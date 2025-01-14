@@ -2,7 +2,9 @@
 
 #include "MapGen/SoilTypeManager.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Kismet/GameplayStatics.h"
+#include <util/ue-header-guard-end.h>
 
 // Sets default values
 ASoilTypeManager::ASoilTypeManager()

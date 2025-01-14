@@ -5,9 +5,12 @@
 
 #include "Carla/Sensor/RssSensor.h"
 #include "Carla.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 #include "Engine/CollisionProfile.h"
 #include "StaticMeshResources.h"
+#include <util/ue-header-guard-end.h>
 
 FActorDefinition ARssSensor::GetSensorDefinition()
 {

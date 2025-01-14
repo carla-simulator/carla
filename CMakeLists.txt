@@ -8,9 +8,14 @@
 
 ]]
 
+set (
+  CARLA_CMAKE_MINIMUM_REQUIRED_VERSION
+  3.27.2
+)
+
 cmake_minimum_required (
   VERSION
-  3.27.2
+  ${CARLA_CMAKE_MINIMUM_REQUIRED_VERSION}
 )
 
 cmake_policy (SET CMP0097 NEW)
@@ -18,6 +23,7 @@ cmake_policy (SET CMP0091 NEW)
 cmake_policy (SET CMP0074 NEW)
 cmake_policy (SET CMP0077 NEW)
 cmake_policy (SET CMP0117 NEW)
+
 if (${CMAKE_MINOR_VERSION} GREATER_EQUAL 24)
   cmake_policy (SET CMP0135 NEW)
 endif ()
@@ -38,7 +44,7 @@ project (
   LANGUAGES
     C
     CXX
-    ASM # This is required by some dependencies, such as LibPNG.
+    ASM
   DESCRIPTION
     "Open-source simulator for autonomous driving research."
   HOMEPAGE_URL
@@ -51,8 +57,13 @@ set (
 )
 
 set (
+  CARLA_BUILD_PATH
+  ${CMAKE_BINARY_DIR}
+)
+
+set (
   CARLA_PACKAGE_PATH
-  ${CMAKE_BINARY_DIR}/Package
+  ${CARLA_BUILD_PATH}/Package
 )
 
 set (
@@ -121,3 +132,10 @@ file (
   ${CMAKE_CURRENT_BINARY_DIR}/Help.md
   ${CARLA_CMAKE_HELP_MESSAGE}
 )
+
+if (CMAKE_EXPORT_COMPILE_COMMANDS)
+  configure_file (
+    ${CARLA_WORKSPACE_PATH}/.clangd.in
+    ${CARLA_WORKSPACE_PATH}/.clangd
+  )
+endif ()

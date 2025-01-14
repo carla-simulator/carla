@@ -4,16 +4,9 @@
 
 #include "LargeMapManager.h"
 
-#include "Engine/WorldComposition.h"
-#include "Engine/ObjectLibrary.h"
 #include "Game/CarlaStatics.h"
 #include "Actor/ActorRegistry.h"
 #include "Game/CarlaEpisode.h"
-#include "Engine/EngineTypes.h"
-#include "Components/PrimitiveComponent.h"
-#include "Landscape.h"
-#include "LandscapeHeightfieldCollisionComponent.h"
-#include "LandscapeComponent.h"
 
 #include "UncenteredPivotPointMesh.h"
 
@@ -21,8 +14,17 @@
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/CustomTerrainPhysicsComponent.h"
 
+#include <util/ue-header-guard-begin.h>
+#include "Engine/WorldComposition.h"
+#include "Engine/ObjectLibrary.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Engine/EngineTypes.h"
+#include "Components/PrimitiveComponent.h"
+#include "Landscape.h"
+#include "LandscapeHeightfieldCollisionComponent.h"
+#include "LandscapeComponent.h"
+#include <util/ue-header-guard-end.h>
 
 #define LARGEMAP_LOGS 1
 
@@ -677,12 +679,12 @@ FCarlaMapTile& ALargeMapManager::LoadCarlaMapTile(FString TileMapPath, TileID Ti
   StreamingLevel->LevelTransform = FTransform(TileLocation);
   StreamingLevel->PackageNameToLoad = *FullName;
 
-  if (!FPackageName::DoesPackageExist(FullName, NULL, &PackageFileName))
+  if (!FPackageName::DoesPackageExist(FullName, &PackageFileName))
   {
     LM_LOG(Error, "Level does not exist in package with FullName variable -> %s", *FullName);
   }
 
-  if (!FPackageName::DoesPackageExist(LongLevelPackageName, NULL, &PackageFileName))
+  if (!FPackageName::DoesPackageExist(LongLevelPackageName, &PackageFileName))
   {
     LM_LOG(Error, "Level does not exist in package with LongLevelPackageName variable -> %s", *LongLevelPackageName);
   }

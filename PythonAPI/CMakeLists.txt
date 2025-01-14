@@ -23,18 +23,74 @@ set (
   RecastNavigation::DetourCrowd
 )
 
-get_target_property (Boost_asio_TARGET_NAME Boost::asio ALIASED_TARGET)
-get_target_property (Boost_python_TARGET_NAME Boost::python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR} ALIASED_TARGET)
-get_target_property (Boost_geometry_TARGET_NAME Boost::geometry ALIASED_TARGET)
-get_target_property (Boost_gil_TARGET_NAME Boost::gil ALIASED_TARGET)
-get_target_property (RecastNavigation_Recast_TARGET_NAME RecastNavigation::Recast ALIASED_TARGET)
-get_target_property (RecastNavigation_Detour_TARGET_NAME RecastNavigation::Detour ALIASED_TARGET)
-get_target_property (RecastNavigation_DetourCrowd_TARGET_NAME RecastNavigation::DetourCrowd ALIASED_TARGET)
+get_target_property (
+  Boost_asio_TARGET_NAME
+  Boost::asio
+  ALIASED_TARGET
+)
+
+get_target_property (
+  Boost_python_TARGET_NAME
+  Boost::python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}
+  ALIASED_TARGET
+)
+
+get_target_property (
+  Boost_geometry_TARGET_NAME
+  Boost::geometry
+  ALIASED_TARGET
+)
+
+get_target_property (
+  Boost_gil_TARGET_NAME
+  Boost::gil
+  ALIASED_TARGET
+)
+
+get_target_property (
+  RecastNavigation_Recast_TARGET_NAME
+  RecastNavigation::Recast
+  ALIASED_TARGET
+)
+
+get_target_property (
+  RecastNavigation_Detour_TARGET_NAME
+  RecastNavigation::Detour
+  ALIASED_TARGET
+)
+
+get_target_property (
+  RecastNavigation_DetourCrowd_TARGET_NAME
+  RecastNavigation::DetourCrowd
+  ALIASED_TARGET
+)
 
 set (
   CARLA_PYTHON_API_CARLA_PATH
   ${CMAKE_CURRENT_SOURCE_DIR}/carla
 )
+
+set (
+  CARLA_PYTHON_API_CMAKE_ARGS
+  "\t'-G${CMAKE_GENERATOR}'"
+)
+
+set (
+  CARLA_PYTHON_API_CMAKE_ARGS
+  "${CARLA_PYTHON_API_CMAKE_ARGS},\n\t'-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}'"
+)
+
+set (
+  CARLA_PYTHON_API_CMAKE_ARGS
+  "${CARLA_PYTHON_API_CMAKE_ARGS},\n\t'-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}'"
+)
+
+if (CMAKE_TOOLCHAIN_FILE)
+  set (
+    CARLA_PYTHON_API_CMAKE_ARGS
+    "${CARLA_PYTHON_API_CMAKE_ARGS},\n\t\'--toolchain=${CMAKE_TOOLCHAIN_FILE}\'"
+  )
+endif ()
 
 carla_two_step_configure_file (
   ${CARLA_PYTHON_API_CARLA_PATH}/pyproject.toml

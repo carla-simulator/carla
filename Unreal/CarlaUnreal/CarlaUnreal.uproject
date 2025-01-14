@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{503B4C24-4B4B-4C8C-53F3-8AB2AC13D07B}",
+	"EngineAssociation": "{EFC07C98-4070-2F0E-BE31-319DCE259DFF}",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -51,10 +51,6 @@
 		},
 		{
 			"Name": "SunPosition",
-			"Enabled": true
-		},
-		{
-			"Name": "StreetMap",
 			"Enabled": true
 		},
 		{

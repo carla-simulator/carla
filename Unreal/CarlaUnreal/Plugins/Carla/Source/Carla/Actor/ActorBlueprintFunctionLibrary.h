@@ -7,21 +7,23 @@
 #pragma once
 
 #include "Carla/Actor/ActorDefinition.h"
-#include "Carla/Actor/ActorDescription.h"
 #include "Carla/Actor/PedestrianParameters.h"
 #include "Carla/Actor/PropParameters.h"
 #include "Carla/Actor/VehicleParameters.h"
-#include "Carla/Sensor/GnssSensor.h"
-#include "Carla/Sensor/Radar.h"
-#include "Carla/Sensor/InertialMeasurementUnit.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include <util/ue-header-guard-end.h>
 
 #include "ActorBlueprintFunctionLibrary.generated.h"
 
+class AGnssSensor;
+class AInertialMeasurementUnit;
+class ARadar;
 class ASceneCaptureSensor;
 class AShaderBasedSensor;
 struct FLidarDescription;
+struct FActorDescription;
 
 UCLASS()
 class UActorBlueprintFunctionLibrary : public UBlueprintFunctionLibrary

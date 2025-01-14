@@ -6,27 +6,17 @@
 
 #pragma once
 
-#include "WheeledVehiclePawn.h"
-
-#include "Components/SkeletalMeshComponent.h"
-
-#include "Vehicle/AckermannController.h"
-#include "Vehicle/AckermannControllerSettings.h"
-#include "Vehicle/CarlaWheeledVehicleState.h"
-#include "Vehicle/VehicleAckermannControl.h"
-#include "Vehicle/VehicleControl.h"
-#include "Vehicle/VehicleLightState.h"
-#include "Vehicle/VehicleInputPriority.h"
-#include "Vehicle/VehiclePhysicsControl.h"
-#include "VehicleVelocityControl.h"
-#include "Vehicle/WheeledVehicleMovementComponentNW.h"
-
-#include "PhysicsEngine/PhysicsConstraintComponent.h"
-#include "MovementComponents/BaseCarlaMovementComponent.h"
-
-
-#include "FoliageInstancedStaticMeshComponent.h"
-#include "CoreMinimal.h"
+#include "Carla/Vehicle/AckermannController.h"
+#include "Carla/Vehicle/AckermannControllerSettings.h"
+#include "Carla/Vehicle/CarlaWheeledVehicleState.h"
+#include "Carla/Vehicle/VehicleAckermannControl.h"
+#include "Carla/Vehicle/VehicleControl.h"
+#include "Carla/Vehicle/VehicleLightState.h"
+#include "Carla/Vehicle/VehicleInputPriority.h"
+#include "Carla/Vehicle/VehiclePhysicsControl.h"
+#include "Carla/Vehicle/VehicleVelocityControl.h"
+#include "Carla/Vehicle/WheeledVehicleMovementComponentNW.h"
+#include "Carla/Vehicle/MovementComponents/BaseCarlaMovementComponent.h"
 
 //-----CARSIM--------------------------------
 #ifdef WITH_CARSIM
@@ -34,10 +24,20 @@
 #endif
 //-------------------------------------------
 
-#include <utility>
+#include <util/disable-ue4-macros.h>
+#include <carla/rpc/VehicleFailureState.h>
+#include <util/enable-ue4-macros.h>
 
-#include "carla/rpc/VehicleFailureState.h"
+#include <util/ue-header-guard-begin.h>
+#include "Components/SkeletalMeshComponent.h"
 #include "WheeledVehiclePawn.h"
+#include "PhysicsEngine/PhysicsConstraintComponent.h"
+#include "FoliageInstancedStaticMeshComponent.h"
+#include "CoreMinimal.h"
+#include "WheeledVehiclePawn.h"
+#include <util/ue-header-guard-end.h>
+
+#include <utility>
 
 #include "CarlaWheeledVehicle.generated.h"
 
@@ -177,6 +177,8 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   FVehiclePhysicsControl GetVehiclePhysicsControl() const;
 
+  FVector GetCenterOfMass(UChaosWheeledVehicleMovementComponent &VehicleMovComponent) const;
+
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   FAckermannControllerSettings GetAckermannControllerSettings() const {
     return AckermannController.GetSettings();
@@ -189,6 +191,8 @@ public:
   FVehicleLightState GetVehicleLightState() const;
 
   void ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl);
+
+  void SetCenterOfMass(UChaosWheeledVehicleMovementComponent &VehicleMovComponent, const FVehiclePhysicsControl &PhysicsControl);
 
   void ApplyAckermannControllerSettings(const FAckermannControllerSettings &AckermannControllerSettings) {
     return AckermannController.ApplySettings(AckermannControllerSettings);

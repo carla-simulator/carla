@@ -4,8 +4,10 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <Containers/UnrealString.h> 
 #pragma once
+#include <util/ue-header-guard-begin.h>
+#include <Containers/UnrealString.h>
+#include <util/ue-header-guard-end.h>
 
 #if WITH_EDITORONLY_DATA
 

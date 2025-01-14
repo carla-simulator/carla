@@ -6,9 +6,11 @@
 
 #include "Carla/Sensor/OpticalFlowCamera.h"
 #include "Carla.h"
-#include "HAL/IConsoleManager.h"
-
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "HAL/IConsoleManager.h"
+#include <util/ue-header-guard-end.h>
 
 #include "Carla/Sensor/PixelReader.h"
 

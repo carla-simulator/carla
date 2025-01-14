@@ -6,11 +6,22 @@
 
 #pragma once
 
+#include "Carla/Game/CarlaEngine.h"
+
+#include <util/disable-ue4-macros.h>
+#include <carla/Logging.h>
+#include <carla/Buffer.h>
+#include <carla/BufferView.h>
+#include <carla/sensor/SensorRegistry.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
 #include "CoreGlobals.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Runtime/ImageWriteQueue/Public/ImagePixelData.h"
 #include "DataDrivenShaderPlatformInfo.h"
 #include "RHIDefinitions.h"
+#include <util/ue-header-guard-end.h>
 
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -18,15 +29,6 @@
 #endif
 #include <D3d12.h>
 #endif
-
-#include "Carla/Game/CarlaEngine.h"
-
-#include <compiler/disable-ue4-macros.h>
-#include <carla/Logging.h>
-#include <carla/Buffer.h>
-#include <carla/BufferView.h>
-#include <carla/sensor/SensorRegistry.h>
-#include <compiler/enable-ue4-macros.h>
 
 // =============================================================================
 // -- FPixelReader -------------------------------------------------------------
@@ -100,7 +102,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
   TRACE_CPUPROFILER_EVENT_SCOPE(FPixelReader::SendPixelsInRenderThread);
   check(Sensor.CaptureRenderTarget != nullptr);
 
-  if (!Sensor.HasActorBegunPlay() || Sensor.IsPendingKill())
+  if (!Sensor.HasActorBegunPlay() || IsValidChecked(&Sensor))
   {
     return;
   }
@@ -118,13 +120,14 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("FWritePixels_SendPixelsInRenderThread");
 
       /// @todo Can we make sure the sensor is not going to be destroyed?
-      if (!Sensor.IsPendingKill())
+      if (IsValidChecked(&Sensor))
       {
         FPixelReader::Payload FuncForSending =
           [&Sensor, Frame = FCarlaEngine::GetFrameCounter(), Conversor = std::move(Conversor)]
           (void *LockedData, uint32 Size, uint32 Offset, uint32 ExpectedRowBytes)
           {
-            if (Sensor.IsPendingKill()) return;
+            if (!IsValidChecked(&Sensor))
+              return;
 
             TArray<TPixel> Converted;
 

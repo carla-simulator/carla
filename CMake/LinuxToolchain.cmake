@@ -33,9 +33,29 @@ elseif (${ARCH} STREQUAL "aarch64")
 	set (TARGET_TRIPLE "aarch64-unknown-linux-gnueabi" CACHE STRING "")
 endif()
 
+file (
+	GLOB
+	UE_SYSROOT_CANDIDATES
+	${UE_ROOT}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v*_clang-*.*.*-*/${TARGET_TRIPLE}
+	LIST_DIRECTORIES TRUE
+	FOLLOW_SYMLINKS
+)
+
+set (UE_SYSROOT_CANDIDATE)
+foreach (CANDIDATE ${UE_SYSROOT_CANDIDATES})
+	if (IS_DIRECTORY ${CANDIDATE})
+		set (UE_SYSROOT_CANDIDATE ${CANDIDATE})
+		break ()
+	endif ()
+endforeach ()
+
+if (NOT UE_SYSROOT_CANDIDATE)
+	message (FATAL_ERROR "Could not find Unreal Engine clang sysroot.")
+endif ()
+
 set (
 	UE_SYSROOT
-	${UE_ROOT}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v22_clang-16.0.6-centos7/${TARGET_TRIPLE}
+	${UE_SYSROOT_CANDIDATE}
 	CACHE PATH ""
 )
 
@@ -52,6 +72,16 @@ set (
 set (
 	UE_LIBS
 	${UE_THIRD_PARTY}/Unix/LibCxx/lib/Unix/${TARGET_TRIPLE} CACHE PATH ""
+)
+
+set (
+	UE_OPENSSL_INCLUDE
+	${UE_THIRD_PARTY}/OpenSSL/1.1.1t/include/Unix CACHE PATH ""
+)
+
+set (
+	UE_OPENSSL_LIBS
+	${UE_THIRD_PARTY}/OpenSSL/1.1.1t/lib/Unix/x86_64-unknown-linux-gnu CACHE PATH ""
 )
 
 add_compile_options (

@@ -33,18 +33,36 @@ if (WIN32)
   endif ()
 endif ()
 
+if (CMAKE_TOOLCHAIN_FILE)
+  cmake_path (
+    ABSOLUTE_PATH
+      CMAKE_TOOLCHAIN_FILE
+    BASE_DIRECTORY
+      ${CARLA_WORKSPACE_PATH}
+    NORMALIZE
+    OUTPUT_VARIABLE
+      TOOLCHAIN_FILE
+  )
+  set (CMAKE_TOOLCHAIN_FILE ${TOOLCHAIN_FILE})
+endif ()
+
 # ================================
 #   Common Definitions
 # ================================
 
 if (WIN32)
   add_compile_definitions (_CRT_SECURE_NO_WARNINGS)
+  check_cxx_compiler_flag (/utf-8 HAS_MSVC_UTF8)
+  if (HAS_MSVC_UTF8)
+    # @TODO This causes warnings with MASM. A better approach should be looked into.
+    add_compile_options ($<$<COMPILE_LANGUAGE:CXX>:/utf-8>)
+  endif ()
 endif ()
 
 set (CARLA_COMMON_DEFINITIONS)
 
 foreach (FORMAT ${LIBCARLA_IMAGE_SUPPORTED_FORMATS})
-  carla_message ("Enabling CARLA image support for \"${FORMAT}\".")
+  carla_message_verbose ("Enabling CARLA image support for \"${FORMAT}\".")
   string (TOUPPER "${FORMAT}" FORMAT_UPPERCASE)
   list (APPEND CARLA_COMMON_DEFINITIONS LIBCARLA_IMAGE_SUPPORT_${FORMAT_UPPERCASE}=1)
 endforeach ()
@@ -56,15 +74,50 @@ if (WIN32)
   list (APPEND CARLA_COMMON_DEFINITIONS _USE_MATH_DEFINES)
 endif ()
 
+if (WIN32)
+  set (EXE_EXT .exe)
+  set (UE_SYSTEM_NAME Win64)
+elseif (LINUX)
+  set (EXE_EXT)
+  set (UE_SYSTEM_NAME Linux)
+elseif (APPLE)
+  set (EXE_EXT)
+  set (UE_SYSTEM_NAME Mac)
+else ()
+  carla_error ("Unknown target system.")
+endif ()
+
 # ================================
 #   Exception Definitions
 # ================================
+
+if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC" AND
+  NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  if (ENABLE_EXCEPTIONS)
+    set (EXCEPTIONS_FLAG /EHsc)
+  else ()
+    set (EXCEPTIONS_FLAG /EHs-c-)
+  endif ()
+else ()
+  if (ENABLE_EXCEPTIONS)
+    set (EXCEPTIONS_FLAG -fexceptions)
+  else ()
+    set (EXCEPTIONS_FLAG -fno-exceptions)
+  endif ()
+endif ()
+
+carla_message ("Checking for ${EXCEPTIONS_FLAG} support")
+check_cxx_compiler_flag (${EXCEPTIONS_FLAG} HAS_EXCEPTIONS_FLAG)
+if (HAS_EXCEPTIONS_FLAG)
+  add_compile_options ($<$<COMPILE_LANGUAGE:CXX>:${EXCEPTIONS_FLAG}>)
+endif ()
 
 set (CARLA_EXCEPTION_DEFINITIONS)
 
 if (ENABLE_EXCEPTIONS)
   # Nothing
 else ()
+  list (APPEND CARLA_EXCEPTION_DEFINITIONS _HAS_EXCEPTIONS=0)
   list (APPEND CARLA_EXCEPTION_DEFINITIONS ASIO_NO_EXCEPTIONS)
   list (APPEND CARLA_EXCEPTION_DEFINITIONS BOOST_NO_EXCEPTIONS)
   list (APPEND CARLA_EXCEPTION_DEFINITIONS LIBCARLA_NO_EXCEPTIONS)
@@ -75,11 +128,33 @@ endif ()
 #   RTTI Definitions
 # ================================
 
+if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC" AND
+    NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  if (ENABLE_RTTI)
+    set (RTTI_FLAG /GR)
+  else ()
+    set (RTTI_FLAG /GR-)
+  endif ()
+else ()
+  if (ENABLE_RTTI)
+    set (RTTI_FLAG -frtti)
+  else ()
+    set (RTTI_FLAG -fno-rtti)
+  endif ()
+endif ()
+
+carla_message ("Checking for ${RTTI_FLAG} support")
+check_cxx_compiler_flag (${RTTI_FLAG} HAS_RTTI_FLAG)
+if (HAS_RTTI_FLAG)
+  add_compile_options ($<$<COMPILE_LANGUAGE:CXX>:${RTTI_FLAG}>)
+endif ()
+
 set (CARLA_RTTI_DEFINITIONS)
 
-if (CARLA_RTTI_DEFINITIONS)
+if (ENABLE_RTTI)
   # Nothing
 else ()
+  list (APPEND CARLA_RTTI_DEFINITIONS BOOST_NO_RTTI)
   list (APPEND CARLA_RTTI_DEFINITIONS BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY)
 endif ()
 

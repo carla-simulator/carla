@@ -159,6 +159,8 @@ namespace detail {
 
     void SetWeatherParameters(const rpc::WeatherParameters &weather);
 
+    bool IsWeatherEnabled(); 
+
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
 
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(rpc::ActorId vehicle) const;
@@ -438,6 +440,10 @@ namespace detail {
 
     std::vector<rpc::LabelledPoint> CastRay(
         geom::Location start_location, geom::Location end_location) const;
+
+    std::string GetActorName(rpc::ActorId actor) const;
+
+    std::string GetActorClassName(rpc::ActorId actor) const;
 
   private:
 

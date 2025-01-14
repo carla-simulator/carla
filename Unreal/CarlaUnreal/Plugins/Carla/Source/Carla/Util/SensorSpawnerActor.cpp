@@ -2,14 +2,19 @@
 
 
 #include "Util/SensorSpawnerActor.h"
-
-#include "JsonFileManagerLibrary.h"
 #include "Carla/Game/CarlaEpisode.h"
-#include "Game/CarlaGameModeBase.h"
+#include "Carla/Game/CarlaGameModeBase.h"
+#include "Carla/Sensor/RayCastLidar.h"
+#include "Carla/Sensor/GnssSensor.h"
+#include "Carla/Sensor/Radar.h"
+#include "Carla/Sensor/InertialMeasurementUnit.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "JsonFileManagerLibrary.h"
 #include "Sensor/SceneCaptureCamera.h"
 #include "Sensor/Sensor.h"
 #include "Kismet/GameplayStatics.h"
-#include "Sensor/RayCastLidar.h"
+#include <util/ue-header-guard-end.h>
 
 DEFINE_LOG_CATEGORY_STATIC(LogSensorSpawnerActor, Verbose, All);
 

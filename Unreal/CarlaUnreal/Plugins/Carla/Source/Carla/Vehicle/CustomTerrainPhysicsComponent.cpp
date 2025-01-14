@@ -5,44 +5,33 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "CustomTerrainPhysicsComponent.h"
-#include "Runtime/Core/Public/Async/ParallelFor.h"
-#include "Engine/CollisionProfile.h"
-#include "Engine/StaticMeshActor.h"
-#include "StaticMeshResources.h"
-#include "CollisionQueryParams.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/MapGen/SoilTypeManager.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Game/CarlaStatics.h"
 
-#include "HAL/PlatformFileManager.h"
-#include "HAL/RunnableThread.h"
-#include "Misc/Paths.h"
-#include "Engine/World.h"
-#include "Math/UnrealMathUtility.h"
-#include "Engine/World.h"
+#include <util/ue-header-guard-begin.h>
+#include "Async/ParallelFor.h"
+#include "Engine/CollisionProfile.h"
+#include "Engine/StaticMeshActor.h"
+#include "StaticMeshResources.h"
+#include "CollisionQueryParams.h"
 #include "Landscape.h"
 #include "LandscapeHeightfieldCollisionComponent.h"
 #include "LandscapeComponent.h"
-
 #include "RHICommandList.h"
 #include "TextureResource.h"
-#include "Rendering/Texture2DResource.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Materials/MaterialParameterCollection.h"
 #include "Materials/MaterialParameterCollectionInstance.h"
 #include "Materials/MaterialInterface.h"
 #include "Materials/MaterialInstance.h"
-// #include <carla/pytorch/pytorch.h>
-
 #include "Components/SkinnedMeshComponent.h"
-#include "GenericPlatform/GenericPlatformFile.h"
 #include "Async/Async.h"
 #include "Async/Future.h"
 #include "LandscapeProxy.h"
-
-
-#include "Carla/Game/CarlaStatics.h"
+#include "UObject/SavePackage.h"
 #include "HAL/PlatformFileManager.h"
 #include "HAL/RunnableThread.h"
 #include "Misc/Paths.h"
@@ -61,15 +50,17 @@
 #include "Math/OrientedBox.h"
 #include "Misc/DateTime.h"
 #include "EngineUtils.h"
+#include <util/ue-header-guard-end.h>
+
+#include <util/disable-ue4-macros.h>
+#include "carla/rpc/String.h"
+// #include <carla/pytorch/pytorch.h>
+#include <util/enable-ue4-macros.h>
+
 #include <algorithm>
 #include <fstream>
-
 #include <thread>
 #include <chrono>
-
-#include <compiler/disable-ue4-macros.h>
-#include "carla/rpc/String.h"
-#include <compiler/enable-ue4-macros.h>
 
 #undef CreateDirectory
 
@@ -930,7 +921,7 @@ void UCustomTerrainPhysicsComponent::UpdateTexture()
     region.Width = Texture->GetSizeX();
     region.Height = Texture->GetSizeY();
 
-    FTexture2DResource* resource = (FTexture2DResource*)Texture->Resource;
+    FTexture2DResource* resource = (FTexture2DResource*)Texture->GetResource();
     RHIUpdateTexture2D(
         resource->GetTexture2DRHI(), 0, region, region.Width * sizeof(uint8_t), &NewData[0]); 
   });
@@ -1024,7 +1015,7 @@ void UCustomTerrainPhysicsComponent::UpdateLargeTexture()
     region.Width = Texture->GetSizeX();
     region.Height = Texture->GetSizeY();
 
-    FTexture2DResource* resource = (FTexture2DResource*)Texture->Resource;
+    FTexture2DResource* resource = (FTexture2DResource*)Texture->GetResource();
     RHIUpdateTexture2D(
         resource->GetTexture2DRHI(), 0, region, region.Width * sizeof(uint8_t), &NewData[0]); 
   });
@@ -1379,8 +1370,24 @@ void UCustomTerrainPhysicsComponent::BuildLandscapeHeightMapDataAasset(ALandscap
   Package->MarkPackageDirty();
   // FAssetRegistryModule::AssetCreated(NewTexture);
 
-  FString PackageFileName = FPackageName::LongPackageNameToFilename(PackageName, FPackageName::GetAssetPackageExtension());
-  bool bSaved = UPackage::SavePackage(Package, HeightMapAsset, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+  FSavePackageArgs SaveArgs;
+  SaveArgs.TopLevelFlags =
+    EObjectFlags::RF_Public |
+    EObjectFlags::RF_Standalone;
+  SaveArgs.Error = GError;
+  SaveArgs.bForceByteSwapping = true;
+  SaveArgs.bWarnOfLongFilename = true;
+  SaveArgs.SaveFlags = SAVE_NoError;
+
+  FString PackageFileName = FPackageName::LongPackageNameToFilename(
+    PackageName,
+    FPackageName::GetAssetPackageExtension());
+  
+  bool bSaved = UPackage::SavePackage(
+    Package,
+    HeightMapAsset,
+    *PackageFileName,
+    SaveArgs);
 }
 
 

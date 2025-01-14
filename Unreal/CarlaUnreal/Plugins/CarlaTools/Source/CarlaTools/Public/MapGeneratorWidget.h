@@ -6,13 +6,15 @@
 
 #pragma once 
 
-#include "CoreMinimal.h"
+#include "RegionOfInterest.h"
 
+#include <util/ue-header-guard-begin.h>
+#include "CoreMinimal.h"
 #include "EditorUtilityWidget.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "ProceduralFoliageSpawner.h"
-#include "RegionOfInterest.h"
 #include <Containers/UnrealString.h>
+#include <util/ue-header-guard-end.h>
 
 #include "MapGeneratorWidget.generated.h"
 
@@ -45,7 +47,7 @@ struct CARLATOOLS_API FMapGeneratorMetaInfo
   FSoilTerramechanicsProperties GeneralSoilType;
 
   UPROPERTY(BlueprintReadWrite)
-  UTextureRenderTarget2D* GlobalHeightmap;
+  UTextureRenderTarget2D* GlobalHeightmap = nullptr;
 
   UPROPERTY(BlueprintReadWrite)
   TMap<FRoiTile, FTerrainROI> TerrainRoisMap;

@@ -6,7 +6,10 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "Engine/TargetPoint.h"
+#include <util/ue-header-guard-end.h>
+
 #include "VehicleSpawnPoint.generated.h"
 
 /// Base class for spawner locations for walkers.

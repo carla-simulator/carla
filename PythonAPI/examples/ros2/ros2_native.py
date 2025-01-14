@@ -82,6 +82,9 @@ def main(args):
         settings.fixed_delta_seconds = 0.05
         world.apply_settings(settings)
 
+        traffic_manager = client.get_trafficmanager()
+        traffic_manager.set_synchronous_mode(True)
+
         with open(args.file) as f:
             config = json.load(f)
 

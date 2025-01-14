@@ -259,6 +259,10 @@ namespace detail {
       _client.SetWeatherParameters(weather);
     }
 
+    bool IsWeatherEnabled() {
+      return _client.IsWeatherEnabled();
+    }
+
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
       return _client.GetVehiclePhysicsControl(vehicle.GetId());
     }
@@ -436,6 +440,16 @@ namespace detail {
 
     geom::Vector3D GetActorAcceleration(const Actor &actor) const {
       return GetActorSnapshot(actor).acceleration;
+    }
+
+    std::string GetActorName(const Actor& actor) const
+    {
+      return _client.GetActorName(actor.GetId());
+    }
+
+    std::string GetActorClassName(const Actor& actor) const
+    {
+      return _client.GetActorClassName(actor.GetId());
     }
 
     void SetActorLocation(Actor &actor, const geom::Location &location) {

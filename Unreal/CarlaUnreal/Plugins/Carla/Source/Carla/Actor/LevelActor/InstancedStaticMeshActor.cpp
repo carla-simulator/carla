@@ -5,7 +5,10 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla/Actor/LevelActor/InstancedStaticMeshActor.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include <util/ue-header-guard-end.h>
 
 AInstancedStaticMeshActor::AInstancedStaticMeshActor(const FObjectInitializer& ObjectInitializer)
   : Super(ObjectInitializer)

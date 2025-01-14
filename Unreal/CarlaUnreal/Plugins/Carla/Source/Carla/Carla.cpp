@@ -1,10 +1,13 @@
 // Copyright 1998-2017 Epic Games, Inc. All Rights Reserved.
 
 #include "Carla.h"
+#include "Settings/CarlaSettings.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Developer/Settings/Public/ISettingsModule.h"
 #include "Developer/Settings/Public/ISettingsSection.h"
 #include "Developer/Settings/Public/ISettingsContainer.h"
-#include "Settings/CarlaSettings.h"
+#include <util/ue-header-guard-end.h>
 
 #define LOCTEXT_NAMESPACE "FCarlaModule"
 
@@ -124,12 +127,12 @@ IMPLEMENT_MODULE(FCarlaModule, Carla)
 // -- Implement carla throw_exception ------------------------------------------
 // =============================================================================
 
-#include <compiler/disable-ue4-macros.h>
+#ifdef LIBCARLA_NO_EXCEPTIONS
+#include <util/disable-ue4-macros.h>
 #include <carla/Exception.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 
 #include <exception>
-
 namespace carla {
 
   void throw_exception(const std::exception &e) {
@@ -139,3 +142,4 @@ namespace carla {
   }
 
 } // namespace carla
+#endif

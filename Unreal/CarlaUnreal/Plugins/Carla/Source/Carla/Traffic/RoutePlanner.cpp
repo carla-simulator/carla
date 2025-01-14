@@ -6,11 +6,14 @@
 
 #include "RoutePlanner.h"
 #include "Carla.h"
-#include "Util/RandomEngine.h"
-#include "Vehicle/CarlaWheeledVehicle.h"
-#include "Vehicle/WheeledVehicleAIController.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Vehicle/WheeledVehicleAIController.h"
+#include "Carla/Util/RandomEngine.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Engine/CollisionProfile.h"
 #include "DrawDebugHelpers.h"
+#include <util/ue-header-guard-end.h>
 
 static bool IsSplineValid(const USplineComponent *SplineComponent)
 {

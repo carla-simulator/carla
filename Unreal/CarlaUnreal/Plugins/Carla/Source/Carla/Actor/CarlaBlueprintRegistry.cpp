@@ -8,10 +8,12 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Dom/JsonObject.h"
 #include "Misc/FileHelper.h"
 #include "Serialization/JsonReader.h"
 #include "Serialization/JsonSerializer.h"
+#include <util/ue-header-guard-end.h>
 
 namespace CommonAttributes {
   static const FString PATH = FPaths::ProjectContentDir();

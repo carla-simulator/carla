@@ -9,7 +9,9 @@
 #include "Carla/Actor/ActorSpawnResult.h"
 #include "Carla/Actor/CarlaActorFactory.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "GameFramework/Actor.h"
+#include <util/ue-header-guard-end.h>
 
 #include "CarlaActorFactoryBlueprint.generated.h"
 

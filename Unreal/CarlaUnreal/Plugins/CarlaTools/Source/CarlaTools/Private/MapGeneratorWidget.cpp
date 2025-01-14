@@ -5,15 +5,15 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "MapGeneratorWidget.h"
-
-#include "ActorFactories/ActorFactory.h"
-#include "AssetRegistry/AssetRegistryModule.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/MapGen/SoilTypeManager.h"
 #include "Carla/Weather/Weather.h"
 #include "Carla/Vehicle/CustomTerrainPhysicsComponent.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "ActorFactories/ActorFactory.h"
+#include "AssetRegistry/AssetRegistryModule.h"
 #include "Components/SplineComponent.h"
-#include "Editor/FoliageEdit/Public/FoliageEdMode.h"
 #include "EditorLevelLibrary.h"
 #include "FileHelpers.h"
 #include "GenericPlatform/GenericPlatformFile.h"
@@ -26,20 +26,20 @@
 #include "Misc/CString.h"
 #include "ProceduralFoliageComponent.h"
 #include "ProceduralFoliageVolume.h"
-#include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
-#include "Runtime/Engine/Public/DrawDebugHelpers.h"
-
+#include "Engine/ObjectLibrary.h"
+#include "DrawDebugHelpers.h"
 #include "EditorAssetLibrary.h"
 #include "EngineUtils.h"
 #include "ObjectEditorUtils.h"
 #include "UObject/UnrealType.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/ObjectMacros.h"
-
+#include "UObject/SavePackage.h"
 #include "Dom/JsonObject.h"
 #include "JsonObjectConverter.h"
 #include "Serialization/JsonSerializer.h"
 #include "Serialization/JsonReader.h"
+#include <util/ue-header-guard-end.h>
 
 #define CUR_CLASS_FUNC (FString(__FUNCTION__))
 #define CUR_LINE  (FString::FromInt(__LINE__))
@@ -435,10 +435,23 @@ UWorld* UMapGeneratorWidget::DuplicateWorld(FString BaseWorldPath, FString Targe
   DuplicateWorld = CastChecked<UWorld>(StaticDuplicateObjectEx(Parameters));
 
   const FString PackageFileName = FPackageName::LongPackageNameToFilename(
-          PackageName, 
-          FPackageName::GetMapPackageExtension());
-      UPackage::SavePackage(WorldPackage, DuplicateWorld, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-          *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+    PackageName, 
+    FPackageName::GetMapPackageExtension());
+  
+  FSavePackageArgs SaveArgs;
+  SaveArgs.TopLevelFlags =
+    EObjectFlags::RF_Public |
+    EObjectFlags::RF_Standalone;
+  SaveArgs.Error = GError;
+  SaveArgs.bForceByteSwapping = true;
+  SaveArgs.bWarnOfLongFilename = true;
+  SaveArgs.SaveFlags = SAVE_NoError;
+
+  UPackage::SavePackage(
+    WorldPackage,
+    DuplicateWorld,
+    *PackageFileName,
+    SaveArgs);
 
   return DuplicateWorld;
 }
@@ -751,9 +764,21 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
   const FString PackageFileName = FPackageName::LongPackageNameToFilename(
       PackageName, 
       FPackageName::GetMapPackageExtension());
-  UPackage::SavePackage(BaseMapPackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-      *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+  
+  FSavePackageArgs SaveArgs;
+  SaveArgs.TopLevelFlags =
+    EObjectFlags::RF_Public |
+    EObjectFlags::RF_Standalone;
+  SaveArgs.Error = GError;
+  SaveArgs.bForceByteSwapping = true;
+  SaveArgs.bWarnOfLongFilename = true;
+  SaveArgs.SaveFlags = SAVE_NoError;
 
+  UPackage::SavePackage(
+    BaseMapPackage,
+    World,
+    *PackageFileName,
+    SaveArgs);
 
   bool bLoadedSuccess = FEditorFileUtils::LoadMap(*PackageName, false, true);
     if(!bLoadedSuccess){
@@ -776,7 +801,7 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
   {
     UE_LOG(LogCarlaToolsMapGenerator, Error, 
         TEXT("%s: Failed to cast Large Map Actor in %s."),
-        *MetaInfo.MapName); 
+        *CUR_CLASS_FUNC_LINE, *MetaInfo.MapName); 
     return false;
   }
 
@@ -810,8 +835,19 @@ bool UMapGeneratorWidget::CreateMainLargeMap(const FMapGeneratorMetaInfo& MetaIn
 
   }
 
-  UPackage::SavePackage(BaseMapPackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-      *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+  SaveArgs.TopLevelFlags =
+    EObjectFlags::RF_Public |
+    EObjectFlags::RF_Standalone;
+  SaveArgs.Error = GError;
+  SaveArgs.bForceByteSwapping = true;
+  SaveArgs.bWarnOfLongFilename = true;
+  SaveArgs.SaveFlags = SAVE_NoError;
+
+  UPackage::SavePackage(
+    BaseMapPackage,
+    World,
+    *PackageFileName,
+    SaveArgs);
 
   return true;
 }
@@ -1082,8 +1118,21 @@ bool UMapGeneratorWidget::CreateTilesMaps(const FMapGeneratorMetaInfo& MetaInfo)
       const FString PackageFileName = FPackageName::LongPackageNameToFilename(
           PackageName, 
           FPackageName::GetMapPackageExtension());
-      UPackage::SavePackage(TilePackage, World, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone,
-          *PackageFileName, GError, nullptr, true, true, SAVE_NoError);
+      
+      FSavePackageArgs SaveArgs;
+      SaveArgs.TopLevelFlags =
+        EObjectFlags::RF_Public |
+        EObjectFlags::RF_Standalone;
+      SaveArgs.Error = GError;
+      SaveArgs.bForceByteSwapping = true;
+      SaveArgs.bWarnOfLongFilename = true;
+      SaveArgs.SaveFlags = SAVE_NoError;
+
+      UPackage::SavePackage(
+        TilePackage,
+        World,
+        *PackageFileName,
+        SaveArgs);
 
       // TODO PROV
       FText ErrorUnloadingStr;
@@ -1200,8 +1249,11 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
         FVector(2500, 2500, 900));
 
     UActorFactory* ActorFactory = GEditor->FindActorFactoryForActorClass(AProceduralFoliageVolume::StaticClass());
+    FActorSpawnParameters SpawnParams;
+    SpawnParams.Name = InName;
+    SpawnParams.ObjectFlags = InObjectFlags;
     AProceduralFoliageVolume* FoliageVolumeActor = (AProceduralFoliageVolume*) ActorFactory->CreateActor(
-        AProceduralFoliageVolume::StaticClass(), Level, Transform, InObjectFlags, InName);
+        AProceduralFoliageVolume::StaticClass(), Level, Transform, SpawnParams);
 
     UProceduralFoliageComponent* FoliageComponent = FoliageVolumeActor->ProceduralComponent;
     FoliageComponent->FoliageSpawner = Spawner;
@@ -1213,6 +1265,7 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
     {
       FoliageComponent->RemoveProceduralContent(false);
 
+#if 0
       FFoliagePaintingGeometryFilter OverrideGeometryFilter;
       OverrideGeometryFilter.bAllowStaticMesh = FoliageComponent->bAllowStaticMesh;
       OverrideGeometryFilter.bAllowBSP = FoliageComponent->bAllowBSP;
@@ -1221,6 +1274,7 @@ bool UMapGeneratorWidget::CookVegetationToWorld(
       OverrideGeometryFilter.bAllowTranslucent = FoliageComponent->bAllowTranslucent;
 
       FEdModeFoliage::AddInstances(World, FoliageInstances, OverrideGeometryFilter, true);
+#endif
     }
     else
     {

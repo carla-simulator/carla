@@ -7,8 +7,12 @@
 
 #pragma once
 
-#include "GameFramework/MovementComponent.h"
 #include "Carla/Vehicle/VehicleControl.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "GameFramework/MovementComponent.h"
+#include <util/ue-header-guard-end.h>
+
 #include "BaseCarlaMovementComponent.generated.h"
 
 class ACarlaWheeledVehicle;

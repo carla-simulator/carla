@@ -283,6 +283,10 @@ namespace detail {
     _pimpl->AsyncCall("set_weather_parameters", weather);
   }
 
+  bool Client::IsWeatherEnabled() {
+    return _pimpl->CallAndWait<bool>("is_weather_enabled");
+  }
+
   std::vector<rpc::Actor> Client::GetActorsById(
       const std::vector<ActorId> &ids) {
     using return_t = std::vector<rpc::Actor>;
@@ -708,6 +712,16 @@ namespace detail {
       geom::Location start_location, geom::Location end_location) const {
     using return_t = std::vector<rpc::LabelledPoint>;
     return _pimpl->CallAndWait<return_t>("cast_ray", start_location, end_location);
+  }
+
+  std::string Client::GetActorName(rpc::ActorId actor) const
+  {
+    return _pimpl->CallAndWait<std::string>("get_actor_name", actor);
+  }
+
+  std::string Client::GetActorClassName(rpc::ActorId actor) const
+  {
+    return _pimpl->CallAndWait<std::string>("get_actor_class_name", actor);
   }
 
 } // namespace detail

@@ -7,11 +7,15 @@
 #pragma once
 
 #include "Carla/OpenDrive/OpenDriveActor.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Commandlets/Commandlet.h"
-#include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
-#include "Runtime/Engine/Classes/Engine/StaticMeshActor.h"
+#include "Engine/ObjectLibrary.h"
+#include "Engine/StaticMeshActor.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "Materials/MaterialInterface.h"
+#include <util/ue-header-guard-end.h>
+
 #include "PrepareAssetsForCookingCommandlet.generated.h"
 
 // undef this API to avoid conflict with UE 4.26

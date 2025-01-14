@@ -10,10 +10,10 @@
 #include "Traffic/TrafficLightManager.h"
 #include "Util/ProceduralCustomMesh.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/rpc/String.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 
 // #include "Engine/Classes/Interfaces/Interface_CollisionDataProvider.h"
 // #include "PhysicsCore/Public/BodySetupEnums.h"

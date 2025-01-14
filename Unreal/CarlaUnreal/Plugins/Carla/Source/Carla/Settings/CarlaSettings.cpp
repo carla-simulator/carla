@@ -7,6 +7,9 @@
 #include "Carla/Settings/CarlaSettings.h"
 #include "Carla.h"
 #include "Carla/Util/IniFile.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "Misc/ConfigCacheIni.h"
 #include "Misc/CommandLine.h"
 #include "Engine/DirectionalLight.h"
 #include "Engine/Engine.h"
@@ -17,6 +20,8 @@
 #include "Materials/MaterialInstance.h"
 #include "UObject/Package.h"
 #include "Math/UnrealMathUtility.h"
+#include <util/ue-header-guard-end.h>
+
 
 // INI file sections.
 #define S_CARLA_SERVER          TEXT("CARLA/Server")
@@ -50,12 +55,8 @@ static EQualityLevel QualityLevelFromString(
 
 FString QualityLevelToString(EQualityLevel QualitySettingsLevel)
 {
-  const UEnum *ptr = FindObject<UEnum>(ANY_PACKAGE, TEXT("EQualityLevel"), true);
-  if (!ptr)
-  {
-    return FString("Invalid");
-  }
-  return ptr->GetNameStringByIndex(static_cast<int32>(QualitySettingsLevel));
+  static_assert(TIsEnumClass<EQualityLevel>::Value);
+  return StaticEnum<EQualityLevel>()->GetNameStringByValue((int64)QualitySettingsLevel);
 }
 
 static void LoadSettingsFromConfig(
@@ -164,10 +165,10 @@ void UCarlaSettings::LoadSettingsFromString(const FString &INIFileContents)
 {
   UE_LOG(LogCarla, Log, TEXT("Loading CARLA settings from string"));
   FIniFile ConfigFile;
-  ConfigFile.ProcessInputFileContents(INIFileContents);
+  CurrentFileName = TEXT("<string-provided-by-client>");
+  ConfigFile.ProcessInputFileContents(INIFileContents, CurrentFileName);
   constexpr bool bLoadCarlaServerSection = false;
   LoadSettingsFromConfig(ConfigFile, *this, bLoadCarlaServerSection);
-  CurrentFileName = TEXT("<string-provided-by-client>");
 }
 
 void UCarlaSettings::LogSettings() const

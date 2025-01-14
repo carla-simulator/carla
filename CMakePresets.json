@@ -1,5 +1,11 @@
 {
-  "version": 8,
+  "version": 4,
+  "cmakeMinimumRequired":
+  {
+    "major": 3,
+    "minor": 27,
+    "patch": 2
+  },
   "configurePresets":
   [
     {
@@ -14,7 +20,7 @@
       "inherits": "Common",
       "cacheVariables":
       {
-        "CMAKE_TOOLCHAIN_FILE": "CMake/LinuxToolchain.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/CMake/LinuxToolchain.cmake"
       },
       "hidden": true
     },

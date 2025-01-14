@@ -204,23 +204,3 @@ client.replay_file("recording01.log", start, duration, camera)
 The recorder saves all of the data in a custom binary file format specified in [__this document__]
 
 ---
-
-## Rendering
-
-CARLA offers a number of options regarding rendering quality and efficiency. At the most basic level, CARLA offers two quality options to enable operation on both high and low spec hardware with the best results:
-
-### Epic mode
-`./CarlaUnreal.sh -quality-level=Epic`
-
-![Epic mode screenshot](img/rendering_quality_epic.jpg)
-*Epic mode screenshot*
-
-### Low mode
-`./CarlaUnreal.sh -quality-level=Low`
-
-![Low mode screenshot](img/rendering_quality_low.jpg)
-*Low mode screenshot*
-
-CARLA also offers options to suspend rendering or render offscreen, to enable simulations to be recorded or run more efficiently.
-
-More details on rendering options can be found [__here__](adv_rendering_options.md).

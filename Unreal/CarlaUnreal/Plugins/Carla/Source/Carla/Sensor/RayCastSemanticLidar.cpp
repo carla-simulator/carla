@@ -7,18 +7,22 @@
 #include "Carla/Sensor/RayCastSemanticLidar.h"
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Game/Tagger.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
 #include "carla/ros2/ROS2.h"
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 
+#include <util/ue-header-guard-begin.h>
 #include "DrawDebugHelpers.h"
 #include "Engine/CollisionProfile.h"
-#include "Runtime/Engine/Classes/Kismet/KismetMathLibrary.h"
-#include "Runtime/Core/Public/Async/ParallelFor.h"
-#include <cmath>
+#include "Kismet/KismetMathLibrary.h"
 #include "PhysicsEngine/PhysicsObjectExternalInterface.h"
+#include "Async/ParallelFor.h"
+#include <util/ue-header-guard-end.h>
+
+#include <cmath>
 
 namespace crp = carla::rpc;
 
@@ -213,7 +217,7 @@ void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const
 
     const AActor* actor = HitInfo.GetActor();
     Detection.object_idx = 0;
-    Detection.object_tag = static_cast<uint32_t>(HitInfo.Component->CustomDepthStencilValue);
+    Detection.object_tag = static_cast<uint32_t>(ATagger::GetTagFromString(HitInfo.Component->ComponentTags[0].ToString()));
 
     if (actor != nullptr) {
 

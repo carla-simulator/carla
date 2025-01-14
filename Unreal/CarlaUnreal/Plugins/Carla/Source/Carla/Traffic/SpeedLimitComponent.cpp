@@ -8,14 +8,17 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
-#include "Game/CarlaStatics.h"
 #include "Carla/Vehicle/WheeledVehicleAIController.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include "carla/geom/Transform.h"
 #include "carla/road/element/Waypoint.h"
 #include "carla/road/element/RoadInfoSignal.h"
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "Game/CarlaStatics.h"
+#include <util/ue-header-guard-end.h>
 
 void USpeedLimitComponent::SetSpeedLimit(float Limit)
 {

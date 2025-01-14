@@ -6,7 +6,10 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "Components/SceneComponent.h"
+#include <util/ue-header-guard-end.h>
+
 #include "NoWorldOffsetSceneComponent.generated.h"
 
 UCLASS(Blueprintable, ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )

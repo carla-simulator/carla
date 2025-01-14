@@ -31,7 +31,6 @@
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Traffic/TrafficSignBase.h"
 
-
 #include <sstream>
 #include <unordered_map>
 

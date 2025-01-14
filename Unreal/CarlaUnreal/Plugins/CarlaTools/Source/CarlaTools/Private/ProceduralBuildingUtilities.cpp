@@ -2,8 +2,11 @@
 
 
 #include "ProceduralBuildingUtilities.h"
-
 #include "AssetRegistry/AssetRegistryModule.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "ProceduralMeshConversion.h"
+#include "MeshMerge/MeshMergingSettings.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/TextureRenderTarget2D.h"
@@ -17,6 +20,8 @@
 #include "UObject/Class.h"
 #include "UObject/UObjectGlobals.h"
 #include "UObject/SavePackage.h"
+#include "PhysicsEngine/BodySetup.h"
+#include <util/ue-header-guard-end.h>
 
 void AProceduralBuildingUtilities::GenerateImpostorTexture(const FVector& BuildingSize)
 {
@@ -116,7 +121,9 @@ void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& D
   UPackage* NewPackage = CreatePackage(*PackageName);
   check(NewPackage);
 
-  const IMeshMergeUtilities& MeshUtilities = FModuleManager::Get().LoadModuleChecked<IMeshMergeModule>("MeshMergeUtilities").GetUtilities();
+  auto& MeshUtilities = FModuleManager::Get().LoadModuleChecked<IMeshMergeModule>(
+    "MeshMergeUtilities").GetUtilities();
+  
   MeshUtilities.MergeComponentsToStaticMesh(
       Components,
       World,
@@ -130,15 +137,19 @@ void AProceduralBuildingUtilities::CookProceduralBuildingToMesh(const FString& D
       true);
 
   FSavePackageArgs SaveArgs;
-  SaveArgs.TopLevelFlags = EObjectFlags::RF_Public |
-                           EObjectFlags::RF_Standalone;
+  SaveArgs.TopLevelFlags =
+    EObjectFlags::RF_Public |
+    EObjectFlags::RF_Standalone;
   SaveArgs.Error = GError;
   SaveArgs.bForceByteSwapping = true;
   SaveArgs.bWarnOfLongFilename = true;
   SaveArgs.SaveFlags = SAVE_NoError;
 
-  UPackage::SavePackage(NewPackage, AssetsToSync[0],
-      *FileName, SaveArgs);
+  UPackage::SavePackage(
+    NewPackage,
+    AssetsToSync[0],
+    *FileName,
+    SaveArgs);
 
 }
 

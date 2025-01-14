@@ -10,8 +10,10 @@
 #include "Carla/Actor/ActorDescription.h"
 #include "Carla/Actor/ActorSpawnResult.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Containers/Array.h"
 #include "GameFramework/Actor.h"
+#include <util/ue-header-guard-end.h>
 
 #include "CarlaActorFactory.generated.h"
 

@@ -7,6 +7,7 @@
 #include "Carla/Util/RayTracer.h"
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/Game/Tagger.h"
 
 
 namespace crp = carla::rpc;

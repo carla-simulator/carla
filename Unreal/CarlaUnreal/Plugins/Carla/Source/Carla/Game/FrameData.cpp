@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "FrameData.h"
+
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Actor/CarlaActor.h"
 #include "Carla/Game/CarlaEngine.h"
@@ -14,12 +15,14 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Settings/CarlaSettings.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
-#include "VehicleAnimationInstance.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include "carla/rpc/VehicleLightState.h"
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 
+#include <util/ue-header-guard-begin.h>
+#include "VehicleAnimationInstance.h"
+#include <util/ue-header-guard-end.h>
 
 void FFrameData::GetFrameData(UCarlaEpisode *ThisEpisode, bool bAdditionalData, bool bIncludeActorsAgain)
 {

@@ -9,17 +9,18 @@
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Sensor/DataStream.h"
 #include "Carla/Util/RandomEngine.h"
-
 #include "Carla/Game/CarlaEngine.h"
 
-#include "GameFramework/Actor.h"
-
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/Logging.h>
 #include <carla/Buffer.h>
 #include <carla/BufferView.h>
 #include <carla/sensor/SensorRegistry.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "GameFramework/Actor.h"
+#include <util/ue-header-guard-end.h>
 
 #include "Sensor.generated.h"
 

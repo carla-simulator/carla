@@ -7,11 +7,13 @@
 #include "Carla/Sensor/PixelReader.h"
 #include "Carla.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Engine/TextureRenderTarget2D.h"
 #include "Async/Async.h"
 #include "HighResScreenshot.h"
-#include "Runtime/ImageWriteQueue/Public/ImageWriteQueue.h"
+#include "ImageWriteQueue.h"
 #include "RHIGPUReadback.h"
+#include <util/ue-header-guard-end.h>
 
 // =============================================================================
 // -- FPixelReader -------------------------------------------------------------
@@ -27,8 +29,8 @@ void FPixelReader::WritePixelsToBuffer(
   check(IsInRenderingThread());
 
   auto RenderResource =
-      static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.Resource);
-  FTexture2DRHIRef Texture = RenderResource->GetRenderTargetTexture();
+      static_cast<const FTextureRenderTarget2DResource *>(RenderTarget.GetResource());
+  auto Texture = RenderResource->GetRenderTargetTexture();
   if (!Texture)
   {
     return;
@@ -53,7 +55,7 @@ void FPixelReader::WritePixelsToBuffer(
     RHICmdList.ImmediateFlush(EImmediateFlushType::FlushRHIThread);
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("query result");
     uint64 OldAbsTime = 0;
-    RHICmdList.GetRenderQueryResult(Query, OldAbsTime, true);
+    RHIGetRenderQueryResult(Query, OldAbsTime, true);
   }
 
   AsyncTask(ENamedThreads::HighTaskPriority, [=, Readback=std::move(BackBufferReadback)]() mutable {

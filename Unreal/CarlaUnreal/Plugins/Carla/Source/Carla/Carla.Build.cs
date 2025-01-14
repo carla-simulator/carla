@@ -35,6 +35,10 @@ public class Carla :
   public Carla(ReadOnlyTargetRules Target) :
     base(Target)
   {
+    PrivatePCHHeaderFile = "Carla.h";
+    bEnableExceptions = true;
+    bUseRTTI = true;
+    
     void AddDynamicLibrary(string library)
     {
       PublicAdditionalLibraries.Add(library);
@@ -42,46 +46,54 @@ public class Carla :
       PublicDelayLoadDLLs.Add(library);
       Console.WriteLine("Dynamic Library Added: " + library);
     }
-
-    Console.WriteLine("PluginDirectory: " + PluginDirectory);
-    foreach (var option in File.ReadAllText(Path.Combine(PluginDirectory, "Options.def")).Split(';'))
+    
+    foreach (var Definition in File.ReadAllText(Path.Combine(PluginDirectory, "Definitions.def")).Split(';'))
     {
-      string optionTrimmed = option.Trim();
-      if (optionTrimmed.Equals("ROS2"))
+      var Trimmed = Definition.Trim();
+      if (Trimmed.Length != 0)
+        PrivateDefinitions.Add(Trimmed.Trim());
+    }
+
+    foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Includes.def")).Split(';'))
+    {
+      var Trimmed = Path.Trim();
+      if (Trimmed.Length != 0)
+        PublicIncludePaths.Add(Trimmed.Trim());
+    }
+
+    foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Libraries.def")).Split(';'))
+    {
+      var Trimmed = Path.Trim();
+      if (Trimmed.Length != 0)
+        PublicAdditionalLibraries.Add(Trimmed.Trim());
+    }
+
+    foreach (var Option in File.ReadAllText(Path.Combine(PluginDirectory, "Options.def")).Split(';'))
+    {
+      string Trimmed = Option.Trim();
+      switch (Trimmed)
       {
-        EnableRos2 = true;
-      }
-      else if (optionTrimmed.Equals("ROS2_DEMO"))
-      {
-        EnableRos2 = true;
-        EnableRos2Demo = true;
-      }
-      else if(optionTrimmed.Equals("OSM2ODR"))
-      {
-        EnableOSM2ODR = true;
+        case "ROS2":
+          EnableRos2 = true;
+          break;
+        case "ROS2_DEMO":
+          EnableRos2 = true;
+          EnableRos2Demo = true;
+          break;
+        case "OSM2ODR":
+          EnableOSM2ODR = true;
+          break;
+        default:
+          Console.WriteLine($"Unknown option \"{Trimmed}\".");
+          break;
       }
     }
 
-    bool IsWindows = Target.Platform == UnrealTargetPlatform.Win64;
-
-    PrivatePCHHeaderFile = "Carla.h";
-    bEnableExceptions = true;
-    
     Action<bool, string, string> TestOptionalFeature = (enable, name, definition) =>
     {
       if (enable)
         PrivateDefinitions.Add(definition);
       Console.WriteLine(string.Format("{0} is {1}.", name, enable ? "enabled" : "disabled"));
-    };
-    
-    Action<string> AddIncludeDirectories = (str) =>
-    {
-      if (str.Length == 0)
-        return;
-      var paths = str.Split(';');
-      if (paths.Length == 0)
-        return;
-      PublicIncludePaths.AddRange(paths);
     };
 
     TestOptionalFeature(EnableCarSim, "CarSim support", "WITH_CARSIM");
@@ -109,12 +121,6 @@ public class Carla :
       "ChaosVehicles"
     });
 
-    if (EnableCarSim)
-    {
-      PrivateDependencyModuleNames.Add("CarSim");
-      PrivateIncludePathModuleNames.Add("CarSim");
-    }
-
     PublicDependencyModuleNames.AddRange(new string[]
     {
       "Core",
@@ -126,6 +132,12 @@ public class Carla :
     });
 
     if (EnableCarSim)
+    {
+      PrivateDependencyModuleNames.Add("CarSim");
+      PrivateIncludePathModuleNames.Add("CarSim");
+    }
+
+    if (EnableCarSim)
       PublicDependencyModuleNames.Add("CarSim");
 
     if (Target.Type == TargetType.Editor)
@@ -133,18 +145,11 @@ public class Carla :
       
     PublicIncludePaths.Add(ModuleDirectory);
 
-    foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Includes.def")).Split(';'))
-      if (Path.Length != 0)
-        PublicIncludePaths.Add(Path.Trim());
-
-    foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Libraries.def")).Split(';'))
-      if (Path.Length != 0)
-        PublicAdditionalLibraries.Add(Path.Trim());
-
     if (EnableOSM2ODR)
     {
       // @TODO
       PublicAdditionalLibraries.Add("");
+      throw new NotImplementedException();
     }
 
     if (EnableChrono)
@@ -157,6 +162,7 @@ public class Carla :
         "ChronoModels_vehicle",
         "ChronoModels_robot",
       };
+      throw new NotImplementedException();
     }
 
     if (EnableRos2)
@@ -170,31 +176,10 @@ public class Carla :
       RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfoonathan_memory-0.7.3.so"));
       RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so"));
       RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so.1"));
-      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so.1.1.1"));
+      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so.1.1.0"));
       RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so"));
       RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so.2.11"));
       RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so.2.11.2"));
-    }
-
-    PublicDefinitions.AddRange(new string[]
-    {
-      "ASIO_NO_EXCEPTIONS",
-      "BOOST_NO_EXCEPTIONS",
-      "LIBCARLA_NO_EXCEPTIONS",
-      "PUGIXML_NO_EXCEPTIONS",
-      "BOOST_DISABLE_ABI_HEADERS",
-      "BOOST_NO_RTTI",
-      "BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY",
-    });
-
-    if (IsWindows)
-    {
-      PublicDefinitions.AddRange(new string[]
-      {
-        "NOMINMAX",
-        "VC_EXTRALEAN",
-        "WIN32_LEAN_AND_MEAN",
-      });
     }
   }
 }

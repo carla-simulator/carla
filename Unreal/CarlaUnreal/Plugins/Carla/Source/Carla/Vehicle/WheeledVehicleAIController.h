@@ -6,12 +6,14 @@
 
 #pragma once
 
-#include <queue>
+#include "Carla/Traffic/TrafficLightState.h"
+#include "Carla/Vehicle/VehicleControl.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "GameFramework/Controller.h"
+#include <util/ue-header-guard-end.h>
 
-#include "Traffic/TrafficLightState.h"
-#include "Vehicle/VehicleControl.h"
+#include <queue>
 
 #include "WheeledVehicleAIController.generated.h"
 

@@ -6,9 +6,11 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "Components/ActorComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "CoreMinimal.h"
+#include <util/ue-header-guard-end.h>
 
 #include "VehicleVelocityControl.generated.h"
 

@@ -8,16 +8,17 @@
 
 #include "PrepareAssetsForCookingCommandlet.h"
 #include "Util/RoadPainterWrapper.h"
-#include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
 #include "Carla/OpenDrive/OpenDrive.h"
-#include <carla/opendrive/OpenDriveParser.h>
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/geom/Math.h>
 #include <carla/rpc/String.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 
+#include <util/ue-header-guard-begin.h>
+#include "Engine/ObjectLibrary.h"
+#include <util/ue-header-guard-end.h>
 
 #include "LoadAssetMaterialsCommandlet.generated.h"
 

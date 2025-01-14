@@ -6,8 +6,12 @@
 
 #pragma once
 
-#include "UObject/NoExportTypes.h"
 #include "MapGen/CityMapMeshTag.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "UObject/NoExportTypes.h"
+#include <util/ue-header-guard-end.h>
+
 #include "RoadMap.generated.h"
 
 /// Road map intersection result. See URoadMap.

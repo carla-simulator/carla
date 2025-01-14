@@ -6,15 +6,6 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "GameFramework/GameModeBase.h"
-
-#include <compiler/disable-ue4-macros.h>
-#include <optional>
-#include <carla/rpc/Texture.h>
-#include <carla/rpc/MaterialParameter.h>
-#include <compiler/enable-ue4-macros.h>
-
 #include "Carla/Actor/CarlaActorFactory.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaGameInstance.h"
@@ -26,7 +17,19 @@
 #include "Carla/Traffic/TrafficLightManager.h"
 #include "Carla/Util/ObjectRegister.h"
 #include "Carla/Weather/Weather.h"
+
+#include <util/disable-ue4-macros.h>
+#include <carla/rpc/Texture.h>
+#include <carla/rpc/MaterialParameter.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "CoreMinimal.h"
+#include "GameFramework/GameModeBase.h"
 #include "MapGen/LargeMapManager.h"
+#include <util/ue-header-guard-end.h>
+
+#include <optional>
 
 #include "CarlaGameModeBase.generated.h"
 

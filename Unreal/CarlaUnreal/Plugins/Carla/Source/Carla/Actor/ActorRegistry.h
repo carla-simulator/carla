@@ -8,11 +8,9 @@
 
 #include "Carla/Actor/CarlaActor.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Containers/Map.h"
-
-#include <compiler/disable-ue4-macros.h>
-#include <carla/Iterator.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/ue-header-guard-end.h>
 
 #include <unordered_map>
 

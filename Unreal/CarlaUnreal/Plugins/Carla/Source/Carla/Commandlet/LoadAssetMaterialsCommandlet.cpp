@@ -5,7 +5,9 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "LoadAssetMaterialsCommandlet.h"
+#include "Carla/OpenDrive/OpenDrive.h"
 
+#include <util/ue-header-guard-begin.h>
 #if WITH_EDITOR
 #include "FileHelpers.h"
 #endif
@@ -13,13 +15,13 @@
 #include "Dom/JsonObject.h"
 #include "Serialization/JsonSerializer.h"
 #include "UObject/ConstructorHelpers.h"
-#include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
+#include "Kismet/GameplayStatics.h"
 #include "Engine/StreamableManager.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/Blueprint.h"
-#include "Carla/OpenDrive/OpenDrive.h"
 #include "Engine/DecalActor.h"
 #include "Components/DecalComponent.h"
+#include <util/ue-header-guard-end.h>
 
 ULoadAssetMaterialsCommandlet::ULoadAssetMaterialsCommandlet()
 {

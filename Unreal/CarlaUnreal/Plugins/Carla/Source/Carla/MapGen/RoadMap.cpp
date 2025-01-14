@@ -6,15 +6,15 @@
 
 #include "Carla/MapGen/RoadMap.h"
 #include "Carla.h"
-
 #include "Carla/Sensor/PixelReader.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Misc/FileHelper.h"
 #include "HighResScreenshot.h"
-
 #if WITH_EDITOR
 #include "DrawDebugHelpers.h"
 #endif // WITH_EDITOR
+#include <util/ue-header-guard-end.h>
 
 #include <type_traits>
 

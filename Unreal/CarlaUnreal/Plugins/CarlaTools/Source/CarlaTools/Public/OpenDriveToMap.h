@@ -2,17 +2,20 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "ProceduralMeshComponent.h"
 #include "Math/Vector2D.h"
 #include "EditorUtilityActor.h"
 #include "EditorUtilityObject.h"
+#include <util/ue-header-guard-end.h>
 
-#include <compiler/disable-ue4-macros.h>
-#include <optional>
+#include <util/disable-ue4-macros.h>
 #include <carla/road/Map.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
+#include <optional>
 
 #include "OpenDriveToMap.generated.h"
 

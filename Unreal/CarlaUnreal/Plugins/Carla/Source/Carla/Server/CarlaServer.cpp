@@ -8,7 +8,6 @@
 #include "Carla.h"
 #include "Carla/Server/CarlaServerResponse.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
-#include "EngineUtils.h"
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
 #include "Carla/Util/NavigationMesh.h"
@@ -16,7 +15,6 @@
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
@@ -25,8 +23,8 @@
 #include "Carla/Actor/ActorData.h"
 #include "CarlaServerResponse.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
-#include "Misc/FileHelper.h"
-#include <compiler/disable-ue4-macros.h>
+
+#include <util/disable-ue4-macros.h>
 #include <carla/Functional.h>
 #include <carla/multigpu/router.h>
 #include <carla/Version.h>
@@ -65,7 +63,13 @@
 #include <carla/streaming/detail/Types.h>
 #include <carla/rpc/Texture.h>
 #include <carla/rpc/MaterialParameter.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "EngineUtils.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "Misc/FileHelper.h"
+#include <util/ue-header-guard-end.h>
 
 #include <vector>
 #include <atomic>
@@ -691,7 +695,8 @@ void FCarlaServer::FPimpl::BindActions()
     auto *Weather = Episode->GetWeather();
     if (Weather == nullptr)
     {
-      RESPOND_ERROR("internal error: unable to find weather");
+      UE_LOG(LogCarla, Log, TEXT("internal error: unable to find weather:: weather is disabled"));
+      return cr::WeatherParameters();
     }
     return Weather->GetCurrentWeather();
   };
@@ -703,10 +708,21 @@ void FCarlaServer::FPimpl::BindActions()
     auto *Weather = Episode->GetWeather();
     if (Weather == nullptr)
     {
-      RESPOND_ERROR("internal error: unable to find weather");
+      RESPOND_ERROR("set_weather_parameters internal error: unable to find weather:: weather is disabled");
     }
     Weather->ApplyWeather(weather);
     return R<void>::Success();
+  };
+
+  BIND_SYNC(is_weather_enabled) << [this]() -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *Weather = Episode->GetWeather();
+    if (Weather == nullptr)
+    {
+      return false;
+    }
+    return true;
   };
 
   // ~~ Actor operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1349,7 +1365,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
-    return cr::VehiclePhysicsControl(PhysicsControl);
+    return cr::VehiclePhysicsControl::FromFVehiclePhysicsControl(PhysicsControl);
   };
 
   BIND_SYNC(get_vehicle_light_state) << [this](
@@ -2648,6 +2664,43 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       UEEndLocation = LargeMap->GlobalToLocalLocation(UEEndLocation);
     }
     return URayTracer::CastRay(StartLocation, EndLocation, World);
+  };
+
+  BIND_SYNC(get_actor_name) << [this](
+    cr::ActorId ActorID) -> R<std::string>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto CarlaActor = Episode->FindCarlaActor(ActorID);
+    if (CarlaActor == nullptr)
+      return std::string();
+    auto Actor = CarlaActor->GetActor();
+    if (Actor == nullptr)
+      return std::string();
+    auto Name = Actor->GetName();
+    if (Name.Len() == 0)
+      return std::string();
+    auto NameStr = StringCast<UTF8CHAR>(*Name, Name.Len());
+    return std::string((const char*)NameStr.Get(), NameStr.Length());
+  };
+
+  BIND_SYNC(get_actor_class_name) << [this](
+    cr::ActorId ActorID) -> R<std::string>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto CarlaActor = Episode->FindCarlaActor(ActorID);
+    if (CarlaActor == nullptr)
+      return std::string();
+    auto Actor = CarlaActor->GetActor();
+    if (Actor == nullptr)
+      return std::string();
+    auto Class = Actor->GetClass();
+    if (Class == nullptr)
+      return std::string();
+    auto Name = Class->GetName();
+    if (Name.Len() == 0)
+      return std::string();
+    auto NameStr = StringCast<UTF8CHAR>(*Name, Name.Len());
+    return std::string((const char*)NameStr.Get(), NameStr.Length());
   };
 
 }

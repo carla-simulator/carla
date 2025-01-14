@@ -17,15 +17,17 @@
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Walker/WalkerControl.h"
 #include "Carla/Walker/WalkerController.h"
+#include "CarlaReplayerHelper.h"
+
+#include <util/disable-ue4-macros.h>
+#include "carla/rpc/VehicleLightState.h"
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
 #include "Components/BoxComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "VehicleAnimationInstance.h"
-
-#include <compiler/disable-ue4-macros.h>
-#include "carla/rpc/VehicleLightState.h"
-#include <compiler/enable-ue4-macros.h>
-
-#include "CarlaReplayerHelper.h"
+#include <util/ue-header-guard-end.h>
 
 #include <ctime>
 #include <sstream>
@@ -118,7 +120,7 @@ void ACarlaRecorder::Ticking(float DeltaSeconds)
           AddActorPosition(View);
           AddVehicleAnimation(View);
           AddVehicleLight(View);
-          AddVehicleWheelsAnimation(View);
+          //AddVehicleWheelsAnimation(View);
           if (bAdditionalData)
           {
             AddActorKinematics(View);
@@ -308,11 +310,15 @@ void ACarlaRecorder::AddVehicleLight(FCarlaActor *CarlaActor)
 
 void ACarlaRecorder::AddVehicleDoor(const ACarlaWheeledVehicle &Vehicle, const EVehicleDoor SDoors, bool bIsOpen)
 {
-  CarlaRecorderDoorVehicle DoorVehicle;
-  DoorVehicle.DatabaseId = Episode->GetActorRegistry().FindCarlaActor(&Vehicle)->GetActorId();
-  DoorVehicle.Doors = static_cast<CarlaRecorderDoorVehicle::VehicleDoorType>(SDoors);
-  DoorVehicle.bIsOpen = bIsOpen;
-  AddDoorVehicle(DoorVehicle);
+  const FCarlaActor* LocalCarlaActor = Episode->GetActorRegistry().FindCarlaActor(&Vehicle);
+  if (LocalCarlaActor != nullptr) 
+  {
+    CarlaRecorderDoorVehicle DoorVehicle;
+    DoorVehicle.DatabaseId = LocalCarlaActor->GetActorId();
+    DoorVehicle.Doors = static_cast<CarlaRecorderDoorVehicle::VehicleDoorType>(SDoors);
+    DoorVehicle.bIsOpen = bIsOpen;
+    AddDoorVehicle(DoorVehicle);
+  }
 }
 
 void ACarlaRecorder::AddActorKinematics(FCarlaActor *CarlaActor)

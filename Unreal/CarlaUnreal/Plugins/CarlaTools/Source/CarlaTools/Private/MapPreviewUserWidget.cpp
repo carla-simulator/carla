@@ -3,23 +3,14 @@
 
 #include "MapPreviewUserWidget.h"
 
-#if PLATFORM_WINDOWS
-  #include "Windows/AllowWindowsPlatformTypes.h"
-#endif
-
+#include <util/ue-header-guard-begin.h>
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "GenericPlatform/GenericPlatformFile.h"
-
 #include "Sockets.h"
 #include "Interfaces/IPv4/IPv4Address.h"
 #include "Common/TcpSocketBuilder.h"
 #include "SocketSubsystem.h"
 #include "SocketTypes.h"
-
-#if PLATFORM_WINDOWS
-  #include "Windows/HideWindowsPlatformTypes.h"
-#endif
-
 #include "Engine/Texture2D.h"
 #include "Containers/ResourceArray.h"
 #include "Rendering/Texture2DResource.h"
@@ -29,7 +20,7 @@
 #include "Misc/Timespan.h"
 #include <Containers/UnrealString.h>
 #include "Misc/Paths.h"
-
+#include <util/ue-header-guard-end.h>
 
 namespace Asio = boost::asio;
 using AsioStreamBuf = boost::asio::streambuf;

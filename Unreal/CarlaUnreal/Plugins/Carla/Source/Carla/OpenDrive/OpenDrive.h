@@ -8,7 +8,9 @@
 
 #include "Carla/OpenDrive/OpenDriveMap.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Kismet/BlueprintFunctionLibrary.h"
+#include <util/ue-header-guard-end.h>
 
 #include "OpenDrive.generated.h"
 

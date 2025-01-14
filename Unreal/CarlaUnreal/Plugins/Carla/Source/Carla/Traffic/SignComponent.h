@@ -5,12 +5,16 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
+#include "Carla/OpenDrive/OpenDrive.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "Components/SceneComponent.h"
 #include "Components/BoxComponent.h"
-#include "Carla/OpenDrive/OpenDrive.h"
+#include <util/ue-header-guard-end.h>
+
 #include <utility>
+
 #include "SignComponent.generated.h"
 
 namespace carla

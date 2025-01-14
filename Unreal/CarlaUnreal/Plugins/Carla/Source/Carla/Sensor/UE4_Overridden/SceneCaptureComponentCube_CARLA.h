@@ -5,8 +5,10 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "Components/SceneCaptureComponentCube.h"
+#include <util/ue-header-guard-end.h>
 
 #include "SceneCaptureComponentCube_CARLA.generated.h"
 

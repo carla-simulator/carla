@@ -7,12 +7,6 @@
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
-
-#include <compiler/disable-ue4-macros.h>
-#include <carla/opendrive/OpenDriveParser.h>
-#include <carla/rpc/String.h>
-#include <compiler/enable-ue4-macros.h>
-
 #include "Carla/Sensor/Sensor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Util/RandomEngine.h"
@@ -20,7 +14,14 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#include "Carla/Game/Tagger.h"
 
+#include <util/disable-ue4-macros.h>
+#include <carla/opendrive/OpenDriveParser.h>
+#include <carla/rpc/String.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
 #include "Engine/StaticMeshActor.h"
 #include "EngineUtils.h"
 #include "GameFramework/SpectatorPawn.h"
@@ -30,25 +31,24 @@
 #include "Materials/MaterialParameterCollectionInstance.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include <util/ue-header-guard-end.h>
+
+constexpr TCHAR DefaultRecastBuilderPath[] = TEXT(RECASTBUILDER_PATH);
 
 static FString BuildRecastBuilderFile()
 {
-    // Define filename with extension depending on if we are on Windows or not
+    auto Path = FPaths::RootDir();
 #if PLATFORM_WINDOWS
-    const FString RecastToolName = "RecastBuilder.exe";
+    Path += TEXT("Tools/RecastBuilder.exe");
 #else
-    const FString RecastToolName = "RecastBuilder";
-#endif // PLATFORM_WINDOWS
-
-    // Define path depending on the UE4 build type (Package or Editor)
-#if UE_BUILD_SHIPPING
-    const FString AbsoluteRecastBuilderPath = FPaths::ConvertRelativePathToFull(
-        FPaths::RootDir() + "Tools/" + RecastToolName);
-#else
-    const FString AbsoluteRecastBuilderPath = FPaths::ConvertRelativePathToFull(
-        FPaths::ProjectDir() + "../../Build/_deps/recastnavigation-build/RecastBuilder/" + RecastToolName);
+    Path += TEXT("Tools/RecastBuilder");
 #endif
-    return AbsoluteRecastBuilderPath;
+    Path = FPaths::ConvertRelativePathToFull(Path);
+
+    if (FPaths::FileExists(Path))
+        return Path;
+    else
+        return DefaultRecastBuilderPath;
 }
 
 static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)

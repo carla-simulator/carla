@@ -8,7 +8,9 @@
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "Components/SceneCaptureComponent2D.h"
+#include <util/ue-header-guard-end.h>
 
 FActorDefinition AInstanceSegmentationCamera::GetSensorDefinition()
 {

@@ -2,8 +2,11 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "EditorUtilityActor.h"
+#include <util/ue-header-guard-end.h>
+
 #include "BlueprintParentClassFixer.generated.h"
 
 /**

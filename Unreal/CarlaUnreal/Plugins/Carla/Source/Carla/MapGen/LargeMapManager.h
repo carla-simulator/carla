@@ -4,16 +4,16 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
 #include "Actor/CarlaActor.h"
-#include "GameFramework/Actor.h"
-
-#include "Engine/LevelStreamingDynamic.h"
-
 #include "Math/DVector.h"
 
-#include "LargeMapManager.generated.h"
+#include <util/ue-header-guard-begin.h>
+#include "CoreMinimal.h"
+#include "GameFramework/Actor.h"
+#include "Engine/LevelStreamingDynamic.h"
+#include <util/ue-header-guard-end.h>
 
+#include "LargeMapManager.generated.h"
 
 // TODO: Cache CarlaEpisode
 

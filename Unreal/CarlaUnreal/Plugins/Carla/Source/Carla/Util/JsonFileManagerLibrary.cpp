@@ -5,12 +5,15 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla/Util/JsonFileManagerLibrary.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "JsonObjectConverter.h"
 #include "Misc/FileHelper.h"
 #include "HAL/PlatformFileManager.h"
 #include "Serialization/JsonSerializer.h"
 #include "Dom/JsonObject.h"
 #include "Kismet/KismetStringLibrary.h"
+#include <util/ue-header-guard-end.h>
 
 DEFINE_LOG_CATEGORY_STATIC(LogJsonFileManagerLibrary, Verbose, All);
 

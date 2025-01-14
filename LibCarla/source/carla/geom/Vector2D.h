@@ -14,8 +14,9 @@
 namespace carla {
 namespace geom {
 
-  class Vector2D {
-  public:
+  struct Vector2D {
+
+    static constexpr auto Dim = 2;
 
     // =========================================================================
     // -- Public data members --------------------------------------------------

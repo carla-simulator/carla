@@ -111,6 +111,8 @@ void export_actor() {
       .def("get_velocity", &cc::Actor::GetVelocity)
       .def("get_angular_velocity", &cc::Actor::GetAngularVelocity)
       .def("get_acceleration", &cc::Actor::GetAcceleration)
+      .def("get_actor_name", &cc::Actor::GetActorName)
+      .def("get_actor_class_name", &cc::Actor::GetActorClassName)
       .def("set_location", &cc::Actor::SetLocation, (arg("location")))
       .def("set_transform", &cc::Actor::SetTransform, (arg("transform")))
       .def("set_target_velocity", &cc::Actor::SetTargetVelocity, (arg("velocity")))

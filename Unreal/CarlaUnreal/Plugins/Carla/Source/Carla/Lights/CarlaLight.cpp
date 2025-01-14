@@ -33,7 +33,6 @@ void UCarlaLight::RegisterLight()
     UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
     CarlaLightSubsystem->RegisterLight(this);
   }
-  RegisterLightWithWeather();
   flags |= ECarlaLightFlags::Registered;
 }
 

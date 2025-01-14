@@ -21,6 +21,8 @@ public class CarlaUnreal : ModuleRules
     public CarlaUnreal(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PrivatePCHHeaderFile = "CarlaUnreal.h";
+        bEnableExceptions = true;
+        bUseRTTI = true;
 
 		PublicDependencyModuleNames.AddRange(new string[]
 		{

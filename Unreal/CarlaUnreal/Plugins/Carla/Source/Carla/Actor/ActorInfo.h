@@ -7,16 +7,11 @@
 #pragma once
 
 #include "Carla/Actor/ActorDescription.h"
-#include "Carla/Game/Tagger.h"
 
-#include "Math/DVector.h"
-
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ObjectLabel.h>
-#include <compiler/enable-ue4-macros.h>
-
-namespace crp = carla::rpc;
+#include <util/enable-ue4-macros.h>
 
 /// A view over an actor and its properties.
 struct FActorInfo
@@ -25,13 +20,13 @@ public:
 
   FActorDescription Description;
 
-  TSet<crp::CityObjectLabel> SemanticTags;
+  TSet<carla::rpc::CityObjectLabel> SemanticTags;
 
   FBoundingBox BoundingBox;
 
-  crp::Actor SerializedData;
+  carla::rpc::Actor SerializedData;
 
   /// @todo To be used solely by the FWorldObserver.
-  mutable FVector Velocity = {0.0f, 0.0f, 0.0f};
+  mutable FVector Velocity = FVector::ZeroVector;
 
 };

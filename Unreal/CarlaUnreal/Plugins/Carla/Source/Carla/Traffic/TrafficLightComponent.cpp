@@ -13,11 +13,11 @@
 #include "TrafficLightManager.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/MapGen/LargeMapManager.h"
-#include "carla/road/element/RoadInfoSignal.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/road/element/RoadInfoSignal.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
 
 UTrafficLightComponent::UTrafficLightComponent()
   : Super()

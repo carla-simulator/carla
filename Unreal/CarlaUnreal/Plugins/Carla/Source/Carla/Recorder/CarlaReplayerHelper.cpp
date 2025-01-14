@@ -24,13 +24,17 @@
 #include "Carla/Vehicle/WheeledVehicleAIController.h"
 #include "Carla/Walker/WalkerControl.h"
 #include "Carla/Walker/WalkerController.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Components/BoxComponent.h"
 #include "Engine/StaticMeshActor.h"
 #include "VehicleAnimationInstance.h"
+#include <util/ue-header-guard-end.h>
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/rpc/VehicleLightState.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
 
 
 #include "EngineUtils.h"

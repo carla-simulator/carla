@@ -1,10 +1,11 @@
-site_name: CARLA Simulator
+site_name: CARLA Simulator UE5
 repo_url: https://github.com/carla-simulator/carla
 docs_dir: Docs
 edit_uri: 'edit/master/Docs/'
-theme: readthedocs
 extra_css: [extra.css]
 extra_javascript: [extra.js]
+theme: readthedocs
+  
 
 nav:
 - Home: 'index.md'
@@ -15,7 +16,7 @@ nav:
   - 'Building CARLA' : 'build_carla.md'
 
 - Next steps:
-  - 'Content authoring - maps': 'tuto_content_authoring_maps.md'  
+  #- 'Content authoring - maps': 'tuto_content_authoring_maps.md'  
   - 'Content authoring - vehicles': 'tuto_content_authoring_vehicles.md'  
 
 - CARLA topics:
@@ -24,8 +25,6 @@ nav:
   - 'Maps': 'core_map.md'
   - 'Sensors and data': 'core_sensors.md'
   - 'Traffic' : 'ts_traffic_simulation_overview.md'
-  - 'Development': 'development_tutorials.md'
-  - 'Custom assets': 'custom_assets_tutorials.md'
 
 - Resources:
   - 'Python API': 'python_api.md'
@@ -33,22 +32,15 @@ nav:
   - 'C++ reference': 'ref_cpp.md'
   - 'Blueprint library': 'bp_library.md'  
   - 'Tutorials': 'tutorials.md'
-  - 'Extended documentation': 'ext_docs.md'
+  #- 'Extended documentation': 'ext_docs.md'
 
 - CARLA Ecosystem:
-  - 'ANSYS': 'ecosys_ansys.md'
-  - 'AWS': 'tuto_G_rllib_integration.md'
-  - 'CarSIM': 'tuto_G_carsim_integration.md'
-  - 'Chrono': 'tuto_G_chrono.md'
   - 'MathWorks': 'large_map_roadrunner.md'
-  - 'NVIDIA SimReady': 'ecosys_simready.md'
-  - 'OpenDRIVE': 'adv_opendrive.md'
-  - 'PTV Vissim': 'adv_ptv.md'
-  - 'RSS': 'adv_rss.md'
-  - 'ROS': https://carla.readthedocs.io/projects/ros-bridge/en/latest/
+  # - 'ASAM OpenDRIVE': 'adv_opendrive.md'
+  - 'ROS2': 'ros2_native.md'
   - 'Scenic': 'tuto_G_scenic.md'
-  - 'SUMO': 'adv_sumo.md'
   - 'SYNKROTRON': 'ecosys_synkrotron.md'
+  - 'InvertedAI': 'inverted_ai.md'
 
 - Contributing:
   - 'Guidelines': 'cont_contribution_guidelines.md' 
@@ -58,4 +50,14 @@ nav:
  
 markdown_extensions:
   - admonition 
+
+theme:
+  name: 'readthedocs'
+  logo: img/logos/carla_ue5_logo.png
+  palette:
+        # Dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
  

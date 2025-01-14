@@ -6,11 +6,12 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
-
 #include "Components/SplineComponent.h"
 #include "EditorUtilityWidget.h"
 #include "Math/Vector.h"
+#include <util/ue-header-guard-end.h>
 
 #include "ProceduralWaterManager.generated.h"
 

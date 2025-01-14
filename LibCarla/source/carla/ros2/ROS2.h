@@ -22,7 +22,7 @@ class AActor;
 namespace carla {
   namespace geom {
     class GeoLocation;
-    class Vector3D;
+    struct Vector3D;
   }
   namespace sensor {
     namespace data {

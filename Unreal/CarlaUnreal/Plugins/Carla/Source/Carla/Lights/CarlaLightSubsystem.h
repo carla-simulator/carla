@@ -6,22 +6,28 @@
 
 #pragma once
 
-#include <vector>
-
-#include <compiler/disable-ue4-macros.h>
-#include <carla/rpc/LightState.h>
-#include <compiler/enable-ue4-macros.h>
-
 #include "Carla.h"
-#include "CoreMinimal.h"
 #include "CarlaLight.h"
+
+#include <util/disable-ue4-macros.h>
+#include <carla/rpc/LightState.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "CoreMinimal.h"
 #include "Subsystems/WorldSubsystem.h"
+#include <util/ue-header-guard-end.h>
+
+#include <vector>
 
 #include "CarlaLightSubsystem.generated.h"
 
 /**
  *
  */
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDayTimeChanged, bool, bIsDay);
+
 UCLASS(Blueprintable, BlueprintType)
 class CARLA_API UCarlaLightSubsystem : public UWorldSubsystem
 {
@@ -63,6 +69,9 @@ public:
   }
 
   void SetDayNightCycle(const bool active);
+
+  UPROPERTY(BlueprintCallable, BlueprintAssignable, Category = "DayTimeChangeEvent")
+  FDayTimeChanged DayTimeChangeEvent;
 
 private:
 

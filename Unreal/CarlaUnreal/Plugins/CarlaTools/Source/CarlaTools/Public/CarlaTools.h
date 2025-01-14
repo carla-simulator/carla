@@ -2,9 +2,11 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 #include "EngineMinimal.h"
+#include <util/ue-header-guard-end.h>
 
 
 DECLARE_LOG_CATEGORY_EXTERN(LogCarlaTools, Log, All);

@@ -6,11 +6,10 @@
 #pragma once
 
 #include "Carla/Util/BoundingBox.h"
-#include <compiler/disable-ue4-macros.h>
-#include <carla/rpc/ObjectLabel.h>
-#include <compiler/enable-ue4-macros.h>
 
-#include "BoundingBox.h"
+#include <util/disable-ue4-macros.h>
+#include <carla/rpc/ObjectLabel.h>
+#include <util/enable-ue4-macros.h>
 
 #include "EnvironmentObject.generated.h"
 

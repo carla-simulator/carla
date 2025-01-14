@@ -12,14 +12,15 @@
 #include "Carla/Sensor/ImageUtil.h"
 #include "Carla/Sensor/PostProcessConfig.h"
 
-#include "Async/Async.h"
+#include <type_traits>
 
+#include <util/ue-header-guard-begin.h>
+#include "Async/Async.h"
 #if __has_include("GBufferView.h")
 #define CARLA_HAS_GBUFFER_API
 #include "GBufferView.h"
 #endif
-
-#include <type_traits>
+#include <util/ue-header-guard-end.h>
 
 #include "SceneCaptureSensor.generated.h"
 

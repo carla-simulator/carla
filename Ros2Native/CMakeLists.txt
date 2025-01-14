@@ -1,28 +1,23 @@
-cmake_minimum_required (VERSION 3.28.0)
+cmake_minimum_required (
+  VERSION
+  ${CARLA_CMAKE_MINIMUM_REQUIRED_VERSION}
+)
 
 project (carla-ros2-native-project)
 
 include (ExternalProject)
 
 set (PROJECT_INSTALL_PATH ${CMAKE_CURRENT_BINARY_DIR}/install)
-set (PROJECT_CMAKE_FLAGS
-    -DCMAKE_CXX_COMPILER=${GXX_COMPILER}
-    -DCMAKE_C_COMPILER=${GCC_COMPILER}
-    -DCMAKE_BUILD_TYPE=Release
-    -DCMAKE_CXX_FLAGS_RELEASE=-D_GLIBCXX_USE_CXX11_ABI=0
-    -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
-)
 
 ExternalProject_add (
   foonathan_memory
-  URL https://github.com/eProsima/foonathan_memory_vendor/archive/refs/heads/master.zip
-  CMAKE_ARGS ${PROJECT_CMAKE_FLAGS} -DBUILD_SHARED_LIBS=ON -DFOONATHAN_MEMORY_FORCE_VENDORED_BUILD=ON
-)
-
-ExternalProject_add (
-  fastcdr
-  URL https://github.com/eProsima/Fast-CDR/archive/refs/heads/1.1.x.zip
-  CMAKE_ARGS ${PROJECT_CMAKE_FLAGS}
+  URL https://github.com/eProsima/foonathan_memory_vendor/archive/refs/heads/${CARLA_FOONATHAN_MEMORY_VENDOR_TAG}.zip
+  CMAKE_ARGS
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
+    -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    -DBUILD_SHARED_LIBS=ON
+    -DFOONATHAN_MEMORY_FORCE_VENDORED_BUILD=ON
 )
 
 # Note: We are using GIT_REPOSITORY instead URL for fastdds because fastdss contains submodules
@@ -30,16 +25,34 @@ ExternalProject_add (
 ExternalProject_add (
   fastdds
   GIT_REPOSITORY https://github.com/eProsima/Fast-DDS.git
-  GIT_TAG 2.11.2
-  CMAKE_ARGS ${PROJECT_CMAKE_FLAGS} -DTHIRDPARTY_Asio=FORCE -DTHIRDPARTY_TinyXML2=FORCE -DCOMPILE_TOOLS=OFF
-  DEPENDS foonathan_memory fastcdr
+  GIT_TAG ${CARLA_FASTDDS_TAG}
+  CMAKE_ARGS
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
+    -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    -DBUILD_SHARED_LIBS=ON
+    -DBUILD_TESTING=OFF
+    -DCOMPILE_EXAMPLES=OFF
+    -DCOMPILE_TOOLS=OFF
+    -DTHIRDPARTY_Asio=FORCE
+    -DTHIRDPARTY_fastcdr=FORCE
+    -DTHIRDPARTY_TinyXML2=FORCE
+    -DSQLITE3_SUPPORT=OFF
+    -DOPENSSL_FOUND:BOOL=ON
+    -DOPENSSL_INCLUDE_DIR:FILEPATH=${UE_OPENSSL_INCLUDE}
+    -DOPENSSL_SSL_LIBRARY:FILEPATH=${UE_OPENSSL_LIBS}/libssl.a
+    -DOPENSSL_CRYPTO_LIBRARY:FILEPATH=${UE_OPENSSL_LIBS}/libcrypto.a
+  DEPENDS foonathan_memory
 )
 
 ExternalProject_Add (
   carla-ros2-native-lib
   DEPENDS fastdds
   SOURCE_DIR ${PROJECT_SOURCE_DIR}/LibCarlaRos2Native
-  CMAKE_ARGS ${PROJECT_CMAKE_FLAGS}
+  CMAKE_ARGS
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
+    -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
 )
 
 set (CARLA_PLUGIN_BINARY_PATH ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Plugins/Carla/Binaries/Linux)

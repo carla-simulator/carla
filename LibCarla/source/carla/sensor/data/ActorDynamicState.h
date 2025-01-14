@@ -134,7 +134,6 @@ namespace detail {
     geom::Vector3D angular_velocity;
 
     geom::Vector3D acceleration;
-
     union TypeDependentState {
       detail::TrafficLightData traffic_light_data;
       detail::TrafficSignData traffic_sign_data;

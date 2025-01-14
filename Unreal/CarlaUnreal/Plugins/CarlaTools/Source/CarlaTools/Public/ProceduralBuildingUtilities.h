@@ -2,8 +2,11 @@
 
 #pragma once
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "EditorUtilityActor.h"
+#include <util/ue-header-guard-end.h>
+
 #include "ProceduralBuildingUtilities.generated.h"
 
 class USceneCaptureComponent2D;

@@ -7,12 +7,15 @@
 #include "Carla/Walker/WalkerController.h"
 #include "Carla.h"
 #include "Carla/Walker/WalkerAnim.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "Components/PoseableMeshComponent.h"
 #include "Components/PrimitiveComponent.h"
 #include "Containers/Map.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/Pawn.h"
+#include <util/ue-header-guard-end.h>
 
 AWalkerController::AWalkerController(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)

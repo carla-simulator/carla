@@ -8,12 +8,15 @@
 
 #include "Carla/OpenDrive/OpenDriveActor.h"
 #include "Commandlets/Commandlet.h"
-#include "Runtime/Engine/Classes/Engine/ObjectLibrary.h"
+#include "Engine/ObjectLibrary.h"
 
+#include <util/ue-header-guard-begin.h>
 #if WITH_EDITORONLY_DATA
 #include "AssetRegistry/AssetRegistryModule.h"
-#include "Developer/AssetTools/Public/AssetToolsModule.h"
+#include "AssetToolsModule.h"
 #endif // WITH_EDITORONLY_DATA
+#include <util/ue-header-guard-end.h>
+
 #include "MoveAssetsCommandlet.generated.h"
 
 /// Struct containing Package Params, used for storing the parsed arguments when

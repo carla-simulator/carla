@@ -2,9 +2,13 @@
 
 #pragma once
 
+#include "Carla/MapGen/LargeMapManager.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Carla/MapGen/LargeMapManager.h"
+#include <util/ue-header-guard-end.h>
+
 #include "SoilTypeManager.generated.h"
 
 UENUM(BlueprintType)

@@ -9,12 +9,15 @@
 #include "Carla/Actor/CarlaActor.h"
 #include "Carla/Sensor/DataStream.h"
 
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
+#include <util/ue-header-guard-end.h>
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/multigpu/router.h>
 #include <carla/streaming/Server.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
 
 class UCarlaEpisode;
 

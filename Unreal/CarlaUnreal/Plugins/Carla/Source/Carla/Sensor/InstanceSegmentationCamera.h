@@ -7,7 +7,6 @@
 #pragma once
 
 #include "Carla/Sensor/ShaderBasedSensor.h"
-
 #include "Carla/Actor/ActorDefinition.h"
 
 #include "InstanceSegmentationCamera.generated.h"

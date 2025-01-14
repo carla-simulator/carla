@@ -2,9 +2,10 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-
 #include "Carla/MapGen/SoilTypeManager.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "CoreMinimal.h"
 #include "Containers/Array.h"
 #include "Containers/EnumAsByte.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -12,6 +13,7 @@
 #include "ProceduralFoliageSpawner.h"
 #include "Templates/UnrealTypeTraits.h"
 #include "UObject/NoExportTypes.h"
+#include <util/ue-header-guard-end.h>
 
 #include "RegionOfInterest.generated.h"
 

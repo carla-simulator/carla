@@ -6,9 +6,13 @@
 
 #pragma once
 
+#include "Sensor/Radar.h"
+
+#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include "Sensor/Radar.h"
+#include <util/ue-header-guard-end.h>
+
 #include "JsonFileManagerLibrary.generated.h"
 
 class FJsonValue;

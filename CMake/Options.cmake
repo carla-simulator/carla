@@ -89,25 +89,19 @@ carla_option (
 carla_option (
   ENABLE_RTTI
   "Enable C++ RTTI."
-  OFF
+  ON
 )
 
 carla_option (
   ENABLE_EXCEPTIONS
   "Enable C++ Exceptions."
-  OFF
+  ON
 )
 
 carla_option (
   PREFER_CLONE
   "Whether to clone dependencies instead of directly downloading a compressed archive."
   OFF
-)
-
-carla_option (
-  BUILD_PYTHON_API_WHEEL_PACKAGE
-  "Whether to build the CARLA python API wheel package."
-  ON
 )
 
 carla_option (
@@ -144,6 +138,18 @@ carla_string_option (
   GCC_COMPILER
   "gcc compiler used by some CARLA extensions."
   /usr/bin/gcc-12
+)
+
+carla_option (
+  VERBOSE_CONFIGURE
+  "Whether to emit extra messages during CMake configure."
+  OFF
+)
+
+carla_option (
+  ENABLE_STREETMAP
+  "Whether to download the Streetmap UE plugin."
+  OFF
 )
 
 
@@ -198,18 +204,14 @@ carla_string_option (
   "${CARLA_UNREAL_RHI_DEFAULT}"
 )
 
-if (${BUILD_CARLA_UNREAL})
-if (${CARLA_HAS_UNREAL_ENGINE_PATH})
-  carla_message (
-    "Carla UE project successfully added to build. (UE path: ${CARLA_UNREAL_ENGINE_PATH})"
-  )
-else ()
-  carla_error (
-    "Could not add UE project to build since the carla_option CARLA_UNREAL_ENGINE_PATH "
-    "is not set to a valid path (\"${CARLA_UNREAL_ENGINE_PATH}\")."
-    "Please set it to point to the root path of your CARLA Unreal Engine installation."
-  )
-endif ()
+if (BUILD_CARLA_UNREAL)
+  if (NOT ${CARLA_HAS_UNREAL_ENGINE_PATH})
+    carla_error (
+      "Could not add UE project to build since the carla_option CARLA_UNREAL_ENGINE_PATH "
+      "is not set to a valid path (\"${CARLA_UNREAL_ENGINE_PATH}\")."
+      "Please set it to point to the root path of your CARLA Unreal Engine installation."
+    )
+  endif ()
 endif ()
 
 carla_string_option (
@@ -220,8 +222,28 @@ carla_string_option (
 
 carla_string_option (
   CARLA_UNREAL_BUILD_TYPE
-  "Carla Unreal-style build type (Debug/Development/Shipping)."
+  "Set the default CARLA Unreal Editor build configuration."
   "Development"
+)
+
+# Docs for UE5 build configurations:
+# https://docs.unrealengine.com/4.27/en-US/ProductionPipelines/DevelopmentSetup/BuildConfigurations/
+
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  set (CARLA_UNREAL_PACKAGE_BUILD_TYPE_DEFAULT Debug)
+elseif (${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
+  set (CARLA_UNREAL_PACKAGE_BUILD_TYPE_DEFAULT Development)
+elseif (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+  set (CARLA_UNREAL_PACKAGE_BUILD_TYPE_DEFAULT Shipping)
+else ()
+  carla_warning("Unexpected CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\". Unreal packages will default to Development. Manually override DEFAULT_PACKAGE_CONFIGURATION if this behavior is not desired.")
+  set (CARLA_UNREAL_PACKAGE_BUILD_TYPE_DEFAULT Development)
+endif ()
+
+carla_string_option (
+  CARLA_UNREAL_PACKAGE_BUILD_TYPE
+  "Set the default CARLA package build configuration."
+  "${CARLA_UNREAL_PACKAGE_BUILD_TYPE_DEFAULT}"
 )
 
 
@@ -380,7 +402,6 @@ carla_string_option (
   ${CARLA_LIBOSMSCOUT_VERSION}
 )
 
-
 # ==== STREETMAP ====
 
 carla_string_option (
@@ -395,16 +416,44 @@ carla_string_option (
   ${CARLA_STREETMAP_VERSION}
 )
 
-# ==== Robotec GPU LIDAR ====
+# ==== FASTDDS ====
 
 carla_string_option (
-  CARLA_RGL_VERSION
-  "Target RGL Plugin version."
-  "marcel/dev"
+  CARLA_FASTDDS_VERSION
+  "Target Fast-DDS version."
+  2.11.2
 )
 
 carla_string_option (
-  CARLA_RGL_TAG
-  "Target RGL Plugin git tag."
-  "${CARLA_RGL_VERSION}"
+  CARLA_FASTDDS_TAG
+  "Target Fast-DDS git tag."
+  ${CARLA_FASTDDS_VERSION}
+)
+
+# ==== FASTCDR ====
+
+carla_string_option (
+  CARLA_FASTCDR_VERSION
+  "Target Fast-CDR version."
+  1.1.x
+)
+
+carla_string_option (
+  CARLA_FASTCDR_TAG
+  "Target Fast-CDR git tag."
+  ${CARLA_FASTCDR_VERSION}
+)
+
+# ==== FOONATHAN MEMORY VENDOR ====
+
+carla_string_option (
+  CARLA_FOONATHAN_MEMORY_VENDOR_VERSION
+  "Target foonathan_memory_vendor version."
+  master
+)
+
+carla_string_option (
+  CARLA_FOONATHAN_MEMORY_VENDOR_TAG
+  "Target foonathan_memory_vendor git tag."
+  ${CARLA_FOONATHAN_MEMORY_VENDOR_VERSION}
 )

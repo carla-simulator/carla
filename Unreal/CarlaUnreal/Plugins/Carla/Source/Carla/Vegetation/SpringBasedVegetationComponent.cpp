@@ -4,22 +4,27 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "SpringBasedVegetationComponent.h"
+#include "Carla/Vegetation/SpringBasedVegetationComponent.h"
 #include "Carla/Walker/WalkerAnim.h"
+
+#include "BaseVegetationActor.h"
+#include "Vehicle/CarlaWheeledVehicle.h"
+
+#include <util/disable-ue4-macros.h>
+#include <carla/rpc/String.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
 #include "Math/Matrix.h"
 #include "Components/CapsuleComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "BaseVegetationActor.h"
-#include "Vehicle/CarlaWheeledVehicle.h"
+#include <util/ue-header-guard-end.h>
+
 #include <unordered_set>
 #include <vector>
 #include <cmath>
 #include <sstream>
-
-#include <compiler/disable-ue4-macros.h>
-#include <carla/rpc/String.h>
-#include <compiler/enable-ue4-macros.h>
 
 // disable warnings for eigen 3.1.0
 #if defined(__clang__)

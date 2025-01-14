@@ -6,16 +6,18 @@
 
 #pragma once
 
-#include "Engine/GameInstance.h"
-
 #include "Carla/Game/CarlaEngine.h"
 #include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Server/CarlaServer.h"
 
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #include <carla/rpc/MapLayer.h>
 #include <carla/rpc/OpendriveGenerationParameters.h>
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
+
+#include <util/ue-header-guard-begin.h>
+#include "Engine/GameInstance.h"
+#include <util/ue-header-guard-end.h>
 
 #include "CarlaGameInstance.generated.h"
 

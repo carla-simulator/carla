@@ -1,9 +1,7 @@
 #pragma once
 
 #include "Carla/Sensor/ShaderBasedSensor.h"
-
 #include "Carla/Actor/ActorDefinition.h"
-
 #include "OpticalFlowCamera.generated.h"
 
 /// Sensor that produces "optical flow" images.

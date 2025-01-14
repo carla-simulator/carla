@@ -7,10 +7,13 @@
 #include <Carla/Sensor/ImageUtil.h>
 #include <Carla/Sensor/ShaderBasedSensor.h>
 #include <Carla/Carla.h>
-#include <Runtime/RHI/Public/RHISurfaceDataConversion.h>
-#include <Runtime/ImageWriteQueue/Public/ImageWriteQueue.h>
+
+#include <util/ue-header-guard-begin.h>
+#include <RHISurfaceDataConversion.h>
+#include <ImageWriteQueue.h>
 #include <HighResScreenshot.h>
 #include <RHIGPUReadback.h>
+#include <util/ue-header-guard-end.h>
 
 
 
@@ -38,56 +41,14 @@ namespace ImageUtil
     TArrayView<FLinearColor> Out)
   {
     SourcePitch *= GPixelFormats[Format].BlockBytes;
-    auto OutPixelCount = Extent.X * Extent.Y;
-    switch (Format)
-    {
-    case PF_G16:
-    case PF_R16_UINT:
-    case PF_R16_SINT:
-      // Shadow maps
-      ConvertRawR16DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    case PF_R8G8B8A8:
-      ConvertRawR8G8B8A8DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    case PF_B8G8R8A8:
-      ConvertRawB8G8R8A8DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    case PF_A2B10G10R10:
-      ConvertRawA2B10G10R10DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    case PF_FloatRGBA:
-    case PF_R16G16B16A16_UNORM:
-    case PF_R16G16B16A16_SNORM:
-      ConvertRawR16G16B16A16FDataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
-      break;
-    case PF_FloatR11G11B10:
-      ConvertRawRR11G11B10DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    case PF_A32B32G32R32F:
-      ConvertRawR32G32B32A32DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
-      break;
-    case PF_A16B16G16R16:
-      ConvertRawR16G16B16A16DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    case PF_G16R16:
-      ConvertRawR16G16DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    case PF_X24_G8: // Depth Stencil
-      ConvertRawR24G8DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
-      break;
-    case PF_R32_FLOAT: // Depth Stencil
-      ConvertRawR32DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
-      break;
-    case PF_R16G16B16A16_UINT:
-    case PF_R16G16B16A16_SINT:
-      ConvertRawR16G16B16A16DataToFLinearColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData());
-      break;
-    default:
-      UE_LOG(LogCarla, Warning, TEXT("Unsupported format %llu"), (unsigned long long)Format);
-      return false;
-    }
-    return true;
+    return ConvertRAWSurfaceDataToFLinearColor(
+      Format,
+      Extent.X,
+      Extent.Y,
+      (uint8*)PixelData,
+      SourcePitch,
+      Out.GetData(),
+      Flags);
   }
 
 
@@ -143,7 +104,17 @@ namespace ImageUtil
       ConvertRawR24G8DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
       break;
     case PF_R32_FLOAT: // Depth
-      ConvertRawR32DataToFColor(Extent.X, Extent.Y, (uint8*)PixelData, SourcePitch, Out.GetData(), Flags);
+		  for (uint32 Y = 0; Y < (uint32)Extent.Y; Y++)
+		  {
+		  	auto SrcPtr = (float*)((uint8*)PixelData + Y * SourcePitch);
+		  	auto DestPtr = Out.GetData() + Y * Extent.X;
+		  	for (uint32 X = 0; X < (uint32)Extent.X; X++)
+		  	{
+		  		*DestPtr = FLinearColor(SrcPtr[0], 0.f, 0.f, 1.f).QuantizeRound();
+		  		++SrcPtr;
+		  		++DestPtr;
+		  	}
+		  }
       break;
     case PF_R16G16B16A16_UINT:
     case PF_R16G16B16A16_SINT:
@@ -226,7 +197,16 @@ namespace ImageUtil
 
 
 
-  static void ReadImageDataAsyncCommand(
+  struct ReadImageDataContext
+  {
+    EPixelFormat Format;
+    FIntPoint Size;
+    ReadImageDataAsyncCallback Callback;
+    TUniquePtr<FRHIGPUTextureReadback> Readback;
+  };
+
+  static void ReadImageDataBegin(
+    ReadImageDataContext& Self,
     UTextureRenderTarget2D& RenderTarget,
     ReadImageDataAsyncCallback&& Callback)
   {
@@ -235,16 +215,17 @@ namespace ImageUtil
 
     auto& CmdList = FRHICommandListImmediate::Get();
     auto Resource = static_cast<FTextureRenderTarget2DResource*>(
-      RenderTarget.Resource);
+      RenderTarget.GetResource());
     auto Texture = Resource->GetRenderTargetTexture();
     if (Texture == nullptr)
       return;
-    auto Readback = MakeUnique<FRHIGPUTextureReadback>(
+    Self.Callback = std::move(Callback);
+    Self.Readback = MakeUnique<FRHIGPUTextureReadback>(
       TEXT("ReadImageData-Readback"));
-    auto Size = Texture->GetSizeXY();
-    auto Format = Texture->GetFormat();
+    Self.Size = Texture->GetSizeXY();
+    Self.Format = Texture->GetFormat();
     auto ResolveRect = FResolveRect();
-    Readback->EnqueueCopy(CmdList, Texture, ResolveRect);
+    Self.Readback->EnqueueCopy(CmdList, Texture, ResolveRect);
 
     auto Query = RenderQueryPool->AllocateQuery();
     CmdList.EndRenderQuery(Query.GetQuery());
@@ -252,24 +233,40 @@ namespace ImageUtil
     uint64 DeltaTime;
     RHIGetRenderQueryResult(Query.GetQuery(), DeltaTime, true);
     Query.ReleaseQuery();
+  }
 
+  static void ReadImageDataEnd(
+    ReadImageDataContext& Self)
+  {
+    int32 RowPitch, BufferHeight;
+    auto MappedPtr = Self.Readback->Lock(RowPitch, &BufferHeight);
+    if (MappedPtr != nullptr)
+    {
+      ScopedCallback Unlock = [&] { Self.Readback->Unlock(); };
+      Self.Callback(MappedPtr, RowPitch, BufferHeight, Self.Format, Self.Size);
+    }
+  }
+
+  static void ReadImageDataEndAsync(
+    ReadImageDataContext&& Self)
+  {
     AsyncTask(
       ENamedThreads::HighTaskPriority, [
-      Readback = MoveTemp(Readback),
-      Callback = std::move(Callback),
-      Size,
-      Format]
+      Self = std::move(Self)]() mutable
     {
-      while (!Readback->IsReady())
+      while (!Self.Readback->IsReady())
         std::this_thread::yield();
-      int32 RowPitch, BufferHeight;
-      auto MappedPtr = Readback->Lock(RowPitch, &BufferHeight);
-      if (MappedPtr != nullptr)
-      {
-        ScopedCallback Unlock = [&] { Readback->Unlock(); };
-        Callback(MappedPtr, RowPitch, BufferHeight, Format, Size);
-      }
+      ReadImageDataEnd(Self);
     });
+  }
+
+  static void ReadImageDataAsyncCommand(
+    UTextureRenderTarget2D& RenderTarget,
+    ReadImageDataAsyncCallback&& Callback)
+  {
+    ReadImageDataContext Context = { };
+    ReadImageDataBegin(Context, RenderTarget, std::move(Callback));
+    ReadImageDataEndAsync(std::move(Context));
   }
 
 
@@ -287,14 +284,14 @@ namespace ImageUtil
     else
     {
       ENQUEUE_RENDER_COMMAND(ReadImageDataAsyncCmd)([
-        &RenderTarget,
-        Callback = std::move(Callback)
+        &RenderTarget, Callback = std::move(Callback)
       ](auto& CmdList) mutable
       {
-        ReadImageDataAsyncCommand(
-          RenderTarget,
-          std::move(Callback));
+        ReadImageDataContext Context = { };
+        ReadImageDataBegin(Context, RenderTarget, std::move(Callback));
+        ReadImageDataEnd(Context);
       });
+
     }
     return true;
   }

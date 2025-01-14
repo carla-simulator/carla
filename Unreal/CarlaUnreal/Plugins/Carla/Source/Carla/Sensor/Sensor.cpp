@@ -10,9 +10,12 @@
 #include <Carla/Actor/ActorDescription.h>
 #include <Carla/Actor/ActorBlueprintFunctionLibrary.h>
 #include <Carla/Game/CarlaStatics.h>
-#include <Engine/CollisionProfile.h>
 #include <Carla/Sensor/ImageUtil.h>
 #include <Carla/Sensor/ShaderBasedSensor.h>
+
+#include <util/ue-header-guard-begin.h>
+#include <Engine/CollisionProfile.h>
+#include <util/ue-header-guard-end.h>
 
 ASensor::ASensor(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)

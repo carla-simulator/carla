@@ -1,6 +1,8 @@
 #include "PostProcessConfig.h"
+#include <util/ue-header-guard-begin.h>
 #include "Components/SceneCaptureComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include <util/ue-header-guard-end.h>
 
 void FPostProcessConfig::EnablePostProcessingEffects()
 {
@@ -20,8 +22,6 @@ void FPostProcessConfig::EnablePostProcessingEffects()
   EngineShowFlags.SetLightShafts(true);
   EngineShowFlags.SetPostProcessMaterial(true);
   EngineShowFlags.SetDistanceFieldAO(true);
-  // TODO: Remove when Physical page pool size scales automatically with demand
-  EngineShowFlags.SetVirtualShadowMapCaching(false);
   // } must be kept in sync with EngineShowFlags.EnableAdvancedFeatures(), AND activate Lumen.
   EngineShowFlags.SetMotionBlur(true);
 }
@@ -84,7 +84,6 @@ void FPostProcessConfig::DisablePostProcessingEffects()
   // EngineShowFlags.SetLandscape(false);
   // EngineShowFlags.SetLargeVertices(false);
   EngineShowFlags.SetLensFlares(false);
-  EngineShowFlags.SetLevelColoration(false);
   EngineShowFlags.SetLightComplexity(false);
   EngineShowFlags.SetLightFunctions(false);
   EngineShowFlags.SetLightInfluences(false);
@@ -114,7 +113,6 @@ void FPostProcessConfig::DisablePostProcessingEffects()
   // EngineShowFlags.SetPrecomputedVisibilityCells(false);
   // EngineShowFlags.SetPreviewShadowsIndicator(false);
   // EngineShowFlags.SetPrimitiveDistanceAccuracy(false);
-  EngineShowFlags.SetPropertyColoration(false);
   // EngineShowFlags.SetQuadOverdraw(false);
   // EngineShowFlags.SetReflectionEnvironment(false);
   // EngineShowFlags.SetReflectionOverride(false);

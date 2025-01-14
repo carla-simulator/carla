@@ -7,8 +7,11 @@
 #pragma once
 
 #include "Carla/Actor/ActorDefinition.h"
-#include "Actor/ActorBlueprintFunctionLibrary.h"
 #include "Carla/Sensor/ShaderBasedSensor.h"
+
+#include <util/ue-header-guard-begin.h>
+#include "Actor/ActorBlueprintFunctionLibrary.h"
+#include <util/ue-header-guard-end.h>
 
 #include "SceneCaptureCamera.generated.h"
 
