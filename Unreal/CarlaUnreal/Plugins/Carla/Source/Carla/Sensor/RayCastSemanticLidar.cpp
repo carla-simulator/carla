@@ -21,7 +21,6 @@
 #include "PhysicsEngine/PhysicsObjectExternalInterface.h"
 #include "Async/ParallelFor.h"
 #include <util/ue-header-guard-end.h>
-// #include "LandscapeProxy.h"
 #include "Landscape.h"
 
 #include <cmath>
