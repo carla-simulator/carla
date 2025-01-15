@@ -6,7 +6,8 @@ interactive=0
 skip_prerequisites=0
 launch=0
 
-workspace_path="$(dirname $0)"
+workspace_path="$(dirname $(realpath "${BASH_SOURCE[-1]}"))"
+echo "workspace_path=$workspace_path"
 
 options=$(getopt -o "i,p,l" --long "interactive,skip-prerequisites,launch" -n 'CarlaSetup.sh' -- "$@")
 eval set -- "$options"
