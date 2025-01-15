@@ -6,6 +6,8 @@ interactive=0
 skip_prerequisites=0
 launch=0
 
+workspace_path="$(dirname $0)"
+
 options=$(getopt -o "i,p,l" --long "interactive,skip-prerequisites,launch" -n 'CarlaSetup.sh' -- "$@")
 eval set -- "$options"
 while true; do
@@ -65,13 +67,13 @@ else
 fi
 
 # -- CLONE CONTENT --
-if [ -d $cd/Unreal/CarlaUnreal/Content ]; then
+if [ -d $workspace_path/Unreal/CarlaUnreal/Content ]; then
     echo "Found CARLA content."
 else
     echo "Could not find CARLA content. Downloading..."
-    mkdir -p $cd/Unreal/CarlaUnreal/Content
+    mkdir -p $workspace_path/Unreal/CarlaUnreal/Content
     git \
-        -C $cd/Unreal/CarlaUnreal/Content \
+        -C $workspace_path/Unreal/CarlaUnreal/Content \
         clone \
         -b ue5-dev \
         https://bitbucket.org/carla-simulator/carla-content.git \
@@ -82,7 +84,7 @@ fi
 if [ ! -z $CARLA_UNREAL_ENGINE_PATH ] && [ -d $CARLA_UNREAL_ENGINE_PATH ]; then
     echo "Found CARLA Unreal Engine at $CARLA_UNREAL_ENGINE_PATH"
 elif [ -d ../UnrealEngine5_carla ]; then
-    echo "Found CARLA Unreal Engine at $cd/UnrealEngine5_carla. Assuming already built..."
+    echo "Found CARLA Unreal Engine at $workspace_path/UnrealEngine5_carla. Assuming already built..."
 else
     echo "Could not find CARLA Unreal Engine, downloading..."
     pushd ..
