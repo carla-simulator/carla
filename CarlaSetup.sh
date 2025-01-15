@@ -65,6 +65,7 @@ else
 fi
 
 # -- CLONE CONTENT --
+cd=$(pwd)
 if [ -d $cd/Unreal/CarlaUnreal/Content ]; then
     echo "Found CARLA content."
 else
