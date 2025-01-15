@@ -4,6 +4,9 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/InstancedStaticMesh.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include "Landscape.h"
+#include "LandscapeRender.h"
+#include "LandscapeMaterialInstanceConstant.h"
 
 #include "TaggedComponent.generated.h"
 
@@ -88,4 +91,33 @@ public:
 
 private:
   UMaterialInstance * TaggedMaterialInstance;
+};
+
+// Specific code for tagging landscapes (terrain)
+
+UCLASS( meta=(BlueprintSpawnableComponent) )
+class CARLA_API UTaggedLandscapeComponent : public UPrimitiveComponent
+{
+  GENERATED_BODY()
+
+public:
+  virtual FPrimitiveSceneProxy * CreateSceneProxy() override;
+  virtual FBoxSphereBounds CalcBounds(const FTransform & LocalToWorld) const;
+
+private:
+  UPROPERTY()
+  ULandscapeMaterialInstanceConstant * TaggedLMIC;
+};
+
+class FTaggedLandscapeComponentSceneProxy : public FLandscapeComponentSceneProxy
+{
+public:
+  ULandscapeMaterialInstanceConstant * TaggedLandscapeMaterialInstance;
+  
+  FTaggedLandscapeComponentSceneProxy(ULandscapeComponent * Component);
+
+  virtual FPrimitiveViewRelevance GetViewRelevance(const FSceneView * View) const override;
+
+private:
+  FSoftObjectPath LandscapeAnnotationWorldPath = FSoftObjectPath("/Carla/PostProcessingMaterials/AnnotationColorLandscape.AnnotationColorLandscape");
 };
