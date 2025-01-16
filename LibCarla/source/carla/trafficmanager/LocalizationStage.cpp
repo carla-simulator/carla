@@ -125,11 +125,11 @@ void LocalizationStage::Update(const unsigned long index) {
     const bool is_random_right_change = perc_random_rightlanechange >= random_device.next();
 
     // Determine which of the parameters we should apply.
-    if (is_keep_right || is_random_right_change) {
+    if (is_random_right_change) {
       force_lane_change = true;
       lane_change_direction = true;
     }
-    if (is_random_left_change) {
+    if (is_keep_right || is_random_left_change) {   // LHT technically this should be is_keep_left
       if (!force_lane_change) {
         force_lane_change = true;
         lane_change_direction = false;

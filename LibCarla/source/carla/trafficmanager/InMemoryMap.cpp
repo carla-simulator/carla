@@ -262,7 +262,7 @@ namespace traffic_manager {
       // Ordering waypoints according to road direction.
       std::sort(segment_waypoints.begin(), segment_waypoints.end(), compare_s);
       auto lane_id = segment_waypoints.front()->GetWaypoint()->GetLaneId();
-      if (lane_id > 0) {
+      if (lane_id < 0) {  // LHT swap direction
         std::reverse(segment_waypoints.begin(), segment_waypoints.end());
       }
 

@@ -649,7 +649,7 @@ namespace road {
     // successor and predecessor (road and lane)
     LaneId next;
     RoadId next_road;
-    if (lane_id <= 0) {
+    if (lane_id > 0) { // LHT swap direction
       next_road = road.GetSuccessor();
       next = lane->GetSuccessor();
     } else {
@@ -667,7 +667,7 @@ namespace road {
       // check if lane has a next link (if not, it deads in the middle section)
       if (next != 0 || (lane_id == 0 && next == 0)) {
         // change to next / prev section
-        if (lane_id <= 0) {
+        if (lane_id <= 0) {  // LHT swap direction
           result.push_back(road.GetNextLane(s, next));
         } else {
           result.push_back(road.GetPrevLane(s, next));
@@ -677,7 +677,7 @@ namespace road {
       // change to another road / junction
       if (next != 0 || (lane_id == 0 && next == 0)) {
         // single road
-        result.push_back(GetEdgeLanePointer(next_road, (next <= 0), next));
+        result.push_back(GetEdgeLanePointer(next_road, (next <= 0), next));  // LHT swap direction
       }
     } else {
       // several roads (junction)
@@ -687,7 +687,7 @@ namespace road {
       auto next_road_as_junction = static_cast<JuncId>(next_road);
       auto options = GetJunctionLanes(next_road_as_junction, road_id, lane_id);
       for (auto opt : options) {
-        result.push_back(GetEdgeLanePointer(opt.first, (opt.second <= 0), opt.second));
+        result.push_back(GetEdgeLanePointer(opt.first, (opt.second > 0), opt.second));  // LHT swap direction
       }
     }
 
@@ -706,22 +706,26 @@ namespace road {
       return result;
     }
 
-    // check all connections
+    // Completely remade, as the junctions have incoming roads, but not "exitting" ones
+    // This should be changed for more consistency, regardless of RHT / LHT
     for (auto con : junction->_connections) {
-      // only connections for our road
-      if (con.second.incoming_road == road_id) {
-        // for center lane it is always next lane id 0, we don't need to search
-        // because it is not in the junction
-        if (lane_id == 0) {
-          result.push_back(std::make_pair(con.second.connecting_road, 0));
-        } else {
-          // check all lane links
-          for (auto link : con.second.lane_links) {
-            // is our lane id ?
-            if (link.from == lane_id) {
-              // add as option
-              result.push_back(std::make_pair(con.second.connecting_road, link.to));
-            }
+      auto conn_road = GetRoad(con.second.connecting_road);
+      auto conn_id = conn_road->_id;
+
+      auto road_pred = conn_road->_predecessor;
+      auto road_succ = conn_road->_successor;
+      if (road_id == road_pred) {
+        for (auto lane : conn_road->GetLanesAt(0)){
+          if (lane_id == lane.second->_predecessor){
+            result.push_back(std::make_pair(conn_id, lane.first));
+          }
+        }
+      }
+
+      if (road_id == road_succ) {
+        for (auto lane : conn_road->GetLanesAt(conn_road->GetLength())){
+          if (lane_id == lane.second->_successor){
+            result.push_back(std::make_pair(conn_id, lane.first));
           }
         }
       }

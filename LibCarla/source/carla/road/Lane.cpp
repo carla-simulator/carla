@@ -195,7 +195,7 @@ namespace road {
         0.0f);
 
     // Fix the direction of the possitive lanes
-    if (GetId() > 0) {
+    if (GetId() <= 0) {  // LHT: Swap the direction
       rot.yaw += 180.0f;
       rot.pitch = 360.0f - rot.pitch;
     }

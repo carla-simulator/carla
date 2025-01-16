@@ -81,7 +81,7 @@ namespace client {
     }
     double remaining_length;
     double road_length = _parent->GetMap().GetLane(_waypoint).GetRoad()->GetLength();
-    if(_waypoint.lane_id < 0) {
+    if(_waypoint.lane_id > 0) {  // LHT: Swap the direction
       remaining_length = road_length - current_s;
     } else {
       remaining_length = current_s;
@@ -112,7 +112,7 @@ namespace client {
 
     double remaining_length;
     double road_length = _parent->GetMap().GetLane(_waypoint).GetRoad()->GetLength();
-    if(_waypoint.lane_id < 0) {
+    if(_waypoint.lane_id > 0) {  // LHT: Swap the direction
       remaining_length = road_length - current_s;
     } else {
       remaining_length = current_s;
@@ -176,7 +176,7 @@ namespace client {
   road::element::LaneMarking::LaneChange Waypoint::GetLaneChange() const {
     using lane_change_type = road::element::LaneMarking::LaneChange;
 
-    const auto lane_change_right_info = _mark_record.first;
+    const auto lane_change_right_info = _mark_record.second;  // LHT: Get the left lane marking, not the right
     lane_change_type c_right;
     if (lane_change_right_info != nullptr) {
       const auto lane_change_right = lane_change_right_info->GetLaneChange();
@@ -185,7 +185,7 @@ namespace client {
       c_right = lane_change_type::Both;
     }
 
-    const auto lane_change_left_info = _mark_record.second;
+    const auto lane_change_left_info = _mark_record.first;   // LHT: Get the right lane marking, not the left
     lane_change_type c_left;
     if (lane_change_left_info != nullptr) {
       const auto lane_change_left = lane_change_left_info->GetLaneChange();
@@ -194,7 +194,7 @@ namespace client {
       c_left = lane_change_type::Both;
     }
 
-    if (_waypoint.lane_id > 0) {
+    if (_waypoint.lane_id < 0) {  // LHT: Swap the direction
       // if road goes backward
       if (c_right == lane_change_type::Right) {
         c_right = lane_change_type::Left;
@@ -203,7 +203,7 @@ namespace client {
       }
     }
 
-    if (((_waypoint.lane_id > 0) ? _waypoint.lane_id - 1 : _waypoint.lane_id + 1) > 0) {
+    if (((_waypoint.lane_id < 0) ? _waypoint.lane_id - 1 : _waypoint.lane_id + 1) < 0) {  // LHT: Swap the direction
       // if road goes backward
       if (c_left == lane_change_type::Right) {
         c_left = lane_change_type::Left;

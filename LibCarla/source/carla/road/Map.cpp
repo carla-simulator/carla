@@ -56,7 +56,7 @@ namespace road {
   }
 
   static double GetDistanceAtStartOfLane(const Lane &lane) {
-    if (lane.GetId() <= 0) {
+    if (lane.GetId() >= 0) {  // LHT: Swap the direction
       return lane.GetDistance() + 10.0 * EPSILON;
     } else {
       return lane.GetDistance() + lane.GetLength() - 10.0 * EPSILON;
@@ -64,7 +64,7 @@ namespace road {
   }
 
   static double GetDistanceAtEndOfLane(const Lane &lane) {
-    if (lane.GetId() > 0) {
+    if (lane.GetId() < 0) {  // LHT: Swap the direction
       return lane.GetDistance() + 10.0 * EPSILON;
     } else {
       return lane.GetDistance() + lane.GetLength() - 10.0 * EPSILON;
@@ -186,7 +186,7 @@ namespace road {
     Waypoint result_start = query_result.front().second.first;
     Waypoint result_end = query_result.front().second.second;
 
-    if (result_start.lane_id < 0) {
+    if (result_start.lane_id > 0) {  // LHT: Swap the direction
       double delta_s = distance_to_segment.first;
       double final_s = result_start.s + delta_s;
       if (final_s >= result_end.s) {
@@ -331,7 +331,7 @@ namespace road {
       Waypoint waypoint, double distance, bool stop_at_junction) const {
 
     const auto &lane = GetLane(waypoint);
-    const bool forward = (waypoint.lane_id <= 0);
+    const bool forward = (waypoint.lane_id >= 0);  // LHT swap direction
     const double signed_distance = forward ? distance : -distance;
     const double relative_s = waypoint.s - lane.GetDistance();
     const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
@@ -347,7 +347,7 @@ namespace road {
           waypoint.s, waypoint.s + signed_distance);
       for(auto* signal : signals){
         double distance_to_signal = 0;
-        if (waypoint.lane_id < 0){
+        if (waypoint.lane_id > 0){  // LHT swap direction
           distance_to_signal = signal->GetDistance() - waypoint.s;
         } else {
           distance_to_signal = waypoint.s - signal->GetDistance();
@@ -384,7 +384,7 @@ namespace road {
         waypoint.s, waypoint.s + signed_remaining_length);
     for(auto* signal : signals){
       double distance_to_signal = 0;
-      if (waypoint.lane_id < 0){
+      if (waypoint.lane_id > 0){  // LHT swap direction
         distance_to_signal = signal->GetDistance() - waypoint.s;
       } else {
         distance_to_signal = waypoint.s - signal->GetDistance();
@@ -418,7 +418,8 @@ namespace road {
       }
       auto& sucessor_lane = _data.GetRoad(successor.road_id).
             GetLaneByDistance(successor.s, successor.lane_id);
-      if (successor.lane_id < 0) {
+
+      if (successor.lane_id > 0) {  // LHT: Swap the direction
         successor.s = sucessor_lane.GetDistance();
       } else {
         successor.s = sucessor_lane.GetDistance() + sucessor_lane.GetLength();
@@ -559,7 +560,7 @@ namespace road {
       return {waypoint};
     }
     const auto &lane = GetLane(waypoint);
-    const bool forward = (waypoint.lane_id <= 0);
+    const bool forward = (waypoint.lane_id >= 0);  // LHT change direction
     const double signed_distance = forward ? distance : -distance;
     const double relative_s = waypoint.s - lane.GetDistance();
     const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
@@ -595,7 +596,7 @@ namespace road {
       return {waypoint};
     }
     const auto &lane = GetLane(waypoint);
-    const bool forward = !(waypoint.lane_id <= 0);
+    const bool forward = !(waypoint.lane_id >= 0);  // LHT change direction
     const double signed_distance = forward ? distance : -distance;
     const double relative_s = waypoint.s - lane.GetDistance();
     const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
@@ -623,7 +624,8 @@ namespace road {
     return result;
   }
 
-  boost::optional<Waypoint> Map::GetRight(Waypoint waypoint) const {
+  // The GetRight and GetLeft logic are different, so swap the functions
+  boost::optional<Waypoint> Map::GetLeft(Waypoint waypoint) const {
     RELEASE_ASSERT(waypoint.lane_id != 0);
     if (waypoint.lane_id > 0) {
       ++waypoint.lane_id;
@@ -633,7 +635,7 @@ namespace road {
     return IsLanePresent(_data, waypoint) ? waypoint : boost::optional<Waypoint>{};
   }
 
-  boost::optional<Waypoint> Map::GetLeft(Waypoint waypoint) const {
+  boost::optional<Waypoint> Map::GetRight(Waypoint waypoint) const {
     RELEASE_ASSERT(waypoint.lane_id != 0);
     if (std::abs(waypoint.lane_id) == 1) {
       waypoint.lane_id *= -1;
@@ -666,8 +668,8 @@ namespace road {
       // right lanes start at s 0
       for (const auto &lane_section : road.GetLaneSectionsAt(0.0)) {
         for (const auto &lane : lane_section.GetLanes()) {
-          // add only the right (negative) lanes
-          if (lane.first < 0 &&
+          // LHT reversed. add the left (positive) lanes
+          if (lane.first > 0 &&
               static_cast<int32_t>(lane.second.GetType()) & static_cast<int32_t>(lane_type)) {
             result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), 0.0 });
           }
@@ -677,8 +679,8 @@ namespace road {
       const auto road_len = road.GetLength();
       for (const auto &lane_section : road.GetLaneSectionsAt(road_len)) {
         for (const auto &lane : lane_section.GetLanes()) {
-          // add only the left (positive) lanes
-          if (lane.first > 0 &&
+          // LHT reversed. add the right (negative) lanes
+          if (lane.first < 0 &&
               static_cast<int32_t>(lane.second.GetType()) & static_cast<int32_t>(lane_type)) {
             result.emplace_back(
               Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), road_len });
@@ -698,8 +700,8 @@ namespace road {
       // right lanes start at s 0
       for (const auto &lane_section : road.GetLaneSectionsAt(0.0)) {
         for (const auto &lane : lane_section.GetLanes()) {
-          // add only the right (negative) lanes
-          if (lane.first < 0 &&
+          // LHT reversed. add the left (positive) lanes
+          if (lane.first > 0 &&
               static_cast<int32_t>(lane.second.GetType()) & static_cast<int32_t>(lane_type)) {
             result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), 0.0 });
           }
@@ -709,8 +711,8 @@ namespace road {
       const auto road_len = road.GetLength();
       for (const auto &lane_section : road.GetLaneSectionsAt(road_len)) {
         for (const auto &lane : lane_section.GetLanes()) {
-          // add only the left (positive) lanes
-          if (lane.first > 0 &&
+          // LHT reversed. add the right (negative) lanes
+          if (lane.first < 0 &&
               static_cast<int32_t>(lane.second.GetType()) & static_cast<int32_t>(lane_type)) {
             result.emplace_back(
               Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), road_len });
@@ -877,7 +879,7 @@ namespace road {
   // returns the remaining length of the geometry depending on the lane
   // direction
   double GetRemainingLength(const Lane &lane, double current_s) {
-    if (lane.GetId() < 0) {
+    if (lane.GetId() >= 0) { // LHT swap direction
       return (lane.GetDistance() + lane.GetLength() - current_s);
     } else {
       return (current_s - lane.GetDistance());
@@ -1431,7 +1433,7 @@ namespace road {
     std::cout << "Filtered from " + std::to_string(_data.GetRoads().size() ) + " roads " << std::endl;
     for( auto& road : _data.GetRoads() ){
       auto &&lane_section = (*road.second.GetLaneSections().begin());
-      const road::Lane* lane = lane_section.GetLane(-1);
+      const road::Lane* lane = lane_section.GetLane(1); // LHT swap direction
       if( lane ) {
         const double s_check = lane_section.GetDistance() + lane_section.GetLength() * 0.5;
         geom::Location roadLocation = lane->ComputeTransform(s_check).location;

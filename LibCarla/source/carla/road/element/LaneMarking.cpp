@@ -63,9 +63,9 @@ namespace element {
   static LaneMarking::LaneChange GetLaneChange(RoadInfoMarkRecord::LaneChange lane_change) {
     switch (lane_change) {
       case RoadInfoMarkRecord::LaneChange::Increase:
-        return LaneMarking::LaneChange::Right;
+        return LaneMarking::LaneChange::Left;  // LHT swap direction
       case RoadInfoMarkRecord::LaneChange::Decrease:
-        return LaneMarking::LaneChange::Left;
+        return LaneMarking::LaneChange::Right;  // LHT swap direction
       case RoadInfoMarkRecord::LaneChange::Both:
         return LaneMarking::LaneChange::Both;
       default:
