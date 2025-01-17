@@ -26,6 +26,7 @@
  * Synchronized actor BoundingBox between server and client
  * Add actor_id to bounding boxes
  * Fixed invisible terrain in instance segmentation
+ * Importing from carla.command is now possible
 
 ## CARLA 0.9.15
 
