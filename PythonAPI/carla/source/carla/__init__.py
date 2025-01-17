@@ -30,7 +30,7 @@ def __fix_ad_namespaces():
                 or (v.__doc__ and ("Python binding of" not in v.__doc__ or "C++ code" not in v.__doc__))
             ):
                 # NOTE: Check when updating RSS version
-                #f inspect.ismodule(v):
+                # if inspect.ismodule(v):
                 #    print("Skipping", v)
                 continue
             if v in ad_submodules:
@@ -59,5 +59,10 @@ if "ad" in locals():
         __fix_ad_namespaces()
     except Exception as e:
         print("Could not clean ad_rss namespace due to", e, "Please report this bug")
-
 del __fix_ad_namespaces
+
+# Allow from carla.command import ...
+import sys
+sys.modules["carla.command"] = command
+del sys
+
