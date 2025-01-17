@@ -91,7 +91,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     BOOST_PACKAGE_BASENAME=boost_${BOOST_VERSION//./_}
 
     log "Retrieving boost."
-    wget "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
+    # wget "https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/${BOOST_PACKAGE_BASENAME}.tar.gz" || true
     # try to use the backup boost we have in Jenkins
     if [[ ! -f "${BOOST_PACKAGE_BASENAME}.tar.gz" ]] ; then
       log "Using boost backup"
