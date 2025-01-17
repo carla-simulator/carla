@@ -1,0 +1,35 @@
+{
+    "name": "CARLA 0.9.15.2 (jammy)",
+    "image": "carla-0.9.15.2-jammy-dev",
+
+    "initializeCommand": "./Scripts/build_image.sh",
+
+    // We do NOT need to set "remoteUser" if the Dockerfile's default user is already correct
+    // but you can if you want to be explicit. Also "updateRemoteUserUID" can be false, since
+    // our Dockerfile already set the user to our exact UID/GID.
+    "updateRemoteUserUID": false,
+
+    "customizations": {
+      "vscode": {
+        "settings": {
+          "terminal.integrated.shell.linux": "bash"
+        },
+        "extensions": [
+          "ms-vscode.cpptools"
+        ]
+      }
+    },
+
+    // You can still keep your postStartCommand
+    "postStartCommand": "bash", 
+
+    // runArgs to set a container name + stable hostname
+    "runArgs": [
+      "--rm",
+      "--name", "carla-0.9.15.2-jammy-devcontainer",
+      "--hostname", "carla-devcontainer",
+      // DO NOT pass --user here (we want the Dockerfile default user, not an override)
+      // NOTE: UE4_ROOT needs to be set on your host environment variables 
+      "--volume", "${localEnv:UE4_ROOT}:/opt/UnrealEngine_4.26"
+    ]
+}
