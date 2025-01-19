@@ -42,6 +42,7 @@ RUN apt-get update && \
     libtool \
     rsync \
     libxml2-dev \
+    libsdl2-2.0-0 \
     git \
     git-lfs
 

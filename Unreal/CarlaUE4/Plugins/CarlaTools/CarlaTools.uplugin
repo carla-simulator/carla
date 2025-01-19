@@ -38,7 +38,7 @@
 			"Name": "ProceduralMeshComponent",
 			"Enabled": true
 		},
-    {
+    	{
 			"Name": "StreetMap",
 			"Enabled": true
 		}

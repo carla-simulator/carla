@@ -30,6 +30,11 @@
       "--hostname", "carla-devcontainer",
       // DO NOT pass --user here (we want the Dockerfile default user, not an override)
       // NOTE: UE4_ROOT needs to be set on your host environment variables 
-      "--volume", "${localEnv:UE4_ROOT}:/opt/UnrealEngine_4.26"
+      "--volume", "${localEnv:UE4_ROOT}:/opt/UnrealEngine_4.26",
+      "--volume", "/tmp/.X11-unix:/tmp/.X11-unix",         // Share X11 socket
+      "--env", "DISPLAY=${localEnv:DISPLAY}",              // Pass host DISPLAY variable
+      "--env", "QT_X11_NO_MITSHM=1",                       // Avoid shared memory issues
+      // "--env", "XDG_RUNTIME_DIR=${localEnv:XDG_RUNTIME_DIR}" // For Wayland (if needed)
+      "--gpus", "all"
     ]
 }
