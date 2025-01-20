@@ -448,6 +448,11 @@ namespace detail {
     _pimpl->AsyncCall("set_actor_autopilot", vehicle, enabled);
   }
 
+  rpc::VehicleTelemetryData Client::GetVehicleTelemetryData(
+    rpc::ActorId vehicle) const {
+    return _pimpl->CallAndWait<carla::rpc::VehicleTelemetryData>("get_telemetry_data", vehicle);
+  }
+
   void Client::ShowVehicleDebugTelemetry(rpc::ActorId vehicle, const bool enabled) {
     _pimpl->AsyncCall("show_vehicle_debug_telemetry", vehicle, enabled);
   }

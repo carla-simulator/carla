@@ -14,6 +14,7 @@
 #include "Carla/Vehicle/VehicleLightState.h"
 #include "Carla/Vehicle/VehicleInputPriority.h"
 #include "Carla/Vehicle/VehiclePhysicsControl.h"
+#include "Vehicle/VehicleTelemetryData.h"
 #include "Carla/Vehicle/VehicleVelocityControl.h"
 #include "Carla/Vehicle/WheeledVehicleMovementComponentNW.h"
 #include "Carla/Vehicle/MovementComponents/BaseCarlaMovementComponent.h"
@@ -236,6 +237,9 @@ public:
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void DeactivateVelocityControl();
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  FVehicleTelemetryData GetVehicleTelemetryData() const;
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void ShowDebugTelemetry(bool Enabled);

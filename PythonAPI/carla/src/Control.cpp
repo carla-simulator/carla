@@ -279,6 +279,55 @@ boost::python::object WalkerBoneControl_init(boost::python::tuple args, boost::p
   return res;
 }
 
+static auto GetWheelsTelemetry(const carla::rpc::VehicleTelemetryData &self) {
+  const auto &wheels = self.wheels;
+  boost::python::object get_iter = boost::python::iterator<std::vector<carla::rpc::WheelTelemetryData>>();
+  boost::python::object iter = get_iter(wheels);
+  return boost::python::list(iter);
+}
+
+static void SetWheelsTelemetry(carla::rpc::VehicleTelemetryData &self, const boost::python::list &list) {
+  std::vector<carla::rpc::WheelTelemetryData> wheels;
+  auto length = boost::python::len(list);
+  for (auto i = 0u; i < length; ++i) {
+    wheels.push_back(boost::python::extract<carla::rpc::WheelTelemetryData &>(list[i]));
+  }
+  self.wheels = wheels;
+}
+
+boost::python::object VehicleTelemetryData_init(boost::python::tuple args, boost::python::dict kwargs) {
+ // Args names
+ const char *args_names[] = {
+   "speed",
+   "steer",
+   "throttle",
+   "brake",
+   "engine_rpm",
+   "gear",
+   "wheels"
+  };
+  const auto NUM_ARGUMENTS = sizeof(args_names) / sizeof(const char*);
+  
+  boost::python::object self = args[0];
+  args = boost::python::tuple(args.slice(1, boost::python::_));
+
+  auto res = self.attr("__init__")();
+  if (len(args) > 0) {
+    for (unsigned int i = 0; i < len(args); ++i) {
+      self.attr(args_names[i]) = args[i];
+    }
+  }
+
+  for (unsigned int i = 0; i < NUM_ARGUMENTS; ++i) {
+    if (kwargs.contains(args_names[i])) {
+      self.attr(args_names[i]) = kwargs[args_names[i]];
+    }
+  }
+
+  return res;
+}
+
+
 void export_control() {
   using namespace boost::python;
   namespace cg = carla::geom;
@@ -488,4 +537,43 @@ void export_control() {
     .def("__ne__", &cr::VehiclePhysicsControl::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
+  
+  class_<cr::WheelTelemetryData>("WheelTelemetryData")
+   .def(init<>())
+   .def_readwrite("tire_friction", &cr::WheelTelemetryData::tire_friction)
+   .def_readwrite("lat_slip", &cr::WheelTelemetryData::lat_slip)
+   .def_readwrite("long_slip", &cr::WheelTelemetryData::long_slip)
+   .def_readwrite("omega", &cr::WheelTelemetryData::omega)
+   .def_readwrite("tire_load", &cr::WheelTelemetryData::tire_load)
+   .def_readwrite("normalized_tire_load", &cr::WheelTelemetryData::normalized_tire_load)
+   .def_readwrite("torque", &cr::WheelTelemetryData::torque)
+   .def_readwrite("long_force", &cr::WheelTelemetryData::long_force)
+   .def_readwrite("lat_force", &cr::WheelTelemetryData::lat_force)
+   .def_readwrite("normalized_long_force", &cr::WheelTelemetryData::normalized_long_force)
+   .def_readwrite("normalized_lat_force", &cr::WheelTelemetryData::normalized_lat_force)
+   .def("__eq__", &cr::WheelTelemetryData::operator==)
+   .def("__ne__", &cr::WheelTelemetryData::operator!=)
+   .def(self_ns::str(self_ns::self))
+ ;
+
+  class_<std::vector<carla::rpc::WheelTelemetryData> >("vector_of_wheels_telemetry")
+    .def(vector_indexing_suite<std::vector<carla::rpc::WheelTelemetryData> >())
+    .def(self_ns::str(self_ns::self))
+  ;
+
+ class_<cr::VehicleTelemetryData>("VehicleTelemetryData", no_init)
+   .def("__init__", raw_function(VehicleTelemetryData_init))
+   .def(init<>())
+   .def_readwrite("speed", &cr::VehicleTelemetryData::speed)
+   .def_readwrite("steer", &cr::VehicleTelemetryData::steer)
+   .def_readwrite("throttle", &cr::VehicleTelemetryData::throttle)
+   .def_readwrite("brake", &cr::VehicleTelemetryData::brake)
+   .def_readwrite("engine_rpm", &cr::VehicleTelemetryData::engine_rpm)
+   .def_readwrite("gear", &cr::VehicleTelemetryData::gear)
+   .def_readwrite("drag", &cr::VehicleTelemetryData::drag)
+   .add_property("wheels", &GetWheelsTelemetry, &SetWheelsTelemetry)
+   .def("__eq__", &cr::VehicleTelemetryData::operator==)
+   .def("__ne__", &cr::VehicleTelemetryData::operator!=)
+   .def(self_ns::str(self_ns::self))
+ ;
 }

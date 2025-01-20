@@ -17,7 +17,9 @@
 #include <carla/rpc/VehicleAckermannControl.h>
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
+#include <carla/rpc/VehicleTelemetryData.h>
 #include <carla/rpc/WheelPhysicsControl.h>
+#include <carla/rpc/WheelTelemetryData.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/WalkerBoneControlIn.h>
 #include <carla/rpc/WalkerBoneControlOut.h>
@@ -540,6 +542,33 @@ namespace rpc {
       << ", wheels=" << control.wheels
       << ", use_sweep_wheel_collision=" << control.use_sweep_wheel_collision
       << ")";
+    return out;
+  }
+
+  inline std::ostream &operator<<(std::ostream &out, const WheelTelemetryData &telemetry) {
+    out << "WheelTelemetryData(tire_friction=" << std::to_string(telemetry.tire_friction)
+        << ", lat_slip=" << std::to_string(telemetry.lat_slip)
+        << ", long_slip=" << std::to_string(telemetry.long_slip)
+        << ", omega=" << std::to_string(telemetry.omega)
+        << ", tire_load=" << std::to_string(telemetry.tire_load)
+        << ", normalized_tire_load=" << std::to_string(telemetry.normalized_tire_load)
+        << ", torque=" << std::to_string(telemetry.torque)
+        << ", long_force=" << std::to_string(telemetry.long_force)
+        << ", lat_force=" << std::to_string(telemetry.lat_force)
+        << ", normalized_long_force=" << std::to_string(telemetry.normalized_long_force)
+        << ", normalized_lat_force=" << std::to_string(telemetry.normalized_lat_force) << ')';
+    return out;
+  }
+
+  inline std::ostream &operator<<(std::ostream &out, const VehicleTelemetryData &telemetry) {
+    out << "VehicleTelemetryData(speed=" << std::to_string(telemetry.speed)
+    << ", steer=" << std::to_string(telemetry.steer)
+    << ", throttle=" << std::to_string(telemetry.throttle)
+    << ", brake=" << std::to_string(telemetry.brake)
+    << ", engine_rpm=" << std::to_string(telemetry.engine_rpm)
+    << ", gear=" << std::to_string(telemetry.gear)
+    << ", drag=" << std::to_string(telemetry.drag)
+    << ", wheels=" << telemetry.wheels << ')';
     return out;
   }
 

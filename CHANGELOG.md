@@ -1,3 +1,6 @@
+## Latest Changes
+* Ported API function `get_telemetry_data` to the vehicle actor from UE4 version.
+
 ## CARLA 0.10.0
 
 * Unreal Engine migration from version 4.26 to version 5.5

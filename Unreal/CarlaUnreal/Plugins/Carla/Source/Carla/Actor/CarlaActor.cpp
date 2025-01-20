@@ -971,6 +971,25 @@ ECarlaServerResponse FVehicleActor::SetActorAutopilot(bool bEnabled, bool bKeepS
   return ECarlaServerResponse::Success;
 }
 
+ECarlaServerResponse FVehicleActor::GetVehicleTelemetryData(FVehicleTelemetryData& TelemetryData)
+{
+  if (IsDormant())
+  {
+    FVehicleTelemetryData EmptyTelemetryData;
+    TelemetryData = EmptyTelemetryData;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    TelemetryData = Vehicle->GetVehicleTelemetryData();
+  }
+  return ECarlaServerResponse::Success;
+}
+
 ECarlaServerResponse FVehicleActor::ShowVehicleDebugTelemetry(bool bEnabled)
 {
   if (IsDormant())
