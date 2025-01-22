@@ -54,5 +54,7 @@ profiler.csv
 # ----------------------
 # USER EDITS
 # ----------------------
+.env
 .venv
+.config
 build/
