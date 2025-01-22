@@ -218,6 +218,43 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation, ui
     TaggedComponent->SetComponentTickEnabled(true);
 
   }
+
+  // Iterate landscape components.
+  TArray<ULandscapeComponent *> LandscapeComponents;
+  Actor.GetComponents<ULandscapeComponent>(LandscapeComponents);
+  for (ULandscapeComponent *Component : LandscapeComponents) {
+    auto Label = crp::CityObjectLabel::Terrain;
+    SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
+#ifdef CARLA_TAGGER_EXTRA_LOG
+    UE_LOG(LogCarla, Log, TEXT("  + LandscapeComponent: %s"), *Component->GetName());
+#endif // CARLA_TAGGER_EXTRA_LOG
+
+    // Find a tagged component that is attached to this component
+    UTaggedLandscapeComponent *TaggedComponent = NULL;
+    TArray<USceneComponent *> AttachedComponents = Component->GetAttachChildren();
+    for (USceneComponent *SceneComponent : AttachedComponents) {
+      UTaggedLandscapeComponent *TaggedSceneComponent = Cast<UTaggedLandscapeComponent>(SceneComponent);
+      if (IsValid(TaggedSceneComponent)) {
+          TaggedComponent = TaggedSceneComponent;
+#ifdef CARLA_TAGGER_EXTRA_LOG
+          UE_LOG(LogCarla, Log, TEXT("    - Found Tag"));
+#endif // CARLA_TAGGER_EXTRA_LOG
+          break;
+      }
+    }
+
+    // If not found, then create new tagged component and attach it to this component
+    if (!TaggedComponent) {
+      TaggedComponent = NewObject<UTaggedLandscapeComponent>(Component);
+      TaggedComponent->SetupAttachment(Component);
+      TaggedComponent->RegisterComponent();
+#ifdef CARLA_TAGGER_EXTRA_LOG
+      UE_LOG(LogCarla, Log, TEXT("    - Added Tag"));
+#endif // CARLA_TAGGER_EXTRA_LOG
+    }
+
+    TaggedComponent->MarkRenderStateDirty();
+  }
 }
 
 void ATagger::TagActorsInLevel(UWorld &World, const UCarlaEpisode &Episode, bool bTagForSemanticSegmentation)

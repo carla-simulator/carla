@@ -25,6 +25,9 @@
  * If available, use ActorIDs instead of Unreal Engine IDs for instance segmentation
  * Synchronized actor BoundingBox between server and client
  * Add actor_id to bounding boxes
+ * Fixed invisible terrain in instance segmentation
+ * Importing from carla.command is now possible
+ * carla.ad subpackages are now directly importable and are not directly importable anymore (e.g. import ad)
  * Fixed segfault in traffic manager when trying to access not available vehicles
 
 ## CARLA 0.9.15

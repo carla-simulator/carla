@@ -19,8 +19,7 @@ import math
 import random
 import invertedai as iai
 from invertedai.common import AgentProperties, AgentState, TrafficLightState
-
-SpawnActor = carla.command.SpawnActor
+from carla.command import SpawnActor, DestroyActor
 
 #---------
 # CARLA Utils
@@ -637,7 +636,7 @@ def main():
 
         vehicles_list = world.get_actors().filter('vehicle.*')
         print('\ndestroying %d vehicles' % len(vehicles_list))
-        client.apply_batch([carla.command.DestroyActor(x) for x in vehicles_list])
+        client.apply_batch([DestroyActor(x) for x in vehicles_list])
 
         walkercontrollers_list = world.get_actors().filter('controller.*')
         for control in walkercontrollers_list:
@@ -646,7 +645,7 @@ def main():
 
         walkers_list = world.get_actors().filter('walker.*')
         print('\ndestroying %d walkers' % len(walkers_list))
-        client.apply_batch([carla.command.DestroyActor(x) for x in walkers_list])
+        client.apply_batch([DestroyActor(x) for x in walkers_list])
 
         time.sleep(0.5)
 
