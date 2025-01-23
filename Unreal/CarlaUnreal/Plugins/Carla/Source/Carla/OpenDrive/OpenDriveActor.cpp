@@ -143,7 +143,12 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
 
   // As the OpenDrive file has the same name as level, build the path to the
   // xodr file using the lavel name and the game content directory.
-  const FString XodrContent = UOpenDrive::LoadXODR(MapName);
+  static FString XodrContent;
+  if (CustomPath.IsEmpty()){
+    XodrContent = UOpenDrive::LoadXODR(MapName);
+  } else {
+    XodrContent = UOpenDrive::LoadXODRFullPath(CustomPath);
+  }
 
   auto map = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromLongFString(XodrContent));
 

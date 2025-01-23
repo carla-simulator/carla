@@ -122,6 +122,26 @@ FString UOpenDrive::LoadXODR(const FString &MapName)
   return Content;
 }
 
+FString UOpenDrive::LoadXODRFullPath(const FString &FullPath)
+{
+  FString Content;
+
+  if (FullPath.IsEmpty())
+  {
+    UE_LOG(LogTemp, Error, TEXT("Failed to find OpenDrive file for map '%s'"), *FullPath);
+  }
+  else if (FFileHelper::LoadFileToString(Content, *FullPath))
+  {
+    UE_LOG(LogTemp, Log, TEXT("Loaded OpenDrive file '%s'"), *FullPath);
+  }
+  else
+  {
+    UE_LOG(LogTemp, Error, TEXT("Failed to load OpenDrive file '%s'"), *FullPath);
+  }
+
+  return Content;
+}
+
 FString UOpenDrive::GetXODRByPath(FString XODRPath, FString MapName){
 
   // When playing in editor the map name gets an extra prefix, here we
