@@ -143,10 +143,47 @@ This software contains Autodesk® FBX® code developed by Autodesk, Inc. Copyrig
 
 ---
 
-## User Edits
+## (Custom Edits) Docker
 
 ### Compile with Python3
+
+You can decide if you want to build with older version of python but you will need to install them.
+
+Python 3.10 was installed by default with apt package manager.
 
 ```bash
 make PythonAPI ARGS="--python-version=2.7, 3.6, 3.7, 3.8"
 ```
+
+The scripts were updated to be forced to use Python3 and Python2.7 is no longer installed in the docker image.
+
+### Devcontainer with GUI Support
+
+This image will use the host permissions by default to be able to run things locally after compilation, you could modify the image if you don't want this.
+
+The easiest way to launch carla in the container is simply caling the run script, this will call the build script automatically before running your container and set the appropiate environment, otherwise you would need to manually do this.
+
+```bash
+run_container.sh
+```
+
+Alternatively you can run the image before trying to call `run_container.sh`
+
+```bash
+build_image.sh
+```
+
+### Run CARLA
+
+Still needs to be build as this si not done in the image
+
+```bash
+make PythonAPI
+make CarlaUE4Editor
+make launch-only
+```
+
+### Know Issues
+
+- Carla binaries won't open on the host, they have to be run from the container
+- `/usr/share/vulkan/icd.d/nvidia_icd.json` need to be available in the host to be copied to be mounted inside the container.

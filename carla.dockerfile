@@ -6,6 +6,8 @@ FROM ubuntu:22.04
 ARG USERNAME=carla
 ARG USER_ID=1000
 ARG GROUP_ID=1000
+ARG EPIC_USER
+ARG EPIC_PASS
 
 # ----------------------------
 # Install CARLA dependencies
@@ -53,7 +55,7 @@ RUN sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-10
 ENV CC="/usr/bin/clang"
 ENV CXX="/usr/bin/clang++"
 # NOTE: Make sure Unreal Engine is mounted at this location
-ENV UE4_ROOT="/opt/UnrealEngine_4.26"
+# ENV UE4_ROOT="/opt/UnrealEngine_4.26"
 
 # ----------------------------
 # Cleanup
@@ -82,6 +84,20 @@ RUN if [ -z "$(getent group $GROUP_ID)" ]; then \
         usermod -l "$USERNAME" -d /home/"$USERNAME" -m "$existing_user"; \
       fi; \
     fi
+
+  
+# ----------------------------
+# Install Unreal Engine 4.26
+# ----------------------------
+
+ENV UE4_ROOT /home/$USERNAME/UE4.26
+
+RUN git clone --depth 1 -b carla "https://${EPIC_USER}:${EPIC_PASS}@github.com/CarlaUnreal/UnrealEngine.git" ${UE4_ROOT}
+  
+RUN cd $UE4_ROOT && \
+  ./Setup.sh && \
+  ./GenerateProjectFiles.sh && \
+  make
 
 # ----------------------------
 # Optionally add passwordless sudo for $USERNAME

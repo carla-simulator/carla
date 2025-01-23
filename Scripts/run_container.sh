@@ -24,6 +24,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
 # Target directory inside the container
+# NOTE: This directory already has host credentials and helps to avoid deleting .bashrc
 TARGET_DIR="/workspace"
 
 # Check if Docker is installed

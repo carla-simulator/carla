@@ -6,8 +6,10 @@ FROM ubuntu:22.04
 ARG USERNAME=carla
 ARG USER_ID=1000
 ARG GROUP_ID=1000
-ARG EPIC_USER
-ARG EPIC_PASS
+
+# Place the appropiate credentials in .env file at the root of this repo
+ARG EPIC_USER="username"
+ARG EPIC_PASS="github_token"
 
 # ----------------------------
 # Set environment variables for NVIDIA support
@@ -131,6 +133,23 @@ ENV CXX=/opt/UE4.26/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_c
 # Set repo working directory
 # ----------------------------
 WORKDIR /workspace
+
+# ----------------------------
+# Isntall CARLA 0.9.15.2
+# ----------------------------
+ARG CARLA_GIT_TAG="0.9.15.2"
+ARG BRANCH="feature/carla-${CARLA_GIT_TAG}-jammy-devcontainer"
+ARG CLONE_DIR="carla-${CARLA_GIT_TAG}"
+
+RUN git clone --depth 1 --branch ${BRANCH} https://github.com/wambitz/carla.git ${CLONE_DIR}
+
+RUN cd ${CLONE_DIR} && \
+    ./Update.sh && \
+    make CarlaUE4Editor && \
+    make PythonAPI && \
+    make build.utils && \
+    make package && \
+    rm -r Dist
 
 # ----------------------------
 # Entry point
