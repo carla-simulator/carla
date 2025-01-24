@@ -255,6 +255,9 @@ Check out the [introduction to blueprints](core_actors.md).
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
         - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
         - `vertical_fov` (_Float_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.other.rss</font>**  
+    - **Attributes:**
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
 
 ### static
 - **<font color="#498efc">static.prop.advertisement</font>**  
