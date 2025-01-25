@@ -29,6 +29,7 @@
  * Importing from carla.command is now possible
  * carla.ad subpackages are now directly importable and are not directly importable anymore (e.g. import ad)
  * Fixed segfault in traffic manager when trying to access not available vehicles
+ * Added ad-rss type-stubs for the PythonAPI when building with RSS support
 
 ## CARLA 0.9.15
 
