@@ -23,6 +23,11 @@ ENV NVIDIA_VISIBLE_DEVICES=all
 ENV XDG_RUNTIME_DIR=/run/user/1000
 
 # ----------------------------
+# Explicitly tell Vulkan to use NVIDIA's ICD
+# ----------------------------
+ENV VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
+
+# ----------------------------
 # Create or rename user/group "$USERNAME"
 # so that we end up with:
 # - group "$USERNAME" at GID=$GROUP_ID
@@ -46,7 +51,7 @@ RUN if [ -z "$(getent group $GROUP_ID)" ]; then \
     fi
 
 # ----------------------------
-# Install Unreal Engine dependencies
+# Install Unreal Engine build dependencies
 # ----------------------------
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive && \
@@ -135,7 +140,7 @@ ENV CXX=/opt/UE4.26/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_c
 WORKDIR /workspace
 
 # ----------------------------
-# Isntall CARLA 0.9.15.2
+# Install CARLA 0.9.15.2
 # ----------------------------
 ARG CARLA_GIT_TAG="0.9.15.2"
 ARG BRANCH="feature/carla-${CARLA_GIT_TAG}-jammy-devcontainer"

@@ -1,6 +1,6 @@
 {
     "name": "CARLA 0.9.15.2 (jammy)",
-    "image": "carla-0.9.15.2-ue4-jammy-dev",
+    "image": "carla-0.9.15.2-jammy-dev",
 
     "initializeCommand": "./Scripts/build_image.sh",
 
@@ -24,14 +24,17 @@
     "postStartCommand": "bash", 
 
     // runArgs to set a container name + stable hostname
+    // NOTE1: DO NOT pass --user here (we want the Dockerfile default user, not an override)
+    // NOTE2: Make sure /usr/share/vulkan/icd.d/nvidia_icd.json exist in the host
+    // NOTE3: Ensure UE4_ROOT environment variable is defined in host
     "runArgs": [
       "--rm",
-      "--name", "carla-0.9.15.2-ue4-jammy-devcontainer",
+      "--name", "carla-0.9.15.2-jammy-devcontainer",
       "--hostname", "carla-devcontainer",
-      // DO NOT pass --user here (we want the Dockerfile default user, not an override)
+      "--env", "DISPLAY=${localEnv:DISPLAY}",  
       "--volume", "/tmp/.X11-unix:/tmp/.X11-unix",         // Share X11 socket
-      "--volume", "/usr/share/vulkan/icd.d/nvidia_icd.json", 
-      "--env", "DISPLAY=${localEnv:DISPLAY}",              // Pass host DISPLAY variable
+      "--volume", "/usr/share/vulkan/icd.d/nvidia_icd.json:/usr/share/vulkan/icd.d/nvidia_icd.json", 
+      "--volume", "${localEnv:UE4_ROOT}:/opt/UE4.26",
       "--gpus", "all"
     ]
 }

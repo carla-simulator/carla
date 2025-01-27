@@ -1,14 +1,14 @@
 #!/bin/bash
 
+# Set Docker image
+IMAGE="carla-0.9.15.2-jammy-dev"
+
 # Set container name and hostname
-CONTAINER_NAME=""carla-0.9.15.2-ue4-jammy-devcontainer""
-HOSTNAME="carla-ue4-devcontainer"
+CONTAINER_NAME=""carla-0.9.15.2-jammy-devcontainer""
+HOSTNAME="carla-devcontainer"
 
 # Get the username dynamically based on whoami
 USERNAME="$(whoami)"
-
-# Set Docker image
-IMAGE="carla-0.9.15.2-ue4-jammy-dev"
 
 # Define DISPLAY and X11 socket for GUI forwarding
 DISPLAY="$DISPLAY"
@@ -59,6 +59,7 @@ docker run -it --rm \
     --volume "$X11_SOCKET:$X11_SOCKET" \
     --volume "$PROJECT_DIR:$TARGET_DIR" \
     --volume "$NVIDIA_ICD:$NVIDIA_ICD" \
+    --volume "$UE4_ROOT:/opt/UE4.26" \
     --gpus all \
     "$IMAGE" bash || {
         echo "Failed to start Docker container. Exiting."

@@ -178,6 +178,7 @@ build_image.sh
 Still needs to be build as this si not done in the image
 
 ```bash
+./Update.sh
 make PythonAPI
 make CarlaUE4Editor
 make launch-only
