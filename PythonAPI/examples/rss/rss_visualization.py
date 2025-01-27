@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #
 # Copyright (c) 2020 Intel Corporation
 #
@@ -23,10 +22,23 @@ import weakref
 import carla
 from carla import ad
 
+class Color:
+    black = (0, 0, 0)
+    gray = (128, 128, 128)
+    white = (255, 255, 255)
+    red = (255, 0, 0)
+    green = (0, 255, 0)
+    blue = (0, 0, 255)
+
+    carla_gray = carla.Color(150, 150, 150)
+    carla_red = carla.Color(255, 0, 0)
+    carla_green = carla.Color(0, 255, 0)
+    carla_blue = carla.Color(0, 0, 255)
 
 class RssStateVisualizer(object):
 
     def __init__(self, display_dimensions, font, world):
+        # type: (tuple[int, int] | list[int], pygame.font.Font, carla.World) -> None
         self._surface = None
         self._display_dimensions = display_dimensions
         self._font = font
@@ -38,7 +50,7 @@ class RssStateVisualizer(object):
         v_offset = 0
 
         if individual_rss_states:
-            surface = self._font.render('RSS States:', True, (255, 255, 255))
+            surface = self._font.render('RSS States:', True, Color.white)
             state_surface.blit(surface, (8, v_offset))
             v_offset += 26
         for state in individual_rss_states:
@@ -66,14 +78,14 @@ class RssStateVisualizer(object):
                 mode = "-"
             item = '%4s % 2dm %8s' % (mode, state.distance, object_name)
 
-            surface = self._font.render(item, True, (255, 255, 255))
+            surface = self._font.render(item, True, Color.white)
             state_surface.blit(surface, (5, v_offset))
-            color = (128, 128, 128)
+            color = Color.gray
             if state.actor_calculation_mode != ad.rss.map.RssMode.NotRelevant:
                 if state.is_dangerous:
-                    color = (255, 0, 0)
+                    color = Color.red
                 else:
-                    color = (0, 255, 0)
+                    color = Color.green
             pygame.draw.circle(state_surface, color, (12, v_offset + 7), 5)
             xpos = 184
             if state.actor_calculation_mode == ad.rss.map.RssMode.Structured:
@@ -111,7 +123,7 @@ class RssStateVisualizer(object):
                     text = "  C"
                 elif state.rss_state.unstructuredSceneState.response == ad.rss.state.UnstructuredSceneResponse.Brake:
                     text = "  B"
-                surface = self._font.render(text, True, (255, 255, 255))
+                surface = self._font.render(text, True, Color.white)
                 state_surface.blit(surface, (xpos, v_offset))
 
             v_offset += 14
@@ -120,35 +132,6 @@ class RssStateVisualizer(object):
     def render(self, display, v_offset):
         if self._surface:
             display.blit(self._surface, (0, v_offset))
-
-
-def get_matrix(transform):
-    """
-    Creates matrix from carla transform.
-    """
-
-    rotation = transform.rotation
-    location = transform.location
-    c_y = np.cos(np.radians(rotation.yaw))
-    s_y = np.sin(np.radians(rotation.yaw))
-    c_r = np.cos(np.radians(rotation.roll))
-    s_r = np.sin(np.radians(rotation.roll))
-    c_p = np.cos(np.radians(rotation.pitch))
-    s_p = np.sin(np.radians(rotation.pitch))
-    matrix = np.matrix(np.identity(4))
-    matrix[0, 3] = location.x
-    matrix[1, 3] = location.y
-    matrix[2, 3] = location.z
-    matrix[0, 0] = c_p * c_y
-    matrix[0, 1] = c_y * s_p * s_r - s_y * c_r
-    matrix[0, 2] = -c_y * s_p * c_r - s_y * s_r
-    matrix[1, 0] = s_y * c_p
-    matrix[1, 1] = s_y * s_p * s_r + c_y * c_r
-    matrix[1, 2] = -s_y * s_p * c_r + c_y * s_r
-    matrix[2, 0] = s_p
-    matrix[2, 1] = -c_p * s_r
-    matrix[2, 2] = c_p * c_r
-    return matrix
 
 # ==============================================================================
 # -- RssUnstructuredSceneVisualizer ------------------------------------------------
@@ -162,12 +145,14 @@ class RssUnstructuredSceneVisualizerMode(Enum):
 
 
 class RssUnstructuredSceneVisualizer(object):
+    """Provides a top-view over the setting?"""
 
     def __init__(self, parent_actor, world, display_dimensions):
+        # type: (carla.Actor, carla.World, tuple[int, int] | list[int]) -> None
         self._last_rendered_frame = -1
         self._surface = None
-        self._current_rss_surface = None
-        self.current_camera_surface = (0, None)
+        self._current_rss_surface = None  # type: tuple[int, pygame.Surface] | None
+        self.current_camera_surface = (0, None)  # type: tuple[int, pygame.Surface]
         self._world = world
         self._parent_actor = parent_actor
         self._display_dimensions = display_dimensions
@@ -233,13 +218,13 @@ class RssUnstructuredSceneVisualizer(object):
             surface = self.current_camera_surface[1]
             surface.blit(self._current_rss_surface[1], (0, 0))
             rect = pygame.Rect((0, 0), (2, surface.get_height()))
-            pygame.draw.rect(surface, (0, 0, 0), rect, 0)
+            pygame.draw.rect(surface, Color.black, rect, 0)
             rect = pygame.Rect((0, 0), (surface.get_width(), 2))
-            pygame.draw.rect(surface, (0, 0, 0), rect, 0)
+            pygame.draw.rect(surface, Color.black, rect, 0)
             rect = pygame.Rect((0, surface.get_height() - 2), (surface.get_width(), surface.get_height()))
-            pygame.draw.rect(surface, (0, 0, 0), rect, 0)
+            pygame.draw.rect(surface, Color.black, rect, 0)
             rect = pygame.Rect((surface.get_width() - 2, 0), (surface.get_width(), surface.get_width()))
-            pygame.draw.rect(surface, (0, 0, 0), rect, 0)
+            pygame.draw.rect(surface, Color.black, rect, 0)
             self._surface = surface
 
     def toggle_camera(self):
@@ -290,17 +275,19 @@ class RssUnstructuredSceneVisualizer(object):
             lines = RssUnstructuredSceneVisualizer.get_trajectory_sets(
                 rss_response.rss_state_snapshot, self._camera.get_transform(), self._calibration)
 
-            polygons = []
-            for heading_range in allowed_heading_ranges:
-                polygons.append((RssUnstructuredSceneVisualizer.transform_points(
+            polygons = [
+                (RssUnstructuredSceneVisualizer.transform_points(
                     RssUnstructuredSceneVisualizer._get_points_from_pairs(
                         RssUnstructuredSceneVisualizer.draw_heading_range(
-                            heading_range, rss_response.ego_dynamics_on_route)),
-                    self._camera.get_transform(), self._calibration), (0, 0, 255)))
+                        heading_range,
+                        rss_response.ego_dynamics_on_route)),
+                    self._camera.get_transform(),
+                    self._calibration),
+                Color.blue)
+                for heading_range in allowed_heading_ranges]
 
             RssUnstructuredSceneVisualizer.draw_lines(surface, lines)
             RssUnstructuredSceneVisualizer.draw_polygons(surface, polygons)
-
         except RuntimeError as e:
             print("ERROR {}".format(e))
         self._current_rss_surface = (frame, surface)
@@ -336,22 +323,26 @@ class RssUnstructuredSceneVisualizer(object):
         """
         Creates 3D bounding boxes based on carla vehicle list and camera.
         """
-        trajectory_sets = []
-
-        # ego
-        trajectory_sets.append((RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
-            rss_state_snapshot.unstructuredSceneEgoInformation.brakeTrajectorySet), camera_transform, calibration), (255, 0, 0)))
-        trajectory_sets.append((RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
-            rss_state_snapshot.unstructuredSceneEgoInformation.continueForwardTrajectorySet), camera_transform, calibration), (0, 255, 0)))
+        trajectory_sets = [
+            # ego
+            (RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
+                rss_state_snapshot.unstructuredSceneEgoInformation.brakeTrajectorySet), camera_transform, calibration),
+             Color.red),
+            (RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
+                rss_state_snapshot.unstructuredSceneEgoInformation.continueForwardTrajectorySet), camera_transform, calibration),
+             Color.green)
+            ]
 
         # others
         for state in rss_state_snapshot.individualResponses:
             if state.unstructuredSceneState.rssStateInformation.brakeTrajectorySet:
                 trajectory_sets.append((RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
-                    state.unstructuredSceneState.rssStateInformation.brakeTrajectorySet), camera_transform, calibration), (255, 0, 0)))
+                    state.unstructuredSceneState.rssStateInformation.brakeTrajectorySet), camera_transform, calibration),
+                                        Color.red))
             if state.unstructuredSceneState.rssStateInformation.continueForwardTrajectorySet:
                 trajectory_sets.append((RssUnstructuredSceneVisualizer.transform_points(RssUnstructuredSceneVisualizer._get_trajectory_set_points(
-                    state.unstructuredSceneState.rssStateInformation.continueForwardTrajectorySet), camera_transform, calibration), (0, 255, 0)))
+                    state.unstructuredSceneState.rssStateInformation.continueForwardTrajectorySet), camera_transform, calibration),
+                                        Color.green))
 
         return trajectory_sets
 
@@ -378,25 +369,22 @@ class RssUnstructuredSceneVisualizer(object):
         """
         Returns trajectory set projected to camera view
         """
+        if world_cords.size == 0:
+            return []
         world_cords = np.transpose(world_cords)
         cords_x_y_z = RssUnstructuredSceneVisualizer._world_to_sensor(world_cords, camera_transform)[:3, :]
-        cords_y_minus_z_x = np.concatenate([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
+        cords_y_minus_z_x = np.stack([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
         ts = np.transpose(np.dot(calibration, cords_y_minus_z_x))
-        camera_ts = np.concatenate([ts[:, 0] / ts[:, 2], ts[:, 1] / ts[:, 2], ts[:, 2]], axis=1)
-        line_to_draw = []
-        for point in camera_ts:
-            line_to_draw.append((int(point[0, 0]), int(point[0, 1])))
-        return line_to_draw
+        camera_ts = np.stack([ts[:, 0] / ts[:, 2], ts[:, 1] / ts[:, 2], ts[:, 2]], axis=1)
+        return [(int(point[0]), int(point[1])) for point in camera_ts]  # line_to_draw
 
     @staticmethod
     def _get_trajectory_set_points(trajectory_set):
         """
         """
         cords = np.zeros((len(trajectory_set), 4))
-        i = 0
-        for pt in trajectory_set:
-            cords[i, :] = np.array([pt.x, -pt.y, 0, 1])
-            i += 1
+        for i, pt in enumerate(trajectory_set):
+            cords[i, :] = [pt.x, -pt.y, 0, 1]
         return cords
 
     @staticmethod
@@ -404,10 +392,8 @@ class RssUnstructuredSceneVisualizer(object):
         """
         """
         cords = np.zeros((len(trajectory_set), 4))
-        i = 0
-        for pt in trajectory_set:
-            cords[i, :] = np.array([pt[0], -pt[1], 0, 1])
-            i += 1
+        for i, pt in enumerate(trajectory_set):
+            cords[i, :] = [pt[0], -pt[1], 0, 1]
         return cords
 
     @staticmethod
@@ -415,10 +401,9 @@ class RssUnstructuredSceneVisualizer(object):
         """
         Transforms world coordinates to sensor.
         """
-        sensor_world_matrix = get_matrix(camera_transform)
-        world_sensor_matrix = np.linalg.inv(sensor_world_matrix)
-        sensor_cords = np.dot(world_sensor_matrix, cords)
-        return sensor_cords
+        world_sensor_matrix = camera_transform.get_inverse_matrix()
+        # Sensor coordinates
+        return np.dot(world_sensor_matrix, cords)
 
 # ==============================================================================
 # -- RssBoundingBoxVisualizer ------------------------------------------------------
@@ -448,9 +433,8 @@ class RssBoundingBoxVisualizer(object):
                 return
 
         # only render on new frame
-        if len(self._surface_for_frame) > 0:
-            if self._surface_for_frame[0][0] == frame:
-                return
+        if len(self._surface_for_frame) > 0 and self._surface_for_frame[0][0] == frame:
+            return
 
         surface = pygame.Surface(self._dim)
         surface.set_colorkey(pygame.Color('black'))
@@ -488,9 +472,8 @@ class RssBoundingBoxVisualizer(object):
                 if other_actor:
                     bounding_boxes.append(RssBoundingBoxVisualizer.get_bounding_box(
                         other_actor, camera_transform, calibration))
-        # filter objects behind camera
-        bounding_boxes = [bb for bb in bounding_boxes if all(bb[:, 2] > 0)]
-        return bounding_boxes
+        # filter objects behind camera and return bounding_boxes
+        return [bb for bb in bounding_boxes if all(bb[:, 2] > 0)]
 
     @staticmethod
     def draw_bounding_boxes(surface, bounding_boxes, color=pygame.Color('red')):
@@ -524,10 +507,10 @@ class RssBoundingBoxVisualizer(object):
 
         bb_cords = RssBoundingBoxVisualizer._create_bb_points(vehicle)
         cords_x_y_z = RssBoundingBoxVisualizer._vehicle_to_sensor(bb_cords, vehicle, camera_transform)[:3, :]
-        cords_y_minus_z_x = np.concatenate([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
+        cords_y_minus_z_x = np.stack([cords_x_y_z[1, :], -cords_x_y_z[2, :], cords_x_y_z[0, :]])
         bbox = np.transpose(np.dot(calibration, cords_y_minus_z_x))
-        camera_bbox = np.concatenate([bbox[:, 0] / bbox[:, 2], bbox[:, 1] / bbox[:, 2], bbox[:, 2]], axis=1)
-        return camera_bbox
+        # camera_bbox
+        return np.stack([bbox[:, 0] / bbox[:, 2], bbox[:, 1] / bbox[:, 2], bbox[:, 2]], axis=1)
 
     @staticmethod
     def _create_bb_points(vehicle):
@@ -535,16 +518,19 @@ class RssBoundingBoxVisualizer(object):
         Returns 3D bounding box for a vehicle.
         """
 
-        cords = np.zeros((8, 4))
+        cords = np.empty((8, 4))
         extent = vehicle.bounding_box.extent
-        cords[0, :] = np.array([extent.x, extent.y, -extent.z, 1])
-        cords[1, :] = np.array([-extent.x, extent.y, -extent.z, 1])
-        cords[2, :] = np.array([-extent.x, -extent.y, -extent.z, 1])
-        cords[3, :] = np.array([extent.x, -extent.y, -extent.z, 1])
-        cords[4, :] = np.array([extent.x, extent.y, extent.z, 1])
-        cords[5, :] = np.array([-extent.x, extent.y, extent.z, 1])
-        cords[6, :] = np.array([-extent.x, -extent.y, extent.z, 1])
-        cords[7, :] = np.array([extent.x, -extent.y, extent.z, 1])
+        x = extent.x
+        y = extent.y
+        z = extent.z
+        cords[0] = [x, y, -z, 1.]
+        cords[1] = [-x, y, -z, 1.]
+        cords[2] = [-x, -y, -z, 1.]
+        cords[3] = [x, -y, -z, 1.]
+        cords[4] = [x, y, z, 1.]
+        cords[5] = [-x, y, z, 1.]
+        cords[6] = [-x, -y, z, 1.]
+        cords[7] = [x, -y, z, 1.]
         return cords
 
     @staticmethod
@@ -554,8 +540,8 @@ class RssBoundingBoxVisualizer(object):
         """
 
         world_cord = RssBoundingBoxVisualizer._vehicle_to_world(cords, vehicle)
-        sensor_cord = RssBoundingBoxVisualizer._world_to_sensor(world_cord, camera_transform)
-        return sensor_cord
+        # Sensor coordinates
+        return RssBoundingBoxVisualizer._world_to_sensor(world_cord, camera_transform)
 
     @staticmethod
     def _vehicle_to_world(cords, vehicle):
@@ -563,12 +549,11 @@ class RssBoundingBoxVisualizer(object):
         Transforms coordinates of a vehicle bounding box to world.
         """
 
-        bb_transform = carla.Transform(vehicle.bounding_box.location)
-        bb_vehicle_matrix = get_matrix(bb_transform)
-        vehicle_world_matrix = get_matrix(vehicle.get_transform())
+        bb_vehicle_matrix = carla.Transform(vehicle.bounding_box.location).get_matrix()
+        vehicle_world_matrix = vehicle.get_transform().get_matrix()
         bb_world_matrix = np.dot(vehicle_world_matrix, bb_vehicle_matrix)
-        world_cords = np.dot(bb_world_matrix, np.transpose(cords))
-        return world_cords
+        # World coordinates
+        return np.dot(bb_world_matrix, np.transpose(cords))
 
     @staticmethod
     def _world_to_sensor(cords, camera_transform):
@@ -576,10 +561,9 @@ class RssBoundingBoxVisualizer(object):
         Transforms world coordinates to sensor.
         """
 
-        sensor_world_matrix = get_matrix(camera_transform)
-        world_sensor_matrix = np.linalg.inv(sensor_world_matrix)
-        sensor_cords = np.dot(world_sensor_matrix, cords)
-        return sensor_cords
+        world_sensor_matrix = camera_transform.get_inverse_matrix()
+        # Sensor coordinates
+        return np.dot(world_sensor_matrix, cords)
 
 # ==============================================================================
 # -- RssDebugVisualizer ------------------------------------------------------------
@@ -596,10 +580,14 @@ class RssDebugVisualizationMode(Enum):
 
 class RssDebugVisualizer(object):
 
-    def __init__(self, player, world):
+    def __init__(self, player, world, visualization_mode=RssDebugVisualizationMode.Off):
         self._world = world
         self._player = player
-        self._visualization_mode = RssDebugVisualizationMode.Off
+        if isinstance(visualization_mode, str):
+            visualization_mode = RssDebugVisualizationMode[visualization_mode]
+        elif isinstance(visualization_mode, int):
+            visualization_mode = RssDebugVisualizationMode(visualization_mode)
+        self._visualization_mode = visualization_mode
 
     def toggleMode(self):
         if self._visualization_mode == RssDebugVisualizationMode.All:
@@ -615,14 +603,14 @@ class RssDebugVisualizer(object):
         print("New Debug Visualizer Mode {}".format(self._visualization_mode))
 
     def tick(self, route, dangerous, individual_rss_states, ego_dynamics_on_route):
-        if self._visualization_mode == RssDebugVisualizationMode.RouteOnly or \
-                self._visualization_mode == RssDebugVisualizationMode.VehicleStateAndRoute or \
-                self._visualization_mode == RssDebugVisualizationMode.All:
+        if self._visualization_mode in {RssDebugVisualizationMode.RouteOnly,
+                                RssDebugVisualizationMode.VehicleStateAndRoute,
+                                RssDebugVisualizationMode.All}:
             self.visualize_route(dangerous, route)
 
-        if self._visualization_mode == RssDebugVisualizationMode.VehicleStateOnly or \
-                self._visualization_mode == RssDebugVisualizationMode.VehicleStateAndRoute or \
-                self._visualization_mode == RssDebugVisualizationMode.All:
+        if self._visualization_mode in {RssDebugVisualizationMode.VehicleStateOnly,
+                                        RssDebugVisualizationMode.VehicleStateAndRoute,
+                                        RssDebugVisualizationMode.All}:
             self.visualize_rss_results(individual_rss_states)
 
         if self._visualization_mode == RssDebugVisualizationMode.All:
@@ -631,8 +619,8 @@ class RssDebugVisualizer(object):
     def visualize_route(self, dangerous, route):
         if not route:
             return
-        right_lane_edges = dict()
-        left_lane_edges = dict()
+        right_lane_edges = {}
+        left_lane_edges = {}
 
         for road_segment in route.roadSegments:
             right_most_lane = road_segment.drivableLaneSegments[0]
@@ -644,7 +632,7 @@ class RssDebugVisualizer(object):
                 color = carla.Color(r=(128 if dangerous else 255))
                 if intersection_lane:
                     color.b = 128 if dangerous else 255
-                color = carla.Color(r=255, g=0, b=255)
+
                 self.visualize_enu_edge(edge, color, self._player.get_location().z)
 
             left_most_lane = road_segment.drivableLaneSegments[-1]
@@ -678,18 +666,18 @@ class RssDebugVisualizer(object):
 
             point = other_actor.get_location()
             point.z += 0.05
-            indicator_color = carla.Color(0, 255, 0)
+            indicator_color = Color.carla_green
             dangerous = ad.rss.state.isDangerous(state.rss_state)
             if dangerous:
-                indicator_color = carla.Color(255, 0, 0)
+                indicator_color = Color.carla_red
             elif state.rss_state.situationType == ad.rss.situation.SituationType.NotRelevant:
-                indicator_color = carla.Color(150, 150, 150)
+                indicator_color = Color.carla_gray
 
             if self._visualization_mode == RssDebugVisualizationMode.All:
                 # the connection lines are only visualized if All is requested
-                lon_color = indicator_color
-                lat_l_color = indicator_color
-                lat_r_color = indicator_color
+                lon_color = carla.Color(indicator_color.r, indicator_color.g, indicator_color.b)
+                lat_l_color = carla.Color(indicator_color.r, indicator_color.g, indicator_color.b)
+                lat_r_color = carla.Color(indicator_color.r, indicator_color.g, indicator_color.b)
                 if not state.rss_state.longitudinalState.isSafe:
                     lon_color.r = 255
                     lon_color.g = 0 if dangerous else 255
@@ -708,7 +696,6 @@ class RssDebugVisualizer(object):
             self._world.debug.draw_point(point, 0.2, indicator_color, 0.02, False)
 
     def visualize_ego_dynamics(self, ego_dynamics_on_route):
-        color = carla.Color(0, 0, 255)
 
         sin_heading = math.sin(float(ego_dynamics_on_route.route_heading))
         cos_heading = math.cos(float(ego_dynamics_on_route.route_heading))
@@ -722,7 +709,7 @@ class RssDebugVisualizer(object):
         heading_location_end.y -= sin_heading * 10.
         heading_location_end.z += 0.5
 
-        self._world.debug.draw_arrow(heading_location_start, heading_location_end, 0.1, 0.1, color, 0.02, False)
+        self._world.debug.draw_arrow(heading_location_start, heading_location_end, 0.1, 0.1, Color.carla_blue, 0.02, False)
 
         sin_center = math.sin(float(ego_dynamics_on_route.route_heading) + math.pi / 2.)
         cos_center = math.cos(float(ego_dynamics_on_route.route_heading) + math.pi / 2.)
@@ -735,4 +722,4 @@ class RssDebugVisualizer(object):
         center_location_end.y -= sin_center * 2.
         center_location_end.z += 0.5
 
-        self._world.debug.draw_line(center_location_start, center_location_end, 0.1, color, 0.02, False)
+        self._world.debug.draw_line(center_location_start, center_location_end, 0.1, Color.carla_blue, 0.02, False)
