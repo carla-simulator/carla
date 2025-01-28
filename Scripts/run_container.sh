@@ -1,67 +1,106 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -e
 
-# Set Docker image
-IMAGE="carla-0.9.15.2-jammy-dev"
+###############################################################################
+# Usage:
+#   ./run_container.sh [--monolith]
+# 
+# If --monolith is supplied, the script uses:
+#   - Dockerfile:  carla-ue4.dockerfile
+#   - Image Name:  carla-0.9.15.2-ue4-jammy-dev
+#   - Container:   carla-0.9.15.2-ue4-jammy-devcontainer
+#   - Hostname:    carla-ue4-devcontainer
+#   - Extra volume for UE4 root
+#
+# Otherwise, it defaults to the lightweight version:
+#   - Dockerfile:  carla.dockerfile
+#   - Image Name:  carla-0.9.15.2-jammy-dev
+#   - Container:   carla-0.9.15.2-jammy-devcontainer
+#   - Hostname:    carla-devcontainer
+#   - Mounts UE4_ROOT:/opt/UE4.26 (external UE4 path) for building CARLA without
+#     baking UE4 into the container.
+###############################################################################
 
-# Set container name and hostname
-CONTAINER_NAME=""carla-0.9.15.2-jammy-devcontainer""
-HOSTNAME="carla-devcontainer"
-
-# Get the username dynamically based on whoami
-USERNAME="$(whoami)"
-
-# Define DISPLAY and X11 socket for GUI forwarding
-DISPLAY="$DISPLAY"
-X11_SOCKET="/tmp/.X11-unix"
-
-# NVIDIA ICD Config file
-NVIDIA_ICD="/usr/share/vulkan/icd.d/nvidia_icd.json"
-
-# Change to the script's directory
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-
-# Get the absolute path of the project directory (one level above the script)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
-# Target directory inside the container
-# NOTE: This directory already has host credentials and helps to avoid deleting .bashrc
-TARGET_DIR="/workspace"
+# ------------------------------------------------------------------------------
+# Parse Argument
+# ------------------------------------------------------------------------------
+MONOLITH=0
+if [[ "$1" == "--monolith" ]]; then
+    MONOLITH=1
+    echo "[INFO] Monolithic mode enabled."
+else
+    echo "[INFO] Using default (lightweight) mode."
+fi
 
-# Check if Docker is installed
+# ------------------------------------------------------------------------------
+# Select image, container names, and Dockerfile
+# ------------------------------------------------------------------------------
+if [ $MONOLITH -eq 1 ]; then
+    DOCKERFILE="carla-ue4.dockerfile"
+    IMAGE_NAME="carla-0.9.15.2-ue4-jammy-dev"
+    CONTAINER_NAME="carla-0.9.15.2-ue4-jammy-devcontainer"
+    HOSTNAME="carla-ue4-devcontainer"
+else
+    DOCKERFILE="carla.dockerfile"
+    IMAGE_NAME="carla-0.9.15.2-jammy-dev"
+    CONTAINER_NAME="carla-0.9.15.2-jammy-devcontainer"
+    HOSTNAME="carla-devcontainer"
+fi
+
+# ------------------------------------------------------------------------------
+# Docker / NVIDIA checks
+# ------------------------------------------------------------------------------
 if ! command -v docker &> /dev/null; then
     echo "Docker is not installed. Please install Docker and try again."
     exit 1
 fi
-
-# Check if NVIDIA Container Toolkit is installed (optional for GPU support)
-if ! docker info | grep -q "Runtimes:.*nvidia"; then
-    echo "NVIDIA Container Toolkit is not installed or configured. GPU acceleration may not work."
-    echo "To enable GPU support, install NVIDIA Container Toolkit: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html"
+ 
+ if ! docker info | grep -q "Runtimes:.*nvidia"; then
+    echo "[WARN] NVIDIA Container Toolkit is not installed or configured."
+    echo "GPU acceleration may not work."
+    echo "Refer to: https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html"
 fi
 
-# Build the Docker image (equivalent to "initializeCommand" in devcontainer.json)
-if [ -f "$SCRIPT_DIR/build_image.sh" ]; then
-    echo "Building Docker image..."
-    bash "$SCRIPT_DIR/build_image.sh" || {
-        echo "Failed to build Docker image. Exiting."
+# ------------------------------------------------------------------------------
+# Build the Docker image (this calls our new combined build script)
+# ------------------------------------------------------------------------------
+echo "[INFO] Building Docker image: $IMAGE_NAME"
+bash "$SCRIPT_DIR/build_image.sh" $([ $MONOLITH -eq 1 ]      && echo "--monolith")
+
+# ------------------------------------------------------------------------------
+# X11 / GPU Setup
+# ------------------------------------------------------------------------------
+DISPLAY="${DISPLAY:-:0}" 
+X11_SOCKET="/tmp/.X11-unix"
+NVIDIA_ICD="/usr/share/vulkan/icd.d/nvidia_icd.json"
+
+# ------------------------------------------------------------------------------
+# If using the LIGHTWEIGHT container, ensure UE4_ROOT is defined
+# ------------------------------------------------------------------------------
+if [ $MONOLITH -eq 0 ]; then
+    if [ -z "${UE4_ROOT}" ]; then
+        echo "[ERROR] \$UE4_ROOT is not set. Please export UE4_ROOT=/absolute/path/to/UE4.26 first."
+        echo "Example: export UE4_ROOT=\"/home/username/UnrealEngine_4.26\""
         exit 1
-    }
-else
-    echo "Initialization script '$SCRIPT_DIR/build_image.sh' not found. Skipping image build."
+    fi
 fi
 
-# Run the Docker container
-echo "Starting Docker container..."
+# ------------------------------------------------------------------------------
+# Start the Docker container
+# ------------------------------------------------------------------------------
+# NOTE: /workspace directory already has host credentials and prevents deleting .bashrc inside the container
+echo "[INFO] Starting Docker container..."
 docker run -it --rm \
     --name "$CONTAINER_NAME" \
     --hostname "$HOSTNAME" \
     --env "DISPLAY=$DISPLAY" \
     --volume "$X11_SOCKET:$X11_SOCKET" \
-    --volume "$PROJECT_DIR:$TARGET_DIR" \
+    --volume "$PROJECT_DIR:/workspace" \
     --volume "$NVIDIA_ICD:$NVIDIA_ICD" \
-    --volume "$UE4_ROOT:/opt/UE4.26" \
     --gpus all \
-    "$IMAGE" bash || {
-        echo "Failed to start Docker container. Exiting."
-        exit 1
-    }
+    $([ $MONOLITH -eq 0 ] && echo "--volume ${UE4_ROOT}:/opt/UE4.26") \
+    "$IMAGE_NAME" \
+    bash

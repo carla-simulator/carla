@@ -67,11 +67,11 @@ RUN apt-get update && \
     libvulkan1 \
     mesa-vulkan-drivers \
     libsdl2-dev \
-    vulkan-tools 
+    vulkan-tools
     # (optional) vulkan-tools -> useful for debugging
   
 # ----------------------------
-# Install CARLA dependencies
+# Install CARLA build dependencies
 # ----------------------------
 RUN apt-get update && \
     apt-get install -y \
@@ -85,7 +85,7 @@ RUN apt-get update && \
     libtiff5-dev \
     libjpeg-dev \
     autoconf \
-    rsync 
+    rsync
 
 # ----------------------------
 # Cleanup
@@ -117,7 +117,7 @@ RUN mkdir -p /workspace && \
     chown -R $USERNAME:$USERNAME /workspace
 
 # ----------------------------
-# Switch to "$DEV_USERNAME" by default
+# Switch to "$USERNAME" by default
 # ----------------------------
 USER "$USERNAME"
     

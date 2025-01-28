@@ -1,66 +1,23 @@
 FROM ubuntu:22.04
-
-# ----------------------------
-# Build arguments for user/group
-# ----------------------------
 ARG USERNAME=carla
 ARG USER_ID=1000
 ARG GROUP_ID=1000
-ARG EPIC_USER
-ARG EPIC_PASS
 
 # ----------------------------
-# Install CARLA dependencies
+# Set environment variables for NVIDIA support
 # ----------------------------
-RUN apt-get update && \
-    apt-get install -y wget software-properties-common && \
-    add-apt-repository ppa:ubuntu-toolchain-r/test && \
-    wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key| apt-key add 
-
-RUN apt-add-repository "deb http://archive.ubuntu.com/ubuntu focal main universe" 
-
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive \
-    apt-get install -y \
-    sudo \
-    build-essential \
-    clang-10 lld-10 \
-    g++-7 \
-    cmake \
-    ninja-build \
-    libvulkan1 \
-    python \
-    python-dev \
-    python3-dev \
-    python3-pip \
-    libpng-dev \
-    libtiff5-dev \
-    libjpeg-dev \
-    tzdata \
-    sed \
-    curl \
-    unzip \
-    autoconf \
-    libtool \
-    rsync \
-    libxml2-dev \
-    libsdl2-2.0-0 \
-    git \
-    git-lfs
-
-RUN sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-10/bin/clang++ 180 && \
-    sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-10/bin/clang 180 && \
-    sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 180
-
-ENV CC="/usr/bin/clang"
-ENV CXX="/usr/bin/clang++"
-# NOTE: Make sure Unreal Engine is mounted at this location
-# ENV UE4_ROOT="/opt/UnrealEngine_4.26"
+ENV NVIDIA_DRIVER_CAPABILITIES=all
+ENV NVIDIA_VISIBLE_DEVICES=all
 
 # ----------------------------
-# Cleanup
+# Set the XDG_RUNTIME_DIR environment variable for ./Setup.sh
 # ----------------------------
-RUN rm -rf /var/lib/apt/lists/*
+ENV XDG_RUNTIME_DIR=/run/user/1000
+
+# ----------------------------
+# Explicitly tell Vulkan to use NVIDIA's ICD
+# ----------------------------
+ENV VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
 
 # ----------------------------
 # Create or rename user/group "$USERNAME"
@@ -69,35 +26,60 @@ RUN rm -rf /var/lib/apt/lists/*
 # - user "$USERNAME"  at UID=$USER_ID
 # ----------------------------
 RUN if [ -z "$(getent group $GROUP_ID)" ]; then \
-      groupadd -g $GROUP_ID "$USERNAME"; \
+      groupadd --gid "$GROUP_ID" "$USERNAME"; \
     else \
-      existing_group="$(getent group $GROUP_ID | cut -d: -f1)"; \
-      if [ "$existing_group" != "$USERNAME" ]; then \
-        groupmod -n "$USERNAME" "$existing_group"; \
-      fi; \
+      groupmod --new-name "$USERNAME" "$(getent group $GROUP_ID | cut -d: -f1)"; \
     fi && \
     if [ -z "$(getent passwd $USER_ID)" ]; then \
-      useradd -m -u $USER_ID -g $GROUP_ID "$USERNAME"; \
+      useradd --uid "$USER_ID" --gid "$GROUP_ID" -m "$USERNAME"; \
     else \
-      existing_user="$(getent passwd $USER_ID | cut -d: -f1)"; \
-      if [ "$existing_user" != "$USERNAME" ]; then \
-        usermod -l "$USERNAME" -d /home/"$USERNAME" -m "$existing_user"; \
+      usermod --login "$USERNAME" --gid "$GROUP_ID" "$(getent passwd $USER_ID | cut -d: -f1)"; \
+      if [ ! -d "/home/$USERNAME" ]; then \
+        mkdir "/home/$USERNAME"; \
+        chown "$USER_ID:$GROUP_ID" "/home/$USERNAME"; \
       fi; \
     fi
 
-  
 # ----------------------------
-# Install Unreal Engine 4.26
+# Install Unreal Engine dependencies for GUI support in containers
 # ----------------------------
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ca-certificates \
+    xdg-user-dirs \
+    xdg-utils \
+    sudo \
+    libvulkan1 \
+    mesa-vulkan-drivers \
+    libsdl2-dev \
+    vulkan-tools
+    # (optional) vulkan-tools -> useful for debugging
 
-ENV UE4_ROOT /home/$USERNAME/UE4.26
+# ----------------------------
+# Install CARLA build dependencies
+# ----------------------------
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    wget \
+    build-essential \
+    cmake \
+    ninja-build \
+    python3 \
+    python3-dev \
+    python3-setuptools \
+    python3-distro \
+    python3-wheel \
+    libtiff5-dev \
+    libjpeg-dev \
+    autoconf \
+    rsync
 
-RUN git clone --depth 1 -b carla "https://${EPIC_USER}:${EPIC_PASS}@github.com/CarlaUnreal/UnrealEngine.git" ${UE4_ROOT}
-  
-RUN cd $UE4_ROOT && \
-  ./Setup.sh && \
-  ./GenerateProjectFiles.sh && \
-  make
+# ----------------------------
+# Cleanup
+# ----------------------------
+RUN rm -rf /var/lib/apt/lists/*
 
 # ----------------------------
 # Optionally add passwordless sudo for $USERNAME
@@ -110,9 +92,20 @@ RUN echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 RUN sed -i 's/#force_color_prompt=yes/force_color_prompt=yes/g' /home/$USERNAME/.bashrc
 
 # ----------------------------
-# Switch to "$DEV_USERNAME" by default
+# Create the UE4 directory env variable (if needed later)
 # ----------------------------
-USER "$USERNAME"
-WORKDIR /home/"$USERNAME"
+ENV UE4_ROOT="/opt/UE4.26"
+
+# ----------------------------
+# Create the repo mount directory with the right ownership
+# ----------------------------
+RUN mkdir -p /workspace && \
+    chown -R $USERNAME:$USERNAME /workspace
+
+# ----------------------------
+# Switch to "$USERNAME" by default and set working directory
+# ----------------------------
+USER $USERNAME
+WORKDIR /workspace
 
 CMD ["/bin/bash"]
