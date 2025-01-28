@@ -38,6 +38,7 @@ pushd "${FBX2OBJ_BUILD_FOLDER}" >/dev/null
 
 cmake -G "Ninja" \
     -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath,/usr/lib/x86_64-linux-gnu -Wl,-rpath-link,/usr/lib/x86_64-linux-gnu" \
     ..
 
 # copy the shared object 'libfbxsdk.so' to 'dist' folder
