@@ -18,6 +18,9 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
+# We define a subdirectory where Dockerfiles reside:
+DOCKERFILES_DIR="${PROJECT_ROOT}/Util/Docker"
+
 MONOLITH=0
 if [[ "$1" == "--monolith" ]]; then
     MONOLITH=1
@@ -59,7 +62,7 @@ echo "[INFO] Building Docker image '${IMAGE_NAME}' using Dockerfile '${DOCKERFIL
 
 # We always build in the project root so Docker sees the Dockerfile paths
 docker build \
-  -f "${PROJECT_ROOT}/${DOCKERFILE}" \
+  -f "${DOCKERFILES_DIR}/${DOCKERFILE}" \
   -t "${IMAGE_NAME}" \
   --build-arg EPIC_USER="${EPIC_USER:-}" \
   --build-arg EPIC_PASS="${EPIC_PASS:-}" \
