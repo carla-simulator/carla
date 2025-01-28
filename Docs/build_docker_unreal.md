@@ -63,13 +63,13 @@ __2. Build the final CARLA image.__
 The following command will use the image created in the previous step to build the final CARLA image based on the current master branch (latest release) of the CARLA repository:
 
 ```sh
-docker build -t carla -f Carla.Dockerfile .
+docker build -t carla -f CarlaLegacy.Dockerfile .
 ```
 
 If you would like to build a specific branch or tag of the CARLA repository, run the following command:
 
 ```sh
-docker build -t carla -f Carla.Dockerfile . --build-arg GIT_BRANCH=<branch_or_tag_name>
+docker build -t carla -f CarlaLegacy.Dockerfile . --build-arg GIT_BRANCH=<branch_or_tag_name>
 ```
 
 ---
