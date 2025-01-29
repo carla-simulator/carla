@@ -2,6 +2,24 @@
 
 set -e
 
+python_path='python3'
+options=$(getopt -o "i,p,l" --long "interactive,skip-prerequisites,launch" -n 'CarlaSetup.sh' -- "$@")
+eval set -- "$options"
+while true; do
+    case "$1" in
+        --python-path)
+            python_path='${OPTARG}'
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            ;;
+    esac
+done
+
 if [ -z "$EUID" ]; then
     EUID=$(id -u)
 fi
@@ -38,11 +56,10 @@ apt-get -y install \
 
 # -- INSTALL PYTHON PACKAGES --
 echo "Installing Python Packages..."
-pip3 install --upgrade pip
-pip3 install -r requirements.txt
+$python_path -m pip install --upgrade pip
+$python_path -m pip install -r requirements.txt
 
 # -- INSTALL CMAKE --
-
 check_cmake_version() {
     CMAKE_VERSION="$($2 --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
     CMAKE_MINIMUM_VERSION=$1

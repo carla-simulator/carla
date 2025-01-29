@@ -4,6 +4,8 @@ setlocal EnableDelayedExpansion
 set SKIP_PREREQUISITES=false
 set LAUNCH=false
 set INTERACTIVE=false
+set PYTHON_PATH=python
+set PYTHON_ROOT=
 
 if not "%*"=="" (
     for %%x in ("%*") do (
@@ -19,6 +21,14 @@ if not "%*"=="" (
             set LAUNCH=true
         ) else if "%%~x"=="-l" (
             set LAUNCH=true
+        ) else if "%%~x"=="--python-path=" (
+            set PYTHON_PATH=%%~nx
+        ) else if "%%~x"=="-pypath" (
+            set PYTHON_PATH=%%~nx
+        ) else if "%%~x"=="--python-root=" (
+            set PYTHON_ROOT=%%~nx
+        ) else if "%%~x"=="-pyroot" (
+            set PYTHON_ROOT=%%~nx
         ) else (
             echo Unknown argument "%%~x"
         )
@@ -91,6 +101,9 @@ cmake ^
     -G Ninja ^
     -S . ^
     -B Build ^
+    --toolchain=CMake/Toolchain.cmake ^
+    -DPython_ROOT_DIR=%PYTHON_ROOT% ^
+    -DPython3_ROOT_DIR=%PYTHON_ROOT% ^
     -DCMAKE_BUILD_TYPE=Release ^
     -DCARLA_UNREAL_ENGINE_PATH=%CARLA_UNREAL_ENGINE_PATH% || exit /b
 echo Building CARLA...

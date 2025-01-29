@@ -5,11 +5,13 @@ set -e
 interactive=0
 skip_prerequisites=0
 launch=0
+python_path=python3
+python_root=
 
 workspace_path="$(dirname $(realpath "${BASH_SOURCE[-1]}"))"
 echo "workspace_path=$workspace_path"
 
-options=$(getopt -o "i,p,l" --long "interactive,skip-prerequisites,launch" -n 'CarlaSetup.sh' -- "$@")
+options=$(getopt -o "i,p,l,pypath,pyroot" --long "interactive,skip-prerequisites,launch,python-path,python-root" -n 'CarlaSetup.sh' -- "$@")
 eval set -- "$options"
 while true; do
     case "$1" in
@@ -23,6 +25,14 @@ while true; do
             ;;
         -l | --launch)
             launch=1
+            shift
+            ;;
+        -pypath | --python-path)
+            python_path='${OPTARG}'
+            shift
+            ;;
+        -pyroot | --python-root)
+            python_root='${OPTARG}'
             shift
             ;;
         --)
@@ -62,7 +72,7 @@ fi
 # -- PREREQUISITES INSTALL STEP --
 if [ $skip_prerequisites -eq 0 ]; then
     echo "Installing prerequisites..."
-    sudo -E bash -x Util/SetupUtils/InstallPrerequisites.sh
+    sudo -E bash -x Util/SetupUtils/InstallPrerequisites.sh --python-path=$python_path
 else
     echo "Skipping prerequisites install step."
 fi
@@ -114,10 +124,12 @@ fi
 # -- BUILD CARLA --
 echo "Configuring the CARLA CMake project..."
 cmake -G Ninja -S . -B Build \
-    --toolchain=$PWD/CMake/LinuxToolchain.cmake \
+    --toolchain=$PWD/CMake/Toolchain.cmake \
     -DLAUNCH_ARGS="-prefernvidia" \
     -DCMAKE_BUILD_TYPE=Release \
     -DENABLE_ROS2=ON \
+    -DPython_ROOT_DIR=${python_root} \
+    -DPython3_ROOT_DIR=${python_root} \
     -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH
 echo "Building CARLA..."
 cmake --build Build
