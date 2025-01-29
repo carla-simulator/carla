@@ -35,6 +35,9 @@ class Color:
     carla_green = carla.Color(0, 255, 0)
     carla_blue = carla.Color(0, 0, 255)
 
+RssStateEvaluator = ad.rss.state.RssStateEvaluator
+EVALUATOR_NONE_STATE = RssStateEvaluator.names["None"]
+
 class RssStateVisualizer(object):
 
     def __init__(self, display_dimensions, font, world):
@@ -89,27 +92,35 @@ class RssStateVisualizer(object):
             pygame.draw.circle(state_surface, color, (12, v_offset + 7), 5)
             xpos = 184
             if state.actor_calculation_mode == ad.rss.map.RssMode.Structured:
-                if not state.rss_state.longitudinalState.isSafe and ((state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceSameDirectionOtherInFront") or (state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceSameDirectionEgoFront")):
-                    pygame.draw.polygon(
-                        state_surface, (
-                            255, 255, 255), ((xpos + 1, v_offset + 1 + 4), (xpos + 6, v_offset + 1 + 0), (xpos + 11, v_offset + 1 + 4),
-                                             (xpos + 7, v_offset + 1 + 4), (xpos + 7, v_offset + 1 + 12), (xpos + 5, v_offset + 1 + 12), (xpos + 5, v_offset + 1 + 4)))
-                    xpos += 14
-
-                if not state.rss_state.longitudinalState.isSafe and ((state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceOppositeDirectionEgoCorrectLane") or (state.rss_state.longitudinalState.rssStateInformation.evaluator == "LongitudinalDistanceOppositeDirection")):
-                    pygame.draw.polygon(
-                        state_surface, (
-                            255, 255, 255), ((xpos + 2, v_offset + 1 + 8), (xpos + 6, v_offset + 1 + 12), (xpos + 10, v_offset + 1 + 8),
-                                             (xpos + 7, v_offset + 1 + 8), (xpos + 7, v_offset + 1 + 0), (xpos + 5, v_offset + 1 + 0), (xpos + 5, v_offset + 1 + 8)))
-                    xpos += 14
-
-                if not state.rss_state.lateralStateRight.isSafe and not (state.rss_state.lateralStateRight.rssStateInformation.evaluator == "None"):
+                # Unsafe longitudinalState
+                if not state.rss_state.longitudinalState.isSafe:
+                    if (state.rss_state.longitudinalState.rssStateInformation.evaluator == RssStateEvaluator.LongitudinalDistanceSameDirectionOtherInFront
+                        or state.rss_state.longitudinalState.rssStateInformation.evaluator == RssStateEvaluator.LongitudinalDistanceSameDirectionEgoFront
+                    ):
+                        pygame.draw.polygon(
+                            state_surface, (
+                                255, 255, 255), ((xpos + 1, v_offset + 1 + 4), (xpos + 6, v_offset + 1 + 0), (xpos + 11, v_offset + 1 + 4),
+                                                (xpos + 7, v_offset + 1 + 4), (xpos + 7, v_offset + 1 + 12), (xpos + 5, v_offset + 1 + 12), (xpos + 5, v_offset + 1 + 4)))
+                        xpos += 14
+                    elif (state.rss_state.longitudinalState.rssStateInformation.evaluator == RssStateEvaluator.LongitudinalDistanceOppositeDirectionEgoCorrectLane
+                            or state.rss_state.longitudinalState.rssStateInformation.evaluator == RssStateEvaluator.LongitudinalDistanceOppositeDirection
+                    ):
+                        pygame.draw.polygon(
+                            state_surface, (
+                                255, 255, 255), ((xpos + 2, v_offset + 1 + 8), (xpos + 6, v_offset + 1 + 12), (xpos + 10, v_offset + 1 + 8),
+                                                (xpos + 7, v_offset + 1 + 8), (xpos + 7, v_offset + 1 + 0), (xpos + 5, v_offset + 1 + 0), (xpos + 5, v_offset + 1 + 8)))
+                        xpos += 14
+                        
+                # Unsafe Laterals: Draw Left/Right arrows
+                # Right
+                if not state.rss_state.lateralStateRight.isSafe and state.rss_state.lateralStateRight.rssStateInformation.evaluator is not EVALUATOR_NONE_STATE:
                     pygame.draw.polygon(
                         state_surface, (
                             255, 255, 255), ((xpos + 0, v_offset + 1 + 4), (xpos + 8, v_offset + 1 + 4), (xpos + 8, v_offset + 1 + 1),
                                              (xpos + 12, v_offset + 1 + 6), (xpos + 8, v_offset + 1 + 10), (xpos + 8, v_offset + 1 + 8), (xpos + 0, v_offset + 1 + 8)))
                     xpos += 14
-                if not state.rss_state.lateralStateLeft.isSafe and not (state.rss_state.lateralStateLeft.rssStateInformation.evaluator == "None"):
+                # Left
+                if not state.rss_state.lateralStateLeft.isSafe and state.rss_state.lateralStateLeft.rssStateInformation.evaluator is not EVALUATOR_NONE_STATE:
                     pygame.draw.polygon(
                         state_surface, (
                             255, 255, 255), ((xpos + 0, v_offset + 1 + 6), (xpos + 4, v_offset + 1 + 1), (xpos + 4, v_offset + 1 + 4),

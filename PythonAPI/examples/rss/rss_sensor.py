@@ -19,6 +19,7 @@ from carla import ad
 import math
 from rss_visualization import RssDebugVisualizer # pylint: disable=relative-import
 
+EVALUATOR_NONE_STATE = ad.rss.state.RssStateEvaluator.names["None"]
 
 # ==============================================================================
 # -- RssSensor -----------------------------------------------------------------
@@ -51,9 +52,9 @@ class RssStateInfo(object):
         self.longitudinal_margin = float(rss_state.longitudinalState.rssStateInformation.currentDistance - rss_state.longitudinalState.rssStateInformation.safeDistance)
         self.margin = max(0, self.longitudinal_margin)
         self.lateral_margin = None
-        if rss_state.lateralStateLeft.rssStateInformation.evaluator != "None":
+        if rss_state.lateralStateLeft.rssStateInformation.evaluator != EVALUATOR_NONE_STATE:
             self.lateral_margin = rss_state.lateralStateLeft.rssStateInformation.currentDistance - rss_state.lateralStateLeft.rssStateInformation.safeDistance
-        if rss_state.lateralStateRight.rssStateInformation.evaluator != "None":
+        if rss_state.lateralStateRight.rssStateInformation.evaluator != EVALUATOR_NONE_STATE:
             lateral_margin_right = rss_state.lateralStateRight.rssStateInformation.currentDistance - rss_state.lateralStateRight.rssStateInformation.safeDistance
             if self.lateral_margin is None or self.lateral_margin > lateral_margin_right:
                 self.lateral_margin = lateral_margin_right
