@@ -50,7 +50,7 @@ RUN if [ -z "$(getent group $GROUP_ID)" ]; then \
 # Install Unreal Engine dependencies for GUI support in containers
 # ------------------------------------------------------------------------------
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+    apt-get install -y \
     ca-certificates \
     xdg-user-dirs \
     xdg-utils \
@@ -64,7 +64,7 @@ RUN apt-get update && \
 # ------------------------------------------------------------------------------
 # Install CARLA build dependencies (make PythonAPI, make CarlaUE4Editor)
 # ------------------------------------------------------------------------------
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get install -y \
     git \
     curl \
     wget \
@@ -84,7 +84,7 @@ RUN apt-get install -y --no-install-recommends \
 # ------------------------------------------------------------------------------
 # (Optional) Install CARLA build packaging depenencies(make build.utils)
 # ------------------------------------------------------------------------------
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get install -y \
     libxml2-dev 
 
 # ------------------------------------------------------------------------------
