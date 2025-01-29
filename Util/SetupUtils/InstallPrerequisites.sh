@@ -3,13 +3,19 @@
 set -e
 
 python_path='python3'
-options=$(getopt -o "i,p,l" --long "interactive,skip-prerequisites,launch" -n 'CarlaSetup.sh' -- "$@")
+
+options=$(\
+    getopt \
+    -o "pypath:" \
+    --long "python-path:" \
+    -n 'CarlaSetup.sh' -- "$@")
+
 eval set -- "$options"
 while true; do
     case "$1" in
-        --python-path)
-            python_path='${OPTARG}'
-            shift
+        -pypath|--python-path)
+            python_path=$2
+            shift 2
             ;;
         --)
             shift

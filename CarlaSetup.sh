@@ -5,35 +5,35 @@ set -e
 interactive=0
 skip_prerequisites=0
 launch=0
-python_path=python3
 python_root=
 
 workspace_path="$(dirname $(realpath "${BASH_SOURCE[-1]}"))"
 echo "workspace_path=$workspace_path"
 
-options=$(getopt -o "i,p,l,pypath,pyroot" --long "interactive,skip-prerequisites,launch,python-path,python-root" -n 'CarlaSetup.sh' -- "$@")
+options=$(\
+    getopt \
+    -o "i,p,l,pyroot:" \
+    --long "interactive,skip-prerequisites,launch,python-root:" \
+    -n 'CarlaSetup.sh' -- "$@")
+
 eval set -- "$options"
 while true; do
     case "$1" in
-        -i | --interactive)
+        -i|--interactive)
             interactive=1
             shift
             ;;
-        -p | --skip-prerequisites)
+        -p|--skip-prerequisites)
             skip_prerequisites=1
             shift
             ;;
-        -l | --launch)
+        -l|--launch)
             launch=1
             shift
             ;;
-        -pypath | --python-path)
-            python_path='${OPTARG}'
-            shift
-            ;;
-        -pyroot | --python-root)
-            python_root='${OPTARG}'
-            shift
+        -pyroot|--python-root)
+            python_root=$2
+            shift 2
             ;;
         --)
             shift
@@ -43,6 +43,8 @@ while true; do
             ;;
     esac
 done
+
+python_path=${python_root}/python3
 
 # Check for root privileges:
 if [ -z "$EUID" ]; then
