@@ -30,17 +30,19 @@ ENV VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
 # - user "$USERNAME"  at UID=$USER_ID
 # ------------------------------------------------------------------------------
 RUN if [ -z "$(getent group $GROUP_ID)" ]; then \
-      groupadd --gid "$GROUP_ID" "$USERNAME"; \
+      groupadd -g $GROUP_ID "$USERNAME"; \
     else \
-      groupmod --new-name "$USERNAME" "$(getent group $GROUP_ID | cut -d: -f1)"; \
+      existing_group="$(getent group $GROUP_ID | cut -d: -f1)"; \
+      if [ "$existing_group" != "$USERNAME" ]; then \
+        groupmod -n "$USERNAME" "$existing_group"; \
+      fi; \
     fi && \
     if [ -z "$(getent passwd $USER_ID)" ]; then \
-      useradd --uid "$USER_ID" --gid "$GROUP_ID" -m "$USERNAME"; \
+      useradd -m -u $USER_ID -g $GROUP_ID "$USERNAME"; \
     else \
-      usermod --login "$USERNAME" --gid "$GROUP_ID" "$(getent passwd $USER_ID | cut -d: -f1)"; \
-      if [ ! -d "/home/$USERNAME" ]; then \
-        mkdir "/home/$USERNAME"; \
-        chown "$USER_ID:$GROUP_ID" "/home/$USERNAME"; \
+      existing_user="$(getent passwd $USER_ID | cut -d: -f1)"; \
+      if [ "$existing_user" != "$USERNAME" ]; then \
+        usermod -l "$USERNAME" -d /home/"$USERNAME" -m "$existing_user"; \
       fi; \
     fi
 
@@ -60,10 +62,9 @@ RUN apt-get update && \
     # (optional) vulkan-tools -> useful for debugging
 
 # ------------------------------------------------------------------------------
-# Install CARLA build dependencies
+# Install CARLA build dependencies (make PythonAPI, make CarlaUE4Editor)
 # ------------------------------------------------------------------------------
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+RUN apt-get install -y --no-install-recommends \
     git \
     curl \
     wget \
@@ -79,6 +80,12 @@ RUN apt-get update && \
     libjpeg-dev \
     autoconf \
     rsync
+
+# ------------------------------------------------------------------------------
+# (Optional) Install CARLA build packaging depenencies(make build.utils)
+# ------------------------------------------------------------------------------
+RUN apt-get install -y --no-install-recommends \
+    libxml2-dev 
 
 # ------------------------------------------------------------------------------
 # Cleanup
@@ -110,6 +117,13 @@ RUN mkdir -p /workspace && \
 # Switch to "$USERNAME" by default and set working directory
 # ------------------------------------------------------------------------------
 USER $USERNAME
+
+# ------------------------------------------------------------------------------
+# Set repo working directory
+# ------------------------------------------------------------------------------
 WORKDIR /workspace
 
+# ------------------------------------------------------------------------------
+# Entry point
+# ------------------------------------------------------------------------------
 CMD ["/bin/bash"]

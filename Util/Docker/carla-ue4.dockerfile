@@ -54,7 +54,6 @@ RUN if [ -z "$(getent group $GROUP_ID)" ]; then \
 # Install Unreal Engine build dependencies
 # ------------------------------------------------------------------------------
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive && \
     apt-get install -y --no-install-recommends \
     git \
     ca-certificates \
@@ -71,10 +70,9 @@ RUN apt-get update && \
     # (optional) vulkan-tools -> useful for debugging
 
 # ------------------------------------------------------------------------------
-# Install CARLA build dependencies
+# Install CARLA build dependencies (make PythonAPI, make CarlaUE4Editor)
 # ------------------------------------------------------------------------------
-RUN apt-get update && \
-    apt-get install -y \
+RUN apt-get install -y --no-install-recommends \
     cmake \
     ninja-build \
     python3 \
@@ -86,6 +84,12 @@ RUN apt-get update && \
     libjpeg-dev \
     autoconf \
     rsync
+
+# ------------------------------------------------------------------------------
+# (Optional) Install CARLA build packaging depenencies(make build.utils)
+# ------------------------------------------------------------------------------
+RUN apt-get install -y --no-install-recommends \
+    libxml2-dev 
 
 # ------------------------------------------------------------------------------
 # Cleanup
@@ -119,7 +123,7 @@ RUN mkdir -p /workspace && \
 # ------------------------------------------------------------------------------
 # Switch to "$USERNAME" by default
 # ------------------------------------------------------------------------------
-USER "$USERNAME"
+USER $USERNAME
     
 # ------------------------------------------------------------------------------
 # Install Unreal Engine 4.26
@@ -148,13 +152,16 @@ ARG CLONE_DIR="carla-${CARLA_GIT_TAG}"
 
 RUN git clone --depth 1 --branch ${BRANCH} https://github.com/wambitz/carla.git ${CLONE_DIR}
 
-RUN cd ${CLONE_DIR} && \
-    ./Update.sh && \
-    make CarlaUE4Editor && \
-    make PythonAPI && \
-    make build.utils && \
-    make package && \
-    rm -r Dist
+# Change working directory
+WORKDIR /workspace/${CLONE_DIR}
+
+# NOTE: Don't run these commands together as Update.sh truncates the output
+RUN ./Update.sh
+RUN make PythonAPI 
+RUN make CarlaUE4Editor 
+RUN make build.utils 
+RUN make package 
+RUN rm -r Dist
 
 # ------------------------------------------------------------------------------
 # Entry point
