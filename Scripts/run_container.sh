@@ -98,9 +98,9 @@ docker run -it --rm \
     --hostname "$HOSTNAME" \
     --env "DISPLAY=$DISPLAY" \
     --volume "$X11_SOCKET:$X11_SOCKET" \
-    --volume "$PROJECT_DIR:/workspace" \
     --volume "$NVIDIA_ICD:$NVIDIA_ICD" \
     --gpus all \
+    $([ $MONOLITH -eq 0 ] && echo "--volume ${PROJECT_DIR}:/workspace") \
     $([ $MONOLITH -eq 0 ] && echo "--volume ${UE4_ROOT}:/opt/UE4.26") \
     "$IMAGE_NAME" \
     bash
