@@ -65,7 +65,7 @@ docker build -t carla-prerequisites -f Prerequisites.Dockerfile .
 Finally create the actual Carla image, it will search for `carla-prerequisites:latest`:
 
 ```
-docker build -t carla -f Carla.Dockerfile .
+docker build -t carla -f CarlaLegacy.Dockerfile .
 ```
 
 ---
@@ -75,7 +75,7 @@ docker build -t carla -f Carla.Dockerfile .
 You can use a specific repository **branch** or **tag** from our repository, using:
 
 ```
-docker build -t carla -f Carla.Dockerfile . --build-arg GIT_BRANCH=branch_name
+docker build -t carla -f CarlaLegacy.Dockerfile . --build-arg GIT_BRANCH=branch_name
 ```
 
 Clean up the intermediate images from the build (keep the ue4-source image so you can use it for full rebuilds)

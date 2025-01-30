@@ -18,11 +18,11 @@ fi
 # check if the XODR file exist
 if [ -f "$1.xodr" ]; then
     # parse openDRIVE crosswalks (generate crosswalks.obj)
-    python get_xodr_crosswalks.py -f "$1.xodr"
+    python3 get_xodr_crosswalks.py -f "$1.xodr"
 else
     if [ -f "$2.xodr" ]; then
         # parse openDRIVE crosswalks (generate crosswalks.obj)
-        python get_xodr_crosswalks.py -f "$2.xodr"
+        python3 get_xodr_crosswalks.py -f "$2.xodr"
     else
         echo "XODR file doesn't exist, ignoring crosswalks from openDRIVE"
     fi
@@ -31,7 +31,7 @@ fi
 # check if the 'crosswalks.obj' file exist
 if [ -f "crosswalks.obj" ]; then
     # join both OBJ
-    python addOBJ.py "$1.obj" crosswalks.obj
+    python3 addOBJ.py "$1.obj" crosswalks.obj
 fi
 
 if [ -f "$1.obj" ]; then

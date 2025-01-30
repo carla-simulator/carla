@@ -100,3 +100,10 @@ Any issues or doubts related with this topic can be posted in the CARLA forum.
 CARLA forum</a>
 </p>
 </div>
+
+---
+
+## Devcontainer: Ubuntu 22.04–based image 
+Check out [Docs/build_docker_ubuntu22.md](./build_docker_ubuntu22.md) for additional instructions.
+
+---

@@ -50,3 +50,10 @@ _out*
 _site
 core
 profiler.csv
+
+# ----------------------
+# USER EDITS
+# ----------------------
+.env
+.venv
+build/
