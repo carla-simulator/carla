@@ -56,7 +56,7 @@ apt-get -y install \
     git \
     git-lfs
 
-if [ "$python_path" -eq "python3" ]; then
+if [ "$python_path" == "python3" ]; then
     apt-get -y install \
         python3 \
         python3-dev \
