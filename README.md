@@ -100,7 +100,7 @@ cd CarlaUE5
 
 The setup script will prompt you for your sudo password, in order to install the prerequisites. It will then prompt you for your GitHub credentials in order to authorise the download of the Unreal Engine repository. 
 
-The setup script will install by default Python 3 using apt. If you want to target an existing Python installation, you should use the --python-root=PATH_TO_PYTHON argument with the relevant Python installation path. You can use whereis python3 in your chosen environment and strip the `/python3` suffix from the path.
+The setup script will install by default Python 3 using apt. If you want to target an existing Python installation, you should use the `--python-root=PATH_TO_PYTHON` argument with the relevant Python installation path. You can use whereis python3 in your chosen environment and strip the `/python3` suffix from the path.
 
 __Building in Linux unattended__:
 
