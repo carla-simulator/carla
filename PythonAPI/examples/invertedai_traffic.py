@@ -169,7 +169,8 @@ def argument_parser():
     return args
 
 # Setup CARLA client and world
-def setup_carla_environment(host, port):
+def setup_carla_environment(host, port, location):
+    map_name = location.split(":")[-1]
 
     step_length = 0.1 # 0.1 is the only step length that is supported by invertedai so far
 
@@ -177,7 +178,7 @@ def setup_carla_environment(host, port):
     client.set_timeout(200.0)
 
     # Configure the simulation environment
-    world = client.load_world('Town10HD')
+    world = client.load_world(map_name)
     world_settings = carla.WorldSettings(
         synchronous_mode=True,
         fixed_delta_seconds=step_length,
@@ -512,16 +513,16 @@ def new_waypoint_needed(waypoint, agent_state, detection_threshold, max_distance
     return distance_from_waypoint <= detection_threshold or distance_from_waypoint >= max_distance_away
 
 
-def get_next_waypoints(carla_map, agent_states, waypoints, distance, args):
+def get_next_waypoints(carla_map, agent_states, waypoints, args):
     indices_of_interest = []
     interested_agent_states = []
     if len(waypoints) == 0:
         indices_of_interest = [i for i in range(len(agent_states))]
     else:
-        indices_of_interest = [i for i in range(len(agent_states)) if new_waypoint_needed(waypoints[i], agent_states[i], detection_threshold, max_distance_away)]
+        indices_of_interest = [i for i in range(len(agent_states)) if new_waypoint_needed(waypoints[i], agent_states[i], args.iai_waypoint_detection_threshold, args.iai_max_distance_away)]
     vehicle_locations = [Location(x=agent_states[i].center.x, y=agent_states[i].center.y, z=0.1) for i in indices_of_interest]
     closest_waypoints = [carla_map.get_waypoint(vehicle_location, project_to_road=True, lane_type=carla.LaneType.Driving) for vehicle_location in vehicle_locations]
-    next_waypoints = [np.random.choice(wp.next(distance)) for wp in closest_waypoints]
+    next_waypoints = [np.random.choice(wp.next(args.iai_waypoint_distance)) for wp in closest_waypoints]
     results = []
     if len(waypoints) == 0:
         results = [[waypoint.transform.location.x, waypoint.transform.location.y] for waypoint in next_waypoints]
@@ -539,11 +540,11 @@ def main():
     args = argument_parser()
 
     # Setup CARLA client and world
-    client, world = setup_carla_environment(args.host, args.port)
+    client, world = setup_carla_environment(args.host, args.port, args.location)
 
     # Specify the IAI API key
     try:
-        iai.add_apikey(args.iai_key)
+        iai.add_apikey(args.iai_key, url="http://localhost:8000")
     except:
         print("\n\tYou need to indicate the InvertedAI API key with the argument --iai-key. To obtain one, please go to https://www.inverted.ai \n")
 
@@ -635,7 +636,7 @@ def main():
         waypoints = []
         for frame in tqdm(range(args.sim_length * FPS)):
             response.traffic_lights_states = assign_iai_traffic_lights_from_carla(world, response.traffic_lights_states, carla2iai_tl)
-            waypoints = get_next_waypoints(carla_map, response.agent_states, waypoints, args.iai_waypoint_distance)
+            waypoints = get_next_waypoints(carla_map, response.agent_states, waypoints, args)
             for i in range(len(waypoints)):
                 agent_properties[i].waypoint = Point(x=waypoints[i][0], y=waypoints[i][1])
 
