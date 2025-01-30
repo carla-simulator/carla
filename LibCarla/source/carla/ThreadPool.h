@@ -24,7 +24,7 @@ namespace carla {
   class ThreadPool : private NonCopyable {
   public:
 
-    ThreadPool() : _work_to_do(_io_context) {}
+    ThreadPool() = default;
 
     /// Stops the ThreadPool and joins all its threads.
     ~ThreadPool() {
@@ -83,9 +83,6 @@ namespace carla {
   private:
 
     boost::asio::io_context _io_context;
-
-    boost::asio::io_context::work _work_to_do;
-
     ThreadGroup _workers;
   };
 
