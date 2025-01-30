@@ -544,7 +544,7 @@ def main():
 
     # Specify the IAI API key
     try:
-        iai.add_apikey(args.iai_key, url="http://localhost:8000")
+        iai.add_apikey(args.iai_key)
     except:
         print("\n\tYou need to indicate the InvertedAI API key with the argument --iai-key. To obtain one, please go to https://www.inverted.ai \n")
 
