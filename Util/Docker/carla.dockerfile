@@ -110,8 +110,8 @@ ENV UE4_ROOT="/opt/UE4.26"
 # ------------------------------------------------------------------------------
 # Create the repo mount directory with the right ownership
 # ------------------------------------------------------------------------------
-RUN mkdir -p /workspace && \
-    chown -R $USERNAME:$USERNAME /workspace
+RUN mkdir -p /workspaces && \
+    chown -R $USERNAME:$USERNAME /workspaces
 
 # ------------------------------------------------------------------------------
 # Switch to "$USERNAME" by default and set working directory
@@ -121,7 +121,7 @@ USER $USERNAME
 # ------------------------------------------------------------------------------
 # Set repo working directory
 # ------------------------------------------------------------------------------
-WORKDIR /workspace
+WORKDIR /workspaces
 
 # ------------------------------------------------------------------------------
 # Entry point

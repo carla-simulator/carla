@@ -117,8 +117,8 @@ ENV UE4_ROOT="/opt/UE4.26"
 # ------------------------------------------------------------------------------
 # Create the repo mount directory with the right ownership
 # ------------------------------------------------------------------------------
-RUN mkdir -p /workspace && \
-    chown -R $USERNAME:$USERNAME /workspace
+RUN mkdir -p /workspaces && \
+    chown -R $USERNAME:$USERNAME /workspaces
 
 # ------------------------------------------------------------------------------
 # Switch to "$USERNAME" by default
@@ -141,7 +141,7 @@ ENV CXX=/opt/UE4.26/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_c
 # ------------------------------------------------------------------------------
 # Set repo working directory
 # ------------------------------------------------------------------------------
-WORKDIR /workspace
+WORKDIR /workspaces
 
 # ------------------------------------------------------------------------------
 # Install CARLA 0.9.15.2
@@ -153,7 +153,7 @@ ARG CLONE_DIR="carla-${CARLA_GIT_TAG}"
 RUN git clone --depth 1 --branch ${BRANCH} https://github.com/wambitz/carla.git ${CLONE_DIR}
 
 # Change working directory
-WORKDIR /workspace/${CLONE_DIR}
+WORKDIR /workspaces/${CLONE_DIR}
 
 # NOTE: Don't run these commands together as Update.sh truncates the output
 RUN ./Update.sh
@@ -161,7 +161,6 @@ RUN make PythonAPI
 RUN make CarlaUE4Editor 
 RUN make build.utils 
 RUN make package 
-RUN rm -r Dist
 
 # ------------------------------------------------------------------------------
 # Entry point

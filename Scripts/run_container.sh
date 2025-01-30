@@ -91,7 +91,6 @@ fi
 # ------------------------------------------------------------------------------
 # Start the Docker container
 # ------------------------------------------------------------------------------
-# NOTE: /workspace directory already has host credentials and prevents deleting .bashrc inside the container
 echo "[INFO] Starting Docker container..."
 docker run -it --rm \
     --name "$CONTAINER_NAME" \
@@ -100,7 +99,7 @@ docker run -it --rm \
     --volume "$X11_SOCKET:$X11_SOCKET" \
     --volume "$NVIDIA_ICD:$NVIDIA_ICD" \
     --gpus all \
-    $([ $MONOLITH -eq 0 ] && echo "--volume ${PROJECT_DIR}:/workspace") \
+    $([ $MONOLITH -eq 0 ] && echo "--volume ${PROJECT_DIR}:/workspaces") \
     $([ $MONOLITH -eq 0 ] && echo "--volume ${UE4_ROOT}:/opt/UE4.26") \
     "$IMAGE_NAME" \
     bash
