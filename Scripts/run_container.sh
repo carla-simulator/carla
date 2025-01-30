@@ -28,7 +28,7 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 # Parse Argument
 # ------------------------------------------------------------------------------
 MONOLITH=0
-if [[ "$1" == "--monolith" ]]; then
+if [[ "$1" == "--monolith" || "$1" == "-m" ]]; then
     MONOLITH=1
     echo "[INFO] Monolithic mode enabled."
 else

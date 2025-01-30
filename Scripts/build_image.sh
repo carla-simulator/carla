@@ -22,7 +22,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 DOCKERFILES_DIR="${PROJECT_ROOT}/Util/Docker"
 
 MONOLITH=0
-if [[ "$1" == "--monolith" ]]; then
+if [[ "$1" == "--monolith" || "$1" == "-m" ]]; then
     MONOLITH=1
     echo "[INFO] Monolithic build enabled."
 fi
