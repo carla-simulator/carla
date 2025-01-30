@@ -1,3 +1,35 @@
+## Latest Changes
+ * Fixed waypoint.next and .previous causing loops when two opposite-direction lanes follow each other in the map.
+ * Fixed a bug that caused navigation information not to be loaded when switching maps
+ * Prevent from segfault on failing SignalReference identification when loading OpenDrive files
+ * Added vehicle doors to the recorder
+ * Added functions to get actor' components transform
+ * Added posibility to Digital Twins to work with local files (osm and xodr)
+ * Enable proper material merging for Building in Digital Twins
+ * Added functions to get actor' bones transforms
+ * Added functions to get actor' bones and components names
+ * Added functions to get actor' sockets transforms
+ * make PythonAPI Windows: Fixed incompatibility issue with Anaconda due `py` command.
+ * Added function to get actor' sockets names
+ * Fixed bug in python agents when vehicle list was empty causing a check on all vehicles (BasicAgent.py) and detected pedestrians as vehicles if no pedestrains are present (BehaviourAgent.py) 
+ * Extended debug drawing functions to allow drawing primitives on HUD layer
+ * Added possibility to change gravity variable in imui sensor for the accelerometer
+ * Fixed ROS2 native extension build error when ROS2 is installed in the system.
+ * ROS2Native: Force fast-dds dependencies download to avoid build crash when boost_asio and tinyxml2 are not installed in Linux.
+ * Added API function `get_telemetry_data` to the vehicle actor.
+ * PythonAPI `Sensor.is_listening` was defined twice (property and method), cleaned and clarified it as a method.
+ * Added V2X sensors for cooperative awareness message and custom user-defined messages to support vehicle-to-vehicle communication
+ * Added named tuples for BasicAgent.py's detection result to allow for type-hints and better semantics.
+ * Added type-hint support for the PythonAPI
+ * Added type-hints to GlobalRoutePlanner and use carla.Vector3D code instead of pre 0.9.13 numpy code.
+ * If available, use ActorIDs instead of Unreal Engine IDs for instance segmentation
+ * Synchronized actor BoundingBox between server and client
+ * Add actor_id to bounding boxes
+ * Fixed invisible terrain in instance segmentation
+ * Importing from carla.command is now possible
+ * carla.ad subpackages are now directly importable and are not directly importable anymore (e.g. import ad)
+ * Fixed segfault in traffic manager when trying to access not available vehicles
+
 ## CARLA 0.9.15
 
   * Added Digital Twins feature version 0.1. Now you can create your own map based on OpenStreetMaps
@@ -25,6 +57,8 @@
   * Fixed bug causing the `FPixelReader::SavePixelsToDisk(PixelData, FilePath)` function to crash due to pixel array not set correctly.
   * Fixed segfaults in Python API due to incorrect GIL locking under Python 3.10.
   * Fixed the import script, where could use any other TilesInfo.txt if the destination folder has many
+  * Fixed PythonAPI not installing on Debian due to deprecated function of distro in setup.py. Less ambiguous error for other posix platforms.
+
 
 ## CARLA 0.9.14
 

@@ -582,10 +582,23 @@ namespace road {
           successor.road_id != waypoint.road_id ||
           successor.section_id != waypoint.section_id ||
           successor.lane_id != waypoint.lane_id);
-      result = ConcatVectors(result, GetNext(successor, distance - remaining_lane_length));
-    }
+      // Fix situations, when next waypoint is in the opposite dirrection and
+      // this waypoint is his successor, so this function would end up in a loop
+      bool is_broken = false;
+      for (const auto &future_succcessor : GetSuccessors(successor)) {
+          if (future_succcessor.road_id == waypoint.road_id 
+               && future_succcessor.lane_id == waypoint.lane_id
+               && future_succcessor.section_id == waypoint.section_id){
+            is_broken = true;
+            break;
+            }
+      }  // end inner for
+      if (!is_broken){
+        result = ConcatVectors(result, GetNext(successor, distance - remaining_lane_length));
+      }
+    }  // end outer for
     return result;
-  }
+  }  // end GetNext
 
   std::vector<Waypoint> Map::GetPrevious(
       const Waypoint waypoint,
@@ -618,10 +631,23 @@ namespace road {
           successor.road_id != waypoint.road_id ||
           successor.section_id != waypoint.section_id ||
           successor.lane_id != waypoint.lane_id);
-      result = ConcatVectors(result, GetPrevious(successor, distance - remaining_lane_length));
-    }
+      // Fix situations, when next waypoint is in the opposite dirrection and
+      // this waypoint is his predeccessor, so this function would end up in a loop
+      bool is_broken = false;
+      for (const auto &future_predecessor : GetPredecessors(successor)) {
+          if (future_predecessor.road_id == waypoint.road_id 
+               && future_predecessor.lane_id == waypoint.lane_id
+               && future_predecessor.section_id == waypoint.section_id){
+            is_broken = true;
+            break;
+            }
+      }  // end inner for
+      if (!is_broken){
+        result = ConcatVectors(result, GetPrevious(successor, distance - remaining_lane_length));
+      }
+    }  // end outer for
     return result;
-  }
+  }  // end GetPrevious
 
   boost::optional<Waypoint> Map::GetRight(Waypoint waypoint) const {
     RELEASE_ASSERT(waypoint.lane_id != 0);
@@ -1232,12 +1258,17 @@ namespace road {
             while(s_current < s_end){
               if(lane->GetWidth(s_current) != 0.0f){
                 const auto edges = lane->GetCornerPositions(s_current, 0);
+                if (edges.first == edges.second) continue;
                 geom::Vector3D director = edges.second - edges.first;
                 geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
                 geom::Transform lanetransform = lane->ComputeTransform(s_current);
                 geom::Transform treeTransform(treeposition, lanetransform.rotation);
                 const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
-                transforms.push_back(std::make_pair(treeTransform,roadinfo->GetType()));
+                if(roadinfo){
+                  transforms.push_back(std::make_pair(treeTransform, roadinfo->GetType()));
+                }else{
+                  transforms.push_back(std::make_pair(treeTransform, "urban"));
+                }
               }
               s_current += distancebetweentrees;
             }

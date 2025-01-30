@@ -259,6 +259,14 @@ namespace detail {
       _client.SetWeatherParameters(weather);
     }
 
+    float GetIMUISensorGravity() const {
+      return _client.GetIMUISensorGravity();
+    }
+
+    void SetIMUISensorGravity(float NewIMUISensorGravity) {
+      _client.SetIMUISensorGravity(NewIMUISensorGravity);
+    }
+
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
       return _client.GetVehiclePhysicsControl(vehicle.GetId());
     }
@@ -357,7 +365,8 @@ namespace detail {
         const geom::Transform &transform,
         Actor *parent = nullptr,
         rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid,
-        GarbageCollectionPolicy gc = GarbageCollectionPolicy::Inherit);
+        GarbageCollectionPolicy gc = GarbageCollectionPolicy::Inherit,
+        const std::string& socket_name = "");
 
     bool DestroyActor(Actor &actor);
 
@@ -438,6 +447,46 @@ namespace detail {
       return GetActorSnapshot(actor).acceleration;
     }
 
+    geom::BoundingBox GetActorBoundingBox(const Actor &actor) {
+      return _client.GetActorBoundingBox(actor.GetId());
+    }
+
+    geom::Transform GetActorComponentWorldTransform(const Actor &actor, const std::string componentName) {
+      return _client.GetActorComponentWorldTransform(actor.GetId(), componentName);
+    }
+
+    geom::Transform GetActorComponentRelativeTransform(const Actor &actor, std::string componentName) {
+      return _client.GetActorComponentRelativeTransform(actor.GetId(), componentName);
+    }
+
+    std::vector<geom::Transform> GetActorBoneWorldTransforms(const Actor &actor) {
+      return _client.GetActorBoneWorldTransforms(actor.GetId());
+    }
+
+    std::vector<geom::Transform> GetActorBoneRelativeTransforms(const Actor &actor) {
+      return _client.GetActorBoneRelativeTransforms(actor.GetId());
+    }
+
+    std::vector<std::string> GetActorComponentNames(const Actor &actor) {
+      return _client.GetActorComponentNames(actor.GetId());
+    }
+
+    std::vector<std::string> GetActorBoneNames(const Actor &actor) {
+      return _client.GetActorBoneNames(actor.GetId());
+    }
+
+    std::vector<geom::Transform> GetActorSocketWorldTransforms(const Actor &actor) {
+      return _client.GetActorSocketWorldTransforms(actor.GetId());
+    }
+
+    std::vector<geom::Transform> GetActorSocketRelativeTransforms(const Actor &actor) {
+      return _client.GetActorSocketRelativeTransforms(actor.GetId());
+    }
+
+    std::vector<std::string> GetActorSocketNames(const Actor &actor) {
+      return _client.GetActorSocketNames(actor.GetId());
+    }    
+
     void SetActorLocation(Actor &actor, const geom::Location &location) {
       _client.SetActorLocation(actor.GetId(), location);
     }
@@ -478,6 +527,10 @@ namespace detail {
 
     void SetVehicleAutopilot(Vehicle &vehicle, bool enabled = true) {
       _client.SetActorAutopilot(vehicle.GetId(), enabled);
+    }
+
+    rpc::VehicleTelemetryData GetVehicleTelemetryData(const Vehicle &vehicle) const {
+      return _client.GetVehicleTelemetryData(vehicle.GetId());
     }
 
     void ShowVehicleDebugTelemetry(Vehicle &vehicle, bool enabled = true) {
@@ -572,6 +625,10 @@ namespace detail {
           BaseJSONPath);
     }
 
+    void RestorePhysXPhysics(Vehicle &vehicle) {
+      _client.RestorePhysXPhysics(vehicle.GetId());
+    }
+
     /// @}
     // =========================================================================
     /// @name Operations with the recorder
@@ -645,6 +702,8 @@ namespace detail {
     void UnSubscribeFromGBuffer(
         Actor & sensor,
         uint32_t gbuffer_id);
+
+    void Send(const Sensor &sensor, std::string message);        
 
     /// @}
     // =========================================================================

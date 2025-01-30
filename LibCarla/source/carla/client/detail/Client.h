@@ -29,6 +29,7 @@
 #include "carla/rpc/VehicleLightStateList.h"
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
+#include "carla/rpc/VehicleTelemetryData.h"
 #include "carla/rpc/VehicleWheels.h"
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/Texture.h"
@@ -149,6 +150,10 @@ namespace detail {
 
     void SetWeatherParameters(const rpc::WeatherParameters &weather);
 
+    float GetIMUISensorGravity() const;
+
+    void SetIMUISensorGravity( float NewIMUISensorGravity );
+
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
 
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(rpc::ActorId vehicle) const;
@@ -179,7 +184,8 @@ namespace detail {
         const rpc::ActorDescription &description,
         const geom::Transform &transform,
         rpc::ActorId parent,
-        rpc::AttachmentType attachment_type);
+        rpc::AttachmentType attachment_type,
+        const std::string& socket_name = "");
 
     bool DestroyActor(rpc::ActorId actor);
 
@@ -232,6 +238,38 @@ namespace detail {
         rpc::ActorId actor,
         const geom::Vector3D &vector);
 
+    geom::BoundingBox GetActorBoundingBox(
+        rpc::ActorId actor);
+
+    geom::Transform GetActorComponentWorldTransform(
+        rpc::ActorId actor,
+        const std::string componentName);
+
+    geom::Transform GetActorComponentRelativeTransform(
+        rpc::ActorId actor,
+        const std::string componentName);
+
+    std::vector<geom::Transform> GetActorBoneWorldTransforms(
+        rpc::ActorId actor);
+
+    std::vector<geom::Transform> GetActorBoneRelativeTransforms(
+        rpc::ActorId actor);
+
+    std::vector<std::string> GetActorComponentNames(
+        rpc::ActorId actor);
+
+    std::vector<std::string> GetActorBoneNames(
+        rpc::ActorId actor);
+
+    std::vector<geom::Transform> GetActorSocketWorldTransforms(
+        rpc::ActorId actor);
+
+    std::vector<geom::Transform> GetActorSocketRelativeTransforms(
+        rpc::ActorId actor);
+
+    std::vector<std::string> GetActorSocketNames(
+        rpc::ActorId actor);
+
     void SetActorSimulatePhysics(
         rpc::ActorId actor,
         bool enabled);
@@ -250,6 +288,8 @@ namespace detail {
     void SetActorAutopilot(
         rpc::ActorId vehicle,
         bool enabled);
+
+    rpc::VehicleTelemetryData GetVehicleTelemetryData(rpc::ActorId vehicle) const;
 
     void ShowVehicleDebugTelemetry(
         rpc::ActorId vehicle,
@@ -296,6 +336,8 @@ namespace detail {
         std::string PowertrainJSON,
         std::string TireJSON,
         std::string BaseJSONPath);
+
+    void RestorePhysXPhysics(rpc::ActorId vehicle);
 
     void ApplyControlToWalker(
         rpc::ActorId walker,
@@ -393,6 +435,8 @@ namespace detail {
     void UnSubscribeFromGBuffer(
         rpc::ActorId ActorId,
         uint32_t GBufferId);
+
+    void Send(rpc::ActorId ActorId, std::string message);
 
     void DrawDebugShape(const rpc::DebugShape &shape);
 

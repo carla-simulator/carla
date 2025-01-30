@@ -304,6 +304,15 @@ void ACarlaRecorder::AddVehicleLight(FCarlaActor *CarlaActor)
   AddLightVehicle(LightVehicle);
 }
 
+void ACarlaRecorder::AddVehicleDoor(const ACarlaWheeledVehicle &Vehicle, const EVehicleDoor SDoors, bool bIsOpen)
+{
+  CarlaRecorderDoorVehicle DoorVehicle;
+  DoorVehicle.DatabaseId = Episode->GetActorRegistry().FindCarlaActor(&Vehicle)->GetActorId();
+  DoorVehicle.Doors = static_cast<CarlaRecorderDoorVehicle::VehicleDoorType>(SDoors);
+  DoorVehicle.bIsOpen = bIsOpen;
+  AddDoorVehicle(DoorVehicle);
+}
+
 void ACarlaRecorder::AddActorKinematics(FCarlaActor *CarlaActor)
 {
   check(CarlaActor != nullptr);
@@ -478,6 +487,7 @@ void ACarlaRecorder::Clear(void)
   PhysicsControls.Clear();
   TrafficLightTimes.Clear();
   WalkersBones.Clear();
+  DoorVehicles.Clear();
   Wheels.Clear();
   Bikers.Clear();
 }
@@ -496,6 +506,7 @@ void ACarlaRecorder::Write(double DeltaSeconds)
   EventsDel.Write(File);
   EventsParent.Write(File);
   Collisions.Write(File);
+  DoorVehicles.Write(File);
 
   // positions and states
   Positions.Write(File);
@@ -649,6 +660,14 @@ void ACarlaRecorder::AddLightVehicle(const CarlaRecorderLightVehicle &LightVehic
   if (Enabled)
   {
     LightVehicles.Add(LightVehicle);
+  }
+}
+
+void ACarlaRecorder::AddDoorVehicle(const CarlaRecorderDoorVehicle &DoorVehicle)
+{
+  if (Enabled)
+  {
+    DoorVehicles.Add(DoorVehicle);
   }
 }
 

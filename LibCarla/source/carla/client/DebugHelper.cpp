@@ -35,6 +35,16 @@ namespace client {
     DrawShape(_episode, point, color, life_time, persistent_lines);
   }
 
+  void DebugHelper::DrawHUDPoint(
+      const geom::Location &location,
+      float size,
+      sensor::data::Color color,
+      float life_time,
+      bool persistent_lines) {
+    Shape::HUDPoint point{location, size};
+    DrawShape(_episode, point, color, life_time, persistent_lines);
+  }
+
   void DebugHelper::DrawLine(
       const geom::Location &begin,
       const geom::Location &end,
@@ -43,6 +53,17 @@ namespace client {
       float life_time,
       bool persistent_lines) {
     Shape::Line line{begin, end, thickness};
+    DrawShape(_episode, line, color, life_time, persistent_lines);
+  }
+
+  void DebugHelper::DrawHUDLine(
+      const geom::Location &begin,
+      const geom::Location &end,
+      float thickness,
+      Color color,
+      float life_time,
+      bool persistent_lines) {
+    Shape::HUDLine line{begin, end, thickness};
     DrawShape(_episode, line, color, life_time, persistent_lines);
   }
 
@@ -59,6 +80,19 @@ namespace client {
     DrawShape(_episode, arrow, color, life_time, persistent_lines);
   }
 
+  void DebugHelper::DrawHUDArrow(
+      const geom::Location &begin,
+      const geom::Location &end,
+      float thickness,
+      float arrow_size,
+      sensor::data::Color color,
+      float life_time,
+      bool persistent_lines) {
+    Shape::HUDLine line{begin, end, thickness};
+    Shape::HUDArrow arrow{line, arrow_size};
+    DrawShape(_episode, arrow, color, life_time, persistent_lines);
+  }
+
   void DebugHelper::DrawBox(
       const geom::BoundingBox &box,
       const geom::Rotation &rotation,
@@ -67,6 +101,17 @@ namespace client {
       float life_time,
       bool persistent_lines) {
     Shape::Box the_box{box, rotation, thickness};
+    DrawShape(_episode, the_box, color, life_time, persistent_lines);
+  }
+
+  void DebugHelper::DrawHUDBox(
+      const geom::BoundingBox &box,
+      const geom::Rotation &rotation,
+      float thickness,
+      sensor::data::Color color,
+      float life_time,
+      bool persistent_lines) {
+    Shape::HUDBox the_box{box, rotation, thickness};
     DrawShape(_episode, the_box, color, life_time, persistent_lines);
   }
 

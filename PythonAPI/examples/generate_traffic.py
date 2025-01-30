@@ -24,6 +24,7 @@ except IndexError:
 import carla
 
 from carla import VehicleLightState as vls
+from carla.command import SpawnActor, SetAutopilot, FutureActor, DestroyActor
 
 import argparse
 import logging
@@ -214,11 +215,6 @@ def main():
             logging.warning(msg, args.number_of_vehicles, number_of_spawn_points)
             args.number_of_vehicles = number_of_spawn_points
 
-        # @todo cannot import these directly.
-        SpawnActor = carla.command.SpawnActor
-        SetAutopilot = carla.command.SetAutopilot
-        FutureActor = carla.command.FutureActor
-
         # --------------
         # Spawn vehicles
         # --------------
@@ -279,8 +275,11 @@ def main():
         for spawn_point in spawn_points:
             walker_bp = random.choice(blueprintsWalkers)
             # set as not invincible
+            probability = random.randint(0,100 + 1);
             if walker_bp.has_attribute('is_invincible'):
                 walker_bp.set_attribute('is_invincible', 'false')
+            if walker_bp.has_attribute('can_use_wheelchair') and probability < 11:
+                walker_bp.set_attribute('use_wheelchair', 'true')
             # set the max speed
             if walker_bp.has_attribute('speed'):
                 if (random.random() > percentagePedestriansRunning):
@@ -357,14 +356,14 @@ def main():
             world.apply_settings(settings)
 
         print('\ndestroying %d vehicles' % len(vehicles_list))
-        client.apply_batch([carla.command.DestroyActor(x) for x in vehicles_list])
+        client.apply_batch([DestroyActor(x) for x in vehicles_list])
 
         # stop walker controllers (list is [controller, actor, controller, actor ...])
         for i in range(0, len(all_id), 2):
             all_actors[i].stop()
 
         print('\ndestroying %d walkers' % len(walkers_list))
-        client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
+        client.apply_batch([DestroyActor(x) for x in all_id])
 
         time.sleep(0.5)
 

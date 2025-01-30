@@ -52,7 +52,7 @@ void export_commands() {
 
   using ActorPtr = carla::SharedPtr<cc::Actor>;
 
-  object command_module(handle<>(borrowed(PyImport_AddModule("libcarla.command"))));
+  object command_module(handle<>(borrowed(PyImport_AddModule("carla.libcarla.command"))));
   scope().attr("command") = command_module;
   scope submodule_scope = command_module;
 
@@ -82,9 +82,15 @@ void export_commands() {
         "__init__",
         &command_impl::CustomSpawnActorInit<cc::ActorBlueprint, cg::Transform, ActorPtr>,
         (arg("blueprint"), arg("transform"), arg("parent")))
+    .def(
+        "__init__",
+        &command_impl::CustomSpawnActorInit<cc::ActorBlueprint, cg::Transform, ActorPtr, cr::AttachmentType, std::string>,
+        (arg("blueprint"), arg("transform"), arg("parent"), arg("attachment_type"), arg("socket_name")))
     .def(init<cr::Command::SpawnActor>())
     .def_readwrite("transform", &cr::Command::SpawnActor::transform)
     .def_readwrite("parent_id", &cr::Command::SpawnActor::parent)
+    .def_readwrite("attachment_type", &cr::Command::SpawnActor::attachment_type)
+    .def_readwrite("socket_name", &cr::Command::SpawnActor::socket_name)
     .def("then", &command_impl::Then, (arg("command")))
   ;
 

@@ -19,6 +19,8 @@
 #include <carla/rpc/VehiclePhysicsControl.h>
 #include <compiler/enable-ue4-macros.h>
 
+#include <Carla/Vehicle/CarlaWheeledVehicle.h>
+
 inline bool CarlaRecorderQuery::ReadHeader(void)
 {
   if (File.eof())
@@ -270,6 +272,49 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
         else
           SkipPacket();
         break;
+
+      // vehicle door animations
+      case static_cast<char>(CarlaRecorderPacketId::VehicleDoor):
+        if (bShowAll)
+        {
+          ReadValue<uint16_t>(File, Total);
+          if (Total > 0 && !bFramePrinted)
+          {
+            PrintFrame(Info);
+            bFramePrinted = true;
+          }
+          Info << " Vehicle door animations: " << Total << std::endl;
+          for (i = 0; i < Total; ++i)
+          {
+            DoorVehicle.Read(File);
+
+            CarlaRecorderDoorVehicle::VehicleDoorType doorVehicle;
+            doorVehicle = DoorVehicle.Doors;
+            EVehicleDoor eDoorVehicle = static_cast<EVehicleDoor>(doorVehicle);
+            std::string opened_doors_list;
+
+            Info << "  Id: " << DoorVehicle.DatabaseId << std::endl; 
+            Info << "  Doors opened: "; 
+            if (eDoorVehicle == EVehicleDoor::FL)
+              Info << " Front Left " << std::endl;
+            if (eDoorVehicle == EVehicleDoor::FR)
+              Info << " Front Right " << std::endl;
+            if (eDoorVehicle == EVehicleDoor::RL)
+              Info << " Rear Left " << std::endl;
+            if (eDoorVehicle == EVehicleDoor::RR)
+              Info << " Rear Right " << std::endl;
+            if (eDoorVehicle == EVehicleDoor::Hood)
+              Info << " Hood " << std::endl;
+            if (eDoorVehicle == EVehicleDoor::Trunk)
+              Info << " Trunk " << std::endl;
+            if (eDoorVehicle == EVehicleDoor::All)
+              Info << " All " << std::endl;
+          }
+        }
+        else
+          SkipPacket();
+        break;
+
 
       // vehicle light animations
       case static_cast<char>(CarlaRecorderPacketId::VehicleLight):

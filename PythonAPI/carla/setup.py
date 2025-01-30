@@ -33,9 +33,10 @@ def get_libcarla_extensions():
 
     if os.name == "posix":
         import distro
-
-        linux_distro = distro.linux_distribution()[0]
-        if linux_distro.lower() in ["ubuntu", "debian", "deepin"]:
+        supported_dists = ["ubuntu", "debian", "deepin"]
+        
+        linux_distro = distro.id().lower()
+        if linux_distro in supported_dists:
             pwd = os.path.dirname(os.path.realpath(__file__))
             pylib = "libboost_python%d%d.a" % (sys.version_info.major,
                                                sys.version_info.minor)
@@ -55,7 +56,7 @@ def get_libcarla_extensions():
                 os.path.join(pwd, 'dependencies/lib/libxerces-c.a')]
             extra_link_args += ['-lz']
             extra_compile_args = [
-                '-isystem', 'dependencies/include/system', '-fPIC', '-std=c++14',
+                '-isystem', os.path.join(pwd, 'dependencies/include/system'), '-fPIC', '-std=c++14',
                 '-Werror', '-Wall', '-Wextra', '-Wpedantic', '-Wno-self-assign-overloaded',
                 '-Wdeprecated', '-Wno-shadow', '-Wuninitialized', '-Wunreachable-code',
                 '-Wpessimizing-move', '-Wold-style-cast', '-Wnull-dereference',
@@ -77,6 +78,7 @@ def get_libcarla_extensions():
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_physics.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libad_map_opendrive_reader.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libboost_program_options.a')]
+                extra_link_args += [os.path.join(pwd, 'dependencies/lib/libodrSpiral.a')]
                 extra_link_args += [os.path.join(pwd, 'dependencies/lib/libspdlog.a')]
                 extra_link_args += ['-lrt']
                 extra_link_args += ['-ltbb']
@@ -100,7 +102,7 @@ def get_libcarla_extensions():
             # extra_link_args += ['/usr/lib/gcc/x86_64-linux-gnu/7/libstdc++.a']
             extra_link_args += ['-lstdc++']
         else:
-            raise NotImplementedError
+            raise NotImplementedError(linux_distro + " not in supported posix platforms: " + str(supported_dists))
     elif os.name == "nt":
         pwd = os.path.dirname(os.path.realpath(__file__))
         pylib = 'libboost_python%d%d' % (

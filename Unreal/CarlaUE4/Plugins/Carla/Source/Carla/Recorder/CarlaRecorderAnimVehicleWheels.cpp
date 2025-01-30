@@ -37,12 +37,12 @@ void CarlaRecorderAnimWheels::Read(std::istream &InFile)
   ReadValue<uint32_t>(InFile, DatabaseId);
   uint32_t NumWheels = 0;
   ReadValue<uint32_t>(InFile, NumWheels);
-  WheelValues.reserve(NumWheels);
+  WheelValues.resize(NumWheels);
   for (size_t i = 0; i < NumWheels; ++i)
   {
     WheelInfo Wheel;
     Wheel.Read(InFile);
-    WheelValues.push_back(Wheel);
+    WheelValues[i] = Wheel;
   }
 }
 

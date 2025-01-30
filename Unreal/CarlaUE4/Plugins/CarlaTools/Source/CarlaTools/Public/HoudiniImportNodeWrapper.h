@@ -8,9 +8,6 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
-
-#include "HoudiniPublicAPIProcessHDANode.h"
-
 #include "HoudiniImportNodeWrapper.generated.h"
 
 // Delegate type for output pins on the node.
@@ -49,17 +46,13 @@ protected:
 
   UFUNCTION()
   void HandleCompleted(
-      UHoudiniPublicAPIAssetWrapper* AssetWrapper, 
       bool bCookSuccess, 
       bool bBakeSuccess);
 
   UFUNCTION()
   void HandleFailed(
-      UHoudiniPublicAPIAssetWrapper* AssetWrapper,
       bool bCookSuccess,
       bool bBakeSuccess);
 
-private:
-  UHoudiniPublicAPIProcessHDANode* HDANode;
 
 };
