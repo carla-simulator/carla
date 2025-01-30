@@ -72,7 +72,7 @@ fi
 # -- PREREQUISITES INSTALL STEP --
 if [ $skip_prerequisites -eq 0 ]; then
     python_path=python3
-    if [ -z "$python_root" ]; then
+    if [ "$python_root" != "" ]; then
         python_path=${python_root}/python3
     fi
     echo "Installing prerequisites..."
