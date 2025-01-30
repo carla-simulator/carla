@@ -155,9 +155,9 @@ Windows:
 cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release
 ```
 
-> [!NOTE]
+>[!NOTE]
 > If you intend to target a specific Python installation, you should add both these arguments to the above cmake command: `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH`.
-﻿
+
 __Build__:
 
 Linux and Windows:
