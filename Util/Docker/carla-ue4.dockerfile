@@ -147,9 +147,8 @@ WORKDIR /workspaces
 # ------------------------------------------------------------------------------
 # Install CARLA 0.9.15.2
 # ------------------------------------------------------------------------------
-ARG CARLA_GIT_TAG="0.9.15.2"
-ARG BRANCH="feature/carla-${CARLA_GIT_TAG}-jammy-devcontainer"
-ARG CLONE_DIR="carla-${CARLA_GIT_TAG}"
+ARG BRANCH=ue4-dev
+ARG CLONE_DIR=carla-ue4-dev
 
 RUN git clone --depth 1 --branch ${BRANCH} https://github.com/wambitz/carla.git ${CLONE_DIR}
 
