@@ -160,8 +160,8 @@ WORKDIR /workspaces/${CLONE_DIR}
 RUN ./Update.sh
 RUN make PythonAPI 
 RUN make CarlaUE4Editor 
-# RUN make build.utils 
-# RUN make package 
+RUN make build.utils 
+RUN make package 
 
 # ------------------------------------------------------------------------------
 # Entry point
