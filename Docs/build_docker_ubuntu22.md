@@ -109,9 +109,9 @@ In this mode, Docker clones and builds Unreal Engine, then compiles CARLA within
 
 If you plan to use the **lightweight** approach, you need a **compiled** Unreal Engine folder on your host that matches CARLA’s requirements (usually UE4.26). 
 
-> Ensure your GitHub account is linked to the official Epic UnrealEngine repository.
+> Note: Ensure your GitHub account is linked to Epic’s UnrealEngine repository before attempting to clone.
 
-The following steps illustrate a general workflow on how to build from a container (refer to `Engine/Documentation/Docker/run_with_docker.md` within the cloned repo for more detailed instructions):
+The following steps outline a general workflow for building UE4 inside a Docker container. For detailed instructions, refer to Engine/Documentation/Docker/run_with_docker.md in the cloned repository:
 
 ```bash
 # Example of cloning a custom CarlaUnrealEngine repository
@@ -126,7 +126,7 @@ Scripts/run_container.sh
 make
 ```
 
-This will generate the required binaries as persistent storage in the host, that we will use later for the CARLA devcontainer, verify succesful compiplation inside and (optionally) outside of the container running:
+These commands generate the required Unreal Engine binaries and store them persistently on your host. You can later reuse them for the CARLA devcontainer. To verify a successful compilation, run the following command inside (or optionally outside) the container:
 
 ```bash
 Engine/Binaries/Linux/UE4Editor
