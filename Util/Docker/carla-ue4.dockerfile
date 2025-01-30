@@ -83,7 +83,8 @@ RUN apt-get install -y \
     libtiff5-dev \
     libjpeg-dev \
     autoconf \
-    rsync
+    rsync \
+    unzip
 
 # ------------------------------------------------------------------------------
 # (Optional) Install CARLA build packaging depenencies(make build.utils)
@@ -159,8 +160,8 @@ WORKDIR /workspaces/${CLONE_DIR}
 RUN ./Update.sh
 RUN make PythonAPI 
 RUN make CarlaUE4Editor 
-RUN make build.utils 
-RUN make package 
+# RUN make build.utils 
+# RUN make package 
 
 # ------------------------------------------------------------------------------
 # Entry point
