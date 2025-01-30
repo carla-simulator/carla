@@ -44,8 +44,6 @@ while true; do
     esac
 done
 
-python_path=${python_root}/python3
-
 # Check for root privileges:
 if [ -z "$EUID" ]; then
     EUID=$(id -u)
@@ -73,6 +71,10 @@ fi
 
 # -- PREREQUISITES INSTALL STEP --
 if [ $skip_prerequisites -eq 0 ]; then
+    python_path=python3
+    if [ -z "$python_root" ]; then
+        python_path=${python_root}/python3
+    fi
     echo "Installing prerequisites..."
     sudo -E bash -x Util/SetupUtils/InstallPrerequisites.sh --python-path=$python_path
 else
