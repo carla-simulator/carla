@@ -79,7 +79,8 @@ RUN apt-get install -y \
     libtiff5-dev \
     libjpeg-dev \
     autoconf \
-    rsync
+    rsync \
+    unzip
 
 # ------------------------------------------------------------------------------
 # (Optional) Install CARLA build packaging depenencies(make build.utils)
