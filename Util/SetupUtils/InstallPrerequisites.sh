@@ -60,7 +60,7 @@ if [ "$python_path" -eq "python3" ]; then
     apt-get -y install \
         python3 \
         python3-dev \
-        python3-pip \
+        python3-pip
 fi
 
 # -- INSTALL PYTHON PACKAGES --
