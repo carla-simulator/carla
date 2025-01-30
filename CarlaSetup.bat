@@ -1,45 +1,62 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-set SKIP_PREREQUISITES=false
-set LAUNCH=false
-set INTERACTIVE=false
-set PYTHON_PATH=python
-set PYTHON_ROOT=
+set skip_prerequisites=false
+set launch=false
+set interactive=false
+set python_path=python
+set python_root=
 
-if not "%*"=="" (
-    for %%x in ("%*") do (
-        if "%%~x"=="--interactive" (
-            set INTERACTIVE=true
-        ) else if "%%~x"=="-i" (
-            set INTERACTIVE=true
-        ) else if "%%~x"=="--skip-prerequisites" (
-            set SKIP_PREREQUISITES=true
-        ) else if "%%~x"=="-p" (
-            set SKIP_PREREQUISITES=true
-        ) else if "%%~x"=="--launch" (
-            set LAUNCH=true
-        ) else if "%%~x"=="-l" (
-            set LAUNCH=true
-        ) else if "%%~x"=="--python-path=" (
-            set PYTHON_PATH=%%~nx
-        ) else if "%%~x"=="-pypath" (
-            set PYTHON_PATH=%%~nx
-        ) else if "%%~x"=="--python-root=" (
-            set PYTHON_ROOT=%%~nx
-        ) else if "%%~x"=="-pyroot" (
-            set PYTHON_ROOT=%%~nx
+rem -- PARSE COMMAND LINE ARGUMENTS --
+
+:parse
+    if "%1"=="" (
+        goto main
+    )
+    if "%1"=="--interactive" (
+        set interactive=true
+    ) else if "%1"=="-i" (
+        set interactive=true
+    ) else if "%1"=="--skip-prerequisites" (
+        set skip_prerequisites=true
+    ) else if "%1"=="-p" (
+        set skip_prerequisites=true
+    ) else if "%1"=="--launch" (
+        set launch=true
+    ) else if "%1"=="-l" (
+        set launch=true
+    ) else (
+        echo %1 | findstr /B /C:"--python-root=" >nul
+        if not errorlevel 1 (
+            set python_root="%1"
+            set python_root="!python_root:--python-root=!"
+        ) else if "%1"=="--python-root" (
+            set python_root=%2
+            shift
+        ) else if "%1"=="-pyroot" (
+            set python_root=%2
+            shift
         ) else (
-            echo Unknown argument "%%~x"
+            echo Unknown argument "%1"
+            exit /b
         )
     )
+    shift
+    goto parse
+
+rem -- MAIN --
+
+:main
+
+if not "%python_root%"=="" (
+    set python_path=%python_root%\python
 )
 
 rem -- PREREQUISITES INSTALL STEP --
 
-if %SKIP_PREREQUISITES%==false (
+if %skip_prerequisites%==false (
     echo Installing prerequisites...
-    call Util/SetupUtils/InstallPrerequisites.bat || exit /b
+    call Util/SetupUtils/InstallPrerequisites.bat --python-path=%python_path% || exit /b
 ) else (
     echo Skipping prerequisites install step.
 )
@@ -102,8 +119,8 @@ cmake ^
     -S . ^
     -B Build ^
     --toolchain=CMake/Toolchain.cmake ^
-    -DPython_ROOT_DIR=%PYTHON_ROOT% ^
-    -DPython3_ROOT_DIR=%PYTHON_ROOT% ^
+    -DPython_ROOT_DIR=%python_root% ^
+    -DPython3_ROOT_DIR=%python_root% ^
     -DCMAKE_BUILD_TYPE=Release ^
     -DCARLA_UNREAL_ENGINE_PATH=%CARLA_UNREAL_ENGINE_PATH% || exit /b
 echo Building CARLA...
@@ -114,7 +131,7 @@ echo CARLA Python API build+install succeeded.
 
 rem -- POST-BUILD STEPS --
 
-if %LAUNCH%==true (
+if %launch%==true (
     echo Launching Carla Unreal Editor...
     cmake --build Build --target launch || exit /b
 )
