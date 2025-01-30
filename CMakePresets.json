@@ -13,11 +13,6 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/Build/${presetName}",
       "installDir": "${sourceDir}/Install/${presetName}",
-      "hidden": true
-    },
-    {
-      "name": "Linux-Common",
-      "inherits": "Common",
       "cacheVariables":
       {
         "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/CMake/LinuxToolchain.cmake"
@@ -25,7 +20,7 @@
       "hidden": true
     },
     {
-      "name": "Windows-Debug",
+      "name": "Debug",
       "inherits": "Common",
       "cacheVariables":
       {
@@ -33,7 +28,7 @@
       }
     },
     {
-      "name": "Windows-Development",
+      "name": "Development",
       "inherits": "Common",
       "cacheVariables":
       {
@@ -41,32 +36,8 @@
       }
     },
     {
-      "name": "Windows-Release",
+      "name": "Release",
       "inherits": "Common",
-      "cacheVariables":
-      {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
-    },
-    {
-      "name": "Linux-Debug",
-      "inherits": "Linux-Common",
-      "cacheVariables":
-      {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
-    },
-    {
-      "name": "Linux-Development",
-      "inherits": "Linux-Common",
-      "cacheVariables":
-      {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-      }
-    },
-    {
-      "name": "Linux-Release",
-      "inherits": "Linux-Common",
       "cacheVariables":
       {
         "CMAKE_BUILD_TYPE": "Release"

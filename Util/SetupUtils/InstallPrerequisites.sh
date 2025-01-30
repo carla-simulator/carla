@@ -2,6 +2,31 @@
 
 set -e
 
+python_path_default='python3'
+python_path=$python_path_default
+
+options=$(\
+    getopt \
+    -o "pypath:" \
+    --long "python-path:" \
+    -n 'CarlaSetup.sh' -- "$@")
+
+eval set -- "$options"
+while true; do
+    case "$1" in
+        -pypath|--python-path)
+            python_path=$2
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            ;;
+    esac
+done
+
 if [ -z "$EUID" ]; then
     EUID=$(id -u)
 fi
@@ -16,14 +41,9 @@ echo "Installing Ubuntu Packages..."
 apt-get update
 apt-get -y install \
     build-essential \
-    g++-12 \
-    gcc-12 \
     make \
     ninja-build \
     libvulkan1 \
-    python3 \
-    python3-dev \
-    python3-pip \
     libpng-dev \
     libtiff5-dev \
     libjpeg-dev \
@@ -36,13 +56,19 @@ apt-get -y install \
     git \
     git-lfs
 
+if [ "$python_path" == "python3" ]; then
+    apt-get -y install \
+        python3 \
+        python3-dev \
+        python3-pip
+fi
+
 # -- INSTALL PYTHON PACKAGES --
 echo "Installing Python Packages..."
-pip3 install --upgrade pip
-pip3 install -r requirements.txt
+$python_path -m pip install --upgrade pip
+$python_path -m pip install -r requirements.txt
 
 # -- INSTALL CMAKE --
-
 check_cmake_version() {
     CMAKE_VERSION="$($2 --version | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
     CMAKE_MINIMUM_VERSION=$1

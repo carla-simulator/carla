@@ -108,15 +108,35 @@ FString UOpenDrive::LoadXODR(const FString &MapName)
 
   if (FilePath.IsEmpty())
   {
-    UE_LOG(LogTemp, Error, TEXT("Failed to find OpenDrive file for map '%s'"), *MapName);
+    UE_LOG(LogCarla, Error, TEXT("Failed to find OpenDrive file for map '%s'"), *MapName);
   }
   else if (FFileHelper::LoadFileToString(Content, *FilePath))
   {
-    UE_LOG(LogTemp, Log, TEXT("Loaded OpenDrive file '%s'"), *FilePath);
+    UE_LOG(LogCarla, Log, TEXT("Loaded OpenDrive file '%s'"), *FilePath);
   }
   else
   {
-    UE_LOG(LogTemp, Error, TEXT("Failed to load OpenDrive file '%s'"), *FilePath);
+    UE_LOG(LogCarla, Error, TEXT("Failed to load OpenDrive file '%s'"), *FilePath);
+  }
+
+  return Content;
+}
+
+FString UOpenDrive::LoadXODRFullPath(const FString &FullPath)
+{
+  FString Content;
+
+  if (FullPath.IsEmpty())
+  {
+    UE_LOG(LogCarla, Error, TEXT("Failed to find OpenDrive file for map '%s'"), *FullPath);
+  }
+  else if (FFileHelper::LoadFileToString(Content, *FullPath))
+  {
+    UE_LOG(LogCarla, Log, TEXT("Loaded OpenDrive file '%s'"), *FullPath);
+  }
+  else
+  {
+    UE_LOG(LogCarla, Error, TEXT("Failed to load OpenDrive file '%s'"), *FullPath);
   }
 
   return Content;

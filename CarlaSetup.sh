@@ -5,22 +5,35 @@ set -e
 interactive=0
 skip_prerequisites=0
 launch=0
+python_root=
 
-options=$(getopt -o "i,p,l" --long "interactive,skip-prerequisites,launch" -n 'CarlaSetup.sh' -- "$@")
+workspace_path="$(dirname $(realpath "${BASH_SOURCE[-1]}"))"
+echo "workspace_path=$workspace_path"
+
+options=$(\
+    getopt \
+    -o "i,p,l,pyroot:" \
+    --long "interactive,skip-prerequisites,launch,python-root:" \
+    -n 'CarlaSetup.sh' -- "$@")
+
 eval set -- "$options"
 while true; do
     case "$1" in
-        -i | --interactive)
+        -i|--interactive)
             interactive=1
             shift
             ;;
-        -p | --skip-prerequisites)
+        -p|--skip-prerequisites)
             skip_prerequisites=1
             shift
             ;;
-        -l | --launch)
+        -l|--launch)
             launch=1
             shift
+            ;;
+        -pyroot|--python-root)
+            python_root=$2
+            shift 2
             ;;
         --)
             shift
@@ -58,20 +71,24 @@ fi
 
 # -- PREREQUISITES INSTALL STEP --
 if [ $skip_prerequisites -eq 0 ]; then
+    python_path=python3
+    if [ "$python_root" != "" ]; then
+        python_path=${python_root}/python3
+    fi
     echo "Installing prerequisites..."
-    sudo -E bash -x Util/SetupUtils/InstallPrerequisites.sh
+    sudo -E bash -x Util/SetupUtils/InstallPrerequisites.sh --python-path=$python_path
 else
     echo "Skipping prerequisites install step."
 fi
 
 # -- CLONE CONTENT --
-if [ -d $cd/Unreal/CarlaUnreal/Content ]; then
+if [ -d $workspace_path/Unreal/CarlaUnreal/Content ]; then
     echo "Found CARLA content."
 else
     echo "Could not find CARLA content. Downloading..."
-    mkdir -p $cd/Unreal/CarlaUnreal/Content
+    mkdir -p $workspace_path/Unreal/CarlaUnreal/Content
     git \
-        -C $cd/Unreal/CarlaUnreal/Content \
+        -C $workspace_path/Unreal/CarlaUnreal/Content \
         clone \
         -b ue5-dev \
         https://bitbucket.org/carla-simulator/carla-content.git \
@@ -82,7 +99,7 @@ fi
 if [ ! -z $CARLA_UNREAL_ENGINE_PATH ] && [ -d $CARLA_UNREAL_ENGINE_PATH ]; then
     echo "Found CARLA Unreal Engine at $CARLA_UNREAL_ENGINE_PATH"
 elif [ -d ../UnrealEngine5_carla ]; then
-    echo "Found CARLA Unreal Engine at $cd/UnrealEngine5_carla. Assuming already built..."
+    echo "Found CARLA Unreal Engine at $workspace_path/UnrealEngine5_carla. Assuming already built..."
 else
     echo "Could not find CARLA Unreal Engine, downloading..."
     pushd ..
@@ -111,10 +128,12 @@ fi
 # -- BUILD CARLA --
 echo "Configuring the CARLA CMake project..."
 cmake -G Ninja -S . -B Build \
-    --toolchain=$PWD/CMake/LinuxToolchain.cmake \
+    --toolchain=$PWD/CMake/Toolchain.cmake \
     -DLAUNCH_ARGS="-prefernvidia" \
     -DCMAKE_BUILD_TYPE=Release \
     -DENABLE_ROS2=ON \
+    -DPython_ROOT_DIR=${python_root} \
+    -DPython3_ROOT_DIR=${python_root} \
     -DCARLA_UNREAL_ENGINE_PATH=$CARLA_UNREAL_ENGINE_PATH
 echo "Building CARLA..."
 cmake --build Build
