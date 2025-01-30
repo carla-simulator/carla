@@ -44,6 +44,7 @@ nav:
   - 'NVIDIA SimReady': 'ecosys_simready.md'
   - 'ASAM OpenDRIVE': 'adv_opendrive.md'
   - 'PTV Vissim': 'adv_ptv.md'
+  - 'RSS': 'adv_rss.md'
   - 'ROS': https://carla.readthedocs.io/projects/ros-bridge/en/latest/
   - 'Scenic': 'tuto_G_scenic.md'
   - 'SUMO': 'adv_sumo.md'

@@ -132,6 +132,8 @@ CARLA specific assets are distributed under CC-BY License.
 
 #### CARLA Dependency and Integration licenses
 
+The ad-rss-lib library compiled and linked by the [RSS Integration build variant](Docs/adv_rss.md) introduces [LGPL-2.1-only License](https://opensource.org/licenses/LGPL-2.1).
+
 Unreal Engine 4 follows its [own license terms](https://www.unrealengine.com/en-US/faq).
 
 CARLA uses three dependencies as part of the SUMO integration:
