@@ -56,5 +56,4 @@ profiler.csv
 # ----------------------
 .env
 .venv
-.config
 build/
