@@ -21,8 +21,7 @@ import invertedai as iai
 import numpy as np
 from tqdm import tqdm
 from invertedai.common import AgentProperties, AgentState, TrafficLightState, Point
-# from carla.command import SpawnActor, DestroyActor
-from carla import Location, Rotation
+from carla import command, Location
 
 #---------
 # CARLA Utils
@@ -47,13 +46,13 @@ def argument_parser():
     argparser.add_argument(
         '-n', '--number-of-vehicles',
         metavar='N',
-        default=30,
+        default=60,
         type=int,
         help='Number of vehicles spawned by InvertedAI (default: 30)')
     argparser.add_argument(
         '-w', '--number-of-walkers',
         metavar='W',
-        default=0,
+        default=60,
         type=int,
         help='Number of walkers (default: 10)')
     argparser.add_argument(
@@ -103,7 +102,7 @@ def argument_parser():
     argparser.add_argument(
         '--sim-length',
         type=int,
-        default=120,
+        default=60,
         help="Length of the simulation in seconds (default: 120)")
     argparser.add_argument(
         '--location',
@@ -220,7 +219,7 @@ def initialize_iai_agent(actor, agent_type):
     agent_state = AgentState.fromlist([
                                         transf.location.x,
                                         transf.location.y,
-                                        transf.rotation.yaw,
+                                        math.radians(transf.rotation.yaw),
                                         speed
                                     ])
 
@@ -245,56 +244,56 @@ def initialize_pedestrians(pedestrians):
     return iai_pedestrians_states, iai_pedestrians_properties
 
 # Spawn pedestrians in the simulation, which are driven by CARLA controllers (not by invertedai)
-# def spawn_pedestrians(client, world, num_pedestrians, bps):
+def spawn_pedestrians(client, world, num_pedestrians, bps):
 
-#     batch = []
+    batch = []
 
-#     # Get spawn points for pedestrians
-#     spawn_points = []
-#     for i in range(num_pedestrians):
+    # Get spawn points for pedestrians
+    spawn_points = []
+    for i in range(num_pedestrians):
         
-#         loc = world.get_random_location_from_navigation()
-#         if (loc is not None):
-#             spawn_point = carla.Transform(location=loc)
-#             #Apply Offset in vertical to avoid collision spawning
-#             spawn_point.location.z += 1
-#             spawn_points.append(spawn_point)
+        loc = world.get_random_location_from_navigation()
+        if (loc is not None):
+            spawn_point = carla.Transform(location=loc)
+            #Apply Offset in vertical to avoid collision spawning
+            spawn_point.location.z += 1
+            spawn_points.append(spawn_point)
 
-#     pedestrians = []
-#     walkers_list = []
+    pedestrians = []
+    walkers_list = []
 
-#     # Spawn pedestrians
-#     for i in range(len(spawn_points)):
-#         walker_bp = random.choice(bps)
-#         if walker_bp.has_attribute('is_invincible'):
-#             walker_bp.set_attribute('is_invincible', 'false')
-#         spawn_point = spawn_points[i]
-#         batch.append(SpawnActor(walker_bp, spawn_point))
+    # Spawn pedestrians
+    for i in range(len(spawn_points)):
+        walker_bp = random.choice(bps)
+        if walker_bp.has_attribute('is_invincible'):
+            walker_bp.set_attribute('is_invincible', 'false')
+        spawn_point = spawn_points[i]
+        batch.append(command.SpawnActor(walker_bp, spawn_point))
 
-#     results = client.apply_batch_sync(batch, True)
-#     pedestrians = world.get_actors().filter('walker.*')
-#     for i in range(len(results)):
-#         if results[i].error:
-#             logging.error(results[i].error)
-#         else:
-#             walkers_list.append({"id": results[i].actor_id})
+    results = client.apply_batch_sync(batch, True)
+    pedestrians = world.get_actors().filter('walker.*')
+    for i in range(len(results)):
+        if results[i].error:
+            logging.error(results[i].error)
+        else:
+            walkers_list.append({"id": results[i].actor_id})
 
-#     # Spawn CARLA IA controllers for pedestrians
-#     batch = []
-#     walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
-#     for i in range(len(walkers_list)):
-#         batch.append(SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
-#     results = client.apply_batch_sync(batch, True)
+    # Spawn CARLA IA controllers for pedestrians
+    batch = []
+    walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
+    for i in range(len(walkers_list)):
+        batch.append(command.SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
+    results = client.apply_batch_sync(batch, True)
 
-#     world.tick()
+    world.tick()
 
-#     for controller in world.get_actors().filter('controller.ai.walker'):
-#         controller.start()
-#         dest = world.get_random_location_from_navigation()
-#         controller.go_to_location(dest)
-#         controller.set_max_speed(0.5 + random.random())
+    for controller in world.get_actors().filter('controller.ai.walker'):
+        controller.start()
+        dest = world.get_random_location_from_navigation()
+        controller.go_to_location(dest)
+        controller.set_max_speed(0.5 + random.random())
 
-#     return pedestrians
+    return pedestrians
 
 # Get blueprints according to the given filters
 def get_actor_blueprints(world, filter, generation):
@@ -363,7 +362,6 @@ def assign_carla_blueprints_to_iai_agents(world,vehicle_blueprints,agent_propert
     agent_properties_new = []
     agent_states_new = []
     recurrent_states_new = []
-    new_agent_id = 0
     iai2carla = {}
 
     for agent_id, state in enumerate(agent_states):
@@ -373,7 +371,6 @@ def assign_carla_blueprints_to_iai_agents(world,vehicle_blueprints,agent_propert
             agent_states_new.append(agent_states[agent_id])
             recurrent_states_new.append(recurrent_states[agent_id])
             actor = noniai_actors[agent_id]
-            new_agent_id += 1
             iai2carla[len(iai2carla)] = {"actor":actor, "is_iai":False, "type":agent_properties[agent_id].agent_type}
              
         else:
@@ -394,8 +391,6 @@ def assign_carla_blueprints_to_iai_agents(world,vehicle_blueprints,agent_propert
                 agent_attr.length = 2*bb.x
                 agent_attr.width = 2*bb.y
                 agent_attr.rear_axis_offset = 2*bb.x/3
-
-                new_agent_id += 1
 
                 agent_properties_new.append(agent_attr)
                 agent_states_new.append(agent_states[agent_id])
@@ -591,12 +586,11 @@ def main():
         pedestrians = []
     
     num_noniai = len(agent_properties)
-
     # Initialize InvertedAI co-simulation
     response, carla2iai_tl, location_info_response = initialize_simulation(args, world, agent_states=agent_states, agent_properties=agent_properties)
     agent_properties = response.agent_properties
     is_iai.extend( [True]*(len(agent_properties)-num_noniai) )
-
+    
     # Map IAI agents to CARLA actors and update response properties and states
     print(f"Number of agents initialized: {len(response.agent_states)}")
     agent_properties, agent_states_new, recurrent_states_new, iai2carla = assign_carla_blueprints_to_iai_agents(world,vehicle_blueprints,agent_properties,response.agent_states,response.recurrent_states,is_iai,noniai_actors)
@@ -620,13 +614,14 @@ def main():
 
     # Perform first CARLA simulation tick
     world.tick()
-
+    
+    iai_agent_indices = [i for i in range(len(agent_properties)) if iai2carla[i]["is_iai"]]
     try:
 
         vehicles = world.get_actors().filter('vehicle.*')
         print("Total number of agents:",len(agent_properties),"Vehicles",len(vehicles), "Pedestrians:",len(pedestrians))
-        for agent_property in agent_properties:
-            agent_property.max_speed = 10.0
+        for index in iai_agent_indices:
+            agent_properties[index].max_speed = 10.0
         # Get hero vehicle
         hero_v = None
         if args.hero:
@@ -636,9 +631,10 @@ def main():
         waypoints = []
         for frame in tqdm(range(args.sim_length * FPS)):
             response.traffic_lights_states = assign_iai_traffic_lights_from_carla(world, response.traffic_lights_states, carla2iai_tl)
-            waypoints = get_next_waypoints(carla_map, response.agent_states, waypoints, args)
+            iai_agent_states = [response.agent_states[i] for i in iai_agent_indices]
+            waypoints = get_next_waypoints(carla_map, iai_agent_states, waypoints, args)
             for i in range(len(waypoints)):
-                agent_properties[i].waypoint = Point(x=waypoints[i][0], y=waypoints[i][1])
+                agent_properties[iai_agent_indices[i]].waypoint = Point(x=waypoints[i][0], y=waypoints[i][1])
 
             # IAI update step
             response = iai.large_drive(
@@ -663,25 +659,14 @@ def main():
             world.tick()
 
             # Update agents not driven by IAI in IAI cosimulation, like pedestrians
-            # for agent_id in iai2carla.keys():
-            #     agentdict = iai2carla[agent_id]
+            for agent_id in iai2carla.keys():
+                agentdict = iai2carla[agent_id]
 
-            #     if not agentdict["is_iai"]:
-            #         actor = agentdict["actor"]
-            #         state, properties = initialize_iai_agent(actor, agentdict["type"])
-            #         response.agent_states[agent_id] = state
-            #         agent_properties[agent_id] = properties
-
-            # Include possible new actors (vehicles) from other clients (using automatic_control.py or manual_control.py for instance)
-            # actors_all = world.get_actors().filter('vehicle.*')
-            # actsids = [act["actor"].id for act in iai2carla.values()]
-            # for actor in actors_all:
-            #     if not (actor.id in actsids):
-            #         state, properties = initialize_iai_agent(actor, "car")
-            #         response.agent_states.append( state )
-            #         agent_properties.append( properties )
-            #         response.recurrent_states.append( response.recurrent_states[-1] )   # temporal fix
-            #         iai2carla[len(iai2carla)] = {"actor":actor, "is_iai":False, "type":properties.agent_type}
+                if not agentdict["is_iai"] and agentdict["type"] == "pedestrian":
+                    actor = agentdict["actor"]
+                    state, properties = initialize_iai_agent(actor, agentdict["type"])
+                    response.agent_states[agent_id] = state
+                    agent_properties[agent_id] = properties
 
             # Update spectator view if there is hero vehicle
             if hero_v is not None:
@@ -690,20 +675,6 @@ def main():
             
 
     finally:
-
-        # vehicles_list = world.get_actors().filter('vehicle.*')
-        # print('\ndestroying %d vehicles' % len(vehicles_list))
-        # client.apply_batch([DestroyActor(x) for x in vehicles_list])
-
-        # walkercontrollers_list = world.get_actors().filter('controller.*')
-        # for control in walkercontrollers_list:
-        #     control.stop()
-        #     control.destroy()
-
-        # walkers_list = world.get_actors().filter('walker.*')
-        # print('\ndestroying %d walkers' % len(walkers_list))
-        # client.apply_batch([DestroyActor(x) for x in walkers_list])
-
         time.sleep(0.5)
 
         if args.record:
