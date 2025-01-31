@@ -15,7 +15,7 @@
       "installDir": "${sourceDir}/Install/${presetName}",
       "cacheVariables":
       {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/CMake/LinuxToolchain.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/CMake/Toolchain.cmake"
       },
       "hidden": true
     },
