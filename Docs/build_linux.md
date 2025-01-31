@@ -89,6 +89,13 @@ sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/lib/llvm-8/bin/
 sudo update-alternatives --install /usr/bin/clang clang /usr/lib/llvm-8/bin/clang 180
 ```
 
+__Ubuntu > 18.04__.
+Create a symbolic link that would tell the system to use version 10 whenever it encounters usr/bin/clang-8 in one of the CARLA setup or installation scripts:
+```sh
+sudo ln -s /usr/bin/clang /usr/bin/clang-8
+sudo ln -s /usr/bin/clang++ /usr/bin/clang++-8
+```
+
 __All Ubuntu systems__.
 
 Starting with CARLA 0.9.12, users have the option to install the CARLA Python API using `pip` or `pip3`. Version 20.3 or higher is required. To check if you have a suitable version, run the following command:
@@ -119,7 +126,13 @@ pip3 install --user -Iv setuptools==47.3.1 &&
 pip install --user distro &&
 pip3 install --user distro &&
 pip install --user wheel &&
-pip3 install --user wheel auditwheel
+pip3 install --user wheel auditwheel &&
+pip3 install nose2
+```
+
+Some of the installation and setup scripts use the deprecated python command. One way to avoid the issues caused by this is with a symbolic link:
+```sh
+sudo ln -s /usr/bin/python3 /usr/bin/python
 ```
 
 ---
