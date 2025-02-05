@@ -23,6 +23,7 @@ After discussing about the world and its actors, it is time to put everything in
 	- [Add map package](tuto_M_add_map_package.md)
 	- [Add map source](tuto_M_add_map_source.md)
 	- [Alternative methods](tuto_M_add_map_alternative.md)
+- [__Additional maps__](#additional-maps)
 
 
 ---
@@ -257,6 +258,9 @@ Non-layered maps are shown in the table below (click the town name to see an ove
 | [__Town11__](map_town11.md) | A Large Map that is undecorated. Serves as a proof of concept for the Large Maps feature. |
 | [__Town12__](map_town12.md) | A Large Map with numerous different regions, including high-rise, residential and rural environments.|
 
+!!! note
+	Town06 and Town07 are additional content which does not come with the standard CARLA package. Please see the [additional maps section](#additional-maps) for details on how to import these. 
+
 ### Layered maps
 
 The layout of layered maps is the same as non-layered maps but it is possible to toggle off and on the layers of the map. There is a minimum layout that cannot be toggled off and consists of roads, sidewalks, traffic lights and traffic signs. Layered maps can be identified by the suffix `_Opt`, for example, `Town01_Opt`. With these maps it is possible to [load][load_layer] and [unload][unload_layer] layers via the Python API:
@@ -291,3 +295,27 @@ CARLA is designed to be extensible and highly customisable for specialist applic
 * [__Add map package__](tuto_M_add_map_package.md)
 * [__Add map source__](tuto_M_add_map_source.md)
 * [__Alternative methods__](tuto_M_add_map_alternative.md)
+
+## Additional maps
+
+Each release has it's own additional package of extra assets and maps. This additional package includes the maps __Town06__ and __Town07__. These are stored separately to reduce the size of the build, so they can only be imported after the main package has been installed. 
+
+__1.__ [Download](https://github.com/carla-simulator/carla/blob/master/Docs/download.md) the appropriate package for your desired version of CARLA.
+
+__2.__ Extract the package:
+
+- __On Linux__:
+
+    - move the package to the _Import_ folder and run the following script to extract the contents:  
+
+```sh
+        cd path/to/carla/root
+
+        ./ImportAssets.sh
+```
+
+- __On Windows__:
+
+    - Extract the contents directly in the root folder. 
+
+---

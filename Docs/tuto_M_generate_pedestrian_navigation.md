@@ -78,6 +78,10 @@ __6.__ A `<mapName>.bin` file will be created. This file contains the informatio
 
 __7.__ Test the pedestrian navigation by starting a simulation and running the example script `generate_traffic.py` in `PythonAPI/examples`.
 
+!!! note
+    **If you need to rebuild the pedestrian navigation** after updating the map, ensure to delete the CARLA cache. This is normally found in the home directory in Ubuntu (i.e. `cd ~`), or in the user directory in Windows (the directory assigned to the environment variable `USERPROFILE`), remove the folder named `carlaCache` and all of its contents, it is likely to be large in size. 
+
+
 ---
 
 If you have any questions about the process, then you can ask in the [forum](https://github.com/carla-simulator/carla/discussions).

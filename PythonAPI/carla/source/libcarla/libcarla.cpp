@@ -216,6 +216,7 @@ static auto MakeCallback(boost::python::object callback) {
   };
 }
 
+#include "V2XData.cpp"
 #include "Geom.cpp"
 #include "Actor.cpp"
 #include "Blueprint.cpp"

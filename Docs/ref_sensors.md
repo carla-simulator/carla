@@ -15,6 +15,9 @@
 - [__Instance segmentation camera__](#instance-segmentation-camera)
 - [__DVS camera__](#dvs-camera)
 - [__Optical Flow camera__](#optical-flow-camera)
+- [__V2X sensor__](#v2x-sensor)
+    - [Cooperative awareness](#cooperative-awareness-message)
+    - [Custom message](#custom-v2x-message)
 
 !!! Important
     All the sensors use the UE coordinate system (__x__-*forward*, __y__-*right*, __z__-*up*), and return coordinates in local space. When using any visualization software, pay attention to its coordinate system. Many invert the Y-axis, so visualizing the sensor data directly may result in mirrored outputs.  
@@ -183,10 +186,11 @@ Provides measures that accelerometer, gyroscope and compass would retrieve for t
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
 | `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `accelerometer`      | [carla.Vector3D](<../python_api#carlavector3d>)    | Measures linear acceleration in `m/s^2`.     |
-| `gyroscope`        | [carla.Vector3D](<../python_api#carlavector3d>)    | Measures angular velocity in `rad/sec`.      |
-| `compass`          | float | Orientation in radians. North is `(0.0, -1.0, 0.0)` in UE.       |
+| `gyroscope`        | [carla.Vector3D](<../python_api#carlavector3d>)    | Measures angular velocity in `rad/s`.      |
+| `compass`          | float | Orientation in radians. North is 0 radians.     |
 
-
+!!! note
+     For the compass, North is 0 radians. East is *pi*/2 radians, South is *pi* radians, West is 3*pi*/2 radians. North is in the direction of decreasing Y in CARLA's global coordinate system. East is in the direction of increasing X. The compass value converted to degrees is equal to 90 - yaw.
 
 ---
 ## Lane invasion detector
@@ -711,34 +715,39 @@ This raw [carla.Image](python_api.md#carla.Image) can be stored and converted it
 raw_image.save_to_disk("path/to/save/converted/image",carla.ColorConverter.cityScapesPalette)
 ```
 
-The following tags are currently available:
+The following tags are currently available (Note, tags changed from version 0.9.13 to 0.9.14):
 
 | Value          | Tag            | Converted color  | Description      |
 | ----------------------------------- | ----------------------------------- | ----------------------------------- | ----------------------------------- |
 | `0`            | Unlabeled      | `(0, 0, 0)`      | Elements that have not been categorized are considered `Unlabeled`. This category is meant to be empty or at least contain elements with no collisions.     |
-| `1`            | Building       | `(70, 70, 70)`   | Buildings like houses, skyscrapers,... and the elements attached to them. <br> E.g. air conditioners, scaffolding, awning or ladders and much more.       |
-| `2`            | Fence          | `(100, 40, 40)`  | Barriers, railing, or other upright structures. Basically wood or wire assemblies that enclose an area of ground.           |
-| `3`            | Other          | `(55, 90, 80)`   | Everything that does not belong to any other category.       |
-| `4`            | Pedestrian       | `(220, 20, 60)`  | Humans that walk or ride/drive any kind of vehicle or mobility system. <br> E.g. bicycles or scooters, skateboards, horses, roller-blades, wheel-chairs, etc.         |
-| `5`            | Pole           | `(153, 153, 153)`            | Small mainly vertically oriented pole. If the pole has a horizontal part (often for traffic light poles) this is also considered pole. <br> E.g. sign pole, traffic light poles.     |
-| `6`            | RoadLine       | `(157, 234, 50)`             | The markings on the road.    |
-| `7`            | Road           | `(128, 64, 128)`             | Part of ground on which cars usually drive. <br> E.g. lanes in any directions, and streets.       |
-| `8`            | SideWalk       | `(244, 35, 232)`             | Part of ground designated for pedestrians or cyclists. Delimited from the road by some obstacle (such as curbs or poles), not only by markings. This label includes a possibly delimiting curb, traffic islands (the walkable part), and pedestrian zones. |
-| `9`            | Vegetation       | `(107, 142, 35)`             | Trees, hedges, all kinds of vertical vegetation. Ground-level vegetation is considered `Terrain`.   |
-| `10`           | Vehicles       | `(0, 0, 142)`    | Cars, vans, trucks, motorcycles, bikes, buses, trains.       |
-| `11`           | Wall           | `(102, 102, 156)`            | Individual standing walls. Not part of a building.         |
-| `12`           | TrafficSign      | `(220, 220, 0)`  | Signs installed by the state/city authority, usually for traffic regulation. This category does not include the poles where signs are attached to. <br> E.g. traffic- signs, parking signs, direction signs...     |
-| `13`           | Sky            | `(70, 130, 180)`             | Open sky. Includes clouds and the sun.   |
-| `14`           | Ground         | `(81, 0, 81)`    | Any horizontal ground-level structures that does not match any other category. For example areas shared by vehicles and pedestrians, or flat roundabouts delimited from the road by a curb.        |
-| `15`           | Bridge         | `(150, 100, 100)`            | Only the structure of the bridge. Fences, people, vehicles, an other elements on top of it are labeled separately.          |
-| `16`           | RailTrack      | `(230, 150, 140)`            | All kind of rail tracks that are non-drivable by cars. <br> E.g. subway and train rail tracks.    |
-| `17`           | GuardRail      | `(180, 165, 180)`            | All types of guard rails/crash barriers. |
-| `18`           | TrafficLight     | `(250, 170, 30)`             | Traffic light boxes without their poles. |
-| `19`           | Static         | `(110, 190, 160)`            | Elements in the scene and props that are immovable. <br> E.g. fire hydrants, fixed benches, fountains, bus stops, etc.    |
-| `20`           | Dynamic        | `(170, 120, 50)`             | Elements whose position is susceptible to change over time. <br> E.g. Movable trash bins, buggies, bags, wheelchairs, animals, etc.         |
-| `21`           | Water          | `(45, 60, 150)`  | Horizontal water surfaces. <br> E.g. Lakes, sea, rivers.   |
-| `22`           | Terrain        | `(145, 170, 100)`            | Grass, ground-level vegetation, soil or sand. These areas are not meant to be driven on. This label includes a possibly delimiting curb.      |
-
+| `1`            | Roads          | `(128, 64, 128)`             | Part of ground on which cars usually drive. <br> E.g. lanes in any directions, and streets.       |
+| `2`            | SideWalks      | `(244, 35, 232)`             | Part of ground designated for pedestrians or cyclists. Delimited from the road by some obstacle (such as curbs or poles), not only by markings. This label includes a possibly delimiting curb, traffic islands (the walkable part), and pedestrian zones. |
+| `3`            | Building       | `(70, 70, 70)`   | Buildings like houses, skyscrapers,... and the elements attached to them. <br> E.g. air conditioners, scaffolding, awning or ladders and much more.       |
+| `4`            | Wall           | `(102, 102, 156)`            | Individual standing walls. Not part of a building.         |
+| `5`            | Fence          | `(190, 153, 153)`  | Barriers, railing, or other upright structures. Basically wood or wire assemblies that enclose an area of ground.           |
+| `6`            | Pole           | `(153, 153, 153)`            | Small mainly vertically oriented pole. If the pole has a horizontal part (often for traffic light poles) this is also considered pole. <br> E.g. sign pole, traffic light poles.     |
+| `7`            | TrafficLight   | `(250, 170, 30)`             | Traffic light boxes without their poles. |
+| `8`            | TrafficSign    | `(220, 220, 0)`  | Signs installed by the state/city authority, usually for traffic regulation. This category does not include the poles where signs are attached to. <br> E.g. traffic- signs, parking signs, direction signs...     |
+| `9`            | Vegetation     | `(107, 142, 35)`             | Trees, hedges, all kinds of vertical vegetation. Ground-level vegetation is considered `Terrain`.   |
+| `10`           | Terrain        | `(152, 251, 152)`            | Grass, ground-level vegetation, soil or sand. These areas are not meant to be driven on. This label includes a possibly delimiting curb.      |
+| `11`           | Sky            | `(70, 130, 180)`             | Open sky. Includes clouds and the sun.   |
+| `12`           | Pedestrian     | `(220, 20, 60)`  | Humans that walk        |
+| `13`           | Rider          | `(255, 0, 0)`  | Humans that ride/drive any kind of vehicle or mobility system <br> E.g. bicycles or scooters, skateboards, horses, roller-blades, wheel-chairs, etc. .       |
+| `14`           | Car            | `(0, 0, 142)`    | Cars, vans        |
+| `15`           | Truck          | `(0, 0, 70)`    | Trucks        |
+| `16`           | Bus            | `(0, 60, 100)`  | Busses        |
+| `17`           | Train          | `(0, 80, 100)`  | Trains        |
+| `18`           | Motorcycle     | `(0, 0, 230)`    | Motorcycle, Motorbike        |
+| `19`           | Bicycle        | `(119, 11, 32)`   | Bicylces      |
+| `20`           | Static         | `(110, 190, 160)`            | Elements in the scene and props that are immovable. <br> E.g. fire hydrants, fixed benches, fountains, bus stops, etc.    |
+| `21`           | Dynamic        | `(170, 120, 50)`             | Elements whose position is susceptible to change over time. <br> E.g. Movable trash bins, buggies, bags, wheelchairs, animals, etc.         |
+| `22`           | Other          | `(55, 90, 80)`    | Everything that does not belong to any other category.  |
+| `23`           | Water          | `(45, 60, 150)`  | Horizontal water surfaces. <br> E.g. Lakes, sea, rivers.   |
+| `24`           | RoadLine       | `(157, 234, 50)`             | The markings on the road.    |
+| `25`           | Ground         | `(81, 0, 81)`    | Any horizontal ground-level structures that does not match any other category. For example areas shared by vehicles and pedestrians, or flat roundabouts delimited from the road by a curb.        |
+| `26`           | Bridge         | `(150, 100, 100)`            | Only the structure of the bridge. Fences, people, vehicles, an other elements on top of it are labeled separately.          |
+| `27`           | RailTrack      | `(230, 150, 140)`            | All kind of rail tracks that are non-drivable by cars. <br> E.g. subway and train rail tracks.    |
+| `28`           | GuardRail      | `(180, 165, 180)`            | All types of guard rails/crash barriers. |
 <br>
 
 !!! Note
@@ -899,3 +908,99 @@ The Optical Flow camera captures the motion perceived from the point of view of 
 | `raw_data` | bytes | Array of BGRA 64-bit pixels containing two float values. |
 
 <br>
+
+---
+
+## V2X sensor 
+
+Vehicle-to-everything (V2X) communication is an important aspect for future applications of cooperative intelligent transportation systems. In real vehicles, this requires a dedicated onboard unit (OBU) in each vehicle, that is able to send and receive information over wireless channels. Depending on the region (Europe, China, USA), different physical technologies, protocols and application messaging formats are used. 
+
+CARLA currently supports simulation of a simple broadcast wireless channel and two application messages. Protocols for network access and forwarding are not supported yet. The two implemented messages are the [*Cooperative Awarness Message*](#cooperative-awareness-message) according to the European standard ETSI, and a [*custom message*](#custom-v2x-message) type, that can be used to transmit arbitrary string data (e.g. JSON). There are two distinct sensors for V2X communication, that can be used separately, one for each application message type.
+
+Basically, the wireless channel incorporates the following calculation for both sensors:
+
+    ReceivedPower = OtherTransmitPower + combined_antenna_gain - loss
+
+    IF (ReceivedPower >= receiver_sensitivity)
+        THEN message is received
+
+To simulate V2X communication, at least two V2X sensors of the same type need to be spawned (at least one sender-receiver pair). Because the received power is calculated on the receiver-side V2X sensor, only the antenna gain that is specified on the receiver-side sensor is incorporated in this calculation. Transmission power and receiver sensitivity can be configured (see [Blueprint attributes](#v2x-sensors-blueprint-attributes)).
+
+The *loss* calculation depends on 
+- the visbility condition between sender and receiver: line of sight (no obstacles), non-line of sight obstructed by buildings, or non-line of sight obstructed by vehicles, and
+- the scenario: highway, rural, or urban environment
+
+While the visibility is simulated within CARLA, the scenario can be configured by the user (see [Blueprint attributes](#v2x-sensors-blueprint-attributes)), as well as several other attributes of the wireless channel.
+
+### Sensor (sub)types
+
+#### Cooperative Awareness Message
+
+*   __Blueprint:__ sensor.other.v2x
+*   __Output:__ [carla.CAMData](python_api.md#carla.CAMData), triggered according to the ETSI CAM standard, unless configured otherwise
+
+Triggering conditions according to ETSI standard:
+- Heading angle change > 4°
+- Position difference > 4 m
+- Speed change > 5 m/s
+- Time elapsed > CAM Generation time (configurable)
+- Low Frequency Container Time Elapsed > 500 ms
+
+For the CAM V2X sensor, additional blueprint attributes apply:
+
+| Blueprint attribute     | Type   | Default  | Description                        |
+|-------------------------|--------|-------------------------|------------------------------------|
+| gen\_cam\_min           | float  | 0.1         |  Minimum elapsed time between two successive CAMs in seconds (s)        |
+| gen\_cam\_max           | float  | 1.0       |   Maximum elapsed time between two successive CAMs in seconds (s)          |
+| fixed\_rate             | bool   | false [true]     |  Generate a CAM in every CARLA tick (only for debug purposes, will result in slowdown)    |
+| `noise_vel_stddev_x` | float  | 0\.0   | Standard deviation parameter in the noise model for velocity (X axis). |
+| `noise_accel_stddev_x`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (X axis).  |
+| `noise_accel_stddev_y`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (Y axis).  |
+| `noise_accel_stddev_z`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (Z axis).  |
+| `noise_yawrate_bias`   | float  | 0\.0   | Mean parameter in the noise model for yaw rate.    |
+| `noise_yawrate_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for yaw rate.  |
+| `noise_alt_bias`   | float  | 0\.0   | Mean parameter in the noise model for altitude.    |
+| `noise_alt_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for altitude.  |
+| `noise_lat_bias`   | float  | 0\.0   | Mean parameter in the noise model for latitude.    |
+| `noise_lat_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for latitude.  |
+| `noise_lon_bias`   | float  | 0\.0   | Mean parameter in the noise model for longitude.   |
+| `noise_lon_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for longitude. |
+| `noise_head_bias`   | float  | 0\.0   | Mean parameter in the noise model for heading.   |
+| `noise_head_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for heading. |
+
+#### Custom V2X Message
+
+*   __Blueprint:__ sensor.other.v2x_custom
+*   __Output:__ [carla.CustomV2XData](python_api.md#carla.CustomV2XData), triggered with next tick after a *send()* was called
+
+##### Methods
+- <a name="carla.Sensor.send"></a>**<font color="#7fb800">send</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)
+The function the user has to call every time to send a message. This function needs for an argument containing an object type [carla.SensorData](#carla.SensorData) to work with.  
+    - **Parameters:**
+        - `data` (_function_) - The called function with one argument containing the sensor data.  
+
+The custom V2X message sensor works a little bit different than other sensors, because it has the *send* function in addition to the *listen* function, that needs to be called, before another sensor of this type will receive anything. The transmission of a custom message is only triggered, when *send* is called. Each message given to the *send* function is only transmitted once to all Custom V2X Message sensors currently spawned.
+
+Example:
+
+    bp = world.get_blueprint_library().find('sensor.other.v2x_custom')
+    sensor = world.spawn_actor(bp, carla.Transform(), attach_to=parent)
+    sensor.send("Hello CARLA")
+
+### V2X sensors blueprint attributes
+
+| Blueprint attribute     | Type   | Default | Description                        |
+|-------------------------|--------|-------------------------|------------------------------------|
+| transmit\_power         | float  | 21.5       | Sender transmission power in dBm                         |
+| receiver\_sensitivity   | float  | -99        | Receiver sensitivity in dBm                                |
+| frequency\_ghz          | float  | 5.9 | Transmission frequency in GHz. 5.9 GHz is standard for several physical channels.                 |
+| noise\_seed             | int    | 0   | Random parameter for initialization of noise                           |
+| filter\_distance        | float  | 500      | Maximum transmission distance in meter, path loss calculations above are skipped for simulation speed      |
+| __Path loss model parameters__ | | | |
+| combined\_antenna\_gain | float  | 10.0   | Combined gain of sender and receiver antennas in dBi, parameter for radiation efficiency and directivity |
+| d\_ref                  | float  | 1.0     | reference distance for Log-distance path loss model in meter           |
+| path\_loss\_exponent    | float  | 2.7                     |    Loss parameter for non-line of sight due to building obstruction    |
+| scenario                | string | urban   | Options: [urban, rural, highway], defines the fading noise parameters |
+| path\_loss\_model       | string | geometric     |   general path loss model to be used. Options: [geometric, winner]  |
+| use\_etsi\_fading       | bool   | true         |   Use the fading params as mentioned in the ETSI publication (true), or use the custom fading standard deviation         |
+| custom\_fading\_stddev  | float  | 0.0      |   Custom value for fading standard deviation, only used if `use_etsi_fading` is set to `false`              |

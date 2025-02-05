@@ -105,7 +105,7 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
     UGameplayStatics::OpenLevel(GetWorld(), *FinalPath, true);
     if (ResetSettings)
       ApplySettings(FEpisodeSettings{});
-    
+
     // send 'LOAD_MAP' command to all secondary servers (if any)
     if (bIsPrimaryServer)
     {
@@ -114,7 +114,7 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
       {
         FCarlaEngine *CarlaEngine = GameInstance->GetCarlaEngine();
         auto SecondaryServer = CarlaEngine->GetSecondaryServer();
-        if (SecondaryServer->HasClientsConnected()) 
+        if (SecondaryServer->HasClientsConnected())
         {
           SecondaryServer->GetCommander().SendLoadMap(std::string(TCHAR_TO_UTF8(*FinalPath)));
         }
@@ -294,11 +294,12 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(AActor* Actor) const
 void UCarlaEpisode::AttachActors(
     AActor *Child,
     AActor *Parent,
-    EAttachmentType InAttachmentType)
+    EAttachmentType InAttachmentType,
+    const FString& SocketName)
 {
   Child->AddActorWorldOffset(FVector(CurrentMapOrigin));
 
-  UActorAttacher::AttachActors(Child, Parent, InAttachmentType);
+  UActorAttacher::AttachActors(Child, Parent, InAttachmentType, SocketName);
 
   if (bIsPrimaryServer)
   {

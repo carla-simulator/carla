@@ -16,6 +16,7 @@
 #include "Vehicle/VehicleLightState.h"
 #include "Vehicle/VehicleInputPriority.h"
 #include "Vehicle/VehiclePhysicsControl.h"
+#include "Vehicle/VehicleTelemetryData.h"
 #include "VehicleVelocityControl.h"
 #include "WheeledVehicleMovementComponent4W.h"
 #include "WheeledVehicleMovementComponentNW.h"
@@ -241,6 +242,9 @@ public:
   void DeactivateVelocityControl();
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  FVehicleTelemetryData GetVehicleTelemetryData() const;
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void ShowDebugTelemetry(bool Enabled);
 
   /// @todo This function should be private to AWheeledVehicleAIController.
@@ -405,6 +409,9 @@ public:
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void CloseDoorPhys(const EVehicleDoor DoorIdx);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void RecordDoorChange(const EVehicleDoor DoorIdx, const bool bIsOpen); 
 
   virtual FVector GetVelocity() const override;
 

@@ -10,6 +10,7 @@ enum class ECarlaServerResponse
 {
   Success,
   ActorNotFound,
+  ComponentNotFound,
   ActorTypeMismatch,
   FunctionNotSupported,
   NullActor,

@@ -55,6 +55,16 @@ namespace client {
     listening_mask.reset(0);
   }
 
+  void ServerSideSensor::Send(std::string message) {
+    log_debug("calling sensor Send() ", GetDisplayId());
+    if (GetActorDescription().description.id != "sensor.other.v2x_custom")
+    {
+      log_warning("Send methods are not supported on non-V2x sensors (sensor.other.v2x_custom).");
+      return;
+    }
+    GetEpisode().Lock()->Send(*this,message);
+  }
+
   void ServerSideSensor::ListenToGBuffer(uint32_t GBufferId, CallbackFunctionType callback) {
     log_debug(GetDisplayId(), ": subscribing to gbuffer stream");
     RELEASE_ASSERT(GBufferId < GBufferTextureCount);

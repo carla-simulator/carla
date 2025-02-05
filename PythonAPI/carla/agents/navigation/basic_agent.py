@@ -6,7 +6,7 @@
 """
 This module implements an agent that roams around a track following random
 waypoints and avoiding other vehicles. The agent also responds to traffic lights.
-It can also make use of the global route planner to follow a specifed route
+It can also make use of the global route planner to follow a specified route
 """
 
 import carla
@@ -15,11 +15,12 @@ from shapely.geometry import Polygon
 from agents.navigation.local_planner import LocalPlanner, RoadOption
 from agents.navigation.global_route_planner import GlobalRoutePlanner
 from agents.tools.misc import (get_speed, is_within_distance,
-                               get_trafficlight_trigger_location,
-                               compute_distance)
+                               get_trafficlight_trigger_location)
+
+from agents.tools.hints import ObstacleDetectionResult, TrafficLightDetectionResult
 
 
-class BasicAgent(object):
+class BasicAgent:
     """
     BasicAgent implements an agent that navigates the scene.
     This agent respects traffic lights and other vehicles, but ignores stop signs.
@@ -29,7 +30,7 @@ class BasicAgent(object):
 
     def __init__(self, vehicle, target_speed=20, opt_dict={}, map_inst=None, grp_inst=None):
         """
-        Initialization the agent paramters, the local and the global planner.
+        Initialization the agent parameters, the local and the global planner.
 
             :param vehicle: actor to apply to agent logic onto
             :param target_speed: speed (in Km/h) at which the vehicle will move
@@ -100,7 +101,7 @@ class BasicAgent(object):
 
         # Get the static elements of the scene
         self._lights_list = self._world.get_actors().filter("*traffic_light*")
-        self._lights_map = {}  # Dictionary mapping a traffic light to a wp corrspoing to its trigger volume location
+        self._lights_map = {}  # Dictionary mapping a traffic light to a wp corresponding to its trigger volume location
 
     def add_emergency_stop(self, control):
         """
@@ -138,23 +139,30 @@ class BasicAgent(object):
         """Get method for protected member local planner"""
         return self._global_planner
 
-    def set_destination(self, end_location, start_location=None):
+    def set_destination(self, end_location, start_location=None, clean_queue=True):
+        # type: (carla.Location, carla.Location | None, bool) -> None
         """
         This method creates a list of waypoints between a starting and ending location,
         based on the route returned by the global router, and adds it to the local planner.
-        If no starting location is passed, the vehicle local planner's target location is chosen,
-        which corresponds (by default), to a location about 5 meters in front of the vehicle.
+        If no starting location is passed and `clean_queue` is True, the vehicle local planner's
+        target location is chosen, which corresponds (by default), to a location about 5 meters
+        in front of the vehicle.
+        If `clean_queue` is False the newly planned route will be appended to the current route.
 
             :param end_location (carla.Location): final location of the route
             :param start_location (carla.Location): starting location of the route
+            :param clean_queue (bool): Whether to clear or append to the currently planned route
         """
         if not start_location:
-            start_location = self._local_planner.target_waypoint.transform.location
-            clean_queue = True
-        else:
-            start_location = self._vehicle.get_location()
-            clean_queue = False
-
+            if clean_queue and self._local_planner.target_waypoint:
+                # Plan from the waypoint in front of the vehicle onwards
+                start_location = self._local_planner.target_waypoint.transform.location
+            elif not clean_queue and self._local_planner._waypoints_queue:
+                # Append to the current plan
+                start_location = self._local_planner._waypoints_queue[-1][0].transform.location
+            else:
+                # no target_waypoint or _waypoints_queue empty, use vehicle location
+                start_location = self._vehicle.get_location()
         start_waypoint = self._map.get_waypoint(start_location)
         end_waypoint = self._map.get_waypoint(end_location)
 
@@ -265,7 +273,7 @@ class BasicAgent(object):
                 If None, the base threshold value is used
         """
         if self._ignore_traffic_lights:
-            return (False, None)
+            return TrafficLightDetectionResult(False, None)
 
         if not lights_list:
             lights_list = self._world.get_actors().filter("*traffic_light*")
@@ -277,7 +285,7 @@ class BasicAgent(object):
             if self._last_traffic_light.state != carla.TrafficLightState.Red:
                 self._last_traffic_light = None
             else:
-                return (True, self._last_traffic_light)
+                return TrafficLightDetectionResult(True, self._last_traffic_light)
 
         ego_vehicle_location = self._vehicle.get_location()
         ego_vehicle_waypoint = self._map.get_waypoint(ego_vehicle_location)
@@ -308,15 +316,15 @@ class BasicAgent(object):
 
             if is_within_distance(trigger_wp.transform, self._vehicle.get_transform(), max_distance, [0, 90]):
                 self._last_traffic_light = traffic_light
-                return (True, traffic_light)
+                return TrafficLightDetectionResult(True, traffic_light)
 
-        return (False, None)
+        return TrafficLightDetectionResult(False, None)
 
     def _vehicle_obstacle_detected(self, vehicle_list=None, max_distance=None, up_angle_th=90, low_angle_th=0, lane_offset=0):
         """
         Method to check if there is a vehicle in front of the agent blocking its path.
 
-            :param vehicle_list (list of carla.Vehicle): list contatining vehicle objects.
+            :param vehicle_list (list of carla.Vehicle): list containing vehicle objects.
                 If None, all vehicle in the scene are used
             :param max_distance: max freespace to check for obstacles.
                 If None, the base threshold value is used
@@ -347,10 +355,12 @@ class BasicAgent(object):
             return Polygon(route_bb)
 
         if self._ignore_vehicles:
-            return (False, None, -1)
+            return ObstacleDetectionResult(False, None, -1)
 
-        if not vehicle_list:
+        if vehicle_list is None:
             vehicle_list = self._world.get_actors().filter("*vehicle*")
+        if len(vehicle_list) == 0:
+            return ObstacleDetectionResult(False, None, -1)
 
         if not max_distance:
             max_distance = self._base_vehicle_threshold
@@ -393,7 +403,7 @@ class BasicAgent(object):
                 target_polygon = Polygon(target_list)
 
                 if route_polygon.intersects(target_polygon):
-                    return (True, target_vehicle, compute_distance(target_vehicle.get_location(), ego_location))
+                    return ObstacleDetectionResult(True, target_vehicle, target_vehicle.get_location().distance(ego_location))
 
             # Simplified approach, using only the plan waypoints (similar to TM)
             else:
@@ -414,13 +424,15 @@ class BasicAgent(object):
                 )
 
                 if is_within_distance(target_rear_transform, ego_front_transform, max_distance, [low_angle_th, up_angle_th]):
-                    return (True, target_vehicle, compute_distance(target_transform.location, ego_transform.location))
+                    return ObstacleDetectionResult(True, target_vehicle, target_transform.location.distance(ego_transform.location))
 
-        return (False, None, -1)
+        return ObstacleDetectionResult(False, None, -1)
 
-    def _generate_lane_change_path(self, waypoint, direction='left', distance_same_lane=10,
+    @staticmethod
+    def _generate_lane_change_path(waypoint, direction='left', distance_same_lane=10,
                                 distance_other_lane=25, lane_change_distance=25,
                                 check=True, lane_changes=1, step_distance=2):
+        # type: (carla.Waypoint, str, float, float, float, bool, int, float) -> list[tuple[carla.Waypoint, RoadOption]]
         """
         This methods generates a path that results in a lane change.
         Use the different distances to fine-tune the maneuver.

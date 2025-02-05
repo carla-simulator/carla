@@ -8,7 +8,7 @@ CARLA has been developed to integrate with several 3rd party applications in ord
 -   [__Scenic__](tuto_G_scenic.md)
 -   [__CarSIM__](tuto_G_carsim_integration.md)
 -   [__Chrono__](tuto_G_chrono.md)
--   [__OpenDRIVE__](adv_opendrive.md) 
+-   [__ASAM OpenDRIVE__](adv_opendrive.md) 
 -   [__PTV Vissim__](adv_ptv.md)
 -   [__RSS__](adv_rss.md) 
 -   [__AWS and RLlib__](tuto_G_rllib_integration.md)
@@ -59,9 +59,9 @@ CARLA's integration with CarSim allows vehicle controls in CARLA to be forwarded
 
 Learn how to use CARLA alongside CarSIM [here](tuto_G_carsim_integration.md).
 
-## OpenDRIVE
+## ASAM OpenDRIVE
 
-[__OpenDRIVE__](https://www.asam.net/standards/detail/opendrive/) is an open format specification used to describe the logic of a road network intended to standardise the discription of road networks in digital format and allow different applications to exchange data on road networks. Please refer to the full documentation [__here__](adv_opendrive.md)
+[__ASAM OpenDRIVE__](https://www.asam.net/standards/detail/opendrive/) is an open format specification used to describe the logic of a road network intended to standardise the discription of road networks in digital format and allow different applications to exchange data on road networks. Please refer to the full documentation [__here__](adv_opendrive.md)
 
 ## RSS - Responsibility Sensitive Safety
 

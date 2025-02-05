@@ -35,6 +35,9 @@ public:
   UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")
   static FString LoadXODR(const FString &MapName);
 
+  UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")
+  static FString LoadXODRFullPath(const FString &FullPath);
+
   /// Load OpenDriveMap associated to the given MapName. Return nullptr if no
   /// XODR can be found with same MapName.
   UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")

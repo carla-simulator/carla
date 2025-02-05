@@ -6,7 +6,6 @@ using UnrealBuildTool;
 
 public class CarlaTools : ModuleRules
 {
-  bool UsingHoudini = true;
   bool bUsingOmniverseConnector = false;
   private bool IsWindows(ReadOnlyTargetRules Target)
   {
@@ -97,16 +96,6 @@ public class CarlaTools : ModuleRules
 				// ... add private dependencies that you statically link with here ...
 			}
 			);
-    if(UsingHoudini)
-    {
-      PrivateDependencyModuleNames.AddRange(
-        new string[]
-        {
-          "HoudiniEngine",
-          "HoudiniEngineEditor",
-          "HoudiniEngineRuntime"
-        });
-    }
     if(bUsingOmniverseConnector)
     {
       PrivateDependencyModuleNames.AddRange(

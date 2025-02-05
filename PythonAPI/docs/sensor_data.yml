@@ -15,7 +15,9 @@
         - Obstacle detector: carla.ObstacleDetectionEvent.<br>
         - Radar sensor: carla.RadarMeasurement.<br>
         - RSS sensor: carla.RssResponse.<br>
-        - Semantic LIDAR sensor: carla.SemanticLidarMeasurement.
+        - Semantic LIDAR sensor: carla.SemanticLidarMeasurement.<br>
+        - Cooperative awareness messages V2X sensor: carla.CAMEvent.<br>
+        - Custom V2X messages V2X sensor: carla.CustomV2XEvent.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: frame
@@ -70,7 +72,13 @@
     - var_name: Sidewalks
     - var_name: TrafficSigns
     - var_name: Vegetation
-    - var_name: Vehicles
+    - var_name: Car
+    - var_name: Bus
+    - var_name: Truck
+    - var_name: Motorcycle
+    - var_name: Bicycle
+    - var_name: Rider
+    - var_name: Train
     - var_name: Walls
     - var_name: Sky
     - var_name: Ground
@@ -872,7 +880,7 @@
   - class_name: GBufferTextureID
     # - DESCRIPTION ------------------------
     doc: >
-      Defines the identifiers of each GBuffer texture (See the method `carla.Sensor.listen_to_gbuffer`).
+      Defines the of each GBuffer texture (See the method `carla.Sensor.listen_to_gbuffer`).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: SceneColor
@@ -934,5 +942,111 @@
       doc: >
         The texture "CustomStencil" contains the Unreal Engine custom stencil data.
     # --------------------------------------
+
+
+  - class_name: CAMData
+    parent: carla.SensorData
+    # - DESCRIPTION ------------------------
+    doc: >
+      This is the data type for cooperative awareness message reception, contained in a [CAMEvent](#carlacamevent)
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: power
+      type: float - dBm
+      doc: >
+        Received power.
+
+    # - METHODS ----------------------------
+    # --------------------------------------
+    methods:
+    - def_name: get
+      return: dict
+      doc: >
+        Get the CAM data. Returns a nested dictionary containing the message following the ETSI standard: - `Header`: dict - `Message`: dict
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: CAMEvent
+    parent: carla.SensorData
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines the data provided by a **sensor.other.v2x**. This is a collection type to combine returning several [CAMData](#carlacamdata).
+    # - PROPERTIES -------------------------
+    instance_variables:
+
+    # - METHODS ----------------------------
+    # --------------------------------------
+    methods:
+    - def_name: get_message_count
+      return: int
+      doc: >
+        Get the number of received CAM's.
+    # --------------------------------------
+    - def_name: __get_item__
+      params:
+      - param_name: pos
+        type: int
+    # --------------------------------------
+    - def_name: __iter__
+      doc: > 
+        Iterate over the [CAMData](#carlacamdata) retrieved as data. 
+      # --------------------------------------
+    - def_name: __len__  
+    # --------------------------------------
+
+
+  - class_name: CustomV2XEvent
+    parent: carla.SensorData
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines the data provided by a **sensor.other.v2x_custom**. This is a collection type to combine returning several [CustomV2XData](#carlacustomv2xdata).
+    # - PROPERTIES -------------------------
+    instance_variables:
+
+    # - METHODS ----------------------------
+    # --------------------------------------
+    methods:
+    - def_name: get_message_count
+      return: int
+      doc: >
+        Get the number of received CAM's.
+    # --------------------------------------
+    - def_name: __get_item__
+      params:
+      - param_name: pos
+        type: int
+    # --------------------------------------
+    - def_name: __iter__
+      doc: > 
+        Iterate over the [CustomV2XData](#carlacustomv2xdata) retrieved as data. 
+      # --------------------------------------
+    - def_name: __len__ 
+    # --------------------------------------
+
+
+  - class_name: CustomV2XData
+    parent: carla.SensorData
+    # - DESCRIPTION ------------------------
+    doc: >
+      This is the data type defining a custom V2X message. Received as part of a [CustomV2XEvent](#carlacustomv2xevent).
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: power
+      type: float - dBm
+      doc: >
+        Received power.
+
+    # - METHODS ----------------------------
+    # --------------------------------------
+    methods:
+    - def_name: get
+      return: dict
+      doc: >
+        Get the custom message. Returns a nested dictionary containing the message. It has two primary keys: - `Header` : dict - `Message`: str
+    # --------------------------------------
+    - def_name: __str__ 
+    # --------------------------------------
+
 
 ...

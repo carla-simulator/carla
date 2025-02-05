@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -26,9 +26,8 @@ public:
 
   ACollisionSensor(const FObjectInitializer& ObjectInitializer);
 
+  virtual void PrePhysTick(float DeltaSeconds) override;
   void SetOwner(AActor *NewOwner) override;
-
-private:
 
   UFUNCTION()
   void OnCollisionEvent(
@@ -37,6 +36,22 @@ private:
       FVector NormalImpulse,
       const FHitResult &Hit);
 
+  UFUNCTION(BlueprintCallable, Category="Collision")
+  void OnActorCollisionEvent(
+      AActor *Actor,
+      AActor *OtherActor,
+      FVector NormalImpulse,
+      const FHitResult &Hit);
+
+  UFUNCTION()
+  void OnComponentCollisionEvent(
+      UPrimitiveComponent* HitComp,
+      AActor* OtherActor,
+      UPrimitiveComponent* OtherComp,
+      FVector NormalImpulse,
+      const FHitResult& Hit);
+
+private:
   /// Registry that saves all collisions. Used to avoid sending the same collision more than once per frame,
   /// as the collision sensor uses the PhysX substepping tick. Helps with sensor usage and stream overload.
   std::vector<std::tuple<uint64_t, AActor*, AActor*>> CollisionRegistry;

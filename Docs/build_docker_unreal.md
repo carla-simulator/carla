@@ -52,10 +52,10 @@ The following steps will each take a long time.
 
 __1. Build the CARLA prerequisites image.__
 
-The following command will build an image called `carla-prerequisites` using `Prerequisites.Dockerfile`. In this build we install the compiler and required tools, download the Unreal Engine 4.26 fork and compile it. You will need to provide your login details as build arguments for the download of Unreal Engine to be successful:
+The following command will build an image called `carla-prerequisites` using `Prerequisites.Dockerfile`. In this build we install the compiler and required tools, download the Unreal Engine 4.26 fork and compile it. You will need to provide your login details (use a Github Personal Access Token instead of a password) as build arguments for the download of Unreal Engine to be successful:
 
 ```sh
-docker build --build-arg EPIC_USER=<GitHubUserName> --build-arg EPIC_PASS=<GitHubPassword> -t carla-prerequisites -f Prerequisites.Dockerfile .
+docker build --build-arg EPIC_USER=<GitHubUserName> --build-arg EPIC_PASS=<GitHubAccessToken> -t carla-prerequisites -f Prerequisites.Dockerfile .
 ```
 
 __2. Build the final CARLA image.__

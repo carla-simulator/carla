@@ -24,7 +24,7 @@ import argparse
 import random
 import time
 import logging
-
+from carla.command import SpawnActor, SetAutopilot, FutureActor, DestroyActor
 
 def main():
     argparser = argparse.ArgumentParser(
@@ -108,11 +108,6 @@ def main():
             logging.warning(msg, count, number_of_spawn_points)
             count = number_of_spawn_points
 
-        # @todo cannot import these directly.
-        SpawnActor = carla.command.SpawnActor
-        SetAutopilot = carla.command.SetAutopilot
-        FutureActor = carla.command.FutureActor
-
         batch = []
         for n, transform in enumerate(spawn_points):
             if n >= count:
@@ -142,7 +137,7 @@ def main():
     finally:
 
         print('\ndestroying %d actors' % len(actor_list))
-        client.apply_batch_sync([carla.command.DestroyActor(x) for x in actor_list])
+        client.apply_batch_sync([DestroyActor(x) for x in actor_list])
 
         print("Stop recording")
         client.stop_recorder()

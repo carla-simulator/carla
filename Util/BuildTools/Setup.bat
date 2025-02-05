@@ -320,6 +320,7 @@ IF "%USE_ROS2%"=="true" (
       -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR%" ^
       -DBUILD_SHARED_LIBS=ON ^
       -DCMAKE_CXX_FLAGS_RELEASE="-D_GLIBCXX_USE_CXX11_ABI=0" ^
+      -DFOONATHAN_MEMORY_FORCE_VENDORED_BUILD=ON ^
       ..
     ninja
     ninja install
@@ -367,7 +368,7 @@ FOR /F "usebackq tokens=1,2" %%i in ("%VERSION_FILE%") do (
     set ASSETS_VERSION=%%i
     set HASH=%%j
 )
-set URL=http://carla-assets.s3.amazonaws.com/%HASH%.tar.gz
+set URL=https://carla-assets.s3.us-east-005.backblazeb2.com/%HASH%.tar.gz
 
 rem ============================================================================
 rem -- Generate CMake ----------------------------------------------------------

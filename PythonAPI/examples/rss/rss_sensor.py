@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-#
 # Copyright (c) 2020 Intel Corporation
 #
 
@@ -21,6 +19,7 @@ from carla import ad
 import math
 from rss_visualization import RssDebugVisualizer # pylint: disable=relative-import
 
+EVALUATOR_NONE_STATE = ad.rss.state.RssStateEvaluator.names["None"]
 
 # ==============================================================================
 # -- RssSensor -----------------------------------------------------------------
@@ -30,6 +29,7 @@ from rss_visualization import RssDebugVisualizer # pylint: disable=relative-impo
 class RssStateInfo(object):
 
     def __init__(self, rss_state, ego_dynamics_on_route, world_model):
+        # type: (ad.rss.state.RssState, carla.RssEgoDynamicsOnRoute, ad.rss.world.WorldModel) -> None
         self.rss_state = rss_state
         self.distance = -1
         self.is_dangerous = ad.rss.state.isDangerous(rss_state)
@@ -52,22 +52,22 @@ class RssStateInfo(object):
         self.longitudinal_margin = float(rss_state.longitudinalState.rssStateInformation.currentDistance - rss_state.longitudinalState.rssStateInformation.safeDistance)
         self.margin = max(0, self.longitudinal_margin)
         self.lateral_margin = None
-        if rss_state.lateralStateLeft.rssStateInformation.evaluator != "None":
+        if rss_state.lateralStateLeft.rssStateInformation.evaluator != EVALUATOR_NONE_STATE:
             self.lateral_margin = rss_state.lateralStateLeft.rssStateInformation.currentDistance - rss_state.lateralStateLeft.rssStateInformation.safeDistance
-        if rss_state.lateralStateRight.rssStateInformation.evaluator != "None":
+        if rss_state.lateralStateRight.rssStateInformation.evaluator != EVALUATOR_NONE_STATE:
             lateral_margin_right = rss_state.lateralStateRight.rssStateInformation.currentDistance - rss_state.lateralStateRight.rssStateInformation.safeDistance
-            if self.lateral_margin==None or self.lateral_margin > lateral_margin_right:
-                self.lateral_margin=lateral_margin_right
-        if self.lateral_margin!=None and self.lateral_margin>0:
-            self.margin += self.lateral_margin
+            if self.lateral_margin is None or self.lateral_margin > lateral_margin_right:
+                self.lateral_margin = lateral_margin_right
+        if self.lateral_margin is not None and self.lateral_margin > 0:
+            self.margin += float(self.lateral_margin)
 
     def get_actor(self, world):
+        # type: (carla.World) -> carla.Actor | None
         if self.rss_state.objectId == 18446744073709551614:
-            return None # "Border Left"
-        elif self.rss_state.objectId == 18446744073709551615:
-            return None # "Border Right"
-        else:
-            return world.get_actor(self.rss_state.objectId)
+            return None  # "Border Left"
+        if self.rss_state.objectId == 18446744073709551615:
+            return None  # "Border Right"
+        return world.get_actor(self.rss_state.objectId)
 
     def __str__(self):
         return "RssStateInfo: object=" + str(self.rss_state.objectId) + " dangerous=" + str(self.is_dangerous)
@@ -76,6 +76,7 @@ class RssStateInfo(object):
 class RssSensor(object):
 
     def __init__(self, parent_actor, world, unstructured_scene_visualizer, bounding_box_visualizer, state_visualizer, routing_targets=None):
+        #  type: (carla.Actor, carla.World, RssUnstructuredSceneVisualizer, RssBoundingBoxVisualizer, RssStateVisualizer, list[carla.Transform]) -> None
         self.sensor = None
         self.unstructured_scene_visualizer = unstructured_scene_visualizer
         self.bounding_box_visualizer = bounding_box_visualizer
@@ -93,14 +94,13 @@ class RssSensor(object):
         self.route = None
         self.debug_visualizer = RssDebugVisualizer(parent_actor, world)
         self.state_visualizer = state_visualizer
-        self.change_to_unstructured_position_map = dict()
+        self.change_to_unstructured_position_map = {}
 
         # get max steering angle
         physics_control = parent_actor.get_physics_control()
         self._max_steer_angle = 0.0
         for wheel in physics_control.wheels:
-            if wheel.max_steer_angle > self._max_steer_angle:
-                self._max_steer_angle = wheel.max_steer_angle
+            self._max_steer_angle = max(self._max_steer_angle, wheel.max_steer_angle)
         self._max_steer_angle = math.radians(self._max_steer_angle)
 
         world = self._parent.get_world()
@@ -148,7 +148,7 @@ class RssSensor(object):
 
         actor_id = -1
         # actor_type_id = "none"
-        if actor_constellation_data.other_actor != None:
+        if actor_constellation_data.other_actor is not None:
             actor_id = actor_constellation_data.other_actor.id
             # actor_type_id = actor_constellation_data.other_actor.type_id
 
@@ -249,24 +249,22 @@ class RssSensor(object):
                                         actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.Unstructured
                                         self.change_to_unstructured_position_map[
                                             actor_id] = actor_constellation_data.other_match_object.enuPosition
-                        else:
-                            # ego moves
-                            if actor_distance < 10:
-                                # if the ego moves, the other actor doesn't move an the mode was
-                                # previously set to unstructured, keep it
-                                try:
-                                    if self.change_to_unstructured_position_map[actor_id] == actor_constellation_data.other_match_object.enuPosition:
-                                        heading_delta = abs(float(actor_constellation_data.ego_match_object.enuPosition.heading -
-                                                                  actor_constellation_data.other_match_object.enuPosition.heading))
-                                        if heading_delta > 0.2:
-                                            actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.Unstructured
-                                        else:
-                                            del self.change_to_unstructured_position_map[actor_id]
-                                except (AttributeError, KeyError):
-                                    pass
-                            else:
-                                if actor_id in self.change_to_unstructured_position_map:
-                                    del self.change_to_unstructured_position_map[actor_id]
+                        # ego moves
+                        elif actor_distance < 10:
+                            # if the ego moves, the other actor doesn't move an the mode was
+                            # previously set to unstructured, keep it
+                            try:
+                                if self.change_to_unstructured_position_map[actor_id] == actor_constellation_data.other_match_object.enuPosition:
+                                    heading_delta = abs(float(actor_constellation_data.ego_match_object.enuPosition.heading -
+                                                                actor_constellation_data.other_match_object.enuPosition.heading))
+                                    if heading_delta > 0.2:
+                                        actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.Unstructured
+                                    else:
+                                        del self.change_to_unstructured_position_map[actor_id]
+                            except (AttributeError, KeyError):
+                                pass
+                        elif actor_id in self.change_to_unstructured_position_map:
+                            del self.change_to_unstructured_position_map[actor_id]
 
                     # still in structured?
                     if actor_constellation_result.rss_calculation_mode == ad.rss.map.RssMode.Structured:
@@ -313,26 +311,29 @@ class RssSensor(object):
         self.debug_visualizer.toggleMode()
 
     def increase_log_level(self):
-        print("inccrease {}".format(self.log_level))
+        print("increase {}".format(self.log_level))
         if self.log_level < carla.RssLogLevel.off:
-            self.log_level = self.log_level+1
+            self.log_level = carla.RssLogLevel.values[self.log_level + 1]
         self.sensor.set_log_level(self.log_level)
 
     def decrease_log_level(self):
         print("decrease {}".format(self.log_level))
         if self.log_level > carla.RssLogLevel.trace:
-            self.log_level = self.log_level-1
+            self.log_level = carla.RssLogLevel.values[self.log_level - 1]
         self.sensor.set_log_level(self.log_level)
 
     def increase_map_log_level(self):
         if self.map_log_level < carla.RssLogLevel.off:
-            self.map_log_level = self.map_log_level+1
+            self.map_log_level = carla.RssLogLevel.values[self.map_log_level + 1]
         self.sensor.set_map_log_level(self.map_log_level)
 
     def decrease_map_log_level(self):
         if self.map_log_level > carla.RssLogLevel.trace:
-            self.map_log_level = self.map_log_level-1
+            self.map_log_level = carla.RssLogLevel.values[self.map_log_level - 1]
         self.sensor.set_map_log_level(self.map_log_level)
+
+    def drop_route(self):
+        self.sensor.drop_route()
 
     @staticmethod
     def get_default_parameters():
@@ -398,14 +399,10 @@ class RssSensor(object):
         return pedestrian_dynamics
 
     def get_steering_ranges(self):
-        ranges = []
-        for heading_range in self._allowed_heading_ranges:
-            ranges.append(
-                (
-                    (float(self.ego_dynamics_on_route.ego_heading) - float(heading_range.begin)) / self._max_steer_angle,
-                    (float(self.ego_dynamics_on_route.ego_heading) - float(heading_range.end)) / self._max_steer_angle)
-            )
-        return ranges
+        return [
+            ((float(self.ego_dynamics_on_route.ego_heading) - float(heading_range.begin)) / self._max_steer_angle,
+             (float(self.ego_dynamics_on_route.ego_heading) - float(heading_range.end)) / self._max_steer_angle)
+            for heading_range in self._allowed_heading_ranges]
 
     def _on_rss_response(self, response):
         if not self or not response:
@@ -437,9 +434,11 @@ class RssSensor(object):
             if self.unstructured_scene_visualizer:
                 self.unstructured_scene_visualizer.tick(response.frame, response, self._allowed_heading_ranges)
 
-            new_states = []
-            for rss_state in response.rss_state_snapshot.individualResponses:
-                new_states.append(RssStateInfo(rss_state, response.ego_dynamics_on_route, response.world_model))
+            new_states = [
+                RssStateInfo(rss_state,
+                             response.ego_dynamics_on_route,
+                             response.world_model)
+                for rss_state in response.rss_state_snapshot.individualResponses]
             if len(new_states) > 0:
                 new_states.sort(key=lambda rss_states: rss_states.distance)
             self.individual_rss_states = new_states
@@ -451,4 +450,4 @@ class RssSensor(object):
                                        self.individual_rss_states, self.ego_dynamics_on_route)
 
         else:
-            print("ignore outdated response {}".format(delta_time))
+            print("ignore outdated RSS response {}".format(delta_time))

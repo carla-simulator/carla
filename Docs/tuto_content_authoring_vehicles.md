@@ -1,36 +1,36 @@
 # Content authoring - vehicles
 
-CARLA provides a comprehensive set of vehicles out of the box in the blueprint library. CARLA allows the user to expand upon this with custom vehicles for maximum extensibility. 
+CARLA provides a comprehensive set of vehicles out of the box in the blueprint library. CARLA allows the user to expand upon this with custom vehicles for maximum extensibility.
 
 3D modelling of detailed vehicles is highly complex and requires a significant degree of skill. We therefore refer the reader to alternative sources of documentation on 3D modelling, since this is beyond the scope of this guide. There are, however, numerous sources of vehicle models in both free and proprietary online repositories. Hence the user has many options to turn to for creating custom vehicles for use in CARLA.
 
 The key factors in preparing a custom vehicle for CARLA lie in rigging the vehicle armature and then importing into the Unreal Engine. After rigging and importing, blueprints need to be set for the car and the wheels. Then apply materials and add the glass parts of the vehicle. We will cover these steps in the following guide.
 
-* __[Modeling](#modeling)__   
-	* [Naming conventions](#naming-conventions)  
-* __[Rigging](#rigging-the-vehicle-using-an-armature)__   
-	* [Import](#import)  
+* __[Modeling](#modeling)__
+	* [Naming conventions](#naming-conventions)
+* __[Rigging](#rigging-the-vehicle-using-an-armature)__
+	* [Import](#import)
 	* [Armature](#add-an-armature)
     * [Parenting](#parenting)
-    * [Assignment](#assigning-car-parts-to-bones) 
+    * [Assignment](#assigning-car-parts-to-bones)
 	* [Blender add-on](#blender-ue4-vehicle-rigging-add-on)
-    * [Export](#export)  
-* __[Import into Unreal Engine](#importing-into-unreal-engine)__   
-	* [Physics asset](#setting-the-physics-asset)  
+    * [Export](#export)
+* __[Import into Unreal Engine](#importing-into-unreal-engine)__
+	* [Physics asset](#setting-the-physics-asset)
 	* [Animation](#creating-the-animation)
     * [Blueprint](#creating-the-blueprint)
-* __[Materials](#materials)__   
+* __[Materials](#materials)__
 	* [Applying materials](#applying-a-material-to-your-vehicle)
 		* [Color](#color)
 		* [Clear coat](#clear-coat)
 		* [Orange peel](#orange-peel)
 		* [Flakes](#flakes)
 		* [Dust](#dust)
-* __[Glass](#glass)__   
+* __[Glass](#glass)__
 	* [Glass meshes](#glass-meshes)
 	* [Glass material](#glass-material)
 	* [Single layer glass](#single-layer-glass)
-* __[Wheels](#wheels)__   
+* __[Wheels](#wheels)__
 	* [Wheel blueprint](#wheel-blueprint)
 	* [Collision mesh](#collision-mesh)
 	* [Tire configuration](#tire-configuration)
@@ -41,7 +41,7 @@ The key factors in preparing a custom vehicle for CARLA lie in rigging the vehic
 
 ## Modeling
 
-Vehicles should have between 50,000 and 100,000 faces. We recommend triangulating the model prior to export as best practice. CARLA vehicles are modeled using the size and scale of actual cars as reference. Please ensure you pay careful attention to the units of your 3D application. Some work in centimeters while others work in meters. 
+Vehicles should have between 50,000 and 100,000 faces. We recommend triangulating the model prior to export as best practice. CARLA vehicles are modeled using the size and scale of actual cars as reference. Please ensure you pay careful attention to the units of your 3D application. Some work in centimeters while others work in meters.
 
 ### Naming conventions
 
@@ -53,7 +53,7 @@ For ease and consistency we recommend that you divide the vehicle into the follo
 - __Lights__: Headlights, indicator lights, etc.
 - __LightGlass_Ext__: A layer of glass that allows visibility from the outside to the inside of the light.
 - __LightGlass_Int__: A layer of glass that allows visibility from the inside to the outside of the light.
-- __LicensePlate__: A rectangular plane of 29x12 cm. You can use the CARLA provided `.fbx` for best results, download it [here](https://carla-assets.s3.eu-west-3.amazonaws.com/fbx/LicensePlate.rar). The texture will be assigned automatically in Unreal Engine.
+- __LicensePlate__: A rectangular plane of 29x12 cm. You can use the CARLA provided `.fbx` for best results, download it [here](https://carla-assets.s3.us-east-005.backblazeb2.com/fbx/LicensePlate.rar). The texture will be assigned automatically in Unreal Engine.
 - __Interior__: Any other details that don't fit in the above sections can go into _Interior_.
 
 Materials should be named using the format `M_CarPart_CarName`, e.g, `M_Bodywork_Mustang`.
@@ -62,11 +62,11 @@ Textures should be named using the format `T_CarPart_CarName`, e.g, `T_Bodywork_
 
 ## Rigging the vehicle using an armature
 
-To look realistic within the simulation, the car needs to have rotating and wheels, the front pair of which can turn with steering inputs. Therefore to prepare a vehicle for CARLA, an armature needs to be rigged to the car to identify the wheels and allow their movement. 
+To look realistic within the simulation, the car needs to have rotating and wheels, the front pair of which can turn with steering inputs. Therefore to prepare a vehicle for CARLA, an armature needs to be rigged to the car to identify the wheels and allow their movement.
 
-### Import 
+### Import
 
-Import or model the vehicle model mesh in your 3D modelling application. In this guide we will use Blender 3D. Ensure that the wheels are separable from the main body. Each wheel must be accessible as a distinct object. 
+Import or model the vehicle model mesh in your 3D modelling application. In this guide we will use Blender 3D. Ensure that the wheels are separable from the main body. Each wheel must be accessible as a distinct object.
 
 ![model_in_blender](img/tuto_content_authoring_vehicles/import_model_blender.png)
 
@@ -74,23 +74,23 @@ It is important to ensure that the vehicle faces in the positive X direction, so
 
 ### Add an armature
 
-Now add an armature to the center of the vehicle, ensure the object is properly centered, the root of the armature bone should be set at the origin. Switch to edit mode and rotate the armature 90 around the x axis. 
+Now add an armature to the center of the vehicle, ensure the object is properly centered, the root of the armature bone should be set at the origin. Switch to edit mode and rotate the armature 90 around the x axis.
 
 ![armature_init](img/tuto_content_authoring_vehicles/vehicle_base_bone.png)
 
-Now select the armature and add 4 more bones. Each of these bones needs to be located such that the root of the bone coincides with the centre of the each wheel. This can be achieved by locating the 3D cursor at the center of each wheel in edit mode. Select one of the wheels in object mode, select a vertex, press A to select all vertices then `Shift+S` and select `Cursor to selected`. This will locate the cursor in the center of the wheel. Then, in object mode, select the armature, switch to edit mode, select a bone and choose `Selection to cursor`. Your bone will now coincide with the wheel. Rotate each bone such that it lines up with the base of the armature. 
+Now select the armature and add 4 more bones. Each of these bones needs to be located such that the root of the bone coincides with the centre of the each wheel. This can be achieved by locating the 3D cursor at the center of each wheel in edit mode. Select one of the wheels in object mode, select a vertex, press A to select all vertices then `Shift+S` and select `Cursor to selected`. This will locate the cursor in the center of the wheel. Then, in object mode, select the armature, switch to edit mode, select a bone and choose `Selection to cursor`. Your bone will now coincide with the wheel. Rotate each bone such that it lines up with the base of the armature.
 
-For each wheel, it is recommended to name the bone according to the wheel it needs to be coupled to, this will help in identification later when you need to assign vertex groups to each bone. 
+For each wheel, it is recommended to name the bone according to the wheel it needs to be coupled to, this will help in identification later when you need to assign vertex groups to each bone.
 
 ![armature_full](img/tuto_content_authoring_vehicles/all_vehicle_bones.png)
 
-### Parenting 
+### Parenting
 
-Now select all the parts of the body and all 4 wheels using shift or control in the project outliner,  then control select the armature you have created (this order is important, it won't work if you select these in reverse order). Press `Ctrl+p` and select `With empty groups` to bind the mesh to the armature.  
+Now select all the parts of the body and all 4 wheels using shift or control in the project outliner,  then control select the armature you have created (this order is important, it won't work if you select these in reverse order). Press `Ctrl+p` and select `With empty groups` to bind the mesh to the armature.
 
 ![bind_armature](img/tuto_content_authoring_vehicles/bind_armature.gif)
 
-Now you have parented the mesh to the armature, you now need to assign each wheel to its respective bone. Select a wheel either in the outliner or the editor. Switch to edit mode, and select all the vertices of the wheel (shortcut - `a`). 
+Now you have parented the mesh to the armature, you now need to assign each wheel to its respective bone. Select a wheel either in the outliner or the editor. Switch to edit mode, and select all the vertices of the wheel (shortcut - `a`).
 
 ### Assigning car parts to bones
 
@@ -108,9 +108,9 @@ There is a very useful add on for blender for rigging a vehicle for import into 
 
 ### Export
 
-Now we will export our rigged model into FBX format for import into Unreal Engine. Select `Export > FBX (.fbx)` from the File menu. In the `Object Types` section of the `Include` panel, shift select the `Armature` and `Mesh` options. 
+Now we will export our rigged model into FBX format for import into Unreal Engine. Select `Export > FBX (.fbx)` from the File menu. In the `Object Types` section of the `Include` panel, shift select the `Armature` and `Mesh` options.
 
-In the `Transform` panel. Change `Forward` to `X Forward` and change `Up` to `Z Up`. This is important to ensure the vehicle is oriented correctly in the Unreal Engine. 
+In the `Transform` panel. Change `Forward` to `X Forward` and change `Up` to `Z Up`. This is important to ensure the vehicle is oriented correctly in the Unreal Engine.
 
 In the `Armature` section uncheck `Add Leaf Bones` and uncheck `Bake Animation`.
 
@@ -118,7 +118,7 @@ In the `Armature` section uncheck `Add Leaf Bones` and uncheck `Bake Animation`.
 
 ## Importing into unreal engine
 
-Launch the Unreal Editor with the `make launch` command from the CARLA root directory (the one where you have built CARLA from source). Open a content browser, set up an appropriate directory and right click and select `Import to ....`. Choose the FBX file that you previously exported from Blender (or another 3D modelling application). Import with default settings. 
+Launch the Unreal Editor with the `make launch` command from the CARLA root directory (the one where you have built CARLA from source). Open a content browser, set up an appropriate directory and right click and select `Import to ....`. Choose the FBX file that you previously exported from Blender (or another 3D modelling application). Import with default settings.
 
 ### Setting the physics asset
 
@@ -130,7 +130,7 @@ First, select the main body, in the `Details` menu on the right, change the `Lin
 
 ![physics_details](img/tuto_content_authoring_vehicles/physics_details.png)
 
-Now select all the wheels (in the `Skeleton Tree` section on the left). 
+Now select all the wheels (in the `Skeleton Tree` section on the left).
 
 ![regenerate_wheels](img/tuto_content_authoring_vehicles/wheels_asset.png)
 
@@ -170,7 +170,7 @@ Select the `Vehicles` node and expand the `Vehicles` item in the `Default value`
 
 ![vehicle_factory](img/tuto_content_authoring_vehicles/vehicle_factory_page.png)
 
-Press the plus icon to add your new vehicle. Scroll down to the last entry and expand it, it should be empty. Name the make and model of your vehicle and under the class section find your blueprint class that you created in the previous section. Leave the number of wheels as 4 and put the generation as 2. Compile and save. Do a global save for safety and you are now..ready to run your vehicle in a simulation. 
+Press the plus icon to add your new vehicle. Scroll down to the last entry and expand it, it should be empty. Name the make and model of your vehicle and under the class section find your blueprint class that you created in the previous section. Leave the number of wheels as 4 and put the generation as 2. Compile and save. Do a global save for safety and you are now..ready to run your vehicle in a simulation.
 
 Press play in the unreal toolbar to run the simulation. Once it is running, open a terminal and run the `manual_control.py` script with the filter option to specify your new vehicle model:
 
@@ -185,13 +185,13 @@ As it is, the vehicle currently has no textures or colors applied. The next step
 
 Once you have your vehicle imported as a basic asset with the mesh and blueprints laid out, you now want to add materials to your vehicle to facilitate photorealistic rendering in the Unreal Engine, for maximum fidelity in your machine learning training data.
 
-The Unreal Editor boasts a comprehensive materials workflow that facilitates the creation of highly realistic materials. This does, however, add a significant degree of complexity to the process. For this reason, CARLA is provided with a large library of material prototypes for you to use without having to start from scratch. 
+The Unreal Editor boasts a comprehensive materials workflow that facilitates the creation of highly realistic materials. This does, however, add a significant degree of complexity to the process. For this reason, CARLA is provided with a large library of material prototypes for you to use without having to start from scratch.
 
 ### Applying a material to your vehicle
 
 CARLA provides a prototype material for replicating the glossy finish of vehicles that can mimic numerous different types of vehicle paint jobs and features. Open Unreal editor and in the content browser, locate the material in `Content > Carla > Static > GenericMaterials > 00_MastersOpt`. The basic material is called `M_CarPaint_Master`. Right click on this material and choose `Create Material Instance` from the context material. Name it and move it into the folder where your new vehicle content is stored.
 
-In the Unreal Editor, move the spectator to a point near the floor and drag the skeletal mesh of the vehicle from the content browser into the scene, the body of your vehicle will now appear there. 
+In the Unreal Editor, move the spectator to a point near the floor and drag the skeletal mesh of the vehicle from the content browser into the scene, the body of your vehicle will now appear there.
 
 ![add_model](img/tuto_content_authoring_vehicles/add_model.gif)
 
@@ -207,7 +207,7 @@ The color settings govern the overall color of the car. The base color is simply
 
 ![change_base_color](img/tuto_content_authoring_vehicles/change_base_color.gif)
 
-#### __Clear coat__ 
+#### __Clear coat__
 
 The clear coat settings govern the appearance of the finish and how it reacts to light. The roughness uses a texture to apply imperfections to the vehicle surface, scattering light more with higher values to create a matte look. Subtle adjustments and low values are recommended for a realistic look. Generally, car paint jobs are smooth and reflective, however, this effect might be used more generously to model specialist matte finishes of custom paint jobs.
 
@@ -215,7 +215,7 @@ The clear coat settings govern the appearance of the finish and how it reacts to
 
 An important parameter to govern the "shininess" or "glossiness" of your car is the `Clear Coat Intensity`. High values close to 1 will make the coat shiny and glossy.
 
-#### __Orange peel__ 
+#### __Orange peel__
 
 Finishes on real cars (particularly on mass produced cars for the general market) tend to have imperfections that appear as slight ripples in the paint. The orange peel effect mimics this and makes cars look more realistic.
 
@@ -223,13 +223,13 @@ Finishes on real cars (particularly on mass produced cars for the general market
 
 #### __Flakes__
 
-Some cars have paint jobs that include flakes of other material, such as metals or ceramics, to give the car a `metallic` or `pearlescant` appearance, adding extra glints and reflections that react in an attractive way to light. The flakes parameters allows CARLA to mimic this. To mimic metallic finishes, it would be 
+Some cars have paint jobs that include flakes of other material, such as metals or ceramics, to give the car a `metallic` or `pearlescant` appearance, adding extra glints and reflections that react in an attractive way to light. The flakes parameters allows CARLA to mimic this. To mimic metallic finishes, it would be
 
 ![flakes](img/tuto_content_authoring_vehicles/flakes.gif)
 
 #### __Dust__
 
-Cars often accumulate grease and dust on the body that adds additional texture to the paint, affecting the way it reflects the light. The dust parameters allow you to add patches of disruption to the coat to mimic foreign materials sticking to the paint. 
+Cars often accumulate grease and dust on the body that adds additional texture to the paint, affecting the way it reflects the light. The dust parameters allow you to add patches of disruption to the coat to mimic foreign materials sticking to the paint.
 
 ![dust](img/tuto_content_authoring_vehicles/change_dust.gif)
 
@@ -245,15 +245,15 @@ Here we see the glass parts attached to the main bodywork (not the doors or othe
 
 ![main_glass](img/tuto_content_authoring_vehicles/glass.png)
 
-If we separate the constituent mesh parts, we can see that the glass profile is separated into 4 different layers. 
+If we separate the constituent mesh parts, we can see that the glass profile is separated into 4 different layers.
 
 ![main_glass_expanded](img/tuto_content_authoring_vehicles/glass_expanded.png)
 
-The 4 layers are separated into 2 groups, the exterior layers, with normals facing out of the vehicle and the interior layers, with mesh normals facing into the vehicle interior. The following diagram demonstrates 
+The 4 layers are separated into 2 groups, the exterior layers, with normals facing out of the vehicle and the interior layers, with mesh normals facing into the vehicle interior. The following diagram demonstrates
 
 ![glass_layers](img/tuto_content_authoring_vehicles/glass_layers.png)
 
-Once you have created your mesh layers, import them in the content browser into the Unreal Editor in the folder where you have stored your vehicle. 
+Once you have created your mesh layers, import them in the content browser into the Unreal Editor in the folder where you have stored your vehicle.
 
 Shift select the 4 glass layers and drag them into the map so you can see them.
 
@@ -288,7 +288,7 @@ For the wheels of CARLA vehicles, we need to set up a blueprint class for each w
 
 ### Wheel blueprint
 
-Inside the folder where you have your new vehicle, right click and choose to create a new blueprint class. Search for 
+Inside the folder where you have your new vehicle, right click and choose to create a new blueprint class. Search for
 
 ![wheel_blueprint](img/tuto_content_authoring_vehicles/wheel_blueprint.png)
 
@@ -298,12 +298,12 @@ Double click on the blueprint to adjust it:
 
 ### Collision mesh
 
-Firstly, the default cylinder used for the collision mesh has a high polygon count, so we should replace this with a low polygon version. In the content browser locate the `CollisionWheel` mesh inside `Content > Carla > Blueprints > Vehicles`. Drag it onto the 
+Firstly, the default cylinder used for the collision mesh has a high polygon count, so we should replace this with a low polygon version. In the content browser locate the `CollisionWheel` mesh inside `Content > Carla > Blueprints > Vehicles`. Drag it onto the
 `Collision Mesh` slot in the details panel of the blueprint. This will improve performance without any noticeable deficit to physics simulation.
 
 ### Tire configuration
 
-Next, we  set the tire configuration. Inside `Content > Carla > Blueprints > Vehicles` locate the `CommonTireConfig` configuration and drag it onto the `Tire Config` section of the blueprint. If you double click on the Tire Config in the blueprint, you can adjust the Friction Scale, you can modify the behavior of the vehicle's road handling. By default it is set at 3.5, a value suitable for most vehicle use cases. However, if you wish to model for example a racing vehicle with slick tires, this would be the appropriate parameter to adjust. 
+Next, we  set the tire configuration. Inside `Content > Carla > Blueprints > Vehicles` locate the `CommonTireConfig` configuration and drag it onto the `Tire Config` section of the blueprint. If you double click on the Tire Config in the blueprint, you can adjust the Friction Scale, you can modify the behavior of the vehicle's road handling. By default it is set at 3.5, a value suitable for most vehicle use cases. However, if you wish to model for example a racing vehicle with slick tires, this would be the appropriate parameter to adjust.
 
 ### Wheel dimensions
 
@@ -316,24 +316,24 @@ Now plug these numbers into the `Wheel` section of the blueprint.Take care to re
 ![bp_wheel_dimensions](img/tuto_content_authoring_vehicles/bp_wheel_dimensions.png)
 
 
-`Affected by handbrake` should be checked for both rear wheels. 
+`Affected by handbrake` should be checked for both rear wheels.
 
 `Steer angle` should be set to the maximum intended steer angle for both front wheels and set to zero for both rear wheels.
 
 ### __Suspension characteristics__
 
-The default values here provide a reasonable starting point. View [__this guide__](tuto_D_customize_vehicle_suspension.md) to set suspension characteristics appropriate to your vehicle type. 
+The default values here provide a reasonable starting point. View [__this guide__](tuto_D_customize_vehicle_suspension.md) to set suspension characteristics appropriate to your vehicle type.
 
 
 ## Lights
 
-The last element to complete a realistic vehicle for CARLA is the lights, headlights, brake lights, blinkers etc. In your 3D modelling application, you should model some shapes that resemble the lights of the vehicle you are replicating. This would be flat discs or flat cuboid structures for most headlights. Some vehicles may also have strips of LEDs. 
+The last element to complete a realistic vehicle for CARLA is the lights, headlights, brake lights, blinkers etc. In your 3D modelling application, you should model some shapes that resemble the lights of the vehicle you are replicating. This would be flat discs or flat cuboid structures for most headlights. Some vehicles may also have strips of LEDs.
 
 ![lights_blender](img/tuto_content_authoring_vehicles/lights_blender.png)
 
 ### UV map
 
-The different types of lights (headlights, blinkers, brake lights, etc.) are distinguished using a texture. You need to create a UV map in your 3D modelling application and position the lights to match up with the relevant region of the texture. 
+The different types of lights (headlights, blinkers, brake lights, etc.) are distinguished using a texture. You need to create a UV map in your 3D modelling application and position the lights to match up with the relevant region of the texture.
 
 ![lights_uv](img/tuto_content_authoring_vehicles/lights_uv_map.png)
 

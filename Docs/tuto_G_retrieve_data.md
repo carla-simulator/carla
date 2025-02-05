@@ -568,7 +568,7 @@ The script places the sensor on the hood of the car, and rotated a bit upwards. 
 The callback is a bit more complex this time, showing more of its capabilities. It will draw the points captured by the radar on the fly. The points will be colored depending on their velocity regarding the ego vehicle.  
 
 * __Blue__ for points approaching the vehicle.  
-* __Read__ for points moving away from it. 
+* __Red__ for points moving away from it. 
 * __White__ for points static regarding the ego vehicle. 
 
 ```py

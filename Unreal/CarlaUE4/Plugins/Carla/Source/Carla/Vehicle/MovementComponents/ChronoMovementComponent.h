@@ -101,6 +101,8 @@ public:
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
   #endif
 
+  virtual void DisableSpecialPhysics() override;
+
 private:
 
   void DisableChronoPhysics();

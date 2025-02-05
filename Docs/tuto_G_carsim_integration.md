@@ -25,7 +25,7 @@ This page shows you how to generate a `.sim` file, explains how vehicle dimensio
     __For Ubuntu__:
 
     1. Download the plugin [here](https://www.carsim.com/users/unreal_plugin/unreal_plugin_2020_0.php).
-    2. Replace the file `CarSim.Build.cs` with the file found [here](https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/CarSim.Build.cs) in order to use the correct solver for Ubuntu.
+    2. Replace the file `CarSim.Build.cs` with the file found [here](https://carla-assets.s3.us-east-005.backblazeb2.com/Backup/CarSim.Build.cs) in order to use the correct solver for Ubuntu.
 
 3. This step can be skipped if you are using the packaged version of CARLA. The packaged version has already been compiled using this flag but if you are building CARLA from source then you will need to compile the server with the `--carsim` flag.  
 

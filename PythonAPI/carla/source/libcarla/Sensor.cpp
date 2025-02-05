@@ -26,7 +26,6 @@ void export_sensor() {
   namespace cc = carla::client;
 
   class_<cc::Sensor, bases<cc::Actor>, boost::noncopyable, boost::shared_ptr<cc::Sensor>>("Sensor", no_init)
-    .add_property("is_listening", &cc::Sensor::IsListening)
     .def("listen", &SubscribeToStream, (arg("callback")))
     .def("is_listening", &cc::Sensor::IsListening)
     .def("stop", &cc::Sensor::Stop)
@@ -41,6 +40,7 @@ void export_sensor() {
     .def("enable_for_ros", &cc::ServerSideSensor::EnableForROS)
     .def("disable_for_ros", &cc::ServerSideSensor::DisableForROS)
     .def("is_enabled_for_ros", &cc::ServerSideSensor::IsEnabledForROS)
+    .def("send", &cc::ServerSideSensor::Send, (arg("message")))
     .def(self_ns::str(self_ns::self))
   ;
 

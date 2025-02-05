@@ -28,8 +28,8 @@ fi
 
 CARLA_VERSION=$1
 CARLA_DIR=carla-simulator-${CARLA_VERSION}
-CARLA_RELEASE_URL=https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/CARLA_${CARLA_VERSION}.tar.gz
-ADDITIONAL_MAPS_URL=https://carla-releases.s3.eu-west-3.amazonaws.com/Linux/AdditionalMaps_${CARLA_VERSION}.tar.gz
+CARLA_RELEASE_URL=https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/CARLA_${CARLA_VERSION}.tar.gz
+ADDITIONAL_MAPS_URL=https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/AdditionalMaps_${CARLA_VERSION}.tar.gz
 
 # Adding maintainer name.
 DEBFULLNAME=Carla\ Simulator\ Team
