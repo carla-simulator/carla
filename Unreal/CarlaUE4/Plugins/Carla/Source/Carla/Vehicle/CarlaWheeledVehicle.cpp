@@ -202,6 +202,20 @@ void ACarlaWheeledVehicle::BeginPlay()
   AddReferenceToManager();
 }
 
+void ACarlaWheeledVehicle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction){
+  Super::TickActor(DeltaTime, TickType, ThisTickFunction);
+
+  FPoseSnapshot pose;
+  GetMesh()->SnapshotPose(pose);
+  for(FTransform &transform : pose.LocalTransforms)
+  {
+    transform *= GetMesh()->GetComponentTransform();
+  }
+  
+  WorldTransformedPose = pose;
+
+}
+
 bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ACarlaWheeledVehicle::IsInVehicleRange);
@@ -1197,4 +1211,18 @@ void ACarlaWheeledVehicle::SetPhysicsConstraintAngle(
     UPhysicsConstraintComponent* Component, const FRotator &NewAngle)
 {
   Component->ConstraintInstance.AngularRotationOffset = NewAngle;
+}
+
+FPoseSnapshot ACarlaWheeledVehicle::GetWorldTransformedPose()
+{
+  if(WorldTransformedPose.bIsValid == false)
+  {
+    SetActorTickEnabled(true);
+    GetMesh()->SnapshotPose(WorldTransformedPose);
+    for(FTransform &transform : WorldTransformedPose.LocalTransforms)
+    {
+      transform *= GetMesh()->GetComponentTransform();
+    }
+  }
+  return WorldTransformedPose;
 }

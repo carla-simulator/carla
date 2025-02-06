@@ -435,6 +435,11 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("get_actor_bone_world_transforms", actor);
   }
 
+  std::vector<geom::Transform> Client::GetVehicleBoneWorldTransforms(rpc::ActorId actor) {
+    using return_t = std::vector<geom::Transform>;
+    return _pimpl->CallAndWait<return_t>("get_vehicle_bone_world_transforms", actor);
+  }
+
   std::vector<geom::Transform> Client::GetActorBoneRelativeTransforms(rpc::ActorId actor) {
     using return_t = std::vector<geom::Transform>;
     return _pimpl->CallAndWait<return_t>("get_actor_bone_relative_transforms", actor);

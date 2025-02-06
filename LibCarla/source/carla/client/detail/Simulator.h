@@ -462,6 +462,10 @@ namespace detail {
     std::vector<geom::Transform> GetActorBoneWorldTransforms(const Actor &actor) {
       return _client.GetActorBoneWorldTransforms(actor.GetId());
     }
+    
+    std::vector<geom::Transform> GetVehicleBoneWorldTransforms(const Vehicle &vehicle) {
+      return _client.GetVehicleBoneWorldTransforms(vehicle.GetId());
+    }
 
     std::vector<geom::Transform> GetActorBoneRelativeTransforms(const Actor &actor) {
       return _client.GetActorBoneRelativeTransforms(actor.GetId());

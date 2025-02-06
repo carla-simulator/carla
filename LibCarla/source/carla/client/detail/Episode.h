@@ -19,6 +19,8 @@
 
 #include <vector>
 
+class FPoseSnapshot;
+
 namespace carla {
 namespace client {
 namespace detail {
