@@ -106,6 +106,8 @@ namespace client {
     /// received in the last tick.
     float GetSpeedLimit() const;
 
+    std::vector<geom::Transform> GetVehicleBoneWorldTransforms() const;
+
     /// Return the state of the traffic light currently affecting this vehicle.
     ///
     /// @return Green If no traffic light is affecting the vehicle.
