@@ -559,6 +559,11 @@ namespace detail {
     return _pimpl->CallAndWait<std::vector<std::pair<carla::ActorId, uint32_t>>>("get_vehicle_light_states");
   }
 
+  std::vector<geom::Transform> Client::GetVehicleBoneWorldTransforms(rpc::ActorId actor) {
+    using return_t = std::vector<geom::Transform>;
+    return _pimpl->CallAndWait<return_t>("get_vehicle_bone_world_transforms", actor);
+  }
+
   std::vector<ActorId> Client::GetGroupTrafficLights(rpc::ActorId traffic_light) {
     using return_t = std::vector<ActorId>;
     return _pimpl->CallAndWait<return_t>("get_group_traffic_lights", traffic_light);

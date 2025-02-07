@@ -14,6 +14,8 @@
 
 #include <exception>
 
+class FPoseSnapShot;
+
 namespace carla {
 namespace client {
 namespace detail {
