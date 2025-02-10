@@ -1,3 +1,5 @@
+  * Updated `BOOST_REPO` link in `install_boost.bat` as the old link was expired
+
 ## CARLA 0.9.15
 
   * Added Digital Twins feature version 0.1. Now you can create your own map based on OpenStreetMaps
