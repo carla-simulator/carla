@@ -22,7 +22,7 @@ CarlaSetup.bat
 
 The CarlaSetup.bat script installs all the required packages, including Visual Studio 2022, Cmake, Python 3.8 packages and Unreal Engine 5.5. It also downloads the CARLA content and builds CARLA. This batch file can therefore take a long time to complete. 
 
-You may also use Python 3.9 and 3.10. 
+You may also use Python 3.9 and 3.10. The setup script will install by default Python 3 using apt. If you want to target an existing Python installation, you should use the `--python-root=PATH_TO_PYTHON` argument with the relevant Python installation path. You can use `where python3` in your chosen environment and strip the `/python3` suffix from the path.
 
 !!! note
         * This version of CARLA requires the **CARLA fork of Unreal Engine 5.5**. You need to link your GitHub account to Epic Games in order to gain permission to clone the UE repository. If you have not already linked your accounts, follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github)
