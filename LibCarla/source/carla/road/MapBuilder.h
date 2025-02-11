@@ -369,6 +369,9 @@ namespace road {
     /// Create the pointers between RoadSegments based on the ids.
     void CreatePointersBetweenRoadSegments();
 
+    /// Debug the built connections through the terminal.
+    void DebugRoadConnections();
+
     /// Create the bounding boxes of each junction
     void CreateJunctionBoundingBoxes(Map &map);
 

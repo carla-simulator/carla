@@ -662,12 +662,12 @@ namespace road {
     double s = section.GetDistance();
 
     // check if we are in a lane section in the middle
-    if ((lane_id > 0 && s > 0) ||
-        (lane_id <= 0 && road._lane_sections.upper_bound(s) != road._lane_sections.end())) {
+    if ((lane_id <= 0 && s > 0) ||
+        (lane_id > 0 && road._lane_sections.upper_bound(s) != road._lane_sections.end())) {  // LHT swap direction
       // check if lane has a next link (if not, it deads in the middle section)
       if (next != 0 || (lane_id == 0 && next == 0)) {
         // change to next / prev section
-        if (lane_id <= 0) {  // LHT swap direction
+        if (lane_id > 0) {  // LHT swap direction
           result.push_back(road.GetNextLane(s, next));
         } else {
           result.push_back(road.GetPrevLane(s, next));
@@ -677,7 +677,7 @@ namespace road {
       // change to another road / junction
       if (next != 0 || (lane_id == 0 && next == 0)) {
         // single road
-        result.push_back(GetEdgeLanePointer(next_road, (next <= 0), next));  // LHT swap direction
+        result.push_back(GetEdgeLanePointer(next_road, (next > 0), next));  // LHT swap direction
       }
     } else {
       // several roads (junction)
@@ -784,6 +784,23 @@ namespace road {
             }
           }
 
+        }
+      }
+    }
+    // DebugRoadConnections();
+  }
+
+  void MapBuilder::DebugRoadConnections(void) {
+    for (auto &road : _map_data._roads) {
+      for (auto &section : road.second._lane_sections) {
+        for (auto &lane : section.second._lanes) {
+          std::cout << "\nLane: " << road.first << "_" << section.first << "_" << lane.first << std::endl;
+          for (auto next_lane : lane.second._next_lanes) {
+            std::cout << "Next lane: " << next_lane->GetRoad()->GetId() << "_" << next_lane->GetLaneSection()->_id << "_" << next_lane->_id << std::endl;
+          }
+          for (auto prev_lanes : lane.second._prev_lanes) {
+            std::cout << "Prev lane: " << prev_lanes->GetRoad()->GetId() << "_" << prev_lanes->GetLaneSection()->_id << "_" << prev_lanes->_id << std::endl;
+          }
         }
       }
     }
