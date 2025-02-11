@@ -29,6 +29,7 @@
  * Importing from carla.command is now possible
  * carla.ad subpackages are now directly importable and are not directly importable anymore (e.g. import ad)
  * Fixed segfault in traffic manager when trying to access not available vehicles
+ * Updated inverted traffic PythonAPI example script, added support for waypoint-guided Inverted AI cars.
 
 ## CARLA 0.9.15
 
