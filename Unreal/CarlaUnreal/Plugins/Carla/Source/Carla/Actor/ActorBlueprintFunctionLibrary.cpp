@@ -652,7 +652,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     
     FActorVariation ColorSaturation;
     ColorSaturation.Id = TEXT("color_saturation");
-    ColorSaturation.Type = EActorAttributeType::Float;
+    ColorSaturation.Type = EActorAttributeType::RGBColor;
     ColorSaturation.RecommendedValues = { ColorToFString(FLinearColor(0.5f, 0.5f, 0.5f).ToFColorSRGB()) };
     ColorSaturation.bRestrictToRecommended = false;
 
@@ -670,7 +670,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
 
     FActorVariation HighlightsGamma;
     HighlightsGamma.Id = TEXT("highlights_gamma");
-    HighlightsGamma.Type = EActorAttributeType::Float;
+    HighlightsGamma.Type = EActorAttributeType::RGBColor;
     HighlightsGamma.RecommendedValues = { ColorToFString(FLinearColor(0.5f, 0.5f, 0.5f).ToFColorSRGB()) };
     HighlightsGamma.bRestrictToRecommended = false;
 
