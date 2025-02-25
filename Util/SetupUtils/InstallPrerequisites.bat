@@ -3,14 +3,17 @@
 set ninja_version=1.12.1
 
 set python_path=python
-set python_version_default=3.8.10
+set python_version_major=3
+set python_version_minor=8
+set python_version_patch=10
+set python_version_default=%python_version_major%.%python_version_minor%.%python_version_patch%
 
 rem https://learn.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-community?view=vs-2022&preserve-view=true
 set visual_studio_components=^
     Microsoft.VisualStudio.Workload.NativeDesktop ^
     Microsoft.VisualStudio.Workload.NativeGame ^
     Microsoft.VisualStudio.Workload.ManagedDesktop ^
-    Microsoft.VisualStudio.Component.Windows10SDK.22621 ^
+    Microsoft.VisualStudio.Component.Windows10SDK.20348 ^
     Microsoft.VisualStudio.Component.VC.CMake.Project ^
     Microsoft.Net.Component.4.8.SDK ^
     Microsoft.Net.ComponentGroup.4.8.1.DeveloperTools ^
@@ -80,7 +83,7 @@ if errorlevel 1 (
     curl -L -O https://www.python.org/ftp/python/%python_version_default%/python-%python_version_default%-amd64.exe || exit /b
     python-%python_version_default%-amd64.exe /passive PrependPath=1  || exit /b
     del python-%python_version_default%-amd64.exe
-    set "PATH=%LocalAppData%\Programs\Python\Python38\Scripts\;%LocalAppData%\Programs\Python\Python38\;%PATH%"
+    set "PATH=%LocalAppData%\Programs\Python\Python%python_version_major%%python_version_minor%\Scripts\;%LocalAppData%\Programs\Python\Python%python_version_major%%python_version_minor%\;%PATH%"
     echo Installed Python %python_version_default%.
 ) else (
     echo Found Python.
