@@ -50,6 +50,7 @@ namespace detail {
         {230u, 150u, 140u},   // rail track    =  27u
         {180u, 165u, 180u},   // guard rail    =  28u
         {180u, 130u,  70u},   // rock          =  29u
+        {90u,    0u,  90u},   // bush          =  30u
       };
 
 } // namespace detail
