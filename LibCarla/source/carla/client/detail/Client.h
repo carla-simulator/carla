@@ -166,6 +166,8 @@ namespace detail {
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(rpc::ActorId vehicle) const;
 
     rpc::VehicleLightState GetVehicleLightState(rpc::ActorId vehicle) const;
+    
+    std::vector<geom::Transform> GetVehicleBoneWorldTransforms(rpc::ActorId actor);
 
     void ApplyPhysicsControlToVehicle(
         rpc::ActorId vehicle,

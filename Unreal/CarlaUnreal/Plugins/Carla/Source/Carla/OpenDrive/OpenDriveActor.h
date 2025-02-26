@@ -38,10 +38,14 @@ private:
 
 #if WITH_EDITORONLY_DATA
   /// Generate the road network using an OpenDrive file (named as the current
-  /// .umap)
+  /// .umap, or the custom one)
   UPROPERTY(Category = "Generate", EditAnywhere)
   bool bGenerateRoutes = false;
 #endif // WITH_EDITORONLY_DATA
+
+  /// Specify a custom path. Expected a full path to the xodr.
+  UPROPERTY(Category = "Generate", EditAnywhere)
+  FString CustomPath = "";
 
   /// Distance between waypoints where the cars will drive
   UPROPERTY(Category = "Generate", EditAnywhere, meta = (ClampMin = "0.01", UIMin = "0.01"))

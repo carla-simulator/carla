@@ -13,35 +13,23 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/Build/${presetName}",
       "installDir": "${sourceDir}/Install/${presetName}",
-      "hidden": true
-    },
-    {
-      "name": "Linux-Common",
-      "inherits": "Common",
       "cacheVariables":
       {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/CMake/LinuxToolchain.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/CMake/Toolchain.cmake"
       },
       "hidden": true
     },
     {
-      "name": "Windows-Debug",
+      "name": "Development",
       "inherits": "Common",
       "cacheVariables":
       {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_EXPORT_COMPILE_COMMANDS" : true
       }
     },
     {
-      "name": "Windows-Development",
-      "inherits": "Common",
-      "cacheVariables":
-      {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-      }
-    },
-    {
-      "name": "Windows-Release",
+      "name": "Release",
       "inherits": "Common",
       "cacheVariables":
       {
@@ -49,27 +37,12 @@
       }
     },
     {
-      "name": "Linux-Debug",
-      "inherits": "Linux-Common",
+      "name": "Debug",
+      "inherits": "Common",
       "cacheVariables":
       {
-        "CMAKE_BUILD_TYPE": "Debug"
-      }
-    },
-    {
-      "name": "Linux-Development",
-      "inherits": "Linux-Common",
-      "cacheVariables":
-      {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-      }
-    },
-    {
-      "name": "Linux-Release",
-      "inherits": "Linux-Common",
-      "cacheVariables":
-      {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS" : true
       }
     }
   ]

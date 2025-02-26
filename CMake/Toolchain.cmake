@@ -8,6 +8,8 @@
 
 ]]
 
+if (LINUX)
+
 set (UE_ROOT $ENV{CARLA_UNREAL_ENGINE_PATH})
 
 if (NOT UE_ROOT)
@@ -204,3 +206,5 @@ set (
 	CMAKE_CXX_STANDARD_INCLUDE_DIRECTORIES
 	${UE_INCLUDE} ${UE_INCLUDE}/c++/v1
 )
+
+endif ()
