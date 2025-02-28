@@ -139,7 +139,7 @@ __4.__ Once the solution is compiled you can open the engine to check that every
 The button above will take you to the official repository of the project. Either download from there and extract it locally or clone it using the following command:
 
 ```sh
-    git clone https://github.com/carla-simulator/carla
+    git clone -b ue4-dev https://github.com/carla-simulator/carla
 ```
 
 !!! Note
