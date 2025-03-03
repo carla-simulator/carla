@@ -173,7 +173,7 @@ namespace ros2 {
     geometry_msgs::msg::Quaternion orientation;
 
     const float rx = 0.0f;                           // pitch
-    const float ry = (float(M_PI_2) / 2.0f) - compass;  // yaw
+    const float ry = M_PI - compass;  // yaw
     const float rz = 0.0f;                           // roll
 
     const float cr = cosf(rz * 0.5f);

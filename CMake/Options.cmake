@@ -53,13 +53,13 @@ carla_option (
 carla_option (
   ENABLE_ROS2
   "Enable ROS2."
-  OFF
+  ON
 )
 
 carla_option (
   ENABLE_ROS2_DEMO
   "Enable ROS2 demo."
-  OFF
+  ON
 )
 
 carla_option (

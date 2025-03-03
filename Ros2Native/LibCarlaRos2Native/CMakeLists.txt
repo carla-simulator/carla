@@ -50,9 +50,25 @@ target_compile_definitions (
   BOOST_ASIO_ENABLE_BUFFER_DEBUGGING
 )
 
+if (WIN32)
+  set (LIB_EXT .lib)
+else ()
+  set (LIB_EXT .so)
+endif ()
+
+file (
+  GLOB
+  LIBFASTRTPS_PATH
+  ${CMAKE_INSTALL_PREFIX}/lib/*fastrtps*${LIB_EXT}*
+)
+
+if (NOT LIBFASTRTPS_PATH)
+  message (FATAL_ERROR "Could not find fastrtps library.")
+endif ()
+
 target_link_libraries (
   carla-ros2-native PUBLIC
-  ${CMAKE_INSTALL_PREFIX}/lib/libfastrtps.so
+  ${LIBFASTRTPS_PATH}
 )
 
 install (

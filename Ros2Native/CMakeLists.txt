@@ -20,6 +20,14 @@ ExternalProject_add (
     -DFOONATHAN_MEMORY_FORCE_VENDORED_BUILD=ON
 )
 
+if (WIN32)
+  set (LIBSSL_PATH ${UE_OPENSSL_LIBS}/ssl.lib)
+  set (LIBCRYPTO_PATH ${UE_OPENSSL_LIBS}/crypto.lib)
+else ()
+  set (LIBSSL_PATH ${UE_OPENSSL_LIBS}/libssl.a)
+  set (LIBCRYPTO_PATH ${UE_OPENSSL_LIBS}/libcrypto.a)
+endif ()
+
 # Note: We are using GIT_REPOSITORY instead URL for fastdds because fastdss contains submodules
 #       and we need the .git folders to download the submodules
 ExternalProject_add (
@@ -40,8 +48,8 @@ ExternalProject_add (
     -DSQLITE3_SUPPORT=OFF
     -DOPENSSL_FOUND:BOOL=ON
     -DOPENSSL_INCLUDE_DIR:FILEPATH=${UE_OPENSSL_INCLUDE}
-    -DOPENSSL_SSL_LIBRARY:FILEPATH=${UE_OPENSSL_LIBS}/libssl.a
-    -DOPENSSL_CRYPTO_LIBRARY:FILEPATH=${UE_OPENSSL_LIBS}/libcrypto.a
+    -DOPENSSL_SSL_LIBRARY:FILEPATH=${LIBSSL_PATH}
+    -DOPENSSL_CRYPTO_LIBRARY:FILEPATH=${LIBCRYPTO_PATH}
   DEPENDS foonathan_memory
 )
 
@@ -59,12 +67,18 @@ set (CARLA_PLUGIN_BINARY_PATH ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Plugins/Car
 
 make_directory (${CARLA_PLUGIN_BINARY_PATH})
 
+if (WIN32)
+  set (ROS2_NATIVE_COPY_PATTERN *.dll)
+else ()
+  set (ROS2_NATIVE_COPY_PATTERN *.so*)
+endif ()
+
 add_custom_command (
   TARGET carla-ros2-native-lib
   POST_BUILD
   COMMAND
     ${CMAKE_COMMAND} -E copy
-    ${PROJECT_INSTALL_PATH}/lib/*.so*
+    ${PROJECT_INSTALL_PATH}/lib/${ROS2_NATIVE_COPY_PATTERN}
     ${CARLA_PLUGIN_BINARY_PATH}
 )
 

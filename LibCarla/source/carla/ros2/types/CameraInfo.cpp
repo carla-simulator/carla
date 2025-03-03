@@ -33,6 +33,7 @@ char dummy;
 using namespace eprosima::fastcdr::exception;
 
 #include <utility>
+#include <cfloat>
 #include <cmath>
 
 #define builtin_interfaces_msg_Time_max_cdr_typesize 8ULL;
