@@ -46,7 +46,6 @@ namespace rpc {
     RailTrack    =   27u,
     GuardRail    =   28u,
     Rock         =   29u,
-    Bush         =   30u,
 
     Any          =  0xFF
   };
