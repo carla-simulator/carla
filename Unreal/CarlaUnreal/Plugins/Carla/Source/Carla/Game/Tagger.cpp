@@ -56,7 +56,7 @@ crp::CityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
   else if (String == "Train")        return crp::CityObjectLabel::Train;
   else if (String == "Rock")         return crp::CityObjectLabel::Rock;
   else if (String == "Stone")        return crp::CityObjectLabel::Rock;
-  else if (String == "Bush")         return crp::CityObjectLabel::Bush;
+  else if (String == "Bush")         return crp::CityObjectLabel::Vegetation;
   else                               return crp::CityObjectLabel::None;
 }
 
@@ -229,7 +229,6 @@ crp::CityObjectLabel ATagger::GetTagFromString(FString Tag)
   if(Tag.Contains("Rider")) return crp::CityObjectLabel::Rider;
   if(Tag.Contains("Train")) return crp::CityObjectLabel::Train;
   if(Tag.Contains("Rock")) return crp::CityObjectLabel::Rock;
-  if(Tag.Contains("Bush")) return crp::CityObjectLabel::Bush;
   return crp::CityObjectLabel::None;
 }
 
@@ -268,7 +267,6 @@ FString ATagger::GetTagAsString(const crp::CityObjectLabel Label)
     CARLA_GET_LABEL_STR(Train)
     CARLA_GET_LABEL_STR(Rider)
     CARLA_GET_LABEL_STR(Rock)
-    CARLA_GET_LABEL_STR(Bush)
 
 #undef CARLA_GET_LABEL_STR
   }
