@@ -21,7 +21,7 @@
 class AActor;
 
 /// A view over an actor and its properties.
-class FCarlaActor
+class CARLA_API FCarlaActor
 {
 public:
 
@@ -35,6 +35,7 @@ public:
     TrafficLight,
     TrafficSign,
     Sensor,
+    Custom,
     INVALID
   };
 
@@ -86,6 +87,11 @@ public:
   ActorType GetActorType() const
   {
     return Type;
+  }
+
+  FString GetCustomType() const
+  {
+    return CustomType;
   }
 
   AActor *GetActor()
@@ -431,16 +437,6 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
-  // Sensor functions
-
-  static TSharedPtr<FCarlaActor> ConstructCarlaActor(
-      IdType ActorId,
-      AActor* Actor,
-      TSharedPtr<const FActorInfo> Info,
-      ActorType Type,
-      carla::rpc::ActorState InState,
-      UWorld* World);
-
 private:
 
   friend class FActorRegistry;
@@ -462,6 +458,8 @@ private:
 protected:
 
   ActorType Type = ActorType::INVALID;
+
+  static const FString CustomType;
 
   TSharedPtr<FActorData> ActorData = nullptr;
 

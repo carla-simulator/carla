@@ -29,6 +29,7 @@ namespace ros2 {
       bool Publish();
 
       bool HasBeenInitialized() const;
+      float GetFov() const;
       void SetImageData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const float* data);
       void SetCameraInfoData(int32_t seconds, uint32_t nanoseconds);
       const char* type() const override { return "optical flow camera"; }
@@ -43,6 +44,7 @@ namespace ros2 {
       void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data);
 
     private:
+      float _fov;
       std::shared_ptr<CarlaOpticalFlowCameraPublisherImpl> _impl;
       std::shared_ptr<CarlaCameraInfoPublisherImpl> _impl_info;
   };

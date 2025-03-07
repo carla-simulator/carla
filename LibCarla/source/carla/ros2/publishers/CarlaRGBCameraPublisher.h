@@ -29,6 +29,7 @@ namespace ros2 {
       bool Publish();
 
       bool HasBeenInitialized() const;
+      float GetFov() const;
       void SetImageData(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, const uint8_t* data);
       void SetCameraInfoData(int32_t seconds, uint32_t nanoseconds);
       const char* type() const override { return "rgb camera"; }
@@ -43,6 +44,7 @@ namespace ros2 {
       void SetInfoRegionOfInterest(uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, bool do_rectify);
 
     private:
+      float _fov;
       std::shared_ptr<CarlaRGBCameraPublisherImpl> _impl;
       std::shared_ptr<CarlaCameraInfoPublisherImpl> _impl_info;
   };

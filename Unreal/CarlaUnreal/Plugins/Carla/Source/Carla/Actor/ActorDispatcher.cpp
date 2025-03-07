@@ -16,11 +16,17 @@
 #include "GameFramework/Controller.h"
 #ifdef WITH_ROS2
   #include <util/disable-ue4-macros.h>
-  #include "carla/ros2/ROS2.h"
+  #include <carla/ros2/ROS2Carla.h>
+  #include <carla/ros2/ROS2Interfaces.h>
   #include <util/enable-ue4-macros.h>
   #include <variant>
 #endif
 #include <util/ue-header-guard-end.h>
+
+std::shared_ptr<carla::ros2::ROS2Interfaces> UActorDispatcher::GetInterfaces()
+{
+  return carla::ros2::ROS2Interfaces::GetInstance();
+}
 
 void UActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Functor)
 {
@@ -156,6 +162,11 @@ bool UActorDispatcher::DestroyActor(FCarlaActor::IdType ActorId)
     }
   }
 
+  #ifdef WITH_ROS2
+  auto ROS2Interfaces = carla::ros2::ROS2Interfaces::GetInstance();
+  ROS2Interfaces->RemoveActorFromInterfaces(reinterpret_cast<void *>(Actor));
+  #endif
+
   Registry.Deregister(ActorId);
 
   return true;
@@ -173,8 +184,9 @@ FCarlaActor* UActorDispatcher::RegisterActor(
 
     // ROS2 mapping of actor->ros_name
     #ifdef WITH_ROS2
-    auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled())
+    auto ROS2Carla = carla::ros2::ROS2Carla::GetInstance();
+    auto ROS2Interfaces = carla::ros2::ROS2Interfaces::GetInstance();
+    if (ROS2Carla->IsEnabled())
     {
       // actor ros_name
       std::string RosName;
@@ -190,18 +202,18 @@ FCarlaActor* UActorDispatcher::RegisterActor(
         if(RosName.find("vehicle") != std::string::npos)
         {
           std::string VehicleName = "vehicle" + std::to_string(View->GetActorId());
-          ROS2->AddActorRosName(static_cast<void*>(&Actor), VehicleName);
+          ROS2Interfaces->AddActorRosName(static_cast<void*>(&Actor), VehicleName);
         }
         else
         {
           size_t pos = RosName.find_last_of('.');
           if (pos != std::string::npos) {
             std::string lastToken = RosName.substr(pos + 1) + "__";
-            ROS2->AddActorRosName(static_cast<void*>(&Actor), lastToken);
+            ROS2Interfaces->AddActorRosName(static_cast<void*>(&Actor), lastToken);
           }
         }
       } else {
-        ROS2->AddActorRosName(static_cast<void*>(&Actor), RosName);
+        ROS2Interfaces->AddActorRosName(static_cast<void*>(&Actor), RosName);
       }
 
       // vehicle controller for hero
@@ -209,14 +221,14 @@ FCarlaActor* UActorDispatcher::RegisterActor(
       {
         if (Attr.Key == "role_name" && (Attr.Value.Value == "hero" || Attr.Value.Value == "ego"))
         {
-          ROS2->AddActorCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
+          ROS2Carla->AddActorCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
           {
             AActor *UEActor = reinterpret_cast<AActor *>(Actor);
             ActorROS2Handler Handler(UEActor, RosName);
             std::visit(Handler, Data);
           });
           #if defined(WITH_ROS2_DEMO)
-          ROS2->AddBasicSubscriberCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2MessageCallbackData Data) -> void
+          ROS2Carla->AddBasicSubscriberCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2MessageCallbackData Data) -> void
           {
             AActor *UEActor = reinterpret_cast<AActor *>(Actor);
             ActorROS2Handler Handler(UEActor, RosName);
@@ -253,10 +265,7 @@ void UActorDispatcher::OnActorDestroyed(AActor *Actor)
   }
 
   #ifdef WITH_ROS2
-  auto ROS2 = carla::ros2::ROS2::GetInstance();
-  if (ROS2->IsEnabled())
-  {
-    ROS2->RemoveActorRosName(reinterpret_cast<void *>(Actor));
-  }
+  auto ROS2Interfaces = carla::ros2::ROS2Interfaces::GetInstance();
+  ROS2Interfaces->RemoveActorRosName(reinterpret_cast<void *>(Actor));
   #endif
 }

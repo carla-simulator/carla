@@ -15,7 +15,7 @@
 namespace carla {
 
 namespace ros2 {
-  class ROS2;
+  class ROS2Carla;
 }
 
 namespace sensor {
@@ -144,7 +144,7 @@ namespace data {
 
   friend class s11n::SemanticLidarHeaderView;
   friend class s11n::SemanticLidarSerializer;
-  friend class carla::ros2::ROS2;
+  friend class carla::ros2::ROS2Carla;
 
   };
 

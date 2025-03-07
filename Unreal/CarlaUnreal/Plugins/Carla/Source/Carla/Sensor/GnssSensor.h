@@ -51,8 +51,13 @@ public:
   float GetLongitudeBias() const;
   float GetAltitudeBias() const;
 
+  UFUNCTION(BlueprintCallable, Category = "GNSS")
   double GetLatitudeValue() const;
+
+  UFUNCTION(BlueprintCallable, Category = "GNSS")
   double GetLongitudeValue() const;
+
+  UFUNCTION(BlueprintCallable, Category = "GNSS")
   double GetAltitudeValue() const;
 
 protected:

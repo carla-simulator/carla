@@ -7,6 +7,7 @@
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla.h"
 #include "Carla/Actor/ActorData.h"
+#include "Carla/Actor/CarlaActorConstructorFactory.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
@@ -22,38 +23,6 @@ namespace crp = carla::rpc;
 
 FActorRegistry::IdType FActorRegistry::ID_COUNTER = 0u;
 
-static FCarlaActor::ActorType FActorRegistry_GetActorType(const AActor *Actor)
-{
-  if (!Actor)
-  {
-    return FCarlaActor::ActorType::INVALID;
-  }
-
-  if (nullptr != Cast<ACarlaWheeledVehicle>(Actor))
-  {
-    return FCarlaActor::ActorType::Vehicle;
-  }
-  else if (nullptr != Cast<ACharacter>(Actor))
-  {
-    return FCarlaActor::ActorType::Walker;
-  }
-  else if (nullptr != Cast<ATrafficLightBase>(Actor))
-  {
-    return FCarlaActor::ActorType::TrafficLight;
-  }
-  else if (nullptr != Cast<ATrafficSignBase>(Actor))
-  {
-    return FCarlaActor::ActorType::TrafficSign;
-  }
-  else if (nullptr != Cast<ASensor>(Actor))
-  {
-    return FCarlaActor::ActorType::Sensor;
-  }
-  else
-  {
-    return FCarlaActor::ActorType::Other;
-  }
-}
 
 FString CarlaGetRelevantTagAsString(const TSet<crp::CityObjectLabel> &SemanticTags)
 {
@@ -173,11 +142,15 @@ TSharedPtr<FCarlaActor> FActorRegistry::MakeCarlaActor(
         std::begin(Token.data),
         std::end(Token.data));
   }
-  auto Type = FActorRegistry_GetActorType(&Actor);
+  auto Type = CarlaActorConstructorFactory::Instance().GetActorType(&Actor);
+  FString CustomType;
+  if (Type == FCarlaActor::ActorType::Custom){
+    CustomType = CarlaActorConstructorFactory::Instance().GetActorCustomType(&Actor);
+  }
   TSharedPtr<FCarlaActor> CarlaActor =
-      FCarlaActor::ConstructCarlaActor(
+      CarlaActorConstructorFactory::Instance().ConstructCarlaActor(
         Id, &Actor,
-        std::move(Info), Type,
+        std::move(Info), Type, CustomType,
         InState, Actor.GetWorld());
   return CarlaActor;
 }

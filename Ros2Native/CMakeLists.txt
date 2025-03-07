@@ -68,6 +68,24 @@ add_custom_command (
     ${CARLA_PLUGIN_BINARY_PATH}
 )
 
+add_custom_command (
+  TARGET carla-ros2-native-lib
+  POST_BUILD
+  COMMAND
+    ${CMAKE_COMMAND} -E copy
+    ${CARLA_PLUGIN_BINARY_PATH}/libfastcdr.so
+    ${CARLA_PLUGIN_BINARY_PATH}/libfastcdr-${CARLA_FASTCDR_FILE_VERSION_NAME}.lib
+)
+
+add_custom_command (
+  TARGET carla-ros2-native-lib
+  POST_BUILD
+  COMMAND
+    ${CMAKE_COMMAND} -E copy
+    ${CARLA_PLUGIN_BINARY_PATH}/libfastrtps.so
+    ${CARLA_PLUGIN_BINARY_PATH}/libfastrtps-${CARLA_FASTDDS_FILE_VERSION_NAME}.lib
+)
+
 carla_add_custom_target (
   carla-ros2-native
   "Build the ROS2-Native CARLA subproject."

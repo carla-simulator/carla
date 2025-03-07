@@ -26,7 +26,7 @@ struct FLidarDescription;
 struct FActorDescription;
 
 UCLASS()
-class UActorBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
+class CARLA_API UActorBlueprintFunctionLibrary : public UBlueprintFunctionLibrary
 {
   GENERATED_BODY()
 
@@ -52,6 +52,60 @@ public:
   /// @name Helpers to create actor definitions
   /// ==========================================================================
   /// @{
+
+  static void AddRecommendedValuesForActorRoleName(
+    FActorDefinition &Definition,
+    TArray<FString> &&RecommendedValues);
+
+  static void AddRecommendedValuesForSensorRoleNames(FActorDefinition &Definition);
+
+  template <typename T, typename Functor>
+  static void FillActorDefinitionArray(
+    const TArray<T> &ParameterArray,
+    TArray<FActorDefinition> &Definitions,
+    Functor Maker)
+  {
+    for (auto &Item : ParameterArray)
+    {
+        FActorDefinition Definition;
+        bool Success = false;
+        Maker(Item, Success, Definition);
+        if (Success)
+        {
+        Definitions.Emplace(std::move(Definition));
+        }
+    }
+  }
+  template <typename ... ARGS>
+  static FString JoinStrings(const FString &Separator, ARGS && ... Args)
+  {
+    return FString::Join(TArray<FString>{std::forward<ARGS>(Args) ...}, *Separator);
+  }
+
+  template <typename ... TStrs>
+  static void FillIdAndTags(FActorDefinition &Def, TStrs && ... Strings)
+  {
+    Def.Id = JoinStrings(TEXT("."), std::forward<TStrs>(Strings) ...).ToLower();
+    Def.Tags = JoinStrings(TEXT(","), std::forward<TStrs>(Strings) ...).ToLower();
+  
+    // each actor gets an actor role name attribute (empty by default)
+    FActorVariation ActorRole;
+    ActorRole.Id = TEXT("role_name");
+    ActorRole.Type = EActorAttributeType::String;
+    ActorRole.RecommendedValues = { TEXT("default") };
+    ActorRole.bRestrictToRecommended = false;
+    Def.Variations.Emplace(ActorRole);
+  
+    // ROS2
+    FActorVariation Var;
+    Var.Id = TEXT("ros_name");
+    Var.Type = EActorAttributeType::String;
+    Var.RecommendedValues = { Def.Id };
+    Var.bRestrictToRecommended = false;
+    Def.Variations.Emplace(Var);
+  }
+
+  static FString ColorToFString(const FColor &Color);
 
   static FActorDefinition MakeGenericDefinition(
       const FString &Category,

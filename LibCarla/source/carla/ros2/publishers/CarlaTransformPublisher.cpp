@@ -186,7 +186,11 @@ namespace ros2 {
 
     std_msgs::msg::Header header;
     header.stamp(std::move(time));
-    header.frame_id(_parent);
+
+    if (!_parent_standalone.empty())
+        header.frame_id(_parent_standalone);
+    else
+        header.frame_id(_parent);
 
     geometry_msgs::msg::Transform t;
     t.rotation(_impl->vec_rotation);
@@ -199,10 +203,11 @@ namespace ros2 {
     _impl->_transform.transforms({ts});
   }
 
-  CarlaTransformPublisher::CarlaTransformPublisher(const char* ros_name, const char* parent) :
+  CarlaTransformPublisher::CarlaTransformPublisher(const char* ros_name, const char* parent, const char* parent_standalone) :
   _impl(std::make_shared<CarlaTransformPublisherImpl>()) {
     _name = ros_name;
     _parent = parent;
+    _parent_standalone = parent_standalone;
   }
 
   CarlaTransformPublisher::~CarlaTransformPublisher() {
@@ -226,6 +231,7 @@ namespace ros2 {
     _frame_id = other._frame_id;
     _name = other._name;
     _parent = other._parent;
+    _parent_standalone = other._parent_standalone;
     _impl = other._impl;
   }
 
@@ -233,6 +239,7 @@ namespace ros2 {
     _frame_id = other._frame_id;
     _name = other._name;
     _parent = other._parent;
+    _parent_standalone = other._parent_standalone;
     _impl = other._impl;
 
     return *this;
@@ -242,6 +249,7 @@ namespace ros2 {
     _frame_id = std::move(other._frame_id);
     _name = std::move(other._name);
     _parent = std::move(other._parent);
+    _parent_standalone = std::move(other._parent_standalone);
     _impl = std::move(other._impl);
   }
 
@@ -249,6 +257,7 @@ namespace ros2 {
     _frame_id = std::move(other._frame_id);
     _name = std::move(other._name);
     _parent = std::move(other._parent);
+    _parent_standalone = std::move(other._parent_standalone);
     _impl = std::move(other._impl);
 
     return *this;

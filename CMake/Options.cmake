@@ -413,6 +413,12 @@ carla_string_option (
 )
 
 carla_string_option (
+  CARLA_FASTDDS_FILE_VERSION_NAME
+  "Target Fast-DDS version."
+  2.11
+)
+
+carla_string_option (
   CARLA_FASTDDS_TAG
   "Target Fast-DDS git tag."
   ${CARLA_FASTDDS_VERSION}
@@ -424,6 +430,12 @@ carla_string_option (
   CARLA_FASTCDR_VERSION
   "Target Fast-CDR version."
   1.1.x
+)
+
+carla_string_option (
+  CARLA_FASTCDR_FILE_VERSION_NAME
+  "Target Fast-CDR version."
+  1.1
 )
 
 carla_string_option (

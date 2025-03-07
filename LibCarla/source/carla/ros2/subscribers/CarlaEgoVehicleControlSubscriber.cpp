@@ -2,7 +2,7 @@
 
 #include "carla/ros2/types/CarlaEgoVehicleControl.h"
 #include "carla/ros2/types/CarlaEgoVehicleControlPubSubTypes.h"
-#include "carla/ros2/listeners/CarlaSubscriberListener.h"
+#include "carla/ros2/listeners/CarlaVehicleSubscriberListener.h"
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
 #include <fastdds/dds/subscriber/Subscriber.hpp>
@@ -34,7 +34,7 @@ namespace ros2 {
     efd::Topic* _topic { nullptr };
     efd::DataReader* _datareader { nullptr };
     efd::TypeSupport _type { new carla_msgs::msg::CarlaEgoVehicleControlPubSubType() };
-    CarlaSubscriberListener _listener {nullptr};
+    CarlaVehicleSubscriberListener _listener {nullptr};
     carla_msgs::msg::CarlaEgoVehicleControl _event {};
     VehicleControl _control {};
     bool _new_message {false};

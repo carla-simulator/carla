@@ -54,10 +54,15 @@ namespace ros2 {
     return _impl_info->_init;
   }
 
+  float CarlaDepthCameraPublisher::GetFov() const {
+    return _fov;
+  }
+
   void CarlaDepthCameraPublisher::InitInfoData(uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, float fov, bool do_rectify) {
     _impl_info->_info = std::move(sensor_msgs::msg::CameraInfo(height, width, fov));
     SetInfoRegionOfInterest(x_offset, y_offset, height, width, do_rectify);
     _impl_info->_init = true;
+    _fov = fov;
   }
 
   bool CarlaDepthCameraPublisher::Init() {

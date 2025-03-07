@@ -20,6 +20,7 @@
 #include <carla/multigpu/secondaryCommands.h>
 #if WITH_ROS2
     #include <carla/ros2/ROS2.h>
+    #include <carla/ros2/ROS2Interfaces.h>
 #endif
 #include <util/enable-ue4-macros.h>
 
@@ -75,9 +76,8 @@ public:
   {
     FCarlaEngine::FrameCounter += 1;
     #if defined(WITH_ROS2)
-    auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled())
-      ROS2->SetFrame(FCarlaEngine::FrameCounter);
+    auto ROS2Interfaces = carla::ros2::ROS2Interfaces::GetInstance();
+    ROS2Interfaces->SetFrame(FCarlaEngine::FrameCounter);
     #endif
     return FCarlaEngine::FrameCounter;
   }
@@ -86,9 +86,8 @@ public:
   {
     FCarlaEngine::FrameCounter = Value;
     #if defined(WITH_ROS2)
-    auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled())
-      ROS2->SetFrame(FCarlaEngine::FrameCounter);
+    auto ROS2Interfaces = carla::ros2::ROS2Interfaces::GetInstance();
+    ROS2Interfaces->SetFrame(FCarlaEngine::FrameCounter);
     #endif
   }
 

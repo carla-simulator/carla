@@ -61,7 +61,7 @@ public:
 
   bool HasSection(const FString &Section) const
   {
-    return (ConfigFile.Num() > 0) && (ConfigFile.FindSection(Section) != nullptr);
+    return (ConfigFile.Num() > 0) && (ConfigFile.Find(Section) != nullptr);
   }
 
   void AddSectionIfMissing(const FString &Section)
