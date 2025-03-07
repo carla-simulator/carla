@@ -41,14 +41,14 @@ namespace ImageUtil
     TArrayView<FLinearColor> Out)
   {
     SourcePitch *= GPixelFormats[Format].BlockBytes;
-    // return ConvertRAWSurfaceDataToFLinearColor(
-    //   Format,
-    //   Extent.X,
-    //   Extent.Y,
-    //   (uint8*)PixelData,
-    //   SourcePitch,
-    //   Out.GetData(),
-    //   Flags);
+    return ConvertRAWSurfaceDataToFLinearColor(
+      Format,
+      Extent.X,
+      Extent.Y,
+      (uint8*)PixelData,
+      SourcePitch,
+      Out.GetData(),
+      Flags);
     return false;
   }
 

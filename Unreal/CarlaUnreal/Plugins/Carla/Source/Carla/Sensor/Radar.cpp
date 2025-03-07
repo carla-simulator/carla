@@ -162,7 +162,6 @@ void ARadar::SendLineTraces(float DeltaTime)
         MaxRy * Radius * Sin
       });
 
-      // Neya TODO: Changed from ParallelLineTraceSingleByChannel
       const bool Hitted = GetWorld()->ParallelLineTraceSingleByChannel(
         OutHit,
         RadarLocation,
