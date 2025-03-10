@@ -168,8 +168,6 @@ This is the most basic possible set up for a simulation, now you can go into fur
 
 The __Ego Vehicle__ is an important concept to bear in mind when using CARLA. The Ego Vehicle refers to the vehicle that will be the focus of the simulation. In most CARLA use cases it's likely to be the vehicle to which you will attach your sensors and/or the vehicle that your autonomous driving machine learning stack will control. It is important because it serves as the basis for some simulation operations that help improve the efficiency of the simulation, like for example:
 
-* __Loading map tiles for Large Maps__: Large Maps (like Town 12) are made up of tiles to that are only loaded when needed to improve CARLA performance. The position of the Ego Vehicle dictates which tiles are used. Only the tiles nearest the Ego Vehicle will be loaded.
-
 * __Hybrid Physics Mode__: if your simulation contains a lot of vehicles controlled by the Traffic Manager, calculating physics for all of these vehicles is very computationally expensive. The [Hybrid Physics Mode](adv_traffic_manager.md#hybrid-physics-mode) enables physics calculation to be limited to the vehicles in the vicinity of the Ego Vehicle, hence saving computing resources.
 
 To define the Ego Vehicle, you should set the `role_name` attribute of the vehicle [carla.Actor](python_api.md#carlaactor) object's [blueprint](python_api.md#carlaactorblueprint) when you are spawning your Ego Vehicle:
