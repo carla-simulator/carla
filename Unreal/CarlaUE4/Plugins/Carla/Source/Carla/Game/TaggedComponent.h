@@ -4,6 +4,7 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/InstancedStaticMesh.h"
 #include "Components/HierarchicalInstancedStaticMeshComponent.h"
+#include "SplineMeshSceneProxy.h"
 #include "Landscape.h"
 #include "LandscapeRender.h"
 #include "LandscapeMaterialInstanceConstant.h"
@@ -52,6 +53,18 @@ class FTaggedStaticMeshSceneProxy : public FStaticMeshSceneProxy
 {
 public:
   FTaggedStaticMeshSceneProxy(UStaticMeshComponent * Component, bool bForceLODsShareStaticLighting, UMaterialInstance * MaterialInstance);
+
+  virtual FPrimitiveViewRelevance GetViewRelevance(const FSceneView * View) const override;
+
+private:
+  UMaterialInstance * TaggedMaterialInstance;
+};
+
+class FTaggedSplineMeshSceneProxy : public FSplineMeshSceneProxy
+{
+public:
+
+  FTaggedSplineMeshSceneProxy(USplineMeshComponent * Component, UMaterialInstance * MaterialInstance);
 
   virtual FPrimitiveViewRelevance GetViewRelevance(const FSceneView * View) const override;
 
