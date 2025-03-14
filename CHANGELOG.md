@@ -30,6 +30,7 @@
  * carla.ad subpackages are now directly importable and are not directly importable anymore (e.g. import ad)
  * Fixed segfault in traffic manager when trying to access not available vehicles
  * Fixed invalid comparission in python examples/rss
+ * Fixed invisible spline meshes in instance segmentation
  * Added ad-rss type-stubs for the PythonAPI when building with RSS support
 
 ## CARLA 0.9.15

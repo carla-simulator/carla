@@ -251,6 +251,9 @@ namespace detail {
 
     std::vector<geom::Transform> GetActorBoneWorldTransforms(
         rpc::ActorId actor);
+        
+    std::vector<geom::Transform> GetVehicleBoneWorldTransforms(
+        rpc::ActorId actor);
 
     std::vector<geom::Transform> GetActorBoneRelativeTransforms(
         rpc::ActorId actor);

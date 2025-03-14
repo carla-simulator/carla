@@ -123,7 +123,12 @@ FPrimitiveSceneProxy * UTaggedComponent::CreateSceneProxy(UStaticMeshComponent *
     return NULL;
   }
 
-  return new FTaggedStaticMeshSceneProxy(StaticMeshComponent, true, TaggedMID);
+  USplineMeshComponent* SplineMeshComponent = Cast<USplineMeshComponent>(StaticMeshComponent);
+  if (SplineMeshComponent) {
+    return new FTaggedSplineMeshSceneProxy(SplineMeshComponent, TaggedMID);
+  } else {
+    return new FTaggedStaticMeshSceneProxy(StaticMeshComponent, true, TaggedMID);
+  }
 }
 
 FPrimitiveSceneProxy * UTaggedComponent::CreateSceneProxy(USkeletalMeshComponent * SkeletalMeshComponent)
@@ -235,6 +240,34 @@ FTaggedStaticMeshSceneProxy::FTaggedStaticMeshSceneProxy(UStaticMeshComponent * 
 FPrimitiveViewRelevance FTaggedStaticMeshSceneProxy::GetViewRelevance(const FSceneView * View) const
 {
   FPrimitiveViewRelevance ViewRelevance = FStaticMeshSceneProxy::GetViewRelevance(View);
+
+  ViewRelevance.bDrawRelevance = ViewRelevance.bDrawRelevance && !View->Family->EngineShowFlags.NotDrawTaggedComponents;
+  ViewRelevance.bShadowRelevance = false;
+
+  return ViewRelevance;
+}
+
+//
+// FTaggedSplineMeshSceneProxy
+//
+FTaggedSplineMeshSceneProxy::FTaggedSplineMeshSceneProxy(USplineMeshComponent * Component, UMaterialInstance * MaterialInstance) :
+  FSplineMeshSceneProxy(Component)
+{
+  TaggedMaterialInstance = MaterialInstance;
+
+  // Replace materials with tagged material
+  bVerifyUsedMaterials = false;
+
+  for (FLODInfo& LODInfo : LODs) {
+    for (FLODInfo::FSectionInfo& SectionInfo : LODInfo.Sections) {
+      SectionInfo.Material = TaggedMaterialInstance;
+    }
+  }
+}
+
+FPrimitiveViewRelevance FTaggedSplineMeshSceneProxy::GetViewRelevance(const FSceneView * View) const
+{
+  FPrimitiveViewRelevance ViewRelevance = FSplineMeshSceneProxy::GetViewRelevance(View);
 
   ViewRelevance.bDrawRelevance = ViewRelevance.bDrawRelevance && !View->Family->EngineShowFlags.NotDrawTaggedComponents;
   ViewRelevance.bShadowRelevance = false;

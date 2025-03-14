@@ -107,6 +107,8 @@ namespace client {
     /// received in the last tick.
     LightState GetLightState() const;
 
+    std::vector<geom::Transform> GetVehicleBoneWorldTransforms() const;
+
     /// Return the speed limit currently affecting this vehicle.
     ///
     /// @note This function does not call the simulator, it returns the data
