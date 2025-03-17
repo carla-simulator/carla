@@ -19,7 +19,7 @@
 
 TArray<FActorDefinition> APropActorFactory::GetDefinitions()
 {
-  LoadPropParametersArrayFromFile("PropFactory.json", PropsParams);
+  LoadPropParametersArrayFromFile("PropParameters.json", PropsParams);
   
   UActorBlueprintFunctionLibrary::MakePropDefinitions(PropsParams, Definitions);
   return Definitions;

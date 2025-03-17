@@ -1416,6 +1416,31 @@ void UActorBlueprintFunctionLibrary::MakePropDefinitions(
   FillActorDefinitionArray(ParameterArray, Definitions, &MakePropDefinition);
 }
 
+void UActorBlueprintFunctionLibrary::MakeBlueprintDefinition(
+  const FBlueprintParameters &Parameters,
+  bool &Success,
+  FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("blueprint"), Parameters.Name);
+  AddRecommendedValuesForActorRoleName(Definition, {TEXT("blueprint")});
+
+  // Definition.Attributes.Emplace(FActorAttribute{
+  //   EActorAttributeType::String,
+  //   Parameters.ObjectType});
+
+
+  Success = CheckActorDefinition(Definition);
+  
+}
+
+void UActorBlueprintFunctionLibrary::MakeBlueprintDefinitions(
+  const TArray<FBlueprintParameters> &ParameterArray,
+  TArray<FActorDefinition> &Definitions)
+{
+  FillActorDefinitionArray(ParameterArray, Definitions, &MakeBlueprintDefinition);
+}
+
+
 void UActorBlueprintFunctionLibrary::MakeObstacleDetectorDefinitions(
     const FString &Type,
     const FString &Id,
