@@ -10,6 +10,7 @@
 #include "Carla/Actor/PedestrianParameters.h"
 #include "Carla/Actor/PropParameters.h"
 #include "Carla/Actor/VehicleParameters.h"
+#include "Carla/Actor/BlueprintParameters.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Kismet/BlueprintFunctionLibrary.h"
@@ -152,6 +153,17 @@ public:
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakePropDefinitions(
       const TArray<FPropParameters> &ParameterArray,
+      TArray<FActorDefinition> &Definitions);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeBlueprintDefinition(
+      const FBlueprintParameters &Parameters,
+      bool &Success,
+      FActorDefinition &Definition);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeBlueprintDefinitions(
+      const TArray<FBlueprintParameters> &ParameterArray,
       TArray<FActorDefinition> &Definitions);
 
   UFUNCTION()

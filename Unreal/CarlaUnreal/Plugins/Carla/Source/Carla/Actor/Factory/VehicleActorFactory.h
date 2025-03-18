@@ -50,8 +50,8 @@ protected:
 
   UPROPERTY(EditAnywhere)
   TArray<FActorDefinition> Definitions;
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TArray<FVehicleParameters> VehiclesParams;
-  UPROPERTY(EditAnywhere)
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TArray<FVehicleParameters> MineVehiclesParams;
 };
