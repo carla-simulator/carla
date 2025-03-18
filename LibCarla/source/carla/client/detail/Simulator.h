@@ -271,6 +271,10 @@ namespace detail {
       return _client.GetVehicleLightState(vehicle.GetId());
     }
 
+    std::vector<geom::Transform> GetVehicleBoneWorldTransforms(const Vehicle &vehicle) {
+      return _client.GetVehicleBoneWorldTransforms(vehicle.GetId());
+    }
+
     /// Returns all the BBs of all the elements of the level
     std::vector<geom::BoundingBox> GetLevelBBs(uint8_t queried_tag) const {
       return _client.GetLevelBBs(queried_tag);

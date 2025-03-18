@@ -1,116 +1,137 @@
-SETLOCAL EnableDelayedExpansion
+@echo off
+setlocal EnableDelayedExpansion
 
-echo Starting Content Download...
-if not exist "Unreal\CarlaUnreal\Content" mkdir Unreal\CarlaUnreal\Content
-start cmd /c git -C Unreal/CarlaUnreal/Content clone -b ue5-dev https://bitbucket.org/carla-simulator/carla-content.git Carla
+set skip_prerequisites=false
+set launch=false
+set interactive=false
+set python_path=python
+set python_root=
 
+rem -- PARSE COMMAND LINE ARGUMENTS --
 
-echo Installing Visual Studio 2022...
-curl -L -O https://aka.ms/vs/17/release/vs_community.exe || exit /b
-rem See: https://learn.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-community?view=vs-2022&preserve-view=true
-vs_Community.exe --add ^
-  Microsoft.VisualStudio.Workload.NativeDesktop ^
-  Microsoft.VisualStudio.Workload.NativeGame ^
-  Microsoft.VisualStudio.Workload.ManagedDesktop ^
-  Microsoft.VisualStudio.Component.Windows10SDK.18362 ^
-  Microsoft.VisualStudio.Component.VC.CMake.Project ^
-  Microsoft.Net.ComponentGroup.4.8.1.DeveloperTools ^
-  Microsoft.VisualStudio.Component.VC.Llvm.Clang ^
-  Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset ^
-  Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang ^
-  Microsoft.VisualStudio.Component.VC.14.36.17.6.x86.x64 ^
-  --removeProductLang Es-es ^
-  --addProductLang En-us ^
-  --installWhileDownloading ^
-  --passive ^
-  --wait
-del vs_community.exe
-echo Visual Studion 2022 Installed!!!
+:parse
+    if "%1"=="" (
+        goto main
+    )
+    if "%1"=="--interactive" (
+        set interactive=true
+    ) else if "%1"=="-i" (
+        set interactive=true
+    ) else if "%1"=="--skip-prerequisites" (
+        set skip_prerequisites=true
+    ) else if "%1"=="-p" (
+        set skip_prerequisites=true
+    ) else if "%1"=="--launch" (
+        set launch=true
+    ) else if "%1"=="-l" (
+        set launch=true
+    ) else (
+        echo %1 | findstr /B /C:"--python-root=" >nul
+        if not errorlevel 1 (
+            set python_root="%1"
+            set python_root="!python_root:--python-root=!"
+        ) else if "%1"=="--python-root" (
+            set python_root=%2
+            shift
+        ) else if "%1"=="-pyroot" (
+            set python_root=%2
+            shift
+        ) else (
+            echo Unknown argument "%1"
+            exit /b
+        )
+    )
+    shift
+    goto parse
 
+rem -- MAIN --
 
-ninja --version 2>NUL
-if errorlevel 1 (
-    echo Found Ninja - FAIL
-    echo Installing Ninja 1.11.1...
-    echo Installing Ninja...
-    curl -L -o %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win.zip https://github.com/ninja-build/ninja/releases/download/v1.11.1/ninja-win.zip || exit /b
-    powershell -command "Expand-Archive $env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\ninja-win.zip $env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\ninja-win" || exit /b
-    move %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win\ninja.exe %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja.exe || exit /b
-    rmdir /s /q %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win
-    del /f %USERPROFILE%\AppData\Local\Microsoft\WindowsApps\ninja-win.zip
-    echo Ninja Installed!!!
-) else (
-    echo Found Ninja - OK
-    ninja --version
+:main
+
+if not "%python_root%"=="" (
+    set python_path=%python_root%\python
 )
 
+rem -- PREREQUISITES INSTALL STEP --
 
-python --version 2>NUL
-if errorlevel 1 (
-    echo Found Python - FAIL
-    echo Installing Python 3.8.10...
-    curl -L -O https://www.python.org/ftp/python/3.8.10/python-3.8.10-amd64.exe || exit /b
-    python-3.8.10-amd64.exe /passive PrependPath=1  || exit /b
-    del python-3.8.10-amd64.exe
-    set "PATH=%LocalAppData%\Programs\Python\Python38\Scripts\;%LocalAppData%\Programs\Python\Python38\;%PATH%"
-    echo Python 3.8.10 installed!!!
+if %skip_prerequisites%==false (
+    echo Installing prerequisites...
+    call Util/SetupUtils/InstallPrerequisites.bat --python-path=%python_path% || exit /b
 ) else (
-    echo Found Python - OK
-    python --version
+    echo Skipping prerequisites install step.
 )
 
+rem -- CLONE CONTENT --
+if exist "%cd%\Unreal\CarlaUnreal\Content" (
+    echo Found CARLA content.
+) else (
+    echo Could not find CARLA content. Downloading...
+    mkdir %cd%\Unreal\CarlaUnreal\Content
+    git ^
+        -C %cd%\Unreal\CarlaUnreal\Content ^
+        clone ^
+        -b ue5-dev ^
+        https://bitbucket.org/carla-simulator/carla-content.git ^
+        Carla ^
+    || exit /b
+)
 
-echo Installing Python Packages...
-python -m pip install --upgrade pip || exit /b
-python -m pip install -r requirements.txt || exit /b
-echo Python Packages Installed...
+rem Activate VS terminal development environment:
+if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" (
+    echo Activating "x64 Native Tools Command Prompt" terminal environment.
+    call "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" || exit /b
+) else (
+    echo Could not find vcvarsall.bat, aborting setup...
+    exit 1
+)
 
-
-echo Switching to x64 Native Tools Command Prompt for VS 2022 command line...
-call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-
-
+rem -- DOWNLOAD + BUILD UNREAL ENGINE --
 if exist "%CARLA_UNREAL_ENGINE_PATH%" (
-    echo Found UnrealEngine5 %CARLA_UNREAL_ENGINE_PATH% - OK
+    echo Found Unreal Engine 5 at "%CARLA_UNREAL_ENGINE_PATH%".
 ) else if exist ..\UnrealEngine5_carla (
-    echo Found UnrealEngine5 ..\UnrealEngine5_carla - OK
-    pushd ..
-    pushd UnrealEngine5_carla
-    set CARLA_UNREAL_ENGINE_PATH=!cd!
-    setx CARLA_UNREAL_ENGINE_PATH !cd!
-    popd
-    popd
+    echo Found CARLA Unreal Engine at %cd%/UnrealEngine5_carla. Assuming already built...
 ) else (
-    echo Found UnrealEngine5 $CARLA_UNREAL_ENGINE_PATH - FAIL
+    echo Could not find CARLA Unreal Engine, downloading...
     pushd ..
-    echo Cloning CARLA Unreal Engine 5...
-    git clone -b ue5-dev-carla https://github.com/CarlaUnreal/UnrealEngine.git UnrealEngine5_carla || exit /b
+    git clone ^
+        -b ue5-dev-carla ^
+        https://github.com/CarlaUnreal/UnrealEngine.git ^
+        UnrealEngine5_carla || exit /b
     pushd UnrealEngine5_carla
     set CARLA_UNREAL_ENGINE_PATH=!cd!
     setx CARLA_UNREAL_ENGINE_PATH !cd!
+    echo Running Unreal Engine pre-build steps...
+    call Setup.bat || exit /b
+    call GenerateProjectFiles.bat || exit /b
+    echo Building Unreal Engine 5...
+    msbuild ^
+        Engine\Intermediate\ProjectFiles\UE5.vcxproj ^
+        /property:Configuration="Development_Editor" ^
+        /property:Platform="x64" || exit /b
     popd
     popd
 )
-pushd ..
-pushd %CARLA_UNREAL_ENGINE_PATH%
-echo Setup CARLA Unreal Engine 5...
-call Setup.bat || exit /b
-echo GenerateProjectFiles CARLA Unreal Engine 5...
-call GenerateProjectFiles.bat || exit /b
-echo Opening Visual Studio 2022...
-msbuild Engine\Intermediate\ProjectFiles\UE5.vcxproj /property:Configuration="Development_Editor" /property:Platform="x64" || exit /b
-popd
-popd
 
-echo Configuring CARLA...
-call cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release -DBUILD_CARLA_UNREAL=ON -DCARLA_UNREAL_ENGINE_PATH=%CARLA_UNREAL_ENGINE_PATH% || exit /b
+rem -- BUILD CARLA --
+echo Configuring the CARLA CMake project...
+cmake ^
+    -G Ninja ^
+    -S . ^
+    -B Build ^
+    --toolchain=CMake/Toolchain.cmake ^
+    -DPython_ROOT_DIR=%python_root% ^
+    -DPython3_ROOT_DIR=%python_root% ^
+    -DCMAKE_BUILD_TYPE=Release ^
+    -DCARLA_UNREAL_ENGINE_PATH=%CARLA_UNREAL_ENGINE_PATH% || exit /b
+echo Building CARLA...
+cmake --build Build || exit /b
+echo Installing Python API...
+cmake --build Build --target carla-python-api-install || exit /b
+echo CARLA Python API build+install succeeded.
 
-echo Buiding CARLA...
-call cmake --build Build || exit /b
+rem -- POST-BUILD STEPS --
 
-echo Installing PythonAPI...
-cmake --build Build --target carla-python-api-install
-
-echo Build Succesfull :)
-echo Launching Unreal Editor with CARLA...
-call cmake --build Build --target launch || exit /b
+if %launch%==true (
+    echo Launching Carla Unreal Editor...
+    cmake --build Build --target launch || exit /b
+)
