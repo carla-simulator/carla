@@ -60,13 +60,8 @@ TSharedPtr<FJsonObject> APropActorFactory::FPropParametersToJsonObject(const FPr
 {
   TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
 
-  //Mesh->GetImportData()->GetSourceData().ToJson()
-  //Mesh->Serialize with an FArchive
-
   JsonObject->SetStringField(TEXT("Name"), PropParams.Name);
-  //JsonObject->SetStringField(TEXT("Mesh"), PropParams.Mesh->GetImportData()->GetFirstFilename());
   JsonObject->SetStringField(TEXT("Mesh"), PropParams.Mesh->GetPathName());
-  //StaticLoadObject(T::StaticClass(), nullptr, *Path.ToString())
 
   FString PropSizeString;
   switch(PropParams.Size)
@@ -143,8 +138,7 @@ bool APropActorFactory::JsonToFPropParameters(const TSharedPtr<FJsonObject> Json
     // Convert "Mesh" string back to a FMesh reference
     FString MeshPath;
     JsonObject->TryGetStringField(TEXT("Mesh"), MeshPath);
-    //LOAD MESH
-    //OutPropParams.Class = StaticLoadClass(ACarlaWheeledProp::StaticClass(), nullptr, *ClassPath);
+    OutPropParams.Mesh = Cast<UStaticMesh>(StaticLoadObject(UStaticMesh::StaticClass(), nullptr, *(MeshPath)));
 
     FString PropSizeString;
     JsonObject->TryGetStringField(TEXT("Size"), PropSizeString);
@@ -172,29 +166,6 @@ bool APropActorFactory::JsonToFPropParameters(const TSharedPtr<FJsonObject> Json
     {
         OutPropParams.Size = EPropSize::INVALID;
     }
-
-    // switch(PropSizeString)
-    // {
-    //   case FString("Tiny"):
-    //       OutPropParams.Size = EPropSize::Tiny;
-    //       break;
-    //   case FString("Small"):
-    //       OutPropParams.Size = EPropSize::Small;
-    //       break;
-    //   case FString("Medium"):
-    //       OutPropParams.Size = EPropSize::Medium;
-    //       break;
-    //   case FString("Big"):
-    //       OutPropParams.Size = EPropSize::Big;
-    //       break;
-    //   case FString("Huge"):
-    //       OutPropParams.Size = EPropSize::Huge;
-    //       break;
-    //   case FString("INVALID"):
-    //   default:
-    //       OutPropParams.Size = EPropSize::INVALID;
-    //       break;
-    // }
 
     return true;
 }

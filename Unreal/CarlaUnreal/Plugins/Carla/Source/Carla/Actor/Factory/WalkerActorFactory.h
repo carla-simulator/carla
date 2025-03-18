@@ -47,6 +47,6 @@ private:
 protected:
 	UPROPERTY(EditAnywhere)
 	TArray<FActorDefinition> Definitions;
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FPedestrianParameters> WalkersParams;
 };

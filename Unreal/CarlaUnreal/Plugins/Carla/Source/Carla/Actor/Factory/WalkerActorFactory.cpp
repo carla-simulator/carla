@@ -209,9 +209,6 @@ bool AWalkerActorFactory::JsonToFWalkerParameters(const TSharedPtr<FJsonObject> 
         OutWalkerParams.Age = EPedestrianAge::INVALID;
     }
 
-    // double OutSpeed;
-    // JsonObject->TryGetNumberField(TEXT("Speed"), OutSpeed);
-    // OutWalkerParams.Speed = static_cast<float>(OutSpeed);
     // Parse Speeds
     const TArray<TSharedPtr<FJsonValue>>* SpeedsArray;
     if (JsonObject->TryGetArrayField(TEXT("Speeds"), SpeedsArray))
