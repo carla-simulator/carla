@@ -1008,6 +1008,22 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
       LowerFOV,
       HorizontalFOV});
   }
+  else if (Id == "ray_cast_surface_normals") {
+    Definition.Variations.Append({
+      Channels,
+      Range,
+      PointsPerSecond,
+      Frequency,
+      UpperFOV,
+      LowerFOV,
+      AtmospAttenRate,
+      NoiseSeed,
+      DropOffGenRate,
+      DropOffIntensityLimit,
+      DropOffAtZeroIntensity,
+      StdDevLidar,
+      HorizontalFOV});
+  }
   else {
     DEBUG_ASSERT(false);
   }
