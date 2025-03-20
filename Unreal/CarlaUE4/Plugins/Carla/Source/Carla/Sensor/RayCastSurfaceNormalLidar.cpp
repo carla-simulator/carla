@@ -109,7 +109,11 @@ ARayCastSurfaceNormalLidar::FSurfaceNormalLidarDetection ARayCastSurfaceNormalLi
   FSurfaceNormalLidarDetection Detection;
   const FVector HitPoint = HitInfo.ImpactPoint;
   Detection.point = SensorTransf.Inverse().TransformPosition(HitPoint);
-  Detection.surf_normal = SensorTransf.Inverse().Rotator().RotateVector(HitInfo.ImpactNormal);
+  const FVector surf_normal = SensorTransf.Inverse().Rotator().RotateVector(HitInfo.ImpactNormal);
+  Detection.surf_normal.x = surf_normal.X;
+  Detection.surf_normal.y = surf_normal.Y;
+  Detection.surf_normal.z = surf_normal.Z;
+  Detection.surf_normal = Detection.surf_normal.MakeSafeUnitVector(std::numeric_limits<float>::epsilon());
 
   const float Distance = Detection.point.Length();
 

@@ -54,7 +54,7 @@ namespace data {
     public:
       geom::Location point;
       float intensity;
-      geom::Location surf_normal;
+      geom::Vector3D surf_normal;
 
       SurfaceNormalLidarDetection() :
           point(0.0f, 0.0f, 0.0f), intensity{0.0f}, surf_normal(0.0f, 0.0f, 0.0f) { }
