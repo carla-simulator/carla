@@ -307,10 +307,14 @@ void ACarlaRecorder::AddVehicleLight(FCarlaActor *CarlaActor)
 void ACarlaRecorder::AddVehicleDoor(const ACarlaWheeledVehicle &Vehicle, const EVehicleDoor SDoors, bool bIsOpen)
 {
   CarlaRecorderDoorVehicle DoorVehicle;
-  DoorVehicle.DatabaseId = Episode->GetActorRegistry().FindCarlaActor(&Vehicle)->GetActorId();
-  DoorVehicle.Doors = static_cast<CarlaRecorderDoorVehicle::VehicleDoorType>(SDoors);
-  DoorVehicle.bIsOpen = bIsOpen;
-  AddDoorVehicle(DoorVehicle);
+  auto CarlaActor = Episode->GetActorRegistry().FindCarlaActor(&Vehicle);
+  if (CarlaActor)
+  {
+      DoorVehicle.DatabaseId = CarlaActor->GetActorId();
+      DoorVehicle.Doors = static_cast<CarlaRecorderDoorVehicle::VehicleDoorType>(SDoors);
+      DoorVehicle.bIsOpen = bIsOpen;
+      AddDoorVehicle(DoorVehicle);
+  }
 }
 
 void ACarlaRecorder::AddActorKinematics(FCarlaActor *CarlaActor)
@@ -353,12 +357,17 @@ void ACarlaRecorder::AddTriggerVolume(const ATrafficSignBase &TrafficSign)
     {
       return;
     }
+    auto CarlaActor = Episode->GetActorRegistry().FindCarlaActor(&TrafficSign);
+    if (!CarlaActor)
+    {
+        return;
+    }
     UBoxComponent* Trigger = Triggers.Top();
     auto VolumeOrigin = Trigger->GetComponentLocation();
     auto VolumeExtent = Trigger->GetScaledBoxExtent();
     CarlaRecorderActorBoundingBox TriggerVolume =
     {
-      Episode->GetActorRegistry().FindCarlaActor(&TrafficSign)->GetActorId(),
+      CarlaActor->GetActorId(),
       {VolumeOrigin, VolumeExtent}
     };
     TriggerVolumes.Add(TriggerVolume);
@@ -370,9 +379,12 @@ void ACarlaRecorder::AddPhysicsControl(const ACarlaWheeledVehicle& Vehicle)
   if (bAdditionalData)
   {
     CarlaRecorderPhysicsControl Control;
-    Control.DatabaseId = Episode->GetActorRegistry().FindCarlaActor(&Vehicle)->GetActorId();
-    Control.VehiclePhysicsControl = Vehicle.GetVehiclePhysicsControl();
-    PhysicsControls.Add(Control);
+    if (auto CarlaActor = Episode->GetActorRegistry().FindCarlaActor(&Vehicle))
+    {
+        Control.DatabaseId = CarlaActor->GetActorId();
+        Control.VehiclePhysicsControl = Vehicle.GetVehiclePhysicsControl();
+        PhysicsControls.Add(Control);
+    }
   }
 }
 
@@ -380,14 +392,17 @@ void ACarlaRecorder::AddTrafficLightTime(const ATrafficLightBase& TrafficLight)
 {
   if (bAdditionalData)
   {
-    auto DatabaseId = Episode->GetActorRegistry().FindCarlaActor(&TrafficLight)->GetActorId();
-    CarlaRecorderTrafficLightTime TrafficLightTime{
-      DatabaseId,
-      TrafficLight.GetGreenTime(),
-      TrafficLight.GetYellowTime(),
-      TrafficLight.GetRedTime()
-    };
-    TrafficLightTimes.Add(TrafficLightTime);
+      if (auto CarlaActor = Episode->GetActorRegistry().FindCarlaActor(&TrafficLight))
+      {
+          auto DatabaseId = CarlaActor->GetActorId();
+          CarlaRecorderTrafficLightTime TrafficLightTime{
+            DatabaseId,
+            TrafficLight.GetGreenTime(),
+            TrafficLight.GetYellowTime(),
+            TrafficLight.GetRedTime()
+          };
+          TrafficLightTimes.Add(TrafficLightTime);
+      }
   }
 }
 

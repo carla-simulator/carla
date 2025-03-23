@@ -553,12 +553,18 @@ void FFrameData::AddTriggerVolume(const ATrafficSignBase &TrafficSign)
   {
     return;
   }
+
+  auto CarlaActor = Episode->GetActorRegistry().FindCarlaActor(&TrafficSign);
+  if (!CarlaActor)
+  {
+      return;
+  }
   UBoxComponent* Trigger = Triggers.Top();
   auto VolumeOrigin = Trigger->GetComponentLocation();
   auto VolumeExtent = Trigger->GetScaledBoxExtent();
   CarlaRecorderActorBoundingBox TriggerVolume =
   {
-    Episode->GetActorRegistry().FindCarlaActor(&TrafficSign)->GetActorId(),
+    CarlaActor->GetActorId(),
     {VolumeOrigin, VolumeExtent}
   };
   TriggerVolumes.Add(TriggerVolume);
@@ -567,21 +573,29 @@ void FFrameData::AddTriggerVolume(const ATrafficSignBase &TrafficSign)
 void FFrameData::AddPhysicsControl(const ACarlaWheeledVehicle& Vehicle)
 {
   CarlaRecorderPhysicsControl Control;
-  Control.DatabaseId = Episode->GetActorRegistry().FindCarlaActor(&Vehicle)->GetActorId();
-  Control.VehiclePhysicsControl = Vehicle.GetVehiclePhysicsControl();
-  PhysicsControls.Add(Control);
+  auto CarlaActor = Episode->GetActorRegistry().FindCarlaActor(&Vehicle);
+  if (CarlaActor)
+  {
+      Control.DatabaseId = CarlaActor->GetActorId();
+      Control.VehiclePhysicsControl = Vehicle.GetVehiclePhysicsControl();
+      PhysicsControls.Add(Control);
+  }
 }
 
 void FFrameData::AddTrafficLightTime(const ATrafficLightBase& TrafficLight)
 {
-  auto DatabaseId = Episode->GetActorRegistry().FindCarlaActor(&TrafficLight)->GetActorId();
-  CarlaRecorderTrafficLightTime TrafficLightTime{
-    DatabaseId,
-    TrafficLight.GetGreenTime(),
-    TrafficLight.GetYellowTime(),
-    TrafficLight.GetRedTime()
-  };
-  TrafficLightTimes.Add(TrafficLightTime);
+    auto CarlaActor = Episode->GetActorRegistry().FindCarlaActor(&TrafficLight);
+    if (CarlaActor)
+    {
+        auto DatabaseId = CarlaActor->GetActorId();
+        CarlaRecorderTrafficLightTime TrafficLightTime{
+          DatabaseId,
+          TrafficLight.GetGreenTime(),
+          TrafficLight.GetYellowTime(),
+          TrafficLight.GetRedTime()
+        };
+        TrafficLightTimes.Add(TrafficLightTime);
+    }
 }
 
 void FFrameData::AddPosition(const CarlaRecorderPosition &Position)
