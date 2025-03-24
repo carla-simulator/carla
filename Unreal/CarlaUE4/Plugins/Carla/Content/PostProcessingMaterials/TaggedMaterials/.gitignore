@@ -1,0 +1,7 @@
+# These files are automatically generated either when playing in editor
+# or via the GenerateTaggedMaterialsRegistryCommandlet during packaging.
+# We only require the directory for keeping a common place for the
+# generated .uassets, so that they can also be used for cooking.
+
+*
+!.gitignore

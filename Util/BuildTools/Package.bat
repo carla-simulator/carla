@@ -188,6 +188,8 @@ if %DO_PACKAGE%==true (
         -clientconfig=%PACKAGE_CONFIG%
 
     if errorlevel 1 goto error_runUAT
+
+    call :cook_tagged_materials Carla !BUILD_FOLDER!\WindowsNoEditor\
 )
 
 rem ==============================================================================
@@ -394,6 +396,9 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
         REM del "!BUILD_FOLDER!\CarlaUE4\Content\!PACKAGE_NAME!/Maps/!PROPS_MAP_NAME!"
         del "!BUILD_FOLDER!\CarlaUE4\AssetRegistry.bin"
 
+        REM Create tagged materials for the instance segmentation
+        call :cook_tagged_materials !PACKAGE_NAME! !BUILD_FOLDER!
+
         if %DO_TARBALL%==true (
 
             if %SINGLE_PACKAGE%==true (
@@ -434,6 +439,55 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
 rem ============================================================================
 
 goto success
+
+rem ============================================================================
+rem -- Helper functions --------------------------------------------------------
+rem ============================================================================
+
+:cook_tagged_materials
+    set CUR_PACKAGE=%1
+    set RESULT_BUILD_FOLDER=%2
+    set SOURCE_REGISTRIES_FOLDER=%ROOT_PATH%Unreal\CarlaUE4\Plugins\Carla\Content\PostProcessingMaterials\TaggedMaterials\
+    set TEMP_BUILD_FOLDER=%INSTALLATION_DIR%UE4Carla/%CARLA_VERSION%_TaggedMaterials_!CUR_PACKAGE!/
+
+    rem Call commandlet to build TaggedMaterialsRegistries for the current package.
+    rem A temporary map containing the TaggedMaterialsRegistry will be created,
+    rem that can be cooked to cook the registry.
+    echo.
+    echo Generate TaggedMaterialsRegistry for package '!CUR_PACKAGE!'...
+    call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe "^
+    "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"^
+    -run=GenerateTaggedMaterialsRegistry^
+    -PackageName=!CUR_PACKAGE!
+
+    if exist "!SOURCE_REGISTRIES_FOLDER!TaggedMaterials_!CUR_PACKAGE!_Map.umap" (
+        rem Cook the temporary map.
+        echo Cook TaggedMaterialsRegistry for package '!CUR_PACKAGE!'
+        call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe "^
+        "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"^
+        -run=cook^
+        -map="/Carla/PostProcessingMaterials/TaggedMaterials/TaggedMaterials_!CUR_PACKAGE!_Map"^
+        -targetplatform="WindowsNoEditor"^
+        -OutputDir="!TEMP_BUILD_FOLDER!"^
+        -iterate^
+        -cooksinglepackage^
+
+        rem Copy the cooked TaggedMaterialsRegistry to the build directory.
+        echo Copy cooked TaggedMaterialsRegistry to package '!CUR_PACKAGE!'
+        set SRC=!TEMP_BUILD_FOLDER!CarlaUE4/Plugins/Carla/Content/PostProcessingMaterials/TaggedMaterials/TaggedMaterials_!CUR_PACKAGE!
+        set TRG=!RESULT_BUILD_FOLDER!CarlaUE4/Plugins/Carla/Content/PostProcessingMaterials/TaggedMaterials/
+        if exist "!SRC!.uasset" (
+            if not exist "!TRG!" mkdir "!TRG!"
+            copy "!SRC:/=\!.*" "!TRG:/=\!"
+        )
+
+        rem Delete the temporary files.
+        rmdir /S /Q "!TEMP_BUILD_FOLDER!"
+        del "!SOURCE_REGISTRIES_FOLDER!TaggedMaterials_!CUR_PACKAGE!*"
+    )
+
+    goto :eof
+
 
 rem ============================================================================
 rem -- Messages and Errors -----------------------------------------------------

@@ -18,6 +18,8 @@
 #include "Vehicle/VehicleSpawnPoint.h"
 #include "Util/BoundingBoxCalculator.h"
 #include "EngineUtils.h"
+#include "Tagger.h"
+#include "TaggedComponent.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
@@ -365,6 +367,21 @@ void ACarlaGameModeBase::ApplyTextureToActor(
           DynamicMaterial->SetTextureParameterValue("ORMH 3", Texture);
           DynamicMaterial->SetTextureParameterValue("ORMH 4", Texture);
           break;
+      }
+    }
+
+    if (TextureParam == cr::MaterialParameter::Tex_Diffuse) {
+      // If there is a tagged component attached, it might use a masked material, which must be updated, too.
+      UTaggedComponent* TaggedComponent = ATagger::FindTaggedComponent(Mesh);
+      if (TaggedComponent)
+      {
+        for (UMaterialInstanceDynamic* TaggedMaterial : TaggedComponent->GetTaggedMaterials()) {
+          TaggedMaterial->SetTextureParameterValue("BaseColor", Texture);
+          TaggedMaterial->SetTextureParameterValue("Difuse", Texture);
+          TaggedMaterial->SetTextureParameterValue("Difuse 2", Texture);
+          TaggedMaterial->SetTextureParameterValue("Difuse 3", Texture);
+          TaggedMaterial->SetTextureParameterValue("Difuse 4", Texture);
+        }
       }
     }
   }

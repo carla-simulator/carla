@@ -101,6 +101,45 @@ RELEASE_PACKAGE_PATH=${RELEASE_PACKAGE_PATH}.tar.gz
 
 log "Packaging version '${REPOSITORY_TAG}' (${PACKAGE_CONFIG})."
 
+# ============================================================================
+# -- Helper functions --------------------------------------------------------
+# ============================================================================
+function cook_tagged_materials {
+  CUR_PACKAGE=$1
+  RESULT_BUILD_FOLDER=$2
+  SOURCE_REGISTRIES_FOLDER=${CARLAUE4_PLUGIN_ROOT_FOLDER}/Content/PostProcessingMaterials/TaggedMaterials
+  TEMP_BUILD_FOLDER=${RELEASE_BUILD_FOLDER}_TaggedMaterials_${CUR_PACKAGE}
+
+  # Call commandlet to build TaggedMaterialsRegistries for the current package.
+  # A temporary map containing the TaggedMaterialsRegistry will be created,
+  # that can be cooked to cook the registry.
+  log "Generate TaggedMaterialsRegistry for package '${CUR_PACKAGE}'..."
+  ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
+  -run=GenerateTaggedMaterialsRegistry -PackageName=${CUR_PACKAGE}
+
+  if [ -f "${SOURCE_REGISTRIES_FOLDER}/TaggedMaterials_${CUR_PACKAGE}_Map.umap" ]; then
+    # Cook the temporary map.
+    log "Cook TaggedMaterialsRegistry for package '${CUR_PACKAGE}'"
+    ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
+    -run=cook \
+    -map="/Carla/PostProcessingMaterials/TaggedMaterials/TaggedMaterials_${CUR_PACKAGE}_Map" \
+    -targetplatform="LinuxNoEditor" -OutputDir="${TEMP_BUILD_FOLDER}" -iterate -cooksinglepackage
+
+    # Copy the cooked TaggedMaterialsRegistry to the build directory.
+    log "Copy cooked TaggedMaterialsRegistry to package '${CUR_PACKAGE}'"
+    SRC=${TEMP_BUILD_FOLDER}/CarlaUE4/Plugins/Carla/Content/PostProcessingMaterials/TaggedMaterials/TaggedMaterials_${CUR_PACKAGE}
+    TRG=${RESULT_BUILD_FOLDER}/CarlaUE4/Plugins/Carla/Content/PostProcessingMaterials/TaggedMaterials/
+    if [ -f ${SRC}.uasset ]; then
+      [ ! -d ${TRG} ] && mkdir -p ${TRG}
+      cp ${SRC}.* ${TRG}
+    fi
+
+    # Delete the temporary files.
+    rm -Rf ${TEMP_BUILD_FOLDER}
+    rm -f ${SOURCE_REGISTRIES_FOLDER}/TaggedMaterials_${CUR_PACKAGE}*
+  fi
+}
+
 # ==============================================================================
 # -- Cook CARLA project --------------------------------------------------------
 # ==============================================================================
@@ -128,6 +167,8 @@ if ${DO_CARLA_RELEASE} ; then
       -clientconfig=${PACKAGE_CONFIG} -ue4exe=UE4Editor \
       -prereqs -targetplatform=Linux -build -utf8output \
       -archivedirectory="${RELEASE_BUILD_FOLDER}"
+
+  cook_tagged_materials "Carla" "${RELEASE_BUILD_FOLDER}/LinuxNoEditor"
 
   popd >/dev/null
 
@@ -349,6 +390,8 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
   rm -Rf "./CarlaUE4/Plugins"
   rm -Rf "./CarlaUE4/Content/${PACKAGE_NAME}/Maps/${PROPS_MAP_NAME}"
   rm -f "./CarlaUE4/AssetRegistry.bin"
+
+  cook_tagged_materials "${PACKAGE_NAME}" "${BUILD_FOLDER}"
 
   if ${DO_TARBALL} ; then
 
