@@ -103,7 +103,8 @@ private:
 
   TArray<SpawnFunctionType> SpawnFunctions;
 
-  TArray<TSubclassOf<AActor>> Classes;
+  // Key: Actor Definition Id
+  TMap<FString, TSubclassOf<AActor>> Classes;
 
   FActorRegistry Registry;
 
