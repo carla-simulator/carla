@@ -30,6 +30,8 @@
 #include <ctime>
 #include <sstream>
 
+#define RECORDER_VERSION    (2)
+
 ACarlaRecorder::ACarlaRecorder(void)
 {
   PrimaryActorTick.TickGroup = TG_PrePhysics;
@@ -451,7 +453,7 @@ std::string ACarlaRecorder::Start(std::string Name, FString MapName, bool Additi
   }
 
   // save info
-  Info.Version = 1;
+  Info.Version = RECORDER_VERSION;
   Info.Magic = TEXT("CARLA_RECORDER");
   Info.Date = std::time(0);
   Info.Mapfile = MapName;
