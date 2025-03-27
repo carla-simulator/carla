@@ -6,11 +6,14 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
+import shutil
 from setuptools import setup, Extension
 
 import fnmatch
 import os
 import sys
+
+from distutils.command.install_lib import install_lib
 
 def is_rss_variant_enabled():
     if 'BUILD_RSS_VARIANT' in os.environ and os.environ['BUILD_RSS_VARIANT'] == 'true':
@@ -135,8 +138,8 @@ def get_libcarla_extensions():
     else:
         raise NotImplementedError
 
-    depends = [x for x in walk('source/libcarla')]
-    depends += [x for x in walk('dependencies')]
+    depends = list(walk('source/libcarla'))
+    depends += list(walk('dependencies'))
 
     def make_extension(name, sources):
 
@@ -163,11 +166,42 @@ def get_license():
 with open("README.md") as f:
     long_description = f.read()
 
+class CleanADStubFiles(install_lib):
+    """
+    Removes the ad/ files from the build directory in a normal built
+    that else would be copies over.
+    """
+    
+    CARLA_RSS_STUB_FILE = "__carla_rss.pyi"
+    _CARLA_RSS_STUB_FILE_PATH = os.path.join("carla", CARLA_RSS_STUB_FILE)
+    CARLA_AD_STUB_DIR = os.path.join("carla", "ad")
+    
+    def run(self):
+        if not is_rss_variant_enabled():
+            self.prune_rss()
+        install_lib.run(self)  # for python2 do not use super here
+        
+    def prune_rss(self):
+        """Removes files from an rss build that we do not want to be copied over to a non-rss build."""
+        if not self.build_dir:
+            return
+        print("Cleaning possible RSS files from previous build.")
+        shutil.rmtree(os.path.join(self.build_dir, self.CARLA_AD_STUB_DIR), ignore_errors=True)
+        try:
+            os.remove(os.path.join(self.build_dir, self._CARLA_RSS_STUB_FILE_PATH))
+        except OSError:
+            pass
+        return
+
 setup(
     name='carla',
     version='0.9.15',
     package_dir={'': 'source'},
-    packages=['carla'],
+    # Avoid "Package would be ignored" warning for non-rss build if using ['carla'] here
+    packages=['carla', 'carla.ad', 'carla.ad.rss', 'carla.ad.map'] if is_rss_variant_enabled() else ['carla'],
+    # For non-rss build do a fine grained include/exclude on the package data.
+    package_data={'carla' : [""]},
+    exclude_package_data={} if is_rss_variant_enabled() else {'carla':[CleanADStubFiles.CARLA_RSS_STUB_FILE]},
     ext_modules=get_libcarla_extensions(),
     license=get_license(),
     description='Python API for communicating with the CARLA server.',
@@ -176,4 +210,6 @@ setup(
     url='https://github.com/carla-simulator/carla',
     author='The CARLA team',
     author_email='carla.simulator@gmail.com',
-    include_package_data=True)
+    include_package_data=True,
+    cmdclass={'install_lib': CleanADStubFiles},
+    )
