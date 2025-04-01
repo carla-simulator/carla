@@ -55,7 +55,7 @@
       - param_name: steer
         type: float
         default: 0.0
-        doc: Scalar value between [0.0,1.0]
+        doc: Scalar value between [-1.0,1.0]
       - param_name: brake
         type: float
         default: 0.0
