@@ -8,74 +8,191 @@
 
 #include "carla/rpc/Color.h"
 #include "carla/rpc/FloatColor.h"
-
+#if __has_include(<boost/gil/pixel.hpp>)
+#include <boost/gil/pixel.hpp>
+#endif
 #include <cstdint>
 
-namespace carla {
-namespace sensor {
-namespace data {
+namespace carla::sensor::data {
 
-#pragma pack(push, 1)
-  /// A 32-bit BGRA color.
-  struct Color {
-    Color() = default;
-    Color(const Color &) = default;
+  #pragma pack(push, 1)
+  namespace detail
+  {
+    template <typename T, std::size_t N>
+    struct GenericColorData
+    {
+      union
+      {
+        T components[N];
+        struct { T x, y, z, w; };
+        struct { T r, g, b, a; };
+      };
+    };
+    
+    template <typename T>
+    struct GenericColorData<T, 1>
+    {
+      union
+      {
+        T components[1];
+        struct { T x; };
+        struct { T r; };
+      };
+    };
+    
+    template <typename T>
+    struct GenericColorData<T, 2>
+    {
+      union
+      {
+        T components[2];
+        struct { T x, y; };
+        struct { T r, g; };
+      };
+    };
+    
+    template <typename T>
+    struct GenericColorData<T, 3>
+    {
+      union
+      {
+        T components[3];
+        struct { T x, y, z; };
+        struct { T r, g, b; };
+      };
+    };
+  }
+  
+  template <typename T, std::size_t N = 3>
+  class GenericColor :
+    public detail::GenericColorData<T, N>
+  {
+    using Base = detail::GenericColorData<T, N>;
+  public:
 
-    Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255u)
-      : b(b), g(g), r(r), a(a) {}
+    static constexpr std::size_t ChannelCount = N;
 
-    Color &operator=(const Color &) = default;
+    GenericColor() = default;
+    GenericColor(const GenericColor&) = default;
+    GenericColor& operator=(const GenericColor&) = default;
+    ~GenericColor() = default;
 
-    bool operator==(const Color &rhs) const  {
-      return (r == rhs.r) && (g == rhs.g) && (b == rhs.b);
+    // Per-component initializer. Allows partial initialization (so you can initialize RG and leave B to 0).
+    template <typename... U>
+    requires (
+      sizeof...(U) <= ChannelCount &&
+      (std::is_convertible_v<U, T> && ...))
+    constexpr GenericColor(U&&... components) :
+      Base{{ T(std::forward<U>(components))... }}
+    {
+      constexpr auto M = sizeof...(U);
+      if constexpr (N != M)
+        for (auto i = M; i < N; ++i)
+          Base::components[i] = T(0);
     }
 
-    bool operator!=(const Color &rhs) const  {
-      return !(*this == rhs);
+    static constexpr auto Black()
+    {
+      return GenericColor();
     }
 
-    operator rpc::Color() const {
-      return {r, g, b};
-    }
-    operator rpc::FloatColor() const {
-      return {r/255.f, g/255.f, b/255.f, a/255.f};
+    // RPC Conversion:
+
+    rpc::Color ToRPCColor() const
+    {
+      return rpc::Color(
+        static_cast<uint8_t>(N > 0 ? Base::components[0] : T(0)),
+        static_cast<uint8_t>(N > 1 ? Base::components[1] : T(0)),
+        static_cast<uint8_t>(N > 2 ? Base::components[2] : T(0)));
     }
 
-    uint8_t b = 0u;
-    uint8_t g = 0u;
-    uint8_t r = 0u;
-    uint8_t a = 0u;
-    MSGPACK_DEFINE_ARRAY(r, g, b, a);
+    operator rpc::Color() const
+    {
+      return ToRPCColor();
+    }
+
+    rpc::FloatColor ToRPCFloatColor(bool DefaultOpaque = false) const
+    {
+      return rpc::FloatColor(
+        static_cast<float>(N > 0 ? Base::components[0] : T(0)),
+        static_cast<float>(N > 1 ? Base::components[1] : T(0)),
+        static_cast<float>(N > 2 ? Base::components[2] : T(0)),
+        static_cast<float>(N > 3 ? Base::components[3] : T(DefaultOpaque ? 1 : 0)));
+    }
+
+    operator rpc::FloatColor() const
+    {
+      return ToRPCFloatColor();
+    }
+
+    // MSGPack Helpers:
+    
+    template <typename Packer>
+    void msgpack_pack(Packer& pk) const
+    {
+      return msgpack_pack(pk, std::make_index_sequence<N>());
+    }
+
+    void msgpack_unpack(clmdep_msgpack::object const& o)
+    { 
+      return msgpack_unpack(o, std::make_index_sequence<N>());
+    }
+
+    template <typename MSGPACK_OBJECT>
+    void msgpack_object(MSGPACK_OBJECT* o, clmdep_msgpack::zone& z) const
+    { 
+      return msgpack_object(o, z, std::make_index_sequence<N>());
+    }
+  
+    template <typename Packer, std::size_t... Indices>
+    void msgpack_pack(
+      Packer& pk,
+      [[maybe_unused]] std::index_sequence<Indices...>) const
+    {
+      clmdep_msgpack::type::make_define_array(Base::components[Indices]...).msgpack_pack(pk);
+    }
+  
+    template <std::size_t... Indices>
+    void msgpack_unpack(
+      clmdep_msgpack::object const& o,
+      [[maybe_unused]] std::index_sequence<Indices...>)
+    { 
+      clmdep_msgpack::type::make_define_array(Base::components[Indices]...).msgpack_unpack(o);
+    }
+  
+    template <typename MSGPACK_OBJECT, std::size_t... Indices>
+    void msgpack_object(
+      MSGPACK_OBJECT* o,
+      clmdep_msgpack::zone& z,
+      [[maybe_unused]] std::index_sequence<Indices...>) const
+    { 
+      clmdep_msgpack::type::make_define_array(Base::components[Indices]...).msgpack_object(o, z);
+    }
   };
 #pragma pack(pop)
 
-static_assert(sizeof(Color) == sizeof(uint32_t), "Invalid color size!");
+  template <typename L, typename R, std::size_t N, std::size_t M>
+  constexpr bool operator==(GenericColor<L, N> l, GenericColor<R, M> r)
+  {
+    if constexpr (N == M)
+      return std::equal(std::begin(l), std::end(r), std::begin(r));
+    else
+      return false;
+  }
+  
+  template <typename L, typename R, std::size_t N, std::size_t M>
+  constexpr bool operator!=(GenericColor<L, N> l, GenericColor<R, M> r)
+  {
+    return !(l == r);
+  }
+  
 
-#pragma pack(push, 1)
-  /// Optical flow pixel format. 2 channel float data.
-  struct OpticalFlowPixel {
-    OpticalFlowPixel() = default;
-    OpticalFlowPixel(const OpticalFlowPixel &) = default;
+  using Color = GenericColor<uint8_t, 4>;
+  static_assert(sizeof(Color) == sizeof(uint32_t), "Invalid color size!");
 
-    OpticalFlowPixel(float x, float y)
-      : x(x), y(y) {}
+  using VectorColor = GenericColor<float, 3>;
+  static_assert(sizeof(VectorColor) == sizeof(float) * 3);
 
-    OpticalFlowPixel &operator=(const OpticalFlowPixel &) = default;
+  using OpticalFlowPixel = GenericColor<float, 2>;
 
-    bool operator==(const OpticalFlowPixel &rhs) const  {
-      return (x == rhs.x) && (y == rhs.y);
-    }
-
-    bool operator!=(const OpticalFlowPixel &rhs) const  {
-      return !(*this == rhs);
-    }
-
-    float x = 0;
-    float y = 0;
-    MSGPACK_DEFINE_ARRAY(x, y);
-  };
-#pragma pack(pop)
-
-} // namespace data
-} // namespace sensor
-} // namespace carla
+} // namespace carla::sensor::data

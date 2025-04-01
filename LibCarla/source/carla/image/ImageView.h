@@ -24,14 +24,21 @@ namespace image {
 
     template <typename DstPixelT, typename ImageT>
     static auto MakeViewFromSensorImage(ImageT &image) {
+
       using namespace boost::gil;
+
       namespace sd = carla::sensor::data;
+
       static_assert(
-          std::is_same<typename ImageT::pixel_type, sd::Color>::value,
+          std::is_same<typename ImageT::pixel_type, sd::Color>::value ||
+          std::is_same<typename ImageT::pixel_type, sd::VectorColor>::value,
           "Invalid pixel type");
+
       static_assert(
-          sizeof(sd::Color) == sizeof(DstPixelT),
+          sizeof(sd::Color) == sizeof(DstPixelT) ||
+          sizeof(sd::VectorColor) == sizeof(DstPixelT),
           "Invalid pixel size");
+
       return interleaved_view(
           image.GetWidth(),
           image.GetHeight(),
@@ -48,6 +55,10 @@ namespace image {
 
     static auto MakeView(sensor::data::ImageTmpl<sensor::data::Color> &image) {
       return MakeViewFromSensorImage<boost::gil::bgra8_pixel_t>(image);
+    }
+
+    static auto MakeView(sensor::data::ImageTmpl<sensor::data::VectorColor> &image) {
+      return MakeViewFromSensorImage<boost::gil::rgb32f_pixel_t>(image);
     }
 
     static auto MakeView(const sensor::data::ImageTmpl<sensor::data::Color> &image) {

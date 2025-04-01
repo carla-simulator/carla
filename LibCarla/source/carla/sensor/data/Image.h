@@ -22,8 +22,8 @@ namespace data {
   /// An image of 64-bit BGRA colors (16-bit channels, 2 floats)
   using OpticalFlowImage = ImageTmpl<OpticalFlowPixel>;
 
-  /// An image of 32-bit BGRA colors (8-bit channels, 4 bytes)
-  using NormalsImage = ImageTmpl<Color>;
+  /// An image of 32-bit BGRA colors (32-bit channels, 4 bytes)
+  using NormalsImage = ImageTmpl<VectorColor>;
 
 } // namespace data
 } // namespace sensor

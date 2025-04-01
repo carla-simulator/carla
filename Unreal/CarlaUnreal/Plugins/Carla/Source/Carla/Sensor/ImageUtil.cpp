@@ -358,7 +358,7 @@ namespace ImageUtil
       EPixelFormat Format,
       FIntPoint Size) -> bool
       {
-        FReadSurfaceDataFlags Flags;
+        FReadSurfaceDataFlags Flags(RCM_MinMax);
         TArray<FLinearColor> Pixels;
         Pixels.SetNum(Size.X * Size.Y);
         if (!DecodePixelsByFormat(Mapping, RowPitch, Size, Format, Flags, Pixels))

@@ -8,6 +8,11 @@
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
+static TAutoConsoleVariable<int32> CV16BitNormals(
+    TEXT("CARLA.Use16BitNormalsSensor"),
+    0,
+    TEXT("Whether to use 16-bit precision instead of 8-bit for the Normals Sensor."));
+
 FActorDefinition ANormalsCamera::GetSensorDefinition()
 {
   return UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition();
@@ -16,7 +21,7 @@ FActorDefinition ANormalsCamera::GetSensorDefinition()
 ANormalsCamera::ANormalsCamera(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
-  Enable16BitFormat(false);
+  Enable16BitFormat(CV16BitNormals.GetValueOnAnyThread() != 0);
   AddPostProcessingMaterial(
       TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
   AddPostProcessingMaterial(
@@ -32,11 +37,24 @@ void ANormalsCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float Delt
       return;
 
   auto FrameIndex = FCarlaEngine::GetFrameCounter();
-  ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
-    TArrayView<const FColor> Pixels,
-    FIntPoint Size) -> bool
+  if (Is16BitFormatEnabled())
   {
-    SendDataToClient(*this, Pixels, FrameIndex);
-    return true;
-  });
+      ImageUtil::ReadSensorImageDataAsyncFLinearColor(*this, [this, FrameIndex](
+          TArrayView<const FLinearColor> Pixels,
+          FIntPoint Size) -> bool
+          {
+              SendDataToClient(*this, Pixels, FrameIndex);
+              return true;
+          });
+  }
+  else
+  {
+      ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
+          TArrayView<const FColor> Pixels,
+          FIntPoint Size) -> bool
+          {
+              SendDataToClient(*this, Pixels, FrameIndex);
+              return true;
+          });
+  }
 }
