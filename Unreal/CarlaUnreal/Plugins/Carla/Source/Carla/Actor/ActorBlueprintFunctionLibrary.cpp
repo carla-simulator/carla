@@ -653,7 +653,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation ColorSaturation;
     ColorSaturation.Id = TEXT("color_saturation");
     ColorSaturation.Type = EActorAttributeType::RGBColor;
-    ColorSaturation.RecommendedValues = { ColorToFString(FLinearColor(0.5f, 0.5f, 0.5f).ToFColorSRGB()) };
+    ColorSaturation.RecommendedValues = { ColorToFString(FLinearColor(0.5f, 0.5f, 0.5f, 1.0f).ToFColorSRGB()) };
     ColorSaturation.bRestrictToRecommended = false;
 
     FActorVariation ColorContrast;
@@ -1572,6 +1572,7 @@ FColor UActorBlueprintFunctionLibrary::ActorAttributeToColor(
   Color.R = Colors[0u];
   Color.G = Colors[1u];
   Color.B = Colors[2u];
+  Color.A = 255u;
   return Color;
 }
 
