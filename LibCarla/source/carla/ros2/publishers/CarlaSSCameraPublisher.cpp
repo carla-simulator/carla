@@ -317,7 +317,7 @@ namespace ros2 {
     _impl->_image.header(std::move(header));
     _impl->_image.width(width);
     _impl->_image.height(height);
-    _impl->_image.encoding("bgra8"); //taken from the list of strings in include/sensor_msgs/image_encodings.h
+    _impl->_image.encoding("rgba8"); //taken from the list of strings in include/sensor_msgs/image_encodings.h
     _impl->_image.is_bigendian(0);
     _impl->_image.step(_impl->_image.width() * sizeof(uint8_t) * 4);
     _impl->_image.data(std::move(data)); //https://github.com/eProsima/Fast-DDS/issues/2330

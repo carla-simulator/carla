@@ -50,14 +50,14 @@ TEST(image, depth) {
   constexpr auto width = 256 * 256 * 256;
   constexpr auto height = 1u;
 
-  auto img_bgra8 = MakeTestImage<bgra8_pixel_t>(width, height);
+  auto img_rgba8 = MakeTestImage<rgba8_pixel_t>(width, height);
   auto img_gray8 = MakeTestImage<gray8_pixel_t>(width, height);
 
   auto depth_view = ImageView::MakeColorConvertedView(
-      img_bgra8.view,
+      img_rgba8.view,
       ColorConverter::Depth());
   auto ldepth_view = ImageView::MakeColorConvertedView(
-      img_bgra8.view,
+      img_rgba8.view,
       ColorConverter::LogarithmicDepth());
 
   auto p = *depth_view.begin();
@@ -65,34 +65,34 @@ TEST(image, depth) {
   auto lp = *ldepth_view.begin();
   static_assert(std::is_same<decltype(lp), gray8_pixel_t>::value, "Not the pixel I was looking for!");
 
-  ASSERT_EQ(depth_view.size(), img_bgra8.view.size());
-  ASSERT_EQ(ldepth_view.size(), img_bgra8.view.size());
+  ASSERT_EQ(depth_view.size(), img_rgba8.view.size());
+  ASSERT_EQ(ldepth_view.size(), img_rgba8.view.size());
 
   {
-    auto it_bgra8 = img_bgra8.view.begin();
+    auto it_rgba8 = img_rgba8.view.begin();
     auto it_gray8 = img_gray8.view.begin();
 
     for (auto r = 0u; r < 256u; ++r) {
       for (auto g = 0u; g < 256u; ++g) {
         for (auto b = 0u; b < 256u; ++b) {
-          decltype(img_bgra8)::pixel_type &p_bgra8 = *it_bgra8;
+          decltype(img_rgba8)::pixel_type &p_rgba8 = *it_rgba8;
           decltype(img_gray8)::pixel_type &p_gray8 = *it_gray8;
-          get_color(p_bgra8, red_t()) = static_cast<uint8_t>(r);
-          get_color(p_bgra8, green_t()) = static_cast<uint8_t>(g);
-          get_color(p_bgra8, blue_t()) = static_cast<uint8_t>(b);
+          get_color(p_rgba8, red_t()) = static_cast<uint8_t>(r);
+          get_color(p_rgba8, green_t()) = static_cast<uint8_t>(g);
+          get_color(p_rgba8, blue_t()) = static_cast<uint8_t>(b);
           const float depth = r + (g * 256) + (b  * 256 * 256);
           const float normalized = depth / static_cast<float>(256 * 256 * 256 - 1);
           p_gray8[0] = static_cast<uint8_t>(255.0 * normalized);
 
-          ++it_bgra8;
+          ++it_rgba8;
           ++it_gray8;
         }
       }
     }
   }
 
-  auto img_copy = MakeTestImage<bgra8_pixel_t>(width, height);
-  ImageConverter::CopyPixels(img_bgra8.view, img_copy.view);
+  auto img_copy = MakeTestImage<rgba8_pixel_t>(width, height);
+  ImageConverter::CopyPixels(img_rgba8.view, img_copy.view);
   ImageConverter::ConvertInPlace(img_copy.view, ColorConverter::LogarithmicDepth());
 
   {
@@ -128,39 +128,39 @@ TEST(image, semantic_segmentation) {
   constexpr auto width = CityScapesPalette::GetNumberOfTags();
   constexpr auto height = 1u;
 
-  auto img_bgra8 = MakeTestImage<bgra8_pixel_t>(width, height);
+  auto img_rgba8 = MakeTestImage<rgba8_pixel_t>(width, height);
   auto img_ss = MakeTestImage<rgb8_pixel_t>(width, height);
 
   auto semseg_view = ImageView::MakeColorConvertedView(
-      img_bgra8.view,
+      img_rgba8.view,
       ColorConverter::CityScapesPalette());
 
   auto p = *semseg_view.begin();
-  static_assert(std::is_same<decltype(p), bgra8_pixel_t>::value, "Not the pixel I was looking for!");
+  static_assert(std::is_same<decltype(p), rgba8_pixel_t>::value, "Not the pixel I was looking for!");
 
-  ASSERT_EQ(semseg_view.size(), img_bgra8.view.size());
+  ASSERT_EQ(semseg_view.size(), img_rgba8.view.size());
 
   {
-    auto it_bgra8 = img_bgra8.view.begin();
+    auto it_rgba8 = img_rgba8.view.begin();
     auto it_ss = img_ss.view.begin();
 
     for (auto tag = 0u; tag < width; ++tag) {
-      decltype(img_bgra8)::pixel_type &p_bgra8 = *it_bgra8;
-      get_color(p_bgra8, red_t()) = static_cast<uint8_t>(tag);
-      get_color(p_bgra8, green_t()) = 0u;
-      get_color(p_bgra8, blue_t()) = 0u;
+      decltype(img_rgba8)::pixel_type &p_rgba8 = *it_rgba8;
+      get_color(p_rgba8, red_t()) = static_cast<uint8_t>(tag);
+      get_color(p_rgba8, green_t()) = 0u;
+      get_color(p_rgba8, blue_t()) = 0u;
       decltype(img_ss)::pixel_type &p_ss = *it_ss;
       auto color = CityScapesPalette::GetColor(static_cast<uint8_t>(tag));
       get_color(p_ss, red_t()) =  color[0u];
       get_color(p_ss, green_t()) = color[1u];
       get_color(p_ss, blue_t()) = color[2u];
-      ++it_bgra8;
+      ++it_rgba8;
       ++it_ss;
     }
   }
 
   auto img_copy = MakeTestImage<rgba8_pixel_t>(width, height);
-  ImageConverter::CopyPixels(img_bgra8.view, img_copy.view);
+  ImageConverter::CopyPixels(img_rgba8.view, img_copy.view);
   ImageConverter::ConvertInPlace(img_copy.view, ColorConverter::CityScapesPalette());
 
   {

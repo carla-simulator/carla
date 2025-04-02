@@ -679,7 +679,7 @@ void ASceneCaptureSensor::BeginPlay()
   CaptureRenderTarget->InitCustomFormat(
       ImageWidth,
       ImageHeight,
-      bEnable16BitFormat ? PF_FloatRGBA : PF_B8G8R8A8,
+      bEnable16BitFormat ? PF_FloatRGBA : PF_R8G8B8A8,
       bInForceLinearGamma);
 
   if (bEnablePostProcessingEffects)
@@ -803,7 +803,6 @@ void ASceneCaptureSensor::CaptureSceneExtended()
 
     if (GBufferPtr->DesiredTexturesMask == 0)
     {
-        // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
         CaptureComponent2D->CaptureScene();
         return;
     }

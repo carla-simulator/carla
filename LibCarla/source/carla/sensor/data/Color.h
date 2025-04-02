@@ -168,30 +168,30 @@ namespace carla::sensor::data {
     { 
       clmdep_msgpack::type::make_define_array(Base::components[Indices]...).msgpack_object(o, z);
     }
+
+    constexpr bool operator==(GenericColor other)
+    {
+      return std::equal(
+        std::begin(Base::components),
+        std::end(Base::components),
+        std::begin(other.components));
+    }
+    
+    constexpr bool operator!=(GenericColor other)
+    {
+      return !(*this == other);
+    }
+
   };
 #pragma pack(pop)
+  
 
-  template <typename L, typename R, std::size_t N, std::size_t M>
-  constexpr bool operator==(GenericColor<L, N> l, GenericColor<R, M> r)
-  {
-    if constexpr (N == M)
-      return std::equal(std::begin(l), std::end(r), std::begin(r));
-    else
-      return false;
-  }
-  
-  template <typename L, typename R, std::size_t N, std::size_t M>
-  constexpr bool operator!=(GenericColor<L, N> l, GenericColor<R, M> r)
-  {
-    return !(l == r);
-  }
-  
 
   using Color = GenericColor<uint8_t, 4>;
   static_assert(sizeof(Color) == sizeof(uint32_t), "Invalid color size!");
 
-  using VectorColor = GenericColor<float, 3>;
-  static_assert(sizeof(VectorColor) == sizeof(float) * 3);
+  using VectorColor = GenericColor<float, 4>;
+  static_assert(sizeof(VectorColor) == sizeof(float) * 4);
 
   using OpticalFlowPixel = GenericColor<float, 2>;
 

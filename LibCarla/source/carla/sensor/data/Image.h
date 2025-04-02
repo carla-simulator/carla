@@ -13,16 +13,16 @@ namespace carla {
 namespace sensor {
 namespace data {
 
-  /// An image of 32-bit BGRA colors (8-bit channels, 4 bytes)
+  /// An image of 32-bit RGBA colors (8-bit channels, 4 bytes)
   using Image = ImageTmpl<Color>;
   
-  /// An image of float BGRA colors (32-bit channels)
+  /// An image of float RGBA colors (32-bit channels)
   using FloatImage = ImageTmpl<rpc::FloatColor>;
 
-  /// An image of 64-bit BGRA colors (16-bit channels, 2 floats)
+  /// An image of 64-bit RGBA colors (16-bit channels, 2 floats)
   using OpticalFlowImage = ImageTmpl<OpticalFlowPixel>;
 
-  /// An image of 32-bit BGRA colors (32-bit channels, 4 bytes)
+  /// An image of 32-bit RGBA colors (32-bit channels, 4 bytes)
   using NormalsImage = ImageTmpl<VectorColor>;
 
 } // namespace data

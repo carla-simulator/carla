@@ -125,7 +125,7 @@ carla_option (
 carla_string_option (
   LIBCARLA_IMAGE_SUPPORTED_FORMATS
   "Semicolon-separated list of supported image formats by LibCarla. Available formats: png, jpeg, tiff."
-  "png"
+  "png;tiff"
 )
 
 carla_option (
@@ -294,6 +294,20 @@ carla_string_option (
   CARLA_LIBPNG_TAG
   "Target libpng git tag."
   v${CARLA_LIBPNG_VERSION}
+)
+
+# ==== LIBTIFF ====
+
+carla_string_option (
+  CARLA_LIBTIFF_VERSION
+  "Target libtiff version."
+  4.7.0
+)
+
+carla_string_option (
+  CARLA_LIBTIFF_TAG
+  "Target libtiff git tag."
+  v${CARLA_LIBTIFF_VERSION}
 )
 
 # ==== PROJ ====

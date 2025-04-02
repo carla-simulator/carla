@@ -117,6 +117,11 @@ else ()
 endif ()
 carla_dependency_option (ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
 carla_dependency_option (ZLIB_LIBRARIES ${ZLIB_LIBRARY})
+carla_dependency_option (ZLIB_VERSION ${CARLA_ZLIB_VERSION})
+carla_dependency_option (ZLIB_FOUND TRUE)
+add_library (
+  ZLIB::ZLIB ALIAS zlibstatic
+)
 
 
 
@@ -141,6 +146,21 @@ include_directories (
   ${libpng_SOURCE_DIR}
   ${libpng_BINARY_DIR}
 ) # @TODO HACK
+
+
+
+carla_dependency_option (tiff-tools OFF)
+carla_dependency_option (tiff-tests OFF)
+carla_dependency_option (tiff-contrib OFF)
+carla_dependency_option (tiff-deprecated OFF)
+carla_dependency_option (tiff-install OFF)
+carla_dependency_add (
+  libtiff
+  ${CARLA_LIBTIFF_TAG}
+  https://gitlab.com/libtiff/libtiff/-/archive/${CARLA_LIBTIFF_TAG}/libtiff-${CARLA_LIBTIFF_TAG}.zip
+  https://gitlab.com/libtiff/libtiff.git
+)
+carla_dependencies_make_available ()
 
 
 

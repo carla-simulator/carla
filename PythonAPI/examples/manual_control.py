@@ -290,7 +290,7 @@ class World(object):
                 print('Please add some Vehicle Spawn Point to your UE5 scene.')
                 sys.exit(1)
             spawn_points = self.map.get_spawn_points()
-            spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
+            spawn_point = spawn_points[5]
             self.player = self.world.try_spawn_actor(blueprint, spawn_point)
             self.show_vehicle_telemetry = False
             self.modify_vehicle_physics(self.player)
@@ -1232,20 +1232,34 @@ class CameraManager(object):
             self.surface = pygame.surfarray.make_surface(lidar_img)
         elif self.sensors[self.index][0].startswith('sensor.camera.optical_flow'):
             image = image.get_color_coded_flow()
-            array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
+            array = np.frombuffer(image.raw_data, dtype=np.uint8)
             array = np.reshape(array, (image.height, image.width, 4))
             array = array[:, :, :3]
             array = array[:, :, ::-1]
             self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
         else:
             image.convert(self.sensors[self.index][1])
-            array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
-            array = np.reshape(array, (image.height, image.width, 4))
+            array = None
+            ext = '.png'
+            try:
+                array = np.frombuffer(image.raw_data, dtype=np.uint8)
+                array = np.reshape(array, (image.height, image.width, 4))
+            except:
+                try:
+                    array = np.frombuffer(image.raw_data, dtype=np.uint16)
+                    array = np.reshape(array, (image.height, image.width, 4))
+                except:
+                    try:
+                        array = np.frombuffer(image.raw_data, dtype=np.uint32)
+                        array = np.reshape(array, (image.height, image.width, 4))
+                        ext = '.tiff'
+                    except Exception as e:
+                        raise e
             array = array[:, :, :3]
             array = array[:, :, ::-1]
             self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
         if self.recording:
-            image.save_to_disk('_out/%08d' % image.frame)
+            image.save_to_disk(f'_out/%08d{ext}' % image.frame)
 
 
 # ==============================================================================

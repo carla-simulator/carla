@@ -54,15 +54,16 @@ namespace image {
     }
 
     static auto MakeView(sensor::data::ImageTmpl<sensor::data::Color> &image) {
-      return MakeViewFromSensorImage<boost::gil::bgra8_pixel_t>(image);
-    }
-
-    static auto MakeView(sensor::data::ImageTmpl<sensor::data::VectorColor> &image) {
-      return MakeViewFromSensorImage<boost::gil::rgb32f_pixel_t>(image);
+      return MakeViewFromSensorImage<boost::gil::rgba8_pixel_t>(image);
     }
 
     static auto MakeView(const sensor::data::ImageTmpl<sensor::data::Color> &image) {
-      return MakeViewFromSensorImage<boost::gil::bgra8c_pixel_t>(image);
+      return MakeViewFromSensorImage<boost::gil::rgba8c_pixel_t>(image);
+    }
+
+    static auto MakeView(sensor::data::ImageTmpl<sensor::data::VectorColor> &image) {
+      puts("Saving rgba32f_pixel_t image.");
+      return MakeViewFromSensorImage<boost::gil::rgba32f_pixel_t>(image);
     }
 
     template <typename SrcViewT, typename DstPixelT, typename CC>

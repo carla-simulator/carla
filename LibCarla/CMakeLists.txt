@@ -196,7 +196,7 @@ if (BUILD_CARLA_SERVER)
   )
 
   target_link_libraries (
-    carla-server PUBLIC SYSTEM
+    carla-server PUBLIC
     Boost::asio
     Boost::geometry
     Boost::algorithm
@@ -205,10 +205,23 @@ if (BUILD_CARLA_SERVER)
     RecastNavigation::Recast
     RecastNavigation::Detour
     RecastNavigation::DetourCrowd
-    png_static
-    zlibstatic
     rpc
   )
+
+  foreach (FORMAT ${LIBCARLA_IMAGE_SUPPORTED_FORMATS})
+    if (${FORMAT} STREQUAL "png")
+      target_link_libraries (
+        carla-server PUBLIC
+        png_static
+        zlibstatic
+      )
+    elseif (${FORMAT} STREQUAL "tiff")
+      target_link_libraries (
+        carla-server PUBLIC
+        tiff
+      )
+    endif ()
+  endforeach ()
   
   target_include_directories (
     carla-server PUBLIC
@@ -361,10 +374,23 @@ if (BUILD_CARLA_CLIENT)
     RecastNavigation::Recast
     RecastNavigation::Detour
     RecastNavigation::DetourCrowd
-    png_static
-    zlibstatic
     rpc
   )
+  
+  foreach (FORMAT ${LIBCARLA_IMAGE_SUPPORTED_FORMATS})
+    if (${FORMAT} STREQUAL "png")
+      target_link_libraries (
+        carla-client PUBLIC
+        png_static
+        zlibstatic
+      )
+    elseif (${FORMAT} STREQUAL "tiff")
+      target_link_libraries (
+        carla-client PUBLIC
+        tiff
+      )
+    endif ()
+  endforeach ()
   
   target_include_directories (
     carla-client PUBLIC

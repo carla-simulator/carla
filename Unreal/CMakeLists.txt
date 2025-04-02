@@ -76,10 +76,25 @@ set (
   Boost::geometry
   Boost::gil
   Eigen3::Eigen
-  zlibstatic
-  png_static
   rpc
 )
+
+foreach (FORMAT ${LIBCARLA_IMAGE_SUPPORTED_FORMATS})
+  if (${FORMAT} STREQUAL "png")
+    list (
+      APPEND
+      UE_DEPENDENCIES
+      png_static
+      zlibstatic
+    )
+  elseif (${FORMAT} STREQUAL "tiff")
+    list (
+      APPEND
+      UE_DEPENDENCIES
+      tiff
+    )
+  endif ()
+endforeach ()
 
 set (UE_DEPENDENCIES_ORDER_ONLY ${UE_DEPENDENCIES})
 

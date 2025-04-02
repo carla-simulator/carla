@@ -404,6 +404,24 @@ void export_sensor_data() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<csd::NormalsImage, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::NormalsImage>>("NormalsImage", no_init)
+    .add_property("width", &csd::NormalsImage::GetWidth)
+    .add_property("height", &csd::NormalsImage::GetHeight)
+    .add_property("fov", &csd::NormalsImage::GetFOVAngle)
+    .add_property("raw_data", &GetRawDataAsBuffer<csd::NormalsImage>)
+    .def("convert", &ConvertImage<csd::NormalsImage>, (arg("color_converter")))
+    // .def("save_to_disk", &SaveImageToDisk<csd::NormalsImage>, (arg("path"), arg("color_converter")=EColorConverter::Raw))
+    .def("__len__", &csd::NormalsImage::size)
+    .def("__iter__", iterator<csd::NormalsImage>())
+    .def("__getitem__", +[](const csd::NormalsImage &self, size_t pos) -> csd::VectorColor {
+      return self.at(pos);
+    })
+    .def("__setitem__", +[](csd::NormalsImage &self, size_t pos, csd::VectorColor color) {
+      self.at(pos) = color;
+    })
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<csd::OpticalFlowImage, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::OpticalFlowImage>>("OpticalFlowImage", no_init)
     .add_property("width", &csd::OpticalFlowImage::GetWidth)
     .add_property("height", &csd::OpticalFlowImage::GetHeight)

@@ -12,8 +12,6 @@ set (
   PYTHON_API_DEPENDENCIES
   carla-client
   rpc
-  png_static
-  zlibstatic
   Boost::asio
   Boost::python
   Boost::geometry
@@ -22,6 +20,23 @@ set (
   RecastNavigation::Detour
   RecastNavigation::DetourCrowd
 )
+
+foreach (FORMAT ${LIBCARLA_IMAGE_SUPPORTED_FORMATS})
+  if (${FORMAT} STREQUAL "png")
+    list (
+      APPEND
+      PYTHON_API_DEPENDENCIES
+      png_static
+      zlibstatic
+    )
+  elseif (${FORMAT} STREQUAL "tiff")
+    list (
+      APPEND
+      PYTHON_API_DEPENDENCIES
+      tiff
+    )
+  endif ()
+endforeach ()
 
 get_target_property (
   Boost_asio_TARGET_NAME

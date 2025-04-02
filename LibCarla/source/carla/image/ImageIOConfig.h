@@ -11,6 +11,8 @@
 #include "carla/StringUtil.h"
 #include "carla/image/BoostGil.h"
 
+#include <string_view>
+
 #ifndef LIBCARLA_IMAGE_SUPPORT_PNG
   #define LIBCARLA_IMAGE_SUPPORT_PNG false
 #endif
@@ -46,11 +48,11 @@
 #  endif
 #endif
 
-#if LIBCARLA_IMAGE_WITH_JPEG_SUPPORT
+#if LIBCARLA_IMAGE_SUPPORT_JPEG
 #  include <boost/gil/extension/io/jpeg.hpp>
 #endif
 
-#if LIBCARLA_IMAGE_WITH_TIFF_SUPPORT
+#if LIBCARLA_IMAGE_SUPPORT_TIFF
 #  include <boost/gil/extension/io/tiff.hpp>
 #endif
 
@@ -58,9 +60,7 @@
 #  pragma clang diagnostic pop
 #endif
 
-namespace carla {
-namespace image {
-namespace io {
+namespace carla::image::io {
 
   constexpr bool has_png_support() {
     return LIBCARLA_IMAGE_SUPPORT_PNG;
@@ -83,33 +83,42 @@ namespace io {
 
 namespace detail {
 
-  template <typename ViewT, typename IOTag>
-  struct is_write_supported {
-    static constexpr bool value = boost::gil::is_write_supported<typename boost::gil::get_pixel_type<ViewT>::type, IOTag>::value;
-  };
+  template <typename ViewType, typename IOTag>
+  constexpr bool is_write_supported = boost::gil::is_write_supported<
+    typename boost::gil::get_pixel_type<ViewType>::type,
+    IOTag>::value;
 
+  template <typename ViewType, typename IOTag>
+  constexpr bool is_read_supported = boost::gil::is_read_supported<
+    typename boost::gil::get_pixel_type<ViewType>::type,
+    IOTag>::value;
+  
   struct io_png {
 
     static constexpr bool is_supported = has_png_support();
 
 #if LIBCARLA_IMAGE_SUPPORT_PNG
 
-    static constexpr const char *get_default_extension() {
-      return "png";
+    using io_tag = boost::gil::png_tag;
+
+    static constexpr std::string_view get_default_extension() {
+      return ".png";
     }
 
     template <typename Str>
-    static bool match_extension(const Str &str) {
-      return StringUtil::EndsWith(str, get_default_extension());
+    static bool match_extension(Str&& str) {
+      auto sv = std::string_view(str);
+      return sv.ends_with(get_default_extension());
     }
 
     template <typename Str, typename ImageT>
-    static void read_image(Str &&in_filename, ImageT &image) {
+    static void read_image(Str&& in_filename, ImageT &image) {
       boost::gil::read_and_convert_image(std::forward<Str>(in_filename), image, boost::gil::png_tag());
     }
 
     template <typename Str, typename ViewT>
-    static void write_view(Str &&out_filename, const ViewT &view) {
+    requires (is_write_supported<ViewT, boost::gil::png_tag>)
+    static void write_view(Str&& out_filename, const ViewT &view) {
       boost::gil::write_view(std::forward<Str>(out_filename), view, boost::gil::png_tag());
     }
 
@@ -122,14 +131,17 @@ namespace detail {
 
 #if LIBCARLA_IMAGE_WITH_JPEG_SUPPORT
 
-    static constexpr const char *get_default_extension() {
-      return "jpeg";
+    using io_tag = boost::gil::jpeg_tag;
+
+    static constexpr std::string_view get_default_extension() {
+      return ".jpeg";
     }
 
     template <typename Str>
-    static bool match_extension(const Str &str) {
-      return StringUtil::EndsWith(str, get_default_extension()) ||
-             StringUtil::EndsWith(str, "jpg");
+    static bool match_extension(Str&& str) {
+      auto sv = std::string_view(str);
+      return sv.ends_with(get_default_extension()) ||
+             sv.ends_with("jpg");
     }
 
     template <typename Str, typename ImageT>
@@ -138,14 +150,14 @@ namespace detail {
     }
 
     template <typename Str, typename ViewT>
-    static typename std::enable_if<is_write_supported<ViewT, boost::gil::jpeg_tag>::value>::type
-    write_view(Str &&out_filename, const ViewT &view) {
+    requires (is_write_supported<ViewT, boost::gil::jpeg_tag>)
+    static void write_view(Str &&out_filename, const ViewT &view) {
       boost::gil::write_view(std::forward<Str>(out_filename), view, boost::gil::jpeg_tag());
     }
 
     template <typename Str, typename ViewT>
-    static typename std::enable_if<!is_write_supported<ViewT, boost::gil::jpeg_tag>::value>::type
-    write_view(Str &&out_filename, const ViewT &view) {
+    requires (!is_write_supported<ViewT, boost::gil::jpeg_tag>)
+    static void write_view(Str &&out_filename, const ViewT &view) {
       boost::gil::write_view(
           std::forward<Str>(out_filename),
           boost::gil::color_converted_view<boost::gil::rgb8_pixel_t>(view),
@@ -161,13 +173,16 @@ namespace detail {
 
 #if LIBCARLA_IMAGE_SUPPORT_TIFF
 
-    static constexpr const char *get_default_extension() {
-      return "tiff";
+    using io_tag = boost::gil::tiff_tag;
+
+    static constexpr std::string_view get_default_extension() {
+      return ".tiff";
     }
 
     template <typename Str>
     static bool match_extension(const Str &str) {
-      return StringUtil::EndsWith(str, get_default_extension());
+      auto sv = std::string_view(str);
+      return sv.ends_with(get_default_extension());
     }
 
     template <typename Str, typename ImageT>
@@ -176,14 +191,14 @@ namespace detail {
     }
 
     template <typename Str, typename ViewT>
-    static typename std::enable_if<is_write_supported<ViewT, boost::gil::tiff_tag>::value>::type
-    write_view(Str &&out_filename, const ViewT &view) {
+    requires (is_write_supported<ViewT, boost::gil::tiff_tag>)
+    static void write_view(Str &&out_filename, const ViewT &view) {
       boost::gil::write_view(std::forward<Str>(out_filename), view, boost::gil::tiff_tag());
     }
 
     template <typename Str, typename ViewT>
-    static typename std::enable_if<!is_write_supported<ViewT, boost::gil::tiff_tag>::value>::type
-    write_view(Str &&out_filename, const ViewT &view) {
+    requires (!is_write_supported<ViewT, boost::gil::tiff_tag>)
+    static void write_view(Str &&out_filename, const ViewT &view) {
       boost::gil::write_view(
           std::forward<Str>(out_filename),
           boost::gil::color_converted_view<boost::gil::rgb8_pixel_t>(view),
@@ -196,121 +211,154 @@ namespace detail {
   struct io_resolver {
 
     template <typename IO, typename Str>
-    static typename std::enable_if<IO::is_supported, bool>::type match_extension(const Str &str) {
-      return IO::match_extension(str);
-    }
-
-    template <typename IO, typename Str>
-    static typename std::enable_if<!IO::is_supported, bool>::type match_extension(const Str &) {
-      return false;
+    static bool match_extension(const Str &str) {
+      if constexpr (IO::is_supported)
+        return IO::match_extension(str);
+      else
+        return false;
     }
 
     template <typename IO, typename Str, typename... Args>
-    static typename std::enable_if<IO::is_supported>::type read_image(const Str &path, Args &&... args) {
+    requires (IO::is_supported)
+    static void read_image(const Str &path, Args &&... args) {
       log_debug("reading", path, "as", IO::get_default_extension());
       IO::read_image(path, std::forward<Args>(args)...);
     }
 
     template <typename IO, typename... Args>
-    static typename std::enable_if<!IO::is_supported>::type read_image(Args &&...) {
+    requires (!IO::is_supported)
+    static void read_image(Args &&...) {
       DEBUG_ASSERT(false);
     }
 
     template <typename IO, typename... Args>
-    static typename std::enable_if<IO::is_supported>::type write_view(std::string &path, Args &&... args) {
+    requires (IO::is_supported)
+    static void write_view(std::string &path, Args &&... args) {
       FileSystem::ValidateFilePath(path, IO::get_default_extension());
       log_debug("writing", path, "as", IO::get_default_extension());
       IO::write_view(path, std::forward<Args>(args)...);
     }
 
     template <typename IO, typename... Args>
-    static typename std::enable_if<!IO::is_supported>::type write_view(Args &&...) {
+    requires (!IO::is_supported)
+    static void write_view(Args &&...) {
       DEBUG_ASSERT(false);
     }
   };
 
   template <typename... IOs>
-  struct io_impl;
-
-  template <typename IO>
-  struct io_impl<IO> {
-    constexpr static bool is_supported = IO::is_supported;
-
-    template <typename... Args>
-    static void read_image(Args &&... args) {
-      io_resolver::read_image<IO>(std::forward<Args>(args)...);
+  class io_implementation
+  {
+    template <typename F>
+    static constexpr void io_foreach_with_break(F&& callback)
+    {
+      bool done = false;
+      ([&]()
+      {
+        if (!done)
+          done = callback(IOs());
+      }(), ...);
     }
 
-    template <typename... Args>
-    static void write_view(Args &&... args) {
-      io_resolver::write_view<IO>(std::forward<Args>(args)...);
-    }
-
-    template <typename Str, typename... Args>
-    static bool try_read_image(const Str &filename, Args &&... args) {
-      if (io_resolver::match_extension<IO>(filename)) {
-        io_resolver::read_image<IO>(filename, std::forward<Args>(args)...);
-        return true;
-      }
-      return false;
-    }
-
-    template <typename Str, typename... Args>
-    static bool try_write_view(Str &filename, Args &&... args) {
-      if (io_resolver::match_extension<IO>(filename)) {
-        io_resolver::write_view<IO>(filename, std::forward<Args>(args)...);
-        return true;
-      }
-      return false;
-    }
-  };
-
-  template <typename IO, typename... IOs>
-  struct io_impl<IO, IOs...> {
-  private:
-    using self = io_impl<IO>;
-    using recursive = io_impl<IOs...>;
   public:
 
-    constexpr static bool is_supported = self::is_supported || recursive::is_supported;
-
-    template <typename... Args>
-    static void read_image(Args &... args) {
-      if (!recursive::try_read_image(args...)) {
-        self::read_image(args...);
-      }
+    static constexpr bool is_supported = (IOs::is_supported || ...);
+    
+    template <typename S, typename V, typename... T>
+    static void try_read_image(S&& filename, V&& view, T&&... args)
+    {
+      using ViewType = std::remove_cvref_t<V>;
+      io_foreach_with_break([&](auto io)
+      {
+        using IO = decltype(io);
+        if constexpr (IO::is_supported)
+        {
+          if constexpr (is_read_supported<ViewType, typename IO::io_tag>)
+          {
+            if (io_resolver::match_extension<IO>(filename))
+            {
+              io_resolver::read_image<IO>(std::forward<S>(filename), std::forward<V>(view), std::forward<T>(args)...);
+              return true;
+            }
+          }
+        }
+        return false;
+      });
     }
 
-    template <typename... Args>
-    static bool try_read_image(Args &... args) {
-      return recursive::try_read_image(args...) || self::try_read_image(args...);
+    template <typename V, typename... T>
+    static void read_image(V&& view, T&&... args)
+    {
+      using ViewType = std::remove_cvref_t<V>;
+      io_foreach_with_break([&](auto io)
+      {
+        using IO = decltype(io);
+        if constexpr (IO::is_supported)
+        {
+          if constexpr (is_read_supported<ViewType, typename IO::io_tag>)
+          {
+            io_resolver::read_image<IO>(std::forward<V>(view), std::forward<T>(args)...);
+            return true;
+          }
+        }
+        return false;
+      });
     }
-
-    template <typename... Args>
-    static void write_view(Args &... args) {
-      if (!recursive::try_write_view(args...)) {
-        self::write_view(args...);
-      }
+    
+    template <typename S, typename V, typename... T>
+    static void try_write_view(S&& filename, V&& view, T&&... args)
+    {
+      using ViewType = std::remove_cvref_t<V>;
+      io_foreach_with_break([&](auto io)
+      {
+        using IO = decltype(io);
+        if constexpr (IO::is_supported)
+        {
+          if constexpr (is_write_supported<ViewType, typename IO::io_tag>)
+          {
+            if (io_resolver::match_extension<IO>(filename))
+            {
+              io_resolver::write_view<IO>(std::forward<S>(filename), std::forward<V>(view), std::forward<T>(args)...);
+              return true;
+            }
+          }
+        }
+        return false;
+      });
     }
-
-    template <typename... Args>
-    static bool try_write_view(Args &... args) {
-      return recursive::try_write_view(args...) || self::try_write_view(args...);
+    
+    template <typename V, typename... T>
+    static void write_view(V&& view, T&&... args)
+    {
+      using ViewType = std::remove_cvref_t<V>;
+      io_foreach_with_break([&](auto io)
+      {
+        using IO = decltype(io);
+        if constexpr (IO::is_supported)
+        {
+          if constexpr (is_write_supported<ViewType, typename IO::io_tag>)
+          {
+            io_resolver::write_view<IO>(std::forward<V>(view), std::forward<T>(args)...);
+            return true;
+          }
+        }
+        return false;
+      });
     }
   };
 
   template <typename DefaultIO, typename... IOs>
-  struct io_any : detail::io_impl<DefaultIO, IOs...> {
+  struct io_any : detail::io_implementation<DefaultIO, IOs...> {
     static_assert(DefaultIO::is_supported, "Default IO needs to be supported.");
   };
 
 } // namespace detail
 
-  struct png : detail::io_impl<detail::io_png> {};
+  struct png : detail::io_implementation<detail::io_png> {};
 
-  struct jpeg : detail::io_impl<detail::io_jpeg> {};
+  struct jpeg : detail::io_implementation<detail::io_jpeg> {};
 
-  struct tiff : detail::io_impl<detail::io_tiff> {};
+  struct tiff : detail::io_implementation<detail::io_tiff> {};
 
 #if LIBCARLA_IMAGE_SUPPORT_PNG
 
@@ -326,6 +374,4 @@ namespace detail {
 
 #endif
 
-} // namespace io
-} // namespace image
-} // namespace carla
+} // namespace carla::image::io

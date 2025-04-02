@@ -320,8 +320,8 @@ namespace carla {
 
     /// @copydoc copy_from(size_type, const Buffer &)
     template <typename T>
-    typename std::enable_if<boost::asio::is_const_buffer_sequence<T>::value>::type
-    copy_from(size_type offset, const T &source) {
+    requires (boost::asio::is_const_buffer_sequence<T>::value)
+    void copy_from(size_type offset, const T &source) {
       reset(boost::asio::buffer_size(source) + offset);
       DEBUG_ASSERT(boost::asio::buffer_size(source) == size() - offset);
       DEBUG_ONLY(auto bytes_copied = )
@@ -331,8 +331,8 @@ namespace carla {
 
     /// @copydoc copy_from(size_type, const Buffer &)
     template <typename T>
-    typename std::enable_if<!boost::asio::is_const_buffer_sequence<T>::value>::type
-    copy_from(size_type offset, const T &source) {
+    requires (!boost::asio::is_const_buffer_sequence<T>::value)
+    void copy_from(size_type offset, const T &source) {
       copy_from(offset, boost::asio::buffer(source));
     }
 
