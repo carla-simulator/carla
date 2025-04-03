@@ -1,5 +1,8 @@
 #! /bin/bash
 
+# Measure overall execution time of packaging
+T_START_OVERALL=$(date +%s)
+
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
@@ -105,6 +108,9 @@ log "Packaging version '${REPOSITORY_TAG}' (${PACKAGE_CONFIG})."
 # -- Helper functions --------------------------------------------------------
 # ============================================================================
 function cook_tagged_materials {
+  # Measure duration of this function call
+  T_START_COOK_TAGGED_MATS=$(date +%s)
+
   CUR_PACKAGE=$1
   RESULT_BUILD_FOLDER=$2
   SOURCE_REGISTRIES_FOLDER=${CARLAUE4_PLUGIN_ROOT_FOLDER}/Content/PostProcessingMaterials/TaggedMaterials
@@ -138,12 +144,17 @@ function cook_tagged_materials {
     rm -Rf ${TEMP_BUILD_FOLDER}
     rm -f ${SOURCE_REGISTRIES_FOLDER}/TaggedMaterials_${CUR_PACKAGE}*
   fi
+
+  T_END_COOK_TAGGED_MATS=$(date +%s)
+  ELAPSED_TIME=$((T_END_COOK_TAGGED_MATS - T_START_COOK_TAGGED_MATS))
+  log "Generating and cooking of TaggedMaterialsRegistry for package '${CUR_PACKAGE}' took ${ELAPSED_TIME} seconds."
 }
 
 # ==============================================================================
 # -- Cook CARLA project --------------------------------------------------------
 # ==============================================================================
 
+T_START_DO_PACKAGE=$(date +%s)
 if ${DO_CARLA_RELEASE} ; then
 
   pushd "${CARLAUE4_ROOT_FOLDER}" >/dev/null
@@ -177,11 +188,15 @@ if ${DO_CARLA_RELEASE} ; then
   fi
 
 fi
+T_END_DO_PACKAGE=$(date +%s)
+ELAPSED_TIME=$((T_END_DO_PACKAGE - T_END_DO_PACKAGE))
+if ${DO_CARLA_RELEASE}; then log "Building and cooking Carla took ${ELAPSED_TIME} seconds."; fi
 
 # ==============================================================================
 # -- Copy files (Python API, README, etc) --------------------------------------
 # ==============================================================================
 
+T_START_DO_COPY_FILES=$(date +%s)
 if ${DO_CARLA_RELEASE} ; then
 
   DESTINATION=${RELEASE_BUILD_FOLDER}/LinuxNoEditor
@@ -232,11 +247,15 @@ if ${DO_CARLA_RELEASE} ; then
   popd >/dev/null
 
 fi
+T_END_DO_COPY_FILES=$(date +%s)
+ELAPSED_TIME=$((T_END_DO_COPY_FILES - T_END_DO_COPY_FILES))
+if ${DO_CARLA_RELEASE}; then log "Copying extra files to package Carla took ${ELAPSED_TIME} seconds."; fi
 
 # ==============================================================================
 # -- Zip the project -----------------------------------------------------------
 # ==============================================================================
 
+T_START_DO_TARBALL=$(date +%s)
 if ${DO_CARLA_RELEASE} && ${DO_TARBALL} ; then
 
   DESTINATION=${RELEASE_PACKAGE_PATH}
@@ -256,11 +275,15 @@ if ${DO_CARLA_RELEASE} && ${DO_TARBALL} ; then
   popd >/dev/null
 
 fi
+T_END_DO_TARBALL=$(date +%s)
+ELAPSED_TIME=$((T_END_DO_TARBALL - T_START_DO_CLEAN))
+if ${DO_CARLA_RELEASE} && ${DO_TARBALL}; then log "Archiving and compressing the project took ${ELAPSED_TIME} seconds."; fi
 
 # ==============================================================================
 # -- Remove intermediate files -------------------------------------------------
 # ==============================================================================
 
+T_START_DO_CLEAN=$(date +%s)
 if ${DO_CARLA_RELEASE} && ${DO_CLEAN_INTERMEDIATE} ; then
 
   log "Removing intermediate build."
@@ -268,15 +291,21 @@ if ${DO_CARLA_RELEASE} && ${DO_CLEAN_INTERMEDIATE} ; then
   rm -Rf ${RELEASE_BUILD_FOLDER}
 
 fi
+T_END_DO_CLEAN=$(date +%s)
+ELAPSED_TIME=$((T_END_DO_CLEAN - T_START_DO_CLEAN))
+if ${DO_CARLA_RELEASE} && ${DO_CLEAN_INTERMEDIATE}; then log "Cleaning up took ${ELAPSED_TIME} seconds."; fi
 
 # ==============================================================================
 # -- Cook other packages -------------------------------------------------------
 # ==============================================================================
 
+T_START_PACKAGES=$(date +%s)
+
 PACKAGE_PATH_FILE=${CARLAUE4_ROOT_FOLDER}/Content/PackagePath.txt
 MAP_LIST_FILE=${CARLAUE4_ROOT_FOLDER}/Content/MapPathsLinux.txt
 
 for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; then
+  T_START_PACKAGE=$(date +%s)
 
   log "Preparing environment for cooking '${PACKAGE_NAME}'."
 
@@ -412,6 +441,9 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
     rm -Rf ${BUILD_FOLDER}
 
   fi
+  T_END_PACKAGE=$(date +%s)
+  ELAPSED_TIME=$((T_END_PACKAGE - T_START_PACKAGE))
+  log "Cooking package ${PACKAGE_NAME} took ${ELAPSED_TIME} seconds."
 
 fi ; done
 
@@ -420,9 +452,17 @@ if ${SINGLE_PACKAGE} ; then
   gzip -f ${DESTINATION}
 fi
 
+T_END_PACKAGES=$(date +%s)
+ELAPSED_TIME=$((T_END_PACKAGES - T_START_PACKAGES))
+log "Cooking all other packages took ${ELAPSED_TIME} seconds."
+
 # ==============================================================================
 # -- Log paths of generated packages -------------------------------------------
 # ==============================================================================
+
+T_END_OVERALL=$(date +%s)
+ELAPSED_TIME=$((T_END_OVERALL - T_START_OVERALL))
+log "Overall packaging took ${ELAPSED_TIME} seconds."
 
 # for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; then
 #   FINAL_PACKAGE=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}.tar.gz

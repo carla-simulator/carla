@@ -15,6 +15,9 @@ set FILE_N=-[%~n0]:
 rem Print batch params (debug purpose)
 echo %FILE_N% [Batch params]: %*
 
+rem Measure overall execution time of packaging
+call :get_current_time_in_seconds T_START_OVERALL
+
 rem ==============================================================================
 rem -- Parse arguments -----------------------------------------------------------
 rem ==============================================================================
@@ -30,6 +33,7 @@ set PACKAGES=Carla
 set PACKAGE_CONFIG=Shipping
 set USE_CARSIM=false
 set SINGLE_PACKAGE=false
+set MEASURE_TIME=true
 
 :arg-parse
 if not "%1"=="" (
@@ -38,6 +42,7 @@ if not "%1"=="" (
         set DO_TARBALL=false
         set DO_PACKAGE=false
         set DO_COPY_FILES=false
+        set MEASURE_TIME=false
     )
 
     if "%1"=="--config" (
@@ -116,6 +121,7 @@ rem ============================================================================
 rem -- Create Carla package ----------------------------------------------------
 rem ============================================================================
 
+call :get_current_time_in_seconds T_START_DO_PACKAGE
 if %DO_PACKAGE%==true (
 
     if %USE_CARSIM% == true (
@@ -191,11 +197,15 @@ if %DO_PACKAGE%==true (
 
     call :cook_tagged_materials Carla !BUILD_FOLDER!\WindowsNoEditor\
 )
+call :get_current_time_in_seconds T_END_DO_PACKAGE
+set /A ELAPSED_TIME=!T_END_DO_PACKAGE! - !T_START_DO_PACKAGE!
+if %MEASURE_TIME%==true if %DO_PACKAGE%==true echo %FILE_N% [TIME]: Building and cooking Carla took !ELAPSED_TIME! seconds.
 
 rem ==============================================================================
 rem -- Adding extra files to package ---------------------------------------------
 rem ==============================================================================
 
+call :get_current_time_in_seconds T_START_DO_COPY_FILES
 if %DO_COPY_FILES%==true (
     echo "%FILE_N% Adding extra files to package..."
 
@@ -223,11 +233,15 @@ if %DO_COPY_FILES%==true (
         echo d | xcopy /y /s "!XCOPY_FROM!Plugins"                                  "!XCOPY_TO!Plugins"
     )
 )
+call :get_current_time_in_seconds T_END_DO_COPY_FILES
+set /A ELAPSED_TIME=!T_END_DO_COPY_FILES! - !T_START_DO_COPY_FILES!
+if %MEASURE_TIME%==true if %DO_COPY_FILES%==true echo %FILE_N% [TIME]: Copying extra files to Carla package took !ELAPSED_TIME! seconds.
 
 rem ==============================================================================
 rem -- Zip the project -----------------------------------------------------------
 rem ==============================================================================
 
+call :get_current_time_in_seconds T_START_DO_TARBALL
 if %DO_PACKAGE%==true if %DO_TARBALL%==true (
     set SRC_PATH=%SOURCE:/=\%
 
@@ -249,19 +263,28 @@ if %DO_PACKAGE%==true if %DO_TARBALL%==true (
         popd
     )
 )
+call :get_current_time_in_seconds T_END_DO_TARBALL
+set /A ELAPSED_TIME=!T_END_DO_TARBALL! - !T_START_DO_TARBALL!
+if %MEASURE_TIME%==true if %DO_PACKAGE%==true if %DO_TARBALL%==true echo %FILE_N% [TIME]: Zipping the project took !ELAPSED_TIME! seconds.
 
 rem ==============================================================================
 rem -- Remove intermediate files -------------------------------------------------
 rem ==============================================================================
 
+call :get_current_time_in_seconds T_START_DO_CLEAN
 if %DO_CLEAN%==true (
     echo %FILE_N% Removing intermediate build.
     rmdir /S /Q "!BUILD_FOLDER!"
 )
+call :get_current_time_in_seconds T_END_DO_CLEAN
+set /A ELAPSED_TIME=!T_END_DO_CLEAN! - !T_START_DO_CLEAN!
+if %MEASURE_TIME%==true if %DO_CLEAN%==true echo %FILE_N% [TIME]: Cleaning up took !ELAPSED_TIME! seconds.
 
 rem ==============================================================================
 rem -- Cook other packages -------------------------------------------------------
 rem ==============================================================================
+
+call :get_current_time_in_seconds T_START_PACKAGES
 
 rem Set some file locations
 set CARLAUE4_ROOT_FOLDER=%ROOT_PATH%Unreal/CarlaUE4
@@ -289,6 +312,7 @@ if not "%PACKAGES%" == "Carla" (
 rem through all maps to cook (parameter)
 set PACKAGES=%RESULT:,=!LF!%
 for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
+    call :get_current_time_in_seconds T_START_PACKAGE
 
     set PACKAGE_NAME=%%i
 
@@ -434,9 +458,20 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
             rmdir /S /Q "!BUILD_FOLDER!"
         )
     )
+    call :get_current_time_in_seconds T_END_PACKAGE
+    set /A ELAPSED_TIME=!T_END_PACKAGE! - !T_START_PACKAGE!
+    if %MEASURE_TIME%==true echo %FILE_N% [TIME]: Cooking package '!PACKAGE_NAME!' took !ELAPSED_TIME! seconds.
 )
 
+call :get_current_time_in_seconds T_END_PACKAGES
+set /A ELAPSED_TIME=!T_END_PACKAGES! - !T_START_PACKAGES!
+if %MEASURE_TIME%==true echo %FILE_N% [TIME]: Cooking all other packages took !ELAPSED_TIME! seconds.
+
 rem ============================================================================
+
+call :get_current_time_in_seconds T_END_OVERALL
+set /A ELAPSED_TIME=!T_END_OVERALL! - !T_START_OVERALL!
+if %MEASURE_TIME%==true echo %FILE_N% [TIME]: Overall packaging took !ELAPSED_TIME! seconds.
 
 goto success
 
@@ -444,7 +479,14 @@ rem ============================================================================
 rem -- Helper functions --------------------------------------------------------
 rem ============================================================================
 
+:get_current_time_in_seconds
+    for /f %%a in ('powershell -command "[int]((Get-Date -UFormat '%%s') -split ',.')[0]"') do set %1=%%a
+    goto :eof
+
 :cook_tagged_materials
+    rem Measure duration of this function call
+    call :get_current_time_in_seconds T_START_COOK_TAGGED_MATS
+
     set CUR_PACKAGE=%1
     set RESULT_BUILD_FOLDER=%2
     set SOURCE_REGISTRIES_FOLDER=%ROOT_PATH%Unreal\CarlaUE4\Plugins\Carla\Content\PostProcessingMaterials\TaggedMaterials\
@@ -485,6 +527,10 @@ rem ============================================================================
         rmdir /S /Q "!TEMP_BUILD_FOLDER!"
         del "!SOURCE_REGISTRIES_FOLDER!TaggedMaterials_!CUR_PACKAGE!*"
     )
+
+    call :get_current_time_in_seconds T_END_COOK_TAGGED_MATS
+    set /A ELAPSED_TIME=!T_END_COOK_TAGGED_MATS! - !T_START_COOK_TAGGED_MATS!
+    if %MEASURE_TIME%==true echo %FILE_N% [TIME]: Generating and cooking of TaggedMaterialsRegistry for package '!CUR_PACKAGE!' took !ELAPSED_TIME! seconds.
 
     goto :eof
 
