@@ -15,6 +15,10 @@ UTaggedMaterialsRegistry::UTaggedMaterialsRegistry() {
   static ConstructorHelpers::FObjectFinder<UMaterial> TaggedOpaqueMaterialObject(*MaterialPath);
   // TODO: Replace with VertexColorViewModeMaterial_ColorOnly?
   TaggedOpaqueMaterial = TaggedOpaqueMaterialObject.Object;
+
+  FString TaggingMPCPath = TEXT("Material'/Carla/PostProcessingMaterials/MPC/MPC_Tagging.MPC_Tagging'");
+  static ConstructorHelpers::FObjectFinder<UMaterialParameterCollection> TaggingMPCObject(*TaggingMPCPath);
+  TaggingParamerCollection = TaggingMPCObject.Object;
 }
 
 UTaggedMaterialsRegistry* UTaggedMaterialsRegistry::Create(const FString& RegistryName) {
@@ -60,11 +64,24 @@ UTaggedMaterialsRegistry* UTaggedMaterialsRegistry::Get() {
   return Registry;
 }
 
+void UTaggedMaterialsRegistry::SetTaggingTraverseTranslucency(UCarlaEpisode* Episode, bool bTaggingTraverseTranslucency) {
+  UMaterialParameterCollectionInstance* MPCInstance = Episode->GetWorld()->GetParameterCollectionInstance(TaggingParamerCollection);
+  MPCInstance->SetScalarParameterValue("TraverseTranslucency", bTaggingTraverseTranslucency);
+}
+
 UMaterialInstanceDynamic* UTaggedMaterialsRegistry::GetTaggedMaterial() {
   return UMaterialInstanceDynamic::Create(TaggedOpaqueMaterial, this);
 }
 
 UMaterialInstanceDynamic* UTaggedMaterialsRegistry::GetTaggedMaterial(UMaterialInterface* UsedMaterial) {
+  // If UsedMaterial is a translucent material, we use the default tagged material but enable IsTranslucent.
+  // Using SetTaggingTraverseTranslucency, it can be globally enabled/disabled that these materials appear invisible or not.
+  if (UsedMaterial && UsedMaterial->GetBlendMode() == EBlendMode::BLEND_Translucent) {
+    UMaterialInstanceDynamic* TranslucentMaterial = GetTaggedMaterial();
+    TranslucentMaterial->SetScalarParameterValue("IsTranslucent", true);
+    return TranslucentMaterial;
+  }
+
   // If UsedMaterial is null OR neither masked nor using WorldPositionOffset, we return NULL to indicate,
   // that the requested material does not require a fine-grained tag-injected correspondence.
   if (!UsedMaterial || !(UsedMaterial->IsMasked() || UsedMaterial->GetMaterial()->WorldPositionOffset.IsConnected())) {

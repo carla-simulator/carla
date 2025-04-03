@@ -300,6 +300,11 @@ namespace detail {
       return _client.CastRay(start_location, end_location);
     }
 
+    void SetAnnotationsTraverseTranslucency(
+      bool enable) {
+        _client.SetAnnotationsTraverseTranslucency(enable);
+      }
+
     /// @}
     // =========================================================================
     /// @name AI

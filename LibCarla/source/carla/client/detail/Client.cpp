@@ -773,6 +773,11 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("cast_ray", start_location, end_location);
   }
 
+  void Client::SetAnnotationsTraverseTranslucency(
+      bool enable) {
+    _pimpl->AsyncCall("set_annotations_traverse_translucency", enable);
+  }
+
 } // namespace detail
 } // namespace client
 } // namespace carla
