@@ -8,7 +8,6 @@
 #include "carla/Version.h"
 
 #include <fstream>
-#include <sys/stat.h>
 #include <cstdlib>
 
 namespace fs = std::filesystem;
@@ -43,12 +42,10 @@ namespace carla::client {
   }
 
   bool FileTransfer::FileExists(std::string_view file) {
-    // Check if the file exists or not
-    struct stat buffer;
     auto fullpath = CachePath;
     fullpath /= carla::version();
     fullpath /= file;
-    return (stat(fullpath.string().c_str(), &buffer) == 0);
+    return fs::is_regular_file(fullpath);
   }
 
   bool FileTransfer::WriteFile(std::string_view path, std::vector<uint8_t> content) {
@@ -57,8 +54,18 @@ namespace carla::client {
     writePath /= path;
 
     // Validate and create the file path
-    if (!fs::exists(writePath))
-      fs::create_directories(writePath);
+    {
+      auto parent = writePath.parent_path();
+      if (fs::exists(parent))
+      {
+        if (!fs::is_directory(parent))
+          return false;
+      }
+      else
+      {
+        fs::create_directories(parent);
+      }
+    }
 
     // Open the file to truncate it in binary mode
     std::ofstream out(
