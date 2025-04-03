@@ -7,76 +7,82 @@
 #include "FileTransfer.h"
 #include "carla/Version.h"
 
-namespace carla {
-namespace client {
+#include <fstream>
+#include <sys/stat.h>
+#include <cstdlib>
 
-  #ifdef _WIN32
-        std::string FileTransfer::_filesBaseFolder = std::string(getenv("USERPROFILE")) + "/carlaCache/";
-  #else
-        std::string FileTransfer::_filesBaseFolder = std::string(getenv("HOME")) + "/carlaCache/";
-  #endif
+namespace fs = std::filesystem;
 
-  bool FileTransfer::SetFilesBaseFolder(const std::string &path) {
-    if (path.empty()) return false;
+namespace carla::client {
 
-    // Check that the path ends in a slash, add it otherwise
-    if (path[path.size() - 1] != '/' && path[path.size() - 1] != '\\') {
-      _filesBaseFolder = path + "/";
-  }
+  static fs::path CachePath = [] {
+    constexpr char OverridePathEV[] = "CARLA_CACHE_DIR";
+    constexpr char HomePathEV[] =
+#ifdef _WIN32
+      "USERPROFILE";
+#else
+      "HOME";
+#endif
+    auto override = std::getenv(OverridePathEV);
+    if (override != NULL)
+      return fs::path(override);
+    auto path = fs::path(std::getenv(HomePathEV));
+    path /= "carlaCache";
+    return path;
+  }();
 
+  bool FileTransfer::SetFilesBaseFolder(std::string_view path) {
+    if (path.empty())
+      return false;
+    CachePath = path;
     return true;
   }
 
-  const std::string& FileTransfer::GetFilesBaseFolder() {
-    return _filesBaseFolder;
+  std::string FileTransfer::GetFilesBaseFolder() {
+    return CachePath.string();
   }
 
-  bool FileTransfer::FileExists(std::string file) {
+  bool FileTransfer::FileExists(std::string_view file) {
     // Check if the file exists or not
     struct stat buffer;
-    std::string fullpath = _filesBaseFolder;
-    fullpath += "/";
-    fullpath += ::carla::version();
-    fullpath += "/";
-    fullpath += file;
-
-    return (stat(fullpath.c_str(), &buffer) == 0);
+    auto fullpath = CachePath;
+    fullpath /= carla::version();
+    fullpath /= file;
+    return (stat(fullpath.string().c_str(), &buffer) == 0);
   }
 
-  bool FileTransfer::WriteFile(std::string path, std::vector<uint8_t> content) {
-    std::string writePath = _filesBaseFolder;
-    writePath += "/";
-    writePath += ::carla::version();
-    writePath += "/";
-    writePath += path;
+  bool FileTransfer::WriteFile(std::string_view path, std::vector<uint8_t> content) {
+    auto writePath = CachePath;
+    writePath /= carla::version();
+    writePath /= path;
 
     // Validate and create the file path
-    carla::FileSystem::ValidateFilePath(writePath);
+    if (!fs::exists(writePath))
+      fs::create_directories(writePath);
 
     // Open the file to truncate it in binary mode
-    std::ofstream out(writePath, std::ios::trunc | std::ios::binary);
-    if(!out.good()) return false;
+    std::ofstream out(
+      writePath,
+      std::ios::trunc | std::ios::binary);
+
+    if (!out.good())
+      return false;
 
     // Write the content on and close it
-    for(auto file : content) {
-          out << file;
+    for (auto file : content) {
+      out << file;
     }
     out.close();
 
     return true;
   }
 
-  std::vector<uint8_t> FileTransfer::ReadFile(std::string path) {
-    std::string fullpath = _filesBaseFolder;
-    fullpath += "/";
-    fullpath += ::carla::version();
-    fullpath += "/";
-    fullpath += path;
-    // Read the binary file from the base folder
+  std::vector<uint8_t> FileTransfer::ReadFile(std::string_view path) {
+    auto fullpath = CachePath;
+    fullpath /= carla::version();
+    fullpath /= path;
     std::ifstream file(fullpath, std::ios::binary);
     std::vector<uint8_t> content(std::istreambuf_iterator<char>(file), {});
     return content;
   }
-
-} // namespace client
-} // namespace carla
+} // namespace carla::client
