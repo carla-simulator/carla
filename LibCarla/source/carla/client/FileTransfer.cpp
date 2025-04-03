@@ -22,10 +22,10 @@ namespace carla::client {
 #else
       "HOME";
 #endif
-    auto override = std::getenv(OverridePathEV);
-    if (override != NULL)
-      return fs::path(override);
-    auto path = fs::path(std::getenv(HomePathEV));
+    const char* override_path = std::getenv(OverridePathEV);
+    if (override_path != NULL)
+      return fs::path(override_path);
+    fs::path path = std::getenv(HomePathEV);
     path /= "carlaCache";
     return path;
   }();
