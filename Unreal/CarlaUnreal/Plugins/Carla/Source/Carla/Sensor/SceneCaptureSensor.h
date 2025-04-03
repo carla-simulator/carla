@@ -569,6 +569,7 @@ private:
           PixelData,
           SourcePitch,
           SourceExtent,
+          ViewSize,
           Format,
           Flags,
           Pixels);
