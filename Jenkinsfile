@@ -123,6 +123,7 @@ pipeline
                                                 
                                             }
                                         }
+                                        /*
                                         stage('Checkout Doxygen repo')
                                         {
                                             when { anyOf { branch "master"; branch "dev"; buildingTag() } }
@@ -132,7 +133,7 @@ pipeline
                                                 dir('doc_repo')
                                                 {
                                                     checkout scmGit(
-                                                        branches: [[name: '*/dev']], 
+                                                        branches: [[name: 'dev']], 
                                                         extensions: [
                                                             cleanBeforeCheckout(),
                                                             checkoutOption(120), 
@@ -150,6 +151,7 @@ pipeline
                                                 
                                             }
                                         }
+                                        */
 
                                         stage('ubuntu retrieve content')
                                         {
@@ -279,9 +281,9 @@ pipeline
 
                                         }
 
-                                        stage('ubuntu deploy dev')
+                                        stage('ubuntu deploy ue4-dev')
                                         {
-                                            when { branch "dev"; }
+                                            when { branch "ue4-dev"; }
                                             steps
                                             {
                                                 sh 'git checkout .'
@@ -299,7 +301,7 @@ pipeline
                                         }
                                     }
                                 }
-                                stage('Publish documentation')
+                               /* stage('Publish documentation')
                                 {
                                     stages
                                     {
@@ -346,6 +348,7 @@ pipeline
 
                                     }
                                 }
+                                */
                             }
                         }
                     }
