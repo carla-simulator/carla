@@ -8,10 +8,9 @@
 
 #include "carla/FileSystem.h"
 
-#include <fstream>
-#include <iostream>
+#include <filesystem>
+#include <string_view>
 #include <string>
-#include <sys/stat.h>
 
 namespace carla {
 namespace client {
@@ -22,19 +21,15 @@ namespace client {
 
     FileTransfer() = delete;
 
-    static bool SetFilesBaseFolder(const std::string &path);
+    static bool SetFilesBaseFolder(std::string_view path);
 
-    static const std::string& GetFilesBaseFolder();
+    static std::string GetFilesBaseFolder();
 
-    static bool FileExists(std::string file);
+    static bool FileExists(std::string_view file);
 
-    static bool WriteFile(std::string path, std::vector<uint8_t> content);
+    static bool WriteFile(std::string_view path, std::vector<uint8_t> content);
 
-    static std::vector<uint8_t> ReadFile(std::string path);
-
-  private:
-
-    static std::string _filesBaseFolder;
+    static std::vector<uint8_t> ReadFile(std::string_view path);
 
   };
 
