@@ -69,7 +69,7 @@ if not exist "%FASTDDS_SRC_DIR%/thirdparty/fastcdr/build" (
 cd "%FASTDDS_SRC_DIR%/thirdparty/fastcdr/build"
 echo %FILE_N% Generating build...
 
-cmake .. -G "Visual Studio 16 2019" -A x64^
+cmake .. -G "Visual Studio 17 2022" -A x64^
     -DCMAKE_BUILD_TYPE=Release^
     -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
     -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR:\=/%"^
@@ -95,7 +95,7 @@ cd ../../..
 @REM cd "%FASTDDS_SRC_DIR%/thirdparty/asio/asio/build"
 @REM echo %FILE_N% Generating build...
 
-@REM cmake .. -G "Visual Studio 16 2019" -A x64^
+@REM cmake .. -G "Visual Studio 17 2022" -A x64^
 @REM     -DCMAKE_BUILD_TYPE=Release^
 @REM     -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
 @REM     -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR:\=/%"^
@@ -117,7 +117,7 @@ if not exist "%FASTDDS_BUILD_DIR%" (
 cd "%FASTDDS_BUILD_DIR%"
 echo %FILE_N% Generating build...
 
-cmake .. -G "Visual Studio 16 2019" -A x64^
+cmake .. -G "Visual Studio 17 2022" -A x64^
     -DCMAKE_BUILD_TYPE=Release^
     -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
     -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR:\=/%"^
@@ -169,8 +169,8 @@ rem ============================================================================
 
 :error_install
     echo.
-    echo %FILE_N% [Visual Studio 16 2019 Win64 ERROR] An error ocurred while installing using Visual Studio 16 2019 Win64.
-    echo %FILE_N% [Visual Studio 16 2019 Win64 ERROR] Possible causes:
+    echo %FILE_N% [Visual Studio 17 2022 Win64 ERROR] An error ocurred while installing using Visual Studio 17 2022 Win64.
+    echo %FILE_N% [Visual Studio 17 2022 Win64 ERROR] Possible causes:
     echo %FILE_N%                - Make sure you have Visual Studio installed.
     echo %FILE_N%                - Make sure you have the "x64 Visual C++ Toolset" in your path.
     echo %FILE_N%                  For example using the "Visual Studio x64 Native Tools Command Prompt",
