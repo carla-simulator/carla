@@ -138,5 +138,8 @@ TOOLCHAIN=$(CURDIR)/ToolChain.cmake
 
 
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> ue4-dev

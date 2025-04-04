@@ -18,7 +18,7 @@ else:
     class ObstacleDetectionResult(NamedTuple):
         obstacle_was_found : bool
         obstacle : Union[Actor, None]
-        distance : float 
+        distance : float
         # distance : Union[float, Literal[-1]] # Python 3.8+ only
 
     class TrafficLightDetectionResult(NamedTuple):
@@ -30,5 +30,5 @@ else:
         ObstacleDetectionResult = NamedTuple('ObstacleDetectionResult', [('obstacle_was_found', bool), ('obstacle', Union[Actor, None]), ('distance', Union[float, Literal[-1]])])
     else:
         ObstacleDetectionResult = NamedTuple('ObstacleDetectionResult', [('obstacle_was_found', bool), ('obstacle', Union[Actor, None]), ('distance', float)])
-    
+
     TrafficLightDetectionResult = NamedTuple('TrafficLightDetectionResult', [('traffic_light_was_found', bool), ('traffic_light', Union[TrafficLight, None])])

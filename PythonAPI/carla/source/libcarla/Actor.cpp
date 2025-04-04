@@ -206,6 +206,7 @@ void export_actor() {
       .def("enable_chrono_physics", &cc::Vehicle::EnableChronoPhysics, (arg("max_substeps")=30, arg("max_substep_delta_time")=0.002, arg("vehicle_json")="", arg("powetrain_json")="", arg("tire_json")="", arg("base_json_path")=""))
       .def("restore_physx_physics", &cc::Vehicle::RestorePhysXPhysics)
       .def("get_failure_state", &cc::Vehicle::GetFailureState)
+      .def("get_vehicle_bone_world_transforms", &cc::Vehicle::GetVehicleBoneWorldTransforms)
       .def(self_ns::str(self_ns::self))
   ;
 

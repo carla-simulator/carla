@@ -26,7 +26,6 @@ namespace client {
       : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(init.GetDisplayId()),
         Super(std::move(init)) {}
 
-    using ActorState::GetBoundingBox;
 
     virtual ~Actor() = default;
 
@@ -59,6 +58,8 @@ namespace client {
     /// @note This function does not call the simulator, it returns the
     /// acceleration calculated after the actor's velocity.
     geom::Vector3D GetAcceleration() const;
+
+    geom::BoundingBox GetBoundingBox() const;
 
     geom::Transform GetComponentWorldTransform(const std::string componentName) const;
 

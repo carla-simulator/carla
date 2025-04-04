@@ -266,6 +266,7 @@ void export_geom() {
     .def_readwrite("location", &cg::BoundingBox::location)
     .def_readwrite("extent", &cg::BoundingBox::extent)
     .def_readwrite("rotation", &cg::BoundingBox::rotation)
+    .def_readonly("actor_id", &cg::BoundingBox::actor_id)
     .def("contains", &cg::BoundingBox::Contains, arg("point"), arg("bbox_transform"))
     .def("get_local_vertices", CALL_RETURNING_LIST(cg::BoundingBox, GetLocalVertices))
     .def("get_world_vertices", CALL_RETURNING_LIST_1(cg::BoundingBox, GetWorldVertices, const cg::Transform&), arg("bbox_transform"))

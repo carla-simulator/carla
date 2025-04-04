@@ -1,13 +1,14 @@
 CARLA Simulator
 ===============
 
-[![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](http://carla.readthedocs.io)
+[![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](http://carla.readthedocs.io) 
 
 [![carla.org](Docs/img/btn/web.png)](http://carla.org)
 [![download](Docs/img/btn/download.png)](https://github.com/carla-simulator/carla/blob/master/Docs/download.md)
 [![documentation](Docs/img/btn/docs.png)](http://carla.readthedocs.io)
 [![forum](Docs/img/btn/forum.png)](https://github.com/carla-simulator/carla/discussions)
 [![discord](Docs/img/btn/chat.png)](https://discord.gg/8kqACuC)
+[![Gurubase](https://img.shields.io/badge/Gurubase-Ask%20CARLA%20Simulator%20Guru-006BFF)](https://gurubase.io/g/carla-simulator)
 
 CARLA is an open-source simulator for autonomous driving research. CARLA has been developed from the ground up to support development, training, and
 validation of autonomous driving systems. In addition to open-source code and protocols, CARLA provides open digital assets (urban layouts, buildings,
@@ -15,6 +16,9 @@ vehicles) that were created for this purpose and can be used freely. The simulat
 environmental conditions.
 
 [![CARLA Video](Docs/img/0_9_15_thumbnail.webp)](https://www.youtube.com/watch?v=q4V9GYjA1pE )
+
+>[!NOTE]
+>This is the development branch `ue4-dev` for the **Unreal Engine 4.26 version of CARLA**. This branch exists in parallel with the Unreal Engine 5.3 version of CARLA, in the `ue5-dev` branch. Please be sure that this version of CARLA is suitable for your needs as there are significant differences between the UE 4.26 and UE 5.3 versions of CARLA. 
 
 ### Download CARLA
 
@@ -25,6 +29,9 @@ Linux:
 Windows:
 * [**Get CARLA overnight build**](https://tiny.carla.org/carla-latest-windows)
 * [**Get AdditionalMaps overnight build**](https://tiny.carla.org/additional-maps-latest-windows)
+
+>[!WARNING]
+>The CARLA package downloads are now provided using the BackBlaze CDN. The Amazon Web Service download links have been discontinued. Please ensure you update any relevant information in repositories using the CARLA simulator package versions. 
 
 ### Recommended system
 

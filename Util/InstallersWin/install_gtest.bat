@@ -35,7 +35,7 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
+if %GENERATOR% == "" set GENERATOR="Visual Studio 17 2022"
 
 rem If not set set the build dir to the current dir
 if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0
@@ -86,7 +86,7 @@ if %errorlevel%  neq 0 goto error_cmake
 echo %FILE_N% Building...
 cmake --build . --config Release --target install
 
-if errorlevel  neq 0 goto error_install
+if %errorlevel% neq 0 goto error_install
 
 rem Remove the downloaded Google Test source because is no more needed
 if %DEL_SRC% == true (

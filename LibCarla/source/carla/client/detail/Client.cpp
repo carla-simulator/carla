@@ -418,6 +418,10 @@ namespace detail {
     _pimpl->AsyncCall("add_actor_torque", actor, vector);
   }
 
+  geom::BoundingBox Client::GetActorBoundingBox(rpc::ActorId actor) {
+    return _pimpl->CallAndWait<geom::BoundingBox>("get_actor_bounding_box", actor);
+  }
+
   geom::Transform Client::GetActorComponentWorldTransform(rpc::ActorId actor, const std::string componentName) {
     return _pimpl->CallAndWait<geom::Transform>("get_actor_component_world_transform", actor, componentName);
   }
@@ -429,6 +433,11 @@ namespace detail {
   std::vector<geom::Transform> Client::GetActorBoneWorldTransforms(rpc::ActorId actor) {
     using return_t = std::vector<geom::Transform>;
     return _pimpl->CallAndWait<return_t>("get_actor_bone_world_transforms", actor);
+  }
+
+  std::vector<geom::Transform> Client::GetVehicleBoneWorldTransforms(rpc::ActorId actor) {
+    using return_t = std::vector<geom::Transform>;
+    return _pimpl->CallAndWait<return_t>("get_vehicle_bone_world_transforms", actor);
   }
 
   std::vector<geom::Transform> Client::GetActorBoneRelativeTransforms(rpc::ActorId actor) {

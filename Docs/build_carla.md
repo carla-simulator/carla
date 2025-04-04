@@ -11,8 +11,7 @@ Build instructions are available for Linux and Windows. You can also build CARLA
 * [__Updating CARLA__](build_update.md)  
 * [__Build system__](build_system.md)  
 
-* [__Linux build with Unreal Engine 5.3__](build_linux_ue5.md)  
-* [__Windows build with Unreal Engine 5.3__](build_windows_ue5.md)  
-
-* [__FAQ__](build_faq.md)  
+* [__FAQ__](build_faq.md) 
  
+!!! note
+    These build instructions are for the **Unreal Engine 4.26 version of CARLA**, if you are looking for build instructions for the Unreal Engine 5.5 version of CARLA, please visit [the correct build instructions for that version](https://carla-ue5.readthedocs.io/en/latest/build_carla/).

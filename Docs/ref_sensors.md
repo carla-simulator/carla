@@ -736,7 +736,7 @@ The following tags are currently available (Note, tags changed from version 0.9.
 | `14`           | Car            | `(0, 0, 142)`    | Cars, vans        |
 | `15`           | Truck          | `(0, 0, 70)`    | Trucks        |
 | `16`           | Bus            | `(0, 60, 100)`  | Busses        |
-| `17`           | Train          | `(0, 60, 100)`  | Trains        |
+| `17`           | Train          | `(0, 80, 100)`  | Trains        |
 | `18`           | Motorcycle     | `(0, 0, 230)`    | Motorcycle, Motorbike        |
 | `19`           | Bicycle        | `(119, 11, 32)`   | Bicylces      |
 | `20`           | Static         | `(110, 190, 160)`            | Elements in the scene and props that are immovable. <br> E.g. fire hydrants, fixed benches, fountains, bus stops, etc.    |
@@ -940,21 +940,19 @@ While the visibility is simulated within CARLA, the scenario can be configured b
 *   __Output:__ [carla.CAMData](python_api.md#carla.CAMData), triggered according to the ETSI CAM standard, unless configured otherwise
 
 Triggering conditions according to ETSI standard:
-- Heading angle change > $4$°
-- Position difference > $4$ m
-- Speed change > $5$ m/s
+- Heading angle change > 4°
+- Position difference > 4 m
+- Speed change > 5 m/s
 - Time elapsed > CAM Generation time (configurable)
-- Low Frequency Container Time Elapsed $> 500$ ms
+- Low Frequency Container Time Elapsed > 500 ms
 
 For the CAM V2X sensor, additional blueprint attributes apply:
 
 | Blueprint attribute     | Type   | Default  | Description                        |
 |-------------------------|--------|-------------------------|------------------------------------|
-| <td colspan=4> Message generation | 
-| gen\_cam\_min           | float  | $0.1$         |  Minimum elapsed time between two successive CAMs in seconds (s)        |
-| gen\_cam\_max           | float  | $1.0$       |   Maximum elapsed time between two successive CAMs in seconds (s)          |
+| gen\_cam\_min           | float  | 0.1         |  Minimum elapsed time between two successive CAMs in seconds (s)        |
+| gen\_cam\_max           | float  | 1.0       |   Maximum elapsed time between two successive CAMs in seconds (s)          |
 | fixed\_rate             | bool   | false [true]     |  Generate a CAM in every CARLA tick (only for debug purposes, will result in slowdown)    |
-| <td colspan=4> Data generation | 
 | `noise_vel_stddev_x` | float  | 0\.0   | Standard deviation parameter in the noise model for velocity (X axis). |
 | `noise_accel_stddev_x`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (X axis).  |
 | `noise_accel_stddev_y`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (Y axis).  |
@@ -993,17 +991,16 @@ Example:
 
 | Blueprint attribute     | Type   | Default | Description                        |
 |-------------------------|--------|-------------------------|------------------------------------|
-| transmit\_power         | float  | $21.5$       | Sender transmission power in dBm                         |
-| receiver\_sensitivity   | float  | $-99$        | Receiver sensitivity in dBm                                |
-| frequency\_ghz          | float  | $5.9$ | Transmission frequency in GHz. 5.9 GHz is standard for several physical channels.                 |
-| noise\_seed             | int    | $0$   | Random parameter for initialization of noise                           |
-| filter\_distance        | float  | $500$      | Maximum transmission distance in meter, path loss calculations above are skipped for simulation speed      |
-| <td colspan=4> __Path loss model parameters__ |
-| combined\_antenna\_gain | float  | $10.0$   | Combined gain of sender and receiver antennas in dBi, parameter for radiation efficiency and directivity |
-| d\_ref                  | float  | $ 1.0 $    | reference distance for Log-distance path loss model in meter           |
+| transmit\_power         | float  | 21.5       | Sender transmission power in dBm                         |
+| receiver\_sensitivity   | float  | -99        | Receiver sensitivity in dBm                                |
+| frequency\_ghz          | float  | 5.9 | Transmission frequency in GHz. 5.9 GHz is standard for several physical channels.                 |
+| noise\_seed             | int    | 0   | Random parameter for initialization of noise                           |
+| filter\_distance        | float  | 500      | Maximum transmission distance in meter, path loss calculations above are skipped for simulation speed      |
+| __Path loss model parameters__ | | | |
+| combined\_antenna\_gain | float  | 10.0   | Combined gain of sender and receiver antennas in dBi, parameter for radiation efficiency and directivity |
+| d\_ref                  | float  | 1.0     | reference distance for Log-distance path loss model in meter           |
 | path\_loss\_exponent    | float  | 2.7                     |    Loss parameter for non-line of sight due to building obstruction    |
 | scenario                | string | urban   | Options: [urban, rural, highway], defines the fading noise parameters |
 | path\_loss\_model       | string | geometric     |   general path loss model to be used. Options: [geometric, winner]  |
 | use\_etsi\_fading       | bool   | true         |   Use the fading params as mentioned in the ETSI publication (true), or use the custom fading standard deviation         |
 | custom\_fading\_stddev  | float  | 0.0      |   Custom value for fading standard deviation, only used if `use_etsi_fading` is set to `false`              |
-
