@@ -83,6 +83,24 @@ fi
 # -- Build API -----------------------------------------------------------------
 # ==============================================================================
 
+build_python_version()
+{
+  py_version="$1"
+
+      log "Building Python API for Python ${py_version}."
+
+    if [[ -z ${TARGET_WHEEL_PLATFORM} ]] ; then
+      /usr/bin/env python${py_version} setup.py bdist_egg bdist_wheel --dist-dir dist/.tmp${py_version}
+      cp dist/.tmp${py_version}/$(ls dist/.tmp${py_version} | grep .whl) dist
+    else
+      /usr/bin/env python${py_version} setup.py bdist_egg bdist_wheel --dist-dir dist/.tmp${py_version} --plat ${TARGET_WHEEL_PLATFORM}
+      /usr/bin/env python${py_version} -m auditwheel repair --plat ${TARGET_WHEEL_PLATFORM} --wheel-dir dist dist/.tmp${py_version}/$(ls dist/.tmp${py_version} | grep .whl)
+    fi
+
+    rm -rf dist/.tmp${py_version}
+
+}
+
 if ${BUILD_RSS_VARIANT} ; then
   export BUILD_RSS_VARIANT=${BUILD_RSS_VARIANT}
 fi
@@ -98,19 +116,10 @@ if ${BUILD_PYTHONAPI} ; then
   fi
 
   for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
-    log "Building Python API for Python ${PY_VERSION}."
-
-    if [[ -z ${TARGET_WHEEL_PLATFORM} ]] ; then
-      /usr/bin/env python${PY_VERSION} setup.py bdist_egg bdist_wheel --dist-dir dist/.tmp
-      cp dist/.tmp/$(ls dist/.tmp | grep .whl) dist
-    else
-      /usr/bin/env python${PY_VERSION} setup.py bdist_egg bdist_wheel --dist-dir dist/.tmp --plat ${TARGET_WHEEL_PLATFORM}
-      /usr/bin/env python${PY_VERSION} -m auditwheel repair --plat ${TARGET_WHEEL_PLATFORM} --wheel-dir dist dist/.tmp/$(ls dist/.tmp | grep .whl)
-    fi
-
-    rm -rf dist/.tmp
-
+    build_python_version ${PY_VERSION} &
   done
+
+  wait 
 
 fi
 

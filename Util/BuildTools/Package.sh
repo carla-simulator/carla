@@ -58,6 +58,9 @@ done
 # ==============================================================================
 # -- Prepare environment -------------------------------------------------------
 # ==============================================================================
+TIME1=$(date +%s.%N)
+echo "TIME1: $TIME1"
+
 source $(dirname "$0")/Environment.sh
 
 if [ ! -d "${UE4_ROOT}" ]; then
@@ -104,6 +107,8 @@ log "Packaging version '${REPOSITORY_TAG}' (${PACKAGE_CONFIG})."
 # ==============================================================================
 # -- Cook CARLA project --------------------------------------------------------
 # ==============================================================================
+TIME2=$(date +%s.%N)
+echo "TIME2: $TIME2"
 
 if ${DO_CARLA_RELEASE} ; then
 
@@ -140,6 +145,8 @@ fi
 # ==============================================================================
 # -- Copy files (Python API, README, etc) --------------------------------------
 # ==============================================================================
+TIME3=$(date +%s.%N)
+echo "TIME3: $TIME3"
 
 if ${DO_CARLA_RELEASE} ; then
 
@@ -195,6 +202,8 @@ fi
 # ==============================================================================
 # -- Zip the project -----------------------------------------------------------
 # ==============================================================================
+TIME4=$(date +%s.%N)
+echo "TIME4: $TIME4"
 
 if ${DO_CARLA_RELEASE} && ${DO_TARBALL} ; then
 
@@ -219,6 +228,8 @@ fi
 # ==============================================================================
 # -- Remove intermediate files -------------------------------------------------
 # ==============================================================================
+TIME5=$(date +%s.%N)
+echo "TIME5: $TIME5"
 
 if ${DO_CARLA_RELEASE} && ${DO_CLEAN_INTERMEDIATE} ; then
 
@@ -231,18 +242,16 @@ fi
 # ==============================================================================
 # -- Cook other packages -------------------------------------------------------
 # ==============================================================================
+package_map() {
 
-PACKAGE_PATH_FILE=${CARLAUE4_ROOT_FOLDER}/Content/PackagePath.txt
-MAP_LIST_FILE=${CARLAUE4_ROOT_FOLDER}/Content/MapPathsLinux.txt
+  package_name = '$1'
 
-for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; then
-
-  log "Preparing environment for cooking '${PACKAGE_NAME}'."
+  log "Preparing environment for cooking '${package_name}'."
 
   if ${SINGLE_PACKAGE} ; then
       BUILD_FOLDER_TARGET=${CARLA_DIST_FOLDER}/${TARGET_ARCHIVE}_${REPOSITORY_TAG}
   else
-      BUILD_FOLDER_TARGET=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}
+      BUILD_FOLDER_TARGET=${CARLA_DIST_FOLDER}/${package_name}_${REPOSITORY_TAG}
   fi
 
   if [[ ${ARCHIVE_SUFIX} != "" ]] ; then
@@ -250,27 +259,27 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
   fi
 
   if [[ ${ARCHIVE_SUFIX} != "" ]] ; then
-    BUILD_FOLDER=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}_${ARCHIVE_SUFIX}
+    BUILD_FOLDER=${CARLA_DIST_FOLDER}/${package_name}_${REPOSITORY_TAG}_${ARCHIVE_SUFIX}
   else
-    BUILD_FOLDER=${CARLA_DIST_FOLDER}/${PACKAGE_NAME}_${REPOSITORY_TAG}
+    BUILD_FOLDER=${CARLA_DIST_FOLDER}/${package_name}_${REPOSITORY_TAG}
   fi
 
   DESTINATION=${BUILD_FOLDER_TARGET}.tar
-  PACKAGE_PATH=${CARLAUE4_ROOT_FOLDER}/Content/${PACKAGE_NAME}
+  PACKAGE_PATH=${CARLAUE4_ROOT_FOLDER}/Content/${package_name}
 
   mkdir -p ${BUILD_FOLDER}
 
-  log "Cooking package '${PACKAGE_NAME}'..."
-
+  log "Cooking package '${package_name}'..."
   pushd "${CARLAUE4_ROOT_FOLDER}" > /dev/null
 
   # Prepare cooking of package
   ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
-      -run=PrepareAssetsForCooking -PackageName=${PACKAGE_NAME} -OnlyPrepareMaps=false
+      -run=PrepareAssetsForCooking -PackageName=${package_name} -OnlyPrepareMaps=false
 
+  PACKAGE_PATH_FILE=${CARLAUE4_ROOT_FOLDER}/Content/PackagePath.txt
   PACKAGE_FILE=$(<${PACKAGE_PATH_FILE})
+  MAP_LIST_FILE=${CARLAUE4_ROOT_FOLDER}/Content/MapPathsLinux.txt
   MAPS_TO_COOK=$(<${MAP_LIST_FILE})
-
 
   # Cook maps in batches
   MAX_STRINGLENGTH=1000
@@ -279,7 +288,6 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
   MAP_STRING=""
   for MAP in "${MAP_LIST[@]}"; do
     if (($(($TOTAL+${#MAP})) > $MAX_STRINGLENGTH)); then
-      echo "Cooking $MAP_STRING"
       ${UE4_ROOT}/Engine/Binaries/Linux/UE4Editor "${CARLAUE4_ROOT_FOLDER}/CarlaUE4.uproject" \
           -run=cook -map="${MAP_STRING}" -cooksinglepackage -targetplatform="LinuxNoEditor" \
           -OutputDir="${BUILD_FOLDER}" -iterate
@@ -347,7 +355,7 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
   rm -Rf "./CarlaUE4/Metadata"
   rm -Rf "./CarlaUE4/Plugins"
-  rm -Rf "./CarlaUE4/Content/${PACKAGE_NAME}/Maps/${PROPS_MAP_NAME}"
+  rm -Rf "./CarlaUE4/Content/${package_name}/Maps/${PROPS_MAP_NAME}"
   rm -f "./CarlaUE4/AssetRegistry.bin"
 
   if ${DO_TARBALL} ; then
@@ -370,7 +378,23 @@ for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; 
 
   fi
 
-fi ; done
+  echo "$package_name has finished"
+}
+
+PIDS=()
+
+for PACKAGE_NAME in "${PACKAGES[@]}" ; do if [[ ${PACKAGE_NAME} != "Carla" ]] ; then
+  package_map() $PACKAGE_NAME & 
+  PID=$!
+  PIDS+=($PID)
+  sleep 10
+done
+
+for PID in "${PIDS[@]}"
+  echo "Waiting for $PID"
+  wait $PID
+  echo "Done $PID"
+done
 
 # compress the TAR if it is a single package
 if ${SINGLE_PACKAGE} ; then
@@ -394,8 +418,81 @@ if ${DO_CARLA_RELEASE} ; then
   fi
 fi
 
+TIME6=$(date +%s.%N)
+echo "TIME6: $TIME6"
+
 # ==============================================================================
 # -- ...and we are done --------------------------------------------------------
 # ==============================================================================
 
 log "Success!"
+TOTAL_TIME=$(echo "$TIME6 - $TIME1" | bc)
+TT_=$(echo "$T1/60" | bc)
+
+T1=$(echo "$TIME2 - $TIME1" | bc)
+T1_=$(echo "$T1/60" | bc)
+TT1=$(echo "100*$T1/$TOTAL_TIME" | bc)
+echo "Preparing_environment: $T1 $T1_ $TT1%"
+
+T2=$(echo "$TIME3 - $TIME2" | bc)
+T2_=$(echo "$T2/60" | bc)
+TT2=$(echo "100*$T2/$TOTAL_TIME" | bc)
+echo "Cooking: $T2 $T2_ $TT2%"
+
+T3=$(echo "$TIME4 - $TIME3" | bc)
+T3_=$(echo "$T3/60" | bc)
+TT3=$(echo "100*$T3/$TOTAL_TIME" | bc)
+echo "Copy_files: $T3 $T3_ $TT3%"
+
+T4=$(echo "$TIME5 - $TIME4" | bc)
+T4_=$(echo "$T4/60" | bc)
+TT4=$(echo "100*$T4/$TOTAL_TIME" | bc)
+echo "Zip: $T4 $T4_ $TT4%"
+
+T5=$(echo "$TIME6 - $TIME4" | bc)
+T5_=$(echo "$T5/60" | bc)
+TT5=$(echo "100*$T5/$TOTAL_TIME" | bc)
+echo "Packages: $T5 $T5_ $TT5%"
+
+# T5=$(echo "$TIME6 - $TIME5" | bc)
+# T5_=$(echo "$T5/60" | bc)
+# TT5=$(echo "100*$T5/$TOTAL_TIME" | bc)
+# echo "Remove_intermediate: $T5 $T5_ $TT5%"
+
+# for i in "${!PACKAGE_TIMES[@]}"; do
+#   PACKAGE_TIME=${PACKAGE_TIMES[$i]}
+#   TP_=$(echo "$PACKAGE_TIME/60" | bc)
+#   NEXT_INDEX=$((i+1))
+#   NAME=${PACKAGES[$NEXT_INDEX]}
+#   TP=$(echo "100*$PACKAGE_TIME/$TOTAL_TIME" | bc)
+#   echo "Package_$NAME: $PACKAGE_TIME $TP_ $TP%"
+# done
+
+# T9=$(echo "$TIME10 - $TIME9" | bc)
+# T9_=$(echo "$T9/60" | bc)
+# TT9=$(echo "100*$T9/$TOTAL_TIME" | bc)
+# echo "Tar: $T9 $T9_ $TT9%"
+
+# T10=$(echo "$TIME11 - $TIME10" | bc)
+# T10_=$(echo "$T10/60" | bc)
+# TT10=$(echo "100*$T10/$TOTAL_TIME" | bc)
+# echo "Logs: $T10 $T10_ $TT10%"
+
+# for i in "${!PACKAGE_TIMES[@]}"; do
+#   PACKAGE_TIME=${PACKAGE_TIMES[$i]}
+#   COOKING_TIME=${COOKING_TIMES[$i]}
+#   ZIPPING_TIME=${ZIPPING_TIMES[$i]}
+#   TP_=$(echo "$PACKAGE_TIME/60" | bc)
+#   TC_=$(echo "$COOKING_TIME/60" | bc)
+#   TZ_=$(echo "$ZIPPING_TIME/60" | bc)
+#   NEXT_INDEX=$((i+1))
+#   NAME=${PACKAGES[$NEXT_INDEX]}
+#   TP=$(echo "100*$PACKAGE_TIME/$TOTAL_TIME" | bc)
+#   TC=$(echo "100*$COOKING_TIME/$TOTAL_TIME" | bc)
+#   TZ=$(echo "100*$ZIPPING_TIME/$TOTAL_TIME" | bc)
+#   echo "Package_$NAME: $PACKAGE_TIME $TP_ $TP%"
+#   echo "Cooking_$NAME: $COOKING_TIME $TC_ $TC%"
+#   echo "Zipping_$NAME: $ZIPPING_TIME $TZ_ $TZ%"
+# done
+
+echo "Total: $TOTAL_TIME $TT_ 100%"

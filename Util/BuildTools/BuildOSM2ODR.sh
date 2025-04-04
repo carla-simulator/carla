@@ -126,25 +126,6 @@ if ${BUILD_OSM2ODR} ; then
   ninja osm2odr
   ninja install
 
-  mkdir -p ${OSM2ODR_SERVER_BUILD_FOLDER}
-  cd ${OSM2ODR_SERVER_BUILD_FOLDER}
-
-  LLVM_BASENAME=llvm-8.0
-  LLVM_INCLUDE="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
-  LLVM_LIBPATH="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
-
-  cmake ${OSM2ODR_SOURCE_FOLDER} \
-      -G "Eclipse CDT4 - Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH}" \
-      -DCMAKE_INSTALL_PREFIX=${LIBCARLA_INSTALL_SERVER_FOLDER} \
-      -DPROJ_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/proj-install-server/include \
-      -DPROJ_LIBRARY=${CARLA_BUILD_FOLDER}/proj-install-server/lib/libproj.a \
-      -DXercesC_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-install-server/include \
-      -DXercesC_LIBRARY=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-install-server/lib/libxerces-c.a
-
-  ninja osm2odr
-  ninja install
-
 fi
 
 log " OSM2ODR Success!"
