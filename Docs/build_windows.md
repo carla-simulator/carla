@@ -12,7 +12,7 @@ If you come across errors or difficulties then have a look at the **[F.A.Q.](bui
         - [Minor installations](#minor-installations)
         - [Python dependencies](#python-dependencies)
         - [Major installations](#major-installations)
-            - [Visual Studio 2019](#visual-studio-2019)
+            - [Visual Studio 2022](#visual-studio-2022)
             - [Unreal Engine](#unreal-engine)
 - [__Part Two: Build CARLA__](#part-two-build-carla)
     - [Clone the CARLA repository](#clone-the-carla-repository)
@@ -70,19 +70,80 @@ pip3 install --user wheel
 ```
 
 #### Major installations
-##### Visual Studio 2019
+##### Visual Studio 2022
 
-Get the 2019 version of Visual Studio from [here](https://developerinsider.co/download-visual-studio-2019-web-installer-iso-community-professional-enterprise/). Choose __Community__ for the free version. Use the _Visual Studio Installer_ to install three additional elements: 
+Get the 2022 version of Visual Studio from [here](https://visualstudio.microsoft.com/downloads/). Choose __Community__ for the free version. Use the _Visual Studio Installer_ to install three additional elements: 
 
-* __Windows 8.1 SDK.__ Select it in the _Installation details_ section on the right or go to the _Indivdual Components_ tab and look under the _SDKs, libraries, and frameworks_ heading.
-* __x64 Visual C++ Toolset.__ In the _Workloads_ section, choose __Desktop development with C++__. This will enable a x64 command prompt that will be used for the build. Check that it has been installed correctly by pressing the `Windows` button and searching for `x64`. Be careful __not to open a `x86_x64` prompt__.  
-* __.NET framework 4.6.2__. In the _Workloads_ section, choose __.NET desktop development__ and then in the _Installation details_ panel on the right, select `.NET Framework 4.6.2 development tools`. This is required to build Unreal Engine. 
+This is our recommended visual studio configuration. 
+You can try to [import](https://learn.microsoft.com/en-us/visualstudio/install/import-export-installation-configurations?view=vs-2022) it.
+```
+{
+  "version": "1.0",
+  "components": [
+    "Microsoft.VisualStudio.Component.CoreEditor",
+    "Microsoft.VisualStudio.Workload.CoreEditor",
+    "Microsoft.Net.Component.4.8.SDK",
+    "Microsoft.Net.Component.4.7.2.TargetingPack",
+    "Microsoft.Net.ComponentGroup.DevelopmentPrerequisites",
+    "Microsoft.VisualStudio.Component.Roslyn.Compiler",
+    "Microsoft.Component.MSBuild",
+    "Microsoft.VisualStudio.Component.Roslyn.LanguageServices",
+    "Microsoft.VisualStudio.Component.TextTemplating",
+    "Microsoft.VisualStudio.Component.SQL.CLR",
+    "Microsoft.Component.ClickOnce",
+    "Microsoft.VisualStudio.Component.ManagedDesktop.Core",
+    "Microsoft.NetCore.Component.Runtime.8.0",
+    "Microsoft.NetCore.Component.SDK",
+    "Microsoft.Net.Component.4.8.TargetingPack",
+    "Microsoft.NetCore.Component.Runtime.6.0",
+    "Microsoft.Net.Component.4.6.2.TargetingPack",
+    "Microsoft.Net.Component.4.7.TargetingPack",
+    "Microsoft.Net.Component.4.7.1.TargetingPack",
+    "Microsoft.Net.Component.4.8.1.SDK",
+    "Microsoft.Net.Component.4.8.1.TargetingPack",
+    "Microsoft.Net.ComponentGroup.4.8.1.DeveloperTools",
+    "Microsoft.VisualStudio.Component.VC.CoreIde",
+    "Microsoft.VisualStudio.Component.Windows10SDK",
+    "Microsoft.VisualStudio.Component.VC.Tools.x86.x64",
+    "Microsoft.VisualStudio.Component.Windows11SDK.22621",
+    "Microsoft.VisualStudio.Component.ManagedDesktop.Prerequisites",
+    "Microsoft.VisualStudio.Workload.ManagedDesktop",
+    "Component.IncredibuildMenu",
+    "Microsoft.VisualStudio.Component.VC.Redist.14.Latest",
+    "Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Core",
+    "Microsoft.VisualStudio.Component.Windows11Sdk.WindowsPerformanceToolkit",
+    "Microsoft.VisualStudio.ComponentGroup.WebToolsExtensions.CMake",
+    "Microsoft.VisualStudio.Component.VC.CMake.Project",
+    "Microsoft.VisualStudio.Component.VC.CLI.Support",
+    "Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset",
+    "Microsoft.VisualStudio.Component.VC.Llvm.Clang",
+    "Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang",
+    "Microsoft.VisualStudio.Component.Windows10SDK.20348",
+    "Microsoft.VisualStudio.ComponentGroup.VC.Tools.142.x86.x64",
+    "Microsoft.VisualStudio.Component.VC.v141.x86.x64",
+    "Microsoft.Component.VC.Runtime.UCRTSDK",
+    "Microsoft.VisualStudio.Component.VC.Tools.ARM64EC",
+    "Microsoft.VisualStudio.Component.UWP.VC.ARM64EC",
+    "Microsoft.VisualStudio.Component.VC.Tools.ARM64",
+    "Microsoft.VisualStudio.Component.UWP.VC.ARM64",
+    "Microsoft.VisualStudio.Workload.NativeDesktop",
+    "Microsoft.VisualStudio.Component.HLSL",
+    "Microsoft.VisualStudio.Workload.NativeGame",
+    "Microsoft.Net.Component.4.6.TargetingPack",
+    "Microsoft.VisualStudio.Component.WinXP",
+    "Microsoft.VisualStudio.Component.VC.14.29.16.11.CLI.Support",
+    "Microsoft.Net.Component.4.6.1.TargetingPack",
+    "Microsoft.VisualStudio.Component.VC.14.36.17.6.x86.x64",
+    "Microsoft.VisualStudio.Component.VC.14.38.17.8.CLI.Support",
+    "Microsoft.Net.Component.4.6.2.SDK"
+  ],
+  "extensions": []
+}
+
+```
 
 !!! Important
     Other Visual Studio versions may cause conflict. Even if these have been uninstalled, some registers may persist. To completely clean Visual Studio from the computer, go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`  
-
-!!! Note
-    It is also possible to use Visual Studio 2022 using the above steps and substituting the Windows 8.1 SDK for the Windows 11/10 SDK. To override the default Visual Studio 2019 Generator in CMake, specify GENERATOR="Visual Studio 17 2022" when using the makefile commands (see [table](build_windows.md#other-make-commands)). You may specify any generator that works with the build commands as specific in the build scripts, for a full list run `cmake -G` (Ninja has been tested to work for building LibCarla so far).
 
 ##### Unreal Engine
 
