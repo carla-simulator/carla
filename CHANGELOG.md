@@ -31,6 +31,8 @@
  * Fixed segfault in traffic manager when trying to access not available vehicles
  * Fixed invalid comparission in python examples/rss
  * Fixed invisible spline meshes in instance segmentation
+ * Set to default Visual Studio 2022 in Windows
+ * Added env CARLA_CACHE_DIR to be able to set CARLA CACHE location
 
 ## CARLA 0.9.15
 
