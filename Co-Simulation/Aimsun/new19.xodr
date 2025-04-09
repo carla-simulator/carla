@@ -1,0 +1,27 @@
+<?xml version="1.0" standalone="yes"?>
+<OpenDRIVE>
+    <header revMajor="1" revMinor="4" name="" version="1.00" date="2024-11-28" north="0.0" south="0.0" east="0.0" west="0.0">
+        <geoReference></geoReference>
+    </header>
+    <road name="StraightRoad" length="500" id="1" junction="-1">
+        <planView>
+            <geometry s="0.0" x="0.0" y="1.5" hdg="0.0" length="500.0">
+                <line/>
+            </geometry>
+        </planView>
+        <lanes>
+            <laneSection s="0.0">
+                <left/>
+                <center>
+                    <lane id="0" type="driving" level="false"/>
+                </center>
+                <right>
+                    <lane id="-1" type="driving" level="false">
+                        <width sOffset="0.0" a="3.0" b="0.0" c="0.0" d="0.0"/>
+						<roadMark sOffset="0.0" type="solid" weight="standard" color="white" width="0.15"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+    </road>
+</OpenDRIVE>
