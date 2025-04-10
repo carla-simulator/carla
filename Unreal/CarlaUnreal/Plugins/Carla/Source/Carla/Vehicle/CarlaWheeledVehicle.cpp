@@ -656,6 +656,56 @@ void ACarlaWheeledVehicle::DeactivateVelocityControl()
   VelocityControl->Deactivate();
 }
 
+FVehicleTelemetryData ACarlaWheeledVehicle::GetVehicleTelemetryData() const
+{
+  FVehicleTelemetryData TelemetryData;
+
+  auto *MovementComponent = GetVehicleMovement();
+
+  // Vehicle telemetry data
+  TelemetryData.Speed = GetVehicleForwardSpeed() / 100.0f;  // From cm/s to m/s
+  TelemetryData.Steer = LastAppliedControl.Steer;
+  TelemetryData.Throttle = LastAppliedControl.Throttle;
+  TelemetryData.Brake = LastAppliedControl.Brake;
+  TelemetryData.EngineRPM = MovementComponent->GetEngineRotationSpeed();
+  TelemetryData.Gear = GetVehicleCurrentGear();
+  TelemetryData.Drag = MovementComponent->DebugDragMagnitude / 100.0f;  // kg*cm/s2 to Kg*m/s2
+
+  // Wheels telemetry data
+  FPhysXVehicleManager* MyVehicleManager = FPhysXVehicleManager::GetVehicleManagerFromScene(GetWorld()->GetPhysicsScene());
+
+  SCOPED_SCENE_READ_LOCK(MyVehicleManager->GetScene());
+  PxWheelQueryResult* WheelsStates = MyVehicleManager->GetWheelsStates_AssumesLocked(MovementComponent);
+  check(WheelsStates);
+
+  TArray<FWheelTelemetryData> Wheels;
+  for (uint32 w = 0; w < MovementComponent->PVehicle->mWheelsSimData.getNbWheels(); ++w)
+  {
+    FWheelTelemetryData WheelTelemetryData;
+
+    WheelTelemetryData.TireFriction = WheelsStates[w].tireFriction;
+    WheelTelemetryData.LatSlip = FMath::RadiansToDegrees(WheelsStates[w].lateralSlip);
+    WheelTelemetryData.LongSlip = WheelsStates[w].longitudinalSlip;
+    WheelTelemetryData.Omega = MovementComponent->PVehicle->mWheelsDynData.getWheelRotationSpeed(w);
+
+    UVehicleWheel* Wheel = MovementComponent->Wheels[w];
+    WheelTelemetryData.TireLoad = Wheel->DebugTireLoad / 100.0f;
+    WheelTelemetryData.NormalizedTireLoad = Wheel->DebugNormalizedTireLoad;
+    WheelTelemetryData.Torque = Wheel->DebugWheelTorque / (100.0f * 100.0f);  // From cm2 to m2
+    WheelTelemetryData.LongForce = Wheel->DebugLongForce / 100.f;
+    WheelTelemetryData.LatForce = Wheel->DebugLatForce / 100.f;
+    WheelTelemetryData.NormalizedLongForce = (FMath::Abs(WheelTelemetryData.LongForce)*WheelTelemetryData.NormalizedTireLoad) / (WheelTelemetryData.TireLoad);
+    WheelTelemetryData.NormalizedLatForce = (FMath::Abs(WheelTelemetryData.LatForce)*WheelTelemetryData.NormalizedTireLoad) / (WheelTelemetryData.TireLoad);
+
+    Wheels.Add(WheelTelemetryData);
+  }
+
+  TelemetryData.Wheels = Wheels;
+
+  return TelemetryData;
+
+}
+
 void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
 {
   if (GetWorld()->GetFirstPlayerController())

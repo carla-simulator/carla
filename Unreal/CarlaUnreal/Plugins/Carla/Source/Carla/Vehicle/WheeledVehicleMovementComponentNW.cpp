@@ -20,7 +20,7 @@ UWheeledVehicleMovementComponentNW::UWheeledVehicleMovementComponentNW(const FOb
   DefEngineData.InitDefaults();
   EngineSetup.MOI = DefEngineData.EngineRevUpMOI;
   EngineSetup.MaxRPM = DefEngineData.MaxRPM;
-  
+
   //
   -- We need to investigate about this --
   EngineSetup.DampingRateFullThrottle = DefEngineData.mDampingRateFullThrottle;
