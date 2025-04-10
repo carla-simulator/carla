@@ -19,12 +19,12 @@ public:
 
 private:
   class IAssetRegistry& GetAssetRegistry() const;
-  TSet<UMaterialInterface*> FindMaskedMaterialInterfaces(const FName& PackageName);
+  TSet<UMaterialInterface*> FindMaskedMaterialInterfaces(const FName& PackageName, TSet<FName>& ScannedAssets);
   void CreateMapPackage(const FString& PackageName, UTaggedMaterialsRegistry* TaggedMaterialsRegistry);
 
+  static TArray<FString> ParseAndSplitParamList(const TArray<FString>& Switches, const FString& SwitchKey);
   static TArray<FString> GetPackagePaths(const FString& PackageName);
   
-  TSet<FName> ScannedAssets;
   mutable class IAssetRegistry* CachedAssetRegistry;
 #endif // WITH_EDITOR
 };

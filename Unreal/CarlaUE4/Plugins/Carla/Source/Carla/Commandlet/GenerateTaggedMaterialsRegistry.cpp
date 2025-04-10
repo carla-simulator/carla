@@ -27,7 +27,7 @@ IAssetRegistry& UGenerateTaggedMaterialsRegistryCommandlet::GetAssetRegistry() c
   return *CachedAssetRegistry;
 }
 
-TSet<UMaterialInterface*> UGenerateTaggedMaterialsRegistryCommandlet::FindMaskedMaterialInterfaces(const FName& PackageName) {
+TSet<UMaterialInterface*> UGenerateTaggedMaterialsRegistryCommandlet::FindMaskedMaterialInterfaces(const FName& PackageName, TSet<FName>& ScannedAssets) {
   if (ScannedAssets.Contains(PackageName)) {
     return {};
   } else {
@@ -54,7 +54,7 @@ TSet<UMaterialInterface*> UGenerateTaggedMaterialsRegistryCommandlet::FindMasked
   TArray<FName> Dependencies;
   AssetRegistry.GetDependencies(PackageName, Dependencies);
   for (const FName& Dependency : Dependencies) {
-    FoundMaterialInterfaces.Append(FindMaskedMaterialInterfaces(Dependency));
+    FoundMaterialInterfaces.Append(FindMaskedMaterialInterfaces(Dependency, ScannedAssets));
   }
 
   return FoundMaterialInterfaces;
@@ -81,6 +81,26 @@ void UGenerateTaggedMaterialsRegistryCommandlet::CreateMapPackage(const FString&
   // Save the new package
   const FString PackageFileName = FPackageName::LongPackageNameToFilename(PackagePath, FPackageName::GetMapPackageExtension());
   UPackage::SavePackage(Package, World, RF_Public | RF_Standalone, *PackageFileName);
+}
+
+TArray<FString> UGenerateTaggedMaterialsRegistryCommandlet::ParseAndSplitParamList(const TArray<FString>& Switches, const FString& SwitchKey) {
+  // Implementation adapted from CookCommandlet.cpp#718
+  TArray<FString> ValueElements;
+  for (const FString& Switch: Switches) {
+    if (Switch.StartsWith(SwitchKey + TEXT("=")) == true) {
+      FString ValuesList = Switch.Right(Switch.Len() - (SwitchKey + TEXT("=")).Len());
+      // Allow support for -KEY=Value1+Value2+Value3 as well as -KEY=Value1 -KEY=Value2
+      for (int32 PlusIdx = ValuesList.Find(TEXT("+"), ESearchCase::CaseSensitive); PlusIdx != INDEX_NONE; PlusIdx = ValuesList.Find(TEXT("+"), ESearchCase::CaseSensitive))
+      {
+        const FString ValueElement = ValuesList.Left(PlusIdx);
+        ValueElements.Add(ValueElement);
+
+        ValuesList.RightInline(ValuesList.Len() - (PlusIdx + 1), false);
+      }
+      ValueElements.Add(ValuesList);
+    }
+  }
+  return ValueElements;
 }
 
 TArray<FString> UGenerateTaggedMaterialsRegistryCommandlet::GetPackagePaths(const FString& PackageName) {
@@ -110,44 +130,81 @@ TArray<FString> UGenerateTaggedMaterialsRegistryCommandlet::GetPackagePaths(cons
 
 int32 UGenerateTaggedMaterialsRegistryCommandlet::Main(const FString& Params)
 {
-  UE_LOG(LogCarla, Log, TEXT("Running UGenerateTaggedMaterialsRegistryCommandlet..."));
+  UE_LOG(LogCarla, Display, TEXT("Running UGenerateTaggedMaterialsRegistryCommandlet..."));
 
-  FString PackageName;
-  FParse::Value(*Params, TEXT("PackageName="), PackageName);
+  // Parse the provided package names
+  TArray<FString> Tokens;
+  TArray<FString> Switches;
+  ParseCommandLine(*Params, Tokens, Switches);
+  TArray<FString> PackageNames = ParseAndSplitParamList(Switches, TEXT("PackageNames"));
 
-  // 1. Collect all relevant top-level packages
-  TArray<FString> RequestedTopLevelPackages = GetPackagePaths(PackageName);
+  // Parse, whether a monolithic target-archive is requested
+  FString TargetArchive;
+  bool bIsMonolithic = FParse::Value(*Params, TEXT("TargetArchive="), TargetArchive);
 
-  // 2. If non-default Carla package is requested, we search for those assets anyway.
-  //    These assets are then already part of ScannedAssets, avoiding duplicates in the requested package.
-  if (PackageName != TEXT("Carla")) {
-    UE_LOG(LogCarla, Log, TEXT("Inspecting default Carla packages to avoid duplicates."));
-    TArray<FString> CarlaTopLevelPackages = GetPackagePaths(TEXT("Carla"));
+  // If Carla package is requested, we store it. If not, we search for those assets anyway.
+  // These assets are then already part of ScannedAssetsCarla, avoiding duplicates in the requested packages.
+  FString PackageNameCarla = TEXT("Carla");
+  TSet<FName> ScannedAssetsCarla;
+  {
+    UE_LOG(LogCarla, Display, TEXT("Scanning tag-injected materials for package: %s"), *PackageNameCarla);
+    UTaggedMaterialsRegistry* TaggedMaterialsRegistryCarla = UTaggedMaterialsRegistry::Create(PackageNameCarla);
+    TArray<FString> CarlaTopLevelPackages = GetPackagePaths(PackageNameCarla);
     for (const FString& TopLevelPackage : CarlaTopLevelPackages) {
-      FindMaskedMaterialInterfaces(*TopLevelPackage);
+      UE_LOG(LogCarla, Display, TEXT("Scanning %s"), *TopLevelPackage);
+      TSet<UMaterialInterface*> MaterialInterfaces = FindMaskedMaterialInterfaces(*TopLevelPackage, ScannedAssetsCarla);
+      for (UMaterialInterface* MaterialInterface : MaterialInterfaces) {
+        // Calling GetTaggedMaterial creates and registers a new tag-injected version of the MaterialInterface
+        TaggedMaterialsRegistryCarla->GetTaggedMaterial(MaterialInterface);
+      }
+    }
+    if (PackageNames.Contains(PackageNameCarla)) {
+      TaggedMaterialsRegistryCarla->Save();
+      CreateMapPackage(PackageNameCarla, TaggedMaterialsRegistryCarla);
     }
   }
 
-  // 3. Recursively search for all masked material interfaces in the requested top-level packages and create tag-injected versions
-  UTaggedMaterialsRegistry* TaggedMaterialsRegistry = UTaggedMaterialsRegistry::Create(PackageName);
-  for (const FString& TopLevelPackage : RequestedTopLevelPackages) {
-    UE_LOG(LogCarla, Log, TEXT("Creating tag-injected materials for package: %s"), *TopLevelPackage);
+  // Always start with already scanned Carla assets to avoid duplicates in the other packages
+  TSet<FName> ScannedAssetsPackage = ScannedAssetsCarla; // shallow copy
+  UTaggedMaterialsRegistry* TaggedMaterialsRegistry = UTaggedMaterialsRegistry::Create(TargetArchive);
+  for (FString PackageName : PackageNames) {
+    if (PackageName == PackageNameCarla) {
+      // Skip the Carla package, since it was explicitly handled before
+      continue;
+    }
+    if (!bIsMonolithic) {
+      // If no monolithic target-archive is requested, start from Carla assets for every package.
+      // Otherwise ScannedAssetsPackage grows from package to package, avoiding further duplicates.
+      ScannedAssetsPackage = ScannedAssetsCarla;
+      TaggedMaterialsRegistry = UTaggedMaterialsRegistry::Create(PackageName);
+    }
 
-    TSet<UMaterialInterface*> MaterialInterfaces = FindMaskedMaterialInterfaces(*TopLevelPackage);
-    for (UMaterialInterface* MaterialInterface : MaterialInterfaces) {
-      // Calling GetTaggedMaterial creates and registers a new tag-injected version of the MaterialInterface
-      TaggedMaterialsRegistry->GetTaggedMaterial(MaterialInterface);
+    // Recursively search for all masked material interfaces in the requested top-level packages and create tag-injected versions
+    TArray<FString> RequestedTopLevelPackages = GetPackagePaths(PackageName);
+    for (const FString& TopLevelPackage : RequestedTopLevelPackages) {
+      UE_LOG(LogCarla, Display, TEXT("Creating tag-injected materials for package: %s"), *TopLevelPackage);
+
+      TSet<UMaterialInterface*> MaterialInterfaces = FindMaskedMaterialInterfaces(*TopLevelPackage, ScannedAssetsPackage);
+      for (UMaterialInterface* MaterialInterface : MaterialInterfaces) {
+        // Calling GetTaggedMaterial creates and registers a new tag-injected version of the MaterialInterface
+        TaggedMaterialsRegistry->GetTaggedMaterial(MaterialInterface);
+      }
+    }
+    if (!bIsMonolithic && TaggedMaterialsRegistry->Num() > 0) {
+      // Save asset and create empty map containing the TaggedMaterialsRegistry for cooking
+      UE_LOG(LogCarla, Display, TEXT("Creating asset and map for package '%s' containing the TaggedMaterialsRegistry for cooking."), *PackageName);
+      TaggedMaterialsRegistry->Save();
+      CreateMapPackage(PackageName, TaggedMaterialsRegistry);
     }
   }
-  if (TaggedMaterialsRegistry->Num() > 0) {
+  if (bIsMonolithic) {
+    // Save monolithic TaggedMaterialsRegistry for entire target-archive
+    UE_LOG(LogCarla, Display, TEXT("Creating monolithic asset and map for target-archive '%s' containing the TaggedMaterialsRegistry for cooking."), *TargetArchive);
     TaggedMaterialsRegistry->Save();
+    CreateMapPackage(TargetArchive, TaggedMaterialsRegistry);
   }
 
-  // 4. Create empty map containing the TaggedMaterialsRegistry for cooking
-  UE_LOG(LogCarla, Log, TEXT("Creating empty map containing the TaggedMaterialsRegistry for cooking."));
-  CreateMapPackage(PackageName, TaggedMaterialsRegistry);
-
-  UE_LOG(LogCarla, Log, TEXT("UGenerateTaggedMaterialsRegistryCommandlet finished."));
+  UE_LOG(LogCarla, Display, TEXT("UGenerateTaggedMaterialsRegistryCommandlet finished."));
 
   return 0;
 }
