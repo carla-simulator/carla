@@ -202,10 +202,21 @@ if (BUILD_CARLA_UNREAL)
   endif ()
 endif ()
 
+carla_option (
+  CARLA_UNREAL_LOG_WINDOW
+  "Whether to open a terminal window along the Unreal editor."
+  ON
+)
+
+set (CARLA_LAUNCH_ARGS_DEFAULT)
+if (CARLA_UNREAL_LOG_WINDOW)
+  list (APPEND CARLA_LAUNCH_ARGS_DEFAULT -log)
+endif ()
+
 carla_string_option (
   CARLA_LAUNCH_ARGS
   "CMake-style semicolon-separated list of arguments to pass when launching the Unreal Editor with CARLA."
-  ""
+  "${CARLA_LAUNCH_ARGS_DEFAULT}"
 )
 
 carla_string_option (
