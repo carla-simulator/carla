@@ -71,6 +71,22 @@
 		{
 			"Name": "PerformanceMonitor",
 			"Enabled": true
+		},
+		{
+			"Name": "PCG",
+			"Enabled": true
+		},
+		{
+			"Name": "LandscapePatch",
+			"Enabled": true
+		},
+		{
+			"Name": "ScriptableToolsFramework",
+			"Enabled": true
+		},
+		{
+			"Name": "ScriptableToolsEditorMode",
+			"Enabled": true
 		}
 	],
 	"TargetPlatforms": [
