@@ -1,3 +1,8 @@
+## LATEST Changes
+
+* Added actor description as Actor TAGs
+
+
 ## CARLA 0.10.0
 
 * Unreal Engine migration from version 4.26 to version 5.5
@@ -51,4 +56,6 @@
 * RSS functionality removed from docs
 * Removed Light Manager from API and docs
 * Added Mine01 off-road mining map from Synkrotron
+
+
 

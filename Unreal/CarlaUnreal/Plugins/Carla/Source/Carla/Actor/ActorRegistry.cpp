@@ -105,6 +105,18 @@ FCarlaActor* FActorRegistry::Register(AActor &Actor, FActorDescription Descripti
   }
   Ids.Emplace(&Actor, Id);
 
+// Add the actor description to the Unreal actor as TAGs
+
+  for (const auto& Elem : Description.Variations)
+  {
+      const FString& Key = Elem.Key;
+      const FActorAttribute& Attribute = Elem.Value;
+
+      // Optional: You can use only the value, or a key-value combination as the tag
+      FString TagString = Key + TEXT(":") + Attribute.Value; // or just Attribute.Value
+      Actor.Tags.Add(FName(*TagString));
+  }
+
   TSharedPtr<FCarlaActor> View =
       MakeCarlaActor(Id, Actor, std::move(Description), crp::ActorState::Active);
 
