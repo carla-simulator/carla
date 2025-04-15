@@ -53,7 +53,7 @@ target_compile_definitions (
 if(WIN32)
   target_link_libraries (
     carla-ros2-native PUBLIC
-    ${CMAKE_INSTALL_PREFIX}/lib/fastrtps-2.14.lib
+    ${CMAKE_INSTALL_PREFIX}/lib/fastrtps-2.11.lib
   )
 
 else()
