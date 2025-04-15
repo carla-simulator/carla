@@ -50,10 +50,18 @@ target_compile_definitions (
   BOOST_ASIO_ENABLE_BUFFER_DEBUGGING
 )
 
-target_link_libraries (
-  carla-ros2-native PUBLIC
-  ${CMAKE_INSTALL_PREFIX}/lib/libfastrtps.so
-)
+if(WIN32)
+  target_link_libraries (
+    carla-ros2-native PUBLIC
+    ${CMAKE_INSTALL_PREFIX}/lib/fastrtps-2.14.lib
+  )
+
+else()
+  target_link_libraries (
+    carla-ros2-native PUBLIC
+    ${CMAKE_INSTALL_PREFIX}/lib/libfastrtps.so
+  )
+endif()
 
 install (
   TARGETS

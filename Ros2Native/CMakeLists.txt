@@ -53,19 +53,29 @@ ExternalProject_Add (
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
     -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    -DCMAKE_CXX_STANDARD=17
 )
 
-set (CARLA_PLUGIN_BINARY_PATH ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Plugins/Carla/Binaries/Linux)
-
-make_directory (${CARLA_PLUGIN_BINARY_PATH})
-
+set (CARLA_PLUGIN_LINUX_BINARY_PATH ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Plugins/Carla/Binaries/Linux)
+make_directory (${CARLA_PLUGIN_LINUX_BINARY_PATH})
 add_custom_command (
   TARGET carla-ros2-native-lib
   POST_BUILD
   COMMAND
     ${CMAKE_COMMAND} -E copy
     ${PROJECT_INSTALL_PATH}/lib/*.so*
-    ${CARLA_PLUGIN_BINARY_PATH}
+    ${CARLA_PLUGIN_LINUX_BINARY_PATH}
+)
+
+set (CARLA_PLUGIN_WINDOWS_BINARY_PATH ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Plugins/Carla/Binaries/Windows)
+make_directory (${CARLA_PLUGIN_WINDOWS_BINARY_PATH})
+add_custom_command (
+  TARGET carla-ros2-native-lib
+  POST_BUILD
+  COMMAND
+    ${CMAKE_COMMAND} -E copy
+    ${PROJECT_INSTALL_PATH}/lib/*.lib*
+    ${CARLA_PLUGIN_WINDOWS_BINARY_PATH}
 )
 
 carla_add_custom_target (
