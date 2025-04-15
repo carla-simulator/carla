@@ -2,7 +2,8 @@
 setlocal EnableDelayedExpansion
 
 set skip_prerequisites=false
-set launch=false
+set skip_prebuild=false
+set launch=true
 set interactive=false
 set python_path=python
 set python_root=
@@ -77,19 +78,47 @@ if exist "%cd%\Unreal\CarlaUnreal\Content" (
 )
 
 rem Activate VS terminal development environment:
-if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" (
-    echo Activating "x64 Native Tools Command Prompt" terminal environment.
-    call "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" || exit /b
-) else (
-    echo Could not find vcvarsall.bat, aborting setup...
+set "vcvars64_found="
+
+echo Checking for Visual Studio 2022...
+if exist "%ProgramFiles%\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vcvars64_found=true"
+    call "%ProgramFiles%\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat" || exit /b
+)
+if exist "%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vcvars64_found=true"
+    call "%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" || exit /b
+)
+if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vcvars64_found=true"
+    call "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat" || exit /b
+)
+if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vcvars64_found=true"
+    call "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" || exit /b
+)
+if exist "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vcvars64_found=true"
+    call "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" || exit /b
+)
+if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vcvars64_found=true"
+    call "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" || exit /b
+)
+
+if "%vcvars64_found%"=="" (
+    echo Could not find vcvars64.bat for any detected Visual Studio version, aborting setup...
     exit 1
+) else (
+    echo Visual Studio 2022 found.
 )
 
 rem -- DOWNLOAD + BUILD UNREAL ENGINE --
 if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     echo Found Unreal Engine 5 at "%CARLA_UNREAL_ENGINE_PATH%".
 ) else if exist ..\UnrealEngine5_carla (
-    echo Found CARLA Unreal Engine at %cd%/UnrealEngine5_carla. Assuming already built...
+    echo Found CARLA Unreal Engine at %cd%/../UnrealEngine5_carla. Assuming already built...
+    set CARLA_UNREAL_ENGINE_PATH=%cd%/../UnrealEngine5_carla
 ) else (
     echo Could not find CARLA Unreal Engine, downloading...
     pushd ..
@@ -112,23 +141,24 @@ if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     popd
 )
 
-rem -- BUILD CARLA --
-echo Configuring the CARLA CMake project...
-cmake ^
-    -G Ninja ^
-    -S . ^
-    -B Build ^
-    --toolchain=CMake/Toolchain.cmake ^
-    -DPython_ROOT_DIR=%python_root% ^
-    -DPython3_ROOT_DIR=%python_root% ^
-    -DCMAKE_BUILD_TYPE=Release ^
-    -DCARLA_UNREAL_ENGINE_PATH=%CARLA_UNREAL_ENGINE_PATH% || exit /b
-echo Building CARLA...
-cmake --build Build || exit /b
-echo Installing Python API...
-cmake --build Build --target carla-python-api-install || exit /b
-echo CARLA Python API build+install succeeded.
-
+if %skip_prebuild%==false (
+    rem -- BUILD CARLA --
+    echo Configuring the CARLA CMake project...
+    cmake ^
+        -G Ninja ^
+        -S . ^
+        -B Build ^
+        --toolchain=CMake/Toolchain.cmake ^
+        -DPython_ROOT_DIR=%python_root% ^
+        -DPython3_ROOT_DIR=%python_root% ^
+        -DCMAKE_BUILD_TYPE=Release ^
+        -DCARLA_UNREAL_ENGINE_PATH=%CARLA_UNREAL_ENGINE_PATH% || exit /b
+    echo Building CARLA...
+    cmake --build Build || exit /b
+    echo Installing Python API...
+    cmake --build Build --target carla-python-api-install || exit /b
+    echo CARLA Python API build+install succeeded.
+)
 rem -- POST-BUILD STEPS --
 
 if %launch%==true (

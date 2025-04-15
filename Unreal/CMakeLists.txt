@@ -148,10 +148,18 @@ foreach (UE_DEP ${UE_DEPENDENCIES})
   )
 endforeach ()
 
-set (
-  CARLA_UNREAL_LIBRARIES
-  $<TARGET_FILE:libsqlite3>
-)
+if(WIN32)
+  set (
+    CARLA_UNREAL_LIBRARIES
+    $<TARGET_FILE:libsqlite3>
+    shlwapi.lib
+  )
+else()
+  set (
+    CARLA_UNREAL_LIBRARIES
+    $<TARGET_FILE:libsqlite3>
+  )
+endif()
 
 foreach (UE_DEP ${UE_DEPENDENCIES})
   get_target_property (UE_DEP_TYPE ${UE_DEP} TYPE)

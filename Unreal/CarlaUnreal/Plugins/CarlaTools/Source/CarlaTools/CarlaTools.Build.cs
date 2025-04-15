@@ -112,7 +112,14 @@ public class CarlaTools :
       // "StreetMapImporting",
       // "StreetMapRuntime",
       "Chaos",
-      "ChaosVehicles"
+      "ChaosVehicles",
+      "AssetTools",
+      "UnrealEd",
+      "EditorStyle",
+      "AssetRegistry",
+      "MeshDescription",
+      "MeshUtilitiesCommon",
+      "Projects"
     });
 
     if (EnableNVIDIAOmniverse)

@@ -1,3 +1,9 @@
+#ifdef _WIN32
+#define _USE_MATH_DEFINES
+// Convert GNU C lib M_PIf32 to a float 32 version of M_PI
+#define M_PIf32 (float)M_PI
+#endif // _WIN32
+ 
 #include "CarlaTransformPublisher.h"
 
 #include <string>

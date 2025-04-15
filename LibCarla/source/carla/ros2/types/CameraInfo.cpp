@@ -20,6 +20,8 @@
  */
 
 #ifdef _WIN32
+// Allow M_PI usage
+#define _USE_MATH_DEFINES
 // Remove linker warning LNK4221 on Visual Studio
 namespace {
 char dummy;
