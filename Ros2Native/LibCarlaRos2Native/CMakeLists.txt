@@ -32,7 +32,7 @@ file (
 
 add_library (
   carla-ros2-native
-  SHARED
+  STATIC
   ${LIBCARLA_ROS2_HEADERS}
   ${LIBCARLA_ROS2_SOURCES}
 )
@@ -54,6 +54,7 @@ if(WIN32)
   target_link_libraries (
     carla-ros2-native PUBLIC
     ${CMAKE_INSTALL_PREFIX}/lib/fastrtps-2.11.lib
+    ${CMAKE_INSTALL_PREFIX}/lib/fastcdr-1.1.lib
   )
 
 else()
