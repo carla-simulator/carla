@@ -56,30 +56,6 @@ ExternalProject_Add (
     -DCMAKE_CXX_STANDARD=17
 )
 
-set (CARLA_PLUGIN_BINARY_PATH ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Plugins/Carla/Binaries)
-make_directory (${CARLA_PLUGIN_BINARY_PATH})
-
-if (WIN32)
-  file(GLOB LIB_FILES ${PROJECT_INSTALL_PATH}/lib/*.lib)
-  add_custom_command (
-    TARGET carla-ros2-native-lib
-    POST_BUILD
-    COMMAND
-      ${CMAKE_COMMAND} -E copy
-      ${LIB_FILES}
-      ${CARLA_PLUGIN_BINARY_PATH}
-)
-else()
-  add_custom_command (
-    TARGET carla-ros2-native-lib
-    POST_BUILD
-    COMMAND
-      ${CMAKE_COMMAND} -E copy
-      ${PROJECT_INSTALL_PATH}/lib/*.so*
-      ${CARLA_PLUGIN_BINARY_PATH}
-)
-endif()
-
 carla_add_custom_target (
   carla-ros2-native
   "Build the ROS2-Native CARLA subproject."
