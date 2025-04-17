@@ -318,30 +318,6 @@ list (
   carla-unreal-configure
 )
 
-set (CARLA_PLUGIN_BINARY_PATH ${CMAKE_SOURCE_DIR}/Unreal/CarlaUnreal/Plugins/Carla/Binaries)
-make_directory (${CARLA_PLUGIN_BINARY_PATH})
-
-if (WIN32)
-  file(GLOB LIB_FILES ${PROJECT_INSTALL_PATH}/lib/*.lib)
-  add_custom_command (
-    TARGET carla-unreal-configure
-    PRE_BUILD
-    COMMAND
-      ${CMAKE_COMMAND} -E copy
-      ${LIB_FILES}
-      ${CARLA_PLUGIN_BINARY_PATH}
-)
-else()
-  add_custom_command (
-    TARGET carla-unreal-configure
-    PRE_BUILD
-    COMMAND
-      ${CMAKE_COMMAND} -E copy
-      ${PROJECT_INSTALL_PATH}/lib/*.so*
-      ${CARLA_PLUGIN_BINARY_PATH}
-)
-endif()
-
 file (
   MAKE_DIRECTORY
   ${CARLA_UE_PATH}/Content/Carla/ExportedMaps
@@ -626,3 +602,27 @@ set_property (
   "${CARLA_BUILD_PATH}/Package"
   "${CARLA_BUILD_PATH}/PythonAPI/dist"
 )
+
+set (CARLA_PLUGIN_BINARY_PATH ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins/Carla/Binaries)
+make_directory (${CARLA_PLUGIN_BINARY_PATH})
+
+if (WIN32)
+  file(GLOB LIB_FILES ${CARLA_WORKSPACE_PATH}/Build/Ros2Native/install/lib/*.lib)
+  add_custom_command (
+    TARGET check-unreal-content
+    PRE_BUILD
+    COMMAND
+      ${CMAKE_COMMAND} -E copy
+      ${LIB_FILES}
+      ${CARLA_PLUGIN_BINARY_PATH}
+)
+else()
+  add_custom_command (
+    TARGET check-unreal-content
+    PRE_BUILD
+    COMMAND
+      ${CMAKE_COMMAND} -E copy
+      ${CARLA_WORKSPACE_PATH}/Build/Ros2Native/install/lib/*.so*
+      ${CARLA_PLUGIN_BINARY_PATH}
+)
+endif()
