@@ -249,13 +249,13 @@ CARLA forum</a>
 >
 > ```
 >  <VCProjectFileGenerator>
->    <Version>VisualStudioVS 2022</Version>
+>    <Version>VisualStudio 2022</Version>
 > </VCProjectFileGenerator>
 > ```
 > 
 > ``` 
 >  <WindowsPlatform>
->    <Compiler>VisualStudioVS 2022</Compiler>
+>    <Compiler>VisualStudio 2022</Compiler>
 > </WindowsPlatform>
 > ```  
 
