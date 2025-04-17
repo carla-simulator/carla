@@ -72,9 +72,9 @@ if (WIN32)
     COMMAND
       ${CMAKE_COMMAND} -E copy
       ${PROJECT_INSTALL_PATH}/lib/carla-ros2-native.lib
-      ${PROJECT_INSTALL_PATH}/lib/fastcdr-1.1.lib
-      ${PROJECT_INSTALL_PATH}/lib/fastrtps-2.11.lib
-      ${PROJECT_INSTALL_PATH}/lib/foonathan_memory-0.7.3.lib
+      ${PROJECT_INSTALL_PATH}/bin/fastcdr-1.1.dll
+      ${PROJECT_INSTALL_PATH}/bin/fastrtps-2.11.dll
+      ${PROJECT_INSTALL_PATH}/bin/foonathan_memory-0.7.3.dll
       ${CARLA_PLUGIN_BINARY_PATH}
 )
 else()

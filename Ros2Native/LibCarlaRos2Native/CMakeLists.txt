@@ -32,7 +32,7 @@ file (
 
 add_library (
   carla-ros2-native
-  STATIC
+  SHARED
   ${LIBCARLA_ROS2_HEADERS}
   ${LIBCARLA_ROS2_SOURCES}
 )
