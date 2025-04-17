@@ -175,8 +175,8 @@ public class Carla :
       if (Target.Platform == UnrealTargetPlatform.Win64)
       {
         PublicAdditionalLibraries.Add(Path.Combine(CarlaPluginBinariesPath, "carla-ros2-native.lib"));
-        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesPath, "fastrtps-2.11.dll"));
-        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesPath, "fastcdr-1.1.dll"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesPath, "libfastrtps-2.11.dll"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesPath, "libfastcdr-1.1.dll"));
         RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesPath, "foonathan_memory-0.7.3.dll"));
       }
       else

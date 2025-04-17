@@ -32,7 +32,7 @@ file (
 
 add_library (
   carla-ros2-native
-  SHARED
+  STATIC
   ${LIBCARLA_ROS2_HEADERS}
   ${LIBCARLA_ROS2_SOURCES}
 )
@@ -55,7 +55,6 @@ if(WIN32)
     carla-ros2-native PUBLIC
     ${CMAKE_INSTALL_PREFIX}/lib/libfastrtps-2.11.lib
     ${CMAKE_INSTALL_PREFIX}/lib/libfastcdr-1.1.lib
-    ${CMAKE_INSTALL_PREFIX}/lib/libfoonathan_memory-0.7.3.lib
   )
 
 else()

@@ -85,7 +85,7 @@ if (WIN32)
       ${PROJECT_INSTALL_PATH}/lib/carla-ros2-native.lib
       ${PROJECT_INSTALL_PATH}/lib/libfastcdr-1.1.lib
       ${PROJECT_INSTALL_PATH}/lib/libfastrtps-2.11.lib
-      ${PROJECT_INSTALL_PATH}/lib/libfoonathan_memory-0.7.3.lib
+      ${PROJECT_INSTALL_PATH}/lib/foonathan_memory-0.7.3.lib
       ${CARLA_PLUGIN_BINARY_PATH}
 )
 else()
