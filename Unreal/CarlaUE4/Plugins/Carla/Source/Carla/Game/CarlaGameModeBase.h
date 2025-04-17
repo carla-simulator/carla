@@ -196,4 +196,6 @@ private:
   // in the same tick
   int32 LatentInfoUUID = 0;
 
+  bool ego_vehicle_found = false;
+
 };

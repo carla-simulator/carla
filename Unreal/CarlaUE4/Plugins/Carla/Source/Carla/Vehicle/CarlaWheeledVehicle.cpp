@@ -28,6 +28,9 @@
 #include "Carla/Vegetation/VegetationManager.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
+// #include "USimulyticActorFallback.h"
+// #include "USimulyticTrafficLightFallback.h"
+
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
 // =============================================================================
@@ -1245,4 +1248,12 @@ FPoseSnapshot ACarlaWheeledVehicle::GetWorldTransformedPose()
     }
   }
   return WorldTransformedPose;
+}
+
+void ACarlaWheeledVehicle::CollectOutputData()
+{
+  ActorDataFallbackComponent = NewObject<UActorDataFallbackComponent>(this);
+  ActorDataFallbackComponent->RegisterComponent();
+  TrafficLightFallbackComponent = NewObject<UTrafficLightFallbackComponent>(this);
+  TrafficLightFallbackComponent->RegisterComponent();
 }

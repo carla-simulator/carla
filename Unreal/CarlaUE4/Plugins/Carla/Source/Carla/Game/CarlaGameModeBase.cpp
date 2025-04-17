@@ -10,6 +10,7 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
 #include "Carla/Lights/CarlaLight.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Engine/DecalActor.h"
 #include "Engine/LevelStreaming.h"
 #include "Engine/LocalPlayer.h"
@@ -378,6 +379,25 @@ void ACarlaGameModeBase::Tick(float DeltaSeconds)
   if (Recorder)
   {
     Recorder->Tick(DeltaSeconds);
+  }
+
+  if(!ego_vehicle_found){
+    TArray<AActor*> Actors;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), AActor::StaticClass(), Actors);
+
+    for (AActor* Actor : Actors)
+    {
+      for(FName& tag : Actor->Tags)
+      {
+        if(tag.ToString() == "role_name:hero")
+        {
+          ACarlaWheeledVehicle* ego_vehicle = Cast<ACarlaWheeledVehicle>(Actor);
+          ego_vehicle->CollectOutputData();
+          ego_vehicle_found = true;
+        }
+      }
+    }
+
   }
 }
 

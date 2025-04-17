@@ -37,6 +37,8 @@
 #include <utility>
 
 #include "carla/rpc/VehicleFailureState.h"
+#include "carla/Public/TrafficLightFallbackComponent.h"
+#include "carla/Public/ActorDataFallbackComponent.h"
 #include "CarlaWheeledVehicle.generated.h"
 
 class UBoxComponent;
@@ -67,6 +69,9 @@ enum class EVehicleDoor : uint8 {
   Trunk = 5,
   All = 6
 };
+
+// class USimulyticActorFallback;
+// class USimulyticTrafficLightFallback;
 
 /// Base class for CARLA wheeled vehicles.
 UCLASS()
@@ -467,6 +472,12 @@ private:
   UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   TMap<UPrimitiveComponent*, UPhysicsConstraintComponent*> CollisionDisableConstraints;
 
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  UActorDataFallbackComponent* ActorDataFallbackComponent = nullptr;
+
+  UPROPERTY(Category="CARLA Wheeled Vehicle", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  UTrafficLightFallbackComponent* TrafficLightFallbackComponent = nullptr;
+
   /// Rollovers tend to have too much angular velocity, resulting in the vehicle doing a full 360º flip.
   /// This function progressively reduces the vehicle's angular velocity so that it ends up upside down instead.
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
@@ -483,16 +494,19 @@ public:
   float SpeedAnim { 0.0f };
   float RotationAnim { 0.0f };
   FPoseSnapshot WorldTransformedPose;
-
+  
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetSpeedAnim() const { return SpeedAnim; }
-
+  
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void SetSpeedAnim(float Speed) { SpeedAnim = Speed; }
-
+  
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetRotationAnim() const { return RotationAnim; }
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void SetRotationAnim(float Rotation) { RotationAnim = Rotation; }
+
+  UFUNCTION()
+  void CollectOutputData();
 };
