@@ -53,8 +53,9 @@ target_compile_definitions (
 if(WIN32)
   target_link_libraries (
     carla-ros2-native PUBLIC
-    ${CMAKE_INSTALL_PREFIX}/lib/fastrtps-2.11.lib
-    ${CMAKE_INSTALL_PREFIX}/lib/fastcdr-1.1.lib
+    ${CMAKE_INSTALL_PREFIX}/lib/libfastrtps-2.11.lib
+    ${CMAKE_INSTALL_PREFIX}/lib/libfastcdr-1.1.lib
+    ${CMAKE_INSTALL_PREFIX}/lib/libfoonathan_memory-0.7.3.lib
   )
 
 else()

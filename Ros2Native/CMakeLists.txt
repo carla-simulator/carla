@@ -16,8 +16,19 @@ ExternalProject_add (
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
     -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-    -DBUILD_SHARED_LIBS=ON
+    -DBUILD_SHARED_LIBS=OFF
     -DFOONATHAN_MEMORY_FORCE_VENDORED_BUILD=ON
+)
+
+ExternalProject_add (
+  fastcdr
+  GIT_REPOSITORY https://github.com/eProsima/Fast-CDR.git
+  GIT_TAG v1.1.0
+  CMAKE_ARGS
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
+    -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    -DBUILD_SHARED_LIBS=OFF
 )
 
 # Note: We are using GIT_REPOSITORY instead URL for fastdds because fastdss contains submodules
@@ -30,7 +41,7 @@ ExternalProject_add (
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
     -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-    -DBUILD_SHARED_LIBS=ON
+    -DBUILD_SHARED_LIBS=OFF
     -DBUILD_TESTING=OFF
     -DCOMPILE_EXAMPLES=OFF
     -DCOMPILE_TOOLS=OFF
@@ -72,9 +83,9 @@ if (WIN32)
     COMMAND
       ${CMAKE_COMMAND} -E copy
       ${PROJECT_INSTALL_PATH}/lib/carla-ros2-native.lib
-      ${PROJECT_INSTALL_PATH}/bin/fastcdr-1.1.dll
-      ${PROJECT_INSTALL_PATH}/bin/fastrtps-2.11.dll
-      ${PROJECT_INSTALL_PATH}/bin/foonathan_memory-0.7.3.dll
+      ${PROJECT_INSTALL_PATH}/lib/libfastcdr-1.1.lib
+      ${PROJECT_INSTALL_PATH}/lib/libfastrtps-2.11.lib
+      ${PROJECT_INSTALL_PATH}/lib/libfoonathan_memory-0.7.3.lib
       ${CARLA_PLUGIN_BINARY_PATH}
 )
 else()
