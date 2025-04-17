@@ -235,7 +235,7 @@ CARLA forum</a>
 
 > This issue occurs when trying to use the _make_ command either to build the server or the client. Even if CMake is installed, updated and added to the environment path. There may be a conflict between Visual Studio versions.  
 >
-> Leave only VSVS 2022 and completely erase the rest.  
+> Leave only VS 2022 and completely erase the rest.  
 
 <!-- ======================================================================= -->
 
