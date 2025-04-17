@@ -208,7 +208,7 @@ CARLA forum</a>
 >
 > __1.__ Go to `carla/Unreal/CarlaUE4` and right-click the `CarlaUE4.uproject`.  
 > __2.__ Click on __Generate Visual Studio project files__.  
-> __3.__ Open the file generated with Visual Studio VS 2022.  
+> __3.__ Open the file generated with Visual Studio 2022.  
 > __4.__ Compile the project with Visual Studio. The shortcut is F7. The build will fail, but the issues found will be shown below.
 >
 > Different issues may result in this specific error message. The user [@tamakoji](https://github.com/tamakoji) solved a recurrent case where the source code hadn't been cloned properly and the CARLA version could not be set (when downloading this as a .zip from git).  
@@ -268,7 +268,7 @@ CARLA forum</a>
 > * __Restart the computer.__ There is a lot going on during the Windows build. Restart and make sure that everything is updated properly.  
 > * __Run Unreal Engine 4.26.__ Something may have failed when building Unreal Engine. Run the Editor and check that version 4.26 is being used.  
 > * __Download the assets.__ The server will not be able to run without the visual content. This step is mandatory.  
-> * __Visual Studio VS 2022.__ If there are other versions of Visual Studio installed or recently uninstalled, conflicts may arise. To completely clean Visual Studio from the computer go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`.  
+> * __Visual Studio 2022.__ If there are other versions of Visual Studio installed or recently uninstalled, conflicts may arise. To completely clean Visual Studio from the computer go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`.  
 > * __Delete CARLA and clone it again.__ Just in case something went wrong. Delete CARLA and clone or download it again.  
 > * __Meet system requirements.__ CARLA needs around 170GB of disk space and a dedicated GPU (or at least one with 6GB) to run.  
 >
