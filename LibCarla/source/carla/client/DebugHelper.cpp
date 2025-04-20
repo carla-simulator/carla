@@ -81,5 +81,9 @@ namespace client {
     DrawShape(_episode, string, color, life_time, persistent_lines);
   }
 
+  void DebugHelper::ClearDebugShape() {
+    _episode.Lock()->ClearDebugShape();
+  }
+
 } // namespace client
 } // namespace carla

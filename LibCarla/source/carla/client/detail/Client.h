@@ -396,6 +396,8 @@ namespace detail {
 
     void DrawDebugShape(const rpc::DebugShape &shape);
 
+    void ClearDebugShape();
+    
     void ApplyBatch(
         std::vector<rpc::Command> commands,
         bool do_tick_cue);

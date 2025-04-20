@@ -63,6 +63,8 @@ namespace client {
         float life_time = -1.0f,
         bool persistent_lines = true);
 
+    void ClearDebugShape();
+
   private:
 
     detail::EpisodeProxy _episode;
