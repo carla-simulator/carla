@@ -2931,6 +2931,17 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     return R<void>::Success();
   };
 
+  // ~~ Clear debug shapes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  BIND_SYNC(clear_debug_shape) << [this]() -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    check(World != nullptr);
+    FDebugShapeDrawer Drawer(*World);
+    Drawer.Clear();
+    return R<void>::Success();
+  };
+
   // ~~ Apply commands in batch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   using C = cr::Command;
