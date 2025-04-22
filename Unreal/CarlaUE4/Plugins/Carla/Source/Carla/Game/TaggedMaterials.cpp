@@ -65,12 +65,9 @@ UMaterialInstanceDynamic* UTaggedMaterialsRegistry::GetTaggedMaterial() {
 }
 
 UMaterialInstanceDynamic* UTaggedMaterialsRegistry::GetTaggedMaterial(UMaterialInterface* UsedMaterial) {
-  // If UsedMaterial is null OR neither masked nor using WorldPositionOffset OR is using ShadingModel from
-  // MaterialExpression (which results in an error when changing the ShadingModel), we return NULL to indicate,
+  // If UsedMaterial is null OR neither masked nor using WorldPositionOffset, we return NULL to indicate,
   // that the requested material does not require a fine-grained tag-injected correspondence.
-  if (!UsedMaterial
-      || !(UsedMaterial->IsMasked() || UsedMaterial->GetMaterial()->WorldPositionOffset.IsConnected())
-      || UsedMaterial->IsShadingModelFromMaterialExpression()) {
+  if (!UsedMaterial || !(UsedMaterial->IsMasked() || UsedMaterial->GetMaterial()->WorldPositionOffset.IsConnected())) {
     return NULL;
   }
 
@@ -121,6 +118,8 @@ void UTaggedMaterialsRegistry::InjectTag(UMaterialInterface* MaterialInterface) 
 }
 
 const static FGuid EmissiveColorGuid = FMaterialAttributeDefinitionMap::GetID(EMaterialProperty::MP_EmissiveColor);
+const static FGuid OpacityMaskGuid = FMaterialAttributeDefinitionMap::GetID(EMaterialProperty::MP_OpacityMask);
+const static FGuid WorldPositionOffsetGuid = FMaterialAttributeDefinitionMap::GetID(EMaterialProperty::MP_WorldPositionOffset);
 
 void UTaggedMaterialsRegistry::InjectTagIntoMaterial(UMaterial* Material) {
   if (TaggedMaskedMaterials.Contains(Material->GetPathName())) {
@@ -128,8 +127,8 @@ void UTaggedMaterialsRegistry::InjectTagIntoMaterial(UMaterial* Material) {
     return;
   }
 
-  UMaterial* TagInjectedMaterial = DuplicateObject<UMaterial>(Material, this);
-  TagInjectedMaterial->SetFlags(RF_Public | RF_Standalone);
+  FName TaggedMaterialName(Material->GetName() + TEXT("_Tagged"));
+  UMaterial* TagInjectedMaterial = NewObject<UMaterial>(this, TaggedMaterialName, RF_Public | RF_Standalone);
 
   UMaterialExpressionVectorParameter* ExpressionInstSegColor = NewObject<UMaterialExpressionVectorParameter>(TagInjectedMaterial);
   ExpressionInstSegColor->SetParameterName(FName("AnnotationColor"));
@@ -137,26 +136,132 @@ void UTaggedMaterialsRegistry::InjectTagIntoMaterial(UMaterial* Material) {
   ExpressionInstSegColor->Material = TagInjectedMaterial;
   TagInjectedMaterial->Expressions.Add(ExpressionInstSegColor);
 
-  if (TagInjectedMaterial->bUseMaterialAttributes) {
+  if (Material->bUseMaterialAttributes) {
+    TagInjectedMaterial->bUseMaterialAttributes = 1;
     // Create a SetAttributeExpression which will be injected between the existing input and the material node
     // and additionally has a emissive color parameter.
     UMaterialExpressionSetMaterialAttributes* SetAttributeExpression = NewObject<UMaterialExpressionSetMaterialAttributes>(TagInjectedMaterial);
     SetAttributeExpression->Material = TagInjectedMaterial;
 
-    SetAttributeExpression->Inputs[0].Connect(0, TagInjectedMaterial->MaterialAttributes.GetTracedInput().Expression);
+    UMaterialExpression* MaterialAttributesExpression = Material->MaterialAttributes.GetTracedInput().Expression;
+    UMaterialExpressionMakeMaterialAttributes* MakeMaterialAttributesExpression = Cast<UMaterialExpressionMakeMaterialAttributes>(MaterialAttributesExpression);
+    UMaterialExpressionSetMaterialAttributes* SetMaterialAttributesExpression = Cast<UMaterialExpressionSetMaterialAttributes>(MaterialAttributesExpression);
+    if (MakeMaterialAttributesExpression) {
+      // Only copy OpacityMask and WorldPositionOffset from the MakeMaterialAttributes node.
+      UMaterialExpression* OpacityMaskExpression = MakeMaterialAttributesExpression->OpacityMask.GetTracedInput().Expression;
+      if (OpacityMaskExpression) {
+        UMaterialExpression* CopiedRootExpression = CopyMaterialExpressions(TagInjectedMaterial, OpacityMaskExpression);
+        FMaterialAttributesInput SetAttributeOpacityMaskInput = FMaterialAttributesInput();
+        SetAttributeOpacityMaskInput.Connect(MakeMaterialAttributesExpression->OpacityMask.GetTracedInput().OutputIndex, CopiedRootExpression);
+        SetAttributeExpression->Inputs.Add(SetAttributeOpacityMaskInput);
+        SetAttributeExpression->AttributeSetTypes.Add(OpacityMaskGuid);
+      }
+      UMaterialExpression* WorldPositionOffsetExpression = Material->WorldPositionOffset.GetTracedInput().Expression;
+      if (WorldPositionOffsetExpression) {
+        UMaterialExpression* CopiedRootExpression = CopyMaterialExpressions(TagInjectedMaterial, WorldPositionOffsetExpression);
+        FMaterialAttributesInput SetAttributeWorldPositionOffsetInput = FMaterialAttributesInput();
+        SetAttributeWorldPositionOffsetInput.Connect(MakeMaterialAttributesExpression->WorldPositionOffset.GetTracedInput().OutputIndex, CopiedRootExpression);
+        SetAttributeExpression->Inputs.Add(SetAttributeWorldPositionOffsetInput);
+        SetAttributeExpression->AttributeSetTypes.Add(WorldPositionOffsetGuid);
+      }
+      if (!OpacityMaskExpression && !WorldPositionOffsetExpression) {
+        return; // neither OpacityMask nor WorldPositionOffset are actually used
+      }
+    } else if (SetMaterialAttributesExpression) {
+      // Copy MaterialAttributes, OpacityMask and WorldPositionOffset from the SetMaterialAttributes node.
+      // Note: This could be done recursively on the MaterialAttributes, but there are currently no materials that do this.
+      //       In the "worst" case, we just copy too much.
+      UMaterialExpression* PreMaterialAttributesExpression = SetMaterialAttributesExpression->Inputs[0].GetTracedInput().Expression;
+      if (PreMaterialAttributesExpression) {
+        UMaterialExpression* CopiedRootExpression = CopyMaterialExpressions(TagInjectedMaterial, PreMaterialAttributesExpression);
+        SetAttributeExpression->Inputs[0].Connect(SetMaterialAttributesExpression->Inputs[0].GetTracedInput().OutputIndex, CopiedRootExpression);
+      }
 
+      bool bHasExpression = false;
+      for (int32 i = 0; i < SetMaterialAttributesExpression->AttributeSetTypes.Num(); ++i) {
+        FGuid CurrentInputGuid = SetMaterialAttributesExpression->AttributeSetTypes[i];
+        if (CurrentInputGuid == OpacityMaskGuid || CurrentInputGuid == WorldPositionOffsetGuid) {
+          UMaterialExpression* InputExpression = SetMaterialAttributesExpression->Inputs[i+1].GetTracedInput().Expression;
+          UMaterialExpression* CopiedRootExpression = CopyMaterialExpressions(TagInjectedMaterial, InputExpression);
+          FMaterialAttributesInput SetAttributeInput = FMaterialAttributesInput();
+          SetAttributeInput.Connect(SetMaterialAttributesExpression->Inputs[i+1].GetTracedInput().OutputIndex, CopiedRootExpression);
+          SetAttributeExpression->Inputs.Add(SetAttributeInput);
+          SetAttributeExpression->AttributeSetTypes.Add(CurrentInputGuid);
+          bHasExpression = true;
+        }
+      }
+      if (!PreMaterialAttributesExpression && !bHasExpression) {
+        return; // neither OpacityMask nor WorldPositionOffset are actually used
+      }
+    } else if (MaterialAttributesExpression) {
+      // If none of the above special cases triggered (this is rare), we simply copy everything.
+      UMaterialExpression* CopiedRootExpression = CopyMaterialExpressions(TagInjectedMaterial, MaterialAttributesExpression);
+      SetAttributeExpression->Inputs[0].Connect(Material->MaterialAttributes.GetTracedInput().OutputIndex, CopiedRootExpression);
+    } else {
+      return; // no MaterialAttributes are connected at all
+    }
+
+    // Finally add the AnnotationColor node as emissive input
     FMaterialAttributesInput SetAttributeEmissiveInput = FMaterialAttributesInput();
-    SetAttributeEmissiveInput.Expression = ExpressionInstSegColor;
+    SetAttributeEmissiveInput.Connect(0, ExpressionInstSegColor);
     SetAttributeExpression->Inputs.Add(SetAttributeEmissiveInput);
     SetAttributeExpression->AttributeSetTypes.Add(EmissiveColorGuid);
 
     TagInjectedMaterial->MaterialAttributes.Connect(0, SetAttributeExpression);
     TagInjectedMaterial->Expressions.Add(SetAttributeExpression);
   } else {
-    // Simply plug the tag node into emissive color. Existing values are simply replaced.
+    // Simply plug the tag node into emissive color.
     TagInjectedMaterial->EmissiveColor.Connect(0, ExpressionInstSegColor);
+
+    // Copy the OpacityMask and WorldPositionOffset (if set) so that the new material mirrors these aspects from the original material.
+    UMaterialExpression* OpacityMaskExpression = Material->OpacityMask.GetTracedInput().Expression;
+    if (OpacityMaskExpression) {
+      UMaterialExpression* CopiedRootExpression = CopyMaterialExpressions(TagInjectedMaterial, OpacityMaskExpression);
+      TagInjectedMaterial->OpacityMask.Connect(Material->OpacityMask.GetTracedInput().OutputIndex, CopiedRootExpression);
+    }
+    UMaterialExpression* WorldPositionOffsetExpression = Material->WorldPositionOffset.GetTracedInput().Expression;
+    if (WorldPositionOffsetExpression) {
+      UMaterialExpression* CopiedRootExpression = CopyMaterialExpressions(TagInjectedMaterial, WorldPositionOffsetExpression);
+      TagInjectedMaterial->WorldPositionOffset.Connect(Material->WorldPositionOffset.GetTracedInput().OutputIndex, CopiedRootExpression);
+    }
+    if (!OpacityMaskExpression && !WorldPositionOffsetExpression) {
+      return; // neither OpacityMask nor WorldPositionOffset are actually used
+    }
   }
-  // Set ShadingModel to unlit and recompile
+
+  // Copy other relevant properties
+  TagInjectedMaterial->OpacityMaskClipValue = Material->OpacityMaskClipValue;
+  TagInjectedMaterial->TwoSided = Material->TwoSided;
+  TagInjectedMaterial->DitherOpacityMask = Material->DitherOpacityMask;
+  TagInjectedMaterial->bFullyRough = 1;  // might save some shaders
+  TagInjectedMaterial->bUseFullPrecision = Material->bUseFullPrecision;
+  TagInjectedMaterial->bUseAlphaToCoverage = Material->bUseAlphaToCoverage;
+  TagInjectedMaterial->ShadingRate = Material->ShadingRate;
+
+  // Copy the "Used With" settings, enabling the required shaders
+  TagInjectedMaterial->bUsedWithSkeletalMesh = Material->bUsedWithSkeletalMesh;
+  TagInjectedMaterial->bUsedWithEditorCompositing = Material->bUsedWithEditorCompositing;
+  TagInjectedMaterial->bUsedWithParticleSprites = Material->bUsedWithParticleSprites;
+  TagInjectedMaterial->bUsedWithBeamTrails = Material->bUsedWithBeamTrails;
+  TagInjectedMaterial->bUsedWithMeshParticles = Material->bUsedWithMeshParticles;
+  TagInjectedMaterial->bUsedWithNiagaraSprites = Material->bUsedWithNiagaraSprites;
+  TagInjectedMaterial->bUsedWithNiagaraRibbons = Material->bUsedWithNiagaraRibbons;
+  TagInjectedMaterial->bUsedWithNiagaraMeshParticles = Material->bUsedWithNiagaraMeshParticles;
+  TagInjectedMaterial->bUsedWithGeometryCache = Material->bUsedWithGeometryCache;
+  TagInjectedMaterial->bUsedWithStaticLighting = Material->bUsedWithStaticLighting;
+  TagInjectedMaterial->bUsedWithMorphTargets = Material->bUsedWithMorphTargets;
+  TagInjectedMaterial->bUsedWithSplineMeshes = Material->bUsedWithSplineMeshes;
+  TagInjectedMaterial->bUsedWithInstancedStaticMeshes = Material->bUsedWithInstancedStaticMeshes;
+  TagInjectedMaterial->bUsedWithGeometryCollections = Material->bUsedWithGeometryCollections;
+  TagInjectedMaterial->bUsesDistortion = Material->bUsesDistortion;
+  TagInjectedMaterial->bUsedWithClothing = Material->bUsedWithClothing;
+  TagInjectedMaterial->bUsedWithWater = Material->bUsedWithWater;
+  TagInjectedMaterial->bUsedWithHairStrands = Material->bUsedWithHairStrands;
+  TagInjectedMaterial->bUsedWithLidarPointCloud = Material->bUsedWithLidarPointCloud;
+  TagInjectedMaterial->bUsedWithVirtualHeightfieldMesh = Material->bUsedWithVirtualHeightfieldMesh;
+
+  // Copy BlendMode, set ShadingModel to unlit and recompile
+  TagInjectedMaterial->BlendMode = Material->BlendMode;
   TagInjectedMaterial->SetShadingModel(MSM_Unlit);
   TagInjectedMaterial->PreEditChange(nullptr);
   TagInjectedMaterial->PostEditChange();
@@ -183,24 +288,37 @@ void UTaggedMaterialsRegistry::InjectTagIntoMaterialInstance(UMaterialInstance* 
     return;
   }
 
-  UMaterialInterface* TagInjectedParent = TaggedMaskedMaterials.FindChecked(MaterialInstance->Parent->GetPathName());
+  UMaterialInterface** TagInjectedParent = TaggedMaskedMaterials.Find(MaterialInstance->Parent->GetPathName());
 
-  // Now, we definitively have a tag-injected version of the parent.
-  // Create a copy of the current material instance and change its parent to the tag-injected one.
-  // We can ignore UMaterialInstanceDynamic here, since it cannot do any modifications to the shader.
-  UMaterialInstanceConstant* MaterialInstanceConstant = Cast<UMaterialInstanceConstant>(MaterialInstance);
-  if (MaterialInstanceConstant) {
-    UMaterialInstanceConstant* TagInjectedMIC = DuplicateObject<UMaterialInstanceConstant>(MaterialInstanceConstant, this);
-    TagInjectedMIC->SetFlags(RF_Public | RF_Standalone);
-    TagInjectedMIC->SetParentEditorOnly(TagInjectedParent);
-    if (TagInjectedMIC->BasePropertyOverrides.bOverride_ShadingModel) {
-      TagInjectedMIC->BasePropertyOverrides.ShadingModel = MSM_Unlit;
+  if (TagInjectedParent) {
+    // Now, we definitively have a tag-injected version of the parent.
+    // Create a copy of the current material instance and change its parent to the tag-injected one.
+    // We can ignore UMaterialInstanceDynamic here, since it cannot do any modifications to the shader.
+    UMaterialInstanceConstant* MaterialInstanceConstant = Cast<UMaterialInstanceConstant>(MaterialInstance);
+    if (MaterialInstanceConstant) {
+      UMaterialInstanceConstant* TagInjectedMIC = DuplicateObject<UMaterialInstanceConstant>(MaterialInstanceConstant, this);
+      TagInjectedMIC->Rename(*(TagInjectedMIC->GetName() + TEXT("_Tagged")));
+      TagInjectedMIC->SetFlags(RF_Public | RF_Standalone);
+      TagInjectedMIC->SetParentEditorOnly(*TagInjectedParent);
+      if (TagInjectedMIC->BasePropertyOverrides.bOverride_ShadingModel) {
+        TagInjectedMIC->BasePropertyOverrides.ShadingModel = MSM_Unlit;
+      }
+      FMaterialUpdateContext LocalMaterialUpdateContext(FMaterialUpdateContext::EOptions::RecreateRenderStates);
+      LocalMaterialUpdateContext.AddMaterialInstance(TagInjectedMIC);
+      TaggedMaskedMaterials.Add(MaterialInstance->GetPathName(), TagInjectedMIC);
+      bPendingChanges = true;
     }
-    FMaterialUpdateContext LocalMaterialUpdateContext(FMaterialUpdateContext::EOptions::RecreateRenderStates);
-    LocalMaterialUpdateContext.AddMaterialInstance(TagInjectedMIC);
-    TaggedMaskedMaterials.Add(MaterialInstance->GetPathName(), TagInjectedMIC);
-    bPendingChanges = true;
   }
+}
+
+UMaterialExpression* UTaggedMaterialsRegistry::CopyMaterialExpressions(UMaterial* TargetMaterial, UMaterialExpression* RootExpression) {
+  TArray<UMaterialExpression*> InputExpressions;
+  RootExpression->GetAllInputExpressions(InputExpressions);
+  TArray<UMaterialExpression*> CopiedExpressions;
+  TArray<UMaterialExpressionComment*> EmptyComments;
+  TArray<UMaterialExpression*> CopiedEmptyComments;
+  UMaterialExpression::CopyMaterialExpressions(InputExpressions, EmptyComments, TargetMaterial, NULL, CopiedExpressions, CopiedEmptyComments);
+  return CopiedExpressions[0];
 }
 
 void UTaggedMaterialsRegistry::PostInitProperties() {
