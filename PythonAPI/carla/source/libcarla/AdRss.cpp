@@ -103,7 +103,7 @@ void export_ad() {
   using namespace boost::python;
 
   // create/import the ad module scope
-  object ad_module(handle<>(borrowed(PyImport_AddModule("ad"))));
+  object ad_module(handle<>(borrowed(PyImport_AddModule("carla.libcarla.ad"))));
   scope().attr("ad") = ad_module;
   scope submodule_scope = ad_module;
   scope().attr("__doc__") = "Python binding of ad namespace C++ code";

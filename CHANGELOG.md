@@ -1,4 +1,5 @@
 ## Latest Changes
+ * Fixed waypoint.next and .previous causing loops when two opposite-direction lanes follow each other in the map.
  * Fixed a bug that caused navigation information not to be loaded when switching maps
  * Prevent from segfault on failing SignalReference identification when loading OpenDrive files
  * Added vehicle doors to the recorder
@@ -20,7 +21,18 @@
  * Added V2X sensors for cooperative awareness message and custom user-defined messages to support vehicle-to-vehicle communication
  * Added named tuples for BasicAgent.py's detection result to allow for type-hints and better semantics.
  * Added type-hint support for the PythonAPI
-
+ * Added type-hints to GlobalRoutePlanner and use carla.Vector3D code instead of pre 0.9.13 numpy code.
+ * If available, use ActorIDs instead of Unreal Engine IDs for instance segmentation
+ * Synchronized actor BoundingBox between server and client
+ * Add actor_id to bounding boxes
+ * Fixed invisible terrain in instance segmentation
+ * Importing from carla.command is now possible
+ * carla.ad subpackages are now directly importable and are not directly importable anymore (e.g. import ad)
+ * Fixed segfault in traffic manager when trying to access not available vehicles
+ * Fixed invalid comparission in python examples/rss
+ * Fixed invisible spline meshes in instance segmentation
+ * Set to default Visual Studio 2022 in Windows
+ * Added env CARLA_CACHE_DIR to be able to set CARLA CACHE location
 
 ## CARLA 0.9.15
 

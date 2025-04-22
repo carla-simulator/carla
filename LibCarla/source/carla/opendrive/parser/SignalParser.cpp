@@ -50,7 +50,7 @@ namespace parser {
           const std::string name = signal_node.attribute("name").value();
           const std::string dynamic =  signal_node.attribute("dynamic").value();
           const std::string orientation =  signal_node.attribute("orientation").value();
-          const double zOffset = signal_node.attribute("zOffSet").as_double();
+          const double zOffset = signal_node.attribute("zOffset").as_double();
           const std::string country =  signal_node.attribute("country").value();
           const std::string type =  signal_node.attribute("type").value();
           const std::string subtype =  signal_node.attribute("subtype").value();

@@ -41,6 +41,7 @@ void AInstanceSegmentationCamera::SetUpSceneCaptureComponent(USceneCaptureCompon
 
   TArray<UObject *> TaggedComponents;
   GetObjectsOfClass(UTaggedComponent::StaticClass(), TaggedComponents, false, EObjectFlags::RF_ClassDefaultObject, EInternalObjectFlags::AllFlags);
+  GetObjectsOfClass(UTaggedLandscapeComponent::StaticClass(), TaggedComponents, false, EObjectFlags::RF_ClassDefaultObject, EInternalObjectFlags::AllFlags);
 
   TArray<UPrimitiveComponent *> ShowOnlyComponents;
   for (UObject *Object : TaggedComponents) {
@@ -56,6 +57,7 @@ void AInstanceSegmentationCamera::PostPhysTick(UWorld *World, ELevelTick TickTyp
   USceneCaptureComponent2D* SceneCapture = GetCaptureComponent2D();
   TArray<UObject *> TaggedComponents;
   GetObjectsOfClass(UTaggedComponent::StaticClass(), TaggedComponents, false, EObjectFlags::RF_ClassDefaultObject, EInternalObjectFlags::AllFlags);
+  GetObjectsOfClass(UTaggedLandscapeComponent::StaticClass(), TaggedComponents, false, EObjectFlags::RF_ClassDefaultObject, EInternalObjectFlags::AllFlags);
 
   SceneCapture->ClearShowOnlyComponents();
   for (UObject *Object : TaggedComponents) {

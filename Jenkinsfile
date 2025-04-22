@@ -126,7 +126,7 @@ pipeline
                                         /*
                                         stage('Checkout Doxygen repo')
                                         {
-                                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
+                                            when { anyOf { branch "master"; branch "ue4-dev"; buildingTag() } }
                                             steps
                                             {
                                                 
@@ -134,6 +134,7 @@ pipeline
                                                 {
                                                     checkout scmGit(
                                                         branches: [[name: 'dev']], 
+                                                        branches: [[name: 'ue4-dev']], 
                                                         extensions: [
                                                             cleanBeforeCheckout(),
                                                             checkoutOption(120), 
@@ -238,7 +239,7 @@ pipeline
                                     {
                                         stage('ubuntu Doxygen generation')
                                         {
-                                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
+                                            when { anyOf { branch "master"; branch "ue4-dev"; buildingTag() } }
                                             steps
                                             {
                                                 sh 'make docs'
@@ -307,7 +308,7 @@ pipeline
                                     {
                                         stage('ubuntu Doxygen upload')
                                         {
-                                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
+                                            when { anyOf { branch "master"; branch "ue4-dev"; buildingTag() } }
                                             steps
                                             {
                                                 dir('doc_repo')
@@ -318,7 +319,7 @@ pipeline
                                                             tar -xvzf carla_doc.tar.gz
                                                             git add Doxygen
                                                             git commit -m "Updated c++ docs" || true
-                                                            git push --set-upstream origin dev
+                                                            git push --set-upstream origin ue4-dev
                                                         '''
                                                     }
                                                 }
@@ -447,7 +448,7 @@ pipeline
                         
                         stage('windows deploy')
                         {
-                            when { anyOf { branch "master"; branch "dev"; buildingTag() } }
+                            when { anyOf { branch "master"; branch "ue4-dev"; buildingTag() } }
                             steps {
                                 bat """
                                     call C:\\Users\\jenkins\\setEnv64.bat

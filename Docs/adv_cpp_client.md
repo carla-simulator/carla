@@ -133,10 +133,3 @@ BINDIR=$(CURDIR)/bin
 INSTALLDIR=$(CURDIR)/libcarla-install
 TOOLCHAIN=$(CURDIR)/ToolChain.cmake
 ```
-
-
-
-
-
-
-

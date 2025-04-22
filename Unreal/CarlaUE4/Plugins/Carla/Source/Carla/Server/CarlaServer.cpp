@@ -14,6 +14,7 @@
 #include "Components/SceneComponent.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Animation/PoseSnapshot.h"
 
 #include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla/Util/DebugShapeDrawer.h"
@@ -43,6 +44,7 @@
 #include <carla/rpc/ActorDefinition.h>
 #include <carla/rpc/ActorDescription.h>
 #include <carla/rpc/BoneTransformDataIn.h>
+#include <carla/rpc/BoundingBox.h>
 #include <carla/rpc/Command.h>
 #include <carla/rpc/CommandResponse.h>
 #include <carla/rpc/DebugShape.h>
@@ -1343,6 +1345,26 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     return R<void>::Success();
   };
 
+  BIND_SYNC(get_actor_bounding_box) << [this](
+      cr::ActorId ActorId) -> R<cr::BoundingBox>
+  {
+    return cr::BoundingBox();
+    // Commenting it out due to an unknown bug where sometimes the server tryes to act on a destroyed actor, crashing the simulation.
+
+    // REQUIRE_CARLA_EPISODE();
+    // FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    // if (!CarlaActor)
+    // {
+    //   return RespondError(
+    //       "get_actor_bounding_box",
+    //       ECarlaServerResponse::ActorNotFound,
+    //       " Actor Id: " + FString::FromInt(ActorId));
+    // }
+    // FBoundingBox bounding_box = UBoundingBoxCalculator::GetActorBoundingBox(CarlaActor->GetActor(), 0);
+    // bounding_box.ActorId = CarlaActor->GetActorId();
+    // return cr::BoundingBox(bounding_box);
+  };
+
   BIND_SYNC(get_actor_component_world_transform) << [this](
       cr::ActorId ActorId,
       const std::string componentName) -> R<cr::Transform>
@@ -1469,6 +1491,25 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
         }
         return MakeVectorFromTArray<cr::Transform>(BoneWorldTransforms);
       }      
+    }
+  };
+
+  BIND_SYNC(get_vehicle_bone_world_transforms) << [this](
+      cr::ActorId ActorId) -> R<std::vector<cr::Transform>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_vehicle_bone_world_transforms",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    else
+    {
+      ACarlaWheeledVehicle* CarlaVehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+      return MakeVectorFromTArray<cr::Transform>(CarlaVehicle->GetWorldTransformedPose().LocalTransforms);
     }
   };
 
@@ -2887,6 +2928,17 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     check(World != nullptr);
     FDebugShapeDrawer Drawer(*World);
     Drawer.Draw(shape);
+    return R<void>::Success();
+  };
+
+  // ~~ Clear debug shapes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  BIND_SYNC(clear_debug_shape) << [this]() -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    check(World != nullptr);
+    FDebugShapeDrawer Drawer(*World);
+    Drawer.Clear();
     return R<void>::Success();
   };
 

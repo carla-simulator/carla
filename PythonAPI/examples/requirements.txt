@@ -5,3 +5,4 @@ pygame
 matplotlib
 open3d
 Pillow
+invertedai@git+https://github.com/inverted-ai/invertedai.git@develop
