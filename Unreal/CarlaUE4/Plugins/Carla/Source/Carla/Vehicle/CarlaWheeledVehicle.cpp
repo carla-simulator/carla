@@ -298,6 +298,20 @@ float ACarlaWheeledVehicle::GetVehicleForwardSpeed() const
   return BaseMovementComponent->GetVehicleForwardSpeed();
 }
 
+float ACarlaWheeledVehicle::GetVehicleLateralSpeed() const
+{
+  auto Right = GetVehicleTransform().GetRotation().GetRightVector();
+  auto Velocity = GetVelocity();
+  return Right.X*Velocity.X + Right.Y*Velocity.Y + Right.Z*Velocity.Z;
+}
+
+float ACarlaWheeledVehicle::GetVehicleAngularVelocity() const
+{
+  // TODO(joel): Check this with core.
+  auto RootComponent = Cast<UPrimitiveComponent>(GetRootComponent());
+  return RootComponent->GetPhysicsAngularVelocityInDegrees().Z;
+}
+
 FVector ACarlaWheeledVehicle::GetVehicleOrientation() const
 {
   return GetVehicleTransform().GetRotation().GetForwardVector();
@@ -1025,6 +1039,12 @@ void ACarlaWheeledVehicle::ResetConstraints()
 FVector ACarlaWheeledVehicle::GetVelocity() const
 {
   return BaseMovementComponent->GetVelocity();
+}
+
+FVector ACarlaWheeledVehicle::GetAngularVelocity() const
+{
+  auto RootComponent = Cast<UPrimitiveComponent>(GetRootComponent());
+  return RootComponent->GetPhysicsAngularVelocityInDegrees();
 }
 
 void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)

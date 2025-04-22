@@ -16,6 +16,7 @@
 #include "carla/sensor/s11n/ImageSerializer.h"
 #include "carla/sensor/s11n/SensorHeaderSerializer.h"
 
+#include "publishers/BasePublisher.h"
 #include "publishers/CarlaPublisher.h"
 #include "publishers/CarlaClockPublisher.h"
 #include "publishers/CarlaRGBCameraPublisher.h"
@@ -36,8 +37,13 @@
 #include "publishers/CarlaCollisionPublisher.h"
 #include "publishers/CarlaLineInvasionPublisher.h"
 
-#include "subscribers/CarlaSubscriber.h"
+// Pseudo publishers.
+#include "publishers/CarlaChassisPublisher.h"
+#include "publishers/OdometryPublisher.h"
+
+#include "subscribers/BaseSubscriber.h"
 #include "subscribers/CarlaEgoVehicleControlSubscriber.h"
+#include "subscribers/AckermannControlSubscriber.h"
 
 #include <vector>
 
@@ -79,21 +85,22 @@ void ROS2::Enable(bool enable) {
 
 void ROS2::SetFrame(uint64_t frame) {
   _frame = frame;
-   //log_info("ROS2 new frame: ", _frame);
-   if (_controller) {
-    void* actor = _controller->GetVehicle();
-    if (_controller->IsAlive()) {
-      if (_controller->HasNewMessage()) {
-        auto it = _actor_callbacks.find(actor);
-        if (it != _actor_callbacks.end()) {
-          VehicleControl control = _controller->GetMessage();
-          it->second(actor, control);
-        }
-      }
-    } else {
-      RemoveActorCallback(actor);
+
+  for (auto& element : _subscribers) {
+    auto actor = element.first;
+    auto subscriber = element.second;
+    auto callback = _actor_callbacks.find(actor)->second;
+
+    subscriber->ProcessMessages(callback);
     }
-   }
+
+  for (auto& element: _pseudo_publishers) {
+    auto actor = element.first;
+    auto publisher = element.second;
+    auto callback = _actor_callbacks.find(actor)->second;
+    publisher->UpdateData(_seconds, _nanoseconds, callback);
+    publisher->Publish();
+  }
 }
 
 void ROS2::SetTimestamp(double timestamp) {
@@ -104,7 +111,6 @@ void ROS2::SetTimestamp(double timestamp) {
   _nanoseconds = static_cast<uint32_t>(fractional * multiplier);
   _clock_publisher->SetData(_seconds, _nanoseconds);
   _clock_publisher->Publish();
-   //log_info("ROS2 new timestamp: ", _timestamp);
 }
 
 void ROS2::AddActorRosName(void *actor, std::string ros_name) {
@@ -126,6 +132,12 @@ void ROS2::RemoveActorRosName(void *actor) {
 
   _publishers.erase(actor);
   _transforms.erase(actor);
+
+  // Check if actor in pseudo actors
+  auto it_pseudo_publisher = _pseudo_publishers.find(actor);
+  if (it_pseudo_publisher != _pseudo_publishers.end()) {
+    _pseudo_publishers.erase(actor);
+  }
 }
 
 void ROS2::UpdateActorRosName(void *actor, std::string ros_name) {
@@ -171,17 +183,30 @@ std::string ROS2::GetActorParentRosName(void *actor) {
     return std::string("");
 }
 
-void ROS2::AddActorCallback(void* actor, std::string ros_name, ActorCallback callback) {
+void ROS2::AddVehicle(void* actor, std::string ros_name, ActorCallback callback) {
   _actor_callbacks.insert({actor, std::move(callback)});
 
-  _controller.reset();
-  _controller = std::make_shared<CarlaEgoVehicleControlSubscriber>(actor, ros_name.c_str());
-  _controller->Init();
+  // Create control subscribers
+  // Carla control interface
+  auto _vehicle_control_subscriber = std::make_shared<CarlaEgoVehicleControlSubscriber>(actor, ros_name.c_str());
+  _subscribers.insert({actor, _vehicle_control_subscriber});
+
+  // Ackermann control interface
+  auto _ackermann_control_subscriber = std::make_shared<AckermannControlSubscriber>(actor, ros_name.c_str());
+  _subscribers.insert({actor, _ackermann_control_subscriber});
+
+  // Creating pseudo publisher
+  // These are messages that are publishing every tick.
+  // Shuld be move to a sensor in the future.
+  auto _odometry_publisher = std::make_shared<OdometryPublisher>(actor, ros_name.c_str());
+  _pseudo_publishers.insert({actor, _odometry_publisher});
+
+  auto _chassis_publisher = std::make_shared<CarlaChassisPublisher>(actor, ros_name.c_str());
+  _pseudo_publishers.insert({actor, _chassis_publisher});
 }
 
-void ROS2::RemoveActorCallback(void* actor) {
-  _controller.reset();
-  _actor_callbacks.erase(actor);
+void ROS2::RemoveVehicle(void* actor) {
+
 }
 
 std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> ROS2::GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, void* actor) {
@@ -832,14 +857,19 @@ void ROS2::ProcessDataFromCollisionSensor(
 }
 
 void ROS2::Shutdown() {
+  for (auto& element : _subscribers) {
+    element.second.reset();
+  }
   for (auto& element : _publishers) {
+    element.second.reset();
+  }
+  for (auto& element : _pseudo_publishers) {
     element.second.reset();
   }
   for (auto& element : _transforms) {
     element.second.reset();
   }
   _clock_publisher.reset();
-  _controller.reset();
   _enabled = false;
 }
 

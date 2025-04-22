@@ -5,42 +5,39 @@
 #pragma once
 
 #include <memory>
-#include <vector>
 
-#include "CarlaSubscriber.h"
+#include "BaseSubscriber.h"
+#include "SubscriberImpl.h"
+
+#include "carla/ros2/types/CarlaEgoVehicleControl.h"
+#include "carla/ros2/types/CarlaEgoVehicleControlPubSubTypes.h"
+
 #include "carla/ros2/ROS2CallbackData.h"
 
 namespace carla {
 namespace ros2 {
 
-  struct CarlaEgoVehicleControlSubscriberImpl;
-
-  class CarlaEgoVehicleControlSubscriber : public CarlaSubscriber {
+  class CarlaEgoVehicleControlSubscriber : public BaseSubscriber {
     public:
-      CarlaEgoVehicleControlSubscriber(void* vehicle, const char* ros_name = "", const char* parent = "");
-      ~CarlaEgoVehicleControlSubscriber();
-      CarlaEgoVehicleControlSubscriber(const CarlaEgoVehicleControlSubscriber&);
-      CarlaEgoVehicleControlSubscriber& operator=(const CarlaEgoVehicleControlSubscriber&);
-      CarlaEgoVehicleControlSubscriber(CarlaEgoVehicleControlSubscriber&&);
-      CarlaEgoVehicleControlSubscriber& operator=(CarlaEgoVehicleControlSubscriber&&);
+      typedef carla_msgs::msg::CarlaEgoVehicleControl msg_type;
+      typedef carla_msgs::msg::CarlaEgoVehicleControlPubSubType msg_pubsub_type;
+ 
+      CarlaEgoVehicleControlSubscriber(void* vehicle, const char* ros_name = "", const char* parent = "") :
+        BaseSubscriber(vehicle, ros_name, parent),
+        _impl(std::make_shared<SubscriberImpl<CarlaEgoVehicleControlSubscriber>>()) {
+          _impl->Init(this->GetTopicName());
+        }
 
-      bool HasNewMessage();
-      bool IsAlive();
-      VehicleControl GetMessage();
-      void* GetVehicle();
+      std::string GetSubscriberType() override {
+        return "/vehicle_control_cmd";
+      }
 
-      bool Init();
-      bool Read();
-      const char* type() const override { return "Ego vehicle control"; }
-
-      //Do not call, for internal use only
-      void ForwardMessage(VehicleControl control);
-      void DestroySubscriber();
-    private:
-      void SetData(int32_t seconds, uint32_t nanoseconds, uint32_t actor_id, std::vector<float>&& data);
+      ROS2CallbackData GetMessage();
+      void ProcessMessages(ActorCallback callback);
 
     private:
-      std::shared_ptr<CarlaEgoVehicleControlSubscriberImpl> _impl;
+      std::shared_ptr<SubscriberImpl<CarlaEgoVehicleControlSubscriber>> _impl;
   };
-}
-}
+
+}  // namespace ros2
+}  // namespace carla

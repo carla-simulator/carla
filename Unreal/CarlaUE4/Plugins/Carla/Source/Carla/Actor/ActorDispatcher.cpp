@@ -220,10 +220,10 @@ FCarlaActor* UActorDispatcher::RegisterActor(
       {
         if (Attr.Key == "role_name" && (Attr.Value.Value == "hero" || Attr.Value.Value == "ego"))
         {
-          ROS2->AddActorCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
+          ROS2->AddVehicle(static_cast<void*>(&Actor), RosName, [](void *Actor, carla::ros2::ROS2CallbackData &Data) -> void
           {
             AActor *UEActor = reinterpret_cast<AActor *>(Actor);
-            ActorROS2Handler Handler(UEActor, RosName);
+            ActorROS2Handler Handler(UEActor);
             boost::variant2::visit(Handler, Data);
           });
         }

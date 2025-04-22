@@ -153,14 +153,14 @@ namespace ros2 {
     const float ay = *pAccelerometer++;
     const float az = *pAccelerometer++;
     linear_acceleration.x(ax);
-    linear_acceleration.y(ay);
+    linear_acceleration.y(-ay);
     linear_acceleration.z(az);
     const float gx = *pGyroscope++;
     const float gy = *pGyroscope++;
     const float gz = *pGyroscope++;
-    gyroscope.x(gx);
+    gyroscope.x(-gx);
     gyroscope.y(gy);
-    gyroscope.z(gz);
+    gyroscope.z(-gz);
 
     builtin_interfaces::msg::Time time;
     time.sec(seconds);

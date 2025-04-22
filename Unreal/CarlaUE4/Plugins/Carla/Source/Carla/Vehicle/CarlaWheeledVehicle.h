@@ -117,6 +117,13 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetVehicleForwardSpeed() const;
 
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetVehicleLateralSpeed() const;
+
+  /// Angular velocity of the vehicle.
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetVehicleAngularVelocity() const;
+
   /// Orientation vector of the vehicle, pointing forward.
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   FVector GetVehicleOrientation() const;
@@ -415,6 +422,7 @@ public:
   void RecordDoorChange(const EVehicleDoor DoorIdx, const bool bIsOpen); 
 
   virtual FVector GetVelocity() const override;
+  FVector GetAngularVelocity() const;
 
   UFUNCTION()
   FPoseSnapshot GetWorldTransformedPose();

@@ -13,13 +13,22 @@
 /// visitor class
 class ActorROS2Handler
 {
-    public:
-        ActorROS2Handler() = delete;
-        ActorROS2Handler(AActor *Actor, std::string RosName) : _Actor(Actor), _RosName(RosName) {};
+  public:
+    ActorROS2Handler() = delete;
+    ActorROS2Handler(AActor *Actor) : _Actor(Actor) {};
 
-        void operator()(carla::ros2::VehicleControl &Source);
+    // =========================================================================
+    // -- Control interface ----------------------------------------------------
+    // =========================================================================
+    void operator()(carla::ros2::VehicleControl &Source);
+    void operator()(carla::ros2::AckermannControl &Source);
 
-    private:
-        AActor *_Actor {nullptr};
-        std::string _RosName;
+    // =========================================================================
+    // -- Pseudo publishers ----------------------------------------------------
+    // =========================================================================
+    void operator()(carla::ros2::VehicleOdometryReport &Target);
+    void operator()(carla::ros2::VehicleChassisReport &Target);
+
+  private:
+    AActor *_Actor {nullptr};
 };
