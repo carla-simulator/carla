@@ -4,29 +4,20 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "TrafficLightFallbackComponent.h"
 
-// Sets default values for this component's properties
 UTrafficLightFallbackComponent::UTrafficLightFallbackComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
+
 	PrimaryComponentTick.bCanEverTick = true;
 	PrimaryComponentTick.TickGroup = TG_PostPhysics;
-
-	// ...
 }
 
 
-// Called when the game starts
 void UTrafficLightFallbackComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
-	
 }
 
 
-// Called every frame
 void UTrafficLightFallbackComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -43,5 +34,14 @@ void UTrafficLightFallbackComponent::TickComponent(float DeltaTime, ELevelTick T
 			//UE_LOG(LogCarla, Log, TEXT("TrafficLight Found: %s"), *debug_actor_name);
 		}
 	}
+
+	// struct DebugROSMessage {
+	// 	int id;
+	// 	carla::rpc::TrafficLightState trafficlight_state;
+	// 	int confidence;
+	// 	double tracking_time;
+	// 	bool blink;
+	// 	bool contains_lights;
+	// };
 }
 

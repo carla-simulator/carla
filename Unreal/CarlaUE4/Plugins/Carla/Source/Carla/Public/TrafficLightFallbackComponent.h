@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Traffic/TrafficLightState.h"
 #include "TrafficLightFallbackComponent.generated.h"
 
 
@@ -23,5 +24,14 @@ protected:
 public:	
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	struct DebugROSMessage {
+		int id;
+		//carla::rpc::TrafficLightState trafficlight_state;
+		int confidence;
+		double tracking_time;
+		bool blink;
+		bool contains_lights;
+	};
 
 };

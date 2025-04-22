@@ -4,6 +4,7 @@
 #include "ActorDataFallbackComponent.h"
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Components/MeshComponent.h"
 #include "Math/DVector.h"
 
 UActorDataFallbackComponent::UActorDataFallbackComponent()
@@ -35,9 +36,22 @@ void UActorDataFallbackComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 	auto It = Episode->GetActorRegistry().begin();
     for (; It != Episode->GetActorRegistry().end(); ++It){
-		const FCarlaActor& View = *(It.Value());
-		debug_msg.id = It.Key();
 
+		const FCarlaActor& View = *(It.Value());
+
+		UActorComponent *actor_comp = View.GetActor()->GetComponentByClass(UMeshComponent::StaticClass());
+		if(actor_comp == nullptr)
+		{
+			continue;
+		}
+		
+		UMeshComponent* mesh_comp = Cast<UMeshComponent>(actor_comp);
+		if(mesh_comp->bHiddenInGame)
+		{
+			continue;
+		}
+
+		debug_msg.id = It.Key();
 		
 		debug_msg.pos_x = View.GetActorGlobalLocation().X;
 		debug_msg.pos_y = View.GetActorGlobalLocation().Y;
@@ -80,8 +94,8 @@ void UActorDataFallbackComponent::TickComponent(float DeltaTime, ELevelTick Tick
 
 		debug_msg.type = "UNKNOWN_MOVABLE";
 		
-		// FString debug_actor_name = View.GetActor()->GetName();
-		// UE_LOG(LogCarla, Log, TEXT("Actor Name: %s"), *debug_actor_name);
+		//FString debug_actor_name = View.GetActor()->GetName();
+		//UE_LOG(LogCarla, Log, TEXT("Actor Name: %s"), *debug_actor_name);
 		ROSObstacleData.Add(debug_msg);
 	}
 
