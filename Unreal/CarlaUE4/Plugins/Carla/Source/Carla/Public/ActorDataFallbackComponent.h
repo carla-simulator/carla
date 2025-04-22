@@ -32,7 +32,6 @@ public:
 
 	struct DebugROSMessage {
 		int id;
-		//float timestamp;
 		float pos_x, pos_y, pos_z;
 		float yaw;
 		float speed_x, speed_y, speed_z;

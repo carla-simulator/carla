@@ -28,6 +28,7 @@ class ActorROS2Handler
     // =========================================================================
     void operator()(carla::ros2::VehicleOdometryReport &Target);
     void operator()(carla::ros2::VehicleChassisReport &Target);
+    void operator()(carla::ros2::ObstacleReport &Target);
 
   private:
     AActor *_Actor {nullptr};

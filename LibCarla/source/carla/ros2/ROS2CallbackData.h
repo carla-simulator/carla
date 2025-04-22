@@ -17,6 +17,8 @@
 #endif
 
 #include <functional>
+#include <vector>
+#include <string>
 
 namespace carla {
 namespace ros2 {
@@ -72,12 +74,37 @@ namespace ros2 {
     float steering_percentage;
   };
 
+  struct PolygonPoint {
+		double x = 0.0;
+		double y = 0.0;
+		double z = 0.0;
+	  };
+
+  struct ObstaclePrediction {
+		int id;
+		float pos_x, pos_y, pos_z;
+		float yaw;
+		float speed_x, speed_y, speed_z;
+		float length, width, height;
+		float corner_points[12];
+		double tracking_time;
+		double timestamp;
+		float acc_x, acc_y, acc_z;
+		float anchor_x, anchor_y, anchor_z;
+		std::string type;
+	};
+
+  struct ObstacleReport {
+    std::vector<ObstaclePrediction> Obstacles;
+  };
+
   using ROS2CallbackData = boost::variant2::variant<
     VehicleControl,
     AckermannControl,
     // Pseudo publishers structures
     VehicleOdometryReport,
-    VehicleChassisReport
+    VehicleChassisReport,
+    ObstacleReport
   >;
 
   using ActorCallback = std::function<void(void *actor, ROS2CallbackData &data)>;

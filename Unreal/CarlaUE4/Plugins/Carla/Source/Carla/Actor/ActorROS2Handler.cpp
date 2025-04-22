@@ -9,10 +9,13 @@
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Vehicle/VehicleControl.h"
 #include "Carla/Vehicle/VehicleAckermannControl.h"
+#include "Carla/Public/ActorDataFallbackComponent.h"
 
 // =============================================================================
 // -- Control interface handlers -----------------------------------------------
 // =============================================================================
+
+#define PI 	(3.1415926535897932f)
 
 void ActorROS2Handler::operator()(carla::ros2::VehicleControl &Source)
 {
@@ -102,4 +105,67 @@ void ActorROS2Handler::operator()(carla::ros2::VehicleChassisReport & Target)
   Target.throttle_percentage = LastControl.Throttle * 100.0f;  // last applied. Alguna forma de coger el actual?
   Target.brake_percentage = LastControl.Brake * 100.0f;        // last applied. Alguna forma de coger el actual?
   Target.steering_percentage = -LastControl.Steer * 100.0f;     // last applied. Alguna forma de coger el actual?
+}
+
+void ActorROS2Handler::operator()(carla::ros2::ObstacleReport &Target)
+{
+  if (!_Actor) return;
+
+  ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(_Actor);
+  if (!Vehicle) return;
+
+  UActorComponent* actor_comp = _Actor->GetComponentByClass(UActorDataFallbackComponent::StaticClass());
+  UActorDataFallbackComponent* data_comp = Cast<UActorDataFallbackComponent>(actor_comp);
+  if(!data_comp) return;
+
+  for(const auto& obstacle : data_comp->ROSObstacleData)
+  {
+    carla::ros2::ObstaclePrediction obs;
+
+    obs.id = obstacle.id;
+
+    float conversion_factor = 0.01;
+    
+    obs.acc_x = obstacle.acc_x * conversion_factor;
+    obs.acc_y = obstacle.acc_y * conversion_factor;
+    obs.acc_z = obstacle.acc_z * conversion_factor;
+
+    obs.pos_x = obstacle.pos_x * conversion_factor;
+    obs.pos_y = obstacle.pos_y * conversion_factor; 
+    obs.pos_z = obstacle.pos_z * conversion_factor;
+
+    obs.speed_x = obstacle.speed_x * conversion_factor;
+    obs.speed_y = obstacle.speed_y * conversion_factor;
+    obs.speed_z = obstacle.speed_z * conversion_factor;
+    
+    obs.anchor_x = obstacle.anchor_x * conversion_factor;   
+    obs.anchor_y = obstacle.anchor_y * conversion_factor; 
+    obs.anchor_z = obstacle.anchor_z * conversion_factor;
+    
+    obs.corner_points[0]  = obstacle.corner_points[0].x  * conversion_factor;
+    obs.corner_points[1]  = obstacle.corner_points[0].y  * conversion_factor;
+    obs.corner_points[2]  = obstacle.corner_points[0].z  * conversion_factor;
+    obs.corner_points[3]  = obstacle.corner_points[1].x  * conversion_factor;
+    obs.corner_points[4]  = obstacle.corner_points[1].y  * conversion_factor;
+    obs.corner_points[5]  = obstacle.corner_points[1].z  * conversion_factor;
+    obs.corner_points[6]  = obstacle.corner_points[2].x  * conversion_factor;
+    obs.corner_points[7]  = obstacle.corner_points[2].y  * conversion_factor;
+    obs.corner_points[8]  = obstacle.corner_points[2].z  * conversion_factor;
+    obs.corner_points[9]  = obstacle.corner_points[3].x  * conversion_factor;
+    obs.corner_points[10] = obstacle.corner_points[3].y  * conversion_factor;
+    obs.corner_points[11] = obstacle.corner_points[3].z  * conversion_factor;
+
+    obs.length = obstacle.length  * conversion_factor;
+    obs.width = obstacle.width    * conversion_factor;
+    obs.height = obstacle.height  * conversion_factor;
+
+    obs.yaw = obstacle.yaw * (PI / 180);
+
+    obs.timestamp = obstacle.timestamp;
+    obs.tracking_time = obstacle.tracking_time;
+
+    obs.type = TCHAR_TO_UTF8(*(obstacle.type));
+
+    Target.Obstacles.push_back(obs);
+  }
 }
