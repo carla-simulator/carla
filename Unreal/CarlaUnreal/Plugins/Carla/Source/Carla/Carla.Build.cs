@@ -128,7 +128,8 @@ public class Carla :
       "RHI",
       "Renderer",
       "ProceduralMeshComponent",
-      "MeshDescription"
+      "MeshDescription",
+      "Projects"
     });
 
     if (EnableCarSim)
