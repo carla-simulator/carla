@@ -761,6 +761,11 @@ namespace detail {
       _client.DrawDebugShape(shape);
     }
 
+    void ClearDebugShape() {
+      _client.ClearDebugShape();
+    }
+
+
     /// @}
     // =========================================================================
     /// @name Apply commands in batch

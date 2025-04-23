@@ -1348,18 +1348,21 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(get_actor_bounding_box) << [this](
       cr::ActorId ActorId) -> R<cr::BoundingBox>
   {
-    REQUIRE_CARLA_EPISODE();
-    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
-    if (!CarlaActor)
-    {
-      return RespondError(
-          "get_actor_bounding_box",
-          ECarlaServerResponse::ActorNotFound,
-          " Actor Id: " + FString::FromInt(ActorId));
-    }
-    FBoundingBox bounding_box = UBoundingBoxCalculator::GetActorBoundingBox(CarlaActor->GetActor(), 0);
-    bounding_box.ActorId = CarlaActor->GetActorId();
-    return cr::BoundingBox(bounding_box);
+    return cr::BoundingBox();
+    // Commenting it out due to an unknown bug where sometimes the server tryes to act on a destroyed actor, crashing the simulation.
+
+    // REQUIRE_CARLA_EPISODE();
+    // FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    // if (!CarlaActor)
+    // {
+    //   return RespondError(
+    //       "get_actor_bounding_box",
+    //       ECarlaServerResponse::ActorNotFound,
+    //       " Actor Id: " + FString::FromInt(ActorId));
+    // }
+    // FBoundingBox bounding_box = UBoundingBoxCalculator::GetActorBoundingBox(CarlaActor->GetActor(), 0);
+    // bounding_box.ActorId = CarlaActor->GetActorId();
+    // return cr::BoundingBox(bounding_box);
   };
 
   BIND_SYNC(get_actor_component_world_transform) << [this](
@@ -2925,6 +2928,17 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     check(World != nullptr);
     FDebugShapeDrawer Drawer(*World);
     Drawer.Draw(shape);
+    return R<void>::Success();
+  };
+
+  // ~~ Clear debug shapes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  BIND_SYNC(clear_debug_shape) << [this]() -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    check(World != nullptr);
+    FDebugShapeDrawer Drawer(*World);
+    Drawer.Clear();
     return R<void>::Success();
   };
 
