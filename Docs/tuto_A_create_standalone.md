@@ -11,13 +11,36 @@ It is a common practice in CARLA to manage assets with standalone packages. Keep
 
 Once assets are imported into Unreal, users can generate a __standalone package__ for them. This will be used to distribute the content to CARLA packages such as 0.9.8.
 
-To export packages, simply run the command below.
+To export packages, simply run the command below. A
 
 ```sh
 make package ARGS="--packages=Package1,Package2"
 ```
 
-This will create a standalone package compressed in a `.tar.gz` file for each of the packages listed. The files will be saved in `Dist` folder on Linux, and `/Build/UE4Carla/` on Windows. 
+This will create a standalone package compressed in a `.tar.gz` file for each of the packages listed. 
+
+To create a package for a specific map, we first need to locate where that map is stored within CARLA's Content directory. Inside the map's directory, there will be a folder named `config`, which contains a JSON file with the name of the map, for example, `mapToPackage.Package.json`.
+
+The json file should look something like this:
+```json
+{
+  "maps": [
+    {
+        "name": "YourMapName",
+        "path": "YourMapPath/InsideCarlaContent",
+        "use_carla_materials": true
+      }
+  ],
+}
+```
+
+It is important not to rename this file, as it will be used as the argument for the make package command. The command would look like this:
+```sh
+make package ARGS="--packages=mapToPackage"
+```
+This command will create a package based on the information defined in the `mapToPackage.Package.json` file, including only the content specified within it.
+
+The files will be saved in `Dist` folder on Linux, and `/Build/UE4Carla/` on Windows. 
 
 ---
 

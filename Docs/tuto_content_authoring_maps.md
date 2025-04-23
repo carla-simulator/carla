@@ -419,30 +419,29 @@ Drag your desired foliage item into the box labeled `+ Drop Foliage Here`. Set a
 
 ### Exporting a map as a separate package
 
-To export a map as a map package that can be ingested into a standalone CARLA package installation, use the `make package` command as follows:
+To create a package for a specific map, we first need to locate where that map is stored within CARLA's Content directory. Inside the map's directory, there will be a folder named `config`, which contains a JSON file with the name of the map, for example, `mapToPackage.Package.json`.
 
-```sh
-make package ARGS="--packages=<mapName>"
-```
-
-The `<mapName>` must point to a json file located in `CARLA_ROOT/Unreal/CarlaUE4/Content/Carla/Config` named *mapName.Package.json* which has the following structure:
-
+The json file should look something like this:
 ```json
 {
+  "props": [],
   "maps": [
     {
-        "path": "/Game/Carla/Maps/",
-        "name": "MyMap",
+        "name": "YourMapName",
+        "path": "YourMapPath/InsideCarlaContent",
         "use_carla_materials": true
       }
   ],
-  "props": []
 }
 ```
 
-Your map should have been saved as `MyMap.umap` file in the `CARLA_ROOT/Unreal/CarlaUE4/Content/Carla/Maps` directory. 
+It is important to remember this file's name (`mapToPackage.Package.json` in this example), as it will be used as the argument for the make package command. The command would look like this:
+```sh
+make package ARGS="--packages=mapToPackage"
+```
+This command will create a package based on the information defined in the `mapToPackage.Package.json` file, including only the content specified within it.
 
-The exported map archive will be saved in the `Dist` folder on Linux and the `/Build/UE4Carla/` folder on Windows.
+The files will be saved in `Dist` folder on Linux, and `/Build/UE4Carla/` on Windows.
 
 ### Exporting a map as part of a complete CARLA package
 
