@@ -19,7 +19,7 @@ make package ARGS="--packages=Package1,Package2"
 
 This will create a standalone package compressed in a `.tar.gz` file for each of the packages listed. 
 
-To create a package for a specific map, we first need to locate where that map is stored within CARLA's Content directory. Inside the map's directory, there will be a folder named config, which contains a JSON file with the name of the map, for example, "mapToPackage.Package.json".
+To create a package for a specific map, we first need to locate where that map is stored within CARLA's Content directory. Inside the map's directory, there will be a folder named `config`, which contains a JSON file with the name of the map, for example, `mapToPackage.Package.json`.
 
 The json file should look something like this:
 ```json
@@ -38,7 +38,7 @@ It is important not to rename this file, as it will be used as the argument for 
 ```sh
 make package ARGS="--packages=mapToPackage"
 ```
-This command will create a package based on the information defined in the "mapToPackage.Package.json" file, including only the content specified within it.
+This command will create a package based on the information defined in the `mapToPackage.Package.json` file, including only the content specified within it.
 
 The files will be saved in `Dist` folder on Linux, and `/Build/UE4Carla/` on Windows. 
 
