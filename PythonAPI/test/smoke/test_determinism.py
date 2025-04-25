@@ -34,7 +34,11 @@ class TestDeterminism(SmokeTest):
             for j in range(0, num_actors1):
                 loc1 = record1.vehicle_position_list[j]
                 loc2 = record2.vehicle_position_list[j]
-                self.assertAlmostEqual(loc1, loc2, msg="Actor location missmatch at frame %s. %s != %s"
+                self.assertAlmostEqual(loc1.X, loc2.X, msg="Actor location missmatch at frame %s. %s != %s"
+                    % (str(record1.frame), str(loc1), str(loc2)) )
+                self.assertAlmostEqual(loc1.Y, loc2.Y, msg="Actor location missmatch at frame %s. %s != %s"
+                    % (str(record1.frame), str(loc1), str(loc2)) )
+                self.assertAlmostEqual(loc1.Z, loc2.Z, msg="Actor location missmatch at frame %s. %s != %s"
                     % (str(record1.frame), str(loc1), str(loc2)) )
 
     def spawn_vehicles(self, world, blueprint_transform_list):
