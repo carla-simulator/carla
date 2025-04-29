@@ -1348,9 +1348,6 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(get_actor_bounding_box) << [this](
       cr::ActorId ActorId) -> R<cr::BoundingBox>
   {
-    //return cr::BoundingBox();
-    // Commenting it out due to an unknown bug where sometimes the server tryes to act on a destroyed actor, crashing the simulation.
-
     REQUIRE_CARLA_EPISODE();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
