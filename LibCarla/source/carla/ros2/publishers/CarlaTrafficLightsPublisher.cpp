@@ -22,9 +22,27 @@ bool CarlaTrafficLightsPublisher::UpdateData(int32_t seconds, uint32_t nanosecon
     std::vector<carla_msgs::msg::CarlaTrafficLightStatus> traffic_lights;
 
     for (const auto& traffic_light: report.traffic_lights) {
-        carla_msgs::msg::CarlaTrafficLightStatus tl;
-        tl.id(traffic_light.id);
-        tl.color(carla_msgs::msg::CarlaTrafficLightStatus_Constants::GREEN);
+      carla_msgs::msg::CarlaTrafficLightStatus tl;
+      tl.id(traffic_light.id);
+        
+      switch (traffic_light.light_state) {
+        case TrafficLightState::Red:
+          tl.color(carla_msgs::msg::CarlaTrafficLightStatus_Constants::RED);
+          break;
+        case TrafficLightState::Yellow:
+          tl.color(carla_msgs::msg::CarlaTrafficLightStatus_Constants::YELLOW);
+          break;
+        case TrafficLightState::Green:
+          tl.color(carla_msgs::msg::CarlaTrafficLightStatus_Constants::GREEN);
+          break;
+        case TrafficLightState::Off:
+          tl.color(carla_msgs::msg::CarlaTrafficLightStatus_Constants::BLACK);
+          break;
+        default:
+          tl.color(carla_msgs::msg::CarlaTrafficLightStatus_Constants::UNKNOWN);
+          break;
+        }
+
         tl.confidence(traffic_light.confidence);
         tl.blink(traffic_light.blink);
 
