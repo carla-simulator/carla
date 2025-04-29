@@ -37,8 +37,8 @@
 #include <utility>
 
 #include "carla/rpc/VehicleFailureState.h"
-#include "carla/Public/TrafficLightFallbackComponent.h"
-#include "carla/Public/ActorDataFallbackComponent.h"
+#include "Public/TrafficLightFallbackComponent.h"
+#include "Public/ActorDataFallbackComponent.h"
 #include "CarlaWheeledVehicle.generated.h"
 
 class UBoxComponent;

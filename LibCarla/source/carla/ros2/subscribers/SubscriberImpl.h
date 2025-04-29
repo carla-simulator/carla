@@ -140,3 +140,6 @@ namespace ros2 {
     bool _new_message { false };
     msg_type _message;
   };
+
+} // namespace ros2
+} // namespace carla

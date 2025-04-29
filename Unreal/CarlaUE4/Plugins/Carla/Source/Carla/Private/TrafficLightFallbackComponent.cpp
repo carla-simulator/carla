@@ -22,26 +22,32 @@ void UTrafficLightFallbackComponent::TickComponent(float DeltaTime, ELevelTick T
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	TrafficLights.Empty();
 	UCarlaEpisode* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
 
 	auto It = Episode->GetActorRegistry().begin();
-    for (; It != Episode->GetActorRegistry().end(); ++It)
+	for (; It != Episode->GetActorRegistry().end(); ++It)
 	{
 		const FCarlaActor& View = *(It.Value());
-		FString debug_actor_name = View.GetActor()->GetName();
-		if(debug_actor_name.Contains(TEXT("TrafficLight"), ESearchCase::IgnoreCase))
-		{
-			//UE_LOG(LogCarla, Log, TEXT("TrafficLight Found: %s"), *debug_actor_name);
-		}
+		const ATrafficLightBase* TrafficLight = Cast<ATrafficLightBase>(View.GetActor());
+		if (!IsValid(TrafficLight)) continue;
+
+		const UTrafficLightComponent* TrafficLightComponent = TrafficLight->GetTrafficLightComponent();
+		if (!IsValid(TrafficLightComponent)) continue;
+
+		const UActorComponent* actor_comp = View.GetActor()->GetComponentByClass(UTrafficLightComponent::StaticClass());
+		if(!IsValid(actor_comp)) continue;
+
+		const UTrafficLightComponent* light_comp = Cast<UTrafficLightComponent>(actor_comp);
+		if(!IsValid(light_comp)) continue;
+
+		const std::string SignId = carla::rpc::FromFString(TrafficLightComponent->GetSignId());
+		DebugROSMessage debug_msg;
+		debug_msg.id = FString(SignId.c_str());
+		debug_msg.light_state = light_comp->GetLightState();
+		debug_msg.confidence = 3; //always most confident, since it's ground truth
+		debug_msg.blink = false; //not supported
+		debug_msg.contains_lights = true;
+		TrafficLights.Add(debug_msg);
 	}
-
-	// struct DebugROSMessage {
-	// 	int id;
-	// 	carla::rpc::TrafficLightState trafficlight_state;
-	// 	int confidence;
-	// 	double tracking_time;
-	// 	bool blink;
-	// 	bool contains_lights;
-	// };
 }
-

@@ -40,6 +40,8 @@
 // Pseudo publishers.
 #include "publishers/CarlaChassisPublisher.h"
 #include "publishers/OdometryPublisher.h"
+#include "publishers/CarlaObstaclesPublisher.h"
+#include "publishers/CarlaTrafficLightsPublisher.h"
 
 #include "subscribers/BaseSubscriber.h"
 #include "subscribers/CarlaEgoVehicleControlSubscriber.h"
@@ -203,6 +205,13 @@ void ROS2::AddVehicle(void* actor, std::string ros_name, ActorCallback callback)
 
   auto _chassis_publisher = std::make_shared<CarlaChassisPublisher>(actor, ros_name.c_str());
   _pseudo_publishers.insert({actor, _chassis_publisher});
+
+  auto _obstacles_publisher = std::make_shared<CarlaObstaclesPublisher>(actor, ros_name.c_str());
+  _pseudo_publishers.insert({actor, _obstacles_publisher});
+
+  auto _traffic_lights_publisher = std::make_shared<CarlaTrafficLightsPublisher>(actor, ros_name.c_str());
+  _pseudo_publishers.insert({actor, _traffic_lights_publisher});
+
 }
 
 void ROS2::RemoveVehicle(void* actor) {

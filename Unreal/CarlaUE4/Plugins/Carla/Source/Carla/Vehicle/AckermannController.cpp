@@ -44,7 +44,8 @@ void FAckermannController::ApplySettings(const FAckermannControllerSettings& Set
 void FAckermannController::SetTargetPoint(const FVehicleAckermannControl& AckermannControl) {
   UserTargetPoint = AckermannControl;
 
-  TargetSteer = FMath::Clamp(UserTargetPoint.Steer, -VehicleMaxSteering, VehicleMaxSteering);
+  TargetSteer = UserTargetPoint.Steer * VehicleMaxSteering;
+  //TargetSteer = FMath::Clamp(UserTargetPoint.Steer, -VehicleMaxSteering, VehicleMaxSteering);
   TargetSteerSpeed = FMath::Abs(UserTargetPoint.SteerSpeed);
   TargetSpeed = UserTargetPoint.Speed;
   TargetAcceleration = FMath::Abs(UserTargetPoint.Acceleration);

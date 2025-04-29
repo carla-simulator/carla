@@ -26,12 +26,12 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	struct DebugROSMessage {
-		int id;
-		//carla::rpc::TrafficLightState trafficlight_state;
+		FString id;
+		ETrafficLightState light_state;
 		int confidence;
 		double tracking_time;
 		bool blink;
 		bool contains_lights;
 	};
-
+	TArray<DebugROSMessage> TrafficLights;
 };

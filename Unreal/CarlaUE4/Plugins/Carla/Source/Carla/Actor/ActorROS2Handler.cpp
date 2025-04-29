@@ -10,6 +10,7 @@
 #include "Carla/Vehicle/VehicleControl.h"
 #include "Carla/Vehicle/VehicleAckermannControl.h"
 #include "Carla/Public/ActorDataFallbackComponent.h"
+#include "Carla/Public/TrafficLightFallbackComponent.h"
 
 // =============================================================================
 // -- Control interface handlers -----------------------------------------------
@@ -84,7 +85,7 @@ void ActorROS2Handler::operator()(carla::ros2::VehicleOdometryReport &Target)
   Target.linear_velocity_x = Velocity.X;  // [cm/s]
   Target.linear_velocity_y = Velocity.Y;
   Target.linear_velocity_z = Velocity.Z;
-  Target.angular_velocity_x = AngularVelocity.X; // Degrees / s
+  Target.angular_velocity_x = AngularVelocity.X;  // Degrees/s
   Target.angular_velocity_y = AngularVelocity.Y;
   Target.angular_velocity_z = AngularVelocity.Z;
 }
@@ -101,10 +102,10 @@ void ActorROS2Handler::operator()(carla::ros2::VehicleChassisReport & Target)
 
   Target.engine_started = true; // For now set it to true always
   Target.engine_rpm = 0;
-  Target.speed_mps = Vehicle->GetVehicleForwardSpeed() / 100.0f; // [m/s]
-  Target.throttle_percentage = LastControl.Throttle * 100.0f;  // last applied. Alguna forma de coger el actual?
-  Target.brake_percentage = LastControl.Brake * 100.0f;        // last applied. Alguna forma de coger el actual?
-  Target.steering_percentage = -LastControl.Steer * 100.0f;     // last applied. Alguna forma de coger el actual?
+  Target.speed_mps = Vehicle->GetVehicleForwardSpeed() / 100.0f;  // [m/s]
+  Target.throttle_percentage = LastControl.Throttle * 100.0f;
+  Target.brake_percentage = LastControl.Brake * 100.0f;
+  Target.steering_percentage = -LastControl.Steer * 100.0f;
 }
 
 void ActorROS2Handler::operator()(carla::ros2::ObstacleReport &Target)
@@ -166,6 +167,28 @@ void ActorROS2Handler::operator()(carla::ros2::ObstacleReport &Target)
 
     obs.type = TCHAR_TO_UTF8(*(obstacle.type));
 
-    Target.Obstacles.push_back(obs);
+    Target.obstacles.push_back(obs);
   }
+}
+
+void ActorROS2Handler::operator()(carla::ros2::TrafficLightReport &Target)
+{
+  if (!_Actor) return;
+
+  
+    UActorComponent* actor_comp = _Actor->GetComponentByClass(UTrafficLightFallbackComponent::StaticClass());
+    UTrafficLightFallbackComponent* data_comp = Cast<UTrafficLightFallbackComponent>(actor_comp);
+    if(!data_comp) return;
+
+    for(const auto& trafficlight : data_comp->TrafficLights)
+    {
+        carla::ros2::TrafficLight trafficlight_msg;
+        trafficlight_msg.id = TCHAR_TO_UTF8(*(trafficlight.id));
+        trafficlight_msg.light_state = static_cast<carla::ros2::TrafficLightState>(trafficlight.light_state);
+        trafficlight_msg.confidence = trafficlight.confidence;
+        trafficlight_msg.tracking_time = trafficlight.tracking_time;
+        trafficlight_msg.blink = trafficlight.blink;
+        trafficlight_msg.contains_lights = trafficlight.contains_lights;
+        Target.traffic_lights.push_back(trafficlight_msg);
+    }
 }

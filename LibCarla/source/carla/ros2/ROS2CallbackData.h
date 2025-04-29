@@ -75,36 +75,56 @@ namespace ros2 {
   };
 
   struct PolygonPoint {
-		double x = 0.0;
-		double y = 0.0;
-		double z = 0.0;
-	  };
-
-  struct ObstaclePrediction {
-		int id;
-		float pos_x, pos_y, pos_z;
-		float yaw;
-		float speed_x, speed_y, speed_z;
-		float length, width, height;
-		float corner_points[12];
-		double tracking_time;
-		double timestamp;
-		float acc_x, acc_y, acc_z;
-		float anchor_x, anchor_y, anchor_z;
-		std::string type;
-	};
-
-  struct ObstacleReport {
-    std::vector<ObstaclePrediction> Obstacles;
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
   };
 
+  struct ObstaclePrediction {
+    int id;
+    float pos_x, pos_y, pos_z;
+    float yaw;
+    float speed_x, speed_y, speed_z;
+    float length, width, height;
+    float corner_points[12];
+    double tracking_time;
+    double timestamp;
+    float acc_x, acc_y, acc_z;
+    float anchor_x, anchor_y, anchor_z;
+    std::string type;
+  };
+
+  struct ObstacleReport {
+    std::vector<ObstaclePrediction> obstacles;
+  };
+
+  enum class TrafficLightState: uint8_t {
+    Red = 0,
+    Yellow = 1,
+    Green = 2,
+    Off = 3
+  };
+  struct TrafficLight {
+    std::string id;
+    TrafficLightState light_state;
+    int confidence;
+    double tracking_time;
+    bool blink;
+    bool contains_lights;
+  };
+  
+  struct TrafficLightReport {
+    std::vector<TrafficLight> traffic_lights;
+  };
+  
   using ROS2CallbackData = boost::variant2::variant<
     VehicleControl,
     AckermannControl,
     // Pseudo publishers structures
     VehicleOdometryReport,
     VehicleChassisReport,
-    ObstacleReport
+    ObstacleReport,
+    TrafficLightReport
   >;
 
   using ActorCallback = std::function<void(void *actor, ROS2CallbackData &data)>;
