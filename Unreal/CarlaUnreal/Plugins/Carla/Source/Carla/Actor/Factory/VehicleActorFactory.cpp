@@ -242,8 +242,12 @@ void AVehicleActorFactory::LoadVehicleParametersArrayFromFile(const FString& Fil
           UE_LOG(LogCarla, Error, TEXT("Failed to parse vehicle parameters from %s"), *FilePath);
       }
   }
-  else
+  else if(FileName == "VehicleParameters.json")
   {
       UE_LOG(LogCarla, Error, TEXT("Failed to load file: %s"), *FilePath);
+  }
+  else 
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Additional file not found: %s"), *FilePath);
   }
 }

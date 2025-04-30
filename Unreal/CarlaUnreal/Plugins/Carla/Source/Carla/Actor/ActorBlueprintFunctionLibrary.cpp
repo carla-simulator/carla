@@ -652,8 +652,8 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     
     FActorVariation ColorSaturation;
     ColorSaturation.Id = TEXT("color_saturation");
-    ColorSaturation.Type = EActorAttributeType::Float;
-    ColorSaturation.RecommendedValues = { ColorToFString(FLinearColor(0.5f, 0.5f, 0.5f).ToFColorSRGB()) };
+    ColorSaturation.Type = EActorAttributeType::RGBColor;
+    ColorSaturation.RecommendedValues = { ColorToFString(FLinearColor(0.5f, 0.5f, 0.5f, 1.0f).ToFColorSRGB()) };
     ColorSaturation.bRestrictToRecommended = false;
 
     FActorVariation ColorContrast;
@@ -670,7 +670,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
 
     FActorVariation HighlightsGamma;
     HighlightsGamma.Id = TEXT("highlights_gamma");
-    HighlightsGamma.Type = EActorAttributeType::Float;
+    HighlightsGamma.Type = EActorAttributeType::RGBColor;
     HighlightsGamma.RecommendedValues = { ColorToFString(FLinearColor(0.5f, 0.5f, 0.5f).ToFColorSRGB()) };
     HighlightsGamma.bRestrictToRecommended = false;
 
@@ -1416,6 +1416,31 @@ void UActorBlueprintFunctionLibrary::MakePropDefinitions(
   FillActorDefinitionArray(ParameterArray, Definitions, &MakePropDefinition);
 }
 
+void UActorBlueprintFunctionLibrary::MakeBlueprintDefinition(
+  const FBlueprintParameters &Parameters,
+  bool &Success,
+  FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("blueprint"), Parameters.Name);
+  AddRecommendedValuesForActorRoleName(Definition, {TEXT("blueprint")});
+
+  // Definition.Attributes.Emplace(FActorAttribute{
+  //   EActorAttributeType::String,
+  //   Parameters.ObjectType});
+
+
+  Success = CheckActorDefinition(Definition);
+  
+}
+
+void UActorBlueprintFunctionLibrary::MakeBlueprintDefinitions(
+  const TArray<FBlueprintParameters> &ParameterArray,
+  TArray<FActorDefinition> &Definitions)
+{
+  FillActorDefinitionArray(ParameterArray, Definitions, &MakeBlueprintDefinition);
+}
+
+
 void UActorBlueprintFunctionLibrary::MakeObstacleDetectorDefinitions(
     const FString &Type,
     const FString &Id,
@@ -1547,6 +1572,7 @@ FColor UActorBlueprintFunctionLibrary::ActorAttributeToColor(
   Color.R = Colors[0u];
   Color.G = Colors[1u];
   Color.B = Colors[2u];
+  Color.A = 255u;
   return Color;
 }
 

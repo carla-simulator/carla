@@ -56,6 +56,7 @@ crp::CityObjectLabel ATagger::GetLabelByFolderName(const FString &String) {
   else if (String == "Train")        return crp::CityObjectLabel::Train;
   else if (String == "Rock")         return crp::CityObjectLabel::Rock;
   else if (String == "Stone")        return crp::CityObjectLabel::Rock;
+  else if (String == "Bush")         return crp::CityObjectLabel::Vegetation;
   else                               return crp::CityObjectLabel::None;
 }
 
