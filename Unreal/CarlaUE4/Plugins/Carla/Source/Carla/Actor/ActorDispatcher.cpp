@@ -27,7 +27,7 @@ void UActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Funct
     Definition.UId = static_cast<uint32>(SpawnFunctions.Num()) + 1u;
     Definitions.Emplace(Definition);
     SpawnFunctions.Emplace(Functor);
-    Classes.Emplace(Definition.Class);
+    Classes.Add(Definition.Id, Definition.Class);
   }
   else
   {
@@ -58,7 +58,14 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UActorDispatcher::SpawnActor(
 
   UE_LOG(LogCarla, Log, TEXT("Spawning actor '%s'"), *Description.Id);
 
-  Description.Class = Classes[Description.UId - 1];
+  auto Class = Classes.Find(Description.Id);
+  if (Class == nullptr)
+  {
+    UE_LOG(LogCarla, Error, TEXT("Invalid ActorDescription '%s' (UId=%d)"), *Description.Id, Description.UId);
+    return MakeTuple(EActorSpawnResultStatus::InvalidDescription, nullptr);
+  }
+
+  Description.Class = *Class;
   FActorSpawnResult Result = SpawnFunctions[Description.UId - 1](Transform, Description);
 
   if ((Result.Status == EActorSpawnResultStatus::Success) && (Result.Actor == nullptr))
@@ -95,7 +102,13 @@ AActor* UActorDispatcher::ReSpawnActor(
 
   UE_LOG(LogCarla, Log, TEXT("Spawning actor '%s'"), *Description.Id);
 
-  Description.Class = Classes[Description.UId - 1];
+  auto Class = Classes.Find(Description.Id);
+  if (Class == nullptr)
+  {
+    UE_LOG(LogCarla, Error, TEXT("Invalid ActorDescription '%s' (UId=%d)"), *Description.Id, Description.UId);
+    return nullptr;
+  }
+  Description.Class = *Class;
   FActorSpawnResult Result = SpawnFunctions[Description.UId - 1](Transform, Description);
 
   if ((Result.Status == EActorSpawnResultStatus::Success) && (Result.Actor == nullptr))
