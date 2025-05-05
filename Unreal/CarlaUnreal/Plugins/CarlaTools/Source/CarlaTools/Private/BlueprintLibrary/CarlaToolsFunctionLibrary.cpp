@@ -75,33 +75,47 @@ void UCarlaToolsFunctionLibrary::ChunkAndSubdivideStaticMesh(UStaticMesh *Source
   const FIndexArrayView IndexArray = LOD.IndexBuffer.GetArrayView();
 
   TArray<UCarlaToolsFunctionLibrary::FTriangle> AllTriangles;
+  TArray<int32> TriangleMaterialIndices;
 
-  for (int i = 0; i < IndexArray.Num(); i += 3)
+  // Extract triangles and their material indices
+  for (int32 SectionIndex = 0; SectionIndex < LOD.Sections.Num(); ++SectionIndex)
   {
-    FVector3f V0 = PositionBuffer.VertexPosition(IndexArray[i]);
-    FVector3f V1 = PositionBuffer.VertexPosition(IndexArray[i + 1]);
-    FVector3f V2 = PositionBuffer.VertexPosition(IndexArray[i + 2]);
-    AllTriangles.Add({V0, V1, V2});
+    const FStaticMeshSection &Section = LOD.Sections[SectionIndex];
+    for (uint32 i = 0; i < Section.NumTriangles; ++i)
+    {
+      int32 Index0 = IndexArray[Section.FirstIndex + i * 3 + 0];
+      int32 Index1 = IndexArray[Section.FirstIndex + i * 3 + 1];
+      int32 Index2 = IndexArray[Section.FirstIndex + i * 3 + 2];
+
+      FVector3f V0 = PositionBuffer.VertexPosition(Index0);
+      FVector3f V1 = PositionBuffer.VertexPosition(Index1);
+      FVector3f V2 = PositionBuffer.VertexPosition(Index2);
+
+      AllTriangles.Add({V0, V1, V2});
+      TriangleMaterialIndices.Add(Section.MaterialIndex);
+    }
   }
 
-  TMap<FIntPoint, TArray<UCarlaToolsFunctionLibrary::FTriangle>> RegionTriangles;
-  for (const auto &T : AllTriangles)
+  // Group triangles by region and material index
+  TMap<FIntPoint, TMap<int32, TArray<UCarlaToolsFunctionLibrary::FTriangle>>> RegionMaterialTriangles;
+
+  for (int32 i = 0; i < AllTriangles.Num(); ++i)
   {
+    const auto &T = AllTriangles[i];
     FVector3f Center = (T.V0 + T.V1 + T.V2) / 3.0f;
+    FIntPoint Region(FMath::FloorToInt(Center.X / ChunkSize), FMath::FloorToInt(Center.Y / ChunkSize));
+    int32 MaterialIndex = TriangleMaterialIndices[i];
 
-    FIntPoint Region = FIntPoint(
-        FMath::FloorToInt(Center.X / ChunkSize),
-        FMath::FloorToInt(Center.Y / ChunkSize));
-
-    RegionTriangles.FindOrAdd(Region).Add(T);
+    RegionMaterialTriangles.FindOrAdd(Region).FindOrAdd(MaterialIndex).Add(T);
   }
 
   FAssetToolsModule &AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools");
   int32 ChunkIndex = 0;
 
-  for (const auto &Elem : RegionTriangles)
+  // Process each chunk
+  for (const auto &RegionPair : RegionMaterialTriangles)
   {
-    if (Elem.Value.Num() == 0)
+    if (RegionPair.Value.Num() == 0)
       continue;
 
     FMeshDescription MeshDesc;
@@ -113,40 +127,49 @@ void UCarlaToolsFunctionLibrary::ChunkAndSubdivideStaticMesh(UStaticMesh *Source
     Attributes.GetVertexInstanceUVs().SetNumChannels(1);
 
     TMap<FVector3f, FVertexID> VertexMap;
+    TMap<int32, FPolygonGroupID> PolygonGroups;
 
-    for (const UCarlaToolsFunctionLibrary::FTriangle &T : Elem.Value)
+    for (const auto &MatPair : RegionPair.Value)
     {
-      FVertexID VIDs[3];
-      FVector3f Verts[3] = {T.V0, T.V1, T.V2};
+      int32 MaterialIndex = MatPair.Key;
+      const auto &Triangles = MatPair.Value;
 
-      for (int i = 0; i < 3; ++i)
+      FPolygonGroupID PGID = MeshDesc.CreatePolygonGroup();
+      PolygonGroups.Add(MaterialIndex, PGID);
+
+      for (const auto &T : Triangles)
       {
-        if (!VertexMap.Contains(Verts[i]))
+        FVertexID VIDs[3];
+        FVector3f Verts[3] = {T.V0, T.V1, T.V2};
+
+        for (int i = 0; i < 3; ++i)
         {
-          FVertexID VID = MeshDesc.CreateVertex();
-          Attributes.GetVertexPositions()[VID] = Verts[i];
-          VertexMap.Add(Verts[i], VID);
+          if (!VertexMap.Contains(Verts[i]))
+          {
+            FVertexID VID = MeshDesc.CreateVertex();
+            Attributes.GetVertexPositions()[VID] = Verts[i];
+            VertexMap.Add(Verts[i], VID);
+          }
+          VIDs[i] = VertexMap[Verts[i]];
         }
-        VIDs[i] = VertexMap[Verts[i]];
+
+        TArray<FVertexInstanceID> VInsts;
+        for (int i = 0; i < 3; ++i)
+        {
+          FVertexInstanceID InstanceID = MeshDesc.CreateVertexInstance(VIDs[i]);
+          VInsts.Add(InstanceID);
+          Attributes.GetVertexInstanceUVs().Set(InstanceID, 0, FVector2f(Verts[i].X * 0.01f, Verts[i].Y * 0.01f));
+        }
+
+        MeshDesc.CreatePolygon(PGID, VInsts);
       }
-
-      TArray<FVertexInstanceID> VInsts;
-      for (int i = 0; i < 3; ++i)
-      {
-        FVertexInstanceID InstanceID = MeshDesc.CreateVertexInstance(VIDs[i]);
-        VInsts.Add(InstanceID);
-
-        const FVector3f Pos = Verts[i];
-        Attributes.GetVertexInstanceUVs().Set(InstanceID, 0, FVector2f(Pos.X * 0.01f, Pos.Y * 0.01f));
-      }
-
-      MeshDesc.CreatePolygon(MeshDesc.CreatePolygonGroup(), VInsts);
     }
 
+    // Compute normals/tangents
     FStaticMeshOperations::ComputeTriangleTangentsAndNormals(MeshDesc, 0.0001f);
     FStaticMeshOperations::ComputeTangentsAndNormals(MeshDesc, EComputeNTBsFlags::Normals | EComputeNTBsFlags::Tangents);
 
-
+    // Create and save new mesh
     FString AssetName = FString::Printf(TEXT("%s_%d"), *MeshName, ChunkIndex++);
     FString PackagePath = OutputFolder + "/" + AssetName;
     UPackage *Package = CreatePackage(*PackagePath);
@@ -156,13 +179,27 @@ void UCarlaToolsFunctionLibrary::ChunkAndSubdivideStaticMesh(UStaticMesh *Source
     NewMesh->SetNumSourceModels(1);
     NewMesh->CreateMeshDescription(0, MoveTemp(MeshDesc));
     NewMesh->CommitMeshDescription(0);
+
+    // Set materials
+    for (const auto &PG : PolygonGroups)
+    {
+      if (SourceMesh->GetStaticMaterials().IsValidIndex(PG.Key))
+      {
+        NewMesh->GetStaticMaterials().Add(SourceMesh->GetStaticMaterials()[PG.Key]);
+      }
+      else
+      {
+        NewMesh->GetStaticMaterials().Add(FStaticMaterial());
+      }
+    }
+
     NewMesh->Build(false);
     NewMesh->PostEditChange();
     NewMesh->MarkPackageDirty();
 
     FAssetRegistryModule::AssetCreated(NewMesh);
     FString Filename = FPackageName::LongPackageNameToFilename(PackagePath, TEXT(".uasset"));
-    UPackage::SavePackage(Package, NewMesh, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *Filename);
+    UPackage::SavePackage(Package, NewMesh, EObjectFlags::RF_Public | RF_Standalone, *Filename);
   }
 }
 
