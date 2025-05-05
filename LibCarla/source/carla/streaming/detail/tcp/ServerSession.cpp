@@ -79,7 +79,6 @@ namespace tcp {
     DEBUG_ASSERT(message != nullptr);
     DEBUG_ASSERT(!message->empty());
     auto self = shared_from_this();
-    boost::asio::post(_strand, [=]() {
       if (!_socket.is_open()) {
         return;
       }
@@ -111,11 +110,8 @@ namespace tcp {
       log_debug("session", _session_id, ": sending message of", message->size(), "bytes");
 
       _deadline.expires_from_now(_timeout);
-      boost::asio::async_write(
-          _socket,
-          message->GetBufferSequence(),
-          handle_sent);
-    });
+      boost::asio::async_write(_socket, message->GetBufferSequence(), 
+        boost::asio::bind_executor(_strand, handle_sent));
   }
 
   void ServerSession::Close() {

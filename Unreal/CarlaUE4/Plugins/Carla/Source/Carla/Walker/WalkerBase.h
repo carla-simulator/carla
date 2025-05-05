@@ -16,6 +16,7 @@ class CARLA_API AWalkerBase : public ACharacter
 
   GENERATED_BODY()
 
+  AWalkerBase(const FObjectInitializer &ObjectInitializer);
 public:
 
   UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)

@@ -129,7 +129,7 @@ pip3 install --user -Iv setuptools==47.3.1 &&
 pip install --user distro &&
 pip3 install --user distro &&
 pip install --user wheel &&
-pip3 install --user wheel auditwheel
+pip3 install --user wheel auditwheel==4.0.0
 ```
 
 ---
