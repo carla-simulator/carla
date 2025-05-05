@@ -444,6 +444,8 @@ namespace detail {
     void DrawDebugShape(const rpc::DebugShape &shape);
 
     void ClearDebugShape();
+
+    void ClearDebugString();
     
     void ApplyBatch(
         std::vector<rpc::Command> commands,

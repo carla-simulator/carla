@@ -717,6 +717,10 @@ namespace detail {
     _pimpl->AsyncCall("clear_debug_shape");
   }
 
+  void Client::ClearDebugString() {
+    _pimpl->AsyncCall("clear_debug_string");
+  }
+
   void Client::ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {
     _pimpl->AsyncCall("apply_batch", std::move(commands), do_tick_cue);
   }

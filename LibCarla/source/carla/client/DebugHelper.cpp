@@ -130,5 +130,9 @@ namespace client {
     _episode.Lock()->ClearDebugShape();
   }
 
+  void DebugHelper::ClearDebugString() {
+    _episode.Lock()->ClearDebugString();
+  }
+
 } // namespace client
 } // namespace carla
