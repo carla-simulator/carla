@@ -30,6 +30,7 @@
  * carla.ad subpackages are now directly importable and are not directly importable anymore (e.g. import ad)
  * Fixed segfault in traffic manager when trying to access not available vehicles
  * Fixed invalid comparission in python examples/rss
+ * Updated inverted traffic PythonAPI example script, added support for waypoint-guided Inverted AI cars.
  * Fixed invisible spline meshes in instance segmentation
  * Set to default Visual Studio 2022 in Windows
  * Added env CARLA_CACHE_DIR to be able to set CARLA CACHE location
