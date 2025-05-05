@@ -110,4 +110,7 @@ public:
     const FBoundingBox& InBB,
     TArray<UStaticMeshComponent*>& OutStaticMeshComps);
 
+  // Return the combined BB of all doors of the vehicle, with the same orientation.
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static FBoundingBox GetVehicleDoorsBoundingBox(const ACarlaWheeledVehicle* Vehicle);
 };

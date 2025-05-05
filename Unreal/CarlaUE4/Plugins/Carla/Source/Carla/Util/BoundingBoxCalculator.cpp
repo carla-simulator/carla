@@ -23,6 +23,7 @@
 
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "Engine/SkeletalMeshSocket.h"
+#include "Kismet/KismetMathLibrary.h"
 
 namespace crp = carla::rpc;
 
@@ -30,10 +31,11 @@ static FBoundingBox ApplyTransformToBB(
     FBoundingBox InBB,
     const FTransform& Transform)
 {
-  auto Scale = Transform.GetScale3D();
+  const auto Scale = Transform.GetScale3D();
+  const auto TransformRotation = Transform.GetRotation().Rotator();
   InBB.Origin *= Scale;
-  InBB.Rotation = Transform.GetRotation().Rotator();
-  InBB.Origin = InBB.Rotation.RotateVector(InBB.Origin) + Transform.GetLocation();
+  InBB.Rotation = UKismetMathLibrary::ComposeRotators(TransformRotation, InBB.Rotation);
+  InBB.Origin = TransformRotation.RotateVector(InBB.Origin) + Transform.GetLocation();
   InBB.Extent *= Scale;
   return InBB;
 }
@@ -183,6 +185,14 @@ FBoundingBox UBoundingBoxCalculator::GetVehicleBoundingBox(
     }
   }
 
+  // Calculate bounding boxes of the doors.
+  FBoundingBox DoorsBB = GetVehicleDoorsBoundingBox(Vehicle);
+  if(DoorsBB.Extent != FVector::ZeroVector)
+  {
+    // Combine doors Bounding Box with the vehicle BB.
+    BB = CombineBBs({DoorsBB, BB});
+  }
+  
   // Component-to-world transform for this component
   auto& CompToWorldTransform = ParentComp->GetComponentTransform();
   BB = ApplyTransformToBB(BB, CompToWorldTransform);
@@ -445,7 +455,7 @@ TArray<FBoundingBox> UBoundingBoxCalculator::GetBBsOfActor(
     {
       Result.Add(BoundingBox);
     }
-    return Result;;
+    return Result;
   }
 
   // Pedestrians, we just use the capsule component at the moment.
@@ -644,4 +654,35 @@ void UBoundingBoxCalculator::GetMeshCompsFromActorBoundingBox(
       OutStaticMeshComps.Emplace(Comp);
     }
   }
+}
+
+FBoundingBox UBoundingBoxCalculator::GetVehicleDoorsBoundingBox(const ACarlaWheeledVehicle* Vehicle)
+{
+  FBoundingBox DoorsBB;
+  if(Vehicle && Vehicle->GetConstraintsComponents().Num() > 0)
+  {
+    FBox DoorsBox(ForceInit);
+    const FTransform& ActorToWorld = Vehicle->GetActorTransform();
+    const FTransform WorldToActor = ActorToWorld.Inverse();
+
+    // Iterates over all doors of the vehicle
+    for(const UPhysicsConstraintComponent* ConstraintComp : Vehicle->GetConstraintsComponents())
+    {
+      const UPrimitiveComponent* DoorComponent = Vehicle->GetConstraintDoor()[ConstraintComp];
+      if(const UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(DoorComponent))
+      {
+        const FTransform ComponentToActor = StaticMeshComp->GetComponentTransform() * WorldToActor;
+        DoorsBox += StaticMeshComp->CalcBounds(ComponentToActor).GetBox();
+      }
+    }
+
+    if(DoorsBox.IsValid)
+    {
+      // DoorBB is aligned with the Vehicle orientation, for this reason it is not necessary to assign rotation.
+      DoorsBB.Origin = DoorsBox.GetCenter();
+      DoorsBB.Extent = DoorsBox.GetExtent();
+    }
+  }
+
+  return DoorsBB;
 }

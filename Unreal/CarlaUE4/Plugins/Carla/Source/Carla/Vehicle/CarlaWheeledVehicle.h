@@ -432,6 +432,10 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   static void SetPhysicsConstraintAngle(
       UPhysicsConstraintComponent*Component, const FRotator &NewAngle);
+  
+  const TArray<UPhysicsConstraintComponent*>& GetConstraintsComponents() const { return ConstraintsComponents; }
+
+  const TMap<UPhysicsConstraintComponent*, UPrimitiveComponent*>& GetConstraintDoor() const {return ConstraintDoor; }
  
 private:
 
