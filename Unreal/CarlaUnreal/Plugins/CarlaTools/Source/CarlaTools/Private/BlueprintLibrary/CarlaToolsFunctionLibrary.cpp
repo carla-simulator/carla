@@ -199,7 +199,7 @@ void UCarlaToolsFunctionLibrary::ChunkAndSubdivideStaticMesh(UStaticMesh *Source
 
     FAssetRegistryModule::AssetCreated(NewMesh);
     FString Filename = FPackageName::LongPackageNameToFilename(PackagePath, TEXT(".uasset"));
-    UPackage::SavePackage(Package, NewMesh, EObjectFlags::RF_Public | RF_Standalone, *Filename);
+    UPackage::SavePackage(Package, NewMesh, EObjectFlags::RF_Public | EObjectFlags::RF_Standalone, *Filename);
   }
 }
 
