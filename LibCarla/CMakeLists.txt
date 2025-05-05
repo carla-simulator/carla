@@ -195,6 +195,12 @@ if (BUILD_CARLA_SERVER)
     ${LIBCARLA_SERVER_SOURCES_THIRD_PARTY}
   )
 
+  find_package (ZLIB REQUIRED)
+  find_package (PNG REQUIRED)
+  find_package (Boost REQUIRED)
+  find_package (RecastNavigation REQUIRED)
+  find_package (RPC REQUIRED)
+
   target_link_libraries (
     carla-server PUBLIC SYSTEM
     Boost::asio
@@ -205,9 +211,9 @@ if (BUILD_CARLA_SERVER)
     RecastNavigation::Recast
     RecastNavigation::Detour
     RecastNavigation::DetourCrowd
-    png_static
-    zlibstatic
-    rpc
+    PNG::PNG
+    ZLIB::ZLIB
+    RPC::RPC
   )
   
   target_include_directories (
@@ -361,8 +367,8 @@ if (BUILD_CARLA_CLIENT)
     RecastNavigation::Recast
     RecastNavigation::Detour
     RecastNavigation::DetourCrowd
-    png_static
-    zlibstatic
+    PNG::PNG
+    ZLIB::ZLIB
     rpc
   )
   

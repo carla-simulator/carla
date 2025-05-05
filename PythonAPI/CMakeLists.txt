@@ -8,12 +8,18 @@ find_package (
   REQUIRED
 )
 
+find_package (ZLIB REQUIRED)
+find_package (PNG REQUIRED)
+find_package (Boost REQUIRED)
+find_package (RecastNavigation REQUIRED)
+find_package (RPC REQUIRED)
+
 set (
   PYTHON_API_DEPENDENCIES
   carla-client
-  rpc
-  png_static
-  zlibstatic
+  RPC::RPC
+  PNG::PNG
+  ZLIB::ZLIB
   Boost::asio
   Boost::python
   Boost::geometry

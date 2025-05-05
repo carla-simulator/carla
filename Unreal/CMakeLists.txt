@@ -67,18 +67,24 @@ endif ()
 
 
 
+find_package (ZLIB REQUIRED)
+find_package (PNG REQUIRED)
+find_package (Boost REQUIRED)
+find_package (RecastNavigation REQUIRED)
+find_package (RPC REQUIRED)
+
 set (
   UE_DEPENDENCIES
   carla-server
-  libsqlite3
+  SQLite::SQLite3
   Boost::asio
   Boost::python
   Boost::geometry
   Boost::gil
   Eigen3::Eigen
-  zlibstatic
-  png_static
-  rpc
+  ZLIB::ZLIB
+  PNG::PNG
+  RPC::RPC
 )
 
 set (UE_DEPENDENCIES_ORDER_ONLY ${UE_DEPENDENCIES})
@@ -150,7 +156,7 @@ endforeach ()
 
 set (
   CARLA_UNREAL_LIBRARIES
-  $<TARGET_FILE:libsqlite3>
+  $<TARGET_FILE:SQLite::SQLite3>
 )
 
 foreach (UE_DEP ${UE_DEPENDENCIES})

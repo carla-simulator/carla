@@ -46,6 +46,8 @@ if (CMAKE_TOOLCHAIN_FILE)
   set (CMAKE_TOOLCHAIN_FILE ${TOOLCHAIN_FILE})
 endif ()
 
+list (APPEND CMAKE_MODULE_PATH ${CARLA_WORKSPACE_PATH}/CMake)
+
 # ================================
 #   Common Definitions
 # ================================

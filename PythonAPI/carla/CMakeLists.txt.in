@@ -196,11 +196,11 @@ target_compile_definitions (
 target_link_libraries (
   ${SKBUILD_PROJECT_NAME} PUBLIC
   $<TARGET_FILE:carla-client>
-  $<TARGET_FILE:@Boost_python_TARGET_NAME@>
-  $<TARGET_FILE:@RecastNavigation_Recast_TARGET_NAME@>
-  $<TARGET_FILE:@RecastNavigation_Detour_TARGET_NAME@>
-  $<TARGET_FILE:@RecastNavigation_DetourCrowd_TARGET_NAME@>
-  $<TARGET_FILE:png_static>
-  $<TARGET_FILE:zlibstatic>
-  $<TARGET_FILE:rpc>
+  $<TARGET_FILE:@Boost::python_TARGET_NAME@>
+  $<TARGET_FILE:@RecastNavigation::Recast_TARGET_NAME@>
+  $<TARGET_FILE:@RecastNavigation::Detour_TARGET_NAME@>
+  $<TARGET_FILE:@RecastNavigation::DetourCrowd_TARGET_NAME@>
+  $<TARGET_FILE:PNG::PNG>
+  $<TARGET_FILE:ZLIB::ZLIB>
+  $<TARGET_FILE:RPC::RPC>
 )
