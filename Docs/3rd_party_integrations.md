@@ -12,6 +12,7 @@ CARLA has been developed to integrate with several 3rd party applications in ord
 -   [__PTV Vissim__](adv_ptv.md)
 -   [__RSS__](adv_rss.md) 
 -   [__AWS and RLlib__](tuto_G_rllib_integration.md)
+-   [__Aimsun Next__](adv_aimsun.md)
 
 ---
 ## ROS bridge
@@ -75,4 +76,6 @@ The RLlib integration brings support between the Ray/RLlib library and CARLA, al
 
 [__Chrono__](https://projectchrono.org/) is a multi-physics simulation engine providing high realism vehicle dynamics using templates. CARLA's Chrono integraion allows CARLA users to add Chrono templates to simulate vehicle dynamics. Please refer to the full documentation [__here__](tuto_G_chrono.md).
 
----
+## Aimsun Next
+
+--- [__Aimsun Next__](https://www.aimsun.com/editions/) is a comprehensive transportation modeling software developed by Aimsun. To use Aimsun Next with CARLA refer to [__this guide__](adv_aimsun.md)

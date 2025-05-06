@@ -34,6 +34,7 @@
  * Fixed invisible spline meshes in instance segmentation
  * Set to default Visual Studio 2022 in Windows
  * Added env CARLA_CACHE_DIR to be able to set CARLA CACHE location
+ * Added Aimsun Next and Carla co-simulation
 
 ## CARLA 0.9.15
 
