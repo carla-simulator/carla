@@ -14,7 +14,7 @@ END
 REMOVE_INTERMEDIATE=false
 BUILD_OSM2ODR=false
 GIT_PULL=true
-CURRENT_OSM2ODR_COMMIT=1835e1e9538d0778971acc8b19b111834aae7261
+CURRENT_OSM2ODR_COMMIT=7e19aef0aeb5cccda6eecd9bd7e33e701a3febef
 OSM2ODR_BRANCH=aaron/defaultsidewalkwidth
 OSM2ODR_REPO=https://github.com/carla-simulator/sumo.git
 
