@@ -113,6 +113,7 @@ public class Carla : ModuleRules
         "PhysX",
         "PhysXVehicles",
         "PhysXVehicleLib",
+        "Projects",
         "Slate",
         "SlateCore",
         "PhysicsCore"

@@ -28,14 +28,16 @@ public:
   void SetColor(FLinearColor color);
   FLinearColor GetColor();
 
+  TArray<UMaterialInstanceDynamic*> GetTaggedMaterials();
+
 private:
   FLinearColor Color;
 
   UPROPERTY()
-  UMaterial * TaggedMaterial;
+  UMaterialInstanceDynamic * TaggedMID;
 
   UPROPERTY()
-  UMaterialInstanceDynamic * TaggedMID;
+  TMap<UMaterialInterface*, UMaterialInstanceDynamic*> TaggedMaterials;
 
   bool bSkeletalMesh = false;
 
@@ -52,7 +54,8 @@ private:
 class FTaggedStaticMeshSceneProxy : public FStaticMeshSceneProxy
 {
 public:
-  FTaggedStaticMeshSceneProxy(UStaticMeshComponent * Component, bool bForceLODsShareStaticLighting, UMaterialInstance * MaterialInstance);
+
+  FTaggedStaticMeshSceneProxy(UStaticMeshComponent * Component, bool bForceLODsShareStaticLighting, UMaterialInstance * MaterialInstance, TMap<UMaterialInterface*, UMaterialInstanceDynamic*> TaggedMaterials);
 
   virtual FPrimitiveViewRelevance GetViewRelevance(const FSceneView * View) const override;
 
@@ -64,7 +67,7 @@ class FTaggedSplineMeshSceneProxy : public FSplineMeshSceneProxy
 {
 public:
 
-  FTaggedSplineMeshSceneProxy(USplineMeshComponent * Component, UMaterialInstance * MaterialInstance);
+  FTaggedSplineMeshSceneProxy(USplineMeshComponent * Component, UMaterialInstance * MaterialInstance, TMap<UMaterialInterface*, UMaterialInstanceDynamic*> TaggedMaterials);
 
   virtual FPrimitiveViewRelevance GetViewRelevance(const FSceneView * View) const override;
 
@@ -75,7 +78,7 @@ private:
 class FTaggedSkeletalMeshSceneProxy : public FSkeletalMeshSceneProxy
 {
 public:
-  FTaggedSkeletalMeshSceneProxy(const USkinnedMeshComponent * Component, FSkeletalMeshRenderData * InSkeletalMeshRenderData, UMaterialInstance * MaterialInstance);
+  FTaggedSkeletalMeshSceneProxy(const USkinnedMeshComponent * Component, FSkeletalMeshRenderData * InSkeletalMeshRenderData, UMaterialInstance * MaterialInstance, TMap<UMaterialInterface*, UMaterialInstanceDynamic*> TaggedMaterials);
 
   virtual FPrimitiveViewRelevance GetViewRelevance(const FSceneView * View) const override;
 
@@ -86,7 +89,7 @@ private:
 class FTaggedInstancedStaticMeshSceneProxy : public FInstancedStaticMeshSceneProxy
 {
 public:
-  FTaggedInstancedStaticMeshSceneProxy(UInstancedStaticMeshComponent * Component, ERHIFeatureLevel::Type InFeatureLevel, UMaterialInstance * MaterialInstance);
+  FTaggedInstancedStaticMeshSceneProxy(UInstancedStaticMeshComponent * Component, ERHIFeatureLevel::Type InFeatureLevel, UMaterialInstance * MaterialInstance, TMap<UMaterialInterface*, UMaterialInstanceDynamic*> TaggedMaterials);
 
   virtual FPrimitiveViewRelevance GetViewRelevance(const FSceneView * View) const override;
 
@@ -98,7 +101,7 @@ private:
 class FTaggedHierarchicalStaticMeshSceneProxy : public FHierarchicalStaticMeshSceneProxy
 {
 public:
-  FTaggedHierarchicalStaticMeshSceneProxy(UHierarchicalInstancedStaticMeshComponent * Component, bool bInIsGrass, ERHIFeatureLevel::Type InFeatureLevel, UMaterialInstance * MaterialInstance);
+  FTaggedHierarchicalStaticMeshSceneProxy(UHierarchicalInstancedStaticMeshComponent * Component, bool bInIsGrass, ERHIFeatureLevel::Type InFeatureLevel, UMaterialInstance * MaterialInstance, TMap<UMaterialInterface*, UMaterialInstanceDynamic*> TaggedMaterials);
 
   virtual FPrimitiveViewRelevance GetViewRelevance(const FSceneView * View) const override;
 
