@@ -107,7 +107,7 @@ public:
 
   /// Gets the Path of all the Assets contained in the package to cook with name
   /// @a PackageName
-  FAssetsPaths GetAssetsPathFromPackage(const FString &PackageName) const;
+  static FAssetsPaths GetAssetsPathFromPackage(const FString &PackageName);
 
   /// Generates the MapPaths file provided @a AssetsPaths and @a PropsMapPath
   void GenerateMapPathsFile(const FAssetsPaths &AssetsPaths, const FString &PropsMapPath);
@@ -195,6 +195,6 @@ private:
 
   /// Gets the first .Package.json file found in Unreal Content Directory with
   /// @a PackageName
-  FString GetFirstPackagePath(const FString &PackageName) const;
+  static FString GetFirstPackagePath(const FString &PackageName);
 
 };

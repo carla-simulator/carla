@@ -614,6 +614,11 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
+   class_<std::vector<carla::rpc::WheelTelemetryData> >("vector_of_wheels_telemetry")
+     .def(vector_indexing_suite<std::vector<carla::rpc::WheelTelemetryData> >())
+     .def(self_ns::str(self_ns::self))
+   ;
+
   class_<cr::VehicleTelemetryData>("VehicleTelemetryData", no_init)
     .def("__init__", raw_function(VehicleTelemetryData_init))
     .def(init<>())
