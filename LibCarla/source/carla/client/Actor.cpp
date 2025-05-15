@@ -33,7 +33,13 @@ namespace client {
   }
 
   geom::BoundingBox Actor::GetBoundingBox() const {
-    return GetEpisode().Lock()->GetActorBoundingBox(*this);
+    geom::BoundingBox bounding_box = GetEpisode().Lock()->GetActorBoundingBox(*this); 
+    if (bounding_box.extent.x == 0.0f && bounding_box.extent.y == 0.0f && bounding_box.extent.z == 0.0f) {
+      return bounding_box;
+    }
+    else{
+      return Super::GetBoundingBox();
+    }
   }
 
   geom::Transform Actor::GetComponentWorldTransform(const std::string componentName) const {

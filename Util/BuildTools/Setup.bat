@@ -63,7 +63,7 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-rem If not defined, use Visual Studio 2019 as tool set
+rem If not defined, use Visual Studio 2022 as tool set
 if "%TOOLSET%" == "" set TOOLSET=msvc-14.3
 if %GENERATOR% == "" set GENERATOR="Visual Studio 17 2022"
 

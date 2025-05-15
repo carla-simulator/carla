@@ -15,6 +15,9 @@ set FILE_N=-[%~n0]:
 rem Print batch params (debug purpose)
 echo %FILE_N% [Batch params]: %*
 
+rem Measure overall execution time of packaging
+call :get_current_time_in_seconds T_START_OVERALL
+
 rem ==============================================================================
 rem -- Parse arguments -----------------------------------------------------------
 rem ==============================================================================
@@ -30,6 +33,7 @@ set PACKAGES=Carla
 set PACKAGE_CONFIG=Shipping
 set USE_CARSIM=false
 set SINGLE_PACKAGE=false
+set MEASURE_TIME=true
 
 :arg-parse
 if not "%1"=="" (
@@ -38,6 +42,7 @@ if not "%1"=="" (
         set DO_TARBALL=false
         set DO_PACKAGE=false
         set DO_COPY_FILES=false
+        set MEASURE_TIME=false
     )
 
     if "%1"=="--config" (
@@ -116,6 +121,7 @@ rem ============================================================================
 rem -- Create Carla package ----------------------------------------------------
 rem ============================================================================
 
+call :get_current_time_in_seconds T_START_DO_PACKAGE
 if %DO_PACKAGE%==true (
 
     if %USE_CARSIM% == true (
@@ -188,12 +194,18 @@ if %DO_PACKAGE%==true (
         -clientconfig=%PACKAGE_CONFIG%
 
     if errorlevel 1 goto error_runUAT
+
+    call :cook_tagged_materials Carla !SOURCE!
 )
+call :get_current_time_in_seconds T_END_DO_PACKAGE
+set /A ELAPSED_TIME=!T_END_DO_PACKAGE! - !T_START_DO_PACKAGE!
+if %MEASURE_TIME%==true if %DO_PACKAGE%==true echo %FILE_N% [TIME]: Building and cooking Carla took !ELAPSED_TIME! seconds.
 
 rem ==============================================================================
 rem -- Adding extra files to package ---------------------------------------------
 rem ==============================================================================
 
+call :get_current_time_in_seconds T_START_DO_COPY_FILES
 if %DO_COPY_FILES%==true (
     echo "%FILE_N% Adding extra files to package..."
 
@@ -221,11 +233,15 @@ if %DO_COPY_FILES%==true (
         echo d | xcopy /y /s "!XCOPY_FROM!Plugins"                                  "!XCOPY_TO!Plugins"
     )
 )
+call :get_current_time_in_seconds T_END_DO_COPY_FILES
+set /A ELAPSED_TIME=!T_END_DO_COPY_FILES! - !T_START_DO_COPY_FILES!
+if %MEASURE_TIME%==true if %DO_COPY_FILES%==true echo %FILE_N% [TIME]: Copying extra files to Carla package took !ELAPSED_TIME! seconds.
 
 rem ==============================================================================
 rem -- Zip the project -----------------------------------------------------------
 rem ==============================================================================
 
+call :get_current_time_in_seconds T_START_DO_TARBALL
 if %DO_PACKAGE%==true if %DO_TARBALL%==true (
     set SRC_PATH=%SOURCE:/=\%
 
@@ -237,29 +253,30 @@ if %DO_PACKAGE%==true if %DO_TARBALL%==true (
     if exist "!SRC_PATH!CarlaUE4/Saved" rmdir /S /Q "!SRC_PATH!CarlaUE4/Saved"
     if exist "!SRC_PATH!Engine/Saved" rmdir /S /Q "!SRC_PATH!Engine/Saved"
 
-    set DST_ZIP=%DESTINATION_ZIP:/=\%
-    if exist "%ProgramW6432%/7-Zip/7z.exe" (
-        "%ProgramW6432%/7-Zip/7z.exe" a "!DST_ZIP!" "!SRC_PATH!" -tzip -mmt -mx5
-    ) else (
-        pushd "!SRC_PATH!"
-            rem https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.archive/compress-archive?view=powershell-6
-            powershell -command "& { Compress-Archive -Path * -CompressionLevel Fastest -DestinationPath '!DST_ZIP!' }"
-        popd
-    )
+    call :zip_dir !SRC_PATH! !DESTINATION_ZIP!
 )
+call :get_current_time_in_seconds T_END_DO_TARBALL
+set /A ELAPSED_TIME=!T_END_DO_TARBALL! - !T_START_DO_TARBALL!
+if %MEASURE_TIME%==true if %DO_PACKAGE%==true if %DO_TARBALL%==true echo %FILE_N% [TIME]: Zipping the project took !ELAPSED_TIME! seconds.
 
 rem ==============================================================================
 rem -- Remove intermediate files -------------------------------------------------
 rem ==============================================================================
 
+call :get_current_time_in_seconds T_START_DO_CLEAN
 if %DO_CLEAN%==true (
     echo %FILE_N% Removing intermediate build.
     rmdir /S /Q "!BUILD_FOLDER!"
 )
+call :get_current_time_in_seconds T_END_DO_CLEAN
+set /A ELAPSED_TIME=!T_END_DO_CLEAN! - !T_START_DO_CLEAN!
+if %MEASURE_TIME%==true if %DO_CLEAN%==true echo %FILE_N% [TIME]: Cleaning up took !ELAPSED_TIME! seconds.
 
 rem ==============================================================================
 rem -- Cook other packages -------------------------------------------------------
 rem ==============================================================================
+
+call :get_current_time_in_seconds T_START_PACKAGES
 
 rem Set some file locations
 set CARLAUE4_ROOT_FOLDER=%ROOT_PATH%Unreal/CarlaUE4
@@ -286,14 +303,17 @@ if not "%PACKAGES%" == "Carla" (
 )
 rem through all maps to cook (parameter)
 set PACKAGES=%RESULT:,=!LF!%
+set PACKAGES=!PACKAGES: =!
+set SINGLE_PACKAGE_DIR=%INSTALLATION_DIR%UE4Carla/Temp_SinglePackage_%CARLA_VERSION%
 for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
+    call :get_current_time_in_seconds T_START_PACKAGE
 
     set PACKAGE_NAME=%%i
 
     if not !PACKAGE_NAME! == Carla (
         echo Preparing environment for cooking '!PACKAGE_NAME!'.
 
-        set BUILD_FOLDER=%INSTALLATION_DIR%UE4Carla/!PACKAGE_NAME!_%CARLA_VERSION%\
+        set BUILD_FOLDER=%INSTALLATION_DIR%UE4Carla/!PACKAGE_NAME!_%CARLA_VERSION%
         set PACKAGE_PATH=%CARLAUE4_ROOT_FOLDER%/Content/!PACKAGE_NAME!
 
         if not exist "!BUILD_FOLDER!" mkdir "!BUILD_FOLDER!"
@@ -340,7 +360,7 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
 
         pushd "!BUILD_FOLDER!"
 
-        set SUBST_PATH=!BUILD_FOLDER!CarlaUE4
+        set SUBST_PATH=!BUILD_FOLDER!\CarlaUE4
 
         REM Copy the package config file to package
         set TARGET="!SUBST_PATH!\Content\Carla\Config\"
@@ -394,46 +414,192 @@ for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
         REM del "!BUILD_FOLDER!\CarlaUE4\Content\!PACKAGE_NAME!/Maps/!PROPS_MAP_NAME!"
         del "!BUILD_FOLDER!\CarlaUE4\AssetRegistry.bin"
 
-        if %DO_TARBALL%==true (
-
-            if %SINGLE_PACKAGE%==true (
-                echo Packaging '%TARGET_ARCHIVE%'...
-                set DESTINATION_ZIP=%INSTALLATION_DIR%UE4Carla/%TARGET_ARCHIVE%_%CARLA_VERSION%.zip
-            ) else (
-                echo Packaging '!PACKAGE_NAME!'...
-                set DESTINATION_ZIP=%INSTALLATION_DIR%UE4Carla/!PACKAGE_NAME!_%CARLA_VERSION%.zip
-            )
-
-            set SOURCE=!BUILD_FOLDER:/=\!\
-            set DST_ZIP=!DESTINATION_ZIP:/=\!
-
-            pushd "!SOURCE!"
-
-            if exist "%ProgramW6432%/7-Zip/7z.exe" (
-                "%ProgramW6432%/7-Zip/7z.exe" a "!DST_ZIP!" . -tzip -mmt -mx5
-            ) else (
-                rem https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.archive/compress-archive?view=powershell-6
-                powershell -command "& { Compress-Archive -Update -Path * -CompressionLevel Fastest -DestinationPath '!DST_ZIP!' }"
-            )
-
-            popd
-
-            if errorlevel 1 goto bad_exit
-            echo ZIP created at !DST_ZIP!
-        )
-
         popd
 
-        if %DO_CLEAN%==true (
-            echo %FILE_N% Removing intermediate build.
-            rmdir /S /Q "!BUILD_FOLDER!"
+        if %SINGLE_PACKAGE%==true (
+            if %DO_CLEAN%==true (
+                if not exist "!SINGLE_PACKAGE_DIR:/=\!" (
+                    move "!BUILD_FOLDER:/=\!" "!SINGLE_PACKAGE_DIR:/=\!"
+                ) else (
+                    robocopy /move /e /nfl /ndl /njh /njs /np "!BUILD_FOLDER:/=\!" "!SINGLE_PACKAGE_DIR:/=\!"
+                    if exist "!BUILD_FOLDER:/=\!" rmdir /S /Q "!BUILD_FOLDER:/=\!"
+                )
+            ) else (
+                robocopy /e /nfl /ndl /njh /njs /np "!BUILD_FOLDER:/=\!" "!SINGLE_PACKAGE_DIR:/=\!"
+            )
+        )
+    )
+    call :get_current_time_in_seconds T_END_PACKAGE
+    set /A ELAPSED_TIME=!T_END_PACKAGE! - !T_START_PACKAGE!
+    if %MEASURE_TIME%==true echo %FILE_N% [TIME]: Cooking package '!PACKAGE_NAME!' took !ELAPSED_TIME! seconds.
+)
+
+rem Create tagged materials for the instance segmentation for all packages at once
+if not "!RESULT!" == "Carla" (
+    call :cook_tagged_materials "!RESULT!" _
+)
+
+rem Zipping and cleaning up for all packages
+if %SINGLE_PACKAGE%==true (
+    set SRC=!SINGLE_PACKAGE_DIR:/=\!
+    if %DO_TARBALL%==true (
+        echo Packaging '%TARGET_ARCHIVE%'...
+        set DESTINATION_ZIP=%INSTALLATION_DIR%UE4Carla/%TARGET_ARCHIVE%_%CARLA_VERSION%.zip
+        call :zip_dir !SRC! !DESTINATION_ZIP!
+    )
+    if %DO_CLEAN%==true (
+        echo %FILE_N% Removing intermediate build.
+        rmdir /S /Q "!SRC!"
+    )
+) else (
+    for /f "tokens=* delims=" %%i in ("!PACKAGES!") do (
+        set PACKAGE_NAME=%%i
+        if not !PACKAGE_NAME! == Carla (
+            set SRC=%INSTALLATION_DIR%UE4Carla/!PACKAGE_NAME!_%CARLA_VERSION%
+            if %DO_TARBALL%==true (
+                echo Packaging '!PACKAGE_NAME!'...
+                set DESTINATION_ZIP=%INSTALLATION_DIR%UE4Carla/!PACKAGE_NAME!_%CARLA_VERSION%.zip
+                call :zip_dir !SRC! !DESTINATION_ZIP!
+            )
+
+            if %DO_CLEAN%==true (
+                echo %FILE_N% Removing intermediate build.
+                rmdir /S /Q "!SRC:/=\!"
+            )
         )
     )
 )
 
+call :get_current_time_in_seconds T_END_PACKAGES
+set /A ELAPSED_TIME=!T_END_PACKAGES! - !T_START_PACKAGES!
+if %MEASURE_TIME%==true echo %FILE_N% [TIME]: Cooking all other packages took !ELAPSED_TIME! seconds.
+
 rem ============================================================================
 
+call :get_current_time_in_seconds T_END_OVERALL
+set /A ELAPSED_TIME=!T_END_OVERALL! - !T_START_OVERALL!
+if %MEASURE_TIME%==true echo %FILE_N% [TIME]: Overall packaging took !ELAPSED_TIME! seconds.
+
 goto success
+
+rem ============================================================================
+rem -- Helper functions --------------------------------------------------------
+rem ============================================================================
+
+:get_current_time_in_seconds
+    for /f %%a in ('powershell -command "[int]((Get-Date -UFormat '%%s') -split ',.')[0]"') do set %1=%%a
+    goto :eof
+
+:zip_dir
+    set ZD_SOURCE=%~1
+    set ZD_SOURCE=!ZD_SOURCE:/=\!
+    set ZD_DST_ZIP=%~2
+    set ZD_DST_ZIP=!ZD_DST_ZIP:/=\!
+
+    pushd "!ZD_SOURCE!"
+    if exist "%ProgramW6432%/7-Zip/7z.exe" (
+        "%ProgramW6432%/7-Zip/7z.exe" a "!ZD_DST_ZIP!" . -tzip -mmt -mx5
+    ) else (
+        rem https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.archive/compress-archive?view=powershell-6
+        powershell -command "& { Compress-Archive -Update -Path * -CompressionLevel Fastest -DestinationPath '!ZD_DST_ZIP!' }"
+    )
+    popd
+
+    if errorlevel 1 goto bad_exit
+    echo ZIP created at !DESTINATION_ZIP!
+
+    goto :eof
+
+:cook_tagged_materials
+    rem Measure duration of this function call
+    call :get_current_time_in_seconds T_START_COOK_TAGGED_MATS
+
+    rem Read input parameters.
+    set CUR_PACKAGES_CSV=%~1
+    set CUR_PACKAGES_CSV=%CUR_PACKAGES_CSV: =%
+    set CUR_PACKAGES_UE=%CUR_PACKAGES_CSV:,=+%
+    set RESULT_BUILD_DIR=%2
+    set REGISTRIES_SUBDIR=CarlaUE4/Plugins/Carla/Content/PostProcessingMaterials/TaggedMaterials
+    set TEMP_BUILD_DIR=%INSTALLATION_DIR%UE4Carla/%CARLA_VERSION%_TaggedMaterials
+
+    rem Call commandlet to build TaggedMaterialsRegistries for the current package(s).
+    rem Temporary maps containing the TaggedMaterialsRegistries will be created,
+    rem that can be cooked to cook the registries.
+    echo.
+    echo Generate TaggedMaterialsRegistry for package(s) '!CUR_PACKAGES_CSV!'...
+    if %SINGLE_PACKAGE%==true (
+        set TARGET_ARCHIVE_OPTION=-TargetArchive="%TARGET_ARCHIVE%"
+    ) else (
+        set TARGET_ARCHIVE_OPTION=
+    )
+    call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe "^
+    "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"^
+    -run=GenerateTaggedMaterialsRegistry^
+    -PackageNames="!CUR_PACKAGES_UE!" !TARGET_ARCHIVE_OPTION!^
+    -NoShaderCompile
+
+    rem Construct string for all maps to cook all at once
+    if %SINGLE_PACKAGE%==true (
+        set MAPS_COOKING_STR=/Carla/PostProcessingMaterials/TaggedMaterials/TaggedMaterials_%TARGET_ARCHIVE%_Map
+    ) else (
+        for %%a in (!CUR_PACKAGES_CSV!) do (
+            set MAP_PATH=/Carla/PostProcessingMaterials/TaggedMaterials/TaggedMaterials_%%a_Map
+            if defined MAPS_COOKING_STR (
+                set MAPS_COOKING_STR=!MAPS_COOKING_STR!+!MAP_PATH!
+            ) else (
+                set MAPS_COOKING_STR=!MAP_PATH!
+            )
+        )
+    )
+
+    rem Cook the temporary map(s).
+    echo Cook TaggedMaterialsRegistries
+    call "%UE4_ROOT%/Engine/Binaries/Win64/UE4Editor.exe "^
+    "%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject"^
+    -run=cook^
+    -map="!MAPS_COOKING_STR!"^
+    -targetplatform="WindowsNoEditor"^
+    -OutputDir="!TEMP_BUILD_DIR!"^
+    -iterate^
+    -cooksinglepackage^
+
+    rem Move/Copy the generated files to the correct packages (zipping happens later on)
+    echo Copy cooked TaggedMaterialsRegistries
+    if "!CUR_PACKAGES_CSV!" == "Carla" (
+        rem For Carla package, we only move the files to target dir
+        set SRC=!TEMP_BUILD_DIR!/!REGISTRIES_SUBDIR!/TaggedMaterials_Carla
+        set TRG=!RESULT_BUILD_DIR!!REGISTRIES_SUBDIR!
+        if not exist "!TRG:/=\!" mkdir "!TRG:/=\!"
+        move "!SRC:/=\!.*" "!TRG:/=\!"
+    ) else if %SINGLE_PACKAGE%==true (
+        rem Move the monolithic TaggedMaterialsRegistry to the single package dir
+        set SRC=!TEMP_BUILD_DIR!/!REGISTRIES_SUBDIR!/TaggedMaterials_%TARGET_ARCHIVE%
+        set TRG=!SINGLE_PACKAGE_DIR!/!REGISTRIES_SUBDIR!
+        if exist "!SRC!.uasset" (
+            if not exist "!TRG:/=\!" mkdir "!TRG:/=\!"
+            move "!SRC:/=\!.*" "!TRG:/=\!"
+        )
+    ) else (
+        rem For other packages, we move/copy the package-related files to their corresponding dirs
+        for %%a in (!CUR_PACKAGES_CSV!) do (
+            set CUR_PACKAGE=%%a
+            set SRC=!TEMP_BUILD_DIR!/!REGISTRIES_SUBDIR!/TaggedMaterials_!CUR_PACKAGE!
+            if exist "!SRC:/=\!.uasset" (
+                set TRG=%INSTALLATION_DIR%UE4Carla/!CUR_PACKAGE!_%CARLA_VERSION%/!REGISTRIES_SUBDIR!
+                if not exist "!TRG:/=\!" mkdir "!TRG:/=\!"
+                move "!SRC:/=\!.*" "!TRG:/=\!"
+            )
+        )
+    )
+    rem Delete the temporary files.
+    rmdir /S /Q "!TEMP_BUILD_DIR:/=\!"
+
+    call :get_current_time_in_seconds T_END_COOK_TAGGED_MATS
+    set /A ELAPSED_TIME=!T_END_COOK_TAGGED_MATS! - !T_START_COOK_TAGGED_MATS!
+    if %MEASURE_TIME%==true echo %FILE_N% [TIME]: Generating and cooking of TaggedMaterialsRegistry for package(s) '!CUR_PACKAGES_CSV!' took !ELAPSED_TIME! seconds.
+
+    goto :eof
+
 
 rem ============================================================================
 rem -- Messages and Errors -----------------------------------------------------

@@ -125,7 +125,7 @@ You must install the following Python dependencies:
 
 ```sh
 pip install --user setuptools &&
-pip3 install --user -Iv setuptools==47.3.1 &&
+pip3 install --user -Iv setuptools &&
 pip install --user distro &&
 pip3 install --user distro &&
 pip install --user wheel &&
