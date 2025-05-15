@@ -127,7 +127,7 @@ void UTaggedMaterialsRegistry::InjectTagIntoMaterial(UMaterial* Material) {
     return;
   }
 
-  FName TaggedMaterialName(Material->GetName() + TEXT("_Tagged"));
+  FName TaggedMaterialName(GetTaggedName(Material->GetName()));
   UMaterial* TagInjectedMaterial = NewObject<UMaterial>(this, TaggedMaterialName, RF_Public | RF_Standalone);
 
   UMaterialExpressionVectorParameter* ExpressionInstSegColor = NewObject<UMaterialExpressionVectorParameter>(TagInjectedMaterial);
@@ -297,7 +297,7 @@ void UTaggedMaterialsRegistry::InjectTagIntoMaterialInstance(UMaterialInstance* 
     UMaterialInstanceConstant* MaterialInstanceConstant = Cast<UMaterialInstanceConstant>(MaterialInstance);
     if (MaterialInstanceConstant) {
       UMaterialInstanceConstant* TagInjectedMIC = DuplicateObject<UMaterialInstanceConstant>(MaterialInstanceConstant, this);
-      TagInjectedMIC->Rename(*(TagInjectedMIC->GetName() + TEXT("_Tagged")));
+      TagInjectedMIC->Rename(*GetTaggedName(TagInjectedMIC->GetName()));
       TagInjectedMIC->SetFlags(RF_Public | RF_Standalone);
       TagInjectedMIC->SetParentEditorOnly(*TagInjectedParent);
       if (TagInjectedMIC->BasePropertyOverrides.bOverride_ShadingModel) {
@@ -309,6 +309,18 @@ void UTaggedMaterialsRegistry::InjectTagIntoMaterialInstance(UMaterialInstance* 
       bPendingChanges = true;
     }
   }
+}
+
+FString UTaggedMaterialsRegistry::GetTaggedName(const FString& OriginalName) {
+  FString TaggedName = OriginalName + TEXT("_Tagged");
+  // Check if the name is already in use by any other object in this TaggedMaterialsRegistry.
+  // Append growing index, if this is actually the case (rare).
+  int32 i = 0;
+  while (StaticFindObject(NULL, this, *TaggedName, true)) {
+    i++;
+    TaggedName = FString(OriginalName + FString::Printf(TEXT("_Tagged%d"), i));
+  }
+  return TaggedName;
 }
 
 UMaterialExpression* UTaggedMaterialsRegistry::CopyMaterialExpressions(UMaterial* TargetMaterial, UMaterialExpression* RootExpression) {
