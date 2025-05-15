@@ -340,11 +340,11 @@ void UOpenDriveToMap::GenerateTile(){
       FCarlaMapTile& CarlaTile =  LmManager->GetCarlaMapTile(CurrentTilesInXY);
       UEditorLevelLibrary::SaveCurrentLevel();
 
-      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Current Tile is %s"), *( CurrentTilesInXY.ToString() ) );
-      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("NumTilesInXY is %s"), *( NumTilesInXY.ToString() ) );
-      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("TileSize is %f"), ( TileSize ) );
-      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Tile0Offset is %s"), *( Tile0Offset.ToString() ) );
-      UE_LOG(LogCarlaToolsMapGenerator, Warning, TEXT("Tile Name is %s"), *(CarlaTile.Name) );
+      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Current Tile is %s"), *( CurrentTilesInXY.ToString() ) );
+      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("NumTilesInXY is %s"), *( NumTilesInXY.ToString() ) );
+      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("TileSize is %f"), ( TileSize ) );
+      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Tile0Offset is %s"), *( Tile0Offset.ToString() ) );
+      UE_LOG(LogCarlaToolsMapGenerator, Log, TEXT("Tile Name is %s"), *(CarlaTile.Name) );
 
       UEditorLevelLibrary::LoadLevel(CarlaTile.Name);
 

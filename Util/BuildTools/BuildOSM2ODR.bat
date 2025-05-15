@@ -20,7 +20,7 @@ set USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--build] [--clean] [-
 set REMOVE_INTERMEDIATE=false
 set BUILD_OSM2ODR=false
 set GIT_PULL=true
-set CURRENT_OSM2ODR_COMMIT=1da3c07e39f3e2e0d97f8f709a7255a0df8c6200
+set CURRENT_OSM2ODR_COMMIT=732d5fd8cb273c15c82374a55625e018d6089d5f
 set OSM2ODR_BRANCH=aaron/defaultsidewalkwidth
 set OSM2ODR_REPO=https://github.com/carla-simulator/sumo.git
 
