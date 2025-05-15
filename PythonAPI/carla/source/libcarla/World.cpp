@@ -432,6 +432,7 @@ void export_world() {
          arg("life_time")=-1.0f,
          arg("persistent_lines")=true))
     .def("clear_debug_shape", &cc::DebugHelper::ClearDebugShape)
+    .def("clear_debug_string", &cc::DebugHelper::ClearDebugString)
   ;
   // scope HUD = class_<cc::DebugHelper>(
 

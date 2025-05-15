@@ -97,6 +97,8 @@ namespace client {
 
     void ClearDebugShape();
 
+    void ClearDebugString();
+
   private:
 
     detail::EpisodeProxy _episode;

@@ -765,6 +765,10 @@ namespace detail {
       _client.ClearDebugShape();
     }
 
+    void ClearDebugString() {
+      _client.ClearDebugString();
+    }
+
 
     /// @}
     // =========================================================================

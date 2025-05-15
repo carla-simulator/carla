@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/Server/CarlaServer.h"
 #include "Carla/Server/CarlaServerResponse.h"
+#include "Carla/Game/CarlaHUD.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
 #include "EngineUtils.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -2931,6 +2932,16 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     check(World != nullptr);
     FDebugShapeDrawer Drawer(*World);
     Drawer.Clear();
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(clear_debug_string) << [this]() -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+
+    ACarlaHUD* CarlaHUD = Cast<ACarlaHUD>(Episode->GetWorld()->GetFirstPlayerController()->GetHUD());
+    CarlaHUD->ClearDebugStrings();
+    GEngine->ClearOnScreenDebugMessages();
     return R<void>::Success();
   };
 
