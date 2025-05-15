@@ -34,6 +34,7 @@ protected:
   void InjectTag(UMaterialInterface* MaterialInterface);
   void InjectTagIntoMaterial(UMaterial* Material);
   void InjectTagIntoMaterialInstance(UMaterialInstance* MaterialInstance);
+  FString GetTaggedName(const FString& OriginalName);
 
   // Copies the given expression and all the material graph of its inputs to the target material. Returns the copy of the root expression.
   UMaterialExpression* CopyMaterialExpressions(UMaterial* TargetMaterial, UMaterialExpression* RootExpression);
