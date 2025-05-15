@@ -120,30 +120,30 @@
       return: carla.Vector3D
       return_units: m/s<sup>2</sup>
       doc: >
-        Returns the actor's 3D acceleration vector the client recieved during last tick. The method does not call the simulator.
+        Returns the actor's 3D acceleration vector the client received during last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_angular_velocity
       return: carla.Vector3D
       return_units: deg/s
       doc: >
-        Returns the actor's angular velocity vector the client recieved during last tick. The method does not call the simulator.
+        Returns the actor's angular velocity vector the client received during last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_location
       return: carla.Location
       return_units: meters
       doc: >
-        Returns the actor's location the client recieved during last tick. The method does not call the simulator.
+        Returns the actor's location the client received during last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_transform
       return: carla.Transform
       doc: >
-        Returns the actor's transform (location and rotation) the client recieved during last tick. The method does not call the simulator.
+        Returns the actor's transform (location and rotation) the client received during last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_velocity
       return: carla.Vector3D
       return_units: m/s
       doc: >
-        Returns the actor's velocity vector the client recieved during last tick. The method does not call the simulator.
+        Returns the actor's velocity vector the client received during last tick. The method does not call the simulator.
     # --------------------------------------
     - def_name: get_world
       return: carla.World
@@ -252,7 +252,7 @@
     parent: carla.Actor
     # - DESCRIPTION ------------------------
     doc: >
-      One of the most important groups of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bycicles and also official vehicles such as police cars. A wide set of these actors is provided in carla.BlueprintLibrary to facilitate differente requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the <b>traffic manager</b>. 
+      One of the most important groups of actors in CARLA. These include any type of vehicle from cars to trucks, motorbikes, vans, bicycles and also official vehicles such as police cars. A wide set of these actors is provided in carla.BlueprintLibrary to facilitate different requirements. Vehicles can be either manually controlled or set to an autopilot mode that will be conducted client-side by the <b>traffic manager</b>. 
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: bounding_box
@@ -591,7 +591,7 @@
     parent: carla.TrafficSign
     # - DESCRIPTION ------------------------
     doc: >
-      A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differenciated by their pole index.
+      A traffic light actor, considered a specific type of traffic sign. As traffic lights will mostly appear at junctions, they belong to a group which contains the different traffic lights in it. Inside the group, traffic lights are differentiated by their pole index.
            
         Within a group the state of traffic lights is changed in a cyclic pattern: one index is chosen and it spends a few seconds in green, yellow and eventually red. The rest of the traffic lights remain frozen in red this whole time, meaning that there is a gap in the last seconds of the cycle where all the traffic lights are red. However, the state of a traffic light can be changed manually.  
     # - PROPERTIES -------------------------

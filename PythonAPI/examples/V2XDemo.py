@@ -685,11 +685,11 @@ class HUD(object):
         self._show_ackermann_info = False
         self._ackermann_control = carla.VehicleAckermannControl()
 
-    def on_world_tick(self, timestamp):
+    def on_world_tick(self, world_snapshot):
         self._server_clock.tick()
         self.server_fps = self._server_clock.get_fps()
-        self.frame = timestamp.frame
-        self.simulation_time = timestamp.elapsed_seconds
+        self.frame = world_snapshot.frame
+        self.simulation_time = world_snapshot.elapsed_seconds
 
     def tick(self, world, clock):
         self._notifications.tick(world, clock)

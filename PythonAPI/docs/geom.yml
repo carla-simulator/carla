@@ -440,20 +440,29 @@
     - def_name: transform
       params:
       - param_name: in_point
-        type: carla.Location
+        type: carla.Vector3D
         doc: >
           Location in the space to which the transformation will be applied.
       doc: >
-        Translates a 3D point from local to global coordinates using the current transformation as frame of reference.
+        Translates a 3D point in place from local to global coordinates using the current transformation as frame of reference.
+    # --------------------------------------
+    - def_name: inverse_transform
+      params:
+      - param_name: in_point
+        type: carla.Vector3D
+        doc: >
+          Location in the space to which the inverse transformation will be applied.
+      doc: >
+        Applies the inverse of `transform` by translating a 3D point in place from global to local coordinates using the current transformation as frame of reference.  
     # --------------------------------------
     - def_name: transform_vector
       params:
-      - param_name: in_vector
+      - param_name: in_point
         type: carla.Vector3D
         doc: >
           Vector to which the transformation will be applied.
       doc: >
-        Rotates a vector using the current transformation as frame of reference, without applying translation. Use this to transform, for example, a velocity.
+        Rotates a vector in place using the current transformation as frame of reference, without applying translation. Use this to transform, for example, a velocity.
     # --------------------------------------
     - def_name: get_forward_vector
       return: carla.Vector3D
