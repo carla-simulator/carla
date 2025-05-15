@@ -329,3 +329,60 @@ TArray<AStaticMeshActor*> UMapGenFunctionLibrary::RevertStaticMeshesInTheLevelFo
 
   return Result;
 }
+
+void UMapGenFunctionLibrary::SpawnMeshInstancesFromVertexColors(
+    AStaticMeshActor* SourceActor,
+    UStaticMesh* MeshToSpawn,
+    FColor ColorCriteria // (R, G, B) in 0–1 range
+  )
+{
+  if (!SourceActor || !MeshToSpawn)
+  {
+      UE_LOG(LogCarla, Error, TEXT("Invalid input: Actor or Mesh is null."));
+      return;
+  }
+  FTransform SourceTransform = SourceActor->GetActorTransform();
+
+  UStaticMeshComponent* SourceSMC = SourceActor->GetStaticMeshComponent();
+  if (!SourceSMC || !SourceSMC->GetStaticMesh())
+  {
+      UE_LOG(LogTemp, Error, TEXT("Invalid StaticMeshComponent."));
+      return;
+  }
+
+  UStaticMesh* SourceMesh = SourceSMC->GetStaticMesh();
+  const FStaticMeshLODResources& LOD = SourceMesh->GetRenderData()->LODResources[0];
+  const FPositionVertexBuffer& PositionBuffer = LOD.VertexBuffers.PositionVertexBuffer;
+  const FColorVertexBuffer& ColorBuffer = LOD.VertexBuffers.ColorVertexBuffer;
+
+  if (ColorBuffer.GetNumVertices() == 0)
+  {
+      UE_LOG(LogTemp, Warning, TEXT("Mesh has no vertex colors."));
+      return;
+  }
+
+  AInstancedStaticMeshActor* InstancedActor = SourceActor->GetWorld()->SpawnActor<AInstancedStaticMeshActor>(
+      AInstancedStaticMeshActor::StaticClass(),
+      SourceActor->GetActorTransform(),
+      FActorSpawnParameters()
+  );
+  InstancedActor->GetInstancedStaticMeshComponent()->SetStaticMesh(MeshToSpawn);
+  InstancedActor->GetInstancedStaticMeshComponent()->SetMobility(EComponentMobility::Movable);
+  for (uint32 i = 0; i < PositionBuffer.GetNumVertices(); ++i)
+  {
+
+    if (i >= ColorBuffer.GetNumVertices())
+        continue;
+
+    const FColor VertexColor = ColorBuffer.VertexColor(i);
+
+    if (VertexColor.R >= ColorCriteria.R && 
+        VertexColor.G >= ColorCriteria.G &&
+        VertexColor.B >= ColorCriteria.B )
+    {
+      // Transform vertex local position to world
+      const FVector WorldPos = SourceTransform.TransformPosition(FVector(PositionBuffer.VertexPosition(i)));
+      InstancedActor->GetInstancedStaticMeshComponent()->AddInstance(FTransform(WorldPos));
+    }
+  }
+}

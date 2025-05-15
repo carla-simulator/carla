@@ -59,4 +59,13 @@ public:
   // This function will removed instanced static meshes in the level and place static mesh actors instead
   UFUNCTION(BlueprintCallable)
   static TArray<AStaticMeshActor*> RevertStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter);
+
+  // This function will removed instanced static meshes in the level and place static mesh actors instead
+  UFUNCTION(BlueprintCallable)
+  static void SpawnMeshInstancesFromVertexColors(class AStaticMeshActor* SourceActor,
+    UStaticMesh* MeshToSpawn,
+    FColor ColorCriteria 
+  );
+
+
 };
