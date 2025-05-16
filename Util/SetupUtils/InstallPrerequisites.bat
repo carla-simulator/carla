@@ -47,17 +47,6 @@ rem -- MAIN --
 
 :main
 
-rem -- INSTALL VISUAL STUDIO --
-if not exist %cd%\Temp (
-    mkdir %cd%\Temp
-)
-pushd Temp
-curl -L -O https://aka.ms/vs/17/release/vs_community.exe || exit /b
-popd Temp
-%cd%\Temp\vs_community.exe --add %visual_studio_components% --installWhileDownloading --passive --wait || exit /b
-del %cd%\Temp\vs_community.exe
-rmdir %cd%\Temp
-
 rem -- INSTALL NINJA --
 ninja --version >nul 2>nul
 if errorlevel 1 (

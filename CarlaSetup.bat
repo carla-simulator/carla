@@ -1,8 +1,8 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-set skip_prerequisites=false
-set launch=false
+set skip_prerequisites=true
+set launch=true
 set interactive=false
 set python_path=python
 set python_root=
@@ -77,9 +77,9 @@ if exist "%cd%\Unreal\CarlaUnreal\Content" (
 )
 
 rem Activate VS terminal development environment:
-if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" (
+if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat" (
     echo Activating "x64 Native Tools Command Prompt" terminal environment.
-    call "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" || exit /b
+    call "%PROGRAMFILES%\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat" || exit /b
 ) else (
     echo Could not find vcvarsall.bat, aborting setup...
     exit 1
@@ -88,28 +88,10 @@ if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Bui
 rem -- DOWNLOAD + BUILD UNREAL ENGINE --
 if exist "%CARLA_UNREAL_ENGINE_PATH%" (
     echo Found Unreal Engine 5 at "%CARLA_UNREAL_ENGINE_PATH%".
-) else if exist ..\UnrealEngine5_carla (
-    echo Found CARLA Unreal Engine at %cd%/UnrealEngine5_carla. Assuming already built...
-) else (
-    echo Could not find CARLA Unreal Engine, downloading...
-    pushd ..
-    git clone ^
-        -b ue5-dev-carla ^
-        https://github.com/CarlaUnreal/UnrealEngine.git ^
-        UnrealEngine5_carla || exit /b
-    pushd UnrealEngine5_carla
-    set CARLA_UNREAL_ENGINE_PATH=!cd!
-    setx CARLA_UNREAL_ENGINE_PATH !cd!
-    echo Running Unreal Engine pre-build steps...
-    call Setup.bat || exit /b
-    call GenerateProjectFiles.bat || exit /b
-    echo Building Unreal Engine 5...
-    msbuild ^
-        Engine\Intermediate\ProjectFiles\UE5.vcxproj ^
-        /property:Configuration="Development_Editor" ^
-        /property:Platform="x64" || exit /b
-    popd
-    popd
+) 
+else (
+    echo Found CARLA Unreal Engine at %cd%/../UnrealEngine5_carla. Assuming already built...
+    set CARLA_UNREAL_ENGINE_PATH=%cd%/../UnrealEngine5_carla
 )
 
 rem -- BUILD CARLA --

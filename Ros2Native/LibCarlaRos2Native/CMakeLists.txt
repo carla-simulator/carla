@@ -39,7 +39,7 @@ add_library (
 
 target_include_directories (
   carla-ros2-native
-  SYSTEM PRIVATE
+  SYSTEM PUBLIC
   ${LIBCARLA_SOURCE_PATH}
   ${CMAKE_INSTALL_PREFIX}/include
 )
@@ -55,6 +55,8 @@ if(WIN32)
     carla-ros2-native PUBLIC
     ${CMAKE_INSTALL_PREFIX}/lib/libfastrtps-2.11.lib
     ${CMAKE_INSTALL_PREFIX}/lib/libfastcdr-1.1.lib
+    ${CMAKE_INSTALL_PREFIX}/lib/foonathan_memory-0.7.3.lib
+    Shlwapi.lib
   )
 
 else()
