@@ -96,7 +96,7 @@ namespace client {
 
     /// Get Gravity value used for IMUI Sensor accelerometer calculation
     float GetIMUISensorGravity() const;
-    
+
     /// Set Gravity value used for IMUI Sensor accelerometer calculation
     void SetIMUISensorGravity(float NewIMUISensorGravity);
 
@@ -236,6 +236,10 @@ namespace client {
         const rpc::TextureFloatColor& emissive_texture,
         const rpc::TextureFloatColor& normal_texture,
         const rpc::TextureFloatColor& ao_roughness_metallic_emissive_texture);
+
+    /// Enables or disables the traversal of translucent materials in semantic, instance and depth annotations. Defaults to False.
+    void SetAnnotationsTraverseTranslucency(
+        bool enable);
 
     std::vector<std::string> GetNamesOfAllObjects() const;
 

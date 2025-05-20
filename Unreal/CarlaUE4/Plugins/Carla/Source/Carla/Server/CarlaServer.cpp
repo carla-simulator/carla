@@ -27,6 +27,7 @@
 #include "Carla/Walker/WalkerBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Game/TaggedMaterials.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
@@ -641,6 +642,13 @@ void FCarlaServer::FPimpl::BindActions()
     }
 
     GameMode->EnableEnvironmentObjects(EnvObjectIdsSet, Enable);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_annotations_traverse_translucency) << [this](bool Enable) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    UTaggedMaterialsRegistry::Get()->SetTaggingTraverseTranslucency(Episode, Enable);
     return R<void>::Success();
   };
 

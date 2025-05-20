@@ -814,6 +814,15 @@
         If the layer is already unloaded the call has no effect.
       warning: This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs.
     # --------------------------------------
+    - def_name: set_annotations_traverse_translucency
+      params:
+      - param_name: enable
+        type: bool
+        doc: >
+          Enables or disables the traversal of translucent materials in semantic, instance and depth annotations. __Default is `False`__.
+      doc: >
+        Sets CARLA's behavior whether the semantic + instance segmentation and depth annotations traverse translucent materials or not. To find the closest obstacle, this should be set to false (default). If you are interested in annotations that detect objects behind windows, this should be enabled.
+    # --------------------------------------
     - def_name: set_pedestrians_cross_factor
       params:
       - param_name: percentage

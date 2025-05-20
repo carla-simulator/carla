@@ -17,6 +17,7 @@ public:
 
   UMaterialInstanceDynamic* GetTaggedMaterial();
   UMaterialInstanceDynamic* GetTaggedMaterial(UMaterialInterface* UsedMaterial);
+  void SetTaggingTraverseTranslucency(UCarlaEpisode* Episode, bool bTaggingTraverseTranslucency);
   FORCEINLINE int32 Num() const {return TaggedMaskedMaterials.Num();}
 
 #if WITH_EDITOR
@@ -48,6 +49,9 @@ private:
 
   UPROPERTY(VisibleAnywhere)
   TMap<FString, UMaterialInterface*> TaggedMaskedMaterials;
+  
+  UPROPERTY(VisibleAnywhere)
+  UMaterialParameterCollection* TaggingParamerCollection;
 
   bool bPendingChanges = false;
 

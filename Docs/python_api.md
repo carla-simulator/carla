@@ -3837,6 +3837,10 @@ Retrieves an object containing weather parameters currently active in the simula
     - **Setter:** _[carla.World.set_weather](#carla.World.set_weather)_  
 
 ##### Setters
+- <a name="carla.World.set_annotations_traverse_translucency"></a>**<font color="#7fb800">set_annotations_traverse_translucency</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enable**</font>)  
+Sets CARLA's behavior whether the semantic + instance segmentation and depth annotations traverse translucent materials or not. To find the closest obstacle, this should be set to false (default). If you are interested in annotations that detect objects behind windows, this should be enabled.  
+    - **Parameters:**
+        - `enable` (_bool_) - Enables or disables the traversal of translucent materials in semantic, instance and depth annotations. __Default is `False`__.  
 - <a name="carla.World.set_pedestrians_cross_factor"></a>**<font color="#7fb800">set_pedestrians_cross_factor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**percentage**</font>)  
     - **Parameters:**
         - `percentage` (_float_) - Sets the percentage of pedestrians that can walk on the road or cross at any point on the road. Value should be between `0.0` and `1.0`. For example, a value of `0.1` would allow 10% of pedestrians to walk on the road. __Default is `0.0`__.  
