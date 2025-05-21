@@ -18,8 +18,10 @@ import logging
 import math
 import random
 import invertedai as iai
-from invertedai.common import AgentProperties, AgentState, TrafficLightState
-from carla.command import SpawnActor, DestroyActor
+import numpy as np
+from tqdm import tqdm
+from invertedai.common import AgentProperties, AgentState, TrafficLightState, Point
+from carla import command, Location
 
 #---------
 # CARLA Utils
@@ -44,13 +46,13 @@ def argument_parser():
     argparser.add_argument(
         '-n', '--number-of-vehicles',
         metavar='N',
-        default=30,
+        default=60,
         type=int,
         help='Number of vehicles spawned by InvertedAI (default: 30)')
     argparser.add_argument(
         '-w', '--number-of-walkers',
         metavar='W',
-        default=10,
+        default=60,
         type=int,
         help='Number of walkers (default: 10)')
     argparser.add_argument(
@@ -100,7 +102,7 @@ def argument_parser():
     argparser.add_argument(
         '--sim-length',
         type=int,
-        default=120,
+        default=60,
         help="Length of the simulation in seconds (default: 120)")
     argparser.add_argument(
         '--location',
@@ -126,8 +128,8 @@ def argument_parser():
         '--map-center',
         type=int,
         nargs='+',
-        help=f"Center of the area to initialize (default: [0,30])",
-        default=tuple([0,30]))
+        help=f"Center of the area to initialize (default: [-50,20])",
+        default=tuple([-50,20]))
     argparser.add_argument(
         '--iai-async',
         type=bool,
@@ -142,13 +144,32 @@ def argument_parser():
         '--iai-log',
         action="store_true",
         help=f"Export a log file for the InvertedAI cosimulation, which can be replayed afterwards")
+    argparser.add_argument(
+        '--iai-waypoint-distance',
+        type=int,
+        default=15,
+        help=f"Distance to the next waypoint for IAI agents (default: 15)"
+    )
+    argparser.add_argument(
+        '--iai-waypoint-detection-threshold',
+        type=int,
+        default=2,
+        help=f"Distance to which an agent is deemed as having reached its waypoint (default: 2)"
+    )
+    argparser.add_argument(
+        '--iai-max-distance-away',
+        type=int,
+        default=20,
+        help=f"Maximum distance away before a new waypoint is set for an agent (default: 20)"
+    )
 
     args = argparser.parse_args()
 
     return args
 
 # Setup CARLA client and world
-def setup_carla_environment(host, port):
+def setup_carla_environment(host, port, location):
+    map_name = location.split(":")[-1]
 
     step_length = 0.1 # 0.1 is the only step length that is supported by invertedai so far
 
@@ -156,7 +177,7 @@ def setup_carla_environment(host, port):
     client.set_timeout(200.0)
 
     # Configure the simulation environment
-    world = client.get_world()
+    world = client.load_world(map_name)
     world_settings = carla.WorldSettings(
         synchronous_mode=True,
         fixed_delta_seconds=step_length,
@@ -198,7 +219,7 @@ def initialize_iai_agent(actor, agent_type):
     agent_state = AgentState.fromlist([
                                         transf.location.x,
                                         transf.location.y,
-                                        transf.rotation.yaw,
+                                        math.radians(transf.rotation.yaw),
                                         speed
                                     ])
 
@@ -247,7 +268,7 @@ def spawn_pedestrians(client, world, num_pedestrians, bps):
         if walker_bp.has_attribute('is_invincible'):
             walker_bp.set_attribute('is_invincible', 'false')
         spawn_point = spawn_points[i]
-        batch.append(SpawnActor(walker_bp, spawn_point))
+        batch.append(command.SpawnActor(walker_bp, spawn_point))
 
     results = client.apply_batch_sync(batch, True)
     pedestrians = world.get_actors().filter('walker.*')
@@ -261,7 +282,7 @@ def spawn_pedestrians(client, world, num_pedestrians, bps):
     batch = []
     walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
     for i in range(len(walkers_list)):
-        batch.append(SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
+        batch.append(command.SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
     results = client.apply_batch_sync(batch, True)
 
     world.tick()
@@ -309,7 +330,7 @@ def transform_iai_to_carla(agent_state):
         carla.Location(
             agent_state.center.x,
             agent_state.center.y,
-            0.
+            0.1
         ),
         carla.Rotation(
             yaw=math.degrees(agent_state.orientation)
@@ -341,7 +362,6 @@ def assign_carla_blueprints_to_iai_agents(world,vehicle_blueprints,agent_propert
     agent_properties_new = []
     agent_states_new = []
     recurrent_states_new = []
-    new_agent_id = 0
     iai2carla = {}
 
     for agent_id, state in enumerate(agent_states):
@@ -351,7 +371,6 @@ def assign_carla_blueprints_to_iai_agents(world,vehicle_blueprints,agent_propert
             agent_states_new.append(agent_states[agent_id])
             recurrent_states_new.append(recurrent_states[agent_id])
             actor = noniai_actors[agent_id]
-            new_agent_id += 1
             iai2carla[len(iai2carla)] = {"actor":actor, "is_iai":False, "type":agent_properties[agent_id].agent_type}
              
         else:
@@ -372,8 +391,6 @@ def assign_carla_blueprints_to_iai_agents(world,vehicle_blueprints,agent_propert
                 agent_attr.length = 2*bb.x
                 agent_attr.width = 2*bb.y
                 agent_attr.rear_axis_offset = 2*bb.x/3
-
-                new_agent_id += 1
 
                 agent_properties_new.append(agent_attr)
                 agent_states_new.append(agent_states[agent_id])
@@ -481,6 +498,35 @@ def initialize_tl_states(world):
     iai_tl_states = assign_iai_traffic_lights_from_carla(world, iai_tl_states, carla2iai_tl)
     return iai_tl_states, carla2iai_tl
 
+
+def get_distance(point1, point2):
+    return np.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])**2)
+
+
+def new_waypoint_needed(waypoint, agent_state, detection_threshold, max_distance_away):
+    distance_from_waypoint = get_distance(waypoint, [agent_state.center.x, agent_state.center.y])
+    return distance_from_waypoint <= detection_threshold or distance_from_waypoint >= max_distance_away
+
+
+def get_next_waypoints(carla_map, agent_states, waypoints, args):
+    indices_of_interest = []
+    interested_agent_states = []
+    if len(waypoints) == 0:
+        indices_of_interest = [i for i in range(len(agent_states))]
+    else:
+        indices_of_interest = [i for i in range(len(agent_states)) if new_waypoint_needed(waypoints[i], agent_states[i], args.iai_waypoint_detection_threshold, args.iai_max_distance_away)]
+    vehicle_locations = [Location(x=agent_states[i].center.x, y=agent_states[i].center.y, z=0.1) for i in indices_of_interest]
+    closest_waypoints = [carla_map.get_waypoint(vehicle_location, project_to_road=True, lane_type=carla.LaneType.Driving) for vehicle_location in vehicle_locations]
+    next_waypoints = [np.random.choice(wp.next(args.iai_waypoint_distance)) for wp in closest_waypoints]
+    results = []
+    if len(waypoints) == 0:
+        results = [[waypoint.transform.location.x, waypoint.transform.location.y] for waypoint in next_waypoints]
+    else:
+        results = waypoints
+        for ind in range(len(next_waypoints)):
+            results[indices_of_interest[ind]] = [next_waypoints[ind].transform.location.x, next_waypoints[ind].transform.location.y]
+    return results
+
 #---------
 # Main
 #---------
@@ -489,11 +535,11 @@ def main():
     args = argument_parser()
 
     # Setup CARLA client and world
-    client, world = setup_carla_environment(args.host, args.port)
+    client, world = setup_carla_environment(args.host, args.port, args.location)
 
     # Specify the IAI API key
     try:
-        iai.add_apikey(args.iai_key)  
+        iai.add_apikey(args.iai_key)
     except:
         print("\n\tYou need to indicate the InvertedAI API key with the argument --iai-key. To obtain one, please go to https://www.inverted.ai \n")
 
@@ -540,47 +586,55 @@ def main():
         pedestrians = []
     
     num_noniai = len(agent_properties)
-
     # Initialize InvertedAI co-simulation
     response, carla2iai_tl, location_info_response = initialize_simulation(args, world, agent_states=agent_states, agent_properties=agent_properties)
     agent_properties = response.agent_properties
     is_iai.extend( [True]*(len(agent_properties)-num_noniai) )
+    
+    # Map IAI agents to CARLA actors and update response properties and states
+    print(f"Number of agents initialized: {len(response.agent_states)}")
+    agent_properties, agent_states_new, recurrent_states_new, iai2carla = assign_carla_blueprints_to_iai_agents(world,vehicle_blueprints,agent_properties,response.agent_states,response.recurrent_states,is_iai,noniai_actors)
+    traffic_lights_states = assign_iai_traffic_lights_from_carla(world,response.traffic_lights_states, carla2iai_tl)
+    response.agent_states = agent_states_new
+    response.agent_properties = agent_properties
+    response.recurrent_states = recurrent_states_new
+    response.traffic_lights_states = traffic_lights_states
 
     # Write InvertedAI log file, which can be opened afterwards to visualize a gif and further analysis
     # See an example of usage here: https://github.com/inverted-ai/invertedai/blob/master/examples/scenario_log_example.py
-    if args.iai_log:
 
+    if args.iai_log:
         log_writer = iai.LogWriter()
         log_writer.initialize(
             location=args.location,
             location_info_response=location_info_response,
             init_response=response
         )
-        iailog_path = os.path.join(os.getcwd(),f"iai_log.json")
-
-    # Map IAI agents to CARLA actors and update response properties and states
-    agent_properties, agent_states_new, recurrent_states_new, iai2carla = assign_carla_blueprints_to_iai_agents(world,vehicle_blueprints,agent_properties,response.agent_states,response.recurrent_states,is_iai,noniai_actors)
-    traffic_lights_states = assign_iai_traffic_lights_from_carla(world,response.traffic_lights_states, carla2iai_tl)
-    response.agent_states = agent_states_new
-    response.recurrent_states = recurrent_states_new
-    response.traffic_lights_states = traffic_lights_states
+    iailog_path = os.path.join(os.getcwd(),f"iai_log.json")
 
     # Perform first CARLA simulation tick
     world.tick()
-
+    
+    iai_agent_indices = [i for i in range(len(agent_properties)) if iai2carla[i]["is_iai"]]
     try:
 
         vehicles = world.get_actors().filter('vehicle.*')
         print("Total number of agents:",len(agent_properties),"Vehicles",len(vehicles), "Pedestrians:",len(pedestrians))
-
+        for index in iai_agent_indices:
+            agent_properties[index].max_speed = 10.0
         # Get hero vehicle
         hero_v = None
         if args.hero:
             hero_v = vehicles[0]
 
-        for frame in range(args.sim_length * FPS):
-
+        carla_map = world.get_map()
+        waypoints = []
+        for frame in tqdm(range(args.sim_length * FPS)):
             response.traffic_lights_states = assign_iai_traffic_lights_from_carla(world, response.traffic_lights_states, carla2iai_tl)
+            iai_agent_states = [response.agent_states[i] for i in iai_agent_indices]
+            waypoints = get_next_waypoints(carla_map, iai_agent_states, waypoints, args)
+            for i in range(len(waypoints)):
+                agent_properties[iai_agent_indices[i]].waypoint = Point(x=waypoints[i][0], y=waypoints[i][1])
 
             # IAI update step
             response = iai.large_drive(
@@ -589,7 +643,6 @@ def main():
                 agent_properties = agent_properties,
                 recurrent_states = response.recurrent_states,
                 traffic_lights_states = response.traffic_lights_states,
-                light_recurrent_states = None,
                 single_call_agent_limit = args.capacity,
                 async_api_calls = args.iai_async,
                 api_model_version = args.api_model,
@@ -609,22 +662,11 @@ def main():
             for agent_id in iai2carla.keys():
                 agentdict = iai2carla[agent_id]
 
-                if not agentdict["is_iai"]:
+                if not agentdict["is_iai"] and agentdict["type"] == "pedestrian":
                     actor = agentdict["actor"]
                     state, properties = initialize_iai_agent(actor, agentdict["type"])
                     response.agent_states[agent_id] = state
                     agent_properties[agent_id] = properties
-
-            # Include possible new actors (vehicles) from other clients (using automatic_control.py or manual_control.py for instance)
-            actors_all = world.get_actors().filter('vehicle.*')
-            actsids = [act["actor"].id for act in iai2carla.values()]
-            for actor in actors_all:
-                if not (actor.id in actsids):
-                    state, properties = initialize_iai_agent(actor, "car")
-                    response.agent_states.append( state )
-                    agent_properties.append( properties )
-                    response.recurrent_states.append( response.recurrent_states[-1] )   # temporal fix
-                    iai2carla[len(iai2carla)] = {"actor":actor, "is_iai":False, "type":properties.agent_type}
 
             # Update spectator view if there is hero vehicle
             if hero_v is not None:
@@ -633,20 +675,6 @@ def main():
             
 
     finally:
-
-        vehicles_list = world.get_actors().filter('vehicle.*')
-        print('\ndestroying %d vehicles' % len(vehicles_list))
-        client.apply_batch([DestroyActor(x) for x in vehicles_list])
-
-        walkercontrollers_list = world.get_actors().filter('controller.*')
-        for control in walkercontrollers_list:
-            control.stop()
-            control.destroy()
-
-        walkers_list = world.get_actors().filter('walker.*')
-        print('\ndestroying %d walkers' % len(walkers_list))
-        client.apply_batch([DestroyActor(x) for x in walkers_list])
-
         time.sleep(0.5)
 
         if args.record:

@@ -30,6 +30,12 @@
  * carla.ad subpackages are now directly importable and are not directly importable anymore (e.g. import ad)
  * Fixed segfault in traffic manager when trying to access not available vehicles
  * Fixed invalid comparission in python examples/rss
+ * Updated inverted traffic PythonAPI example script, added support for waypoint-guided Inverted AI cars.
+ * Fixed invisible spline meshes in instance segmentation
+ * Set to default Visual Studio 2022 in Windows
+ * Added env CARLA_CACHE_DIR to be able to set CARLA CACHE location
+ * Support of masked materials in instance segmentation, resulting in fine-grained annotations on e.g. leaves or fences (as in semantic segmentation)
+ * Added API function `world.set_annotations_traverse_translucency` and implemented functionality to configure, whether depth and semantic + instance segmentation traverse translucent materials or not.
 
 ## CARLA 0.9.15
 

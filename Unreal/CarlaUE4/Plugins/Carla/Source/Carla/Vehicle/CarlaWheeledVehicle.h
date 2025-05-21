@@ -311,6 +311,7 @@ public:
 protected:
 
   virtual void BeginPlay() override;
+  virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction) override;
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason);
 
   UFUNCTION(BlueprintImplementableEvent)
@@ -415,6 +416,9 @@ public:
 
   virtual FVector GetVelocity() const override;
 
+  UFUNCTION()
+  FPoseSnapshot GetWorldTransformedPose();
+
 //-----CARSIM--------------------------------
   UPROPERTY(Category="CARLA Wheeled Vehicle", EditAnywhere)
   float CarSimOriginOffset = 150.f;
@@ -470,6 +474,7 @@ private:
 public:
   float SpeedAnim { 0.0f };
   float RotationAnim { 0.0f };
+  FPoseSnapshot WorldTransformedPose;
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetSpeedAnim() const { return SpeedAnim; }

@@ -40,7 +40,13 @@ public:
   static UCarlaSettings *GetCarlaSettings(const UObject *WorldContextObject);
 
   UFUNCTION(BlueprintPure, Category="CARLA")
+  static TArray<FString> GetAllPluginContentPaths();
+  
+  UFUNCTION(BlueprintPure, Category="CARLA")
   static TArray<FString> GetAllMapNames();
+
+  UFUNCTION(BlueprintPure, Category="CARLA")
+  static FString FindMapPath(const FString &MapName);
 
   UFUNCTION(BlueprintPure, Category="CARLA", meta=(WorldContext="WorldContextObject"))
   static ACarlaRecorder* GetRecorder(const UObject *WorldContextObject);

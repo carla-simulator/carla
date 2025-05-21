@@ -394,5 +394,10 @@ namespace client {
     }
   }
 
+  void World::SetAnnotationsTraverseTranslucency(
+      bool enable) {
+    _episode.Lock()->SetAnnotationsTraverseTranslucency(enable);
+  }
+
 } // namespace client
 } // namespace carla

@@ -125,7 +125,7 @@ You must install the following Python dependencies:
 
 ```sh
 pip install --user setuptools &&
-pip3 install --user -Iv setuptools==47.3.1 &&
+pip3 install --user -Iv setuptools &&
 pip install --user distro &&
 pip3 install --user distro &&
 pip install --user wheel &&
@@ -178,7 +178,7 @@ __4.__ Open the Editor to check that Unreal Engine has been installed properly.
 The button above will take you to the official repository of the project. Either download from there and extract it locally or clone it using the following command:
 
 ```sh
-        git clone https://github.com/carla-simulator/carla
+        git clone -b ue4-dev https://github.com/carla-simulator/carla
 ```
 
 !!! Note

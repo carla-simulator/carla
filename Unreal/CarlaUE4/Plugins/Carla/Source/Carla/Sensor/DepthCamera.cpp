@@ -6,7 +6,7 @@
 
 #include "Carla.h"
 #include "Carla/Sensor/DepthCamera.h"
-
+#include "Carla/Sensor/InstanceSegmentationCamera.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
 #include "Carla/Sensor/PixelReader.h"
@@ -30,8 +30,16 @@ ADepthCamera::ADepthCamera(const FObjectInitializer &ObjectInitializer)
   );
 }
 
+void ADepthCamera::SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture)
+{
+  Super::SetUpSceneCaptureComponent(SceneCapture);
+  AInstanceSegmentationCamera::SetUpSceneCaptureComponentForTagging(SceneCapture);
+}
+
 void ADepthCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ADepthCamera::PostPhysTick);
+
+  AInstanceSegmentationCamera::PostPhysTickForTagging(*GetCaptureComponent2D());
   FPixelReader::SendPixelsInRenderThread<ADepthCamera, FColor>(*this);
 }

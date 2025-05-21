@@ -82,7 +82,8 @@ public class Carla : ModuleRules
         "RHI",
         "Renderer",
         "ProceduralMeshComponent",
-        "MeshDescription"
+        "MeshDescription",
+        "Projects"
         // ... add other public dependencies that you statically link with here ...
       }
       );
@@ -113,6 +114,7 @@ public class Carla : ModuleRules
         "PhysX",
         "PhysXVehicles",
         "PhysXVehicleLib",
+        "Projects",
         "Slate",
         "SlateCore",
         "PhysicsCore"
