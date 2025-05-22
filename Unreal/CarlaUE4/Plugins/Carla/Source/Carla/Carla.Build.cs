@@ -323,11 +323,9 @@ public class Carla : ModuleRules
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_fastdds")));
 
-        string LibFastDDSPath = LibCarlaInstallPath;
-        AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfoonathan_memory-0.7.3.so"));
-        AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastcdr.so"));
-        AddDynamicLibrary(Path.Combine(LibFastDDSPath, "lib", "libfastrtps.so"));
-        PublicAdditionalLibraries.Add("stdc++");
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfoonathan_memory-0.7.3.a"));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfastcdr.a"));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfastrtps.a"));
       }
 
 

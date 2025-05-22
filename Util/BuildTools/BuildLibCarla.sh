@@ -138,7 +138,7 @@ function build_libcarla {
     M_BUILD_FOLDER=${LIBCARLA_BUILD_PYTORCH_FOLDER}.$(echo "$2" | tr '[:upper:]' '[:lower:]')
     M_INSTALL_FOLDER=${LIBCARLA_INSTALL_SERVER_FOLDER}
   elif [ $1 == ros2 ] ; then
-    M_TOOLCHAIN=${LIBSTDCPP_TOOLCHAIN_FILE}
+    M_TOOLCHAIN=${LIBCPP_TOOLCHAIN_FILE}
     M_BUILD_FOLDER=${LIBCARLA_FASTDDS_FOLDER}.$(echo "$2" | tr '[:upper:]' '[:lower:]')
     M_INSTALL_FOLDER=${LIBCARLA_INSTALL_SERVER_FOLDER}
   elif [ $1 == ClientRSS ] ; then
