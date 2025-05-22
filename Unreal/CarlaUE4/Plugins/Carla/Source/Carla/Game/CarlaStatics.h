@@ -45,6 +45,12 @@ public:
   UFUNCTION(BlueprintPure, Category="CARLA", meta=(WorldContext="WorldContextObject"))
   static ACarlaRecorder* GetRecorder(const UObject *WorldContextObject);
 
+  UFUNCTION(BlueprintPure, Category="CARLA")
+  static TArray<FString> GetAllPluginContentPaths();
+
+  UFUNCTION(BlueprintPure, Category="CARLA")
+  static FString FindMapPath(const FString &MapName);
+
   static CarlaReplayer* GetReplayer(const UObject *WorldContextObject);
 
   UFUNCTION(BlueprintPure, Category="CARLA", meta=(WorldContext="WorldContextObject"))
