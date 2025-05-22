@@ -4,10 +4,12 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla.h"
 #include "Interfaces/IPluginManager.h"
 #include "Misc/Paths.h"
+#include "Modules/ModuleManager.h"
+#include "HAL/FileManagerGeneric.h"
 #include "PluginDescriptor.h"
 #include "Runtime/Core/Public/HAL/FileManagerGeneric.h"
 

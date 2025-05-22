@@ -117,7 +117,8 @@ public class Carla : ModuleRules
         "Projects",
         "Slate",
         "SlateCore",
-        "PhysicsCore"
+        "PhysicsCore",
+        "Projects"
         // ... add private dependencies that you statically link with here ...
       }
       );

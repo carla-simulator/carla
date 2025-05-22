@@ -64,13 +64,21 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
 bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
 {
   bool bIsFileFound = false;
-
-  FString FinalPath = UCarlaStatics::FindMapPath(MapString);
+  FString MapToLoad;
+  if (MapString.IsEmpty()) {
+    MapToLoad = UGameplayStatics::GetCurrentLevelName(GetWorld(), true);
+  }
+  else 
+  {
+    MapToLoad = MapString;
+  }
+   
+  FString FinalPath = UCarlaStatics::FindMapPath(MapToLoad);
 
   if(FPaths::FileExists(FinalPath))
   {
     bIsFileFound = true;
-    FinalPath = MapString;
+    FinalPath = MapToLoad;
   }
 
   if (bIsFileFound)
