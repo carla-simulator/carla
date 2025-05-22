@@ -300,6 +300,11 @@ namespace detail {
       return _client.CastRay(start_location, end_location);
     }
 
+    void SetAnnotationsTraverseTranslucency(
+      bool enable) {
+        _client.SetAnnotationsTraverseTranslucency(enable);
+      }
+
     /// @}
     // =========================================================================
     /// @name AI
@@ -760,6 +765,15 @@ namespace detail {
     void DrawDebugShape(const rpc::DebugShape &shape) {
       _client.DrawDebugShape(shape);
     }
+
+    void ClearDebugShape() {
+      _client.ClearDebugShape();
+    }
+
+    void ClearDebugString() {
+      _client.ClearDebugString();
+    }
+
 
     /// @}
     // =========================================================================

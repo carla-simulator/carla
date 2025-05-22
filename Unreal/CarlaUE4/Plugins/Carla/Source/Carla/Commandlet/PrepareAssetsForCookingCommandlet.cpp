@@ -380,7 +380,7 @@ bool UPrepareAssetsForCookingCommandlet::SaveWorld(
   return bPackageSaved;
 }
 
-FString UPrepareAssetsForCookingCommandlet::GetFirstPackagePath(const FString &PackageName) const
+FString UPrepareAssetsForCookingCommandlet::GetFirstPackagePath(const FString &PackageName)
 {
   // Get all Package names
   TArray<FString> PackageList;
@@ -396,7 +396,7 @@ FString UPrepareAssetsForCookingCommandlet::GetFirstPackagePath(const FString &P
   return IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*PackageList[0]);
 }
 
-FAssetsPaths UPrepareAssetsForCookingCommandlet::GetAssetsPathFromPackage(const FString &PackageName) const
+FAssetsPaths UPrepareAssetsForCookingCommandlet::GetAssetsPathFromPackage(const FString &PackageName)
 {
   const FString PackageJsonFilePath = GetFirstPackagePath(PackageName);
 

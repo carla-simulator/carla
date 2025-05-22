@@ -114,7 +114,7 @@
       note: >
         Only carla.Vehicle actors can use this method.  
       warning: >
-        Enabling a constant velocity for a vehicle managed by the [Traffic Manager](https://carla.readthedocs.io/en/latest/adv_traffic_manager/) may cause conflicts. This method overrides any changes in velocity by the TM.  
+        Enabling a constant velocity for a vehicle managed by the [Traffic Manager](adv_traffic_manager.md) may cause conflicts. This method overrides any changes in velocity by the TM.  
     # --------------------------------------
     - def_name: get_acceleration
       return: carla.Vector3D

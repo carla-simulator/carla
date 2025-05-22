@@ -101,6 +101,18 @@ FLinearColor ATagger::GetLabelColor(const uint32_t ActorID, const crp::CityObjec
 // -- static ATagger functions -------------------------------------------------
 // =============================================================================
 
+template<class T /* = UTaggedComponent*/>
+T* ATagger::FindTaggedComponent(const USceneComponent* Component) {
+  TArray<USceneComponent *> AttachedComponents = Component->GetAttachChildren();
+  for (USceneComponent *SceneComponent : AttachedComponents) {
+    T *TaggedSceneComponent = Cast<T>(SceneComponent);
+    if (IsValid(TaggedSceneComponent)) {
+        return TaggedSceneComponent;
+    }
+  }
+  return NULL;
+}
+
 void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation, uint32_t ActorID)
 {
 #ifdef CARLA_TAGGER_EXTRA_LOG
@@ -129,21 +141,13 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation, ui
     }
 
     // Find a tagged component that is attached to this component
-    UTaggedComponent *TaggedComponent = NULL;
-    TArray<USceneComponent *> AttachedComponents = Component->GetAttachChildren();
-    for (USceneComponent *SceneComponent : AttachedComponents) {
-      UTaggedComponent *TaggedSceneComponent = Cast<UTaggedComponent>(SceneComponent);
-      if (IsValid(TaggedSceneComponent)) {
-          TaggedComponent = TaggedSceneComponent;
+    UTaggedComponent *TaggedComponent = FindTaggedComponent(Component);
+    if (TaggedComponent) {
 #ifdef CARLA_TAGGER_EXTRA_LOG
-          UE_LOG(LogCarla, Log, TEXT("    - Found Tag"));
+      UE_LOG(LogCarla, Log, TEXT("    - Found Tag"));
 #endif // CARLA_TAGGER_EXTRA_LOG
-          break;
-      }
-    }
-
-    // If not found, then create new tagged component and attach it to this component
-    if (!TaggedComponent) {
+    } else {
+      // If not found, then create new tagged component and attach it to this component
       TaggedComponent = NewObject<UTaggedComponent>(Component);
       TaggedComponent->SetupAttachment(Component);
       TaggedComponent->RegisterComponent();
@@ -184,21 +188,13 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation, ui
     }
 
     // Find a tagged component that is attached to this component
-    UTaggedComponent *TaggedComponent = NULL;
-    TArray<USceneComponent *> AttachedComponents = Component->GetAttachChildren();
-    for (USceneComponent *SceneComponent : AttachedComponents) {
-      UTaggedComponent *TaggedSceneComponent = Cast<UTaggedComponent>(SceneComponent);
-      if (IsValid(TaggedSceneComponent)) {
-          TaggedComponent = TaggedSceneComponent;
+    UTaggedComponent *TaggedComponent = FindTaggedComponent(Component);
+    if (TaggedComponent) {
 #ifdef CARLA_TAGGER_EXTRA_LOG
-          UE_LOG(LogCarla, Log, TEXT("    - Found Tag"));
+      UE_LOG(LogCarla, Log, TEXT("    - Found Tag"));
 #endif // CARLA_TAGGER_EXTRA_LOG
-          break;
-      }
-    }
-
-    // If not found, then create new tagged component and attach it to this component
-    if (!TaggedComponent) {
+    } else {
+      // If not found, then create new tagged component and attach it to this component
       TaggedComponent = NewObject<UTaggedComponent>(Component);
       TaggedComponent->SetupAttachment(Component);
       TaggedComponent->RegisterComponent();
@@ -230,21 +226,13 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation, ui
 #endif // CARLA_TAGGER_EXTRA_LOG
 
     // Find a tagged component that is attached to this component
-    UTaggedLandscapeComponent *TaggedComponent = NULL;
-    TArray<USceneComponent *> AttachedComponents = Component->GetAttachChildren();
-    for (USceneComponent *SceneComponent : AttachedComponents) {
-      UTaggedLandscapeComponent *TaggedSceneComponent = Cast<UTaggedLandscapeComponent>(SceneComponent);
-      if (IsValid(TaggedSceneComponent)) {
-          TaggedComponent = TaggedSceneComponent;
+    UTaggedLandscapeComponent *TaggedComponent = FindTaggedComponent<UTaggedLandscapeComponent>(Component);
+    if (TaggedComponent) {
 #ifdef CARLA_TAGGER_EXTRA_LOG
-          UE_LOG(LogCarla, Log, TEXT("    - Found Tag"));
+      UE_LOG(LogCarla, Log, TEXT("    - Found Tag"));
 #endif // CARLA_TAGGER_EXTRA_LOG
-          break;
-      }
-    }
-
-    // If not found, then create new tagged component and attach it to this component
-    if (!TaggedComponent) {
+    } else {
+      // If not found, then create new tagged component and attach it to this component
       TaggedComponent = NewObject<UTaggedLandscapeComponent>(Component);
       TaggedComponent->SetupAttachment(Component);
       TaggedComponent->RegisterComponent();

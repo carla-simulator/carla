@@ -171,7 +171,7 @@ __2.__ Run the configuration scripts:
 
 __3.__ Compile the modified engine:
 
->1. Open the `UE4.sln` file inside the source folder with Visual Studio 2019.
+>1. Open the `UE4.sln` file inside the source folder with Visual Studio 2022.
 
 >2. In the build bar ensure that you have selected 'Development Editor', 'Win64' and 'UnrealBuildTool' options. Check [this guide](https://docs.unrealengine.com/en-US/ProductionPipelines/DevelopmentSetup/BuildingUnrealEngine/index.html) if you need any help. 
         
@@ -243,7 +243,7 @@ To set the environment variable:
 This section outlines the commands to build CARLA. 
 
 - All commands should be run in the root CARLA folder. 
-- Commands should be executed via the __x64 Native Tools Command Prompt for VS 2019__. Open this by clicking the `Windows` key and searching for `x64`.
+- Commands should be executed via the __x64 Native Tools Command Prompt for VS 2022__. Open this by clicking the `Windows` key and searching for `x64`.
 
 There are two parts to the build process for CARLA, compiling the client and compiling the server.
 
