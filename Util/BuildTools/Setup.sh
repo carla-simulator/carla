@@ -976,7 +976,7 @@ if ${USE_ROS2} ; then
     FAST_DDS_LIB_BASENAME=fast-dds-lib
     FAST_DDS_LIB_SOURCE_DIR=${PWD}/${FAST_DDS_LIB_BASENAME}-source
     FAST_DDS_LIB_REPO="https://github.com/eProsima/Fast-DDS.git"
-    FAST_DDS_LIB_BRANCH=2.11.2
+    FAST_DDS_LIB_BRANCH=v2.11.2
     
     git clone --recurse-submodules --depth 1 --branch ${FAST_DDS_LIB_BRANCH} ${FAST_DDS_LIB_REPO} ${FAST_DDS_LIB_SOURCE_DIR}
 
