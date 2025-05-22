@@ -377,7 +377,7 @@
     - var_name: object_tag
       type: uint
       doc: >
-        [Semantic tag](https://carla.readthedocs.io/en/latest/ref_sensors/#semantic-segmentation-camera) of the component hit by the ray.
+        [Semantic tag](ref_sensors.md#semantic-segmentation-camera) of the component hit by the ray.
     # - METHODS ----------------------------
     methods:
     - def_name: __str__

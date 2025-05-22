@@ -444,6 +444,8 @@ namespace detail {
     void DrawDebugShape(const rpc::DebugShape &shape);
 
     void ClearDebugShape();
+
+    void ClearDebugString();
     
     void ApplyBatch(
         std::vector<rpc::Command> commands,
@@ -478,6 +480,8 @@ namespace detail {
     std::vector<rpc::LabelledPoint> CastRay(
         geom::Location start_location, geom::Location end_location) const;
 
+    void SetAnnotationsTraverseTranslucency(
+        bool enable);
   private:
 
     class Pimpl;

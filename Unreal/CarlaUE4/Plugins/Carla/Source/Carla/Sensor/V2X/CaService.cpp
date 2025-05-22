@@ -6,6 +6,8 @@
 
 #include "Carla.h"
 #include "CaService.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/Sensor/InertialMeasurementUnit.h"
 #include <boost/algorithm/clamp.hpp>
 #include "carla/rpc/String.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
@@ -622,7 +624,7 @@ float CaService::ComputeYawRate()
 {
     check(mActorOwner != nullptr);
     const FVector AngularVelocity =
-        FIMU_GetActorAngularVelocityInRadians(*mActorOwner);
+        AInertialMeasurementUnit::GetActorAngularVelocityInRadians(*mActorOwner);
 
     const FQuat SensorLocalRotation =
         mActorOwner->GetRootComponent()->GetRelativeTransform().GetRotation();

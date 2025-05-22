@@ -10,7 +10,7 @@
 #include "Misc/Paths.h"
 #include "Modules/ModuleManager.h"
 #include "HAL/FileManagerGeneric.h"
-
+#include "PluginDescriptor.h"
 #include "Runtime/Core/Public/HAL/FileManagerGeneric.h"
 
 TArray<FString> UCarlaStatics::GetAllPluginContentPaths()

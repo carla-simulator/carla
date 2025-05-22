@@ -66,6 +66,10 @@ public:
   void AddHUDString(const FString Str, const FVector Location, const FColor Color, double LifeTime);
   void AddHUDLine(const FVector Begin, const FVector End, const float Thickness, const FColor Color, double LifeTime);
 
+  void ClearDebugStrings()
+  {
+    StringList.Empty();
+  }
 private:
   TArray<HUDString> StringList;
   TArray<HUDLine> LineList;

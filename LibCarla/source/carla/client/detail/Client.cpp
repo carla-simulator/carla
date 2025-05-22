@@ -717,6 +717,10 @@ namespace detail {
     _pimpl->AsyncCall("clear_debug_shape");
   }
 
+  void Client::ClearDebugString() {
+    _pimpl->AsyncCall("clear_debug_string");
+  }
+
   void Client::ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {
     _pimpl->AsyncCall("apply_batch", std::move(commands), do_tick_cue);
   }
@@ -771,6 +775,11 @@ namespace detail {
       geom::Location start_location, geom::Location end_location) const {
     using return_t = std::vector<rpc::LabelledPoint>;
     return _pimpl->CallAndWait<return_t>("cast_ray", start_location, end_location);
+  }
+
+  void Client::SetAnnotationsTraverseTranslucency(
+      bool enable) {
+    _pimpl->AsyncCall("set_annotations_traverse_translucency", enable);
   }
 
 } // namespace detail

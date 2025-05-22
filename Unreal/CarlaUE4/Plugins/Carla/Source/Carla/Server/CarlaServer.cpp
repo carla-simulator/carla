@@ -7,6 +7,7 @@
 #include "Carla.h"
 #include "Carla/Server/CarlaServer.h"
 #include "Carla/Server/CarlaServerResponse.h"
+#include "Carla/Game/CarlaHUD.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
 #include "EngineUtils.h"
 #include "Components/SkeletalMeshComponent.h"
@@ -26,6 +27,7 @@
 #include "Carla/Walker/WalkerBase.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Game/TaggedMaterials.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
@@ -640,6 +642,13 @@ void FCarlaServer::FPimpl::BindActions()
     }
 
     GameMode->EnableEnvironmentObjects(EnvObjectIdsSet, Enable);
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(set_annotations_traverse_translucency) << [this](bool Enable) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    UTaggedMaterialsRegistry::Get()->SetTaggingTraverseTranslucency(Episode, Enable);
     return R<void>::Success();
   };
 
@@ -1348,9 +1357,6 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   BIND_SYNC(get_actor_bounding_box) << [this](
       cr::ActorId ActorId) -> R<cr::BoundingBox>
   {
-    //return cr::BoundingBox();
-    // Commenting it out due to an unknown bug where sometimes the server tryes to act on a destroyed actor, crashing the simulation.
-
     REQUIRE_CARLA_EPISODE();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
     if (!CarlaActor)
@@ -2934,6 +2940,16 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     check(World != nullptr);
     FDebugShapeDrawer Drawer(*World);
     Drawer.Clear();
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(clear_debug_string) << [this]() -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+
+    ACarlaHUD* CarlaHUD = Cast<ACarlaHUD>(Episode->GetWorld()->GetFirstPlayerController()->GetHUD());
+    CarlaHUD->ClearDebugStrings();
+    GEngine->ClearOnScreenDebugMessages();
     return R<void>::Success();
   };
 
