@@ -185,6 +185,7 @@ public class Carla :
         PublicAdditionalLibraries.Add(Path.Combine(CarlaPluginBinariesPath, "libfastrtps-2.11.lib"));
         PublicAdditionalLibraries.Add(Path.Combine(CarlaPluginBinariesPath, "libfastcdr-1.1.lib"));
         PublicAdditionalLibraries.Add(Path.Combine(CarlaPluginBinariesPath, "foonathan_memory-0.7.3.lib"));
+        PublicAdditionalLibraries.Add("Shlwapi.lib");
       }
       else
       {

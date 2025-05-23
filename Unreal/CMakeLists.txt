@@ -151,6 +151,7 @@ endforeach ()
 set (
   CARLA_UNREAL_LIBRARIES
   $<TARGET_FILE:libsqlite3>
+  shlwapi.lib
 )
 
 foreach (UE_DEP ${UE_DEPENDENCIES})
@@ -367,8 +368,6 @@ add_dependencies (
   carla-unreal
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
-
-
 
 function (
   add_carla_ue_package_target
