@@ -58,6 +58,7 @@ namespace parser {
     JuncId junction_id;
     RoadId predecessor;
     RoadId successor;
+    bool is_rht;
     std::vector<RoadTypeSpeed> speed;
     std::vector<LaneOffset> section_offsets;
     std::vector<LaneSection> sections;
@@ -117,14 +118,15 @@ namespace parser {
     std::vector<Road> roads;
 
     for (pugi::xml_node node_road : xml.child("OpenDRIVE").children("road")) {
-      Road road { 0, "", 0.0, -1, 0, 0, {}, {}, {} };
+      Road road { 0, "", 0.0, -1, 0, 0, true, {}, {}, {} };
 
       // attributes
       road.id = node_road.attribute("id").as_uint();
       road.name = node_road.attribute("name").value();
       road.length = node_road.attribute("length").as_double();
       road.junction_id = node_road.attribute("junction").as_int();
-
+      auto rule = node_road.attribute("rule") ? node_road.attribute("rule").value(): "RHT";
+      road.is_rht = rule == "RHT";
       // link
       pugi::xml_node link = node_road.child("link");
       if (link) {
@@ -293,7 +295,8 @@ namespace parser {
           r.length,
           r.junction_id,
           r.predecessor,
-          r.successor);
+          r.successor,
+          r.is_rht);
 
       // type speed
       for (auto const s : r.speed) {

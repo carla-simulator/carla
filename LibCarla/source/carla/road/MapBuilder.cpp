@@ -184,7 +184,8 @@ namespace road {
       std::string lane_change,
       const double height,
       const std::string type_name,
-      const double type_width) {
+      const double type_width,
+      bool is_rht) {
     DEBUG_ASSERT(lane != nullptr);
     RoadInfoMarkRecord::LaneChange lc;
 
@@ -201,7 +202,7 @@ namespace road {
     }
     _temp_lane_info_container[lane].emplace_back(std::make_unique<RoadInfoMarkRecord>(s, road_mark_id, type,
         weight, color,
-        material, width, lc, height, type_name, type_width));
+        material, width, lc, height, type_name, type_width, is_rht));
   }
 
   void MapBuilder::CreateRoadMarkTypeLine(
@@ -356,7 +357,8 @@ namespace road {
         const double length,
         const JuncId junction_id,
         const RoadId predecessor,
-        const RoadId successor)
+        const RoadId successor,
+        const bool is_rht)
     {
 
       // add it
@@ -369,6 +371,7 @@ namespace road {
       road->_length = length;
       road->_junction_id = junction_id;
       (junction_id != -1) ? road->_is_junction = true : road->_is_junction = false;
+      road->_is_rht = is_rht;
       road->_successor = successor;
       road->_predecessor = predecessor;
 
@@ -649,7 +652,7 @@ namespace road {
     // successor and predecessor (road and lane)
     LaneId next;
     RoadId next_road;
-    if (lane_id > 0) { // LHT swap direction
+    if (lane->IsPositiveDirection()) {
       next_road = road.GetSuccessor();
       next = lane->GetSuccessor();
     } else {
@@ -662,12 +665,12 @@ namespace road {
     double s = section.GetDistance();
 
     // check if we are in a lane section in the middle
-    if ((lane_id <= 0 && s > 0) ||
-        (lane_id > 0 && road._lane_sections.upper_bound(s) != road._lane_sections.end())) {  // LHT swap direction
+    if ((!lane->IsPositiveDirection() && s > 0) ||
+        (lane->IsPositiveDirection() && road._lane_sections.upper_bound(s) != road._lane_sections.end())) {
       // check if lane has a next link (if not, it deads in the middle section)
       if (next != 0 || (lane_id == 0 && next == 0)) {
         // change to next / prev section
-        if (lane_id > 0) {  // LHT swap direction
+        if (lane->IsPositiveDirection()) {
           result.push_back(road.GetNextLane(s, next));
         } else {
           result.push_back(road.GetPrevLane(s, next));
@@ -677,7 +680,9 @@ namespace road {
       // change to another road / junction
       if (next != 0 || (lane_id == 0 && next == 0)) {
         // single road
-        result.push_back(GetEdgeLanePointer(next_road, (next > 0), next));  // LHT swap direction
+        auto _s = lane->IsPositiveDirection() ? 0 : GetRoad(next_road)->GetLength();
+        Lane* next_lane = GetLane(next_road, next, _s);
+        result.push_back(GetEdgeLanePointer(next_road, !next_lane->IsPositiveDirection(), next));
       }
     } else {
       // several roads (junction)
@@ -687,18 +692,18 @@ namespace road {
       auto next_road_as_junction = static_cast<JuncId>(next_road);
       auto options = GetJunctionLanes(next_road_as_junction, road_id, lane_id);
       for (auto opt : options) {
-        result.push_back(GetEdgeLanePointer(opt.first, (opt.second > 0), opt.second));  // LHT swap direction
+        result.push_back(GetEdgeLanePointer(opt.first, (opt.second->IsPositiveDirection()), opt.second->GetId()));
       }
     }
 
     return result;
   }
 
-  std::vector<std::pair<RoadId, LaneId>> MapBuilder::GetJunctionLanes(
+  std::vector<std::pair<RoadId, const Lane*>> MapBuilder::GetJunctionLanes(
       JuncId junction_id,
       RoadId road_id,
       LaneId lane_id) {
-    std::vector<std::pair<RoadId, LaneId>> result;
+    std::vector<std::pair<RoadId, const Lane*>> result;
 
     // get the junction
     Junction *junction = _map_data.GetJunction(junction_id);
@@ -717,7 +722,7 @@ namespace road {
       if (road_id == road_pred) {
         for (auto lane : conn_road->GetLanesAt(0)){
           if (lane_id == lane.second->_predecessor){
-            result.push_back(std::make_pair(conn_id, lane.first));
+            result.push_back(std::make_pair(conn_id, lane.second));
           }
         }
       }
@@ -725,14 +730,14 @@ namespace road {
       if (road_id == road_succ) {
         for (auto lane : conn_road->GetLanesAt(conn_road->GetLength())){
           if (lane_id == lane.second->_successor){
-            result.push_back(std::make_pair(conn_id, lane.first));
+            result.push_back(std::make_pair(conn_id, lane.second));
           }
         }
       }
     }
 
-    return result;
-  }
+  return result;
+}
 
   // assign pointers to the next lanes
   void MapBuilder::CreatePointersBetweenRoadSegments(void) {
