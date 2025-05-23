@@ -201,6 +201,13 @@ public:
     _client->call("keep_right_rule_percentage", actor, percentage);
   }
 
+  /// Method to set % to keep on the left lane.
+  void SetKeepLeftPercentage(const carla::rpc::Actor &actor, const float percentage) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("keep_left_rule_percentage", actor, percentage);
+  }
+
+
   /// Method to set % to randomly do a left lane change.
   void SetRandomLeftLaneChangePercentage(const carla::rpc::Actor &actor, const float percentage) {
     DEBUG_ASSERT(_client != nullptr);

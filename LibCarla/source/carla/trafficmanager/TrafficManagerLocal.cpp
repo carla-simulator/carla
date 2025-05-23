@@ -391,6 +391,10 @@ void TrafficManagerLocal::SetKeepRightPercentage(const ActorPtr &actor, const fl
   parameters.SetKeepRightPercentage(actor, percentage);
 }
 
+void TrafficManagerLocal::SetKeepLeftPercentage(const ActorPtr &actor, const float percentage) {
+  parameters.SetKeepLeftPercentage(actor, percentage);
+}
+
 void TrafficManagerLocal::SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) {
   parameters.SetRandomLeftLaneChangePercentage(actor, percentage);
 }

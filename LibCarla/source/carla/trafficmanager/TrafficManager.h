@@ -327,6 +327,14 @@ public:
     }
   }
 
+  /// Method to set % to keep on the left lane.
+  void SetKeepLeftPercentage(const ActorPtr &actor, const float percentage) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetKeepLeftPercentage(actor, percentage);
+    }
+  }
+
   /// Method to set % to randomly do a left lane change.
   void SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) {
     TrafficManagerBase* tm_ptr = GetTM(_port);

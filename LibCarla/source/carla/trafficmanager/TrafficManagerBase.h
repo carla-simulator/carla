@@ -116,6 +116,9 @@ public:
   /// Method to set % to keep on the right lane.
   virtual void SetKeepRightPercentage(const ActorPtr &actor,const float percentage) = 0;
 
+  /// Method to set % to keep on the left lane.
+  virtual void SetKeepLeftPercentage(const ActorPtr &actor,const float percentage) = 0;
+
   /// Method to set % to randomly do a left lane change.
   virtual void SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) = 0;
 

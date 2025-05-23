@@ -111,6 +111,12 @@ void Parameters::SetKeepRightPercentage(const ActorPtr &actor, const float perce
   perc_keep_right.AddEntry(entry);
 }
 
+void Parameters::SetKeepLeftPercentage(const ActorPtr &actor, const float percentage) {
+
+  const auto entry = std::make_pair(actor->GetId(), percentage);
+  perc_keep_left.AddEntry(entry);
+}
+
 void Parameters::SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) {
 
   const auto entry = std::make_pair(actor->GetId(), percentage);
@@ -304,6 +310,17 @@ float Parameters::GetKeepRightPercentage(const ActorId &actor_id) {
 
   if (perc_keep_right.Contains(actor_id)) {
     percentage = perc_keep_right.GetValue(actor_id);
+  }
+
+  return percentage;
+}
+
+float Parameters::GetKeepLeftPercentage(const ActorId &actor_id) {
+
+  float percentage = -1.0f;
+
+  if (perc_keep_left.Contains(actor_id)) {
+    percentage = perc_keep_left.GetValue(actor_id);
   }
 
   return percentage;

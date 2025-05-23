@@ -102,6 +102,7 @@ void export_trafficmanager() {
     .def("ignore_signs_percentage", &ctm::TrafficManager::SetPercentageRunningSign, (arg("actor"), arg("perc")))
     .def("set_global_distance_to_leading_vehicle", &ctm::TrafficManager::SetGlobalDistanceToLeadingVehicle, (arg("distance")))
     .def("keep_right_rule_percentage", &ctm::TrafficManager::SetKeepRightPercentage, (arg("actor"), arg("perc")))
+    .def("keep_left_rule_percentage", &ctm::TrafficManager::SetKeepLeftPercentage, (arg("actor"), arg("perc")))
     .def("random_left_lanechange_percentage", &ctm::TrafficManager::SetRandomLeftLaneChangePercentage, (arg("actor"), arg("percentage")))
     .def("random_right_lanechange_percentage", &ctm::TrafficManager::SetRandomRightLaneChangePercentage, (arg("actor"), arg("percentage")))
     .def("set_synchronous_mode", &ctm::TrafficManager::SetSynchronousMode, (arg("mode_switch")))
