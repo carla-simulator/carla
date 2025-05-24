@@ -1,6 +1,7 @@
 ## LATEST Changes
 
 * Added actor description as Actor TAGs
+* Got Windows ROS2 Build working
 
 
 ## CARLA 0.10.0
