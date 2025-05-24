@@ -26,7 +26,7 @@ namespace ros2 {
 
       bool HasNewMessage();
       bool IsAlive();
-      const char* GetMessage();
+      const char* GetCarlaMessage();
       void* GetActor();
 
       bool Init();

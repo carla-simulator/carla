@@ -94,8 +94,8 @@ void ROS2::SetFrame(uint64_t frame) {
       if (_controller->HasNewMessage()) {
         auto it = _actor_callbacks.find(actor);
         if (it != _actor_callbacks.end()) {
-          //VehicleControl control = _controller->GetMessage();
-          //it->second(actor, control);
+          VehicleControl control = _controller->GetCarlaMessage();
+          it->second(actor, control);
         }
       }
     } else {
@@ -114,8 +114,8 @@ void ROS2::SetFrame(uint64_t frame) {
       auto it = _actor_message_callbacks.find(actor);
       if (it != _actor_message_callbacks.end()) {
         MessageControl control;
-        //control.message = _basic_subscriber->GetMessage();
-        //it->second(actor, control);
+        control.message = _basic_subscriber->GetCarlaMessage();
+        it->second(actor, control);
       }
     }
    }

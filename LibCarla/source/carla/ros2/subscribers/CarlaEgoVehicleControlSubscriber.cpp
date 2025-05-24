@@ -160,7 +160,7 @@ namespace ros2 {
     _impl->_alive = false;
   }
 
-  VehicleControl CarlaEgoVehicleControlSubscriber::GetMessage() {
+  VehicleControl CarlaEgoVehicleControlSubscriber::GetCarlaMessage() {
     _impl->_new_message = false;
     return _impl->_control;
   }
