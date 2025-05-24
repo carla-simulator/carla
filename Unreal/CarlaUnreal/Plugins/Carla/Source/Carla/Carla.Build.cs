@@ -175,12 +175,6 @@ public class Carla :
       string CarlaPluginBinariesPath = Path.Combine(CarlaPluginSourcePath, "..", "..", "Binaries");
       if (Target.Platform == UnrealTargetPlatform.Win64)
       {
-        PublicDefinitions.Add("FASTRTPS_NO_LIB"); // static link
-        PublicDefinitions.Add("FASTCDR_NO_LIB"); // static link
-        PublicDefinitions.Add("FOONATHAN_MEMORY=1");
-        PublicDefinitions.Add("FOONATHAN_MEMORY_VERSION_MAJOR=0");
-        PublicDefinitions.Add("FOONATHAN_MEMORY_VERSION_MINOR=7");
-        PublicDefinitions.Add("FOONATHAN_MEMORY_VERSION_PATCH=3");
         PublicAdditionalLibraries.Add(Path.Combine(CarlaPluginBinariesPath, "carla-ros2-native.lib"));
         PublicAdditionalLibraries.Add(Path.Combine(CarlaPluginBinariesPath, "libfastrtps-2.11.lib"));
         PublicAdditionalLibraries.Add(Path.Combine(CarlaPluginBinariesPath, "libfastcdr-1.1.lib"));

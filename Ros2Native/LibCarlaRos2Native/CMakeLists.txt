@@ -30,16 +30,25 @@ file (
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/types/*.h
 )
 
-add_library (
-  carla-ros2-native
-  STATIC
-  ${LIBCARLA_ROS2_HEADERS}
-  ${LIBCARLA_ROS2_SOURCES}
-)
+if (WIN32)
+  add_library (
+    carla-ros2-native
+    STATIC
+    ${LIBCARLA_ROS2_HEADERS}
+    ${LIBCARLA_ROS2_SOURCES}
+  )
+else ()
+  add_library (
+    carla-ros2-native
+    SHARED
+    ${LIBCARLA_ROS2_HEADERS}
+    ${LIBCARLA_ROS2_SOURCES}
+  )
+endif()
 
 target_include_directories (
   carla-ros2-native
-  SYSTEM PUBLIC
+  SYSTEM PRIVATE
   ${LIBCARLA_SOURCE_PATH}
   ${CMAKE_INSTALL_PREFIX}/include
 )

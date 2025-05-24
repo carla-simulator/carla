@@ -148,11 +148,18 @@ foreach (UE_DEP ${UE_DEPENDENCIES})
   )
 endforeach ()
 
-set (
-  CARLA_UNREAL_LIBRARIES
-  $<TARGET_FILE:libsqlite3>
-  shlwapi.lib
-)
+if(WIN32)
+  set (
+    CARLA_UNREAL_LIBRARIES
+    $<TARGET_FILE:libsqlite3>
+    shlwapi.lib
+  )
+else()
+  set (
+    CARLA_UNREAL_LIBRARIES
+    $<TARGET_FILE:libsqlite3>
+  )
+endif()
 
 foreach (UE_DEP ${UE_DEPENDENCIES})
   get_target_property (UE_DEP_TYPE ${UE_DEP} TYPE)
@@ -319,6 +326,8 @@ list (
   carla-unreal-configure
 )
 
+
+
 file (
   MAKE_DIRECTORY
   ${CARLA_UE_PATH}/Content/Carla/ExportedMaps
@@ -368,6 +377,8 @@ add_dependencies (
   carla-unreal
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
+
+
 
 function (
   add_carla_ue_package_target

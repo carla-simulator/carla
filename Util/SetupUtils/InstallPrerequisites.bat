@@ -47,6 +47,44 @@ rem -- MAIN --
 
 :main
 
+rem -- INSTALL VISUAL STUDIO --
+set "vcvars64_found="
+
+echo Checking if Visual Studio 2022 needs to be installed...
+if exist "%ProgramFiles%\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vcvars64_found=true"
+)
+if exist "%ProgramFiles%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vcvars64_found=true"
+)
+if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vcvars64_found=true"
+)
+if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vcvars64_found=true"
+)
+if exist "%ProgramFiles%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vcvars64_found=true"
+)
+if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vcvars64_found=true"
+)
+
+if "%vcvars64_found%"=="" (
+    echo Visual Studio 2022 not found. Installing required components...
+    if not exist %cd%\Temp (
+        mkdir %cd%\Temp
+    )
+    pushd Temp
+    curl -L -O https://aka.ms/vs/17/release/vs_community.exe || exit /b
+    popd Temp
+    %cd%\Temp\vs_community.exe --add %visual_studio_components% --installWhileDownloading --passive --wait || exit /b
+    del %cd%\Temp\vs_community.exe
+    rmdir %cd%\Temp
+) else (
+    echo Visual Studio 2022 found. Skipping installation.
+)
+
 rem -- INSTALL NINJA --
 ninja --version >nul 2>nul
 if errorlevel 1 (
