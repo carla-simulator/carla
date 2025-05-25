@@ -426,7 +426,7 @@ carla_string_option (
 carla_string_option (
   CARLA_FASTDDS_TAG
   "Target Fast-DDS git tag."
-  ${CARLA_FASTDDS_VERSION}
+  v${CARLA_FASTDDS_VERSION}
 )
 
 # ==== FASTCDR ====
