@@ -387,13 +387,10 @@ void TrafficManagerLocal::SetPercentageRunningSign(const ActorPtr &actor, const 
   parameters.SetPercentageRunningSign(actor, perc);
 }
 
-void TrafficManagerLocal::SetKeepRightPercentage(const ActorPtr &actor, const float percentage) {
-  parameters.SetKeepRightPercentage(actor, percentage);
+void TrafficManagerLocal::SetKeepSlowLanePercentage(const ActorPtr &actor, const float percentage) {
+  parameters.SetKeepSlowLanePercentage(actor, percentage);
 }
 
-void TrafficManagerLocal::SetKeepLeftPercentage(const ActorPtr &actor, const float percentage) {
-  parameters.SetKeepLeftPercentage(actor, percentage);
-}
 
 void TrafficManagerLocal::SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) {
   parameters.SetRandomLeftLaneChangePercentage(actor, percentage);

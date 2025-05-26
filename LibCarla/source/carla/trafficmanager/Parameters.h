@@ -63,10 +63,8 @@ private:
   AtomicMap<ActorId, float> perc_ignore_walkers;
   /// Map containing % of ignoring vehicles.
   AtomicMap<ActorId, float> perc_ignore_vehicles;
-  /// Map containing % of keep right rule.
-  AtomicMap<ActorId, float> perc_keep_right;
-  /// Map containing % of keep left rule.
-  AtomicMap<ActorId, float> perc_keep_left;
+  /// Map containing % of keep slow lane rule.
+  AtomicMap<ActorId, float> perc_keep_slow_lane;
   /// Map containing % of random left lane change.
   AtomicMap<ActorId, float> perc_random_left;
   /// Map containing % of random right lane change.
@@ -156,11 +154,8 @@ public:
   /// Method to set % to ignore any vehicle.
   void SetPercentageIgnoreWalkers(const ActorPtr &actor, const float perc);
 
-  /// Method to set % to keep on the right lane.
-  void SetKeepRightPercentage(const ActorPtr &actor, const float percentage);
-
-  /// Method to set % to keep on the left lane.
-  void SetKeepLeftPercentage(const ActorPtr &actor, const float percentage);
+  /// Method to set % to keep on the slow lane.
+  void SetKeepSlowLanePercentage(const ActorPtr &actor, const float percentage);
 
   /// Method to set % to randomly do a left lane change.
   void SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage);
@@ -233,11 +228,8 @@ public:
   /// Method to query lane change command for a vehicle.
   ChangeLaneInfo GetForceLaneChange(const ActorId &actor_id);
 
-  /// Method to query percentage probability of keep right rule for a vehicle.
-  float GetKeepRightPercentage(const ActorId &actor_id);
-
-  /// Method to query percentage probability of keep left rule for a vehicle.
-  float GetKeepLeftPercentage(const ActorId &actor_id);
+  /// Method to query percentage probability of keep slow lane rule for a vehicle.
+  float GetKeepSlowLanePercentage(const ActorId &actor_id);
 
   /// Method to query percentage probability of a random right lane change for a vehicle.
   float GetRandomLeftLaneChangePercentage(const ActorId &actor_id);

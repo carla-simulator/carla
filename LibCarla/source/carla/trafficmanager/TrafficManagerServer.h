@@ -174,13 +174,8 @@ public:
       });
 
       /// Method to set % to keep on the right lane.
-      server->bind("set_percentage_keep_right_rule", [=](carla::rpc::Actor actor, const float percentage) {
-        tm->SetKeepRightPercentage(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
-      });
-
-      /// Method to set % to keep on the right lane.
-      server->bind("set_percentage_keep_left_rule", [=](carla::rpc::Actor actor, const float percentage) {
-        tm->SetKeepLeftPercentage(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
+      server->bind("set_percentage_keep_slow_lane_rule", [=](carla::rpc::Actor actor, const float percentage) {
+        tm->SetKeepSlowLanePercentage(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
       });
 
 

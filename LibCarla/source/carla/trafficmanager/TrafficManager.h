@@ -319,19 +319,11 @@ public:
     }
   }
 
-  /// Method to set % to keep on the right lane.
-  void SetKeepRightPercentage(const ActorPtr &actor, const float percentage) {
+  /// Method to set % to keep on the slow lane.
+  void SetKeepSlowLanePercentage(const ActorPtr &actor, const float percentage) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if(tm_ptr != nullptr){
-      tm_ptr->SetKeepRightPercentage(actor, percentage);
-    }
-  }
-
-  /// Method to set % to keep on the left lane.
-  void SetKeepLeftPercentage(const ActorPtr &actor, const float percentage) {
-    TrafficManagerBase* tm_ptr = GetTM(_port);
-    if(tm_ptr != nullptr){
-      tm_ptr->SetKeepLeftPercentage(actor, percentage);
+      tm_ptr->SetKeepSlowLanePercentage(actor, percentage);
     }
   }
 
