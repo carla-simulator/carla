@@ -7,18 +7,17 @@ set -e
 #
 # If --monolith is supplied, it will:
 #   - Use:       carla-ue4.dockerfile
-#   - Tag:       carla-0.9.15.2-ue4-jammy-dev
+#   - Tag:       carla-ue4-jammy-dev
 #   - Pass EPIC creds as needed
 #
 # Otherwise (default/lightweight):
 #   - Use:       carla.dockerfile
-#   - Tag:       carla-0.9.15.2-jammy-dev
+#   - Tag:       carla-ue4-jammy-dev
 ###############################################################################
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-
-# We define a subdirectory where Dockerfiles reside:
+PROJECT_NAME="$(basename "$PROJECT_ROOT")"
 DOCKERFILES_DIR="${PROJECT_ROOT}/Util/Docker"
 
 MONOLITH=0
@@ -28,11 +27,11 @@ if [[ "$1" == "--monolith" || "$1" == "-m" ]]; then
 fi
 
 if [ $MONOLITH -eq 1 ]; then
-    DOCKERFILE="carla-ue4.dockerfile"
-    IMAGE_NAME="carla-0.9.15.2-ue4-jammy-dev"
+    DOCKERFILE="carla-ue4-monolith.dockerfile"
+    IMAGE_NAME="carla-ue4-jammy-monolith"
 else
-    DOCKERFILE="carla.dockerfile"
-    IMAGE_NAME="carla-0.9.15.2-jammy-dev"
+    DOCKERFILE="carla-ue4.dockerfile"
+    IMAGE_NAME="carla-ue4-jammy-dev"
 fi
 
 # ------------------------------------------------------------------------------
@@ -69,4 +68,5 @@ docker build \
   --build-arg USERNAME="$(whoami)" \
   --build-arg USER_UID="$(id -u)" \
   --build-arg USER_GID="$(id -g)" \
+  --build-arg PROJECT_NAME="${PROJECT_NAME}" \
   "${PROJECT_ROOT}"

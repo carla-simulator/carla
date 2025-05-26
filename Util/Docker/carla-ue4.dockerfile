@@ -6,17 +6,14 @@ FROM ubuntu:22.04
 ARG USERNAME=carla
 ARG USER_ID=1000
 ARG GROUP_ID=1000
-
-# Place the appropiate credentials in .env file at the root of this repo
-ARG EPIC_USER="username"
-ARG EPIC_PASS="github_token"
+ARG PROJECT_NAME="carla-ue4-dev"
 
 # ------------------------------------------------------------------------------
 # Set environment variables for NVIDIA support
 # ------------------------------------------------------------------------------
 ENV NVIDIA_DRIVER_CAPABILITIES=all
 ENV NVIDIA_VISIBLE_DEVICES=all
-    
+
 # ------------------------------------------------------------------------------
 # Set the XDG_RUNTIME_DIR environment variable for ./Setup.sh
 # ------------------------------------------------------------------------------
@@ -26,6 +23,11 @@ ENV XDG_RUNTIME_DIR=/run/user/1000
 # Explicitly tell Vulkan to use NVIDIA's ICD
 # ------------------------------------------------------------------------------
 ENV VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/nvidia_icd.json
+
+# ------------------------------------------------------------------------------
+# Create the UE4 directory env variable (if needed later)
+# ------------------------------------------------------------------------------
+ENV UE4_ROOT="/opt/UE4.26"
 
 # ------------------------------------------------------------------------------
 # Create or rename user/group "$USERNAME"
@@ -51,15 +53,11 @@ RUN if [ -z "$(getent group $GROUP_ID)" ]; then \
     fi
 
 # ------------------------------------------------------------------------------
-# Install Unreal Engine build dependencies
+# Install Unreal Engine dependencies for GUI support in containers
 # ------------------------------------------------------------------------------
 RUN apt-get update && \
     apt-get install -y \
-    git \
     ca-certificates \
-    curl \
-    wget \
-    build-essential \
     xdg-user-dirs \
     xdg-utils \
     sudo \
@@ -73,6 +71,10 @@ RUN apt-get update && \
 # Install CARLA build dependencies (make PythonAPI, make CarlaUE4Editor)
 # ------------------------------------------------------------------------------
 RUN apt-get install -y \
+    git \
+    curl \
+    wget \
+    build-essential \
     cmake \
     ninja-build \
     python3 \
@@ -108,59 +110,20 @@ RUN echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 RUN sed -i 's/#force_color_prompt=yes/force_color_prompt=yes/g' /home/$USERNAME/.bashrc
 
 # ------------------------------------------------------------------------------
-# Create the UE4 directory with the right ownership
-# ------------------------------------------------------------------------------
-RUN mkdir -p /opt/UE4.26 && \
-    chown -R $USERNAME:$USERNAME /opt/UE4.26
-
-ENV UE4_ROOT="/opt/UE4.26"
-
-# ------------------------------------------------------------------------------
 # Create the repo mount directory with the right ownership
 # ------------------------------------------------------------------------------
-RUN mkdir -p /workspaces && \
+RUN mkdir -p /workspaces/$PROJECT_NAME && \
     chown -R $USERNAME:$USERNAME /workspaces
 
 # ------------------------------------------------------------------------------
-# Switch to "$USERNAME" by default
+# Switch to "$USERNAME" by default and set working directory
 # ------------------------------------------------------------------------------
 USER $USERNAME
-    
-# ------------------------------------------------------------------------------
-# Install Unreal Engine 4.26
-# ------------------------------------------------------------------------------
-RUN git clone --depth 1 -b carla "https://${EPIC_USER}:${EPIC_PASS}@github.com/CarlaUnreal/UnrealEngine.git" ${UE4_ROOT}
-      
-RUN cd $UE4_ROOT && \
-    ./Setup.sh && \
-    ./GenerateProjectFiles.sh && \
-    make
-
-ENV CC=/opt/UE4.26/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang
-ENV CXX=/opt/UE4.26/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang++
 
 # ------------------------------------------------------------------------------
 # Set repo working directory
 # ------------------------------------------------------------------------------
-WORKDIR /workspaces
-
-# ------------------------------------------------------------------------------
-# Install CARLA 0.9.15.2
-# ------------------------------------------------------------------------------
-ARG BRANCH=ue4-dev
-ARG CLONE_DIR=carla-ue4-dev
-
-RUN git clone --depth 1 --branch ${BRANCH} https://github.com/wambitz/carla.git ${CLONE_DIR}
-
-# Change working directory
-WORKDIR /workspaces/${CLONE_DIR}
-
-# NOTE: Don't run these commands together as Update.sh truncates the output
-RUN ./Update.sh
-RUN make PythonAPI 
-RUN make CarlaUE4Editor 
-RUN make build.utils 
-RUN make package 
+WORKDIR /workspaces/${PROJECT_NAME}
 
 # ------------------------------------------------------------------------------
 # Entry point

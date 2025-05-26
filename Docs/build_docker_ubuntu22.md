@@ -1,6 +1,6 @@
-# CARLA Docker Dev Environment – Ubuntu 22.04 Based Image
+# CARLA Docker Dev Environment (Ubuntu 22.04)
 
-This repository provides **two** distinct Docker-based approaches for building and running **CARLA (version 0.9.15.2)** on **Ubuntu Jammy (22.04)**:
+This repository provides **two** distinct Docker-based approaches for building and running **CARLA (version UE4)** on **Ubuntu Jammy (22.04)**:
 
 1. **Monolithic**  
    - Bundles Unreal Engine (UE4) and CARLA into a single Docker image.  
@@ -9,7 +9,7 @@ This repository provides **two** distinct Docker-based approaches for building a
 
 2. **Lightweight Devcontainer**  
    - Installs only the dependencies (plus NVIDIA support) required to compile and run CARLA.  
-   - Requires mounting an existing **UE4** build from the host into the container (see [Build UE4 for Devcontainer Option](#build-ue4-for-devcontainer-option)).  
+   - Requires mounting an existing **UE4** build from the host into the container (see [Build UE4 for Devcontainer Option](#build-ue4-prerequisite-for-lightweight--devcontainer)).  
    - Much faster to build but relies on a locally compiled Unreal Engine folder.
 
 Your choice between **monolithic** and **lightweight** depends primarily on disk space, build times, and whether you prefer a fully self-contained environment (monolithic) or a setup that reuses a locally compiled Unreal Engine (lightweight).
@@ -41,7 +41,7 @@ Two main scripts in the `Scripts/` directory manage building and launching the D
 
 ### `carla-ue4.dockerfile` (Monolithic)
 
-- Clones Unreal Engine from Epic’s private GitHub (requires valid Epic credentials). If you don't have this set up, please follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github) before going any further.
+- Clones Unreal Engine from Epic’s private GitHub (requires valid Epic credentials). **If you don't have this set up, please follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github) before going any further**.
 - Compiles UE4 and then CARLA within a single Docker image, which may exceed 100 GB and take multiple hours to build.  
 - The image **retains** the `Dist/` directory, enabling you to run or extract the packaged CARLA binaries without additional scripts like `docker_tools.py` in comparison to `CarlaLegacy.Dockefile`. Although this makes the final image large, modern hardware generally has sufficient resources (e.g., larger SSDs, more RAM) to handle this scale. It also eliminates the need to repeatedly rebuild or rely on external tooling.
 
@@ -57,9 +57,47 @@ If disk usage is a concern and you do not need the final packaged artifacts, you
 
 ---
 
-## Usage
+## Build UE4 (Prerequisite for Lightweight / Devcontainer)
 
-### 1. Lightweight (Devcontainer) Mode
+> Note: Ensure your GitHub account is linked to Epic’s UnrealEngine repository before attempting to clone.
+
+If you plan to use the **lightweight** approach, you need a **compiled** Unreal Engine folder on your host that matches CARLA’s requirements (usually UE4.26). You have the 2 following uptions
+
+### Option 1: Build Natively
+
+Follow CARLA official documentation: [Unreal Engine - Linux Build](https://carla.readthedocs.io/en/latest/build_linux/#:~:text=wheel%20auditwheel%3D%3D4.0.0-,Unreal%20Engine,-Starting%20with%20version)
+
+### Option 2: Build UE4 in Build Container 
+
+
+The following steps outline a general workflow for building UE4 inside a Docker container. For detailed instructions, refer to `Engine/Documentation/Docker/run_with_docker.md` in the cloned repository:
+
+```bash
+# Example of cloning a custom CarlaUnrealEngine repository
+git clone git@github.com:wambitz/CarlaUnrealEngine.git CarlaUE4
+
+cd CarlaUE4
+Scripts/run_container.sh
+
+# Inside the container follow official UE4.26 build steps:
+./Setup.sh
+./GenerateProjectFiles.sh
+make
+
+# Exit container
+exit
+```
+
+These commands generate the required Unreal Engine binaries and store them persistently on your host. You can later reuse them for the CARLA devcontainer. To verify a successful compilation, run the following command inside (or optionally outside) the container:
+
+```bash
+Engine/Binaries/Linux/UE4Editor
+```
+---
+
+## Scripts Usage
+
+### 1. Lightweight Mode
 
 This mode relies on a **locally compiled** Unreal Engine folder. You mount that folder into the container for building CARLA.
 
@@ -77,13 +115,13 @@ make CarlaUE4Editor
 
 # Optionally build for distribution:
 make build.utils
-make Package
+make package
 ```
 
 - **Result**:  
   - Uses **`carla.dockerfile`** (lightweight).  
   - Mounts your host’s `$UE4_ROOT` folder into `/opt/UE4.26` inside the container.  
-  - Expects a fully compiled UE4 on the host. See [Build UE4 for Devcontainer Option](#build-ue4-for-devcontainer-option) for more details.
+  - Expects a fully compiled UE4 on the host. See [Build UE4 for Devcontainer Option](#build-ue4-prerequisite-for-lightweight--devcontainer) for more details.
 
 ### 2. Monolithic Mode
 
@@ -99,39 +137,13 @@ In this mode, Docker clones and builds Unreal Engine, then compiles CARLA within
 ```
 
 - **Result**:  
-  - Uses **`carla-ue4.dockerfile`** (monolithic).  
-  - Builds UE4 and CARLA in one Docker image (commonly exceeding 100 GB).  
+  - Uses **`carla-ue4-monolith.dockerfile`**.  
+  - Builds UE4 and CARLA in one Docker image (commonly exceeding 200 GB).  
   - Takes significant time (hours) on most hardware.
 
 ---
 
-## Build UE4 in Build Container
 
-If you plan to use the **lightweight** approach, you need a **compiled** Unreal Engine folder on your host that matches CARLA’s requirements (usually UE4.26). 
-
-> Note: Ensure your GitHub account is linked to Epic’s UnrealEngine repository before attempting to clone.
-
-The following steps outline a general workflow for building UE4 inside a Docker container. For detailed instructions, refer to Engine/Documentation/Docker/run_with_docker.md in the cloned repository:
-
-```bash
-# Example of cloning a custom CarlaUnrealEngine repository
-git clone git@github.com:wambitz/CarlaUnrealEngine.git CarlaUE4
-
-cd CarlaUE4
-Scripts/run_container.sh
-
-# Inside the container follow official UE4.26 build steps:
-./Setup.sh
-./GenerateProjectFiles.sh
-make
-```
-
-These commands generate the required Unreal Engine binaries and store them persistently on your host. You can later reuse them for the CARLA devcontainer. To verify a successful compilation, run the following command inside (or optionally outside) the container:
-
-```bash
-Engine/Binaries/Linux/UE4Editor
-```
----
 
 ## Using a Devcontainer for CARLA Server/Client Development
 
@@ -141,8 +153,8 @@ Create `.devcontainer/devcontainer.json` in your CARLA repository:
 
 ```jsonc
 {
-    "name": "CARLA 0.9.15.2 (jammy)",
-    "image": "carla-0.9.15.2-jammy-dev",
+    "name": "CARLA UE4 Dev (jammy)",
+    "image": "carla-ue4-jammy-dev",
 
     "initializeCommand": "./Scripts/build_image.sh",
 
@@ -169,7 +181,7 @@ Create `.devcontainer/devcontainer.json` in your CARLA repository:
     // NOTE3: Ensure UE4_ROOT environment variable is defined in host
     "runArgs": [
       "--rm",
-      "--name", "carla-0.9.15.2-jammy-devcontainer",
+      "--name", "carla-ue4-jammy-devcontainer",
       "--hostname", "carla-devcontainer",
       "--env", "DISPLAY=${localEnv:DISPLAY}",
       "--volume", "/tmp/.X11-unix:/tmp/.X11-unix",
@@ -185,6 +197,7 @@ Create `.devcontainer/devcontainer.json` in your CARLA repository:
 1. **GPU Access**: Install and configure the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html).  
 2. **X11 Forwarding**: Ensure `/tmp/.X11-unix` is accessible and `DISPLAY` is set properly on your host.  
 3. **UE4_ROOT Environment Variable**: Must be defined on your host so the devcontainer can mount the UE4 directory.
+4. **Vulkan Support**: `/usr/share/vulkan/icd.d/nvidia_icd.json` must be exist in your host so the devcontainer can mount the vulkan configuration.
 
 ---
 
@@ -194,7 +207,7 @@ Create `.devcontainer/devcontainer.json` in your CARLA repository:
   For hardware acceleration, install the [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html).
 
 - **Disk Space**  
-  The monolithic image can exceed **100 GB** (e.g., ~221 GB in some builds). Ensure you have enough space before choosing this route.
+  The monolithic image can exceed **200 GB** (e.g., ~221 GB in some builds). Ensure you have enough space before choosing this route.
 
 - **Build Times**  
   - Monolithic mode: ~2 hours on a high-end workstation (e.g., Intel Core i9-14900KF, 64 GB RAM, RTX 4090).  
