@@ -72,10 +72,12 @@ void UCarlaToolsFunctionLibrary::ChunkAndSubdivideStaticMesh(UStaticMesh *Source
 
   const FStaticMeshLODResources &LOD = SourceMesh->GetRenderData()->LODResources[0];
   const FPositionVertexBuffer &PositionBuffer = LOD.VertexBuffers.PositionVertexBuffer;
+  const FStaticMeshVertexBuffer &VertexBuffer = LOD.VertexBuffers.StaticMeshVertexBuffer;
   const FIndexArrayView IndexArray = LOD.IndexBuffer.GetArrayView();
 
-  TArray<UCarlaToolsFunctionLibrary::FTriangle> AllTriangles;
+  TArray<FTriangle> AllTriangles;
   TArray<int32> TriangleMaterialIndices;
+  TArray<FIntVector> TriangleVertexIndices;
 
   // Extract triangles and their material indices
   for (int32 SectionIndex = 0; SectionIndex < LOD.Sections.Num(); ++SectionIndex)
@@ -93,11 +95,12 @@ void UCarlaToolsFunctionLibrary::ChunkAndSubdivideStaticMesh(UStaticMesh *Source
 
       AllTriangles.Add({V0, V1, V2});
       TriangleMaterialIndices.Add(Section.MaterialIndex);
+      TriangleVertexIndices.Add(FIntVector(Index0, Index1, Index2));
     }
   }
 
   // Group triangles by region and material index
-  TMap<FIntPoint, TMap<int32, TArray<UCarlaToolsFunctionLibrary::FTriangle>>> RegionMaterialTriangles;
+  TMap<FIntPoint, TMap<int32, TArray<int32>>> RegionMaterialTriangleIndices;
 
   for (int32 i = 0; i < AllTriangles.Num(); ++i)
   {
@@ -106,14 +109,14 @@ void UCarlaToolsFunctionLibrary::ChunkAndSubdivideStaticMesh(UStaticMesh *Source
     FIntPoint Region(FMath::FloorToInt(Center.X / ChunkSize), FMath::FloorToInt(Center.Y / ChunkSize));
     int32 MaterialIndex = TriangleMaterialIndices[i];
 
-    RegionMaterialTriangles.FindOrAdd(Region).FindOrAdd(MaterialIndex).Add(T);
+    RegionMaterialTriangleIndices.FindOrAdd(Region).FindOrAdd(MaterialIndex).Add(i);
   }
 
   FAssetToolsModule &AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools");
   int32 ChunkIndex = 0;
 
   // Process each chunk
-  for (const auto &RegionPair : RegionMaterialTriangles)
+  for (const auto &RegionPair : RegionMaterialTriangleIndices)
   {
     if (RegionPair.Value.Num() == 0)
       continue;
@@ -126,39 +129,46 @@ void UCarlaToolsFunctionLibrary::ChunkAndSubdivideStaticMesh(UStaticMesh *Source
     Attributes.GetVertexInstanceBinormalSigns();
     Attributes.GetVertexInstanceUVs().SetNumChannels(1);
 
-    TMap<FVector3f, FVertexID> VertexMap;
+    TMap<int32, FVertexID> VertexMap;
     TMap<int32, FPolygonGroupID> PolygonGroups;
 
     for (const auto &MatPair : RegionPair.Value)
     {
       int32 MaterialIndex = MatPair.Key;
-      const auto &Triangles = MatPair.Value;
+      const auto &TriangleIndices = MatPair.Value;
 
       FPolygonGroupID PGID = MeshDesc.CreatePolygonGroup();
       PolygonGroups.Add(MaterialIndex, PGID);
 
-      for (const auto &T : Triangles)
+      for (int32 TriIdx : TriangleIndices)
       {
+        const FTriangle &T = AllTriangles[TriIdx];
+        const FIntVector &Indices = TriangleVertexIndices[TriIdx];
+
         FVertexID VIDs[3];
-        FVector3f Verts[3] = {T.V0, T.V1, T.V2};
 
         for (int i = 0; i < 3; ++i)
         {
-          if (!VertexMap.Contains(Verts[i]))
+          int32 OriginalIndex = (i == 0 ? Indices.X : (i == 1 ? Indices.Y : Indices.Z));
+          if (!VertexMap.Contains(OriginalIndex))
           {
             FVertexID VID = MeshDesc.CreateVertex();
-            Attributes.GetVertexPositions()[VID] = Verts[i];
-            VertexMap.Add(Verts[i], VID);
+            Attributes.GetVertexPositions()[VID] = PositionBuffer.VertexPosition(OriginalIndex);
+            VertexMap.Add(OriginalIndex, VID);
           }
-          VIDs[i] = VertexMap[Verts[i]];
+          VIDs[i] = VertexMap[OriginalIndex];
         }
 
+        // Create VertexInstances and assign UVs
         TArray<FVertexInstanceID> VInsts;
         for (int i = 0; i < 3; ++i)
         {
+          int32 OriginalIndex = (i == 0 ? Indices.X : (i == 1 ? Indices.Y : Indices.Z));
           FVertexInstanceID InstanceID = MeshDesc.CreateVertexInstance(VIDs[i]);
           VInsts.Add(InstanceID);
-          Attributes.GetVertexInstanceUVs().Set(InstanceID, 0, FVector2f(Verts[i].X * 0.01f, Verts[i].Y * 0.01f));
+
+          FVector2f UV = VertexBuffer.GetVertexUV(OriginalIndex, 0);
+          Attributes.GetVertexInstanceUVs().Set(InstanceID, 0, UV);
         }
 
         MeshDesc.CreatePolygon(PGID, VInsts);
