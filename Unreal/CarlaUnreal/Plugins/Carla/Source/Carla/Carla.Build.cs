@@ -190,7 +190,7 @@ public class Carla :
         RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesPath, "libfastcdr.so.1.1.0"));
         RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesPath, "libfastrtps.so"));
         RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesPath, "libfastrtps.so.2.11"));
-        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesPath, "libfastrtps.so.2.11.2"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesPath, "libfastrtps.so.2.11.3"));
       }
     }
   }

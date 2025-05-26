@@ -97,7 +97,8 @@ else()
       -DOPENSSL_FOUND:BOOL=ON
       -DOPENSSL_INCLUDE_DIR:FILEPATH=${UE_OPENSSL_INCLUDE}
       -DOPENSSL_SSL_LIBRARY:FILEPATH=${UE_OPENSSL_LIBS}/libssl.a
-      -DOPENSSL_CRYPTO_LIBRARY:FILEPATH=${UE_OPENSSL_LIBS}/libcrypto.a    DEPENDS foonathan_memory
+      -DOPENSSL_CRYPTO_LIBRARY:FILEPATH=${UE_OPENSSL_LIBS}/libcrypto.a
+    DEPENDS foonathan_memory
   )
 
   ExternalProject_Add (
