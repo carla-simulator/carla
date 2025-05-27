@@ -11,7 +11,7 @@ It is a common practice in CARLA to manage assets with standalone packages. Keep
 
 Once assets are imported into Unreal, users can generate a __standalone package__ for them. This will be used to distribute the content to CARLA packages such as 0.9.8.
 
-To export packages, simply run the command below. A
+To export packages, simply run the command below.
 
 ```sh
 make package ARGS="--packages=Package1,Package2"
