@@ -1086,6 +1086,7 @@ void MapBuilder::CreateController(
         auto road_transform = map.ComputeTransform(closest_waypoint_to_signal.get());
         auto distance_to_road = (road_transform.location -signal_position).Length();
         double lane_width = map.GetLaneWidth(closest_waypoint_to_signal.get());
+        bool is_rht = map.GetLane(closest_waypoint_to_signal.get()).GetRoad()->IsRHT();
         int displacement_direction = 1;
         int iter = 0;
         int MaxIter = 10;
@@ -1095,7 +1096,7 @@ void MapBuilder::CreateController(
             log_debug("Traffic sign",
                 signal->GetSignalId(),
                 "overlaps a driving lane. Moving out of the road...");
-          }
+            }
 
           auto right_waypoint = map.GetRight(closest_waypoint_to_signal.get());
           auto right_lane_type = (right_waypoint) ? map.GetLaneType(right_waypoint.get()) : carla::road::Lane::LaneType::None;
@@ -1103,12 +1104,24 @@ void MapBuilder::CreateController(
           auto left_waypoint = map.GetLeft(closest_waypoint_to_signal.get());
           auto left_lane_type = (left_waypoint) ? map.GetLaneType(left_waypoint.get()) : carla::road::Lane::LaneType::None;
 
-          if (right_lane_type != carla::road::Lane::LaneType::Driving) {
-            displacement_direction = 1;
-          } else if (left_lane_type != carla::road::Lane::LaneType::Driving) {
-            displacement_direction = -1;
+          if (is_rht) {
+            // Move to the right if possible, then left
+            if (right_lane_type != carla::road::Lane::LaneType::Driving) {
+              displacement_direction = 1;
+            } else if (left_lane_type != carla::road::Lane::LaneType::Driving) {
+              displacement_direction = -1;
+            } else {
+              displacement_direction = 0;
+            }
           } else {
-            displacement_direction = 0;
+            // Move to the left if possible, then right
+            if (left_lane_type != carla::road::Lane::LaneType::Driving) {
+              displacement_direction = -1;
+            } else if (right_lane_type != carla::road::Lane::LaneType::Driving) {
+              displacement_direction = 1;
+            } else {
+              displacement_direction = 0;
+            }
           }
 
           geom::Vector3D displacement = 1.f*(road_transform.GetRightVector()) *
