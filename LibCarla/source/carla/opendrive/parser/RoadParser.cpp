@@ -126,7 +126,14 @@ namespace parser {
       road.length = node_road.attribute("length").as_double();
       road.junction_id = node_road.attribute("junction").as_int();
       auto rule = node_road.attribute("rule") ? node_road.attribute("rule").value(): "RHT";
-      road.is_rht = rule == "RHT";
+      if (rule == "RHT") {
+        road.is_rht = true;
+      } else if (rule == "LHT") {
+        road.is_rht = false;
+      } else {
+        std::cout << "Detected rule '" << rule << "' for road '" << road.id << "'. Defaulting to RHT." << std::endl;
+        road.is_rht = true;
+      }
       // link
       pugi::xml_node link = node_road.child("link");
       if (link) {
