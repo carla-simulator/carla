@@ -3456,6 +3456,8 @@ The lane type of the current Waypoint, based on OpenDRIVE 1.4 standard.
 The right lane marking information based on the direction of the Waypoint.  
 - <a name="carla.Waypoint.left_lane_marking"></a>**<font color="#f8805a">left_lane_marking</font>** (_[carla.LaneMarking](#carla.LaneMarking)_)  
 The left lane marking information based on the direction of the Waypoint.  
+- <a name="carla.Waypoint.is_rht"></a>**<font color="#f8805a">is_rht</font>** (_bool_)  
+Flag indicating whether the waypoint is part of a right-handed traffic road.  
 
 ### Methods
 - <a name="carla.Waypoint.next"></a>**<font color="#7fb800">next</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
