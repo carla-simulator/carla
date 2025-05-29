@@ -125,7 +125,7 @@ namespace parser {
       road.name = node_road.attribute("name").value();
       road.length = node_road.attribute("length").as_double();
       road.junction_id = node_road.attribute("junction").as_int();
-      auto rule = node_road.attribute("rule") ? node_road.attribute("rule").value(): "RHT";
+      std::string rule = node_road.attribute("rule") ? node_road.attribute("rule").value(): "RHT";
       if (rule == "RHT") {
         road.is_rht = true;
       } else if (rule == "LHT") {
