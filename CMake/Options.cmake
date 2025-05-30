@@ -53,7 +53,7 @@ carla_option (
 carla_option (
   ENABLE_ROS2
   "Enable ROS2."
-  OFF
+  ON
 )
 
 carla_option (
@@ -420,7 +420,7 @@ carla_string_option (
 carla_string_option (
   CARLA_FASTDDS_VERSION
   "Target Fast-DDS version."
-  2.11.2
+  2.11.3
 )
 
 carla_string_option (

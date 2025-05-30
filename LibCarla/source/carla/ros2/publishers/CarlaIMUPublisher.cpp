@@ -1,3 +1,8 @@
+#ifdef _WIN32
+// Allow use of M_PI
+#define _USE_MATH_DEFINES
+#endif // _WIN32
+
 #include "CarlaIMUPublisher.h"
 
 #include <string>

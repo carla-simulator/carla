@@ -26,7 +26,7 @@ namespace ros2 {
 
       bool HasNewMessage();
       bool IsAlive();
-      VehicleControl GetMessage();
+      VehicleControl GetCarlaMessage();
       void* GetVehicle();
 
       bool Init();
