@@ -54,7 +54,6 @@ USplineComponent *UGeometryImporter::CreateSpline(UWorld *World, const TArray<FV
         UE_LOG(LogTemp, Log, TEXT("Spline actor not created"));
         return nullptr;
     }
-    // SplineActor->Rename(*SplineName);
 
     USplineComponent *Spline = NewObject<USplineComponent>(SplineActor);
     Spline->ClearSplinePoints();
