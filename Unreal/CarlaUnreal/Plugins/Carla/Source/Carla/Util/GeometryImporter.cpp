@@ -59,7 +59,7 @@ USplineComponent *UGeometryImporter::CreateSpline(UWorld *World, const TArray<FV
     USplineComponent *Spline = NewObject<USplineComponent>(SplineActor);
     Spline->ClearSplinePoints();
     Spline->RegisterComponent();
-    Spline->SetMobility(EComponentMobility::Movable);
+    Spline->SetMobility(EComponentMobility::Static);
     SplineActor->SetRootComponent(Spline);
 
     for (int32 i = 0; i < Points.Num(); ++i)
