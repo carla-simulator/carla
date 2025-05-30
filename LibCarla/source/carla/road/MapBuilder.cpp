@@ -609,12 +609,20 @@ namespace road {
   }
 
   // return the pointer to a lane object
-  Lane *MapBuilder::GetEdgeLanePointer(RoadId road_id, bool from_start, LaneId lane_id) {
+  Lane *MapBuilder::GetEdgeLanePointer(RoadId road_id, LaneId lane_id) {
 
     if (!_map_data.ContainsRoad(road_id)) {
       return nullptr;
     }
     Road &road = _map_data.GetRoad(road_id);
+
+    // Not very pretty as it repeats the IsPositiveDirection logic of the Lane class
+    bool from_start = false;
+    if (road.IsRHT() && lane_id <= 0){
+      from_start = true;
+    } else if (!road.IsRHT() && lane_id >= 0){
+      from_start = true;
+    }
 
     // get the lane section
     LaneSection *section;
@@ -646,7 +654,7 @@ namespace road {
     LaneSection &section = road._lane_sections.GetById(section_id);
 
     // get the lane
-    Lane *lane = section.GetLane(lane_id);
+    Lane *lane = section.GetLane(lane_id); 
     DEBUG_ASSERT(lane != nullptr);
 
     // successor and predecessor (road and lane)
@@ -680,9 +688,7 @@ namespace road {
       // change to another road / junction
       if (next != 0 || (lane_id == 0 && next == 0)) {
         // single road
-        auto _s = lane->IsPositiveDirection() ? 0 : GetRoad(next_road)->GetLength();
-        Lane* next_lane = GetLane(next_road, next, _s);
-        result.push_back(GetEdgeLanePointer(next_road, !next_lane->IsPositiveDirection(), next));
+        result.push_back(GetEdgeLanePointer(next_road, next));
       }
     } else {
       // several roads (junction)
@@ -692,7 +698,8 @@ namespace road {
       auto next_road_as_junction = static_cast<JuncId>(next_road);
       auto options = GetJunctionLanes(next_road_as_junction, road_id, lane_id);
       for (auto opt : options) {
-        result.push_back(GetEdgeLanePointer(opt.first, (opt.second->IsPositiveDirection()), opt.second->GetId()));
+        /// @todo: Find a better way to change from 'const Lane*' to 'Lane*' and use opt.second
+        result.push_back(GetEdgeLanePointer(opt.first, opt.second->GetId()));
       }
     }
 

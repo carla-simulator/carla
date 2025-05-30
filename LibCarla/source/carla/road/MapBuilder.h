@@ -399,7 +399,7 @@ namespace road {
     void CheckSignalsOnRoads(Map &map);
 
     /// Return the pointer to a lane object.
-    Lane *GetEdgeLanePointer(RoadId road_id, bool from_start, LaneId lane_id);
+    Lane *GetEdgeLanePointer(RoadId road_id, LaneId lane_id);
 
     /// Return a list of pointers to all lanes from a lane (using road and
     /// junction info).
