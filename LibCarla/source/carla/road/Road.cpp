@@ -47,6 +47,10 @@ namespace road {
     return _junction_id;
   }
 
+  bool Road::IsRHT() const {
+    return _is_rht;
+  }
+
   RoadId Road::GetSuccessor() const {
     return _successor;
   }

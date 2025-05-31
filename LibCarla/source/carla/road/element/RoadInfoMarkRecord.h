@@ -46,7 +46,8 @@ namespace element {
         _lane_change(LaneChange::None),
         _height(0.0),
         _type_name(""),
-        _type_width(0.0) {}
+        _type_width(0.0),
+        _is_rht(true) {}
 
     RoadInfoMarkRecord(
         double s,
@@ -59,7 +60,8 @@ namespace element {
         LaneChange lane_change,
         double height,
         std::string type_name,
-        double type_width)
+        double type_width,
+        bool is_rht)
       : RoadInfo(s),
         _road_mark_id(road_mark_id),
         _type(type),
@@ -70,7 +72,8 @@ namespace element {
         _lane_change(lane_change),
         _height(height),
         _type_name(type_name),
-        _type_width(type_width) {}
+        _type_width(type_width),
+        _is_rht(is_rht) {}
 
     void AcceptVisitor(RoadInfoVisitor &v) final {
       v.Visit(*this);
@@ -130,6 +133,10 @@ namespace element {
       return _type_width;
     }
 
+    bool isRHT() const {
+      return _is_rht;
+    }
+
     std::vector<std::unique_ptr<RoadInfoMarkTypeLine>> &GetLines() {
       return _lines;
     }
@@ -155,6 +162,8 @@ namespace element {
     const std::string _type_name;
 
     const double _type_width;
+
+    bool _is_rht;
 
     std::vector<std::unique_ptr<RoadInfoMarkTypeLine>> _lines;
   };

@@ -100,6 +100,10 @@ namespace client {
     std::vector<SharedPtr<Landmark>> GetLandmarksOfTypeInDistance(
         double distance, std::string filter_type, bool stop_at_junction = false) const;
 
+    bool IsPositiveDirection() const;
+
+    bool IsRHT() const;
+
   private:
 
     friend class Map;

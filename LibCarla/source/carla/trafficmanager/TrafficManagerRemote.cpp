@@ -191,10 +191,10 @@ void TrafficManagerRemote::SetPercentageRunningSign(const ActorPtr &_actor, cons
   client.SetPercentageRunningSign(actor, percentage);
 }
 
-void TrafficManagerRemote::SetKeepRightPercentage(const ActorPtr &_actor, const float percentage) {
+void TrafficManagerRemote::SetKeepSlowLanePercentage(const ActorPtr &_actor, const float percentage) {
   carla::rpc::Actor actor(_actor->Serialize());
 
-  client.SetKeepRightPercentage(actor, percentage);
+  client.SetKeepSlowLanePercentage(actor, percentage);
 }
 
 void TrafficManagerRemote::SetRandomLeftLaneChangePercentage(const ActorPtr &_actor, const float percentage) {

@@ -80,6 +80,7 @@ namespace parser {
             type_width = road_mark_type.attribute("width").as_double();
           }
 
+          bool is_rht = lane->GetRoad()->IsRHT();
           // Call map builder for LaneRoadMark
           map_builder.CreateRoadMark(
               lane,
@@ -93,7 +94,8 @@ namespace parser {
               lane_change,
               height,
               type_name,
-              type_width);
+              type_width,
+              is_rht);
         }
 
         for (pugi::xml_node road_mark_type_line_node : road_mark_type.children("line")) {
