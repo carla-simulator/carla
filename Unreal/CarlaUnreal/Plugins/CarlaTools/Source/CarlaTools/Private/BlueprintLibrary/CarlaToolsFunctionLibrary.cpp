@@ -21,6 +21,10 @@
 #include "Modules/ModuleManager.h"
 #include "Misc/PackageName.h"
 #include "Misc/Paths.h"
+#include "GeometryScript/MeshPrimitiveFunctions.h"
+#include "GeometryScript/MeshAssetFunctions.h"
+#include "UDynamicMesh.h"
+
 
 #if WITH_EDITOR
 #include "Editor/EditorEngine.h"
@@ -309,4 +313,43 @@ void UCarlaToolsFunctionLibrary::SplitStaticMeshByMaterial(UStaticMesh *SourceMe
     FString Filename = FPackageName::LongPackageNameToFilename(PackagePath, TEXT(".uasset"));
     UPackage::SavePackage(Package, NewMesh, EObjectFlags::RF_Public | RF_Standalone, *Filename);
   }
+}
+
+void UCarlaToolsFunctionLibrary::AddPolygonToDynamicMesh(UDynamicMesh* Mesh, const TArray<FVector>& PolyLine, UStaticMesh* OutputMesh)
+{
+  if (PolyLine.Num() < 3)
+  {
+    return;
+  }
+
+  FGeometryScriptPrimitiveOptions PrimitiveOptions;
+  FTransform Transform = FTransform::Identity;
+  TArray<FVector2D> PathVertices;
+  PathVertices.Reserve(PolyLine.Num());
+  for (const FVector& Point : PolyLine)
+  {
+    PathVertices.Add(FVector2D(Point.X, Point.Y));
+  }
+  FGeometryScriptRevolveOptions RevolveOptions;
+  int32 Steps = 32; // Number of steps for the revolve
+  
+  Mesh = UGeometryScriptLibrary_MeshPrimitiveFunctions::AppendTriangulatedPolygon(
+	Mesh,
+  PrimitiveOptions,
+	Transform,
+	PathVertices);
+  
+  FGeometryScriptCopyMeshToAssetOptions GeometryScriptCopyMeshToAssetOptions;
+  FGeometryScriptMeshWriteLOD TargetLOD;
+  EGeometryScriptOutcomePins Outcome;
+
+  Mesh = UGeometryScriptLibrary_StaticMeshFunctions::CopyMeshToStaticMesh(
+    Mesh,
+		OutputMesh,
+		GeometryScriptCopyMeshToAssetOptions,
+    TargetLOD,
+		Outcome
+  );
+
+
 }

@@ -83,6 +83,8 @@ public class CarlaTools :
       "MeshDescription",
       "RawMesh",
       "AssetTools",
+      "GeometryFramework",
+      "GeometryScriptingCore"
     });
 
     PrivateDependencyModuleNames.AddRange(new string[]
@@ -119,7 +121,7 @@ public class CarlaTools :
       "AssetRegistry",
       "MeshDescription",
       "MeshUtilitiesCommon",
-      "Projects"
+      "Projects",
     });
 
     if (EnableNVIDIAOmniverse)

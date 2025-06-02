@@ -38,4 +38,8 @@ public:
   UFUNCTION(BlueprintCallable)
   static void SplitStaticMeshByMaterial(UStaticMesh* SourceMesh, FString BaseName, FString OutputFolder, int SubdivisionFactor);
 
+  // This function will removed instanced static meshes in the level and place static mesh actors instead
+  UFUNCTION(BlueprintCallable)
+  static void AddPolygonToDynamicMesh(class UDynamicMesh* Mesh, const TArray<FVector>& PolyLine, UStaticMesh* OutputMesh);
+
 };
