@@ -559,7 +559,7 @@ void ATrafficLightManager::SpawnTrafficLights()
     auto ClosestWaypointToSignal =
         GetMap()->GetClosestWaypointOnRoad(CarlaTransform.location);
 
-    const bool IsRHT = GetMap()->GetLane(ClosestWaypointToSignal.get()).GetRoad()->IsRHT();
+    const bool IsRHT = GetMap()->GetLane(ClosestWaypointToSignal.value()).GetRoad()->IsRHT();
 
     FTransform SpawnTransform(CarlaTransform);
 

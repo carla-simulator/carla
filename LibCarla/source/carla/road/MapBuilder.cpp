@@ -1091,8 +1091,8 @@ void MapBuilder::CreateController(
       if(closest_waypoint_to_signal) {
         auto road_transform = map.ComputeTransform(closest_waypoint_to_signal.value());
         auto distance_to_road = (road_transform.location -signal_position).Length();
-        double lane_width = map.GetLaneWidth(closest_waypoint_to_signal.get());
-        bool is_rht = map.GetLane(closest_waypoint_to_signal.get()).GetRoad()->IsRHT();
+        double lane_width = map.GetLaneWidth(closest_waypoint_to_signal.value());
+        bool is_rht = map.GetLane(closest_waypoint_to_signal.value()).GetRoad()->IsRHT();
         int displacement_direction = 1;
         int iter = 0;
         int MaxIter = 10;
