@@ -195,7 +195,7 @@ namespace road {
         0.0f);
 
     // Fix the direction of the possitive lanes
-    if (GetId() > 0) {
+    if (!IsPositiveDirection()) {
       rot.yaw += 180.0f;
       rot.pitch = 360.0f - rot.pitch;
     }
@@ -261,6 +261,17 @@ namespace road {
     }
 
     return std::make_pair(dp_r.location, dp_l.location);
+  }
+
+  bool Lane::IsPositiveDirection() const {
+    const auto *road = GetRoad();
+    DEBUG_ASSERT(road != nullptr);
+    if (road->IsRHT() && GetId() <= 0){
+      return true;
+    } else if (!road->IsRHT() && GetId() >= 0){
+      return true;
+    }
+    return false;
   }
 
 } // road

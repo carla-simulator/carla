@@ -60,12 +60,12 @@ namespace element {
     }
   }
 
-  static LaneMarking::LaneChange GetLaneChange(RoadInfoMarkRecord::LaneChange lane_change) {
+  static LaneMarking::LaneChange GetLaneChange(RoadInfoMarkRecord::LaneChange lane_change, bool isRHT) {
     switch (lane_change) {
       case RoadInfoMarkRecord::LaneChange::Increase:
-        return LaneMarking::LaneChange::Right;
+        return isRHT ? LaneMarking::LaneChange::Right : LaneMarking::LaneChange::Left;
       case RoadInfoMarkRecord::LaneChange::Decrease:
-        return LaneMarking::LaneChange::Left;
+        return isRHT ? LaneMarking::LaneChange::Left : LaneMarking::LaneChange::Right;
       case RoadInfoMarkRecord::LaneChange::Both:
         return LaneMarking::LaneChange::Both;
       default:
@@ -76,7 +76,7 @@ namespace element {
   LaneMarking::LaneMarking(const RoadInfoMarkRecord &info)
     : type(GetType(info.GetType())),
       color(GetColor(info.GetColor())),
-      lane_change(GetLaneChange(info.GetLaneChange())),
+      lane_change(GetLaneChange(info.GetLaneChange(), info.isRHT())),
       width(info.GetWidth()) {}
 
 } // namespace element

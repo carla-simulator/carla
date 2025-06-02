@@ -46,6 +46,8 @@ namespace road {
 
     JuncId GetJunctionId() const;
 
+    bool IsRHT() const;
+
     Lane &GetLaneByDistance(double s, LaneId lane_id);
 
     const Lane &GetLaneByDistance(double s, LaneId lane_id) const;
@@ -193,6 +195,8 @@ namespace road {
     bool _is_junction { false };
 
     JuncId _junction_id { -1 };
+
+    bool _is_rht { true };
 
     LaneSectionMap _lane_sections;
 
