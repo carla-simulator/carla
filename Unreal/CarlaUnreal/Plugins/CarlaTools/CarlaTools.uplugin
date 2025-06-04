@@ -1,0 +1,44 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "1.0",
+  "FriendlyName": "CarlaTools",
+  "Description": "This plugin provides engine tools for Carla",
+  "Category": "Other",
+  "CreatedBy": "Carla Team",
+  "CreatedByURL": "http://carla.org",
+  "DocsURL": "http://carla.readthedocs.io",
+  "MarketplaceURL": "",
+  "SupportURL": "https://github.com/carla-simulator/carla/issues",
+  "CanContainContent": true,
+  "IsBetaVersion": false,
+  "IsExperimentalVersion": true,
+  "Installed": true,
+  "Modules":
+  [
+    {
+      "Name": "CarlaTools",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins":
+  [
+    {
+      "Name": "Carla",
+      "Enabled": true
+    },
+    {
+      "Name": "EditorScriptingUtilities",
+      "Enabled": true
+    },
+    {
+      "Name": "ProceduralMeshComponent",
+      "Enabled": true
+    },
+    {
+      "Name": "ChaosVehiclesPlugin",
+      "Enabled": true
+    }
+  ]
+}

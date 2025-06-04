@@ -164,6 +164,22 @@ namespace detail {
     _pimpl->CallAndWait<void>("copy_opendrive_to_file", std::move(opendrive), params);
   }
 
+  void Client::ApplyTextureToActor(
+    rpc::ActorId ActorId,
+    const rpc::MaterialParameter& MaterialParameter,
+    const rpc::TextureColor& Texture)
+  {
+    _pimpl->CallAndWait<void>("apply_texture_to_actor", ActorId, MaterialParameter, Texture);
+  }
+
+  void Client::ApplyTextureToActor(
+    rpc::ActorId ActorId,
+    const rpc::MaterialParameter& MaterialParameter,
+    const rpc::TextureFloatColor& Texture)
+  {
+    _pimpl->CallAndWait<void>("apply_texture_to_actor_float", ActorId, MaterialParameter, Texture);
+  }
+
   void Client::ApplyColorTextureToObjects(
       const std::vector<std::string> &objects_name,
       const rpc::MaterialParameter& parameter,
@@ -265,6 +281,10 @@ namespace detail {
 
   void Client::SetWeatherParameters(const rpc::WeatherParameters &weather) {
     _pimpl->AsyncCall("set_weather_parameters", weather);
+  }
+
+  bool Client::IsWeatherEnabled() {
+    return _pimpl->CallAndWait<bool>("is_weather_enabled");
   }
 
   std::vector<rpc::Actor> Client::GetActorsById(
@@ -539,6 +559,11 @@ namespace detail {
     return _pimpl->CallAndWait<std::vector<std::pair<carla::ActorId, uint32_t>>>("get_vehicle_light_states");
   }
 
+  std::vector<geom::Transform> Client::GetVehicleBoneWorldTransforms(rpc::ActorId actor) {
+    using return_t = std::vector<geom::Transform>;
+    return _pimpl->CallAndWait<return_t>("get_vehicle_bone_world_transforms", actor);
+  }
+
   std::vector<ActorId> Client::GetGroupTrafficLights(rpc::ActorId traffic_light) {
     using return_t = std::vector<ActorId>;
     return _pimpl->CallAndWait<return_t>("get_group_traffic_lights", traffic_light);
@@ -692,6 +717,16 @@ namespace detail {
       geom::Location start_location, geom::Location end_location) const {
     using return_t = std::vector<rpc::LabelledPoint>;
     return _pimpl->CallAndWait<return_t>("cast_ray", start_location, end_location);
+  }
+
+  std::string Client::GetActorName(rpc::ActorId actor) const
+  {
+    return _pimpl->CallAndWait<std::string>("get_actor_name", actor);
+  }
+
+  std::string Client::GetActorClassName(rpc::ActorId actor) const
+  {
+    return _pimpl->CallAndWait<std::string>("get_actor_class_name", actor);
   }
 
 } // namespace detail

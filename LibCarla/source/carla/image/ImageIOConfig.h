@@ -11,28 +11,16 @@
 #include "carla/StringUtil.h"
 #include "carla/image/BoostGil.h"
 
-#ifndef LIBCARLA_IMAGE_WITH_PNG_SUPPORT
-#  if defined(__has_include) && __has_include("png.h")
-#    define LIBCARLA_IMAGE_WITH_PNG_SUPPORT true
-#  else
-#    define LIBCARLA_IMAGE_WITH_PNG_SUPPORT false
-#  endif
+#ifndef LIBCARLA_IMAGE_SUPPORT_PNG
+  #define LIBCARLA_IMAGE_SUPPORT_PNG false
 #endif
 
-#ifndef LIBCARLA_IMAGE_WITH_JPEG_SUPPORT
-#  if defined(__has_include) && __has_include("jpeglib.h")
-#    define LIBCARLA_IMAGE_WITH_JPEG_SUPPORT true
-#  else
-#    define LIBCARLA_IMAGE_WITH_JPEG_SUPPORT false
-#  endif
+#ifndef LIBCARLA_IMAGE_SUPPORT_JPEG
+  #define LIBCARLA_IMAGE_SUPPORT_JPEG false
 #endif
 
-#ifndef LIBCARLA_IMAGE_WITH_TIFF_SUPPORT
-#  if defined(__has_include) && __has_include("tiffio.h")
-#    define LIBCARLA_IMAGE_WITH_TIFF_SUPPORT true
-#  else
-#    define LIBCARLA_IMAGE_WITH_TIFF_SUPPORT false
-#  endif
+#ifndef LIBCARLA_IMAGE_SUPPORT_TIFF
+  #define LIBCARLA_IMAGE_SUPPORT_TIFF false
 #endif
 
 #if defined(__clang__)
@@ -40,7 +28,7 @@
 #  pragma clang diagnostic ignored "-Wunused-parameter"
 #endif
 
-#if LIBCARLA_IMAGE_WITH_PNG_SUPPORT == true
+#if LIBCARLA_IMAGE_SUPPORT_PNG
 #  ifndef png_infopp_NULL
 #    define png_infopp_NULL (png_infopp)NULL
 #  endif // png_infopp_NULL
@@ -58,11 +46,11 @@
 #  endif
 #endif
 
-#if LIBCARLA_IMAGE_WITH_JPEG_SUPPORT == true
+#if LIBCARLA_IMAGE_WITH_JPEG_SUPPORT
 #  include <boost/gil/extension/io/jpeg.hpp>
 #endif
 
-#if LIBCARLA_IMAGE_WITH_TIFF_SUPPORT == true
+#if LIBCARLA_IMAGE_WITH_TIFF_SUPPORT
 #  include <boost/gil/extension/io/tiff.hpp>
 #endif
 
@@ -75,21 +63,23 @@ namespace image {
 namespace io {
 
   constexpr bool has_png_support() {
-    return LIBCARLA_IMAGE_WITH_PNG_SUPPORT;
+    return LIBCARLA_IMAGE_SUPPORT_PNG;
   }
 
   constexpr bool has_jpeg_support() {
-    return LIBCARLA_IMAGE_WITH_JPEG_SUPPORT;
+    return LIBCARLA_IMAGE_SUPPORT_JPEG;
   }
 
   constexpr bool has_tiff_support() {
-    return LIBCARLA_IMAGE_WITH_TIFF_SUPPORT;
+    return LIBCARLA_IMAGE_SUPPORT_TIFF;
   }
 
-  static_assert(has_png_support() || has_jpeg_support() || has_tiff_support(),
-      "No image format supported, please compile with at least one of "
-      "LIBCARLA_IMAGE_WITH_PNG_SUPPORT, LIBCARLA_IMAGE_WITH_JPEG_SUPPORT, "
-      "or LIBCARLA_IMAGE_WITH_TIFF_SUPPORT");
+  static_assert(
+    has_png_support() || has_jpeg_support() || has_tiff_support(),
+    "No image format supported, please compile with at least one of "
+    "LIBCARLA_IMAGE_SUPPORT_PNG, "
+    "LIBCARLA_IMAGE_SUPPORT_JPEG "
+    "or LIBCARLA_IMAGE_SUPPORT_TIFF");
 
 namespace detail {
 
@@ -102,7 +92,7 @@ namespace detail {
 
     static constexpr bool is_supported = has_png_support();
 
-#if LIBCARLA_IMAGE_WITH_PNG_SUPPORT
+#if LIBCARLA_IMAGE_SUPPORT_PNG
 
     static constexpr const char *get_default_extension() {
       return "png";
@@ -123,7 +113,7 @@ namespace detail {
       boost::gil::write_view(std::forward<Str>(out_filename), view, boost::gil::png_tag());
     }
 
-#endif // LIBCARLA_IMAGE_WITH_PNG_SUPPORT
+#endif // LIBCARLA_IMAGE_SUPPORT_PNG
   };
 
   struct io_jpeg {
@@ -169,7 +159,7 @@ namespace detail {
 
     static constexpr bool is_supported = has_tiff_support();
 
-#if LIBCARLA_IMAGE_WITH_TIFF_SUPPORT
+#if LIBCARLA_IMAGE_SUPPORT_TIFF
 
     static constexpr const char *get_default_extension() {
       return "tiff";
@@ -200,7 +190,7 @@ namespace detail {
           boost::gil::tiff_tag());
     }
 
-#endif // LIBCARLA_IMAGE_WITH_TIFF_SUPPORT
+#endif // LIBCARLA_IMAGE_SUPPORT_TIFF
   };
 
   struct io_resolver {
@@ -322,11 +312,11 @@ namespace detail {
 
   struct tiff : detail::io_impl<detail::io_tiff> {};
 
-#if LIBCARLA_IMAGE_WITH_PNG_SUPPORT
+#if LIBCARLA_IMAGE_SUPPORT_PNG
 
   struct any : detail::io_any<detail::io_png, detail::io_tiff, detail::io_jpeg> {};
 
-#elif LIBCARLA_IMAGE_WITH_TIFF_SUPPORT
+#elif LIBCARLA_IMAGE_SUPPORT_TIFF
 
   struct any : detail::io_any<detail::io_tiff, detail::io_jpeg> {};
 

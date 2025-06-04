@@ -6,10 +6,13 @@
 
 #include "carla/StringUtil.h"
 
+// @TODO: This is not great; we can implement this better.
+
 #ifdef _WIN32
-#  include <shlwapi.h>
+  #include <shlwapi.h>
+  #pragma comment(lib, "Shlwapi.lib")
 #else
-#  include <fnmatch.h>
+  #include <fnmatch.h>
 #endif // _WIN32
 
 namespace carla {

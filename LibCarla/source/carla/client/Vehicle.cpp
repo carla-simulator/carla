@@ -103,6 +103,10 @@ namespace client {
     return GetEpisode().Lock()->GetVehicleLightState(*this).GetLightStateEnum();
   }
 
+  std::vector<geom::Transform> Vehicle::GetVehicleBoneWorldTransforms() const {
+    return GetEpisode().Lock()->GetVehicleBoneWorldTransforms(*this);
+  }
+
   float Vehicle::GetSpeedLimit() const {
     return GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.speed_limit;
   }

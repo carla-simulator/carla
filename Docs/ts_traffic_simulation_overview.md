@@ -5,7 +5,6 @@ Traffic simulation is integral to the accurate and efficient training and testin
 - [__Traffic Manager__](#traffic-manager)
 - [__Scenario Runner and OpenScenario__](#scenario-runner-and-openscenario)
 - [__Scenic__](#scenic)
-- [__SUMO__](#sumo)
 
 ---
 
@@ -67,27 +66,6 @@ __Useful for:__
 Go to Scenic Tutorial</a>
 </p>
 </div>
-
----
-
-## SUMO
-
-[SUMO](https://sumo.dlr.de/docs/SUMO_at_a_Glance.html) is an open source, microscopic, multi-modal traffic simulation. In SUMO, each vehicle is modelled explicitly, has its own route, and moves individually through the network. Simulations are deterministic by default but there are various options for introducing randomness. 
-
-CARLA provides a co-simulation feature with SUMO that allows distribution of tasks between the two simulators. Vehicles can be spawned in CARLA through SUMO, and managed by SUMO much as the Traffic Manager would do. 
-
-__Useful for:__
-
-- Exploitation of the capabilities of both CARLA and SUMO in one package.
-
-<div class="build-buttons">
-<p>
-<a href="https://carla.readthedocs.io/en/latest/adv_sumo/" target="_blank" class="btn btn-neutral" title="Go to SUMO Co-Simulation">
-Go to SUMO Co-Simulation</a>
-</p>
-</div>
-
----
 
 If you have any doubts about the different options available to simulate traffic in CARLA, feel free to post in the forum or in [Discord](https://discord.gg/8kqACuC).
 

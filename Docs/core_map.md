@@ -11,18 +11,8 @@ After discussing about the world and its actors, it is time to put everything in
 	- [Environment Objects](#environment-objects)
 - [__Navigation in CARLA__](#navigation-in-carla)  
 	- [Navigating through waypoints](#navigating-through-waypoints)  
-	- [Generating a map navigation](#generating-a-map-navigation)  
-- [__CARLA maps__](#carla-maps)  
-	- [Non-layered maps](#non-layered-maps)
-	- [Layered maps](#layered-maps)
-- [__Custom maps__](#custom-maps)
-	- [Overview](tuto_M_custom_map_overview.md)
-	- [Road painting](tuto_M_custom_road_painter.md)
-	- [Custom buildings](tuto_M_custom_buildings.md) 
-	- [Generate map](tuto_M_generate_map.md)
-	- [Add map package](tuto_M_add_map_package.md)
-	- [Add map source](tuto_M_add_map_source.md)
-	- [Alternative methods](tuto_M_add_map_alternative.md)
+	- [Generating a map navigation](#generating-a-map-navigation)
+- [__Left handed traffic__](#left-handed-traffic)
 
 
 ---
@@ -134,10 +124,6 @@ Every object on a CARLA map has a set of associated variables which can be found
 		# Toggle buildings on
 		world.enable_environment_objects(objects_to_toggle, True)
 
-See an example of distinct objects being toggled:
-
-![toggle_objects_gif](img/objects_small.gif)
-
 [env_obj]: https://carla.readthedocs.io/en/latest/python_api/#carla.EnvironmentObject
 [env_obj_id]: https://carla.readthedocs.io/en/latest/python_api/#carla.EnvironmentObject.id
 [toggle_env_obj]: https://carla.readthedocs.io/en/latest/python_api/#carla.World.enable_environment_objects
@@ -217,77 +203,24 @@ info_map = map.to_opendrive()
 ```
 
 ---
-## CARLA maps
 
-There are eight towns in the CARLA ecosystem and each of those towns have two kinds of map, non-layered and layered. [Layers][layer_api] refer to the grouped objects within a map and consist of the following:
+## Left handed traffic
 
-- NONE
-- Buildings
-- Decals
-- Foliage
-- Ground
-- ParkedVehicles
-- Particles
-- Props
-- StreetLights
-- Walls
-- All
+CARLA supports left-handed traffic rules defined in the OpenDRIVE files. To invoke a left-handed traffic rule on any road, apply the left-handed traffic attribute in the OpenDRIVE XML file like so:
 
-[layer_api]: https://carla.readthedocs.io/en/latest/python_api/#carlamaplayer
+```xml
+<road name="Road 0" length="1.3310253693587601e+1" id="0" junction="-1" rule="LHT">
+    <link>
+        <predecessor elementType="road" elementId="3" contactPoint="end" />
+        <successor elementType="road" elementId="10" contactPoint="start" />
+    </link>
+...
+</road>
+```
 
-### Non-layered maps
+!!! note
+	The right-handed traffic convention is the default. A road with no `rule` attribute (or an unrecognized parameter) will be considered a right-handed road. You may also wish to explicitly set it by adding `rule="RHT"`. 
 
-Non-layered maps are shown in the table below (click the town name to see an overhead image of the layout). All of the layers are present at all times and cannot be toggled on or off in these maps. Up until CARLA 0.9.11, these were the only kinds of map available.
+CARLA will apply left handed traffic conventions to each road with the `rule="LHT"` attribute applied.
 
-!!! Note
-    Users can [customize a map](tuto_A_map_customization.md) or even [create a new map](tuto_M_custom_map_overview.md) to be used in CARLA.
-
-| Town       | Summary |
-| -----------| ------  |
-| [__Town01__](map_town01.md)  | A small, simple town with a river and several bridges.|
-| [__Town02__](map_town02.md) | A small simple town with a mixture of residential and commercial buildings.|
-| [__Town03__](map_town03.md) | A larger, urban map with a roundabout and large junctions.|
-| [__Town04__](map_town04.md) | A small town embedded in the mountains with a special "figure of 8" *infinite* highway.|
-| [__Town05__](map_town05.md) | Squared-grid town with cross junctions and a bridge. It has multiple lanes per direction. Useful to perform lane changes.  |
-| [__Town06__](map_town06.md) | Long many lane highways with many highway entrances and exits. It also has a [**Michigan left**](<https://en.wikipedia.org/wiki/Michigan_left>). |
-| [__Town07__](map_town07.md) | A rural environment with narrow roads, corn, barns and hardly any traffic lights. |
-| **Town08** | Secret "unseen" town used for the [Leaderboard](https://leaderboard.carla.org/) challenge |
-| **Town09** | Secret "unseen" town used for the [Leaderboard](https://leaderboard.carla.org/) challenge |
-| [__Town10__](map_town10.md) | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade.|
-| [__Town11__](map_town11.md) | A Large Map that is undecorated. Serves as a proof of concept for the Large Maps feature. |
-| [__Town12__](map_town12.md) | A Large Map with numerous different regions, including high-rise, residential and rural environments.|
-
-### Layered maps
-
-The layout of layered maps is the same as non-layered maps but it is possible to toggle off and on the layers of the map. There is a minimum layout that cannot be toggled off and consists of roads, sidewalks, traffic lights and traffic signs. Layered maps can be identified by the suffix `_Opt`, for example, `Town01_Opt`. With these maps it is possible to [load][load_layer] and [unload][unload_layer] layers via the Python API:
-
-		# Load layered map for Town 01 with minimum layout plus buildings and parked vehicles
-		world = client.load_world('Town01_Opt', carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles)
-
-		# Toggle all buildings off
-		world.unload_map_layer(carla.MapLayer.Buildings)
-
-		# Toggle all buildings on	
-		world.load_map_layer(carla.MapLayer.Buildings)
-
-[load_layer]: https://carla.readthedocs.io/en/latest/python_api/#carla.World.load_map_layer
-[unload_layer]: https://carla.readthedocs.io/en/latest/python_api/#carla.World.unload_map_layer
-
-See an example of all layers being loaded and unloaded in sequence:
-
-![map-layers](img/sublevels.gif)
-
-
----
-
-## Custom maps
-
-CARLA is designed to be extensible and highly customisable for specialist applications. Therefore, in addition to the many maps and assets already avaiable in CARLA out of the box, it is possible to create and import new maps, road networks and assets to populate bespoke environments in a CARLA simulation. The following documents detail the steps needed to build and integrate custom maps:  
-
-* [__Overview__](tuto_M_custom_map_overview.md)
-* [__Road painting__](tuto_M_custom_road_painter.md)
-* [__Custom buildings__](tuto_M_custom_buildings.md) 
-* [__Generate map__](tuto_M_generate_map.md)
-* [__Add map package__](tuto_M_add_map_package.md)
-* [__Add map source__](tuto_M_add_map_source.md)
-* [__Alternative methods__](tuto_M_add_map_alternative.md)
+Note that the left or right-handed traffic conventions don't only affect the behaviour of traffic but also traffic signs and signals affecting the road. Therefore if the map has assets placed manually for right handed traffic conventions (e.g. road signs or traffic lights), these will need to be adjusted. Traffic lights defined in the OpenDRIVE definition for left-handed traffic will be automatically placed by CARLA in the appropriate position upon importing the map.

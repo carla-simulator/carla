@@ -6,8 +6,7 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-# Allows controlling a vehicle with a keyboard. For a simpler and more
-# documented example, please take a look at tutorial.py.
+"""Allows controlling a vehicle with a keyboard."""
 
 """
 Welcome to CARLA manual control.
@@ -54,31 +53,9 @@ Use ARROWS or WASD keys for control.
     ESC          : quit
 """
 
-from __future__ import print_function
-
-
-# ==============================================================================
-# -- find carla module ---------------------------------------------------------
-# ==============================================================================
-
-
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
-
 # ==============================================================================
 # -- imports -------------------------------------------------------------------
 # ==============================================================================
-
 
 import carla
 
@@ -91,6 +68,7 @@ import logging
 import math
 import random
 import re
+import os
 import weakref
 
 try:
@@ -143,6 +121,37 @@ try:
 except ImportError:
     raise RuntimeError('cannot import numpy, make sure numpy package is installed')
 
+OBJECT_TO_COLOR = [
+    (255, 255, 255),
+    (128, 64, 128),
+    (244, 35, 232),
+    (70, 70, 70),
+    (102, 102, 156),
+    (190, 153, 153),
+    (153, 153, 153),
+    (250, 170, 30),
+    (220, 220, 0),
+    (107, 142,  35),
+    (152, 251, 152),
+    (70, 130, 180),
+    (220, 20, 60),
+    (255, 0, 0),
+    (0, 0, 142),
+    (0, 0, 70),
+    (0,  60, 100),
+    (0,  80, 100),
+    (0, 0, 230),
+    (119, 11, 32),
+    (110, 190, 160),
+    (170, 120, 50),
+    (55, 90, 80),
+    (45, 60, 150),
+    (157, 234, 50),
+    (81, 0, 81),
+    (150, 100, 100),
+    (230, 150, 140),
+    (180, 165, 180),
+]
 
 # ==============================================================================
 # -- Global functions ----------------------------------------------------------
@@ -174,7 +183,7 @@ def get_actor_blueprints(world, filter, generation):
     try:
         int_generation = int(generation)
         # Check if generation is in available generations
-        if int_generation in [1, 2, 3]:
+        if int_generation in [1, 2, 3, 4]:
             bps = [x for x in bps if int(x.get_attribute('generation')) == int_generation]
             return bps
         else:
@@ -191,9 +200,10 @@ def get_actor_blueprints(world, filter, generation):
 
 
 class World(object):
-    def __init__(self, carla_world, hud, args):
+    def __init__(self, carla_world, hud, traffic_manager, args):
         self.world = carla_world
         self.sync = args.sync
+        self.traffic_manager = traffic_manager
         self.actor_role_name = args.rolename
         try:
             self.map = self.world.get_map()
@@ -277,7 +287,7 @@ class World(object):
         while self.player is None:
             if not self.map.get_spawn_points():
                 print('There are no spawn points available in your map/town.')
-                print('Please add some Vehicle Spawn Point to your UE4 scene.')
+                print('Please add some Vehicle Spawn Point to your UE5 scene.')
                 sys.exit(1)
             spawn_points = self.map.get_spawn_points()
             spawn_point = random.choice(spawn_points) if spawn_points else carla.Transform()
@@ -294,6 +304,7 @@ class World(object):
         self.camera_manager.set_sensor(cam_index, notify=False)
         actor_type = get_actor_display_name(self.player)
         self.hud.notification(actor_type)
+        self.traffic_manager.update_vehicle_lights(self.player, True)
 
         if self.sync:
             self.world.tick()
@@ -581,8 +592,7 @@ class KeyboardControl(object):
                 else: # Remove the Reverse flag
                     current_lights &= ~carla.VehicleLightState.Reverse
                 if current_lights != self._lights: # Change the light state only if necessary
-                    self._lights = current_lights
-                    world.player.set_light_state(carla.VehicleLightState(self._lights))
+                    world.player.set_light_state(carla.VehicleLightState(current_lights))
                 # Apply control
                 if not self._ackermann_enabled:
                     world.player.apply_control(self._control)
@@ -596,6 +606,8 @@ class KeyboardControl(object):
             elif isinstance(self._control, carla.WalkerControl):
                 self._parse_walker_keys(pygame.key.get_pressed(), clock.get_time(), world)
                 world.player.apply_control(self._control)
+
+        self._lights = current_lights
 
     def _parse_vehicle_keys(self, keys, milliseconds):
         if keys[K_UP] or keys[K_w]:
@@ -1116,10 +1128,9 @@ class CameraManager(object):
             ['sensor.camera.depth', cc.LogarithmicDepth, 'Camera Depth (Logarithmic Gray Scale)', {}],
             ['sensor.camera.semantic_segmentation', cc.Raw, 'Camera Semantic Segmentation (Raw)', {}],
             ['sensor.camera.semantic_segmentation', cc.CityScapesPalette, 'Camera Semantic Segmentation (CityScapes Palette)', {}],
-            ['sensor.camera.instance_segmentation', cc.CityScapesPalette, 'Camera Instance Segmentation (CityScapes Palette)', {}],
             ['sensor.camera.instance_segmentation', cc.Raw, 'Camera Instance Segmentation (Raw)', {}],
             ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)', {'range': '50'}],
-            ['sensor.camera.dvs', cc.Raw, 'Dynamic Vision Sensor', {}],
+            ['sensor.lidar.ray_cast_semantic', None, 'Semantic Lidar (Ray-Cast)', {'range': '50'}],
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB Distorted',
                 {'lens_circle_multiplier': '3.0',
                 'lens_circle_falloff': '3.0',
@@ -1191,7 +1202,7 @@ class CameraManager(object):
         self = weak_self()
         if not self:
             return
-        if self.sensors[self.index][0].startswith('sensor.lidar'):
+        if self.sensors[self.index][0] == 'sensor.lidar.ray_cast':
             points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
             points = np.reshape(points, (int(points.shape[0] / 4), 4))
             lidar_data = np.array(points[:, :2])
@@ -1204,15 +1215,21 @@ class CameraManager(object):
             lidar_img = np.zeros((lidar_img_size), dtype=np.uint8)
             lidar_img[tuple(lidar_data.T)] = (255, 255, 255)
             self.surface = pygame.surfarray.make_surface(lidar_img)
-        elif self.sensors[self.index][0].startswith('sensor.camera.dvs'):
-            # Example of converting the raw_data from a carla.DVSEventArray
-            # sensor into a NumPy array and using it as an image
-            dvs_events = np.frombuffer(image.raw_data, dtype=np.dtype([
-                ('x', np.uint16), ('y', np.uint16), ('t', np.int64), ('pol', np.bool)]))
-            dvs_img = np.zeros((image.height, image.width, 3), dtype=np.uint8)
-            # Blue is positive, red is negative
-            dvs_img[dvs_events[:]['y'], dvs_events[:]['x'], dvs_events[:]['pol'] * 2] = 255
-            self.surface = pygame.surfarray.make_surface(dvs_img.swapaxes(0, 1))
+        elif self.sensors[self.index][0] == 'sensor.lidar.ray_cast_semantic':
+            points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
+            points = np.reshape(points, (int(points.shape[0] / 6), 6))
+            lidar_data = np.array(points[:, :2])
+            lidar_data *= min(self.hud.dim) / (2.0 * self.lidar_range)
+            lidar_data += (0.5 * self.hud.dim[0], 0.5 * self.hud.dim[1])
+            lidar_data = lidar_data.astype(np.int32)
+            lidar_data = np.reshape(lidar_data, (-1, 2))
+            lidar_img_size = (self.hud.dim[0], self.hud.dim[1], 3)
+            lidar_img = np.zeros((lidar_img_size), dtype=np.uint8)
+            for i in range(len(image)):
+                point = lidar_data[i]
+                lidar_tag = image[i].object_tag
+                lidar_img[tuple(point.T)] = OBJECT_TO_COLOR[int(lidar_tag)]
+            self.surface = pygame.surfarray.make_surface(lidar_img)
         elif self.sensors[self.index][0].startswith('sensor.camera.optical_flow'):
             image = image.get_color_coded_flow()
             array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
@@ -1247,6 +1264,7 @@ def game_loop(args):
         client.set_timeout(2000.0)
 
         sim_world = client.get_world()
+        traffic_manager = client.get_trafficmanager()
         if args.sync:
             original_settings = sim_world.get_settings()
             settings = sim_world.get_settings()
@@ -1255,7 +1273,6 @@ def game_loop(args):
                 settings.fixed_delta_seconds = 0.05
             sim_world.apply_settings(settings)
 
-            traffic_manager = client.get_trafficmanager()
             traffic_manager.set_synchronous_mode(True)
 
         if args.autopilot and not sim_world.get_settings().synchronous_mode:
@@ -1269,7 +1286,7 @@ def game_loop(args):
         pygame.display.flip()
 
         hud = HUD(args.width, args.height)
-        world = World(sim_world, hud, args)
+        world = World(sim_world, hud, traffic_manager, args)
         controller = KeyboardControl(world, args.autopilot)
 
         if args.sync:
@@ -1308,56 +1325,36 @@ def game_loop(args):
 
 
 def main():
-    argparser = argparse.ArgumentParser(
-        description='CARLA Manual Control Client')
+    argparser = argparse.ArgumentParser(description='CARLA Manual Control Client')
     argparser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        dest='debug',
+        '-v', '--verbose', action='store_true', dest='debug',
         help='print debug information')
     argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
+        '--host', metavar='H', default='127.0.0.1',
         help='IP of the host server (default: 127.0.0.1)')
     argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
+        '-p', '--port', metavar='P', default=2000, type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '-a', '--autopilot',
-        action='store_true',
+        '-a', '--autopilot', action='store_true',
         help='enable autopilot')
     argparser.add_argument(
-        '--res',
-        metavar='WIDTHxHEIGHT',
-        default='1280x720',
+        '--res', metavar='WIDTHxHEIGHT', default='1280x720',
         help='window resolution (default: 1280x720)')
     argparser.add_argument(
-        '--filter',
-        metavar='PATTERN',
-        default='vehicle.*',
+        '--filter', metavar='PATTERN', default='vehicle.*',
         help='actor filter (default: "vehicle.*")')
     argparser.add_argument(
-        '--generation',
-        metavar='G',
-        default='2',
-        help='restrict to certain actor generation (values: "1","2","All" - default: "2")')
+        '--generation', metavar='G', default='All',
+        help='restrict to certain actor generation (values: "2","3","All" - default: "All")')
     argparser.add_argument(
-        '--rolename',
-        metavar='NAME',
-        default='hero',
+        '--rolename', metavar='NAME', default='hero',
         help='actor role name (default: "hero")')
     argparser.add_argument(
-        '--gamma',
-        default=2.2,
-        type=float,
-        help='Gamma correction of the camera (default: 2.2)')
+        '--gamma', default=1.0, type=float,
+        help='Gamma correction of the camera (default: 1.0)')
     argparser.add_argument(
-        '--sync',
-        action='store_true',
+        '--sync', action='store_true',
         help='Activate synchronous mode execution')
     args = argparser.parse_args()
 

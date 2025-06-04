@@ -194,7 +194,7 @@ make import  ARGS="--package=<package_name>"
 make import  ARGS="--no-carla-materials"
 ```
 
-All files will be imported and prepared to be used in the Unreal Editor. The map package will be created in `Unreal/CarlaUE4/Content`. A base map tile, `<mapName>`, will be created as a streaming level for all the tiles. The base tile will contain the sky, weather, and Large Map actors and will be ready for use in a simulation.
+All files will be imported and prepared to be used in the Unreal Editor. The map package will be created in `Unreal/CarlaUnreal/Content`. A base map tile, `<mapName>`, will be created as a streaming level for all the tiles. The base tile will contain the sky, weather, and Large Map actors and will be ready for use in a simulation.
 
 !!! Note
     It is currently not recommended to use the customization tools provided for standard maps in the Unreal Editor, e.g., road painter, procedural buildings, etc.

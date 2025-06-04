@@ -1,0 +1,8 @@
+dist/
+build/
+dependencies/
+
+pyproject.toml
+*.pyd
+*.so
+*.egg-info

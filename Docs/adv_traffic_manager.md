@@ -458,7 +458,7 @@ The CARLA server keeps a register of all TM instances by storing the port and th
 In a multi-client simulation, multiple TMs are created on the same port. The first TM will be a TM-Server and the rest will be TM-Clients connecting to it. The TM-Server will dictate the behavior of all the TM instances:
 
 ```py
-terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000
+terminal 1: ./CarlaUnreal.sh -carla-rpc-port=4000
 terminal 2: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Server
 terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Client
 ```
@@ -468,7 +468,7 @@ terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Client
 In a multi-TM simulation, multiple TM instances are created on distinct ports. Each TM instance will control its own behavior:
 
 ```py
-terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000
+terminal 1: ./CarlaUnreal.sh -carla-rpc-port=4000
 terminal 2: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Server A
 terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4550 # TM-Server B
 ```
@@ -478,8 +478,8 @@ terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4550 # TM-Server B
 Multi-simulation is when more than one CARLA server is running at the same time. The TM needs to connect to the relevant CARLA server port. As long as the computational power allows for it, the TM can run multiple simulations at a time without any problems:
 
 ```py
-terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000 # simulation A 
-terminal 2: ./CarlaUE4.sh -carla-rpc-port=5000 # simulation B
+terminal 1: ./CarlaUnreal.sh -carla-rpc-port=4000 # simulation A 
+terminal 2: ./CarlaUnreal.sh -carla-rpc-port=5000 # simulation B
 terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Server A connected to simulation A
 terminal 4: python3 generate_traffic.py --port 5000 --tm-port 5050 # TM-Server B connected to simulation B
 ```

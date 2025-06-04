@@ -52,22 +52,18 @@ class TestVehiclePhysicsControl(unittest.TestCase):
                           carla.Vector2D(x=63.0868, y=0.703473),
                           carla.Vector2D(x=119.12, y=0.573047)]
 
-        wheels = [carla.WheelPhysicsControl(tire_friction=2, damping_rate=0, max_steer_angle=30, radius=10),
-                  carla.WheelPhysicsControl(tire_friction=3, damping_rate=1, max_steer_angle=40, radius=20),
-                  carla.WheelPhysicsControl(tire_friction=4, damping_rate=2, max_steer_angle=50, radius=30),
-                  carla.WheelPhysicsControl(tire_friction=5, damping_rate=3, max_steer_angle=60, radius=40)]
+        wheels = [carla.WheelPhysicsControl(tire_friction=2, max_steer_angle=30, radius=10),
+                  carla.WheelPhysicsControl(tire_friction=3, max_steer_angle=40, radius=20),
+                  carla.WheelPhysicsControl(tire_friction=4, max_steer_angle=50, radius=30),
+                  carla.WheelPhysicsControl(tire_friction=5, max_steer_angle=60, radius=40)]
 
         pc = carla.VehiclePhysicsControl(
             torque_curve=torque_curve,
             max_rpm=5729,
             moi=1,
-            damping_rate_full_throttle=0.15,
-            damping_rate_zero_throttle_clutch_engaged=2,
-            damping_rate_zero_throttle_clutch_disengaged=0.35,
 
             use_gear_autobox=1,
             gear_switch_time=0.5,
-            clutch_strength=10,
 
             mass=5500,
             drag_coefficient=0.3,
@@ -83,13 +79,9 @@ class TestVehiclePhysicsControl(unittest.TestCase):
 
         self.assertTrue(abs(pc.max_rpm - 5729) <= error)
         self.assertTrue(abs(pc.moi - 1) <= error)
-        self.assertTrue(abs(pc.damping_rate_full_throttle - 0.15) <= error)
-        self.assertTrue(abs(pc.damping_rate_zero_throttle_clutch_engaged - 2) <= error)
-        self.assertTrue(abs(pc.damping_rate_zero_throttle_clutch_disengaged - 0.35) <= error)
 
         self.assertTrue(abs(pc.use_gear_autobox - 1) <= error)
         self.assertTrue(abs(pc.gear_switch_time - 0.5) <= error)
-        self.assertTrue(abs(pc.clutch_strength - 10) <= error)
 
         self.assertTrue(abs(pc.mass - 5500) <= error)
         self.assertTrue(abs(pc.drag_coefficient - 0.3) <= error)
@@ -104,7 +96,6 @@ class TestVehiclePhysicsControl(unittest.TestCase):
 
         for i in range(0, len(wheels)):
             self.assertTrue(abs(pc.wheels[i].tire_friction - wheels[i].tire_friction) <= error)
-            self.assertTrue(abs(pc.wheels[i].damping_rate - wheels[i].damping_rate) <= error)
             self.assertTrue(abs(pc.wheels[i].max_steer_angle - wheels[i].max_steer_angle) <= error)
             self.assertTrue(abs(pc.wheels[i].radius - wheels[i].radius) <= error)
 

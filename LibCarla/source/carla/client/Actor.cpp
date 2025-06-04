@@ -32,6 +32,16 @@ namespace client {
     return GetEpisode().Lock()->GetActorAcceleration(*this);
   }
 
+  std::string Actor::GetActorName() const
+  {
+    return GetEpisode().Lock()->GetActorName(*this);
+  }
+
+  std::string Actor::GetActorClassName() const
+  {
+    return GetEpisode().Lock()->GetActorClassName(*this);
+  }
+
   void Actor::SetLocation(const geom::Location &location) {
     GetEpisode().Lock()->SetActorLocation(*this, location);
   }
@@ -94,6 +104,20 @@ namespace client {
 
   void Actor::SetEnableGravity(const bool enabled) {
     GetEpisode().Lock()->SetActorEnableGravity(*this, enabled);
+  }
+
+  void Actor::ApplyTexture(
+    const rpc::MaterialParameter& MaterialParameter,
+    const rpc::TextureColor& Texture)
+  {
+    GetEpisode().Lock()->ApplyTextureToActor(*this, MaterialParameter, Texture);
+  }
+
+  void Actor::ApplyTexture(
+    const rpc::MaterialParameter& MaterialParameter,
+    const rpc::TextureFloatColor& Texture)
+  {
+    GetEpisode().Lock()->ApplyTextureToActor(*this, MaterialParameter, Texture);
   }
 
   rpc::ActorState Actor::GetActorState() const {

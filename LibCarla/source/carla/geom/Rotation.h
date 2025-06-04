@@ -6,14 +6,16 @@
 
 #pragma once
 
+#include <cmath>
+
 #include "carla/MsgPack.h"
 #include "carla/geom/Math.h"
 #include "carla/geom/Vector3D.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
-#include <compiler/enable-ue4-macros.h>
+#include <util/enable-ue4-macros.h>
 #include "Math/Rotator.h"
-#include <compiler/disable-ue4-macros.h>
+#include <util/disable-ue4-macros.h>
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
 namespace carla {
@@ -125,16 +127,87 @@ namespace geom {
     }
 
     // =========================================================================
+    // -- UE4 methods -------------------------------------------------
+    // =========================================================================
+    
+    Rotation Normalize() const {
+      Rotation V0 = Rotation(*this);
+
+      V0.pitch = V0.pitch - (360.0f * trunc(V0.pitch/360.0f));
+      V0.yaw   = V0.yaw   - (360.0f * trunc(V0.yaw/360.0f));
+      V0.roll  = V0.roll  - (360.0f * trunc(V0.roll/360.0f));
+
+      if( V0.pitch < 0.0f ){
+        V0.pitch += 360.0f;
+      }
+      if( V0.yaw < 0.0f ){
+        V0.yaw += 360.0f;
+      }
+      if( V0.roll < 0.0f ){
+        V0.roll += 360.0f;
+      }
+
+      if( V0.pitch >= 180.0f ){
+        V0.pitch -= 360.0f;
+      }
+      if( V0.yaw >= 180.0f ){
+        V0.yaw -= 360.0f;
+      }
+      if( V0.roll >= 180.0f ){
+        V0.roll -= 360.0f;
+      }
+      
+      return V0;
+    }
+
+    // =========================================================================
     // -- Comparison operators -------------------------------------------------
     // =========================================================================
 
-    bool operator==(const Rotation &rhs) const  {
-      return (pitch == rhs.pitch) && (yaw == rhs.yaw) && (roll == rhs.roll);
+    bool operator==(const Rotation &rhs) const {
+      return ((pitch == rhs.pitch) && (yaw == rhs.yaw) && (roll == rhs.roll)) || 
+        // When comparing two normalized rotators the sum of both comps can be 180 according to UE, we are following same structure for rotators
+        ( ( abs(pitch) + abs(rhs.pitch) == 180.0f) && ( abs(yaw) + abs(rhs.yaw) == 180.0f) && ( abs(roll) + abs(rhs.roll) == 180.0f) );
     }
 
-    bool operator!=(const Rotation &rhs) const  {
+    bool operator!=(const Rotation &rhs) const {
       return !(*this == rhs);
     }
+
+    // =========================================================================
+    // -- Aritmetic operators -------------------------------------------------
+    // =========================================================================
+
+    Rotation operator+(const Rotation &rhs) const {
+      Rotation Result;
+      Result.pitch = pitch + rhs.pitch;
+      Result.yaw = yaw + rhs.yaw;
+      Result.roll = roll + rhs.roll;
+      return Result;
+    }
+
+    Rotation operator-(const Rotation &rhs) const {
+      Rotation Result;
+      Result.pitch = pitch - rhs.pitch;
+      Result.yaw = yaw - rhs.yaw;
+      Result.roll = roll - rhs.roll;
+      return Result;
+    }
+
+    Rotation& operator+=(const Rotation &rhs) {
+      pitch += rhs.pitch;
+      yaw += rhs.yaw;
+      roll += rhs.roll;
+      return *this;
+    }
+
+    Rotation& operator-=(const Rotation &rhs) {
+      pitch -= rhs.pitch;
+      yaw -= rhs.yaw;
+      roll -= rhs.roll;
+      return *this;
+    }
+
 
     // =========================================================================
     // -- Conversions to UE4 types ---------------------------------------------

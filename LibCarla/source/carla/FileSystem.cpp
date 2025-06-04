@@ -17,16 +17,11 @@ namespace carla {
 
   void FileSystem::ValidateFilePath(std::string &filepath, const std::string &ext) {
     fs::path path(filepath);
-    if (path.extension().empty() && !ext.empty()) {
-      if (ext[0] != '.') {
-        path += '.';
-      }
-      path += ext;
-    }
+    if (!ext.empty() && path.extension() != ext)
+      path.replace_extension(ext);
     auto parent = path.parent_path();
-    if (!parent.empty()) {
+    if (!fs::exists(parent))
       fs::create_directories(parent);
-    }
     filepath = path.string();
   }
 

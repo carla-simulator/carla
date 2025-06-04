@@ -35,9 +35,13 @@
 #include "publishers/CarlaTransformPublisher.h"
 #include "publishers/CarlaCollisionPublisher.h"
 #include "publishers/CarlaLineInvasionPublisher.h"
+#include "publishers/BasicPublisher.h"
 
 #include "subscribers/CarlaSubscriber.h"
 #include "subscribers/CarlaEgoVehicleControlSubscriber.h"
+#if defined(WITH_ROS2_DEMO)
+  #include "subscribers/BasicSubscriber.h"
+#endif
 
 #include <vector>
 
@@ -75,6 +79,10 @@ void ROS2::Enable(bool enable) {
   log_info("ROS2 enabled: ", _enabled);
   _clock_publisher = std::make_shared<CarlaClockPublisher>("clock", "");
   _clock_publisher->Init();
+#if defined(WITH_ROS2_DEMO)
+  _basic_publisher = std::make_shared<BasicPublisher>("basic_publisher", "");
+  _basic_publisher->Init();
+#endif
 }
 
 void ROS2::SetFrame(uint64_t frame) {
@@ -94,6 +102,24 @@ void ROS2::SetFrame(uint64_t frame) {
       RemoveActorCallback(actor);
     }
    }
+#if defined(WITH_ROS2_DEMO)
+   if (_basic_subscriber)
+   {
+    void* actor = _basic_subscriber->GetActor();
+    if (!_basic_subscriber->IsAlive()){
+        RemoveBasicSubscriberCallback(actor);
+    }
+    if (actor&& _basic_subscriber->HasNewMessage())
+    {
+      auto it = _actor_message_callbacks.find(actor);
+      if (it != _actor_message_callbacks.end()) {
+        MessageControl control;
+        control.message = _basic_subscriber->GetMessage();
+        it->second(actor, control);
+      }
+    }
+   }
+#endif
 }
 
 void ROS2::SetTimestamp(double timestamp) {
@@ -104,7 +130,10 @@ void ROS2::SetTimestamp(double timestamp) {
   _nanoseconds = static_cast<uint32_t>(fractional * multiplier);
   _clock_publisher->SetData(_seconds, _nanoseconds);
   _clock_publisher->Publish();
-   //log_info("ROS2 new timestamp: ", _timestamp);
+#if defined(WITH_ROS2_DEMO)
+  _basic_publisher->SetData("Hello from Carla!");
+  _basic_publisher->Publish();
+#endif
 }
 
 void ROS2::AddActorRosName(void *actor, std::string ros_name) {
@@ -169,6 +198,23 @@ std::string ROS2::GetActorParentRosName(void *actor) {
   }
   else
     return std::string("");
+}
+
+void ROS2::AddBasicSubscriberCallback(void* actor, std::string ros_name, ActorMessageCallback callback) {
+  #if defined(WITH_ROS2_DEMO)
+  _actor_message_callbacks.insert({actor, std::move(callback)});
+
+  _basic_subscriber.reset();
+  _basic_subscriber = std::make_shared<BasicSubscriber>(actor, ros_name.c_str());
+  _basic_subscriber->Init();
+  #endif
+}
+
+void ROS2::RemoveBasicSubscriberCallback(void* actor) {
+  #if defined(WITH_ROS2_DEMO)
+  _basic_subscriber.reset();
+  _actor_message_callbacks.erase(actor);
+  #endif
 }
 
 void ROS2::AddActorCallback(void* actor, std::string ros_name, ActorCallback callback) {
@@ -841,6 +887,10 @@ void ROS2::Shutdown() {
   _clock_publisher.reset();
   _controller.reset();
   _enabled = false;
+#if defined(WITH_ROS2_DEMO)
+  _basic_publisher.reset();
+  _basic_subscriber.reset();
+#endif
 }
 
 } // namespace ros2

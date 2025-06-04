@@ -107,6 +107,16 @@ namespace detail {
     void CopyOpenDriveToServer(
         std::string opendrive, const rpc::OpendriveGenerationParameters & params);
 
+    void ApplyTextureToActor(
+      rpc::ActorId ActorId,
+      const rpc::MaterialParameter& MaterialParameter,
+      const rpc::TextureColor& Texture);
+
+    void ApplyTextureToActor(
+      rpc::ActorId ActorId,
+      const rpc::MaterialParameter& MaterialParameter,
+      const rpc::TextureFloatColor& Texture);
+
     void ApplyColorTextureToObjects(
         const std::vector<std::string> &objects_name,
         const rpc::MaterialParameter& parameter,
@@ -149,11 +159,15 @@ namespace detail {
 
     void SetWeatherParameters(const rpc::WeatherParameters &weather);
 
+    bool IsWeatherEnabled(); 
+
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
 
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(rpc::ActorId vehicle) const;
 
     rpc::VehicleLightState GetVehicleLightState(rpc::ActorId vehicle) const;
+    
+    std::vector<geom::Transform> GetVehicleBoneWorldTransforms(rpc::ActorId actor);
 
     void ApplyPhysicsControlToVehicle(
         rpc::ActorId vehicle,
@@ -428,6 +442,10 @@ namespace detail {
 
     std::vector<rpc::LabelledPoint> CastRay(
         geom::Location start_location, geom::Location end_location) const;
+
+    std::string GetActorName(rpc::ActorId actor) const;
+
+    std::string GetActorClassName(rpc::ActorId actor) const;
 
   private:
 

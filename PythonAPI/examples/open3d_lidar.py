@@ -6,30 +6,20 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""Open3D Lidar visuialization example for CARLA"""
+"""Open3D Lidar visualization example for CARLA"""
 
-import glob
-import os
 import sys
 import argparse
 import time
 from datetime import datetime
 import random
 import numpy as np
-from matplotlib import cm
+import matplotlib
 import open3d as o3d
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 
-VIRIDIS = np.array(cm.get_cmap('plasma').colors)
+VIRIDIS = np.array(matplotlib.colormaps['plasma'].colors)
 VID_RANGE = np.linspace(0.0, 1.0, VIRIDIS.shape[0])
 LABEL_COLORS = np.array([
     (255, 255, 255), # None
@@ -155,10 +145,60 @@ def add_open3d_axis(vis):
         [0.0, 0.0, 1.0]]))
     vis.add_geometry(axis)
 
+def main():
+    argparser = argparse.ArgumentParser(
+        description=__doc__)
+    argparser.add_argument(
+        '--host', metavar='H', default='localhost',
+        help='IP of the host CARLA Simulator (default: localhost)')
+    argparser.add_argument(
+        '-p', '--port', metavar='P', default=2000, type=int,
+        help='TCP port of CARLA Simulator (default: 2000)')
+    argparser.add_argument(
+        '--no-rendering', action='store_true',
+        help='use the no-rendering mode which will provide some extra performance')
+    argparser.add_argument(
+        '--semantic', action='store_true',
+        help='use the semantic lidar instead, which provides ground truth information')
+    argparser.add_argument(
+        '--no-noise', action='store_true',
+        help='remove the drop off and noise from the normal (non-semantic) lidar')
+    argparser.add_argument(
+        '--no-autopilot', action='store_false',
+        help='disables the autopilot so the vehicle will remain stopped')
+    argparser.add_argument(
+        '--show-axis', action='store_true',
+        help='show the cartesian coordinates axis')
+    argparser.add_argument(
+        '--filter', metavar='PATTERN', default='vehicle.*',
+        help='actor filter (default: "vehicle.*")')
+    argparser.add_argument(
+        '--upper-fov', default=15.0, type=float,
+        help='lidar\'s upper field of view in degrees (default: 15.0)')
+    argparser.add_argument(
+        '--lower-fov', default=-25.0, type=float,
+        help='lidar\'s lower field of view in degrees (default: -25.0)')
+    argparser.add_argument(
+        '--channels', default=64.0, type=float,
+        help='lidar\'s channel count (default: 64)')
+    argparser.add_argument(
+        '--range', default=100.0, type=float,
+        help='lidar\'s maximum range in meters (default: 100.0)')
+    argparser.add_argument(
+        '--points-per-second', default=500000, type=int,
+        help='lidar\'s points per second (default: 500000)')
+    argparser.add_argument(
+        '-x', default=0.0, type=float,
+        help='offset in the sensor position in the X-axis in meters (default: 0.0)')
+    argparser.add_argument(
+        '-y', default=0.0, type=float,
+        help='offset in the sensor position in the Y-axis in meters (default: 0.0)')
+    argparser.add_argument(
+        '-z', default=0.0, type=float,
+        help='offset in the sensor position in the Z-axis in meters (default: 0.0)')
+    args = argparser.parse_args()
 
-def main(arg):
-    """Main function of the script"""
-    client = carla.Client(arg.host, arg.port)
+    client = carla.Client(args.host, args.port)
     client.set_timeout(2.0)
     world = client.get_world()
 
@@ -172,24 +212,24 @@ def main(arg):
 
         settings.fixed_delta_seconds = delta
         settings.synchronous_mode = True
-        settings.no_rendering_mode = arg.no_rendering
+        settings.no_rendering_mode = args.no_rendering
         world.apply_settings(settings)
 
         blueprint_library = world.get_blueprint_library()
-        vehicle_bp = blueprint_library.filter(arg.filter)[0]
+        vehicle_bp = blueprint_library.filter(args.filter)[0]
         vehicle_transform = random.choice(world.get_map().get_spawn_points())
         vehicle = world.spawn_actor(vehicle_bp, vehicle_transform)
-        vehicle.set_autopilot(arg.no_autopilot)
+        vehicle.set_autopilot(args.no_autopilot)
 
-        lidar_bp = generate_lidar_bp(arg, world, blueprint_library, delta)
+        lidar_bp = generate_lidar_bp(args, world, blueprint_library, delta)
 
-        user_offset = carla.Location(arg.x, arg.y, arg.z)
+        user_offset = carla.Location(args.x, args.y, args.z)
         lidar_transform = carla.Transform(carla.Location(x=-0.5, z=1.8) + user_offset)
 
         lidar = world.spawn_actor(lidar_bp, lidar_transform, attach_to=vehicle)
 
         point_list = o3d.geometry.PointCloud()
-        if arg.semantic:
+        if args.semantic:
             lidar.listen(lambda data: semantic_lidar_callback(data, point_list))
         else:
             lidar.listen(lambda data: lidar_callback(data, point_list))
@@ -205,7 +245,7 @@ def main(arg):
         vis.get_render_option().point_size = 1
         vis.get_render_option().show_coordinate_frame = True
 
-        if arg.show_axis:
+        if args.show_axis:
             add_open3d_axis(vis)
 
         frame = 0
@@ -236,91 +276,11 @@ def main(arg):
         vis.destroy_window()
 
 
-if __name__ == "__main__":
-    argparser = argparse.ArgumentParser(
-        description=__doc__)
-    argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='localhost',
-        help='IP of the host CARLA Simulator (default: localhost)')
-    argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
-        help='TCP port of CARLA Simulator (default: 2000)')
-    argparser.add_argument(
-        '--no-rendering',
-        action='store_true',
-        help='use the no-rendering mode which will provide some extra'
-        ' performance but you will lose the articulated objects in the'
-        ' lidar, such as pedestrians')
-    argparser.add_argument(
-        '--semantic',
-        action='store_true',
-        help='use the semantic lidar instead, which provides ground truth'
-        ' information')
-    argparser.add_argument(
-        '--no-noise',
-        action='store_true',
-        help='remove the drop off and noise from the normal (non-semantic) lidar')
-    argparser.add_argument(
-        '--no-autopilot',
-        action='store_false',
-        help='disables the autopilot so the vehicle will remain stopped')
-    argparser.add_argument(
-        '--show-axis',
-        action='store_true',
-        help='show the cartesian coordinates axis')
-    argparser.add_argument(
-        '--filter',
-        metavar='PATTERN',
-        default='model3',
-        help='actor filter (default: "vehicle.*")')
-    argparser.add_argument(
-        '--upper-fov',
-        default=15.0,
-        type=float,
-        help='lidar\'s upper field of view in degrees (default: 15.0)')
-    argparser.add_argument(
-        '--lower-fov',
-        default=-25.0,
-        type=float,
-        help='lidar\'s lower field of view in degrees (default: -25.0)')
-    argparser.add_argument(
-        '--channels',
-        default=64.0,
-        type=float,
-        help='lidar\'s channel count (default: 64)')
-    argparser.add_argument(
-        '--range',
-        default=100.0,
-        type=float,
-        help='lidar\'s maximum range in meters (default: 100.0)')
-    argparser.add_argument(
-        '--points-per-second',
-        default=500000,
-        type=int,
-        help='lidar\'s points per second (default: 500000)')
-    argparser.add_argument(
-        '-x',
-        default=0.0,
-        type=float,
-        help='offset in the sensor position in the X-axis in meters (default: 0.0)')
-    argparser.add_argument(
-        '-y',
-        default=0.0,
-        type=float,
-        help='offset in the sensor position in the Y-axis in meters (default: 0.0)')
-    argparser.add_argument(
-        '-z',
-        default=0.0,
-        type=float,
-        help='offset in the sensor position in the Z-axis in meters (default: 0.0)')
-    args = argparser.parse_args()
+if __name__ == '__main__':
 
     try:
-        main(args)
+        main()
     except KeyboardInterrupt:
-        print(' - Exited by user.')
+        pass
+    finally:
+        print('\ndone.')

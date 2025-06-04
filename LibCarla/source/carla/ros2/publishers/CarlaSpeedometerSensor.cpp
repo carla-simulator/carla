@@ -1,5 +1,3 @@
-#define _GLIBCXX_USE_CXX11_ABI 0
-
 #include "CarlaSpeedometerSensor.h"
 
 #include <string>

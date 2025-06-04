@@ -1,2 +1,2 @@
 CompileFlags:
-  CompilationDatabase: ${CARLA_BUILD_PATH}
+  CompilationDatabase: "@CMAKE_CURRENT_BINARY_DIR@"

@@ -13,12 +13,12 @@
 #include "carla/geom/Transform.h"
 #include "carla/nav/WalkerManager.h"
 #include "carla/rpc/ActorId.h"
-#include <recast/Recast.h>
-#include <recast/DetourCrowd.h>
-#include <recast/DetourNavMesh.h>
-#include <recast/DetourNavMeshBuilder.h>
-#include <recast/DetourNavMeshQuery.h>
-#include <recast/DetourCommon.h>
+#include <Recast.h>
+#include <DetourCrowd.h>
+#include <DetourNavMesh.h>
+#include <DetourNavMeshBuilder.h>
+#include <DetourNavMeshQuery.h>
+#include <DetourCommon.h>
 
 namespace carla {
 namespace nav {

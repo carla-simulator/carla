@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -199,7 +199,7 @@ def generate_decals_file(folder):
 def invoke_commandlet(name, arguments):
     """Generic function for running a commandlet with its arguments."""
     ue4_path = os.environ["UE4_ROOT"]
-    uproject_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "CarlaUE4.uproject")
+    uproject_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUnreal", "CarlaUnreal.uproject")
     run = "-run=%s" % (name)
 
     if os.name == "nt":
@@ -313,7 +313,7 @@ def generate_package_file(package_name, props, maps):
             "use_carla_materials": use_carla_materials
         })
 
-    package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Config")
+    package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUnreal", "Content", package_name, "Config")
     if not os.path.exists(package_config_path):
         try:
             os.makedirs(package_config_path)
@@ -331,7 +331,7 @@ def copy_roadpainter_config_files(package_name):
     two_directories_up = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     final_path = os.path.join(two_directories_up, "Import", "roadpainter_decals.json")
     if os.path.exists(final_path):
-        package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Config")
+        package_config_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUnreal", "Content", package_name, "Config")
         if not os.path.exists(package_config_path):
             try:
                 os.makedirs(package_config_path)
@@ -402,7 +402,7 @@ def import_assets(package_name, json_dirname, props, maps, do_tiles, tile_size, 
             xodr_folder_destin = os.path.join(
                 CARLA_ROOT_PATH,
                 "Unreal",
-                "CarlaUE4",
+                "CarlaUnreal",
                 "Content",
                 package_name,
                 "Maps",
@@ -551,7 +551,7 @@ def build_binary_for_navigation(package_name, dirname, maps):
 
             # copy the binary file
             nav_path_source = os.path.join(folder, "%s.bin" % fbx_name_no_ext)
-            nav_folder_target = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUE4", "Content", package_name, "Maps", target_name, "Nav")
+            nav_folder_target = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUnreal", "Content", package_name, "Maps", target_name, "Nav")
             if os.path.exists(nav_path_source):
                 if not os.path.exists(nav_folder_target):
                     os.makedirs(nav_folder_target)
@@ -583,7 +583,7 @@ def build_binary_for_tm(package_name, dirname, maps):
         tm_folder_target = os.path.join(
             CARLA_ROOT_PATH,
             "Unreal",
-            "CarlaUE4",
+            "CarlaUnreal",
             "Content",
             package_name,
             "Maps",

@@ -1,422 +1,141 @@
-cmake_minimum_required (VERSION 3.20.0)
+#[[
 
+  Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma
+  de Barcelona (UAB).
+  
+  This work is licensed under the terms of the MIT license.
+  For a copy, see <https://opensource.org/licenses/MIT>.
+
+]]
+
+set (
+  CARLA_CMAKE_MINIMUM_REQUIRED_VERSION
+  3.27.2
+)
+
+cmake_minimum_required (
+  VERSION
+  ${CARLA_CMAKE_MINIMUM_REQUIRED_VERSION}
+)
+
+cmake_policy (SET CMP0097 NEW)
+cmake_policy (SET CMP0091 NEW)
+cmake_policy (SET CMP0074 NEW)
+cmake_policy (SET CMP0077 NEW)
 cmake_policy (SET CMP0117 NEW)
 
+if (${CMAKE_MINOR_VERSION} GREATER_EQUAL 24)
+  cmake_policy (SET CMP0135 NEW)
+endif ()
+
 set (CARLA_VERSION_MAJOR 0)
-set (CARLA_VERSION_MINOR 9)
-set (CARLA_VERSION_PATCH 14)
-set (CARLA_VERSION ${CARLA_VERSION_MAJOR}.${CARLA_VERSION_MINOR}.${CARLA_VERSION_PATCH})
+set (CARLA_VERSION_MINOR 10)
+set (CARLA_VERSION_PATCH 0)
+
+set (
+  CARLA_VERSION 
+  ${CARLA_VERSION_MAJOR}.${CARLA_VERSION_MINOR}.${CARLA_VERSION_PATCH}
+)
 
 project (
-    CARLA
-    VERSION ${CARLA_VERSION}
-    LANGUAGES CXX
-    DESCRIPTION "Open-source simulator for autonomous driving research."
-    HOMEPAGE_URL "https://carla.org/"
+  CARLA
+  VERSION
+    ${CARLA_VERSION}
+  LANGUAGES
+    C
+    CXX
+    ASM
+  DESCRIPTION
+    "Open-source simulator for autonomous driving research."
+  HOMEPAGE_URL
+    https://carla.org
+)
+
+set (
+  CARLA_WORKSPACE_PATH
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+set (
+  CARLA_BUILD_PATH
+  ${CMAKE_BINARY_DIR}
+)
+
+set (
+  CARLA_PACKAGE_PATH
+  ${CARLA_BUILD_PATH}/Package
+)
+
+set (
+  CARLA_UNREAL_PLUGINS_PATH
+  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins
+)
+
+set (
+  CARLA_LICENSE_FILE_PATH
+  ${CARLA_WORKSPACE_PATH}/LICENSE
 )
 
 include (CheckCCompilerFlag)
 include (CheckCXXCompilerFlag)
+include (CheckLinkerFlag)
+include (${CARLA_WORKSPACE_PATH}/CMake/Util.cmake)
+include (${CARLA_WORKSPACE_PATH}/CMake/Options.cmake)
+include (${CARLA_WORKSPACE_PATH}/CMake/Common.cmake)
+include (${CARLA_WORKSPACE_PATH}/CMake/Dependencies.cmake)
 
-set (CMAKE_CXX_STANDARD 20)
-set (CMAKE_CXX_STANDARD_REQUIRED ON)
-set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set (CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-option (
-    BUILD_LIBCARLA_CLIENT
-    "Build the LibCarla client."
-    ON)
-
-option (
-    BUILD_LIBCARLA_SERVER
-    "Build the LibCarla server."
-    ON)
-
-option (
-    ENABLE_LIBCARLA_PYTORCH
-    "Enable LibCarla-PyTorch."
-    OFF)
-
-option (
-    BUILD_PYTHON_API
-    "Build the CARLA Python API."
-    ON)
-
-option (
-    ENABLE_LIBCARLA_CLIENT_RSS
-    "Enable RSS components (ad-rss-lib)"
-    OFF)
-
-option (
-    INSTALL_LIBCARLA
-    "Install LibCarla and all of its dependencies."
-    ON)
-
-option (
-    BUILD_OSM_WORLD_RENDERER
-    "Build OSM World Renderer."
-    ON)
-
-option (
-    ENABLE_RTTI
-    "Enable C++ RTTI."
-    OFF)
-
-option (
-    ENABLE_EXCEPTIONS
-    "Enable C++ Exceptions."
-    OFF)
-
-set (CARLA_WORKSPACE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
-set (CARLA_BUILD_PATH ${CMAKE_CURRENT_BINARY_DIR})
-if (NOT CARLA_DEPENDENCIES_PATH)
-    set (CARLA_DEPENDENCIES_PATH ${CMAKE_CURRENT_BINARY_DIR}/Dependencies)
+if (BUILD_CARLA_CLIENT OR BUILD_CARLA_SERVER)
+  add_subdirectory (LibCarla)
 endif ()
-
-configure_file (
-    ${CARLA_WORKSPACE_PATH}/.clangd.in
-    ${CARLA_WORKSPACE_PATH}/.clangd)
-
-set (LIBCARLA_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/LibCarla/source)
-set (LIBCARLA_THIRD_PARTY_SOURCE_PATH ${LIBCARLA_SOURCE_PATH}/third-party)
-set (PYTHONAPI_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/PythonAPI)
-
-set (BOOST_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/boost-install/include)
-set (BOOST_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/boost-install/lib)
-set (CHRONO_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/chrono-install/include)
-set (CHRONO_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/chrono-install/lib)
-set (EIGEN_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/eigen-install/include)
-set (EIGEN_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/eigen-install/lib)
-set (GOOGLETEST_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/gtest-install/include)
-set (GOOGLETEST_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/gtest-install/lib)
-set (LIBPNG_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/libpng-install/include)
-set (LIBPNG_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/libpng-install/lib)
-set (PROJ_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/proj-install/include)
-set (PROJ_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/proj-install/lib)
-set (RECAST_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/recast-install/include)
-set (RECAST_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/recast-install/lib)
-set (RPCLIB_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/rpclib-install/include)
-set (RPCLIB_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/rpclib-install/lib)
-set (SQLITE_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/sqlite-install/include)
-set (SQLITE_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/sqlite-install/lib)
-set (XERCESC_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/xercesc-install/include)
-set (XERCESC_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/xercesc-install/lib)
-set (ZLIB_INCLUDE_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-install/include)
-set (ZLIB_LIBRARY_PATH ${CARLA_DEPENDENCIES_PATH}/zlib-install/lib)
-
-set (
-    CARLA_COMMON_DEFINITIONS
-    BOOST_ERROR_CODE_HEADER_ONLY
-    LIBCARLA_IMAGE_WITH_PNG_SUPPORT
-)
-
-if (WIN32)
-    # https://learn.microsoft.com/en-us/cpp/porting/modifying-winver-and-win32-winnt?view=msvc-170
-    list (APPEND CARLA_COMMON_DEFINITIONS _WIN32_WINNT=0x0601) # Windows 10
-    list (APPEND CARLA_COMMON_DEFINITIONS _CRT_SECURE_NO_WARNINGS)
-endif ()
-
-if (ENABLE_EXCEPTIONS)
-else ()
-    list (APPEND CARLA_COMMON_DEFINITIONS ASIO_NO_EXCEPTIONS)
-    list (APPEND CARLA_COMMON_DEFINITIONS BOOST_NO_EXCEPTIONS)
-    list (APPEND CARLA_COMMON_DEFINITIONS LIBCARLA_NO_EXCEPTIONS)
-    list (APPEND CARLA_COMMON_DEFINITIONS PUGIXML_NO_EXCEPTIONS)
-endif ()
-
-if (ENABLE_RTTI)
-else ()
-    list (APPEND CARLA_COMMON_DEFINITIONS BOOST_NO_RTTI)
-    list (APPEND CARLA_COMMON_DEFINITIONS BOOST_TYPE_INDEX_FORCE_NO_RTTI_COMPATIBILITY)
-endif ()
-
-if (BUILD_LIBCARLA_SERVER OR BUILD_LIBCARLA_CLIENT)
-    configure_file (
-        ${LIBCARLA_SOURCE_PATH}/carla/Version.h.in
-        ${LIBCARLA_SOURCE_PATH}/carla/Version.h)
-endif ()
-
-if (BUILD_LIBCARLA_SERVER)
-
-    project (carla-server)
-
-    set (LIBCARLA_SERVER_INCLUDE_PATHS
-        ${LIBCARLA_SOURCE_PATH}
-        ${BOOST_INCLUDE_PATH}
-        ${RPCLIB_INCLUDE_PATH}
-    )
-
-    file (
-        GLOB
-        LIBCARLA_SERVER_SOURCES
-        ${LIBCARLA_SOURCE_PATH}/carla/Buffer.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/Exception.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/geom/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/opendrive/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/opendrive/parser/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/road/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/road/element/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/road/general/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/road/object/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/road/signal/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/rpc/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/sensor/s11n/SensorHeaderSerializer.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/streaming/detail/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/streaming/detail/tcp/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.cpp
-    )
-
-    file (
-        GLOB
-        LIBCARLA_SERVER_SOURCES_THIRD_PARTY
-        ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/odrSpiral/*.cpp
-        ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/moodycamel/*.cpp
-        ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.cpp
-    )
-
-    file (
-        GLOB
-        LIBCARLA_SERVER_HEADERS
-        ${LIBCARLA_SOURCE_PATH}/carla/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/geom/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/opendrive/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/opendrive/parser/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/road/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/road/element/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/road/general/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/road/object/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/road/signal/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/rpc/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/sensor/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/sensor/s11n/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/streaming/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/streaming/detail/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/streaming/low_level/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.h
-        ${LIBCARLA_SOURCE_PATH}/compiler/*.h
-    )
-
-    file (
-        GLOB
-        LIBCARLA_SERVER_HEADERS_THIRD_PARTY
-        ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/odrSpiral/*.h
-        ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/moodycamel/*.h
-        ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.hpp
-    )
-
-    add_library (
-        carla-server STATIC
-        ${LIBCARLA_SERVER_HEADERS}
-        ${LIBCARLA_SERVER_SOURCES}
-        ${LIBCARLA_SERVER_HEADERS_THIRD_PARTY}
-        ${LIBCARLA_SERVER_SOURCES_THIRD_PARTY}
-    )
-    
-    target_include_directories (
-        carla-server PUBLIC
-        ${LIBCARLA_SERVER_INCLUDE_PATHS}
-    )
-    
-    target_compile_definitions (
-        carla-server PUBLIC
-        ${CARLA_COMMON_DEFINITIONS}
-    )
-
-    install (TARGETS carla-server DESTINATION lib)
-
-    foreach (HEADER ${LIBCARLA_SERVER_HEADERS})
-        cmake_path (GET HEADER PARENT_PATH HEADER_PARENT)
-        cmake_path (RELATIVE_PATH HEADER_PARENT BASE_DIRECTORY ${LIBCARLA_SOURCE_PATH}/carla OUTPUT_VARIABLE HEADER_RELATIVE)
-        install (FILES ${HEADER} DESTINATION include/carla/${HEADER_RELATIVE})
-    endforeach ()
-
-endif ()
-
-
-
-if (BUILD_LIBCARLA_CLIENT)
-
-    project (carla-client)
-
-    set (
-        LIBCARLA_CLIENT_INCLUDE_PATHS
-        ${LIBCARLA_SOURCE_PATH}
-        ${BOOST_INCLUDE_PATH}
-        ${RPCLIB_INCLUDE_PATH}
-        ${RECAST_INCLUDE_PATH}
-        ${LIBPNG_INCLUDE_PATH}
-    )
-
-    file (
-        GLOB
-        LIBCARLA_CLIENT_HEADERS
-        ${LIBCARLA_SOURCE_PATH}/carla/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/client/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/client/detail/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/geom/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/image/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/nav/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/opendrive/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/opendrive/parser/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/pointcloud/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/profiler/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/road/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/road/element/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/road/general/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/road/object/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/road/signal/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/rpc/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/sensor/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/sensor/data/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/sensor/s11n/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/streaming/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/streaming/detail/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/streaming/detail/tcp/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/streaming/low_level/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.h
-        ${LIBCARLA_SOURCE_PATH}/carla/trafficmanager/*.h
-        ${LIBCARLA_SOURCE_PATH}/compiler/*.h
-    )
-
-    if (ENABLE_LIBCARLA_CLIENT_RSS)
-        file (
-            GLOB
-            LIBCARLA_CLIENT_HEADERS_RSS
-            ${LIBCARLA_SOURCE_PATH}/carla/rss/*.h
-        )
-        list (
-            APPEND
-            LIBCARLA_CLIENT_HEADERS
-            ${LIBCARLA_CLIENT_HEADERS_RSS}
-        )
-    endif ()
-
-    file (
-        GLOB
-        LIBCARLA_CLIENT_HEADERS_THIRD_PARTY
-        ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/odrSpiral/*.h
-        ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/moodycamel/*.h
-        ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.hpp
-        ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.h
-    )
-
-    file (
-        GLOB
-        LIBCARLA_CLIENT_SOURCES
-        ${LIBCARLA_SOURCE_PATH}/carla/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/client/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/client/detail/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/geom/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/image/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/nav/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/opendrive/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/opendrive/parser/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/pointcloud/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/road/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/road/element/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/road/general/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/road/object/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/road/signal/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/rpc/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/sensor/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/sensor/data/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/sensor/s11n/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/streaming/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/streaming/detail/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/streaming/detail/tcp/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/streaming/low_level/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.cpp
-        ${LIBCARLA_SOURCE_PATH}/carla/trafficmanager/*.cpp
-    )
-
-    if (ENABLE_LIBCARLA_CLIENT_RSS)
-        file (
-            GLOB
-            LIBCARLA_CLIENT_SOURCES_RSS
-            ${LIBCARLA_SOURCE_PATH}/carla/rss/*.cpp
-        )
-        list (
-            APPEND
-            LIBCARLA_CLIENT_SOURCES
-            ${LIBCARLA_CLIENT_SOURCES_RSS}
-        )
-    endif ()
-
-    file (
-        GLOB
-        LIBCARLA_CLIENT_SOURCES_THIRD_PARTY
-        ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/odrSpiral/*.cpp
-        ${LIBCARLA_THIRD_PARTY_SOURCE_PATH}/pugixml/*.cpp
-    )
-
-    add_library (
-        carla-client STATIC
-        ${LIBCARLA_CLIENT_HEADERS}
-        ${LIBCARLA_CLIENT_SOURCES}
-        ${LIBCARLA_CLIENT_HEADERS_THIRD_PARTY}
-        ${LIBCARLA_CLIENT_SOURCES_THIRD_PARTY}
-    )
-
-    target_include_directories (
-        carla-client PUBLIC
-        ${LIBCARLA_CLIENT_INCLUDE_PATHS}
-    )
-
-    target_compile_definitions (
-        carla-client PUBLIC
-        ${CARLA_COMMON_DEFINITIONS}
-    )
-    
-    install (TARGETS carla-client DESTINATION lib)
-    
-    foreach (HEADER ${LIBCARLA_CLIENT_HEADERS})
-        cmake_path (GET HEADER PARENT_PATH HEADER_PARENT)
-        cmake_path (RELATIVE_PATH HEADER_PARENT BASE_DIRECTORY ${LIBCARLA_SOURCE_PATH}/carla OUTPUT_VARIABLE HEADER_RELATIVE)
-        install (FILES ${HEADER} DESTINATION include/carla/${HEADER_RELATIVE})
-    endforeach ()
-
-endif ()
-
-
 
 if (BUILD_OSM_WORLD_RENDERER)
+  add_subdirectory (osm-world-renderer)
+endif ()
 
-    project (OsmMapRenderer)
+if (ENABLE_ROS2)
+  add_subdirectory (Ros2Native)
+endif()
 
-    set (OSM_RENDERER_PATH ${CARLA_WORKSPACE_PATH}/osm-world-renderer)
+if (BUILD_PYTHON_API)
+  add_subdirectory (PythonAPI)
+endif ()
 
-    add_library (
-        LibOSMRenderer
-        ${OSM_RENDERER_PATH}/OsmRenderer/src/OsmRenderer.cpp
-        ${OSM_RENDERER_PATH}/OsmRenderer/src/MapDrawer.cpp
-        ${OSM_RENDERER_PATH}/OsmRenderer/src/MapRasterizer.cpp
-    )
+if (BUILD_CARLA_UNREAL)
+  add_subdirectory (Unreal)
+endif ()
 
-    target_include_directories (
-        LibOSMRenderer PUBLIC
-        ${OSM_RENDERER_PATH}/OsmRenderer/include
-    )
+if (BUILD_EXAMPLES)
+  add_subdirectory (Examples)
+endif ()
 
-    add_executable (
-        OSMWorldRenderer
-        ${OSM_RENDERER_PATH}/OsmRenderer/main.cpp
-    )
+carla_add_custom_target (
+  carla-help
+  "Display this message."
+  COMMAND ${CMAKE_COMMAND} -E cat "${CMAKE_CURRENT_BINARY_DIR}/Help.md"
+)
 
-    target_link_libraries (OSMWorldRenderer PRIVATE LibOSMRenderer)
-    target_link_libraries (OSMWorldRenderer PRIVATE osmscout)
-    target_link_libraries (OSMWorldRenderer PRIVATE osmscout_map)
-    target_link_libraries (OSMWorldRenderer PRIVATE osmscout_map_svg)
-    target_link_libraries (OSMWorldRenderer PRIVATE lunasvg)
+carla_get_option_docs (CARLA_OPTION_DOCS)
+carla_get_target_docs (CARLA_TARGET_DOCS)
+set (CARLA_CMAKE_HELP_MESSAGE)
+string (
+  APPEND 
+  CARLA_CMAKE_HELP_MESSAGE
+  "# CARLA - CMake Help\n"
+  "## CMake Targets\n"
+  "${CARLA_TARGET_DOCS}\n"
+  "## CMake Options\n"
+  "${CARLA_OPTION_DOCS}\n"
+)
 
-    target_compile_definitions (
-        OSMWorldRenderer PUBLIC
-        _USE_MATH_DEFINES
-        ${CARLA_COMMON_DEFINITIONS}
-    )
+file (
+  WRITE
+  ${CMAKE_CURRENT_BINARY_DIR}/Help.md
+  ${CARLA_CMAKE_HELP_MESSAGE}
+)
 
+if (CMAKE_EXPORT_COMPILE_COMMANDS)
+  configure_file (
+    ${CARLA_WORKSPACE_PATH}/.clangd.in
+    ${CARLA_WORKSPACE_PATH}/.clangd
+  )
 endif ()

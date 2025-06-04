@@ -81,7 +81,7 @@ namespace client {
     }
     double remaining_length;
     double road_length = _parent->GetMap().GetLane(_waypoint).GetRoad()->GetLength();
-    if(_waypoint.lane_id < 0) {
+    if(IsPositiveDirection()) {
       remaining_length = road_length - current_s;
     } else {
       remaining_length = current_s;
@@ -112,7 +112,7 @@ namespace client {
 
     double remaining_length;
     double road_length = _parent->GetMap().GetLane(_waypoint).GetRoad()->GetLength();
-    if(_waypoint.lane_id < 0) {
+    if(IsPositiveDirection()) {
       remaining_length = road_length - current_s;
     } else {
       remaining_length = current_s;
@@ -146,15 +146,19 @@ namespace client {
   }
 
   std::optional<road::element::LaneMarking> Waypoint::GetRightLaneMarking() const {
-    if (_mark_record.first != nullptr) {
-      return road::element::LaneMarking(*_mark_record.first);
+    auto road = _parent->GetMap().GetLane(_waypoint).GetRoad();
+    const auto lane_marking_right_info = road->IsRHT() ? _mark_record.first : _mark_record.second;
+    if (lane_marking_right_info != nullptr) {
+      return road::element::LaneMarking(*lane_marking_right_info);
     }
     return std::optional<road::element::LaneMarking>{};
   }
 
   std::optional<road::element::LaneMarking> Waypoint::GetLeftLaneMarking() const {
-    if (_mark_record.second != nullptr) {
-      return road::element::LaneMarking(*_mark_record.second);
+    auto road = _parent->GetMap().GetLane(_waypoint).GetRoad();
+    const auto lane_marking_left_info = road->IsRHT() ? _mark_record.second : _mark_record.first;
+    if (lane_marking_left_info != nullptr) {
+      return road::element::LaneMarking(*lane_marking_left_info);
     }
     return std::optional<road::element::LaneMarking>{};
   }
@@ -176,7 +180,9 @@ namespace client {
   road::element::LaneMarking::LaneChange Waypoint::GetLaneChange() const {
     using lane_change_type = road::element::LaneMarking::LaneChange;
 
-    const auto lane_change_right_info = _mark_record.first;
+    auto road = _parent->GetMap().GetLane(_waypoint).GetRoad();
+
+    const auto lane_change_right_info = road->IsRHT() ? _mark_record.first : _mark_record.second;
     lane_change_type c_right;
     if (lane_change_right_info != nullptr) {
       const auto lane_change_right = lane_change_right_info->GetLaneChange();
@@ -185,7 +191,7 @@ namespace client {
       c_right = lane_change_type::Both;
     }
 
-    const auto lane_change_left_info = _mark_record.second;
+    const auto lane_change_left_info = road->IsRHT() ? _mark_record.second : _mark_record.first;
     lane_change_type c_left;
     if (lane_change_left_info != nullptr) {
       const auto lane_change_left = lane_change_left_info->GetLaneChange();
@@ -194,7 +200,7 @@ namespace client {
       c_left = lane_change_type::Both;
     }
 
-    if (_waypoint.lane_id > 0) {
+    if (!IsPositiveDirection()) {
       // if road goes backward
       if (c_right == lane_change_type::Right) {
         c_right = lane_change_type::Left;
@@ -203,7 +209,7 @@ namespace client {
       }
     }
 
-    if (((_waypoint.lane_id > 0) ? _waypoint.lane_id - 1 : _waypoint.lane_id + 1) > 0) {
+    if (((!IsPositiveDirection()) ? _waypoint.lane_id - 1 : _waypoint.lane_id + 1) < 0) {
       // if road goes backward
       if (c_left == lane_change_type::Right) {
         c_left = lane_change_type::Left;
@@ -250,6 +256,14 @@ namespace client {
       }
     }
     return result;
+  }
+
+  bool Waypoint::IsPositiveDirection() const {
+    return _parent->GetMap().GetLane(_waypoint).IsPositiveDirection();
+  }
+
+  bool Waypoint::IsRHT() const {
+    return _parent->GetMap().GetLane(_waypoint).GetRoad()->IsRHT();
   }
 
 } // namespace client

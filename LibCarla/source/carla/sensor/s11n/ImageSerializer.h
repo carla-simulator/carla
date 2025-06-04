@@ -31,6 +31,8 @@ namespace s11n {
     };
 #pragma pack(pop)
 
+    static_assert (sizeof(ImageHeader) == sizeof(uint32_t) * 3);
+
     constexpr static auto header_offset = sizeof(ImageHeader);
 
     static const ImageHeader &DeserializeHeader(const RawData &data) {
@@ -38,20 +40,29 @@ namespace s11n {
     }
 
     template <typename Sensor>
-    static Buffer Serialize(const Sensor &sensor, Buffer &&bitmap);
+    static Buffer Serialize(Sensor&& sensor, Buffer&& bitmap);
 
     static SharedPtr<SensorData> Deserialize(RawData &&data);
   };
 
   template <typename Sensor>
-  inline Buffer ImageSerializer::Serialize(const Sensor &sensor, Buffer &&bitmap) {
+  inline Buffer ImageSerializer::Serialize(
+    Sensor&& sensor,
+    Buffer&& bitmap) 
+  {
     DEBUG_ASSERT(bitmap.size() > sizeof(ImageHeader));
+
     ImageHeader header = {
       sensor.GetImageWidth(),
       sensor.GetImageHeight(),
       sensor.GetFOVAngle()
     };
-    std::memcpy(bitmap.data(), reinterpret_cast<const void *>(&header), sizeof(header));
+
+    std::memcpy(
+      bitmap.data(),
+      reinterpret_cast<const void *>(&header),
+      sizeof(header));
+    
     return std::move(bitmap);
   }
 

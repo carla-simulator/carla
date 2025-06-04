@@ -70,6 +70,10 @@ namespace data {
       _detections.push_back(detection);
     }
 
+    const std::vector<RadarDetection>& GetDetections() const {
+      return _detections;
+    }
+
   private:
     std::vector<RadarDetection> _detections;
 

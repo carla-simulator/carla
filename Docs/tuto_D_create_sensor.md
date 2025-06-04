@@ -104,8 +104,8 @@ Let's start.
 This class has to be located inside Carla plugin, we'll create two files for our
 new C++ class
 
-  * `Unreal/CarlaUE4/Plugins/Carla/Source/Carla/Sensor/SafeDistanceSensor.h`
-  * `Unreal/CarlaUE4/Plugins/Carla/Source/Carla/Sensor/SafeDistanceSensor.cpp`
+  * `Unreal/CarlaUnreal/Plugins/Carla/Source/Carla/Sensor/SafeDistanceSensor.h`
+  * `Unreal/CarlaUnreal/Plugins/Carla/Source/Carla/Sensor/SafeDistanceSensor.cpp`
 
 At the very minimum, the sensor is required to inherit `ASensor`, and provide a
 static method `GetSensorDefinition`; but we'll be overriding also the `Set`,

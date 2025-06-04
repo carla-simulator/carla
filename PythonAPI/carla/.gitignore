@@ -1,6 +1,4 @@
-*.egg-info
+CMakeLists.txt
+LICENSE
+MANIFEST.in
 setup.py
-build
-dependencies
-dist
-temp/

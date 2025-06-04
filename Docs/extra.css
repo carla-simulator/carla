@@ -1,3 +1,11 @@
+body {
+	background-color: #616161 !important;
+}
+
+.wy-side-nav-search {
+	background-color: #c7e9fd !important;
+}
+
 .build-buttons{
     text-align: center;
 }

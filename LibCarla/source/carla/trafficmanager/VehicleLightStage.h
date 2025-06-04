@@ -23,6 +23,8 @@ private:
   rpc::VehicleLightStateList all_light_states;
   /// Current weather parameters
   rpc::WeatherParameters weather;
+  /// Weather enabled
+  bool is_weather_enabled;
 
 public:
   VehicleLightStage(const std::vector<ActorId> &vehicle_id_list,

@@ -1,0 +1,49 @@
+{
+  "version": 4,
+  "cmakeMinimumRequired":
+  {
+    "major": 3,
+    "minor": 27,
+    "patch": 2
+  },
+  "configurePresets":
+  [
+    {
+      "name": "Common",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/Build/${presetName}",
+      "installDir": "${sourceDir}/Install/${presetName}",
+      "cacheVariables":
+      {
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/CMake/Toolchain.cmake"
+      },
+      "hidden": true
+    },
+    {
+      "name": "Development",
+      "inherits": "Common",
+      "cacheVariables":
+      {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_EXPORT_COMPILE_COMMANDS" : true
+      }
+    },
+    {
+      "name": "Release",
+      "inherits": "Common",
+      "cacheVariables":
+      {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "Debug",
+      "inherits": "Common",
+      "cacheVariables":
+      {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_EXPORT_COMPILE_COMMANDS" : true
+      }
+    }
+  ]
+}

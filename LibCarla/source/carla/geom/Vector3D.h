@@ -14,8 +14,9 @@
 namespace carla {
 namespace geom {
 
-  class Vector3D {
-  public:
+  struct Vector3D {
+
+    static constexpr auto Dim = 3;
 
     // =========================================================================
     // -- Public data members --------------------------------------------------
@@ -59,7 +60,7 @@ namespace geom {
       return std::sqrt(SquaredLength2D());
     }
 
-    constexpr Vector3D Abs() const {
+    inline Vector3D Abs() const {
        return Vector3D(abs(x), abs(y), abs(z));
     }
 

@@ -91,6 +91,10 @@ namespace client {
     _episode.Lock()->SetWeatherParameters(weather);
   }
 
+  bool World::IsWeatherEnabled() const {
+    return _episode.Lock()->IsWeatherEnabled();
+  }
+
   WorldSnapshot World::GetSnapshot() const {
     return _episode.Lock()->GetWorldSnapshot();
   }

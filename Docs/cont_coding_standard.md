@@ -31,7 +31,7 @@
   * Compilation should not give any error or warning
     (`clang++-8 -Wall -Wextra -std=C++14 -Wno-missing-braces`).
   * The use of `throw` is forbidden, use `carla::throw_exception` instead.
-  * Unreal C++ code (CarlaUE4 and Carla plugin) follow the
+  * Unreal C++ code (CarlaUnreal and Carla plugin) follow the
     [Unreal Engine's Coding Standard][ue4link] with the exception of using
     spaces instead of tabs.
   * LibCarla uses a variation of [Google's style guide][googlelink].

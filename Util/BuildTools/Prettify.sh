@@ -124,7 +124,7 @@ elif [[ -f ${PRETTIFY_FILE} ]] ; then
   if [[ ${PRETTIFY_FILE} == *.py ]] ; then
     log "autopep8 ${PRETTIFY_FILE}"
     ${AUTOPEP8_COMMAND} ${PRETTIFY_FILE}
-  elif [[ ${PRETTIFY_FILE} == *Unreal/CarlaUE4/* ]] ; then
+  elif [[ ${PRETTIFY_FILE} == *Unreal/CarlaUnreal/* ]] ; then
     log "uncrustify for UE4 ${PRETTIFY_FILE}"
     ${UNCRUSTIFY_COMMAND} -c ${UNCRUSTIFY_UE4_CONFIG} ${PRETTIFY_FILE}
   else

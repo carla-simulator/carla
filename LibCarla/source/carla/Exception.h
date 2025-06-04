@@ -36,7 +36,7 @@ namespace carla
 namespace carla
 {
   [[noreturn]]
-  inline void throw_exception(const std::exception &e)
+  inline static void throw_exception(const std::exception &e)
   {
     throw e;
   }

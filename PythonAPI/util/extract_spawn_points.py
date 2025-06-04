@@ -1,93 +1,58 @@
-""" CARLA map spawn points extractor """
+#!/usr/bin/env python
 
-from __future__ import print_function
+# Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Barcelona (UAB).
+#
+# This work is licensed under the terms of the MIT license.
+# For a copy, see <https://opensource.org/licenses/MIT>.
+
 import argparse
-import logging
-import glob
 import os
-import sys
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 
-
-def extract(args):
-    try:
-        client = carla.Client(args.host, args.port, worker_threads=1)
-        client.set_timeout(2.0)
-
-        world = client.get_world()
-        try:
-            _map = world.get_map()
-        except RuntimeError as error:
-            logging.info('RuntimeError: %s', error)
-            sys.exit(1)
-
-        if not _map.get_spawn_points():
-            logging.info('There are no spawn points available in your map/town.')
-            logging.info('Please add some Vehicle Spawn Point to your UE4 scene.')
-            sys.exit(1)
-        spawn_points = _map.get_spawn_points()
-        with open(args.output_dir + "/spawn_points.csv", "w", encoding='utf8') as file:
-            index = 0
-            for index, spawn_point in enumerate(spawn_points):
-                file.write(f'{index},{spawn_point.location.x},{spawn_point.location.y},{spawn_point.location.z}\n')
-
-    finally:
-        world = None
-
-# ==============================================================================
-# -- main() --------------------------------------------------------------------
-# ==============================================================================
-
-
 def main():
     argparser = argparse.ArgumentParser(
-        description='CARLA map spawn points extractor')
+        description='CARLA Manual Control Client')
     argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
+        '--host', metavar='H', default='127.0.0.1',
         help='IP of the host server (default: 127.0.0.1)')
     argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
+        '-p', '--port', metavar='P', default=2000, type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '-o', '--output-dir',
-        required=True,
-        help='Output directory path for extraction result')
+        '-o', '--output-dir', default='',
+        help='Folder path where the spawn poitns will be stored (empty string is deactivated)')
+    argparser.add_argument(
+        '--show', action='store_true',
+        help='Show the spawning points in the scene')
     args = argparser.parse_args()
 
-    if args.output_dir is None or not os.path.exists(args.output_dir):
+    if args.output_dir and not os.path.exists(args.output_dir):
         print('output directory not found.')
+        return
 
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.INFO)
+    client = carla.Client(args.host, args.port)
+    world = client.get_world()
+    tmap = world.get_map()
+    spawn_points = tmap.get_spawn_points()
 
-    logging.info('listening to server %s:%s', args.host, args.port)
+    if args.show:
+        print("Showing the spawn points in the scene")
+        for i, spawn_point in enumerate(spawn_points):
+            world.debug.draw_point(spawn_point.location, life_time=-1, size=0.2, color=carla.Color(0,0,128))
+            world.debug.draw_string(spawn_point.location + carla.Location(z=3), str(i), life_time=0, color=carla.Color(0, 0, 0))
 
-    print(__doc__)
 
-    try:
-        extract(args)
-    except:
-        print('\nAn error has occurred in extraction.')
+    if args.output_dir:
+        file_name = args.output_dir + "/spawn_points.csv"
+        print(f"Saving the spawn points to {file_name}")
+        with open(file_name, "w", encoding='utf8') as file:
+            for index, spawn_point in enumerate(spawn_points):
+                loc = spawn_point.location
+                rot = spawn_point.rotation
+                file.write(f'{index},{loc.x},{loc.y},{loc.z},{rot.roll},{rot.pitch},{rot.yaw}\n')
 
 
 if __name__ == '__main__':
-
-    try:
-        main()
-    except KeyboardInterrupt:
-        print('\nCancelled by user. Bye!')
-    except RuntimeError as e:
-        print(e)
+    main()
