@@ -37,7 +37,7 @@ You may also use Python 3.9 and 3.10.
 The Setup.bat file launches the following commands itself, you will need to use the following commands once you modify the code and wish to relaunch:
 
 !!! warning
-       Ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined pointing to the CARLA Unreal Engine 5.5 absolute path. Setup.bat sets this variable, but I may not be set if another approach was followed to install the requirements. 
+       Ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined pointing to the CARLA Unreal Engine 5.5 absolute path. Setup.bat sets this variable, but it may not be set if another approach was followed to install the requirements. 
 
 * **Configure**. Open x64 Native Tools Command Prompt for VS 2022 at the CarlaUE5 folder and runn the following command:
 
@@ -59,7 +59,7 @@ CMake preset - aggregate commands into single preset
 cmake --build Build
 ```
 
-* **Build and install the Python API**. Open the x64 Native Tools Command Prompt for VS 2022 at the CarlaUE5 folder and run the following command::
+* **Build and install the Python API**. Open the x64 Native Tools Command Prompt for VS 2022 at the CarlaUE5 folder and run the following command:
 
 ```sh
 cmake --build Build --target carla-python-api-install
