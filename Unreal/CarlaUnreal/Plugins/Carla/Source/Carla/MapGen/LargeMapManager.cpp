@@ -630,6 +630,13 @@ FCarlaMapTile& ALargeMapManager::GetCarlaMapTile(FIntVector TileVectorID)
   return *Tile;
 }
 
+FCarlaMapTile* ALargeMapManager::GetCarlaMapTilePointer(FIntVector TileVectorID)
+{
+  TileID TileID = GetTileID(TileVectorID);
+  FCarlaMapTile* Tile = MapTiles.Find(TileID);
+  return Tile;
+}
+
 FCarlaMapTile* ALargeMapManager::GetCarlaMapTile(TileID TileID)
 {
   FCarlaMapTile* Tile = MapTiles.Find(TileID);

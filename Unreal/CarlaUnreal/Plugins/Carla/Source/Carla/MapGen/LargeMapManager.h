@@ -195,7 +195,9 @@ public:
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   FCarlaMapTile& GetCarlaMapTile(FIntVector TileVectorID);
-  
+
+  FCarlaMapTile* GetCarlaMapTilePointer(FIntVector TileVectorID);
+
   FCarlaMapTile* GetCarlaMapTile(TileID TileID);
 
   FCarlaMapTile& LoadCarlaMapTile(FString TileMapPath, TileID TileId);

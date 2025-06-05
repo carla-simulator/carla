@@ -62,19 +62,19 @@ UPrepareAssetsForCookingCommandlet::UPrepareAssetsForCookingCommandlet()
   // Get Carla Default materials, these will be used for maps that need to use
   // Carla materials
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNodeYellowMaterial(TEXT(
-    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled_V3.M_Road_03_Tiled_V3'"));
+    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_A.MI_Road_Asphalt_A'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> MarkingNodeWhiteMaterial(TEXT(
-    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/M_Road_03_LMW.M_Road_03_LMW'"));
+    "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_B_LaneMarkingWhite.MI_Road_Asphalt_B_LaneMarkingWhite'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> RoadNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/RoadPainterMaterials/LargeMaps/M_Road_03_Tiled_V2.M_Road_03_Tiled_V2'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Rural_A.MI_Road_Rural_A'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> TerrainNodeMaterial(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/00_MastersOpt/Large_Maps/materials/MI_LargeLandscape_Grass.MI_LargeLandscape_Grass'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Interurban.MI_LargeLandscape_Interurban'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> CurbNodeMaterial(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/LargeMap_materials/largeM_curb/MI_largeM_curb01.MI_largeM_curb01'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Gutters_Curbs/largeM_curb/MI_largeM_curb01.MI_largeM_curb01'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> GutterNodeMaterial(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/LargeMap_materials/largeM_gutter/MI_largeM_gutter01.MI_largeM_gutter01'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Gutters_Curbs/largeM_gutter/MI_largeM_gutter01.MI_largeM_gutter01'"));
   static ConstructorHelpers::FObjectFinder<UMaterialInstanceConstant> SidewalkNode(TEXT(
-      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/LargeMap_materials/largeM_sidewalk/tile01/MI_largeM_tile02.MI_largeM_tile02'"));
+      "MaterialInstanceConstant'/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Apartment.MI_Sidewalk_Apartment'"));
 
   GutterNodeMaterialInstance = (UMaterialInstance *) GutterNodeMaterial.Object;
   CurbNodeMaterialInstance = (UMaterialInstance *) CurbNodeMaterial.Object;
