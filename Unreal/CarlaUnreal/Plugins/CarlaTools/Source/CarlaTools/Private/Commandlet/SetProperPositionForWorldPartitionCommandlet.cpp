@@ -66,7 +66,7 @@ int32 USetProperPositionForWorldPartitionCommandlet::Main(const FString &Params)
     UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Error, TEXT("Largemapmanager not found "));
   }
 
-  //UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
+  UEditorLoadingAndSavingUtils::SaveDirtyPackages(false, true);
   UEditorLevelLibrary::SaveCurrentLevel();
 
   return 0;
@@ -79,22 +79,28 @@ void USetProperPositionForWorldPartitionCommandlet::ProcessTile(const FIntVector
   {
     ALargeMapManager* LmManager = Cast<ALargeMapManager>(QueryActor);
     UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Warning, TEXT("Current Tile is %s"), *(CurrentTilesInXY.ToString()));
-    const FCarlaMapTile& CarlaTile = LmManager->GetCarlaMapTile(CurrentTilesInXY);
-  
-    UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Warning, TEXT("Tile Name is %s"), *(CarlaTile.Name));
-    UEditorLevelLibrary::LoadLevel(CarlaTile.Name);
-
-    const FVector MinPosition = FVector(CurrentTilesInXY.X * TileSize, CurrentTilesInXY.Y * -TileSize, 0.0f);
-
-    TArray<AActor*> FoundActors;
-    UGameplayStatics::GetAllActorsOfClass(GEditor->GetEditorWorldContext().World(), AActor::StaticClass(), FoundActors);
-    for (AActor* CA : FoundActors) 
+    FCarlaMapTile* CarlaTile = LmManager->GetCarlaMapTilePointer(CurrentTilesInXY);
+    if( CarlaTile != nullptr )
     {
-      CA->AddActorWorldOffset(MinPosition, false, nullptr, ETeleportType::ResetPhysics);
-    }
+      UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Warning, TEXT("Tile Name is %s"), *(CarlaTile->Name));
+      UEditorLevelLibrary::LoadLevel(CarlaTile->Name);
 
+      const FVector MinPosition = FVector(CurrentTilesInXY.X * TileSize, CurrentTilesInXY.Y * -TileSize, 0.0f);
+
+      TArray<AActor*> FoundActors;
+      UGameplayStatics::GetAllActorsOfClass(GEditor->GetEditorWorldContext().World(), AActor::StaticClass(), FoundActors);
+      for (AActor* CA : FoundActors) 
+      {
+        CA->AddActorWorldOffset(MinPosition, false, nullptr, ETeleportType::ResetPhysics);
+      }
+    }
+    else
+    {
+        UE_LOG(LogCarlaToolsMapSetProperPositionForWorldPartitionCommandlet, Error, TEXT("Failed to load Tile %s"), *(CurrentTilesInXY.ToString()));
+    }
     UEditorLevelLibrary::SaveCurrentLevel();
   }
+
 }
 
 #endif

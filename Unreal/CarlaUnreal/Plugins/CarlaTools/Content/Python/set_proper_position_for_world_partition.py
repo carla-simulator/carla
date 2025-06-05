@@ -7,8 +7,8 @@ import subprocess
 
 
 """Generic function for running a commandlet with its arguments."""
-ue4_path = os.environ["UE5_ROOT"]
-uproject_path = unreal.Paths.project_dir() + ("CarlaUE4.uproject")
+ue4_path = os.environ["CARLA_UNREAL_ENGINE_PATH"]
+uproject_path = unreal.Paths.project_dir() + ("CarlaUnreal.uproject")
 run = "-run=%s" % ("SetProperPositionForWorldPartitionCommandlet")
 
 print("Before any Commandlet:")
@@ -40,4 +40,3 @@ elif os.name == "posix":
     print("Commandlet:", full_command)
     print("Arguments:", arguments)
     subprocess.call([full_command], shell=True)
-
