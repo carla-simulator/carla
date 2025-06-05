@@ -48,7 +48,7 @@ ATrafficLightManager::ATrafficLightManager()
   }
   // Default traffic signs models
   static ConstructorHelpers::FClassFinder<AActor> StopFinder(
-      TEXT( "/Game/Carla/Static/TrafficSign/BP_Stop" ) );
+      TEXT( "/Game/Carla/Static/TrafficSign/BP_Stop01" ) );
   if (StopFinder.Succeeded())
   {
     TSubclassOf<AActor> StopSignModel = StopFinder.Class;
@@ -56,7 +56,7 @@ ATrafficLightManager::ATrafficLightManager()
     SignComponentModels.Add(carla::road::SignalType::StopSign().c_str(), UStopSignComponent::StaticClass());
   }
   static ConstructorHelpers::FClassFinder<AActor> YieldFinder(
-      TEXT( "/Game/Carla/Static/TrafficSign/BP_Yield" ) );
+      TEXT( "/Game/Carla/Static/TrafficSign/BP_Yield01" ) );
   if (YieldFinder.Succeeded())
   {
     TSubclassOf<AActor> YieldSignModel = YieldFinder.Class;
