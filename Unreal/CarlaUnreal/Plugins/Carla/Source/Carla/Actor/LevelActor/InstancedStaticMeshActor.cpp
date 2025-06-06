@@ -15,6 +15,5 @@ AInstancedStaticMeshActor::AInstancedStaticMeshActor(const FObjectInitializer& O
 {
   PrimaryActorTick.bCanEverTick = false;
   InstancedStaticMeshComponent = CreateDefaultSubobject<UHierarchicalInstancedStaticMeshComponent>("InstancedStaticMeshComponent");
-  
+  RootComponent = InstancedStaticMeshComponent;
 }
-
