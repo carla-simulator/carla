@@ -107,9 +107,9 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     pushd "${ADRSS_COLCON_WORKSPACE}" >/dev/null
     if [[ "${CMAKE_PREFIX_PATH}" == "" ]]; then
-      CMAKE_PREFIX_PATH="${CARLA_BUILD_FOLDER}/boost-1.80.0-$CXX_TAG-install;${CARLA_BUILD_FOLDER}/proj-install"
+      CMAKE_PREFIX_PATH="${CARLA_BUILD_FOLDER}/boost-1.84.0-$CXX_TAG-install;${CARLA_BUILD_FOLDER}/proj-install"
     else
-      CMAKE_PREFIX_PATH="${CARLA_BUILD_FOLDER}/boost-1.80.0-$CXX_TAG-install;${CARLA_BUILD_FOLDER}/proj-install;${CMAKE_PREFIX_PATH}"
+      CMAKE_PREFIX_PATH="${CARLA_BUILD_FOLDER}/boost-1.84.0-$CXX_TAG-install;${CARLA_BUILD_FOLDER}/proj-install;${CMAKE_PREFIX_PATH}"
     fi
 
     # get the python version of the binding to be built, need to query the binary,
