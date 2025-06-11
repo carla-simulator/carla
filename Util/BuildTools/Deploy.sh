@@ -151,7 +151,7 @@ if [[ -n "$SUMMARY_OUTPUT_PATH" ]]; then
   {
     echo "package_uri=${DEPLOY_URI}"
     echo "additional_maps_package_uri=${DEPLOY_URI2}"
-  } > "$SUMMARY_OUTPUT_PATH"
+  } >> "$SUMMARY_OUTPUT_PATH"
 fi
 
 # ==============================================================================
