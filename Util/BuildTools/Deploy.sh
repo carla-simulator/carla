@@ -4,18 +4,14 @@
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-
-
 REPLACE_LATEST=false
 DOCKER_PUSH=false
 AWS_COPY="aws s3 cp"
 DOCKER="docker"
 UNTAR="tar -xvzf"
 UPLOAD_MAPS=true
-PROFILE="--profile Jenkins-CVC"
 ENDPOINT="--endpoint-url=https://s3.us-east-005.backblazeb2.com/"
-TEST=false
-
+SUMMARY_OUTPUT_PATH=
 
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
@@ -23,17 +19,14 @@ TEST=false
 
 DOC_STRING="Upload latest build to S3."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--replace-latest] [--docker-push] [--dry-run]"
+USAGE_STRING="Usage: $0 [-h|--help] [--replace-latest] [--docker-push] [--dry-run] [--github-output GITHUB_OUTPUT]"
 
-OPTS=`getopt -o h --long help,replace-latest,docker-push,dry-run,test -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,replace-latest,docker-push,dry-run,summary-output: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    --test )
-      TEST=true
-      shift ;;
     --replace-latest )
       REPLACE_LATEST=true;
       shift ;;
@@ -45,6 +38,9 @@ while [[ $# -gt 0 ]]; do
       DOCKER="echo ${DOCKER}";
       UNTAR="echo ${UNTAR}";
       shift ;;
+    --summary-output )
+      SUMMARY_OUTPUT_PATH="$2";
+      shift 2 ;;
     -h | --help )
       echo "$DOC_STRING"
       echo "$USAGE_STRING"
@@ -93,25 +89,6 @@ if [ ! -f ${LATEST_PACKAGE_PATH} ]; then
   fatal_error "Latest package not found, please run 'make package'."
 fi
 
-
-# ==============================================================================
-# -- TEST --------------------------------------------------------------------
-# ==============================================================================
-
-if ${TEST} ; then
-  LATEST_PACKAGE=test_CARLA_${REPOSITORY_TAG}.tar.gz
-  LATEST_PACKAGE_PATH=./${LATEST_PACKAGE}
-  LATEST_PACKAGE2=test_AdditionalMaps_${REPOSITORY_TAG}.tar.gz
-  LATEST_PACKAGE_PATH2=./${LATEST_PACKAGE2}
-
-  DEPLOY_NAME=test_CARLA_${REPOSITORY_TAG}.tar.gz
-  DEPLOY_NAME2=test_AdditionalMaps_${REPOSITORY_TAG}.tar.gz
-
-  touch ${LATEST_PACKAGE}
-  touch ${LATEST_PACKAGE2}
-
-fi
-
 # ==============================================================================
 # -- Upload --------------------------------------------------------------------
 # ==============================================================================
@@ -119,10 +96,10 @@ fi
 DEPLOY_URI=${S3_PREFIX}/${DEPLOY_NAME}
 DEPLOY_URI2=${S3_PREFIX}/${DEPLOY_NAME2}
 
-${AWS_COPY} ${LATEST_PACKAGE_PATH} ${DEPLOY_URI} ${ENDPOINT} ${PROFILE}
+${AWS_COPY} ${LATEST_PACKAGE_PATH} ${DEPLOY_URI} ${ENDPOINT}
 log "Latest build uploaded to ${DEPLOY_URI}."
 
-${AWS_COPY} ${LATEST_PACKAGE_PATH2} ${DEPLOY_URI2} ${ENDPOINT} ${PROFILE}
+${AWS_COPY} ${LATEST_PACKAGE_PATH2} ${DEPLOY_URI2} ${ENDPOINT}
 log "Latest build uploaded to ${DEPLOY_URI2}."
 
 # ==============================================================================
@@ -131,10 +108,10 @@ log "Latest build uploaded to ${DEPLOY_URI2}."
 
 if ${REPLACE_LATEST} ; then
 
-  ${AWS_COPY} ${DEPLOY_URI} ${LATEST_DEPLOY_URI} ${ENDPOINT} ${PROFILE}
+  ${AWS_COPY} ${DEPLOY_URI} ${LATEST_DEPLOY_URI} ${ENDPOINT}
   log "Latest build uploaded to ${LATEST_DEPLOY_URI}."
   
-  ${AWS_COPY} ${DEPLOY_URI2} ${LATEST_DEPLOY_URI2} ${ENDPOINT} ${PROFILE}
+  ${AWS_COPY} ${DEPLOY_URI2} ${LATEST_DEPLOY_URI2} ${ENDPOINT}
   log "Latest build uploaded to ${LATEST_DEPLOY_URI2}."
 
 fi
@@ -165,6 +142,17 @@ if ${DOCKER_PUSH} ; then
   popd >/dev/null
 
 fi;
+
+# ==============================================================================
+# -- Summary output ------------------------------------------------------------
+# ==============================================================================
+
+if [[ -n "$SUMMARY_OUTPUT_PATH" ]]; then
+  {
+    echo "package_uri=${DEPLOY_URI}"
+    echo "additional_maps_package_uri=${DEPLOY_URI2}"
+  } >> "$SUMMARY_OUTPUT_PATH"
+fi
 
 # ==============================================================================
 # -- ...and we are done --------------------------------------------------------
