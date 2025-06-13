@@ -85,7 +85,11 @@ private:
   TArray<ATrafficSignBase*> TrafficSigns;
 
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
-  TSubclassOf<AActor> TrafficLightModel;
+  TSubclassOf<AActor> TrafficLightModel_RHT;
+
+  UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
+  TSubclassOf<AActor> TrafficLightModel_LHT;
+
 
   // Relates an OpenDRIVE type to a traffic sign blueprint
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")

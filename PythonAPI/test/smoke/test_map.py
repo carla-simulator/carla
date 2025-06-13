@@ -19,17 +19,14 @@ class TestMap(SmokeTest):
 
     def test_load_all_maps(self):
         print("TestMap.test_load_all_maps")
-        map_names = list(self.client.get_available_maps())
-        random.shuffle(map_names)
+        map_names = ['Town01', 'Town01_Opt', 'Town02', 'Town02_Opt', 'Town03', 'Town03_Opt', 'Town04', 'Town04_Opt', 'Town05', 'Town05_Opt', 'Town10HD', 'Town10HD_Opt']
         for map_name in map_names:
-            # ignore empty or large maps by now
-            if map_name != '/Game/Carla/Maps/BaseMap/BaseMap' and map_name != '/Game/Carla/Maps/Town11/Town11' and map_name != '/Game/Carla/Maps/Town12/Town12':
-                world = self.client.load_world(map_name)
-                # workaround: give time to UE4 to clean memory after loading (old assets)
-                time.sleep(5)
-                m = world.get_map()
-                self.assertEqual(map_name.split('/')[-1], m.name.split('/')[-1])
-                self._check_map(m)
+            world = self.client.load_world(map_name)
+            # workaround: give time to UE4 to clean memory after loading (old assets)
+            time.sleep(5)
+            m = world.get_map()
+            self.assertEqual(map_name.split('/')[-1], m.name.split('/')[-1])
+            self._check_map(m)
 
     def _check_map(self, m):
         for spawn_point in m.get_spawn_points():

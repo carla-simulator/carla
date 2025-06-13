@@ -105,11 +105,12 @@ void Parameters::SetForceLaneChange(const ActorPtr &actor, const bool direction)
   force_lane_change.AddEntry(entry);
 }
 
-void Parameters::SetKeepRightPercentage(const ActorPtr &actor, const float percentage) {
+void Parameters::SetKeepSlowLanePercentage(const ActorPtr &actor, const float percentage) {
 
   const auto entry = std::make_pair(actor->GetId(), percentage);
-  perc_keep_right.AddEntry(entry);
+  perc_keep_slow_lane.AddEntry(entry);
 }
+
 
 void Parameters::SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) {
 
@@ -298,12 +299,12 @@ ChangeLaneInfo Parameters::GetForceLaneChange(const ActorId &actor_id) {
   return change_lane_info;
 }
 
-float Parameters::GetKeepRightPercentage(const ActorId &actor_id) {
+float Parameters::GetKeepSlowLanePercentage(const ActorId &actor_id) {
 
   float percentage = -1.0f;
 
-  if (perc_keep_right.Contains(actor_id)) {
-    percentage = perc_keep_right.GetValue(actor_id);
+  if (perc_keep_slow_lane.Contains(actor_id)) {
+    percentage = perc_keep_slow_lane.GetValue(actor_id);
   }
 
   return percentage;

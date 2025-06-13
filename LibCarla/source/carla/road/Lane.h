@@ -119,6 +119,8 @@ namespace road {
     std::pair<geom::Vector3D, geom::Vector3D> GetCornerPositions(
       const double s, const float extra_width = 0.f) const;
 
+    bool IsPositiveDirection() const;
+
   private:
 
     friend MapBuilder;
