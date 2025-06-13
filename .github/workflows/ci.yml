@@ -65,11 +65,12 @@ jobs:
           aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
 
       - name: Upload package
+        id: upload_step
         run: make deploy ARGS="--replace-latest --summary-output $GITHUB_OUTPUT"
   
       - name: Write summary
         run: |
-          echo "## CARLA Ubuntu CI/CD Summary" >> $GITHUB_STEP_SUMMARY
+          echo "## [Ubuntu] CARLA CI/CD Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- CARLA Package: ${{ steps.upload_step.outputs.package_uri }}" >> $GITHUB_STEP_SUMMARY
           echo "- Additional Maps: ${{ steps.upload_step.outputs.additional_maps_package_uri }}" >> $GITHUB_STEP_SUMMARY
