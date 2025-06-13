@@ -1,0 +1,129 @@
+name: CARLA CI/CD
+
+on:
+  # pull_request:
+  #   branches:
+  #     - ue4-dev
+  #   types: [opened, synchronize, reopened]
+  push:
+     branches:
+       -ue4-dev
+
+jobs:
+  ubuntu:
+    name: Ubuntu CI/CD
+    runs-on: self-hosted
+    container:
+      image: carlasim/carla-builder:ue4-20.04
+      options: --runtime=nvidia --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all --user 1001:1001 --volume /home/jenkins/UnrealEngine_4.26:/unreal-engine
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+    env:
+      UE4_ROOT: /unreal-engine
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download content
+        run: ./Update.sh
+
+      - name: Setup
+        run: make setup ARGS="--python-version=3.10,3.11,3.12 --ros2 --chrono"
+
+      - name: Build LibCarla
+        run: make LibCarla ARGS="--python-version=3.10,3.11,3.12 --ros2 --chrono"
+
+      - name: Build PythonAPI
+        run: make PythonAPI ARGS="--python-version=3.10,3.11,3.12 --ros2 --chrono"
+
+      - name: Build CarlaUE4Editor
+        run: make CarlaUE4Editor ARGS="--python-version=3.10,3.11,3.12 --ros2 --chrono"
+
+      - name: Build Package
+        run: |
+          make package ARGS="--python-version=3.10,3.11,3.12 --ros2 --chrono"
+          make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=3.10,3.11,3.12"
+
+      - name: Make C++ examples
+        run: make examples
+
+      - name: Run unit tests
+        run: make check ARGS="--all --xml --python-version=3.10,3.11,3.12"
+
+      - name: Run smoke tests
+        run: |
+          ./Dist/CARLA_*/LinuxNoEditor/CarlaUE4.sh --ros2 -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &
+          make smoke_tests ARGS="--xml --python-version=3.12"
+          make run-examples ARGS="localhost 3654"
+
+      - name: Configure Backblaze
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
+
+      - name: Upload package
+        id: upload_step
+        run: make deploy ARGS="--replace-latest --summary-output $GITHUB_OUTPUT"
+  
+      - name: Write summary
+        run: |
+          echo "## [Ubuntu] CARLA CI/CD Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- CARLA Package: ${{ steps.upload_step.outputs.package_uri }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Additional Maps: ${{ steps.upload_step.outputs.additional_maps_package_uri }}" >> $GITHUB_STEP_SUMMARY
+
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ vars.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+
+  # windows:
+  #   name: Windows CI/CD
+  #   runs-on: self-hosted-windows
+  #   env:
+  #     UE4_ROOT: C:\Users\adas\workspace\carla-ue4\unreal-engine
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+
+  #     - name: Download content
+  #       run: |
+  #         call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+  #         call Update.bat
+  #       shell: cmd
+
+  #     - name: Setup
+  #       run: |
+  #         call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+  #         make setup ARGS="--chrono"
+  #       shell: cmd
+
+  #     - name: Build LibCarla
+  #       run: |
+  #         call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+  #         make LibCarla
+  #       shell: cmd
+
+  #     - name: Build PythonAPI
+  #       run: |
+  #         call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+  #         make PythonAPI
+  #       shell: cmd
+
+  #     - name: Build CarlaUE4Editor
+  #       run: |
+  #         call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+  #         make CarlaUE4Editor  ARGS="--chrono"
+  #       shell: cmd
+
+  #     - name: Build Package
+  #       run: |
+  #         call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+  #         make package ARGS="--chrono"
+  #         make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate"
+  #       shell: cmd
