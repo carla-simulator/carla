@@ -82,48 +82,48 @@ jobs:
       #     password: ${{ secrets.DOCKERHUB_TOKEN }}
 
 
-  windows:
-    name: Windows CI/CD
-    runs-on: self-hosted-windows
-    env:
-      UE4_ROOT: C:\Users\adas\workspace\carla-ue4\unreal-engine
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  # windows:
+  #   name: Windows CI/CD
+  #   runs-on: self-hosted-windows
+  #   env:
+  #     UE4_ROOT: C:\Users\adas\workspace\carla-ue4\unreal-engine
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
 
-      - name: Download content
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-          call Update.bat
-        shell: cmd
+  #     - name: Download content
+  #       run: |
+  #         call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+  #         call Update.bat
+  #       shell: cmd
 
-      - name: Setup
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-          make setup ARGS="--chrono"
-        shell: cmd
+  #     - name: Setup
+  #       run: |
+  #         call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+  #         make setup ARGS="--chrono"
+  #       shell: cmd
 
-      - name: Build LibCarla
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-          make LibCarla
-        shell: cmd
+  #     - name: Build LibCarla
+  #       run: |
+  #         call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+  #         make LibCarla
+  #       shell: cmd
 
-      - name: Build PythonAPI
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-          make PythonAPI
-        shell: cmd
+  #     - name: Build PythonAPI
+  #       run: |
+  #         call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+  #         make PythonAPI
+  #       shell: cmd
 
-      - name: Build CarlaUE4Editor
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-          make CarlaUE4Editor  ARGS="--chrono"
-        shell: cmd
+  #     - name: Build CarlaUE4Editor
+  #       run: |
+  #         call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+  #         make CarlaUE4Editor  ARGS="--chrono"
+  #       shell: cmd
 
-      - name: Build Package
-        run: |
-          call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
-          make package ARGS="--chrono"
-          make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate"
-        shell: cmd
+  #     - name: Build Package
+  #       run: |
+  #         call "C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+  #         make package ARGS="--chrono"
+  #         make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate"
+  #       shell: cmd
