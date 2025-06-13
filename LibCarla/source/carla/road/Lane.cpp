@@ -235,7 +235,7 @@ namespace road {
     }
 
     float lane_width = static_cast<float>(GetWidth(s)) / 2.0f;
-    if (extra_width != 0.f && road->IsJunction() && GetType() == Lane::LaneType::Driving) {
+    if (extra_width != 0.f && GetType() == Lane::LaneType::Driving) {
       lane_width += extra_width;
     }
 
