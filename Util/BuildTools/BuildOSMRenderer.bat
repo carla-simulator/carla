@@ -75,7 +75,7 @@ if not exist "%OSM_RENDERER_VSPROJECT_PATH%" mkdir "%OSM_RENDERER_VSPROJECT_PATH
 cd "%OSM_RENDERER_VSPROJECT_PATH%"
 
 cmake -G "Visual Studio 17 2022" -A x64^
-    -DCMAKE_CXX_FLAGS_RELEASE="/std:c++17 /wd4251 /I%INSTALLATION_DIR:/=\%boost-1.80.0-install\include"^
+    -DCMAKE_CXX_FLAGS_RELEASE="/std:c++17 /wd4251 /I%INSTALLATION_DIR:/=\%boost-1.84.0-install\include"^
     "%OSM_RENDERER_SOURCE%"
 
 cmake --build . --config Release

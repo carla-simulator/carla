@@ -66,7 +66,7 @@ rem -- Local Variables ---------------------------------------------------------
 rem ============================================================================
 
 set BOOST_BASENAME=boost-%BOOST_VERSION%
-set BOOST_SHA256SUM="e34756f63abe8ac34b35352743f17d061fcc825969a2dd8458264edb38781782"
+set BOOST_SHA256SUM="cc77eb8ed25da4d596b25e77e4dbb6c5afaac9cddd00dc9ca947b6b268cc76a4"
 
 set BOOST_TEMP_FOLDER=boost_%BOOST_VERSION:.=_%
 set BOOST_TEMP_FILE=%BOOST_TEMP_FOLDER%.zip

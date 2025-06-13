@@ -24,7 +24,7 @@ rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
-set BOOST_VERSION=1.80.0
+set BOOST_VERSION=1.84.0
 set INSTALLERS_DIR=%ROOT_PATH:/=\%Util\InstallersWin\
 set VERSION_FILE=%ROOT_PATH:/=\%Util\ContentVersions.txt
 set CONTENT_DIR=%ROOT_PATH:/=\%Unreal\CarlaUE4\Content\Carla\
@@ -224,8 +224,8 @@ echo %FILE_N% Installing Xercesc...
 call "%INSTALLERS_DIR%install_xercesc.bat"^
  --build-dir "%INSTALLATION_DIR%"^
  --generator %GENERATOR%
-copy %INSTALLATION_DIR%\xerces-c-3.2.3-install\lib\xerces-c_3.lib %CARLA_PYTHON_DEPENDENCIES%\lib
-copy %INSTALLATION_DIR%\xerces-c-3.2.3-install\lib\xerces-c_3.lib %CARLA_DEPENDENCIES_FOLDER%\lib
+xcopy /Y /I %INSTALLATION_DIR%\xerces-c-3.2.3-install\lib\xerces-c_3.lib %CARLA_PYTHON_DEPENDENCIES%\lib\
+xcopy /Y /I %INSTALLATION_DIR%\xerces-c-3.2.3-install\lib\xerces-c_3.lib %CARLA_DEPENDENCIES_FOLDER%\lib\
 
 rem ============================================================================
 rem -- Download and install Sqlite3 --------------------------------------------
@@ -233,8 +233,8 @@ rem ============================================================================
 echo %FILE_N% Installing Sqlite3
 call "%INSTALLERS_DIR%install_sqlite3.bat"^
  --build-dir "%INSTALLATION_DIR%"
-copy %INSTALLATION_DIR%\sqlite3-install\lib\sqlite3.lib %CARLA_PYTHON_DEPENDENCIES%\lib
-copy %INSTALLATION_DIR%\sqlite3-install\lib\sqlite3.lib %CARLA_DEPENDENCIES_FOLDER%\lib
+xcopy /Y /I %INSTALLATION_DIR%\sqlite3-install\lib\sqlite3.lib %CARLA_PYTHON_DEPENDENCIES%\lib\
+xcopy /Y /I %INSTALLATION_DIR%\sqlite3-install\lib\sqlite3.lib %CARLA_DEPENDENCIES_FOLDER%\lib\
 
 rem ============================================================================
 rem -- Download and install PROJ --------------------------------------------
@@ -244,8 +244,8 @@ echo %FILE_N% Installing PROJ
 call "%INSTALLERS_DIR%install_proj.bat"^
  --build-dir "%INSTALLATION_DIR%"^
  --generator %GENERATOR%
-copy %INSTALLATION_DIR%\proj-install\lib\proj.lib %CARLA_PYTHON_DEPENDENCIES%\lib
-copy %INSTALLATION_DIR%\proj-install\lib\proj.lib %CARLA_DEPENDENCIES_FOLDER%\lib
+xcopy /Y /I %INSTALLATION_DIR%\proj-install\lib\proj.lib %CARLA_PYTHON_DEPENDENCIES%\lib\
+xcopy /Y /I %INSTALLATION_DIR%\proj-install\lib\proj.lib %CARLA_DEPENDENCIES_FOLDER%\lib\
 
 rem ============================================================================
 rem -- Download and install Eigen ----------------------------------------------
