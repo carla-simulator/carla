@@ -1,0 +1,41 @@
+name: CARLA Content CI/CD
+
+on:
+  workflow_dispatch:
+
+jobs:
+  content:
+    name: CARLA Content CI/CD
+    runs-on: self-hosted:ubuntu
+    container:
+      image: carlasim/carla-builder:ue4-20.04
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    steps:
+
+      - name: Checkout repository
+        run: |
+          git clone -b joel-mb/github_actions https://bitbucket.org/carla-simulator/carla-content.git
+
+      - name: Check Filenames
+        run: make check
+
+      - name: Make package
+        run: make dist
+
+      - name: Configure Backblaze
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
+
+      - name: Upload package
+        id: upload_step
+        run: make upload-dist
+  
+      - name: Write summary
+        run: |
+          echo "## CARLA Content CI/CD Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Content package: ${{ steps.upload_step.outputs.package_uri }}" >> $GITHUB_STEP_SUMMARY
