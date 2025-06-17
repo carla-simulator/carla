@@ -1,14 +1,21 @@
-name: CARLA Content CI/CD
+name: UE4-Content
 
 on:
   workflow_dispatch:
+    inputs:
+      branch:
+        description: "Specify the target branch for the content build"
+        required: true
+        default: "master"
+        type: string
 
 jobs:
   content:
-    name: CARLA Content CI/CD
-    runs-on: self-hosted:ubuntu
+    name: Content Build
+    runs-on: self-hosted
     container:
       image: carlasim/carla-builder:ue4-20.04
+      options: --user 1001:1001
       credentials:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -17,13 +24,12 @@ jobs:
 
       - name: Checkout repository
         run: |
-          git clone -b joel-mb/github_actions https://bitbucket.org/carla-simulator/carla-content.git
-
-      - name: Check Filenames
-        run: make check
+          git clone -b ${{ inputs.branch }} https://bitbucket.org/carla-simulator/carla-content.git
 
       - name: Make package
-        run: make dist
+        run: |
+          cd carla-content
+          make dist
 
       - name: Configure Backblaze
         run: |
@@ -32,10 +38,17 @@ jobs:
 
       - name: Upload package
         id: upload_step
-        run: make upload-dist
+        run: |
+          cd carla-content
+          make upload-dist
   
       - name: Write summary
         run: |
           echo "## CARLA Content CI/CD Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- Content package: ${{ steps.upload_step.outputs.package_uri }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Post Checkout repository
+        if: always()
+        run: |
+          rm -rf carla-content
