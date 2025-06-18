@@ -28,13 +28,13 @@ on:
 
     secrets:
       DOCKERHUB_USERNAME:
-        required: true
+        required: false
       DOCKERHUB_TOKEN:
-        required: true
+        required: false
       AWS_ACCESS_KEY_ID:
-        required: true
+        required: false
       AWS_ACCESS_KEY:
-        required: true
+        required: false
 
 jobs:
   ubuntu:
@@ -43,9 +43,6 @@ jobs:
     container:
       image: carlasim/carla-builder:ue4-20.04
       options: --runtime=nvidia --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all --user 1001:1001 --volume /home/jenkins/UnrealEngine_4.26:/unreal-engine
-      credentials:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
     env:
       UE4_ROOT: /unreal-engine
 
