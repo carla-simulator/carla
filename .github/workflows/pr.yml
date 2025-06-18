@@ -1,0 +1,28 @@
+name: UE4-PR
+
+on:
+  pull_request:
+    branches:
+      - ue4-dev
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  ubuntu-pr:
+    name: Ubuntu PR
+    uses: ./.github/workflows/ci.yml
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+    with:
+      python-versions: "3.12"
+      smoke-test-python-versions: "3.12"
+      additional-maps: false
+      upload-package: false
+      upload-replace-latest: false
+      upload-docker: false

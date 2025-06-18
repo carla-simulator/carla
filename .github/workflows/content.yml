@@ -1,0 +1,54 @@
+name: UE4-Content
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Specify the target branch for the content build"
+        required: true
+        default: "master"
+        type: string
+
+jobs:
+  content:
+    name: Content Build
+    runs-on: self-hosted
+    container:
+      image: carlasim/carla-builder:ue4-20.04
+      options: --user 1001:1001
+      credentials:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    steps:
+
+      - name: Checkout repository
+        run: |
+          git clone -b ${{ inputs.branch }} https://bitbucket.org/carla-simulator/carla-content.git
+
+      - name: Make package
+        run: |
+          cd carla-content
+          make dist
+
+      - name: Configure Backblaze
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
+
+      - name: Upload package
+        id: upload_step
+        run: |
+          cd carla-content
+          make upload-dist
+  
+      - name: Write summary
+        run: |
+          echo "## CARLA Content CI/CD Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Content package: ${{ steps.upload_step.outputs.package_uri }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Post Checkout repository
+        if: always()
+        run: |
+          rm -rf carla-content
