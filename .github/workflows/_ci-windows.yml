@@ -1,0 +1,110 @@
+on:
+  workflow_call:
+    inputs:
+      python-versions:
+        required: true
+        type: string
+      additional-args:
+        type: string
+        required: false
+        default: ""
+      additional-maps:
+        type: boolean
+        default: true
+      upload-package:
+        type: boolean
+        required: true
+      upload-replace-latest:
+        type: boolean
+        required: true
+
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: false
+      DOCKERHUB_TOKEN:
+        required: false
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_ACCESS_KEY:
+        required: false
+
+jobs:
+  windows:
+    name: Windows CI/CD
+    runs-on: self-hosted:windows
+    env:
+      UE4_ROOT: C:\Users\jenkins\unreal-engine
+      VCVARS: C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download content
+        run: |
+          call "%VCVARS%"
+          call Update.bat
+        shell: cmd
+
+      - name: Setup
+        run: |
+          call "%VCVARS%"
+          make setup ARGS="--chrono"
+        shell: cmd
+
+      - name: Build LibCarla
+        run: |
+          call "%VCVARS%"
+          make LibCarla
+        shell: cmd
+
+      - name: Build PythonAPI
+        run: |
+          call "%VCVARS%"
+          make PythonAPI
+        shell: cmd
+
+      - name: Build CarlaUE4Editor
+        run: |
+          call "%VCVARS%"
+          make CarlaUE4Editor  ARGS="--chrono"
+        shell: cmd
+
+      - name: Build Package
+        run: |
+          call "%VCVARS%"
+          IF "${{ inputs.upload-package }}"=="false" SET ZIP=--no-zip
+          make package ARGS="--chrono %ZIP%"
+        shell: cmd
+
+      - name: Build AdditionalMaps Package
+        if: inputs.additional-maps == true
+        run: |
+          call "%VCVARS%"
+          make package ARGS="--chrono --packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate"
+        shell: cmd
+
+      - name: Configure Backblaze
+        if: inputs.upload-package == true
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
+        shell: cmd
+
+      - name: Upload package
+        if: inputs.upload-package == true
+        id: upload_step
+        run: |
+          call "%VCVARS%"
+          IF "${{ inputs.upload-replace-latest }}"=="true" SET REPLACE_LATEST=--replace-latest
+          make deploy ARGS="%REPLACE_LATEST% --workdir %CD% --summary-output %GITHUB_OUTPUT%"
+        shell: cmd
+
+      - name: Write summary
+        if: inputs.upload-package == true
+        run: |
+          echo ## [Windows] CARLA CI/CD Summary>> %GITHUB_STEP_SUMMARY%
+          echo.>> %GITHUB_STEP_SUMMARY%
+          echo - CARLA Package: ${{ steps.upload_step.outputs.package_uri }}>> %GITHUB_STEP_SUMMARY%
+          echo - Additional Maps: ${{ steps.upload_step.outputs.additional_maps_package_uri }}>> %GITHUB_STEP_SUMMARY%
+        shell: cmd

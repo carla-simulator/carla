@@ -14,10 +14,20 @@ rem ============================================================================
 
 set DOC_STRING=Upload latest build to S3
 
-set USAGE_STRING="Usage: $0 [-h|--help] [--replace-latest] [--dry-run]"
+set USAGE_STRING="Usage: $0 [-h|--help] [--summary-output=SUMMARY_OUTPUT] [--workdir=WORKING_DIRECTORY] [--replace-latest] [--dry-run]"
 
 :arg-parse
 if not "%1"=="" (
+    if "%1"=="--summary-output" (
+        set SUMMARY_OUTPUT_PATH=%2
+        shift
+    )
+
+    if "%1"=="--workdir" (
+        set WORKDIR=%2
+        shift
+    )
+
     if "%1"=="--replace-latest" (
         set REPLACE_LATEST=true
     )
@@ -42,13 +52,20 @@ if not defined REPOSITORY_TAG goto error_carla_version
 echo REPOSITORY_TAG = !REPOSITORY_TAG!
 
 rem Last package data
-set CARLA_DIST_FOLDER=%~dp0%\Build\UE4Carla
+if defined WORKDIR (
+    set "CARLA_DIST_FOLDER=%WORKDIR%\Build\UE4Carla"
+) else (
+    set "CARLA_DIST_FOLDER=%~dp0%\Build\UE4Carla"
+)
 set PACKAGE=CARLA_%REPOSITORY_TAG%.zip
 set PACKAGE_PATH=%CARLA_DIST_FOLDER%\%PACKAGE%
 set PACKAGE2=AdditionalMaps_%REPOSITORY_TAG%.zip
 set PACKAGE_PATH2=%CARLA_DIST_FOLDER%\%PACKAGE2%
 
+set ENDPOINT=https://s3.us-east-005.backblazeb2.com
+
 set S3_PREFIX=s3://carla-releases/Windows
+set URL_PREFIX=%ENDPOINT%/carla-releases/Windows
 
 set LATEST_DEPLOY_URI=!S3_PREFIX!/Dev/CARLA_Latest.zip
 set LATEST_DEPLOY_URI2=!S3_PREFIX!/Dev/AdditionalMaps_Latest.zip
@@ -62,6 +79,7 @@ if %errorlevel% == 0 (
 ) else (
   echo Detected non-release version with tag %REPOSITORY_TAG%
   set S3_PREFIX=!S3_PREFIX!/Dev
+  set URL_PREFIX=%URL_PREFIX%/Dev
   git log --pretty=format:%%cd_%%h --date=format:%%Y%%m%%d -n 1 > tempo1234
   set /p DEPLOY_NAME= < tempo1234
   del tempo1234
@@ -87,11 +105,11 @@ rem -- Upload ------------------------------------------------------------------
 rem ==============================================================================
 
 set DEPLOY_URI=!S3_PREFIX!/%DEPLOY_NAME%
-%AWS_COPY% %PACKAGE_PATH% %DEPLOY_URI%
+%AWS_COPY% %PACKAGE_PATH% %DEPLOY_URI% --endpoint-url %ENDPOINT%
 echo Latest build uploaded to %DEPLOY_URI%
 
 set DEPLOY_URI2=!S3_PREFIX!/%DEPLOY_NAME2%
-%AWS_COPY% %PACKAGE_PATH2% %DEPLOY_URI2%
+%AWS_COPY% %PACKAGE_PATH2% %DEPLOY_URI2% --endpoint-url %ENDPOINT%
 echo Latest build uploaded to %DEPLOY_URI2%
 
 rem ==============================================================================
@@ -99,10 +117,19 @@ rem -- Replace Latest ----------------------------------------------------------
 rem ==============================================================================
 
 if %REPLACE_LATEST%==true (
-  %AWS_COPY% %DEPLOY_URI% %LATEST_DEPLOY_URI%
+  %AWS_COPY% %DEPLOY_URI% %LATEST_DEPLOY_URI% --endpoint-url %ENDPOINT%
   echo Latest build updated as %LATEST_DEPLOY_URI%
-  %AWS_COPY% %DEPLOY_URI2% %LATEST_DEPLOY_URI2%
+  %AWS_COPY% %DEPLOY_URI2% %LATEST_DEPLOY_URI2% --endpoint-url %ENDPOINT%
   echo Latest build updated as %LATEST_DEPLOY_URI2%
+)
+
+rem ==============================================================================
+rem -- Summary output ------------------------------------------------------------
+rem ==============================================================================
+
+if defined SUMMARY_OUTPUT_PATH (
+    echo package_uri=%URL_PREFIX%/%DEPLOY_NAME%>> "%SUMMARY_OUTPUT_PATH%"
+    echo additional_maps_package_uri=%URL_PREFIX%/%DEPLOY_NAME2%>> "%SUMMARY_OUTPUT_PATH%"
 )
 
 rem ==============================================================================

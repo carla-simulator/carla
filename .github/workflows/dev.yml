@@ -11,9 +11,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ubuntu-pr:
+  ubuntu-dev:
     name: Ubuntu Dev
-    uses: ./.github/workflows/ci.yml
+    uses: ./.github/workflows/_ci-ubuntu.yml
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -26,3 +26,15 @@ jobs:
       upload-package: true
       upload-replace-latest: true
       upload-docker: false
+
+  windows-dev:
+    name: Windows Dev
+    uses: ./.github/workflows/_ci-windows.yml
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}s
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+    with:
+      python-versions: "3.10,3.11,3.12"
+      additional-maps: true
+      upload-package: true
+      upload-replace-latest: true

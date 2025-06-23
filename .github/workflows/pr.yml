@@ -13,7 +13,7 @@ concurrency:
 jobs:
   ubuntu-pr:
     name: Ubuntu PR
-    uses: ./.github/workflows/ci.yml
+    uses: ./.github/workflows/_ci-ubuntu.yml
     with:
       python-versions: "3.12"
       smoke-test-python-versions: "3.12"
@@ -21,3 +21,12 @@ jobs:
       upload-package: false
       upload-replace-latest: false
       upload-docker: false
+
+  windows-pr:
+    name: Windows PR
+    uses: ./.github/workflows/_ci-windows.yml
+    with:
+      python-versions: "3.12"
+      additional-maps: false
+      upload-package: false
+      upload-replace-latest: false
