@@ -64,39 +64,21 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
 bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
 {
   bool bIsFileFound = false;
-
-  FString FinalPath = MapString.IsEmpty() ? GetMapName() : MapString;
-  FinalPath += !MapString.EndsWith(".umap") ? ".umap" : "";
-
-  if (MapString.StartsWith("/Game"))
-  {
-    // Some conversions...
-    FinalPath.RemoveFromStart(TEXT("/Game/"));
-    FinalPath = FPaths::ProjectContentDir() + FinalPath;
-    FinalPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FinalPath);
-
-    if (FPaths::FileExists(FinalPath)) {
-      bIsFileFound = true;
-      FinalPath = MapString;
-    }
+  FString MapToLoad;
+  if (MapString.IsEmpty()) {
+    MapToLoad = UGameplayStatics::GetCurrentLevelName(GetWorld(), true);
   }
-  else
+  else 
   {
-    if (MapString.Contains("/")) return false;
+    MapToLoad = MapString;
+  }
+   
+  FString FinalPath = UCarlaStatics::FindMapPath(MapToLoad);
 
-    // Find the full path under Carla
-    TArray<FString> TempStrArray, PathList;
-    IFileManager::Get().FindFilesRecursive(PathList, *FPaths::ProjectContentDir(), *FinalPath, true, false, false);
-    if (PathList.Num() > 0)
-    {
-      FinalPath = PathList[0];
-      FinalPath.ParseIntoArray(TempStrArray, TEXT("Content/"), true);
-      FinalPath = TempStrArray[1];
-      FinalPath.ParseIntoArray(TempStrArray, TEXT("."), true);
-      FinalPath = "/Game/" + TempStrArray[0];
-
-      return LoadNewEpisode(FinalPath, ResetSettings);
-    }
+  if(FPaths::FileExists(FinalPath))
+  {
+    bIsFileFound = true;
+    FinalPath = MapToLoad;
   }
 
   if (bIsFileFound)
@@ -105,7 +87,7 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
     UGameplayStatics::OpenLevel(GetWorld(), *FinalPath, true);
     if (ResetSettings)
       ApplySettings(FEpisodeSettings{});
-
+    
     // send 'LOAD_MAP' command to all secondary servers (if any)
     if (bIsPrimaryServer)
     {
@@ -114,7 +96,7 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
       {
         FCarlaEngine *CarlaEngine = GameInstance->GetCarlaEngine();
         auto SecondaryServer = CarlaEngine->GetSecondaryServer();
-        if (SecondaryServer->HasClientsConnected())
+        if (SecondaryServer->HasClientsConnected()) 
         {
           SecondaryServer->GetCommander().SendLoadMap(std::string(TCHAR_TO_UTF8(*FinalPath)));
         }

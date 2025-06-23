@@ -1,0 +1,114 @@
+on:
+  workflow_call:
+    inputs:
+      python-versions:
+        required: true
+        type: string
+      smoke-test-python-versions:
+        type: string
+        required: true
+      additional-args:
+        type: string
+        required: false
+        default: ""
+      additional-maps:
+        type: boolean
+        default: true
+      upload-package:
+        type: boolean
+        required: true
+      upload-replace-latest:
+        type: boolean
+        required: true
+      upload-docker:
+        type: boolean
+        required: true
+
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: false
+      DOCKERHUB_TOKEN:
+        required: false
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_ACCESS_KEY:
+        required: false
+
+jobs:
+  ubuntu:
+    name: Ubuntu CI/CD
+    runs-on: self-hosted:ubuntu-gpu
+    container:
+      image: carlasim/carla-builder:ue4-20.04
+      options: --runtime=nvidia --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all --user 1001:1001 --volume /home/jenkins/UnrealEngine_4.26:/unreal-engine
+    env:
+      UE4_ROOT: /unreal-engine
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download content
+        run: ./Update.sh
+
+      - name: Setup
+        run: make setup ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono"
+
+      - name: Build LibCarla
+        run: make LibCarla ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono"
+
+      - name: Build PythonAPI
+        run: make PythonAPI ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono"
+
+      - name: Build CarlaUE4Editor
+        run: make CarlaUE4Editor ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono"
+
+      - name: Build Package
+        run: |
+          [[ "${{ inputs.upload-package }}" == "false" ]] && ZIP="--no-zip"
+          make package ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono $ZIP"
+
+      - name: Build AdditionalMaps Package
+        if: inputs.additional-maps == true
+        run: |
+          make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=${{ inputs.python-versions }}"
+
+      - name: Make C++ examples
+        run: make examples
+
+      - name: Run unit tests
+        run: make check ARGS="--python-api --xml --python-version=${{ inputs.python-versions }}"
+
+      - name: Run smoke tests
+        run: |
+          ./Dist/CARLA_*/LinuxNoEditor/CarlaUE4.sh --ros2 -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &
+          make smoke_tests ARGS="--xml --python-version=${{ inputs.smoke-test-python-versions }}"
+          make run-examples ARGS="localhost 3654"
+
+      - name: Configure Backblaze
+        if: inputs.upload-package == true
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
+
+      - name: Upload package
+        if: inputs.upload-package == true
+        id: upload_step
+        run: |
+          [[ "${{ inputs.upload-replace-latest }}" == "true" ]] && ARGS="--replace-latest"
+          make deploy ARGS="$ARGS --summary-output $GITHUB_OUTPUT"
+  
+      - name: Write summary
+        if: inputs.upload-package == true
+        run: |
+          echo "## [Ubuntu] CARLA CI/CD Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- CARLA Package: ${{ steps.upload_step.outputs.package_uri }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Additional Maps: ${{ steps.upload_step.outputs.additional_maps_package_uri }}" >> $GITHUB_STEP_SUMMARY
+
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ vars.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}

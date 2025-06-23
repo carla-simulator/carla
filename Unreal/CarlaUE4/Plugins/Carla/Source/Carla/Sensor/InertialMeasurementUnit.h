@@ -29,6 +29,7 @@ public:
   AInertialMeasurementUnit(const FObjectInitializer &ObjectInitializer);
 
   static FActorDefinition GetSensorDefinition();
+  static FVector GetActorAngularVelocityInRadians(AActor &Actor);
 
   void Set(const FActorDescription &ActorDescription) override;
 

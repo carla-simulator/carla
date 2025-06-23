@@ -473,6 +473,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     return _client.GetNamesOfAllObjects();
   }
 
+
 } // namespace detail
 } // namespace client
 } // namespace carla

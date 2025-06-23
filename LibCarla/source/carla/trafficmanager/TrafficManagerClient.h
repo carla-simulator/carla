@@ -195,10 +195,10 @@ public:
     _client->call("set_global_distance_to_leading_vehicle",distance);
   }
 
-  /// Method to set % to keep on the right lane.
-  void SetKeepRightPercentage(const carla::rpc::Actor &actor, const float percentage) {
+  /// Method to set % to keep on the slow lane.
+  void SetKeepSlowLanePercentage(const carla::rpc::Actor &actor, const float percentage) {
     DEBUG_ASSERT(_client != nullptr);
-    _client->call("keep_right_rule_percentage", actor, percentage);
+    _client->call("keep_slow_lane_rule_percentage", actor, percentage);
   }
 
   /// Method to set % to randomly do a left lane change.

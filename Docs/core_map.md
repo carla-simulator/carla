@@ -23,6 +23,7 @@ After discussing about the world and its actors, it is time to put everything in
 	- [Add map package](tuto_M_add_map_package.md)
 	- [Add map source](tuto_M_add_map_source.md)
 	- [Alternative methods](tuto_M_add_map_alternative.md)
+- [__Left handed traffic__](#left-handed-traffic)
 - [__Additional maps__](#additional-maps)
 
 
@@ -295,6 +296,27 @@ CARLA is designed to be extensible and highly customisable for specialist applic
 * [__Add map package__](tuto_M_add_map_package.md)
 * [__Add map source__](tuto_M_add_map_source.md)
 * [__Alternative methods__](tuto_M_add_map_alternative.md)
+
+## Left handed traffic
+
+CARLA supports left-handed traffic rules defined in the OpenDRIVE files. To invoke a left-handed traffic rule on any road, apply the left-handed traffic attribute in the OpenDRIVE XML file like so:
+
+```xml
+<road name="Road 0" length="1.3310253693587601e+1" id="0" junction="-1" rule="LHT">
+    <link>
+        <predecessor elementType="road" elementId="3" contactPoint="end" />
+        <successor elementType="road" elementId="10" contactPoint="start" />
+    </link>
+...
+</road>
+```
+
+!!! note
+	The right-handed traffic convention is the default. A road with no `rule` attribute (or an unrecognized parameter) will be considered a right-handed road. You may also wish to explicitly set it by adding `rule="RHT"`. 
+
+CARLA will apply left handed traffic conventions to each road with the `rule="LHT"` attribute applied.
+
+Note that the left or right-handed traffic conventions don't only affect the behaviour of traffic but also traffic signs and signals affecting the road. Therefore if the map has assets placed manually for right handed traffic conventions (e.g. road signs or traffic lights), these will need to be adjusted. Traffic lights defined in the OpenDRIVE definition for left-handed traffic will be automatically placed by CARLA in the appropriate position upon importing the map.
 
 ## Additional maps
 

@@ -485,7 +485,7 @@
         doc: > 
           Function with a snapshot as compulsory parameter that will be called when the client receives a tick.  
       doc: >
-        This method is used in [__asynchronous__ mode](https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/). It starts callbacks from the client for the function defined as `callback`, and returns the ID of the callback. The function will be called everytime the server ticks. It requires a carla.WorldSnapshot as argument, which can be retrieved from __<font color="#7fb800">wait_for_tick()</font>__. Use __<font color="#7fb800">remove_on_tick()</font>__ to stop the callbacks.
+        This method is used in [__asynchronous__ mode](adv_synchrony_timestep.md). It starts callbacks from the client for the function defined as `callback`, and returns the ID of the callback. The function will be called everytime the server ticks. It requires a carla.WorldSnapshot as argument, which can be retrieved from __<font color="#7fb800">wait_for_tick()</font>__. Use __<font color="#7fb800">remove_on_tick()</font>__ to stop the callbacks.
     # --------------------------------------
     - def_name: remove_on_tick
       params:
@@ -506,9 +506,9 @@
         doc: > 
           Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.   
       doc: >
-        This method is used in [__synchronous__ mode](https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/), when the server waits for a client tick before computing the next frame. This method will send the tick, and give way to the server. It returns the ID of the new frame computed by the server. 
+        This method is used in [__synchronous__ mode](adv_synchrony_timestep.md), when the server waits for a client tick before computing the next frame. This method will send the tick, and give way to the server. It returns the ID of the new frame computed by the server. 
       note: > 
-        If no tick is received in synchronous mode, the simulation will freeze. Also, if many ticks are received from different clients, there may be synchronization issues. Please read the docs about [synchronous mode](https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/) to learn more.  
+        If no tick is received in synchronous mode, the simulation will freeze. Also, if many ticks are received from different clients, there may be synchronization issues. Please read the docs about [synchronous mode](adv_synchrony_timestep.md) to learn more.  
     # --------------------------------------
     - def_name: wait_for_tick
       return: carla.WorldSnapshot
@@ -520,7 +520,7 @@
         doc: > 
           Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.   
       doc: >
-        This method is used in [__asynchronous__ mode](https://carla.readthedocs.io/en/latest/adv_synchrony_timestep/). It makes the client wait for a server tick. When the next frame is computed, the server will tick and return a snapshot describing the new state of the world. 
+        This method is used in [__asynchronous__ mode](adv_synchrony_timestep.md). It makes the client wait for a server tick. When the next frame is computed, the server will tick and return a snapshot describing the new state of the world. 
     # --------------------------------------
     - def_name: spawn_actor
       return: carla.Actor
@@ -813,6 +813,15 @@
         Unloads the selected layers to the level.
         If the layer is already unloaded the call has no effect.
       warning: This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs.
+    # --------------------------------------
+    - def_name: set_annotations_traverse_translucency
+      params:
+      - param_name: enable
+        type: bool
+        doc: >
+          Enables or disables the traversal of translucent materials in semantic, instance and depth annotations. __Default is `False`__.
+      doc: >
+        Sets CARLA's behavior whether the semantic + instance segmentation and depth annotations traverse translucent materials or not. To find the closest obstacle, this should be set to false (default). If you are interested in annotations that detect objects behind windows, this should be enabled.
     # --------------------------------------
     - def_name: set_pedestrians_cross_factor
       params:

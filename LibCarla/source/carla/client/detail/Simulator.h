@@ -300,6 +300,11 @@ namespace detail {
       return _client.CastRay(start_location, end_location);
     }
 
+    void SetAnnotationsTraverseTranslucency(
+      bool enable) {
+        _client.SetAnnotationsTraverseTranslucency(enable);
+      }
+
     /// @}
     // =========================================================================
     /// @name AI
@@ -461,6 +466,10 @@ namespace detail {
 
     std::vector<geom::Transform> GetActorBoneWorldTransforms(const Actor &actor) {
       return _client.GetActorBoneWorldTransforms(actor.GetId());
+    }
+    
+    std::vector<geom::Transform> GetVehicleBoneWorldTransforms(const Vehicle &vehicle) {
+      return _client.GetVehicleBoneWorldTransforms(vehicle.GetId());
     }
 
     std::vector<geom::Transform> GetActorBoneRelativeTransforms(const Actor &actor) {
@@ -756,6 +765,15 @@ namespace detail {
     void DrawDebugShape(const rpc::DebugShape &shape) {
       _client.DrawDebugShape(shape);
     }
+
+    void ClearDebugShape() {
+      _client.ClearDebugShape();
+    }
+
+    void ClearDebugString() {
+      _client.ClearDebugString();
+    }
+
 
     /// @}
     // =========================================================================

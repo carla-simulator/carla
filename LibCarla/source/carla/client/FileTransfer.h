@@ -8,10 +8,8 @@
 
 #include "carla/FileSystem.h"
 
-#include <fstream>
-#include <iostream>
 #include <string>
-#include <sys/stat.h>
+#include <vector>
 #include <cstdint>
 
 namespace carla {

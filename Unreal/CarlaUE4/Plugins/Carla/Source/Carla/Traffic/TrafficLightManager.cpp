@@ -28,13 +28,22 @@ ATrafficLightManager::ATrafficLightManager()
   SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
   RootComponent = SceneComponent;
 
-  // Hard codded default traffic light blueprint
-  static ConstructorHelpers::FClassFinder<AActor> TrafficLightFinder(
-      TEXT( "/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive" ) );
-  if (TrafficLightFinder.Succeeded())
+  // Hard coded default traffic light blueprint
+  static ConstructorHelpers::FClassFinder<AActor> TrafficLightRHTFinder(
+      TEXT( "/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive_RHT" ) );
+  if (TrafficLightRHTFinder.Succeeded())
   {
-    TSubclassOf<AActor> Model = TrafficLightFinder.Class;
-    TrafficLightModel = Model;
+    TSubclassOf<AActor> Model = TrafficLightRHTFinder.Class;
+    TrafficLightModel_RHT = Model;
+  }
+
+  // Hard coded default traffic light blueprint
+  static ConstructorHelpers::FClassFinder<AActor> TrafficLightLHTFinder(
+    TEXT( "/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive_LHT" ) );
+  if (TrafficLightLHTFinder.Succeeded())
+  {
+    TSubclassOf<AActor> Model = TrafficLightLHTFinder.Class;
+    TrafficLightModel_LHT = Model;
   }
   // Default traffic signs models
   static ConstructorHelpers::FClassFinder<AActor> StopFinder(
@@ -256,7 +265,7 @@ void ATrafficLightManager::GenerateSignalsAndTrafficLights()
 {
   if(!TrafficLightsGenerated)
   {
-    if(!TrafficLightModel)
+    if(!TrafficLightModel_RHT || !TrafficLightModel_LHT )
     {
       UE_LOG(LogCarla, Error, TEXT("Missing TrafficLightModel"));
       return;
@@ -548,6 +557,11 @@ void ATrafficLightManager::SpawnTrafficLights()
     }
     const auto& Signal = Signals.at(SignalId);
     auto CarlaTransform = Signal->GetTransform();
+    auto ClosestWaypointToSignal =
+        GetMap()->GetClosestWaypointOnRoad(CarlaTransform.location);
+
+    const bool IsRHT = GetMap()->GetLane(ClosestWaypointToSignal.get()).GetRoad()->IsRHT();
+
     FTransform SpawnTransform(CarlaTransform);
 
     FVector SpawnLocation = SpawnTransform.GetLocation();
@@ -563,6 +577,8 @@ void ATrafficLightManager::SpawnTrafficLights()
     SpawnParams.SpawnCollisionHandlingOverride =
         ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
     SpawnParams.OverrideLevel = GM->GetULevelFromName("TrafficLights");
+
+    auto TrafficLightModel = IsRHT ? TrafficLightModel_RHT : TrafficLightModel_LHT;
     ATrafficLightBase * TrafficLight = GetWorld()->SpawnActor<ATrafficLightBase>(
         TrafficLightModel,
         SpawnLocation,
@@ -574,8 +590,6 @@ void ATrafficLightManager::SpawnTrafficLights()
     UTrafficLightComponent *TrafficLightComponent = TrafficLight->GetTrafficLightComponent();
     TrafficLightComponent->SetSignId(SignalId.c_str());
 
-    auto ClosestWaypointToSignal =
-        GetMap()->GetClosestWaypointOnRoad(CarlaTransform.location);
     if (ClosestWaypointToSignal)
     {
       auto SignalDistanceToRoad =

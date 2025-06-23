@@ -123,6 +123,7 @@ pipeline
                                                 
                                             }
                                         }
+                                        /*
                                         stage('Checkout Doxygen repo')
                                         {
                                             when { anyOf { branch "master"; branch "ue4-dev"; buildingTag() } }
@@ -132,7 +133,8 @@ pipeline
                                                 dir('doc_repo')
                                                 {
                                                     checkout scmGit(
-                                                        branches: [[name: '*/ue4-dev']], 
+                                                        branches: [[name: 'dev']], 
+                                                        branches: [[name: 'ue4-dev']], 
                                                         extensions: [
                                                             cleanBeforeCheckout(),
                                                             checkoutOption(120), 
@@ -150,6 +152,7 @@ pipeline
                                                 
                                             }
                                         }
+                                        */
 
                                         stage('ubuntu retrieve content')
                                         {
@@ -299,7 +302,7 @@ pipeline
                                         }
                                     }
                                 }
-                                stage('Publish documentation')
+                               /* stage('Publish documentation')
                                 {
                                     stages
                                     {
@@ -346,6 +349,7 @@ pipeline
 
                                     }
                                 }
+                                */
                             }
                         }
                     }

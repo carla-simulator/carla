@@ -373,6 +373,10 @@
       type: carla.LaneMarking
       doc: >
         The left lane marking information based on the direction of the Waypoint.
+    - var_name: is_rht
+      type: bool
+      doc: >
+        Flag indicating whether the waypoint is part of a right-handed traffic road.
     # - METHODS ----------------------------
     methods:
     - def_name: next
@@ -735,11 +739,11 @@
       type: float
       var_units: meters
       doc: >
-        Pitch rotation of the signal (Y-axis in [UE coordinates system](https://carla.readthedocs.io/en/latest/python_api/#carlarotation)).
+        Pitch rotation of the signal (Y-axis in [UE coordinates system](python_api.md#carlarotation)).
     - var_name: roll
       type: float
       doc: >
-        Roll rotation of the signal (X-axis in [UE coordinates system](https://carla.readthedocs.io/en/latest/python_api/#carlarotation)).
+        Roll rotation of the signal (X-axis in [UE coordinates system](python_api.md#carlarotation)).
     - var_name: waypoint
       type: carla.Waypoint
       doc: >

@@ -24,8 +24,12 @@ public:
 
   AInstanceSegmentationCamera(const FObjectInitializer &ObjectInitializer);
 
+  static void SetUpSceneCaptureComponentForTagging(USceneCaptureComponent2D &SceneCapture);
+  static void PostPhysTickForTagging(USceneCaptureComponent2D &SceneCapture);
+
 protected:
 
   void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) override;
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
+  static void AddTaggedComponentsToSceneCapture(USceneCaptureComponent2D &SceneCapture);
 };

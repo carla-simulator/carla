@@ -363,6 +363,7 @@ void export_world() {
         self.ApplyTexturesToObjects(PythonLitstToVector<std::string>(list), diffuse_texture, emissive_texture, normal_texture, ao_roughness_metallic_emissive_texture);
       }, (arg("objects_name_list"), arg("diffuse_texture"), arg("emissive_texture"), arg("normal_texture"), arg("ao_roughness_metallic_emissive_texture")))
     .def(self_ns::str(self_ns::self))
+    .def("set_annotations_traverse_translucency", CALL_WITHOUT_GIL_1(cc::World, SetAnnotationsTraverseTranslucency, bool), (arg("enable")))
   ;
 
 #undef SPAWN_ACTOR_WITHOUT_GIL
@@ -431,6 +432,8 @@ void export_world() {
          arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
          arg("life_time")=-1.0f,
          arg("persistent_lines")=true))
+    .def("clear_debug_shape", &cc::DebugHelper::ClearDebugShape)
+    .def("clear_debug_string", &cc::DebugHelper::ClearDebugString)
   ;
   // scope HUD = class_<cc::DebugHelper>(
 
