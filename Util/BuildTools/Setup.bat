@@ -374,7 +374,11 @@ rem ============================================================================
 rem -- Generate CMake ----------------------------------------------------------
 rem ============================================================================
 
-for /f %%i in ('git describe --tags --dirty --always') do set carla_version=%%i
+call %ROOT_PATH:/=\%Util\BuildTools\Environment.bat
+call :get_git_repository_version
+if not defined REPOSITORY_TAG goto error_carla_version
+set carla_version = !REPOSITORY_TAG!
+
 set CMAKE_INSTALLATION_DIR=%INSTALLATION_DIR:\=/%
 
 echo %FILE_N% Creating "CMakeLists.txt.in"...
@@ -470,6 +474,11 @@ rem ============================================================================
     echo           [ERROR] Possible causes:
     echo           [ERROR]  - Make sure you use x64 (not x64_x86!)
     echo           [ERROR]  - You are not using "Visual Studio x64 Native Tools Command Prompt".
+    goto failed
+
+:error_carla_version
+    echo.
+    echo %FILE_N% [ERROR] Carla Version is not set
     goto failed
 
 :failed

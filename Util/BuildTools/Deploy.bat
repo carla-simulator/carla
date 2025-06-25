@@ -47,7 +47,8 @@ if not "%1"=="" (
 )
 
 rem Get repository version
-for /f %%i in ('git describe --tags --dirty --always') do set REPOSITORY_TAG=%%i
+call %ROOT_PATH:/=\%Util\BuildTools\Environment.bat
+call :get_git_repository_version
 if not defined REPOSITORY_TAG goto error_carla_version
 echo REPOSITORY_TAG = !REPOSITORY_TAG!
 
