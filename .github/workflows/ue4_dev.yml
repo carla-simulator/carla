@@ -1,0 +1,33 @@
+name: UE4-Dev
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: push-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ubuntu-dev:
+    name: Ubuntu Dev
+    runs-on: ubuntu-latest
+    steps:
+      - name: Info Only - Do not use on this branch
+        run: |
+          echo "This is a placeholder workflow on the default branch."
+          echo "It exists solely to make the 'Run workflow' button visible in the GitHub Actions page."
+          echo "The actual workflow should run on ue4-dev."
+          echo "Exiting intentionally."
+          exit 1
+
+  windows-dev:
+    name: Windows Dev
+    runs-on: ubuntu-latest
+    steps:
+      - name: Info Only - Do not use on this branch
+        run: |
+          echo "This is a placeholder workflow on the default branch."
+          echo "It exists solely to make the 'Run workflow' button visible in the GitHub Actions page."
+          echo "The actual workflow should run on ue4-dev."
+          echo "Exiting intentionally."
+          exit 1
