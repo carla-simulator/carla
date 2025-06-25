@@ -9,6 +9,7 @@ Plugins
 !Unreal/CarlaUE4/Plugins
 Unreal/CarlaUE4/Plugins/Streetmap
 Unreal/CarlaUE4/Plugins/HoudiniEngine
+build/
 
 
 /ExportedMaps
@@ -50,3 +51,6 @@ _out*
 _site
 core
 profiler.csv
+.env
+.venv
+devcontainer.json

@@ -1,4 +1,10 @@
 ## Latest Changes
+ * Renamed Ubuntu 18-based Dockerfile to CarlaLegacy for clarity
+ * Created documentation for using devcontainers
+ * Ensured CARLA scripts consistently use python3
+ * Replaced wget with curl for FBX SDK downloads
+ * Enabled mounting of UE4 from the host when running CARLA inside a container
+ * Added support for GUI inside containers with Ubuntu 22 image
  * Fixed waypoint.next and .previous causing loops when two opposite-direction lanes follow each other in the map.
  * Fixed a bug that caused navigation information not to be loaded when switching maps
  * Prevent from segfault on failing SignalReference identification when loading OpenDrive files
