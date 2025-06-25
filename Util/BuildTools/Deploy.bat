@@ -47,7 +47,6 @@ if not "%1"=="" (
 )
 
 rem Get repository version
-call %ROOT_PATH:/=\%Util\BuildTools\Environment.bat
 call :get_git_repository_version
 if not defined REPOSITORY_TAG goto error_carla_version
 echo REPOSITORY_TAG = !REPOSITORY_TAG!
@@ -132,6 +131,13 @@ if defined SUMMARY_OUTPUT_PATH (
     echo package_uri=%URL_PREFIX%/%DEPLOY_NAME%>> "%SUMMARY_OUTPUT_PATH%"
     echo additional_maps_package_uri=%URL_PREFIX%/%DEPLOY_NAME2%>> "%SUMMARY_OUTPUT_PATH%"
 )
+
+rem ============================================================================
+rem -- Helper functions --------------------------------------------------------
+rem ============================================================================
+
+:get_git_repository_version
+   %ROOT_PATH:/=\%Util\BuildTools\Environment.bat %*
 
 rem ==============================================================================
 rem -- ...and we are done --------------------------------------------------------

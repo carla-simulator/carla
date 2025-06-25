@@ -374,10 +374,10 @@ rem ============================================================================
 rem -- Generate CMake ----------------------------------------------------------
 rem ============================================================================
 
-call %ROOT_PATH:/=\%Util\BuildTools\Environment.bat
 call :get_git_repository_version
 if not defined REPOSITORY_TAG goto error_carla_version
-set carla_version = !REPOSITORY_TAG!
+set carla_version=!REPOSITORY_TAG!
+echo carla_version: %carla_version%
 
 set CMAKE_INSTALLATION_DIR=%INSTALLATION_DIR:\=/%
 
@@ -426,6 +426,13 @@ set CMAKE_CONFIG_FILE=%INSTALLATION_DIR%CMakeLists.txt.in
 >>"%CMAKE_CONFIG_FILE%" echo endif ()
 
 goto success
+
+rem ============================================================================
+rem -- Helper functions --------------------------------------------------------
+rem ============================================================================
+
+:get_git_repository_version
+   %ROOT_PATH:/=\%Util\BuildTools\Environment.bat %*
 
 rem ============================================================================
 rem -- Messages and Errors -----------------------------------------------------
