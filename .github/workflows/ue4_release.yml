@@ -1,0 +1,29 @@
+name: UE4-Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ubuntu-release:
+    name: Ubuntu Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Info Only - Do not use on this branch
+        run: |
+          echo "This is a placeholder workflow on the default branch."
+          echo "It exists solely to make the 'Run workflow' button visible in the GitHub Actions page."
+          echo "This workflow is intended to run on a UE4 release branch following the naming convention: ue4/x.y.z"
+          echo "Exiting intentionally."
+          exit 1
+
+  windows-release:
+    name: Windows Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Info Only - Do not use on this branch
+        run: |
+          echo "This is a placeholder workflow on the default branch."
+          echo "It exists solely to make the 'Run workflow' button visible in the GitHub Actions page."
+          echo "This workflow is intended to run on a UE4 release branch following the naming convention: ue4/x.y.z"
+          echo "Exiting intentionally."
+          exit 1
