@@ -61,7 +61,7 @@ If disk usage is a concern and you do not need the final packaged artifacts, you
 
 > Note: Ensure your GitHub account is linked to Epic’s UnrealEngine repository before attempting to clone.
 
-If you plan to use the **lightweight** approach, you need a **compiled** Unreal Engine folder on your host that matches CARLA’s requirements (usually UE4.26). You have the 2 following uptions
+If you plan to use the **lightweight** approach, you need a **compiled** Unreal Engine folder on your host that matches CARLA’s requirements (usually UE4.26). You have the 2 following options
 
 ### Option 1: Build Natively
 
