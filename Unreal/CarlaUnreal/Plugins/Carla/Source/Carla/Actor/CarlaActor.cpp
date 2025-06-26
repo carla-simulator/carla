@@ -40,6 +40,8 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include <util/ue-header-guard-end.h>
 
+const FString FCarlaActor::CustomType = "";
+
 FCarlaActor::FCarlaActor(
     IdType ActorId,
     AActor* Actor,
@@ -118,37 +120,6 @@ FOtherActor::FOtherActor(
 {
   Type = ActorType::Other;
   ActorData = MakeShared<FActorData>();
-}
-
-TSharedPtr<FCarlaActor> FCarlaActor::ConstructCarlaActor(
-      IdType ActorId,
-      AActor* Actor,
-      TSharedPtr<const FActorInfo> Info,
-      ActorType Type,
-      carla::rpc::ActorState InState,
-      UWorld* World)
-{
-  switch(Type)
-  {
-  case ActorType::TrafficSign:
-    return MakeShared<FTrafficSignActor>(ActorId, Actor, std::move(Info), InState, World);
-    break;
-  case ActorType::TrafficLight:
-    return MakeShared<FTrafficLightActor>(ActorId, Actor, std::move(Info), InState, World);
-    break;
-  case ActorType::Vehicle:
-    return MakeShared<FVehicleActor>(ActorId, Actor, std::move(Info), InState, World);
-    break;
-  case ActorType::Walker:
-    return MakeShared<FWalkerActor>(ActorId, Actor, std::move(Info), InState, World);
-    break;
-  case ActorType::Sensor:
-    return MakeShared<FSensorActor>(ActorId, Actor, std::move(Info), InState, World);
-    break;
-  default:
-    return MakeShared<FOtherActor>(ActorId, Actor, std::move(Info), InState, World);
-    break;
-  }
 }
 
 // Base FCarlaActor functions ---------------------

@@ -194,8 +194,8 @@ void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, 
 
   // ROS2
   #if defined(WITH_ROS2)
-  auto ROS2 = carla::ros2::ROS2::GetInstance();
-  if (ROS2->IsEnabled())
+  auto ROS2Carla = carla::ros2::ROS2Carla::GetInstance();
+  if (ROS2Carla->IsEnabled())
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
     auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
@@ -203,11 +203,11 @@ void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, 
     if (ParentActor)
     {
       FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromIMU(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, AccelerometerValue, GyroscopeValue, CompassValue, this);
+      ROS2Carla->ProcessDataFromIMU(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, AccelerometerValue, GyroscopeValue, CompassValue, this);
     }
     else
     {
-      ROS2->ProcessDataFromIMU(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), AccelerometerValue, GyroscopeValue, CompassValue, this);
+      ROS2Carla->ProcessDataFromIMU(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), AccelerometerValue, GyroscopeValue, CompassValue, this);
     }
   }
   #endif

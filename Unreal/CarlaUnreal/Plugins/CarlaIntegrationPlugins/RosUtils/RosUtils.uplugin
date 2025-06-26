@@ -1,0 +1,26 @@
+{
+  "FileVersion" : 3,
+  "Version" : "0.0.0",
+  "VersionName": "0.0.0",
+  "FriendlyName": "RosUtils",
+  "Description": "RosUtils Plugin",
+  "Category" : "Science",
+  "MarketplaceURL" : "",
+  "EnabledByDefault" : true,
+  "CanContainContent": true,
+  "IsBetaVersion" : true,
+  "Installed": false,
+  "Modules": [
+    {
+      "Name": "RosUtils",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    }
+  ],
+  "Plugins": [
+		{
+			"Name": "Carla",
+			"Enabled": true
+		}
+	]
+}

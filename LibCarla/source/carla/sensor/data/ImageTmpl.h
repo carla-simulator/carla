@@ -13,7 +13,7 @@
 #include "carla/sensor/s11n/GBufferUint8Serializer.h"
 #include "carla/sensor/s11n/GBufferFloatSerializer.h"
 #include "carla/sensor/s11n/NormalsImageSerializer.h"
-#include "carla/ros2/ROS2.h"
+#include "carla/ros2/ROS2Carla.h"
 
 namespace carla {
 namespace sensor {
@@ -23,7 +23,7 @@ namespace data {
   template <typename PixelT>
   class ImageTmpl : public Array<PixelT> {
     using Super = Array<PixelT>;
-    friend class carla::ros2::ROS2;
+    friend class carla::ros2::ROS2Carla;
   protected:
 
     using Serializer = s11n::ImageSerializer;

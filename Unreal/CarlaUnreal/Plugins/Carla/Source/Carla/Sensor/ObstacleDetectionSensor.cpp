@@ -143,8 +143,8 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
 
     // ROS2
     #if defined(WITH_ROS2)
-    auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled())
+    auto ROS2Carla = carla::ros2::ROS2Carla::GetInstance();
+    if (ROS2Carla->IsEnabled())
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
       auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
@@ -152,11 +152,11 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
       if (ParentActor)
       {
         FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-        ROS2->ProcessDataFromObstacleDetection(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, Actor, OtherActor, HitDistance/100.0f, this);
+        ROS2Carla->ProcessDataFromObstacleDetection(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, Actor, OtherActor, HitDistance/100.0f, this);
       }
       else
       {
-        ROS2->ProcessDataFromObstacleDetection(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), Actor, OtherActor, HitDistance/100.0f, this);
+        ROS2Carla->ProcessDataFromObstacleDetection(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), Actor, OtherActor, HitDistance/100.0f, this);
       }
     }
     #endif

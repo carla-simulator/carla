@@ -158,28 +158,22 @@ private:
   FScopedStack<FString> Stack;
 };
 
-template <typename ... ARGS>
-static FString JoinStrings(const FString &Separator, ARGS && ... Args)
+static FString VectorToFString(const FVector &TextVector)
 {
-  return FString::Join(TArray<FString>{std::forward<ARGS>(Args) ...}, *Separator);
+  return UActorBlueprintFunctionLibrary::JoinStrings(
+      TEXT(","),
+      FString::SanitizeFloat(TextVector.X),
+      FString::SanitizeFloat(TextVector.Y),
+      FString::SanitizeFloat(TextVector.Z));
 }
 
-static FString ColorToFString(const FColor &Color)
+FString UActorBlueprintFunctionLibrary::ColorToFString(const FColor &Color)
 {
   return JoinStrings(
       TEXT(","),
       FString::FromInt(Color.R),
       FString::FromInt(Color.G),
       FString::FromInt(Color.B));
-}
-
-static FString VectorToFString(const FVector &TextVector)
-{
-  return JoinStrings(
-      TEXT(","),
-      FString::SanitizeFloat(TextVector.X),
-      FString::SanitizeFloat(TextVector.Y),
-      FString::SanitizeFloat(TextVector.Z));
 }
 
 /// ============================================================================
@@ -202,30 +196,7 @@ bool UActorBlueprintFunctionLibrary::CheckActorDefinitions(const TArray<FActorDe
 /// -- Helpers to create actor definitions -------------------------------------
 /// ============================================================================
 
-template <typename ... TStrs>
-static void FillIdAndTags(FActorDefinition &Def, TStrs && ... Strings)
-{
-  Def.Id = JoinStrings(TEXT("."), std::forward<TStrs>(Strings) ...).ToLower();
-  Def.Tags = JoinStrings(TEXT(","), std::forward<TStrs>(Strings) ...).ToLower();
-
-  // each actor gets an actor role name attribute (empty by default)
-  FActorVariation ActorRole;
-  ActorRole.Id = TEXT("role_name");
-  ActorRole.Type = EActorAttributeType::String;
-  ActorRole.RecommendedValues = { TEXT("default") };
-  ActorRole.bRestrictToRecommended = false;
-  Def.Variations.Emplace(ActorRole);
-
-  // ROS2
-  FActorVariation Var;
-  Var.Id = TEXT("ros_name");
-  Var.Type = EActorAttributeType::String;
-  Var.RecommendedValues = { Def.Id };
-  Var.bRestrictToRecommended = false;
-  Def.Variations.Emplace(Var);
-}
-
-static void AddRecommendedValuesForActorRoleName(
+void UActorBlueprintFunctionLibrary::AddRecommendedValuesForActorRoleName(
     FActorDefinition &Definition,
     TArray<FString> &&RecommendedValues)
 {
@@ -239,7 +210,7 @@ static void AddRecommendedValuesForActorRoleName(
   }
 }
 
-static void AddRecommendedValuesForSensorRoleNames(FActorDefinition &Definition)
+void UActorBlueprintFunctionLibrary::AddRecommendedValuesForSensorRoleNames(FActorDefinition &Definition)
 {
   AddRecommendedValuesForActorRoleName(Definition, {TEXT("front"), TEXT("back"), TEXT("left"), TEXT(
       "right"), TEXT("front_left"), TEXT("front_right"), TEXT("back_left"), TEXT("back_right")});
@@ -275,7 +246,7 @@ static void AddVariationsForTrigger(FActorDefinition &Def)
   {
     FActorVariation ExtentCoordinate;
 
-    ExtentCoordinate.Id = JoinStrings(TEXT("_"), Extent, Coordinate);
+    ExtentCoordinate.Id = UActorBlueprintFunctionLibrary::JoinStrings(TEXT("_"), Extent, Coordinate);
     ExtentCoordinate.Type = EActorAttributeType::Float;
     ExtentCoordinate.RecommendedValues = { TEXT("1.0f") };
     ExtentCoordinate.bRestrictToRecommended = false;
@@ -1261,24 +1232,6 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
     EActorAttributeType::Bool,
     Parameters.HasLights ? TEXT("true") : TEXT("false")});
   Success = CheckActorDefinition(Definition);
-}
-
-template <typename T, typename Functor>
-static void FillActorDefinitionArray(
-    const TArray<T> &ParameterArray,
-    TArray<FActorDefinition> &Definitions,
-    Functor Maker)
-{
-  for (auto &Item : ParameterArray)
-  {
-    FActorDefinition Definition;
-    bool Success = false;
-    Maker(Item, Success, Definition);
-    if (Success)
-    {
-      Definitions.Emplace(std::move(Definition));
-    }
-  }
 }
 
 void UActorBlueprintFunctionLibrary::MakeVehicleDefinitions(

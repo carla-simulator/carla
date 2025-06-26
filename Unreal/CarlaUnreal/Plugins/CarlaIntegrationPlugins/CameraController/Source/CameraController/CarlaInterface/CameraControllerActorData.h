@@ -1,0 +1,18 @@
+// Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
+#pragma once
+
+#include "Carla/Actor/ActorData.h"
+
+class FCameraControllerData : public FActorData
+{
+public:
+
+    virtual void RecordActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;
+
+    virtual void RestoreActorData(FCarlaActor* CarlaActor, UCarlaEpisode* CarlaEpisode) override;
+};

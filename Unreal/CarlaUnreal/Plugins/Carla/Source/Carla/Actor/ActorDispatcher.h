@@ -14,6 +14,11 @@
 #include <util/ue-header-guard-begin.h>
 #include "Containers/Array.h"
 #include "Templates/Function.h"
+#ifdef WITH_ROS2
+  #include <util/disable-ue4-macros.h>
+  #include <carla/ros2/ROS2Interfaces.h>
+  #include <util/enable-ue4-macros.h>
+#endif
 #include <util/ue-header-guard-end.h>
 
 #include "ActorDispatcher.generated.h"
@@ -30,6 +35,8 @@ class CARLA_API UActorDispatcher : public UObject
 public:
 
   using SpawnFunctionType = TFunction<FActorSpawnResult(const FTransform &, const FActorDescription &)>;
+
+  static std::shared_ptr<carla::ros2::ROS2Interfaces> GetInterfaces();
 
   /// Bind a definition to a spawn function. When SpawnActor is called with a
   /// matching description @a Functor is called.

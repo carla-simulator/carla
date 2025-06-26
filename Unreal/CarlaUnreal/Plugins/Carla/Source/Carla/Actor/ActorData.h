@@ -25,7 +25,7 @@ class UCarlaEpisode;
 class UTrafficLightController;
 class FCarlaActor;
 
-class FActorData
+class CARLA_API FActorData
 {
 public:
 

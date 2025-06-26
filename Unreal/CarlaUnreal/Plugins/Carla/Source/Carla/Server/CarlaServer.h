@@ -21,7 +21,7 @@
 
 class UCarlaEpisode;
 
-class FCarlaServer
+class CARLA_API FCarlaServer
 {
 public:
 

@@ -765,6 +765,25 @@ void FCarlaServer::FPimpl::BindActions()
       LargeMap->OnActorSpawned(*Result.Value);
     }
 
+    #if defined(WITH_ROS2)
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(Result.Value->GetActorId());
+    if (!CarlaActor)
+    {
+      RESPOND_ERROR("internal error: actor could not be spawned");
+    }
+    auto ROS2Interfaces = carla::ros2::ROS2Interfaces::GetInstance();
+    for (const auto &Attr : CarlaActor->GetActorInfo()->Description.Variations)
+    {
+      if (Attr.Key == "ros_name")
+      {
+        const std::string RosName = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
+        // There may be a better way to convert from cr::ActorDescription to FActorDescription...
+        FActorDescription Des = Description;
+        ROS2Interfaces->RegisterActorWithInterfaces(Des, RosName, static_cast<void*>(CarlaActor->GetActor()));
+      }
+    }
+    #endif
+
     return Episode->SerializeActor(Result.Value);
   };
 
@@ -800,21 +819,29 @@ void FCarlaServer::FPimpl::BindActions()
     ParentCarlaActor->AddChildren(CarlaActor->GetActorId());
 
     #if defined(WITH_ROS2)
-    auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled())
+    auto ROS2Interfaces = carla::ros2::ROS2Interfaces::GetInstance();
+    FCarlaActor* CurrentActor = ParentCarlaActor;
+    while(CurrentActor)
     {
-      FCarlaActor* CurrentActor = ParentCarlaActor;
-      while(CurrentActor)
+      for (const auto &Attr : CurrentActor->GetActorInfo()->Description.Variations)
       {
-        for (const auto &Attr : CurrentActor->GetActorInfo()->Description.Variations)
+        if (Attr.Key == "ros_name")
         {
-          if (Attr.Key == "ros_name")
-          {
-            const std::string value = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
-            ROS2->AddActorParentRosName(static_cast<void*>(CarlaActor->GetActor()), static_cast<void*>(CurrentActor->GetActor()));
-          }
+          const std::string value = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
+          ROS2Interfaces->AddActorParentRosName(static_cast<void*>(CarlaActor->GetActor()), static_cast<void*>(CurrentActor->GetActor()));
         }
-        CurrentActor = Episode->FindCarlaActor(CurrentActor->GetParent());
+      }
+      CurrentActor = Episode->FindCarlaActor(CurrentActor->GetParent());
+    }
+
+    for (const auto &Attr : CarlaActor->GetActorInfo()->Description.Variations)
+    {
+      if (Attr.Key == "ros_name")
+      {
+        const std::string RosName = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
+        // There may be a better way to convert from cr::ActorDescription to FActorDescription...
+        FActorDescription Des = Description;
+        ROS2Interfaces->RegisterActorWithInterfaces(Des, RosName, static_cast<void*>(CarlaActor->GetActor()));
       }
     }
     #endif

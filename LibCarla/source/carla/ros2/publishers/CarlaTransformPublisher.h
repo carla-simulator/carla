@@ -16,7 +16,7 @@ namespace ros2 {
 
   class CarlaTransformPublisher : public CarlaPublisher {
     public:
-      CarlaTransformPublisher(const char* ros_name = "", const char* parent = "");
+      CarlaTransformPublisher(const char* ros_name = "", const char* parent = "", const char* parent_standalone = "");
       ~CarlaTransformPublisher();
       CarlaTransformPublisher(const CarlaTransformPublisher&);
       CarlaTransformPublisher& operator=(const CarlaTransformPublisher&);
@@ -30,6 +30,7 @@ namespace ros2 {
 
     private:
       std::shared_ptr<CarlaTransformPublisherImpl> _impl;
+      std::string _parent_standalone = "";
   };
 }
 }

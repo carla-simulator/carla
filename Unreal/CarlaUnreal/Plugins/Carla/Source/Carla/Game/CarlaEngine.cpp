@@ -22,6 +22,7 @@
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
 #include <carla/ros2/ROS2.h>
+#include <carla/ros2/ROS2Interfaces.h>
 #include <carla/streaming/EndPoint.h>
 #include <carla/streaming/Server.h>
 #include <util/enable-ue4-macros.h>
@@ -65,9 +66,8 @@ FCarlaEngine::~FCarlaEngine()
   if (bIsRunning)
   {
     #if defined(WITH_ROS2)
-    auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled())
-      ROS2->Shutdown();
+    auto ROS2Interfaces = carla::ros2::ROS2Interfaces::GetInstance();
+    ROS2Interfaces->Shutdown();
     #endif
     FWorldDelegates::OnWorldTickStart.Remove(OnPreTickHandle);
     FWorldDelegates::OnWorldPostActorTick.Remove(OnPostTickHandle);
@@ -222,9 +222,9 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
   if (Settings.ROS2)
   {
     UE_LOG(LogCarla, Log, TEXT("ROS2: Creating ROS2 Instance..."));
-    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    auto ROS2Interfaces = carla::ros2::ROS2Interfaces::GetInstance();
     UE_LOG(LogCarla, Log, TEXT("ROS2: Enabling ROS2..."));
-    ROS2->Enable(true);
+    ROS2Interfaces->Enable(true);
     UE_LOG(LogCarla, Log, TEXT("ROS2: ROS2 enabled..."));
   } else {
     UE_LOG(LogCarla, Log, TEXT("ROS2: ROS2 enabled..."));

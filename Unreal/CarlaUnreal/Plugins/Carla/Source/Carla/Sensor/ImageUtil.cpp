@@ -49,6 +49,7 @@ namespace ImageUtil
       SourcePitch,
       Out.GetData(),
       Flags);
+    return false;
   }
 
 
