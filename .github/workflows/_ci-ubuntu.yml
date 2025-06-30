@@ -66,7 +66,9 @@ jobs:
 
       - name: Build Package
         run: |
-          [[ "${{ inputs.upload-package }}" == "false" ]] && ZIP="--no-zip"
+          if [ "${{ inputs.upload-package }}" = "false" ]; then
+            ZIP="--no-zip"
+          fi
           make package ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono $ZIP"
 
       - name: Build AdditionalMaps Package
@@ -96,7 +98,9 @@ jobs:
         if: inputs.upload-package == true
         id: upload_step
         run: |
-          [[ "${{ inputs.upload-replace-latest }}" == "true" ]] && ARGS="--replace-latest"
+          if [ "${{ inputs.upload-replace-latest }}" = "true" ]; then
+            ARGS="--replace-latest"
+          fi
           make deploy ARGS="$ARGS --summary-output $GITHUB_OUTPUT"
   
       - name: Write summary
