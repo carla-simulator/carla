@@ -110,7 +110,7 @@ if not defined UE4_ROOT (
 rem Set packaging paths
 call :get_git_repository_version
 if not defined REPOSITORY_TAG goto error_carla_version
-set CARLA_VERSION = !REPOSITORY_TAG!
+set CARLA_VERSION=!REPOSITORY_TAG!
 
 set BUILD_FOLDER=%INSTALLATION_DIR%UE4Carla/%CARLA_VERSION%/
 
