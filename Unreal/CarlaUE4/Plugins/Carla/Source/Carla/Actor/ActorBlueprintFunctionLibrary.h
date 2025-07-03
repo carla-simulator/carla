@@ -170,6 +170,17 @@ public:
       const TArray<FPropParameters> &ParameterArray,
       TArray<FActorDefinition> &Definitions);
 
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeBlueprintDefinition(
+      const FBlueprintParameters &Parameters,
+      bool &Success,
+      FActorDefinition &Definition);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeBlueprintDefinitions(
+      const TArray<FBlueprintParameters> &ParameterArray,
+      TArray<FActorDefinition> &Definitions);    
+
   UFUNCTION()
   static void MakeObstacleDetectorDefinitions(
       const FString &Type,

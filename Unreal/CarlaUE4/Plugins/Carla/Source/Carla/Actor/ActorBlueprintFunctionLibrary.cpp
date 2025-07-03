@@ -1699,6 +1699,45 @@ void UActorBlueprintFunctionLibrary::MakePropDefinitions(
   FillActorDefinitionArray(ParameterArray, Definitions, &MakePropDefinition);
 }
 
+
+void UActorBlueprintFunctionLibrary::MakeBlueprintDefinition(
+  const FBlueprintParameters &Parameters,
+  bool &Success,
+  FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("blueprint"), Parameters.Name);
+  AddRecommendedValuesForActorRoleName(Definition, {TEXT("blueprint")});
+
+  // Use StaticLoadObject to load the UBlueprint asset itself from the path in the JSON.
+  UBlueprint* BlueprintAsset = Cast<UBlueprint>(StaticLoadObject(UBlueprint::StaticClass(), nullptr, *Parameters.Path));
+
+  if (BlueprintAsset)
+  {
+    UClass* BlueprintClass = BlueprintAsset->GeneratedClass;
+    if (BlueprintClass) 
+    {
+        Definition.Class = BlueprintClass;
+        Success = CheckActorDefinition(Definition);
+    } 
+    else 
+    {
+        Success = false;
+    }
+  }
+  else
+  {
+    UE_LOG(LogCarla, Error, TEXT("Failed to load Blueprint asset for path: %s. The path is likely incorrect."), *Parameters.Path);
+    Success = false;
+  }
+}
+
+void UActorBlueprintFunctionLibrary::MakeBlueprintDefinitions(
+  const TArray<FBlueprintParameters> &ParameterArray,
+  TArray<FActorDefinition> &Definitions)
+{
+  FillActorDefinitionArray(ParameterArray, Definitions, &MakeBlueprintDefinition);
+}
+
 void UActorBlueprintFunctionLibrary::MakeObstacleDetectorDefinitions(
     const FString &Type,
     const FString &Id,
