@@ -150,7 +150,7 @@ WORKDIR /workspaces
 ARG BRANCH=ue4-dev
 ARG CLONE_DIR=carla-ue4-dev
 
-RUN git clone --depth 1 --branch ${BRANCH} https://github.com/wambitz/carla.git ${CLONE_DIR}
+RUN git clone --depth 1 --branch ${BRANCH} https://github.com/carla-simulator/carla.git ${CLONE_DIR}
 
 # Change working directory
 WORKDIR /workspaces/${CLONE_DIR}
