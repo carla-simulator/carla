@@ -145,6 +145,13 @@ __1.__ Clone the content for CARLA's fork of Unreal Engine 4.26 to your local co
 ```sh
     git clone --depth 1 -b carla https://github.com/CarlaUnreal/UnrealEngine.git ~/UnrealEngine_4.26
 ```
+!!! Note
+    Since github doesn't allow authentication with usename/password anymore, a personal authentication token can be used to clone the UnrealEngine repository. Here's the command to clone with OAuth.
+
+```sh
+    git clone --depth 1 -b carla https://oauth2:TOKEN@github.com/CarlaUnreal/UnrealEngine.git ~/UnrealEngine_4.26
+```
+
 __2.__ Navigate into the directory where you cloned the repository:
 ```sh
     cd ~/UnrealEngine_4.26
@@ -154,6 +161,8 @@ __3.__ Make the build. This may take an hour or two depending on your system.
 ```sh
     ./Setup.sh && ./GenerateProjectFiles.sh && make
 ```
+!!! Warning
+    No need to use `-j` tag to use all processor cores, e.g., `make -j$(nproc)`. That will cause the build to fail. Clang will use all available cores anyway.  
 
 __4.__ Open the Editor to check that Unreal Engine has been installed properly.
 ```sh
