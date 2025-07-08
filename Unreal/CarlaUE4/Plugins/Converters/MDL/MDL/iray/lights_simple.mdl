@@ -1,0 +1,148 @@
+// SPDX-FileCopyrightText: Copyright (c) 2016-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-License-Identifier: MIT
+//
+
+mdl 1.0;
+
+import df::*;
+import anno::*;
+
+export material light_omni (
+    uniform color tint = color(1.)
+    [[
+        anno::display_name("Emission color"),
+        anno::description("The color of the light")
+    ]],
+    uniform float intensity = 10
+    [[
+        anno::display_name("Intensity"),
+        anno::description("The brightness of light")
+    ]],
+    uniform float unit_scale = 1.
+    [[
+        anno::display_name("Unit scale"),
+        anno::description("Compensate for scene units other than meter")
+    ]] 
+) [[
+    anno::copyright_notice (
+    "SPDX-FileCopyrightText: Copyright (c) 2016-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved. "
+    "SPDX-License-Identifier: MIT "
+    ),
+    anno::author("NVIDIA Corporation"),
+    anno::display_name("Diffuse light"),
+    anno::description("Material for a light with a diffuse emission characteristic")
+]] = material (
+    surface: material_surface (
+        emission:  material_emission (
+            emission: df::diffuse_edf(),
+            intensity: tint*intensity*unit_scale
+        )
+    )
+);
+
+export material light_spot (
+    uniform color tint = color(1.)
+    [[
+        anno::display_name("Emission color"),
+        anno::description("The color of the light")
+    ]],
+    uniform float intensity = 10
+    [[
+        anno::display_name("Intensity"),
+        anno::description("The brightness of light")
+    ]],
+    uniform float unit_scale = 1.
+    [[
+        anno::display_name("Unit scale"),
+        anno::description("Compensate for scene units other then meter")
+    ]], 
+    uniform float spot_exponent = 30
+    [[
+        anno::display_name("Spot exponent"),
+        anno::description("the higher the exponent, the more focused the emission is")
+    ]] 
+) [[
+    anno::copyright_notice (
+    "SPDX-FileCopyrightText: Copyright (c) 2016-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved. "
+    "SPDX-License-Identifier: MIT"
+    ),
+    anno::author("NVIDIA Corporation"),
+    anno::display_name("Spot light"),
+    anno::description("Material for a light with a shaped emission characteristic")
+]] = material (
+    surface: material_surface (
+        emission:  material_emission (
+            emission: df::spot_edf(
+                exponent: spot_exponent,
+                global_distribution: true, 
+                global_frame: float3x3(1.,0,0,   0,1.,0.,  0.,0,-1) 
+            ),
+            intensity: tint*intensity*unit_scale
+        )
+    )
+);
+
+export material light_ies (
+    uniform light_profile profile = light_profile()
+    [[
+        anno::display_name("Light profile"),
+        anno::description("An IES light profile describing the emission characteristic")
+    ]],
+    uniform color tint = color(1.)
+    [[
+        anno::display_name("Emission color"),
+        anno::description("The color of the light")
+    ]],
+    uniform float intensity = 10
+    [[
+        anno::display_name("Intensity"),
+        anno::description("The brightness of light")
+    ]],
+    uniform float unit_scale = 1.
+    [[
+        anno::display_name("Unit scale"),
+        anno::description("Compensate for scene units other then meter")
+    ]]  
+) [[
+    anno::copyright_notice (
+    "Permission is hereby granted by NVIDIA Corporation (\"NVIDIA\"), free of charge, "
+    "to any person obtaining a copy of the sample definition code that uses our "
+    "Material Definition Language (the \"MDL Materials\"), to reproduce and distribute "
+    "the MDL Materials, including without limitation the rights to use, copy, merge, "
+    "publish, distribute, and sell modified and unmodified copies of the MDL  "
+    "Materials, and to permit persons to whom the MDL Materials is furnished to do "
+    "so, in all cases solely for use with NVIDIA's Material Definition Language, "
+    "subject to the following further conditions: "
+    "\n"
+    "1. The above copyright notices, this list of conditions, and the disclaimer "
+    "that follows shall be retained in all copies of one or more of the MDL "
+    "Materials, including in any software with which the MDL Materials are bundled, "
+    "redistributed, and/or sold, and included either as stand-alone text files, "
+    "human-readable headers or in the appropriate machine-readable metadata fields "
+    "within text or binary files as long as those fields can be easily viewed by the "
+    "user, as applicable. "
+    "2. The name of NVIDIA shall not be used to promote, endorse or advertise any "
+    "Modified Version without specific prior written permission, except a) to comply "
+    "with the notice requirements otherwise contained herein; or b) to acknowledge "
+    "the contribution(s) of NVIDIA. "
+    "\n"
+    "THE MDL MATERIALS ARE PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS "
+    "OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF MERCHANTABILITY, "
+    "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF COPYRIGHT, PATENT, "
+    "TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL NVIDIA CORPORATION BE LIABLE FOR "
+    "ANY CLAIM, DAMAGES OR OTHER LIABILITY, INCLUDING ANY GENERAL, SPECIAL, "
+    "INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, WHETHER IN AN ACTION OF "
+    "CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF THE USE OR INABILITY TO USE "
+    "THE MDL MATERIALS OR FROM OTHER DEALINGS IN THE MDL MATERIALS."
+    ),
+    anno::author("NVIDIA Corporation"),
+    anno::display_name("IES light"),
+    anno::description("Material for a light with Ies defined distribution characteristics")
+]] = material (
+    surface: material_surface (
+        emission:  material_emission (
+            emission: df::measured_edf(profile: profile,global_distribution: true, global_frame: float3x3(1.,0,0,   0,1.,0.,  0.,0,1) ),
+            intensity: tint*intensity*unit_scale
+        )
+    )
+);

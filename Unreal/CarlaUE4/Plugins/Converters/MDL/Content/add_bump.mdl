@@ -1,0 +1,90 @@
+//carbon MDL test for adding a bump/normal layer 
+//two separate used, to expose the parameter within.
+
+
+mdl 1.3;
+import df::*;
+import base::*;
+import state::*;
+import tex::*;
+import math::*;
+import state::*;
+import anno::*;
+import ::nvidia::core_definitions::plastic;
+import ::nvidia::core_definitions::file_bump_texture;
+import ::nvidia::core_definitions::normalmap_texture;
+import ::base::mono_mode;
+
+
+const string COPYRIGHT = "THE MDL MATERIALS ARE PROVIDED PURSUANT TO AN END USER LICENSE AGREEMENT, WHICH WAS ACCEPTED IN ORDER TO GAIN ACCESS TO THIS FILE. IN PARTICULAR, THE MDL MATERIALS ARE PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO ANY WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF COPYRIGHT, PATENT, TRADEMARK, OR OTHER RIGHT. IN NO EVENT SHALL NVIDIA CORPORATION BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, INCLUDING ANY GENERAL, SPECIAL,  INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF THE USE OR INABILITY TO USE THE MDL MATERIALS OR FROM OTHER DEALINGS IN THE MDL MATERIALS";
+
+
+export material add_bump(
+    material base = ::nvidia::core_definitions::plastic(diffuse_color: color(0.5,0.5,0.5f))
+    [[
+        anno::display_name("Base material"),
+        anno::description("The material that will get a bump map"),
+        anno::in_group("Add Bump")
+    ]],
+    uniform texture_2d globalbump_texture =  texture_2d ( "" , ::tex::gamma_default)
+    [[
+        anno::display_name("Global Bump Map"),
+        anno::description("An additional global bump map for the material. Local bump map of the base material is preserved"),
+        anno::in_group("Add Bump")
+    ]],
+    uniform float globalbump_strength =  1.f
+    [[
+        anno::display_name("Global Bump Strength"),
+        anno::description("Specifies the strength of the bump."),
+        anno::in_group("Add Bump")
+    ]],
+    uniform float2 globalbump_translate =  float2 ( 0.f)
+    [[
+        anno::display_name("Global Bump Translate"),
+        anno::description("Controls the position of the texture."),
+        anno::in_group("Add Bump")
+    ]],
+    uniform float globalbump_rotate =  0.f
+    [[
+        anno::display_name("Global Bump Rotate"),
+        anno::description("Rotates angle of the texture in degrees."),
+        anno::in_group("Add Bump")
+    ]],
+    uniform float2 globalbump_scale =  float2 ( 1.f)
+    [[
+        anno::display_name("Global Bump Scale"),
+        anno::description("Larger numbers increase the texture size."),
+        anno::in_group("Add Bump")
+    ]],
+    uniform int globalbump_uv_space_index = 0
+    [[
+        anno::display_name("Global Bump UV Space Index"),
+        anno::description("UV space index."),
+        anno::hard_range(0,3),
+        anno::in_group("Add Bump")
+    ]]
+	
+) [[
+    anno::display_name("Add bump map"),
+    anno::description("Adds global bumpmap to existing materials. Local bump map of the base material is preserved"),
+    anno::author("NVIDIA Corporation"),
+    anno::copyright_notice(COPYRIGHT),
+    anno::key_words(string[]("modifier","generic"))
+]] = material(
+    surface: base.surface,
+    volume: base.volume,
+    ior: base.ior,
+    thin_walled: base.thin_walled,
+    geometry: material_geometry(
+        displacement: base.geometry.displacement,
+        normal: ::nvidia::core_definitions::file_bump_texture(
+        texture:  globalbump_texture,
+        scaling: float2 ((1.f/globalbump_scale.x) , (1.f/globalbump_scale.y)),
+        translation:  globalbump_translate,
+        rotation:  globalbump_rotate,
+        clip:  false,
+        factor:  globalbump_strength,
+        texture_space:  globalbump_uv_space_index),
+        cutout_opacity: base.geometry.cutout_opacity
+    )
+);

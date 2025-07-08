@@ -1,0 +1,23 @@
+// SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-License-Identifier: MIT
+//
+
+// This file is used as a proxy for meshes while the actual mdl is loading.
+
+mdl 1.4;
+
+import ::Default::Default;
+import ::tex::gamma_mode;
+import ::state::normal;
+
+// This defines the color to use when streaming materials in.
+export material Streaming()
+ = Default::Default(default_mat_display_color: color(0.95, 0.95, 0.95));
+
+// This defines the color to use when a material failed to load (compile error)
+export material CompileFailed()
+ = Default::Default(default_mat_display_color: color(0.95, 0.05, 0.05));
+
+// This defines the color to use when a material is not supported anymore (e.g., when old USD schema is used)
+export material Deprecated()
+ = Default::Default(default_mat_display_color: color(0.95, 0.95, 0.05));
