@@ -14,6 +14,7 @@ BUILD_CARLAUE4=false
 LAUNCH_UE4_EDITOR=false
 USE_CARSIM=false
 USE_CHRONO=false
+USD_SIMREADY=true
 USE_PYTORCH=false
 USE_UNITY=true
 USE_ROS2=false
@@ -141,6 +142,16 @@ fi
 if ${BUILD_CARLAUE4} ; then
 
   OPTIONAL_MODULES_TEXT=""
+
+  if ${USD_SIMREADY} ; then
+    OPTIONAL_MODULES_TEXT="SimReady ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
+    # fetch SimReady plugin dependencies
+    pushd "${CARLAUE4_ADDPLUGINS_FOLDER}/Converters" >/dev/null
+    ./get_dependencies.sh
+    popd >/dev/null
+  else
+    OPTIONAL_MODULES_TEXT="SimReady OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  fi
   if ${USE_CARSIM} ; then
     python3 ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject" -e
     OPTIONAL_MODULES_TEXT="CarSim ON"$'\n'"${OPTIONAL_MODULES_TEXT}"

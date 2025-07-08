@@ -1,0 +1,5 @@
+<project toolsVersion="5.6">
+  <dependency name="nvtt" linkPath="../ThirdParty/nvtt/win64_release">
+    <package name="nvtt" version="nvtt-3.1.6-windows-x86_64" platforms="windows-x86_64"/>
+  </dependency>
+</project>

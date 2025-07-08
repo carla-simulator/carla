@@ -1,0 +1,145 @@
+--- a/Engine/Private/Materials/HLSLMaterialTranslator.h
++++ b/HLSLMaterialTranslator.h
+@@ -3,6 +3,9 @@
+ 	HLSLMaterialTranslator.h: Translates material expressions into HLSL code.
+ =============================================================================*/
+ 
++// Copied from Engine\Source\Runtime\Engine\Private\Materials\HLSLMaterialTranslator.h
++// Modified by a patch from the CarlaUE4 project build process
++
+ #pragma once
+ 
+ #include "CoreMinimal.h"
+@@ -37,7 +40,8 @@
+ #include "Materials/MaterialExpressionCustomOutput.h"
+ #include "Materials/MaterialExpressionVectorNoise.h"
+ #include "Materials/MaterialExpressionVertexInterpolator.h"
+-#include "Materials/MaterialUniformExpressions.h"
++//MDL
++#include "MaterialUniformExpressions.h"
+ #include "ParameterCollection.h"
+ #include "Materials/MaterialParameterCollection.h"
+ #include "Containers/LazyPrintf.h"
+@@ -49,6 +53,47 @@ class Error;
+ 
+ #if WITH_EDITORONLY_DATA
+ 
++//MDL
++/** @return the number of components in a vector type. */
++static inline uint32 GetNumComponents(EMaterialValueType Type)
++{
++	switch (Type)
++	{
++	case MCT_Float:
++	case MCT_Float1: return 1;
++	case MCT_Float2: return 2;
++	case MCT_Float3: return 3;
++	case MCT_Float4: return 4;
++	default: return 0;
++	}
++}
++
++/** @return the vector type containing a given number of components. */
++static inline EMaterialValueType GetVectorType(uint32 NumComponents)
++{
++	switch (NumComponents)
++	{
++	case 1: return MCT_Float;
++	case 2: return MCT_Float2;
++	case 3: return MCT_Float3;
++	case 4: return MCT_Float4;
++	default: return MCT_Unknown;
++	};
++}
++
++static inline int32 SwizzleComponentToIndex(TCHAR Component)
++{
++	switch (Component)
++	{
++	case TCHAR('x'): case TCHAR('X'): case TCHAR('r'): case TCHAR('R'): return 0;
++	case TCHAR('y'): case TCHAR('Y'): case TCHAR('g'): case TCHAR('G'): return 1;
++	case TCHAR('z'): case TCHAR('Z'): case TCHAR('b'): case TCHAR('B'): return 2;
++	case TCHAR('w'): case TCHAR('W'): case TCHAR('a'): case TCHAR('A'): return 3;
++	default:
++		return -1;
++	}
++}
++
+ enum EMaterialExpressionVisitResult
+ {
+ 	MVR_CONTINUE,
+@@ -135,6 +180,16 @@ struct FMaterialCustomExpressionEntry
+ 	TArray<int32> OutputCodeIndex;
+ };
+ 
++//MDL
++FORCEINLINE bool operator==(const FMaterialCustomExpressionEntry& Lhs, const FMaterialCustomExpressionEntry& Rhs)
++{
++	return	Lhs.Implementation == Rhs.Implementation && 
++			Lhs.ScopeID == Rhs.ScopeID &&
++			Lhs.Expression == Rhs.Expression &&
++			Lhs.InputHash == Rhs.InputHash &&
++			Lhs.OutputCodeIndex == Rhs.OutputCodeIndex;
++}
++
+ class FHLSLMaterialTranslator : public FMaterialCompiler
+ {
+ protected:
+@@ -173,6 +228,10 @@ protected:
+ 	/** Code chunk definitions corresponding to each of the material inputs, only initialized after Translate has been called. */
+ 	FString TranslatedCodeChunkDefinitions[CompiledMP_MAX];
+ 
++	//MDL
++	/* Final input chunk of each property*/
++	int32 PropertyFinalChunk[CompiledMP_MAX];
++
+ 	/** Code chunks corresponding to each of the material inputs, only initialized after Translate has been called. */
+ 	FString TranslatedCodeChunks[CompiledMP_MAX];
+ 
+@@ -373,7 +432,8 @@ protected:
+ 	const TCHAR* DescribeType(EMaterialValueType Type) const;
+ 
+ 	/** Used to get an HLSL type from EMaterialValueType */
+-	const TCHAR* HLSLTypeString(EMaterialValueType Type) const;
++	// MDL
++	virtual const TCHAR* HLSLTypeString(EMaterialValueType Type) const;
+ 
+ 	int32 NonPixelShaderExpressionError();
+ 
+@@ -388,7 +448,8 @@ protected:
+ 	FString CreateSymbolName(const TCHAR* SymbolNameHint);
+ 
+ 	/** Adds an already formatted inline or referenced code chunk */
+-	int32 AddCodeChunkInner(uint64 Hash, const TCHAR* FormattedCode, EMaterialValueType Type, bool bInlined);
++	//MDL
++	virtual int32 AddCodeChunkInner(uint64 Hash, const TCHAR* FormattedCode, EMaterialValueType Type, bool bInlined);
+ 
+ 	/** 
+ 	 * Constructs the formatted code chunk and creates a new local variable definition from it. 
+@@ -413,12 +474,14 @@ protected:
+ 	int32 AddUniformExpressionWithHash(uint64 BaseHash, FMaterialUniformExpression* UniformExpression, EMaterialValueType Type, const TCHAR* Format, ...);
+ 
+ 	// AccessUniformExpression - Adds code to access the value of a uniform expression to the Code array and returns its index.
+-	int32 AccessUniformExpression(int32 Index);
++	//MDL
++	virtual int32 AccessUniformExpression(int32 Index);
+ 
+ 	int32 AccessMaterialAttribute(int32 CodeIndex, const FGuid& AttributeID);
+ 
+ 	// CoerceParameter
+-	FString CoerceParameter(int32 Index, EMaterialValueType DestType);
++	//MDL
++	virtual FString CoerceParameter(int32 Index, EMaterialValueType DestType);
+ 
+ 	// GetParameterType
+ 	virtual EMaterialValueType GetParameterType(int32 Index) const override;
+@@ -691,7 +754,8 @@ protected:
+ 	virtual int32 ComponentMask(int32 Vector, bool R, bool G, bool B, bool A) override;
+ 	virtual int32 AppendVector(int32 A, int32 B) override;
+ 
+-	int32 TransformBase(EMaterialCommonBasis SourceCoordBasis, EMaterialCommonBasis DestCoordBasis, int32 A, int AWComponent);
++	//MDL
++	virtual int32 TransformBase(EMaterialCommonBasis SourceCoordBasis, EMaterialCommonBasis DestCoordBasis, int32 A, int AWComponent);
+ 	
+ 	virtual int32 TransformVector(EMaterialCommonBasis SourceCoordBasis, EMaterialCommonBasis DestCoordBasis, int32 A) override;
+ 	virtual int32 TransformPosition(EMaterialCommonBasis SourceCoordBasis, EMaterialCommonBasis DestCoordBasis, int32 A) override;
