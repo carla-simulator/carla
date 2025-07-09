@@ -44,10 +44,10 @@ cp -f $MAT_DIR/MaterialUniformExpressions.cpp    MaterialUniformExpressions.cpp 
 cp -f $MAT_DIR/MaterialUniformExpressions.h      MaterialUniformExpressions.h > /dev/null
 
 # Apply the patch to the private engine material files
-git apply --whitespace=nowarn $SCRIPT_DIR/HLSLMaterialTranslator.cpp.patch
-git apply --whitespace=nowarn $SCRIPT_DIR/HLSLMaterialTranslator.h.patch
-git apply --whitespace=nowarn $SCRIPT_DIR/MaterialInstanceSupport.h.patch
-git apply --whitespace=nowarn $SCRIPT_DIR/MaterialUniformExpressions.cpp.patch
-git apply --whitespace=nowarn $SCRIPT_DIR/MaterialUniformExpressions.h.patch
+git apply --whitespace=nowarn --ignore-space-change $SCRIPT_DIR/HLSLMaterialTranslator.cpp.patch
+git apply --whitespace=nowarn --ignore-space-change $SCRIPT_DIR/HLSLMaterialTranslator.h.patch
+git apply --whitespace=nowarn --ignore-space-change $SCRIPT_DIR/MaterialInstanceSupport.h.patch
+git apply --whitespace=nowarn --ignore-space-change $SCRIPT_DIR/MaterialUniformExpressions.cpp.patch
+git apply --whitespace=nowarn --ignore-space-change $SCRIPT_DIR/MaterialUniformExpressions.h.patch
 
 popd > /dev/null
