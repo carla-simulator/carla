@@ -38,11 +38,11 @@ copy /Y %MAT_DIR%\MaterialUniformExpressions.cpp    MaterialUniformExpressions.c
 copy /Y %MAT_DIR%\MaterialUniformExpressions.h      MaterialUniformExpressions.h > nul
 
 :: Apply the patch to the private engine material files
-call git apply --whitespace=nowarn %~dp0HLSLMaterialTranslator.cpp.patch
-call git apply --whitespace=nowarn %~dp0HLSLMaterialTranslator.h.patch
-call git apply --whitespace=nowarn %~dp0MaterialInstanceSupport.h.patch
-call git apply --whitespace=nowarn %~dp0MaterialUniformExpressions.cpp.patch
-call git apply --whitespace=nowarn %~dp0MaterialUniformExpressions.h.patch
+call git apply --whitespace=nowarn --ignore-space-change %~dp0HLSLMaterialTranslator.cpp.patch
+call git apply --whitespace=nowarn --ignore-space-change %~dp0HLSLMaterialTranslator.h.patch
+call git apply --whitespace=nowarn --ignore-space-change %~dp0MaterialInstanceSupport.h.patch
+call git apply --whitespace=nowarn --ignore-space-change %~dp0MaterialUniformExpressions.cpp.patch
+call git apply --whitespace=nowarn --ignore-space-change %~dp0MaterialUniformExpressions.h.patch
 
 :finished
 
