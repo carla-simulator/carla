@@ -47,16 +47,6 @@ void FSimReadyEditorModule::StartupModule()
     MainButton = MakeShared<FSimReadyMainButton>();
     MainButton->Initialize();
 
-    // Disable Editor performance throttling
-    UEditorPerformanceSettings* Settings = GetMutableDefault<UEditorPerformanceSettings>();
-    Settings->bThrottleCPUWhenNotForeground = false;
-    Settings->UpdateDefaultConfigFile();
-
-    // Force-enable DisplayEmptyFolders, hiding empty folders breaks server browsing
-    UContentBrowserSettings* ContentBrowserSettings = GetMutableDefault<UContentBrowserSettings>();
-    ContentBrowserSettings->DisplayEmptyFolders = true;
-    ContentBrowserSettings->UpdateDefaultConfigFile();
-
     FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
     PropertyModule.RegisterCustomClassLayout(USimReadyImporterUI::StaticClass()->GetFName(), FOnGetDetailCustomizationInstance::CreateStatic(&FSimReadyImporterDetails::MakeInstance));
     PropertyModule.RegisterCustomPropertyTypeLayout(FSimReadyReparentMaterialInfo::StaticStruct()->GetFName(), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FSimReadyReparentMaterialInfoTypeCustomization::MakeInstance));
