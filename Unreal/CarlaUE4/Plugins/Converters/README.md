@@ -26,6 +26,7 @@ Basic SimReady Converter Plugin Usage
     - If using USDView, `Include USD Preview Surface` may be selected instead
 - Export a map with a commandlet
   - `./UE4Editor-Cmd ${CARLA_ROOT}/Unreal/CarlaUE4/CarlaUE4.uproject -run=SimReadyExport -AllowCommandletRendering -map=Town10HD_Opt.umap -path=${USD_OUTPUT} -MDL=true -log`
+  - If running this commandlet in automation, it may be useful to add these arguments (depending on your setup): `-Unattended -NoSound -RenderOffScreen`
 - Export a vehicle
   - Find a vehicle blueprint in the Content Browser, like `BP_Ford_Crown`
   - Right click on the blueprint and select `SimReady > Export as USD`
@@ -36,3 +37,6 @@ Basic SimReady Converter Plugin Usage
   - Right click on the blueprint and select `SimReady > Export as USD`
   - Choose a folder to save the exported pedestrian as a USD Stage
   - Use the default settings to export unless you want USD Preview Surface materials
+- Converting MDL Materials
+  - When converting Unreal materials to MDL there are many material functions that are not supported, like screen space, object space, or camera effects. These will produce warnings when exporting. Sometimes these issues create significant differences between renderers, other times the differences are negligible.
+  - There is a Material Reparenting system (a slightly different version documented [here](https://docs.omniverse.nvidia.com/connect/latest/ue4/manual.html#material-reparenting-for-omniverse-core-materials)). It allows users to map Unreal material parameters to MDL core material parameters. Example core materials are OmniPBR, OmniGlass, SimPBR, and more.
