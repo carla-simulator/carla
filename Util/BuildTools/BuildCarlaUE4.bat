@@ -54,6 +54,9 @@ if not "%1"=="" (
     if "%1"=="--ros2" (
         set USE_ROS2=true
     )
+    if "%1"=="--no-simready" (
+        set USE_SIMREADY=false
+    )
     if "%1"=="--no-unity" (
         set USE_UNITY=false
     )
@@ -142,6 +145,9 @@ if %USE_SIMREADY% == true (
     call get_dependencies.bat
     popd
 ) else (
+    python %ROOT_PATH%Util/BuildTools/enable_simready_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -p="MDL"
+    python %ROOT_PATH%Util/BuildTools/enable_simready_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -p="SimReady"
+    python %ROOT_PATH%Util/BuildTools/enable_simready_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/Plugins/CarlaTools/CarlaTools.uplugin" -p="SimReady"
     set SIMREADY_PLUGINS_INSTALLED="SimReady OFF"
 )
 if %USE_CARSIM% == true (
