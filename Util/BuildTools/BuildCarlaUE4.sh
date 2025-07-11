@@ -14,7 +14,7 @@ BUILD_CARLAUE4=false
 LAUNCH_UE4_EDITOR=false
 USE_CARSIM=false
 USE_CHRONO=false
-USD_SIMREADY=true
+USE_SIMREADY=true
 USE_PYTORCH=false
 USE_UNITY=true
 USE_ROS2=false
@@ -24,7 +24,7 @@ EDITOR_FLAGS=""
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,ros2,no-unity,editor-flags: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,ros2,no-simready,no-unity,editor-flags: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -67,6 +67,9 @@ while [[ $# -gt 0 ]]; do
       shift ;;
     --ros2 )
       USE_ROS2=true;
+      shift ;;
+    --no-simready )
+      USE_SIMREADY=false
       shift ;;
     --no-unity )
       USE_UNITY=false
@@ -143,13 +146,16 @@ if ${BUILD_CARLAUE4} ; then
 
   OPTIONAL_MODULES_TEXT=""
 
-  if ${USD_SIMREADY} ; then
+  if ${USE_SIMREADY} ; then
     OPTIONAL_MODULES_TEXT="SimReady ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
     # fetch SimReady plugin dependencies
     pushd "${CARLAUE4_ADDPLUGINS_FOLDER}/Converters" >/dev/null
     ./get_dependencies.sh
     popd >/dev/null
   else
+    python3 ${PWD}/../../Util/BuildTools/enable_simready_to_uproject.py -f="CarlaUE4.uproject" -p="MDL"
+    python3 ${PWD}/../../Util/BuildTools/enable_simready_to_uproject.py -f="CarlaUE4.uproject" -p="SimReady"
+    python3 ${PWD}/../../Util/BuildTools/enable_simready_to_uproject.py -f="Plugins/CarlaTools/CarlaTools.uplugin" -p="SimReady"
     OPTIONAL_MODULES_TEXT="SimReady OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
   fi
   if ${USE_CARSIM} ; then
