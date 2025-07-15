@@ -53,7 +53,7 @@ If you'd rather customize the datasets you use, follow the instructions below to
 
     * `NUREC_IMAGE` is required and must be set to the full path of the NuRec image in the CARLA repository. Run the following command to set it:
         ```bash
-        export NUREC_IMAGE="nvcr.io/nvidia/nre/nurec-grpc:0.1.0"
+        export NUREC_IMAGE="docker.io/carlasimulator/nvidia-nurec-grpc:0.1.0"
         ```
     * [`CUDA_VISIBLE_DEVICES`](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#env-vars) is optional and you can use it to designate the GPU that runs the replays. If you don't set it to a specific GPU, the script defaults to "0" and runs on GPU 0. If you've already set this environment variable, the script inherits whatever has previously been set.
 
