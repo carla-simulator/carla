@@ -80,7 +80,7 @@ jobs:
         run: make examples
 
       - name: Run unit tests
-        run: make check ARGS="--python-api --xml --python-version=${{ inputs.python-versions }}"
+        run: make check.PythonAPI ARGS="--xml --python-version=${{ inputs.python-versions }}"
 
       - name: Run smoke tests
         run: |
