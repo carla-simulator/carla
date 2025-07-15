@@ -10,7 +10,7 @@ AWS_COPY="aws s3 cp"
 DOCKER="docker"
 UNTAR="tar -xvzf"
 UPLOAD_MAPS=true
-ENDPOINT="--endpoint-url=https://s3.us-east-005.backblazeb2.com/"
+ENDPOINT="https://s3.us-east-005.backblazeb2.com"
 SUMMARY_OUTPUT_PATH=
 
 # ==============================================================================
@@ -61,6 +61,7 @@ LATEST_PACKAGE2=AdditionalMaps_${REPOSITORY_TAG}.tar.gz
 LATEST_PACKAGE_PATH2=${CARLA_DIST_FOLDER}/${LATEST_PACKAGE2}
 
 S3_PREFIX=s3://carla-releases/Linux
+URL_PREFIX=${ENDPOINT}/carla-releases/Linux
 
 LATEST_DEPLOY_URI=${S3_PREFIX}/Dev/CARLA_Latest.tar.gz
 LATEST_DEPLOY_URI2=${S3_PREFIX}/Dev/AdditionalMaps_Latest.tar.gz
@@ -77,6 +78,7 @@ elif [[ ${REPOSITORY_TAG} =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   DOCKER_TAG=${REPOSITORY_TAG}
 else
   S3_PREFIX=${S3_PREFIX}/Dev
+  URL_PREFIX=${URL_PREFIX}/Dev
   DEPLOY_NAME=$(git log --pretty=format:'%cd_%h' --date=format:'%Y%m%d' -n 1).tar.gz
   DEPLOY_NAME2=AdditionalMaps_$(git log --pretty=format:'%cd_%h' --date=format:'%Y%m%d' -n 1).tar.gz
   DOCKER_TAG=latest
@@ -96,10 +98,10 @@ fi
 DEPLOY_URI=${S3_PREFIX}/${DEPLOY_NAME}
 DEPLOY_URI2=${S3_PREFIX}/${DEPLOY_NAME2}
 
-${AWS_COPY} ${LATEST_PACKAGE_PATH} ${DEPLOY_URI} ${ENDPOINT}
+${AWS_COPY} ${LATEST_PACKAGE_PATH} ${DEPLOY_URI} --endpoint-url ${ENDPOINT}
 log "Latest build uploaded to ${DEPLOY_URI}."
 
-${AWS_COPY} ${LATEST_PACKAGE_PATH2} ${DEPLOY_URI2} ${ENDPOINT}
+${AWS_COPY} ${LATEST_PACKAGE_PATH2} ${DEPLOY_URI2} --endpoint-url ${ENDPOINT}
 log "Latest build uploaded to ${DEPLOY_URI2}."
 
 # ==============================================================================
@@ -108,10 +110,10 @@ log "Latest build uploaded to ${DEPLOY_URI2}."
 
 if ${REPLACE_LATEST} ; then
 
-  ${AWS_COPY} ${DEPLOY_URI} ${LATEST_DEPLOY_URI} ${ENDPOINT}
+  ${AWS_COPY} ${DEPLOY_URI} ${LATEST_DEPLOY_URI} --endpoint-url ${ENDPOINT}
   log "Latest build uploaded to ${LATEST_DEPLOY_URI}."
   
-  ${AWS_COPY} ${DEPLOY_URI2} ${LATEST_DEPLOY_URI2} ${ENDPOINT}
+  ${AWS_COPY} ${DEPLOY_URI2} ${LATEST_DEPLOY_URI2} --endpoint-url ${ENDPOINT}
   log "Latest build uploaded to ${LATEST_DEPLOY_URI2}."
 
 fi
@@ -149,8 +151,8 @@ fi;
 
 if [[ -n "$SUMMARY_OUTPUT_PATH" ]]; then
   {
-    echo "package_uri=${DEPLOY_URI}"
-    echo "additional_maps_package_uri=${DEPLOY_URI2}"
+    echo "package_uri=${URL_PREFIX}/${DEPLOY_NAME}"
+    echo "additional_maps_package_uri=${URL_PREFIX}/${DEPLOY_NAME2}"
   } >> "$SUMMARY_OUTPUT_PATH"
 fi
 
