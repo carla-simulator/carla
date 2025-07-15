@@ -135,11 +135,11 @@ done
 
 # Download NuRec GRPC Container
 echo "Checking NuRec GRPC container..."
-if check_NuRec_container "nvcr.io/nvidia/nre/nurec-grpc:0.1.0"; then
+if check_NuRec_container "docker.io/carlasimulator/nvidia-nurec-grpc:0.1.0"; then
     echo "NuRec GRPC container already exists, skipping download."
 else
     echo "Initiating NuRec GRPC Container Downloads..."
-    docker pull nvcr.io/nvidia/nre/nurec-grpc:0.1.0
+    docker pull docker.io/carlasimulator/nvidia-nurec-grpc:0.1.0
     if [ $? -ne 0 ]; then
         echo "Error: Failed to download NuRec GRPC Container"
         exit 1
@@ -183,7 +183,7 @@ else
 fi
 
 # Set the NuRec image path
-NUREC_IMAGE="nvcr.io/nvidia/nre/nurec-grpc:0.1.0"
+NUREC_IMAGE="docker.io/carlasimulator/nvidia-nurec-grpc:0.1.0"
 export NUREC_IMAGE
 echo "NUREC_IMAGE: $NUREC_IMAGE"
 
