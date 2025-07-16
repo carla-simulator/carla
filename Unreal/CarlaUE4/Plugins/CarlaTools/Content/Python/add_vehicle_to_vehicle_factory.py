@@ -31,11 +31,15 @@ vehicle_list = vehicle_factory_default_object.get_editor_property("Vehicles")
 
 # generate the new field
 new_vehicle_parameters = unreal.VehicleParameters()
-new_vehicle_parameters.make = 'usd'
+new_vehicle_parameters.make = unreal.Paths.get_base_filename(unreal.Paths.get_path(args.vehicle_blueprint_path)) #'usd'
 new_vehicle_parameters.model = args.name
 new_vehicle_parameters.class_ = vehicle_blueprint
 new_vehicle_parameters.generation = 2
 new_vehicle_parameters.base_type = 'car'
+new_vehicle_parameters.has_lights = True
 
 # add to the vehicle list
 vehicle_list.append(new_vehicle_parameters)
+
+# save vehicle factory
+unreal.EditorAssetLibrary.save_asset(vehicle_factory_path, False)

@@ -1,0 +1,705 @@
+// SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-License-Identifier: MIT
+//
+
+// Revision 3
+mdl 1.4;
+
+import ::df::*;
+import ::base::*;
+import ::math::*;
+import ::state::*;
+import ::anno::*;
+import ::tex::*;
+
+export annotation sampler_usage(string name, string label = "");
+export annotation gamma_type(::tex::gamma_mode type);
+
+
+float3x3 UsdTransform2d(
+    uniform float3 row0 = float3(1, 0, 0),
+    uniform float3 row1 = float3(0, 1, 0),
+    uniform float3 row2 = float3(0, 0, 1)
+)
+{
+    return float3x3(row0.x, row0.y, row0.z,
+                    row1.x, row1.y, row1.z,
+                    row2.x, row2.y, row2.z);
+}
+
+// MDL wrap mode              // Hydra wrap mode
+// ----------------------------------------------
+//  wrap_clamp = 0            // HdWrapClamp = 0
+//  wrap_repeat = 1,          // HdWrapRepeat = 1
+//  wrap_mirrored_repeat = 2, // HdWrapMirror = 3
+//  wrap_clip = 3             // HdWrapBlack = 2
+::tex::wrap_mode wrapModeFromHydraWrapMode(int wrapMode)
+{
+  if (wrapMode == 0)
+    return ::tex::wrap_clamp;
+  if (wrapMode == 1)
+    return ::tex::wrap_repeat;
+  if (wrapMode == 3)
+    return ::tex::wrap_mirrored_repeat;
+
+  return ::tex::wrap_clip;
+}
+
+// channel enum          // channel
+// ------------------------------------
+// 0                     // r
+// 1                     // g
+// 2                     // b
+// 3                     // a
+// 4                     // rgb  but in case to get single channel, it will return r
+float getColorChannel(float4 rgba, int channel) 
+{
+  if(channel == 0)
+  {
+    return rgba.x;
+  }
+  if(channel == 1)
+  {
+    return rgba.y;
+  }
+  if(channel == 2)
+  {
+    return rgba.z;
+  }
+  if(channel == 3)
+  {
+    return rgba.w;
+  }
+  return rgba.x;
+}
+
+float3 getColor(float4 rgba, int channel) 
+{
+  if(channel == 4)
+  {
+    return float3(rgba.x, rgba.y, rgba.z);
+  }
+  float singleChannel = getColorChannel(rgba, channel);
+  return float3(singleChannel, 0, 0);
+}
+
+
+base::texture_coordinate_info transform_coordinate_2d(
+    uniform float3x3 transform,
+    base::texture_coordinate_info coordinate = base::texture_coordinate_info()
+)
+{
+    float3 r_position = transform * float3(coordinate.position.x,coordinate.position.y, 1);
+
+    return base::texture_coordinate_info(
+        float3(r_position.x,r_position.y, 0),
+        coordinate.tangent_u,
+        coordinate.tangent_v);
+}
+
+
+float3 previewSurface_tangent_space_normal_texture(
+    uniform texture_2d texture,
+    uniform tex::wrap_mode wrap_u = tex::wrap_repeat,
+    uniform tex::wrap_mode wrap_v = tex::wrap_repeat,
+    uniform float3 scale = 2.0,
+    uniform float3 bias = -1.0,
+    ::base::texture_coordinate_info uvw = ::base::texture_coordinate_info()
+)
+{
+    //if we mirror repeat a tangent space texture, tangent space needs to be flipped for every other tile
+    bool pixel_flip_u = false;
+    bool pixel_flip_v = false;
+    if (wrap_u == tex::wrap_mirrored_repeat) {
+        if( uvw.position.x > 0. && int(uvw.position.x) % 2 == 1)
+            pixel_flip_u = ! pixel_flip_u;
+        else if( uvw.position.x < 0. && int(uvw.position.x) % 2 == 0)
+            pixel_flip_u = ! pixel_flip_u;
+    }
+    if (wrap_v == tex::wrap_mirrored_repeat) {
+        if( uvw.position.y > 0. && int(uvw.position.y) % 2 == 1)
+            pixel_flip_v = ! pixel_flip_v;
+        else if( uvw.position.y < 0. && int(uvw.position.y) % 2 == 0)
+            pixel_flip_v = ! pixel_flip_v;
+    }
+
+    float3 transformed_tangent_u = uvw.tangent_u;
+    float3 transformed_tangent_v = uvw.tangent_v;
+
+    if (pixel_flip_u)
+        transformed_tangent_u=-transformed_tangent_u;
+    if (pixel_flip_v)
+        transformed_tangent_v=-transformed_tangent_v;
+
+    float3 tangent_space_normal =
+        (tex::lookup_float3(texture,float2(uvw.position.x,uvw.position.y), wrap_u, wrap_v) * scale) + bias;
+
+    return math::normalize(
+        transformed_tangent_u * tangent_space_normal.x +
+        transformed_tangent_v * tangent_space_normal.y +
+        state::normal() * tangent_space_normal.z);
+}
+
+
+float getFloatVal(
+    uniform float defaultVal,
+    uniform bool useTex = false,
+    uniform texture_2d tex = texture_2d(),
+    uniform int tex_stIndex = 0,
+    uniform bool tex_xform = false,
+    uniform float3 tex_xformRow0 = float3(1, 0, 0),
+    uniform float3 tex_xformRow1 = float3(0, 1, 0),
+    uniform float3 tex_xformRow2 = float3(0, 0, 1),
+    uniform int tex_wrapS = 0,
+    uniform int tex_wrapT = 0,
+    uniform float4 tex_scale = float4(1.0),
+    uniform float4 tex_bias = float4(0.0),
+    uniform int tex_output = 0,
+    uniform bool doSaturate = false
+)
+{
+  float4 ret4 = float4(defaultVal);
+
+  if (useTex)
+  {
+    if(tex::texture_isvalid(tex)) {
+      base::texture_coordinate_info uvw = 
+        base::coordinate_source(
+          coordinate_system: base::texture_coordinate_uvw,
+          texture_space: tex_stIndex
+      );
+
+      base::texture_coordinate_info  transformed_uvw = uvw;
+      
+      if (tex_xform)
+      {
+        transformed_uvw = 
+          transform_coordinate_2d(
+            transform: UsdTransform2d(tex_xformRow0, tex_xformRow1, tex_xformRow2),
+            coordinate: uvw
+          );
+      }
+      
+      ::base::texture_return texRet = 
+        base::file_texture(
+          texture: tex,
+          wrap_u: wrapModeFromHydraWrapMode(tex_wrapS),
+          wrap_v: wrapModeFromHydraWrapMode(tex_wrapT),
+          uvw: transformed_uvw,
+          clip: false		
+        );
+
+      float3 tint = float3(texRet.tint);
+      ret4 = float4(tint.x, tint.y, tint.z, texRet.mono);
+      ret4 = ret4 * tex_scale + tex_bias;
+    } else {
+      // fallback
+      ret4 = float4(defaultVal, 0, 0, 0);
+    }
+  }
+  
+  float ret = getColorChannel(ret4, tex_output);
+
+  if (doSaturate)
+  {
+    ret = math::saturate(ret);
+  }
+  else
+  {
+    ret = math::max(ret, 0);
+  }  
+
+  return ret;
+}
+
+color getColorVal(
+    uniform color defaultVal,
+    uniform bool useTex = false,
+    uniform texture_2d tex = texture_2d(),
+    uniform int tex_stIndex = 0,
+    uniform bool tex_xform = false,
+    uniform float3 tex_xformRow0 = float3(1, 0, 0),
+    uniform float3 tex_xformRow1 = float3(0, 1, 0),
+    uniform float3 tex_xformRow2 = float3(0, 0, 1),
+    uniform int tex_wrapS = 0,
+    uniform int tex_wrapT = 0,
+    uniform float4 tex_scale = float4(1.0),
+    uniform float4 tex_bias = float4(0.0),
+    uniform int tex_output = 0,
+    uniform bool doSaturate = false
+)
+{
+  float3 defVal = float3(defaultVal);
+
+  float4 ret = float4(defVal.x, defVal.y, defVal.z, 1.0);
+
+  if (useTex)
+  {
+    if(tex::texture_isvalid(tex)) {
+      base::texture_coordinate_info uvw = 
+        base::coordinate_source(
+          coordinate_system: base::texture_coordinate_uvw,
+          texture_space: tex_stIndex
+      );
+
+      base::texture_coordinate_info  transformed_uvw = uvw;
+      
+      if (tex_xform)
+      {
+        transformed_uvw = 
+          transform_coordinate_2d(
+            transform: UsdTransform2d(tex_xformRow0, tex_xformRow1, tex_xformRow2),
+            coordinate: uvw
+          );
+      }
+      
+      ::base::texture_return texRet = 
+        base::file_texture(
+          texture: tex,
+          wrap_u: wrapModeFromHydraWrapMode(tex_wrapS),
+          wrap_v: wrapModeFromHydraWrapMode(tex_wrapT),
+          uvw: transformed_uvw,
+          clip: false		
+        );
+
+      float3 tint = float3(texRet.tint);
+      ret = float4(tint.x, tint.y, tint.z, texRet.mono);
+      ret = ret * tex_scale + tex_bias;
+    } else {
+      // fallback
+      float3 colorVal(defaultVal);
+      ret = float4(colorVal.x, colorVal.y, colorVal.z, 0);
+    }
+  }
+  
+  if (doSaturate)
+  {
+    ret = math::saturate(ret);
+  }
+  else
+  {
+    ret = math::max(ret, float4(0));
+  }
+
+  float3 ret3 = getColor(ret, tex_output);
+
+  return color(ret3.x, ret3.y, ret3.z);
+}
+
+float3 getNormalVal(
+    uniform float3 defaultVal,
+    uniform bool useTex = false,
+    uniform texture_2d tex = texture_2d(),
+    uniform int tex_stIndex = 0,
+    uniform bool tex_xform = false,
+    uniform float3 tex_xformRow0 = float3(1, 0, 0),
+    uniform float3 tex_xformRow1 = float3(0, 1, 0),
+    uniform float3 tex_xformRow2 = float3(0, 0, 1),
+    uniform int tex_wrapS = 0,
+    uniform int tex_wrapT = 0,
+    uniform float4 tex_scale = float4(2.0),
+    uniform float4 tex_bias = float4(-1.0)
+)
+{
+  float3 ret = defaultVal;
+
+  base::texture_coordinate_info uvw = 
+    base::coordinate_source(
+      coordinate_system: base::texture_coordinate_uvw,
+      texture_space: tex_stIndex
+    );
+
+  if (useTex)
+  {
+    if(tex::texture_isvalid(tex)) {
+      base::texture_coordinate_info  transformed_uvw = uvw;
+      
+      if (tex_xform)
+      {
+        transformed_uvw = 
+          transform_coordinate_2d(
+            transform: UsdTransform2d(tex_xformRow0, tex_xformRow1, tex_xformRow2),
+            coordinate: uvw
+          );
+      }
+
+      ret = previewSurface_tangent_space_normal_texture(
+          texture: tex,
+          wrap_u: wrapModeFromHydraWrapMode(tex_wrapS),
+          wrap_v: wrapModeFromHydraWrapMode(tex_wrapT),
+          scale: float3(tex_scale.x, tex_scale.y, tex_scale.z),
+          bias: float3(tex_bias.x, tex_bias.y, tex_bias.z),
+          uvw: transformed_uvw
+        );
+    } else {
+      // fallback
+      ret = float3(defaultVal.x, defaultVal.y, defaultVal.z);
+    }
+  }
+  else
+  {
+    ret = math::normalize(
+        uvw.tangent_u * ret.x +
+        uvw.tangent_v * ret.y +
+        state::normal() * ret.z);
+  }
+
+  return ret;
+}
+
+float sqr(float x) { return x*x; }
+
+export material UsdPreviewSurface (
+
+    uniform color diffuseColor = color(0.18, 0.18, 0.18),
+    uniform bool diffuseColorTexEnabled = false,
+    uniform texture_2d diffuseColorTex_file = texture_2d(),
+    uniform int diffuseColorTex_stIndex = 0,
+    uniform bool diffuseColorTex_xformEnabled = false,
+    uniform float3 diffuseColorTex_xformRow0 = float3(1, 0, 0),
+    uniform float3 diffuseColorTex_xformRow1 = float3(0, 1, 0),
+    uniform float3 diffuseColorTex_xformRow2 = float3(0, 0, 1),
+    uniform int diffuseColorTex_wrapS = 1,
+    uniform int diffuseColorTex_wrapT = 1,
+    uniform float4 diffuseColorTex_scale = float4(1.0),
+    uniform float4 diffuseColorTex_bias = float4(0.0),
+    uniform int diffuseColorTex_output = 4,
+
+    uniform color emissiveColor = color(0),
+    uniform bool emissiveColorTexEnabled = false,
+    uniform texture_2d emissiveColorTex_file = texture_2d(),
+    uniform int emissiveColorTex_stIndex = 0,
+    uniform bool emissiveColorTex_xformEnabled = false,
+    uniform float3 emissiveColorTex_xformRow0 = float3(1, 0, 0),
+    uniform float3 emissiveColorTex_xformRow1 = float3(0, 1, 0),
+    uniform float3 emissiveColorTex_xformRow2 = float3(0, 0, 1),
+    uniform int emissiveColorTex_wrapS = 1,
+    uniform int emissiveColorTex_wrapT = 1,
+    uniform float4 emissiveColorTex_scale = float4(1.0),
+    uniform float4 emissiveColorTex_bias = float4(0.0),
+    uniform int emissiveColorTex_output = 4,
+
+    uniform int useSpecularWorkflow = 0,
+
+    uniform color specularColor = color(0),
+    uniform bool specularColorTexEnabled = false,
+    uniform texture_2d specularColorTex_file = texture_2d(),
+    uniform int specularColorTex_stIndex = 0,
+    uniform bool specularColorTex_xformEnabled = false,
+    uniform float3 specularColorTex_xformRow0 = float3(1, 0, 0),
+    uniform float3 specularColorTex_xformRow1 = float3(0, 1, 0),
+    uniform float3 specularColorTex_xformRow2 = float3(0, 0, 1),
+    uniform int specularColorTex_wrapS = 1,
+    uniform int specularColorTex_wrapT = 1,
+    uniform float4 specularColorTex_scale = float4(1.0),
+    uniform float4 specularColorTex_bias = float4(0.0),
+    uniform int specularColorTex_output = 4,
+
+    uniform float metallic = 0,
+    uniform bool metallicTexEnabled = false,
+    uniform texture_2d metallicTex_file = texture_2d(),
+    uniform int metallicTex_stIndex = 0,
+    uniform bool metallicTex_xformEnabled = false,
+    uniform float3 metallicTex_xformRow0 = float3(1, 0, 0),
+    uniform float3 metallicTex_xformRow1 = float3(0, 1, 0),
+    uniform float3 metallicTex_xformRow2 = float3(0, 0, 1),
+    uniform int metallicTex_wrapS = 1,
+    uniform int metallicTex_wrapT = 1,
+    uniform float4 metallicTex_scale = float4(1.0),
+    uniform float4 metallicTex_bias = float4(0.0),
+    uniform int metallicTex_output = 4,
+    
+    uniform float roughness = 0.5,
+    uniform bool roughnessTexEnabled = false,
+    uniform texture_2d roughnessTex_file = texture_2d(),
+    uniform int roughnessTex_stIndex = 0,
+    uniform bool roughnessTex_xformEnabled = false,
+    uniform float3 roughnessTex_xformRow0 = float3(1, 0, 0),
+    uniform float3 roughnessTex_xformRow1 = float3(0, 1, 0),
+    uniform float3 roughnessTex_xformRow2 = float3(0, 0, 1),
+    uniform int roughnessTex_wrapS = 1,
+    uniform int roughnessTex_wrapT = 1,
+    uniform float4 roughnessTex_scale = float4(1.0),
+    uniform float4 roughnessTex_bias = float4(0.0),
+    uniform int roughnessTex_output = 4,
+
+    // uniform float clearCoat = 0,
+    // uniform bool clearCoatTexEnabled = false,
+    // uniform texture_2d clearCoatTex_file = texture_2d(),
+    // uniform int clearCoatTex_stIndex = 0,
+    // uniform bool clearCoatTex_xformEnabled = false,
+    // uniform float3 clearCoatTex_xformRow0 = float3(1, 0, 0),
+    // uniform float3 clearCoatTex_xformRow1 = float3(0, 1, 0),
+    // uniform float3 clearCoatTex_xformRow2 = float3(0, 0, 1),
+    // uniform int clearCoatTex_wrapS = 1,
+    // uniform int clearCoatTex_wrapT = 1,
+    // uniform float4 clearCoatTex_scale = float4(1.0),
+    // uniform float4 clearCoatTex_bias = float4(0.0),
+    // uniform int clearCoatTex_output = 4,
+
+    // uniform float clearCoatRoughness = 0.01,
+    // uniform bool clearCoatRoughnessTexEnabled = false,
+    // uniform texture_2d clearCoatRoughnessTex_file = texture_2d(),
+    // uniform int clearCoatRoughnessTex_stIndex = 0,
+    // uniform bool clearCoatRoughnessTex_xformEnabled = false,
+    // uniform float3 clearCoatRoughnessTex_xformRow0 = float3(1, 0, 0),
+    // uniform float3 clearCoatRoughnessTex_xformRow1 = float3(0, 1, 0),
+    // uniform float3 clearCoatRoughnessTex_xformRow2 = float3(0, 0, 1),
+    // uniform int clearCoatRoughnessTex_wrapS = 1,
+    // uniform int clearCoatRoughnessTex_wrapT = 1,
+    // uniform float4 clearCoatRoughnessTex_scale = float4(1.0),
+    // uniform float4 clearCoatRoughnessTex_bias = float4(0.0),
+    // uniform int clearCoatRoughnessTex_output = 4,
+
+    uniform bool enable_opacity = true,
+    uniform float opacity = 1.0,
+    uniform bool opacityTexEnabled = false,
+    uniform texture_2d opacityTex_file = texture_2d(),
+    uniform int opacityTex_stIndex = 0,
+    uniform bool opacityTex_xformEnabled = false,
+    uniform float3 opacityTex_xformRow0 = float3(1, 0, 0),
+    uniform float3 opacityTex_xformRow1 = float3(0, 1, 0),
+    uniform float3 opacityTex_xformRow2 = float3(0, 0, 1),
+    uniform int opacityTex_wrapS = 1,
+    uniform int opacityTex_wrapT = 1,
+    uniform float4 opacityTex_scale = float4(1.0),
+    uniform float4 opacityTex_bias = float4(0.0),
+    uniform int opacityTex_output = 4,
+
+    uniform float opacityThreshold = 0.0,
+
+    uniform float ior = 1.5,
+    uniform bool iorTexEnabled = false,
+    uniform texture_2d iorTex_file = texture_2d(),
+    uniform int iorTex_stIndex = 0,
+    uniform bool iorTex_xformEnabled = false,
+    uniform float3 iorTex_xformRow0 = float3(1, 0, 0),
+    uniform float3 iorTex_xformRow1 = float3(0, 1, 0),
+    uniform float3 iorTex_xformRow2 = float3(0, 0, 1),
+    uniform int iorTex_wrapS = 1,
+    uniform int iorTex_wrapT = 1,
+    uniform float4 iorTex_scale = float4(1.0),
+    uniform float4 iorTex_bias = float4(0.0),
+    uniform int iorTex_output = 4,
+
+    uniform float3 normal = float3(0.0, 0.0, 1.0),
+    uniform bool normalTexEnabled = false,
+    uniform texture_2d normalTex_file = texture_2d(),
+    uniform int normalTex_stIndex = 0,
+    uniform bool normalTex_xformEnabled = false,
+    uniform float3 normalTex_xformRow0 = float3(1, 0, 0),
+    uniform float3 normalTex_xformRow1 = float3(0, 1, 0),
+    uniform float3 normalTex_xformRow2 = float3(0, 0, 1),
+    uniform int normalTex_wrapS = 1,
+    uniform int normalTex_wrapT = 1,
+    uniform float4 normalTex_scale = float4(1.0),
+    uniform float4 normalTex_bias = float4(0.0),
+
+    uniform float displacement = 0.0,
+    uniform bool displacementTexEnabled = false,
+    uniform texture_2d displacementTex_file = texture_2d(),
+    uniform int displacementTex_stIndex = 0,
+    uniform bool displacementTex_xformEnabled = false,
+    uniform float3 displacementTex_xformRow0 = float3(1, 0, 0),
+    uniform float3 displacementTex_xformRow1 = float3(0, 1, 0),
+    uniform float3 displacementTex_xformRow2 = float3(0, 0, 1),
+    uniform int displacementTex_wrapS = 1,
+    uniform int displacementTex_wrapT = 1,
+    uniform float4 displacementTex_scale = float4(1.0),
+    uniform float4 displacementTex_bias = float4(0.0),
+    uniform int displacementTex_output = 4,
+
+    uniform float occlusion = 1.0,
+    uniform bool occlusionTexEnabled = false,
+    uniform texture_2d occlusionTex_file = texture_2d(),
+    uniform int occlusionTex_stIndex = 0,
+    uniform bool occlusionTex_xformEnabled = false,
+    uniform float3 occlusionTex_xformRow0 = float3(1, 0, 0),
+    uniform float3 occlusionTex_xformRow1 = float3(0, 1, 0),
+    uniform float3 occlusionTex_xformRow2 = float3(0, 0, 1),
+    uniform int occlusionTex_wrapS = 1,
+    uniform int occlusionTex_wrapT = 1,
+    uniform float4 occlusionTex_scale = float4(1.0),
+    uniform float4 occlusionTex_bias = float4(0.0),
+    uniform int occlusionTex_output = 4
+
+) = let {
+
+  color diffuseColorVal = getColorVal(diffuseColor, diffuseColorTexEnabled, diffuseColorTex_file, diffuseColorTex_stIndex,
+                                      diffuseColorTex_xformEnabled, diffuseColorTex_xformRow0, diffuseColorTex_xformRow1, diffuseColorTex_xformRow2, 
+                                      diffuseColorTex_wrapS, diffuseColorTex_wrapT, diffuseColorTex_scale, diffuseColorTex_bias, diffuseColorTex_output, true);
+
+  color emissiveColorVal = getColorVal(emissiveColor, emissiveColorTexEnabled, emissiveColorTex_file, emissiveColorTex_stIndex,
+                                       emissiveColorTex_xformEnabled, emissiveColorTex_xformRow0, emissiveColorTex_xformRow1, emissiveColorTex_xformRow2, 
+                                       emissiveColorTex_wrapS, emissiveColorTex_wrapT, emissiveColorTex_scale, emissiveColorTex_bias, emissiveColorTex_output, true);
+
+  color specularColorVal = getColorVal(specularColor, specularColorTexEnabled, specularColorTex_file, specularColorTex_stIndex,
+                                       specularColorTex_xformEnabled, specularColorTex_xformRow0, specularColorTex_xformRow1, specularColorTex_xformRow2, 
+                                       specularColorTex_wrapS, specularColorTex_wrapT, specularColorTex_scale, specularColorTex_bias, specularColorTex_output, true);
+
+  float metallicVal = getFloatVal(metallic, metallicTexEnabled, metallicTex_file, metallicTex_stIndex,
+                                  metallicTex_xformEnabled, metallicTex_xformRow0, metallicTex_xformRow1, metallicTex_xformRow2, 
+                                  metallicTex_wrapS, metallicTex_wrapT, metallicTex_scale, metallicTex_bias, metallicTex_output, true);
+
+  float roughnessVal = getFloatVal(roughness, roughnessTexEnabled, roughnessTex_file, roughnessTex_stIndex,
+                                   roughnessTex_xformEnabled, roughnessTex_xformRow0, roughnessTex_xformRow1, roughnessTex_xformRow2, 
+                                   roughnessTex_wrapS, roughnessTex_wrapT, roughnessTex_scale, roughnessTex_bias, roughnessTex_output, true);
+
+  // float clearCoatVal = getFloatVal(clearCoat, clearCoatTexEnabled, clearCoatTex_file, clearCoatTex_stIndex,
+  //                                  clearCoatTex_xformEnabled, clearCoatTex_xformRow0, clearCoatTex_xformRow1, clearCoatTex_xformRow2, 
+  //                                  clearCoatTex_wrapS, clearCoatTex_wrapT, clearCoatTex_scale, clearCoatTex_bias, clearCoatTex_output, true);
+
+  // float clearCoatRoughnessVal = getFloatVal(clearCoatRoughness, clearCoatRoughnessTexEnabled, clearCoatRoughnessTex_file, clearCoatRoughnessTex_stIndex,
+  //                                           clearCoatRoughnessTex_xformEnabled, clearCoatRoughnessTex_xformRow0, clearCoatRoughnessTex_xformRow1, clearCoatRoughnessTex_xformRow2,
+  //                                           clearCoatRoughnessTex_wrapS, clearCoatRoughnessTex_wrapT, clearCoatRoughnessTex_scale, clearCoatRoughnessTex_bias, clearCoatRoughnessTex_output, true);
+
+  float opacityVal = getFloatVal(opacity, opacityTexEnabled, opacityTex_file, opacityTex_stIndex,
+                                 opacityTex_xformEnabled, opacityTex_xformRow0, opacityTex_xformRow1, opacityTex_xformRow2, 
+                                 opacityTex_wrapS, opacityTex_wrapT, opacityTex_scale, opacityTex_bias, opacityTex_output, true);
+
+  float iorVal = getFloatVal(ior, iorTexEnabled, iorTex_file, iorTex_stIndex,
+                             iorTex_xformEnabled, iorTex_xformRow0, iorTex_xformRow1, iorTex_xformRow2, 
+                             iorTex_wrapS, iorTex_wrapT, iorTex_scale, iorTex_bias, iorTex_output);
+
+  float3 normalVal = getNormalVal(normal, normalTexEnabled, normalTex_file, normalTex_stIndex,
+                                  normalTex_xformEnabled, normalTex_xformRow0, normalTex_xformRow1, normalTex_xformRow2, 
+                                  normalTex_wrapS, normalTex_wrapT, normalTex_scale, normalTex_bias);
+
+  float displacementVal = getFloatVal(displacement, displacementTexEnabled, displacementTex_file, displacementTex_stIndex,
+                                      displacementTex_xformEnabled, displacementTex_xformRow0, displacementTex_xformRow1, displacementTex_xformRow2, 
+                                      displacementTex_wrapS, displacementTex_wrapT, displacementTex_scale, displacementTex_bias, displacementTex_output);
+
+  float occlusionVal = getFloatVal(occlusion, occlusionTexEnabled, occlusionTex_file, occlusionTex_stIndex,
+                                   occlusionTex_xformEnabled, occlusionTex_xformRow0, occlusionTex_xformRow1, occlusionTex_xformRow2, 
+                                   occlusionTex_wrapS, occlusionTex_wrapT, occlusionTex_scale, occlusionTex_bias, occlusionTex_output, true);
+
+  // Do not square roughness, matches ARKit rendering more closely
+  float sqrRoughness = roughnessVal /** roughnessVal*/;
+  //float sqrClearCoatRoughness = clearCoatRoughnessVal /** clearCoatRoughnessVal*/;
+
+  bsdf diffuse_bsdf = df::diffuse_reflection_bsdf(
+    roughness: 0.0f,
+    tint: diffuseColorVal * occlusionVal
+  );
+
+  // bsdf ggx_smith_transmission_bsdf = df::microfacet_ggx_smith_bsdf(
+  //   roughness_u: sqrRoughness,
+  //   mode: df::scatter_transmit,
+  //   tint: color(1.0)
+  // );
+
+  /*
+    From UsdPreviewSurface documentation:
+    https://graphics.pixar.com/usd/docs/UsdPreviewSurface-Proposal.html#UsdPreviewSurfaceProposal-PreviewSurface
+
+    opacityThreshold - float - 0.0
+    The opacityThreshold input is useful for creating geometric cut-outs based on the opacity input. A value of 0.0 
+    indicates that no masking is applied to the opacity input, while a value greater than 0.0 indicates that rendering 
+    of the surface is limited to the areas where the opacity is greater than that value. A classic use of 
+    opacityThreshold is to create a leaf from an opacity input texture, in that case the threshold determines the parts 
+    of the opacity texture that will be fully transparent and not receive lighting. Note that when opacityThreshold is 
+    greater than zero, then opacity modulates the presence of the surface, rather than its transparency - pathtracers 
+    might implement this as allowing ((1 - opacity) * 100) % of the rays that do intersect the object to instead pass 
+    through it unhindered, and rasterizers may interpret opacity as pixel coverage.  
+    Thus, opacityThreshold serves as a switch for how the opacity input is interpreted; this "translucent or masked" 
+    behavior is common in engines and renderers, and makes the UsdPreviewSurface easier to interchange.  It does imply, 
+    however, that it is not possible to faithfully recreate a glassy/translucent material that also provides an 
+    opacity-based mask... so no single-polygon glass leaves.
+  */
+  
+  // float transparency = (opacityThreshold <= 0) ? 1.0 - opacityVal : 0;
+
+  // TODO: handle transparency when opacityThreshold is 0
+  /*
+  bsdf diffuse_ggx_transmission_mix_bsdf = df::weighted_layer(
+    weight: transparency,
+    layer: ggx_smith_transmission_bsdf,
+    base: diffuse_bsdf
+  );
+  */  
+  bsdf diffuse_ggx_transmission_mix_bsdf = diffuse_bsdf;
+
+  bsdf ggx_smith_bsdf = df::microfacet_ggx_smith_bsdf(
+    roughness_u: sqrRoughness,
+    mode: df::scatter_reflect,
+    tint: color(1.0)    
+  );
+
+  /*
+    From UsdPreviewSurface documentation:
+    https://graphics.pixar.com/usd/docs/UsdPreviewSurface-Proposal.html#UsdPreviewSurfaceProposal-PreviewSurface
+
+    useSpecularWorkflow - int - 0 
+      This node can fundamentally operate in two modes : 
+        Specular workflow where you provide a texture/value to the "specularColor" input. 
+        Or, Metallic workflow where you provide a texture/value to the "metallic" input.
+        Depending on the 0 or 1 value of this parameter, the following parameters are conditionally enabled:
+
+    useSpecularWorkflow = 1: (Specular workflow ) 
+      specularColor - color3f - (0.0, 0.0, 0.0)
+      Specular color to be used. This is the color at 0 incidence. Edge (f90/grazing) color is assumed white. 
+      Transition between the two colors according to Schlick fresnel approximation.
+
+    useSpecularWorkflow = 0:   (Metalness workflow ) 
+      metallic - float - 0.0
+      Use 1 for metallic surfaces and 0 for non-metallic.
+      - If metallic is 1, then both F0 (reflectivity at 0 degree incidence) and edge F90 reflectivity will simply be the Albedo.
+      - If metallic is 0, then Albedo is ignored in the calculation of F0 and F90; F0 is derived from ior via ( (1-ior)/(1+ior) )^2 and F90 is white. 
+      In between, we interpolate.
+  */  
+
+  float normalReflectivityFromIor = sqr((1.0 - iorVal)/(1.0 + iorVal));
+
+  // TODO: support RGB specularColor in specularWorkflow 
+  bsdf non_metallic_brdf = df::color_custom_curve_layer(    
+    normal_reflectivity: useSpecularWorkflow != 0 ? specularColorVal : color(normalReflectivityFromIor),
+    grazing_reflectivity: color(1.0),
+    exponent:	5.0,
+    weight:		color(1.0),
+    layer: ggx_smith_bsdf,
+    base:  diffuse_ggx_transmission_mix_bsdf
+  );
+  
+  bsdf metal_bsdf = df::directional_factor(
+    normal_tint:  /*normalReflectivityFromIor **/ diffuseColorVal,
+    grazing_tint: diffuseColorVal,
+    exponent: 5.0f,
+    base: ggx_smith_bsdf
+  );
+  
+  bsdf custom_curve_metal_mix_bsdf = df::weighted_layer(
+    weight: useSpecularWorkflow != 0 ? 0 : metallicVal,
+    layer:	metal_bsdf,
+    base:	non_metallic_brdf
+  );
+
+  // TODO: support clear coat (in real-time mode)
+  /* // Disabled for now since 2nd ggx layer dominates the bottom layer in real-time mode and makes reflections sharp
+  bsdf clearcoat_on_custom_curve_metal_mix_bsdf = df::custom_curve_layer(
+    normal_reflectivity: normalReflectivityFromIor,
+    grazing_reflectivity: 1.0,
+    exponent: 5.0,
+    weight: clearCoatVal,
+    layer: df::microfacet_ggx_smith_bsdf( roughness_u: sqrClearCoatRoughness, mode: df::scatter_reflect ),
+    base: custom_curve_metal_mix_bsdf
+  );
+  */
+  bsdf clearcoat_on_custom_curve_metal_mix_bsdf = custom_curve_metal_mix_bsdf;
+
+  bsdf final_bsdf = clearcoat_on_custom_curve_metal_mix_bsdf;
+
+} in material(
+  surface: material_surface(
+    scattering: final_bsdf,
+		emission:  material_emission(
+      df::diffuse_edf(),
+      intensity: emissiveColorVal
+		)
+  ),
+  ior: color(ior), // NOTE: cannot use iorVal because it is varying and material.ior must be uniform
+  geometry: material_geometry(
+    displacement: state::normal() * displacementVal,
+    normal: normalVal,
+    cutout_opacity: enable_opacity ? (opacityThreshold == 0.0) ? opacityVal : ((opacityVal >= opacityThreshold) ? 1.0 : 0) : 1.0
+  )
+);

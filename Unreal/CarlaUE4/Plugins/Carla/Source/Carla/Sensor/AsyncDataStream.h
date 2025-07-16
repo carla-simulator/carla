@@ -12,6 +12,7 @@
 #include <carla/sensor/SensorRegistry.h>
 #include <carla/sensor/s11n/SensorHeaderSerializer.h>
 #include <carla/streaming/Stream.h>
+#include <carla/rpc/Transform.h>
 #include <compiler/enable-ue4-macros.h>
 
 template <typename T>
@@ -72,6 +73,36 @@ public:
       {
         carla::log_info("Re-framing sensor type ", HeaderStr->sensor_type, " from ", HeaderStr->frame, " to ", FrameNumber);
         HeaderStr->frame = FrameNumber;
+      }
+    }
+  }
+
+  /// allow to change the timestamp of the header
+  void SetTimestamp(double Timestamp)
+  {
+    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr =
+      reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
+    if (HeaderStr)
+    {
+      if (HeaderStr->timestamp != Timestamp)
+      {
+        carla::log_info("Re-timestamping sensor type ", HeaderStr->sensor_type, " from ", HeaderStr->timestamp, " to ", Timestamp);
+        HeaderStr->timestamp = Timestamp;
+      }
+    }
+  }
+
+  /// allow to change the transform of the header
+  void SetTransform(carla::rpc::Transform Transform)
+  {
+    carla::sensor::s11n::SensorHeaderSerializer::Header *HeaderStr =
+      reinterpret_cast<carla::sensor::s11n::SensorHeaderSerializer::Header *>(Header.data());
+    if (HeaderStr)
+    {
+      if (HeaderStr->sensor_transform != Transform)
+      {
+        carla::log_info("Re-transforming sensor type ", HeaderStr->sensor_type, " from ", HeaderStr->sensor_transform, " to ", Transform);
+        HeaderStr->sensor_transform = Transform;
       }
     }
   }

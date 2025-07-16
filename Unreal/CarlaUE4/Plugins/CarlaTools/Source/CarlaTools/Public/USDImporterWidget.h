@@ -62,7 +62,8 @@ struct CARLATOOLS_API FVehicleMeshAnchorPoints
   FVector Hood;
   UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="USD Importer")
   FVector Trunk;
-
+  UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "USD Importer")
+  FVector Body;
 };
 
 USTRUCT(BlueprintType)

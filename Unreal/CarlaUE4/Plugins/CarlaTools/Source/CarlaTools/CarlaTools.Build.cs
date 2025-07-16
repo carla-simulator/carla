@@ -6,7 +6,7 @@ using UnrealBuildTool;
 
 public class CarlaTools : ModuleRules
 {
-  bool bUsingOmniverseConnector = false;
+  bool bUsingSimReadyPlugins = false;
   private bool IsWindows(ReadOnlyTargetRules Target)
   {
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
@@ -29,12 +29,12 @@ public class CarlaTools : ModuleRules
     string[] text = System.IO.File.ReadAllLines(OptionalModulesFile);
     foreach (string line in text)
     {
-      if (line.Contains("Omniverse ON"))
+      if (line.Contains("SimReady ON"))
       {
-        Console.WriteLine("Enabling OmniverseConnector");
-        bUsingOmniverseConnector = true;
-        PublicDefinitions.Add("WITH_OMNIVERSE");
-        PrivateDefinitions.Add("WITH_OMNIVERSE");
+        Console.WriteLine("Enabling SimReady Converter Plugins");
+        bUsingSimReadyPlugins = true;
+        PublicDefinitions.Add("WITH_SIMREADY");
+        PrivateDefinitions.Add("WITH_SIMREADY");
       }
     }
 
@@ -59,8 +59,7 @@ public class CarlaTools : ModuleRules
         "ProceduralMeshComponent",
         "MeshDescription",
         "RawMesh",
-        "AssetTools",
-        "Projects"
+        "AssetTools"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -97,13 +96,13 @@ public class CarlaTools : ModuleRules
 				// ... add private dependencies that you statically link with here ...
 			}
 			);
-    if(bUsingOmniverseConnector)
+    if(bUsingSimReadyPlugins)
     {
       PrivateDependencyModuleNames.AddRange(
         new string[]
         {
-          "OmniverseUSD",
-          "OmniverseRuntime"
+          "SimReadyUSD",
+          "SimReadyRuntime"
         });
     }
 

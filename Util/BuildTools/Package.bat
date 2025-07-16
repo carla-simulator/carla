@@ -108,9 +108,9 @@ if not defined UE4_ROOT (
 )
 
 rem Set packaging paths
-rem
-for /f %%i in ('git describe --tags --dirty --always') do set CARLA_VERSION=%%i
-if not defined CARLA_VERSION goto error_carla_version
+call :get_git_repository_version
+if not defined REPOSITORY_TAG goto error_carla_version
+set CARLA_VERSION=!REPOSITORY_TAG!
 
 set BUILD_FOLDER=%INSTALLATION_DIR%UE4Carla/%CARLA_VERSION%/
 
@@ -485,6 +485,9 @@ goto success
 rem ============================================================================
 rem -- Helper functions --------------------------------------------------------
 rem ============================================================================
+
+:get_git_repository_version
+    %ROOT_PATH:/=\%Util\BuildTools\Environment.bat %*
 
 :get_current_time_in_seconds
     for /f %%a in ('powershell -command "[int]((Get-Date -UFormat '%%s') -split ',.')[0]"') do set %1=%%a

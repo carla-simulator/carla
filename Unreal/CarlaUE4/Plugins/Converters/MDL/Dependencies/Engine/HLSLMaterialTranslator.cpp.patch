@@ -1,0 +1,216 @@
+--- a/Engine/Private/Materials/HLSLMaterialTranslator.cpp
++++ b/HLSLMaterialTranslator.cpp
+@@ -3,12 +3,16 @@
+ 	HLSLMaterialTranslator.cpp: Translates material expressions into HLSL code.
+ =============================================================================*/
+ 
++// Copied from Engine\Source\Runtime\Engine\Private\Materials\HLSLMaterialTranslator.cpp
++// Modified by a patch from the CarlaUE4 project build process
++
+ #include "HLSLMaterialTranslator.h"
+ 
+ class Error;
+ 
+ #if WITH_EDITORONLY_DATA
+-
++//MDL
++#if 0
+ /** @return the number of components in a vector type. */
+ static inline uint32 GetNumComponents(EMaterialValueType Type)
+ {
+@@ -48,6 +52,34 @@ static inline int32 SwizzleComponentToIndex(TCHAR Component)
+ 		return -1;
+ 	}
+ }
++//MDL
++#endif
++
++//MDL
++/*-----------------------------------------------------------------------------
++	FMaterialVirtualTextureStack
++-----------------------------------------------------------------------------*/
++FMaterialVirtualTextureStack::FMaterialVirtualTextureStack(int32 InPreallocatedStackTextureIndex)
++	: NumLayers(0u)
++	, PreallocatedStackTextureIndex(InPreallocatedStackTextureIndex)
++{
++	for (uint32 i = 0u; i < VIRTUALTEXTURE_SPACE_MAXLAYERS; ++i)
++	{
++		LayerUniformExpressionIndices[i] = INDEX_NONE;
++	}
++}
++
++int32 FMaterialVirtualTextureStack::FindLayer(int32 UniformExpressionIndex) const
++{
++	for (uint32 LayerIndex = 0u; LayerIndex < NumLayers; ++LayerIndex)
++	{
++		if (LayerUniformExpressionIndices[LayerIndex] == UniformExpressionIndex)
++		{
++			return LayerIndex;
++		}
++	}
++	return -1;
++}
+ 
+ FHLSLMaterialTranslator::FHLSLMaterialTranslator(FMaterial* InMaterial,
+ 	FMaterialCompilationOutput& InMaterialCompilationOutput,
+@@ -129,6 +161,10 @@ FHLSLMaterialTranslator::FHLSLMaterialTranslator(FMaterial* InMaterial,
+ 	SharedPixelProperties[MP_Refraction] = true;
+ 	SharedPixelProperties[MP_PixelDepthOffset] = true;
+ 	SharedPixelProperties[MP_SubsurfaceColor] = true;
++	// For exporting clearcoat
++	// MDL
++	SharedPixelProperties[MP_CustomData0] = true;
++	SharedPixelProperties[MP_CustomData1] = true;
+ 	SharedPixelProperties[MP_ShadingModel] = true;
+ 
+ 	for (int32 Frequency = 0; Frequency < SF_NumFrequencies; ++Frequency)
+@@ -672,14 +708,19 @@ bool FHLSLMaterialTranslator::Translate()
+ 
+ 			// another ForceCast as CompilePropertyAndSetMaterialProperty() can return MCT_Float which we don't want here
+ 			int32 SubsurfaceColor = Material->CompilePropertyAndSetMaterialProperty(MP_SubsurfaceColor, this);
+-			SubsurfaceColor = ForceCast(SubsurfaceColor, FMaterialAttributeDefinitionMap::GetValueType(MP_SubsurfaceColor), MFCF_ExactMatch | MFCF_ReplicateValue);
++			//MDL
++			//SubsurfaceColor = ForceCast(SubsurfaceColor, FMaterialAttributeDefinitionMap::GetValueType(MP_SubsurfaceColor), MFCF_ExactMatch | MFCF_ReplicateValue);
+ 
+-			static FName NameSubsurfaceProfile(TEXT("__SubsurfaceProfile"));
++			//MDL
++			//static FName NameSubsurfaceProfile(TEXT("__SubsurfaceProfile"));
+ 
+ 			// 1.0f is is a not used profile - later this gets replaced with the actual profile
+-			int32 CodeSubsurfaceProfile = ForceCast(ScalarParameter(NameSubsurfaceProfile, 1.0f), MCT_Float1);
++			//MDL
++			//int32 CodeSubsurfaceProfile = ForceCast(ScalarParameter(NameSubsurfaceProfile, 1.0f), MCT_Float1);
+ 
+-			Chunk[MP_SubsurfaceColor] = AppendVector(SubsurfaceColor, CodeSubsurfaceProfile);		
++			//MDL
++			//Chunk[MP_SubsurfaceColor] = AppendVector(SubsurfaceColor, CodeSubsurfaceProfile);	
++			Chunk[MP_SubsurfaceColor] = SubsurfaceColor;
+ 		}
+ 
+ 		Chunk[MP_CustomData0]					= Material->CompilePropertyAndSetMaterialProperty(MP_CustomData0		,this);
+@@ -689,10 +730,12 @@ bool FHLSLMaterialTranslator::Translate()
+ 
+ 		if (IsTranslucentBlendMode(BlendMode) || MaterialShadingModels.HasShadingModel(MSM_SingleLayerWater))
+ 		{
+-			int32 UserRefraction = ForceCast(Material->CompilePropertyAndSetMaterialProperty(MP_Refraction, this), MCT_Float1);
+-			int32 RefractionDepthBias = ForceCast(ScalarParameter(FName(TEXT("RefractionDepthBias")), Material->GetRefractionDepthBiasValue()), MCT_Float1);
++			//MDL
++			//int32 UserRefraction = ForceCast(Material->CompilePropertyAndSetMaterialProperty(MP_Refraction, this), MCT_Float1);
++			//int32 RefractionDepthBias = ForceCast(ScalarParameter(FName(TEXT("RefractionDepthBias")), Material->GetRefractionDepthBiasValue()), MCT_Float1);
+ 
+-			Chunk[MP_Refraction] = AppendVector(UserRefraction, RefractionDepthBias);
++			//Chunk[MP_Refraction] = AppendVector(UserRefraction, RefractionDepthBias);
++			Chunk[MP_Refraction] = Material->CompilePropertyAndSetMaterialProperty(MP_Refraction, this);
+ 		}
+ 
+ 		if (bCompileForComputeShader)
+@@ -800,6 +843,9 @@ bool FHLSLMaterialTranslator::Translate()
+ 			ResourcesString += CustomExpressions[ExpressionIndex].Implementation + "\r\n\r\n";
+ 		}
+ 
++		//MDL
++		FMemory::Memcpy(PropertyFinalChunk, Chunk);
++
+ 		// Translation is designed to have a code chunk generation phase followed by several passes that only has readonly access to the code chunks.
+ 		// At this point we mark the code chunk generation complete.
+ 		bAllowCodeChunkGeneration = false;
+@@ -1411,7 +1457,8 @@ void FHLSLMaterialTranslator::GetMaterialEnvironment(EShaderPlatform InPlatform,
+ 		if (NumSetMaterials == 0)
+ 		{
+ 			// Should not really end up here
+-			UE_LOG(LogMaterial, Warning, TEXT("Unknown material shading model(s). Setting to MSM_DefaultLit"));
++			//MDL
++			//UE_LOG(LogMaterial, Warning, TEXT("Unknown material shading model(s). Setting to MSM_DefaultLit"));
+ 			OutEnvironment.SetDefine(TEXT("MATERIAL_SHADINGMODEL_DEFAULT_LIT"),TEXT("1"));
+ 		}
+ 	}
+@@ -1422,6 +1469,8 @@ void FHLSLMaterialTranslator::GetMaterialEnvironment(EShaderPlatform InPlatform,
+ 		OutEnvironment.SetDefine(TEXT("MATERIAL_SHADINGMODEL_UNLIT"), TEXT("1"));
+ 	}
+ 
++// MDL
++#if 0
+ 	if (Material->GetMaterialDomain() == MD_Volume ) // && Material->HasN)
+ 	{
+ 		TArray<const UMaterialExpressionVolumetricAdvancedMaterialOutput*> VolumetricAdvancedExpressions;
+@@ -1460,6 +1509,8 @@ void FHLSLMaterialTranslator::GetMaterialEnvironment(EShaderPlatform InPlatform,
+ 				VolumetricAdvancedNode->bGroundContribution ? TEXT("1") : TEXT("0"));
+ 		}
+ 	}
++//MDL
++#endif
+ }
+ 
+ // Assign custom interpolators to slots, packing them as much as possible in unused slots.
+@@ -2385,7 +2436,8 @@ int32 FHLSLMaterialTranslator::AccessUniformExpression(int32 Index)
+ 			TextureInputIndex = UniformTextureExpressions[(uint32)EMaterialTextureParameterType::Virtual].AddUnique(TextureUniformExpression);
+ 			GenerateCode = false;
+ 			break;
+-		default: UE_LOG(LogMaterial, Fatal,TEXT("Unrecognized texture material value type: %u"),(int32)CodeChunk.Type);
++		//MDL
++		//default: UE_LOG(LogMaterial, Fatal,TEXT("Unrecognized texture material value type: %u"),(int32)CodeChunk.Type);
+ 		};
+ 		if(GenerateCode)
+ 		{
+@@ -2394,7 +2446,8 @@ int32 FHLSLMaterialTranslator::AccessUniformExpression(int32 Index)
+ 	}
+ 	else
+ 	{
+-		UE_LOG(LogMaterial, Fatal,TEXT("User input of unknown type: %s"),DescribeType(CodeChunk.Type));
++		//MDL
++		//UE_LOG(LogMaterial, Fatal,TEXT("User input of unknown type: %s"),DescribeType(CodeChunk.Type));
+ 	}
+ 
+ 	return AddInlinedCodeChunk((*CurrentScopeChunks)[Index].Type,FormattedCode);
+@@ -2842,7 +2895,10 @@ int32 FHLSLMaterialTranslator::ValidCast(int32 Code, EMaterialValueType DestType
+ 			case 1: Mask = TEXT(".r"); break;
+ 			case 2: Mask = TEXT(".rg"); break;
+ 			case 3: Mask = TEXT(".rgb"); break;
+-			default: UE_LOG(LogMaterial, Fatal,TEXT("Should never get here!")); return INDEX_NONE;
++			//MDL
++			default: 
++				//UE_LOG(LogMaterial, Fatal,TEXT("Should never get here!"));
++				return INDEX_NONE;
+ 			};
+ 
+ 			return AddInlinedCodeChunk(DestType,TEXT("%s%s"),*GetParameterCode(Code),Mask);
+@@ -2925,7 +2981,10 @@ int32 FHLSLMaterialTranslator::ForceCast(int32 Code, EMaterialValueType DestType
+ 			case 1: Mask = TEXT(".r"); break;
+ 			case 2: Mask = TEXT(".rg"); break;
+ 			case 3: Mask = TEXT(".rgb"); break;
+-			default: UE_LOG(LogMaterial, Fatal,TEXT("Should never get here!")); return INDEX_NONE;
++			//MDL
++			default: 
++				//UE_LOG(LogMaterial, Fatal,TEXT("Should never get here!"));
++				return INDEX_NONE;
+ 			};
+ 
+ 			return AddInlinedCodeChunk(DestType,TEXT("%s%s"),*GetParameterCode(Code),Mask);
+@@ -4593,6 +4652,8 @@ int32 FHLSLMaterialTranslator::TextureSample(
+ 	int32 VTStackIndex = INDEX_NONE;
+ 	int32 VTLayerIndex = INDEX_NONE;
+ 	int32 VTPageTableIndex = INDEX_NONE;
++//MDL
++#if 0
+ 	if (bVirtualTexture)
+ 	{
+ 		check(VirtualTextureIndex >= 0);
+@@ -4668,6 +4729,8 @@ int32 FHLSLMaterialTranslator::TextureSample(
+ 
+ 		MaterialCompilationOutput.UniformExpressionSet.VTStacks[VTStackIndex].SetLayer(VTLayerIndex, VirtualTextureIndex);
+ 	}
++//MDL
++#endif
+ 
+ 	int32 SamplingCodeIndex = INDEX_NONE;
+ 	if (bVirtualTexture)
+@@ -5045,7 +5108,8 @@ int32 FHLSLMaterialTranslator::Texture(UTexture* InTexture, int32& TextureRefere
+ 	EMaterialValueType ShaderType = InTexture->GetMaterialType();
+ 	TextureReferenceIndex = Material->GetReferencedTextures().Find(InTexture);
+ 
+-#if DO_CHECK
++//MDL
++#if 0 //DO_CHECK
+ 	// UE-3518: Additional pre-assert logging to help determine the cause of this failure.
+ 	if (TextureReferenceIndex == INDEX_NONE)
+ 	{

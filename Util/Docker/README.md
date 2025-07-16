@@ -1,4 +1,4 @@
-# Building Carla in a Docker
+# Building Carla in a Docker Ubuntu 18.04 Image
 
 _These instructions have been tested in **Ubuntu 16.04**._
 
@@ -65,7 +65,7 @@ docker build -t carla-prerequisites -f Prerequisites.Dockerfile .
 Finally create the actual Carla image, it will search for `carla-prerequisites:latest`:
 
 ```
-docker build -t carla -f Carla.Dockerfile .
+docker build -t carla -f CarlaLegacy.Dockerfile .
 ```
 
 ---
@@ -75,7 +75,7 @@ docker build -t carla -f Carla.Dockerfile .
 You can use a specific repository **branch** or **tag** from our repository, using:
 
 ```
-docker build -t carla -f Carla.Dockerfile . --build-arg GIT_BRANCH=branch_name
+docker build -t carla -f CarlaLegacy.Dockerfile . --build-arg GIT_BRANCH=branch_name
 ```
 
 Clean up the intermediate images from the build (keep the ue4-source image so you can use it for full rebuilds)
@@ -102,3 +102,12 @@ Or you can use it to cook assets (like new maps and meshes), ready to be consume
 ```
 
 The needed files and hierarchy to import assets is explained [here](https://carla.readthedocs.io/en/latest/export_import_dist/).
+
+# Building Carla in a Docker Ubuntu 22.04 Image
+
+_These instructions have been tested in **Ubuntu 24.04**._
+
+The following documentation is intended to explain how to build a Docker image that uses **Ubuntu 22.04** to compile Carla. 
+
+- [CARLA Docker Dev Environment (Ubuntu 22.04)](../../Docs/build_docker_ubuntu22.md)
+

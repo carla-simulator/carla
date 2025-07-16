@@ -1,4 +1,11 @@
 ## Latest Changes
+ * Added the SimReady OpenUSD and MDL Converters to provide export and import support for SimReady OpenUSD stages and MDL materials.
+ * Renamed Ubuntu 18-based Dockerfile to CarlaLegacy for clarity
+ * Created documentation for using devcontainers
+ * Ensured CARLA scripts consistently use python3
+ * Replaced wget with curl for FBX SDK downloads
+ * Enabled mounting of UE4 from the host when running CARLA inside a container
+ * Added support for GUI inside containers with Ubuntu 22 image
  * Fixed waypoint.next and .previous causing loops when two opposite-direction lanes follow each other in the map.
  * Fixed a bug that caused navigation information not to be loaded when switching maps
  * Prevent from segfault on failing SignalReference identification when loading OpenDrive files
@@ -36,6 +43,7 @@
  * Added env CARLA_CACHE_DIR to be able to set CARLA CACHE location
  * Support of masked materials in instance segmentation, resulting in fine-grained annotations on e.g. leaves or fences (as in semantic segmentation)
  * Added API function `world.set_annotations_traverse_translucency` and implemented functionality to configure, whether depth and semantic + instance segmentation traverse translucent materials or not.
+ * Fixed `frame`, `timestamp` and `transform` of `SensorData` not matching to the actually sent image for camera sensors.
 
 ## CARLA 0.9.15
 

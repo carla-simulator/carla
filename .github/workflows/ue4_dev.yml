@@ -1,0 +1,40 @@
+name: UE4-Dev
+
+on:
+  push:
+     branches:
+       - ue4-dev
+  workflow_dispatch:  # Allow manual trigger
+
+concurrency:
+  group: push-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ubuntu-dev:
+    name: Ubuntu Dev
+    uses: ./.github/workflows/_ci-ubuntu.yml
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+    with:
+      python-versions: "3.10,3.11,3.12"
+      smoke-test-python-versions: "3.12"
+      additional-maps: true
+      upload-package: true
+      upload-replace-latest: true
+      upload-docker: false
+
+  windows-dev:
+    name: Windows Dev
+    uses: ./.github/workflows/_ci-windows.yml
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+    with:
+      python-versions: "3.10,3.11,3.12"
+      additional-maps: true
+      upload-package: true
+      upload-replace-latest: true

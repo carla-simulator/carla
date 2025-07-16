@@ -32,31 +32,38 @@ import carla
 VIRIDIS = np.array(cm.get_cmap('plasma').colors)
 VID_RANGE = np.linspace(0.0, 1.0, VIRIDIS.shape[0])
 LABEL_COLORS = np.array([
-    (255, 255, 255), # None
-    (70, 70, 70),    # Building
-    (100, 40, 40),   # Fences
-    (55, 90, 80),    # Other
-    (220, 20, 60),   # Pedestrian
-    (153, 153, 153), # Pole
-    (157, 234, 50),  # RoadLines
-    (128, 64, 128),  # Road
-    (244, 35, 232),  # Sidewalk
-    (107, 142, 35),  # Vegetation
-    (0, 0, 142),     # Vehicle
-    (102, 102, 156), # Wall
-    (220, 220, 0),   # TrafficSign
-    (70, 130, 180),  # Sky
-    (81, 0, 81),     # Ground
-    (150, 100, 100), # Bridge
-    (230, 150, 140), # RailTrack
-    (180, 165, 180), # GuardRail
-    (250, 170, 30),  # TrafficLight
-    (110, 190, 160), # Static
-    (170, 120, 50),  # Dynamic
-    (45, 60, 150),   # Water
-    (145, 170, 100), # Terrain
-]) / 255.0 # normalize each channel [0-1] since is what Open3D uses
-
+    (0, 0, 0),           # 0: None
+    # cityscape labels
+    (128, 64, 128),      # 1: Roads
+    (244, 35, 232),      # 2: Sidewalks
+    (70, 70, 70),        # 3: Buildings
+    (102, 102, 156),     # 4: Walls
+    (190, 153, 153),     # 5: Fences
+    (153, 153, 153),     # 6: Poles
+    (250, 170, 30),      # 7: TrafficLight
+    (220, 220, 0),       # 8: TrafficSigns
+    (107, 142, 35),      # 9: Vegetation
+    (145, 170, 100),     # 10: Terrain
+    (70, 130, 180),      # 11: Sky
+    (220, 20, 60),       # 12: Pedestrians
+    (255, 0, 0),         # 13: Rider
+    (0, 0, 142),         # 14: Car
+    (0, 0, 70),          # 15: Truck
+    (0, 60, 100),        # 16: Bus
+    (0, 80, 100),        # 17: Train
+    (0, 0, 230),         # 18: Motorcycle
+    (119, 11, 32),       # 19: Bicycle
+    # custom labels
+    (110, 190, 160),     # 20: Static (custom, teal)
+    (170, 120, 50),      # 21: Dynamic (custom, brown)
+    (55, 90, 80),        # 22: Other (custom, dark teal)
+    (45, 60, 150),       # 23: Water (custom, blue)
+    (157, 234, 50),      # 24: RoadLines (custom, bright green)
+    (81, 0, 81),         # 25: Ground (custom, purple)
+    (150, 100, 100),     # 26: Bridge (custom, muted red)
+    (230, 150, 140),     # 27: RailTrack (custom, pink)
+    (180, 165, 180),     # 28: GuardRail (custom, light purple)
+]) / 255.0  # normalize to [0, 1] for Open3D
 
 def lidar_callback(point_cloud, point_list):
     """Prepares a point cloud with intensity

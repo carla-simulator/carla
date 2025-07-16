@@ -105,11 +105,13 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
   Sensor.EnqueueRenderSceneImmediate();
 
   // Enqueue a command in the render-thread that will write the image buffer to
-  // the data stream. The stream is created in the capture thus executed in the
-  // game-thread.
+  // the data stream. We need to get frame, timestamp and the sensor transform in the capture
+  // (thus executed in the game-thread), so that they reflect the current point in time.
+  // Otherwise the asynchronous execution could send a future header to the client.
   ENQUEUE_RENDER_COMMAND(FWritePixels_SendPixelsInRenderThread)
   (
-    [&Sensor, use16BitFormat, Conversor = std::move(Conversor)](auto &InRHICmdList) mutable
+    [&Sensor, use16BitFormat, Conversor = std::move(Conversor), Frame = FCarlaEngine::GetFrameCounter(),
+     Timestamp = Sensor.GetEpisode().GetElapsedGameTime(), Transform = Sensor.GetActorTransform()](auto &InRHICmdList) mutable
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("FWritePixels_SendPixelsInRenderThread");
 
@@ -117,7 +119,8 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
       if (!Sensor.IsPendingKill())
       {
         FPixelReader::Payload FuncForSending =
-          [&Sensor, Frame = FCarlaEngine::GetFrameCounter(), Conversor = std::move(Conversor)](void *LockedData, uint32 Size, uint32 Offset, uint32 ExpectedRowBytes)
+          [&Sensor, Frame, Timestamp, Transform, Conversor = std::move(Conversor)]
+          (void *LockedData, uint32 Size, uint32 Offset, uint32 ExpectedRowBytes)
           {
             if (Sensor.IsPendingKill()) return;
 
@@ -134,6 +137,8 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
 
             auto Stream = Sensor.GetDataStream(Sensor);
             Stream.SetFrameNumber(Frame);
+            Stream.SetTimestamp(Timestamp);
+            Stream.SetTransform(Transform);
             auto Buffer = Stream.PopBufferFromPool();
 
             uint32 CurrentRowBytes = ExpectedRowBytes;

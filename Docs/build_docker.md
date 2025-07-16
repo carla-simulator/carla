@@ -100,3 +100,15 @@ Any issues or doubts related with this topic can be posted in the CARLA forum.
 CARLA forum</a>
 </p>
 </div>
+
+---
+
+## Devcontainer: Ubuntu 22.04 based image 
+
+_These instructions have been tested in **Ubuntu 24.04**._
+
+The following documentation is intended to explain how to build a Docker image that uses **Ubuntu 22.04** to compile Carla. 
+
+- [CARLA Docker Dev Environment (Ubuntu 22.04)](./build_docker_ubuntu22.md)
+
+---
