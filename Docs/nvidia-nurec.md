@@ -33,7 +33,7 @@ To get started with the sample dataset from NVIDIA, use the installer script. If
 To get started quickly and easily with the curated sample set from the [NVIDIA PhysicalAI-Autonomous-Vehicles-NuRec dataset](https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec), navigate to the CARLA directory on your machine and run the following launch script:
 
 ```bash
-./PythonAPI/nvidia/nurec/install_nurec.sh
+./PythonAPI/examples/nvidia/install_nurec.sh
 ```
 
 The script helps you set your HuggingFace access token (if there isn't one already), sets the required environment variables for the NuRec container, pulls the curated sample dataset from HuggingFace, and installs the required Python packages.
@@ -79,7 +79,7 @@ If you'd rather customize the datasets you use, follow the instructions below to
     ```bash
         source vecarla/bin/activate
 
-        cd PythonAPI/nvidia/nurec/
+        cd PythonAPI/examples/nvidia/
 
         python example_replay_recording.py --usdz-filename /path/to/scenario.usdz
     ```
@@ -92,7 +92,7 @@ If you'd rather customize the datasets you use, follow the instructions below to
     ```bash
         source vecarla/bin/activate
 
-        cd PythonAPI/nvidia/nurec/
+        cd PythonAPI/examples/nvidia/
 
         python example_custom_camera.py --usdz-filename /path/to/scenario.usdz
     ```
@@ -106,7 +106,7 @@ If you'd rather customize the datasets you use, follow the instructions below to
     ```bash
         source vecarla/bin/activate
 
-        cd PythonAPI/nvidia/nurec/
+        cd PythonAPI/examples/nvidia/
 
         python example_save_images.py --usdz-filename /path/to/scenario.usdz --output-dir ./captured_images
     ```
