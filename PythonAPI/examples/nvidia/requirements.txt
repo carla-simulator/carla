@@ -3,5 +3,5 @@ numpy==2.2.5
 scipy==1.15.3
 grpcio==1.64.0
 protobuf==4.23.3
-carla>=0.9.15
+carla>=0.9.16
 nvidia-nvimgcodec-cu12

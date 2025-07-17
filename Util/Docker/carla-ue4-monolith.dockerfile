@@ -145,7 +145,7 @@ ENV CXX=/opt/UE4.26/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_c
 WORKDIR /workspaces
 
 # ------------------------------------------------------------------------------
-# Install CARLA 0.9.15.2
+# Install CARLA
 # ------------------------------------------------------------------------------
 ARG BRANCH=ue4-dev
 ARG CLONE_DIR=carla-ue4-dev
