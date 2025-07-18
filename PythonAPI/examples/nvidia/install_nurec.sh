@@ -227,7 +227,9 @@ pip3 install pygame numpy nvidia-nvjpeg-cu12 imageio|| {
 
 # Install Carla Wheel
 echo "Installing Carla Wheel..."
-python -m pip install ../../carla/dist/carla-0.9.15-cp310-cp310-linux_x86_64.whl || {
+
+WHEEL=$(ls ../../carla/dist/carla-0.9.16-cp310-cp310-*.whl | head -n 1)
+python -m pip install ${WHEEL} || {
     echo "Error: Failed to install Carla Wheel"
     exit 1
 }

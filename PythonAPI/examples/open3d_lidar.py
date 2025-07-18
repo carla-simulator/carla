@@ -29,7 +29,7 @@ except IndexError:
 
 import carla
 
-VIRIDIS = np.array(cm.get_cmap('plasma').colors)
+VIRIDIS = np.array(cm._colormaps.get_cmap('plasma').colors)
 VID_RANGE = np.linspace(0.0, 1.0, VIRIDIS.shape[0])
 LABEL_COLORS = np.array([
     (0, 0, 0),           # 0: None

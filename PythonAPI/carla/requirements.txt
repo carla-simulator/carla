@@ -1,5 +1,6 @@
-networkx
-numpy; python_version < '3.0'
-numpy==1.18.4; python_version >= '3.0'
-distro
-Shapely==1.6.4.post2
+auditwheel==5.1.0
+distro==1.9.0
+packaging
+pyelftools
+setuptools
+wheel

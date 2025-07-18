@@ -15,9 +15,6 @@ import glob
 import os
 import sys
 import argparse
-import math
-import time
-import queue
 import imageio
 
 # ==============================================================================
@@ -115,18 +112,18 @@ def main():
             print(name)
         return
 
-    if args.object_name is '':
+    if args.object_name == '':
         print('Error: missing object name to apply texture')
         return
 
     diffuse = None
     normal = None
     ao_r_m_e = None
-    if args.diffuse is not '':
+    if args.diffuse != '':
         diffuse = imageio.imread(args.diffuse)
-    if args.normal is not '':
+    if args.normal != '':
         normal = imageio.imread(args.normal)
-    if args.ao_roughness_metallic_emissive is not '':
+    if args.ao_roughness_metallic_emissive != '':
         ao_r_m_e = imageio.imread(args.ao_roughness_metallic_emissive)
 
     tex_diffuse = get_8bit_texture(diffuse)
