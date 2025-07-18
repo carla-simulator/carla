@@ -1,8 +1,9 @@
+invertedai@git+https://github.com/inverted-ai/invertedai.git@develop ; python_version >= "3.10"
 future
-numpy; python_version < '3.0'
-numpy==1.18.4; python_version >= '3.0'
+numpy<2.0.0
+networkx
+Shapely
 pygame
 matplotlib
 open3d
 Pillow
-invertedai@git+https://github.com/inverted-ai/invertedai.git@develop
