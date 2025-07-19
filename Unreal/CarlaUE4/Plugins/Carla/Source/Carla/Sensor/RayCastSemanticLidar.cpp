@@ -87,11 +87,11 @@ void ARayCastSemanticLidar::PostPhysTick(UWorld *World, ELevelTick TickType, flo
     if (ParentActor)
     {
       FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromSemanticLidar(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, SemanticLidarData, this);
+      ROS2->ProcessDataFromSemanticLidar(DataStream.GetSensorType(), LocalTransformRelativeToParent, SemanticLidarData, this);
     }
     else
     {
-      ROS2->ProcessDataFromSemanticLidar(DataStream.GetSensorType(), StreamId, SensorTransform, SemanticLidarData, this);
+      ROS2->ProcessDataFromSemanticLidar(DataStream.GetSensorType(), SensorTransform, SemanticLidarData, this);
     }
   }
   #endif

@@ -189,8 +189,8 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
                 if (ROS2->IsEnabled())
                 {
                   TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send PixelReader");
-                  auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
-                  auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, StreamId, BufView]()
+                  // auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
+                  auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, BufView]()
                   {
                     // get resolution of camera
                     int W = -1, H = -1;
@@ -209,11 +209,11 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
                     if (ParentActor)
                     {
                       FTransform LocalTransformRelativeToParent = Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-                      ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, W, H, Fov, BufView, &Sensor);
+                      ROS2->ProcessDataFromCamera(Stream.GetSensorType(), LocalTransformRelativeToParent, W, H, Fov, BufView, &Sensor);
                     }
                     else
                     {
-                      ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), W, H, Fov, BufView, &Sensor);
+                      ROS2->ProcessDataFromCamera(Stream.GetSensorType(), Stream.GetSensorTransform(), W, H, Fov, BufView, &Sensor);
                     }
                   });
                 }

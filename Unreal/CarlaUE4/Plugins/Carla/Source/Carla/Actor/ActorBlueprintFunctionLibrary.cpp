@@ -206,12 +206,19 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs && ... Strings)
   Def.Variations.Emplace(ActorRole);
 
   // ROS2
-  FActorVariation Var;
-  Var.Id = TEXT("ros_name");
-  Var.Type = EActorAttributeType::String;
-  Var.RecommendedValues = { Def.Id };
-  Var.bRestrictToRecommended = false;
-  Def.Variations.Emplace(Var);
+  FActorVariation RosTopicName;
+  RosTopicName.Id = TEXT("ros_name");
+  RosTopicName.Type = EActorAttributeType::String;
+  RosTopicName.RecommendedValues = { TEXT("") };  // empty by default
+  RosTopicName.bRestrictToRecommended = false;
+  Def.Variations.Emplace(RosTopicName);
+
+  FActorVariation RosFrameId;
+  RosFrameId.Id = TEXT("ros_frame_id");
+  RosFrameId.Type = EActorAttributeType::String;
+  RosFrameId.RecommendedValues = { TEXT("") };  // empty by default
+  RosFrameId.bRestrictToRecommended = false;
+  Def.Variations.Emplace(RosFrameId);
 }
 
 static void AddRecommendedValuesForActorRoleName(

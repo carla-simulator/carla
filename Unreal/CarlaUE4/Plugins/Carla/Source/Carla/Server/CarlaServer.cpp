@@ -789,7 +789,7 @@ void FCarlaServer::FPimpl::BindActions()
           if (Attr.Key == "ros_name")
           {
             const std::string value = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
-            ROS2->AddActorParentRosName(static_cast<void*>(CarlaActor->GetActor()), static_cast<void*>(CurrentActor->GetActor()));
+            ROS2->RegisterActorParent(static_cast<void*>(CarlaActor->GetActor()), static_cast<void*>(CurrentActor->GetActor()));
           }
         }
         CurrentActor = Episode->FindCarlaActor(CurrentActor->GetParent());

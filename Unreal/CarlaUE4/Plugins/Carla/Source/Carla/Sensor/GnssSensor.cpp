@@ -70,11 +70,11 @@ void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSe
     if (ParentActor)
     {
       FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
+      ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), LocalTransformRelativeToParent, carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
     }
     else
     {
-      ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
+      ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), Stream.GetSensorTransform(), carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
     }
   }
   #endif

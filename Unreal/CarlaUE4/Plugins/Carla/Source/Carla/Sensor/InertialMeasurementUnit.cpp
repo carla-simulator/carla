@@ -201,11 +201,11 @@ void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, 
     if (ParentActor)
     {
       FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromIMU(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, Accelerometer, Gyroscope, Compass, this);
+      ROS2->ProcessDataFromIMU(Stream.GetSensorType(), LocalTransformRelativeToParent, Accelerometer, Gyroscope, Compass, this);
     }
     else
     {
-      ROS2->ProcessDataFromIMU(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), Accelerometer, Gyroscope, Compass, this);
+      ROS2->ProcessDataFromIMU(Stream.GetSensorType(), Stream.GetSensorTransform(), Accelerometer, Gyroscope, Compass, this);
     }
   }
   #endif

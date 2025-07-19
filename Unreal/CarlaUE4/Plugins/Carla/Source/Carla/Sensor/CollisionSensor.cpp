@@ -140,11 +140,11 @@ void ACollisionSensor::OnCollisionEvent(
     if (ParentActor)
     {
       FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromCollisionSensor(0, StreamId, LocalTransformRelativeToParent, OtherActor->GetUniqueID(), carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z}, this);
+      ROS2->ProcessDataFromCollisionSensor(0, LocalTransformRelativeToParent, OtherActor->GetUniqueID(), carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z}, this);
     }
     else
     {
-      ROS2->ProcessDataFromCollisionSensor(0, StreamId, GetActorTransform(), OtherActor->GetUniqueID(), carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z}, this);
+      ROS2->ProcessDataFromCollisionSensor(0, GetActorTransform(), OtherActor->GetUniqueID(), carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z}, this);
     }
   }
 #endif

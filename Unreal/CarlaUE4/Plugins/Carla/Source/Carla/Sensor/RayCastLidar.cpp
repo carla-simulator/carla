@@ -78,11 +78,11 @@ void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float Delta
     if (ParentActor)
     {
       FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, LidarData, this);
+      ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), LocalTransformRelativeToParent, LidarData, this);
     }
     else
     {
-      ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, SensorTransform, LidarData, this);
+      ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), SensorTransform, LidarData, this);
     }
   }
   #endif

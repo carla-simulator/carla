@@ -90,11 +90,11 @@ void ARadar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
     if (ParentActor)
     {
       FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromRadar(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, RadarData, this);
+      ROS2->ProcessDataFromRadar(DataStream.GetSensorType(), LocalTransformRelativeToParent, RadarData, this);
     }
     else
     {
-      ROS2->ProcessDataFromRadar(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), RadarData, this);
+      ROS2->ProcessDataFromRadar(DataStream.GetSensorType(), DataStream.GetSensorTransform(), RadarData, this);
     }
   }
   #endif

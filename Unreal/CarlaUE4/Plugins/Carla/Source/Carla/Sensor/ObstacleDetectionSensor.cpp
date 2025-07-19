@@ -153,11 +153,11 @@ void AObstacleDetectionSensor::OnObstacleDetectionEvent(
       if (ParentActor)
       {
         FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-        ROS2->ProcessDataFromObstacleDetection(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, Actor, OtherActor, HitDistance/100.0f, this);
+        ROS2->ProcessDataFromObstacleDetection(DataStream.GetSensorType(), LocalTransformRelativeToParent, Actor, OtherActor, HitDistance/100.0f, this);
       }
       else
       {
-        ROS2->ProcessDataFromObstacleDetection(DataStream.GetSensorType(), StreamId, DataStream.GetSensorTransform(), Actor, OtherActor, HitDistance/100.0f, this);
+        ROS2->ProcessDataFromObstacleDetection(DataStream.GetSensorType(), DataStream.GetSensorTransform(), Actor, OtherActor, HitDistance/100.0f, this);
       }
     }
     #endif
