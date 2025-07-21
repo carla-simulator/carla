@@ -53,39 +53,39 @@ jobs:
         run: ./Update.sh
 
       - name: Setup
-        run: make setup ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono"
+        run: make setup ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono --target-wheel-platform=manylinux_2_31_x86_64"
 
       - name: Build LibCarla
-        run: make LibCarla ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono"
+        run: make LibCarla ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono --target-wheel-platform=manylinux_2_31_x86_64"
 
       - name: Build PythonAPI
-        run: make PythonAPI ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono"
+        run: make PythonAPI ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono --target-wheel-platform=manylinux_2_31_x86_64"
 
       - name: Build CarlaUE4Editor
-        run: make CarlaUE4Editor ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono"
+        run: make CarlaUE4Editor ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono --target-wheel-platform=manylinux_2_31_x86_64"
 
       - name: Build Package
         run: |
           if [ "${{ inputs.upload-package }}" = "false" ]; then
             ZIP="--no-zip"
           fi
-          make package ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono $ZIP"
+          make package ARGS="--python-version=${{ inputs.python-versions }} --ros2 --chrono $ZIP --target-wheel-platform=manylinux_2_31_x86_64"
 
       - name: Build AdditionalMaps Package
         if: inputs.additional-maps == true
         run: |
-          make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=${{ inputs.python-versions }}"
+          make package ARGS="--packages=AdditionalMaps,Town06_Opt,Town07_Opt,Town11,Town12,Town13,Town15 --target-archive=AdditionalMaps --clean-intermediate --python-version=${{ inputs.python-versions }} --target-wheel-platform=manylinux_2_31_x86_64"
 
       - name: Make C++ examples
         run: make examples
 
       - name: Run unit tests
-        run: make check ARGS="--python-api --xml --python-version=${{ inputs.python-versions }}"
+        run: make check.PythonAPI ARGS="--xml --python-version=${{ inputs.python-versions }} --target-wheel-platform=manylinux_2_31_x86_64"
 
       - name: Run smoke tests
         run: |
           ./Dist/CARLA_*/LinuxNoEditor/CarlaUE4.sh --ros2 -RenderOffScreen --carla-rpc-port=3654 --carla-streaming-port=0 -nosound > CarlaUE4.log &
-          make smoke_tests ARGS="--xml --python-version=${{ inputs.smoke-test-python-versions }}"
+          make smoke_tests ARGS="--xml --python-version=${{ inputs.smoke-test-python-versions }} --target-wheel-platform=manylinux_2_31_x86_64"
           make run-examples ARGS="localhost 3654"
 
       - name: Configure Backblaze

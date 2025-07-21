@@ -165,7 +165,7 @@ with open("README.md") as f:
 
 setup(
     name='carla',
-    version='0.9.15',
+    version='0.9.16',
     package_dir={'': 'source'},
     packages=['carla'],
     ext_modules=get_libcarla_extensions(),

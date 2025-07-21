@@ -1,0 +1,21 @@
+// SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-License-Identifier: MIT
+//
+
+mdl 1.5;
+import ::anno::in_group;
+import ::df::diffuse_reflection_bsdf;
+import ::df::diffuse_edf;
+import ::state::normal;
+export material DebugWhiteEmissive()
+ = 
+    let {
+        material_surface surface(
+            scattering: ::df::diffuse_reflection_bsdf(color(1.f, 1.f, 1.f), 0.f),
+            emission:  material_emission(
+                df::diffuse_edf(),
+                intensity: color(400.f)
+		    ));
+    } in material(
+            thin_walled: false,
+            surface: surface);

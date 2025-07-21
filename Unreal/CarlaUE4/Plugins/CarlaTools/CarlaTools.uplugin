@@ -41,6 +41,10 @@
     	{
 			"Name": "StreetMap",
 			"Enabled": true
+		},
+		{
+			"Name": "SimReady",
+			"Enabled": true
 		}
 	]
 }
