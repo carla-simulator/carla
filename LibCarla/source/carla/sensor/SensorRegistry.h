@@ -47,6 +47,7 @@ class ARayCastLidar;
 class ASceneCaptureCamera;
 class ASemanticSegmentationCamera;
 class AInstanceSegmentationCamera;
+class ACosmosControlSensor;
 class ARssSensor;
 class FWorldObserver;
 struct FCameraGBufferUint8;
@@ -81,6 +82,7 @@ namespace sensor {
     std::pair<ASceneCaptureCamera *, s11n::ImageSerializer>,
     std::pair<ASemanticSegmentationCamera *, s11n::ImageSerializer>,
     std::pair<AInstanceSegmentationCamera *, s11n::ImageSerializer>,
+    std::pair<ACosmosControlSensor *, s11n::ImageSerializer>,
     std::pair<FWorldObserver *, s11n::EpisodeStateSerializer>,
     std::pair<FCameraGBufferUint8 *, s11n::GBufferUint8Serializer>,
     std::pair<FCameraGBufferFloat *, s11n::GBufferFloatSerializer>,
@@ -114,6 +116,7 @@ namespace sensor {
 #include "Carla/Sensor/SceneCaptureCamera.h"
 #include "Carla/Sensor/SemanticSegmentationCamera.h"
 #include "Carla/Sensor/InstanceSegmentationCamera.h"
+#include "Carla/Sensor/CosmosControlSensor.h"
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Sensor/V2XSensor.h"
 #include "Carla/Sensor/CustomV2XSensor.h"

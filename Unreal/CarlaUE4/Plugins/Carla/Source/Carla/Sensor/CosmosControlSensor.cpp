@@ -5,7 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "Sensor/CosmosControlSensor.h"
+#include "Carla/Sensor/CosmosControlSensor.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
 #include "Carla/Sensor/PixelReader.h"
@@ -22,20 +22,20 @@ ACosmosControlSensor::ACosmosControlSensor(
     const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
-  AddPostProcessingMaterial(TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
+  //AddPostProcessingMaterial(TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
   // TODO: Setup OnActorSpawnHandler so we can refresh components
   // World->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateRaw(this, &ACosmosControlSensor::OnActorSpawned));
 }
 
 void ACosmosControlSensor::SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture)
 {
-  Super::SetUpSceneCaptureComponent(SceneCapture);
+ Super::SetUpSceneCaptureComponent(SceneCapture);
 
-  ApplyViewMode(VMI_Unlit, true, SceneCapture.ShowFlags);
+ ApplyViewMode(VMI_Unlit, true, SceneCapture.ShowFlags);
 
-  SceneCapture.ShowFlags.SetAtmosphere(false);
+ SceneCapture.ShowFlags.SetAtmosphere(false);
 
-  SceneCapture.PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
+ SceneCapture.PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
 
 //   TArray<UObject *> StaticMeshComps;
 //   GetObjectsOfClass(UStaticMeshComponent::StaticClass(), StaticMeshComps, false, EObjectFlags::RF_ClassDefaultObject, EInternalObjectFlags::AllFlags);
@@ -51,7 +51,7 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ACosmosControlSensor::PostPhysTick);
 
-  USceneCaptureComponent2D* SceneCapture = GetCaptureComponent2D();
+  //USceneCaptureComponent2D* SceneCapture = GetCaptureComponent2D();
 //   TArray<UObject *> StaticMeshComps;
 //   GetObjectsOfClass(UStaticMeshComponent::StaticClass(), StaticMeshComps, false, EObjectFlags::RF_ClassDefaultObject, EInternalObjectFlags::AllFlags);
 
@@ -61,6 +61,6 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
 //     SceneCapture.ShowOnlyComponents.Emplace(Component);
 //   }
 
-  FPixelReader::SendPixelsInRenderThread<ACosmosControlSensor, FColor>(*this);
+  //FPixelReader::SendPixelsInRenderThread<ACosmosControlSensor, FColor>(*this);
 
 }

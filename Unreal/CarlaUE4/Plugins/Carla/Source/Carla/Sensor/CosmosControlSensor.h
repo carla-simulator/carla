@@ -7,6 +7,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Carla/Sensor/ShaderBasedSensor.h"
 #include "Sensor/Sensor.h"
 #include "Carla/Actor/ActorDefinition.h"
 #include "CosmosControlSensor.generated.h"
@@ -15,7 +16,7 @@
  * Sensor that produces an input control visualization for Cosmos
  */
 UCLASS()
-class CARLA_API ACosmosControlSensor : public ASensor
+class CARLA_API ACosmosControlSensor : public AShaderBasedSensor
 {
 	GENERATED_BODY()
 
