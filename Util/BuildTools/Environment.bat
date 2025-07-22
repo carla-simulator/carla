@@ -15,10 +15,10 @@ rem BAT script containing utility functions for reuse across other scripts.
 
         REM Check if working directory is dirty
         git diff-index --quiet HEAD --
-        if %errorlevel%==0 (
-            set DIRTY=
-        ) else (
+        if not !errorlevel!==0 (
             set DIRTY=-dirty
+        ) else (
+            set DIRTY=
         )
         set TAG=!COMMIT!!DIRTY!
     )
