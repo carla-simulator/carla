@@ -75,7 +75,7 @@ void UCarlaEpisode::BeginDestroy()
     }
   }
 
-  FGenericPlatformProcess::CloseProc(RecastBuilderProcessHandle);
+  FPlatformProcess::CloseProc(RecastBuilderProcessHandle);
 }
 
 bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
