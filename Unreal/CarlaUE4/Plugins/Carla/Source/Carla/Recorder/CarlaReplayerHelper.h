@@ -106,7 +106,7 @@ private:
     uint32_t DesiredId,
     bool SpawnSensors);
 
-  FCarlaActor* FindTrafficLightAt(FVector Location);
+  FCarlaActor* FindTrafficSignAt(FVector Location);
 
   // enable / disable physics for an actor
   bool SetActorSimulatePhysics(FCarlaActor *CarlaActor, bool bEnabled);
