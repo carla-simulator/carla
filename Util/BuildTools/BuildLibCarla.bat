@@ -17,6 +17,7 @@ rem ============================================================================
 set DOC_STRING=Build LibCarla.
 set USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--server] [--client] [--clean]
 
+set GENERATOR=""
 set REMOVE_INTERMEDIATE=false
 set BUILD_SERVER=false
 set BUILD_CLIENT=false

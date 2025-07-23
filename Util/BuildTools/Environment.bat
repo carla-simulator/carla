@@ -10,7 +10,17 @@ rem BAT script containing utility functions for reuse across other scripts.
     if %errorlevel%==0 (
         set TAG=%BRANCH:ue4/=%
     ) else (
-        for /f "delims=" %%v in ('git describe --tags --dirty --always') do set TAG=%%v
+        REM Get short commit hash
+        for /f "delims=" %%c in ('git rev-parse --short HEAD') do set COMMIT=%%c
+
+        REM Check if working directory is dirty
+        git diff-index --quiet HEAD --
+        if not !errorlevel!==0 (
+            set DIRTY=-dirty
+        ) else (
+            set DIRTY=
+        )
+        set TAG=!COMMIT!!DIRTY!
     )
 
     goto :good_exit

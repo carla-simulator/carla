@@ -17,6 +17,7 @@ rem ============================================================================
 set DOC_STRING=Build LibCarla.
 set USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild] [--build] [--clean] [--no-pull]
 
+set GENERATOR=""
 set REMOVE_INTERMEDIATE=false
 set BUILD_OSM2ODR=false
 set GIT_PULL=true
