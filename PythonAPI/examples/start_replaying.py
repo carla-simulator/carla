@@ -105,7 +105,7 @@ def main():
             offset = carla.Transform(carla.Location(0, 0, 40), carla.Rotation(-90, 0, 0))
 
         # replay the session
-        client.replay_file(args.recorder_filename, args.start, args.duration, args.camera, args.spawn_sensors, offset)
+        print(client.replay_file(args.recorder_filename, args.start, args.duration, args.camera, args.spawn_sensors, offset))
 
     finally:
         pass
