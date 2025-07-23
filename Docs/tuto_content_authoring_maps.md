@@ -398,7 +398,7 @@ Drag the material onto the lane markings you wish to color. Repeat the whole pro
 
 The CARLA content library has a comprehensive set of vegetation blueprints for you to add further realism to the off-road areas of your maps like sidewalks, parks, hillsides, fields and forrest. 
 
-Navigate to the vegetation folder in the CARLA content library: `Carla > Static > Visitation`. You will find blueprints for multiple types of trees, bushes, shrubs. You can drag these elements into your map from the content browser. 
+Navigate to the vegetation folder in the CARLA content library: `Carla > Static > Vegetation`. You will find blueprints for multiple types of trees, bushes, shrubs. You can drag these elements into your map from the content browser. 
 
 ![map_materials](img/tuto_content_authoring_maps/add_tree.png)
 
