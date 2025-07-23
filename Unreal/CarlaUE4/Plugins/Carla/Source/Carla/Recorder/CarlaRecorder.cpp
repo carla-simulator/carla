@@ -61,10 +61,10 @@ std::string ACarlaRecorder::ShowFileActorsBlocked(std::string Name, double MinTi
 }
 
 std::string ACarlaRecorder::ReplayFile(std::string Name, double TimeStart, double Duration,
-    uint32_t FollowId, bool ReplaySensors)
+    uint32_t FollowId, const FTransform Offset, bool ReplaySensors)
 {
   Stop();
-  return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId, ReplaySensors);
+  return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId, Offset, ReplaySensors);
 }
 
 void ACarlaRecorder::SetReplayerTimeFactor(double TimeFactor)

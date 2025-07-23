@@ -2881,7 +2881,8 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       double start,
       double duration,
       uint32_t follow_id,
-      bool replay_sensors) -> R<std::string>
+      bool replay_sensors,
+      const cr::Transform offset) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ReplayFile(
@@ -2889,6 +2890,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
         start,
         duration,
         follow_id,
+        offset,
         replay_sensors));
   };
 

@@ -170,7 +170,7 @@ public:
 
   // replayer
   std::string ReplayFile(std::string Name, double TimeStart, double Duration,
-      uint32_t FollowId, bool ReplaySensors);
+      uint32_t FollowId, const FTransform Offset, bool ReplaySensors);
   void SetReplayerTimeFactor(double TimeFactor);
   void SetReplayerIgnoreHero(bool IgnoreHero);
   void SetReplayerIgnoreSpectator(bool IgnoreSpectator);
