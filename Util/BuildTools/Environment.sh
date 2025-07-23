@@ -38,7 +38,9 @@ function get_git_repository_version {
   if [[ "$branch" == ue4/* ]]; then
     echo "${branch#ue4/}"
   else
-    git describe --tags --dirty --always
+    commit=$(git rev-parse --short HEAD)
+    git diff-index --quiet HEAD -- || dirty="-dirty"
+    echo "${commit}${dirty}"
   fi
 }
 
