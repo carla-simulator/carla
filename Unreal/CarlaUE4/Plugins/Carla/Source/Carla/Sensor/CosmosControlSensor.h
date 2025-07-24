@@ -24,10 +24,16 @@ public:
 
 	static FActorDefinition GetSensorDefinition();
 
-  	ACosmosControlSensor(const FObjectInitializer &ObjectInitializer);
+  ACosmosControlSensor(const FObjectInitializer& ObjectInitializer);
+  void BeginDestroy() override;
 
 protected:
 
   void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) override;
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
+
+private:
+  bool added_persisted_stop_lines;
+  bool added_persisted_route_lines;
+  bool added_persisted_crosswalks;
 };
