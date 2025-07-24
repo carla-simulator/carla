@@ -2827,6 +2827,69 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     }
   };
 
+  BIND_SYNC(enable_gbuffers) << [this](const cr::ActorId ActorId, bool bEnabled) -> R<void>
+  {
+      REQUIRE_CARLA_EPISODE();
+      FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+      if(!CarlaActor)
+      {
+        return RespondError(
+            "enable_gbuffers",
+            ECarlaServerResponse::ActorNotFound,
+            " Actor Id: " + FString::FromInt(ActorId));
+      }
+      if (CarlaActor->IsDormant())
+      {
+        return RespondError(
+            "enable_gbuffers",
+            ECarlaServerResponse::FunctionNotAvailiableWhenDormant,
+            " Actor Id: " + FString::FromInt(ActorId));
+      }
+      ASceneCaptureSensor* Sensor = Cast<ASceneCaptureSensor>(CarlaActor->GetActor());
+      if (!Sensor)
+      {
+        return RespondError(
+          "enable_gbuffers",
+          ECarlaServerResponse::ActorTypeMismatch,
+          " Actor Id: " + FString::FromInt(ActorId));
+      }
+
+      Sensor->EnableGBuffers(bEnabled);
+      
+      return R<void>::Success();
+
+  };
+
+  BIND_SYNC(are_gbuffers_enabled) << [this](const cr::ActorId ActorId) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if(!CarlaActor)
+    {
+      return RespondError(
+          "enable_gbuffers",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    if (CarlaActor->IsDormant())
+    {
+      return RespondError(
+          "enable_gbuffers",
+          ECarlaServerResponse::FunctionNotAvailiableWhenDormant,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ASceneCaptureSensor* Sensor = Cast<ASceneCaptureSensor>(CarlaActor->GetActor());
+    if (!Sensor)
+    {
+      return RespondError(
+        "enable_gbuffers",
+        ECarlaServerResponse::ActorTypeMismatch,
+        " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    return R<bool>(Sensor->AreGBuffersEnabled());
+  };
+
   // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(start_recorder) << [this](std::string name, bool AdditionalData) -> R<std::string>

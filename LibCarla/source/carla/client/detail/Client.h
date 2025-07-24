@@ -422,6 +422,10 @@ namespace detail {
         const streaming::Token &token,
         std::function<void(Buffer)> callback);
 
+    void EnableGBuffers(rpc::ActorId ActorId, bool bEnabled);
+    
+    bool AreGBuffersEnabled(rpc::ActorId ActorId);
+
     void SubscribeToGBuffer(
         rpc::ActorId ActorId,
         uint32_t GBufferId,

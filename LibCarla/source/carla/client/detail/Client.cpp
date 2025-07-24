@@ -688,6 +688,14 @@ namespace detail {
     _pimpl->AsyncCall("send", ActorId, message);
   }
 
+  void Client::EnableGBuffers(rpc::ActorId ActorId, bool bEnabled) {
+    _pimpl->CallAndWait<void>("enable_gbuffers", ActorId, bEnabled);
+  }
+
+  bool Client::AreGBuffersEnabled(rpc::ActorId ActorId) {
+    return _pimpl->CallAndWait<bool>("are_gbuffers_enabled", ActorId);
+  }
+
   void Client::SubscribeToGBuffer(
       rpc::ActorId ActorId,
       uint32_t GBufferId,

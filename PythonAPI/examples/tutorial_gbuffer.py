@@ -95,6 +95,7 @@ def main():
         # Here we will register the callbacks for each gbuffer texture.
         # The function "listen_to_gbuffer" behaves like the regular listen function,
         # but you must first pass it the ID of the desired gbuffer texture.
+        camera.enable_gbuffers(True)
         camera.listen_to_gbuffer(carla.GBufferTextureID.SceneColor, lambda image: image.save_to_disk('_out/GBuffer-SceneColor-%06d.png' % image.frame))
         camera.listen_to_gbuffer(carla.GBufferTextureID.SceneDepth, lambda image: image.save_to_disk('_out/GBuffer-SceneDepth-%06d.png' % image.frame))
         camera.listen_to_gbuffer(carla.GBufferTextureID.SceneStencil, lambda image: image.save_to_disk('_out/GBuffer-SceneStencil-%06d.png' % image.frame))

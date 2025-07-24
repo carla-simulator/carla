@@ -448,12 +448,20 @@ float ASceneCaptureSensor::GetChromAberrOffset() const
 }
 
 void ASceneCaptureSensor::EnqueueRenderSceneImmediate() {
-  TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
-  // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
-  GetCaptureComponent2D()->CaptureScene();
+  // 
+  if( bEnableGBuffers )
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediateGBuffers);
 
-  // // Equivalent to "CaptureComponent2D->CaptureScene" + (optional) GBuffer extraction.
-  // CaptureSceneExtended();
+    // // Equivalent to "CaptureComponent2D->CaptureScene" + (optional) GBuffer extraction.
+    CaptureSceneExtended();
+  }
+  else
+  {
+    TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor::EnqueueRenderSceneImmediate);
+    // Creates an snapshot of the scene, requieres bCaptureEveryFrame = false.
+    GetCaptureComponent2D()->CaptureScene();
+  }
 }
 
 constexpr const TCHAR* GBufferNames[] =
