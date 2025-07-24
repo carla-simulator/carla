@@ -66,7 +66,8 @@ import carla
 
 class ActorTrace(object):
     """Class that store and process information about an actor at certain moment."""
-    def __init__(self, actor, lidar):
+    def __init__(self, actor, lidar, world):
+        self._world = world
         self.set_lidar(lidar)
         self.set_actor(actor)
         self._lidar_pc_local = np.array([])
@@ -109,8 +110,8 @@ class ActorTrace(object):
 
         self._bb_vertices = ver_np
 
-        self._bb_minlimits = ver_np.min(axis=0) - 0.001
-        self._bb_maxlimits = ver_np.max(axis=0) + 0.001
+        self._bb_minlimits = ver_np.min(axis=0) - 0.1
+        self._bb_maxlimits = ver_np.max(axis=0) + 0.1
 
     def print(self, print_if_empty = False):
         if self._lidar_pc_local.shape[0] > 0 or print_if_empty:
@@ -141,6 +142,8 @@ class ActorTrace(object):
             zmax = self._bb_maxlimits[2]
             out = np.any((lidar_pc[:, 2] > zmax) | (lidar_pc[:, 2] < zmin))
             if out:
+                print( "Zmin: %f, Zmax: %f" % (zmin, zmax) )
+                print("Lidar points: %s" % lidar_pc[:, 2])
                 print("Problem with z axis")
                 return True
 
@@ -150,10 +153,45 @@ class ActorTrace(object):
         if self.lidar_is_outside_bb():
             print("Error!!! Points of lidar point cloud are outside its BB for car %d: %s " % (self._actor_id, self._actor_type))
             self.print()
+            self.draw_debug(world=self._world)
             return False
         else:
             return True
 
+    def draw_debug(self, world=None):
+        debug = self._world.debug if world is None else world.debug
+
+        points = self._lidar_pc_local
+        mask_x = (points[:, 0] < self._bb_minlimits[0]) | (points[:, 0] > self._bb_maxlimits[0])
+        mask_y = (points[:, 1] < self._bb_minlimits[1]) | (points[:, 1] > self._bb_maxlimits[1])
+        mask_z = (points[:, 2] < self._bb_minlimits[2]) | (points[:, 2] > self._bb_maxlimits[2])
+
+        outside_mask = mask_x | mask_y | mask_z
+        outliers = points[outside_mask]
+
+        # Draw LiDAR points (in actor's local frame, so transform back to world)
+        for p in outliers:
+            p_hom = np.append(p, 1.0)
+            p_world = np.dot(self._actor_transf.get_matrix(), p_hom.T)
+            loc = carla.Location(x=p_world[0], y=p_world[1], z=p_world[2])
+            debug.draw_point(loc, size=0.05, color=carla.Color(255, 0, 0), life_time=5000.0)
+
+        # Draw bounding box
+        debug.draw_box(
+            self._actor_bb,
+            self._actor_transf.rotation,
+            thickness=40.0,
+            color=carla.Color(255, 255, 255),
+            life_time=5000.0
+        )
+
+        # Optional: label it
+        loc = self._actor_transf.location
+        debug.draw_string(loc, f"Actor {self._actor_id}", draw_shadow=False,
+                        color=carla.Color(255, 255, 0), life_time=5000.0)
+
+
+            
 def wait(world, frames=100, queue = None, slist = None):
     for i in range(0, frames):
         world.tick()
@@ -188,8 +226,8 @@ def bb_callback(snapshot, world, sensor_queue, sensor_name):
 def move_spectator(world, actor):
     actor_tr = actor.get_transform()
     spectator_transform = carla.Transform(actor_tr.location, actor_tr.rotation)
-    spectator_transform.location -= actor_tr.get_forward_vector() * 5
-    spectator_transform.location -= actor_tr.get_up_vector() * 3
+    spectator_transform.location -= actor_tr.get_forward_vector() * 10
+    spectator_transform.location += actor_tr.get_up_vector() * 3
     spectator = world.get_spectator()
     spectator.set_transform(spectator_transform)
 
@@ -197,7 +235,7 @@ def world_callback(snapshot, world, sensor_queue, sensor_name, actor):
     move_spectator(world, actor)
     bb_callback(snapshot, world, sensor_queue, sensor_name)
 
-def process_sensors(w_frame, sensor_queue, sensor_number):
+def process_sensors(w_frame, sensor_queue, sensor_number, world):
     if sensor_number != 2:
         print("Error!!! Sensor number should be two")
 
@@ -216,7 +254,7 @@ def process_sensors(w_frame, sensor_queue, sensor_number):
                 sl_data = s_frame
             elif s_frame[1] == "bb":
                 bb_data = s_frame
-            #print("    Frame: %d   Sensor: %s Len: %d " % (s_frame[0], s_frame[1], len(s_frame[2])))
+          #print("    Frame: %d   Sensor: %s Len: %d " % (s_frame[0], s_frame[1], len(s_frame[2])))
     except Empty:
         print("Error!!! The needeinformation is not here!!!")
         return
@@ -224,10 +262,11 @@ def process_sensors(w_frame, sensor_queue, sensor_number):
     if sl_data == None or bb_data == None:
         print("Error!!! Missmatch for sensor %s in the frame timestamp (w: %d, s: %d)" % (s_frame[1], w_frame, s_frame[0]))
 
-    for actor_data in bb_data[2]:
-        trace_vehicle = ActorTrace(actor_data, sl_data)
-        trace_vehicle.process()
-        trace_vehicle.check_lidar_data()
+    if( bb_data != None ):
+        for actor_data in bb_data[2]:
+            trace_vehicle = ActorTrace(actor_data, sl_data, world)
+            trace_vehicle.process()
+            trace_vehicle.check_lidar_data()
 
 class SpawnCar(object):
     def __init__(self, location, rotation, filter="vehicle.*", autopilot = False, velocity = None):
@@ -293,9 +332,10 @@ def destroy_prop_vehicles():
 def main():
     # We start creating the client
     client = carla.Client('localhost', 2000)
-    client.set_timeout(2.0)
-    world = client.get_world()
-
+    client.set_timeout(30.0)
+    world = client.load_world('Town03')
+    actor = None
+    callback_id = None
     try:
         # We need to save the settings to be able to recover them at the end
         # of the script to leave the server in the same state that we found it.
@@ -339,7 +379,7 @@ def main():
         lidar_tr = carla.Transform(carla.Location(z=3), carla.Rotation(yaw=0))
         lidar = world.spawn_actor(lidar_bp, lidar_tr, attach_to=actor)
         lidar.listen(lambda data: lidar_callback(data, sensor_queue, "semlidar"))
-        world.on_tick(lambda snapshot: world_callback(snapshot, world, sensor_queue, "bb", actor))
+        callback_id = world.on_tick(lambda snapshot: world_callback(snapshot, world, sensor_queue, "bb", actor))
         sensor_list.append(lidar)
         sensor_list.append(actor) # actor acts as a 'sensor' to simplify bb-lidar data comparison 
         
@@ -350,18 +390,20 @@ def main():
             # Tick the server
             world.tick()
             w_frame = world.get_snapshot().frame
-            process_sensors(w_frame, sensor_queue, len(sensor_list))
+            process_sensors(w_frame, sensor_queue, len(sensor_list), world)
 
         actor.disable_constant_velocity()
 
     finally:
+        if callback_id:
+            world.remove_on_tick(callback_id)
+
         world.apply_settings(original_settings)
 
         # Destroy all the actors
         destroy_prop_vehicles()
         for sensor in sensor_list:
             sensor.destroy()
-        
 
 if __name__ == "__main__":
     try:

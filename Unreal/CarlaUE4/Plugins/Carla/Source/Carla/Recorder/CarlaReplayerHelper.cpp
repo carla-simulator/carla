@@ -47,7 +47,7 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
   // check type of actor we need
   if (ActorDesc.Id.StartsWith("traffic."))
   {
-    FCarlaActor* CarlaActor = FindTrafficLightAt(Location);
+    FCarlaActor* CarlaActor = FindTrafficSignAt(Location);
     if (CarlaActor != nullptr)
     {
       // reuse that actor
@@ -92,7 +92,7 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
   }
 }
 
-FCarlaActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
+FCarlaActor *CarlaReplayerHelper::FindTrafficSignAt(FVector Location)
 {
   check(Episode != nullptr);
   auto World = Episode->GetWorld();
@@ -108,7 +108,7 @@ FCarlaActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
   for (auto It = Registry.begin(); It != Registry.end(); ++It)
   {
     FCarlaActor* CarlaActor = It.Value().Get();
-    if(CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight)
+    if(CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight || CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficSign)
     {
       FVector vec = CarlaActor->GetActorGlobalLocation();
       int x2 = static_cast<int>(vec.X);

@@ -47,6 +47,7 @@ public:
 
   UCarlaEpisode(const FObjectInitializer &ObjectInitializer);
 
+  virtual void BeginDestroy() override;
   // ===========================================================================
   // -- Load a new episode -----------------------------------------------------
   // ===========================================================================
@@ -403,6 +404,8 @@ private:
   FFrameData FrameData;
 
   FSensorManager SensorManager;
+
+  FProcHandle RecastBuilderProcessHandle;
 };
 
 FString CarlaGetRelevantTagAsString(const TSet<crp::CityObjectLabel> &SemanticTags);

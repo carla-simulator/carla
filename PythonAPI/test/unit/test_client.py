@@ -25,8 +25,14 @@ class TestClient(unittest.TestCase):
         if branch.startswith("ue4/"):
             out = branch.split("/")[1]
         else:
-            out = check_output(['git', 'describe', '--tags', '--dirty', '--always', ])
+            commit = check_output(['git', 'rev-parse', '--short',  'HEAD', ])
+            dirty = check_output(['git', 'diff-index', 'HEAD', ])
             if sys.version_info > (3, 0):
-                out = out.decode('utf8').strip()
-        
+                commit = commit.decode('utf8').strip()
+                dirty = dirty.decode('utf8').strip()
+            
+            out = commit
+            if dirty:
+                out += "-dirty"
+
         self.assertEqual(str(v), str(out))
