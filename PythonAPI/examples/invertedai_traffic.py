@@ -31,55 +31,57 @@ from carla import command, Location
 def argument_parser():
 
     argparser = argparse.ArgumentParser(
-        description=__doc__)
+        description=__doc__,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
     argparser.add_argument(
         '--host',
         metavar='H',
         default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
+        help='IP of the host server')
     argparser.add_argument(
         '-p', '--port',
         metavar='P',
         default=2000,
         type=int,
-        help='TCP port to listen to (default: 2000)')
+        help='TCP port to listen to')
     argparser.add_argument(
         '-n', '--number-of-vehicles',
         metavar='N',
-        default=60,
+        default=50,
         type=int,
-        help='Number of vehicles spawned by InvertedAI (default: 30)')
+        help='Number of vehicles spawned by InvertedAI')
     argparser.add_argument(
         '-w', '--number-of-walkers',
         metavar='W',
-        default=60,
+        default=0,
         type=int,
-        help='Number of walkers (default: 10)')
+        help='Number of walkers')
     argparser.add_argument(
         '--safe',
         type=bool,
         default=True,
-        help='Avoid spawning vehicles prone to accidents (default True)')
+        help='Avoid spawning vehicles prone to accidents')
     argparser.add_argument(
         '--filterv',
         metavar='PATTERN',
         default='vehicle.*',
-        help='Filter vehicle model (default: "vehicle.*")')
+        help='Filter vehicle model')
     argparser.add_argument(
         '--generationv',
         metavar='G',
         default='All',
-        help='restrict to certain vehicle generation (default: "All")')
+        help='restrict to certain vehicle generation')
     argparser.add_argument(
         '--filterw',
         metavar='PATTERN',
         default='walker.pedestrian.*',
-        help='Filter pedestrian type (default: "walker.pedestrian.*")')
+        help='Filter pedestrian type')
     argparser.add_argument(
         '--generationw',
         metavar='G',
         default='All',
-        help='restrict to certain pedestrian generation (default: "All")')
+        help='restrict to certain pedestrian generation')
     argparser.add_argument(
         '-s', '--seed',
         metavar='S',
@@ -103,7 +105,7 @@ def argument_parser():
         '--sim-length',
         type=int,
         default=60,
-        help="Length of the simulation in seconds (default: 120)")
+        help="Length of the simulation in seconds")
     argparser.add_argument(
         '--location',
         type=str,
@@ -112,33 +114,33 @@ def argument_parser():
     argparser.add_argument(
         '--capacity',
         type=int,
-        help=f"The capacity parameter of a quadtree leaf before splitting (default: 100)",
+        help=f"The capacity parameter of a quadtree leaf before splitting",
         default=100)
     argparser.add_argument(
         '--width',
         type=int,
-        help=f"Full width of the area to initialize (default: 250)",
+        help=f"Full width of the area to initialize",
         default=250)
     argparser.add_argument(
         '--height',
         type=int,
-        help=f"Full height of the area to initialize (default: 250)",
+        help=f"Full height of the area to initialize",
         default=250)
     argparser.add_argument(
         '--map-center',
         type=int,
         nargs='+',
-        help=f"Center of the area to initialize (default: [-50,20])",
+        help=f"Center of the area to initialize",
         default=tuple([-50,20]))
     argparser.add_argument(
         '--iai-async',
         type=bool,
-        help=f"Whether to call drive asynchronously (default: True)",
+        help=f"Whether to call drive asynchronously",
         default=True)
     argparser.add_argument(
         '--api-model',
         type=str,
-        help=f"IAI API model version (default: bI5p)",
+        help=f"IAI API model version",
         default="bI5p")
     argparser.add_argument(
         '--iai-log',
@@ -148,19 +150,19 @@ def argument_parser():
         '--iai-waypoint-distance',
         type=int,
         default=15,
-        help=f"Distance to the next waypoint for IAI agents (default: 15)"
+        help=f"Distance to the next waypoint for IAI agents"
     )
     argparser.add_argument(
         '--iai-waypoint-detection-threshold',
         type=int,
         default=2,
-        help=f"Distance to which an agent is deemed as having reached its waypoint (default: 2)"
+        help=f"Distance to which an agent is deemed as having reached its waypoint"
     )
     argparser.add_argument(
         '--iai-max-distance-away',
         type=int,
         default=20,
-        help=f"Maximum distance away before a new waypoint is set for an agent (default: 20)"
+        help=f"Maximum distance away before a new waypoint is set for an agent"
     )
 
     args = argparser.parse_args()
