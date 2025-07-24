@@ -39,7 +39,7 @@ namespace ros2 {
         }
 
       bool Publish() {
-        return _impl_image->Publish() && _impl_camera_info->Publish();
+        return _impl_camera_info->Publish() && _impl_image->Publish();
       }
 
       bool WriteImage(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, const uint8_t* data);

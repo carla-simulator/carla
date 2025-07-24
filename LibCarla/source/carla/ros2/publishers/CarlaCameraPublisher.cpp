@@ -13,23 +13,20 @@ bool CarlaCameraPublisher::WriteCameraInfo(int32_t seconds, uint32_t nanoseconds
   _impl_camera_info->GetMessage()->header().stamp().nanosec(nanoseconds);
   _impl_camera_info->GetMessage()->header().frame_id(GetFrameId());
 
-  // TODO: Esto esta en el init del CameroInfo.cpp
-      // string m_distortion_model
-    // m_distortion_model = "plumb_bob";
+  const double cx = static_cast<double>(width) / 2.0;
+  const double cy = static_cast<double>(height) / 2.0;
+  const double fx = static_cast<double>(width) / (2.0 * std::tan(fov) * M_PI / 360.0);
+  const double fy = fx;
 
-    // const double cx = static_cast<double>(m_width) / 2.0;
-    // const double cy = static_cast<double>(m_height) / 2.0;
-    // const double fx = static_cast<double>(m_width) / (2.0 * std::tan(fov) * M_PI / 360.0);
-    // const double fy = fx;
-
-    // m_d = { 0.0, 0.0, 0.0, 0.0, 0.0 };
-    // m_k = {fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0};
-    // m_r = { 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 };
-    // m_p = {fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0};
-
-    // m_binning_x = 0;
-    // m_binning_y = 0;
-
+  _impl_camera_info->GetMessage()->height(height);
+  _impl_camera_info->GetMessage()->width(width);
+  _impl_camera_info->GetMessage()->distortion_model("plumb_bob");
+  _impl_camera_info->GetMessage()->D({ 0.0, 0.0, 0.0, 0.0, 0.0 });
+  _impl_camera_info->GetMessage()->k({fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0});
+  _impl_camera_info->GetMessage()->r({ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 });
+  _impl_camera_info->GetMessage()->p({fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0});
+  _impl_camera_info->GetMessage()->binning_x(0);
+  _impl_camera_info->GetMessage()->binning_y(0);
 
   _impl_camera_info->GetMessage()->roi().x_offset(x_offset);
   _impl_camera_info->GetMessage()->roi().y_offset(y_offset);
@@ -51,13 +48,11 @@ bool CarlaCameraPublisher::WriteImage(int32_t seconds, uint32_t nanoseconds, uin
   _impl_image->GetMessage()->is_bigendian(0);
   _impl_image->GetMessage()->step(width * sizeof(uint8_t) * 4);
 
-  // TODO: Revisit
-  std::vector<uint8_t> vector_data;
+  // 4 channels
   const size_t size = height * width * 4;
-  vector_data.resize(size);
-  std::memcpy(&vector_data[0], &data[0], size);
+  std::vector<uint8_t> vector_data(data, data + size);
 
-  _impl_image->GetMessage()->data(std::move(vector_data)); //https://github.com/eProsima/Fast-DDS/issues/2330
+  _impl_image->GetMessage()->data(std::move(vector_data)); // https://github.com/eProsima/Fast-DDS/issues/2330
 
   return true;
 }

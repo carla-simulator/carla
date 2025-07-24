@@ -217,7 +217,6 @@ std::shared_ptr<BasePublisher> ROS2::GetOrCreateSensor(int type, void* actor) {
 void ROS2::ProcessDataFromCamera(
     uint64_t sensor_type,
     const carla::geom::Transform sensor_transform,
-    int W, int H, float Fov,
     const carla::SharedBufferView buffer,
     void *actor) {
 
@@ -229,6 +228,7 @@ void ROS2::ProcessDataFromCamera(
   if (!header)
     return;
 
+  sensor_publisher->WriteCameraInfo(_seconds, _nanoseconds, 0, 0, header->height, header->width, header->fov_angle, true);
   sensor_publisher->WriteImage(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
   sensor_publisher->Publish();
 

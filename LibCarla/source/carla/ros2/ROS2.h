@@ -84,7 +84,6 @@ class ROS2
     void ProcessDataFromCamera(
       uint64_t sensor_type,
       const carla::geom::Transform sensor_transform,
-      int W, int H, float Fov,
       const carla::SharedBufferView buffer,
       void *actor = nullptr);
     void ProcessDataFromGNSS(
