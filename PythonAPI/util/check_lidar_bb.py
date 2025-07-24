@@ -226,8 +226,8 @@ def bb_callback(snapshot, world, sensor_queue, sensor_name):
 def move_spectator(world, actor):
     actor_tr = actor.get_transform()
     spectator_transform = carla.Transform(actor_tr.location, actor_tr.rotation)
-    spectator_transform.location -= actor_tr.get_forward_vector() * 5
-    spectator_transform.location -= actor_tr.get_up_vector() * 3
+    spectator_transform.location -= actor_tr.get_forward_vector() * 10
+    spectator_transform.location += actor_tr.get_up_vector() * 3
     spectator = world.get_spectator()
     spectator.set_transform(spectator_transform)
 
@@ -332,9 +332,10 @@ def destroy_prop_vehicles():
 def main():
     # We start creating the client
     client = carla.Client('localhost', 2000)
-    client.set_timeout(20000.0)
+    client.set_timeout(30.0)
     world = client.load_world('Town03')
     actor = None
+    callback_id = None
     try:
         # We need to save the settings to be able to recover them at the end
         # of the script to leave the server in the same state that we found it.
@@ -378,7 +379,7 @@ def main():
         lidar_tr = carla.Transform(carla.Location(z=3), carla.Rotation(yaw=0))
         lidar = world.spawn_actor(lidar_bp, lidar_tr, attach_to=actor)
         lidar.listen(lambda data: lidar_callback(data, sensor_queue, "semlidar"))
-        world.on_tick(lambda snapshot: world_callback(snapshot, world, sensor_queue, "bb", actor))
+        callback_id = world.on_tick(lambda snapshot: world_callback(snapshot, world, sensor_queue, "bb", actor))
         sensor_list.append(lidar)
         sensor_list.append(actor) # actor acts as a 'sensor' to simplify bb-lidar data comparison 
         
@@ -394,6 +395,9 @@ def main():
         actor.disable_constant_velocity()
 
     finally:
+        if callback_id:
+            world.remove_on_tick(callback_id)
+
         world.apply_settings(original_settings)
 
         # Destroy all the actors
