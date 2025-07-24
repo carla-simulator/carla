@@ -76,6 +76,10 @@ def main():
         action='store_true',
         help='move spectator camera')
     argparser.add_argument(
+        '--top-view',
+        action='store_true',
+        help='enable top-down camera view when following an actor')
+    argparser.add_argument(
         '--spawn-sensors',
         action='store_true',
         help='spawn sensors in the replayed world')
@@ -95,8 +99,13 @@ def main():
         # set to ignore the spectator camera or not
         client.set_replayer_ignore_spectator(not args.move_spectator)
 
+        # set desired offset
+        offset = carla.Transform(carla.Location(-10, 0, 5),  carla.Rotation(-25, 0, 0))
+        if args.top_view:
+            offset = carla.Transform(carla.Location(0, 0, 40), carla.Rotation(-90, 0, 0))
+
         # replay the session
-        print(client.replay_file(args.recorder_filename, args.start, args.duration, args.camera, args.spawn_sensors))
+        print(client.replay_file(args.recorder_filename, args.start, args.duration, args.camera, args.spawn_sensors, offset))
 
     finally:
         pass

@@ -7,6 +7,7 @@
 #include "carla/PythonUtil.h"
 #include "carla/client/Client.h"
 #include "carla/client/World.h"
+#include <carla/geom/Transform.h>
 #include "carla/Logging.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/trafficmanager/TrafficManager.h"
@@ -16,6 +17,7 @@
 #include <boost/python/stl_iterator.hpp>
 
 namespace ctm = carla::traffic_manager;
+namespace cg = carla::geom;
 
 static void SetTimeout(carla::client::Client &client, double seconds) {
   client.SetTimeout(TimeDurationFromSeconds(seconds));
@@ -190,6 +192,25 @@ void export_client() {
     .def_readwrite("enable_pedestrian_navigation", &rpc::OpendriveGenerationParameters::enable_pedestrian_navigation)
   ;
 
+#define REPLAY_FILE_WITHOUT_GIL(fn) +[]( \
+        cc::Client &self, \
+        std::string name, \
+        double time_start, \
+        double duration, \
+        uint32_t follow_id, \
+        bool replay_sensors, \
+        cg::Transform offset) { \
+      carla::PythonUtil::ReleaseGIL unlock; \
+      return self.fn(name, time_start, duration, follow_id, replay_sensors, offset); \
+    }, \
+    ( \
+      arg("name"), \
+      arg("time_start"), \
+      arg("duration"), \
+      arg("follow_id"), \
+      arg("replay_sensors")=false, \
+      arg("offset")=cg::Transform(cg::Location(cg::Vector3D(-10, 0, 5)), cg::Rotation(-25, 0, 0)))
+
   class_<cc::Client>("Client",
       init<std::string, uint16_t, size_t>((arg("host")="127.0.0.1", arg("port")=2000, arg("worker_threads")=0u)))
     .def("set_timeout", &::SetTimeout, (arg("seconds")))
@@ -211,7 +232,7 @@ void export_client() {
     .def("show_recorder_file_info", CALL_WITHOUT_GIL_2(cc::Client, ShowRecorderFileInfo, std::string, bool), (arg("name"), arg("show_all")))
     .def("show_recorder_collisions", CALL_WITHOUT_GIL_3(cc::Client, ShowRecorderCollisions, std::string, char, char), (arg("name"), arg("type1"), arg("type2")))
     .def("show_recorder_actors_blocked", CALL_WITHOUT_GIL_3(cc::Client, ShowRecorderActorsBlocked, std::string, double, double), (arg("name"), arg("min_time"), arg("min_distance")))
-    .def("replay_file", CALL_WITHOUT_GIL_5(cc::Client, ReplayFile, std::string, double, double, uint32_t, bool), (arg("name"), arg("time_start"), arg("duration"), arg("follow_id"), arg("replay_sensors")=false))
+    .def("replay_file", REPLAY_FILE_WITHOUT_GIL(ReplayFile))
     .def("stop_replayer", &cc::Client::StopReplayer, (arg("keep_actors")))
     .def("set_replayer_time_factor", &cc::Client::SetReplayerTimeFactor, (arg("time_factor")))
     .def("set_replayer_ignore_hero", &cc::Client::SetReplayerIgnoreHero, (arg("ignore_hero")))
