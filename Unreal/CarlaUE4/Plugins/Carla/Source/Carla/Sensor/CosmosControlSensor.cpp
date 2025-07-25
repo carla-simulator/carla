@@ -11,7 +11,7 @@
 #include "Carla/Sensor/PixelReader.h"
 
 #include "Components/SceneCaptureComponent2D.h"
-#include "Components/LineBatchComponent.h"
+
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "carla/Traffic/RoutePlanner.h"
 #include "carla/Game/Tagger.h"
@@ -20,6 +20,7 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "UObject/UObjectGlobals.h"
 
 
 FActorDefinition ACosmosControlSensor::GetSensorDefinition()
@@ -32,14 +33,23 @@ ACosmosControlSensor::ACosmosControlSensor(
   : Super(ObjectInitializer)
 {
   Tags.Add(FName(TEXT("CosmosControlSensor")));
-  added_persisted_stop_lines = true;
-  added_persisted_route_lines = true;
-  added_persisted_crosswalks = true;
+  added_persisted_stop_lines = false;
+  added_persisted_route_lines = false;
+  added_persisted_crosswalks = false;
+  duplicated_persistent_comp = false;
+
+  DynamicLines = CreateDefaultSubobject<ULineBatchComponent>(FName(TEXT("CosmosDynamicLinesBatchComponent")));
+  PersistentLines = CreateDefaultSubobject<ULineBatchComponent>(FName(TEXT("CosmosPersistentLinesBatchComponent")));
+
+  DynamicLines->bOnlyOwnerSee = true;
+  PersistentLines->bOnlyOwnerSee = true;
 
   AddPostProcessingMaterial(TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
   //AddPostProcessingMaterial(TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
   // TODO: Setup OnActorSpawnHandler so we can refresh components
   // World->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateRaw(this, &ACosmosControlSensor::OnActorSpawned));
+
+
 }
 
 void ACosmosControlSensor::SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture)
@@ -71,7 +81,10 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
   GetObjectsOfClass(UMeshComponent::StaticClass(), CosmosRelevantComponents, true, EObjectFlags::RF_ClassDefaultObject, EInternalObjectFlags::AllFlags);
 
   for (UObject* Object : CosmosRelevantComponents) {
+
+
     UMeshComponent* mesh_component = Cast<UMeshComponent>(Object);
+    if (!mesh_component->IsVisible()) continue;
     if (mesh_component->GetOwner() == nullptr) continue;
 
     FVector box_origin, box_extent;
@@ -81,25 +94,36 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
 
     bounds = FBoxSphereBounds(box_origin, box_extent, 0.0f);
 
+    const carla::rpc::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*mesh_component);
     UStaticMeshComponent* static_mesh_comp = Cast<UStaticMeshComponent>(mesh_component);
     USkeletalMeshComponent* skeletal_mesh_comp = Cast<USkeletalMeshComponent>(mesh_component);
+
+    if (!static_mesh_comp && !skeletal_mesh_comp) continue;
+
     //TODO:Specialize for Skeletal
     if (static_mesh_comp != nullptr)
     {
       if(static_mesh_comp->GetStaticMesh())
       {
+        //if (static_mesh_comp->GetAttachParent() != nullptr)
+        //{
+        //  if(static_mesh_comp->GetAttachParent()->GetName().Contains("VehicleMesh")) continue;
+        //}
+        if (!static_mesh_comp->GetName().Contains("mesh")) continue;
         bounds = static_mesh_comp->GetStaticMesh()->GetBounds();
+        bounds.Origin = box_origin;
       }
     }
     else if(skeletal_mesh_comp != nullptr)
     {
       if (skeletal_mesh_comp->SkeletalMesh)
       {
-        //bounds = skeletal_mesh_comp->SkeletalMesh->GetBounds();
+        bounds = skeletal_mesh_comp->SkeletalMesh->GetBounds();
+        bounds.Origin = skeletal_mesh_comp->GetComponentLocation();
+        bounds.Origin.Z += bounds.BoxExtent.Z;
       }
     }
 
-    const carla::rpc::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*mesh_component);
     FColor vis_color;
     switch (Tag) {
     case carla::rpc::CityObjectLabel::TrafficLight:
@@ -115,6 +139,8 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     case carla::rpc::CityObjectLabel::Bicycle:
     case carla::rpc::CityObjectLabel::Bus:
     case carla::rpc::CityObjectLabel::Motorcycle:
+    case carla::rpc::CityObjectLabel::Train:
+    case carla::rpc::CityObjectLabel::Truck:
       vis_color = FColor::Red;
       break;
     case carla::rpc::CityObjectLabel::Pedestrians:
@@ -137,7 +163,7 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
       Tag == carla::rpc::CityObjectLabel::Train ||
       Tag == carla::rpc::CityObjectLabel::Truck)
     {
-      DrawDebugBox(World, box_origin, bounds.BoxExtent, mesh_component->GetOwner()->GetActorRotation().Quaternion(), vis_color.WithAlpha(dist_alpha), false, -1, depth_prio, 10);
+      DrawDebugBox(World, bounds.Origin, bounds.BoxExtent, mesh_component->GetOwner()->GetActorRotation().Quaternion(), vis_color.WithAlpha(dist_alpha), false, -1, depth_prio, 10);
     }
     else if (Tag == carla::rpc::CityObjectLabel::Poles)
     {
@@ -150,9 +176,9 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
   }
 
 
-  if (added_persisted_stop_lines)
+  if (!added_persisted_stop_lines)
   {
-    added_persisted_stop_lines = false;
+    added_persisted_stop_lines = true;
 
     TArray<AActor*> TrafficLights;
     UGameplayStatics::GetAllActorsOfClass(World, ATrafficLightBase::StaticClass(), TrafficLights);
@@ -169,9 +195,9 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     }
   }
 
-  if(added_persisted_route_lines)
+  if(!added_persisted_route_lines)
   {
-    added_persisted_route_lines = false;
+    added_persisted_route_lines = true;
 
     TArray<AActor*> RouteSplines;
     UGameplayStatics::GetAllActorsOfClass(World, ARoutePlanner::StaticClass(), RouteSplines);
@@ -203,12 +229,12 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     }
   }
 
-  if(added_persisted_crosswalks)
+  if(!added_persisted_crosswalks)
   {
     ACarlaGameModeBase* carla_game_mode = Cast<ACarlaGameModeBase>(World->GetAuthGameMode());
     if (carla_game_mode != nullptr)
     {
-      added_persisted_crosswalks = false;
+      added_persisted_crosswalks = true;
       std::vector<carla::geom::Location> crosswalks_points = carla_game_mode->GetMap()->GetAllCrosswalkZones();
       carla::geom::Location first_in_loop = crosswalks_points[0];
       for (int i = 1; i < crosswalks_points.size(); ++i)
@@ -225,6 +251,24 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
   }
 
   USceneCaptureComponent2D* SceneCapture = GetCaptureComponent2D();
+
+  if (added_persisted_stop_lines && added_persisted_route_lines && added_persisted_crosswalks && !duplicated_persistent_comp)
+  {
+    duplicated_persistent_comp = true;
+    //FObjectDuplicationParameters params(PersistentLines, GetWorld()->PersistentLineBatcher);
+    //PersistentLines = Cast<ULineBatchComponent>(StaticDuplicateObjectEx(params));
+    PersistentLines->BatchedLines = GetWorld()->PersistentLineBatcher->BatchedLines;
+    PersistentLines->BatchedPoints = GetWorld()->PersistentLineBatcher->BatchedPoints;
+    PersistentLines->DefaultLifeTime = GetWorld()->PersistentLineBatcher->DefaultLifeTime;
+    PersistentLines->bCalculateAccurateBounds = GetWorld()->PersistentLineBatcher->bCalculateAccurateBounds;
+    PersistentLines->MarkRenderStateDirty();
+    GetWorld()->PersistentLineBatcher->Flush();
+
+    SceneCapture->ShowOnlyComponents.Empty();
+    SceneCapture->ShowOnlyComponents.Emplace(GetWorld()->LineBatcher);
+    SceneCapture->ShowOnlyComponents.Emplace(PersistentLines);
+  }
+
   FPixelReader::SendPixelsInRenderThread<ACosmosControlSensor, FColor>(*this);
 }
 

@@ -10,6 +10,7 @@
 #include "Carla/Sensor/ShaderBasedSensor.h"
 #include "Sensor/Sensor.h"
 #include "Carla/Actor/ActorDefinition.h"
+#include "Components/LineBatchComponent.h"
 #include "CosmosControlSensor.generated.h"
 
 /**
@@ -32,8 +33,14 @@ protected:
   void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) override;
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+  ULineBatchComponent* DynamicLines;
+  UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+  ULineBatchComponent* PersistentLines;
+
 private:
   bool added_persisted_stop_lines;
   bool added_persisted_route_lines;
   bool added_persisted_crosswalks;
+  bool duplicated_persistent_comp;
 };
