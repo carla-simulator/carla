@@ -4,6 +4,8 @@ project(OsmMapRenderer)
 # Libosmscout and Luna SVG Library
 include_directories(ThirdParties/include)
 include_directories(ThirdParties/include/lunasvg)
+include_directories(ThirdParties/include/plutovg)
+
 link_directories(ThirdParties/lib)
 
 add_definitions(-D_USE_MATH_DEFINES)
@@ -20,3 +22,4 @@ target_link_libraries(osm-world-renderer osmscout)
 target_link_libraries(osm-world-renderer osmscout_map)
 target_link_libraries(osm-world-renderer osmscout_map_svg)
 target_link_libraries(osm-world-renderer lunasvg)
+target_link_libraries(osm-world-renderer plutovg)

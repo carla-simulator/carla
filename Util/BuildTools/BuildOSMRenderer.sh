@@ -12,6 +12,9 @@ LIBOSMSCOUT_COMMIT=e83e4881a4adc69c5a4bcc05de5e1f23ebf06238
 LUNASVG_SOURCE_FOLDER=${CARLA_BUILD_FOLDER}/lunasvg-source
 LUNASVG_BUILD_FOLDER=${CARLA_BUILD_FOLDER}/lunasvg-build
 
+PLUTOVG_SOURCE_FOLDER=${CARLA_BUILD_FOLDER}/plutovg-source
+PLUTOVG_BUILD_FOLDER=${CARLA_BUILD_FOLDER}/plutovg-build
+
 OSM_RENDERER_SOURCE=${CARLA_ROOT_FOLDER}/osm-world-renderer
 OSM_RENDERER_BUILD=${CARLA_BUILD_FOLDER}/osm-world-renderer-build
 
@@ -59,6 +62,22 @@ cmake ${LUNASVG_SOURCE_FOLDER} \
 make
 make install
 
+# ==============================================================================
+# -- Download and build plutovg ------------------------------------------------
+# ==============================================================================
+echo "Cloning plutovg"
+if [ ! -d ${PLUTOVG_SOURCE_FOLDER} ] ; then
+  git clone ${PLUTOVG_REPO} ${PLUTOVG_SOURCE_FOLDER}
+fi
+
+mkdir -p ${PLUTOVG_BUILD_FOLDER}
+cd ${PLUTOVG_BUILD_FOLDER}
+
+cmake ${PLUTOVG_SOURCE_FOLDER} \
+    -DCMAKE_INSTALL_PREFIX=${INSTALLATION_PATH}
+
+make
+make install
 
 # ==============================================================================
 # -- Build osm-map-renderer tool -----------------------------------------------
