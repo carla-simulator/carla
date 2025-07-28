@@ -192,17 +192,17 @@ You can test the materials rapidly by drag and drop onto map elements:
 ![map_materials](img/tuto_content_authoring_maps/map_materials.gif)
 
 
-# Road Painter
+## Road Painter
 
 The road painter is a tool that can be used to customize the appearance of the road, adding extra realism with additional textures, decals and meshes.
 
-## What is the road painter?
+### What is the road painter?
 
 The Road Painter tool is a blueprint that uses OpenDRIVE information to paint roads quickly. It takes a master material and applies it to a render target of the road to use as a canvas. The master material is made up of a collection of materials that can be blended using brushes and applied as masks. There is no need to apply photometry techniques nor consider the UVs of the geometry.
 
 The road painter uses the OpenDRIVE information to paint the roads. Make sure that your `.xodr` file has the same name as your map for this to work correctly.
 
-## Establish the road painter, master material and render target
+### Establish the road painter, master material and render target
 
 __1. Create the `RoadPainter` actor.__
 
@@ -246,7 +246,7 @@ The `Tutorial_RenderTarget` will be the communication link between the road pain
 
 ---
 
-## Prepare the master material
+### Prepare the master material
 
 The `Tutorial_RoadMaster` material you created holds the base material, extra material information, and parameters that will be applied via your `Tutorial_RenderTarget`. You can configure one base material and up to three additional materials.
 
@@ -272,7 +272,7 @@ Explore some of the CARLA textures available in `Game > Carla > Static > Generic
 
 ---
 
-### Paint the road
+#### Paint the road
 
 __1. Create the link between the road painter and the roads.__
 
