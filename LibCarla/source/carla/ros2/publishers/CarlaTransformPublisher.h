@@ -38,7 +38,12 @@ namespace ros2 {
       bool Write(int32_t seconds, uint32_t nanoseconds, std::string frame_id, std::string child_frame_id, geom::Transform transform);
 
     private:
+      geometry_msgs::msg::Transform ComputeTransform(std::string frame_id, geom::Transform current_transform);
+
+    private:
       std::shared_ptr<PublisherImpl<TransformMsgTraits>> _impl;
+
+      std::unordered_map<std::string, std::pair<geom::Transform, geometry_msgs::msg::Transform>> _last_transforms;
   };
 
 }  // namespace ros2
