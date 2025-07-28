@@ -12,6 +12,7 @@ namespace carla {
 namespace geom {
 
   class Location;
+  class Transform;
 
   class GeoLocation {
   public:
@@ -44,6 +45,13 @@ namespace geom {
     /// Transform the given @a location to a GeoLocation using this as
     /// geo-reference.
     GeoLocation Transform(const Location &location) const;
+
+    // Transform the given @a location to a GeoLocation using this as
+    // geo-reference.
+    Location GeoLocationToTransform(float lat, float lon, float altitude) const;
+
+    Location GeoLocationToTransform(const GeoLocation other) const;
+ 
 
     // =========================================================================
     // -- Comparison operators -------------------------------------------------

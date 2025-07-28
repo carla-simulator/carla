@@ -72,6 +72,12 @@ static auto GetLaneValidities(const carla::client::Landmark &self){
   return result;
 }
 
+static carla::geom::Location ToTransform(
+    const carla::client::Map &self,
+    const carla::geom::GeoLocation& geo_location) {
+  return self.GetGeoReference().GeoLocationToTransform(geo_location);
+}
+
 static carla::geom::GeoLocation ToGeolocation(
     const carla::client::Map &self,
     const carla::geom::Location &location) {
@@ -163,6 +169,7 @@ void export_map() {
     .def("get_topology", &GetTopology)
     .def("generate_waypoints", CALL_RETURNING_LIST_1(cc::Map, GenerateWaypoints, double), (args("distance")))
     .def("transform_to_geolocation", &ToGeolocation, (arg("location")))
+    .def("geolocation_to_transform", &ToTransform, (arg("geo_location")))
     .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
     .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))
     .def("get_crosswalks", CALL_RETURNING_LIST(cc::Map, GetAllCrosswalkZones))

@@ -72,5 +72,25 @@ namespace geom {
     return result;
   }
 
+  Location GeoLocation::GeoLocationToTransform(float lat, float lon, float altitude) const {
+    double scale = LatToScale(latitude);
+    double mx0, my0, mx1, my1;
+
+    // Convert both reference point and target point to Mercator coordinates
+    LatLonToMercator(latitude, longitude, scale, mx0, my0);
+    LatLonToMercator(lat, lon, scale, mx1, my1);
+
+    // Compute local displacement
+    double dx = mx1 - mx0;
+    double dy = my1 - my0;
+
+    // Invert y again to match Location convention
+    return Location(static_cast<float>(dx), static_cast<float>(-dy), static_cast<float>(altitude - this->altitude));
+  }
+
+  Location GeoLocation::GeoLocationToTransform(const GeoLocation other) const
+  {
+    return GeoLocationToTransform(other.latitude, other.longitude, other.altitude);
+  }
 } // namespace geom
 } // namespace carla
