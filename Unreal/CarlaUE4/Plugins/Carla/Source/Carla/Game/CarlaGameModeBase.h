@@ -138,6 +138,8 @@ private:
 
   void ParseOpenDrive();
 
+  void SpawnRoadSplines();
+
   void RegisterEnvironmentObjects();
 
   void ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FName>& OutLevelNames);

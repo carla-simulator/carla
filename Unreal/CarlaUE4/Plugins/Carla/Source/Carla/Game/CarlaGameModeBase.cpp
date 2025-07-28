@@ -9,6 +9,7 @@
 #include "Carla/Game/CarlaHUD.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
+#include "Carla/Traffic/RoadSpline.h"
 #include "Carla/Lights/CarlaLight.h"
 #include "Engine/DecalActor.h"
 #include "Engine/LevelStreaming.h"
@@ -164,6 +165,7 @@ void ACarlaGameModeBase::InitGame(
   if(Map.has_value())
   {
     StoreSpawnPoints();
+    SpawnRoadSplines();
   }
 }
 
@@ -477,6 +479,39 @@ void ACarlaGameModeBase::ParseOpenDrive()
   {
     Episode->MapGeoReference = Map->GetGeoReference();
   }
+}
+
+void ACarlaGameModeBase::SpawnRoadSplines()
+{
+  if (!Map.has_value())
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Map is not available yet."));
+    return;
+  }
+
+  UWorld* World = GetWorld();
+  if (!World)
+  {
+    UE_LOG(LogCarla, Error, TEXT("World context is invalid."));
+    return;
+  }
+
+  // Spawn a simple test road spline at origin
+  ARoadSpline* SplineActor = World->SpawnActor<ARoadSpline>(FVector::ZeroVector, FRotator::ZeroRotator);
+  if (!SplineActor)
+  {
+    UE_LOG(LogCarla, Error, TEXT("Failed to spawn test ARoadSpline actor."));
+    return;
+  }
+
+  TArray<FVector> SplinePoints;
+  SplinePoints.Add(FVector(0.0f, 0.0f, 0.0f));
+  SplinePoints.Add(FVector(0.0f, 1000.0f, 0.0f));
+
+  SplineActor->SetSplinePoints(SplinePoints);
+  SplineActor->BoundaryType = ERoadSplineBoundaryType::RoadBoundary;
+
+  UE_LOG(LogCarla, Log, TEXT("Spawned example road spline."));
 }
 
 ATrafficLightManager* ACarlaGameModeBase::GetTrafficLightManager()
