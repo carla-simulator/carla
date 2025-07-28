@@ -397,6 +397,10 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   // -- Operations with sensors ------------------------------------------------
   // ===========================================================================
 
+  void Simulator::EnableGBuffers(const Sensor &sensor, bool bEnable) {
+    _client.EnableGBuffers(sensor.GetId(), bEnable);
+  }
+
   void Simulator::SubscribeToSensor(
       const Sensor &sensor,
       std::function<void(SharedPtr<sensor::SensorData>)> callback) {
