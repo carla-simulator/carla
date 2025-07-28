@@ -496,22 +496,48 @@ void ACarlaGameModeBase::SpawnRoadSplines()
     return;
   }
 
-  // Spawn a simple test road spline at origin
-  ARoadSpline* SplineActor = World->SpawnActor<ARoadSpline>(FVector::ZeroVector, FRotator::ZeroRotator);
-  if (!SplineActor)
-  {
-    UE_LOG(LogCarla, Error, TEXT("Failed to spawn test ARoadSpline actor."));
-    return;
+  constexpr float SampleDistance = 1.0f;
+
+  const auto& Roads = Map->GetRoads();
+  for (const auto& RoadTuple : Roads) {
+    const auto RoadId = RoadTuple.first;
+    const auto& Road = RoadTuple.second;
+
+    const auto& LaneSections = Road.GetLaneSections();
+
+    for (const auto& Section : LaneSections)
+    {
+      const auto& Lanes = Section.GetLanes();
+
+      for (const auto& LaneTuple : Lanes)
+      {
+        const auto& Lane = LaneTuple.second;
+        auto LaneType = Lane.GetType();
+        if (LaneType == carla::road::Lane::LaneType::None)
+          continue;
+
+        const double LaneLength = Lane.GetLength();
+        TArray<FVector> SplinePoints;
+
+        for (double s = 0.0; s <= LaneLength; s += SampleDistance)
+        {
+          carla::geom::Transform LaneTransform = Lane.ComputeTransform(s);
+          const auto& Loc = LaneTransform.location;
+          SplinePoints.Add(FVector(Loc.x * 100.0f, Loc.y * 100.0f, Loc.z * 100.0f));
+        }
+
+        if (SplinePoints.Num() > 0)
+        {
+          ARoadSpline* SplineActor = World->SpawnActor<ARoadSpline>(FVector::ZeroVector, FRotator::ZeroRotator);
+          if (SplineActor)
+          {
+            SplineActor->SetSplinePoints(SplinePoints);
+            SplineActor->BoundaryType = ERoadSplineBoundaryType::LaneBoundary;
+          }
+        }
+      }
+    }
   }
-
-  TArray<FVector> SplinePoints;
-  SplinePoints.Add(FVector(0.0f, 0.0f, 0.0f));
-  SplinePoints.Add(FVector(0.0f, 1000.0f, 0.0f));
-
-  SplineActor->SetSplinePoints(SplinePoints);
-  SplineActor->BoundaryType = ERoadSplineBoundaryType::RoadBoundary;
-
-  UE_LOG(LogCarla, Log, TEXT("Spawned example road spline."));
 }
 
 ATrafficLightManager* ACarlaGameModeBase::GetTrafficLightManager()
