@@ -6,7 +6,7 @@ ARoadSpline::ARoadSpline()
   PrimaryActorTick.bCanEverTick = false;
   SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("SplineComponent"));
   RootComponent = SplineComponent;
-  BoundaryType = ERoadSplineBoundaryType::LaneBoundary;
+  BoundaryType = ERoadSplineBoundaryType::Unknown;
 }
 
 void ARoadSpline::SetSplinePoints(const TArray<FVector>& Points, bool bClosedLoop)
