@@ -402,6 +402,15 @@ public:
     // FlushRenderingCommands();
   }
 
+  void EnableGBuffers(bool Enable = true)
+  {
+    bEnableGBuffers = Enable;
+  }
+
+  bool AreGBuffersEnabled() const
+  {
+    return bEnableGBuffers;
+  }
   struct
   {
     FCameraGBufferUint8 SceneColor;
@@ -460,6 +469,10 @@ protected:
   /// Whether to change render target format to PF_A16B16G16R16, offering 16bit / channel
   UPROPERTY(EditAnywhere)
   bool bEnable16BitFormat = false;
+
+  /// Whether to change render target format to PF_A16B16G16R16, offering 16bit / channel
+  UPROPERTY(EditAnywhere)
+  bool bEnableGBuffers = false;
 
 private:
 

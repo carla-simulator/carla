@@ -37,6 +37,9 @@ namespace client {
       return listening_mask.test(0);
     }
 
+    /// Enable this sensor for ROS2 publishing
+    void EnableGBuffers(bool bEnabled = true);
+
     /// Listen fr
     void ListenToGBuffer(uint32_t GBufferId, CallbackFunctionType callback);
 

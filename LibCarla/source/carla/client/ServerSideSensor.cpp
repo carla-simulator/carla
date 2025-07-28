@@ -65,6 +65,10 @@ namespace client {
     GetEpisode().Lock()->Send(*this,message);
   }
 
+  void ServerSideSensor::EnableGBuffers(bool bEnabled) {
+    GetEpisode().Lock()->EnableGBuffers(*this, bEnabled);
+  }
+
   void ServerSideSensor::ListenToGBuffer(uint32_t GBufferId, CallbackFunctionType callback) {
     log_debug(GetDisplayId(), ": subscribing to gbuffer stream");
     RELEASE_ASSERT(GBufferId < GBufferTextureCount);
