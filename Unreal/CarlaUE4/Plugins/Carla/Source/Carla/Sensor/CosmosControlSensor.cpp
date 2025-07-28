@@ -13,9 +13,9 @@
 #include "Components/SceneCaptureComponent2D.h"
 
 #include "Carla/Traffic/TrafficLightBase.h"
-#include "carla/Traffic/RoutePlanner.h"
-#include "carla/Game/Tagger.h"
-#include "carla/Game/CarlaGameModeBase.h"
+#include "Carla/Traffic/RoutePlanner.h"
+#include "Carla/Game/Tagger.h"
+#include "Carla/Game/CarlaGameModeBase.h"
 #include "carla/road/Map.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
