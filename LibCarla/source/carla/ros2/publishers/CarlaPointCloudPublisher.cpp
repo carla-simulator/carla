@@ -7,7 +7,7 @@
 namespace carla {
 namespace ros2 {
 
-bool CarlaPointCloudPublisher::WritePointCloud(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, float* data) {
+bool CarlaPointCloudPublisher::WritePointCloud(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, std::vector<uint8_t> data) {
 
   _impl->GetMessage()->header().stamp().sec(seconds);
   _impl->GetMessage()->header().stamp().nanosec(nanoseconds);
@@ -23,8 +23,8 @@ bool CarlaPointCloudPublisher::WritePointCloud(int32_t seconds, uint32_t nanosec
   _impl->GetMessage()->point_step(point_size);
   _impl->GetMessage()->row_step(width * point_size);
   _impl->GetMessage()->is_dense(false); // True if there are not invalid points
-  _impl->GetMessage()->data(std::move(ComputePointCloud(height, width, data)));
- 
+  _impl->GetMessage()->data(std::move(data));
+
   return true;
 }
 

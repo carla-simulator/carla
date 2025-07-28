@@ -6,6 +6,8 @@
 
 #include <memory>
 
+#include "carla/geom/GeoLocation.h"
+
 #include "carla/ros2/publishers/BasePublisher.h"
 #include "carla/ros2/publishers/PublisherImpl.h"
 
@@ -32,7 +34,7 @@ namespace ros2 {
         return _impl->Publish();
       }
 
-      bool Write(int32_t seconds, uint32_t nanoseconds, const double* data);
+      bool Write(int32_t seconds, uint32_t nanoseconds, const geom::GeoLocation data);
 
     private:
       std::shared_ptr<PublisherImpl<GnssMsgTraits>> _impl;

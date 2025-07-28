@@ -7,6 +7,8 @@
 #include <memory>
 #include <vector>
 
+#include "carla/geom/Transform.h"
+
 #include "carla/ros2/publishers/BasePublisher.h"
 #include "carla/ros2/publishers/PublisherImpl.h"
 
@@ -33,7 +35,7 @@ namespace ros2 {
         return _impl->Publish();
       }
 
-      bool Write(int32_t seconds, uint32_t nanoseconds, std::string frame_id, std::string child_frame_id, const float* translation, const float* rotation);
+      bool Write(int32_t seconds, uint32_t nanoseconds, std::string frame_id, std::string child_frame_id, geom::Transform transform);
 
     private:
       std::shared_ptr<PublisherImpl<TransformMsgTraits>> _impl;

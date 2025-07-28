@@ -9,7 +9,16 @@
 namespace carla {
 namespace ros2 {
 
-  using CarlaRGBCameraPublisher = CarlaCameraPublisher;
+class CarlaRGBCameraPublisher : public CarlaCameraPublisher {
+  public:
+    CarlaRGBCameraPublisher(std::string base_topic_name, std::string frame_id):
+      CarlaCameraPublisher(base_topic_name, frame_id) {}
+
+    uint8_t GetChannels() override { return 4; }
+  
+  private:
+    std::string GetEncoding() override { return "bgra8"; }
+};
 
 }  // namespace ros2
 }  // namespace carla

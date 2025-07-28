@@ -18,6 +18,17 @@
 namespace carla {
 namespace ros2 {
 
+  class CarlaDVSCameraPublisher : public CarlaCameraPublisher {
+    public:
+      CarlaDVSCameraPublisher(std::string base_topic_name, std::string frame_id):
+        CarlaCameraPublisher(base_topic_name, frame_id) {}
+
+      uint8_t GetChannels() override { return 3; }
+
+    private:
+      std::string GetEncoding() override { return "bgr8"; }
+  };
+
   class CarlaDVSPointCloudPublisher : public CarlaPointCloudPublisher {
     public:
       CarlaDVSPointCloudPublisher(std::string base_topic_name, std::string frame_id):
@@ -30,12 +41,12 @@ namespace ros2 {
       std::vector<uint8_t> ComputePointCloud(uint32_t height, uint32_t width, float *data) override;
   };
 
-  class CarlaDVSCameraPublisher : public BasePublisher {
+  class CarlaDVSPublisher : public BasePublisher {
     public:
 
-      CarlaDVSCameraPublisher(std::string base_topic_name, std::string frame_id) :
+      CarlaDVSPublisher(std::string base_topic_name, std::string frame_id) :
         BasePublisher(base_topic_name, frame_id) {
-          _camera_pub = std::make_shared<CarlaCameraPublisher>(base_topic_name, frame_id);
+          _camera_pub = std::make_shared<CarlaDVSCameraPublisher>(base_topic_name, frame_id);
           _point_cloud_pub = std::make_shared<CarlaDVSPointCloudPublisher>(base_topic_name, frame_id);
       }
 
@@ -46,24 +57,25 @@ namespace ros2 {
       bool WriteCameraInfo(int32_t seconds, uint32_t nanoseconds, uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, float fov, bool do_rectify) {
         return _camera_pub->WriteCameraInfo(seconds, nanoseconds, x_offset, y_offset, height, width, fov, do_rectify);
       }
-      bool WriteImage(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, const uint8_t* data) {
-        // TODO: Inicializar todo a 0?
-        std::vector<uint8_t> im_data;
-        const size_t im_size = width * height * 3;
-        im_data.resize(im_size);
-        carla::sensor::data::DVSEvent* vec_event = (carla::sensor::data::DVSEvent*)&data[0];
-        for (size_t i = 0; i < width; ++i, ++vec_event) {
-          size_t index = (vec_event->y * width + vec_event->x) * 3 + (static_cast<int>(vec_event->pol) * 2);
+      bool WriteImage(int32_t seconds, uint32_t nanoseconds, uint32_t elements, uint32_t im_height, uint32_t im_width, const uint8_t *data) {
+        const size_t im_size = im_width * im_height * _camera_pub->GetChannels();
+        std::vector<uint8_t> im_data(im_size, 0);
+
+        const carla::sensor::data::DVSEvent* events = reinterpret_cast<const carla::sensor::data::DVSEvent*>(data);
+        for (size_t i = 0; i < elements; ++i) {
+          const auto& event = events[i];
+          size_t index = (event.y * im_width + event.x) * 3 + (static_cast<int>(event.pol) * 2);
           im_data[index] = 255;
         }
-        return _camera_pub->WriteImage(seconds, nanoseconds, height, width, im_data.data());
+
+        return _camera_pub->WriteImage(seconds, nanoseconds, im_height, im_width, std::move(im_data));
       }
       bool WritePointCloud(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, float* data) {
         return _point_cloud_pub->WritePointCloud(seconds, nanoseconds, height, width, data);
       }
 
     private:
-      std::shared_ptr<CarlaCameraPublisher> _camera_pub;
+      std::shared_ptr<CarlaDVSCameraPublisher> _camera_pub;
       std::shared_ptr<CarlaDVSPointCloudPublisher> _point_cloud_pub;
   };
 

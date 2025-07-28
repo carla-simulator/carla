@@ -2,7 +2,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "CarlaDVSCameraPublisher.h"
+#include "CarlaDVSPublisher.h"
 
 #include "carla/sensor/data/DVSEvent.h"
 
@@ -40,11 +40,16 @@ std::vector<sensor_msgs::msg::PointField> CarlaDVSPointCloudPublisher::GetFields
 }
 
 std::vector<uint8_t> CarlaDVSPointCloudPublisher::ComputePointCloud(uint32_t height, uint32_t width, float *data) {
-  std::vector<uint8_t> vector_data;
-  const size_t size = height * width;
-  vector_data.resize(size);
-  std::memcpy(&vector_data[0], &data[0], size);
 
+  sensor::data::DVSEvent* events = reinterpret_cast<sensor::data::DVSEvent*>(data);
+  const size_t total_points = height * width;
+  for (size_t i = 0; i < total_points; ++i) {
+    events[i].y *= -1.0f;
+  }
+
+  const size_t total_bytes = total_points * sizeof(sensor::data::DVSEvent);
+  std::vector<uint8_t> vector_data(reinterpret_cast<uint8_t*>(events),
+                                   reinterpret_cast<uint8_t*>(events) + total_bytes);
   return vector_data;
 }
 

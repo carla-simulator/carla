@@ -67,6 +67,7 @@ class ROS2
     std::string GetActorBaseTopicName(void *actor);
 
     std::string GetFrameId(void *actor);
+    std::string GetParentFrameId(void *actor);
 
     // Registration
     void RegisterActor(void *actor, std::string ros_name, std::string frame_id);

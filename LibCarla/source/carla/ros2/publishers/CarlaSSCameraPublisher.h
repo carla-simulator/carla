@@ -4,12 +4,12 @@
 
 #pragma once
 
-#include "carla/ros2/publishers/CarlaCameraPublisher.h"
+#include "carla/ros2/publishers/CarlaRGBCameraPublisher.h"
 
 namespace carla {
 namespace ros2 {
 
-  using CarlaSSCameraPublisher = CarlaCameraPublisher;
+  using CarlaSSCameraPublisher = CarlaRGBCameraPublisher;
 
 }  // namespace ros2
 }  // namespace carla

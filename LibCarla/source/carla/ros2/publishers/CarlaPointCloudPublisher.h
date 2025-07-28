@@ -33,7 +33,10 @@ namespace ros2 {
         return _impl->Publish();
       }
 
-      bool WritePointCloud(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, float* data);
+      bool WritePointCloud(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, float* data) {
+        return WritePointCloud(seconds, nanoseconds, height, width, ComputePointCloud(height, width, data));
+      }
+      bool WritePointCloud(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, std::vector<uint8_t> data);
 
     private:
       virtual const size_t GetPointSize() = 0;

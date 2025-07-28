@@ -55,19 +55,17 @@ std::vector<sensor_msgs::msg::PointField> CarlaSemanticLidarPublisher::GetFields
 }
 
 std::vector<uint8_t> CarlaSemanticLidarPublisher::ComputePointCloud(uint32_t height, uint32_t width, float *data) {
-  // TODO: Do not harcode number of elements (6)
 
-  float* it = data;
-  float* end = &data[height * width * 6];
-  for (++it; it < end; it += 6) {
-    *it *= -1.0f;
+  sensor::data::SemanticLidarDetection* detections = reinterpret_cast<sensor::data::SemanticLidarDetection*>(data);
+
+  const size_t total_points = height * width;
+  for (size_t i = 0; i < total_points; ++i) {
+    detections[i].point.y *= -1.0f;
   }
 
-  std::vector<uint8_t> vector_data;
-  const size_t size = height * width * sizeof(float) * 6;
-  vector_data.resize(size);
-  std::memcpy(&vector_data[0], &data[0], size);
-
+  const size_t total_bytes = total_points * sizeof(sensor::data::SemanticLidarDetection);
+  std::vector<uint8_t> vector_data(reinterpret_cast<uint8_t*>(detections),
+                                   reinterpret_cast<uint8_t*>(detections) + total_bytes);
   return vector_data;
 }
 

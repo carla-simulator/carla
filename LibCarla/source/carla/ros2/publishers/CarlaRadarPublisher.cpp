@@ -9,12 +9,12 @@
 namespace carla {
 namespace ros2 {
 
-  struct RadarDetectionWithPosition {
-    float x;
-    float y;
-    float z;
-    carla::sensor::data::RadarDetection detection;
-  };
+struct RadarDetectionWithPosition {
+  float x;
+  float y;
+  float z;
+  carla::sensor::data::RadarDetection detection;
+};
 
 const size_t CarlaRadarPublisher::GetPointSize() {
   return sizeof(RadarDetectionWithPosition);
@@ -68,18 +68,24 @@ std::vector<sensor_msgs::msg::PointField> CarlaRadarPublisher::GetFields() {
 }
 
 std::vector<uint8_t> CarlaRadarPublisher::ComputePointCloud(uint32_t height, uint32_t width, float *data) {
-  std::vector<uint8_t> vector_data;
-  const size_t size = width * sizeof(RadarDetectionWithPosition);
-  vector_data.resize(size);
-  RadarDetectionWithPosition* radar_data = (RadarDetectionWithPosition*)&vector_data[0];
-  carla::sensor::data::RadarDetection* detection_data = (carla::sensor::data::RadarDetection*)data;
-  for (size_t i = 0; i < width; ++i, ++radar_data, ++detection_data) {
-    radar_data->x = detection_data->depth * cosf(detection_data->azimuth) * cosf(-detection_data->altitude);
-    radar_data->y = detection_data->depth * sinf(-detection_data->azimuth) * cosf(detection_data->altitude);
-    radar_data->z = detection_data->depth * sinf(detection_data->altitude);
-    radar_data->detection = *detection_data;
+
+  carla::sensor::data::RadarDetection* detections = reinterpret_cast<sensor::data::RadarDetection*>(data);
+  const size_t total_bytes = height * width * sizeof(sensor::data::RadarDetection);
+  const size_t total_points = total_bytes / sizeof(sensor::data::RadarDetection);
+
+  std::vector<RadarDetectionWithPosition> radar_points(total_points);
+  for (size_t i = 0; i < total_points; ++i) {
+    const auto& det = detections[i];
+    auto& point = radar_points[i];
+
+    point.x = det.depth * std::cos(det.azimuth) * std::cos(-det.altitude);
+    point.y = det.depth * std::sin(-det.azimuth) * std::cos(det.altitude);
+    point.z = det.depth * std::sin(det.altitude);
+    point.detection = det;
   }
-  return vector_data;
+
+  const uint8_t* byte_ptr = reinterpret_cast<const uint8_t*>(radar_points.data());
+  return std::vector<uint8_t>(byte_ptr, byte_ptr + radar_points.size() * sizeof(RadarDetectionWithPosition));
 }
 
 }  // namespace ros2

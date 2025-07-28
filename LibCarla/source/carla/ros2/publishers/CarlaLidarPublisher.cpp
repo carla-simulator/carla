@@ -11,7 +11,6 @@ namespace ros2 {
 
 const size_t CarlaLidarPublisher::GetPointSize() {
   return sizeof(sensor::data::LidarDetection);
-  // return 4 * sizeof(float);
 }
 
 std::vector<sensor_msgs::msg::PointField> CarlaLidarPublisher::GetFields() {
@@ -44,17 +43,18 @@ std::vector<sensor_msgs::msg::PointField> CarlaLidarPublisher::GetFields() {
 }
 
 std::vector<uint8_t> CarlaLidarPublisher::ComputePointCloud(uint32_t height, uint32_t width, float *data) {
-  float* it = data;
-  float* end = &data[height * width];
-  for (++it; it < end; it += 4) {
-      *it *= -1.0f;
-  }
-  std::vector<uint8_t> vector_data;
-  const size_t size = height * width * sizeof(float);
-  vector_data.resize(size);
-  std::memcpy(&vector_data[0], &data[0], size);
 
-  return std::move(vector_data);
+  sensor::data::LidarDetection* detections = reinterpret_cast<sensor::data::LidarDetection*>(data);
+
+  const size_t total_points = height * width;
+  for (size_t i = 0; i < total_points; ++i) {
+    detections[i].point.y *= -1.0f;
+  }
+
+  const size_t total_bytes = total_points * sizeof(sensor::data::LidarDetection);
+  std::vector<uint8_t> vector_data(reinterpret_cast<uint8_t*>(detections),
+                                   reinterpret_cast<uint8_t*>(detections) + total_bytes);
+  return vector_data;
 }
 
 }  // namespace ros2

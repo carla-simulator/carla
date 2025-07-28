@@ -4,8 +4,6 @@
 
 #include "CarlaCollisionPublisher.h"
 
-// #include "carla/geom/Vector3D.h"
-
 namespace carla {
 namespace ros2 {
 

@@ -13,6 +13,7 @@
 
 #include "carla/ros2/types/Imu.h"
 #include "carla/ros2/types/ImuPubSubTypes.h"
+
 namespace carla {
 namespace ros2 {
 
@@ -33,7 +34,7 @@ namespace ros2 {
         return _impl->Publish();
       }
 
-      bool Write(int32_t seconds, uint32_t nanoseconds, float* pAccelerometer, float* pGyroscope, float compass);
+      bool Write(int32_t seconds, uint32_t nanoseconds, geom::Vector3D accelerometer, geom::Vector3D gyroscope, float compass);
 
     private:
       std::shared_ptr<PublisherImpl<ImuMsgTraits>> _impl;

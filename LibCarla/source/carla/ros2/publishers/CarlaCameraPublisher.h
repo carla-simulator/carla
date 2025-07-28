@@ -38,12 +38,22 @@ namespace ros2 {
           _impl_camera_info->Init(GetBaseTopicName() + "/camera_info");
         }
 
+      virtual uint8_t GetChannels() = 0;
+
       bool Publish() {
         return _impl_camera_info->Publish() && _impl_image->Publish();
       }
 
-      bool WriteImage(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, const uint8_t* data);
       bool WriteCameraInfo(int32_t seconds, uint32_t nanoseconds, uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, float fov, bool do_rectify);
+      bool WriteImage(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, const uint8_t* data) {
+        return WriteImage(seconds, nanoseconds, height, width, ComputeImage(height, width, data));
+      }
+      bool WriteImage(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, std::vector<uint8_t> data);
+
+    private:
+      virtual std::string GetEncoding() = 0;
+
+      virtual std::vector<uint8_t> ComputeImage(uint32_t height, uint32_t width, const uint8_t* data);
 
     private:
       std::shared_ptr<PublisherImpl<ImageMsgTraits>> _impl_image;

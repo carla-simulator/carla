@@ -7,6 +7,12 @@
 namespace carla {
 namespace ros2 {
 
+std::vector<uint8_t> CarlaCameraPublisher::ComputeImage(uint32_t height, uint32_t width, const uint8_t *data) {
+  const size_t size = height * width * this->GetChannels() * sizeof(uint8_t);
+  std::vector<uint8_t> vector_data(data, data + size);
+  return vector_data;
+}
+
 bool CarlaCameraPublisher::WriteCameraInfo(int32_t seconds, uint32_t nanoseconds, uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, float fov, bool do_rectify) {
   
   _impl_camera_info->GetMessage()->header().stamp().sec(seconds);
@@ -37,22 +43,18 @@ bool CarlaCameraPublisher::WriteCameraInfo(int32_t seconds, uint32_t nanoseconds
   return true;
 }
 
-bool CarlaCameraPublisher::WriteImage(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, const uint8_t* data) {
+bool CarlaCameraPublisher::WriteImage(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, std::vector<uint8_t> data) {
   _impl_image->GetMessage()->header().stamp().sec(seconds);
   _impl_image->GetMessage()->header().stamp().nanosec(nanoseconds);
   _impl_image->GetMessage()->header().frame_id(this->GetFrameId());
 
   _impl_image->GetMessage()->width(width);
   _impl_image->GetMessage()->height(height);
-  _impl_image->GetMessage()->encoding("bgra8");
+  _impl_image->GetMessage()->encoding(this->GetEncoding());
   _impl_image->GetMessage()->is_bigendian(0);
-  _impl_image->GetMessage()->step(width * sizeof(uint8_t) * 4);
+  _impl_image->GetMessage()->step(width * this->GetChannels() * sizeof(uint8_t));
 
-  // 4 channels
-  const size_t size = height * width * 4;
-  std::vector<uint8_t> vector_data(data, data + size);
-
-  _impl_image->GetMessage()->data(std::move(vector_data)); // https://github.com/eProsima/Fast-DDS/issues/2330
+  _impl_image->GetMessage()->data(std::move(data)); // https://github.com/eProsima/Fast-DDS/issues/2330
 
   return true;
 }
