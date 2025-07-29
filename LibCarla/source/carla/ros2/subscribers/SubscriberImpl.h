@@ -47,8 +47,6 @@ namespace ros2 {
     efd::DataReader* _datareader { nullptr };
     efd::TypeSupport _type { new msg_pubsub_type() };
 
-    // S* _subscriber {nullptr};
-
     void on_subscription_matched(efd::DataReader* reader, const efd::SubscriptionMatchedStatus& info) override {
       _alive = (info.total_count > 0) ? true : false;
     }
@@ -59,19 +57,8 @@ namespace ros2 {
 
       eprosima::fastrtps::types::ReturnCode_t rcode = reader->take_next_sample(&_message, &info);
       if (rcode == eprosima::fastrtps::types::ReturnCode_t::ReturnCodeValue::RETCODE_OK) {
-        // auto 
-
-        // send message to the owner (i.e, subscriber implementation)
-
-
-        // _owner->ForwardMessage(message);
-        // Cosas buenas: Lo proceso automaticamente
-        // Cosas malas: Puedo saturar si envio mucho mensajes y no me da tiempo a procesar.
-        // auto data = S::GetMessage(_message);
-        // S::ProcessMessage()
+        // TODO: Process messages directly.
         _new_message = true;
-        // auto data = _subscriber->GetMessage(message);
-        // _subscriber->ProcessMessge(data)
       } else {
         log_error("SubscriberImpl::on_data_available (", this->GetTopicName(), ") failed with code:", rcode());
       }
@@ -157,146 +144,6 @@ namespace ros2 {
     bool _new_message { false };
     msg_type _message;
   };
-
-
-
-  // // Forward declaration
-  // template<typename S>
-  // class SubscriberImpl;
-
-  // // TODO(joel): Join SubscriberListener and SubscriberImpl definition in the same class.
-  // template<typename S>
-  // class SubscriberListener : public eprosima::fastdds::dds::DataReaderListener {
-  // public:
-  //   using msg_type = typename S::msg_type;
-
-  //   void on_subscription_matched(efd::DataReader* reader, const efd::SubscriptionMatchedStatus& info) override {
-  //     _alive = (info.total_count > 0) ? true : false;
-  //   }
-
-  //   void on_data_available(efd::DataReader* reader) override {
-  //     efd::SampleInfo info;
-  //     msg_type message;
-
-  //     eprosima::fastrtps::types::ReturnCode_t rcode = reader->take_next_sample(&message, &info);
-  //     if (rcode == eprosima::fastrtps::types::ReturnCode_t::ReturnCodeValue::RETCODE_OK) {
-  //       // send message to the owner (i.e, subscriber implementation)
-  //       _owner->ForwardMessage(message);
-  //     } else {
-  //       log_error("SubscriberImpl::on_data_available (", _owner->GetTopicName(), ") failed with code:", rcode());
-  //     }
-  //   }
-
-  //   SubscriberImpl<S>* GetOwner() { return _owner; }
-  //   void SetOwner(SubscriberImpl<S>* owner) { _owner = owner; }
-
-  // private:
-  //   bool _alive { false };
-  //   SubscriberImpl<S>* _owner {nullptr};
-  // };
-
-  // template<typename S>
-  // class SubscriberImpl {
-  // public:
-  //   using msg_type = typename S::msg_type;
-  //   using msg_pubsub_type = typename S::msg_pubsub_type;
-
-  //   efd::DomainParticipant* _participant { nullptr };
-  //   efd::Subscriber* _subscriber { nullptr };
-  //   efd::Topic* _topic { nullptr };
-  //   efd::DataReader* _datareader { nullptr };
-  //   efd::TypeSupport _type { new msg_pubsub_type() };
-  //   SubscriberListener<S> _listener;
-
-  //   SubscriberImpl() {
-  //     _listener.SetOwner(this);
-  //   }
-
-  //   ~SubscriberImpl() {
-  //     if (_datareader)
-  //       _subscriber->delete_datareader(_datareader);
-
-  //     if (_subscriber)
-  //         _participant->delete_subscriber(_subscriber);
-
-  //     if (_topic)
-  //         _participant->delete_topic(_topic);
-
-  //     if (_participant)
-  //         efd::DomainParticipantFactory::get_instance()->delete_participant(_participant);
-  //   }
-
-  //   bool Init(std::string topic_name) {
-  //     if (_type == nullptr) {
-  //       log_error("Invalid TypeSupport");
-  //       return false;
-  //     }
-
-  //     efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-  //     auto factory = efd::DomainParticipantFactory::get_instance();
-  //     _participant = factory->create_participant(0, pqos);
-  //     if (_participant == nullptr) {
-  //       log_error("Failed to create DomainParticipant");
-  //       return false;
-  //     }
-  //     _type.register_type(_participant);
-
-  //     efd::SubscriberQos subqos = efd::SUBSCRIBER_QOS_DEFAULT;
-  //     _subscriber = _participant->create_subscriber(subqos, nullptr);
-  //     if (_subscriber == nullptr) {
-  //       log_error("Failed to create Subscriber");
-  //       return false;
-  //     }
-
-  //     efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
-  //     _topic = _participant->create_topic(topic_name, _type->getName(), tqos);
-  //     if (_topic == nullptr) {
-  //       log_error("Failed to create Topic");
-  //       return false;
-  //     }
-
-  //     efd::DataReaderQos rqos = efd::DATAREADER_QOS_DEFAULT;
-  //     efd::DataReaderListener* listener = (efd::DataReaderListener*)&_listener;
-  //     _datareader = _subscriber->create_datareader(_topic, rqos, listener);
-  //     if (_datareader == nullptr) {
-  //       log_error("Failed to create DataReader");
-  //       return false;
-  //     }
-
-  //     _topic_name = topic_name;
-  //     return true;
-  //   }
-
-  //   std::string GetTopicName() {
-  //     return _topic_name;
-  //   }
-
-  //   void ForwardMessage(msg_type message) {
-  //     _new_message = true;
-  //     _message = message;
-  //   }
-
-  //   // bool IsAlive() {
-  //   //   return _alive;
-  //   // }
-
-  //   msg_type GetMessage() {
-  //     _new_message = false;
-  //     return _message;
-  //   }
-
-  //   bool HasNewMessage() { return _new_message; }
-
-  // private:
-  //   std::string _topic_name;
-
-  //   // bool _alive { false; }
-  //   bool _new_message { false };
-  //   msg_type _message;
-  // };
-
-
-
 
 }  // namespace ros2
 }  // namespace carla
