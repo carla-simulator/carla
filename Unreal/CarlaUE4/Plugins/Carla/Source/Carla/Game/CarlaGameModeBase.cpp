@@ -496,15 +496,12 @@ void ACarlaGameModeBase::SpawnRoadSplines()
     return;
   }
 
-  constexpr float SampleDistance = 1.0f;
+  constexpr float SampleDistance = 2.0f;
 
   const auto& Roads = Map->GetRoads();
   for (const auto& RoadTuple : Roads) {
     const auto RoadId = RoadTuple.first;
     const auto& Road = RoadTuple.second;
-
-    if (Map->IsJunction(RoadId))
-      continue;
 
     const auto& LaneSections = Road.GetLaneSections();
 
@@ -566,8 +563,13 @@ void ACarlaGameModeBase::SpawnRoadSplines()
           ARoadSpline* SplineActor = World->SpawnActor<ARoadSpline>(FVector::ZeroVector, FRotator::ZeroRotator);
           if (SplineActor)
           {
+            SplineActor->SetFolderPath(FName(TEXT("RoadSplines")));
+            SplineActor->SetActorLabel(FString::Printf(TEXT("RoadSpline_%d_%d_Left"), RoadId, Lane.GetId()));
             SplineActor->SetSplinePoints(LeftBoundaryPoints);
             AssignBoundaryType(SplineActor);
+
+            if (Map->IsJunction(RoadId))
+              SplineActor->bIsJunction = true;
           }
         }
 
@@ -576,8 +578,13 @@ void ACarlaGameModeBase::SpawnRoadSplines()
           ARoadSpline* SplineActor = World->SpawnActor<ARoadSpline>(FVector::ZeroVector, FRotator::ZeroRotator);
           if (SplineActor)
           {
+            SplineActor->SetFolderPath(FName(TEXT("RoadSplines")));
+            SplineActor->SetActorLabel(FString::Printf(TEXT("RoadSpline_%d_%d_Right"), RoadId, Lane.GetId()));
             SplineActor->SetSplinePoints(RightBoundaryPoints);
             AssignBoundaryType(SplineActor);
+
+            if (Map->IsJunction(RoadId))
+              SplineActor->bIsJunction = true;
           }
         }
       }

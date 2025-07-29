@@ -7,6 +7,7 @@ ARoadSpline::ARoadSpline()
   SplineComponent = CreateDefaultSubobject<USplineComponent>(TEXT("SplineComponent"));
   RootComponent = SplineComponent;
   BoundaryType = ERoadSplineBoundaryType::Unknown;
+  bIsJunction = false;
 }
 
 void ARoadSpline::SetSplinePoints(const TArray<FVector>& Points, bool bClosedLoop)

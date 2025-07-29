@@ -8,8 +8,6 @@
 UENUM(BlueprintType)
 enum class ERoadSplineBoundaryType : uint8
 {
-  // LaneBoundary     UMETA(DisplayName = "Lane Boundary"),
-  // RoadBoundary     UMETA(DisplayName = "Road Boundary")
   None          UMETA(DisplayName = "None"),
   Driving       UMETA(DisplayName = "Driving"),
   Stop          UMETA(DisplayName = "Stop"),
@@ -47,6 +45,9 @@ public:
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Boundary")
   ERoadSplineBoundaryType BoundaryType;
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Boundary")
+  bool bIsJunction;
 
   void SetSplinePoints(const TArray<FVector>& Points, bool bClosedLoop = false);
 
