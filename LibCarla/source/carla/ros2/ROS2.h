@@ -54,7 +54,7 @@ class ROS2
       return _instance;
     }
 
-    // general
+    // General
     void Enable(bool enable);
     void Shutdown();
 
@@ -81,7 +81,7 @@ class ROS2
     void RegisterVehicle(void *actor, std::string ros_name, std::string frame_id, ActorCallback callback);
     void UnregisterVehicle(void *actor);
 
-    // receiving data to publish
+    // Receiving data to publish
     void ProcessDataFromCamera(
       uint64_t sensor_type,
       const carla::geom::Transform sensor_transform,
@@ -103,7 +103,6 @@ class ROS2
       uint64_t sensor_type,
       const carla::geom::Transform sensor_transform,
       const carla::SharedBufferView buffer,
-      int W, int H, float Fov,
       void *actor = nullptr);
     void ProcessDataFromLidar(
       uint64_t sensor_type,

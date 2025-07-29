@@ -85,17 +85,9 @@ void ARadar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
   if (ROS2->IsEnabled())
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
-    auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
     AActor* ParentActor = GetAttachParentActor();
-    if (ParentActor)
-    {
-      FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromRadar(DataStream.GetSensorType(), LocalTransformRelativeToParent, RadarData, this);
-    }
-    else
-    {
-      ROS2->ProcessDataFromRadar(DataStream.GetSensorType(), DataStream.GetSensorTransform(), RadarData, this);
-    }
+    auto Transform = (ParentActor) ? GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : GetActorTransform();
+    ROS2->ProcessDataFromRadar(DataStream.GetSensorType(), Transform, RadarData, this);
   }
   #endif
 

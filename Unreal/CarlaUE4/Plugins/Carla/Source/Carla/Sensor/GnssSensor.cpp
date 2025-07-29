@@ -65,17 +65,9 @@ void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSe
   if (ROS2->IsEnabled())
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
-    auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
     AActor* ParentActor = GetAttachParentActor();
-    if (ParentActor)
-    {
-      FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), LocalTransformRelativeToParent, carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
-    }
-    else
-    {
-      ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), Stream.GetSensorTransform(), carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
-    }
+    auto Transform = (ParentActor) ? GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : GetActorTransform();
+    ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), Transform, carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
   }
   #endif
   {

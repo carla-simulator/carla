@@ -292,26 +292,23 @@ void ROS2::ProcessDataFromDVS(
     uint64_t sensor_type,
     const carla::geom::Transform sensor_transform,
     const carla::SharedBufferView buffer,
-    int W, int H, float Fov,
     void *actor) {
 
   auto base_publisher = GetOrCreateSensor(ESensors::DVSCamera, actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaDVSPublisher>(base_publisher);
 
-  // TODO: Do not use the serialized buffer, use the events instead
   const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
     reinterpret_cast<const carla::sensor::s11n::ImageSerializer::ImageHeader *>(buffer->data());
   if (!header)
     return;
 
-  // TODO: Clean
-  size_t height = 1;
-  size_t width =  (buffer->size() - carla::sensor::s11n::ImageSerializer::header_offset) / sizeof(carla::sensor::data::DVSEvent);
-  size_t elements = width;
+  const size_t elements =  (buffer->size() - carla::sensor::s11n::ImageSerializer::header_offset) / sizeof(carla::sensor::data::DVSEvent);
+  const size_t im_width = header->width;
+  const size_t im_height = header->height;
 
-  sensor_publisher->WriteCameraInfo(_seconds, _nanoseconds, 0, 0, header->height, header->width, header->fov_angle, true);
+  sensor_publisher->WriteCameraInfo(_seconds, _nanoseconds, 0, 0, im_height, im_width, header->fov_angle, true);
   sensor_publisher->WriteImage(_seconds, _nanoseconds, elements, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
-  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, height, width, (float*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, 1, elements, (float*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
   sensor_publisher->Publish();
 
   _transform_publisher->Write(_seconds, _nanoseconds, GetParentFrameId(actor), GetFrameId(actor), sensor_transform);
