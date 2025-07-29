@@ -4,8 +4,9 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/Logging.h"
 #include "carla/ros2/ROS2.h"
+
+#include "carla/Logging.h"
 #include "carla/geom/GeoLocation.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/sensor/data/DVSEvent.h"
@@ -16,29 +17,25 @@
 #include "carla/sensor/s11n/ImageSerializer.h"
 #include "carla/sensor/s11n/SensorHeaderSerializer.h"
 
-// #include "publishers/CarlaPublisher.h"
-#include "publishers/CarlaClockPublisher.h"
 #include "publishers/CarlaCameraPublisher.h"
-
-#include "publishers/CarlaRGBCameraPublisher.h"
+#include "publishers/CarlaClockPublisher.h"
+#include "publishers/CarlaCollisionPublisher.h"
 #include "publishers/CarlaDepthCameraPublisher.h"
+#include "publishers/CarlaDVSPublisher.h"
+#include "publishers/CarlaGNSSPublisher.h"
+#include "publishers/CarlaIMUPublisher.h"
+#include "publishers/CarlaISCameraPublisher.h"
+#include "publishers/CarlaLidarPublisher.h"
 #include "publishers/CarlaNormalsCameraPublisher.h"
 #include "publishers/CarlaOpticalFlowCameraPublisher.h"
-#include "publishers/CarlaSSCameraPublisher.h"
-#include "publishers/CarlaISCameraPublisher.h"
-#include "publishers/CarlaDVSPublisher.h"
-#include "publishers/CarlaLidarPublisher.h"
-#include "publishers/CarlaSemanticLidarPublisher.h"
 #include "publishers/CarlaRadarPublisher.h"
-#include "publishers/CarlaIMUPublisher.h"
-#include "publishers/CarlaGNSSPublisher.h"
+#include "publishers/CarlaRGBCameraPublisher.h"
+#include "publishers/CarlaSemanticLidarPublisher.h"
+#include "publishers/CarlaSSCameraPublisher.h"
 #include "publishers/CarlaTransformPublisher.h"
-#include "publishers/CarlaCollisionPublisher.h"
-// #include "publishers/CarlaLineInvasionPublisher.h"
 
-// #include "subscribers/CarlaSubscriber.h"
-#include "subscribers/CarlaEgoVehicleControlSubscriber.h"
 #include "subscribers/AckermannControlSubscriber.h"
+#include "subscribers/CarlaEgoVehicleControlSubscriber.h"
 
 #include <vector>
 
@@ -226,9 +223,7 @@ std::shared_ptr<BasePublisher> ROS2::GetOrCreateSensor(int type, void* actor) {
     case ESensors::WorldObserver:
     case ESensors::CameraGBufferUint8:
     case ESensors::CameraGBufferFloat:
-      std::cerr << "Sensor type not implemented: " << type << std::endl;
-    default:
-      std::cerr << "Unknown sensor type" << type << std::endl;
+      return nullptr;
   }
 }
 
