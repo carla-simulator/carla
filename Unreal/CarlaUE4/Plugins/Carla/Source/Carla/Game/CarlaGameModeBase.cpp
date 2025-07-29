@@ -520,45 +520,64 @@ void ACarlaGameModeBase::SpawnRoadSplines()
           continue;
 
         const double LaneLength = Lane.GetLength();
-        TArray<FVector> SplinePoints;
+        TArray<FVector> LeftBoundaryPoints;
+        TArray<FVector> RightBoundaryPoints;
 
         for (double s = 0.0; s <= LaneLength; s += SampleDistance)
         {
-          carla::geom::Transform LaneTransform = Lane.ComputeTransform(s);
-          const auto& Loc = LaneTransform.location;
-          SplinePoints.Add(FVector(Loc.x * 100.0f, Loc.y * 100.0f, Loc.z * 100.0f));
+          auto Corners = Lane.GetCornerPositions(s);
+          const auto& LeftLoc = Corners.first;
+          const auto& RightLoc = Corners.second;
+
+          LeftBoundaryPoints.Add(FVector(LeftLoc.x * 100.0f, LeftLoc.y * 100.0f, RightLoc.z * 100.0f));
+          RightBoundaryPoints.Add(FVector(RightLoc.x * 100.0f, RightLoc.y * 100.0f, RightLoc.z * 100.0f));
         }
 
-        if (SplinePoints.Num() > 0)
+        auto AssignBoundaryType = [&](ARoadSpline* SplineActor)
+        {
+          switch (LaneType)
+          {
+            case carla::road::Lane::LaneType::Driving:       SplineActor->BoundaryType = ERoadSplineBoundaryType::Driving; break;
+            case carla::road::Lane::LaneType::Stop:          SplineActor->BoundaryType = ERoadSplineBoundaryType::Stop; break;
+            case carla::road::Lane::LaneType::Shoulder:      SplineActor->BoundaryType = ERoadSplineBoundaryType::Shoulder; break;
+            case carla::road::Lane::LaneType::Biking:        SplineActor->BoundaryType = ERoadSplineBoundaryType::Biking; break;
+            case carla::road::Lane::LaneType::Sidewalk:      SplineActor->BoundaryType = ERoadSplineBoundaryType::Sidewalk; break;
+            case carla::road::Lane::LaneType::Border:        SplineActor->BoundaryType = ERoadSplineBoundaryType::Border; break;
+            case carla::road::Lane::LaneType::Restricted:    SplineActor->BoundaryType = ERoadSplineBoundaryType::Restricted; break;
+            case carla::road::Lane::LaneType::Parking:       SplineActor->BoundaryType = ERoadSplineBoundaryType::Parking; break;
+            case carla::road::Lane::LaneType::Bidirectional: SplineActor->BoundaryType = ERoadSplineBoundaryType::Bidirectional; break;
+            case carla::road::Lane::LaneType::Median:        SplineActor->BoundaryType = ERoadSplineBoundaryType::Median; break;
+            case carla::road::Lane::LaneType::Special1:      SplineActor->BoundaryType = ERoadSplineBoundaryType::Special1; break;
+            case carla::road::Lane::LaneType::Special2:      SplineActor->BoundaryType = ERoadSplineBoundaryType::Special2; break;
+            case carla::road::Lane::LaneType::Special3:      SplineActor->BoundaryType = ERoadSplineBoundaryType::Special3; break;
+            case carla::road::Lane::LaneType::RoadWorks:     SplineActor->BoundaryType = ERoadSplineBoundaryType::RoadWorks; break;
+            case carla::road::Lane::LaneType::Tram:          SplineActor->BoundaryType = ERoadSplineBoundaryType::Tram; break;
+            case carla::road::Lane::LaneType::Rail:          SplineActor->BoundaryType = ERoadSplineBoundaryType::Rail; break;
+            case carla::road::Lane::LaneType::Entry:         SplineActor->BoundaryType = ERoadSplineBoundaryType::Entry; break;
+            case carla::road::Lane::LaneType::Exit:          SplineActor->BoundaryType = ERoadSplineBoundaryType::Exit; break;
+            case carla::road::Lane::LaneType::OffRamp:       SplineActor->BoundaryType = ERoadSplineBoundaryType::OffRamp; break;
+            case carla::road::Lane::LaneType::OnRamp:        SplineActor->BoundaryType = ERoadSplineBoundaryType::OnRamp; break;
+            default:                                         SplineActor->BoundaryType = ERoadSplineBoundaryType::Unknown; break;
+          }
+        };
+
+        if (LeftBoundaryPoints.Num() > 0)
         {
           ARoadSpline* SplineActor = World->SpawnActor<ARoadSpline>(FVector::ZeroVector, FRotator::ZeroRotator);
           if (SplineActor)
           {
-            SplineActor->SetSplinePoints(SplinePoints);
-            switch (LaneType)
-            {
-              case carla::road::Lane::LaneType::Driving:       SplineActor->BoundaryType = ERoadSplineBoundaryType::Driving; break;
-              case carla::road::Lane::LaneType::Stop:          SplineActor->BoundaryType = ERoadSplineBoundaryType::Stop; break;
-              case carla::road::Lane::LaneType::Shoulder:      SplineActor->BoundaryType = ERoadSplineBoundaryType::Shoulder; break;
-              case carla::road::Lane::LaneType::Biking:        SplineActor->BoundaryType = ERoadSplineBoundaryType::Biking; break;
-              case carla::road::Lane::LaneType::Sidewalk:      SplineActor->BoundaryType = ERoadSplineBoundaryType::Sidewalk; break;
-              case carla::road::Lane::LaneType::Border:        SplineActor->BoundaryType = ERoadSplineBoundaryType::Border; break;
-              case carla::road::Lane::LaneType::Restricted:    SplineActor->BoundaryType = ERoadSplineBoundaryType::Restricted; break;
-              case carla::road::Lane::LaneType::Parking:       SplineActor->BoundaryType = ERoadSplineBoundaryType::Parking; break;
-              case carla::road::Lane::LaneType::Bidirectional: SplineActor->BoundaryType = ERoadSplineBoundaryType::Bidirectional; break;
-              case carla::road::Lane::LaneType::Median:        SplineActor->BoundaryType = ERoadSplineBoundaryType::Median; break;
-              case carla::road::Lane::LaneType::Special1:      SplineActor->BoundaryType = ERoadSplineBoundaryType::Special1; break;
-              case carla::road::Lane::LaneType::Special2:      SplineActor->BoundaryType = ERoadSplineBoundaryType::Special2; break;
-              case carla::road::Lane::LaneType::Special3:      SplineActor->BoundaryType = ERoadSplineBoundaryType::Special3; break;
-              case carla::road::Lane::LaneType::RoadWorks:     SplineActor->BoundaryType = ERoadSplineBoundaryType::RoadWorks; break;
-              case carla::road::Lane::LaneType::Tram:          SplineActor->BoundaryType = ERoadSplineBoundaryType::Tram; break;
-              case carla::road::Lane::LaneType::Rail:          SplineActor->BoundaryType = ERoadSplineBoundaryType::Rail; break;
-              case carla::road::Lane::LaneType::Entry:         SplineActor->BoundaryType = ERoadSplineBoundaryType::Entry; break;
-              case carla::road::Lane::LaneType::Exit:          SplineActor->BoundaryType = ERoadSplineBoundaryType::Exit; break;
-              case carla::road::Lane::LaneType::OffRamp:       SplineActor->BoundaryType = ERoadSplineBoundaryType::OffRamp; break;
-              case carla::road::Lane::LaneType::OnRamp:        SplineActor->BoundaryType = ERoadSplineBoundaryType::OnRamp; break;
-              default:                                         SplineActor->BoundaryType = ERoadSplineBoundaryType::Unknown; break;
-            }
+            SplineActor->SetSplinePoints(LeftBoundaryPoints);
+            AssignBoundaryType(SplineActor);
+          }
+        }
+
+        if (RightBoundaryPoints.Num() > 0)
+        {
+          ARoadSpline* SplineActor = World->SpawnActor<ARoadSpline>(FVector::ZeroVector, FRotator::ZeroRotator);
+          if (SplineActor)
+          {
+            SplineActor->SetSplinePoints(RightBoundaryPoints);
+            AssignBoundaryType(SplineActor);
           }
         }
       }
