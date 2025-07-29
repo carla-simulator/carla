@@ -20,7 +20,7 @@ except IndexError:
 import carla
 import time
 
-TESTING_ADDRESS = ('localhost', 2000)
+TESTING_ADDRESS = ('localhost', 3654)
 VEHICLE_VEHICLES_EXCLUDE_FROM_OLD_TOWNS = ['vehicle.mitsubishi.fusorosa', 'vehicle.carlamotors.european_hgv', 'vehicle.carlamotors.firetruck']
 
 class SmokeTest(unittest.TestCase):
