@@ -37,10 +37,10 @@ namespace carla {
 namespace ros2 {
 
   class BasePublisher;
+  class BaseSubscriber;
 
   class CarlaTransformPublisher;
   class CarlaClockPublisher;
-  class CarlaEgoVehicleControlSubscriber;
 
 class ROS2
 {
@@ -147,17 +147,19 @@ class ROS2
   int32_t _seconds { 0 };
   uint32_t _nanoseconds { 0 };
 
-  std::shared_ptr<CarlaEgoVehicleControlSubscriber> _controller;
-  std::unordered_map<void *, ActorCallback> _actor_callbacks;
-
   std::shared_ptr<CarlaClockPublisher> _clock_publisher;
   std::shared_ptr<CarlaTransformPublisher> _transform_publisher;
 
+  // actor->parent relationship
   std::unordered_map<void *, void *> _actor_parent_map;
+
   std::unordered_map<void *, std::string> _registered_actors;
   std::unordered_map<void *, std::string> _frame_ids;
 
   std::unordered_map<void *, std::shared_ptr<BasePublisher>> _publishers;
+  std::unordered_multimap<void *, std::shared_ptr<BaseSubscriber>> _subscribers;
+  std::unordered_map<void *, ActorCallback> _actor_callbacks;
+
   // std::unordered_map<void *, bool> _tfs;
 };
 

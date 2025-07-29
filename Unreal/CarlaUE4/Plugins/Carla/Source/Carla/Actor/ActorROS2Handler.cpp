@@ -8,6 +8,7 @@
 
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Vehicle/VehicleControl.h"
+#include "Carla/Vehicle/VehicleAckermannControl.h"
 
 void ActorROS2Handler::operator()(carla::ros2::VehicleControl &Source)
 {
@@ -27,4 +28,22 @@ void ActorROS2Handler::operator()(carla::ros2::VehicleControl &Source)
   NewControl.Gear = Source.gear;
 
   Vehicle->ApplyVehicleControl(NewControl, EVehicleInputPriority::User);
+}
+
+void ActorROS2Handler::operator()(carla::ros2::AckermannControl &Source)
+{
+  if (!_Actor) return;
+
+  ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(_Actor);
+  if (!Vehicle) return;
+
+  // setup control values
+  FVehicleAckermannControl NewControl;
+  NewControl.Steer = Source.steer;
+  NewControl.SteerSpeed = Source.steer_speed;
+  NewControl.Speed = Source.speed;
+  NewControl.Acceleration = Source.acceleration;
+  NewControl.Jerk = Source.jerk;
+
+  Vehicle->ApplyVehicleAckermannControl(NewControl, EVehicleInputPriority::User);
 }

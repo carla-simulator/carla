@@ -38,6 +38,7 @@
 
 // #include "subscribers/CarlaSubscriber.h"
 #include "subscribers/CarlaEgoVehicleControlSubscriber.h"
+#include "subscribers/AckermannControlSubscriber.h"
 
 #include <vector>
 
@@ -79,10 +80,13 @@ void ROS2::Enable(bool enable) {
 
 void ROS2::SetFrame(uint64_t frame) {
   _frame = frame;
-  if (_controller) {
-    void* actor = _controller->GetActor();
+
+  for (auto& element : _subscribers) {
+    auto actor = element.first;
+    auto subscriber = element.second;
     auto callback = _actor_callbacks.find(actor)->second;
-    _controller->ProcessMessages(callback);
+
+    subscriber->ProcessMessages(callback);
   }
 }
 
@@ -105,12 +109,13 @@ void ROS2::RegisterActor(void *actor, std::string ros_name, std::string frame_id
 void ROS2::UnregisterActor(void *actor) {
   _registered_actors.erase(actor);
   _frame_ids.erase(actor);
-  // TODO: Erase RegisterActorParent
+  _actor_parent_map.erase(actor);
 }
 
 void ROS2::RegisterActorParent(void *actor, void *parent) {
   _actor_parent_map.insert({actor, parent});
 }
+
 
 void ROS2::RegisterSensor(void *actor, std::string ros_name, std::string frame_id) {
   RegisterActor(actor, ros_name, frame_id);
@@ -124,16 +129,24 @@ void ROS2::UnregisterSensor(void *actor) {
 void ROS2::RegisterVehicle(void *actor, std::string ros_name, std::string frame_id, ActorCallback callback) {
   RegisterActor(actor, ros_name, frame_id);
 
+  // Register actor callback
   _actor_callbacks.insert({actor, std::move(callback)});
 
-  // _controller.reset();
-  _controller = std::make_shared<CarlaEgoVehicleControlSubscriber>(actor, GetActorBaseTopicName(actor), "");
+  // Register subscribers
+  auto base_topic_name = GetActorBaseTopicName(actor);
+
+  auto _vehicle_control_subscriber = std::make_shared<CarlaEgoVehicleControlSubscriber>(actor, base_topic_name, frame_id);
+  _subscribers.insert({actor, _vehicle_control_subscriber});
+
+  auto _ackermann_control_subscriber = std::make_shared<AckermannControlSubscriber>(actor, base_topic_name, frame_id);
+  _subscribers.insert({actor, _ackermann_control_subscriber});
+
 }
 
 void ROS2::UnregisterVehicle(void *actor) {
   UnregisterActor(actor);
-  _controller.reset();
-  // TODO: Erase callback? Or save callback in the subscriber
+  _actor_callbacks.erase(actor);
+  _subscribers.erase(actor);
 }
 
 std::string ROS2::GetActorRosName(void *actor) {
@@ -390,15 +403,12 @@ void ROS2::ProcessDataFromCollisionSensor(
 }
 
 void ROS2::Shutdown() {
-  for (auto& element : _publishers) {
-    // element.second.reset();
-  }
-  // for (auto& element : _transforms) {
-  //   element.second.reset();
-  // }
+  _publishers.clear();
+  _subscribers.clear();
+
   _clock_publisher.reset();
   _transform_publisher.reset();
-  _controller.reset();
+
   _enabled = false;
 }
 

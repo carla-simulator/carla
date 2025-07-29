@@ -5,9 +5,6 @@
 namespace carla {
 namespace ros2 {
 
-  namespace efd = eprosima::fastdds::dds;
-  using erc = eprosima::fastrtps::types::ReturnCode_t;
-
   ROS2CallbackData CarlaEgoVehicleControlSubscriber::GetMessage() {
     auto message = _impl->GetMessage();
 
