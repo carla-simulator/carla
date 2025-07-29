@@ -38,7 +38,7 @@ namespace ros2 {
       const size_t GetPointSize() override;
       std::vector<sensor_msgs::msg::PointField> GetFields() override;
 
-      std::vector<uint8_t> ComputePointCloud(uint32_t height, uint32_t width, float *data) override;
+      std::vector<uint8_t> ComputePointCloud(uint32_t height, uint32_t width, uint8_t *data) override;
   };
 
   class CarlaDVSPublisher : public BasePublisher {
@@ -70,7 +70,7 @@ namespace ros2 {
 
         return _camera_pub->WriteImage(seconds, nanoseconds, im_height, im_width, std::move(im_data));
       }
-      bool WritePointCloud(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, float* data) {
+      bool WritePointCloud(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, uint8_t* data) {
         return _point_cloud_pub->WritePointCloud(seconds, nanoseconds, height, width, data);
       }
 

@@ -20,7 +20,7 @@ namespace ros2 {
       const size_t GetPointSize() override;
       std::vector<sensor_msgs::msg::PointField> GetFields() override;
 
-      std::vector<uint8_t> ComputePointCloud(uint32_t height, uint32_t width, float *data) override;
+      std::vector<uint8_t> ComputePointCloud(uint32_t height, uint32_t width, uint8_t *data) override;
   };
 
 }  // namespace ros2

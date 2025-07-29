@@ -42,7 +42,7 @@ std::vector<sensor_msgs::msg::PointField> CarlaLidarPublisher::GetFields() {
     return {descriptor1, descriptor2, descriptor3, descriptor4};
 }
 
-std::vector<uint8_t> CarlaLidarPublisher::ComputePointCloud(uint32_t height, uint32_t width, float *data) {
+std::vector<uint8_t> CarlaLidarPublisher::ComputePointCloud(uint32_t height, uint32_t width, uint8_t *data) {
 
   sensor::data::LidarDetection* detections = reinterpret_cast<sensor::data::LidarDetection*>(data);
 

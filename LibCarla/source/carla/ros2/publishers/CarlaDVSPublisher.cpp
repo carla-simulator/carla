@@ -39,7 +39,7 @@ std::vector<sensor_msgs::msg::PointField> CarlaDVSPointCloudPublisher::GetFields
   return {descriptor1, descriptor2, descriptor3, descriptor4};
 }
 
-std::vector<uint8_t> CarlaDVSPointCloudPublisher::ComputePointCloud(uint32_t height, uint32_t width, float *data) {
+std::vector<uint8_t> CarlaDVSPointCloudPublisher::ComputePointCloud(uint32_t height, uint32_t width, uint8_t *data) {
 
   sensor::data::DVSEvent* events = reinterpret_cast<sensor::data::DVSEvent*>(data);
   const size_t total_points = height * width;

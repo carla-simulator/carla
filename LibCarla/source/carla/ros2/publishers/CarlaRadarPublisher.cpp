@@ -67,7 +67,7 @@ std::vector<sensor_msgs::msg::PointField> CarlaRadarPublisher::GetFields() {
   return {descriptor1, descriptor2, descriptor3, descriptor4, descriptor5, descriptor6, descriptor7};
 }
 
-std::vector<uint8_t> CarlaRadarPublisher::ComputePointCloud(uint32_t height, uint32_t width, float *data) {
+std::vector<uint8_t> CarlaRadarPublisher::ComputePointCloud(uint32_t height, uint32_t width, uint8_t *data) {
 
   carla::sensor::data::RadarDetection* detections = reinterpret_cast<sensor::data::RadarDetection*>(data);
   const size_t total_bytes = height * width * sizeof(sensor::data::RadarDetection);

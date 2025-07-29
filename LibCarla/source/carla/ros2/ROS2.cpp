@@ -308,7 +308,7 @@ void ROS2::ProcessDataFromDVS(
 
   sensor_publisher->WriteCameraInfo(_seconds, _nanoseconds, 0, 0, im_height, im_width, header->fov_angle, true);
   sensor_publisher->WriteImage(_seconds, _nanoseconds, elements, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
-  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, 1, elements, (float*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, 1, elements, (uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
   sensor_publisher->Publish();
 
   _transform_publisher->Write(_seconds, _nanoseconds, GetParentFrameId(actor), GetFrameId(actor), sensor_transform);
@@ -329,7 +329,7 @@ void ROS2::ProcessDataFromLidar(
   // Divide the total number of floats by 4 to get the number of lidar detections.
   size_t width = data._points.size() / 4;
   size_t height = 1;
-  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, height, width, (float*)data._points.data());
+  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, height, width, (uint8_t*)data._points.data());
   sensor_publisher->Publish();
 
   _transform_publisher->Write(_seconds, _nanoseconds, GetParentFrameId(actor), GetFrameId(actor), sensor_transform);
@@ -347,7 +347,7 @@ void ROS2::ProcessDataFromSemanticLidar(
 
   size_t width = data._ser_points.size();
   size_t height = 1;
-  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, height, width, (float*)data._ser_points.data());
+  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, height, width, (uint8_t*)data._ser_points.data());
   sensor_publisher->Publish();
 
   _transform_publisher->Write(_seconds, _nanoseconds, GetParentFrameId(actor), GetFrameId(actor), sensor_transform);
@@ -365,7 +365,7 @@ void ROS2::ProcessDataFromRadar(
 
   size_t width = data.GetDetectionCount();
   size_t height = 1;
-  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, height, width, (float*)data._detections.data());
+  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, height, width, (uint8_t*)data._detections.data());
   sensor_publisher->Publish();
 
   _transform_publisher->Write(_seconds, _nanoseconds, GetParentFrameId(actor), GetFrameId(actor), sensor_transform);
