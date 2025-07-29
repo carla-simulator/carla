@@ -134,6 +134,7 @@ class ROS2
       void* actor);
 
   private:
+    std::shared_ptr<CarlaTransformPublisher> GetTransformPublisher(void *actor);
     std::shared_ptr<BasePublisher> GetOrCreateSensor(int type, void* actor);
 
   // sigleton
@@ -147,7 +148,6 @@ class ROS2
   uint32_t _nanoseconds { 0 };
 
   std::shared_ptr<CarlaClockPublisher> _clock_publisher;
-  std::shared_ptr<CarlaTransformPublisher> _transform_publisher;
 
   // actor->parent relationship
   std::unordered_map<void *, void *> _actor_parent_map;
@@ -159,7 +159,8 @@ class ROS2
   std::unordered_multimap<void *, std::shared_ptr<BaseSubscriber>> _subscribers;
   std::unordered_map<void *, ActorCallback> _actor_callbacks;
 
-  // std::unordered_map<void *, bool> _tfs;
+  std::unordered_map<void *, bool> _tfs;
+  std::unordered_map<void *, std::shared_ptr<CarlaTransformPublisher>> _tf_publishers;
 };
 
 } // namespace ros2
