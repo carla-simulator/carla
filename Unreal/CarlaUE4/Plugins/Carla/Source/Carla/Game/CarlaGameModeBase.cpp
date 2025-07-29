@@ -566,6 +566,9 @@ void ACarlaGameModeBase::SpawnRoadSplines()
             SplineActor->SetFolderPath(FName(TEXT("RoadSplines")));
             SplineActor->SetActorLabel(FString::Printf(TEXT("RoadSpline_%d_%d_Left"), RoadId, Lane.GetId()));
             SplineActor->SetSplinePoints(LeftBoundaryPoints);
+            SplineActor->OrientationType = ERoadSplineOrientationType::Left;
+            SplineActor->LaneID = Lane.GetId();
+            SplineActor->RoadID = RoadId;
             AssignBoundaryType(SplineActor);
 
             if (Map->IsJunction(RoadId))
@@ -581,6 +584,9 @@ void ACarlaGameModeBase::SpawnRoadSplines()
             SplineActor->SetFolderPath(FName(TEXT("RoadSplines")));
             SplineActor->SetActorLabel(FString::Printf(TEXT("RoadSpline_%d_%d_Right"), RoadId, Lane.GetId()));
             SplineActor->SetSplinePoints(RightBoundaryPoints);
+            SplineActor->OrientationType = ERoadSplineOrientationType::Right;
+            SplineActor->LaneID = Lane.GetId();
+            SplineActor->RoadID = RoadId;
             AssignBoundaryType(SplineActor);
 
             if (Map->IsJunction(RoadId))

@@ -32,6 +32,15 @@ enum class ERoadSplineBoundaryType : uint8
   Unknown       UMETA(DisplayName = "Unknown")
 };
 
+UENUM(BlueprintType)
+enum class ERoadSplineOrientationType : uint8
+{
+  Unkown        UMETA(DisplayName = "Unkown"),
+  Left          UMETA(DisplayName = "Left"),
+  Right         UMETA(DisplayName = "Right"),
+  Center        UMETA(DisplayName = "Center"),
+};
+
 UCLASS()
 class CARLA_API ARoadSpline : public AActor
 {
@@ -47,7 +56,16 @@ public:
   ERoadSplineBoundaryType BoundaryType;
 
   UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Boundary")
+  ERoadSplineOrientationType OrientationType;
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "RoadInfo")
   bool bIsJunction;
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "RoadInfo")
+  int RoadID;
+
+  UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "RoadInfo")
+  int LaneID;
 
   void SetSplinePoints(const TArray<FVector>& Points, bool bClosedLoop = false);
 

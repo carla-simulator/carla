@@ -16,10 +16,12 @@
 #include "Carla/Traffic/RoutePlanner.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Game/CarlaGameModeBase.h"
+#include "Carla/Traffic/RoadSpline.h"
 #include "carla/road/Map.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "UObject/UObjectGlobals.h"
 
 
@@ -150,10 +152,7 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
 
     if (Tag == carla::rpc::CityObjectLabel::TrafficLight || Tag == carla::rpc::CityObjectLabel::TrafficSigns)
     {
-      //DrawDebugSolidBox(World, box_origin, box_extent, mesh_component->GetComponentRotation().Quaternion(), FColor::Cyan);
-      DrawDebugBox(World, mesh_component->GetComponentLocation(), bounds.BoxExtent, mesh_component->GetOwner()->GetActorRotation().Quaternion(), vis_color.WithAlpha(dist_alpha), false, -1, depth_prio, 10);
-      //DrawDebugSolidBox(World, box_origin, bounds.BoxExtent, mesh_component->GetOwner()->GetActorRotation().Quaternion(), vis_color, false, -1.0f, 10U);
-      //DrawDebugSolidPlane(World, FPlane(FVector(0.0f, 1.0f, 0.0f), 1.0f), box_origin, FVector2D(bounds.BoxExtent.X, bounds.BoxExtent.Z), vis_color);
+      DrawDebugSolidBox(World, mesh_component->GetComponentLocation(), bounds.BoxExtent, mesh_component->GetOwner()->GetActorRotation().Quaternion(), vis_color.WithAlpha(dist_alpha), false, -1, depth_prio);
     }
     else if (Tag == carla::rpc::CityObjectLabel::Car ||
       Tag == carla::rpc::CityObjectLabel::Bicycle ||
@@ -197,32 +196,180 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
 
   if(!added_persisted_route_lines)
   {
-    added_persisted_route_lines = true;
 
-    TArray<AActor*> RouteSplines;
-    UGameplayStatics::GetAllActorsOfClass(World, ARoutePlanner::StaticClass(), RouteSplines);
-    for (AActor* RouteSpline : RouteSplines)
+    //TArray<AActor*> RouteSplines;
+    //UGameplayStatics::GetAllActorsOfClass(World, ARoutePlanner::StaticClass(), RouteSplines);
+    //for (AActor* RouteSpline : RouteSplines)
+    //{
+    //  ARoutePlanner* route_planner = Cast<ARoutePlanner>(RouteSpline);
+
+    //  //route_planner->DrawRoutes();
+    //  for (int i = 0, lenRoutes = route_planner->Routes.Num(); i < lenRoutes; ++i)
+    //  {
+    //    for (int j = 0, lenNumPoints = route_planner->Routes[i]->GetNumberOfSplinePoints() - 1; j < lenNumPoints; ++j)
+    //    {
+    //      const FVector p0 = route_planner->Routes[i]->GetLocationAtSplinePoint(j + 0, ESplineCoordinateSpace::World);
+    //      const FVector p1 = route_planner->Routes[i]->GetLocationAtSplinePoint(j + 1, ESplineCoordinateSpace::World);
+
+    //      static const float MinThickness = 3.f;
+    //      static const float MaxThickness = 15.f;
+
+    //      const float Dist = (float)j / (float)lenNumPoints;
+    //      const float OneMinusDist = 1.f - Dist;
+    //      //const float Thickness = OneMinusDist * MaxThickness + MinThickness;
+
+    //      if (!route_planner->bIsIntersection)
+    //      {
+    //        DrawDebugLine(World, p0, p1, FColor(71, 134, 183).WithAlpha(dist_alpha), true, -1.f, depth_prio, 20.0f);
+    //      }
+    //    }
+    //  }
+    //}
+
+    TArray<AActor*> RoadSplines;
+    UGameplayStatics::GetAllActorsOfClass(World, ARoadSpline::StaticClass(), RoadSplines);
+    if(RoadSplines.Num() > 0) added_persisted_route_lines = true;
+
+    TMap<int32, TArray<ARoadSpline*>> SplinesByRoadId;
+
+    TArray<ARoadSpline*> ShoulderRoadSplines;
+    TArray<ARoadSpline*> DrivingRoadSplines;
+    for (AActor* RoadSpline : RoadSplines)
     {
-      ARoutePlanner* route_planner = Cast<ARoutePlanner>(RouteSpline);
+      ARoadSpline* spline = Cast<ARoadSpline>(RoadSpline);
+      if (spline->BoundaryType == ERoadSplineBoundaryType::Shoulder) ShoulderRoadSplines.Add(spline);
+      else if(spline->BoundaryType == ERoadSplineBoundaryType::Driving) DrivingRoadSplines.Add(spline);
 
-      //route_planner->DrawRoutes();
-      for (int i = 0, lenRoutes = route_planner->Routes.Num(); i < lenRoutes; ++i)
+      if (!SplinesByRoadId.Contains(spline->RoadID)) SplinesByRoadId.Add(spline->RoadID);
+      SplinesByRoadId[spline->RoadID].Add(spline);
+    }
+
+    auto DrawSpline = [&](ARoadSpline* spline)
+    {
+
+      UE_LOG(LogTemp, Log, TEXT("Drawing Road Spline"));
+
+      for (int i = 0, lenNumPoints = spline->SplineComponent->GetNumberOfSplinePoints() - 1; i < lenNumPoints; ++i)
       {
-        for (int j = 0, lenNumPoints = route_planner->Routes[i]->GetNumberOfSplinePoints() - 1; j < lenNumPoints; ++j)
+        const FVector p0 = spline->SplineComponent->GetLocationAtSplinePoint(i + 0, ESplineCoordinateSpace::World) + (spline->OrientationType == ERoadSplineOrientationType::Left ? FVector(25.0f, 25.0f, 25.0f) : FVector::ZeroVector);
+        const FVector p1 = spline->SplineComponent->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::World) + (spline->OrientationType == ERoadSplineOrientationType::Left ? FVector(25.0f, 25.0f, 25.0f) : FVector::ZeroVector);
+
+        static const float MinThickness = 3.f;
+        static const float MaxThickness = 15.f;
+
+        const float Dist = (float)i / (float)lenNumPoints;
+        const float OneMinusDist = 1.f - Dist;
+        //const float Thickness = OneMinusDist * MaxThickness + MinThickness;
+        FColor debug_color = spline->BoundaryType != ERoadSplineBoundaryType::Driving ?
+          FColor(206, 36, 35).WithAlpha(dist_alpha) :
+          FColor(55, 103, 221).WithAlpha(dist_alpha);
+        DrawDebugLine(World, p0, p1, debug_color, true, -1.f, depth_prio, 20.0f);
+      }
+    };
+
+    //for (ARoadSpline* RoadSpline : DrivingRoadSplines)
+    //{
+    //  if (RoadSpline->bIsJunction || RoadSpline->OrientationType == ERoadSplineOrientationType::Right) continue;
+    //  DrawSpline(RoadSpline);
+    //}
+
+    //for (ARoadSpline* RoadSpline : ShoulderRoadSplines)
+    //{
+    //  if (RoadSpline->bIsJunction ||
+    //    (RoadSpline->LaneID > 0 && RoadSpline->OrientationType == ERoadSplineOrientationType::Right) ||
+    //    (RoadSpline->LaneID < 0 && RoadSpline->OrientationType == ERoadSplineOrientationType::Left)) continue;
+    //  DrawSpline(RoadSpline);
+    //}
+    
+
+    for (TPair<int32, TArray<ARoadSpline*>> splines_pair : SplinesByRoadId)
+    {
+      TArray<ARoadSpline*> splines = splines_pair.Value;
+
+      UE_LOG(LogTemp, Log, TEXT("Key %d has %d items"), splines_pair.Key, splines_pair.Value.Num());
+
+      for (ARoadSpline* spline : splines)
+      {
+
+        UE_LOG(LogTemp, Log, TEXT("LaneID: %d RoadID: %d"), spline->LaneID, spline->RoadID);
+
+        if (spline->BoundaryType != ERoadSplineBoundaryType::Driving &&
+          spline->BoundaryType != ERoadSplineBoundaryType::Shoulder &&
+          spline->BoundaryType != ERoadSplineBoundaryType::Sidewalk) continue;
+
+        //TODO: Render rules for junction shoulders
+        if(spline->bIsJunction)
         {
-          const FVector p0 = route_planner->Routes[i]->GetLocationAtSplinePoint(j + 0, ESplineCoordinateSpace::World);
-          const FVector p1 = route_planner->Routes[i]->GetLocationAtSplinePoint(j + 1, ESplineCoordinateSpace::World);
+         
+        }
+        else if (spline->OrientationType == ERoadSplineOrientationType::Left)
+        {
 
-          static const float MinThickness = 3.f;
-          static const float MaxThickness = 15.f;
+          UE_LOG(LogTemp, Log, TEXT("Spline is Left Orientated"));
 
-          const float Dist = (float)j / (float)lenNumPoints;
-          const float OneMinusDist = 1.f - Dist;
-          //const float Thickness = OneMinusDist * MaxThickness + MinThickness;
+          TArray<ARoadSpline*> found_splines = splines_pair.Value.FilterByPredicate([spline](ARoadSpline* in_spline) {
+            return in_spline->LaneID == spline->LaneID + (spline->LaneID == 1 ? -2 : -1);
+          });
 
-          if (!route_planner->bIsIntersection)
+          UE_LOG(LogTemp, Log, TEXT("Found Splines Num: %d"), found_splines.Num());
+
+          for (ARoadSpline* target_spline : found_splines)
           {
-            DrawDebugLine(World, p0, p1, FColor(71, 134, 183).WithAlpha(dist_alpha), true, -1.f, depth_prio, 20.0f);
+            ERoadSplineBoundaryType boundary = target_spline->BoundaryType;
+            bool should_render;
+            switch (boundary) 
+            {
+            case ERoadSplineBoundaryType::Driving:
+              //we only render right drivings
+              if (spline->BoundaryType == ERoadSplineBoundaryType::Driving) should_render = spline->LaneID > 0 && spline->LaneID * target_spline->LaneID > 0;
+              else if (spline->BoundaryType == ERoadSplineBoundaryType::Shoulder) should_render = true;
+              else if (spline->BoundaryType == ERoadSplineBoundaryType::Sidewalk) should_render = true;
+              break;
+            case ERoadSplineBoundaryType::Shoulder:
+              if (spline->BoundaryType == ERoadSplineBoundaryType::Driving) should_render = false;
+              else if (spline->BoundaryType == ERoadSplineBoundaryType::Shoulder) should_render = false;
+              else if (spline->BoundaryType == ERoadSplineBoundaryType::Sidewalk) should_render = true;
+              break;
+            default:
+              should_render = false;
+              break;
+            }
+            if (should_render) DrawSpline(spline);
+          }
+        }
+        else if (spline->OrientationType == ERoadSplineOrientationType::Right)
+        {
+
+          UE_LOG(LogTemp, Log, TEXT("Spline is Left Orientated"));
+
+          TArray<ARoadSpline*> found_splines = splines_pair.Value.FilterByPredicate([spline](ARoadSpline* in_spline) {
+            return in_spline->LaneID == spline->LaneID + (spline->LaneID == -1 ? 2 : 1);
+          });
+
+          UE_LOG(LogTemp, Log, TEXT("Found Splines Num: %d"), found_splines.Num());
+
+          for (ARoadSpline* target_spline : found_splines)
+          {
+            ERoadSplineBoundaryType boundary = target_spline->BoundaryType;
+            bool should_render;
+            switch (boundary)
+            {
+            case ERoadSplineBoundaryType::Driving:
+              //we only render right drivings
+              if (spline->BoundaryType == ERoadSplineBoundaryType::Driving) should_render = spline->LaneID < 0;
+              else if (spline->BoundaryType == ERoadSplineBoundaryType::Shoulder) should_render = true;
+              else if (spline->BoundaryType == ERoadSplineBoundaryType::Sidewalk) should_render = true;
+              break;
+            case ERoadSplineBoundaryType::Shoulder:
+              if (spline->BoundaryType == ERoadSplineBoundaryType::Driving) should_render = false;
+              else if (spline->BoundaryType == ERoadSplineBoundaryType::Shoulder) should_render = false;
+              else if (spline->BoundaryType == ERoadSplineBoundaryType::Sidewalk) should_render = true;
+              break;
+            default:
+              should_render = false;
+              break;
+            }
+            if (should_render) DrawSpline(spline);
           }
         }
       }
@@ -234,19 +381,47 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     ACarlaGameModeBase* carla_game_mode = Cast<ACarlaGameModeBase>(World->GetAuthGameMode());
     if (carla_game_mode != nullptr)
     {
-      added_persisted_crosswalks = true;
+      added_persisted_crosswalks = false;
       std::vector<carla::geom::Location> crosswalks_points = carla_game_mode->GetMap()->GetAllCrosswalkZones();
       carla::geom::Location first_in_loop = crosswalks_points[0];
+
+      //FPlane crosswalk_plane(first_in_loop, FVector(0.0f, 0.0f, 1.0f));//(crosswalks_points[0], crosswalks_points[1], crosswalks_points[2]);
+      FVector min, max;
+      min = FVector(TNumericLimits<float>::Max());
+      max = FVector(TNumericLimits<float>::Min());
+      //TArray<FVector> Verts;
+      //TArray<int32> Indices;
+      //Indices.AddUninitialized(6);
+      //Indices[0] = 0; Indices[1] = 2; Indices[2] = 1;
+      //Indices[3] = 1; Indices[4] = 2; Indices[5] = 3;
+
+      //Verts.Add(crosswalks_points[0]);
+      //int32 vert_num = 1;
       for (int i = 1; i < crosswalks_points.size(); ++i)
       {
-        DrawDebugLine(World, crosswalks_points[i - 1], crosswalks_points[i], FColor(202, 132, 58).WithAlpha(dist_alpha), true, -1.f, depth_prio, 20.0f);
-
+        DrawDebugLine(World, crosswalks_points[i - 1], crosswalks_points[i], FColor(202, 132, 58).WithAlpha(dist_alpha), false, -1.f, depth_prio, 20.0f);
+        min = UKismetMathLibrary::Vector_ComponentMin(min, crosswalks_points[i]);
+        max = UKismetMathLibrary::Vector_ComponentMax(max, crosswalks_points[i]);
         if (crosswalks_points[i] == first_in_loop)
         {
-          ++i;
-          if (i < crosswalks_points.size()) first_in_loop = crosswalks_points[i];
+          //DrawDebugMesh(World, Verts, Indices, FColor(202, 132, 58).WithAlpha(dist_alpha), true, depth_prio);
+          //Verts.Empty();
+          //DrawDebugSolidBox(World, (min + max) * 0.5f, FVector(min - max).GetAbs() * 0.5f + FVector(0.0f,0.0f,10.0f), FColor(202, 132, 58).WithAlpha(dist_alpha), false, -1.0f, depth_prio);
+          min = FVector(TNumericLimits<float>::Max());
+          max = FVector(TNumericLimits<float>::Min());
+          if (++i < crosswalks_points.size())
+          {
+            first_in_loop = crosswalks_points[i];
+            //Verts.Add(crosswalks_points[i]);
+          }
+          //crosswalk_plane = FPlane(first_in_loop, FVector(0.0f, 0.0f, 1.0f));
+        }
+        else
+        {
+          //Verts.Add(crosswalks_points[i]);
         }
       }
+
     }
   }
 
