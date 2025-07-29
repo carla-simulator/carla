@@ -20,7 +20,7 @@ except IndexError:
 import carla
 import time
 
-TESTING_ADDRESS = ('localhost', 3654)
+TESTING_ADDRESS = ('localhost', 2000)
 VEHICLE_VEHICLES_EXCLUDE_FROM_OLD_TOWNS = ['vehicle.mitsubishi.fusorosa', 'vehicle.carlamotors.european_hgv', 'vehicle.carlamotors.firetruck']
 
 class SmokeTest(unittest.TestCase):
@@ -32,7 +32,7 @@ class SmokeTest(unittest.TestCase):
         self.world = self.client.get_world()
 
     def tearDown(self):
-        self.client.load_world("Town03")
+        self.client.load_world("Town10HD_Opt")
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
         self.world = None
