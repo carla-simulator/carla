@@ -32,7 +32,7 @@ class SmokeTest(unittest.TestCase):
         self.world = self.client.get_world()
 
     def tearDown(self):
-        self.client.load_world("Town10HD_Opt")
+        self.client.load_world("Town03")
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
         self.world = None
