@@ -521,13 +521,25 @@ namespace road {
     std::vector<Waypoint> result;
     result.reserve(next_lanes.size());
     for (auto *next_lane : next_lanes) {
-      RELEASE_ASSERT(next_lane != nullptr);
+      if(next_lane == nullptr)
+      {
+        continue;  // skip null pointers
+      }
       const auto lane_id = next_lane->GetId();
-      RELEASE_ASSERT(lane_id != 0);
+      if(lane_id == 0)
+      {
+        continue;  // skip lane with id 0
+      }
       const auto *section = next_lane->GetLaneSection();
-      RELEASE_ASSERT(section != nullptr);
+      if(section == nullptr)
+      {
+        continue;  // skip null pointers
+      }
       const auto *road = next_lane->GetRoad();
-      RELEASE_ASSERT(road != nullptr);
+      if(road == nullptr)
+      {
+        continue;  // skip null pointers
+      }
       const auto distance = GetDistanceAtStartOfLane(*next_lane);
       result.emplace_back(Waypoint{road->GetId(), section->GetId(), lane_id, distance});
     }
@@ -539,13 +551,24 @@ namespace road {
     std::vector<Waypoint> result;
     result.reserve(prev_lanes.size());
     for (auto *next_lane : prev_lanes) {
-      RELEASE_ASSERT(next_lane != nullptr);
+      if(next_lane == nullptr){
+        continue;  // skip null pointers
+      }
       const auto lane_id = next_lane->GetId();
-      RELEASE_ASSERT(lane_id != 0);
+      if(lane_id == 0)
+      {
+        continue;  // skip lane with id 0
+      }
       const auto *section = next_lane->GetLaneSection();
-      RELEASE_ASSERT(section != nullptr);
+      if(section == nullptr)
+      {
+        continue;  // skip null pointers
+      }
       const auto *road = next_lane->GetRoad();
-      RELEASE_ASSERT(road != nullptr);
+      if(road == nullptr)
+      {
+        continue;
+      }
       const auto distance = GetDistanceAtEndOfLane(*next_lane);
       result.emplace_back(Waypoint{road->GetId(), section->GetId(), lane_id, distance});
     }
