@@ -516,20 +516,6 @@ void ACarlaGameModeBase::SpawnRoadSplines()
         if (LaneType == carla::road::Lane::LaneType::None)
           continue;
 
-        const double LaneLength = Lane.GetLength();
-        TArray<FVector> LeftBoundaryPoints;
-        TArray<FVector> RightBoundaryPoints;
-
-        for (double s = 0.0; s <= LaneLength; s += SampleDistance)
-        {
-          auto Corners = Lane.GetCornerPositions(s);
-          const auto& LeftLoc = Corners.first;
-          const auto& RightLoc = Corners.second;
-
-          LeftBoundaryPoints.Add(FVector(LeftLoc.x * 100.0f, LeftLoc.y * 100.0f, RightLoc.z * 100.0f));
-          RightBoundaryPoints.Add(FVector(RightLoc.x * 100.0f, RightLoc.y * 100.0f, RightLoc.z * 100.0f));
-        }
-
         auto AssignBoundaryType = [&](ARoadSpline* SplineActor)
         {
           switch (LaneType)
@@ -557,6 +543,32 @@ void ACarlaGameModeBase::SpawnRoadSplines()
             default:                                         SplineActor->BoundaryType = ERoadSplineBoundaryType::Unknown; break;
           }
         };
+
+
+        const double s_start = Lane.GetDistance();
+        const double s_end = s_start + Lane.GetLength();
+
+        TArray<FVector> LeftBoundaryPoints;
+        TArray<FVector> RightBoundaryPoints;
+
+        for (double s = s_start; s < s_end; s += SampleDistance)
+        {
+          auto Corners = Lane.GetCornerPositions(s);
+          const auto& LeftLoc = Corners.first;
+          const auto& RightLoc = Corners.second;
+
+          LeftBoundaryPoints.Add(FVector(LeftLoc.x * 100.0f, LeftLoc.y * 100.0f, RightLoc.z * 100.0f));
+          RightBoundaryPoints.Add(FVector(RightLoc.x * 100.0f, RightLoc.y * 100.0f, RightLoc.z * 100.0f));
+        }
+
+        {
+          auto Corners = Lane.GetCornerPositions(s_end);
+          const auto& LeftLoc = Corners.first;
+          const auto& RightLoc = Corners.second;
+
+          LeftBoundaryPoints.Add(FVector(LeftLoc.x * 100.0f, LeftLoc.y * 100.0f, RightLoc.z * 100.0f));
+          RightBoundaryPoints.Add(FVector(RightLoc.x * 100.0f, RightLoc.y * 100.0f, RightLoc.z * 100.0f));
+        }
 
         if (LeftBoundaryPoints.Num() > 0)
         {
