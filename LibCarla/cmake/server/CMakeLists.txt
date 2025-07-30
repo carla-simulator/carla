@@ -71,6 +71,9 @@ install(FILES ${libcarla_carla_streaming_low_level_headers} DESTINATION include/
 file(GLOB libcarla_carla_multigpu_headers "${libcarla_source_path}/carla/multigpu/*.h")
 install(FILES ${libcarla_carla_multigpu_headers} DESTINATION include/carla/multigpu)
 
+file(GLOB libcarla_carla_ros2_headers "${libcarla_source_path}/carla/ros2/*.h")
+install(FILES ${libcarla_carla_ros2_headers} DESTINATION include/carla/ros2)
+
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
 
 if(WIN32)
