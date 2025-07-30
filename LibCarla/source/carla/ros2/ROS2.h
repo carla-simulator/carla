@@ -70,12 +70,12 @@ class ROS2
     std::string GetParentFrameId(void *actor);
 
     // Registration
-    void RegisterActor(void *actor, std::string ros_name, std::string frame_id);
+    void RegisterActor(void *actor, std::string ros_name, std::string frame_id, bool publish_tf=true);
     void UnregisterActor(void *actor);
 
     void RegisterActorParent(void *actor, void *parent);
 
-    void RegisterSensor(void *actor, std::string ros_name, std::string frame_id);
+    void RegisterSensor(void *actor, std::string ros_name, std::string frame_id, bool publish_tf);
     void UnregisterSensor(void *actor);
 
     void RegisterVehicle(void *actor, std::string ros_name, std::string frame_id, ActorCallback callback);
@@ -134,7 +134,7 @@ class ROS2
       void* actor);
 
   private:
-    std::shared_ptr<CarlaTransformPublisher> GetTransformPublisher(void *actor);
+    std::shared_ptr<CarlaTransformPublisher> GetOrCreateTransformPublisher(void *actor);
     std::shared_ptr<BasePublisher> GetOrCreateSensor(int type, void* actor);
 
   // sigleton

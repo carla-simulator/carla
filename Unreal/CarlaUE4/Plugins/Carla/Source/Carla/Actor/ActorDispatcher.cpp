@@ -200,11 +200,16 @@ FCarlaActor* UActorDispatcher::RegisterActor(
         FrameId = RosName;
       }
 
+      bool PublishTF = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
+        "ros_publish_tf",
+        Description.Variations,
+        true);
+
       auto *Sensor = Cast<ASensor>(View->GetActor());
       auto *Vehicle = Cast<ACarlaWheeledVehicle>(View->GetActor());
       if (Sensor != nullptr)
       {
-        ROS2->RegisterSensor(static_cast<void*>(&Actor), RosName, FrameId);
+        ROS2->RegisterSensor(static_cast<void*>(&Actor), RosName, FrameId, PublishTF);
       }
       else if (Vehicle != nullptr && Description.GetAttribute("role_name").Value == "hero")
       {
