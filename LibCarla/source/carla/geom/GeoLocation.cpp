@@ -32,10 +32,18 @@ namespace geom {
     return std::cos(Math::ToRadians(lat));
   }
 
+  static double DegreesToRadians(double degrees) {
+    return degrees * Math::Pi<double>() / 180.0;
+  }
+
+  static double RadiansToDegrees(double radians) {
+    return radians * 180.0 / Math::Pi<double>();
+  }
+
   /// Converts lat/lon/scale to mx/my (mx/my in meters if correct scale
   /// is given).
-  template <class float_type>
-  static void LatLonToMercator(double lat, double lon, double scale, float_type &mx, float_type &my) {
+  template <class double_type>
+  static void LatLonToMercator(double lat, double lon, double scale, double_type &mx, double_type &my) {
     mx = scale * Math::ToRadians(lon) * EARTH_RADIUS_EQUA;
     my = scale * EARTH_RADIUS_EQUA * std::log(std::tan((90.0 + lat) * Math::Pi<double>() / 360.0));
   }
@@ -63,14 +71,60 @@ namespace geom {
     MercatorToLatLon(mx, my, scale, lat_end, lon_end);
   }
 
-  GeoLocation GeoLocation::Transform(const Location &location) const {
-    GeoLocation result{0.0, 0.0, altitude + location.z};
-    LatLonAddMeters(
-        latitude, longitude,
-        location.x, -location.y,  // Invert y axis to have increasing latitudes northward
-        result.latitude, result.longitude);
-    return result;
+  // Forward (spherical TM)
+  Location GeoLocation::GetTransversemercProjection(double lat, double lon, double alt) const {
+      const double R = EARTH_RADIUS_EQUA;
+      const double k0 = 0.9996;
+
+      double phi = DegreesToRadians(lat);
+      double lambda = DegreesToRadians(lon);
+      double phi0 = DegreesToRadians(latitude);
+      double lambda0 = DegreesToRadians(longitude);
+
+      double deltaLambda = lambda - lambda0;
+      double B = cos(phi) * sin(deltaLambda);
+
+      double x = 0.5 * R * k0 * log((1 + B) / (1 - B));
+      double y = k0 * R * (atan(tan(phi) / cos(deltaLambda)) - phi0);
+
+      return Location(x, y, altitude + alt);
   }
 
+  // Inverse (matches above)
+  GeoLocation GeoLocation::InverseTransversemercProjection(double x, double y, double alt) const {
+      const double R = EARTH_RADIUS_EQUA;
+      const double k0 = 0.9996;
+
+      double phi0 = DegreesToRadians(latitude);
+      double lambda0 = DegreesToRadians(longitude);
+
+      double D = x / (k0 * R);
+      double E = (y / (k0 * R)) + phi0;
+
+      double phi = asin(sin(E) / cosh(D));
+      double deltaLambda = atan2(sinh(D), cos(E));
+
+      double lambda = lambda0 + deltaLambda;
+
+      double latDeg = RadiansToDegrees(phi);
+      double lonDeg = RadiansToDegrees(lambda);
+
+      return GeoLocation(latDeg, lonDeg, alt + altitude);
+  }
+
+  GeoLocation GeoLocation::Transform(const Location &location) const {
+    return InverseTransversemercProjection(
+        location.x, location.y, location.z + altitude);
+  }
+
+
+  Location GeoLocation::GeoLocationToTransform(double lat, double lon, double altitude) const {
+    return GetTransversemercProjection(lat, lon, altitude);
+  }
+
+  Location GeoLocation::GeoLocationToTransform(const GeoLocation other) const
+  {
+    return GeoLocationToTransform(other.latitude, other.longitude, other.altitude);
+  }
 } // namespace geom
 } // namespace carla

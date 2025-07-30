@@ -47,6 +47,7 @@
  * Support of masked materials in instance segmentation, resulting in fine-grained annotations on e.g. leaves or fences (as in semantic segmentation)
  * Added API function `world.set_annotations_traverse_translucency` and implemented functionality to configure, whether depth and semantic + instance segmentation traverse translucent materials or not.
  * Fixed `frame`, `timestamp` and `transform` of `SensorData` not matching to the actually sent image for camera sensors.
+ * Added  "geolocation_to_transform" function to the Map object in the PythonAPI
 
 ## CARLA 0.9.15
 

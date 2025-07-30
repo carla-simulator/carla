@@ -12,10 +12,11 @@ namespace carla {
 namespace geom {
 
   class Location;
+  class Transform;
 
   class GeoLocation {
   public:
-
+    
     // =========================================================================
     // -- Public data members --------------------------------------------------
     // =========================================================================
@@ -37,6 +38,14 @@ namespace geom {
         longitude(longitude),
         altitude(altitude) {}
 
+    // Get Location in Transverse Mercator projection
+    // using as base the already defined latitude, longitude and altitude in the object
+    Location GetTransversemercProjection(double lat, double lon, double alt) const;
+
+    // Get GeoLocation Inversing Traverse Mercator projection
+    // using as base the already defined latitude, longitude and altitude in the object
+    GeoLocation InverseTransversemercProjection(double x, double y, double alt) const;
+
     // =========================================================================
     // -- Transform locations --------------------------------------------------
     // =========================================================================
@@ -44,6 +53,12 @@ namespace geom {
     /// Transform the given @a location to a GeoLocation using this as
     /// geo-reference.
     GeoLocation Transform(const Location &location) const;
+
+    // Transform the given @a location to a GeoLocation using this as
+    // geo-reference.
+    Location GeoLocationToTransform(double lat, double lon, double altitude) const;
+
+    Location GeoLocationToTransform(const GeoLocation other) const;
 
     // =========================================================================
     // -- Comparison operators -------------------------------------------------
