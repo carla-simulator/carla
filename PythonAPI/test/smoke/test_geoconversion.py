@@ -16,7 +16,7 @@ class TestGeoLocationConversion(SmokeTest):
         self.assertAlmostEqual(a.y, b.y, delta=tol)
         self.assertAlmostEqual(a.z, b.z, delta=tol)
 
-    def _assert_geolocation_close(self, a, b, latlon_tol=0.1, alt_tol=1.0):
+    def _assert_geolocation_close(self, a, b, latlon_tol=0.01, alt_tol=1.0):
         # Latitudes must stay in range [-90, 90]
         if not (-90.0 <= a.latitude <= 90.0 and -90.0 <= b.latitude <= 90.0):
             raise ValueError(f"Latitude out of bounds: {a.latitude}, {b.latitude}")
