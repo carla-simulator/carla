@@ -41,6 +41,5 @@ protected:
 private:
   bool added_persisted_stop_lines;
   bool added_persisted_route_lines;
-  bool added_persisted_crosswalks;
   bool duplicated_persistent_comp;
 };

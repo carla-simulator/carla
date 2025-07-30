@@ -37,7 +37,6 @@ ACosmosControlSensor::ACosmosControlSensor(
   Tags.Add(FName(TEXT("CosmosControlSensor")));
   added_persisted_stop_lines = false;
   added_persisted_route_lines = false;
-  added_persisted_crosswalks = false;
   duplicated_persistent_comp = false;
 
   DynamicLines = CreateDefaultSubobject<ULineBatchComponent>(FName(TEXT("CosmosDynamicLinesBatchComponent")));
@@ -376,58 +375,46 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     }
   }
 
-  if(!added_persisted_crosswalks)
+  ACarlaGameModeBase* carla_game_mode = Cast<ACarlaGameModeBase>(World->GetAuthGameMode());
+  if (carla_game_mode != nullptr)
   {
-    ACarlaGameModeBase* carla_game_mode = Cast<ACarlaGameModeBase>(World->GetAuthGameMode());
-    if (carla_game_mode != nullptr)
+    std::vector<carla::geom::Location> crosswalks_points = carla_game_mode->GetMap()->GetAllCrosswalkZones();
+    carla::geom::Location first_in_loop = crosswalks_points[0];
+
+    FPlane orientation_plane(
+      crosswalks_points[1].ToFVector(),
+      crosswalks_points[2].ToFVector(),
+      crosswalks_points[1].ToFVector() + FVector(0.0f, 0.0f, 100.0f));
+
+    FVector extent = FVector::ZeroVector;
+    extent.Z = 10.0f;
+    extent.Y = FVector::Dist(crosswalks_points[1].ToFVector(), crosswalks_points[2].ToFVector()) * 100.0f * 0.5f;
+
+    for (int i = 1; i < crosswalks_points.size(); ++i)
     {
-      added_persisted_crosswalks = false;
-      std::vector<carla::geom::Location> crosswalks_points = carla_game_mode->GetMap()->GetAllCrosswalkZones();
-      carla::geom::Location first_in_loop = crosswalks_points[0];
-
-      //FPlane crosswalk_plane(first_in_loop, FVector(0.0f, 0.0f, 1.0f));//(crosswalks_points[0], crosswalks_points[1], crosswalks_points[2]);
-      FVector min, max;
-      min = FVector(TNumericLimits<float>::Max());
-      max = FVector(TNumericLimits<float>::Min());
-      //TArray<FVector> Verts;
-      //TArray<int32> Indices;
-      //Indices.AddUninitialized(6);
-      //Indices[0] = 0; Indices[1] = 2; Indices[2] = 1;
-      //Indices[3] = 1; Indices[4] = 2; Indices[5] = 3;
-
-      //Verts.Add(crosswalks_points[0]);
-      //int32 vert_num = 1;
-      for (int i = 1; i < crosswalks_points.size(); ++i)
+      if (crosswalks_points[i] == first_in_loop)
       {
-        DrawDebugLine(World, crosswalks_points[i - 1], crosswalks_points[i], FColor(202, 132, 58).WithAlpha(dist_alpha), false, -1.f, depth_prio, 20.0f);
-        min = UKismetMathLibrary::Vector_ComponentMin(min, crosswalks_points[i]);
-        max = UKismetMathLibrary::Vector_ComponentMax(max, crosswalks_points[i]);
-        if (crosswalks_points[i] == first_in_loop)
+        FVector centre = ((first_in_loop.ToFVector() + crosswalks_points[i - 2].ToFVector()) * 100.0f * 0.5f) - FVector(0.0f,0.0f,25.0f);
+        extent.X = (orientation_plane.GetNormal() * (first_in_loop.ToFVector() - crosswalks_points[i - 3].ToFVector())).Size() * 100.0f * 0.5f;
+        DrawDebugSolidBox(World, centre, extent, orientation_plane.GetNormal().ToOrientationQuat(), FColor(202, 132, 58).WithAlpha(dist_alpha), false, -1.0f, depth_prio);
+
+        if (++i < crosswalks_points.size())
         {
-          //DrawDebugMesh(World, Verts, Indices, FColor(202, 132, 58).WithAlpha(dist_alpha), true, depth_prio);
-          //Verts.Empty();
-          //DrawDebugSolidBox(World, (min + max) * 0.5f, FVector(min - max).GetAbs() * 0.5f + FVector(0.0f,0.0f,10.0f), FColor(202, 132, 58).WithAlpha(dist_alpha), false, -1.0f, depth_prio);
-          min = FVector(TNumericLimits<float>::Max());
-          max = FVector(TNumericLimits<float>::Min());
-          if (++i < crosswalks_points.size())
-          {
-            first_in_loop = crosswalks_points[i];
-            //Verts.Add(crosswalks_points[i]);
-          }
-          //crosswalk_plane = FPlane(first_in_loop, FVector(0.0f, 0.0f, 1.0f));
-        }
-        else
-        {
-          //Verts.Add(crosswalks_points[i]);
+          first_in_loop = crosswalks_points[i];
+          extent.Y = FVector::Dist(crosswalks_points[i+1].ToFVector(), crosswalks_points[i+2].ToFVector()) * 100.0f * 0.5f;
+          orientation_plane = FPlane(
+            crosswalks_points[i+1].ToFVector(),
+            crosswalks_points[i+2].ToFVector(),
+            crosswalks_points[i+1].ToFVector() + FVector(0.0f, 0.0f, 100.0f));
         }
       }
-
     }
+
   }
 
   USceneCaptureComponent2D* SceneCapture = GetCaptureComponent2D();
 
-  if (added_persisted_stop_lines && added_persisted_route_lines && added_persisted_crosswalks && !duplicated_persistent_comp)
+  if (added_persisted_stop_lines && added_persisted_route_lines && !duplicated_persistent_comp)
   {
     duplicated_persistent_comp = true;
     //FObjectDuplicationParameters params(PersistentLines, GetWorld()->PersistentLineBatcher);
