@@ -11,6 +11,7 @@
 #include "Sensor/Sensor.h"
 #include "Carla/Actor/ActorDefinition.h"
 #include "Components/LineBatchComponent.h"
+#include "Carla/Game/Tagger.h"
 #include "CosmosControlSensor.generated.h"
 
 /**
@@ -23,6 +24,21 @@ class CARLA_API ACosmosControlSensor : public AShaderBasedSensor
 
 public:
 
+  struct CosmosColors
+  {
+    static const FColor LaneLines;
+    static const FColor Lanes;
+    static const FColor Poles;
+    static const FColor RoadBoundaries;
+    static const FColor WaitLines;
+    static const FColor Crosswalks;
+    static const FColor RoadMarkings;
+    static const FColor TrafficSigns;
+    static const FColor TrafficLights;
+    static const FColor Cars;
+    static const FColor Pedestrians;
+  };
+
 	static FActorDefinition GetSensorDefinition();
 
   ACosmosControlSensor(const FObjectInitializer& ObjectInitializer);
@@ -33,10 +49,22 @@ protected:
   void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) override;
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 
+  void DrawDebugLine(const UWorld* InWorld, FVector const& LineStart, FVector const& LineEnd, FColor const& Color, bool bPersistentLines = false, float LifeTime = -1.f, uint8 DepthPriority = 0, float Thickness = 0);
+  void DrawDebugSolidBox(const UWorld* InWorld, FVector const& Center, FVector const& Extent, FQuat const& Rotation, FColor const& Color, bool bPersistent = false, float LifeTime = -1.f, uint8 DepthPriority = 0);
+  void DrawDebugBox(const UWorld* InWorld, FVector const& Center, FVector const& Box, const FQuat& Rotation, FColor const& Color, bool bPersistentLines = false, float LifeTime = -1.f, uint8 DepthPriority = 0, float Thickness = 0);
+  void DrawDebugCapsule(const UWorld* InWorld, FVector const& Center, float HalfHeight, float Radius, const FQuat& Rotation, FColor const& Color, bool bPersistentLines = false, float LifeTime = -1.f, uint8 DepthPriority = 0, float Thickness = 0);
+  void DrawCircle(const UWorld* InWorld, const FVector& Base, const FVector& X, const FVector& Y, const FColor& Color, float Radius, int32 NumSides, bool bPersistentLines = false, float LifeTime = -1.f, uint8 DepthPriority = 0, float Thickness = 0);
+  void DrawHalfCircle(const UWorld* InWorld, const FVector& Base, const FVector& X, const FVector& Y, const FColor& Color, float Radius, int32 NumSides, bool bPersistentLines = false, float LifeTime = -1.f, uint8 DepthPriority = 0, float Thickness = 0);
+
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
   ULineBatchComponent* DynamicLines;
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
   ULineBatchComponent* PersistentLines;
+
+private:
+  ULineBatchComponent* GetDebugLineBatcher(bool bPersistentLines);
+  FColor GetColorByTag(carla::rpc::CityObjectLabel Tag, uint8 alpha = 255);
+
 
 private:
   bool added_persisted_stop_lines;
