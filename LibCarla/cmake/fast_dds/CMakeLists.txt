@@ -4,6 +4,7 @@ project(libcarla_fastdds)
 # Install headers.
 
 file(GLOB libcarla_carla_fastdds_headers
+  "${libcarla_source_path}/carla/ros2/*.h"
   "${libcarla_source_path}/carla/ros2/publishers/*.h"
   "${libcarla_source_path}/carla/ros2/subscribers/*.h"
   "${libcarla_source_path}/carla/ros2/listeners/*.h"
@@ -16,6 +17,7 @@ install(FILES ${fast_dds_dependencies} DESTINATION lib)
 
 
 file(GLOB libcarla_fastdds_sources
+  "${libcarla_source_path}/carla/ros2/*.cpp"
   "${libcarla_source_path}/carla/ros2/publishers/*.cpp"
   "${libcarla_source_path}/carla/ros2/subscribers/*.cpp"
   "${libcarla_source_path}/carla/ros2/listeners/*.cpp"

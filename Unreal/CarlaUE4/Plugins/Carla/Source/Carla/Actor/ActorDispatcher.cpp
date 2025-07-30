@@ -182,51 +182,43 @@ FCarlaActor* UActorDispatcher::RegisterActor(
     // TODO: support external actor destruction
     Actor.OnDestroyed.AddDynamic(this, &UActorDispatcher::OnActorDestroyed);
 
-    // ROS2 mapping of actor->ros_name
     #if defined(WITH_ROS2)
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2->IsEnabled())
     {
-      // actor ros_name
-      std::string RosName;
-      for (auto &&Attr : Description.Variations)
+      std::string RosName = std::string(TCHAR_TO_UTF8(*Description.GetAttribute("ros_name").Value));
+      // If not specified by the user, set the ActorId as the actor name
+      if (RosName.empty())
       {
-        if (Attr.Key == "ros_name")
-        {
-          RosName = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
-        }
-      }
-      const std::string id = std::string(TCHAR_TO_UTF8(*Description.Id));
-      if (RosName == id) {
-        if(RosName.find("vehicle") != std::string::npos)
-        {
-          std::string VehicleName = "vehicle" + std::to_string(View->GetActorId());
-          ROS2->AddActorRosName(static_cast<void*>(&Actor), VehicleName);
-        }
-        else
-        {
-          size_t pos = RosName.find_last_of('.');
-          if (pos != std::string::npos) {
-            std::string lastToken = RosName.substr(pos + 1) + "__";
-            ROS2->AddActorRosName(static_cast<void*>(&Actor), lastToken);
-          }
-        }
-      } else {
-        ROS2->AddActorRosName(static_cast<void*>(&Actor), RosName);
+        RosName = std::to_string(View->GetActorId());
       }
 
-      // vehicle controller for hero
-      for (auto &&Attr : Description.Variations)
+      std::string FrameId = std::string(TCHAR_TO_UTF8(*Description.GetAttribute("ros_frame_id").Value));
+      // If not specified by the user, set the actor name as the frame id
+      if (FrameId.empty()) 
       {
-        if (Attr.Key == "role_name" && (Attr.Value.Value == "hero" || Attr.Value.Value == "ego"))
-        {
-          ROS2->AddActorCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
+        FrameId = RosName;
+      }
+
+      bool PublishTF = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
+        "ros_publish_tf",
+        Description.Variations,
+        true);
+
+      auto *Sensor = Cast<ASensor>(View->GetActor());
+      auto *Vehicle = Cast<ACarlaWheeledVehicle>(View->GetActor());
+      if (Sensor != nullptr)
+      {
+        ROS2->RegisterSensor(static_cast<void*>(&Actor), RosName, FrameId, PublishTF);
+      }
+      else if (Vehicle != nullptr && Description.GetAttribute("role_name").Value == "hero")
+      {
+        ROS2->RegisterVehicle(static_cast<void*>(&Actor), RosName, RosName, [RosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
           {
             AActor *UEActor = reinterpret_cast<AActor *>(Actor);
             ActorROS2Handler Handler(UEActor, RosName);
             boost::variant2::visit(Handler, Data);
           });
-        }
       }
     }
     #endif
@@ -259,7 +251,17 @@ void UActorDispatcher::OnActorDestroyed(AActor *Actor)
   auto ROS2 = carla::ros2::ROS2::GetInstance();
   if (ROS2->IsEnabled())
   {
-    ROS2->RemoveActorRosName(reinterpret_cast<void *>(Actor));
+    auto Description = CarlaActor->GetActorInfo()->Description;
+
+    auto *Sensor = Cast<ASensor>(Actor);
+    auto *Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
+    if (Sensor != nullptr)
+    {
+      ROS2->UnregisterSensor(static_cast<void*>(Actor));
+    }
+    else if (Vehicle != nullptr && Description.GetAttribute("role_name").Value == "hero") {
+      ROS2->UnregisterVehicle(static_cast<void*>(Actor));
+    }
   }
   #endif
 }

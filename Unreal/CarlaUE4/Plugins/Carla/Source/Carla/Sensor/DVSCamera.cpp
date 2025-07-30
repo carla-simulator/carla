@@ -171,31 +171,9 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
   if (ROS2->IsEnabled())
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
-    auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
-    {
-      // get resolution of camera
-      int W = -1, H = -1;
-      float Fov = -1.0f;
-      auto WidthOpt = GetAttribute("image_size_x");
-      if (WidthOpt.has_value())
-        W = FCString::Atoi(*WidthOpt->Value);
-      auto HeightOpt = GetAttribute("image_size_y");
-      if (HeightOpt.has_value())
-        H = FCString::Atoi(*HeightOpt->Value);
-      auto FovOpt = GetAttribute("fov");
-      if (FovOpt.has_value())
-        Fov = FCString::Atof(*FovOpt->Value);
-      AActor* ParentActor = GetAttachParentActor();
-      if (ParentActor)
-      {
-        FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-        ROS2->ProcessDataFromDVS(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, BufView, W, H, Fov, this);
-      }
-      else
-      {
-        ROS2->ProcessDataFromDVS(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), BufView, W, H, Fov, this);
-      }
-    }
+    AActor* ParentActor = GetAttachParentActor();
+    auto Transform = (ParentActor) ? GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : Stream.GetSensorTransform();
+    ROS2->ProcessDataFromDVS(Stream.GetSensorType(), Transform, BufView, this);
   }
   #endif
   if (events.size() > 0)

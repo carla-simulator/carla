@@ -1,35 +1,42 @@
-// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
 
 #include <memory>
-#include <vector>
 
-#include "CarlaPublisher.h"
+#include "carla/ros2/publishers/BasePublisher.h"
+#include "carla/ros2/publishers/PublisherImpl.h"
+
+#include "carla/ros2/types/Clock.h"
+#include "carla/ros2/types/ClockPubSubTypes.h"
 
 namespace carla {
 namespace ros2 {
 
-  struct CarlaClockPublisherImpl;
-
-  class CarlaClockPublisher : public CarlaPublisher {
+  class CarlaClockPublisher : public BasePublisher {
     public:
-      CarlaClockPublisher(const char* ros_name = "", const char* parent = "");
-      ~CarlaClockPublisher();
-      CarlaClockPublisher(const CarlaClockPublisher&);
-      CarlaClockPublisher& operator=(const CarlaClockPublisher&);
-      CarlaClockPublisher(CarlaClockPublisher&&);
-      CarlaClockPublisher& operator=(CarlaClockPublisher&&);
+      struct ClockMsgTraits {
+        using msg_type = rosgraph::msg::Clock;
+        using msg_pubsub_type = rosgraph::msg::ClockPubSubType;
+      };
 
-      bool Init();
-      bool Publish();
-      void SetData(int32_t sec, uint32_t nanosec);
-      const char* type() const override { return "clock"; }
+      CarlaClockPublisher() :
+        BasePublisher("rt/clock"),
+        _impl(std::make_shared<PublisherImpl<ClockMsgTraits>>()) {
+          _impl->Init(GetBaseTopicName());
+      }
+
+      bool Publish() {
+        return _impl->Publish();
+      }
+
+      bool Write(int32_t seconds, uint32_t nanoseconds);
 
     private:
-      std::shared_ptr<CarlaClockPublisherImpl> _impl;
+      std::shared_ptr<PublisherImpl<ClockMsgTraits>> _impl;
   };
-}
-}
+
+}  // namespace ros2
+}  // namespace carla

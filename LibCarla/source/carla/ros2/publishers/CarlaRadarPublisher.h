@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
@@ -7,32 +7,21 @@
 #include <memory>
 #include <vector>
 
-#include "CarlaPublisher.h"
+#include "CarlaPointCloudPublisher.h"
 
 namespace carla {
 namespace ros2 {
 
-  struct CarlaRadarPublisherImpl;
-
-  class CarlaRadarPublisher : public CarlaPublisher {
+  class CarlaRadarPublisher : public CarlaPointCloudPublisher {
     public:
-      CarlaRadarPublisher(const char* ros_name = "", const char* parent = "");
-      ~CarlaRadarPublisher();
-      CarlaRadarPublisher(const CarlaRadarPublisher&);
-      CarlaRadarPublisher& operator=(const CarlaRadarPublisher&);
-      CarlaRadarPublisher(CarlaRadarPublisher&&);
-      CarlaRadarPublisher& operator=(CarlaRadarPublisher&&);
-
-      bool Init();
-      bool Publish();
-      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, size_t elements, const uint8_t* data);
-      const char* type() const override { return "radar"; }
+      CarlaRadarPublisher(std::string base_topic_name, std::string frame_id) :
+        CarlaPointCloudPublisher(base_topic_name, frame_id) {}
 
     private:
-      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, size_t elements, std::vector<uint8_t>&& data);
+      const size_t GetPointSize() override;
+      std::vector<sensor_msgs::msg::PointField> GetFields() override;
 
-    private:
-      std::shared_ptr<CarlaRadarPublisherImpl> _impl;
+      std::vector<uint8_t> ComputePointCloud(uint32_t height, uint32_t width, uint8_t *data) override;
   };
 }
 }

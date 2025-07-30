@@ -32,7 +32,19 @@ namespace ros2 {
     bool    manual_gear_shift;
   };
 
-  using ROS2CallbackData = boost::variant2::variant<VehicleControl>;
+  struct AckermannControl
+  {
+    float steer;
+    float steer_speed;
+    float speed;
+    float acceleration;
+    float jerk;
+  };
+
+  using ROS2CallbackData = boost::variant2::variant<
+    VehicleControl,
+    AckermannControl
+  >;
 
   using ActorCallback = std::function<void(void *actor, ROS2CallbackData data)>;
 
