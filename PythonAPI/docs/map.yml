@@ -184,6 +184,14 @@
       doc: >
         Converts a given `location`, a point in the simulation, to a carla.GeoLocation, which represents world coordinates. The geographical location of the map is defined inside OpenDRIVE within the tag <b><georeference></b>.
     # --------------------------------------
+    - def_name: geolocation_to_transform
+      params:
+      - param_name: geo_location
+        type: carla.GeoLocation
+      return: carla.Location
+      doc: >
+        Converts a given `geo_location`, a point given in geocoordinates, to a carla.Location, which represents a location in the simulation. The geographical location of the map is defined inside OpenDRIVE within the tag <b><georeference></b>.
+    # --------------------------------------
     - def_name: get_all_landmarks
       doc: >
         Returns all the landmarks in the map. Landmarks retrieved using this method have a __null__ waypoint.
