@@ -294,7 +294,7 @@ def _get_sumo_net(cfg_file):
     cfg_file = os.path.join(os.getcwd(), cfg_file)
 
     tree = ET.parse(cfg_file)
-    tag = tree.find('//net-file')
+    tag = tree.find('.//net-file')
     if tag is None:
         return None
 
