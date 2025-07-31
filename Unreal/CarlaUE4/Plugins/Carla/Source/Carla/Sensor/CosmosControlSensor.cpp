@@ -21,6 +21,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "UObject/UObjectGlobals.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/Actor/ActorRegistry.h"
+#include "Carla/Game/CarlaEpisode.h"
 
 const FColor ACosmosControlSensor::CosmosColors::LaneLines(98, 183, 249, 128);
 const FColor ACosmosControlSensor::CosmosColors::Lanes(56, 103, 221, 128);
@@ -31,7 +34,7 @@ const FColor ACosmosControlSensor::CosmosColors::Crosswalks(206, 131, 63, 128);
 const FColor ACosmosControlSensor::CosmosColors::RoadMarkings(126, 204, 205, 128);
 const FColor ACosmosControlSensor::CosmosColors::TrafficSigns(131, 175, 155, 128);
 const FColor ACosmosControlSensor::CosmosColors::TrafficLights(252, 157, 155, 128);
-const FColor ACosmosControlSensor::CosmosColors::Cars(255, 0, 0, 128);
+const FColor ACosmosControlSensor::CosmosColors::Cars(200, 36, 35, 128); // Same as Road Boundaries?
 const FColor ACosmosControlSensor::CosmosColors::Pedestrians(0, 255, 0, 128);
 
 
@@ -49,8 +52,8 @@ ACosmosControlSensor::ACosmosControlSensor(
   added_persisted_route_lines = false;
   duplicated_persistent_comp = false;
 
-  DynamicLines = CreateDefaultSubobject<ULineBatchComponent>(FName(TEXT("CosmosDynamicLinesBatchComponent")));
-  PersistentLines = CreateDefaultSubobject<ULineBatchComponent>(FName(TEXT("CosmosPersistentLinesBatchComponent")));
+  DynamicLines = CreateDefaultSubobject<ULineBatchComponent_CARLA>(FName(TEXT("CosmosDynamicLinesBatchComponent")));
+  PersistentLines = CreateDefaultSubobject<ULineBatchComponent_CARLA>(FName(TEXT("CosmosPersistentLinesBatchComponent")));
 
   DynamicLines->bOnlyOwnerSee = true;
   PersistentLines->bOnlyOwnerSee = true;
@@ -114,8 +117,20 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
   DynamicLines->Flush();
 
   int depth_prio = 0;
-  int dist_alpha = 255;
+  int dist_alpha = CosmosColors::RoadBoundaries.A;
   float cutoff_dist = 3000.0f;
+  ACarlaGameModeBase* carla_game_mode = Cast<ACarlaGameModeBase>(World->GetAuthGameMode());
+  auto* GameInstance = UCarlaStatics::GetGameInstance(World);
+
+  AActor* player_actor = nullptr;
+  for(TPair<FCarlaActor::IdType, TSharedPtr<FCarlaActor>> pair : GetEpisode().GetActorRegistry())
+  {
+    const FActorAttribute* Attribute = pair.Value->GetActorInfo()->Description.Variations.Find("role_name");
+    if (Attribute && (Attribute->Value.Contains("hero") || Attribute->Value.Contains("ego_vehicle"))) {
+      player_actor = pair.Value->GetActor();
+      break;
+    }
+  }
 
   //TODO: Move to sensor once it's able to be spawned
   TArray<UObject*> CosmosRelevantComponents;
@@ -127,6 +142,12 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     UMeshComponent* mesh_component = Cast<UMeshComponent>(Object);
     if (!mesh_component->IsVisible()) continue;
     if (mesh_component->GetOwner() == nullptr) continue;
+    if (mesh_component->GetOwner() == player_actor) continue;
+    
+
+    //Assumed to be off the road (parkings, ceilings)
+    //TODO: Better Occlusion techniques to root these out variable height maps)
+    if (mesh_component->GetComponentLocation().Z > 10000.0f) continue;
 
     FVector box_origin, box_extent;
     FBoxSphereBounds bounds;
@@ -180,10 +201,11 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     else if (Tag == carla::rpc::CityObjectLabel::Poles)
     {
       //Filtering out horizontal poles
-      if (fmax(bounds.BoxExtent.X, bounds.BoxExtent.Y) > bounds.BoxExtent.Z) continue;
-
-      float half_height = bounds.BoxExtent.Z;
-      DrawDebugCapsule(World, mesh_component->GetComponentLocation() + FVector(0.0f, 0.0f, half_height), half_height, 0.1f, FQuat::Identity, vis_color, false, -1, depth_prio, 20);
+      //if (/*fmax(bounds.BoxExtent.X, bounds.BoxExtent.Y) > bounds.BoxExtent.Z && */!static_mesh_comp->GetStaticMesh()->GetFName().ToString().Contains("pole")) continue;
+      
+      float half_height = fmax(bounds.BoxExtent.Z, box_extent.Z);
+      float distance_to_road = mesh_component->GetComponentLocation().Z;
+      DrawDebugCapsule(World, mesh_component->GetComponentLocation() + FVector(0.0f, 0.0f, half_height), half_height + (distance_to_road > 250.0f ? 0.0f : distance_to_road), 0.1f, FQuat::Identity, vis_color, false, -1, depth_prio, 20);
     }
   }
 
@@ -200,44 +222,16 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
       UBoxComponent* stop_box_collider = Cast<UBoxComponent>(traffic_light->GetComponentByClass(UBoxComponent::StaticClass()));
       //DrawDebugCapsule(World, stop_box_collider->GetComponentLocation() - FVector(0.0f, 0.0f, stop_box_collider->GetScaledBoxExtent().Z), stop_box_collider->GetScaledBoxExtent().X, 0.1f, stop_box_collider->GetRightVector()., FColor::Red, false, -1, 0, 20);
       //DrawDebugLine(const UWorld * InWorld, FVector const& LineStart, FVector const& LineEnd, FColor const& Color, bool bPersistentLines = false, float LifeTime = -1.f, uint8 DepthPriority = 0, float Thickness = 0.f) {}
+      FVector ground_pos = FVector(stop_box_collider->GetComponentLocation().X, stop_box_collider->GetComponentLocation().Y, 0.0f);
       DrawDebugLine(World,
-        stop_box_collider->GetComponentLocation() - FVector(0.0f, 0.0f, stop_box_collider->GetScaledBoxExtent().Z) + -stop_box_collider->GetScaledBoxExtent().X * stop_box_collider->GetForwardVector() - 710.0f * stop_box_collider->GetRightVector(),
-        stop_box_collider->GetComponentLocation() - FVector(0.0f, 0.0f, stop_box_collider->GetScaledBoxExtent().Z) + stop_box_collider->GetScaledBoxExtent().X * stop_box_collider->GetForwardVector() - 710.0f * stop_box_collider->GetRightVector(),
+        ground_pos /*stop_box_collider->GetComponentLocation() - FVector(0.0f, 0.0f, stop_box_collider->GetScaledBoxExtent().Z)*/ + -stop_box_collider->GetScaledBoxExtent().X * stop_box_collider->GetForwardVector() - 710.0f * stop_box_collider->GetRightVector(),
+        ground_pos /*stop_box_collider->GetComponentLocation() - FVector(0.0f, 0.0f, stop_box_collider->GetScaledBoxExtent().Z)*/ + stop_box_collider->GetScaledBoxExtent().X * stop_box_collider->GetForwardVector() - 710.0f * stop_box_collider->GetRightVector(),
         CosmosColors::WaitLines.WithAlpha(dist_alpha), true, -1, depth_prio, 20);
     }
   }
 
   if(!added_persisted_route_lines)
   {
-
-    //TArray<AActor*> RouteSplines;
-    //UGameplayStatics::GetAllActorsOfClass(World, ARoutePlanner::StaticClass(), RouteSplines);
-    //for (AActor* RouteSpline : RouteSplines)
-    //{
-    //  ARoutePlanner* route_planner = Cast<ARoutePlanner>(RouteSpline);
-
-    //  //route_planner->DrawRoutes();
-    //  for (int i = 0, lenRoutes = route_planner->Routes.Num(); i < lenRoutes; ++i)
-    //  {
-    //    for (int j = 0, lenNumPoints = route_planner->Routes[i]->GetNumberOfSplinePoints() - 1; j < lenNumPoints; ++j)
-    //    {
-    //      const FVector p0 = route_planner->Routes[i]->GetLocationAtSplinePoint(j + 0, ESplineCoordinateSpace::World);
-    //      const FVector p1 = route_planner->Routes[i]->GetLocationAtSplinePoint(j + 1, ESplineCoordinateSpace::World);
-
-    //      static const float MinThickness = 3.f;
-    //      static const float MaxThickness = 15.f;
-
-    //      const float Dist = (float)j / (float)lenNumPoints;
-    //      const float OneMinusDist = 1.f - Dist;
-    //      //const float Thickness = OneMinusDist * MaxThickness + MinThickness;
-
-    //      if (!route_planner->bIsIntersection)
-    //      {
-    //        DrawDebugLine(World, p0, p1, FColor(71, 134, 183).WithAlpha(dist_alpha), true, -1.f, depth_prio, 20.0f);
-    //      }
-    //    }
-    //  }
-    //}
 
     TArray<AActor*> RoadSplines;
     UGameplayStatics::GetAllActorsOfClass(World, ARoadSpline::StaticClass(), RoadSplines);
@@ -454,7 +448,6 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
   }
 
   //Crosswalks
-  ACarlaGameModeBase* carla_game_mode = Cast<ACarlaGameModeBase>(World->GetAuthGameMode());
   if (carla_game_mode != nullptr)
   {
     std::vector<carla::geom::Location> crosswalks_points = carla_game_mode->GetMap()->GetAllCrosswalkZones();
@@ -510,7 +503,7 @@ void ACosmosControlSensor::BeginDestroy() {
   if(GetWorld()) GetWorld()->PersistentLineBatcher->Flush();
 }
 
-ULineBatchComponent* ACosmosControlSensor::GetDebugLineBatcher(bool bPersistentLines)
+ULineBatchComponent_CARLA* ACosmosControlSensor::GetDebugLineBatcher(bool bPersistentLines)
 {
   return (bPersistentLines ? PersistentLines : DynamicLines);
 }
@@ -521,7 +514,7 @@ void ACosmosControlSensor::DrawDebugBox(const UWorld* InWorld, FVector const& Ce
   if (GEngine->GetNetMode(InWorld) != NM_DedicatedServer)
   {
     // this means foreground lines can't be persistent 
-    if (ULineBatchComponent* const LineBatcher = GetDebugLineBatcher(bPersistentLines))
+    if (ULineBatchComponent_CARLA* const LineBatcher = GetDebugLineBatcher(bPersistentLines))
     {
       float const LineLifeTime = 0.0f;//GetDebugLineLifeTime(LineBatcher, LifeTime, bPersistentLines);
       TArray<struct FBatchedLine> Lines;
@@ -585,7 +578,7 @@ void ACosmosControlSensor::DrawDebugSolidBox(const UWorld* InWorld, FVector cons
   // no debug line drawing on dedicated server
   if (GEngine->GetNetMode(InWorld) != NM_DedicatedServer)
   {
-    if (ULineBatchComponent* const LineBatcher = GetDebugLineBatcher(bPersistent))
+    if (ULineBatchComponent_CARLA* const LineBatcher = GetDebugLineBatcher(bPersistent))
     {
       FTransform Transform(Rotation, Center, FVector(1.0f, 1.0f, 1.0f));	// Build transform from Rotation, Center with uniform scale of 1.0.
       FBox Box = FBox::BuildAABB(FVector::ZeroVector, Extent);	// The Transform handles the Center location, so this box needs to be centered on origin.
@@ -600,7 +593,7 @@ void ACosmosControlSensor::DrawDebugLine(const UWorld* InWorld, FVector const& L
   if (GEngine->GetNetMode(InWorld) != NM_DedicatedServer)
   {
     // this means foreground lines can't be persistent 
-    if (ULineBatchComponent* const LineBatcher = GetDebugLineBatcher(bPersistentLines))
+    if (ULineBatchComponent_CARLA* const LineBatcher = GetDebugLineBatcher(bPersistentLines))
     {
       //float const LineLifeTime = GetDebugLineLifeTime(LineBatcher, LifeTime, bPersistentLines);
       LineBatcher->DrawLine(LineStart, LineEnd, Color, DepthPriority, Thickness, 0.0f);

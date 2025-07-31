@@ -12,6 +12,7 @@
 #include "Carla/Actor/ActorDefinition.h"
 #include "Components/LineBatchComponent.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Sensor/UE4_Overridden/LineBatchComponent_CARLA.h"
 #include "CosmosControlSensor.generated.h"
 
 /**
@@ -57,12 +58,12 @@ protected:
   void DrawHalfCircle(const UWorld* InWorld, const FVector& Base, const FVector& X, const FVector& Y, const FColor& Color, float Radius, int32 NumSides, bool bPersistentLines = false, float LifeTime = -1.f, uint8 DepthPriority = 0, float Thickness = 0);
 
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-  ULineBatchComponent* DynamicLines;
+  ULineBatchComponent_CARLA* DynamicLines;
   UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
-  ULineBatchComponent* PersistentLines;
+  ULineBatchComponent_CARLA* PersistentLines;
 
 private:
-  ULineBatchComponent* GetDebugLineBatcher(bool bPersistentLines);
+  ULineBatchComponent_CARLA* GetDebugLineBatcher(bool bPersistentLines);
   FColor GetColorByTag(carla::rpc::CityObjectLabel Tag, uint8 alpha = 255);
 
 
