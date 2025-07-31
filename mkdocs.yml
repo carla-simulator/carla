@@ -45,7 +45,7 @@ nav:
   - 'ASAM OpenDRIVE': 'adv_opendrive.md'
   - 'PTV Vissim': 'adv_ptv.md'
   - 'RSS': 'adv_rss.md'
-  - 'ROS': https://carla.readthedocs.io/projects/ros-bridge/en/latest/
+  - 'ROS': 'ecosys_ros.md'
   - 'Scenic': 'tuto_G_scenic.md'
   - 'SUMO': 'adv_sumo.md'
   - 'SYNKROTRON': 'ecosys_synkrotron.md'

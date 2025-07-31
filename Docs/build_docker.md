@@ -1,10 +1,6 @@
 # CARLA in Docker
 
-Linux users can pull an image based on a CARLA release to run in a Docker container. This is useful for users who:
-
-- Want to run CARLA without needing to install all dependencies
-- Run multiple CARLA servers and perform GPU mapping
-- Run the CARLA server without a display
+Linux users can pull an image based on a CARLA release to run in a Docker container for convenience or for cluster or cloud deployments.
 
 ## Before you begin
 
@@ -12,14 +8,14 @@ You will need to have installed:
 
 - __Docker:__ Follow the installation instructions [here](https://docs.docker.com/engine/install/).
 - __Post installation:__ Follow [these instructions](https://docs.docker.com/engine/install/linux-postinstall/) to avoid the need for `sudo` commands
-- __NVIDIA Container Toolkit (v1.12.0 or higher):__ The NVIDIA Container Toolkit is a library and toolset that exposes NVIDIA graphics devices to Linux containers. It is designed specifically for Linux containers running on Linux host systems or within Linux distributions under version 2 of the Windows Subsystem for Linux.
+- __NVIDIA Container Toolkit (v1.12.0 or higher):__ The NVIDIA Container Toolkit is a library and toolset that exposes NVIDIA graphics devices to Linux containers. It is designed specifically for Linux containers running on Linux host systems. Follow the instructions [here](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#with-apt-ubuntu-debian) to install the container toolkit with `apt` and then follow the [configuration instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#configuring-docker).
 
 ## Pull the CARLA Docker image
 
 Pull the image with the following command:
 
 ```sh
-docker pull carlasim/carla:0.9.15 #Substite desired version number
+docker pull carlasim/carla:0.9.16 #Substite desired version number, 0.9.16+
 ```
 
 ## Run the image
@@ -32,7 +28,7 @@ docker run \
     --net=host \
     --env=NVIDIA_VISIBLE_DEVICES=all \
     --env=NVIDIA_DRIVER_CAPABILITIES=all \
-    carlasim/carla:0.9.15 bash CarlaUE4.sh -RenderOffScreen -nosound
+    carlasim/carla:0.9.16 bash CarlaUE4.sh -RenderOffScreen -nosound
 ```
 
 ---
