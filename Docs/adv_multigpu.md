@@ -16,11 +16,15 @@ The parameters we can use are:
 
 For example
 
-**./CarlaUE4.sh -nullrhi**
+```sh
+./CarlaUE4.sh -nullrhi
+```
 
 The primary server will use by default the port 2002 to listen for secondary servers. If you need to listen on another port, then you can change it with the flag
 
-**./CarlaUE4.sh -nullrhi -carla-primary-port=3002**
+```sh
+./CarlaUE4.sh -nullrhi -carla-primary-port=3002
+```
 
 ## Secondary servers
 
@@ -32,13 +36,17 @@ Then we need to start as many servers as we want, but the ideal is to have as ma
 
 For example, if the primary server is executing in the same computer than the secondary servers and with the default port, we can use this:
 
-**./CarlaUE4.sh -carla-rpc-port=3000 -carla-primary-host=127.0.0.1 -ini:[/Script/Engine.RendererSettings]:r.GraphicsAdapter=0**
+```sh
+./CarlaUE4.sh -carla-rpc-port=3000 -carla-primary-host=127.0.0.1 -ini:[/Script/Engine.RendererSettings]:r.GraphicsAdapter=0
+```
 
 Here, the secondary server will use port 3000 as the RPC server to avoid conflicts with other ports (but it will never be used), and will connect to the primary server located at IP 127.0.0.1 (localhost) in the default port (2002), and also this server will use the GPU device 0.
 
 If we want to start another secondary server in the same machine using another GPU, we could use this command:
 
-**./CarlaUE4.sh -carla-rpc-port=4000 -carla-primary-host=127.0.0.1 -carla-primary-port=2002 -ini:[/Script/Engine.RendererSettings]:r.GraphicsAdapter=1**
+```sh
+./CarlaUE4.sh -carla-rpc-port=4000 -carla-primary-host=127.0.0.1 -carla-primary-port=2002 -ini:[/Script/Engine.RendererSettings]:r.GraphicsAdapter=1
+```
 
 This secondary server will use port 4000 as the RPC server to avoid conflicts with other ports and will connect to the primary server located at IP 127.0.0.1 in the port 2002, and also this server will use the GPU device 1.
 

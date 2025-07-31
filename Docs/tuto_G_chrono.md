@@ -49,21 +49,21 @@ There are a variety of example template files for different vehicles available i
 See below for an example of how to enable Chrono physics:
 
 ```python
-    # Spawn your vehicle
-    vehicle = world.spawn_actor(bp, spawn_point)
+# Spawn your vehicle
+vehicle = world.spawn_actor(bp, spawn_point)
 
-    # Set the base path
-    base_path = "/path/to/carla/Build/chrono-install/share/chrono/data/vehicle/"
+# Set the base path
+base_path = "/path/to/carla/Build/chrono-install/share/chrono/data/vehicle/"
 
-    # Set the template files
+# Set the template files
 
-    vehicle_json = "sedan/vehicle/Sedan_Vehicle.json"
-    powertrain_json = "sedan/powertrain/Sedan_SimpleMapPowertrain.json"
-    tire_json = "sedan/tire/Sedan_TMeasyTire.json"
+vehicle_json = "sedan/vehicle/Sedan_Vehicle.json"
+powertrain_json = "sedan/powertrain/Sedan_SimpleMapPowertrain.json"
+tire_json = "sedan/tire/Sedan_TMeasyTire.json"
 
-    # Enable Chrono physics
+# Enable Chrono physics
 
-    vehicle.enable_chrono_physics(5000, 0.002, vehicle_json, powertrain_json, tire_json, base_path)
+vehicle.enable_chrono_physics(5000, 0.002, vehicle_json, powertrain_json, tire_json, base_path)
 ```
 
 You can try the Chrono physics integration using the example script `manual_control_chrono.py` found in `PythonAPI/examples`. After running the script, press `Ctrl + o` to enable Chrono.
