@@ -213,13 +213,19 @@ The above command will build the Python API for the system Python version. You c
 sudo apt install python3.X python3.X-dev python3.X-distutils
 ```
 
-* Disable any virtual environment managers such as PyEnv, Rye or Conda. These might interfere with the installation.
+* We recommend to disable any virtual environment managers such as PyEnv, Rye or Conda. These might interfere with the installation.
 
 * Then run the following command in the root CARLA root directory: 
 
 ```sh
 # Delete versions as required
 make PythonAPI ARGS="--python-version=3.8, 3.9, 3.10, 3.11"
+```
+
+* If you are using a non-standard Python installation or a Python virtual environment manager like PyEnv, Rye or Conda. Instead of the `--python-version` argument it may be better to use the `--python-root` argument (you can locate the installation using `which python3`):
+
+```sh
+make PythonAPI ARGS="--python-root=/path/to/python/installation"
 ```
 
 The CARLA Python API wheel will be generated in `CARLA_ROOT/PythonAPI/carla/dist`. The name of the wheel will depend upon the current CARLA version and the chosen Python version. Install the wheel with PIP:
