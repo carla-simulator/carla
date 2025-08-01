@@ -220,7 +220,6 @@ sudo apt install python3.X python3.X-dev python3.X-distutils
 ```sh
 # Delete versions as required
 make PythonAPI ARGS="--python-version=3.8, 3.9, 3.10, 3.11"
-```
 
 * If you are using a non-standard Python installation or a Python virtual environment manager like PyEnv, Rye or Conda. Instead of the `--python-version` argument it may be better to use the `--python-root` argument (you can locate the installation using `which python3`):
 
