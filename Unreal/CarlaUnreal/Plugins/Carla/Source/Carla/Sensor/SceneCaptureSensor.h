@@ -134,6 +134,11 @@ public:
 
   void SetImageSize(uint32 Width, uint32 Height);
 
+  USceneCaptureComponent2D_CARLA *GetCaptureComponent() const
+  {
+    return CaptureComponent2D;
+  }
+  
   uint32 GetImageWidth() const
   {
     return ImageWidth;

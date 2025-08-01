@@ -29,14 +29,6 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 # Go two directories above the current script
 CARLA_ROOT_PATH = os.path.normpath(SCRIPT_DIR + '/../..')
 
-try:
-    sys.path.append(glob.glob(os.path.join(CARLA_ROOT_PATH, "PythonAPI/carla/dist/carla-*%d.%d-%s.egg" % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64')))[0])
-except IndexError:
-    pass
-
 import carla
 
 
