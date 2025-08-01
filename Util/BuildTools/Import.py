@@ -29,14 +29,6 @@ SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 # Go two directories above the current script
 CARLA_ROOT_PATH = os.path.normpath(SCRIPT_DIR + '/../..')
 
-try:
-    sys.path.append(glob.glob(os.path.join(CARLA_ROOT_PATH, "PythonAPI/carla/dist/carla-*%d.%d-%s.egg" % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64')))[0])
-except IndexError:
-    pass
-
 import carla
 
 
@@ -198,20 +190,20 @@ def generate_decals_file(folder):
 
 def invoke_commandlet(name, arguments):
     """Generic function for running a commandlet with its arguments."""
-    ue4_path = os.environ["UE4_ROOT"]
+    ue5_path = os.environ["CARLA_UNREAL_ENGINE_PATH"]
     uproject_path = os.path.join(CARLA_ROOT_PATH, "Unreal", "CarlaUnreal", "CarlaUnreal.uproject")
     run = "-run=%s" % (name)
 
     if os.name == "nt":
         sys_name = "Win64"
-        editor_path = "%s/Engine/Binaries/%s/UE4Editor" % (ue4_path, sys_name)
+        editor_path = "%s/Engine/Binaries/%s/UnrealEditor" % (ue5_path, sys_name)
         command = [editor_path, uproject_path, run]
         command.extend(arguments)
         print("Commandlet:", command)
         subprocess.check_call(command, shell=True)
     elif os.name == "posix":
         sys_name = "Linux"
-        editor_path = "%s/Engine/Binaries/%s/UE4Editor" % (ue4_path, sys_name)
+        editor_path = "%s/Engine/Binaries/%s/UnrealEditor" % (ue5_path, sys_name)
         full_command = "%s %s %s %s" % (editor_path, uproject_path, run, " ".join(arguments))
         print("Commandlet:", full_command)
         subprocess.call([full_command], shell=True)
@@ -350,7 +342,7 @@ def import_assets(package_name, json_dirname, props, maps, do_tiles, tile_size, 
             # import groups of tiles to prevent unreal from using too much memory
             map_template = {}
             for key, value in iter(umap.items()):
-                if key is not 'tiles':
+                if key != 'tiles':
                     map_template[key] = value
             map_template['tiles'] = []
             tiles = umap['tiles']
