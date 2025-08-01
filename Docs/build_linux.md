@@ -187,6 +187,8 @@ cd ~
 gedit .bashrc # or .profile
 ```
 
+---
+
 ### Build CARLA with Make
 
 The following commands should be run from the root folder of the CARLA repository that you earlier downloaded or cloned with git. There are two parts to the build process for CARLA, compiling the client and compiling the server.
@@ -201,11 +203,23 @@ The following command compiles the Python API client:
 make PythonAPI
 ```
 
-Optionally, to compile the PythonAPI for a specific version of Python, run the below command in the root CARLA directory. The relevant Python version needs to be installed at system level.
+**Building the Python API for a specific Python version**
+
+The above command will build the Python API for the system Python version. You can target a specific version of Python up to 3.11 with the following instructions:
+
+* Install the target Python version at the system level with the development headers and the distutils, replace *X* with the desired version:
+
+```
+sudo apt install python3.X python3.X-dev python3.X-distutils
+```
+
+* Disable any virtual environment managers such as PyEnv, Rye or Conda. These might interfere with the installation.
+
+* Then run the following command in the root CARLA root directory: 
 
 ```sh
 # Delete versions as required
-make PythonAPI ARGS="--python-version=3.8, 3.9, 3.10, 3.11, 3.12"
+make PythonAPI ARGS="--python-version=3.8, 3.9, 3.10, 3.11"
 ```
 
 The CARLA Python API wheel will be generated in `CARLA_ROOT/PythonAPI/carla/dist`. The name of the wheel will depend upon the current CARLA version and the chosen Python version. Install the wheel with PIP:
