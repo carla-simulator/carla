@@ -210,6 +210,17 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
   if (FPaths::FileExists(AbsoluteRecastBuilderPath) &&
       Params.enable_pedestrian_navigation)
   {
+    if(FPlatformProcess::IsProcRunning(RecastBuilderProcessHandle))
+    {
+      UE_LOG(LogCarla, Warning, TEXT("RecastBuilder process is already running, "
+          "it will be replaced with the new one."));
+      FPlatformProcess::CloseProc(RecastBuilderProcessHandle);
+    }
+    else
+    {
+      UE_LOG(LogCarla, Log, TEXT("Starting RecastBuilder process..."));
+    }
+
     /// @todo this can take too long to finish, clients need a method
     /// to know if the navigation is available or not.
     RecastBuilderProcessHandle = FPlatformProcess::CreateProc(

@@ -190,7 +190,7 @@ FCarlaActor* UActorDispatcher::RegisterActor(
       // If not specified by the user, set the ActorId as the actor name
       if (RosName.empty())
       {
-        RosName = std::to_string(View->GetActorId());
+        RosName = "actor" + std::to_string(View->GetActorId());
       }
 
       std::string FrameId = std::string(TCHAR_TO_UTF8(*Description.GetAttribute("ros_frame_id").Value));
@@ -241,27 +241,27 @@ void UActorDispatcher::OnActorDestroyed(AActor *Actor)
   FCarlaActor* CarlaActor = Registry.FindCarlaActor(Actor);
   if (CarlaActor)
   {
+    #if defined(WITH_ROS2)
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+    {
+      auto Description = CarlaActor->GetActorInfo()->Description;
+
+      auto *Sensor = Cast<ASensor>(Actor);
+      auto *Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
+      if (Sensor != nullptr)
+      {
+        ROS2->UnregisterSensor(static_cast<void*>(Actor));
+      }
+      else if (Vehicle != nullptr && Description.GetAttribute("role_name").Value == "hero") {
+        ROS2->UnregisterVehicle(static_cast<void*>(Actor));
+      }
+    }
+    #endif
+
     if (CarlaActor->IsActive())
     {
       Registry.Deregister(CarlaActor->GetActorId());
     }
   }
-
-  #if defined(WITH_ROS2)
-  auto ROS2 = carla::ros2::ROS2::GetInstance();
-  if (ROS2->IsEnabled())
-  {
-    auto Description = CarlaActor->GetActorInfo()->Description;
-
-    auto *Sensor = Cast<ASensor>(Actor);
-    auto *Vehicle = Cast<ACarlaWheeledVehicle>(Actor);
-    if (Sensor != nullptr)
-    {
-      ROS2->UnregisterSensor(static_cast<void*>(Actor));
-    }
-    else if (Vehicle != nullptr && Description.GetAttribute("role_name").Value == "hero") {
-      ROS2->UnregisterVehicle(static_cast<void*>(Actor));
-    }
-  }
-  #endif
 }
