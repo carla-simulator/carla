@@ -1,0 +1,20 @@
+{
+  "Name":                       "Sedan Rack-Pinion Steering",
+  "Type":                       "Steering",
+  "Template":                   "RackPinion",
+
+  "Steering Link":
+  {
+    "Mass":                     1.889,
+    "COM":                      0,
+    "Inertia":                  [0.138, 0.00009, 0.138],
+    "Radius":                   0.03,
+    "Length":                   0.5
+  },
+
+  "Pinion":
+  {
+    "Radius":                   0.3,
+    "Maximum Angle":            0.27
+  }
+}
