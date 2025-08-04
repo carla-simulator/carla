@@ -44,7 +44,7 @@ Chrono physics is enabled using the `enable_chrono_physics` method available thr
 !!! Important
     Double-check your paths. Incorrect or missing paths can cause Unreal Engine to crash.
 
-There are a variety of example template files for different vehicles available in `Build/chrono-install/share/chrono/data/vehicle`. Read the Project Chrono [documentation](https://api.projectchrono.org/manual_vehicle.html) to find out more about their vehicle examples and how to create templates.
+A default implementation for a sedan is provided in `Co-Simulation/Chrono/Vehicles/sedan/` but you can find a variety of example template files for different vehicles available in `Build/chrono-install/share/chrono/data/vehicle`. Read the Project Chrono [documentation](https://api.projectchrono.org/manual_vehicle.html) to find out more about their vehicle examples and how to create templates.
 
 See below for an example of how to enable Chrono physics:
 
@@ -53,7 +53,7 @@ See below for an example of how to enable Chrono physics:
     vehicle = world.spawn_actor(bp, spawn_point)
 
     # Set the base path
-    base_path = "/path/to/carla/Build/chrono-install/share/chrono/data/vehicle/"
+    base_path = "/path/to/carla/Co-Simulation/Chrono/Vehicles/"
 
     # Set the template files
 
