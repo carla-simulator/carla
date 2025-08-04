@@ -89,6 +89,7 @@ import math
 import random
 import re
 import weakref
+from pathlib import Path
 
 try:
     import pygame
@@ -431,7 +432,7 @@ class KeyboardControl(object):
                         vehicle_json = "sedan/vehicle/Sedan_Vehicle.json"
                         powertrain_json = "sedan/powertrain/Sedan_SimpleMapPowertrain.json"
                         tire_json = "sedan/tire/Sedan_TMeasyTire.json"
-                        base_path = "/home/adas/carla/Build/chrono-install/share/chrono/data/vehicle/"
+                        base_path = str(Path(__file__).resolve().parents[2] / "Co-Simulation" / "Chrono" / "Vehicles") + os.sep
                         world.player.enable_chrono_physics(5000, 0.002, vehicle_json, powertrain_json, tire_json, base_path)
                     else:
                         self._chrono_enabled = False

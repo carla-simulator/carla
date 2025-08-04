@@ -4021,7 +4021,7 @@ class Vehicle(Actor):
             `vehicle_json (str)`: Path to vehicle json file relative to `base_json_path`.\n
             `powertrain_json (str)`: Path to powertrain json file relative to `base_json_path`.\n
             `tire_json (str)`: Path to tire json file relative to `base_json_path`.\n
-            `base_json_path (str)`: Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/chrono-install/share/chrono/data/vehicle/` (the final / character is required).
+            `base_json_path (str)`: Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/Co-Simulation/Chrono/Vehicles/` (the final / character is required).
         """
 
     def is_at_traffic_light(self) -> bool:
