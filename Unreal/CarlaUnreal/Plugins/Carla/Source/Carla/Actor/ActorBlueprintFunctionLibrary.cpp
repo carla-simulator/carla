@@ -402,6 +402,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     post_process_profile.bRestrictToRecommended = false;
 
     Definition.Variations.Append({PostProccess, post_process_profile});
+
   }
 
   Success = CheckActorDefinition(Definition);
