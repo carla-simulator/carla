@@ -394,14 +394,14 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     PostProccess.RecommendedValues = {TEXT("true")};
     PostProccess.bRestrictToRecommended = false;
 
-    // PostProcessProfile
-    FActorVariation PostProcessProfile;
-    PostProcessProfile.Id = TEXT("PostProcessProfile");
-    PostProcessProfile.Type = EActorAttributeType::String;
-    PostProcessProfile.RecommendedValues = {TEXT("default")};
-    PostProcessProfile.bRestrictToRecommended = false;
+    // post_process_profile
+    FActorVariation post_process_profile;
+    post_process_profile.Id = TEXT("post_process_profile");
+    post_process_profile.Type = EActorAttributeType::String;
+    post_process_profile.RecommendedValues = {TEXT("default")};
+    post_process_profile.bRestrictToRecommended = false;
 
-    Definition.Variations.Append({PostProccess, PostProcessProfile});
+    Definition.Variations.Append({PostProccess, post_process_profile});
   }
 
   Success = CheckActorDefinition(Definition);

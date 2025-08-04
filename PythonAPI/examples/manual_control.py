@@ -1133,7 +1133,8 @@ class CameraManager(object):
             ['sensor.lidar.ray_cast_semantic', None, 'Semantic Lidar (Ray-Cast)', {'range': '50'}],
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB Distorted',
                 {'lens_circle_multiplier': '3.0',
-                'lens_circle_falloff': '3.0'}],
+                'lens_circle_falloff': '3.0',
+                'post_process_profile' : 'default'}],
             ['sensor.camera.optical_flow', cc.Raw, 'Optical Flow', {}],
             ['sensor.camera.normals', cc.Raw, 'Camera Normals', {}],
         ]
