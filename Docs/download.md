@@ -6,9 +6,9 @@
 
 ### Nightly build
 
-> This is an automated build with the latest changes pushed to our `dev`
-> branch. It contains the very latest fixes and features that will be part of the
-> next release, but also some experimental changes. Use at your own risk!
+> This is an automated build with the latest changes pushed to our `ue4-dev` branch. It contains the very latest
+> fixes and features that will be part of the next release of the Unreal Engine 4.26 version of CARLA, but also
+> some experimental changes from work-in-progress. Use at your own risk!
 
 - [CARLA Nightly Build (Linux)](https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/Dev/CARLA_Latest.tar.gz)
 - [AdditionalMaps Nightly Build (Linux)](https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/Dev/AdditionalMaps_Latest.tar.gz)
