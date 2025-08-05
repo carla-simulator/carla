@@ -10,6 +10,7 @@
 #include <boost/asio/ip/address.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ip/udp.hpp>
+#include <boost/asio/ip/basic_resolver_query.hpp>
 
 namespace carla {
 namespace streaming {
@@ -72,17 +73,21 @@ namespace detail {
     return boost::asio::ip::make_address("127.0.0.1");
   }
 
-  static inline auto make_address(const std::string &address) {
+  static inline auto make_address(
+    const std::string &address)
+  {
+    using protocol_type = boost::asio::ip::tcp;
+    using resolver_type = boost::asio::ip::tcp::resolver;
+
     boost::asio::io_context io_context;
-    boost::asio::ip::tcp::resolver resolver(io_context);
-    boost::asio::ip::tcp::resolver::query query(boost::asio::ip::tcp::v4(), address, "", boost::asio::ip::tcp::resolver::query::canonical_name);
-    boost::asio::ip::tcp::resolver::iterator iter = resolver.resolve(query);
-    boost::asio::ip::tcp::resolver::iterator end;
-    while (iter != end)
-    {
-      boost::asio::ip::tcp::endpoint endpoint = *iter++;
-      return endpoint.address();
-    }
+    resolver_type resolver(io_context);
+    auto result = resolver.resolve(
+      protocol_type::v4(),
+      address,
+      std::string_view(),
+      resolver_type::canonical_name);
+    for (auto& e : result)
+      return e.endpoint().address();
     return boost::asio::ip::make_address(address);
   }
 

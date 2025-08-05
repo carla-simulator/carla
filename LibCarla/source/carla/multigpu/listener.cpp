@@ -31,7 +31,7 @@ namespace multigpu {
     _acceptor.cancel();
     _acceptor.close();
     _io_context.stop();
-    _io_context.reset();
+    _io_context.restart();
   }
   
   void Listener::OpenSession(

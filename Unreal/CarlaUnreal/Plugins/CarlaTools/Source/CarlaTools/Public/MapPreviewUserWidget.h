@@ -7,9 +7,15 @@
 #include "Blueprint/UserWidget.h"
 #include <util/ue-header-guard-end.h>
 
+// This warning suppression avoids errors due to name collisions between a function's local variable and a concept named disposition.
+#pragma warning(push)
+#if defined(_MSVC_LANG) && !defined(__clang__)
+#pragma warning(disable : 4459)
+#endif
 #include <util/disable-ue4-macros.h>
 #include <boost/asio.hpp>
 #include <util/enable-ue4-macros.h>
+#pragma warning(pop)
 
 #include <memory>
 
@@ -24,8 +30,9 @@ class CARLATOOLS_API UMapPreviewUserWidget : public UUserWidget
 	GENERATED_BODY()
 
 private:
-	// Boost socket
-  boost::asio::io_service io_service;
+
+  boost::asio::io_context io_context;
+
   std::unique_ptr<boost::asio::ip::tcp::socket> SocketPtr;
 
 
