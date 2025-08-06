@@ -221,6 +221,18 @@ sudo apt install python3.X python3.X-dev python3.X-distutils
 # Delete versions as required
 make PythonAPI ARGS="--python-version=3.8, 3.9, 3.10, 3.11"
 
+* **For Python 3.12**, the *distutils* library does not exist for Ubuntu and therefore *setuptools* may
+ need to be updated, run the following commands to update *setuptools*:
+
+```sh
+sudo apt install python3.12 python3.12-dev python3.12-venv
+python3.12 -m ensurepip --upgrade
+python3.12 -m pip install --upgrade pip setuptools
+
+# Then run make from the CARLA root directory
+make PythonAPI ARGS="--python-version=3.12"
+```
+
 * If you are using a non-standard Python installation or a Python virtual environment manager like PyEnv, Rye or Conda. Instead of the `--python-version` argument it may be better to use the `--python-root` argument (you can locate the installation using `which python3`):
 
 ```sh

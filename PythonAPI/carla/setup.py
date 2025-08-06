@@ -62,6 +62,7 @@ def get_libcarla_extensions():
                 '-Wpessimizing-move', '-Wold-style-cast', '-Wnull-dereference',
                 '-Wduplicate-enum', '-Wnon-virtual-dtor', '-Wheader-hygiene',
                 '-Wconversion', '-Wfloat-overflow-conversion',
+                '-Wno-error=unused-command-line-argument',
                 '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT',
                 '-stdlib=libstdc++'
             ]
