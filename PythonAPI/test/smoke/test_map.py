@@ -50,7 +50,7 @@ class TestMap(SmokeTest):
         self.assertTrue(str(m.to_opendrive()))
 
         # --- Check for crosswalks using get_crosswalks() ---
-        crosswalks = carla_map.get_crosswalks()
+        crosswalks = m.get_crosswalks()
         self.assertGreater(
             len(crosswalks), 0,
             msg=f"Map {map_name} has no crosswalks."
