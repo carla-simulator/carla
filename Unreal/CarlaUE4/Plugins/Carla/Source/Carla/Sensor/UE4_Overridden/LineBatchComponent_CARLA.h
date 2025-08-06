@@ -13,9 +13,12 @@ UCLASS()
 class CARLA_API ULineBatchComponent_CARLA : public ULineBatchComponent
 {
 	GENERATED_BODY()
-	
+
+	ULineBatchComponent_CARLA(const FObjectInitializer& ObjectInitializer = FObjectInitializer::Get());
+
 	virtual FPrimitiveSceneProxy* CreateSceneProxy() override;
 
+	UMaterial* CosmosMeshMaterial = nullptr;
 };
 
 /** Represents a LineBatchComponent to the scene manager. */

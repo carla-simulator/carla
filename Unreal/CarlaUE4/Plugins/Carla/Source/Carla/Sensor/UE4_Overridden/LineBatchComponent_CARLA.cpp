@@ -3,6 +3,7 @@
 
 #include "Sensor/UE4_Overridden/LineBatchComponent_CARLA.h"
 #include "Sensor/CosmosControlSensor.h"
+#include "ConstructorHelpers.h"
 
 FLineBatcherSceneProxy_CARLA::FLineBatcherSceneProxy_CARLA(const ULineBatchComponent_CARLA* InComponent) :
 	FLineBatcherSceneProxy(InComponent), Lines(InComponent->BatchedLines),
@@ -13,18 +14,24 @@ FLineBatcherSceneProxy_CARLA::FLineBatcherSceneProxy_CARLA(const ULineBatchCompo
 	//SetCustomDepthStencilValue_GameThread(250);
 }
 
+ULineBatchComponent_CARLA::ULineBatchComponent_CARLA(const FObjectInitializer& ObjectInitializer /*= FObjectInitializer::Get()*/)
+	: Super(ObjectInitializer)
+{
+	ConstructorHelpers::FObjectFinder<UMaterial> Loader(TEXT("Material'/Carla/PostProcessingMaterials/DebugCosmosMeshMaterial.DebugCosmosMeshMaterial'"));
+	CosmosMeshMaterial = Loader.Object;
+}
 
 FPrimitiveSceneProxy* ULineBatchComponent_CARLA::CreateSceneProxy()
 {
-	static UMaterial* loaded_cosmos_mesh_material;
-	if(loaded_cosmos_mesh_material == nullptr)
-	{
-		FSoftObjectPath material_path("Material'/Carla/PostProcessingMaterials/DebugCosmosMeshMaterial.DebugCosmosMeshMaterial'");
-		loaded_cosmos_mesh_material = LoadObject<UMaterial>(NULL, *(material_path.ToString()), NULL, LOAD_None, NULL);
-	}
+	//static UMaterial* loaded_cosmos_mesh_material;
+	//if(loaded_cosmos_mesh_material == nullptr)
+	//{
+	//	FSoftObjectPath material_path("Material'/Carla/PostProcessingMaterials/DebugCosmosMeshMaterial.DebugCosmosMeshMaterial'");
+	//	loaded_cosmos_mesh_material = LoadObject<UMaterial>(NULL, *(material_path.ToString()), NULL, LOAD_None, NULL);
+	//}
 
 	FLineBatcherSceneProxy_CARLA* proxy = new FLineBatcherSceneProxy_CARLA(this);
-	proxy->CosmosMeshMaterial = loaded_cosmos_mesh_material;
+	proxy->CosmosMeshMaterial = CosmosMeshMaterial;
 	
 	return proxy;
 }
