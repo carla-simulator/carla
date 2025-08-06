@@ -19,7 +19,7 @@ class TestMap(SmokeTest):
 
     def test_load_all_maps(self):
         print("TestMap.test_load_all_maps")
-        map_names = ['Town01', 'Town01_Opt', 'Town02', 'Town02_Opt', 'Town03', 'Town03_Opt', 'Town04', 'Town04_Opt', 'Town05', 'Town05_Opt', 'Town10HD', 'Town10HD_Opt']
+        map_names = ['Town01', 'Town01_Opt', 'Town02', 'Town02_Opt', 'Town03', 'Town03_Opt', 'Town04', 'Town04_Opt', 'Town05', 'Town05_Opt', 'Town10HD', 'Town10HD_Opt', 'Town12', 'Town15']
         for map_name in map_names:
             world = self.client.load_world(map_name)
             # workaround: give time to UE4 to clean memory after loading (old assets)
@@ -48,3 +48,11 @@ class TestMap(SmokeTest):
                 waypoint = random.choice(next_waypoints)
         _ = m.transform_to_geolocation(carla.Location())
         self.assertTrue(str(m.to_opendrive()))
+
+        # --- Check for crosswalks using get_crosswalks() ---
+        crosswalks = carla_map.get_crosswalks()
+        self.assertGreater(
+            len(crosswalks), 0,
+            msg=f"Map {map_name} has no crosswalks."
+        )
+            
