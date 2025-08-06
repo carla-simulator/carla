@@ -115,6 +115,7 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
   ACarlaGameModeBase* carla_game_mode = Cast<ACarlaGameModeBase>(World->GetAuthGameMode());
   auto* GameInstance = UCarlaStatics::GetGameInstance(World);
 
+  //TODO: Finish Frustrum Culling
   //FMinimalViewInfo view_info;
   //FConvexVolume frustrum;
   //GetCaptureComponent2D()->GetCameraView(DeltaSeconds, view_info);
@@ -130,7 +131,6 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     }
   }
 
-  //TODO: Move to sensor once it's able to be spawned
   TArray<UObject*> CosmosRelevantComponents;
   GetObjectsOfClass(UMeshComponent::StaticClass(), CosmosRelevantComponents, true, EObjectFlags::RF_ClassDefaultObject, EInternalObjectFlags::AllFlags);
 
@@ -149,6 +149,7 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     FVector box_origin, box_extent;
     FBoxSphereBounds bounds;
     UKismetSystemLibrary::GetActorBounds(mesh_component->GetOwner(), box_origin, box_extent);
+    //TODO: Finish Frustrum Culling
     //if (!frustrum.IntersectBox(box_origin, box_extent)) continue;
 
     bounds = FBoxSphereBounds(box_origin, box_extent, 0.0f);

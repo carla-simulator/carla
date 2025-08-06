@@ -68,8 +68,5 @@ public:
   int LaneID;
 
   void SetSplinePoints(const TArray<FVector>& Points, bool bClosedLoop = false);
-
-protected:
-
 };
 

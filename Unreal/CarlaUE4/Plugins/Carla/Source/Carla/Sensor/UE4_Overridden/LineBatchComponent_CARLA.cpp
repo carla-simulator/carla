@@ -10,8 +10,6 @@ FLineBatcherSceneProxy_CARLA::FLineBatcherSceneProxy_CARLA(const ULineBatchCompo
 	Points(InComponent->BatchedPoints), Meshes(InComponent->BatchedMeshes)
 {
 	bWillEverBeLit = false;
-	//SetCustomDepthEnabled_GameThread(true);
-	//SetCustomDepthStencilValue_GameThread(250);
 }
 
 ULineBatchComponent_CARLA::ULineBatchComponent_CARLA(const FObjectInitializer& ObjectInitializer /*= FObjectInitializer::Get()*/)
@@ -23,13 +21,6 @@ ULineBatchComponent_CARLA::ULineBatchComponent_CARLA(const FObjectInitializer& O
 
 FPrimitiveSceneProxy* ULineBatchComponent_CARLA::CreateSceneProxy()
 {
-	//static UMaterial* loaded_cosmos_mesh_material;
-	//if(loaded_cosmos_mesh_material == nullptr)
-	//{
-	//	FSoftObjectPath material_path("Material'/Carla/PostProcessingMaterials/DebugCosmosMeshMaterial.DebugCosmosMeshMaterial'");
-	//	loaded_cosmos_mesh_material = LoadObject<UMaterial>(NULL, *(material_path.ToString()), NULL, LOAD_None, NULL);
-	//}
-
 	FLineBatcherSceneProxy_CARLA* proxy = new FLineBatcherSceneProxy_CARLA(this);
 	proxy->CosmosMeshMaterial = CosmosMeshMaterial;
 	
