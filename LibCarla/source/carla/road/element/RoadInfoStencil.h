@@ -60,10 +60,6 @@ namespace element {
       return _road_id;
     }
 
-    bool IsDynamic() const {
-      return _signal->GetDynamic();
-    }
-
     double GetS() const {
       return _s;
     }

@@ -18,18 +18,6 @@ namespace road {
     Both
   };
 
-  struct StencilDependency {
-  public:
-
-    StencilDependency( std::string dependency_id, std::string type)
-      : _dependency_id(dependency_id), _type(type) {}
-
-    std::string _dependency_id;
-
-    std::string _type;
-
-  };
-
   class Stencil : private MovableNonCopyable {
   public:
     Stencil(
@@ -38,18 +26,12 @@ namespace road {
         double s,
         double t,
         std::string name,
-        std::string dynamic,
         std::string orientation,
-        double zOffset,
-        std::string country,
         std::string type,
-        std::string subtype,
-        double value,
-        std::string unit,
-        double height,
-        double width,
         std::string text,
-        double hOffset,
+        double zOffset,
+        double length,
+        double width,
         double pitch,
         double roll)
       : _road_id(road_id),
@@ -57,18 +39,11 @@ namespace road {
         _s(s),
         _t(t),
         _name(name),
-        _dynamic(dynamic),
         _orientation(orientation),
-        _zOffset(zOffset),
-        _country(country),
         _type(type),
-        _subtype(subtype),
-        _value(value),
-        _unit(unit),
-        _height(height),
-        _width(width),
         _text(text),
-        _hOffset(hOffset),
+        _length(length),
+        _width(width),
         _pitch(pitch),
         _roll(roll) {}
 
@@ -86,14 +61,6 @@ namespace road {
 
     double GetT() const {
       return _t;
-    }
-
-    bool GetDynamic() const {
-      if(_dynamic == "yes") {
-        return true;
-      }else {
-        return false;
-      }
     }
 
     const std::string &GetName() const {
@@ -114,39 +81,20 @@ namespace road {
       return _zOffset;
     }
 
-    const std::string &GetCountry() const {
-      return _country;
-    }
-
     const std::string &GetType() const {
       return _type;
     }
 
-    const std::string &GetSubtype() const {
-      return _subtype;
-    }
-
-    double GetValue() const {
-      return _value;
-    }
-
-    const std::string &GetUnit() const {
-      return _unit;
-    }
-
-    double GetHeight() const {
+    double GetLength() const {
       return _height;
     }
 
     double GetWidth() const {
-      return _width; }
+      return _width; 
+    }
 
     const std::string &GetText() const {
       return _text;
-    }
-
-    double GetHOffset() const {
-      return _hOffset;
     }
 
     double GetPitch() const {
@@ -157,17 +105,8 @@ namespace road {
       return _roll;
     }
 
-    const std::vector<StencilDependency> &
-        GetDependencies() {
-      return _dependencies;
-    }
-
     const geom::Transform &GetTransform() const {
       return _transform;
-    }
-
-    const std::set<ContId>& GetControllers() const {
-      return _controllers;
     }
 
   private:
@@ -183,41 +122,23 @@ namespace road {
 
     std::string _name;
 
-    std::string _dynamic;
-
     std::string _orientation;
-
-    double _zOffset;
-
-    std::string _country;
 
     std::string _type;
 
-    std::string _subtype;
-
-    double _value;
-
-    std::string _unit;
-
-    double _height;
-
-    double _width;
-
     std::string _text;
 
-    double _hOffset;
+    double _zOffset;
+
+    double _length;
+
+    double _width;
 
     double _pitch;
 
     double _roll;
 
-    std::vector<StencilDependency> _dependencies;
-
     geom::Transform _transform;
-
-    std::set<ContId> _controllers;
-
-    bool _using_inertial_position = false;
   };
 
 } // road
