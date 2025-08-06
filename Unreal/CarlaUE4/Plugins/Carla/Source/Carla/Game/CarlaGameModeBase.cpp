@@ -496,8 +496,6 @@ void ACarlaGameModeBase::SpawnRoadSplines()
     return;
   }
 
-  constexpr float SampleDistance = 2.0f;
-
   const auto& Roads = Map->GetRoads();
   for (const auto& RoadTuple : Roads) {
     const auto RoadId = RoadTuple.first;
