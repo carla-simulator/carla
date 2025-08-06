@@ -24,6 +24,7 @@
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Actor/ActorRegistry.h"
 #include "Carla/Game/CarlaEpisode.h"
+#include "Engine/Public/ConvexVolume.h"
 
 const FColor ACosmosControlSensor::CosmosColors::LaneLines(98, 183, 249, 128);
 const FColor ACosmosControlSensor::CosmosColors::Lanes(56, 103, 221, 128);
@@ -34,7 +35,7 @@ const FColor ACosmosControlSensor::CosmosColors::Crosswalks(206, 131, 63, 128);
 const FColor ACosmosControlSensor::CosmosColors::RoadMarkings(126, 204, 205, 128);
 const FColor ACosmosControlSensor::CosmosColors::TrafficSigns(131, 175, 155, 128);
 const FColor ACosmosControlSensor::CosmosColors::TrafficLights(252, 157, 155, 128);
-const FColor ACosmosControlSensor::CosmosColors::Cars(200, 36, 35, 128); // Same as Road Boundaries?
+const FColor ACosmosControlSensor::CosmosColors::Cars(200, 36, 35, 128);
 const FColor ACosmosControlSensor::CosmosColors::Pedestrians(0, 255, 0, 128);
 
 
@@ -50,7 +51,6 @@ ACosmosControlSensor::ACosmosControlSensor(
   Tags.Add(FName(TEXT("CosmosControlSensor")));
   added_persisted_stop_lines = false;
   added_persisted_route_lines = false;
-  duplicated_persistent_comp = false;
 
   DynamicLines = CreateDefaultSubobject<ULineBatchComponent_CARLA>(FName(TEXT("CosmosDynamicLinesBatchComponent")));
   PersistentLines = CreateDefaultSubobject<ULineBatchComponent_CARLA>(FName(TEXT("CosmosPersistentLinesBatchComponent")));
@@ -59,11 +59,6 @@ ACosmosControlSensor::ACosmosControlSensor(
   PersistentLines->bOnlyOwnerSee = true;
 
   AddPostProcessingMaterial(TEXT("Material'/Carla/PostProcessingMaterials/CosmosLens.CosmosLens'"));
-  //AddPostProcessingMaterial(TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
-  // TODO: Setup OnActorSpawnHandler so we can refresh components
-  // World->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateRaw(this, &ACosmosControlSensor::OnActorSpawned));
-
-
 }
 
 void ACosmosControlSensor::SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture)
@@ -120,6 +115,11 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
   ACarlaGameModeBase* carla_game_mode = Cast<ACarlaGameModeBase>(World->GetAuthGameMode());
   auto* GameInstance = UCarlaStatics::GetGameInstance(World);
 
+  //FMinimalViewInfo view_info;
+  //FConvexVolume frustrum;
+  //GetCaptureComponent2D()->GetCameraView(DeltaSeconds, view_info);
+  //GetViewFrustumBounds(frustrum, view_info.CalculateProjectionMatrix(), false);
+
   AActor* player_actor = nullptr;
   for(TPair<FCarlaActor::IdType, TSharedPtr<FCarlaActor>> pair : GetEpisode().GetActorRegistry())
   {
@@ -141,7 +141,6 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     if (!mesh_component->IsVisible()) continue;
     if (mesh_component->GetOwner() == nullptr) continue;
     if (mesh_component->GetOwner() == player_actor) continue;
-    
 
     //Assumed to be off the road (parkings, ceilings)
     //TODO: Better Occlusion techniques to root these out variable height maps)
@@ -150,7 +149,7 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     FVector box_origin, box_extent;
     FBoxSphereBounds bounds;
     UKismetSystemLibrary::GetActorBounds(mesh_component->GetOwner(), box_origin, box_extent);
-
+    //if (!frustrum.IntersectBox(box_origin, box_extent)) continue;
 
     bounds = FBoxSphereBounds(box_origin, box_extent, 0.0f);
 
@@ -164,7 +163,7 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     {
       if(static_mesh_comp->GetStaticMesh())
       {
-        if (!static_mesh_comp->GetName().Contains("mesh")) continue;
+        if (!static_mesh_comp->GetName().Contains("mesh") || static_mesh_comp->GetName().Contains("road")) continue;
         bounds = static_mesh_comp->GetStaticMesh()->GetBounds();
         bounds.Origin = box_origin;
       }
@@ -218,19 +217,16 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     for (AActor* traffic_light : TrafficLights)
     {
       UBoxComponent* stop_box_collider = Cast<UBoxComponent>(traffic_light->GetComponentByClass(UBoxComponent::StaticClass()));
-      //DrawDebugCapsule(World, stop_box_collider->GetComponentLocation() - FVector(0.0f, 0.0f, stop_box_collider->GetScaledBoxExtent().Z), stop_box_collider->GetScaledBoxExtent().X, 0.1f, stop_box_collider->GetRightVector()., FColor::Red, false, -1, 0, 20);
-      //DrawDebugLine(const UWorld * InWorld, FVector const& LineStart, FVector const& LineEnd, FColor const& Color, bool bPersistentLines = false, float LifeTime = -1.f, uint8 DepthPriority = 0, float Thickness = 0.f) {}
       FVector ground_pos = FVector(stop_box_collider->GetComponentLocation().X, stop_box_collider->GetComponentLocation().Y, 0.0f);
       DrawDebugLine(World,
-        ground_pos /*stop_box_collider->GetComponentLocation() - FVector(0.0f, 0.0f, stop_box_collider->GetScaledBoxExtent().Z)*/ + -stop_box_collider->GetScaledBoxExtent().X * stop_box_collider->GetForwardVector() - 710.0f * stop_box_collider->GetRightVector(),
-        ground_pos /*stop_box_collider->GetComponentLocation() - FVector(0.0f, 0.0f, stop_box_collider->GetScaledBoxExtent().Z)*/ + stop_box_collider->GetScaledBoxExtent().X * stop_box_collider->GetForwardVector() - 710.0f * stop_box_collider->GetRightVector(),
+        ground_pos + -stop_box_collider->GetScaledBoxExtent().X * stop_box_collider->GetForwardVector() - 710.0f * stop_box_collider->GetRightVector(),
+        ground_pos + stop_box_collider->GetScaledBoxExtent().X * stop_box_collider->GetForwardVector() - 710.0f * stop_box_collider->GetRightVector(),
         CosmosColors::WaitLines.WithAlpha(dist_alpha), true, -1, depth_prio, 20);
     }
   }
 
   if(!added_persisted_route_lines)
   {
-
     TArray<AActor*> RoadSplines;
     UGameplayStatics::GetAllActorsOfClass(World, ARoadSpline::StaticClass(), RoadSplines);
     if(RoadSplines.Num() > 0) added_persisted_route_lines = true;
@@ -251,23 +247,15 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
 
     auto DrawSpline = [&](ARoadSpline* spline)
     {
-
-      UE_LOG(LogTemp, Log, TEXT("Drawing Road Spline"));
-
       for (int i = 0, lenNumPoints = spline->SplineComponent->GetNumberOfSplinePoints() - 1; i < lenNumPoints; ++i)
       {
-        const FVector p0 = spline->SplineComponent->GetLocationAtSplinePoint(i + 0, ESplineCoordinateSpace::World);// + (spline->OrientationType == ERoadSplineOrientationType::Left ? FVector(25.0f, 25.0f, 25.0f) : FVector::ZeroVector);
-        const FVector p1 = spline->SplineComponent->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::World);// + (spline->OrientationType == ERoadSplineOrientationType::Left ? FVector(25.0f, 25.0f, 25.0f) : FVector::ZeroVector);
-
-        static const float MinThickness = 3.f;
-        static const float MaxThickness = 15.f;
+        const FVector p0 = spline->SplineComponent->GetLocationAtSplinePoint(i + 0, ESplineCoordinateSpace::World);
+        const FVector p1 = spline->SplineComponent->GetLocationAtSplinePoint(i + 1, ESplineCoordinateSpace::World);
 
         const float Dist = (float)i / (float)lenNumPoints;
-        const float OneMinusDist = 1.f - Dist;
-        //const float Thickness = OneMinusDist * MaxThickness + MinThickness;
         FColor debug_color = spline->BoundaryType != ERoadSplineBoundaryType::Driving ?
           CosmosColors::RoadBoundaries.WithAlpha(dist_alpha) : CosmosColors::LaneLines.WithAlpha(dist_alpha);
-          //FColor(206, 36, 35).WithAlpha(dist_alpha) : FColor(55, 103, 221).WithAlpha(dist_alpha);
+
         DrawDebugLine(World, p0, p1, debug_color, true, -1.f, depth_prio, 20.0f);
       }
     };
@@ -276,116 +264,49 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     {
       TArray<ARoadSpline*> splines = splines_pair.Value;
 
-      //UE_LOG(LogTemp, Log, TEXT("Key %d has %d items"), splines_pair.Key, splines_pair.Value.Num());
-
       for (ARoadSpline* spline : splines)
       {
-
-        //UE_LOG(LogTemp, Log, TEXT("LaneID: %d RoadID: %d"), spline->LaneID, spline->RoadID);
 
         if (spline->BoundaryType != ERoadSplineBoundaryType::Driving &&
           spline->BoundaryType != ERoadSplineBoundaryType::Shoulder &&
           spline->BoundaryType != ERoadSplineBoundaryType::Sidewalk &&
           spline->BoundaryType != ERoadSplineBoundaryType::Median) continue;
 
-        //TODO: Render rules for junction shoulders
+        bool should_render = false;
+        TArray<ARoadSpline*> found_splines = splines_pair.Value.FilterByPredicate([spline](ARoadSpline* in_spline) {
+          return in_spline->LaneID == spline->LaneID +
+            (spline->OrientationType == ERoadSplineOrientationType::Left ?
+              (spline->LaneID == 1 ? -2 : -1) : (spline->LaneID == -1 ? 2 : 1));
+        });
+
         if(spline->bIsJunction)
         {
-         //Sidewalks & medians
-          if (spline->OrientationType == ERoadSplineOrientationType::Left)
+          for (ARoadSpline* target_spline : found_splines)
           {
-
-            //UE_LOG(LogTemp, Log, TEXT("Spline is Left Orientated"));
-
-            TArray<ARoadSpline*> found_splines = splines_pair.Value.FilterByPredicate([spline](ARoadSpline* in_spline) {
-              return in_spline->LaneID == spline->LaneID + (spline->LaneID == 1 ? -2 : -1);
-            });
-
-            //UE_LOG(LogTemp, Log, TEXT("Found Splines Num: %d"), found_splines.Num());
-
-            for (ARoadSpline* target_spline : found_splines)
+            ERoadSplineBoundaryType boundary = target_spline->BoundaryType;
+            switch (boundary)
             {
-              ERoadSplineBoundaryType boundary = target_spline->BoundaryType;
-              bool should_render = false;
-              switch (boundary)
-              {
-              case ERoadSplineBoundaryType::Driving:
-                //we only render right drivings
-                if (spline->BoundaryType == ERoadSplineBoundaryType::Driving) should_render = false;
-                else if (spline->BoundaryType == ERoadSplineBoundaryType::Shoulder) should_render = false;
-                else if (spline->BoundaryType == ERoadSplineBoundaryType::Sidewalk) should_render = true;//spline->LaneID > 0 && spline->LaneID * target_spline->LaneID > 0;
-                else if (spline->BoundaryType == ERoadSplineBoundaryType::Median) should_render = true;
-                break;
-              case ERoadSplineBoundaryType::Shoulder:
-                if (spline->BoundaryType == ERoadSplineBoundaryType::Driving) should_render = false;
-                else if (spline->BoundaryType == ERoadSplineBoundaryType::Shoulder) should_render = false;
-                else if (spline->BoundaryType == ERoadSplineBoundaryType::Sidewalk) should_render = true;//spline->LaneID > 0 && spline->LaneID * target_spline->LaneID > 0;
-                else if (spline->BoundaryType == ERoadSplineBoundaryType::Median) should_render = true;
-                break;
-              default:
-                should_render = false;
-                break;
-              }
-              if (should_render) DrawSpline(spline);
-            }
-          }
-          else if (spline->OrientationType == ERoadSplineOrientationType::Right)
-          {
-
-            //UE_LOG(LogTemp, Log, TEXT("Spline is Left Orientated"));
-
-            TArray<ARoadSpline*> found_splines = splines_pair.Value.FilterByPredicate([spline](ARoadSpline* in_spline) {
-              return in_spline->LaneID == spline->LaneID + (spline->LaneID == -1 ? 2 : 1);
-            });
-
-            //UE_LOG(LogTemp, Log, TEXT("Found Splines Num: %d"), found_splines.Num());
-
-            for (ARoadSpline* target_spline : found_splines)
-            {
-              ERoadSplineBoundaryType boundary = target_spline->BoundaryType;
-              bool should_render = false;
-              switch (boundary)
-              {
-              case ERoadSplineBoundaryType::Driving:
-                //we only render right drivings
-                if (spline->BoundaryType == ERoadSplineBoundaryType::Driving) should_render = false;
-                else if (spline->BoundaryType == ERoadSplineBoundaryType::Shoulder) should_render = false;
-                else if (spline->BoundaryType == ERoadSplineBoundaryType::Sidewalk) should_render = true;//spline->LaneID < 0;
-                else if (spline->BoundaryType == ERoadSplineBoundaryType::Median) should_render = true;
-                break;
-              case ERoadSplineBoundaryType::Shoulder:
-                if (spline->BoundaryType == ERoadSplineBoundaryType::Driving) should_render = false;
-                else if (spline->BoundaryType == ERoadSplineBoundaryType::Shoulder) should_render = false;
-                else if (spline->BoundaryType == ERoadSplineBoundaryType::Sidewalk) should_render = true;//spline->LaneID < 0;
-                else if (spline->BoundaryType == ERoadSplineBoundaryType::Median) should_render = true;
-                break;
-              default:
-                should_render = false;
-                break;
-              }
-              if (should_render) DrawSpline(spline);
+            case ERoadSplineBoundaryType::Driving:
+            case ERoadSplineBoundaryType::Shoulder:
+              if (spline->BoundaryType == ERoadSplineBoundaryType::Driving) should_render = false;
+              else if (spline->BoundaryType == ERoadSplineBoundaryType::Shoulder) should_render = false;
+              else if (spline->BoundaryType == ERoadSplineBoundaryType::Sidewalk) should_render = true;
+              else if (spline->BoundaryType == ERoadSplineBoundaryType::Median) should_render = true;
+              break;
+            default:
+              should_render = false;
+              break;
             }
           }
         }
         else if (spline->OrientationType == ERoadSplineOrientationType::Left)
         {
-
-          //UE_LOG(LogTemp, Log, TEXT("Spline is Left Orientated"));
-
-          TArray<ARoadSpline*> found_splines = splines_pair.Value.FilterByPredicate([spline](ARoadSpline* in_spline) {
-            return in_spline->LaneID == spline->LaneID + (spline->LaneID == 1 ? -2 : -1);
-          });
-
-          //UE_LOG(LogTemp, Log, TEXT("Found Splines Num: %d"), found_splines.Num());
-
           for (ARoadSpline* target_spline : found_splines)
           {
             ERoadSplineBoundaryType boundary = target_spline->BoundaryType;
-            bool should_render = false;
             switch (boundary) 
             {
             case ERoadSplineBoundaryType::Driving:
-              //we only render right drivings
               if (spline->BoundaryType == ERoadSplineBoundaryType::Driving) should_render = spline->LaneID > 0 && spline->LaneID * target_spline->LaneID > 0;
               else if (spline->BoundaryType == ERoadSplineBoundaryType::Shoulder) should_render = false;
               else if (spline->BoundaryType == ERoadSplineBoundaryType::Sidewalk) should_render = spline->LaneID > 0 && spline->LaneID * target_spline->LaneID > 0;
@@ -401,28 +322,16 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
               should_render = false;
               break;
             }
-            if (should_render) DrawSpline(spline);
           }
         }
         else if (spline->OrientationType == ERoadSplineOrientationType::Right)
         {
-
-          //UE_LOG(LogTemp, Log, TEXT("Spline is Left Orientated"));
-
-          TArray<ARoadSpline*> found_splines = splines_pair.Value.FilterByPredicate([spline](ARoadSpline* in_spline) {
-            return in_spline->LaneID == spline->LaneID + (spline->LaneID == -1 ? 2 : 1);
-          });
-
-          //UE_LOG(LogTemp, Log, TEXT("Found Splines Num: %d"), found_splines.Num());
-
           for (ARoadSpline* target_spline : found_splines)
           {
             ERoadSplineBoundaryType boundary = target_spline->BoundaryType;
-            bool should_render = false;
             switch (boundary)
             {
             case ERoadSplineBoundaryType::Driving:
-              //we only render right drivings
               if (spline->BoundaryType == ERoadSplineBoundaryType::Driving) should_render = spline->LaneID < 0;
               else if (spline->BoundaryType == ERoadSplineBoundaryType::Shoulder) should_render = false;
               else if (spline->BoundaryType == ERoadSplineBoundaryType::Sidewalk) should_render = spline->LaneID < 0;
@@ -438,9 +347,10 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
               should_render = false;
               break;
             }
-            if (should_render) DrawSpline(spline);
           }
         }
+
+        if (should_render) DrawSpline(spline);
       }
     }
   }
@@ -483,22 +393,7 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
   }
 
   USceneCaptureComponent2D* SceneCapture = GetCaptureComponent2D();
-
-  if (added_persisted_stop_lines && added_persisted_route_lines && !duplicated_persistent_comp)
-  {
-    duplicated_persistent_comp = true;
-    SceneCapture->ShowOnlyComponents.Empty();
-    SceneCapture->ShowOnlyComponents.Emplace(GetWorld()->LineBatcher);
-    SceneCapture->ShowOnlyComponents.Emplace(DynamicLines);
-    SceneCapture->ShowOnlyComponents.Emplace(PersistentLines);
-  }
-
   FPixelReader::SendPixelsInRenderThread<ACosmosControlSensor, FColor>(*this);
-}
-
-void ACosmosControlSensor::BeginDestroy() {
-  Super::BeginDestroy();
-  if(GetWorld()) GetWorld()->PersistentLineBatcher->Flush();
 }
 
 ULineBatchComponent_CARLA* ACosmosControlSensor::GetDebugLineBatcher(bool bPersistentLines)
@@ -514,7 +409,7 @@ void ACosmosControlSensor::DrawDebugBox(const UWorld* InWorld, FVector const& Ce
     // this means foreground lines can't be persistent 
     if (ULineBatchComponent_CARLA* const LineBatcher = GetDebugLineBatcher(bPersistentLines))
     {
-      float const LineLifeTime = 0.0f;//GetDebugLineLifeTime(LineBatcher, LifeTime, bPersistentLines);
+      float const LineLifeTime = 0.0f;
       TArray<struct FBatchedLine> Lines;
 
       FTransform const Transform(Rotation);
@@ -580,7 +475,6 @@ void ACosmosControlSensor::DrawDebugSolidBox(const UWorld* InWorld, FVector cons
     {
       FTransform Transform(Rotation, Center, FVector(1.0f, 1.0f, 1.0f));	// Build transform from Rotation, Center with uniform scale of 1.0.
       FBox Box = FBox::BuildAABB(FVector::ZeroVector, Extent);	// The Transform handles the Center location, so this box needs to be centered on origin.
-      //float const ActualLifetime = GetDebugLineLifeTime(LineBatcher, LifeTime, bPersistent);
       LineBatcher->DrawSolidBox(Box, Transform, Color, DepthPriority, 0.0f);
     }
   }
@@ -593,7 +487,6 @@ void ACosmosControlSensor::DrawDebugLine(const UWorld* InWorld, FVector const& L
     // this means foreground lines can't be persistent 
     if (ULineBatchComponent_CARLA* const LineBatcher = GetDebugLineBatcher(bPersistentLines))
     {
-      //float const LineLifeTime = GetDebugLineLifeTime(LineBatcher, LifeTime, bPersistentLines);
       LineBatcher->DrawLine(LineStart, LineEnd, Color, DepthPriority, Thickness, 0.0f);
     }
   }

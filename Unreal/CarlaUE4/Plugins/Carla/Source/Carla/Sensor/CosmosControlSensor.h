@@ -43,13 +43,13 @@ public:
 	static FActorDefinition GetSensorDefinition();
 
   ACosmosControlSensor(const FObjectInitializer& ObjectInitializer);
-  void BeginDestroy() override;
 
 protected:
 
   void SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture) override;
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
 
+  //Duplicate functions from DrawDebugHelpers to guarantee they work outside editor
   void DrawDebugLine(const UWorld* InWorld, FVector const& LineStart, FVector const& LineEnd, FColor const& Color, bool bPersistentLines = false, float LifeTime = -1.f, uint8 DepthPriority = 0, float Thickness = 0);
   void DrawDebugSolidBox(const UWorld* InWorld, FVector const& Center, FVector const& Extent, FQuat const& Rotation, FColor const& Color, bool bPersistent = false, float LifeTime = -1.f, uint8 DepthPriority = 0);
   void DrawDebugBox(const UWorld* InWorld, FVector const& Center, FVector const& Box, const FQuat& Rotation, FColor const& Color, bool bPersistentLines = false, float LifeTime = -1.f, uint8 DepthPriority = 0, float Thickness = 0);
@@ -70,5 +70,4 @@ private:
 private:
   bool added_persisted_stop_lines;
   bool added_persisted_route_lines;
-  bool duplicated_persistent_comp;
 };

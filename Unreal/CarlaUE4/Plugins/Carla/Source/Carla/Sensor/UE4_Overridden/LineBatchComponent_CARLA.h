@@ -15,6 +15,7 @@ class CARLA_API ULineBatchComponent_CARLA : public ULineBatchComponent
 	GENERATED_BODY()
 	
 	virtual FPrimitiveSceneProxy* CreateSceneProxy() override;
+
 };
 
 /** Represents a LineBatchComponent to the scene manager. */
@@ -25,6 +26,8 @@ public:
 
 	FLineBatcherSceneProxy_CARLA(const ULineBatchComponent_CARLA* InComponent);
 
+	virtual void GetDynamicMeshElements(const TArray<const FSceneView*>& Views, const FSceneViewFamily& ViewFamily, uint32 VisibilityMap, FMeshElementCollector& Collector) const override;
+
 	/**
 	*  Returns a struct that describes to the renderer when to draw this proxy.
 	*	@param		Scene view to use to determine our relevence.
@@ -32,8 +35,11 @@ public:
 	*/
 	virtual FPrimitiveViewRelevance GetViewRelevance(const FSceneView* View) const override;
 
+	UMaterial* CosmosMeshMaterial = nullptr;
+
 private:
 	TArray<FBatchedLine> Lines;
 	TArray<FBatchedPoint> Points;
 	TArray<FBatchedMesh> Meshes;
+
 };
