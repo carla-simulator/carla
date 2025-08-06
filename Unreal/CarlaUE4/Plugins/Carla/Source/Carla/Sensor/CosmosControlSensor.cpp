@@ -58,7 +58,7 @@ ACosmosControlSensor::ACosmosControlSensor(
   DynamicLines->bOnlyOwnerSee = true;
   PersistentLines->bOnlyOwnerSee = true;
 
-  AddPostProcessingMaterial(TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
+  AddPostProcessingMaterial(TEXT("Material'/Carla/PostProcessingMaterials/CosmosLens.CosmosLens'"));
   //AddPostProcessingMaterial(TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
   // TODO: Setup OnActorSpawnHandler so we can refresh components
   // World->AddOnActorSpawnedHandler(FOnActorSpawned::FDelegate::CreateRaw(this, &ACosmosControlSensor::OnActorSpawned));
@@ -69,8 +69,6 @@ ACosmosControlSensor::ACosmosControlSensor(
 void ACosmosControlSensor::SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture)
 {
   Super::SetUpSceneCaptureComponent(SceneCapture);
-
-  ApplyViewMode(VMI_Unlit, true, SceneCapture.ShowFlags);
 
   SceneCapture.ShowFlags.SetAtmosphere(false);
 
@@ -116,7 +114,7 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
 
   DynamicLines->Flush();
 
-  int depth_prio = 0;
+  int depth_prio = ESceneDepthPriorityGroup::SDPG_World;
   int dist_alpha = CosmosColors::RoadBoundaries.A;
   float cutoff_dist = 3000.0f;
   ACarlaGameModeBase* carla_game_mode = Cast<ACarlaGameModeBase>(World->GetAuthGameMode());
