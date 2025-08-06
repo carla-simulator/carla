@@ -16,6 +16,14 @@ namespace carla {
 namespace opendrive {
 namespace parser {
 
+  std::string ObjectParser::get_string_attribute(const pugi::xml_node& node, const char* attribute_name){
+    return node.attribute(attribute_name)? node.attribute(attribute_name).as_string() : std::string{};
+  }
+
+  double ObjectParser::get_double_attribute(const pugi::xml_node& node, const char* attribute_name){
+    return node.attribute(attribute_name)? node.attribute(attribute_name).as_double() : 0.0;
+  }
+
   void ObjectParser::Parse(
       const pugi::xml_document &xml,
       carla::road::MapBuilder &map_builder) {
@@ -27,12 +35,12 @@ namespace parser {
       // parse all objects
       pugi::xml_node node_objects = node_road.child("objects");
       if (node_objects) {
-
+        
         for (pugi::xml_node node_object : node_objects.children("object")) {
-
-          // type Crosswalk
           std::string type = node_object.attribute("type").as_string();
           std::string name = node_object.attribute("name").as_string();
+
+          // type Crosswalk
           if (type == "crosswalk") {
 
               // read all points
