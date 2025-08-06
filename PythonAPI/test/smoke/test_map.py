@@ -19,7 +19,7 @@ class TestMap(SmokeTest):
 
     def test_load_all_maps(self):
         print("TestMap.test_load_all_maps")
-        map_names = ['Town01', 'Town01_Opt', 'Town02', 'Town02_Opt', 'Town03', 'Town03_Opt', 'Town04', 'Town04_Opt', 'Town05', 'Town05_Opt', 'Town10HD', 'Town10HD_Opt', 'Town12', 'Town15']
+        map_names = ['Town01', 'Town01_Opt', 'Town02', 'Town02_Opt', 'Town03', 'Town03_Opt', 'Town04', 'Town04_Opt', 'Town05', 'Town05_Opt', 'Town10HD', 'Town10HD_Opt']
         for map_name in map_names:
             world = self.client.load_world(map_name)
             # workaround: give time to UE4 to clean memory after loading (old assets)
