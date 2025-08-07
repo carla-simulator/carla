@@ -40,7 +40,8 @@ class TestSensorTickTime(SyncSmokeTest):
       "sensor.other.obstacle",
       "sensor.camera.instance_segmentation",
       "sensor.other.v2x",
-      "sensor.other.v2x_custom"
+      "sensor.other.v2x_custom",
+      "sensor.camera.cosmos_visualization"
     }
     spawned_sensors = []
     sensor_tick = 1.0
