@@ -49,10 +49,12 @@ class TestMap(SmokeTest):
         _ = m.transform_to_geolocation(carla.Location())
         self.assertTrue(str(m.to_opendrive()))
 
-        # --- Check for crosswalks using get_crosswalks() ---
-        crosswalks = m.get_crosswalks()
-        self.assertGreater(
-            len(crosswalks), 0,
-            msg=f"Map {m.name} has no crosswalks."
-        )
+        maps_withoutcrosswalks = ['Town01', 'Town01_Opt', 'Town02', 'Town02_Opt']
+        if m.name not in maps_withoutcrosswalks:
+            # --- Check for crosswalks using get_crosswalks() ---
+            crosswalks = m.get_crosswalks()
+            self.assertGreater(
+                len(crosswalks), 0,
+                msg=f"Map {m.name} has no crosswalks."
+            )
             
