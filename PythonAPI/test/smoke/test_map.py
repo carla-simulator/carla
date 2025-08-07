@@ -50,11 +50,10 @@ class TestMap(SmokeTest):
         self.assertTrue(str(m.to_opendrive()))
 
         maps_withoutcrosswalks = ['Town01', 'Town01_Opt', 'Town02', 'Town02_Opt']
-        if m.name not in maps_withoutcrosswalks:
+        if not any(map_name in m.name for map_name in maps_withoutcrosswalks):
             # --- Check for crosswalks using get_crosswalks() ---
             crosswalks = m.get_crosswalks()
             self.assertGreater(
                 len(crosswalks), 0,
                 msg=f"Map {m.name} has no crosswalks."
             )
-            
