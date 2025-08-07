@@ -616,6 +616,8 @@ void UOpenDriveToMap::GenerateRoadMesh( const boost::optional<carla::road::Map>&
         UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData,  Tangents, DefaultRoadMaterial, MapName, "DrivingLane", FName(TEXT("SM_DrivingLaneMesh" + FString::FromInt(index) + GetStringForCurrentTile() )));
         StaticMeshComponent->SetStaticMesh(MeshToSet);
       }
+      if(IsValid(MeshToSet))
+        MeshToSet->	bGenerateMeshDistanceField = false;
       TempActor->SetActorLocation(MeshCentroid * 100);
       TempActor->Tags.Add(FName("RoadLane"));
       // ActorMeshList.Add(TempActor);
@@ -714,6 +716,8 @@ void UOpenDriveToMap::GenerateLaneMarks(const boost::optional<carla::road::Map>&
     );
 
     UStaticMesh* MeshToSet = UMapGenFunctionLibrary::CreateMesh(MeshData,  Tangents, DefaultLandscapeMaterial, MapName, "LaneMark", FName(TEXT("SM_LaneMarkMesh" + FString::FromInt(meshindex) + GetStringForCurrentTile() )));
+    if(IsValid(MeshToSet))
+      MeshToSet->	bGenerateMeshDistanceField = false;
     StaticMeshComponent->SetStaticMesh(MeshToSet);
     TempActor->SetActorLocation(MeshCentroid * 100);
     TempActor->Tags.Add(*FString(lanemarkinfo[index].c_str()));
