@@ -116,6 +116,9 @@ public:
   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Sensor Gravity")
   float IMUISensorGravity = 9.81f;
 
+  UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Road Spline")
+  float SampleDistance = 2.0f;
+
 protected:
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
@@ -137,6 +140,8 @@ private:
   void GenerateSpawnPoints();
 
   void ParseOpenDrive();
+
+  void SpawnRoadSplines();
 
   void RegisterEnvironmentObjects();
 

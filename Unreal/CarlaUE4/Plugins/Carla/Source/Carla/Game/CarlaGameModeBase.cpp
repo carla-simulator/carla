@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -9,6 +9,7 @@
 #include "Carla/Game/CarlaHUD.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
+#include "Carla/Traffic/RoadSpline.h"
 #include "Carla/Lights/CarlaLight.h"
 #include "Engine/DecalActor.h"
 #include "Engine/LevelStreaming.h"
@@ -34,6 +35,7 @@
 
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
+
 
 namespace cr = carla::road;
 namespace crp = carla::rpc;
@@ -163,6 +165,7 @@ void ACarlaGameModeBase::InitGame(
   if(Map.has_value())
   {
     StoreSpawnPoints();
+    SpawnRoadSplines();
   }
 }
 
@@ -475,6 +478,137 @@ void ACarlaGameModeBase::ParseOpenDrive()
   else
   {
     Episode->MapGeoReference = Map->GetGeoReference();
+  }
+}
+
+void ACarlaGameModeBase::SpawnRoadSplines()
+{
+  if (!Map.has_value())
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Map is not available yet."));
+    return;
+  }
+
+  UWorld* World = GetWorld();
+  if (!World)
+  {
+    UE_LOG(LogCarla, Error, TEXT("World context is invalid."));
+    return;
+  }
+
+  const auto& Roads = Map->GetRoads();
+  for (const auto& RoadTuple : Roads) {
+    const auto RoadId = RoadTuple.first;
+    const auto& Road = RoadTuple.second;
+
+    const auto& LaneSections = Road.GetLaneSections();
+
+    for (const auto& Section : LaneSections)
+    {
+      const auto& Lanes = Section.GetLanes();
+
+      for (const auto& LaneTuple : Lanes)
+      {
+        const auto& Lane = LaneTuple.second;
+        auto LaneType = Lane.GetType();
+        if (LaneType == carla::road::Lane::LaneType::None)
+          continue;
+
+        auto AssignBoundaryType = [&](ARoadSpline* SplineActor)
+        {
+          switch (LaneType)
+          {
+            case carla::road::Lane::LaneType::Driving:       SplineActor->BoundaryType = ERoadSplineBoundaryType::Driving; break;
+            case carla::road::Lane::LaneType::Stop:          SplineActor->BoundaryType = ERoadSplineBoundaryType::Stop; break;
+            case carla::road::Lane::LaneType::Shoulder:      SplineActor->BoundaryType = ERoadSplineBoundaryType::Shoulder; break;
+            case carla::road::Lane::LaneType::Biking:        SplineActor->BoundaryType = ERoadSplineBoundaryType::Biking; break;
+            case carla::road::Lane::LaneType::Sidewalk:      SplineActor->BoundaryType = ERoadSplineBoundaryType::Sidewalk; break;
+            case carla::road::Lane::LaneType::Border:        SplineActor->BoundaryType = ERoadSplineBoundaryType::Border; break;
+            case carla::road::Lane::LaneType::Restricted:    SplineActor->BoundaryType = ERoadSplineBoundaryType::Restricted; break;
+            case carla::road::Lane::LaneType::Parking:       SplineActor->BoundaryType = ERoadSplineBoundaryType::Parking; break;
+            case carla::road::Lane::LaneType::Bidirectional: SplineActor->BoundaryType = ERoadSplineBoundaryType::Bidirectional; break;
+            case carla::road::Lane::LaneType::Median:        SplineActor->BoundaryType = ERoadSplineBoundaryType::Median; break;
+            case carla::road::Lane::LaneType::Special1:      SplineActor->BoundaryType = ERoadSplineBoundaryType::Special1; break;
+            case carla::road::Lane::LaneType::Special2:      SplineActor->BoundaryType = ERoadSplineBoundaryType::Special2; break;
+            case carla::road::Lane::LaneType::Special3:      SplineActor->BoundaryType = ERoadSplineBoundaryType::Special3; break;
+            case carla::road::Lane::LaneType::RoadWorks:     SplineActor->BoundaryType = ERoadSplineBoundaryType::RoadWorks; break;
+            case carla::road::Lane::LaneType::Tram:          SplineActor->BoundaryType = ERoadSplineBoundaryType::Tram; break;
+            case carla::road::Lane::LaneType::Rail:          SplineActor->BoundaryType = ERoadSplineBoundaryType::Rail; break;
+            case carla::road::Lane::LaneType::Entry:         SplineActor->BoundaryType = ERoadSplineBoundaryType::Entry; break;
+            case carla::road::Lane::LaneType::Exit:          SplineActor->BoundaryType = ERoadSplineBoundaryType::Exit; break;
+            case carla::road::Lane::LaneType::OffRamp:       SplineActor->BoundaryType = ERoadSplineBoundaryType::OffRamp; break;
+            case carla::road::Lane::LaneType::OnRamp:        SplineActor->BoundaryType = ERoadSplineBoundaryType::OnRamp; break;
+            default:                                         SplineActor->BoundaryType = ERoadSplineBoundaryType::Unknown; break;
+          }
+        };
+
+
+        const double s_start = Lane.GetDistance();
+        const double s_end = s_start + Lane.GetLength();
+
+        TArray<FVector> LeftBoundaryPoints;
+        TArray<FVector> RightBoundaryPoints;
+
+        for (double s = s_start; s < s_end; s += SampleDistance)
+        {
+          auto Corners = Lane.GetCornerPositions(s);
+          const auto& LeftLoc = Corners.first;
+          const auto& RightLoc = Corners.second;
+
+          LeftBoundaryPoints.Add(FVector(LeftLoc.x * 100.0f, LeftLoc.y * 100.0f, RightLoc.z * 100.0f));
+          RightBoundaryPoints.Add(FVector(RightLoc.x * 100.0f, RightLoc.y * 100.0f, RightLoc.z * 100.0f));
+        }
+
+        {
+          auto Corners = Lane.GetCornerPositions(s_end);
+          const auto& LeftLoc = Corners.first;
+          const auto& RightLoc = Corners.second;
+
+          LeftBoundaryPoints.Add(FVector(LeftLoc.x * 100.0f, LeftLoc.y * 100.0f, RightLoc.z * 100.0f));
+          RightBoundaryPoints.Add(FVector(RightLoc.x * 100.0f, RightLoc.y * 100.0f, RightLoc.z * 100.0f));
+        }
+
+        if (LeftBoundaryPoints.Num() > 0)
+        {
+          ARoadSpline* SplineActor = World->SpawnActor<ARoadSpline>(FVector::ZeroVector, FRotator::ZeroRotator);
+          if (SplineActor)
+          {
+#if WITH_EDITOR
+            SplineActor->SetFolderPath(FName(TEXT("RoadSplines")));
+            SplineActor->SetActorLabel(FString::Printf(TEXT("RoadSpline_%d_%d_Left"), RoadId, Lane.GetId()));
+#endif
+            SplineActor->SetSplinePoints(LeftBoundaryPoints);
+            SplineActor->OrientationType = ERoadSplineOrientationType::Left;
+            SplineActor->LaneID = Lane.GetId();
+            SplineActor->RoadID = RoadId;
+            AssignBoundaryType(SplineActor);
+
+            if (Map->IsJunction(RoadId))
+              SplineActor->bIsJunction = true;
+          }
+        }
+
+        if (RightBoundaryPoints.Num() > 0)
+        {
+          ARoadSpline* SplineActor = World->SpawnActor<ARoadSpline>(FVector::ZeroVector, FRotator::ZeroRotator);
+          if (SplineActor)
+          {
+#if WITH_EDITOR
+            SplineActor->SetFolderPath(FName(TEXT("RoadSplines")));
+            SplineActor->SetActorLabel(FString::Printf(TEXT("RoadSpline_%d_%d_Right"), RoadId, Lane.GetId()));
+#endif
+            SplineActor->SetSplinePoints(RightBoundaryPoints);
+            SplineActor->OrientationType = ERoadSplineOrientationType::Right;
+            SplineActor->LaneID = Lane.GetId();
+            SplineActor->RoadID = RoadId;
+            AssignBoundaryType(SplineActor);
+
+            if (Map->IsJunction(RoadId))
+              SplineActor->bIsJunction = true;
+          }
+        }
+      }
+    }
   }
 }
 
