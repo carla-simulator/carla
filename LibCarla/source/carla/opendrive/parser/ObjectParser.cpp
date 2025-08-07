@@ -10,6 +10,7 @@
 #include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/Road.h"
 
+
 #include <pugixml/pugixml.hpp>
 
 namespace carla {
@@ -21,7 +22,6 @@ namespace parser {
       carla::road::MapBuilder &map_builder) {
 
     std::vector<road::element::CrosswalkPoint> points;
-
     for (pugi::xml_node node_road : xml.child("OpenDRIVE").children("road")) {
 
       // parse all objects
@@ -33,8 +33,11 @@ namespace parser {
           // type Crosswalk
           std::string type = node_object.attribute("type").as_string();
           std::string name = node_object.attribute("name").as_string();
-          if (type == "crosswalk") {
-
+          std::string name_lower = name;
+          std::transform(name_lower.begin(), name_lower.end(), name_lower.begin(),
+                [](unsigned char c){ return std::tolower(c); });
+          bool bIsCrosswalk = (type == "crosswalk" || (name_lower.find("crosswalk") != std::string::npos));
+          if (bIsCrosswalk) {
               // read all points
               pugi::xml_node node_outline = node_object.child("outline");
               if (node_outline) {
@@ -119,6 +122,8 @@ namespace parser {
         }
       }
     }
+
+
   }
 } // namespace parser
 } // namespace opendrive
