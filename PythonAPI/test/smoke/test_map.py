@@ -53,6 +53,6 @@ class TestMap(SmokeTest):
         crosswalks = m.get_crosswalks()
         self.assertGreater(
             len(crosswalks), 0,
-            msg=f"Map {map_name} has no crosswalks."
+            msg=f"Map {m.name} has no crosswalks."
         )
             
