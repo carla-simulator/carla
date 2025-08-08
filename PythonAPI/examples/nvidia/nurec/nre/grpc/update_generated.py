@@ -1,14 +1,14 @@
-# SPDX-FileCopyrightText: © 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-#
-# SPDX-License-Identifier: MIT
+# Copyright (c) 2025 NVIDIA CORPORATION.  All rights reserved.
 
-import os
-import sys
 import glob
-import subprocess
 import logging
+import os
 import re
+import subprocess
+import sys
+
 from pathlib import Path
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,19 +17,19 @@ logger = logging.getLogger(__name__)
 def compile_proto(proto_path, project_base):
     """Compile a proto files to Python code."""
     # Use the protoc command installed by grpcio-tools through Python
-    # Use the directory of the proto file as the proto_path so imports work
+    # Use `project_base` as the root directory for the proto files such that protoc generates absolute imports
+    # starting from the project root.
     cmd = [
         sys.executable,
         "-m",
         "grpc_tools.protoc",
-        f"--proto_path={os.path.dirname(proto_path)}",
+        f"--proto_path={project_base}",
         f"--python_out={project_base}",
         f"--pyi_out={project_base}",
         f"--grpc_python_out={project_base}",
         proto_path,
     ]
 
-    print(" ".join(cmd))
     result = subprocess.run(cmd, capture_output=True, text=True)
 
     if result.returncode != 0:
@@ -41,12 +41,13 @@ def compile_proto(proto_path, project_base):
 def main():
     """Main function."""
     # Get the path to the proto files
+
     if "BUILD_WORKSPACE_DIRECTORY" in os.environ:
         project_base = os.environ["BUILD_WORKSPACE_DIRECTORY"]
     else:
-        project_base = Path(__file__).parent
+        project_base = Path(__file__).parent.parent.parent
 
-    project_proto_dir = os.path.join(project_base, "protos")
+    project_proto_dir = os.path.join(project_base, "nre", "grpc", "protos")
 
     # Create __init__.py in the output directory to make it importable
     init_file = os.path.join(project_proto_dir, "__init__.py")

@@ -1,12 +1,9 @@
-// SPDX-FileCopyrightText: © 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-//
-// SPDX-License-Identifier: MIT
-
+// Copyright (c) 2025 NVIDIA CORPORATION.  All rights reserved.
 syntax = "proto3";
 
-package sensorsim;
+package nre.grpc.protos.sensorsim;
 
-import "common.proto";
+import "nre/grpc/protos/common.proto";
 
 ////////////////////////////////////////////////////////////////////////////////
 // Sensor simulator <-> Runtime
@@ -15,12 +12,12 @@ import "common.proto";
 service SensorsimService {
     rpc render_rgb (RGBRenderRequest) returns (RGBRenderReturn);
     rpc render_lidar (LidarRenderRequest) returns (LidarRenderReturn);
-    rpc get_version (common.Empty) returns (common.VersionId);
-    rpc get_available_scenes (common.Empty) returns (common.AvailableScenesReturn);
+    rpc get_version (nre.grpc.protos.common.Empty) returns (nre.grpc.protos.common.VersionId);
+    rpc get_available_scenes (nre.grpc.protos.common.Empty) returns (nre.grpc.protos.common.AvailableScenesReturn);
     rpc get_available_cameras (AvailableCamerasRequest) returns (AvailableCamerasReturn);
-    rpc shut_down (common.Empty) returns (common.Empty);
+    rpc shut_down (nre.grpc.protos.common.Empty) returns (nre.grpc.protos.common.Empty);
     rpc get_available_trajectories (AvailableTrajectoriesRequest) returns (AvailableTrajectoriesReturn);
-    rpc get_available_ego_masks (common.Empty) returns (AvailableEgoMasksReturn);
+    rpc get_available_ego_masks (nre.grpc.protos.common.Empty) returns (AvailableEgoMasksReturn);
 }
 
 message EgoMaskId {
@@ -46,6 +43,11 @@ enum ShutterType {
     GLOBAL = 5; //Instantaneous global shutter (no rolling shutter)
 }
 
+message LinearCde {
+    double linear_c = 1;
+    double linear_d = 2;
+    double linear_e = 3;
+}
 
 message FthetaCameraParam {
     enum PolynomialType {
@@ -64,6 +66,8 @@ message FthetaCameraParam {
     repeated double angle_to_pixeldist_poly = 5;
 
     double max_angle = 6;
+
+    LinearCde linear_cde = 7;
 }
 
 //TODO: implentation of OpenCV pinhole camera model parameters
@@ -130,8 +134,8 @@ message CameraSpec {
 message PosePair {
     // represents poses at start and end of the frame
     // TODO: replace with common.Trajectory (more general)
-    common.Pose start_pose = 1;
-    common.Pose end_pose = 2;
+    nre.grpc.protos.common.Pose start_pose = 1;
+    nre.grpc.protos.common.Pose end_pose = 2;
 }
 
 message DynamicObject {
@@ -183,7 +187,7 @@ message AvailableCamerasRequest {
 message AvailableCamerasReturn {
     message AvailableCamera {
         CameraSpec intrinsics = 1;
-        common.Pose rig_to_camera = 2; // should be camera_to_rig -> silently breaks things, deprecate and create duplicate? or just fix and let people know
+        nre.grpc.protos.common.Pose rig_to_camera = 2; // should be camera_to_rig -> silently breaks things, deprecate and create duplicate? or just fix and let people know
 
         string logical_id = 3;
         uint32 trajectory_idx = 4;
@@ -199,7 +203,7 @@ message AvailableTrajectoriesRequest {
 message AvailableTrajectoriesReturn {
     message AvailableTrajectory {
         uint32 trajectory_idx = 1;
-        common.Trajectory trajectory = 2;
+        nre.grpc.protos.common.Trajectory trajectory = 2;
     }
 
     repeated AvailableTrajectory available_trajectories = 1;

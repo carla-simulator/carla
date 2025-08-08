@@ -38,9 +38,9 @@ After generating the Python files, you can import and use them in your Python co
 
 ```python
 # Import the generated modules
-import grpc_proto.common_pb2 as common_pb2
-import grpc_proto.sensorsim_pb2 as sensorsim_pb2
-import grpc_proto.sensorsim_pb2_grpc as sensorsim_pb2_grpc
+import nre.grpc.protos.common_pb2 as common_pb2
+import nre.grpc.protos.sensorsim_pb2 as sensorsim_pb2
+import nre.grpc.protos.sensorsim_pb2_grpc as sensorsim_pb2_grpc
 
 # Create a gRPC channel and stub
 import grpc
@@ -73,7 +73,7 @@ The NuRec gRPC API provides the following main services:
 When modifying the .proto files, always regenerate the Python code:
 
 ```bash
-python PythonAPI/examples/nvidia/grpc/update_generated.py
+python PythonAPI/examples/nvidia/nre/grpc/update_generated.py
 ```
 
 ## Support

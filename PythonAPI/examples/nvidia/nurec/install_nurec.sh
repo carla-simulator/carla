@@ -7,7 +7,7 @@ command_exists() {
 
 
 
-# Function to check if Hugging Face dataset exists
+# Function to check if HuggingFace dataset exists
 check_hf_dataset() {
     local dataset_path="PhysicalAI-Autonomous-Vehicles-NuRec"
     if [ -d "$dataset_path" ]; then
@@ -25,25 +25,58 @@ check_NuRec_container() {
     return 1
 }
 
-# Function to validate Hugging Face PAT format (basic check)
+# Function to validate HuggingFace PAT format (basic check)
 validate_hf_pat() {
     if [[ ! $1 =~ ^hf_[a-zA-Z0-9]{32,}$ ]]; then
-        echo "Error: Invalid Hugging Face PAT format" >&2
+        echo "Error: Invalid HuggingFace PAT format" >&2
         return 1
     fi
     return 0
 }
 
-# Function to get and validate Hugging Face PAT
+# Function to get and validate HuggingFace PAT
 get_hf_pat() {
-    # Get Hugging Face PAT
-    read -s -p "Please enter your Hugging Face Personal Access Token. If you don't have one, visit: https://huggingface.co/settings/tokens. Enter your token: " hf_pat
-    echo  
+    # Color codes
+    local RED='\033[0;31m'
+    local GREEN='\033[0;32m'
+    local YELLOW='\033[1;33m'
+    local BLUE='\033[0;34m'
+    local PURPLE='\033[0;35m'
+    local CYAN='\033[0;36m'
+    local WHITE='\033[1;37m'
+    local NC='\033[0m' # No Color
+    
+    echo "" >&2
+    echo -e "${CYAN}============================================================${NC}" >&2
+    echo -e "${WHITE}              🔑 ${YELLOW}HUGGINGFACE AUTHENTICATION REQUIRED${WHITE} 🔑${NC}" >&2
+    echo -e "${CYAN}============================================================${NC}" >&2
+    echo "" >&2
+    echo -e "${WHITE}To download the dataset, you need a ${YELLOW}HuggingFace Personal Access Token${WHITE}.${NC}" >&2
+    echo "" >&2
+    echo -e "${BLUE}📍 If you don't have a token yet:${NC}" >&2
+    echo -e "${WHITE}   1. Visit: ${CYAN}https://huggingface.co/settings/tokens${NC}" >&2
+    echo -e "${WHITE}   2. Click ${YELLOW}'New token'${NC}" >&2
+    echo -e "${WHITE}   3. Choose ${GREEN}'Read'${WHITE} permissions${NC}" >&2
+    echo -e "${WHITE}   4. Copy the generated token${NC}" >&2
+    echo "" >&2
+    echo -e "${YELLOW}⚠️  Your input will be hidden for security${NC}" >&2
+    echo "" >&2
+    
+    # Get HuggingFace PAT
+    echo -ne "${PURPLE}🔐 Enter your HuggingFace Personal Access Token: ${NC}" >&2
+    read -s hf_pat
+    echo >&2
+    echo "" >&2
 
-    # Validate Hugging Face PAT
+    # Validate HuggingFace PAT
     if ! validate_hf_pat "$hf_pat"; then
+        echo -e "${RED}❌ Invalid token format. Please try again.${NC}" >&2
+        echo "" >&2
         return 1
     fi
+    
+    echo -e "${GREEN}✅ Token validated successfully!${NC}" >&2
+    echo "" >&2
     echo "$hf_pat"
     return 0
 }
@@ -135,23 +168,29 @@ done
 
 # Download NuRec GRPC Container
 echo "Checking NuRec GRPC container..."
-if check_NuRec_container "docker.io/carlasimulator/nvidia-nurec-grpc:0.1.0"; then
+if check_NuRec_container "docker.io/carlasimulator/nvidia-nurec-grpc:0.2.0"; then
     echo "NuRec GRPC container already exists, skipping download."
 else
     echo "Initiating NuRec GRPC Container Downloads..."
-    docker pull docker.io/carlasimulator/nvidia-nurec-grpc:0.1.0
+    docker pull docker.io/carlasimulator/nvidia-nurec-grpc:0.2.0
     if [ $? -ne 0 ]; then
         echo "Error: Failed to download NuRec GRPC Container"
         exit 1
     fi
 fi
 
-# Download the dataset from Hugging Face
-echo "Checking Hugging Face dataset..."
+# Download the dataset from HuggingFace
+echo "Checking HuggingFace dataset..."
 if check_hf_dataset; then
-    echo "Hugging Face dataset already exists, skipping download."
+    echo "HuggingFace dataset already exists, skipping download."
 else
-    # Get and validate Hugging Face PAT
+    echo "Installing HuggingFace CLI..."
+    pip3 install --upgrade huggingface_hub || {
+        echo "Error: Failed to install HuggingFace CLI"
+        exit 1
+    }
+
+    # Get and validate HuggingFace PAT
     hf_pat=$(get_hf_pat)
     if [ $? -ne 0 ]; then
         exit 1
@@ -160,30 +199,24 @@ else
     # Strip any newlines or whitespace from the token
     hf_pat=$(echo "$hf_pat" | tr -d '\n\r' | xargs)
 
-    # Create the Hugging Face URL with embedded token
-    hf_url="https://user:${hf_pat}@huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec/"
-
-    echo "Downloading the dataset from Hugging Face..."
-    git lfs install
+    echo "Downloading the dataset from HuggingFace using CLI..."
     
-    # Set git configuration to avoid prompts
-    export GIT_TERMINAL_PROMPT=0  # Disable git prompts
-    
-    # Clone the repository using the URL with embedded token
-    echo "Cloning dataset with authentication..."
-    git clone "$hf_url"
-    
-    clone_result=$?
-    unset GIT_TERMINAL_PROMPT
-    
-    if [ $clone_result -ne 0 ]; then
-        echo "Error: Failed to download the NuRec dataset from Hugging Face"
+    # Login to HuggingFace using the token
+    echo "$hf_pat" | hf auth login --token "$hf_pat" || {
+        echo "Error: Failed to authenticate with HuggingFace"
         exit 1
-    fi
+    }
+    
+    # Download the dataset using HuggingFace CLI
+    echo "Downloading dataset with HuggingFace CLI..."
+    hf download nvidia/PhysicalAI-Autonomous-Vehicles-NuRec --repo-type dataset --local-dir PhysicalAI-Autonomous-Vehicles-NuRec || {
+        echo "Error: Failed to download the NuRec dataset from HuggingFace"
+        exit 1
+    }
 fi
 
 # Set the NuRec image path
-NUREC_IMAGE="docker.io/carlasimulator/nvidia-nurec-grpc:0.1.0"
+NUREC_IMAGE="docker.io/carlasimulator/nvidia-nurec-grpc:0.2.0"
 export NUREC_IMAGE
 echo "NUREC_IMAGE: $NUREC_IMAGE"
 
@@ -228,7 +261,7 @@ pip3 install pygame numpy nvidia-nvjpeg-cu12 imageio|| {
 # Install Carla Wheel
 echo "Installing Carla Wheel..."
 
-WHEEL=$(ls ../../carla/dist/carla-0.9.16-cp310-cp310-*.whl | head -n 1)
+WHEEL=$(ls ../../../carla/dist/carla-0.9.16-cp310-cp310-*.whl | head -n 1)
 python -m pip install ${WHEEL} || {
     echo "Error: Failed to install Carla Wheel"
     exit 1
@@ -243,12 +276,12 @@ pip3 install -r requirements.txt || {
 
 # Install and setup GRPC Protos
 echo "Setting up GRPC Protos..."
-pip3 install -r grpc_proto/requirements.txt || {
+pip3 install -r nre/grpc/requirements.txt || {
     echo "Error: Failed to install GRPC requirements"
     exit 1
 }
 
-python3 grpc_proto/update_generated.py || {
+python3 nre/grpc/update_generated.py || {
     echo "Error: Failed to update generated GRPC files"
     exit 1
 }
@@ -257,3 +290,21 @@ python3 grpc_proto/update_generated.py || {
 chmod +x "$0"
 
 echo "Setup completed successfully!"
+echo ""
+echo "🔔 IMPORTANT: Environment Variable Notice"
+echo "=============================================="
+echo "The NUREC_IMAGE environment variable has been added to your ~/.bashrc file"
+echo "and will be available in new terminal sessions."
+echo ""
+echo "To use it in your CURRENT terminal session, run one of these commands:"
+echo ""
+echo "  Option 1 (Reload bashrc):"
+echo "    source ~/.bashrc"
+echo ""
+echo "  Option 2 (Export manually for this session):"
+echo "    export NUREC_IMAGE=\"$NUREC_IMAGE\""
+echo ""
+echo "  Option 3 (Start a new terminal session)"
+echo ""
+echo "You can verify the variable is set by running:"
+echo "    echo \$NUREC_IMAGE"
