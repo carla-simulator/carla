@@ -39,6 +39,10 @@
     {
       "Name": "ChaosVehiclesPlugin",
       "Enabled": true
+    },
+    {
+      "Name": "PCG",
+      "Enabled": true
     }
   ]
 }
