@@ -18,6 +18,7 @@
 - [__V2X sensor__](#v2x-sensor)
     - [Cooperative awareness](#cooperative-awareness-message)
     - [Custom message](#custom-v2x-message)
+- [__Surface normal LiDAR sensor__](#surface-normal-lidar-sensor)
 
 !!! Important
     All the sensors use the UE coordinate system (__x__-*forward*, __y__-*right*, __z__-*up*), and return coordinates in local space. When using any visualization software, pay attention to its coordinate system. Many invert the Y-axis, so visualizing the sensor data directly may result in mirrored outputs.  
@@ -1004,3 +1005,15 @@ Example:
 | path\_loss\_model       | string | geometric     |   general path loss model to be used. Options: [geometric, winner]  |
 | use\_etsi\_fading       | bool   | true         |   Use the fading params as mentioned in the ETSI publication (true), or use the custom fading standard deviation         |
 | custom\_fading\_stddev  | float  | 0.0      |   Custom value for fading standard deviation, only used if `use_etsi_fading` is set to `false`              |
+
+<br>
+
+---
+## Surface normal LIDAR sensor
+
+* __Blueprint:__ sensor.lidar.ray_cast_surface_normals
+* __Output:__ [carla.SurfaceNormalLidarMeasurement](python_api.md#carla.SurfaceNormalLidarMeasurement) per step (unless `sensor_tick` says otherwise).
+
+This sensor shares the same interface as the [LIDAR sensor](#lidar-sensor). In addition to providing the `x, y, z` coordinates and intensity value `i`, surface normal LiDAR sensors also return a globally oriented surface normal vector `nx, ny, nz`. This vector represents the global orientation of the surface at the point where the laser ray intersects it.
+
+![SurfaceNormalLidarPointCloud](img/surface_normal_lidar_point_cloud.png)
