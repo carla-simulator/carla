@@ -119,7 +119,8 @@ public class CarlaTools :
       "AssetRegistry",
       "MeshDescription",
       "MeshUtilitiesCommon",
-      "Projects"
+      "Projects",
+      "PCG"
     });
 
     if (EnableNVIDIAOmniverse)
