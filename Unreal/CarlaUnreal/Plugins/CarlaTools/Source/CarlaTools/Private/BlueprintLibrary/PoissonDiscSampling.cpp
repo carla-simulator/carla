@@ -4,9 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "Generation/PoissonDiscSampling.h"
-
-#include "CarlaMeshGeneration.h"
+#include "BlueprintLibrary/PoissonDiscSampling.h"
 
 #include "PCGContext.h"
 #include "PCGComponent.h"
@@ -185,13 +183,6 @@ static std::vector<V2> GeneratePoissonDiscPoints(
   Results2D.push_back(First);
   Pending.push_back(First);
 
-  UE_LOG(LogCarlaMeshGeneration, Log,
-    TEXT("Generating Poisson Disc Sampling points array.\n")
-    TEXT(" R = %f | MaxRetries = %d | GridSize = (%d, %d) | CellCount = %d\n")
-    TEXT(" AABB Min = (%f, %f), Max = (%f, %f) | CellSize = %f"),
-    R, MaxRetries, GridSize.X, GridSize.Y, CellCount,
-    Min.X, Min.Y, Max.X, Max.Y, CellSize);
-
   while (!Pending.empty())
   {
     std::uniform_int_distribution<IntT> UID(0, (IntT)Pending.size() - 1);
@@ -256,10 +247,6 @@ static std::vector<V2> GeneratePoissonDiscPoints(
     if (!Found)
       Pending.erase(Pending.begin() + Index);
   }
-
-  UE_LOG(LogCarlaMeshGeneration, Log,
-    TEXT("Poisson Disc Sampling generated %d valid points."),
-    Results2D.size());
 
   return Results2D;
 }
