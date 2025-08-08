@@ -19,7 +19,7 @@ The packaged version of CARLA allows you to get started quickly with the CARLA s
 
 The following requirements should be fulfilled before installing CARLA:
 
-* __Operating System__: CARLA is built for Windows **10** and **11** and Ubuntu **18.04**, **20.04** and **22.04**. 
+* __Operating System__: CARLA is built for Windows **10** and **11** and Ubuntu **20.04** and **22.04**. 
 * __An adequate GPU__ :We recommend a dedicated GPU equivalent to an NVIDIA 2070 or better with at least 8Gb of VRAM or more.
 * __Disk space__: CARLA will use about 20 GB of disk space.
 * __Two TCP ports__: Ports 2000 and 2001 by default. Make sure that these ports are not blocked by firewalls or any other applications.
@@ -47,14 +47,14 @@ Download the desired CARLA package from GitHub using the link provided below. We
 
 <div class="build-buttons">
 <p>
-<a href="https://github.com/carla-simulator/carla/blob/master/Docs/download.md" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+<a href="https://carla.readthedocs.io/en/latest/download/" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
 <span class="icon icon-github"></span> Download CARLA packages</a>
 </p>
 </div>
 
 This repository contains multiple versions of CARLA. You will find options to download the __current release__ with all the most recent fixes and features, __previous releases__ and a __nightly build__ with all the developmental fixes and features (the nightly build may be unstable, use it with caution).
 
-The package is a compressed file named __CARLA_version.number__. Download and extract the archive in a convenient location (e.g. the `home` or `Documents` directory), then open a command-line terminal inside the top level of the extracted archive.
+The package is a compressed file named with the version number. Download and extract the archive in a convenient location (e.g. the `home` or `Documents` directory).
 
 #### Additional assets
 
@@ -65,9 +65,7 @@ Each CARLA package includes pre-installed maps that you can use out-of-the-box. 
 Install the Python client library from [PyPi](https://pypi.org/project/carla/) using PIP for an officially released version:
 
 ```sh
-# For the most recent release
-pip3 install carla
-#pip3 install carla==0.9.14 <= For a specific version
+pip3 install carla # carla==0.9.14 <= For a specific version
 ```
 
 CARLA packages also have Python wheels included inside `PythonAPI/carla/dist`. **If you are using a custom package built from source or the CARLA-latest package, you need to install the wheels included in the package, not the wheels from PyPi**. From inside this directory, install the relevant wheel with PIP:
@@ -107,7 +105,7 @@ cd path/to/carla/root
 CarlaUE4.exe
 ```
 
-A window containing a view over the default city map will open. This is the _spectator view_ of the CARLA server. The spectator view allows you to inspect your simulation. To fly around the city in the spectator view use the mouse and `WASD` keys, holding down the right mouse button to gimbal the view direction. 
+A window containing a view over the default city map will open. This is the _spectator view_ of the CARLA server that allows you to inspect your simulation. To fly around the city in the spectator view use the mouse and `WASD` keys, holding down the right mouse button to gimbal the view direction. 
 
 ![spectator_view](/img/build_install/town10_spectator_view.png)
 
@@ -127,7 +125,7 @@ cd PythonAPI\examples
 python3 manual_control.py 
 ```
 
-A new PyGame window will open allowing you to control a vehicle in the CARLA simulator with the arrow keys on the keyboard. When writing your own scripts for CARLA, you should import the CARLA Python API, connect to the server (which needs to be launched first) and access the simulation [`world` Object](python_api.md#carlaworld) with the following code:
+A new Pygame window will open allowing you to control a vehicle in the CARLA simulator with the arrow keys on the keyboard. When writing your own scripts for CARLA, you should import the CARLA Python API, connect to the server (which needs to be launched first) and access the simulation [`world` Object](python_api.md#carlaworld) with the following code:
 
 ```py
 import carla

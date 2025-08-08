@@ -44,23 +44,22 @@ The script [`PythonAPI/util/config.py`][config] provides more configuration opti
 
 ## Import additional assets 
 
-Each release has it's own additional package of extra assets and maps. This additional package includes the maps __Town06__ and __Town07__. These are stored separately to reduce the size of the build, so they can only be imported after the main package has been installed. 
+Each release has its own additional package of extra assets and maps. These are stored separately to reduce the size of the build, so they can only be imported after the main package has been installed. 
 
 __1.__ [Download](https://github.com/carla-simulator/carla/blob/master/Docs/download.md) the appropriate package for your desired version of CARLA.
 
-__2.__ Extract the package:
+__2.__ Import the assets:
 
-- __On Linux__:
-
-    - move the package to the _Import_ folder and run the following script to extract the contents:  
+* __On Linux__:
+Move the compressed archive to the _Import_ folder and run the following script to extract the contents:  
 
 ```sh
-        cd path/to/carla/root
+cd path/to/carla/root
 
-        ./ImportAssets.sh
+./ImportAssets.sh
 ```
 
-- __On Windows__:
+* __On Windows__:
 
     - Extract the contents directly in the root folder. 
 
