@@ -41,9 +41,9 @@ from scenario import Scenario
 from blueprint_library import BlueprintLibrary
 
 import grpc
-from grpc_proto.common_pb2 import Empty as EmptyRequest
-from grpc_proto.sensorsim_pb2_grpc import SensorsimServiceStub
-from grpc_proto.sensorsim_pb2 import (
+from nre.grpc.protos.common_pb2 import Empty as EmptyRequest
+from nre.grpc.protos.sensorsim_pb2_grpc import SensorsimServiceStub
+from nre.grpc.protos.sensorsim_pb2 import (
     RGBRenderReturn,
     RGBRenderRequest,
     AvailableCamerasRequest,

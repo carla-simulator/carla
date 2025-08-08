@@ -1,10 +1,7 @@
-// SPDX-FileCopyrightText: © 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
-//
-// SPDX-License-Identifier: MIT
-
+// Copyright (c) 2025 NVIDIA CORPORATION.  All rights reserved.
 syntax = "proto3";
 
-package common;
+package nre.grpc.protos.common;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Common types
@@ -78,4 +75,3 @@ message SessionRequestStatus {} // empty; reserved name in case we want to exten
 message AvailableScenesReturn {
     repeated string scene_ids = 1;
 }
-

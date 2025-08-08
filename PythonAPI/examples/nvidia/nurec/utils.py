@@ -24,7 +24,7 @@ centers and reference points (typically rear axle center).
 """
 
 import numpy as np
-from grpc_proto import common_pb2 as grpc_types
+from nre.grpc.protos import common_pb2 as grpc_types
 import carla
 from scipy.spatial.transform import Rotation as R
 import logging
@@ -107,7 +107,8 @@ def undo_carla_coordinate_transform(transform: np.ndarray) -> np.ndarray:
     # yaw, pitch, roll = roll, -yaw, pitch
     # yaw, pitch, roll = -pitch, roll, yaw
     yaw = -yaw
-    roll = -roll
+    roll = roll
+    pitch = -pitch
     rotation = R.from_euler("zyx", [yaw, pitch, roll], degrees=False)
     # carla.Rotation(pitch=euler_angles[2] * 180 / np.pi, yaw=-euler_angles[0] * 180 / np.pi, roll=euler_angles[1] * 180 / np.pi)
     result[:3, :3] = rotation.as_matrix()
