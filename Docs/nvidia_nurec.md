@@ -30,6 +30,14 @@ Before you get started, make sure you have satisifed the following prerequisites
 
 To get started with the sample dataset from NVIDIA, use the installer script. If you'd rather customize your dataset, follow the instructions to get the assets from HuggingFace and set up your environment manually.
 
+We recommend operating in a virtual environment to avoid problems with Python versions:
+
+```sh
+sudo apt install python3.10-venv
+python3     -m venv vecarla
+source vecarla/bin/activate
+```
+
 ### Use the Installer Script
 
 To get started quickly and easily with the curated sample set from the [NVIDIA PhysicalAI-Autonomous-Vehicles-NuRec dataset](https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec), navigate to the CARLA directory on your machine and run the following launch script:
