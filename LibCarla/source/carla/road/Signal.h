@@ -18,7 +18,7 @@
 namespace carla {
 namespace road {
 
-  enum SignalOrientation {
+  enum class SignalOrientation {
     Positive,
     Negative,
     Both

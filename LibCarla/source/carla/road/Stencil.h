@@ -11,7 +11,7 @@
 namespace carla {
 namespace road {
 
-  enum StencilOrientation {
+  enum class StencilOrientation {
     Positive,
     Negative,
     Both
