@@ -72,7 +72,6 @@ Then logout and log back in again or reboot.
 ```sh
 sudo apt install python3.10-venv
 python3 -m venv vecarla
-source vecarla/bin/activate
 ```
 
 ### Use the Installer Script

@@ -185,7 +185,7 @@ if check_hf_dataset; then
     echo "HuggingFace dataset already exists, skipping download."
 else
     echo "Installing HuggingFace CLI..."
-    pip3 install --upgrade huggingface_hub || {
+    python -m pip install --upgrade huggingface_hub || {
         echo "Error: Failed to install HuggingFace CLI"
         exit 1
     }
@@ -281,7 +281,7 @@ python -m pip install -r nre/grpc/requirements.txt || {
     exit 1
 }
 
-python3 nre/grpc/update_generated.py || {
+python nre/grpc/update_generated.py || {
     echo "Error: Failed to update generated GRPC files"
     exit 1
 }
