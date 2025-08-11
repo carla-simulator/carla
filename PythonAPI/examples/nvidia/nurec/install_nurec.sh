@@ -172,7 +172,7 @@ if check_NuRec_container "docker.io/carlasimulator/nvidia-nurec-grpc:0.2.0"; the
     echo "NuRec GRPC container already exists, skipping download."
 else
     echo "Initiating NuRec GRPC Container Downloads..."
-    docker pull docker.io/carlasimulator/nvidia-nurec-grpc:0.2.0
+    sudo -E docker pull docker.io/carlasimulator/nvidia-nurec-grpc:0.2.0
     if [ $? -ne 0 ]; then
         echo "Error: Failed to download NuRec GRPC Container"
         exit 1
