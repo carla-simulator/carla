@@ -152,6 +152,38 @@ else
     docker --version
 fi
 
+# Install NVIDIA Container Toolkit
+echo "Checking NVIDIA Container Toolkit..."
+if ! command_exists nvidia-ctk; then
+    echo "NVIDIA Container Toolkit not found. Installing..."
+    
+    # Add NVIDIA's package repositories
+    echo "Adding NVIDIA's package repositories..."
+    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+        | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+    
+    distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+    curl -fsSL https://nvidia.github.io/libnvidia-container/$distribution/libnvidia-container.list \
+        | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+        | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list
+    
+    sudo apt-get update
+    
+    # Install the toolkit
+    echo "Installing NVIDIA Container Toolkit..."
+    sudo apt-get install -y nvidia-container-toolkit
+    
+    # Configure Docker runtime
+    echo "Configuring Docker runtime for NVIDIA..."
+    sudo nvidia-ctk runtime configure --runtime=docker
+    sudo systemctl restart docker
+    
+    echo "NVIDIA Container Toolkit installed successfully"
+else
+    echo "NVIDIA Container Toolkit is already installed"
+    nvidia-ctk --version
+fi
+
 # Check for other required commands
 for cmd in pip; do
     if ! command_exists $cmd; then
