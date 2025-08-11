@@ -28,7 +28,7 @@ To use this integration, you'll need:
 
 ## Installation
 
-For detailed installation instructions, please refer to the [NUREC Installation Guide](../../../Docs/nvidia-nurec.md).
+For detailed installation instructions, please refer to the [NUREC Installation Guide](../../../Docs/nvidia_nurec.md).
 
 ## Running CARLA with NUREC
 
