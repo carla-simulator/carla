@@ -281,7 +281,7 @@ python -m pip install -r nre/grpc/requirements.txt || {
     exit 1
 }
 
-python3 nre/grpc/update_generated.py || {
+python nre/grpc/update_generated.py || {
     echo "Error: Failed to update generated GRPC files"
     exit 1
 }
