@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Function to check if a command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
-}
+command_exists() { command -v "$1" >/dev/null 2>&1; }
 
+# The user we want to grant docker access to (the one who invoked sudo, if any)
+TARGET_USER="${SUDO_USER:-$USER}"
 
 
 # Function to check if HuggingFace dataset exists
@@ -119,39 +119,33 @@ if ! command_exists docker; then
     sudo systemctl start docker
     sudo systemctl enable docker
     
-    # Add current user to docker group (if not root)
-    if [ "$EUID" -ne 0 ]; then
-        echo "Adding current user ($USER) to docker group..."
-        sudo usermod -aG docker "$USER"
-        echo "Note: You may need to log out and log back in for group changes to take effect"
-        echo "Or run: newgrp docker"
+    echo "Ensuring 'docker' group exists..."
+    if ! getent group docker >/dev/null; then
+        sudo groupadd docker
     fi
-    
-    # Verify Docker installation
-    if command_exists docker; then
-        echo "Docker installed successfully"
-        docker --version
-        
-        # Test Docker with a simple command
-        echo "Testing Docker installation..."
-        if [ "$EUID" -eq 0 ]; then
-            docker run --rm hello-world >/dev/null 2>&1
-        else
-            # For non-root users, use newgrp to test with new group membership
-            echo "Testing Docker (you may be prompted for password)..."
-            newgrp docker <<EOF
-docker run --rm hello-world >/dev/null 2>&1
-EOF
-        fi
-        
-        if [ $? -eq 0 ]; then
-            echo "Docker test successful"
-        else
-            echo "Warning: Docker test failed. You may need to restart your session or run 'newgrp docker'"
-        fi
+
+    echo "Adding user '${TARGET_USER}' to 'docker' group..."
+    sudo usermod -aG docker "${TARGET_USER}"
+
+    echo "Docker installed. Version:"
+    sudo docker --version
+
+    echo
+    echo "👉 IMPORTANT: You must start a **new login session** for group changes to take effect."
+    echo "   Options:"
+    echo "     - log out and back in,"
+    echo "     - or run:  su - ${TARGET_USER}"
+    echo
+
+    # Smoke test in a fresh login shell for the target user (no reliance on newgrp)
+    echo "Attempting a non-root test as ${TARGET_USER} in a fresh shell..."
+    if sudo -u "${TARGET_USER}" -H sh -lc 'id -nG | grep -qw docker && docker run --rm hello-world >/dev/null 2>&1'; then
+        echo "Docker test successful for ${TARGET_USER}."
     else
-        echo "Error: Docker installation verification failed"
-        exit 1
+        echo "Warning: Test could not confirm access yet (likely current session lacks new group)."
+        echo "After opening a new session, verify with:"
+        echo "  id -nG ${TARGET_USER}"
+        echo "  docker run --rm hello-world"
     fi
 else
     echo "Docker is already installed"
