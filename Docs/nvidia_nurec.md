@@ -21,7 +21,7 @@ To use neural rendering in your CARLA simulations, use the NVIDIA Neural Reconst
 
 Before you get started, make sure you have satisifed the following prerequisites:
 
-- [CARLA 0.9.16 or newer installed](https://carla.readthedocs.io/en/latest/start_quickstart/#carla-installation)
+- [CARLA 0.9.16 or newer package installed](https://carla.readthedocs.io/en/latest/start_quickstart/#carla-installation)
 - CUDA 12.8 or higher
 - [NVIDIA container toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 - Python 3.10+
@@ -30,12 +30,20 @@ Before you get started, make sure you have satisifed the following prerequisites
 
 To get started with the sample dataset from NVIDIA, use the installer script. If you'd rather customize your dataset, follow the instructions to get the assets from HuggingFace and set up your environment manually.
 
+To avoid conflicts with Python versions, we recommend using a virtual environment to complete the installation. Run the following commands in the terminal to set up a virtual environment:
+
+```sh
+sudo apt install python3.10-venv
+python3     -m venv vecarla
+source vecarla/bin/activate
+```
+
 ### Use the Installer Script
 
-To get started quickly and easily with the curated sample set from the [NVIDIA PhysicalAI-Autonomous-Vehicles-NuRec dataset](https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec), navigate to the CARLA directory on your machine and run the following launch script:
+To get started quickly and easily with the curated sample set from the [NVIDIA PhysicalAI-Autonomous-Vehicles-NuRec dataset](https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec), navigate to the CARLA root directory on your machine and run the following launch script:
 
 ```bash
-./PythonAPI/examples/nvidia/install_nurec.sh
+./PythonAPI/examples/nvidia/nurec/install_nurec.sh
 ```
 
 The script helps you set your HuggingFace access token (if there isn't one already), sets the required environment variables for the NuRec container, pulls the curated sample dataset from HuggingFace, and installs the required Python packages.
