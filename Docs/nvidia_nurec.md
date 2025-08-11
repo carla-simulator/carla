@@ -72,6 +72,7 @@ Then logout and log back in again or reboot.
 ```sh
 sudo apt install python3.10-venv
 python3 -m venv vecarla
+source vecarla/bin/activate
 ```
 
 ### Use the Installer Script
@@ -125,13 +126,15 @@ If you'd rather customize the datasets you use, follow the instructions below to
 ./CarlaUE4.sh
 ```
 
-**2. Replay a NuRec Scenario:** Once the CARLA server is running, open a new terminal window and navigate to the directory where your CARLA package exists, then replay a NuRec scenario with one of the following scripts: 
+**2. Replay a NuRec Scenario:** Once the CARLA server is running, open a new terminal window and navigate to the directory where your CARLA package exists, then replay a NuRec scenario with one of the following scripts. We recommend using the NuRec version 25.07 datasets, which you will find in the `CARLA_ROOT/PythonAPI/examples/nvidia/nurec/PhysicalAI-Autonomous-Vehicles-NuRec/sample_set/25.07_release` directory.
 
-* **Multi-camera replay:** The script provides a complete, multi-view visualization system, ideal for understanding how to integrate various camera types and create comprehensive monitoring setups. When you run it, it replays simulations with multiple NuRec cameras (front, left cross, right cross) in different camera positions in a Pygame display grid. It also supports additional perspectives pulled from standard CARLA cameras attached to the ego vehicle and multiple camera feeds with different framerates and resolutions.  
+* **Multi-camera replay:** The script provides a complete, multi-view visualization system, ideal for understanding how to integrate various camera types and create comprehensive monitoring setups. When you run it, it replays simulations with multiple NuRec cameras (front, left cross, right cross) in different camera positions in a Pygame display grid. It also supports additional perspectives pulled from standard CARLA cameras attached to the ego vehicle and multiple camera feeds with different framerates and resolutions. 
 
 ```sh
 cd PythonAPI/examples/nvidia/
-python example_replay_recording.py --usdz-filename /path/to/scenario.usdz
+python example_replay_recording.py --usdz-filename \
+PhysicalAI-Autonomous-Vehicles-NuRec/sample_set/25.07 \ 
+_release/026d6a39-bd8f-4175-bc61-fe50ed0403a3/026d6a39-bd8f-4175-bc61-fe50ed0403a3.usdz
 
 ```
 
@@ -143,7 +146,9 @@ python example_replay_recording.py --usdz-filename /path/to/scenario.usdz
 
 ```sh
 cd PythonAPI/examples/nvidia/
-python example_custom_camera.py --usdz-filename /path/to/scenario.usdz
+python example_custom_camera.py --usdz-filename \
+PhysicalAI-Autonomous-Vehicles-NuRec/sample_set/25.07 \
+_release/026d6a39-bd8f-4175-bc61-fe50ed0403a3/026d6a39-bd8f-4175-bc61-fe50ed0403a3.usdz
 ```
 
 !!! note
