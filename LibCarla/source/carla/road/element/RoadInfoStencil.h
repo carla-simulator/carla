@@ -48,11 +48,11 @@ namespace element {
       v.Visit(*this);
     }
 
-    SignId GetStencilId() const {
+    StencilId GetStencilId() const {
       return _stencil_id;
     }
 
-    const Signal* GetStencil() const {
+    const Stencil* GetStencil() const {
       return _stencil;
     }
 

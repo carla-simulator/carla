@@ -3,7 +3,6 @@
 #include "carla/Memory.h"
 #include "carla/NonCopyable.h"
 #include "carla/road/RoadTypes.h"
-#include "carla/road/LaneValidity.h"
 #include "carla/geom/Transform.h"
 
 #include <string>
@@ -30,6 +29,7 @@ namespace road {
         std::string type,
         std::string text,
         double zOffset,
+        double heading,
         double length,
         double width,
         double pitch,
@@ -42,6 +42,8 @@ namespace road {
         _orientation(orientation),
         _type(type),
         _text(text),
+        _zOffset(zOffset),
+        _heading(heading),
         _length(length),
         _width(width),
         _pitch(pitch),
@@ -81,12 +83,16 @@ namespace road {
       return _zOffset;
     }
 
+    double GetHeading() const {
+      return _heading;
+    }
+
     const std::string &GetType() const {
       return _type;
     }
 
     double GetLength() const {
-      return _height;
+      return _length;
     }
 
     double GetWidth() const {
@@ -114,7 +120,7 @@ namespace road {
 
     RoadId _road_id;
 
-    StencilId _signal_id;
+    StencilId _stencil_id;
 
     double _s;
 
@@ -129,6 +135,8 @@ namespace road {
     std::string _text;
 
     double _zOffset;
+
+    double _heading;
 
     double _length;
 
