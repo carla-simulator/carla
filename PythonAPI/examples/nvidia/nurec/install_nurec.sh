@@ -253,7 +253,7 @@ echo "Installing Python dependencies..."
 
 # Install base dependencies
 echo "Installing base dependencies..."
-pip3 install pygame numpy nvidia-nvjpeg-cu12 imageio|| {
+python -m pip install pygame numpy nvidia-nvjpeg-cu12 imageio|| {
     echo "Error: Failed to install pygame and numpy"
     exit 1
 }
@@ -269,14 +269,14 @@ python -m pip install ${WHEEL} || {
 
 # Install project requirements
 echo "Installing project requirements..."
-pip3 install -r requirements.txt || {
+python -m pip install -r requirements.txt || {
     echo "Error: Failed to install project requirements"
     exit 1
 }
 
 # Install and setup GRPC Protos
 echo "Setting up GRPC Protos..."
-pip3 install -r nre/grpc/requirements.txt || {
+python -m pip install -r nre/grpc/requirements.txt || {
     echo "Error: Failed to install GRPC requirements"
     exit 1
 }
