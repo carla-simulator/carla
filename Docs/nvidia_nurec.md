@@ -21,7 +21,7 @@ To use neural rendering in your CARLA simulations, use the NVIDIA Neural Reconst
 
 Before you get started, make sure you have satisifed the following prerequisites:
 
-- [CARLA 0.9.16 or newer installed](https://carla.readthedocs.io/en/latest/start_quickstart/#carla-installation)
+- [CARLA 0.9.16 or newer package installed](https://carla.readthedocs.io/en/latest/start_quickstart/#carla-installation)
 - CUDA 12.8 or higher
 - [NVIDIA container toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
 - Python 3.10+
@@ -30,15 +30,33 @@ Before you get started, make sure you have satisifed the following prerequisites
 
 To get started with the sample dataset from NVIDIA, use the installer script. If you'd rather customize your dataset, follow the instructions to get the assets from HuggingFace and set up your environment manually.
 
+To avoid conflicts with Python versions, we recommend using a virtual environment to complete the installation. Run the following commands in the terminal to set up a virtual environment:
+
+```sh
+sudo apt install python3.10-venv
+python3     -m venv vecarla
+source vecarla/bin/activate
+```
+
 ### Use the Installer Script
 
-To get started quickly and easily with the curated sample set from the [NVIDIA PhysicalAI-Autonomous-Vehicles-NuRec dataset](https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec), navigate to the CARLA directory on your machine and run the following launch script:
+To get started quickly and easily with the curated sample set from the [NVIDIA PhysicalAI-Autonomous-Vehicles-NuRec dataset](https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec), navigate to the CARLA root directory on your machine and run the following launch script:
 
 ```bash
-./PythonAPI/examples/nvidia/install_nurec.sh
+./PythonAPI/examples/nvidia/nurec/install_nurec.sh
 ```
 
 The script helps you set your HuggingFace access token (if there isn't one already), sets the required environment variables for the NuRec container, pulls the curated sample dataset from HuggingFace, and installs the required Python packages.
+
+The script will install the following Python packages:
+
+* pygame
+* numpy
+* scipy
+* grpc
+* carla
+* nvidia-nvimgcodec-cu12
+
 
 ### Use a Custom Dataset
 
@@ -57,7 +75,7 @@ If you'd rather customize the datasets you use, follow the instructions below to
     * `NUREC_IMAGE` is required and must be set to the full path of the NuRec image in the CARLA repository. Run the following command to set it:  
 
         ```
-        export NUREC_IMAGE="docker.io/carlasimulator/nvidia-nurec-grpc:0.1.0"
+        export NUREC_IMAGE="docker.io/carlasimulator/nvidia-nurec-grpc:0.2.0"
         ```
 
     * [`CUDA_VISIBLE_DEVICES`](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#env-vars) is optional and you can use it to designate the GPU that runs the replays. If you don't set it to a specific GPU, the script defaults to "0" and runs on GPU 0. If you've already set this environment variable, the script inherits whatever has previously been set.
