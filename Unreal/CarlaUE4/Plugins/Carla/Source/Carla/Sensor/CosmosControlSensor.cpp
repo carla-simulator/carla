@@ -207,7 +207,6 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     }
   }
 
-
   if (!added_persisted_stop_lines)
   {
     added_persisted_stop_lines = true;
@@ -362,6 +361,24 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     std::vector<carla::geom::Location> crosswalks_points = carla_game_mode->GetMap()->GetAllCrosswalkZones();
     carla::geom::Location first_in_loop = crosswalks_points[0];
 
+    const auto& road_stencils = carla_game_mode->GetMap()->GetStencils();
+    for (const auto& StencilPair : road_stencils)
+    {
+      const auto& Stencil = StencilPair.second;
+      if (!Stencil)
+      {
+        continue;
+      }
+
+      const FTransform Transform = Stencil->GetTransform();
+      const float StencilWidth = Stencil->GetWidth() * 100.0;
+      const float StencilLength = Stencil->GetLength() * 100.0;
+
+      FQuat StencilOrientation = Transform.GetRotation();
+
+      DrawDebugSolidBox(World, Transform.GetLocation(), FVector(StencilWidth, StencilLength, 10.0) * 0.5, StencilOrientation, CosmosColors::RoadMarkings.WithAlpha(dist_alpha), false, -1.0f, depth_prio);
+    }
+
     FPlane orientation_plane(
       crosswalks_points[1].ToFVector(),
       crosswalks_points[2].ToFVector(),
@@ -390,7 +407,6 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
         }
       }
     }
-
   }
 
   USceneCaptureComponent2D* SceneCapture = GetCaptureComponent2D();
