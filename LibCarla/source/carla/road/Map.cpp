@@ -557,11 +557,10 @@ namespace road {
 
           // move perpendicular ('t')
           geom::Transform pivot = base;
-          pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
           pivot.rotation.yaw -= 90;   // move perpendicular to 's' for the lateral offset
           geom::Vector3D v(static_cast<float>(crosswalk->GetT()), 0.0f, 0.0f);
           pivot.TransformPoint(v);
-          // restore pivot position and orientation
+          // restore pivot position and orientation with heading
           pivot = base;
           pivot.location = v;
           pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
@@ -572,12 +571,6 @@ namespace road {
                 static_cast<float>(corner.u),
                 static_cast<float>(corner.v),
                 static_cast<float>(corner.z));
-            // set the width larger to contact with the sidewalk (in case they have gutter area)
-            if (corner.u < 0) {
-              v2.x -= 1.0f;
-            } else {
-              v2.x += 1.0f;
-            }
             pivot.TransformPoint(v2);
             result.push_back(v2);
           }
