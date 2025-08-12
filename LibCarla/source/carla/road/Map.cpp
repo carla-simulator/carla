@@ -569,7 +569,7 @@ namespace road {
           for (auto corner : crosswalk->GetPoints()) {
             geom::Vector3D v2(
                 static_cast<float>(corner.u),
-                static_cast<float>(corner.v),
+                static_cast<float>(-corner.v), // Unreal Hack
                 static_cast<float>(corner.z));
             pivot.TransformPoint(v2);
             result.push_back(v2);
