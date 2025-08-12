@@ -103,23 +103,13 @@ namespace parser {
                 node_object.attribute("pitch").as_double(),
                 node_object.attribute("roll").as_double());
           } else if (name.find("Stencil_") != std::string::npos) {
-            // Parse all stencil types, not just STOP
             road::RoadId road_id = node_road.attribute("id").as_uint();
             road::Road *road = map_builder.GetRoad(road_id);
             
-            // Extract the stencil type from the name (e.g., "STOP", "ArrowType4R", etc.)
             std::string stencil_type = name.substr(8); // Skip "Stencil_" prefix
             
-            // Extract text if it exists (some stencils might have text content)
-            std::string text = "";
-            pugi::xml_node userData = node_object.child("userData");
-            if (userData) {
-              pugi::xml_node textNode = userData.child("text");
-              if (textNode) {
-                text = textNode.text().get();
-              }
-            }
-            
+            // Assign stencil types
+
             map_builder.AddStencil(road,
                 node_object.attribute("id").as_string(),
                 node_object.attribute("s").as_double(),
@@ -127,7 +117,6 @@ namespace parser {
                 node_object.attribute("name").as_string(),
                 node_object.attribute("orientation").as_string(),
                 stencil_type,
-                text,
                 node_object.attribute("zOffset").as_double(),
                 node_object.attribute("hdg").as_double(),
                 node_object.attribute("length").as_double(),

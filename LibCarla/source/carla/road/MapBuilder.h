@@ -220,7 +220,6 @@ namespace road {
         const std::string name,
         const std::string orientation,
         const std::string type,
-        const std::string text,
         const double zOffset,
         const double heading,
         const double length,

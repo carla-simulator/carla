@@ -27,7 +27,6 @@ namespace road {
         std::string name,
         std::string orientation,
         std::string type,
-        std::string text,
         double zOffset,
         double heading,
         double length,
@@ -41,7 +40,6 @@ namespace road {
         _name(name),
         _orientation(orientation),
         _type(type),
-        _text(text),
         _zOffset(zOffset),
         _heading(heading),
         _length(length),
@@ -99,10 +97,6 @@ namespace road {
       return _width; 
     }
 
-    const std::string &GetText() const {
-      return _text;
-    }
-
     double GetPitch() const {
       return _pitch;
     }
@@ -132,10 +126,6 @@ namespace road {
 
     std::string _type;
 
-    std::string _text;
-
-    double _zOffset;
-
     double _heading;
 
     double _length;
@@ -145,6 +135,8 @@ namespace road {
     double _pitch;
 
     double _roll;
+
+    double _zOffset;
 
     geom::Transform _transform;
   };
