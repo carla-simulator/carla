@@ -40,12 +40,12 @@ namespace road {
         _name(name),
         _orientation(orientation),
         _type(type),
-        _zOffset(zOffset),
         _heading(heading),
         _length(length),
         _width(width),
         _pitch(pitch),
-        _roll(roll) {}
+        _roll(roll),
+        _zOffset(zOffset) {}
 
     RoadId GetRoadId() const {
       return _road_id;
