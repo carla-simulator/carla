@@ -19,6 +19,7 @@
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/RoadInfoSpeed.h"
 #include "carla/road/element/RoadInfoSignal.h"
+#include "carla/road/element/RoadInfoStencil.h"
 
 #include "marchingcube/MeshReconstruction.h"
 
@@ -28,6 +29,8 @@
 #include <chrono>
 #include <thread>
 #include <iomanip>
+#include <queue>
+#include <set>
 #include <cmath>
 
 namespace carla {
@@ -443,6 +446,78 @@ namespace road {
       for(const auto* road_info : road_infos) {
         result.push_back(road_info);
       }
+    }
+    return result;
+  }
+
+  std::vector<const element::RoadInfoStencil*>
+      Map::GetAllStencilReferences() const {
+    std::vector<const element::RoadInfoStencil*> result;
+    for (const auto& road_pair : _data.GetRoads()) {
+      const auto &road = road_pair.second;
+      auto road_infos = road.GetInfos<element::RoadInfoStencil>();
+      for(const auto* road_info : road_infos) {
+        result.push_back(road_info);
+      }
+    }
+    return result;
+  }
+
+  std::vector<Map::StencilSearchData> Map::GetStencilsInDistance(
+      Waypoint waypoint, double distance, bool stop_at_junction) const {
+
+    const auto &lane = GetLane(waypoint);
+    const bool forward = lane.IsPositiveDirection();
+    const double signed_distance = forward ? distance : -distance;
+    const double relative_s = waypoint.s - lane.GetDistance();
+    const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
+    DEBUG_ASSERT(remaining_lane_length >= 0.0);
+
+    auto &road = _data.GetRoad(waypoint.road_id);
+    std::vector<StencilSearchData> result;
+
+    // If after subtracting the distance we are still in the same lane, return
+    // same waypoint with the extra distance.
+    if (distance <= remaining_lane_length) {
+      auto stencils = road.GetInfosInRange<element::RoadInfoStencil>(
+          waypoint.s, waypoint.s + signed_distance);
+      for(auto* stencil : stencils){
+        double distance_to_stencil = 0;
+        if (lane.IsPositiveDirection()){
+          distance_to_stencil = stencil->GetS() - waypoint.s;
+        } else {
+          distance_to_stencil = waypoint.s - stencil->GetS();
+        }
+        
+        // Check orientation
+        auto orientation = stencil->GetOrientation();
+        bool add_stencil = (orientation == StencilOrientation::Both) ||
+                         (forward && orientation == StencilOrientation::Positive) ||
+                         (!forward && orientation == StencilOrientation::Negative);
+        
+        if (add_stencil && distance_to_stencil >= 0) {
+          StencilSearchData data;
+          data.stencil = stencil;
+          data.waypoint = waypoint;
+          data.waypoint.s = stencil->GetS();
+          data.accumulated_s = distance_to_stencil;
+          result.push_back(data);
+        }
+      }
+      return result;
+    }
+
+    // If we run out of remaining_lane_length we have to go to successors.
+    for (auto &successor : GetSuccessors(waypoint)) {
+      if (stop_at_junction && IsJunction(successor.road_id)) {
+        continue;
+      }
+      auto successor_stencils = GetStencilsInDistance(
+          successor, distance - remaining_lane_length, stop_at_junction);
+      for(auto& stencil : successor_stencils){
+        stencil.accumulated_s += remaining_lane_length;
+      }
+      result = ConcatVectors(result, successor_stencils);
     }
     return result;
   }
