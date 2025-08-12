@@ -34,6 +34,7 @@ nav:
   - 'Blueprint library': 'bp_library.md'  
   - 'Tutorials': 'tutorials.md'
   - 'Extended documentation': 'ext_docs.md'
+  - 'Downloads': 'download.md'
 
 - CARLA Ecosystem:
   - 'ANSYS': 'ecosys_ansys.md'

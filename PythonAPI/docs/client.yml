@@ -250,7 +250,7 @@
       - param_name: filename
         type: str
         doc: >
-          Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUE4/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.
+          Name of the file to write the recorded data. An absolute path will be considered if some folder appears in the name. Otherwise, the chosen path will be one of the following: **Build from source** - `<CARLA_ROOT>/Unreal/CarlaUE4/Saved`, **Windows package** - `C:\Users\<user>\AppData\Local\CarlaUE4\Saved`, **Linux package** - `/home/<user>/.config/Epic/CarlaUE4/Saved/`.
       - param_name: additional_data
         type: bool
         default: False

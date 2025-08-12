@@ -210,6 +210,11 @@ The above command will build the Python API for the system Python version. You c
 * Install the target Python version at the system level with the development headers and the distutils, replace *X* with the desired version:
 
 ```
+# The Deadsnakes PPA may be needed for some Python versions
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt update
+
+# Replace the X for the desired Python version
 sudo apt install python3.X python3.X-dev python3.X-distutils
 ```
 

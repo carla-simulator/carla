@@ -14,7 +14,7 @@ Launch the CARLA simulator with the ROS 2 integration enabled:
 
 ```bash
 # If running a package:
-./CarlaUE4sh --ros2
+./CarlaUE4.sh --ros2
 
 # If running the editor:
 make launch ARGS="--ros2 --editor-flags='--ros2'"

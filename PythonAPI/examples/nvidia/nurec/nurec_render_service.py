@@ -68,6 +68,27 @@ def get_container_name(uuid_val: str) -> str:
     container_name = f"NuRec_{uuid_val}_run_{random_suffix}"
     return container_name
 
+def check_if_scene_loaded(logs: str) -> bool:
+    """
+    Check if the scene is loaded by looking for the string "successfully loaded scene" or "done testing gathered scenes" in the logs.
+    """
+    return "successfully loaded scene" in logs.lower() or "done testing gathered scenes" in logs.lower()
+
+
+def _normalize_image_name(image: str) -> str:
+    """
+    Normalize Docker image names for comparison.
+    Docker often omits the leading "docker.io/" in image names when listing containers.
+    This strips that prefix for consistent equality checks.
+    """
+    if not image:
+        return image
+    prefix = "docker.io/"
+    if image.startswith(prefix):
+        return image[len(prefix):]
+    return image
+
+
 class ServerMonitor:
     def __init__(self, expected_host, expected_port):
         self.expected_host = expected_host
@@ -99,7 +120,7 @@ class ServerMonitor:
             
             # Check for scene loaded message
             if not self.scene_loaded.is_set():
-                if "successfully loaded scene" in line.lower():
+                if check_if_scene_loaded(line):
                     logger.debug(f"Scene loaded: {line}")
                     self.scene_loaded.set()
             
@@ -220,7 +241,7 @@ class NuRecRenderService:
                     logger.warning(f"Skipping container {line} because it has the wrong format")
                     continue
                 name, image = parts
-                if pattern in name and image == self.image:
+                if pattern in name and _normalize_image_name(image) == _normalize_image_name(self.image):
                     matching_container = name
                     break
             
@@ -247,7 +268,7 @@ class NuRecRenderService:
             server_started = "serving on" in logs.lower()
             
             # Check for correct scene
-            scene_loaded = "successfully loaded scene" in logs.lower()
+            scene_loaded = check_if_scene_loaded(logs)
             correct_scene = expected_scene in logs
             
             # Check for correct port
@@ -289,7 +310,7 @@ class NuRecRenderService:
                     
                     # Check if it's a NuRec container with the same image
                     if (container_name.startswith("NuRec_") and 
-                        container_image == self.image):
+                        _normalize_image_name(container_image) == _normalize_image_name(self.image)):
                         containers_to_kill.append(container_name)
             
             if containers_to_kill:
@@ -426,7 +447,6 @@ class NuRecRenderService:
             self.image,
             "--artifact-glob",
             f"{os.path.realpath(self.usdz_path)}",
-            "--no-enable-nrend",
             f"--port={self.final_port}",
             "--host=localhost",
             "--test-scenes-are-valid",

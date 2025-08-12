@@ -28,7 +28,7 @@ To use this integration, you'll need:
 
 ## Installation
 
-For detailed installation instructions, please refer to the [NUREC Installation Guide](../../../Docs/nvidia-nurec.md).
+For detailed installation instructions, please refer to the [NUREC Installation Guide](../../../Docs/nvidia_nurec.md).
 
 ## Running CARLA with NUREC
 
@@ -38,7 +38,7 @@ Start carla with the standard process.
 
 ### Step 2: Replay a NUREC Scenario
 
-Make sure to specify the nurec image to use by setting the NUREC_IMAGE env variable. See [the docs](../../../Docs/nvidia-nurec.md) for details.
+Make sure to specify the nurec image to use by setting the NUREC_IMAGE env variable. See [the docs](../../../Docs/nvidia_nurec.md) for details.
 
 Once CARLA is running, you can replay a NUREC scenario using the `example_replay_recording.py` script:
 

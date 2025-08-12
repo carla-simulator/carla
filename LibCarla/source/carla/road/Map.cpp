@@ -584,6 +584,7 @@ namespace road {
         }
       }
     }
+
     return result;
   }
 
