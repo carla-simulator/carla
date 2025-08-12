@@ -48,7 +48,7 @@ namespace multigpu {
       _connection_timer(_pool.io_context()),
       _buffer_pool(std::make_shared<BufferPool>()) {
 
-    boost::asio::ip::address ip_address = boost::asio::ip::address::from_string(ip);
+    boost::asio::ip::address ip_address = boost::asio::ip::make_address(ip);
     _endpoint = boost::asio::ip::tcp::endpoint(ip_address, port);
     _commander.set_callback(callback);
   }

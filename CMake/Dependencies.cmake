@@ -168,10 +168,17 @@ carla_dependency_option (BOOST_LOCALE_WITH_ICU OFF)
 carla_dependency_option (BOOST_LOCALE_WITH_ICONV OFF)
 carla_dependency_option (BOOST_GIL_BUILD_EXAMPLES OFF)
 carla_dependency_option (BOOST_GIL_BUILD_HEADER_TESTS OFF)
+carla_dependency_option (BOOST_GIL_USE_BOOST_FILESYSTEM OFF)
+
+set (BOOST_URL_SUFIX)
+if (${CARLA_BOOST_VERSION} VERSION_GREATER 1.84.0)
+  set (BOOST_URL_SUFIX -cmake)
+endif ()
+
 carla_dependency_add(
   boost
   ${CARLA_BOOST_TAG}
-  https://github.com/boostorg/boost/releases/download/${CARLA_BOOST_TAG}/${CARLA_BOOST_TAG}.zip
+  https://github.com/boostorg/boost/releases/download/${CARLA_BOOST_TAG}/${CARLA_BOOST_TAG}${BOOST_URL_SUFIX}.zip
   https://github.com/boostorg/boost.git
 )
 
@@ -216,8 +223,8 @@ carla_dependency_add (
 
 
 
+# ==== PROJ ====
 if (ENABLE_OSM2ODR)
-  # ==== PROJ ====
   carla_dependency_option (BUILD_TESTING OFF)
   carla_dependency_option (ENABLE_TIFF OFF)
   carla_dependency_option (ENABLE_CURL OFF)
@@ -231,8 +238,8 @@ endif ()
 
 
 
+# ==== XERCESC ====
 if (ENABLE_OSM2ODR)
-  # ==== XERCESC ====
   carla_dependency_add (
     xercesc
     ${CARLA_XERCESC_TAG}
@@ -243,16 +250,20 @@ endif ()
 
 
 
+# ==== LUNASVG ====
 if (BUILD_OSM_WORLD_RENDERER)
-  # ==== LUNASVG ====
   carla_dependency_add (
     lunasvg
     ${CARLA_LUNASVG_TAG}
     https://github.com/sammycage/lunasvg/archive/refs/tags/${CARLA_LUNASVG_TAG}.zip
     https://github.com/sammycage/lunasvg.git
   )
+endif ()
 
-  # ==== LIBOSMSCOUT ====
+
+
+# ==== LIBOSMSCOUT ====
+if (BUILD_OSM_WORLD_RENDERER)
   carla_dependency_add (
     libosmscout
     ${CARLA_LIBOSMSCOUT_TAG}
@@ -263,8 +274,8 @@ endif ()
 
 
 
+# ==== STREETMAP ====
 if (BUILD_CARLA_UNREAL AND ENABLE_STREETMAP)
-  # ==== STREETMAP ====
   carla_dependency_add (
     StreetMap
     ${CARLA_STREETMAP_TAG}
