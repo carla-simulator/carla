@@ -12,6 +12,15 @@ FLineBatcherSceneProxy_CARLA::FLineBatcherSceneProxy_CARLA(const ULineBatchCompo
 	bWillEverBeLit = false;
 }
 
+FLineBatcherSceneProxy_CARLA::~FLineBatcherSceneProxy_CARLA()
+{
+	for (auto& Pair : CachedMaterialProxies)
+	{
+		delete Pair.Value;
+	}
+	CachedMaterialProxies.Empty();
+}
+
 ULineBatchComponent_CARLA::ULineBatchComponent_CARLA(const FObjectInitializer& ObjectInitializer /*= FObjectInitializer::Get()*/)
 	: Super(ObjectInitializer)
 {
@@ -91,9 +100,28 @@ void FLineBatcherSceneProxy_CARLA::GetDynamicMeshElements(const TArray<const FSc
 					MeshBuilder.AddTriangle(M.MeshIndices[Idx], M.MeshIndices[Idx + 1], M.MeshIndices[Idx + 2]);
 				}
 
-				FMaterialRenderProxy* const MaterialRenderProxy = new(FMemStack::Get()) FColoredMaterialRenderProxy(
-					CosmosMeshMaterial == nullptr ? GEngine->DebugMeshMaterial->GetRenderProxy() : CosmosMeshMaterial->GetRenderProxy(),
-					M.Color);
+				// Create a unique key from the color
+				uint32 ColorKey = M.Color.DWColor();
+				FColoredMaterialRenderProxy** CachedProxy = CachedMaterialProxies.Find(ColorKey);
+				FMaterialRenderProxy* MaterialRenderProxy = nullptr;
+				
+				if (CachedProxy)
+				{
+					MaterialRenderProxy = *CachedProxy;
+				}
+				else
+				{
+					// Create new proxy and cache it
+					FMaterialRenderProxy* BaseMaterialProxy = CosmosMeshMaterial == nullptr ? GEngine->DebugMeshMaterial->GetRenderProxy() : CosmosMeshMaterial->GetRenderProxy();
+					
+					FColoredMaterialRenderProxy* NewProxy = new FColoredMaterialRenderProxy(
+						BaseMaterialProxy,
+						M.Color);
+					
+					CachedMaterialProxies.Add(ColorKey, NewProxy);
+					MaterialRenderProxy = NewProxy;
+				}
+				
 				MeshBuilder.GetMesh(FMatrix::Identity, MaterialRenderProxy, M.DepthPriority, false, false, ViewIndex, Collector);
 			}
 		}

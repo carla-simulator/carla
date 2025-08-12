@@ -44,5 +44,11 @@ private:
 	TArray<FBatchedLine> Lines;
 	TArray<FBatchedPoint> Points;
 	TArray<FBatchedMesh> Meshes;
+	
+	// Cache for material render proxies to avoid memory leaks
+	// Key is the color, value is the cached proxy
+	mutable TMap<uint32, FColoredMaterialRenderProxy*> CachedMaterialProxies;
 
+public:
+	virtual ~FLineBatcherSceneProxy_CARLA();
 };
