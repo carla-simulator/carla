@@ -11,6 +11,7 @@
 #include <carla/client/Waypoint.h>
 #include <carla/road/element/LaneMarking.h>
 #include <carla/client/Landmark.h>
+#include <carla/client/RoadMark.h>
 #include <carla/road/SignalType.h>
 
 #include <ostream>
@@ -156,6 +157,12 @@ void export_map() {
     .value("Negative", cr::SignalOrientation::Negative)
     .value("Both", cr::SignalOrientation::Both)
   ;
+
+  enum_<cr::StencilOrientation>("RoadMarkOrientation")
+    .value("Positive", cr::StencilOrientation::Positive)
+    .value("Negative", cr::StencilOrientation::Negative)
+    .value("Both", cr::StencilOrientation::Both)
+  ;
   // ===========================================================================
   // -- Map --------------------------------------------------------------------
   // ===========================================================================
@@ -177,6 +184,9 @@ void export_map() {
     .def("get_all_landmarks_from_id", CALL_RETURNING_LIST_1(cc::Map, GetLandmarksFromId, std::string), (args("opendrive_id")))
     .def("get_all_landmarks_of_type", CALL_RETURNING_LIST_1(cc::Map, GetAllLandmarksOfType, std::string), (args("type")))
     .def("get_landmark_group", CALL_RETURNING_LIST_1(cc::Map, GetLandmarkGroup, cc::Landmark), args("landmark"))
+    .def("get_all_road_marks", CALL_RETURNING_LIST(cc::Map, GetAllRoadMarks))
+    .def("get_road_marks_from_id", CALL_RETURNING_LIST_1(cc::Map, GetRoadMarksFromId, std::string), (args("opendrive_id")))
+    .def("get_all_road_marks_of_type", CALL_RETURNING_LIST_1(cc::Map, GetAllRoadMarksOfType, std::string), (args("type")))
     .def("cook_in_memory_map", &cc::Map::CookInMemoryMap, (arg("path")=""))
     .def(self_ns::str(self_ns::self))
   ;
@@ -288,5 +298,24 @@ void export_map() {
     .add_property("waypoint", &cc::Landmark::GetWaypoint)
     .add_property("transform", CALL_RETURNING_COPY(cc::Landmark, GetTransform))
     .def("get_lane_validities", &GetLaneValidities)
+  ;
+
+  class_<cc::RoadMark, boost::noncopyable, boost::shared_ptr<cc::RoadMark>>("RoadMark", no_init)
+    .add_property("road_id", &cc::RoadMark::GetRoadId)
+    .add_property("distance", &cc::RoadMark::GetDistance)
+    .add_property("s", &cc::RoadMark::GetS)
+    .add_property("t", &cc::RoadMark::GetT)
+    .add_property("id", &cc::RoadMark::GetId)
+    .add_property("name", &cc::RoadMark::GetName)
+    .add_property("orientation", &cc::RoadMark::GetOrientation)
+    .add_property("z_offset", &cc::RoadMark::GetZOffset)
+    .add_property("type", &cc::RoadMark::GetType)
+    .add_property("length", &cc::RoadMark::GetLength)
+    .add_property("width", &cc::RoadMark::GetWidth)
+    .add_property("heading", &cc::RoadMark::GetHeading)
+    .add_property("pitch", &cc::RoadMark::GetPitch)
+    .add_property("roll", &cc::RoadMark::GetRoll)
+    .add_property("waypoint", &cc::RoadMark::GetWaypoint)
+    .add_property("transform", CALL_RETURNING_COPY(cc::RoadMark, GetTransform))
   ;
 }

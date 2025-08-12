@@ -14,6 +14,7 @@
 #include "carla/road/RoadTypes.h"
 #include "carla/rpc/MapInfo.h"
 #include "Landmark.h"
+#include "RoadMark.h"
 
 #include <string>
 
@@ -93,6 +94,15 @@ namespace client {
 
     /// Returns all the landmarks in the same group including this one
     std::vector<SharedPtr<Landmark>> GetLandmarkGroup(const Landmark &landmark) const;
+
+    /// Returns all the road marks in the map
+    std::vector<SharedPtr<RoadMark>> GetAllRoadMarks() const;
+
+    /// Returns all the road marks in the map with a specific OpenDRIVE id
+    std::vector<SharedPtr<RoadMark>> GetRoadMarksFromId(std::string id) const;
+
+    /// Returns all the road marks in the map of a specific type
+    std::vector<SharedPtr<RoadMark>> GetAllRoadMarksOfType(std::string type) const;
 
     /// Cooks InMemoryMap used by the traffic manager
     void CookInMemoryMap(const std::string& path) const;
