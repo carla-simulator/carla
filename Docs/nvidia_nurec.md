@@ -95,6 +95,9 @@ The script will install the following Python packages:
 * carla
 * nvidia-nvimgcodec-cu12
 
+!!! note
+    You may need to log your Linux user out and log back in again in order for the NuRec tool to work after installation. 
+
 ### Use a Custom Dataset
 
 If you'd rather customize the datasets you use, follow the instructions below to get the assets, launch the NuRec container, and install the required Python packages. 
