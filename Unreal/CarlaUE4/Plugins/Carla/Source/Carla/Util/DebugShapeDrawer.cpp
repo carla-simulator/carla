@@ -26,7 +26,7 @@ struct FShapeVisitor
 
   FShapeVisitor(UWorld &InWorld, FColor InColor, float InLifeTime, bool bInPersistentLines)
     : World(&InWorld),
-      Color(InColor.ReinterpretAsLinear() * BrightMultiplier),
+      Color(FLinearColor(InColor) * BrightMultiplier),
       LifeTime(InLifeTime),
       bPersistentLines(bInPersistentLines)
   {

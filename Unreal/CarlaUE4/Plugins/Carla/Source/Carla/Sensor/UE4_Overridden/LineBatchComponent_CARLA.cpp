@@ -70,12 +70,14 @@ void FLineBatcherSceneProxy_CARLA::GetDynamicMeshElements(const TArray<const FSc
 
 			for (int32 i = 0; i < Lines.Num(); i++)
 			{
-				PDI->DrawLine(Lines[i].Start, Lines[i].End, Lines[i].Color, Lines[i].DepthPriority, Lines[i].Thickness);
+				FLinearColor LinearColor = FLinearColor(Lines[i].Color);
+				PDI->DrawLine(Lines[i].Start, Lines[i].End, LinearColor, Lines[i].DepthPriority, Lines[i].Thickness);
 			}
 
 			for (int32 i = 0; i < Points.Num(); i++)
 			{
-				PDI->DrawPoint(Points[i].Position, Points[i].Color, Points[i].PointSize, Points[i].DepthPriority);
+				FLinearColor LinearColor = FLinearColor(Points[i].Color);
+				PDI->DrawPoint(Points[i].Position, LinearColor, Points[i].PointSize, Points[i].DepthPriority);
 			}
 
 			for (int32 i = 0; i < Meshes.Num(); i++)
@@ -114,9 +116,10 @@ void FLineBatcherSceneProxy_CARLA::GetDynamicMeshElements(const TArray<const FSc
 					// Create new proxy and cache it
 					FMaterialRenderProxy* BaseMaterialProxy = CosmosMeshMaterial == nullptr ? GEngine->DebugMeshMaterial->GetRenderProxy() : CosmosMeshMaterial->GetRenderProxy();
 					
+					FLinearColor LinearColor = FLinearColor(M.Color);
 					FColoredMaterialRenderProxy* NewProxy = new FColoredMaterialRenderProxy(
 						BaseMaterialProxy,
-						M.Color);
+						LinearColor);
 					
 					CachedMaterialProxies.Add(ColorKey, NewProxy);
 					MaterialRenderProxy = NewProxy;

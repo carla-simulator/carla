@@ -26,17 +26,17 @@
 #include "Carla/Game/CarlaEpisode.h"
 #include "Engine/Public/ConvexVolume.h"
 
-const FColor ACosmosControlSensor::CosmosColors::LaneLines(98, 183, 249, 128);
-const FColor ACosmosControlSensor::CosmosColors::Lanes(56, 103, 221, 128);
-const FColor ACosmosControlSensor::CosmosColors::Poles(66, 40, 144, 128);
-const FColor ACosmosControlSensor::CosmosColors::RoadBoundaries(200, 36, 35, 128);
-const FColor ACosmosControlSensor::CosmosColors::WaitLines(185, 63, 34, 128);
-const FColor ACosmosControlSensor::CosmosColors::Crosswalks(206, 131, 63, 128);
-const FColor ACosmosControlSensor::CosmosColors::RoadMarkings(126, 204, 205, 128);
-const FColor ACosmosControlSensor::CosmosColors::TrafficSigns(131, 175, 155, 128);
-const FColor ACosmosControlSensor::CosmosColors::TrafficLights(252, 157, 155, 128);
-const FColor ACosmosControlSensor::CosmosColors::Cars(200, 36, 35, 128);
-const FColor ACosmosControlSensor::CosmosColors::Pedestrians(0, 255, 0, 128);
+const FColor ACosmosControlSensor::CosmosColors::LaneLines(98, 183, 249, 255);
+const FColor ACosmosControlSensor::CosmosColors::Lanes(56, 103, 221, 255);
+const FColor ACosmosControlSensor::CosmosColors::Poles(66, 40, 144, 255);
+const FColor ACosmosControlSensor::CosmosColors::RoadBoundaries(200, 36, 35, 255);
+const FColor ACosmosControlSensor::CosmosColors::WaitLines(185, 63, 34, 255);
+const FColor ACosmosControlSensor::CosmosColors::Crosswalks(206, 131, 63, 255);
+const FColor ACosmosControlSensor::CosmosColors::RoadMarkings(126, 204, 205, 255);
+const FColor ACosmosControlSensor::CosmosColors::TrafficSigns(131, 175, 155, 255);
+const FColor ACosmosControlSensor::CosmosColors::TrafficLights(252, 157, 155, 255);
+const FColor ACosmosControlSensor::CosmosColors::Cars(255, 0, 0, 255);
+const FColor ACosmosControlSensor::CosmosColors::Pedestrians(0, 255, 0, 255);
 
 
 FActorDefinition ACosmosControlSensor::GetSensorDefinition()
@@ -67,7 +67,30 @@ void ACosmosControlSensor::SetUpSceneCaptureComponent(USceneCaptureComponent2D &
 {
   Super::SetUpSceneCaptureComponent(SceneCapture);
 
+  ApplyViewMode(VMI_Unlit, true, SceneCapture.ShowFlags);
+  SceneCapture.ShowFlags.SetPostProcessing(false);
   SceneCapture.ShowFlags.SetAtmosphere(false);
+  SceneCapture.ShowFlags.SetFog(false);
+  SceneCapture.ShowFlags.SetVolumetricFog(false);
+  SceneCapture.ShowFlags.SetMotionBlur(false);
+  SceneCapture.ShowFlags.SetBloom(false);
+  SceneCapture.ShowFlags.SetEyeAdaptation(false);
+  SceneCapture.ShowFlags.SetTonemapper(false);
+  SceneCapture.ShowFlags.SetColorGrading(false);
+  SceneCapture.ShowFlags.SetDepthOfField(false);
+  SceneCapture.ShowFlags.SetVignette(false);
+  SceneCapture.ShowFlags.SetGrain(false);
+  SceneCapture.ShowFlags.SetLensFlares(false);
+  SceneCapture.ShowFlags.SetAntiAliasing(false);
+  SceneCapture.ShowFlags.SetScreenSpaceReflections(false);
+  SceneCapture.ShowFlags.SetAmbientOcclusion(false);
+  SceneCapture.ShowFlags.SetDirectionalLights(false);
+  SceneCapture.ShowFlags.SetPointLights(false);
+  SceneCapture.ShowFlags.SetSpotLights(false);
+  SceneCapture.ShowFlags.SetSkyLighting(false);
+  SceneCapture.bCaptureEveryFrame = true;
+  SceneCapture.PostProcessSettings.bOverride_ColorGamma = true;
+  SceneCapture.PostProcessSettings.ColorGamma = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
 
   SceneCapture.PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
   SceneCapture.ShowOnlyComponents.Empty();
