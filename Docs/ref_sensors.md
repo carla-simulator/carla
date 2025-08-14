@@ -296,6 +296,71 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 
 <br>
 
+## Hybrid Solid State LiDAR sensor
+
+* __Blueprint:__ sensor.lidar.hss_lidar
+* __Output:__ [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) per step (unless `sensor_tick` says otherwise).
+
+This sensor simulates a Hybrid Solid State LIDAR implemented using ray-casting. For the default parameters, the Hesai AT128 specifications were selected.
+The points are computed by adding a laser for each channel distributed in the vertical FOV. The point cloud is calculated by doing a ray-cast for each laser in every step.
+
+
+The information of the LIDAR measurement is encoded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by the following formula.
+<br>
+![LidarIntensityComputation](img/lidar_intensity.jpg)
+
+`a` — Attenuation coefficient. This may depend on the sensor's wavelenght, and the conditions of the atmosphere. It can be modified with the LIDAR attribute `atmosphere_attenuation_rate`.
+`d` — Distance from the hit point to the sensor.
+
+For a better realism, points in the cloud can be dropped off. This is an easy way to simulate loss due to external perturbations. This can done combining two different.
+
+*   __General drop-off__ — Proportion of points that are dropped off randomly. This is done before the tracing, meaning the points being dropped are not calculated, and therefore improves the performance. If `dropoff_general_rate = 0.5`, half of the points will be dropped.
+*   __Instensity-based drop-off__ — For each point detected, and extra drop-off is performed with a probability based in the computed intensity. This probability is determined by two parameters. `dropoff_zero_intensity` is the probability of points with zero intensity to be dropped. `dropoff_intensity_limit` is a threshold intensity above which no points will be dropped. The probability of a point within the range to be dropped is a linear proportion based on these two parameters.
+
+Additionally, the `noise_stddev` attribute makes for a noise model to simulate unexpected deviations that appear in real-life sensors. For positive values, each point is randomly perturbed along the vector of the laser ray. The result is a LIDAR sensor with perfect angular positioning, but noisy distance measurement.
+
+The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> __2.__ Run the simulation using `python3 config.py --fps=10`.
+
+The LiDAR configured as AT128, AT360 and AT1440 shown in figure below:
+![LidarPointCloud](img/hss.gif)
+
+#### Lidar attributes
+
+
+| Blueprint attribute  | Type   | Default    | Description     |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `channels`         | int    | 128     | Number of lasers.  |
+| `range`            | float  | 10.0  | Maximum distance to measure/raycast in meters (centimeters for CARLA 0.9.6 or previous).  |
+| `rotation_frequency`            | float  | 10.0  | LIDAR rotation frequency.       |
+| `upper_fov`        | float  | 12.9  | Angle in degrees of the highest laser.        |
+| `lower_fov`        | float  | -12.5 | Angle in degrees of the lowest laser.         |
+| `horizontal_fov`   | float | 120.0 | Horizontal field of view in degrees, ranging from -horizontal_fov/2 to +horizontal_fov/2, symmetric to the forward-pointing axis. |
+| `atmosphere_attenuation_rate`     | float  | 0.004 | Coefficient that measures the LIDAR instensity loss per meter. Check the intensity computation above. |
+| `dropoff_general_rate`          | float  | 0.45  | General proportion of points that are randomy dropped.    |
+| `dropoff_intensity_limit`       | float  | 0.8   | For the intensity based drop-off, the threshold intensity value above which no points are dropped.    |
+| `dropoff_zero_intensity`        | float  | 0.4   | For the intensity based drop-off, the probability of each point with zero intensity being dropped.    |
+| `sensor_tick`      | float  | 0.0   | Simulation seconds between sensor captures (ticks). |
+| `noise_stddev`     | float  | 0.0   | Standard deviation of the noise model to disturb each point along the vector of its raycast. |
+| `horizontal_resolution`   | float | 0.1   | Horizontal Resolution of the sensor. |
+
+
+
+
+#### Output attributes
+
+| Sensor data attribute            | Type  | Description        |
+| ----------------------- | ----------------------- | ----------------------- |
+| `frame`            | int   | Frame number when the measurement took place.      |
+| `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
+| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `horizontal_angle`   | float | Angle (radians) in the XY plane of the LIDAR in the current frame.           |
+| `channels`         | int   | Number of channels (lasers) of the LIDAR.    |
+| `get_point_count(channel)`       | int   | Number of points per channel captured this frame.  |
+| `raw_data`         | bytes | Array of 32-bits floats (XYZI of each point).      |
+
+
+<br>
+
 ## Obstacle detector
 
 * __Blueprint:__ sensor.other.obstacle
