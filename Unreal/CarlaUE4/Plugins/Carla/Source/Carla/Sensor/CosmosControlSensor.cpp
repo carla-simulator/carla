@@ -228,7 +228,7 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
       
       float half_height = fmax(bounds.BoxExtent.Z, box_extent.Z);
       float distance_to_road = mesh_component->GetComponentLocation().Z;
-      DrawDebugCapsule(World, mesh_component->GetComponentLocation() + FVector(0.0f, 0.0f, half_height), half_height + (distance_to_road > 250.0f ? 0.0f : distance_to_road), 0.1f, FQuat::Identity, vis_color, false, -1, depth_prio, 20);
+      DrawDebugCapsule(World, mesh_component->GetComponentLocation() + FVector(0.0f, 0.0f, half_height), half_height + (distance_to_road > 250.0f ? 0.0f : distance_to_road), 0.1f, FQuat::Identity, vis_color, false, -1, depth_prio, 10);
     }
   }
 
@@ -246,7 +246,7 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
       DrawDebugLine(World,
         ground_pos + -stop_box_collider->GetScaledBoxExtent().X * stop_box_collider->GetForwardVector() - 710.0f * stop_box_collider->GetRightVector(),
         ground_pos + stop_box_collider->GetScaledBoxExtent().X * stop_box_collider->GetForwardVector() - 710.0f * stop_box_collider->GetRightVector(),
-        CosmosColors::WaitLines.WithAlpha(dist_alpha), true, -1, depth_prio, 20);
+        CosmosColors::WaitLines.WithAlpha(dist_alpha), true, -1, depth_prio, 10);
     }
   }
 
@@ -281,7 +281,7 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
         FColor debug_color = spline->BoundaryType != ERoadSplineBoundaryType::Driving ?
           CosmosColors::RoadBoundaries.WithAlpha(dist_alpha) : CosmosColors::LaneLines.WithAlpha(dist_alpha);
 
-        DrawDebugLine(World, p0, p1, debug_color, true, -1.f, depth_prio, 20.0f);
+        DrawDebugLine(World, p0, p1, debug_color, true, -1.f, depth_prio, 5.0f);
       }
     };
 

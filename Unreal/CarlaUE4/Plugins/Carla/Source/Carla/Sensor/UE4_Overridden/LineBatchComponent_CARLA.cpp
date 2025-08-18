@@ -71,7 +71,7 @@ void FLineBatcherSceneProxy_CARLA::GetDynamicMeshElements(const TArray<const FSc
 			for (int32 i = 0; i < Lines.Num(); i++)
 			{
 				FLinearColor LinearColor = FLinearColor(Lines[i].Color);
-				PDI->DrawLine(Lines[i].Start, Lines[i].End, LinearColor, Lines[i].DepthPriority, Lines[i].Thickness);
+				PDI->DrawLine(Lines[i].Start, Lines[i].End, LinearColor, Lines[i].DepthPriority, Lines[i].Thickness, 0.0f, true);
 			}
 
 			for (int32 i = 0; i < Points.Num(); i++)
