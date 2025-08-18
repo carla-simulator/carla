@@ -116,7 +116,7 @@ void FLineBatcherSceneProxy_CARLA::GetDynamicMeshElements(const TArray<const FSc
 					// Create new proxy and cache it
 					FMaterialRenderProxy* BaseMaterialProxy = CosmosMeshMaterial == nullptr ? GEngine->DebugMeshMaterial->GetRenderProxy() : CosmosMeshMaterial->GetRenderProxy();
 					
-					FLinearColor LinearColor = FLinearColor(M.Color);
+					FLinearColor LinearColor = M.Color.ReinterpretAsLinear();
 					FColoredMaterialRenderProxy* NewProxy = new FColoredMaterialRenderProxy(
 						BaseMaterialProxy,
 						LinearColor);

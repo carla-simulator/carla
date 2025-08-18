@@ -67,8 +67,6 @@ void ACosmosControlSensor::SetUpSceneCaptureComponent(USceneCaptureComponent2D &
 {
   Super::SetUpSceneCaptureComponent(SceneCapture);
 
-  ApplyViewMode(VMI_Unlit, true, SceneCapture.ShowFlags);
-  SceneCapture.ShowFlags.SetPostProcessing(false);
   SceneCapture.ShowFlags.SetAtmosphere(false);
   SceneCapture.ShowFlags.SetFog(false);
   SceneCapture.ShowFlags.SetVolumetricFog(false);
@@ -567,7 +565,11 @@ void ACosmosControlSensor::DrawDebugLine(const UWorld* InWorld, FVector const& L
     // this means foreground lines can't be persistent 
     if (ULineBatchComponent_CARLA* const LineBatcher = GetDebugLineBatcher(bPersistentLines))
     {
-      LineBatcher->DrawLine(LineStart, LineEnd, Color, DepthPriority, Thickness, 0.0f);
+      float rlinear = ((float)Color.R) / 255.0f;
+      float glinear = ((float)Color.G) / 255.0f;
+      float blinear = ((float)Color.B) / 255.0f;
+
+      LineBatcher->DrawLine(LineStart, LineEnd, FLinearColor(rlinear, glinear, blinear), DepthPriority, Thickness, 0.0f);
     }
   }
 }
