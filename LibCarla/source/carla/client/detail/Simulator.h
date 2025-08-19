@@ -714,7 +714,9 @@ namespace detail {
         Actor & sensor,
         uint32_t gbuffer_id);
 
-    void Send(const Sensor &sensor, std::string message);        
+    void Send(const Sensor &sensor, std::string message);
+
+    void SetIgnoredVehicles(const Sensor &sensor, const std::vector<ActorId>& vehicle_ids);
 
     /// @}
     // =========================================================================

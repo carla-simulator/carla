@@ -96,7 +96,16 @@ public:
     return *Episode;
   }
 
+  void SetIgnoredVehicles(const TArray<FCarlaActor::IdType>& VehicleIds);
+
+  const TSet<FCarlaActor::IdType>& GetIgnoredVehicles() const
+  {
+    return IgnoredVehicles;
+  }
+
 protected:
+
+  TSet<FCarlaActor::IdType> IgnoredVehicles;
 
   void PostActorCreated() override;
 

@@ -445,6 +445,8 @@ namespace detail {
 
     void Send(rpc::ActorId ActorId, std::string message);
 
+    void SetIgnoredVehicles(rpc::ActorId ActorId, const std::vector<rpc::ActorId>& vehicle_ids);
+
     void DrawDebugShape(const rpc::DebugShape &shape);
 
     void ClearDebugShape();

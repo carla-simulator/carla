@@ -455,6 +455,10 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     _client.Send(sensor.GetId(), message);
   }
 
+  void Simulator::SetIgnoredVehicles(const Sensor &sensor, const std::vector<ActorId>& vehicle_ids) {
+    _client.SetIgnoredVehicles(sensor.GetId(), vehicle_ids);
+  }
+
   // =========================================================================
   /// -- Texture updating operations
   // =========================================================================

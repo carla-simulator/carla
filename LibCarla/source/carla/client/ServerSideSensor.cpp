@@ -119,5 +119,15 @@ namespace client {
     return Actor::Destroy();
   }
 
+  void ServerSideSensor::SetIgnoredVehicles(const std::vector<ActorId>& vehicle_ids) {
+    _ignored_actors = vehicle_ids;
+    // Send the vehicle IDs list to the server to update the sensor instance
+    GetEpisode().Lock()->SetIgnoredVehicles(*this, vehicle_ids);
+  }
+
+  std::vector<ActorId> ServerSideSensor::GetIgnoredVehicles() const {
+    return _ignored_actors;
+  }
+
 } // namespace client
 } // namespace carla

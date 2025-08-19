@@ -91,6 +91,15 @@ void ASensor::SetSeed(const int32 InSeed)
   RandomEngine->Seed(InSeed);
 }
 
+void ASensor::SetIgnoredVehicles(const TArray<FCarlaActor::IdType>& VehicleIds)
+{
+  IgnoredVehicles.Empty();
+  for (auto Id : VehicleIds)
+  {
+    IgnoredVehicles.Add(Id);
+  }
+}
+
 void ASensor::PostActorCreated()
 {
   Super::PostActorCreated();

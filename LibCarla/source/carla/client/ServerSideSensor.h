@@ -67,9 +67,16 @@ namespace client {
     /// Additionally stop listening.
     bool Destroy() override;
 
+    /// Set the list of vehicle IDs that this sensor should ignore.
+    void SetIgnoredVehicles(const std::vector<ActorId>& vehicle_ids);
+
+    /// Get the list of vehicle IDs that this sensor is ignoring.
+    std::vector<ActorId> GetIgnoredVehicles() const;
+
   private:
 
     std::bitset<16> listening_mask;
+    std::vector<ActorId> _ignored_actors;
   };
 
 } // namespace client

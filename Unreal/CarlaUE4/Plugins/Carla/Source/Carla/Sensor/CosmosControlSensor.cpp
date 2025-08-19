@@ -164,6 +164,12 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     if (!mesh_component->IsVisible()) continue;
     if (mesh_component->GetOwner() == nullptr) continue;
     if (mesh_component->GetOwner() == player_actor) continue;
+    
+    // Check if this is a vehicle and if it's in the ignored vehicles list for this sensor
+    FCarlaActor* CarlaActor = GetEpisode().FindCarlaActor(mesh_component->GetOwner());
+    if (CarlaActor && 
+        CarlaActor->GetActorInfo()->Description.Id.Contains("vehicle") && 
+        IgnoredVehicles.Contains(CarlaActor->GetActorId())) continue;
 
     //Assumed to be off the road (parkings, ceilings)
     //TODO: Better Occlusion techniques to root these out variable height maps)

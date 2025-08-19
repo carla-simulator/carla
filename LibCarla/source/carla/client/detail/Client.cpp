@@ -688,6 +688,10 @@ namespace detail {
     _pimpl->AsyncCall("send", ActorId, message);
   }
 
+  void Client::SetIgnoredVehicles(rpc::ActorId ActorId, const std::vector<rpc::ActorId>& vehicle_ids) {
+    _pimpl->CallAndWait<void>("set_ignored_vehicles", ActorId, vehicle_ids);
+  }
+
   void Client::EnableGBuffers(rpc::ActorId ActorId, bool bEnabled) {
     _pimpl->CallAndWait<void>("enable_gbuffers", ActorId, bEnabled);
   }
