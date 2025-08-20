@@ -489,13 +489,7 @@ namespace road {
           distance_to_stencil = waypoint.s - stencil->GetS();
         }
         
-        // Check orientation
-        auto orientation = stencil->GetOrientation();
-        bool add_stencil = (orientation == StencilOrientation::Both) ||
-                         (forward && orientation == StencilOrientation::Positive) ||
-                         (!forward && orientation == StencilOrientation::Negative);
-        
-        if (add_stencil && distance_to_stencil >= 0) {
+        if (distance_to_stencil >= 0) {
           StencilSearchData data;
           data.stencil = stencil;
           data.waypoint = waypoint;
