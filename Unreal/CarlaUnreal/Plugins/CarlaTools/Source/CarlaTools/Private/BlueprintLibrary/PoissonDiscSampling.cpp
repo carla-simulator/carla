@@ -46,6 +46,24 @@ TArray<FPCGPinProperties> UPCGPoissonDiscSamplingSettings::InputPinProperties() 
   return Properties;
 }
 
+float GetZFromAlphaTable(const TArray<TPair<float, float>>& Table, float Alpha)
+{
+    for (int32 i = 1; i < Table.Num(); ++i)
+    {
+        if (Alpha <= Table[i].Key)
+        {
+            float Alpha1 = Table[i - 1].Key;
+            float Alpha2 = Table[i].Key;
+            float Z1 = Table[i - 1].Value;
+            float Z2 = Table[i].Value;
+
+            float T = FMath::Clamp((Alpha - Alpha1) / (Alpha2 - Alpha1), 0.0f, 1.0f);
+            return FMath::Lerp(Z1, Z2, T);
+        }
+    }
+    return Table.Last().Value;
+}
+
 TArray<FPCGPinProperties> UPCGPoissonDiscSamplingSettings::OutputPinProperties() const
 {
   return Super::DefaultPointOutputPinProperties();
@@ -254,13 +272,6 @@ static std::vector<V2> GeneratePoissonDiscPoints(
 bool FPCGPoissonDiscSampling::ExecuteInternal(
   FPCGContext* Context) const
 { 
-  auto MakePCGPoint = [&](V2 Point)
-  {
-      FPCGPoint P;
-      P.Transform.SetLocation(FVector(Point.X, Point.Y, 0.0F));
-      return P;
-  };
-
   const UPCGPoissonDiscSamplingSettings* SettingsPtr = Context->GetInputSettings<UPCGPoissonDiscSamplingSettings>();
   check(SettingsPtr);
 
@@ -280,20 +291,26 @@ bool FPCGPoissonDiscSampling::ExecuteInternal(
     FTransform SplineTransform = InputData->GetTransform();
     // Sample points along the spline
     int32 SampleCount = SettingsPtr->SplineSampleCount;
+    TArray<TPair<float, FVector>> SplineAlphaTable;
+    SplineAlphaTable.Reserve(SampleCount);
+
     std::vector<V2> SplinePoints;
     SplinePoints.reserve(SampleCount);
+
     FBox SplineBoundingBox(EForceInit::ForceInit);
 
     for (int32 i = 0; i < SampleCount; ++i)
     {
-        float Alpha = static_cast<float>(i) / SampleCount;
+        float Alpha = static_cast<float>(i) / static_cast<float>(SampleCount - 1);
+
+        // Local spline position (used for filtering and bounds)
         FVector LocalPos = InputData->GetLocationAtAlpha(Alpha);
-
-        // Store 2D local coordinates
         SplinePoints.emplace_back(LocalPos.X, LocalPos.Y);
+        SplineBoundingBox += FVector(LocalPos.X, LocalPos.Y, LocalPos.Z);
 
-        // Accumulate bounding box in local space
-        SplineBoundingBox += FVector(LocalPos.X, LocalPos.Y, 0.0f);
+        // World position (used for Z height and placing points)
+        FVector WorldPos = InputData->GetTransform().TransformPosition(LocalPos);
+        SplineAlphaTable.Emplace(Alpha, LocalPos);
     }
 
     // Build polygon edges
@@ -318,10 +335,46 @@ bool FPCGPoissonDiscSampling::ExecuteInternal(
     auto& OutputPoints = Output->GetMutablePoints();
     OutputPoints.Reserve(Results2D.size());
 
+    // Ensure metadata is initialized
+    UPCGMetadata* Metadata = Output->Metadata;
+    check(Metadata);
+
+    // Create metadata attribute for random float
+    FName AttributeName = TEXT("Density");
+    FPCGMetadataAttribute<float>* RandomAttr = Metadata->CreateAttribute<float>(
+        AttributeName, 0.0f, /* bAllowsInterpolation = */ true, /* bOverrideParent = */ false);
     for (const V2& P : Results2D)
     {
+        FVector2D Target2D(P.X, P.Y);
+
+        // Find closest point in the table
+        float ClosestDistSqr = FLT_MAX;
+        float BestAlpha = 0.0f;
+        FVector BestWorldPos = FVector::ZeroVector;
+
+        for (const TPair<float, FVector>& Entry : SplineAlphaTable)
+        {
+            const FVector2D Table2D(Entry.Value.X, Entry.Value.Y);
+            float DistSqr = FVector2D::DistSquared(Target2D, Table2D);
+
+            if (DistSqr < ClosestDistSqr)
+            {
+                ClosestDistSqr = DistSqr;
+                BestAlpha = Entry.Key;
+                BestWorldPos = Entry.Value;
+            }
+        }
+
+        // Build PCG point
         FPCGPoint Point;
-        Point.Transform.SetLocation(FVector(P.X, P.Y, 0.0f)); // You can later replace Z
+        FVector WorldPoint = FVector(Target2D.X, Target2D.Y, BestWorldPos.Z);
+        Point.Transform.SetLocation(WorldPoint);
+
+        // Add metadata
+        Point.MetadataEntry = Metadata->AddEntry();
+        float RandomValue = FRandomStream(Point.Seed).GetFraction();
+        RandomAttr->SetValue(Point.MetadataEntry, RandomValue);
+
         OutputPoints.Add(Point);
     }
 
@@ -334,4 +387,3 @@ bool FPCGPoissonDiscSampling::ExecuteInternal(
 
   return true;
 }
-
