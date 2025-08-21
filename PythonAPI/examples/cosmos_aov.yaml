@@ -1,0 +1,84 @@
+- sensor: rgb
+  attributes:
+    image_size_x: 1920
+    image_size_y: 1080
+    fov: 110
+  transform:
+    location:
+      x: 0
+      y: 0
+      z: 1.8
+    rotation:
+      pitch: 8
+      yaw: 0
+      roll: 0
+- sensor: normals
+  attributes:
+    image_size_x: 1920
+    image_size_y: 1080
+    fov: 110
+  transform:
+    location:
+      x: 0
+      y: 0
+      z: 1.8
+    rotation:
+      pitch: 8
+      yaw: 0
+      roll: 0
+- sensor: depth
+  attributes:
+    image_size_x: 1920
+    image_size_y: 1080
+    fov: 110
+  transform:
+    location:
+      x: 0
+      y: 0
+      z: 1.8
+    rotation:
+      pitch: 8
+      yaw: 0
+      roll: 0
+- sensor: semantic_segmentation
+  attributes:
+    image_size_x: 1920
+    image_size_y: 1080
+    fov: 110
+  transform:
+    location:
+      x: 0
+      y: 0
+      z: 1.8
+    rotation:
+      pitch: 8
+      yaw: 0
+      roll: 0
+- sensor: instance_segmentation
+  attributes:
+    image_size_x: 1920
+    image_size_y: 1080
+    fov: 110
+  transform:
+    location:
+      x: 0
+      y: 0
+      z: 1.8
+    rotation:
+      pitch: 8
+      yaw: 0
+      roll: 0
+- sensor: cosmos_visualization
+  attributes:
+    image_size_x: 1920
+    image_size_y: 1080
+    fov: 110
+  transform:
+    location:
+      x: 0
+      y: 0
+      z: 1.8
+    rotation:
+      pitch: 8
+      yaw: 0
+      roll: 0
