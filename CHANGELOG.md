@@ -1,5 +1,6 @@
 ## Latest Changes
 
+ * Added a hybrid solid-state LiDAR with adjustable parameters (blueprint attributes)
  * Added NVIDIA Neural Reconstruction Engine (NuRec) integration
  * Added the SimReady OpenUSD and MDL Converters to provide export and import support for SimReady OpenUSD stages and MDL materials.
  * Added support for left-handed traffic maps
