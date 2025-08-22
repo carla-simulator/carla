@@ -28,3 +28,4 @@ canny_classes:
   - [30, 170, 250]
   - [153, 153, 153]  # poles
   - [140, 0, 0]      # vehicles
+  
