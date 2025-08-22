@@ -226,7 +226,7 @@ def post_processing_worker(raw_q: mp.Queue, proc_q: mp.Queue):
             colored = apply_colormap_vectorized(ids, colormap_uint8)
             processed['INSTANCE_SEGMENTATION'] = colored
         if AOV.COSMOS_VISUALIZATION in frames:
-            processed['COSMOS_VISUALIZATION'] = frames[AOV.COSMOS_VISUALIZATION]
+            processed['HDMAP'] = frames[AOV.COSMOS_VISUALIZATION]
         proc_q.put((bundle.index, processed))
     logging.info(f"[{mp.current_process().name}] exiting")
 
