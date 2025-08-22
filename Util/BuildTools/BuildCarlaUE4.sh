@@ -6,7 +6,7 @@
 
 DOC_STRING="Build and launch CarlaUE4."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean] [--opengl]"
+USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean] [--opengl] [--chrono] [--chrono-path=PATH]"
 
 REMOVE_INTERMEDIATE=false
 HARD_CLEAN=false
@@ -18,13 +18,14 @@ USE_SIMREADY=true
 USE_PYTORCH=false
 USE_UNITY=true
 USE_ROS2=false
+CHRONO_PATH=""
 
 EDITOR_FLAGS=""
 
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,ros2,no-simready,no-unity,editor-flags: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,chrono-path:,ros2,no-simready,no-unity,editor-flags: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -62,6 +63,10 @@ while [[ $# -gt 0 ]]; do
     --chrono )
       USE_CHRONO=true
       shift ;;
+    --chrono-path )
+      CHRONO_PATH=$2
+      USE_CHRONO=true
+      shift 2 ;;
     --pytorch )
       USE_PYTORCH=true;
       shift ;;
@@ -199,7 +204,7 @@ if ${BUILD_CARLAUE4} ; then
   fi
 
   log "Build CarlaUE4 project."
-  make CarlaUE4Editor
+  make CarlaUE4Editor ARGS=""
 
   #Providing the user with the ExportedMaps folder
   EXPORTED_MAPS="${CARLAUE4_ROOT_FOLDER}/Content/Carla/ExportedMaps"

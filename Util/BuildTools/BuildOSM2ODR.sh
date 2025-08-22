@@ -18,7 +18,7 @@ CURRENT_OSM2ODR_COMMIT=1da3c07e39f3e2e0d97f8f709a7255a0df8c6200
 OSM2ODR_BRANCH=aaron/defaultsidewalkwidth
 OSM2ODR_REPO=https://github.com/carla-simulator/sumo.git
 
-OPTS=`getopt -o h --long help,rebuild,build,clean,carsim,no-pull -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,rebuild,build,clean,carsim,no-pull,chrono,chrono-path: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -37,6 +37,10 @@ while [[ $# -gt 0 ]]; do
     --clean )
       REMOVE_INTERMEDIATE=true;
       shift ;;
+    --chrono )
+      shift ;;
+    --chrono-path )
+      shift 2 ;;
     -h | --help )
       echo "$DOC_STRING"
       echo "$USAGE_STRING"

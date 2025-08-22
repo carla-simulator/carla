@@ -15,6 +15,8 @@ rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
+set CHRONO_PATH=
+
 :arg-parse
 if not "%1"=="" (
     if "%1"=="--build-dir" (
@@ -31,6 +33,10 @@ if not "%1"=="" (
         set GENERATOR=%2
         shift
     )
+    if "%1"=="--chrono-path" (
+        set CHRONO_PATH=%2
+        shift
+    )
     shift
     goto :arg-parse
 )
@@ -41,43 +47,27 @@ if not "%BUILD_DIR:~-1%"=="\" set BUILD_DIR=%BUILD_DIR%\
 if %GENERATOR% == "" set GENERATOR="Visual Studio 17 2022"
 
 rem ============================================================================
-rem -- Get Eigen (Chrono dependency) -------------------------------------------
+rem -- Get/Use Eigen (Chrono dependency) ---------------------------------------
 rem ============================================================================
 
-set EIGEN_VERSION=3.3.7
-set EIGEN_REPO=https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.zip
-set EIGEN_BASENAME=eigen-%EIGEN_VERSION%
-
-set EIGEN_SRC_DIR=%BUILD_DIR%%EIGEN_BASENAME%
 set EIGEN_INSTALL_DIR=%BUILD_DIR%eigen-install
 set EIGEN_INCLUDE=%EIGEN_INSTALL_DIR%\include
-set EIGEN_TEMP_FILE=eigen-%EIGEN_VERSION%.zip
-set EIGEN_TEMP_FILE_DIR=%BUILD_DIR%eigen-%EIGEN_VERSION%.zip
-
-if not exist "%EIGEN_SRC_DIR%" (
-    if not exist "%EIGEN_TEMP_FILE_DIR%" (
-        echo %FILE_N% Retrieving %EIGEN_TEMP_FILE_DIR%.
-        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%EIGEN_REPO%', '%EIGEN_TEMP_FILE_DIR%')"
-    )
-    if %errorlevel% neq 0 goto error_download_eigen
-    rem Extract the downloaded library
-    echo %FILE_N% Extracting eigen from "%EIGEN_TEMP_FILE%".
-    powershell -Command "Expand-Archive '%EIGEN_TEMP_FILE_DIR%' -DestinationPath '%BUILD_DIR%'"
-    if %errorlevel% neq 0 goto error_extracting
-    echo %EIGEN_SRC_DIR%
-
-    del %EIGEN_TEMP_FILE_DIR%
-)
 
 if not exist "%EIGEN_INSTALL_DIR%" (
-    mkdir %EIGEN_INSTALL_DIR%
-    mkdir %EIGEN_INCLUDE%
-    mkdir %EIGEN_INCLUDE%\unsupported
-    mkdir %EIGEN_INCLUDE%\Eigen
+    echo %FILE_N% Eigen not found, installing via install_eigen.bat...
+    call "%LOCAL_PATH%install_eigen.bat" --build-dir "%BUILD_DIR%"
+    if %errorlevel% neq 0 (
+        echo %FILE_N% [ERROR] Failed to install Eigen.
+        goto bad_exit
+    )
 )
 
-xcopy /q /Y /S /I "%EIGEN_SRC_DIR%\Eigen" "%EIGEN_INCLUDE%\Eigen"
-xcopy /q /Y /S /I "%EIGEN_SRC_DIR%\unsupported\Eigen" "%EIGEN_INCLUDE%\unsupported\Eigen"
+if not exist "%EIGEN_INCLUDE%" (
+    echo %FILE_N% [ERROR] Eigen include directory not found at: %EIGEN_INCLUDE%
+    goto bad_exit
+)
+
+for %%i in ("%EIGEN_INCLUDE%") do set EIGEN_INCLUDE_ABS=%%~fi
 
 rem ============================================================================
 rem -- Get Chrono -------------------------------------------
@@ -88,13 +78,24 @@ set CHRONO_VERSION=6.0.0
 set CHRONO_REPO=https://github.com/projectchrono/chrono.git
 set CHRONO_BASENAME=chrono
 
-set CHRONO_SRC_DIR=%BUILD_DIR%%CHRONO_BASENAME%-src
 set CHRONO_INSTALL_DIR=%BUILD_DIR%chrono-install
+
+if not "%CHRONO_PATH%"=="" (
+    echo %FILE_N% Using user-provided Chrono at: %CHRONO_PATH%
+    set CHRONO_SRC_DIR=%CHRONO_PATH%
+) else (
+    set CHRONO_SRC_DIR=%BUILD_DIR%%CHRONO_BASENAME%-src
+)
+
 set CHRONO_BUILD_DIR=%CHRONO_SRC_DIR%\build
 
 if not exist %CHRONO_INSTALL_DIR% (
-    echo %FILE_N% Retrieving Chrono.
-    call git clone --depth 1 --branch %CHRONO_VERSION% %CHRONO_REPO% %CHRONO_SRC_DIR%
+    if "%CHRONO_PATH%"=="" (
+        echo %FILE_N% Retrieving Chrono.
+        call git clone --depth 1 --branch %CHRONO_VERSION% %CHRONO_REPO% %CHRONO_SRC_DIR%
+    ) else (
+        echo %FILE_N% Using existing Chrono source at: %CHRONO_PATH%
+    )
 
     mkdir %CHRONO_BUILD_DIR%
     mkdir %CHRONO_INSTALL_DIR%
@@ -110,14 +111,14 @@ if not exist %CHRONO_INSTALL_DIR% (
     echo %FILE_N% Compiling Chrono.
     cmake -G %GENERATOR% %PLATFORM%^
         -DCMAKE_BUILD_TYPE=Release^
-        -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP"^
-        -DEIGEN3_INCLUDE_DIR="%EIGEN_INCLUDE%"^
+        -DCMAKE_CXX_FLAGS_RELEASE="/MD /MP /O2 /Ob2 /DNDEBUG"^
+        -DEIGEN3_INCLUDE_DIR="%EIGEN_INCLUDE_ABS%"^
         -DCMAKE_INSTALL_PREFIX="%CHRONO_INSTALL_DIR%"^
         -DENABLE_MODULE_VEHICLE=ON^
         %CHRONO_SRC_DIR%
 
     echo %FILE_N% Building...
-    cmake --build . --config Release --target install
+    cmake --build . --config Release --target install --parallel %NUMBER_OF_PROCESSORS%
 
 )
 
@@ -129,17 +130,17 @@ rem ============================================================================
 
 :help
     echo %FILE_N% Download and install a the Chrono library.
-    echo "Usage: %FILE_N% [-h^|--help] [--build-dir] [--zlib-install-dir]"
+    echo "Usage: %FILE_N% [-h^|--help] [--build-dir] [--zlib-install-dir] [--chrono-path]"
     goto eof
 
 :success
     echo.
-    echo %FILE_N% Chrono has been successfully installed in "%EIGEN_INSTALL_DIR%"!
+    echo %FILE_N% Chrono has been successfully installed in "%CHRONO_INSTALL_DIR%"!
     goto good_exit
 
 :already_build
-    echo %FILE_N% A xerces installation already exists.
-    echo %FILE_N% Delete "%EIGEN_INSTALL_DIR%" if you want to force a rebuild.
+    echo %FILE_N% A chrono installation already exists.
+    echo %FILE_N% Delete "%CHRONO_INSTALL_DIR%" if you want to force a rebuild.
     goto good_exit
 
 :error_download_eigen
@@ -200,7 +201,7 @@ rem ============================================================================
     exit /b 0
 
 :bad_exit
-    if exist "%EIGEN_INSTALL_DIR%" rd /s /q "%EIGEN_INSTALL_DIR%"
+    if exist "%CHRONO_INSTALL_DIR%" rd /s /q "%CHRONO_INSTALL_DIR%"
     echo %FILE_N% Exiting with error...
     endlocal
     exit /b %errorlevel%

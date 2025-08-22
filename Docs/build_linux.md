@@ -225,8 +225,9 @@ sudo apt install python3.X python3.X-dev python3.X-distutils
 ```sh
 # Delete versions as required
 make PythonAPI ARGS="--python-version=3.8, 3.9, 3.10, 3.11"
+```
 
-* **For Python 3.12**, the *distutils* library does not exist for Ubuntu and therefore *setuptools* may
+* **For Python 3.12 and 3.13**: the *distutils* library does not exist for Ubuntu and therefore *setuptools* may
  need to be updated, run the following commands to update *setuptools*:
 
 ```sh

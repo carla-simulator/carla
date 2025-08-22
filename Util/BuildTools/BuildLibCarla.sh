@@ -36,7 +36,7 @@ BUILD_RSS_VARIANT=false
 USE_PYTORCH=false
 USE_ROS2=false
 
-OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss,pytorch,carsim,ros2 -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss,pytorch,carsim,ros2,chrono,chrono-path: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -71,6 +71,10 @@ while [[ $# -gt 0 ]]; do
     --ros2 )
       USE_ROS2=true;
       shift ;;
+    --chrono )
+      shift ;;
+    --chrono-path )
+      shift 2 ;;
     --rss )
       BUILD_RSS_VARIANT=true;
       shift ;;

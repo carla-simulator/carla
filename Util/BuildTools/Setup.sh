@@ -8,7 +8,7 @@ DOC_STRING="Download and install the required libraries for carla."
 
 USAGE_STRING="Usage: $0 [--python-version=VERSION]"
 
-OPTS=`getopt -o h --long help,chrono,ros2,pytorch,python-version: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,chrono,chrono-path:,ros2,pytorch,python-version: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -16,6 +16,7 @@ PY_VERSION_LIST=3
 USE_CHRONO=false
 USE_PYTORCH=false
 USE_ROS2=false
+CHRONO_PATH=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -25,6 +26,10 @@ while [[ $# -gt 0 ]]; do
     --chrono )
       USE_CHRONO=true;
       shift ;;
+    --chrono-path )
+      CHRONO_PATH="$2";
+      USE_CHRONO=true;
+      shift 2 ;;
     --pytorch )
       USE_PYTORCH=true;
       shift ;;
@@ -538,9 +543,8 @@ cp -p ${XERCESC_SERVER_LIB} ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
 # ==============================================================================
 # -- Get Eigen headers 3.1.0 (CARLA dependency) -------------------------------------
 # ==============================================================================
-
-EIGEN_VERSION=3.1.0
-EIGEN_REPO=https://gitlab.com/libeigen/eigen/-/archive/${EIGEN_VERSION}/eigen-${EIGEN_VERSION}.tar.gz
+EIGEN_VERSION=3.3.7
+EIGEN_REPO=https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
 EIGEN_BASENAME=eigen-${EIGEN_VERSION}
 
 EIGEN_SRC_DIR=eigen-${EIGEN_VERSION}-src
@@ -549,51 +553,8 @@ EIGEN_INCLUDE=${EIGEN_INSTALL_DIR}/include
 
 
 if [[ -d ${EIGEN_INSTALL_DIR} ]] ; then
-  log "Eigen already installed."
-else
-  log "Retrieving Eigen."
-
-  start=$(date +%s)
-  wget ${EIGEN_REPO}
-  end=$(date +%s)
-  echo "Elapsed Time downloading from eigen repo: $(($end-$start)) seconds"
-
-  log "Extracting Eigen."
-  start=$(date +%s)
-  tar -xzf ${EIGEN_BASENAME}.tar.gz
-  end=$(date +%s)
-  echo "Elapsed Time Extracting EIGEN: $(($end-$start)) seconds"
-
-  mv ${EIGEN_BASENAME} ${EIGEN_SRC_DIR}
-  mkdir -p ${EIGEN_INCLUDE}/unsupported
-  mv ${EIGEN_SRC_DIR}/Eigen ${EIGEN_INCLUDE}
-  mv ${EIGEN_SRC_DIR}/unsupported/Eigen ${EIGEN_INCLUDE}/unsupported/Eigen
-
-  rm -Rf ${EIGEN_BASENAME}.tar.gz
-  rm -Rf ${EIGEN_SRC_DIR}
-fi
-
-mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
-cp -p -r ${EIGEN_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
-
-if ${USE_CHRONO} ; then
-
-  # ==============================================================================
-  # -- Get Eigen headers (Chrono dependency) -------------------------------------
-  # ==============================================================================
-
-  EIGEN_VERSION=3.3.7
-  EIGEN_REPO=https://gitlab.com/libeigen/eigen/-/archive/3.3.7/eigen-3.3.7.tar.gz
-  EIGEN_BASENAME=eigen-${EIGEN_VERSION}
-
-  EIGEN_SRC_DIR=eigen-${EIGEN_VERSION}-src
-  EIGEN_INSTALL_DIR=eigen-${EIGEN_VERSION}-install
-  EIGEN_INCLUDE=${EIGEN_INSTALL_DIR}/include
-
-
-  if [[ -d ${EIGEN_INSTALL_DIR} ]] ; then
     log "Eigen already installed."
-  else
+else
     log "Retrieving Eigen."
 
     start=$(date +%s)
@@ -615,54 +576,64 @@ if ${USE_CHRONO} ; then
 
     rm -Rf ${EIGEN_BASENAME}.tar.gz
     rm -Rf ${EIGEN_SRC_DIR}
-  fi
+fi
 
-  mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
-  cp -p -r ${EIGEN_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+cp -p -r ${EIGEN_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
 
+
+if ${USE_CHRONO} ; then
   # ==============================================================================
-  # -- Get Chrono and compile it with libc++ -------------------------------------
+  # -- Get Eigen headers (Chrono dependency) -------------------------------------
   # ==============================================================================
-
-  CHRONO_TAG=6.0.0
-  # CHRONO_TAG=develop
-  CHRONO_REPO=https://github.com/projectchrono/chrono.git
-
-  CHRONO_SRC_DIR=chrono-source
   CHRONO_INSTALL_DIR=chrono-install
 
-  if [[ -d ${CHRONO_INSTALL_DIR} ]] ; then
-    log "chrono library already installed."
+  if [[ -n "${CHRONO_PATH}" ]] ; then
+    log "Using user-provided Chrono at: ${CHRONO_PATH}"
+    CHRONO_SRC_DIR="${CHRONO_PATH}"
   else
-    log "Retrieving chrono library."
-    start=$(date +%s)
-    git clone --depth 1 --branch ${CHRONO_TAG} ${CHRONO_REPO} ${CHRONO_SRC_DIR}
-    end=$(date +%s)
-    echo "Elapsed Time dowloading chrono: $(($end-$start)) seconds"
+    # ==============================================================================
+    # -- Get Chrono and compile it with libc++ -------------------------------------
+    # ==============================================================================
+    CHRONO_TAG=6.0.0
+    # CHRONO_TAG=develop
+    CHRONO_REPO=https://github.com/projectchrono/chrono.git
+
+    CHRONO_SRC_DIR=chrono-source
+
+    if [[ -d ${CHRONO_INSTALL_DIR} ]] ; then
+        log "chrono library already installed."
+    else
+        log "Retrieving chrono library."
+        start=$(date +%s)
+        git clone --depth 1 --branch ${CHRONO_TAG} ${CHRONO_REPO} ${CHRONO_SRC_DIR}
+        end=$(date +%s)
+        echo "Elapsed Time dowloading chrono: $(($end-$start)) seconds"
+    fi
+  fi
+    EIGEN_INCLUDE=$(realpath "${EIGEN_INSTALL_DIR}/include")
 
     mkdir -p ${CHRONO_SRC_DIR}/build
-
     pushd ${CHRONO_SRC_DIR}/build >/dev/null
-
     cmake -G "Ninja" \
         -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH} -Wno-unused-command-line-argument ${UNREAL_HOSTED_CFLAGS}" \
-        -DEIGEN3_INCLUDE_DIR="../../${EIGEN_INCLUDE}" \
-        -DCMAKE_INSTALL_PREFIX="../../${CHRONO_INSTALL_DIR}" \
+        -DEIGEN3_INCLUDE_DIR="${EIGEN_INCLUDE}" \
+        -DCMAKE_INSTALL_PREFIX="${CARLA_BUILD_FOLDER}/${CHRONO_INSTALL_DIR}" \
         -DCMAKE_BUILD_TYPE=Release \
         -DENABLE_MODULE_VEHICLE=ON \
         ..
     ninja
     ninja install
-
     popd >/dev/null
-
+  if [[ -n "${CHRONO_PATH}" ]] ; then
+    log "nothing to delete from chrono."
+  else
     rm -Rf ${CHRONO_SRC_DIR}
   fi
-
-  mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
-  mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
-  cp -p ${CHRONO_INSTALL_DIR}/lib/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
-  cp -p -r ${CHRONO_INSTALL_DIR}/include/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+    mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+    mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+    cp -p ${CHRONO_INSTALL_DIR}/lib/*.so ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+    cp -p -r ${CHRONO_INSTALL_DIR}/include/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
 fi
 
 # ==============================================================================
@@ -977,7 +948,7 @@ if ${USE_ROS2} ; then
     FAST_DDS_LIB_SOURCE_DIR=${PWD}/${FAST_DDS_LIB_BASENAME}-source
     FAST_DDS_LIB_REPO="https://github.com/eProsima/Fast-DDS.git"
     FAST_DDS_LIB_BRANCH=v2.11.2
-    
+
     git clone --recurse-submodules --depth 1 --branch ${FAST_DDS_LIB_BRANCH} ${FAST_DDS_LIB_REPO} ${FAST_DDS_LIB_SOURCE_DIR}
 
     # copy OpenSSL from UE4
