@@ -316,7 +316,12 @@ void UBoundingBoxCalculator::GetISMBoundingBox(
 
   if(!Mesh)
   {
-    UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned to the ISM"), *ISMComp->GetOwner()->GetName());
+  #if WITH_EDITOR
+    UE_LOG(LogCarla, Error, TEXT("Actor Name: %s Actor Labe: %s has no SM assigned to the ISM"), *ISMComp->GetOwner()->GetName(), *ISMComp->GetOwner()->GetActorLabel());
+  #else
+    UE_LOG(LogCarla, Error, TEXT("Actor Name: %s has no SM assigned to the ISM"), *ISMComp->GetOwner()->GetName());
+
+  #endif
     return;
   }
 
