@@ -1362,7 +1362,7 @@ void UActorBlueprintFunctionLibrary::SetCamera(
             Description.Variations["enable_postprocess_effects"],
             true));
 
-    FString PostProcessDefaultName = RetrieveActorAttributeToString("postprocess_default_name",
+    FString PostProcessDefaultName = RetrieveActorAttributeToString("post_process_profile",
         Description.Variations, TEXT("default"));
     
     UPostProcessJsonUtils::LoadAllPostProcessFromJsonToSceneCapture(

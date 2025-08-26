@@ -1119,10 +1119,12 @@ class CameraManager(object):
                 (carla.Transform(carla.Location(x=2.5, y=0.5, z=0.0), carla.Rotation(pitch=-8.0)), Attachment.SpringArmGhost),
                 (carla.Transform(carla.Location(x=-4.0, z=2.0), carla.Rotation(pitch=6.0)), Attachment.SpringArmGhost),
                 (carla.Transform(carla.Location(x=0, y=-2.5, z=-0.0), carla.Rotation(yaw=90.0)), Attachment.Rigid)]
-
+        world = self._parent.get_world()
+        map_name = world.get_map().name
+        post_process_profile = self.get_post_process_profile(map_name)
         self.transform_index = 1
         self.sensors = [
-            ['sensor.camera.rgb', cc.Raw, 'Camera RGB', {}],
+            ['sensor.camera.rgb', cc.Raw, 'Camera RGB', {'post_process_profile' : post_process_profile }],
             ['sensor.camera.depth', cc.Raw, 'Camera Depth (Raw)', {}],
             ['sensor.camera.depth', cc.Depth, 'Camera Depth (Gray Scale)', {}],
             ['sensor.camera.depth', cc.LogarithmicDepth, 'Camera Depth (Logarithmic Gray Scale)', {}],
@@ -1134,11 +1136,11 @@ class CameraManager(object):
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB Distorted',
                 {'lens_circle_multiplier': '3.0',
                 'lens_circle_falloff': '3.0',
-                'post_process_profile' : 'default'}],
+                'post_process_profile' : post_process_profile }],
             ['sensor.camera.optical_flow', cc.Raw, 'Optical Flow', {}],
             ['sensor.camera.normals', cc.Raw, 'Camera Normals', {}],
         ]
-        world = self._parent.get_world()
+
         bp_library = world.get_blueprint_library()
         for item in self.sensors:
             bp = bp_library.find(item[0])
@@ -1195,6 +1197,12 @@ class CameraManager(object):
     def render(self, display):
         if self.surface is not None:
             display.blit(self.surface, (0, 0))
+    
+    def get_post_process_profile(self, map_name: str) -> str:
+        if "Town10HD_Opt" in map_name:
+            return "Town10HD_Opt"
+        return "default"
+
 
     @staticmethod
     def _parse_image(weak_self, image):
