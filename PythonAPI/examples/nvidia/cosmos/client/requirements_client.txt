@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: © 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
+# Please keep requirements sorted alphabetically
+
+pyyaml==6.0.2
+numpy==2.2.6
+pygame==2.6.1
+pillow==11.3.0
+matplotlib==3.10.3
+requests==2.32.0
+fastapi==0.115.0
+uvicorn==0.30.6
+streamlit==1.36.0
+toml==0.10.2
+gradio_client==1.11.1
+loguru==0.7.3
+opencv-python

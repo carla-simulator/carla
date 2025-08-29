@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText: © 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
+
+
+name: carla-cosmos-client
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip=25.0
+  - opencv=4.12.0
