@@ -1,5 +1,5 @@
 ## Latest Changes
-
+ * Added NVIDIA Cosmos Transfer1 integration
  * Added NVIDIA Neural Reconstruction Engine (NuRec) integration
  * Added the SimReady OpenUSD and MDL Converters to provide export and import support for SimReady OpenUSD stages and MDL materials.
  * Added support for left-handed traffic maps
