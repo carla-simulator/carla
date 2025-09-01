@@ -399,6 +399,15 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetWheelSteerAngle(EVehicleWheelLocation WheelLocation);
 
+  /// Set the pitch angle of the car wheels indicated by the user
+  /// 0 = FL_VehicleWheel, 1 = FR_VehicleWheel, 2 = BL_VehicleWheel, 3 = BR_VehicleWheel
+  /// NOTE : This is purely aesthetic. It will not modify the physics of the car in any way
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetWheelPitchAngle(EVehicleWheelLocation WheelLocation, float AngleInDeg);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetWheelPitchAngle(EVehicleWheelLocation WheelLocation);
+
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void OpenDoor(const EVehicleDoor DoorIdx);
 

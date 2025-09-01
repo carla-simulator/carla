@@ -331,6 +331,17 @@ namespace detail {
         rpc::VehicleWheelLocation wheel_location
     );
 
+    void SetWheelPitchAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation vehicle_wheel,
+        float angle_in_deg
+    );
+
+    float GetWheelPitchAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location
+    );
+
     void EnableChronoPhysics(
         rpc::ActorId vehicle,
         uint64_t MaxSubsteps,

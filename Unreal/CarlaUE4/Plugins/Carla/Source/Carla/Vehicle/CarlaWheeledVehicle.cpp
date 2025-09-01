@@ -966,6 +966,38 @@ float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocati
   }
 }
 
+void ACarlaWheeledVehicle::SetWheelPitchAngle(EVehicleWheelLocation WheelLocation, float AngleInDeg) {
+
+  if (bPhysicsEnabled == false)
+  {
+    check((uint8)WheelLocation >= 0)
+    UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+    check(VehicleAnim != nullptr)
+    VehicleAnim->SetWheelPitchAngle((uint8)WheelLocation, AngleInDeg);
+  }
+  else
+  {
+    UE_LOG(LogTemp, Warning, TEXT("Cannot set wheel pitch angle. Physics are enabled."))
+  }
+}
+
+float ACarlaWheeledVehicle::GetWheelPitchAngle(EVehicleWheelLocation WheelLocation) {
+
+  check((uint8)WheelLocation >= 0)
+  UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+  check(VehicleAnim->GetWheeledVehicleMovementComponent() != nullptr)
+
+  if (bPhysicsEnabled == true) 
+  {
+    return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetRotationAngle();
+  }
+  else 
+  {
+    return VehicleAnim->GetWheelPitchAngle((uint8)WheelLocation);
+  }
+}
+
 void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
   if(!GetCarlaMovementComponent<UDefaultMovementComponent>())
   {

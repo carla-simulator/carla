@@ -286,6 +286,16 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse SetWheelPitchAngle(const EVehicleWheelLocation&, float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetWheelPitchAngle(const EVehicleWheelLocation&, float&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse ApplyControlToVehicle(
       const FVehicleControl&, const EVehicleInputPriority&)
   {
@@ -513,7 +523,13 @@ public:
       const EVehicleWheelLocation& WheelLocation, float AngleInDeg) final;
 
   virtual ECarlaServerResponse GetWheelSteerAngle(
-      const EVehicleWheelLocation& WheelLocation, float& Angle);
+      const EVehicleWheelLocation& WheelLocation, float& Angle) final;
+
+  virtual ECarlaServerResponse SetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float AngleInDeg) final;
+
+  virtual ECarlaServerResponse GetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float& Angle) final;
 
   virtual ECarlaServerResponse SetActorSimulatePhysics(bool bSimulatePhysics) final;
 

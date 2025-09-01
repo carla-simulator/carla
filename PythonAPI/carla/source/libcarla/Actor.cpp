@@ -189,6 +189,8 @@ void export_actor() {
       .def("close_door", &cc::Vehicle::CloseDoor, (arg("door_idx")))
       .def("set_wheel_steer_direction", &cc::Vehicle::SetWheelSteerDirection, (arg("wheel_location")), (arg("angle_in_deg")))
       .def("get_wheel_steer_angle", &cc::Vehicle::GetWheelSteerAngle, (arg("wheel_location")))
+      .def("set_wheel_pitch_angle", &cc::Vehicle::SetWheelPitchAngle, (arg("wheel_location")), (arg("angle_in_deg")))
+      .def("get_wheel_pitch_angle", &cc::Vehicle::GetWheelPitchAngle, (arg("wheel_location")))
       .def("get_light_state", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetLightState))
       .def("apply_physics_control", &cc::Vehicle::ApplyPhysicsControl, (arg("physics_control")))
       .def("get_physics_control", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetPhysicsControl))
