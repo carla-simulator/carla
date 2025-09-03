@@ -15,6 +15,8 @@
 
 #include <disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
+#include <carla/road/Map.h>
+#include <carla/road/Road.h>
 #include <carla/road/SignalType.h>
 #include <carla/rpc/String.h>
 #include <enable-ue4-macros.h>
@@ -279,15 +281,22 @@ namespace SimReadyCarlaWrapper
             return;
         }
 
-        TSubclassOf<AActor> TrafficLightModel;
+        TSubclassOf<AActor> TrafficLightLHTModel;
+        TSubclassOf<AActor> TrafficLightRHTModel;
         TMap<FString, TSubclassOf<USignComponent>> SignComponentModels;
         TMap<FString, TSubclassOf<AActor>> TrafficSignsModels;
         TMap<FString, TSubclassOf<AActor>> SpeedLimitModels;
 
-        UClass* TrafficLightClass = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive.BP_TLOpenDrive_C"));
-        if (TrafficLightClass)
+        UClass* TrafficLightLHTClass = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive_LHT.BP_TLOpenDrive_LHT_C"));
+        if (TrafficLightLHTClass)
         {
-            TrafficLightModel = TrafficLightClass;
+            TrafficLightLHTModel = TrafficLightLHTClass;
+        }
+
+        UClass* TrafficLightRHTClass = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive_RHT.BP_TLOpenDrive_RHT_C"));
+        if (TrafficLightRHTClass)
+        {
+            TrafficLightRHTModel = TrafficLightRHTClass;
         }
         // Default traffic signs models
         UClass* StopClass = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Static/TrafficSign/BP_Stop.BP_Stop_C"));
@@ -465,6 +474,19 @@ namespace SimReadyCarlaWrapper
             const auto& Signal = Signals.at(SignalId);
             auto CarlaTransform = Signal->GetTransform();
             FTransform SpawnTransform(CarlaTransform);
+            
+            // Determine right hand or left hand traffic light
+            TSubclassOf<AActor> TrafficLightModel = TrafficLightRHTModel;
+            const auto& Roads = XodrMap->GetRoads();
+            auto RoadIt = Roads.find(Signal->GetRoadId());
+            if (RoadIt != Roads.end())
+            {
+                const auto& Road = RoadIt->second;
+                if (!Road.IsRHT())
+                {
+                    TrafficLightModel = TrafficLightLHTModel;
+                }
+            }
 
             FVector SpawnLocation = SpawnTransform.GetLocation();
             FRotator SpawnRotation(SpawnTransform.GetRotation());
