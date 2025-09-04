@@ -47,6 +47,8 @@ jobs:
     steps:
 
       - name: Checkout repository
+        with:
+          lfs: true
         uses: actions/checkout@v4
 
       - name: Download content
