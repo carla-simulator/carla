@@ -2,9 +2,13 @@
 #include "Carla/Game/CarlaEpisode.h"
 
 #include "ConstructorHelpers.h"
+#include "AssetRegistryModule.h"
 #include "Interfaces/IPluginManager.h"
 #include "HAL/FileManager.h"
 
+#include "Materials/MaterialInstance.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Materials/MaterialInstanceConstant.h"
 #include "Materials/MaterialExpression.h"
 #include "Materials/MaterialExpressionVectorParameter.h"
 #include "Materials/MaterialExpressionSetMaterialAttributes.h"
