@@ -464,7 +464,7 @@ void ASceneCaptureSensor_WideAngleLens::CaptureSceneExtended()
 {
     TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureSensor_WideAngleLens::CaptureSceneExtended);
 
-    bool SkipVFTR = CVarWideAngleSensorSkipVFTR.GetValueOnAnyThread();
+    bool SkipVFTR = CVarWideAngleSensorSkipVFTR.GetValueOnAnyThread() != 0;
 
     if (!SkipVFTR)
     {
