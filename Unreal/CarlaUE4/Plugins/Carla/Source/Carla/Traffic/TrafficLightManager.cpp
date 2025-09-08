@@ -880,6 +880,7 @@ void ATrafficLightManager::AdjustSignHeightToGround(FVector& SpawnLocation) cons
   CollisionParams.bTraceComplex = true;
   CollisionParams.bReturnPhysicalMaterial = false;
 
+  constexpr float ZOffsetSignToGround = 0.5f;
   if (GetWorld()->LineTraceSingleByChannel(
       HitResult,
       Start,
@@ -887,7 +888,7 @@ void ATrafficLightManager::AdjustSignHeightToGround(FVector& SpawnLocation) cons
       ECC_WorldStatic,
       CollisionParams))
   {
-    SpawnLocation.Z = HitResult.Location.Z + 5.0f;
+    SpawnLocation.Z = HitResult.Location.Z + ZOffsetSignToGround;
   }
   else
   {
