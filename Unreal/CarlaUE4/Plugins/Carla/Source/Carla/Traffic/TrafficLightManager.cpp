@@ -572,6 +572,8 @@ void ATrafficLightManager::SpawnTrafficLights()
     SpawnRotation.Roll = 0;
     SpawnRotation.Pitch = 0;
 
+    AdjustSignHeightToGround(SpawnLocation);
+
     FActorSpawnParameters SpawnParams;
     SpawnParams.Owner = this;
     SpawnParams.SpawnCollisionHandlingOverride =
@@ -667,6 +669,8 @@ void ATrafficLightManager::SpawnSignals()
       SpawnRotation.Roll = 0;
       SpawnRotation.Pitch = 0;
 
+      AdjustSignHeightToGround(SpawnLocation);
+
       FActorSpawnParameters SpawnParams;
       SpawnParams.Owner = this;
       SpawnParams.SpawnCollisionHandlingOverride =
@@ -723,6 +727,8 @@ void ATrafficLightManager::SpawnSignals()
       // Remove road inclination
       SpawnRotation.Roll = 0;
       SpawnRotation.Pitch = 0;
+
+      AdjustSignHeightToGround(SpawnLocation);
 
       FActorSpawnParameters SpawnParams;
       SpawnParams.Owner = this;
@@ -861,5 +867,31 @@ void ATrafficLightManager::RemoveAttachedProps(TArray<AActor*> Actors) const
     Actor->GetAttachedActors(AttachedActors, true);
     RemoveAttachedProps(AttachedActors);
     Actor->Destroy();
+  }
+}
+
+void ATrafficLightManager::AdjustSignHeightToGround(FVector& SpawnLocation) const
+{
+  const FVector Start = SpawnLocation + FVector(0, 0, 10000.0f);
+  const FVector End = SpawnLocation - FVector(0, 0, 10000.0f);
+
+  FHitResult HitResult;
+  FCollisionQueryParams CollisionParams;
+  CollisionParams.bTraceComplex = true;
+  CollisionParams.bReturnPhysicalMaterial = false;
+
+  if (GetWorld()->LineTraceSingleByChannel(
+      HitResult,
+      Start,
+      End,
+      ECC_WorldStatic,
+      CollisionParams))
+  {
+    SpawnLocation.Z = HitResult.Location.Z + 5.0f;
+  }
+  else
+  {
+    carla::log_warning("Could not find ground for traffic sign placement at location",
+        TCHAR_TO_UTF8(*SpawnLocation.ToString()));
   }
 }

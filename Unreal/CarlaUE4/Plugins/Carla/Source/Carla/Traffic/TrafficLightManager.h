@@ -69,6 +69,8 @@ private:
 
   void RemoveAttachedProps(TArray<AActor*> Actors) const;
 
+  void AdjustSignHeightToGround(FVector& SpawnLocation) const;
+
   // Mapped references to ATrafficLightGroup (junction)
   UPROPERTY()
   TMap<int, ATrafficLightGroup *> TrafficGroups;
