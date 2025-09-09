@@ -16,7 +16,6 @@ This guide explains how Unreal Engine and CARLA can be built from scratch using 
 
 You will need to meet the following system requirements:
 
-- 64-bit version of Docker is Ubuntu 16.04+
 - Minimum 8GB of RAM
 - Minimum 600GB available disk space for the initial container build process
 
@@ -46,30 +45,24 @@ git clone https://github.com/carla-simulator/carla
 
 ---
 
-## Building the images
+## Building the image
 
-The following steps will each take a long time.
+!!! note 
+    If you are using a version earlier than `0.9.16`, please refer to the documentation for that specific version.
 
-__1. Build the CARLA prerequisites image.__
+We provide scripts to simplify the image-building process. You can create a monolithic CARLA image using the following command:
 
-The following command will build an image called `carla-prerequisites` using `Prerequisites.Dockerfile`. In this build we install the compiler and required tools, download the Unreal Engine 4.26 fork and compile it. You will need to provide your login details (use a Github Personal Access Token instead of a password) as build arguments for the download of Unreal Engine to be successful:
+!!! Warning
+    This process may take a significant amount of time.
 
 ```sh
-docker build --build-arg EPIC_USER=<GitHubUserName> --build-arg EPIC_PASS=<GitHubAccessToken> -t carla-prerequisites -f Prerequisites.Dockerfile .
+Util/Docker/build.sh --monolith --epic-user=<GITHUB_USERNAME> --epic-token=<GITHUB_ACCESS_TOKEN>
 ```
 
-__2. Build the final CARLA image.__
-
-The following command will use the image created in the previous step to build the final CARLA image based on the current master branch (latest release) of the CARLA repository:
+To build a specific branch or tag of the CARLA repository, use the following command:
 
 ```sh
-docker build -t carla -f CarlaLegacy.Dockerfile .
-```
-
-If you would like to build a specific branch or tag of the CARLA repository, run the following command:
-
-```sh
-docker build -t carla -f CarlaLegacy.Dockerfile . --build-arg GIT_BRANCH=<branch_or_tag_name>
+./build.sh --monolith --branch <BRANCH_OR_TAG_NAME> --epic-user=<GITHUB_USERNAME> --epic-token=<GITHUB_ACCESS_TOKEN>
 ```
 
 ---
