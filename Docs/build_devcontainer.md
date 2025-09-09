@@ -2,19 +2,23 @@
 
 CARLA can be built and developed entirely inside Docker containers. This approach eliminates concerns about dependencies, Python versions, or system configuration—everything is already set up in our Dockerfiles. For example, our Dockerfiles provide support for multiple Python versions, with all required libraries pre-installed.
 
-This repository offers two Docker-based approaches for building and running CARLA: **monolithic mode** and **lightweight mode**.
+We offer two Docker-based approaches for building CARLA: **monolith mode** and **lightweight mode**.
 
-Your choice between **monolithic** and **lightweight** depends on your intended use, as well as factors such as disk space, build time, and whether you prefer a fully self-contained environment (monolithic) or one that reuses a locally compiled Unreal Engine (lightweight).
+Your choice between **monolith** and **lightweight** depends on your intended use, as well as factors such as disk space, build time, and whether you prefer a fully self-contained environment (monolith) or one that reuses a locally compiled Unreal Engine (lightweight).
 
 ## Monolith
+
+This Docker image is intended for use with the `docker_tools.py` scripts. Refer to [Build Unreal Engine and CARLA in Docker](build_docker_unreal.md) for more information.
 
 * Bundles Unreal Engine (UE4) and CARLA into a single Docker image.  
 * Requires a long build process and produces a large final image (often 100+ GB).  
 * Provides a fully self-contained environment with everything compiled inside Docker.
 
+
 ## Lightweight (Recommended)
 
-* Recommended for development purposes.
+This Docker image is intended for development purposes and is the recommended way to build packages and work with CARLA. Compared to monolith mode, it offers greater flexibility and faster iteration.
+
 * Installs only the dependencies (plus NVIDIA support) required to build and run CARLA.  
 * Requires mounting an existing **UE4** build from the host into the container.
 * Much faster to build but relies on a locally compiled Unreal Engine folder.
@@ -25,11 +29,11 @@ Your choice between **monolithic** and **lightweight** depends on your intended 
 
 ### Monolith
 
-As previously said, the monolithic build bundles both Unreal Engine (UE4) and CARLA into a single Docker image. The process can take several hours and the resulting image may exceed 200 GB in size.
+As previously said, the monolith build bundles both Unreal Engine (UE4) and CARLA into a single Docker image. The process can take several hours and the resulting image may exceed 200 GB in size.
 
 Because this build clones Unreal Engine from Epic Games’ private GitHub repository, you must have valid Epic credentials linked to your GitHub account. **If you don't have this set up, please follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github) before proceeding**.
 
-To build the monolithic image, run the following command:
+To build the monolith image, run the following command:
 
 ```sh
 Util/Docker/build.sh --monolith --epic-user <GITHUB_USERNAME> --epic-token <GITHUB_ACCESS_TOKEN>
@@ -39,8 +43,6 @@ Util/Docker/build.sh --monolith --epic-user <GITHUB_USERNAME> --epic-token <GITH
 ```
 
 This will create a Docker image named `carla-monolith:<branch>`.
-
-This Docker image is intended for use with the docker_tools.py scripts. Refer to [Build Unreal Engine and CARLA in Docker](build_docker_unreal.md) for more information.
 
 ### Lightweight (development)
 
@@ -53,13 +55,18 @@ Util/Docker/build.sh --dev
 
 ## Run the docker images
 
-### Monolithic
+### Monolith
+
+This image is not intended to be run directly. Instead, it is used through the docker_tools.py script. Refer to [Build Unreal Engine and CARLA in Docker](build_docker_unreal.md) for more information.
 
 ```sh
-Util/Docker/run.sh --monolith
-```
+# Build a CARLA package
+# Note: The package will be created using the branch that was used to build the image
+./docker_tools.py
 
-If the monolithic image hasn’t been built yet, this command will automatically invoke build.sh to create it.
+# Import some assets
+./docker_tools.py --input /assets/to/import/path --output /output/path
+```
 
 ### Lightweight
 
@@ -107,7 +114,7 @@ make package ARGS="--python-version=3.10,3.11,3.12"
 
 ## Using a Devcontainer for CARLA Server/Client Development
 
-You can use a **Visual Studio Code devcontainer** with the lightweight approach. This setup mounts your host’s directories (including UE4) into a Docker environment. Note that the monolithic image is not well suited to devcontainers since it stores everything inside the image.
+You can use a **Visual Studio Code devcontainer** with the lightweight approach. This setup mounts your host’s directories (including UE4) into a Docker environment. Note that the monolith image is not well suited to devcontainers since it stores everything inside the image.
 
 Create a `.devcontainer/devcontainer.json` in your CARLA repository with the following content:
 
