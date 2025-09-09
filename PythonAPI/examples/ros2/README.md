@@ -40,5 +40,7 @@ Start `rviz` to visualize the sensor output from CARLA:
 Docker must be installed on your system to complete this step.
 
 ```bash
+xhost +local:root # Allow the container to access the display
+
 ./run_rviz.sh
 ```
