@@ -30,6 +30,10 @@ Build options:
     --force-rebuild      Force rebuild images with no cache
     --branch             CARLA branch (only for monolith configuration)
 
+Epic credentials (only needed for monolith configuration)
+    --epic-user          Github user name
+    --epic-token         Github access token
+
 Other commands:
 
     -h, --help           Show this help message and exit
@@ -45,6 +49,8 @@ BUILD_CI=false
 
 # CARLA target branch for monolith build
 BRANCH="ue4-dev"
+EPIC_USER=
+EPIC_TOKEN=
 
 HOST_UID=$(id -u)
 HOST_GID=$(id -g)
@@ -52,7 +58,7 @@ DOCKER_GID=$(getent group docker | cut -d: -f3)
 
 FORCE_REBUILD=
 
-OPTS=`getopt -o h --long help,ubuntu-distro:,base,dev,monolith,ci,user:,docker-gid:,branch:,force-rebuild -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,ubuntu-distro:,base,dev,monolith,ci,user:,docker-gid:,branch:,epic-user:,epic-token:,force-rebuild -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -81,6 +87,12 @@ while [[ $# -gt 0 ]]; do
       shift 2 ;;
     --branch)
       BRANCH="$2"
+      shift 2 ;;
+    --epic-user)
+      EPIC_USER="$2"
+      shift 2 ;;
+    --epic-token)
+      EPIC_TOKEN="$2"
       shift 2 ;;
     --force-rebuild )
       FORCE_REBUILD=true
