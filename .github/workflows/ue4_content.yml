@@ -12,7 +12,7 @@ on:
 jobs:
   content:
     name: Content Build
-    runs-on: self-hosted
+    runs-on: self-hosted:ubuntu-gpu
     container:
       image: carlasim/carla-builder:ue4-20.04
       options: --user 1001:1001
