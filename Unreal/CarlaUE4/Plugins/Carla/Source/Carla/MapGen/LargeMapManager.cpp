@@ -93,7 +93,7 @@ void ALargeMapManager::BeginPlay()
   {
     Spectator = PlayerController->GetPawnOrSpectator();
   }
-  GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+  GetWorld()->GetTimerManager().ClearTimer(Handle);
   GetWorld()->GetTimerManager().SetTimer(
     Handle,
     [this]()
@@ -205,7 +205,7 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
   ATagger::TagActorsInLevel(*InLevel, *CarlaEpisode, true);
   AdjustAllSignsToHeightGround();
   
-  GetWorld()->GetTimerManager().ClearTimer(TimerHandle);
+  GetWorld()->GetTimerManager().ClearTimer(Handle);
   GetWorld()->GetTimerManager().SetTimer(
     Handle,
     [this]()
