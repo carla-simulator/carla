@@ -93,16 +93,6 @@ void ALargeMapManager::BeginPlay()
   {
     Spectator = PlayerController->GetPawnOrSpectator();
   }
-  GetWorld()->GetTimerManager().ClearTimer(Handle);
-  GetWorld()->GetTimerManager().SetTimer(
-    Handle,
-    [this]()
-    {
-        AdjustAllSignsToHeightGround();
-    },
-    20.0f,
-    false
-  );
 }
 
 void ALargeMapManager::PreWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin)
@@ -204,17 +194,6 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(InWorld);
   ATagger::TagActorsInLevel(*InLevel, *CarlaEpisode, true);
   AdjustAllSignsToHeightGround();
-  
-  GetWorld()->GetTimerManager().ClearTimer(Handle);
-  GetWorld()->GetTimerManager().SetTimer(
-    Handle,
-    [this]()
-    {
-        AdjustAllSignsToHeightGround();
-    },
-    20.0f,
-    false
-  );
   LM_LOG(Warning, "OnLevelAddedToWorld");
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }

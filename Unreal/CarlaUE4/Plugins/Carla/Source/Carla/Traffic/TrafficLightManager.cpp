@@ -261,6 +261,18 @@ const boost::optional<carla::road::Map>& ATrafficLightManager::GetMap()
   return UCarlaStatics::GetGameMode(GetWorld())->GetMap();
 }
 
+void ATrafficLightManager::AdjustAllSignsToHeightGround()
+{
+  for(ATrafficSignBase* TS : TrafficSigns)
+  {
+    TS->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+    FVector SpawnLocation = TS->GetActorLocation();
+    AdjustSignHeightToGround(SpawnLocation);
+    TS->SetActorLocation(SpawnLocation);
+    TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
+  }
+}
+
 void ATrafficLightManager::GenerateSignalsAndTrafficLights()
 {
   if(!TrafficLightsGenerated)
@@ -279,22 +291,7 @@ void ATrafficLightManager::GenerateSignalsAndTrafficLights()
 
     TrafficLightsGenerated = true;
 
-    GetWorld()->GetTimerManager().SetTimer(
-      TimerHandle,
-      [this]()
-      {
-        for(ATrafficSignBase* TS : TrafficSigns)
-        {
-          TS->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-          FVector SpawnLocation = TS->GetActorLocation();
-          AdjustSignHeightToGround(SpawnLocation);
-          TS->SetActorLocation(SpawnLocation);
-          TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
-        }
-      },
-      20.0f,
-      false
-    );
+    GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ATrafficLightManager::AdjustAllSignsToHeightGround, 10.0f, false);
   }
 }
 
