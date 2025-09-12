@@ -20,8 +20,8 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
     with:
-      python-versions: "3.12"
-      smoke-test-python-versions: "3.12"
+      python-versions: "3.10"
+      smoke-test-python-versions: "3.10"
       additional-maps: false
       upload-package: true
       upload-replace-latest: true
