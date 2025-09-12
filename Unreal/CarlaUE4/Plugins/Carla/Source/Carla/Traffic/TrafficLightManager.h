@@ -128,4 +128,7 @@ private:
   TArray<UPrimitiveComponent*> IgnoredComponentsForHeightAdjustment;
   UPROPERTY()
   TArray<AActor*> IgnoredActorsForHeightAdjustment;
+
+  UPROPERTY()
+  FTimerHandle TimerHandle;
 };

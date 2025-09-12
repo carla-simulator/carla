@@ -93,6 +93,16 @@ void ALargeMapManager::BeginPlay()
   {
     Spectator = PlayerController->GetPawnOrSpectator();
   }
+  GetWorld()->GetTimeManager().ClearTimer(TimerHandle);
+  GetWorld()->GetTimerManager().SetTimer(
+    Handle,
+    [this]()
+    {
+        AdjustAllSignsToHeightGround();
+    },
+    20.0f,
+    false
+  );
 }
 
 void ALargeMapManager::PreWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOrigin, FIntVector InDstOrigin)
@@ -137,8 +147,8 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 
 void ALargeMapManager::AdjustSignHeightToGround(FVector& SpawnLocation, const FString& ActorName, const TArray<AActor*>& ActorsToIgnore) const
 {
-  const FVector Start = SpawnLocation + FVector(0, 0, 10000.0f);
-  const FVector End = SpawnLocation - FVector(0, 0, 10000.0f);
+  const FVector Start = SpawnLocation + FVector(0, 0, 10.0f);
+  const FVector End = SpawnLocation - FVector(0, 0, 20000.0f);
 
   FHitResult HitResult;
   FCollisionQueryParams CollisionParams;
@@ -162,11 +172,8 @@ void ALargeMapManager::AdjustSignHeightToGround(FVector& SpawnLocation, const FS
   }
 }
 
-void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
+void ALargeMapManager::AdjustAllSignsToHeightGround()
 {
-  LM_LOG(Warning, "OnLevelAddedToWorld");
-  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(InWorld);
-  ATagger::TagActorsInLevel(*InLevel, *CarlaEpisode, true);
   TArray<AActor*> ActorsToIgnore;
   TArray<AActor*> ActorsToAdjustHeight;
   UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATrafficSignBase::StaticClass(), ActorsToAdjustHeight);
@@ -189,8 +196,26 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
     Actor->SetActorLocation(SpawnLocation);
     Actor->GetRootComponent()->SetMobility(EComponentMobility::Static);
   }
-  
+}
 
+void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
+{
+
+  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(InWorld);
+  ATagger::TagActorsInLevel(*InLevel, *CarlaEpisode, true);
+  AdjustAllSignsToHeightGround();
+  
+  GetWorld()->GetTimeManager().ClearTimer(TimerHandle);
+  GetWorld()->GetTimerManager().SetTimer(
+    Handle,
+    [this]()
+    {
+        AdjustAllSignsToHeightGround();
+    },
+    20.0f,
+    false
+  );
+  LM_LOG(Warning, "OnLevelAddedToWorld");
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }
 
@@ -1048,6 +1073,11 @@ void ALargeMapManager::UpdateTileState(
       StreamingLevel->bShouldBlockOnLoad = InShouldBlockOnLoad;
       StreamingLevel->SetShouldBeLoaded(InShouldBeLoaded);
       StreamingLevel->SetShouldBeVisible(InShouldBeVisible);
+  }
+
+  if(InShouldBeLoaded)
+  {
+    AdjustAllSignsToHeightGround();
   }
 }
 

@@ -254,6 +254,8 @@ protected:
 
   void AdjustSignHeightToGround(FVector& SpawnLocation, const FString& ActorName, const TArray<AActor*>& ActorsToIgnore) const;
 
+  void AdjustAllSignsToHeightGround();
+
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   TMap<uint64, FCarlaMapTile> MapTiles;
 
@@ -350,4 +352,7 @@ protected:
 
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   bool bHasTerramechanics = false;
+
+  UPROPERTY()
+  FTimerHandle Handle;
 };

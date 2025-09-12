@@ -278,6 +278,23 @@ void ATrafficLightManager::GenerateSignalsAndTrafficLights()
     SpawnSignals();
 
     TrafficLightsGenerated = true;
+
+    GetWorld()->GetTimerManager().SetTimer(
+      TimerHandle,
+      [this]()
+      {
+        for(ATrafficSignBase* TS : TrafficSigns)
+        {
+          TS->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+          FVector SpawnLocation = TS->GetActorLocation();
+          AdjustSignHeightToGround(SpawnLocation);
+          TS->SetActorLocation(SpawnLocation);
+          TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
+        }
+      },
+      20.0f,
+      false
+    );
   }
 }
 
@@ -571,7 +588,6 @@ void ATrafficLightManager::SpawnTrafficLights()
     // Remove road inclination
     SpawnRotation.Roll = 0;
     SpawnRotation.Pitch = 0;
-    bool bPositionAdjusted = AdjustSignHeightToGround(SpawnLocation);
 
     FActorSpawnParameters SpawnParams;
     SpawnParams.Owner = this;
@@ -610,21 +626,6 @@ void ATrafficLightManager::SpawnTrafficLights()
           Primitive->SetCollisionProfileName(TEXT("NoCollision"));
         }
       }
-    }
-    if(!bPositionAdjusted)
-    {
-      FString CurrentActorName;
-      #if WITH_EDITOR
-        CurrentActorName = TrafficLight->GetActorLabel();
-      #else
-        CurrentActorName = TrafficLight->GetName();
-      #endif
-      carla::log_warning("Could not adjust traffic light position to ground",
-          TCHAR_TO_UTF8(*TrafficLightComponent->GetSignId()));
-      UE_LOG(LogCarla, Warning, TEXT("Could not adjust traffic light position to ground %s , ActorName: %s "),
-          *TrafficLightComponent->GetSignId(), 
-          *CurrentActorName
-          );
     }
     RegisterLightComponentFromOpenDRIVE(TrafficLightComponent);
     TrafficLightComponent->InitializeSign(GetMap().get());
@@ -699,8 +700,6 @@ void ATrafficLightManager::SpawnSignals()
       SpawnRotation.Roll = 0;
       SpawnRotation.Pitch = 0;
 
-      bool bPositionAdjusted = AdjustSignHeightToGround(SpawnLocation);
-
       FActorSpawnParameters SpawnParams;
       SpawnParams.Owner = this;
       SpawnParams.SpawnCollisionHandlingOverride =
@@ -746,21 +745,6 @@ void ATrafficLightManager::SpawnSignals()
           }
         }
       }
-      if(!bPositionAdjusted)
-      {
-        FString CurrentActorName;
-        #if WITH_EDITOR
-          CurrentActorName = TrafficSign->GetActorLabel();
-        #else
-          CurrentActorName = TrafficSign->GetName();
-        #endif
-        carla::log_warning("Could not adjust sign position to ground",
-            TCHAR_TO_UTF8(*SignComponent->GetSignId()));
-        UE_LOG(LogCarla, Warning, TEXT("Could not adjust sign position to ground %s , ActorName: %s "),
-            *SignComponent->GetSignId(), 
-            *CurrentActorName
-            );
-      }
       TrafficSignComponents.Add(SignComponent->GetSignId(), SignComponent);
       TrafficSigns.Add(TrafficSign);
     }
@@ -775,8 +759,6 @@ void ATrafficLightManager::SpawnSignals()
       // Remove road inclination
       SpawnRotation.Roll = 0;
       SpawnRotation.Pitch = 0;
-
-      bool bPositionAdjusted = AdjustSignHeightToGround(SpawnLocation);
 
       FActorSpawnParameters SpawnParams;
       SpawnParams.Owner = this;
@@ -823,21 +805,7 @@ void ATrafficLightManager::SpawnSignals()
           }
         }
       }
-      if(!bPositionAdjusted)
-      {
-        FString CurrentActorName;
-        #if WITH_EDITOR
-          CurrentActorName = TrafficSign->GetActorLabel();
-        #else
-          CurrentActorName = TrafficSign->GetName();
-        #endif
-        carla::log_warning("Could not adjust speed limit sign position to ground",
-            TCHAR_TO_UTF8(*SignComponent->GetSignId()));
-        UE_LOG(LogCarla, Warning, TEXT("Could not adjust speed limit sign position to ground %s , ActorName: %s "),
-            *SignComponent->GetSignId(), 
-            *CurrentActorName 
-            );
-      }
+
       TrafficSignComponents.Add(SignComponent->GetSignId(), SignComponent);
       TrafficSigns.Add(TrafficSign);
     }
