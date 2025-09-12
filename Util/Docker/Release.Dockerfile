@@ -15,10 +15,10 @@ RUN packages='xdg-user-dirs' \
 
 RUN useradd -m carla
 
-COPY --chown=carla:carla . /home/carla
+WORKDIR /workspace
+COPY --chown=carla:carla . .
 
 USER carla
-WORKDIR /home/carla
 
 ENV SDL_VIDEODRIVER="x11"
 
