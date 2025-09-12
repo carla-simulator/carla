@@ -133,4 +133,5 @@ private:
 
   UPROPERTY()
   FTimerHandle TimerHandle;
+
 };
