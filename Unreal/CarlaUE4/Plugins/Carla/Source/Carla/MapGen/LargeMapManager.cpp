@@ -158,7 +158,7 @@ void ALargeMapManager::AdjustSignHeightToGround(FVector& SpawnLocation, const FS
   }
   else
   {
-
+ 
   }
 }
 
@@ -193,8 +193,10 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(InWorld);
   ATagger::TagActorsInLevel(*InLevel, *CarlaEpisode, true);
+
   AdjustAllSignsToHeightGround();
   LM_LOG(Warning, "OnLevelAddedToWorld");
+
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }
 

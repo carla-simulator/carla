@@ -290,6 +290,8 @@ void ATrafficLightManager::GenerateSignalsAndTrafficLights()
     SpawnSignals();
 
     TrafficLightsGenerated = true;
+
+    GetWorld()->GetTimerManager().SetTimer(TimerHandle, this, &ATrafficLightManager::AdjustAllSignsToHeightGround, 10.0f, false);
   }
 }
 
@@ -739,6 +741,21 @@ void ATrafficLightManager::SpawnSignals()
             Primitive->SetCollisionProfileName(TEXT("NoCollision"));
           }
         }
+      }
+      if(!bPositionAdjusted)
+      {
+        FString CurrentActorName;
+        #if WITH_EDITOR
+          CurrentActorName = TrafficSign->GetActorLabel();
+        #else
+          CurrentActorName = TrafficSign->GetName();
+        #endif
+        carla::log_warning("Could not adjust sign position to ground",
+            TCHAR_TO_UTF8(*SignComponent->GetSignId()));
+        UE_LOG(LogCarla, Warning, TEXT("Could not adjust sign position to ground %s , ActorName: %s "),
+            *SignComponent->GetSignId(), 
+            *CurrentActorName
+            );
       }
       TrafficSignComponents.Add(SignComponent->GetSignId(), SignComponent);
       TrafficSigns.Add(TrafficSign);
