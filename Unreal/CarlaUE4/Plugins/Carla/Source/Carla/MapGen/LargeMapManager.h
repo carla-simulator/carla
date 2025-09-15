@@ -174,7 +174,7 @@ public:
   FIntVector GetTileVectorID(TileID TileID) const;
 
   FVector GetTileLocation(TileID TileID) const;
-  
+
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   FVector GetTileLocation(FIntVector TileVectorID) const;
 
@@ -195,7 +195,7 @@ public:
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   FCarlaMapTile& GetCarlaMapTile(FIntVector TileVectorID);
-  
+
   FCarlaMapTile* GetCarlaMapTile(TileID TileID);
 
   FCarlaMapTile& LoadCarlaMapTile(FString TileMapPath, TileID TileId);
@@ -252,7 +252,7 @@ protected:
     const TSet<TileID>& InTilesToBeVisible,
     const TSet<TileID>& InTilesToHidde);
 
-  void AdjustSignHeightToGround(FVector& SpawnLocation, const FString& ActorName, const TArray<AActor*>& ActorsToIgnore) const;
+  bool AdjustSignHeightToGround(FVector& SpawnLocation, const FString& ActorName, const TArray<AActor*>& ActorsToIgnore) const;
 
   void AdjustAllSignsToHeightGround();
 

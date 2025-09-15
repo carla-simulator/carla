@@ -135,7 +135,7 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 }
 
 
-void ALargeMapManager::AdjustSignHeightToGround(FVector& SpawnLocation, const FString& ActorName, const TArray<AActor*>& ActorsToIgnore) const
+bool ALargeMapManager::AdjustSignHeightToGround(FVector& SpawnLocation, const FString& ActorName, const TArray<AActor*>& ActorsToIgnore) const
 {
   const FVector Start = SpawnLocation + FVector(0, 0, 10.0f);
   const FVector End = SpawnLocation - FVector(0, 0, 20000.0f);
@@ -145,7 +145,7 @@ void ALargeMapManager::AdjustSignHeightToGround(FVector& SpawnLocation, const FS
   CollisionParams.bTraceComplex = true;
   CollisionParams.bReturnPhysicalMaterial = false;
   CollisionParams.AddIgnoredActors(ActorsToIgnore);
-  
+
   constexpr float ZOffsetSignToGround = 0.5f;
   if (GetWorld()->LineTraceSingleByChannel(
       HitResult,
@@ -155,10 +155,11 @@ void ALargeMapManager::AdjustSignHeightToGround(FVector& SpawnLocation, const FS
       CollisionParams))
   {
     SpawnLocation.Z = HitResult.Location.Z + ZOffsetSignToGround;
+    return true;
   }
   else
   {
-
+    return false;
   }
 }
 
@@ -170,19 +171,15 @@ void ALargeMapManager::AdjustAllSignsToHeightGround()
   ActorsToIgnore.Append(ActorsToAdjustHeight);
   for (AActor* Actor : ActorsToAdjustHeight)
   {
+    ATrafficSignBase* TrafficSign = Cast<ATrafficSignBase>(Actor);
+    if (!IsValid(TrafficSign))
+      continue;
+    if (TrafficSign->bPositioned)
+      continue;
     FVector SpawnLocation = Actor->GetActorLocation();
+    TrafficSign->bPositioned = AdjustSignHeightToGround(SpawnLocation, Actor->GetName(), ActorsToIgnore);
+
     Actor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-    AdjustSignHeightToGround(SpawnLocation, Actor->GetName(), ActorsToIgnore);
-    Actor->SetActorLocation(SpawnLocation);
-    Actor->GetRootComponent()->SetMobility(EComponentMobility::Static);
-  }
-  UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATrafficLightBase::StaticClass(), ActorsToAdjustHeight);
-  ActorsToIgnore.Append(ActorsToAdjustHeight);
-  for (AActor* Actor : ActorsToAdjustHeight)
-  {
-    FVector SpawnLocation = Actor->GetActorLocation();
-    Actor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-    AdjustSignHeightToGround(SpawnLocation, Actor->GetName(), ActorsToIgnore);
     Actor->SetActorLocation(SpawnLocation);
     Actor->GetRootComponent()->SetMobility(EComponentMobility::Static);
   }
@@ -260,6 +257,7 @@ void ALargeMapManager::OnActorSpawned(
       World->FlushLevelStreaming();
 
       IsHeroVehicle = true;
+      AdjustAllSignsToHeightGround();
     }
   }
 
