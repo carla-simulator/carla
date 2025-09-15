@@ -95,7 +95,11 @@ public:
   void Disable(void);
 
   // start / stop
-  std::string Start(std::string Name, FString MapName, bool AdditionalData = false);
+  std::string Start(
+    std::string Name,
+    FString MapName,
+    bool AdditionalData = false,
+    bool KeepCurrentMap = false);
 
   void Stop(void);
 
