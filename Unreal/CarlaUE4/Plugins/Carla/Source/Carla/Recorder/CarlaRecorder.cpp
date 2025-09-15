@@ -60,11 +60,13 @@ std::string ACarlaRecorder::ShowFileActorsBlocked(std::string Name, double MinTi
   return Query.QueryBlocked(Name, MinTime, MinDistance);
 }
 
-std::string ACarlaRecorder::ReplayFile(std::string Name, double TimeStart, double Duration,
-    uint32_t FollowId, const FTransform Offset, bool ReplaySensors)
+std::string ACarlaRecorder::ReplayFile(
+  std::string Name, double TimeStart, double Duration,
+  uint32_t FollowId, const FTransform Offset, bool ReplaySensors,
+  bool KeepCurrentMap)
 {
   Stop();
-  return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId, Offset, ReplaySensors);
+  return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId, Offset, ReplaySensors, KeepCurrentMap);
 }
 
 void ACarlaRecorder::SetReplayerTimeFactor(double TimeFactor)
@@ -433,8 +435,7 @@ void ACarlaRecorder::AddActorBones(FCarlaActor *CarlaActor)
 std::string ACarlaRecorder::Start(
   std::string Name,
   FString MapName,
-  bool AdditionalData,
-  bool KeepCurrentMap)
+  bool AdditionalData)
 {
   // stop replayer if any in course
   if (Replayer.IsEnabled())
@@ -460,8 +461,7 @@ std::string ACarlaRecorder::Start(
   Info.Version = RECORDER_VERSION;
   Info.Magic = TEXT("CARLA_RECORDER");
   Info.Date = std::time(0);
-  if (!KeepCurrentMap)
-    Info.Mapfile = MapName;
+  Info.Mapfile = MapName;
 
   // write general info
   Info.Write(File);

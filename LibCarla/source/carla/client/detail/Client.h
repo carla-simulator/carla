@@ -408,7 +408,7 @@ namespace detail {
     std::vector<ActorId> GetGroupTrafficLights(
         rpc::ActorId traffic_light);
 
-    std::string StartRecorder(std::string name, bool additional_data, bool keep_current_map);
+    std::string StartRecorder(std::string name, bool additional_data);
 
     void StopRecorder();
 
@@ -418,8 +418,10 @@ namespace detail {
 
     std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance);
 
-    std::string ReplayFile(std::string name, double start, double duration,
-        uint32_t follow_id, bool replay_sensors, geom::Transform offset);
+    std::string ReplayFile(
+        std::string name, double start, double duration,
+        uint32_t follow_id, bool replay_sensors, geom::Transform offset,
+        bool keep_current_map);
 
     void SetReplayerTimeFactor(double time_factor);
 

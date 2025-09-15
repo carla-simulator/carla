@@ -199,7 +199,8 @@ void export_client() {
         double duration, \
         uint32_t follow_id, \
         bool replay_sensors, \
-        cg::Transform offset) { \
+        cg::Transform offset,
+        bool keep_current_map) { \
       carla::PythonUtil::ReleaseGIL unlock; \
       return self.fn(name, time_start, duration, follow_id, replay_sensors, offset); \
     }, \
@@ -209,7 +210,8 @@ void export_client() {
       arg("duration"), \
       arg("follow_id"), \
       arg("replay_sensors")=false, \
-      arg("offset")=cg::Transform(cg::Location(cg::Vector3D(-10, 0, 5)), cg::Rotation(-25, 0, 0)))
+      arg("offset")=cg::Transform(cg::Location(cg::Vector3D(-10, 0, 5)), cg::Rotation(-25, 0, 0)), \
+      arg("keep_current_map")=false)
 
   class_<cc::Client>("Client",
       init<std::string, uint16_t, size_t>((arg("host")="127.0.0.1", arg("port")=2000, arg("worker_threads")=0u)))
@@ -227,7 +229,7 @@ void export_client() {
     .def("generate_opendrive_world", CONST_CALL_WITHOUT_GIL_3(cc::Client, GenerateOpenDriveWorld, std::string,
         rpc::OpendriveGenerationParameters, bool), (arg("opendrive"), arg("parameters")=rpc::OpendriveGenerationParameters(),
         arg("reset_settings")=true))
-    .def("start_recorder", CALL_WITHOUT_GIL_3(cc::Client, StartRecorder, std::string, bool, bool), (arg("name"), arg("additional_data")=false, arg("keep_current_map")=false))
+    .def("start_recorder", CALL_WITHOUT_GIL_2(cc::Client, StartRecorder, std::string, bool, bool), (arg("name"), arg("additional_data")=false))
     .def("stop_recorder", &cc::Client::StopRecorder)
     .def("show_recorder_file_info", CALL_WITHOUT_GIL_2(cc::Client, ShowRecorderFileInfo, std::string, bool), (arg("name"), arg("show_all")))
     .def("show_recorder_collisions", CALL_WITHOUT_GIL_3(cc::Client, ShowRecorderCollisions, std::string, char, char), (arg("name"), arg("type1"), arg("type2")))

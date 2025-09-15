@@ -319,7 +319,7 @@ public:
     return Recorder->GetReplayer();
   }
 
-  std::string StartRecorder(std::string name, bool AdditionalData, bool KeepCurrentMap);
+  std::string StartRecorder(std::string name, bool AdditionalData);
 
   FIntVector GetCurrentMapOrigin() const { return CurrentMapOrigin; }
 

@@ -104,8 +104,14 @@ double CarlaReplayer::GetTotalTime(void)
   return Frame.Elapsed;
 }
 
-std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, double Duration,
-    uint32_t ThisFollowId, const FTransform Offset, bool ReplaySensors)
+std::string CarlaReplayer::ReplayFile(
+  std::string Filename,
+  double TimeStart,
+  double Duration,
+  uint32_t ThisFollowId,
+  const FTransform Offset,
+  bool ReplaySensors,
+  bool KeepCurrentMap)
 {
   std::stringstream Info;
   std::string s;
@@ -133,28 +139,31 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
   // from start
   Rewind();
 
-  // check to load map if different
-  if (Episode->GetMapName() != RecInfo.Mapfile)
+  if (!KeepCurrentMap)
   {
-    if (!Episode->LoadNewEpisode(RecInfo.Mapfile))
+    // check to load map if different
+    if (Episode->GetMapName() != RecInfo.Mapfile)
     {
-      Info << "Could not load mapfile " << TCHAR_TO_UTF8(*RecInfo.Mapfile) << std::endl;
-      Stop();
-      return Info.str();
+      if (!Episode->LoadNewEpisode(RecInfo.Mapfile))
+      {
+        Info << "Could not load mapfile " << TCHAR_TO_UTF8(*RecInfo.Mapfile) << std::endl;
+        Stop();
+        return Info.str();
+      }
+      Info << "Loading map " << TCHAR_TO_UTF8(*RecInfo.Mapfile) << std::endl;
+      Info << "Replayer will start after map is loaded..." << std::endl;
+    
+      // prepare autoplay after map is loaded
+      Autoplay.Enabled = true;
+      Autoplay.Filename = Filename2;
+      Autoplay.Mapfile = RecInfo.Mapfile;
+      Autoplay.TimeStart = TimeStart;
+      Autoplay.Duration = Duration;
+      Autoplay.FollowId = ThisFollowId;
+      Autoplay.FollowOffset = Offset;
+      Autoplay.TimeFactor = TimeFactor;
+      Autoplay.ReplaySensors = ReplaySensors;
     }
-    Info << "Loading map " << TCHAR_TO_UTF8(*RecInfo.Mapfile) << std::endl;
-    Info << "Replayer will start after map is loaded..." << std::endl;
-
-    // prepare autoplay after map is loaded
-    Autoplay.Enabled = true;
-    Autoplay.Filename = Filename2;
-    Autoplay.Mapfile = RecInfo.Mapfile;
-    Autoplay.TimeStart = TimeStart;
-    Autoplay.Duration = Duration;
-    Autoplay.FollowId = ThisFollowId;
-    Autoplay.FollowOffset = Offset;
-    Autoplay.TimeFactor = TimeFactor;
-    Autoplay.ReplaySensors = ReplaySensors;
   }
 
   // get Total time of recorder
