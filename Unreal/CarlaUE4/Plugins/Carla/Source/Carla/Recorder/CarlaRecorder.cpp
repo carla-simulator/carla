@@ -430,7 +430,11 @@ void ACarlaRecorder::AddActorBones(FCarlaActor *CarlaActor)
   WalkersBones.Add(std::move(Walker));
 }
 
-std::string ACarlaRecorder::Start(std::string Name, FString MapName, bool AdditionalData)
+std::string ACarlaRecorder::Start(
+  std::string Name,
+  FString MapName,
+  bool AdditionalData,
+  bool KeepCurrentMap)
 {
   // stop replayer if any in course
   if (Replayer.IsEnabled())
@@ -456,7 +460,8 @@ std::string ACarlaRecorder::Start(std::string Name, FString MapName, bool Additi
   Info.Version = RECORDER_VERSION;
   Info.Magic = TEXT("CARLA_RECORDER");
   Info.Date = std::time(0);
-  Info.Mapfile = MapName;
+  if (!KeepCurrentMap)
+    Info.Mapfile = MapName;
 
   // write general info
   Info.Write(File);

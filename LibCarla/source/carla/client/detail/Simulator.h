@@ -652,8 +652,8 @@ namespace detail {
     // =========================================================================
     /// @{
 
-    std::string StartRecorder(std::string name, bool additional_data) {
-      return _client.StartRecorder(std::move(name), additional_data);
+    std::string StartRecorder(std::string name, bool additional_data, bool keep_current_map) {
+      return _client.StartRecorder(std::move(name), additional_data, keep_current_map);
     }
 
     void StopRecorder(void) {

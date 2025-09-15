@@ -119,8 +119,8 @@ namespace client {
       return _simulator->GetCurrentEpisode();
     }
 
-    std::string StartRecorder(std::string name, bool additional_data = false) {
-      return _simulator->StartRecorder(name, additional_data);
+    std::string StartRecorder(std::string name, bool additional_data = false, bool keep_current_map = false) {
+      return _simulator->StartRecorder(name, additional_data, keep_current_map);
     }
 
     void StopRecorder(void) {

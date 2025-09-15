@@ -426,13 +426,13 @@ void UCarlaEpisode::EndPlay(void)
   }
 }
 
-std::string UCarlaEpisode::StartRecorder(std::string Name, bool AdditionalData)
+std::string UCarlaEpisode::StartRecorder(std::string Name, bool AdditionalData, bool KeepCurrentMap)
 {
   std::string result;
 
   if (Recorder)
   {
-    result = Recorder->Start(Name, MapName, AdditionalData);
+    result = Recorder->Start(Name, MapName, AdditionalData, KeepCurrentMap);
   }
   else
   {

@@ -227,7 +227,7 @@ void export_client() {
     .def("generate_opendrive_world", CONST_CALL_WITHOUT_GIL_3(cc::Client, GenerateOpenDriveWorld, std::string,
         rpc::OpendriveGenerationParameters, bool), (arg("opendrive"), arg("parameters")=rpc::OpendriveGenerationParameters(),
         arg("reset_settings")=true))
-    .def("start_recorder", CALL_WITHOUT_GIL_2(cc::Client, StartRecorder, std::string, bool), (arg("name"), arg("additional_data")=false))
+    .def("start_recorder", CALL_WITHOUT_GIL_2(cc::Client, StartRecorder, std::string, bool, bool), (arg("name"), arg("additional_data")=false, arg("keep_current_map")=false))
     .def("stop_recorder", &cc::Client::StopRecorder)
     .def("show_recorder_file_info", CALL_WITHOUT_GIL_2(cc::Client, ShowRecorderFileInfo, std::string, bool), (arg("name"), arg("show_all")))
     .def("show_recorder_collisions", CALL_WITHOUT_GIL_3(cc::Client, ShowRecorderCollisions, std::string, char, char), (arg("name"), arg("type1"), arg("type2")))
