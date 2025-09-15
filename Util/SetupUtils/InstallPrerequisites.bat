@@ -3,7 +3,7 @@
 set ninja_version=1.12.1
 
 set python_path=python
-set python_version_default=3.8.10
+set python_version_default=3.13.7
 
 rem https://learn.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-community?view=vs-2022&preserve-view=true
 set visual_studio_components=^
