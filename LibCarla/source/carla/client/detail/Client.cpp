@@ -629,7 +629,7 @@ namespace detail {
   }
 
   std::string Client::StartRecorder(std::string name, bool additional_data) {
-    return _pimpl->CallAndWait<std::string>("start_recorder", name, additional_data, keep_current_map);
+    return _pimpl->CallAndWait<std::string>("start_recorder", name, additional_data);
   }
 
   void Client::StopRecorder() {
