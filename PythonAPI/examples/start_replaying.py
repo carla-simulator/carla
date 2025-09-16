@@ -71,6 +71,10 @@ def main():
         '--spawn-sensors',
         action='store_true',
         help='spawn sensors in the replayed world')
+    argparser.add_argument(
+        '-m', '--map-override',
+        type=str,
+        help='The name of the map to load instead of whatever the log file indicates.')
     args = argparser.parse_args()
 
     try:
@@ -93,7 +97,14 @@ def main():
             offset = carla.Transform(carla.Location(0, 0, 40), carla.Rotation(-90, 0, 0))
 
         # replay the session
-        print(client.replay_file(args.recorder_filename, args.start, args.duration, args.camera, args.spawn_sensors, offset))
+        print(client.replay_file(
+            args.recorder_filename,
+            args.start,
+            args.duration,
+            args.camera,
+            args.spawn_sensors,
+            offset,
+            map_override=args.map_override if args.map_override != None else ""))
 
     finally:
         pass

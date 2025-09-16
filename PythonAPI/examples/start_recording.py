@@ -55,10 +55,6 @@ def main():
         default=0,
         type=int,
         help='recorder duration (auto-stop)')
-    argparser.add_argument(
-        '-k', '--keep-current-map',
-        action='store_true',
-        help='Whether to keep the current map open')
     args = argparser.parse_args()
 
     actor_list = []
@@ -79,8 +75,7 @@ def main():
         count = args.number_of_vehicles
 
         print("Recording on file: %s" % client.start_recorder(
-            name=args.recorder_filename,
-            keep_current_map=args.keep_current_map))
+            name=args.recorder_filename))
 
         if args.safe:
             blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]
