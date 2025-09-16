@@ -129,6 +129,12 @@
 	* [__Mailbox__](#mailbox)
 	* [__Street fountain__](#street-fountain)
 	* [__Vending machine__](#vending-machine)
+## __Vegetation__
+* __Trees__
+	* [__Aporosa tree__](#aporosa-tree)
+	* [__Coconut palm__](#coconut-palm)
+	* [__Cypress tree__](#cypress-tree)
+
 ## __Utility__
 * __Calibration__
 	* [__Calibrator__](#calibrator)
@@ -809,6 +815,30 @@
 
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.vendingmachine<span>
+
+---
+
+## __Vegetation__
+### Aporosa tree
+
+![static_prop_Aporosa](../img/catalogue/props/static_prop_aporosa.webp)
+
+
+* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.aporosatree<span>  
+
+### Coconut palm
+
+![static_prop_CoconutPalm](../img/catalogue/props/static_prop_coconut_palm.webp)
+
+
+* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.coconutpalm<span>  
+
+### Cypress tree
+
+![static_prop_CypressTree](../img/catalogue/props/static_prop_cypress_tree.webp)
+
+
+* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.cypresstree<span>  
 
 ---
 

@@ -2,9 +2,9 @@
 
 ### Latest Release
 
-The latest release of CARLA is **0.9.15**, check out the [release announcement](https://carla.org/2023/11/10/release-0.9.15/) for more details.
+The latest release of CARLA is **0.9.16**, check out the [release announcement](https://carla.org/2025/09/16/release-0.9.16/) for more details.
 
-- [CARLA 0.9.15](https://github.com/carla-simulator/carla/releases/tag/0.9.15/) - [Documentation](https://carla.readthedocs.io/en/0.9.15/)
+- [CARLA 0.9.16](https://github.com/carla-simulator/carla/releases/tag/0.9.16/) - [Documentation](https://carla.readthedocs.io/en/0.9.16/)
 
 ### Nightly build
 
