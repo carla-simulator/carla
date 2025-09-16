@@ -142,8 +142,8 @@ namespace client {
     std::string ReplayFile(
       std::string name, double start, double duration,
       uint32_t follow_id, bool replay_sensors, geom::Transform offset,
-      bool keep_current_map) {
-      return _simulator->ReplayFile(name, start, duration, follow_id, replay_sensors, offset, keep_current_map);
+      std::string map_override) {
+      return _simulator->ReplayFile(name, start, duration, follow_id, replay_sensors, offset, map_override);
     }
 
     void StopReplayer(bool keep_actors) {
