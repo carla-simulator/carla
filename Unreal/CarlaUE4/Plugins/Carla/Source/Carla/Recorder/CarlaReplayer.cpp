@@ -140,7 +140,7 @@ std::string CarlaReplayer::ReplayFile(
   Rewind();
 
   if (!MapOverride.empty())
-    RecInfo.Mapfile = MapOverride;
+    RecInfo.Mapfile = UTF8_TO_TCHAR(MapOverride.c_str());
   
   // check to load map if different
   if (Episode->GetMapName() != RecInfo.Mapfile)
