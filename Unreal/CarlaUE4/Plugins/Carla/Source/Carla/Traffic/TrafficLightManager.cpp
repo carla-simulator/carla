@@ -290,18 +290,13 @@ void ATrafficLightManager::GenerateSignalsAndTrafficLights()
     SpawnSignals();
 
     TrafficLightsGenerated = true;
-    
+
     // Get current map name
-    FString CurrentMapName = GetWorld()->GetMapName();
-
-    // When running PIE, GetMapName() usually prepends "UEDPIE_X_"
-    // so we strip it out to get the actual name
-    CurrentMapName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
-
-    if (CurrentMapName.Equals(TEXT("Town15"), ESearchCase::IgnoreCase))
+    if (CurrentMapName.Contains(TEXT("Town15"), ESearchCase::IgnoreCase))
     {
       AdjustAllSignsToHeightGround();
     }
+
   }
 }
 
