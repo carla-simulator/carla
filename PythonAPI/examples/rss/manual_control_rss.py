@@ -44,26 +44,6 @@ Use ARROWS or WASD keys for control.
 
 from __future__ import print_function
 
-
-# ==============================================================================
-# -- find carla module ---------------------------------------------------------
-# ==============================================================================
-
-
-import glob
-import os
-import sys
-import signal
-
-try:
-    sys.path.append(glob.glob(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) + '/carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
-
 # ==============================================================================
 # -- imports -------------------------------------------------------------------
 # ==============================================================================
@@ -76,7 +56,10 @@ from carla import ColorConverter as cc
 import argparse
 import logging
 import math
+import os
 import random
+import signal
+import sys
 import weakref
 from rss_sensor import RssSensor # pylint: disable=relative-import
 from rss_visualization import RssUnstructuredSceneVisualizer, RssBoundingBoxVisualizer, RssStateVisualizer # pylint: disable=relative-import

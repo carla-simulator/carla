@@ -254,29 +254,10 @@ The Python API client grants control over the simulation. Compilation of the Pyt
 The following command compiles the Python API client:
 
 ```sh
-    make PythonAPI
+make PythonAPI
 ```
 
-The CARLA client library will be built in two distinct, mutually exclusive forms. This gives users the freedom to choose which form they prefer to run the CARLA client code. The two forms include `.egg` files and `.whl` files. Choose __one__ of the following options below to use the client library:
-
-__A. `.egg` file__
-
->The `.egg` file does not need to be installed. All of CARLA's example scripts automatically [look for this file](build_system.md#versions-prior-to-0912) when importing CARLA.
-
->If you previously installed a CARLA `.whl`, the `.whl` will take precedence over an `.egg` file.
-
-__B. `.whl` file__
-
->The `.whl` file should be installed using `pip`:
-
-```sh
-python3 -m pip install <path/to/wheel>.whl
-```
-
->This `.whl` file cannot be distributed as it is built specifically for your OS.
-
-!!! Warning
-    Issues can arise through the use of different methods to install the CARLA client library and having different versions of CARLA on your system. It is recommended to use virtual environments when installing the `.whl` and to [uninstall](build_faq.md#how-do-i-uninstall-the-carla-client-library) any previously installed client libraries before installing new ones.
+The CARLA client library is provideed as a Python wheel package. Running the command above will automatically install the wheel in your target Python environment. You can also find the wheel file in the `PythonAPI\carla\dist` directory.
 
 __2.__ __Compile the server__:
 

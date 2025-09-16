@@ -16,6 +16,7 @@ import argparse
 import docker
 import docker_utils
 import os
+import subprocess
 
 
 def print_formated_dict(dic):
@@ -53,11 +54,17 @@ def parse_args():
         default=False,
         help='Prints extra information')
     argparser.add_argument(
-        '--image',
+        '--force-rebuild',
+        action='store_true',
+        default=False,
+        help='Force docker image rebuild')
+    argparser.add_argument(
+        '-b', '--branch',
         type=str,
-        help='Use a specific Carla image. Default: "carla:latest"',
-        default='carla:latest',
+        help='Use a specific Carla branch. Default: "ue4-dev"',
+        default='ue4-dev',
     )
+
     args = argparser.parse_args()
 
     if not args.output:
@@ -85,8 +92,8 @@ def parse_args():
 def main():
 
     args = parse_args()
-    carla_image_name = args.image
-    inbox_assets_path = '/home/carla/carla/Import'
+    carla_image_name = "carla-monolith:{}".format(args.branch)
+    inbox_assets_path = '/workspaces/carla/Import'
     client = docker.from_env()
 
     # All possible Docker arguments are here:
@@ -107,6 +114,20 @@ def main():
     print_formated_dict(container_args)
 
     try:
+
+        print("Checking if the image exists...")
+        try:
+            client.images.get(carla_image_name)
+            print(f"Image {carla_image_name} found")
+        except docker.errors.ImageNotFound:
+            print(f"Image {carla_image_name} not found!")
+            build_cmd = ["./build.sh", "--monolith", "--branch", args.branch]
+            if args.force_rebuild:
+                build_cmd.append("--force-rebuild")
+            subprocess.check_call(build_cmd)
+        except docker.errors.APIError as e:
+            print(f"Unkown error while checking if the image exist!")
+            raise
 
         print("Running Docker...")
         carla_container = client.containers.run(**container_args)
@@ -132,7 +153,7 @@ def main():
         # Get the files routes to export
         files_to_copy = docker_utils.get_file_paths(
             carla_container,
-            '/home/carla/carla/Dist/*.tar.gz',
+            '/workspaces/carla/Dist/*.tar.gz',
             user='carla', verbose=args.verbose)
 
         # Copy these files to the output folder

@@ -47,7 +47,12 @@ jobs:
     steps:
 
       - name: Checkout repository
+        with:
+          lfs: true
         uses: actions/checkout@v4
+      
+      - name: Checkout Git-LFS files
+        run: git lfs pull
 
       - name: Download content
         run: ./Update.sh

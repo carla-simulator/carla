@@ -55,6 +55,9 @@ public:
   UFUNCTION(BlueprintImplementableEvent)
   UBoxComponent *GetTriggerVolume() const;
 
+  UPROPERTY(Category = "Traffic Sign", VisibleAnywhere, BlueprintReadOnly)
+  bool bPositioned = false;
+
   TArray<UBoxComponent*> GetTriggerVolumes() const;
 
 private:

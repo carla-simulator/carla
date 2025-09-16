@@ -1,4 +1,5 @@
 auditwheel==5.1.0
+build
 distro==1.9.0
 packaging
 pyelftools

@@ -2,18 +2,6 @@
 # Copyright (c) 2020 Intel Corporation
 #
 
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(glob.glob(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) + '/carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
 from enum import Enum
 import math
 import numpy as np

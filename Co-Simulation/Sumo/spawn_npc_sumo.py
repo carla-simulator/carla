@@ -14,29 +14,15 @@
 import argparse
 import json
 import logging
+import os
 import random
 import re
 import shutil
+import sys
 import tempfile
 import time
 
 import lxml.etree as ET  # pylint: disable=wrong-import-position
-
-# ==================================================================================================
-# -- find carla module -----------------------------------------------------------------------------
-# ==================================================================================================
-
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(
-        glob.glob('../../PythonAPI/carla/dist/carla-*%d.%d-%s.egg' %
-                  (sys.version_info.major, sys.version_info.minor,
-                   'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 # ==================================================================================================
 # -- find traci module -----------------------------------------------------------------------------

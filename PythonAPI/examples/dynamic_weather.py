@@ -13,22 +13,11 @@ Connect to a CARLA Simulator instance and control the weather. Change Sun
 position smoothly with time and generate storms occasionally.
 """
 
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
 import carla
 
 import argparse
 import math
+import sys
 
 
 def clamp(value, minimum=0.0, maximum=100.0):

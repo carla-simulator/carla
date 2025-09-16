@@ -31,22 +31,6 @@ Welcome to CARLA No-Rendering Mode Visualizer
 """
 
 # ==============================================================================
-# -- find carla module ---------------------------------------------------------
-# ==============================================================================
-
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
-# ==============================================================================
 # -- imports -------------------------------------------------------------------
 # ==============================================================================
 
@@ -56,9 +40,12 @@ from carla import TrafficLightState as tls
 import argparse
 import logging
 import datetime
+import glob
 import weakref
 import math
+import os
 import random
+import sys
 import hashlib
 
 try:

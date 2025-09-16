@@ -11,21 +11,6 @@
 Quick check script to get map stuff
 """
 
-import glob
-import os
-import sys
-import numpy as np
-from queue import Queue
-from queue import Empty
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
 import carla
 
 

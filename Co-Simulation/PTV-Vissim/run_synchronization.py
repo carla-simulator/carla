@@ -16,23 +16,8 @@ Script to co-simulate CARLA and PTV-Vissim.
 import argparse
 import json
 import logging
-import time
-
-# ==================================================================================================
-# -- find carla module -----------------------------------------------------------------------------
-# ==================================================================================================
-
-import glob
 import os
-import sys
-
-try:
-    sys.path.append(
-        glob.glob('../../PythonAPI/carla/dist/carla-*%d.%d-%s.egg' %
-                  (sys.version_info.major, sys.version_info.minor,
-                   'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+import time
 
 # ==================================================================================================
 # -- vissim integration imports --------------------------------------------------------------------

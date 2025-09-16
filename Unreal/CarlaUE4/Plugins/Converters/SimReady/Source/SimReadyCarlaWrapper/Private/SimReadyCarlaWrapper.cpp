@@ -15,6 +15,8 @@
 
 #include <disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
+#include <carla/road/Map.h>
+#include <carla/road/Road.h>
 #include <carla/road/SignalType.h>
 #include <carla/rpc/String.h>
 #include <enable-ue4-macros.h>
@@ -283,12 +285,40 @@ namespace SimReadyCarlaWrapper
         TMap<FString, TSubclassOf<USignComponent>> SignComponentModels;
         TMap<FString, TSubclassOf<AActor>> TrafficSignsModels;
         TMap<FString, TSubclassOf<AActor>> SpeedLimitModels;
+        bool bIsRHT = true;
+        const auto& roads = XodrMap->GetRoads();
 
-        UClass* TrafficLightClass = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive.BP_TLOpenDrive_C"));
-        if (TrafficLightClass)
-        {
-            TrafficLightModel = TrafficLightClass;
+        if (!roads.empty()) {
+            const auto& firstPair = *roads.begin();   
+            const carla::road::Road& firstRoad = firstPair.second; 
+            bIsRHT = firstRoad.IsRHT();
         }
+
+        if( bIsRHT )
+        {
+            UClass* TrafficLightClass = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive_RHT.BP_TLOpenDrive_RHT_C"));
+            if (TrafficLightClass)
+            {
+                TrafficLightModel = TrafficLightClass;
+            }
+            else
+            {
+                UE_LOG(LogSimReadyCarlaWrapper, Error, TEXT("Failed to load traffic light model at '/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive_RHT.BP_TLOpenDrive_RHT_C'"));
+            }
+        }
+        else
+        {
+            UClass* TrafficLightClass = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive_LHT.BP_TLOpenDrive_LHT_C"));
+            if (TrafficLightClass)
+            {
+                TrafficLightModel = TrafficLightClass;
+            }
+            else
+            {
+                UE_LOG(LogSimReadyCarlaWrapper, Error, TEXT("Failed to load traffic light model at '/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive_LHT.BP_TLOpenDrive_LHT_C'"));
+            }
+        }
+
         // Default traffic signs models
         UClass* StopClass = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Static/TrafficSign/BP_Stop.BP_Stop_C"));
         if (StopClass)
@@ -296,61 +326,109 @@ namespace SimReadyCarlaWrapper
             TrafficSignsModels.Add(carla::road::SignalType::StopSign().c_str(), StopClass);
             SignComponentModels.Add(carla::road::SignalType::StopSign().c_str(), UStopSignComponent::StaticClass());
         }
+        else
+        {
+            UE_LOG(LogSimReadyCarlaWrapper, Error, TEXT("Failed to load stop sign model at '/Game/Carla/Static/TrafficSign/BP_Stop.BP_Stop_C'"));
+        }
         UClass* YieldClass = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Static/TrafficSign/BP_Yield.BP_Yield_C"));
         if (YieldClass)
         {
             TrafficSignsModels.Add(carla::road::SignalType::YieldSign().c_str(), YieldClass);
             SignComponentModels.Add(carla::road::SignalType::YieldSign().c_str(), UYieldSignComponent::StaticClass());
         }
+        else
+        {
+            UE_LOG(LogSimReadyCarlaWrapper, Error, TEXT("Failed to load yield sign model at '/Game/Carla/Static/TrafficSign/BP_Yield.BP_Yield_C'"));
+        }
         UClass* SpeedLimit30Class = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit30.BP_SpeedLimit30_C"));
         if (SpeedLimit30Class)
         {
             SpeedLimitModels.Add("30", SpeedLimit30Class);
+        }
+        else
+        {
+            UE_LOG(LogSimReadyCarlaWrapper, Error, TEXT("Failed to load speed limit 30 sign model at '/Game/Carla/Static/TrafficSign/BP_SpeedLimit30.BP_SpeedLimit30_C'"));
         }
         UClass* SpeedLimit40Class = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit40.BP_SpeedLimit40_C"));
         if (SpeedLimit40Class)
         {
             SpeedLimitModels.Add("40", SpeedLimit40Class);
         }
+        else
+        {
+            UE_LOG(LogSimReadyCarlaWrapper, Error, TEXT("Failed to load speed limit 40 sign model at '/Game/Carla/Static/TrafficSign/BP_SpeedLimit40.BP_SpeedLimit40_C'"));
+        }
         UClass* SpeedLimit50Class = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit50.BP_SpeedLimit50_C"));
         if (SpeedLimit50Class)
         {
             SpeedLimitModels.Add("50", SpeedLimit50Class);
+        }
+        else
+        {
+            UE_LOG(LogSimReadyCarlaWrapper, Error, TEXT("Failed to load speed limit 50 sign model at '/Game/Carla/Static/TrafficSign/BP_SpeedLimit50.BP_SpeedLimit50_C'"));
         }
         UClass* SpeedLimit60Class = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit60.BP_SpeedLimit60_C"));
         if (SpeedLimit60Class)
         {
             SpeedLimitModels.Add("60", SpeedLimit60Class);
         }
+        else
+        {
+            UE_LOG(LogSimReadyCarlaWrapper, Error, TEXT("Failed to load speed limit 60 sign model at '/Game/Carla/Static/TrafficSign/BP_SpeedLimit60.BP_SpeedLimit60_C'"));
+        }
         UClass* SpeedLimit70Class = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit70.BP_SpeedLimit70_C"));
         if (SpeedLimit70Class)
         {
             SpeedLimitModels.Add("70", SpeedLimit70Class);
+        }
+        else
+        {
+            UE_LOG(LogSimReadyCarlaWrapper, Error, TEXT("Failed to load speed limit 70 sign model at '/Game/Carla/Static/TrafficSign/BP_SpeedLimit70.BP_SpeedLimit70_C'"));
         }
         UClass* SpeedLimit80Class = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit80.BP_SpeedLimit80_C"));
         if (SpeedLimit80Class)
         {
             SpeedLimitModels.Add("80", SpeedLimit80Class);
         }
+        else
+        {
+            UE_LOG(LogSimReadyCarlaWrapper, Error, TEXT("Failed to load speed limit 80 sign model at '/Game/Carla/Static/TrafficSign/BP_SpeedLimit80.BP_SpeedLimit80_C'"));
+        }
         UClass* SpeedLimit90Class = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit90.BP_SpeedLimit90_C"));
         if (SpeedLimit90Class)
         {
             SpeedLimitModels.Add("90", SpeedLimit90Class);
+        }
+        else
+        {
+            UE_LOG(LogSimReadyCarlaWrapper, Error, TEXT("Failed to load speed limit 90 sign model at '/Game/Carla/Static/TrafficSign/BP_SpeedLimit90.BP_SpeedLimit90_C'"));
         }
         UClass* SpeedLimit100Class = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit100.BP_SpeedLimit100_C"));
         if (SpeedLimit100Class)
         {
             SpeedLimitModels.Add("100", SpeedLimit100Class);
         }
+        else
+        {
+            UE_LOG(LogSimReadyCarlaWrapper, Error, TEXT("Failed to load speed limit 100 sign model at '/Game/Carla/Static/TrafficSign/BP_SpeedLimit100.BP_SpeedLimit100_C'"));
+        }
         UClass* SpeedLimit110Class = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit110.BP_SpeedLimit110_C"));
         if (SpeedLimit110Class)
         {
             SpeedLimitModels.Add("110", SpeedLimit110Class);
         }
+        else
+        {
+            UE_LOG(LogSimReadyCarlaWrapper, Error, TEXT("Failed to load speed limit 110 sign model at '/Game/Carla/Static/TrafficSign/BP_SpeedLimit110.BP_SpeedLimit110_C'"));
+        }
         UClass* SpeedLimit120Class = LoadClass<AActor>(nullptr, TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit120.BP_SpeedLimit120_C"));
         if (SpeedLimit120Class)
         {
             SpeedLimitModels.Add("120", SpeedLimit120Class);
+        }
+        else
+        {
+            UE_LOG(LogSimReadyCarlaWrapper, Error, TEXT("Failed to load speed limit 120 sign model at '/Game/Carla/Static/TrafficSign/BP_SpeedLimit120.BP_SpeedLimit120_C'"));
         }
 
         const auto& Signals = XodrMap->GetSignals();

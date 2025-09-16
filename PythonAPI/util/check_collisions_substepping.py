@@ -12,23 +12,13 @@ This script runs several scenarios involving collisions and check if they
 are deterministic for different simulation parameters.
 """
 
-import glob
 import os
-import sys
 import argparse
 import time
 import filecmp
 import shutil
 
 import numpy as np
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 

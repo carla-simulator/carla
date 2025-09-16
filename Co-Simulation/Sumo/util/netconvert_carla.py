@@ -18,27 +18,13 @@ import argparse
 import bisect
 import collections
 import logging
+import os
 import shutil
 import subprocess
+import sys
 import tempfile
 
 import lxml.etree as ET  # pylint: disable=import-error
-
-# ==================================================================================================
-# -- find carla module -----------------------------------------------------------------------------
-# ==================================================================================================
-
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(
-        glob.glob('../../../PythonAPI/carla/dist/carla-*%d.%d-%s.egg' %
-                  (sys.version_info.major, sys.version_info.minor,
-                   'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 # ==================================================================================================
 # -- find sumo modules -----------------------------------------------------------------------------

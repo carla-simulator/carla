@@ -7,24 +7,8 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-import glob
 import os
 import sys
-
-try:
-    carla_lib_name = 'carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64')
-    sys.path.append(glob.glob('../carla/dist/%s' % carla_lib_name)[0])
-except IndexError:
-    print('\n  [ERROR] Could not find "%s"' % carla_lib_name)
-    print('          Blueprint library docs will not be generated')
-    print("  .---------------------------------------------------.")
-    print("  |     Make sure the python client is compiled!      |")
-    print("  '---------------------------------------------------'\n")
-    # We don't provide an error to prvent Travis checks failing
-    sys.exit(0)
 
 import carla
 

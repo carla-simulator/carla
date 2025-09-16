@@ -25,7 +25,7 @@ launch: CarlaUE4Editor
 launch-only:
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --launch $(ARGS)
 
-package: PythonAPI
+package: PythonAPI.wheel
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildCarlaUE4.bat" --at-least-write-optionalmodules $(ARGS)
 	@"${CARLA_BUILD_TOOLS_FOLDER}/Package.bat" --ue-version 4.26 $(ARGS)
 
@@ -59,7 +59,10 @@ benchmark: LibCarla
 
 .PHONY: PythonAPI
 PythonAPI: LibCarla osm2odr
-	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --py3
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat"
+
+PythonAPI.wheel: LibCarla osm2odr
+	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.bat" --build-wheel
 
 server: setup
 	@"${CARLA_BUILD_TOOLS_FOLDER}/BuildLibCarla.bat" --server --generator "$(GENERATOR)"

@@ -261,6 +261,18 @@ const boost::optional<carla::road::Map>& ATrafficLightManager::GetMap()
   return UCarlaStatics::GetGameMode(GetWorld())->GetMap();
 }
 
+void ATrafficLightManager::AdjustAllSignsToHeightGround()
+{
+  for(ATrafficSignBase* TS : TrafficSigns)
+  {
+    TS->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+    FVector SpawnLocation = TS->GetActorLocation();
+    AdjustSignHeightToGround(SpawnLocation);
+    TS->SetActorLocation(SpawnLocation);
+    TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
+  }
+}
+
 void ATrafficLightManager::GenerateSignalsAndTrafficLights()
 {
   if(!TrafficLightsGenerated)
@@ -278,6 +290,13 @@ void ATrafficLightManager::GenerateSignalsAndTrafficLights()
     SpawnSignals();
 
     TrafficLightsGenerated = true;
+
+    // Get current map name
+    if (CurrentMapName.Contains(TEXT("Town15"), ESearchCase::IgnoreCase))
+    {
+      AdjustAllSignsToHeightGround();
+    }
+
   }
 }
 
@@ -589,7 +608,7 @@ void ATrafficLightManager::SpawnTrafficLights()
 
     UTrafficLightComponent *TrafficLightComponent = TrafficLight->GetTrafficLightComponent();
     TrafficLightComponent->SetSignId(SignalId.c_str());
-
+    IgnoredActorsForHeightAdjustment.Add(TrafficLight);
     if (ClosestWaypointToSignal)
     {
       auto SignalDistanceToRoad =
@@ -610,7 +629,6 @@ void ATrafficLightManager::SpawnTrafficLights()
         }
       }
     }
-
     RegisterLightComponentFromOpenDRIVE(TrafficLightComponent);
     TrafficLightComponent->InitializeSign(GetMap().get());
   }
@@ -621,6 +639,22 @@ void ATrafficLightManager::SpawnSignals()
   ACarlaGameModeBase *GM = UCarlaStatics::GetGameMode(GetWorld());
   check(GM);
 
+  for (TActorIterator<AActor> It(GetWorld()); It; ++It)
+  {
+      AActor* Actor = *It;
+      if (!Actor) continue;
+
+      TArray<UInstancedStaticMeshComponent*> ISMComps;
+      Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
+      for (UInstancedStaticMeshComponent* Comp : ISMComps)
+      {
+          if (Comp && Comp->GetWorld() == GetWorld())
+          {
+            IgnoredComponentsForHeightAdjustment.Add(Comp);
+          }
+      }
+  }
+
   const auto &Signals = GetMap()->GetSignals();
   for (auto& SignalPair : Signals)
   {
@@ -628,6 +662,7 @@ void ATrafficLightManager::SpawnSignals()
     FString SignalType = Signal->GetType().c_str();
 
     ATrafficSignBase * ClosestTrafficSign = GetClosestTrafficSignActor(*Signal.get(), GetWorld());
+    IgnoredActorsForHeightAdjustment.Add(ClosestTrafficSign);
     if (ClosestTrafficSign)
     {
       USignComponent *SignComponent;
@@ -677,6 +712,9 @@ void ATrafficLightManager::SpawnSignals()
           SpawnLocation,
           SpawnRotation,
           SpawnParams);
+
+
+      IgnoredActorsForHeightAdjustment.Add(TrafficSign);
 
       USignComponent *SignComponent =
           NewObject<USignComponent>(TrafficSign, SignComponentModels[SignalType]);
@@ -734,6 +772,8 @@ void ATrafficLightManager::SpawnSignals()
           SpawnLocation,
           SpawnRotation,
           SpawnParams);
+      IgnoredActorsForHeightAdjustment.Add(TrafficSign);
+
 
       USpeedLimitComponent *SignComponent =
           NewObject<USpeedLimitComponent>(TrafficSign);
@@ -767,6 +807,7 @@ void ATrafficLightManager::SpawnSignals()
           }
         }
       }
+
       TrafficSignComponents.Add(SignComponent->GetSignId(), SignComponent);
       TrafficSigns.Add(TrafficSign);
     }
@@ -861,5 +902,34 @@ void ATrafficLightManager::RemoveAttachedProps(TArray<AActor*> Actors) const
     Actor->GetAttachedActors(AttachedActors, true);
     RemoveAttachedProps(AttachedActors);
     Actor->Destroy();
+  }
+}
+
+bool ATrafficLightManager::AdjustSignHeightToGround(FVector& SpawnLocation) const
+{
+  const FVector Start = SpawnLocation + FVector(0, 0, 10.0f);
+  const FVector End = SpawnLocation - FVector(0, 0, 10000.0f);
+
+  FHitResult HitResult;
+  FCollisionQueryParams CollisionParams;
+  CollisionParams.bTraceComplex = true;
+  CollisionParams.bReturnPhysicalMaterial = false;
+  CollisionParams.AddIgnoredComponents(IgnoredComponentsForHeightAdjustment);
+  CollisionParams.AddIgnoredActors(IgnoredActorsForHeightAdjustment);
+
+  constexpr float ZOffsetSignToGround = 0.5f;
+  if (GetWorld()->LineTraceSingleByChannel(
+      HitResult,
+      Start,
+      End,
+      ECC_WorldStatic,
+      CollisionParams))
+  {
+    SpawnLocation.Z = HitResult.Location.Z + ZOffsetSignToGround;
+    return true;
+  }
+  else
+  {
+    return false;
   }
 }

@@ -1,17 +1,5 @@
 #!/usr/bin/env python3
 
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
 import argparse
 import multiprocessing as mp
 import logging
@@ -21,12 +9,8 @@ from typing import Dict, List, Sequence, Tuple
 from pathlib import Path
 import yaml
 import subprocess
-import time
 import numpy as np
 import cv2
-import glob
-import os
-import sys
 import carla
 from PIL import Image
 

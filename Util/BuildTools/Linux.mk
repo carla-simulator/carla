@@ -13,10 +13,10 @@ launch-only:
 import: CarlaUE4Editor PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Import.sh $(ARGS)
 
-package: CarlaUE4Editor PythonAPI
+package: CarlaUE4Editor PythonAPI.wheel
 	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
 
-package.rss: CarlaUE4Editor PythonAPI.rss.rebuild
+package.rss: CarlaUE4Editor PythonAPI.rss.wheel
 	@${CARLA_BUILD_TOOLS_FOLDER}/Package.sh $(ARGS)
 
 docs:
@@ -64,9 +64,6 @@ check.LibCarla.release: LibCarla.release
 check.PythonAPI: PythonAPI
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --python-api $(ARGS)
 
-check.PythonAPI.2: PythonAPI.2
-	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --python-api --python-version=2 $(ARGS)
-
 check.PythonAPI.3: PythonAPI.3
 	@${CARLA_BUILD_TOOLS_FOLDER}/Check.sh --python-api --python-version=3 $(ARGS)
 
@@ -91,17 +88,20 @@ CarlaUE4Editor: LibCarla.server.release osm2odr downloadplugins
 PythonAPI: LibCarla.client.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh $(ARGS)
 
-PythonAPI.2: LibCarla.client.release osm2odr
-	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --python-version=2
-
 PythonAPI.3: LibCarla.client.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --python-version=3
+
+PythonAPI.wheel: LibCarla.client.release osm2odr
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh $(ARGS) --build-wheel
 
 PythonAPI.rebuild: LibCarla.client.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild $(ARGS)
 
 PythonAPI.rss: LibCarla.client.rss.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rss $(ARGS)
+
+PythonAPI.rss.wheel: LibCarla.client.rss.release osm2odr
+	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rss --build-wheel $(ARGS)
 
 PythonAPI.rss.rebuild: LibCarla.client.rss.release osm2odr
 	@${CARLA_BUILD_TOOLS_FOLDER}/BuildPythonAPI.sh --rebuild --rss $(ARGS)

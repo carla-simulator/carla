@@ -7,7 +7,7 @@
 pyyaml==6.0.2
 numpy==2.2.6
 pygame==2.6.1
-pillow==11.3.0
+pillow
 matplotlib==3.10.3
 requests==2.32.0
 fastapi==0.115.0

@@ -21,19 +21,8 @@ not the case, the clients needs to take in account at each frame how many
 sensors are going to tick at each frame.
 """
 
-import glob
-import os
-import sys
 from queue import Queue
 from queue import Empty
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 
@@ -82,6 +71,14 @@ def main():
         cam01 = world.spawn_actor(cam_bp, carla.Transform())
         cam01.listen(lambda data: sensor_callback(data, sensor_queue, "camera01"))
         sensor_list.append(cam01)
+
+        cam02 = world.spawn_actor(cam_bp, carla.Transform())
+        cam02.listen(lambda data: sensor_callback(data, sensor_queue, "camera02"))
+        sensor_list.append(cam02)
+
+        cam03 = world.spawn_actor(cam_bp, carla.Transform())
+        cam03.listen(lambda data: sensor_callback(data, sensor_queue, "camera03"))
+        sensor_list.append(cam03)
 
         lidar_bp.set_attribute('points_per_second', '100000')
         lidar01 = world.spawn_actor(lidar_bp, carla.Transform())

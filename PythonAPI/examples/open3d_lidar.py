@@ -8,8 +8,6 @@
 
 """Open3D Lidar visualization example for CARLA"""
 
-import glob
-import os
 import sys
 import argparse
 import time
@@ -18,14 +16,6 @@ import random
 import numpy as np
 from matplotlib import cm
 import open3d as o3d
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 

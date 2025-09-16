@@ -134,13 +134,65 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 #endif // WITH_EDITOR
 }
 
+
+
+bool ALargeMapManager::AdjustSignHeightToGround(FVector& SpawnLocation, const FString& ActorName, const TArray<AActor*>& ActorsToIgnore) const
+{
+  const FVector Start = SpawnLocation + FVector(0, 0, 10.0f);
+  const FVector End = SpawnLocation - FVector(0, 0, 20000.0f);
+
+  FHitResult HitResult;
+  FCollisionQueryParams CollisionParams;
+  CollisionParams.bTraceComplex = true;
+  CollisionParams.bReturnPhysicalMaterial = false;
+  CollisionParams.AddIgnoredActors(ActorsToIgnore);
+
+  constexpr float ZOffsetSignToGround = 0.5f;
+  if (GetWorld()->LineTraceSingleByChannel(
+      HitResult,
+      Start,
+      End,
+      ECC_WorldStatic,
+      CollisionParams))
+  {
+    SpawnLocation.Z = HitResult.Location.Z + ZOffsetSignToGround;
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+void ALargeMapManager::AdjustAllSignsToHeightGround()
+{
+  TArray<AActor*> ActorsToIgnore;
+  TArray<AActor*> ActorsToAdjustHeight;
+  UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATrafficSignBase::StaticClass(), ActorsToAdjustHeight);
+  ActorsToIgnore.Append(ActorsToAdjustHeight);
+  for (AActor* Actor : ActorsToAdjustHeight)
+  {
+    ATrafficSignBase* TrafficSign = Cast<ATrafficSignBase>(Actor);
+    if (!IsValid(TrafficSign))
+      continue;
+    if (TrafficSign->bPositioned)
+      continue;
+    FVector SpawnLocation = Actor->GetActorLocation();
+    TrafficSign->bPositioned = AdjustSignHeightToGround(SpawnLocation, Actor->GetName(), ActorsToIgnore);
+
+    Actor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+    Actor->SetActorLocation(SpawnLocation);
+    Actor->GetRootComponent()->SetMobility(EComponentMobility::Static);
+  }
+}
+
 void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
-  LM_LOG(Warning, "OnLevelAddedToWorld");
+
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(InWorld);
   ATagger::TagActorsInLevel(*InLevel, *CarlaEpisode, true);
-
-
+  AdjustAllSignsToHeightGround();
+  LM_LOG(Warning, "OnLevelAddedToWorld");
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }
 
@@ -204,8 +256,8 @@ void ALargeMapManager::OnActorSpawned(
       // Wait until the pending levels changes are finished to avoid spawning
       // the car without ground underneath
       World->FlushLevelStreaming();
-
       IsHeroVehicle = true;
+      AdjustAllSignsToHeightGround();
     }
   }
 
@@ -998,6 +1050,11 @@ void ALargeMapManager::UpdateTileState(
       StreamingLevel->bShouldBlockOnLoad = InShouldBlockOnLoad;
       StreamingLevel->SetShouldBeLoaded(InShouldBeLoaded);
       StreamingLevel->SetShouldBeVisible(InShouldBeVisible);
+  }
+
+  if(InShouldBeLoaded)
+  {
+    AdjustAllSignsToHeightGround();
   }
 }
 

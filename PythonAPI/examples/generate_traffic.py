@@ -8,19 +8,6 @@
 
 """Example script to generate traffic in the simulation"""
 
-import glob
-import os
-import sys
-import time
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
 import carla
 
 from carla import VehicleLightState as vls
@@ -29,6 +16,8 @@ from carla.command import SpawnActor, SetAutopilot, FutureActor, DestroyActor
 import argparse
 import logging
 from numpy import random
+import time
+
 
 def get_actor_blueprints(world, filter, generation):
     bps = world.get_blueprint_library().filter(filter)

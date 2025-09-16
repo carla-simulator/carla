@@ -69,6 +69,10 @@ private:
 
   void RemoveAttachedProps(TArray<AActor*> Actors) const;
 
+  bool AdjustSignHeightToGround(FVector& SpawnLocation) const;
+
+  void AdjustAllSignsToHeightGround();
+  
   // Mapped references to ATrafficLightGroup (junction)
   UPROPERTY()
   TMap<int, ATrafficLightGroup *> TrafficGroups;
@@ -122,4 +126,11 @@ private:
   UPROPERTY()
   bool bTrafficLightsFrozen = false;
 
+  UPROPERTY()
+  TArray<UPrimitiveComponent*> IgnoredComponentsForHeightAdjustment;
+  UPROPERTY()
+  TArray<AActor*> IgnoredActorsForHeightAdjustment;
+
+  UPROPERTY()
+  FTimerHandle TimerHandle;
 };
