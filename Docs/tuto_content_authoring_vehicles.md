@@ -263,3 +263,8 @@ Click on the mesh in the component's panel:
 
 - In the *Steering Setup*, set the *Steering Type* to *Ackermann*
 - Modify the mass, chassis width and height according to reference
+
+### Add vehicle to blueprint library
+The new blueprint will not be added automatically to blueprint library, it's necessary to manually add the vehicle blueprint in the vehicle parameters file.
+- Find the vehicle parameters file in Unreal/CarlaUnreal/Content/Carla/Config/VehicleParameters.json
+- Add the new vehicle parameters to file
