@@ -113,7 +113,7 @@ carla_option (
 carla_option (
   ENABLE_ALL_WARNINGS
   "Whether to emit extra build warnings."
-  OFF
+  ON
 )
 
 carla_option (
