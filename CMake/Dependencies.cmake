@@ -21,7 +21,7 @@ macro (carla_git_dependency_add NAME TAG ARCHIVE_URL GIT_URL)
     GIT_SUBMODULES_RECURSE ON
     GIT_SHALLOW ON
     GIT_PROGRESS ON
-    OVERRIDE_FIND_PACKAGE
+    EXCLUDE_FROM_ALL SYSTEM OVERRIDE_FIND_PACKAGE
     ${ARGN}
   )
   list (APPEND CARLA_DEPENDENCIES_PENDING ${NAME})
@@ -32,7 +32,7 @@ macro (carla_download_dependency_add NAME TAG ARCHIVE_URL GIT_URL)
   FetchContent_Declare (
     ${NAME}
     URL ${ARCHIVE_URL}
-    OVERRIDE_FIND_PACKAGE
+    EXCLUDE_FROM_ALL SYSTEM OVERRIDE_FIND_PACKAGE
     ${ARGN}
   )
   list (APPEND CARLA_DEPENDENCIES_PENDING ${NAME})
@@ -68,8 +68,8 @@ string (REPLACE "." "" CARLA_SQLITE_TAG ${CARLA_SQLITE_VERSION})
 carla_message ("Downloading sqlite3...")
 FetchContent_Declare (
   sqlite3
-  URL https://www.sqlite.org/2024/sqlite-amalgamation-${CARLA_SQLITE_TAG}.zip
-  OVERRIDE_FIND_PACKAGE
+  URL https://www.sqlite.org/${CARLA_SQLITE_RELEASE_YEAR}/sqlite-amalgamation-${CARLA_SQLITE_TAG}.zip
+  SYSTEM OVERRIDE_FIND_PACKAGE EXCLUDE_FROM_ALL
 )
 FetchContent_MakeAvailable (sqlite3)
 
@@ -87,6 +87,8 @@ add_executable (
 if (LINUX)
   target_link_libraries (libsqlite3 PRIVATE ${CMAKE_DL_LIBS})
   target_link_libraries (libsqlite3 PRIVATE Threads::Threads)
+  find_library (STD_MATH_LIB m)
+  target_link_libraries (libsqlite3 PRIVATE ${STD_MATH_LIB})
 endif ()
 
 target_link_libraries (
@@ -99,24 +101,12 @@ target_link_libraries (
 # ==== ZLIB ====
 carla_dependency_option (ZLIB_BUILD_EXAMPLES OFF)
 carla_dependency_add (
-  zlib
+  ZLIB
   ${CARLA_ZLIB_TAG}
   https://github.com/madler/zlib/archive/refs/tags/${CARLA_ZLIB_TAG}.zip
   https://github.com/madler/zlib.git
 )
 carla_dependencies_make_available ()
-include_directories (
-  ${zlib_SOURCE_DIR}
-  ${zlib_BINARY_DIR}
-) # @TODO HACK
-
-if (WIN32)
-  carla_dependency_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zlibstatic${CARLA_DEBUG_AFFIX}.lib)
-else ()
-  carla_dependency_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/libz.a)
-endif ()
-carla_dependency_option (ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
-carla_dependency_option (ZLIB_LIBRARIES ${ZLIB_LIBRARY})
 
 
 
@@ -137,10 +127,6 @@ carla_dependency_add (
   https://github.com/pnggroup/libpng.git
 )
 carla_dependencies_make_available ()
-include_directories (
-  ${libpng_SOURCE_DIR}
-  ${libpng_BINARY_DIR}
-) # @TODO HACK
 
 
 
