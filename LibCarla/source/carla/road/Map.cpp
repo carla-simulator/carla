@@ -575,6 +575,62 @@ namespace road {
     return result;
   }
 
+  std::map<const carla::road::element::RoadInfoCrosswalk*,std::vector<geom::Location>> Map::GetAllCrosswalksInfo() const {
+    std::map<const carla::road::element::RoadInfoCrosswalk*,std::vector<geom::Location>> result;
+
+    for (const auto &pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      std::vector<const RoadInfoCrosswalk *> crosswalks = road.GetInfos<RoadInfoCrosswalk>();
+      if (crosswalks.size() > 0) {
+        for (auto crosswalk : crosswalks) {
+          std::vector<geom::Location> crosswalk_points;
+          // waypoint only at start position
+          std::vector<geom::Location> points;
+          Waypoint waypoint;
+          geom::Transform base;
+          for (const auto &section : road.GetLaneSectionsAt(crosswalk->GetS())) {
+            // get the section with the center lane
+            for (const auto &lane : section.GetLanes()) {
+              // is the center line
+              if (lane.first == 0) {
+                // get the center point
+                waypoint.road_id = pair.first;
+                waypoint.section_id = section.GetId();
+                waypoint.lane_id = 0;
+                waypoint.s = crosswalk->GetS();
+                base = ComputeTransform(waypoint);
+              }
+            }
+          }
+
+          // move perpendicular ('t')
+          geom::Transform pivot = base;
+          pivot.rotation.yaw -= 90;   // move perpendicular to 's' for the lateral offset
+          geom::Vector3D v(static_cast<float>(crosswalk->GetT()), 0.0f, 0.0f);
+          pivot.TransformPoint(v);
+          // restore pivot position and orientation with heading
+          pivot = base;
+          pivot.location = v;
+          pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
+
+          // calculate all the corners
+          for (auto corner : crosswalk->GetPoints()) {
+            geom::Vector3D v2(
+                static_cast<float>(corner.u),
+                static_cast<float>(-corner.v), // Unreal Hack
+                static_cast<float>(corner.z));
+            pivot.TransformPoint(v2);
+            crosswalk_points.push_back(v2);
+          }
+          result.insert(std::make_pair(crosswalk,crosswalk_points));
+        }
+      }
+    }
+
+    return result;
+  }
+
+
   // ===========================================================================
   // -- Map: Waypoint generation -----------------------------------------------
   // ===========================================================================

@@ -91,6 +91,11 @@ namespace road {
     /// when a location is repeated an area is finished
     std::vector<geom::Location> GetAllCrosswalkZones() const;
 
+    /// Returns a list of locations defining 2d areas,
+    /// when a location is repeated an area is finished
+    std::map<const carla::road::element::RoadInfoCrosswalk* ,
+               std::vector<geom::Location>> GetAllCrosswalksInfo() const;
+
     const std::unordered_map<RoadId, Road>& GetRoads() const {
       return _data.GetRoads();
     }
