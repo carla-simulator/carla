@@ -1,4 +1,4 @@
-// MapJsonExporter.h
+// UCosmosStaticExporter.h
 #pragma once
 
 #include "CoreMinimal.h"
@@ -15,11 +15,6 @@ class CARLA_API UCosmosStaticExporter : public UObject
 	GENERATED_BODY()
 public:
 
-	virtual FString GetObjectTypeName() const
-    {
-        return TEXT("object");
-    }
-
 	/**
 	 * Perform the export for this object type.
 	 * @param World        The world/context to query (may be null if your data source is external).
@@ -28,10 +23,19 @@ public:
 	 * @param OutError     On failure, set a human-readable reason.
 	 * @return             true on success.
 	 */
-    virtual	bool Export(class UWorld* World, const FString& SessionId, const FString& OutFilePath, FString& OutError)
-    {
-        OutError = FString::Printf(TEXT("Export not implemented for %s"), *GetObjectTypeName());
-        return false;
-    }
+	UFUNCTION(BlueprintCallable, Category = "Cosmos Static Exporter")
+    static bool ExportCosmosStaticExporter(class UWorld* World, const FString& SessionId, const FString& OutFilePath, FString& OutError);
 
+	static bool ParseSessionIdParts(const FString& In, FString& OutUuid, FString& OutStart, FString& OutEnd)
+	{
+		// Expect: uuid_start_end (all as strings)
+		int32 A = INDEX_NONE, B = INDEX_NONE;
+		if (!In.FindChar(TEXT('_'), A)) return false;
+		if (!In.FindLastChar(TEXT('_'), B)) return false;
+		if (A <= 0 || B <= A+1 || B >= In.Len()-1) return false;
+		OutUuid  = In.Left(A);
+		OutStart = In.Mid(A+1, B-(A+1));
+		OutEnd   = In.Mid(B+1);
+		return true;
+	}
 };
