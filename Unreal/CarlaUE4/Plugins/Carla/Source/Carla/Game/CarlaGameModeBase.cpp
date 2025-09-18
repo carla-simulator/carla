@@ -36,6 +36,9 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Carla/Cosmos/Exporter/CrosswalksExporter.h"
+#include "Carla/Cosmos/Exporter/RoadBoundaryExporter.h"
+#include "Carla/Cosmos/Exporter/LaneLineExporter.h"
+#include "Carla/Cosmos/Exporter/RoadMarkingExporter.h"
 #include "Carla/Cosmos/Exporter/CosmosStaticExporter.h"
 
 
@@ -170,14 +173,44 @@ void ACarlaGameModeBase::InitGame(
     SpawnRoadSplines();
   }
 
-  // Build the session ID
-  FString SessionId = UCosmosStaticExporter::GenerateSesionId(20000.0f);
-  FString Path = FPaths::ProjectDir() + SessionId + "/3d_crosswalks/crosswalks.json";
+  // Build the session ID - using fixed example session ID for testing
+  // FString SessionId = UCosmosStaticExporter::GenerateSesionId(20000.0f);
+  FString SessionId = TEXT("2d23a1f4-c269-46aa-8e7d-1bb595d1e421_2445376400000_2445396400000");
+
+  // Export crosswalks
+  FString CrosswalksPath = FPaths::ProjectDir() + SessionId + "/3d_crosswalks/" + SessionId + ".crosswalks.json";
   FString CosmosErrorMessage;
-  UCrosswalksExporter::ExportCosmosCrosswalk(World, SessionId, Path, CosmosErrorMessage);
+  UCrosswalksExporter::ExportCosmosCrosswalk(World, SessionId, CrosswalksPath, CosmosErrorMessage);
   if (!CosmosErrorMessage.IsEmpty())
   {
     UE_LOG(LogCarla, Error, TEXT("Failed to export crosswalks: %s"), *CosmosErrorMessage);
+  }
+
+  // Export road boundaries
+  FString RoadBoundariesPath = FPaths::ProjectDir() + SessionId + "/3d_road_boundaries/" + SessionId + ".road_boundaries.json";
+  FString RoadBoundariesErrorMessage;
+  URoadBoundaryExporter::ExportCosmosRoadBoundaries(World, SessionId, RoadBoundariesPath, RoadBoundariesErrorMessage);
+  if (!RoadBoundariesErrorMessage.IsEmpty())
+  {
+    UE_LOG(LogCarla, Error, TEXT("Failed to export road boundaries: %s"), *RoadBoundariesErrorMessage);
+  }
+
+  // Export lane lines
+  FString LaneLinesPath = FPaths::ProjectDir() + SessionId + "/3d_lanelines/" + SessionId + ".lanelines.json";
+  FString LaneLinesErrorMessage;
+  ULaneLineExporter::ExportCosmosLaneLines(World, SessionId, LaneLinesPath, LaneLinesErrorMessage);
+  if (!LaneLinesErrorMessage.IsEmpty())
+  {
+    UE_LOG(LogCarla, Error, TEXT("Failed to export lane lines: %s"), *LaneLinesErrorMessage);
+  }
+
+  // Export road markings
+  FString RoadMarkingsPath = FPaths::ProjectDir() + SessionId + "/3d_road_markings/" + SessionId + ".road_markings.json";
+  FString RoadMarkingsErrorMessage;
+  URoadMarkingExporter::ExportCosmosRoadMarkings(World, SessionId, RoadMarkingsPath, RoadMarkingsErrorMessage);
+  if (!RoadMarkingsErrorMessage.IsEmpty())
+  {
+    UE_LOG(LogCarla, Error, TEXT("Failed to export road markings: %s"), *RoadMarkingsErrorMessage);
   }
 }
 
