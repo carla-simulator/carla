@@ -44,11 +44,7 @@ class TestSensorTickTime(SyncSmokeTest):
       "sensor.camera.cosmos_visualization",
       "sensor.camera.rgb.wide_angle_lens",
       "sensor.camera.depth.wide_angle_lens",
-      "sensor.camera.depth.wide_angle_lens",
-      "sensor.camera.depth.wide_angle_lens",
       "sensor.camera.semantic_segmentation.wide_angle_lens",
-      "sensor.camera.semantic_segmentation.wide_angle_lens",
-      "sensor.camera.instance_segmentation.wide_angle_lens",
       "sensor.camera.instance_segmentation.wide_angle_lens"
     }
     spawned_sensors = []
