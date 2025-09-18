@@ -14,6 +14,24 @@ class CARLA_API UCosmosStaticExporter : public UObject
 {
 	GENERATED_BODY()
 public:
+	
+	static FString GenerateSesionId(float TimeElapsed)
+	{
+		// Generate a GUID with hyphens
+		FString Uuid = FGuid::NewGuid().ToString(EGuidFormats::DigitsWithHyphens);
+
+		// Example: current UTC time in seconds since epoch
+		FDateTime Now = FDateTime::UtcNow();
+		int64 UnixTime = Now.ToUnixTimestamp();           // seconds
+		int64 StartTs = UnixTime * 1000000;               // microseconds
+		int64 EndTs = StartTs + static_cast<int64>(TimeElapsed * 1000000); // microseconds
+
+		// Build the session ID
+		return FString::Printf(TEXT("%s_%lld_%lld"),
+			*Uuid,
+			StartTs,
+			EndTs);
+	}
 
 	/**
 	 * Perform the export for this object type.

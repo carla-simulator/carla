@@ -35,6 +35,8 @@
 
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Carla/Cosmos/Exporter/CrosswalksExporter.h"
+#include "Carla/Cosmos/Exporter/CosmosStaticExporter.h"
 
 
 namespace cr = carla::road;
@@ -166,6 +168,16 @@ void ACarlaGameModeBase::InitGame(
   {
     StoreSpawnPoints();
     SpawnRoadSplines();
+  }
+
+  // Build the session ID
+  FString SessionId = UCosmosStaticExporter::GenerateSesionId(20000.0f);
+  FString Path = FPaths::ProjectDir() + SessionId + "/3d_crosswalks/crosswalks.json";
+  FString CosmosErrorMessage;
+  UCrosswalksExporter::ExportCosmosCrosswalk(World, SessionId, Path, CosmosErrorMessage);
+  if (!CosmosErrorMessage.IsEmpty())
+  {
+    UE_LOG(LogCarla, Error, TEXT("Failed to export crosswalks: %s"), *CosmosErrorMessage);
   }
 }
 
