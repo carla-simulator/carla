@@ -22,16 +22,17 @@
 namespace carla {
 namespace multigpu {
 
-  static std::atomic_size_t SESSION_COUNTER{0u};
+  static std::atomic_size_t SESSION_COUNTER = 0;
 
   Primary::Primary(
       boost::asio::io_context &io_context,
       const time_duration timeout,
       Listener &server)
     : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(
-          std::string("tcp multigpu server session ") + std::to_string(SESSION_COUNTER)),
+          std::string("tcp multigpu server session ") + 
+          std::to_string(SESSION_COUNTER.load(std::memory_order::acquire))),
       _server(server),
-      _session_id(SESSION_COUNTER++),
+      _session_id(SESSION_COUNTER.fetch_add(1, std::memory_order::release) + 1),
       _socket(io_context),
       _timeout(timeout),
       _deadline(io_context),

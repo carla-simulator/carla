@@ -26,6 +26,7 @@
 #endif
 
 #include <functional>
+#include <atomic>
 #include <memory>
 
 namespace carla {
@@ -108,7 +109,7 @@ namespace tcp {
 
     callback_function_type _on_closed;
 
-    bool _is_writing = false;
+    std::atomic_bool _is_writing = false;
   };
 
 } // namespace tcp
