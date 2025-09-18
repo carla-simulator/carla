@@ -19,6 +19,14 @@
 #include <limits>
 #include <stack>
 
+static constexpr float DefaultKannalaBrandtCoefficients[] =
+{
+    0.08309221636708493f,
+    0.01112126630599195f,
+    0.008587261043925865f,
+    0.0008542188930970716f
+};
+
 /// Checks validity of FActorDefinition.
 class FActorDefinitionValidator
 {
@@ -681,14 +689,6 @@ FActorDefinition UActorBlueprintFunctionLibrary::MakeWideAngleLensCameraDefiniti
   check(Success);
   return Definition;
 }
-
-static constexpr float DefaultKannalaBrandtCoefficients[] =
-{
-    0.08309221636708493f,
-    0.01112126630599195f,
-    0.008587261043925865f,
-    0.0008542188930970716f
-};
 
 void UActorBlueprintFunctionLibrary::MakeWideAngleLensCameraDefinition(
     const FString& Id,
