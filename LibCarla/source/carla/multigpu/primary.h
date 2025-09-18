@@ -102,8 +102,6 @@ namespace multigpu {
 
     std::shared_ptr<BufferPool> _buffer_pool;
 
-    bool _is_writing = false;
-
   };
 
 } // namespace multigpu
