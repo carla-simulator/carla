@@ -109,7 +109,11 @@ namespace tcp {
 
     callback_function_type _on_closed;
 
+#ifndef __linux__
     std::atomic_bool _is_writing = false;
+#else
+    std::atomic_uint32_t _is_writing = 0;
+#endif
   };
 
 } // namespace tcp

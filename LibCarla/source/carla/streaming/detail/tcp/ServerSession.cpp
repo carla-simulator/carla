@@ -24,6 +24,17 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #pragma comment(lib, "Synchronization.lib")
+#elif defined(__linux__)
+#include <cstdint>
+#include <climits>
+#include <sys/syscall.h>
+#if __has_include(<sys/futex.h>)
+#include <sys/futex.h>
+#define HAS_FUTEX
+#elif __has_include(<linux/futex.h>)
+#include <linux/futex.h>
+#define HAS_FUTEX
+#endif
 #endif
 
 namespace carla {
@@ -109,10 +120,16 @@ namespace tcp {
               (SIZE_T)sizeof(_is_writing),
               INFINITE);
           }
-#elif defined(__linux__)
-          #error TODO: ADD FUTEX CALLS
+#elif defined(HAS_FUTEX)
+          while (true)
+          {
+            std::uint32_t expected = _is_writing.load(std::memory_order::acquire);
+            if (expected == 0)
+              break;
+            (void)syscall(SYS_futex, (uint32_t*)&_is_writing, FUTEX_WAIT, &expected, NULL, NULL, 0);
+          }
 #else
-          while (_is_writing) {
+          while (_is_writing.load(std::memory_order::acquire)) {
             std::this_thread::yield();
           }
 #endif
@@ -129,11 +146,11 @@ namespace tcp {
         size_t DEBUG_ONLY(bytes)) {
         _is_writing.store(false, std::memory_order::release);
 #ifdef HAS_ATOMIC_WAIT_NOTIFY
-          _is_writing.wait(std::memory_order::acquire);
+        _is_writing.wait(std::memory_order::acquire);
 #elif defined(_WIN32)
         WakeByAddressAll((PVOID)&_is_writing);
-#elif defined(__linux__)
-        #error TODO: ADD FUTEX CALLS
+#elif defined(HAS_FUTEX)
+        syscall(SYS_futex, (uint32_t*)&_is_writing, FUTEX_WAKE, INT_MAX, NULL, NULL, 0);
 #else
         // Do nothing
 #endif
