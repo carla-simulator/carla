@@ -147,11 +147,6 @@ public:
 
   TArrayView<USceneCaptureComponent2D_CARLA*> GetCaptureComponents2D();
 
-  /*
-  void SetSelectiveRenderingEnabled(bool Enable);
-  virtual bool IsSelectiveRenderingEnabled() const override;
-  */
-
 protected:
 
   UFUNCTION(BlueprintCallable, BlueprintPure)

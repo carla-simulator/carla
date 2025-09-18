@@ -388,18 +388,6 @@ void ASceneCaptureSensor_WideAngleLens::EnqueueRenderSceneImmediate()
     CaptureSceneExtended();
 }
 
-/*
-void ASceneCaptureSensor_WideAngleLens::SetSelectiveRenderingEnabled(bool Enable)
-{
-  bSelectiveRenderingEnabled = Enable;
-}
-
-bool ASceneCaptureSensor_WideAngleLens::IsSelectiveRenderingEnabled() const
-{
-  return bSelectiveRenderingEnabled;
-}
-*/
-
 uint8 ASceneCaptureSensor_WideAngleLens::FindFaceIndex(FVector2D UV) const
 {
     const float R = hypotf(UV.X, UV.Y);
