@@ -101,12 +101,24 @@ target_link_libraries (
 # ==== ZLIB ====
 carla_dependency_option (ZLIB_BUILD_EXAMPLES OFF)
 carla_dependency_add (
-  ZLIB
+  zlib
   ${CARLA_ZLIB_TAG}
   https://github.com/madler/zlib/archive/refs/tags/${CARLA_ZLIB_TAG}.zip
   https://github.com/madler/zlib.git
 )
 carla_dependencies_make_available ()
+include_directories (
+  ${zlib_SOURCE_DIR}
+  ${zlib_BINARY_DIR}
+) # @TODO HACK
+
+if (WIN32)
+  carla_dependency_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zlibstatic${CARLA_DEBUG_AFFIX}.lib)
+else ()
+  carla_dependency_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/libz.a)
+endif ()
+carla_dependency_option (ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
+carla_dependency_option (ZLIB_LIBRARIES ${ZLIB_LIBRARY})
 
 
 
@@ -127,6 +139,10 @@ carla_dependency_add (
   https://github.com/pnggroup/libpng.git
 )
 carla_dependencies_make_available ()
+include_directories (
+  ${libpng_SOURCE_DIR}
+  ${libpng_BINARY_DIR}
+) # @TODO HACK
 
 
 
