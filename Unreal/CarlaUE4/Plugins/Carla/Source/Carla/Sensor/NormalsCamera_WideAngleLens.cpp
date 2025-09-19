@@ -5,31 +5,28 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
-#include "Carla/Sensor/NormalsCamera.h"
+#include "Carla/Sensor/NormalsCamera_WideAngleLens.h"
 
 #include "Carla/Sensor/PixelReader.h"
 
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
 
-FActorDefinition ANormalsCamera::GetSensorDefinition()
+FActorDefinition ANormalsCamera_WideAngleLens::GetSensorDefinition()
 {
-  return UActorBlueprintFunctionLibrary::MakeCameraDefinition(
-    TEXT("normals"),
-    false);
+  return UActorBlueprintFunctionLibrary::MakeWideAngleLensCameraDefinition(TEXT("normals"));
 }
 
-ANormalsCamera::ANormalsCamera(const FObjectInitializer &ObjectInitializer)
+ANormalsCamera_WideAngleLens::ANormalsCamera_WideAngleLens(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
-  Enable16BitFormat(false);
   AddPostProcessingMaterial(
       TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
   AddPostProcessingMaterial(
       TEXT("Material'/Carla/PostProcessingMaterials/NormalsEffectMaterial.NormalsEffectMaterial'"));
 }
 
-void ANormalsCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
+void ANormalsCamera_WideAngleLens::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(ANormalsCamera::PostPhysTick);
-  FPixelReader::SendPixelsInRenderThread<ANormalsCamera, FColor>(*this);
+  TRACE_CPUPROFILER_EVENT_SCOPE(ANormalsCamera_WideAngleLens::PostPhysTick);
+  FPixelReader::SendPixelsInRenderThread<ANormalsCamera_WideAngleLens, FColor>(*this);
 }
