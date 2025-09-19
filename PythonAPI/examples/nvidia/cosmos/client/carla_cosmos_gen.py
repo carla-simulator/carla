@@ -316,8 +316,8 @@ def main():
         name = entry['sensor']
         sensor_name = f"sensor.camera.{name}"
         attributes = entry.get('attributes', {})
-        if ('camera_model' in attributes and name != 'depth') or 'fisheye' in entry:
-            sensor_name += '-wide_angle_lens'
+        if ('camera_model' in attributes and name != 'normals') or 'wide_angle_lens' in entry:
+            sensor_name += '.wide_angle_lens'
         bp = world.get_blueprint_library().find(sensor_name)
         for k,v in attributes.items(): bp.set_attribute(k,str(v))
         tf = entry.get('transform',{})
