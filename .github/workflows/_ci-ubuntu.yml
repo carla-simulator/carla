@@ -52,7 +52,7 @@ jobs:
       - name: Init conda
         run: |
           conda init bash
-          echo "source activate carla312" >> ~/.bashrc
+          echo "source activate carla310" >> ~/.bashrc
 
           cat <<'EOF' > ~/.bash_profile
           if [ -f ~/.bashrc ]; then
@@ -69,7 +69,7 @@ jobs:
 
       - name: Activate conda environment
         run: |
-          conda activate carla312
+          conda activate carla310
 
       - name: Preset
         run: |

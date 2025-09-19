@@ -15,8 +15,8 @@ jobs:
     name: Ubuntu PR
     uses: ./.github/workflows/_ci-ubuntu.yml
     with:
-      python-versions: "3.12"
-      smoke-test-python-versions: "3.12"
+      python-versions: "3.10"
+      smoke-test-python-versions: "3.10"
       additional-maps: false
       upload-package: false
       upload-replace-latest: false
