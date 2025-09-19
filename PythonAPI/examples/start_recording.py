@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -74,7 +74,8 @@ def main():
 
         count = args.number_of_vehicles
 
-        print("Recording on file: %s" % client.start_recorder(args.recorder_filename))
+        print("Recording on file: %s" % client.start_recorder(
+            name=args.recorder_filename))
 
         if args.safe:
             blueprints = [x for x in blueprints if int(x.get_attribute('number_of_wheels')) == 4]

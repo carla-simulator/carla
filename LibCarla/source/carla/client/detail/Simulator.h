@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -672,9 +672,11 @@ namespace detail {
       return _client.ShowRecorderActorsBlocked(std::move(name), min_time, min_distance);
     }
 
-    std::string ReplayFile(std::string name, double start, double duration,
-        uint32_t follow_id, bool replay_sensors, geom::Transform offset) {
-      return _client.ReplayFile(std::move(name), start, duration, follow_id, replay_sensors, offset);
+    std::string ReplayFile(
+      std::string name, double start, double duration,
+      uint32_t follow_id, bool replay_sensors, geom::Transform offset,
+      std::string map_override) {
+      return _client.ReplayFile(std::move(name), start, duration, follow_id, replay_sensors, offset, map_override);
     }
 
     void SetReplayerTimeFactor(double time_factor) {

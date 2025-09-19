@@ -1,0 +1,79 @@
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
+#include "/Engine/Public/Platform.ush"
+
+
+
+RWTexture2D<float4> Destination;
+Texture2D Source;
+SamplerState SourceSampler;
+float4 DestinationCameraParams;
+float4 SourceCameraParams;
+float InvGamma;
+
+
+
+#include "CameraModelCommon.ush"
+
+
+
+#ifndef WORK_PER_INVOCATION
+	#define WORK_PER_INVOCATION 1
+#endif
+
+
+
+void UndistortImage(uint2 Position, uint2 Shape)
+{
+	const float2 SourceFocalDistance = SourceCameraParams.xy;
+	const float2 SourceCenter = SourceCameraParams.zw;
+	
+	const float2 DestinationFocalDistance = DestinationCameraParams.xy;
+	const float2 DestinationCenter = DestinationCameraParams.zw;
+	
+	const float2 PixelUV = (float2(Position) - SourceCenter) / SourceFocalDistance;
+	const float R = length(PixelUV);
+	
+	const float Theta = ComputeAnglePerspective(R);
+	const float RDeformed = ComputeDistance(Theta);
+	
+	const float Scale = RDeformed / R;
+	const float2 DeformedPixelUV = PixelUV * Scale;
+	
+	const float2 UV =
+		(DestinationCenter + DestinationFocalDistance * DeformedPixelUV) /
+		float2(Shape.x, Shape.y);
+	
+	const float4 OutColor =
+		(UV.x >= 0.0F && UV.x <= 1.0F && UV.y >= 0.0F && UV.y <= 1.0F) ?
+		Source.SampleLevel(SourceSampler, UV, 0) :
+		float4(0, 0, 0, 1);
+	
+	Destination[Position] = OutColor;
+}
+
+
+
+[numthreads(
+	THREAD_GROUP_SIZE_X,
+	THREAD_GROUP_SIZE_Y,
+	THREAD_GROUP_SIZE_Z)]
+void MainCS(
+	in uint3 ThreadID : SV_DispatchThreadID)
+{
+	float Width, Height;
+	Destination.GetDimensions(Width, Height);
+
+	if (ThreadID.x >= uint(Width) || uint(ThreadID.y) >= Height)
+		return;
+
+	const uint Begin = min(ThreadID.x * WORK_PER_INVOCATION, Width);
+	const uint End = min(Begin + WORK_PER_INVOCATION, Width);
+
+	for (uint i = Begin; i < End; ++i)
+		UndistortImage(uint2(i, ThreadID.y), uint2(Width, Height));
+}

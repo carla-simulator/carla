@@ -5,6 +5,7 @@
 #include "Developer/Settings/Public/ISettingsSection.h"
 #include "Developer/Settings/Public/ISettingsContainer.h"
 #include "Settings/CarlaSettings.h"
+#include "Interfaces/IPluginManager.h"
 
 #define LOCTEXT_NAMESPACE "FCarlaModule"
 
@@ -13,8 +14,21 @@ DEFINE_LOG_CATEGORY(LogCarlaServer);
 
 void FCarlaModule::StartupModule()
 {
+	AddShaderSearchPaths();
 	RegisterSettings();
 	LoadChronoDll();
+}
+
+void FCarlaModule::AddShaderSearchPaths()
+{
+	FString PluginBaseDir = IPluginManager::Get().FindPlugin(TEXT("Carla"))->GetBaseDir();
+	UE_LOG(LogCarla, Log, TEXT("PluginBaseDir: %s"), *PluginBaseDir);
+	check(FPaths::DirectoryExists(PluginBaseDir));
+	FString ShadersDirectoryPath = FPaths::Combine(PluginBaseDir, TEXT("Shaders"));
+	UE_LOG(LogCarla, Log, TEXT("ShadersDirectoryPath: %s"), *ShadersDirectoryPath);
+	check(FPaths::DirectoryExists(ShadersDirectoryPath));
+	ShadersDirectoryPath = FPaths::ConvertRelativePathToFull(ShadersDirectoryPath);
+	AddShaderSourceDirectoryMapping("/Plugin/Carla", ShadersDirectoryPath);
 }
 
 void FCarlaModule::LoadChronoDll()
