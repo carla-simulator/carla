@@ -313,8 +313,13 @@ def main():
     vehicle = world.get_actor(args.camera)
     sensor_infos = []
     for entry in sensor_cfg:
-        bp = world.get_blueprint_library().find(f"sensor.camera.{entry['sensor']}")
-        for k,v in entry.get('attributes',{}).items(): bp.set_attribute(k,str(v))
+        name = entry['sensor']
+        sensor_name = f"sensor.camera.{name}"
+        attributes = entry.get('attributes', {})
+        if ('camera_model' in attributes and name != 'depth') or 'fisheye' in entry:
+            sensor_name += '-wide_angle_lens'
+        bp = world.get_blueprint_library().find(sensor_name)
+        for k,v in attributes.items(): bp.set_attribute(k,str(v))
         tf = entry.get('transform',{})
         transform = carla.Transform(
             carla.Location(**tf.get('location',{})),
