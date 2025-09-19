@@ -7,7 +7,7 @@
 #include "Serialization/JsonWriter.h"
 #include "Serialization/JsonSerializer.h"
 // libcarla (server-side OpenDRIVE)
-#include <carla/road/Map.h>
+
 #include "CrosswalksExporter.generated.h"
 
 UCLASS()
@@ -16,8 +16,6 @@ class CARLA_API UCrosswalksExporter : public UCosmosStaticExporter
 	GENERATED_BODY()
 
 public:
-
-  UFUNCTION(BlueprintCallable, Category = "Cosmos Static Exporter")
   static bool ExportCosmosCrosswalk(UWorld* World, const FString& SessionId, const FString& OutFilePath, FString& OutError);
 
 private:
@@ -42,6 +40,5 @@ private:
       const FString& OptionalFeatureVer,
       const FString& OptionalClipVerId);
 
-private:
-  const carla::road::Map* RoadMap = nullptr; // not required if you use GameMode->GetMap()
+
 };

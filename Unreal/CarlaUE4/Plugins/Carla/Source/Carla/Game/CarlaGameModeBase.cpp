@@ -36,10 +36,11 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Carla/Cosmos/Exporter/CrosswalksExporter.h"
+/*
 #include "Carla/Cosmos/Exporter/RoadBoundaryExporter.h"
 #include "Carla/Cosmos/Exporter/LaneLineExporter.h"
-#include "Carla/Cosmos/Exporter/RoadMarkingExporter.h"
 #include "Carla/Cosmos/Exporter/CosmosStaticExporter.h"
+*/
 
 
 namespace cr = carla::road;
@@ -186,6 +187,7 @@ void ACarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Failed to export crosswalks: %s"), *CosmosErrorMessage);
   }
 
+  /*
   // Export road boundaries
   FString RoadBoundariesPath = FPaths::ProjectDir() + SessionId + "/3d_road_boundaries/" + SessionId + ".road_boundaries.json";
   FString RoadBoundariesErrorMessage;
@@ -203,7 +205,6 @@ void ACarlaGameModeBase::InitGame(
   {
     UE_LOG(LogCarla, Error, TEXT("Failed to export lane lines: %s"), *LaneLinesErrorMessage);
   }
-
   // Export road markings
   FString RoadMarkingsPath = FPaths::ProjectDir() + SessionId + "/3d_road_markings/" + SessionId + ".road_markings.json";
   FString RoadMarkingsErrorMessage;
@@ -212,6 +213,7 @@ void ACarlaGameModeBase::InitGame(
   {
     UE_LOG(LogCarla, Error, TEXT("Failed to export road markings: %s"), *RoadMarkingsErrorMessage);
   }
+  */
 }
 
 void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)

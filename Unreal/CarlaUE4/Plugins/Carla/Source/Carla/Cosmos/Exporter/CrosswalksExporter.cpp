@@ -7,26 +7,13 @@
 #include "Misc/FileHelper.h"
 #include "Serialization/JsonWriter.h"
 #include "Serialization/JsonSerializer.h"
-#include "Misc/Crc.h"
 
 // libcarla
+#include <compiler/disable-ue4-macros.h>
+#include <carla/road/Map.h>
 #include <carla/geom/Location.h>
 #include <carla/road/element/RoadInfoCrosswalk.h>
-
-#include "CrosswalksExporter.h"
-#include "Carla/Game/CarlaGameModeBase.h"
-#include "Carla/Game/CarlaStatics.h"
-
-#include "Misc/Paths.h"
-#include "Misc/FileHelper.h"
-#include "Serialization/JsonWriter.h"
-#include "Serialization/JsonSerializer.h"
-#include "Misc/Crc.h"
-
-// libcarla
-#include <carla/geom/Location.h>
-#include <carla/road/element/RoadInfoCrosswalk.h>
-
+#include <compiler/enable-ue4-macros.h>
 // --------------------- helpers ---------------------
 
 bool UCrosswalksExporter::ParseSessionIdParts(const FString& In, FString& OutUuid, FString& OutStart, FString& OutEnd)

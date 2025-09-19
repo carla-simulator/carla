@@ -130,6 +130,7 @@ void ATagger::TagActor(const AActor &Actor, bool bTagForSemanticSegmentation, ui
       Label = crp::CityObjectLabel::Rider;
     }
     SetStencilValue(*Component, Label, bTagForSemanticSegmentation);
+    Component->ComponentTags.Add(FName(*GetTagAsString(Label)));
 #ifdef CARLA_TAGGER_EXTRA_LOG
     UE_LOG(LogCarla, Log, TEXT("  + StaticMeshComponent: %s"), *Component->GetName());
     UE_LOG(LogCarla, Log, TEXT("    - Label: \"%s\""), *GetTagAsString(Label));
