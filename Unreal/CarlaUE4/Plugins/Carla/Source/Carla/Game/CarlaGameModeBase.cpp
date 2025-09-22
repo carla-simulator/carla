@@ -36,9 +36,12 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Carla/Cosmos/Exporter/CrosswalksExporter.h"
-/*
 #include "Carla/Cosmos/Exporter/RoadBoundaryExporter.h"
 #include "Carla/Cosmos/Exporter/LaneLineExporter.h"
+#include "Carla/Cosmos/Exporter/TrafficSignsExporter.h"
+#include "Carla/Cosmos/Exporter/WaitLinesExporter.h"
+#include "Carla/Cosmos/Exporter/RoadMarkingExporter.h"
+/*
 #include "Carla/Cosmos/Exporter/CosmosStaticExporter.h"
 */
 
@@ -187,7 +190,6 @@ void ACarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Failed to export crosswalks: %s"), *CosmosErrorMessage);
   }
 
-  /*
   // Export road boundaries
   FString RoadBoundariesPath = FPaths::ProjectDir() + SessionId + "/3d_road_boundaries/" + SessionId + ".road_boundaries.json";
   FString RoadBoundariesErrorMessage;
@@ -205,6 +207,25 @@ void ACarlaGameModeBase::InitGame(
   {
     UE_LOG(LogCarla, Error, TEXT("Failed to export lane lines: %s"), *LaneLinesErrorMessage);
   }
+
+  // Export traffic signs (exports to both 3d_poles and 3d_traffic_lights subdirectories)
+  FString TrafficSignsBasePath = FPaths::ProjectDir() + SessionId + "/";
+  FString TrafficSignsErrorMessage;
+  UTrafficSignsExporter::ExportCosmosTrafficSigns(World, SessionId, TrafficSignsBasePath, TrafficSignsErrorMessage);
+  if (!TrafficSignsErrorMessage.IsEmpty())
+  {
+    UE_LOG(LogCarla, Error, TEXT("Failed to export traffic signs: %s"), *TrafficSignsErrorMessage);
+  }
+
+  // Export wait lines
+  FString WaitLinesPath = FPaths::ProjectDir() + SessionId + "/3d_wait_lines/" + SessionId + ".wait_lines.json";
+  FString WaitLinesErrorMessage;
+  UWaitLinesExporter::ExportCosmosWaitLines(World, SessionId, WaitLinesPath, WaitLinesErrorMessage);
+  if (!WaitLinesErrorMessage.IsEmpty())
+  {
+    UE_LOG(LogCarla, Error, TEXT("Failed to export wait lines: %s"), *WaitLinesErrorMessage);
+  }
+
   // Export road markings
   FString RoadMarkingsPath = FPaths::ProjectDir() + SessionId + "/3d_road_markings/" + SessionId + ".road_markings.json";
   FString RoadMarkingsErrorMessage;
@@ -213,7 +234,6 @@ void ACarlaGameModeBase::InitGame(
   {
     UE_LOG(LogCarla, Error, TEXT("Failed to export road markings: %s"), *RoadMarkingsErrorMessage);
   }
-  */
 }
 
 void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
