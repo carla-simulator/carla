@@ -1,412 +1,358 @@
-// TrafficPolesExporter.cpp
+// TrafficSignsExporter.cpp
+#include "TrafficSignsExporter.h"
+#include "Carla/Game/Tagger.h"
 
-#include "Carla/Cosmos/Exporter/TrafficSignsExporter.h"
-#include "Carla/Traffic/TrafficSignBase.h"
-
-// UE
 #include "Kismet/GameplayStatics.h"
 #include "Components/StaticMeshComponent.h"
 #include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
 #include "Serialization/JsonWriter.h"
 #include "Serialization/JsonSerializer.h"
-// CARLA
+#include "Misc/Crc.h"
 
+// --------------------- helpers ---------------------
 
-FString UTrafficSignsExporter::MakeStableLabelId(const FString& Uuid, const FVector& P0M, const FVector& P1M)
+bool UTrafficSignsExporter::ParseSessionIdParts(const FString& In, FString& OutUuid, FString& OutStart, FString& OutEnd)
 {
-	struct { float x0,y0,z0,x1,y1,z1; } S{ P0M.X, P0M.Y, P0M.Z, P1M.X, P1M.Y, P1M.Z };
-	uint32 Crc = FCrc::MemCrc32(&S, sizeof(S));
-	FString Hex = FString::Printf(TEXT("%08x-%04x-%04x-%04x-%012x"),
-		(Crc) & 0xFFFFFFFFu,
-		(Crc >> 16) & 0xFFFFu,
-		(Crc ^ 0xA5A5) & 0xFFFFu,
-		(Crc ^ 0x5A5A) & 0xFFFFu,
-		(Crc * 2654435761u) & 0xFFFFFFFFFFFFu);
-	return FString::Printf(TEXT("mads:000:%s:000000"), *Hex);
+  int32 A = INDEX_NONE, B = INDEX_NONE;
+  if (!In.FindChar(TEXT('_'), A)) return false;
+  if (!In.FindLastChar(TEXT('_'), B)) return false;
+  if (A <= 0 || B <= A+1 || B >= In.Len()-1) return false;
+  OutUuid  = In.Left(A);
+  OutStart = In.Mid(A+1, B-(A+1));
+  OutEnd   = In.Mid(B+1);
+  return true;
 }
-
-// --------------------- Poles (unchanged) ---------------------
 
 void UTrafficSignsExporter::BuildPolePolylineMeters(const UStaticMeshComponent* C, FVector& OutTopM, FVector& OutBaseM)
 {
-	FVector Origin, Extent;
-	C->GetLocalBounds(Origin, Extent);
+  // Get component bounds (same as CosmosControlSensor)
+  FBoxSphereBounds Bounds = C->CalcBounds(C->GetComponentTransform());
 
-	const FTransform& T = C->GetComponentTransform();
-	const FVector UpWS = T.GetUnitAxis(EAxis::Z);
-	const FVector CenterWS = T.TransformPosition(Origin);
-	const float HalfHeightWS = T.GetScale3D().Z * Extent.Z;
+  // Calculate pole height similar to CosmosControlSensor logic
+  float HalfHeight = Bounds.BoxExtent.Z;
+  float DistanceToRoad = C->GetComponentLocation().Z;
+  FVector ComponentLocation = C->GetComponentLocation();
 
-	const FVector TopWS  = CenterWS + UpWS * HalfHeightWS;
-	const FVector BaseWS = CenterWS - UpWS * HalfHeightWS;
+  // Top point: mesh center + half_height (same as CosmosControlSensor capsule center)
+  FVector TopWS = ComponentLocation + FVector(0.0f, 0.0f, HalfHeight);
 
-	OutTopM  = TopWS  / 100.0f;
-	OutBaseM = BaseWS / 100.0f;
+  // Base point: calculate based on CosmosControlSensor capsule logic
+  // The capsule extends down by (half_height + distance_adjustment) from the top point
+  float DistanceAdjustment = (DistanceToRoad > 250.0f ? 0.0f : DistanceToRoad);
+  FVector BaseWS = TopWS - FVector(0.0f, 0.0f, HalfHeight + DistanceAdjustment);
+
+  // Convert to meters
+  OutTopM = TopWS / 100.0f;
+  OutBaseM = BaseWS / 100.0f;
 }
 
-FString UTrafficSignsExporter::ClassifyPoleType(const UStaticMeshComponent* C)
+void UTrafficSignsExporter::BuildComponentCuboidMeters(const UStaticMeshComponent* C, TArray<FVector>& Out8VertsMeters)
 {
-	const TArray<FName>& Tags = C->ComponentTags;
-	if (Tags.Contains("sign"))  return TEXT("SIGN");
-	if (Tags.Contains("light")) return TEXT("SENTRY");
-	if (Tags.Contains("tree"))  return TEXT("TREE");
-	return TEXT("SENTRY");
+  FVector Origin, Extent;
+  C->GetLocalBounds(Origin, Extent);
+
+  const FTransform& T = C->GetComponentTransform();
+
+  // 8 corners of the bounding box in local space
+  TArray<FVector> LocalCorners = {
+    Origin + FVector(+Extent.X, +Extent.Y, +Extent.Z),
+    Origin + FVector(-Extent.X, +Extent.Y, +Extent.Z),
+    Origin + FVector(-Extent.X, -Extent.Y, +Extent.Z),
+    Origin + FVector(+Extent.X, -Extent.Y, +Extent.Z),
+    Origin + FVector(+Extent.X, +Extent.Y, -Extent.Z),
+    Origin + FVector(-Extent.X, +Extent.Y, -Extent.Z),
+    Origin + FVector(-Extent.X, -Extent.Y, -Extent.Z),
+    Origin + FVector(+Extent.X, -Extent.Y, -Extent.Z)
+  };
+
+  Out8VertsMeters.Empty(8);
+  for (const FVector& LocalCorner : LocalCorners)
+  {
+    FVector WorldCorner = T.TransformPosition(LocalCorner);
+    Out8VertsMeters.Add(WorldCorner / 100.0f); // Convert cm to meters
+  }
 }
 
-void UTrafficSignsExporter::AppendPoleLabelJson(
-	TArray<TSharedPtr<FJsonValue>>& Labels,
-	const FString& Uuid,
-	const FString& StartTs,
-	const FVector& TopM,
-	const FVector& BaseM,
-	const FString& PoleTypeText)
+void UTrafficSignsExporter::AppendPoleLabel(
+    TArray<TSharedPtr<FJsonValue>>& Labels,
+    const FString& StartTs,
+    const FVector& TopM,
+    const FVector& BaseM)
 {
-	TSharedRef<FJsonObject> Label = MakeShared<FJsonObject>();
-	Label->SetStringField(TEXT("labelFamily"), TEXT("SHAPE3D"));
+  TSharedRef<FJsonObject> Label = MakeShared<FJsonObject>();
 
-	// assetRef
-	{
-		TSharedRef<FJsonObject> AssetRef = MakeShared<FJsonObject>();
-		AssetRef->SetStringField(TEXT("sessionId"), Uuid);
-		AssetRef->SetStringField(TEXT("sensorName"), TEXT("lidar_gt_top_p128"));
-		TSharedRef<FJsonObject> FramesObj = MakeShared<FJsonObject>();
-		TArray<TSharedPtr<FJsonValue>> Frames; Frames.Add(MakeShared<FJsonValueNumber>(0));
-		FramesObj->SetArrayField(TEXT("frames"), Frames);
-		AssetRef->SetObjectField(TEXT("frames"), FramesObj);
-		Label->SetObjectField(TEXT("assetRef"), AssetRef);
-	}
+  // labelData.shape3d.polyline3d
+  TSharedRef<FJsonObject> LabelData = MakeShared<FJsonObject>();
+  {
+    TSharedRef<FJsonObject> Shape3D = MakeShared<FJsonObject>();
+    Shape3D->SetStringField(TEXT("unit"), TEXT("METRIC"));
 
-	// labelClassKey
-	{
-		TSharedRef<FJsonObject> ClassKey = MakeShared<FJsonObject>();
-		ClassKey->SetStringField(TEXT("labelClassNamespace"), TEXT("minimap"));
-		ClassKey->SetStringField(TEXT("labelClassIdentifier"), TEXT("poles:autolabels"));
-		ClassKey->SetStringField(TEXT("labelClassVersion"), TEXT("v0"));
-		Label->SetObjectField(TEXT("labelClassKey"), ClassKey);
-	}
+    TSharedRef<FJsonObject> Polyline3D = MakeShared<FJsonObject>();
+    TArray<TSharedPtr<FJsonValue>> VertArray;
 
-	Label->SetStringField(TEXT("labelId"), MakeStableLabelId(Uuid, TopM, BaseM));
+    // Add top vertex
+    TArray<TSharedPtr<FJsonValue>> TopTriple;
+    TopTriple.Add(MakeShared<FJsonValueNumber>(TopM.X));
+    TopTriple.Add(MakeShared<FJsonValueNumber>(TopM.Y));
+    TopTriple.Add(MakeShared<FJsonValueNumber>(TopM.Z));
+    VertArray.Add(MakeShared<FJsonValueArray>(TopTriple));
 
-	// labelData.shape3d
-	TSharedRef<FJsonObject> LabelData = MakeShared<FJsonObject>();
-	{
-		TSharedRef<FJsonObject> Shape3D = MakeShared<FJsonObject>();
+    // Add base vertex
+    TArray<TSharedPtr<FJsonValue>> BaseTriple;
+    BaseTriple.Add(MakeShared<FJsonValueNumber>(BaseM.X));
+    BaseTriple.Add(MakeShared<FJsonValueNumber>(BaseM.Y));
+    BaseTriple.Add(MakeShared<FJsonValueNumber>(BaseM.Z));
+    VertArray.Add(MakeShared<FJsonValueArray>(BaseTriple));
 
-		// attributes
-		{
-			TArray<TSharedPtr<FJsonValue>> Attrs;
-			auto AddAttrText = [&](const TCHAR* Name, const FString& Text)
-			{
-				TSharedRef<FJsonObject> A = MakeShared<FJsonObject>();
-				A->SetStringField(TEXT("name"), Name);
-				A->SetStringField(TEXT("text"), Text);
-				Attrs.Add(MakeShared<FJsonValueObject>(A));
-			};
+    Polyline3D->SetArrayField(TEXT("vertices"), VertArray);
+    Shape3D->SetObjectField(TEXT("polyline3d"), Polyline3D);
+    LabelData->SetObjectField(TEXT("shape3d"), Shape3D);
+  }
+  Label->SetObjectField(TEXT("labelData"), LabelData);
+  Label->SetStringField(TEXT("timestampMicroseconds"), StartTs);
 
-			AddAttrText(TEXT("coordinate_frame"), TEXT("rig"));
-			AddAttrText(TEXT("timestamp"),        StartTs);
-			AddAttrText(TEXT("asset_ref"),        TEXT(""));
-			AddAttrText(TEXT("feature_id"),       TEXT(""));
-			AddAttrText(TEXT("feature_version"),  TEXT(""));
-			AddAttrText(TEXT("clip_version_id"),  TEXT(""));
-
-			// label_name enum
-			{
-				TSharedRef<FJsonObject> A = MakeShared<FJsonObject>();
-				A->SetStringField(TEXT("name"), TEXT("label_name"));
-				A->SetStringField(TEXT("enum"), TEXT("pole"));
-				Attrs.Add(MakeShared<FJsonValueObject>(A));
-			}
-
-			AddAttrText(TEXT("pole_type"), PoleTypeText);
-
-			Shape3D->SetArrayField(TEXT("attributes"), Attrs);
-		}
-
-		Shape3D->SetStringField(TEXT("unit"), TEXT("METRIC"));
-
-		// polyline3d.vertices : [Top, Base]
-		{
-			TSharedRef<FJsonObject> Polyline = MakeShared<FJsonObject>();
-			TArray<TSharedPtr<FJsonValue>> Verts;
-
-			auto AddTriple = [&](const FVector& V)
-			{
-				TArray<TSharedPtr<FJsonValue>> Tpl;
-				Tpl.Add(MakeShared<FJsonValueNumber>(V.X));
-				Tpl.Add(MakeShared<FJsonValueNumber>(V.Y));
-				Tpl.Add(MakeShared<FJsonValueNumber>(V.Z));
-				Verts.Add(MakeShared<FJsonValueArray>(Tpl));
-			};
-
-			AddTriple(TopM);
-			AddTriple(BaseM);
-
-			Polyline->SetArrayField(TEXT("vertices"), Verts);
-			Shape3D->SetObjectField(TEXT("polyline3d"), Polyline);
-		}
-
-		LabelData->SetObjectField(TEXT("shape3d"), Shape3D);
-	}
-	Label->SetObjectField(TEXT("labelData"), LabelData);
-	Label->SetStringField(TEXT("timestampMicroseconds"), StartTs);
-
-	Labels.Add(MakeShared<FJsonValueObject>(Label));
+  Labels.Add(MakeShared<FJsonValueObject>(Label));
 }
+
+void UTrafficSignsExporter::AppendTrafficSignLabel(
+    TArray<TSharedPtr<FJsonValue>>& Labels,
+    const FString& StartTs,
+    const TArray<FVector>& V8Meters)
+{
+  TSharedRef<FJsonObject> Label = MakeShared<FJsonObject>();
+
+  // labelData.shape3d.cuboid3d
+  TSharedRef<FJsonObject> LabelData = MakeShared<FJsonObject>();
+  {
+    TSharedRef<FJsonObject> Shape3D = MakeShared<FJsonObject>();
+    Shape3D->SetStringField(TEXT("unit"), TEXT("METRIC"));
+
+    TSharedRef<FJsonObject> Cuboid3D = MakeShared<FJsonObject>();
+    TArray<TSharedPtr<FJsonValue>> VertArray;
+    VertArray.Reserve(8);
+
+    for (const FVector& V : V8Meters)
+    {
+      TArray<TSharedPtr<FJsonValue>> Triple;
+      Triple.Add(MakeShared<FJsonValueNumber>(V.X));
+      Triple.Add(MakeShared<FJsonValueNumber>(V.Y));
+      Triple.Add(MakeShared<FJsonValueNumber>(V.Z));
+      VertArray.Add(MakeShared<FJsonValueArray>(Triple));
+    }
+
+    Cuboid3D->SetArrayField(TEXT("vertices"), VertArray);
+    Shape3D->SetObjectField(TEXT("cuboid3d"), Cuboid3D);
+    LabelData->SetObjectField(TEXT("shape3d"), Shape3D);
+  }
+  Label->SetObjectField(TEXT("labelData"), LabelData);
+  Label->SetStringField(TEXT("timestampMicroseconds"), StartTs);
+
+  Labels.Add(MakeShared<FJsonValueObject>(Label));
+}
+
+void UTrafficSignsExporter::AppendTrafficLightLabel(
+    TArray<TSharedPtr<FJsonValue>>& Labels,
+    const FString& StartTs,
+    const TArray<FVector>& V8Meters)
+{
+  TSharedRef<FJsonObject> Label = MakeShared<FJsonObject>();
+
+  // labelData.shape3d.cuboid3d (same as traffic signs)
+  TSharedRef<FJsonObject> LabelData = MakeShared<FJsonObject>();
+  {
+    TSharedRef<FJsonObject> Shape3D = MakeShared<FJsonObject>();
+    Shape3D->SetStringField(TEXT("unit"), TEXT("METRIC"));
+
+    TSharedRef<FJsonObject> Cuboid3D = MakeShared<FJsonObject>();
+    TArray<TSharedPtr<FJsonValue>> VertArray;
+    VertArray.Reserve(8);
+
+    for (const FVector& V : V8Meters)
+    {
+      TArray<TSharedPtr<FJsonValue>> Triple;
+      Triple.Add(MakeShared<FJsonValueNumber>(V.X));
+      Triple.Add(MakeShared<FJsonValueNumber>(V.Y));
+      Triple.Add(MakeShared<FJsonValueNumber>(V.Z));
+      VertArray.Add(MakeShared<FJsonValueArray>(Triple));
+    }
+
+    Cuboid3D->SetArrayField(TEXT("vertices"), VertArray);
+    Shape3D->SetObjectField(TEXT("cuboid3d"), Cuboid3D);
+    LabelData->SetObjectField(TEXT("shape3d"), Shape3D);
+  }
+  Label->SetObjectField(TEXT("labelData"), LabelData);
+  Label->SetStringField(TEXT("timestampMicroseconds"), StartTs);
+
+  Labels.Add(MakeShared<FJsonValueObject>(Label));
+}
+
+// --------------------- main export ---------------------
 
 bool UTrafficSignsExporter::ExportCosmosTrafficSigns(UWorld* World, const FString& SessionId, const FString& OutFilePath, FString& OutError)
 {
-	OutError.Reset();
-
-	FString Uuid, StartTs, EndTs;
-	if (!UCosmosStaticExporter::ParseSessionIdParts(SessionId, Uuid, StartTs, EndTs))
-	{
-		OutError = FString::Printf(TEXT("SessionId '%s' is not 'uuid_start_end'"), *SessionId);
-		return false;
-	}
-  bool bAllOk = true;
-
-	TArray<UStaticMeshComponent*> PoleComps;
-	TArray<UStaticMeshComponent*> LightComps;
-	TArray<UStaticMeshComponent*> SignComps;
-
-	TArray<AActor*> TrafficSignsActors;
-	UGameplayStatics::GetAllActorsOfClass(World, ATrafficSignBase::StaticClass(), TrafficSignsActors);
-	for (AActor* Actor : TrafficSignsActors)
-	{
-		TArray<UStaticMeshComponent*> Comps;
-		Actor->GetComponents<UStaticMeshComponent>(Comps);
-		for (UStaticMeshComponent* C : Comps)
-		{
-			if (C->ComponentTags.Contains("Pole"))
-			{
-				PoleComps.Add(C);
-			}
-			else if (C->ComponentTags.Contains("TrafficLight"))
-			{
-				LightComps.Add(C);
-			}
-			else if (C->ComponentTags.Contains("TrafficSign"))
-			{
-				SignComps.Add(C);
-			}
-		}
-	}
+  FString Uuid, StartTs, EndTs;
+  if (!ParseSessionIdParts(SessionId, Uuid, StartTs, EndTs))
   {
-    // Poles
-    FString OutPolesPath = OutFilePath + "3d_poles/" + SessionId + ".json";
-    TSharedRef<FJsonObject> Root = MakeShared<FJsonObject>();
-    TArray<TSharedPtr<FJsonValue>> Labels;
+    OutError = FString::Printf(TEXT("SessionId '%s' is not 'uuid_start_end'"), *SessionId);
+    return false;
+  }
 
-    for (UStaticMeshComponent* C : PoleComps)
+  // Three separate arrays for each type
+  TArray<TSharedPtr<FJsonValue>> PolesLabels;
+  TArray<TSharedPtr<FJsonValue>> TrafficSignsLabels;
+  TArray<TSharedPtr<FJsonValue>> TrafficLightsLabels;
+
+  // Scan all mesh components with tags (same approach as CosmosControlSensor)
+  TArray<UObject*> AllMeshComponents;
+  GetObjectsOfClass(UMeshComponent::StaticClass(), AllMeshComponents, true, EObjectFlags::RF_ClassDefaultObject, EInternalObjectFlags::AllFlags);
+
+  UE_LOG(LogCarla, Warning, TEXT("TrafficSignsExporter: Found %d total mesh components"), AllMeshComponents.Num());
+
+  int32 VisibleComponents = 0;
+  int32 ComponentsWithOwner = 0;
+  int32 FilteredComponents = 0;
+  int32 StaticMeshComponents = 0;
+  int32 PolesFound = 0;
+  int32 TrafficSignsFound = 0;
+  int32 TrafficLightsFound = 0;
+  int32 TaggedComponents = 0;
+
+  for (UObject* Obj : AllMeshComponents)
+  {
+    UMeshComponent* MeshComp = Cast<UMeshComponent>(Obj);
+    if (!MeshComp) continue;
+
+    if (!MeshComp->IsVisible()) continue;
+    VisibleComponents++;
+
+    if (!MeshComp->GetOwner()) continue;
+    ComponentsWithOwner++;
+
+    // Apply same filtering as CosmosControlSensor
+    if (MeshComp->GetComponentLocation().Z > 10000.0f) continue;
+    FilteredComponents++;
+
+    // Cast to static mesh for our specific operations
+    UStaticMeshComponent* StaticMeshComp = Cast<UStaticMeshComponent>(MeshComp);
+    if (!StaticMeshComp) continue;
+    StaticMeshComponents++;
+
+    const carla::rpc::CityObjectLabel Tag = ATagger::GetTagOfTaggedComponent(*MeshComp);
+
+    if (Tag != carla::rpc::CityObjectLabel::None)
     {
+      TaggedComponents++;
+      // Log some tags we find to see what's available (only first few to avoid spam)
+      if (TaggedComponents <= 5)
+      {
+        UE_LOG(LogCarla, Warning, TEXT("Tagged component %d: Tag=%d (%s), Owner=%s, Location=%s"),
+               TaggedComponents, (int32)Tag,
+               Tag == carla::rpc::CityObjectLabel::TrafficSigns ? TEXT("TrafficSigns") :
+               Tag == carla::rpc::CityObjectLabel::TrafficLight ? TEXT("TrafficLight") :
+               Tag == carla::rpc::CityObjectLabel::Poles ? TEXT("Poles") : TEXT("Other"),
+               MeshComp->GetOwner() ? *MeshComp->GetOwner()->GetName() : TEXT("NoOwner"),
+               *MeshComp->GetComponentLocation().ToString());
+      }
+    }
+
+    if (Tag == carla::rpc::CityObjectLabel::TrafficSigns)
+    {
+      TrafficSignsFound++;
+      UE_LOG(LogCarla, Warning, TEXT("Found traffic sign: %s at %s"),
+             MeshComp->GetOwner() ? *MeshComp->GetOwner()->GetName() : TEXT("NoOwner"),
+             *MeshComp->GetComponentLocation().ToString());
+
+      // Build cuboid for traffic signs
+      TArray<FVector> V8Meters;
+      BuildComponentCuboidMeters(StaticMeshComp, V8Meters);
+      if (V8Meters.Num() == 8)
+      {
+        AppendTrafficSignLabel(TrafficSignsLabels, StartTs, V8Meters);
+      }
+    }
+    else if (Tag == carla::rpc::CityObjectLabel::TrafficLight)
+    {
+      TrafficLightsFound++;
+      UE_LOG(LogCarla, Warning, TEXT("Found traffic light: %s at %s"),
+             MeshComp->GetOwner() ? *MeshComp->GetOwner()->GetName() : TEXT("NoOwner"),
+             *MeshComp->GetComponentLocation().ToString());
+
+      // Build cuboid for traffic lights (same format as traffic signs)
+      TArray<FVector> V8Meters;
+      BuildComponentCuboidMeters(StaticMeshComp, V8Meters);
+      if (V8Meters.Num() == 8)
+      {
+        AppendTrafficLightLabel(TrafficLightsLabels, StartTs, V8Meters);
+      }
+    }
+    else if (Tag == carla::rpc::CityObjectLabel::Poles)
+    {
+      PolesFound++;
+      UE_LOG(LogCarla, Warning, TEXT("Found pole: %s at %s"),
+             MeshComp->GetOwner() ? *MeshComp->GetOwner()->GetName() : TEXT("NoOwner"),
+             *MeshComp->GetComponentLocation().ToString());
+
+      // Additional filtering like CosmosControlSensor (filter out horizontal poles)
+      FBoxSphereBounds Bounds = StaticMeshComp->CalcBounds(StaticMeshComp->GetComponentTransform());
+
+      // Filter out horizontal poles (poles should be taller than they are wide)
+      if (FMath::Max(Bounds.BoxExtent.X, Bounds.BoxExtent.Y) > Bounds.BoxExtent.Z)
+      {
+        // Skip horizontal objects unless they explicitly contain "pole" in the name
+        if (!StaticMeshComp->GetStaticMesh() || !StaticMeshComp->GetStaticMesh()->GetFName().ToString().Contains(TEXT("pole")))
+        {
+          continue;
+        }
+      }
+
       FVector TopM, BaseM;
-      BuildPolePolylineMeters(C, TopM, BaseM);
-      const FString PoleType = ClassifyPoleType(C);
-      AppendPoleLabelJson(Labels, Uuid, StartTs, TopM, BaseM, PoleType);
-    }
-
-    Root->SetArrayField(TEXT("labels"), Labels);
-
-    FString OutText;
-    TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutText);
-    if (!FJsonSerializer::Serialize(Root, Writer))
-    { 
-      OutError += TEXT("[Poles] JSON serialization failed. "); 
-      bAllOk = false; 
-    }
-    else
-    {
-      const FString Dir = FPaths::GetPath(OutPolesPath);
-      IFileManager::Get().MakeDirectory(*Dir, /*Tree=*/true);
-      if (!FFileHelper::SaveStringToFile(OutText, *OutPolesPath, FFileHelper::EEncodingOptions::ForceUTF8))
-      { 
-        OutError += FString::Printf(TEXT("[Poles] Failed to write: %s. "), *OutPolesPath); 
-        bAllOk = false; 
-      }
+      BuildPolePolylineMeters(StaticMeshComp, TopM, BaseM);
+      AppendPoleLabel(PolesLabels, StartTs, TopM, BaseM);
     }
   }
+
+  UE_LOG(LogCarla, Warning, TEXT("TrafficSignsExporter stats: Visible=%d, WithOwner=%d, PassedFilter=%d, StaticMesh=%d, Tagged=%d"),
+         VisibleComponents, ComponentsWithOwner, FilteredComponents, StaticMeshComponents, TaggedComponents);
+  UE_LOG(LogCarla, Warning, TEXT("TrafficSignsExporter found: Poles=%d, TrafficSigns=%d, TrafficLights=%d"),
+         PolesFound, TrafficSignsFound, TrafficLightsFound);
+
+  // Write three separate JSON files
+  struct ExportInfo {
+    FString SubDir;
+    FString Filename;
+    TArray<TSharedPtr<FJsonValue>>& Labels;
+  };
+
+  TArray<ExportInfo> Exports = {
+    { TEXT("3d_poles/"), TEXT(".poles.json"), PolesLabels },
+    { TEXT("3d_traffic_signs/"), TEXT(".traffic_signs.json"), TrafficSignsLabels },
+    { TEXT("3d_traffic_lights/"), TEXT(".traffic_lights.json"), TrafficLightsLabels }
+  };
+
+  for (const ExportInfo& Export : Exports)
   {
-    // Traffic Lights
-    FString OutTrafficSignsPath = OutFilePath + "3d_traffic_lights/" + SessionId + ".json";
-
     TSharedRef<FJsonObject> Root = MakeShared<FJsonObject>();
-    TArray<TSharedPtr<FJsonValue>> Labels;
-
-    for (UStaticMeshComponent* C : SignComps)
-    {
-      TArray<FVector> V8;
-      BuildComponentCuboidMeters(C, V8);
-      if (V8.Num() != 8) continue;
-
-      const FString SignClass = TEXT("TRAFFIC_SIGN"); 
-      AppendTrafficSignLabelJson(Labels, Uuid, StartTs, V8, SignClass);
-    }
-
-    Root->SetArrayField(TEXT("labels"), Labels);
+    Root->SetArrayField(TEXT("labels"), Export.Labels);
 
     FString OutText;
     TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&OutText);
     if (!FJsonSerializer::Serialize(Root, Writer))
-    { 
-      OutError += TEXT("[TrafficSigns] JSON serialization failed. "); 
-      bAllOk = false; 
-    }
-    else
     {
-      const FString Dir = FPaths::GetPath(OutTrafficSignsPath);
-      IFileManager::Get().MakeDirectory(*Dir, /*Tree=*/true);
-      if (!FFileHelper::SaveStringToFile(OutText, *OutTrafficSignsPath, FFileHelper::EEncodingOptions::ForceUTF8))
-      { 
-        OutError += FString::Printf(TEXT("[TrafficSigns] Failed to write: %s. "), *OutTrafficSignsPath); 
-        bAllOk = false; 
-      }
+      OutError = FString::Printf(TEXT("JSON serialization failed for %s"), *Export.SubDir);
+      return false;
+    }
+
+    FString FullPath = OutFilePath + Export.SubDir + SessionId + Export.Filename;
+    const FString Dir = FPaths::GetPath(FullPath);
+    IFileManager::Get().MakeDirectory(*Dir, /*Tree=*/true);
+
+    if (!FFileHelper::SaveStringToFile(OutText, *FullPath, FFileHelper::EEncodingOptions::ForceUTF8))
+    {
+      OutError = FString::Printf(TEXT("Failed to write: %s"), *FullPath);
+      return false;
     }
   }
-	return bAllOk;
-}
 
-// --------------------- Traffic Lights (new) ---------------------
-
-void UTrafficSignsExporter::BuildComponentCuboidMeters(const UStaticMeshComponent* Comp, TArray<FVector>& Out8VertsMeters)
-{
-	Out8VertsMeters.Reset();
-	Out8VertsMeters.Reserve(8);
-
-	// Local bounds (center-origin, half-extents in local space)
-	FVector Origin, Extent;
-	Comp->GetLocalBounds(Origin, Extent);  // Origin is local center, Extent is half-sizes
-
-	const FTransform& Xform = Comp->GetComponentTransform();
-
-	// 8 local corners around Origin
-	const FVector S[8] = {
-		FVector(+Extent.X, +Extent.Y, +Extent.Z),
-		FVector(+Extent.X, -Extent.Y, +Extent.Z),
-		FVector(-Extent.X, -Extent.Y, +Extent.Z),
-		FVector(-Extent.X, +Extent.Y, +Extent.Z),
-		FVector(+Extent.X, +Extent.Y, -Extent.Z),
-		FVector(+Extent.X, -Extent.Y, -Extent.Z),
-		FVector(-Extent.X, -Extent.Y, -Extent.Z),
-		FVector(-Extent.X, +Extent.Y, -Extent.Z),
-	};
-
-	for (int i=0;i<8;++i)
-	{
-		const FVector Local = Origin + S[i];
-		const FVector World = Xform.TransformPosition(Local);
-		Out8VertsMeters.Add(World / 100.0f); // cm -> m
-	}
-}
-
-void UTrafficSignsExporter::AppendTrafficSignLabelJson(
-	TArray<TSharedPtr<FJsonValue>>& Labels,
-	const FString& Uuid,
-	const FString& StartTs,
-	const TArray<FVector>& V8Meters,
-	const FString& LightClassText)
-{
-	// Matches the traffic-signs sample structure but with:
-	//  - labelClassIdentifier = "traffic-lights:autolabels"
-	//  - label_name enum      = "traffic_light"
-	//  - cuboid3d.vertices    = 8 world points in meters
-	//  - include an attribute "light_class" (text) analogous to "sign_class"
-	// Schema reference: sample file you shared. :contentReference[oaicite:1]{index=1}
-
-	TSharedRef<FJsonObject> Label = MakeShared<FJsonObject>();
-	Label->SetStringField(TEXT("labelFamily"), TEXT("SHAPE3D"));
-
-	// assetRef
-	{
-		TSharedRef<FJsonObject> AssetRef = MakeShared<FJsonObject>();
-		AssetRef->SetStringField(TEXT("sessionId"), Uuid);
-		AssetRef->SetStringField(TEXT("sensorName"), TEXT("lidar_gt_top_p128"));
-		TSharedRef<FJsonObject> FramesObj = MakeShared<FJsonObject>();
-		TArray<TSharedPtr<FJsonValue>> Frames; Frames.Add(MakeShared<FJsonValueNumber>(0));
-		FramesObj->SetArrayField(TEXT("frames"), Frames);
-		AssetRef->SetObjectField(TEXT("frames"), FramesObj);
-		Label->SetObjectField(TEXT("assetRef"), AssetRef);
-	}
-
-	// labelClassKey
-	{
-		TSharedRef<FJsonObject> ClassKey = MakeShared<FJsonObject>();
-		ClassKey->SetStringField(TEXT("labelClassNamespace"), TEXT("minimap"));
-		ClassKey->SetStringField(TEXT("labelClassIdentifier"), TEXT("traffic-lights:autolabels"));
-		ClassKey->SetStringField(TEXT("labelClassVersion"), TEXT("v0"));
-		Label->SetObjectField(TEXT("labelClassKey"), ClassKey);
-	}
-
-	// A simple deterministic id from first & opposite vertices
-	const FVector P0 = V8Meters.Num() > 0 ? V8Meters[0] : FVector::ZeroVector;
-	const FVector P4 = V8Meters.Num() > 4 ? V8Meters[4] : FVector::ZeroVector;
-	Label->SetStringField(TEXT("labelId"), MakeStableLabelId(Uuid, P0, P4));
-
-	// labelData.shape3d (cuboid3d)
-	TSharedRef<FJsonObject> LabelData = MakeShared<FJsonObject>();
-	{
-		TSharedRef<FJsonObject> Shape3D = MakeShared<FJsonObject>();
-
-		// cuboid3d.vertices (8)
-		{
-			TSharedRef<FJsonObject> Cuboid = MakeShared<FJsonObject>();
-			TArray<TSharedPtr<FJsonValue>> VertArray;
-			VertArray.Reserve(8);
-			for (const FVector& V : V8Meters)
-			{
-				TArray<TSharedPtr<FJsonValue>> Triple;
-				Triple.Add(MakeShared<FJsonValueNumber>(V.X));
-				Triple.Add(MakeShared<FJsonValueNumber>(V.Y));
-				Triple.Add(MakeShared<FJsonValueNumber>(V.Z));
-				VertArray.Add(MakeShared<FJsonValueArray>(Triple));
-			}
-			Cuboid->SetArrayField(TEXT("vertices"), VertArray);
-			Shape3D->SetObjectField(TEXT("cuboid3d"), Cuboid);
-		}
-
-		// attributes (match the sample schema’s structure) :contentReference[oaicite:2]{index=2}
-		{
-			TArray<TSharedPtr<FJsonValue>> Attrs;
-
-			auto AddAttrText = [&](const TCHAR* Name, const FString& Text)
-			{
-				if (Text.Len() == 0 && FCString::Strcmp(Name, TEXT("asset_ref")) != 0) // allow empty asset_ref
-				{
-					// skip truly empty optional fields except asset_ref which we keep for shape parity
-				}
-				TSharedRef<FJsonObject> A = MakeShared<FJsonObject>();
-				A->SetStringField(TEXT("name"), Name);
-				A->SetStringField(TEXT("text"), Text);
-				Attrs.Add(MakeShared<FJsonValueObject>(A));
-			};
-
-			AddAttrText(TEXT("coordinate_frame"), TEXT("rig"));
-			AddAttrText(TEXT("timestamp"),        StartTs);
-			AddAttrText(TEXT("asset_ref"),        TEXT("")); // optionally fill
-			AddAttrText(TEXT("feature_id"),       TEXT(""));
-			AddAttrText(TEXT("feature_version"),  TEXT(""));
-			AddAttrText(TEXT("clip_version_id"),  TEXT(""));
-
-			// label_name enum = traffic_light
-			{
-				TSharedRef<FJsonObject> A = MakeShared<FJsonObject>();
-				A->SetStringField(TEXT("name"), TEXT("label_name"));
-				A->SetStringField(TEXT("enum"), TEXT("traffic_light"));
-				Attrs.Add(MakeShared<FJsonValueObject>(A));
-			}
-
-			// light_class text (like sign_class in your sample)
-			AddAttrText(TEXT("light_class"), LightClassText);
-
-			Shape3D->SetArrayField(TEXT("attributes"), Attrs);
-		}
-
-		Shape3D->SetStringField(TEXT("unit"), TEXT("METRIC"));
-
-		LabelData->SetObjectField(TEXT("shape3d"), Shape3D);
-	}
-	Label->SetObjectField(TEXT("labelData"), LabelData);
-	Label->SetStringField(TEXT("timestampMicroseconds"), StartTs);
-
-	Labels.Add(MakeShared<FJsonValueObject>(Label));
+  return true;
 }
