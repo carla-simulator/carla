@@ -11,6 +11,8 @@
 #include "SpeedLimitComponent.h"
 #include "Components/BoxComponent.h"
 #include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
+#include "OpenDrive/OpenDrive.h"
+#include "OpenDrive/MapLogicParser.h"
 
 #include "UObject/ConstructorHelpers.h"
 
@@ -182,6 +184,16 @@ void ATrafficLightManager::RegisterLightComponentFromOpenDRIVE(UTrafficLightComp
       NewTrafficLightController->SetControllerId(ControllerId.c_str());
       TrafficLightGroup->AddController(NewTrafficLightController);
       TrafficControllers.Add(ControllerId.c_str(), NewTrafficLightController);
+
+      // DEBUG: Log controller registration for MapLogicParser verification
+      UE_LOG(LogCarla, Log, TEXT("TrafficLightManager: Registered new controller '%s' for junction %d"),
+             *FString(ControllerId.c_str()), JunctionId);
+    }
+    else
+    {
+      // DEBUG: Log existing controller usage
+      UE_LOG(LogCarla, Log, TEXT("TrafficLightManager: Using existing controller '%s' for junction %d"),
+             *FString(ControllerId.c_str()), JunctionId);
     }
     TrafficLightController = TrafficControllers[ControllerId.c_str()];
   }
@@ -371,6 +383,7 @@ void ATrafficLightManager::MatchTrafficLightActorsWithOpenDriveSignals()
 
 void ATrafficLightManager::InitializeTrafficLights()
 {
+  UE_LOG(LogCarla, Warning, TEXT("=== TrafficLightManager::InitializeTrafficLights() START ==="));
 
   // Should not run in empty maps
   if (!GetMap())
@@ -381,8 +394,35 @@ void ATrafficLightManager::InitializeTrafficLights()
 
   if (!TrafficLightsGenerated)
   {
+    UE_LOG(LogCarla, Log, TEXT("TrafficLightManager: Generating traffic lights and signals..."));
     GenerateSignalsAndTrafficLights();
+
+    // DEBUG: Log how many controllers we have after generation
+    UE_LOG(LogCarla, Warning, TEXT("TrafficLightManager: After generation - %d controllers registered"), TrafficControllers.Num());
+    for (auto& ControllerPair : TrafficControllers)
+    {
+      UE_LOG(LogCarla, Log, TEXT("  - Generated controller: '%s'"), *ControllerPair.Key);
+    }
   }
+
+  // Try to apply custom traffic light timing from map_logic.json (optional)
+  FString MapName = GetWorld()->GetMapName();
+  FString XODRPath = UOpenDrive::FindPathToXODRFile(MapName);
+
+  UE_LOG(LogCarla, Warning, TEXT("TrafficLightManager: Looking for map_logic.json for map '%s'"), *MapName);
+  UE_LOG(LogCarla, Log, TEXT("TrafficLightManager: XODR path: '%s'"), *XODRPath);
+
+  if (!XODRPath.IsEmpty())
+  {
+    UE_LOG(LogCarla, Warning, TEXT("TrafficLightManager: Applying MapLogicParser..."));
+    UMapLogicParser::ParseAndApplyMapLogic(XODRPath, this);
+  }
+  else
+  {
+    UE_LOG(LogCarla, Warning, TEXT("TrafficLightManager: No XODR path found, skipping MapLogicParser"));
+  }
+
+  UE_LOG(LogCarla, Warning, TEXT("=== TrafficLightManager::InitializeTrafficLights() END ==="));
 }
 
 bool MatchSignalAndActor(const carla::road::Signal &Signal, ATrafficSignBase* ClosestTrafficSign)
@@ -810,10 +850,22 @@ ATrafficLightGroup* ATrafficLightManager::GetTrafficGroup(carla::road::JuncId Ju
 
 UTrafficLightController* ATrafficLightManager::GetController(FString ControllerId)
 {
+  // DEBUG: Log controller lookup attempts from MapLogicParser
+  UE_LOG(LogCarla, Log, TEXT("TrafficLightManager: GetController requested for '%s'"), *ControllerId);
+
   if (TrafficControllers.Contains(ControllerId))
   {
+    UE_LOG(LogCarla, Log, TEXT("TrafficLightManager: Controller '%s' FOUND"), *ControllerId);
     return TrafficControllers[ControllerId];
   }
+
+  // DEBUG: Log all available controllers when lookup fails
+  UE_LOG(LogCarla, Warning, TEXT("TrafficLightManager: Controller '%s' NOT FOUND. Available controllers:"), *ControllerId);
+  for (auto& ControllerPair : TrafficControllers)
+  {
+    UE_LOG(LogCarla, Warning, TEXT("  - Available controller: '%s'"), *ControllerPair.Key);
+  }
+
   return nullptr;
 }
 
