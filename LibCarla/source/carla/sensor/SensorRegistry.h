@@ -52,6 +52,7 @@ class ARssSensor;
 class FWorldObserver;
 class ASceneCaptureCamera_WideAngleLens;
 class ADepthCamera_WideAngleLens;
+class ANormalsCamera_WideAngleLens;
 class AInstanceSegmentationCamera_WideAngleLens;
 class ASemanticSegmentationCamera_WideAngleLens;
 struct FCameraGBufferUint8;
@@ -90,6 +91,7 @@ namespace sensor {
     std::pair<FWorldObserver *, s11n::EpisodeStateSerializer>,
     std::pair<ASceneCaptureCamera_WideAngleLens *, s11n::ImageSerializer>,
     std::pair<ADepthCamera_WideAngleLens *, s11n::ImageSerializer>,
+    std::pair<ANormalsCamera_WideAngleLens *, s11n::ImageSerializer>,
     std::pair<AInstanceSegmentationCamera_WideAngleLens *, s11n::ImageSerializer>,
     std::pair<ASemanticSegmentationCamera_WideAngleLens *, s11n::ImageSerializer>,
     std::pair<FCameraGBufferUint8 *, s11n::GBufferUint8Serializer>,
@@ -127,6 +129,7 @@ namespace sensor {
 #include "Carla/Sensor/CosmosControlSensor.h"
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Sensor/DepthCamera_WideAngleLens.h"
+#include "Carla/Sensor/NormalsCamera_WideAngleLens.h"
 #include "Carla/Sensor/SceneCaptureCamera_WideAngleLens.h"
 #include "Carla/Sensor/SemanticSegmentationCamera_WideAngleLens.h"
 #include "Carla/Sensor/InstanceSegmentationCamera_WideAngleLens.h"

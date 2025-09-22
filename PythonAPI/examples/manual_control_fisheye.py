@@ -1131,6 +1131,7 @@ class CameraManager(object):
             ['sensor.camera.semantic_segmentation.wide_angle_lens', cc.CityScapesPalette, 'Camera Semantic Segmentation (CityScapes Palette, Wide Angle Lens)', {}],
             ['sensor.camera.instance_segmentation.wide_angle_lens', cc.CityScapesPalette, 'Camera Instance Segmentation (CityScapes Palette, Wide Angle Lens)', {}],
             ['sensor.camera.instance_segmentation.wide_angle_lens', cc.Raw, 'Camera Instance Segmentation (Raw, Wide Angle Lens)', {}],
+            ['sensor.camera.normals.wide_angle_lens', cc.Raw, 'Camera Normals (Wide Angle Lens)', {}],
 
             # ['sensor.camera.rgb', cc.Raw, 'Camera RGB', {}],
             # ['sensor.camera.depth', cc.Raw, 'Camera Depth (Raw)', {}],
