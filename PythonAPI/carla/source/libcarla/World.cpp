@@ -122,6 +122,54 @@ static void EnableEnvironmentObjects(
   self.EnableEnvironmentObjects(env_objects_ids, enable);
 }
 
+static std::string ExportCosmosCrosswalks(
+    carla::client::World &self,
+    const std::string &session_id,
+    const std::string &output_path) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return self.ExportCosmosCrosswalks(session_id, output_path);
+}
+
+static std::string ExportCosmosRoadBoundaries(
+    carla::client::World &self,
+    const std::string &session_id,
+    const std::string &output_path) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return self.ExportCosmosRoadBoundaries(session_id, output_path);
+}
+
+static std::string ExportCosmosLaneLines(
+    carla::client::World &self,
+    const std::string &session_id,
+    const std::string &output_path) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return self.ExportCosmosLaneLines(session_id, output_path);
+}
+
+static std::string ExportCosmosTrafficSigns(
+    carla::client::World &self,
+    const std::string &session_id,
+    const std::string &output_path) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return self.ExportCosmosTrafficSigns(session_id, output_path);
+}
+
+static std::string ExportCosmosWaitLines(
+    carla::client::World &self,
+    const std::string &session_id,
+    const std::string &output_path) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return self.ExportCosmosWaitLines(session_id, output_path);
+}
+
+static std::string ExportCosmosRoadMarkings(
+    carla::client::World &self,
+    const std::string &session_id,
+    const std::string &output_path) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return self.ExportCosmosRoadMarkings(session_id, output_path);
+}
+
 void export_world() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -364,6 +412,12 @@ void export_world() {
       }, (arg("objects_name_list"), arg("diffuse_texture"), arg("emissive_texture"), arg("normal_texture"), arg("ao_roughness_metallic_emissive_texture")))
     .def(self_ns::str(self_ns::self))
     .def("set_annotations_traverse_translucency", CALL_WITHOUT_GIL_1(cc::World, SetAnnotationsTraverseTranslucency, bool), (arg("enable")))
+    .def("export_cosmos_crosswalks", &ExportCosmosCrosswalks, (arg("session_id"), arg("output_path")))
+    .def("export_cosmos_road_boundaries", &ExportCosmosRoadBoundaries, (arg("session_id"), arg("output_path")))
+    .def("export_cosmos_lane_lines", &ExportCosmosLaneLines, (arg("session_id"), arg("output_path")))
+    .def("export_cosmos_traffic_signs", &ExportCosmosTrafficSigns, (arg("session_id"), arg("output_path")))
+    .def("export_cosmos_wait_lines", &ExportCosmosWaitLines, (arg("session_id"), arg("output_path")))
+    .def("export_cosmos_road_markings", &ExportCosmosRoadMarkings, (arg("session_id"), arg("output_path")))
   ;
 
 #undef SPAWN_ACTOR_WITHOUT_GIL

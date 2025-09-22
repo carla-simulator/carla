@@ -338,6 +338,30 @@ namespace client {
     return _episode.Lock()->GetNamesOfAllObjects();
   }
 
+  std::string World::ExportCosmosCrosswalks(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosCrosswalks(session_id, output_path);
+  }
+
+  std::string World::ExportCosmosRoadBoundaries(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosRoadBoundaries(session_id, output_path);
+  }
+
+  std::string World::ExportCosmosLaneLines(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosLaneLines(session_id, output_path);
+  }
+
+  std::string World::ExportCosmosTrafficSigns(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosTrafficSigns(session_id, output_path);
+  }
+
+  std::string World::ExportCosmosWaitLines(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosWaitLines(session_id, output_path);
+  }
+
+  std::string World::ExportCosmosRoadMarkings(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosRoadMarkings(session_id, output_path);
+  }
+
   void World::ApplyTexturesToObject(
       const std::string &object_name,
       const rpc::TextureColor& diffuse_texture,

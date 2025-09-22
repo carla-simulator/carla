@@ -182,6 +182,30 @@ namespace detail {
     return _pimpl->CallAndWait<std::vector<std::string>>("get_names_of_all_objects");
   }
 
+  std::string Client::ExportCosmosCrosswalks(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_crosswalks", session_id, output_path);
+  }
+
+  std::string Client::ExportCosmosRoadBoundaries(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_road_boundaries", session_id, output_path);
+  }
+
+  std::string Client::ExportCosmosLaneLines(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_lane_lines", session_id, output_path);
+  }
+
+  std::string Client::ExportCosmosTrafficSigns(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_traffic_signs", session_id, output_path);
+  }
+
+  std::string Client::ExportCosmosWaitLines(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_wait_lines", session_id, output_path);
+  }
+
+  std::string Client::ExportCosmosRoadMarkings(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_road_markings", session_id, output_path);
+  }
+
   rpc::EpisodeInfo Client::GetEpisodeInfo() {
     return _pimpl->CallAndWait<rpc::EpisodeInfo>("get_episode_info");
   }

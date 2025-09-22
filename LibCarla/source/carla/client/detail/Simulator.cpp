@@ -481,6 +481,30 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     return _client.GetNamesOfAllObjects();
   }
 
+  std::string Simulator::ExportCosmosCrosswalks(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosCrosswalks(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosRoadBoundaries(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosRoadBoundaries(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosLaneLines(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosLaneLines(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosTrafficSigns(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosTrafficSigns(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosWaitLines(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosWaitLines(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosRoadMarkings(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosRoadMarkings(session_id, output_path);
+  }
+
 
 } // namespace detail
 } // namespace client

@@ -120,6 +120,14 @@ namespace detail {
 
     std::vector<std::string> GetNamesOfAllObjects() const;
 
+    /// Export cosmos data to JSON files
+    std::string ExportCosmosCrosswalks(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosRoadBoundaries(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosLaneLines(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosTrafficSigns(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosWaitLines(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosRoadMarkings(const std::string& session_id, const std::string& output_path) const;
+
     rpc::EpisodeInfo GetEpisodeInfo();
 
     rpc::MapInfo GetMapInfo();
