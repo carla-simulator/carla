@@ -122,13 +122,15 @@ bool UWaitLinesExporter::ExportCosmosWaitLines(UWorld* World, const FString& Ses
     return false;
   }
 
-  const FString Dir = FPaths::GetPath(OutFilePath);
+  // Construct full path with subdirectory and filename
+  FString FullPath = OutFilePath + TEXT("3d_wait_lines/") + SessionId + TEXT(".wait_lines.json");
+  const FString Dir = FPaths::GetPath(FullPath);
   IFileManager::Get().MakeDirectory(*Dir, /*Tree=*/true);
 
   // UE4 encoding option
-  if (!FFileHelper::SaveStringToFile(OutText, *OutFilePath, FFileHelper::EEncodingOptions::ForceUTF8))
+  if (!FFileHelper::SaveStringToFile(OutText, *FullPath, FFileHelper::EEncodingOptions::ForceUTF8))
   {
-    OutError = FString::Printf(TEXT("Failed to write: %s"), *OutFilePath);
+    OutError = FString::Printf(TEXT("Failed to write: %s"), *FullPath);
     return false;
   }
 
