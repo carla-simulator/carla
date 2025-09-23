@@ -167,6 +167,7 @@ class SensorInfo:
     def _callback(self, data):
         conv_map = {
             AOV.RGB: carla.ColorConverter.Raw,
+            AOV.NORMALS: carla.ColorConverter.Raw,
             AOV.SEMANTIC_SEGMENTATION: carla.ColorConverter.CityScapesPalette
         }
         conv = conv_map.get(self.sensor_type, carla.ColorConverter.Raw)
@@ -319,7 +320,7 @@ def main():
         name = entry['sensor']
         sensor_name = f"sensor.camera.{name}"
         attributes = entry.get('attributes', {})
-        if ('camera_model' in attributes and name != 'normals') or 'wide_angle_lens' in entry:
+        if entry.get('wide_angle_lens', False):
             sensor_name += '.wide_angle_lens'
         bp = world.get_blueprint_library().find(sensor_name)
         for k,v in attributes.items(): bp.set_attribute(k,str(v))

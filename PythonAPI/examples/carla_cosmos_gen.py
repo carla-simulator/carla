@@ -163,6 +163,7 @@ class SensorInfo:
     def _callback(self, data):
         conv_map = {
             AOV.RGB: carla.ColorConverter.Raw,
+            AOV.NORMALS: carla.ColorConverter.Raw,
             AOV.SEMANTIC_SEGMENTATION: carla.ColorConverter.CityScapesPalette,
             AOV.COSMOS_VISUALIZATION: carla.ColorConverter.Raw
         }
@@ -192,6 +193,8 @@ def post_processing_worker(raw_q: mp.Queue, proc_q: mp.Queue):
         frames = bundle.frames
         if AOV.RGB in frames:
             processed['RGB'] = frames[AOV.RGB]
+        if AOV.NORMALS in frames:
+            processed['NORMALS'] = frames[AOV.NORMALS]
         if AOV.RGB in frames and AOV.SEMANTIC_SEGMENTATION in frames:
             masked, edges = masked_edges_from_semseg(
                 frames[AOV.RGB], frames[AOV.SEMANTIC_SEGMENTATION], CLASSES_TO_KEEP_CANNY
@@ -317,7 +320,7 @@ def main():
         name = entry['sensor']
         sensor_name = f"sensor.camera.{name}"
         attributes = entry.get('attributes', {})
-        if ('camera_model' in attributes and name != 'normals') or entry.get('wide_angle_lens', False):
+        if entry.get('wide_angle_lens', False):
             sensor_name += '.wide_angle_lens'
         bp = world.get_blueprint_library().find(sensor_name)
         for k,v in attributes.items(): bp.set_attribute(k,str(v))
