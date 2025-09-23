@@ -190,7 +190,6 @@ The __Ego Vehicle__ is an important concept to bear in mind when using CARLA. Th
 To define the Ego Vehicle, you should set the `role_name` attribute of the vehicle [carla.Actor](python_api.md#carlaactor) object's [blueprint](python_api.md#carlaactorblueprint) when you are spawning your Ego Vehicle:
 
 ```py
-
 ego_bp = world.get_blueprint_library().find('vehicle.lincoln.mkz_2020')
 
 ego_bp.set_attribute('role_name', 'hero')

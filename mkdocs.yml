@@ -3,7 +3,6 @@ repo_url: https://github.com/carla-simulator/carla
 docs_dir: Docs
 edit_uri: 'edit/master/Docs/'
 theme: readthedocs
-extra_css: [extra.css]
 extra_javascript: [extra.js]
 
 nav:
@@ -62,5 +61,12 @@ nav:
  
 markdown_extensions:
   - admonition 
+  #- fenced_code
+  #- codehilite
+  #- pymdownx.superfences
   - attr_list
+
+extra_css: 
+ - extra.css
+ - styles/overrides.css
  
