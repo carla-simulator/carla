@@ -52,6 +52,7 @@ CLASSES_TO_KEEP_SHADED_SEG: List[Sequence[int]] = []
 CLASSES_TO_KEEP_CANNY: List[Sequence[int]] = []
 
 def load_class_filter_config(path: str):
+    path = Path(path).resolve()
     with open(path, 'r') as f:
         config = yaml.safe_load(f)
     global CLASSES_TO_KEEP_SHADED_SEG, CLASSES_TO_KEEP_CANNY
@@ -286,7 +287,8 @@ def main():
     client.set_timeout(60.0)
     client.reload_world()
     
-    info = client.show_recorder_file_info(args.recorder_filename, False)
+    recorder_filename = Path(args.recorder_filename).resolve()
+    info = client.show_recorder_file_info(str(recorder_filename), False)
     log_frames, log_duration = parse_frames_duration(info)
 
     log_delta = log_duration / log_frames
@@ -297,7 +299,7 @@ def main():
     client.set_replayer_ignore_hero(args.ignore_hero)
     client.set_replayer_ignore_spectator(not args.move_spectator)
     client.replay_file(
-        args.recorder_filename, args.start, args.duration, args.camera, args.spawn_sensors
+        str(recorder_filename), args.start, args.duration, args.camera, args.spawn_sensors
     )
 
     world = client.get_world()
@@ -306,7 +308,8 @@ def main():
     settings.fixed_delta_seconds = log_delta
     world.apply_settings(settings)
 
-    with open(args.sensors.replace('file:',''), 'r') as f:
+    sensors_filepath = Path(args.sensors.replace('file:','')).resolve()
+    with open(sensors_filepath, 'r') as f:
         sensor_cfg = yaml.safe_load(f)
     vehicle = world.get_actor(args.camera)
     sensor_infos = []
@@ -342,7 +345,7 @@ def main():
         )
         p.start(); workers.append(p)
 
-    out_dir = Path(args.output_dir)
+    out_dir = Path(args.output_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     writer = mp.Process(
         target=video_writer_worker,
