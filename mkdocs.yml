@@ -25,6 +25,7 @@ nav:
   - 'Maps': 'core_map.md'
   - 'Sensors and data': 'core_sensors.md'
   - 'Traffic' : 'ts_traffic_simulation_overview.md'
+  - 'AI rendering': 'ai_rendering.md'
   - 'Development': 'development_tutorials.md'
   - 'Custom assets': 'custom_assets_tutorials.md'
 

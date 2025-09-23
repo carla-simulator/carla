@@ -19,6 +19,7 @@ NVIDIA's neural reconstruction technology enables a rich 3D representation of an
 NVIDIA's Cosmos Transfer is a  branch of [Cosmos World Foundation Models (WFMs)](https://www.nvidia.com/en-us/ai/cosmos/) specialized for multimodal controllable conditional world generation or world2world transfer. Cosmos Transfer is designed to bridge the perceptual divide between simulated and real-world environments.
 
 Users can generate endless hyper-realistic video variations from CARLA sequences using simple text prompts. This capability is ideal for:
+
 * Expanding visual diversity in perception datasets
 * Bridging the domain gap for sim-to-real training
 * Exploring edge cases with photorealistic textures, lighting, and weather variations
