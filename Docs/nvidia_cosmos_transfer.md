@@ -11,18 +11,18 @@ This integration is presented in the form of a client-server architecture. The `
     * [Option 2: Deploying your own service somewhere else](#option-2-deploying-your-own-service-somewhere-else)
 * __[Using the CARLA x Cosmos Transfer Client](#using-the-carla-x-cosmos-transfer-client)__
     * [Dependency installation](#installing-dependencies)
-    * [Generating Cosmos-Transfer inputs](#generating-cosmos-transfer-control-inputs)
-    * [Generating style-transfer variations using Cosmos Transfer1](#generating-cosmos-transfer-control-inputs)
+    * [Generating Cosmos-Transfer control inputs](#generating-cosmos-transfer-control-inputs)
+    * [Generating style-transfer variations using Cosmos Transfer](#generating-style-transfer-variations-using-cosmos-transfer)
     * [Understanding the Cosmos-Transfer configuration](#understainding-the-cosmos-transfer-configuration)
 
 --- 
 # Deploying a Cosmos Transfer server
 
-Cosmos Transfer requires high-performance datacenter GPUs such as the NVIDIA H100. We have created multiple ways to deploy Cosmos Transfer1 servers easily.
+Cosmos Transfer requires high-performance datacenter GPUs such as the NVIDIA H100. We have created multiple ways to deploy Cosmos Transfer servers easily.
 
 ## Option 1: 1-click deployment on NVIDIA Brev
 
-The CARLA team has created a Brev launchable to enable users to create their own Cosmos Transfer1 servers with ease. To this end:
+The CARLA team has created a Brev launchable to enable users to create their own Cosmos Transfer servers with ease. To this end:
 
 __1.__ Sign up on Brev [here](https://login.brev.nvidia.com/signin).
 __2.__ Follow the instructions on the website  to fund your account.
@@ -49,7 +49,7 @@ __7.__ Your Cosmos Transfer service is ready!
 
 ## Option 2: Deploying your own service somewhere else
 
-If you have access to the appropriate hardware, you can deploy Cosmos Transfer1 in a Docker container. The files required to build the server image can be found in the `PythonAPI/examples/nvidia/cosmos/server` directory inside the root folder of your CARLA installation or package.
+If you have access to the appropriate hardware, you can deploy Cosmos Transfer in a Docker container. The files required to build the server image can be found in the `PythonAPI/examples/nvidia/cosmos/server` directory inside the root folder of your CARLA installation or package.
 
 __1.__ **Install Docker**: If Docker is not already installed on your system, [install it](https://docs.docker.com/engine/install/).
 
@@ -83,9 +83,9 @@ python cosmos_client.py http://localhost:8080 example_data/prompts/rain.toml
 
 In order to start generating videos, you will need to [install the dependencies](#installing-dependencies) for the Cosmos Transfer client. The Cosmos Transfer generation process involves two steps:
 
-__1.__ [__Generating control videos for Cosmos Transfer1 with CARLA__](#generating-cosmos-transfer-control-inputs)
+__1.__ [__Generating control videos for Cosmos Transfer with CARLA__](#generating-cosmos-transfer-control-inputs)
 
->This step generates several control videos for Cosmos Transfer1 from a CARLA simulation log file. The videos generated may include the following:
+>This step generates several control videos for Cosmos Transfer from a CARLA simulation log file. The videos generated may include the following:
 >
 >* RGB
 >* Depth
@@ -94,7 +94,7 @@ __1.__ [__Generating control videos for Cosmos Transfer1 with CARLA__](#generati
 >* Instance segmentation
 >* Sky mask
 
-__2.__ [__Generating style-transfer variations using Cosmos Transfer1__](#generating-style-transfer-variations-using-cosmos-transfer1)
+__2.__ [__Generating style-transfer variations using Cosmos Transfer__](#generating-style-transfer-variations-using-cosmos-transfer1)
 
 >This step generates style-transfer variations of the original control videos using the Cosmos Transfer1 model. The control videos created by CARLA are sent through to a server running the Cosmos Transfer1 model. Requests are sent to the server through a simple API using the `cosmos_client.py` script. 
 
@@ -112,7 +112,7 @@ __2.__ Once downloaded, uncompress the archive:
 tar -xzvf  CARLA_0.9.16.tar.gz
 ```
 
-__3.__ Install `conda`, see [instructions](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html). You can skip this step if conda is already installed on your system.
+__3.__ Install `conda`, see [these instructions](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html). You can skip this step if conda is already installed on your system.
 
 __4.__ Create a conda environment (e.g., `carla-cosmos-client`) and install all dependencies:
 
@@ -136,14 +136,18 @@ pip install carla-0.9.16-cp310-cp310-linux_x86_64.whl
 
 ## Generating Cosmos-Transfer Control Inputs
 
-__1.__ Start CARLA by navigating to the root folder of your CARLA installation and execute:
+__1.__ __Start CARLA__
+
+>Navigate to the root folder of your CARLA installation and execute the launch script:
 ```sh
 ./CarlaUE4.sh
 ```
 
-__2.__ If you want to generate new control inputs using an example, you can run the `PythonAPI/examples/nvidia/cosmos/client/carla_cosmos_gen.py` with the example named **iai_carla_synthetic_log_1731622446_actorPOV4641_startTime3.7s_log.log** in the `PythonAPI/examples/nvidia/cosmos/client/example_data/logs/inverted_ai/` directory. You will find several other example log files in the same directory to experiment with.
+__2.__ __Generate control videos from a CARLA log__
 
-A typical invocation will look like this:
+>If you want to generate new control inputs using an example, you can run the `PythonAPI/examples/nvidia/cosmos/client/carla_cosmos_gen.py` with the example named **iai_carla_synthetic_log_1731622446_actorPOV4641_startTime3.7s_log.log** in the `PythonAPI/examples/nvidia/cosmos/client/example_data/logs/inverted_ai/` directory. You will find several other example log files in the same directory to experiment with.
+
+>A typical invocation will look like this:
 
 ```sh
 cd PythonAPI/examples/nvidia/cosmos/client
@@ -151,9 +155,9 @@ cd PythonAPI/examples/nvidia/cosmos/client
 python carla_cosmos_gen.py -f full_path_to_log/your_log.log --sensors cosmos_aov.yaml --class-filter-config filter_semantic_classes.yaml -c ego_sim_id -s 0.0 -d 5.0 -o output_path
 ```
 
-The `ego_sim_id` value is the actor ID of the ego vehicle, for the Cosmos generation script to identify it. If you are recording your own scenarios, remember to note the Ego vehicle's actor ID from the `id` attribute.
+>The `ego_sim_id` value is the actor ID of the ego vehicle, for the Cosmos generation script to identify it. If you are recording your own scenarios, remember to note the Ego vehicle's actor ID from the `id` attribute.
 
-For example:
+>For example:
 
 ```sh
  python carla_cosmos_gen.py -f ${PWD}/example_data/logs/inverted_ai/iai_carla_synthetic_log_1731622446_actorPOV4641_startTime3.7s_log.log \ 
@@ -162,24 +166,26 @@ For example:
  -c 4641 -s 0.0 -d 5.0 -o output
 ```
 
-**Note**: For the example log, replace `ego_sim_id` with 4641.
+>**Note**: For the example log, replace `ego_sim_id` with 4641.
 
-This will produce a set of videos that will be later used to control Cosmos Transfer.
+>This will produce a set of videos that will be later used to control Cosmos Transfer.
 
 ---
 
-## Generating style-transfer variations using Cosmos Transfer1
+## Generating style-transfer variations using Cosmos Transfer
 
-Once you have a set of artifacts and the Cosmos Transfer service has been deployed and is active, use the `cosmos_client.py` script to make requests.
+Once you have a set of artifacts and the Cosmos Transfer service has been deployed and is active, use the `cosmos_client.py` script to make requests. The following command will generate Cosmos Transfer style-transfer videos for the prompt and parameters found in the `rain.toml` example configuration file found in `client/example_data/prompts`. 
 
 ```sh
 cd PythonAPI/examples/nvidia/cosmos/client
-# Replace https://url_to_server with the URL to your CARLA-Cosmos-Transfer1 server
+# Replace https://url_to_server with the URL to your CARLA-Cosmos-Transfer server
 python cosmos_client.py http://url_to_server:port example_data/prompts/rain.toml
 ```
 
+You can edit the text prompt and control parameters in the `rain.toml` configuration to experiment and see the effects. Numerous other examples are provided in the same directory and you can learn more about the parameters in the [following section](#understainding-the-cosmos-transfer-configuration).
+
 You can optionally override some fields from the TOML on the command line and choose where to save the output:
-http://localhost:8000/ts_traffic_simulation_overview/
+*http://localhost:8000/ts_traffic_simulation_overview/*
 ```sh
 python cosmos_client.py http://url_to_server:port \
   example_data/prompts/rain.toml \
