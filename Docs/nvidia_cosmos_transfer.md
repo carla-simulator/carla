@@ -10,7 +10,7 @@ This integration is presented in the form of a client-server architecture. The `
     * [Option 1: 1-click deployment on NVIDIA Brev](#option-1-1-click-deployment-on-nvidia-brev)
     * [Option 2: Deploying your own service somewhere else](#option-2-deploying-your-own-service-somewhere-else)
 * __[Using the CARLA x Cosmos Transfer Client](#using-the-carla-x-cosmos-transfer-client)__
-    * [Dependency installation](#installing-dependencies)
+    * [Dependency installation](#install-dependencies)
     * [Generating Cosmos-Transfer control inputs](#generating-cosmos-transfer-control-inputs)
     * [Generating style-transfer variations using Cosmos Transfer](#generating-style-transfer-variations-using-cosmos-transfer)
     * [Understanding the Cosmos-Transfer configuration](#understainding-the-cosmos-transfer-configuration)
@@ -24,19 +24,25 @@ Cosmos Transfer requires high-performance datacenter GPUs such as the NVIDIA H10
 
 The CARLA team has created a Brev launchable to enable users to create their own Cosmos Transfer servers with ease. To this end:
 
-__1.__ Sign up on Brev [here](https://login.brev.nvidia.com/signin).
-__2.__ Follow the instructions on the website  to fund your account.
-__2.__ Go to the link [carla-x-cosmos-transfer1-lambda](https://brev.nvidia.com/launchable/deploy/now?launchableID=env-32CoARmRgbQdxkQeHHkWfvRj87T).
-__3.__ Click on Deploy Launchable.
+__1.__ Sign up to NVIDIA Brev [here](https://login.brev.nvidia.com/signin). Follow the instructions on the website  to fund your account.
+
+__2.__ Go to the link [carla-x-cosmos-transfer1-lambda](https://brev.nvidia.com/launchable/deploy/now?launchableID=env-32CoARmRgbQdxkQeHHkWfvRj87T). Click on *Deploy Launchable*.
 ![Brev launchable](img/cosmos_transfer/brev_01.png){ style="padding:1rem;" }
-__4.__ Click on Go to Instance Page.
+
+__3.__ Click on *Go to Instance Page*.
 ![Go to Instance Page](img/cosmos_transfer/brev_02.png){ style="padding:1rem;" }
+
 __5.__ Wait until the instance has started.
 ![Started instance](img/cosmos_transfer/brev_05.png){ style="padding:1rem;" }
-__6.__ Make URL public. 
+__6.__ Make the URL public. 
+
+>Click on *Edit Access* (take a note of the *Shareable URL* and port):
+
 ![Edit URL](img/cosmos_transfer/brev_06.png){ style="padding:1rem;" }
 
-![Public URL](img/cosmos_transfer/brev_07.png){ style="padding:1rem;" }
+>Toggle *Make Public*:
+
+![Public URL](img/cosmos_transfer/brev_07.png){ style="padding-left:5rem;padding-right:5em;padding-top:1rem;" }
 
 __7.__ Your Cosmos Transfer service is ready!
 
@@ -49,29 +55,35 @@ __7.__ Your Cosmos Transfer service is ready!
 
 ## Option 2: Deploying your own service somewhere else
 
-If you have access to the appropriate hardware, you can deploy Cosmos Transfer in a Docker container. The files required to build the server image can be found in the `PythonAPI/examples/nvidia/cosmos/server` directory inside the root folder of your CARLA installation or package.
+If you have access to the appropriate hardware, you can deploy Cosmos Transfer in a Docker container. The files required to build the server image can be found in the `PythonAPI/examples/nvidia/cosmos/server` directory inside the root folder of your CARLA installation or package. Follow these steps to build and deploy a Cosmos Transfer server:
 
 __1.__ **Install Docker**: If Docker is not already installed on your system, [install it](https://docs.docker.com/engine/install/).
 
 __2.__ **Install Conda**: Follow [these instructions](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html) to install Conda.
 
-__3.__ **Build the server**: Open a terminal inside `PythonAPI/examples/nvidia/cosmos/server` and run the `make_docker.sh` script:
+__3.__ **Build the server**
+
+>Open a terminal inside `PythonAPI/examples/nvidia/cosmos/server` and run the `make_docker.sh` script:
 
 ```sh
 ./make_docker.sh
 ```
 
-This step is likely to take 1-2 hours.
+>This step is likely to take 1-2 hours.
 
-__4.__ __Deploy__: Deploy your docker image in your favorite environment. We recommend a cluster with at least 8 x H100 GPUs. A single H100 GPU should be enough for lower workloads. Run the docker image with the folowing command:
+__4.__ __Deploy__
+
+>Deploy your docker image in your favorite environment. We recommend a cluster with at least 8 x H100 GPUs. A single H100 GPU should be enough for lower workloads. Run the docker image with the folowing command:
 
 ```bash
 docker run -d --shm-size 96g --gpus=all --ipc=host -p 8080:8080 cosmos-transfer1-carla
 ```
 
-__5.__ __Make requests with the client__: Once you have deployed your Cosmos server, you can make requests to it using the `cosmos_client.py` script, providing the appropriate IP address and port for the `endpoint` argument.
+__5.__ __Make requests with the client__
 
-For example, for a locally deployed server on port 8080:
+>Once you have deployed your Cosmos server, you can make requests to it using the `cosmos_client.py` script, providing the appropriate IP address and port for the `endpoint` argument.
+
+>For example, for a locally deployed server on port 8080:
 
 ```sh
 python cosmos_client.py http://localhost:8080 example_data/prompts/rain.toml
@@ -102,14 +114,14 @@ __2.__ [__Generating style-transfer variations using Cosmos Transfer__](#generat
 
 ---
 
-## Installing Dependencies
+## Install dependencies
 
 __1.__ Download CARLA [0.9.16](https://github.com/carla-simulator/carla/releases/tag/0.9.16) or the latest nightly build [here](https://carla.readthedocs.io/en/latest/download/#nightly-build)
 
 __2.__ Once downloaded, uncompress the archive:
 
 ```sh
-tar -xzvf  CARLA_0.9.16.tar.gz
+tar -xzvf CARLA_0.9.16.tar.gz
 ```
 
 __3.__ Install `conda`, see [these instructions](https://docs.conda.io/projects/conda/en/latest/user-guide/install/index.html). You can skip this step if conda is already installed on your system.
@@ -139,6 +151,7 @@ pip install carla-0.9.16-cp310-cp310-linux_x86_64.whl
 __1.__ __Start CARLA__
 
 >Navigate to the root folder of your CARLA installation and execute the launch script:
+
 ```sh
 ./CarlaUE4.sh
 ```
@@ -181,6 +194,7 @@ cd PythonAPI/examples/nvidia/cosmos/client
 # Replace https://url_to_server with the URL to your CARLA-Cosmos-Transfer server
 python cosmos_client.py http://url_to_server:port example_data/prompts/rain.toml
 ```
+The first argument is the URL and port of the Cosmos Transfer server. If you are running a local server from a Docker container, this may be `localhost` or the network IP address of your server. If you are using NVIDIA Brev, the appropriate URL and port are given in the details of the Brev instance.
 
 You can edit the text prompt and control parameters in the `rain.toml` configuration to experiment and see the effects. Numerous other examples are provided in the same directory and you can learn more about the parameters in the [following section](#understainding-the-cosmos-transfer-configuration).
 
