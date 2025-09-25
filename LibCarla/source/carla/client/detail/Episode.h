@@ -17,6 +17,8 @@
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/rpc/EpisodeInfo.h"
 
+#include <boost/optional.hpp>
+#include <chrono>
 #include <vector>
 
 class FPoseSnapshot;
@@ -51,6 +53,15 @@ namespace detail {
     std::shared_ptr<const EpisodeState> GetState() const {
       return _state.load();
     }
+
+    // @TODO:
+    //  This is almost identical to WaitForState.
+    //  We should investigate whether we can merge both approaches.
+    void AwaitStateUpdate(
+      std::weak_ptr<const EpisodeState> old_state,
+      boost::optional<std::chrono::milliseconds> timeout = {}) const;
+    
+    void NotifyStateUpdate();
 
     void RegisterActor(rpc::Actor actor) {
       _actors.Insert(std::move(actor));

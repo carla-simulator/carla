@@ -23,6 +23,7 @@
 
 #include <exception>
 #include <thread>
+#include <cassert>
 
 using namespace std::string_literals;
 
@@ -46,23 +47,35 @@ namespace detail {
     }
   }
 
-  static bool SynchronizeFrame(uint64_t frame, const Episode &episode, time_duration timeout) {
-    bool result = true;
+  static bool SynchronizeFrame(
+    uint64_t target_frame,
+    const Episode &episode,
+    time_duration timeout)
+  {
     auto start = std::chrono::system_clock::now();
-    while (frame > episode.GetState()->GetTimestamp().frame) {
-      std::this_thread::yield();
-      auto end = std::chrono::system_clock::now();
-      auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
-      if(timeout.to_chrono() < diff) {
-        result = false;
-        break;
+    auto deadline = start + timeout;
+    // Wait while target_frame > current_frame:
+    while (true)
+    {
+      std::size_t current_frame;
+      std::weak_ptr<const EpisodeState> state_weak;
+      {
+        auto state = episode.GetState(); // Hold ref
+        state_weak = state;
+        current_frame = state->GetTimestamp().frame;
+      } // Release ref
+      if (target_frame <= current_frame)
+      {
+        carla::traffic_manager::TrafficManager::Tick();
+        return;
       }
+      auto local_timeout = deadline - std::chrono::system_clock::now();
+      episode.AwaitStateUpdate(state_weak, local_timeout); // Wait for state pointer update with timeout.
+      auto elapsed = std::chrono::system_clock::now() - start;
+      if (timeout < elapsed)
+        return false;
     }
-    if(result) {
-      carla::traffic_manager::TrafficManager::Tick();
-    }
-
-    return result;
+    assert(0);
   }
 
   // ===========================================================================
@@ -281,8 +294,10 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     }
     const auto frame = _client.SetEpisodeSettings(settings);
 
-    using namespace std::literals::chrono_literals;
-    SynchronizeFrame(frame, *_episode, 1s);
+    SynchronizeFrame(
+      frame,
+      *_episode,
+      std::chrono::seconds(1));
 
     return frame;
   }

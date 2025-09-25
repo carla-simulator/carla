@@ -11,6 +11,7 @@
 #include "carla/client/detail/WalkerNavigation.h"
 #include "carla/sensor/Deserializer.h"
 #include "carla/trafficmanager/TrafficManager.h"
+#include "carla/Futex.h"
 
 #include <exception>
 
@@ -41,7 +42,9 @@ using namespace std::chrono_literals;
     : _client(client),
       _state(std::make_shared<EpisodeState>(info.id)),
       _simulator(simulator),
-      _token(info.token) {}
+      _token(info.token),
+      __state_counter(0) {
+  }
 
   Episode::~Episode() {
     try {
@@ -87,6 +90,8 @@ using namespace std::chrono_literals;
             }
           } while (!self->_state.compare_exchange(&prev, next));
 
+          NotifyStateUpdate();
+
           if(UpdateLights || HasMapChanged) {
             self->_on_light_update_callbacks.Call(next);
           }
@@ -108,6 +113,17 @@ using namespace std::chrono_literals;
         }
       }
     });
+  }
+
+  void Episode::AwaitStateUpdate(
+    std::weak_ptr<const EpisodeState> old_state,
+    boost::optional<std::chrono::milliseconds> timeout) const
+  {
+    carla::futex::wait(_state, old_state, timeout);
+  }
+  
+  void Episode::NotifyStateUpdate() {
+    carla::futex::wake(_state);
   }
 
   boost::optional<rpc::Actor> Episode::GetActorById(ActorId id) {

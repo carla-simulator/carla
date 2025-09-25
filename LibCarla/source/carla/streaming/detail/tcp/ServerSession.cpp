@@ -10,6 +10,8 @@
 #include "carla/Debug.h"
 #include "carla/Logging.h"
 
+#include "carla/Futex.h"
+
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
 #include <boost/asio/bind_executor.hpp>
@@ -17,25 +19,6 @@
 
 #include <atomic>
 #include <thread>
-
-#if __cplusplus >= 202002L
-#define HAS_ATOMIC_WAIT_NOTIFY
-#elif defined(_WIN32)
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#pragma comment(lib, "Synchronization.lib")
-#elif defined(__linux__)
-#include <cstdint>
-#include <climits>
-#include <sys/syscall.h>
-#if __has_include(<sys/futex.h>)
-#include <sys/futex.h>
-#define HAS_FUTEX
-#elif __has_include(<linux/futex.h>)
-#include <linux/futex.h>
-#define HAS_FUTEX
-#endif
-#endif
 
 namespace carla {
 namespace streaming {
@@ -103,57 +86,22 @@ namespace tcp {
       if (!_socket.is_open()) {
         return;
       }
-      if (_is_writing.load(std::memory_order::acquire)) {
+      if (_is_writing.load(std::memory_order_acquire)) {
         if (_server.IsSynchronousMode()) {
           // wait until previous message has been sent
-#ifdef HAS_ATOMIC_WAIT_NOTIFY
-          _is_writing.wait(std::memory_order::acquire);
-#elif defined(_WIN32)
-          while (true)
-          {
-            bool expected = _is_writing.load(std::memory_order::acquire);
-            if (!expected)
-              break;
-            (void)WaitOnAddress(
-              (volatile PVOID)&_is_writing,
-              (PVOID)&expected,
-              (SIZE_T)sizeof(_is_writing),
-              INFINITE);
-          }
-#elif defined(HAS_FUTEX)
-          while (true)
-          {
-            std::uint32_t expected = _is_writing.load(std::memory_order::acquire);
-            if (expected == 0)
-              break;
-            (void)syscall(SYS_futex, (uint32_t*)&_is_writing, FUTEX_WAIT, &expected, NULL, NULL, 0);
-          }
-#else
-          while (_is_writing.load(std::memory_order::acquire)) {
-            std::this_thread::yield();
-          }
-#endif
+          carla::futex::wait(_is_writing, false);
         } else {
           // ignore this message
           log_debug("session", _session_id, ": connection too slow: message discarded");
           return;
         }
       }
-      _is_writing.store(true, std::memory_order::release);
-
+      _is_writing.store(true, std::memory_order_relaxed);
       auto handle_sent = [this, self, message](
         const boost::system::error_code &ec,
         size_t DEBUG_ONLY(bytes)) {
-        _is_writing.store(false, std::memory_order::release);
-#ifdef HAS_ATOMIC_WAIT_NOTIFY
-        _is_writing.wait(std::memory_order::acquire);
-#elif defined(_WIN32)
-        WakeByAddressAll((PVOID)&_is_writing);
-#elif defined(HAS_FUTEX)
-        syscall(SYS_futex, (uint32_t*)&_is_writing, FUTEX_WAKE, INT_MAX, NULL, NULL, 0);
-#else
-        // Do nothing
-#endif
+        _is_writing.store(false, std::memory_order_release);
+        carla::futex::wake(_is_writing);
         if (ec) {
           log_info("session", _session_id, ": error sending data :", ec.message());
           CloseNow(ec);
