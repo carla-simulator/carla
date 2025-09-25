@@ -1,4 +1,4 @@
-# Coordinates
+# Coordinates and transformations
 
 This page provides details on the coordinate conventions used in CARLA and how to handle coordinates through the CARLA Python API.
 
