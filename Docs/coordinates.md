@@ -8,7 +8,7 @@ This page provides details on the coordinate conventions used in CARLA and how t
     * [Location](#location)
     * [Rotation](#rotation)
     * [Transform](#transform)
-* __[Actor coordinates](#actor-coordinates)__
+* __[Geocoordinates](#geocoordinates)__
 
 ---
 
