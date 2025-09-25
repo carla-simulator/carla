@@ -12,6 +12,14 @@ import subprocess
 import numpy as np
 import cv2
 import carla
+
+import json
+import tarfile
+import tempfile
+import math
+
+import os
+
 from PIL import Image
 
 # === ENUMS AND DATA STRUCTURES ===
@@ -254,6 +262,455 @@ def video_writer_worker(proc_q: mp.Queue, out_dir: Path, fps: float):
         tmp.unlink(missing_ok=True)
     logging.info("[Writer] exiting")
 
+# === DYNAMIC OBJECT EXTRACTION (COSMOS FORMAT) ===
+def extract_dynamic_objects_cosmos_format(world, frame_number):
+    objects_data = {}
+
+    # Get all vehicles
+    vehicles = world.get_actors().filter('vehicle.*')
+    for vehicle in vehicles:
+        bbox = vehicle.bounding_box
+        transform = vehicle.get_transform()
+
+        # Convert to transformation matrix (object_to_world)
+        loc = transform.location
+        rot = transform.rotation
+
+        # Convert degrees to radians
+        roll = math.radians(rot.roll)
+        pitch = math.radians(rot.pitch)
+        yaw = math.radians(rot.yaw)
+
+        # Create rotation matrix from Euler angles
+        cos_roll = math.cos(roll)
+        sin_roll = math.sin(roll)
+        cos_pitch = math.cos(pitch)
+        sin_pitch = math.sin(pitch)
+        cos_yaw = math.cos(yaw)
+        sin_yaw = math.sin(yaw)
+
+        adjusted_z = loc.z + bbox.extent.z  # Move up by half the height
+
+        object_to_world = [
+            [cos_yaw * cos_pitch, cos_yaw * sin_pitch * sin_roll - sin_yaw * cos_roll, cos_yaw * sin_pitch * cos_roll + sin_yaw * sin_roll, loc.x],
+            [sin_yaw * cos_pitch, sin_yaw * sin_pitch * sin_roll + cos_yaw * cos_roll, sin_yaw * sin_pitch * cos_roll - cos_yaw * sin_roll, loc.y],
+            [-sin_pitch, cos_pitch * sin_roll, cos_pitch * cos_roll, adjusted_z],
+            [0.0, 0.0, 0.0, 1.0]
+        ]
+
+        # Get velocity to determine if moving
+        velocity = vehicle.get_velocity()
+        speed = math.sqrt(velocity.x**2 + velocity.y**2 + velocity.z**2)
+        is_moving = speed > 0.1  # Moving if speed > 0.1 m/s
+
+        # Object dimensions: [length, width, height]
+        object_lwh = [
+            bbox.extent.x * 2.0,  # Length
+            bbox.extent.y * 2.0,  # Width
+            bbox.extent.z * 2.0   # Height
+        ]
+
+        objects_data[str(vehicle.id)] = {
+            "object_to_world": object_to_world,
+            "object_lwh": object_lwh,
+            "object_is_moving": is_moving,
+            "object_type": "Automobile",
+            "aux_info": {
+                "trackline_id": str(vehicle.id),
+                "category": "automobile",
+                "egomotion_label_class_id": "carla:generated:v0",
+                "mounted": False,
+                "has_trailer": False,
+                "has_protrusion": False,
+                "automobile_type": "other",
+                "truck_type": "",
+                "bus_type": "",
+                "puller_type": "",
+                "rider_type": "",
+                "alive": True,
+                "parent_obstacle_label_id": "",
+                "lidar_sensor": "",
+                "blueprint_id": vehicle.type_id
+            }
+        }
+
+    # Get all pedestrians
+    walkers = world.get_actors().filter('walker.pedestrian.*')
+    for walker in walkers:
+        bbox = walker.bounding_box
+        transform = walker.get_transform()
+
+        # Convert to transformation matrix
+        loc = transform.location
+        rot = transform.rotation
+
+        # Convert degrees to radians and create transformation matrix
+        roll = math.radians(rot.roll)
+        pitch = math.radians(rot.pitch)
+        yaw = math.radians(rot.yaw)
+
+        cos_roll = math.cos(roll)
+        sin_roll = math.sin(roll)
+        cos_pitch = math.cos(pitch)
+        sin_pitch = math.sin(pitch)
+        cos_yaw = math.cos(yaw)
+        sin_yaw = math.sin(yaw)
+
+        adjusted_z = loc.z + bbox.extent.z  # Move up by half the height
+
+        object_to_world = [
+            [cos_yaw * cos_pitch, cos_yaw * sin_pitch * sin_roll - sin_yaw * cos_roll, cos_yaw * sin_pitch * cos_roll + sin_yaw * sin_roll, loc.x],
+            [sin_yaw * cos_pitch, sin_yaw * sin_pitch * sin_roll + cos_yaw * cos_roll, sin_yaw * sin_pitch * cos_roll - cos_yaw * sin_roll, loc.y],
+            [-sin_pitch, cos_pitch * sin_roll, cos_pitch * cos_roll, adjusted_z],
+            [0.0, 0.0, 0.0, 1.0]
+        ]
+
+        # Get velocity to determine if moving
+        velocity = walker.get_velocity()
+        speed = math.sqrt(velocity.x**2 + velocity.y**2 + velocity.z**2)
+        is_moving = speed > 0.05  # Moving if speed > 0.05 m/s
+
+        object_lwh = [
+            bbox.extent.x * 2.0,  # Length
+            bbox.extent.y * 2.0,  # Width
+            bbox.extent.z * 2.0   # Height
+        ]
+
+        objects_data[str(walker.id)] = {
+            "object_to_world": object_to_world,
+            "object_lwh": object_lwh,
+            "object_is_moving": is_moving,
+            "object_type": "Pedestrian",
+            "aux_info": {
+                "trackline_id": str(walker.id),
+                "category": "pedestrian",
+                "egomotion_label_class_id": "carla:generated:v0",
+                "mounted": False,
+                "has_trailer": False,
+                "has_protrusion": False,
+                "automobile_type": "",
+                "truck_type": "",
+                "bus_type": "",
+                "puller_type": "",
+                "rider_type": "pedestrian",
+                "alive": True,
+                "parent_obstacle_label_id": "",
+                "lidar_sensor": "",
+                "blueprint_id": walker.type_id
+            }
+        }
+
+    return objects_data
+
+def export_dynamic_objects_cosmos_format(dynamic_frames, session_id, output_dir):
+    # Create all_object_info directory
+    objects_dir = output_dir / "all_object_info"
+    objects_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create temporary directory for JSON files
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Create individual JSON files for each frame
+        json_files = []
+        for frame_idx, frame_data in enumerate(dynamic_frames):
+            filename = f"{session_id}.{frame_idx:06d}.all_object_info.json"
+            json_file = temp_path / filename
+
+            with open(json_file, 'w') as f:
+                json.dump(frame_data, f, separators=(',', ':'))  # Compact format
+
+            json_files.append((filename, str(json_file)))
+
+        # Create tar archive
+        tar_filename = f"{session_id}.tar"
+        tar_path = objects_dir / tar_filename
+
+        with tarfile.open(tar_path, 'w') as tar:
+            for filename, filepath in json_files:
+                tar.add(filepath, arcname=filename)
+
+        logging.info(f"Exported {len(dynamic_frames)} frames of dynamic objects to {tar_path}")
+        return True
+
+def extract_camera_poses(world, frame_number, camera_actor_id, camera_sensor=None):
+    """Extract camera pose data for a single frame"""
+    import numpy as np
+
+    if camera_sensor is not None:
+        # Use the actual camera sensor transform - this is the correct camera pose
+        camera_transform = camera_sensor.get_transform()
+        loc = camera_transform.location
+        rot = camera_transform.rotation
+    else:
+        # Fallback: Get the ego vehicle (camera actor)
+        ego_vehicle = world.get_actor(camera_actor_id)
+        if ego_vehicle is None:
+            return None
+
+        # Get vehicle transform (fallback only)
+        vehicle_transform = ego_vehicle.get_transform()
+        loc = vehicle_transform.location
+        rot = vehicle_transform.rotation
+
+    import math
+    roll = math.radians(rot.roll)
+    pitch = math.radians(rot.pitch)
+    yaw = math.radians(rot.yaw)
+
+    # Create rotation matrix from Euler angles
+    cos_roll = math.cos(roll)
+    sin_roll = math.sin(roll)
+    cos_pitch = math.cos(pitch)
+    sin_pitch = math.sin(pitch)
+    cos_yaw = math.cos(yaw)
+    sin_yaw = math.sin(yaw)
+
+    # Rotation matrix (ZYX Euler angle convention)
+    R = np.array([
+        [cos_yaw * cos_pitch, cos_yaw * sin_pitch * sin_roll - sin_yaw * cos_roll, cos_yaw * sin_pitch * cos_roll + sin_yaw * sin_roll],
+        [sin_yaw * cos_pitch, sin_yaw * sin_pitch * sin_roll + cos_yaw * cos_roll, sin_yaw * sin_pitch * cos_roll - cos_yaw * sin_roll],
+        [-sin_pitch, cos_pitch * sin_roll, cos_pitch * cos_roll]
+    ])
+
+    # Use CARLA coordinate system directly, same as C++ exporters and objects
+    # Create 4x4 transformation matrix
+    pose_matrix = np.eye(4)
+    pose_matrix[:3, :3] = R
+    pose_matrix[:3, 3] = [loc.x, loc.y, loc.z]  # Python API already returns values in meters
+
+    return pose_matrix
+
+def extract_vehicle_pose(world, frame_number, camera_actor_id, camera_sensor=None):
+    """Extract ego vehicle pose data for a single frame"""
+    # For now, vehicle pose is the same as camera pose since camera is mounted on ego vehicle
+    return extract_camera_poses(world, frame_number, camera_actor_id, camera_sensor)
+
+def export_pose_data(pose_frames, session_id, output_dir):
+    """Export per-frame camera pose data in cosmos format (tar archive of .npy files)"""
+    import numpy as np
+    import tarfile
+    import tempfile
+    import os
+    from io import BytesIO
+
+    # Create pose directory
+    pose_dir = output_dir / "pose"
+    pose_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create temporary directory for npy files
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Create individual .npy files for each frame
+        npy_files = []
+        for frame_idx, pose_matrix in enumerate(pose_frames):
+            if pose_matrix is not None:
+                # Create webdataset compatible filename
+                # Use session_id as prefix for webdataset compatibility
+                filename = f"{session_id}.{frame_idx:06d}.pose.camera_front_wide_120fov.npy"
+                npy_file = temp_path / filename
+
+                # Save numpy array
+                np.save(npy_file, pose_matrix)
+                npy_files.append((filename, str(npy_file)))
+
+        # Create tar archive
+        tar_filename = f"{session_id}.tar"
+        tar_path = pose_dir / tar_filename
+
+        with tarfile.open(tar_path, 'w') as tar:
+            for filename, filepath in npy_files:
+                tar.add(filepath, arcname=filename)
+
+        logging.info(f"Exported {len(npy_files)} frames of camera pose data to {tar_path}")
+        return True
+
+def export_vehicle_pose_data(vehicle_pose_frames, session_id, output_dir):
+    """Export per-frame vehicle pose data in cosmos format (tar archive of .npy files)"""
+    import numpy as np
+    import tarfile
+    import tempfile
+
+    # Create vehicle_pose directory
+    vehicle_pose_dir = output_dir / "vehicle_pose"
+    vehicle_pose_dir.mkdir(parents=True, exist_ok=True)
+
+    # Create temporary directory for npy files
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Create individual .npy files for each frame
+        npy_files = []
+        for frame_idx, pose_matrix in enumerate(vehicle_pose_frames):
+            if pose_matrix is not None:
+                # Use session_id as prefix for webdataset compatibility
+                filename = f"{session_id}.{frame_idx:06d}.vehicle_pose.npy"
+                npy_file = temp_path / filename
+
+                # Save numpy array
+                np.save(npy_file, pose_matrix)
+                npy_files.append((filename, str(npy_file)))
+
+        # Create tar archive
+        tar_filename = f"{session_id}.tar"
+        tar_path = vehicle_pose_dir / tar_filename
+
+        with tarfile.open(tar_path, 'w') as tar:
+            for filename, filepath in npy_files:
+                tar.add(filepath, arcname=filename)
+
+        logging.info(f"Exported {len(npy_files)} frames of vehicle pose data to {tar_path}")
+        return True
+
+# === RDS-HQ EXPORT ===
+def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=None, pose_frames=None, vehicle_pose_frames=None):
+    """Export RDS-HQ compatible clip structure"""
+    import os
+
+    # Create RDS-HQ output directory
+    rds_hq_dir = Path(args.output_dir) / "rds-hq"
+    rds_hq_dir.mkdir(parents=True, exist_ok=True)
+
+    # Generate session ID based on the log file name
+    # Extract base name without extension from the recorder file
+    log_file_base = Path(args.recorder_filename).stem
+
+    # Sanitize the log file base name by replacing periods with underscores
+    # This is crucial for webdataset compatibility as it uses periods as delimiters
+    log_file_base_sanitized = log_file_base.replace('.', '_')
+
+    # Create session ID with format: logfilename_starttime_endtime (in microseconds)
+    start_time_us = int(args.start * 1000000)
+    end_time_us = int((args.start + (args.duration if args.duration > 0 else log_duration)) * 1000000)
+    session_id = f"{log_file_base_sanitized}_{start_time_us}_{end_time_us}"
+
+    logging.info(f"Exporting RDS-HQ clip with session ID: {session_id}")
+    logging.info(f"Output directory: {rds_hq_dir}")
+
+    try:
+        # Export static cosmos data
+        logging.info("Starting export of all static cosmos elements...")
+        static_exports = [
+            ("crosswalks", world.export_cosmos_crosswalks, "3d_crosswalks"),
+            ("road_boundaries", world.export_cosmos_road_boundaries, "3d_road_boundaries"),
+            ("lane_lines", world.export_cosmos_lane_lines, "3d_lanelines"),  # Note: no underscore for compatibility
+            ("traffic_signs", world.export_cosmos_traffic_signs, "3d_traffic_signs"),
+            ("wait_lines", world.export_cosmos_wait_lines, "3d_wait_lines"),
+            ("road_markings", world.export_cosmos_road_markings, "3d_road_markings")
+        ]
+
+        successful_exports = []
+        failed_exports = []
+        static_directories = {}  # Track created directories for tar archiving
+
+        for export_name, export_func, dir_name in static_exports:
+            try:
+                logging.info(f"Attempting to export {export_name}...")
+                result = export_func(session_id, str(rds_hq_dir) + "/")
+                logging.info(f"Successfully exported {export_name}: {result}")
+                successful_exports.append(export_name)
+                static_directories[export_name] = dir_name
+            except Exception as e:
+                logging.error(f"Failed to export {export_name}: {e}")
+                import traceback
+                logging.error(f"Full traceback: {traceback.format_exc()}")
+                failed_exports.append((export_name, str(e)))
+
+        # Create tar archives for all 3d_* directories with JSON files
+        import tarfile
+        import glob
+        import os
+
+        # Process all 3d_* directories
+        for dir_path in rds_hq_dir.glob("3d_*"):
+            if dir_path.is_dir():
+                try:
+                    # Find all JSON files in the directory
+                    json_files = list(dir_path.glob("*.json"))
+
+                    if json_files:
+                        # Create tar archive
+                        tar_filename = f"{session_id}.tar"
+                        tar_path = dir_path / tar_filename
+
+                        with tarfile.open(tar_path, 'w') as tar:
+                            for json_file in json_files:
+                                tar.add(json_file, arcname=json_file.name)
+
+                        logging.info(f"Created tar archive {tar_path} with {len(json_files)} JSON files")
+
+                        for json_file in json_files:
+                            json_file.unlink()
+                        logging.info(f"Removed {len(json_files)} JSON files from {dir_path.name}")
+                    else:
+                        logging.debug(f"No JSON files found in {dir_path}")
+                except Exception as e:
+                    logging.error(f"Failed to create tar archive for {dir_path.name}: {e}")
+
+        # Export dynamic objects
+        if dynamic_frames:
+            try:
+                logging.info(f"Exporting {len(dynamic_frames)} frames of dynamic objects...")
+                if export_dynamic_objects_cosmos_format(dynamic_frames, session_id, rds_hq_dir):
+                    successful_exports.append("dynamic_objects")
+            except Exception as e:
+                logging.error(f"Failed to export dynamic objects: {e}")
+                failed_exports.append(("dynamic_objects", str(e)))
+
+        # Export pose data
+        if pose_frames:
+            try:
+                logging.info(f"Exporting {len(pose_frames)} frames of camera pose data...")
+                if export_pose_data(pose_frames, session_id, rds_hq_dir):
+                    successful_exports.append("camera_poses")
+            except Exception as e:
+                logging.error(f"Failed to export camera poses: {e}")
+                failed_exports.append(("camera_poses", str(e)))
+
+        # Export vehicle pose data
+        if vehicle_pose_frames:
+            try:
+                logging.info(f"Exporting {len(vehicle_pose_frames)} frames of vehicle pose data...")
+                if export_vehicle_pose_data(vehicle_pose_frames, session_id, rds_hq_dir):
+                    successful_exports.append("vehicle_poses")
+            except Exception as e:
+                logging.error(f"Failed to export vehicle poses: {e}")
+                failed_exports.append(("vehicle_poses", str(e)))
+
+        # Create metadata file
+        metadata = {
+            "session_id": session_id,
+            "carla_version": "0.9.15",
+            "recorder_file": args.recorder_filename,
+            "start_time": args.start,
+            "duration": args.duration if args.duration > 0 else log_duration,
+            "total_frames": log_frames,
+            "fps": round(1.0 / (log_duration / log_frames)),
+            "camera_actor_id": args.camera,
+            "time_factor": args.time_factor,
+            "output_structure": {
+                "3d_crosswalks": f"{session_id}.tar",
+                "3d_road_boundaries": f"{session_id}.tar",
+                "3d_lanelines": f"{session_id}.tar",
+                "3d_traffic_signs": f"{session_id}.tar",
+                "3d_wait_lines": f"{session_id}.tar",
+                "3d_road_markings": f"{session_id}.tar",
+                "all_object_info": f"{session_id}.tar",
+                "pose": f"{session_id}.tar",
+                "vehicle_pose": f"{session_id}.tar"
+            }
+        }
+
+        import json
+        metadata_file = rds_hq_dir / f"{session_id}_metadata.json"
+        with open(metadata_file, 'w') as f:
+            json.dump(metadata, f, indent=2)
+
+    except Exception as e:
+        logging.error(f"Failed to export RDS-HQ clip: {e}")
+        raise
+
 # === MAIN ===
 def main():
     parser = argparse.ArgumentParser()
@@ -277,7 +734,7 @@ def main():
         level=logging.INFO,
         format='%(asctime)s %(levelname)s %(processName)s: %(message)s'
     )
-    logging.info("Starting CarlaCosmos-DataAcquisition parallel pipeline")
+    logging.info("Starting CarlaCosmos-DataAcquisition with RDS-HQ export")
 
     if args.class_filter_config:
         load_class_filter_config(args.class_filter_config)
@@ -349,9 +806,34 @@ def main():
     timestamp = args.start
     total = log_duration if args.duration == 0.0 else args.duration
     frame_count = 0
+    dynamic_frames = []  # Collect dynamic object data for each frame
+    pose_frames = []     # Collect camera pose data for each frame
+    vehicle_pose_frames = []  # Collect vehicle pose data for each frame
+
     try:
         while timestamp < args.start + total:
             idx = world.tick()
+
+            # Extract dynamic objects for this frame (cosmos format)
+            dynamic_objects = extract_dynamic_objects_cosmos_format(world, frame_count)
+            dynamic_frames.append(dynamic_objects)
+
+            # Find the main camera sensor (RGB camera for pose reference)
+            main_camera_sensor = None
+            for si in sensor_infos:
+                if si.sensor_type == AOV.RGB:  # Use RGB camera as the pose reference
+                    main_camera_sensor = si.sensor
+                    break
+
+            # Extract camera pose for this frame using the actual camera sensor
+            camera_pose = extract_camera_poses(world, frame_count, args.camera, main_camera_sensor)
+            pose_frames.append(camera_pose)
+
+            # Extract vehicle pose for this frame using the same camera sensor
+            vehicle_pose = extract_vehicle_pose(world, frame_count, args.camera, main_camera_sensor)
+            vehicle_pose_frames.append(vehicle_pose)
+
+            # Capture sensor frames
             frame_dict = {}
             for si in sensor_infos:
                 res = si.capture_current_frame()
@@ -361,12 +843,15 @@ def main():
             raw_q.put(FrameBundle(idx, frame_dict, timestamp))
             frame_count += 1
             if frame_count % 100 == 0:
-                logging.info(f"Queued frame {frame_count}, timestamp={timestamp:.3f}, idx={idx}")
+                logging.info(f"Queued frame {frame_count}, timestamp={timestamp:.3f}, idx={idx}, objects={len(dynamic_objects)}")
             timestamp += log_delta
     finally:
         for _ in workers: raw_q.put(None)
         for p in workers: p.join()
         proc_q.put(None); writer.join()
+
+        export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames, pose_frames, vehicle_pose_frames)
+
         client.stop_replayer(keep_actors=False)
         for si in sensor_infos: si.sensor.stop(); si.sensor.destroy()
         settings.synchronous_mode = False; settings.fixed_delta_seconds = None; world.apply_settings(settings)
