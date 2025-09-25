@@ -177,7 +177,7 @@ bool ULaneLineExporter::ExportCosmosLaneLines(UWorld* World, const FString& Sess
   }
 
   // Construct full path with subdirectory and filename
-  FString FullPath = OutFilePath + TEXT("3d_lane_lines/") + SessionId + TEXT(".lane_lines.json");
+  FString FullPath = OutFilePath + TEXT("3d_lanelines/") + SessionId + TEXT(".lanelines.json");
   const FString Dir = FPaths::GetPath(FullPath);
   IFileManager::Get().MakeDirectory(*Dir, /*Tree=*/true);
 
