@@ -124,7 +124,7 @@ This would be important for exchanging data about nearby vehicles or objects to 
 
 ## Geocoordinates
 
-Geocoordinates are geodetic coordinates given in the format of **latitude**, **longitude** and **altitude** to represent a location on the Earth's surface. The OpenDRIVE definition of a CARLA map (the `.xodr` file) allows a georeference in its metadata. See [this documentation](https://releases.asam.net/OpenDRIVE/1.6.0/ASAM_OpenDRIVE_BS_V1-6-0.html#_georeferencing_in_opendrive) for more information about the georeference in the OpenDRIVE standard.
+Geocoordinates are geodetic coordinates given in the format of **latitude**, **longitude** and **altitude** to represent a location on the Earth's surface. The OpenDRIVE definition of a CARLA map (the `.xodr` file) allows a georeference in its metadata. See [this documentation](https://releases.asam.net/OpenDRIVE/1.6.0/ASAM_OpenDRIVE_BS_V1-6-0.html#_georeferencing_in_opendrive) for more information about the georeference in the OpenDRIVE standard. 
 
 In the OpenDRIVE file, the georeference will be provided in the header information in a <geoReference> tag:
 
@@ -142,7 +142,7 @@ In the OpenDRIVE file, the georeference will be provided in the header informati
 
 ```
         
-The georeference provided in the OpenDRIVE file is used by the CARLA [Map object](python_api.md#carlamap) to convert between CARLA's world coordinates and geocoordinates. The geocoordinate provided serves as the location at the coordinate center of the map in CARLA, i.e. X=0, Y=0, Z=0. 
+The georeference provided in the OpenDRIVE file is used by the CARLA [Map object](python_api.md#carlamap) to convert between CARLA's world coordinates and geocoordinates. The geocoordinate provided serves as the location at the coordinate center of the map in CARLA, i.e. X=0, Y=0, Z=0. **CARLA uses the [Transverse Mercator projection](https://en.wikipedia.org/wiki/Transverse_Mercator_projection) for converting geolocations**. 
 
 To convert a CARLA coordinate into a geocoordinate, use the `transform_to_geolocation()` method of the Map object:
 
