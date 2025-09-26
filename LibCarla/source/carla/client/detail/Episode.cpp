@@ -42,8 +42,7 @@ using namespace std::chrono_literals;
     : _client(client),
       _state(std::make_shared<EpisodeState>(info.id)),
       _simulator(simulator),
-      _token(info.token),
-      __state_counter(0) {
+      _token(info.token) {
   }
 
   Episode::~Episode() {
@@ -90,7 +89,7 @@ using namespace std::chrono_literals;
             }
           } while (!self->_state.compare_exchange(&prev, next));
 
-          NotifyStateUpdate();
+          self->NotifyStateUpdate();
 
           if(UpdateLights || HasMapChanged) {
             self->_on_light_update_callbacks.Call(next);

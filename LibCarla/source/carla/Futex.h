@@ -7,7 +7,13 @@
 #pragma once
 
 #include <atomic>
+#include <utility>
+#include <type_traits>
 #include <boost/optional.hpp>
+
+#if __has_include("carla/AtomicSharedPtr.h")
+#include "carla/AtomicSharedPtr.h"
+#endif
 
 #if __cplusplus >= 202002L
     #define HAS_ATOMIC_WAIT_NOTIFY
@@ -36,11 +42,11 @@ namespace carla
 {
   namespace futex
   {
-    template <typename T>
+    template <typename T, typename U, typename = std::enable_if_t<std::is_convertible<T, U>::value>>
     inline static void wait(
       std::atomic<T>& target,
-      T desired,
-      boost::optional<std::chrono::milliseconds> timeout)
+      U desired,
+      boost::optional<std::chrono::milliseconds> timeout = { })
     {
 #ifdef _WIN32
       DWORD timeout_ms = INFINITE;
@@ -61,7 +67,7 @@ namespace carla
       uint32_t timeout_ms;
       auto timeout_ms_ptr = &timeout_ms;
       if (timeout.has_value())
-        timeout_ms = (uint32_t)timeout.value().count();
+        timeout_ms = static_cast<uint32_t>(timeout.value().count());
       else
         timeout_ms_ptr = nullptr;
       while (true)
@@ -71,7 +77,7 @@ namespace carla
           break;
         (void)syscall(
           SYS_futex,
-          (uint32_t*)&target,
+          reinterpret_cast<uint32_t*>(&target),
           FUTEX_WAIT,
           &expected,
           timeout_ms_ptr, nullptr, 0);
@@ -82,44 +88,43 @@ namespace carla
 #endif
     }
 
-    template <typename T>
+    template <typename T, typename U>
     inline static void wait(
-      T& target,
-      T desired,
-      boost::optional<std::chrono::milliseconds> timeout)
+      AtomicSharedPtr<T>& target,
+      U desired,
+      boost::optional<std::chrono::milliseconds> timeout = { })
     {
-      auto target_ptr = (volatile T*)&target;
 #ifdef _WIN32
-      auto timeout_ms = (DWORD)timeout.count();
+      auto timeout_ms = (DWORD)timeout.value().count();
       timeout_ms = timeout_ms != 0 ? timeout_ms : INFINITE;
       while (true)
       {
-        T current = *target_ptr;
+        T current = target.load();
         if (current == desired)
           break;
         (void)WaitOnAddress(
-          (volatile PVOID)target_ptr,
+          reinterpret_cast<volatile PVOID*>(&target),
           (PVOID)&current,
           sizeof(T),
           timeout_ms);
       }
 #elif defined(HAS_FUTEX)
-      auto timeout_ms = (uint32_t)timeout.count();
+      auto timeout_ms = static_cast<uint32_t>(timeout.value().count());
       auto timeout_ms_ptr = timeout_ms != 0 ? &timeout_ms : nullptr;
       while (true)
       {
-        T expected = *target_ptr;
+        T expected = target.load();
         if (expected == desired)
           break;
         (void)syscall(
           SYS_futex,
-          (uint32_t*)target_ptr,
+          reinterpret_cast<uint32_t*>(target),
           FUTEX_WAIT,
           &expected,
           timeout_ms_ptr, nullptr, 0);
       }
 #else
-      while (*target_ptr != desired)
+      while (target.load() != desired)
         std::this_thread::yield();
 #endif
     }
@@ -137,7 +142,7 @@ namespace carla
 #elif defined(HAS_FUTEX)
       syscall(
         SYS_futex,
-        (uint32_t*)&target,
+        reinterpret_cast<uint32_t*>(&target),
         FUTEX_WAKE,
         all ? INT_MAX : 1,
         nullptr, nullptr, 0);

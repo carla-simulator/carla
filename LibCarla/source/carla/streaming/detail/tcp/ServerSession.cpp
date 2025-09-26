@@ -25,7 +25,7 @@ namespace streaming {
 namespace detail {
 namespace tcp {
 
-  static std::atomic_size_t SESSION_COUNTER = 0;
+  static std::atomic_size_t SESSION_COUNTER { 0 };
 
   ServerSession::ServerSession(
       boost::asio::io_context &io_context,
@@ -33,14 +33,16 @@ namespace tcp {
       Server &server)
     : LIBCARLA_INITIALIZE_LIFETIME_PROFILER(
           std::string("tcp server session ") +
-          std::to_string(SESSION_COUNTER.load(std::memory_order::acquire))),
+          std::to_string(SESSION_COUNTER.load(std::memory_order_acquire))),
       _server(server),
       _session_id(
-        SESSION_COUNTER.fetch_add(1, std::memory_order::release) + 1),
+        SESSION_COUNTER.fetch_add(1, std::memory_order_release) + 1),
       _socket(io_context),
       _timeout(timeout),
       _deadline(io_context),
-      _strand(io_context) {}
+      _strand(io_context),
+      _is_writing() {
+    }
 
   void ServerSession::Open(
       callback_function_type on_opened,

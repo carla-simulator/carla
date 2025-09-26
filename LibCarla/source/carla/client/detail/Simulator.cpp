@@ -47,10 +47,11 @@ namespace detail {
     }
   }
 
+  template <typename T>
   static bool SynchronizeFrame(
     uint64_t target_frame,
     const Episode &episode,
-    time_duration timeout)
+    T&& timeout)
   {
     auto start = std::chrono::system_clock::now();
     auto deadline = start + timeout;
@@ -67,7 +68,7 @@ namespace detail {
       if (target_frame <= current_frame)
       {
         carla::traffic_manager::TrafficManager::Tick();
-        return;
+        return true;
       }
       auto local_timeout = deadline - std::chrono::system_clock::now();
       episode.AwaitStateUpdate(state_weak, local_timeout); // Wait for state pointer update with timeout.
