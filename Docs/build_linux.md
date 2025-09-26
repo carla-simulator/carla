@@ -183,7 +183,7 @@ make PythonAPI
 ``` 
 
 !!! note
-    **Numpy 2 error**: If the Python installation or environment that you are using to build Python has *numpy>=2.0.0* installed, this will cause an error during the build process due to conflicting dependencies. This should be the first thing to check when encountering errors related to Boost. Check your numpy version using `python3 -m pip show numpy`.
+    **NumPy 2 error**: If the Python installation or environment that you are using to build CARLA has *numpy>=2.0.0* installed, this will cause an error during the build process due to conflicting dependencies. This should be the first thing to check when encountering errors related to Boost. Check your NumPy version using `python3 -m pip show numpy`.
 
 **Building the Python API for a specific Python version**
 
@@ -249,7 +249,7 @@ During the first launch, the editor may show warnings regarding shaders and mesh
 ![ue4_editor_open](img/ue4_editor_open.png)
 
 !!! note
-    **Numpy 2 error**: `make launch` can be affected by the Numpy 2 conflict, check the numpy version in your Python installation using PIP: `python3 -m pip show numpy`. If it is version *2.0.0* or later, you will need to downgrade to *numpy<=2.0.0*.
+    **NumPy 2 error**: `make launch` can be affected by the NumPy 2 conflict, check the NumPy version in your Python installation using PIP: `python3 -m pip show numpy`. If it is version *2.0.0* or later, you will need to downgrade to *numpy<2.0.0*.
 
 #### 3. Start the simulation
 
