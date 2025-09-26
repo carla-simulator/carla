@@ -42,10 +42,15 @@ using namespace std::chrono_literals;
     : _client(client),
       _state(std::make_shared<EpisodeState>(info.id)),
       _simulator(simulator),
-      _token(info.token) {
+      _token(info.token),
+      _state_counter(0) {
   }
 
   Episode::~Episode() {
+
+    (void)_state_counter.fetch_add(1U, std::memory_order_release);
+    carla::futex::wake(_state_counter);
+
     try {
       _client.UnSubscribeFromStream(_token);
     } catch (const std::exception &e) {
@@ -118,11 +123,24 @@ using namespace std::chrono_literals;
     std::weak_ptr<const EpisodeState> old_state,
     boost::optional<std::chrono::milliseconds> timeout) const
   {
-    carla::futex::wait(_state, old_state, timeout);
+    auto pinned = old_state.lock();
+    if (pinned == nullptr)
+      return;
+    auto old_counter = _state_counter.load(std::memory_order_acquire);
+    while (true)
+    {
+      auto current_state = _state.load();
+      if (pinned->GetEpisodeId() != current_state->GetEpisodeId())
+        break;
+      if (_state_counter.load(std::memory_order_acquire) != old_counter)
+        break;
+      carla::futex::wait(_state_counter, old_counter, timeout);
+    }
   }
   
   void Episode::NotifyStateUpdate() {
-    carla::futex::wake(_state);
+    (void)_state_counter.fetch_add(1U, std::memory_order_release);
+    carla::futex::wake(_state_counter);
   }
 
   boost::optional<rpc::Actor> Episode::GetActorById(ActorId id) {

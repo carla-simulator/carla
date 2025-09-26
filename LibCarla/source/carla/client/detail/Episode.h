@@ -147,6 +147,8 @@ namespace detail {
     bool _should_update_map = true;
 
     std::weak_ptr<Simulator> _simulator;
+
+    std::atomic_uint32_t _state_counter;
   };
 
 } // namespace detail

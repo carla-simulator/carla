@@ -47,12 +47,12 @@ namespace detail {
     }
   }
 
-  template <typename T>
   static bool SynchronizeFrame(
     uint64_t target_frame,
     const Episode &episode,
-    T&& timeout)
+    time_duration timeout_td)
   {
+    auto timeout = timeout_td.to_chrono();
     auto start = std::chrono::system_clock::now();
     auto deadline = start + timeout;
     // Wait while target_frame > current_frame:
@@ -71,7 +71,8 @@ namespace detail {
         return true;
       }
       auto local_timeout = deadline - std::chrono::system_clock::now();
-      episode.AwaitStateUpdate(state_weak, local_timeout); // Wait for state pointer update with timeout.
+      auto local_timeout_ms = std::chrono::duration_cast<std::chrono::milliseconds>(local_timeout);
+      episode.AwaitStateUpdate(state_weak, local_timeout_ms); // Wait for state pointer update with timeout.
       auto elapsed = std::chrono::system_clock::now() - start;
       if (timeout < elapsed)
         return false;
