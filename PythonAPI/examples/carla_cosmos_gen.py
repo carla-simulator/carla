@@ -262,7 +262,7 @@ def video_writer_worker(proc_q: mp.Queue, out_dir: Path, fps: float):
         tmp.unlink(missing_ok=True)
     logging.info("[Writer] exiting")
 
-# === DYNAMIC OBJECT EXTRACTION (COSMOS FORMAT) ===
+# === DYNAMIC OBJECT EXTRACTION (RDS-HQ FORMAT) ===
 def extract_dynamic_objects_cosmos_format(world, frame_number):
     objects_data = {}
 
@@ -272,11 +272,9 @@ def extract_dynamic_objects_cosmos_format(world, frame_number):
         bbox = vehicle.bounding_box
         transform = vehicle.get_transform()
 
-        # Convert to transformation matrix (object_to_world)
         loc = transform.location
         rot = transform.rotation
 
-        # Convert degrees to radians
         roll = math.radians(rot.roll)
         pitch = math.radians(rot.pitch)
         yaw = math.radians(rot.yaw)
@@ -291,17 +289,13 @@ def extract_dynamic_objects_cosmos_format(world, frame_number):
 
         adjusted_z = loc.z + bbox.extent.z  # Move up by half the height
 
-        object_to_world = [
+        # Create transform matrix in Carla coordinates (keep original)
+        object_to_world = np.array([
             [cos_yaw * cos_pitch, cos_yaw * sin_pitch * sin_roll - sin_yaw * cos_roll, cos_yaw * sin_pitch * cos_roll + sin_yaw * sin_roll, loc.x],
             [sin_yaw * cos_pitch, sin_yaw * sin_pitch * sin_roll + cos_yaw * cos_roll, sin_yaw * sin_pitch * cos_roll - cos_yaw * sin_roll, loc.y],
             [-sin_pitch, cos_pitch * sin_roll, cos_pitch * cos_roll, adjusted_z],
             [0.0, 0.0, 0.0, 1.0]
-        ]
-
-        # Get velocity to determine if moving
-        velocity = vehicle.get_velocity()
-        speed = math.sqrt(velocity.x**2 + velocity.y**2 + velocity.z**2)
-        is_moving = speed > 0.1  # Moving if speed > 0.1 m/s
+        ]).tolist()
 
         # Object dimensions: [length, width, height]
         object_lwh = [
@@ -310,23 +304,58 @@ def extract_dynamic_objects_cosmos_format(world, frame_number):
             bbox.extent.z * 2.0   # Height
         ]
 
+        # Determine vehicle type based on blueprint ID
+        # Following the same classification as CosmosControlSensor
+        type_id = vehicle.type_id.lower()
+
+        # Default values
+        object_type = "Automobile"
+        category = "automobile"
+        automobile_type = "other"
+        truck_type = ""
+        bus_type = ""
+        rider_type = ""
+
+        # Check vehicle type from blueprint ID
+        if 'truck' in type_id or 'firetruck' in type_id or 'sprinter' in type_id or 'carlacola' in type_id:
+            object_type = "Truck"
+            category = "truck"
+            automobile_type = ""
+            truck_type = "other"
+        elif 'bus' in type_id:
+            object_type = "Bus"
+            category = "bus"
+            automobile_type = ""
+            bus_type = "other"
+        elif 'motorcycle' in type_id or 'harley' in type_id or 'yamaha' in type_id or 'kawasaki' in type_id or 'vespa' in type_id:
+            object_type = "Motorcycle"
+            category = "motorcycle"
+            automobile_type = ""
+            rider_type = "motorcycle"
+        elif 'bicycle' in type_id or 'bike' in type_id or 'bh.crossbike' in type_id or 'diamondback.century' in type_id or 'gazelle.omafiets' in type_id:
+            object_type = "Bicycle"
+            category = "bicycle"
+            automobile_type = ""
+            rider_type = "bicycle"
+        # Otherwise keep as automobile (cars, vans, etc.)
+
         objects_data[str(vehicle.id)] = {
             "object_to_world": object_to_world,
             "object_lwh": object_lwh,
-            "object_is_moving": is_moving,
-            "object_type": "Automobile",
+            "object_is_moving": True,
+            "object_type": object_type,
             "aux_info": {
                 "trackline_id": str(vehicle.id),
-                "category": "automobile",
+                "category": category,
                 "egomotion_label_class_id": "carla:generated:v0",
                 "mounted": False,
                 "has_trailer": False,
                 "has_protrusion": False,
-                "automobile_type": "other",
-                "truck_type": "",
-                "bus_type": "",
+                "automobile_type": automobile_type,
+                "truck_type": truck_type,
+                "bus_type": bus_type,
                 "puller_type": "",
-                "rider_type": "",
+                "rider_type": rider_type,
                 "alive": True,
                 "parent_obstacle_label_id": "",
                 "lidar_sensor": "",
@@ -340,11 +369,9 @@ def extract_dynamic_objects_cosmos_format(world, frame_number):
         bbox = walker.bounding_box
         transform = walker.get_transform()
 
-        # Convert to transformation matrix
         loc = transform.location
         rot = transform.rotation
 
-        # Convert degrees to radians and create transformation matrix
         roll = math.radians(rot.roll)
         pitch = math.radians(rot.pitch)
         yaw = math.radians(rot.yaw)
@@ -358,17 +385,13 @@ def extract_dynamic_objects_cosmos_format(world, frame_number):
 
         adjusted_z = loc.z + bbox.extent.z  # Move up by half the height
 
-        object_to_world = [
+        # Create transform matrix in Carla coordinates (keep original)
+        object_to_world = np.array([
             [cos_yaw * cos_pitch, cos_yaw * sin_pitch * sin_roll - sin_yaw * cos_roll, cos_yaw * sin_pitch * cos_roll + sin_yaw * sin_roll, loc.x],
             [sin_yaw * cos_pitch, sin_yaw * sin_pitch * sin_roll + cos_yaw * cos_roll, sin_yaw * sin_pitch * cos_roll - cos_yaw * sin_roll, loc.y],
             [-sin_pitch, cos_pitch * sin_roll, cos_pitch * cos_roll, adjusted_z],
             [0.0, 0.0, 0.0, 1.0]
-        ]
-
-        # Get velocity to determine if moving
-        velocity = walker.get_velocity()
-        speed = math.sqrt(velocity.x**2 + velocity.y**2 + velocity.z**2)
-        is_moving = speed > 0.05  # Moving if speed > 0.05 m/s
+        ]).tolist()
 
         object_lwh = [
             bbox.extent.x * 2.0,  # Length
@@ -379,7 +402,7 @@ def extract_dynamic_objects_cosmos_format(world, frame_number):
         objects_data[str(walker.id)] = {
             "object_to_world": object_to_world,
             "object_lwh": object_lwh,
-            "object_is_moving": is_moving,
+            "object_is_moving": True,
             "object_type": "Pedestrian",
             "aux_info": {
                 "trackline_id": str(walker.id),
@@ -430,7 +453,6 @@ def export_dynamic_objects_cosmos_format(dynamic_frames, session_id, output_dir)
             for filename, filepath in json_files:
                 tar.add(filepath, arcname=filename)
 
-        logging.info(f"Exported {len(dynamic_frames)} frames of dynamic objects to {tar_path}")
         return True
 
 def extract_camera_poses(world, frame_number, camera_actor_id, camera_sensor=None):
@@ -455,10 +477,17 @@ def extract_camera_poses(world, frame_number, camera_actor_id, camera_sensor=Non
 
     import math
     roll = math.radians(rot.roll)
-    pitch = math.radians(rot.pitch)
+    # Compensate for the sensor looking upward - subtract pitch to look forward
+    # If sensor has 8 degrees upward pitch, we compensate by subtracting it
+    pitch = math.radians(rot.pitch - 8.0) if camera_sensor is not None else math.radians(rot.pitch)
     yaw = math.radians(rot.yaw)
 
+    # Debug: Log the sensor transform to understand orientation
+    if camera_sensor is not None:
+        logging.debug(f"Camera sensor transform - Original Pitch: {rot.pitch}, Adjusted Pitch: {rot.pitch - 8.0}, Yaw: {rot.yaw}, Roll: {rot.roll}")
+
     # Create rotation matrix from Euler angles
+    # Carla uses UE4 convention: Pitch (Y), Yaw (Z), Roll (X)
     cos_roll = math.cos(roll)
     sin_roll = math.sin(roll)
     cos_pitch = math.cos(pitch)
@@ -466,20 +495,37 @@ def extract_camera_poses(world, frame_number, camera_actor_id, camera_sensor=Non
     cos_yaw = math.cos(yaw)
     sin_yaw = math.sin(yaw)
 
-    # Rotation matrix (ZYX Euler angle convention)
+    # Carla/UE4 uses ZYX Euler angles (Yaw-Pitch-Roll order)
+    # This is the standard aerospace convention
+    # Apply rotations in order: Yaw (Z) -> Pitch (Y) -> Roll (X)
+
+    # Combined rotation matrix using ZYX convention
+    # This matches what Carla expects
     R = np.array([
         [cos_yaw * cos_pitch, cos_yaw * sin_pitch * sin_roll - sin_yaw * cos_roll, cos_yaw * sin_pitch * cos_roll + sin_yaw * sin_roll],
         [sin_yaw * cos_pitch, sin_yaw * sin_pitch * sin_roll + cos_yaw * cos_roll, sin_yaw * sin_pitch * cos_roll - cos_yaw * sin_roll],
         [-sin_pitch, cos_pitch * sin_roll, cos_pitch * cos_roll]
     ])
 
-    # Use CARLA coordinate system directly, same as C++ exporters and objects
-    # Create 4x4 transformation matrix
-    pose_matrix = np.eye(4)
-    pose_matrix[:3, :3] = R
-    pose_matrix[:3, 3] = [loc.x, loc.y, loc.z]  # Python API already returns values in meters
+    # Create 4x4 transformation matrix (camera-to-world transform)
+    # This represents where the camera is in world coordinates
+    pose_matrix_carla = np.eye(4)
+    pose_matrix_carla[:3, :3] = R
+    pose_matrix_carla[:3, 3] = [loc.x, loc.y, loc.z]
 
-    return pose_matrix
+    # Convert from Carla/UE4 FLU convention to OpenCV convention
+    # Carla: X=forward, Y=right, Z=up (FLU)
+    # OpenCV: X=right, Y=down, Z=forward
+    # Fixed: Remove horizontal flip by not negating Y axis
+    # Transformation: OpenCV_X = Carla_Y, OpenCV_Y = -Carla_Z, OpenCV_Z = Carla_X
+    pose_matrix_opencv = np.concatenate([
+        pose_matrix_carla[:, 1:2],   # X_opencv = Y_carla (right, no flip)
+        -pose_matrix_carla[:, 2:3],  # Y_opencv = -Z_carla (down)
+        pose_matrix_carla[:, 0:1],   # Z_opencv = X_carla (forward)
+        pose_matrix_carla[:, 3:4]    # Keep homogeneous coordinate
+    ], axis=1)
+
+    return pose_matrix_opencv
 
 def extract_vehicle_pose(world, frame_number, camera_actor_id, camera_sensor=None):
     """Extract ego vehicle pose data for a single frame"""
@@ -563,8 +609,84 @@ def export_vehicle_pose_data(vehicle_pose_frames, session_id, output_dir):
         logging.info(f"Exported {len(npy_files)} frames of vehicle pose data to {tar_path}")
         return True
 
+# === CAMERA INTRINSICS EXPORT ===
+def get_existing_camera_sensors(world, ego_vehicle_id):
+    """Get camera sensors already spawned by the replayer"""
+    ego_vehicle = world.get_actor(ego_vehicle_id)
+    all_actors = world.get_actors()
+
+    # Find all camera sensors
+    camera_sensors = []
+    for actor in all_actors:
+        if 'sensor.camera' in actor.type_id:
+            # Check if attached to our ego vehicle
+            if hasattr(actor, 'parent') and actor.parent and actor.parent.id == ego_vehicle_id:
+                camera_sensors.append(actor)
+
+    return camera_sensors
+
+def extract_camera_intrinsics_from_sensor(sensor):
+    """Extract camera intrinsics from an already spawned sensor"""
+    # Get attributes from the sensor's blueprint
+    attributes = sensor.attributes
+
+    # Extract camera parameters
+    image_width = int(attributes.get('image_size_x', 1920))
+    image_height = int(attributes.get('image_size_y', 1080))
+    fov = float(attributes.get('fov', 90.0))
+
+    # Build intrinsic matrix
+    focal = image_width / (2.0 * np.tan(fov * np.pi / 360.0))
+
+    K = np.identity(3)
+    K[0, 0] = focal  # fx
+    K[1, 1] = focal  # fy
+    K[0, 2] = image_width / 2.0   # cx
+    K[1, 2] = image_height / 2.0  # cy
+
+    return K, image_width, image_height, fov
+
+def export_camera_intrinsics_single(K, width, height, session_id, output_dir):
+    """Export camera intrinsics in RDS-HQ format (both pinhole and ftheta)"""
+    import tarfile
+    import tempfile
+
+    # Create pinhole_intrinsic directory
+    pinhole_dir = output_dir / "pinhole_intrinsic"
+    pinhole_dir.mkdir(parents=True, exist_ok=True)
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+
+        # Format for RDS-HQ pinhole camera model
+        # PinholeCamera.from_numpy() expects [fx, fy, cx, cy, w, h]
+        intrinsic_data = np.array([
+            K[0,0],    # fx
+            K[1,1],    # fy
+            K[0,2],    # cx
+            K[1,2],    # cy
+            width,     # w
+            height     # h
+        ], dtype=np.float32)
+
+        # Save as .npy file with WebDataset naming convention
+        # WebDataset expects: prefix.key.extension -> will create key "key.extension" in the dict
+        filename = f"{session_id}.pinhole_intrinsic.camera_front_wide_120fov.npy"
+        npy_file = temp_path / filename
+        np.save(npy_file, intrinsic_data)
+
+        # Create tar archive
+        tar_path = pinhole_dir / f"{session_id}.tar"
+        with tarfile.open(tar_path, 'w') as tar:
+            tar.add(npy_file, arcname=filename)
+
+    logging.info(f"Exported pinhole camera intrinsics to {tar_path}")
+
+    return True
+
+
 # === RDS-HQ EXPORT ===
-def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=None, pose_frames=None, vehicle_pose_frames=None):
+def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=None, pose_frames=None, vehicle_pose_frames=None, camera_intrinsics=None):
     """Export RDS-HQ compatible clip structure"""
     import os
 
@@ -587,6 +709,11 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
 
     logging.info(f"Exporting RDS-HQ clip with session ID: {session_id}")
     logging.info(f"Output directory: {rds_hq_dir}")
+
+    # Define target FPS for RDS-HQ export
+    target_fps = 24
+    recording_fps = round(1.0 / (log_duration / log_frames))
+    downsample_ratio = max(1, round(recording_fps / target_fps))
 
     try:
         # Export static cosmos data
@@ -651,7 +778,9 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
         # Export dynamic objects
         if dynamic_frames:
             try:
-                logging.info(f"Exporting {len(dynamic_frames)} frames of dynamic objects...")
+                actual_frame_count = len(dynamic_frames)
+                calculated_fps = actual_frame_count / (args.duration if args.duration > 0 else log_duration)
+                logging.info(f"Exporting {actual_frame_count} frames of dynamic objects (calculated fps: {calculated_fps:.2f})...")
                 if export_dynamic_objects_cosmos_format(dynamic_frames, session_id, rds_hq_dir):
                     successful_exports.append("dynamic_objects")
             except Exception as e:
@@ -661,7 +790,9 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
         # Export pose data
         if pose_frames:
             try:
-                logging.info(f"Exporting {len(pose_frames)} frames of camera pose data...")
+                actual_frame_count = len(pose_frames)
+                calculated_fps = actual_frame_count / (args.duration if args.duration > 0 else log_duration)
+                logging.info(f"Exporting {actual_frame_count} frames of camera pose data (calculated fps: {calculated_fps:.2f})...")
                 if export_pose_data(pose_frames, session_id, rds_hq_dir):
                     successful_exports.append("camera_poses")
             except Exception as e:
@@ -678,15 +809,34 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
                 logging.error(f"Failed to export vehicle poses: {e}")
                 failed_exports.append(("vehicle_poses", str(e)))
 
-        # Create metadata file
+        # Export camera intrinsics
+        if camera_intrinsics:
+            try:
+                logging.info("Exporting camera intrinsics...")
+                K, width, height, fov = camera_intrinsics
+                if export_camera_intrinsics_single(K, width, height, session_id, rds_hq_dir):
+                    successful_exports.append("camera_intrinsics")
+            except Exception as e:
+                logging.error(f"Failed to export camera intrinsics: {e}")
+                failed_exports.append(("camera_intrinsics", str(e)))
+
+        # Create metadata file with actual exported frame counts
+        actual_exported_frames = len(dynamic_frames) if dynamic_frames else 0
+        actual_duration = args.duration if args.duration > 0 else log_duration
+        actual_fps = actual_exported_frames / actual_duration if actual_duration > 0 else 0
+
         metadata = {
             "session_id": session_id,
             "carla_version": "0.9.15",
             "recorder_file": args.recorder_filename,
             "start_time": args.start,
-            "duration": args.duration if args.duration > 0 else log_duration,
-            "total_frames": log_frames,
-            "fps": round(1.0 / (log_duration / log_frames)),
+            "duration": actual_duration,
+            "total_frames_in_recording": log_frames,
+            "exported_frames": actual_exported_frames,
+            "recording_fps": round(1.0 / (log_duration / log_frames)),
+            "exported_fps": round(actual_fps),
+            "target_fps": target_fps,
+            "downsample_ratio": downsample_ratio,
             "camera_actor_id": args.camera,
             "time_factor": args.time_factor,
             "output_structure": {
@@ -698,7 +848,8 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
                 "3d_road_markings": f"{session_id}.tar",
                 "all_object_info": f"{session_id}.tar",
                 "pose": f"{session_id}.tar",
-                "vehicle_pose": f"{session_id}.tar"
+                "vehicle_pose": f"{session_id}.tar",
+                "pinhole_intrinsic": f"{session_id}.tar"
             }
         }
 
@@ -749,6 +900,12 @@ def main():
     log_delta = log_duration / log_frames
     fps = round(1.0 / log_delta)
     logging.info(f"Recorder: {log_frames} frames, {log_duration:.2f}s, fps={fps}")
+
+    # Calculate downsampling for RDS-HQ export (target 24 FPS)
+    target_fps = 24
+    downsample_ratio = max(1, round(fps / target_fps))  # e.g., 240/24 = 10
+    effective_fps = fps / downsample_ratio
+    logging.info(f"RDS-HQ export: downsampling by {downsample_ratio}x from {fps} fps to {effective_fps:.1f} fps")
 
     client.set_replayer_time_factor(args.time_factor)
     client.set_replayer_ignore_hero(args.ignore_hero)
@@ -810,28 +967,67 @@ def main():
     pose_frames = []     # Collect camera pose data for each frame
     vehicle_pose_frames = []  # Collect vehicle pose data for each frame
 
+    # Extract camera intrinsics from existing sensors (if replayer spawned them)
+    camera_intrinsics = None
+    if args.spawn_sensors:
+        # Try to get existing camera sensors from the replayer
+        existing_cameras = get_existing_camera_sensors(world, args.camera)
+        if existing_cameras:
+            # Use the first RGB camera as reference for intrinsics
+            for camera in existing_cameras:
+                if 'rgb' in camera.type_id.lower():
+                    K, width, height, fov = extract_camera_intrinsics_from_sensor(camera)
+                    camera_intrinsics = (K, width, height, fov)
+                    logging.info(f"Extracted camera intrinsics: {width}x{height}, FOV={fov:.2f}")
+                    break
+
+    # If no existing sensors or intrinsics not extracted, use the spawned sensors
+    if not camera_intrinsics and sensor_infos:
+        for si in sensor_infos:
+            if si.sensor_type == AOV.RGB:
+                # Extract from the spawned sensor's blueprint
+                sensor = si.sensor
+                attributes = sensor.attributes
+                width = int(attributes.get('image_size_x', 1920))
+                height = int(attributes.get('image_size_y', 1080))
+                fov = float(attributes.get('fov', 90.0))
+
+                focal = width / (2.0 * np.tan(fov * np.pi / 360.0))
+                K = np.identity(3)
+                K[0, 0] = focal
+                K[1, 1] = focal
+                K[0, 2] = width / 2.0
+                K[1, 2] = height / 2.0
+
+                camera_intrinsics = (K, width, height, fov)
+                logging.info(f"Extracted camera intrinsics from spawned sensor: {width}x{height}, FOV={fov:.2f}")
+                break
+
     try:
         while timestamp < args.start + total:
             idx = world.tick()
 
-            # Extract dynamic objects for this frame (cosmos format)
-            dynamic_objects = extract_dynamic_objects_cosmos_format(world, frame_count)
-            dynamic_frames.append(dynamic_objects)
+            # Only collect RDS-HQ data for frames matching target FPS (24 fps)
+            # This implements downsampling: e.g., collect every 10th frame for 240->24 fps
+            if frame_count % downsample_ratio == 0:
+                # Extract dynamic objects for this frame (cosmos format)
+                dynamic_objects = extract_dynamic_objects_cosmos_format(world, frame_count)
+                dynamic_frames.append(dynamic_objects)
 
-            # Find the main camera sensor (RGB camera for pose reference)
-            main_camera_sensor = None
-            for si in sensor_infos:
-                if si.sensor_type == AOV.RGB:  # Use RGB camera as the pose reference
-                    main_camera_sensor = si.sensor
-                    break
+                # Find the main camera sensor (RGB camera for pose reference)
+                main_camera_sensor = None
+                for si in sensor_infos:
+                    if si.sensor_type == AOV.RGB:  # Use RGB camera as the pose reference
+                        main_camera_sensor = si.sensor
+                        break
 
-            # Extract camera pose for this frame using the actual camera sensor
-            camera_pose = extract_camera_poses(world, frame_count, args.camera, main_camera_sensor)
-            pose_frames.append(camera_pose)
+                # Extract camera pose for this frame using the actual camera sensor
+                camera_pose = extract_camera_poses(world, frame_count, args.camera, main_camera_sensor)
+                pose_frames.append(camera_pose)
 
-            # Extract vehicle pose for this frame using the same camera sensor
-            vehicle_pose = extract_vehicle_pose(world, frame_count, args.camera, main_camera_sensor)
-            vehicle_pose_frames.append(vehicle_pose)
+                # Extract vehicle pose for this frame using the same camera sensor
+                vehicle_pose = extract_vehicle_pose(world, frame_count, args.camera, main_camera_sensor)
+                vehicle_pose_frames.append(vehicle_pose)
 
             # Capture sensor frames
             frame_dict = {}
@@ -843,14 +1039,15 @@ def main():
             raw_q.put(FrameBundle(idx, frame_dict, timestamp))
             frame_count += 1
             if frame_count % 100 == 0:
-                logging.info(f"Queued frame {frame_count}, timestamp={timestamp:.3f}, idx={idx}, objects={len(dynamic_objects)}")
+                rds_frames_collected = len(dynamic_frames)
+                logging.info(f"Queued frame {frame_count}, timestamp={timestamp:.3f}, idx={idx}, RDS-HQ frames={rds_frames_collected}")
             timestamp += log_delta
     finally:
         for _ in workers: raw_q.put(None)
         for p in workers: p.join()
         proc_q.put(None); writer.join()
 
-        export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames, pose_frames, vehicle_pose_frames)
+        export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames, pose_frames, vehicle_pose_frames, camera_intrinsics)
 
         client.stop_replayer(keep_actors=False)
         for si in sensor_infos: si.sensor.stop(); si.sensor.destroy()
