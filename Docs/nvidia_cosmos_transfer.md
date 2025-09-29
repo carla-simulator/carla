@@ -13,7 +13,7 @@ This integration is presented in the form of a client-server architecture. The `
     * [Dependency installation](#install-dependencies)
     * [Generating Cosmos-Transfer control inputs](#generating-cosmos-transfer-control-inputs)
     * [Generating style-transfer variations using Cosmos Transfer](#generating-style-transfer-variations-using-cosmos-transfer)
-    * [Understanding the Cosmos-Transfer configuration](#understainding-the-cosmos-transfer-configuration)
+    * [Understanding the Cosmos-Transfer configuration](#understanding-the-cosmos-transfer-configuration)
 
 --- 
 # Deploying a Cosmos Transfer server
@@ -196,7 +196,7 @@ python cosmos_client.py http://url_to_server:port example_data/prompts/rain.toml
 ```
 The first argument is the URL and port of the Cosmos Transfer server. If you are running a local server from a Docker container, this may be `localhost` or the network IP address of your server. If you are using NVIDIA Brev, the appropriate URL and port are given in the details of the Brev instance.
 
-You can edit the text prompt and control parameters in the `rain.toml` configuration to experiment and see the effects. Numerous other examples are provided in the same directory and you can learn more about the parameters in the [following section](#understainding-the-cosmos-transfer-configuration).
+You can edit the text prompt and control parameters in the `rain.toml` configuration to experiment and see the effects. Numerous other examples are provided in the same directory and you can learn more about the parameters in the [following section](#understanding-the-cosmos-transfer-configuration).
 
 You can optionally override some fields from the TOML on the command line and choose where to save the output:
 
@@ -214,7 +214,7 @@ python cosmos_client.py http://url_to_server:port \
 
 ---
 
-## Understainding the Cosmos-Transfer Configuration
+## Understanding the Cosmos-Transfer Configuration
 
 This section describes the TOML configuration (see `example_data/prompts/rain.toml`). The client accepts a flat schema as shown below, and also supports the same keys nested under a top-level `controlnet_specs` table.
 
