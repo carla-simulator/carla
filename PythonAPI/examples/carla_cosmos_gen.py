@@ -275,69 +275,30 @@ def extract_dynamic_objects_cosmos_format(world, frame_number):
         loc = transform.location
         rot = transform.rotation
 
-        roll = math.radians(rot.roll)
-        pitch = math.radians(rot.pitch)
-        yaw = math.radians(rot.yaw)
+        # Convert to radians
+        roll, pitch, yaw = map(math.radians, [rot.roll, rot.pitch, rot.yaw])
 
-        # Create rotation matrix from Euler angles
-        cos_roll = math.cos(roll)
-        sin_roll = math.sin(roll)
-        cos_pitch = math.cos(pitch)
-        sin_pitch = math.sin(pitch)
-        cos_yaw = math.cos(yaw)
-        sin_yaw = math.sin(yaw)
+        # Trigonometric values
+        cr, sr = math.cos(roll), math.sin(roll)
+        cp, sp = math.cos(pitch), math.sin(pitch)
+        cy, sy = math.cos(yaw), math.sin(yaw)
 
-        adjusted_z = loc.z + bbox.extent.z  # Move up by half the height
+        # Adjust Z to object center
+        adjusted_z = loc.z + bbox.extent.z
 
-        # Create transform matrix in Carla coordinates (keep original)
-        object_to_world = np.array([
-            [cos_yaw * cos_pitch, cos_yaw * sin_pitch * sin_roll - sin_yaw * cos_roll, cos_yaw * sin_pitch * cos_roll + sin_yaw * sin_roll, loc.x],
-            [sin_yaw * cos_pitch, sin_yaw * sin_pitch * sin_roll + cos_yaw * cos_roll, sin_yaw * sin_pitch * cos_roll - cos_yaw * sin_roll, loc.y],
-            [-sin_pitch, cos_pitch * sin_roll, cos_pitch * cos_roll, adjusted_z],
+        # Create transform matrix in CARLA coordinates
+        object_to_world = [
+            [cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr, loc.x],
+            [sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr, loc.y],
+            [-sp, cp * sr, cp * cr, adjusted_z],
             [0.0, 0.0, 0.0, 1.0]
-        ]).tolist()
-
-        # Object dimensions: [length, width, height]
-        object_lwh = [
-            bbox.extent.x * 2.0,  # Length
-            bbox.extent.y * 2.0,  # Width
-            bbox.extent.z * 2.0   # Height
         ]
 
-        # Determine vehicle type based on blueprint ID
-        # Following the same classification as CosmosControlSensor
-        type_id = vehicle.type_id.lower()
+        # Object dimensions
+        object_lwh = [bbox.extent.x * 2.0, bbox.extent.y * 2.0, bbox.extent.z * 2.0]
 
-        # Default values
-        object_type = "Automobile"
-        category = "automobile"
-        automobile_type = "other"
-        truck_type = ""
-        bus_type = ""
-        rider_type = ""
-
-        # Check vehicle type from blueprint ID
-        if 'truck' in type_id or 'firetruck' in type_id or 'sprinter' in type_id or 'carlacola' in type_id:
-            object_type = "Truck"
-            category = "truck"
-            automobile_type = ""
-            truck_type = "other"
-        elif 'bus' in type_id:
-            object_type = "Bus"
-            category = "bus"
-            automobile_type = ""
-            bus_type = "other"
-        elif 'motorcycle' in type_id or 'harley' in type_id or 'yamaha' in type_id or 'kawasaki' in type_id or 'vespa' in type_id:
-            object_type = "Motorcycle"
-            category = "motorcycle"
-            automobile_type = ""
-            rider_type = "motorcycle"
-        elif 'bicycle' in type_id or 'bike' in type_id or 'bh.crossbike' in type_id or 'diamondback.century' in type_id or 'gazelle.omafiets' in type_id:
-            object_type = "Bicycle"
-            category = "bicycle"
-            automobile_type = ""
-            rider_type = "bicycle"
-        # Otherwise keep as automobile (cars, vans, etc.)
+        object_type, category = "Automobile", "automobile"
+        automobile_type, truck_type, bus_type, rider_type = "other", "", "", ""
 
         objects_data[str(vehicle.id)] = {
             "object_to_world": object_to_world,
@@ -376,20 +337,17 @@ def extract_dynamic_objects_cosmos_format(world, frame_number):
         pitch = math.radians(rot.pitch)
         yaw = math.radians(rot.yaw)
 
-        cos_roll = math.cos(roll)
-        sin_roll = math.sin(roll)
-        cos_pitch = math.cos(pitch)
-        sin_pitch = math.sin(pitch)
-        cos_yaw = math.cos(yaw)
-        sin_yaw = math.sin(yaw)
+        cr, sr = math.cos(roll), math.sin(roll)
+        cp, sp = math.cos(pitch), math.sin(pitch)
+        cy, sy = math.cos(yaw), math.sin(yaw)
 
         adjusted_z = loc.z + bbox.extent.z  # Move up by half the height
 
         # Create transform matrix in Carla coordinates (keep original)
         object_to_world = np.array([
-            [cos_yaw * cos_pitch, cos_yaw * sin_pitch * sin_roll - sin_yaw * cos_roll, cos_yaw * sin_pitch * cos_roll + sin_yaw * sin_roll, loc.x],
-            [sin_yaw * cos_pitch, sin_yaw * sin_pitch * sin_roll + cos_yaw * cos_roll, sin_yaw * sin_pitch * cos_roll - cos_yaw * sin_roll, loc.y],
-            [-sin_pitch, cos_pitch * sin_roll, cos_pitch * cos_roll, adjusted_z],
+            [cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr, loc.x],
+            [sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr, loc.y],
+            [-sp, cp * sr, cp * cr, adjusted_z],
             [0.0, 0.0, 0.0, 1.0]
         ]).tolist()
 
@@ -456,81 +414,49 @@ def export_dynamic_objects_cosmos_format(dynamic_frames, session_id, output_dir)
         return True
 
 def extract_camera_poses(world, frame_number, camera_actor_id, camera_sensor=None):
-    """Extract camera pose data for a single frame"""
+    """Extract camera pose data in OpenCV format."""
     import numpy as np
 
-    if camera_sensor is not None:
-        # Use the actual camera sensor transform - this is the correct camera pose
-        camera_transform = camera_sensor.get_transform()
-        loc = camera_transform.location
-        rot = camera_transform.rotation
-    else:
-        # Fallback: Get the ego vehicle (camera actor)
-        ego_vehicle = world.get_actor(camera_actor_id)
-        if ego_vehicle is None:
-            return None
+    if camera_sensor is None:
+        logging.warning(f"Frame {frame_number}: No camera sensor provided, skipping pose extraction")
+        return None
 
-        # Get vehicle transform (fallback only)
-        vehicle_transform = ego_vehicle.get_transform()
-        loc = vehicle_transform.location
-        rot = vehicle_transform.rotation
+    transform = camera_sensor.get_transform()
 
-    import math
+    loc = transform.location
+    rot = transform.rotation
+
+    # Convert to radians
     roll = math.radians(rot.roll)
-    # Compensate for the sensor looking upward - subtract pitch to look forward
-    # If sensor has 8 degrees upward pitch, we compensate by subtracting it
-    pitch = math.radians(rot.pitch - 8.0) if camera_sensor is not None else math.radians(rot.pitch)
+    pitch = math.radians(rot.pitch)
     yaw = math.radians(rot.yaw)
 
-    # Debug: Log the sensor transform to understand orientation
-    if camera_sensor is not None:
-        logging.debug(f"Camera sensor transform - Original Pitch: {rot.pitch}, Adjusted Pitch: {rot.pitch - 8.0}, Yaw: {rot.yaw}, Roll: {rot.roll}")
+    # Create rotation matrix
+    cr, sr = math.cos(roll), math.sin(roll)
+    cp, sp = math.cos(pitch), math.sin(pitch)
+    cy, sy = math.cos(yaw), math.sin(yaw)
 
-    # Create rotation matrix from Euler angles
-    # Carla uses UE4 convention: Pitch (Y), Yaw (Z), Roll (X)
-    cos_roll = math.cos(roll)
-    sin_roll = math.sin(roll)
-    cos_pitch = math.cos(pitch)
-    sin_pitch = math.sin(pitch)
-    cos_yaw = math.cos(yaw)
-    sin_yaw = math.sin(yaw)
-
-    # Carla/UE4 uses ZYX Euler angles (Yaw-Pitch-Roll order)
-    # This is the standard aerospace convention
-    # Apply rotations in order: Yaw (Z) -> Pitch (Y) -> Roll (X)
-
-    # Combined rotation matrix using ZYX convention
-    # This matches what Carla expects
+    # Build rotation matrix
     R = np.array([
-        [cos_yaw * cos_pitch, cos_yaw * sin_pitch * sin_roll - sin_yaw * cos_roll, cos_yaw * sin_pitch * cos_roll + sin_yaw * sin_roll],
-        [sin_yaw * cos_pitch, sin_yaw * sin_pitch * sin_roll + cos_yaw * cos_roll, sin_yaw * sin_pitch * cos_roll - cos_yaw * sin_roll],
-        [-sin_pitch, cos_pitch * sin_roll, cos_pitch * cos_roll]
+        [cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr],
+        [sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr],
+        [-sp, cp * sr, cp * cr]
     ])
 
-    # Create 4x4 transformation matrix (camera-to-world transform)
-    # This represents where the camera is in world coordinates
-    pose_matrix_carla = np.eye(4)
-    pose_matrix_carla[:3, :3] = R
-    pose_matrix_carla[:3, 3] = [loc.x, loc.y, loc.z]
+    # Create CARLA pose matrix (camera-to-world)
+    pose_carla = np.eye(4)
+    pose_carla[:3, :3] = R
+    pose_carla[:3, 3] = [loc.x, loc.y, loc.z]
 
-    # Convert from Carla/UE4 FLU convention to OpenCV convention
-    # Carla: X=forward, Y=right, Z=up (FLU)
-    # OpenCV: X=right, Y=down, Z=forward
-    # Fixed: Remove horizontal flip by not negating Y axis
-    # Transformation: OpenCV_X = Carla_Y, OpenCV_Y = -Carla_Z, OpenCV_Z = Carla_X
-    pose_matrix_opencv = np.concatenate([
-        pose_matrix_carla[:, 1:2],   # X_opencv = Y_carla (right, no flip)
-        -pose_matrix_carla[:, 2:3],  # Y_opencv = -Z_carla (down)
-        pose_matrix_carla[:, 0:1],   # Z_opencv = X_carla (forward)
-        pose_matrix_carla[:, 3:4]    # Keep homogeneous coordinate
+    # Convert CARLA to OpenCV coordinate system
+    pose_opencv = np.concatenate([
+        pose_carla[:, 1:2],   # X = Y_carla (right)
+        -pose_carla[:, 2:3],  # Y = -Z_carla (down)
+        pose_carla[:, 0:1],   # Z = X_carla (forward)
+        pose_carla[:, 3:4]
     ], axis=1)
 
-    return pose_matrix_opencv
-
-def extract_vehicle_pose(world, frame_number, camera_actor_id, camera_sensor=None):
-    """Extract ego vehicle pose data for a single frame"""
-    # For now, vehicle pose is the same as camera pose since camera is mounted on ego vehicle
-    return extract_camera_poses(world, frame_number, camera_actor_id, camera_sensor)
+    return pose_opencv
 
 def export_pose_data(pose_frames, session_id, output_dir):
     """Export per-frame camera pose data in cosmos format (tar archive of .npy files)"""
@@ -572,43 +498,6 @@ def export_pose_data(pose_frames, session_id, output_dir):
         logging.info(f"Exported {len(npy_files)} frames of camera pose data to {tar_path}")
         return True
 
-def export_vehicle_pose_data(vehicle_pose_frames, session_id, output_dir):
-    """Export per-frame vehicle pose data in cosmos format (tar archive of .npy files)"""
-    import numpy as np
-    import tarfile
-    import tempfile
-
-    # Create vehicle_pose directory
-    vehicle_pose_dir = output_dir / "vehicle_pose"
-    vehicle_pose_dir.mkdir(parents=True, exist_ok=True)
-
-    # Create temporary directory for npy files
-    with tempfile.TemporaryDirectory() as temp_dir:
-        temp_path = Path(temp_dir)
-
-        # Create individual .npy files for each frame
-        npy_files = []
-        for frame_idx, pose_matrix in enumerate(vehicle_pose_frames):
-            if pose_matrix is not None:
-                # Use session_id as prefix for webdataset compatibility
-                filename = f"{session_id}.{frame_idx:06d}.vehicle_pose.npy"
-                npy_file = temp_path / filename
-
-                # Save numpy array
-                np.save(npy_file, pose_matrix)
-                npy_files.append((filename, str(npy_file)))
-
-        # Create tar archive
-        tar_filename = f"{session_id}.tar"
-        tar_path = vehicle_pose_dir / tar_filename
-
-        with tarfile.open(tar_path, 'w') as tar:
-            for filename, filepath in npy_files:
-                tar.add(filepath, arcname=filename)
-
-        logging.info(f"Exported {len(npy_files)} frames of vehicle pose data to {tar_path}")
-        return True
-
 # === CAMERA INTRINSICS EXPORT ===
 def get_existing_camera_sensors(world, ego_vehicle_id):
     """Get camera sensors already spawned by the replayer"""
@@ -647,7 +536,7 @@ def extract_camera_intrinsics_from_sensor(sensor):
     return K, image_width, image_height, fov
 
 def export_camera_intrinsics_single(K, width, height, session_id, output_dir):
-    """Export camera intrinsics in RDS-HQ format (both pinhole and ftheta)"""
+    """Export camera parameters in RDS-HQ format"""
     import tarfile
     import tempfile
 
@@ -686,7 +575,7 @@ def export_camera_intrinsics_single(K, width, height, session_id, output_dir):
 
 
 # === RDS-HQ EXPORT ===
-def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=None, pose_frames=None, vehicle_pose_frames=None, camera_intrinsics=None):
+def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=None, pose_frames=None, camera_intrinsics=None):
     """Export RDS-HQ compatible clip structure"""
     import os
 
@@ -799,16 +688,6 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
                 logging.error(f"Failed to export camera poses: {e}")
                 failed_exports.append(("camera_poses", str(e)))
 
-        # Export vehicle pose data
-        if vehicle_pose_frames:
-            try:
-                logging.info(f"Exporting {len(vehicle_pose_frames)} frames of vehicle pose data...")
-                if export_vehicle_pose_data(vehicle_pose_frames, session_id, rds_hq_dir):
-                    successful_exports.append("vehicle_poses")
-            except Exception as e:
-                logging.error(f"Failed to export vehicle poses: {e}")
-                failed_exports.append(("vehicle_poses", str(e)))
-
         # Export camera intrinsics
         if camera_intrinsics:
             try:
@@ -848,7 +727,6 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
                 "3d_road_markings": f"{session_id}.tar",
                 "all_object_info": f"{session_id}.tar",
                 "pose": f"{session_id}.tar",
-                "vehicle_pose": f"{session_id}.tar",
                 "pinhole_intrinsic": f"{session_id}.tar"
             }
         }
@@ -965,7 +843,6 @@ def main():
     frame_count = 0
     dynamic_frames = []  # Collect dynamic object data for each frame
     pose_frames = []     # Collect camera pose data for each frame
-    vehicle_pose_frames = []  # Collect vehicle pose data for each frame
 
     # Extract camera intrinsics from existing sensors (if replayer spawned them)
     camera_intrinsics = None
@@ -1025,10 +902,6 @@ def main():
                 camera_pose = extract_camera_poses(world, frame_count, args.camera, main_camera_sensor)
                 pose_frames.append(camera_pose)
 
-                # Extract vehicle pose for this frame using the same camera sensor
-                vehicle_pose = extract_vehicle_pose(world, frame_count, args.camera, main_camera_sensor)
-                vehicle_pose_frames.append(vehicle_pose)
-
             # Capture sensor frames
             frame_dict = {}
             for si in sensor_infos:
@@ -1047,7 +920,7 @@ def main():
         for p in workers: p.join()
         proc_q.put(None); writer.join()
 
-        export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames, pose_frames, vehicle_pose_frames, camera_intrinsics)
+        export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames, pose_frames, camera_intrinsics)
 
         client.stop_replayer(keep_actors=False)
         for si in sensor_infos: si.sensor.stop(); si.sensor.destroy()
