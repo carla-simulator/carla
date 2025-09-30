@@ -295,23 +295,21 @@ def extract_dynamic_objects_cosmos_format(world, frame_number):
 
         # Get semantic label from CARLA to determine vehicle type
         # CityObjectLabel: Car=14, Truck=15, Bus=16, Train=17, Motorcycle=18, Bicycle=19
-        # These map to RDS-HQ renderer colors (see bbox_utils.py CLASS_COLORS):
-        #   - Car/Automobile (RED), Truck/Bus/Train (BLUE), Pedestrian (GREEN), Rider/Cyclist (YELLOW)
         semantic_label = vehicle.semantic_tags[0] if vehicle.semantic_tags else 14  # Default to Car
 
-        # Map CARLA semantic labels to RDS-HQ object_type (determines bounding box color)
+        # Map CARLA semantic labels to RDS-HQ object_types
         if semantic_label == 14:  # Car
             object_type = "Automobile"
         elif semantic_label == 15:  # Truck
             object_type = "Truck"
         elif semantic_label == 16:  # Bus
-            object_type = "Bus"  # Renderer maps Bus -> Truck (BLUE)
+            object_type = "Bus"
         elif semantic_label == 17:  # Train
-            object_type = "Train_or_tram_car"  # Renderer maps to Truck (BLUE)
+            object_type = "Train_or_tram_car"
         elif semantic_label == 18:  # Motorcycle
-            object_type = "Rider"  # Renderer maps Rider -> Cyclist (YELLOW)
+            object_type = "Rider"
         elif semantic_label == 19:  # Bicycle
-            object_type = "Rider"  # Renderer maps Rider -> Cyclist (YELLOW)
+            object_type = "Rider"
         else:
             object_type = "Automobile"  # Default
 
