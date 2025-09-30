@@ -532,7 +532,7 @@ def export_camera_intrinsics_single(K, width, height, session_id, output_dir):
 
 
 # === DATASET CONFIG EXPORT ===
-def export_dataset_config(session_id, output_dir, rds_hq_camera_name="rds_hq", input_fps=30, target_render_fps=24):
+def export_dataset_config(session_id, output_dir, rds_hq_camera_name="rds_hq", input_fps=30, target_render_fps=24, total_frames=None):
     """
     Export dataset configuration JSON for RDS-HQ renderer.
 
@@ -542,10 +542,20 @@ def export_dataset_config(session_id, output_dir, rds_hq_camera_name="rds_hq", i
         rds_hq_camera_name: Name of the RDS-HQ camera sensor
         input_fps: FPS of the exported pose data (native CARLA recording FPS)
         target_render_fps: Desired output video FPS (renderer will downsample)
+        total_frames: Total number of frames exported (used to calculate chunk size)
 
     Returns:
         Path to exported config file
     """
+    # Calculate downsampled frame count
+    if total_frames is not None:
+        downsample_ratio = input_fps // target_render_fps
+        downsampled_frames = total_frames // downsample_ratio
+        # Use 121 frames if we have enough, otherwise use available frames
+        chunk_frame = min(121, downsampled_frames)
+    else:
+        chunk_frame = 121
+
     config = {
         "CAMERAS": [rds_hq_camera_name],
         "MINIMAP_TYPES": [
@@ -565,14 +575,14 @@ def export_dataset_config(session_id, output_dir, rds_hq_camera_name="rds_hq", i
         "NOT_POST_TRAINING": {
             "RESIZE_RESOLUTION": [1280, 720],
             "TO_COSMOS_RESOLUTION": "resize",
-            "TARGET_CHUNK_FRAME": 121,
+            "TARGET_CHUNK_FRAME": chunk_frame,
             "OVERLAP_FRAME": 0,
             "TARGET_RENDER_FPS": target_render_fps  # Output video FPS
         },
         "POST_TRAINING": {
             "RESIZE_RESOLUTION": [1280, 720],
             "TO_COSMOS_RESOLUTION": "center-crop",
-            "TARGET_CHUNK_FRAME": 121,
+            "TARGET_CHUNK_FRAME": chunk_frame,
             "OVERLAP_FRAME": 0,
             "TARGET_RENDER_FPS": target_render_fps
         }
@@ -746,7 +756,8 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
             output_dir=rds_hq_dir,
             rds_hq_camera_name="rds_hq",  # Camera name from our export
             input_fps=recording_fps,       # Native CARLA recording FPS
-            target_render_fps=24           # Desired output video FPS
+            target_render_fps=24,          # Desired output video FPS
+            total_frames=actual_exported_frames  # Total frames exported
         )
 
     except Exception as e:
