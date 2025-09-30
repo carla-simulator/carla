@@ -1283,7 +1283,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       UELocation = LargeMap->GlobalToLocalLocation(UELocation);
     }
     ECarlaServerResponse Response =
-        CarlaActor->AddActorForceAtLocation(UELocation, force.ToCentimeters().ToFVector());
+        CarlaActor->AddActorForceAtLocation(force.ToCentimeters().ToFVector(), UELocation);
     if (Response != ECarlaServerResponse::Success)
     {
       return RespondError(

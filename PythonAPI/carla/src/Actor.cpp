@@ -32,9 +32,18 @@ static void AddActorImpulse(cc::Actor &self,
   self.AddImpulse(impulse);
 }
 
+static void AddActorImpulseAtLocation(carla::client::Actor &self,
+    const carla::geom::Vector3D &impulse, const carla::geom::Location &location) {
+  self.AddImpulse(impulse, location);
+}
 static void AddActorForce(cc::Actor &self,
     const cg::Vector3D &force) {
   self.AddForce(force);
+}
+
+static void AddActorForceAtLocation(carla::client::Actor &self,
+  const carla::geom::Vector3D &force, const carla::geom::Location &location) {
+self.AddForce(force, location);
 }
 
 static auto GetGroupTrafficLights(cc::TrafficLight &self) {
@@ -119,8 +128,10 @@ void export_actor() {
       .def("set_target_angular_velocity", &cc::Actor::SetTargetAngularVelocity, (arg("angular_velocity")))
       .def("enable_constant_velocity", &cc::Actor::EnableConstantVelocity, (arg("velocity")))
       .def("disable_constant_velocity", &cc::Actor::DisableConstantVelocity)
-      .def("add_impulse", &AddActorImpulse, (arg("impulse")))
+      .def("add_impulse", &AddActorImpulse, (arg("impulse"))) 
+      .def("add_impulse_at_location", &AddActorImpulseAtLocation, (arg("impulse"), arg("location")))
       .def("add_force", &AddActorForce, (arg("force")))
+      .def("add_force_at_location", &AddActorForceAtLocation, (arg("force"), arg("location")))
       .def("add_angular_impulse", &cc::Actor::AddAngularImpulse, (arg("angular_impulse")))
       .def("add_torque", &cc::Actor::AddTorque, (arg("torque")))
       .def("set_simulate_physics", &cc::Actor::SetSimulatePhysics, (arg("enabled") = true))
