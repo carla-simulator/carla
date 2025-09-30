@@ -29,7 +29,6 @@ class AOV(Enum):
     SEMANTIC_SEGMENTATION = 2
     INSTANCE_SEGMENTATION = 3
     NORMALS = 4
-    COSMOS_VISUALIZATION = 5
 
 @dataclass
 class FrameBundle:
@@ -171,7 +170,6 @@ class SensorInfo:
         conv_map = {
             AOV.RGB: carla.ColorConverter.Raw,
             AOV.SEMANTIC_SEGMENTATION: carla.ColorConverter.CityScapesPalette,
-            AOV.COSMOS_VISUALIZATION: carla.ColorConverter.Raw
         }
         conv = conv_map.get(self.sensor_type, carla.ColorConverter.Raw)
         data.convert(conv)
@@ -217,8 +215,6 @@ def post_processing_worker(raw_q: mp.Queue, proc_q: mp.Queue):
             ids = reconstruct_ids_vectorized(frames[AOV.INSTANCE_SEGMENTATION])
             colored = apply_colormap_vectorized(ids, colormap_uint8)
             processed['INSTANCE_SEGMENTATION'] = colored
-        if AOV.COSMOS_VISUALIZATION in frames:
-            processed['COSMOS_VISUALIZATION'] = frames[AOV.COSMOS_VISUALIZATION]
         proc_q.put((bundle.index, processed))
     logging.info(f"[{mp.current_process().name}] exiting")
 
@@ -414,7 +410,6 @@ def export_dynamic_objects_cosmos_format(dynamic_frames, session_id, output_dir)
         return True
 
 def extract_camera_poses(world, frame_number, camera_actor_id, camera_sensor=None):
-    """Extract camera pose data in OpenCV format."""
     import numpy as np
 
     if camera_sensor is None:
@@ -459,7 +454,6 @@ def extract_camera_poses(world, frame_number, camera_actor_id, camera_sensor=Non
     return pose_opencv
 
 def export_pose_data(pose_frames, session_id, output_dir):
-    """Export per-frame camera pose data in cosmos format (tar archive of .npy files)"""
     import numpy as np
     import tarfile
     import tempfile
@@ -478,8 +472,7 @@ def export_pose_data(pose_frames, session_id, output_dir):
         npy_files = []
         for frame_idx, pose_matrix in enumerate(pose_frames):
             if pose_matrix is not None:
-                # Create webdataset compatible filename
-                # Use session_id as prefix for webdataset compatibility
+                # Use session_id as prefix
                 filename = f"{session_id}.{frame_idx:06d}.pose.camera_front_wide_120fov.npy"
                 npy_file = temp_path / filename
 
@@ -499,23 +492,7 @@ def export_pose_data(pose_frames, session_id, output_dir):
         return True
 
 # === CAMERA INTRINSICS EXPORT ===
-def get_existing_camera_sensors(world, ego_vehicle_id):
-    """Get camera sensors already spawned by the replayer"""
-    ego_vehicle = world.get_actor(ego_vehicle_id)
-    all_actors = world.get_actors()
-
-    # Find all camera sensors
-    camera_sensors = []
-    for actor in all_actors:
-        if 'sensor.camera' in actor.type_id:
-            # Check if attached to our ego vehicle
-            if hasattr(actor, 'parent') and actor.parent and actor.parent.id == ego_vehicle_id:
-                camera_sensors.append(actor)
-
-    return camera_sensors
-
 def extract_camera_intrinsics_from_sensor(sensor):
-    """Extract camera intrinsics from an already spawned sensor"""
     # Get attributes from the sensor's blueprint
     attributes = sensor.attributes
 
@@ -536,19 +513,16 @@ def extract_camera_intrinsics_from_sensor(sensor):
     return K, image_width, image_height, fov
 
 def export_camera_intrinsics_single(K, width, height, session_id, output_dir):
-    """Export camera parameters in RDS-HQ format"""
     import tarfile
     import tempfile
 
-    # Create pinhole_intrinsic directory
     pinhole_dir = output_dir / "pinhole_intrinsic"
     pinhole_dir.mkdir(parents=True, exist_ok=True)
 
     with tempfile.TemporaryDirectory() as temp_dir:
         temp_path = Path(temp_dir)
 
-        # Format for RDS-HQ pinhole camera model
-        # PinholeCamera.from_numpy() expects [fx, fy, cx, cy, w, h]
+        # PinholeCamera expects [fx, fy, cx, cy, w, h]
         intrinsic_data = np.array([
             K[0,0],    # fx
             K[1,1],    # fy
@@ -558,8 +532,7 @@ def export_camera_intrinsics_single(K, width, height, session_id, output_dir):
             height     # h
         ], dtype=np.float32)
 
-        # Save as .npy file with WebDataset naming convention
-        # WebDataset expects: prefix.key.extension -> will create key "key.extension" in the dict
+        # Save as .npy file
         filename = f"{session_id}.pinhole_intrinsic.camera_front_wide_120fov.npy"
         npy_file = temp_path / filename
         np.save(npy_file, intrinsic_data)
@@ -576,19 +549,14 @@ def export_camera_intrinsics_single(K, width, height, session_id, output_dir):
 
 # === RDS-HQ EXPORT ===
 def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=None, pose_frames=None, camera_intrinsics=None):
-    """Export RDS-HQ compatible clip structure"""
     import os
 
-    # Create RDS-HQ output directory
     rds_hq_dir = Path(args.output_dir) / "rds-hq"
     rds_hq_dir.mkdir(parents=True, exist_ok=True)
 
-    # Generate session ID based on the log file name
-    # Extract base name without extension from the recorder file
     log_file_base = Path(args.recorder_filename).stem
 
     # Sanitize the log file base name by replacing periods with underscores
-    # This is crucial for webdataset compatibility as it uses periods as delimiters
     log_file_base_sanitized = log_file_base.replace('.', '_')
 
     # Create session ID with format: logfilename_starttime_endtime (in microseconds)
@@ -638,7 +606,6 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
         import glob
         import os
 
-        # Process all 3d_* directories
         for dir_path in rds_hq_dir.glob("3d_*"):
             if dir_path.is_dir():
                 try:
@@ -812,10 +779,6 @@ def main():
         )
         sensor = world.spawn_actor(bp, transform, attach_to=vehicle)
         
-        # If it's the cosmos visualization sensor, set it to ignore the ego vehicle
-        if entry['sensor'].upper() == 'COSMOS_VISUALIZATION':
-            sensor.set_ignored_vehicles([args.camera])  # Only this sensor ignores ego
-        
         sensor_infos.append(SensorInfo(sensor, AOV[entry['sensor'].upper()]))
 
     raw_q = mp.Queue()
@@ -844,48 +807,19 @@ def main():
     dynamic_frames = []  # Collect dynamic object data for each frame
     pose_frames = []     # Collect camera pose data for each frame
 
-    # Extract camera intrinsics from existing sensors (if replayer spawned them)
+    # Extract camera intrinsics from the spawned sensors
     camera_intrinsics = None
-    if args.spawn_sensors:
-        # Try to get existing camera sensors from the replayer
-        existing_cameras = get_existing_camera_sensors(world, args.camera)
-        if existing_cameras:
-            # Use the first RGB camera as reference for intrinsics
-            for camera in existing_cameras:
-                if 'rgb' in camera.type_id.lower():
-                    K, width, height, fov = extract_camera_intrinsics_from_sensor(camera)
-                    camera_intrinsics = (K, width, height, fov)
-                    logging.info(f"Extracted camera intrinsics: {width}x{height}, FOV={fov:.2f}")
-                    break
-
-    # If no existing sensors or intrinsics not extracted, use the spawned sensors
-    if not camera_intrinsics and sensor_infos:
-        for si in sensor_infos:
-            if si.sensor_type == AOV.RGB:
-                # Extract from the spawned sensor's blueprint
-                sensor = si.sensor
-                attributes = sensor.attributes
-                width = int(attributes.get('image_size_x', 1920))
-                height = int(attributes.get('image_size_y', 1080))
-                fov = float(attributes.get('fov', 90.0))
-
-                focal = width / (2.0 * np.tan(fov * np.pi / 360.0))
-                K = np.identity(3)
-                K[0, 0] = focal
-                K[1, 1] = focal
-                K[0, 2] = width / 2.0
-                K[1, 2] = height / 2.0
-
-                camera_intrinsics = (K, width, height, fov)
-                logging.info(f"Extracted camera intrinsics from spawned sensor: {width}x{height}, FOV={fov:.2f}")
-                break
+    for si in sensor_infos:
+        if si.sensor_type == AOV.RGB:
+            K, width, height, fov = extract_camera_intrinsics_from_sensor(si.sensor)
+            camera_intrinsics = (K, width, height, fov)
+            break
 
     try:
         while timestamp < args.start + total:
             idx = world.tick()
 
             # Only collect RDS-HQ data for frames matching target FPS (24 fps)
-            # This implements downsampling: e.g., collect every 10th frame for 240->24 fps
             if frame_count % downsample_ratio == 0:
                 # Extract dynamic objects for this frame (cosmos format)
                 dynamic_objects = extract_dynamic_objects_cosmos_format(world, frame_count)
@@ -925,7 +859,6 @@ def main():
         client.stop_replayer(keep_actors=False)
         for si in sensor_infos: si.sensor.stop(); si.sensor.destroy()
         settings.synchronous_mode = False; settings.fixed_delta_seconds = None; world.apply_settings(settings)
-        logging.info("Finished CarlaCosmos-DataAcquisition parallel pipeline")
 
 if __name__ == '__main__':
     main()
