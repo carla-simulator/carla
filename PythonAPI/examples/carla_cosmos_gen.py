@@ -293,31 +293,33 @@ def extract_dynamic_objects_cosmos_format(world, frame_number):
         # Object dimensions
         object_lwh = [bbox.extent.x * 2.0, bbox.extent.y * 2.0, bbox.extent.z * 2.0]
 
-        object_type, category = "Automobile", "automobile"
-        automobile_type, truck_type, bus_type, rider_type = "other", "", "", ""
+        # Get semantic label from CARLA to determine vehicle type
+        # CityObjectLabel: Car=14, Truck=15, Bus=16, Train=17, Motorcycle=18, Bicycle=19
+        # These map to RDS-HQ renderer colors (see bbox_utils.py CLASS_COLORS):
+        #   - Car/Automobile (RED), Truck/Bus/Train (BLUE), Pedestrian (GREEN), Rider/Cyclist (YELLOW)
+        semantic_label = vehicle.semantic_tags[0] if vehicle.semantic_tags else 14  # Default to Car
+
+        # Map CARLA semantic labels to RDS-HQ object_type (determines bounding box color)
+        if semantic_label == 14:  # Car
+            object_type = "Automobile"
+        elif semantic_label == 15:  # Truck
+            object_type = "Truck"
+        elif semantic_label == 16:  # Bus
+            object_type = "Bus"  # Renderer maps Bus -> Truck (BLUE)
+        elif semantic_label == 17:  # Train
+            object_type = "Train_or_tram_car"  # Renderer maps to Truck (BLUE)
+        elif semantic_label == 18:  # Motorcycle
+            object_type = "Rider"  # Renderer maps Rider -> Cyclist (YELLOW)
+        elif semantic_label == 19:  # Bicycle
+            object_type = "Rider"  # Renderer maps Rider -> Cyclist (YELLOW)
+        else:
+            object_type = "Automobile"  # Default
 
         objects_data[str(vehicle.id)] = {
             "object_to_world": object_to_world,
             "object_lwh": object_lwh,
             "object_is_moving": True,
-            "object_type": object_type,
-            "aux_info": {
-                "trackline_id": str(vehicle.id),
-                "category": category,
-                "egomotion_label_class_id": "carla:generated:v0",
-                "mounted": False,
-                "has_trailer": False,
-                "has_protrusion": False,
-                "automobile_type": automobile_type,
-                "truck_type": truck_type,
-                "bus_type": bus_type,
-                "puller_type": "",
-                "rider_type": rider_type,
-                "alive": True,
-                "parent_obstacle_label_id": "",
-                "lidar_sensor": "",
-                "blueprint_id": vehicle.type_id
-            }
+            "object_type": object_type
         }
 
     # Get all pedestrians
@@ -357,24 +359,7 @@ def extract_dynamic_objects_cosmos_format(world, frame_number):
             "object_to_world": object_to_world,
             "object_lwh": object_lwh,
             "object_is_moving": True,
-            "object_type": "Pedestrian",
-            "aux_info": {
-                "trackline_id": str(walker.id),
-                "category": "pedestrian",
-                "egomotion_label_class_id": "carla:generated:v0",
-                "mounted": False,
-                "has_trailer": False,
-                "has_protrusion": False,
-                "automobile_type": "",
-                "truck_type": "",
-                "bus_type": "",
-                "puller_type": "",
-                "rider_type": "pedestrian",
-                "alive": True,
-                "parent_obstacle_label_id": "",
-                "lidar_sensor": "",
-                "blueprint_id": walker.type_id
-            }
+            "object_type": "Pedestrian"  # Renderer uses this for GREEN bounding box
         }
 
     return objects_data
