@@ -29,6 +29,7 @@ class AOV(Enum):
     SEMANTIC_SEGMENTATION = 2
     INSTANCE_SEGMENTATION = 3
     NORMALS = 4
+    RDS_HQ = 5
 
 @dataclass
 class FrameBundle:
@@ -455,8 +456,8 @@ def export_pose_data(pose_frames, session_id, output_dir):
         npy_files = []
         for frame_idx, pose_matrix in enumerate(pose_frames):
             if pose_matrix is not None:
-                # Use session_id as prefix
-                filename = f"{session_id}.{frame_idx:06d}.pose.camera_front_wide_120fov.npy"
+                # Use session_id as prefix with rds_hq sensor naming
+                filename = f"{session_id}.{frame_idx:06d}.pose.rds_hq.npy"
                 npy_file = temp_path / filename
 
                 # Save numpy array
@@ -515,8 +516,8 @@ def export_camera_intrinsics_single(K, width, height, session_id, output_dir):
             height     # h
         ], dtype=np.float32)
 
-        # Save as .npy file
-        filename = f"{session_id}.pinhole_intrinsic.camera_front_wide_120fov.npy"
+        # Save as .npy file with rds_hq sensor naming
+        filename = f"{session_id}.pinhole_intrinsic.rds_hq.npy"
         npy_file = temp_path / filename
         np.save(npy_file, intrinsic_data)
 
@@ -528,6 +529,61 @@ def export_camera_intrinsics_single(K, width, height, session_id, output_dir):
     logging.info(f"Exported pinhole camera intrinsics to {tar_path}")
 
     return True
+
+
+# === DATASET CONFIG EXPORT ===
+def export_dataset_config(session_id, output_dir, rds_hq_camera_name="rds_hq", input_fps=30, target_render_fps=24):
+    """
+    Export dataset configuration JSON for RDS-HQ renderer.
+
+    Args:
+        session_id: Session identifier
+        output_dir: Output directory path
+        rds_hq_camera_name: Name of the RDS-HQ camera sensor
+        input_fps: FPS of the exported pose data (native CARLA recording FPS)
+        target_render_fps: Desired output video FPS (renderer will downsample)
+
+    Returns:
+        Path to exported config file
+    """
+    config = {
+        "CAMERAS": [rds_hq_camera_name],
+        "MINIMAP_TYPES": [
+            "lanelines",
+            "road_boundaries",
+            "crosswalks",
+            "road_markings",
+            "wait_lines",
+            "poles",
+            "traffic_signs",
+            "traffic_lights"
+        ],
+        "INPUT_POSE_FPS": input_fps,  # Native recording FPS
+        "INPUT_LIDAR_FPS": 10,
+        "GT_VIDEO_FPS": input_fps,
+        "COSMOS_RESOLUTION": [1280, 704],
+        "NOT_POST_TRAINING": {
+            "RESIZE_RESOLUTION": [1280, 720],
+            "TO_COSMOS_RESOLUTION": "resize",
+            "TARGET_CHUNK_FRAME": 121,
+            "OVERLAP_FRAME": 0,
+            "TARGET_RENDER_FPS": target_render_fps  # Output video FPS
+        },
+        "POST_TRAINING": {
+            "RESIZE_RESOLUTION": [1280, 720],
+            "TO_COSMOS_RESOLUTION": "center-crop",
+            "TARGET_CHUNK_FRAME": 121,
+            "OVERLAP_FRAME": 0,
+            "TARGET_RENDER_FPS": target_render_fps
+        }
+    }
+
+    config_path = output_dir / f"dataset_{session_id}.json"
+    with open(config_path, 'w') as f:
+        json.dump(config, f, indent=2)
+
+    logging.info(f"Exported dataset config to {config_path}")
+    return str(config_path)
 
 
 # === RDS-HQ EXPORT ===
@@ -550,10 +606,8 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
     logging.info(f"Exporting RDS-HQ clip with session ID: {session_id}")
     logging.info(f"Output directory: {rds_hq_dir}")
 
-    # Define target FPS for RDS-HQ export
-    target_fps = 24
+    # Get recording FPS (export all frames at native FPS)
     recording_fps = round(1.0 / (log_duration / log_frames))
-    downsample_ratio = max(1, round(recording_fps / target_fps))
 
     try:
         # Export static cosmos data
@@ -664,8 +718,6 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
             "exported_frames": actual_exported_frames,
             "recording_fps": round(1.0 / (log_duration / log_frames)),
             "exported_fps": round(actual_fps),
-            "target_fps": target_fps,
-            "downsample_ratio": downsample_ratio,
             "camera_actor_id": args.camera,
             "time_factor": args.time_factor,
             "output_structure": {
@@ -685,6 +737,17 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
         metadata_file = rds_hq_dir / f"{session_id}_metadata.json"
         with open(metadata_file, 'w') as f:
             json.dump(metadata, f, indent=2)
+
+        # Export dataset config for renderer
+        logging.info("Exporting dataset config for RDS-HQ renderer...")
+        recording_fps = round(1.0 / (log_duration / log_frames))
+        export_dataset_config(
+            session_id=session_id,
+            output_dir=rds_hq_dir,
+            rds_hq_camera_name="rds_hq",  # Camera name from our export
+            input_fps=recording_fps,       # Native CARLA recording FPS
+            target_render_fps=24           # Desired output video FPS
+        )
 
     except Exception as e:
         logging.error(f"Failed to export RDS-HQ clip: {e}")
@@ -729,11 +792,8 @@ def main():
     fps = round(1.0 / log_delta)
     logging.info(f"Recorder: {log_frames} frames, {log_duration:.2f}s, fps={fps}")
 
-    # Calculate downsampling for RDS-HQ export (target 24 FPS)
-    target_fps = 24
-    downsample_ratio = max(1, round(fps / target_fps))  # e.g., 240/24 = 10
-    effective_fps = fps / downsample_ratio
-    logging.info(f"RDS-HQ export: downsampling by {downsample_ratio}x from {fps} fps to {effective_fps:.1f} fps")
+    # Export all frames at native FPS (renderer will handle downsampling)
+    logging.info(f"RDS-HQ export: exporting all frames at native {fps} fps")
 
     client.set_replayer_time_factor(args.time_factor)
     client.set_replayer_ignore_hero(args.ignore_hero)
@@ -753,7 +813,12 @@ def main():
     vehicle = world.get_actor(args.camera)
     sensor_infos = []
     for entry in sensor_cfg:
-        bp = world.get_blueprint_library().find(f"sensor.camera.{entry['sensor']}")
+        sensor_type = entry['sensor']
+
+        # rds_hq sensor is an RGB camera in CARLA
+        carla_sensor_type = 'rgb' if sensor_type == 'rds_hq' else sensor_type
+
+        bp = world.get_blueprint_library().find(f"sensor.camera.{carla_sensor_type}")
         for k,v in entry.get('attributes',{}).items(): bp.set_attribute(k,str(v))
         tf = entry.get('transform',{})
         transform = carla.Transform(
@@ -761,8 +826,8 @@ def main():
             carla.Rotation(**tf.get('rotation',{}))
         )
         sensor = world.spawn_actor(bp, transform, attach_to=vehicle)
-        
-        sensor_infos.append(SensorInfo(sensor, AOV[entry['sensor'].upper()]))
+
+        sensor_infos.append(SensorInfo(sensor, AOV[sensor_type.upper()]))
 
     raw_q = mp.Queue()
     proc_q = mp.Queue()
@@ -790,10 +855,10 @@ def main():
     dynamic_frames = []  # Collect dynamic object data for each frame
     pose_frames = []     # Collect camera pose data for each frame
 
-    # Extract camera intrinsics from the spawned sensors
+    # Extract camera intrinsics from the rds_hq sensor
     camera_intrinsics = None
     for si in sensor_infos:
-        if si.sensor_type == AOV.RGB:
+        if si.sensor_type == AOV.RDS_HQ:
             K, width, height, fov = extract_camera_intrinsics_from_sensor(si.sensor)
             camera_intrinsics = (K, width, height, fov)
             break
@@ -802,22 +867,21 @@ def main():
         while timestamp < args.start + total:
             idx = world.tick()
 
-            # Only collect RDS-HQ data for frames matching target FPS (24 fps)
-            if frame_count % downsample_ratio == 0:
-                # Extract dynamic objects for this frame (cosmos format)
-                dynamic_objects = extract_dynamic_objects_cosmos_format(world, frame_count)
-                dynamic_frames.append(dynamic_objects)
+            # Collect RDS-HQ data for every frame
+            # Extract dynamic objects for this frame
+            dynamic_objects = extract_dynamic_objects_cosmos_format(world, frame_count)
+            dynamic_frames.append(dynamic_objects)
 
-                # Find the main camera sensor (RGB camera for pose reference)
-                main_camera_sensor = None
-                for si in sensor_infos:
-                    if si.sensor_type == AOV.RGB:  # Use RGB camera as the pose reference
-                        main_camera_sensor = si.sensor
-                        break
+            # Find the rds_hq sensor for pose reference (RDS-HQ export)
+            main_camera_sensor = None
+            for si in sensor_infos:
+                if si.sensor_type == AOV.RDS_HQ:
+                    main_camera_sensor = si.sensor
+                    break
 
-                # Extract camera pose for this frame using the actual camera sensor
-                camera_pose = extract_camera_poses(world, frame_count, args.camera, main_camera_sensor)
-                pose_frames.append(camera_pose)
+            # Extract camera pose for this frame using the actual camera sensor
+            camera_pose = extract_camera_poses(world, frame_count, args.camera, main_camera_sensor)
+            pose_frames.append(camera_pose)
 
             # Capture sensor frames
             frame_dict = {}
