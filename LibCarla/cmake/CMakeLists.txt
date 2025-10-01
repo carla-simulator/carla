@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.1)
+cmake_minimum_required(VERSION 3.10)
 project(libcarla)
 
 option(LIBCARLA_BUILD_DEBUG "Build debug configuration" ON)

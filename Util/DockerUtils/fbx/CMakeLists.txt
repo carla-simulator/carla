@@ -3,7 +3,7 @@
 # Dependencies:
 #	sudo apt-get install libxml2-dev
 
-cmake_minimum_required(VERSION 2.8.9)
+cmake_minimum_required(VERSION 3.10)
 project(FBX2OBJ)
 
 set(CMAKE_GENERATOR_PLATFORM x64)

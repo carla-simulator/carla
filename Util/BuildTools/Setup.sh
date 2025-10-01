@@ -58,6 +58,12 @@ export PATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v1
 
 CXX_TAG=c10
 
+# Minimum CMake policy flag to allow configuring older CMakeLists files with
+# modern CMake versions. Some vendored projects use very old cmake_minimum_required
+# values; passing this flag avoids the "Compatibility with CMake < X has been removed"
+# fatal error on newer CMake.
+CMAKE_POLICY_VERSION_MINIMUM_FLAG="-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
+
 # Convert comma-separated string to array of unique elements.
 IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
 
@@ -253,7 +259,8 @@ else
   pushd ${RPCLIB_BASENAME}-libcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS ${UNREAL_HOSTED_CFLAGS}" \
+    ${CMAKE_POLICY_VERSION_MINIMUM_FLAG} \
+    -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -DASIO_NO_EXCEPTIONS ${UNREAL_HOSTED_CFLAGS}" \
       -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libcxx-install" \
       ../${RPCLIB_BASENAME}-source
 
@@ -270,7 +277,8 @@ else
   pushd ${RPCLIB_BASENAME}-libstdcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
+    ${CMAKE_POLICY_VERSION_MINIMUM_FLAG} \
+    -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
       -DCMAKE_INSTALL_PREFIX="../${RPCLIB_BASENAME}-libstdcxx-install" \
       ../${RPCLIB_BASENAME}-source
 
@@ -322,7 +330,8 @@ else
   pushd ${GTEST_BASENAME}-libcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -fno-exceptions ${UNREAL_HOSTED_CFLAGS}" \
+    -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS -fno-exceptions ${UNREAL_HOSTED_CFLAGS}" \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
       -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libcxx-install" \
       ../${GTEST_BASENAME}-source
 
@@ -339,7 +348,8 @@ else
   pushd ${GTEST_BASENAME}-libstdcxx-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14" \
+    -DCMAKE_CXX_FLAGS="-std=c++14" \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
       -DCMAKE_INSTALL_PREFIX="../${GTEST_BASENAME}-libstdcxx-install" \
       ../${GTEST_BASENAME}-source
 
@@ -393,7 +403,8 @@ else
   pushd ${RECAST_BASENAME}-build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
+    ${CMAKE_POLICY_VERSION_MINIMUM_FLAG} \
+    -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
       -DCMAKE_INSTALL_PREFIX="../${RECAST_BASENAME}-install" \
       -DRECASTNAVIGATION_DEMO=False \
       -DRECASTNAVIGATION_TEST=False \
@@ -505,7 +516,8 @@ else
   pushd ${XERCESC_SRC_DIR}/build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -w" \
+    ${CMAKE_POLICY_VERSION_MINIMUM_FLAG} \
+    -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -w" \
       -DCMAKE_INSTALL_PREFIX="../../${XERCESC_INSTALL_DIR}" \
       -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_SHARED_LIBS=OFF \
@@ -522,7 +534,8 @@ else
   pushd ${XERCESC_SRC_DIR}/build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -fPIC -w -I${LLVM_INCLUDE} -L${LLVM_LIBPATH}" \
+    ${CMAKE_POLICY_VERSION_MINIMUM_FLAG} \
+    -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -fPIC -w -I${LLVM_INCLUDE} -L${LLVM_LIBPATH}" \
       -DCMAKE_INSTALL_PREFIX="../../${XERCESC_INSTALL_SERVER_DIR}" \
       -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_SHARED_LIBS=OFF \
@@ -617,6 +630,7 @@ if ${USE_CHRONO} ; then
     mkdir -p ${CHRONO_SRC_DIR}/build
     pushd ${CHRONO_SRC_DIR}/build >/dev/null
     cmake -G "Ninja" \
+      ${CMAKE_POLICY_VERSION_MINIMUM_FLAG} \
       -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -L${LLVM_LIBPATH} -Wno-unused-command-line-argument ${UNREAL_HOSTED_CFLAGS}" \
       -DEIGEN3_INCLUDE_DIR="${EIGEN_INCLUDE}" \
       -DCMAKE_INSTALL_PREFIX="${CARLA_BUILD_FOLDER}/${CHRONO_INSTALL_DIR}" \
@@ -735,7 +749,8 @@ else
   pushd ${PROJ_SRC_DIR}/build >/dev/null
 
   cmake -G "Ninja" .. \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
+    ${CMAKE_POLICY_VERSION_MINIMUM_FLAG} \
+    -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
       -DSQLITE3_INCLUDE_DIR=${SQLITE_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_LIB} \
       -DEXE_SQLITE3=${SQLITE_EXE} \
       -DENABLE_TIFF=OFF -DENABLE_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF \
@@ -753,7 +768,8 @@ else
   pushd ${PROJ_SRC_DIR}/build >/dev/null
 
   cmake -G "Ninja" .. \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}"  \
+    ${CMAKE_POLICY_VERSION_MINIMUM_FLAG} \
+    -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}"  \
       -DSQLITE3_INCLUDE_DIR=${SQLITE_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_LIB} \
       -DEXE_SQLITE3=${SQLITE_EXE} \
       -DENABLE_TIFF=OFF -DENABLE_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF \
@@ -936,6 +952,7 @@ if ${USE_ROS2} ; then
     mkdir -p ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}/build
     pushd ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}/build >/dev/null
     cmake -G "Ninja" \
+      ${CMAKE_POLICY_VERSION_MINIMUM_FLAG} \
       -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
       -DCMAKE_TOOLCHAIN_FILE=${LIBCPP_TOOLCHAIN_FILE} \
       -DBUILD_SHARED_LIBS=OFF \
@@ -975,6 +992,7 @@ if ${USE_ROS2} ; then
     pushd ${FAST_DDS_LIB_SOURCE_DIR}/build >/dev/null
     # removed -DASIO_NO_EXCEPTIONS as fastdds makes usage of them.
     cmake -G "Ninja" \
+      ${CMAKE_POLICY_VERSION_MINIMUM_FLAG} \
       -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
       -DFORCE_CXX="14" \
       -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS ${UNREAL_HOSTED_CFLAGS}" \
