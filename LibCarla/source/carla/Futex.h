@@ -41,46 +41,46 @@ namespace carla
     template <typename T, typename U>
     inline static void wait(
       const std::atomic<T>& target,
-      U desired,
+      U&& old_value,
       boost::optional<std::chrono::milliseconds> timeout = { })
     {
 #ifdef _WIN32
+
       DWORD timeout_ms = INFINITE;
       if (timeout.has_value())
-        timeout_ms = (DWORD)timeout.value().count();
-      while (true)
+        timeout_ms = static_cast<DWORD>(timeout.value().count());
+      do
       {
-        T current = target.load(std::memory_order_cquire);
-        if (current == desired)
-          break;
         (void)WaitOnAddress(
           reinterpret_cast<volatile PVOID>(&target),
-          (PVOID)&current,
-          sizeof(current),
+          (PVOID)&old_value,
+          sizeof(old_value),
           timeout_ms);
-      }
+      } while (target.load(std::memory_order_acquire) == old_value)
+
 #elif defined(HAS_FUTEX)
+
       uint32_t timeout_ms;
       auto timeout_ms_ptr = &timeout_ms;
       if (timeout.has_value())
         timeout_ms = static_cast<uint32_t>(timeout.value().count());
       else
         timeout_ms_ptr = nullptr;
-      while (true)
+      do
       {
-        T current = target.load(std::memory_order_acquire);
-        if (current == desired)
-          break;
         (void)syscall(
           SYS_futex,
           reinterpret_cast<const uint32_t*>(&target),
           FUTEX_WAIT,
-          &current,
+          &old_value,
           timeout_ms_ptr, nullptr, 0);
-      }
+      } while (target.load(std::memory_order_acquire) == old_value);
+
 #else
-      while (target.load(std::memory_order_acquire) != desired)
+
+      while (target.load(std::memory_order_acquire) == old_value)
         std::this_thread::yield();
+
 #endif
     }
 
@@ -90,17 +90,21 @@ namespace carla
       bool all = true)
     {
 #ifdef _WIN32
+
       if (all)
-        WakeByAddressAll((PVOID)&target);
+        (void)WakeByAddressAll((PVOID)&target);
       else
-        WakeByAddressSingle((PVOID)&target);
+        (void)WakeByAddressSingle((PVOID)&target);
+
 #elif defined(HAS_FUTEX)
-      syscall(
+
+      (void)syscall(
         SYS_futex,
         reinterpret_cast<uint32_t*>(&target),
         FUTEX_WAKE,
         all ? INT_MAX : 1,
         nullptr, nullptr, 0);
+
 #else
       // Do nothing
 #endif
