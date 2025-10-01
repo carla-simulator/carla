@@ -49,14 +49,14 @@ namespace carla
       DWORD timeout_ms = INFINITE;
       if (timeout.has_value())
         timeout_ms = static_cast<DWORD>(timeout.value().count());
-      do
+      while (target.load(std::memory_order_acquire) == old_value)
       {
         (void)WaitOnAddress(
           reinterpret_cast<volatile PVOID>(&target),
           (PVOID)&old_value,
           sizeof(old_value),
           timeout_ms);
-      } while (target.load(std::memory_order_acquire) == old_value)
+      }
 
 #elif defined(HAS_FUTEX)
 
@@ -66,7 +66,7 @@ namespace carla
         timeout_ms = static_cast<uint32_t>(timeout.value().count());
       else
         timeout_ms_ptr = nullptr;
-      do
+      while (target.load(std::memory_order_acquire) == old_value)
       {
         (void)syscall(
           SYS_futex,
@@ -74,7 +74,7 @@ namespace carla
           FUTEX_WAIT,
           &old_value,
           timeout_ms_ptr, nullptr, 0);
-      } while (target.load(std::memory_order_acquire) == old_value);
+      }
 
 #else
 
