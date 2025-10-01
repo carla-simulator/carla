@@ -24,3 +24,4 @@ private:
       const FString& StartTs,
       const TArray<FVector>& PolyMeters);
 };
+

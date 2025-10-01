@@ -12,6 +12,7 @@
 #include "carla/NonCopyable.h"
 #include "carla/road/element/LaneMarking.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
+#include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/element/Waypoint.h"
 #include "carla/road/MapData.h"
 #include "carla/road/RoadTypes.h"
@@ -22,6 +23,7 @@
 #include <boost/optional.hpp>
 
 #include <vector>
+#include <map>
 
 namespace carla {
 namespace road {

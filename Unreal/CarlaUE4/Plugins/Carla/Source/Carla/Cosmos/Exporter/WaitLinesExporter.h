@@ -25,3 +25,4 @@ private:
       const FVector& StartPoint,
       const FVector& EndPoint);
 };
+
