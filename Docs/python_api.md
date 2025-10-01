@@ -69,10 +69,20 @@ Applies an angular impulse at the center of mass of the actor. This method shoul
 Applies a force at the center of mass of the actor. This method should be used for forces that are applied over a certain period of time. Use __<font color="#7fb800">add_impulse()</font>__ to apply an impulse that only lasts an instant.  
     - **Parameters:**
         - `force` (_[carla.Vector3D](#carla.Vector3D)<small> - N</small>_) - Force vector in global coordinates.  
+- <a name="carla.Actor.add_force_at_location"></a>**<font color="#7fb800">add_force_at_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**force**</font>, <font color="#00a6ed">**location**</font>)  
+Applies a force at the location provided. This method should be used for forces that are applied over a certain period of time. Use __<font color="#7fb800">add_impulse()</font>__ to apply an impulse that only lasts an instant.  
+    - **Parameters:**
+        - `force` (_[carla.Vector3D](#carla.Vector3D)<small> - N</small>_) - Force vector in global coordinates.  
+        - `location` (_[carla.Location](#carla.Location)<small> - meters</small>_) - Application center of the given force in global coordinates.  
 - <a name="carla.Actor.add_impulse"></a>**<font color="#7fb800">add_impulse</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>)  
 Applies an impulse at the center of mass of the actor. This method should be used for instantaneous forces, usually applied once. Use __<font color="#7fb800">add_force()</font>__ to apply forces over a period of time.  
     - **Parameters:**
         - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> - N*s</small>_) - Impulse vector in global coordinates.  
+- <a name="carla.Actor.add_impulse_at_location"></a>**<font color="#7fb800">add_impulse_at_location</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**impulse**</font>, <font color="#00a6ed">**impulse**</font>)  
+Applies an impulse at the center of mass of the actor. This method should be used for instantaneous forces, usually applied once. Use __<font color="#7fb800">add_force()</font>__ to apply forces over a period of time.  
+    - **Parameters:**
+        - `impulse` (_[carla.Vector3D](#carla.Vector3D)<small> - N*s</small>_) - Impulse vector in global coordinates.  
+        - `impulse` (_[carla.Location](#carla.Location)<small> - N*s</small>_) - Application location of the given impulse in global coordinates.  
 - <a name="carla.Actor.add_torque"></a>**<font color="#7fb800">add_torque</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**torque**</font>)  
 Applies a torque at the center of mass of the actor. This method should be used for torques that are applied over a certain period of time. Use __<font color="#7fb800">add_angular_impulse()</font>__ to apply a torque that only lasts an instant.  
     - **Parameters:**
@@ -2790,6 +2800,10 @@ Describes a rotation for an object according to Unreal Engine's axis system.
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_)  
         - `rotation` (_[carla.Rotation](#carla.Rotation)<small> - degrees (pitch, yaw, roll)</small>_)  
+- <a name="carla.Transform.inverse_transform"></a>**<font color="#7fb800">inverse_transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**in_point**</font>)  
+Translates a 3D point from global to local coordinates using the current transformation as frame of reference.  
+    - **Parameters:**
+        - `in_point` (_[carla.Location](#carla.Location)_) - Location in global to which the inverse transformation will be applied.  
 - <a name="carla.Transform.transform"></a>**<font color="#7fb800">transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**in_point**</font>)  
 Translates a 3D point from local to global coordinates using the current transformation as frame of reference.  
     - **Parameters:**

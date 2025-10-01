@@ -54,21 +54,33 @@ location = carla.Location(10,10,1)
 
 # With keyword arguments
 location = carla.Location(x=10,y=10, z=1)
+
+# Default constructor with no arguments
+location = carla.Location() # x=y=z=0
 ```
+
+Each or all the keyword arguments can be omitted and the relevant axis will be set to zero. 
 
 ---
 
 ### Rotation
 
-The [Rotation object](python_api.md#carlarotation) is used to define rotations within the CARLA coordinate system. Rotations are defined in Euler form as yaw, pitch and roll. The Euler angles are measured in degrees. 
+The [Rotation object](python_api.md#carlarotation) is used to define rotations within the CARLA coordinate system. Rotations are defined in Euler form as **roll**, **pitch** and **yaw**. The Euler angles are measured in degrees. **Rotations are applied intrinsically in the order **yaw, pitch, roll**.
 
 The following code shows how to create a rotation object for a roll of 10 degrees, a pitch of 10 degrees and a yaw of 90 degrees:
 
 ```py
-rotation = carla.Rotation(roll=10, pitch=10, yaw=90)
+# Default constructor with positional arguments
+rotation = carla.Rotation(10,90,10) # pitch, yaw, roll
+
+# With keyword arguments
+rotation = carla.Rotation(pitch=10, yaw=90, roll=10)
+
+# Default constructor with no arguments
+rotation = carla.Rotation(10,90,10) # pitch=yaw=roll=0
 ```
 
-The keyword arguments can be omitted and the relevant angle will be set to zero. Rotations are applied **intrinsically** in the order **yaw, pitch, roll**.
+Each or all the keyword arguments can be omitted and the relevant angle will be set to zero. 
 
 ---
 
@@ -77,8 +89,11 @@ The keyword arguments can be omitted and the relevant angle will be set to zero.
 The CARLA [Transform object](python_api.md#carlatransform) is used to contain all information about an object's pose, both its 3D location and rotation. A new transform object can be created using a Location and Rotation:
 
 ```py
+# Set up a Location and Rotation
 location = carla.Location(10,10,1)
 rotation = carla.Rotation(yaw=90)
+
+# Create the transform
 transform = carla.Transform(location, rotation)
 ```
 
@@ -100,12 +115,12 @@ print(vehicle.get_transform().rotation)
 >>>Rotation(pitch=0.0, yaw=90, roll=0.0)
 ```
 
-The transform object provides utility functions for applying transforms to other coordinates. The translation and rotation associated with a transform can be applied to a Location or Vector using the `transform()` method:
+The transform object provides utility functions for applying transforms to other coordinates. The translation and rotation associated with a transform can be applied to a Location or Vector using the `transform()` method. This method is used to transform a point in the local coordinates of the transform's parent object (e.g a vehicle or other actor) to global coordinates. For example, to find the position of a sensor attached to a vehicle in the global coordinate frame:
 
 ```
-location = carla.Location(1,0,0)
+sensor_local_coord = carla.Location(1,0,0)
 vehicle_transform = vehicle.get_transform()
-transformed_location = vehicle_transform.transform(location)
+sensor_global_coord = vehicle_transform.transform(sensor_local_coord)
 
 >>>Vector3D(x=10.0, y=11.0, z=1.0)
 ```

@@ -71,6 +71,22 @@
       doc: >
         Applies a force at the center of mass of the actor. This method should be used for forces that are applied over a certain period of time. Use __<font color="#7fb800">add_impulse()</font>__ to apply an impulse that only lasts an instant.  
     # --------------------------------------
+    - def_name: add_force_at_location
+      params:
+      - param_name: force
+        type: carla.Vector3D
+        param_units: N
+        doc: >
+          Force vector in global coordinates. 
+      - param_name: location
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Application center of the given force in global coordinates.
+      doc: >
+        Applies a force at the location provided. This method should be used for forces that are applied over a certain period of time. Use __<font color="#7fb800">add_impulse()</font>__ to apply an impulse that only lasts an instant.  
+    
+    # --------------------------------------
     - def_name: add_impulse
       params:
       - param_name: impulse
@@ -80,6 +96,22 @@
           Impulse vector in global coordinates. 
       doc: >
         Applies an impulse at the center of mass of the actor. This method should be used for instantaneous forces, usually applied once. Use __<font color="#7fb800">add_force()</font>__ to apply forces over a period of time.
+    # --------------------------------------
+    - def_name: add_impulse_at_location
+      params:
+      - param_name: impulse
+        type: carla.Vector3D
+        param_units: N*s
+        doc: >
+          Impulse vector in global coordinates. 
+      - param_name: impulse
+        type: carla.Location
+        param_units: N*s
+        doc: >
+          Application location of the given impulse in global coordinates.
+      doc: >
+        Applies an impulse at the center of mass of the actor. This method should be used for instantaneous forces, usually applied once. Use __<font color="#7fb800">add_force()</font>__ to apply forces over a period of time.
+    
     # --------------------------------------
     - def_name: add_torque
       params:
