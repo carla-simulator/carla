@@ -1,4 +1,5 @@
 // CrosswalksExporter.cpp
+#include "Carla.h"
 #include "CrosswalksExporter.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaStatics.h"

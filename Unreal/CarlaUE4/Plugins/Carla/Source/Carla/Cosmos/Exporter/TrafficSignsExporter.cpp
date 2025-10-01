@@ -1,4 +1,5 @@
 // TrafficSignsExporter.cpp
+#include "Carla.h"
 #include "TrafficSignsExporter.h"
 #include "Carla/Game/Tagger.h"
 

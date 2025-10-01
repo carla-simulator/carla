@@ -1,4 +1,5 @@
 // RoadMarkingExporter.cpp
+#include "Carla.h"
 #include "RoadMarkingExporter.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 

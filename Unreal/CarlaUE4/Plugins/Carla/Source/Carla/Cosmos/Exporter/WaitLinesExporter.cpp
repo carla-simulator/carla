@@ -1,4 +1,5 @@
 // WaitLinesExporter.cpp
+#include "Carla.h"
 #include "WaitLinesExporter.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 

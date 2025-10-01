@@ -1,4 +1,5 @@
 // LaneLineExporter.cpp
+#include "Carla.h"
 #include "LaneLineExporter.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaStatics.h"
