@@ -16,6 +16,7 @@ If you come across errors or difficulties then have a look at the **[F.A.Q.](bui
         - [Compile the server](#2-compile-the-server)
         - [Start the simulation](#3-start-the-simulation)
     - [Additional Make options](#additional-make-options)
+    - [Running tests](#running-tests)
 
 ---
 ## Part One: Prerequisites
@@ -181,6 +182,9 @@ Then build the Python API with the following command:
 make PythonAPI
 ``` 
 
+!!! note
+    **NumPy 2 error**: If the Python installation or environment that you are using to build CARLA has *numpy>=2.0.0* installed, this will cause an error during the build process due to conflicting dependencies. This should be the first thing to check when encountering errors related to Boost. Check your NumPy version using `python3 -m pip show numpy`.
+
 **Building the Python API for a specific Python version**
 
 The above command will compile CARLA with the system default Python version, which is called when you run `python3` on the command line. If you wish to build CARLA for other Python versions, we recommend you use virtual environments.
@@ -244,6 +248,9 @@ During the first launch, the editor may show warnings regarding shaders and mesh
 
 ![ue4_editor_open](img/ue4_editor_open.png)
 
+!!! note
+    **NumPy 2 error**: `make launch` can be affected by the NumPy 2 conflict, check the NumPy version in your Python installation using PIP: `python3 -m pip show numpy`. If it is version *2.0.0* or later, you will need to downgrade to *numpy<2.0.0*.
+
 #### 3. Start the simulation
 
 Press **Play** to start the server simulation. The camera can be moved with `WASD` keys and rotated by clicking the scene while moving the mouse around.  
@@ -282,15 +289,42 @@ There are more `make` commands that you may find useful. Find them in the table 
 
 ---
 
+### Running tests
+
+CARLA's code comes with a suite of tests designed to detect regressions in fundamental functionality that might be introduced by new code changes. CARLA's CI/CD system runs these tests for each nightly build and release before uploading new packages. If you are managing your own build we recommend that you run the test suite at least periodically to detect breaking changes.
+
+First, create a CARLA package from your latest changes:
+
+```sh
+make package
+```
+
+The Package will be created in the Dist folder, it will have a name dependent on the last commit, run the simulator from the newly build package. Substitute the appropriate package ID, which will depend on the latest commit:
+
+```sh
+./Dist/CARLA_<package_id>/LinuxNoEditor/CarlaUE4.sh --ros2 -RenderOffScreen --carla-rpc-port=<port> --carla-streaming-port=0 -nosound
+```
+
+Once the simulator is running, run the smoke tests:
+
+```sh
+make smoke_tests ARGS="--xml --python-version=<python_version> --target-wheel-platform=manylinux_2_31_x86_64
+```
+
+Then, finally, run the examples:
+
+```sh
+make run-examples ARGS="localhost <port>"
+```
+
+You will be alerted on the command line if any tests fail. You can find the smoke tests in `${CARLA_ROOT}/PythonAPI/test/smoke`. 
+
+---
+
 Read the **[F.A.Q.](build_faq.md)** page or post in the [CARLA forum](https://github.com/carla-simulator/carla/discussions) for any issues regarding this guide.  
 
 Up next, learn how to update the CARLA build or take your first steps in the simulation, and learn some core concepts.  
 <div class="build-buttons">
-
-<p>
-<a href="../build_update" target="_blank" class="btn btn-neutral" title="Learn how to update the build">
-Update CARLA</a>
-</p>
 
 <p>
 <a href="../core_concepts" target="_blank" class="btn btn-neutral" title="Learn about CARLA core concepts">

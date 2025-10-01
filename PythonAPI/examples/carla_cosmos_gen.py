@@ -52,6 +52,7 @@ CLASSES_TO_KEEP_SHADED_SEG: List[Sequence[int]] = []
 CLASSES_TO_KEEP_CANNY: List[Sequence[int]] = []
 
 def load_class_filter_config(path: str):
+    path = Path(path).resolve()
     with open(path, 'r') as f:
         config = yaml.safe_load(f)
     global CLASSES_TO_KEEP_SHADED_SEG, CLASSES_TO_KEEP_CANNY
@@ -162,6 +163,7 @@ class SensorInfo:
     def _callback(self, data):
         conv_map = {
             AOV.RGB: carla.ColorConverter.Raw,
+            AOV.NORMALS: carla.ColorConverter.Raw,
             AOV.SEMANTIC_SEGMENTATION: carla.ColorConverter.CityScapesPalette,
             AOV.COSMOS_VISUALIZATION: carla.ColorConverter.Raw
         }
@@ -191,6 +193,8 @@ def post_processing_worker(raw_q: mp.Queue, proc_q: mp.Queue):
         frames = bundle.frames
         if AOV.RGB in frames:
             processed['RGB'] = frames[AOV.RGB]
+        if AOV.NORMALS in frames:
+            processed['NORMALS'] = frames[AOV.NORMALS]
         if AOV.RGB in frames and AOV.SEMANTIC_SEGMENTATION in frames:
             masked, edges = masked_edges_from_semseg(
                 frames[AOV.RGB], frames[AOV.SEMANTIC_SEGMENTATION], CLASSES_TO_KEEP_CANNY
@@ -286,7 +290,8 @@ def main():
     client.set_timeout(60.0)
     client.reload_world()
     
-    info = client.show_recorder_file_info(args.recorder_filename, False)
+    recorder_filename = Path(args.recorder_filename).resolve()
+    info = client.show_recorder_file_info(str(recorder_filename), False)
     log_frames, log_duration = parse_frames_duration(info)
 
     log_delta = log_duration / log_frames
@@ -297,7 +302,7 @@ def main():
     client.set_replayer_ignore_hero(args.ignore_hero)
     client.set_replayer_ignore_spectator(not args.move_spectator)
     client.replay_file(
-        args.recorder_filename, args.start, args.duration, args.camera, args.spawn_sensors
+        str(recorder_filename), args.start, args.duration, args.camera, args.spawn_sensors
     )
 
     world = client.get_world()
@@ -306,13 +311,19 @@ def main():
     settings.fixed_delta_seconds = log_delta
     world.apply_settings(settings)
 
-    with open(args.sensors.replace('file:',''), 'r') as f:
+    sensors_filepath = Path(args.sensors.replace('file:','')).resolve()
+    with open(sensors_filepath, 'r') as f:
         sensor_cfg = yaml.safe_load(f)
     vehicle = world.get_actor(args.camera)
     sensor_infos = []
     for entry in sensor_cfg:
-        bp = world.get_blueprint_library().find(f"sensor.camera.{entry['sensor']}")
-        for k,v in entry.get('attributes',{}).items(): bp.set_attribute(k,str(v))
+        name = entry['sensor']
+        sensor_name = f"sensor.camera.{name}"
+        attributes = entry.get('attributes', {})
+        if entry.get('wide_angle_lens', False):
+            sensor_name += '.wide_angle_lens'
+        bp = world.get_blueprint_library().find(sensor_name)
+        for k,v in attributes.items(): bp.set_attribute(k,str(v))
         tf = entry.get('transform',{})
         transform = carla.Transform(
             carla.Location(**tf.get('location',{})),
@@ -337,7 +348,7 @@ def main():
         )
         p.start(); workers.append(p)
 
-    out_dir = Path(args.output_dir)
+    out_dir = Path(args.output_dir).resolve()
     out_dir.mkdir(parents=True, exist_ok=True)
     writer = mp.Process(
         target=video_writer_worker,

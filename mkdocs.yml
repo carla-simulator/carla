@@ -19,6 +19,7 @@ nav:
   - 'Content authoring - props': 'content_authoring_props.md'  
 
 - CARLA topics:
+  - 'Coordinates and transformations': 'coordinates.md'
   - 'Foundations': 'foundations.md'
   - 'Actors': 'core_actors.md'
   - 'Maps': 'core_map.md'
