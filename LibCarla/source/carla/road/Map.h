@@ -6,6 +6,11 @@
 
 #pragma once
 
+#include <map>
+#include <vector>
+
+#include <boost/optional.hpp>
+
 #include "carla/geom/Mesh.h"
 #include "carla/geom/Rtree.h"
 #include "carla/geom/Transform.h"
@@ -19,11 +24,6 @@
 #include "carla/road/MeshFactory.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/rpc/OpendriveGenerationParameters.h"
-
-#include <boost/optional.hpp>
-
-#include <vector>
-#include <map>
 
 namespace carla {
 namespace road {

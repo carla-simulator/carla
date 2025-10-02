@@ -14,7 +14,7 @@ class CARLA_API UCosmosStaticExporter : public UObject
 {
 	GENERATED_BODY()
 public:
-	
+
 	static FString GenerateSesionId(float TimeElapsed)
 	{
 		// Generate a GUID with hyphens
