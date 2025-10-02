@@ -16,6 +16,8 @@
 #include "carla/ros2/ROS2.h"
 #include <compiler/enable-ue4-macros.h>
 
+#include "Carla/Game/CarlaStatics.h"
+
 #include <limits>
 
 // Based on OpenDRIVE's lon and lat

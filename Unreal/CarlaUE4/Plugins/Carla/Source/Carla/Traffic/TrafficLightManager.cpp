@@ -13,6 +13,7 @@
 #include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
 
 #include "UObject/ConstructorHelpers.h"
+#include "EngineUtils.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/String.h>
