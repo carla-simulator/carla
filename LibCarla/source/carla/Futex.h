@@ -32,7 +32,7 @@
     #endif
 #endif
 
-
+#define FUTEX_SYNC_MODE 0
 
 namespace carla
 {

@@ -19,6 +19,7 @@
 
 #include <atomic>
 #include <thread>
+#include <mutex>
 
 namespace carla {
 namespace streaming {
@@ -91,7 +92,36 @@ namespace tcp {
       if (_is_writing.load(std::memory_order_acquire)) {
         if (_server.IsSynchronousMode()) {
           // wait until previous message has been sent
-          carla::futex::wait(_is_writing, false);
+          auto wait_start = std::chrono::high_resolution_clock::now();
+          if (FUTEX_SYNC_MODE == 0)
+          {
+            carla::futex::wait(_is_writing, false);
+          }
+          else
+          {
+            if (FUTEX_SYNC_MODE == 1)
+            {
+              while (_is_writing.load(std::memory_order_acquire) != 0)
+                std::this_thread::yield();
+            }
+            else
+            {
+              while (_is_writing.load(std::memory_order_acquire) != 0)
+                std::this_thread::sleep_for(std::chrono::microseconds(100));
+            }
+          }
+          auto wait_end = std::chrono::high_resolution_clock::now();
+          auto dt = wait_end - wait_start;
+          char path[512];
+          snprintf(path, sizeof(path), "/home/marcel/%s-%u.txt", __FUNCTION__, FUTEX_SYNC_MODE);
+          static std::mutex lock;
+          std::lock_guard<std::mutex> guard(lock);
+          auto file = fopen(path, "a");
+          fprintf(
+            file,
+            "%lluus\n",
+            (unsigned long long)std::chrono::duration_cast<std::chrono::microseconds>(dt).count());
+          fclose(file);
         } else {
           // ignore this message
           log_debug("session", _session_id, ": connection too slow: message discarded");
@@ -103,7 +133,8 @@ namespace tcp {
         const boost::system::error_code &ec,
         size_t DEBUG_ONLY(bytes)) {
         _is_writing.store(false, std::memory_order_release);
-        carla::futex::wake(_is_writing);
+        if (FUTEX_SYNC_MODE == 0)
+          carla::futex::wake(_is_writing);
         if (ec) {
           log_info("session", _session_id, ": error sending data :", ec.message());
           CloseNow(ec);

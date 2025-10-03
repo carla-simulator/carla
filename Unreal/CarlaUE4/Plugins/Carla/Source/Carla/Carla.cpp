@@ -23,10 +23,12 @@ void FCarlaModule::AddShaderSearchPaths()
 {
 	FString PluginBaseDir = IPluginManager::Get().FindPlugin(TEXT("Carla"))->GetBaseDir();
 	UE_LOG(LogCarla, Log, TEXT("PluginBaseDir: %s"), *PluginBaseDir);
-	check(FPaths::DirectoryExists(PluginBaseDir));
+	if (!FPaths::DirectoryExists(PluginBaseDir))
+		return;
 	FString ShadersDirectoryPath = FPaths::Combine(PluginBaseDir, TEXT("Shaders"));
 	UE_LOG(LogCarla, Log, TEXT("ShadersDirectoryPath: %s"), *ShadersDirectoryPath);
-	check(FPaths::DirectoryExists(ShadersDirectoryPath));
+	if (!FPaths::DirectoryExists(ShadersDirectoryPath))
+		return;
 	ShadersDirectoryPath = FPaths::ConvertRelativePathToFull(ShadersDirectoryPath);
 	AddShaderSourceDirectoryMapping("/Plugin/Carla", ShadersDirectoryPath);
 }

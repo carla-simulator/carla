@@ -20,9 +20,11 @@
 #include "carla/client/detail/WalkerNavigation.h"
 #include "carla/trafficmanager/TrafficManager.h"
 #include "carla/sensor/Deserializer.h"
+#include "carla/Futex.h"
 
 #include <exception>
 #include <thread>
+#include <mutex>
 #include <cassert>
 
 using namespace std::string_literals;
@@ -52,32 +54,74 @@ namespace detail {
     const Episode &episode,
     time_duration timeout_td)
   {
-    auto timeout = timeout_td.to_chrono();
-    auto start = std::chrono::system_clock::now();
-    auto deadline = start + timeout;
-    // Wait while target_frame > current_frame:
-    while (true)
+    bool result = true;
+    auto wait_start = std::chrono::high_resolution_clock::now();
+    if (FUTEX_SYNC_MODE == 0)
     {
-      std::size_t current_frame;
-      std::weak_ptr<const EpisodeState> state_weak;
+      auto timeout = timeout_td.to_chrono();
+      auto start = std::chrono::system_clock::now();
+      auto deadline = start + timeout;
+      // Wait while target_frame > current_frame:
+      while (true)
       {
-        auto state = episode.GetState(); // Hold ref
-        state_weak = state;
-        current_frame = state->GetTimestamp().frame;
-      } // Release ref
-      if (target_frame <= current_frame)
-      {
-        carla::traffic_manager::TrafficManager::Tick();
-        return true;
+        std::size_t current_frame;
+        std::weak_ptr<const EpisodeState> state_weak;
+        {
+          auto state = episode.GetState(); // Hold ref
+          state_weak = state;
+          current_frame = state->GetTimestamp().frame;
+        } // Release ref
+        if (target_frame <= current_frame)
+        {
+          carla::traffic_manager::TrafficManager::Tick();
+          result = true;
+          break;
+        }
+        auto local_timeout = deadline - std::chrono::system_clock::now();
+        auto local_timeout_ms = std::chrono::duration_cast<std::chrono::milliseconds>(local_timeout);
+        episode.AwaitStateUpdate(state_weak, local_timeout_ms); // Wait for state pointer update with timeout.
+        auto elapsed = std::chrono::system_clock::now() - start;
+        if (timeout < elapsed)
+        {
+          result = false;
+          break;
+        }
       }
-      auto local_timeout = deadline - std::chrono::system_clock::now();
-      auto local_timeout_ms = std::chrono::duration_cast<std::chrono::milliseconds>(local_timeout);
-      episode.AwaitStateUpdate(state_weak, local_timeout_ms); // Wait for state pointer update with timeout.
-      auto elapsed = std::chrono::system_clock::now() - start;
-      if (timeout < elapsed)
-        return false;
     }
-    assert(0);
+    else
+    {
+      bool result = true;
+      auto start = std::chrono::system_clock::now();
+      while (target_frame > episode.GetState()->GetTimestamp().frame) {
+        if (FUTEX_SYNC_MODE == 2)
+          std::this_thread::sleep_for(std::chrono::microseconds(100));
+        else
+          std::this_thread::yield();
+        auto end = std::chrono::system_clock::now();
+        auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
+        if(timeout_td.to_chrono() < diff)
+        {
+          result = false;
+          break;
+        }
+      }
+      if(result) {
+        carla::traffic_manager::TrafficManager::Tick();
+      }
+    }
+    auto wait_end = std::chrono::high_resolution_clock::now();
+    auto dt = wait_end - wait_start;
+    char path[512];
+    static std::mutex lock;
+    snprintf(path, sizeof(path), "/home/marcel/%s-%u.txt", __FUNCTION__, FUTEX_SYNC_MODE);
+    std::lock_guard<std::mutex> guard(lock);
+    auto file = fopen(path, "a");
+    fprintf(
+      file,
+      "%lluus\n",
+      (unsigned long long)std::chrono::duration_cast<std::chrono::microseconds>(dt).count());
+    fclose(file);
+    return result;
   }
 
   // ===========================================================================

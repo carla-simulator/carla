@@ -48,8 +48,11 @@ using namespace std::chrono_literals;
 
   Episode::~Episode() {
 
-    (void)_state_counter.fetch_add(1U, std::memory_order_release);
-    carla::futex::wake(_state_counter);
+    if (FUTEX_SYNC_MODE == 0)
+    {
+      (void)_state_counter.fetch_add(1U, std::memory_order_release);
+      carla::futex::wake(_state_counter);
+    }
 
     try {
       _client.UnSubscribeFromStream(_token);
@@ -123,6 +126,8 @@ using namespace std::chrono_literals;
     std::weak_ptr<const EpisodeState> old_state,
     boost::optional<std::chrono::milliseconds> timeout) const
   {
+    if (FUTEX_SYNC_MODE != 0)
+      return;
     auto pinned = old_state.lock();
     if (pinned == nullptr)
       return;
@@ -139,6 +144,8 @@ using namespace std::chrono_literals;
   }
   
   void Episode::NotifyStateUpdate() {
+    if (FUTEX_SYNC_MODE != 0)
+      return;
     (void)_state_counter.fetch_add(1U, std::memory_order_release);
     carla::futex::wake(_state_counter);
   }
