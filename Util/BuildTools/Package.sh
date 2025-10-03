@@ -307,7 +307,6 @@ if ${DO_CARLA_RELEASE} ; then
   copy_if_changed "./PythonAPI/examples/*.py" "${DESTINATION}/PythonAPI/examples/"
   copy_if_changed "./PythonAPI/examples/rss/*.py" "${DESTINATION}/PythonAPI/examples/rss/"
   copy_if_changed "./PythonAPI/examples/requirements.txt" "${DESTINATION}/PythonAPI/examples/"
-  copy_if_changed "./PythonAPI/examples/cosmos_aov.yaml" "${DESTINATION}/PythonAPI/examples/"
   copy_if_changed "./PythonAPI/examples/nvidia/" "${DESTINATION}/PythonAPI/examples/nvidia"
   copy_if_changed "./PythonAPI/examples/ros2/" "${DESTINATION}/PythonAPI/examples/ros2"
 
