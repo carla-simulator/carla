@@ -76,13 +76,13 @@ static auto GetLaneValidities(const carla::client::Landmark &self){
 static carla::geom::Location ToTransform(
     const carla::client::Map &self,
     const carla::geom::GeoLocation& geo_location) {
-  return self.GetGeoReference().GeoLocationToTransform(geo_location);
+  return self.GetGeoProjection().GeoLocationToTransform(geo_location);
 }
 
 static carla::geom::GeoLocation ToGeolocation(
     const carla::client::Map &self,
     const carla::geom::Location &location) {
-  return self.GetGeoReference().Transform(location);
+  return self.GetGeoProjection().TransformToGeoLocation(location);
 }
 
 void export_map() {

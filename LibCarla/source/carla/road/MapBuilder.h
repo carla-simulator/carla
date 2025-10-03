@@ -376,10 +376,12 @@ namespace road {
         const std::set<road::SignId>&& signals
         );
 
-
-
     void SetGeoReference(const geom::GeoLocation &geo_reference) {
-      _map_data._geo_reference = geo_reference;
+        _map_data._geo_reference = geo_reference;
+        }
+
+    void SetGeoProjection(const geom::GeoProjection &geo_projection) {
+      _map_data._geo_projection = geo_projection;
     }
 
   private:

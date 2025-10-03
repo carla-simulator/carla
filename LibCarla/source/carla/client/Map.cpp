@@ -112,6 +112,10 @@ namespace client {
     return _map.GetGeoReference();
   }
 
+  const geom::GeoProjection &Map::GetGeoProjection() const {
+    return _map.GetGeoProjection();
+  }
+
   std::vector<geom::Location> Map::GetAllCrosswalkZones() const {
     return _map.GetAllCrosswalkZones();
   }
