@@ -56,7 +56,7 @@ namespace detail {
   {
     bool result = true;
     auto wait_start = std::chrono::high_resolution_clock::now();
-    if (FUTEX_SYNC_MODE == 0)
+    if (LOOP_WAIT_MODE == 0)
     {
       auto timeout = timeout_td.to_chrono();
       auto start = std::chrono::system_clock::now();
@@ -93,7 +93,7 @@ namespace detail {
       bool result = true;
       auto start = std::chrono::system_clock::now();
       while (target_frame > episode.GetState()->GetTimestamp().frame) {
-        if (FUTEX_SYNC_MODE == 2)
+        if (LOOP_WAIT_MODE == 2)
           std::this_thread::sleep_for(std::chrono::microseconds(100));
         else
           std::this_thread::yield();
@@ -109,11 +109,14 @@ namespace detail {
         carla::traffic_manager::TrafficManager::Tick();
       }
     }
+#ifndef LOOP_WAIT_BENCHMARK
+    (void)wait_start;
+#else
     auto wait_end = std::chrono::high_resolution_clock::now();
     auto dt = wait_end - wait_start;
     char path[512];
     static std::mutex lock;
-    snprintf(path, sizeof(path), "/home/marcel/%s-%u.txt", __FUNCTION__, FUTEX_SYNC_MODE);
+    snprintf(path, sizeof(path), "~/%s-%u.txt", __FUNCTION__, LOOP_WAIT_MODE);
     std::lock_guard<std::mutex> guard(lock);
     auto file = fopen(path, "a");
     fprintf(
@@ -121,6 +124,7 @@ namespace detail {
       "%lluus\n",
       (unsigned long long)std::chrono::duration_cast<std::chrono::microseconds>(dt).count());
     fclose(file);
+#endif
     return result;
   }
 
