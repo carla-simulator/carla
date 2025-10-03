@@ -17,8 +17,9 @@ import json
 import tarfile
 import tempfile
 import math
-
 import os
+import traceback
+import glob
 
 from PIL import Image
 
@@ -55,9 +56,43 @@ def parse_frames_duration(info):
     else:
         return -1, -1.0
 
+def compute_rotation_components(rotation):
+    """Compute cosine and sine components for roll, pitch, yaw from CARLA rotation."""
+    roll = math.radians(rotation.roll)
+    pitch = math.radians(rotation.pitch)
+    yaw = math.radians(rotation.yaw)
+
+    cr, sr = math.cos(roll), math.sin(roll)
+    cp, sp = math.cos(pitch), math.sin(pitch)
+    cy, sy = math.cos(yaw), math.sin(yaw)
+
+    return cr, sr, cp, sp, cy, sy
+
+def build_transform_matrix(location, rotation, z_offset=0.0):
+    """Build a 4x4 transformation matrix from CARLA location and rotation."""
+    cr, sr, cp, sp, cy, sy = compute_rotation_components(rotation)
+    adjusted_z = location.z + z_offset
+
+    return [
+        [cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr, location.x],
+        [sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr, location.y],
+        [-sp, cp * sr, cp * cr, adjusted_z],
+        [0.0, 0.0, 0.0, 1.0]
+    ]
+
 # === CONFIGURATION LOADERS ===
 CLASSES_TO_KEEP_SHADED_SEG: List[Sequence[int]] = []
 CLASSES_TO_KEEP_CANNY: List[Sequence[int]] = []
+
+# Semantic label to object type mapping for CARLA vehicles
+SEMANTIC_LABEL_TO_OBJECT_TYPE = {
+    14: "Automobile",
+    15: "Truck",
+    16: "Bus",
+    17: "Train_or_tram_car",
+    18: "Rider",
+    19: "Rider"
+}
 
 def load_class_filter_config(path: str):
     path = Path(path).resolve()
@@ -262,7 +297,7 @@ def video_writer_worker(proc_q: mp.Queue, out_dir: Path, fps: float):
     logging.info("[Writer] exiting")
 
 # === DYNAMIC OBJECT EXTRACTION (RDS-HQ FORMAT) ===
-def extract_dynamic_objects_cosmos_format(world, frame_number, ego_vehicle_id=None):
+def extract_dynamic_objects_data(world, ego_vehicle_id=None):
     objects_data = {}
 
     vehicles = world.get_actors().filter('vehicle.*')
@@ -273,41 +308,13 @@ def extract_dynamic_objects_cosmos_format(world, frame_number, ego_vehicle_id=No
         bbox = vehicle.bounding_box
         transform = vehicle.get_transform()
 
-        loc = transform.location
-        rot = transform.rotation
-
-        roll, pitch, yaw = map(math.radians, [rot.roll, rot.pitch, rot.yaw])
-
-        cr, sr = math.cos(roll), math.sin(roll)
-        cp, sp = math.cos(pitch), math.sin(pitch)
-        cy, sy = math.cos(yaw), math.sin(yaw)
-
-        adjusted_z = loc.z + bbox.extent.z
-
-        object_to_world = [
-            [cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr, loc.x],
-            [sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr, loc.y],
-            [-sp, cp * sr, cp * cr, adjusted_z],
-            [0.0, 0.0, 0.0, 1.0]
-        ]
+        object_to_world = build_transform_matrix(
+            transform.location, transform.rotation, bbox.extent.z
+        )
 
         object_lwh = [bbox.extent.x * 2.0, bbox.extent.y * 2.0, bbox.extent.z * 2.0]
         semantic_label = vehicle.semantic_tags[0] if vehicle.semantic_tags else 14  # Default to Car
-
-        if semantic_label == 14:
-            object_type = "Automobile"
-        elif semantic_label == 15:
-            object_type = "Truck"
-        elif semantic_label == 16:
-            object_type = "Bus"
-        elif semantic_label == 17:
-            object_type = "Train_or_tram_car"
-        elif semantic_label == 18:
-            object_type = "Rider"
-        elif semantic_label == 19:
-            object_type = "Rider"
-        else:
-            object_type = "Automobile"
+        object_type = SEMANTIC_LABEL_TO_OBJECT_TYPE.get(semantic_label, "Automobile")
 
         objects_data[str(vehicle.id)] = {
             "object_to_world": object_to_world,
@@ -321,31 +328,11 @@ def extract_dynamic_objects_cosmos_format(world, frame_number, ego_vehicle_id=No
         bbox = walker.bounding_box
         transform = walker.get_transform()
 
-        loc = transform.location
-        rot = transform.rotation
+        object_to_world = build_transform_matrix(
+            transform.location, transform.rotation, bbox.extent.z
+        )
 
-        roll = math.radians(rot.roll)
-        pitch = math.radians(rot.pitch)
-        yaw = math.radians(rot.yaw)
-
-        cr, sr = math.cos(roll), math.sin(roll)
-        cp, sp = math.cos(pitch), math.sin(pitch)
-        cy, sy = math.cos(yaw), math.sin(yaw)
-
-        adjusted_z = loc.z + bbox.extent.z
-
-        object_to_world = np.array([
-            [cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr, loc.x],
-            [sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr, loc.y],
-            [-sp, cp * sr, cp * cr, adjusted_z],
-            [0.0, 0.0, 0.0, 1.0]
-        ]).tolist()
-
-        object_lwh = [
-            bbox.extent.x * 2.0,
-            bbox.extent.y * 2.0,
-            bbox.extent.z * 2.0
-        ]
+        object_lwh = [bbox.extent.x * 2.0, bbox.extent.y * 2.0, bbox.extent.z * 2.0]
 
         objects_data[str(walker.id)] = {
             "object_to_world": object_to_world,
@@ -356,7 +343,7 @@ def extract_dynamic_objects_cosmos_format(world, frame_number, ego_vehicle_id=No
 
     return objects_data
 
-def export_dynamic_objects_cosmos_format(dynamic_frames, session_id, output_dir):
+def export_dynamic_objects_data(dynamic_frames, session_id, output_dir):
     objects_dir = output_dir / "all_object_info"
     objects_dir.mkdir(parents=True, exist_ok=True)
 
@@ -382,9 +369,7 @@ def export_dynamic_objects_cosmos_format(dynamic_frames, session_id, output_dir)
 
         return True
 
-def extract_camera_poses(world, frame_number, camera_actor_id, camera_sensor=None):
-    import numpy as np
-
+def extract_camera_poses(world, frame_number, camera_sensor=None):
     if camera_sensor is None:
         logging.warning(f"Frame {frame_number}: No camera sensor provided, skipping pose extraction")
         return None
@@ -392,15 +377,7 @@ def extract_camera_poses(world, frame_number, camera_actor_id, camera_sensor=Non
     transform = camera_sensor.get_transform()
 
     loc = transform.location
-    rot = transform.rotation
-
-    roll = math.radians(rot.roll)
-    pitch = math.radians(rot.pitch)
-    yaw = math.radians(rot.yaw)
-
-    cr, sr = math.cos(roll), math.sin(roll)
-    cp, sp = math.cos(pitch), math.sin(pitch)
-    cy, sy = math.cos(yaw), math.sin(yaw)
+    cr, sr, cp, sp, cy, sy = compute_rotation_components(transform.rotation)
 
     R = np.array([
         [cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr],
@@ -421,13 +398,7 @@ def extract_camera_poses(world, frame_number, camera_actor_id, camera_sensor=Non
 
     return pose_opencv
 
-def export_pose_data(pose_frames, session_id, output_dir):
-    import numpy as np
-    import tarfile
-    import tempfile
-    import os
-    from io import BytesIO
-
+def export_camera_pose_data(pose_frames, session_id, output_dir):
     pose_dir = output_dir / "pose"
     pose_dir.mkdir(parents=True, exist_ok=True)
 
@@ -471,10 +442,7 @@ def extract_camera_intrinsics_from_sensor(sensor):
 
     return K, image_width, image_height, fov
 
-def export_camera_intrinsics_single(K, width, height, session_id, output_dir):
-    import tarfile
-    import tempfile
-
+def export_camera_intrinsincs_pinhole(K, width, height, session_id, output_dir):
     pinhole_dir = output_dir / "pinhole_intrinsic"
     pinhole_dir.mkdir(parents=True, exist_ok=True)
 
@@ -574,8 +542,6 @@ def export_dataset_config(session_id, output_dir, rds_hq_camera_name="rds_hq", i
 
 # === RDS-HQ EXPORT ===
 def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=None, pose_frames=None, camera_intrinsics=None):
-    import os
-
     rds_hq_dir = Path(args.output_dir) / "rds-hq"
     rds_hq_dir.mkdir(parents=True, exist_ok=True)
 
@@ -615,13 +581,8 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
                 static_directories[export_name] = dir_name
             except Exception as e:
                 logging.error(f"Failed to export {export_name}: {e}")
-                import traceback
                 logging.error(f"Full traceback: {traceback.format_exc()}")
                 failed_exports.append((export_name, str(e)))
-
-        import tarfile
-        import glob
-        import os
 
         for dir_path in rds_hq_dir.glob("3d_*"):
             if dir_path.is_dir():
@@ -651,7 +612,7 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
                 actual_frame_count = len(dynamic_frames)
                 calculated_fps = actual_frame_count / (args.duration if args.duration > 0 else log_duration)
                 logging.info(f"Exporting {actual_frame_count} frames of dynamic objects (calculated fps: {calculated_fps:.2f})...")
-                if export_dynamic_objects_cosmos_format(dynamic_frames, session_id, rds_hq_dir):
+                if export_dynamic_objects_data(dynamic_frames, session_id, rds_hq_dir):
                     successful_exports.append("dynamic_objects")
             except Exception as e:
                 logging.error(f"Failed to export dynamic objects: {e}")
@@ -662,7 +623,7 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
                 actual_frame_count = len(pose_frames)
                 calculated_fps = actual_frame_count / (args.duration if args.duration > 0 else log_duration)
                 logging.info(f"Exporting {actual_frame_count} frames of camera pose data (calculated fps: {calculated_fps:.2f})...")
-                if export_pose_data(pose_frames, session_id, rds_hq_dir):
+                if export_camera_pose_data(pose_frames, session_id, rds_hq_dir):
                     successful_exports.append("camera_poses")
             except Exception as e:
                 logging.error(f"Failed to export camera poses: {e}")
@@ -672,7 +633,7 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
             try:
                 logging.info("Exporting camera intrinsics...")
                 K, width, height, fov = camera_intrinsics
-                if export_camera_intrinsics_single(K, width, height, session_id, rds_hq_dir):
+                if export_camera_intrinsincs_pinhole(K, width, height, session_id, rds_hq_dir):
                     successful_exports.append("camera_intrinsics")
             except Exception as e:
                 logging.error(f"Failed to export camera intrinsics: {e}")
@@ -708,13 +669,11 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
             }
         }
 
-        import json
         metadata_file = rds_hq_dir / f"{session_id}_metadata.json"
         with open(metadata_file, 'w') as f:
             json.dump(metadata, f, indent=2)
 
         logging.info("Exporting dataset config for RDS-HQ renderer...")
-        recording_fps = round(1.0 / (log_duration / log_frames))
         export_dataset_config(
             session_id=session_id,
             output_dir=rds_hq_dir,
@@ -854,7 +813,7 @@ def main():
             idx = world.tick()
 
             if has_rds_hq_sensor:
-                dynamic_objects = extract_dynamic_objects_cosmos_format(world, frame_count, args.camera)
+                dynamic_objects = extract_dynamic_objects_data(world, args.camera)
                 dynamic_frames.append(dynamic_objects)
 
                 main_camera_sensor = None
@@ -863,7 +822,7 @@ def main():
                         main_camera_sensor = si.sensor
                         break
 
-                camera_pose = extract_camera_poses(world, frame_count, args.camera, main_camera_sensor)
+                camera_pose = extract_camera_poses(world, frame_count, main_camera_sensor)
                 pose_frames.append(camera_pose)
 
             frame_dict = {}
