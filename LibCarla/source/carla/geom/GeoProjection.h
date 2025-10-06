@@ -45,7 +45,7 @@ namespace geom {
         int    zone     = 31;               // 1 to 60
         bool   north    = true;             // hemisphere
         double k        = 0.9996;           // scale factor at origin. This should be fixed
-        double x_0      = 5000000.0;        // false easting
+        double x_0      = 500000.0;         // false easting
         double y_0      = 0.0;              // false northing
         Ellipsoid ellps = Ellipsoid();      // Earth0's ellipsoidal shape
     };
@@ -61,7 +61,6 @@ namespace geom {
         double lat_2    = 0.0;              // 2nd standard parallel
         double x_0      = 0.0;              // false easting
         double y_0      = 0.0;              // false northing
-        double e        = 0.0818191908426;  // eccentricity
         Ellipsoid ellps = Ellipsoid();      // Earth0's ellipsoidal shape
     };
 

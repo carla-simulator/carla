@@ -38,20 +38,8 @@ namespace parser {
     for (std::sregex_iterator it(s.begin(), s.end(), re), end; it != end; ++it) {
         std::string key = (*it)[1].str();
         std::string val = (*it)[2].str();
-        // if (!val.empty()) val = unquote(val);
         geo_parameters_map[key] = val;
     }
-
-    // Might be needed for quotes,
-    // static inline std::string unquote(std::string s) {
-    //   if (s.size() >= 2) {
-    //       char a = s.front(), b = s.back();
-    //       if ((a == '"' && b == '"') || (a == '\'' && b == '\'')) {
-    //           return s.substr(1, s.size() - 2);
-    //       }
-    //   }
-    //   return s;
-    //   }
 
     return geo_parameters_map;
   }
@@ -138,20 +126,16 @@ namespace parser {
     if (parameters.find("zone") != parameters.end()) {
       p.zone = std::stod(parameters["zone"]);
     }
-    if (parameters.find("north") != parameters.end()) {
-      p.north = true;
-      p.x_0 = 5000000.0;
-      p.y_0 = 0.0;
-    } else if (parameters.find("south") != parameters.end()) {
-      p.north = true;
-      p.x_0 = 5000000.0;
+
+    p.x_0 = 500000.0;
+    if (parameters.count("south") > 0) {  // 'south' is a flag so can't check the value as the rest.
+      p.north = false;
       p.y_0 = 10000000.0;
-    } {
-      log_debug("hemisphere hasn't been specified, defaulting to northern one.");
+    } else {
       p.north = true;
-      p.x_0 = 5000000.0;
       p.y_0 = 0.0;
     }
+
     p.ellps = ellipsoid;
     auto projection = geom::GeoProjection::Make(p);
     projection.setRawReference(geo_reference_string);
@@ -189,6 +173,12 @@ namespace parser {
     }
     if (parameters.find("lat_2") != parameters.end()) {
       p.lat_2 = std::stod(parameters["lat_2"]);
+    }
+    if (parameters.find("x_0") != parameters.end()) {
+      p.x_0 = std::stod(parameters["x_0"]);
+    }
+    if (parameters.find("y_0") != parameters.end()) {
+      p.y_0 = std::stod(parameters["y_0"]);
     }
 
     p.ellps = ellipsoid;
