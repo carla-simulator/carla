@@ -1,0 +1,31 @@
+# Low Resolution Narrow FOV Test Config
+# 640x480, 60° FOV (narrow/telephoto)
+- sensor: rgb
+  attributes:
+    image_size_x: 640
+    image_size_y: 480
+    fov: 60
+  transform:
+    location:
+      x: 0
+      y: 0
+      z: 1.8
+    rotation:
+      pitch: 8
+      yaw: 0
+      roll: 0
+
+- sensor: rds_hq
+  attributes:
+    image_size_x: 640
+    image_size_y: 480
+    fov: 60
+  transform:
+    location:
+      x: 0.0
+      y: 0.0
+      z: 1.8
+    rotation:
+      pitch: 8
+      yaw: 0
+      roll: 0

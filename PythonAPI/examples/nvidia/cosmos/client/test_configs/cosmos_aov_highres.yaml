@@ -1,0 +1,31 @@
+# High Resolution Wide FOV Test Config
+# 2560x1440, 120° FOV
+- sensor: rgb
+  attributes:
+    image_size_x: 2560
+    image_size_y: 1440
+    fov: 120
+  transform:
+    location:
+      x: 0
+      y: 0
+      z: 1.8
+    rotation:
+      pitch: 8
+      yaw: 0
+      roll: 0
+
+- sensor: rds_hq
+  attributes:
+    image_size_x: 2560
+    image_size_y: 1440
+    fov: 120
+  transform:
+    location:
+      x: 0.0
+      y: 0.0
+      z: 1.8
+    rotation:
+      pitch: 8
+      yaw: 0
+      roll: 0
