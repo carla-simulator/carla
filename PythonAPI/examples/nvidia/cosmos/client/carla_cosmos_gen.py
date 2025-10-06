@@ -18,6 +18,8 @@ import tarfile
 import tempfile
 import math
 import os
+import sys
+import shutil
 import traceback
 import glob
 
@@ -473,7 +475,7 @@ def export_camera_intrinsincs_pinhole(K, width, height, session_id, output_dir):
 
 
 # === DATASET CONFIG EXPORT ===
-def export_dataset_config(session_id, output_dir, rds_hq_camera_name="rds_hq", input_fps=30, target_render_fps=24, total_frames=None, chunk_frames=None):
+def export_dataset_config(session_id, output_dir, rds_hq_camera_name="rds_hq", input_fps=30, target_render_fps=24, total_frames=None, chunk_frames=None, image_width=1280, image_height=1080):
     """
     Export dataset configuration JSON for RDS-HQ renderer.
 
@@ -485,6 +487,8 @@ def export_dataset_config(session_id, output_dir, rds_hq_camera_name="rds_hq", i
         target_render_fps: Desired output video FPS (renderer will downsample)
         total_frames: Total number of frames exported (used to calculate chunk size)
         chunk_frames: Target chunk frame size (None = use full video, -1 = default 121, or specify exact value)
+        image_width: Camera sensor width from sensor config (default: 1280)
+        image_height: Camera sensor height from sensor config (default: 1080)
 
     Returns:
         Path to exported config file
@@ -515,16 +519,16 @@ def export_dataset_config(session_id, output_dir, rds_hq_camera_name="rds_hq", i
         "INPUT_POSE_FPS": input_fps,  # Native recording FPS
         "INPUT_LIDAR_FPS": 10,
         "GT_VIDEO_FPS": input_fps,
-        "COSMOS_RESOLUTION": [1280, 704],
+        "COSMOS_RESOLUTION": [image_width, image_height],
         "NOT_POST_TRAINING": {
-            "RESIZE_RESOLUTION": [1280, 720],
+            "RESIZE_RESOLUTION": [image_width, image_height],
             "TO_COSMOS_RESOLUTION": "resize",
             "TARGET_CHUNK_FRAME": chunk_frame,
             "OVERLAP_FRAME": 0,
             "TARGET_RENDER_FPS": target_render_fps  # Output video FPS
         },
         "POST_TRAINING": {
-            "RESIZE_RESOLUTION": [1280, 720],
+            "RESIZE_RESOLUTION": [image_width, image_height],
             "TO_COSMOS_RESOLUTION": "center-crop",
             "TARGET_CHUNK_FRAME": chunk_frame,
             "OVERLAP_FRAME": 0,
@@ -538,6 +542,84 @@ def export_dataset_config(session_id, output_dir, rds_hq_camera_name="rds_hq", i
 
     logging.info(f"Exported dataset config to {config_path}")
     return str(config_path)
+
+
+# === HD MAP RENDERING ===
+def render_hdmap_video(session_id, rds_hq_dir, output_dir):
+    """
+    Render HD map video using the Cosmos-Drive-Dreams toolkit.
+
+    Args:
+        session_id: Session identifier
+        rds_hq_dir: Directory containing RDS-HQ export data
+        output_dir: Output directory for rendered videos
+
+    Returns:
+        True if rendering succeeded, False otherwise
+    """
+    try:
+        script_dir = Path(__file__).parent.resolve()
+        # Go up one level from client/ to cosmos/, then into utils/
+        toolkit_path = script_dir.parent / "utils" / "cosmos-drive-dreams" / "cosmos-drive-dreams-toolkits"
+        render_script = toolkit_path / "render_from_rds_hq.py"
+
+        if not toolkit_path.exists() or not render_script.exists():
+            logging.error(f"Cosmos-Drive-Dreams toolkit not found at {toolkit_path}")
+            logging.error("Please initialize the submodule: git submodule update --init --recursive")
+            return False
+
+        config_path = rds_hq_dir / f"dataset_{session_id}.json"
+        if not config_path.exists():
+            logging.error(f"Dataset config not found: {config_path}")
+            return False
+
+        toolkit_config_dir = toolkit_path / "config"
+        toolkit_config_dir.mkdir(exist_ok=True)
+        toolkit_config_path = toolkit_config_dir / f"dataset_{session_id}.json"
+
+        shutil.copy(str(config_path), str(toolkit_config_path))
+        logging.info(f"Copied dataset config to {toolkit_config_path}")
+
+        logging.info(f"Starting HD map video rendering for session: {session_id}")
+        logging.info(f"Input directory: {rds_hq_dir}")
+        logging.info(f"Output directory: {output_dir}")
+
+        cmd = [
+            sys.executable,
+            str(render_script),
+            '-i', str(rds_hq_dir),
+            '-o', str(output_dir),
+            '-cj', session_id,
+            '-d', session_id,
+            '-c', 'pinhole',
+            '-s', 'lidar'  # Skip lidar rendering (we don't export lidar data)
+        ]
+
+        result = subprocess.run(
+            cmd,
+            cwd=str(toolkit_path),  # Run from toolkit directory so relative paths work
+            check=True,
+            capture_output=True,
+            text=True
+        )
+
+        if result.stdout:
+            logging.info(f"Renderer output:\n{result.stdout}")
+
+        logging.info(f"Successfully rendered HD map video for session: {session_id}")
+        return True
+
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Renderer failed with exit code {e.returncode}")
+        if e.stdout:
+            logging.error(f"Stdout: {e.stdout}")
+        if e.stderr:
+            logging.error(f"Stderr: {e.stderr}")
+        return False
+    except Exception as e:
+        logging.error(f"Failed to render HD map video: {e}")
+        logging.error(f"Full traceback: {traceback.format_exc()}")
+        return False
 
 
 # === RDS-HQ EXPORT ===
@@ -674,13 +756,17 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
             json.dump(metadata, f, indent=2)
 
         logging.info("Exporting dataset config for RDS-HQ renderer...")
+        # Extract image dimensions from camera intrinsics
+        K, width, height, fov = camera_intrinsics if camera_intrinsics else (None, 1280, 1080, 90.0)
         export_dataset_config(
             session_id=session_id,
             output_dir=rds_hq_dir,
             rds_hq_camera_name="rds_hq",
             input_fps=recording_fps,
             target_render_fps=24,
-            total_frames=actual_exported_frames
+            total_frames=actual_exported_frames,
+            image_width=int(width),
+            image_height=int(height)
         )
 
     except Exception as e:
@@ -704,6 +790,7 @@ def main():
     parser.add_argument('--move-spectator', action='store_true')
     parser.add_argument('--spawn-sensors', action='store_true')
     parser.add_argument('--num-post-workers', type=int, default=max(1, mp.cpu_count()-1))
+    parser.add_argument('--skip-render-hdmap', action='store_true', help='Skip automatic HD map video rendering')
     args = parser.parse_args()
 
     logging.basicConfig(
@@ -845,6 +932,19 @@ def main():
 
         if has_rds_hq_sensor:
             export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames, pose_frames, camera_intrinsics)
+
+            # Automatically render HD map video unless --skip-render-hdmap is specified
+            if not args.skip_render_hdmap:
+                rds_hq_dir = Path(args.output_dir) / "rds-hq"
+                log_file_base = Path(args.recorder_filename).stem
+                log_file_base_sanitized = log_file_base.replace('.', '_')
+                start_time_us = int(args.start * 1000000)
+                end_time_us = int((args.start + (args.duration if args.duration > 0 else log_duration)) * 1000000)
+                session_id = f"{log_file_base_sanitized}_{start_time_us}_{end_time_us}"
+
+                render_hdmap_video(session_id, rds_hq_dir, Path(args.output_dir))
+            else:
+                logging.info("Skipping HD map video rendering (--skip-render-hdmap flag set)")
         else:
             logging.info("Skipping RDS-HQ export (no rds_hq sensor defined)")
 
