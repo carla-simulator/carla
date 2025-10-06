@@ -49,21 +49,79 @@ set (
   ${CARLA_UE_PATH}/Content/Carla
 )
 
-if (NOT EXISTS ${CARLA_UE_CONTENT_PATH}/.git)
-  carla_error ("Missing CARLA content.")
+set (
+  CARLA_UE_CONTENT_ORIGIN_URL
+  https://bitbucket.org/carla-simulator/carla-content.git
+)
+
+set (CARLA_HAS_CONTENT FALSE)
+
+if (CARLA_UNREAL_CONTENT_PREFER_CLONE)
+
+  # Assume CARLA Content has been downloaded using git.
+  # Therefore, we can use git commands to test the validity of the repo.
+
+  function (carla_test_is_valid_content_directory RETURN_VALUE PATH)
+    if (IS_DIRECTORY "${PATH}")
+      carla_message ("Searching CARLA Content in ${PATH}")
+      execute_process (
+        COMMAND
+          git -C ${PATH} config --get remote.origin.url
+        OUTPUT_VARIABLE
+          GIT_ORIGIN_URL
+        RESULT_VARIABLE
+          GIT_ORIGIN_URL_RESULT
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      if (NOT ${GIT_ORIGIN_URL_RESULT})
+        if ("${GIT_ORIGIN_URL}" STREQUAL "${CARLA_UE_CONTENT_ORIGIN_URL}")
+          set (${RETURN_VALUE} TRUE PARENT_SCOPE)
+          return ()
+        endif ()
+      endif ()
+    endif ()
+    set (${RETURN_VALUE} FALSE PARENT_SCOPE)
+  endfunction ()
+
+  carla_test_is_valid_content_directory (CARLA_HAS_CONTENT "${CARLA_UE_CONTENT_PATH}")
+
+  if (NOT ${CARLA_HAS_CONTENT})
+    foreach (ADDITIONAL_CONTENT_SEARCH_PATH ${CARLA_ADDITIONAL_CONTENT_SEARCH_PATHS})
+      carla_test_is_valid_content_directory (CARLA_HAS_CONTENT "${ADDITIONAL_CONTENT_SEARCH_PATH}")
+      if (${CARLA_HAS_CONTENT})
+        carla_message ("Found CARLA Content in \"${ADDITIONAL_CONTENT_SEARCH_PATH}\", creating symlink.")
+        carla_create_symlink (
+          "${CARLA_UE_CONTENT_PATH}"
+          "${ADDITIONAL_CONTENT_SEARCH_PATH}")
+        break ()
+      endif ()
+    endforeach ()
+  endif ()
+
+else ()
+
+  # Assume CARLA Content has been downloaded directly, without using git.
+  # In this case use a simple directory existence check.
+
+  if (IS_DIRECTORY ${CARLA_UE_CONTENT_PATH})
+    set (CARLA_HAS_CONTENT TRUE)
+  endif ()
+
+endif ()
+
+if (NOT ${CARLA_HAS_CONTENT})
+  carla_error (
+    "Could not find CARLA Content. Either clone it from ${CARLA_UE_CONTENT_ORIGIN_URL} or, if you already downloaded it somewhere else in your system, add its path to CARLA_ADDITIONAL_CONTENT_SEARCH_PATHS.")
+else ()
+  carla_message (
+    "Found CARLA Content."
+  )
 endif ()
 
 set (
   UNREAL_EDITOR_PATH
   ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
 )
-
-set (CARLA_UE_CONTENT_CHECK_PATH ${CARLA_UE_PATH}/Content/Carla/Blueprints)
-if (IS_DIRECTORY ${CARLA_UE_CONTENT_CHECK_PATH})
-  carla_message_verbose ("CARLA Unreal Content - FOUND")
-else ()
-  carla_warning ("Could not find CARLA Content, download it or running the editor will result in a crash.")
-endif ()
 
 
 
@@ -322,10 +380,32 @@ list (
 
 file (
   MAKE_DIRECTORY
-  ${CARLA_UE_PATH}/Content/Carla/ExportedMaps
+  ${CARLA_UE_CONTENT_PATH}/ExportedMaps
 )
 
 
+
+carla_add_custom_target (
+  ue-compile-shaders
+  "Compile all CARLA Unreal Engine Shaders."
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor-Cmd${EXE_EXT}
+    ${CARLA_UE_PROJECT_PATH}
+    -run=DerivedDataCache
+    -fill
+)
+
+carla_add_custom_target (
+  ue-cook-content
+  "Compile all CARLA Unreal Engine Shaders."
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor-Cmd${EXE_EXT}
+    ${CARLA_UE_PROJECT_PATH}
+    -run=Cook
+    -TargetPlatform=${UE_SYSTEM_NAME}
+    -unattended
+    -nop4
+)
 
 carla_add_custom_target (
   carla-unreal
@@ -348,7 +428,7 @@ add_dependencies (
 )
 
 carla_add_custom_target (
-  carla-unreal-editor
+  ue-editor
   "Build the CarlaUnrealEditor subproject."
   COMMAND
     ${CARLA_UE_BUILD_COMMAND_PREFIX}
@@ -364,8 +444,13 @@ carla_add_custom_target (
   VERBATIM
 )
 
-add_dependencies (
+carla_add_custom_target_alias (
   carla-unreal-editor
+  ue-editor
+)
+
+add_dependencies (
+  ue-editor
   carla-unreal
   ${UE_DEPENDENCIES_ORDER_ONLY}
 )
@@ -410,7 +495,8 @@ function (
   endif ()
 
   set (TARGET_NAME_SHORT package${TARGET_NAME_SUFFIX})
-  set (TARGET_NAME carla-unreal-${TARGET_NAME_SHORT})
+  set (TARGET_NAME ue-${TARGET_NAME_SHORT})
+  set (TARGET_NAME_LONG carla-${TARGET_NAME})
 
   carla_add_custom_target (
     ${TARGET_NAME}
@@ -445,6 +531,16 @@ function (
     VERBATIM
   )
   
+  carla_add_custom_target_alias (
+    ${TARGET_NAME_SHORT}
+    ${TARGET_NAME}
+  )
+
+  carla_add_custom_target_alias (
+    ${TARGET_NAME_LONG}
+    ${TARGET_NAME}
+  )
+
   set (
     PACKAGE_POST_BUILD_COMMANDS
     COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE CREATING VERSION FILE UNREAL PACKAGE EXTRA FILES STARTED **********"
@@ -495,17 +591,7 @@ function (
   add_dependencies (
     ${TARGET_NAME}
     carla-python-api
-    carla-unreal-editor
-  )
-
-  carla_add_custom_target (
-    ${TARGET_NAME_SHORT}
-    "Create a CARLA package in ${PACKAGE_CONFIGURATION} mode."
-  )
-
-  add_dependencies (
-    ${TARGET_NAME_SHORT}
-    ${TARGET_NAME}
+    ue-editor
   )
 
 endfunction()
@@ -547,29 +633,6 @@ set (
   VERBATIM
 )
 
-if (WIN32)
-  set (
-    PRELAUNCH_CONTENT_CHECK_COMMAND
-    if exist ${CARLA_UE_CONTENT_CHECK_PATH} (exit 0) else (exit 1)
-  )
-else ()
-  set (
-    PRELAUNCH_CONTENT_CHECK_COMMAND
-    test -d ${CARLA_UE_CONTENT_CHECK_PATH}
-  )
-endif ()
-
-carla_add_custom_target (
-  check-unreal-content
-  "Perform some basic checks to ensure that the CARLA Unreal Editor will not open without its assets."
-  COMMAND
-    ${PRELAUNCH_CONTENT_CHECK_COMMAND}
-  COMMENT
-    "Performing prelaunch check for CARLA Content presence."
-  USES_TERMINAL
-  VERBATIM
-)
-
 carla_add_custom_target (
   launch-only
   "Open CARLA in the Unreal Editor. This will not rebuild outdated targets."
@@ -578,7 +641,6 @@ carla_add_custom_target (
 
 add_dependencies (
   launch-only
-  check-unreal-content
 )
 
 carla_add_custom_target (
@@ -589,8 +651,7 @@ carla_add_custom_target (
 
 add_dependencies (
   launch
-  carla-unreal-editor
-  check-unreal-content
+  ue-editor
 )
 
 set_property (

@@ -146,6 +146,56 @@ endfunction ()
 
 
 
+function (carla_add_library_alias NAME ORIGINAL_TARGET)
+  carla_add_target_docs (
+    NAME ${NAME}
+    TYPE LibraryAlias
+    DOCS_BRIEF "Alias for \"${ORIGINAL_TARGET}\"."
+  )
+  add_library (${NAME} ALIAS ${ORIGINAL_TARGET} ${ARGN})
+endfunction ()
+
+
+
+function (carla_add_executable_alias NAME ORIGINAL_TARGET)
+  carla_add_target_docs (
+    NAME ${NAME}
+    TYPE ExecutableAlias
+    DOCS_BRIEF "Alias for \"${ORIGINAL_TARGET}\"."
+  )
+  add_executable (${NAME} ALIAS ${ORIGINAL_TARGET} ${ARGN})
+endfunction ()
+
+
+
+function (carla_add_custom_target_alias NAME ORIGINAL_TARGET)
+  carla_add_target_docs (
+    NAME ${NAME}
+    TYPE CustomTargetAlias
+    DOCS_BRIEF "Alias for \"${ORIGINAL_TARGET}\"."
+  )
+  add_custom_target (${NAME} DEPENDS ${ORIGINAL_TARGET})
+endfunction ()
+
+
+
+function (carla_create_symlink ${DESTINATION} ${SOURCE})
+  execute_process (
+    COMMAND
+      ${CMAKE_COMMAND}
+        -E create_symlink
+        ${SOURCE}
+        ${DESTINATION}
+    RESULT_VARIABLE
+      CREATE_SYMLINK_RESULT
+  )
+  if (${CREATE_SYMLINK_RESULT})
+    carla_error ("Failed to create symlink from ${SOURCE} to ${DESTINATION}")
+  endif ()
+endfunction ()
+
+
+
 if (VERBOSE_CONFIGURE)
   macro (carla_print_cmake_variable NAME)
     carla_message ("${NAME}: \'${${NAME}}\'")

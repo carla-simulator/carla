@@ -42,9 +42,7 @@ project (
   VERSION
     ${CARLA_VERSION}
   LANGUAGES
-    C
-    CXX
-    ASM
+    C CXX ASM
   DESCRIPTION
     "Open-source simulator for autonomous driving research."
   HOMEPAGE_URL

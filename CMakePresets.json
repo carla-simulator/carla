@@ -15,7 +15,8 @@
       "installDir": "${sourceDir}/Install/${presetName}",
       "cacheVariables":
       {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/CMake/Toolchain.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/CMake/Toolchain.cmake",
+        "CMAKE_EXPORT_COMPILE_COMMANDS" : true
       },
       "hidden": true
     },
@@ -24,8 +25,7 @@
       "inherits": "Common",
       "cacheVariables":
       {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "CMAKE_EXPORT_COMPILE_COMMANDS" : true
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
     },
     {
@@ -41,8 +41,7 @@
       "inherits": "Common",
       "cacheVariables":
       {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "CMAKE_EXPORT_COMPILE_COMMANDS" : true
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     }
   ]

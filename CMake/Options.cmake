@@ -148,8 +148,14 @@ carla_option (
 
 carla_option (
   CARLA_UNREAL_CONTENT_PREFER_CLONE
-  "Whether to perform a git clone instead of a direct archive download of the CARLA Unreal assets (EXTREMELY DISCOURAGED)."
-  OFF
+  "Whether to perform a git clone instead of a direct archive download of the CARLA Unreal assets."
+  ON
+)
+
+carla_string_option (
+  CARLA_ADDITIONAL_CONTENT_SEARCH_PATHS
+  "Comma-separated list of additional paths to look for a cloned CARLA Unreal Engine Content repo."
+  ""
 )
 
 cmake_path (

@@ -159,7 +159,7 @@ else ()
 endif ()
 
 carla_add_custom_target (
-  carla-python-api
+  python-api
   "Build the CARLA Python API."
   COMMAND
     ${CMAKE_COMMAND}
@@ -174,8 +174,13 @@ carla_add_custom_target (
   USES_TERMINAL
 )
 
+carla_add_custom_target_alias (
+  carla-python-api
+  python-api
+)
+
 carla_add_custom_target (
-  carla-python-api-install
+  install-python-api
   "Build & install the CARLA Python API"
   COMMAND
     ${Python3_EXECUTABLE}
@@ -185,6 +190,11 @@ carla_add_custom_target (
     ${CARLA_PYTHON_API_CARLA_PATH}
   VERBATIM
   USES_TERMINAL
+)
+
+carla_add_custom_target_alias (
+  carla-python-api-install
+  install-python-api
 )
 
 add_dependencies (
