@@ -27,7 +27,7 @@ namespace geom {
         TransverseMercator,  // custom TM
         UTM,                 // Universal Transverse Mercator (WGS84)
         WebMercator,         // EPSG:3857
-        LambertConic2SP,     // EPSG:… (common in EU)
+        LambertConformalConic,     // EPSG:… (common in EU)
     };
 
     // All are lacking the datum and ellipsoid, so suppose spherical Earth. 
@@ -54,7 +54,7 @@ namespace geom {
         Ellipsoid ellps = Ellipsoid();      // Earth0's ellipsoidal shape. A sphere in this case.
     };
 
-    struct LambertConic2SPParams {
+    struct LambertConformalConicParams {
         double lon_0    = 0.0;              // central meridian
         double lat_0    = 0.0;              // latitude of origin
         double lat_1    = 0.0;              // 1st standard parallel
@@ -68,7 +68,7 @@ namespace geom {
         TransverseMercatorParams,
         UTMParams,
         WebMercatorParams,
-        LambertConic2SPParams>;
+        LambertConformalConicParams>;
 
     struct GeoProjection {
 
@@ -118,8 +118,8 @@ namespace geom {
         /// Transform the given geo location to a location using WebMercator.
         Location GeoLocationToTransformWebMercator(const GeoLocation& geolocation) const;
 
-        /// Transform the given geo location to a location using LambertConic2SP.
-        Location GeoLocationToTransformLambertConic2SP(const GeoLocation& geolocation) const;
+        /// Transform the given geo location to a location using LambertConformalConic.
+        Location GeoLocationToTransformLambertConformalConic(const GeoLocation& geolocation) const;
 
         /// Transform the given geo location to a location.
         GeoLocation TransformToGeoLocation(const Location& location) const;
@@ -133,8 +133,8 @@ namespace geom {
         /// Transform the given location to a geo location using WebMercator.
         GeoLocation TransformToGeoLocationWebMercator(const Location& location) const;
 
-        /// Transform the given location to a geo location using LambertConic2SP.
-        GeoLocation TransformToGeoLocationLambertConic2SP(const Location& location) const;
+        /// Transform the given location to a geo location using LambertConformalConic.
+        GeoLocation TransformToGeoLocationLambertConformalConic(const Location& location) const;
 
     };
 } // namespace geom

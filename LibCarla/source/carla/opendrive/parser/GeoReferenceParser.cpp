@@ -155,12 +155,12 @@ namespace parser {
     return projection;
   }
 
-  static geom::GeoProjection CreateLambertConic2SPProjection(
+  static geom::GeoProjection CreateLambertConformalConicProjection(
     std::unordered_map<std::string, std::string> parameters,
     std::string geo_reference_string,
     geom::Ellipsoid ellipsoid){
 
-    geom::LambertConic2SPParams p;
+    geom::LambertConformalConicParams p;
 
     if (parameters.find("lon_0") != parameters.end()) {
       p.lon_0 = std::stod(parameters["lon_0"]);
@@ -262,7 +262,7 @@ namespace parser {
     } else if (proj == "merc") {
       return CreateWebMercatorProjection(parameters, geo_reference_string, ellipsoid);
     } else if (proj == "lcc") {
-      return CreateLambertConic2SPProjection(parameters, geo_reference_string, ellipsoid);
+      return CreateLambertConformalConicProjection(parameters, geo_reference_string, ellipsoid);
     }
 
     log_debug("projection '" + proj + "' is not supported, using default transverse mercator.");

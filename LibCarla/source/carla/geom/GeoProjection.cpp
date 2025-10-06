@@ -33,8 +33,8 @@ namespace geom {
                 return GeoLocationToTransformWebMercator(geolocation);
             }
 
-            case ProjectionType::LambertConic2SP: {
-                return GeoLocationToTransformLambertConic2SP(geolocation);
+            case ProjectionType::LambertConformalConic: {
+                return GeoLocationToTransformLambertConformalConic(geolocation);
             }
 
             default: {
@@ -58,8 +58,8 @@ namespace geom {
                 return TransformToGeoLocationWebMercator(location);
             }
 
-            case ProjectionType::LambertConic2SP:{
-                return TransformToGeoLocationLambertConic2SP(location);
+            case ProjectionType::LambertConformalConic:{
+                return TransformToGeoLocationLambertConformalConic(location);
             }
 
             default: {
@@ -67,23 +67,6 @@ namespace geom {
             }
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     Location GeoProjection::GeoLocationToTransformTransverseMercator(const GeoLocation& geolocation) const {
         const auto& p = boost::variant2::get<TransverseMercatorParams>(params);
@@ -175,8 +158,8 @@ namespace geom {
         return Location(x, y, geolocation.altitude);
     }
 
-    Location GeoProjection::GeoLocationToTransformLambertConic2SP(const GeoLocation& geolocation) const {
-        const auto& p = boost::variant2::get<LambertConic2SPParams>(params);
+    Location GeoProjection::GeoLocationToTransformLambertConformalConic(const GeoLocation& geolocation) const {
+        const auto& p = boost::variant2::get<LambertConformalConicParams>(params);
 
         const double lat = DegreesToRadians(geolocation.latitude);
         const double lon = DegreesToRadians(geolocation.longitude);
@@ -325,8 +308,8 @@ namespace geom {
         return GeoLocation(RadiansToDegrees(lat), RadiansToDegrees(lon), location.z);
     }
 
-    GeoLocation GeoProjection::TransformToGeoLocationLambertConic2SP(const Location& location) const {
-        const auto& p = boost::variant2::get<LambertConic2SPParams>(params);
+    GeoLocation GeoProjection::TransformToGeoLocationLambertConformalConic(const Location& location) const {
+        const auto& p = boost::variant2::get<LambertConformalConicParams>(params);
 
         double lon_0 = DegreesToRadians(p.lon_0);
         double lat_1 = DegreesToRadians(p.lat_1);
