@@ -15,7 +15,6 @@
 
 #include <pugixml/pugixml.hpp>
 
-#include <limits>
 #include <string>
 #include <vector>
 #include <regex>
@@ -24,8 +23,10 @@ namespace carla {
 namespace opendrive {
 namespace parser {
 
-  static double ParseDouble(const std::string &string_value) {
-    return std::stod(string_value);
+  static std::string ToLowerCase(std::string s) {
+    std::transform(s.begin(), s.end(), s.begin(),
+                   [](unsigned char c){ return char(std::tolower(c)); });
+    return s;
   }
 
   static std::unordered_map<std::string, std::string> ParseProjectionParameters(const std::string &s){
@@ -45,49 +46,36 @@ namespace parser {
   }
 
   static geom::Ellipsoid CreateEllipsoid(std::unordered_map<std::string, std::string> parameters){
-
-    // This should ideally be done through positions, as that is PROJs standard.
-    static const std::unordered_map<std::string, std::pair<double,double>> custom_ellipsoids = {
-      {"WGS84",  {6378137.0, 298.257223563}},
-      {"GRS80",  {6378137.0, 298.257222101}},
-      {"intl",   {6378388.0, 297.0}}, // International 1924 (Hayford)
-      {"bessel", {6377397.155, 299.1528128}},
-      {"clrk66", {6378206.4, 294.9786982138}}, // Clarke 1866
-      {"airy",   {6377563.396, 299.3249646}},
-      {"WGS72",  {6378135.0, 298.26}},
-      {"WGS66",  {6378145.0, 298.25}},
-      {"sphere", {6370997.0, std::numeric_limits<double>::infinity()}}
-    };
-
-    geom::Ellipsoid E;
+    geom::Ellipsoid ellps;
 
     if (parameters.find("ellps") != parameters.end()) {
-      auto it = custom_ellipsoids.find(parameters["ellps"]);
-      if (it != custom_ellipsoids.end()) {
-        E.a = it->second.first;
-        E.f_inv = it->second.second;
+      auto value = ToLowerCase(parameters["ellps"]);
+      auto it = geom::custom_ellipsoids.find(value);
+      if (it != geom::custom_ellipsoids.end()) {
+        ellps.a = it->second.first;
+        ellps.f_inv = it->second.second;
       } else {
-        auto it = custom_ellipsoids.find("GRS80"); // Proj's default
-        E.a = it->second.first;
-        E.f_inv = it->second.second;
+        auto it = geom::custom_ellipsoids.find("grs80"); // Proj's default
+        ellps.a = it->second.first;
+        ellps.f_inv = it->second.second;
       }
     }
 
     // Specific semi-major axis
     if (parameters.find("a") != parameters.end()) {
-      E.a = std::stod(parameters["a"]);
+      ellps.a = std::stod(parameters["a"]);
     }
 
     // Specific semi-minor axis
     if (parameters.find("b") != parameters.end()) {
-      E.fromb(std::stod(parameters["b"]));
+      ellps.fromb(std::stod(parameters["b"]));
     } else if (parameters.find("f") != parameters.end()) {
-      E.fromf(std::stod(parameters["f"]));
+      ellps.fromf(std::stod(parameters["f"]));
     } else if (parameters.find("rf") != parameters.end()) {
-      E.f_inv = std::stod(parameters["rf"]);
+      ellps.f_inv = std::stod(parameters["rf"]);
     }
 
-    return E;
+    return ellps;
   }
 
   static geom::GeoProjection CreateTransverseMercatorProjection(
@@ -117,25 +105,16 @@ namespace parser {
     return projection;
   }
 
-  static geom::GeoProjection CreateUTMProjection(
+  static geom::GeoProjection CreateUniversalTransverseMercatorProjection(
     std::unordered_map<std::string, std::string> parameters,
     std::string geo_reference_string,
     geom::Ellipsoid ellipsoid){
 
-    geom::UTMParams p;
+    geom::UniversalTransverseMercatorParams p;
     if (parameters.find("zone") != parameters.end()) {
       p.zone = std::stod(parameters["zone"]);
     }
-
-    p.x_0 = 500000.0;
-    if (parameters.count("south") > 0) {  // 'south' is a flag so can't check the value as the rest.
-      p.north = false;
-      p.y_0 = 10000000.0;
-    } else {
-      p.north = true;
-      p.y_0 = 0.0;
-    }
-
+    p.north = (parameters.count("south") > 0) ? false : true;
     p.ellps = ellipsoid;
     auto projection = geom::GeoProjection::Make(p);
     projection.setRawReference(geo_reference_string);
@@ -207,7 +186,7 @@ namespace parser {
     return result;
   }
 
-  static geom::GeoLocation CreateUTMGeoReference(std::unordered_map<std::string, std::string> parameters){
+  static geom::GeoLocation CreateUniversalTransverseMercatorGeoReference(std::unordered_map<std::string, std::string> parameters){
     geom::GeoLocation result{0.0, 0.0, 0.0};
 
     result.latitude = 0.0;
@@ -258,7 +237,7 @@ namespace parser {
     if (proj == "tmerc") {
       return CreateTransverseMercatorProjection(parameters, geo_reference_string, ellipsoid);
     } else if (proj == "utm") {
-      return CreateUTMProjection(parameters, geo_reference_string, ellipsoid);
+      return CreateUniversalTransverseMercatorProjection(parameters, geo_reference_string, ellipsoid);
     } else if (proj == "merc") {
       return CreateWebMercatorProjection(parameters, geo_reference_string, ellipsoid);
     } else if (proj == "lcc") {
@@ -285,7 +264,7 @@ namespace parser {
     if (proj == "tmerc") {
       return CreateTransverseMercatorGeoReference(parameters);
     } else if (proj == "utm") {
-      return CreateUTMGeoReference(parameters);
+      return CreateUniversalTransverseMercatorGeoReference(parameters);
     } else if (proj == "merc") {
       return CreateWebMercatorGeoReference(parameters);
     } else if (proj == "lcc") {

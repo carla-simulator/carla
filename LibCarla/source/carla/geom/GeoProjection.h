@@ -1,6 +1,8 @@
 #pragma once
 #include <string>
 #include <boost/variant2/variant.hpp>
+#include "carla/geom/GeoProjectionsParams.h"
+
 
 namespace carla {
 namespace geom {
@@ -9,64 +11,18 @@ namespace geom {
     class Transform;
     class GeoLocation;
 
-    struct Ellipsoid {
-        double a     = 6378137.0;           // semi-major
-        double f_inv = 298.257223563;       // inverse flattening
-        double f() const {return 1.0 / f_inv;}
-        double b() const {return a * (1.0 - f());}
-        double e2() const {return f() * (2.0 - f());}
-        double ep2() const{return e2() / (1.0 - e2());}
-
-        void fromb(double b) {f_inv = 1.0 / (1.0 - b/a);}
-        void fromf(double f) {f_inv = 1.0 / f;}
-    };
-
     /// All the supported projection types. To add new ones, add them to this enum,
     /// create the parameters structure and the parser from geo to location (and viceversa).
     enum class ProjectionType {
-        TransverseMercator,  // custom TM
-        UTM,                 // Universal Transverse Mercator (WGS84)
-        WebMercator,         // EPSG:3857
-        LambertConformalConic,     // EPSG:… (common in EU)
-    };
-
-    // All are lacking the datum and ellipsoid, so suppose spherical Earth. 
-
-    struct TransverseMercatorParams {
-        double lat_0    = 0.0;              // latitude of origin
-        double lon_0    = 0.0;              // longitude of origin
-        double k        = 1.0;              // scale factor at origin
-        double x_0      = 0.0;              // false easting
-        double y_0      = 0.0;              // false northing
-        Ellipsoid ellps = Ellipsoid();      // Earth0's ellipsoidal shape
-    };
-
-    struct UTMParams {
-        int    zone     = 31;               // 1 to 60
-        bool   north    = true;             // hemisphere
-        double k        = 0.9996;           // scale factor at origin. This should be fixed
-        double x_0      = 500000.0;         // false easting
-        double y_0      = 0.0;              // false northing
-        Ellipsoid ellps = Ellipsoid();      // Earth0's ellipsoidal shape
-    };
-
-    struct WebMercatorParams {
-        Ellipsoid ellps = Ellipsoid();      // Earth0's ellipsoidal shape. A sphere in this case.
-    };
-
-    struct LambertConformalConicParams {
-        double lon_0    = 0.0;              // central meridian
-        double lat_0    = 0.0;              // latitude of origin
-        double lat_1    = 0.0;              // 1st standard parallel
-        double lat_2    = 0.0;              // 2nd standard parallel
-        double x_0      = 0.0;              // false easting
-        double y_0      = 0.0;              // false northing
-        Ellipsoid ellps = Ellipsoid();      // Earth0's ellipsoidal shape
+        TransverseMercator,
+        UniversalTransverseMercator,
+        WebMercator,
+        LambertConformalConic,
     };
 
     using ProjectionParams = boost::variant2::variant<
         TransverseMercatorParams,
-        UTMParams,
+        UniversalTransverseMercatorParams,
         WebMercatorParams,
         LambertConformalConicParams>;
 
@@ -110,31 +66,39 @@ namespace geom {
         Location GeoLocationToTransform(const GeoLocation& geolocation) const;
 
         /// Transform the given geo location to a location using TransverseMercator.
-        Location GeoLocationToTransformTransverseMercator(const GeoLocation& geolocation) const;
+        Location GeoLocationToTransformTransverseMercator(
+            const GeoLocation& geolocation, const TransverseMercatorParams params) const;
 
-        /// Transform the given geo location to a location using UTM.
-        Location GeoLocationToTransformUTM(const GeoLocation& geolocation) const;
+        /// Transform the given geo location to a location using UniversalTransverseMercator.
+        Location GeoLocationToTransformUniversalTransverseMercator(
+            const GeoLocation& geolocation, const UniversalTransverseMercatorParams params) const;
 
         /// Transform the given geo location to a location using WebMercator.
-        Location GeoLocationToTransformWebMercator(const GeoLocation& geolocation) const;
+        Location GeoLocationToTransformWebMercator(
+            const GeoLocation& geolocation, const WebMercatorParams params) const;
 
         /// Transform the given geo location to a location using LambertConformalConic.
-        Location GeoLocationToTransformLambertConformalConic(const GeoLocation& geolocation) const;
+        Location GeoLocationToTransformLambertConformalConic(
+            const GeoLocation& geolocation, const LambertConformalConicParams params) const;
 
         /// Transform the given geo location to a location.
         GeoLocation TransformToGeoLocation(const Location& location) const;
 
         /// Transform the given location to a geo location using TransverseMercator.
-        GeoLocation TransformToGeoLocationTransverseMercator(const Location& location) const;
+        GeoLocation TransformToGeoLocationTransverseMercator(
+            const Location& location, const TransverseMercatorParams params) const;
 
-        /// Transform the given location to a geo location using UTM.
-        GeoLocation TransformToGeoLocationUTM(const Location& location) const;
+        /// Transform the given location to a geo location using UniversalTransverseMercator.
+        GeoLocation TransformToGeoLocationUniversalTransverseMercator(
+            const Location& location, const UniversalTransverseMercatorParams) const;
 
         /// Transform the given location to a geo location using WebMercator.
-        GeoLocation TransformToGeoLocationWebMercator(const Location& location) const;
+        GeoLocation TransformToGeoLocationWebMercator(
+            const Location& location, const WebMercatorParams params) const;
 
         /// Transform the given location to a geo location using LambertConformalConic.
-        GeoLocation TransformToGeoLocationLambertConformalConic(const Location& location) const;
+        GeoLocation TransformToGeoLocationLambertConformalConic(
+            const Location& location, const LambertConformalConicParams params) const;
 
     };
 } // namespace geom
