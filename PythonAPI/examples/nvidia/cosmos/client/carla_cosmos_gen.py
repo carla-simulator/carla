@@ -379,7 +379,10 @@ def extract_camera_poses(world, frame_number, camera_sensor=None):
     transform = camera_sensor.get_transform()
 
     loc = transform.location
-    cr, sr, cp, sp, cy, sy = compute_rotation_components(transform.rotation)
+    # Invert pitch for coordinate system conversion
+    rotation = transform.rotation
+    inverted_rotation = carla.Rotation(pitch=-rotation.pitch, yaw=rotation.yaw, roll=rotation.roll)
+    cr, sr, cp, sp, cy, sy = compute_rotation_components(inverted_rotation)
 
     R = np.array([
         [cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr],
@@ -427,22 +430,60 @@ def export_camera_pose_data(pose_frames, session_id, output_dir):
         return True
 
 # === CAMERA INTRINSICS EXPORT ===
-def extract_camera_intrinsics_from_sensor(sensor):
+def extract_camera_instrinsics_pinhole(sensor, sensor_config=None):
+    """
+    Extract pinhole camera intrinsics from sensor.
+
+    Users can specify custom pinhole parameters via sensor_config:
+    - pinhole_parameters:
+        - focal_length: focal length (fx = fy, pixels are square)
+        (cx, cy are always computed from image size)
+
+    Alternatively, can provide FOV in attributes to compute focal length.
+    Priority: pinhole_parameters.focal_length > attributes.fov
+
+    Returns:
+        Tuple: (K, width, height, fov)
+        K is 3x3 intrinsic matrix, format: [[fx, 0, cx], [0, fy, cy], [0, 0, 1]]
+        fov can be None if using custom parameters
+    """
     attributes = sensor.attributes
 
     image_width = int(attributes.get('image_size_x', 1920))
     image_height = int(attributes.get('image_size_y', 1080))
-    fov = float(attributes.get('fov', 90.0))
 
-    focal = image_width / (2.0 * np.tan(fov * np.pi / 360.0))
+    cx = image_width / 2.0
+    cy = image_height / 2.0
+
+    pinhole_config = sensor_config.get('pinhole_parameters', {}) if sensor_config else {}
+    has_custom_params = 'focal_length' in pinhole_config
 
     K = np.identity(3)
-    K[0, 0] = focal  # fx
-    K[1, 1] = focal  # fy
-    K[0, 2] = image_width / 2.0   # cx
-    K[1, 2] = image_height / 2.0  # cy
+    K[0, 2] = cx
+    K[1, 2] = cy
 
-    return K, image_width, image_height, fov
+    if has_custom_params:
+        focal_length = float(pinhole_config['focal_length'])
+
+        K[0, 0] = focal_length  # fx
+        K[1, 1] = focal_length  # fy
+
+        logging.info(f"Using custom pinhole parameters: focal_length={focal_length}, cx={cx}, cy={cy}")
+        horizontal_fov = attributes.get('fov')
+    else:
+        horizontal_fov = attributes.get('fov')
+        if horizontal_fov is None:
+            raise ValueError("Either pinhole_parameters.focal_length or attributes.fov must be provided")
+
+        horizontal_fov = float(horizontal_fov)
+        focal_length = image_width / (2.0 * np.tan(horizontal_fov * np.pi / 360.0))
+
+        K[0, 0] = focal_length  # fx
+        K[1, 1] = focal_length  # fy
+
+        logging.info(f"Computed pinhole parameters from FOV={horizontal_fov}: focal_length={focal_length}, cx={cx}, cy={cy}")
+
+    return K, image_width, image_height, horizontal_fov
 
 def export_camera_intrinsincs_pinhole(K, width, height, session_id, output_dir):
     pinhole_dir = output_dir / "pinhole_intrinsic"
@@ -471,6 +512,105 @@ def export_camera_intrinsincs_pinhole(K, width, height, session_id, output_dir):
 
     logging.info(f"Exported pinhole camera intrinsics to {tar_path}")
 
+    return True
+
+
+def extract_camera_intrinsics_ftheta(sensor, sensor_config=None):
+    """
+    Extract f-theta camera intrinsics for wide-angle lens sensors.
+
+    Users can specify custom ftheta distortion parameters via sensor_config:
+    - ftheta_parameters:
+        - polynomials: dict with k0-k5 keys for polynomial coefficients
+        - is_bw_poly: whether polynomial is backwards (default: False)
+        - linear: dict with c, d, e keys for linear coefficients (default: [1, 0, 0])
+        (cx, cy are always computed from image size)
+
+    If custom parameters are not provided, falls back to equidistant model computed from FOV (FOV attribute required).
+
+    Returns:
+        Tuple: (cx, cy, width, height, poly, is_bw_poly, linear_cde, fov, camera_model)
+        Format matches RDS-HQ ftheta intrinsics: [cx, cy, width, height, *poly(6), is_bw_poly, c, d, e]
+        fov can be None if using custom parameters
+    """
+    attributes = sensor.attributes
+    image_width = int(attributes.get('image_size_x', 1920))
+    image_height = int(attributes.get('image_size_y', 1080))
+
+    cx = image_width / 2.0
+    cy = image_height / 2.0
+
+    ftheta_config = sensor_config.get('ftheta_parameters', {}) if sensor_config else {}
+    has_custom_poly = 'polynomials' in ftheta_config
+
+    if has_custom_poly:
+        poly_dict = ftheta_config['polynomials']
+        poly = np.array([
+            float(poly_dict.get('k0', 0.0)),
+            float(poly_dict.get('k1', 0.0)),
+            float(poly_dict.get('k2', 0.0)),
+            float(poly_dict.get('k3', 0.0)),
+            float(poly_dict.get('k4', 0.0)),
+            float(poly_dict.get('k5', 0.0))
+        ], dtype=np.float32)
+
+        is_bw_poly = ftheta_config.get('is_bw_poly', False)
+
+        linear_dict = ftheta_config.get('linear', {})
+        linear_cde = np.array([
+            float(linear_dict.get('c', 1.0)),
+            float(linear_dict.get('d', 0.0)),
+            float(linear_dict.get('e', 0.0))
+        ], dtype=np.float32)
+
+        camera_model = 'custom_ftheta'
+        fov = None
+        logging.info(f"Using custom ftheta parameters: poly={poly}, is_bw_poly={is_bw_poly}, linear_cde={linear_cde}, cx={cx}, cy={cy}")
+    else:
+        fov = float(attributes.get('fov'))
+        if fov is None:
+            raise ValueError("FOV attribute must be provided when not using custom ftheta_parameters")
+
+        # Equidistant model: r = f*θ, so backward poly is θ = r/f
+        fov_radians = fov * np.pi / 180.0
+        focal_length = image_width / (2.0 * np.tan(fov_radians / 2.0))
+        poly = np.array([0.0, focal_length, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+        is_bw_poly = False
+
+        linear_cde = np.array([1.0, 0.0, 0.0], dtype=np.float32)
+        camera_model = 'equidistant'
+        logging.info(f"Using computed equidistant model from FOV={fov}: focal_length={focal_length}, cx={cx}, cy={cy}")
+
+    return cx, cy, image_width, image_height, poly, is_bw_poly, linear_cde, fov, camera_model
+
+
+def export_camera_intrinsics_ftheta(cx, cy, width, height, poly, is_bw_poly, linear_cde, session_id, output_dir):
+    """
+    Export f-theta camera intrinsics to RDS-HQ format.
+
+    Format: [cx, cy, width, height, poly[0..5], is_bw_poly, linear_c, linear_d, linear_e]
+    """
+    ftheta_dir = output_dir / "ftheta_intrinsic"
+    ftheta_dir.mkdir(parents=True, exist_ok=True)
+
+    intrinsic_data = np.array([
+        cx, cy, width, height,
+        *poly,
+        1.0 if is_bw_poly else 0.0,
+        *linear_cde
+    ], dtype=np.float32)
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        temp_path = Path(temp_dir)
+        filename = f"{session_id}.ftheta_intrinsic.rds_hq.npy"
+        npy_file = temp_path / filename
+        np.save(npy_file, intrinsic_data)
+
+        tar_path = ftheta_dir / f"{session_id}.tar"
+        with tarfile.open(tar_path, 'w') as tar:
+            tar.add(npy_file, arcname=filename)
+
+    logging.info(f"Exported f-theta intrinsics: {int(width)}x{int(height)}")
     return True
 
 
@@ -545,7 +685,7 @@ def export_dataset_config(session_id, output_dir, rds_hq_camera_name="rds_hq", i
 
 
 # === HD MAP RENDERING ===
-def render_hdmap_video(session_id, rds_hq_dir, output_dir):
+def render_hdmap_video(session_id, rds_hq_dir, output_dir, camera_type='pinhole'):
     """
     Render HD map video using the Cosmos-Drive-Dreams toolkit.
 
@@ -553,6 +693,7 @@ def render_hdmap_video(session_id, rds_hq_dir, output_dir):
         session_id: Session identifier
         rds_hq_dir: Directory containing RDS-HQ export data
         output_dir: Output directory for rendered videos
+        camera_type: Camera model type ('pinhole' or 'ftheta')
 
     Returns:
         True if rendering succeeded, False otherwise
@@ -591,7 +732,7 @@ def render_hdmap_video(session_id, rds_hq_dir, output_dir):
             '-o', str(output_dir),
             '-cj', session_id,
             '-d', session_id,
-            '-c', 'pinhole',
+            '-c', camera_type,
             '-s', 'lidar'  # Skip lidar rendering (we don't export lidar data)
         ]
 
@@ -713,18 +854,29 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
 
         if camera_intrinsics:
             try:
-                logging.info("Exporting camera intrinsics...")
-                K, width, height, fov = camera_intrinsics
-                if export_camera_intrinsincs_pinhole(K, width, height, session_id, rds_hq_dir):
-                    successful_exports.append("camera_intrinsics")
+                camera_type = camera_intrinsics[0]
+                if camera_type == 'ftheta':
+                    logging.info("Exporting ftheta camera intrinsics...")
+                    _, cx, cy, width, height, poly, is_bw_poly, linear_cde, fov, camera_model = camera_intrinsics
+                    if export_camera_intrinsics_ftheta(cx, cy, width, height, poly, is_bw_poly, linear_cde, session_id, rds_hq_dir):
+                        successful_exports.append("camera_intrinsics_ftheta")
+                elif camera_type == 'pinhole':
+                    logging.info("Exporting pinhole camera intrinsics...")
+                    _, K, width, height, fov = camera_intrinsics
+                    if export_camera_intrinsincs_pinhole(K, width, height, session_id, rds_hq_dir):
+                        successful_exports.append("camera_intrinsics_pinhole")
             except Exception as e:
                 logging.error(f"Failed to export camera intrinsics: {e}")
+                logging.error(f"Full traceback: {traceback.format_exc()}")
                 failed_exports.append(("camera_intrinsics", str(e)))
 
         # Create metadata file with actual exported frame counts
         actual_exported_frames = len(dynamic_frames) if dynamic_frames else 0
         actual_duration = args.duration if args.duration > 0 else log_duration
         actual_fps = actual_exported_frames / actual_duration if actual_duration > 0 else 0
+
+        # Determine intrinsic type for metadata
+        intrinsic_key = "ftheta_intrinsic" if camera_intrinsics and camera_intrinsics[0] == 'ftheta' else "pinhole_intrinsic"
 
         metadata = {
             "session_id": session_id,
@@ -738,6 +890,7 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
             "exported_fps": round(actual_fps),
             "camera_actor_id": args.camera,
             "time_factor": args.time_factor,
+            "camera_model": camera_intrinsics[0] if camera_intrinsics else "pinhole",
             "output_structure": {
                 "3d_crosswalks": f"{session_id}.tar",
                 "3d_road_boundaries": f"{session_id}.tar",
@@ -747,7 +900,7 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
                 "3d_road_markings": f"{session_id}.tar",
                 "all_object_info": f"{session_id}.tar",
                 "pose": f"{session_id}.tar",
-                "pinhole_intrinsic": f"{session_id}.tar"
+                intrinsic_key: f"{session_id}.tar"
             }
         }
 
@@ -757,7 +910,14 @@ def export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames=Non
 
         logging.info("Exporting dataset config for RDS-HQ renderer...")
         # Extract image dimensions from camera intrinsics
-        K, width, height, fov = camera_intrinsics if camera_intrinsics else (None, 1280, 1080, 90.0)
+        if camera_intrinsics:
+            camera_type = camera_intrinsics[0]
+            if camera_type == 'ftheta':
+                _, cx, cy, width, height, poly, is_bw_poly, linear_cde, fov, camera_model = camera_intrinsics
+            else:  # pinhole
+                _, K, width, height, fov = camera_intrinsics
+        else:
+            width, height = 1280, 1080
         export_dataset_config(
             session_id=session_id,
             output_dir=rds_hq_dir,
@@ -838,12 +998,19 @@ def main():
 
         sensor_name = f"sensor.camera.{carla_sensor_type}"
 
-        if entry.get('wide_angle_lens', False):
+        is_wide_angle = entry.get('wide_angle_lens', False)
+        if is_wide_angle:
             sensor_name += '.wide_angle_lens'
 
         bp = world.get_blueprint_library().find(sensor_name)
 
         attributes = entry.get('attributes', {})
+
+        # Auto-set equidistant camera model for wide-angle sensors to match RDS-HQ f-theta
+        if is_wide_angle and 'camera_model' not in attributes:
+            attributes['camera_model'] = 'equidistant'
+            logging.info(f"Auto-setting camera_model='equidistant' for wide-angle {sensor_type} sensor")
+
         for k,v in attributes.items():
             bp.set_attribute(k, str(v))
 
@@ -854,7 +1021,11 @@ def main():
         )
         sensor = world.spawn_actor(bp, transform, attach_to=vehicle)
 
-        sensor_infos.append(SensorInfo(sensor, AOV[sensor_type.upper()]))
+        is_wide_angle = entry.get('wide_angle_lens', False)
+        sensor_info = SensorInfo(sensor, AOV[sensor_type.upper()])
+        sensor_info.is_wide_angle = is_wide_angle  # Add flag to track wide-angle sensors
+        sensor_info.config_entry = entry  # Store config for ftheta parameter extraction
+        sensor_infos.append(sensor_info)
 
     raw_q = mp.Queue()
     proc_q = mp.Queue()
@@ -882,16 +1053,20 @@ def main():
     dynamic_frames = []
     pose_frames = []
 
-    has_rds_hq_sensor = any(si.sensor_type == AOV.RDS_HQ for si in sensor_infos)
+    # Find RDS-HQ sensor and extract camera intrinsics
     camera_intrinsics = None
+    rds_hq_sensor = next((si for si in sensor_infos if si.sensor_type == AOV.RDS_HQ), None)
 
-    if has_rds_hq_sensor:
-        for si in sensor_infos:
-            if si.sensor_type == AOV.RDS_HQ:
-                K, width, height, fov = extract_camera_intrinsics_from_sensor(si.sensor)
-                camera_intrinsics = (K, width, height, fov)
-                break
-        logging.info("RDS-HQ sensor found - will export RDS-HQ data")
+    if rds_hq_sensor:
+        sensor_config = getattr(rds_hq_sensor, 'config_entry', None)
+        if rds_hq_sensor.is_wide_angle:
+            cx, cy, width, height, poly, is_bw_poly, linear_cde, fov, camera_model = extract_camera_intrinsics_ftheta(rds_hq_sensor.sensor, sensor_config)
+            camera_intrinsics = ('ftheta', cx, cy, width, height, poly, is_bw_poly, linear_cde, fov, camera_model)
+            logging.info(f"RDS-HQ sensor: wide-angle ({camera_model}), exporting f-theta intrinsics")
+        else:
+            K, width, height, fov = extract_camera_instrinsics_pinhole(rds_hq_sensor.sensor, sensor_config)
+            camera_intrinsics = ('pinhole', K, width, height, fov)
+            logging.info("RDS-HQ sensor: pinhole, exporting pinhole intrinsics")
     else:
         logging.info("No RDS-HQ sensor found - skipping RDS-HQ export")
 
@@ -899,17 +1074,12 @@ def main():
         while timestamp < args.start + total:
             idx = world.tick()
 
-            if has_rds_hq_sensor:
+            # Collect RDS-HQ data (dynamic objects and camera poses)
+            if rds_hq_sensor:
                 dynamic_objects = extract_dynamic_objects_data(world, args.camera)
                 dynamic_frames.append(dynamic_objects)
 
-                main_camera_sensor = None
-                for si in sensor_infos:
-                    if si.sensor_type == AOV.RDS_HQ:
-                        main_camera_sensor = si.sensor
-                        break
-
-                camera_pose = extract_camera_poses(world, frame_count, main_camera_sensor)
+                camera_pose = extract_camera_poses(world, frame_count, rds_hq_sensor.sensor)
                 pose_frames.append(camera_pose)
 
             frame_dict = {}
@@ -930,10 +1100,10 @@ def main():
         for p in workers: p.join()
         proc_q.put(None); writer.join()
 
-        if has_rds_hq_sensor:
+        # Export RDS-HQ data and optionally render HD map video
+        if rds_hq_sensor:
             export_rds_hq_clip(world, args, log_frames, log_duration, dynamic_frames, pose_frames, camera_intrinsics)
 
-            # Automatically render HD map video unless --skip-render-hdmap is specified
             if not args.skip_render_hdmap:
                 rds_hq_dir = Path(args.output_dir) / "rds-hq"
                 log_file_base = Path(args.recorder_filename).stem
@@ -942,9 +1112,10 @@ def main():
                 end_time_us = int((args.start + (args.duration if args.duration > 0 else log_duration)) * 1000000)
                 session_id = f"{log_file_base_sanitized}_{start_time_us}_{end_time_us}"
 
-                render_hdmap_video(session_id, rds_hq_dir, Path(args.output_dir))
+                camera_type = camera_intrinsics[0] if camera_intrinsics else 'pinhole'
+                render_hdmap_video(session_id, rds_hq_dir, Path(args.output_dir), camera_type)
             else:
-                logging.info("Skipping HD map video rendering (--skip-render-hdmap flag set)")
+                logging.info("Skipping HD map rendering (--skip-render-hdmap flag set)")
         else:
             logging.info("Skipping RDS-HQ export (no rds_hq sensor defined)")
 
