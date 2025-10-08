@@ -290,6 +290,8 @@ void export_geom() {
     .def(init<double, double>((arg("a")=6378137.0, arg("f_inv")=std::numeric_limits<double>::infinity())))
     .def_readwrite("a", &cg::Ellipsoid::a)
     .def_readwrite("f_inv", &cg::Ellipsoid::f_inv)
+    .def("__eq__", &cg::Ellipsoid::operator==)
+    .def("__ne__", &cg::Ellipsoid::operator!=)
   ;
 
   class_<cg::TransverseMercatorParams>("GeoProjectionTM")
@@ -300,17 +302,23 @@ void export_geom() {
     .def_readwrite("k", &cg::TransverseMercatorParams::k)
     .def_readwrite("x_0", &cg::TransverseMercatorParams::x_0)
     .def_readwrite("y_0", &cg::TransverseMercatorParams::y_0)
+    .def("__eq__", &cg::TransverseMercatorParams::operator==)
+    .def("__ne__", &cg::TransverseMercatorParams::operator!=)
   ;
 
   class_<cg::UniversalTransverseMercatorParams>("GeoProjectionUTM")
     .def(init<int, bool, cg::Ellipsoid>((arg("zone")=31, arg("north")=true, arg("ellps")=cg::Ellipsoid())))
     .def_readwrite("zone", &cg::UniversalTransverseMercatorParams::zone)
     .def_readwrite("north", &cg::UniversalTransverseMercatorParams::north)
+    .def("__eq__", &cg::UniversalTransverseMercatorParams::operator==)
+    .def("__ne__", &cg::UniversalTransverseMercatorParams::operator!=)
   ;
 
   class_<cg::WebMercatorParams>("GeoProjectionWebMerc")
     .def(init<cg::Ellipsoid>((arg("ellps")=cg::Ellipsoid())))
     .def_readwrite("ellps", &cg::WebMercatorParams::ellps)
+    .def("__eq__", &cg::WebMercatorParams::operator==)
+    .def("__ne__", &cg::WebMercatorParams::operator!=)
   ;
 
   class_<cg::LambertConformalConicParams>("GeoProjectionLCC2SP")
@@ -322,5 +330,7 @@ void export_geom() {
     .def_readwrite("lon_0", &cg::LambertConformalConicParams::lon_0)
     .def_readwrite("x_0", &cg::LambertConformalConicParams::x_0)
     .def_readwrite("y_0", &cg::LambertConformalConicParams::y_0)
+    .def("__eq__", &cg::LambertConformalConicParams::operator==)
+    .def("__ne__", &cg::LambertConformalConicParams::operator!=)
   ;
 }

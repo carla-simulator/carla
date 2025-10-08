@@ -50,6 +50,13 @@ namespace geom {
             f_inv = 1.0 / f;
         }
 
+        bool operator==(const Ellipsoid &rhs) const {
+            return (a == rhs.a) && (f_inv == rhs.f_inv);
+        }
+    
+        bool operator!=(const Ellipsoid &rhs) const {
+            return !(*this == rhs);
+        }
     };
 
     class TransverseMercatorParams {
@@ -66,6 +73,15 @@ namespace geom {
         double x_0 = 0.0f;
         double y_0 = 0.0f;
         Ellipsoid ellps = Ellipsoid();
+
+        bool operator==(const TransverseMercatorParams &rhs) const {
+            return (lat_0 == rhs.lat_0) && (lon_0 == rhs.lon_0) && (k == rhs.k)
+                && (x_0 == rhs.x_0) && (y_0 == rhs.y_0) && (ellps == rhs.ellps);
+        }
+    
+        bool operator!=(const TransverseMercatorParams &rhs) const {
+            return !(*this == rhs);
+        }
     };
 
     class UniversalTransverseMercatorParams {
@@ -79,6 +95,14 @@ namespace geom {
         int zone = 31;
         bool north = true;
         Ellipsoid ellps = Ellipsoid();
+
+        bool operator==(const UniversalTransverseMercatorParams &rhs) const {
+            return (zone == rhs.zone) && (north == rhs.north) && (ellps == rhs.ellps);
+        }
+    
+        bool operator!=(const UniversalTransverseMercatorParams &rhs) const {
+            return !(*this == rhs);
+        }
     };
 
     class WebMercatorParams {
@@ -90,6 +114,14 @@ namespace geom {
             ellps(ellps) {}
 
         Ellipsoid ellps = Ellipsoid();
+
+        bool operator==(const WebMercatorParams &rhs) const {
+            return (ellps == rhs.ellps);
+        }
+    
+        bool operator!=(const WebMercatorParams &rhs) const {
+            return !(*this == rhs);
+        }
     };
 
     class LambertConformalConicParams {
@@ -108,6 +140,15 @@ namespace geom {
         double x_0 = 0.0;
         double y_0 = 0.0;
         Ellipsoid ellps = Ellipsoid();
+
+        bool operator==(const LambertConformalConicParams &rhs) const {
+            return (lat_0 == rhs.lat_0) && (lat_1 == rhs.lat_1) && (lat_2 == rhs.lat_2) && (lon_0 == rhs.lon_0)
+                && (x_0 == rhs.x_0) && (y_0 == rhs.y_0) && (ellps == rhs.ellps);
+        }
+    
+        bool operator!=(const LambertConformalConicParams &rhs) const {
+            return !(*this == rhs);
+        }
     };
 
 } // namespace geom
