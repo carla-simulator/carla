@@ -54,6 +54,17 @@ static auto GetTopology(const carla::client::Map &self) {
   return result;
 }
 
+static auto GetGeoReference(const carla::client::Map &self) {
+  return self.GetGeoReference();
+}
+
+static auto GetGeoProjection(const carla::client::Map &self) {
+  const auto &variant = self.GetGeoProjection().params;
+
+  return boost::variant2::visit([](const auto &params) -> boost::python::object {
+    return boost::python::object(params);}, variant);
+}
+
 static auto GetJunctionWaypoints(const carla::client::Junction &self, const carla::road::Lane::LaneType lane_type) {
   namespace py = boost::python;
   auto topology = self.GetWaypoints(lane_type);
@@ -243,6 +254,8 @@ void export_map() {
     .def("geolocation_to_transform", &ToTransformUTM, (arg("geo_location"), args("projection")))
     .def("geolocation_to_transform", &ToTransformWebMerc, (arg("geo_location"), args("projection")))
     .def("geolocation_to_transform", &ToTransformLCC2SP, (arg("geo_location"), args("projection")))
+    .def("get_georeference", &GetGeoReference)
+    .def("get_geoprojection", &GetGeoProjection)
     .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
     .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))
     .def("get_crosswalks", CALL_RETURNING_LIST(cc::Map, GetAllCrosswalkZones))
