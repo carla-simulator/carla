@@ -113,6 +113,8 @@ namespace parser {
     geom::UniversalTransverseMercatorParams p;
     if (parameters.find("zone") != parameters.end()) {
       p.zone = std::stod(parameters["zone"]);
+    } else {
+      log_warning("Missing 'zone' parameter for UTM projection. Using default value " + p.zone);
     }
     p.north = (parameters.count("south") > 0) ? false : true;
     p.ellps = ellipsoid;
@@ -149,9 +151,13 @@ namespace parser {
     }
     if (parameters.find("lat_1") != parameters.end()) {
       p.lat_1 = std::stod(parameters["lat_1"]);
+    } else {
+      log_warning("Missing 'lat_1' parameter for LCC projection. Using default value " + p.lat_1);
     }
     if (parameters.find("lat_2") != parameters.end()) {
       p.lat_2 = std::stod(parameters["lat_2"]);
+    } else {
+      log_warning("Missing 'lat_2' parameter for LCC projection. Using default value " + p.lat_2);
     }
     if (parameters.find("x_0") != parameters.end()) {
       p.x_0 = std::stod(parameters["x_0"]);

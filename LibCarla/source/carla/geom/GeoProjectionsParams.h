@@ -6,6 +6,7 @@
 namespace carla {
 namespace geom {
 
+    // Must be all lower case to support both cases when parsing
     static const std::unordered_map<std::string, std::pair<double,double>> custom_ellipsoids = {
         {"wgs84",  {6378137.0, 298.257223563}},
         {"grs80",  {6378137.0, 298.257222101}},
@@ -134,8 +135,8 @@ namespace geom {
             lat_0(lat_0), lat_1(lat_1), lat_2(lat_2), lon_0(lon_0), x_0(x_0), y_0(y_0), ellps(ellps) {}
 
         double lat_0 = 0.0;
-        double lat_1 = 0.0;
-        double lat_2 = 0.0;
+        double lat_1 = -5.0;
+        double lat_2 = 5.0;
         double lon_0 = 0.0;
         double x_0 = 0.0;
         double y_0 = 0.0;
