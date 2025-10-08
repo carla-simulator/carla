@@ -10,7 +10,6 @@
 namespace carla {
 namespace geom {
 
-
     static double DegreesToRadians(double degrees) {
     return degrees * Math::Pi<double>() / 180.0;
     }
@@ -80,19 +79,19 @@ namespace geom {
     }
 
     Location GeoProjection::GeoLocationToTransformTransverseMercator(
-        const GeoLocation& geolocation, const TransverseMercatorParams params) const {
+        const GeoLocation& geolocation, const TransverseMercatorParams p) const {
 
         // Using Snyder TM forward (ellipsoidal) to 6th order
         double lat  = DegreesToRadians(geolocation.latitude);
         double lon  = DegreesToRadians(geolocation.longitude);
-        double lat_0 = DegreesToRadians(params.lat_0);
-        double lon_0 = DegreesToRadians(params.lon_0);
+        double lat_0 = DegreesToRadians(p.lat_0);
+        double lon_0 = DegreesToRadians(p.lon_0);
 
         double dlon = std::atan2(std::sin(lon - lon_0), std::cos(lon - lon_0));
 
-        double a = params.ellps.a;
-        double e2 = params.ellps.e2();
-        double ep2 = params.ellps.ep2();
+        double a = p.ellps.a;
+        double e2 = p.ellps.e2();
+        double ep2 = p.ellps.ep2();
         double e4 = e2 * e2;
         double e6 = e4 * e2;
 
@@ -102,7 +101,7 @@ namespace geom {
         double A = std::cos(lat) * dlon;
 
         auto meridional_arc = [&](double phi) {
-            return params.ellps.a * ((1.0 - e2 / 4.0 - 3.0 * e4 / 64.0 - 5.0 * e6 / 256.0) * phi
+            return p.ellps.a * ((1.0 - e2 / 4.0 - 3.0 * e4 / 64.0 - 5.0 * e6 / 256.0) * phi
                 - (3.0 * e2 / 8.0 + 3.0 * e4 / 32.0 + 45.0 * e6 / 1024.0) * std::sin(2.0 * phi)
                 + (15.0 * e4 / 256.0 + 45.0 * e6 / 1024.0) * std::sin(4.0 * phi)
                 - (35.0 * e6 / 3072.0) * std::sin(6.0 * phi));
@@ -111,10 +110,10 @@ namespace geom {
         double M  = meridional_arc(lat);
         double M_0 = meridional_arc(lat_0);
 
-        double x = params.x_0 + params.k * N * (A + (1.0 - T + C) * std::pow(A, 3) / 6.0
+        double x = p.x_0 + p.k * N * (A + (1.0 - T + C) * std::pow(A, 3) / 6.0
             + (5.0 - 18.0*T + T*T + 72.0*C - 58.0*ep2) * std::pow(A, 5) / 120.0);
 
-        double  y = params.y_0 + params.k * ((M - M_0) + N * std::tan(lat) * ((A*A) / 2.0
+        double  y = p.y_0 + p.k * ((M - M_0) + N * std::tan(lat) * ((A*A) / 2.0
             + (5.0 - T + 9.0*C + 4.0*C*C) * std::pow(A, 4) / 24.0
             + (61.0 - 58.0*T + T*T + 600.0*C - 330.0*ep2) * std::pow(A, 6) / 720.0));
 
@@ -122,19 +121,19 @@ namespace geom {
     }
 
     Location GeoProjection::GeoLocationToTransformUniversalTransverseMercator(
-        const GeoLocation& geolocation, const UniversalTransverseMercatorParams params) const {
+        const GeoLocation& geolocation, const UniversalTransverseMercatorParams p) const {
 
         // Using Snyder TM forward (ellipsoidal) to 6th order. Same formula as Transverse Mercator.
         double lat = DegreesToRadians(geolocation.latitude);
         double lon = DegreesToRadians(geolocation.longitude);
-        double lon_0 = DegreesToRadians(6 * params.zone - 183);
+        double lon_0 = DegreesToRadians(6 * p.zone - 183);
         double k = 0.9996;
         double x_0 = 500000.0;
-        double y_0 = (params.north) ? 0.0 : 10000000.0;
+        double y_0 = (p.north) ? 0.0 : 10000000.0;
 
-        double a = params.ellps.a;
-        double e2 = params.ellps.e2();
-        double ep2 = params.ellps.ep2();
+        double a = p.ellps.a;
+        double e2 = p.ellps.e2();
+        double ep2 = p.ellps.ep2();
         double e4 = e2 * e2;
         double e6 = e4 * e2;
 
@@ -143,7 +142,7 @@ namespace geom {
         double C = ep2 * std::cos(lat) * std::cos(lat);
         double A = std::cos(lat) * std::atan2(std::sin(lon - lon_0), std::cos(lon - lon_0));
 
-        double M = params.ellps.a * ((1.0 - e2 / 4.0 - 3.0 * e4 / 64.0 - 5.0 * e6 / 256.0) * lat
+        double M = p.ellps.a * ((1.0 - e2 / 4.0 - 3.0 * e4 / 64.0 - 5.0 * e6 / 256.0) * lat
             - (3.0 * e2 / 8.0 + 3.0 * e4 / 32.0 + 45.0 * e6 / 1024.0) * std::sin(2.0 * lat)
             + (15.0 * e4 / 256.0 + 45.0 * e6 / 1024.0) * std::sin(4.0 * lat)
             - (35.0 * e6 / 3072.0) * std::sin(6.0 * lat));
@@ -159,29 +158,29 @@ namespace geom {
     }
 
     Location GeoProjection::GeoLocationToTransformWebMercator(
-        const GeoLocation& geolocation, const WebMercatorParams params) const {
+        const GeoLocation& geolocation, const WebMercatorParams p) const {
 
         double lat = DegreesToRadians(geolocation.latitude);
         double lon = DegreesToRadians(geolocation.longitude);
 
-        double x = params.ellps.a * lon;
-        double y = params.ellps.a * std::log(std::tan(Math::Pi<double>() / 4.0 + lat / 2.0));
+        double x = p.ellps.a * lon;
+        double y = p.ellps.a * std::log(std::tan(Math::Pi<double>() / 4.0 + lat / 2.0));
 
         return Location(static_cast<float>(x), static_cast<float>(y), static_cast<float>(geolocation.altitude));
     }
 
     Location GeoProjection::GeoLocationToTransformLambertConformalConic(
-        const GeoLocation& geolocation, const LambertConformalConicParams params) const {
+        const GeoLocation& geolocation, const LambertConformalConicParams p) const {
 
         double lat = DegreesToRadians(geolocation.latitude);
         double lon = DegreesToRadians(geolocation.longitude);
-        double lon_0 = DegreesToRadians(params.lon_0);
-        double lat_0 = DegreesToRadians(params.lat_0);
-        double lat_1 = DegreesToRadians(params.lat_1);
-        double lat_2 = DegreesToRadians(params.lat_2);
+        double lon_0 = DegreesToRadians(p.lon_0);
+        double lat_0 = DegreesToRadians(p.lat_0);
+        double lat_1 = DegreesToRadians(p.lat_1);
+        double lat_2 = DegreesToRadians(p.lat_2);
 
-        double a = params.ellps.a;
-        double e2 = params.ellps.e2();
+        double a = p.ellps.a;
+        double e2 = p.ellps.e2();
         double e = std::sqrt(e2);
 
         double m1 = std::cos(lat_1) / std::sqrt(1.0 - e2 * std::sin(lat_1) * std::sin(lat_1));
@@ -202,27 +201,27 @@ namespace geom {
         double rho0 = a * F * std::pow(t0, n);
         double theta = n * std::atan2(std::sin(lon - lon_0), std::cos(lon - lon_0));
 
-        double x = params.x_0 + rho * std::sin(theta);
-        double y = params.y_0 + rho0 - rho * std::cos(theta);
+        double x = p.x_0 + rho * std::sin(theta);
+        double y = p.y_0 + rho0 - rho * std::cos(theta);
 
         return Location(static_cast<float>(x), static_cast<float>(y), static_cast<float>(geolocation.altitude));
     }
 
     GeoLocation GeoProjection::TransformToGeoLocationTransverseMercator(
-        const Location& location, const TransverseMercatorParams params) const {
+        const Location& location, const TransverseMercatorParams p) const {
 
         // Using Snyder TM inverse (ellipsoidal) to 6th order
-        double lat_0 = DegreesToRadians(params.lat_0);
-        double lon_0 = DegreesToRadians(params.lon_0);
+        double lat_0 = DegreesToRadians(p.lat_0);
+        double lon_0 = DegreesToRadians(p.lon_0);
 
-        double a = params.ellps.a;
-        double e2 = params.ellps.e2();
-        double ep2 = params.ellps.ep2();
+        double a = p.ellps.a;
+        double e2 = p.ellps.e2();
+        double ep2 = p.ellps.ep2();
         double e4 = e2 * e2;
         double e6 = e4 * e2;
 
-        double x = (location.x - params.x_0) / params.k;
-        double y = (location.y - params.y_0) / params.k;
+        double x = (location.x - p.x_0) / p.k;
+        double y = (location.y - p.y_0) / p.k;
 
         double M = a * ((1.0 - e2 / 4.0 - 3.0 * e4 / 64.0 - 5.0 * e6 / 256.0) * lat_0
             - (3.0 * e2 / 8.0 + 3.0 * e4 / 32.0 + 45.0 * e6 / 1024.0) * std::sin(2.0 * lat_0)
@@ -261,17 +260,17 @@ namespace geom {
     }
 
     GeoLocation GeoProjection::TransformToGeoLocationUniversalTransverseMercator(
-        const Location& location, const UniversalTransverseMercatorParams params) const {
+        const Location& location, const UniversalTransverseMercatorParams p) const {
 
         // Using Snyder TM inverse (ellipsoidal) to 6th order. Same formula as Transverse Mercator.
-        double lon_0 = DegreesToRadians(6 * params.zone - 183); // central meridian
+        double lon_0 = DegreesToRadians(6 * p.zone - 183); // central meridian
         double k = 0.9996;
         double x_0 = 500000.0;
-        double y_0 = (params.north) ? 0.0 : 10000000.0;
+        double y_0 = (p.north) ? 10000000.0 : 0.0; 
 
-        double a = params.ellps.a;
-        double e2 = params.ellps.e2();
-        double ep2 = params.ellps.ep2();
+        double a = p.ellps.a;
+        double e2 = p.ellps.e2();
+        double ep2 = p.ellps.ep2();
         double e4 = e2 * e2;
         double e6 = e4 * e2;
 
@@ -311,24 +310,24 @@ namespace geom {
     }
 
     GeoLocation GeoProjection::TransformToGeoLocationWebMercator(
-        const Location& location, const WebMercatorParams params) const {
+        const Location& location, const WebMercatorParams p) const {
 
-        double lon = location.x / params.ellps.a;
-        double lat = 2*std::atan(std::exp(location.y / params.ellps.a)) - Math::Pi<double>()/2;
+        double lon = location.x / p.ellps.a;
+        double lat = 2*std::atan(std::exp(location.y / p.ellps.a)) - Math::Pi<double>()/2;
 
         return GeoLocation(RadiansToDegrees(lat), RadiansToDegrees(lon), location.z);
     }
 
     GeoLocation GeoProjection::TransformToGeoLocationLambertConformalConic(
-        const Location& location, const LambertConformalConicParams params) const {
+        const Location& location, const LambertConformalConicParams p) const {
 
-        double lon_0 = DegreesToRadians(params.lon_0);
-        double lat_1 = DegreesToRadians(params.lat_1);
-        double lat_2 = DegreesToRadians(params.lat_2);
-        double lat_0 = DegreesToRadians(params.lat_0);
+        double lon_0 = DegreesToRadians(p.lon_0);
+        double lat_1 = DegreesToRadians(p.lat_1);
+        double lat_2 = DegreesToRadians(p.lat_2);
+        double lat_0 = DegreesToRadians(p.lat_0);
 
-        double a = params.ellps.a;
-        double e2 = params.ellps.e2();
+        double a = p.ellps.a;
+        double e2 = p.ellps.e2();
         double e = std::sqrt(e2);
 
         double m1 = std::cos(lat_1) / std::sqrt(1.0 - e2 * std::sin(lat_1) * std::sin(lat_1));
@@ -345,8 +344,8 @@ namespace geom {
         double F = m1 / (n * std::pow(t1, n));
         double rho0 = a * F * std::pow(t0, n);
 
-        double x = static_cast<double>(location.x) - params.x_0;
-        double y = static_cast<double>(location.y) - params.y_0;
+        double x = static_cast<double>(location.x) - p.x_0;
+        double y = static_cast<double>(location.y) - p.y_0;
 
         double sgn = (n >= 0.0) ? 1.0 : -1.0;
         double Y = rho0 - y;

@@ -55,9 +55,9 @@ namespace parser {
         ellps.a = it->second.first;
         ellps.f_inv = it->second.second;
       } else {
-        auto it = geom::custom_ellipsoids.find("sphere"); // Not Proj's default, but maintains compatibility
-        ellps.a = it->second.first;
-        ellps.f_inv = it->second.second;
+        auto val = geom::custom_ellipsoids.find("sphere"); // Not Proj's default, but maintains compatibility
+        ellps.a = val->second.first;
+        ellps.f_inv = val->second.second;
       }
     }
 
@@ -112,9 +112,9 @@ namespace parser {
 
     geom::UniversalTransverseMercatorParams p;
     if (parameters.find("zone") != parameters.end()) {
-      p.zone = std::stod(parameters["zone"]);
+      p.zone = std::stoi(parameters["zone"]);
     } else {
-      log_warning("Missing 'zone' parameter for UTM projection. Using default value " + p.zone);
+      log_warning("Missing 'zone' parameter for UTM projection. Using default value " + std::to_string(p.zone));
     }
     p.north = (parameters.count("south") > 0) ? false : true;
     p.ellps = ellipsoid;
@@ -124,7 +124,6 @@ namespace parser {
   }
 
   static geom::GeoProjection CreateWebMercatorProjection(
-    std::unordered_map<std::string, std::string> parameters,
     std::string geo_reference_string,
     geom::Ellipsoid ellipsoid){
 
@@ -152,12 +151,12 @@ namespace parser {
     if (parameters.find("lat_1") != parameters.end()) {
       p.lat_1 = std::stod(parameters["lat_1"]);
     } else {
-      log_warning("Missing 'lat_1' parameter for LCC projection. Using default value " + p.lat_1);
+      log_warning("Missing 'lat_1' parameter for LCC projection. Using default value " + std::to_string(p.lat_1));
     }
     if (parameters.find("lat_2") != parameters.end()) {
       p.lat_2 = std::stod(parameters["lat_2"]);
     } else {
-      log_warning("Missing 'lat_2' parameter for LCC projection. Using default value " + p.lat_2);
+      log_warning("Missing 'lat_2' parameter for LCC projection. Using default value " + std::to_string(p.lat_2));
     }
     if (parameters.find("x_0") != parameters.end()) {
       p.x_0 = std::stod(parameters["x_0"]);
@@ -173,7 +172,7 @@ namespace parser {
   }
 
   // TransverseMercator projection with default parameters.
-  static geom::GeoProjection CreateDefaultProjection(std::string geo_reference_string, geom::Ellipsoid ellipsoid){
+  static geom::GeoProjection CreateDefaultProjection(geom::Ellipsoid ellipsoid){
     geom::TransverseMercatorParams p;
 
     p.ellps = ellipsoid;
@@ -203,7 +202,7 @@ namespace parser {
     return result;
   }
 
-  static geom::GeoLocation CreateWebMercatorGeoReference(std::unordered_map<std::string, std::string> parameters){
+  static geom::GeoLocation CreateWebMercatorGeoReference(){
     geom::GeoLocation result{0.0, 0.0, 0.0};
     return result;
   }
@@ -219,7 +218,7 @@ namespace parser {
     return result;
   }
 
-  static geom::GeoLocation CreateDefaultGeoReference(std::unordered_map<std::string, std::string> parameters){
+  static geom::GeoLocation CreateDefaultGeoReference(){
     geom::GeoLocation result{0.0, 0.0, 0.0};
     return result;
   }
@@ -236,7 +235,7 @@ namespace parser {
       proj = parameters["proj"];
     } else {
       log_warning("cannot find the type of projection, using default transverse mercator");
-      return CreateDefaultProjection(geo_reference_string, ellipsoid);
+      return CreateDefaultProjection(ellipsoid);
     }
 
     // Parse the parameters
@@ -245,13 +244,14 @@ namespace parser {
     } else if (proj == "utm") {
       return CreateUniversalTransverseMercatorProjection(parameters, geo_reference_string, ellipsoid);
     } else if (proj == "merc") {
-      return CreateWebMercatorProjection(parameters, geo_reference_string, ellipsoid);
+      // Fixed projection, doesn't have any parameters
+      return CreateWebMercatorProjection(geo_reference_string, ellipsoid); 
     } else if (proj == "lcc") {
       return CreateLambertConformalConicProjection(parameters, geo_reference_string, ellipsoid);
     }
 
     log_debug("projection '" + proj + "' is not supported, using default transverse mercator.");
-    return CreateDefaultProjection(geo_reference_string, ellipsoid);
+    return CreateDefaultProjection(ellipsoid);
   }
 
   static geom::GeoLocation ParseGeoReference(const std::string &geo_reference_string) {
@@ -264,7 +264,7 @@ namespace parser {
       proj = parameters["proj"];
     } else {
       log_warning("cannot find the type of projection, using default geolocation");
-      return CreateDefaultGeoReference(parameters);
+      return CreateDefaultGeoReference();
     }
 
     if (proj == "tmerc") {
@@ -272,19 +272,19 @@ namespace parser {
     } else if (proj == "utm") {
       return CreateUniversalTransverseMercatorGeoReference(parameters);
     } else if (proj == "merc") {
-      return CreateWebMercatorGeoReference(parameters);
+      // Fixed projection, doesn't have any parameters
+      return CreateWebMercatorGeoReference();
     } else if (proj == "lcc") {
       return CreateLamberConic2SPGeoReference(parameters);
     }
 
     log_debug("projection '" + proj + "' is not supported, using default geolocation.");
-    return CreateDefaultGeoReference(parameters);
+    return CreateDefaultGeoReference();
   }
 
   void GeoReferenceParser::Parse(
       const pugi::xml_document &xml,
       carla::road::MapBuilder &map_builder) {
-    //TODO: Fix SetGeoReference for the GNSS
     map_builder.SetGeoReference(ParseGeoReference(
         xml.child("OpenDRIVE").child("header").child_value("geoReference")));
 
