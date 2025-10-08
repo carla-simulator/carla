@@ -55,7 +55,7 @@ namespace parser {
         ellps.a = it->second.first;
         ellps.f_inv = it->second.second;
       } else {
-        auto it = geom::custom_ellipsoids.find("grs80"); // Proj's default
+        auto it = geom::custom_ellipsoids.find("sphere"); // Not Proj's default, but maintains compatibility
         ellps.a = it->second.first;
         ellps.f_inv = it->second.second;
       }
