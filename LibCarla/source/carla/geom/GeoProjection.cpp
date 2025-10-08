@@ -266,7 +266,7 @@ namespace geom {
         double lon_0 = DegreesToRadians(6 * p.zone - 183); // central meridian
         double k = 0.9996;
         double x_0 = 500000.0;
-        double y_0 = (p.north) ? 10000000.0 : 0.0; 
+        double y_0 = (p.north) ? 0.0 : 10000000.0;
 
         double a = p.ellps.a;
         double e2 = p.ellps.e2();
