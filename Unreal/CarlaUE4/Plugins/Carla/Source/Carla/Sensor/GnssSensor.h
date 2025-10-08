@@ -57,7 +57,7 @@ protected:
 
 private:
 
-  carla::geom::GeoLocation CurrentGeoReference;
+  carla::geom::GeoProjection CurrentGeoProjection;
 
   float LatitudeDeviation;
   float LongitudeDeviation;

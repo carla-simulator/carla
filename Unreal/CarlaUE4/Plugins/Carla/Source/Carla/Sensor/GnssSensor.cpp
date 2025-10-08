@@ -45,7 +45,7 @@ void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSe
     ActorLocation = LargeMap->LocalToGlobalLocation(ActorLocation);
   }
   carla::geom::Location Location = ActorLocation;
-  carla::geom::GeoLocation CurrentLocation = CurrentGeoReference.Transform(Location);
+  carla::geom::GeoLocation CurrentLocation = CurrentGeoProjection.TransformToGeoLocation(Location);
 
   // Compute the noise for the sensor
   const float LatError = RandomEngine->GetNormalDistribution(0.0f, LatitudeDeviation);
@@ -137,5 +137,5 @@ void AGnssSensor::BeginPlay()
   Super::BeginPlay();
 
   const UCarlaEpisode* episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
-  CurrentGeoReference = episode->GetGeoReference();
+  CurrentGeoProjection = episode->GetGeoProjection();
 }
