@@ -130,7 +130,7 @@ namespace geom {
         double lon_0 = DegreesToRadians(6 * params.zone - 183);
         double k = 0.9996;
         double x_0 = 500000.0;
-        double y_0 = (params.north) ? 10000000.0 : 0.0; 
+        double y_0 = (params.north) ? 0.0 : 10000000.0;
 
         double a = params.ellps.a;
         double e2 = params.ellps.e2();
@@ -267,7 +267,7 @@ namespace geom {
         double lon_0 = DegreesToRadians(6 * params.zone - 183); // central meridian
         double k = 0.9996;
         double x_0 = 500000.0;
-        double y_0 = (params.north) ? 10000000.0 : 0.0; 
+        double y_0 = (params.north) ? 0.0 : 10000000.0;
 
         double a = params.ellps.a;
         double e2 = params.ellps.e2();
