@@ -80,7 +80,7 @@ namespace parser {
 
   static geom::GeoProjection CreateTransverseMercatorProjection(
     std::unordered_map<std::string, std::string> parameters,
-    std::string geo_reference_string,
+    std::string proj_string,
     geom::Ellipsoid ellipsoid){
 
     geom::TransverseMercatorParams p;
@@ -101,13 +101,13 @@ namespace parser {
     }
     p.ellps = ellipsoid;
     auto projection = geom::GeoProjection::Make(p);
-    projection.setRawReference(geo_reference_string);
+    projection.setPROJString(proj_string);
     return projection;
   }
 
   static geom::GeoProjection CreateUniversalTransverseMercatorProjection(
     std::unordered_map<std::string, std::string> parameters,
-    std::string geo_reference_string,
+    std::string proj_string,
     geom::Ellipsoid ellipsoid){
 
     geom::UniversalTransverseMercatorParams p;
@@ -119,25 +119,25 @@ namespace parser {
     p.north = (parameters.count("south") > 0) ? false : true;
     p.ellps = ellipsoid;
     auto projection = geom::GeoProjection::Make(p);
-    projection.setRawReference(geo_reference_string);
+    projection.setPROJString(proj_string);
     return projection;
   }
 
   static geom::GeoProjection CreateWebMercatorProjection(
-    std::string geo_reference_string,
+    std::string proj_string,
     geom::Ellipsoid ellipsoid){
 
     // Parameters are fixed.
     geom::WebMercatorParams p;
     p.ellps = ellipsoid;
     auto projection = geom::GeoProjection::Make(p);
-    projection.setRawReference(geo_reference_string);
+    projection.setPROJString(proj_string);
     return projection;
   }
 
   static geom::GeoProjection CreateLambertConformalConicProjection(
     std::unordered_map<std::string, std::string> parameters,
-    std::string geo_reference_string,
+    std::string proj_string,
     geom::Ellipsoid ellipsoid){
 
     geom::LambertConformalConicParams p;
@@ -167,7 +167,7 @@ namespace parser {
 
     p.ellps = ellipsoid;
     auto projection = geom::GeoProjection::Make(p);
-    projection.setRawReference(geo_reference_string);
+    projection.setPROJString(proj_string);
     return projection;
   }
 
@@ -223,10 +223,10 @@ namespace parser {
     return result;
   }
 
-  static geom::GeoProjection ParseGeoProjection(const std::string &geo_reference_string) {
+  static geom::GeoProjection ParseGeoProjection(const std::string &proj_string) {
     geom::GeoProjection result;
 
-    auto parameters = ParseProjectionParameters(geo_reference_string);
+    auto parameters = ParseProjectionParameters(proj_string);
     auto ellipsoid = CreateEllipsoid(parameters);
 
     // Get the projection type
@@ -240,23 +240,23 @@ namespace parser {
 
     // Parse the parameters
     if (proj == "tmerc") {
-      return CreateTransverseMercatorProjection(parameters, geo_reference_string, ellipsoid);
+      return CreateTransverseMercatorProjection(parameters, proj_string, ellipsoid);
     } else if (proj == "utm") {
-      return CreateUniversalTransverseMercatorProjection(parameters, geo_reference_string, ellipsoid);
+      return CreateUniversalTransverseMercatorProjection(parameters, proj_string, ellipsoid);
     } else if (proj == "merc") {
       // Fixed projection, doesn't have any parameters
-      return CreateWebMercatorProjection(geo_reference_string, ellipsoid); 
+      return CreateWebMercatorProjection(proj_string, ellipsoid); 
     } else if (proj == "lcc") {
-      return CreateLambertConformalConicProjection(parameters, geo_reference_string, ellipsoid);
+      return CreateLambertConformalConicProjection(parameters, proj_string, ellipsoid);
     }
 
     log_debug("projection '" + proj + "' is not supported, using default transverse mercator.");
     return CreateDefaultProjection(ellipsoid);
   }
 
-  static geom::GeoLocation ParseGeoReference(const std::string &geo_reference_string) {
+  static geom::GeoLocation ParseGeoReference(const std::string &proj_string) {
 
-    auto parameters = ParseProjectionParameters(geo_reference_string);
+    auto parameters = ParseProjectionParameters(proj_string);
 
     // Get the projection type
     std::string proj;

@@ -29,7 +29,7 @@ namespace geom {
     struct GeoProjection {
 
         template <typename T>
-        static auto Make(T&& args)
+        static GeoProjection Make(T&& args)
         {
             GeoProjection r = { };
             r.params = ProjectionParams(std::forward<T>(args));
@@ -47,20 +47,20 @@ namespace geom {
         }
 
         /// Set the Proj raw string.
-        void setRawReference(std::string s) {
-            raw_reference = std::move(s);
+        void setPROJString(std::string s) {
+            proj_string = std::move(s);
         }
 
         /// Get the Proj raw string.
-        const std::string& getRawReference() const {
-            return raw_reference;
+        const std::string& getPROJString() const {
+            return proj_string;
         }
 
         // Projection parameters.
         ProjectionParams params;
 
         /// Proj string reference.
-        std::string raw_reference;
+        std::string proj_string;
 
         /// Transform the given location to a geo location.
         Location GeoLocationToTransform(const GeoLocation& geolocation) const;

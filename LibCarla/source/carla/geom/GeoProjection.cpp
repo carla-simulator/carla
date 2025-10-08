@@ -111,11 +111,11 @@ namespace geom {
         double M_0 = meridional_arc(lat_0);
 
         double x = p.x_0 + p.k * N * (A + (1.0 - T + C) * std::pow(A, 3) / 6.0
-            + (5.0 - 18.0*T + T*T + 72.0*C - 58.0*ep2) * std::pow(A, 5) / 120.0);
+            + (5.0 - 18.0 * T + T * T + 72.0 * C - 58.0 * ep2) * std::pow(A, 5) / 120.0);
 
         double  y = p.y_0 + p.k * ((M - M_0) + N * std::tan(lat) * ((A*A) / 2.0
-            + (5.0 - T + 9.0*C + 4.0*C*C) * std::pow(A, 4) / 24.0
-            + (61.0 - 58.0*T + T*T + 600.0*C - 330.0*ep2) * std::pow(A, 6) / 720.0));
+            + (5.0 - T + 9.0 * C + 4.0 * C * C) * std::pow(A, 4) / 24.0
+            + (61.0 - 58.0 * T + T * T + 600.0 * C - 330.0 * ep2) * std::pow(A, 6) / 720.0));
 
         return Location(static_cast<float>(x), static_cast<float>(y), static_cast<float>(geolocation.altitude));
     }
@@ -148,11 +148,11 @@ namespace geom {
             - (35.0 * e6 / 3072.0) * std::sin(6.0 * lat));
 
         double x = x_0 + k * N * (A + (1.0 - T + C) * std::pow(A, 3) / 6.0
-            + (5.0 - 18.0*T + T*T + 72.0*C - 58.0*ep2) * std::pow(A, 5) / 120.0);
+            + (5.0 - 18.0 * T + T * T + 72.0 * C - 58.0 * ep2) * std::pow(A, 5) / 120.0);
 
-        double y = y_0 + k * (M + N * std::tan(lat) * ((A*A) / 2.0
-            + (5.0 - T + 9.0*C + 4.0*C*C) * std::pow(A, 4) / 24.0
-            + (61.0 - 58.0*T + T*T + 600.0*C - 330.0*ep2) * std::pow(A, 6) / 720.0));
+        double y = y_0 + k * (M + N * std::tan(lat) * ((A * A) / 2.0
+            + (5.0 - T + 9.0 * C + 4.0 * C * C) * std::pow(A, 4) / 24.0
+            + (61.0 - 58.0 * T + T * T + 600.0 * C - 330.0 * ep2) * std::pow(A, 6) / 720.0));
 
         return Location(static_cast<float>(x), static_cast<float>(y), static_cast<float>(geolocation.altitude));
     }
@@ -355,7 +355,7 @@ namespace geom {
         double t = std::pow(rho / (a * F), 1.0 / n);
 
         // initial spherical guess
-        double lat = M_PI * 0.5 - 2.0 * std::atan(t);
+        double lat = Math::Pi<double>() * 0.5 - 2.0 * std::atan(t);
         for (int i = 0; i < 10; ++i) {
             const double lat_next = Math::Pi<double>() * 0.5
                 - 2.0 * std::atan(t * std::pow((1.0 - e * std::sin(lat)) / (1.0 + e * std::sin(lat)), 0.5 * e));

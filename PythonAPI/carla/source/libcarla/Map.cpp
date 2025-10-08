@@ -54,7 +54,7 @@ static auto GetTopology(const carla::client::Map &self) {
   return result;
 }
 
-static auto GetGeoReference(const carla::client::Map &self) {
+static carla::geom::GeoLocation GetGeoReference(const carla::client::Map &self) {
   return self.GetGeoReference();
 }
 
