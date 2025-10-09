@@ -94,6 +94,7 @@ void FCarlaExporterModule::PluginButtonClicked()
 
   int offset = 1;
   AreaType areaType;
+
   for (int round = 0; round < rounds; ++round)
   {
     for (UObject* SelectedObject : BP_Actors)
@@ -105,37 +106,56 @@ void FCarlaExporterModule::PluginButtonClicked()
       if (TempActor->ActorHasTag(FName("NoExport"))) continue;
 
       FString ActorName = TempActor->GetName();
+      FString ClassificationName = ActorName;
+      TArray<UActorComponent*> TempComponents;
+      TempActor->GetComponents(UStaticMeshComponent::StaticClass(), TempComponents);
+      if (TempComponents.Num() > 0)
+      {
+        UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(TempComponents[0]);
+        if (SMC && SMC->GetStaticMesh())
+        {
+          FString MeshName = SMC->GetStaticMesh()->GetName();
+          // If actor name is generic (StaticMeshActor, Actor, etc), use mesh name instead
+          if (ActorName.StartsWith(TEXT("StaticMeshActor")) || ActorName.StartsWith(TEXT("Actor_")))
+          {
+            ClassificationName = MeshName;
+            GenericNameCount++;
+            UE_LOG(LogTemp, Warning, TEXT("Generic actor name found: '%s', using mesh name: '%s'"), *ActorName, *MeshName);
+          }
+          else
+          {
+            SpecificNameCount++;
+          }
+        }
+      }
 
-      // check type by nomenclature
-      if (ActorName.Find("Road_Road") != -1 || ActorName.Find("Roads_Road") != -1)
-        areaType = AreaType::ROAD;
-      else if (ActorName.Find("Road_Marking") != -1 || ActorName.Find("Roads_Marking") != -1)
-        areaType = AreaType::ROAD;
-      else if (ActorName.Find("Road_Curb") != -1 || ActorName.Find("Roads_Curb") != -1)
-        areaType = AreaType::ROAD;
-      else if (ActorName.Find("Road_Gutter") != -1 || ActorName.Find("Roads_Gutter") != -1)
-        areaType = AreaType::ROAD;
-      else if (ActorName.Find("Road_Sidewalk") != -1 || ActorName.Find("Roads_Sidewalk") != -1)
-        areaType = AreaType::SIDEWALK;
-      else if (ActorName.Find("Road_Crosswalk") != -1 || ActorName.Find("Roads_Crosswalk") != -1)
-        areaType = AreaType::CROSSWALK;
-      else if (ActorName.Find("Road_Grass") != -1 || ActorName.Find("Roads_Grass") != -1)
-        areaType = AreaType::GRASS;
+      if (ClassificationName.Find(TEXT("Road")) != -1 || ClassificationName.Find(TEXT("LaneMarking")) != -1)
+      {
+        if (ClassificationName.Find(TEXT("Sidewalk")) != -1 || ClassificationName.Find(TEXT("SideWalk")) != -1)
+          areaType = AreaType::SIDEWALK;
+        else if (ClassificationName.Find(TEXT("Crosswalk")) != -1 || ClassificationName.Find(TEXT("CrossWalk")) != -1)
+          areaType = AreaType::CROSSWALK;
+        else if (ClassificationName.Find(TEXT("Grass")) != -1)
+          areaType = AreaType::GRASS;
+        else
+          areaType = AreaType::ROAD;
+      }
       else
+      {
         areaType = AreaType::BLOCK;
+      }
 
-      // check to export in this round or not
       if (rounds > 1)
       {
         if (areaType == AreaType::BLOCK && round != 0)
           continue;
-        else if (areaType == AreaType::ROAD && round != 1)
+        if (areaType == AreaType::ROAD && round != 1)
           continue;
-        else if (areaType == AreaType::GRASS && round != 2)
+        if (areaType == AreaType::GRASS && round != 2)
           continue;
-        else if (areaType == AreaType::SIDEWALK && round != 3)
+        if (areaType == AreaType::SIDEWALK && round != 3)
           continue;
-        else if (areaType == AreaType::CROSSWALK && round != 4)
+        if (areaType == AreaType::CROSSWALK && round != 4)
           continue;
       }
 
