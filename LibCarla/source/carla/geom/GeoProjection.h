@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include <boost/variant2/variant.hpp>
 #include "carla/geom/GeoProjectionsParams.h"
 
 #ifdef _MSC_VER

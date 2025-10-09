@@ -18,6 +18,16 @@
 #include <ostream>
 #include <fstream>
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4583)
+#pragma warning(disable:4582)
+#include <boost/variant2/variant.hpp>
+#pragma warning(pop)
+#else
+#include <boost/variant2/variant.hpp>
+#endif
+
 namespace carla {
 namespace client {
 
