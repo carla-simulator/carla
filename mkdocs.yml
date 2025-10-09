@@ -69,5 +69,4 @@ markdown_extensions:
 
 extra_css: 
  - extra.css
- - styles/overrides.css
  

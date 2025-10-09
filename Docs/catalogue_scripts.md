@@ -5,6 +5,7 @@ This document outlines the available example Python scripts and utilities for th
 * [Manual control](#manual-control)
 * [Automatic control](#automatic-control)
 * [Generate traffic](#generate-traffic)
+* [Inverted AI traffic](#inverted-ai-traffic)
 * [Start recording](#start-recording)
 * [Start replaying](#start-replaying)
 * [Open3D LIDAR](#open3d-lidar)
@@ -14,6 +15,7 @@ This document outlines the available example Python scripts and utilities for th
 * [LIDAR to camera](#lidar-to-camera)
 * [Vehicle gallery](#vehicle-gallery)
 
+---
 
 ## Manual control
 
@@ -79,6 +81,41 @@ The manual control script has multiple command line arguments for configuration:
 | --gamma |  | 2.2 | Gamma correction of the RGB camera |
 | --sync |  | Not active | Activate the script in synchronous mode |
 
+### Script variants
+
+There are multiple variants of the manual control script for different purposes. They maintain the same key commands and most of the same command line arguments, some have command line arguments.
+
+#### Chrono
+
+* Script filename: `manual_control_chrono.py`
+
+This script launches manual control with Chrono physics, using the Sedan powertrain parameters found in the `Co-Simulation/Chrono/Vehicles` directory of the CARLA repository/package. 
+
+#### Fisheye
+
+* Script filename: `manual_control_fisheye.py`
+
+This script launches manual control with the fisheye camera model. It has some additional command line arguments for fisheye camera model parameters:
+
+| Argument | Short form | Default | Description |
+|----------|------------|---------|-------------|
+| --fov |  | 90.0 | Camera field of view angle |
+| --fov_mask |  | Not active | Mask pixels outside of FOV |
+| --fov_fade_size |  | 0.0 | Fade of FOV edge in pixels |
+| --model |  | perspective | Fisheye model:  |
+| --k0 |  | 0.0 | k0 Kannala-Brandt parameter |
+| --k1 |  | 0.0 | k1 Kannala-Brandt parameter |
+| --k2 |  | 0.0 | k2 Kannala-Brandt parameter |
+| --k3 |  | 0.0 | k3 Kannala-Brandt parameter |
+| --equirectangular |  | Not active | Image rectification |
+| --perspective |  | Not active | Image rectification |
+
+#### Steering wheel
+
+* Script filename: `manual_control_steeringwheel.py`
+
+This script demonstrates how to control CARLA using an external steering wheel through Pygame's Joystick module. 
+
 ---
 
 ## Automatic control
@@ -133,6 +170,45 @@ This script generates traffic of varying density distributed across a chosen CAR
 | --hero | | False | Nominate a hero vehicle |
 | --respawn | | False | Automatically respawn dormant vehicles in large maps |
 | --no-rendering | | Not active | Activate no-rendering mode for the CARLA server |
+
+---
+
+## Inverted AI traffic
+
+* Script filename: `invertedai_traffic.py`
+* Example usage: `python3 invertedai_traffic.py -iai-key <token> --record`
+
+This script demonstrates how to launch a traffic simulation in CARLA driven by [Inverted AI's](https://www.inverted.ai/home) AI traffic engine. You will need to provide an Inverted AI API key, please [register](https://www.inverted.ai/portal/login) on the website to obtain one. 
+
+### Command line arguments 
+
+| Argument | Short form | Default | Description |
+|----------|------------|---------|-------------|
+| --number-of-vehicles | -n | 30 | Number of vehicles to spawn |
+| --number-of-walkers | -w | 10 | Number of pedestrians to spawn |
+| --host | -h | 127.0.0.1 | Host IP address |
+| --port | -p | 2000 | TCP port for CARLA client |
+| --safe |  |  | Don't spawn vehicles prone to accidents |
+| --filterv |  | vehicle.* | Filter vehicle models with string |
+| --filterw |  | walker.pedestrian.* | Filter pedestrian models with string |
+| --generationv |  | All | Specify vehicle generation, "1", "2" or "All" |
+| --generationw |  | All | Specify pedestrian generation, "1", "2" or "All" |
+| --seed | -s |  | Integer seed for random generation (activates the deterministic mode for the TM) |
+| --hero |  | Not active | Set one of the vehicles as a hero |
+| --iai-key | | | Inverted AI API key |
+| --record | | Not active | Record the simulation using the CARLA recorder |
+| --sim-length | | 60 | Simulation length in seconds |
+| --location | | carla:Town10HD | IAI formatted map for simulation  |
+| --capacity | | 100 | Quadtree leaf split threshold |
+| --width | | 250 | Width of area to initialize traffic |
+| --height | | 250 | Height of area to initialize traffic |
+| --map-center | | -50,20 | Center of the area to initialize |
+| --iai-async | | Not active | Call IAI DRIVE asynchronously |
+| --api-model | | bI5p | IAI API model version |
+| --iai-log | | Not active | Store a log file for the co-simulation |
+| --iai-waypoint-distance | | 15 | Distance to next waypoint for IAI agents |
+| --iai-waypoint-detection-threshold | | 2 | Distance from waypoint to consider as completed |
+| --iai-max-distance-away | | 20 | Max distance away before a new waypoint is set for an agent |
 
 ---
 
