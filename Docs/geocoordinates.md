@@ -2,21 +2,15 @@
 
 CARLA parses a georeference from metadata provided in the OpenDRIVE header that enables the conversion of a CARLA location given in **X**, **Y** and **Z** coordinates (in meters) into a geocoordinate given in **latitude** (degrees), **longitude** (degrees) and **altitude** (meters). The reverse transformation is also possible from latitude, longitude and altitude into a CARLA coordinate. 
 
-A map projection is used to convert between CARLA coordinates and geocoordinates. This projection is used in the GNSS sensor and the `transform_to_geolocation()` and `geolocation_to_transform()` methods of the [Map object](python_api.md#carlamap). The type of projection, along with the latitude and longitude coordinates of the center of the map (i.e. X=Y=0) and other parameters associated with the projection are defined in the OpenDRIVE header information in the `<geoReference>` in a PROJ.4-style string:
+A map projection is used to convert between CARLA coordinates and geocoordinates. This projection is used in the GNSS sensor and the `transform_to_geolocation()` and `geolocation_to_transform()` methods of the [Map object](python_api.md#carlamap). The type of projection, a reference ellipsoid along with the geolocation of the center of the map (i.e. X=Y=0) and other parameters associated with the projection are defined in the OpenDRIVE header information in the `<geoReference>` tag in a PROJ.4-style string.
 
-| Parameter | Description |
-|-----------|-------------|
-| `+proj`   | Type of map projection to use |
-| `+lat_0`  | Latitude value for the origin of the map |
-| `+lon_0`  | Longitude value for the origin of the map |
-| `+ellps`  | [Reference ellipsoid](#reference-ellipsoid) used to model the Earth's shape |
-| `+a`  | Semi-major axis of the ellipsoid model |
-| `+b`  | Semi-major axis of the ellipsoid model |
-| `+f`  | Flattening of the ellipsoid model (a-b)/a |
-| `+f_inv`  | Inverse flattening of the ellipsoid model 1/f |
-| `x_0` | The east–west offset (in meters) applied to all projected x-coordinates |
-| `y_0` | The north–south offset (in meters) applied to all projected y-coordinates |
-| `k` | Scale factor at origin |
+The following is an example of a `<geoReference>` tag provided in an OpenDRIVE file header:
+
+```xml
+<geoReference><![CDATA[+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84]]></geoReference>
+```
+
+---
 
 ## Map projection
 
@@ -28,6 +22,69 @@ CARLA supports 4 different [map projection types](https://en.wikipedia.org/wiki/
 | [Universal Transverse Mercator](https://en.wikipedia.org/wiki/Universal_Transverse_Mercator_coordinate_system) | `+proj=utm` |
 | [Web Mercator](https://en.wikipedia.org/wiki/Web_Mercator_projection) | `+proj=merc` |
 | [Lambert Conformal Conic - 2SP version](https://en.wikipedia.org/wiki/Lambert_conformal_conic_projection) | `+proj=lcc` |
+
+Each map projection requires a specific set of parameters defined in the OpenDRIVE georeference:
+
+### Transverse mercator
+
+| Parameter | Description |
+|-----------|-------------|
+| `+proj`   | Type of map projection to use |
+| `+ellps`  | [Reference ellipsoid](#reference-ellipsoid) used to model the Earth's shape |
+| `+lat_0`  | Latitude value for the origin of the map |
+| `+lon_0`  | Longitude value for the origin of the map |
+| `k` | Scale factor at origin |
+| `+a`  | Semi-major axis of the ellipsoid model |
+| `+b`  | Semi-major axis of the ellipsoid model |
+| `+f`  | Flattening of the ellipsoid model (a-b)/a |
+| `+f_inv`  | Inverse flattening of the ellipsoid model 1/f |
+| `x_0` | The east–west offset (in meters) applied to all projected x-coordinates |
+| `y_0` | The north–south offset (in meters) applied to all projected y-coordinates |
+
+### Universal transverse mercator
+
+| Parameter | Description |
+|-----------|-------------|
+| `+proj`   | Type of map projection to use |
+| `+ellps`  | [Reference ellipsoid](#reference-ellipsoid) used to model the Earth's shape |
+| `+zone`  | Defines the longitudinal zone for the UTM projection (1-60) |
+| `+north`  | Defines the geolocation as in the Northern hemisphere (default) |
+| `+south` | Defines the geolocation as in the Southern hemisphere |
+| `+a`  | Semi-major axis of the ellipsoid model |
+| `+b`  | Semi-major axis of the ellipsoid model |
+| `+f`  | Flattening of the ellipsoid model (a-b)/a |
+| `+f_inv`  | Inverse flattening of the ellipsoid model 1/f |
+| `x_0` | The east–west offset (in meters) applied to all projected x-coordinates |
+| `y_0` | The north–south offset (in meters) applied to all projected y-coordinates |
+
+### Web mercator
+
+The Web mercator assumes a spherical Earth, therefore only the **a** parameter, the semi-major axis of the ellipsoid is used. 
+
+| Parameter | Description |
+|-----------|-------------|
+| `+proj`   | Type of map projection to use |
+| `+ellps`  | [Reference ellipsoid](#reference-ellipsoid) used to model the Earth's shape |
+| `+a`  | Semi-major axis of the ellipsoid model |
+
+### Lambert conformal conic 2SP
+
+| Parameter | Description |
+|-----------|-------------|
+| `+proj`   | Type of map projection to use |
+| `+ellps`  | [Reference ellipsoid](#reference-ellipsoid) used to model the Earth's shape |
+| `+lat_0`  | Latitude value for the origin of the map |
+| `+lat_1`  | Latitude value for the upper latitude limit |
+| `+lat_2`  | Latitude value for the lower latitude limit |
+| `+lon_0`  | Longitude value for the origin of the map |
+| `+a`  | Semi-major axis of the ellipsoid model |
+| `+b`  | Semi-major axis of the ellipsoid model |
+| `+f`  | Flattening of the ellipsoid model (a-b)/a |
+| `+f_inv`  | Inverse flattening of the ellipsoid model 1/f |
+| `x_0` | The east–west offset (in meters) applied to all projected x-coordinates |
+| `y_0` | The north–south offset (in meters) applied to all projected y-coordinates |
+
+---
 
 ## Reference ellipsoid
 
