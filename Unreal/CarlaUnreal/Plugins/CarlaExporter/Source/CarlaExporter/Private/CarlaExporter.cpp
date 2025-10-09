@@ -18,7 +18,7 @@
 #include "PhysicsEngine/ConvexElem.h"
 #include "LevelEditor.h"
 #include "EngineUtils.h"
-#include "PhysicsPublic.h"
+#include "Chaos/TriangleMeshImplicitObject.h"
 
 #include <fstream>
 #include <sstream>
@@ -194,7 +194,6 @@ void FCarlaExporterModule::PluginButtonClicked()
 int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName, UBodySetup *body, FTransform &CompTransform, AreaType Area, int32 Offset)
 {
 // @CARLAUE
-#if 0
   if (!body) return 0;
 
   constexpr float TO_METERS = 0.01f;
@@ -202,6 +201,19 @@ int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName
   int TotalVerticesAdded = 0;
   bool Written = false;
 
+  // Check collision complexity setting
+  // CTF_UseDefault/CTF_UseSimpleAsComplex: Use simple collision only
+  // CTF_UseComplexAsSimple: Use complex collision only
+  bool bUseSimpleCollision = (body->CollisionTraceFlag == ECollisionTraceFlag::CTF_UseDefault ||
+                               body->CollisionTraceFlag == ECollisionTraceFlag::CTF_UseSimpleAsComplex ||
+                               body->CollisionTraceFlag == ECollisionTraceFlag::CTF_UseSimpleAndComplex);
+
+  bool bUseComplexCollision = (body->CollisionTraceFlag == ECollisionTraceFlag::CTF_UseComplexAsSimple ||
+                                body->CollisionTraceFlag == ECollisionTraceFlag::CTF_UseSimpleAndComplex);
+
+  // Export simple collision (boxes, spheres, capsules, convex) if enabled
+  if (bUseSimpleCollision)
+  {
   // try to write the box collision if any
   for (const auto &box: body->AggGeom.BoxElems)
   {
@@ -270,24 +282,21 @@ int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName
     Written = true;
   }
 
-  // try to write the simple collision mesh
+  // try to write the convex collision mesh
   for (const auto &convex : body->AggGeom.ConvexElems)
   {
-    // get data
-    PxConvexMesh *mesh = convex.GetConvexMesh();
-    if (!mesh) continue;
-    int32 nbVerts = mesh->getNbVertices();
-    const PxVec3* convexVerts = mesh->getVertices();
-    const PxU8* indexBuffer = (PxU8 *) mesh->getIndexBuffer();
+    // Use the vertex data directly from ConvexElem
+    const TArray<FVector>& convexVerts = convex.VertexData;
+    if (convexVerts.Num() == 0) continue;
 
+    int32 nbVerts = convexVerts.Num();
     f << "o " << TCHAR_TO_ANSI(*(ObjectName +"_convex")) << "\n";
 
     // write all vertex
     for (int32 j=0; j<nbVerts; j++)
     {
-      const PxVec3 &v = convexVerts[j];
-      FVector vec(v.x, v.y, v.z);
-      FVector vec3 = CompTransform.TransformVector(vec);
+      const FVector &v = convexVerts[j];
+      FVector vec3 = CompTransform.TransformVector(v);
       FVector world(CompLocation.X + vec3.X, CompLocation.Y + vec3.Y, CompLocation.Z + vec3.Z);
 
       f << "v " << std::fixed << world.X * TO_METERS << " " << world.Z * TO_METERS << " " << world.Y * TO_METERS << "\n";
@@ -301,45 +310,71 @@ int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName
       case AreaType::CROSSWALK: f << "usemtl crosswalk" << "\n"; break;
       case AreaType::BLOCK:     f << "usemtl block"     << "\n"; break;
     }
-    // write all faces
-    for (PxU32 i=0; i<mesh->getNbPolygons(); ++i)
+
+    // Use index data to write faces if available
+    const TArray<int32>& IndexData = convex.IndexData;
+    if (IndexData.Num() >= 3)
     {
-      PxHullPolygon face;
-      bool status = mesh->getPolygonData(i, face);
-      const PxU8* faceIndices = indexBuffer + face.mIndexBase;
-      int faceNbVerts = face.mNbVerts;
-      for(int32 j=2; j<faceNbVerts; j++)
+      // Validate indices are within bounds
+      bool bValidIndices = true;
+      for (int32 Idx : IndexData)
       {
-        // inverse order for left hand
-        f << "f " << Offset + faceIndices[j-1] << " " << Offset + faceIndices[j] << " " << Offset + faceIndices[0] << "\n";
+        if (Idx < 0 || Idx >= nbVerts)
+        {
+          bValidIndices = false;
+          break;
+        }
+      }
+
+      if (bValidIndices)
+      {
+        for (int32 i = 0; i < IndexData.Num(); i += 3)
+        {
+          if (i + 2 < IndexData.Num())
+          {
+            // inverse order for left hand
+            f << "f " << Offset + IndexData[i+2] << " " << Offset + IndexData[i+1] << " " << Offset + IndexData[i] << "\n";
+          }
+        }
       }
     }
+
     TotalVerticesAdded += nbVerts;
     Offset += nbVerts;
     Written = true;
   }
+  } // End simple collision export
 
-  if (!Written)
+  // Export complex trimesh collision data from Chaos if enabled
+  if (bUseComplexCollision && body->TriMeshGeometries.Num() > 0)
   {
-    // write the mesh
-    for (const auto &mesh : body->TriMeshes)
+    for (const auto& TriMeshGeometry : body->TriMeshGeometries)
     {
-      // get data
-      PxU32 nbVerts = mesh->getNbVertices();
-      const PxVec3* convexVerts = mesh->getVertices();
+      if (!TriMeshGeometry) continue;
 
-      f << "o " << TCHAR_TO_ANSI(*(ObjectName +"_mesh")) << "\n";
+      const auto& Particles = TriMeshGeometry->Particles();
+      const auto& Elements = TriMeshGeometry->Elements();
 
-      // write all vertex
-      for (PxU32 j=0; j<nbVerts; j++)
+      int32 NumTriangles = Elements.GetNumTriangles();
+      if (NumTriangles == 0) continue;
+
+      f << "o " << TCHAR_TO_ANSI(*(ObjectName +"_trimesh")) << "\n";
+
+      // Determine if using large or small indices
+      bool bUsesLargeIndices = Elements.RequiresLargeIndices();
+      int32 NumVertices = Particles.Size();
+
+      // Write all vertices
+      for (int32 i = 0; i < NumVertices; i++)
       {
-        const PxVec3 &v = convexVerts[j];
-        FVector vec(v.x, v.y, v.z);
+        const auto& v = Particles.X(i);
+        FVector vec(v.X, v.Y, v.Z);
         FVector vec3 = CompTransform.TransformVector(vec);
         FVector world(CompLocation.X + vec3.X, CompLocation.Y + vec3.Y, CompLocation.Z + vec3.Z);
 
         f << "v " << std::fixed << world.X * TO_METERS << " " << world.Z * TO_METERS << " " << world.Y * TO_METERS << "\n";
       }
+
       // set the material in function of the area type
       switch (Area)
       {
@@ -349,37 +384,36 @@ int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName
         case AreaType::CROSSWALK: f << "usemtl crosswalk" << "\n"; break;
         case AreaType::BLOCK:     f << "usemtl block"     << "\n"; break;
       }
-      // write all faces
-      int k = 0;
-      // triangle indices can be of 16 or 32 bits
-      if (mesh->getTriangleMeshFlags() & PxTriangleMeshFlag::e16_BIT_INDICES)
+
+      // Write all faces
+      if (bUsesLargeIndices)
       {
-        PxU16 *Indices16 = (PxU16 *) mesh->getTriangles();
-        for (PxU32 i=0; i<mesh->getNbTriangles(); ++i)
+        const auto& IndexBuffer = Elements.GetLargeIndexBuffer();
+        for (int32 i = 0; i < NumTriangles; i++)
         {
+          const auto& Triangle = IndexBuffer[i];
           // inverse order for left hand
-          f << "f " << Offset + Indices16[k+2] << " " << Offset + Indices16[k+1] << " " << Offset + Indices16[k] << "\n";
-          k += 3;
+          f << "f " << Offset + Triangle[2] << " " << Offset + Triangle[1] << " " << Offset + Triangle[0] << "\n";
         }
       }
       else
       {
-        PxU32 *Indices32 = (PxU32 *) mesh->getTriangles();
-        for (PxU32 i=0; i<mesh->getNbTriangles(); ++i)
+        const auto& IndexBuffer = Elements.GetSmallIndexBuffer();
+        for (int32 i = 0; i < NumTriangles; i++)
         {
+          const auto& Triangle = IndexBuffer[i];
           // inverse order for left hand
-          f << "f " << Offset + Indices32[k+2] << " " << Offset + Indices32[k+1] << " " << Offset + Indices32[k] << "\n";
-          k += 3;
+          f << "f " << Offset + Triangle[2] << " " << Offset + Triangle[1] << " " << Offset + Triangle[0] << "\n";
         }
       }
-      TotalVerticesAdded += nbVerts;
-      Offset += nbVerts;
+
+      TotalVerticesAdded += NumVertices;
+      Offset += NumVertices;
+      Written = true;
     }
   }
+
   return TotalVerticesAdded;
-#else
-    return 0;
-#endif
 }
 
 void FCarlaExporterModule::AddMenuExtension(FMenuBuilder& Builder)
