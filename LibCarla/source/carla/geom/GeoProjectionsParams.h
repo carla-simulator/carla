@@ -18,7 +18,7 @@ namespace geom {
         {"wgs66",  {6378145.0, 298.25}},
         {"sphere", {6370997.0, std::numeric_limits<double>::infinity()}}
     };
-    
+
     class Ellipsoid {
     public:
 
