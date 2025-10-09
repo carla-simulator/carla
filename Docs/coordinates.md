@@ -157,7 +157,7 @@ In the OpenDRIVE file, the georeference will be provided in the header informati
 
 ```
         
-The georeference provided in the OpenDRIVE file is used by the CARLA [Map object](python_api.md#carlamap) to convert between CARLA's world coordinates and geocoordinates. The geocoordinate provided serves as the location at the coordinate center of the map in CARLA, i.e. X=0, Y=0, Z=0. **CARLA uses the [Transverse Mercator projection](https://en.wikipedia.org/wiki/Transverse_Mercator_projection) for converting geolocations**. 
+The georeference provided in the OpenDRIVE file is used by the CARLA [Map object](python_api.md#carlamap) to convert between CARLA's world coordinates and geocoordinates. The geocoordinate provided by the `lat_0` and `lon_0` parameters serves as the geolocation at the coordinate center of the map in CARLA, i.e. X=0, Y=0, Z=0. More details about CARLA's support of georeference parameters and projections can be found [here](geocoordinates.md).
 
 To convert a CARLA coordinate into a geocoordinate, use the `transform_to_geolocation()` method of the Map object:
 
