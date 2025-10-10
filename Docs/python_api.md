@@ -1016,6 +1016,25 @@ Quotient between current RPM and MaxRPM where the autonomous gear box should shi
 
 ---
 
+## carla.GeoEllipsoid<a name="carla.GeoEllipsoid"></a>
+Geoellipsoid for map projection.  
+
+### Instance Variables
+- <a name="carla.GeoEllipsoid.a"></a>**<font color="#f8805a">a</font>** (_float_)  
+Semi-major axis in meters.  
+- <a name="carla.GeoEllipsoid.f_inv"></a>**<font color="#f8805a">f_inv</font>** (_float_)  
+Inverse flattening.  
+
+### Methods
+- <a name="carla.GeoEllipsoid.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**a**=6378137.0</font>, <font color="#00a6ed">**f_inv**=298.257223563</font>)  
+Constructor for this class.  
+    - **Parameters:**
+        - `a` (_float_) - Semi-major axis in meters.  
+        - `f_inv` (_float_) - Inverse flattening.  
+    - **Return:** _[carla.GeoEllipsoid](#carla.GeoEllipsoid)_  
+
+---
+
 ## carla.GeoLocation<a name="carla.GeoLocation"></a>
 Class that contains geographical coordinates simulated data. The [carla.Map](#carla.Map) can convert simulation locations by using the <b><georeference></b> tag in the OpenDRIVE file.  
 
@@ -1038,6 +1057,109 @@ Height regarding ground level.
 - <a name="carla.GeoLocation.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.GeoLocation](#carla.GeoLocation)</font>)  
 - <a name="carla.GeoLocation.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.GeoLocation](#carla.GeoLocation)</font>)  
 - <a name="carla.GeoLocation.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
+## carla.GeoProjectionLCC2SP<a name="carla.GeoProjectionLCC2SP"></a>
+Class defining the Lambert Conformal Conic 2SP map projection.  
+
+### Instance Variables
+- <a name="carla.GeoProjectionLCC2SP.lat_0"></a>**<font color="#f8805a">lat_0</font>** (_float_)  
+Latitude of the center of the map.  
+- <a name="carla.GeoProjectionLCC2SP.lat_1"></a>**<font color="#f8805a">lat_1</font>** (_float_)  
+Latitude of 1st standard parallel.  
+- <a name="carla.GeoProjectionLCC2SP.lat_2"></a>**<font color="#f8805a">lat_2</font>** (_float_)  
+Latitude of 2nd standard parallel.  
+- <a name="carla.GeoProjectionLCC2SP.lon_0"></a>**<font color="#f8805a">lon_0</font>** (_float_)  
+Longitude of the center of the map.  
+- <a name="carla.GeoProjectionLCC2SP.x_0"></a>**<font color="#f8805a">x_0</font>** (_float_)  
+False Easting offset.  
+- <a name="carla.GeoProjectionLCC2SP.y_0"></a>**<font color="#f8805a">y_0</font>** (_float_)  
+False Northing offset.  
+- <a name="carla.GeoProjectionLCC2SP.ellps"></a>**<font color="#f8805a">ellps</font>** (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_)  
+Geoellipsoid used for the projection.  
+
+### Methods
+- <a name="carla.GeoProjectionLCC2SP.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lat_0**=0.0</font>, <font color="#00a6ed">**lat_1**=-5.0</font>, <font color="#00a6ed">**lat_2**=5.0</font>, <font color="#00a6ed">**lon_0**=0.0</font>, <font color="#00a6ed">**x_0**=0.0</font>, <font color="#00a6ed">**y_0**=0.0</font>, <font color="#00a6ed">**ellps**=[carla.GeoEllipsoid](#carla.GeoEllipsoid)</font>)  
+Constructor for this class.  
+    - **Parameters:**
+        - `lat_0` (_float_) - Latitude value for map origin.  
+        - `lat_1` (_float_) - Latitude of 1st standard parallel.  
+        - `lat_2` (_float_) - Latitude of 2nd standard parallel.  
+        - `lon_0` (_float_) - Longitude value for map origin.  
+        - `x_0` (_float_) - False Easting offset.  
+        - `y_0` (_float_) - False Northing offset.  
+        - `ellps` (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_) - Geoellipsoid used for the projection.  
+    - **Return:** _[carla.GeoProjectionLCC2SP](#carla.GeoProjectionLCC2SP)_  
+
+---
+
+## carla.GeoProjectionTM<a name="carla.GeoProjectionTM"></a>
+Class defining the Transverse Mercator map projection.  
+
+### Instance Variables
+- <a name="carla.GeoProjectionTM.lat_0"></a>**<font color="#f8805a">lat_0</font>** (_float_)  
+Latitude of the center of the map.  
+- <a name="carla.GeoProjectionTM.lon_0"></a>**<font color="#f8805a">lon_0</font>** (_float_)  
+Longitude of the center of the map.  
+- <a name="carla.GeoProjectionTM.k"></a>**<font color="#f8805a">k</font>** (_float_)  
+Scale factor.  
+- <a name="carla.GeoProjectionTM.x_0"></a>**<font color="#f8805a">x_0</font>** (_float_)  
+False Easting offset.  
+- <a name="carla.GeoProjectionTM.y_0"></a>**<font color="#f8805a">y_0</font>** (_float_)  
+False Northing offset.  
+- <a name="carla.GeoProjectionTM.ellps"></a>**<font color="#f8805a">ellps</font>** (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_)  
+Geoellipsoid used for the projection.  
+
+### Methods
+- <a name="carla.GeoProjectionTM.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lat_0**=0.0</font>, <font color="#00a6ed">**lon_0**=0.0</font>, <font color="#00a6ed">**k**=1.0</font>, <font color="#00a6ed">**x_0**=0.0</font>, <font color="#00a6ed">**y_0**=0.0</font>, <font color="#00a6ed">**ellps**=[carla.GeoEllipsoid](#carla.GeoEllipsoid)</font>)  
+Constructor for this class.  
+    - **Parameters:**
+        - `lat_0` (_float_) - Latitude value for map origin.  
+        - `lon_0` (_float_) - Longitude value for map origin.  
+        - `k` (_float_) - Scale factor near origin.  
+        - `x_0` (_float_) - False Easting offset.  
+        - `y_0` (_float_) - False Northing offset.  
+        - `ellps` (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_) - Geoellipsoid used for the projection.  
+    - **Return:** _[carla.GeoProjectionTM](#carla.GeoProjectionTM)_  
+
+---
+
+## carla.GeoProjectionUTM<a name="carla.GeoProjectionUTM"></a>
+Class defining the Universal Transverse Mercator map projection.  
+
+### Instance Variables
+- <a name="carla.GeoProjectionUTM.zone"></a>**<font color="#f8805a">zone</font>** (_int_)  
+Longitude zone, 1-60.  
+- <a name="carla.GeoProjectionUTM.north"></a>**<font color="#f8805a">north</font>** (_bool_)  
+Boolean defining the northern (True) or southern (False) hemisphere.  
+- <a name="carla.GeoProjectionUTM.ellps"></a>**<font color="#f8805a">ellps</font>** (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_)  
+Geoellipsoid used for the projection.  
+
+### Methods
+- <a name="carla.GeoProjectionUTM.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**zone**=31</font>, <font color="#00a6ed">**north**=True</font>, <font color="#00a6ed">**ellps**=[carla.GeoEllipsoid](#carla.GeoEllipsoid)</font>)  
+Constructor for this class.  
+    - **Parameters:**
+        - `zone` (_int_) - Longitude zone, 1-60.  
+        - `north` (_bool_) - Boolean defining the northern (True) or southern (False) hemisphere.  
+        - `ellps` (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_) - Geoellipsoid used for the projection.  
+    - **Return:** _[carla.GeoProjectionUTM](#carla.GeoProjectionUTM)_  
+
+---
+
+## carla.GeoProjectionWebMerc<a name="carla.GeoProjectionWebMerc"></a>
+Class defining the Web Mercator map projection.  
+
+### Instance Variables
+- <a name="carla.GeoProjectionWebMerc.ellps"></a>**<font color="#f8805a">ellps</font>** (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_)  
+Geoellipsoid used for the projection.  
+
+### Methods
+- <a name="carla.GeoProjectionWebMerc.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**ellps**=[carla.GeoEllipsoid](#carla.GeoEllipsoid)</font>)  
+Constructor for this class.  
+    - **Parameters:**
+        - `ellps` (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_) - Geoellipsoid used for the projection.  
+    - **Return:** _[carla.GeoProjectionWebMerc](#carla.GeoProjectionWebMerc)_  
 
 ---
 
@@ -1757,6 +1879,12 @@ Returns the landmarks of a specific type. Landmarks retrieved using this method 
 - <a name="carla.Map.get_crosswalks"></a>**<font color="#7fb800">get_crosswalks</font>**(<font color="#00a6ed">**self**</font>)  
 Returns a list of locations with all crosswalk zones in the form of closed polygons. The first point is repeated, symbolizing where the polygon begins and ends.  
     - **Return:** _list([carla.Location](#carla.Location))_  
+- <a name="carla.Map.get_geoprojection"></a>**<font color="#7fb800">get_geoprojection</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the geoprojection defined for the map through the OpenDRIVE metadata.  
+    - **Return:** _[carla.GeoProjectionLCC2SP](#carla.GeoProjectionLCC2SP), [carla.GeoProjectionTM](#carla.GeoProjectionTM), [carla.GeoProjectionUTM](#carla.GeoProjectionUTM), [carla.GeoProjectionWebMerc](#carla.GeoProjectionWebMerc)_  
+- <a name="carla.Map.get_georeference"></a>**<font color="#7fb800">get_georeference</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the [carla.GeoLocation](#carla.GeoLocation) of the center of the map.  
+    - **Return:** _[carla.GeoLocation](#carla.GeoLocation)_  
 - <a name="carla.Map.get_landmark_group"></a>**<font color="#7fb800">get_landmark_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**landmark**</font>)  
 Returns the landmarks in the same group as the specified landmark (including itself). Returns an empty list if the landmark does not belong to any group.  
     - **Parameters:**

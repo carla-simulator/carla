@@ -38,8 +38,8 @@ Each map projection requires a specific set of parameters defined in the OpenDRI
 | `+b`  | Semi-major axis of the ellipsoid model |
 | `+f`  | Flattening of the ellipsoid model (a-b)/a |
 | `+f_inv`  | Inverse flattening of the ellipsoid model 1/f |
-| `x_0` | The east–west offset (in meters) applied to all projected x-coordinates |
-| `y_0` | The north–south offset (in meters) applied to all projected y-coordinates |
+| `x_0` | False Easting offset |
+| `y_0` | False Northing offset |
 
 ### Universal transverse mercator
 
@@ -54,8 +54,8 @@ Each map projection requires a specific set of parameters defined in the OpenDRI
 | `+b`  | Semi-major axis of the ellipsoid model |
 | `+f`  | Flattening of the ellipsoid model (a-b)/a |
 | `+f_inv`  | Inverse flattening of the ellipsoid model 1/f |
-| `x_0` | The east–west offset (in meters) applied to all projected x-coordinates |
-| `y_0` | The north–south offset (in meters) applied to all projected y-coordinates |
+| `x_0` | False Easting offset |
+| `y_0` | False Northing offset |
 
 ### Web mercator
 
@@ -81,8 +81,8 @@ The Web mercator assumes a spherical Earth, therefore only the **a** parameter, 
 | `+b`  | Semi-major axis of the ellipsoid model |
 | `+f`  | Flattening of the ellipsoid model (a-b)/a |
 | `+f_inv`  | Inverse flattening of the ellipsoid model 1/f |
-| `x_0` | The east–west offset (in meters) applied to all projected x-coordinates |
-| `y_0` | The north–south offset (in meters) applied to all projected y-coordinates |
+| `x_0` | False Easting offset |
+| `y_0` | False Northing offset |
 
 ---
 
@@ -101,7 +101,7 @@ CARLA supports numerous commonly used reference ellipsoids. The type of ellipsoi
 
 | Ref. ellipsoid | __a__ | __f_inv__ |
 |----------------|-------|-----------|
-| wgs84 (default)  | 6378137.0 | 298.257223563 |
+| wgs84 (default) | 6378137.0 | 298.257223563 |
 | grs80  | 6378137.0 | 298.257222101 |
 | intl   | 6378388.0 | 297.0 |
 | bessel | 6377397.155 | 299.1528128 |
@@ -113,9 +113,11 @@ CARLA supports numerous commonly used reference ellipsoids. The type of ellipsoi
 
 If a reference ellipsoid is defined in the georeference tag and then parameters are also given, the given parameters will override those for the chosen reference ellipsoid. 
 
+---
+
 ## Geocoordinates and the Python API
 
-The Python API provides the facility to convert between CARLA coordinates and geocoordinates and also to define new projections. The CARLA [Map object](python_api.md#carlamap) maintains the information about the georeference gathered from the OpenDRIVE header and provides methods for conversion:
+The Python API provides the facility to convert between CARLA coordinates and geocoordinates and also to define projections with custom parameters. The CARLA [Map object](python_api.md#carlamap) maintains the information about the georeference gathered from the OpenDRIVE header and provides methods for conversion:
 
 ```py
 # Retrieve the map object
@@ -125,7 +127,18 @@ carla_map = world.get_map()
 geolocation = carla_map.transform_to_geolocation(carla.Location(10,10,1))
 
 # Convert a carla.Geolocation to a carla.Location
+geolocation = carla.GeoLocation(latitude=41.400779, longitude=2.188103, altitude=0)
 location = carla_map.geolocation_to_transform(geolocation)
+```
+
+The Map object provides methods to inspect the current georeference and geoprojection:
+
+```py
+# Get the georeference
+carla_map.get_georeference() # returns a carla.GeoLocation
+
+# Get the geoprojection
+carla_map.get_geoprojection() # returns a carla.GeoProjection
 ```
 
 ### Custom projection
@@ -148,7 +161,6 @@ Then to define a projection, use the relevant GeoProjection object:
 | Lambert Conformal Conic 2SP | carla.GeoProjectionLCC2SP |
 
 ```py
-geoellipsoid = carla.GeoEllipsoid(a=6378137.0, f_inv=297.0)
 geoprojection = carla.GeoProjectionTM(lat_0=41.400779, lon_0=2.188103, k=1.0, ellps=geoellipsoid)
 ```
 
