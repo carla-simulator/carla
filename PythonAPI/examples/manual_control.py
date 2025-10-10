@@ -1201,10 +1201,7 @@ class CameraManager(object):
     def get_post_process_profile(self, map_name: str) -> str:
         if "Town10HD_Opt" in map_name:
             return "Town10HD_Opt"
-        elif "Town15" in map_name:
-            return "Town15"
-        return "default"
-
+        return "Default"
 
     @staticmethod
     def _parse_image(weak_self, image):
