@@ -1148,7 +1148,7 @@ Constructor for this class.
 ---
 
 ## carla.GeoProjectionWebMerc<a name="carla.GeoProjectionWebMerc"></a>
-Class defining the Web Mercator map projection.  
+Class defining the Web Mercator map projection. Since the Web Mercator assumes a spherical earth, only the *a* parameter is relevant for the provided ellipsoid.  
 
 ### Instance Variables
 - <a name="carla.GeoProjectionWebMerc.ellps"></a>**<font color="#f8805a">ellps</font>** (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_)  
@@ -1881,7 +1881,7 @@ Returns a list of locations with all crosswalk zones in the form of closed polyg
     - **Return:** _list([carla.Location](#carla.Location))_  
 - <a name="carla.Map.get_geoprojection"></a>**<font color="#7fb800">get_geoprojection</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the geoprojection defined for the map through the OpenDRIVE metadata.  
-    - **Return:** _[carla.GeoProjectionLCC2SP](#carla.GeoProjectionLCC2SP), [carla.GeoProjectionTM](#carla.GeoProjectionTM), [carla.GeoProjectionUTM](#carla.GeoProjectionUTM), [carla.GeoProjectionWebMerc](#carla.GeoProjectionWebMerc)_  
+    - **Return:** _one of [carla.GeoProjectionLCC2SP](#carla.GeoProjectionLCC2SP), [carla.GeoProjectionTM](#carla.GeoProjectionTM), [carla.GeoProjectionUTM](#carla.GeoProjectionUTM), [carla.GeoProjectionWebMerc](#carla.GeoProjectionWebMerc)_  
 - <a name="carla.Map.get_georeference"></a>**<font color="#7fb800">get_georeference</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the [carla.GeoLocation](#carla.GeoLocation) of the center of the map.  
     - **Return:** _[carla.GeoLocation](#carla.GeoLocation)_  

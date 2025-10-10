@@ -56,8 +56,6 @@ Each map projection requires a specific set of parameters defined in the OpenDRI
 | `+b`  | Semi-major axis of the ellipsoid model |
 | `+f`  | Flattening of the ellipsoid model (a-b)/a |
 | `+f_inv`  | Inverse flattening of the ellipsoid model 1/f |
-| `x_0` | False Easting offset |
-| `y_0` | False Northing offset |
 
 ### Web mercator
 
@@ -176,6 +174,7 @@ carla_map = world.get_map()
 geolocation = carla_map.transform_to_geolocation(carla.Location(10,10,1), geoprojection)
 
 # Convert a carla.Geolocation to a carla.Location
+geolocation = carla.GeoLocation(latitude=41.400779, longitude=2.188103, altitude=0)
 location = carla_map.geolocation_to_transform(geolocation, geoprojection)
 ```
 

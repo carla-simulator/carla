@@ -896,7 +896,7 @@
   - class_name: GeoProjectionWebMerc
     # - DESCRIPTION ------------------------
     doc: >
-      Class defining the Web Mercator map projection.
+      Class defining the Web Mercator map projection. Since the Web Mercator assumes a spherical earth, only the *a* parameter is relevant for the provided ellipsoid.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: ellps
