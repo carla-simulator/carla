@@ -4,11 +4,13 @@ CARLA parses a georeference from metadata provided in the OpenDRIVE header that 
 
 A map projection is used to convert between CARLA coordinates and geocoordinates. This projection is used in the GNSS sensor and the `transform_to_geolocation()` and `geolocation_to_transform()` methods of the [Map object](python_api.md#carlamap). The type of projection, a reference ellipsoid along with the geolocation of the center of the map (i.e. X=Y=0) and other parameters associated with the projection are defined in the OpenDRIVE header information in the `<geoReference>` tag in a PROJ.4-style string.
 
-The following is an example of a `<geoReference>` tag provided in an OpenDRIVE file header:
+The following is an example of a `<geoReference>` tag provided in an OpenDRIVE file header. Details on the meaning of each parameter are given in the following sections:
 
 ```xml
 <geoReference><![CDATA[+proj=tmerc +lat_0=0 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84]]></geoReference>
 ```
+
+The georeference defined in the OpenDRIVE and geoprojection can be queried through the CARLA Python API using the `get_georeference()` and `get_geoprojection()` methods of the [Map object](python_api.md#carlamap).
 
 ---
 
@@ -29,7 +31,7 @@ Each map projection requires a specific set of parameters defined in the OpenDRI
 
 | Parameter | Description |
 |-----------|-------------|
-| `+proj`   | Type of map projection to use |
+| `+proj`   | `tmerc` |
 | `+ellps`  | [Reference ellipsoid](#reference-ellipsoid) used to model the Earth's shape |
 | `+lat_0`  | Latitude value for the origin of the map |
 | `+lon_0`  | Longitude value for the origin of the map |
@@ -45,7 +47,7 @@ Each map projection requires a specific set of parameters defined in the OpenDRI
 
 | Parameter | Description |
 |-----------|-------------|
-| `+proj`   | Type of map projection to use |
+| `+proj`   | `utm` |
 | `+ellps`  | [Reference ellipsoid](#reference-ellipsoid) used to model the Earth's shape |
 | `+zone`  | Defines the longitudinal zone for the UTM projection (1-60) |
 | `+north`  | Defines the geolocation as in the Northern hemisphere (default) |
@@ -63,7 +65,7 @@ The Web mercator assumes a spherical Earth, therefore only the **a** parameter, 
 
 | Parameter | Description |
 |-----------|-------------|
-| `+proj`   | Type of map projection to use |
+| `+proj`   | `merc` |
 | `+ellps`  | [Reference ellipsoid](#reference-ellipsoid) used to model the Earth's shape |
 | `+a`  | Semi-major axis of the ellipsoid model |
 
@@ -71,7 +73,7 @@ The Web mercator assumes a spherical Earth, therefore only the **a** parameter, 
 
 | Parameter | Description |
 |-----------|-------------|
-| `+proj`   | Type of map projection to use |
+| `+proj`   | `lcc` |
 | `+ellps`  | [Reference ellipsoid](#reference-ellipsoid) used to model the Earth's shape |
 | `+lat_0`  | Latitude value for the origin of the map |
 | `+lat_1`  | Latitude value for the upper latitude limit |
@@ -101,15 +103,15 @@ CARLA supports numerous commonly used reference ellipsoids. The type of ellipsoi
 
 | Ref. ellipsoid | __a__ | __f_inv__ |
 |----------------|-------|-----------|
-| wgs84 (default) | 6378137.0 | 298.257223563 |
-| grs80  | 6378137.0 | 298.257222101 |
-| intl   | 6378388.0 | 297.0 |
-| bessel | 6377397.155 | 299.1528128 |
-| clrk66 | 6378206.4 | 294.9786982138 |
-| airy   | 6377563.396 | 299.3249646 |
-| wgs72  | 6378135.0 | 298.26 |
-| wgs66  | 6378145.0 | 298.25 |
-| sphere | 6370997.0 | inf |
+| `wgs84` (default) | 6378137.0 | 298.257223563 |
+| `grs80`  | 6378137.0 | 298.257222101 |
+| `intl`   | 6378388.0 | 297.0 |
+| `bessel` | 6377397.155 | 299.1528128 |
+| `clrk66` | 6378206.4 | 294.9786982138 |
+| `airy`   | 6377563.396 | 299.3249646 |
+| `wgs72`  | 6378135.0 | 298.26 |
+| `wgs66`  | 6378145.0 | 298.25 |
+| `sphere` | 6370997.0 | inf |
 
 If a reference ellipsoid is defined in the georeference tag and then parameters are also given, the given parameters will override those for the chosen reference ellipsoid. 
 
