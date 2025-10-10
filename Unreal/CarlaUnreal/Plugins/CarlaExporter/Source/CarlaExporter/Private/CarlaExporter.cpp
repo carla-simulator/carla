@@ -119,12 +119,7 @@ void FCarlaExporterModule::PluginButtonClicked()
           if (ActorName.StartsWith(TEXT("StaticMeshActor")) || ActorName.StartsWith(TEXT("Actor_")))
           {
             ClassificationName = MeshName;
-            GenericNameCount++;
             UE_LOG(LogTemp, Warning, TEXT("Generic actor name found: '%s', using mesh name: '%s'"), *ActorName, *MeshName);
-          }
-          else
-          {
-            SpecificNameCount++;
           }
         }
       }
