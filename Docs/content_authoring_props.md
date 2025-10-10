@@ -38,11 +38,11 @@ Now that we have an asset in FBX format, we can import it into the CARLA content
 
 ## Add the new prop to the JSON configuration file
 
-To register the asset as a prop and use it through the CARLA API, we need to include it in the configuration file `Default.Package.json` in the `${CARLA_ROOT}/Unreal/CarlaUnreal/Content/Carla/Config` directory. Add a new entry in this file matching the format of the existing entries, locating the static mesh file that you imported (you can double check the path by hovering over the imported asset in the content browser). Choose a memorable name for the asset and add it to the `name` field:
+To register the asset as a prop and use it through the CARLA API, we need to include it in the configuration file `.PropParameters.json` in the `${CARLA_ROOT}/Unreal/CarlaUnreal/Content/Carla/Config` directory. Add a new entry in this file matching the format of the existing entries, locating the static mesh file that you imported (you can double check the path by hovering over the imported asset in the content browser). Choose a memorable name for the asset and add it to the `name` field:
 
 ```json
 {
-	"props": [
+	"Props": [
 		{
 			"name": "ATM",
 			"path": "/Game/Carla/Static/Static/SM_Atm.SM_Atm",
@@ -66,7 +66,7 @@ To register the asset as a prop and use it through the CARLA API, we need to inc
 
 Start the CARLA simulation Unreal Engine editor with the play command. Once it is running, open a Python script or notebook. The new prop will be assigned the blueprint ID `static.prop.policebarrier` (i.e. `static.prop.<name_lower_case>`).
 
-Filter for the name you entered in the name field in `Default.Package.json` in lower case and you will find a new blueprint ID for your new prop:
+Filter for the name you entered in the name field in `PropParameters.json` in lower case and you will find a new blueprint ID for your new prop:
 
 ```py
 import carla

@@ -18,7 +18,7 @@ nav:
 - Next steps:
   #- 'Content authoring - maps': 'tuto_content_authoring_maps.md'  
   - 'Content authoring - vehicles': 'tuto_content_authoring_vehicles.md'  
-  #- 'Content authoring - props': 'content_authoring_props.md' 
+  - 'Content authoring - props': 'content_authoring_props.md' 
 
 - CARLA topics:
   - 'Foundations': 'foundations.md'
