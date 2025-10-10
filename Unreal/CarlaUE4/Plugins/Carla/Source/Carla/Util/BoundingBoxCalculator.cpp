@@ -56,15 +56,14 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
     auto Character = Cast<ACharacter>(Actor);
     if (Character != nullptr)
     {
-      auto Capsule = Character->GetCapsuleComponent();
-      if (Capsule != nullptr)
+      UActorComponent *ActorComp = Character->GetComponentByClass(USkeletalMeshComponent::StaticClass());
+      USkeletalMeshComponent* ParentComp = Cast<USkeletalMeshComponent>(ActorComp);
+
+      if (ParentComp != nullptr)
       {
-        const auto Radius = Capsule->GetScaledCapsuleRadius();
-        const auto HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
-        // Characters have the pivot point centered.
-        FVector Origin = {0.0f, 0.0f, 0.0f};
-        FVector Extent = {Radius, Radius, HalfHeight};
-        return {Origin, Extent};
+        FBoundingBox Box = GetSkeletalMeshBoundingBoxFromComponent(ParentComp);
+
+        return Box;
       }
     }
     // Traffic sign.
@@ -201,19 +200,15 @@ FBoundingBox UBoundingBoxCalculator::GetCharacterBoundingBox(
   bool FilterByTag = TagQueried == crp::CityObjectLabel::Any ||
                      TagQueried == crp::CityObjectLabel::Pedestrians;
 
-  UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
+  UActorComponent *ActorComp = Character->GetComponentByClass(USkeletalMeshComponent::StaticClass());
+  USkeletalMeshComponent* ParentComp = Cast<USkeletalMeshComponent>(ActorComp);
 
-
-  if (Capsule && FilterByTag)
+  if (ParentComp && FilterByTag)
   {
-    const float Radius = Capsule->GetScaledCapsuleRadius();
-    const float HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
-    FBoundingBox BoundingBox;
-    // Characters have the pivot point centered.
-    BoundingBox.Origin = {0.0f, 0.0f, 0.0f};
-    BoundingBox.Extent = {Radius, Radius, HalfHeight};
-    // Component-to-world transform for this component
-    auto CompToWorldTransform = Capsule->GetComponentTransform();
+    FBoundingBox BoundingBox = GetSkeletalMeshBoundingBoxFromComponent(ParentComp);
+
+    auto& CompToWorldTransform = ParentComp->GetComponentTransform();
+
     BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
 
     return BoundingBox;
@@ -255,6 +250,29 @@ void UBoundingBoxCalculator::GetTrafficLightBoundingBox(
     OutBB.Emplace(BB);
     OutTag.Emplace(Tag);
   }
+}
+
+FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBoxFromComponent(
+  const USkeletalMeshComponent* SkeletalMeshComp
+)
+{
+  if(!SkeletalMeshComp || !SkeletalMeshComp->SkeletalMesh)
+  {
+    UE_LOG(LogCarla, Error, TEXT("GetSkeletalMeshBoundingBoxFromComponent no SkeletalMeshComponent or SkeletalMesh"));
+    return {};
+  }
+
+  // Force update bounds
+  const_cast<USkeletalMeshComponent*>(SkeletalMeshComp)->UpdateBounds();
+  
+  // Get the AABB in local space (component space)
+  FBox LocalBox = SkeletalMeshComp->CalcBounds(FTransform::Identity).GetBox();
+  
+  // Extract extent in local space and set origin to zero
+  FVector Origin = {0.0f, 0.0f, 0.0f};
+  FVector Extent = LocalBox.GetExtent();
+
+  return {Origin, Extent};
 }
 
 // TODO: update to calculate current animation pose

@@ -6,6 +6,7 @@
 
 #include <carla/geom/BoundingBox.h>
 #include <carla/geom/GeoLocation.h>
+#include <carla/geom/GeoProjectionsParams.h>
 #include <carla/geom/Location.h>
 #include <carla/geom/Rotation.h>
 #include <carla/geom/Transform.h>
@@ -283,5 +284,53 @@ void export_geom() {
     .def("__eq__", &cg::GeoLocation::operator==)
     .def("__ne__", &cg::GeoLocation::operator!=)
     .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::Ellipsoid>("GeoEllipsoid")
+    .def(init<double, double>((arg("a")=6378137.0, arg("f_inv")=std::numeric_limits<double>::infinity())))
+    .def_readwrite("a", &cg::Ellipsoid::a)
+    .def_readwrite("f_inv", &cg::Ellipsoid::f_inv)
+    .def("__eq__", &cg::Ellipsoid::operator==)
+    .def("__ne__", &cg::Ellipsoid::operator!=)
+  ;
+
+  class_<cg::TransverseMercatorParams>("GeoProjectionTM")
+    .def(init<double, double, double, double, double, cg::Ellipsoid>(
+      (arg("lat_0")=0.0, arg("lon_0")=0.0, arg("k")=1.0, arg("x_0")=0.0, arg("y_0")=0.0, arg("ellps")=cg::Ellipsoid())))
+    .def_readwrite("lat_0", &cg::TransverseMercatorParams::lat_0)
+    .def_readwrite("lon_0", &cg::TransverseMercatorParams::lon_0)
+    .def_readwrite("k", &cg::TransverseMercatorParams::k)
+    .def_readwrite("x_0", &cg::TransverseMercatorParams::x_0)
+    .def_readwrite("y_0", &cg::TransverseMercatorParams::y_0)
+    .def("__eq__", &cg::TransverseMercatorParams::operator==)
+    .def("__ne__", &cg::TransverseMercatorParams::operator!=)
+  ;
+
+  class_<cg::UniversalTransverseMercatorParams>("GeoProjectionUTM")
+    .def(init<int, bool, cg::Ellipsoid>((arg("zone")=31, arg("north")=true, arg("ellps")=cg::Ellipsoid())))
+    .def_readwrite("zone", &cg::UniversalTransverseMercatorParams::zone)
+    .def_readwrite("north", &cg::UniversalTransverseMercatorParams::north)
+    .def("__eq__", &cg::UniversalTransverseMercatorParams::operator==)
+    .def("__ne__", &cg::UniversalTransverseMercatorParams::operator!=)
+  ;
+
+  class_<cg::WebMercatorParams>("GeoProjectionWebMerc")
+    .def(init<cg::Ellipsoid>((arg("ellps")=cg::Ellipsoid())))
+    .def_readwrite("ellps", &cg::WebMercatorParams::ellps)
+    .def("__eq__", &cg::WebMercatorParams::operator==)
+    .def("__ne__", &cg::WebMercatorParams::operator!=)
+  ;
+
+  class_<cg::LambertConformalConicParams>("GeoProjectionLCC2SP")
+    .def(init<double, double, double, double, double, double, cg::Ellipsoid>(
+      (arg("lat_0")=0.0, arg("lat_1")=0.0, arg("lat_2")=0.0, arg("lon_0")=0.0, arg("x_0")=0.0, arg("y_0")=0.0, arg("ellps")=cg::Ellipsoid())))
+    .def_readwrite("lat_0", &cg::LambertConformalConicParams::lat_0)
+    .def_readwrite("lat_1", &cg::LambertConformalConicParams::lat_1)
+    .def_readwrite("lat_2", &cg::LambertConformalConicParams::lat_2)
+    .def_readwrite("lon_0", &cg::LambertConformalConicParams::lon_0)
+    .def_readwrite("x_0", &cg::LambertConformalConicParams::x_0)
+    .def_readwrite("y_0", &cg::LambertConformalConicParams::y_0)
+    .def("__eq__", &cg::LambertConformalConicParams::operator==)
+    .def("__ne__", &cg::LambertConformalConicParams::operator!=)
   ;
 }

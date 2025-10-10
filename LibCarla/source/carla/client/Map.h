@@ -74,6 +74,8 @@ namespace client {
 
     const geom::GeoLocation &GetGeoReference() const;
 
+    const geom::GeoProjection &GetGeoProjection() const;
+
     std::vector<geom::Location> GetAllCrosswalkZones() const;
 
     SharedPtr<Junction> GetJunction(const Waypoint &waypoint) const;

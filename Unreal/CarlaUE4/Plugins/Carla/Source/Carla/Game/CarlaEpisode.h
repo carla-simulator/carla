@@ -132,9 +132,9 @@ public:
   TArray<FTransform> GetRecommendedSpawnPoints() const;
 
   /// Return the GeoLocation point of the map loaded
-  const carla::geom::GeoLocation &GetGeoReference() const
+  const carla::geom::GeoProjection &GetGeoProjection() const
   {
-    return MapGeoReference;
+    return MapGeoProjection;
   }
 
   // ===========================================================================
@@ -397,7 +397,7 @@ private:
 
   ACarlaRecorder *Recorder = nullptr;
 
-  carla::geom::GeoLocation MapGeoReference;
+  carla::geom::GeoProjection MapGeoProjection;
 
   FIntVector CurrentMapOrigin;
 

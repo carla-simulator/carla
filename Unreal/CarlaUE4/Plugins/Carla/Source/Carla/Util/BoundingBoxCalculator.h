@@ -50,6 +50,9 @@ public:
     uint8 InTagQueried = 0xFF);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
+  static FBoundingBox GetSkeletalMeshBoundingBoxFromComponent(const USkeletalMeshComponent* SkeletalMeshComp);
+  
+  UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static FBoundingBox GetSkeletalMeshBoundingBox(const USkeletalMesh* SkeletalMesh);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)

@@ -13,9 +13,20 @@
 #include <carla/client/Landmark.h>
 #include <carla/client/RoadMark.h>
 #include <carla/road/SignalType.h>
+#include <carla/geom/GeoProjectionsParams.h>
 
 #include <ostream>
 #include <fstream>
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4583)
+#pragma warning(disable:4582)
+#include <boost/variant2/variant.hpp>
+#pragma warning(pop)
+#else
+#include <boost/variant2/variant.hpp>
+#endif
 
 namespace carla {
 namespace client {
@@ -53,6 +64,17 @@ static auto GetTopology(const carla::client::Map &self) {
   return result;
 }
 
+static carla::geom::GeoLocation GetGeoReference(const carla::client::Map &self) {
+  return self.GetGeoReference();
+}
+
+static auto GetGeoProjection(const carla::client::Map &self) {
+  const auto &variant = self.GetGeoProjection().params;
+
+  return boost::variant2::visit([](const auto &params) -> boost::python::object {
+    return boost::python::object(params);}, variant);
+}
+
 static auto GetJunctionWaypoints(const carla::client::Junction &self, const carla::road::Lane::LaneType lane_type) {
   namespace py = boost::python;
   auto topology = self.GetWaypoints(lane_type);
@@ -76,14 +98,71 @@ static auto GetLaneValidities(const carla::client::Landmark &self){
 static carla::geom::Location ToTransform(
     const carla::client::Map &self,
     const carla::geom::GeoLocation& geo_location) {
-  return self.GetGeoReference().GeoLocationToTransform(geo_location);
+  return self.GetGeoProjection().GeoLocationToTransform(geo_location);
+}
+
+static carla::geom::Location ToTransformTM(
+  const carla::client::Map &self,
+  const carla::geom::GeoLocation& geo_location,
+  const carla::geom::TransverseMercatorParams& params) {
+return self.GetGeoProjection().GeoLocationToTransformTransverseMercator(geo_location, params);
+}
+
+static carla::geom::Location ToTransformUTM(
+  const carla::client::Map &self,
+  const carla::geom::GeoLocation& geo_location,
+  const carla::geom::UniversalTransverseMercatorParams& params) {
+return self.GetGeoProjection().GeoLocationToTransformUniversalTransverseMercator(geo_location, params);
+}
+
+static carla::geom::Location ToTransformWebMerc(
+  const carla::client::Map &self,
+  const carla::geom::GeoLocation& geo_location,
+  const carla::geom::WebMercatorParams& params) {
+return self.GetGeoProjection().GeoLocationToTransformWebMercator(geo_location, params);
+}
+
+static carla::geom::Location ToTransformLCC2SP(
+  const carla::client::Map &self,
+  const carla::geom::GeoLocation& geo_location,
+  const carla::geom::LambertConformalConicParams& params) {
+return self.GetGeoProjection().GeoLocationToTransformLambertConformalConic(geo_location, params);
 }
 
 static carla::geom::GeoLocation ToGeolocation(
-    const carla::client::Map &self,
-    const carla::geom::Location &location) {
-  return self.GetGeoReference().Transform(location);
+  const carla::client::Map &self,
+  const carla::geom::Location &location) {
+return self.GetGeoProjection().TransformToGeoLocation(location);
 }
+
+static carla::geom::GeoLocation ToGeolocationTM(
+    const carla::client::Map &self,
+    const carla::geom::Location &location,
+    const carla::geom::TransverseMercatorParams& params) {
+  return self.GetGeoProjection().TransformToGeoLocationTransverseMercator(location, params);
+}
+
+static carla::geom::GeoLocation ToGeolocationUTM(
+  const carla::client::Map &self,
+  const carla::geom::Location &location,
+  const carla::geom::UniversalTransverseMercatorParams& params) {
+  return self.GetGeoProjection().TransformToGeoLocationUniversalTransverseMercator(location, params);
+}
+
+static carla::geom::GeoLocation ToGeolocationWebMerc(
+  const carla::client::Map &self,
+  const carla::geom::Location &location,
+  const carla::geom::WebMercatorParams& params) {
+  return self.GetGeoProjection().TransformToGeoLocationWebMercator(location, params);
+}
+
+static carla::geom::GeoLocation ToGeolocationLCC2SP(
+  const carla::client::Map &self,
+  const carla::geom::Location &location,
+  const carla::geom::LambertConformalConicParams& params) {
+  return self.GetGeoProjection().TransformToGeoLocationLambertConformalConic(location, params);
+}
+
 
 void export_map() {
   using namespace boost::python;
@@ -176,7 +255,17 @@ void export_map() {
     .def("get_topology", &GetTopology)
     .def("generate_waypoints", CALL_RETURNING_LIST_1(cc::Map, GenerateWaypoints, double), (args("distance")))
     .def("transform_to_geolocation", &ToGeolocation, (arg("location")))
+    .def("transform_to_geolocation", &ToGeolocationTM, (arg("location"), arg("projection")))
+    .def("transform_to_geolocation", &ToGeolocationUTM, (arg("location"), arg("projection")))
+    .def("transform_to_geolocation", &ToGeolocationWebMerc, (arg("location"), arg("projection")))
+    .def("transform_to_geolocation", &ToGeolocationLCC2SP, (arg("location"), arg("projection")))
     .def("geolocation_to_transform", &ToTransform, (arg("geo_location")))
+    .def("geolocation_to_transform", &ToTransformTM, (arg("geo_location"), args("projection")))
+    .def("geolocation_to_transform", &ToTransformUTM, (arg("geo_location"), args("projection")))
+    .def("geolocation_to_transform", &ToTransformWebMerc, (arg("geo_location"), args("projection")))
+    .def("geolocation_to_transform", &ToTransformLCC2SP, (arg("geo_location"), args("projection")))
+    .def("get_georeference", &GetGeoReference)
+    .def("get_geoprojection", &GetGeoProjection)
     .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
     .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))
     .def("get_crosswalks", CALL_RETURNING_LIST(cc::Map, GetAllCrosswalkZones))

@@ -96,7 +96,7 @@ private:
 
   // GNSS reference position and heading
   FVector GetReferencePosition();
-  carla::geom::GeoLocation CurrentGeoReference;
+  carla::geom::GeoProjection CurrentGeoProjection;
   float LatitudeDeviation;
   float LongitudeDeviation;
   float AltitudeDeviation;
