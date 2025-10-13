@@ -134,144 +134,134 @@ void TrafficManagerLocal::SetupLocalMap() {
 
 void TrafficManagerLocal::Start() {
   run_traffic_manger.store(true);
-  worker_thread = std::make_unique<std::thread>(&TrafficManagerLocal::Run, this);
-}
-
-void TrafficManagerLocal::Run() {
 
   localization_frame.reserve(INITIAL_SIZE);
   collision_frame.reserve(INITIAL_SIZE);
   tl_frame.reserve(INITIAL_SIZE);
   control_frame.reserve(INITIAL_SIZE);
   current_reserved_capacity = INITIAL_SIZE;
+  
+  bool synchronous_mode = parameters.GetSynchronousMode();
+  if (!synchronous_mode) {
+    worker_thread = std::make_unique<std::thread>(&TrafficManagerLocal::Run, this);
+  }
+}
 
-  size_t last_frame = 0;
-  while (run_traffic_manger.load()) {
+void TrafficManagerLocal::Step() {
+  bool synchronous_mode = parameters.GetSynchronousMode();
+  bool hybrid_physics_mode = parameters.GetHybridPhysicsMode();
+  parameters.SetMaxBoundaries(20.0f, episode_proxy.Lock()->GetEpisodeSettings().actor_active_distance);
 
-    bool synchronous_mode = parameters.GetSynchronousMode();
-    bool hybrid_physics_mode = parameters.GetHybridPhysicsMode();
-    parameters.SetMaxBoundaries(20.0f, episode_proxy.Lock()->GetEpisodeSettings().actor_active_distance);
+  // Skipping velocity update if elapsed time is less than 0.05s in asynchronous, hybrid mode.
+  if (!synchronous_mode && hybrid_physics_mode) {
+    TimePoint current_instance = chr::system_clock::now();
+    chr::duration<float> elapsed_time = current_instance - previous_update_instance;
+    chr::duration<float> time_to_wait = chr::duration<float>(HYBRID_MODE_DT) - elapsed_time;
+    if (time_to_wait > chr::duration<float>(0.0f)) {
+      std::this_thread::sleep_for(time_to_wait);
+    }
+    previous_update_instance = current_instance;
+  }
 
-    // Wait for external trigger to initiate cycle in synchronous mode.
-    if (synchronous_mode) {
-      std::unique_lock<std::mutex> lock(step_execution_mutex);
-      step_begin_trigger.wait(lock, [this]() {return step_begin.load() || !run_traffic_manger.load();});
-      step_begin.store(false);
+  // Stop TM from processing the same frame more than once
+  if (!synchronous_mode) {
+    carla::client::Timestamp timestamp = world.GetSnapshot().GetTimestamp();
+    if (timestamp.frame == last_frame) {
+      return;
+    }
+    last_frame = timestamp.frame;
+  }
+
+  std::unique_lock<std::mutex> registration_lock(registration_mutex);
+  // Updating simulation state, actor life cycle and performing necessary cleanup.
+  alsm.Update();
+
+  // Re-allocating inter-stage communication frames based on changed number of registered vehicles.
+  int current_registered_vehicles_state = registered_vehicles.GetState();
+  unsigned long number_of_vehicles = vehicle_id_list.size();
+  if (registered_vehicles_state != current_registered_vehicles_state || number_of_vehicles != registered_vehicles.Size()) {
+    vehicle_id_list = registered_vehicles.GetIDList();
+    number_of_vehicles = vehicle_id_list.size();
+
+    // Reserve more space if needed.
+    uint64_t growth_factor = static_cast<uint64_t>(static_cast<float>(number_of_vehicles) * INV_GROWTH_STEP_SIZE);
+    uint64_t new_frame_capacity = INITIAL_SIZE + GROWTH_STEP_SIZE * growth_factor;
+    if (new_frame_capacity > current_reserved_capacity) {
+      localization_frame.reserve(new_frame_capacity);
+      collision_frame.reserve(new_frame_capacity);
+      tl_frame.reserve(new_frame_capacity);
+      control_frame.reserve(new_frame_capacity);
     }
 
-    // Skipping velocity update if elapsed time is less than 0.05s in asynchronous, hybrid mode.
-    if (!synchronous_mode && hybrid_physics_mode) {
-      TimePoint current_instance = chr::system_clock::now();
-      chr::duration<float> elapsed_time = current_instance - previous_update_instance;
-      chr::duration<float> time_to_wait = chr::duration<float>(HYBRID_MODE_DT) - elapsed_time;
-      if (time_to_wait > chr::duration<float>(0.0f)) {
-        std::this_thread::sleep_for(time_to_wait);
-      }
-      previous_update_instance = current_instance;
-    }
+    registered_vehicles_state = registered_vehicles.GetState();
+  }
 
-    // Stop TM from processing the same frame more than once
-    if (!synchronous_mode) {
-      carla::client::Timestamp timestamp = world.GetSnapshot().GetTimestamp();
-      if (timestamp.frame == last_frame) {
-        continue;
-      }
-      last_frame = timestamp.frame;
-    }
+  // Reset frames for current cycle.
+  localization_frame.clear();
+  localization_frame.resize(number_of_vehicles);
+  collision_frame.clear();
+  collision_frame.resize(number_of_vehicles);
+  tl_frame.clear();
+  tl_frame.resize(number_of_vehicles);
+  control_frame.clear();
+  // Reserve two frames for each vehicle: one for the ApplyVehicleControl command,
+  // and one for the optional SetVehicleLightState command
+  control_frame.reserve(2 * number_of_vehicles);
+  // Resize to accomodate at least all ApplyVehicleControl commands,
+  // that will be inserted by the motion_plan_stage stage.
+  control_frame.resize(number_of_vehicles);
 
-    std::unique_lock<std::mutex> registration_lock(registration_mutex);
-    // Updating simulation state, actor life cycle and performing necessary cleanup.
-    alsm.Update();
+  // Run core operation stages.
+  for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
+    localization_stage.Update(index);
+  }
+  for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
+    collision_stage.Update(index);
+  }
+  collision_stage.ClearCycleCache();
+  vehicle_light_stage.UpdateWorldInfo();
+  for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
+    traffic_light_stage.Update(index);
+    motion_plan_stage.Update(index);
+    vehicle_light_stage.Update(index);
+  }
 
-    // Re-allocating inter-stage communication frames based on changed number of registered vehicles.
-    int current_registered_vehicles_state = registered_vehicles.GetState();
-    unsigned long number_of_vehicles = vehicle_id_list.size();
-    if (registered_vehicles_state != current_registered_vehicles_state || number_of_vehicles != registered_vehicles.Size()) {
-      vehicle_id_list = registered_vehicles.GetIDList();
-      number_of_vehicles = vehicle_id_list.size();
+  registration_lock.unlock();
 
-      // Reserve more space if needed.
-      uint64_t growth_factor = static_cast<uint64_t>(static_cast<float>(number_of_vehicles) * INV_GROWTH_STEP_SIZE);
-      uint64_t new_frame_capacity = INITIAL_SIZE + GROWTH_STEP_SIZE * growth_factor;
-      if (new_frame_capacity > current_reserved_capacity) {
-        localization_frame.reserve(new_frame_capacity);
-        collision_frame.reserve(new_frame_capacity);
-        tl_frame.reserve(new_frame_capacity);
-        control_frame.reserve(new_frame_capacity);
-      }
-
-      registered_vehicles_state = registered_vehicles.GetState();
-    }
-
-    // Reset frames for current cycle.
-    localization_frame.clear();
-    localization_frame.resize(number_of_vehicles);
-    collision_frame.clear();
-    collision_frame.resize(number_of_vehicles);
-    tl_frame.clear();
-    tl_frame.resize(number_of_vehicles);
-    control_frame.clear();
-    // Reserve two frames for each vehicle: one for the ApplyVehicleControl command,
-    // and one for the optional SetVehicleLightState command
-    control_frame.reserve(2 * number_of_vehicles);
-    // Resize to accomodate at least all ApplyVehicleControl commands,
-    // that will be inserted by the motion_plan_stage stage.
-    control_frame.resize(number_of_vehicles);
-
-    // Run core operation stages.
-    for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
-      localization_stage.Update(index);
-    }
-    for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
-      collision_stage.Update(index);
-    }
-    collision_stage.ClearCycleCache();
-    vehicle_light_stage.UpdateWorldInfo();
-    for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
-      traffic_light_stage.Update(index);
-      motion_plan_stage.Update(index);
-      vehicle_light_stage.Update(index);
-    }
-
-    registration_lock.unlock();
-
-    // Sending the current cycle's batch command to the simulator.
-    if (synchronous_mode) {
+  // Sending the current cycle's batch command to the simulator.
+  if (synchronous_mode) {
+    episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
+  } else {
+    if (control_frame.size() > 0){
       episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
-      step_end.store(true);
-      step_end_trigger.notify_one();
-    } else {
-      if (control_frame.size() > 0){
-        episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
-      }
     }
+  }
+}
+
+void TrafficManagerLocal::Run() {
+  while (run_traffic_manger.load() && !parameters.GetSynchronousMode()) {
+    Step();
   }
 }
 
 bool TrafficManagerLocal::SynchronousTick() {
   if (parameters.GetSynchronousMode()) {
-    step_begin.store(true);
-    step_begin_trigger.notify_one();
-
-    std::unique_lock<std::mutex> lock(step_execution_mutex);
-    step_end_trigger.wait(lock, [this]() { return step_end.load(); });
-    step_end.store(false);
+    Step();  // Do one step of TM.
   }
   return true;
 }
 
 void TrafficManagerLocal::Stop() {
-
   run_traffic_manger.store(false);
-  if (parameters.GetSynchronousMode()) {
-    step_begin_trigger.notify_one();
-  }
 
-  if (worker_thread) {
-    if (worker_thread->joinable()) {
-      worker_thread->join();
+  bool synchronous_mode = parameters.GetSynchronousMode();
+  if (!synchronous_mode) {
+    if (worker_thread) {
+      if (worker_thread->joinable()) {
+        worker_thread->join();
+      }
+      worker_thread.reset();
     }
-    worker_thread.release();
   }
 
   vehicle_id_list.clear();
@@ -294,8 +284,6 @@ void TrafficManagerLocal::Stop() {
   control_frame.clear();
 
   run_traffic_manger.store(true);
-  step_begin.store(false);
-  step_end.store(false);
 }
 
 void TrafficManagerLocal::Release() {
@@ -466,11 +454,25 @@ bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {
 }
 
 void TrafficManagerLocal::SetSynchronousMode(bool mode) {
-  const bool previous_mode = parameters.GetSynchronousMode();
+  const bool previously_synchronous = parameters.GetSynchronousMode();
   parameters.SetSynchronousMode(mode);
-  if (previous_mode && !mode) {
-    step_begin.store(true);
-    step_begin_trigger.notify_one();
+  if (mode == previously_synchronous) { // Same mode as before, do nothing.
+    return;
+  }
+
+  if (!previously_synchronous) {  // Switch from async to synchronous
+    if (worker_thread) {
+      if (worker_thread->joinable()) {
+        worker_thread->join();
+      }
+      worker_thread.reset();
+    }
+  }
+  else { // Switch from synchronous to async, start worker thread again.
+    if (worker_thread) {
+      std::cout << "Error: Worker thread exists but should not." << std::endl;
+    }
+    worker_thread = std::make_unique<std::thread>(&TrafficManagerLocal::Run, this);
   }
 }
 
