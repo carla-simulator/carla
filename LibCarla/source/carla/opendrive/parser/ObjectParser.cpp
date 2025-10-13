@@ -36,7 +36,7 @@ namespace parser {
           std::string name_lower = name;
           std::transform(name_lower.begin(), name_lower.end(), name_lower.begin(),
             [](unsigned char c){ return std::tolower(c); });
-          if (type == "crosswalk" || (name_lower.find("crosswalk") != std::string::npos) {
+          if (type == "crosswalk" || name_lower.find("crosswalk") != std::string::npos) {
             // read all points
             pugi::xml_node node_outline = node_object.child("outline");
             if (node_outline) {
