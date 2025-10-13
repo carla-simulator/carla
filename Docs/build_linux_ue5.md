@@ -1,7 +1,7 @@
 # Building CARLA in Linux with Unreal Engine 5.5
 
 !!! note
-        The Unreal Engine 5 version of CARLA requires Ubuntu version 22.04 at minimum. It has not been configured to build on older Ubuntu versions.
+    The Unreal Engine 5 version of CARLA requires Ubuntu version 22.04 at minimum. It has not been configured to build on older Ubuntu versions.
 
 * __[Set up the environment](#set-up-the-environment)__  
 * __[Build and run CARLA UE5](#build-and-run-carla-ue5)__  
@@ -52,8 +52,8 @@ cd CarlaUE5
 sudo -E env GIT_LOCAL_CREDENTIALS=github_username@github_token ./CarlaSetup.sh 
 ```
 
-!!! Note
-        The setup script will install by default Python 3 using apt. If you want to target an existing Python installation, you should use the `--python-root=PATH_TO_PYTHON` argument with the relevant Python installation path. You can use whereis python3 in your chosen environment and strip the `/python3` suffix from the path.
+!!! note
+    The setup script will install by default Python 3 using apt. If you want to target an existing Python installation, you should use the `--python-root=PATH_TO_PYTHON` argument with the relevant Python installation path. You can use whereis python3 in your chosen environment and strip the `/python3` suffix from the path.
 
 The CarlaSetup.sh script installs all the required packages, including Cmake, debian packages, Python packages and Unreal Engine 5.5 and sets up the necessary environment variables. It also downloads the CARLA content.
 
@@ -61,11 +61,11 @@ Once this is complete, the script will launch the CARLA Unreal Engine 5 editor. 
 
 The setup script should only be run the first time that you set up the build. Subsequently, when rebuilding, you should use the commands in the following section.
 
-!!! Note
-        * This version of CARLA requires the **CARLA fork of Unreal Engine 5.5**. You need to link your GitHub account to Epic Games in order to gain permission to clone the UE repository. If you have not already linked your accounts, follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github)
-        * For using CARLA Unreal Engine 5 previous builds, **ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined** pointing to the CARLA Unreal Engine 5.5 absolute path. If this variable is not defined, the CarlaSetup.sh script will download and build CARLA Unreal Engine 5 and **this takes more than 1 extra hour of build and 225Gb of disk space**.
-        * The CarlaSetup.sh script checks if there is any Python installed at the top of the PATH variable, and installs Python otherwise. **To use your own version of Python, ensure that the PATH variable is properly set for Python before running the script**.
-        * CARLA cannot be built on an external disk, Ubuntu is not giving the required read/write/execution permissions for builds.
+!!! note
+    * This version of CARLA requires the **CARLA fork of Unreal Engine 5.5**. You need to link your GitHub account to Epic Games in order to gain permission to clone the UE repository. If you have not already linked your accounts, follow [this guide](https://www.unrealengine.com/en-US/ue4-on-github)
+    * For using CARLA Unreal Engine 5 previous builds, **ensure CARLA_UNREAL_ENGINE_PATH environment variable is defined** pointing to the CARLA Unreal Engine 5.5 absolute path. If this variable is not defined, the CarlaSetup.sh script will download and build CARLA Unreal Engine 5 and **this takes more than 1 extra hour of build and 225Gb of disk space**.
+    * The CarlaSetup.sh script checks if there is any Python installed at the top of the PATH variable, and installs Python otherwise. **To use your own version of Python, ensure that the PATH variable is properly set for Python before running the script**.
+    * CARLA cannot be built on an external disk, Ubuntu is not giving the required read/write/execution permissions for builds.
 
 You may want to follow the setup steps separately, if, for example, you are including additional libraries or if the CarlaSetup.sh script fails for some reason. Please refer to [the extended instructions](#extended-build-instructions) to proceed.
 
@@ -80,7 +80,7 @@ cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUIL
 ```
 
 !!! Note
-        If you intend to target a specific Python installation, you should add both these arguments to the above cmake command: `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH`.
+    If you intend to target a specific Python installation, you should add both these arguments to the above cmake command: `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH`.
 
 
 The command line options are as follows:
@@ -190,7 +190,7 @@ Then build Unreal Engine 5.5:
 ```
 
 !!! note
-        The first time building the Unreal Engine may take up to 3 hours to complete. 
+    The first time building the Unreal Engine may take up to 3 hours to complete. 
 
 Set up an environment variable to indicate the location of the Unreal Engine 5.5. In your `.bashrc` file, add the following line:
 
