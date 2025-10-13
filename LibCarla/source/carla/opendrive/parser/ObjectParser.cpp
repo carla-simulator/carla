@@ -33,18 +33,21 @@ namespace parser {
           // type Crosswalk
           std::string type = node_object.attribute("type").as_string();
           std::string name = node_object.attribute("name").as_string();
-          if (type == "crosswalk") {
-
-              // read all points
-              pugi::xml_node node_outline = node_object.child("outline");
-              if (node_outline) {
-                points.clear();
-                for (pugi::xml_node node_corner : node_outline.children("cornerLocal")) {
-                  points.emplace_back(node_corner.attribute("u").as_double(),
-                                      node_corner.attribute("v").as_double(),
-                                      node_corner.attribute("z").as_double());
-                }
+          std::string name_lower = name;
+          std::transform(name_lower.begin(), name_lower.end(), name_lower.begin(),
+            [](unsigned char c){ return std::tolower(c); });
+          if (type == "crosswalk" || (name_lower.find("crosswalk") != std::string::npos) {
+            // read all points
+            pugi::xml_node node_outline = node_object.child("outline");
+            if (node_outline) {
+              points.clear();
+              for (pugi::xml_node node_corner : node_outline.children("cornerLocal")) {
+                points.emplace_back(node_corner.attribute("u").as_double(),
+                                    node_corner.attribute("v").as_double(),
+                                    node_corner.attribute("z").as_double());
               }
+            }
+
             // get road id
             road::RoadId road_id = node_road.attribute("id").as_uint();
             road::Road *road = map_builder.GetRoad(road_id);
