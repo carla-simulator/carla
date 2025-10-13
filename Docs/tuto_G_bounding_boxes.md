@@ -108,8 +108,7 @@ CARLA objects all have an associated bounding box. CARLA [actors](python_api.md#
 It is important to note that to get the 3D coordinates of the bounding box in world coordinates, you need to include the transform of the actor as an argument to the `get_world_vertices()` method like so:
 
 ```py
-actor.get_world_vertices(actor.get_transform())
-
+actor.bounding_box.get_world_vertices(actor.get_transform())
 ```
 
 For objects in the map like buildings, traffic lights and road signs, the bounding box can be retrieved through the [carla.World]((python_api.md#carla.World)) method `get_level_bbs()`. A [carla.CityObjectLabel]((python_api.md#carla.CityObjectLabel)) can be used as an argument to filter the bounding box list to relevant objects:
