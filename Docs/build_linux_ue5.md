@@ -85,9 +85,9 @@ cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUIL
 
 The command line options are as follows:
 
-**G** - which build system to use
-**S** - source path for CARLA repository
-**B** - directory where the build goes
+* **G** - which build system to use
+* **S** - source path for CARLA repository
+* **B** - directory where the build goes
 
 * Build CARLA:
 

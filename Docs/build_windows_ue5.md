@@ -47,9 +47,9 @@ cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release
 
 The command line options are as follows:
 
-**G** - which build system to use
-**S** - source path for CARLA repository
-**B** - directory where the build goes
+* **G** - which build system to use
+* **S** - source path for CARLA repository
+* **B** - directory where the build goes
 
 CMake preset - aggregate commands into single preset
 
