@@ -5,9 +5,27 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "WalkerBase.h"
+#include "Carla/Game/Tagger.h"
+#include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Game/CarlaStatics.h"
 
 
 AWalkerBase::AWalkerBase(const FObjectInitializer &ObjectInitializer)
         : Super(ObjectInitializer)
 {
+}
+
+void AWalkerBase::TagWheelchair()
+{
+  auto* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+  if (!Episode) {
+    return;
+  }
+
+  FCarlaActor* CarlaActor = Episode->FindCarlaActor(this);
+  if (!CarlaActor){
+    return;
+  } 
+
+  ATagger::TagActor(*this, true, CarlaActor->GetActorId());
 }
