@@ -105,32 +105,15 @@ void FCarlaExporterModule::PluginButtonClicked()
       // check the TAG (NoExport)
       if (TempActor->ActorHasTag(FName("NoExport"))) continue;
 
-      FString ActorName = TempActor->GetName();
-      FString ClassificationName = ActorName;
-      TArray<UActorComponent*> TempComponents;
-      TempActor->GetComponents(UStaticMeshComponent::StaticClass(), TempComponents);
-      if (TempComponents.Num() > 0)
-      {
-        UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(TempComponents[0]);
-        if (SMC && SMC->GetStaticMesh())
-        {
-          FString MeshName = SMC->GetStaticMesh()->GetName();
-          // If actor name is generic (StaticMeshActor, Actor, etc), use mesh name instead
-          if (ActorName.StartsWith(TEXT("StaticMeshActor")) || ActorName.StartsWith(TEXT("Actor_")))
-          {
-            ClassificationName = MeshName;
-            UE_LOG(LogTemp, Warning, TEXT("Generic actor name found: '%s', using mesh name: '%s'"), *ActorName, *MeshName);
-          }
-        }
-      }
+      FString ActorName = TempActor->GetActorLabel();
 
-      if (ClassificationName.Find(TEXT("Road")) != -1 || ClassificationName.Find(TEXT("LaneMarking")) != -1)
+      if (ActorName.Find(TEXT("Road")) != -1)
       {
-        if (ClassificationName.Find(TEXT("Sidewalk")) != -1 || ClassificationName.Find(TEXT("SideWalk")) != -1)
+        if (ActorName.Find(TEXT("Sidewalk")) != -1)
           areaType = AreaType::SIDEWALK;
-        else if (ClassificationName.Find(TEXT("Crosswalk")) != -1 || ClassificationName.Find(TEXT("CrossWalk")) != -1)
+        else if (ActorName.Find(TEXT("Crosswalk")) != -1) != -1)
           areaType = AreaType::CROSSWALK;
-        else if (ClassificationName.Find(TEXT("Grass")) != -1)
+        else if (ActorName.Find(TEXT("Grass")) != -1)
           areaType = AreaType::GRASS;
         else
           areaType = AreaType::ROAD;
