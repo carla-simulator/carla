@@ -125,6 +125,22 @@ string (
   "${CARLA_OPTION_DOCS}\n"
 )
 
+carla_get_targets (CARLA_TARGET_LIST)
+set (CARLA_TARGETS_HELPER_TEXT)
+foreach (CARLA_TARGET ${CARLA_TARGET_LIST})
+  string (
+    APPEND
+    CARLA_TARGETS_HELPER_TEXT
+    "${CARLA_TARGET}: ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${CARLA_TARGET}\n"
+  )
+endforeach ()
+file (
+  WRITE
+  ${CMAKE_CURRENT_BINARY_DIR}/Targets.md
+  ${CARLA_TARGETS_HELPER_TEXT}
+)
+
+
 file (
   WRITE
   ${CMAKE_CURRENT_BINARY_DIR}/Help.md

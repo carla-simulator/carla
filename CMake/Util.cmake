@@ -113,6 +113,15 @@ endfunction ()
 
 
 
+function (carla_get_targets OUT_VAR)
+  get_property (TARGETS GLOBAL PROPERTY CARLA_TARGETS)
+  set (${OUT_VAR} ${TARGETS})
+  return (PROPAGATE ${OUT_VAR})
+endfunction ()
+
+
+
+
 function (carla_add_library NAME DESCRIPTION)
   carla_add_target_docs (
     NAME ${NAME}
@@ -120,6 +129,9 @@ function (carla_add_library NAME DESCRIPTION)
     DOCS_BRIEF ${DESCRIPTION}
   )
   add_library (${NAME} ${ARGN})
+  get_property (TARGETS GLOBAL PROPERTY CARLA_TARGETS)
+  list (APPEND TARGETS ${NAME})
+  set_property (GLOBAL PROPERTY CARLA_TARGETS ${TARGETS})
 endfunction ()
 
 
@@ -131,6 +143,9 @@ function (carla_add_executable NAME DESCRIPTION)
     DOCS_BRIEF ${DESCRIPTION}
   )
   add_executable (${NAME} ${ARGN})
+  get_property (TARGETS GLOBAL PROPERTY CARLA_TARGETS)
+  list (APPEND TARGETS ${NAME})
+  set_property (GLOBAL PROPERTY CARLA_TARGETS ${TARGETS})
 endfunction ()
 
 
@@ -142,6 +157,9 @@ function (carla_add_custom_target NAME DESCRIPTION)
     DOCS_BRIEF ${DESCRIPTION}
   )
   add_custom_target (${NAME} ${ARGN})
+  get_property (TARGETS GLOBAL PROPERTY CARLA_TARGETS)
+  list (APPEND TARGETS ${NAME})
+  set_property (GLOBAL PROPERTY CARLA_TARGETS ${TARGETS})
 endfunction ()
 
 
