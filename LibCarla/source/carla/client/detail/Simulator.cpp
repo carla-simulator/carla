@@ -23,6 +23,7 @@
 
 #include <exception>
 #include <thread>
+#include <chrono>
 
 using namespace std::string_literals;
 
@@ -50,7 +51,7 @@ namespace detail {
     bool result = true;
     auto start = std::chrono::system_clock::now();
     while (frame > episode.GetState()->GetTimestamp().frame) {
-      std::this_thread::yield();
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
       auto end = std::chrono::system_clock::now();
       auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
       if(timeout.to_chrono() < diff) {

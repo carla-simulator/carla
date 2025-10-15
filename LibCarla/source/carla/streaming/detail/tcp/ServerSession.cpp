@@ -17,6 +17,7 @@
 
 #include <atomic>
 #include <thread>
+#include <chrono>
 
 namespace carla {
 namespace streaming {
@@ -86,7 +87,7 @@ namespace tcp {
         if (_server.IsSynchronousMode()) {
           // wait until previous message has been sent
           while (_is_writing) {
-            std::this_thread::yield();
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
           }
         } else {
           // ignore this message
