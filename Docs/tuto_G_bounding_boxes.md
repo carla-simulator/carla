@@ -21,9 +21,6 @@ client = carla.Client('localhost', 2000)
 world  = client.get_world()
 bp_lib = world.get_blueprint_library()
 
-# Get the map spawn points
-spawn_points = world.get_map().get_spawn_points()
-
 # spawn vehicle
 vehicle_bp =bp_lib.find('vehicle.lincoln.mkz_2020')
 vehicle = world.try_spawn_actor(vehicle_bp, random.choice(spawn_points))
@@ -39,6 +36,9 @@ settings = world.get_settings()
 settings.synchronous_mode = True # Enables synchronous mode
 settings.fixed_delta_seconds = 0.05
 world.apply_settings(settings)
+
+# Get the map spawn points
+spawn_points = world.get_map().get_spawn_points()
 
 # Create a queue to store and retrieve the sensor data
 image_queue = queue.Queue()
@@ -108,8 +108,7 @@ CARLA objects all have an associated bounding box. CARLA [actors](python_api.md#
 It is important to note that to get the 3D coordinates of the bounding box in world coordinates, you need to include the transform of the actor as an argument to the `get_world_vertices()` method like so:
 
 ```py
-bounding_box.get_world_vertices(actor.get_transform())
-
+actor.bounding_box.get_world_vertices(actor.get_transform())
 ```
 
 For objects in the map like buildings, traffic lights and road signs, the bounding box can be retrieved through the [carla.World]((python_api.md#carla.World)) method `get_level_bbs()`. A [carla.CityObjectLabel]((python_api.md#carla.CityObjectLabel)) can be used as an argument to filter the bounding box list to relevant objects:
