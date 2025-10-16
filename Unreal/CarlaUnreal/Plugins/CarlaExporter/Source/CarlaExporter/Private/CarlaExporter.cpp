@@ -27,6 +27,14 @@ static const FName CarlaExporterTabName("CarlaExporter");
 
 #define LOCTEXT_NAMESPACE "FCarlaExporterModule"
 
+// Helper function to check if a component is a building mesh
+static bool IsBuilding(UInstancedStaticMeshComponent* comp)
+{
+  if (!comp || !comp->GetStaticMesh()) return false;
+  FString MeshPath = comp->GetStaticMesh()->GetPathName();
+  return MeshPath.Contains(TEXT("/Building/")) || MeshPath.Contains(TEXT("/Buildings/"));
+}
+
 void FCarlaExporterModule::StartupModule()
 {
   // This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
@@ -107,20 +115,17 @@ void FCarlaExporterModule::PluginButtonClicked()
 
       FString ActorName = TempActor->GetActorLabel();
 
+      areaType = AreaType::BLOCK;
       if (ActorName.Find(TEXT("Road")) != -1)
       {
         if (ActorName.Find(TEXT("Sidewalk")) != -1)
           areaType = AreaType::SIDEWALK;
-        else if (ActorName.Find(TEXT("Crosswalk")) != -1) != -1)
+        else if (ActorName.Find(TEXT("Crosswalk")) != -1)
           areaType = AreaType::CROSSWALK;
         else if (ActorName.Find(TEXT("Grass")) != -1)
           areaType = AreaType::GRASS;
         else
           areaType = AreaType::ROAD;
-      }
-      else
-      {
-        areaType = AreaType::BLOCK;
       }
 
       if (rounds > 1)
@@ -141,6 +146,86 @@ void FCarlaExporterModule::PluginButtonClicked()
 
       TArray<UActorComponent*> Components;
       TempActor->GetComponents(UStaticMeshComponent::StaticClass(), Components);
+
+      // Check if this actor has building components to export them separately
+      bool bActorHasBuildings = false;
+      if (areaType == AreaType::BLOCK)
+      {
+        for (auto *Component : Components)
+        {
+          UInstancedStaticMeshComponent* comp2 = Cast<UInstancedStaticMeshComponent>(Component);
+          if (IsBuilding(comp2))
+          {
+            bActorHasBuildings = true;
+            break;
+          }
+        }
+      }
+
+      // If actor has buildings, write all building instances under a single object
+      if (bActorHasBuildings)
+      {
+        f << "o " << TCHAR_TO_ANSI(*ActorName) << "_buildings\n";
+        f << "usemtl block\n";  // Set material BEFORE faces
+
+        for (auto *Component : Components)
+        {
+          UInstancedStaticMeshComponent* comp2 = Cast<UInstancedStaticMeshComponent>(Component);
+          if (IsBuilding(comp2))
+          {
+            // Export bounding box for each building instance
+            for (int i=0; i<comp2->GetInstanceCount(); ++i)
+            {
+              // get the instance transform in world space
+              FTransform InstanceTransform;
+              comp2->GetInstanceTransform(i, InstanceTransform, true);
+
+              // Get the mesh bounds in local space
+              FBoxSphereBounds MeshBounds = comp2->GetStaticMesh()->GetBounds();
+              FVector MeshMin = MeshBounds.Origin - MeshBounds.BoxExtent;
+              FVector MeshMax = MeshBounds.Origin + MeshBounds.BoxExtent;
+
+              // Generate 8 corners of the bounding box in mesh local space
+              TArray<FVector> Corners;
+              Corners.Add(FVector(MeshMin.X, MeshMin.Y, MeshMin.Z));
+              Corners.Add(FVector(MeshMin.X, MeshMin.Y, MeshMax.Z));
+              Corners.Add(FVector(MeshMin.X, MeshMax.Y, MeshMin.Z));
+              Corners.Add(FVector(MeshMin.X, MeshMax.Y, MeshMax.Z));
+              Corners.Add(FVector(MeshMax.X, MeshMin.Y, MeshMin.Z));
+              Corners.Add(FVector(MeshMax.X, MeshMin.Y, MeshMax.Z));
+              Corners.Add(FVector(MeshMax.X, MeshMax.Y, MeshMin.Z));
+              Corners.Add(FVector(MeshMax.X, MeshMax.Y, MeshMax.Z));
+
+              // Transform corners to world space and write vertices
+              for (const FVector& Corner : Corners)
+              {
+                FVector WorldCorner = InstanceTransform.TransformPosition(Corner);
+                f << "v " << std::fixed << WorldCorner.X * TO_METERS << " " << WorldCorner.Z * TO_METERS << " " << WorldCorner.Y * TO_METERS << "\n";
+              }
+
+              // Write 12 triangular faces (2 per box side)
+              // Vertex order: 0=MinMinMin, 1=MinMinMax, 2=MinMaxMin, 3=MinMaxMax, 4=MaxMinMin, 5=MaxMinMax, 6=MaxMaxMin, 7=MaxMaxMax
+              int32 baseOffset = offset;
+              f << "f " << baseOffset+3 << " " << baseOffset+1 << " " << baseOffset+0 << "\n";
+              f << "f " << baseOffset+2 << " " << baseOffset+3 << " " << baseOffset+0 << "\n";
+              f << "f " << baseOffset+7 << " " << baseOffset+3 << " " << baseOffset+2 << "\n";
+              f << "f " << baseOffset+6 << " " << baseOffset+7 << " " << baseOffset+2 << "\n";
+              f << "f " << baseOffset+5 << " " << baseOffset+7 << " " << baseOffset+6 << "\n";
+              f << "f " << baseOffset+4 << " " << baseOffset+5 << " " << baseOffset+6 << "\n";
+              f << "f " << baseOffset+1 << " " << baseOffset+5 << " " << baseOffset+4 << "\n";
+              f << "f " << baseOffset+0 << " " << baseOffset+1 << " " << baseOffset+4 << "\n";
+              f << "f " << baseOffset+4 << " " << baseOffset+6 << " " << baseOffset+2 << "\n";
+              f << "f " << baseOffset+0 << " " << baseOffset+4 << " " << baseOffset+2 << "\n";
+              f << "f " << baseOffset+1 << " " << baseOffset+3 << " " << baseOffset+7 << "\n";
+              f << "f " << baseOffset+5 << " " << baseOffset+1 << " " << baseOffset+7 << "\n";
+
+              offset += 8;
+            }
+          }
+        }
+      }
+
+      // Export non-building components
       for (auto *Component : Components)
       {
 
@@ -151,16 +236,30 @@ void FCarlaExporterModule::PluginButtonClicked()
           UBodySetup *body = comp2->GetBodySetup();
           if (!body) continue;
 
+          // Check if this is a building mesh by examining the asset path
+          bool bIsBuilding = false;
+          if (comp2->GetStaticMesh())
+          {
+            FString MeshPath = comp2->GetStaticMesh()->GetPathName();
+            bIsBuilding = MeshPath.Contains(TEXT("/Building/")) || MeshPath.Contains(TEXT("/Buildings/"));
+          }
+
+          // Skip buildings (already exported above)
+          if (bIsBuilding)
+          {
+            continue;
+          }
+
+          // Export non-building instances
           for (int i=0; i<comp2->GetInstanceCount(); ++i)
           {
-            // f << " instance_" << i << "\n";
             FString ObjectName = ActorName +"_"+FString::FromInt(i);
 
-            // get the component position and transform
+            // get the instance transform in world space
             FTransform InstanceTransform;
             comp2->GetInstanceTransform(i, InstanceTransform, true);
-            FVector InstanceLocation = InstanceTransform.GetTranslation();
 
+            // Export collision geometry
             offset += WriteObjectGeom(f, ObjectName, body, InstanceTransform, areaType, offset);
           }
         }
@@ -258,6 +357,7 @@ int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName
 
       f << "v " << std::fixed << world.X * TO_METERS << " " << world.Z * TO_METERS << " " << world.Y * TO_METERS << "\n";
     }
+
     // set the material in function of the area type
     switch (Area)
     {
@@ -267,6 +367,7 @@ int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName
       case AreaType::CROSSWALK: f << "usemtl crosswalk" << "\n"; break;
       case AreaType::BLOCK:     f << "usemtl block"     << "\n"; break;
     }
+
     // write all faces
     int k = 0;
     for (int32 i=0; i<indexBuffer.Num()/3; ++i)
@@ -280,7 +381,6 @@ int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName
     Written = true;
   }
 
-  // try to write the convex collision mesh
   for (const auto &convex : body->AggGeom.ConvexElems)
   {
     // Use the vertex data directly from ConvexElem
