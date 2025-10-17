@@ -327,6 +327,7 @@ def main():
     camera_bp = bp_lib.find('sensor.camera.rgb')
     camera_bp.set_attribute('image_size_x', str(args.width))
     camera_bp.set_attribute('image_size_y', str(args.height))
+    camera_bp.set_attribute('post_process_profile','Town10HD_Opt')
     camera_init_trans = carla.Transform(carla.Location(z=2))
     camera = world.spawn_actor(camera_bp, camera_init_trans, attach_to=ego_vehicle)
 
@@ -341,7 +342,7 @@ def main():
 
     # Add some traffic
     npcs = []
-    for i in range(100):
+    for i in range(20):
         vehicle_bp = random.choice(bp_lib.filter('vehicle'))
         npc = world.try_spawn_actor(vehicle_bp, random.choice(spawn_points))
         if npc:
@@ -380,13 +381,17 @@ def main():
             }
 
             image = image_queue.get()
-            img = np.reshape(np.copy(image.raw_data), (image.height, image.width, 4))
+            #image = inst_queue.get()
+            
+            img = np.reshape(np.frombuffer(image.raw_data, dtype=np.dtype("uint8")), (image.height, image.width, 4))
+
+            print(img.shape)
 
             if record:
                 image.save_to_disk('_out/%08d' % image.frame)
 
             inst_seg_image = inst_queue.get()
-            inst_seg = np.reshape(np.copy(inst_seg_image.raw_data), (inst_seg_image.height, inst_seg_image.width, 4))
+            inst_seg = np.reshape(np.frombuffer(image.raw_data, dtype=np.dtype("uint8")), (inst_seg_image.height, inst_seg_image.width, 4))
 
             # Decode instance segmentation image
             semantic_labels, actor_ids = decode_instance_segmentation(inst_seg)
