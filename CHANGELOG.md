@@ -1,6 +1,9 @@
 ## Latest Changes
 
  * Added a hybrid solid-state LiDAR with adjustable parameters (blueprint attributes)
+## CARLA 0.9.16
+
+ * Added NVIDIA Cosmos Transfer1 integration
  * Added NVIDIA Neural Reconstruction Engine (NuRec) integration
  * Added the SimReady OpenUSD and MDL Converters to provide export and import support for SimReady OpenUSD stages and MDL materials.
  * Added support for left-handed traffic maps
@@ -50,6 +53,8 @@
  * Fixed `frame`, `timestamp` and `transform` of `SensorData` not matching to the actually sent image for camera sensors.
  * Added  "geolocation_to_transform" function to the Map object in the PythonAPI
  * Add support for NVIDIA NuRec 25.07 (CARLA-NuRec 0.2)
+ * Added `set_wheel_pitch_angle()` to change the bone pitch angle of each wheel of a vehicle
+ * Added `get_wheel_pitch_angle()` to get the rotation (pitch) angle of a vehicle wheel
 
 ## CARLA 0.9.15
 

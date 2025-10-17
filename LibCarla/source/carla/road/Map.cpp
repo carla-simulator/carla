@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -19,6 +19,7 @@
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/RoadInfoSpeed.h"
 #include "carla/road/element/RoadInfoSignal.h"
+#include "carla/road/element/RoadInfoStencil.h"
 
 #include "marchingcube/MeshReconstruction.h"
 
@@ -28,6 +29,8 @@
 #include <chrono>
 #include <thread>
 #include <iomanip>
+#include <queue>
+#include <set>
 #include <cmath>
 
 namespace carla {
@@ -447,6 +450,72 @@ namespace road {
     return result;
   }
 
+  std::vector<const element::RoadInfoStencil*>
+      Map::GetAllStencilReferences() const {
+    std::vector<const element::RoadInfoStencil*> result;
+    for (const auto& road_pair : _data.GetRoads()) {
+      const auto &road = road_pair.second;
+      auto road_infos = road.GetInfos<element::RoadInfoStencil>();
+      for(const auto* road_info : road_infos) {
+        result.push_back(road_info);
+      }
+    }
+    return result;
+  }
+
+  std::vector<Map::StencilSearchData> Map::GetStencilsInDistance(
+      Waypoint waypoint, double distance, bool stop_at_junction) const {
+
+    const auto &lane = GetLane(waypoint);
+    const bool forward = lane.IsPositiveDirection();
+    const double signed_distance = forward ? distance : -distance;
+    const double relative_s = waypoint.s - lane.GetDistance();
+    const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
+    DEBUG_ASSERT(remaining_lane_length >= 0.0);
+
+    auto &road = _data.GetRoad(waypoint.road_id);
+    std::vector<StencilSearchData> result;
+
+    // If after subtracting the distance we are still in the same lane, return
+    // same waypoint with the extra distance.
+    if (distance <= remaining_lane_length) {
+      auto stencils = road.GetInfosInRange<element::RoadInfoStencil>(
+          waypoint.s, waypoint.s + signed_distance);
+      for(auto* stencil : stencils){
+        double distance_to_stencil = 0;
+        if (lane.IsPositiveDirection()){
+          distance_to_stencil = stencil->GetS() - waypoint.s;
+        } else {
+          distance_to_stencil = waypoint.s - stencil->GetS();
+        }
+        
+        if (distance_to_stencil >= 0) {
+          StencilSearchData data;
+          data.stencil = stencil;
+          data.waypoint = waypoint;
+          data.waypoint.s = stencil->GetS();
+          data.accumulated_s = distance_to_stencil;
+          result.push_back(data);
+        }
+      }
+      return result;
+    }
+
+    // If we run out of remaining_lane_length we have to go to successors.
+    for (auto &successor : GetSuccessors(waypoint)) {
+      if (stop_at_junction && IsJunction(successor.road_id)) {
+        continue;
+      }
+      auto successor_stencils = GetStencilsInDistance(
+          successor, distance - remaining_lane_length, stop_at_junction);
+      for(auto& stencil : successor_stencils){
+        stencil.accumulated_s += remaining_lane_length;
+      }
+      result = ConcatVectors(result, successor_stencils);
+    }
+    return result;
+  }
+
   std::vector<LaneMarking> Map::CalculateCrossedLanes(
       const geom::Location &origin,
       const geom::Location &destination) const {
@@ -482,11 +551,10 @@ namespace road {
 
           // move perpendicular ('t')
           geom::Transform pivot = base;
-          pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
           pivot.rotation.yaw -= 90;   // move perpendicular to 's' for the lateral offset
           geom::Vector3D v(static_cast<float>(crosswalk->GetT()), 0.0f, 0.0f);
           pivot.TransformPoint(v);
-          // restore pivot position and orientation
+          // restore pivot position and orientation with heading
           pivot = base;
           pivot.location = v;
           pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
@@ -495,14 +563,8 @@ namespace road {
           for (auto corner : crosswalk->GetPoints()) {
             geom::Vector3D v2(
                 static_cast<float>(corner.u),
-                static_cast<float>(corner.v),
+                static_cast<float>(-corner.v), // Unreal Hack
                 static_cast<float>(corner.z));
-            // set the width larger to contact with the sidewalk (in case they have gutter area)
-            if (corner.u < 0) {
-              v2.x -= 1.0f;
-            } else {
-              v2.x += 1.0f;
-            }
             pivot.TransformPoint(v2);
             result.push_back(v2);
           }
@@ -512,6 +574,62 @@ namespace road {
 
     return result;
   }
+
+  std::map<const carla::road::element::RoadInfoCrosswalk*,std::vector<geom::Location>> Map::GetAllCrosswalksInfo() const {
+    std::map<const carla::road::element::RoadInfoCrosswalk*,std::vector<geom::Location>> result;
+
+    for (const auto &pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      std::vector<const RoadInfoCrosswalk *> crosswalks = road.GetInfos<RoadInfoCrosswalk>();
+      if (crosswalks.size() > 0) {
+        for (auto crosswalk : crosswalks) {
+          std::vector<geom::Location> crosswalk_points;
+          // waypoint only at start position
+          std::vector<geom::Location> points;
+          Waypoint waypoint;
+          geom::Transform base;
+          for (const auto &section : road.GetLaneSectionsAt(crosswalk->GetS())) {
+            // get the section with the center lane
+            for (const auto &lane : section.GetLanes()) {
+              // is the center line
+              if (lane.first == 0) {
+                // get the center point
+                waypoint.road_id = pair.first;
+                waypoint.section_id = section.GetId();
+                waypoint.lane_id = 0;
+                waypoint.s = crosswalk->GetS();
+                base = ComputeTransform(waypoint);
+              }
+            }
+          }
+
+          // move perpendicular ('t')
+          geom::Transform pivot = base;
+          pivot.rotation.yaw -= 90;   // move perpendicular to 's' for the lateral offset
+          geom::Vector3D v(static_cast<float>(crosswalk->GetT()), 0.0f, 0.0f);
+          pivot.TransformPoint(v);
+          // restore pivot position and orientation with heading
+          pivot = base;
+          pivot.location = v;
+          pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
+
+          // calculate all the corners
+          for (auto corner : crosswalk->GetPoints()) {
+            geom::Vector3D v2(
+                static_cast<float>(corner.u),
+                static_cast<float>(-corner.v), // Unreal Hack
+                static_cast<float>(corner.z));
+            pivot.TransformPoint(v2);
+            crosswalk_points.push_back(v2);
+          }
+          result.insert(std::make_pair(crosswalk,crosswalk_points));
+        }
+      }
+    }
+
+    return result;
+  }
+
 
   // ===========================================================================
   // -- Map: Waypoint generation -----------------------------------------------

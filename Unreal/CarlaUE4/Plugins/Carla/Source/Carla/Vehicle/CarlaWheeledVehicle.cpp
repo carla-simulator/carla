@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 // Copyright (c) 2019 Intel Corporation
 //
@@ -945,7 +945,7 @@ void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLoc
   }
   else
   {
-    UE_LOG(LogTemp, Warning, TEXT("Cannot set wheel steer direction. Physics are enabled."))
+    UE_LOG(LogCarla, Warning, TEXT("Cannot set wheel steer direction. Physics are enabled."));
   }
 }
 
@@ -963,6 +963,38 @@ float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocati
   else
   {
     return VehicleAnim->GetWheelRotAngle((uint8)WheelLocation);
+  }
+}
+
+void ACarlaWheeledVehicle::SetWheelPitchAngle(EVehicleWheelLocation WheelLocation, float AngleInDeg) {
+
+  if (bPhysicsEnabled == false)
+  {
+    check((uint8)WheelLocation >= 0)
+    UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+    check(VehicleAnim != nullptr)
+    VehicleAnim->SetWheelPitchAngle((uint8)WheelLocation, AngleInDeg);
+  }
+  else
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Cannot set wheel pitch angle. Physics are enabled."))
+  }
+}
+
+float ACarlaWheeledVehicle::GetWheelPitchAngle(EVehicleWheelLocation WheelLocation) {
+
+  check((uint8)WheelLocation >= 0)
+  UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+  check(VehicleAnim->GetWheeledVehicleMovementComponent() != nullptr)
+
+  if (bPhysicsEnabled == true) 
+  {
+    return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetRotationAngle();
+  }
+  else 
+  {
+    return VehicleAnim->GetWheelPitchAngle((uint8)WheelLocation);
   }
 }
 
@@ -1034,7 +1066,7 @@ void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ACarlaWheeledVehicle::OpenDoor(const EVehicleDoor DoorIdx) {
   if (int(DoorIdx) >= ConstraintsComponents.Num() && DoorIdx != EVehicleDoor::All) {
-    UE_LOG(LogTemp, Warning, TEXT("This door is not configured for this car."));
+    UE_LOG(LogCarla, Warning, TEXT("This door is not configured for this car."));
     return;
   }
 
@@ -1051,7 +1083,7 @@ void ACarlaWheeledVehicle::OpenDoor(const EVehicleDoor DoorIdx) {
 
 void ACarlaWheeledVehicle::CloseDoor(const EVehicleDoor DoorIdx) {
   if (int(DoorIdx) >= ConstraintsComponents.Num() && DoorIdx != EVehicleDoor::All) {
-    UE_LOG(LogTemp, Warning, TEXT("This door is not configured for this car."));
+    UE_LOG(LogCarla, Warning, TEXT("This door is not configured for this car."));
     return;
   }
 

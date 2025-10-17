@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -15,6 +15,8 @@
 #include "carla/geom/Math.h"
 #include "carla/ros2/ROS2.h"
 #include <compiler/enable-ue4-macros.h>
+
+#include "Carla/Game/CarlaStatics.h"
 
 #include <limits>
 

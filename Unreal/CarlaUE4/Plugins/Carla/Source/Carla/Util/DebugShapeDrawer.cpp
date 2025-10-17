@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -26,7 +26,7 @@ struct FShapeVisitor
 
   FShapeVisitor(UWorld &InWorld, FColor InColor, float InLifeTime, bool bInPersistentLines)
     : World(&InWorld),
-      Color(InColor.ReinterpretAsLinear() * BrightMultiplier),
+      Color(FLinearColor(InColor) * BrightMultiplier),
       LifeTime(InLifeTime),
       bPersistentLines(bInPersistentLines)
   {

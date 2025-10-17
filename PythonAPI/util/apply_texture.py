@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """ TL info printer
 """
-# Copyright (c) 2021 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -11,23 +11,8 @@
 # -- imports -------------------------------------------------------------------
 # ==============================================================================
 
-import glob
-import os
-import sys
 import argparse
 import imageio
-
-# ==============================================================================
-# -- find carla module ---------------------------------------------------------
-# ==============================================================================
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 

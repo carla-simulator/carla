@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -336,6 +336,30 @@ namespace client {
 
   std::vector<std::string> World::GetNamesOfAllObjects() const {
     return _episode.Lock()->GetNamesOfAllObjects();
+  }
+
+  std::string World::ExportCosmosCrosswalks(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosCrosswalks(session_id, output_path);
+  }
+
+  std::string World::ExportCosmosRoadBoundaries(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosRoadBoundaries(session_id, output_path);
+  }
+
+  std::string World::ExportCosmosLaneLines(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosLaneLines(session_id, output_path);
+  }
+
+  std::string World::ExportCosmosTrafficSigns(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosTrafficSigns(session_id, output_path);
+  }
+
+  std::string World::ExportCosmosWaitLines(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosWaitLines(session_id, output_path);
+  }
+
+  std::string World::ExportCosmosRoadMarkings(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosRoadMarkings(session_id, output_path);
   }
 
   void World::ApplyTexturesToObject(

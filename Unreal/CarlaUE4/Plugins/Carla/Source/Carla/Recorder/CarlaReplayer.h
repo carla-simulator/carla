@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -54,7 +54,8 @@ public:
   ~CarlaReplayer() { Stop(); };
 
   std::string ReplayFile(std::string Filename, double TimeStart = 0.0f, double Duration = 0.0f,
-      uint32_t FollowId = 0, const FTransform Offset = FTransform(),  bool ReplaySensors = false);
+      uint32_t FollowId = 0, const FTransform Offset = FTransform(),  bool ReplaySensors = false,
+      std::string MapOverride = "");
 
   // void Start(void);
   void Stop(bool KeepActors = false);

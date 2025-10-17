@@ -16,9 +16,12 @@ This guide outlines what Chrono is, how to use it in CARLA, and the limitations 
 
 ---
 
-## Using Chrono on CARLA
+## Using Chrono with CARLA
 
-To use the Chrono integration, you must first configure the server with a tag on startup and then use the PythonAPI to enable it on a spawned vehicle. Read on for more details.
+To use the Chrono integration for vehicle Physics in CARLA, you must first build or launch the server with a build flag and then use the PythonAPI to enable Chrono for a vehicle spawned in the CARLA simulation.
+
+!!! note
+    The CARLA-Chrono integration is compatible with **Chrono version 6**. Ensure that your Chrono installation is compatible before starting. 
 
 ### Configuring the server
 
@@ -28,6 +31,12 @@ __In the build from source version of CARLA__, run the following command to star
 
 ```sh
 make launch ARGS="--chrono"
+```
+
+The above command pulls the source code for version 6 from the Project Chrono repository. If you wish to use your own Chrono installation, use the following command to specify the path to your Chrono source code:
+
+```sh
+make launch ARGS="--chrono --chrono-path <PATH>"
 ```
 
 ---

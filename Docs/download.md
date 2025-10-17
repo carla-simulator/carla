@@ -2,9 +2,9 @@
 
 ### Latest Release
 
-The latest release of CARLA is **0.9.15**, check out the [release announcement](https://carla.org/2023/11/10/release-0.9.15/) for more details.
+The latest release of CARLA is **0.9.16**, check out the [release announcement](https://carla.org/2025/09/16/release-0.9.16/) for more details.
 
-- [CARLA 0.9.15](https://github.com/carla-simulator/carla/releases/tag/0.9.15/) - [Documentation](https://carla.readthedocs.io/en/0.9.15/)
+- [CARLA 0.9.16](https://github.com/carla-simulator/carla/releases/tag/0.9.16/) - [Documentation](https://carla.readthedocs.io/en/latest/)
 
 ### Nightly build
 
@@ -19,10 +19,14 @@ next release, but also some experimental changes. Use at your own risk!
 
 <p><a id="last-run-link" href='https://github.com/carla-simulator/carla/actions'>Last successful build</a>: <span id="last-run-time" class="loading">Loading...</span></p>
 
+!!! note
+    If you are looking for the nightly build of the Unreal Engine 5.5 version of CARLA, please visit the [downloads page](https://carla-ue5.readthedocs.io/en/latest/download/) of the [CARLA UE5 documentation](https://carla-ue5.readthedocs.io/en/latest/).
+
 ### Versions 0.9.x
 
 Here are the previous versions of CARLA with links to the specific documentation for each version:
 
+- [CARLA 0.9.15](https://github.com/carla-simulator/carla/releases/tag/0.9.15/) - [Documentation](https://carla.readthedocs.io/en/0.9.15/)
 - [CARLA 0.9.14](https://github.com/carla-simulator/carla/releases/tag/0.9.14/) - [Documentation](https://carla.readthedocs.io/en/0.9.14/)
 - [CARLA 0.9.13](https://github.com/carla-simulator/carla/releases/tag/0.9.13/) - [Documentation](https://carla.readthedocs.io/en/0.9.13/)
 - [CARLA 0.9.12](https://github.com/carla-simulator/carla/releases/tag/0.9.12/) - [Documentation](https://carla.readthedocs.io/en/0.9.12/)

@@ -57,6 +57,7 @@ from nre.grpc.protos.sensorsim_pb2 import (
     OpenCVFisheyeCameraParam,
     ShutterType,
 )
+from track import Track
 
 import nvidia.nvimgcodec as nvimgcodec
 
@@ -319,72 +320,6 @@ class TimeKeeper:
         pass
 
 
-class NurecSensor:
-    def __init__(
-        self,
-        parent_actor,
-        transform,
-        renderer,
-        callback,
-        camera_spec,
-        time_keeper: TimeKeeper,
-        framerate=2,
-        resolution_ratio=0.25,
-    ):
-        self.parent_actor = parent_actor
-        self.transform = np.array(transform)
-        self.renderer = renderer
-        self.callback = callback
-        self.time_keeper = time_keeper
-        self.zero = None
-        self.zero_count = 0
-        self.framerate = framerate
-        self.last_timestamp: float = 0.0  # Change to float to match timestamp
-        self.rotation = R.from_matrix(self.transform[:3, :3])
-        self.translation = self.transform[:3, 3]
-        self.resolution_ratio = resolution_ratio
-        self.camera_spec = camera_spec
-
-    def _should_render(self) -> bool:
-        if not self.time_keeper.is_running():
-            return False
-        timestamp_us = self.time_keeper.get_sim_time()
-        timestamp = timestamp_us / 1_000_000
-        if timestamp - self.last_timestamp < 1 / self.framerate:
-            return False
-        self.last_timestamp += 1 / self.framerate
-        if timestamp - self.last_timestamp > 1 / self.framerate:
-            self.last_timestamp = timestamp
-        return True
-
-    def on_world_tick(self, world: carla.World) -> None:
-        if not self._should_render():
-            return
-
-        actor = world.find(self.parent_actor.actor_inst.id)
-        if actor is None:
-            logger.warning(f"Parent actor {self.parent_actor} not found in world")
-            return
-
-        actor_transform = actor.get_transform().get_matrix()
-        actor_transform = np.array(actor_transform)  # 4x4 matrix
-        camera_transform = (
-            undo_carla_coordinate_transform(actor_transform) @ self.transform
-        )
-        image = self.renderer.render(
-            world,
-            self.camera_spec,
-            camera_transform,
-            self.resolution_ratio,
-        )
-
-        try:
-            self.callback(image)
-        except Exception as e:
-            logger.error(f"Error in callback for camera {self.camera_spec.logical_id}: {e}")
-            raise e
-
-
 class MockWorldSnapshot:
     def __init__(self):
         pass
@@ -402,7 +337,7 @@ class MockWorldSnapshot:
 class NurecRenderer:
     def __init__(
         self,
-        scenario,
+        scenario: Scenario,
         host=None,
         port=2000,
         active_actors: Dict[int, str] = {},
@@ -484,7 +419,7 @@ class NurecRenderer:
 
 
 class NurecActor:
-    def __init__(self, actor_inst, track, physics=False, blueprint_id=None):
+    def __init__(self, actor_inst: carla.Actor, track: Track, physics: bool = False, blueprint_id: int = None):
         self.actor_inst = actor_inst
         self.track = track
         self.physics = physics
@@ -515,6 +450,71 @@ class NurecActor:
             carla.Vector3D(velocity_vector[0], velocity_vector[1], velocity_vector[2])
         )
 
+
+class NurecSensor:
+    def __init__(
+        self,
+        parent_actor: NurecActor,
+        transform: Optional[np.ndarray],
+        renderer: NurecRenderer,
+        callback: Callable[[np.ndarray], None],
+        camera_spec: Union[Dict[str, Any], str],
+        time_keeper: TimeKeeper,
+        framerate=2,
+        resolution_ratio=0.25,
+    ):
+        self.parent_actor = parent_actor
+        self.transform = np.array(transform)
+        self.renderer = renderer
+        self.callback = callback
+        self.time_keeper = time_keeper
+        self.zero = None
+        self.zero_count = 0
+        self.framerate = framerate
+        self.last_timestamp: float = 0.0  # Change to float to match timestamp
+        self.rotation = R.from_matrix(self.transform[:3, :3])
+        self.translation = self.transform[:3, 3]
+        self.resolution_ratio = resolution_ratio
+        self.camera_spec = camera_spec
+
+    def _should_render(self) -> bool:
+        if not self.time_keeper.is_running():
+            return False
+        timestamp_us = self.time_keeper.get_sim_time()
+        timestamp = timestamp_us / 1_000_000
+        if timestamp - self.last_timestamp < 1 / self.framerate:
+            return False
+        self.last_timestamp += 1 / self.framerate
+        if timestamp - self.last_timestamp > 1 / self.framerate:
+            self.last_timestamp = timestamp
+        return True
+
+    def on_world_tick(self, world: carla.World) -> None:
+        if not self._should_render():
+            return
+
+        actor = world.find(self.parent_actor.actor_inst.id)
+        if actor is None:
+            logger.warning(f"Parent actor {self.parent_actor} not found in world")
+            return
+
+        actor_transform = actor.get_transform().get_matrix()
+        actor_transform = np.array(actor_transform)  # 4x4 matrix
+        camera_transform = (
+            undo_carla_coordinate_transform(actor_transform) @ self.transform
+        )
+        image = self.renderer.render(
+            world,
+            self.camera_spec,
+            camera_transform,
+            self.resolution_ratio,
+        )
+
+        try:
+            self.callback(image)
+        except Exception as e:
+            logger.error(f"Error in callback for camera {self.camera_spec.logical_id}: {e}")
+            raise e
 
 """
 A class to load a nurec reconstruction form a file. Spawns the actors in the carla scene and creates the sensors present in the recording.

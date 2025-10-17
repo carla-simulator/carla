@@ -446,6 +446,15 @@
       doc: >
         Translates a 3D point from local to global coordinates using the current transformation as frame of reference.
     # --------------------------------------
+    - def_name: inverse_transform
+      params:
+      - param_name: in_point
+        type: carla.Location
+        doc: >
+          Location in global to which the inverse transformation will be applied.
+      doc: >
+        Translates a 3D point from global to local coordinates using the current transformation as frame of reference.
+    # --------------------------------------
     - def_name: transform_vector
       params:
       - param_name: in_vector

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -60,11 +60,13 @@ std::string ACarlaRecorder::ShowFileActorsBlocked(std::string Name, double MinTi
   return Query.QueryBlocked(Name, MinTime, MinDistance);
 }
 
-std::string ACarlaRecorder::ReplayFile(std::string Name, double TimeStart, double Duration,
-    uint32_t FollowId, const FTransform Offset, bool ReplaySensors)
+std::string ACarlaRecorder::ReplayFile(
+  std::string Name, double TimeStart, double Duration,
+  uint32_t FollowId, const FTransform Offset, bool ReplaySensors,
+  std::string MapOverride)
 {
   Stop();
-  return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId, Offset, ReplaySensors);
+  return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId, Offset, ReplaySensors, MapOverride);
 }
 
 void ACarlaRecorder::SetReplayerTimeFactor(double TimeFactor)
@@ -430,7 +432,10 @@ void ACarlaRecorder::AddActorBones(FCarlaActor *CarlaActor)
   WalkersBones.Add(std::move(Walker));
 }
 
-std::string ACarlaRecorder::Start(std::string Name, FString MapName, bool AdditionalData)
+std::string ACarlaRecorder::Start(
+  std::string Name,
+  FString MapName,
+  bool AdditionalData)
 {
   // stop replayer if any in course
   if (Replayer.IsEnabled())

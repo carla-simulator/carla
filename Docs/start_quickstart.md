@@ -29,13 +29,13 @@ The following requirements should be fulfilled before installing CARLA:
 Check your __PIP__ version:
 
 ```sh
-pip3 -V
+python3 -m pip -V
 ```
 If you need to upgrade:
 
 ```sh
 # For Python 3
-pip3 install --upgrade pip
+python3 -m pip install --upgrade pip
 ```
 
 ---
@@ -65,21 +65,21 @@ Each CARLA package includes pre-installed maps that you can use out-of-the-box. 
 Install the Python client library from [PyPi](https://pypi.org/project/carla/) using PIP for an officially released version:
 
 ```sh
-pip3 install carla # carla==0.9.14 <= For a specific version
+python3 -m pip install carla # carla==0.9.14 <= For a specific version
 ```
 
 CARLA packages also have Python wheels included inside `PythonAPI/carla/dist`. **If you are using a custom package built from source or the CARLA-latest package, you need to install the wheels included in the package, not the wheels from PyPi**. From inside this directory, install the relevant wheel with PIP:
 
 ```sh
 cd PythonAPI/carla/dist
-pip3 install carla-0.9.15-cp37m-manylinux_2_27_x86_64.whl # For CARLA v0.9.15 with Python 3.7
+python3 -m pip install carla-0.9.15-cp37m-manylinux_2_27_x86_64.whl # For CARLA v0.9.15 with Python 3.7
 ```
 
 The Python client example scripts rely on some pre-requisite packages, install these using PIP in the `PythonAPI/examples` directory:
 
 ```sh
 cd PythonAPI/examples
-pip3 install -r requirements.txt
+python3 -m pip install -r requirements.txt
 ```
 
 ---

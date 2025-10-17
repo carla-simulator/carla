@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -23,6 +23,7 @@
 
 #include <exception>
 #include <thread>
+#include <chrono>
 
 using namespace std::string_literals;
 
@@ -50,7 +51,7 @@ namespace detail {
     bool result = true;
     auto start = std::chrono::system_clock::now();
     while (frame > episode.GetState()->GetTimestamp().frame) {
-      std::this_thread::yield();
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
       auto end = std::chrono::system_clock::now();
       auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
       if(timeout.to_chrono() < diff) {
@@ -455,6 +456,10 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     _client.Send(sensor.GetId(), message);
   }
 
+  void Simulator::SetIgnoredVehicles(const Sensor &sensor, const std::vector<ActorId>& vehicle_ids) {
+    _client.SetIgnoredVehicles(sensor.GetId(), vehicle_ids);
+  }
+
   // =========================================================================
   /// -- Texture updating operations
   // =========================================================================
@@ -475,6 +480,30 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
 
   std::vector<std::string> Simulator::GetNamesOfAllObjects() const {
     return _client.GetNamesOfAllObjects();
+  }
+
+  std::string Simulator::ExportCosmosCrosswalks(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosCrosswalks(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosRoadBoundaries(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosRoadBoundaries(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosLaneLines(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosLaneLines(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosTrafficSigns(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosTrafficSigns(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosWaitLines(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosWaitLines(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosRoadMarkings(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosRoadMarkings(session_id, output_path);
   }
 
 

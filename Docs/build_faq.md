@@ -98,6 +98,7 @@ CARLA forum</a>
 > * __Download the assets.__ The server will not be able to run without the visual content. This step is mandatory.  
 > * __UE4_ROOT is not defined.__ The environment variable is not set. Remember to make it persistent session-wide by adding it to the `~/.bashrc` or `~/.profile`. Otherwise it will need to be set for every new shell. Run `export UE4_ROOT=<path_to_unreal_4-26>` to set the variable this time.  
 > * __Check dependencies.__ Make sure that everything was installed properly. Maybe one of the commands was skipped, unsuccessful or the dependencies were not suitable for the system.
+> * __Numpy 2 conflicts__. Numpy 2 causes conflicts with tools used to build CARLA. This is one of the most common causes for errors related to Boost. Check your numpy version using `python3 -m pip show numpy`. If it is version 2.0.0 or later, you must downgrade to *numpy<2.0.0*.
 > * __Delete CARLA and clone it again.__ Just in case something went wrong. Delete CARLA and clone or download it again.  
 > * __Meet system requirements.__ Ubuntu version should be 16.04 or later. CARLA needs around 170GB of disk space and a dedicated GPU (or at least one with 6GB) to run.
 > 
@@ -122,7 +123,7 @@ CARLA forum</a>
 > Run the following command.
 > 
 > 
->       pip3 install -Iv setuptools==47.3.1
+>       python3 -m pip install -Iv setuptools==47.3.1
 >  
 >
 > And build the PythonAPI again. 
@@ -405,14 +406,10 @@ CARLA forum</a>
 <!-- ======================================================================= -->
 ###### How do I uninstall the CARLA client library?
 
->If you installed the client library using __pip/pip3__, you should uninstall it by running:
+>If you installed the client library using __pip__, you should uninstall it by running:
 
 ```sh
-# Python 3
-pip3 uninstall carla
-
-# Python 2
-pip uninstall carla
+python3 -m pip uninstall carla
 ```
 
 ---

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -804,6 +804,42 @@ ECarlaServerResponse FVehicleActor::GetWheelSteerAngle(
     }
 
     Angle = Vehicle->GetWheelSteerAngle(WheelLocation);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::SetWheelPitchAngle(
+    const EVehicleWheelLocation& WheelLocation, float AngleInDeg)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if(Vehicle == nullptr){
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    Vehicle->SetWheelPitchAngle(WheelLocation, AngleInDeg);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::GetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float& Angle)
+{
+  if (IsDormant())
+  {
+    Angle = 0;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if(Vehicle == nullptr){
+      return ECarlaServerResponse::NotAVehicle;
+    }
+
+    Angle = Vehicle->GetWheelPitchAngle(WheelLocation);
   }
   return ECarlaServerResponse::Success;
 }

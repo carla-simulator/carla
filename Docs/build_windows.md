@@ -50,23 +50,23 @@ In this section you will find details of system requirements, minor and major so
     Be sure that the above programs are added to the [environment path](https://www.java.com/en/download/help/path.xml). Remember that the path added should correspond to the progam's `bin` directory.  
 #### Python dependencies
 
-Starting with CARLA 0.9.12, users have the option to install the CARLA Python API using `pip3`. Version 20.3 or higher is required. To check if you have a suitable version, run the following command:
+Starting with CARLA 0.9.12, users have the option to install the CARLA Python API using `pip`. Version 20.3 or higher is required. To check if you have a suitable version, run the following command:
 
 ```sh
-pip3 -V
+python3 -m pip -V
 ```
 
 If you need to upgrade:
 
 ```sh
-pip3 install --upgrade pip
+python3 -m pip install --upgrade pip
 ```
 
 You must install the following Python dependencies:
 
 ```sh
-pip3 install --user setuptools
-pip3 install --user wheel
+python3 -m pip install --user setuptools
+python3 -m pip install --user wheel
 ```
 
 #### Major installations
@@ -211,7 +211,7 @@ The button above will take you to the official repository of the project. Either
 Download the __latest__ assets to work with the current version of CARLA by running the following command in the CARLA root folder:
 
 ```sh
-    Update.bat
+Update.bat
 ```
 
 The assets will be downloaded and extracted to the appropriate location if have 7zip installed. If you do not have this software installed, you will need to manually extract the file contents to `Unreal\CarlaUE4\Content\Carla`.
@@ -223,7 +223,7 @@ To download the assets for a __specific version__ of CARLA:
 3. Extract the file with a command similar to the following:
 
 ```sh
-    tar -xvzf <assets_file_name>.tar.gz.tar -C C:\path\to\carla\Unreal\CarlaUE4\Content\Carla
+tar -xvzf <assets_file_name>.tar.gz -C C:\path\to\carla\Unreal\CarlaUE4\Content\Carla
 ```
 
 ### Set Unreal Engine environment variable
@@ -254,39 +254,26 @@ The Python API client grants control over the simulation. Compilation of the Pyt
 The following command compiles the Python API client:
 
 ```sh
-    make PythonAPI
+make PythonAPI
 ```
 
-The CARLA client library will be built in two distinct, mutually exclusive forms. This gives users the freedom to choose which form they prefer to run the CARLA client code. The two forms include `.egg` files and `.whl` files. Choose __one__ of the following options below to use the client library:
+The CARLA client library is provideed as a Python wheel package. Running the command above will automatically install the wheel in your target Python environment. You can also find the wheel file in the `PythonAPI\carla\dist` directory.
 
-__A. `.egg` file__
-
->The `.egg` file does not need to be installed. All of CARLA's example scripts automatically [look for this file](build_system.md#versions-prior-to-0912) when importing CARLA.
-
->If you previously installed a CARLA `.whl`, the `.whl` will take precedence over an `.egg` file.
-
-__B. `.whl` file__
-
->The `.whl` file should be installed using `pip3`:
-
-```sh
-pip3 install <path/to/wheel>.whl
-```
-
->This `.whl` file cannot be distributed as it is built specifically for your OS.
-
-!!! Warning
-    Issues can arise through the use of different methods to install the CARLA client library and having different versions of CARLA on your system. It is recommended to use virtual environments when installing the `.whl` and to [uninstall](build_faq.md#how-do-i-uninstall-the-carla-client-library) any previously installed client libraries before installing new ones.
+!!! note
+    **NumPy 2 error**: If the Python installation or environment that you are using to build CARLA has *numpy>=2.0.0* installed, this will cause an error during the build process due to conflicting dependencies. This should be the first thing to check when encountering errors related to Boost. Check your NumPy version using `python3 -m pip show numpy`.
 
 __2.__ __Compile the server__:
 
 The following command compiles and launches Unreal Engine. Run this command each time you want to launch the server or use the Unreal Engine editor:
 
 ```sh
-    make launch
+make launch
 ```
 
 The project may ask to build other instances such as `UE4Editor-Carla.dll` the first time. Agree in order to open the project. During the first launch, the editor may show warnings regarding shaders and mesh distance fields. These take some time to be loaded and the map will not show properly until then.
+
+!!! note
+    **NumPy 2 error**: `make launch` can be affected by the NumPy 2 conflict, check the NumPy version in your Python installation using PIP: `python3 -m pip show numpy`. If it is version *2.0.0* or later, you will need to downgrade to *numpy<2.0.0*.
 
 __3.__ __Start the simulation__:
 
@@ -295,14 +282,14 @@ Press **Play** to start the server simulation. The camera can be moved with `WAS
 Test the simulator using the example scripts inside `PythonAPI\examples`.  With the simulator running, open a new terminal for each script and run the following commands to spawn some life into the town and create a weather cycle:
 
 ```sh
-        # Terminal A 
-        cd PythonAPI\examples
-        pip3 install -r requirements.txt
-        python3 generate_traffic.py  
+# Terminal A 
+cd PythonAPI\examples
+python3 -m pip install -r requirements.txt
+python3 generate_traffic.py  
 
-        # Terminal B
-        cd PythonAPI\examples
-        python3 dynamic_weather.py 
+# Terminal B
+cd PythonAPI\examples
+python3 dynamic_weather.py 
 ```
 
 !!! Important
@@ -321,7 +308,6 @@ There are more `make` commands that you may find useful. Find them in the table 
 | `make package`                                                        | Builds CARLA and creates a packaged version for distribution.         |
 | `make clean`                                                          | Deletes all the binaries and temporals generated by the build system. |
 | `make rebuild`                                                        | `make clean` and `make launch` both in one command.                   |
-
 
 ---
 

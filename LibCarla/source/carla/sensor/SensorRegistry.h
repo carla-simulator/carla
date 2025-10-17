@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -50,6 +50,11 @@ class AInstanceSegmentationCamera;
 class ACosmosControlSensor;
 class ARssSensor;
 class FWorldObserver;
+class ASceneCaptureCamera_WideAngleLens;
+class ADepthCamera_WideAngleLens;
+class ANormalsCamera_WideAngleLens;
+class AInstanceSegmentationCamera_WideAngleLens;
+class ASemanticSegmentationCamera_WideAngleLens;
 struct FCameraGBufferUint8;
 struct FCameraGBufferFloat;
 class AV2XSensor;
@@ -85,6 +90,11 @@ namespace sensor {
     std::pair<AInstanceSegmentationCamera *, s11n::ImageSerializer>,
     std::pair<ACosmosControlSensor *, s11n::ImageSerializer>,
     std::pair<FWorldObserver *, s11n::EpisodeStateSerializer>,
+    std::pair<ASceneCaptureCamera_WideAngleLens *, s11n::ImageSerializer>,
+    std::pair<ADepthCamera_WideAngleLens *, s11n::ImageSerializer>,
+    std::pair<ANormalsCamera_WideAngleLens *, s11n::ImageSerializer>,
+    std::pair<AInstanceSegmentationCamera_WideAngleLens *, s11n::ImageSerializer>,
+    std::pair<ASemanticSegmentationCamera_WideAngleLens *, s11n::ImageSerializer>,
     std::pair<FCameraGBufferUint8 *, s11n::GBufferUint8Serializer>,
     std::pair<FCameraGBufferFloat *, s11n::GBufferFloatSerializer>,
     std::pair<AV2XSensor *, s11n::CAMDataSerializer>,
@@ -120,6 +130,11 @@ namespace sensor {
 #include "Carla/Sensor/InstanceSegmentationCamera.h"
 #include "Carla/Sensor/CosmosControlSensor.h"
 #include "Carla/Sensor/WorldObserver.h"
+#include "Carla/Sensor/DepthCamera_WideAngleLens.h"
+#include "Carla/Sensor/NormalsCamera_WideAngleLens.h"
+#include "Carla/Sensor/SceneCaptureCamera_WideAngleLens.h"
+#include "Carla/Sensor/SemanticSegmentationCamera_WideAngleLens.h"
+#include "Carla/Sensor/InstanceSegmentationCamera_WideAngleLens.h"
 #include "Carla/Sensor/V2XSensor.h"
 #include "Carla/Sensor/CustomV2XSensor.h"
 #include "Carla/Sensor/HSSLidar.h"

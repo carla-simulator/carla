@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -182,6 +182,30 @@ namespace detail {
     return _pimpl->CallAndWait<std::vector<std::string>>("get_names_of_all_objects");
   }
 
+  std::string Client::ExportCosmosCrosswalks(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_crosswalks", session_id, output_path);
+  }
+
+  std::string Client::ExportCosmosRoadBoundaries(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_road_boundaries", session_id, output_path);
+  }
+
+  std::string Client::ExportCosmosLaneLines(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_lane_lines", session_id, output_path);
+  }
+
+  std::string Client::ExportCosmosTrafficSigns(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_traffic_signs", session_id, output_path);
+  }
+
+  std::string Client::ExportCosmosWaitLines(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_wait_lines", session_id, output_path);
+  }
+
+  std::string Client::ExportCosmosRoadMarkings(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_road_markings", session_id, output_path);
+  }
+
   rpc::EpisodeInfo Client::GetEpisodeInfo() {
     return _pimpl->CallAndWait<rpc::EpisodeInfo>("get_episode_info");
   }
@@ -326,6 +350,19 @@ namespace detail {
         rpc::ActorId vehicle,
         rpc::VehicleWheelLocation wheel_location){
     return _pimpl->CallAndWait<float>("get_wheel_steer_angle", vehicle, wheel_location);
+  }
+
+  void Client::SetWheelPitchAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation vehicle_wheel,
+        float angle_in_deg) {
+    return _pimpl->AsyncCall("set_wheel_pitch_angle", vehicle, vehicle_wheel, angle_in_deg);
+  }
+
+  float Client::GetWheelPitchAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location){
+    return _pimpl->CallAndWait<float>("get_wheel_pitch_angle", vehicle, wheel_location);
   }
 
   rpc::Actor Client::SpawnActor(
@@ -635,10 +672,12 @@ namespace detail {
     return _pimpl->CallAndWait<std::string>("show_recorder_actors_blocked", name, min_time, min_distance);
   }
 
-  std::string Client::ReplayFile(std::string name, double start, double duration,
-      uint32_t follow_id, bool replay_sensors, geom::Transform offset) {
+  std::string Client::ReplayFile(
+    std::string name, double start, double duration,
+    uint32_t follow_id, bool replay_sensors, geom::Transform offset,
+    std::string map_override) {
     return _pimpl->CallAndWait<std::string>("replay_file", name, start, duration,
-        follow_id, replay_sensors, offset);
+        follow_id, replay_sensors, offset, map_override);
   }
 
   void Client::StopReplayer(bool keep_actors) {
@@ -686,6 +725,10 @@ namespace detail {
 
   void Client::Send(rpc::ActorId ActorId, std::string message) {
     _pimpl->AsyncCall("send", ActorId, message);
+  }
+
+  void Client::SetIgnoredVehicles(rpc::ActorId ActorId, const std::vector<rpc::ActorId>& vehicle_ids) {
+    _pimpl->CallAndWait<void>("set_ignored_vehicles", ActorId, vehicle_ids);
   }
 
   void Client::EnableGBuffers(rpc::ActorId ActorId, bool bEnabled) {

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -89,6 +89,14 @@ namespace client {
     ///
     /// @note The function returns the rotation of the vehicle based on the it's physics
     float GetWheelSteerAngle(WheelLocation wheel_location);
+
+    /// Sets a @a Pitch Angle to a wheel of the vehicle (affects the bone of the car skeleton, not the physics)
+    void SetWheelPitchAngle(WheelLocation wheel_location, float angle_in_deg);
+
+    /// Return a @a Pitch Angle from a wheel of the vehicle
+    ///
+    /// @note The function returns the pitch angle of the vehicle based on the it's physics
+    float GetWheelPitchAngle(WheelLocation wheel_location);
 
     /// Return the control last applied to this vehicle.
     ///

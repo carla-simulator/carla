@@ -26,17 +26,17 @@
 #include "Carla/Game/CarlaEpisode.h"
 #include "Engine/Public/ConvexVolume.h"
 
-const FColor ACosmosControlSensor::CosmosColors::LaneLines(98, 183, 249, 128);
-const FColor ACosmosControlSensor::CosmosColors::Lanes(56, 103, 221, 128);
-const FColor ACosmosControlSensor::CosmosColors::Poles(66, 40, 144, 128);
-const FColor ACosmosControlSensor::CosmosColors::RoadBoundaries(200, 36, 35, 128);
-const FColor ACosmosControlSensor::CosmosColors::WaitLines(185, 63, 34, 128);
-const FColor ACosmosControlSensor::CosmosColors::Crosswalks(206, 131, 63, 128);
-const FColor ACosmosControlSensor::CosmosColors::RoadMarkings(126, 204, 205, 128);
-const FColor ACosmosControlSensor::CosmosColors::TrafficSigns(131, 175, 155, 128);
-const FColor ACosmosControlSensor::CosmosColors::TrafficLights(252, 157, 155, 128);
-const FColor ACosmosControlSensor::CosmosColors::Cars(200, 36, 35, 128);
-const FColor ACosmosControlSensor::CosmosColors::Pedestrians(0, 255, 0, 128);
+const FColor ACosmosControlSensor::CosmosColors::LaneLines(98, 183, 249, 255);
+const FColor ACosmosControlSensor::CosmosColors::Lanes(56, 103, 221, 255);
+const FColor ACosmosControlSensor::CosmosColors::Poles(66, 40, 144, 255);
+const FColor ACosmosControlSensor::CosmosColors::RoadBoundaries(200, 36, 35, 255);
+const FColor ACosmosControlSensor::CosmosColors::WaitLines(185, 63, 34, 255);
+const FColor ACosmosControlSensor::CosmosColors::Crosswalks(206, 131, 63, 255);
+const FColor ACosmosControlSensor::CosmosColors::RoadMarkings(126, 204, 205, 255);
+const FColor ACosmosControlSensor::CosmosColors::TrafficSigns(131, 175, 155, 255);
+const FColor ACosmosControlSensor::CosmosColors::TrafficLights(252, 157, 155, 255);
+const FColor ACosmosControlSensor::CosmosColors::Cars(255, 0, 0, 255);
+const FColor ACosmosControlSensor::CosmosColors::Pedestrians(0, 255, 0, 255);
 
 
 FActorDefinition ACosmosControlSensor::GetSensorDefinition()
@@ -51,6 +51,8 @@ ACosmosControlSensor::ACosmosControlSensor(
   Tags.Add(FName(TEXT("CosmosControlSensor")));
   added_persisted_stop_lines = false;
   added_persisted_route_lines = false;
+  added_persisted_crosswalks = false;
+  added_persisted_stencils = false;
 
   DynamicLines = CreateDefaultSubobject<ULineBatchComponent_CARLA>(FName(TEXT("CosmosDynamicLinesBatchComponent")));
   PersistentLines = CreateDefaultSubobject<ULineBatchComponent_CARLA>(FName(TEXT("CosmosPersistentLinesBatchComponent")));
@@ -66,6 +68,27 @@ void ACosmosControlSensor::SetUpSceneCaptureComponent(USceneCaptureComponent2D &
   Super::SetUpSceneCaptureComponent(SceneCapture);
 
   SceneCapture.ShowFlags.SetAtmosphere(false);
+  SceneCapture.ShowFlags.SetFog(false);
+  SceneCapture.ShowFlags.SetVolumetricFog(false);
+  SceneCapture.ShowFlags.SetMotionBlur(false);
+  SceneCapture.ShowFlags.SetBloom(false);
+  SceneCapture.ShowFlags.SetEyeAdaptation(false);
+  SceneCapture.ShowFlags.SetTonemapper(false);
+  SceneCapture.ShowFlags.SetColorGrading(false);
+  SceneCapture.ShowFlags.SetDepthOfField(false);
+  SceneCapture.ShowFlags.SetVignette(false);
+  SceneCapture.ShowFlags.SetGrain(false);
+  SceneCapture.ShowFlags.SetLensFlares(false);
+  SceneCapture.ShowFlags.SetAntiAliasing(false);
+  SceneCapture.ShowFlags.SetScreenSpaceReflections(false);
+  SceneCapture.ShowFlags.SetAmbientOcclusion(false);
+  SceneCapture.ShowFlags.SetDirectionalLights(false);
+  SceneCapture.ShowFlags.SetPointLights(false);
+  SceneCapture.ShowFlags.SetSpotLights(false);
+  SceneCapture.ShowFlags.SetSkyLighting(false);
+  SceneCapture.bCaptureEveryFrame = true;
+  SceneCapture.PostProcessSettings.bOverride_ColorGamma = true;
+  SceneCapture.PostProcessSettings.ColorGamma = FVector4(1.0f, 1.0f, 1.0f, 1.0f);
 
   SceneCapture.PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_UseShowOnlyList;
   SceneCapture.ShowOnlyComponents.Empty();
@@ -141,6 +164,12 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     if (!mesh_component->IsVisible()) continue;
     if (mesh_component->GetOwner() == nullptr) continue;
     if (mesh_component->GetOwner() == player_actor) continue;
+    
+    // Check if this is a vehicle and if it's in the ignored vehicles list for this sensor
+    FCarlaActor* CarlaActor = GetEpisode().FindCarlaActor(mesh_component->GetOwner());
+    if (CarlaActor && 
+        CarlaActor->GetActorInfo()->Description.Id.Contains("vehicle") && 
+        IgnoredVehicles.Contains(CarlaActor->GetActorId())) continue;
 
     //Assumed to be off the road (parkings, ceilings)
     //TODO: Better Occlusion techniques to root these out variable height maps)
@@ -203,10 +232,9 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
       
       float half_height = fmax(bounds.BoxExtent.Z, box_extent.Z);
       float distance_to_road = mesh_component->GetComponentLocation().Z;
-      DrawDebugCapsule(World, mesh_component->GetComponentLocation() + FVector(0.0f, 0.0f, half_height), half_height + (distance_to_road > 250.0f ? 0.0f : distance_to_road), 0.1f, FQuat::Identity, vis_color, false, -1, depth_prio, 20);
+      DrawDebugCapsule(World, mesh_component->GetComponentLocation() + FVector(0.0f, 0.0f, half_height), half_height + (distance_to_road > 250.0f ? 0.0f : distance_to_road), 0.1f, FQuat::Identity, vis_color, false, -1, depth_prio, 10);
     }
   }
-
 
   if (!added_persisted_stop_lines)
   {
@@ -222,7 +250,7 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
       DrawDebugLine(World,
         ground_pos + -stop_box_collider->GetScaledBoxExtent().X * stop_box_collider->GetForwardVector() - 710.0f * stop_box_collider->GetRightVector(),
         ground_pos + stop_box_collider->GetScaledBoxExtent().X * stop_box_collider->GetForwardVector() - 710.0f * stop_box_collider->GetRightVector(),
-        CosmosColors::WaitLines.WithAlpha(dist_alpha), true, -1, depth_prio, 20);
+        CosmosColors::WaitLines.WithAlpha(dist_alpha), true, -1, depth_prio, 10);
     }
   }
 
@@ -257,7 +285,7 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
         FColor debug_color = spline->BoundaryType != ERoadSplineBoundaryType::Driving ?
           CosmosColors::RoadBoundaries.WithAlpha(dist_alpha) : CosmosColors::LaneLines.WithAlpha(dist_alpha);
 
-        DrawDebugLine(World, p0, p1, debug_color, true, -1.f, depth_prio, 20.0f);
+        DrawDebugLine(World, p0, p1, debug_color, true, -1.f, depth_prio, 5.0f);
       }
     };
 
@@ -356,41 +384,96 @@ void ACosmosControlSensor::PostPhysTick(UWorld *World, ELevelTick TickType, floa
     }
   }
 
-  //Crosswalks
-  if (carla_game_mode != nullptr)
+  // Crosswalks
+  if (!added_persisted_crosswalks && carla_game_mode != nullptr)
   {
+    added_persisted_crosswalks = true;
+
     std::vector<carla::geom::Location> crosswalks_points = carla_game_mode->GetMap()->GetAllCrosswalkZones();
-    carla::geom::Location first_in_loop = crosswalks_points[0];
-
-    FPlane orientation_plane(
-      crosswalks_points[1].ToFVector(),
-      crosswalks_points[2].ToFVector(),
-      crosswalks_points[1].ToFVector() + FVector(0.0f, 0.0f, 100.0f));
-
-    FVector extent = FVector::ZeroVector;
-    extent.Z = 10.0f;
-    extent.Y = FVector::Dist(crosswalks_points[1].ToFVector(), crosswalks_points[2].ToFVector()) * 100.0f * 0.5f;
-
-    for (int i = 1; i < crosswalks_points.size(); ++i)
+    
+    if (crosswalks_points.size() > 0)
     {
-      if (crosswalks_points[i] == first_in_loop)
-      {
-        FVector centre = ((first_in_loop.ToFVector() + crosswalks_points[i - 2].ToFVector()) * 100.0f * 0.5f) - FVector(0.0f,0.0f,25.0f);
-        extent.X = (orientation_plane.GetNormal() * (first_in_loop.ToFVector() - crosswalks_points[i - 3].ToFVector())).Size() * 100.0f * 0.5f;
-        DrawDebugSolidBox(World, centre, extent, orientation_plane.GetNormal().ToOrientationQuat(), CosmosColors::Crosswalks.WithAlpha(dist_alpha), false, -1.0f, depth_prio);
+      TArray<FVector> current_polygon;
+      carla::geom::Location first_in_loop = crosswalks_points[0];
+      current_polygon.Add(first_in_loop.ToFVector() * 100.0f);
 
-        if (++i < crosswalks_points.size())
+      for (int i = 1; i < crosswalks_points.size(); ++i)
+      {
+        if (crosswalks_points[i] == first_in_loop)
         {
-          first_in_loop = crosswalks_points[i];
-          extent.Y = FVector::Dist(crosswalks_points[i+1].ToFVector(), crosswalks_points[i+2].ToFVector()) * 100.0f * 0.5f;
-          orientation_plane = FPlane(
-            crosswalks_points[i+1].ToFVector(),
-            crosswalks_points[i+2].ToFVector(),
-            crosswalks_points[i+1].ToFVector() + FVector(0.0f, 0.0f, 100.0f));
+          if (current_polygon.Num() >= 3)
+          {
+            TArray<FVector> mesh_vertices = current_polygon;
+            TArray<int32> mesh_indices;
+            
+            // Simple triangulation
+            for (int j = 1; j < current_polygon.Num() - 1; ++j)
+            {
+              mesh_indices.Add(0);
+              mesh_indices.Add(j);
+              mesh_indices.Add(j + 1);
+            }
+            
+            DrawDebugMesh(World, mesh_vertices, mesh_indices, CosmosColors::Crosswalks.WithAlpha(dist_alpha), true, -1.0f, depth_prio);
+            
+            // for (int j = 0; j < current_polygon.Num(); ++j)
+            // {
+            //   int next_j = (j + 1) % current_polygon.Num();
+            //   DrawDebugLine(World, current_polygon[j], current_polygon[next_j], 
+            //               CosmosColors::Crosswalks.WithAlpha(255), true, -1.0f, depth_prio, 15.0f);
+            // }
+          }
+
+          // Start new polygon if more points remain
+          current_polygon.Empty();
+          if (i < crosswalks_points.size() - 1)
+          {
+            first_in_loop = crosswalks_points[++i];
+            current_polygon.Add(first_in_loop.ToFVector() * 100.0f);
+          }
+        }
+        else
+        {
+          current_polygon.Add(crosswalks_points[i].ToFVector() * 100.0f);
         }
       }
     }
+  }
 
+  // Stencils
+  if (!added_persisted_stencils && carla_game_mode != nullptr)
+  {
+    added_persisted_stencils = true;
+
+    const auto& road_stencils = carla_game_mode->GetMap()->GetStencils();
+
+    for (const auto& StencilPair : road_stencils)
+    {
+      const auto& Stencil = StencilPair.second;
+      if (!Stencil)
+      {
+        continue;
+      }
+
+      const FTransform Transform = Stencil->GetTransform();
+      const float StencilWidth = Stencil->GetWidth() * 100.0;
+      const float StencilLength = Stencil->GetLength() * 100.0;
+      FQuat StencilOrientation = Transform.GetRotation();
+
+      TArray<FVector> mesh_vertices = {
+        Transform.GetLocation() + StencilOrientation.RotateVector(FVector(-StencilLength/2, -StencilWidth/2, 0)),
+        Transform.GetLocation() + StencilOrientation.RotateVector(FVector(StencilLength/2, -StencilWidth/2, 0)),
+        Transform.GetLocation() + StencilOrientation.RotateVector(FVector(StencilLength/2, StencilWidth/2, 0)),
+        Transform.GetLocation() + StencilOrientation.RotateVector(FVector(-StencilLength/2, StencilWidth/2, 0))
+      };
+
+      TArray<int32> mesh_indices = {
+        0, 1, 2,
+        0, 2, 3
+      };
+
+      DrawDebugMesh(World, mesh_vertices, mesh_indices, CosmosColors::RoadMarkings.WithAlpha(dist_alpha), true, -1.0f, depth_prio);
+    }
   }
 
   USceneCaptureComponent2D* SceneCapture = GetCaptureComponent2D();
@@ -488,7 +571,23 @@ void ACosmosControlSensor::DrawDebugLine(const UWorld* InWorld, FVector const& L
     // this means foreground lines can't be persistent 
     if (ULineBatchComponent_CARLA* const LineBatcher = GetDebugLineBatcher(bPersistentLines))
     {
-      LineBatcher->DrawLine(LineStart, LineEnd, Color, DepthPriority, Thickness, 0.0f);
+      float rlinear = ((float)Color.R) / 255.0f;
+      float glinear = ((float)Color.G) / 255.0f;
+      float blinear = ((float)Color.B) / 255.0f;
+
+      LineBatcher->DrawLine(LineStart, LineEnd, FLinearColor(rlinear, glinear, blinear), DepthPriority, Thickness, 0.0f);
+    }
+  }
+}
+
+void ACosmosControlSensor::DrawDebugMesh(const UWorld* InWorld, const TArray<FVector>& Vertices, const TArray<int32>& Indices, const FColor& Color, bool bPersistentLines, float LifeTime, uint8 DepthPriority)
+{
+  // no debug mesh drawing on dedicated server
+  if (GEngine->GetNetMode(InWorld) != NM_DedicatedServer)
+  {
+    if (ULineBatchComponent_CARLA* const LineBatcher = GetDebugLineBatcher(bPersistentLines))
+    {
+      LineBatcher->DrawMesh(Vertices, Indices, Color, DepthPriority, 0.0f);
     }
   }
 }

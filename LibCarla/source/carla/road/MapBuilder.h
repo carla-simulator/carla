@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -9,6 +9,8 @@
 #include "carla/road/Map.h"
 #include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/element/RoadInfoSignal.h"
+#include "carla/road/element/RoadInfoStencil.h"
+#include "carla/road/Stencil.h"
 
 #include <boost/optional.hpp>
 
@@ -209,6 +211,22 @@ namespace road {
         const std::string dependency_id,
         const std::string dependency_type);
 
+    // Stencil methods
+    element::RoadInfoStencil* AddStencil(
+        Road* road,
+        const StencilId stencil_id,
+        const double s,
+        const double t,
+        const std::string name,
+        const std::string orientation,
+        const std::string type,
+        const double zOffset,
+        const double heading,
+        const double length,
+        const double width,
+        const double pitch,
+        const double roll);
+
     // called from junction parser
     void AddJunction(
         const JuncId id,
@@ -358,10 +376,12 @@ namespace road {
         const std::set<road::SignId>&& signals
         );
 
-
-
     void SetGeoReference(const geom::GeoLocation &geo_reference) {
-      _map_data._geo_reference = geo_reference;
+        _map_data._geo_reference = geo_reference;
+        }
+
+    void SetGeoProjection(const geom::GeoProjection &geo_projection) {
+      _map_data._geo_projection = geo_projection;
     }
 
   private:
@@ -379,8 +399,13 @@ namespace road {
 
     geom::Transform ComputeSignalTransform(std::unique_ptr<Signal> &signal,  MapData &data);
 
+    geom::Transform ComputeStencilTransform(std::unique_ptr<Stencil> &stencil,  MapData &data);
+
     /// Solves the signal references in the road
     void SolveSignalReferencesAndTransforms();
+
+    /// Solves the stencil references in the road
+    void SolveStencilReferencesAndTransforms();
 
     /// Solve the references between Controllers and Juntions
     void SolveControllerAndJuntionReferences();
@@ -425,6 +450,11 @@ namespace road {
         _temp_signal_container;
 
     std::vector<element::RoadInfoSignal*> _temp_signal_reference_container;
+
+    std::unordered_map<StencilId, std::unique_ptr<Stencil>>
+        _temp_stencil_container;
+
+    std::vector<element::RoadInfoStencil*> _temp_stencil_reference_container;
 
   };
 

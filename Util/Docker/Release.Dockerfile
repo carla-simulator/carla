@@ -23,6 +23,8 @@ ENV OMP_NUM_THREADS="48"
 ENV NVIDIA_DRIVER_CAPABILITIES="all"
 ENV NVIDIA_VISIBLE_DEVICES="all"
 
+USER carla
+
 # you can also run CARLA in offscreen mode with -RenderOffScreen
 # CMD /bin/bash CarlaUE4.sh -RenderOffScreen
 CMD /bin/bash CarlaUE4.sh

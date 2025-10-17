@@ -17,20 +17,51 @@ When you run the replay script, CARLA loads the map and actors from the CARLA Se
 
 To use neural rendering in your CARLA simulations, use the NVIDIA Neural Reconstruction API and data from the NVIDIA Physical AI Dataset. Follow the instructions in this guide.
 
-## Before you Begin
+* __[Before you begin](#before-you-begin)__
+    * [Prerequisites](#prerequisites)
+    * [Hugging Face accoung](#hugging-face-account)
+* __[Setup](#setup)__
+    * [Prerequisite installation](#prerequisite-installation)
+    * [Run the installer script](#run-the-installer-script)
+    * [Example datasets](#example-datasets)
+    * [Python environment](#python-environment)
+    * [Environment variables](#python-environment)
+* __[Run the CARLA NuRec replays](#run-the-carla-nurec-replays)__
+* __[Command line parameters](#command-line-parameters)__
+
+--- 
+
+## Before you begin
+
+### Prerequisites
 
 Before you get started, make sure you have satisifed the following prerequisites:
 
-- [CARLA 0.9.16 or newer package installed](https://carla.readthedocs.io/en/latest/start_quickstart/#carla-installation)
-- CUDA 12.8 or higher
-- [NVIDIA container toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+- Ubuntu 22.04
+- [CARLA 0.9.16 or newer package installed](https://carla.readthedocs.io/en/latest/download/) (use the Nightly Build before the 0.9.16 release)
+- [CUDA 12.8 or higher](https://developer.nvidia.com/cuda-downloads)
 - Python 3.10+
+
+### Hugging face account
+
+The installation downloads some sample datasets from Hugging Face. To complete the installation, you must have a Hugging Face account and create a token.
+
+* If you don't already have a Hugging Face account, [create one](https://huggingface.co/join) and log in.
+* Agree to share your contact information to access the dataset:
+    * Find the dataset on the Hugging face website [here](https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec)
+    * Click on *&#10004; Agree and access repository*
+* [Create a token](https://huggingface.co/settings/tokens) with *Read* permissions
+* Save the token in a safe place and enter it when prompted during the installation
+
+---
 
 ## Setup
 
-To get started with the sample dataset from NVIDIA, use the installer script. If you'd rather customize your dataset, follow the instructions to get the assets from HuggingFace and set up your environment manually.
+### Prerequisite installation
 
-The installer script will attempt to install the following Ubuntu package dependencies.
+The install script will attempt to install the following Ubuntu dependencies. To avoid installation problems, we recommend installing these dependencie before running the NuRec install. 
+
+**Docker**: The NuRec tool uses Docker images, therefore you need Docker installed on your system. The following packages are recommended:
 
 * docker-ce
 * docker-ce-cli
@@ -38,9 +69,7 @@ The installer script will attempt to install the following Ubuntu package depend
 * docker-buildx-plugin
 * docker-compose-plugin
 
-We recommend to pre-install these requirements with the following command to avoid problems during installation:
-
-Add the Docker repository and install Docker:
+We recommend to pre-install these Docker requirements with the following commands. Add the Docker repository and install Docker with `apt-get`:
 
 ```sh
 sudo install -m 0755 -d /etc/apt/keyrings
@@ -67,15 +96,19 @@ sudo usermod -aG docker $USER
 
 Then logout and log back in again or reboot. 
 
+**NVIDIA container toolkit**: The NuRec tool renders the neurally reconstructed scenes from within a running Docker container. The NVIDIA container toolkit is required to allow a Docker container to directly connect to the GPU hardware. Follow [these instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) to install the container toolkit.
+
 **Create a virtual environment**: To avoid conflicts between different Python or library versions, we recommend using a virtual environment to complete the installation. Run the following commands in the terminal to set up a virtual environment:
 
 ```sh
 sudo apt install python3.10-venv
 python3 -m venv vecarla
-source vecarla/bin/activate
+source vecarla/bin/activate # Activate the venv
 ```
 
-### Use the Installer Script
+Remember to activate the virtual environment in each new terminal session you open. 
+
+### Run the Installer Script
 
 To get started quickly and easily with the curated sample set from the [NVIDIA PhysicalAI-Autonomous-Vehicles-NuRec dataset](https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec), navigate to the CARLA root directory on your machine and run the following launch script:
 
@@ -95,28 +128,34 @@ The script will install the following Python packages:
 * carla
 * nvidia-nvimgcodec-cu12
 
-### Use a Custom Dataset
+!!! note
+    You may need to log your Linux user out and log back in again in order for the NuRec tool to work after installation. 
 
-If you'd rather customize the datasets you use, follow the instructions below to get the assets, launch the NuRec container, and install the required Python packages. 
+### Example datasets
 
-1. **Get the pre-trained assets** from the [NVIDIA PhysicalAI-Autonomous-Vehicles-NuRec dataset on HuggingFace](https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec).  
+The NuRec tool can make use of a large collection of pre-trained neural reconstruction datasets, the installer will download the collection from the [NVIDIA PhysicalAI-Autonomous-Vehicles-NuRec dataset on HuggingFace](https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec). The dataset is ~200Gb in size so ensure that you have adequate hard drive space.
 
-2. **Set up your environment.** Download and install the required Python packages by running the following command from the CARLA directory on your machine:  
+### Python environment 
+
+If you are using a specific Python environtment, you should install the required Python packages by running the following command from the CARLA directory on your machine:  
+
+```
+pip install -r requirements.txt
+```
+
+### Set up your environment variables 
+
+The replay script uses two environment variables — `NUREC_IMAGE` and `CUDA_VISIBLE_DEVICES`. If you are customizing your installation, you may need to change these:
+
+* `NUREC_IMAGE` is required and must be set to the full path of the NuRec image in the CARLA repository. Run the following command to set it:  
 
     ```
-    pip install -r requirements.txt
+    export NUREC_IMAGE="docker.io/carlasimulator/nvidia-nurec-grpc:0.2.0"
     ```
 
-3. **Set your environment variables.** The replay script takes two environment variables — `NUREC_IMAGE` and `CUDA_VISIBLE_DEVICES`:
+* [`CUDA_VISIBLE_DEVICES`](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#env-vars) is optional and you can use it to designate the GPU that runs the replays. If you don't set it to a specific GPU, the script defaults to "0" and runs on GPU 0. If you've already set this environment variable, the script inherits whatever has previously been set.
 
-    * `NUREC_IMAGE` is required and must be set to the full path of the NuRec image in the CARLA repository. Run the following command to set it:  
-
-        ```
-        export NUREC_IMAGE="docker.io/carlasimulator/nvidia-nurec-grpc:0.2.0"
-        ```
-
-    * [`CUDA_VISIBLE_DEVICES`](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#env-vars) is optional and you can use it to designate the GPU that runs the replays. If you don't set it to a specific GPU, the script defaults to "0" and runs on GPU 0. If you've already set this environment variable, the script inherits whatever has previously been set.
-
+---
 
 ## Run the CARLA NuRec Replays
 
@@ -126,45 +165,42 @@ If you'd rather customize the datasets you use, follow the instructions below to
 ./CarlaUE4.sh
 ```
 
-**2. Replay a NuRec Scenario:** Once the CARLA server is running, open a new terminal window and navigate to the directory where your CARLA package exists, then replay a NuRec scenario with one of the following scripts. We recommend using the NuRec version 25.07 datasets, which you will find in the `CARLA_ROOT/PythonAPI/examples/nvidia/nurec/PhysicalAI-Autonomous-Vehicles-NuRec/sample_set/25.07_release` directory.
+**2. Replay a NuRec Scenario:** Once the CARLA server is running, open a new terminal window and navigate to the directory where your CARLA package exists, then replay a NuRec scenario with the `example_nurec_replay_save_images.py` script. We recommend using the NuRec version 25.07 datasets, which you will find in the `CARLA_ROOT/PythonAPI/examples/nvidia/nurec/PhysicalAI-Autonomous-Vehicles-NuRec/sample_set/25.07_release` directory.
 
-* **Multi-camera replay:** The script provides a complete, multi-view visualization system, ideal for understanding how to integrate various camera types and create comprehensive monitoring setups. When you run it, it replays simulations with multiple NuRec cameras (front, left cross, right cross) in different camera positions in a Pygame display grid. It also supports additional perspectives pulled from standard CARLA cameras attached to the ego vehicle and multiple camera feeds with different framerates and resolutions. 
+* **Multi-camera replay:** The example script provides a complete, multi-view visualization system, ideal for understanding how to integrate various camera types and create comprehensive monitoring setups. When you run it, it replays simulations with multiple NuRec cameras (front, left cross, right cross) in different camera positions in a Pygame display grid. It also supports additional perspectives pulled from standard CARLA cameras attached to the ego vehicle and multiple camera feeds with different framerates and resolutions. 
+
+!!! note
+    If you are using a virtual environment for Python version consistency, remember to activate the virtual environment with: `source vecarla/bin/activate`
 
 ```sh
+source vecarla/bin/activate # Omit if you are not using a venv
 cd PythonAPI/examples/nvidia/
-python example_replay_recording.py --usdz-filename \
+python example_nurec_replay_save_images.py --usdz-filename \
 PhysicalAI-Autonomous-Vehicles-NuRec/sample_set/25.07 \ 
-_release/026d6a39-bd8f-4175-bc61-fe50ed0403a3/026d6a39-bd8f-4175-bc61-fe50ed0403a3.usdz
+_release/026d6a39-bd8f-4175-bc61-fe50ed0403a3/026d6a39-bd8f-4175-bc61-fe50ed0403a3.usdz #--move-spectator --saveimages
 
 ```
 
-!!! note
-    If you are using a virtual environment for Python version consistency, remember to activate the virtual environment with: `source vecarla/bin/activate`
+* Additional arguments:
 
-* **Custom camera parameters:** If you need to replicate specific camera hardware or match real-world camera calibrations, use this script to configure NuRec cameras with custom intrinsic parameters. The advanced camera configurations available include custom F-Theta configuration, precise intrinsic parameter specification (principal point, distortion polynomials), custom positioning through camera transform matrices, rolling shutter simulation, and real-time visualization using Pygame.  
+    * `--move-spectator`: the CARLA spectator will follow the Ego vehicle to assist in debugging and inspection
+    * `--saveimages`: images rendered by NuRec cameras and CARLA cameras will be saved in a default directory named `data` created in the execution location of the script
+    * `--output-dir`: specify the directory for the output images when using the `--saveimages` flag
 
+* **Custom camera parameters:** If you need to replicate specific camera hardware or match real-world camera calibrations, you can specify the camera configuration in the YAML configuration file. You will find the camera configurations in the `carla_example_camera_config.yml` file in the same directory as the example scripts. Modify this file and re-launch the example script above. You can change the target YAML file on line 173 of the `example_nurec_replay_save_images.py` script:
 
-```sh
-cd PythonAPI/examples/nvidia/
-python example_custom_camera.py --usdz-filename \
-PhysicalAI-Autonomous-Vehicles-NuRec/sample_set/25.07 \
-_release/026d6a39-bd8f-4175-bc61-fe50ed0403a3/026d6a39-bd8f-4175-bc61-fe50ed0403a3.usdz
+```py
+    # Add cameras using the new flexible add_camera method
+
+    with open("your_camera_config.yaml", "r") as f:
+        camera_configs = yaml.safe_load(f)
 ```
 
-!!! note
-    If you are using a virtual environment for Python version consistency, remember to activate the virtual environment with: `source vecarla/bin/activate`
+The advanced camera configurations available include custom F-Theta configuration, precise intrinsic parameter specification (principal point, distortion polynomials), custom positioning through camera transform matrices, rolling shutter simulation, and real-time visualization using Pygame.
 
-* **Image capture:** If you need to export and save images from the scenario replays, use this script. It replays the NuRec scenario and captures images from both NuRec and CARLA cameras, then saves them to the specified output directory. You can customize the framerate and resolution on the NuRec cameras, attach standard CARLA cameras to the ego vehicle, display real-time camera feeds using Pygame, and save the captured images as JPEG (.jpg) files in folders organized by camera type.
+---
 
-```
-source vecarla/bin/activate
-cd PythonAPI/examples/nvidia/
-python example_save_images.py --usdz-filename /path/to/scenario.usdz --output-dir ./captured_images
-```
-
-Run the replay script with as many sample scenarios as needed.
-
-### Command Line Parameters
+### Command line parameters
 
 The following table explains the available command-line parameters for the scripts:
 
@@ -173,5 +209,7 @@ The following table explains the available command-line parameters for the scrip
 | -h | --host | 127.0.0.1 | IP address of the CARLA host server |
 | -p | --port | 2000 | TCP port for the CARLA server |
 | -u | --usdz-filename | (required) | Path to the USDZ file containing the NuRec scenario |
-| -c | --camera | camera_front_wide_120fov | Name of the camera to use for visualization |
+| -np | --nurec-port  | 46435 | TCP port for NuRec-CARLA connection |
+| --saveimages | | Inactive | Save the images generated by NuRec or CARLA cameras |
+| --output-dir | | `data` | Choose directory for `--saveimages` |
 | --move-spectator | | False | Move the spectator camera to follow the ego vehicle |

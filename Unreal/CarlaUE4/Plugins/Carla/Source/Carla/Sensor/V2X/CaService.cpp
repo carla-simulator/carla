@@ -49,7 +49,7 @@ void CaService::SetOwner(UWorld *world, AActor *Owner)
     mWorld = world;
     mCarlaEpisode = UCarlaStatics::GetCurrentEpisode(world);
 
-    CurrentGeoReference = mCarlaEpisode->GetGeoReference();
+    CurrentGeoProjection = mCarlaEpisode->GetGeoProjection();
 
     mActorOwner = Owner;
     mCarlaEpisode = UCarlaStatics::GetCurrentEpisode(mWorld);
@@ -293,7 +293,7 @@ FVector CaService::GetReferencePosition()
         ActorLocation = LargeMap->LocalToGlobalLocation(ActorLocation);
     }
     carla::geom::Location Location = ActorLocation;
-    carla::geom::GeoLocation CurrentLocation = CurrentGeoReference.Transform(Location);
+    carla::geom::GeoLocation CurrentLocation = CurrentGeoProjection.TransformToGeoLocation(Location);
 
     // Compute the noise for the sensor
     const float LatError = mRandomEngine->GetNormalDistribution(0.0f, LatitudeDeviation);

@@ -1,0 +1,50 @@
+# SPDX-FileCopyrightText: © 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
+FROM nvcr.io/nvidia/tritonserver:25.04-vllm-python-py3
+
+# Install system dependencies
+RUN apt-get update && apt-get --no-install-recommends install -y git tree ffmpeg wget libglib2.0-0 supervisor
+
+# Fix shell and CUDA link
+RUN rm /bin/sh && ln -s /bin/bash /bin/sh && ln -s /lib64/libcuda.so.1 /lib64/libcuda.so
+
+# Set workdir
+WORKDIR /workspace
+
+# Remove conflicting pre-installed packages if needed
+RUN rm -rf /usr/lib/python3/dist-packages/blinker-1.7.0.dist-info
+
+# Install Python dependencies from both requirements files
+RUN pip install -v --upgrade --no-build-isolation --no-dependencies sam2==1.1.0 && \
+    pip install transformer-engine[pytorch] && \
+    pip install decord==0.6.0 && \
+    git clone https://github.com/NVIDIA/apex && \
+    pip install -v --disable-pip-version-check --no-cache-dir --no-build-isolation \
+        --config-settings "--build-option=--cpp_ext" \
+        --config-settings "--build-option=--cuda_ext" ./apex && \
+    rm -rf apex
+
+
+# Install libmagic
+RUN apt-get --no-install-recommends install -y libmagic-dev
+
+# Copy all project files and folders into the image
+COPY . .
+
+# Install Python dependencies from both requirements files
+RUN pip install --no-cache-dir -r requirements_docker.txt && \
+    pip install --no-cache-dir -r requirements_server.txt
+
+# Link python explicitly if not already done
+RUN ln -sf /usr/bin/python3.12 /usr/bin/python
+
+# Clean up some residuals from the base image
+RUN rm -fr /root/.cache/bazel/
+
+# Create necessary directories
+RUN mkdir -p storage/jobs_data storage/results logs
+
+# Supervisor will run the API and worker
+CMD ["supervisord", "-c", "supervisord.conf"]

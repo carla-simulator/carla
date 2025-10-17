@@ -167,6 +167,7 @@ void ACarlaGameModeBase::InitGame(
     StoreSpawnPoints();
     SpawnRoadSplines();
   }
+
 }
 
 void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
@@ -477,7 +478,7 @@ void ACarlaGameModeBase::ParseOpenDrive()
   }
   else
   {
-    Episode->MapGeoReference = Map->GetGeoReference();
+    Episode->MapGeoProjection = Map->GetGeoProjection();
   }
 }
 

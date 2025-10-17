@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -119,5 +119,16 @@ namespace client {
     return Actor::Destroy();
   }
 
+  //Only Functional in Cosmos Control Sensor
+  void ServerSideSensor::SetIgnoredVehicles(const std::vector<ActorId>& vehicle_ids) {
+    _ignored_actors = vehicle_ids;
+    GetEpisode().Lock()->SetIgnoredVehicles(*this, vehicle_ids);
+  }
+
+  std::vector<ActorId> ServerSideSensor::GetIgnoredVehicles() const {
+    return _ignored_actors;
+  }
+
 } // namespace client
 } // namespace carla
+

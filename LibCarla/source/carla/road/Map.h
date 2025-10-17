@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -6,22 +6,24 @@
 
 #pragma once
 
+#include <map>
+#include <vector>
+
+#include <boost/optional.hpp>
+
 #include "carla/geom/Mesh.h"
 #include "carla/geom/Rtree.h"
 #include "carla/geom/Transform.h"
 #include "carla/NonCopyable.h"
 #include "carla/road/element/LaneMarking.h"
 #include "carla/road/element/RoadInfoMarkRecord.h"
+#include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/element/Waypoint.h"
 #include "carla/road/MapData.h"
 #include "carla/road/RoadTypes.h"
 #include "carla/road/MeshFactory.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/rpc/OpendriveGenerationParameters.h"
-
-#include <boost/optional.hpp>
-
-#include <vector>
 
 namespace carla {
 namespace road {
@@ -45,6 +47,10 @@ namespace road {
 
     const geom::GeoLocation &GetGeoReference() const {
       return _data.GetGeoReference();
+    }
+
+    const geom::GeoProjection &GetGeoProjection() const {
+      return _data.GetGeoProjection();
     }
 
     /// ========================================================================
@@ -90,6 +96,11 @@ namespace road {
     /// Returns a list of locations defining 2d areas,
     /// when a location is repeated an area is finished
     std::vector<geom::Location> GetAllCrosswalkZones() const;
+
+    /// Returns a list of locations defining 2d areas,
+    /// when a location is repeated an area is finished
+    std::map<const carla::road::element::RoadInfoCrosswalk* ,
+               std::vector<geom::Location>> GetAllCrosswalksInfo() const;
 
     const std::unordered_map<RoadId, Road>& GetRoads() const {
       return _data.GetRoads();
@@ -196,6 +207,24 @@ namespace road {
     const std::unordered_map<ContId, std::unique_ptr<Controller>>& GetControllers() const {
       return _data.GetControllers();
     }
+
+    const std::unordered_map<StencilId, std::unique_ptr<Stencil>>& GetStencils() const {
+      return _data.GetStencils();
+    }
+    /// Data structure for the stencil search
+    struct StencilSearchData {
+      const element::RoadInfoStencil *stencil;
+      Waypoint waypoint;
+      double accumulated_s = 0;
+    };
+
+    /// Searches stencils from an initial waypoint until the defined distance.
+    std::vector<StencilSearchData> GetStencilsInDistance(
+        Waypoint waypoint, double distance, bool stop_at_junction = false) const;
+
+    /// Return all RoadInfoStencil in the map
+    std::vector<const element::RoadInfoStencil*>
+        GetAllStencilReferences() const;
 
     std::vector<carla::geom::BoundingBox> GetJunctionsBoundingBoxes() const;
 

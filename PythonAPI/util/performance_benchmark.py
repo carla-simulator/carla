@@ -31,10 +31,8 @@ if sys.version_info[0] < 3:
 from tr import tr
 import argparse
 import cpuinfo
-import glob
 import math
 import numpy as np
-import os
 import psutil
 import pygame
 import shutil
@@ -42,14 +40,6 @@ import GPUtil
 import threading
 import time
 import logging
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 

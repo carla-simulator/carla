@@ -292,6 +292,16 @@
       doc: >
         Generates a binary file from the CARLA map containing information used by the Traffic Manager. This method is only used during the import process for maps.
     # --------------------------------------
+    - def_name: get_geoprojection
+      doc: >
+        Returns the geoprojection defined for the map through the OpenDRIVE metadata.
+      return: one of carla.GeoProjectionLCC2SP, carla.GeoProjectionTM, carla.GeoProjectionUTM, carla.GeoProjectionWebMerc
+    # --------------------------------------
+    - def_name: get_georeference
+      doc: >
+        Returns the carla.GeoLocation of the center of the map.
+      return: carla.GeoLocation
+    # --------------------------------------
     - def_name: __str__
     # --------------------------------------
 
@@ -769,4 +779,253 @@
 
         <small>Example: In a road with 5 lanes, being 3 not affected: [(from_lane1,to_lane2),(from_lane4,to_lane5)]</small>
     # --------------------------------------
+
+  - class_name: GeoProjectionTM
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class defining the Transverse Mercator map projection.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: lat_0
+      type: float
+      doc: >
+        Latitude of the center of the map.
+    - var_name: lon_0
+      type: float
+      doc: >
+        Longitude of the center of the map.
+    - var_name: k
+      type: float
+      doc: >
+        Scale factor.
+    - var_name: x_0
+      type: float
+      doc: >
+        False Easting offset.
+    - var_name: y_0
+      type: float
+      doc: >
+        False Northing offset.
+    - var_name: ellps
+      type: carla.GeoEllipsoid
+      doc: >
+        Geoellipsoid used for the projection.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: lat_0
+        type: float
+        default: 0.0
+        doc: >
+          Latitude value for map origin.
+      - param_name: lon_0
+        type: float
+        default: 0.0
+        doc: >
+          Longitude value for map origin.
+      - param_name: k
+        type: float
+        default: 1.0
+        doc: >
+          Scale factor near origin.
+      - param_name: x_0
+        type: float
+        default: 0.0
+        doc: >
+          False Easting offset.
+      - param_name: y_0
+        type: float
+        default: 0.0
+        doc: >
+          False Northing offset.
+      - param_name: ellps
+        type: carla.GeoEllipsoid
+        default: carla.GeoEllipsoid
+        doc: >
+          Geoellipsoid used for the projection.
+      return: carla.GeoProjectionTM
+      doc: >
+        Constructor for this class.
+  #---------------------------------------
+
+  - class_name: GeoProjectionUTM
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class defining the Universal Transverse Mercator map projection.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: zone
+      type: int
+      default: 31
+      doc: >
+        Longitude zone, 1-60.
+    - var_name: north
+      type: bool
+      default: True
+      doc: >
+        Boolean defining the northern (True) or southern (False) hemisphere.
+    - var_name: ellps
+      type: carla.GeoEllipsoid
+      doc: >
+        Geoellipsoid used for the projection.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: zone
+        type: int
+        default: 31
+        doc: >
+          Longitude zone, 1-60.
+      - param_name: north
+        type: bool
+        default: True
+        doc: >
+          Boolean defining the northern (True) or southern (False) hemisphere.
+      - param_name: ellps
+        type: carla.GeoEllipsoid
+        default: carla.GeoEllipsoid
+        doc: >
+          Geoellipsoid used for the projection.
+      return: carla.GeoProjectionUTM
+      doc: >
+        Constructor for this class.
+  #---------------------------------------
+
+  - class_name: GeoProjectionWebMerc
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class defining the Web Mercator map projection. Since the Web Mercator assumes a spherical earth, only the *a* parameter is relevant for the provided ellipsoid.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: ellps
+      type: carla.GeoEllipsoid
+      doc: >
+        Geoellipsoid used for the projection.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: ellps
+        type: carla.GeoEllipsoid
+        default: carla.GeoEllipsoid
+        doc: >
+          Geoellipsoid used for the projection.
+      return: carla.GeoProjectionWebMerc
+      doc: >
+        Constructor for this class.
+  #----------------------------------------
+
+  - class_name: GeoProjectionLCC2SP
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class defining the Lambert Conformal Conic 2SP map projection.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: lat_0
+      type: float
+      doc: >
+        Latitude of the center of the map.
+    - var_name: lat_1
+      type: float
+      doc: >
+        Latitude of 1st standard parallel.
+    - var_name: lat_2
+      type: float
+      doc: >
+        Latitude of 2nd standard parallel.
+    - var_name: lon_0
+      type: float
+      doc: >
+        Longitude of the center of the map.
+    - var_name: x_0
+      type: float
+      doc: >
+        False Easting offset.
+    - var_name: y_0
+      type: float
+      doc: >
+        False Northing offset.
+    - var_name: ellps
+      type: carla.GeoEllipsoid
+      doc: >
+        Geoellipsoid used for the projection.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: lat_0
+        type: float
+        default: 0.0
+        doc: >
+          Latitude value for map origin.
+      - param_name: lat_1
+        type: float
+        default: -5.0
+        doc: >
+          Latitude of 1st standard parallel.
+      - param_name: lat_2
+        type: float
+        default: 5.0
+        doc: >
+          Latitude of 2nd standard parallel.
+      - param_name: lon_0
+        type: float
+        default: 0.0
+        doc: >
+          Longitude value for map origin.
+      - param_name: x_0
+        type: float
+        default: 0.0
+        doc: >
+          False Easting offset.
+      - param_name: y_0
+        type: float
+        default: 0.0
+        doc: >
+          False Northing offset.
+      - param_name: ellps
+        type: carla.GeoEllipsoid
+        default: carla.GeoEllipsoid
+        doc: >
+          Geoellipsoid used for the projection.
+      return: carla.GeoProjectionLCC2SP
+      doc: >
+        Constructor for this class.
+  #---------------------------------------
+
+  - class_name: GeoEllipsoid
+    # - DESCRIPTION ------------------------
+    doc: >
+      Geoellipsoid for map projection.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: a
+      type: float
+      doc: >
+        Semi-major axis in meters.
+    - var_name: f_inv
+      type: float
+      doc: >
+        Inverse flattening.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __init__
+      params:
+      - param_name: a
+        type: float
+        default: 6378137.0
+        doc: >
+          Semi-major axis in meters.
+      - param_name: f_inv
+        type: float
+        default: 298.257223563
+        doc: >
+          Inverse flattening.
+      return: carla.GeoEllipsoid
+      doc: >
+        Constructor for this class.
+  #----------------------------------------
+
 ...
