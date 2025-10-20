@@ -490,7 +490,7 @@ std::vector<ActorId> TrafficManagerLocal::GetRegisteredVehiclesIDs() {
 
 void TrafficManagerLocal::SetRandomDeviceSeed(const uint64_t _seed) {
   seed = _seed;
-  random_device = RandomGenerator(seed);
+  random_device = UniformPRNG(seed);
   world.ResetAllTrafficLights();
 }
 

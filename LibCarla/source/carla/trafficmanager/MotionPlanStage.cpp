@@ -41,7 +41,7 @@ MotionPlanStage::MotionPlanStage(
   const TLFrame &tl_frame,
   const cc::World &world,
   ControlFrame &output_array,
-  RandomGenerator &random_device,
+  UniformPRNG &random_device,
   const LocalMapPtr &local_map)
     : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),

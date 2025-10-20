@@ -8,7 +8,7 @@
 #include "carla/trafficmanager/InMemoryMap.h"
 #include "carla/trafficmanager/LocalizationUtils.h"
 #include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/RandomGenerator.h"
+#include "carla/trafficmanager/UniformPRNG.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
 #include "carla/trafficmanager/TrackTraffic.h"
@@ -42,7 +42,7 @@ private:
   std::unordered_map<ActorId, cc::Timestamp> teleportation_instance;
   ControlFrame &output_array;
   cc::Timestamp current_timestamp;
-  RandomGenerator &random_device;
+  UniformPRNG &random_device;
   const LocalMapPtr &local_map;
 
   std::pair<bool, float> CollisionHandling(const CollisionHazardData &collision_hazard,
@@ -82,7 +82,7 @@ public:
                   const TLFrame &tl_frame,
                   const cc::World &world,
                   ControlFrame &output_array,
-                  RandomGenerator &random_device,
+                  UniformPRNG &random_device,
                   const LocalMapPtr &local_map);
 
   void Update(const unsigned long index);

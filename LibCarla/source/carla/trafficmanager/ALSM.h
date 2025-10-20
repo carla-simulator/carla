@@ -15,7 +15,7 @@
 #include "carla/trafficmanager/LocalizationStage.h"
 #include "carla/trafficmanager/MotionPlanStage.h"
 #include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/RandomGenerator.h"
+#include "carla/trafficmanager/UniformPRNG.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/TrafficLightStage.h"
 #include "carla/trafficmanager/VehicleLightStage.h"

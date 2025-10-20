@@ -22,7 +22,7 @@ LocalizationStage::LocalizationStage(
   Parameters &parameters,
   std::vector<ActorId>& marked_for_removal,
   LocalizationFrame &output_array,
-  RandomGenerator &random_device)
+  UniformPRNG &random_device)
     : vehicle_id_list(vehicle_id_list),
     buffer_map(buffer_map),
     simulation_state(simulation_state),
@@ -197,8 +197,7 @@ void LocalizationStage::Update(const unsigned long index) {
       uint64_t selection_index = 0u;
       // Pseudo-randomized path selection if found more than one choice.
       if (next_waypoints.size() > 1) {
-        double r_sample = random_device.next();
-        selection_index = static_cast<uint64_t>(r_sample*next_waypoints.size()*0.01);
+        selection_index = random_device.next<uint64_t>(0, next_waypoints.size());
       } else if (next_waypoints.size() == 0) {
         if (!parameters.GetOSMMode()) {
           std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
@@ -482,7 +481,7 @@ void LocalizationStage::ImportPath(Path &imported_path, Buffer &waypoint_buffer,
 
       // Choose correct path.
       if (next_waypoints.size() > 1) {
-        const float imported_road_id = imported->GetWaypoint()->GetRoadId();
+        auto imported_road_id = imported->GetWaypoint()->GetRoadId();
         float min_distance = std::numeric_limits<float>::infinity();
         for (uint64_t k = 0u; k < next_waypoints.size(); ++k) {
           SimpleWaypointPtr junction_end_point = next_waypoints.at(k);
@@ -495,7 +494,7 @@ void LocalizationStage::ImportPath(Path &imported_path, Buffer &waypoint_buffer,
           while (next_waypoints.at(k)->DistanceSquared(junction_end_point) < 50.0f) {
             junction_end_point = junction_end_point->GetNextWaypoint().front();
           }
-          float jep_road_id = junction_end_point->GetWaypoint()->GetRoadId();
+          auto jep_road_id = junction_end_point->GetWaypoint()->GetRoadId();
           if (jep_road_id == imported_road_id) {
             selection_index = k;
             break;
