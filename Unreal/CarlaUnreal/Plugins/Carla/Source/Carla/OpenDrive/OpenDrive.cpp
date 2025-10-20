@@ -22,8 +22,6 @@ FString UOpenDrive::FindPathToXODRFile(const FString &InMapName){
 
 #if WITH_EDITOR
     {
-      // When playing in editor the map name gets an extra prefix, here we
-      // remove it.
       FString CorrectedMapName = MapName;
       constexpr auto PIEPrefix = TEXT("UEDPIE_0_");
       CorrectedMapName.RemoveFromStart(PIEPrefix);
@@ -31,12 +29,12 @@ FString UOpenDrive::FindPathToXODRFile(const FString &InMapName){
     }
 #endif // WITH_EDITOR
 
-  MapName += TEXT(".xodr");
+  FString XODRFileName = MapName + TEXT(".xodr");
 
   const FString DefaultFilePath =
       FPaths::ProjectContentDir() +
       TEXT("Carla/Maps/OpenDrive/") +
-      MapName;
+      XODRFileName;
 
   auto &FileManager = IFileManager::Get();
 
@@ -49,20 +47,46 @@ FString UOpenDrive::FindPathToXODRFile(const FString &InMapName){
   FileManager.FindFilesRecursive(
       FilesFound,
       *FPaths::ProjectContentDir(),
-      *MapName,
+      *XODRFileName,
       true,
       false,
       false);
 
-  return FilesFound.Num() > 0 ? FilesFound[0u] : FString{};
+  if (FilesFound.Num() > 0)
+  {
+    return FilesFound[0u];
+  }
+
+  FString PluginPath = FPaths::ProjectDir() + TEXT("Plugins/") + MapName + TEXT("/Content/Maps/OpenDrive/") + XODRFileName;
+
+  if (FileManager.FileExists(*PluginPath))
+  {
+    return PluginPath;
+  }
+
+  FString PluginsDir = FPaths::ProjectDir() + TEXT("Plugins/");
+
+  TArray<FString> PluginFilesFound;
+  FileManager.FindFilesRecursive(
+      PluginFilesFound,
+      *PluginsDir,
+      *XODRFileName,
+      true,
+      false,
+      false);
+
+  if (PluginFilesFound.Num() > 0)
+  {
+    return PluginFilesFound[0u];
+  }
+
+  return FString{};
 }
 
 FString UOpenDrive::GetXODR(const UWorld *World)
 {
   auto MapName = World->GetMapName();
 
-  // When playing in editor the map name gets an extra prefix, here we
-  // remove it.
   #if WITH_EDITOR
   {
     FString CorrectedMapName = MapName;
@@ -70,31 +94,35 @@ FString UOpenDrive::GetXODR(const UWorld *World)
     CorrectedMapName.RemoveFromStart(PIEPrefix);
     MapName = CorrectedMapName;
   }
-  #endif // WITH_EDITOR
+  #endif
 
   ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World);
-
   auto MapDir = GameMode->GetFullMapPath();
   const auto FolderDir = MapDir + "/OpenDrive/";
   const auto FileName = MapDir.EndsWith(MapName) ? "*" : MapName;
 
-  // Find all the xodr and bin files from the map
   TArray<FString> Files;
   IFileManager::Get().FindFilesRecursive(Files, *FolderDir, *FString(FileName + ".xodr"), true, false, false);
+
+  if (!Files.Num())
+  {
+    FString PluginFolder = FPaths::ProjectDir() + TEXT("Plugins/") + MapName + TEXT("/Content/Maps/OpenDrive/");
+    IFileManager::Get().FindFilesRecursive(Files, *PluginFolder, *FString(FileName + ".xodr"), true, false, false);
+  }
 
   FString Content;
 
   if (!Files.Num())
   {
-    UE_LOG(LogTemp, Error, TEXT("Failed to find OpenDrive file for map '%s'"), *MapName);
+    UE_LOG(LogCarla, Error, TEXT("No OpenDrive file found for map '%s'"), *MapName);
   }
   else if (FFileHelper::LoadFileToString(Content, *Files[0]))
   {
-    UE_LOG(LogTemp, Log, TEXT("Loaded OpenDrive file '%s'"), *Files[0]);
+    UE_LOG(LogCarla, Log, TEXT("Loaded OpenDrive file '%s'"), *Files[0]);
   }
   else
   {
-    UE_LOG(LogTemp, Error, TEXT("Failed to load OpenDrive file '%s'"), *Files[0]);
+    UE_LOG(LogCarla, Error, TEXT("Failed to load OpenDrive file '%s'"), *Files[0]);
   }
 
   return Content;
@@ -204,7 +232,7 @@ UOpenDriveMap *UOpenDrive::LoadCurrentOpenDriveMap(const UObject *WorldContextOb
     return nullptr;
 
   return LoadOpenDriveMap(World->GetMapName());
-  
+
 #else
 
   return nullptr;
