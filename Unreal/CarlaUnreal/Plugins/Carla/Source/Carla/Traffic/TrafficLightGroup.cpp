@@ -64,6 +64,12 @@ void ATrafficLightGroup::Tick(float DeltaTime)
     return;
   }
 
+  if (Controllers.Num() == 0)
+  {
+    UE_LOG(LogCarla, Error, TEXT("TrafficLightGroup::Tick() JunctionId=%d has NO CONTROLLERS!"), JunctionId);
+    return;
+  }
+
   UTrafficLightController* controller = Controllers[CurrentController];
   if (controller->AdvanceTimeAndCycleFinished(DeltaTime))
   {
