@@ -2,6 +2,7 @@
 
 * Added actor description as Actor TAGs
 * Create class with functions to import points and polylines from satellite segmentation (#8946, #8949 #8950)
+* Python API: Allow `from carla.command import ...` (#9367)
 
 ## CARLA 0.10.0
 
