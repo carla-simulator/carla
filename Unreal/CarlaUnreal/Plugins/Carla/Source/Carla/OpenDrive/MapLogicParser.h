@@ -54,6 +54,9 @@ struct FTrafficLightLogicData
   FString ActorName;
 
   UPROPERTY()
+  FString SignalID;
+
+  UPROPERTY()
   int32 JunctionID = -1;
 
   UPROPERTY()
@@ -78,6 +81,11 @@ public:
   /// @param TrafficLightManager The traffic light manager to apply configuration to
   /// @return true if map_logic.json was found and applied successfully, false otherwise
   static bool ParseAndApplyMapLogic(const FString& XODRFilePath, ATrafficLightManager* TrafficLightManager);
+
+  /// Apply lane IDs from map_logic.json to traffic light components
+  /// @param XODRFilePath Path to the .xodr file (will look for map_logic.json in same directory)
+  /// @param TrafficLightManager The traffic light manager to apply configuration to
+  static void ApplyLaneIdsFromMapLogic(const FString& XODRFilePath, ATrafficLightManager* TrafficLightManager);
 
 private:
 
@@ -105,10 +113,4 @@ private:
   /// @param FilePath Full path to a file
   /// @return Directory path without the filename
   static FString GetDirectoryPath(const FString& FilePath);
-
-  /// Spawn a visible trigger box at the traffic light location for testing
-  /// @param TargetActor The actor to place the trigger box at
-  /// @param TrafficLightName Name of the traffic light for logging
-  /// @param World The world to spawn in
-  static void SpawnVisibleTriggerBox(AActor* TargetActor, const FString& TrafficLightName, UWorld* World);
 };

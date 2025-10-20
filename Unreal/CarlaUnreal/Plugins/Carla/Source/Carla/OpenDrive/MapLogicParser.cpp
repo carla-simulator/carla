@@ -6,7 +6,9 @@
 
 #include "MapLogicParser.h"
 #include "Traffic/TrafficLightController.h"
-#include "TriggerBoxActor.h"
+#include "Traffic/TrafficLightComponent.h"
+#include "Traffic/DigitalTwinsTrafficLight.h"
+#include "Traffic/TrafficLightBase.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Dom/JsonObject.h"
@@ -20,6 +22,10 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Engine/StaticMesh.h"
 #include <util/ue-header-guard-end.h>
+
+#include <util/disable-ue4-macros.h>
+#include <carla/road/element/RoadInfoSignal.h>
+#include <util/enable-ue4-macros.h>
 
 bool UMapLogicParser::ParseAndApplyMapLogic(const FString& XODRFilePath, ATrafficLightManager* TrafficLightManager)
 {
@@ -35,17 +41,14 @@ bool UMapLogicParser::ParseAndApplyMapLogic(const FString& XODRFilePath, ATraffi
     return false;
   }
 
-  // Load traffic light logic data from JSON
   TArray<FTrafficLightLogicData> LogicData = LoadMapLogicFromJSON(XODRFilePath);
 
   if (LogicData.Num() == 0)
   {
-    // No JSON file found or no data - this is normal for native CARLA maps
     UE_LOG(LogCarla, Log, TEXT("MapLogicParser: No map_logic.json found for %s, using default timing"), *XODRFilePath);
     return false;
   }
 
-  // Apply the configuration
   ApplyTrafficLightLogic(LogicData, TrafficLightManager);
 
   UE_LOG(LogCarla, Log, TEXT("MapLogicParser: Applied custom timing to %d traffic light controllers"), LogicData.Num());
@@ -56,21 +59,15 @@ TArray<FTrafficLightLogicData> UMapLogicParser::LoadMapLogicFromJSON(const FStri
 {
   TArray<FTrafficLightLogicData> Result;
 
-  // Construct path to map_logic.json in the same directory as the XODR file
   FString DirectoryPath = GetDirectoryPath(XODRFilePath);
   FString JsonFilePath = FPaths::Combine(DirectoryPath, TEXT("map_logic.json"));
 
-  UE_LOG(LogCarla, Log, TEXT("MapLogicParser: Looking for map_logic.json at: %s"), *JsonFilePath);
-
-  // Check if file exists
   if (!FPlatformFileManager::Get().GetPlatformFile().FileExists(*JsonFilePath))
   {
-    // This is normal - not all maps will have map_logic.json
     UE_LOG(LogCarla, Log, TEXT("MapLogicParser: map_logic.json not found at %s"), *JsonFilePath);
     return Result;
   }
 
-  // Load file content
   FString JsonString;
   if (!FFileHelper::LoadFileToString(JsonString, *JsonFilePath))
   {
@@ -78,11 +75,7 @@ TArray<FTrafficLightLogicData> UMapLogicParser::LoadMapLogicFromJSON(const FStri
     return Result;
   }
 
-  // DEBUG: Log the raw JSON content
   UE_LOG(LogCarla, Log, TEXT("MapLogicParser: Successfully loaded map_logic.json from %s"), *JsonFilePath);
-  UE_LOG(LogCarla, Log, TEXT("MapLogicParser: Raw JSON content:\n%s"), *JsonString);
-
-  // Parse JSON
   TSharedPtr<FJsonObject> JsonObject;
   TSharedRef<TJsonReader<>> Reader = TJsonReaderFactory<>::Create(JsonString);
 
@@ -92,7 +85,6 @@ TArray<FTrafficLightLogicData> UMapLogicParser::LoadMapLogicFromJSON(const FStri
     return Result;
   }
 
-  // Get TrafficLights array
   const TArray<TSharedPtr<FJsonValue>>* TrafficLightsArray;
   if (!JsonObject->TryGetArrayField(TEXT("TrafficLights"), TrafficLightsArray))
   {
@@ -100,7 +92,6 @@ TArray<FTrafficLightLogicData> UMapLogicParser::LoadMapLogicFromJSON(const FStri
     return Result;
   }
 
-  // Parse each traffic light entry
   for (const auto& JsonValue : *TrafficLightsArray)
   {
     TSharedPtr<FJsonObject> TrafficLightJson = JsonValue->AsObject();
@@ -113,29 +104,6 @@ TArray<FTrafficLightLogicData> UMapLogicParser::LoadMapLogicFromJSON(const FStri
 
   UE_LOG(LogCarla, Log, TEXT("MapLogicParser: Loaded %d traffic light configurations from %s"), Result.Num(), *JsonFilePath);
 
-  // DEBUG: Log each loaded traffic light configuration
-  for (int32 i = 0; i < Result.Num(); i++)
-  {
-    const FTrafficLightLogicData& Data = Result[i];
-    UE_LOG(LogCarla, Log, TEXT("MapLogicParser: [%d] ActorName='%s' GroupID='%s' JunctionID=%d Timing(R:%.1f G:%.1f Y:%.1f)"),
-           i, *Data.ActorName, *Data.TrafficLightGroupID, Data.JunctionID,
-           Data.Timing.RedDuration, Data.Timing.GreenDuration, Data.Timing.AmberDuration);
-
-    // Log modules and their lane IDs
-    for (int32 j = 0; j < Data.Modules.Num(); j++)
-    {
-      const FTrafficLightModule& Module = Data.Modules[j];
-      FString LaneIdsStr = TEXT("[");
-      for (int32 k = 0; k < Module.LaneIds.Num(); k++)
-      {
-        LaneIdsStr += FString::Printf(TEXT("%d"), Module.LaneIds[k]);
-        if (k < Module.LaneIds.Num() - 1) LaneIdsStr += TEXT(", ");
-      }
-      LaneIdsStr += TEXT("]");
-      UE_LOG(LogCarla, Log, TEXT("MapLogicParser: [%d] Module[%d] LaneIds=%s"), i, j, *LaneIdsStr);
-    }
-  }
-
   return Result;
 }
 
@@ -144,126 +112,27 @@ void UMapLogicParser::ApplyTrafficLightLogic(const TArray<FTrafficLightLogicData
   int32 SuccessCount = 0;
   int32 FailedCount = 0;
 
-  UE_LOG(LogCarla, Log, TEXT("MapLogicParser: Starting to apply timing configuration to %d traffic lights"), LogicData.Num());
-
   for (const auto& Data : LogicData)
   {
-    UE_LOG(LogCarla, Log, TEXT("MapLogicParser: Processing traffic light '%s' (GroupID='%s', JunctionID=%d)"),
-           *Data.ActorName, *Data.TrafficLightGroupID, Data.JunctionID);
-
-    // STEP 1: Try to find the actor by name in the scene (search both AActor and AStaticMeshActor)
-    UWorld* World = TrafficLightManager->GetWorld();
-    AActor* FoundActor = nullptr;
-
-    UE_LOG(LogCarla, Warning, TEXT("MapLogicParser: 🔍 DEBUG - Looking for actor: '%s'"), *Data.ActorName);
-
-    // Search in all Actors first
-    TArray<AActor*> AllActors;
-    UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), AllActors);
-
-    UE_LOG(LogCarla, Warning, TEXT("MapLogicParser: 🔍 DEBUG - Found %d total actors in scene"), AllActors.Num());
-
-    // DEBUG: Log first 10 actors to see naming patterns
-    for (int32 i = 0; i < FMath::Min(10, AllActors.Num()); i++)
-    {
-      if (AllActors[i])
-      {
-        UE_LOG(LogCarla, Warning, TEXT("MapLogicParser: 🔍 DEBUG - Actor[%d]: '%s' (Class: %s)"),
-               i, *AllActors[i]->GetName(), *AllActors[i]->GetClass()->GetName());
-      }
-    }
-
-    // Look for actors that contain part of our target name
-    UE_LOG(LogCarla, Warning, TEXT("MapLogicParser: 🔍 DEBUG - Searching for actors containing 'BP_TrafficLight'"));
-    for (AActor* Actor : AllActors)
-    {
-      if (Actor && Actor->GetName().Contains(TEXT("BP_TrafficLight")))
-      {
-        UE_LOG(LogCarla, Warning, TEXT("MapLogicParser: 🔍 DEBUG - Found BP_TrafficLight actor: '%s'"), *Actor->GetName());
-      }
-    }
-
-    // Exact match search
-    for (AActor* Actor : AllActors)
-    {
-      if (Actor && Actor->GetName() == Data.ActorName)
-      {
-        FoundActor = Actor;
-        UE_LOG(LogCarla, Warning, TEXT("MapLogicParser: ✅ FOUND ACTOR '%s' at location (%.1f, %.1f, %.1f)"),
-               *Data.ActorName,
-               FoundActor->GetActorLocation().X,
-               FoundActor->GetActorLocation().Y,
-               FoundActor->GetActorLocation().Z);
-        break;
-      }
-    }
-
-    // Search specifically in StaticMeshActors if not found
-    if (!FoundActor)
-    {
-      TArray<AActor*> StaticMeshActors;
-      UGameplayStatics::GetAllActorsOfClass(World, AStaticMeshActor::StaticClass(), StaticMeshActors);
-
-      UE_LOG(LogCarla, Warning, TEXT("MapLogicParser: 🔍 DEBUG - Found %d StaticMeshActors"), StaticMeshActors.Num());
-
-      for (AActor* Actor : StaticMeshActors)
-      {
-        if (Actor && Actor->GetName() == Data.ActorName)
-        {
-          FoundActor = Actor;
-          UE_LOG(LogCarla, Warning, TEXT("MapLogicParser: ✅ FOUND STATIC MESH ACTOR '%s' at location (%.1f, %.1f, %.1f)"),
-                 *Data.ActorName,
-                 FoundActor->GetActorLocation().X,
-                 FoundActor->GetActorLocation().Y,
-                 FoundActor->GetActorLocation().Z);
-          break;
-        }
-      }
-    }
-
-    if (!FoundActor)
-    {
-      UE_LOG(LogCarla, Error, TEXT("MapLogicParser: ❌ NOT FOUND '%s' in scene"), *Data.ActorName);
-      UE_LOG(LogCarla, Error, TEXT("MapLogicParser: 💡 Check if the actor name in the scene matches exactly (case-sensitive)"));
-    }
-    else
-    {
-      // STEP 1.5: Spawn a visible trigger box at the actor location for testing
-      SpawnVisibleTriggerBox(FoundActor, Data.ActorName, World);
-    }
-
-    // STEP 2: Find the controller using the TrafficLightGroupID (which corresponds to ControllerID from OpenDRIVE)
     UTrafficLightController* Controller = TrafficLightManager->GetController(Data.TrafficLightGroupID);
 
     if (Controller)
     {
-      // Apply custom timing
       Controller->SetRedTime(Data.Timing.RedDuration);
       Controller->SetGreenTime(Data.Timing.GreenDuration);
       Controller->SetYellowTime(Data.Timing.AmberDuration);
-
-      UE_LOG(LogCarla, Log, TEXT("MapLogicParser: ✅ SUCCESS - Applied timing to controller '%s' - Red:%.1f Green:%.1f Yellow:%.1f"),
-             *Data.TrafficLightGroupID,
-             Data.Timing.RedDuration,
-             Data.Timing.GreenDuration,
-             Data.Timing.AmberDuration);
       SuccessCount++;
     }
     else
     {
-      UE_LOG(LogCarla, Error, TEXT("MapLogicParser: ❌ FAILED - Controller '%s' not found for traffic light '%s' (JunctionID=%d)"),
+      UE_LOG(LogCarla, Error, TEXT("MapLogicParser: Controller '%s' not found for traffic light '%s' (JunctionID=%d)"),
              *Data.TrafficLightGroupID, *Data.ActorName, Data.JunctionID);
       FailedCount++;
     }
   }
 
-  UE_LOG(LogCarla, Warning, TEXT("MapLogicParser: Summary - Successfully applied timing to %d/%d traffic lights. %d failed."),
+  UE_LOG(LogCarla, Log, TEXT("MapLogicParser: Applied timing to %d/%d traffic lights (%d failed)"),
          SuccessCount, LogicData.Num(), FailedCount);
-
-  if (FailedCount > 0)
-  {
-    UE_LOG(LogCarla, Error, TEXT("MapLogicParser: %d traffic lights failed to get timing configuration! Check ControllerID mapping."), FailedCount);
-  }
 }
 
 FTrafficLightLogicData UMapLogicParser::ParseTrafficLightFromJSON(TSharedPtr<FJsonObject> TrafficLightJson)
@@ -275,19 +144,16 @@ FTrafficLightLogicData UMapLogicParser::ParseTrafficLightFromJSON(TSharedPtr<FJs
     return Result;
   }
 
-  // Parse basic fields
   TrafficLightJson->TryGetStringField(TEXT("ActorName"), Result.ActorName);
+  TrafficLightJson->TryGetStringField(TEXT("SignalID"), Result.SignalID);
   TrafficLightJson->TryGetNumberField(TEXT("JunctionID"), Result.JunctionID);
   TrafficLightJson->TryGetStringField(TEXT("TrafficLightGroupID"), Result.TrafficLightGroupID);
-
-  // Parse timing object
   const TSharedPtr<FJsonObject>* TimingObject;
   if (TrafficLightJson->TryGetObjectField(TEXT("Timing"), TimingObject))
   {
     Result.Timing = ParseTimingFromJSON(*TimingObject);
   }
 
-  // Parse modules array
   const TArray<TSharedPtr<FJsonValue>>* ModulesArray;
   if (TrafficLightJson->TryGetArrayField(TEXT("Modules"), ModulesArray))
   {
@@ -297,8 +163,6 @@ FTrafficLightLogicData UMapLogicParser::ParseTrafficLightFromJSON(TSharedPtr<FJs
       if (ModuleObject.IsValid())
       {
         FTrafficLightModule Module;
-
-        // Parse lane IDs array for this module
         const TArray<TSharedPtr<FJsonValue>>* LaneIdsArray;
         if (ModuleObject->TryGetArrayField(TEXT("LaneIds"), LaneIdsArray))
         {
@@ -311,7 +175,6 @@ FTrafficLightLogicData UMapLogicParser::ParseTrafficLightFromJSON(TSharedPtr<FJs
             }
           }
         }
-
         Result.Modules.Add(Module);
       }
     }
@@ -329,7 +192,6 @@ FTrafficLightTiming UMapLogicParser::ParseTimingFromJSON(TSharedPtr<FJsonObject>
     return Result;
   }
 
-  // Parse timing fields with fallback to default values
   double TempValue;
 
   if (TimingJson->TryGetNumberField(TEXT("RedDuration"), TempValue))
@@ -362,61 +224,161 @@ FString UMapLogicParser::GetDirectoryPath(const FString& FilePath)
   return Directory;
 }
 
-void UMapLogicParser::SpawnVisibleTriggerBox(AActor* TargetActor, const FString& TrafficLightName, UWorld* World)
+void UMapLogicParser::ApplyLaneIdsFromMapLogic(const FString& XODRFilePath, ATrafficLightManager* TrafficLightManager)
 {
-  if (!TargetActor || !World)
+  if (!TrafficLightManager)
   {
-    UE_LOG(LogCarla, Error, TEXT("MapLogicParser: Cannot spawn trigger box - invalid actor or world"));
+    UE_LOG(LogCarla, Warning, TEXT("MapLogicParser::ApplyLaneIdsFromMapLogic: TrafficLightManager is null"));
     return;
   }
 
-  // Get the target location (traffic light position)
-  FVector SpawnLocation = TargetActor->GetActorLocation();
-
-  // Offset the trigger box slightly above the traffic light for visibility
-  SpawnLocation.Z += 50.0f;
-
-  // Spawn custom trigger box actor that handles overlap events and shows wireframe
-  FActorSpawnParameters SpawnParams;
-  SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-  SpawnParams.Name = FName(*FString::Printf(TEXT("TriggerBox_%s"), *TrafficLightName));
-
-  ATriggerBoxActor* TriggerBoxActor = World->SpawnActor<ATriggerBoxActor>(ATriggerBoxActor::StaticClass(), SpawnLocation, FRotator::ZeroRotator, SpawnParams);
-
-  if (TriggerBoxActor)
+  const std::optional<carla::road::Map>& Map = TrafficLightManager->GetMap();
+  if (!Map.has_value())
   {
-    // Set the traffic light name for logging
-    TriggerBoxActor->TrafficLightName = TrafficLightName;
+    UE_LOG(LogCarla, Warning, TEXT("MapLogicParser::ApplyLaneIdsFromMapLogic: Map is not available"));
+    return;
+  }
 
-    // Get the box collision component
-    UBoxComponent* BoxComponent = Cast<UBoxComponent>(TriggerBoxActor->GetCollisionComponent());
-    if (BoxComponent)
+  TArray<FTrafficLightLogicData> LogicData = LoadMapLogicFromJSON(XODRFilePath);
+  if (LogicData.Num() == 0)
+  {
+    UE_LOG(LogCarla, Log, TEXT("MapLogicParser::ApplyLaneIdsFromMapLogic: No map_logic.json found or no data"));
+    return;
+  }
+
+  const auto& Signals = Map->GetSignals();
+
+  int32 SuccessCount = 0;
+
+  for (const FTrafficLightLogicData& Data : LogicData)
+  {
+    if (Data.SignalID.IsEmpty())
     {
-      // Set trigger box size (5m x 5m x 1m)
-      BoxComponent->SetBoxExtent(FVector(250.0f, 250.0f, 50.0f)); // Half extents
+      UE_LOG(LogCarla, Warning, TEXT("Skipping traffic light with empty SignalID (ActorName='%s')"), *Data.ActorName);
+      continue;
+    }
 
-      // Configure collision for overlap detection (redundant but ensuring)
-      BoxComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-      BoxComponent->SetCollisionResponseToAllChannels(ECR_Ignore);
-      BoxComponent->SetCollisionResponseToChannel(ECC_Vehicle, ECR_Overlap);
-      BoxComponent->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-      BoxComponent->SetGenerateOverlapEvents(true);
+    std::string SignalIdStr(TCHAR_TO_UTF8(*Data.SignalID));
 
-      // Scale the wireframe mesh to match the collision box
-      if (TriggerBoxActor->WireframeMesh)
+    if (Signals.find(SignalIdStr) == Signals.end())
+    {
+      UE_LOG(LogCarla, Warning, TEXT("Signal '%s' not found in OpenDRIVE"), *Data.SignalID);
+      continue;
+    }
+
+    const auto& Signal = Signals.at(SignalIdStr);
+    auto CarlaTransform = Signal->GetTransform();
+    FTransform UETransform(CarlaTransform);
+    FVector SignalLocation = UETransform.GetLocation();
+
+    constexpr float MaxDistanceMatchSqr = 2500.0f;
+    AActor* ClosestActor = nullptr;
+    float MinDistance = MaxDistanceMatchSqr;
+
+    TArray<AActor*> AllActors;
+    UGameplayStatics::GetAllActorsOfClass(TrafficLightManager->GetWorld(), AActor::StaticClass(), AllActors);
+
+    for (AActor* Actor : AllActors)
+    {
+      if (!Actor) continue;
+
+      float Dist = FVector::DistSquared(Actor->GetActorLocation(), SignalLocation);
+      if (Dist < MinDistance)
       {
-        TriggerBoxActor->WireframeMesh->SetWorldScale3D(FVector(5.0f, 5.0f, 1.0f)); // 5m x 5m x 1m
+        MinDistance = Dist;
+        ClosestActor = Actor;
+      }
+    }
+
+    if (!ClosestActor)
+    {
+      UE_LOG(LogCarla, Error, TEXT("No actor found within 50cm of signal '%s'"), *Data.SignalID);
+      continue;
+    }
+
+    ATrafficLightBase* TrafficLightActor = Cast<ATrafficLightBase>(ClosestActor);
+    UTrafficLightComponent* TrafficLightComp = nullptr;
+
+    if (TrafficLightActor)
+    {
+      TrafficLightComp = TrafficLightActor->GetTrafficLightComponent();
+
+      if (TrafficLightComp->GetSignId() != Data.SignalID)
+      {
+        TrafficLightComp->SetSignId(Data.SignalID);
+      }
+    }
+    else
+    {
+      TArray<UStaticMeshComponent*> MeshComponents;
+      ClosestActor->GetComponents<UStaticMeshComponent>(MeshComponents);
+
+      if (MeshComponents.Num() == 0)
+      {
+        UE_LOG(LogCarla, Error, TEXT("DigitalTwins actor has no StaticMeshComponents"));
+        continue;
+      }
+      FActorSpawnParameters SpawnParams;
+      SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+      ADigitalTwinsTrafficLight* NewTrafficLight = TrafficLightManager->GetWorld()->SpawnActor<ADigitalTwinsTrafficLight>(
+          ADigitalTwinsTrafficLight::StaticClass(),
+          ClosestActor->GetActorLocation(),
+          ClosestActor->GetActorRotation(),
+          SpawnParams);
+
+      if (!NewTrafficLight)
+      {
+        UE_LOG(LogCarla, Error, TEXT("Failed to spawn ADigitalTwinsTrafficLight"));
+        continue;
       }
 
-      UE_LOG(LogCarla, Warning, TEXT("MapLogicParser: ✅ SPAWNED TRIGGER BOX ACTOR for '%s' at location (%.1f, %.1f, %.1f) - Wireframe visible in game"),
-             *TrafficLightName,
-             SpawnLocation.X,
-             SpawnLocation.Y,
-             SpawnLocation.Z);
+      for (UStaticMeshComponent* SourceMesh : MeshComponents)
+      {
+        if (!SourceMesh) continue;
+
+        UStaticMeshComponent* NewMesh = NewObject<UStaticMeshComponent>(NewTrafficLight);
+        NewMesh->SetStaticMesh(SourceMesh->GetStaticMesh());
+        NewMesh->SetRelativeTransform(SourceMesh->GetRelativeTransform());
+
+        for (int32 i = 0; i < SourceMesh->GetNumMaterials(); i++)
+        {
+          NewMesh->SetMaterial(i, SourceMesh->GetMaterial(i));
+        }
+
+        NewMesh->RegisterComponent();
+        NewMesh->AttachToComponent(NewTrafficLight->GetRootComponent(),
+                                   FAttachmentTransformRules::KeepRelativeTransform);
+      }
+
+      TrafficLightComp = NewTrafficLight->GetTrafficLightComponent();
+      if (!TrafficLightComp)
+      {
+        UE_LOG(LogCarla, Error, TEXT("ADigitalTwinsTrafficLight has no TrafficLightComponent"));
+        NewTrafficLight->Destroy();
+        continue;
+      }
+
+      TrafficLightComp->SetSignId(Data.SignalID);
+      TrafficLightManager->RegisterLightComponentFromOpenDRIVE(TrafficLightComp);
+      ClosestActor->Destroy();
     }
+
+    UTrafficLightController* Controller = TrafficLightManager->GetController(Data.TrafficLightGroupID);
+    if (Controller)
+    {
+      Controller->SetRedTime(Data.Timing.RedDuration);
+      Controller->SetGreenTime(Data.Timing.GreenDuration);
+      Controller->SetYellowTime(Data.Timing.AmberDuration);
+    }
+    else
+    {
+      UE_LOG(LogCarla, Error, TEXT("Failed to get controller '%s'"), *Data.TrafficLightGroupID);
+    }
+
+    TrafficLightComp->InitializeSign(Map.value());
+    SuccessCount++;
   }
-  else
-  {
-    UE_LOG(LogCarla, Error, TEXT("MapLogicParser: Failed to spawn trigger box actor"));
-  }
+
+  UE_LOG(LogCarla, Log, TEXT("Applied lane IDs to %d traffic lights"), SuccessCount);
 }
