@@ -301,12 +301,15 @@ int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName
   // Check collision complexity setting
   // CTF_UseDefault/CTF_UseSimpleAsComplex: Use simple collision only
   // CTF_UseComplexAsSimple: Use complex collision only
+  // Force crosswalks to use complex collision to export as polygons instead of degenerate boxes
   bool bUseSimpleCollision = (body->CollisionTraceFlag == ECollisionTraceFlag::CTF_UseDefault ||
                                body->CollisionTraceFlag == ECollisionTraceFlag::CTF_UseSimpleAsComplex ||
-                               body->CollisionTraceFlag == ECollisionTraceFlag::CTF_UseSimpleAndComplex);
+                               body->CollisionTraceFlag == ECollisionTraceFlag::CTF_UseSimpleAndComplex) &&
+                              Area != AreaType::CROSSWALK;
 
   bool bUseComplexCollision = (body->CollisionTraceFlag == ECollisionTraceFlag::CTF_UseComplexAsSimple ||
-                                body->CollisionTraceFlag == ECollisionTraceFlag::CTF_UseSimpleAndComplex);
+                                body->CollisionTraceFlag == ECollisionTraceFlag::CTF_UseSimpleAndComplex ||
+                                Area == AreaType::CROSSWALK);
 
   // Export simple collision (boxes, spheres, capsules, convex) if enabled
   if (bUseSimpleCollision)
@@ -358,7 +361,7 @@ int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName
       f << "v " << std::fixed << world.X * TO_METERS << " " << world.Z * TO_METERS << " " << world.Y * TO_METERS << "\n";
     }
 
-    // set the material in function of the area type
+    // set the material in function of the area type (AFTER vertices, BEFORE faces)
     switch (Area)
     {
       case AreaType::ROAD:      f << "usemtl road"      << "\n"; break;
@@ -399,7 +402,7 @@ int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName
 
       f << "v " << std::fixed << world.X * TO_METERS << " " << world.Z * TO_METERS << " " << world.Y * TO_METERS << "\n";
     }
-    // set the material in function of the area type
+    // set the material in function of the area type (AFTER vertices, BEFORE faces)
     switch (Area)
     {
       case AreaType::ROAD:      f << "usemtl road"      << "\n"; break;
@@ -473,7 +476,7 @@ int32 FCarlaExporterModule::WriteObjectGeom(std::ofstream &f, FString ObjectName
         f << "v " << std::fixed << world.X * TO_METERS << " " << world.Z * TO_METERS << " " << world.Y * TO_METERS << "\n";
       }
 
-      // set the material in function of the area type
+      // set the material in function of the area type (AFTER vertices, BEFORE faces)
       switch (Area)
       {
         case AreaType::ROAD:      f << "usemtl road"      << "\n"; break;
