@@ -1,12 +1,12 @@
 # Quick start package installation
 
-This guide shows how to download and install the packaged version of CARLA. The package includes the CARLA server and two options for the client library. There are additional assets that can be downloaded and imported into the package. Advanced customization and development options that require use of the Unreal Engine editor are not available but these can be accessed by using the build version of CARLA for either [Windows](build_windows.md) or [Linux](build_linux.md).
+This guide shows how to download and install the packaged version of CARLA. The package includes the CARLA server and two options for the client library. There are additional assets that can be downloaded and imported into the package. Advanced customization and development options that require use of the Unreal Engine editor are not available but these can be accessed by using the build version of CARLA for either [Windows](build_windows_ue5.md) or [Linux](build_linux_ue5.md).
 
 * __[Before you begin](#before-you-begin)__  
 * __[CARLA installation](#carla-installation)__  
 * __[Install client library](#install-client-library)__
-* __[Running CARLA](#running-carla)__  
-* __[Updating CARLA](#updating-carla)__    
+* __[Running CARLA](#running-carla)__    
+* __[Running CARLA with a Docker container](#running-carla-using-a-docker-container)__   
 * __[Follow-up](#follow-up)__ 
 ---
 ## Before you begin
@@ -49,7 +49,7 @@ pip3 install --user pygame numpy
 
 Download the desired CARLA package from GitHub:
 
-- [Download the package from GitHub here](#b-package-installation)
+- [Download the package from GitHub here](https://github.com/carla-simulator/carla/releases/tag/0.10.0)
 
 This repository contains different versions of CARLA. You will find options to download the __current release__ with all the most recent fixes and features, __previous releases__ and a __nightly build__ with all the developmental fixes and features (the nightly build is the most unstable version of CARLA).
 
@@ -110,6 +110,47 @@ cd PythonAPI\examples
 
 python3 manual_control.py 
 ```
+
+## Running CARLA using a Docker container
+
+For Linux users, CARLA is available in a Docker image, which you may use if you need to run it on the cloud or a cluster or if your machine does not meet the software or operating system prerequisites. 
+
+Firstly, install Docker by following the [installation instructions](https://docs.docker.com/engine/install/ubuntu/). You may want to follow the [post installation instructions](https://docs.docker.com/engine/install/linux-postinstall/) to avoid the need for `sudo` commands. 
+
+Next, install the NVIDIA container toolkit using the [installation instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-apt) and then follow the [configuration instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#configuring-docker).
+
+Then you may run CARLA in the Docker container using the following commands:
+
+**Running the Docker image without display**:
+
+```sh
+docker run \
+    --runtime=nvidia \
+    --net=host \
+    --env=NVIDIA_VISIBLE_DEVICES=all \
+    --env=NVIDIA_DRIVER_CAPABILITIES=all \
+    carlasim/carla:0.10.0 bash CarlaUnreal.sh -RenderOffScreen -nosound
+```
+
+---
+
+**Running the Docker image with a display**:
+
+To run the Docker image with a display, you will need the `x11` display protocol:
+
+```sh
+docker run \
+    --runtime=nvidia \
+    --net=host \
+    --user=$(id -u):$(id -g) \
+    --env=DISPLAY=$DISPLAY \
+    --env=NVIDIA_VISIBLE_DEVICES=all \
+    --env=NVIDIA_DRIVER_CAPABILITIES=all \
+    --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+    carlasim/carla:0.10.0 bash CarlaUnreal.sh -nosound
+```
+
+---
 
 ## Follow-up
 

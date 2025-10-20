@@ -1,10 +1,11 @@
 # CARLA catalogue
 
-The CARLA simulator provides a vast library of 3D assets to populate your autonomous agent's virtual environment. The 3D asset library provides numerous pre-built maps to choose from, a diverse array of vehicle models for traffic simulation along with models of pedestrians and other structures or obstacles that can be dynamically added to your simulation during runtime. This catalogue documents all of the 3D assets available to use in your simulations. 
+The CARLA simulator provides a vast library of 3D assets to populate your autonomous agent's virtual environment. The 3D asset library provides numerous pre-built maps to choose from, a diverse array of vehicle models for traffic simulation along with models of pedestrians and other structures or obstacles that can be dynamically added to your simulation during runtime. This catalogue documents all of the 3D assets available to use in your simulations. CARLA also provides a number of example Python scripts to use as guidance for utilizing the API in various contexts.
 
 * [__Vehicles catalogue__](catalogue_vehicles.md)
 * [__Pedestrians catalogue__](catalogue_pedestrians.md)
 * [__Props catalogue__](catalogue_props.md)
+<!-- * [__Script catalogue__](catalogue_scripts.md) -->
 
 ## Maps
 
@@ -13,10 +14,7 @@ There are two maps to chose from. An urban environment with skyscrapers, commerc
 | Town       | Summary |
 | -----------| ------  |
 | [__Town10__](map_town10.md) | A downtown urban environment with skyscrapers, residential buildings and an ocean promenade.|
-| [__Mine__](map_mine.md) | An industrial, off-road, open-cast mining environment. |
-
-!!! note
-    Towns 1-9 are included in the build-from-source version of CARLA but are not updated or tested to work with UE5. There may be non-functioning geometry or textures in these maps. If you choose to use these maps, you will likely need to fix problems in the maps before use. 
+| [__Mine01__](map_mine.md) | An industrial, off-road, open-cast mining environment. |
 
 ## Vehicles
 
@@ -36,3 +34,6 @@ CARLA's props model the various structures and items you might find on or near r
 
 ![props_overview](../img/catalogue/props/props_overview.webp)
 
+<!-- ## Scripts
+
+CARLA comes provided with a library of example scripts that can be used to explore maps, vehicles or use as guidance for using the API in various contexts. You could also use them as the basis for your own scripts. Choose a script for your application in the [__scripts catalogue__](catalogue_scripts.md). -->
