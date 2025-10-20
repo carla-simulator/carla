@@ -94,7 +94,7 @@ FString UOpenDrive::GetXODR(const UWorld *World)
     CorrectedMapName.RemoveFromStart(PIEPrefix);
     MapName = CorrectedMapName;
   }
-  #endif
+  #endif // WITH_EDITOR
 
   ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World);
   auto MapDir = GameMode->GetFullMapPath();
