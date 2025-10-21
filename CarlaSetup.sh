@@ -95,14 +95,16 @@ else
         Carla
 fi
 
+workspace_parent_path=$(realpath "$workspace_path/..")
+test_ue5_directory=${workspace_parent_path}/UnrealEngine5_carla
+
 # -- DOWNLOAD + BUILD UNREAL ENGINE --
 if [ ! -z $CARLA_UNREAL_ENGINE_PATH ] && [ -d $CARLA_UNREAL_ENGINE_PATH ]; then
     echo "Found CARLA Unreal Engine at $CARLA_UNREAL_ENGINE_PATH"
-elif [ -d ../UnrealEngine5_carla ]; then
-    echo "Found CARLA Unreal Engine at $workspace_path/UnrealEngine5_carla. Assuming already built..."
+elif [ -d "$test_ue5_directory" ]; then
+    echo "Found CARLA Unreal Engine at $test_ue5_directory. Assuming already built..."
 else
     echo "Could not find CARLA Unreal Engine, downloading..."
-    pushd ..
     if [ -z "$GIT_LOCAL_CREDENTIALS" ]
     then
         UE5_URL=https://github.com/CarlaUnreal/UnrealEngine.git
@@ -112,8 +114,8 @@ else
         GIT_LOCAL_TOKEN=${GIT_CREDENTIALS_INFO[1]}
         UE5_URL=https://$GIT_LOCAL_USER:$GIT_LOCAL_TOKEN@github.com/CarlaUnreal/UnrealEngine.git
     fi
-    git clone -b ue5-dev-carla $UE5_URL UnrealEngine5_carla
-    pushd UnrealEngine5_carla
+    git -C $workspace_parent_path clone -b ue5-dev-carla $UE5_URL UnrealEngine5_carla
+    pushd ../UnrealEngine5_carla
     echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$PWD >> ~/.bashrc
     export CARLA_UNREAL_ENGINE_PATH=$PWD
     echo "Running Unreal Engine pre-build steps..."
@@ -121,7 +123,6 @@ else
     bash -x GenerateProjectFiles.sh
     echo "Building Unreal Engine 5..."
     make
-    popd
     popd
 fi
 
