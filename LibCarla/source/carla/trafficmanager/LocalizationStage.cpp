@@ -481,7 +481,7 @@ void LocalizationStage::ImportPath(Path &imported_path, Buffer &waypoint_buffer,
 
       // Choose correct path.
       if (next_waypoints.size() > 1) {
-        auto imported_road_id = imported->GetWaypoint()->GetRoadId();
+        road::RoadId imported_road_id = imported->GetWaypoint()->GetRoadId();
         float min_distance = std::numeric_limits<float>::infinity();
         for (uint64_t k = 0u; k < next_waypoints.size(); ++k) {
           SimpleWaypointPtr junction_end_point = next_waypoints.at(k);
@@ -494,7 +494,7 @@ void LocalizationStage::ImportPath(Path &imported_path, Buffer &waypoint_buffer,
           while (next_waypoints.at(k)->DistanceSquared(junction_end_point) < 50.0f) {
             junction_end_point = junction_end_point->GetNextWaypoint().front();
           }
-          auto jep_road_id = junction_end_point->GetWaypoint()->GetRoadId();
+          road::RoadId jep_road_id = junction_end_point->GetWaypoint()->GetRoadId();
           if (jep_road_id == imported_road_id) {
             selection_index = k;
             break;
