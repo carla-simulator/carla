@@ -589,6 +589,7 @@ The [Kannala-Brandt](https://www.researchgate.net/publication/6899685_A_Generic_
 | `fov_fade_size`       | float     | 0.0      | Amount of blur of the edge of the `fov_mask`.        |
 | `perspective`       | bool     | false      | Turns on perspective mode.         |
 | `equirectangular`       | bool     | false      | Turns on equirectangular projection.         |
+| `longitude_offset` | float | 0.0 | Shifts view center by degrees for equirectangular model |
 
 #### Output attributes
 
