@@ -45,18 +45,23 @@ blueprint.set_attribute('sensor_tick', '1.0')
 
 ### Spawning
 
-`attachment_to` and `attachment_type`, are crucial. Sensors should be attached to a parent actor, usually a vehicle, to follow it around and gather the information. The attachment type will determine how its position is updated regarding said vehicle. 
-
-* __Rigid attachment.__ Movement is strict regarding its parent location. This is the proper attachment to retrieve data from the simulation.  
-* __SpringArm attachment.__ Movement is eased with little accelerations and decelerations. This attachment is only recommended to record videos from the simulation. The movement is smooth and "hops" are avoided when updating the cameras' positions.  
-* __SpringArmGhost attachment.__ Like the previous one but without doing the collision test, so the camera or sensor could cross walls or other geometries.  
+Sensors can be placed anywhere in the map. Normally they are attached to a parent actor, such as a a vehicle, to move around the simulation like a sensor physically mounted to a vehicle. The `spawn_actor()` method requires a sensor blueprint chosen from the blueprint library and a transform. In the case of an unattached sensor, the transform will define it's absolute position in the CARLA world. The `attach_to` parameter defines the actor to attach the camera to. For a sensor attached to an actor, the transform defines its relative position to the actor in the actor's coordinate system.
 
 ```py
+my_vehicle = world.spawn_actor(vehicle_blueprint, spawn_point)
 transform = carla.Transform(carla.Location(x=0.8, z=1.7))
-sensor = world.spawn_actor(blueprint, transform, attach_to=my_vehicle)
+sensor = world.spawn_actor(sensor_blueprint, transform, attach_to=my_vehicle)
 ```
-!!! Important
-    When spawning with attachment, location must be relative to the parent actor.  
+
+The `attachment_type` parameter defines how the sensor's movement will be governed by the movement of its parent actor.
+
+* __Rigid attachment__ (`carla.AttachmentType.Rigid`): Movement strictly follows the parent actors's pose. This is the most common choice for normal vehicle sensors like cameras and LIDARs. It is the default attachment type setting.  
+* __SpringArm attachment__ (`carla.AttachmentType.SpringArm`): Movement is eased with little accelerations and decelerations. This attachment is recommended to record videos from the simulation. The movement is smooth and "hops" are avoided when updating the cameras' positions.  
+* __SpringArmGhost attachment__ (`carla.AttachmentType.SpringArmGhost`): Like SpringArm but without collision testing, so the camera or sensor could cross walls or other geometries.  
+
+```py
+sensor = world.spawn_actor(sensor_blueprint, transform, attach_to=my_vehicle, attachment_type=carla.AttachmentType.SpringArm)
+```
 
 ### Listening
 
@@ -112,8 +117,9 @@ Take a shot of the world from their point of view. For cameras that return [carl
 
 |Sensor |Output | Overview       |
 | ----------------- | ---------- | ------------------ |
-| [Depth](ref_sensors.md#depth-camera) | [carla.Image](<../python_api#carlaimage>)  |Renders the depth of the elements in the field of view in a gray-scale map.          |
 | [RGB](ref_sensors.md#rgb-camera)      | [carla.Image](<../python_api#carlaimage>)   | Provides clear vision of the surroundings. Looks like a normal photo of the scene.   |
+| [Wide angle](ref_sensors.md#wide-angle-cameras)      | [carla.Image](<../python_api#carlaimage>)   | Models alternative camera models including wide-angle, fisheye and 360 degree cameras.  |
+| [Depth](ref_sensors.md#depth-camera) | [carla.Image](<../python_api#carlaimage>)  | Renders the depth of the elements in the field of view in a gray-scale map.          |
 | [Optical Flow](ref_sensors.md#optical-flow-camera)    | [carla.Image](<../python_api#carlaimage>)  | Renders the motion of every pixel from the camera.  |
 | [Semantic segmentation](ref_sensors.md#semantic-segmentation-camera)    | [carla.Image](<../python_api#carlaimage>)  | Renders elements in the field of view with a specific color according to their tags. |
 | [Instance segmentation](ref_sensors.md#instance-segmentation-camera)    | [carla.Image](<../python_api#carlaimage>)  | Renders elements in the field of view with a specific color according to their tags and a unique object ID. |
