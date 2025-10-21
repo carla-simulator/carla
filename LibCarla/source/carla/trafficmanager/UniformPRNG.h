@@ -26,10 +26,10 @@ public:
         typename = std::enable_if<std::is_scalar<T>::value>>
     T next(T begin, T end) {
 
-        using Distribution = std::conditional<
+        using Distribution = typename std::conditional<
             std::is_floating_point<T>::value,
             std::uniform_real_distribution<T>,
-            std::uniform_int_distribution<T>>;
+            std::uniform_int_distribution<T>>::type;
 
         return Distribution(begin, end)(state);
     }
