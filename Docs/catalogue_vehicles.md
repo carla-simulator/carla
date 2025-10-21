@@ -54,6 +54,8 @@ vehicle.apply_control(control)
 	* [__Mercedes__ - Sprinter](#mercedes-sprinter)
 * __Bus__
 	* [__Mitsubishi__ - Fusorosa](#mitsubishi-fusorosa)
+* __Industrial__
+	* [__Earth mover__](#mining-earth-mover)
 
 
 ---
@@ -375,11 +377,31 @@ vehicle.destroy()
 * __Model__: Fusorosa
 * __Class__: Bus
 * __Generation__: 2
-* __Blueprint ID__: <span style="color:#00a6ed;">ehicle.fuso.mitsubishi<span>
+* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.fuso.mitsubishi<span>
 
 * __Base type__: bus
 
 * __Has lights__: <span style="color:#99c635;">True<span>
+
+* __Has opening doors__: <span style="color:#f16c6c;">False<span>
+
+---
+
+## Industrial
+### Mining earth mover
+
+![earth_mover](../img/catalogue/vehicles/mining_truck.png)
+
+
+* __Manufacturer__: Not specified
+* __Model__: Earth mover
+* __Class__: Truck
+* __Generation__: 2
+* __Blueprint ID__: <span style="color:#00a6ed;">vehicle.miningtruck.miningtruck<span>
+
+* __Base type__: truck
+
+* __Has lights__: <span style="color:#99c635;">False<span>
 
 * __Has opening doors__: <span style="color:#f16c6c;">False<span>
 
