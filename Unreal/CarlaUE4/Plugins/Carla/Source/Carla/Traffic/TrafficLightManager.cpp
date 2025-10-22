@@ -266,11 +266,38 @@ void ATrafficLightManager::AdjustAllSignsToHeightGround()
 {
   for(ATrafficSignBase* TS : TrafficSigns)
   {
-    TS->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-    FVector SpawnLocation = TS->GetActorLocation();
+    FVector OldLocation = TS->GetActorLocation();
+    FVector SpawnLocation = OldLocation;
+
     AdjustSignHeightToGround(SpawnLocation);
-    TS->SetActorLocation(SpawnLocation);
-    TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
+    float ZDelta = SpawnLocation.Z - OldLocation.Z;
+
+    if (FMath::Abs(ZDelta) > KINDA_SMALL_NUMBER)
+    {
+      TMap<UBoxComponent*, FVector> BoxPositions;
+      TArray<UBoxComponent*> BoxComponents;
+      TS->GetComponents<UBoxComponent>(BoxComponents, true);
+
+      for (UBoxComponent* Box : BoxComponents)
+      {
+        if (Box)
+        {
+          FVector BoxWorldLocation = Box->GetComponentLocation();
+          BoxPositions.Add(Box, BoxWorldLocation);
+        }
+      }
+
+      TS->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+      TS->SetActorLocation(SpawnLocation);
+      TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
+
+      for (auto& Pair : BoxPositions)
+      {
+        FVector OldBoxLocation = Pair.Value;
+        Pair.Key->SetWorldLocation(OldBoxLocation);
+        FVector NewBoxLocation = Pair.Key->GetComponentLocation();
+      }
+    }
   }
 }
 
