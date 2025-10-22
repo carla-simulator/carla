@@ -138,8 +138,8 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 
 bool ALargeMapManager::AdjustSignHeightToGround(FVector& SpawnLocation, const FString& ActorName, const TArray<AActor*>& ActorsToIgnore) const
 {
-  const FVector Start = SpawnLocation + FVector(0, 0, 10.0f);
-  const FVector End = SpawnLocation - FVector(0, 0, 20000.0f);
+  const FVector Start = SpawnLocation + FVector(0, 0, 200.0f);
+  const FVector End = SpawnLocation - FVector(0, 0, 10000.0f);
 
   FHitResult HitResult;
   FCollisionQueryParams CollisionParams;
@@ -177,12 +177,45 @@ void ALargeMapManager::AdjustAllSignsToHeightGround()
       continue;
     if (TrafficSign->bPositioned)
       continue;
-    FVector SpawnLocation = Actor->GetActorLocation();
-    TrafficSign->bPositioned = AdjustSignHeightToGround(SpawnLocation, Actor->GetName(), ActorsToIgnore);
+    FVector OriginalLocation = Actor->GetActorLocation();
+    FVector AdjustedLocation = OriginalLocation;
+    
+    TrafficSign->bPositioned = AdjustSignHeightToGround(AdjustedLocation, Actor->GetName(), ActorsToIgnore);
+    
+    if (TrafficSign->bPositioned)
+    {
+      float ZOffset = AdjustedLocation.Z - OriginalLocation.Z;
 
-    Actor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-    Actor->SetActorLocation(SpawnLocation);
-    Actor->GetRootComponent()->SetMobility(EComponentMobility::Static);
+      Actor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+      
+      // Get all static mesh components
+      TArray<UStaticMeshComponent*> StaticMeshComps;
+      Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+      
+      for (UStaticMeshComponent* MeshComp : StaticMeshComps)
+      {
+        if (!MeshComp) continue;
+        
+        // Skip if this has a mesh parent (it's a child)
+        USceneComponent* ParentComp = MeshComp->GetAttachParent();
+        if (ParentComp && Cast<UStaticMeshComponent>(ParentComp))
+        {
+          continue;
+        }
+        
+        // Move the mesh component down
+        FVector CompLocation = MeshComp->GetRelativeLocation();
+        CompLocation.Z += ZOffset;
+        MeshComp->SetRelativeLocation(CompLocation);
+        
+        MeshComp->UpdateBounds();
+        
+        LM_LOG(Log, "Moved mesh %s by %f cm", *Actor->GetName(), ZOffset);
+      }
+      
+      Actor->UpdateComponentTransforms();
+      Actor->GetRootComponent()->SetMobility(EComponentMobility::Static);
+    }
   }
 }
 

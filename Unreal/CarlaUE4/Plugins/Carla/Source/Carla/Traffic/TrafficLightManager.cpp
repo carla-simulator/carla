@@ -909,7 +909,7 @@ void ATrafficLightManager::RemoveAttachedProps(TArray<AActor*> Actors) const
 
 bool ATrafficLightManager::AdjustSignHeightToGround(FVector& SpawnLocation) const
 {
-  const FVector Start = SpawnLocation + FVector(0, 0, 10.0f);
+  const FVector Start = SpawnLocation + FVector(0, 0, 200.0f);
   const FVector End = SpawnLocation - FVector(0, 0, 10000.0f);
 
   FHitResult HitResult;
