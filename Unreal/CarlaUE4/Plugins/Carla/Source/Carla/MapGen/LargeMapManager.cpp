@@ -175,20 +175,44 @@ void ALargeMapManager::AdjustAllSignsToHeightGround()
     ATrafficSignBase* TrafficSign = Cast<ATrafficSignBase>(Actor);
     if (!IsValid(TrafficSign))
       continue;
-    if (TrafficSign->bPositioned)
-      continue;
-    FVector SpawnLocation = Actor->GetActorLocation();
-    TrafficSign->bPositioned = AdjustSignHeightToGround(SpawnLocation, Actor->GetName(), ActorsToIgnore);
+    FVector OldLocation = Actor->GetActorLocation();
+    FVector SpawnLocation = OldLocation;
 
-    Actor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-    Actor->SetActorLocation(SpawnLocation);
-    Actor->GetRootComponent()->SetMobility(EComponentMobility::Static);
+    if (AdjustSignHeightToGround(SpawnLocation, Actor->GetName(), ActorsToIgnore))
+    {
+      float ZDelta = SpawnLocation.Z - OldLocation.Z;
+
+      if (FMath::Abs(ZDelta) > KINDA_SMALL_NUMBER)
+      {
+        TMap<UBoxComponent*, FVector> BoxPositions;
+        TArray<UBoxComponent*> BoxComponents;
+        Actor->GetComponents<UBoxComponent>(BoxComponents, true);
+
+        for (UBoxComponent* Box : BoxComponents)
+        {
+          if (Box)
+          {
+            BoxPositions.Add(Box, Box->GetComponentLocation());
+          }
+        }
+
+        Actor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+        Actor->SetActorLocation(SpawnLocation);
+        Actor->GetRootComponent()->SetMobility(EComponentMobility::Static);
+
+        for (auto& Pair : BoxPositions)
+        {
+          Pair.Key->SetWorldLocation(Pair.Value);
+        }
+
+        TrafficSign->bPositioned = true;
+      }
+    }
   }
 }
 
 void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
-
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(InWorld);
   ATagger::TagActorsInLevel(*InLevel, *CarlaEpisode, true);
   AdjustAllSignsToHeightGround();
