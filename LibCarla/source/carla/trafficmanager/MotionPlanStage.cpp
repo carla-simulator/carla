@@ -14,6 +14,7 @@
 #include "carla/trafficmanager/PIDController.h"
 
 #include "carla/trafficmanager/MotionPlanStage.h"
+#include "carla/sensor/data/Color.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -42,7 +43,8 @@ MotionPlanStage::MotionPlanStage(
   const cc::World &world,
   ControlFrame &output_array,
   RandomGenerator &random_device,
-  const LocalMapPtr &local_map)
+  const LocalMapPtr &local_map,
+  std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles)
     : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     parameters(parameters),
@@ -58,7 +60,8 @@ MotionPlanStage::MotionPlanStage(
     world(world),
     output_array(output_array),
     random_device(random_device),
-    local_map(local_map) {}
+    local_map(local_map),
+    large_vehicles(large_vehicles) {}
 
 void MotionPlanStage::Update(const unsigned long index) {
   const ActorId actor_id = vehicle_id_list.at(index);
@@ -157,10 +160,21 @@ void MotionPlanStage::Update(const unsigned long index) {
 
       const float target_point_distance = std::max(vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
                                                   MIN_TARGET_WAYPOINT_DISTANCE);
-      const SimpleWaypointPtr &target_waypoint = GetTargetWaypoint(waypoint_buffer, target_point_distance).first;
+      // const SimpleWaypointPtr &target_waypoint = GetTargetWaypoint(waypoint_buffer, target_point_distance).first;
+      auto target_pair = GetTargetWaypoint(waypoint_buffer, target_point_distance);
+      const SimpleWaypointPtr &target_waypoint = target_pair.first;
+      uint64_t target_index = target_pair.second;
+      
       cg::Location target_location = target_waypoint->GetLocation();
+      // std::cout << "^^^++++++" << std::endl;
+      // std::cout << "Target wp: " << target_waypoint->GetLocation().x << "-" << target_waypoint->GetLocation().y << "-"<< target_waypoint->GetLocation().z << std::endl;
+      // std::cout << "--..--..--" << std::endl;
+      world.MakeDebugHelper().DrawPoint(target_waypoint->GetLocation(), 0.1f, sensor::data::Color{255u, 0u, 0u}, 1.0f);
+      float base_offset = CalculateBaseOffset(actor_id, waypoint_buffer, target_waypoint, target_index);
 
-      float offset = parameters.GetLaneOffset(actor_id);
+      // std::cout << "Offset: " << base_offset << std::endl;
+
+      float offset = parameters.GetLaneOffset(actor_id) + base_offset;
       auto right_vector = target_waypoint->GetTransform().GetRightVector();
       auto offset_location = cg::Location(cg::Vector3D(offset*right_vector.x, offset*right_vector.y, 0.0f));
       target_location = target_location + offset_location;
@@ -303,6 +317,48 @@ bool MotionPlanStage::SafeAfterJunction(const LocalizationData &localization,
   }
 
   return safe_after_junction;
+}
+
+float MotionPlanStage::CalculateBaseOffset(const ActorId actor_id,
+                                           const Buffer &waypoint_buffer,
+                                           const SimpleWaypointPtr target_waypoint,
+                                           const uint64_t target_index){
+
+  // This offset is meant to make large vehicle do wider turns at intersections
+  if (large_vehicles.find(actor_id) == large_vehicles.end() || !target_waypoint->CheckJunction()){
+    return 0.0;
+  }
+
+  // Going straight at the intersection
+  if (large_vehicles[actor_id].first == 0.0f){
+    return 0.0f;
+  }
+
+  float distance_to_junction_end = 0.0f;
+  for (unsigned long i = target_index; i < waypoint_buffer.size(); ++i) {
+    SimpleWaypointPtr current_waypoint = waypoint_buffer.at(i);
+
+    if (i > 0){
+      SimpleWaypointPtr prev_waypoint = waypoint_buffer.at(i-1);
+      float new_distance = current_waypoint->Distance(prev_waypoint->GetLocation());
+      distance_to_junction_end = distance_to_junction_end + new_distance;
+    }
+
+    if (!current_waypoint->CheckJunction()) {
+      break;
+    }
+  }
+
+  // std::cout << "Distance to junction end: " << distance_to_junction_end << std::endl;
+
+  // From offset to -offset, linearly
+  auto junction_length = large_vehicles[actor_id].first;
+  float offset = LARGE_VEHICLES_JUNCTION_OFFSET * ((2.0f * distance_to_junction_end) / junction_length - 1.0f);
+  offset = large_vehicles[actor_id].second ? -offset : offset; // Change the sign depending on right / left turns
+
+  // std::cout << "Offset: " << offset << std::endl;
+
+  return offset;
 }
 
 std::pair<bool, float> MotionPlanStage::CollisionHandling(const CollisionHazardData &collision_hazard,

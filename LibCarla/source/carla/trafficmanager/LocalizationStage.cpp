@@ -19,6 +19,7 @@ LocalizationStage::LocalizationStage(
   const SimulationState &simulation_state,
   TrackTraffic &track_traffic,
   const LocalMapPtr &local_map,
+  std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles,
   Parameters &parameters,
   std::vector<ActorId>& marked_for_removal,
   LocalizationFrame &output_array,
@@ -28,6 +29,7 @@ LocalizationStage::LocalizationStage(
     simulation_state(simulation_state),
     track_traffic(track_traffic),
     local_map(local_map),
+    large_vehicles(large_vehicles),
     parameters(parameters),
     marked_for_removal(marked_for_removal),
     output_array(output_array),
@@ -215,6 +217,7 @@ void LocalizationStage::Update(const unsigned long index) {
     }
   }
   ExtendAndFindSafeSpace(actor_id, is_at_junction_entrance, waypoint_buffer);
+  HandleLargeVehicleJunction(actor_id, is_at_junction_entrance, waypoint_buffer);
 
   // Editing output array
   LocalizationData &output = output_array.at(index);
@@ -239,7 +242,7 @@ void LocalizationStage::ExtendAndFindSafeSpace(const ActorId actor_id,
 
   SimpleWaypointPtr junction_end_point = nullptr;
   SimpleWaypointPtr safe_point_after_junction = nullptr;
-
+  
   if (is_at_junction_entrance
       && vehicles_at_junction_entrance.find(actor_id) == vehicles_at_junction_entrance.end()) {
 
@@ -318,6 +321,95 @@ void LocalizationStage::ExtendAndFindSafeSpace(const ActorId actor_id,
            && vehicles_at_junction_entrance.find(actor_id) != vehicles_at_junction_entrance.end()) {
 
     vehicles_at_junction_entrance.erase(actor_id);
+  }
+}
+
+void LocalizationStage::HandleLargeVehicleJunction(const ActorId actor_id,
+                                                   const bool is_at_junction_entrance,
+                                                   Buffer &waypoint_buffer) {
+
+  if (large_vehicles.find(actor_id) == large_vehicles.end()){
+    return;
+  }
+
+  bool is_at_junction = waypoint_buffer.front()->CheckJunction();
+
+  SimpleWaypointPtr current_waypoint = nullptr;
+
+  if (is_at_junction_entrance
+      && large_vehicles_at_junction_entrance.find(actor_id) == large_vehicles_at_junction_entrance.end()
+      && large_vehicles_at_junction.find(actor_id) == large_vehicles_at_junction.end()) {
+
+    std::cout << "GETTING JUNCTION DATA" << std::endl;
+
+    bool entered_junction = false;
+    float junction_length = 0.0f;
+    bool is_straight_path = true;
+
+    for (unsigned long i = 0u; i < waypoint_buffer.size(); ++i) {
+      current_waypoint = waypoint_buffer.at(i);
+
+      // Wait until the start of the intersection, and make sure it turns
+      if (!entered_junction && current_waypoint->CheckJunction()) {
+        // std::cout << "Entered junction" << std::endl;
+        entered_junction = true;
+      }
+
+      // Compute the turn length
+      if (i > 0 && entered_junction) {
+        // std::cout << "Inside junction" << std::endl;
+        SimpleWaypointPtr prev_waypoint = waypoint_buffer.at(i-1);
+        float new_distance = current_waypoint->Distance(prev_waypoint->GetLocation());
+        junction_length = junction_length + new_distance;
+        // std::cout << "New distance: " << new_distance << std::endl;
+
+        if (is_straight_path){
+          RoadOption junction_type = current_waypoint->GetRoadOption();
+          if (junction_type == RoadOption::Right){
+            large_vehicles[actor_id].second = true;
+            std::cout << "Right turn" << std::endl;
+            is_straight_path = false;
+          } else if (junction_type == RoadOption::Left) {
+            large_vehicles[actor_id].second = false;
+            std::cout << "Left turn" << std::endl;
+            is_straight_path = false;
+          } else {
+            std::cout << "Nothing turn" << std::endl;
+          }
+        }
+      }
+
+      // Stop if the junction has ended
+      if (entered_junction && !current_waypoint->CheckJunction()){
+        // std::cout << "Exited junction" << std::endl;
+        break;
+      }
+    }
+    std::cout << "Junction length: " << junction_length << std::endl;
+    if (!is_straight_path){
+      large_vehicles[actor_id].first = junction_length;
+    } else {
+      std::cout << "Straight turn" << std::endl;
+    }
+
+    std::cout << "Adding data to dict" << std::endl;
+    large_vehicles_at_junction_entrance.insert(actor_id);
+  }
+  else if (is_at_junction
+      && large_vehicles_at_junction_entrance.find(actor_id) != large_vehicles_at_junction_entrance.end()) {
+
+    std::cout << "Entering junction" << std::endl;
+    large_vehicles_at_junction_entrance.erase(actor_id);
+    large_vehicles_at_junction.insert(actor_id);
+  }
+  else if (!is_at_junction
+      && large_vehicles_at_junction.find(actor_id) != large_vehicles_at_junction.end()) {
+
+    // std::cout << "Exiting a junction, removing the saved length" << std::endl;
+    large_vehicles_at_junction.erase(actor_id);
+    if (large_vehicles.find(actor_id) != large_vehicles.end()){
+      large_vehicles[actor_id].first = 0.0f;
+    }
   }
 }
 
