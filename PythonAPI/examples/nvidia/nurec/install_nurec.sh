@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+CARLA_ROOT=$(realpath "$BASH_SOURCE[0]")
+CARLA_ROOT=$(dirname "$CARLA_ROOT")
+CARLA_ROOT=$CARLA_ROOT/../../../..
+CARLA_ROOT=$(realpath "$CARLA_ROOT")
+PYTHON_API_ROOT=$CARLA_ROOT/PythonAPI
+CARLA_NUREC_ROOT=$PYTHON_API_ROOT/examples/nvidia/nurec
+echo CARLA_ROOT=$CARLA_ROOT
+
 command_exists() { command -v "$1" >/dev/null 2>&1; }
 
 # The user we want to grant docker access to (the one who invoked sudo, if any)
@@ -199,6 +207,7 @@ if check_NuRec_container "docker.io/carlasimulator/nvidia-nurec-grpc:0.2.0"; the
 else
     echo "Initiating NuRec GRPC Container Downloads..."
     sudo -E docker pull docker.io/carlasimulator/nvidia-nurec-grpc:0.2.0
+    
     if [ $? -ne 0 ]; then
         echo "Error: Failed to download NuRec GRPC Container"
         exit 1
@@ -211,7 +220,7 @@ if check_hf_dataset; then
     echo "HuggingFace dataset already exists, skipping download."
 else
     echo "Installing HuggingFace CLI..."
-    python -m pip install --upgrade huggingface_hub || {
+    python3 -m pip install --upgrade huggingface_hub || {
         echo "Error: Failed to install HuggingFace CLI"
         exit 1
     }
@@ -279,7 +288,7 @@ echo "Installing Python dependencies..."
 
 # Install base dependencies
 echo "Installing base dependencies..."
-python -m pip install pygame numpy nvidia-nvjpeg-cu12 imageio|| {
+python3 -m pip install pygame numpy nvidia-nvjpeg-cu12 imageio|| {
     echo "Error: Failed to install pygame and numpy"
     exit 1
 }
@@ -287,22 +296,22 @@ python -m pip install pygame numpy nvidia-nvjpeg-cu12 imageio|| {
 # Install Carla Wheel
 echo "Installing Carla Wheel..."
 
-WHEEL=$(ls ../../../carla/dist/carla-0.9.16-cp310-cp310-*.whl | head -n 1)
-python -m pip install ${WHEEL} || {
+WHEEL=$(ls $CARLA_ROOT/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-*.whl | head -n 1)
+python3 -m pip install ${WHEEL} || {
     echo "Error: Failed to install Carla Wheel"
     exit 1
 }
 
 # Install project requirements
 echo "Installing project requirements..."
-python -m pip install -r requirements.txt || {
+python3 -m pip install -r $CARLA_NUREC_ROOT/requirements.txt || {
     echo "Error: Failed to install project requirements"
     exit 1
 }
 
 # Install and setup GRPC Protos
 echo "Setting up GRPC Protos..."
-python -m pip install -r nre/grpc/requirements.txt || {
+python3 -m pip install -r $CARLA_NUREC_ROOT/nre/grpc/requirements.txt || {
     echo "Error: Failed to install GRPC requirements"
     exit 1
 }
