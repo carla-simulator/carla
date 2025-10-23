@@ -18,7 +18,10 @@ TARGET_USER="${SUDO_USER:-$USER}"
 # Function to check if HuggingFace dataset exists
 check_hf_dataset() {
     local dataset_path="PhysicalAI-Autonomous-Vehicles-NuRec"
+    local dataset_path_real=$(realpath "$dataset_path")
     if [ -d "$dataset_path" ]; then
+        echo "HuggingFace dataset already exists, skipping download."
+        echo "If you need to download it again, delete $dataset_path_real."
         return 0
     fi
     return 1
@@ -216,9 +219,7 @@ fi
 
 # Download the dataset from HuggingFace
 echo "Checking HuggingFace dataset..."
-if check_hf_dataset; then
-    echo "HuggingFace dataset already exists, skipping download."
-else
+if ! check_hf_dataset; then
     echo "Installing HuggingFace CLI..."
     python3 -m pip install --upgrade huggingface_hub || {
         echo "Error: Failed to install HuggingFace CLI"
