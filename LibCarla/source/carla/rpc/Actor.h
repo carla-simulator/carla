@@ -11,6 +11,7 @@
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/streaming/Token.h"
+#include "carla/MsgPackAdaptors.h"
 
 #include <cstring>
 
@@ -29,6 +30,8 @@ namespace rpc {
     ActorDescription description;
 
     geom::BoundingBox bounding_box;
+
+    boost::optional<geom::BoundingBox> trigger_volume;
 
     std::vector<uint8_t> semantic_tags;
 
@@ -51,7 +54,7 @@ namespace rpc {
 
     /// @}
 
-    MSGPACK_DEFINE_ARRAY(id, parent_id, description, bounding_box, semantic_tags, stream_token);
+    MSGPACK_DEFINE_ARRAY(id, parent_id, description, bounding_box, trigger_volume, semantic_tags, stream_token);
   };
 
 } // namespace rpc

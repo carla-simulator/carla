@@ -29,6 +29,8 @@ public:
 
   FBoundingBox BoundingBox;
 
+  TOptional<FBoundingBox> TriggerVolume;
+
   crp::Actor SerializedData;
 
   /// @todo To be used solely by the FWorldObserver.

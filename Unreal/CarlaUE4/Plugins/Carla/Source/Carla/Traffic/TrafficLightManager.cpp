@@ -15,6 +15,10 @@
 #include "UObject/ConstructorHelpers.h"
 #include "EngineUtils.h"
 
+#include "Carla/Game/CarlaEpisode.h"
+#include "Carla/Actor/ActorRegistry.h"
+#include "Carla/Util/BoundingBoxCalculator.h"
+
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/String.h>
 #include <carla/road/SignalType.h>
@@ -296,6 +300,35 @@ void ATrafficLightManager::AdjustAllSignsToHeightGround()
         FVector OldBoxLocation = Pair.Value;
         Pair.Key->SetWorldLocation(OldBoxLocation);
         FVector NewBoxLocation = Pair.Key->GetComponentLocation();
+      }
+
+      TS->bPositioned = true;
+      UCarlaEpisode* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+      if (Episode)
+      {
+        FCarlaActor* CarlaActor = Episode->FindCarlaActor(TS);
+        if (CarlaActor)
+        {
+          FActorInfo* Info = const_cast<FActorInfo*>(CarlaActor->GetActorInfo());
+          if (Info)
+          {
+            FBoundingBox NewBoundingBox = UBoundingBoxCalculator::GetActorBoundingBox(TS, 0);
+            Info->BoundingBox = NewBoundingBox;
+            Info->SerializedData.bounding_box = NewBoundingBox;
+
+            TArray<UBoxComponent*> TriggerVolumes = TS->GetTriggerVolumes();
+            if (TriggerVolumes.Num() > 0)
+            {
+              FBoundingBox TriggerBox = UBoundingBoxCalculator::CombineBoxes(TriggerVolumes);
+              FTransform ActorTransform = TS->GetActorTransform();
+              TriggerBox.Origin -= ActorTransform.GetTranslation();
+              TriggerBox.Origin = ActorTransform.GetRotation().Inverse().RotateVector(TriggerBox.Origin);
+              TriggerBox.Rotation = ActorTransform.GetRotation().Inverse().Rotator();
+              Info->TriggerVolume = TriggerBox;
+              Info->SerializedData.trigger_volume = TriggerBox;
+            }
+          }
+        }
       }
     }
   }

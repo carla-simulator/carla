@@ -61,6 +61,10 @@ namespace detail {
       return _description.bounding_box;
     }
 
+    const boost::optional<geom::BoundingBox> &GetTriggerVolume() const {
+      return _description.trigger_volume;
+    }
+
     const rpc::Actor &GetActorDescription() const {
       return _description;
     }

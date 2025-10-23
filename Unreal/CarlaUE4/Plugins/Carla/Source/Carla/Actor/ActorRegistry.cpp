@@ -10,6 +10,7 @@
 
 #include "Carla/Game/Tagger.h"
 #include "Carla/Traffic/TrafficLightBase.h"
+#include "Carla/Traffic/TrafficSignBase.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Sensor/Sensor.h"
 
@@ -151,6 +152,31 @@ TSharedPtr<FCarlaActor> FActorRegistry::MakeCarlaActor(
   ATagger::GetTagsOfTaggedActor(Actor, Info->SemanticTags);
   Info->BoundingBox = UBoundingBoxCalculator::GetActorBoundingBox(&Actor);
 
+  auto TrafficSign = Cast<ATrafficSignBase>(&Actor);
+  auto TrafficLight = Cast<ATrafficLightBase>(&Actor);
+  if (TrafficSign != nullptr || TrafficLight != nullptr)
+  {
+    TArray<UBoxComponent*> TriggerVolumes;
+    if (TrafficSign != nullptr)
+    {
+      TriggerVolumes = TrafficSign->GetTriggerVolumes();
+    }
+    else if (TrafficLight != nullptr)
+    {
+      TriggerVolumes = TrafficLight->GetTriggerVolumes();
+    }
+
+    if (TriggerVolumes.Num() > 0)
+    {
+      FBoundingBox TriggerBox = UBoundingBoxCalculator::CombineBoxes(TriggerVolumes);
+      FTransform ActorTransform = Actor.GetActorTransform();
+      TriggerBox.Origin -= ActorTransform.GetTranslation();
+      TriggerBox.Origin = ActorTransform.GetRotation().Inverse().RotateVector(TriggerBox.Origin);
+      TriggerBox.Rotation = ActorTransform.GetRotation().Inverse().Rotator();
+      Info->TriggerVolume = TriggerBox;
+    }
+  }
+
   if (Info->Description.Id.IsEmpty())
   {
     // This is a fake actor, let's fake the id based on their semantic tags.
@@ -160,6 +186,10 @@ TSharedPtr<FCarlaActor> FActorRegistry::MakeCarlaActor(
   Info->SerializedData.id = Id;
   Info->SerializedData.description = Info->Description;
   Info->SerializedData.bounding_box = Info->BoundingBox;
+  if (Info->TriggerVolume.IsSet())
+  {
+    Info->SerializedData.trigger_volume = Info->TriggerVolume.GetValue();
+  }
   Info->SerializedData.semantic_tags.reserve(Info->SemanticTags.Num());
   for (auto &&Tag : Info->SemanticTags)
   {

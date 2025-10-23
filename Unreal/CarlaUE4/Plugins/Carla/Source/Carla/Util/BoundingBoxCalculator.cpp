@@ -70,6 +70,61 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
     auto TrafficSign = Cast<ATrafficSignBase>(Actor);
     if (TrafficSign != nullptr)
     {
+      if (TrafficSign->bPositioned)
+      {
+        TArray<FBoundingBox> MeshBBs;
+
+        TArray<UStaticMeshComponent*> StaticMeshComps;
+        Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+        for (UStaticMeshComponent* MeshComp : StaticMeshComps)
+        {
+          if (MeshComp && MeshComp->IsVisible())
+          {
+            UStaticMesh* StaticMesh = MeshComp->GetStaticMesh();
+            if (StaticMesh)
+            {
+              FBoundingBox BB = GetStaticMeshBoundingBox(StaticMesh);
+              if (!BB.Extent.IsZero())
+              {
+                const FTransform& CompToWorldTransform = MeshComp->GetComponentTransform();
+                BB = ApplyTransformToBB(BB, CompToWorldTransform);
+                MeshBBs.Add(BB);
+              }
+            }
+          }
+        }
+
+        TArray<USkeletalMeshComponent*> SkeletalMeshComps;
+        Actor->GetComponents<USkeletalMeshComponent>(SkeletalMeshComps);
+        for (USkeletalMeshComponent* MeshComp : SkeletalMeshComps)
+        {
+          if (MeshComp && MeshComp->IsVisible())
+          {
+            USkeletalMesh* SkeletalMesh = MeshComp->SkeletalMesh;
+            if (SkeletalMesh)
+            {
+              FBoundingBox BB = GetSkeletalMeshBoundingBox(SkeletalMesh);
+              if (!BB.Extent.IsZero())
+              {
+                const FTransform& CompToWorldTransform = MeshComp->GetComponentTransform();
+                BB = ApplyTransformToBB(BB, CompToWorldTransform);
+                MeshBBs.Add(BB);
+              }
+            }
+          }
+        }
+
+        if (MeshBBs.Num() > 0)
+        {
+          FBoundingBox CombinedBB = CombineBBs(MeshBBs);
+          FTransform Transform = Actor->GetActorTransform();
+          CombinedBB.Origin = Transform.InverseTransformPosition(CombinedBB.Origin);
+          CombinedBB.Rotation = Transform.InverseTransformRotation(CombinedBB.Rotation.Quaternion()).Rotator();
+          CombinedBB.Rotation = Transform.GetRotation().Rotator();
+          return CombinedBB;
+        }
+      }
+
       // first return a merge of the generated trigger boxes, if any
       auto TriggerVolumes = TrafficSign->GetTriggerVolumes();
       if (TriggerVolumes.Num() > 0)
@@ -264,10 +319,10 @@ FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBoxFromComponent(
 
   // Force update bounds
   const_cast<USkeletalMeshComponent*>(SkeletalMeshComp)->UpdateBounds();
-  
+
   // Get the AABB in local space (component space)
   FBox LocalBox = SkeletalMeshComp->CalcBounds(FTransform::Identity).GetBox();
-  
+
   // Extract extent in local space and set origin to zero
   FVector Origin = {0.0f, 0.0f, 0.0f};
   FVector Extent = LocalBox.GetExtent();

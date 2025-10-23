@@ -14,6 +14,8 @@
 #include "Landscape.h"
 #include "LandscapeHeightfieldCollisionComponent.h"
 #include "LandscapeComponent.h"
+#include "Carla/Util/BoundingBoxCalculator.h"
+#include "Components/BoxComponent.h"
 
 #include "UncenteredPivotPointMesh.h"
 
@@ -206,6 +208,33 @@ void ALargeMapManager::AdjustAllSignsToHeightGround()
         }
 
         TrafficSign->bPositioned = true;
+        UCarlaEpisode* Episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
+        if (Episode)
+        {
+          FCarlaActor* CarlaActor = Episode->FindCarlaActor(TrafficSign);
+          if (CarlaActor)
+          {
+            FActorInfo* Info = const_cast<FActorInfo*>(CarlaActor->GetActorInfo());
+            if (Info)
+            {
+              FBoundingBox NewBoundingBox = UBoundingBoxCalculator::GetActorBoundingBox(TrafficSign, 0);
+              Info->BoundingBox = NewBoundingBox;
+              Info->SerializedData.bounding_box = NewBoundingBox;
+
+              TArray<UBoxComponent*> TriggerVolumes = TrafficSign->GetTriggerVolumes();
+              if (TriggerVolumes.Num() > 0)
+              {
+                FBoundingBox TriggerBox = UBoundingBoxCalculator::CombineBoxes(TriggerVolumes);
+                FTransform ActorTransform = TrafficSign->GetActorTransform();
+                TriggerBox.Origin -= ActorTransform.GetTranslation();
+                TriggerBox.Origin = ActorTransform.GetRotation().Inverse().RotateVector(TriggerBox.Origin);
+                TriggerBox.Rotation = ActorTransform.GetRotation().Inverse().Rotator();
+                Info->TriggerVolume = TriggerBox;
+                Info->SerializedData.trigger_volume = TriggerBox;
+              }
+            }
+          }
+        }
       }
     }
   }
