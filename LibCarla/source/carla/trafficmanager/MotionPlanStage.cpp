@@ -166,13 +166,7 @@ void MotionPlanStage::Update(const unsigned long index) {
       uint64_t target_index = target_pair.second;
       
       cg::Location target_location = target_waypoint->GetLocation();
-      // std::cout << "^^^++++++" << std::endl;
-      // std::cout << "Target wp: " << target_waypoint->GetLocation().x << "-" << target_waypoint->GetLocation().y << "-"<< target_waypoint->GetLocation().z << std::endl;
-      // std::cout << "--..--..--" << std::endl;
-      world.MakeDebugHelper().DrawPoint(target_waypoint->GetLocation(), 0.1f, sensor::data::Color{255u, 0u, 0u}, 1.0f);
       float base_offset = CalculateBaseOffset(actor_id, waypoint_buffer, target_waypoint, target_index);
-
-      // std::cout << "Offset: " << base_offset << std::endl;
 
       float offset = parameters.GetLaneOffset(actor_id) + base_offset;
       auto right_vector = target_waypoint->GetTransform().GetRightVector();
@@ -334,14 +328,14 @@ float MotionPlanStage::CalculateBaseOffset(const ActorId actor_id,
     return 0.0f;
   }
 
-  float distance_to_junction_end = 0.0f;
+  float junction_missing_length = 0.0f;
   for (unsigned long i = target_index; i < waypoint_buffer.size(); ++i) {
     SimpleWaypointPtr current_waypoint = waypoint_buffer.at(i);
 
     if (i > 0){
       SimpleWaypointPtr prev_waypoint = waypoint_buffer.at(i-1);
       float new_distance = current_waypoint->Distance(prev_waypoint->GetLocation());
-      distance_to_junction_end = distance_to_junction_end + new_distance;
+      junction_missing_length = junction_missing_length + new_distance;
     }
 
     if (!current_waypoint->CheckJunction()) {
@@ -349,15 +343,25 @@ float MotionPlanStage::CalculateBaseOffset(const ActorId actor_id,
     }
   }
 
-  // std::cout << "Distance to junction end: " << distance_to_junction_end << std::endl;
+  float junction_length = large_vehicles[actor_id].first;
+  bool turn_flag = large_vehicles[actor_id].second;
+  float max_offset = LARGE_VEHICLES_JUNCTION_OFFSET;
+  float max_offset_point = LARGE_VEHICLES_JUNCTION_POINT;
 
-  // From offset to -offset, linearly
-  auto junction_length = large_vehicles[actor_id].first;
-  float offset = LARGE_VEHICLES_JUNCTION_OFFSET * ((2.0f * distance_to_junction_end) / junction_length - 1.0f);
-  offset = large_vehicles[actor_id].second ? -offset : offset; // Change the sign depending on right / left turns
-
-  // std::cout << "Offset: " << offset << std::endl;
-
+  float t = geom::Math::Clamp(junction_missing_length / junction_length, 0.0f, 1.0f);
+  float offset = 0.0;
+  // From offset to -offset, but making sure the entries and exits have offset 0 for smooth transition.
+  if (t < max_offset_point) {
+    float a = t / max_offset_point;
+    offset = max_offset * 0.5f * (1.0f - cosf(PI * a));
+  } else if (t < 1.0f - max_offset_point) {
+    float a = (t - max_offset_point) / (1.0f - 2.0f * max_offset_point);
+    offset =  max_offset * cosf(PI * a);
+  } else if (t <= 1.0f) {
+    float a = (t - (1.0f - max_offset_point)) / max_offset_point;
+    offset = -max_offset * 0.5f * (1.0f + cosf(PI * a));
+  }
+  offset = turn_flag ? offset : -offset; // Change the sign depending on right / left turns
   return offset;
 }
 
