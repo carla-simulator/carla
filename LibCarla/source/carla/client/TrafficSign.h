@@ -18,10 +18,6 @@ namespace client {
     explicit TrafficSign(ActorInitializer init) : Actor(std::move(init)) {}
 
     const geom::BoundingBox &GetTriggerVolume() const {
-      const auto &trigger_vol = ActorState::GetTriggerVolume();
-      if (trigger_vol.has_value()) {
-        return trigger_vol.value();
-      }
       return ActorState::GetBoundingBox();
     }
 
