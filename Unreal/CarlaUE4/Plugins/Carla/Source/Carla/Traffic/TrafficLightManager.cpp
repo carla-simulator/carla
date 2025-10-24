@@ -266,37 +266,49 @@ void ATrafficLightManager::AdjustAllSignsToHeightGround()
 {
   for(ATrafficSignBase* TS : TrafficSigns)
   {
-    FVector OldLocation = TS->GetActorLocation();
-    FVector SpawnLocation = OldLocation;
+    if (!IsValid(TS))
+      continue;
+    if (TS->bPositioned)
+      continue;
 
-    AdjustSignHeightToGround(SpawnLocation);
-    float ZDelta = SpawnLocation.Z - OldLocation.Z;
-
-    if (FMath::Abs(ZDelta) > KINDA_SMALL_NUMBER)
+    FVector OriginalLocation = TS->GetActorLocation();
+    FVector AdjustedLocation = OriginalLocation;
+    
+    TS->bPositioned = AdjustSignHeightToGround(AdjustedLocation);
+    
+    if (TS->bPositioned)
     {
-      TMap<UBoxComponent*, FVector> BoxPositions;
-      TArray<UBoxComponent*> BoxComponents;
-      TS->GetComponents<UBoxComponent>(BoxComponents, true);
-
-      for (UBoxComponent* Box : BoxComponents)
-      {
-        if (Box)
-        {
-          FVector BoxWorldLocation = Box->GetComponentLocation();
-          BoxPositions.Add(Box, BoxWorldLocation);
-        }
-      }
+      float ZOffset = AdjustedLocation.Z - OriginalLocation.Z;
 
       TS->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-      TS->SetActorLocation(SpawnLocation);
-      TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
-
-      for (auto& Pair : BoxPositions)
+      
+      // Get all static mesh components
+      TArray<UStaticMeshComponent*> StaticMeshComps;
+      TS->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+      
+      for (UStaticMeshComponent* MeshComp : StaticMeshComps)
       {
-        FVector OldBoxLocation = Pair.Value;
-        Pair.Key->SetWorldLocation(OldBoxLocation);
-        FVector NewBoxLocation = Pair.Key->GetComponentLocation();
+        if (!MeshComp) continue;
+        
+        // Skip if this has a mesh parent (it's a child)
+        USceneComponent* ParentComp = MeshComp->GetAttachParent();
+        if (ParentComp && Cast<UStaticMeshComponent>(ParentComp))
+        {
+          continue;
+        }
+        
+        // Move the mesh component down
+        FVector CompLocation = MeshComp->GetRelativeLocation();
+        CompLocation.Z += ZOffset;
+        MeshComp->SetRelativeLocation(CompLocation);
+        
+        MeshComp->UpdateBounds();
+        
+        UE_LOG(LogCarla, Log, TEXT("Moved mesh %s by %f cm"), *TS->GetName(), ZOffset);
       }
+      
+      TS->UpdateComponentTransforms();
+      TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
     }
   }
 }
@@ -936,7 +948,7 @@ void ATrafficLightManager::RemoveAttachedProps(TArray<AActor*> Actors) const
 
 bool ATrafficLightManager::AdjustSignHeightToGround(FVector& SpawnLocation) const
 {
-  const FVector Start = SpawnLocation + FVector(0, 0, 10.0f);
+  const FVector Start = SpawnLocation + FVector(0, 0, 200.0f);
   const FVector End = SpawnLocation - FVector(0, 0, 10000.0f);
 
   FHitResult HitResult;

@@ -138,8 +138,8 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 
 bool ALargeMapManager::AdjustSignHeightToGround(FVector& SpawnLocation, const FString& ActorName, const TArray<AActor*>& ActorsToIgnore) const
 {
-  const FVector Start = SpawnLocation + FVector(0, 0, 10.0f);
-  const FVector End = SpawnLocation - FVector(0, 0, 20000.0f);
+  const FVector Start = SpawnLocation + FVector(0, 0, 200.0f);
+  const FVector End = SpawnLocation - FVector(0, 0, 10000.0f);
 
   FHitResult HitResult;
   FCollisionQueryParams CollisionParams;
@@ -175,38 +175,46 @@ void ALargeMapManager::AdjustAllSignsToHeightGround()
     ATrafficSignBase* TrafficSign = Cast<ATrafficSignBase>(Actor);
     if (!IsValid(TrafficSign))
       continue;
-    FVector OldLocation = Actor->GetActorLocation();
-    FVector SpawnLocation = OldLocation;
-
-    if (AdjustSignHeightToGround(SpawnLocation, Actor->GetName(), ActorsToIgnore))
+    if (TrafficSign->bPositioned)
+      continue;
+    FVector OriginalLocation = Actor->GetActorLocation();
+    FVector AdjustedLocation = OriginalLocation;
+    
+    TrafficSign->bPositioned = AdjustSignHeightToGround(AdjustedLocation, Actor->GetName(), ActorsToIgnore);
+    
+    if (TrafficSign->bPositioned)
     {
-      float ZDelta = SpawnLocation.Z - OldLocation.Z;
+      float ZOffset = AdjustedLocation.Z - OriginalLocation.Z;
 
-      if (FMath::Abs(ZDelta) > KINDA_SMALL_NUMBER)
+      Actor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+      
+      // Get all static mesh components
+      TArray<UStaticMeshComponent*> StaticMeshComps;
+      Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+      
+      for (UStaticMeshComponent* MeshComp : StaticMeshComps)
       {
-        TMap<UBoxComponent*, FVector> BoxPositions;
-        TArray<UBoxComponent*> BoxComponents;
-        Actor->GetComponents<UBoxComponent>(BoxComponents, true);
-
-        for (UBoxComponent* Box : BoxComponents)
+        if (!MeshComp) continue;
+        
+        // Skip if this has a mesh parent (it's a child)
+        USceneComponent* ParentComp = MeshComp->GetAttachParent();
+        if (ParentComp && Cast<UStaticMeshComponent>(ParentComp))
         {
-          if (Box)
-          {
-            BoxPositions.Add(Box, Box->GetComponentLocation());
-          }
+          continue;
         }
-
-        Actor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-        Actor->SetActorLocation(SpawnLocation);
-        Actor->GetRootComponent()->SetMobility(EComponentMobility::Static);
-
-        for (auto& Pair : BoxPositions)
-        {
-          Pair.Key->SetWorldLocation(Pair.Value);
-        }
-
-        TrafficSign->bPositioned = true;
+        
+        // Move the mesh component down
+        FVector CompLocation = MeshComp->GetRelativeLocation();
+        CompLocation.Z += ZOffset;
+        MeshComp->SetRelativeLocation(CompLocation);
+        
+        MeshComp->UpdateBounds();
+        
+        LM_LOG(Log, "Moved mesh %s by %f cm", *Actor->GetName(), ZOffset);
       }
+      
+      Actor->UpdateComponentTransforms();
+      Actor->GetRootComponent()->SetMobility(EComponentMobility::Static);
     }
   }
 }
