@@ -160,7 +160,6 @@ void MotionPlanStage::Update(const unsigned long index) {
 
       const float target_point_distance = std::max(vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
                                                   MIN_TARGET_WAYPOINT_DISTANCE);
-      // const SimpleWaypointPtr &target_waypoint = GetTargetWaypoint(waypoint_buffer, target_point_distance).first;
       auto target_pair = GetTargetWaypoint(waypoint_buffer, target_point_distance);
       const SimpleWaypointPtr &target_waypoint = target_pair.first;
       uint64_t target_index = target_pair.second;
@@ -348,9 +347,10 @@ float MotionPlanStage::CalculateBaseOffset(const ActorId actor_id,
   float max_offset = LARGE_VEHICLES_JUNCTION_OFFSET;
   float max_offset_point = LARGE_VEHICLES_JUNCTION_POINT;
 
+  // From offset to -offset, but making sure the entries and exits have offset 0 for smooth transition.
+  // i.e the vehicles opens up at the entry to perform a wider turn later on, exiting in a straighter trajectory.
   float t = geom::Math::Clamp(junction_missing_length / junction_length, 0.0f, 1.0f);
   float offset = 0.0;
-  // From offset to -offset, but making sure the entries and exits have offset 0 for smooth transition.
   if (t < max_offset_point) {
     float a = t / max_offset_point;
     offset = max_offset * 0.5f * (1.0f - cosf(PI * a));

@@ -367,21 +367,14 @@ bool ALSM::IsVehicleStuck(const ActorId& actor_id) {
 }
 
 void ALSM::AddActor(const Actor actor){
-  // std::cout << "Adding actor" << std::endl;
-
   ActorId actor_id = actor->GetId();
   for (auto&& attribute: actor->GetAttributes()) {
     if (attribute.GetId() == "base_type"){
-
       std::string value = attribute.GetValue();
       std::transform(value.begin(), value.end(), value.begin(),[](unsigned char c){ return std::tolower(c);});
-    
-      // std::cout << "VALUE: " << attribute.GetValue() << std::endl;
       if (std::find(large_vehicle_types.begin(), large_vehicle_types.end(), attribute.GetValue()) != large_vehicle_types.end()) {
-        // std::cout << "Vehicle is a large vehicle. Registering it '" << actor_id << "'" << std::endl;
         large_vehicles[actor_id] = std::make_pair(0.0f, 0.0f);
       } else {
-        // std::cout << "Vehicle is not a large vehicle. Ignoring '" << actor_id << "'" << std::endl;
       }
     }
   }

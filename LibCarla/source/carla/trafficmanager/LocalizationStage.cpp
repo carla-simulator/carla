@@ -332,9 +332,8 @@ void LocalizationStage::HandleLargeVehicleJunction(const ActorId actor_id,
     return;
   }
 
-  bool is_at_junction = waypoint_buffer.front()->CheckJunction();
-
   SimpleWaypointPtr current_waypoint = nullptr;
+  bool is_at_junction = waypoint_buffer.front()->CheckJunction();
 
   if (is_at_junction_entrance
       && large_vehicles_at_junction_entrance.find(actor_id) == large_vehicles_at_junction_entrance.end()
@@ -347,19 +346,14 @@ void LocalizationStage::HandleLargeVehicleJunction(const ActorId actor_id,
     for (unsigned long i = 0u; i < waypoint_buffer.size(); ++i) {
       current_waypoint = waypoint_buffer.at(i);
 
-      // Wait until the start of the intersection, and make sure it turns
       if (!entered_junction && current_waypoint->CheckJunction()) {
-        // std::cout << "Entered junction" << std::endl;
         entered_junction = true;
       }
 
-      // Compute the turn length
       if (i > 0 && entered_junction) {
-        // std::cout << "Inside junction" << std::endl;
         SimpleWaypointPtr prev_waypoint = waypoint_buffer.at(i-1);
         float new_distance = current_waypoint->Distance(prev_waypoint->GetLocation());
         junction_length = junction_length + new_distance;
-        // std::cout << "New distance: " << new_distance << std::endl;
 
         if (is_straight_path){
           RoadOption junction_type = current_waypoint->GetRoadOption();
@@ -374,7 +368,6 @@ void LocalizationStage::HandleLargeVehicleJunction(const ActorId actor_id,
         }
       }
 
-      // Stop if the junction has ended
       if (entered_junction && !current_waypoint->CheckJunction()){
         break;
       }
@@ -394,7 +387,6 @@ void LocalizationStage::HandleLargeVehicleJunction(const ActorId actor_id,
   else if (!is_at_junction
       && large_vehicles_at_junction.find(actor_id) != large_vehicles_at_junction.end()) {
 
-    // std::cout << "Exiting a junction, removing the saved length" << std::endl;
     large_vehicles_at_junction.erase(actor_id);
     if (large_vehicles.find(actor_id) != large_vehicles.end()){
       large_vehicles[actor_id].first = 0.0f;
