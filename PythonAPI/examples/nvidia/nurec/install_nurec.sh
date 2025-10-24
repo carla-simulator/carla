@@ -345,7 +345,7 @@ $PYTHON_EXECUTABLE -m pip install -r $CARLA_NUREC_ROOT/nre/grpc/requirements.txt
     exit 1
 }
 
-$PYTHON_EXECUTABLE nre/grpc/update_generated.py || {
+$PYTHON_EXECUTABLE $CARLA_NUREC_ROOT/nre/grpc/update_generated.py || {
     echo "Error: Failed to update generated GRPC files"
     exit 1
 }
