@@ -349,7 +349,7 @@ float MotionPlanStage::CalculateBaseOffset(const ActorId actor_id,
 
   // From offset to -offset, but making sure the entries and exits have offset 0 for smooth transition.
   // i.e the vehicles opens up at the entry to perform a wider turn later on, exiting in a straighter trajectory.
-  float t = geom::Math::Clamp(junction_missing_length / junction_length, 0.0f, 1.0f);
+  float t = cg::Math::Clamp(junction_missing_length / junction_length, 0.0f, 1.0f);
   float offset = 0.0;
   if (t < max_offset_point) {
     float a = t / max_offset_point;

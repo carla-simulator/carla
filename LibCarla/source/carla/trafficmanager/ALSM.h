@@ -67,7 +67,7 @@ private:
   std::unordered_map<ActorId, bool> has_physics_enabled;
   std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles;
   // Base types of the vehicles considered as large ones
-  std::vector<std::string> large_vehicle_types = {"bus", "truck", "van"};
+  std::vector<std::string> large_vehicle_types = {"bus", "truck"};
 
   // Updates the duration for which a registered vehicle is stuck at a location.
   void UpdateIdleTime(std::pair<ActorId, double>& max_idle_time, const ActorId& actor_id);

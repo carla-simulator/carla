@@ -339,6 +339,21 @@ void LocalizationStage::HandleLargeVehicleJunction(const ActorId actor_id,
       && large_vehicles_at_junction_entrance.find(actor_id) == large_vehicles_at_junction_entrance.end()
       && large_vehicles_at_junction.find(actor_id) == large_vehicles_at_junction.end()) {
 
+    large_vehicles_at_junction_entrance.insert(actor_id);
+
+    const SimpleWaypointPtr first_waypoint = waypoint_buffer.front();
+    const SimpleWaypointPtr last_waypoint = waypoint_buffer.back();
+    const SimpleWaypointPtr middle_waypoint = waypoint_buffer.at(static_cast<uint16_t>(waypoint_buffer.size() / 2));
+  
+    float radius = GetThreePointCircleRadius(first_waypoint->GetLocation(),
+                                             middle_waypoint->GetLocation(),
+                                             last_waypoint->GetLocation());
+
+    std::cout << "Radius: " << radius << std::endl;
+    if (radius > LARGE_VEHICLES_JUNCTION_MAX_RADIUS){
+      return; // Straight path
+    }
+
     bool entered_junction = false;
     float junction_length = 0.0f;
     bool is_straight_path = true;
@@ -372,11 +387,10 @@ void LocalizationStage::HandleLargeVehicleJunction(const ActorId actor_id,
         break;
       }
     }
-   if (!is_straight_path){
+    if (!is_straight_path){
       large_vehicles[actor_id].first = junction_length;
     }
 
-    large_vehicles_at_junction_entrance.insert(actor_id);
   }
   else if (is_at_junction
       && large_vehicles_at_junction_entrance.find(actor_id) != large_vehicles_at_junction_entrance.end()) {
@@ -392,6 +406,50 @@ void LocalizationStage::HandleLargeVehicleJunction(const ActorId actor_id,
       large_vehicles[actor_id].first = 0.0f;
     }
   }
+}
+
+float LocalizationStage::GetThreePointCircleRadius(cg::Location first_location,
+                                                   cg::Location middle_location,
+                                                   cg::Location last_location) {
+
+    float x1 = first_location.x;
+    float y1 = first_location.y;
+    float x2 = middle_location.x;
+    float y2 = middle_location.y;
+    float x3 = last_location.x;
+    float y3 = last_location.y;
+
+    float x12 = x1 - x2;
+    float x13 = x1 - x3;
+    float y12 = y1 - y2;
+    float y13 = y1 - y3;
+    float y31 = y3 - y1;
+    float y21 = y2 - y1;
+    float x31 = x3 - x1;
+    float x21 = x2 - x1;
+
+    float sx13 = x1 * x1 - x3 * x3;
+    float sy13 = y1 * y1 - y3 * y3;
+    float sx21 = x2 * x2 - x1 * x1;
+    float sy21 = y2 * y2 - y1 * y1;
+
+    float f_denom = 2 * (y31 * x12 - y21 * x13);
+    if (f_denom == 0) {
+      return std::numeric_limits<float>::max();
+    }
+    float f = (sx13 * x12 + sy13 * x12 + sx21 * x13 + sy21 * x13) / f_denom;
+
+    float g_denom = 2 * (x31 * y12 - x21 * y13);
+    if (g_denom == 0) {
+      return std::numeric_limits<float>::max();
+    }
+    float g = (sx13 * y12 + sy13 * y12 + sx21 * y13 + sy21 * y13) / g_denom;
+
+    float c = - (x1 * x1 + y1 * y1) - 2 * g * x1 - 2 * f * y1;
+    float h = -g;
+    float k = -f;
+
+  return std::sqrt(h * h + k * k - c);
 }
 
 void LocalizationStage::RemoveActor(ActorId actor_id) {

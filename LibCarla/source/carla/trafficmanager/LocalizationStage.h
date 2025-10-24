@@ -62,6 +62,10 @@ private:
                                   const bool is_at_junction_entrance,
                                   Buffer &waypoint_buffer);
 
+  float GetThreePointCircleRadius(cg::Location first_location,
+                                  cg::Location middle_location,
+                                  cg::Location last_location);
+
   void ImportPath(Path &imported_path,
                   Buffer &waypoint_buffer,
                   const ActorId actor_id,
