@@ -117,7 +117,7 @@ source vecarla/bin/activate # Activate the venv
 Remember to activate the virtual environment in each new terminal session you open. 
 
 !!! note
-    Bear in mind that the virtual environment will be created in the folder where you run this command. In order to source the environment, you must be in the same directory where you ran this commmand. Once the *venv* is activated, you can then navigate to other directories as required. We recommend creating the *venv* in the `${CARLA_ROOT}` directory or the `${CARLA_ROOT}/PythonAPI/examples/nurec` directory.
+    Bear in mind that the virtual environment will be created in the folder where you run this command. In order to source the environment, you must be in the same directory where you ran this command. Once the *venv* is activated, you can then navigate to other directories as required. We recommend creating the *venv* in the `${CARLA_ROOT}` directory or the `${CARLA_ROOT}/PythonAPI/examples/nurec` directory.
 
 ### Run the installer Script
 
@@ -188,8 +188,7 @@ cd ${CARLA_ROOT}
 ```sh
 source vecarla/bin/activate # Omit if you are not using a venv
 cd ${CARLA_ROOT}/PythonAPI/examples/nvidia/nurec/
-python3 example_nurec_replay_save_images.py --usdz-filename \
-PhysicalAI-Autonomous-Vehicles-NuRec/sample_set/25.07/<path_to_example>/<usd_filename.usdz> #--move-spectator --saveimages
+python3 example_nurec_replay_save_images.py --usdz-filename <path_to_example>/<usd_filename>.usdz #--move-spectator --saveimages
 
 ```
 
