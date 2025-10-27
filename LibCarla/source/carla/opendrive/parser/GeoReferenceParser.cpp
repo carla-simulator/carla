@@ -18,14 +18,19 @@
 #include <string>
 #include <vector>
 #include <regex>
+#include <utility>
+#include <cctype>
+#include <stdexcept>
 
 namespace carla {
 namespace opendrive {
 namespace parser {
 
-  static std::string ToLowerCase(std::string s) {
-    std::transform(s.begin(), s.end(), s.begin(),
-                   [](unsigned char c){ return char(std::tolower(c)); });
+  template <typename S>
+  static std::string ToLowerCase(S&& s) {
+    std::string r = s;
+    for (auto& c : r)
+      c = static_cast<char>(std::tolower(c));
     return s;
   }
 
@@ -45,11 +50,60 @@ namespace parser {
     return geo_parameters_map;
   }
 
-  static geom::Ellipsoid CreateEllipsoid(std::unordered_map<std::string, std::string> parameters){
-    geom::Ellipsoid ellps;
+  template <typename M, typename S>
+  static bool TryGetParameter(M& parameters, S&& name, std::string& out)
+  {
+    auto i = parameters.find(std::forward<S>(name));
+    if (i == parameters.cend())
+      return false;
+    out = i->second;
+    return true;
+  }
 
-    if (parameters.find("ellps") != parameters.end()) {
-      auto value = ToLowerCase(parameters["ellps"]);
+  template <typename Map, typename S, typename O>
+  static
+  std::enable_if_t<std::is_floating_point<O>::value, bool>
+  TryGetParameter(Map& parameters, S&& name, O& out)
+  {
+    auto i = parameters.find(std::forward<S>(name));
+    if (i == parameters.cend())
+      return false;
+    out = static_cast<O>(std::stod(i->second));
+    return true;
+  }
+
+  template <typename Map, typename S, typename O>
+  static
+  std::enable_if_t<std::is_integral<O>::value && std::is_unsigned<O>::value, bool>
+  TryGetParameter(Map& parameters, S&& name, O& out)
+  {
+    auto i = parameters.find(std::forward<S>(name));
+    if (i == parameters.cend())
+      return false;
+    out = static_cast<O>(std::stoull(i->second));
+    return true;
+  }
+
+  template <typename Map, typename S, typename O>
+  static
+  std::enable_if_t<std::is_integral<O>::value && std::is_signed<O>::value, bool>
+  TryGetParameter(Map& parameters, S&& name, O& out)
+  {
+    auto i = parameters.find(std::forward<S>(name));
+    if (i == parameters.cend())
+      return false;
+    out = static_cast<O>(std::stoll(i->second));
+    return true;
+  }
+
+  static geom::Ellipsoid CreateEllipsoid(std::unordered_map<std::string, std::string> parameters){
+    
+    geom::Ellipsoid ellps;
+    std::string value;
+    double x;
+
+    if (TryGetParameter(parameters, "ellps", value)) {
+      value = ToLowerCase(value);
       auto it = geom::custom_ellipsoids.find(value);
       if (it != geom::custom_ellipsoids.end()) {
         ellps.a = it->second.first;
@@ -62,18 +116,12 @@ namespace parser {
     }
 
     // Specific semi-major axis
-    if (parameters.find("a") != parameters.end()) {
-      ellps.a = std::stod(parameters["a"]);
-    }
-
-    // Specific semi-minor axis
-    if (parameters.find("b") != parameters.end()) {
-      ellps.fromb(std::stod(parameters["b"]));
-    } else if (parameters.find("f") != parameters.end()) {
-      ellps.fromf(std::stod(parameters["f"]));
-    } else if (parameters.find("rf") != parameters.end()) {
-      ellps.f_inv = std::stod(parameters["rf"]);
-    }
+    TryGetParameter(parameters, "a", ellps.a);
+    TryGetParameter(parameters, "b", x);
+    ellps.fromb(x);
+    TryGetParameter(parameters, "f", x);
+    ellps.fromf(x);
+    TryGetParameter(parameters, "rf", ellps.f_inv);
 
     return ellps;
   }
@@ -84,21 +132,11 @@ namespace parser {
     geom::Ellipsoid ellipsoid){
 
     geom::TransverseMercatorParams p;
-    if (parameters.find("lat_0") != parameters.end()) {
-      p.lat_0 = std::stod(parameters["lat_0"]);
-    }
-    if (parameters.find("lon_0") != parameters.end()) {
-      p.lon_0 = std::stod(parameters["lon_0"]);
-    }
-    if (parameters.find("k") != parameters.end()) {
-      p.k = std::stod(parameters["k"]);
-    }
-    if (parameters.find("lat_0") != parameters.end()) {
-      p.x_0 = std::stod(parameters["x_0"]);
-    }
-    if (parameters.find("lat_0") != parameters.end()) {
-      p.y_0 = std::stod(parameters["y_0"]);
-    }
+    TryGetParameter(parameters, "lat_0", p.lat_0);
+    TryGetParameter(parameters, "lon_0", p.lon_0);
+    TryGetParameter(parameters, "k", p.k);
+    TryGetParameter(parameters, "x_0", p.x_0);
+    TryGetParameter(parameters, "y_0", p.y_0);
     p.ellps = ellipsoid;
     auto projection = geom::GeoProjection::Make(p);
     projection.setPROJString(proj_string);
@@ -111,9 +149,7 @@ namespace parser {
     geom::Ellipsoid ellipsoid){
 
     geom::UniversalTransverseMercatorParams p;
-    if (parameters.find("zone") != parameters.end()) {
-      p.zone = std::stoi(parameters["zone"]);
-    } else {
+    if (!TryGetParameter(parameters, "zone", p.zone)) {
       log_warning("Missing 'zone' parameter for UTM projection. Using default value " + std::to_string(p.zone));
     }
     p.north = (parameters.count("south") > 0) ? false : true;
@@ -141,30 +177,14 @@ namespace parser {
     geom::Ellipsoid ellipsoid){
 
     geom::LambertConformalConicParams p;
-
-    if (parameters.find("lon_0") != parameters.end()) {
-      p.lon_0 = std::stod(parameters["lon_0"]);
-    }
-    if (parameters.find("lat_0") != parameters.end()) {
-      p.lat_0 = std::stod(parameters["lat_0"]);
-    }
-    if (parameters.find("lat_1") != parameters.end()) {
-      p.lat_1 = std::stod(parameters["lat_1"]);
-    } else {
+    TryGetParameter(parameters, "lon_0", p.lon_0);
+    TryGetParameter(parameters, "lat_0", p.lat_0);
+    if (!TryGetParameter(parameters, "lat_1", p.lat_1))
       log_warning("Missing 'lat_1' parameter for LCC projection. Using default value " + std::to_string(p.lat_1));
-    }
-    if (parameters.find("lat_2") != parameters.end()) {
-      p.lat_2 = std::stod(parameters["lat_2"]);
-    } else {
+    if (!TryGetParameter(parameters, "lat_2", p.lat_2))
       log_warning("Missing 'lat_2' parameter for LCC projection. Using default value " + std::to_string(p.lat_2));
-    }
-    if (parameters.find("x_0") != parameters.end()) {
-      p.x_0 = std::stod(parameters["x_0"]);
-    }
-    if (parameters.find("y_0") != parameters.end()) {
-      p.y_0 = std::stod(parameters["y_0"]);
-    }
-
+    TryGetParameter(parameters, "x_0", p.x_0);
+    TryGetParameter(parameters, "y_0", p.y_0);
     p.ellps = ellipsoid;
     auto projection = geom::GeoProjection::Make(p);
     projection.setPROJString(proj_string);
@@ -182,23 +202,16 @@ namespace parser {
 
   static geom::GeoLocation CreateTransverseMercatorGeoReference(std::unordered_map<std::string, std::string> parameters){
     geom::GeoLocation result{0.0, 0.0, 0.0};
-    if (parameters.find("lat_0") != parameters.end()) {
-      result.latitude = std::stod(parameters["lat_0"]);
-    }
-    if (parameters.find("lon_0") != parameters.end()) {
-      result.longitude = std::stod(parameters["lon_0"]);
-    }
+    TryGetParameter(parameters, "lat_0", result.latitude);
+    TryGetParameter(parameters, "lon_0", result.longitude);
     return result;
   }
 
   static geom::GeoLocation CreateUniversalTransverseMercatorGeoReference(std::unordered_map<std::string, std::string> parameters){
     geom::GeoLocation result{0.0, 0.0, 0.0};
-
     result.latitude = 0.0;
-    if (parameters.find("zone") != parameters.end()) {
-      double zone = std::stod(parameters["zone"]);
-      result.longitude = geom::Math::ToRadians(6 * zone - 183);
-    }
+    if (TryGetParameter(parameters, "zone", result.longitude))
+      result.longitude = geom::Math::ToRadians(6 * result.longitude - 183);
     return result;
   }
 
@@ -209,12 +222,8 @@ namespace parser {
 
   static geom::GeoLocation CreateLamberConic2SPGeoReference(std::unordered_map<std::string, std::string> parameters){
     geom::GeoLocation result{0.0, 0.0, 0.0};
-    if (parameters.find("lat_0") != parameters.end()) {
-      result.latitude = std::stod(parameters["lat_0"]);
-    }
-    if (parameters.find("lon_0") != parameters.end()) {
-      result.longitude = std::stod(parameters["lon_0"]);
-    }
+    TryGetParameter(parameters, "lat_0", result.latitude);
+    TryGetParameter(parameters, "lon_0", result.longitude);
     return result;
   }
 
@@ -223,73 +232,58 @@ namespace parser {
     return result;
   }
 
-  static geom::GeoProjection ParseGeoProjection(const std::string &proj_string) {
-    geom::GeoProjection result;
-
+  static auto ParseGeoProjectionAndReference(const std::string& proj_string) {
     auto parameters = ParseProjectionParameters(proj_string);
     auto ellipsoid = CreateEllipsoid(parameters);
 
     // Get the projection type
     std::string proj;
-    if (parameters.find("proj") != parameters.end()) {
-      proj = parameters["proj"];
-    } else {
+    if (!TryGetParameter(parameters, "proj", proj)) {
       log_warning("cannot find the type of projection, using default transverse mercator");
-      return CreateDefaultProjection(ellipsoid);
+      return std::make_pair(
+        CreateDefaultProjection(ellipsoid),
+        CreateDefaultGeoReference());
     }
 
     // Parse the parameters
     if (proj == "tmerc") {
-      return CreateTransverseMercatorProjection(parameters, proj_string, ellipsoid);
+      return std::make_pair(
+        CreateTransverseMercatorProjection(parameters, proj_string, ellipsoid),
+        CreateTransverseMercatorGeoReference(parameters));
     } else if (proj == "utm") {
-      return CreateUniversalTransverseMercatorProjection(parameters, proj_string, ellipsoid);
+      return std::make_pair(
+        CreateUniversalTransverseMercatorProjection(parameters, proj_string, ellipsoid),
+        CreateUniversalTransverseMercatorGeoReference(parameters));
     } else if (proj == "merc") {
-      // Fixed projection, doesn't have any parameters
-      return CreateWebMercatorProjection(proj_string, ellipsoid); 
+      return std::make_pair(
+        CreateWebMercatorProjection(proj_string, ellipsoid),
+        CreateWebMercatorGeoReference());
     } else if (proj == "lcc") {
-      return CreateLambertConformalConicProjection(parameters, proj_string, ellipsoid);
-    }
-
-    log_debug("projection '" + proj + "' is not supported, using default transverse mercator.");
-    return CreateDefaultProjection(ellipsoid);
-  }
-
-  static geom::GeoLocation ParseGeoReference(const std::string &proj_string) {
-
-    auto parameters = ParseProjectionParameters(proj_string);
-
-    // Get the projection type
-    std::string proj;
-    if (parameters.find("proj") != parameters.end()) {
-      proj = parameters["proj"];
+      return std::make_pair(
+        CreateLambertConformalConicProjection(parameters, proj_string, ellipsoid),
+        CreateLamberConic2SPGeoReference(parameters));
     } else {
-      log_warning("cannot find the type of projection, using default geolocation");
-      return CreateDefaultGeoReference();
+      log_debug("projection '" + proj + "' is not supported, using default transverse mercator.");
+      return std::make_pair(
+        CreateDefaultProjection(ellipsoid),
+        CreateDefaultGeoReference());
     }
-
-    if (proj == "tmerc") {
-      return CreateTransverseMercatorGeoReference(parameters);
-    } else if (proj == "utm") {
-      return CreateUniversalTransverseMercatorGeoReference(parameters);
-    } else if (proj == "merc") {
-      // Fixed projection, doesn't have any parameters
-      return CreateWebMercatorGeoReference();
-    } else if (proj == "lcc") {
-      return CreateLamberConic2SPGeoReference(parameters);
-    }
-
-    log_debug("projection '" + proj + "' is not supported, using default geolocation.");
-    return CreateDefaultGeoReference();
   }
 
   void GeoReferenceParser::Parse(
       const pugi::xml_document &xml,
       carla::road::MapBuilder &map_builder) {
-    map_builder.SetGeoReference(ParseGeoReference(
-        xml.child("OpenDRIVE").child("header").child_value("geoReference")));
-
-    map_builder.SetGeoProjection(ParseGeoProjection(
-      xml.child("OpenDRIVE").child("header").child_value("geoReference")));
+    
+    auto georeference_string =
+      xml
+      .child("OpenDRIVE")
+      .child("header")
+      .child_value("geoReference");
+    
+    auto reference_and_projection = ParseGeoProjectionAndReference(
+      georeference_string);
+    map_builder.SetGeoProjection(reference_and_projection.first);
+    map_builder.SetGeoReference(reference_and_projection.second);
   }
 
 } // parser
