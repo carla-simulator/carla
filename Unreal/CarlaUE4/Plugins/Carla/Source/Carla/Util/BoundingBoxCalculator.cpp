@@ -66,38 +66,8 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
         return Box;
       }
     }
-    // Traffic sign.
-    auto TrafficSign = Cast<ATrafficSignBase>(Actor);
-    if (TrafficSign != nullptr)
-    {
-      // first return a merge of the generated trigger boxes, if any
-      auto TriggerVolumes = TrafficSign->GetTriggerVolumes();
-      if (TriggerVolumes.Num() > 0)
-      {
-        FBoundingBox Box = UBoundingBoxCalculator::CombineBoxes(TriggerVolumes);
-        FTransform Transform = Actor->GetActorTransform();
-        Box.Origin = Transform.InverseTransformPosition(Box.Origin);
-        Box.Rotation = Transform.InverseTransformRotation(Box.Rotation.Quaternion()).Rotator();
-        return Box;
-      }
-      // try to return the original bounding box
-      auto TriggerVolume = TrafficSign->GetTriggerVolume();
-      if (TriggerVolume != nullptr)
-      {
-          auto Transform = TriggerVolume->GetRelativeTransform();
-          return
-          {
-              Transform.GetTranslation(),
-              TriggerVolume->GetScaledBoxExtent(),
-              Transform.GetRotation().Rotator()
-          };
-      }
-      else
-      {
-        UE_LOG(LogCarla, Warning, TEXT("Traffic sign missing trigger volume: %s"), *Actor->GetName());
-        return {};
-      }
-    }
+    // Traffic sign - now calculates mesh-based bounding box
+    // Use GetTrafficSignTriggerVolume() for trigger volume
     // Other, by default BB
     TArray<FBoundingBox> BBs = GetBBsOfActor(Actor);
     FBoundingBox BB = CombineBBs(BBs);
@@ -264,10 +234,10 @@ FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBoxFromComponent(
 
   // Force update bounds
   const_cast<USkeletalMeshComponent*>(SkeletalMeshComp)->UpdateBounds();
-  
+
   // Get the AABB in local space (component space)
   FBox LocalBox = SkeletalMeshComp->CalcBounds(FTransform::Identity).GetBox();
-  
+
   // Extract extent in local space and set origin to zero
   FVector Origin = {0.0f, 0.0f, 0.0f};
   FVector Extent = LocalBox.GetExtent();
@@ -678,4 +648,43 @@ void UBoundingBoxCalculator::GetMeshCompsFromActorBoundingBox(
       OutStaticMeshComps.Emplace(Comp);
     }
   }
+}
+
+FBoundingBox UBoundingBoxCalculator::GetTrafficSignTriggerVolume(const AActor *Actor)
+{
+  if (Actor != nullptr)
+  {
+    auto TrafficSign = Cast<ATrafficSignBase>(Actor);
+    if (TrafficSign != nullptr)
+    {
+      // first return a merge of the generated trigger boxes, if any
+      auto TriggerVolumes = TrafficSign->GetTriggerVolumes();
+      if (TriggerVolumes.Num() > 0)
+      {
+        FBoundingBox Box = UBoundingBoxCalculator::CombineBoxes(TriggerVolumes);
+        FTransform Transform = Actor->GetActorTransform();
+        Box.Origin = Transform.InverseTransformPosition(Box.Origin);
+        Box.Rotation = Transform.InverseTransformRotation(Box.Rotation.Quaternion()).Rotator();
+        return Box;
+      }
+      // try to return the original bounding box
+      auto TriggerVolume = TrafficSign->GetTriggerVolume();
+      if (TriggerVolume != nullptr)
+      {
+          auto Transform = TriggerVolume->GetRelativeTransform();
+          return
+          {
+              Transform.GetTranslation(),
+              TriggerVolume->GetScaledBoxExtent(),
+              Transform.GetRotation().Rotator()
+          };
+      }
+      else
+      {
+        UE_LOG(LogCarla, Warning, TEXT("Traffic sign missing trigger volume: %s"), *Actor->GetName());
+        return {};
+      }
+    }
+  }
+  return {};
 }

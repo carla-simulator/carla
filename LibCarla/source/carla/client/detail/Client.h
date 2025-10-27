@@ -249,6 +249,9 @@ namespace detail {
     geom::BoundingBox GetActorBoundingBox(
         rpc::ActorId actor);
 
+    geom::BoundingBox GetTrafficSignTriggerVolume(
+        rpc::ActorId actor);
+
     geom::Transform GetActorComponentWorldTransform(
         rpc::ActorId actor,
         const std::string componentName);
