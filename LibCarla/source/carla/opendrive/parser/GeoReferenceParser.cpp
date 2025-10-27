@@ -51,7 +51,7 @@ namespace parser {
   }
 
   template <typename M, typename S>
-  static bool TryGetParameter(M& parameters, S&& name, std::string& out)
+  static bool TryGetParameter(std::string& out, M& parameters, S&& name)
   {
     auto i = parameters.find(std::forward<S>(name));
     if (i == parameters.cend())
@@ -60,10 +60,10 @@ namespace parser {
     return true;
   }
 
-  template <typename Map, typename S, typename O>
+  template <typename M, typename S, typename O>
   static
   std::enable_if_t<std::is_floating_point<O>::value, bool>
-  TryGetParameter(Map& parameters, S&& name, O& out)
+  TryGetParameter(O& out, M& parameters, S&& name)
   {
     auto i = parameters.find(std::forward<S>(name));
     if (i == parameters.cend())
@@ -72,10 +72,10 @@ namespace parser {
     return true;
   }
 
-  template <typename Map, typename S, typename O>
+  template <typename M, typename S, typename O>
   static
   std::enable_if_t<std::is_integral<O>::value && std::is_unsigned<O>::value, bool>
-  TryGetParameter(Map& parameters, S&& name, O& out)
+  TryGetParameter(O& out, M& parameters, S&& name)
   {
     auto i = parameters.find(std::forward<S>(name));
     if (i == parameters.cend())
@@ -84,10 +84,10 @@ namespace parser {
     return true;
   }
 
-  template <typename Map, typename S, typename O>
+  template <typename M, typename S, typename O>
   static
   std::enable_if_t<std::is_integral<O>::value && std::is_signed<O>::value, bool>
-  TryGetParameter(Map& parameters, S&& name, O& out)
+  TryGetParameter(O& out, M& parameters, S&& name)
   {
     auto i = parameters.find(std::forward<S>(name));
     if (i == parameters.cend())
@@ -102,7 +102,7 @@ namespace parser {
     std::string value;
     double x;
 
-    if (TryGetParameter(parameters, "ellps", value)) {
+    if (TryGetParameter(value, parameters, "ellps")) {
       value = ToLowerCase(value);
       auto it = geom::custom_ellipsoids.find(value);
       if (it != geom::custom_ellipsoids.end()) {
@@ -116,12 +116,12 @@ namespace parser {
     }
 
     // Specific semi-major axis
-    TryGetParameter(parameters, "a", ellps.a);
-    TryGetParameter(parameters, "b", x);
+    TryGetParameter(ellps.a, parameters, "a");
+    TryGetParameter(x, parameters, "b");
     ellps.fromb(x);
-    TryGetParameter(parameters, "f", x);
+    TryGetParameter(x, parameters, "f");
     ellps.fromf(x);
-    TryGetParameter(parameters, "rf", ellps.f_inv);
+    TryGetParameter(ellps.f_inv, parameters, "rf");
 
     return ellps;
   }
@@ -132,11 +132,11 @@ namespace parser {
     geom::Ellipsoid ellipsoid){
 
     geom::TransverseMercatorParams p;
-    TryGetParameter(parameters, "lat_0", p.lat_0);
-    TryGetParameter(parameters, "lon_0", p.lon_0);
-    TryGetParameter(parameters, "k", p.k);
-    TryGetParameter(parameters, "x_0", p.x_0);
-    TryGetParameter(parameters, "y_0", p.y_0);
+    TryGetParameter(p.lat_0, parameters, "lat_0");
+    TryGetParameter(p.lon_0, parameters, "lon_0");
+    TryGetParameter(p.k, parameters, "k");
+    TryGetParameter(p.x_0, parameters, "x_0");
+    TryGetParameter(p.y_0, parameters, "y_0");
     p.ellps = ellipsoid;
     auto projection = geom::GeoProjection::Make(p);
     projection.setPROJString(proj_string);
@@ -149,7 +149,7 @@ namespace parser {
     geom::Ellipsoid ellipsoid){
 
     geom::UniversalTransverseMercatorParams p;
-    if (!TryGetParameter(parameters, "zone", p.zone)) {
+    if (!TryGetParameter(p.zone, parameters, "zone")) {
       log_warning("Missing 'zone' parameter for UTM projection. Using default value " + std::to_string(p.zone));
     }
     p.north = (parameters.count("south") > 0) ? false : true;
@@ -177,14 +177,14 @@ namespace parser {
     geom::Ellipsoid ellipsoid){
 
     geom::LambertConformalConicParams p;
-    TryGetParameter(parameters, "lon_0", p.lon_0);
-    TryGetParameter(parameters, "lat_0", p.lat_0);
-    if (!TryGetParameter(parameters, "lat_1", p.lat_1))
+    TryGetParameter(p.lon_0, parameters, "lon_0");
+    TryGetParameter(p.lat_0, parameters, "lat_0");
+    if (!TryGetParameter(p.lat_1, parameters, "lat_1"))
       log_warning("Missing 'lat_1' parameter for LCC projection. Using default value " + std::to_string(p.lat_1));
-    if (!TryGetParameter(parameters, "lat_2", p.lat_2))
+    if (!TryGetParameter(p.lat_2, parameters, "lat_2"))
       log_warning("Missing 'lat_2' parameter for LCC projection. Using default value " + std::to_string(p.lat_2));
-    TryGetParameter(parameters, "x_0", p.x_0);
-    TryGetParameter(parameters, "y_0", p.y_0);
+    TryGetParameter(p.x_0, parameters, "x_0");
+    TryGetParameter(p.y_0, parameters, "y_0");
     p.ellps = ellipsoid;
     auto projection = geom::GeoProjection::Make(p);
     projection.setPROJString(proj_string);
@@ -202,15 +202,15 @@ namespace parser {
 
   static geom::GeoLocation CreateTransverseMercatorGeoReference(std::unordered_map<std::string, std::string> parameters){
     geom::GeoLocation result{0.0, 0.0, 0.0};
-    TryGetParameter(parameters, "lat_0", result.latitude);
-    TryGetParameter(parameters, "lon_0", result.longitude);
+    TryGetParameter(result.latitude, parameters, "lat_0");
+    TryGetParameter(result.longitude, parameters, "lon_0");
     return result;
   }
 
   static geom::GeoLocation CreateUniversalTransverseMercatorGeoReference(std::unordered_map<std::string, std::string> parameters){
     geom::GeoLocation result{0.0, 0.0, 0.0};
     result.latitude = 0.0;
-    if (TryGetParameter(parameters, "zone", result.longitude))
+    if (TryGetParameter(result.longitude, parameters, "zone"))
       result.longitude = geom::Math::ToRadians(6 * result.longitude - 183);
     return result;
   }
@@ -222,8 +222,8 @@ namespace parser {
 
   static geom::GeoLocation CreateLamberConic2SPGeoReference(std::unordered_map<std::string, std::string> parameters){
     geom::GeoLocation result{0.0, 0.0, 0.0};
-    TryGetParameter(parameters, "lat_0", result.latitude);
-    TryGetParameter(parameters, "lon_0", result.longitude);
+    TryGetParameter(result.latitude, parameters, "lat_0");
+    TryGetParameter(result.longitude, parameters, "lon_0");
     return result;
   }
 
@@ -238,7 +238,7 @@ namespace parser {
 
     // Get the projection type
     std::string proj;
-    if (!TryGetParameter(parameters, "proj", proj)) {
+    if (!TryGetParameter(proj, parameters, "proj")) {
       log_warning("cannot find the type of projection, using default transverse mercator");
       return std::make_pair(
         CreateDefaultProjection(ellipsoid),
