@@ -23,6 +23,7 @@ ALSM::ALSM(
   const cc::World &world,
   const LocalMapPtr &local_map,
   SimulationState &simulation_state,
+  std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles,
   LocalizationStage &localization_stage,
   CollisionStage &collision_stage,
   TrafficLightStage &traffic_light_stage,
@@ -36,6 +37,7 @@ ALSM::ALSM(
     world(world),
     local_map(local_map),
     simulation_state(simulation_state),
+    large_vehicles(large_vehicles),
     localization_stage(localization_stage),
     collision_stage(collision_stage),
     traffic_light_stage(traffic_light_stage),
@@ -364,6 +366,20 @@ bool ALSM::IsVehicleStuck(const ActorId& actor_id) {
   return false;
 }
 
+void ALSM::AddActor(const Actor actor){
+  ActorId actor_id = actor->GetId();
+  for (auto&& attribute: actor->GetAttributes()) {
+    if (attribute.GetId() == "base_type"){
+      std::string value = attribute.GetValue();
+      std::transform(value.begin(), value.end(), value.begin(),[](unsigned char c){ return std::tolower(c);});
+      if (std::find(large_vehicle_types.begin(), large_vehicle_types.end(), attribute.GetValue()) != large_vehicle_types.end()) {
+        large_vehicles[actor_id] = std::make_pair(0.0f, 0.0f);
+      } else {
+      }
+    }
+  }
+}
+
 void ALSM::RemoveActor(const ActorId actor_id, const bool registered_actor) {
   if (registered_actor) {
     registered_vehicles.Remove({actor_id});
@@ -374,6 +390,10 @@ void ALSM::RemoveActor(const ActorId actor_id, const bool registered_actor) {
     traffic_light_stage.RemoveActor(actor_id);
     motion_plan_stage.RemoveActor(actor_id);
     vehicle_light_stage.RemoveActor(actor_id);
+
+    if (large_vehicles.find(actor_id) != large_vehicles.end()){
+      large_vehicles.erase(actor_id);
+    }
   }
   else {
     unregistered_actors.erase(actor_id);

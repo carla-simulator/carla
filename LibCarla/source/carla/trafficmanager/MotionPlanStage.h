@@ -44,6 +44,7 @@ private:
   cc::Timestamp current_timestamp;
   RandomGenerator &random_device;
   const LocalMapPtr &local_map;
+  std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles;
 
   std::pair<bool, float> CollisionHandling(const CollisionHazardData &collision_hazard,
                                            const bool tl_hazard,
@@ -54,6 +55,11 @@ private:
   bool SafeAfterJunction(const LocalizationData &localization,
                          const bool tl_hazard,
                          const bool collision_emergency_stop);
+
+  float CalculateBaseOffset(const ActorId actor_id, 
+                            const Buffer &waypoint_buffer,
+                            const SimpleWaypointPtr target_waypoint,
+                            const uint64_t target_index);
 
   float GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
                                   const cg::Location vehicle_location,
@@ -83,7 +89,8 @@ public:
                   const cc::World &world,
                   ControlFrame &output_array,
                   RandomGenerator &random_device,
-                  const LocalMapPtr &local_map);
+                  const LocalMapPtr &local_map,
+                  std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles);
 
   void Update(const unsigned long index);
 
