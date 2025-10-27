@@ -61,6 +61,8 @@ private:
   cc::World world;
   /// Set of all actors registered with traffic manager.
   AtomicActorSet registered_vehicles;
+  // Set containing the ids of the registered large vehicles
+  std::unordered_map<ActorId, std::pair<float, bool>> large_vehicles;
   /// State counter to track changes in registered actors.
   int registered_vehicles_state;
   /// List of vehicles registered with the traffic manager in
