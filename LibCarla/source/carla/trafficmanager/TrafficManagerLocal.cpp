@@ -39,6 +39,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                          simulation_state,
                                          track_traffic,
                                          local_map,
+                                         large_vehicles,
                                          parameters,
                                          marked_for_removal,
                                          localization_frame,
@@ -75,7 +76,8 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       world,
                                       control_frame,
                                       random_device,
-                                      local_map)),
+                                      local_map,
+                                      large_vehicles)),
 
     vehicle_light_stage(VehicleLightStage(vehicle_id_list,
                                           buffer_map,
@@ -91,6 +93,7 @@ TrafficManagerLocal::TrafficManagerLocal(
               world,
               local_map,
               simulation_state,
+              large_vehicles,
               localization_stage,
               collision_stage,
               traffic_light_stage,
@@ -304,6 +307,9 @@ void TrafficManagerLocal::Reset() {
 void TrafficManagerLocal::RegisterVehicles(const std::vector<ActorPtr> &vehicle_list) {
   std::lock_guard<std::mutex> registration_lock(registration_mutex);
   registered_vehicles.Insert(vehicle_list);
+  for (auto actor : vehicle_list) {
+    alsm.AddActor(actor);
+  }
 }
 
 void TrafficManagerLocal::UnregisterVehicles(const std::vector<ActorPtr> &actor_list) {

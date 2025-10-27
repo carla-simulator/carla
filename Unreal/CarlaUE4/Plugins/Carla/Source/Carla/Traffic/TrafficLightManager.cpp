@@ -266,11 +266,50 @@ void ATrafficLightManager::AdjustAllSignsToHeightGround()
 {
   for(ATrafficSignBase* TS : TrafficSigns)
   {
-    TS->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-    FVector SpawnLocation = TS->GetActorLocation();
-    AdjustSignHeightToGround(SpawnLocation);
-    TS->SetActorLocation(SpawnLocation);
-    TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
+    if (!IsValid(TS))
+      continue;
+    if (TS->bPositioned)
+      continue;
+
+    FVector OriginalLocation = TS->GetActorLocation();
+    FVector AdjustedLocation = OriginalLocation;
+    
+    TS->bPositioned = AdjustSignHeightToGround(AdjustedLocation);
+    
+    if (TS->bPositioned)
+    {
+      float ZOffset = AdjustedLocation.Z - OriginalLocation.Z;
+
+      TS->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+      
+      // Get all static mesh components
+      TArray<UStaticMeshComponent*> StaticMeshComps;
+      TS->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+      
+      for (UStaticMeshComponent* MeshComp : StaticMeshComps)
+      {
+        if (!MeshComp) continue;
+        
+        // Skip if this has a mesh parent (it's a child)
+        USceneComponent* ParentComp = MeshComp->GetAttachParent();
+        if (ParentComp && Cast<UStaticMeshComponent>(ParentComp))
+        {
+          continue;
+        }
+        
+        // Move the mesh component down
+        FVector CompLocation = MeshComp->GetRelativeLocation();
+        CompLocation.Z += ZOffset;
+        MeshComp->SetRelativeLocation(CompLocation);
+        
+        MeshComp->UpdateBounds();
+        
+        UE_LOG(LogCarla, Log, TEXT("Moved mesh %s by %f cm"), *TS->GetName(), ZOffset);
+      }
+      
+      TS->UpdateComponentTransforms();
+      TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
+    }
   }
 }
 
@@ -909,7 +948,7 @@ void ATrafficLightManager::RemoveAttachedProps(TArray<AActor*> Actors) const
 
 bool ATrafficLightManager::AdjustSignHeightToGround(FVector& SpawnLocation) const
 {
-  const FVector Start = SpawnLocation + FVector(0, 0, 10.0f);
+  const FVector Start = SpawnLocation + FVector(0, 0, 200.0f);
   const FVector End = SpawnLocation - FVector(0, 0, 10000.0f);
 
   FHitResult HitResult;

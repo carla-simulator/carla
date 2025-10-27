@@ -65,6 +65,9 @@ private:
   double elapsed_last_actor_destruction {0.0};
   cc::Timestamp current_timestamp;
   std::unordered_map<ActorId, bool> has_physics_enabled;
+  std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles;
+  // Base types of the vehicles considered as large ones
+  std::vector<std::string> large_vehicle_types = {"bus", "truck"};
 
   // Updates the duration for which a registered vehicle is stuck at a location.
   void UpdateIdleTime(std::pair<ActorId, double>& max_idle_time, const ActorId& actor_id);
@@ -97,6 +100,7 @@ public:
        const cc::World &world,
        const LocalMapPtr &local_map,
        SimulationState &simulation_state,
+       std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles,
        LocalizationStage &localization_stage,
        CollisionStage &collision_stage,
        TrafficLightStage &traffic_light_stage,
@@ -104,6 +108,9 @@ public:
        VehicleLightStage &vehicle_light_stage);
 
   void Update();
+
+  // Initialize an actor to the traffic manager
+  void AddActor(const Actor actor);
 
   // Removes an actor from traffic manager and performs clean up of associated data
   // from various stages tracking the said vehicle.

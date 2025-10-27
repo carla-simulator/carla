@@ -9,6 +9,7 @@
 - [__Obstacle detector__](#obstacle-detector)
 - [__Radar sensor__](#radar-sensor)
 - [__RGB camera__](#rgb-camera)
+- [__Wide-angle camera__](#wide-angle-cameras)
 - [__RSS sensor__](#rss-sensor)
 - [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
 - [__Semantic segmentation camera__](#semantic-segmentation-camera)
@@ -559,9 +560,51 @@ Since these effects are provided by UE, please make sure to check their document
 | `fov` | float | Horizontal field of view in degrees.         |
 | `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
 
+---
 
+## Wide-angle cameras
+
+* __Blueprint RGB:__ sensor.camera.rgb.wide_angle_lens
+* __Blueprint depth:__ sensor.camera.depth.wide_angle_lens
+* __Blueprint semantic segmentation:__ sensor.camera.semantic_segmentation.wide_angle_lens
+* __Blueprint instance segmentation:__ sensor.camera.instance_segmentation.wide_angle_lens
+* __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise)..
+
+The wide-angle camera models multiple types of specialized cameras such as standard wide-angle, 360 degree cameras and fisheye lenses. The wide-angle camera model offers standard RGB output along with depth, semantic segmentation and instance segmentation. There are numerous projection models available, including perspective, stereographic, equidistant, equisolid, orthographic and Kannala-Brandt.
+
+The [Kannala-Brandt](https://www.researchgate.net/publication/6899685_A_Generic_Camera_Model_and_Calibration_Method_for_Conventional_Wide-Angle_and_Fish-Eye_Lenses) model used matches the [implementation used in OpenCV](https://docs.opencv.org/3.4/db/d58/group__calib3d__fisheye.html).
+
+| Blueprint attribute  | Type     | Default  | Description          |
+| ----------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- |
+| `camera_model`       | str     | `perspective`   | Options: <br>`perspective`,<br>`stereographic`,<br>`equidistant`,<br>`equisolid`,<br>`orthographic`,<br>`kannala-brandt`|
+| `fov`    | float    | 90\.0    | Horizontal field of view in degrees.   |
+| `image_size_x`       | int      | 800      | Image width in pixels.           |
+| `image_size_y`       | int      | 600      | Image height in pixels.          |
+| `k0`       | float      | 0.0831      | Kannala-Brandt K0 parameter.          |
+| `k1`       | float      | 0.0111      | Kannala-Brandt K1 parameter.          |
+| `k2`       | float      | 0.00858      | Kannala-Brandt K2 parameter.          |
+| `k3`       | float      | 0.000854      | Kannala-Brandt K3 parameter.          |
+| `sensor_tick`        | float    | 0\.0     | Simulation seconds between sensor captures (ticks).  |
+| `fov_mask`       | bool     | false      | Masks out pixels outside of the FOV.         |
+| `fov_fade_size`       | float     | 0.0      | Amount of blur of the edge of the `fov_mask`.        |
+| `perspective`       | bool     | false      | Turns on perspective mode.         |
+| `equirectangular`       | bool     | false      | Turns on equirectangular projection.         |
+| `longitude_offset` | float | 0.0 | Shifts view center by degrees for equirectangular model |
+
+#### Output attributes
+
+| Sensor data attribute            | Type  | Description        |
+| ----------------------- | ----------------------- | ----------------------- |
+| `frame`            | int   | Frame number when the measurement took place.      |
+| `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
+| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `width`            | int   | Image width in pixels.           |
+| `height`           | int   | Image height in pixels.          |
+| `fov` | float | Horizontal field of view in degrees.         |
+| `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
 
 ---
+
 ## RSS sensor
 
 *   __Blueprint:__ sensor.other.rss

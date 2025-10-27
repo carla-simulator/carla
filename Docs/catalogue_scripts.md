@@ -95,20 +95,21 @@ This script launches manual control with Chrono physics, using the Sedan powertr
 
 * Script filename: `manual_control_fisheye.py`
 
-This script launches manual control with the fisheye camera model. It has some additional command line arguments for fisheye camera model parameters:
+This script launches manual control with the fisheye camera model. This script has the same key commands and command line arguments as [Manual control](#manual-control). It has some additional command line arguments for camera model parameters:
 
 | Argument | Short form | Default | Description |
 |----------|------------|---------|-------------|
 | --fov |  | 90.0 | Camera field of view angle |
 | --fov_mask |  | Not active | Mask pixels outside of FOV |
-| --fov_fade_size |  | 0.0 | Fade of FOV edge in pixels |
-| --model |  | perspective | Fisheye model:  |
-| --k0 |  | 0.0 | k0 Kannala-Brandt parameter |
-| --k1 |  | 0.0 | k1 Kannala-Brandt parameter |
-| --k2 |  | 0.0 | k2 Kannala-Brandt parameter |
-| --k3 |  | 0.0 | k3 Kannala-Brandt parameter |
-| --equirectangular |  | Not active | Image rectification |
-| --perspective |  | Not active | Image rectification |
+| --fov_fade_size |  | 0.0 | Fade of FOV edge, with the given broadening factor |
+| --model |  | perspective | Camera model: <br>perspective <br>equidistant <br>equisolid <br>orthographic <br>stereographic <br>kannala-brandt  |
+| --k0 |  | 0.0831 | k0 Kannala-Brandt parameter |
+| --k1 |  | 0.0111 | k1 Kannala-Brandt parameter |
+| --k2 |  | 0.00858 | k2 Kannala-Brandt parameter |
+| --k3 |  | 0.000854 | k3 Kannala-Brandt parameter |
+| --equirectangular |  | Not active | Equirectangular projection |
+| --perspective |  | Not active | Perspective projection |
+| --longitude_shift | 0.0 | Shifts view center by degrees for equirectangular model |
 
 #### Steering wheel
 
