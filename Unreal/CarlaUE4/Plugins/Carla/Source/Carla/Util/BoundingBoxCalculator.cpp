@@ -66,16 +66,24 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
         return Box;
       }
     }
-    // Traffic sign - now calculates mesh-based bounding box
-    // Use GetTrafficSignTriggerVolume() for trigger volume
-    // Other, by default BB
-    TArray<FBoundingBox> BBs = GetBBsOfActor(Actor);
-    FBoundingBox BB = CombineBBs(BBs);
-    // Conver to local space; GetBBsOfActor return BBs in world space
+    // Traffic sign - calculate BB in local space to maintain proper orientation
+    TArray<FBoundingBox> BBsWorld = GetBBsOfActor(Actor);
+
+    // Transform all BBs to local space first
     FTransform Transform = Actor->GetActorTransform();
-    BB.Origin = Transform.InverseTransformPosition(BB.Origin);
-    BB.Rotation = Transform.InverseTransformRotation(BB.Rotation.Quaternion()).Rotator();
-    BB.Rotation = Transform.GetRotation().Rotator();
+
+    TArray<FBoundingBox> BBsLocal;
+    for (const FBoundingBox& BBWorld : BBsWorld)
+    {
+      FBoundingBox BBLocal;
+      BBLocal.Origin = Transform.InverseTransformPosition(BBWorld.Origin);
+      BBLocal.Extent = BBWorld.Extent; // Extent doesn't change
+      BBLocal.Rotation = FRotator(0, 0, 0); // In local space, no rotation
+      BBsLocal.Add(BBLocal);
+    }
+
+    FBoundingBox BB = CombineBBs(BBsLocal);
+    BB.Rotation = FRotator(0, 0, 0);
     return BB;
 
   }
@@ -661,10 +669,26 @@ FBoundingBox UBoundingBoxCalculator::GetTrafficSignTriggerVolume(const AActor *A
       auto TriggerVolumes = TrafficSign->GetTriggerVolumes();
       if (TriggerVolumes.Num() > 0)
       {
-        FBoundingBox Box = UBoundingBoxCalculator::CombineBoxes(TriggerVolumes);
+        // Transform all trigger volumes to local space first (same as bounding boxes)
         FTransform Transform = Actor->GetActorTransform();
-        Box.Origin = Transform.InverseTransformPosition(Box.Origin);
-        Box.Rotation = Transform.InverseTransformRotation(Box.Rotation.Quaternion()).Rotator();
+        TArray<FBoundingBox> TriggerVolumesLocal;
+
+        for (UBoxComponent* TriggerVolume : TriggerVolumes)
+        {
+          FBoundingBox TVWorld;
+          TVWorld.Origin = TriggerVolume->GetComponentLocation();
+          TVWorld.Extent = TriggerVolume->GetScaledBoxExtent();
+          TVWorld.Rotation = TriggerVolume->GetComponentRotation();
+
+          FBoundingBox TVLocal;
+          TVLocal.Origin = Transform.InverseTransformPosition(TVWorld.Origin);
+          TVLocal.Extent = TVWorld.Extent; // Extent doesn't change
+          TVLocal.Rotation = FRotator(0, 0, 0); // In local space, no rotation
+          TriggerVolumesLocal.Add(TVLocal);
+        }
+
+        FBoundingBox Box = CombineBBs(TriggerVolumesLocal);
+        Box.Rotation = FRotator(0, 0, 0);
         return Box;
       }
       // try to return the original bounding box

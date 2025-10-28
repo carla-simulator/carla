@@ -77,6 +77,8 @@ public:
 
   void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);
 
+  void RegisterEnvironmentObjects();
+
   void EnableOverlapEvents();
 
   void CheckForEmptyMeshes();
@@ -142,8 +144,6 @@ private:
   void ParseOpenDrive();
 
   void SpawnRoadSplines();
-
-  void RegisterEnvironmentObjects();
 
   void ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FName>& OutLevelNames);
 

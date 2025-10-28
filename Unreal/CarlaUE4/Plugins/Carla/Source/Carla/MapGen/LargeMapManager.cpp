@@ -9,6 +9,7 @@
 #include "Game/CarlaStatics.h"
 #include "Actor/ActorRegistry.h"
 #include "Game/CarlaEpisode.h"
+#include "Util/BoundingBoxCalculator.h"
 #include "Engine/EngineTypes.h"
 #include "Components/PrimitiveComponent.h"
 #include "Landscape.h"
@@ -166,9 +167,17 @@ bool ALargeMapManager::AdjustSignHeightToGround(FVector& SpawnLocation, const FS
 
 void ALargeMapManager::AdjustAllSignsToHeightGround()
 {
+  UWorld* World = GetWorld();
+  if (!World)
+  {
+    return;
+  }
+
+  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
+
   TArray<AActor*> ActorsToIgnore;
   TArray<AActor*> ActorsToAdjustHeight;
-  UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATrafficSignBase::StaticClass(), ActorsToAdjustHeight);
+  UGameplayStatics::GetAllActorsOfClass(World, ATrafficSignBase::StaticClass(), ActorsToAdjustHeight);
   ActorsToIgnore.Append(ActorsToAdjustHeight);
   for (AActor* Actor : ActorsToAdjustHeight)
   {
@@ -179,40 +188,40 @@ void ALargeMapManager::AdjustAllSignsToHeightGround()
       continue;
     FVector OriginalLocation = Actor->GetActorLocation();
     FVector AdjustedLocation = OriginalLocation;
-    
+
     TrafficSign->bPositioned = AdjustSignHeightToGround(AdjustedLocation, Actor->GetName(), ActorsToIgnore);
-    
+
     if (TrafficSign->bPositioned)
     {
       float ZOffset = AdjustedLocation.Z - OriginalLocation.Z;
 
       Actor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-      
+
       // Get all static mesh components
       TArray<UStaticMeshComponent*> StaticMeshComps;
       Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-      
+
       for (UStaticMeshComponent* MeshComp : StaticMeshComps)
       {
         if (!MeshComp) continue;
-        
+
         // Skip if this has a mesh parent (it's a child)
         USceneComponent* ParentComp = MeshComp->GetAttachParent();
         if (ParentComp && Cast<UStaticMeshComponent>(ParentComp))
         {
           continue;
         }
-        
+
         // Move the mesh component down
         FVector CompLocation = MeshComp->GetRelativeLocation();
         CompLocation.Z += ZOffset;
         MeshComp->SetRelativeLocation(CompLocation);
-        
+
         MeshComp->UpdateBounds();
-        
+
         LM_LOG(Log, "Moved mesh %s by %f cm", *Actor->GetName(), ZOffset);
       }
-      
+
       Actor->UpdateComponentTransforms();
       Actor->GetRootComponent()->SetMobility(EComponentMobility::Static);
     }
@@ -224,6 +233,14 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(InWorld);
   ATagger::TagActorsInLevel(*InLevel, *CarlaEpisode, true);
   AdjustAllSignsToHeightGround();
+
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(InWorld);
+  if (GameMode)
+  {
+    GameMode->RegisterEnvironmentObjects();
+    LM_LOG(Log, "Re-registered environment objects after sign height adjustment");
+  }
+
   LM_LOG(Warning, "OnLevelAddedToWorld");
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }
