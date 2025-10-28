@@ -320,12 +320,18 @@ std::pair<cg::Location, uint64_t> MotionPlanStage::GetTargetData(const Buffer &w
     float target_close_distance = vehicle_location.Distance(target_close_location);
     float target_far_distance = vehicle_location.Distance(target_far_location);
 
-    double t = (target_distance - target_close_distance) / (target_far_distance - target_close_distance);
-    cg::Location target_location = cg::Location(
-      target_close_location.x + (target_far_location.x - target_close_location.x) * t,
-      target_close_location.y + (target_far_location.y - target_close_location.y) * t,
-      target_close_location.z + (target_far_location.z - target_close_location.z) * t
-    );
+    cg::Location target_location;
+    if (target_far_distance != target_close_distance){
+      double t = (target_distance - target_close_distance) / (target_far_distance - target_close_distance);
+      target_location = cg::Location(
+        target_close_location.x + (target_far_location.x - target_close_location.x) * t,
+        target_close_location.y + (target_far_location.y - target_close_location.y) * t,
+        target_close_location.z + (target_far_location.z - target_close_location.z) * t
+      );
+    } else {
+      // This actually happens, for some reason
+      target_location = target_close_location;
+    }
 
     return std::make_pair(target_location, closest_index);
   }
