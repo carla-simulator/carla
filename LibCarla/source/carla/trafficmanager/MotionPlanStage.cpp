@@ -158,28 +158,32 @@ void MotionPlanStage::Update(const unsigned long index) {
     if (vehicle_physics_enabled && !simulation_state.IsDormant(actor_id)) {
       ActuationSignal actuation_signal{0.0f, 0.0f, 0.0f};
 
+      // Get the targer data.
       const float target_point_distance = std::max(vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
                                                   MIN_TARGET_WAYPOINT_DISTANCE);
-      auto target_pair = GetTargetWaypoint(waypoint_buffer, target_point_distance);
-      const SimpleWaypointPtr &target_waypoint = target_pair.first;
+      auto target_pair = GetTargetData(waypoint_buffer, target_point_distance, vehicle_location);
+      cg::Location target_location = target_pair.first;
       uint64_t target_index = target_pair.second;
-      
-      cg::Location target_location = target_waypoint->GetLocation();
-      float base_offset = CalculateBaseOffset(actor_id, waypoint_buffer, target_waypoint, target_index);
+      SimpleWaypointPtr target_waypoint = waypoint_buffer.at(target_index);
 
+      float base_offset = CalculateBaseOffset(actor_id, waypoint_buffer, target_waypoint->CheckJunction(), target_index);
       float offset = parameters.GetLaneOffset(actor_id) + base_offset;
       auto right_vector = target_waypoint->GetTransform().GetRightVector();
       auto offset_location = cg::Location(cg::Vector3D(offset*right_vector.x, offset*right_vector.y, 0.0f));
       target_location = target_location + offset_location;
 
-      float dot_product = DeviationDotProduct(vehicle_location, vehicle_heading, target_location);
-      float cross_product = DeviationCrossProduct(vehicle_location, vehicle_heading, target_location);
-      dot_product = acos(dot_product) / PI;
-      if (cross_product < 0.0f) {
-        dot_product *= -1.0f;
+      // Get the targer deviations.
+      cg::Vector3D target_vector = target_location - vehicle_location;
+      float target_yaw = std::atan2(target_vector.y, target_vector.x) *180.0f / PI;
+      float angular_deviation = target_yaw - vehicle_rotation.yaw;
+      if (angular_deviation > 180.0f) {
+        angular_deviation = angular_deviation - 360.0f;
+      } else if (angular_deviation < -180.0f) {
+        angular_deviation = angular_deviation + 360.0f;
       }
-      const float angular_deviation = dot_product;
+      angular_deviation = angular_deviation / 180.0f;  // Between -1 and 1
       const float velocity_deviation = (dynamic_target_velocity - vehicle_speed) / dynamic_target_velocity;
+
       // If previous state for vehicle not found, initialize state entry.
       if (pid_state_map.find(actor_id) == pid_state_map.end()) {
         const auto initial_state = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f};
@@ -215,7 +219,6 @@ void MotionPlanStage::Update(const unsigned long index) {
       }
 
       // Constructing the actuation signal.
-
       carla::rpc::VehicleControl vehicle_control;
       vehicle_control.throttle = actuation_signal.throttle;
       vehicle_control.brake = actuation_signal.brake;
@@ -274,6 +277,59 @@ void MotionPlanStage::Update(const unsigned long index) {
   }
 }
 
+std::pair<cg::Location, uint64_t> MotionPlanStage::GetTargetData(const Buffer &waypoint_buffer,
+                                                                 float target_distance,
+                                                                 cg::Location vehicle_location){
+
+    // If there is only one point, return it.
+    if (waypoint_buffer.size() == 1){
+      return std::make_pair(waypoint_buffer.front()->GetLocation(), 0);
+    }
+
+    float target_square_distance = target_distance * target_distance;
+
+    // Get the two closest waypoints.
+    size_t closest_index = 0;
+    size_t farthest_index = 0;
+    for (uint64_t i = 0; i < waypoint_buffer.size() - 1; i++) {
+        SimpleWaypointPtr target_close_waypoint = waypoint_buffer.at(i);
+        SimpleWaypointPtr target_far_waypoint = waypoint_buffer.at(i+1);
+        float close_dist_square = vehicle_location.DistanceSquared(target_close_waypoint->GetLocation());
+        float far_dist_square = vehicle_location.DistanceSquared(target_far_waypoint->GetLocation());
+
+        if (close_dist_square < target_square_distance){
+          closest_index = i;
+        } else {
+          farthest_index = i;
+          break;
+        }
+    }
+
+    // Edge cases
+    if (farthest_index == 0) {
+      closest_index = 0;
+      farthest_index = 1;
+    } else if (closest_index == waypoint_buffer.size() - 1) {
+      farthest_index = closest_index;
+      closest_index = closest_index - 1;
+    }
+
+    // Interpolate between the two waypoints.
+    cg::Location target_close_location = waypoint_buffer.at(closest_index)->GetLocation();
+    cg::Location target_far_location = waypoint_buffer.at(farthest_index)->GetLocation();
+    float target_close_distance = vehicle_location.Distance(target_close_location);
+    float target_far_distance = vehicle_location.Distance(target_far_location);
+
+    double t = (target_distance - target_close_distance) / (target_far_distance - target_close_distance);
+    cg::Location target_location = cg::Location(
+      target_close_location.x + (target_far_location.x - target_close_location.x) * t,
+      target_close_location.y + (target_far_location.y - target_close_location.y) * t,
+      target_close_location.z + (target_far_location.z - target_close_location.z) * t
+    );
+
+    return std::make_pair(target_location, closest_index);
+  }
+
 bool MotionPlanStage::SafeAfterJunction(const LocalizationData &localization,
                                         const bool tl_hazard,
                                         const bool collision_emergency_stop) {
@@ -314,11 +370,11 @@ bool MotionPlanStage::SafeAfterJunction(const LocalizationData &localization,
 
 float MotionPlanStage::CalculateBaseOffset(const ActorId actor_id,
                                            const Buffer &waypoint_buffer,
-                                           const SimpleWaypointPtr target_waypoint,
+                                           const bool is_target_junction,
                                            const uint64_t target_index){
 
   // This offset is meant to make large vehicle do wider turns at intersections
-  if (large_vehicles.find(actor_id) == large_vehicles.end() || !target_waypoint->CheckJunction()){
+  if (large_vehicles.find(actor_id) == large_vehicles.end() || !is_target_junction){
     return 0.0;
   }
 

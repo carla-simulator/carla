@@ -58,7 +58,7 @@ private:
 
   float CalculateBaseOffset(const ActorId actor_id, 
                             const Buffer &waypoint_buffer,
-                            const SimpleWaypointPtr target_waypoint,
+                            const bool is_target_junction,
                             const uint64_t target_index);
 
   float GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
@@ -72,6 +72,10 @@ private:
   float GetThreePointCircleRadius(cg::Location first_location,
                                   cg::Location middle_location,
                                   cg::Location last_location);
+
+  std::pair<cg::Location, uint64_t> GetTargetData(const Buffer &waypoint_buffer,
+                                                  float target_distance,
+                                                  cg::Location vehicle_location);
 
 public:
   MotionPlanStage(const std::vector<ActorId> &vehicle_id_list,
