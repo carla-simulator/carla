@@ -160,8 +160,8 @@ void MotionPlanStage::Update(const unsigned long index) {
 
       // Get the targer data.
       const float target_point_distance = std::max(vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
-                                                  MIN_TARGET_WAYPOINT_DISTANCE);
-      auto target_pair = GetTargetData(waypoint_buffer, target_point_distance, vehicle_location);
+                                                   MIN_TARGET_WAYPOINT_DISTANCE);
+      auto target_pair = GetTargetLocation(waypoint_buffer, target_point_distance, vehicle_location);
       cg::Location target_location = target_pair.first;
       uint64_t target_index = target_pair.second;
       SimpleWaypointPtr target_waypoint = waypoint_buffer.at(target_index);
@@ -277,9 +277,9 @@ void MotionPlanStage::Update(const unsigned long index) {
   }
 }
 
-std::pair<cg::Location, uint64_t> MotionPlanStage::GetTargetData(const Buffer &waypoint_buffer,
-                                                                 float target_distance,
-                                                                 cg::Location vehicle_location){
+std::pair<cg::Location, uint64_t> MotionPlanStage::GetTargetLocation(const Buffer &waypoint_buffer,
+                                                                     float target_distance,
+                                                                     cg::Location vehicle_location){
 
     // If there is only one point, return it.
     if (waypoint_buffer.size() == 1){
@@ -318,7 +318,9 @@ std::pair<cg::Location, uint64_t> MotionPlanStage::GetTargetData(const Buffer &w
 
     cg::Location target_location;
     if (target_far_distance != target_close_distance){
-      double t = (target_distance - target_close_distance) / (target_far_distance - target_close_distance);
+      float t = (target_distance - target_close_distance) / (target_far_distance - target_close_distance);
+      // This adds a little consistency as sometimes the buffer's front is further than the target distance.
+      t = std::max(t, 0.0f);
       target_location = cg::Location(
         target_close_location.x + (target_far_location.x - target_close_location.x) * t,
         target_close_location.y + (target_far_location.y - target_close_location.y) * t,

@@ -73,9 +73,9 @@ private:
                                   cg::Location middle_location,
                                   cg::Location last_location);
 
-  std::pair<cg::Location, uint64_t> GetTargetData(const Buffer &waypoint_buffer,
-                                                  float target_distance,
-                                                  cg::Location vehicle_location);
+  std::pair<cg::Location, uint64_t> GetTargetLocation(const Buffer &waypoint_buffer,
+                                                      float target_distance,
+                                                      cg::Location vehicle_location);
 
 public:
   MotionPlanStage(const std::vector<ActorId> &vehicle_id_list,

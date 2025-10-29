@@ -349,7 +349,6 @@ void LocalizationStage::HandleLargeVehicleJunction(const ActorId actor_id,
                                              middle_waypoint->GetLocation(),
                                              last_waypoint->GetLocation());
 
-    std::cout << "Radius: " << radius << std::endl;
     if (radius > LARGE_VEHICLES_JUNCTION_MAX_RADIUS){
       return; // Straight path
     }
