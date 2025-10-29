@@ -639,10 +639,6 @@ carla_add_custom_target (
   ${CARLA_LAUNCH_TARGET_OPTIONS}
 )
 
-add_dependencies (
-  launch-only
-)
-
 carla_add_custom_target (
   launch
   "Build and open CARLA in the Unreal Editor."

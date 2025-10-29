@@ -14,6 +14,7 @@ def main():
         for line in file.readlines():
             key, command = line.split(':')
             target_map[key] = command.strip()
+    
     parser = ArgumentParser()
     for k, v in target_map.items():
         parser.add_argument(k, help=f'Run "{v}"')
