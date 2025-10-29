@@ -15,12 +15,14 @@
 #include "JsonUtilities.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Engine/StaticMeshActor.h"
+#include "Components/StaticMeshComponent.h"
 #include <util/ue-header-guard-end.h>
 
 TArray<FActorDefinition> APropActorFactory::GetDefinitions()
 {
   LoadPropParametersArrayFromFile("PropParameters.json", PropsParams);
-  
+
   UActorBlueprintFunctionLibrary::MakePropDefinitions(PropsParams, Definitions);
   return Definitions;
 }
@@ -37,22 +39,77 @@ FActorSpawnResult APropActorFactory::SpawnActor(
     return SpawnResult;
   }
 
-  AActor* SpawnedActor = GetWorld()->SpawnActor<AActor>(ActorDescription.Class, SpawnAtTransform);
-  SpawnResult.Actor = SpawnedActor;
+  FActorSpawnParameters SpawnParameters;
+  SpawnParameters.SpawnCollisionHandlingOverride =
+      ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-  if(SpawnedActor == nullptr)
+  AStaticMeshActor* StaticMeshActor = GetWorld()->SpawnActor<AStaticMeshActor>(
+      ActorDescription.Class, SpawnAtTransform, SpawnParameters);
+
+  SpawnResult.Actor = StaticMeshActor;
+
+  if(StaticMeshActor == nullptr)
   {
     SpawnResult.Status = EActorSpawnResultStatus::Collision;
     return SpawnResult;
   }
 
-  if(PostProcessProp(SpawnedActor, ActorDescription))
+  UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(
+      StaticMeshActor->GetRootComponent());
+
+  if (!StaticMeshComponent)
   {
-    SpawnResult.Status = EActorSpawnResultStatus::Success;
+    UE_LOG(LogCarla, Error, TEXT("Prop spawn failed: StaticMeshComponent is null for actor %s"),
+        *ActorDescription.Id);
+    StaticMeshActor->Destroy();
+    SpawnResult.Status = EActorSpawnResultStatus::UnknownError;
     return SpawnResult;
   }
 
-  SpawnResult.Status = EActorSpawnResultStatus::UnknownError;
+  if (!ActorDescription.Variations.Contains("mesh_path"))
+  {
+    UE_LOG(LogCarla, Error, TEXT("Prop spawn failed: No mesh_path variation found for actor %s"),
+        *ActorDescription.Id);
+    StaticMeshActor->Destroy();
+    SpawnResult.Status = EActorSpawnResultStatus::InvalidDescription;
+    return SpawnResult;
+  }
+
+  FString MeshPath = UActorBlueprintFunctionLibrary::ActorAttributeToString(
+      ActorDescription.Variations["mesh_path"], "");
+
+  if (MeshPath.IsEmpty())
+  {
+    UE_LOG(LogCarla, Error, TEXT("Prop spawn failed: mesh_path is empty for actor %s"),
+        *ActorDescription.Id);
+    StaticMeshActor->Destroy();
+    SpawnResult.Status = EActorSpawnResultStatus::InvalidDescription;
+    return SpawnResult;
+  }
+
+  UStaticMesh* Mesh = LoadObject<UStaticMesh>(nullptr, *MeshPath);
+  if (Mesh == nullptr)
+  {
+    UE_LOG(LogCarla, Error, TEXT("Prop spawn failed: Failed to load mesh '%s' for actor %s"),
+        *MeshPath, *ActorDescription.Id);
+    StaticMeshActor->Destroy();
+    SpawnResult.Status = EActorSpawnResultStatus::UnknownError;
+    return SpawnResult;
+  }
+
+  StaticMeshComponent->SetMobility(EComponentMobility::Movable);
+  if (!StaticMeshComponent->SetStaticMesh(Mesh))
+  {
+    UE_LOG(LogCarla, Error, TEXT("Prop spawn failed: Failed to set mesh '%s' for actor %s"),
+        *MeshPath, *ActorDescription.Id);
+    StaticMeshActor->Destroy();
+    SpawnResult.Status = EActorSpawnResultStatus::UnknownError;
+    return SpawnResult;
+  }
+
+  StaticMeshComponent->SetMobility(EComponentMobility::Static);
+  PostProcessProp(StaticMeshActor, ActorDescription);
+  SpawnResult.Status = EActorSpawnResultStatus::Success;
   return SpawnResult;
 }
 
