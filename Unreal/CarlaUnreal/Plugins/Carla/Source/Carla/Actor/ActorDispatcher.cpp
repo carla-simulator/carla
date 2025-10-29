@@ -11,6 +11,7 @@
 #include "Carla/Actor/CarlaActorFactory.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/VehicleControl.h"
+#include "Components/WorldPartitionStreamingSourceComponent.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "GameFramework/Controller.h"
@@ -171,6 +172,14 @@ FCarlaActor* UActorDispatcher::RegisterActor(
     // TODO: support external actor destruction
     Actor.OnDestroyed.AddDynamic(this, &UActorDispatcher::OnActorDestroyed);
 
+    for (auto&& Attr : Description.Variations)
+    {
+      if (Attr.Key == "role_name" && (Attr.Value.Value == "hero" || Attr.Value.Value == "ego"))
+      {
+        Actor.AddComponentByClass(UWorldPartitionStreamingSourceComponent::StaticClass(), false, FTransform::Identity, false);
+      }
+    }
+
     // ROS2 mapping of actor->ros_name
     #ifdef WITH_ROS2
     auto ROS2 = carla::ros2::ROS2::GetInstance();
@@ -209,6 +218,7 @@ FCarlaActor* UActorDispatcher::RegisterActor(
       {
         if (Attr.Key == "role_name" && (Attr.Value.Value == "hero" || Attr.Value.Value == "ego"))
         {
+
           ROS2->AddActorCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
           {
             AActor *UEActor = reinterpret_cast<AActor *>(Actor);
