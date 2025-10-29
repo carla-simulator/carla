@@ -291,13 +291,9 @@ std::pair<cg::Location, uint64_t> MotionPlanStage::GetTargetData(const Buffer &w
     // Get the two closest waypoints.
     size_t closest_index = 0;
     size_t farthest_index = 0;
-    for (uint64_t i = 0; i < waypoint_buffer.size() - 1; i++) {
-        SimpleWaypointPtr target_close_waypoint = waypoint_buffer.at(i);
-        SimpleWaypointPtr target_far_waypoint = waypoint_buffer.at(i+1);
-        float close_dist_square = vehicle_location.DistanceSquared(target_close_waypoint->GetLocation());
-        float far_dist_square = vehicle_location.DistanceSquared(target_far_waypoint->GetLocation());
-
-        if (close_dist_square < target_square_distance){
+    for (uint64_t i = 0; i < waypoint_buffer.size(); i++) {
+        float close_square_dist = vehicle_location.DistanceSquared(waypoint_buffer.at(i)->GetLocation());
+        if (close_square_dist < target_square_distance){
           closest_index = i;
         } else {
           farthest_index = i;
