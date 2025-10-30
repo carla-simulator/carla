@@ -372,7 +372,7 @@ void ALSM::AddActor(const Actor actor){
     if (attribute.GetId() == "base_type"){
       std::string value = attribute.GetValue();
       std::transform(value.begin(), value.end(), value.begin(),[](unsigned char c){ return std::tolower(c);});
-      if (std::find(large_vehicle_types.begin(), large_vehicle_types.end(), attribute.GetValue()) != large_vehicle_types.end()) {
+      if (std::find(large_vehicle_types.begin(), large_vehicle_types.end(), value) != large_vehicle_types.end()) {
         large_vehicles[actor_id] = std::make_pair(0.0f, 0.0f);
       } else {
       }
