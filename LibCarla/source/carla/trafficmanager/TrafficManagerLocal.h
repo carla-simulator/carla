@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -61,6 +61,8 @@ private:
   cc::World world;
   /// Set of all actors registered with traffic manager.
   AtomicActorSet registered_vehicles;
+  // Set containing the ids of the registered large vehicles
+  std::unordered_map<ActorId, std::pair<float, bool>> large_vehicles;
   /// State counter to track changes in registered actors.
   int registered_vehicles_state;
   /// List of vehicles registered with the traffic manager in
@@ -99,16 +101,10 @@ private:
   TrafficManagerServer server;
   /// Switch to turn on / turn off traffic manager.
   std::atomic<bool> run_traffic_manger{true};
-  /// Flags to signal step begin and end.
-  std::atomic<bool> step_begin{false};
-  std::atomic<bool> step_end{false};
-  /// Mutex for progressing synchronous execution.
-  std::mutex step_execution_mutex;
-  /// Condition variables for progressing synchronous execution.
-  std::condition_variable step_begin_trigger;
-  std::condition_variable step_end_trigger;
   /// Single worker thread for sequential execution of sub-components.
   std::unique_ptr<std::thread> worker_thread;
+  /// Last processed frame
+  size_t last_frame;
   /// Randomization seed.
   uint64_t seed {static_cast<uint64_t>(time(NULL))};
   /// Structure holding random devices per vehicle.
@@ -138,6 +134,9 @@ public:
 
   /// To start the TrafficManager.
   void Start();
+
+  /// To do one step of the TrafficManager.
+  void Step();
 
   /// Initiates thread to run the TrafficManager sequentially.
   void Run();
@@ -224,8 +223,8 @@ public:
   /// the Global leading vehicle.
   void SetGlobalDistanceToLeadingVehicle(const float distance);
 
-  /// Method to set % to keep on the right lane.
-  void SetKeepRightPercentage(const ActorPtr &actor, const float percentage);
+  /// Method to set % to keep on the slow lane.
+  void SetKeepSlowLanePercentage(const ActorPtr &actor, const float percentage);
 
   /// Method to set % to randomly do a left lane change.
   void SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage);

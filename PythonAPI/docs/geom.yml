@@ -325,11 +325,13 @@
   - class_name: Rotation
     # - DESCRIPTION ------------------------
     doc: >
-      Class that represents a 3D rotation and therefore, an orientation in space. CARLA uses the Unreal Engine coordinates system. This is a Z-up left-handed system.  <br>
-
-      <br>The constructor method follows a specific order of declaration: `(pitch, yaw, roll)`, which corresponds to `(Y-rotation,Z-rotation,X-rotation)`.  <br>
-      <br>![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg)
-      *Unreal Engine's coordinates system*
+      Class that represents a 3D rotation and therefore, an orientation in space. CARLA uses the Unreal Engine coordinates system. This is a Z-up left-handed system. 
+      <br>
+      <br>
+      The constructor method follows a specific order of declaration: `(pitch, yaw, roll)`, which corresponds to `(Y-rotation,Z-rotation,X-rotation)`.
+      <br>
+      <img src="https://github.com/carla-simulator/carla/blob/ue4-dev/Docs/img/unreal_lhcs.png?raw=true" width="100%">
+      *Unreal Engine's left handed coordinate system with rotations*
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: pitch
@@ -443,6 +445,15 @@
           Location in the space to which the transformation will be applied.
       doc: >
         Translates a 3D point from local to global coordinates using the current transformation as frame of reference.
+    # --------------------------------------
+    - def_name: inverse_transform
+      params:
+      - param_name: in_point
+        type: carla.Location
+        doc: >
+          Location in global to which the inverse transformation will be applied.
+      doc: >
+        Translates a 3D point from global to local coordinates using the current transformation as frame of reference.
     # --------------------------------------
     - def_name: transform_vector
       params:

@@ -1,0 +1,188 @@
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
+#include "/Engine/Public/Platform.ush"
+
+// Reference:
+// https://www.researchgate.net/publication/6899685_A_Generic_Camera_Model_and_Calibration_Method_for_Conventional_Wide-Angle_and_Fish-Eye_Lenses
+
+
+
+#define WAL_SHADER_FLAGS_EQUIRECTANGULAR (1U << 0)
+#define WAL_SHADER_FLAGS_FOV_MASK (1U << 1)
+
+
+
+RWTexture2D<float4> OutImage;
+Texture2D CubeFront;
+Texture2D CubeBack;
+Texture2D CubeRight;
+Texture2D CubeLeft;
+Texture2D CubeTop;
+Texture2D CubeBottom;
+SamplerState FaceSampler;
+float YFOVAngle;
+float4 CameraParams;
+float LongitudeOffset;
+float FOVFadeSize;
+uint Flags;
+
+
+
+// Expects Coefficients to be declared if CAMERA_TYPE == CAMERA_TYPE_CUSTOM.
+#include "CameraModelCommon.ush"
+
+
+
+float4 SampleCubemap(float3 Direction)
+{
+	float4 OutColor;
+	
+	const float3 DirectionAbs = abs(Direction);
+	
+	uint FaceIndex = 0;
+
+	if (DirectionAbs.x >= DirectionAbs.y && DirectionAbs.x >= DirectionAbs.z)
+		FaceIndex = Direction.x < 0 ? 1 : 0;
+	else if (DirectionAbs.y >= DirectionAbs.x && DirectionAbs.y >= DirectionAbs.z)
+		FaceIndex = Direction.y < 0 ? 3 : 2;
+	else
+		FaceIndex = Direction.z < 0 ? 5 : 4;
+
+	const float3 Lookup[6] =
+	{
+		float3(Direction.y, -Direction.z, Direction.x),
+		float3(Direction.y, Direction.z, Direction.x),
+		float3(-Direction.x, -Direction.z, Direction.y),
+		float3(-Direction.x, Direction.z, Direction.y),
+		float3(Direction.y, Direction.x, Direction.z),
+		float3(Direction.y, -Direction.x, Direction.z)
+	};
+
+	const float3 Key = Lookup[FaceIndex];
+	const float2 UV = (Key.xy / Key.z + float2(1, 1)) * 0.5F;
+	
+	switch (FaceIndex)
+	{
+		case 0:
+			OutColor = CubeFront.SampleLevel(FaceSampler, UV, 0);
+			break;
+		case 1:
+			OutColor = CubeBack.SampleLevel(FaceSampler, UV, 0);
+			break;
+		case 2:
+			OutColor = CubeRight.SampleLevel(FaceSampler, UV, 0);
+			break;
+		case 3:
+			OutColor = CubeLeft.SampleLevel(FaceSampler, UV, 0);
+			break;
+		case 4:
+			OutColor = CubeTop.SampleLevel(FaceSampler, UV, 0);
+			break;
+		case 5:
+			OutColor = CubeBottom.SampleLevel(FaceSampler, UV, 0);
+			break;
+		default:
+			break;
+	}
+
+	return OutColor;
+}
+
+
+
+[numthreads(
+	THREAD_GROUP_SIZE_X,
+	THREAD_GROUP_SIZE_Y,
+	THREAD_GROUP_SIZE_Z)]
+void MainCS(
+	in uint3 ThreadID : SV_DispatchThreadID)
+{
+	const float Pi = 3.1415927410125732421875F;
+	const float InvPi = 1.0F / Pi;
+	const float PiHalf = Pi / 2.0F;
+	const float Pi2 = Pi * 2.0F;
+
+	const bool UseFadeMask = (Flags & WAL_SHADER_FLAGS_FOV_MASK) != 0U;
+	
+	const uint2 PixelPosition = ThreadID.xy;
+
+	float Width, Height;
+	OutImage.GetDimensions(Width, Height);
+
+	const uint2 ImageShape = uint2(Width, Height);
+
+	if (PixelPosition.x >= ImageShape.x ||
+		PixelPosition.y >= ImageShape.y)
+		return;
+	
+	const float2 FocalDistance = CameraParams.xy;
+	const float2 Center = CameraParams.zw;
+
+	float3 Direction;
+	float Alpha;
+
+	if ((Flags & WAL_SHADER_FLAGS_EQUIRECTANGULAR) == 0U)
+	{
+		// Common distortion path, compute ray angle and sample cubemap.
+		// ComputeAngle uses the current camera model, see CameraModelCommon.ush.
+
+		const float2 UV = (float2(PixelPosition) - Center) / FocalDistance;
+
+		Alpha = ComputeAngle(length(UV));
+
+		const float Phi = PiHalf - Alpha;
+		const float Theta = atan2(UV.y, UV.x);
+		
+		float PhiSin = 0.0F;
+		float PhiCos = 0.0F;
+		float ThetaSin = 0.0F;
+		float ThetaCos = 0.0F;
+
+		sincos(Phi, PhiSin, PhiCos);
+		sincos(Theta, ThetaSin, ThetaCos);
+		
+		Direction = normalize(float3(
+			PhiSin,
+			PhiCos * ThetaCos,
+			-PhiCos * ThetaSin));
+
+		Alpha *= 2.0F;
+	}
+	else
+	{
+		// Equirectangular render path:
+		// directly sample from cubemap using equirectangular coordinates.
+
+		const float2 UV = PixelCoordinateToUV(PixelPosition, ImageShape);
+
+		const float Longitude = float(UV.x) * Pi + LongitudeOffset;
+		const float Latitude = float(UV.y) * Pi / 2;
+		
+		float LongitudeSin = 0.0F;
+		float LongitudeCos = 0.0F;
+		float LatitudeSin = 0.0F;
+		float LatitudeCos = 0.0F;
+
+		sincos(Longitude, LongitudeSin, LongitudeCos);
+		sincos(Latitude, LatitudeSin, LatitudeCos);
+
+		Direction = normalize(float3(
+			-LatitudeCos * LongitudeSin,
+			LatitudeCos * LongitudeCos,
+			-LatitudeSin));
+		
+		if (UseFadeMask)
+			Alpha = atan2(length(Direction.yz), Direction.x) * 2;
+	}
+	
+	float4 OutColor = SampleCubemap(Direction);
+
+	if (UseFadeMask)
+		OutColor.xyz *= max((1.0F - smoothstep(YFOVAngle - FOVFadeSize, YFOVAngle, Alpha)), 0.0F);
+
+	OutImage[PixelPosition] = OutColor;
+}

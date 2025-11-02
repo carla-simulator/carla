@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 // Copyright (c) 2019 Intel Corporation
 //
@@ -51,6 +51,10 @@ public:
   int32 GetVehicleCurrentGear() const override;
 
   float GetVehicleForwardSpeed() const override;
+
+  void DisableCarSimPhysics();
+
+  virtual void DisableSpecialPhysics() override;
 
 private:
 

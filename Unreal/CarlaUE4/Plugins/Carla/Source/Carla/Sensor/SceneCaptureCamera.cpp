@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -49,19 +49,6 @@ void ASceneCaptureCamera::EndPlay(const EEndPlayReason::Type EndPlayReason)
 void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureCamera::PostPhysTick);
-  ENQUEUE_RENDER_COMMAND(MeasureTime)
-  (
-    [](auto &InRHICmdList)
-    {
-      std::chrono::time_point<std::chrono::high_resolution_clock> Time = 
-          std::chrono::high_resolution_clock::now();
-      auto Duration = std::chrono::duration_cast< std::chrono::milliseconds >(Time.time_since_epoch());
-      uint64_t Milliseconds = Duration.count();
-      FString ProfilerText = FString("(Render)Frame: ") + FString::FromInt(FCarlaEngine::GetFrameCounter()) + 
-          FString(" Time: ") + FString::FromInt(Milliseconds);
-      TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(*ProfilerText);
-    }
-  );
   FPixelReader::SendPixelsInRenderThread<ASceneCaptureCamera, FColor>(*this);
 }
 

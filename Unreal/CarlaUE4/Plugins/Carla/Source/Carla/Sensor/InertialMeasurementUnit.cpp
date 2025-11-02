@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -15,6 +15,8 @@
 #include "carla/geom/Math.h"
 #include "carla/ros2/ROS2.h"
 #include <compiler/enable-ue4-macros.h>
+
+#include "Carla/Game/CarlaStatics.h"
 
 #include <limits>
 
@@ -52,7 +54,7 @@ void AInertialMeasurementUnit::SetOwner(AActor *Owner)
 }
 
 // Returns the angular velocity of Actor, expressed in the frame of Actor
-static FVector FIMU_GetActorAngularVelocityInRadians(
+FVector AInertialMeasurementUnit::GetActorAngularVelocityInRadians(
     AActor &Actor)
 {
   const auto RootComponent = Cast<UPrimitiveComponent>(Actor.GetRootComponent());
@@ -104,8 +106,8 @@ carla::geom::Vector3D AInertialMeasurementUnit::ComputeAccelerometer(
 {
   // Used to convert from UE4's cm to meters
   constexpr float TO_METERS = 1e-2;
-  // Earth's gravitational acceleration is approximately 9.81 m/s^2
-  constexpr float GRAVITY = 9.81f;
+  // Gravity set by gamemode
+  const float GRAVITY = UCarlaStatics::GetGameMode(GetWorld())->IMUISensorGravity;
 
   // 2nd derivative of the polynomic (quadratic) interpolation
   // using the point in current time and two previous steps:
@@ -148,7 +150,7 @@ carla::geom::Vector3D AInertialMeasurementUnit::ComputeGyroscope()
 {
   check(GetOwner() != nullptr);
   const FVector AngularVelocity =
-      FIMU_GetActorAngularVelocityInRadians(*GetOwner());
+      GetActorAngularVelocityInRadians(*GetOwner());
 
   const FQuat SensorLocalRotation =
       RootComponent->GetRelativeTransform().GetRotation();
@@ -196,17 +198,9 @@ void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, 
   if (ROS2->IsEnabled())
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
-    auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
     AActor* ParentActor = GetAttachParentActor();
-    if (ParentActor)
-    {
-      FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromIMU(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, Accelerometer, Gyroscope, Compass, this);
-    }
-    else
-    {
-      ROS2->ProcessDataFromIMU(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), Accelerometer, Gyroscope, Compass, this);
-    }
+    auto Transform = (ParentActor) ? GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : GetActorTransform();
+    ROS2->ProcessDataFromIMU(Stream.GetSensorType(), Transform, Accelerometer, Gyroscope, Compass, this);
   }
   #endif
 

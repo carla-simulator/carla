@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2021 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -15,20 +15,9 @@ Uses:
         python vehicle_physics_tester.py --filter vehicle_id --turn
 """
 
-import glob
-import os
-import sys
 import argparse
 import time
 import numpy as np
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 

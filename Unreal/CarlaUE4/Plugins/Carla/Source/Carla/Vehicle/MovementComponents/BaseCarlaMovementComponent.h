@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 // Copyright (c) 2019 Intel Corporation
 //
@@ -34,6 +34,8 @@ public:
   virtual int32 GetVehicleCurrentGear() const;
 
   virtual float GetVehicleForwardSpeed() const;
+
+  virtual void DisableSpecialPhysics() {};
 
 protected:
 

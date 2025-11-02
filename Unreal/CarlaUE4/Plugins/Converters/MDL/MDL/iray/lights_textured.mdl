@@ -1,0 +1,46 @@
+// SPDX-FileCopyrightText: Copyright (c) 2016-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-License-Identifier: MIT
+
+mdl 1.0;
+
+import df::*;
+import anno::*;
+import base::*;
+
+export material light_textured(
+    uniform color tint = color(1.)
+    [[
+        anno::display_name("Emission color"),
+        anno::description("The color of the light")
+    ]],
+    uniform float intensity = 10
+    [[
+        anno::display_name("Intensity"),
+        anno::description("The brightness of the light")
+    ]],
+    uniform float unit_scale = 1.
+    [[
+        anno::display_name("Unit scale"),
+        anno::description("Compensate for scene units other than meter")
+    ]],
+    uniform texture_2d diffuse_texture = texture_2d()
+    [[
+        anno::display_name("Light texture"),
+        anno::description("Texture to be used for the light")
+    ]]
+) [[
+    anno::copyright_notice (
+    "SPDX-FileCopyrightText: Copyright (c) 2016-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved. "
+    "SPDX-License-Identifier: MIT"
+    ),
+    anno::author("NVIDIA Corporation"),
+    anno::display_name("Diffuse light"),
+    anno::description("Material for a light with a diffuse emission characteristic")
+]] = material (
+    surface: material_surface (
+        emission:  material_emission (
+            emission: df::diffuse_edf(),
+            intensity: tint * unit_scale * base::file_texture(texture: diffuse_texture, color_scale: color(intensity)).tint
+        )
+    )
+);

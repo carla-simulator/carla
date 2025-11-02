@@ -1,10 +1,12 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla.h"
+#include "Carla/Actor/CarlaActor.h"
+#include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 
@@ -54,57 +56,34 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
     auto Character = Cast<ACharacter>(Actor);
     if (Character != nullptr)
     {
-      auto Capsule = Character->GetCapsuleComponent();
-      if (Capsule != nullptr)
+      UActorComponent *ActorComp = Character->GetComponentByClass(USkeletalMeshComponent::StaticClass());
+      USkeletalMeshComponent* ParentComp = Cast<USkeletalMeshComponent>(ActorComp);
+
+      if (ParentComp != nullptr)
       {
-        const auto Radius = Capsule->GetScaledCapsuleRadius();
-        const auto HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
-        // Characters have the pivot point centered.
-        FVector Origin = {0.0f, 0.0f, 0.0f};
-        FVector Extent = {Radius, Radius, HalfHeight};
-        return {Origin, Extent};
-      }
-    }
-    // Traffic sign.
-    auto TrafficSign = Cast<ATrafficSignBase>(Actor);
-    if (TrafficSign != nullptr)
-    {
-      // first return a merge of the generated trigger boxes, if any
-      auto TriggerVolumes = TrafficSign->GetTriggerVolumes();
-      if (TriggerVolumes.Num() > 0)
-      {
-        FBoundingBox Box = UBoundingBoxCalculator::CombineBoxes(TriggerVolumes);
-        FTransform Transform = Actor->GetActorTransform();
-        Box.Origin = Transform.InverseTransformPosition(Box.Origin);
-        Box.Rotation = Transform.InverseTransformRotation(Box.Rotation.Quaternion()).Rotator();
+        FBoundingBox Box = GetSkeletalMeshBoundingBoxFromComponent(ParentComp);
+
         return Box;
       }
-      // try to return the original bounding box
-      auto TriggerVolume = TrafficSign->GetTriggerVolume();
-      if (TriggerVolume != nullptr)
-      {
-          auto Transform = TriggerVolume->GetRelativeTransform();
-          return
-          {
-              Transform.GetTranslation(),
-              TriggerVolume->GetScaledBoxExtent(),
-              Transform.GetRotation().Rotator()
-          };
-      }
-      else
-      {
-        UE_LOG(LogCarla, Warning, TEXT("Traffic sign missing trigger volume: %s"), *Actor->GetName());
-        return {};
-      }
     }
-    // Other, by default BB
-    TArray<FBoundingBox> BBs = GetBBsOfActor(Actor);
-    FBoundingBox BB = CombineBBs(BBs);
-    // Conver to local space; GetBBsOfActor return BBs in world space
+    // Traffic sign - calculate BB in local space to maintain proper orientation
+    TArray<FBoundingBox> BBsWorld = GetBBsOfActor(Actor);
+
+    // Transform all BBs to local space first
     FTransform Transform = Actor->GetActorTransform();
-    BB.Origin = Transform.InverseTransformPosition(BB.Origin);
-    BB.Rotation = Transform.InverseTransformRotation(BB.Rotation.Quaternion()).Rotator();
-    BB.Rotation = Transform.GetRotation().Rotator();
+
+    TArray<FBoundingBox> BBsLocal;
+    for (const FBoundingBox& BBWorld : BBsWorld)
+    {
+      FBoundingBox BBLocal;
+      BBLocal.Origin = Transform.InverseTransformPosition(BBWorld.Origin);
+      BBLocal.Extent = BBWorld.Extent; // Extent doesn't change
+      BBLocal.Rotation = FRotator(0, 0, 0); // In local space, no rotation
+      BBsLocal.Add(BBLocal);
+    }
+
+    FBoundingBox BB = CombineBBs(BBsLocal);
+    BB.Rotation = FRotator(0, 0, 0);
     return BB;
 
   }
@@ -199,19 +178,15 @@ FBoundingBox UBoundingBoxCalculator::GetCharacterBoundingBox(
   bool FilterByTag = TagQueried == crp::CityObjectLabel::Any ||
                      TagQueried == crp::CityObjectLabel::Pedestrians;
 
-  UCapsuleComponent* Capsule = Character->GetCapsuleComponent();
+  UActorComponent *ActorComp = Character->GetComponentByClass(USkeletalMeshComponent::StaticClass());
+  USkeletalMeshComponent* ParentComp = Cast<USkeletalMeshComponent>(ActorComp);
 
-
-  if (Capsule && FilterByTag)
+  if (ParentComp && FilterByTag)
   {
-    const float Radius = Capsule->GetScaledCapsuleRadius();
-    const float HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
-    FBoundingBox BoundingBox;
-    // Characters have the pivot point centered.
-    BoundingBox.Origin = {0.0f, 0.0f, 0.0f};
-    BoundingBox.Extent = {Radius, Radius, HalfHeight};
-    // Component-to-world transform for this component
-    auto CompToWorldTransform = Capsule->GetComponentTransform();
+    FBoundingBox BoundingBox = GetSkeletalMeshBoundingBoxFromComponent(ParentComp);
+
+    auto& CompToWorldTransform = ParentComp->GetComponentTransform();
+
     BoundingBox = ApplyTransformToBB(BoundingBox, CompToWorldTransform);
 
     return BoundingBox;
@@ -253,6 +228,29 @@ void UBoundingBoxCalculator::GetTrafficLightBoundingBox(
     OutBB.Emplace(BB);
     OutTag.Emplace(Tag);
   }
+}
+
+FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBoxFromComponent(
+  const USkeletalMeshComponent* SkeletalMeshComp
+)
+{
+  if(!SkeletalMeshComp || !SkeletalMeshComp->SkeletalMesh)
+  {
+    UE_LOG(LogCarla, Error, TEXT("GetSkeletalMeshBoundingBoxFromComponent no SkeletalMeshComponent or SkeletalMesh"));
+    return {};
+  }
+
+  // Force update bounds
+  const_cast<USkeletalMeshComponent*>(SkeletalMeshComp)->UpdateBounds();
+
+  // Get the AABB in local space (component space)
+  FBox LocalBox = SkeletalMeshComp->CalcBounds(FTransform::Identity).GetBox();
+
+  // Extract extent in local space and set origin to zero
+  FVector Origin = {0.0f, 0.0f, 0.0f};
+  FVector Extent = LocalBox.GetExtent();
+
+  return {Origin, Extent};
 }
 
 // TODO: update to calculate current animation pose
@@ -316,7 +314,12 @@ void UBoundingBoxCalculator::GetISMBoundingBox(
 
   if(!Mesh)
   {
-    UE_LOG(LogCarla, Error, TEXT("%s has no SM assigned to the ISM"), *ISMComp->GetOwner()->GetName());
+  #if WITH_EDITOR
+    UE_LOG(LogCarla, Error, TEXT("Actor Name: %s Actor Labe: %s has no SM assigned to the ISM"), *ISMComp->GetOwner()->GetName(), *ISMComp->GetOwner()->GetActorLabel());
+  #else
+    UE_LOG(LogCarla, Error, TEXT("Actor Name: %s has no SM assigned to the ISM"), *ISMComp->GetOwner()->GetName());
+
+  #endif
     return;
   }
 
@@ -407,12 +410,21 @@ void UBoundingBoxCalculator::GetBBsOfSkeletalMeshComponents(
 
 TArray<FBoundingBox> UBoundingBoxCalculator::GetBoundingBoxOfActors(
   const TArray<AActor*>& Actors,
+  const UCarlaEpisode* Episode,
   uint8 InTagQueried)
 {
   TArray<FBoundingBox> Result;
   for(AActor* Actor : Actors)
   {
+    uint32_t ActorId = Actor->GetUniqueID();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(Actor);
+    if (CarlaActor) {
+      ActorId = CarlaActor->GetActorId();
+    }
     TArray<FBoundingBox> BBs = GetBBsOfActor(Actor, InTagQueried);
+    for (FBoundingBox& BB : BBs) {
+      BB.ActorId = ActorId;
+    }
     Result.Append(BBs.GetData(), BBs.Num());
   }
 
@@ -644,4 +656,59 @@ void UBoundingBoxCalculator::GetMeshCompsFromActorBoundingBox(
       OutStaticMeshComps.Emplace(Comp);
     }
   }
+}
+
+FBoundingBox UBoundingBoxCalculator::GetTrafficSignTriggerVolume(const AActor *Actor)
+{
+  if (Actor != nullptr)
+  {
+    auto TrafficSign = Cast<ATrafficSignBase>(Actor);
+    if (TrafficSign != nullptr)
+    {
+      // first return a merge of the generated trigger boxes, if any
+      auto TriggerVolumes = TrafficSign->GetTriggerVolumes();
+      if (TriggerVolumes.Num() > 0)
+      {
+        // Transform all trigger volumes to local space first (same as bounding boxes)
+        FTransform Transform = Actor->GetActorTransform();
+        TArray<FBoundingBox> TriggerVolumesLocal;
+
+        for (UBoxComponent* TriggerVolume : TriggerVolumes)
+        {
+          FBoundingBox TVWorld;
+          TVWorld.Origin = TriggerVolume->GetComponentLocation();
+          TVWorld.Extent = TriggerVolume->GetScaledBoxExtent();
+          TVWorld.Rotation = TriggerVolume->GetComponentRotation();
+
+          FBoundingBox TVLocal;
+          TVLocal.Origin = Transform.InverseTransformPosition(TVWorld.Origin);
+          TVLocal.Extent = TVWorld.Extent; // Extent doesn't change
+          TVLocal.Rotation = FRotator(0, 0, 0); // In local space, no rotation
+          TriggerVolumesLocal.Add(TVLocal);
+        }
+
+        FBoundingBox Box = CombineBBs(TriggerVolumesLocal);
+        Box.Rotation = FRotator(0, 0, 0);
+        return Box;
+      }
+      // try to return the original bounding box
+      auto TriggerVolume = TrafficSign->GetTriggerVolume();
+      if (TriggerVolume != nullptr)
+      {
+          auto Transform = TriggerVolume->GetRelativeTransform();
+          return
+          {
+              Transform.GetTranslation(),
+              TriggerVolume->GetScaledBoxExtent(),
+              Transform.GetRotation().Rotator()
+          };
+      }
+      else
+      {
+        UE_LOG(LogCarla, Warning, TEXT("Traffic sign missing trigger volume: %s"), *Actor->GetName());
+        return {};
+      }
+    }
+  }
+  return {};
 }

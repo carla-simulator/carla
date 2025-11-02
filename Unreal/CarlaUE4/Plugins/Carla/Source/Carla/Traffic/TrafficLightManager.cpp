@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -6,6 +6,7 @@
 
 #include "TrafficLightManager.h"
 #include "Game/CarlaStatics.h"
+#include "Util/BoundingBoxCalculator.h"
 #include "StopSignComponent.h"
 #include "YieldSignComponent.h"
 #include "SpeedLimitComponent.h"
@@ -13,6 +14,7 @@
 #include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
 
 #include "UObject/ConstructorHelpers.h"
+#include "EngineUtils.h"
 
 #include <compiler/disable-ue4-macros.h>
 #include <carla/rpc/String.h>
@@ -28,13 +30,22 @@ ATrafficLightManager::ATrafficLightManager()
   SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
   RootComponent = SceneComponent;
 
-  // Hard codded default traffic light blueprint
-  static ConstructorHelpers::FClassFinder<AActor> TrafficLightFinder(
-      TEXT( "/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive" ) );
-  if (TrafficLightFinder.Succeeded())
+  // Hard coded default traffic light blueprint
+  static ConstructorHelpers::FClassFinder<AActor> TrafficLightRHTFinder(
+      TEXT( "/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive_RHT" ) );
+  if (TrafficLightRHTFinder.Succeeded())
   {
-    TSubclassOf<AActor> Model = TrafficLightFinder.Class;
-    TrafficLightModel = Model;
+    TSubclassOf<AActor> Model = TrafficLightRHTFinder.Class;
+    TrafficLightModel_RHT = Model;
+  }
+
+  // Hard coded default traffic light blueprint
+  static ConstructorHelpers::FClassFinder<AActor> TrafficLightLHTFinder(
+    TEXT( "/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive_LHT" ) );
+  if (TrafficLightLHTFinder.Succeeded())
+  {
+    TSubclassOf<AActor> Model = TrafficLightLHTFinder.Class;
+    TrafficLightModel_LHT = Model;
   }
   // Default traffic signs models
   static ConstructorHelpers::FClassFinder<AActor> StopFinder(
@@ -252,11 +263,70 @@ const boost::optional<carla::road::Map>& ATrafficLightManager::GetMap()
   return UCarlaStatics::GetGameMode(GetWorld())->GetMap();
 }
 
+void ATrafficLightManager::AdjustAllSignsToHeightGround()
+{
+  UWorld* World = GetWorld();
+  if (!World)
+  {
+    return;
+  }
+
+  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
+
+  for(ATrafficSignBase* TS : TrafficSigns)
+  {
+    if (!IsValid(TS))
+      continue;
+    if (TS->bPositioned)
+      continue;
+
+    FVector OriginalLocation = TS->GetActorLocation();
+    FVector AdjustedLocation = OriginalLocation;
+
+    TS->bPositioned = AdjustSignHeightToGround(AdjustedLocation);
+
+    if (TS->bPositioned)
+    {
+      float ZOffset = AdjustedLocation.Z - OriginalLocation.Z;
+
+      TS->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+
+      // Get all static mesh components
+      TArray<UStaticMeshComponent*> StaticMeshComps;
+      TS->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+
+      for (UStaticMeshComponent* MeshComp : StaticMeshComps)
+      {
+        if (!MeshComp) continue;
+
+        // Skip if this has a mesh parent (it's a child)
+        USceneComponent* ParentComp = MeshComp->GetAttachParent();
+        if (ParentComp && Cast<UStaticMeshComponent>(ParentComp))
+        {
+          continue;
+        }
+
+        // Move the mesh component down
+        FVector CompLocation = MeshComp->GetRelativeLocation();
+        CompLocation.Z += ZOffset;
+        MeshComp->SetRelativeLocation(CompLocation);
+
+        MeshComp->UpdateBounds();
+
+        UE_LOG(LogCarla, Log, TEXT("Moved mesh %s by %f cm"), *TS->GetName(), ZOffset);
+      }
+
+      TS->UpdateComponentTransforms();
+      TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
+    }
+  }
+}
+
 void ATrafficLightManager::GenerateSignalsAndTrafficLights()
 {
   if(!TrafficLightsGenerated)
   {
-    if(!TrafficLightModel)
+    if(!TrafficLightModel_RHT || !TrafficLightModel_LHT )
     {
       UE_LOG(LogCarla, Error, TEXT("Missing TrafficLightModel"));
       return;
@@ -269,6 +339,21 @@ void ATrafficLightManager::GenerateSignalsAndTrafficLights()
     SpawnSignals();
 
     TrafficLightsGenerated = true;
+
+    // Get current map name
+    FString CurrentMapName = GetWorld()->GetMapName();
+    if (CurrentMapName.Contains(TEXT("Town15"), ESearchCase::IgnoreCase))
+    {
+      AdjustAllSignsToHeightGround();
+
+      ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(GetWorld());
+      if (GameMode)
+      {
+        GameMode->RegisterEnvironmentObjects();
+        UE_LOG(LogCarla, Log, TEXT("Re-registered environment objects after sign height adjustment"));
+      }
+    }
+
   }
 }
 
@@ -548,6 +633,11 @@ void ATrafficLightManager::SpawnTrafficLights()
     }
     const auto& Signal = Signals.at(SignalId);
     auto CarlaTransform = Signal->GetTransform();
+    auto ClosestWaypointToSignal =
+        GetMap()->GetClosestWaypointOnRoad(CarlaTransform.location);
+
+    const bool IsRHT = GetMap()->GetLane(ClosestWaypointToSignal.get()).GetRoad()->IsRHT();
+
     FTransform SpawnTransform(CarlaTransform);
 
     FVector SpawnLocation = SpawnTransform.GetLocation();
@@ -563,6 +653,8 @@ void ATrafficLightManager::SpawnTrafficLights()
     SpawnParams.SpawnCollisionHandlingOverride =
         ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
     SpawnParams.OverrideLevel = GM->GetULevelFromName("TrafficLights");
+
+    auto TrafficLightModel = IsRHT ? TrafficLightModel_RHT : TrafficLightModel_LHT;
     ATrafficLightBase * TrafficLight = GetWorld()->SpawnActor<ATrafficLightBase>(
         TrafficLightModel,
         SpawnLocation,
@@ -573,9 +665,7 @@ void ATrafficLightManager::SpawnTrafficLights()
 
     UTrafficLightComponent *TrafficLightComponent = TrafficLight->GetTrafficLightComponent();
     TrafficLightComponent->SetSignId(SignalId.c_str());
-
-    auto ClosestWaypointToSignal =
-        GetMap()->GetClosestWaypointOnRoad(CarlaTransform.location);
+    IgnoredActorsForHeightAdjustment.Add(TrafficLight);
     if (ClosestWaypointToSignal)
     {
       auto SignalDistanceToRoad =
@@ -596,7 +686,6 @@ void ATrafficLightManager::SpawnTrafficLights()
         }
       }
     }
-
     RegisterLightComponentFromOpenDRIVE(TrafficLightComponent);
     TrafficLightComponent->InitializeSign(GetMap().get());
   }
@@ -607,6 +696,22 @@ void ATrafficLightManager::SpawnSignals()
   ACarlaGameModeBase *GM = UCarlaStatics::GetGameMode(GetWorld());
   check(GM);
 
+  for (TActorIterator<AActor> It(GetWorld()); It; ++It)
+  {
+      AActor* Actor = *It;
+      if (!Actor) continue;
+
+      TArray<UInstancedStaticMeshComponent*> ISMComps;
+      Actor->GetComponents<UInstancedStaticMeshComponent>(ISMComps);
+      for (UInstancedStaticMeshComponent* Comp : ISMComps)
+      {
+          if (Comp && Comp->GetWorld() == GetWorld())
+          {
+            IgnoredComponentsForHeightAdjustment.Add(Comp);
+          }
+      }
+  }
+
   const auto &Signals = GetMap()->GetSignals();
   for (auto& SignalPair : Signals)
   {
@@ -614,6 +719,7 @@ void ATrafficLightManager::SpawnSignals()
     FString SignalType = Signal->GetType().c_str();
 
     ATrafficSignBase * ClosestTrafficSign = GetClosestTrafficSignActor(*Signal.get(), GetWorld());
+    IgnoredActorsForHeightAdjustment.Add(ClosestTrafficSign);
     if (ClosestTrafficSign)
     {
       USignComponent *SignComponent;
@@ -663,6 +769,9 @@ void ATrafficLightManager::SpawnSignals()
           SpawnLocation,
           SpawnRotation,
           SpawnParams);
+
+
+      IgnoredActorsForHeightAdjustment.Add(TrafficSign);
 
       USignComponent *SignComponent =
           NewObject<USignComponent>(TrafficSign, SignComponentModels[SignalType]);
@@ -720,6 +829,8 @@ void ATrafficLightManager::SpawnSignals()
           SpawnLocation,
           SpawnRotation,
           SpawnParams);
+      IgnoredActorsForHeightAdjustment.Add(TrafficSign);
+
 
       USpeedLimitComponent *SignComponent =
           NewObject<USpeedLimitComponent>(TrafficSign);
@@ -753,6 +864,7 @@ void ATrafficLightManager::SpawnSignals()
           }
         }
       }
+
       TrafficSignComponents.Add(SignComponent->GetSignId(), SignComponent);
       TrafficSigns.Add(TrafficSign);
     }
@@ -847,5 +959,34 @@ void ATrafficLightManager::RemoveAttachedProps(TArray<AActor*> Actors) const
     Actor->GetAttachedActors(AttachedActors, true);
     RemoveAttachedProps(AttachedActors);
     Actor->Destroy();
+  }
+}
+
+bool ATrafficLightManager::AdjustSignHeightToGround(FVector& SpawnLocation) const
+{
+  const FVector Start = SpawnLocation + FVector(0, 0, 200.0f);
+  const FVector End = SpawnLocation - FVector(0, 0, 10000.0f);
+
+  FHitResult HitResult;
+  FCollisionQueryParams CollisionParams;
+  CollisionParams.bTraceComplex = true;
+  CollisionParams.bReturnPhysicalMaterial = false;
+  CollisionParams.AddIgnoredComponents(IgnoredComponentsForHeightAdjustment);
+  CollisionParams.AddIgnoredActors(IgnoredActorsForHeightAdjustment);
+
+  constexpr float ZOffsetSignToGround = 0.5f;
+  if (GetWorld()->LineTraceSingleByChannel(
+      HitResult,
+      Start,
+      End,
+      ECC_WorldStatic,
+      CollisionParams))
+  {
+    SpawnLocation.Z = HitResult.Location.Z + ZOffsetSignToGround;
+    return true;
+  }
+  else
+  {
+    return false;
   }
 }

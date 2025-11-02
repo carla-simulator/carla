@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -37,6 +37,9 @@ namespace client {
       return listening_mask.test(0);
     }
 
+    /// Enable this sensor for ROS2 publishing
+    void EnableGBuffers(bool bEnabled = true);
+
     /// Listen fr
     void ListenToGBuffer(uint32_t GBufferId, CallbackFunctionType callback);
 
@@ -56,14 +59,24 @@ namespace client {
     /// Return if the sensor is publishing for ROS2
     bool IsEnabledForROS();
 
+    /// Send data via this sensor
+    void Send(std::string message);
+
     /// @copydoc Actor::Destroy()
     ///
     /// Additionally stop listening.
     bool Destroy() override;
 
+    /// Set the list of vehicle IDs that this sensor should ignore.
+    void SetIgnoredVehicles(const std::vector<ActorId>& vehicle_ids);
+
+    /// Get the list of vehicle IDs that this sensor is ignoring.
+    std::vector<ActorId> GetIgnoredVehicles() const;
+
   private:
 
     std::bitset<16> listening_mask;
+    std::vector<ActorId> _ignored_actors;
   };
 
 } // namespace client

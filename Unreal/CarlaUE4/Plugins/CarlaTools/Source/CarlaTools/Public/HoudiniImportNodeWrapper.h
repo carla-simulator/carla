@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -8,9 +8,6 @@
 
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintAsyncActionBase.h"
-
-#include "HoudiniPublicAPIProcessHDANode.h"
-
 #include "HoudiniImportNodeWrapper.generated.h"
 
 // Delegate type for output pins on the node.
@@ -49,17 +46,13 @@ protected:
 
   UFUNCTION()
   void HandleCompleted(
-      UHoudiniPublicAPIAssetWrapper* AssetWrapper, 
       bool bCookSuccess, 
       bool bBakeSuccess);
 
   UFUNCTION()
   void HandleFailed(
-      UHoudiniPublicAPIAssetWrapper* AssetWrapper,
       bool bCookSuccess,
       bool bBakeSuccess);
 
-private:
-  UHoudiniPublicAPIProcessHDANode* HDANode;
 
 };

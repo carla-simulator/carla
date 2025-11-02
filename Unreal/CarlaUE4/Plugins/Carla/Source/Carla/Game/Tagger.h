@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -17,6 +17,9 @@
 
 namespace crp = carla::rpc;
 
+class UCarlaEpisode;
+class UTaggedComponent;
+
 /// Sets actors' custom depth stencil value for semantic segmentation according
 /// to their meshes.
 ///
@@ -29,13 +32,17 @@ class CARLA_API ATagger : public AActor
 
 public:
 
+  // Find a tagged component that is attached to the given component.
+  template<class T = UTaggedComponent>
+  static T* FindTaggedComponent(const USceneComponent* Component);
+
   /// Set the tag of an actor.
   ///
   /// If bTagForSemanticSegmentation true, activate the custom depth pass. This
   /// pass is necessary for rendering the semantic segmentation. However, it may
   /// add a performance penalty since occlusion doesn't seem to be applied to
   /// objects having this value active.
-  static void TagActor(const AActor &Actor, bool bTagForSemanticSegmentation);
+  static void TagActor(const AActor &Actor, bool bTagForSemanticSegmentation, uint32_t ActorId);
 
 
   /// Set the tag of every actor in level.
@@ -44,9 +51,10 @@ public:
   /// pass is necessary for rendering the semantic segmentation. However, it may
   /// add a performance penalty since occlusion doesn't seem to be applied to
   /// objects having this value active.
+  static void TagActorsInLevel(UWorld &World, const UCarlaEpisode &Episode, bool bTagForSemanticSegmentation);
   static void TagActorsInLevel(UWorld &World, bool bTagForSemanticSegmentation);
 
-  static void TagActorsInLevel(ULevel &Level, bool bTagForSemanticSegmentation);
+  static void TagActorsInLevel(ULevel &Level, const UCarlaEpisode &Episode, bool bTagForSemanticSegmentation);
 
   /// Retrieve the tag of an already tagged component.
   static crp::CityObjectLabel GetTagOfTaggedComponent(const UPrimitiveComponent &Component)
@@ -84,7 +92,7 @@ public:
   static void SetStencilValue(UPrimitiveComponent &Component,
     const crp::CityObjectLabel &Label, const bool bSetRenderCustomDepth);
 
-  static FLinearColor GetActorLabelColor(const AActor &Actor, const crp::CityObjectLabel &Label);
+  static FLinearColor GetLabelColor(const uint32_t ActorID, const crp::CityObjectLabel &Label);
 
   static bool IsThing(const crp::CityObjectLabel &Label);
 

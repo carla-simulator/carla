@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -129,6 +129,7 @@ namespace geom {
       const road::Lane& lane,
       std::vector<std::unique_ptr<Mesh>>& inout,
       std::vector<std::string>& outinfo ) const;
+      
     // =========================================================================
     // -- Generation parameters ------------------------------------------------
     // =========================================================================
@@ -147,6 +148,21 @@ namespace geom {
     };
 
     RoadParameters road_param;
+
+
+    // =========================================================================
+    // -- Helper functions ------------------------------------------------
+    // =========================================================================
+
+    static uint32_t SelectVerticesInWidth(uint32_t default_num_vertices, road::Lane::LaneType type);
+  private:
+
+    // Calculate the points on both sides of the lane mark for the specified s_current
+    std::pair<geom::Vector3D, geom::Vector3D> ComputeEdgesForLanemark(
+      const road::LaneSection& lane_section,
+      const road::Lane& lane,
+      const double s_current,
+      const double lanemark_width) const;
 
   };
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -16,6 +16,7 @@ class CARLA_API AWalkerBase : public ACharacter
 
   GENERATED_BODY()
 
+  AWalkerBase(const FObjectInitializer &ObjectInitializer);
 public:
 
   UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
@@ -24,9 +25,17 @@ public:
   UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
   float AfterLifeSpan = 10.0f;
 
+  UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
+  bool bUsesWheelChair = false;
+
   UFUNCTION(BlueprintCallable)
   void StartDeathLifeSpan()
   {
     SetLifeSpan(AfterLifeSpan);
   }
+
+  // Called after adding wheelschairs as they have no tag.
+  UFUNCTION(BlueprintCallable)
+  void TagWheelchair();
+
 };

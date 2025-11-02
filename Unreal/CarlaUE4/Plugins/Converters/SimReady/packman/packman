@@ -1,0 +1,239 @@
+#!/bin/bash
+
+# Copyright 2019-2025 NVIDIA CORPORATION
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+
+#     http://www.apache.org/licenses/LICENSE-2.0
+
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+SAVED_SETTINGS=`echo $-`
+# Fail on undefined variables
+set -u
+# Don't exit on errors
+set +e
+
+if echo ${PM_VERBOSITY-} | grep -i "debug" > /dev/null ; then
+	set -x
+	PM_CURL_SILENT=""
+	PM_WGET_QUIET=""
+else
+	PM_CURL_SILENT="-s -S"
+	PM_WGET_QUIET="--quiet"
+fi
+export PM_PACKMAN_VERSION=7.30
+
+
+cleanup() {
+    # Remove temporary variable file if it exists
+    if [[ -n "${PM_VAR_PATH:-}" && -f "$PM_VAR_PATH" ]]; then
+        rm -f "$PM_VAR_PATH"
+    fi
+
+    # Restore the settings we may have altered during our run
+    if [[ "$SAVED_SETTINGS" == *"e"* ]]; then
+        set -e
+    fi
+
+    if [[ "$SAVED_SETTINGS" != *"x"* ]]; then
+        set +x
+    fi
+
+    # the e setting is always set in source mode so we remove it here so it
+    # doesn't leak (in regular ./ execution doesn't matter)
+    set +u
+}
+
+main() {
+    # This is necessary for newer macOS
+    if [ `uname` == 'Darwin' ]; then
+        export LC_ALL=en_US.UTF-8
+        export LANG=en_US.UTF-8
+    fi
+
+    # We cannot rely on realpath, it isn't installed on macOS and some Linux distros
+    get_abs_filename() {
+        echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+    }
+
+    # Specify where packman command exists
+    export PM_INSTALL_PATH="$(get_abs_filename "$(dirname "${BASH_SOURCE}")")"
+
+    # The packages root may already be configured by the user
+    if [ -z "${PM_PACKAGES_ROOT:-}" ]; then
+        # Set variable temporarily in this process so that the following execution will work
+        if [ `uname` == 'Darwin' ]; then
+            export PM_PACKAGES_ROOT="${HOME}/Library/Application Support/packman-cache"
+        else
+            if [ -z "${XDG_CACHE_HOME:-}" ]; then
+                export PM_PACKAGES_ROOT="${HOME}/.cache/packman"
+            else
+                export PM_PACKAGES_ROOT="${XDG_CACHE_HOME}/packman"
+            fi
+        fi
+    fi
+
+    # Ensure the packages root path exists:
+    if [ ! -d "$PM_PACKAGES_ROOT" ]; then
+        echo "Creating packman packages cache at $PM_PACKAGES_ROOT"
+        mkdir -p -m a+rwx "$PM_PACKAGES_ROOT" || return 1
+    fi
+
+    execute_with_retry()
+    {
+        local CMD="$1"
+        local MAX_TRIES=4
+        local DELAY=2
+        local TRIES=0
+        local exit_code
+
+        while [ $TRIES -lt $MAX_TRIES ]
+        do
+            ((TRIES++))
+            eval $CMD
+            exit_code=$?
+            if [ $exit_code -eq 0 ]; then
+                return 0
+            fi
+            
+            if [ $TRIES -lt $MAX_TRIES ]; then
+                echo "Attempt $TRIES failed. Retrying in $DELAY seconds ..."
+                sleep $DELAY
+                DELAY=$((DELAY * DELAY))
+                echo "Retrying ..."
+            fi
+        done
+
+        echo "Command failed after $MAX_TRIES attempts: $CMD"
+        return $exit_code
+    }
+
+    fetch_file_from_s3()
+    {
+        local SOURCE=$1
+        local SOURCE_URL=https://bootstrap.packman.nvidia.com/$SOURCE
+        local TARGET=$2
+        echo "Fetching $SOURCE from bootstrap.packman.nvidia.com ..."
+        local CMD="curl -o $TARGET $SOURCE_URL $PM_CURL_SILENT"
+        if command -v wget >/dev/null 2>&1; then
+            CMD="wget $PM_WGET_QUIET -O$TARGET $SOURCE_URL"
+        fi
+        execute_with_retry "$CMD"
+        return $?
+    }
+
+    generate_temp_file_name()
+    {
+        if [ `uname` == "Darwin" ]; then
+            local tmpfile=`mktemp -t packman`
+        else
+            local tmpfile=`mktemp -t packman.XXXXXXXX`
+        fi
+        echo "$tmpfile"
+    }
+
+    install_python()
+    {
+        PLATFORM=`uname`
+        PROCESSOR=`uname -m`
+        PYTHON_VERSION=3.10.17-nv1
+
+        if [ $PLATFORM == 'Darwin' ]; then
+            PYTHON_PACKAGE=3.10.5-1-macos-x86_64
+        elif [ $PLATFORM == 'Linux' ] && [ $PROCESSOR == 'x86_64' ]; then
+            PYTHON_PACKAGE=$PYTHON_VERSION-linux-x86_64
+        elif [ $PLATFORM == 'Linux' ] && [ $PROCESSOR == 'aarch64' ]; then
+            PYTHON_PACKAGE=$PYTHON_VERSION-linux-aarch64
+        else
+            echo "Operating system not supported"
+            return 1
+        fi
+
+        PYTHON_INSTALL_FOLDER="$PM_PACKAGES_ROOT/python/$PYTHON_PACKAGE"
+        if [ ! -d "$PYTHON_INSTALL_FOLDER" ]; then
+            mkdir -p "$PYTHON_INSTALL_FOLDER" || return 1
+        fi
+
+        export PM_PYTHON="$PYTHON_INSTALL_FOLDER/python"
+
+        if [ ! -f "$PM_PYTHON" ]; then
+            PYTHON_PACKAGE_TMP=$(generate_temp_file_name)
+            fetch_file_from_s3 "python@$PYTHON_PACKAGE.tar.gz" "$PYTHON_PACKAGE_TMP" || return 1
+            echo "Unpacking python"
+            tar -xf "$PYTHON_PACKAGE_TMP" -C "$PYTHON_INSTALL_FOLDER" || return 1
+            rm "$PYTHON_PACKAGE_TMP" || return 1
+        fi
+    }
+
+    # Ensure python is available:
+    if [ -z "${PM_PYTHON_EXT:-}" ]; then
+        install_python || return 1
+    else
+        PM_PYTHON="$PM_PYTHON_EXT"
+    fi
+
+    # The packman module may be externally configured
+    if [ -z "${PM_MODULE_DIR_EXT:-}" ]; then
+        PM_MODULE_DIR="$PM_PACKAGES_ROOT/packman-common/$PM_PACKMAN_VERSION"
+    else
+        PM_MODULE_DIR="$PM_MODULE_DIR_EXT"
+    fi
+    export PM_MODULE="$PM_MODULE_DIR/run.py"
+
+    # Ensure the packman package exists:
+    if [ ! -f "$PM_MODULE" ]; then
+        # Remove a previously corrupt packman-common if it's there
+        if [ -d "$PM_MODULE_DIR" ]; then
+            rm -rf "$PM_MODULE_DIR" || return 1
+        fi
+        PM_MODULE_PACKAGE="packman-common@$PM_PACKMAN_VERSION.zip"
+        TARGET=$(generate_temp_file_name)
+        # We always fetch packman from S3:
+        fetch_file_from_s3 "$PM_MODULE_PACKAGE" "$TARGET" || return 1
+        echo "Unpacking ..."
+        "$PM_PYTHON" -S -s -u -E "$PM_INSTALL_PATH/bootstrap/install_package.py" "$TARGET" "$PM_MODULE_DIR" || return 1
+        rm "$TARGET" || return 1
+    fi
+
+    # Generate temporary file name for environment variables:
+    PM_VAR_PATH=`mktemp -u -t tmp.$$.pmvars.XXXXXX`
+
+    if [ $# -ne 0 ]; then
+        PM_VAR_PATH_ARG=--var-path="$PM_VAR_PATH"
+    else
+        PM_VAR_PATH_ARG=""
+    fi
+
+    "$PM_PYTHON" -S -s -u -E "$PM_MODULE" "$@" ${PM_VAR_PATH_ARG:-} || return 1
+    # Export the variables if the file was used:
+    if [ -f "$PM_VAR_PATH" ]; then
+        while read -r line
+        do
+            if [ ${#line} -gt 0 ]; then
+                export "$line"
+            fi
+        done < "$PM_VAR_PATH"
+    fi
+        
+    # Return success
+    return 0
+}
+
+main "$@"
+exit_code=$?
+cleanup
+
+# Determine execution context and return accordingly
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    # This is direct execution
+    exit $exit_code
+else
+    # This is sourced execution
+	return $exit_code
+fi

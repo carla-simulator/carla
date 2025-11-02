@@ -9,12 +9,16 @@
 - [__Obstacle detector__](#obstacle-detector)
 - [__Radar sensor__](#radar-sensor)
 - [__RGB camera__](#rgb-camera)
+- [__Wide-angle camera__](#wide-angle-cameras)
 - [__RSS sensor__](#rss-sensor)
 - [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
 - [__Semantic segmentation camera__](#semantic-segmentation-camera)
 - [__Instance segmentation camera__](#instance-segmentation-camera)
 - [__DVS camera__](#dvs-camera)
 - [__Optical Flow camera__](#optical-flow-camera)
+- [__V2X sensor__](#v2x-sensor)
+    - [Cooperative awareness](#cooperative-awareness-message)
+    - [Custom message](#custom-v2x-message)
 
 !!! Important
     All the sensors use the UE coordinate system (__x__-*forward*, __y__-*right*, __z__-*up*), and return coordinates in local space. When using any visualization software, pay attention to its coordinate system. Many invert the Y-axis, so visualizing the sensor data directly may result in mirrored outputs.  
@@ -183,10 +187,11 @@ Provides measures that accelerometer, gyroscope and compass would retrieve for t
 | `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
 | `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
 | `accelerometer`      | [carla.Vector3D](<../python_api#carlavector3d>)    | Measures linear acceleration in `m/s^2`.     |
-| `gyroscope`        | [carla.Vector3D](<../python_api#carlavector3d>)    | Measures angular velocity in `rad/sec`.      |
-| `compass`          | float | Orientation in radians. North is `(0.0, -1.0, 0.0)` in UE.       |
+| `gyroscope`        | [carla.Vector3D](<../python_api#carlavector3d>)    | Measures angular velocity in `rad/s`.      |
+| `compass`          | float | Orientation in radians. North is 0 radians.     |
 
-
+!!! note
+     For the compass, North is 0 radians. East is *pi*/2 radians, South is *pi* radians, West is 3*pi*/2 radians. North is in the direction of decreasing Y in CARLA's global coordinate system. East is in the direction of increasing X. The compass value converted to degrees is equal to 90 - yaw.
 
 ---
 ## Lane invasion detector
@@ -273,6 +278,71 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 | `dropoff_zero_intensity`        | float  | 0.4   | For the intensity based drop-off, the probability of each point with zero intensity being dropped.    |
 | `sensor_tick`      | float  | 0.0   | Simulation seconds between sensor captures (ticks). |
 | `noise_stddev`     | float  | 0.0   | Standard deviation of the noise model to disturb each point along the vector of its raycast. |
+
+
+
+
+#### Output attributes
+
+| Sensor data attribute            | Type  | Description        |
+| ----------------------- | ----------------------- | ----------------------- |
+| `frame`            | int   | Frame number when the measurement took place.      |
+| `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
+| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `horizontal_angle`   | float | Angle (radians) in the XY plane of the LIDAR in the current frame.           |
+| `channels`         | int   | Number of channels (lasers) of the LIDAR.    |
+| `get_point_count(channel)`       | int   | Number of points per channel captured this frame.  |
+| `raw_data`         | bytes | Array of 32-bits floats (XYZI of each point).      |
+
+
+<br>
+
+## Hybrid Solid State LiDAR sensor
+
+* __Blueprint:__ sensor.lidar.hss_lidar
+* __Output:__ [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) per step (unless `sensor_tick` says otherwise).
+
+This sensor simulates a Hybrid Solid State LIDAR implemented using ray-casting. For the default parameters, the Hesai AT128 specifications were selected.
+The points are computed by adding a laser for each channel distributed in the vertical FOV. The point cloud is calculated by doing a ray-cast for each laser in every step.
+
+
+The information of the LIDAR measurement is encoded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by the following formula.
+<br>
+![LidarIntensityComputation](img/lidar_intensity.jpg)
+
+`a` — Attenuation coefficient. This may depend on the sensor's wavelenght, and the conditions of the atmosphere. It can be modified with the LIDAR attribute `atmosphere_attenuation_rate`.
+`d` — Distance from the hit point to the sensor.
+
+For a better realism, points in the cloud can be dropped off. This is an easy way to simulate loss due to external perturbations. This can done combining two different.
+
+*   __General drop-off__ — Proportion of points that are dropped off randomly. This is done before the tracing, meaning the points being dropped are not calculated, and therefore improves the performance. If `dropoff_general_rate = 0.5`, half of the points will be dropped.
+*   __Instensity-based drop-off__ — For each point detected, and extra drop-off is performed with a probability based in the computed intensity. This probability is determined by two parameters. `dropoff_zero_intensity` is the probability of points with zero intensity to be dropped. `dropoff_intensity_limit` is a threshold intensity above which no points will be dropped. The probability of a point within the range to be dropped is a linear proportion based on these two parameters.
+
+Additionally, the `noise_stddev` attribute makes for a noise model to simulate unexpected deviations that appear in real-life sensors. For positive values, each point is randomly perturbed along the vector of the laser ray. The result is a LIDAR sensor with perfect angular positioning, but noisy distance measurement.
+
+The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> __2.__ Run the simulation using `python3 config.py --fps=10`.
+
+The LiDAR configured as AT128, AT360 and AT1440 shown in figure below:
+![LidarPointCloud](img/hss.gif)
+
+#### Lidar attributes
+
+
+| Blueprint attribute  | Type   | Default    | Description     |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `channels`         | int    | 128     | Number of lasers.  |
+| `range`            | float  | 10.0  | Maximum distance to measure/raycast in meters (centimeters for CARLA 0.9.6 or previous).  |
+| `rotation_frequency`            | float  | 10.0  | LIDAR rotation frequency.       |
+| `upper_fov`        | float  | 12.9  | Angle in degrees of the highest laser.        |
+| `lower_fov`        | float  | -12.5 | Angle in degrees of the lowest laser.         |
+| `horizontal_fov`   | float | 120.0 | Horizontal field of view in degrees, ranging from -horizontal_fov/2 to +horizontal_fov/2, symmetric to the forward-pointing axis. |
+| `atmosphere_attenuation_rate`     | float  | 0.004 | Coefficient that measures the LIDAR instensity loss per meter. Check the intensity computation above. |
+| `dropoff_general_rate`          | float  | 0.45  | General proportion of points that are randomy dropped.    |
+| `dropoff_intensity_limit`       | float  | 0.8   | For the intensity based drop-off, the threshold intensity value above which no points are dropped.    |
+| `dropoff_zero_intensity`        | float  | 0.4   | For the intensity based drop-off, the probability of each point with zero intensity being dropped.    |
+| `sensor_tick`      | float  | 0.0   | Simulation seconds between sensor captures (ticks). |
+| `noise_stddev`     | float  | 0.0   | Standard deviation of the noise model to disturb each point along the vector of its raycast. |
+| `horizontal_resolution`   | float | 0.1   | Horizontal Resolution of the sensor. |
 
 
 
@@ -490,9 +560,51 @@ Since these effects are provided by UE, please make sure to check their document
 | `fov` | float | Horizontal field of view in degrees.         |
 | `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
 
+---
 
+## Wide-angle cameras
+
+* __Blueprint RGB:__ sensor.camera.rgb.wide_angle_lens
+* __Blueprint depth:__ sensor.camera.depth.wide_angle_lens
+* __Blueprint semantic segmentation:__ sensor.camera.semantic_segmentation.wide_angle_lens
+* __Blueprint instance segmentation:__ sensor.camera.instance_segmentation.wide_angle_lens
+* __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise)..
+
+The wide-angle camera models multiple types of specialized cameras such as standard wide-angle, 360 degree cameras and fisheye lenses. The wide-angle camera model offers standard RGB output along with depth, semantic segmentation and instance segmentation. There are numerous projection models available, including perspective, stereographic, equidistant, equisolid, orthographic and Kannala-Brandt.
+
+The [Kannala-Brandt](https://www.researchgate.net/publication/6899685_A_Generic_Camera_Model_and_Calibration_Method_for_Conventional_Wide-Angle_and_Fish-Eye_Lenses) model used matches the [implementation used in OpenCV](https://docs.opencv.org/3.4/db/d58/group__calib3d__fisheye.html).
+
+| Blueprint attribute  | Type     | Default  | Description          |
+| ----------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- |
+| `camera_model`       | str     | `perspective`   | Options: <br>`perspective`,<br>`stereographic`,<br>`equidistant`,<br>`equisolid`,<br>`orthographic`,<br>`kannala-brandt`|
+| `fov`    | float    | 90\.0    | Horizontal field of view in degrees.   |
+| `image_size_x`       | int      | 800      | Image width in pixels.           |
+| `image_size_y`       | int      | 600      | Image height in pixels.          |
+| `k0`       | float      | 0.0831      | Kannala-Brandt K0 parameter.          |
+| `k1`       | float      | 0.0111      | Kannala-Brandt K1 parameter.          |
+| `k2`       | float      | 0.00858      | Kannala-Brandt K2 parameter.          |
+| `k3`       | float      | 0.000854      | Kannala-Brandt K3 parameter.          |
+| `sensor_tick`        | float    | 0\.0     | Simulation seconds between sensor captures (ticks).  |
+| `fov_mask`       | bool     | false      | Masks out pixels outside of the FOV.         |
+| `fov_fade_size`       | float     | 0.0      | Amount of blur of the edge of the `fov_mask`.        |
+| `perspective`       | bool     | false      | Turns on perspective mode.         |
+| `equirectangular`       | bool     | false      | Turns on equirectangular projection.         |
+| `longitude_offset` | float | 0.0 | Shifts view center by degrees for equirectangular model |
+
+#### Output attributes
+
+| Sensor data attribute            | Type  | Description        |
+| ----------------------- | ----------------------- | ----------------------- |
+| `frame`            | int   | Frame number when the measurement took place.      |
+| `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
+| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `width`            | int   | Image width in pixels.           |
+| `height`           | int   | Image height in pixels.          |
+| `fov` | float | Horizontal field of view in degrees.         |
+| `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
 
 ---
+
 ## RSS sensor
 
 *   __Blueprint:__ sensor.other.rss
@@ -711,34 +823,39 @@ This raw [carla.Image](python_api.md#carla.Image) can be stored and converted it
 raw_image.save_to_disk("path/to/save/converted/image",carla.ColorConverter.cityScapesPalette)
 ```
 
-The following tags are currently available:
+The following tags are currently available (Note, tags changed from version 0.9.13 to 0.9.14):
 
 | Value          | Tag            | Converted color  | Description      |
 | ----------------------------------- | ----------------------------------- | ----------------------------------- | ----------------------------------- |
 | `0`            | Unlabeled      | `(0, 0, 0)`      | Elements that have not been categorized are considered `Unlabeled`. This category is meant to be empty or at least contain elements with no collisions.     |
-| `1`            | Building       | `(70, 70, 70)`   | Buildings like houses, skyscrapers,... and the elements attached to them. <br> E.g. air conditioners, scaffolding, awning or ladders and much more.       |
-| `2`            | Fence          | `(100, 40, 40)`  | Barriers, railing, or other upright structures. Basically wood or wire assemblies that enclose an area of ground.           |
-| `3`            | Other          | `(55, 90, 80)`   | Everything that does not belong to any other category.       |
-| `4`            | Pedestrian       | `(220, 20, 60)`  | Humans that walk or ride/drive any kind of vehicle or mobility system. <br> E.g. bicycles or scooters, skateboards, horses, roller-blades, wheel-chairs, etc.         |
-| `5`            | Pole           | `(153, 153, 153)`            | Small mainly vertically oriented pole. If the pole has a horizontal part (often for traffic light poles) this is also considered pole. <br> E.g. sign pole, traffic light poles.     |
-| `6`            | RoadLine       | `(157, 234, 50)`             | The markings on the road.    |
-| `7`            | Road           | `(128, 64, 128)`             | Part of ground on which cars usually drive. <br> E.g. lanes in any directions, and streets.       |
-| `8`            | SideWalk       | `(244, 35, 232)`             | Part of ground designated for pedestrians or cyclists. Delimited from the road by some obstacle (such as curbs or poles), not only by markings. This label includes a possibly delimiting curb, traffic islands (the walkable part), and pedestrian zones. |
-| `9`            | Vegetation       | `(107, 142, 35)`             | Trees, hedges, all kinds of vertical vegetation. Ground-level vegetation is considered `Terrain`.   |
-| `10`           | Vehicles       | `(0, 0, 142)`    | Cars, vans, trucks, motorcycles, bikes, buses, trains.       |
-| `11`           | Wall           | `(102, 102, 156)`            | Individual standing walls. Not part of a building.         |
-| `12`           | TrafficSign      | `(220, 220, 0)`  | Signs installed by the state/city authority, usually for traffic regulation. This category does not include the poles where signs are attached to. <br> E.g. traffic- signs, parking signs, direction signs...     |
-| `13`           | Sky            | `(70, 130, 180)`             | Open sky. Includes clouds and the sun.   |
-| `14`           | Ground         | `(81, 0, 81)`    | Any horizontal ground-level structures that does not match any other category. For example areas shared by vehicles and pedestrians, or flat roundabouts delimited from the road by a curb.        |
-| `15`           | Bridge         | `(150, 100, 100)`            | Only the structure of the bridge. Fences, people, vehicles, an other elements on top of it are labeled separately.          |
-| `16`           | RailTrack      | `(230, 150, 140)`            | All kind of rail tracks that are non-drivable by cars. <br> E.g. subway and train rail tracks.    |
-| `17`           | GuardRail      | `(180, 165, 180)`            | All types of guard rails/crash barriers. |
-| `18`           | TrafficLight     | `(250, 170, 30)`             | Traffic light boxes without their poles. |
-| `19`           | Static         | `(110, 190, 160)`            | Elements in the scene and props that are immovable. <br> E.g. fire hydrants, fixed benches, fountains, bus stops, etc.    |
-| `20`           | Dynamic        | `(170, 120, 50)`             | Elements whose position is susceptible to change over time. <br> E.g. Movable trash bins, buggies, bags, wheelchairs, animals, etc.         |
-| `21`           | Water          | `(45, 60, 150)`  | Horizontal water surfaces. <br> E.g. Lakes, sea, rivers.   |
-| `22`           | Terrain        | `(145, 170, 100)`            | Grass, ground-level vegetation, soil or sand. These areas are not meant to be driven on. This label includes a possibly delimiting curb.      |
-
+| `1`            | Roads          | `(128, 64, 128)`             | Part of ground on which cars usually drive. <br> E.g. lanes in any directions, and streets.       |
+| `2`            | SideWalks      | `(244, 35, 232)`             | Part of ground designated for pedestrians or cyclists. Delimited from the road by some obstacle (such as curbs or poles), not only by markings. This label includes a possibly delimiting curb, traffic islands (the walkable part), and pedestrian zones. |
+| `3`            | Building       | `(70, 70, 70)`   | Buildings like houses, skyscrapers,... and the elements attached to them. <br> E.g. air conditioners, scaffolding, awning or ladders and much more.       |
+| `4`            | Wall           | `(102, 102, 156)`            | Individual standing walls. Not part of a building.         |
+| `5`            | Fence          | `(190, 153, 153)`  | Barriers, railing, or other upright structures. Basically wood or wire assemblies that enclose an area of ground.           |
+| `6`            | Pole           | `(153, 153, 153)`            | Small mainly vertically oriented pole. If the pole has a horizontal part (often for traffic light poles) this is also considered pole. <br> E.g. sign pole, traffic light poles.     |
+| `7`            | TrafficLight   | `(250, 170, 30)`             | Traffic light boxes without their poles. |
+| `8`            | TrafficSign    | `(220, 220, 0)`  | Signs installed by the state/city authority, usually for traffic regulation. This category does not include the poles where signs are attached to. <br> E.g. traffic- signs, parking signs, direction signs...     |
+| `9`            | Vegetation     | `(107, 142, 35)`             | Trees, hedges, all kinds of vertical vegetation. Ground-level vegetation is considered `Terrain`.   |
+| `10`           | Terrain        | `(152, 251, 152)`            | Grass, ground-level vegetation, soil or sand. These areas are not meant to be driven on. This label includes a possibly delimiting curb.      |
+| `11`           | Sky            | `(70, 130, 180)`             | Open sky. Includes clouds and the sun.   |
+| `12`           | Pedestrian     | `(220, 20, 60)`  | Humans that walk        |
+| `13`           | Rider          | `(255, 0, 0)`  | Humans that ride/drive any kind of vehicle or mobility system <br> E.g. bicycles or scooters, skateboards, horses, roller-blades, wheel-chairs, etc. .       |
+| `14`           | Car            | `(0, 0, 142)`    | Cars, vans        |
+| `15`           | Truck          | `(0, 0, 70)`    | Trucks        |
+| `16`           | Bus            | `(0, 60, 100)`  | Busses        |
+| `17`           | Train          | `(0, 80, 100)`  | Trains        |
+| `18`           | Motorcycle     | `(0, 0, 230)`    | Motorcycle, Motorbike        |
+| `19`           | Bicycle        | `(119, 11, 32)`   | Bicylces      |
+| `20`           | Static         | `(110, 190, 160)`            | Elements in the scene and props that are immovable. <br> E.g. fire hydrants, fixed benches, fountains, bus stops, etc.    |
+| `21`           | Dynamic        | `(170, 120, 50)`             | Elements whose position is susceptible to change over time. <br> E.g. Movable trash bins, buggies, bags, wheelchairs, animals, etc.         |
+| `22`           | Other          | `(55, 90, 80)`    | Everything that does not belong to any other category.  |
+| `23`           | Water          | `(45, 60, 150)`  | Horizontal water surfaces. <br> E.g. Lakes, sea, rivers.   |
+| `24`           | RoadLine       | `(157, 234, 50)`             | The markings on the road.    |
+| `25`           | Ground         | `(81, 0, 81)`    | Any horizontal ground-level structures that does not match any other category. For example areas shared by vehicles and pedestrians, or flat roundabouts delimited from the road by a curb.        |
+| `26`           | Bridge         | `(150, 100, 100)`            | Only the structure of the bridge. Fences, people, vehicles, an other elements on top of it are labeled separately.          |
+| `27`           | RailTrack      | `(230, 150, 140)`            | All kind of rail tracks that are non-drivable by cars. <br> E.g. subway and train rail tracks.    |
+| `28`           | GuardRail      | `(180, 165, 180)`            | All types of guard rails/crash barriers. |
 <br>
 
 !!! Note
@@ -899,3 +1016,99 @@ The Optical Flow camera captures the motion perceived from the point of view of 
 | `raw_data` | bytes | Array of BGRA 64-bit pixels containing two float values. |
 
 <br>
+
+---
+
+## V2X sensor 
+
+Vehicle-to-everything (V2X) communication is an important aspect for future applications of cooperative intelligent transportation systems. In real vehicles, this requires a dedicated onboard unit (OBU) in each vehicle, that is able to send and receive information over wireless channels. Depending on the region (Europe, China, USA), different physical technologies, protocols and application messaging formats are used. 
+
+CARLA currently supports simulation of a simple broadcast wireless channel and two application messages. Protocols for network access and forwarding are not supported yet. The two implemented messages are the [*Cooperative Awarness Message*](#cooperative-awareness-message) according to the European standard ETSI, and a [*custom message*](#custom-v2x-message) type, that can be used to transmit arbitrary string data (e.g. JSON). There are two distinct sensors for V2X communication, that can be used separately, one for each application message type.
+
+Basically, the wireless channel incorporates the following calculation for both sensors:
+
+    ReceivedPower = OtherTransmitPower + combined_antenna_gain - loss
+
+    IF (ReceivedPower >= receiver_sensitivity)
+        THEN message is received
+
+To simulate V2X communication, at least two V2X sensors of the same type need to be spawned (at least one sender-receiver pair). Because the received power is calculated on the receiver-side V2X sensor, only the antenna gain that is specified on the receiver-side sensor is incorporated in this calculation. Transmission power and receiver sensitivity can be configured (see [Blueprint attributes](#v2x-sensors-blueprint-attributes)).
+
+The *loss* calculation depends on 
+- the visbility condition between sender and receiver: line of sight (no obstacles), non-line of sight obstructed by buildings, or non-line of sight obstructed by vehicles, and
+- the scenario: highway, rural, or urban environment
+
+While the visibility is simulated within CARLA, the scenario can be configured by the user (see [Blueprint attributes](#v2x-sensors-blueprint-attributes)), as well as several other attributes of the wireless channel.
+
+### Sensor (sub)types
+
+#### Cooperative Awareness Message
+
+*   __Blueprint:__ sensor.other.v2x
+*   __Output:__ [carla.CAMData](python_api.md#carla.CAMData), triggered according to the ETSI CAM standard, unless configured otherwise
+
+Triggering conditions according to ETSI standard:
+- Heading angle change > 4°
+- Position difference > 4 m
+- Speed change > 5 m/s
+- Time elapsed > CAM Generation time (configurable)
+- Low Frequency Container Time Elapsed > 500 ms
+
+For the CAM V2X sensor, additional blueprint attributes apply:
+
+| Blueprint attribute     | Type   | Default  | Description                        |
+|-------------------------|--------|-------------------------|------------------------------------|
+| gen\_cam\_min           | float  | 0.1         |  Minimum elapsed time between two successive CAMs in seconds (s)        |
+| gen\_cam\_max           | float  | 1.0       |   Maximum elapsed time between two successive CAMs in seconds (s)          |
+| fixed\_rate             | bool   | false [true]     |  Generate a CAM in every CARLA tick (only for debug purposes, will result in slowdown)    |
+| `noise_vel_stddev_x` | float  | 0\.0   | Standard deviation parameter in the noise model for velocity (X axis). |
+| `noise_accel_stddev_x`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (X axis).  |
+| `noise_accel_stddev_y`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (Y axis).  |
+| `noise_accel_stddev_z`          | float   | 0\.0    | Standard deviation parameter in the noise model for acceleration (Z axis).  |
+| `noise_yawrate_bias`   | float  | 0\.0   | Mean parameter in the noise model for yaw rate.    |
+| `noise_yawrate_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for yaw rate.  |
+| `noise_alt_bias`   | float  | 0\.0   | Mean parameter in the noise model for altitude.    |
+| `noise_alt_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for altitude.  |
+| `noise_lat_bias`   | float  | 0\.0   | Mean parameter in the noise model for latitude.    |
+| `noise_lat_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for latitude.  |
+| `noise_lon_bias`   | float  | 0\.0   | Mean parameter in the noise model for longitude.   |
+| `noise_lon_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for longitude. |
+| `noise_head_bias`   | float  | 0\.0   | Mean parameter in the noise model for heading.   |
+| `noise_head_stddev` | float  | 0\.0   | Standard deviation parameter in the noise model for heading. |
+
+#### Custom V2X Message
+
+*   __Blueprint:__ sensor.other.v2x_custom
+*   __Output:__ [carla.CustomV2XData](python_api.md#carla.CustomV2XData), triggered with next tick after a *send()* was called
+
+##### Methods
+- <a name="carla.Sensor.send"></a>**<font color="#7fb800">send</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)
+The function the user has to call every time to send a message. This function needs for an argument containing an object type [carla.SensorData](#carla.SensorData) to work with.  
+    - **Parameters:**
+        - `data` (_function_) - The called function with one argument containing the sensor data.  
+
+The custom V2X message sensor works a little bit different than other sensors, because it has the *send* function in addition to the *listen* function, that needs to be called, before another sensor of this type will receive anything. The transmission of a custom message is only triggered, when *send* is called. Each message given to the *send* function is only transmitted once to all Custom V2X Message sensors currently spawned.
+
+Example:
+
+    bp = world.get_blueprint_library().find('sensor.other.v2x_custom')
+    sensor = world.spawn_actor(bp, carla.Transform(), attach_to=parent)
+    sensor.send("Hello CARLA")
+
+### V2X sensors blueprint attributes
+
+| Blueprint attribute     | Type   | Default | Description                        |
+|-------------------------|--------|-------------------------|------------------------------------|
+| transmit\_power         | float  | 21.5       | Sender transmission power in dBm                         |
+| receiver\_sensitivity   | float  | -99        | Receiver sensitivity in dBm                                |
+| frequency\_ghz          | float  | 5.9 | Transmission frequency in GHz. 5.9 GHz is standard for several physical channels.                 |
+| noise\_seed             | int    | 0   | Random parameter for initialization of noise                           |
+| filter\_distance        | float  | 500      | Maximum transmission distance in meter, path loss calculations above are skipped for simulation speed      |
+| __Path loss model parameters__ | | | |
+| combined\_antenna\_gain | float  | 10.0   | Combined gain of sender and receiver antennas in dBi, parameter for radiation efficiency and directivity |
+| d\_ref                  | float  | 1.0     | reference distance for Log-distance path loss model in meter           |
+| path\_loss\_exponent    | float  | 2.7                     |    Loss parameter for non-line of sight due to building obstruction    |
+| scenario                | string | urban   | Options: [urban, rural, highway], defines the fading noise parameters |
+| path\_loss\_model       | string | geometric     |   general path loss model to be used. Options: [geometric, winner]  |
+| use\_etsi\_fading       | bool   | true         |   Use the fading params as mentioned in the ETSI publication (true), or use the custom fading standard deviation         |
+| custom\_fading\_stddev  | float  | 0.0      |   Custom value for fading standard deviation, only used if `use_etsi_fading` is set to `false`              |

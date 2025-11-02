@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -42,6 +42,10 @@ namespace client {
     } else {
       tm.UnregisterVehicles({shared_from_this()});
     }
+  }
+
+  Vehicle::TelemetryData Vehicle::GetTelemetryData() const {
+    return GetEpisode().Lock()->GetVehicleTelemetryData(*this);
   }
 
   void Vehicle::ShowDebugTelemetry(bool enabled) {
@@ -91,6 +95,14 @@ namespace client {
     return GetEpisode().Lock()->GetWheelSteerAngle(*this, wheel_location);
   }
 
+  void Vehicle::SetWheelPitchAngle(WheelLocation wheel_location, float angle_in_deg) {
+    GetEpisode().Lock()->SetWheelPitchAngle(*this, wheel_location, angle_in_deg);
+  }
+
+  float Vehicle::GetWheelPitchAngle(WheelLocation wheel_location) {
+    return GetEpisode().Lock()->GetWheelPitchAngle(*this, wheel_location);
+  }
+
   Vehicle::Control Vehicle::GetControl() const {
     return GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.control;
   }
@@ -101,6 +113,10 @@ namespace client {
 
   Vehicle::LightState Vehicle::GetLightState() const {
     return GetEpisode().Lock()->GetVehicleLightState(*this).GetLightStateEnum();
+  }
+
+  std::vector<geom::Transform> Vehicle::GetVehicleBoneWorldTransforms() const {
+    return GetEpisode().Lock()->GetVehicleBoneWorldTransforms(*this);
   }
 
   float Vehicle::GetSpeedLimit() const {
@@ -142,6 +158,10 @@ namespace client {
         PowertrainJSON,
         TireJSON,
         BaseJSONPath);
+  }
+
+  void Vehicle::RestorePhysXPhysics() {
+    GetEpisode().Lock()->RestorePhysXPhysics(*this);
   }
 
   rpc::VehicleFailureState Vehicle::GetFailureState() const {

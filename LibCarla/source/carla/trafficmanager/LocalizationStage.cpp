@@ -19,6 +19,7 @@ LocalizationStage::LocalizationStage(
   const SimulationState &simulation_state,
   TrackTraffic &track_traffic,
   const LocalMapPtr &local_map,
+  std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles,
   Parameters &parameters,
   std::vector<ActorId>& marked_for_removal,
   LocalizationFrame &output_array,
@@ -28,6 +29,7 @@ LocalizationStage::LocalizationStage(
     simulation_state(simulation_state),
     track_traffic(track_traffic),
     local_map(local_map),
+    large_vehicles(large_vehicles),
     parameters(parameters),
     marked_for_removal(marked_for_removal),
     output_array(output_array),
@@ -117,26 +119,28 @@ void LocalizationStage::Update(const unsigned long index) {
 
   // Apply parameters for keep right rule and random lane changes.
   if (!force_lane_change && vehicle_speed > MIN_LANE_CHANGE_SPEED){
-    const float perc_keep_right = parameters.GetKeepRightPercentage(actor_id);
+    const float perc_keep_slow = parameters.GetKeepSlowLanePercentage(actor_id);
     const float perc_random_leftlanechange = parameters.GetRandomLeftLaneChangePercentage(actor_id);
     const float perc_random_rightlanechange = parameters.GetRandomRightLaneChangePercentage(actor_id);
-    const bool is_keep_right = perc_keep_right > random_device.next();
-    const bool is_random_left_change = perc_random_leftlanechange >= random_device.next();
+    const bool is_rht = waypoint_buffer.front()->GetWaypoint()->IsRHT();
+
+    const bool is_keep_slow = perc_keep_slow > random_device.next();
     const bool is_random_right_change = perc_random_rightlanechange >= random_device.next();
+    const bool is_random_left_change = perc_random_leftlanechange >= random_device.next();
+
+    const bool is_left_lane_change = is_rht ? is_random_left_change : is_keep_slow || is_random_left_change;
+    const bool is_right_lane_change = is_rht ? is_keep_slow || is_random_right_change : is_random_right_change;
 
     // Determine which of the parameters we should apply.
-    if (is_keep_right || is_random_right_change) {
+    if (is_left_lane_change && is_right_lane_change){
+      force_lane_change = true;
+      lane_change_direction = FIFTYPERC > random_device.next();
+    } else if (is_right_lane_change) {
       force_lane_change = true;
       lane_change_direction = true;
-    }
-    if (is_random_left_change) {
-      if (!force_lane_change) {
-        force_lane_change = true;
-        lane_change_direction = false;
-      } else {
-        // Both a left and right lane changes are forced. Choose between one of them.
-        lane_change_direction = FIFTYPERC > random_device.next();
-      }
+    } else if (is_left_lane_change) {
+      force_lane_change = true;
+      lane_change_direction = false;
     }
   }
 
@@ -213,6 +217,7 @@ void LocalizationStage::Update(const unsigned long index) {
     }
   }
   ExtendAndFindSafeSpace(actor_id, is_at_junction_entrance, waypoint_buffer);
+  HandleLargeVehicleJunction(actor_id, is_at_junction_entrance, waypoint_buffer);
 
   // Editing output array
   LocalizationData &output = output_array.at(index);
@@ -237,7 +242,7 @@ void LocalizationStage::ExtendAndFindSafeSpace(const ActorId actor_id,
 
   SimpleWaypointPtr junction_end_point = nullptr;
   SimpleWaypointPtr safe_point_after_junction = nullptr;
-
+  
   if (is_at_junction_entrance
       && vehicles_at_junction_entrance.find(actor_id) == vehicles_at_junction_entrance.end()) {
 
@@ -319,6 +324,133 @@ void LocalizationStage::ExtendAndFindSafeSpace(const ActorId actor_id,
   }
 }
 
+void LocalizationStage::HandleLargeVehicleJunction(const ActorId actor_id,
+                                                   const bool is_at_junction_entrance,
+                                                   Buffer &waypoint_buffer) {
+
+  if (large_vehicles.find(actor_id) == large_vehicles.end()){
+    return;
+  }
+
+  SimpleWaypointPtr current_waypoint = nullptr;
+  bool is_at_junction = waypoint_buffer.front()->CheckJunction();
+
+  if (is_at_junction_entrance
+      && large_vehicles_at_junction_entrance.find(actor_id) == large_vehicles_at_junction_entrance.end()
+      && large_vehicles_at_junction.find(actor_id) == large_vehicles_at_junction.end()) {
+
+    large_vehicles_at_junction_entrance.insert(actor_id);
+
+    const SimpleWaypointPtr first_waypoint = waypoint_buffer.front();
+    const SimpleWaypointPtr last_waypoint = waypoint_buffer.back();
+    const SimpleWaypointPtr middle_waypoint = waypoint_buffer.at(static_cast<uint16_t>(waypoint_buffer.size() / 2));
+  
+    float radius = GetThreePointCircleRadius(first_waypoint->GetLocation(),
+                                             middle_waypoint->GetLocation(),
+                                             last_waypoint->GetLocation());
+
+    if (radius > LARGE_VEHICLES_JUNCTION_MAX_RADIUS){
+      return; // Straight path
+    }
+
+    bool entered_junction = false;
+    float junction_length = 0.0f;
+    bool is_straight_path = true;
+
+    for (unsigned long i = 0u; i < waypoint_buffer.size(); ++i) {
+      current_waypoint = waypoint_buffer.at(i);
+
+      if (!entered_junction && current_waypoint->CheckJunction()) {
+        entered_junction = true;
+      }
+
+      if (i > 0 && entered_junction) {
+        SimpleWaypointPtr prev_waypoint = waypoint_buffer.at(i-1);
+        float new_distance = current_waypoint->Distance(prev_waypoint->GetLocation());
+        junction_length = junction_length + new_distance;
+
+        if (is_straight_path){
+          RoadOption junction_type = current_waypoint->GetRoadOption();
+          if (junction_type == RoadOption::Right){
+            large_vehicles[actor_id].second = true;
+            is_straight_path = false;
+          } else if (junction_type == RoadOption::Left) {
+            large_vehicles[actor_id].second = false;
+            is_straight_path = false;
+          } else {
+          }
+        }
+      }
+
+      if (entered_junction && !current_waypoint->CheckJunction()){
+        break;
+      }
+    }
+    if (!is_straight_path){
+      large_vehicles[actor_id].first = junction_length;
+    }
+
+  }
+  else if (is_at_junction
+      && large_vehicles_at_junction_entrance.find(actor_id) != large_vehicles_at_junction_entrance.end()) {
+
+    large_vehicles_at_junction_entrance.erase(actor_id);
+    large_vehicles_at_junction.insert(actor_id);
+  }
+  else if (!is_at_junction
+      && large_vehicles_at_junction.find(actor_id) != large_vehicles_at_junction.end()) {
+
+    large_vehicles_at_junction.erase(actor_id);
+    if (large_vehicles.find(actor_id) != large_vehicles.end()){
+      large_vehicles[actor_id].first = 0.0f;
+    }
+  }
+}
+
+float LocalizationStage::GetThreePointCircleRadius(cg::Location first_location,
+                                                   cg::Location middle_location,
+                                                   cg::Location last_location) {
+
+    float x1 = first_location.x;
+    float y1 = first_location.y;
+    float x2 = middle_location.x;
+    float y2 = middle_location.y;
+    float x3 = last_location.x;
+    float y3 = last_location.y;
+
+    float x12 = x1 - x2;
+    float x13 = x1 - x3;
+    float y12 = y1 - y2;
+    float y13 = y1 - y3;
+    float y31 = y3 - y1;
+    float y21 = y2 - y1;
+    float x31 = x3 - x1;
+    float x21 = x2 - x1;
+
+    float sx13 = x1 * x1 - x3 * x3;
+    float sy13 = y1 * y1 - y3 * y3;
+    float sx21 = x2 * x2 - x1 * x1;
+    float sy21 = y2 * y2 - y1 * y1;
+
+    float f_denom = 2 * (y31 * x12 - y21 * x13);
+    if (f_denom == 0) {
+      return std::numeric_limits<float>::max();
+    }
+    float f = (sx13 * x12 + sy13 * x12 + sx21 * x13 + sy21 * x13) / f_denom;
+
+    float g_denom = 2 * (x31 * y12 - x21 * y13);
+    if (g_denom == 0) {
+      return std::numeric_limits<float>::max();
+    }
+    float g = (sx13 * y12 + sy13 * y12 + sx21 * y13 + sy21 * y13) / g_denom;
+
+    float c = - (x1 * x1 + y1 * y1) - 2 * g * x1 - 2 * f * y1;
+    float h = -g;
+    float k = -f;
+
+  return std::sqrt(h * h + k * k - c);
+}
+
 void LocalizationStage::RemoveActor(ActorId actor_id) {
     last_lane_change_swpt.erase(actor_id);
     vehicles_at_junction.erase(actor_id);
@@ -337,6 +469,10 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
   // Waypoint representing the new starting point for the waypoint buffer
   // due to lane change. Remains nullptr if lane change not viable.
   SimpleWaypointPtr change_over_point = nullptr;
+
+  if (buffer_map.find(actor_id) == buffer_map.end()) {
+    return change_over_point;
+  }
 
   // Retrieve waypoint buffer for current vehicle.
   const Buffer &waypoint_buffer = buffer_map.at(actor_id);
@@ -590,6 +726,10 @@ void LocalizationStage::ImportRoute(Route &imported_actions, Buffer &waypoint_bu
 }
 
 Action LocalizationStage::ComputeNextAction(const ActorId& actor_id) {
+  if (buffer_map.find(actor_id) == buffer_map.end()) {
+    return std::make_pair(RoadOption::Void, nullptr);
+  }
+
   auto waypoint_buffer = buffer_map.at(actor_id);
   auto next_action = std::make_pair(RoadOption::LaneFollow, waypoint_buffer.back()->GetWaypoint());
   bool is_lane_change = false;
@@ -623,9 +763,12 @@ Action LocalizationStage::ComputeNextAction(const ActorId& actor_id) {
 }
 
 ActionBuffer LocalizationStage::ComputeActionBuffer(const ActorId& actor_id) {
-
-  auto waypoint_buffer = buffer_map.at(actor_id);
   ActionBuffer action_buffer;
+
+  if (buffer_map.find(actor_id) == buffer_map.end()) {
+    return action_buffer;
+  }
+  auto waypoint_buffer = buffer_map.at(actor_id);
   Action lane_change;
   bool is_lane_change = false;
   SimpleWaypointPtr buffer_front = waypoint_buffer.front();

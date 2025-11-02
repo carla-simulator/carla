@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -23,6 +23,7 @@
 
 #include <exception>
 #include <thread>
+#include <chrono>
 
 using namespace std::string_literals;
 
@@ -50,7 +51,7 @@ namespace detail {
     bool result = true;
     auto start = std::chrono::system_clock::now();
     while (frame > episode.GetState()->GetTimestamp().frame) {
-      std::this_thread::yield();
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
       auto end = std::chrono::system_clock::now();
       auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
       if(timeout.to_chrono() < diff) {
@@ -87,6 +88,12 @@ namespace detail {
   EpisodeProxy Simulator::LoadEpisode(std::string map_name, bool reset_settings, rpc::MapLayer map_layers) {
     const auto id = GetCurrentEpisode().GetId();
     _client.LoadEpisode(std::move(map_name), reset_settings, map_layers);
+
+    // delete the pointer to _episode so that the Navigation information
+    // will be loaded for the correct map
+    assert(_episode.use_count() == 1);
+    _episode.reset();
+    GetReadyCurrentEpisode();
 
     // We are waiting 50ms for the server to reload the episode.
     // If in this time we have not detected a change of episode, we try again
@@ -342,19 +349,21 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   // -- General operations with actors -----------------------------------------
   // ===========================================================================
 
-  SharedPtr<Actor> Simulator::SpawnActor(
+    SharedPtr<Actor> Simulator::SpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent,
       rpc::AttachmentType attachment_type,
-      GarbageCollectionPolicy gc) {
+      GarbageCollectionPolicy gc,
+      const std::string& socket_name) {
     rpc::Actor actor;
     if (parent != nullptr) {
       actor = _client.SpawnActorWithParent(
           blueprint.MakeActorDescription(),
           transform,
           parent->GetId(),
-          attachment_type);
+          attachment_type,
+          socket_name);
     } else {
       actor = _client.SpawnActor(
           blueprint.MakeActorDescription(),
@@ -388,6 +397,10 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   // ===========================================================================
   // -- Operations with sensors ------------------------------------------------
   // ===========================================================================
+
+  void Simulator::EnableGBuffers(const Sensor &sensor, bool bEnable) {
+    _client.EnableGBuffers(sensor.GetId(), bEnable);
+  }
 
   void Simulator::SubscribeToSensor(
       const Sensor &sensor,
@@ -439,6 +452,14 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     _client.FreezeAllTrafficLights(frozen);
   }
 
+  void Simulator::Send(const Sensor &sensor, std::string message) {
+    _client.Send(sensor.GetId(), message);
+  }
+
+  void Simulator::SetIgnoredVehicles(const Sensor &sensor, const std::vector<ActorId>& vehicle_ids) {
+    _client.SetIgnoredVehicles(sensor.GetId(), vehicle_ids);
+  }
+
   // =========================================================================
   /// -- Texture updating operations
   // =========================================================================
@@ -460,6 +481,31 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   std::vector<std::string> Simulator::GetNamesOfAllObjects() const {
     return _client.GetNamesOfAllObjects();
   }
+
+  std::string Simulator::ExportCosmosCrosswalks(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosCrosswalks(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosRoadBoundaries(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosRoadBoundaries(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosLaneLines(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosLaneLines(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosTrafficSigns(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosTrafficSigns(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosWaitLines(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosWaitLines(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosRoadMarkings(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosRoadMarkings(session_id, output_path);
+  }
+
 
 } // namespace detail
 } // namespace client

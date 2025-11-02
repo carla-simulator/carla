@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -37,12 +37,12 @@ void CarlaRecorderAnimWheels::Read(std::istream &InFile)
   ReadValue<uint32_t>(InFile, DatabaseId);
   uint32_t NumWheels = 0;
   ReadValue<uint32_t>(InFile, NumWheels);
-  WheelValues.reserve(NumWheels);
+  WheelValues.resize(NumWheels);
   for (size_t i = 0; i < NumWheels; ++i)
   {
     WheelInfo Wheel;
     Wheel.Read(InFile);
-    WheelValues.push_back(Wheel);
+    WheelValues[i] = Wheel;
   }
 }
 

@@ -59,7 +59,7 @@ As a reminder, the feature is only available for the Linux build so far.
 
 ### Dependencies
 
-There are additional prerequisites required for building RSS and its dependencies. Take a look at the [official documentation](https://intel.github.io/ad-rss-lib/BUILDING)) to know more about this.
+There are additional prerequisites required for building RSS and its dependencies. Take a look at the [official documentation](https://intel.github.io/ad-rss-lib/BUILDING) to know more about this.
 
 Dependencies provided by Ubunutu (>= 16.04).
 ```sh
@@ -68,13 +68,13 @@ sudo apt-get install libgtest-dev libpython-dev libpugixml-dev libtbb-dev
 
 The dependencies are built using [colcon](https://colcon.readthedocs.io/en/released/user/installation.html), so it has to be installed.
 ```sh
-pip3 install --user -U colcon-common-extensions
+python3 -m pip install --user -U colcon-common-extensions
 ```
 
 There are some additional dependencies for the Python bindings.
 ```sh
 sudo apt-get install castxml
-pip3 install --user pygccxml pyplusplus
+python3 -m pip install --user pygccxml pyplusplus
 ```
 
 ### Build

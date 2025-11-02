@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -1310,13 +1310,13 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   SparseMap.SavePath = SavePath;
   // Creating the FileManager
   IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
-  if( FileManager.CreateDirectory(*SavePath)){
+  /*if( FileManager.CreateDirectory(*SavePath)){
     UE_LOG(LogCarla, Warning, 
         TEXT("Folder was created at %s"), *SavePath);
   }else{
     UE_LOG(LogCarla, Error, 
         TEXT("Folder was not created at %s"), *SavePath);  
-  }
+  }*/
 
   if(bUseDeformationPlane){
     DeformationPlaneActor = GetWorld()->SpawnActor<AStaticMeshActor>();

@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -19,6 +19,7 @@
 #include "carla/road/element/RoadInfoMarkRecord.h"
 #include "carla/road/element/RoadInfoSpeed.h"
 #include "carla/road/element/RoadInfoSignal.h"
+#include "carla/road/element/RoadInfoStencil.h"
 
 #include "marchingcube/MeshReconstruction.h"
 
@@ -28,6 +29,8 @@
 #include <chrono>
 #include <thread>
 #include <iomanip>
+#include <queue>
+#include <set>
 #include <cmath>
 
 namespace carla {
@@ -56,7 +59,7 @@ namespace road {
   }
 
   static double GetDistanceAtStartOfLane(const Lane &lane) {
-    if (lane.GetId() <= 0) {
+    if (lane.IsPositiveDirection()) {
       return lane.GetDistance() + 10.0 * EPSILON;
     } else {
       return lane.GetDistance() + lane.GetLength() - 10.0 * EPSILON;
@@ -64,7 +67,7 @@ namespace road {
   }
 
   static double GetDistanceAtEndOfLane(const Lane &lane) {
-    if (lane.GetId() > 0) {
+    if (!lane.IsPositiveDirection()) {
       return lane.GetDistance() + 10.0 * EPSILON;
     } else {
       return lane.GetDistance() + lane.GetLength() - 10.0 * EPSILON;
@@ -186,7 +189,7 @@ namespace road {
     Waypoint result_start = query_result.front().second.first;
     Waypoint result_end = query_result.front().second.second;
 
-    if (result_start.lane_id < 0) {
+    if (GetLane(result_start).IsPositiveDirection()) {
       double delta_s = distance_to_segment.first;
       double final_s = result_start.s + delta_s;
       if (final_s >= result_end.s) {
@@ -331,7 +334,7 @@ namespace road {
       Waypoint waypoint, double distance, bool stop_at_junction) const {
 
     const auto &lane = GetLane(waypoint);
-    const bool forward = (waypoint.lane_id <= 0);
+    const bool forward = lane.IsPositiveDirection();
     const double signed_distance = forward ? distance : -distance;
     const double relative_s = waypoint.s - lane.GetDistance();
     const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
@@ -347,7 +350,7 @@ namespace road {
           waypoint.s, waypoint.s + signed_distance);
       for(auto* signal : signals){
         double distance_to_signal = 0;
-        if (waypoint.lane_id < 0){
+        if (lane.IsPositiveDirection()){
           distance_to_signal = signal->GetDistance() - waypoint.s;
         } else {
           distance_to_signal = waypoint.s - signal->GetDistance();
@@ -384,7 +387,7 @@ namespace road {
         waypoint.s, waypoint.s + signed_remaining_length);
     for(auto* signal : signals){
       double distance_to_signal = 0;
-      if (waypoint.lane_id < 0){
+      if (lane.IsPositiveDirection()){
         distance_to_signal = signal->GetDistance() - waypoint.s;
       } else {
         distance_to_signal = waypoint.s - signal->GetDistance();
@@ -418,7 +421,8 @@ namespace road {
       }
       auto& sucessor_lane = _data.GetRoad(successor.road_id).
             GetLaneByDistance(successor.s, successor.lane_id);
-      if (successor.lane_id < 0) {
+
+      if (GetLane(successor).IsPositiveDirection()) {
         successor.s = sucessor_lane.GetDistance();
       } else {
         successor.s = sucessor_lane.GetDistance() + sucessor_lane.GetLength();
@@ -442,6 +446,72 @@ namespace road {
       for(const auto* road_info : road_infos) {
         result.push_back(road_info);
       }
+    }
+    return result;
+  }
+
+  std::vector<const element::RoadInfoStencil*>
+      Map::GetAllStencilReferences() const {
+    std::vector<const element::RoadInfoStencil*> result;
+    for (const auto& road_pair : _data.GetRoads()) {
+      const auto &road = road_pair.second;
+      auto road_infos = road.GetInfos<element::RoadInfoStencil>();
+      for(const auto* road_info : road_infos) {
+        result.push_back(road_info);
+      }
+    }
+    return result;
+  }
+
+  std::vector<Map::StencilSearchData> Map::GetStencilsInDistance(
+      Waypoint waypoint, double distance, bool stop_at_junction) const {
+
+    const auto &lane = GetLane(waypoint);
+    const bool forward = lane.IsPositiveDirection();
+    const double signed_distance = forward ? distance : -distance;
+    const double relative_s = waypoint.s - lane.GetDistance();
+    const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
+    DEBUG_ASSERT(remaining_lane_length >= 0.0);
+
+    auto &road = _data.GetRoad(waypoint.road_id);
+    std::vector<StencilSearchData> result;
+
+    // If after subtracting the distance we are still in the same lane, return
+    // same waypoint with the extra distance.
+    if (distance <= remaining_lane_length) {
+      auto stencils = road.GetInfosInRange<element::RoadInfoStencil>(
+          waypoint.s, waypoint.s + signed_distance);
+      for(auto* stencil : stencils){
+        double distance_to_stencil = 0;
+        if (lane.IsPositiveDirection()){
+          distance_to_stencil = stencil->GetS() - waypoint.s;
+        } else {
+          distance_to_stencil = waypoint.s - stencil->GetS();
+        }
+        
+        if (distance_to_stencil >= 0) {
+          StencilSearchData data;
+          data.stencil = stencil;
+          data.waypoint = waypoint;
+          data.waypoint.s = stencil->GetS();
+          data.accumulated_s = distance_to_stencil;
+          result.push_back(data);
+        }
+      }
+      return result;
+    }
+
+    // If we run out of remaining_lane_length we have to go to successors.
+    for (auto &successor : GetSuccessors(waypoint)) {
+      if (stop_at_junction && IsJunction(successor.road_id)) {
+        continue;
+      }
+      auto successor_stencils = GetStencilsInDistance(
+          successor, distance - remaining_lane_length, stop_at_junction);
+      for(auto& stencil : successor_stencils){
+        stencil.accumulated_s += remaining_lane_length;
+      }
+      result = ConcatVectors(result, successor_stencils);
     }
     return result;
   }
@@ -481,11 +551,10 @@ namespace road {
 
           // move perpendicular ('t')
           geom::Transform pivot = base;
-          pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
           pivot.rotation.yaw -= 90;   // move perpendicular to 's' for the lateral offset
           geom::Vector3D v(static_cast<float>(crosswalk->GetT()), 0.0f, 0.0f);
           pivot.TransformPoint(v);
-          // restore pivot position and orientation
+          // restore pivot position and orientation with heading
           pivot = base;
           pivot.location = v;
           pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
@@ -494,22 +563,73 @@ namespace road {
           for (auto corner : crosswalk->GetPoints()) {
             geom::Vector3D v2(
                 static_cast<float>(corner.u),
-                static_cast<float>(corner.v),
+                static_cast<float>(-corner.v), // Unreal Hack
                 static_cast<float>(corner.z));
-            // set the width larger to contact with the sidewalk (in case they have gutter area)
-            if (corner.u < 0) {
-              v2.x -= 1.0f;
-            } else {
-              v2.x += 1.0f;
-            }
             pivot.TransformPoint(v2);
             result.push_back(v2);
           }
         }
       }
     }
+
     return result;
   }
+
+  std::map<const carla::road::element::RoadInfoCrosswalk*,std::vector<geom::Location>> Map::GetAllCrosswalksInfo() const {
+    std::map<const carla::road::element::RoadInfoCrosswalk*,std::vector<geom::Location>> result;
+
+    for (const auto &pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      std::vector<const RoadInfoCrosswalk *> crosswalks = road.GetInfos<RoadInfoCrosswalk>();
+      if (crosswalks.size() > 0) {
+        for (auto crosswalk : crosswalks) {
+          std::vector<geom::Location> crosswalk_points;
+          // waypoint only at start position
+          std::vector<geom::Location> points;
+          Waypoint waypoint;
+          geom::Transform base;
+          for (const auto &section : road.GetLaneSectionsAt(crosswalk->GetS())) {
+            // get the section with the center lane
+            for (const auto &lane : section.GetLanes()) {
+              // is the center line
+              if (lane.first == 0) {
+                // get the center point
+                waypoint.road_id = pair.first;
+                waypoint.section_id = section.GetId();
+                waypoint.lane_id = 0;
+                waypoint.s = crosswalk->GetS();
+                base = ComputeTransform(waypoint);
+              }
+            }
+          }
+
+          // move perpendicular ('t')
+          geom::Transform pivot = base;
+          pivot.rotation.yaw -= 90;   // move perpendicular to 's' for the lateral offset
+          geom::Vector3D v(static_cast<float>(crosswalk->GetT()), 0.0f, 0.0f);
+          pivot.TransformPoint(v);
+          // restore pivot position and orientation with heading
+          pivot = base;
+          pivot.location = v;
+          pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
+
+          // calculate all the corners
+          for (auto corner : crosswalk->GetPoints()) {
+            geom::Vector3D v2(
+                static_cast<float>(corner.u),
+                static_cast<float>(-corner.v), // Unreal Hack
+                static_cast<float>(corner.z));
+            pivot.TransformPoint(v2);
+            crosswalk_points.push_back(v2);
+          }
+          result.insert(std::make_pair(crosswalk,crosswalk_points));
+        }
+      }
+    }
+
+    return result;
+  }
+
 
   // ===========================================================================
   // -- Map: Waypoint generation -----------------------------------------------
@@ -520,13 +640,25 @@ namespace road {
     std::vector<Waypoint> result;
     result.reserve(next_lanes.size());
     for (auto *next_lane : next_lanes) {
-      RELEASE_ASSERT(next_lane != nullptr);
+      if(next_lane == nullptr)
+      {
+        continue;  // skip null pointers
+      }
       const auto lane_id = next_lane->GetId();
-      RELEASE_ASSERT(lane_id != 0);
+      if(lane_id == 0)
+      {
+        continue;  // skip lane with id 0
+      }
       const auto *section = next_lane->GetLaneSection();
-      RELEASE_ASSERT(section != nullptr);
+      if(section == nullptr)
+      {
+        continue;  // skip null pointers
+      }
       const auto *road = next_lane->GetRoad();
-      RELEASE_ASSERT(road != nullptr);
+      if(road == nullptr)
+      {
+        continue;  // skip null pointers
+      }
       const auto distance = GetDistanceAtStartOfLane(*next_lane);
       result.emplace_back(Waypoint{road->GetId(), section->GetId(), lane_id, distance});
     }
@@ -538,13 +670,24 @@ namespace road {
     std::vector<Waypoint> result;
     result.reserve(prev_lanes.size());
     for (auto *next_lane : prev_lanes) {
-      RELEASE_ASSERT(next_lane != nullptr);
+      if(next_lane == nullptr){
+        continue;  // skip null pointers
+      }
       const auto lane_id = next_lane->GetId();
-      RELEASE_ASSERT(lane_id != 0);
+      if(lane_id == 0)
+      {
+        continue;  // skip lane with id 0
+      }
       const auto *section = next_lane->GetLaneSection();
-      RELEASE_ASSERT(section != nullptr);
+      if(section == nullptr)
+      {
+        continue;  // skip null pointers
+      }
       const auto *road = next_lane->GetRoad();
-      RELEASE_ASSERT(road != nullptr);
+      if(road == nullptr)
+      {
+        continue;
+      }
       const auto distance = GetDistanceAtEndOfLane(*next_lane);
       result.emplace_back(Waypoint{road->GetId(), section->GetId(), lane_id, distance});
     }
@@ -559,7 +702,7 @@ namespace road {
       return {waypoint};
     }
     const auto &lane = GetLane(waypoint);
-    const bool forward = (waypoint.lane_id <= 0);
+    const bool forward = lane.IsPositiveDirection(); 
     const double signed_distance = forward ? distance : -distance;
     const double relative_s = waypoint.s - lane.GetDistance();
     const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
@@ -582,10 +725,23 @@ namespace road {
           successor.road_id != waypoint.road_id ||
           successor.section_id != waypoint.section_id ||
           successor.lane_id != waypoint.lane_id);
-      result = ConcatVectors(result, GetNext(successor, distance - remaining_lane_length));
-    }
+      // Fix situations, when next waypoint is in the opposite dirrection and
+      // this waypoint is his successor, so this function would end up in a loop
+      bool is_broken = false;
+      for (const auto &future_succcessor : GetSuccessors(successor)) {
+          if (future_succcessor.road_id == waypoint.road_id 
+               && future_succcessor.lane_id == waypoint.lane_id
+               && future_succcessor.section_id == waypoint.section_id){
+            is_broken = true;
+            break;
+            }
+      }  // end inner for
+      if (!is_broken){
+        result = ConcatVectors(result, GetNext(successor, distance - remaining_lane_length));
+      }
+    }  // end outer for
     return result;
-  }
+  }  // end GetNext
 
   std::vector<Waypoint> Map::GetPrevious(
       const Waypoint waypoint,
@@ -595,7 +751,7 @@ namespace road {
       return {waypoint};
     }
     const auto &lane = GetLane(waypoint);
-    const bool forward = !(waypoint.lane_id <= 0);
+    const bool forward = !lane.IsPositiveDirection();
     const double signed_distance = forward ? distance : -distance;
     const double relative_s = waypoint.s - lane.GetDistance();
     const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
@@ -618,31 +774,66 @@ namespace road {
           successor.road_id != waypoint.road_id ||
           successor.section_id != waypoint.section_id ||
           successor.lane_id != waypoint.lane_id);
-      result = ConcatVectors(result, GetPrevious(successor, distance - remaining_lane_length));
-    }
+      // Fix situations, when next waypoint is in the opposite dirrection and
+      // this waypoint is his predeccessor, so this function would end up in a loop
+      bool is_broken = false;
+      for (const auto &future_predecessor : GetPredecessors(successor)) {
+          if (future_predecessor.road_id == waypoint.road_id 
+               && future_predecessor.lane_id == waypoint.lane_id
+               && future_predecessor.section_id == waypoint.section_id){
+            is_broken = true;
+            break;
+            }
+      }  // end inner for
+      if (!is_broken){
+        result = ConcatVectors(result, GetPrevious(successor, distance - remaining_lane_length));
+      }
+    }  // end outer for
     return result;
-  }
+  }  // end GetPrevious
 
   boost::optional<Waypoint> Map::GetRight(Waypoint waypoint) const {
     RELEASE_ASSERT(waypoint.lane_id != 0);
-    if (waypoint.lane_id > 0) {
-      ++waypoint.lane_id;
+    bool is_rht = GetLane(waypoint).GetRoad()->IsRHT();
+    if (is_rht){
+      if (waypoint.lane_id > 0) {
+        ++waypoint.lane_id;
+      } else {
+        --waypoint.lane_id;
+      }
+      return IsLanePresent(_data, waypoint) ? waypoint : boost::optional<Waypoint>{};
     } else {
-      --waypoint.lane_id;
+      if (std::abs(waypoint.lane_id) == 1) {
+        waypoint.lane_id *= -1;
+      } else if (waypoint.lane_id > 0) {
+        --waypoint.lane_id;
+      } else {
+        ++waypoint.lane_id;
+      }
+      return IsLanePresent(_data, waypoint) ? waypoint : boost::optional<Waypoint>{};
     }
-    return IsLanePresent(_data, waypoint) ? waypoint : boost::optional<Waypoint>{};
   }
 
   boost::optional<Waypoint> Map::GetLeft(Waypoint waypoint) const {
     RELEASE_ASSERT(waypoint.lane_id != 0);
-    if (std::abs(waypoint.lane_id) == 1) {
-      waypoint.lane_id *= -1;
-    } else if (waypoint.lane_id > 0) {
-      --waypoint.lane_id;
+    bool is_rht = GetLane(waypoint).GetRoad()->IsRHT();
+    if (is_rht){
+      if (std::abs(waypoint.lane_id) == 1) {
+        waypoint.lane_id *= -1;
+      } else if (waypoint.lane_id > 0) {
+        --waypoint.lane_id;
+      } else {
+        ++waypoint.lane_id;
+      }
+      return IsLanePresent(_data, waypoint) ? waypoint : boost::optional<Waypoint>{};
     } else {
-      ++waypoint.lane_id;
+      if (waypoint.lane_id > 0) {
+        ++waypoint.lane_id;
+      } else {
+        --waypoint.lane_id;
+      }
+      return IsLanePresent(_data, waypoint) ? waypoint : boost::optional<Waypoint>{};
     }
-    return IsLanePresent(_data, waypoint) ? waypoint : boost::optional<Waypoint>{};
   }
 
   std::vector<Waypoint> Map::GenerateWaypoints(const double distance) const {
@@ -666,8 +857,7 @@ namespace road {
       // right lanes start at s 0
       for (const auto &lane_section : road.GetLaneSectionsAt(0.0)) {
         for (const auto &lane : lane_section.GetLanes()) {
-          // add only the right (negative) lanes
-          if (lane.first < 0 &&
+          if (lane.second.IsPositiveDirection() &&
               static_cast<int32_t>(lane.second.GetType()) & static_cast<int32_t>(lane_type)) {
             result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), 0.0 });
           }
@@ -677,8 +867,8 @@ namespace road {
       const auto road_len = road.GetLength();
       for (const auto &lane_section : road.GetLaneSectionsAt(road_len)) {
         for (const auto &lane : lane_section.GetLanes()) {
-          // add only the left (positive) lanes
-          if (lane.first > 0 &&
+          // LHT reversed. add the right (negative) lanes
+          if (!lane.second.IsPositiveDirection() &&
               static_cast<int32_t>(lane.second.GetType()) & static_cast<int32_t>(lane_type)) {
             result.emplace_back(
               Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), road_len });
@@ -698,8 +888,7 @@ namespace road {
       // right lanes start at s 0
       for (const auto &lane_section : road.GetLaneSectionsAt(0.0)) {
         for (const auto &lane : lane_section.GetLanes()) {
-          // add only the right (negative) lanes
-          if (lane.first < 0 &&
+          if (lane.second.IsPositiveDirection() &&
               static_cast<int32_t>(lane.second.GetType()) & static_cast<int32_t>(lane_type)) {
             result.emplace_back(Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), 0.0 });
           }
@@ -709,8 +898,7 @@ namespace road {
       const auto road_len = road.GetLength();
       for (const auto &lane_section : road.GetLaneSectionsAt(road_len)) {
         for (const auto &lane : lane_section.GetLanes()) {
-          // add only the left (positive) lanes
-          if (lane.first > 0 &&
+          if (!lane.second.IsPositiveDirection() &&
               static_cast<int32_t>(lane.second.GetType()) & static_cast<int32_t>(lane_type)) {
             result.emplace_back(
               Waypoint{ road.GetId(), lane_section.GetId(), lane.second.GetId(), road_len });
@@ -877,7 +1065,7 @@ namespace road {
   // returns the remaining length of the geometry depending on the lane
   // direction
   double GetRemainingLength(const Lane &lane, double current_s) {
-    if (lane.GetId() < 0) {
+    if (lane.IsPositiveDirection()) {
       return (lane.GetDistance() + lane.GetLength() - current_s);
     } else {
       return (current_s - lane.GetDistance());
@@ -1232,12 +1420,17 @@ namespace road {
             while(s_current < s_end){
               if(lane->GetWidth(s_current) != 0.0f){
                 const auto edges = lane->GetCornerPositions(s_current, 0);
+                if (edges.first == edges.second) continue;
                 geom::Vector3D director = edges.second - edges.first;
                 geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
                 geom::Transform lanetransform = lane->ComputeTransform(s_current);
                 geom::Transform treeTransform(treeposition, lanetransform.rotation);
                 const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
-                transforms.push_back(std::make_pair(treeTransform,roadinfo->GetType()));
+                if(roadinfo){
+                  transforms.push_back(std::make_pair(treeTransform, roadinfo->GetType()));
+                }else{
+                  transforms.push_back(std::make_pair(treeTransform, "urban"));
+                }
               }
               s_current += distancebetweentrees;
             }
@@ -1431,7 +1624,7 @@ namespace road {
     std::cout << "Filtered from " + std::to_string(_data.GetRoads().size() ) + " roads " << std::endl;
     for( auto& road : _data.GetRoads() ){
       auto &&lane_section = (*road.second.GetLaneSections().begin());
-      const road::Lane* lane = lane_section.GetLane(-1);
+      const road::Lane* lane = road.second.IsRHT() ? lane_section.GetLane(-1) : lane_section.GetLane(1);
       if( lane ) {
         const double s_check = lane_section.GetDistance() + lane_section.GetLength() * 0.5;
         geom::Location roadLocation = lane->ComputeTransform(s_check).location;

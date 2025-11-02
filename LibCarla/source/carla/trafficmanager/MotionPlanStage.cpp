@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -14,6 +14,7 @@
 #include "carla/trafficmanager/PIDController.h"
 
 #include "carla/trafficmanager/MotionPlanStage.h"
+#include "carla/sensor/data/Color.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -42,7 +43,8 @@ MotionPlanStage::MotionPlanStage(
   const cc::World &world,
   ControlFrame &output_array,
   RandomGenerator &random_device,
-  const LocalMapPtr &local_map)
+  const LocalMapPtr &local_map,
+  std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles)
     : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     parameters(parameters),
@@ -58,7 +60,8 @@ MotionPlanStage::MotionPlanStage(
     world(world),
     output_array(output_array),
     random_device(random_device),
-    local_map(local_map) {}
+    local_map(local_map),
+    large_vehicles(large_vehicles) {}
 
 void MotionPlanStage::Update(const unsigned long index) {
   const ActorId actor_id = vehicle_id_list.at(index);
@@ -155,24 +158,32 @@ void MotionPlanStage::Update(const unsigned long index) {
     if (vehicle_physics_enabled && !simulation_state.IsDormant(actor_id)) {
       ActuationSignal actuation_signal{0.0f, 0.0f, 0.0f};
 
+      // Get the targer data.
       const float target_point_distance = std::max(vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
-                                                  MIN_TARGET_WAYPOINT_DISTANCE);
-      const SimpleWaypointPtr &target_waypoint = GetTargetWaypoint(waypoint_buffer, target_point_distance).first;
-      cg::Location target_location = target_waypoint->GetLocation();
+                                                   MIN_TARGET_WAYPOINT_DISTANCE);
+      auto target_pair = GetTargetLocation(waypoint_buffer, target_point_distance, vehicle_location);
+      cg::Location target_location = target_pair.first;
+      uint64_t target_index = target_pair.second;
+      SimpleWaypointPtr target_waypoint = waypoint_buffer.at(target_index);
 
-      float offset = parameters.GetLaneOffset(actor_id);
+      float base_offset = CalculateBaseOffset(actor_id, waypoint_buffer, target_waypoint->CheckJunction(), target_index);
+      float offset = parameters.GetLaneOffset(actor_id) + base_offset;
       auto right_vector = target_waypoint->GetTransform().GetRightVector();
       auto offset_location = cg::Location(cg::Vector3D(offset*right_vector.x, offset*right_vector.y, 0.0f));
       target_location = target_location + offset_location;
 
-      float dot_product = DeviationDotProduct(vehicle_location, vehicle_heading, target_location);
-      float cross_product = DeviationCrossProduct(vehicle_location, vehicle_heading, target_location);
-      dot_product = acos(dot_product) / PI;
-      if (cross_product < 0.0f) {
-        dot_product *= -1.0f;
+      // Get the targer deviations.
+      cg::Vector3D target_vector = target_location - vehicle_location;
+      float target_yaw = std::atan2(target_vector.y, target_vector.x) *180.0f / PI;
+      float angular_deviation = target_yaw - vehicle_rotation.yaw;
+      if (angular_deviation > 180.0f) {
+        angular_deviation = angular_deviation - 360.0f;
+      } else if (angular_deviation < -180.0f) {
+        angular_deviation = angular_deviation + 360.0f;
       }
-      const float angular_deviation = dot_product;
+      angular_deviation = angular_deviation / 180.0f;  // Between -1 and 1
       const float velocity_deviation = (dynamic_target_velocity - vehicle_speed) / dynamic_target_velocity;
+
       // If previous state for vehicle not found, initialize state entry.
       if (pid_state_map.find(actor_id) == pid_state_map.end()) {
         const auto initial_state = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f};
@@ -208,7 +219,6 @@ void MotionPlanStage::Update(const unsigned long index) {
       }
 
       // Constructing the actuation signal.
-
       carla::rpc::VehicleControl vehicle_control;
       vehicle_control.throttle = actuation_signal.throttle;
       vehicle_control.brake = actuation_signal.brake;
@@ -267,6 +277,63 @@ void MotionPlanStage::Update(const unsigned long index) {
   }
 }
 
+std::pair<cg::Location, uint64_t> MotionPlanStage::GetTargetLocation(const Buffer &waypoint_buffer,
+                                                                     float target_distance,
+                                                                     cg::Location vehicle_location){
+
+    // If there is only one point, return it.
+    if (waypoint_buffer.size() == 1){
+      return std::make_pair(waypoint_buffer.front()->GetLocation(), 0);
+    }
+
+    float target_square_distance = target_distance * target_distance;
+
+    // Get the two closest waypoints.
+    size_t closest_index = 0;
+    size_t farthest_index = 0;
+    for (uint64_t i = 0; i < waypoint_buffer.size(); i++) {
+        float close_square_dist = vehicle_location.DistanceSquared(waypoint_buffer.at(i)->GetLocation());
+        if (close_square_dist < target_square_distance){
+          closest_index = i;
+        } else {
+          farthest_index = i;
+          break;
+        }
+    }
+
+    // Edge cases
+    if (farthest_index == 0) {
+      closest_index = 0;
+      farthest_index = 1;
+    } else if (closest_index == waypoint_buffer.size() - 1) {
+      farthest_index = closest_index;
+      closest_index = closest_index - 1;
+    }
+
+    // Interpolate between the two waypoints.
+    cg::Location target_close_location = waypoint_buffer.at(closest_index)->GetLocation();
+    cg::Location target_far_location = waypoint_buffer.at(farthest_index)->GetLocation();
+    float target_close_distance = vehicle_location.Distance(target_close_location);
+    float target_far_distance = vehicle_location.Distance(target_far_location);
+
+    cg::Location target_location;
+    if (target_far_distance != target_close_distance){
+      float t = (target_distance - target_close_distance) / (target_far_distance - target_close_distance);
+      // This adds a little consistency as sometimes the buffer's front is further than the target distance.
+      t = std::max(t, 0.0f);
+      target_location = cg::Location(
+        target_close_location.x + (target_far_location.x - target_close_location.x) * t,
+        target_close_location.y + (target_far_location.y - target_close_location.y) * t,
+        target_close_location.z + (target_far_location.z - target_close_location.z) * t
+      );
+    } else {
+      // This actually happens, for some reason
+      target_location = target_close_location;
+    }
+
+    return std::make_pair(target_location, closest_index);
+  }
+
 bool MotionPlanStage::SafeAfterJunction(const LocalizationData &localization,
                                         const bool tl_hazard,
                                         const bool collision_emergency_stop) {
@@ -303,6 +370,59 @@ bool MotionPlanStage::SafeAfterJunction(const LocalizationData &localization,
   }
 
   return safe_after_junction;
+}
+
+float MotionPlanStage::CalculateBaseOffset(const ActorId actor_id,
+                                           const Buffer &waypoint_buffer,
+                                           const bool is_target_junction,
+                                           const uint64_t target_index){
+
+  // This offset is meant to make large vehicle do wider turns at intersections
+  if (large_vehicles.find(actor_id) == large_vehicles.end() || !is_target_junction){
+    return 0.0;
+  }
+
+  // Going straight at the intersection
+  if (large_vehicles[actor_id].first == 0.0f){
+    return 0.0f;
+  }
+
+  float junction_missing_length = 0.0f;
+  for (unsigned long i = target_index; i < waypoint_buffer.size(); ++i) {
+    SimpleWaypointPtr current_waypoint = waypoint_buffer.at(i);
+
+    if (i > 0){
+      SimpleWaypointPtr prev_waypoint = waypoint_buffer.at(i-1);
+      float new_distance = current_waypoint->Distance(prev_waypoint->GetLocation());
+      junction_missing_length = junction_missing_length + new_distance;
+    }
+
+    if (!current_waypoint->CheckJunction()) {
+      break;
+    }
+  }
+
+  float junction_length = large_vehicles[actor_id].first;
+  bool turn_flag = large_vehicles[actor_id].second;
+  float max_offset = LARGE_VEHICLES_JUNCTION_OFFSET;
+  float max_offset_point = LARGE_VEHICLES_JUNCTION_POINT;
+
+  // From offset to -offset, but making sure the entries and exits have offset 0 for smooth transition.
+  // i.e the vehicles opens up at the entry to perform a wider turn later on, exiting in a straighter trajectory.
+  float t = cg::Math::Clamp(junction_missing_length / junction_length, 0.0f, 1.0f);
+  float offset = 0.0;
+  if (t < max_offset_point) {
+    float a = t / max_offset_point;
+    offset = max_offset * 0.5f * (1.0f - cosf(PI * a));
+  } else if (t < 1.0f - max_offset_point) {
+    float a = (t - max_offset_point) / (1.0f - 2.0f * max_offset_point);
+    offset =  max_offset * cosf(PI * a);
+  } else if (t <= 1.0f) {
+    float a = (t - (1.0f - max_offset_point)) / max_offset_point;
+    offset = -max_offset * 0.5f * (1.0f + cosf(PI * a));
+  }
+  offset = turn_flag ? offset : -offset; // Change the sign depending on right / left turns
+  return offset;
 }
 
 std::pair<bool, float> MotionPlanStage::CollisionHandling(const CollisionHazardData &collision_hazard,

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 // Copyright (c) 2019 Intel Corporation
 //
@@ -200,6 +200,20 @@ void ACarlaWheeledVehicle::BeginPlay()
   }
 
   AddReferenceToManager();
+}
+
+void ACarlaWheeledVehicle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction){
+  Super::TickActor(DeltaTime, TickType, ThisTickFunction);
+
+  FPoseSnapshot pose;
+  GetMesh()->SnapshotPose(pose);
+  for(FTransform &transform : pose.LocalTransforms)
+  {
+    transform *= GetMesh()->GetComponentTransform();
+  }
+  
+  WorldTransformedPose = pose;
+
 }
 
 bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
@@ -459,21 +473,27 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
     {
       FWheelPhysicsControl PhysicsWheel;
 
-      PxVehicleWheelData PWheelData = Vehicle4W->PVehicle->mWheelsSimData.getWheelData(i);
-      PhysicsWheel.DampingRate = Cm2ToM2(PWheelData.mDampingRate);
-      PhysicsWheel.MaxSteerAngle = FMath::RadiansToDegrees(PWheelData.mMaxSteer);
-      PhysicsWheel.Radius = PWheelData.mRadius;
-      PhysicsWheel.MaxBrakeTorque = Cm2ToM2(PWheelData.mMaxBrakeTorque);
-      PhysicsWheel.MaxHandBrakeTorque = Cm2ToM2(PWheelData.mMaxHandBrakeTorque);
+      if (bPhysicsEnabled) {
+        PxVehicleWheelData PWheelData = Vehicle4W->PVehicle->mWheelsSimData.getWheelData(i);
 
-      PxVehicleTireData PTireData = Vehicle4W->PVehicle->mWheelsSimData.getTireData(i);
-      PhysicsWheel.LatStiffMaxLoad = PTireData.mLatStiffX;
-      PhysicsWheel.LatStiffValue = PTireData.mLatStiffY;
-      PhysicsWheel.LongStiffValue = PTireData.mLongitudinalStiffnessPerUnitGravity;
+        PhysicsWheel.DampingRate = Cm2ToM2(PWheelData.mDampingRate);
+        PhysicsWheel.MaxSteerAngle = FMath::RadiansToDegrees(PWheelData.mMaxSteer);
+        PhysicsWheel.Radius = PWheelData.mRadius;
+        PhysicsWheel.MaxBrakeTorque = Cm2ToM2(PWheelData.mMaxBrakeTorque);
+        PhysicsWheel.MaxHandBrakeTorque = Cm2ToM2(PWheelData.mMaxHandBrakeTorque);
 
-      PhysicsWheel.TireFriction = Vehicle4W->Wheels[i]->TireConfig->GetFrictionScale();
-      PhysicsWheel.Position = Vehicle4W->Wheels[i]->Location;
+        PxVehicleTireData PTireData = Vehicle4W->PVehicle->mWheelsSimData.getTireData(i);
 
+        PhysicsWheel.LatStiffMaxLoad = PTireData.mLatStiffX;
+        PhysicsWheel.LatStiffValue = PTireData.mLatStiffY;
+        PhysicsWheel.LongStiffValue = PTireData.mLongitudinalStiffnessPerUnitGravity;
+        PhysicsWheel.TireFriction = Vehicle4W->Wheels[i]->TireConfig->GetFrictionScale();
+        PhysicsWheel.Position = Vehicle4W->Wheels[i]->Location;
+      } else {
+        if (i < LastPhysicsControl.Wheels.Num()) {
+          PhysicsWheel = LastPhysicsControl.Wheels[i];
+        }
+      }
       Wheels.Add(PhysicsWheel);
     }
 
@@ -537,17 +557,23 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
     {
       FWheelPhysicsControl PhysicsWheel;
 
-      PxVehicleWheelData PWheelData = VehicleNW->PVehicle->mWheelsSimData.getWheelData(i);
-      PhysicsWheel.DampingRate = Cm2ToM2(PWheelData.mDampingRate);
-      PhysicsWheel.MaxSteerAngle = FMath::RadiansToDegrees(PWheelData.mMaxSteer);
-      PhysicsWheel.Radius = PWheelData.mRadius;
-      PhysicsWheel.MaxBrakeTorque = Cm2ToM2(PWheelData.mMaxBrakeTorque);
-      PhysicsWheel.MaxHandBrakeTorque = Cm2ToM2(PWheelData.mMaxHandBrakeTorque);
+      if (bPhysicsEnabled) {
+        PxVehicleWheelData PWheelData = VehicleNW->PVehicle->mWheelsSimData.getWheelData(i);
+        PhysicsWheel.DampingRate = Cm2ToM2(PWheelData.mDampingRate);
+        PhysicsWheel.MaxSteerAngle = FMath::RadiansToDegrees(PWheelData.mMaxSteer);
+        PhysicsWheel.Radius = PWheelData.mRadius;
+        PhysicsWheel.MaxBrakeTorque = Cm2ToM2(PWheelData.mMaxBrakeTorque);
+        PhysicsWheel.MaxHandBrakeTorque = Cm2ToM2(PWheelData.mMaxHandBrakeTorque);
 
-      PxVehicleTireData PTireData = VehicleNW->PVehicle->mWheelsSimData.getTireData(i);
-      PhysicsWheel.LatStiffMaxLoad = PTireData.mLatStiffX;
-      PhysicsWheel.LatStiffValue = PTireData.mLatStiffY;
-      PhysicsWheel.LongStiffValue = PTireData.mLongitudinalStiffnessPerUnitGravity;
+        PxVehicleTireData PTireData = VehicleNW->PVehicle->mWheelsSimData.getTireData(i);
+        PhysicsWheel.LatStiffMaxLoad = PTireData.mLatStiffX;
+        PhysicsWheel.LatStiffValue = PTireData.mLatStiffY;
+        PhysicsWheel.LongStiffValue = PTireData.mLongitudinalStiffnessPerUnitGravity;
+      } else {
+        if (i < LastPhysicsControl.Wheels.Num()) {
+          PhysicsWheel = LastPhysicsControl.Wheels[i];
+        }
+      }
 
       PhysicsWheel.TireFriction = VehicleNW->Wheels[i]->TireConfig->GetFrictionScale();
       PhysicsWheel.Position = VehicleNW->Wheels[i]->Location;
@@ -800,6 +826,56 @@ void ACarlaWheeledVehicle::DeactivateVelocityControl()
   VelocityControl->Deactivate();
 }
 
+FVehicleTelemetryData ACarlaWheeledVehicle::GetVehicleTelemetryData() const
+{
+  FVehicleTelemetryData TelemetryData;
+
+  auto *MovementComponent = GetVehicleMovement();
+
+  // Vehicle telemetry data
+  TelemetryData.Speed = GetVehicleForwardSpeed() / 100.0f;  // From cm/s to m/s
+  TelemetryData.Steer = LastAppliedControl.Steer;
+  TelemetryData.Throttle = LastAppliedControl.Throttle;
+  TelemetryData.Brake = LastAppliedControl.Brake;
+  TelemetryData.EngineRPM = MovementComponent->GetEngineRotationSpeed();
+  TelemetryData.Gear = GetVehicleCurrentGear();
+  TelemetryData.Drag = MovementComponent->DebugDragMagnitude / 100.0f;  // kg*cm/s2 to Kg*m/s2
+
+  // Wheels telemetry data
+  FPhysXVehicleManager* MyVehicleManager = FPhysXVehicleManager::GetVehicleManagerFromScene(GetWorld()->GetPhysicsScene());
+
+  SCOPED_SCENE_READ_LOCK(MyVehicleManager->GetScene());
+  PxWheelQueryResult* WheelsStates = MyVehicleManager->GetWheelsStates_AssumesLocked(MovementComponent);
+  check(WheelsStates);
+
+  TArray<FWheelTelemetryData> Wheels;
+  for (uint32 w = 0; w < MovementComponent->PVehicle->mWheelsSimData.getNbWheels(); ++w)
+  {
+    FWheelTelemetryData WheelTelemetryData;
+
+    WheelTelemetryData.TireFriction = WheelsStates[w].tireFriction;
+    WheelTelemetryData.LatSlip = FMath::RadiansToDegrees(WheelsStates[w].lateralSlip);
+    WheelTelemetryData.LongSlip = WheelsStates[w].longitudinalSlip;
+    WheelTelemetryData.Omega = MovementComponent->PVehicle->mWheelsDynData.getWheelRotationSpeed(w);
+
+    UVehicleWheel* Wheel = MovementComponent->Wheels[w];
+    WheelTelemetryData.TireLoad = Wheel->DebugTireLoad / 100.0f;
+    WheelTelemetryData.NormalizedTireLoad = Wheel->DebugNormalizedTireLoad;
+    WheelTelemetryData.Torque = Wheel->DebugWheelTorque / (100.0f * 100.0f);  // From cm2 to m2
+    WheelTelemetryData.LongForce = Wheel->DebugLongForce / 100.f;
+    WheelTelemetryData.LatForce = Wheel->DebugLatForce / 100.f;
+    WheelTelemetryData.NormalizedLongForce = (FMath::Abs(WheelTelemetryData.LongForce)*WheelTelemetryData.NormalizedTireLoad) / (WheelTelemetryData.TireLoad);
+    WheelTelemetryData.NormalizedLatForce = (FMath::Abs(WheelTelemetryData.LatForce)*WheelTelemetryData.NormalizedTireLoad) / (WheelTelemetryData.TireLoad);
+
+    Wheels.Add(WheelTelemetryData);
+  }
+
+  TelemetryData.Wheels = Wheels;
+
+  return TelemetryData;
+
+}
+
 void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
 {
   if (GetWorld()->GetFirstPlayerController())
@@ -869,7 +945,7 @@ void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLoc
   }
   else
   {
-    UE_LOG(LogTemp, Warning, TEXT("Cannot set wheel steer direction. Physics are enabled."))
+    UE_LOG(LogCarla, Warning, TEXT("Cannot set wheel steer direction. Physics are enabled."));
   }
 }
 
@@ -887,6 +963,38 @@ float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocati
   else
   {
     return VehicleAnim->GetWheelRotAngle((uint8)WheelLocation);
+  }
+}
+
+void ACarlaWheeledVehicle::SetWheelPitchAngle(EVehicleWheelLocation WheelLocation, float AngleInDeg) {
+
+  if (bPhysicsEnabled == false)
+  {
+    check((uint8)WheelLocation >= 0)
+    UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+    check(VehicleAnim != nullptr)
+    VehicleAnim->SetWheelPitchAngle((uint8)WheelLocation, AngleInDeg);
+  }
+  else
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Cannot set wheel pitch angle. Physics are enabled."))
+  }
+}
+
+float ACarlaWheeledVehicle::GetWheelPitchAngle(EVehicleWheelLocation WheelLocation) {
+
+  check((uint8)WheelLocation >= 0)
+  UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+  check(VehicleAnim->GetWheeledVehicleMovementComponent() != nullptr)
+
+  if (bPhysicsEnabled == true) 
+  {
+    return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetRotationAngle();
+  }
+  else 
+  {
+    return VehicleAnim->GetWheelPitchAngle((uint8)WheelLocation);
   }
 }
 
@@ -958,7 +1066,7 @@ void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ACarlaWheeledVehicle::OpenDoor(const EVehicleDoor DoorIdx) {
   if (int(DoorIdx) >= ConstraintsComponents.Num() && DoorIdx != EVehicleDoor::All) {
-    UE_LOG(LogTemp, Warning, TEXT("This door is not configured for this car."));
+    UE_LOG(LogCarla, Warning, TEXT("This door is not configured for this car."));
     return;
   }
 
@@ -975,7 +1083,7 @@ void ACarlaWheeledVehicle::OpenDoor(const EVehicleDoor DoorIdx) {
 
 void ACarlaWheeledVehicle::CloseDoor(const EVehicleDoor DoorIdx) {
   if (int(DoorIdx) >= ConstraintsComponents.Num() && DoorIdx != EVehicleDoor::All) {
-    UE_LOG(LogTemp, Warning, TEXT("This door is not configured for this car."));
+    UE_LOG(LogCarla, Warning, TEXT("This door is not configured for this car."));
     return;
   }
 
@@ -1019,6 +1127,8 @@ void ACarlaWheeledVehicle::OpenDoorPhys(const EVehicleDoor DoorIdx)
   {
     (*CollisionDisable)->InitComponentConstraint();
   }
+
+  RecordDoorChange(DoorIdx, true);
 }
 
 void ACarlaWheeledVehicle::CloseDoorPhys(const EVehicleDoor DoorIdx)
@@ -1032,6 +1142,16 @@ void ACarlaWheeledVehicle::CloseDoorPhys(const EVehicleDoor DoorIdx)
   DoorComponent->SetWorldTransform(DoorInitialTransform);
   DoorComponent->AttachToComponent(
       GetMesh(), FAttachmentTransformRules(EAttachmentRule::KeepWorld, true));
+  RecordDoorChange(DoorIdx, false);
+}
+
+void ACarlaWheeledVehicle::RecordDoorChange(const EVehicleDoor DoorIdx, bool bIsOpen)
+{
+  auto * Recorder = UCarlaStatics::GetRecorder(GetWorld());
+  if (Recorder && Recorder->IsEnabled())
+  {
+      Recorder->AddVehicleDoor(*this, DoorIdx, bIsOpen);
+  }
 }
 
 void ACarlaWheeledVehicle::ApplyRolloverBehavior()
@@ -1121,4 +1241,18 @@ void ACarlaWheeledVehicle::SetPhysicsConstraintAngle(
     UPhysicsConstraintComponent* Component, const FRotator &NewAngle)
 {
   Component->ConstraintInstance.AngularRotationOffset = NewAngle;
+}
+
+FPoseSnapshot ACarlaWheeledVehicle::GetWorldTransformedPose()
+{
+  if(WorldTransformedPose.bIsValid == false)
+  {
+    SetActorTickEnabled(true);
+    GetMesh()->SnapshotPose(WorldTransformedPose);
+    for(FTransform &transform : WorldTransformedPose.LocalTransforms)
+    {
+      transform *= GetMesh()->GetComponentTransform();
+    }
+  }
+  return WorldTransformedPose;
 }

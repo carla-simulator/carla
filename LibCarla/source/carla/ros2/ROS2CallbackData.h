@@ -1,10 +1,12 @@
-// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
+
+#include <functional>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -30,7 +32,19 @@ namespace ros2 {
     bool    manual_gear_shift;
   };
 
-  using ROS2CallbackData = boost::variant2::variant<VehicleControl>;
+  struct AckermannControl
+  {
+    float steer;
+    float steer_speed;
+    float speed;
+    float acceleration;
+    float jerk;
+  };
+
+  using ROS2CallbackData = boost::variant2::variant<
+    VehicleControl,
+    AckermannControl
+  >;
 
   using ActorCallback = std::function<void(void *actor, ROS2CallbackData data)>;
 

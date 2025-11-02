@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -30,6 +30,13 @@ namespace client {
         float life_time = -1.0f,
         bool persistent_lines = true);
 
+    void DrawHUDPoint(
+        const geom::Location &location,
+        float size = 0.1f,
+        Color color = Color{255u, 0u, 0u},
+        float life_time = -1.0f,
+        bool persistent_lines = true);
+
     void DrawLine(
         const geom::Location &begin,
         const geom::Location &end,
@@ -38,7 +45,24 @@ namespace client {
         float life_time = -1.0f,
         bool persistent_lines = true);
 
+    void DrawHUDLine(
+        const geom::Location &begin,
+        const geom::Location &end,
+        float thickness = 1.0f,
+        Color color = Color{225u, 0u, 0u},
+        float life_time = -1.0f,
+        bool presistent_lines = true);
+
     void DrawArrow(
+        const geom::Location &begin,
+        const geom::Location &end,
+        float thickness = 0.1f,
+        float arrow_size = 0.1f,
+        Color color = Color{255u, 0u, 0u},
+        float life_time = -1.0f,
+        bool persistent_lines = true);
+
+    void DrawHUDArrow(
         const geom::Location &begin,
         const geom::Location &end,
         float thickness = 0.1f,
@@ -55,6 +79,14 @@ namespace client {
         float life_time = -1.0f,
         bool persistent_lines = true);
 
+    void DrawHUDBox(
+        const geom::BoundingBox &box,
+        const geom::Rotation &rotation,
+        float thickness = 0.1f,
+        Color color = Color{255u, 0u, 0u},
+        float life_time = -1.0f,
+        bool persistent_lines = true);
+
     void DrawString(
         const geom::Location &location,
         const std::string &text,
@@ -62,6 +94,10 @@ namespace client {
         Color color = Color{255u, 0u, 0u},
         float life_time = -1.0f,
         bool persistent_lines = true);
+
+    void ClearDebugShape();
+
+    void ClearDebugString();
 
   private:
 

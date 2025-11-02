@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -144,7 +144,12 @@ void AOpenDriveActor::BuildRoutes(FString MapName)
 
   // As the OpenDrive file has the same name as level, build the path to the
   // xodr file using the lavel name and the game content directory.
-  const FString XodrContent = UOpenDrive::LoadXODR(MapName);
+  static FString XodrContent;
+  if (CustomPath.IsEmpty()){
+    XodrContent = UOpenDrive::LoadXODR(MapName);
+  } else {
+    XodrContent = UOpenDrive::LoadXODRFullPath(CustomPath);
+  }
 
   auto map = carla::opendrive::OpenDriveParser::Load(carla::rpc::FromLongFString(XodrContent));
 

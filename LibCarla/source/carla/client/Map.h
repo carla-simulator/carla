@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -14,6 +14,7 @@
 #include "carla/road/RoadTypes.h"
 #include "carla/rpc/MapInfo.h"
 #include "Landmark.h"
+#include "RoadMark.h"
 
 #include <string>
 
@@ -73,6 +74,8 @@ namespace client {
 
     const geom::GeoLocation &GetGeoReference() const;
 
+    const geom::GeoProjection &GetGeoProjection() const;
+
     std::vector<geom::Location> GetAllCrosswalkZones() const;
 
     SharedPtr<Junction> GetJunction(const Waypoint &waypoint) const;
@@ -93,6 +96,15 @@ namespace client {
 
     /// Returns all the landmarks in the same group including this one
     std::vector<SharedPtr<Landmark>> GetLandmarkGroup(const Landmark &landmark) const;
+
+    /// Returns all the road marks in the map
+    std::vector<SharedPtr<RoadMark>> GetAllRoadMarks() const;
+
+    /// Returns all the road marks in the map with a specific OpenDRIVE id
+    std::vector<SharedPtr<RoadMark>> GetRoadMarksFromId(std::string id) const;
+
+    /// Returns all the road marks in the map of a specific type
+    std::vector<SharedPtr<RoadMark>> GetAllRoadMarksOfType(std::string type) const;
 
     /// Cooks InMemoryMap used by the traffic manager
     void CookInMemoryMap(const std::string& path) const;

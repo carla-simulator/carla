@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -14,6 +14,7 @@
 #include "carla/rpc/VehicleDoor.h"
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
+#include "carla/rpc/VehicleTelemetryData.h"
 #include "carla/rpc/VehicleWheels.h"
 #include "carla/trafficmanager/TrafficManager.h"
 
@@ -35,6 +36,7 @@ namespace client {
     using Control = rpc::VehicleControl;
     using AckermannControl = rpc::VehicleAckermannControl;
     using PhysicsControl = rpc::VehiclePhysicsControl;
+    using TelemetryData = rpc::VehicleTelemetryData;
     using LightState = rpc::VehicleLightState::LightState;
     using TM = traffic_manager::TrafficManager;
     using VehicleDoor = rpc::VehicleDoor;
@@ -45,6 +47,11 @@ namespace client {
 
     /// Switch on/off this vehicle's autopilot.
     void SetAutopilot(bool enabled = true, uint16_t tm_port = TM_DEFAULT_PORT);
+
+    /// Return the telemetry data for this vehicle.
+    ///
+    /// @warning This function does call the simulator.
+    TelemetryData GetTelemetryData() const;
 
     /// Switch on/off this vehicle's autopilot.
     void ShowDebugTelemetry(bool enabled = true);
@@ -83,6 +90,14 @@ namespace client {
     /// @note The function returns the rotation of the vehicle based on the it's physics
     float GetWheelSteerAngle(WheelLocation wheel_location);
 
+    /// Sets a @a Pitch Angle to a wheel of the vehicle (affects the bone of the car skeleton, not the physics)
+    void SetWheelPitchAngle(WheelLocation wheel_location, float angle_in_deg);
+
+    /// Return a @a Pitch Angle from a wheel of the vehicle
+    ///
+    /// @note The function returns the pitch angle of the vehicle based on the it's physics
+    float GetWheelPitchAngle(WheelLocation wheel_location);
+
     /// Return the control last applied to this vehicle.
     ///
     /// @note This function does not call the simulator, it returns the data
@@ -99,6 +114,8 @@ namespace client {
     /// @note This function does not call the simulator, it returns the data
     /// received in the last tick.
     LightState GetLightState() const;
+
+    std::vector<geom::Transform> GetVehicleBoneWorldTransforms() const;
 
     /// Return the speed limit currently affecting this vehicle.
     ///
@@ -136,6 +153,8 @@ namespace client {
         std::string PowertrainJSON = "",
         std::string TireJSON = "",
         std::string BaseJSONPath = "");
+
+    void RestorePhysXPhysics();
 
     /// Returns the failure state of the vehicle
     rpc::VehicleFailureState GetFailureState() const;

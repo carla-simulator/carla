@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -12,11 +12,11 @@ namespace carla {
 namespace rpc {
 
   enum class ActorAttributeType : uint8_t {
-    Bool,
-    Int,
-    Float,
-    String,
-    RGBColor,
+    Bool = 1u,
+    Int = 2u,
+    Float = 3u,
+    String = 4u,
+    RGBColor = 5u,
 
     SIZE,
     INVALID

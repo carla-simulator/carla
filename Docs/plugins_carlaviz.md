@@ -28,7 +28,7 @@ The carlaviz plugin is used to visualize the simulation in a web browser. A wind
 
 *   __Docker__ — Visit the docs and [install Docker](https://docs.docker.com/get-docker/).  
 *   __Operative system__ — Any OS able to run CARLA should work.  
-*   __Websocket-client__ — ```pip3 install websocket_client```. Install [pip](https://pip.pypa.io/en/stable/installing/) if it is not already in the system.  
+*   __Websocket-client__ — ```python3 -m pip install websocket_client```. Install [pip](https://pip.pypa.io/en/stable/installing/) if it is not already in the system.  
 
 ### Download the plugin
 

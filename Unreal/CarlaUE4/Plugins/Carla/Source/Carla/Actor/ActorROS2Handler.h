@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -17,7 +17,8 @@ class ActorROS2Handler
         ActorROS2Handler() = delete;
         ActorROS2Handler(AActor *Actor, std::string RosName) : _Actor(Actor), _RosName(RosName) {};
 
-        void operator()(carla::ros2::VehicleControl &Source);
+    void operator()(carla::ros2::VehicleControl &Source);
+    void operator()(carla::ros2::AckermannControl &Source);
 
     private:
         AActor *_Actor {nullptr};

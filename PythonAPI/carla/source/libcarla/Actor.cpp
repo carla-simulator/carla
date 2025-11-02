@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -49,9 +49,19 @@ static void AddActorImpulse(carla::client::Actor &self,
   self.AddImpulse(impulse);
 }
 
+static void AddActorImpulseAtLocation(carla::client::Actor &self,
+    const carla::geom::Vector3D &impulse, const carla::geom::Location &location) {
+  self.AddImpulse(impulse, location);
+}
+
 static void AddActorForce(carla::client::Actor &self,
     const carla::geom::Vector3D &force) {
   self.AddForce(force);
+}
+
+static void AddActorForceAtLocation(carla::client::Actor &self,
+  const carla::geom::Vector3D &force, const carla::geom::Location &location) {
+self.AddForce(force, location);
 }
 
 static auto GetGroupTrafficLights(carla::client::TrafficLight &self) {
@@ -113,6 +123,15 @@ void export_actor() {
       .def("get_velocity", &cc::Actor::GetVelocity)
       .def("get_angular_velocity", &cc::Actor::GetAngularVelocity)
       .def("get_acceleration", &cc::Actor::GetAcceleration)
+      .def("get_component_world_transform", &cc::Actor::GetComponentWorldTransform, (arg("component_name")))
+      .def("get_component_relative_transform", &cc::Actor::GetComponentRelativeTransform, (arg("component_name")))
+      .def("get_bone_world_transforms", CALL_RETURNING_LIST(cc::Actor,GetBoneWorldTransforms))
+      .def("get_bone_relative_transforms", CALL_RETURNING_LIST(cc::Actor,GetBoneRelativeTransforms))
+      .def("get_component_names", CALL_RETURNING_LIST(cc::Actor,GetComponentNames))
+      .def("get_bone_names", CALL_RETURNING_LIST(cc::Actor,GetBoneNames))
+      .def("get_socket_world_transforms", CALL_RETURNING_LIST(cc::Actor,GetSocketWorldTransforms))
+      .def("get_socket_relative_transforms", CALL_RETURNING_LIST(cc::Actor,GetSocketRelativeTransforms))   
+      .def("get_socket_names", CALL_RETURNING_LIST(cc::Actor,GetSocketNames))         
       .def("set_location", &cc::Actor::SetLocation, (arg("location")))
       .def("set_transform", &cc::Actor::SetTransform, (arg("transform")))
       .def("set_target_velocity", &cc::Actor::SetTargetVelocity, (arg("velocity")))
@@ -120,7 +139,9 @@ void export_actor() {
       .def("enable_constant_velocity", &cc::Actor::EnableConstantVelocity, (arg("velocity")))
       .def("disable_constant_velocity", &cc::Actor::DisableConstantVelocity)
       .def("add_impulse", &AddActorImpulse, (arg("impulse")))
+      .def("add_impulse_at_location", &AddActorImpulseAtLocation, (arg("impulse"), arg("location")))
       .def("add_force", &AddActorForce, (arg("force")))
+      .def("add_force_at_location", &AddActorForceAtLocation, (arg("force"), arg("location")))
       .def("add_angular_impulse", &cc::Actor::AddAngularImpulse, (arg("angular_impulse")))
       .def("add_torque", &cc::Actor::AddTorque, (arg("torque")))
       .def("set_simulate_physics", &cc::Actor::SetSimulatePhysics, (arg("enabled") = true))
@@ -180,12 +201,15 @@ void export_actor() {
       .def("close_door", &cc::Vehicle::CloseDoor, (arg("door_idx")))
       .def("set_wheel_steer_direction", &cc::Vehicle::SetWheelSteerDirection, (arg("wheel_location")), (arg("angle_in_deg")))
       .def("get_wheel_steer_angle", &cc::Vehicle::GetWheelSteerAngle, (arg("wheel_location")))
+      .def("set_wheel_pitch_angle", &cc::Vehicle::SetWheelPitchAngle, (arg("wheel_location")), (arg("angle_in_deg")))
+      .def("get_wheel_pitch_angle", &cc::Vehicle::GetWheelPitchAngle, (arg("wheel_location")))
       .def("get_light_state", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetLightState))
       .def("apply_physics_control", &cc::Vehicle::ApplyPhysicsControl, (arg("physics_control")))
       .def("get_physics_control", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetPhysicsControl))
       .def("apply_ackermann_controller_settings", &cc::Vehicle::ApplyAckermannControllerSettings, (arg("settings")))
       .def("get_ackermann_controller_settings", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetAckermannControllerSettings))
       .def("set_autopilot", CALL_WITHOUT_GIL_2(cc::Vehicle, SetAutopilot, bool, uint16_t), (arg("enabled") = true, arg("tm_port") = ctm::TM_DEFAULT_PORT))
+      .def("get_telemetry_data", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetTelemetryData))
       .def("show_debug_telemetry", &cc::Vehicle::ShowDebugTelemetry, (arg("enabled") = true))
       .def("get_speed_limit", &cc::Vehicle::GetSpeedLimit)
       .def("get_traffic_light_state", &cc::Vehicle::GetTrafficLightState)
@@ -194,7 +218,9 @@ void export_actor() {
       .def("enable_carsim", &cc::Vehicle::EnableCarSim, (arg("simfile_path") = ""))
       .def("use_carsim_road", &cc::Vehicle::UseCarSimRoad, (arg("enabled")))
       .def("enable_chrono_physics", &cc::Vehicle::EnableChronoPhysics, (arg("max_substeps")=30, arg("max_substep_delta_time")=0.002, arg("vehicle_json")="", arg("powetrain_json")="", arg("tire_json")="", arg("base_json_path")=""))
+      .def("restore_physx_physics", &cc::Vehicle::RestorePhysXPhysics)
       .def("get_failure_state", &cc::Vehicle::GetFailureState)
+      .def("get_vehicle_bone_world_transforms", &cc::Vehicle::GetVehicleBoneWorldTransforms)
       .def(self_ns::str(self_ns::self))
   ;
 

@@ -1,0 +1,131 @@
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
+#include "/Engine/Public/Platform.ush"
+
+
+
+// Reference:
+// https://www.researchgate.net/publication/6899685_A_Generic_Camera_Model_and_Calibration_Method_for_Conventional_Wide-Angle_and_Fish-Eye_Lenses
+
+
+
+
+
+
+
+RWTexture2D<float4> OutImage;
+Texture2D CubeFront;
+Texture2D CubeBack;
+Texture2D CubeRight;
+Texture2D CubeLeft;
+Texture2D CubeTop;
+Texture2D CubeBottom;
+SamplerState FaceSampler;
+float YFOVAngle;
+float4 CameraParams;
+
+
+
+#include "CameraModelCommon.ush"
+
+
+
+[numthreads(
+	THREAD_GROUP_SIZE_X,
+	THREAD_GROUP_SIZE_Y,
+	THREAD_GROUP_SIZE_Z)]
+void MainCS(
+	in uint3 ThreadID : SV_DispatchThreadID)
+{
+	float Width, Height;
+	OutImage.GetDimensions(Width, Height);
+
+	if (ThreadID.x >= uint(Width) || uint(ThreadID.y) >= Height)
+		return;
+
+	const float2 FocalDistance = CameraParams.xy;
+	const float2 Center = CameraParams.zw;
+
+	const float2 PixelUV = (float2(ThreadID.xy) - Center) / FocalDistance;
+	const float R = length(PixelUV);
+	const float Theta = ComputeAngle(R);
+
+	const float Pi = 3.1415927410125732421875F;
+	const float PiHalf = Pi / 2.0F;
+
+	const float Phi = PiHalf - Theta;
+	const float Rho = atan2(PixelUV.y, PixelUV.x);
+
+	float PhiSin = 0.0F;
+	float PhiCos = 0.0F;
+	float RhoSin = 0.0F;
+	float RhoCos = 0.0F;
+
+	sincos(Phi, PhiSin, PhiCos);
+	sincos(Rho, RhoSin, RhoCos);
+	
+	float3 Direction = normalize(float3(
+		PhiSin,
+		PhiCos * RhoCos,
+		-PhiCos * RhoSin));
+
+	const float3 DirectionAbs = abs(Direction);
+	
+	uint FaceIndex = 0;
+
+	if (DirectionAbs.x >= DirectionAbs.y && DirectionAbs.x >= DirectionAbs.z)
+		FaceIndex = Direction.x < 0 ? 1 : 0;
+	else if (DirectionAbs.y >= DirectionAbs.x && DirectionAbs.y >= DirectionAbs.z)
+		FaceIndex = Direction.y < 0 ? 3 : 2;
+	else
+		FaceIndex = Direction.z < 0 ? 5 : 4;
+
+	const float3 Lookup[6] =
+	{
+		float3(Direction.y, -Direction.z, Direction.x),
+		float3(Direction.y, Direction.z, Direction.x),
+		float3(-Direction.x, -Direction.z, Direction.y),
+		float3(-Direction.x, Direction.z, Direction.y),
+		float3(Direction.y, Direction.x, Direction.z),
+		float3(Direction.y, -Direction.x, Direction.z)
+	};
+	
+	const float3 Key = Lookup[FaceIndex];
+	
+	const float2 UV = (Key.xy / Key.z + float2(1, 1)) * 0.5F;
+	float4 OutColor;
+
+	switch (FaceIndex)
+	{
+		case 0:
+			OutColor = CubeFront.SampleLevel(FaceSampler, UV, 0);
+			break;
+		case 1:
+			OutColor = CubeBack.SampleLevel(FaceSampler, UV, 0);
+			break;
+		case 2:
+			OutColor = CubeRight.SampleLevel(FaceSampler, UV, 0);
+			break;
+		case 3:
+			OutColor = CubeLeft.SampleLevel(FaceSampler, UV, 0);
+			break;
+		case 4:
+			OutColor = CubeTop.SampleLevel(FaceSampler, UV, 0);
+			break;
+		case 5:
+			OutColor = CubeBottom.SampleLevel(FaceSampler, UV, 0);
+			break;
+		default:
+			break;
+	}
+	
+	const float FadeSize = 0.1;
+	OutColor *= (1.0F - smoothstep(YFOVAngle - FadeSize, YFOVAngle, Theta));
+	OutColor.rgb = max(OutColor.rgb, float3(0, 0, 0));
+
+    OutImage[ThreadID.xy] = OutColor;
+}

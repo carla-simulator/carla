@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: © 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# SPDX-License-Identifier: MIT
+
+pydantic==2.6.4
+python-multipart==0.0.18
+requests==2.32.0
+supervisor==4.2.5
+huggingface-hub==0.33.5
+gradio==5.42.0

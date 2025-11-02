@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -29,6 +29,7 @@
 #include "carla/rpc/VehicleLightStateList.h"
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
+#include "carla/rpc/VehicleTelemetryData.h"
 #include "carla/rpc/VehicleWheels.h"
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/Texture.h"
@@ -119,6 +120,14 @@ namespace detail {
 
     std::vector<std::string> GetNamesOfAllObjects() const;
 
+    /// Export cosmos data to JSON files
+    std::string ExportCosmosCrosswalks(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosRoadBoundaries(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosLaneLines(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosTrafficSigns(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosWaitLines(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosRoadMarkings(const std::string& session_id, const std::string& output_path) const;
+
     rpc::EpisodeInfo GetEpisodeInfo();
 
     rpc::MapInfo GetMapInfo();
@@ -148,6 +157,10 @@ namespace detail {
     rpc::WeatherParameters GetWeatherParameters();
 
     void SetWeatherParameters(const rpc::WeatherParameters &weather);
+
+    float GetIMUISensorGravity() const;
+
+    void SetIMUISensorGravity( float NewIMUISensorGravity );
 
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
 
@@ -179,7 +192,8 @@ namespace detail {
         const rpc::ActorDescription &description,
         const geom::Transform &transform,
         rpc::ActorId parent,
-        rpc::AttachmentType attachment_type);
+        rpc::AttachmentType attachment_type,
+        const std::string& socket_name = "");
 
     bool DestroyActor(rpc::ActorId actor);
 
@@ -232,6 +246,44 @@ namespace detail {
         rpc::ActorId actor,
         const geom::Vector3D &vector);
 
+    geom::BoundingBox GetActorBoundingBox(
+        rpc::ActorId actor);
+
+    geom::BoundingBox GetTrafficSignTriggerVolume(
+        rpc::ActorId actor);
+
+    geom::Transform GetActorComponentWorldTransform(
+        rpc::ActorId actor,
+        const std::string componentName);
+
+    geom::Transform GetActorComponentRelativeTransform(
+        rpc::ActorId actor,
+        const std::string componentName);
+
+    std::vector<geom::Transform> GetActorBoneWorldTransforms(
+        rpc::ActorId actor);
+        
+    std::vector<geom::Transform> GetVehicleBoneWorldTransforms(
+        rpc::ActorId actor);
+
+    std::vector<geom::Transform> GetActorBoneRelativeTransforms(
+        rpc::ActorId actor);
+
+    std::vector<std::string> GetActorComponentNames(
+        rpc::ActorId actor);
+
+    std::vector<std::string> GetActorBoneNames(
+        rpc::ActorId actor);
+
+    std::vector<geom::Transform> GetActorSocketWorldTransforms(
+        rpc::ActorId actor);
+
+    std::vector<geom::Transform> GetActorSocketRelativeTransforms(
+        rpc::ActorId actor);
+
+    std::vector<std::string> GetActorSocketNames(
+        rpc::ActorId actor);
+
     void SetActorSimulatePhysics(
         rpc::ActorId actor,
         bool enabled);
@@ -250,6 +302,8 @@ namespace detail {
     void SetActorAutopilot(
         rpc::ActorId vehicle,
         bool enabled);
+
+    rpc::VehicleTelemetryData GetVehicleTelemetryData(rpc::ActorId vehicle) const;
 
     void ShowVehicleDebugTelemetry(
         rpc::ActorId vehicle,
@@ -288,6 +342,17 @@ namespace detail {
         rpc::VehicleWheelLocation wheel_location
     );
 
+    void SetWheelPitchAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation vehicle_wheel,
+        float angle_in_deg
+    );
+
+    float GetWheelPitchAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location
+    );
+
     void EnableChronoPhysics(
         rpc::ActorId vehicle,
         uint64_t MaxSubsteps,
@@ -296,6 +361,8 @@ namespace detail {
         std::string PowertrainJSON,
         std::string TireJSON,
         std::string BaseJSONPath);
+
+    void RestorePhysXPhysics(rpc::ActorId vehicle);
 
     void ApplyControlToWalker(
         rpc::ActorId walker,
@@ -362,8 +429,10 @@ namespace detail {
 
     std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance);
 
-    std::string ReplayFile(std::string name, double start, double duration,
-        uint32_t follow_id, bool replay_sensors);
+    std::string ReplayFile(
+        std::string name, double start, double duration,
+        uint32_t follow_id, bool replay_sensors, geom::Transform offset,
+        std::string map_override);
 
     void SetReplayerTimeFactor(double time_factor);
 
@@ -376,6 +445,10 @@ namespace detail {
     void SubscribeToStream(
         const streaming::Token &token,
         std::function<void(Buffer)> callback);
+
+    void EnableGBuffers(rpc::ActorId ActorId, bool bEnabled);
+    
+    bool AreGBuffersEnabled(rpc::ActorId ActorId);
 
     void SubscribeToGBuffer(
         rpc::ActorId ActorId,
@@ -394,8 +467,16 @@ namespace detail {
         rpc::ActorId ActorId,
         uint32_t GBufferId);
 
+    void Send(rpc::ActorId ActorId, std::string message);
+
+    void SetIgnoredVehicles(rpc::ActorId ActorId, const std::vector<rpc::ActorId>& vehicle_ids);
+
     void DrawDebugShape(const rpc::DebugShape &shape);
 
+    void ClearDebugShape();
+
+    void ClearDebugString();
+    
     void ApplyBatch(
         std::vector<rpc::Command> commands,
         bool do_tick_cue);
@@ -429,6 +510,8 @@ namespace detail {
     std::vector<rpc::LabelledPoint> CastRay(
         geom::Location start_location, geom::Location end_location) const;
 
+    void SetAnnotationsTraverseTranslucency(
+        bool enable);
   private:
 
     class Pimpl;

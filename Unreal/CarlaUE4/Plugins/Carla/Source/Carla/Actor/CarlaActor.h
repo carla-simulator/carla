@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -9,6 +9,7 @@
 #include "Carla/Actor/ActorInfo.h"
 #include "Carla/Actor/ActorData.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Vehicle/VehicleTelemetryData.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Traffic/TrafficLightState.h"
 
@@ -285,6 +286,16 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse SetWheelPitchAngle(const EVehicleWheelLocation&, float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetWheelPitchAngle(const EVehicleWheelLocation&, float&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse ApplyControlToVehicle(
       const FVehicleControl&, const EVehicleInputPriority&)
   {
@@ -322,6 +333,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse GetVehicleTelemetryData(FVehicleTelemetryData&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse ShowVehicleDebugTelemetry(bool)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -339,6 +355,11 @@ public:
 
   virtual ECarlaServerResponse EnableChronoPhysics(uint64_t, float,
       const FString&, const FString&, const FString&, const FString&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse RestorePhysXPhysics()
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -502,7 +523,13 @@ public:
       const EVehicleWheelLocation& WheelLocation, float AngleInDeg) final;
 
   virtual ECarlaServerResponse GetWheelSteerAngle(
-      const EVehicleWheelLocation& WheelLocation, float& Angle);
+      const EVehicleWheelLocation& WheelLocation, float& Angle) final;
+
+  virtual ECarlaServerResponse SetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float AngleInDeg) final;
+
+  virtual ECarlaServerResponse GetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float& Angle) final;
 
   virtual ECarlaServerResponse SetActorSimulatePhysics(bool bSimulatePhysics) final;
 
@@ -522,6 +549,8 @@ public:
 
   virtual ECarlaServerResponse SetActorAutopilot(bool bEnabled, bool bKeepState = false) final;
 
+  virtual ECarlaServerResponse GetVehicleTelemetryData(FVehicleTelemetryData&) final;
+
   virtual ECarlaServerResponse ShowVehicleDebugTelemetry(bool bEnabled) final;
 
   virtual ECarlaServerResponse EnableCarSim(const FString& SimfilePath) final;
@@ -532,6 +561,8 @@ public:
       uint64_t MaxSubsteps, float MaxSubstepDeltaTime,
       const FString& VehicleJSON, const FString& PowertrainJSON,
       const FString& TireJSON, const FString& BaseJSONPath) final;
+
+  virtual ECarlaServerResponse RestorePhysXPhysics();
 };
 
 class FSensorActor : public FCarlaActor

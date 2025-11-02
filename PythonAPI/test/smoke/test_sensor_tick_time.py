@@ -1,4 +1,4 @@
-# Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -38,7 +38,15 @@ class TestSensorTickTime(SyncSmokeTest):
       "sensor.camera.semantic_segmentation",
       "sensor.camera.dvs",
       "sensor.other.obstacle",
-      "sensor.camera.instance_segmentation"
+      "sensor.camera.instance_segmentation",
+      "sensor.other.v2x",
+      "sensor.other.v2x_custom",
+      "sensor.camera.cosmos_visualization",
+      "sensor.camera.rgb.wide_angle_lens",
+      "sensor.camera.normals.wide_angle_lens",
+      "sensor.camera.depth.wide_angle_lens",
+      "sensor.camera.semantic_segmentation.wide_angle_lens",
+      "sensor.camera.instance_segmentation.wide_angle_lens"
     }
     spawned_sensors = []
     sensor_tick = 1.0
@@ -64,5 +72,3 @@ class TestSensorTickTime(SyncSmokeTest):
       self.assertEqual(sensor.num_ticks, num_sensor_ticks,
         "\n\n {} does not match tick count".format(sensor.bp_sensor.id))
       sensor.destroy()
-
-

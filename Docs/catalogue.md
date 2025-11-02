@@ -6,6 +6,10 @@ The CARLA simulator provides a vast library of 3D assets to populate your autono
 * [__Pedestrians catalogue__](catalogue_pedestrians.md)
 * [__Props catalogue__](catalogue_props.md)
 
+CARLA also provides numerous example Python scripts to help users understand the Python API. Information about the scripts is provided in the scripts catalogue:
+
+* [__Scripts catalogue__](catalogue_scripts.md)
+
 ## Maps
 
 The CARLA simulator provides 10 pre-built maps to choose from, providing a diverse array of environments for training and testing your autonomous agents. 

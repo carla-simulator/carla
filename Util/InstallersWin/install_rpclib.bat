@@ -34,7 +34,7 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
+if %GENERATOR% == "" set GENERATOR="Visual Studio 17 2022"
 
 rem If not set set the build dir to the current dir
 if "%BUILD_DIR%" == "" set BUILD_DIR=%~dp0

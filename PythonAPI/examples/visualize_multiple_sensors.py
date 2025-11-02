@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -13,18 +13,6 @@ By default, it renders four cameras, one LiDAR and one Semantic LiDAR.
 It can easily be configure for any different number of sensors. 
 To do that, check lines 290-308.
 """
-
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 import argparse

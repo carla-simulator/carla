@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -808,6 +808,42 @@ ECarlaServerResponse FVehicleActor::GetWheelSteerAngle(
   return ECarlaServerResponse::Success;
 }
 
+ECarlaServerResponse FVehicleActor::SetWheelPitchAngle(
+    const EVehicleWheelLocation& WheelLocation, float AngleInDeg)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if(Vehicle == nullptr){
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    Vehicle->SetWheelPitchAngle(WheelLocation, AngleInDeg);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::GetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float& Angle)
+{
+  if (IsDormant())
+  {
+    Angle = 0;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if(Vehicle == nullptr){
+      return ECarlaServerResponse::NotAVehicle;
+    }
+
+    Angle = Vehicle->GetWheelPitchAngle(WheelLocation);
+  }
+  return ECarlaServerResponse::Success;
+}
+
 ECarlaServerResponse FVehicleActor::SetActorSimulatePhysics(bool bEnabled)
 {
   if (IsDormant())
@@ -969,6 +1005,25 @@ ECarlaServerResponse FVehicleActor::SetActorAutopilot(bool bEnabled, bool bKeepS
   return ECarlaServerResponse::Success;
 }
 
+ECarlaServerResponse FVehicleActor::GetVehicleTelemetryData(FVehicleTelemetryData& TelemetryData)
+{
+  if (IsDormant())
+  {
+    FVehicleTelemetryData EmptyTelemetryData;
+    TelemetryData = EmptyTelemetryData;
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    TelemetryData = Vehicle->GetVehicleTelemetryData();
+  }
+  return ECarlaServerResponse::Success;
+}
+
 ECarlaServerResponse FVehicleActor::ShowVehicleDebugTelemetry(bool bEnabled)
 {
   if (IsDormant())
@@ -1051,6 +1106,28 @@ ECarlaServerResponse FVehicleActor::EnableChronoPhysics(
         PowertrainJSON,
         TireJSON,
         BaseJSONPath);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::RestorePhysXPhysics()
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (Vehicle == nullptr)
+    {
+      return ECarlaServerResponse::NotAVehicle;
+    }
+    UBaseCarlaMovementComponent* MovementComponent = 
+        Vehicle->GetCarlaMovementComponent<UBaseCarlaMovementComponent>();
+    if(MovementComponent)
+    {
+      MovementComponent->DisableSpecialPhysics();
+    }
   }
   return ECarlaServerResponse::Success;
 }

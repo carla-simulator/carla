@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -30,6 +30,8 @@
 #include <ctime>
 #include <sstream>
 
+#define RECORDER_VERSION    (2)
+
 ACarlaRecorder::ACarlaRecorder(void)
 {
   PrimaryActorTick.TickGroup = TG_PrePhysics;
@@ -58,11 +60,13 @@ std::string ACarlaRecorder::ShowFileActorsBlocked(std::string Name, double MinTi
   return Query.QueryBlocked(Name, MinTime, MinDistance);
 }
 
-std::string ACarlaRecorder::ReplayFile(std::string Name, double TimeStart, double Duration,
-    uint32_t FollowId, bool ReplaySensors)
+std::string ACarlaRecorder::ReplayFile(
+  std::string Name, double TimeStart, double Duration,
+  uint32_t FollowId, const FTransform Offset, bool ReplaySensors,
+  std::string MapOverride)
 {
   Stop();
-  return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId, ReplaySensors);
+  return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId, Offset, ReplaySensors, MapOverride);
 }
 
 void ACarlaRecorder::SetReplayerTimeFactor(double TimeFactor)
@@ -304,6 +308,19 @@ void ACarlaRecorder::AddVehicleLight(FCarlaActor *CarlaActor)
   AddLightVehicle(LightVehicle);
 }
 
+void ACarlaRecorder::AddVehicleDoor(const ACarlaWheeledVehicle &Vehicle, const EVehicleDoor SDoors, bool bIsOpen)
+{
+  CarlaRecorderDoorVehicle DoorVehicle;
+  auto CarlaActor = Episode->GetActorRegistry().FindCarlaActor(&Vehicle);
+  if (CarlaActor)
+  {
+      DoorVehicle.DatabaseId = CarlaActor->GetActorId();
+      DoorVehicle.Doors = static_cast<CarlaRecorderDoorVehicle::VehicleDoorType>(SDoors);
+      DoorVehicle.bIsOpen = bIsOpen;
+      AddDoorVehicle(DoorVehicle);
+  }
+}
+
 void ACarlaRecorder::AddActorKinematics(FCarlaActor *CarlaActor)
 {
   check(CarlaActor != nullptr);
@@ -344,12 +361,17 @@ void ACarlaRecorder::AddTriggerVolume(const ATrafficSignBase &TrafficSign)
     {
       return;
     }
+    auto CarlaActor = Episode->GetActorRegistry().FindCarlaActor(&TrafficSign);
+    if (!CarlaActor)
+    {
+        return;
+    }
     UBoxComponent* Trigger = Triggers.Top();
     auto VolumeOrigin = Trigger->GetComponentLocation();
     auto VolumeExtent = Trigger->GetScaledBoxExtent();
     CarlaRecorderActorBoundingBox TriggerVolume =
     {
-      Episode->GetActorRegistry().FindCarlaActor(&TrafficSign)->GetActorId(),
+      CarlaActor->GetActorId(),
       {VolumeOrigin, VolumeExtent}
     };
     TriggerVolumes.Add(TriggerVolume);
@@ -361,9 +383,12 @@ void ACarlaRecorder::AddPhysicsControl(const ACarlaWheeledVehicle& Vehicle)
   if (bAdditionalData)
   {
     CarlaRecorderPhysicsControl Control;
-    Control.DatabaseId = Episode->GetActorRegistry().FindCarlaActor(&Vehicle)->GetActorId();
-    Control.VehiclePhysicsControl = Vehicle.GetVehiclePhysicsControl();
-    PhysicsControls.Add(Control);
+    if (auto CarlaActor = Episode->GetActorRegistry().FindCarlaActor(&Vehicle))
+    {
+        Control.DatabaseId = CarlaActor->GetActorId();
+        Control.VehiclePhysicsControl = Vehicle.GetVehiclePhysicsControl();
+        PhysicsControls.Add(Control);
+    }
   }
 }
 
@@ -371,14 +396,17 @@ void ACarlaRecorder::AddTrafficLightTime(const ATrafficLightBase& TrafficLight)
 {
   if (bAdditionalData)
   {
-    auto DatabaseId = Episode->GetActorRegistry().FindCarlaActor(&TrafficLight)->GetActorId();
-    CarlaRecorderTrafficLightTime TrafficLightTime{
-      DatabaseId,
-      TrafficLight.GetGreenTime(),
-      TrafficLight.GetYellowTime(),
-      TrafficLight.GetRedTime()
-    };
-    TrafficLightTimes.Add(TrafficLightTime);
+      if (auto CarlaActor = Episode->GetActorRegistry().FindCarlaActor(&TrafficLight))
+      {
+          auto DatabaseId = CarlaActor->GetActorId();
+          CarlaRecorderTrafficLightTime TrafficLightTime{
+            DatabaseId,
+            TrafficLight.GetGreenTime(),
+            TrafficLight.GetYellowTime(),
+            TrafficLight.GetRedTime()
+          };
+          TrafficLightTimes.Add(TrafficLightTime);
+      }
   }
 }
 
@@ -404,7 +432,10 @@ void ACarlaRecorder::AddActorBones(FCarlaActor *CarlaActor)
   WalkersBones.Add(std::move(Walker));
 }
 
-std::string ACarlaRecorder::Start(std::string Name, FString MapName, bool AdditionalData)
+std::string ACarlaRecorder::Start(
+  std::string Name,
+  FString MapName,
+  bool AdditionalData)
 {
   // stop replayer if any in course
   if (Replayer.IsEnabled())
@@ -427,7 +458,7 @@ std::string ACarlaRecorder::Start(std::string Name, FString MapName, bool Additi
   }
 
   // save info
-  Info.Version = 1;
+  Info.Version = RECORDER_VERSION;
   Info.Magic = TEXT("CARLA_RECORDER");
   Info.Date = std::time(0);
   Info.Mapfile = MapName;
@@ -478,6 +509,7 @@ void ACarlaRecorder::Clear(void)
   PhysicsControls.Clear();
   TrafficLightTimes.Clear();
   WalkersBones.Clear();
+  DoorVehicles.Clear();
   Wheels.Clear();
   Bikers.Clear();
 }
@@ -496,6 +528,7 @@ void ACarlaRecorder::Write(double DeltaSeconds)
   EventsDel.Write(File);
   EventsParent.Write(File);
   Collisions.Write(File);
+  DoorVehicles.Write(File);
 
   // positions and states
   Positions.Write(File);
@@ -649,6 +682,14 @@ void ACarlaRecorder::AddLightVehicle(const CarlaRecorderLightVehicle &LightVehic
   if (Enabled)
   {
     LightVehicles.Add(LightVehicle);
+  }
+}
+
+void ACarlaRecorder::AddDoorVehicle(const CarlaRecorderDoorVehicle &DoorVehicle)
+{
+  if (Enabled)
+  {
+    DoorVehicles.Add(DoorVehicle);
   }
 }
 

@@ -1,0 +1,65 @@
+// SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-License-Identifier: MIT
+//
+
+mdl 1.1;
+
+using df import *;
+using state import *;
+using base import *;
+using tex import *;
+using anno import *;
+using math import *;
+using limits import *;
+
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//
+export color constant( color background = color(1,1,1) )
+{
+     return background;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//
+export color cubic(
+    uniform texture_cube texture = texture_cube("cubic.dds")
+        [[ 
+            anno::description("Cubic environment")
+        ]],
+    uniform bool flip = true
+){
+    float3 v = state::transform_vector(state::coordinate_internal, state::coordinate_world, state::direction());
+    if (flip)
+    {
+        v *= -1;
+    }
+
+    color return_color = tex::lookup_color(texture, v);
+    return return_color;
+}
+
+//////////////////////////////////////////////////////////////////////////////
+//
+//
+export color spherical(
+    uniform texture_2d texture = texture_2d("std_env.hdr")
+        [[ 
+            anno::description("Spherical environment")
+        ]]
+){
+    float3 v = state::transform_vector(state::coordinate_internal, state::coordinate_world, state::direction());
+
+    float theta, gamma;
+
+    gamma = math::asin(v.y);
+    theta = math::atan2(v.z, v.x);
+
+    float2 uv = float2( theta/math::PI , gamma/(math::PI * 0.5));
+
+    uv = (uv + 1.0) * 0.5;
+    color return_color = tex::lookup_color(texture, uv);
+    return return_color;
+}

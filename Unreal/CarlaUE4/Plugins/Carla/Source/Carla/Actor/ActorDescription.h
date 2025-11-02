@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -34,4 +34,15 @@ struct FActorDescription
   ///   Value: The attribute.
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TMap<FString, FActorAttribute> Variations;
+
+  FActorAttribute GetAttribute(const FString Name) const {
+    if (Variations.Contains(Name))
+    {
+      return Variations[Name];
+    }
+    else
+    {
+      return FActorAttribute();
+    }
+  }
 };

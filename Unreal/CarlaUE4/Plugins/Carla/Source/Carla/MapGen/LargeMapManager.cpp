@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
@@ -9,6 +9,7 @@
 #include "Game/CarlaStatics.h"
 #include "Actor/ActorRegistry.h"
 #include "Game/CarlaEpisode.h"
+#include "Util/BoundingBoxCalculator.h"
 #include "Engine/EngineTypes.h"
 #include "Components/PrimitiveComponent.h"
 #include "Landscape.h"
@@ -134,12 +135,113 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 #endif // WITH_EDITOR
 }
 
+
+
+bool ALargeMapManager::AdjustSignHeightToGround(FVector& SpawnLocation, const FString& ActorName, const TArray<AActor*>& ActorsToIgnore) const
+{
+  const FVector Start = SpawnLocation + FVector(0, 0, 200.0f);
+  const FVector End = SpawnLocation - FVector(0, 0, 10000.0f);
+
+  FHitResult HitResult;
+  FCollisionQueryParams CollisionParams;
+  CollisionParams.bTraceComplex = true;
+  CollisionParams.bReturnPhysicalMaterial = false;
+  CollisionParams.AddIgnoredActors(ActorsToIgnore);
+
+  constexpr float ZOffsetSignToGround = 0.5f;
+  if (GetWorld()->LineTraceSingleByChannel(
+      HitResult,
+      Start,
+      End,
+      ECC_WorldStatic,
+      CollisionParams))
+  {
+    SpawnLocation.Z = HitResult.Location.Z + ZOffsetSignToGround;
+    return true;
+  }
+  else
+  {
+    return false;
+  }
+}
+
+void ALargeMapManager::AdjustAllSignsToHeightGround()
+{
+  UWorld* World = GetWorld();
+  if (!World)
+  {
+    return;
+  }
+
+  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
+
+  TArray<AActor*> ActorsToIgnore;
+  TArray<AActor*> ActorsToAdjustHeight;
+  UGameplayStatics::GetAllActorsOfClass(World, ATrafficSignBase::StaticClass(), ActorsToAdjustHeight);
+  ActorsToIgnore.Append(ActorsToAdjustHeight);
+  for (AActor* Actor : ActorsToAdjustHeight)
+  {
+    ATrafficSignBase* TrafficSign = Cast<ATrafficSignBase>(Actor);
+    if (!IsValid(TrafficSign))
+      continue;
+    if (TrafficSign->bPositioned)
+      continue;
+    FVector OriginalLocation = Actor->GetActorLocation();
+    FVector AdjustedLocation = OriginalLocation;
+
+    TrafficSign->bPositioned = AdjustSignHeightToGround(AdjustedLocation, Actor->GetName(), ActorsToIgnore);
+
+    if (TrafficSign->bPositioned)
+    {
+      float ZOffset = AdjustedLocation.Z - OriginalLocation.Z;
+
+      Actor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+
+      // Get all static mesh components
+      TArray<UStaticMeshComponent*> StaticMeshComps;
+      Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+
+      for (UStaticMeshComponent* MeshComp : StaticMeshComps)
+      {
+        if (!MeshComp) continue;
+
+        // Skip if this has a mesh parent (it's a child)
+        USceneComponent* ParentComp = MeshComp->GetAttachParent();
+        if (ParentComp && Cast<UStaticMeshComponent>(ParentComp))
+        {
+          continue;
+        }
+
+        // Move the mesh component down
+        FVector CompLocation = MeshComp->GetRelativeLocation();
+        CompLocation.Z += ZOffset;
+        MeshComp->SetRelativeLocation(CompLocation);
+
+        MeshComp->UpdateBounds();
+
+        LM_LOG(Log, "Moved mesh %s by %f cm", *Actor->GetName(), ZOffset);
+      }
+
+      Actor->UpdateComponentTransforms();
+      Actor->GetRootComponent()->SetMobility(EComponentMobility::Static);
+    }
+  }
+}
+
 void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
+  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(InWorld);
+  ATagger::TagActorsInLevel(*InLevel, *CarlaEpisode, true);
+  AdjustAllSignsToHeightGround();
+
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(InWorld);
+  if (GameMode)
+  {
+    GameMode->RegisterEnvironmentObjects();
+    LM_LOG(Log, "Re-registered environment objects after sign height adjustment");
+  }
+
   LM_LOG(Warning, "OnLevelAddedToWorld");
-  ATagger::TagActorsInLevel(*InLevel, true);
-
-
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }
 
@@ -203,8 +305,8 @@ void ALargeMapManager::OnActorSpawned(
       // Wait until the pending levels changes are finished to avoid spawning
       // the car without ground underneath
       World->FlushLevelStreaming();
-
       IsHeroVehicle = true;
+      AdjustAllSignsToHeightGround();
     }
   }
 
@@ -997,6 +1099,11 @@ void ALargeMapManager::UpdateTileState(
       StreamingLevel->bShouldBlockOnLoad = InShouldBlockOnLoad;
       StreamingLevel->SetShouldBeLoaded(InShouldBeLoaded);
       StreamingLevel->SetShouldBeVisible(InShouldBeVisible);
+  }
+
+  if(InShouldBeLoaded)
+  {
+    AdjustAllSignsToHeightGround();
   }
 }
 

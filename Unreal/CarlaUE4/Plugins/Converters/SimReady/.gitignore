@@ -1,0 +1,5 @@
+Binaries/
+Intermediate/
+ThirdParty/
+*.sln
+.idea/

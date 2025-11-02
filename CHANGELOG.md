@@ -1,3 +1,64 @@
+## Latest Changes
+
+ * Improved the way the TrafficManager controls large vehicles at junctions, reducing the frequency of collisions with other elements in the simulation.
+ * Improved the turning behavior of vehicles controlled by the TrafficManager, making them smoother.
+ * Added a hybrid solid-state LiDAR with adjustable parameters (blueprint attributes)
+
+## CARLA 0.9.16
+
+ * Added NVIDIA Cosmos Transfer1 integration
+ * Added NVIDIA Neural Reconstruction Engine (NuRec) integration
+ * Added the SimReady OpenUSD and MDL Converters to provide export and import support for SimReady OpenUSD stages and MDL materials.
+ * Added support for left-handed traffic maps
+ * Renamed Ubuntu 18-based Dockerfile to CarlaLegacy for clarity
+ * Created documentation for using devcontainers
+ * Ensured CARLA scripts consistently use python3
+ * Replaced wget with curl for FBX SDK downloads
+ * Enabled mounting of UE4 from the host when running CARLA inside a container
+ * Added support for GUI inside containers with Ubuntu 22 image
+ * Fixed waypoint.next and .previous causing loops when two opposite-direction lanes follow each other in the map.
+ * Fixed a bug that caused navigation information not to be loaded when switching maps
+ * Prevent from segfault on failing SignalReference identification when loading OpenDrive files
+ * Added vehicle doors to the recorder
+ * Added functions to get actor' components transform
+ * Added posibility to Digital Twins to work with local files (osm and xodr)
+ * Enable proper material merging for Building in Digital Twins
+ * Added functions to get actor' bones transforms
+ * Added functions to get actor' bones and components names
+ * Added functions to get actor' sockets transforms
+ * make PythonAPI Windows: Fixed incompatibility issue with Anaconda due `py` command.
+ * Added function to get actor' sockets names
+ * Fixed bug in python agents when vehicle list was empty causing a check on all vehicles (BasicAgent.py) and detected pedestrians as vehicles if no pedestrains are present (BehaviourAgent.py) 
+ * Extended debug drawing functions to allow drawing primitives on HUD layer
+ * Added possibility to change gravity variable in imui sensor for the accelerometer
+ * Fixed ROS2 native extension build error when ROS2 is installed in the system.
+ * ROS2Native: Force fast-dds dependencies download to avoid build crash when boost_asio and tinyxml2 are not installed in Linux.
+ * Added API function `get_telemetry_data` to the vehicle actor.
+ * PythonAPI `Sensor.is_listening` was defined twice (property and method), cleaned and clarified it as a method.
+ * Added V2X sensors for cooperative awareness message and custom user-defined messages to support vehicle-to-vehicle communication
+ * Added named tuples for BasicAgent.py's detection result to allow for type-hints and better semantics.
+ * Added type-hint support for the PythonAPI
+ * Added type-hints to GlobalRoutePlanner and use carla.Vector3D code instead of pre 0.9.13 numpy code.
+ * If available, use ActorIDs instead of Unreal Engine IDs for instance segmentation
+ * Synchronized actor BoundingBox between server and client
+ * Add actor_id to bounding boxes
+ * Fixed invisible terrain in instance segmentation
+ * Importing from carla.command is now possible
+ * carla.ad subpackages are now directly importable and are not directly importable anymore (e.g. import ad)
+ * Fixed segfault in traffic manager when trying to access not available vehicles
+ * Fixed invalid comparission in python examples/rss
+ * Updated inverted traffic PythonAPI example script, added support for waypoint-guided Inverted AI cars.
+ * Fixed invisible spline meshes in instance segmentation
+ * Set to default Visual Studio 2022 in Windows
+ * Added env CARLA_CACHE_DIR to be able to set CARLA CACHE location
+ * Support of masked materials in instance segmentation, resulting in fine-grained annotations on e.g. leaves or fences (as in semantic segmentation)
+ * Added API function `world.set_annotations_traverse_translucency` and implemented functionality to configure, whether depth and semantic + instance segmentation traverse translucent materials or not.
+ * Fixed `frame`, `timestamp` and `transform` of `SensorData` not matching to the actually sent image for camera sensors.
+ * Added  "geolocation_to_transform" function to the Map object in the PythonAPI
+ * Add support for NVIDIA NuRec 25.07 (CARLA-NuRec 0.2)
+ * Added `set_wheel_pitch_angle()` to change the bone pitch angle of each wheel of a vehicle
+ * Added `get_wheel_pitch_angle()` to get the rotation (pitch) angle of a vehicle wheel
+
 ## CARLA 0.9.15
 
   * Added Digital Twins feature version 0.1. Now you can create your own map based on OpenStreetMaps
@@ -25,6 +86,8 @@
   * Fixed bug causing the `FPixelReader::SavePixelsToDisk(PixelData, FilePath)` function to crash due to pixel array not set correctly.
   * Fixed segfaults in Python API due to incorrect GIL locking under Python 3.10.
   * Fixed the import script, where could use any other TilesInfo.txt if the destination folder has many
+  * Fixed PythonAPI not installing on Debian due to deprecated function of distro in setup.py. Less ambiguous error for other posix platforms.
+
 
 ## CARLA 0.9.14
 

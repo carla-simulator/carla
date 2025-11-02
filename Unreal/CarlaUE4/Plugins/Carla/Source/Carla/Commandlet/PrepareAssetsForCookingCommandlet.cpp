@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -34,6 +34,9 @@ static bool ValidateStaticMesh(UStaticMesh *Mesh)
   for (int i = 0; i < Mesh->StaticMaterials.Num(); i++)
   {
     UMaterialInterface *Material = Mesh->GetMaterial(i);
+    if (!Material) {
+      Material = UMaterial::GetDefaultMaterial(MD_Surface);
+    }
     const FString MaterialName = Material->GetName();
 
     if (MaterialName.Contains(TEXT("light"), ESearchCase::IgnoreCase) ||
@@ -377,7 +380,7 @@ bool UPrepareAssetsForCookingCommandlet::SaveWorld(
   return bPackageSaved;
 }
 
-FString UPrepareAssetsForCookingCommandlet::GetFirstPackagePath(const FString &PackageName) const
+FString UPrepareAssetsForCookingCommandlet::GetFirstPackagePath(const FString &PackageName)
 {
   // Get all Package names
   TArray<FString> PackageList;
@@ -393,7 +396,7 @@ FString UPrepareAssetsForCookingCommandlet::GetFirstPackagePath(const FString &P
   return IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*PackageList[0]);
 }
 
-FAssetsPaths UPrepareAssetsForCookingCommandlet::GetAssetsPathFromPackage(const FString &PackageName) const
+FAssetsPaths UPrepareAssetsForCookingCommandlet::GetAssetsPathFromPackage(const FString &PackageName)
 {
   const FString PackageJsonFilePath = GetFirstPackagePath(PackageName);
 

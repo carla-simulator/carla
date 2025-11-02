@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -31,6 +31,52 @@ namespace client {
   geom::Vector3D Actor::GetAcceleration() const {
     return GetEpisode().Lock()->GetActorAcceleration(*this);
   }
+
+  geom::BoundingBox Actor::GetBoundingBox() const {
+    geom::BoundingBox bounding_box = GetEpisode().Lock()->GetActorBoundingBox(*this); 
+    if (bounding_box.extent.x == 0.0f && bounding_box.extent.y == 0.0f && bounding_box.extent.z == 0.0f) {
+      return bounding_box;
+    }
+    else{
+      return Super::GetBoundingBox();
+    }
+  }
+
+  geom::Transform Actor::GetComponentWorldTransform(const std::string componentName) const {
+    return GetEpisode().Lock()->GetActorComponentWorldTransform(*this, componentName);
+  }
+
+  geom::Transform Actor::GetComponentRelativeTransform(const std::string componentName) const {
+    return GetEpisode().Lock()->GetActorComponentRelativeTransform(*this, componentName);
+  }
+
+  std::vector<geom::Transform> Actor::GetBoneWorldTransforms() const {
+    return GetEpisode().Lock()->GetActorBoneWorldTransforms(*this);
+  }
+
+  std::vector<geom::Transform> Actor::GetBoneRelativeTransforms() const {
+    return GetEpisode().Lock()->GetActorBoneRelativeTransforms(*this);
+  }
+
+  std::vector<std::string> Actor::GetComponentNames() const {
+    return GetEpisode().Lock()->GetActorComponentNames(*this);
+  }
+
+  std::vector<std::string> Actor::GetBoneNames() const {
+    return GetEpisode().Lock()->GetActorBoneNames(*this);
+  } 
+
+  std::vector<geom::Transform> Actor::GetSocketWorldTransforms() const {
+    return GetEpisode().Lock()->GetActorSocketWorldTransforms(*this);
+  }
+
+  std::vector<geom::Transform> Actor::GetSocketRelativeTransforms() const {
+    return GetEpisode().Lock()->GetActorSocketRelativeTransforms(*this);
+  }
+
+  std::vector<std::string> Actor::GetSocketNames() const {
+    return GetEpisode().Lock()->GetActorSocketNames(*this);
+  }  
 
   void Actor::SetLocation(const geom::Location &location) {
     GetEpisode().Lock()->SetActorLocation(*this, location);

@@ -36,7 +36,7 @@ BUILD_RSS_VARIANT=false
 USE_PYTORCH=false
 USE_ROS2=false
 
-OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss,pytorch,carsim,ros2 -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss,pytorch,carsim,ros2,chrono,chrono-path: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -71,6 +71,10 @@ while [[ $# -gt 0 ]]; do
     --ros2 )
       USE_ROS2=true;
       shift ;;
+    --chrono )
+      shift ;;
+    --chrono-path )
+      shift 2 ;;
     --rss )
       BUILD_RSS_VARIANT=true;
       shift ;;
@@ -138,7 +142,7 @@ function build_libcarla {
     M_BUILD_FOLDER=${LIBCARLA_BUILD_PYTORCH_FOLDER}.$(echo "$2" | tr '[:upper:]' '[:lower:]')
     M_INSTALL_FOLDER=${LIBCARLA_INSTALL_SERVER_FOLDER}
   elif [ $1 == ros2 ] ; then
-    M_TOOLCHAIN=${LIBSTDCPP_TOOLCHAIN_FILE}
+    M_TOOLCHAIN=${LIBCPP_TOOLCHAIN_FILE}
     M_BUILD_FOLDER=${LIBCARLA_FASTDDS_FOLDER}.$(echo "$2" | tr '[:upper:]' '[:lower:]')
     M_INSTALL_FOLDER=${LIBCARLA_INSTALL_SERVER_FOLDER}
   elif [ $1 == ClientRSS ] ; then
@@ -146,7 +150,7 @@ function build_libcarla {
     M_TOOLCHAIN=${LIBSTDCPP_TOOLCHAIN_FILE}
     M_BUILD_FOLDER=${LIBCARLA_BUILD_CLIENT_FOLDER}.rss.$(echo "$2" | tr '[:upper:]' '[:lower:]')
     M_INSTALL_FOLDER=${LIBCARLA_INSTALL_CLIENT_FOLDER}
-    CMAKE_EXTRA_OPTIONS="${CMAKE_EXTRA_OPTIONS:+${CMAKE_EXTRA_OPTIONS} }-DBUILD_RSS_VARIANT=ON -DADRSS_INSTALL_DIR=${CARLA_BUILD_FOLDER}/ad-rss-4.4.3/install"
+    CMAKE_EXTRA_OPTIONS="${CMAKE_EXTRA_OPTIONS:+${CMAKE_EXTRA_OPTIONS} }-DBUILD_RSS_VARIANT=ON -DADRSS_INSTALL_DIR=${CARLA_BUILD_FOLDER}/ad-rss-4.4.4/install"
   else
     fatal_error "Invalid build configuration \"$1\""
   fi

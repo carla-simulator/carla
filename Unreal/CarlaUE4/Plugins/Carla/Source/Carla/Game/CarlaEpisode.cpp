@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -61,42 +61,41 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
   FrameData.SetEpisode(this);
 }
 
+void UCarlaEpisode::BeginDestroy()
+{
+  Super::BeginDestroy();
+
+  // stop recorder and replayer
+  if (Recorder)
+  {
+    Recorder->Stop();
+    if (Recorder->GetReplayer()->IsEnabled())
+    {
+      Recorder->GetReplayer()->Stop();
+    }
+  }
+
+  FPlatformProcess::CloseProc(RecastBuilderProcessHandle);
+}
+
 bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
 {
   bool bIsFileFound = false;
-
-  FString FinalPath = MapString.IsEmpty() ? GetMapName() : MapString;
-  FinalPath += !MapString.EndsWith(".umap") ? ".umap" : "";
-
-  if (MapString.StartsWith("/Game"))
-  {
-    // Some conversions...
-    FinalPath.RemoveFromStart(TEXT("/Game/"));
-    FinalPath = FPaths::ProjectContentDir() + FinalPath;
-    FinalPath = IFileManager::Get().ConvertToAbsolutePathForExternalAppForRead(*FinalPath);
-
-    if (FPaths::FileExists(FinalPath)) {
-      bIsFileFound = true;
-      FinalPath = MapString;
-    }
+  FString MapToLoad;
+  if (MapString.IsEmpty()) {
+    MapToLoad = UGameplayStatics::GetCurrentLevelName(GetWorld(), true);
   }
-  else
+  else 
   {
-    if (MapString.Contains("/")) return false;
+    MapToLoad = MapString;
+  }
+   
+  FString FinalPath = UCarlaStatics::FindMapPath(MapToLoad);
 
-    // Find the full path under Carla
-    TArray<FString> TempStrArray, PathList;
-    IFileManager::Get().FindFilesRecursive(PathList, *FPaths::ProjectContentDir(), *FinalPath, true, false, false);
-    if (PathList.Num() > 0)
-    {
-      FinalPath = PathList[0];
-      FinalPath.ParseIntoArray(TempStrArray, TEXT("Content/"), true);
-      FinalPath = TempStrArray[1];
-      FinalPath.ParseIntoArray(TempStrArray, TEXT("."), true);
-      FinalPath = "/Game/" + TempStrArray[0];
-
-      return LoadNewEpisode(FinalPath, ResetSettings);
-    }
+  if(FPaths::FileExists(FinalPath))
+  {
+    bIsFileFound = true;
+    FinalPath = MapToLoad;
   }
 
   if (bIsFileFound)
@@ -211,9 +210,20 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
   if (FPaths::FileExists(AbsoluteRecastBuilderPath) &&
       Params.enable_pedestrian_navigation)
   {
+    if(FPlatformProcess::IsProcRunning(RecastBuilderProcessHandle))
+    {
+      UE_LOG(LogCarla, Warning, TEXT("RecastBuilder process is already running, "
+          "it will be replaced with the new one."));
+      FPlatformProcess::CloseProc(RecastBuilderProcessHandle);
+    }
+    else
+    {
+      UE_LOG(LogCarla, Log, TEXT("Starting RecastBuilder process..."));
+    }
+
     /// @todo this can take too long to finish, clients need a method
     /// to know if the navigation is available or not.
-    FPlatformProcess::CreateProc(
+    RecastBuilderProcessHandle = FPlatformProcess::CreateProc(
         *AbsoluteRecastBuilderPath, *AbsoluteOBJPath,
         true, true, true, nullptr, 0, nullptr, nullptr);
   }
@@ -294,11 +304,12 @@ carla::rpc::Actor UCarlaEpisode::SerializeActor(AActor* Actor) const
 void UCarlaEpisode::AttachActors(
     AActor *Child,
     AActor *Parent,
-    EAttachmentType InAttachmentType)
+    EAttachmentType InAttachmentType,
+    const FString& SocketName)
 {
   Child->AddActorWorldOffset(FVector(CurrentMapOrigin));
 
-  UActorAttacher::AttachActors(Child, Parent, InAttachmentType);
+  UActorAttacher::AttachActors(Child, Parent, InAttachmentType, SocketName);
 
   if (bIsPrimaryServer)
   {

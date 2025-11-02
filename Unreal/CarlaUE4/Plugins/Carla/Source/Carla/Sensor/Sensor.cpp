@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -89,6 +89,15 @@ void ASensor::SetSeed(const int32 InSeed)
   check(RandomEngine != nullptr);
   Seed = InSeed;
   RandomEngine->Seed(InSeed);
+}
+
+void ASensor::SetIgnoredVehicles(const TArray<FCarlaActor::IdType>& VehicleIds)
+{
+  IgnoredVehicles.Empty();
+  for (auto Id : VehicleIds)
+  {
+    IgnoredVehicles.Add(Id);
+  }
 }
 
 void ASensor::PostActorCreated()

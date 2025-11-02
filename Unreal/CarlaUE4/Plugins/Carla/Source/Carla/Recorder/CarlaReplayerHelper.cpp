@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -47,7 +47,7 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
   // check type of actor we need
   if (ActorDesc.Id.StartsWith("traffic."))
   {
-    FCarlaActor* CarlaActor = FindTrafficLightAt(Location);
+    FCarlaActor* CarlaActor = FindTrafficSignAt(Location);
     if (CarlaActor != nullptr)
     {
       // reuse that actor
@@ -62,21 +62,6 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
   }
   else if (SpawnSensors || !ActorDesc.Id.StartsWith("sensor."))
   {
-    // check if an actor of that type already exist with same id
-    if (Episode->GetActorRegistry().Contains(DesiredId))
-    {
-      auto* CarlaActor = Episode->FindCarlaActor(DesiredId);
-      const FActorDescription *desc = &CarlaActor->GetActorInfo()->Description;
-      if (desc->Id == ActorDesc.Id)
-      {
-        // we don't need to create, actor of same type already exist
-        // relocate
-        FRotator Rot = FRotator::MakeFromEuler(Rotation);
-        FTransform Trans2(Rot, Location, FVector(1, 1, 1));
-        CarlaActor->SetActorGlobalTransform(Trans2);
-        return std::pair<int, FCarlaActor*>(2, CarlaActor);
-      }
-    }
     // create the transform
     FRotator Rot = FRotator::MakeFromEuler(Rotation);
     FTransform Trans(Rot, FVector(0, 0, 100000), FVector(1, 1, 1));
@@ -107,7 +92,7 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
   }
 }
 
-FCarlaActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
+FCarlaActor *CarlaReplayerHelper::FindTrafficSignAt(FVector Location)
 {
   check(Episode != nullptr);
   auto World = Episode->GetWorld();
@@ -123,7 +108,7 @@ FCarlaActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
   for (auto It = Registry.begin(); It != Registry.end(); ++It)
   {
     FCarlaActor* CarlaActor = It.Value().Get();
-    if(CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight)
+    if(CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight || CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficSign)
     {
       FVector vec = CarlaActor->GetActorGlobalLocation();
       int x2 = static_cast<int>(vec.X);
@@ -202,7 +187,7 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
   }
 
   // check to ignore Hero or Spectator
-  if ((bIgnoreHero && IsHero) || 
+  if ((bIgnoreHero && IsHero) ||
       (bIgnoreSpectator && ActorDesc.Id.StartsWith("spectator")))
   {
     return std::make_pair(3, 0);
@@ -227,7 +212,11 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
         // disable physics
         SetActorSimulatePhysics(result.second, false);
         // disable collisions
-        result.second->GetActor()->SetActorEnableCollision(false);
+        result.second->GetActor()->SetActorEnableCollision(true);
+        auto RootComponent = Cast<UPrimitiveComponent>(
+            result.second->GetActor()->GetRootComponent());
+        RootComponent->SetSimulatePhysics(false);
+        RootComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         // disable autopilot for vehicles
         if (result.second->GetActorType() == FCarlaActor::ActorType::Vehicle)
           SetActorAutopilot(result.second, false, false);
@@ -296,7 +285,7 @@ bool CarlaReplayerHelper::ProcessReplayerEventParent(uint32_t ChildId, uint32_t 
 }
 
 // reposition actors
-bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per, double DeltaTime)
+bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per, double DeltaTime, bool bIgnoreSpectator)
 {
   check(Episode != nullptr);
   FCarlaActor* CarlaActor = Episode->FindCarlaActor(Pos1.DatabaseId);
@@ -304,6 +293,11 @@ bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, Ca
   FRotator Rotation;
   if(CarlaActor)
   {
+    //Hot fix to avoid spectator we should investigate why this case is possible here
+    if(bIgnoreSpectator && CarlaActor->GetActor()->GetClass()->GetFName().ToString().Contains("Spectator"))
+    {
+      return false;
+    }
     // check to assign first position or interpolate between both
     if (Per == 0.0)
     {
@@ -413,6 +407,24 @@ void CarlaReplayerHelper::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Ve
     Control.Gear = Vehicle.Gear;
     Control.bManualGearShift = false;
     CarlaActor->ApplyControlToVehicle(Control, EVehicleInputPriority::User);
+  }
+}
+
+// set the openings and closings of vehicle doors
+void CarlaReplayerHelper::ProcessReplayerDoorVehicle(CarlaRecorderDoorVehicle DoorVehicle)
+{
+  check(Episode != nullptr);
+  FCarlaActor * CarlaActor = Episode->FindCarlaActor(DoorVehicle.DatabaseId);
+  if (CarlaActor)
+  {
+    ACarlaWheeledVehicle * Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+    if (Vehicle) {
+      if(DoorVehicle.bIsOpen){
+        Vehicle->OpenDoor(static_cast<EVehicleDoor>(DoorVehicle.Doors));
+      }else{
+        Vehicle->CloseDoor(static_cast<EVehicleDoor>(DoorVehicle.Doors));
+      }
+    }
   }
 }
 

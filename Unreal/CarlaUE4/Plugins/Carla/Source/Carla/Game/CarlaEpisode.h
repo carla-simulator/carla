@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -47,6 +47,7 @@ public:
 
   UCarlaEpisode(const FObjectInitializer &ObjectInitializer);
 
+  virtual void BeginDestroy() override;
   // ===========================================================================
   // -- Load a new episode -----------------------------------------------------
   // ===========================================================================
@@ -131,9 +132,9 @@ public:
   TArray<FTransform> GetRecommendedSpawnPoints() const;
 
   /// Return the GeoLocation point of the map loaded
-  const carla::geom::GeoLocation &GetGeoReference() const
+  const carla::geom::GeoProjection &GetGeoProjection() const
   {
-    return MapGeoReference;
+    return MapGeoProjection;
   }
 
   // ===========================================================================
@@ -245,7 +246,8 @@ public:
   void AttachActors(
       AActor *Child,
       AActor *Parent,
-      EAttachmentType InAttachmentType = EAttachmentType::Rigid);
+      EAttachmentType InAttachmentType = EAttachmentType::Rigid,
+      const FString& SocketName = "");
 
   /// @copydoc FActorDispatcher::DestroyActor(AActor*)
   UFUNCTION(BlueprintCallable)
@@ -395,13 +397,15 @@ private:
 
   ACarlaRecorder *Recorder = nullptr;
 
-  carla::geom::GeoLocation MapGeoReference;
+  carla::geom::GeoProjection MapGeoProjection;
 
   FIntVector CurrentMapOrigin;
 
   FFrameData FrameData;
 
   FSensorManager SensorManager;
+
+  FProcHandle RecastBuilderProcessHandle;
 };
 
 FString CarlaGetRelevantTagAsString(const TSet<crp::CityObjectLabel> &SemanticTags);

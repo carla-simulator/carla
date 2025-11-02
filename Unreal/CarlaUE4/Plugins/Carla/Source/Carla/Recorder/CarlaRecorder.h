@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -33,7 +33,9 @@
 #include "CarlaRecorderState.h"
 #include "CarlaRecorderVisualTime.h"
 #include "CarlaRecorderWalkerBones.h"
+#include "CarlaRecorderDoorVehicle.h"
 #include "CarlaReplayer.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
 #include "CarlaRecorder.generated.h"
 
@@ -68,7 +70,8 @@ enum class CarlaRecorderPacketId : uint8_t
   WalkerBones,
   VisualTime,
   AnimVehicleWheels,
-  AnimBiker
+  AnimBiker,
+  VehicleDoor
 };
 
 /// Recorder for the simulation
@@ -92,7 +95,10 @@ public:
   void Disable(void);
 
   // start / stop
-  std::string Start(std::string Name, FString MapName, bool AdditionalData = false);
+  std::string Start(
+    std::string Name,
+    FString MapName,
+    bool AdditionalData = false);
 
   void Stop(void);
 
@@ -137,6 +143,10 @@ public:
 
   void AddActorBones(FCarlaActor *CarlaActor);
 
+  void AddVehicleDoor(const ACarlaWheeledVehicle& Vehicle, const EVehicleDoor SDoors, bool bIsOpen);
+
+  void AddDoorVehicle(const CarlaRecorderDoorVehicle &DoorVehicle);
+
   // set episode
   void SetEpisode(UCarlaEpisode *ThisEpisode)
   {
@@ -162,8 +172,10 @@ public:
   std::string ShowFileActorsBlocked(std::string Name, double MinTime = 30, double MinDistance = 10);
 
   // replayer
-  std::string ReplayFile(std::string Name, double TimeStart, double Duration,
-      uint32_t FollowId, bool ReplaySensors);
+  std::string ReplayFile(
+    std::string Name, double TimeStart, double Duration,
+    uint32_t FollowId, const FTransform Offset, bool ReplaySensors,
+    std::string MapOverride);
   void SetReplayerTimeFactor(double TimeFactor);
   void SetReplayerIgnoreHero(bool IgnoreHero);
   void SetReplayerIgnoreSpectator(bool IgnoreSpectator);
@@ -208,6 +220,7 @@ private:
   CarlaRecorderTrafficLightTimes TrafficLightTimes;
   CarlaRecorderWalkersBones WalkersBones;
   CarlaRecorderVisualTime VisualTime;
+  CarlaRecorderDoorVehicles DoorVehicles;
 
   // replayer
   CarlaReplayer Replayer;

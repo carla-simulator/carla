@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -294,14 +294,14 @@ def _get_sumo_net(cfg_file):
     cfg_file = os.path.join(os.getcwd(), cfg_file)
 
     tree = ET.parse(cfg_file)
-    tag = tree.find('//net-file')
+    tag = tree.find('.//net-file')
     if tag is None:
         return None
 
     net_file = os.path.join(os.path.dirname(cfg_file), tag.get('value'))
     logging.debug('Reading net file: %s', net_file)
 
-    sumo_net = traci.sumolib.net.readNet(net_file)
+    sumo_net = sumolib.net.readNet(net_file)
     return sumo_net
 
 class SumoSimulation(object):

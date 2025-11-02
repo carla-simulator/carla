@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -90,6 +90,15 @@ namespace client {
   void World::SetWeather(const rpc::WeatherParameters &weather) {
     _episode.Lock()->SetWeatherParameters(weather);
   }
+  
+  float World::GetIMUISensorGravity() const {
+    return _episode.Lock()->GetIMUISensorGravity();
+  }
+
+  void World::SetIMUISensorGravity(float NewIMUISensorGravity) {
+    _episode.Lock()->SetIMUISensorGravity(NewIMUISensorGravity);
+  }
+  
 
   WorldSnapshot World::GetSnapshot() const {
     return _episode.Lock()->GetWorldSnapshot();
@@ -119,17 +128,19 @@ namespace client {
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent_actor,
-      rpc::AttachmentType attachment_type) {
-    return _episode.Lock()->SpawnActor(blueprint, transform, parent_actor, attachment_type);
+      rpc::AttachmentType attachment_type,
+      const std::string& socket_name) {
+    return _episode.Lock()->SpawnActor(blueprint, transform, parent_actor, attachment_type, GarbageCollectionPolicy::Inherit, socket_name);
   }
 
   SharedPtr<Actor> World::TrySpawnActor(
       const ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent_actor,
-      rpc::AttachmentType attachment_type) noexcept {
+      rpc::AttachmentType attachment_type,
+      const std::string& socket_name) noexcept {
     try {
-      return SpawnActor(blueprint, transform, parent_actor, attachment_type);
+      return SpawnActor(blueprint, transform, parent_actor, attachment_type, socket_name);
     } catch (const std::exception &) {
       return nullptr;
     }
@@ -327,6 +338,30 @@ namespace client {
     return _episode.Lock()->GetNamesOfAllObjects();
   }
 
+  std::string World::ExportCosmosCrosswalks(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosCrosswalks(session_id, output_path);
+  }
+
+  std::string World::ExportCosmosRoadBoundaries(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosRoadBoundaries(session_id, output_path);
+  }
+
+  std::string World::ExportCosmosLaneLines(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosLaneLines(session_id, output_path);
+  }
+
+  std::string World::ExportCosmosTrafficSigns(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosTrafficSigns(session_id, output_path);
+  }
+
+  std::string World::ExportCosmosWaitLines(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosWaitLines(session_id, output_path);
+  }
+
+  std::string World::ExportCosmosRoadMarkings(const std::string& session_id, const std::string& output_path) const {
+    return _episode.Lock()->ExportCosmosRoadMarkings(session_id, output_path);
+  }
+
   void World::ApplyTexturesToObject(
       const std::string &object_name,
       const rpc::TextureColor& diffuse_texture,
@@ -381,6 +416,11 @@ namespace client {
       ApplyFloatColorTextureToObjects(
           objects_names, rpc::MaterialParameter::Tex_Emissive, emissive_texture);
     }
+  }
+
+  void World::SetAnnotationsTraverseTranslucency(
+      bool enable) {
+    _episode.Lock()->SetAnnotationsTraverseTranslucency(enable);
   }
 
 } // namespace client

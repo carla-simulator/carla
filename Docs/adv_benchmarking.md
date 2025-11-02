@@ -156,7 +156,7 @@ python3 performance_benchmark.py --show_scenarios
 
 >> * Show what scenarios will run when configurations are applied without actually executing them:
 ```shell
-python3 performance_benchmark.py --sensors 2 5 --maps Town03 Town05 --weather 0 1 --show_scenarios`
+python3 performance_benchmark.py --sensors 2 5 --maps Town03 Town05 --weather 0 1 --show_scenarios
 ```
 
 >> * Execute the performance benchmark for those scenarios:

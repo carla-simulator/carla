@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -35,6 +35,15 @@ struct HUDString
   double TimeToDie;
 };
 
+struct HUDLine
+{
+  FVector Begin;
+  FVector End;
+  float Thickness;
+  FColor Color;
+  double TimeToDie;
+};
+
 /// Class to draw on HUD
 UCLASS()
 class CARLA_API ACarlaHUD : public AHUD
@@ -55,7 +64,13 @@ public:
   void AddDebugVehicleForTelemetry(UWheeledVehicleMovementComponent* Veh) { DebugVehicle = Veh; }
 
   void AddHUDString(const FString Str, const FVector Location, const FColor Color, double LifeTime);
+  void AddHUDLine(const FVector Begin, const FVector End, const float Thickness, const FColor Color, double LifeTime);
 
+  void ClearDebugStrings()
+  {
+    StringList.Empty();
+  }
 private:
   TArray<HUDString> StringList;
+  TArray<HUDLine> LineList;
 };

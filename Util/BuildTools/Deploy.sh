@@ -4,14 +4,14 @@
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-
-
 REPLACE_LATEST=false
 DOCKER_PUSH=false
 AWS_COPY="aws s3 cp"
 DOCKER="docker"
 UNTAR="tar -xvzf"
 UPLOAD_MAPS=true
+ENDPOINT="https://s3.us-east-005.backblazeb2.com"
+SUMMARY_OUTPUT_PATH=
 
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
@@ -19,9 +19,9 @@ UPLOAD_MAPS=true
 
 DOC_STRING="Upload latest build to S3."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--replace-latest] [--docker-push] [--dry-run]"
+USAGE_STRING="Usage: $0 [-h|--help] [--replace-latest] [--docker-push] [--dry-run] [--github-output GITHUB_OUTPUT]"
 
-OPTS=`getopt -o h --long help,replace-latest,docker-push,dry-run -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,replace-latest,docker-push,dry-run,summary-output: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -38,6 +38,9 @@ while [[ $# -gt 0 ]]; do
       DOCKER="echo ${DOCKER}";
       UNTAR="echo ${UNTAR}";
       shift ;;
+    --summary-output )
+      SUMMARY_OUTPUT_PATH="$2";
+      shift 2 ;;
     -h | --help )
       echo "$DOC_STRING"
       echo "$USAGE_STRING"
@@ -58,6 +61,7 @@ LATEST_PACKAGE2=AdditionalMaps_${REPOSITORY_TAG}.tar.gz
 LATEST_PACKAGE_PATH2=${CARLA_DIST_FOLDER}/${LATEST_PACKAGE2}
 
 S3_PREFIX=s3://carla-releases/Linux
+URL_PREFIX=${ENDPOINT}/carla-releases/Linux
 
 LATEST_DEPLOY_URI=${S3_PREFIX}/Dev/CARLA_Latest.tar.gz
 LATEST_DEPLOY_URI2=${S3_PREFIX}/Dev/AdditionalMaps_Latest.tar.gz
@@ -74,6 +78,7 @@ elif [[ ${REPOSITORY_TAG} =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   DOCKER_TAG=${REPOSITORY_TAG}
 else
   S3_PREFIX=${S3_PREFIX}/Dev
+  URL_PREFIX=${URL_PREFIX}/Dev
   DEPLOY_NAME=$(git log --pretty=format:'%cd_%h' --date=format:'%Y%m%d' -n 1).tar.gz
   DEPLOY_NAME2=AdditionalMaps_$(git log --pretty=format:'%cd_%h' --date=format:'%Y%m%d' -n 1).tar.gz
   DOCKER_TAG=latest
@@ -93,10 +98,10 @@ fi
 DEPLOY_URI=${S3_PREFIX}/${DEPLOY_NAME}
 DEPLOY_URI2=${S3_PREFIX}/${DEPLOY_NAME2}
 
-${AWS_COPY} ${LATEST_PACKAGE_PATH} ${DEPLOY_URI}
+${AWS_COPY} ${LATEST_PACKAGE_PATH} ${DEPLOY_URI} --endpoint-url ${ENDPOINT}
 log "Latest build uploaded to ${DEPLOY_URI}."
 
-${AWS_COPY} ${LATEST_PACKAGE_PATH2} ${DEPLOY_URI2}
+${AWS_COPY} ${LATEST_PACKAGE_PATH2} ${DEPLOY_URI2} --endpoint-url ${ENDPOINT}
 log "Latest build uploaded to ${DEPLOY_URI2}."
 
 # ==============================================================================
@@ -105,10 +110,10 @@ log "Latest build uploaded to ${DEPLOY_URI2}."
 
 if ${REPLACE_LATEST} ; then
 
-  ${AWS_COPY} ${DEPLOY_URI} ${LATEST_DEPLOY_URI}
+  ${AWS_COPY} ${DEPLOY_URI} ${LATEST_DEPLOY_URI} --endpoint-url ${ENDPOINT}
   log "Latest build uploaded to ${LATEST_DEPLOY_URI}."
   
-  ${AWS_COPY} ${DEPLOY_URI2} ${LATEST_DEPLOY_URI2}
+  ${AWS_COPY} ${DEPLOY_URI2} ${LATEST_DEPLOY_URI2} --endpoint-url ${ENDPOINT}
   log "Latest build uploaded to ${LATEST_DEPLOY_URI2}."
 
 fi
@@ -139,6 +144,17 @@ if ${DOCKER_PUSH} ; then
   popd >/dev/null
 
 fi;
+
+# ==============================================================================
+# -- Summary output ------------------------------------------------------------
+# ==============================================================================
+
+if [[ -n "$SUMMARY_OUTPUT_PATH" ]]; then
+  {
+    echo "package_uri=${URL_PREFIX}/${DEPLOY_NAME}"
+    echo "additional_maps_package_uri=${URL_PREFIX}/${DEPLOY_NAME2}"
+  } >> "$SUMMARY_OUTPUT_PATH"
+fi
 
 # ==============================================================================
 # -- ...and we are done --------------------------------------------------------

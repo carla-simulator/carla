@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -259,6 +259,14 @@ namespace detail {
       _client.SetWeatherParameters(weather);
     }
 
+    float GetIMUISensorGravity() const {
+      return _client.GetIMUISensorGravity();
+    }
+
+    void SetIMUISensorGravity(float NewIMUISensorGravity) {
+      _client.SetIMUISensorGravity(NewIMUISensorGravity);
+    }
+
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
       return _client.GetVehiclePhysicsControl(vehicle.GetId());
     }
@@ -291,6 +299,11 @@ namespace detail {
         geom::Location start_location, geom::Location end_location) const {
       return _client.CastRay(start_location, end_location);
     }
+
+    void SetAnnotationsTraverseTranslucency(
+      bool enable) {
+        _client.SetAnnotationsTraverseTranslucency(enable);
+      }
 
     /// @}
     // =========================================================================
@@ -357,7 +370,8 @@ namespace detail {
         const geom::Transform &transform,
         Actor *parent = nullptr,
         rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid,
-        GarbageCollectionPolicy gc = GarbageCollectionPolicy::Inherit);
+        GarbageCollectionPolicy gc = GarbageCollectionPolicy::Inherit,
+        const std::string& socket_name = "");
 
     bool DestroyActor(Actor &actor);
 
@@ -438,6 +452,54 @@ namespace detail {
       return GetActorSnapshot(actor).acceleration;
     }
 
+    geom::BoundingBox GetActorBoundingBox(const Actor &actor) {
+      return _client.GetActorBoundingBox(actor.GetId());
+    }
+
+    geom::BoundingBox GetTrafficSignTriggerVolume(const Actor &actor) {
+      return _client.GetTrafficSignTriggerVolume(actor.GetId());
+    }
+
+    geom::Transform GetActorComponentWorldTransform(const Actor &actor, const std::string componentName) {
+      return _client.GetActorComponentWorldTransform(actor.GetId(), componentName);
+    }
+
+    geom::Transform GetActorComponentRelativeTransform(const Actor &actor, std::string componentName) {
+      return _client.GetActorComponentRelativeTransform(actor.GetId(), componentName);
+    }
+
+    std::vector<geom::Transform> GetActorBoneWorldTransforms(const Actor &actor) {
+      return _client.GetActorBoneWorldTransforms(actor.GetId());
+    }
+    
+    std::vector<geom::Transform> GetVehicleBoneWorldTransforms(const Vehicle &vehicle) {
+      return _client.GetVehicleBoneWorldTransforms(vehicle.GetId());
+    }
+
+    std::vector<geom::Transform> GetActorBoneRelativeTransforms(const Actor &actor) {
+      return _client.GetActorBoneRelativeTransforms(actor.GetId());
+    }
+
+    std::vector<std::string> GetActorComponentNames(const Actor &actor) {
+      return _client.GetActorComponentNames(actor.GetId());
+    }
+
+    std::vector<std::string> GetActorBoneNames(const Actor &actor) {
+      return _client.GetActorBoneNames(actor.GetId());
+    }
+
+    std::vector<geom::Transform> GetActorSocketWorldTransforms(const Actor &actor) {
+      return _client.GetActorSocketWorldTransforms(actor.GetId());
+    }
+
+    std::vector<geom::Transform> GetActorSocketRelativeTransforms(const Actor &actor) {
+      return _client.GetActorSocketRelativeTransforms(actor.GetId());
+    }
+
+    std::vector<std::string> GetActorSocketNames(const Actor &actor) {
+      return _client.GetActorSocketNames(actor.GetId());
+    }    
+
     void SetActorLocation(Actor &actor, const geom::Location &location) {
       _client.SetActorLocation(actor.GetId(), location);
     }
@@ -478,6 +540,10 @@ namespace detail {
 
     void SetVehicleAutopilot(Vehicle &vehicle, bool enabled = true) {
       _client.SetActorAutopilot(vehicle.GetId(), enabled);
+    }
+
+    rpc::VehicleTelemetryData GetVehicleTelemetryData(const Vehicle &vehicle) const {
+      return _client.GetVehicleTelemetryData(vehicle.GetId());
     }
 
     void ShowVehicleDebugTelemetry(Vehicle &vehicle, bool enabled = true) {
@@ -548,6 +614,14 @@ namespace detail {
       return _client.GetWheelSteerAngle(vehicle.GetId(), wheel_location);
     }
 
+    void SetWheelPitchAngle(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location, float angle_in_deg) {
+      _client.SetWheelPitchAngle(vehicle.GetId(), wheel_location, angle_in_deg);
+    }
+
+    float GetWheelPitchAngle(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location) {
+      return _client.GetWheelPitchAngle(vehicle.GetId(), wheel_location);
+    }
+
     void EnableCarSim(Vehicle &vehicle, std::string simfile_path) {
       _client.EnableCarSim(vehicle.GetId(), simfile_path);
     }
@@ -570,6 +644,10 @@ namespace detail {
           PowertrainJSON,
           TireJSON,
           BaseJSONPath);
+    }
+
+    void RestorePhysXPhysics(Vehicle &vehicle) {
+      _client.RestorePhysXPhysics(vehicle.GetId());
     }
 
     /// @}
@@ -598,9 +676,11 @@ namespace detail {
       return _client.ShowRecorderActorsBlocked(std::move(name), min_time, min_distance);
     }
 
-    std::string ReplayFile(std::string name, double start, double duration,
-        uint32_t follow_id, bool replay_sensors) {
-      return _client.ReplayFile(std::move(name), start, duration, follow_id, replay_sensors);
+    std::string ReplayFile(
+      std::string name, double start, double duration,
+      uint32_t follow_id, bool replay_sensors, geom::Transform offset,
+      std::string map_override) {
+      return _client.ReplayFile(std::move(name), start, duration, follow_id, replay_sensors, offset, map_override);
     }
 
     void SetReplayerTimeFactor(double time_factor) {
@@ -631,11 +711,13 @@ namespace detail {
 
     void UnSubscribeFromSensor(Actor &sensor);
 
-    void EnableForROS(const Sensor &sensor);
+    void EnableGBuffers(const Sensor &sensor, bool bEnable);
 
     void DisableForROS(const Sensor &sensor);
 
     bool IsEnabledForROS(const Sensor &sensor);
+
+    void EnableForROS(const Sensor &sensor);
 
     void SubscribeToGBuffer(
         Actor & sensor,
@@ -645,6 +727,10 @@ namespace detail {
     void UnSubscribeFromGBuffer(
         Actor & sensor,
         uint32_t gbuffer_id);
+
+    void Send(const Sensor &sensor, std::string message);
+
+    void SetIgnoredVehicles(const Sensor &sensor, const std::vector<ActorId>& vehicle_ids);
 
     /// @}
     // =========================================================================
@@ -697,6 +783,15 @@ namespace detail {
     void DrawDebugShape(const rpc::DebugShape &shape) {
       _client.DrawDebugShape(shape);
     }
+
+    void ClearDebugShape() {
+      _client.ClearDebugShape();
+    }
+
+    void ClearDebugString() {
+      _client.ClearDebugString();
+    }
+
 
     /// @}
     // =========================================================================
@@ -765,6 +860,14 @@ namespace detail {
         const rpc::TextureFloatColor& Texture);
 
     std::vector<std::string> GetNamesOfAllObjects() const;
+
+    /// Export cosmos data to JSON files
+    std::string ExportCosmosCrosswalks(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosRoadBoundaries(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosLaneLines(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosTrafficSigns(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosWaitLines(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosRoadMarkings(const std::string& session_id, const std::string& output_path) const;
 
     /// @}
 

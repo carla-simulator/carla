@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -55,4 +55,7 @@ struct CARLA_API FPedestrianParameters
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   int32 Generation = 0;
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite)
+  bool bCanUseWheelChair = false;
 };

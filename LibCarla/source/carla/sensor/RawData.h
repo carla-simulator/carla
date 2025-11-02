@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -8,7 +8,10 @@
 
 #include "carla/Buffer.h"
 #include "carla/sensor/s11n/SensorHeaderSerializer.h"
+
+#if defined(WITH_ROS2)
 #include "carla/ros2/ROS2.h"
+#endif
 
 #include <cstdint>
 #include <iterator>
@@ -89,7 +92,10 @@ namespace sensor {
 
     template <typename... Items>
     friend class CompositeSerializer;
+
+    #if defined(WITH_ROS2)
     friend class carla::ros2::ROS2;
+    #endif
 
     RawData(Buffer &&buffer) : _buffer(std::move(buffer)) {}
 

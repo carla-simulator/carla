@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -12,10 +12,11 @@ namespace carla {
 namespace geom {
 
   class Location;
+  class Transform;
 
   class GeoLocation {
   public:
-
+    
     // =========================================================================
     // -- Public data members --------------------------------------------------
     // =========================================================================
@@ -36,14 +37,6 @@ namespace geom {
       : latitude(latitude),
         longitude(longitude),
         altitude(altitude) {}
-
-    // =========================================================================
-    // -- Transform locations --------------------------------------------------
-    // =========================================================================
-
-    /// Transform the given @a location to a GeoLocation using this as
-    /// geo-reference.
-    GeoLocation Transform(const Location &location) const;
 
     // =========================================================================
     // -- Comparison operators -------------------------------------------------

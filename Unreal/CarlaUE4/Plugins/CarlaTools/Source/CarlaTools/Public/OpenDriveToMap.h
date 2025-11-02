@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
 
@@ -90,6 +90,9 @@ public:
 
   UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
   FString Url;
+
+  UPROPERTY( EditAnywhere, BlueprintReadWrite, Category="Settings" )
+  FString LocalFilePath;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Settings")
   FVector2D OriginGeoCoordinates;
@@ -212,6 +215,9 @@ private:
         FVector &location) const;
 
   void InitTextureData();
+
+  void ImportXODR();
+  void ImportOSM();
 
   UPROPERTY()
   UCustomFileDownloader* FileDownloader;

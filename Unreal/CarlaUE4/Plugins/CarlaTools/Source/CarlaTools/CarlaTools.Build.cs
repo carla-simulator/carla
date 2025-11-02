@@ -6,8 +6,7 @@ using UnrealBuildTool;
 
 public class CarlaTools : ModuleRules
 {
-  bool UsingHoudini = true;
-  bool bUsingOmniverseConnector = false;
+  bool bUsingSimReadyPlugins = false;
   private bool IsWindows(ReadOnlyTargetRules Target)
   {
     return (Target.Platform == UnrealTargetPlatform.Win64) || (Target.Platform == UnrealTargetPlatform.Win32);
@@ -30,12 +29,12 @@ public class CarlaTools : ModuleRules
     string[] text = System.IO.File.ReadAllLines(OptionalModulesFile);
     foreach (string line in text)
     {
-      if (line.Contains("Omniverse ON"))
+      if (line.Contains("SimReady ON"))
       {
-        Console.WriteLine("Enabling OmniverseConnector");
-        bUsingOmniverseConnector = true;
-        PublicDefinitions.Add("WITH_OMNIVERSE");
-        PrivateDefinitions.Add("WITH_OMNIVERSE");
+        Console.WriteLine("Enabling SimReady Converter Plugins");
+        bUsingSimReadyPlugins = true;
+        PublicDefinitions.Add("WITH_SIMREADY");
+        PrivateDefinitions.Add("WITH_SIMREADY");
       }
     }
 
@@ -97,23 +96,13 @@ public class CarlaTools : ModuleRules
 				// ... add private dependencies that you statically link with here ...
 			}
 			);
-    if(UsingHoudini)
+    if(bUsingSimReadyPlugins)
     {
       PrivateDependencyModuleNames.AddRange(
         new string[]
         {
-          "HoudiniEngine",
-          "HoudiniEngineEditor",
-          "HoudiniEngineRuntime"
-        });
-    }
-    if(bUsingOmniverseConnector)
-    {
-      PrivateDependencyModuleNames.AddRange(
-        new string[]
-        {
-          "OmniverseUSD",
-          "OmniverseRuntime"
+          "SimReadyUSD",
+          "SimReadyRuntime"
         });
     }
 

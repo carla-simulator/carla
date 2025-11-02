@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -15,6 +15,7 @@
 #include "CarlaRecorderAnimVehicleWheels.h"
 #include "CarlaRecorderLightVehicle.h"
 #include "CarlaRecorderLightScene.h"
+#include "CarlaRecorderDoorVehicle.h"	
 #include "CarlaRecorderWalkerBones.h"
 
 #include <unordered_map>
@@ -51,7 +52,7 @@ public:
   bool ProcessReplayerEventParent(uint32_t ChildId, uint32_t ParentId);
 
   // reposition actors
-  bool ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per, double DeltaTime);
+  bool ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per, double DeltaTime, bool bIgnoreSpectator);
 
   // replay event for traffic light state
   bool ProcessReplayerStateTrafficLight(CarlaRecorderStateTrafficLight State);
@@ -64,6 +65,9 @@ public:
 
   // set the animation for walkers
   void ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker);
+
+  // set the openings and closing of vehicle doors
+  void ProcessReplayerDoorVehicle(CarlaRecorderDoorVehicle DoorVehicle);
 
   // set the animation for bikers
   void ProcessReplayerAnimBiker(CarlaRecorderAnimBiker Biker);
@@ -102,7 +106,7 @@ private:
     uint32_t DesiredId,
     bool SpawnSensors);
 
-  FCarlaActor* FindTrafficLightAt(FVector Location);
+  FCarlaActor* FindTrafficSignAt(FVector Location);
 
   // enable / disable physics for an actor
   bool SetActorSimulatePhysics(FCarlaActor *CarlaActor, bool bEnabled);

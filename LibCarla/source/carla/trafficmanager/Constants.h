@@ -57,6 +57,9 @@ static const float JUNCTION_LOOK_AHEAD = 5.0f;
 static const float SAFE_DISTANCE_AFTER_JUNCTION = 4.0f;
 static const float MIN_JUNCTION_LENGTH = 8.0f;
 static const float MIN_SAFE_INTERVAL_LENGTH = 0.5f * SAFE_DISTANCE_AFTER_JUNCTION;
+static const float LARGE_VEHICLES_JUNCTION_OFFSET = 1.5f;
+static const float LARGE_VEHICLES_JUNCTION_POINT = 0.3f;
+static const float LARGE_VEHICLES_JUNCTION_MAX_RADIUS = 20.0f;
 } // namespace WaypointSelection
 
 namespace LaneChange {

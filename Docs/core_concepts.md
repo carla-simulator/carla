@@ -37,7 +37,7 @@ __Blueprints__ are already-made actor layouts necessary to spawn an actor. Basic
 
 ### 3rd- Maps and navigation
 
-__The map__ is the object representing the simulated world, the town mostly. There are eight maps available. All of them use OpenDRIVE 1.4 standard to describe the roads.  
+__The map__ is the object representing the simulated world, the town mostly. There are eight maps available. All of them use ASAM OpenDRIVE 1.4 standard to describe the roads.  
 
 __Roads, lanes and junctions__ are managed by the [Python API](python_api.md) to be accessed from the client. These are used along with the __waypoint__ class to provide vehicles with a navigation path.  
 

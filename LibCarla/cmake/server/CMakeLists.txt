@@ -118,8 +118,6 @@ file(GLOB libcarla_server_sources
     "${libcarla_source_path}/carla/streaming/low_level/*.h"
     "${libcarla_source_path}/carla/multigpu/*.h"
     "${libcarla_source_path}/carla/multigpu/*.cpp"
-    "${libcarla_source_path}/carla/ros2/*.h"
-    "${libcarla_source_path}/carla/ros2/*.cpp"
     "${libcarla_source_thirdparty_path}/odrSpiral/*.cpp"
     "${libcarla_source_thirdparty_path}/odrSpiral/*.h"
     "${libcarla_source_thirdparty_path}/moodycamel/*.cpp"

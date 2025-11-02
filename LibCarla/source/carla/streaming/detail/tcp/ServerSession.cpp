@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -17,6 +17,7 @@
 
 #include <atomic>
 #include <thread>
+#include <chrono>
 
 namespace carla {
 namespace streaming {
@@ -79,7 +80,6 @@ namespace tcp {
     DEBUG_ASSERT(message != nullptr);
     DEBUG_ASSERT(!message->empty());
     auto self = shared_from_this();
-    boost::asio::post(_strand, [=]() {
       if (!_socket.is_open()) {
         return;
       }
@@ -87,7 +87,7 @@ namespace tcp {
         if (_server.IsSynchronousMode()) {
           // wait until previous message has been sent
           while (_is_writing) {
-            std::this_thread::yield();
+            std::this_thread::sleep_for(std::chrono::microseconds(100));
           }
         } else {
           // ignore this message
@@ -111,11 +111,8 @@ namespace tcp {
       log_debug("session", _session_id, ": sending message of", message->size(), "bytes");
 
       _deadline.expires_from_now(_timeout);
-      boost::asio::async_write(
-          _socket,
-          message->GetBufferSequence(),
-          handle_sent);
-    });
+      boost::asio::async_write(_socket, message->GetBufferSequence(), 
+        boost::asio::bind_executor(_strand, handle_sent));
   }
 
   void ServerSession::Close() {
