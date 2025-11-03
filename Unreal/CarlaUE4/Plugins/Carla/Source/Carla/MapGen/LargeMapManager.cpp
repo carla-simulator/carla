@@ -197,30 +197,19 @@ void ALargeMapManager::AdjustAllSignsToHeightGround()
 
       Actor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
 
-      // Get all static mesh components
-      TArray<UStaticMeshComponent*> StaticMeshComps;
-      Actor->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-
-      for (UStaticMeshComponent* MeshComp : StaticMeshComps)
+      Actor->SetActorLocation(AdjustedLocation);
+      TArray<UBoxComponent*> BoxComponents;
+      Actor->GetComponents<UBoxComponent>(BoxComponents);
+      for (UBoxComponent* BoxComp : BoxComponents)
       {
-        if (!MeshComp) continue;
+        if (!BoxComp) continue;
 
-        // Skip if this has a mesh parent (it's a child)
-        USceneComponent* ParentComp = MeshComp->GetAttachParent();
-        if (ParentComp && Cast<UStaticMeshComponent>(ParentComp))
-        {
-          continue;
-        }
-
-        // Move the mesh component down
-        FVector CompLocation = MeshComp->GetRelativeLocation();
-        CompLocation.Z += ZOffset;
-        MeshComp->SetRelativeLocation(CompLocation);
-
-        MeshComp->UpdateBounds();
-
-        LM_LOG(Log, "Moved mesh %s by %f cm", *Actor->GetName(), ZOffset);
+        FVector BoxLocation = BoxComp->GetRelativeLocation();
+        BoxLocation.Z -= ZOffset;
+        BoxComp->SetRelativeLocation(BoxLocation);
       }
+
+      LM_LOG(Log, "Adjusted sign %s height by %f cm", *Actor->GetName(), ZOffset);
 
       Actor->UpdateComponentTransforms();
       Actor->GetRootComponent()->SetMobility(EComponentMobility::Static);

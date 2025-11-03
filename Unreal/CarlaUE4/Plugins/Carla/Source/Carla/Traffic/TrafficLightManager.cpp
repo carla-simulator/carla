@@ -291,30 +291,19 @@ void ATrafficLightManager::AdjustAllSignsToHeightGround()
 
       TS->GetRootComponent()->SetMobility(EComponentMobility::Movable);
 
-      // Get all static mesh components
-      TArray<UStaticMeshComponent*> StaticMeshComps;
-      TS->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-
-      for (UStaticMeshComponent* MeshComp : StaticMeshComps)
+      TS->SetActorLocation(AdjustedLocation);
+      TArray<UBoxComponent*> BoxComponents;
+      TS->GetComponents<UBoxComponent>(BoxComponents);
+      for (UBoxComponent* BoxComp : BoxComponents)
       {
-        if (!MeshComp) continue;
+        if (!BoxComp) continue;
 
-        // Skip if this has a mesh parent (it's a child)
-        USceneComponent* ParentComp = MeshComp->GetAttachParent();
-        if (ParentComp && Cast<UStaticMeshComponent>(ParentComp))
-        {
-          continue;
-        }
-
-        // Move the mesh component down
-        FVector CompLocation = MeshComp->GetRelativeLocation();
-        CompLocation.Z += ZOffset;
-        MeshComp->SetRelativeLocation(CompLocation);
-
-        MeshComp->UpdateBounds();
-
-        UE_LOG(LogCarla, Log, TEXT("Moved mesh %s by %f cm"), *TS->GetName(), ZOffset);
+        FVector BoxLocation = BoxComp->GetRelativeLocation();
+        BoxLocation.Z -= ZOffset;
+        BoxComp->SetRelativeLocation(BoxLocation);
       }
+
+      UE_LOG(LogCarla, Log, TEXT("Adjusted sign %s height by %f cm"), *TS->GetName(), ZOffset);
 
       TS->UpdateComponentTransforms();
       TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
