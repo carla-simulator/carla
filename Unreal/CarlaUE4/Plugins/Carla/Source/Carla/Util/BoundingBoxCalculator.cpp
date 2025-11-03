@@ -665,31 +665,26 @@ FBoundingBox UBoundingBoxCalculator::GetTrafficSignTriggerVolume(const AActor *A
     auto TrafficSign = Cast<ATrafficSignBase>(Actor);
     if (TrafficSign != nullptr)
     {
-      // first return a merge of the generated trigger boxes, if any
+      // Return the first generated trigger box (OpenDRIVE-based signals)
+      // Newer traffic signs may have multiple trigger volumes (EffectBox, CheckBox, etc.)
+      // but for the Python API we return only the first one to preserve its rotation
       auto TriggerVolumes = TrafficSign->GetTriggerVolumes();
       if (TriggerVolumes.Num() > 0)
       {
-        // Transform all trigger volumes to local space first (same as bounding boxes)
+        UBoxComponent* FirstTriggerVolume = TriggerVolumes[0];
         FTransform Transform = Actor->GetActorTransform();
-        TArray<FBoundingBox> TriggerVolumesLocal;
 
-        for (UBoxComponent* TriggerVolume : TriggerVolumes)
-        {
-          FBoundingBox TVWorld;
-          TVWorld.Origin = TriggerVolume->GetComponentLocation();
-          TVWorld.Extent = TriggerVolume->GetScaledBoxExtent();
-          TVWorld.Rotation = TriggerVolume->GetComponentRotation();
+        FBoundingBox TVWorld;
+        TVWorld.Origin = FirstTriggerVolume->GetComponentLocation();
+        TVWorld.Extent = FirstTriggerVolume->GetScaledBoxExtent();
+        TVWorld.Rotation = FirstTriggerVolume->GetComponentRotation();
 
-          FBoundingBox TVLocal;
-          TVLocal.Origin = Transform.InverseTransformPosition(TVWorld.Origin);
-          TVLocal.Extent = TVWorld.Extent; // Extent doesn't change
-          TVLocal.Rotation = FRotator(0, 0, 0); // In local space, no rotation
-          TriggerVolumesLocal.Add(TVLocal);
-        }
+        FBoundingBox TVLocal;
+        TVLocal.Origin = Transform.InverseTransformPosition(TVWorld.Origin);
+        TVLocal.Extent = TVWorld.Extent; // Extent doesn't change
+        TVLocal.Rotation = Transform.InverseTransformRotation(TVWorld.Rotation.Quaternion()).Rotator();
 
-        FBoundingBox Box = CombineBBs(TriggerVolumesLocal);
-        Box.Rotation = FRotator(0, 0, 0);
-        return Box;
+        return TVLocal;
       }
       // try to return the original bounding box
       auto TriggerVolume = TrafficSign->GetTriggerVolume();
