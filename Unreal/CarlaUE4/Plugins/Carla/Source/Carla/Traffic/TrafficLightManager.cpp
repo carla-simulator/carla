@@ -6,6 +6,7 @@
 
 #include "TrafficLightManager.h"
 #include "Game/CarlaStatics.h"
+#include "Util/BoundingBoxCalculator.h"
 #include "StopSignComponent.h"
 #include "YieldSignComponent.h"
 #include "SpeedLimitComponent.h"
@@ -264,6 +265,14 @@ const boost::optional<carla::road::Map>& ATrafficLightManager::GetMap()
 
 void ATrafficLightManager::AdjustAllSignsToHeightGround()
 {
+  UWorld* World = GetWorld();
+  if (!World)
+  {
+    return;
+  }
+
+  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
+
   for(ATrafficSignBase* TS : TrafficSigns)
   {
     if (!IsValid(TS))
@@ -273,40 +282,29 @@ void ATrafficLightManager::AdjustAllSignsToHeightGround()
 
     FVector OriginalLocation = TS->GetActorLocation();
     FVector AdjustedLocation = OriginalLocation;
-    
+
     TS->bPositioned = AdjustSignHeightToGround(AdjustedLocation);
-    
+
     if (TS->bPositioned)
     {
       float ZOffset = AdjustedLocation.Z - OriginalLocation.Z;
 
       TS->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-      
-      // Get all static mesh components
-      TArray<UStaticMeshComponent*> StaticMeshComps;
-      TS->GetComponents<UStaticMeshComponent>(StaticMeshComps);
-      
-      for (UStaticMeshComponent* MeshComp : StaticMeshComps)
+
+      TS->SetActorLocation(AdjustedLocation);
+      TArray<UBoxComponent*> BoxComponents;
+      TS->GetComponents<UBoxComponent>(BoxComponents);
+      for (UBoxComponent* BoxComp : BoxComponents)
       {
-        if (!MeshComp) continue;
-        
-        // Skip if this has a mesh parent (it's a child)
-        USceneComponent* ParentComp = MeshComp->GetAttachParent();
-        if (ParentComp && Cast<UStaticMeshComponent>(ParentComp))
-        {
-          continue;
-        }
-        
-        // Move the mesh component down
-        FVector CompLocation = MeshComp->GetRelativeLocation();
-        CompLocation.Z += ZOffset;
-        MeshComp->SetRelativeLocation(CompLocation);
-        
-        MeshComp->UpdateBounds();
-        
-        UE_LOG(LogCarla, Log, TEXT("Moved mesh %s by %f cm"), *TS->GetName(), ZOffset);
+        if (!BoxComp) continue;
+
+        FVector BoxLocation = BoxComp->GetRelativeLocation();
+        BoxLocation.Z -= ZOffset;
+        BoxComp->SetRelativeLocation(BoxLocation);
       }
-      
+
+      UE_LOG(LogCarla, Log, TEXT("Adjusted sign %s height by %f cm"), *TS->GetName(), ZOffset);
+
       TS->UpdateComponentTransforms();
       TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
     }
@@ -336,6 +334,13 @@ void ATrafficLightManager::GenerateSignalsAndTrafficLights()
     if (CurrentMapName.Contains(TEXT("Town15"), ESearchCase::IgnoreCase))
     {
       AdjustAllSignsToHeightGround();
+
+      ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(GetWorld());
+      if (GameMode)
+      {
+        GameMode->RegisterEnvironmentObjects();
+        UE_LOG(LogCarla, Log, TEXT("Re-registered environment objects after sign height adjustment"));
+      }
     }
 
   }

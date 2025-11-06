@@ -9,6 +9,9 @@
 
 #include "Carla/Game/Tagger.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
+#include "Carla/Traffic/TrafficSignBase.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/MapGen/LargeMapManager.h"
 
 #include "InstancedFoliageActor.h"
 #include "GameFramework/Character.h"
@@ -42,6 +45,7 @@ void UObjectRegister::RegisterObjects(TArray<AActor*> Actors)
 {
   // Empties the array but doesn't change memory allocations
   EnvironmentObjects.Reset();
+  ObjectIdToComp.Reset();
 
   for(AActor* Actor : Actors)
   {
@@ -295,17 +299,32 @@ void UObjectRegister::RegisterSMComponents(AActor* Actor)
   const FString ActorName = Actor->GetName();
   const bool IsActorTickEnabled = Actor->IsActorTickEnabled();
 
+  ATrafficSignBase* TrafficSign = Cast<ATrafficSignBase>(Actor);
+  if (!IsValid(TrafficSign) || BBs.Num() == 0)
+  {
+    return;
+  }
+
   for(int i = 0; i < BBs.Num(); i++)
   {
     const FString SMName = FString::Printf(TEXT("%s_SM_%d"), *ActorName, i);
 
     FEnvironmentObject EnvironmentObject;
-    EnvironmentObject.Transform = Transform;
+    FTransform EffectiveTransform = Transform;
+    FBoundingBox EffectiveBB = BBs[i];
+
+    if (TrafficSign)
+    {
+      EffectiveBB.Origin = Transform.InverseTransformPosition(BBs[i].Origin);
+      EffectiveBB.Rotation = FRotator(0, 0, 0);
+    }
+
+    EnvironmentObject.Transform = EffectiveTransform;
     EnvironmentObject.Id = CityHash64(TCHAR_TO_ANSI(*SMName), SMName.Len());
     EnvironmentObject.Name = SMName;
     EnvironmentObject.Actor = Actor;
     EnvironmentObject.CanTick = IsActorTickEnabled;
-    EnvironmentObject.BoundingBox = BBs[i];
+    EnvironmentObject.BoundingBox = EffectiveBB;
     EnvironmentObject.Type = EnvironmentObjectType::SMComp;
     EnvironmentObject.ObjectLabel = static_cast<crp::CityObjectLabel>(Tags[i]);
     EnvironmentObjects.Emplace(EnvironmentObject);

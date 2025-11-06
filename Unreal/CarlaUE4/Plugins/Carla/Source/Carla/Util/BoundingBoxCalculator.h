@@ -114,4 +114,8 @@ public:
     const FBoundingBox& InBB,
     TArray<UStaticMeshComponent*>& OutStaticMeshComps);
 
+  /// Compute the trigger volume of a traffic sign
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static FBoundingBox GetTrafficSignTriggerVolume(const AActor *Actor);
+
 };

@@ -74,7 +74,7 @@ def lidar_callback(point_cloud, point_list):
 
     # We're negating the y to correclty visualize a world that matches
     # what we see in Unreal since Open3D uses a right-handed coordinate system
-    points[:, :1] = -points[:, :1]
+    points[:, 1] = -points[:, 1]
 
     # # An example of converting points from sensor to vehicle space if we had
     # # a carla.Transform variable named "tran":
