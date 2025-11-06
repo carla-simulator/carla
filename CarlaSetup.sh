@@ -96,10 +96,12 @@ else
 fi
 
 # -- DOWNLOAD + BUILD UNREAL ENGINE --
-if [ ! -z $CARLA_UNREAL_ENGINE_PATH ] && [ -d $CARLA_UNREAL_ENGINE_PATH ]; then
+if [ ! -z "$CARLA_UNREAL_ENGINE_PATH" ] && [ -d "$CARLA_UNREAL_ENGINE_PATH" ]; then
     echo "Found CARLA Unreal Engine at $CARLA_UNREAL_ENGINE_PATH"
 elif [ -d ../UnrealEngine5_carla ]; then
-    echo "Found CARLA Unreal Engine at $workspace_path/UnrealEngine5_carla. Assuming already built..."
+    CARLA_UNREAL_ENGINE_PATH="$(realpath ../UnrealEngine5_carla)"
+    echo "Found CARLA Unreal Engine at $CARLA_UNREAL_ENGINE_PATH. Assuming already built..."
+    export CARLA_UNREAL_ENGINE_PATH
 else
     echo "Could not find CARLA Unreal Engine, downloading..."
     pushd ..
@@ -126,7 +128,18 @@ else
 fi
 
 # -- BUILD CARLA --
+if [ -z "$CARLA_UNREAL_ENGINE_PATH" ]; then
+    echo "Error: CARLA_UNREAL_ENGINE_PATH is not set. Please set it to the Unreal Engine 5 installation path."
+    exit 1
+fi
+
+if [ ! -d "$CARLA_UNREAL_ENGINE_PATH" ]; then
+    echo "Error: CARLA_UNREAL_ENGINE_PATH does not exist: $CARLA_UNREAL_ENGINE_PATH"
+    exit 1
+fi
+
 echo "Configuring the CARLA CMake project..."
+echo "Using CARLA_UNREAL_ENGINE_PATH: $CARLA_UNREAL_ENGINE_PATH"
 cmake -G Ninja -S . -B Build \
     --toolchain=$PWD/CMake/Toolchain.cmake \
     -DLAUNCH_ARGS="-prefernvidia" \

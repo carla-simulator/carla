@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "{EFC07C98-4070-2F0E-BE31-319DCE259DFF}",
+	"EngineAssociation": "BA5C9F5F-2E1F-40D9-BDE6-D1D7D148E751",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -70,6 +70,10 @@
 		},
 		{
 			"Name": "PerformanceMonitor",
+			"Enabled": true
+		},
+		{
+			"Name": "StreetMap",
 			"Enabled": true
 		}
 	],

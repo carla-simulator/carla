@@ -160,6 +160,16 @@ cmake_path (
   NORMALIZE
 )
 
+# If environment variable is not set, try to find ../UnrealEngine5_carla
+if ("${CARLA_UNREAL_ENGINE_PATH_INFERRED}" STREQUAL "")
+  get_filename_component(CARLA_WORKSPACE_PARENT_DIR "${CARLA_WORKSPACE_PATH}" DIRECTORY)
+  set(UE5_CARLA_CANDIDATE "${CARLA_WORKSPACE_PARENT_DIR}/UnrealEngine5_carla")
+  if (EXISTS "${UE5_CARLA_CANDIDATE}")
+    set(CARLA_UNREAL_ENGINE_PATH_INFERRED "${UE5_CARLA_CANDIDATE}")
+    carla_message ("Auto-detected Unreal Engine 5 at: ${CARLA_UNREAL_ENGINE_PATH_INFERRED}")
+  endif ()
+endif ()
+
 carla_string_option (
   CARLA_UNREAL_ENGINE_PATH
   "Path to the CARLA fork of Unreal Engine."

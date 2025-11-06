@@ -18,12 +18,37 @@ endif ()
 
 if ("${UE_ROOT}" STREQUAL "")
 	set (UE_ROOT ${CARLA_UNREAL_ENGINE_PATH})
-	set (ENV{UE_ROOT} ${UE_ROOT}) # @TODO
+endif ()
+
+if ("${UE_ROOT}" STREQUAL "")
+	# Try to auto-detect ../UnrealEngine5_carla relative to this toolchain file
+	get_filename_component(TOOLCHAIN_DIR "${CMAKE_CURRENT_LIST_DIR}" ABSOLUTE)
+	# TOOLCHAIN_DIR is /home/j0142063/CarlaUE5/CMake
+	# Get workspace directory (parent of CMake directory)
+	get_filename_component(WORKSPACE_DIR "${TOOLCHAIN_DIR}/.." ABSOLUTE)
+	# Get parent directory of workspace (where UnrealEngine5_carla should be)
+	get_filename_component(WORKSPACE_PARENT_DIR "${WORKSPACE_DIR}/.." ABSOLUTE)
+	set(UE5_CARLA_CANDIDATE "${WORKSPACE_PARENT_DIR}/UnrealEngine5_carla")
+	get_filename_component(UE5_CARLA_CANDIDATE "${UE5_CARLA_CANDIDATE}" ABSOLUTE)
+	if (EXISTS "${UE5_CARLA_CANDIDATE}")
+		set (UE_ROOT "${UE5_CARLA_CANDIDATE}")
+		message (STATUS "Toolchain: Auto-detected Unreal Engine 5 at: ${UE_ROOT}")
+	else ()
+		message (STATUS "Toolchain: Tried to find Unreal Engine 5 at: ${UE5_CARLA_CANDIDATE} (not found)")
+	endif ()
+endif ()
+
+if ("${UE_ROOT}" STREQUAL "")
+	message (FATAL_ERROR "Could not find Carla Unreal Engine 5 path. Please set CARLA_UNREAL_ENGINE_PATH environment variable or ensure ../UnrealEngine5_carla exists relative to CarlaUE5.")
 endif ()
 
 if (NOT EXISTS ${UE_ROOT})
 	message (FATAL_ERROR "The specified Carla Unreal Engine 5 path does not exist (\"${UE_ROOT}\").")
 endif ()
+
+# Set environment variable for subprojects
+set (ENV{CARLA_UNREAL_ENGINE_PATH} ${UE_ROOT})
+set (ENV{UE_ROOT} ${UE_ROOT})
 
 set (ARCH ${CMAKE_HOST_SYSTEM_PROCESSOR})
 
