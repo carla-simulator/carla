@@ -6,6 +6,7 @@
 
 #include "TrafficLightManager.h"
 #include "Game/CarlaStatics.h"
+#include "Util/BoundingBoxCalculator.h"
 #include "StopSignComponent.h"
 #include "YieldSignComponent.h"
 #include "SpeedLimitComponent.h"
@@ -264,13 +265,49 @@ const boost::optional<carla::road::Map>& ATrafficLightManager::GetMap()
 
 void ATrafficLightManager::AdjustAllSignsToHeightGround()
 {
+  UWorld* World = GetWorld();
+  if (!World)
+  {
+    return;
+  }
+
+  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
+
   for(ATrafficSignBase* TS : TrafficSigns)
   {
-    TS->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-    FVector SpawnLocation = TS->GetActorLocation();
-    AdjustSignHeightToGround(SpawnLocation);
-    TS->SetActorLocation(SpawnLocation);
-    TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
+    if (!IsValid(TS))
+      continue;
+    if (TS->bPositioned)
+      continue;
+
+    FVector OriginalLocation = TS->GetActorLocation();
+    FVector AdjustedLocation = OriginalLocation;
+
+    TS->bPositioned = AdjustSignHeightToGround(AdjustedLocation);
+
+    if (TS->bPositioned)
+    {
+      float ZOffset = AdjustedLocation.Z - OriginalLocation.Z;
+
+      TS->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+
+      TS->SetActorLocation(AdjustedLocation);
+      TArray<UBoxComponent*> BoxComponents;
+      TS->GetComponents<UBoxComponent>(BoxComponents);
+      for (UBoxComponent* BoxComp : BoxComponents)
+      {
+        if (!BoxComp) continue;
+
+        FVector BoxLocation = BoxComp->GetRelativeLocation();
+        BoxLocation.Z -= ZOffset;
+        BoxComp->SetRelativeLocation(BoxLocation);
+      }
+
+      UE_LOG(LogCarla, Log, TEXT("Adjusted sign %s height by %f cm"), *TS->GetName(), ZOffset);
+
+      TS->UpdateComponentTransforms();
+      TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
+    }
   }
 }
 
@@ -297,6 +334,13 @@ void ATrafficLightManager::GenerateSignalsAndTrafficLights()
     if (CurrentMapName.Contains(TEXT("Town15"), ESearchCase::IgnoreCase))
     {
       AdjustAllSignsToHeightGround();
+
+      ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(GetWorld());
+      if (GameMode)
+      {
+        GameMode->RegisterEnvironmentObjects();
+        UE_LOG(LogCarla, Log, TEXT("Re-registered environment objects after sign height adjustment"));
+      }
     }
 
   }
@@ -909,7 +953,7 @@ void ATrafficLightManager::RemoveAttachedProps(TArray<AActor*> Actors) const
 
 bool ATrafficLightManager::AdjustSignHeightToGround(FVector& SpawnLocation) const
 {
-  const FVector Start = SpawnLocation + FVector(0, 0, 10.0f);
+  const FVector Start = SpawnLocation + FVector(0, 0, 200.0f);
   const FVector End = SpawnLocation - FVector(0, 0, 10000.0f);
 
   FHitResult HitResult;

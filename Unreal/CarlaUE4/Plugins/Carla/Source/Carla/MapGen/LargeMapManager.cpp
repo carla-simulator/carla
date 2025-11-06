@@ -9,6 +9,7 @@
 #include "Game/CarlaStatics.h"
 #include "Actor/ActorRegistry.h"
 #include "Game/CarlaEpisode.h"
+#include "Util/BoundingBoxCalculator.h"
 #include "Engine/EngineTypes.h"
 #include "Components/PrimitiveComponent.h"
 #include "Landscape.h"
@@ -138,8 +139,8 @@ void ALargeMapManager::PostWorldOriginOffset(UWorld* InWorld, FIntVector InSrcOr
 
 bool ALargeMapManager::AdjustSignHeightToGround(FVector& SpawnLocation, const FString& ActorName, const TArray<AActor*>& ActorsToIgnore) const
 {
-  const FVector Start = SpawnLocation + FVector(0, 0, 10.0f);
-  const FVector End = SpawnLocation - FVector(0, 0, 20000.0f);
+  const FVector Start = SpawnLocation + FVector(0, 0, 200.0f);
+  const FVector End = SpawnLocation - FVector(0, 0, 10000.0f);
 
   FHitResult HitResult;
   FCollisionQueryParams CollisionParams;
@@ -166,9 +167,17 @@ bool ALargeMapManager::AdjustSignHeightToGround(FVector& SpawnLocation, const FS
 
 void ALargeMapManager::AdjustAllSignsToHeightGround()
 {
+  UWorld* World = GetWorld();
+  if (!World)
+  {
+    return;
+  }
+
+  UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(World);
+
   TArray<AActor*> ActorsToIgnore;
   TArray<AActor*> ActorsToAdjustHeight;
-  UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATrafficSignBase::StaticClass(), ActorsToAdjustHeight);
+  UGameplayStatics::GetAllActorsOfClass(World, ATrafficSignBase::StaticClass(), ActorsToAdjustHeight);
   ActorsToIgnore.Append(ActorsToAdjustHeight);
   for (AActor* Actor : ActorsToAdjustHeight)
   {
@@ -177,21 +186,50 @@ void ALargeMapManager::AdjustAllSignsToHeightGround()
       continue;
     if (TrafficSign->bPositioned)
       continue;
-    FVector SpawnLocation = Actor->GetActorLocation();
-    TrafficSign->bPositioned = AdjustSignHeightToGround(SpawnLocation, Actor->GetName(), ActorsToIgnore);
+    FVector OriginalLocation = Actor->GetActorLocation();
+    FVector AdjustedLocation = OriginalLocation;
 
-    Actor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
-    Actor->SetActorLocation(SpawnLocation);
-    Actor->GetRootComponent()->SetMobility(EComponentMobility::Static);
+    TrafficSign->bPositioned = AdjustSignHeightToGround(AdjustedLocation, Actor->GetName(), ActorsToIgnore);
+
+    if (TrafficSign->bPositioned)
+    {
+      float ZOffset = AdjustedLocation.Z - OriginalLocation.Z;
+
+      Actor->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+
+      Actor->SetActorLocation(AdjustedLocation);
+      TArray<UBoxComponent*> BoxComponents;
+      Actor->GetComponents<UBoxComponent>(BoxComponents);
+      for (UBoxComponent* BoxComp : BoxComponents)
+      {
+        if (!BoxComp) continue;
+
+        FVector BoxLocation = BoxComp->GetRelativeLocation();
+        BoxLocation.Z -= ZOffset;
+        BoxComp->SetRelativeLocation(BoxLocation);
+      }
+
+      LM_LOG(Log, "Adjusted sign %s height by %f cm", *Actor->GetName(), ZOffset);
+
+      Actor->UpdateComponentTransforms();
+      Actor->GetRootComponent()->SetMobility(EComponentMobility::Static);
+    }
   }
 }
 
 void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
 {
-
   UCarlaEpisode* CarlaEpisode = UCarlaStatics::GetCurrentEpisode(InWorld);
   ATagger::TagActorsInLevel(*InLevel, *CarlaEpisode, true);
   AdjustAllSignsToHeightGround();
+
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(InWorld);
+  if (GameMode)
+  {
+    GameMode->RegisterEnvironmentObjects();
+    LM_LOG(Log, "Re-registered environment objects after sign height adjustment");
+  }
+
   LM_LOG(Warning, "OnLevelAddedToWorld");
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }

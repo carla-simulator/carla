@@ -1,6 +1,9 @@
 ## Latest Changes
 
+ * Improved the way the TrafficManager controls large vehicles at junctions, reducing the frequency of collisions with other elements in the simulation.
+ * Improved the turning behavior of vehicles controlled by the TrafficManager, making them smoother.
  * Added a hybrid solid-state LiDAR with adjustable parameters (blueprint attributes)
+
 ## CARLA 0.9.16
 
  * Added NVIDIA Cosmos Transfer1 integration

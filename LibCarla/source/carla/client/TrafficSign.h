@@ -17,9 +17,7 @@ namespace client {
 
     explicit TrafficSign(ActorInitializer init) : Actor(std::move(init)) {}
 
-    const geom::BoundingBox &GetTriggerVolume() const {
-      return ActorState::GetBoundingBox();
-    }
+    geom::BoundingBox GetTriggerVolume() const;
 
     carla::road::SignId GetSignId() const;
 

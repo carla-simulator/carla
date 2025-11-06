@@ -456,6 +456,10 @@ namespace detail {
       return _client.GetActorBoundingBox(actor.GetId());
     }
 
+    geom::BoundingBox GetTrafficSignTriggerVolume(const Actor &actor) {
+      return _client.GetTrafficSignTriggerVolume(actor.GetId());
+    }
+
     geom::Transform GetActorComponentWorldTransform(const Actor &actor, const std::string componentName) {
       return _client.GetActorComponentWorldTransform(actor.GetId(), componentName);
     }

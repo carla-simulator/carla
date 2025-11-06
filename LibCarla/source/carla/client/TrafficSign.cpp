@@ -11,6 +11,10 @@
 namespace carla {
 namespace client {
 
+  geom::BoundingBox TrafficSign::GetTriggerVolume() const {
+    return GetEpisode().Lock()->GetTrafficSignTriggerVolume(*this);
+  }
+
   carla::road::SignId TrafficSign::GetSignId() const {
     return std::string(GetEpisode().Lock()->GetActorSnapshot(*this).state.traffic_light_data.sign_id);
   }
