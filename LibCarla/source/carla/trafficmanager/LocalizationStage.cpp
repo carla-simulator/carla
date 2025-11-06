@@ -199,7 +199,7 @@ void LocalizationStage::Update(const unsigned long index) {
       uint64_t selection_index = 0u;
       // Pseudo-randomized path selection if found more than one choice.
       if (next_waypoints.size() > 1) {
-        selection_index = random_device.next<uint64_t>(0, next_waypoints.size());
+        selection_index = random_device.next<uint64_t>(0, next_waypoints.size() - 1);
       } else if (next_waypoints.size() == 0) {
         if (!parameters.GetOSMMode()) {
           std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
