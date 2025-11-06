@@ -2,7 +2,8 @@
 
 set -euo pipefail
 
-PYTHON_EXECUTABLE=python3
+CARLA_VERSION=0.9.16
+PYTHON_EXECUTABLE=python
 
 CARLA_ROOT=$(realpath "$BASH_SOURCE[0]")
 CARLA_ROOT=$(dirname "$CARLA_ROOT")
@@ -36,6 +37,9 @@ while true; do
 done
 
 echo Using python interpreter $PYTHON_EXECUTABLE.
+
+PYTHON_VERSION=$($PYTHON_EXECUTABLE -V)
+IFS=. read PYTHON_MAJOR PYTHON_MINOR PYTHON_PATCH <<< "$($PYTHON_EXECUTABLE -c 'import sys; print(".".join(map(str, sys.version_info[:3])))')"
 
 command_exists() { command -v "$1" >/dev/null 2>&1; }
 
@@ -325,7 +329,10 @@ $PYTHON_EXECUTABLE -m pip install pygame numpy nvidia-nvjpeg-cu12 imageio|| {
 # Install Carla Wheel
 echo "Installing Carla Wheel..."
 
-WHEEL=$(ls $CARLA_ROOT/PythonAPI/carla/dist/carla-0.9.16-cp310-cp310-*.whl | head -n 1)
+
+WHEEL_NAME_PREFIX=carla-$CARLA_VERSION-cp$PYTHON_MAJOR$PYTHON_MINOR-cp$PYTHON_MAJOR$PYTHON_MINOR
+
+WHEEL=$(ls $CARLA_ROOT/PythonAPI/carla/dist/$WHEEL_NAME_PREFIX-*.whl | head -n 1)
 $PYTHON_EXECUTABLE -m pip install ${WHEEL} || {
     echo "Error: Failed to install Carla Wheel"
     exit 1
