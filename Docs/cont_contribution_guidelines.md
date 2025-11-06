@@ -46,10 +46,10 @@ In order to start working, [fork the CARLA repository](https://docs.github.com/e
 
 ### Learn about Unreal Engine
 
-A basic introduction to C++ programming with UE4 can be found at Unreal's [C++ Programming Tutorials][ue4tutorials]. There are other options online, some of them not free of charge. The [Unreal C++ Course at Udemy][ue4course] it's pretty complete and there are usually offers that make it very affordable.
+A basic introduction to C++ programming with UE5 can be found at Unreal's [C++ Programming Tutorials][ue5tutorials]. There are other options online, some of them not free of charge. The [Unreal C++ Course at Udemy][ue5course] it's pretty complete and there are usually offers that make it very affordable.
 
-[ue4tutorials]: https://docs.unrealengine.com/latest/INT/Programming/Tutorials/
-[ue4course]: https://www.udemy.com/unrealcourse/
+[ue5tutorials]: https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-cpp-programming-tutorials
+[ue5course]: https://www.udemy.com/unrealcourse/
 
 ### Before getting started
 
