@@ -24,7 +24,8 @@ namespace s11n {
   class NoopSerializer {
   public:
 
-    [[ noreturn ]] static SharedPtr<SensorData> Deserialize(RawData &&data);
+    [[ noreturn ]] static SharedPtr<SensorData> Deserialize(RawData DESERIALIZE_DECL_DATA(data));
+
   };
 
 } // namespace s11n

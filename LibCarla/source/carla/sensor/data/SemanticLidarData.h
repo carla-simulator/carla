@@ -14,10 +14,6 @@
 
 namespace carla {
 
-namespace ros2 {
-  class ROS2;
-}
-
 namespace sensor {
 
 namespace s11n {
@@ -127,7 +123,7 @@ namespace data {
     }
 
     virtual void WriteChannelCount(std::vector<uint32_t> points_per_channel) {
-      for (auto idxChannel = 0u; idxChannel < GetChannelCount(); ++idxChannel)
+      for (auto idxChannel = 0u; idxChannel < GetChannelCount() && idxChannel < points_per_channel.size(); ++idxChannel)
         _header[Index::SIZE + idxChannel] = points_per_channel[idxChannel];
     }
 
@@ -144,7 +140,6 @@ namespace data {
 
   friend class s11n::SemanticLidarHeaderView;
   friend class s11n::SemanticLidarSerializer;
-  friend class carla::ros2::ROS2;
 
   };
 

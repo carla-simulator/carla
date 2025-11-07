@@ -12,6 +12,12 @@
 #include "carla/sensor/data/LidarData.h"
 
 namespace carla {
+
+namespace ros2 {
+  template <class HEADER_TYPE, class DATA_TYPE>
+  class UePublisherBasePointCloud;
+} // namespace ros2
+
 namespace sensor {
 
   class SensorData;
@@ -40,8 +46,21 @@ namespace s11n {
       return _begin[Index::SIZE + channel];
     }
 
+    size_t GetHeaderOffset() const {
+      return sizeof(uint32_t) * (GetChannelCount() + data::LidarData::Index::SIZE);
+    }
+
+    size_t GetDataSize() const {
+      size_t data_size=0u;
+      for (size_t i=0; i<GetChannelCount(); ++i) {
+        data_size+=GetPointCount(i)*sizeof(carla::sensor::data::LidarDetection);
+      }
+      return data_size;
+    }
+
   private:
     friend class LidarSerializer;
+    friend class carla::ros2::UePublisherBasePointCloud<LidarHeaderView, carla::sensor::data::LidarDetection>;
 
     explicit LidarHeaderView(const uint32_t *begin) : _begin(begin) {
       DEBUG_ASSERT(_begin != nullptr);
@@ -63,8 +82,7 @@ namespace s11n {
     }
 
     static size_t GetHeaderOffset(const RawData &data) {
-      auto View = DeserializeHeader(data);
-      return sizeof(uint32_t) * (View.GetChannelCount() + data::LidarData::Index::SIZE);
+      return DeserializeHeader(data).GetHeaderOffset();
     }
 
     template <typename Sensor>
@@ -73,7 +91,8 @@ namespace s11n {
         const data::LidarData &data,
         Buffer &&output);
 
-    static SharedPtr<SensorData> Deserialize(RawData &&data);
+    static SharedPtr<SensorData> Deserialize(RawData DESERIALIZE_DECL_DATA(data));
+
   };
 
   // ===========================================================================

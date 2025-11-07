@@ -1087,7 +1087,7 @@ The function the user has to call every time to send a message. This function ne
     - **Parameters:**
         - `data` (_function_) - The called function with one argument containing the sensor data.  
 
-The custom V2X message sensor works a little bit different than other sensors, because it has the *send* function in addition to the *listen* function, that needs to be called, before another sensor of this type will receive anything. The transmission of a custom message is only triggered, when *send* is called. Each message given to the *send* function is only transmitted once to all Custom V2X Message sensors currently spawned.
+The custom V2X message sensor works a little bit different than other sensors, because it has the *send* function in addition to the *listen* function, that needs to be called, before another sensor of this type will receive anything. The transmission of a custom message is only triggered, when *send* is called. Each message given to the *send* function is only transmitted once to all Custom V2X Message sensors currently spawned. Independent communcation channels can be created by the sensors 'channel_id' attribute. Only sensors having the same 'channel_id' are communicating with each other. This allows to create different sender/receiver groups within the system.
 
 Example:
 
@@ -1099,6 +1099,7 @@ Example:
 
 | Blueprint attribute     | Type   | Default | Description                        |
 |-------------------------|--------|-------------------------|------------------------------------|
+| channel\_id             | string  | ''       | Only Sender/Receiver with the same channel_id are communicating with each other    |
 | transmit\_power         | float  | 21.5       | Sender transmission power in dBm                         |
 | receiver\_sensitivity   | float  | -99        | Receiver sensitivity in dBm                                |
 | frequency\_ghz          | float  | 5.9 | Transmission frequency in GHz. 5.9 GHz is standard for several physical channels.                 |

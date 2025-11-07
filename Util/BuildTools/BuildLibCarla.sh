@@ -112,8 +112,9 @@ if ${REMOVE_INTERMEDIATE} ; then
   log "Cleaning intermediate files and folders."
 
   rm -Rf ${LIBCARLA_BUILD_SERVER_FOLDER}* ${LIBCARLA_BUILD_CLIENT_FOLDER}*
-  rm -Rf ${LIBCARLA_BUILD_PYTORCH_FOLDER}* ${LIBCARLA_BUILD_PYTORCH_FOLDER}*
+  rm -Rf ${LIBCARLA_BUILD_PYTORCH_FOLDER}* ${LIBCARLA_BUILD_FASTDDS_FOLDER}*
   rm -Rf ${LIBCARLA_INSTALL_SERVER_FOLDER} ${LIBCARLA_INSTALL_CLIENT_FOLDER}
+  
 
 fi
 
@@ -123,12 +124,13 @@ fi
 
 # Build LibCarla for the given configuration.
 #
-#     usage: build_libcarla {Server,Client,ClientRSS} {Debug,Release}
+#     usage: build_libcarla {Server,ServerROS,Client,ClientRSS} {Debug,Release}
 #
 function build_libcarla {
 
   CMAKE_EXTRA_OPTIONS=''
 
+  M_ROS=false
   if [ $1 == Server ] ; then
     M_TOOLCHAIN=${LIBCPP_TOOLCHAIN_FILE}
     M_BUILD_FOLDER=${LIBCARLA_BUILD_SERVER_FOLDER}.$(echo "$2" | tr '[:upper:]' '[:lower:]')
@@ -141,9 +143,11 @@ function build_libcarla {
     M_TOOLCHAIN=${LIBSTDCPP_TOOLCHAIN_FILE}
     M_BUILD_FOLDER=${LIBCARLA_BUILD_PYTORCH_FOLDER}.$(echo "$2" | tr '[:upper:]' '[:lower:]')
     M_INSTALL_FOLDER=${LIBCARLA_INSTALL_SERVER_FOLDER}
-  elif [ $1 == ros2 ] ; then
+  elif [ $1 == ServerROS ] ; then
+    BUILD_TYPE='Server'
+    M_ROS=true
     M_TOOLCHAIN=${LIBCPP_TOOLCHAIN_FILE}
-    M_BUILD_FOLDER=${LIBCARLA_FASTDDS_FOLDER}.$(echo "$2" | tr '[:upper:]' '[:lower:]')
+    M_BUILD_FOLDER=${LIBCARLA_BUILD_FASTDDS_FOLDER}.$(echo "$2" | tr '[:upper:]' '[:lower:]')
     M_INSTALL_FOLDER=${LIBCARLA_INSTALL_SERVER_FOLDER}
   elif [ $1 == ClientRSS ] ; then
     BUILD_TYPE='Client'
@@ -188,6 +192,7 @@ function build_libcarla {
         -DCMAKE_BUILD_TYPE=${BUILD_TYPE:-$1} \
         -DLIBCARLA_BUILD_DEBUG=${M_DEBUG} \
         -DLIBCARLA_BUILD_RELEASE=${M_RELEASE} \
+        -DLIBCARLA_USE_ROS=${M_ROS} \
         -DCMAKE_TOOLCHAIN_FILE=${M_TOOLCHAIN} \
         -DCMAKE_INSTALL_PREFIX=${M_INSTALL_FOLDER} \
         -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
@@ -208,24 +213,22 @@ function build_libcarla {
 # ==============================================================================
 # -- Build all possible configurations -----------------------------------------
 # ==============================================================================
-
+SERVER_VARIANT='Server'
+if ${USE_ROS2}; then
+  SERVER_VARIANT='ServerROS'
+fi
 if { ${BUILD_SERVER} && ${BUILD_OPTION_DEBUG}; }; then
 
-  build_libcarla Server Debug
+  build_libcarla ${SERVER_VARIANT} Debug
 
 fi
 
 if { ${BUILD_SERVER} && ${BUILD_OPTION_RELEASE}; }; then
 
-  build_libcarla Server Release
+  build_libcarla ${SERVER_VARIANT} Release
   if ${USE_PYTORCH} ; then
     build_libcarla Pytorch Release
   fi
-
-  if ${USE_ROS2} ; then
-    build_libcarla ros2 Release
-  fi
-
 fi
 
 CLIENT_VARIANT='Client'

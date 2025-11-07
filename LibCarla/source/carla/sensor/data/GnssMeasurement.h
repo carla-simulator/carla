@@ -25,12 +25,10 @@ namespace data {
 
     friend Serializer;
 
-    explicit GnssMeasurement(const RawData &&data)
+    explicit GnssMeasurement(const RawData DESERIALIZE_DECL_DATA(data))
       : Super(data){
-
-      geom::GeoLocation gnss_data = Serializer::DeserializeRawData(data);
+      geom::GeoLocation gnss_data = Serializer::DeserializeRawData(DESERIALIZE_MOVE_DATA(data));
       _geo_location = gnss_data;
-
     }
 
   public:

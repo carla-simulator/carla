@@ -183,22 +183,6 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
                 carla::Buffer BufferReady(std::move(carla::sensor::SensorRegistry::Serialize(Sensor, std::move(Buffer))));
                 carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(BufferReady));
 
-                // ROS2
-                #if defined(WITH_ROS2)
-                auto ROS2 = carla::ros2::ROS2::GetInstance();
-                if (ROS2->IsEnabled())
-                {
-                  TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send PixelReader");
-                  // auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
-                  auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, BufView]()
-                  {
-                    AActor* ParentActor = Sensor.GetAttachParentActor();
-                    auto Transform = (ParentActor) ? Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : Stream.GetSensorTransform();
-                    ROS2->ProcessDataFromCamera(Stream.GetSensorType(), Transform, BufView, &Sensor);
-                  });
-                }
-                #endif
-
                 // network
                 SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
                 TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");

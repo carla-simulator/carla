@@ -9,6 +9,7 @@
 #include "carla/MsgPack.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
+#include "carla/geom/Quaternion.h"
 #include "carla/geom/Rotation.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
@@ -39,7 +40,7 @@ namespace geom {
 
     Transform() = default;
 
-    Transform(const Location &in_location)
+    explicit Transform(const Location &in_location)
       : location(in_location),
         rotation() {}
 
@@ -65,74 +66,19 @@ namespace geom {
 
     /// Applies this transformation to @a in_point (first translation then rotation).
     void TransformPoint(Vector3D &in_point) const {
-      auto out_point = in_point;
-      rotation.RotateVector(out_point); // First rotate
-      out_point += location;            // Then translate
-      in_point = out_point;
+      Vector3D out_point = rotation.RotatedVector(in_point); // First rotate
+      in_point = out_point + Vector3D(location);  // Then translate
     }
 
     /// Applies this transformation to @a in_vector (rotation only).
     void TransformVector(Vector3D &in_vector) const {
-      auto out_vector = in_vector;
-      rotation.RotateVector(out_vector); // First rotate
-      in_vector = out_vector;
+      in_vector = rotation.RotatedVector(in_vector); // Only rotation
     }
 
     /// Applies the inverse of this transformation to @a in_point
     void InverseTransformPoint(Vector3D &in_point) const {
-      auto out_point = in_point;
-      out_point -= location;                   // First translate inverse
-      rotation.InverseRotateVector(out_point); // Then rotate inverse
-      in_point = out_point;
-    }
-
-    /// Computes the 4-matrix form of the transformation
-    std::array<float, 16> GetMatrix() const {
-      const float yaw = rotation.yaw;
-      const float cy = std::cos(Math::ToRadians(yaw));
-      const float sy = std::sin(Math::ToRadians(yaw));
-
-      const float roll = rotation.roll;
-      const float cr = std::cos(Math::ToRadians(roll));
-      const float sr = std::sin(Math::ToRadians(roll));
-
-      const float pitch = rotation.pitch;
-      const float cp = std::cos(Math::ToRadians(pitch));
-      const float sp = std::sin(Math::ToRadians(pitch));
-
-      std::array<float, 16> transform = {
-          cp * cy, cy * sp * sr - sy * cr, -cy * sp * cr - sy * sr, location.x,
-          cp * sy, sy * sp * sr + cy * cr, -sy * sp * cr + cy * sr, location.y,
-          sp, -cp * sr, cp * cr, location.z,
-          0.0, 0.0, 0.0, 1.0};
-
-      return transform;
-    }
-
-    /// Computes the 4-matrix form of the inverse transformation
-    std::array<float, 16> GetInverseMatrix() const {
-      const float yaw = rotation.yaw;
-      const float cy = std::cos(Math::ToRadians(yaw));
-      const float sy = std::sin(Math::ToRadians(yaw));
-
-      const float roll = rotation.roll;
-      const float cr = std::cos(Math::ToRadians(roll));
-      const float sr = std::sin(Math::ToRadians(roll));
-
-      const float pitch = rotation.pitch;
-      const float cp = std::cos(Math::ToRadians(pitch));
-      const float sp = std::sin(Math::ToRadians(pitch));
-
-      Vector3D a = {0.0f, 0.0f, 0.0f};
-      InverseTransformPoint(a);
-
-      std::array<float, 16> transform = {
-          cp * cy, cp * sy, sp, a.x,
-          cy * sp * sr - sy * cr, sy * sp * sr + cy * cr, -cp * sr, a.y,
-          -cy * sp * cr - sy * sr, -sy * sp * cr + cy * sr, cp * cr, a.z,
-          0.0f, 0.0f, 0.0f, 1.0};
-
-      return transform;
+      Vector3D out_point = in_point - Vector3D(location);  // First translate inverse
+      in_point = rotation.InverseRotatedVector(out_point); // Then rotate inverse
     }
 
     // =========================================================================
@@ -162,6 +108,38 @@ namespace geom {
     }
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
+
+#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
+    // this matrix is rotating within a right handed-coordinate system, but Unreal coordinate frame is left-handed!
+    // If we want to make this public, a dedicated Matrix4x4 type has to be defined considiering that (see also Quaternion.h)
+    std::array<float, 16> TransformationMatrix() const {
+      auto const matrix = Quaternion(rotation).RotationMatrix();
+
+      std::array<float, 16> transform = {
+          matrix[0], matrix[1], matrix[2], location.x,
+          matrix[3], matrix[4], matrix[5], location.y,
+          matrix[6], matrix[7], matrix[8], location.z,
+          0.0, 0.0, 0.0, 1.0};
+
+      return transform;
+    }
+
+    /// Computes the 4-matrix form of the inverse transformation
+    std::array<float, 16> InverseTransformationMatrix() const {
+      auto const matrix = Quaternion(rotation).InverseRotationMatrix();
+
+      Vector3D a = {0.0f, 0.0f, 0.0f};
+      InverseTransformPoint(a);
+
+      std::array<float, 16> transform = {
+          matrix[0], matrix[1], matrix[2], a.x,
+          matrix[3], matrix[4], matrix[5], a.y,
+          matrix[6], matrix[7], matrix[8], a.z,
+          0.0f, 0.0f, 0.0f, 1.0};
+
+      return transform;
+    }
+#endif
   };
 
 } // namespace geom

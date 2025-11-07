@@ -15,7 +15,6 @@
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 
 #include <compiler/disable-ue4-macros.h>
-#include "carla/ros2/ROS2.h"
 #include <carla/Buffer.h>
 #include <carla/BufferView.h>
 #include <compiler/enable-ue4-macros.h>
@@ -158,29 +157,21 @@ void ADVSCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
   /** DVS Simulator **/
   ADVSCamera::DVSEventArray events = this->Simulation(DeltaTime);
 
-  auto Stream = GetDataStream(*this);
-  auto Buff = Stream.PopBufferFromPool();
-
-  // serialize data
-  carla::Buffer BufferReady(carla::sensor::SensorRegistry::Serialize(*this, events, std::move(Buff)));
-  carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(BufferReady));
-
-  // ROS2
-  #if defined(WITH_ROS2)
-  auto ROS2 = carla::ros2::ROS2::GetInstance();
-  if (ROS2->IsEnabled())
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
-    AActor* ParentActor = GetAttachParentActor();
-    auto Transform = (ParentActor) ? GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : Stream.GetSensorTransform();
-    ROS2->ProcessDataFromDVS(Stream.GetSensorType(), Transform, BufView, this);
-  }
-  #endif
   if (events.size() > 0)
   {
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ADVSCamera Stream Send");
-    /** Send the events **/
-    Stream.Send(*this, BufView);
+    auto Stream = GetDataStream(*this);
+    auto Buff = Stream.PopBufferFromPool();
+
+    // serialize data
+    carla::Buffer BufferReady(carla::sensor::SensorRegistry::Serialize(*this, events, std::move(Buff)));
+    carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(BufferReady));
+
+    if (events.size() > 0)
+    {
+      TRACE_CPUPROFILER_EVENT_SCOPE_STR("ADVSCamera Stream Send");
+      /** Send the events **/
+      Stream.Send(*this, BufView);
+    }
   }
 }
 

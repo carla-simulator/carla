@@ -35,8 +35,7 @@ enum EScenario
 class PathLossModel
 {
 public:
-    PathLossModel(URandomEngine *random_engine);
-    void SetOwner(AActor *Owner);
+    PathLossModel(URandomEngine *random_engine, AActor *Owner);
     void SetScenario(EScenario scenario);
     void Simulate(const std::vector<ActorPowerPair> ActorList, UCarlaEpisode *CarlaEpisode, UWorld *World);
     ActorPowerMap GetReceiveActorPowerList();
@@ -62,9 +61,7 @@ private:
                                  const FVector Destination,
                                  const double Distance3d,
                                  const double ht,
-                                 const double ht_local,
                                  const double hr,
-                                 const double hr_local,
                                  const double reference_z);
     void EstimatePathStateAndVehicleObstacles(AActor *OtherActor, FVector Source, double TxHeight, double RxHeight, double reference_z, EPathState &state, std::vector<FVector> &vehicle_obstacles);
     double MakeVehicleBlockageLoss(double TxHeight, double RxHeight, double obj_height, double obj_distance);

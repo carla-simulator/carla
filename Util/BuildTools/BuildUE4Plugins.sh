@@ -86,7 +86,7 @@ if ${BUILD_STREETMAP} ; then
       git clone -b ${STREETMAP_BRANCH} ${STREETMAP_REPO} ${CARLAUE4_STREETMAP_FOLDER}
     fi
     cd ${CARLAUE4_STREETMAP_FOLDER}
-    git fetch
+    git fetch || echo "WARNING: checking status of streetmap failed. Ignoring."  
     git checkout ${CURRENT_STREETMAP_COMMIT}
   fi
 fi

@@ -17,8 +17,13 @@ float DeviationCrossProduct(const cg::Location &reference_location,
                             const cg::Vector3D &heading_vector,
                             const cg::Location &target_location) {
   cg::Vector3D next_vector = target_location - reference_location;
-  next_vector = next_vector.MakeSafeUnitVector(EPSILON);
-  const float cross_z = heading_vector.x * next_vector.y - heading_vector.y * next_vector.x;
+  auto next_vector_length = next_vector.Length();
+  float cross_z = 0.;
+  if ( next_vector_length > EPSILON )
+  {
+    next_vector = next_vector.MakeUnitVectorLengthInput(EPSILON, next_vector_length);
+    cross_z = heading_vector.x * next_vector.y - heading_vector.y * next_vector.x;
+  }
   return cross_z;
 }
 
@@ -27,11 +32,16 @@ float DeviationDotProduct(const cg::Location &reference_location,
                           const cg::Location &target_location) {
   cg::Vector3D next_vector = target_location - reference_location;
   next_vector.z = 0.0f;
-  next_vector = next_vector.MakeSafeUnitVector(EPSILON);
-  cg::Vector3D heading_vector_flat(heading_vector.x, heading_vector.y, 0);
-  heading_vector_flat = heading_vector_flat.MakeSafeUnitVector(EPSILON);
-  float dot_product = cg::Math::Dot(next_vector, heading_vector_flat);
-  dot_product = std::max(0.0f, std::min(dot_product, 1.0f));
+  auto next_vector_length = next_vector.Length();
+  float dot_product = 0.;
+  if ( next_vector_length > EPSILON )
+  {
+    next_vector = next_vector.MakeUnitVectorLengthInput(EPSILON, next_vector_length);
+    cg::Vector3D heading_vector_flat(heading_vector.x, heading_vector.y, 0);
+    heading_vector_flat = heading_vector_flat.MakeUnitVector(EPSILON);
+    dot_product = cg::Math::Dot(next_vector, heading_vector_flat);
+    dot_product = std::max(0.0f, std::min(dot_product, 1.0f));
+  }
   return dot_product;
 }
 

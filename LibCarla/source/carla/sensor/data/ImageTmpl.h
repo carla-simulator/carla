@@ -14,10 +14,6 @@
 #include "carla/sensor/s11n/GBufferFloatSerializer.h"
 #include "carla/sensor/s11n/NormalsImageSerializer.h"
 
-#if defined(WITH_ROS2)
-#include "carla/ros2/ROS2.h"
-#endif
-
 namespace carla {
 namespace sensor {
 namespace data {
@@ -26,10 +22,6 @@ namespace data {
   template <typename PixelT>
   class ImageTmpl : public Array<PixelT> {
     using Super = Array<PixelT>;
-    #if defined(WITH_ROS2)
-    friend class carla::ros2::ROS2;
-    #endif
-
   protected:
 
     using Serializer = s11n::ImageSerializer;
@@ -42,8 +34,8 @@ namespace data {
     friend s11n::GBufferFloatSerializer;
     friend SerializerNormals;
 
-    explicit ImageTmpl(RawData &&data)
-      : Super(Serializer::header_offset, std::move(data)) {
+    explicit ImageTmpl(RawData DESERIALIZE_DECL_DATA(data))
+      : Super(Serializer::header_offset, DESERIALIZE_MOVE_DATA(data)) {
       DEBUG_ASSERT(GetWidth() * GetHeight() == Super::size());
     }
 

@@ -47,6 +47,9 @@ namespace detail {
       if (!result.second) {
         throw_exception(std::runtime_error("failed to create stream!"));
       }
+      if ( _topic_visibility_default_enabled ) {
+        ptr->EnableForROS(0);
+      }
       log_debug("Stream created");
       return carla::streaming::Stream(ptr);
     } else {
@@ -103,27 +106,27 @@ namespace detail {
     }
   }
   
-  token_type Dispatcher::GetToken(stream_id_type sensor_id) {
+  token_type Dispatcher::GetToken(stream_id_type stream_id) {
     std::lock_guard<std::mutex> lock(_mutex);
-    log_debug("Searching sensor id: ", sensor_id);
-    auto search = _stream_map.find(sensor_id);
+    log_debug("Searching sensor id: ", stream_id);
+    auto search = _stream_map.find(stream_id);
     if (search != _stream_map.end()) {
-      log_debug("Found sensor id: ", sensor_id);
+      log_debug("Found sensor id: ", stream_id);
       auto stream_state = search->second;
       stream_state->ForceActive();
-      log_debug("Getting token from stream ", sensor_id, " on port ", stream_state->token().get_port());
+      log_debug("Getting token from stream ", stream_id, " on port ", stream_state->token().get_port());
       return stream_state->token();
     } else {
-      log_debug("Not Found sensor id, creating sensor stream: ", sensor_id);
+      log_debug("Not Found sensor id, creating sensor stream: ", stream_id);
       token_type temp_token(_cached_token);
-      temp_token.set_stream_id(sensor_id);
+      temp_token.set_stream_id(stream_id);
       auto ptr = std::make_shared<MultiStreamState>(temp_token);
       auto result = _stream_map.emplace(std::make_pair(temp_token.get_stream_id(), ptr));
       ptr->ForceActive();
       if (!result.second) {
-        log_debug("Failed to create multistream for stream ", sensor_id, " on port ", temp_token.get_port());
+        log_debug("Failed to create multistream for stream ", stream_id, " on port ", temp_token.get_port());
       }
-      log_debug("Created token from stream ", sensor_id, " on port ", temp_token.get_port());
+      log_debug("Created token from stream ", stream_id, " on port ", temp_token.get_port());
       return temp_token;
     }
     return token_type();

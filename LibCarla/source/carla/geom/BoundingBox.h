@@ -83,14 +83,14 @@ namespace geom {
     std::array<Location, 8> GetLocalVertices() const {
 
         return {{
-            location + Location(rotation.RotateVector({-extent.x,-extent.y,-extent.z})),
-            location + Location(rotation.RotateVector({-extent.x,-extent.y, extent.z})),
-            location + Location(rotation.RotateVector({-extent.x, extent.y,-extent.z})),
-            location + Location(rotation.RotateVector({-extent.x, extent.y, extent.z})),
-            location + Location(rotation.RotateVector({ extent.x,-extent.y,-extent.z})),
-            location + Location(rotation.RotateVector({ extent.x,-extent.y, extent.z})),
-            location + Location(rotation.RotateVector({ extent.x, extent.y,-extent.z})),
-            location + Location(rotation.RotateVector({ extent.x, extent.y, extent.z}))
+            location + Location(rotation.RotatedVector(Location(-extent.x,-extent.y,-extent.z))),
+            location + Location(rotation.RotatedVector(Location(-extent.x,-extent.y, extent.z))),
+            location + Location(rotation.RotatedVector(Location(-extent.x, extent.y,-extent.z))),
+            location + Location(rotation.RotatedVector(Location(-extent.x, extent.y, extent.z))),
+            location + Location(rotation.RotatedVector(Location( extent.x,-extent.y,-extent.z))),
+            location + Location(rotation.RotatedVector(Location( extent.x,-extent.y, extent.z))),
+            location + Location(rotation.RotatedVector(Location( extent.x, extent.y,-extent.z))),
+            location + Location(rotation.RotatedVector(Location( extent.x, extent.y, extent.z)))
         }};
     }
 

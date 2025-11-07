@@ -193,7 +193,7 @@ void ACarlaWheeledVehicle::BeginPlay()
 
     MovementComponent->WheelSetups = NewWheelSetups;
 
-    LastPhysicsControl = GetVehiclePhysicsControl();
+    LastAppliedPhysicsControl = GetVehiclePhysicsControl();
 
     // Update physics in the Ackermann Controller
     AckermannController.UpdateVehiclePhysics(this);
@@ -333,7 +333,7 @@ float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 
 void ACarlaWheeledVehicle::FlushVehicleControl()
 {
-  if (bAckermannControlActive) {
+  if (IsAckermannControlActive()) {
     AckermannController.UpdateVehicleState(this);
     AckermannController.RunLoop(InputControl.Control);
   }
@@ -490,8 +490,8 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
         PhysicsWheel.TireFriction = Vehicle4W->Wheels[i]->TireConfig->GetFrictionScale();
         PhysicsWheel.Position = Vehicle4W->Wheels[i]->Location;
       } else {
-        if (i < LastPhysicsControl.Wheels.Num()) {
-          PhysicsWheel = LastPhysicsControl.Wheels[i];
+        if (i < LastAppliedPhysicsControl.Wheels.Num()) {
+          PhysicsWheel = LastAppliedPhysicsControl.Wheels[i];
         }
       }
       Wheels.Add(PhysicsWheel);
@@ -570,8 +570,8 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
         PhysicsWheel.LatStiffValue = PTireData.mLatStiffY;
         PhysicsWheel.LongStiffValue = PTireData.mLongitudinalStiffnessPerUnitGravity;
       } else {
-        if (i < LastPhysicsControl.Wheels.Num()) {
-          PhysicsWheel = LastPhysicsControl.Wheels[i];
+        if (i < LastAppliedPhysicsControl.Wheels.Num()) {
+          PhysicsWheel = LastAppliedPhysicsControl.Wheels[i];
         }
       }
 
@@ -594,12 +594,12 @@ FVehicleLightState ACarlaWheeledVehicle::GetVehicleLightState() const
 
 void ACarlaWheeledVehicle::RestoreVehiclePhysicsControl()
 {
-  ApplyVehiclePhysicsControl(LastPhysicsControl);
+  ApplyVehiclePhysicsControl(LastAppliedPhysicsControl);
 }
 
 void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl)
 {
-  LastPhysicsControl = PhysicsControl;
+  LastAppliedPhysicsControl = PhysicsControl;
   if (!bIsNWVehicle) {
     UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
           GetVehicleMovement());

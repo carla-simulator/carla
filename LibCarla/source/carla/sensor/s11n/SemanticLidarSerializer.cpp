@@ -11,9 +11,9 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
-  SharedPtr<SensorData> SemanticLidarSerializer::Deserialize(RawData &&data) {
+  SharedPtr<SensorData> SemanticLidarSerializer::Deserialize(RawData DESERIALIZE_DECL_DATA(data)) {
     return SharedPtr<data::SemanticLidarMeasurement>(
-        new data::SemanticLidarMeasurement{std::move(data)});
+        new data::SemanticLidarMeasurement{DESERIALIZE_MOVE_DATA(data)});
   }
 
 } // namespace s11n

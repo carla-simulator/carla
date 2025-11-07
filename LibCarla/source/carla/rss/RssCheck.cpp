@@ -453,7 +453,7 @@ bool RssCheck::CheckObjects(carla::client::Timestamp const &timestamp,
 ::ad::physics::Speed RssCheck::GetSpeed(carla::client::Actor const &actor) const {
   auto velocity = actor.GetVelocity();
   auto const actor_transform = actor.GetTransform();
-  actor_transform.rotation.InverseRotateVector(velocity);
+  actor_transform.rotation.InverseRotatedVector(velocity);
 
   ::ad::physics::Speed speed(std::sqrt(velocity.x * velocity.x + velocity.y * velocity.y));
   if (velocity.x < 0.) {

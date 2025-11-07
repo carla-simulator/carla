@@ -22,10 +22,6 @@ class CARLA_API AV2XSensor : public ASensor
 {
     GENERATED_BODY()
 
-    using FV2XData = carla::sensor::data::CAMDataS;
-    using ActorV2XDataMap = std::map<AActor *, carla::sensor::data::CAMData>;
-    using V2XDataList = std::vector<carla::sensor::data::CAMData>;
-
 public:
     AV2XSensor(const FObjectInitializer &ObjectInitializer);
 
@@ -64,14 +60,11 @@ public:
     void SetOwner(AActor *Owner) override;
 
 private:
-    static std::list<AActor *> mV2XActorContainer;
     CaService *CaServiceObj;
     PathLossModel *PathLossModelObj;
+    void InitModel(AActor *Owner);
 
     // store data
+    using ActorV2XDataMap = std::map<AActor *, carla::sensor::data::CAMData>;
     static ActorV2XDataMap mActorV2XDataMap;
-    FV2XData mV2XData;
-
-    // write
-    void WriteMessageToV2XData(const V2XDataList &msg_received_power_list);
 };

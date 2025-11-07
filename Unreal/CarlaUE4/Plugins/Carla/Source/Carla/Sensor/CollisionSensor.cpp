@@ -128,24 +128,6 @@ void ACollisionSensor::OnCollisionEvent(
   }
 
   CollisionRegistry.emplace_back(CurrentFrame, Actor, OtherActor);
-
-  // ROS2
-#if defined(WITH_ROS2)
-  auto ROS2 = carla::ros2::ROS2::GetInstance();
-  if (ROS2->IsEnabled())
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
-
-    // Retrieve the corresponding Carla actor to access its ID for collision processing
-    FCarlaActor* OtherCarlaActor = CurrentEpisode.FindCarlaActor(OtherActor);
-    
-    if (OtherCarlaActor) {
-      AActor* ParentActor = GetAttachParentActor();
-      auto Transform = (ParentActor) ? GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : GetActorTransform();
-      ROS2->ProcessDataFromCollisionSensor(0, Transform, OtherCarlaActor->GetActorId(), carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z}, this);
-    }
-  }
-#endif
 }
 
 void ACollisionSensor::OnActorCollisionEvent(

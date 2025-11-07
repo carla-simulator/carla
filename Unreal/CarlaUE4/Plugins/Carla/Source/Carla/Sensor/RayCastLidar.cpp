@@ -13,7 +13,6 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
-#include "carla/ros2/ROS2.h"
 #include "carla/geom/Location.h"
 #include <compiler/enable-ue4-macros.h>
 
@@ -67,19 +66,6 @@ void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float Delta
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");
     DataStream.SerializeAndSend(*this, LidarData, DataStream.PopBufferFromPool());
   }
-  // ROS2
-  #if defined(WITH_ROS2)
-  auto ROS2 = carla::ros2::ROS2::GetInstance();
-  if (ROS2->IsEnabled())
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
-    AActor* ParentActor = GetAttachParentActor();
-    auto Transform = (ParentActor) ? GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : GetActorTransform();
-    ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), Transform, LidarData, this);
-  }
-  #endif
-
-
 }
 
 float ARayCastLidar::ComputeIntensity(const FSemanticDetection& RawDetection) const

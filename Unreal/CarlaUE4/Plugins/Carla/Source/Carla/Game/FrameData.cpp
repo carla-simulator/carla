@@ -1014,6 +1014,7 @@ void FFrameData::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Vehicle)
     Control.bReverse = (Vehicle.Gear < 0);
     Control.Gear = Vehicle.Gear;
     Control.bManualGearShift = false;
+    Control.Timestamp = float(Episode->GetElapsedGameTime());
     CarlaActor->ApplyControlToVehicle(Control, EVehicleInputPriority::User);
   }
 }
@@ -1123,6 +1124,7 @@ bool FFrameData::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, s
             Control.bReverse = false;
             Control.Gear = 1;
             Control.bManualGearShift = false;
+            Control.Timestamp = float(Episode->GetElapsedGameTime());
             CarlaActor->ApplyControlToVehicle(Control, EVehicleInputPriority::User);
         }
         break;

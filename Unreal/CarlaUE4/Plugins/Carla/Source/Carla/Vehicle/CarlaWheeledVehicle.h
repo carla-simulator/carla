@@ -210,10 +210,10 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void ApplyVehicleControl(const FVehicleControl &Control, EVehicleInputPriority Priority)
   {
-    if (bAckermannControlActive) {
+    if (ActiveVehicleController::AckermannControl == CurrentActiveController) {
       AckermannController.Reset();
     }
-    bAckermannControlActive = false;
+    CurrentActiveController = ActiveVehicleController::VehicleControl;
 
     if (InputControl.Priority <= Priority)
     {
@@ -225,14 +225,14 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void ApplyVehicleAckermannControl(const FVehicleAckermannControl &AckermannControl, EVehicleInputPriority Priority)
   {
-    bAckermannControlActive = true;
+    CurrentActiveController = ActiveVehicleController::AckermannControl;
     LastAppliedAckermannControl = AckermannControl;
     AckermannController.SetTargetPoint(AckermannControl);
   }
 
   bool IsAckermannControlActive() const
   {
-    return bAckermannControlActive;
+    return ActiveVehicleController::AckermannControl == CurrentActiveController;
   }
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
@@ -346,11 +346,14 @@ private:
   }
   InputControl;
 
+  enum class ActiveVehicleController {
+    VehicleControl,
+    AckermannControl
+  } CurrentActiveController;
   FVehicleControl LastAppliedControl;
   FVehicleAckermannControl LastAppliedAckermannControl;
-  FVehiclePhysicsControl LastPhysicsControl;
+  FVehiclePhysicsControl LastAppliedPhysicsControl;
 
-  bool bAckermannControlActive = false;
   FAckermannController AckermannController;
 
   float RolloverBehaviorForce = 0.35;

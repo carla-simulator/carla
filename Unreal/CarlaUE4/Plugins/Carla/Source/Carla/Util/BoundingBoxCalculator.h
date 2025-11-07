@@ -56,6 +56,9 @@ public:
   static FBoundingBox GetSkeletalMeshBoundingBox(const USkeletalMesh* SkeletalMesh);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
+  static TArray<FVector> GetSkeletalMeshVertices(const USkeletalMesh* SkeletalMesh);
+
+  UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static FBoundingBox GetStaticMeshBoundingBox(const UStaticMesh* StaticMesh);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)

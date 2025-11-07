@@ -38,10 +38,10 @@ using namespace std::chrono_literals;
     : Episode(client, client.GetEpisodeInfo(), simulator) {}
 
   Episode::Episode(Client &client, const rpc::EpisodeInfo &info, std::weak_ptr<Simulator> simulator)
-    : _client(client),
-      _state(std::make_shared<EpisodeState>(info.id)),
-      _simulator(simulator),
-      _token(info.token) {}
+    : _client(client)
+    , _state(std::make_shared<EpisodeState>(info.id))
+    , _token(info.token) 
+    , _simulator(simulator) {}
 
   Episode::~Episode() {
     try {
@@ -57,7 +57,7 @@ using namespace std::chrono_literals;
       auto self = weak.lock();
       if (self != nullptr) {
 
-        auto data = sensor::Deserializer::Deserialize(std::move(buffer));
+        auto data = sensor::Deserializer::Deserialize(DESERIALIZE_MOVE_DATA(buffer));
         auto next = std::make_shared<const EpisodeState>(CastData(*data));
         auto prev = self->GetState();
 
