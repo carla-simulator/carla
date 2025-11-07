@@ -26,6 +26,8 @@
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "Engine/SkeletalMeshSocket.h"
 
+#include "Carla/Walker/WalkerBase.h"
+
 namespace crp = carla::rpc;
 
 static FBoundingBox ApplyTransformToBB(
@@ -62,6 +64,24 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
       if (ParentComp != nullptr)
       {
         FBoundingBox Box = GetSkeletalMeshBoundingBoxFromComponent(ParentComp);
+
+        if (Character->GetName().Contains("_AB001_G3")
+          || Character->GetName().Contains("_AG001_G3"))
+        {
+          // Hack to center the bbox of Gen3 kids
+          Box.Origin.Z -= Box.Extent.Z * (1.0f / 0.65f - 1.0f);
+        }
+
+        auto WB = Cast<AWalkerBase>(Character);
+
+        if (WB && WB->bUsesWheelChair)
+        {
+          Box.Origin.X += 15.0f;
+          Box.Origin.Z -= 15.0f;
+          
+          Box.Extent.X += 5.0f;
+          Box.Extent.Z += 5.0f;
+        }
 
         return Box;
       }
@@ -240,15 +260,14 @@ FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBoxFromComponent(
     return {};
   }
 
-  // Force update bounds
+  // Force update bounds to current pose
   const_cast<USkeletalMeshComponent*>(SkeletalMeshComp)->UpdateBounds();
 
-  // Get the AABB in local space (component space)
-  FBox LocalBox = SkeletalMeshComp->CalcBounds(FTransform::Identity).GetBox();
-
-  // Extract extent in local space and set origin to zero
-  FVector Origin = {0.0f, 0.0f, 0.0f};
-  FVector Extent = LocalBox.GetExtent();
+  // Get bounds in component space (already includes current animation pose)
+  FBoxSphereBounds Bounds = SkeletalMeshComp->Bounds;
+  
+  FVector Origin = FVector::ZeroVector;
+  FVector Extent = Bounds.BoxExtent;
 
   return {Origin, Extent};
 }

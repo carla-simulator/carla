@@ -35,11 +35,10 @@ namespace client {
   geom::BoundingBox Actor::GetBoundingBox() const {
     geom::BoundingBox bounding_box = GetEpisode().Lock()->GetActorBoundingBox(*this); 
     if (bounding_box.extent.x == 0.0f && bounding_box.extent.y == 0.0f && bounding_box.extent.z == 0.0f) {
-      return bounding_box;
-    }
-    else{
+      // Only fall back to cached value if the server returns a zero bounding box
       return Super::GetBoundingBox();
     }
+    return bounding_box;  // Return the fresh calculation, not the cached one
   }
 
   geom::Transform Actor::GetComponentWorldTransform(const std::string componentName) const {
