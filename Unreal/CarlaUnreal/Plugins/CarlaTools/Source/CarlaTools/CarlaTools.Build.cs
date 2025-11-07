@@ -119,6 +119,7 @@ public class CarlaTools :
       "AssetRegistry",
       "MeshDescription",
       "MeshUtilitiesCommon",
+      "MeshConversion",
       "Projects",
       "PCG"
     });
