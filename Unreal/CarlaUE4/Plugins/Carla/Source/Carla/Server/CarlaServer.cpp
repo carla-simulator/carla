@@ -3613,13 +3613,13 @@ FCarlaServer::FPimpl::CheckHandleActorInSecondaryServerResult FCarlaServer::FPim
   FCarlaActor* CarlaActor = Episode->FindCarlaActorByStreamId(stream_id);
   if ( CarlaActor == nullptr ) 
   {
-    return {.actor_exists = false,
-            .handle_in_secondary_server = false,
-            .actor_type_id = "",
-            .stream_actor_id = {.stream_id=stream_id, .actor_id=0}};
+    return {/*.actor_exists = */false,
+            /*.handle_in_secondary_server = */false,
+            /*.actor_type_id = */"",
+            /*.stream_actor_id = */{stream_id, 0}};
 
   }
-  return CheckHandleActorInSecondaryServer(CarlaActor, {.stream_id=stream_id, .actor_id=CarlaActor->GetActorId()});
+  return CheckHandleActorInSecondaryServer(CarlaActor, {stream_id, CarlaActor->GetActorId()});
 }
 
 FCarlaServer::FPimpl::CheckHandleActorInSecondaryServerResult FCarlaServer::FPimpl::CheckHandleActorInSecondaryServer(carla::streaming::detail::actor_id_type actor_id) {
@@ -3628,10 +3628,10 @@ FCarlaServer::FPimpl::CheckHandleActorInSecondaryServerResult FCarlaServer::FPim
   carla::streaming::detail::stream_id_type stream_id = 1;
 
   if (CarlaActor == nullptr) {
-    return {.actor_exists = false,
-            .handle_in_secondary_server = false,
-            .actor_type_id = "",
-            .stream_actor_id = {.stream_id=stream_id, .actor_id=actor_id}};
+    return {/*.actor_exists = */false,
+            /*.handle_in_secondary_server = */false,
+            /*.actor_type_id = */"",
+            /*.stream_actor_id = */{stream_id, actor_id}};
   }
 
   auto *Sensor = Cast<ASensor>(CarlaActor->GetActor());
@@ -3639,7 +3639,7 @@ FCarlaServer::FPimpl::CheckHandleActorInSecondaryServerResult FCarlaServer::FPim
   {
     stream_id = carla::streaming::detail::token_type(Sensor->GetToken()).get_stream_id();
   }
-  return CheckHandleActorInSecondaryServer(CarlaActor, {.stream_id=stream_id, .actor_id=actor_id});
+  return CheckHandleActorInSecondaryServer(CarlaActor, {stream_id, actor_id});
 }
 
 
@@ -3647,10 +3647,10 @@ FCarlaServer::FPimpl::CheckHandleActorInSecondaryServerResult FCarlaServer::FPim
 FCarlaServer::FPimpl::CheckHandleActorInSecondaryServerResult FCarlaServer::FPimpl::CheckHandleActorInSecondaryServer(FCarlaActor* CarlaActor,
   carla::streaming::detail::stream_actor_id_type stream_actor_id) {
 
-  CheckHandleActorInSecondaryServerResult result = {.actor_exists = true,
-            .handle_in_secondary_server = false,
-            .actor_type_id = CarlaActor->GetActorInfo()->Description.Id,
-            .stream_actor_id = stream_actor_id};
+  CheckHandleActorInSecondaryServerResult result = {/*.actor_exists = */true,
+            /*.handle_in_secondary_server = */false,
+            /*.actor_type_id = */CarlaActor->GetActorInfo()->Description.Id,
+            /*.stream_actor_id = */stream_actor_id};
 
   // check for the world observer (always in primary server)
   if (stream_actor_id.stream_id == 1 || 

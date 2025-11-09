@@ -35,8 +35,8 @@ namespace geom {
   float Math::GetVectorAngle(const Vector3D &a, const Vector3D &b) {
     auto const a_unit = a.MakeUnitVector();
     auto const b_unit = b.MakeUnitVector();
-    auto const cosine_vector_angle = Math::CosineVectorAngleFromUnitVectors(a, b);
-    auto const sine_vector_angle = Math::SineVectorAngleFromUnitVectors(a, b);
+    auto const cosine_vector_angle = Math::CosineVectorAngleFromUnitVectors(a_unit, b_unit);
+    auto const sine_vector_angle = Math::SineVectorAngleFromUnitVectors(a_unit, b_unit);
     auto const angle = std::atan2(sine_vector_angle, cosine_vector_angle);
     return angle;
   }

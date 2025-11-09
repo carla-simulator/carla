@@ -317,7 +317,7 @@ void export_geom() {
     .def("rotated_quaternion", &cg::Quaternion::RotatedQuaternion, (arg("quaternion")))
     .def("yaw_rad", &cg::Quaternion::YawRad)
     .def("yaw_degree", &cg::Quaternion::YawDegree)
-    .def("rotator", &cg::Quaternion::Rotation)
+    .def("rotator", &cg::Quaternion::Rotator)
     .def("rotated_vector", &cg::Quaternion::RotatedVector<cg::Vector3D>, (arg("vector")))
     .def("inverse_rotated_vector", &cg::Quaternion::InverseRotatedVector<cg::Vector3D>, (arg("vector")))
     .def("__eq__", &cg::Quaternion::operator==)

@@ -218,9 +218,9 @@ public:
     SynchronizationWindowParticipantStates.reserve(SynchronizationWindowMap.size());
     for (auto &SynchronizationWindow: SynchronizationWindowMap) {
       carla::rpc::synchronization_window_participant_state ParticipantState {
-        .client_id = SynchronizationWindow.first,
-        .participant_id = SynchronizationWindow.second.ParticipantId,
-        .target_game_time = SynchronizationWindow.second.TargetGameTime
+        SynchronizationWindow.first,
+        SynchronizationWindow.second.ParticipantId,
+        SynchronizationWindow.second.TargetGameTime
       };
       SynchronizationWindowParticipantStates.push_back(ParticipantState);
     }

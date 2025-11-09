@@ -57,7 +57,7 @@ public:
     void Send(const carla::rpc::CustomV2XBytes &data);
 
 private:
-    SenderId GetSenderId() { return {.Actor=this, .ChannelId = mChannelId}; }
+    SenderId GetSenderId() { return {this, mChannelId}; }
     
     // infrastructure stationID cannot be dermined before sending data, because on construction time the CARLA Actor is not yet created
     void UpdateStationId();

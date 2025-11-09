@@ -18,17 +18,17 @@ void ROS2Session::WriteMessage(std::shared_ptr<const carla::streaming::detail::M
 
 void ROS2Session::EnableForROS(carla::streaming::detail::actor_id_type actor_id) {
   auto ROS2 = carla::ros2::ROS2::GetInstance();
-  ROS2->EnableForROS({.stream_id=_stream_id, .actor_id=actor_id});
+  ROS2->EnableForROS({_stream_id, actor_id});
 }
 
 void ROS2Session::DisableForROS(carla::streaming::detail::actor_id_type actor_id) {
   auto ROS2 = carla::ros2::ROS2::GetInstance();
-  ROS2->DisableForROS({.stream_id=_stream_id, .actor_id=actor_id});
+  ROS2->DisableForROS({_stream_id, actor_id});
 }
 
 bool ROS2Session::IsEnabledForROS(carla::streaming::detail::actor_id_type actor_id) {
   auto ROS2 = carla::ros2::ROS2::GetInstance();
-  return ROS2->IsEnabledForROS({.stream_id=_stream_id, .actor_id=actor_id});
+  return ROS2->IsEnabledForROS({_stream_id, actor_id});
 }
 }  // namespace ros2
 }  // namespace carla

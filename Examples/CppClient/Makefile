@@ -4,9 +4,9 @@ BINDIR=$(CURDIR)/bin
 INSTALLDIR=$(CURDIR)/libcarla-install
 TOOLCHAIN=$(CURDIR)/ToolChain.cmake
 
-CC=/usr/bin/gcc-9
-CXX=/usr/bin/g++-9
-CXXFLAGS=-std=c++14 -pthread -fPIC -O3 -DNDEBUG -Werror -Wall -Wextra
+CC=/usr/bin/gcc
+CXX=/usr/bin/g++
+CXXFLAGS=-std=c++17 -pthread -fPIC -O3 -DNDEBUG -Werror -Wall -Wextra
 
 define log
 	@echo "\033[1;35m$(1)\033[0m"

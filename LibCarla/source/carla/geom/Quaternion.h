@@ -159,7 +159,7 @@ namespace geom {
       return q * *this * q.Inverse();
     }
 
-    /** shortened version of getRotation providing the yaw component in rad
+    /** shortened version of Rotator() providing the yaw component in rad
      */
     float YawRad() const {
       auto const matrix = RotationMatrix();
@@ -173,13 +173,13 @@ namespace geom {
       return -yaw;
     }
 
-    /** shortened version of getRotation providing the yaw component in degree
+    /** shortened version of Rotator() providing the yaw component in degree
      */
     float YawDegree() const {
       return Math::ToDegrees(YawRad());
     }
 
-    Rotation Rotation() const {
+    carla::geom::Rotation Rotator() const {
       // calculation see https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
       auto const matrix = RotationMatrix();
       float yaw = 0.f;
@@ -205,7 +205,7 @@ namespace geom {
         roll = std::atan2(matrix[7], matrix[8]);
       }
       // Unreal uses left handed system: negate all rotations
-      geom::Rotation rotator;
+      carla::geom::Rotation rotator;
       rotator.roll = Math::ToDegrees(-roll);
       rotator.pitch = Math::ToDegrees(-pitch);
       rotator.yaw = Math::ToDegrees(-yaw);
