@@ -117,6 +117,7 @@ public class Carla :
       "Slate",
       "SlateCore",
       "PhysicsCore",
+      "MeshConversion",
       "Chaos",
       "ChaosVehicles"
     });

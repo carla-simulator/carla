@@ -1,6 +1,6 @@
 // Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "BlueprintLibrary/MeshToLandscape.h"
+#include "MeshToLandscape.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Landscape.h"
@@ -18,7 +18,22 @@ void UMeshToLandscapeUtil::FilterLandscapeLikeStaticMeshComponentsByVariance(
 	for (int32 i = 0; i != StaticMeshComponents.Num();)
 	{
 		UStaticMeshComponent* SMC = StaticMeshComponents[i];
+		if (SMC == nullptr)
+		{
+			++i;
+			continue;
+		}
 		UStaticMesh* SM = SMC->GetStaticMesh();
+		if (SM == nullptr)
+		{
+			++i;
+			continue;
+		}
+		if (SM->GetNumLODs() == 0)
+		{
+			++i;
+			continue;
+		}
 		const FStaticMeshLODResources& LOD = SM->GetLODForExport(0);
 		FStaticMeshLODResourcesMeshAdapter Adapter(&LOD);
 		int32 VertexCount = LOD.GetNumVertices();
@@ -38,27 +53,57 @@ void UMeshToLandscapeUtil::FilterLandscapeLikeStaticMeshComponentsByVariance(
 		else
 			++i;
 	}
-	StaticMeshComponents.Shrink();
+}
+
+void UMeshToLandscapeUtil::FilterLandscapeLikeStaticMeshComponentsByPatterns(
+	TArray<UStaticMeshComponent*>& StaticMeshComponents,
+	const TArray<FString>& ActorNamePatterns)
+{
+	FString NameTemp;
+	if (ActorNamePatterns.IsEmpty())
+		return;
+	for (int32 i = 0; i != StaticMeshComponents.Num();)
+	{
+		UStaticMeshComponent* SMC = StaticMeshComponents[i];
+		SMC->GetOwner()->GetName(NameTemp);
+		bool Match = false;
+		for (const FString& Pattern : ActorNamePatterns)
+		{
+			Match = NameTemp.MatchesWildcard(Pattern);
+			if (Match)
+				break;
+		}
+		if (!Match)
+			StaticMeshComponents.RemoveAtSwap(i, EAllowShrinking::No);
+		else
+			++i;
+	}
 }
 
 ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
-	const TArray<UStaticMeshComponent*>& InStaticMeshComponents,
+	const TArray<UStaticMeshComponent*>& StaticMeshComponents,
 	int32 HeightmapWidth,
 	int32 HeightmapHeight)
 {
-	if (InStaticMeshComponents.Num() == 0)
+	if (StaticMeshComponents.Num() == 0)
 		return nullptr;
 	
-	UWorld* World = InStaticMeshComponents[0]->GetWorld();
+	UWorld* World = StaticMeshComponents[0]->GetWorld();
 
 	TArray<uint16_t> HeightmapData;
 	HeightmapData.SetNumZeroed(HeightmapHeight * HeightmapWidth);
+
+	if (HeightmapData.Num() == 0)
+	{
+		// @TODO: Add Warning.
+		return nullptr;
+	}
 
 	double Limit = 1e32;
 	FVector3d Max = FVector3d(-Limit);
 	FVector3d Min = FVector3d(Limit);
 
-	for (UStaticMeshComponent* SMC : InStaticMeshComponents)
+	for (UStaticMeshComponent* SMC : StaticMeshComponents)
 	{
 		check(SMC->GetWorld() == World);
 		UStaticMesh* SM = SMC->GetStaticMesh();
@@ -75,21 +120,24 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	}
 
 	FVector3d Range = Max - Min;
+	FVector3d RangeInv = FVector3d::OneVector / Range;
+	FVector3d Origin = (Max + Min) * 0.5F;
 
 	auto MapPosition = [=](FVector3d xyz) -> FIntVector3
 	{
-		xyz /= Range;
-		check(xyz.X >= 0);
-		check(xyz.Y >= 0);
-		check(xyz.Z >= 0);
+		xyz -= Min;
+		xyz *= RangeInv;
+		check(xyz.X + 1e-4 > 0);
+		check(xyz.Y + 1e-4 > 0);
+		check(xyz.Z + 1e-4 > 0);
 		xyz = xyz.GetAbs();
 		return FIntVector3(
-			std::round(xyz.X * (double)HeightmapWidth),
-			std::round(xyz.Y * (double)HeightmapHeight),
+			std::round(xyz.X * (double)(HeightmapWidth - 1)),
+			std::round(xyz.Y * (double)(HeightmapHeight - 1)),
 			xyz.Z * std::numeric_limits<uint16_t>::max());
 	};
 
-	for (UStaticMeshComponent* SMC : InStaticMeshComponents)
+	for (UStaticMeshComponent* SMC : StaticMeshComponents)
 	{
 		UStaticMesh* SM = SMC->GetStaticMesh();
 		const FStaticMeshLODResources& LOD = SM->GetLODForExport(0);
@@ -98,12 +146,17 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 		{
 			FVector3d Vertex = Adapter.GetVertex(i);
 			FIntVector3 Coord = MapPosition(Vertex);
-			HeightmapData[Coord.Y * HeightmapWidth + Coord.X] = Coord.Z;
+			volatile auto Offset = Coord.Y * HeightmapWidth + Coord.X;
+			HeightmapData[(int32)Offset] = Coord.Z;
 		}
 	}
 
+	FActorSpawnParameters SpawnParams;
 	ALandscape* Landscape = World->SpawnActor<ALandscape>(
-		ALandscape::StaticClass());
+		ALandscape::StaticClass(),
+		Origin,
+		FRotator(),
+		SpawnParams);
 
 	TMap<FGuid, TArray<uint16>> LayerHeightMaps;
 	LayerHeightMaps.Add(FGuid::NewGuid(), MoveTemp(HeightmapData));
@@ -111,7 +164,7 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	TMap<FGuid, TArray<FLandscapeImportLayerInfo>> LayerImportInfos;
 
 	Landscape->Import(
-		Landscape->GetLandscapeGuid(),
+		FGuid::NewGuid(),
 		0, 0,
 		HeightmapWidth - 1, HeightmapHeight - 1,
 		1, 63,
@@ -126,22 +179,26 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	return Landscape;
 }
 
-void UMeshToLandscapeUtil::EnumerateLandscapeLikeStaticMeshComponentsByVariance(
-	AActor* WorldContextObject,
-	TArray<UStaticMeshComponent*>& OutStaticMeshComponents,
-	double MaxZVariance)
+void UMeshToLandscapeUtil::EnumerateLandscapeLikeStaticMeshComponents(
+	UObject* WorldContextObject,
+	const TArray<FString>& ActorNamePatterns,
+	double MaxZVariance,
+	TArray<UStaticMeshComponent*>& OutStaticMeshComponents)
 {
 	UWorld* World = WorldContextObject->GetWorld();
 	TArray<AActor*> SMAs;
+	TArray<UStaticMeshComponent*> SMCs;
 	UGameplayStatics::GetAllActorsOfClass(
 		WorldContextObject,
 		AStaticMeshActor::StaticClass(),
 		SMAs);
 	for (AActor* SMA : SMAs)
 	{
-		TArray<UStaticMeshComponent*> SMCs;
 		SMA->GetComponents(SMCs);
 		FilterLandscapeLikeStaticMeshComponentsByVariance(SMCs, MaxZVariance);
+		FilterLandscapeLikeStaticMeshComponentsByPatterns(SMCs, ActorNamePatterns);
 		OutStaticMeshComponents.Append(SMCs);
+		SMCs.Reset();
 	}
+	OutStaticMeshComponents.Shrink();
 }
