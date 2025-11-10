@@ -106,6 +106,8 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	for (UStaticMeshComponent* SMC : StaticMeshComponents)
 	{
 		check(SMC->GetWorld() == World);
+		AActor* SMCOwner = SMC->GetOwner();
+		check(SMCOwner != nullptr);
 		UStaticMesh* SM = SMC->GetStaticMesh();
 		const FStaticMeshLODResources& LOD = SM->GetLODForExport(0);
 		FStaticMeshLODResourcesMeshAdapter Adapter(&LOD);
@@ -114,6 +116,7 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 		for (int32 i = 0; i != LOD.GetNumVertices(); ++i)
 		{
 			FVector3d Vertex = Adapter.GetVertex(i);
+			Vertex = SMCOwner->GetTransform().TransformPosition(Vertex);
 			Max = FVector3d::Max(Max, Vertex);
 			Min = FVector3d::Min(Min, Vertex);
 		}
@@ -121,7 +124,6 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 
 	FVector3d Range = Max - Min;
 	FVector3d RangeInv = FVector3d::OneVector / Range;
-	FVector3d Origin = (Max + Min) * 0.5F;
 
 	auto MapPosition = [=](FVector3d xyz) -> FIntVector3
 	{
@@ -139,12 +141,15 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 
 	for (UStaticMeshComponent* SMC : StaticMeshComponents)
 	{
+		AActor* SMCOwner = SMC->GetOwner();
+		check(SMCOwner != nullptr);
 		UStaticMesh* SM = SMC->GetStaticMesh();
 		const FStaticMeshLODResources& LOD = SM->GetLODForExport(0);
 		FStaticMeshLODResourcesMeshAdapter Adapter(&LOD);
 		for (int32 i = 0; i != LOD.GetNumVertices(); ++i)
 		{
 			FVector3d Vertex = Adapter.GetVertex(i);
+			Vertex = SMCOwner->GetTransform().TransformPosition(Vertex);
 			FIntVector3 Coord = MapPosition(Vertex);
 			volatile auto Offset = Coord.Y * HeightmapWidth + Coord.X;
 			HeightmapData[(int32)Offset] = Coord.Z;
@@ -154,28 +159,33 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	FActorSpawnParameters SpawnParams;
 	ALandscape* Landscape = World->SpawnActor<ALandscape>(
 		ALandscape::StaticClass(),
-		Origin,
-		FRotator(),
+		FVector3d::ZeroVector,
+		FRotator::ZeroRotator,
 		SpawnParams);
+	FGuid LandscapeGUID = FGuid::NewGuid();
 
 	TMap<FGuid, TArray<uint16>> LayerHeightMaps;
-	LayerHeightMaps.Add(FGuid::NewGuid(), MoveTemp(HeightmapData));
+	LayerHeightMaps.Add(FGuid(), MoveTemp(HeightmapData));
 
 	TMap<FGuid, TArray<FLandscapeImportLayerInfo>> LayerImportInfos;
+	LayerImportInfos.Add(FGuid(), TArray<FLandscapeImportLayerInfo>());
 
 	Landscape->Import(
-		FGuid::NewGuid(),
+		LandscapeGUID,
 		0, 0,
 		HeightmapWidth - 1, HeightmapHeight - 1,
 		1, 63,
 		LayerHeightMaps,
 		nullptr,
 		LayerImportInfos,
-		ELandscapeImportAlphamapType::Layered,
-		nullptr);
+		ELandscapeImportAlphamapType::Additive);
 
+#if WITH_EDITOR
 	Landscape->PostEditChange();
 	Landscape->RegisterAllComponents();
+	Landscape->MarkPackageDirty();
+#endif
+
 	return Landscape;
 }
 
