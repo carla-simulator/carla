@@ -7,11 +7,15 @@
 #include <carla/geom/BoundingBox.h>
 #include <carla/geom/GeoLocation.h>
 #include <carla/geom/GeoProjectionsParams.h>
+#include <carla/geom/Acceleration.h>
+#include <carla/geom/AngularVelocity.h>
 #include <carla/geom/Location.h>
 #include <carla/geom/Rotation.h>
+#include <carla/geom/Quaternion.h>
 #include <carla/geom/Transform.h>
 #include <carla/geom/Vector2D.h>
 #include <carla/geom/Vector3D.h>
+#include <carla/geom/Velocity.h>
 
 #include <boost/python/implicit.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -51,10 +55,34 @@ namespace geom {
     return out;
   }
 
-  std::ostream &operator<<(std::ostream &out, const Rotation &rotation) {
-    out << "Rotation(pitch=" << std::to_string(rotation.pitch)
-        << ", yaw=" << std::to_string(rotation.yaw)
-        << ", roll=" << std::to_string(rotation.roll) << ')';
+  std::ostream &operator<<(std::ostream &out, const Velocity &vector3D) {
+    WriteVector3D(out, "Velocity", vector3D);
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const AngularVelocity &vector3D) {
+    WriteVector3D(out, "AngularVelocity", vector3D);
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const Acceleration &vector3D) {
+    WriteVector3D(out, "Acceleration", vector3D);
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const Rotation &rotator) {
+    out << "Rotation(pitch=" << std::to_string(rotator.pitch)
+        << ", yaw=" << std::to_string(rotator.yaw)
+        << ", roll=" << std::to_string(rotator.roll) << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const Quaternion &quaternion) {
+    out << "Quaternion"
+        << "(x=" << std::to_string(quaternion.x)
+        << ", y=" << std::to_string(quaternion.y)
+        << ", z=" << std::to_string(quaternion.z)
+        << ", w=" << std::to_string(quaternion.w) << ')';
     return out;
   }
 
@@ -88,6 +116,7 @@ static void TransformList(const carla::geom::Transform &self, boost::python::lis
   }
 }
 
+#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
 static boost::python::list BuildMatrix(const std::array<float, 16> &m) {
   boost::python::list r_out;
   boost::python::list r[4];
@@ -97,12 +126,13 @@ static boost::python::list BuildMatrix(const std::array<float, 16> &m) {
 }
 
 static auto GetTransformMatrix(const carla::geom::Transform &self) {
-  return BuildMatrix(self.GetMatrix());
+  return BuildMatrix(self.TransformationMatrix());
 }
 
 static auto GetInverseTransformMatrix(const carla::geom::Transform &self) {
-  return BuildMatrix(self.GetInverseMatrix());
+  return BuildMatrix(self.InverseTransformationMatrix());
 }
+#endif
 
 static auto Cross(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
   return carla::geom::Math::Cross(self, other);
@@ -215,6 +245,42 @@ void export_geom() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<cg::Acceleration, bases<cg::Vector3D>>("Acceleration")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def(init<const cg::Vector3D &>((arg("rhs"))))
+    .add_property("x", +[](const cg::Acceleration &self) { return self.x; }, +[](cg::Acceleration &self, float x) { self.x = x; })
+    .add_property("y", +[](const cg::Acceleration &self) { return self.y; }, +[](cg::Acceleration &self, float y) { self.y = y; })
+    .add_property("z", +[](const cg::Acceleration &self) { return self.z; }, +[](cg::Acceleration &self, float z) { self.z = z; })
+    .def("__eq__", &cg::Acceleration::operator==)
+    .def("__ne__", &cg::Acceleration::operator!=)
+    .def("__abs__", &cg::Acceleration::Abs)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::AngularVelocity, bases<cg::Vector3D>>("AngularVelocity")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def(init<const cg::Vector3D &>((arg("rhs"))))
+    .add_property("x", +[](const cg::AngularVelocity &self) { return self.x; }, +[](cg::AngularVelocity &self, float x) { self.x = x; })
+    .add_property("y", +[](const cg::AngularVelocity &self) { return self.y; }, +[](cg::AngularVelocity &self, float y) { self.y = y; })
+    .add_property("z", +[](const cg::AngularVelocity &self) { return self.z; }, +[](cg::AngularVelocity &self, float z) { self.z = z; })
+    .def("__eq__", &cg::AngularVelocity::operator==)
+    .def("__ne__", &cg::AngularVelocity::operator!=)
+    .def("__abs__", &cg::AngularVelocity::Abs)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::Velocity, bases<cg::Vector3D>>("Velocity")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def(init<const cg::Vector3D &>((arg("rhs"))))
+    .add_property("x", +[](const cg::Velocity &self) { return self.x; }, +[](cg::Velocity &self, float x) { self.x = x; })
+    .add_property("y", +[](const cg::Velocity &self) { return self.y; }, +[](cg::Velocity &self, float y) { self.y = y; })
+    .add_property("z", +[](const cg::Velocity &self) { return self.z; }, +[](cg::Velocity &self, float z) { self.z = z; })
+    .def("__eq__", &cg::Velocity::operator==)
+    .def("__ne__", &cg::Velocity::operator!=)
+    .def("__abs__", &cg::Velocity::Abs)
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<cg::Rotation>("Rotation")
     .def(init<float, float, float>((arg("pitch")=0.0f, arg("yaw")=0.0f, arg("roll")=0.0f)))
     .def_readwrite("pitch", &cg::Rotation::pitch)
@@ -225,6 +291,37 @@ void export_geom() {
     .def("get_up_vector", &cg::Rotation::GetUpVector)
     .def("__eq__", &cg::Rotation::operator==)
     .def("__ne__", &cg::Rotation::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::Quaternion>("Quaternion")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f, arg("w")=1.0f)))
+    .def(init<cg::Rotation>((arg("rotator"))))
+    .def_readwrite("x", &cg::Quaternion::x)
+    .def_readwrite("y", &cg::Quaternion::y)
+    .def_readwrite("z", &cg::Quaternion::z)
+    .def_readwrite("w", &cg::Quaternion::w)
+    .def("create_from_yaw_degree", &cg::Quaternion::CreateFromYawDegree, (arg("yaw")))
+    .def("identity", &cg::Quaternion::Identity)
+    .def("get_forward_vector", &cg::Quaternion::GetForwardVector)
+    .def("get_right_vector", &cg::Quaternion::GetRightVector)
+    .def("get_up_vector", &cg::Quaternion::GetUpVector)
+    .def("inverse", &cg::Quaternion::Inverse)
+    .def("length", &cg::Quaternion::Length)
+    .def("squared_length", &cg::Quaternion::SquaredLength)
+    .def("unit_quaternion", &cg::Quaternion::UnitQuaternion)
+#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
+    .def("rotation_matrix", &cg::Quaternion::RotationMatrix)
+    .def("inverse_rotation_matrix", &cg::Quaternion::InverseRotationMatrix)
+#endif
+    .def("rotated_quaternion", &cg::Quaternion::RotatedQuaternion, (arg("quaternion")))
+    .def("yaw_rad", &cg::Quaternion::YawRad)
+    .def("yaw_degree", &cg::Quaternion::YawDegree)
+    .def("rotator", &cg::Quaternion::Rotator)
+    .def("rotated_vector", &cg::Quaternion::RotatedVector<cg::Vector3D>, (arg("vector")))
+    .def("inverse_rotated_vector", &cg::Quaternion::InverseRotatedVector<cg::Vector3D>, (arg("vector")))
+    .def("__eq__", &cg::Quaternion::operator==)
+    .def("__ne__", &cg::Quaternion::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -249,8 +346,10 @@ void export_geom() {
     .def("get_forward_vector", &cg::Transform::GetForwardVector)
     .def("get_right_vector", &cg::Transform::GetRightVector)
     .def("get_up_vector", &cg::Transform::GetUpVector)
+#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
     .def("get_matrix", &GetTransformMatrix)
     .def("get_inverse_matrix", &GetInverseTransformMatrix)
+#endif
     .def("__eq__", &cg::Transform::operator==)
     .def("__ne__", &cg::Transform::operator!=)
     .def(self_ns::str(self_ns::self))

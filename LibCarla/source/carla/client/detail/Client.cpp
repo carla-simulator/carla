@@ -381,7 +381,7 @@ namespace detail {
       if (attachment_type == rpc::AttachmentType::SpringArm ||
           attachment_type == rpc::AttachmentType::SpringArmGhost)
       {
-        const auto a = transform.location.MakeSafeUnitVector(std::numeric_limits<float>::epsilon());
+        const auto a = transform.location.MakeUnitVector(std::numeric_limits<float>::epsilon());
         const auto z = geom::Vector3D(0.0f, 0.f, 1.0f);
         constexpr float OneEps = 1.0f - std::numeric_limits<float>::epsilon();
         if (geom::Math::Dot(a, z) > OneEps) {

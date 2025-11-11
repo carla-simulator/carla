@@ -245,8 +245,8 @@ namespace traffic_manager {
     auto compare_s = [](const SimpleWaypointPtr &swp1, const SimpleWaypointPtr &swp2) {
       return (swp1->GetWaypoint()->GetDistance() < swp2->GetWaypoint()->GetDistance());
     };
-    auto wpt_angle = [](cg::Vector3D l1, cg::Vector3D l2) {
-      return cg::Math::GetVectorAngle(l1, l2);
+    auto wpt_angle_abs = [](cg::Vector3D l1, cg::Vector3D l2) {
+      return cg::Math::GetVectorAngleAbs(l1, l2);
     };
     auto max = [](int16_t x, int16_t y) {
       return x ^ ((x ^ y) & -(x < y));
@@ -269,8 +269,8 @@ namespace traffic_manager {
       // Adding more waypoints if the angle is too tight or if they are too distant.
       for (std::size_t i = 0; i < segment_waypoints.size() - 1; ++i) {
           double distance = std::abs(segment_waypoints.at(i)->GetWaypoint()->GetDistance() - segment_waypoints.at(i+1)->GetWaypoint()->GetDistance());
-          double angle = wpt_angle(segment_waypoints.at(i)->GetTransform().GetForwardVector(), segment_waypoints.at(i+1)->GetTransform().GetForwardVector());
-          int16_t angle_splits = static_cast<int16_t>(angle/MAX_WPT_RADIANS);
+          double angle_abs = wpt_angle_abs(segment_waypoints.at(i)->GetTransform().GetForwardVector(), segment_waypoints.at(i+1)->GetTransform().GetForwardVector());
+          int16_t angle_splits = static_cast<int16_t>(angle_abs/MAX_WPT_RADIANS);
           int16_t distance_splits = static_cast<int16_t>((distance*distance)/MAX_WPT_DISTANCE);
           auto max_splits = max(angle_splits, distance_splits);
           if (max_splits >= 1) {
