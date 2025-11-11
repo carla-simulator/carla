@@ -24,7 +24,6 @@
 namespace carla {
 namespace streaming {
 namespace detail {
-namespace tcp {
 
   /// Serialization of a set of buffers to be sent over a TCP socket as a single
   /// message. Template paramenter @a MaxNumberOfBuffers imposes a compile-time
@@ -76,6 +75,10 @@ namespace tcp {
       return MakeListView(begin, begin + _number_of_buffers + 1u);
     }
 
+    auto GetBufferViewSequence() const {
+      auto begin = _buffers.begin();
+      return MakeListView(begin, begin + _number_of_buffers);
+    }
   private:
 
     message_size_type _number_of_buffers = 0u;
@@ -91,7 +94,6 @@ namespace tcp {
   /// header and body sort of messages.
   using Message = MessageTmpl<2u>;
 
-} // namespace tcp
 } // namespace detail
 } // namespace streaming
 } // namespace carla

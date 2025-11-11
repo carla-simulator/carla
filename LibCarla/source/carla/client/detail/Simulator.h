@@ -34,10 +34,14 @@
 #include <memory>
 
 namespace carla {
-namespace client {
 
+namespace actors {
   class ActorBlueprint;
   class BlueprintLibrary;
+}
+
+namespace client {
+
   class Map;
   class Sensor;
   class WalkerAIController;
@@ -237,7 +241,7 @@ namespace detail {
       _episode->AddPendingException(e);
     }
 
-    SharedPtr<BlueprintLibrary> GetBlueprintLibrary();
+    SharedPtr<actors::BlueprintLibrary> GetBlueprintLibrary();
 
     /// Returns a list of pairs where the firts element is the vehicle ID
     /// and the second one is the light state
@@ -366,7 +370,7 @@ namespace detail {
     /// actor. If @gc is GarbageCollectionPolicy::Inherit, the default garbage
     /// collection policy is used.
     SharedPtr<Actor> SpawnActor(
-        const ActorBlueprint &blueprint,
+        const actors::ActorBlueprint &blueprint,
         const geom::Transform &transform,
         Actor *parent = nullptr,
         rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid,
@@ -379,6 +383,12 @@ namespace detail {
     {
       return _client.DestroyActor(actor_id);
     }
+
+    void EnableForROS(const Actor &actor);
+
+    void DisableForROS(const Actor &actor);
+
+    bool IsEnabledForROS(const Actor &actor);
 
     ActorSnapshot GetActorSnapshot(ActorId actor_id) const {
       DEBUG_ASSERT(_episode != nullptr);
@@ -710,14 +720,7 @@ namespace detail {
         std::function<void(SharedPtr<sensor::SensorData>)> callback);
 
     void UnSubscribeFromSensor(Actor &sensor);
-
     void EnableGBuffers(const Sensor &sensor, bool bEnable);
-
-    void DisableForROS(const Sensor &sensor);
-
-    bool IsEnabledForROS(const Sensor &sensor);
-
-    void EnableForROS(const Sensor &sensor);
 
     void SubscribeToGBuffer(
         Actor & sensor,

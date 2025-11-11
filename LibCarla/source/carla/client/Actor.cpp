@@ -145,6 +145,18 @@ namespace client {
     return GetEpisode().Lock()->GetActorState(*this);
   }
 
+  void Actor::EnableForROS() {
+    GetEpisode().Lock()->EnableForROS(*this);
+  }
+
+  void Actor::DisableForROS() {
+    GetEpisode().Lock()->DisableForROS(*this);
+  }
+
+  bool Actor::IsEnabledForROS(){
+    return GetEpisode().Lock()->IsEnabledForROS(*this);
+  }
+
   bool Actor::Destroy() {
     rpc::ActorState actor_state = GetActorState();
     bool result = false;

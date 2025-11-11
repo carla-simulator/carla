@@ -4,6 +4,7 @@
  * Improved the turning behavior of vehicles controlled by the TrafficManager, making them smoother.
  * Added a hybrid solid-state LiDAR with adjustable parameters (blueprint attributes)
  * Fix OpenDrive Builder lane width
+ * Prepare server for multistream support and ROS2 client calls
 
 ## CARLA 0.9.16
 

@@ -148,6 +148,9 @@ void export_actor() {
       .def("set_collisions", &cc::Actor::SetCollisions, (arg("enabled") = true))
       .def("set_enable_gravity", &cc::Actor::SetEnableGravity, (arg("enabled") = true))
       .def("destroy", CALL_WITHOUT_GIL(cc::Actor, Destroy))
+      .def("enable_for_ros", &cc::Actor::EnableForROS)
+      .def("disable_for_ros", &cc::Actor::DisableForROS)
+      .def("is_enabled_for_ros", &cc::Actor::IsEnabledForROS)
       .def(self_ns::str(self_ns::self))
   ;
 
