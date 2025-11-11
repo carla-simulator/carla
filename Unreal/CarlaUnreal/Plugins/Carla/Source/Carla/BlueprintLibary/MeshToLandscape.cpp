@@ -7,6 +7,10 @@
 #include "CoreMinimal.h"
 #include "Engine/StaticMeshActor.h"
 #include "StaticMeshLODResourcesAdapter.h"
+#include "PhysicsEngine/PhysicsObjectExternalInterface.h"
+#include "Async/ParallelFor.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Engine/CollisionProfile.h"
 #include <util/ue-header-guard-end.h>
 
 void UMeshToLandscapeUtil::FilterLandscapeLikeStaticMeshComponentsByVariance(
@@ -82,16 +86,21 @@ void UMeshToLandscapeUtil::FilterLandscapeLikeStaticMeshComponentsByPatterns(
 
 ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	const TArray<UStaticMeshComponent*>& StaticMeshComponents,
-	int32 HeightmapWidth,
-	int32 HeightmapHeight)
+	FIntPoint HeightmapExtent,
+	int32 SubsectionCount,
+	int32 SubsectionSizeQuads)
 {
 	if (StaticMeshComponents.Num() == 0)
 		return nullptr;
 	
 	UWorld* World = StaticMeshComponents[0]->GetWorld();
 
+	constexpr uint16 HeightmapZero = 32768;
+
 	TArray<uint16_t> HeightmapData;
-	HeightmapData.SetNumZeroed(HeightmapHeight * HeightmapWidth);
+	HeightmapData.SetNumUninitialized(HeightmapExtent.X * HeightmapExtent.Y);
+	for (uint16& Value : HeightmapData)
+		Value = HeightmapZero;
 
 	if (HeightmapData.Num() == 0)
 	{
@@ -109,57 +118,88 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 		AActor* SMCOwner = SMC->GetOwner();
 		check(SMCOwner != nullptr);
 		UStaticMesh* SM = SMC->GetStaticMesh();
+		check(SM->HasValidRenderData());
+		check(!SM->IsNaniteEnabled() || SM->HasValidNaniteData());
 		const FStaticMeshLODResources& LOD = SM->GetLODForExport(0);
 		FStaticMeshLODResourcesMeshAdapter Adapter(&LOD);
 		int32 VertexCount = LOD.GetNumVertices();
-
 		for (int32 i = 0; i != LOD.GetNumVertices(); ++i)
 		{
 			FVector3d Vertex = Adapter.GetVertex(i);
-			Vertex = SMCOwner->GetTransform().TransformPosition(Vertex);
+			Vertex = SMC->GetComponentTransform().TransformPosition(Vertex);
 			Max = FVector3d::Max(Max, Vertex);
 			Min = FVector3d::Min(Min, Vertex);
 		}
 	}
 
-	FVector3d Range = Max - Min;
-	FVector3d RangeInv = FVector3d::OneVector / Range;
-
-	auto MapPosition = [=](FVector3d xyz) -> FIntVector3
 	{
-		xyz -= Min;
-		xyz *= RangeInv;
-		check(xyz.X + 1e-4 > 0);
-		check(xyz.Y + 1e-4 > 0);
-		check(xyz.Z + 1e-4 > 0);
-		xyz = xyz.GetAbs();
-		return FIntVector3(
-			std::round(xyz.X * (double)(HeightmapWidth - 1)),
-			std::round(xyz.Y * (double)(HeightmapHeight - 1)),
-			xyz.Z * std::numeric_limits<uint16_t>::max());
-	};
+		FVector3d Range = Max - Min;
+		FVector3d RangeInv = FVector3d::OneVector / Range;
+		FVector2d CellSize = FVector2d(Min) / FVector2d(HeightmapExtent);
 
-	for (UStaticMeshComponent* SMC : StaticMeshComponents)
-	{
-		AActor* SMCOwner = SMC->GetOwner();
-		check(SMCOwner != nullptr);
-		UStaticMesh* SM = SMC->GetStaticMesh();
-		const FStaticMeshLODResources& LOD = SM->GetLODForExport(0);
-		FStaticMeshLODResourcesMeshAdapter Adapter(&LOD);
-		for (int32 i = 0; i != LOD.GetNumVertices(); ++i)
+		TArray<std::atomic<uint16_t>> SharedHeightmapData;
+		SharedHeightmapData.SetNumUninitialized(HeightmapData.Num());
+		for (std::atomic<uint16_t>& Value : SharedHeightmapData)
+			std::construct_at(&Value, 0);
+
+		auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(World->GetPhysicsScene());
+		ParallelFor(HeightmapData.Num(), [&](int32 Index)
 		{
-			FVector3d Vertex = Adapter.GetVertex(i);
-			Vertex = SMCOwner->GetTransform().TransformPosition(Vertex);
-			FIntVector3 Coord = MapPosition(Vertex);
-			volatile auto Offset = Coord.Y * HeightmapWidth + Coord.X;
-			HeightmapData[(int32)Offset] = Coord.Z;
-		}
+			int32 Y = Index / HeightmapExtent.X;
+			int32 X = Index % HeightmapExtent.X;
+			std::atomic<uint16_t>& TargetCell = SharedHeightmapData[Index];
+			FVector2d XY = FVector2d(Min) + CellSize * FVector2d(X, Y);
+			FVector3d Begin = FVector3d(XY.X, XY.Y, Max.Z);
+			FVector3d End = FVector3d(XY.X, XY.Y, Max.Z);
+			FHitResult Hit;
+			FCollisionQueryParams CQParams =
+				FCollisionQueryParams(FName(TEXT("Heightmap query trace")));
+			CQParams.bTraceComplex = true;
+			CQParams.bFindInitialOverlaps = true;
+			if (World->ParallelLineTraceSingleByChannel(
+				Hit,
+				Begin, End,
+				ECollisionChannel::ECC_EngineTraceChannel2,
+				CQParams,
+				FCollisionResponseParams::DefaultResponseParam))
+			{
+				FVector3d HitLocation = Hit.Location;
+				double HitZ = HitLocation.Z;
+				// ???:
+				HitZ -= Min.Z;
+				HitZ *= RangeInv.Z;
+				check(HitZ + 1e-4 > 0);
+				HitZ -= 0.5;
+				HitZ *= Range.Z;
+				uint16 Desired = (int32)std::clamp<int32>(
+					HitZ, 0, std::numeric_limits<uint16>::max()) +
+					HeightmapZero;
+				while (true)
+				{
+					uint16 Current = TargetCell.load(std::memory_order_acquire);
+					if (Current > Desired)
+						break;
+					if (TargetCell.compare_exchange_weak(
+						Current, Desired,
+						std::memory_order_release, std::memory_order_relaxed))
+					{
+						UE_LOG(LogCarla, Warning, TEXT("Set (%i, %i) to %u"), X, Y, Desired);
+						return;
+					}
+				}
+			}
+		}, EParallelForFlags::BackgroundPriority);
+
+		for (int32 i = 0; i != SharedHeightmapData.Num(); ++i)
+			HeightmapData[i] = SharedHeightmapData[i].load(std::memory_order_relaxed);
+
+		LockedPhysObject.Release();
 	}
 
 	FActorSpawnParameters SpawnParams;
 	ALandscape* Landscape = World->SpawnActor<ALandscape>(
 		ALandscape::StaticClass(),
-		FVector3d::ZeroVector,
+		Min,
 		FRotator::ZeroRotator,
 		SpawnParams);
 	FGuid LandscapeGUID = FGuid::NewGuid();
@@ -173,12 +213,12 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	Landscape->Import(
 		LandscapeGUID,
 		0, 0,
-		HeightmapWidth - 1, HeightmapHeight - 1,
-		1, 63,
+		HeightmapExtent.X - 1, HeightmapExtent.Y - 1,
+		SubsectionCount, SubsectionSizeQuads,
 		LayerHeightMaps,
 		nullptr,
 		LayerImportInfos,
-		ELandscapeImportAlphamapType::Additive);
+		ELandscapeImportAlphamapType::Layered);
 
 #if WITH_EDITOR
 	Landscape->PostEditChange();
@@ -205,6 +245,27 @@ void UMeshToLandscapeUtil::EnumerateLandscapeLikeStaticMeshComponents(
 	for (AActor* SMA : SMAs)
 	{
 		SMA->GetComponents(SMCs);
+		for (int32 i = 0; i != SMCs.Num();)
+		{
+			UStaticMesh* SM = SMCs[i]->GetStaticMesh();
+			if (SM != nullptr) // Some SMCs have NULL SM.
+			{
+				if (SM->HasValidRenderData() && (!SM->IsNaniteEnabled() || SM->HasValidNaniteData()))
+				{
+					++i;
+					continue;
+				}
+				else
+				{
+					// @TODO: ADD WARNING
+				}
+			}
+			else
+			{
+				// @TODO: ADD WARNING
+			}
+			SMCs.RemoveAtSwap(i, EAllowShrinking::No);
+		}
 		FilterLandscapeLikeStaticMeshComponentsByVariance(SMCs, MaxZVariance);
 		FilterLandscapeLikeStaticMeshComponentsByPatterns(SMCs, ActorNamePatterns);
 		OutStaticMeshComponents.Append(SMCs);
