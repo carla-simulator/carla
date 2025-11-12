@@ -32,9 +32,13 @@ import carla
 # process it as you liked and the important part is that,
 # at the end, it should include an element into the sensor queue.
 def sensor_callback(sensor_data, sensor_queue, sensor_name):
-    # Do stuff with the sensor_data data like save it to disk
-    # Then you just need to add to the queue
+    # Do stuff with the sensor_data data like save it to disk,
+    # then you add it to the queue so the main loop is aware of it.
     sensor_queue.put((sensor_data.frame, sensor_name))
+
+    # # You could also put the sensor data in the queue
+    # # and process it in the main loop
+    # sensor_queue.put((sensor_name, sensor_data.frame, sensor_data))
 
 
 def main():
@@ -105,18 +109,17 @@ def main():
             w_frame = world.get_snapshot().frame
             print("\nWorld's frame: %d" % w_frame)
 
-            # Now, we wait to the sensors data to be received.
-            # As the queue is blocking, we will wait in the queue.get() methods
-            # until all the information is processed and we continue with the next frame.
-            # We include a timeout of 1.0 s (in the get method) and if some information is
-            # not received in this time we continue.
+            # Now, we wait to the sensors data to be received. The queue.get() method retrieves
+            # and item from the queue, blocking for up to the given 1.0s if the queue is empty,
+            # raising an Empty error if the queue hasn't been filled in that time.
             try:
                 for _ in range(len(sensor_list)):
                     s_frame = sensor_queue.get(True, 1.0)
                     print("    Frame: %d   Sensor: %s" % (s_frame[0], s_frame[1]))
-
             except Empty:
                 print("    Some of the sensor information is missed")
+                # # Or raise an error if it is paramount that all data is received
+                # raise RuntimeError(" Some of the sensor information is missed")
 
     finally:
         world.apply_settings(original_settings)
