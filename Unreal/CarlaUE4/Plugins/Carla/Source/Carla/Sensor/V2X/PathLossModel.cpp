@@ -8,6 +8,7 @@
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Util/RandomEngine.h"
 #include "Math/UnrealMathUtility.h"
+#include "Carla/Util/RandomEngine.h"
 
 #include "DrawDebugHelpers.h"
 
@@ -19,13 +20,9 @@ double PathLossModel::Frequency_GHz = 5.9f;
 double PathLossModel::Frequency = 5.9f * std::pow(10, 9);
 double PathLossModel::lambda = PathLossModel::c_speedoflight / (5.9f * std::pow(10, 9));
 
-PathLossModel::PathLossModel(URandomEngine *random_engine)
+PathLossModel::PathLossModel(URandomEngine *random_engine, AActor *Owner)
 {
     mRandomEngine = random_engine;
-}
-
-void PathLossModel::SetOwner(AActor *Owner)
-{
     mActorOwner = Owner;
 }
 
@@ -74,10 +71,6 @@ void PathLossModel::Simulate(const std::vector<ActorPowerPair> ActorList, UCarla
     FVector OtherActorLocation;
     mReceiveActorPowerList.clear();
     float ReceivedPower = 0;
-    // Logic to get height of the vehicle
-    //  TODO: make that thing use the actual attachment and transform of the sensor
-
-    double tx_height_local = (mActorOwner->GetSimpleCollisionHalfHeight() * 2.0f) + 2.0;
 
     const FActorRegistry &Registry = mCarlaEpisode->GetActorRegistry();
 
@@ -90,20 +83,17 @@ void PathLossModel::Simulate(const std::vector<ActorPowerPair> ActorList, UCarla
             continue;
         }
         OtherActorLocation = actor_power_pair.first->GetTransform().GetLocation();
-        double rx_height_local = (actor_power_pair.first->GetSimpleCollisionHalfHeight() * 2.0) + 2.0;
 
         // calculate relative ht and hr respecting slope and elevation
         //  cm
         // if objects are on a slope, minimum Z height of both is the reference to calculate transmitter height
         double ref0 = std::min(CurrentActorLocation.Z, OtherActorLocation.Z);
         // cm
-        double ht = CurrentActorLocation.Z + tx_height_local - ref0;
-        double hr = OtherActorLocation.Z + rx_height_local - ref0;
+        double ht = CurrentActorLocation.Z - ref0;
+        double hr = OtherActorLocation.Z - ref0;
         // localize to common ref0 as ground
         FVector source_rel = CurrentActorLocation;
-        source_rel.Z += tx_height_local;
         FVector dest_rel = OtherActorLocation;
-        dest_rel.Z += rx_height_local;
 
         double Distance3d = FVector::Distance(source_rel, dest_rel) / 100.0f; // From cm to m
         // to meters
@@ -119,9 +109,7 @@ void PathLossModel::Simulate(const std::vector<ActorPowerPair> ActorList, UCarla
                                                    OtherActorLocation,
                                                    Distance3d,
                                                    ht,
-                                                   tx_height_local,
                                                    hr,
-                                                   rx_height_local,
                                                    ref0);
             if (ReceivedPower > -1.0 * std::numeric_limits<float>::max())
             {
@@ -137,9 +125,7 @@ float PathLossModel::CalculateReceivedPower(AActor *OtherActor,
                                             const FVector Destination,
                                             const double Distance3d,
                                             const double ht,
-                                            const double ht_local,
                                             const double hr,
-                                            const double hr_local,
                                             const double reference_z)
 {
     // hr in m
@@ -156,9 +142,7 @@ float PathLossModel::CalculateReceivedPower(AActor *OtherActor,
     HitResult.Reset();
 
     FVector tx = Source;
-    tx.Z += ht_local;
     FVector rx = Destination;
-    rx.Z += hr_local;
     mWorld->LineTraceMultiByObjectType(HitResult, tx, rx, ObjectParams);
 
     // all losses

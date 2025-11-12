@@ -1100,9 +1100,9 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
   };
 
 
-  BIND_SYNC(send) << [this](
+BIND_SYNC(send) << [this](
       cr::ActorId ActorId,
-      std::string message) -> R<void>
+      cr::CustomV2XBytes Data) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
     FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
@@ -1130,7 +1130,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
         " Actor Id: " + FString::FromInt(ActorId));
     }
 
-    Sensor->Send(cr::ToFString(message));
+    Sensor->Send(Data);
     return R<void>::Success();
   };
 

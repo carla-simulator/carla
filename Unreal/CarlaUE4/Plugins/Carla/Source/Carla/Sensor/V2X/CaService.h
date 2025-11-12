@@ -21,7 +21,7 @@ class CaService
 {
 public:
   CaService(URandomEngine *random_engine);
-  void SetOwner(UWorld *world, AActor *Owner);
+  void SetActor(UWorld *world, AActor *Owner);
 
   void SetParams(const float GenCamMin, const float GenCamMax, const bool FixedRate);
   void SetVelDeviation(const float noise_vel_stddev_x);
@@ -36,14 +36,14 @@ public:
                         const float noise_alt_bias,
                         const float noise_head_bias);
   bool Trigger(float DeltaSeconds);
-  CAM_t GetCamMessage();
-
+  CAM_t GetCamMessage()const;
+  bool CarlaActorInitialized()const { return mCarlaActor!=nullptr; }
 private:
-  AActor *mActorOwner;
-  FCarlaActor *mCarlaActor;
-  UCarlaEpisode *mCarlaEpisode;
-  UWorld *mWorld;
-  ACarlaWheeledVehicle *mVehicle;
+  AActor *mActorOwner{nullptr};
+  FCarlaActor *mCarlaActor{nullptr};
+  UCarlaEpisode *mCarlaEpisode{nullptr};
+  UWorld *mWorld{nullptr};
+  ACarlaWheeledVehicle *mVehicle{nullptr};
   float mLastCamTimeStamp;
   float mLastLowCamTimeStamp;
   float mGenCamMin;
@@ -70,12 +70,12 @@ private:
   bool CheckHeadingDelta(float DeltaSeconds);
   bool CheckPositionDelta(float DeltaSeconds);
   bool CheckSpeedDelta(float DeltaSeconds);
-  double GetFVectorAngle(const FVector &a, const FVector &b);
+  double GetFVectorAngle(const FVector &a, const FVector &b)const;
   void GenerateCamMessage(float DeltaTime);
-  ITSContainer::StationType_t GetStationType();
+  ITSContainer::StationType_t GetStationType()const;
 
-  float GetHeading();
-  long GetVehicleRole();
+  float GetHeading()const;
+  long GetVehicleRole()const;
 
   /* Constant values for message*/
   const long mProtocolVersion = 2;
@@ -84,7 +84,7 @@ private:
   long mStationType;
 
   carla::geom::Vector3D ComputeAccelerometer(const float DeltaTime);
-  const carla::geom::Vector3D ComputeAccelerometerNoise(const FVector &Accelerometer);
+  const carla::geom::Vector3D ComputeAccelerometerNoise(const FVector &Accelerometer)const;
   /// Standard deviation for acceleration settings.
   FVector StdDevAccel;
 
@@ -95,7 +95,7 @@ private:
   float PrevDeltaTime;
 
   // GNSS reference position and heading
-  FVector GetReferencePosition();
+  FVector GetReferencePosition()const;
   carla::geom::GeoProjection CurrentGeoProjection;
   float LatitudeDeviation;
   float LongitudeDeviation;
@@ -108,12 +108,12 @@ private:
   float HeadingBias;
 
   // Velocity
-  float ComputeSpeed();
+  float ComputeSpeed()const;
   float VelocityDeviation;
 
   // Yaw rate
-  const float ComputeYawNoise(const FVector &Gyroscope);
-  float ComputeYawRate();
+  const float ComputeYawNoise(const FVector &Gyroscope)const;
+  float ComputeYawRate()const;
   float YawrateDeviation;
   float YawrateBias;
 
@@ -128,5 +128,5 @@ private:
 
   // random for noise
   URandomEngine *mRandomEngine;
-  ITSContainer::SpeedValue_t BuildSpeedValue(const float vel);
+  ITSContainer::SpeedValue_t BuildSpeedValue(const float vel)const;
 };

@@ -999,33 +999,67 @@ class IMUSensor(object):
 class V2XSensor(object):
     def __init__(self, parent_actor, hud):
         self.sensor = None
+        self.sensor_custom = None
+        self.hud = hud
         self._parent = parent_actor
         world = self._parent.get_world()
-        #bp = world.get_blueprint_library().find('sensor.other.v2x_custom')
+
+        # create a v2x sensor to receive messages
         bp = world.get_blueprint_library().find('sensor.other.v2x')
         bp.set_attribute("path_loss_model", "geometric")
-        self.hud = hud
         self.sensor = world.spawn_actor(
             bp, carla.Transform(), attach_to=self._parent)
+        
+        # create a custom V2X sensors to demonstrate message sending/receiving
+        bp_custom = world.get_blueprint_library().find('sensor.other.v2x_custom')
+        bp_custom.set_attribute("path_loss_model", "geometric")
+        self.sensor_custom = world.spawn_actor(
+            bp_custom, carla.Transform(), attach_to=self._parent)
+        
         # We need to pass the lambda a weak reference to self to avoid circular
         # reference.
         weak_self = weakref.ref(self)
         self.sensor.listen(
             lambda sensor_data: V2XSensor._V2X_callback(weak_self, sensor_data))
+        self.sensor_custom.listen(
+            lambda sensor_data: V2XSensor._V2X_custom_callback(weak_self, sensor_data))
+
 
     @staticmethod
     def _V2X_callback(weak_self, sensor_data):
         self = weak_self()
         if not self:
             return
-        print(sensor_data.get_message_count())
         for data in sensor_data:
             msg = data.get()
-            # stationId = msg["Header"]["Station ID"]
+            stationId = msg["Message"]["Header"]["Station ID"]
             power = data.power 
-            print(msg)
-            # self.hud.notification('Cam message received from %s ' % stationId)
-            self.hud.notification('Cam message received with power %f ' % power)
+            print("V2X message: %s" % msg)
+            self.hud.notification('CAM received from %s with power %f ' % (stationId, power))
+        
+        # trigger custom sensor to send messages
+        message = carla.CustomV2XBytes()
+        bytes = bytearray("Hello CARLA Byte Array", 'utf-8')
+        message.set_bytes(bytes)
+        self.sensor_custom.send(message)
+        message.set_string("Hello CARLA String Message")
+        self.sensor_custom.send(message)
+
+    @staticmethod
+    def _V2X_custom_callback(weak_self, sensor_data):
+        self = weak_self()
+        if not self:
+            return
+        for data in sensor_data:
+            print("V2XCustom %s" % data)
+            msg = data.get()
+            stationId = msg["Message"]["Header"]["Station ID"]
+            power = data.power 
+            bytes = msg["Message"]["Message"]["Bytes"]
+            print("V2XCustom bytes hex %s" % bytes.hex())
+            print("V2XCustom bytes str %s" % bytes.decode('utf-8', errors='ignore'))
+            self.hud.notification('Custom CAM received from %s with power %f' % (stationId, power))
+
 # ==============================================================================
 # -- RadarSensor ---------------------------------------------------------------
 # ==============================================================================

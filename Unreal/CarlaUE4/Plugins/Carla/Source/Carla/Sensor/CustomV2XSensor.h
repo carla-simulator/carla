@@ -13,6 +13,7 @@
 #include "V2X/PathLossModel.h"
 #include <list>
 #include <map>
+#include <mutex>
 #include "CustomV2XSensor.generated.h"
 
 
@@ -22,8 +23,21 @@ class CARLA_API ACustomV2XSensor : public ASensor
     GENERATED_BODY()
 
     using FV2XData = carla::sensor::data::CustomV2XDataS;
-    using V2XDataList = std::vector<carla::sensor::data::CustomV2XData>;
-    using ActorV2XDataMap = std::map<AActor *, carla::sensor::data::CustomV2XData>;
+    using V2XDataList = std::list<carla::sensor::data::CustomV2XData>;
+    struct SenderId {
+        AActor * Actor;
+        std::string ChannelId;
+
+        bool operator < (const SenderId & other) const { 
+            if ( Actor != other.Actor ) {
+                return Actor < other.Actor;
+            }
+            else {
+                return ChannelId < other.ChannelId;
+            }
+        }
+    };
+    using ActorV2XDataMap = std::map<SenderId, V2XDataList>;
 
 public:
     ACustomV2XSensor(const FObjectInitializer &ObjectInitializer);
@@ -47,27 +61,22 @@ public:
     virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
     void SetOwner(AActor *Owner) override;
 
-    void Send(const FString message);
+    void Send(const carla::rpc::CustomV2XBytes &data);
 
 private:
-    static std::list<AActor *> mV2XActorContainer;
+    SenderId GetSenderId() { return {this, mChannelId}; }
+    
+    // infrastructure stationID cannot be dermined before sending data, because on construction time the CARLA Actor is not yet created
+    void UpdateStationId();
+    // global data
+    static std::mutex v2xDataLock;
+    static ActorV2XDataMap gActorV2XDataMapNextFrame;
+    static ActorV2XDataMap gActorV2XDataMap;
+
     PathLossModel *PathLossModelObj;
 
-    //store data
-    static ACustomV2XSensor::ActorV2XDataMap mActorV2XDataMap;
-    FV2XData mV2XData;
-
-    //write
-    void WriteMessageToV2XData(const ACustomV2XSensor::V2XDataList &msg_received_power_list);
-
-    //msg gen
-    void CreateITSPduHeader(CustomV2XM_t &message);
-    CustomV2XM_t CreateCustomV2XMessage();
     const long mProtocolVersion = 2;
     const long mMessageId = ITSContainer::messageID_custom;
-    long mStationId;
-    std::string mMessageData;
-    bool mMessageDataChanged = false;
-    constexpr static uint16_t data_size = sizeof(CustomV2XM_t::message);
-
+    long mStationId {0};
+    std::string mChannelId;
 };

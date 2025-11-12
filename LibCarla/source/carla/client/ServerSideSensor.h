@@ -6,8 +6,10 @@
 
 #pragma once
 
-#include "carla/client/Sensor.h"
 #include <bitset>
+
+#include "carla/client/Sensor.h"
+#include "carla/rpc/CustomV2XBytes.h"
 
 namespace carla {
 namespace client {
@@ -60,7 +62,7 @@ namespace client {
     bool IsEnabledForROS();
 
     /// Send data via this sensor
-    void Send(std::string message);
+    void Send(const rpc::CustomV2XBytes &data);
 
     /// @copydoc Actor::Destroy()
     ///

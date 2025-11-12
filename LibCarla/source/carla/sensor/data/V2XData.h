@@ -41,10 +41,6 @@ namespace carla
             {
 
             public:
-                explicit CAMDataS() = default;
-
-                CAMDataS &operator=(CAMDataS &&) = default;
-
                 // Returns the number of current received messages.
                 size_t GetMessageCount() const
                 {
@@ -58,7 +54,7 @@ namespace carla
                 }
 
                 // Adds a new detection.
-                void WriteMessage(CAMData message)
+                void WriteMessage(CAMData const &message)
                 {
                     MessageList.push_back(message);
                 }
@@ -73,10 +69,6 @@ namespace carla
             {
 
             public:
-                explicit CustomV2XDataS() = default;
-
-                CustomV2XDataS &operator=(CustomV2XDataS &&) = default;
-
                 // Returns the number of current received messages.
                 size_t GetMessageCount() const
                 {
@@ -90,7 +82,7 @@ namespace carla
                 }
 
                 // Adds a new detection.
-                void WriteMessage(CustomV2XData message)
+                void WriteMessage(CustomV2XData const &message)
                 {
                     MessageList.push_back(message);
                 }

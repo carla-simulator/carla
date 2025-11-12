@@ -102,11 +102,11 @@
     - def_name: send
       params:
       - param_name: message
-        type: string
+        type: carla.CustomV2XBytes
         doc: >
-           The data to send. Note: maximum string length is 100 chars. 
+           The data to send. Note: There is a maximum data size for a single message see carla.CustomV2XBytes for more information.
       doc: >
-        Instructs the sensor to send the string given by `message` to all other CustomV2XSensors on the next tick.
+        Instructs the sensor to send the bytes given by `message` to all other CustomV2XSensors on the next tick.
     # --------------------------------------
     - def_name: __str__
     # --------------------------------------

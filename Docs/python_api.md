@@ -716,6 +716,48 @@ No changes applied to the image. Used by the [RGB camera](ref_sensors.md#rgb-cam
 
 ---
 
+## carla.CustomV2XBytes<a name="carla.CustomV2XBytes"></a>
+This is the data type defining the bytes of a custom V2X message. Sent by the method `[carla.Sensor.send](#carla.Sensor.send)` and received as part of a [CustomV2XEvent](#carlacustomv2xevent).  
+
+### Instance Variables
+- <a name="carla.CustomV2XBytes.data_size"></a>**<font color="#f8805a">data_size</font>** (_int_)  
+The actual number of bytes of the message.  
+
+### Methods
+- <a name="carla.CustomV2XBytes.get"></a>**<font color="#7fb800">get</font>**(<font color="#00a6ed">**self**</font>)  
+Get the custom bytes. Returns a nested dictionary containing the message. It has three primary keys: - `DataSize` : int - `MaxDataSize`: int - `Bytes`: memory view containing the bytes.  
+    - **Return:** _dict_  
+- <a name="carla.CustomV2XBytes.max_data_size"></a>**<font color="#7fb800">max_data_size</font>**(<font color="#00a6ed">**self**</font>)  
+Get the maximum data size that a single message is able to transport.  
+    - **Return:** _int_  
+
+##### Getters
+- <a name="carla.CustomV2XBytes.get_bytes"></a>**<font color="#7fb800">get_bytes</font>**(<font color="#00a6ed">**self**</font>)  
+Get the custom bytes.  
+    - **Return:** _bytes_  
+    - **Setter:** _[carla.CustomV2XBytes.set_bytes](#carla.CustomV2XBytes.set_bytes)_  
+- <a name="carla.CustomV2XBytes.get_string"></a>**<font color="#7fb800">get_string</font>**(<font color="#00a6ed">**self**</font>)  
+Get the custom bytes as string. Be aware: this is a convenience method for quick tests, no coding/decoding is performed.  
+    - **Return:** _str_  
+    - **Setter:** _[carla.CustomV2XBytes.set_string](#carla.CustomV2XBytes.set_string)_  
+
+##### Setters
+- <a name="carla.CustomV2XBytes.set_bytes"></a>**<font color="#7fb800">set_bytes</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**bytes**</font>)  
+Set the custom bytes from a bytearray. Be aware that only up to `MaxDataSize` bytes are considered. If you have larger data, you need to split it manually.  
+    - **Parameters:**
+        - `bytes` (_bytes_)  
+    - **Getter:** _[carla.CustomV2XBytes.get_bytes](#carla.CustomV2XBytes.get_bytes)_  
+- <a name="carla.CustomV2XBytes.set_string"></a>**<font color="#7fb800">set_string</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**string**</font>)  
+Set the custom bytes directly from a string. The null termination is not transmitted. Be aware that only up to `MaxDataSize` bytes are considered. If you have larger data, you need to split it manually. Be aware: this is a convenience method for quick tests, no coding/decoding is performed.  
+    - **Parameters:**
+        - `string` (_str_)  
+    - **Getter:** _[carla.CustomV2XBytes.get_string](#carla.CustomV2XBytes.get_string)_  
+
+##### Dunder methods
+- <a name="carla.CustomV2XBytes.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
 ## carla.CustomV2XData<a name="carla.CustomV2XData"></a>
 <small style="display:block;margin-top:-20px;">Inherited from _[carla.SensorData](#carla.SensorData)_</small></br>
 This is the data type defining a custom V2X message. Received as part of a [CustomV2XEvent](#carlacustomv2xevent).  
@@ -726,7 +768,7 @@ Received power.
 
 ### Methods
 - <a name="carla.CustomV2XData.get"></a>**<font color="#7fb800">get</font>**(<font color="#00a6ed">**self**</font>)  
-Get the custom message. Returns a nested dictionary containing the message. It has two primary keys: - `Header` : dict - `Message`: str.  
+Get the custom message. Returns a nested dictionary containing the message. It has two primary keys: - `Header` : dict - `Message`: dict.  
     - **Return:** _dict_  
 
 ##### Dunder methods
@@ -2493,9 +2535,9 @@ The function the sensor will be calling to every time the desired GBuffer textur
         - `gbuffer_id` (_[carla.GBufferTextureID](#carla.GBufferTextureID)_) - The ID of the target Unreal Engine GBuffer texture.  
         - `callback` (_function_) - The called function with one argument containing the received GBuffer texture.  
 - <a name="carla.Sensor.send"></a>**<font color="#7fb800">send</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**message**</font>)  
-Instructs the sensor to send the string given by `message` to all other CustomV2XSensors on the next tick.  
+Instructs the sensor to send the bytes given by `message` to all other CustomV2XSensors on the next tick.  
     - **Parameters:**
-        - `message` (_string_) - The data to send. Note: maximum string length is 100 chars.  
+        - `message` (_[carla.CustomV2XBytes](#carla.CustomV2XBytes)_) - The data to send. Note: There is a maximum data size for a single message see [carla.CustomV2XBytes](#carla.CustomV2XBytes) for more information.  
 - <a name="carla.Sensor.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  
 Commands the sensor to stop listening for data.  
 - <a name="carla.Sensor.stop_gbuffer"></a>**<font color="#7fb800">stop_gbuffer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**gbuffer_id**</font>)  

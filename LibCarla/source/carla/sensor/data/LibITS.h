@@ -1,7 +1,10 @@
 #pragma once
 #include <stdint.h>
-#include <vector>
+#include <array>
 #include <cstring>
+
+#include "carla/rpc/CustomV2XBytes.h"
+
 
 class ITSContainer
 {
@@ -531,7 +534,7 @@ public:
     /* ProtectedCommunicationZonesRSU */
     typedef struct ProtectedCommunicationZonesRSU {
         long ProtectedCommunicationZoneCount;
-        std::vector<ProtectedCommunicationZone_t> list;
+        std::array<ProtectedCommunicationZone_t, 16u> data;  /* (SIZE(1..16)) */
     } ProtectedCommunicationZonesRSU_t;
 
     /* VehicleRole Dependencies */
@@ -626,7 +629,7 @@ public:
     /* PathHistory */
     typedef struct PathHistory {
         long NumberOfPathPoint;
-        std::vector<PathPoint_t> data;
+        std::array<PathPoint_t, 40u> data; /* (SIZE(0..40)) */
     } PathHistory_t;
 };
 
@@ -752,8 +755,6 @@ public:
         GenerationDeltaTime_t generationDeltaTime;
         CamParameters_t camParameters;
     } CoopAwareness_t;
-
-
 };
 
     /* CoopAwareness */
@@ -763,9 +764,8 @@ public:
         CAMContainer::CoopAwareness_t cam;
     } CAM_t;
 
-
     typedef struct CustomV2XM
     {
         ITSContainer::ItsPduHeader_t header;
-        char message[100];
+        carla::rpc::CustomV2XBytes data;
     } CustomV2XM_t;

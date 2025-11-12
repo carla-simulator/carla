@@ -258,6 +258,63 @@ Check out the [introduction to blueprints](core_actors.md).
 - **<font color="#498efc">sensor.other.rss</font>**  
     - **Attributes:**
         - `role_name` (_String_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.other.v2x</font>**  
+    - **Attributes:**
+        - `channel_id` (_String_) <sub>_- Modifiable_</sub>
+        - `combined_antenna_gain` (_Float_) <sub>_- Modifiable_</sub>
+        - `custom_fading_stddev` (_Float_) <sub>_- Modifiable_</sub>
+        - `d_ref` (_Float_) <sub>_- Modifiable_</sub>
+        - `filter_distance` (_Float_) <sub>_- Modifiable_</sub>
+        - `fixed_rate` (_Bool_) <sub>_- Modifiable_</sub>
+        - `frequency_ghz` (_Float_) <sub>_- Modifiable_</sub>
+        - `gen_cam_max` (_Float_) <sub>_- Modifiable_</sub>
+        - `gen_cam_min` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_accel_stddev_x` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_accel_stddev_y` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_accel_stddev_z` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_alt_bias` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_alt_stddev` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_head_bias` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_head_stddev` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_lat_bias` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_lat_stddev` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_lon_bias` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_lon_stddev` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_seed` (_Int_) <sub>_- Modifiable_</sub>
+        - `noise_vel_stddev_x` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_yawrate_bias` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_yawrate_stddev` (_Float_) <sub>_- Modifiable_</sub>
+        - `path_loss_exponent` (_Float_) <sub>_- Modifiable_</sub>
+        - `path_loss_model` (_String_) <sub>_- Modifiable_</sub>
+        - `receiver_sensitivity` (_Float_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `ros_frame_id` (_String_) <sub>_- Modifiable_</sub>
+        - `ros_name` (_String_) <sub>_- Modifiable_</sub>
+        - `ros_publish_tf` (_Bool_) <sub>_- Modifiable_</sub>
+        - `scenario` (_String_) <sub>_- Modifiable_</sub>
+        - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
+        - `transmit_power` (_Float_) <sub>_- Modifiable_</sub>
+        - `use_etsi_fading` (_Bool_) <sub>_- Modifiable_</sub>
+- **<font color="#498efc">sensor.other.v2x_custom</font>**  
+    - **Attributes:**
+        - `channel_id` (_String_) <sub>_- Modifiable_</sub>
+        - `combined_antenna_gain` (_Float_) <sub>_- Modifiable_</sub>
+        - `custom_fading_stddev` (_Float_) <sub>_- Modifiable_</sub>
+        - `d_ref` (_Float_) <sub>_- Modifiable_</sub>
+        - `filter_distance` (_Float_) <sub>_- Modifiable_</sub>
+        - `frequency_ghz` (_Float_) <sub>_- Modifiable_</sub>
+        - `noise_seed` (_Int_) <sub>_- Modifiable_</sub>
+        - `path_loss_exponent` (_Float_) <sub>_- Modifiable_</sub>
+        - `path_loss_model` (_String_) <sub>_- Modifiable_</sub>
+        - `receiver_sensitivity` (_Float_) <sub>_- Modifiable_</sub>
+        - `role_name` (_String_) <sub>_- Modifiable_</sub>
+        - `ros_frame_id` (_String_) <sub>_- Modifiable_</sub>
+        - `ros_name` (_String_) <sub>_- Modifiable_</sub>
+        - `ros_publish_tf` (_Bool_) <sub>_- Modifiable_</sub>
+        - `scenario` (_String_) <sub>_- Modifiable_</sub>
+        - `sensor_tick` (_Float_) <sub>_- Modifiable_</sub>
+        - `transmit_power` (_Float_) <sub>_- Modifiable_</sub>
+        - `use_etsi_fading` (_Bool_) <sub>_- Modifiable_</sub>
 
 ### static
 - **<font color="#498efc">static.prop.advertisement</font>**  
