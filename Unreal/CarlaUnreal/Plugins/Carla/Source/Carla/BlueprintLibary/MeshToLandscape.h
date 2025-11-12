@@ -34,9 +34,8 @@ public:
     UFUNCTION(BlueprintCallable, Category="CarlaTools")
     static ALandscape* ConvertMeshesToLandscape(
         const TArray<UStaticMeshComponent*>& StaticMeshComponents,
-        FIntPoint HeightmapExtent,
-        int32 SubsectionCount,
-        int32 SubsectionSizeQuads);
+        int32 SubsectionSizeQuads = 255,
+        int32 NumSubsections = 8);
 
     UFUNCTION(BlueprintCallable, Category="CarlaTools", meta=(WorldContext="WorldContextObject"))
     static void EnumerateLandscapeLikeStaticMeshComponents(

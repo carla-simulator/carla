@@ -86,27 +86,25 @@ void UMeshToLandscapeUtil::FilterLandscapeLikeStaticMeshComponentsByPatterns(
 
 ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	const TArray<UStaticMeshComponent*>& StaticMeshComponents,
-	FIntPoint HeightmapExtent,
-	int32 SubsectionCount,
-	int32 SubsectionSizeQuads)
+	int32 SubsectionSizeQuads,
+	int32 NumSubsections)
 {
 	if (StaticMeshComponents.Num() == 0)
 		return nullptr;
 	
 	UWorld* World = StaticMeshComponents[0]->GetWorld();
 
-	constexpr uint16 HeightmapZero = 32768;
+	double Scale = 100.0;
 
-	TArray<uint16_t> HeightmapData;
-	HeightmapData.SetNumUninitialized(HeightmapExtent.X * HeightmapExtent.Y);
-	for (uint16& Value : HeightmapData)
-		Value = HeightmapZero;
-
-	if (HeightmapData.Num() == 0)
+	auto EncodeZ = [&](double Z)
 	{
-		// @TODO: Add Warning.
-		return nullptr;
-	}
+		const uint16 U16Max = TNumericLimits<uint16>::Max();
+		Z /= Scale;
+		Z += 256.0;
+		Z /= 512.0;
+		Z *= (double)U16Max;
+		return std::min<uint16>((uint16)std::lround(Z), U16Max);
+	};
 
 	double Limit = 1e32;
 	FVector3d Max = FVector3d(-Limit);
@@ -132,15 +130,69 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 		}
 	}
 
+	int32 ComponentSizeQuads = SubsectionSizeQuads * NumSubsections;
+	double MetersPerQuad = 5.0;
+
+	FVector3d Range = Max - Min;
+	FVector3d Center = (Max + Min) / 2;
+	FIntPoint RangeMeters = FIntPoint( // QuadCount
+		(int32)std::lround(Range.X * UE_CM_TO_M),
+		(int32)std::lround(Range.Y * UE_CM_TO_M));
+	int32 NumComponents = RangeMeters.GetMax() / (ComponentSizeQuads * MetersPerQuad);
+	FIntPoint HeightmapExtent = RangeMeters;
+
+	TArray<uint16_t> HeightmapData;
+	HeightmapData.SetNumZeroed(HeightmapExtent.X * HeightmapExtent.Y);
+
+	if (HeightmapData.Num() == 0)
 	{
-		FVector3d Range = Max - Min;
+		// @TODO: Add Warning.
+		return nullptr;
+	}
+
+	{
 		FVector3d RangeInv = FVector3d::OneVector / Range;
-		FVector2d CellSize = FVector2d(Min) / FVector2d(HeightmapExtent);
+		FVector2d CellSize = FVector2d(Range) / (FVector2d(HeightmapExtent) - FVector2d(1.0));
 
 		TArray<std::atomic<uint16_t>> SharedHeightmapData;
 		SharedHeightmapData.SetNumUninitialized(HeightmapData.Num());
 		for (std::atomic<uint16_t>& Value : SharedHeightmapData)
 			std::construct_at(&Value, 0);
+
+		for (int32 i = 0; i != HeightmapData.Num(); ++i)
+		{
+			int32 Y = i / HeightmapExtent.X;
+			int32 X = i % HeightmapExtent.X;
+			FVector2d XY = FVector2d(Min) + CellSize * FVector2d(X, Y);
+			FVector3d Begin = FVector3d(XY.X, XY.Y, Max.Z);
+			FVector3d End = FVector3d(XY.X, XY.Y, Min.Z);
+		}
+
+		FCollisionQueryParams CQParams =
+			FCollisionQueryParams(FName(TEXT("Heightmap query trace")));
+		CQParams.bTraceComplex = true;
+		CQParams.bFindInitialOverlaps = true;
+		/*
+		{
+			TSet<UPrimitiveComponent*> TargetComponents;
+			for (auto SMC : StaticMeshComponents)
+				TargetComponents.Add(Cast<UStaticMeshComponent>(SMC));
+			TArray<AActor*> AllActors;
+			TArray<UPrimitiveComponent*> ActorComponents;
+			UGameplayStatics::GetAllActorsOfClass(
+				World,
+				AActor::StaticClass(),
+				AllActors);
+			for (AActor* Actor : AllActors)
+			{
+				Actor->GetComponents(ActorComponents, false);
+				for (UPrimitiveComponent* Component : ActorComponents)
+					if (TargetComponents.Contains(Component))
+						CQParams.AddIgnoredComponent(Component);
+				ActorComponents.Reset();
+			}
+		}
+		*/
 
 		auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(World->GetPhysicsScene());
 		ParallelFor(HeightmapData.Num(), [&](int32 Index)
@@ -150,30 +202,16 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 			std::atomic<uint16_t>& TargetCell = SharedHeightmapData[Index];
 			FVector2d XY = FVector2d(Min) + CellSize * FVector2d(X, Y);
 			FVector3d Begin = FVector3d(XY.X, XY.Y, Max.Z);
-			FVector3d End = FVector3d(XY.X, XY.Y, Max.Z);
+			FVector3d End = FVector3d(XY.X, XY.Y, Min.Z);
 			FHitResult Hit;
-			FCollisionQueryParams CQParams =
-				FCollisionQueryParams(FName(TEXT("Heightmap query trace")));
-			CQParams.bTraceComplex = true;
-			CQParams.bFindInitialOverlaps = true;
 			if (World->ParallelLineTraceSingleByChannel(
 				Hit,
 				Begin, End,
-				ECollisionChannel::ECC_EngineTraceChannel2,
+				ECollisionChannel::ECC_Camera,
 				CQParams,
 				FCollisionResponseParams::DefaultResponseParam))
 			{
-				FVector3d HitLocation = Hit.Location;
-				double HitZ = HitLocation.Z;
-				// ???:
-				HitZ -= Min.Z;
-				HitZ *= RangeInv.Z;
-				check(HitZ + 1e-4 > 0);
-				HitZ -= 0.5;
-				HitZ *= Range.Z;
-				uint16 Desired = (int32)std::clamp<int32>(
-					HitZ, 0, std::numeric_limits<uint16>::max()) +
-					HeightmapZero;
+				uint16 Desired = EncodeZ(Hit.Location.Z);
 				while (true)
 				{
 					uint16 Current = TargetCell.load(std::memory_order_acquire);
@@ -183,7 +221,7 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 						Current, Desired,
 						std::memory_order_release, std::memory_order_relaxed))
 					{
-						UE_LOG(LogCarla, Warning, TEXT("Set (%i, %i) to %u"), X, Y, Desired);
+						// UE_LOG(LogCarla, Warning, TEXT("Set (%i, %i) to %u"), X, Y, Desired);
 						return;
 					}
 				}
@@ -199,10 +237,21 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	FActorSpawnParameters SpawnParams;
 	ALandscape* Landscape = World->SpawnActor<ALandscape>(
 		ALandscape::StaticClass(),
-		Min,
+		FVector3d::ZeroVector,
 		FRotator::ZeroRotator,
 		SpawnParams);
 	FGuid LandscapeGUID = FGuid::NewGuid();
+
+	Landscape->ComponentSizeQuads = ComponentSizeQuads;
+	Landscape->SubsectionSizeQuads = SubsectionSizeQuads;
+	Landscape->NumSubsections = NumSubsections;
+
+	Landscape->SetLandscapeGuid(LandscapeGUID);
+	Landscape->CreateLandscapeInfo();
+	Landscape->SetActorTransform(FTransform(
+		FQuat::Identity,
+		FVector3d(Min.X, Min.Y, 0.0),
+		FVector3d(100.0)));
 
 	TMap<FGuid, TArray<uint16>> LayerHeightMaps;
 	LayerHeightMaps.Add(FGuid(), MoveTemp(HeightmapData));
@@ -214,15 +263,17 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 		LandscapeGUID,
 		0, 0,
 		HeightmapExtent.X - 1, HeightmapExtent.Y - 1,
-		SubsectionCount, SubsectionSizeQuads,
+		NumSubsections, SubsectionSizeQuads,
 		LayerHeightMaps,
 		nullptr,
 		LayerImportInfos,
 		ELandscapeImportAlphamapType::Layered);
 
 #if WITH_EDITOR
-	Landscape->PostEditChange();
 	Landscape->RegisterAllComponents();
+	Landscape->RecreateCollisionComponents();
+	Landscape->PostEditChange();
+	Landscape->CreateLandscapeInfo();
 	Landscape->MarkPackageDirty();
 #endif
 
