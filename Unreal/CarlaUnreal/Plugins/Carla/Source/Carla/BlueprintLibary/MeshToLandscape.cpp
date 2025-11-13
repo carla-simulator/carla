@@ -13,15 +13,20 @@
 #include "Engine/CollisionProfile.h"
 #include <util/ue-header-guard-end.h>
 
-void UMeshToLandscapeUtil::FilterLandscapeLikeStaticMeshComponentsByVariance(
-	TArray<UStaticMeshComponent*>& StaticMeshComponents,
+static TAutoConsoleVariable<int32> CVDrawDebugLandscapeTraces(
+	TEXT("CARLA.DrawDebugLandscapeTraces"),
+	0,
+	TEXT("Whether to debug-draw the traces during landscape construction from static mesh components."));
+
+void UMeshToLandscapeUtil::FilterStaticMeshComponentsByVariance(
+	TArray<UPrimitiveComponent*>& Components,
 	double MaxZVariance)
 {
 	if (MaxZVariance < 0.0)
 		return;
-	for (int32 i = 0; i != StaticMeshComponents.Num();)
+	for (int32 i = 0; i != Components.Num();)
 	{
-		UStaticMeshComponent* SMC = StaticMeshComponents[i];
+		UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(Components[i]);
 		if (SMC == nullptr)
 		{
 			++i;
@@ -53,46 +58,56 @@ void UMeshToLandscapeUtil::FilterLandscapeLikeStaticMeshComponentsByVariance(
 		}
 		double V = M2 / (double)(VertexCount - 1);
 		if (V >= MaxZVariance)
-			StaticMeshComponents.RemoveAtSwap(i, EAllowShrinking::No);
+			Components.RemoveAtSwap(i, EAllowShrinking::No);
 		else
 			++i;
 	}
 }
 
-void UMeshToLandscapeUtil::FilterLandscapeLikeStaticMeshComponentsByPatterns(
-	TArray<UStaticMeshComponent*>& StaticMeshComponents,
-	const TArray<FString>& ActorNamePatterns)
+void UMeshToLandscapeUtil::FilterComponentsByPatterns(
+	TArray<UPrimitiveComponent*>& Components,
+	const TArray<FString>& Patterns)
 {
 	FString NameTemp;
-	if (ActorNamePatterns.IsEmpty())
+	if (Patterns.IsEmpty())
 		return;
-	for (int32 i = 0; i != StaticMeshComponents.Num();)
+	for (int32 i = 0; i != Components.Num();)
 	{
-		UStaticMeshComponent* SMC = StaticMeshComponents[i];
-		SMC->GetOwner()->GetName(NameTemp);
+		UPrimitiveComponent* SMC = Components[i];
 		bool Match = false;
-		for (const FString& Pattern : ActorNamePatterns)
+		SMC->GetName(NameTemp);
+		for (const FString& Pattern : Patterns)
 		{
 			Match = NameTemp.MatchesWildcard(Pattern);
 			if (Match)
 				break;
 		}
 		if (!Match)
-			StaticMeshComponents.RemoveAtSwap(i, EAllowShrinking::No);
+		{
+			SMC->GetOwner()->GetName(NameTemp);
+			for (const FString& Pattern : Patterns)
+			{
+				Match = NameTemp.MatchesWildcard(Pattern);
+				if (Match)
+					break;
+			}
+		}
+		if (!Match)
+			Components.RemoveAtSwap(i, EAllowShrinking::No);
 		else
 			++i;
 	}
 }
 
 ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
-	const TArray<UStaticMeshComponent*>& StaticMeshComponents,
+	const TArray<UPrimitiveComponent*>& Components,
 	int32 SubsectionSizeQuads,
 	int32 NumSubsections)
 {
-	if (StaticMeshComponents.Num() == 0)
+	if (Components.Num() == 0)
 		return nullptr;
 	
-	UWorld* World = StaticMeshComponents[0]->GetWorld();
+	UWorld* World = Components[0]->GetWorld();
 
 	double Scale = 100.0;
 
@@ -110,11 +125,19 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	FVector3d Max = FVector3d(-Limit);
 	FVector3d Min = FVector3d(Limit);
 
-	for (UStaticMeshComponent* SMC : StaticMeshComponents)
+	for (UPrimitiveComponent* Component : Components)
 	{
-		check(SMC->GetWorld() == World);
-		AActor* SMCOwner = SMC->GetOwner();
-		check(SMCOwner != nullptr);
+		check(Component->GetWorld() == World);
+		AActor* Owner = Component->GetOwner();
+		check(Owner != nullptr);
+		UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(Component);
+		if (SMC == nullptr)
+		{
+			FBox Box = Component->Bounds.GetBox();
+			Min = FVector3d::Min(Box.Min, Min);
+			Max = FVector3d::Max(Box.Max, Max);
+			continue;
+		}
 		UStaticMesh* SM = SMC->GetStaticMesh();
 		check(SM->HasValidRenderData());
 		check(!SM->IsNaniteEnabled() || SM->HasValidNaniteData());
@@ -154,64 +177,63 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 		FVector3d RangeInv = FVector3d::OneVector / Range;
 		FVector2d CellSize = FVector2d(Range) / (FVector2d(HeightmapExtent) - FVector2d(1.0));
 
-		TArray<std::atomic<uint16_t>> SharedHeightmapData;
-		SharedHeightmapData.SetNumUninitialized(HeightmapData.Num());
-		for (std::atomic<uint16_t>& Value : SharedHeightmapData)
-			std::construct_at(&Value, 0);
-
-		for (int32 i = 0; i != HeightmapData.Num(); ++i)
+		if (CVDrawDebugLandscapeTraces.GetValueOnAnyThread())
 		{
-			int32 Y = i / HeightmapExtent.X;
-			int32 X = i % HeightmapExtent.X;
-			FVector2d XY = FVector2d(Min) + CellSize * FVector2d(X, Y);
-			FVector3d Begin = FVector3d(XY.X, XY.Y, Max.Z);
-			FVector3d End = FVector3d(XY.X, XY.Y, Min.Z);
-		}
-
-		FCollisionQueryParams CQParams =
-			FCollisionQueryParams(FName(TEXT("Heightmap query trace")));
-		CQParams.bTraceComplex = true;
-		CQParams.bFindInitialOverlaps = true;
-		/*
-		{
-			TSet<UPrimitiveComponent*> TargetComponents;
-			for (auto SMC : StaticMeshComponents)
-				TargetComponents.Add(Cast<UStaticMeshComponent>(SMC));
-			TArray<AActor*> AllActors;
-			TArray<UPrimitiveComponent*> ActorComponents;
-			UGameplayStatics::GetAllActorsOfClass(
-				World,
-				AActor::StaticClass(),
-				AllActors);
-			for (AActor* Actor : AllActors)
+			for (int32 Index = 0; Index != HeightmapData.Num(); ++Index)
 			{
-				Actor->GetComponents(ActorComponents, false);
-				for (UPrimitiveComponent* Component : ActorComponents)
-					if (TargetComponents.Contains(Component))
-						CQParams.AddIgnoredComponent(Component);
-				ActorComponents.Reset();
+				int32 Y = Index / HeightmapExtent.X;
+				int32 X = Index % HeightmapExtent.X;
+				FVector2d XY = FVector2d(Min) + CellSize * FVector2d(X, Y);
+				FVector3d Begin = FVector3d(XY.X, XY.Y, Max.Z);
+				FVector3d End = FVector3d(XY.X, XY.Y, Min.Z);
+				DrawDebugLine(World, Begin, End, FColor::Red, false, 10.0F);
 			}
 		}
-		*/
+
+		TSet<UPrimitiveComponent*> ComponentMap(Components);
 
 		auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(World->GetPhysicsScene());
-		ParallelFor(HeightmapData.Num(), [&](int32 Index)
 		{
-			int32 Y = Index / HeightmapExtent.X;
-			int32 X = Index % HeightmapExtent.X;
-			std::atomic<uint16_t>& TargetCell = SharedHeightmapData[Index];
-			FVector2d XY = FVector2d(Min) + CellSize * FVector2d(X, Y);
-			FVector3d Begin = FVector3d(XY.X, XY.Y, Max.Z);
-			FVector3d End = FVector3d(XY.X, XY.Y, Min.Z);
-			FHitResult Hit;
-			if (World->ParallelLineTraceSingleByChannel(
-				Hit,
-				Begin, End,
-				ECollisionChannel::ECC_Camera,
-				CQParams,
-				FCollisionResponseParams::DefaultResponseParam))
+			TArray<std::atomic<uint16_t>> SharedHeightmapData;
+			SharedHeightmapData.SetNumUninitialized(HeightmapData.Num());
+			for (std::atomic<uint16_t>& Value : SharedHeightmapData)
+				std::construct_at(&Value, 0);
+
+			ParallelFor(HeightmapData.Num(), [&](int32 Index)
 			{
-				uint16 Desired = EncodeZ(Hit.Location.Z);
+				int32 Y = Index / HeightmapExtent.X;
+				int32 X = Index % HeightmapExtent.X;
+				std::atomic<uint16_t>& TargetCell = SharedHeightmapData[Index];
+				FVector2d XY = FVector2d(Min) + CellSize * FVector2d(X, Y);
+				FVector3d Begin = FVector3d(XY.X, XY.Y, Max.Z);
+				FVector3d End = FVector3d(XY.X, XY.Y, Min.Z);
+				FHitResult Hit;
+				double HitZ = 0.0F;
+
+				FCollisionQueryParams CQParams =
+					FCollisionQueryParams(FName(TEXT("Heightmap query trace")));
+				CQParams.bTraceComplex = true;
+				CQParams.bFindInitialOverlaps = true;
+				for (int32 Retry = 0; Retry != 32; ++Retry)
+				{
+					if (!World->ParallelLineTraceSingleByChannel(
+						Hit,
+						Begin, End,
+						ECollisionChannel::ECC_GameTraceChannel2,
+						CQParams,
+						FCollisionResponseParams::DefaultResponseParam))
+					{
+						break;
+					}
+					if (ComponentMap.Contains(Hit.GetComponent()))
+					{
+						HitZ = Hit.Location.Z;
+						break;
+					}
+					CQParams.AddIgnoredComponent(Hit.GetComponent());
+				}
+
+				uint16 Desired = EncodeZ(HitZ);
 				while (true)
 				{
 					uint16 Current = TargetCell.load(std::memory_order_acquire);
@@ -225,12 +247,11 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 						return;
 					}
 				}
-			}
-		}, EParallelForFlags::BackgroundPriority);
+			}, EParallelForFlags::Unbalanced);
 
-		for (int32 i = 0; i != SharedHeightmapData.Num(); ++i)
-			HeightmapData[i] = SharedHeightmapData[i].load(std::memory_order_relaxed);
-
+			for (int32 i = 0; i != SharedHeightmapData.Num(); ++i)
+				HeightmapData[i] = SharedHeightmapData[i].load(std::memory_order_relaxed);
+		}
 		LockedPhysObject.Release();
 	}
 
@@ -252,13 +273,13 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 		FQuat::Identity,
 		FVector3d(Min.X, Min.Y, 0.0),
 		FVector3d(100.0)));
-
+	
 	TMap<FGuid, TArray<uint16>> LayerHeightMaps;
 	LayerHeightMaps.Add(FGuid(), MoveTemp(HeightmapData));
 
 	TMap<FGuid, TArray<FLandscapeImportLayerInfo>> LayerImportInfos;
 	LayerImportInfos.Add(FGuid(), TArray<FLandscapeImportLayerInfo>());
-
+	
 	Landscape->Import(
 		LandscapeGUID,
 		0, 0,
@@ -268,6 +289,8 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 		nullptr,
 		LayerImportInfos,
 		ELandscapeImportAlphamapType::Layered);
+
+	Landscape->EnableNaniteSkirts(true, 0.1F, false);
 
 #if WITH_EDITOR
 	Landscape->RegisterAllComponents();
@@ -283,22 +306,63 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 void UMeshToLandscapeUtil::EnumerateLandscapeLikeStaticMeshComponents(
 	UObject* WorldContextObject,
 	const TArray<FString>& ActorNamePatterns,
+	const TArray<UClass*>& ClassWhitelist,
+	const TArray<UClass*>& ClassBlacklist,
 	double MaxZVariance,
-	TArray<UStaticMeshComponent*>& OutStaticMeshComponents)
+	TArray<UPrimitiveComponent*>& OutComponents)
 {
 	UWorld* World = WorldContextObject->GetWorld();
-	TArray<AActor*> SMAs;
-	TArray<UStaticMeshComponent*> SMCs;
+	TArray<AActor*> Actors;
+	TArray<UPrimitiveComponent*> Components;
 	UGameplayStatics::GetAllActorsOfClass(
 		WorldContextObject,
-		AStaticMeshActor::StaticClass(),
-		SMAs);
-	for (AActor* SMA : SMAs)
+		AActor::StaticClass(),
+		Actors);
+	for (AActor* Actor : Actors)
 	{
-		SMA->GetComponents(SMCs);
-		for (int32 i = 0; i != SMCs.Num();)
+		bool AnySMC = false;
+		Actor->GetComponents(Components);
+		for (int32 i = 0; i != Components.Num();)
 		{
-			UStaticMesh* SM = SMCs[i]->GetStaticMesh();
+			UPrimitiveComponent* Component = Components[i];
+
+			bool IsWhitelisted = false;
+			for (UClass* Class : ClassWhitelist)
+			{
+				IsWhitelisted = Component->IsA(Class);
+				if (IsWhitelisted)
+					break;
+			}
+
+			if (IsWhitelisted)
+			{
+				++i;
+				continue;
+			}
+
+			bool IsBlacklisted = false;
+			for (UClass* Class : ClassBlacklist)
+			{
+				IsBlacklisted = Component->IsA(Class);
+				if (IsBlacklisted)
+					break;
+			}
+
+			if (IsBlacklisted)
+			{
+				Components.RemoveAtSwap(i, EAllowShrinking::No);
+				continue;
+			}
+
+			bool IsSMC = Component->IsA<UStaticMeshComponent>();
+			AnySMC = AnySMC || IsSMC;
+			if (!IsSMC)
+			{
+				++i;
+				continue;
+			}
+			UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(Component);
+			UStaticMesh* SM = SMC->GetStaticMesh();
 			if (SM != nullptr) // Some SMCs have NULL SM.
 			{
 				if (SM->HasValidRenderData() && (!SM->IsNaniteEnabled() || SM->HasValidNaniteData()))
@@ -315,12 +379,13 @@ void UMeshToLandscapeUtil::EnumerateLandscapeLikeStaticMeshComponents(
 			{
 				// @TODO: ADD WARNING
 			}
-			SMCs.RemoveAtSwap(i, EAllowShrinking::No);
+			Components.RemoveAtSwap(i, EAllowShrinking::No);
 		}
-		FilterLandscapeLikeStaticMeshComponentsByVariance(SMCs, MaxZVariance);
-		FilterLandscapeLikeStaticMeshComponentsByPatterns(SMCs, ActorNamePatterns);
-		OutStaticMeshComponents.Append(SMCs);
-		SMCs.Reset();
+		if (AnySMC)
+			FilterStaticMeshComponentsByVariance(Components, MaxZVariance);
+		FilterComponentsByPatterns(Components, ActorNamePatterns);
+		OutComponents.Append(Components);
+		Components.Reset();
 	}
-	OutStaticMeshComponents.Shrink();
+	OutComponents.Shrink();
 }

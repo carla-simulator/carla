@@ -21,27 +21,29 @@ class CARLA_API UMeshToLandscapeUtil :
 {
     GENERATED_BODY()
 
-    static void FilterLandscapeLikeStaticMeshComponentsByVariance(
-        TArray<UStaticMeshComponent*>& StaticMeshComponents,
+    static void FilterStaticMeshComponentsByVariance(
+        TArray<UPrimitiveComponent*>& Components,
         double MaxZVariance);
 
-    static void FilterLandscapeLikeStaticMeshComponentsByPatterns(
-        TArray<UStaticMeshComponent*>& StaticMeshComponents,
-        const TArray<FString>& ActorNamePatterns);
+    static void FilterComponentsByPatterns(
+        TArray<UPrimitiveComponent*>& Components,
+        const TArray<FString>& Patterns);
 
 public:
 
     UFUNCTION(BlueprintCallable, Category="CarlaTools")
     static ALandscape* ConvertMeshesToLandscape(
-        const TArray<UStaticMeshComponent*>& StaticMeshComponents,
+        const TArray<UPrimitiveComponent*>& Components,
         int32 SubsectionSizeQuads = 255,
         int32 NumSubsections = 8);
 
     UFUNCTION(BlueprintCallable, Category="CarlaTools", meta=(WorldContext="WorldContextObject"))
     static void EnumerateLandscapeLikeStaticMeshComponents(
         UObject* WorldContextObject,
-        const TArray<FString>& ActorNamePatterns,
+        const TArray<FString>& Patterns,
+        const TArray<UClass*>& ClassWhitelist,
+        const TArray<UClass*>& ClassBlacklist,
         double MaxZVariance,
-        TArray<UStaticMeshComponent*>& OutStaticMeshComponents);
+        TArray<UPrimitiveComponent*>& OutComponents);
 
 };
