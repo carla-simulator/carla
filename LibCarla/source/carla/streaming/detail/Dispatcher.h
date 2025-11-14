@@ -43,8 +43,8 @@ namespace detail {
 
     token_type GetToken(stream_id_type stream_id);
 
-    void SetROS2TopicVisibilityDefaultEnabled(bool _topic_visibility_default_enabled) {
-      _topic_visibility_default_enabled = _topic_visibility_default_enabled;
+    void SetROS2TopicVisibilityDefaultEnabled(bool topic_visibility_default_enabled) {
+      _topic_visibility_default_enabled = topic_visibility_default_enabled;
     }
 
     void EnableForROS(stream_actor_id_type stream_actor_id) {
