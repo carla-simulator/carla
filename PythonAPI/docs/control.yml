@@ -43,6 +43,11 @@
       type: int
       doc: >
         States which gear is the vehicle running on.
+    # --------------------------------------
+    - var_name: timestamp
+      type: float
+      doc: >
+        The timestamp of this control value.
 
     # - METHODS ----------------------------
     methods:
@@ -116,6 +121,11 @@
       type: float
       doc: >
         Desired jerk (m/s3). Default is 0.0.
+    # --------------------------------------
+    - var_name: timestamp
+      type: float
+      doc: >
+        The timestamp of this control value.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -243,6 +253,11 @@
       type: bool
       doc: >
         If <b>True</b>, the walker will perform a jump.
+    # --------------------------------------
+    - var_name: timestamp
+      type: float
+      doc: >
+        The timestamp of this control value.
 
     # - METHODS ----------------------------
     methods:

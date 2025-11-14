@@ -12,8 +12,8 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
-  SharedPtr<SensorData> EpisodeStateSerializer::Deserialize(RawData &&data) {
-    return SharedPtr<data::RawEpisodeState>(new data::RawEpisodeState{std::move(data)});
+  SharedPtr<SensorData> EpisodeStateSerializer::Deserialize(RawData DESERIALIZE_DECL_DATA(data)) {
+    return SharedPtr<data::RawEpisodeState>(new data::RawEpisodeState{DESERIALIZE_MOVE_DATA(data)});
   }
 
 } // namespace s11n

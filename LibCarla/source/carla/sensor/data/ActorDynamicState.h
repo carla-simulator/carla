@@ -7,12 +7,15 @@
 #pragma once
 
 #include "carla/geom/Transform.h"
+#include "carla/geom/Quaternion.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/ActorState.h"
 #include "carla/rpc/VehicleFailureState.h"
 #include "carla/rpc/TrafficLightState.h"
+#include "carla/rpc/VehicleAckermannControl.h"
 #include "carla/rpc/VehicleControl.h"
+#include "carla/rpc/VehicleControlType.h"
 #include "carla/rpc/WalkerControl.h"
 
 #include <cstdint>
@@ -36,39 +39,80 @@ namespace detail {
         hand_brake(control.hand_brake),
         reverse(control.reverse),
         manual_gear_shift(control.manual_gear_shift),
-        gear(control.gear) {}
+        gear(control.gear),
+        timestamp(control.timestamp) {}
 
     operator rpc::VehicleControl() const {
-      return {throttle, steer, brake, hand_brake, reverse, manual_gear_shift, gear};
+      return {throttle, steer, brake, hand_brake, reverse, manual_gear_shift, gear, timestamp};
     }
 
   private:
 
-    float throttle;
-    float steer;
-    float brake;
-    bool hand_brake;
-    bool reverse;
-    bool manual_gear_shift;
-    int32_t gear;
+    float throttle = 0.f;
+    float steer = 0.f;
+    float brake = 0.f;
+    bool hand_brake = true;
+    bool reverse = false;
+    bool manual_gear_shift = false;
+    int32_t gear = 0;
+    float timestamp = 0.f;
   };
 
-#pragma pack(pop)
+ class PackedVehicleAckermannControl {
+  public:
+  
+    PackedVehicleAckermannControl() = default;
 
-#pragma pack(push, 1)
+    PackedVehicleAckermannControl(const rpc::VehicleAckermannControl &control)
+      : steer(control.steer),
+        steer_speed(control.steer_speed),
+        speed(control.speed),
+        acceleration(control.acceleration),
+        jerk(control.jerk),
+        timestamp(control.timestamp) {}
+
+    operator rpc::VehicleAckermannControl() const {
+      return {steer, steer_speed, speed, acceleration, jerk, timestamp};
+    }
+  private:
+    float steer = 0.f;
+    float steer_speed = 0.f;
+    float speed = 0.f;
+    float acceleration = 0.f;
+    float jerk = 0.f;
+    float timestamp = 0.f;
+ };
+
   struct VehicleData {
-    VehicleData() = default;
+    VehicleData()=default;
 
-    PackedVehicleControl control;
+    rpc::VehicleControlType control_type{ rpc::VehicleControlType::VehicleControl};
+    union ControlTypeDependentData {
+      PackedVehicleControl vehicle_control;
+      PackedVehicleAckermannControl ackermann_control;
+    } control_data {PackedVehicleControl()};
+    
+    rpc::VehicleControl GetVehicleControl() const {
+      if ( rpc::VehicleControlType::VehicleControl == control_type ) {
+        return control_data.vehicle_control;
+      }
+      return rpc::VehicleControl();
+    }
+
+    rpc::VehicleAckermannControl GetAckermannControl() const {
+      if ( rpc::VehicleControlType::AckermannControl == control_type ) {
+        return control_data.ackermann_control;
+      }
+      return rpc::VehicleAckermannControl();
+    }
+
     float speed_limit;
     rpc::TrafficLightState traffic_light_state;
     bool has_traffic_light;
     rpc::ActorId traffic_light_id;
     rpc::VehicleFailureState failure_state;
   };
-#pragma pack(pop)
 
-#pragma pack(push, 1)
   class PackedWalkerControl {
   public:
 
@@ -77,10 +121,11 @@ namespace detail {
     PackedWalkerControl(const rpc::WalkerControl &control)
       : direction{control.direction.x, control.direction.y, control.direction.z},
         speed(control.speed),
-        jump(control.jump) {}
+        jump(control.jump),
+        timestamp(control.timestamp) {}
 
     operator rpc::WalkerControl() const {
-      return {geom::Vector3D{direction[0u], direction[1u], direction[2u]}, speed, jump};
+      return {geom::Vector3D{direction[0u], direction[1u], direction[2u]}, speed, jump, timestamp};
     }
 
   private:
@@ -88,11 +133,8 @@ namespace detail {
     float direction[3u];
     float speed;
     bool jump;
+    float timestamp;
   };
-
-#pragma pack(pop)
-
-#pragma pack(push, 1)
 
   struct TrafficLightData {
     TrafficLightData() = default;
@@ -106,28 +148,24 @@ namespace detail {
     bool time_is_frozen;
     rpc::TrafficLightState state;
   };
-#pragma pack(pop)
-
-#pragma pack(push, 1)
 
   struct TrafficSignData {
     TrafficSignData() = default;
 
     char sign_id[32u];
   };
-#pragma pack(pop)
 } // namespace detail
-
-#pragma pack(push, 1)
 
   /// Dynamic state of an actor at a certain frame.
   struct ActorDynamicState {
 
-    ActorId id;
+    ActorId id {0};
 
     rpc::ActorState actor_state;
 
     geom::Transform transform;
+
+    geom::Quaternion quaternion;
 
     geom::Vector3D velocity;
 
@@ -138,15 +176,15 @@ namespace detail {
     union TypeDependentState {
       detail::TrafficLightData traffic_light_data;
       detail::TrafficSignData traffic_sign_data;
-      detail::VehicleData vehicle_data;
+      detail::VehicleData vehicle_data{};
       detail::PackedWalkerControl walker_control;
     } state;
   };
 
 #pragma pack(pop)
 
- static_assert(
-    sizeof(ActorDynamicState) == 119u,
+static_assert(
+    sizeof(ActorDynamicState) == 135u,
     "Invalid ActorDynamicState size! "
     "If you modified this class please update the size here, else you may "
     "comment this assert, but your platform may have compatibility issues "

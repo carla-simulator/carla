@@ -14,6 +14,9 @@ struct CARLA_API FVehicleAckermannControl
   GENERATED_BODY()
 
   UPROPERTY(Category = "Vehicle Ackermann Control", EditAnywhere, BlueprintReadWrite)
+  float Timestamp = 0.0f;
+
+  UPROPERTY(Category = "Vehicle Ackermann Control", EditAnywhere, BlueprintReadWrite)
   float Steer = 0.0f;
 
   UPROPERTY(Category = "Vehicle Ackermann Control", EditAnywhere, BlueprintReadWrite)

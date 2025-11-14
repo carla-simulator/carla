@@ -3238,6 +3238,8 @@ Desired speed (m/s). Default is 0.0.
 Desired acceleration (m/s2) Default is 0.0.  
 - <a name="carla.VehicleAckermannControl.jerk"></a>**<font color="#f8805a">jerk</font>** (_float_)  
 Desired jerk (m/s3). Default is 0.0.  
+- <a name="carla.VehicleAckermannControl.timestamp"></a>**<font color="#f8805a">timestamp</font>** (_float_)  
+The timestamp of this control value.  
 
 ### Methods
 - <a name="carla.VehicleAckermannControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**steer**=0.0</font>, <font color="#00a6ed">**steer_speed**=0.0</font>, <font color="#00a6ed">**speed**=0.0</font>, <font color="#00a6ed">**acceleration**=0.0</font>, <font color="#00a6ed">**jerk**=0.0</font>)  
@@ -3273,6 +3275,8 @@ Determines whether the vehicle will move backwards. Default is <b>False</b>.
 Determines whether the vehicle will be controlled by changing gears manually. Default is <b>False</b>.  
 - <a name="carla.VehicleControl.gear"></a>**<font color="#f8805a">gear</font>** (_int_)  
 States which gear is the vehicle running on.  
+- <a name="carla.VehicleControl.timestamp"></a>**<font color="#f8805a">timestamp</font>** (_float_)  
+The timestamp of this control value.  
 
 ### Methods
 - <a name="carla.VehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**throttle**=0.0</font>, <font color="#00a6ed">**steer**=0.0</font>, <font color="#00a6ed">**brake**=0.0</font>, <font color="#00a6ed">**hand_brake**=False</font>, <font color="#00a6ed">**reverse**=False</font>, <font color="#00a6ed">**manual_gear_shift**=False</font>, <font color="#00a6ed">**gear**=0</font>)  
@@ -3556,6 +3560,8 @@ Vector using global coordinates that will correspond to the direction of the wal
 A scalar value to control the walker's speed.  
 - <a name="carla.WalkerControl.jump"></a>**<font color="#f8805a">jump</font>** (_bool_)  
 If <b>True</b>, the walker will perform a jump.  
+- <a name="carla.WalkerControl.timestamp"></a>**<font color="#f8805a">timestamp</font>** (_float_)  
+The timestamp of this control value.  
 
 ### Methods
 - <a name="carla.WalkerControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**direction**=[1.0, 0.0, 0.0]</font>, <font color="#00a6ed">**speed**=0.0</font>, <font color="#00a6ed">**jump**=False</font>)  

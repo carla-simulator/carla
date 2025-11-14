@@ -409,7 +409,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     _client.SubscribeToStream(
         sensor.GetActorDescription().GetStreamToken(),
         [cb=std::move(callback), ep=WeakEpisodeProxy{shared_from_this()}](auto buffer) {
-          auto data = sensor::Deserializer::Deserialize(std::move(buffer));
+          auto data = sensor::Deserializer::Deserialize(DESERIALIZE_MOVE_DATA(buffer));
           data->_episode = ep.TryLock();
           cb(std::move(data));
         });
@@ -438,7 +438,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
       std::function<void(SharedPtr<sensor::SensorData>)> callback) {
     _client.SubscribeToGBuffer(actor.GetId(), gbuffer_id,
         [cb=std::move(callback), ep=WeakEpisodeProxy{shared_from_this()}](auto buffer) {
-          auto data = sensor::Deserializer::Deserialize(std::move(buffer));
+          auto data = sensor::Deserializer::Deserialize(DESERIALIZE_MOVE_DATA(buffer));
           data->_episode = ep.TryLock();
           cb(std::move(data));
         });

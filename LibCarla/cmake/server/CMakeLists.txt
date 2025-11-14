@@ -140,6 +140,7 @@ if (LIBCARLA_BUILD_RELEASE)
   install(TARGETS carla_server DESTINATION lib OPTIONAL)
 
   set_target_properties(carla_server PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
+  target_compile_definitions(carla_server PUBLIC CARLA_SERVER_BUILD)
 
 endif()
 
@@ -154,6 +155,6 @@ if (LIBCARLA_BUILD_DEBUG)
   install(TARGETS carla_server_debug DESTINATION lib OPTIONAL)
 
   set_target_properties(carla_server_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
-  target_compile_definitions(carla_server_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
+  target_compile_definitions(carla_server_debug PUBLIC CARLA_SERVER_BUILD BOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
 
 endif()

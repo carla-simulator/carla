@@ -40,6 +40,18 @@ namespace s11n {
       return _begin[Index::SIZE + channel];
     }
 
+    size_t GetHeaderOffset() const {
+      return sizeof(uint32_t) * (GetChannelCount() + data::LidarData::Index::SIZE);
+    }
+
+    size_t GetDataSize() const {
+      size_t data_size=0u;
+      for (size_t i=0; i<GetChannelCount(); ++i) {
+        data_size+=GetPointCount(i)*sizeof(carla::sensor::data::LidarDetection);
+      }
+      return data_size;
+    }
+
   private:
     friend class LidarSerializer;
 
@@ -63,8 +75,7 @@ namespace s11n {
     }
 
     static size_t GetHeaderOffset(const RawData &data) {
-      auto View = DeserializeHeader(data);
-      return sizeof(uint32_t) * (View.GetChannelCount() + data::LidarData::Index::SIZE);
+      return DeserializeHeader(data).GetHeaderOffset();
     }
 
     template <typename Sensor>
@@ -73,7 +84,8 @@ namespace s11n {
         const data::LidarData &data,
         Buffer &&output);
 
-    static SharedPtr<SensorData> Deserialize(RawData &&data);
+    static SharedPtr<SensorData> Deserialize(RawData DESERIALIZE_DECL_DATA(data));
+
   };
 
   // ===========================================================================
