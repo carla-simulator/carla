@@ -21,19 +21,27 @@ class CARLA_API UMeshToLandscapeUtil :
 {
     GENERATED_BODY()
 
+    static void FilterByClassList(
+        TArray<UActorComponent*>& Components,
+        const TArray<UClass*>& Blacklist,
+        const TArray<UClass*>& Whitelist);
+
+    static void FilterInvalidStaticMeshComponents(
+        TArray<UActorComponent*>& Components);
+
     static void FilterStaticMeshComponentsByVariance(
-        TArray<UPrimitiveComponent*>& Components,
+        TArray<UActorComponent*>& Components,
         double MaxZVariance);
 
     static void FilterComponentsByPatterns(
-        TArray<UPrimitiveComponent*>& Components,
+        TArray<UActorComponent*>& Components,
         const TArray<FString>& Patterns);
 
 public:
 
     UFUNCTION(BlueprintCallable, Category="CarlaTools")
     static ALandscape* ConvertMeshesToLandscape(
-        const TArray<UPrimitiveComponent*>& Components,
+        const TArray<UActorComponent*>& Components,
         int32 SubsectionSizeQuads = 255,
         int32 NumSubsections = 8);
 
@@ -44,6 +52,6 @@ public:
         const TArray<UClass*>& ClassWhitelist,
         const TArray<UClass*>& ClassBlacklist,
         double MaxZVariance,
-        TArray<UPrimitiveComponent*>& OutComponents);
+        TArray<UActorComponent*>& OutComponents);
 
 };

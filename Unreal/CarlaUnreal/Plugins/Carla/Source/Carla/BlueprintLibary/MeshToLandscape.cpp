@@ -18,8 +18,87 @@ static TAutoConsoleVariable<int32> CVDrawDebugLandscapeTraces(
 	0,
 	TEXT("Whether to debug-draw the traces during landscape construction from static mesh components."));
 
+static TAutoConsoleVariable<int32> CVMeshToLandscapeMaxTraceRetries(
+	TEXT("CARLA.MeshToLandscape.MaxTraceRetries"),
+	256,
+	TEXT("Max parallel line trace retries."));
+
+static TAutoConsoleVariable<int32> CVDrawDebugWorldBB(
+	TEXT("CARLA.MeshToLandscape.WorldBB"),
+	1,
+	TEXT("Whether to debug-draw the bounding box used for tracing."));
+
+void UMeshToLandscapeUtil::FilterByClassList(
+	TArray<UActorComponent*>& Components,
+	const TArray<UClass*>& Blacklist,
+	const TArray<UClass*>& Whitelist)
+{
+	for (int32 i = 0; i != Components.Num();)
+	{
+		UActorComponent* Component = Components[i];
+
+		bool IsWhitelisted = false;
+		bool IsBlacklisted = false;
+
+		for (UClass* Class : Whitelist)
+		{
+			IsWhitelisted = Component->IsA(Class);
+			if (IsWhitelisted)
+				break;
+		}
+
+		for (UClass* Class : Blacklist)
+		{
+			IsBlacklisted = Component->IsA(Class);
+			if (IsBlacklisted)
+				break;
+		}
+
+		if (IsWhitelisted || !IsBlacklisted)
+		{
+			++i;
+			continue;
+		}
+
+		Components.RemoveAtSwap(i, EAllowShrinking::No);
+	}
+}
+
+void UMeshToLandscapeUtil::FilterInvalidStaticMeshComponents(
+	TArray<UActorComponent*>& Components)
+{
+	for (int32 i = 0; i != Components.Num();)
+	{
+		UActorComponent* Component = Components[i];
+		UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(Component);
+		if (SMC == nullptr)
+		{
+			++i;
+			continue;
+		}
+		UStaticMesh* SM = SMC->GetStaticMesh();
+		if (SM != nullptr) // Some SMCs have NULL SM.
+		{
+			if (SM->HasValidRenderData() && (!SM->IsNaniteEnabled() || SM->HasValidNaniteData()))
+			{
+				++i;
+				continue;
+			}
+			else
+			{
+				// @TODO: ADD WARNING
+			}
+		}
+		else
+		{
+			// @TODO: ADD WARNING
+		}
+		Components.RemoveAtSwap(i, EAllowShrinking::No);
+	}
+}
+
 void UMeshToLandscapeUtil::FilterStaticMeshComponentsByVariance(
-	TArray<UPrimitiveComponent*>& Components,
+	TArray<UActorComponent*>& Components,
 	double MaxZVariance)
 {
 	if (MaxZVariance < 0.0)
@@ -65,7 +144,7 @@ void UMeshToLandscapeUtil::FilterStaticMeshComponentsByVariance(
 }
 
 void UMeshToLandscapeUtil::FilterComponentsByPatterns(
-	TArray<UPrimitiveComponent*>& Components,
+	TArray<UActorComponent*>& Components,
 	const TArray<FString>& Patterns)
 {
 	FString NameTemp;
@@ -73,7 +152,7 @@ void UMeshToLandscapeUtil::FilterComponentsByPatterns(
 		return;
 	for (int32 i = 0; i != Components.Num();)
 	{
-		UPrimitiveComponent* SMC = Components[i];
+		UActorComponent* SMC = Components[i];
 		bool Match = false;
 		SMC->GetName(NameTemp);
 		for (const FString& Pattern : Patterns)
@@ -100,7 +179,7 @@ void UMeshToLandscapeUtil::FilterComponentsByPatterns(
 }
 
 ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
-	const TArray<UPrimitiveComponent*>& Components,
+	const TArray<UActorComponent*>& Components,
 	int32 SubsectionSizeQuads,
 	int32 NumSubsections)
 {
@@ -121,41 +200,26 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 		return std::min<uint16>((uint16)std::lround(Z), U16Max);
 	};
 
-	double Limit = 1e32;
-	FVector3d Max = FVector3d(-Limit);
-	FVector3d Min = FVector3d(Limit);
+	FBox3d Bounds = FBox3d(ForceInit);
 
-	for (UPrimitiveComponent* Component : Components)
+	for (UActorComponent* Component : Components)
 	{
 		check(Component->GetWorld() == World);
-		AActor* Owner = Component->GetOwner();
-		check(Owner != nullptr);
-		UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(Component);
-		if (SMC == nullptr)
+		UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Component);
+		if (PrimitiveComponent != nullptr)
 		{
-			FBox Box = Component->Bounds.GetBox();
-			Min = FVector3d::Min(Box.Min, Min);
-			Max = FVector3d::Max(Box.Max, Max);
+			FTransform Transform = PrimitiveComponent->GetComponentTransform();
+			FBox BoxBounds = PrimitiveComponent->CalcBounds(Transform).GetBox();
+			Bounds += BoxBounds;
 			continue;
-		}
-		UStaticMesh* SM = SMC->GetStaticMesh();
-		check(SM->HasValidRenderData());
-		check(!SM->IsNaniteEnabled() || SM->HasValidNaniteData());
-		const FStaticMeshLODResources& LOD = SM->GetLODForExport(0);
-		FStaticMeshLODResourcesMeshAdapter Adapter(&LOD);
-		int32 VertexCount = LOD.GetNumVertices();
-		for (int32 i = 0; i != LOD.GetNumVertices(); ++i)
-		{
-			FVector3d Vertex = Adapter.GetVertex(i);
-			Vertex = SMC->GetComponentTransform().TransformPosition(Vertex);
-			Max = FVector3d::Max(Max, Vertex);
-			Min = FVector3d::Min(Min, Vertex);
 		}
 	}
 
 	int32 ComponentSizeQuads = SubsectionSizeQuads * NumSubsections;
 	double MetersPerQuad = 5.0;
 
+	FVector3d Max = Bounds.Max;
+	FVector3d Min = Bounds.Min;
 	FVector3d Range = Max - Min;
 	FVector3d Center = (Max + Min) / 2;
 	FIntPoint RangeMeters = FIntPoint( // QuadCount
@@ -164,8 +228,10 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	int32 NumComponents = RangeMeters.GetMax() / (ComponentSizeQuads * MetersPerQuad);
 	FIntPoint HeightmapExtent = RangeMeters;
 
+	int32 HeightmapNum = HeightmapExtent.X * HeightmapExtent.Y;
+
 	TArray<uint16_t> HeightmapData;
-	HeightmapData.SetNumZeroed(HeightmapExtent.X * HeightmapExtent.Y);
+	HeightmapData.SetNumUninitialized(HeightmapExtent.X * HeightmapExtent.Y);
 
 	if (HeightmapData.Num() == 0)
 	{
@@ -174,23 +240,13 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	}
 
 	{
-		FVector3d RangeInv = FVector3d::OneVector / Range;
 		FVector2d CellSize = FVector2d(Range) / (FVector2d(HeightmapExtent) - FVector2d(1.0));
 
-		if (CVDrawDebugLandscapeTraces.GetValueOnAnyThread())
-		{
-			for (int32 Index = 0; Index != HeightmapData.Num(); ++Index)
-			{
-				int32 Y = Index / HeightmapExtent.X;
-				int32 X = Index % HeightmapExtent.X;
-				FVector2d XY = FVector2d(Min) + CellSize * FVector2d(X, Y);
-				FVector3d Begin = FVector3d(XY.X, XY.Y, Max.Z);
-				FVector3d End = FVector3d(XY.X, XY.Y, Min.Z);
-				DrawDebugLine(World, Begin, End, FColor::Red, false, 10.0F);
-			}
-		}
+		const TSet<UActorComponent*> ComponentMap(Components);
+		TArray<TPair<FVector3d, FVector3d>> Failures;
+		FCriticalSection FailuresCS;
 
-		TSet<UPrimitiveComponent*> ComponentMap(Components);
+		int32 MaxRetries = CVMeshToLandscapeMaxTraceRetries.GetValueOnAnyThread();
 
 		auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(World->GetPhysicsScene());
 		{
@@ -203,25 +259,27 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 			{
 				int32 Y = Index / HeightmapExtent.X;
 				int32 X = Index % HeightmapExtent.X;
-				std::atomic<uint16_t>& TargetCell = SharedHeightmapData[Index];
+
 				FVector2d XY = FVector2d(Min) + CellSize * FVector2d(X, Y);
 				FVector3d Begin = FVector3d(XY.X, XY.Y, Max.Z);
 				FVector3d End = FVector3d(XY.X, XY.Y, Min.Z);
 				FHitResult Hit;
 				double HitZ = 0.0F;
 
-				FCollisionQueryParams CQParams =
-					FCollisionQueryParams(FName(TEXT("Heightmap query trace")));
+				FCollisionQueryParams CQParams = FCollisionQueryParams::DefaultQueryParam;
 				CQParams.bTraceComplex = true;
 				CQParams.bFindInitialOverlaps = true;
-				for (int32 Retry = 0; Retry != 32; ++Retry)
+				CQParams.bReturnPhysicalMaterial = false;
+				CQParams.MobilityType = EQueryMobilityType::Any;
+				
+				int32 Retry = 0;
+				for (; Retry != MaxRetries; ++Retry)
 				{
 					if (!World->ParallelLineTraceSingleByChannel(
 						Hit,
 						Begin, End,
-						ECollisionChannel::ECC_GameTraceChannel2,
-						CQParams,
-						FCollisionResponseParams::DefaultResponseParam))
+						ECollisionChannel::ECC_Visibility,
+						CQParams))
 					{
 						break;
 					}
@@ -233,18 +291,26 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 					CQParams.AddIgnoredComponent(Hit.GetComponent());
 				}
 
+				if (Retry == MaxRetries)
+				{
+					FailuresCS.Lock();
+					Failures.Add({ Begin, End });
+					FailuresCS.Unlock();
+				}
+
+				std::atomic<uint16_t>& Target = SharedHeightmapData[Index];
 				uint16 Desired = EncodeZ(HitZ);
 				while (true)
 				{
-					uint16 Current = TargetCell.load(std::memory_order_acquire);
-					if (Current > Desired)
-						break;
-					if (TargetCell.compare_exchange_weak(
-						Current, Desired,
-						std::memory_order_release, std::memory_order_relaxed))
+					uint16 Current = Target.load(
+						std::memory_order_acquire);
+					if (Current > Desired ||
+						Target.compare_exchange_weak(
+							Current, Desired,
+							std::memory_order_release,
+							std::memory_order_relaxed))
 					{
-						// UE_LOG(LogCarla, Warning, TEXT("Set (%i, %i) to %u"), X, Y, Desired);
-						return;
+						break;
 					}
 				}
 			}, EParallelForFlags::Unbalanced);
@@ -253,6 +319,43 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 				HeightmapData[i] = SharedHeightmapData[i].load(std::memory_order_relaxed);
 		}
 		LockedPhysObject.Release();
+
+		if (CVDrawDebugWorldBB.GetValueOnAnyThread())
+		{
+			DrawDebugBox(
+				World,
+				Bounds.GetCenter(),
+				Bounds.GetExtent(),
+				FColor::Yellow,
+				false,
+				15.0F);
+		}
+
+		if (CVDrawDebugLandscapeTraces.GetValueOnAnyThread() != 0)
+		{
+			for (int32 Index = 0; Index != HeightmapData.Num(); ++Index)
+			{
+				int32 Y = Index / HeightmapExtent.X;
+				int32 X = Index % HeightmapExtent.X;
+				FVector2d XY = FVector2d(Min) + CellSize * FVector2d(X, Y);
+				FVector3d Begin = FVector3d(XY.X, XY.Y, Max.Z);
+				FVector3d End = FVector3d(XY.X, XY.Y, Min.Z);
+				DrawDebugLine(World, Begin, End, FColor::Red, false, 10.0F);
+			}
+
+			for (auto [Begin, End] : Failures)
+				DrawDebugLine(World, Begin, End, FColor::Red, false, 20.0F);
+		}
+
+		for (auto [Begin, End] : Failures)
+		{
+			UE_LOG(
+				LogCarla,
+				Warning,
+				TEXT("Failed to trace against world from (%f, %f, %f) to (%f, %f, %f), too many objects."),
+				Begin.X, Begin.Y, Begin.Z,
+				End.X, End.Y, End.Z);
+		}
 	}
 
 	FActorSpawnParameters SpawnParams;
@@ -290,7 +393,7 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 		LayerImportInfos,
 		ELandscapeImportAlphamapType::Layered);
 
-	Landscape->EnableNaniteSkirts(true, 0.1F, false);
+	// Landscape->EnableNaniteSkirts(true, 0.1F, false);
 
 #if WITH_EDITOR
 	Landscape->RegisterAllComponents();
@@ -309,11 +412,11 @@ void UMeshToLandscapeUtil::EnumerateLandscapeLikeStaticMeshComponents(
 	const TArray<UClass*>& ClassWhitelist,
 	const TArray<UClass*>& ClassBlacklist,
 	double MaxZVariance,
-	TArray<UPrimitiveComponent*>& OutComponents)
+	TArray<UActorComponent*>& OutComponents)
 {
 	UWorld* World = WorldContextObject->GetWorld();
 	TArray<AActor*> Actors;
-	TArray<UPrimitiveComponent*> Components;
+	TArray<UActorComponent*> Components;
 	UGameplayStatics::GetAllActorsOfClass(
 		WorldContextObject,
 		AActor::StaticClass(),
@@ -321,68 +424,21 @@ void UMeshToLandscapeUtil::EnumerateLandscapeLikeStaticMeshComponents(
 	for (AActor* Actor : Actors)
 	{
 		bool AnySMC = false;
+		
 		Actor->GetComponents(Components);
-		for (int32 i = 0; i != Components.Num();)
+		for (UActorComponent* PrimitiveComponent : Components)
 		{
-			UPrimitiveComponent* Component = Components[i];
-
-			bool IsWhitelisted = false;
-			for (UClass* Class : ClassWhitelist)
-			{
-				IsWhitelisted = Component->IsA(Class);
-				if (IsWhitelisted)
-					break;
-			}
-
-			if (IsWhitelisted)
-			{
-				++i;
-				continue;
-			}
-
-			bool IsBlacklisted = false;
-			for (UClass* Class : ClassBlacklist)
-			{
-				IsBlacklisted = Component->IsA(Class);
-				if (IsBlacklisted)
-					break;
-			}
-
-			if (IsBlacklisted)
-			{
-				Components.RemoveAtSwap(i, EAllowShrinking::No);
-				continue;
-			}
-
-			bool IsSMC = Component->IsA<UStaticMeshComponent>();
-			AnySMC = AnySMC || IsSMC;
-			if (!IsSMC)
-			{
-				++i;
-				continue;
-			}
-			UStaticMeshComponent* SMC = Cast<UStaticMeshComponent>(Component);
-			UStaticMesh* SM = SMC->GetStaticMesh();
-			if (SM != nullptr) // Some SMCs have NULL SM.
-			{
-				if (SM->HasValidRenderData() && (!SM->IsNaniteEnabled() || SM->HasValidNaniteData()))
-				{
-					++i;
-					continue;
-				}
-				else
-				{
-					// @TODO: ADD WARNING
-				}
-			}
-			else
-			{
-				// @TODO: ADD WARNING
-			}
-			Components.RemoveAtSwap(i, EAllowShrinking::No);
+			AnySMC = PrimitiveComponent->IsA<UStaticMeshComponent>();
+			if (AnySMC)
+				break;
 		}
+
+		FilterByClassList(Components, ClassBlacklist, ClassWhitelist);
 		if (AnySMC)
+		{
+			FilterInvalidStaticMeshComponents(Components);
 			FilterStaticMeshComponentsByVariance(Components, MaxZVariance);
+		}
 		FilterComponentsByPatterns(Components, ActorNamePatterns);
 		OutComponents.Append(Components);
 		Components.Reset();
