@@ -14,7 +14,6 @@
 #include "carla/rpc/MapInfo.h"
 #include "carla/rpc/MapLayer.h"
 #include "carla/rpc/Response.h"
-#include "carla/rpc/ServerSynchronizationTypes.h"
 #include "carla/rpc/Transform.h"
 #include "carla/rpc/VehicleTelemetryData.h"
 #include "carla/streaming/detail/Dispatcher.h"
