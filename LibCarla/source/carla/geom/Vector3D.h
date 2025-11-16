@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <limits>
+#include <ostream>
 
 namespace carla {
 namespace geom {
@@ -218,6 +219,20 @@ namespace geom {
     }
     // =========================================================================
   };
+
+
+  template <typename T>
+  static void WriteVector3D(std::ostream &out, const char *name, const T &vector3D) {
+    out << name
+        << "(x=" << std::to_string(vector3D.x)
+        << ", y=" << std::to_string(vector3D.y)
+        << ", z=" << std::to_string(vector3D.z) << ')';
+  }
+
+  inline std::ostream &operator<<(std::ostream &out, const Vector3D &vector3D) {
+    WriteVector3D(out, "Vector3D", vector3D);
+    return out;
+  }
 
 } // namespace geom
 } // namespace carla

@@ -8,6 +8,8 @@
 
 #include "carla/MsgPack.h"
 
+#include <ostream>
+
 namespace carla {
 namespace geom {
 
@@ -52,6 +54,13 @@ namespace geom {
 
     MSGPACK_DEFINE_ARRAY(latitude, longitude, altitude);
   };
+
+  inline std::ostream &operator<<(std::ostream &out, const GeoLocation &geo_location) {
+    out << "GeoLocation(latitude=" << std::to_string(geo_location.latitude)
+        << ", longitude=" << std::to_string(geo_location.longitude)
+        << ", altitude=" << std::to_string(geo_location.altitude) << ')';
+    return out;
+  }
 
 } // namespace geom
 } // namespace carla

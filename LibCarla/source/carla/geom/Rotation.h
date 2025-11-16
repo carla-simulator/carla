@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <ostream>
+
 #include "carla/MsgPack.h"
 #include "carla/geom/Math.h"
 #include "carla/geom/Vector3D.h"
@@ -159,6 +161,13 @@ namespace geom {
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
   };
+
+  inline std::ostream &operator<<(std::ostream &out, const Rotation &rotator) {
+    out << "Rotation(pitch=" << std::to_string(rotator.pitch)
+        << ", yaw=" << std::to_string(rotator.yaw)
+        << ", roll=" << std::to_string(rotator.roll) << ')';
+    return out;
+  }
 
 } // namespace geom
 } // namespace carla

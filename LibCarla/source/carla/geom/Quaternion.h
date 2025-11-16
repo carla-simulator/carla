@@ -9,6 +9,7 @@
 #define ALLOW_UNSAFE_GEOM_MATRIX_ACCESS 1
 
 #include <array>
+#include <ostream>
 
 #include "carla/MsgPack.h"
 #include "carla/geom/Math.h"
@@ -384,6 +385,16 @@ inline Quaternion operator*(const Quaternion& q1, const float& s) {
   quat.z = q1.z * s;
   return quat;
 }
+
+
+inline std::ostream &operator<<(std::ostream &out, const Quaternion &quaternion) {
+    out << "Quaternion"
+        << "(x=" << std::to_string(quaternion.x)
+        << ", y=" << std::to_string(quaternion.y)
+        << ", z=" << std::to_string(quaternion.z)
+        << ", w=" << std::to_string(quaternion.w) << ')';
+    return out;
+  }
 
 } // namespace geom
 } // namespace carla

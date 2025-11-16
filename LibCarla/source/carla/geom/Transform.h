@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <ostream>
+
 #include "carla/MsgPack.h"
 #include "carla/geom/Location.h"
 #include "carla/geom/Math.h"
@@ -141,6 +143,11 @@ namespace geom {
     }
 #endif
   };
+
+  inline std::ostream &operator<<(std::ostream &out, const Transform &transform) {
+    out << "Transform(" << transform.location << ", " << transform.rotation << ')';
+    return out;
+  }
 
 } // namespace geom
 } // namespace carla

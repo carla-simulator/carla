@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <limits>
+#include <ostream>
 
 namespace carla {
 namespace geom {
@@ -165,6 +166,19 @@ namespace geom {
 
     MSGPACK_DEFINE_ARRAY(x, y)
   };
+
+  template <typename T>
+  static void WriteVector2D(std::ostream &out, const char *name, const T &vector2D) {
+    out << name
+        << "(x=" << std::to_string(vector2D.x)
+        << ", y=" << std::to_string(vector2D.y) << ')';
+  }
+
+  inline std::ostream &operator<<(std::ostream &out, const Vector2D &vector2D) {
+    WriteVector2D(out, "Vector2D", vector2D);
+    return out;
+  }
+
 
 } // namespace geom
 } // namespace carla

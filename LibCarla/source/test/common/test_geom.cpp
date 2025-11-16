@@ -13,17 +13,6 @@
 #include <carla/geom/Quaternion.h>
 #include <limits>
 
-namespace carla {
-namespace geom {
-
-  std::ostream &operator<<(std::ostream &out, const Vector3D &vector3D) {
-    out << "{x=" << vector3D.x << ", y=" << vector3D.y << ", z=" << vector3D.z << '}';
-    return out;
-  }
-
-} // namespace geom
-} // namespace carla
-
 using namespace carla::geom;
 
 TEST(geom, single_point_no_transform) {

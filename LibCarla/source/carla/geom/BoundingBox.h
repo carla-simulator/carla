@@ -152,5 +152,13 @@ namespace geom {
     MSGPACK_DEFINE_ARRAY(location, extent, rotation, actor_id);
   };
 
+  inline::std::ostream &operator<<(std::ostream &out, const BoundingBox &box) {
+    out << "BoundingBox(" << box.location << ", ";
+    carla::geom::WriteVector3D(out, "Extent", box.extent);
+    out << ", " << box.rotation;
+    out << ')';
+    return out;
+  }
+
 } // namespace geom
 } // namespace carla
