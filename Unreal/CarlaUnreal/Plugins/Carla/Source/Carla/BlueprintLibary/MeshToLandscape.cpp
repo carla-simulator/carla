@@ -23,10 +23,104 @@ static TAutoConsoleVariable<int32> CVMeshToLandscapeMaxTraceRetries(
 	256,
 	TEXT("Max parallel line trace retries."));
 
-static TAutoConsoleVariable<int32> CVDrawDebugWorldBB(
-	TEXT("CARLA.MeshToLandscape.WorldBB"),
-	1,
+static TAutoConsoleVariable<int32> CVDrawDebugBoxes(
+	TEXT("CARLA.MeshToLandscape.DrawDebugBoxes"),
+	0,
 	TEXT("Whether to debug-draw the bounding box used for tracing."));
+
+constexpr int32 KernelSide = 3;
+
+static void ComputeBinomialKernel(
+	uint16 Out[KernelSide][KernelSide])
+{
+	uint64_t B[KernelSide];
+
+	int32 N = KernelSide - 1;
+
+	for (int32 i = 0; i <= N; ++i)
+	{
+		int32 k = i;
+		k = std::min(k, N - k);
+		uint64_t c = 1;
+		for (int32 t = 1; t <= k; ++t)
+			c = (c * (N - (k - t))) / t;
+		B[i] = c;
+	}
+
+	for (int32 y = 0; y < KernelSide; ++y)
+	{
+		for (int32 x = 0; x < KernelSide; ++x)
+		{
+			uint64_t Value = B[y] * B[x];
+			Value = std::min<uint16>((uint16)Value, UINT16_MAX);
+			Out[y][x] = (uint16_t)Value;
+		}
+	}
+}
+
+static void ApplyBinomialKernel(
+	TArrayView<uint16> Image,
+	FIntPoint Extent)
+{
+	constexpr int32 N = KernelSide;
+
+	if (Image.Num() != Extent.X * Extent.Y)
+		return;
+
+	uint16 Kernel[N][N];
+	ComputeBinomialKernel(Kernel);
+
+	TArray<uint16> Temp;
+	Temp.SetNumUninitialized(Image.Num());
+
+	const int32 half = N / 2;
+
+	ParallelFor(Image.Num(), [&](int32 Index)
+	{
+		const int32 cx = Index % Extent.X;
+		const int32 cy = Index / Extent.X;
+		const FIntPoint center(cx, cy);
+
+		const int32 yMin = FMath::Max(0, center.Y - half);
+		const int32 yMax = FMath::Min(Extent.Y - 1, center.Y + half);
+		const int32 xMin = FMath::Max(0, center.X - half);
+		const int32 xMax = FMath::Min(Extent.X - 1, center.X + half);
+
+		uint64_t acc = 0ULL;
+
+		for (int32 y = yMin; y <= yMax; ++y)
+		{
+			const int32 ky = y - (center.Y - half);
+			const int32 rowBase = y * Extent.X;
+			for (int32 x = xMin; x <= xMax; ++x)
+			{
+				const int32 kx = x - (center.X - half);
+				const uint16 pix = Image[rowBase + x];
+				const uint16 kval = Kernel[ky][kx];
+				acc += uint64_t(kval) * uint64_t(pix);
+			}
+		}
+
+		const uint64_t maxU16 = 65535ULL;
+		if (acc > maxU16) acc = maxU16;
+		Temp[Index] = static_cast<uint16_t>(acc);
+	});
+
+	for (int32 i = 0; i < Image.Num(); ++i)
+		Image[i] = Temp[i];
+}
+
+void UMeshToLandscapeUtil::FilterInvalidComponents(
+	TArray<UActorComponent*>& Components)
+{
+	for (int32 i = 0; i != Components.Num();)
+	{
+		if (!IsValidChecked(Components[i]))
+			Components.RemoveAtSwap(i, EAllowShrinking::No);
+		else
+			++i;
+	}
+}
 
 void UMeshToLandscapeUtil::FilterByClassList(
 	TArray<UActorComponent*>& Components,
@@ -47,6 +141,12 @@ void UMeshToLandscapeUtil::FilterByClassList(
 				break;
 		}
 
+		if (IsWhitelisted)
+		{
+			++i;
+			continue;
+		}
+
 		for (UClass* Class : Blacklist)
 		{
 			IsBlacklisted = Component->IsA(Class);
@@ -54,7 +154,7 @@ void UMeshToLandscapeUtil::FilterByClassList(
 				break;
 		}
 
-		if (IsWhitelisted || !IsBlacklisted)
+		if (!IsBlacklisted)
 		{
 			++i;
 			continue;
@@ -154,34 +254,39 @@ void UMeshToLandscapeUtil::FilterComponentsByPatterns(
 	{
 		UActorComponent* SMC = Components[i];
 		bool Match = false;
-		SMC->GetName(NameTemp);
+		NameTemp = UKismetSystemLibrary::GetDisplayName(SMC);
 		for (const FString& Pattern : Patterns)
 		{
 			Match = NameTemp.MatchesWildcard(Pattern);
 			if (Match)
 				break;
 		}
-		if (!Match)
+		if (Match)
 		{
-			SMC->GetOwner()->GetName(NameTemp);
-			for (const FString& Pattern : Patterns)
-			{
-				Match = NameTemp.MatchesWildcard(Pattern);
-				if (Match)
-					break;
-			}
-		}
-		if (!Match)
-			Components.RemoveAtSwap(i, EAllowShrinking::No);
-		else
 			++i;
+			continue;
+		}
+		NameTemp = UKismetSystemLibrary::GetDisplayName(SMC->GetOwner());
+		for (const FString& Pattern : Patterns)
+		{
+			Match = NameTemp.MatchesWildcard(Pattern);
+			if (Match)
+				break;
+		}
+		if (Match)
+		{
+			++i;
+			continue;
+		}
+		Components.RemoveAtSwap(i, EAllowShrinking::No);
 	}
 }
 
 ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	const TArray<UActorComponent*>& Components,
 	int32 SubsectionSizeQuads,
-	int32 NumSubsections)
+	int32 NumSubsections,
+	bool ApplySmoothing)
 {
 	if (Components.Num() == 0)
 		return nullptr;
@@ -204,20 +309,20 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 
 	for (UActorComponent* Component : Components)
 	{
-		check(Component->GetWorld() == World);
+		if (Component == nullptr)
+			continue;
 		UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Component);
 		if (PrimitiveComponent != nullptr)
 		{
-			FTransform Transform = PrimitiveComponent->GetComponentTransform();
-			FBox BoxBounds = PrimitiveComponent->CalcBounds(Transform).GetBox();
+			FBox BoxBounds = PrimitiveComponent->Bounds.GetBox();
+			if (CVDrawDebugBoxes.GetValueOnAnyThread())
+				DrawDebugBox(World, BoxBounds.GetCenter(), BoxBounds.GetExtent(), FColor::Cyan, false, 10.0F);
 			Bounds += BoxBounds;
-			continue;
 		}
 	}
 
 	int32 ComponentSizeQuads = SubsectionSizeQuads * NumSubsections;
-	double MetersPerQuad = 5.0;
-
+	
 	FVector3d Max = Bounds.Max;
 	FVector3d Min = Bounds.Min;
 	FVector3d Range = Max - Min;
@@ -225,13 +330,12 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	FIntPoint RangeMeters = FIntPoint( // QuadCount
 		(int32)std::lround(Range.X * UE_CM_TO_M),
 		(int32)std::lround(Range.Y * UE_CM_TO_M));
-	int32 NumComponents = RangeMeters.GetMax() / (ComponentSizeQuads * MetersPerQuad);
 	FIntPoint HeightmapExtent = RangeMeters;
 
 	int32 HeightmapNum = HeightmapExtent.X * HeightmapExtent.Y;
 
 	TArray<uint16_t> HeightmapData;
-	HeightmapData.SetNumUninitialized(HeightmapExtent.X * HeightmapExtent.Y);
+	HeightmapData.SetNumZeroed(HeightmapExtent.X * HeightmapExtent.Y);
 
 	if (HeightmapData.Num() == 0)
 	{
@@ -248,79 +352,56 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 
 		int32 MaxRetries = CVMeshToLandscapeMaxTraceRetries.GetValueOnAnyThread();
 
-		auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(World->GetPhysicsScene());
+		auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(
+			World->GetPhysicsScene());
+
+		ParallelFor(HeightmapData.Num(), [&](int32 Index)
 		{
-			TArray<std::atomic<uint16_t>> SharedHeightmapData;
-			SharedHeightmapData.SetNumUninitialized(HeightmapData.Num());
-			for (std::atomic<uint16_t>& Value : SharedHeightmapData)
-				std::construct_at(&Value, 0);
+			int32 Y = Index / HeightmapExtent.X;
+			int32 X = Index % HeightmapExtent.X;
 
-			ParallelFor(HeightmapData.Num(), [&](int32 Index)
+			FVector2d XY = FVector2d(Min) + CellSize * FVector2d(X, Y);
+			FVector3d Begin = FVector3d(XY.X, XY.Y, Max.Z);
+			FVector3d End = FVector3d(XY.X, XY.Y, Min.Z);
+			FHitResult Hit;
+			double HitZ = 0.0F;
+
+			FCollisionQueryParams CQParams = FCollisionQueryParams::DefaultQueryParam;
+			CQParams.bTraceComplex = true;
+			CQParams.bFindInitialOverlaps = true;
+			CQParams.bReturnPhysicalMaterial = false;
+			CQParams.MobilityType = EQueryMobilityType::Any;
+
+			bool Failed = false;
+			int32 Retry = 0;
+			for (; Retry != MaxRetries; ++Retry)
 			{
-				int32 Y = Index / HeightmapExtent.X;
-				int32 X = Index % HeightmapExtent.X;
-
-				FVector2d XY = FVector2d(Min) + CellSize * FVector2d(X, Y);
-				FVector3d Begin = FVector3d(XY.X, XY.Y, Max.Z);
-				FVector3d End = FVector3d(XY.X, XY.Y, Min.Z);
-				FHitResult Hit;
-				double HitZ = 0.0F;
-
-				FCollisionQueryParams CQParams = FCollisionQueryParams::DefaultQueryParam;
-				CQParams.bTraceComplex = true;
-				CQParams.bFindInitialOverlaps = true;
-				CQParams.bReturnPhysicalMaterial = false;
-				CQParams.MobilityType = EQueryMobilityType::Any;
-				
-				int32 Retry = 0;
-				for (; Retry != MaxRetries; ++Retry)
+				if (!World->ParallelLineTraceSingleByChannel(
+					Hit,
+					Begin, End,
+					ECollisionChannel::ECC_GameTraceChannel2,
+					CQParams))
+					break;
+				if (ComponentMap.Contains(Hit.GetComponent()))
 				{
-					if (!World->ParallelLineTraceSingleByChannel(
-						Hit,
-						Begin, End,
-						ECollisionChannel::ECC_Visibility,
-						CQParams))
-					{
-						break;
-					}
-					if (ComponentMap.Contains(Hit.GetComponent()))
-					{
-						HitZ = Hit.Location.Z;
-						break;
-					}
-					CQParams.AddIgnoredComponent(Hit.GetComponent());
+					HitZ = Hit.Location.Z;
+					break;
 				}
+				CQParams.AddIgnoredComponent(Hit.GetComponent());
+			}
 
-				if (Retry == MaxRetries)
-				{
-					FailuresCS.Lock();
-					Failures.Add({ Begin, End });
-					FailuresCS.Unlock();
-				}
+			HeightmapData[Index] = EncodeZ(HitZ);
 
-				std::atomic<uint16_t>& Target = SharedHeightmapData[Index];
-				uint16 Desired = EncodeZ(HitZ);
-				while (true)
-				{
-					uint16 Current = Target.load(
-						std::memory_order_acquire);
-					if (Current > Desired ||
-						Target.compare_exchange_weak(
-							Current, Desired,
-							std::memory_order_release,
-							std::memory_order_relaxed))
-					{
-						break;
-					}
-				}
-			}, EParallelForFlags::Unbalanced);
-
-			for (int32 i = 0; i != SharedHeightmapData.Num(); ++i)
-				HeightmapData[i] = SharedHeightmapData[i].load(std::memory_order_relaxed);
-		}
+			if (Retry == MaxRetries)
+			{
+				FailuresCS.Lock();
+				Failures.Add({ Begin, End });
+				FailuresCS.Unlock();
+			}
+		}, EParallelForFlags::Unbalanced);
 		LockedPhysObject.Release();
 
-		if (CVDrawDebugWorldBB.GetValueOnAnyThread())
+		if (CVDrawDebugBoxes.GetValueOnAnyThread())
 		{
 			DrawDebugBox(
 				World,
@@ -340,7 +421,7 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 				FVector2d XY = FVector2d(Min) + CellSize * FVector2d(X, Y);
 				FVector3d Begin = FVector3d(XY.X, XY.Y, Max.Z);
 				FVector3d End = FVector3d(XY.X, XY.Y, Min.Z);
-				DrawDebugLine(World, Begin, End, FColor::Red, false, 10.0F);
+				DrawDebugLine(World, Begin, End, FColor::Green, false, 10.0F);
 			}
 
 			for (auto [Begin, End] : Failures)
@@ -356,6 +437,11 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 				Begin.X, Begin.Y, Begin.Z,
 				End.X, End.Y, End.Z);
 		}
+	}
+
+	if (ApplySmoothing)
+	{
+		ApplyBinomialKernel(HeightmapData, HeightmapExtent);
 	}
 
 	FActorSpawnParameters SpawnParams;
@@ -440,6 +526,7 @@ void UMeshToLandscapeUtil::EnumerateLandscapeLikeStaticMeshComponents(
 			FilterStaticMeshComponentsByVariance(Components, MaxZVariance);
 		}
 		FilterComponentsByPatterns(Components, ActorNamePatterns);
+		FilterInvalidComponents(Components);
 		OutComponents.Append(Components);
 		Components.Reset();
 	}
