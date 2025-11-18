@@ -171,44 +171,136 @@ Implement flexible configuration via YAML/JSON:
 - [ ] Data format converters (to nuScenes, KITTI, etc.)
 - [ ] Cloud storage integration
 
-## Data Format Specification
+## Data Format Specification (Bench2Drive Compatible)
 
-### Directory Structure
+The data will be saved in **Bench2Drive (B2D) format** for compatibility with existing autonomous driving datasets.
+
+### Root Directory Structure
 ```
-dataset/
-├── metadata.json                 # Scenario metadata
-├── telemetry/
-│   ├── vehicle_state.csv        # Vehicle dynamics and position
-│   ├── control_inputs.csv       # Steering, throttle, brake
-│   └── sensor_sync.csv          # Timestamp synchronization
-├── sensors/
-│   ├── camera_rgb_front/
-│   │   ├── 0000000000.png
-│   │   ├── 0000000001.png
-│   │   └── ...
-│   ├── camera_depth_front/
-│   ├── camera_semseg_front/
-│   ├── camera_bev/
-│   ├── lidar/
-│   │   ├── 0000000000.ply
-│   │   └── ...
-│   ├── imu.csv
-│   └── gnss.csv
-└── annotations/
-    ├── bounding_boxes_3d.json   # 3D bboxes of nearby objects
-    └── traffic_lights.json       # Traffic light states
+{root_directory}/
+├── GeneralDriving_Town01_Route001_Weather00/
+├── GeneralDriving_Town01_Route001_Weather10/
+├── GeneralDriving_Town02_Route042_Weather05/
+└── ...
 ```
 
-### Metadata Fields
-- Timestamp
-- Frame number
-- Town/map name
-- Weather parameters
-- Behavior profile
-- Spawn point
-- Destination
-- Number of other vehicles
-- Number of pedestrians
+Each scenario is named as: `{ScenarioType}_{Town}_{Route}_{Weather}`
+- **ScenarioType**: `GeneralDriving` (for now, can be extended later)
+- **Town**: `Town01`, `Town02`, etc.
+- **Route**: Route number (e.g., `Route001`, `Route042`)
+- **Weather**: Weather preset ID (e.g., `Weather00`, `Weather10`)
+
+### Scenario Directory Structure
+```
+GeneralDriving_Town01_Route001_Weather00/
+├── anno/
+│   ├── 00000.json.gz
+│   ├── 00001.json.gz
+│   ├── 00002.json.gz
+│   └── ...
+├── camera/
+│   ├── rgb_front/
+│   │   ├── 00000.jpg
+│   │   ├── 00001.jpg
+│   │   └── ...
+│   ├── rgb_front_left/
+│   ├── rgb_front_right/
+│   ├── rgb_back/
+│   ├── rgb_back_left/
+│   ├── rgb_back_right/
+│   ├── rgb_top_down/          # BEV camera for debugging
+│   ├── depth_front/
+│   │   ├── 00000.png
+│   │   └── ...
+│   ├── depth_front_left/
+│   ├── depth_front_right/
+│   ├── depth_back/
+│   ├── depth_back_left/
+│   ├── depth_back_right/
+│   ├── instance_front/
+│   │   ├── 00000.png
+│   │   └── ...
+│   ├── instance_front_left/
+│   ├── instance_front_right/
+│   ├── instance_back/
+│   ├── instance_back_left/
+│   ├── instance_back_right/
+│   ├── semantic_front/
+│   │   ├── 00000.png
+│   │   └── ...
+│   ├── semantic_front_left/
+│   ├── semantic_front_right/
+│   ├── semantic_back/
+│   ├── semantic_back_left/
+│   └── semantic_back_right/
+└── lidar/
+    ├── 00000.laz
+    ├── 00001.laz
+    └── ...
+```
+
+### Annotation File Format (anno/*.json.gz)
+
+Each compressed JSON file contains the following fields:
+
+**Vehicle State:**
+- `x`, `y`: Global position coordinates
+- `theta`: Vehicle heading angle
+- `speed`: Current speed
+- `acceleration`: 3-axis acceleration (from IMU)
+- `angular_velocity`: 3-axis angular velocity (from IMU)
+
+**Control Inputs:**
+- `throttle`: Throttle value [0.0, 1.0]
+- `steer`: Steering value [-1.0, 1.0]
+- `brake`: Brake value [0.0, 1.0]
+- `reverse`: Boolean, reverse gear engaged
+- `only_ap_brake`: Boolean, autopilot-only brake flag
+
+**Navigation/Waypoints:**
+- `x_command_far`, `y_command_far`: Far waypoint coordinates
+- `command_far`: Command at far waypoint
+- `x_command_near`, `y_command_near`: Near waypoint coordinates
+- `command_near`: Command at near waypoint
+- `x_target`, `y_target`: Target destination coordinates
+- `next_command`: Next navigation command
+- `should_brake`: Boolean, whether vehicle should brake
+
+**Environment:**
+- `weather`: Weather preset ID
+
+**Perception (Complex Objects):**
+- `bounding_boxes`: Dictionary containing 3D bounding boxes of nearby objects
+- `sensors`: Dictionary containing sensor intrinsics and extrinsics
+
+### Sensor Configuration (B2D Compatible)
+
+**RGB Cameras (6 cameras + 1 top-down):**
+- `CAM_FRONT`: x=0.80, y=0.0, z=1.60, yaw=0.0, 1600x900, FOV=70
+- `CAM_FRONT_LEFT`: x=0.27, y=-0.55, z=1.60, yaw=-55.0, 1600x900, FOV=70
+- `CAM_FRONT_RIGHT`: x=0.27, y=0.55, z=1.60, yaw=55.0, 1600x900, FOV=70
+- `CAM_BACK`: x=-2.0, y=0.0, z=1.60, yaw=180.0, 1600x900, FOV=110
+- `CAM_BACK_LEFT`: x=-0.32, y=-0.55, z=1.60, yaw=-110.0, 1600x900, FOV=70
+- `CAM_BACK_RIGHT`: x=-0.32, y=0.55, z=1.60, yaw=110.0, 1600x900, FOV=70
+- `CAM_TOP_DOWN`: For debugging (BEV), high altitude with downward pitch
+
+**Corresponding Depth, Instance, and Semantic Segmentation:**
+Each RGB camera has corresponding depth, instance segmentation, and semantic segmentation cameras at the same position.
+
+**LiDAR:**
+- `LIDAR_TOP`: x=-0.39, y=0.0, z=1.84, range=85m, 10Hz, 64 channels, 600k points/sec
+
+**Other Sensors:**
+- `GPS`: For global position
+- `IMU`: x=-1.4, y=0.0, z=0.0, 20Hz sampling
+- `Speedometer`: 20Hz reading frequency
+
+### File Naming Convention
+- Frame numbers use 5 digits with zero-padding: `00000`, `00001`, ..., `99999`
+- RGB images: `.jpg` format
+- Depth/Semantic/Instance: `.png` format
+- LiDAR: `.laz` format (compressed LAS point cloud)
+- Annotations: `.json.gz` format (compressed JSON)
 
 ## Example Usage
 
@@ -220,24 +312,24 @@ from agents.tools.data_collector import DataCollector
 # Create vehicle
 vehicle = world.spawn_actor(blueprint, spawn_point)
 
-# Configure sensors
-sensor_config = {
-    'cameras': [
-        {'type': 'rgb', 'position': 'front', 'width': 1920, 'height': 1080},
-        {'type': 'depth', 'position': 'front'},
-        {'type': 'semantic_segmentation', 'position': 'front'},
-        {'type': 'rgb', 'position': 'bev', 'height': 50, 'pitch': -90},
-    ],
-    'lidar': {'range': 100, 'rotation_frequency': 10, 'channels': 64},
-    'imu': True,
-    'gnss': True,
-    'collision': True,
-}
-
 # Create BehaviorAgent with sensors
 agent = BehaviorAgent(vehicle, behavior='normal')
-sensor_manager = SensorManager(vehicle, sensor_config)
-data_collector = DataCollector(sensor_manager, output_dir='./dataset/town01_sunny_normal')
+
+# Create sensor manager with B2D configuration
+sensor_manager = SensorManager(vehicle, config_preset='bench2drive')
+
+# Create data collector with B2D format
+# Scenario name will be: GeneralDriving_Town01_Route001_Weather00
+data_collector = DataCollector(
+    sensor_manager=sensor_manager,
+    vehicle=vehicle,
+    root_dir='./b2d_dataset',
+    scenario_type='GeneralDriving',
+    town='Town01',
+    route_id=1,
+    weather_id=0,
+    format='bench2drive'
+)
 
 # Set destination and run
 agent.set_destination(destination)
@@ -246,13 +338,20 @@ data_collector.start_recording()
 while True:
     control = agent.run_step()
     vehicle.apply_control(control)
-    data_collector.record_frame()
+
+    # Record frame with telemetry data
+    data_collector.record_frame(
+        control=control,
+        waypoint_info=agent.get_waypoint_info()  # Navigation commands
+    )
+
     world.tick()
 
     if agent.done():
         break
 
 data_collector.stop_recording()
+sensor_manager.destroy()
 ```
 
 ## Testing Plan
