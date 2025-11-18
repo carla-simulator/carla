@@ -196,7 +196,7 @@ void UMeshToLandscapeUtil::FilterComponentsByPatterns(
 	const TArray<FString>& PatternWhitelist,
 	const TArray<FString>& PatternBlacklist)
 {
-	if (PatternWhitelist.IsEmpty() ||
+	if (PatternWhitelist.IsEmpty() &&
 		PatternBlacklist.IsEmpty())
 		return;
 	for (int32 i = 0; i != Components.Num();)
