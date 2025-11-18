@@ -33,93 +33,41 @@ constexpr int32 KernelSide = 3;
 static void ComputeBinomialKernel(
 	uint16 Out[KernelSide][KernelSide])
 {
-	uint64_t B[KernelSide];
+	int32 N = KernelSide;
 
-	int32 N = KernelSide - 1;
-
-	for (int32 i = 0; i <= N; ++i)
+	auto BinCoef = [](int32 n, int32 x)
 	{
-		int32 k = i;
-		k = std::min(k, N - k);
-		uint64_t c = 1;
-		for (int32 t = 1; t <= k; ++t)
-			c = (c * (N - (k - t))) / t;
-		B[i] = c;
-	}
+		int32 r = 1;
+		for (int32 i = 1; i != n; ++i)
+			r *= (n + 1 - i);
+		for (int32 i = 1; i != n; ++i)
+			r /= i;
+		return r;
+	};
 
-	for (int32 y = 0; y < KernelSide; ++y)
+	for (int32 i = 0; i != KernelSide; ++i)
 	{
-		for (int32 x = 0; x < KernelSide; ++x)
+		auto a = BinCoef(N - 1, i);
+		for (int32 j = 0; j != KernelSide; ++j)
 		{
-			uint64_t Value = B[y] * B[x];
-			Value = std::min<uint16>((uint16)Value, UINT16_MAX);
-			Out[y][x] = (uint16_t)Value;
+			auto b = BinCoef(N - 1, j);
+			Out[i][j] = a * b >> (2 * (N - 1));
 		}
 	}
 }
 
-static void ApplyBinomialKernel(
+static void ApplyKernel(
 	TArrayView<uint16> Image,
-	FIntPoint Extent)
+	FIntPoint Extent,
+	uint16 Kernel[KernelSide][KernelSide])
 {
-	constexpr int32 N = KernelSide;
-
-	if (Image.Num() != Extent.X * Extent.Y)
-		return;
-
-	uint16 Kernel[N][N];
-	ComputeBinomialKernel(Kernel);
-
 	TArray<uint16> Temp;
 	Temp.SetNumUninitialized(Image.Num());
-
-	const int32 half = N / 2;
-
 	ParallelFor(Image.Num(), [&](int32 Index)
 	{
-		const int32 cx = Index % Extent.X;
-		const int32 cy = Index / Extent.X;
-		const FIntPoint center(cx, cy);
-
-		const int32 yMin = FMath::Max(0, center.Y - half);
-		const int32 yMax = FMath::Min(Extent.Y - 1, center.Y + half);
-		const int32 xMin = FMath::Max(0, center.X - half);
-		const int32 xMax = FMath::Min(Extent.X - 1, center.X + half);
-
-		uint64_t acc = 0ULL;
-
-		for (int32 y = yMin; y <= yMax; ++y)
-		{
-			const int32 ky = y - (center.Y - half);
-			const int32 rowBase = y * Extent.X;
-			for (int32 x = xMin; x <= xMax; ++x)
-			{
-				const int32 kx = x - (center.X - half);
-				const uint16 pix = Image[rowBase + x];
-				const uint16 kval = Kernel[ky][kx];
-				acc += uint64_t(kval) * uint64_t(pix);
-			}
-		}
-
-		const uint64_t maxU16 = 65535ULL;
-		if (acc > maxU16) acc = maxU16;
-		Temp[Index] = static_cast<uint16_t>(acc);
+		int32 Y = Index / Extent.X;
+		int32 X = Index % Extent.X;
 	});
-
-	for (int32 i = 0; i < Image.Num(); ++i)
-		Image[i] = Temp[i];
-}
-
-void UMeshToLandscapeUtil::FilterInvalidComponents(
-	TArray<UActorComponent*>& Components)
-{
-	for (int32 i = 0; i != Components.Num();)
-	{
-		if (!IsValidChecked(Components[i]))
-			Components.RemoveAtSwap(i, EAllowShrinking::No);
-		else
-			++i;
-	}
 }
 
 void UMeshToLandscapeUtil::FilterByClassList(
@@ -245,34 +193,70 @@ void UMeshToLandscapeUtil::FilterStaticMeshComponentsByVariance(
 
 void UMeshToLandscapeUtil::FilterComponentsByPatterns(
 	TArray<UActorComponent*>& Components,
-	const TArray<FString>& Patterns)
+	const TArray<FString>& PatternWhitelist,
+	const TArray<FString>& PatternBlacklist)
 {
-	FString NameTemp;
-	if (Patterns.IsEmpty())
+	if (PatternWhitelist.IsEmpty() ||
+		PatternBlacklist.IsEmpty())
 		return;
 	for (int32 i = 0; i != Components.Num();)
 	{
-		UActorComponent* SMC = Components[i];
+		UActorComponent* Component = Components[i];
+
 		bool Match = false;
-		NameTemp = UKismetSystemLibrary::GetDisplayName(SMC);
-		for (const FString& Pattern : Patterns)
+
+		FString ComponentName =
+			UKismetSystemLibrary::GetDisplayName(Component);
+
+		FString ActorName =
+			UKismetSystemLibrary::GetDisplayName(Component->GetOwner());
+
+		for (const FString& Pattern : PatternBlacklist)
 		{
-			Match = NameTemp.MatchesWildcard(Pattern);
+			Match = ComponentName.MatchesWildcard(Pattern);
 			if (Match)
 				break;
 		}
+
+		if (Match)
+		{
+			Components.RemoveAtSwap(i, EAllowShrinking::No);
+			continue;
+		}
+
+		for (const FString& Pattern : PatternBlacklist)
+		{
+			Match = ActorName.MatchesWildcard(Pattern);
+			if (Match)
+				break;
+		}
+
+		if (Match)
+		{
+			Components.RemoveAtSwap(i, EAllowShrinking::No);
+			continue;
+		}
+
+		for (const FString& Pattern : PatternWhitelist)
+		{
+			Match = ComponentName.MatchesWildcard(Pattern);
+			if (Match)
+				break;
+		}
+
 		if (Match)
 		{
 			++i;
 			continue;
 		}
-		NameTemp = UKismetSystemLibrary::GetDisplayName(SMC->GetOwner());
-		for (const FString& Pattern : Patterns)
+
+		for (const FString& Pattern : PatternWhitelist)
 		{
-			Match = NameTemp.MatchesWildcard(Pattern);
+			Match = ActorName.MatchesWildcard(Pattern);
 			if (Match)
 				break;
 		}
+
 		if (Match)
 		{
 			++i;
@@ -285,8 +269,7 @@ void UMeshToLandscapeUtil::FilterComponentsByPatterns(
 ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	const TArray<UActorComponent*>& Components,
 	int32 SubsectionSizeQuads,
-	int32 NumSubsections,
-	bool ApplySmoothing)
+	int32 NumSubsections)
 {
 	if (Components.Num() == 0)
 		return nullptr;
@@ -309,14 +292,20 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 
 	for (UActorComponent* Component : Components)
 	{
-		if (Component == nullptr)
-			continue;
 		UPrimitiveComponent* PrimitiveComponent = Cast<UPrimitiveComponent>(Component);
 		if (PrimitiveComponent != nullptr)
 		{
 			FBox BoxBounds = PrimitiveComponent->Bounds.GetBox();
 			if (CVDrawDebugBoxes.GetValueOnAnyThread())
-				DrawDebugBox(World, BoxBounds.GetCenter(), BoxBounds.GetExtent(), FColor::Cyan, false, 10.0F);
+			{
+				DrawDebugBox(
+					World,
+					BoxBounds.GetCenter(),
+					BoxBounds.GetExtent(),
+					FColor::Cyan,
+					false,
+					10.0F);
+			}
 			Bounds += BoxBounds;
 		}
 	}
@@ -371,6 +360,9 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 			CQParams.bFindInitialOverlaps = true;
 			CQParams.bReturnPhysicalMaterial = false;
 			CQParams.MobilityType = EQueryMobilityType::Any;
+			CQParams.bIgnoreTouches = true;
+
+			FRandomStream PRNG(Index);
 
 			bool Failed = false;
 			int32 Retry = 0;
@@ -381,7 +373,16 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 					Begin, End,
 					ECollisionChannel::ECC_GameTraceChannel2,
 					CQParams))
+				{
+					// double dx = PRNG.FRandRange(0.0, UE_CM_TO_M * 5);
+					// double dy = PRNG.FRandRange(0.0, UE_CM_TO_M * 5);
+					// Begin.X += dx;
+					// Begin.Y += dy;
+					// End.X += dx;
+					// End.Y += dy;
+					// continue;
 					break;
+				}
 				if (ComponentMap.Contains(Hit.GetComponent()))
 				{
 					HitZ = Hit.Location.Z;
@@ -439,11 +440,6 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 		}
 	}
 
-	if (ApplySmoothing)
-	{
-		ApplyBinomialKernel(HeightmapData, HeightmapExtent);
-	}
-
 	FActorSpawnParameters SpawnParams;
 	ALandscape* Landscape = World->SpawnActor<ALandscape>(
 		ALandscape::StaticClass(),
@@ -494,7 +490,8 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 
 void UMeshToLandscapeUtil::EnumerateLandscapeLikeStaticMeshComponents(
 	UObject* WorldContextObject,
-	const TArray<FString>& ActorNamePatterns,
+	const TArray<FString>& PatternWhitelist,
+	const TArray<FString>& PatternBlacklist,
 	const TArray<UClass*>& ClassWhitelist,
 	const TArray<UClass*>& ClassBlacklist,
 	double MaxZVariance,
@@ -525,8 +522,10 @@ void UMeshToLandscapeUtil::EnumerateLandscapeLikeStaticMeshComponents(
 			FilterInvalidStaticMeshComponents(Components);
 			FilterStaticMeshComponentsByVariance(Components, MaxZVariance);
 		}
-		FilterComponentsByPatterns(Components, ActorNamePatterns);
-		FilterInvalidComponents(Components);
+		FilterComponentsByPatterns(
+			Components,
+			PatternWhitelist,
+			PatternBlacklist);
 		OutComponents.Append(Components);
 		Components.Reset();
 	}
