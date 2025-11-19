@@ -6,6 +6,7 @@
 #include "Landscape.h"
 #include "CoreMinimal.h"
 #include "Engine/StaticMeshActor.h"
+#include "Components/StaticMeshComponent.h"
 #include "StaticMeshLODResourcesAdapter.h"
 #include "PhysicsEngine/PhysicsObjectExternalInterface.h"
 #include "Async/ParallelFor.h"
@@ -29,46 +30,6 @@ static TAutoConsoleVariable<int32> CVDrawDebugBoxes(
 	TEXT("Whether to debug-draw the bounding box used for tracing."));
 
 constexpr int32 KernelSide = 3;
-
-static void ComputeBinomialKernel(
-	uint16 Out[KernelSide][KernelSide])
-{
-	int32 N = KernelSide;
-
-	auto BinCoef = [](int32 n, int32 x)
-	{
-		int32 r = 1;
-		for (int32 i = 1; i != n; ++i)
-			r *= (n + 1 - i);
-		for (int32 i = 1; i != n; ++i)
-			r /= i;
-		return r;
-	};
-
-	for (int32 i = 0; i != KernelSide; ++i)
-	{
-		auto a = BinCoef(N - 1, i);
-		for (int32 j = 0; j != KernelSide; ++j)
-		{
-			auto b = BinCoef(N - 1, j);
-			Out[i][j] = a * b >> (2 * (N - 1));
-		}
-	}
-}
-
-static void ApplyKernel(
-	TArrayView<uint16> Image,
-	FIntPoint Extent,
-	uint16 Kernel[KernelSide][KernelSide])
-{
-	TArray<uint16> Temp;
-	Temp.SetNumUninitialized(Image.Num());
-	ParallelFor(Image.Num(), [&](int32 Index)
-	{
-		int32 Y = Index / Extent.X;
-		int32 X = Index % Extent.X;
-	});
-}
 
 void UMeshToLandscapeUtil::FilterByClassList(
 	TArray<UActorComponent*>& Components,
