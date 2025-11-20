@@ -15,6 +15,7 @@
 #include <boost/asio/post.hpp>
 
 #include <rpc/server.h>
+#include <rpc/this_session.h>
 
 #include <future>
 
@@ -65,6 +66,14 @@ namespace rpc {
       _server.stop();
     }
 
+    void BindOnClientConnected(::rpc::server::callback_type callback) {
+      _server.set_on_connection(callback);
+    }
+
+    void BindOnClientDisconnected(::rpc::server::callback_type callback) {
+      _server.set_on_disconnection(callback);
+    }
+
   private:
 
     boost::asio::io_context _sync_io_context;
@@ -108,7 +117,9 @@ namespace detail {
     template <typename FuncT>
     static auto WrapSyncCall(boost::asio::io_context &io, FuncT &&functor) {
       return [&io, functor=std::forward<FuncT>(functor)](Metadata metadata, Args... args) -> R {
-        auto task = std::packaged_task<R()>([functor=std::move(functor), args...]() {
+        auto const session_id = ::rpc::this_session().id();
+        auto task = std::packaged_task<R()>([session_id, functor=std::move(functor), args...]() {
+          ::rpc::this_session().set_id(session_id);
           return functor(args...);
         });
         if (metadata.IsResponseIgnored()) {
