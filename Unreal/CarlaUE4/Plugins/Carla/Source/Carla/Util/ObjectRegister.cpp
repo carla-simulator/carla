@@ -300,7 +300,8 @@ void UObjectRegister::RegisterSMComponents(AActor* Actor)
   const bool IsActorTickEnabled = Actor->IsActorTickEnabled();
 
   ATrafficSignBase* TrafficSign = Cast<ATrafficSignBase>(Actor);
-  if (!IsValid(TrafficSign) || BBs.Num() == 0)
+  
+  if (BBs.Num() == 0)
   {
     return;
   }
