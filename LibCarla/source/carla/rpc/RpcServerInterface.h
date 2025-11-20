@@ -14,6 +14,7 @@
 #include "carla/rpc/MapInfo.h"
 #include "carla/rpc/MapLayer.h"
 #include "carla/rpc/Response.h"
+#include "carla/rpc/ServerSynchronizationTypes.h"
 #include "carla/rpc/Transform.h"
 #include "carla/rpc/VehicleTelemetryData.h"
 #include "carla/streaming/detail/Dispatcher.h"
@@ -77,6 +78,26 @@ public:
   virtual carla::rpc::Response<void> call_enable_actor_for_ros(ActorId actor_id) = 0;
   virtual carla::rpc::Response<void> call_disable_actor_for_ros(ActorId actor_id) = 0;
   virtual carla::rpc::Response<bool> call_is_actor_enabled_for_ros(ActorId actor_id) = 0;
+  /**
+   * @}
+   */
+
+  /**
+   * @brief synchronization calls
+   * @{
+   */
+  virtual Response<uint64_t> call_tick(
+      synchronization_client_id_type const &client_id = ALL_CLIENTS,
+      synchronization_participant_id_type const &participant_id = ALL_PARTICIPANTS) = 0;
+  virtual Response<synchronization_participant_id_type> call_register_synchronization_participant(
+      synchronization_client_id_type const &client_id,
+      synchronization_participant_id_type const &participant_id_hint = ALL_PARTICIPANTS) = 0;
+  virtual Response<bool> call_deregister_synchronization_participant(
+      synchronization_client_id_type const &client_id, synchronization_participant_id_type const &participant_id) = 0;
+  virtual Response<bool> call_update_synchronization_window(
+      synchronization_client_id_type const &client_id, synchronization_participant_id_type const &participant_id,
+      synchronization_target_game_time const &target_game_time = NO_SYNC_TARGET_GAME_TIME) = 0;
+  virtual carla::rpc::Response<std::pair< bool , std::vector<carla::rpc::synchronization_window_participant_state> > >  call_get_synchronization_window_status() = 0;
   /**
    * @}
    */

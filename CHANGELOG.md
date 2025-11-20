@@ -5,6 +5,8 @@
  * Added a hybrid solid-state LiDAR with adjustable parameters (blueprint attributes)
  * Fix OpenDrive Builder lane width
  * Prepare server for multistream support and ROS2 client calls
+ * Introduced fine grained ServerSynchronization mechanism: each client decides for its own if it requires synchronization or not and provides its own synchronization window.
+   Be aware: some existing code using master/slave sync mechanism might need rework. See also generate_traffic.py.
 
 ## CARLA 0.9.16
 

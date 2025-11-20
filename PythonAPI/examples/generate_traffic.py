@@ -148,9 +148,9 @@ def main():
     all_id = []
     client = carla.Client(args.host, args.port)
     client.set_timeout(10.0)
-    synchronous_master = False
     random.seed(args.seed if args.seed is not None else int(time.time()))
 
+    original_world_settings = None
     try:
         world = client.get_world()
 
@@ -164,15 +164,14 @@ def main():
         if args.seed is not None:
             traffic_manager.set_random_device_seed(args.seed)
 
-        settings = world.get_settings()
+        original_world_settings = world.get_settings()
+        print("current_world_settings {}".format(original_world_settings))
+        settings = original_world_settings
         if not args.asynch:
             traffic_manager.set_synchronous_mode(True)
             if not settings.synchronous_mode:
-                synchronous_master = True
                 settings.synchronous_mode = True
                 settings.fixed_delta_seconds = 0.05
-            else:
-                synchronous_master = False
         else:
             print("You are currently in asynchronous mode. If this is a traffic simulation, \
             you could experience some issues. If it's not working correctly, switch to synchronous \
@@ -180,7 +179,9 @@ def main():
 
         if args.no_rendering:
             settings.no_rendering_mode = True
+        print("apply_world_settings {}".format(settings))
         world.apply_settings(settings)
+        print("settings applied")
 
         blueprints = get_actor_blueprints(world, args.filterv, args.generationv)
         if not blueprints:
@@ -229,7 +230,7 @@ def main():
             batch.append(SpawnActor(blueprint, transform)
                 .then(SetAutopilot(FutureActor, True, traffic_manager.get_port())))
 
-        for response in client.apply_batch_sync(batch, synchronous_master):
+        for response in client.apply_batch_sync(batch, do_tick=True):
             if response.error:
                 logging.error(response.error)
             else:
@@ -281,7 +282,7 @@ def main():
                 print("Walker has no speed")
                 walker_speed.append(0.0)
             batch.append(SpawnActor(walker_bp, spawn_point))
-        results = client.apply_batch_sync(batch, True)
+        results = client.apply_batch_sync(batch, do_tick=True)
         walker_speed2 = []
         for i in range(len(results)):
             if results[i].error:
@@ -295,7 +296,7 @@ def main():
         walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
         for i in range(len(walkers_list)):
             batch.append(SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
-        results = client.apply_batch_sync(batch, True)
+        results = client.apply_batch_sync(batch, do_tick=True)
         for i in range(len(results)):
             if results[i].error:
                 logging.error(results[i].error)
@@ -308,7 +309,7 @@ def main():
         all_actors = world.get_actors(all_id)
 
         # wait for a tick to ensure client receives the last transform of the walkers we have just created
-        if args.asynch or not synchronous_master:
+        if args.asynch:
             world.wait_for_tick()
         else:
             world.tick()
@@ -330,18 +331,22 @@ def main():
         traffic_manager.global_percentage_speed_difference(30.0)
 
         while True:
-            if not args.asynch and synchronous_master:
+            if not args.asynch:
                 world.tick()
             else:
                 world.wait_for_tick()
 
     finally:
 
-        if not args.asynch and synchronous_master:
-            settings = world.get_settings()
-            settings.synchronous_mode = False
-            settings.no_rendering_mode = False
-            settings.fixed_delta_seconds = None
+        if not args.asynch:
+            if original_world_settings:
+                settings= original_world_settings
+            else:
+                settings = world.get_settings()
+                settings.synchronous_mode = False
+                settings.no_rendering_mode = False
+                settings.fixed_delta_seconds = None
+            print("restore world_settings {}".format(settings))
             world.apply_settings(settings)
 
         print('\ndestroying %d vehicles' % len(vehicles_list))

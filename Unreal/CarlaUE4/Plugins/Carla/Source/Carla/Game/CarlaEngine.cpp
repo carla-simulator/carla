@@ -202,7 +202,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       Secondary = std::make_shared<carla::multigpu::Secondary>(PrimaryIP, PrimaryPort, CommandExecutor);
       Secondary->Connect();
       // set this server in synchronous mode
-      bSynchronousMode = true;
+      Server.EnableSynchronousMode();
     }
     else
     {
@@ -281,21 +281,24 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 
     if (bIsPrimaryServer)
     {
-      if (CurrentEpisode && !bSynchronousMode && SecondaryServer->HasClientsConnected())
-      {
-        // set synchronous mode
-        CurrentSettings.bSynchronousMode = true;
-        CurrentSettings.FixedDeltaSeconds = 1 / 20.0f;
-        OnEpisodeSettingsChanged(CurrentSettings);
-        CurrentEpisode->ApplySettings(CurrentSettings);
-      }
-
       // process RPC commands
       do
       {
         Server.RunSome(1u);
       }
-      while (bSynchronousMode && !Server.TickCueReceived());
+      while (Server.IsSynchronousModeActive() && !Server.TickCueReceived());
+
+      if ( (CurrentEpisode && !Server.IsSynchronousModeActive() && SecondaryServer->HasClientsConnected())
+          || ( Server.IsSynchronousModeActive() && (!CurrentSettings.FixedDeltaSeconds || !CurrentSettings.bSynchronousMode) ) )
+      {
+        // ensure the delta seconds are also considered in this run
+        DeltaSeconds = Server.GetTickDeltaSeconds();
+
+        CurrentSettings.bSynchronousMode = true;
+        CurrentSettings.FixedDeltaSeconds = DeltaSeconds;
+        OnEpisodeSettingsChanged(CurrentSettings);
+        CurrentEpisode->ApplySettings(CurrentSettings);
+      }
     }
     else
     {
@@ -382,7 +385,12 @@ void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
 {
   CurrentSettings = FEpisodeSettings(Settings);
 
-  bSynchronousMode = Settings.bSynchronousMode;
+  if (Settings.bSynchronousMode && !Server.IsSynchronousModeActive()) {
+    Server.EnableSynchronousMode();
+  }
+  else if (!Settings.bSynchronousMode && Server.IsSynchronousModeActive()) {
+    Server.DisableSynchronousMode();
+  }
 
   if (GEngine && GEngine->GameViewport)
   {
