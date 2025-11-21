@@ -20,6 +20,7 @@
 #include <limits>
 #include <memory>
 #include <string>
+#include <sstream>
 
 namespace carla {
 namespace streaming {
@@ -59,6 +60,11 @@ namespace detail {
       : MessageTmpl(sizeof...(Buffers) + 1u, buf, buffers...) {
       static_assert(sizeof...(Buffers) < max_size(), "Too many buffers!");
       _buffer_views[0u] = boost::asio::buffer(&_total_size, sizeof(_total_size));
+      log_debug("MessageTmpl[", this, "] Created message with ", _number_of_buffers, " buffers and total size ", _total_size, " bytes. ",  GetBufferDetailsAsString());
+    }
+
+    ~MessageTmpl(){
+      log_debug("MessageTmpl[", this, "] Destroyed.", GetBufferDetailsAsString());
     }
 
     /// Size in bytes of the message excluding the header.
@@ -78,6 +84,14 @@ namespace detail {
     auto GetBufferViewSequence() const {
       auto begin = _buffers.begin();
       return MakeListView(begin, begin + _number_of_buffers);
+    }
+
+    auto GetBufferDetailsAsString() const {
+      std::stringstream result;
+      for (size_t i = 0; i < _number_of_buffers; ++i) {
+        result << " Buffer[" << i << "|" << static_cast<const void*>(_buffers[i]->data()) << "]: size=" << _buffers[i]->size() << " bytes  | use_count= " << _buffers[i].use_count();
+      }
+      return result.str();
     }
   private:
 

@@ -22,7 +22,6 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/geom/BoundingBox.h>
 #include <carla/geom/GeoLocation.h>
-#include <carla/ros2/ROS2.h>
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDescription.h>
 #include <carla/rpc/OpendriveGenerationParameters.h>
@@ -362,11 +361,6 @@ private:
   {
     ElapsedGameTime += DeltaSeconds;
     SetVisualGameTime(VisualGameTime + DeltaSeconds);
-    #if defined(WITH_ROS2)
-    auto ROS2 = carla::ros2::ROS2::GetInstance();
-    if (ROS2->IsEnabled())
-      ROS2->SetTimestamp(GetElapsedGameTime());
-    #endif
 
   }
 

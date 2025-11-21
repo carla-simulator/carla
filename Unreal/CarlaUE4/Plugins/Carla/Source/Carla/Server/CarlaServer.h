@@ -42,7 +42,7 @@ public:
 
   void RunSome(uint32 Milliseconds);
 
-  void SetROS2TopicVisibilityDefaultEnabled(bool _topic_visibility_default_enabled);
+  void SetROS2TopicVisibilityDefaultEnabled(bool topic_visibility_default_enabled);
 
   void EnableSynchronousMode();
   void DisableSynchronousMode();

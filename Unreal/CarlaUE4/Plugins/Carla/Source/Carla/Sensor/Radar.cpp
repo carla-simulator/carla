@@ -14,7 +14,6 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
-#include "carla/ros2/ROS2.h"
 #include <compiler/enable-ue4-macros.h>
 
 FActorDefinition ARadar::GetSensorDefinition()
@@ -78,18 +77,6 @@ void ARadar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
   SendLineTraces(DeltaTime);
 
   auto DataStream = GetDataStream(*this);
-
-  // ROS2
-  #if defined(WITH_ROS2)
-  auto ROS2 = carla::ros2::ROS2::GetInstance();
-  if (ROS2->IsEnabled())
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
-    AActor* ParentActor = GetAttachParentActor();
-    auto Transform = (ParentActor) ? GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : GetActorTransform();
-    ROS2->ProcessDataFromRadar(DataStream.GetSensorType(), Transform, RadarData, this);
-  }
-  #endif
 
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");

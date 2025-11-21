@@ -81,8 +81,8 @@ namespace low_level {
       return _dispatcher->GetToken(stream_id);
     }
 
-    void SetROS2TopicVisibilityDefaultEnabled(bool _topic_visibility_default_enabled) {
-      _dispatcher->SetROS2TopicVisibilityDefaultEnabled(_topic_visibility_default_enabled);
+    void SetROS2TopicVisibilityDefaultEnabled(bool topic_visibility_default_enabled) {
+      _dispatcher->SetROS2TopicVisibilityDefaultEnabled(topic_visibility_default_enabled);
     }
     
     void EnableForROS(detail::stream_actor_id_type stream_actor_id) {

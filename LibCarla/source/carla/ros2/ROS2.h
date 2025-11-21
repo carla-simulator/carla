@@ -6,162 +6,139 @@
 
 #pragma once
 
-#include "carla/Buffer.h"
 #include "carla/BufferView.h"
-#include "carla/geom/Transform.h"
-#include "carla/ros2/ROS2CallbackData.h"
-#include "carla/streaming/detail/Types.h"
+#include "carla/ros2/ROS2NameRegistry.h"
+#include "carla/ros2/ROS2Session.h"
+#include "carla/ros2/types/SensorActorDefinition.h"
+#include "carla/ros2/types/TrafficLightActorDefinition.h"
+#include "carla/ros2/types/TrafficSignActorDefinition.h"
+#include "carla/ros2/types/VehicleActorDefinition.h"
+#include "carla/ros2/types/WalkerActorDefinition.h"
+#include "carla/rpc/RpcServerInterface.h"
+#include "carla/streaming/detail/Message.h"
 
-#include <unordered_set>
-#include <unordered_map>
+#include <list>
 #include <memory>
-#include <vector>
+#include <unordered_map>
 
-// forward declarations
-class AActor;
-namespace carla {
-  namespace geom {
-    class GeoLocation;
-    class Vector3D;
-  }
-  namespace sensor {
-    namespace data {
-      struct DVSEvent;
-      class LidarData;
-      class SemanticLidarData;
-      class RadarData;
-    }
-  }
-}
 namespace carla {
 namespace ros2 {
 
-  class BasePublisher;
-  class BaseSubscriber;
+class DdsDomainParticipantImpl;
+class UePublisherBaseSensor;
+class TransformPublisher;
+class CarlaActorListPublisher;
+class UeWorldPublisher;
+class ServiceInterface;
 
-  class CarlaTransformPublisher;
-  class CarlaClockPublisher;
+class ROS2 {
+public:
+  // deleting copy constructor for singleton
+  ROS2(const ROS2& obj) = delete;
+  ~ROS2() = default;
 
-class ROS2
-{
-  public:
+  static std::shared_ptr<ROS2> GetInstance();
 
-    // deleting copy constructor for singleton
-    ROS2(const ROS2& obj) = delete;
-    static std::shared_ptr<ROS2> GetInstance() {
-      if (!_instance)
-        _instance = std::shared_ptr<ROS2>(new ROS2);
-      return _instance;
-    }
+  // starting/stopping
+  enum class TopicVisibilityDefaultMode {
+    eOn,
+    eOff
+  }; 
+  void Enable(carla::rpc::RpcServerInterface* carla_server,
+              carla::streaming::detail::stream_id_type const world_observer_stream_id,
+              TopicVisibilityDefaultMode topic_visibility_default_mode);
+  bool IsEnabled() const {
+    return _enabled;
+  }
+  TopicVisibilityDefaultMode VisibilityDefaultMode() const {
+    return _topic_visibility_default_mode;
+  }
+  void NotifyInitGame();
+  void NotifyBeginEpisode();
+  void NotifyEndEpisode();
+  void NotifyEndGame();
+  void Disable();
 
-    // General
-    void Enable(bool enable);
-    void Shutdown();
+  void AttachActors(ActorId const child, ActorId const parent);
 
-    bool IsEnabled() { return _enabled; }
+  void AddVehicleUe(std::shared_ptr<carla::ros2::types::VehicleActorDefinition> vehicle_actor_definition,
+                    carla::ros2::types::VehicleControlCallback vehicle_control_callback,
+                    carla::ros2::types::VehicleAckermannControlCallback vehicle_ackermann_control_callback,
+                    carla::ros2::types::ActorSetTransformCallback vehicle_set_transform_callback);
+  void AddWalkerUe(std::shared_ptr<carla::ros2::types::WalkerActorDefinition> walker_actor_definition,
+                   carla::ros2::types::WalkerControlCallback walker_control_callback);
+  void AddTrafficLightUe(
+      std::shared_ptr<carla::ros2::types::TrafficLightActorDefinition> traffic_light_actor_definition);
+  void AddTrafficSignUe(std::shared_ptr<carla::ros2::types::TrafficSignActorDefinition> traffic_sign_actor_definition);
+  bool AddSensorUe(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
+                   carla::ros2::types::ActorSetTransformCallback actor_set_transform_callback = nullptr);
+  bool AddV2XCustomSensorUe(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition, 
+    carla::ros2::types::V2XCustomSendCallback v2x_custom_send_callback);
 
-    void SetFrame(uint64_t frame);
-    void SetTimestamp(double timestamp);
+  void RemoveActor(ActorId const actor);
 
-    std::string GetActorRosName(void *actor);
-    std::string GetActorBaseTopicName(void *actor);
+  /**
+   * Implement actions before sensor data processing
+   */
+  void ProcessDataFromUeSensorPreAction();
+  void ProcessDataFromUeSensor(carla::streaming::detail::stream_id_type const stream_id,
+                               std::shared_ptr<const carla::streaming::detail::Message> message);
+  /**
+   * Implement actions after sensor data processing
+   */
+  void ProcessDataFromUeSensorPostAction();
 
-    std::string GetFrameId(void *actor);
-    std::string GetParentFrameId(void *actor);
+  void EnableForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id);
+  void DisableForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id);  
+  bool IsEnabledForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id);
 
-    // Registration
-    void RegisterActor(void *actor, std::string ros_name, std::string frame_id, bool publish_tf=true);
-    void UnregisterActor(void *actor);
+  /**
+   * Process incoming messages
+   */
+  void ProcessMessages();
 
-    void RegisterActorParent(void *actor, void *parent);
+  uint64_t CurrentFrame() const;
+  carla::ros2::types::Timestamp const& CurrentTimestamp() const;
 
-    void RegisterSensor(void *actor, std::string ros_name, std::string frame_id, bool publish_tf);
-    void UnregisterSensor(void *actor);
+  std::shared_ptr<ROS2NameRegistry> GetNameRegistry() {
+    return _name_registry;
+  }
 
-    void RegisterVehicle(void *actor, std::string ros_name, std::string frame_id, ActorCallback callback);
-    void UnregisterVehicle(void *actor);
+private:
+  bool _enabled{false};
+  TopicVisibilityDefaultMode _topic_visibility_default_mode{TopicVisibilityDefaultMode::eOn};
+  carla::rpc::RpcServerInterface* _carla_server{nullptr};
+  std::shared_ptr<ROS2NameRegistry> _name_registry{nullptr};
+  std::shared_ptr<carla::streaming::detail::Dispatcher> _dispatcher;
+  std::shared_ptr<DdsDomainParticipantImpl> _domain_participant_impl;
+  std::shared_ptr<carla::ros2::types::SensorActorDefinition> _world_observer_sensor_actor_definition;
 
-    // Receiving data to publish
-    void ProcessDataFromCamera(
-      uint64_t sensor_type,
-      const carla::geom::Transform sensor_transform,
-      const carla::SharedBufferView buffer,
-      void *actor = nullptr);
-    void ProcessDataFromGNSS(
-      uint64_t sensor_type,
-      const carla::geom::Transform sensor_transform,
-      const carla::geom::GeoLocation &data,
-      void *actor = nullptr);
-    void ProcessDataFromIMU(
-      uint64_t sensor_type,
-      const carla::geom::Transform sensor_transform,
-      carla::geom::Vector3D accelerometer,
-      carla::geom::Vector3D gyroscope,
-      float compass,
-      void *actor = nullptr);
-    void ProcessDataFromDVS(
-      uint64_t sensor_type,
-      const carla::geom::Transform sensor_transform,
-      const carla::SharedBufferView buffer,
-      void *actor = nullptr);
-    void ProcessDataFromLidar(
-      uint64_t sensor_type,
-      const carla::geom::Transform sensor_transform,
-      carla::sensor::data::LidarData &data,
-      void *actor = nullptr);
-    void ProcessDataFromSemanticLidar(
-      uint64_t sensor_type,
-      const carla::geom::Transform sensor_transform,
-      carla::sensor::data::SemanticLidarData &data,
-      void *actor = nullptr);
-    void ProcessDataFromRadar(
-      uint64_t sensor_type,
-      const carla::geom::Transform sensor_transform,
-      const carla::sensor::data::RadarData &data,
-      void *actor = nullptr);
-    void ProcessDataFromObstacleDetection(
-      uint64_t sensor_type,
-      const carla::geom::Transform sensor_transform,
-      AActor *first_actor,
-      AActor *second_actor,
-      float distance,
-      void *actor = nullptr);
-    void ProcessDataFromCollisionSensor(
-      uint64_t sensor_type,
-      const carla::geom::Transform sensor_transform,
-      uint32_t other_actor,
-      carla::geom::Vector3D impulse,
-      void* actor);
+  struct UeSensor {
+    UeSensor(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition_)
+      : sensor_actor_definition(sensor_actor_definition_) {}
+    std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition;
+    carla::ros2::types::V2XCustomSendCallback v2x_custom_send_callback{nullptr};
+    bool publisher_expected{true};
+    std::shared_ptr<UePublisherBaseSensor> publisher;
+    std::shared_ptr<ROS2Session> session;
+    carla::ros2::types::ActorSetTransformCallback actor_set_transform_callback{nullptr};
+  };
+  std::unordered_map<carla::streaming::detail::stream_id_type, UeSensor> _ue_sensors;
+  bool _ue_sensors_changed{false};
+  std::shared_ptr<TransformPublisher> _transform_publisher;
 
-  private:
-    std::shared_ptr<CarlaTransformPublisher> GetOrCreateTransformPublisher(void *actor);
-    std::shared_ptr<BasePublisher> GetOrCreateSensor(int type, void* actor);
+  std::shared_ptr<UeWorldPublisher> _world_publisher;
+
+  std::list<std::shared_ptr<carla::ros2::ServiceInterface>> _services;
+
+  std::shared_ptr<CarlaActorListPublisher> _carla_sensor_actor_list_publisher;
+
+  UeSensor* AddSensorUeInternal(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition);
+  void CreateSensorUePublisher(UeSensor& sensor);
 
   // sigleton
-  ROS2() {};
-
-  static std::shared_ptr<ROS2> _instance;
-
-  bool _enabled { false };
-  uint64_t _frame { 0 };
-  int32_t _seconds { 0 };
-  uint32_t _nanoseconds { 0 };
-
-  std::shared_ptr<CarlaClockPublisher> _clock_publisher;
-
-  // actor->parent relationship
-  std::unordered_map<void *, void *> _actor_parent_map;
-
-  std::unordered_map<void *, std::string> _registered_actors;
-  std::unordered_map<void *, std::string> _frame_ids;
-
-  std::unordered_map<void *, std::shared_ptr<BasePublisher>> _publishers;
-  std::unordered_multimap<void *, std::shared_ptr<BaseSubscriber>> _subscribers;
-  std::unordered_map<void *, ActorCallback> _actor_callbacks;
-
-  std::unordered_map<void *, bool> _tfs;
-  std::unordered_map<void *, std::shared_ptr<CarlaTransformPublisher>> _tf_publishers;
+  ROS2(){};
 };
 
-} // namespace ros2
-} // namespace carla
+}  // namespace ros2
+}  // namespace carla

@@ -83,7 +83,7 @@ set(CMAKE_C_COMPILER ${CC})
 set(CMAKE_CXX_COMPILER ${CXX})
 
 # disable -Werror since the boost 1.72 doesn't compile with ad_rss without warnings (i.e. the geometry headers)
-set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++14 -pthread -fPIC" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -std=c++17 -pthread -fPIC" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wall -Wextra -Wpedantic" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wdeprecated -Wshadow -Wuninitialized -Wunreachable-code" CACHE STRING "" FORCE)
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wpessimizing-move -Wold-style-cast -Wnull-dereference" CACHE STRING "" FORCE)
@@ -91,7 +91,7 @@ set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wduplicate-enum -Wnon-virtual-dtor -Wh
 set(CMAKE_CXX_FLAGS "\${CMAKE_CXX_FLAGS} -Wconversion -Wfloat-overflow-conversion" CACHE STRING "" FORCE)
 
 # @todo These flags need to be compatible with setup.py compilation.
-set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++14 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY" CACHE STRING "" FORCE)
+set(CMAKE_CXX_FLAGS_RELEASE_CLIENT "\${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG -g -fwrapv -O2 -Wall -Wstrict-prototypes -fno-strict-aliasing -Wdate-time -D_FORTIFY_SOURCE=2 -g -fstack-protector-strong -Wformat -Werror=format-security -fPIC -std=c++17 -Wno-missing-braces -DBOOST_ERROR_CODE_HEADER_ONLY" CACHE STRING "" FORCE)
 EOL
 
 # -- LIBCPP_TOOLCHAIN_FILE -----------------------------------------------------
@@ -962,22 +962,24 @@ if ${USE_ROS2} ; then
     # cp -r ${UE4_ROOT}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/include/c++/4.8.5/atomic ${FASTDDS_INCLUDE}
     # cp -r ${UE4_ROOT}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/lib64/libatomic* ${FASTDDS_LIB}
 
-    # we have to tweak the sources a bit to be able to compile with our boost version and without exceptions
+    # we have to tweak the sources a bit to be able to compile with our boost version
     if [[ -e ${FAST_DDS_LIB_SOURCE_DIR}/thirdparty/boost/include/boost ]]; then
       # remove their boost includes, but keep their entry point
       rm -rf ${FAST_DDS_LIB_SOURCE_DIR}/thirdparty/boost/include/boost
-      # ensure the find boost compiles without exceptions
-      sed -i s/"CXX_STANDARD 11"/"CXX_STANDARD 11\n         COMPILE_DEFINITIONS \"-DBOOST_NO_EXCEPTIONS\""/ ${FAST_DDS_LIB_SOURCE_DIR}/cmake/modules/FindThirdpartyBoost.cmake
-      sed -i s/"class ThirdpartyBoostCompileTest"/"#ifdef BOOST_NO_EXCEPTIONS\nnamespace boost {void throw_exception(std::exception const \& e) {}}\n#endif\nclass ThirdpartyBoostCompileTest"/ ${FAST_DDS_LIB_SOURCE_DIR}/thirdparty/boost/test/ThirdpartyBoostCompile_test.cpp
     fi
 
     mkdir -p ${FAST_DDS_LIB_SOURCE_DIR}/build
     pushd ${FAST_DDS_LIB_SOURCE_DIR}/build >/dev/null
-    # removed -DASIO_NO_EXCEPTIONS as fastdds makes usage of them.
+    # removed -DASIO_NO_EXCEPTIONS and -DBOOST_NO_EXCEPTIONS as fastdds makes usage of them.
+    # ensure to NOT disable ASIO_EXCEPTIONS and BOOST_EXCEPTIONS for DDS build!
+    # because these exceptions are actively deployed within FastDDS to detect e.g. if socket-addresses are already in use, etc.
+    # and reacts accordingly
+    # if we disable expections the exception is forwarded to CARLA server and the program gets finished, which is not desired
+    # behaviour
     cmake -G "Ninja" \
       -DCMAKE_INSTALL_PREFIX="${FASTDDS_INSTALL_DIR}" \
       -DFORCE_CXX="14" \
-      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} -DBOOST_NO_EXCEPTIONS ${UNREAL_HOSTED_CFLAGS}" \
+      -DCMAKE_CXX_FLAGS="-fPIC -std=c++14 -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH} ${UNREAL_HOSTED_CFLAGS}" \
       -DBUILD_SHARED_LIBS=OFF \
       -DBUILD_TESTING=OFF \
       -DCOMPILE_EXAMPLES=OFF \
@@ -1043,8 +1045,6 @@ endif ()
 add_definitions(-DLIBCARLA_TEST_CONTENT_FOLDER="${LIBCARLA_TEST_CONTENT_FOLDER}")
 
 set(BOOST_INCLUDE_PATH "${BOOST_INCLUDE}")
-set(FASTDDS_INCLUDE_PATH "${FASTDDS_INCLUDE}")
-set(FASTDDS_LIB_PATH "${FASTDDS_LIB}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Server")
   # Here libraries linking libc++.
@@ -1055,8 +1055,10 @@ if (CMAKE_BUILD_TYPE STREQUAL "Server")
   set(GTEST_INCLUDE_PATH "${GTEST_LIBCXX_INCLUDE}")
   set(GTEST_LIB_PATH "${GTEST_LIBCXX_LIBPATH}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "ros2")
-  list(APPEND CMAKE_PREFIX_PATH "${FASTDDS_INSTALL_DIR}")
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_LIBCXX_INCLUDE}")
+  set(FASTDDS_INCLUDE_PATH "${FASTDDS_INCLUDE}")
+  set(FASTDDS_LIB_PATH "${FASTDDS_LIB}")
+  set(FASTDDS_LIBRARIES "fastrtps fastcdr")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Pytorch")
   list(APPEND CMAKE_PREFIX_PATH "${LIBTORCH_PATH}")
   list(APPEND CMAKE_PREFIX_PATH "${LIBTORCHSCATTER_INSTALL_DIR}")

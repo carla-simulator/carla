@@ -12,7 +12,6 @@
 
 #include <compiler/disable-ue4-macros.h>
 #include "carla/geom/Math.h"
-#include "carla/ros2/ROS2.h"
 #include <compiler/enable-ue4-macros.h>
 
 #include "DrawDebugHelpers.h"
@@ -71,22 +70,10 @@ void ARayCastSemanticLidar::PostPhysTick(UWorld *World, ELevelTick TickType, flo
   SimulateLidar(DeltaTime);
 
   auto DataStream = GetDataStream(*this);
-  auto SensorTransform = DataStream.GetSensorTransform();
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("Send Stream");
     DataStream.SerializeAndSend(*this, SemanticLidarData, DataStream.PopBufferFromPool());
   }
-  // ROS2
-  #if defined(WITH_ROS2)
-  auto ROS2 = carla::ros2::ROS2::GetInstance();
-  if (ROS2->IsEnabled())
-  {
-    TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
-    AActor* ParentActor = GetAttachParentActor();
-    auto Transform = (ParentActor) ? GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : GetActorTransform();
-    ROS2->ProcessDataFromSemanticLidar(DataStream.GetSensorType(), Transform, SemanticLidarData, this);
-  }
-  #endif
 }
 
 void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)

@@ -103,12 +103,12 @@ namespace tcp {
           log_info("session", _session_id, ": error sending data :", ec.message());
           CloseNow(ec);
         } else {
-          DEBUG_ONLY(log_debug("session", _session_id, ": successfully sent", bytes, "bytes"));
+          DEBUG_ONLY(log_debug("session", _session_id, ": successfully sent", bytes, "bytes ", message->GetBufferDetailsAsString()));
           DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type) + message->size());
         }
       };
 
-      log_debug("session", _session_id, ": sending message of", message->size(), "bytes");
+      log_debug("session", _session_id, ": sending message of", message->size(), "bytes ", message->GetBufferDetailsAsString());
 
       _deadline.expires_from_now(_timeout);
       boost::asio::async_write(_socket, message->GetBufferSequence(), 

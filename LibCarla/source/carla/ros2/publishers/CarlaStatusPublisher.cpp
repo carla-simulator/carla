@@ -1,0 +1,37 @@
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
+#include "CarlaStatusPublisher.h"
+
+#include "carla/ros2/impl/DdsPublisherImpl.h"
+
+namespace carla {
+namespace ros2 {
+
+CarlaStatusPublisher::CarlaStatusPublisher()
+  : PublisherBaseSensor(carla::ros2::types::ActorNameDefinition::CreateFromRoleName("status")),
+    _impl(std::make_shared<CarlaStatusPublisherImpl>()) {}
+
+bool CarlaStatusPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
+  // provide the status transient local to ensure if CARLA is stuck and someone wants to query the synchronization status,
+  // then the last published state is still available and one is able to detect for what CARLA is waiting
+  auto topic_qos = get_topic_qos();
+  topic_qos.transient_local();
+  return _impl->Init(domain_participant, get_topic_name(), topic_qos);
+}
+
+bool CarlaStatusPublisher::Publish() {
+  return _impl->Publish();
+}
+
+bool CarlaStatusPublisher::SubscribersConnected() const {
+  return _impl->SubscribersConnected();
+}
+
+void CarlaStatusPublisher::UpdateCarlaStatus(const carla_msgs::msg::CarlaStatus& status) {
+  _impl->Message() = status;
+  _impl->SetMessageUpdated();
+}
+}  // namespace ros2
+}  // namespace carla

@@ -199,10 +199,18 @@ public class Carla : ModuleRules
       if (UseDebugLibs(Target))
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
+        if (UsingRos2)
+        {
+          PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_fastdds_debug")));
+        }
       }
       else
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
+        if (UsingRos2)
+        {
+          PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_fastdds")));
+        }
       }
       if (UsingChrono)
       {
@@ -230,10 +238,18 @@ public class Carla : ModuleRules
       if (UseDebugLibs(Target))
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server_debug")));
+        if (UsingRos2)
+        {
+          PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_fastdds_debug")));
+        }
       }
       else
       {
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_server")));
+        if (UsingRos2)
+        {
+          PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_fastdds")));
+        }
       }
       if (UsingChrono)
       {
@@ -318,11 +334,8 @@ public class Carla : ModuleRules
         PublicAdditionalLibraries.Add("stdc++");
         PublicAdditionalLibraries.Add("/usr/lib/x86_64-linux-gnu/libpython3.9.so");
       }
-
       if (UsingRos2)
       {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_fastdds")));
-
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfoonathan_memory-0.7.3.a"));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfastcdr.a"));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfastrtps.a"));
@@ -344,6 +357,12 @@ public class Carla : ModuleRules
 
     PublicIncludePaths.Add(LibCarlaIncludePath);
     PrivateIncludePaths.Add(LibCarlaIncludePath);
+
+    if ( UsingRos2 )
+    {
+      PublicIncludePaths.Add(Path.Combine(LibCarlaIncludePath, "carla", "ros2", "ros_types"));
+      PrivateIncludePaths.Add(Path.Combine(LibCarlaIncludePath, "carla", "ros2", "ros_types"));
+    }
 
     PublicDefinitions.Add("ASIO_NO_EXCEPTIONS");
     PublicDefinitions.Add("BOOST_NO_EXCEPTIONS");

@@ -12,6 +12,12 @@
 #include "carla/sensor/data/LidarData.h"
 
 namespace carla {
+
+namespace ros2 {
+  template <class HEADER_TYPE, class DATA_TYPE>
+  class UePublisherBasePointCloud;
+} // namespace ros2
+
 namespace sensor {
 
   class SensorData;
@@ -54,6 +60,7 @@ namespace s11n {
 
   private:
     friend class LidarSerializer;
+    friend class carla::ros2::UePublisherBasePointCloud<LidarHeaderView, carla::sensor::data::LidarDetection>;
 
     explicit LidarHeaderView(const uint32_t *begin) : _begin(begin) {
       DEBUG_ASSERT(_begin != nullptr);
