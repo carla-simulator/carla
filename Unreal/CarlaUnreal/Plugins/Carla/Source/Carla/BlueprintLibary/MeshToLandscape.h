@@ -15,6 +15,18 @@ class ULandscapeComponent;
 class AStaticMeshActor;
 class UStaticMeshComponent;
 
+USTRUCT(BlueprintType)
+struct CARLA_API FHitDisplacementEntry
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MeshToLandscapeUtil")
+    FString Pattern;
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "MeshToLandscapeUtil")
+    double Displacement;
+};
+
 UCLASS(BlueprintType)
 class CARLA_API UMeshToLandscapeUtil :
     public UBlueprintFunctionLibrary
@@ -44,7 +56,9 @@ public:
     static ALandscape* ConvertMeshesToLandscape(
         const TArray<UActorComponent*>& Components,
         int32 SubsectionSizeQuads,
-        int32 NumSubsections);
+        int32 NumSubsections,
+        int32 SampleFrequency,
+        const TArray<FHitDisplacementEntry>& HitDisplacementMap);
 
     UFUNCTION(BlueprintCallable, Category="CarlaTools", meta=(WorldContext="WorldContextObject"))
     static void EnumerateLandscapeLikeStaticMeshComponents(

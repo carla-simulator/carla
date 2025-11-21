@@ -230,24 +230,23 @@ void UMeshToLandscapeUtil::FilterComponentsByPatterns(
 ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	const TArray<UActorComponent*>& Components,
 	int32 SubsectionSizeQuads,
-	int32 NumSubsections)
+	int32 NumSubsections,
+	int32 SampleFrequency,
+	const TArray<FHitDisplacementEntry>& HitDisplacementMap)
 {
+#if WITH_EDITOR
 	if (Components.Num() == 0)
 		return nullptr;
-	
-	UWorld* World = Components[0]->GetWorld();
 
-	double Scale = 100.0;
+	int32 ComponentSizeQuads = SubsectionSizeQuads * NumSubsections;
 
-	auto EncodeZ = [&](double Z)
+	if (ComponentSizeQuads == 0)
 	{
-		const uint16 U16Max = TNumericLimits<uint16>::Max();
-		Z /= Scale;
-		Z += 256.0;
-		Z /= 512.0;
-		Z *= (double)U16Max;
-		return std::min<uint16>((uint16)std::lround(Z), U16Max);
-	};
+		// @TODO: Add Warning.
+		return nullptr;
+	}
+
+	UWorld* World = Components[0]->GetWorld();
 
 	FBox3d Bounds = FBox3d(ForceInit);
 
@@ -271,31 +270,41 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 		}
 	}
 
-	int32 ComponentSizeQuads = SubsectionSizeQuads * NumSubsections;
-	
 	FVector3d Max = Bounds.Max;
 	FVector3d Min = Bounds.Min;
 	FVector3d Range = Max - Min;
-	FVector3d Center = (Max + Min) / 2;
-	FIntPoint RangeMeters = FIntPoint( // QuadCount
-		(int32)std::lround(Range.X * UE_CM_TO_M),
-		(int32)std::lround(Range.Y * UE_CM_TO_M));
-	FIntPoint HeightmapExtent = RangeMeters;
+	FVector3d Center = Bounds.GetCenter();
 
-	int32 HeightmapNum = HeightmapExtent.X * HeightmapExtent.Y;
+	FVector3d RangeMeters = Range * UE_CM_TO_M;
+	FIntPoint DesiredVertexCount = FIntPoint(
+		FMath::Max(1, (int32)FMath::CeilToInt(RangeMeters.X * SampleFrequency) + 1),
+		FMath::Max(1, (int32)FMath::CeilToInt(RangeMeters.Y * SampleFrequency) + 1));
+
+	FIntPoint DesiredQuadCount = (DesiredVertexCount - FIntPoint(1)).ComponentMax(FIntPoint(1));
+	FIntPoint ComponentSizeQuads2 = FIntPoint(ComponentSizeQuads);
+	FIntPoint RequiredQuadCount =
+		((DesiredQuadCount + ComponentSizeQuads2 - 1) / ComponentSizeQuads2) *
+		ComponentSizeQuads2;
+	FIntPoint HeightmapExtent =
+		RequiredQuadCount +
+		FIntPoint(1);
+
+	auto EncodeZ = [/* This will be invoked in a ParallelFor! */ &](double Z)
+	{
+		const uint16 U16Max = TNumericLimits<uint16>::Max();
+		Z -= Min.Z;
+		Z /= 100.0;
+		Z += 256.0;
+		Z /= 512.0;
+		return (uint16)std::lround(Z * U16Max);
+	};
 
 	TArray<uint16_t> HeightmapData;
 	HeightmapData.SetNumZeroed(HeightmapExtent.X * HeightmapExtent.Y);
 
-	if (HeightmapData.Num() == 0)
-	{
-		// @TODO: Add Warning.
-		return nullptr;
-	}
+	FVector2d CellSize = FVector2d(Range) / (FVector2d(HeightmapExtent) - FVector2d(1.0));
 
 	{
-		FVector2d CellSize = FVector2d(Range) / (FVector2d(HeightmapExtent) - FVector2d(1.0));
-
 		const TSet<UActorComponent*> ComponentMap(Components);
 		TArray<TPair<FVector3d, FVector3d>> Failures;
 		FCriticalSection FailuresCS;
@@ -314,7 +323,7 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 			FVector3d Begin = FVector3d(XY.X, XY.Y, Max.Z);
 			FVector3d End = FVector3d(XY.X, XY.Y, Min.Z);
 			FHitResult Hit;
-			double HitZ = 0.0F;
+			double HitZ = 0.0;
 
 			FCollisionQueryParams CQParams = FCollisionQueryParams::DefaultQueryParam;
 			CQParams.bTraceComplex = true;
@@ -347,6 +356,18 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 				if (ComponentMap.Contains(Hit.GetComponent()))
 				{
 					HitZ = Hit.Location.Z;
+					FString TestName;
+					double ZDisplacement = 0.0;
+					for (auto& [Pattern, Displacement] : HitDisplacementMap)
+					{
+						Hit.GetComponent()->GetName(TestName);
+						if (TestName.MatchesWildcard(Pattern))
+							ZDisplacement = std::abs(Displacement) > std::abs(ZDisplacement) ? Displacement : ZDisplacement;
+						Hit.GetActor()->GetName(TestName);
+						if (TestName.MatchesWildcard(Pattern))
+							ZDisplacement = std::abs(Displacement) > std::abs(ZDisplacement) ? Displacement : ZDisplacement;
+					}
+					HitZ += ZDisplacement;
 					break;
 				}
 				CQParams.AddIgnoredComponent(Hit.GetComponent());
@@ -407,25 +428,26 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 		FVector3d::ZeroVector,
 		FRotator::ZeroRotator,
 		SpawnParams);
+
 	FGuid LandscapeGUID = FGuid::NewGuid();
 
 	Landscape->ComponentSizeQuads = ComponentSizeQuads;
 	Landscape->SubsectionSizeQuads = SubsectionSizeQuads;
 	Landscape->NumSubsections = NumSubsections;
+	Landscape->bUseCompressedHeightmapStorage = true;
 
-	Landscape->SetLandscapeGuid(LandscapeGUID);
-	Landscape->CreateLandscapeInfo();
-	Landscape->SetActorTransform(FTransform(
-		FQuat::Identity,
-		FVector3d(Min.X, Min.Y, 0.0),
-		FVector3d(100.0)));
-	
 	TMap<FGuid, TArray<uint16>> LayerHeightMaps;
 	LayerHeightMaps.Add(FGuid(), MoveTemp(HeightmapData));
 
 	TMap<FGuid, TArray<FLandscapeImportLayerInfo>> LayerImportInfos;
 	LayerImportInfos.Add(FGuid(), TArray<FLandscapeImportLayerInfo>());
-	
+
+	FVector3d LandscapeScale = FVector3d(CellSize, 100.0);
+	Landscape->SetActorTransform(FTransform(
+		FQuat::Identity,
+		Min,
+		LandscapeScale));
+
 	Landscape->Import(
 		LandscapeGUID,
 		0, 0,
@@ -434,19 +456,22 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 		LayerHeightMaps,
 		nullptr,
 		LayerImportInfos,
-		ELandscapeImportAlphamapType::Layered);
+		ELandscapeImportAlphamapType::Additive,
+		TArrayView<const FLandscapeLayer>());
 
-	// Landscape->EnableNaniteSkirts(true, 0.1F, false);
+	Landscape->SetLandscapeGuid(LandscapeGUID);
 
-#if WITH_EDITOR
-	Landscape->RegisterAllComponents();
+	Landscape->CreateLandscapeInfo();
+
+	Landscape->ReregisterAllComponents();
 	Landscape->RecreateCollisionComponents();
 	Landscape->PostEditChange();
-	Landscape->CreateLandscapeInfo();
 	Landscape->MarkPackageDirty();
-#endif
 
 	return Landscape;
+#else
+	return nullptr;
+#endif
 }
 
 void UMeshToLandscapeUtil::EnumerateLandscapeLikeStaticMeshComponents(
