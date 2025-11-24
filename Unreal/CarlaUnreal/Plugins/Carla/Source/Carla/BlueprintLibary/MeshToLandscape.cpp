@@ -17,11 +17,16 @@
 static TAutoConsoleVariable<int32> CVDrawDebugLandscapeTraces(
 	TEXT("CARLA.DrawDebugLandscapeTraces"),
 	0,
-	TEXT("Whether to debug-draw the traces during landscape construction from static mesh components."));
+	TEXT("Whether to debug-draw the traces during landscape construction."));
+
+static TAutoConsoleVariable<int32> CVDrawDebugLandscapeTraceFailures(
+	TEXT("CARLA.DrawDebugLandscapeTraceFailures"),
+	0,
+	TEXT("Whether to debug-draw trace failures during landscape construction."));
 
 static TAutoConsoleVariable<int32> CVMeshToLandscapeMaxTraceRetries(
 	TEXT("CARLA.MeshToLandscape.MaxTraceRetries"),
-	256,
+	16,
 	TEXT("Max parallel line trace retries."));
 
 static TAutoConsoleVariable<int32> CVDrawDebugBoxes(
@@ -88,7 +93,13 @@ void UMeshToLandscapeUtil::FilterInvalidStaticMeshComponents(
 		UStaticMesh* SM = SMC->GetStaticMesh();
 		if (SM != nullptr) // Some SMCs have NULL SM.
 		{
-			if (SM->HasValidRenderData() && (!SM->IsNaniteEnabled() || SM->HasValidNaniteData()))
+			bool OK = SM->HasValidRenderData();
+			OK = OK && (
+#if WITH_EDITOR
+				!SM->IsNaniteEnabled() ||
+#endif
+				SM->HasValidNaniteData());
+			if (OK)
 			{
 				++i;
 				continue;
@@ -234,7 +245,6 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	int32 SampleFrequency,
 	const TArray<FHitDisplacementEntry>& HitDisplacementMap)
 {
-#if WITH_EDITOR
 	if (Components.Num() == 0)
 		return nullptr;
 
@@ -293,9 +303,10 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	{
 		const uint16 U16Max = TNumericLimits<uint16>::Max();
 		Z -= Min.Z;
-		Z /= 100.0;
+		Z *= UE_CM_TO_M;
 		Z += 256.0;
 		Z /= 512.0;
+		Z = std::clamp(Z, 0.0, 1.0);
 		return (uint16)std::lround(Z * U16Max);
 	};
 
@@ -314,14 +325,27 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 		auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(
 			World->GetPhysicsScene());
 
+		std::array<FVector2d, 8> Ring;
+
+		constexpr double I2R = 2.0 * PI / (double)Ring.size();
+		double MaxOffsetRadius = CellSize.GetMin() / 2.0;
+		for (size_t i = 0; i != Ring.size(); ++i)
+		{
+			FVector2d D;
+			FMath::SinCos(&D.Y, &D.X, (double)i * I2R);
+			Ring[i] = D;
+		}
+
 		ParallelFor(HeightmapData.Num(), [&](int32 Index)
 		{
 			int32 Y = Index / HeightmapExtent.X;
 			int32 X = Index % HeightmapExtent.X;
 
 			FVector2d XY = FVector2d(Min) + CellSize * FVector2d(X, Y);
-			FVector3d Begin = FVector3d(XY.X, XY.Y, Max.Z);
-			FVector3d End = FVector3d(XY.X, XY.Y, Min.Z);
+			FVector3d Begin0 = FVector3d(XY.X, XY.Y, Max.Z);
+			FVector3d End0 = FVector3d(XY.X, XY.Y, Min.Z);
+			FVector3d Begin = Begin0;
+			FVector3d End = End0;
 			FHitResult Hit;
 			double HitZ = 0.0;
 
@@ -344,28 +368,36 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 					ECollisionChannel::ECC_GameTraceChannel2,
 					CQParams))
 				{
-					// double dx = PRNG.FRandRange(0.0, UE_CM_TO_M * 5);
-					// double dy = PRNG.FRandRange(0.0, UE_CM_TO_M * 5);
-					// Begin.X += dx;
-					// Begin.Y += dy;
-					// End.X += dx;
-					// End.Y += dy;
-					// continue;
-					break;
+					int32 Index = PRNG.RandRange(0, (int32)Ring.size() - 1);
+					FVector3d Offset = FVector3d(Ring[Index], 0.0);
+					Offset *= PRNG.FRandRange(0.0, MaxOffsetRadius);
+					Begin = Begin0 + Offset;
+					End = End0 + Offset;
+					continue;
 				}
-				if (ComponentMap.Contains(Hit.GetComponent()))
+
+				UPrimitiveComponent* HitComponent = Hit.GetComponent();
+				if (ComponentMap.Contains(HitComponent))
 				{
 					HitZ = Hit.Location.Z;
 					FString TestName;
 					double ZDisplacement = 0.0;
 					for (auto& [Pattern, Displacement] : HitDisplacementMap)
 					{
-						Hit.GetComponent()->GetName(TestName);
+						if (std::abs(Displacement) <= std::abs(ZDisplacement))
+							continue;
+						TestName = UKismetSystemLibrary::GetDisplayName(HitComponent);
 						if (TestName.MatchesWildcard(Pattern))
-							ZDisplacement = std::abs(Displacement) > std::abs(ZDisplacement) ? Displacement : ZDisplacement;
-						Hit.GetActor()->GetName(TestName);
+						{
+							ZDisplacement = Displacement;
+							continue;
+						}
+						TestName = UKismetSystemLibrary::GetDisplayName(HitComponent->GetOwner());
 						if (TestName.MatchesWildcard(Pattern))
-							ZDisplacement = std::abs(Displacement) > std::abs(ZDisplacement) ? Displacement : ZDisplacement;
+						{
+							ZDisplacement = Displacement;
+							continue;
+						}
 					}
 					HitZ += ZDisplacement;
 					break;
@@ -406,19 +438,27 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 				FVector3d End = FVector3d(XY.X, XY.Y, Min.Z);
 				DrawDebugLine(World, Begin, End, FColor::Green, false, 10.0F);
 			}
+		}
 
+		if (CVDrawDebugLandscapeTraceFailures.GetValueOnAnyThread())
+		{
 			for (auto [Begin, End] : Failures)
 				DrawDebugLine(World, Begin, End, FColor::Red, false, 20.0F);
 		}
 
-		for (auto [Begin, End] : Failures)
+		if (Failures.Num() != 0 && false)
 		{
-			UE_LOG(
-				LogCarla,
-				Warning,
-				TEXT("Failed to trace against world from (%f, %f, %f) to (%f, %f, %f), too many objects."),
-				Begin.X, Begin.Y, Begin.Z,
-				End.X, End.Y, End.Z);
+			FString FailureString;
+			for (auto [Begin, End] : Failures)
+			{
+				FailureString += FString::Printf(
+					TEXT("Failed to trace against world from (%f, %f, %f) to (%f, %f, %f), too many objects.\n"),
+					Begin.X, Begin.Y, Begin.Z,
+					End.X, End.Y, End.Z);
+			}
+			FFileHelper::SaveStringToFile(
+				FailureString,
+				*FString::Printf(TEXT("TraceFailures.txt")));
 		}
 	}
 
@@ -463,15 +503,14 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 
 	Landscape->CreateLandscapeInfo();
 
+#if WITH_EDITOR
 	Landscape->ReregisterAllComponents();
 	Landscape->RecreateCollisionComponents();
 	Landscape->PostEditChange();
 	Landscape->MarkPackageDirty();
+#endif
 
 	return Landscape;
-#else
-	return nullptr;
-#endif
 }
 
 void UMeshToLandscapeUtil::EnumerateLandscapeLikeStaticMeshComponents(
