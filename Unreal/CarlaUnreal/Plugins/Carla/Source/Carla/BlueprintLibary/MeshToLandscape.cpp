@@ -245,6 +245,7 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	int32 SampleFrequency,
 	const TArray<FHitDisplacementEntry>& HitDisplacementMap)
 {
+#if WITH_EDITOR
 	if (Components.Num() == 0)
 		return nullptr;
 
@@ -503,14 +504,15 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 
 	Landscape->CreateLandscapeInfo();
 
-#if WITH_EDITOR
 	Landscape->ReregisterAllComponents();
 	Landscape->RecreateCollisionComponents();
 	Landscape->PostEditChange();
 	Landscape->MarkPackageDirty();
-#endif
 
 	return Landscape;
+#else
+	return nullptr;
+#endif
 }
 
 void UMeshToLandscapeUtil::EnumerateLandscapeLikeStaticMeshComponents(
