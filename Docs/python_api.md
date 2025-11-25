@@ -3272,6 +3272,11 @@ Returns the physics angle in degrees of a vehicle's wheel.
     - **Return:** _float_  
     - **Note:** <font color="#8E8E8E">_Returns the angle based on the physics of the wheel, not the visual angle.
 _</font>  
+- <a name="carla.Vehicle.get_wheel_pitch_angle"></a>**<font color="#7fb800">get_wheel_pitch_angle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>)
+Returns the pitch angle in degrees of a vehicle's wheel.
+    - **Parameters:**
+        - `wheel_location` (_[carla.VehicleWheelLocation](#carla.VehicleWheelLocation)_)
+    - **Return:** _float_
 - <a name="carla.Vehicle.get_wheel_height"></a>**<font color="#7fb800">get_wheel_height</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>)
 Returns the height of a vehicle's wheel.
     - **Parameters:**
@@ -3296,6 +3301,11 @@ Sets the angle of a vehicle's wheel visually.
         - `angle_in_deg` (_float_)  
     - **Warning:** <font color="#ED2F2F">_Does not affect the physics of the vehicle.
 _</font>
+- <a name="carla.Vehicle.set_wheel_pitch_angle"></a>**<font color="#7fb800">set_wheel_pitch_angle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>, <font color="#00a6ed">**angle_in_deg**</font>)
+Sets the pitch angle of a vehicle's wheel visually.
+    - **Parameters:**
+        - `wheel_location` (_[carla.VehicleWheelLocation](#carla.VehicleWheelLocation)_)
+        - `angle_in_deg` (_float_)
 - <a name="carla.Vehicle.set_wheel_height"></a>**<font color="#7fb800">set_wheel_height</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>, <font color="#00a6ed">**height**</font>)
 Sets the height of a vehicle's wheel visually.
     - **Parameters:**
