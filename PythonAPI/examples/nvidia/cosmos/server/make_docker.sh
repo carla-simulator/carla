@@ -108,7 +108,7 @@ if [ ! -d "cosmos-transfer1" ]; then
     print_status "Cloning cosmos-transfer1 repository..."
     git clone --recursive https://github.com/nvidia-cosmos/cosmos-transfer1.git
     cd cosmos-transfer1
-    git switch -c transfer1-stable 6f6701d1259bd4021457923e752b1924644dd089
+    git switch -c transfer1-stable dddf6aff7beaa82f81ad972773c152601fd0c934
     
 else
     cd cosmos-transfer1
