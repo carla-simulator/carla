@@ -43,7 +43,7 @@ python3 -m pip install --upgrade pip
 
 ### Download and extract a CARLA package
 
-Download the desired CARLA package from GitHub using the link provided below. We recommend downloading the Package for the latest release, which is currently [0.9.15](https://github.com/carla-simulator/carla/releases/tag/0.9.15/).
+Download the desired CARLA package from GitHub using the link provided below. We recommend downloading the Package for the latest release, which is currently [0.9.16](https://github.com/carla-simulator/carla/releases/tag/0.9.16/).
 
 <div class="build-buttons">
 <p>
