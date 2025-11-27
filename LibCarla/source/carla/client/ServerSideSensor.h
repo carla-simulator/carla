@@ -52,15 +52,6 @@ namespace client {
       return listening_mask.test(id + 1);
     }
 
-    /// Enable this sensor for ROS2 publishing
-    void EnableForROS();
-
-    /// Disable this sensor for ROS2 publishing
-    void DisableForROS();
-
-    /// Return if the sensor is publishing for ROS2
-    bool IsEnabledForROS();
-
     /// Send data via this sensor
     void Send(const rpc::CustomV2XBytes &data);
 

@@ -14,66 +14,24 @@ install(FILES ${libcarla_carla_rpclib} DESTINATION lib)
 
 install(DIRECTORY "${libcarla_source_path}/compiler" DESTINATION include)
 
-file(GLOB libcarla_carla_headers "${libcarla_source_path}/carla/*.h")
-install(FILES ${libcarla_carla_headers} DESTINATION include/carla)
+foreach(dir "" 
+            "actors/"
+            "geom/"
+            "opendrive/" "opendrive/parser/"
+            "profiler/"
+            "road/" "road/element/" "road/general/" "road/object/" "road/signal/"
+            "rpc/"
+            "sensor/" "sensor/data/" "sensor/s11n/"
+            "streaming/" "streaming/detail/" "streaming/detail/tcp/" "streaming/low_level/"
+            "multigpu/"
+            "ros2/")
 
-file(GLOB libcarla_carla_geom_headers "${libcarla_source_path}/carla/geom/*.h")
-install(FILES ${libcarla_carla_geom_headers} DESTINATION include/carla/geom)
+  file(GLOB headers "${libcarla_source_path}/carla/${dir}*.h")
+  install(FILES ${headers} DESTINATION include/carla/${dir})
 
-file(GLOB libcarla_carla_opendrive "${libcarla_source_path}/carla/opendrive/*.h")
-install(FILES ${libcarla_carla_opendrive} DESTINATION include/carla/opendrive)
+endforeach()
 
-file(GLOB libcarla_carla_opendrive_parser "${libcarla_source_path}/carla/opendrive/parser/*.h")
-install(FILES ${libcarla_carla_opendrive_parser} DESTINATION include/carla/opendrive/parser)
-
-file(GLOB libcarla_carla_profiler_headers "${libcarla_source_path}/carla/profiler/*.h")
-install(FILES ${libcarla_carla_profiler_headers} DESTINATION include/carla/profiler)
-
-file(GLOB libcarla_carla_road_headers "${libcarla_source_path}/carla/road/*.h")
-install(FILES ${libcarla_carla_road_headers} DESTINATION include/carla/road)
-
-file(GLOB libcarla_carla_road_element_headers "${libcarla_source_path}/carla/road/element/*.h")
-install(FILES ${libcarla_carla_road_element_headers} DESTINATION include/carla/road/element)
-
-file(GLOB libcarla_carla_road_general_headers "${libcarla_source_path}/carla/road/general/*.h")
-install(FILES ${libcarla_carla_road_general_headers} DESTINATION include/carla/road/general)
-
-file(GLOB libcarla_carla_road_object_headers "${libcarla_source_path}/carla/road/object/*.h")
-install(FILES ${libcarla_carla_road_object_headers} DESTINATION include/carla/road/object)
-
-file(GLOB libcarla_carla_road_signal_headers "${libcarla_source_path}/carla/road/signal/*.h")
-install(FILES ${libcarla_carla_road_signal_headers} DESTINATION include/carla/road/signal)
-
-file(GLOB libcarla_carla_rpc_headers "${libcarla_source_path}/carla/rpc/*.h")
-install(FILES ${libcarla_carla_rpc_headers} DESTINATION include/carla/rpc)
-
-file(GLOB libcarla_carla_sensor_headers "${libcarla_source_path}/carla/sensor/*.h")
-install(FILES ${libcarla_carla_sensor_headers} DESTINATION include/carla/sensor)
-
-file(GLOB libcarla_carla_sensor_data_headers "${libcarla_source_path}/carla/sensor/data/*.h")
-install(FILES ${libcarla_carla_sensor_data_headers} DESTINATION include/carla/sensor/data)
-
-file(GLOB libcarla_carla_sensor_s11n_headers "${libcarla_source_path}/carla/sensor/s11n/*.h")
-install(FILES ${libcarla_carla_sensor_s11n_headers} DESTINATION include/carla/sensor/s11n)
-
-file(GLOB libcarla_carla_streaming_headers "${libcarla_source_path}/carla/streaming/*.h")
-install(FILES ${libcarla_carla_streaming_headers} DESTINATION include/carla/streaming)
-
-file(GLOB libcarla_carla_streaming_detail_headers "${libcarla_source_path}/carla/streaming/detail/*.h")
-install(FILES ${libcarla_carla_streaming_detail_headers} DESTINATION include/carla/streaming/detail)
-
-file(GLOB libcarla_carla_streaming_detail_tcp_headers "${libcarla_source_path}/carla/streaming/detail/tcp/*.h")
-install(FILES ${libcarla_carla_streaming_detail_tcp_headers} DESTINATION include/carla/streaming/detail/tcp)
-
-file(GLOB libcarla_carla_streaming_low_level_headers "${libcarla_source_path}/carla/streaming/low_level/*.h")
-install(FILES ${libcarla_carla_streaming_low_level_headers} DESTINATION include/carla/streaming/low_level)
-
-file(GLOB libcarla_carla_multigpu_headers "${libcarla_source_path}/carla/multigpu/*.h")
-install(FILES ${libcarla_carla_multigpu_headers} DESTINATION include/carla/multigpu)
-
-file(GLOB libcarla_carla_ros2_headers "${libcarla_source_path}/carla/ros2/*.h")
-install(FILES ${libcarla_carla_ros2_headers} DESTINATION include/carla/ros2)
-
+# Install boost headers and libraries.
 install(DIRECTORY "${BOOST_INCLUDE_PATH}/boost" DESTINATION include)
 
 if(WIN32)
@@ -85,45 +43,40 @@ if(WIN32)
 endif()
 
 # carla_server library.
+# first the sources which are picked from some directories
+set(libcarla_server_sources
+  "${libcarla_source_path}/carla/Buffer.cpp"
+  "${libcarla_source_path}/carla/Exception.cpp"
+  "${libcarla_source_path}/carla/StringUtil.cpp"
+  # other cpp files only define Deserialize used in client
+  "${libcarla_source_path}/carla/sensor/s11n/SensorHeaderSerializer.cpp"
+  )
+# then the globs on the folders to add as a whole
+foreach(dir 
+      "actors"
+      "geom"
+      "opendrive" "opendrive/parser" 
+      "profiler"
+      "road" "road/element" "road/general" "road/object" "road/signal"
+      "rpc"
+      "sensor" "sensor/data"
+      "streaming" "streaming/detail" "streaming/detail/tcp" "streaming/low_level"
+      "multigpu")
 
-file(GLOB libcarla_server_sources
-    "${libcarla_source_path}/carla/*.h"
-    "${libcarla_source_path}/carla/Buffer.cpp"
-    "${libcarla_source_path}/carla/Exception.cpp"
-    "${libcarla_source_path}/carla/geom/*.cpp"
-    "${libcarla_source_path}/carla/geom/*.h"
-    "${libcarla_source_path}/carla/opendrive/*.cpp"
-    "${libcarla_source_path}/carla/opendrive/*.h"
-    "${libcarla_source_path}/carla/opendrive/parser/*.cpp"
-    "${libcarla_source_path}/carla/opendrive/parser/*.h"
-    "${libcarla_source_path}/carla/road/*.cpp"
-    "${libcarla_source_path}/carla/road/*.h"
-    "${libcarla_source_path}/carla/road/element/*.cpp"
-    "${libcarla_source_path}/carla/road/element/*.h"
-    "${libcarla_source_path}/carla/road/general/*.cpp"
-    "${libcarla_source_path}/carla/road/general/*.h"
-    "${libcarla_source_path}/carla/road/object/*.cpp"
-    "${libcarla_source_path}/carla/road/object/*.h"
-    "${libcarla_source_path}/carla/road/signal/*.cpp"
-    "${libcarla_source_path}/carla/road/signal/*.h"
-    "${libcarla_source_path}/carla/rpc/*.cpp"
-    "${libcarla_source_path}/carla/rpc/*.h"
-    "${libcarla_source_path}/carla/sensor/*.h"
-    "${libcarla_source_path}/carla/sensor/s11n/*.h"
-    "${libcarla_source_path}/carla/sensor/s11n/SensorHeaderSerializer.cpp"
-    "${libcarla_source_path}/carla/streaming/*.h"
-    "${libcarla_source_path}/carla/streaming/detail/*.cpp"
-    "${libcarla_source_path}/carla/streaming/detail/*.h"
-    "${libcarla_source_path}/carla/streaming/detail/tcp/*.cpp"
-    "${libcarla_source_path}/carla/streaming/low_level/*.h"
-    "${libcarla_source_path}/carla/multigpu/*.h"
-    "${libcarla_source_path}/carla/multigpu/*.cpp"
-    "${libcarla_source_thirdparty_path}/odrSpiral/*.cpp"
-    "${libcarla_source_thirdparty_path}/odrSpiral/*.h"
-    "${libcarla_source_thirdparty_path}/moodycamel/*.cpp"
-    "${libcarla_source_thirdparty_path}/moodycamel/*.h"
-    "${libcarla_source_thirdparty_path}/pugixml/*.cpp"
-    "${libcarla_source_thirdparty_path}/pugixml/*.hpp")
+  file(GLOB sources "${libcarla_source_path}/carla/${dir}/*.cpp")
+  list(APPEND libcarla_server_sources ${sources})
+
+endforeach()
+
+foreach(thirdparty_dir
+        "odrSpiral"
+        "moodycamel"
+        "pugixml")
+
+  file(GLOB sources "${libcarla_source_thirdparty_path}/${thirdparty_dir}/*.cpp")
+  list(APPEND libcarla_server_sources ${sources})
+
+endforeach()
 
 # ==============================================================================
 # Create targets for debug and release in the same build type.

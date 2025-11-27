@@ -10,7 +10,7 @@
 #include "carla/Exception.h"
 #include "carla/Logging.h"
 #include "carla/RecurrentSharedFuture.h"
-#include "carla/client/BlueprintLibrary.h"
+#include "carla/actors/BlueprintLibrary.h"
 #include "carla/client/FileTransfer.h"
 #include "carla/client/Map.h"
 #include "carla/client/Sensor.h"
@@ -246,9 +246,9 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   // -- Access to global objects in the episode --------------------------------
   // ===========================================================================
 
-  SharedPtr<BlueprintLibrary> Simulator::GetBlueprintLibrary() {
+  SharedPtr<actors::BlueprintLibrary> Simulator::GetBlueprintLibrary() {
     auto defs = _client.GetActorDefinitions();
-    return MakeShared<BlueprintLibrary>(std::move(defs));
+    return MakeShared<actors::BlueprintLibrary>(std::move(defs));
   }
 
   rpc::VehicleLightStateList Simulator::GetVehiclesLightStates() {
@@ -350,7 +350,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   // ===========================================================================
 
     SharedPtr<Actor> Simulator::SpawnActor(
-      const ActorBlueprint &blueprint,
+      const actors::ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent,
       rpc::AttachmentType attachment_type,
@@ -394,6 +394,19 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     return success;
   }
 
+  void Simulator::EnableForROS(const Actor &actor) {
+    _client.EnableForROS(actor.GetId());
+  }
+
+  void Simulator::DisableForROS(const Actor &actor) {
+    _client.DisableForROS(actor.GetId());
+  }
+
+  bool Simulator::IsEnabledForROS(const Actor &actor) {
+    return _client.IsEnabledForROS(actor.GetId());
+  }
+
+
   // ===========================================================================
   // -- Operations with sensors ------------------------------------------------
   // ===========================================================================
@@ -418,18 +431,6 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   void Simulator::UnSubscribeFromSensor(Actor &sensor) {
     _client.UnSubscribeFromStream(sensor.GetActorDescription().GetStreamToken());
     // If in the future we need to unsubscribe from each gbuffer individually, it should be done here.
-  }
-
-  void Simulator::EnableForROS(const Sensor &sensor) {
-    _client.EnableForROS(sensor.GetActorDescription().GetStreamToken());
-  }
-
-  void Simulator::DisableForROS(const Sensor &sensor) {
-    _client.DisableForROS(sensor.GetActorDescription().GetStreamToken());
-  }
-
-  bool Simulator::IsEnabledForROS(const Sensor &sensor) {
-    return _client.IsEnabledForROS(sensor.GetActorDescription().GetStreamToken());
   }
 
   void Simulator::SubscribeToGBuffer(

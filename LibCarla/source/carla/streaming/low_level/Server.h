@@ -40,7 +40,7 @@ namespace low_level {
         detail::EndPoint<protocol_type, InternalEPType> internal_ep,
         detail::EndPoint<protocol_type, ExternalEPType> external_ep)
       : _server(io_context, std::move(internal_ep)),
-        _dispatcher(std::move(external_ep)) {
+        _dispatcher(std::make_shared<detail::Dispatcher>(std::move(external_ep))) {
       StartServer();
     }
 
@@ -49,7 +49,7 @@ namespace low_level {
         boost::asio::io_context &io_context,
         detail::EndPoint<protocol_type, InternalEPType> internal_ep)
       : _server(io_context, std::move(internal_ep)),
-        _dispatcher(make_endpoint<protocol_type>(_server.GetLocalEndpoint().port())) {
+        _dispatcher(std::make_shared<detail::Dispatcher>(make_endpoint<protocol_type>(_server.GetLocalEndpoint().port()))) {
       StartServer();
     }
 
@@ -66,51 +66,59 @@ namespace low_level {
     }
 
     Stream MakeStream() {
-      return _dispatcher.MakeStream();
+      return _dispatcher->MakeStream();
     }
 
     void CloseStream(carla::streaming::detail::stream_id_type id) {
-      return _dispatcher.CloseStream(id);
+      return _dispatcher->CloseStream(id);
     }
 
     void SetSynchronousMode(bool is_synchro) {
       _server.SetSynchronousMode(is_synchro);
     }
 
-    token_type GetToken(stream_id sensor_id) {
-      return _dispatcher.GetToken(sensor_id);
+    token_type GetToken(stream_id stream_id) {
+      return _dispatcher->GetToken(stream_id);
     }
 
-    void EnableForROS(stream_id sensor_id) {
-      _dispatcher.EnableForROS(sensor_id);
+    void SetROS2TopicVisibilityDefaultEnabled(bool _topic_visibility_default_enabled) {
+      _dispatcher->SetROS2TopicVisibilityDefaultEnabled(_topic_visibility_default_enabled);
+    }
+    
+    void EnableForROS(detail::stream_actor_id_type stream_actor_id) {
+      _dispatcher->EnableForROS(stream_actor_id);
     }
 
-    void DisableForROS(stream_id sensor_id) {
-      _dispatcher.DisableForROS(sensor_id);
+    void DisableForROS(detail::stream_actor_id_type stream_actor_id) {
+      _dispatcher->DisableForROS(stream_actor_id);
     }
 
-    bool IsEnabledForROS(stream_id sensor_id) {
-      return _dispatcher.IsEnabledForROS(sensor_id);
+    bool IsEnabledForROS(detail::stream_actor_id_type stream_actor_id) {
+      return _dispatcher->IsEnabledForROS(stream_actor_id);
+    }
+
+    std::shared_ptr<detail::Dispatcher> GetDispatcher() const {
+      return _dispatcher;
     }
 
   private:
 
     void StartServer() {
       auto on_session_opened = [this](auto session) {
-        if (!_dispatcher.RegisterSession(session)) {
+        if (!_dispatcher->RegisterSession(session)) {
           session->Close();
         }
       };
       auto on_session_closed = [this](auto session) {
         log_debug("on_session_closed called");
-        _dispatcher.DeregisterSession(session);
+        _dispatcher->DeregisterSession(session);
       };
       _server.Listen(on_session_opened, on_session_closed);
     }
 
     underlying_server _server;
 
-    detail::Dispatcher _dispatcher;
+    std::shared_ptr<detail::Dispatcher> _dispatcher;
   };
 
 } // namespace low_level

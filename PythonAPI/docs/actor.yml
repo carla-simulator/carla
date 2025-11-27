@@ -134,6 +134,10 @@
       doc: >
         Disables any constant velocity previously set for a carla.Vehicle actor.  
     # --------------------------------------
+    - def_name: disable_for_ros
+      doc: >
+        Commands the actor to stop publishing via ROS2.
+    # --------------------------------------
     - def_name: enable_constant_velocity
       params:
       - param_name: velocity
@@ -147,6 +151,10 @@
         Only carla.Vehicle actors can use this method.  
       warning: >
         Enabling a constant velocity for a vehicle managed by the [Traffic Manager](adv_traffic_manager.md) may cause conflicts. This method overrides any changes in velocity by the TM.  
+    # --------------------------------------
+    - def_name: enable_for_ros
+      doc: >
+        Commands the actor to publish their content via ROS2.
     # --------------------------------------
     - def_name: get_acceleration
       return: carla.Vector3D
@@ -181,6 +189,12 @@
       return: carla.World
       doc: >
         Returns the world this actor belongs to.
+    # --------------------------------------
+    - def_name: is_enabled_for_ros
+      doc: >
+        Returns if the actor is enabled or not to publish via ROS2.
+      return:
+        bool
     # --------------------------------------
     - def_name: set_target_angular_velocity
       params:

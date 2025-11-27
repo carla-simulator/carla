@@ -164,10 +164,9 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
           }
           case carla::multigpu::MultiGPUCommand::ENABLE_ROS:
           {
-            // get the sensor id
-            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
+            auto stream_actor_id = *(reinterpret_cast<carla::streaming::detail::stream_actor_id_type *>(Data.data()));
             // query dispatcher
-            Server.GetStreamingServer().EnableForROS(sensor_id);
+            Server.GetStreamingServer().EnableForROS(stream_actor_id);
             // return a 'true'
             bool res = true;
             carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
@@ -177,10 +176,9 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
           }
           case carla::multigpu::MultiGPUCommand::DISABLE_ROS:
           {
-            // get the sensor id
-            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
+            auto stream_actor_id = *(reinterpret_cast<carla::streaming::detail::stream_actor_id_type *>(Data.data()));
             // query dispatcher
-            Server.GetStreamingServer().DisableForROS(sensor_id);
+            Server.GetStreamingServer().DisableForROS(stream_actor_id);
             // return a 'true'
             bool res = true;
             carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
@@ -190,10 +188,9 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
           }
           case carla::multigpu::MultiGPUCommand::IS_ENABLED_ROS:
           {
-            // get the sensor id
-            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
+            auto stream_actor_id = *(reinterpret_cast<carla::streaming::detail::stream_actor_id_type *>(Data.data()));
             // query dispatcher
-            bool res = Server.GetStreamingServer().IsEnabledForROS(sensor_id);
+            bool res = Server.GetStreamingServer().IsEnabledForROS(stream_actor_id);
             carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
             carla::log_info("responding IS_ENABLED_ROS with: ", res);
             Secondary->Write(std::move(buf));

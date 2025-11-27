@@ -8,7 +8,7 @@
 
 #include "carla/Debug.h"
 #include "carla/Iterator.h"
-#include "carla/client/ActorAttribute.h"
+#include "carla/actors/ActorAttribute.h"
 #include "carla/rpc/ActorDefinition.h"
 #include "carla/rpc/ActorDescription.h"
 
@@ -17,7 +17,7 @@
 #include <unordered_set>
 
 namespace carla {
-namespace client {
+namespace actors {
 
   /// Contains all the necessary information for spawning an Actor.
   class ActorBlueprint {
@@ -120,5 +120,5 @@ namespace client {
     std::unordered_map<std::string, ActorAttribute> _attributes;
   };
 
-} // namespace client
+} // namespace actors
 } // namespace carla

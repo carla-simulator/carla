@@ -6,12 +6,9 @@
 
 #pragma once
 
-#include "carla/NonCopyable.h"
 #include "carla/Time.h"
-#include "carla/TypeTraits.h"
 #include "carla/profiler/LifetimeProfiled.h"
-#include "carla/streaming/detail/Types.h"
-#include "carla/streaming/detail/tcp/Message.h"
+#include "carla/streaming/detail/Session.h"
 
 #if defined(__clang__)
 #  pragma clang diagnostic push
@@ -25,9 +22,6 @@
 #  pragma clang diagnostic pop
 #endif
 
-#include <functional>
-#include <memory>
-
 namespace carla {
 namespace streaming {
 namespace detail {
@@ -40,8 +34,8 @@ namespace tcp {
   /// closes itself after @a timeout of inactivity is met.
   class ServerSession
     : public std::enable_shared_from_this<ServerSession>,
-      private profiler::LifetimeProfiled,
-      private NonCopyable {
+      public Session,
+      private profiler::LifetimeProfiled {
   public:
 
     using socket_type = boost::asio::ip::tcp::socket;
@@ -58,31 +52,11 @@ namespace tcp {
         callback_function_type on_opened,
         callback_function_type on_closed);
 
-    /// @warning This function should only be called after the session is
-    /// opened. It is safe to call this function from within the @a callback.
-    stream_id_type get_stream_id() const {
-      return _stream_id;
-    }
-
-    template <typename... Buffers>
-    static auto MakeMessage(Buffers... buffers) {
-      static_assert(
-          are_same<SharedBufferView, Buffers...>::value,
-          "This function only accepts arguments of type BufferView.");
-      return std::make_shared<const Message>(buffers...);
-    }
-
-    /// Writes some data to the socket.
-    void Write(std::shared_ptr<const Message> message);
-
-    /// Writes some data to the socket.
-    template <typename... Buffers>
-    void Write(Buffers... buffers) {
-      Write(MakeMessage(buffers...));
-    }
+    /// Writes message to the socket.
+    virtual void WriteMessage(std::shared_ptr<const Message> message) override;
 
     /// Post a job to close the session.
-    void Close();
+    virtual void Close() override;
 
   private:
 
@@ -95,8 +69,6 @@ namespace tcp {
     Server &_server;
 
     const size_t _session_id;
-
-    stream_id_type _stream_id = 0u;
 
     socket_type _socket;
 

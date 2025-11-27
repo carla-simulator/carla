@@ -8,7 +8,7 @@
 
 #include "carla/NonCopyable.h"
 #include "carla/client/World.h"
-#include "carla/client/ActorAttribute.h"
+#include "carla/actors/ActorAttribute.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/rpc/Actor.h"
 
@@ -48,7 +48,7 @@ namespace detail {
       return World{_episode};
     }
 
-    const std::vector<ActorAttributeValue> &GetAttributes() const
+    const std::vector<carla::actors::ActorAttributeValue> &GetAttributes() const
     {
       return _attributes;
     }
@@ -83,7 +83,7 @@ namespace detail {
 
     std::string _display_id;
 
-    std::vector<ActorAttributeValue> _attributes;
+    std::vector<carla::actors::ActorAttributeValue> _attributes;
   };
 
 } // namespace detail

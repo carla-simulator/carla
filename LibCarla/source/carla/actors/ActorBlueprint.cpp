@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/client/ActorBlueprint.h"
+#include "carla/actors/ActorBlueprint.h"
 
 #include "carla/Exception.h"
 #include "carla/StringUtil.h"
@@ -12,7 +12,7 @@
 #include <algorithm>
 
 namespace carla {
-namespace client {
+namespace actors {
 
   template <typename Map, typename Container>
   static void FillMap(Map &destination, Container &source) {
@@ -62,5 +62,5 @@ namespace client {
     return description;
   }
 
-} // namespace client
+} // namespace actors
 } // namespace carla
