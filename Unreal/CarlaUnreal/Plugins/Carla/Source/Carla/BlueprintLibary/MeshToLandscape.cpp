@@ -106,12 +106,18 @@ void UMeshToLandscapeUtil::FilterInvalidStaticMeshComponents(
 			}
 			else
 			{
-				// @TODO: ADD WARNING
+				UE_LOG(
+					LogCarla, Warning,
+					TEXT("Skipping static mesh asset %s due to invalid RenderData or invalid Nanite data."),
+					*SM->GetName());
 			}
 		}
 		else
 		{
-			// @TODO: ADD WARNING
+			UE_LOG(
+				LogCarla, Warning,
+				TEXT("Skipping static mesh asset %s due to missing static mesh data (GetStaticMesh returned nullptr)."),
+				*SM->GetName());
 		}
 		Components.RemoveAtSwap(i, EAllowShrinking::No);
 	}
@@ -253,7 +259,11 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 
 	if (ComponentSizeQuads == 0)
 	{
-		// @TODO: Add Warning.
+		UE_LOG(
+			LogCarla, Warning,
+			TEXT("Skipping landscape generation, SubsectionSizeQuads=%i NumSubsections=%i"),
+			SubsectionSizeQuads,
+			NumSubsections);
 		return nullptr;
 	}
 
@@ -299,17 +309,6 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 	FIntPoint HeightmapExtent =
 		RequiredQuadCount +
 		FIntPoint(1);
-
-	auto EncodeZ = [/* This will be invoked in a ParallelFor! */ &](double Z)
-	{
-		const uint16 U16Max = TNumericLimits<uint16>::Max();
-		Z -= Min.Z;
-		Z *= UE_CM_TO_M;
-		Z += 256.0;
-		Z /= 512.0;
-		Z = std::clamp(Z, 0.0, 1.0);
-		return (uint16)std::lround(Z * U16Max);
-	};
 
 	TArray<uint16_t> HeightmapData;
 	HeightmapData.SetNumZeroed(HeightmapExtent.X * HeightmapExtent.Y);
@@ -406,7 +405,13 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 				CQParams.AddIgnoredComponent(Hit.GetComponent());
 			}
 
-			HeightmapData[Index] = EncodeZ(HitZ);
+			HitZ -= Min.Z;
+			HitZ *= UE_CM_TO_M;
+			HitZ += 256.0;
+			HitZ /= 512.0;
+			HitZ = std::clamp(HitZ, 0.0, 1.0);
+			HeightmapData[Index] = (uint16)std::lround(
+				HitZ * TNumericLimits<uint16>::Max());
 
 			if (Retry == MaxRetries)
 			{
