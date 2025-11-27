@@ -160,5 +160,13 @@ public:
       DisplayName = "Enable ROS2")
   bool ROS2 = false;
 
+  /// Default ROS2 Topic Visibility
+  UPROPERTY(Category = "Quality Settings/ROS2",
+      BlueprintReadOnly,
+      EditAnywhere,
+      config,
+      DisplayName = "  ROS2 Topics Visible On Startup")
+  bool ROS2TopicVisibility = true;
+
   /// @}
 };

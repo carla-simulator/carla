@@ -11,7 +11,7 @@
 #include "carla/TypeTraits.h"
 #include "carla/profiler/LifetimeProfiled.h"
 #include "carla/multigpu/secondaryCommands.h"
-#include "carla/streaming/detail/tcp/Message.h"
+#include "carla/streaming/detail/Message.h"
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
 #include "carla/ThreadPool.h"
@@ -50,7 +50,7 @@ namespace multigpu {
 
     void AsyncRun(size_t worker_threads);
 
-    void Write(std::shared_ptr<const carla::streaming::detail::tcp::Message> message);
+    void Write(std::shared_ptr<const carla::streaming::detail::Message> message);
     void Write(Buffer buffer);
     void Write(std::string text);
 
@@ -63,7 +63,7 @@ namespace multigpu {
       static_assert(
           are_same<SharedBufferView, Buffers...>::value,
           "This function only accepts arguments of type BufferView.");
-      return std::make_shared<const carla::streaming::detail::tcp::Message>(buffers...);
+      return std::make_shared<const carla::streaming::detail::Message>(buffers...);
     }
 
   private:

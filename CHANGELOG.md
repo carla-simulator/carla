@@ -6,6 +6,7 @@
  * Fix OpenDrive Builder lane width
  * Introduced geom::AngularVelocity, geom::Velocity, geom::Acceleration, geom::Quaternion types
  * Fixed geom::Rotation::RotateVector() rotation directions of pitch and roll
+ * Prepare server for multistream support and ROS2 client calls
 
 ## CARLA 0.9.16
 

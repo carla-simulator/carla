@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <carla/PythonUtil.h>
+#include <carla/actors/ActorBlueprint.h>
 #include <carla/client/Actor.h>
 #include <carla/client/ActorList.h>
 #include <carla/client/World.h>
@@ -172,6 +173,7 @@ static std::string ExportCosmosRoadMarkings(
 
 void export_world() {
   using namespace boost::python;
+  namespace ca = carla::actors;
   namespace cc = carla::client;
   namespace cg = carla::geom;
   namespace cr = carla::rpc;
@@ -340,7 +342,7 @@ void export_world() {
 
 #define SPAWN_ACTOR_WITHOUT_GIL(fn) +[]( \
         cc::World &self, \
-        const cc::ActorBlueprint &blueprint, \
+        const ca::ActorBlueprint &blueprint, \
         const cg::Transform &transform, \
         cc::Actor *parent, \
         cr::AttachmentType attachment_type, \

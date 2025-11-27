@@ -8,12 +8,13 @@
 
 #include "carla/AtomicSharedPtr.h"
 #include "carla/Logging.h"
+#include "carla/streaming/detail/Message.h"
 #include "carla/streaming/detail/StreamStateBase.h"
-#include "carla/streaming/detail/tcp/Message.h"
 
+#include <atomic>
 #include <mutex>
 #include <vector>
-#include <atomic>
+#include <set>
 
 namespace carla {
 namespace streaming {
@@ -24,13 +25,9 @@ namespace detail {
   /// @todo Lacking some optimization.
   class MultiStreamState final : public StreamStateBase {
   public:
-
     using StreamStateBase::StreamStateBase;
 
-    MultiStreamState(const token_type &token) :
-      StreamStateBase(token),
-      _session(nullptr)
-      {};
+    MultiStreamState(const token_type &token) : StreamStateBase(token), _session(nullptr){};
 
     template <typename... Buffers>
     void Write(Buffers... buffers) {
@@ -38,8 +35,8 @@ namespace detail {
       auto session = _session.load();
       if (session != nullptr) {
         auto message = Session::MakeMessage(buffers...);
-        session->Write(std::move(message));
-        log_debug("sensor ", session->get_stream_id()," data sent");
+        session->WriteMessage(std::move(message));
+        log_debug("sensor ", session->get_stream_id(), " data sent");
         // Return here, _session is only valid if we have a
         // single session.
         return;
@@ -51,9 +48,9 @@ namespace detail {
         auto message = Session::MakeMessage(buffers...);
         for (auto &s : _sessions) {
           if (s != nullptr) {
-            s->Write(message);
-            log_debug("sensor ", s->get_stream_id()," data sent ");
-         }
+            s->WriteMessage(message);
+            log_debug("sensor ", s->get_stream_id(), " data sent ");
+          }
         }
       }
     }
@@ -62,25 +59,48 @@ namespace detail {
       _force_active = true;
     }
 
-    void EnableForROS() {
-      _enabled_for_ros = true;
+    void EnableForROS(actor_id_type actor_id) {
+      log_error("MultiStreamState enable for ros. Searching sessions.");
+      _enable_for_ros.insert(actor_id);
+      for (auto &s : _sessions) {
+        if (s != nullptr) {
+          s->EnableForROS(actor_id);
+          log_error("sensor ", s->get_stream_id(), " enable for ros ");
+        }
+      }
     }
 
-    void DisableForROS() {
-      _enabled_for_ros = false;
+    void DisableForROS(actor_id_type actor_id) {
+      _enable_for_ros.erase(actor_id);
+      for (auto &s : _sessions) {
+        if (s != nullptr) {
+          s->DisableForROS(actor_id);
+          log_error("sensor ", s->get_stream_id(), " disable for ros ");
+        }
+      }
     }
 
-    bool IsEnabledForROS() {
-      return _enabled_for_ros;
+    bool IsEnabledForROS(actor_id_type actor_id) {
+      for (auto &s : _sessions) {
+        if (s != nullptr) {
+          if (s->IsEnabledForROS(actor_id)) {
+            return true;
+          }
+        }
+      }
+      return false;
     }
 
     bool AreClientsListening() {
-      return (_sessions.size() > 0 || _force_active || _enabled_for_ros);
+      return (_sessions.size() > 0 || _force_active);
     }
 
     void ConnectSession(std::shared_ptr<Session> session) final {
       DEBUG_ASSERT(session != nullptr);
       std::lock_guard<std::mutex> lock(_mutex);
+      for (auto actor_id: _enable_for_ros) {
+        session->EnableForROS(actor_id);
+      }
       _sessions.emplace_back(std::move(session));
       log_debug("Connecting multistream sessions:", _sessions.size());
       if (_sessions.size() == 1) {
@@ -137,10 +157,10 @@ namespace detail {
     AtomicSharedPtr<Session> _session;
     // if there are more than one session, we use vector of sessions with mutex
     std::vector<std::shared_ptr<Session>> _sessions;
-    bool _force_active {false};
-    bool _enabled_for_ros {false};
+    bool _force_active{false};
+    std::set<actor_id_type> _enable_for_ros;
   };
 
-} // namespace detail
-} // namespace streaming
-} // namespace carla
+}  // namespace detail
+}  // namespace streaming
+}  // namespace carla

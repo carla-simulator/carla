@@ -14,11 +14,17 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/multigpu/router.h>
 #include <carla/streaming/Server.h>
+#include <carla/rpc/Actor.h>
+#include <carla/rpc/ActorDescription.h>
+#include <carla/rpc/AttachmentType.h>
+#include <carla/rpc/Response.h>
+#include <carla/rpc/Transform.h>
+#include <carla/rpc/RpcServerInterface.h>
 #include <compiler/enable-ue4-macros.h>
 
 class UCarlaEpisode;
 
-class FCarlaServer
+class FCarlaServer: public carla::rpc::RpcServerInterface
 {
 public:
 
@@ -36,6 +42,8 @@ public:
 
   void RunSome(uint32 Milliseconds);
 
+  void SetROS2TopicVisibilityDefaultEnabled(bool _topic_visibility_default_enabled);
+
   void Tick();
   
   bool TickCueReceived();
@@ -48,6 +56,62 @@ public:
 
   carla::streaming::Server &GetStreamingServer();
 
+  /**
+   * Reimplemented from ROS2ServerInterfase
+  */
+  std::shared_ptr<carla::streaming::detail::Dispatcher> GetDispatcher() override {
+    return GetStreamingServer().GetDispatcher();
+  }
+
+
+
+  /**
+   * @brief episode related calls
+   * @{
+   */
+  carla::rpc::Response<void> call_load_new_episode(const std::string &map_name, const bool reset_settings, carla::rpc::MapLayer map_layers) override;
+  carla::rpc::Response<carla::rpc::EpisodeSettings> call_get_episode_settings() override;
+  carla::rpc::Response<uint64_t> call_set_episode_settings(carla::rpc::EpisodeSettings const &settings) override;
+  /**
+   * @}
+   */
+
+  /**
+   * @brief map related calls
+   * @{
+   */
+  carla::rpc::Response<std::vector<std::string>> call_get_available_maps() override;
+  carla::rpc::Response<std::string> call_get_map_data() override;
+  carla::rpc::Response<carla::rpc::MapInfo> call_get_map_info() override;
+  /**
+   * @}
+   */
+
+  /**
+   * @brief actor related calls
+   * @{
+   */
+  carla::rpc::Response<std::vector<carla::rpc::ActorDefinition> > call_get_actor_definitions() override;
+  carla::rpc::Response<carla::rpc::Actor> call_spawn_actor(carla::rpc::ActorDescription Description, const carla::rpc::Transform &Transform) override;
+  carla::rpc::Response<carla::rpc::Actor> call_spawn_actor_with_parent(carla::rpc::ActorDescription Description, const carla::rpc::Transform &Transform,
+                                                       carla::rpc::ActorId ParentId, carla::rpc::AttachmentType InAttachmentType,
+                                                       const std::string &socket_name) override;
+  carla::rpc::Response<bool> call_destroy_actor(carla::rpc::ActorId ActorId) override;
+  carla::rpc::Response<carla::rpc::VehicleTelemetryData> call_get_telemetry_data(carla::rpc::ActorId ActorId) override;
+  /**
+   * @}
+   */
+
+  /**
+   * @brief ros actor interaction calls
+   * @{
+   */
+  carla::rpc::Response<void> call_enable_actor_for_ros(carla::rpc::ActorId actor_id) override;
+  carla::rpc::Response<void> call_disable_actor_for_ros(carla::rpc::ActorId actor_id) override;
+  carla::rpc::Response<bool> call_is_actor_enabled_for_ros(carla::rpc::ActorId actor_id) override;
+  /**
+   * @}
+   */
 private:
 
   class FPimpl;

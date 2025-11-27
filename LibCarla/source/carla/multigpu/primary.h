@@ -11,7 +11,7 @@
 #include "carla/TypeTraits.h"
 #include "carla/profiler/LifetimeProfiled.h"
 #include "carla/streaming/detail/Types.h"
-#include "carla/streaming/detail/tcp/Message.h"
+#include "carla/streaming/detail/Message.h"
 #include "carla/multigpu/listener.h"
 
 #include <boost/asio/deadline_timer.hpp>
@@ -55,11 +55,11 @@ namespace multigpu {
       static_assert(
           are_same<SharedBufferView, Buffers...>::value,
           "This function only accepts arguments of type BufferView.");
-      return std::make_shared<const carla::streaming::detail::tcp::Message>(buffers...);
+      return std::make_shared<const carla::streaming::detail::Message>(buffers...);
     }
 
     /// Writes some data to the socket.
-    void Write(std::shared_ptr<const carla::streaming::detail::tcp::Message> message);
+    void Write(std::shared_ptr<const carla::streaming::detail::Message> message);
 
     /// Writes a string
     void Write(std::string text);

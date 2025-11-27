@@ -144,6 +144,15 @@ namespace client {
       return GetEpisode().IsValid() && GetActorState() == rpc::ActorState::Active;
     }
 
+    /// Enable this actor for ROS2 publishing
+    void EnableForROS();
+
+    /// Disable this actor for ROS2 publishing
+    void DisableForROS();
+
+    /// Return if the actor is publishing for ROS2
+    bool IsEnabledForROS();
+
     /// Tell the simulator to destroy this Actor, and return whether the actor
     /// was successfully destroyed.
     ///
