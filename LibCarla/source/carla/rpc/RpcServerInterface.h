@@ -87,8 +87,9 @@ public:
    * @{
    */
   virtual Response<uint64_t> call_tick(
-      synchronization_client_id_type const &client_id = ALL_CLIENTS,
-      synchronization_participant_id_type const &participant_id = ALL_PARTICIPANTS) = 0;
+      synchronization_client_id_type const &client_id,
+      synchronization_participant_id_type const &participant_id,
+      carla::rpc::SynchronizationTickMode synchronization_tick_mode) = 0;
   virtual Response<synchronization_participant_id_type> call_register_synchronization_participant(
       synchronization_client_id_type const &client_id,
       synchronization_participant_id_type const &participant_id_hint = ALL_PARTICIPANTS) = 0;

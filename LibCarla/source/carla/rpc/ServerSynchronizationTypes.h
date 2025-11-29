@@ -27,7 +27,10 @@ struct synchronization_window_participant_state {
     synchronization_target_game_time target_game_time;
 };
 
-
+enum class SynchronizationTickMode {
+    FORCE_ENABLE_SYNC,
+    TICK_ONLY_IF_SYNC_ENABLED
+};
 
 }  // namespace rpc
 }  // namespace carla

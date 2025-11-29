@@ -239,7 +239,8 @@ public:
    */
   carla::rpc::Response<uint64_t> call_tick(
       carla::rpc::synchronization_client_id_type const &client_id,
-      carla::rpc::synchronization_participant_id_type const &participant_id) override;
+      carla::rpc::synchronization_participant_id_type const &participant_id,
+      carla::rpc::SynchronizationTickMode synchronization_tick_mode) override;
   carla::rpc::Response<carla::rpc::synchronization_participant_id_type> call_register_synchronization_participant(
       carla::rpc::synchronization_client_id_type const &client_id,
       carla::rpc::synchronization_participant_id_type const &participant_id_hint = carla::rpc::ALL_PARTICIPANTS) override;
@@ -424,6 +425,7 @@ void FCarlaServer::FPimpl::BindActions()
 
   BIND_SYNC(tick_cue) << [this]() -> R<uint64_t>
   {
+    REQUIRE_CARLA_EPISODE();
     TRACE_CPUPROFILER_EVENT_SCOPE(TickCueReceived);
     UE_LOG(
       LogCarlaServer,
@@ -432,7 +434,7 @@ void FCarlaServer::FPimpl::BindActions()
       UTF8_TO_TCHAR(SynchronizationClientId().c_str()),
       TickParticipantId(),
       ::rpc::this_session().id());
-    return call_tick(SynchronizationClientId(), TickParticipantId());
+    return call_tick(SynchronizationClientId(), TickParticipantId(), carla::rpc::SynchronizationTickMode::TICK_ONLY_IF_SYNC_ENABLED);
   };
 
   // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -3667,12 +3669,20 @@ void FCarlaServer::FPimpl::NotifyEndEpisode()
 
 carla::rpc::Response<uint64_t> FCarlaServer::FPimpl::call_tick(
     carla::rpc::synchronization_client_id_type const &client_id,
-    carla::rpc::synchronization_participant_id_type const&participant_id)
+    carla::rpc::synchronization_participant_id_type const&participant_id,
+    carla::rpc::SynchronizationTickMode synchronization_tick_mode)
 {
-  REQUIRE_CARLA_EPISODE();
   auto Current = FCarlaEngine::GetFrameCounter();
-  auto const TargetGameTime = Episode->GetElapsedGameTime() + GetTickDeltaSeconds();
-  (void) call_update_synchronization_window(client_id, participant_id, TargetGameTime);
+
+  if ( (synchronization_tick_mode == carla::rpc::SynchronizationTickMode::FORCE_ENABLE_SYNC)
+        || ServerSync.IsSynchronousModeActive() ) {
+    auto const TargetGameTime = Episode->GetElapsedGameTime() + GetTickDeltaSeconds();
+    ServerSync.UpdateSynchronizationWindow(client_id, participant_id, TargetGameTime);
+  }
+  else { 
+    UE_LOG(LogCarla, Warning, TEXT("CarlaServer::call_tick[%s:%d] received, but synchronous mode not running. Tick is ignored."), 
+                                   UTF8_TO_TCHAR(client_id.c_str()), participant_id);
+  }
   return Current + 1;
 }
 
@@ -3879,9 +3889,11 @@ double FCarlaServer::GetTickDeltaSeconds() {
 
 void FCarlaServer::Tick()
 {
-  (void)Pimpl->call_tick(Pimpl->SynchronizationClientId(), Pimpl->ServerSynchronizationParticipantId);
+  (void)Pimpl->call_tick(Pimpl->SynchronizationClientId(), 
+                         Pimpl->ServerSynchronizationParticipantId,
+                         carla::rpc::SynchronizationTickMode::TICK_ONLY_IF_SYNC_ENABLED);
 }
-
+  
 bool FCarlaServer::TickCueReceived()
 {
   return Pimpl->IsNextGameTickAllowed();
@@ -3987,12 +3999,12 @@ carla::rpc::Response<carla::rpc::VehicleTelemetryData> FCarlaServer::call_get_te
   return Pimpl->call_get_telemetry_data(ActorId);
 }
 
-  
 carla::rpc::Response<uint64_t> FCarlaServer::call_tick(
   carla::rpc::synchronization_client_id_type const &client_id,
-  carla::rpc::synchronization_participant_id_type const&synchronization_participant)
+  carla::rpc::synchronization_participant_id_type const&synchronization_participant,
+  carla::rpc::SynchronizationTickMode synchronization_tick_mode)
 {
-  return Pimpl->call_tick(client_id, synchronization_participant);
+  return Pimpl->call_tick(client_id, synchronization_participant, synchronization_tick_mode);
 }
 
 carla::rpc::Response<carla::rpc::synchronization_participant_id_type> FCarlaServer::call_register_synchronization_participant(

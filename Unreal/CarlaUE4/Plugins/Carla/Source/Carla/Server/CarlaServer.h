@@ -123,8 +123,9 @@ public:
    * @{
    */
   carla::rpc::Response<uint64_t> call_tick(
-      carla::rpc::synchronization_client_id_type const &client_id = carla::rpc::ALL_CLIENTS,
-      carla::rpc::synchronization_participant_id_type const &participant_id = carla::rpc::ALL_PARTICIPANTS) override;
+      carla::rpc::synchronization_client_id_type const &client_id,
+      carla::rpc::synchronization_participant_id_type const &participant_id,
+      carla::rpc::SynchronizationTickMode synchronization_tick_mode) override;
   carla::rpc::Response<carla::rpc::synchronization_participant_id_type> call_register_synchronization_participant(
       carla::rpc::synchronization_client_id_type const &client_id,
       carla::rpc::synchronization_participant_id_type const &participant_id_hint = carla::rpc::ALL_PARTICIPANTS) override;

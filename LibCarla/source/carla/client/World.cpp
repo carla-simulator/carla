@@ -75,7 +75,10 @@ namespace client {
         if (tics_correct >= 2)
           return id;
 
-        Tick(local_timeout);
+        if (settings.synchronous_mode) {
+          // tick if synchronous mode is active
+          Tick(local_timeout);
+        }
       }
 
       log_warning("World::ApplySettings: After", number_of_attemps, " attemps, the settings were not correctly set. Please check that everything is consistent.");
