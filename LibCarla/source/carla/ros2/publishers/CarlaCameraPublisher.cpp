@@ -21,7 +21,7 @@ bool CarlaCameraPublisher::WriteCameraInfo(int32_t seconds, uint32_t nanoseconds
 
   const double cx = static_cast<double>(width) / 2.0;
   const double cy = static_cast<double>(height) / 2.0;
-  const double fx = static_cast<double>(width) / (2.0 * std::tan(fov) * M_PI / 360.0);
+  const double fx = static_cast<double>(width) / (2.0 * std::tan(fov * M_PI / 360.0));
   const double fy = fx;
 
   _impl_camera_info->GetMessage()->height(height);
