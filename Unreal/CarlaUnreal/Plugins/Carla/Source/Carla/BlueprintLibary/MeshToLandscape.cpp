@@ -26,7 +26,7 @@ static TAutoConsoleVariable<int32> CVDrawDebugLandscapeTraceFailures(
 
 static TAutoConsoleVariable<int32> CVMeshToLandscapeMaxTraceRetries(
 	TEXT("CARLA.MeshToLandscape.MaxTraceRetries"),
-	16,
+	8,
 	TEXT("Max parallel line trace retries."));
 
 static TAutoConsoleVariable<int32> CVDrawDebugBoxes(
@@ -109,7 +109,7 @@ void UMeshToLandscapeUtil::FilterInvalidStaticMeshComponents(
 				UE_LOG(
 					LogCarla, Warning,
 					TEXT("Skipping static mesh asset %s due to invalid RenderData or invalid Nanite data."),
-					*SM->GetName());
+					*UKismetSystemLibrary::GetDisplayName(Component));
 			}
 		}
 		else
@@ -117,7 +117,7 @@ void UMeshToLandscapeUtil::FilterInvalidStaticMeshComponents(
 			UE_LOG(
 				LogCarla, Warning,
 				TEXT("Skipping static mesh asset %s due to missing static mesh data (GetStaticMesh returned nullptr)."),
-				*SM->GetName());
+				*UKismetSystemLibrary::GetDisplayName(Component));
 		}
 		Components.RemoveAtSwap(i, EAllowShrinking::No);
 	}
@@ -322,19 +322,28 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 
 		int32 MaxRetries = CVMeshToLandscapeMaxTraceRetries.GetValueOnAnyThread();
 
-		auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(
-			World->GetPhysicsScene());
+		constexpr auto RingSampleCount = 8U;
+		const double I2R = 2.0 * PI / (double)RingSampleCount;
 
-		std::array<FVector2d, 8> Ring;
+		double MaxOffsetRadius = CellSize.GetMin() * 0.5;
 
-		constexpr double I2R = 2.0 * PI / (double)Ring.size();
-		double MaxOffsetRadius = CellSize.GetMin() / 2.0;
-		for (size_t i = 0; i != Ring.size(); ++i)
+		FVector2d OffsetRing[RingSampleCount];
+		for (size_t i = 0; i != RingSampleCount; ++i)
 		{
 			FVector2d D;
 			FMath::SinCos(&D.Y, &D.X, (double)i * I2R);
-			Ring[i] = D;
+			OffsetRing[i] = D;
 		}
+
+		FCollisionShape TestGeometry;
+		TestGeometry.SetBox(
+			FVector3f(
+				CellSize.X,
+				CellSize.Y,
+				UE_M_TO_CM) * 2.5F);
+
+		auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(
+			World->GetPhysicsScene());
 
 		ParallelFor(HeightmapData.Num(), [&](int32 Index)
 		{
@@ -347,7 +356,7 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 			FVector3d Begin = Begin0;
 			FVector3d End = End0;
 			FHitResult Hit;
-			double HitZ = 0.0;
+			double HitZ = Min.Z;
 
 			FCollisionQueryParams CQParams = FCollisionQueryParams::DefaultQueryParam;
 			CQParams.bTraceComplex = true;
@@ -358,66 +367,82 @@ ALandscape* UMeshToLandscapeUtil::ConvertMeshesToLandscape(
 
 			FRandomStream PRNG(Index);
 
-			bool Failed = false;
-			int32 Retry = 0;
-			for (; Retry != MaxRetries; ++Retry)
+			if (!World->ParallelSweepSingleByChannel(
+				Hit,
+				Begin,
+				End,
+				FQuat::Identity,
+				ECollisionChannel::ECC_WorldStatic,
+				TestGeometry,
+				CQParams))
 			{
-				if (!World->ParallelLineTraceSingleByChannel(
+				HeightmapData[Index] = 0;
+				return;
+			}
+
+			int32 Retry = 0;
+			for (; Retry < MaxRetries; ++Retry) // Sometimes, LTSBC fails on geometry seams
+			{
+				if (World->ParallelLineTraceSingleByChannel(
 					Hit,
 					Begin, End,
 					ECollisionChannel::ECC_GameTraceChannel2,
 					CQParams))
 				{
-					int32 Index = PRNG.RandRange(0, (int32)Ring.size() - 1);
-					FVector3d Offset = FVector3d(Ring[Index], 0.0);
+					if (ComponentMap.Contains(Hit.GetComponent())) // Done
+					{
+						HitZ = Hit.Location.Z;
+						break;
+					}
+					CQParams.AddIgnoredComponent(Hit.GetComponent());
+				}
+				else
+				{
+					int32 Index = PRNG.RandRange(0, (int32)RingSampleCount - 1);
+					FVector3d Offset = FVector3d(OffsetRing[Index], 0.0);
 					Offset *= PRNG.FRandRange(0.0, MaxOffsetRadius);
 					Begin = Begin0 + Offset;
 					End = End0 + Offset;
-					continue;
 				}
-
-				UPrimitiveComponent* HitComponent = Hit.GetComponent();
-				if (ComponentMap.Contains(HitComponent))
-				{
-					HitZ = Hit.Location.Z;
-					FString TestName;
-					double ZDisplacement = 0.0;
-					for (auto& [Pattern, Displacement] : HitDisplacementMap)
-					{
-						if (std::abs(Displacement) <= std::abs(ZDisplacement))
-							continue;
-						TestName = UKismetSystemLibrary::GetDisplayName(HitComponent);
-						if (TestName.MatchesWildcard(Pattern))
-						{
-							ZDisplacement = Displacement;
-							continue;
-						}
-						TestName = UKismetSystemLibrary::GetDisplayName(HitComponent->GetOwner());
-						if (TestName.MatchesWildcard(Pattern))
-						{
-							ZDisplacement = Displacement;
-							continue;
-						}
-					}
-					HitZ += ZDisplacement;
-					break;
-				}
-				CQParams.AddIgnoredComponent(Hit.GetComponent());
 			}
 
-			HitZ -= Min.Z;
-			HitZ *= UE_CM_TO_M;
-			HitZ += 256.0;
-			HitZ /= 512.0;
-			HitZ = std::clamp(HitZ, 0.0, 1.0);
-			HeightmapData[Index] = (uint16)std::lround(
-				HitZ * TNumericLimits<uint16>::Max());
-
-			if (Retry == MaxRetries)
+			if (Retry != MaxRetries)
+			{
+				UPrimitiveComponent* HitComponent = Hit.GetComponent();
+				FString TestName;
+				double ZDisplacement = 0.0;
+				for (auto& [Pattern, Displacement] : HitDisplacementMap)
+				{
+					if (std::abs(Displacement) <= std::abs(ZDisplacement))
+						continue;
+					TestName = UKismetSystemLibrary::GetDisplayName(HitComponent);
+					if (TestName.MatchesWildcard(Pattern))
+					{
+						ZDisplacement = Displacement;
+						continue;
+					}
+					TestName = UKismetSystemLibrary::GetDisplayName(HitComponent->GetOwner());
+					if (TestName.MatchesWildcard(Pattern))
+					{
+						ZDisplacement = Displacement;
+						continue;
+					}
+				}
+				HitZ += ZDisplacement;
+				HitZ -= Min.Z;
+				HitZ *= UE_CM_TO_M;
+				HitZ += 256.0;
+				HitZ /= 512.0;
+				HitZ = std::clamp(HitZ, 0.0, 1.0);
+				HeightmapData[Index] = (uint16)std::lround(
+					HitZ * TNumericLimits<uint16>::Max());
+			}
+			else
 			{
 				FailuresCS.Lock();
 				Failures.Add({ Begin, End });
 				FailuresCS.Unlock();
+				HeightmapData[Index] = 0;
 			}
 		}, EParallelForFlags::Unbalanced);
 		LockedPhysObject.Release();
