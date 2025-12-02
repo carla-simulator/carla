@@ -3866,6 +3866,22 @@ double FCarlaServer::GetTickDeltaSeconds() {
   return Pimpl->GetTickDeltaSeconds();
 }
 
+void FCarlaServer::EnableSynchronousMode() {
+  Pimpl->EnableSynchronousMode();
+}
+
+void FCarlaServer::DisableSynchronousMode() {
+  Pimpl->DisableSynchronousMode();
+}
+
+bool FCarlaServer::IsSynchronousModeActive() {
+  return Pimpl->ServerSync.IsSynchronousModeActive();
+}
+
+double FCarlaServer::GetTickDeltaSeconds() {
+  return Pimpl->GetTickDeltaSeconds();
+}
+
 void FCarlaServer::Tick()
 {
   (void)Pimpl->call_tick(Pimpl->SynchronizationClientId(), 
