@@ -56,6 +56,7 @@ void UeWorldPublisher::ProcessMessages() {
     vehicle.second._vehicle_controller->ProcessMessages();
     vehicle.second._vehicle_ackermann_controller->ProcessMessages();
     vehicle.second._actor_set_transform_subscriber->ProcessMessages();
+    vehicle.second._vehicle_publisher->ProcessMessages();
   }
   for (auto& walker : _walkers) {
     walker.second._walker_controller->ProcessMessages();
@@ -95,7 +96,7 @@ void UeWorldPublisher::AddVehicleUe(
   _objects_changed = true;
 
   auto vehicle_publisher =
-      std::make_shared<VehiclePublisher>(vehicle_actor_definition, _transform_publisher, _objects_publisher, _objects_with_covariance_publisher);
+      std::make_shared<VehiclePublisher>(vehicle_actor_definition, _transform_publisher, _objects_publisher, _objects_with_covariance_publisher, _carla_server);
   UeVehicle ue_vehicle(vehicle_publisher);
   ue_vehicle._vehicle_controller =
       std::make_shared<VehicleControlSubscriber>(*vehicle_publisher, std::move(vehicle_control_callback));
@@ -316,7 +317,7 @@ void UeWorldPublisher::UpdateSensorData(
         if ( publisher->is_enabled_for_ros() ) {
           object_enabled_for_ros = true;
           publisher->UpdateTransform(_timestamp, transform);
-          publisher->UpdateVehicle(object, actor_dynamic_state, _carla_server);
+          publisher->UpdateVehicle(object, actor_dynamic_state);
           publisher->Publish();
         }
       }

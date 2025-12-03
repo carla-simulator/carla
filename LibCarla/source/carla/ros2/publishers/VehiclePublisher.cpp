@@ -15,9 +15,11 @@ namespace ros2 {
 VehiclePublisher::VehiclePublisher(std::shared_ptr<carla::ros2::types::VehicleActorDefinition> vehicle_actor_definition,
                                    std::shared_ptr<TransformPublisher> transform_publisher,
                                    std::shared_ptr<ObjectsPublisher> objects_publisher,
-                                   std::shared_ptr<ObjectsWithCovariancePublisher> objects_with_covariance_publisher)
+                                   std::shared_ptr<ObjectsWithCovariancePublisher> objects_with_covariance_publisher,
+                                   carla::rpc::RpcServerInterface &carla_server)
   : PublisherBaseTransform(std::static_pointer_cast<carla::ros2::types::ActorNameDefinition>(vehicle_actor_definition),
                            transform_publisher),
+    _carla_server(carla_server),
     _vehicle_info_publisher(std::make_shared<VehicleInfoPublisherImpl>()),
     _vehicle_status_publisher(std::make_shared<EgoVehicleStatusPublisherImpl>()),
     _vehicle_odometry_publisher(std::make_shared<VehicleOdometryPublisherImpl>()),
@@ -99,47 +101,59 @@ bool VehiclePublisher::SubscribersConnected() const {
          _vehicle_object_with_covariance_publisher->SubscribersConnected();
 }
 
+bool VehiclePublisher::ProcessMessages() {
+  // the telemetry data is not transferred by the sensor data stream,
+  // it has to be requested separately from the server,
+  // This should happen within the message processing step, when also other calls are expected
+  // to ensure the simulation internal data is actually locked and its safe to acceess it. 
+  if (_vehicle_telemetry_publisher->SubscribersConnected()) {
+    auto response = _carla_server.call_get_telemetry_data(_actor_name_definition->id);
+    if (response.HasError()) {
+      carla::log_warning("VehiclePublisher: Failed to get telemetry data for actor id ",
+                        std::to_string(_actor_name_definition->id));
+    }
+    else {
+      auto const telemetry_data = response.Get();
+      _vehicle_telemetry_publisher->Message().throttle(telemetry_data.throttle);
+      _vehicle_telemetry_publisher->Message().steer(telemetry_data.steer);
+      _vehicle_telemetry_publisher->Message().brake(telemetry_data.brake);
+      _vehicle_telemetry_publisher->Message().engine_rpm(telemetry_data.engine_rpm);
+      _vehicle_telemetry_publisher->Message().gear(telemetry_data.gear);
+      _vehicle_telemetry_publisher->Message().drag(telemetry_data.drag);
+      
+      _vehicle_telemetry_publisher->Message().wheels().clear();
+      for (auto const &wheel: telemetry_data.wheels) {
+        carla_msgs::msg::CarlaEgoVehicleTelemetryDataWheel wheel_msg;
+        wheel_msg.tire_friction(wheel.tire_friction);
+        wheel_msg.lat_slip(wheel.lat_slip);
+        wheel_msg.long_slip(wheel.long_slip);
+        wheel_msg.omega(wheel.omega);
+        wheel_msg.tire_load(wheel.tire_load);
+        wheel_msg.normalized_tire_load(wheel.normalized_tire_load);
+        wheel_msg.torque(wheel.torque);
+        wheel_msg.long_force(wheel.long_force);
+        wheel_msg.lat_force(wheel.lat_force);
+        wheel_msg.normalized_long_force(wheel.normalized_long_force);
+        wheel_msg.normalized_lat_force(wheel.normalized_lat_force);
+        _vehicle_telemetry_publisher->Message().wheels().push_back(wheel_msg);
+      }
+    }
+  }
+  return true;
+}
+
 void VehiclePublisher::UpdateVehicle(std::shared_ptr<carla::ros2::types::Object> &object,
-                                     carla::sensor::data::ActorDynamicState const &actor_dynamic_state,
-                                     carla::rpc::RpcServerInterface &carla_server) {
+                                     carla::sensor::data::ActorDynamicState const &actor_dynamic_state) {
   _vehicle_odometry_publisher->SetMessageHeader(object->Timestamp().time(), "map");
   _vehicle_odometry_publisher->Message().child_frame_id(frame_id());
   _vehicle_odometry_publisher->Message().pose(object->Transform().pose_with_covariance());
   _vehicle_odometry_publisher->Message().twist(object->AcceleratedMovement().twist_with_covariance());
   
   _vehicle_speed_publisher->Message().data(object->Speed().speed().data());
-  
-  auto response = carla_server.call_get_telemetry_data(_actor_name_definition->id);
-  if (!response) {
-    carla::log_warning("VehiclePublisher: Failed to get telemetry data for actor id ",
-                       std::to_string(_actor_name_definition->id), ": ", response.GetError().What());
-  }
-  else {
-    auto telemetry_data = response.Get();
-    _vehicle_telemetry_publisher->SetMessageHeader(object->Timestamp().time(), "map");
-    _vehicle_telemetry_publisher->Message().throttle(telemetry_data.throttle);
-    _vehicle_telemetry_publisher->Message().steer(telemetry_data.steer);
-    _vehicle_telemetry_publisher->Message().brake(telemetry_data.brake);
-    _vehicle_telemetry_publisher->Message().engine_rpm(telemetry_data.engine_rpm);
-    _vehicle_telemetry_publisher->Message().gear(telemetry_data.gear);
-    _vehicle_telemetry_publisher->Message().drag(telemetry_data.drag);
-    _vehicle_telemetry_publisher->Message().wheels().clear();
-    for (auto const &wheel: telemetry_data.wheels) {
-      carla_msgs::msg::CarlaEgoVehicleTelemetryDataWheel wheel_msg;
-      wheel_msg.tire_friction(wheel.tire_friction);
-      wheel_msg.lat_slip(wheel.lat_slip);
-      wheel_msg.long_slip(wheel.long_slip);
-      wheel_msg.omega(wheel.omega);
-      wheel_msg.tire_load(wheel.tire_load);
-      wheel_msg.normalized_tire_load(wheel.normalized_tire_load);
-      wheel_msg.torque(wheel.torque);
-      wheel_msg.long_force(wheel.long_force);
-      wheel_msg.lat_force(wheel.lat_force);
-      wheel_msg.normalized_long_force(wheel.normalized_long_force);
-      wheel_msg.normalized_lat_force(wheel.normalized_lat_force);
-      _vehicle_telemetry_publisher->Message().wheels().push_back(wheel_msg);
-    }
-  }
+  _vehicle_speed_publisher->SetMessageUpdated();
+
+  // add the timestamp and frame_id to telemetry data
+  _vehicle_telemetry_publisher->SetMessageHeader(object->Timestamp().time(), "map");
 
   _vehicle_status_publisher->SetMessageHeader(object->Timestamp().time(), frame_id());
   _vehicle_status_publisher->Message().velocity(object->Speed().speed().data());

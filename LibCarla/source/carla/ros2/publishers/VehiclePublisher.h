@@ -39,7 +39,8 @@ public:
   VehiclePublisher(std::shared_ptr<carla::ros2::types::VehicleActorDefinition> vehicle_actor_definition,
                    std::shared_ptr<TransformPublisher> transform_publisher,
                    std::shared_ptr<ObjectsPublisher> objects_publisher,
-                   std::shared_ptr<ObjectsWithCovariancePublisher> objects_with_covariance_publisher);
+                   std::shared_ptr<ObjectsWithCovariancePublisher> objects_with_covariance_publisher,
+                   carla::rpc::RpcServerInterface &carla_server);
   virtual ~VehiclePublisher() = default;
 
   /**
@@ -56,11 +57,16 @@ public:
    */
   bool SubscribersConnected() const override;
 
+  /**
+   * Perform message processing. 
+   */
+  bool ProcessMessages();
+
   void UpdateVehicle(std::shared_ptr<carla::ros2::types::Object> &object,
-                     carla::sensor::data::ActorDynamicState const &actor_dynamic_state,
-                     carla::rpc::RpcServerInterface &carla_server);
+                     carla::sensor::data::ActorDynamicState const &actor_dynamic_state);
 
 private:
+  carla::rpc::RpcServerInterface &_carla_server;
   std::shared_ptr<VehicleInfoPublisherImpl> _vehicle_info_publisher;
   bool _vehicle_info_published{false};
   std::shared_ptr<EgoVehicleStatusPublisherImpl> _vehicle_status_publisher;

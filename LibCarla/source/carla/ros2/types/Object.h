@@ -20,9 +20,11 @@
 #include "derived_object_msgs/msg/Object.h"
 #include "derived_object_msgs/msg/ObjectWithCovariance.h"
 
+
 namespace carla {
 namespace ros2 {
 namespace types {
+
 
 /**
   Convert a carla (linear) acceleration to a ROS accel (linear part)
@@ -40,7 +42,10 @@ public:
   explicit Object(std::shared_ptr<carla::ros2::types::VehicleActorDefinition> vehicle_actor_definition)
     : _actor_name_definition(
           std::static_pointer_cast<carla::ros2::types::ActorNameDefinition>(vehicle_actor_definition)) {
-    if (_actor_name_definition->base_type == "Bus" || _actor_name_definition->base_type == "Truck") {
+    
+    _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_OTHER_VEHICLE;
+    if (_actor_name_definition->base_type == "Bus" || _actor_name_definition->base_type == "Truck"
+        || _actor_name_definition->base_type == "bus" || _actor_name_definition->base_type == "truck") {
       _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_TRUCK;
     } else if (_actor_name_definition->base_type == "car" || _actor_name_definition->base_type == "van") {
       _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_CAR;
@@ -68,7 +73,7 @@ public:
       carla::log_warning(
           "Unknown Vehicle Object[", _actor_name_definition->type_id, "] id: ", _actor_name_definition->id,
           " object_type: ", _actor_name_definition->object_type, " base_type: ", _actor_name_definition->base_type,
-          " mass: ", vehicle_actor_definition->vehicle_physics_control.mass, " ROS-class: ", _classification);
+          " mass: ", vehicle_actor_definition->vehicle_physics_control.mass, " estimated ROS-class based on mass: ", classification_string());
     }
   }
   /**
@@ -82,7 +87,7 @@ public:
     _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_PEDESTRIAN;
     carla::log_debug("Creating Walker Object[", _actor_name_definition->type_id, "] id: ", _actor_name_definition->id,
                     " object_type: ", _actor_name_definition->object_type,
-                    " base_type: ", _actor_name_definition->base_type, " ROS-class: ", _classification);
+                    " base_type: ", _actor_name_definition->base_type, " ROS-class: ", classification_string());
   }
   /**
    * The representation of an object in the sense of derived_object_msgs::msg::Object.
@@ -95,7 +100,7 @@ public:
     _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_SIGN;
     carla::log_debug("Creating Traffic Light Object[", _actor_name_definition->type_id,
                     "] id: ", _actor_name_definition->id, " object_type: ", _actor_name_definition->object_type,
-                    " base_type: ", _actor_name_definition->base_type, " ROS-class: ", _classification);
+                    " base_type: ", _actor_name_definition->base_type, " ROS-class: ", classification_string());
   }
   /**
    * The representation of an object in the sense of derived_object_msgs::msg::Object.
@@ -108,7 +113,7 @@ public:
     _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_SIGN;
     carla::log_debug("Creating Traffic Sign Object[", _actor_name_definition->type_id,
                     "] id: ", _actor_name_definition->id, " object_type: ", _actor_name_definition->object_type,
-                    " base_type: ", _actor_name_definition->base_type, " ROS-class: ", _classification);
+                    " base_type: ", _actor_name_definition->base_type, " ROS-class: ", classification_string());
   }
   ~Object() = default;
   Object(const Object&) = delete;
@@ -206,13 +211,44 @@ public:
     return _classification;
   }
 
+  std::string classification_string() {
+    switch (_classification) {
+      case derived_object_msgs::msg::Object_Constants::CLASSIFICATION_UNKNOWN:
+        return "UNKNOWN";
+      case derived_object_msgs::msg::Object_Constants::CLASSIFICATION_UNKNOWN_SMALL:
+        return "UNKNOWN_SMALL";
+      case derived_object_msgs::msg::Object_Constants::CLASSIFICATION_UNKNOWN_MEDIUM:
+        return "UNKNOWN_MEDIUM";
+      case derived_object_msgs::msg::Object_Constants::CLASSIFICATION_UNKNOWN_BIG:
+        return "UNKNOWN_BIG";
+      case derived_object_msgs::msg::Object_Constants::CLASSIFICATION_PEDESTRIAN:
+        return "PEDESTRIAN";
+      case derived_object_msgs::msg::Object_Constants::CLASSIFICATION_BIKE:
+        return "BIKE";
+      case derived_object_msgs::msg::Object_Constants::CLASSIFICATION_CAR:
+        return "CAR";
+      case derived_object_msgs::msg::Object_Constants::CLASSIFICATION_TRUCK:
+        return "TRUCK";
+      case derived_object_msgs::msg::Object_Constants::CLASSIFICATION_MOTORCYCLE:
+        return "MOTORCYCLE";
+      case derived_object_msgs::msg::Object_Constants::CLASSIFICATION_OTHER_VEHICLE:
+        return "OTHER_VEHICLE";
+      case derived_object_msgs::msg::Object_Constants::CLASSIFICATION_BARRIER:
+        return "BARRIER";
+      case derived_object_msgs::msg::Object_Constants::CLASSIFICATION_SIGN:
+        return "SIGN";
+      default:
+        return "N/A";
+    }
+  }
+
   carla_msgs::msg::CarlaActorInfo carla_actor_info(std::shared_ptr<ROS2NameRegistry> name_registry) const {
     return _actor_name_definition->carla_actor_info(name_registry);
   }
 
 private:
   std::shared_ptr<carla::ros2::types::ActorNameDefinition> _actor_name_definition;
-  uint8_t _classification;
+  uint8_t _classification{derived_object_msgs::msg::Object_Constants::CLASSIFICATION_UNKNOWN};
   carla::geom::BoundingBox _bounding_box;
   carla::ros2::types::Transform _transform;
   carla::ros2::types::AcceleratedMovement _accelerated_movement;
