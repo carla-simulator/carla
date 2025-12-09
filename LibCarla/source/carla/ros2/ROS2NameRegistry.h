@@ -56,7 +56,11 @@ public:
 
   std::string FrameId(ROS2NameRecord const* record) {
     std::lock_guard<std::mutex> lock(access_mutex);
-    return GetTopicAndFrameLocked(record)._frame_id;
+    std::string frame_id = GetTopicAndFrameLocked(record)._frame_id;
+    if (frame_id.empty()) {
+      frame_id = "map";
+    }
+    return frame_id;
   }
   std::string TopicName(ROS2NameRecord const* record) {
     std::lock_guard<std::mutex> lock(access_mutex);

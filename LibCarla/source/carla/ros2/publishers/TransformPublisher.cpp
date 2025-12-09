@@ -30,13 +30,20 @@ bool TransformPublisher::SubscribersConnected() const {
   return _impl->SubscribersConnected();
 }
 
-void TransformPublisher::AddTransform(const builtin_interfaces::msg::Time &stamp, std::string name, std::string parent,
+void TransformPublisher::AddTransform(const builtin_interfaces::msg::Time &stamp, const std::string &name, const std::string &parent,
                                       geometry_msgs::msg::Transform const &transform) {
+  
   geometry_msgs::msg::TransformStamped ts;
-  ts.header().stamp(stamp);
   ts.header().frame_id(parent);
+  if ( name == parent ) {
+    // the child frame cannot be its own parent in ROS TF, so replace it with "carla"
+    ts.child_frame_id("carla");
+  }
+  else {
+    ts.child_frame_id(name);
+  }
+  ts.header().stamp(stamp);
   ts.transform(transform);
-  ts.child_frame_id(name);
   _impl->Message().transforms().push_back(ts);
   _impl->SetMessageUpdated();
 }

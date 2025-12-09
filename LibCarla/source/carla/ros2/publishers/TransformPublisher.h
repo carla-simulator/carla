@@ -32,7 +32,7 @@ public:
    */
   bool SubscribersConnected() const override;
 
-  void AddTransform(const builtin_interfaces::msg::Time &stamp, std::string name, std::string parent,
+  void AddTransform(const builtin_interfaces::msg::Time &stamp, const std::string &name, const std::string &parent,
                     geometry_msgs::msg::Transform const &transform);
 
 private:
