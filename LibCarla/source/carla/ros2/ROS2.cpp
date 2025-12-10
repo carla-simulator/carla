@@ -126,7 +126,7 @@ void ROS2::NotifyBeginEpisode() {
   get_available_maps_service->Init(_domain_participant_impl);
   _services.push_back(get_available_maps_service);
 
-  auto load_map_service = std::make_shared<carla::ros2::SpawnObjectService>(
+  auto load_map_service = std::make_shared<carla::ros2::LoadMapService>(
       *_carla_server, carla::ros2::types::ActorNameDefinition::CreateFromRoleName("load_map"));
   load_map_service->Init(_domain_participant_impl);
   _services.push_back(load_map_service);
