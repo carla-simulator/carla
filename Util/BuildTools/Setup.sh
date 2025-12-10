@@ -422,7 +422,7 @@ unset RECAST_BASENAME
 # ==============================================================================
 
 LIBPNG_VERSION=1.6.37
-LIBPNG_REPO=https://sourceforge.net/projects/libpng/files/libpng16/${LIBPNG_VERSION}/libpng-${LIBPNG_VERSION}.tar.xz
+LIBPNG_REPO=https://sourceforge.net/projects/libpng/files/libpng16/older-releases/${LIBPNG_VERSION}/libpng-${LIBPNG_VERSION}.tar.xz
 LIBPNG_BASENAME=libpng-${LIBPNG_VERSION}
 LIBPNG_INSTALL=${LIBPNG_BASENAME}-install
 
