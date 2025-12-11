@@ -138,6 +138,17 @@ public:
   /**
    * @}
    */
+
+  /**
+   * @brief weather related calls
+   * @{
+   */
+   carla::rpc::Response<carla::rpc::WeatherParameters> call_get_weather_parameters() override;
+   carla::rpc::Response<void> call_set_weather_parameters(carla::rpc::WeatherParameters const &weather_parameters) override;
+  /**
+   * @}
+   */
+
 private:
 
   class FPimpl;

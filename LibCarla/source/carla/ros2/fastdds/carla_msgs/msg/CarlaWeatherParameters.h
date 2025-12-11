@@ -200,6 +200,44 @@ namespace carla_msgs {
             eProsima_user_DllExport float& wind_intensity();
 
             /*!
+             * @brief This function sets a value in member sun_azimuth_angle
+             * @param _sun_azimuth_angle New value for member sun_azimuth_angle
+             */
+            eProsima_user_DllExport void sun_azimuth_angle(
+                    float _sun_azimuth_angle);
+
+            /*!
+             * @brief This function returns the value of member sun_azimuth_angle
+             * @return Value of member sun_azimuth_angle
+             */
+            eProsima_user_DllExport float sun_azimuth_angle() const;
+
+            /*!
+             * @brief This function returns a reference to member sun_azimuth_angle
+             * @return Reference to member sun_azimuth_angle
+             */
+            eProsima_user_DllExport float& sun_azimuth_angle();
+
+            /*!
+             * @brief This function sets a value in member sun_altitude_angle
+             * @param _sun_altitude_angle New value for member sun_altitude_angle
+             */
+            eProsima_user_DllExport void sun_altitude_angle(
+                    float _sun_altitude_angle);
+
+            /*!
+             * @brief This function returns the value of member sun_altitude_angle
+             * @return Value of member sun_altitude_angle
+             */
+            eProsima_user_DllExport float sun_altitude_angle() const;
+
+            /*!
+             * @brief This function returns a reference to member sun_altitude_angle
+             * @return Reference to member sun_altitude_angle
+             */
+            eProsima_user_DllExport float& sun_altitude_angle();
+
+            /*!
              * @brief This function sets a value in member fog_density
              * @param _fog_density New value for member fog_density
              */
@@ -238,6 +276,25 @@ namespace carla_msgs {
             eProsima_user_DllExport float& fog_distance();
 
             /*!
+             * @brief This function sets a value in member fog_falloff
+             * @param _fog_falloff New value for member fog_falloff
+             */
+            eProsima_user_DllExport void fog_falloff(
+                    float _fog_falloff);
+
+            /*!
+             * @brief This function returns the value of member fog_falloff
+             * @return Value of member fog_falloff
+             */
+            eProsima_user_DllExport float fog_falloff() const;
+
+            /*!
+             * @brief This function returns a reference to member fog_falloff
+             * @return Reference to member fog_falloff
+             */
+            eProsima_user_DllExport float& fog_falloff();
+
+            /*!
              * @brief This function sets a value in member wetness
              * @param _wetness New value for member wetness
              */
@@ -257,42 +314,80 @@ namespace carla_msgs {
             eProsima_user_DllExport float& wetness();
 
             /*!
-             * @brief This function sets a value in member sun_azimuth_angle
-             * @param _sun_azimuth_angle New value for member sun_azimuth_angle
+             * @brief This function sets a value in member scattering_intensity
+             * @param _scattering_intensity New value for member scattering_intensity
              */
-            eProsima_user_DllExport void sun_azimuth_angle(
-                    float _sun_azimuth_angle);
+            eProsima_user_DllExport void scattering_intensity(
+                    float _scattering_intensity);
 
             /*!
-             * @brief This function returns the value of member sun_azimuth_angle
-             * @return Value of member sun_azimuth_angle
+             * @brief This function returns the value of member scattering_intensity
+             * @return Value of member scattering_intensity
              */
-            eProsima_user_DllExport float sun_azimuth_angle() const;
+            eProsima_user_DllExport float scattering_intensity() const;
 
             /*!
-             * @brief This function returns a reference to member sun_azimuth_angle
-             * @return Reference to member sun_azimuth_angle
+             * @brief This function returns a reference to member scattering_intensity
+             * @return Reference to member scattering_intensity
              */
-            eProsima_user_DllExport float& sun_azimuth_angle();
+            eProsima_user_DllExport float& scattering_intensity();
 
             /*!
-             * @brief This function sets a value in member sun_altitude_angle
-             * @param _sun_altitude_angle New value for member sun_altitude_angle
+             * @brief This function sets a value in member mie_scattering_scale
+             * @param _mie_scattering_scale New value for member mie_scattering_scale
              */
-            eProsima_user_DllExport void sun_altitude_angle(
-                    float _sun_altitude_angle);
+            eProsima_user_DllExport void mie_scattering_scale(
+                    float _mie_scattering_scale);
 
             /*!
-             * @brief This function returns the value of member sun_altitude_angle
-             * @return Value of member sun_altitude_angle
+             * @brief This function returns the value of member mie_scattering_scale
+             * @return Value of member mie_scattering_scale
              */
-            eProsima_user_DllExport float sun_altitude_angle() const;
+            eProsima_user_DllExport float mie_scattering_scale() const;
 
             /*!
-             * @brief This function returns a reference to member sun_altitude_angle
-             * @return Reference to member sun_altitude_angle
+             * @brief This function returns a reference to member mie_scattering_scale
+             * @return Reference to member mie_scattering_scale
              */
-            eProsima_user_DllExport float& sun_altitude_angle();
+            eProsima_user_DllExport float& mie_scattering_scale();
+
+            /*!
+             * @brief This function sets a value in member rayleigh_scattering_scale
+             * @param _rayleigh_scattering_scale New value for member rayleigh_scattering_scale
+             */
+            eProsima_user_DllExport void rayleigh_scattering_scale(
+                    float _rayleigh_scattering_scale);
+
+            /*!
+             * @brief This function returns the value of member rayleigh_scattering_scale
+             * @return Value of member rayleigh_scattering_scale
+             */
+            eProsima_user_DllExport float rayleigh_scattering_scale() const;
+
+            /*!
+             * @brief This function returns a reference to member rayleigh_scattering_scale
+             * @return Reference to member rayleigh_scattering_scale
+             */
+            eProsima_user_DllExport float& rayleigh_scattering_scale();
+
+            /*!
+             * @brief This function sets a value in member dust_storm
+             * @param _dust_storm New value for member dust_storm
+             */
+            eProsima_user_DllExport void dust_storm(
+                    float _dust_storm);
+
+            /*!
+             * @brief This function returns the value of member dust_storm
+             * @return Value of member dust_storm
+             */
+            eProsima_user_DllExport float dust_storm() const;
+
+            /*!
+             * @brief This function returns a reference to member dust_storm
+             * @return Reference to member dust_storm
+             */
+            eProsima_user_DllExport float& dust_storm();
 
 
             /*!
@@ -358,11 +453,16 @@ namespace carla_msgs {
             float m_precipitation;
             float m_precipitation_deposits;
             float m_wind_intensity;
-            float m_fog_density;
-            float m_fog_distance;
-            float m_wetness;
             float m_sun_azimuth_angle;
             float m_sun_altitude_angle;
+            float m_fog_density;
+            float m_fog_distance;
+            float m_fog_falloff;
+            float m_wetness;
+            float m_scattering_intensity;
+            float m_mie_scattering_scale;
+            float m_rayleigh_scattering_scale;
+            float m_dust_storm;
         };
     } // namespace msg
 } // namespace carla_msgs

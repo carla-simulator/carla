@@ -17,6 +17,7 @@
 #include "carla/rpc/ServerSynchronizationTypes.h"
 #include "carla/rpc/Transform.h"
 #include "carla/rpc/VehicleTelemetryData.h"
+#include "carla/rpc/WeatherParameters.h"
 #include "carla/streaming/detail/Dispatcher.h"
 
 namespace carla {
@@ -99,6 +100,16 @@ public:
       synchronization_client_id_type const &client_id, synchronization_participant_id_type const &participant_id,
       synchronization_target_game_time const &target_game_time = NO_SYNC_TARGET_GAME_TIME) = 0;
   virtual carla::rpc::Response<std::pair< bool , std::vector<carla::rpc::synchronization_window_participant_state> > >  call_get_synchronization_window_status() = 0;
+  /**
+   * @}
+   */
+
+  /**
+   * @brief weather related calls
+   * @{
+   */
+   virtual Response<WeatherParameters> call_get_weather_parameters() = 0;
+   virtual Response<void> call_set_weather_parameters(WeatherParameters const &weather_parameters) = 0;
   /**
    * @}
    */

@@ -17,12 +17,14 @@
 #include "carla/ros2/publishers/UePublisherBaseSensor.h"
 #include "carla/ros2/publishers/VehiclePublisher.h"
 #include "carla/ros2/publishers/WalkerPublisher.h"
+#include "carla/ros2/publishers/WeatherPublisher.h"
 #include "carla/ros2/subscribers/AckermannControlSubscriber.h"
 #include "carla/ros2/subscribers/ActorSetTransformSubscriber.h"
 #include "carla/ros2/subscribers/CarlaControlSubscriber.h"
 #include "carla/ros2/subscribers/CarlaSynchronizationWindowSubscriber.h"
 #include "carla/ros2/subscribers/VehicleControlSubscriber.h"
 #include "carla/ros2/subscribers/WalkerControlSubscriber.h"
+#include "carla/ros2/subscribers/WeatherControlSubscriber.h"
 #include "carla/ros2/types/Object.h"
 #include "carla/ros2/types/VehicleActorDefinition.h"
 #include "carla/rpc/RpcServerInterface.h"
@@ -200,6 +202,7 @@ private:
   std::shared_ptr<ROS2NameRegistry> _name_registry;
   // publisher
   std::shared_ptr<CarlaStatusPublisher> _carla_status_publisher;
+  std::shared_ptr<WeatherPublisher> _carla_weather_publisher;
   std::shared_ptr<CarlaActorListPublisher> _carla_actor_list_publisher;
   std::shared_ptr<ClockPublisher> _clock_publisher;
   std::shared_ptr<MapPublisher> _map_publisher;
@@ -208,6 +211,7 @@ private:
   std::shared_ptr<TrafficLightsPublisher> _traffic_lights_publisher;
   // subscriber
   std::shared_ptr<CarlaControlSubscriber> _carla_control_subscriber;
+  std::shared_ptr<WeatherControlSubscriber> _weather_control_subscriber;
   std::shared_ptr<CarlaSynchronizationWindowSubscriber> _sync_subscriber;
 
   bool _initialized{false};

@@ -17,6 +17,7 @@ UeWorldPublisher::UeWorldPublisher(carla::rpc::RpcServerInterface& carla_server,
     _carla_server(carla_server),
     _name_registry(name_registry),
     _carla_status_publisher(std::make_shared<CarlaStatusPublisher>()),
+    _carla_weather_publisher(std::make_shared<WeatherPublisher>(_carla_server)),
     _carla_actor_list_publisher(std::make_shared<CarlaActorListPublisher>("actor_list")),
     _clock_publisher(std::make_shared<ClockPublisher>()),
     _map_publisher(std::make_shared<MapPublisher>()),
@@ -24,17 +25,20 @@ UeWorldPublisher::UeWorldPublisher(carla::rpc::RpcServerInterface& carla_server,
     _objects_with_covariance_publisher(std::make_shared<ObjectsWithCovariancePublisher>()),
     _traffic_lights_publisher(std::make_shared<TrafficLightsPublisher>()),
     _carla_control_subscriber(std::make_shared<CarlaControlSubscriber>(*this, _carla_server)),
-    _sync_subscriber(std::make_shared<CarlaSynchronizationWindowSubscriber>(*this, _carla_server)) {
+    _sync_subscriber(std::make_shared<CarlaSynchronizationWindowSubscriber>(*this, _carla_server)),
+    _weather_control_subscriber(std::make_shared<WeatherControlSubscriber>(*this, _carla_server)) {
 }
 
 bool UeWorldPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
   _domain_participant_impl = domain_participant;
   _initialized = _carla_status_publisher->Init(domain_participant) &&
+                 _carla_weather_publisher->Init(domain_participant) &&
                  _carla_actor_list_publisher->Init(domain_participant) && _clock_publisher->Init(domain_participant) &&
                  _map_publisher->Init(domain_participant) && _objects_publisher->Init(domain_participant) &&
                  _objects_with_covariance_publisher->Init(domain_participant) && _traffic_lights_publisher->Init(domain_participant) &&
                  _transform_publisher->Init(domain_participant) &&
-                 _carla_control_subscriber->Init(domain_participant) && _sync_subscriber->Init(domain_participant);
+                 _carla_control_subscriber->Init(domain_participant) && _sync_subscriber->Init(domain_participant) &&
+                 _weather_control_subscriber->Init(domain_participant);
   return _initialized;
 }
 
@@ -42,7 +46,7 @@ bool UeWorldPublisher::Publish() {
   if (!_initialized) {
     return false;
   }
-  return _clock_publisher->Publish() && _map_publisher->Publish();
+  return _clock_publisher->Publish() && _map_publisher->Publish() && _carla_weather_publisher->Publish();
 }
 
 void UeWorldPublisher::ProcessMessages() {
@@ -52,6 +56,8 @@ void UeWorldPublisher::ProcessMessages() {
 
   _carla_control_subscriber->ProcessMessages();
   _sync_subscriber->ProcessMessages();
+  _carla_weather_publisher->ProcessMessages();
+  _weather_control_subscriber->ProcessMessages();
   for (auto& vehicle : _vehicles) {
     vehicle.second._vehicle_controller->ProcessMessages();
     vehicle.second._vehicle_ackermann_controller->ProcessMessages();

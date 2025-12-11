@@ -110,7 +110,7 @@ bool VehiclePublisher::ProcessMessages() {
     auto response = _carla_server.call_get_telemetry_data(_actor_name_definition->id);
     if (response.HasError()) {
       carla::log_warning("VehiclePublisher: Failed to get telemetry data for actor id ",
-                        std::to_string(_actor_name_definition->id));
+                        std::to_string(_actor_name_definition->id), ":", response.GetError().What());
     }
     else {
       auto const telemetry_data = response.Get();

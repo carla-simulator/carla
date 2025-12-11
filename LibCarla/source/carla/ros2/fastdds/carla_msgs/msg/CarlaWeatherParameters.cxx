@@ -36,24 +36,34 @@ using namespace eprosima::fastcdr::exception;
 
 carla_msgs::msg::CarlaWeatherParameters::CarlaWeatherParameters()
 {
-    // m_cloudiness com.eprosima.idl.parser.typecode.PrimitiveTypeCode@6f6745d6
+    // m_cloudiness com.eprosima.idl.parser.typecode.PrimitiveTypeCode@32a068d1
     m_cloudiness = 0.0;
-    // m_precipitation com.eprosima.idl.parser.typecode.PrimitiveTypeCode@27508c5d
+    // m_precipitation com.eprosima.idl.parser.typecode.PrimitiveTypeCode@33cb5951
     m_precipitation = 0.0;
-    // m_precipitation_deposits com.eprosima.idl.parser.typecode.PrimitiveTypeCode@4f704591
+    // m_precipitation_deposits com.eprosima.idl.parser.typecode.PrimitiveTypeCode@7fad8c79
     m_precipitation_deposits = 0.0;
-    // m_wind_intensity com.eprosima.idl.parser.typecode.PrimitiveTypeCode@4b5189ac
+    // m_wind_intensity com.eprosima.idl.parser.typecode.PrimitiveTypeCode@71a794e5
     m_wind_intensity = 0.0;
-    // m_fog_density com.eprosima.idl.parser.typecode.PrimitiveTypeCode@1e4d3ce5
-    m_fog_density = 0.0;
-    // m_fog_distance com.eprosima.idl.parser.typecode.PrimitiveTypeCode@3ddc6915
-    m_fog_distance = 0.0;
-    // m_wetness com.eprosima.idl.parser.typecode.PrimitiveTypeCode@704deff2
-    m_wetness = 0.0;
-    // m_sun_azimuth_angle com.eprosima.idl.parser.typecode.PrimitiveTypeCode@379614be
+    // m_sun_azimuth_angle com.eprosima.idl.parser.typecode.PrimitiveTypeCode@76329302
     m_sun_azimuth_angle = 0.0;
-    // m_sun_altitude_angle com.eprosima.idl.parser.typecode.PrimitiveTypeCode@404bbcbd
+    // m_sun_altitude_angle com.eprosima.idl.parser.typecode.PrimitiveTypeCode@5e25a92e
     m_sun_altitude_angle = 0.0;
+    // m_fog_density com.eprosima.idl.parser.typecode.PrimitiveTypeCode@4df828d7
+    m_fog_density = 0.0;
+    // m_fog_distance com.eprosima.idl.parser.typecode.PrimitiveTypeCode@b59d31
+    m_fog_distance = 0.0;
+    // m_fog_falloff com.eprosima.idl.parser.typecode.PrimitiveTypeCode@62fdb4a6
+    m_fog_falloff = 0.0;
+    // m_wetness com.eprosima.idl.parser.typecode.PrimitiveTypeCode@11e21d0e
+    m_wetness = 0.0;
+    // m_scattering_intensity com.eprosima.idl.parser.typecode.PrimitiveTypeCode@1dd02175
+    m_scattering_intensity = 0.0;
+    // m_mie_scattering_scale com.eprosima.idl.parser.typecode.PrimitiveTypeCode@31206beb
+    m_mie_scattering_scale = 0.0;
+    // m_rayleigh_scattering_scale com.eprosima.idl.parser.typecode.PrimitiveTypeCode@3e77a1ed
+    m_rayleigh_scattering_scale = 0.0331;
+    // m_dust_storm com.eprosima.idl.parser.typecode.PrimitiveTypeCode@3ffcd140
+    m_dust_storm = 0.0;
 
 }
 
@@ -67,6 +77,11 @@ carla_msgs::msg::CarlaWeatherParameters::~CarlaWeatherParameters()
 
 
 
+
+
+
+
+
 }
 
 carla_msgs::msg::CarlaWeatherParameters::CarlaWeatherParameters(
@@ -76,11 +91,16 @@ carla_msgs::msg::CarlaWeatherParameters::CarlaWeatherParameters(
     m_precipitation = x.m_precipitation;
     m_precipitation_deposits = x.m_precipitation_deposits;
     m_wind_intensity = x.m_wind_intensity;
-    m_fog_density = x.m_fog_density;
-    m_fog_distance = x.m_fog_distance;
-    m_wetness = x.m_wetness;
     m_sun_azimuth_angle = x.m_sun_azimuth_angle;
     m_sun_altitude_angle = x.m_sun_altitude_angle;
+    m_fog_density = x.m_fog_density;
+    m_fog_distance = x.m_fog_distance;
+    m_fog_falloff = x.m_fog_falloff;
+    m_wetness = x.m_wetness;
+    m_scattering_intensity = x.m_scattering_intensity;
+    m_mie_scattering_scale = x.m_mie_scattering_scale;
+    m_rayleigh_scattering_scale = x.m_rayleigh_scattering_scale;
+    m_dust_storm = x.m_dust_storm;
 }
 
 carla_msgs::msg::CarlaWeatherParameters::CarlaWeatherParameters(
@@ -90,11 +110,16 @@ carla_msgs::msg::CarlaWeatherParameters::CarlaWeatherParameters(
     m_precipitation = x.m_precipitation;
     m_precipitation_deposits = x.m_precipitation_deposits;
     m_wind_intensity = x.m_wind_intensity;
-    m_fog_density = x.m_fog_density;
-    m_fog_distance = x.m_fog_distance;
-    m_wetness = x.m_wetness;
     m_sun_azimuth_angle = x.m_sun_azimuth_angle;
     m_sun_altitude_angle = x.m_sun_altitude_angle;
+    m_fog_density = x.m_fog_density;
+    m_fog_distance = x.m_fog_distance;
+    m_fog_falloff = x.m_fog_falloff;
+    m_wetness = x.m_wetness;
+    m_scattering_intensity = x.m_scattering_intensity;
+    m_mie_scattering_scale = x.m_mie_scattering_scale;
+    m_rayleigh_scattering_scale = x.m_rayleigh_scattering_scale;
+    m_dust_storm = x.m_dust_storm;
 }
 
 carla_msgs::msg::CarlaWeatherParameters& carla_msgs::msg::CarlaWeatherParameters::operator =(
@@ -105,11 +130,16 @@ carla_msgs::msg::CarlaWeatherParameters& carla_msgs::msg::CarlaWeatherParameters
     m_precipitation = x.m_precipitation;
     m_precipitation_deposits = x.m_precipitation_deposits;
     m_wind_intensity = x.m_wind_intensity;
-    m_fog_density = x.m_fog_density;
-    m_fog_distance = x.m_fog_distance;
-    m_wetness = x.m_wetness;
     m_sun_azimuth_angle = x.m_sun_azimuth_angle;
     m_sun_altitude_angle = x.m_sun_altitude_angle;
+    m_fog_density = x.m_fog_density;
+    m_fog_distance = x.m_fog_distance;
+    m_fog_falloff = x.m_fog_falloff;
+    m_wetness = x.m_wetness;
+    m_scattering_intensity = x.m_scattering_intensity;
+    m_mie_scattering_scale = x.m_mie_scattering_scale;
+    m_rayleigh_scattering_scale = x.m_rayleigh_scattering_scale;
+    m_dust_storm = x.m_dust_storm;
 
     return *this;
 }
@@ -122,11 +152,16 @@ carla_msgs::msg::CarlaWeatherParameters& carla_msgs::msg::CarlaWeatherParameters
     m_precipitation = x.m_precipitation;
     m_precipitation_deposits = x.m_precipitation_deposits;
     m_wind_intensity = x.m_wind_intensity;
-    m_fog_density = x.m_fog_density;
-    m_fog_distance = x.m_fog_distance;
-    m_wetness = x.m_wetness;
     m_sun_azimuth_angle = x.m_sun_azimuth_angle;
     m_sun_altitude_angle = x.m_sun_altitude_angle;
+    m_fog_density = x.m_fog_density;
+    m_fog_distance = x.m_fog_distance;
+    m_fog_falloff = x.m_fog_falloff;
+    m_wetness = x.m_wetness;
+    m_scattering_intensity = x.m_scattering_intensity;
+    m_mie_scattering_scale = x.m_mie_scattering_scale;
+    m_rayleigh_scattering_scale = x.m_rayleigh_scattering_scale;
+    m_dust_storm = x.m_dust_storm;
 
     return *this;
 }
@@ -135,7 +170,7 @@ bool carla_msgs::msg::CarlaWeatherParameters::operator ==(
         const CarlaWeatherParameters& x) const
 {
 
-    return (m_cloudiness == x.m_cloudiness && m_precipitation == x.m_precipitation && m_precipitation_deposits == x.m_precipitation_deposits && m_wind_intensity == x.m_wind_intensity && m_fog_density == x.m_fog_density && m_fog_distance == x.m_fog_distance && m_wetness == x.m_wetness && m_sun_azimuth_angle == x.m_sun_azimuth_angle && m_sun_altitude_angle == x.m_sun_altitude_angle);
+    return (m_cloudiness == x.m_cloudiness && m_precipitation == x.m_precipitation && m_precipitation_deposits == x.m_precipitation_deposits && m_wind_intensity == x.m_wind_intensity && m_sun_azimuth_angle == x.m_sun_azimuth_angle && m_sun_altitude_angle == x.m_sun_altitude_angle && m_fog_density == x.m_fog_density && m_fog_distance == x.m_fog_distance && m_fog_falloff == x.m_fog_falloff && m_wetness == x.m_wetness && m_scattering_intensity == x.m_scattering_intensity && m_mie_scattering_scale == x.m_mie_scattering_scale && m_rayleigh_scattering_scale == x.m_rayleigh_scattering_scale && m_dust_storm == x.m_dust_storm);
 }
 
 bool carla_msgs::msg::CarlaWeatherParameters::operator !=(
@@ -148,6 +183,21 @@ size_t carla_msgs::msg::CarlaWeatherParameters::getMaxCdrSerializedSize(
         size_t current_alignment)
 {
     size_t initial_alignment = current_alignment;
+
+
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+
+
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+
+
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+
+
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+
+
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
 
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
@@ -216,6 +266,21 @@ size_t carla_msgs::msg::CarlaWeatherParameters::getCdrSerializedSize(
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
 
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+
+
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+
+
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+
+
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+
+
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+
+
 
     return current_alignment - initial_alignment;
 }
@@ -228,11 +293,16 @@ void carla_msgs::msg::CarlaWeatherParameters::serialize(
     scdr << m_precipitation;
     scdr << m_precipitation_deposits;
     scdr << m_wind_intensity;
-    scdr << m_fog_density;
-    scdr << m_fog_distance;
-    scdr << m_wetness;
     scdr << m_sun_azimuth_angle;
     scdr << m_sun_altitude_angle;
+    scdr << m_fog_density;
+    scdr << m_fog_distance;
+    scdr << m_fog_falloff;
+    scdr << m_wetness;
+    scdr << m_scattering_intensity;
+    scdr << m_mie_scattering_scale;
+    scdr << m_rayleigh_scattering_scale;
+    scdr << m_dust_storm;
 
 }
 
@@ -244,11 +314,16 @@ void carla_msgs::msg::CarlaWeatherParameters::deserialize(
     dcdr >> m_precipitation;
     dcdr >> m_precipitation_deposits;
     dcdr >> m_wind_intensity;
-    dcdr >> m_fog_density;
-    dcdr >> m_fog_distance;
-    dcdr >> m_wetness;
     dcdr >> m_sun_azimuth_angle;
     dcdr >> m_sun_altitude_angle;
+    dcdr >> m_fog_density;
+    dcdr >> m_fog_distance;
+    dcdr >> m_fog_falloff;
+    dcdr >> m_wetness;
+    dcdr >> m_scattering_intensity;
+    dcdr >> m_mie_scattering_scale;
+    dcdr >> m_rayleigh_scattering_scale;
+    dcdr >> m_dust_storm;
 }
 
 /*!
@@ -364,6 +439,62 @@ float& carla_msgs::msg::CarlaWeatherParameters::wind_intensity()
 }
 
 /*!
+ * @brief This function sets a value in member sun_azimuth_angle
+ * @param _sun_azimuth_angle New value for member sun_azimuth_angle
+ */
+void carla_msgs::msg::CarlaWeatherParameters::sun_azimuth_angle(
+        float _sun_azimuth_angle)
+{
+    m_sun_azimuth_angle = _sun_azimuth_angle;
+}
+
+/*!
+ * @brief This function returns the value of member sun_azimuth_angle
+ * @return Value of member sun_azimuth_angle
+ */
+float carla_msgs::msg::CarlaWeatherParameters::sun_azimuth_angle() const
+{
+    return m_sun_azimuth_angle;
+}
+
+/*!
+ * @brief This function returns a reference to member sun_azimuth_angle
+ * @return Reference to member sun_azimuth_angle
+ */
+float& carla_msgs::msg::CarlaWeatherParameters::sun_azimuth_angle()
+{
+    return m_sun_azimuth_angle;
+}
+
+/*!
+ * @brief This function sets a value in member sun_altitude_angle
+ * @param _sun_altitude_angle New value for member sun_altitude_angle
+ */
+void carla_msgs::msg::CarlaWeatherParameters::sun_altitude_angle(
+        float _sun_altitude_angle)
+{
+    m_sun_altitude_angle = _sun_altitude_angle;
+}
+
+/*!
+ * @brief This function returns the value of member sun_altitude_angle
+ * @return Value of member sun_altitude_angle
+ */
+float carla_msgs::msg::CarlaWeatherParameters::sun_altitude_angle() const
+{
+    return m_sun_altitude_angle;
+}
+
+/*!
+ * @brief This function returns a reference to member sun_altitude_angle
+ * @return Reference to member sun_altitude_angle
+ */
+float& carla_msgs::msg::CarlaWeatherParameters::sun_altitude_angle()
+{
+    return m_sun_altitude_angle;
+}
+
+/*!
  * @brief This function sets a value in member fog_density
  * @param _fog_density New value for member fog_density
  */
@@ -420,6 +551,34 @@ float& carla_msgs::msg::CarlaWeatherParameters::fog_distance()
 }
 
 /*!
+ * @brief This function sets a value in member fog_falloff
+ * @param _fog_falloff New value for member fog_falloff
+ */
+void carla_msgs::msg::CarlaWeatherParameters::fog_falloff(
+        float _fog_falloff)
+{
+    m_fog_falloff = _fog_falloff;
+}
+
+/*!
+ * @brief This function returns the value of member fog_falloff
+ * @return Value of member fog_falloff
+ */
+float carla_msgs::msg::CarlaWeatherParameters::fog_falloff() const
+{
+    return m_fog_falloff;
+}
+
+/*!
+ * @brief This function returns a reference to member fog_falloff
+ * @return Reference to member fog_falloff
+ */
+float& carla_msgs::msg::CarlaWeatherParameters::fog_falloff()
+{
+    return m_fog_falloff;
+}
+
+/*!
  * @brief This function sets a value in member wetness
  * @param _wetness New value for member wetness
  */
@@ -448,59 +607,115 @@ float& carla_msgs::msg::CarlaWeatherParameters::wetness()
 }
 
 /*!
- * @brief This function sets a value in member sun_azimuth_angle
- * @param _sun_azimuth_angle New value for member sun_azimuth_angle
+ * @brief This function sets a value in member scattering_intensity
+ * @param _scattering_intensity New value for member scattering_intensity
  */
-void carla_msgs::msg::CarlaWeatherParameters::sun_azimuth_angle(
-        float _sun_azimuth_angle)
+void carla_msgs::msg::CarlaWeatherParameters::scattering_intensity(
+        float _scattering_intensity)
 {
-    m_sun_azimuth_angle = _sun_azimuth_angle;
+    m_scattering_intensity = _scattering_intensity;
 }
 
 /*!
- * @brief This function returns the value of member sun_azimuth_angle
- * @return Value of member sun_azimuth_angle
+ * @brief This function returns the value of member scattering_intensity
+ * @return Value of member scattering_intensity
  */
-float carla_msgs::msg::CarlaWeatherParameters::sun_azimuth_angle() const
+float carla_msgs::msg::CarlaWeatherParameters::scattering_intensity() const
 {
-    return m_sun_azimuth_angle;
+    return m_scattering_intensity;
 }
 
 /*!
- * @brief This function returns a reference to member sun_azimuth_angle
- * @return Reference to member sun_azimuth_angle
+ * @brief This function returns a reference to member scattering_intensity
+ * @return Reference to member scattering_intensity
  */
-float& carla_msgs::msg::CarlaWeatherParameters::sun_azimuth_angle()
+float& carla_msgs::msg::CarlaWeatherParameters::scattering_intensity()
 {
-    return m_sun_azimuth_angle;
+    return m_scattering_intensity;
 }
 
 /*!
- * @brief This function sets a value in member sun_altitude_angle
- * @param _sun_altitude_angle New value for member sun_altitude_angle
+ * @brief This function sets a value in member mie_scattering_scale
+ * @param _mie_scattering_scale New value for member mie_scattering_scale
  */
-void carla_msgs::msg::CarlaWeatherParameters::sun_altitude_angle(
-        float _sun_altitude_angle)
+void carla_msgs::msg::CarlaWeatherParameters::mie_scattering_scale(
+        float _mie_scattering_scale)
 {
-    m_sun_altitude_angle = _sun_altitude_angle;
+    m_mie_scattering_scale = _mie_scattering_scale;
 }
 
 /*!
- * @brief This function returns the value of member sun_altitude_angle
- * @return Value of member sun_altitude_angle
+ * @brief This function returns the value of member mie_scattering_scale
+ * @return Value of member mie_scattering_scale
  */
-float carla_msgs::msg::CarlaWeatherParameters::sun_altitude_angle() const
+float carla_msgs::msg::CarlaWeatherParameters::mie_scattering_scale() const
 {
-    return m_sun_altitude_angle;
+    return m_mie_scattering_scale;
 }
 
 /*!
- * @brief This function returns a reference to member sun_altitude_angle
- * @return Reference to member sun_altitude_angle
+ * @brief This function returns a reference to member mie_scattering_scale
+ * @return Reference to member mie_scattering_scale
  */
-float& carla_msgs::msg::CarlaWeatherParameters::sun_altitude_angle()
+float& carla_msgs::msg::CarlaWeatherParameters::mie_scattering_scale()
 {
-    return m_sun_altitude_angle;
+    return m_mie_scattering_scale;
+}
+
+/*!
+ * @brief This function sets a value in member rayleigh_scattering_scale
+ * @param _rayleigh_scattering_scale New value for member rayleigh_scattering_scale
+ */
+void carla_msgs::msg::CarlaWeatherParameters::rayleigh_scattering_scale(
+        float _rayleigh_scattering_scale)
+{
+    m_rayleigh_scattering_scale = _rayleigh_scattering_scale;
+}
+
+/*!
+ * @brief This function returns the value of member rayleigh_scattering_scale
+ * @return Value of member rayleigh_scattering_scale
+ */
+float carla_msgs::msg::CarlaWeatherParameters::rayleigh_scattering_scale() const
+{
+    return m_rayleigh_scattering_scale;
+}
+
+/*!
+ * @brief This function returns a reference to member rayleigh_scattering_scale
+ * @return Reference to member rayleigh_scattering_scale
+ */
+float& carla_msgs::msg::CarlaWeatherParameters::rayleigh_scattering_scale()
+{
+    return m_rayleigh_scattering_scale;
+}
+
+/*!
+ * @brief This function sets a value in member dust_storm
+ * @param _dust_storm New value for member dust_storm
+ */
+void carla_msgs::msg::CarlaWeatherParameters::dust_storm(
+        float _dust_storm)
+{
+    m_dust_storm = _dust_storm;
+}
+
+/*!
+ * @brief This function returns the value of member dust_storm
+ * @return Value of member dust_storm
+ */
+float carla_msgs::msg::CarlaWeatherParameters::dust_storm() const
+{
+    return m_dust_storm;
+}
+
+/*!
+ * @brief This function returns a reference to member dust_storm
+ * @return Reference to member dust_storm
+ */
+float& carla_msgs::msg::CarlaWeatherParameters::dust_storm()
+{
+    return m_dust_storm;
 }
 
 
@@ -523,7 +738,7 @@ void carla_msgs::msg::CarlaWeatherParameters::serializeKey(
         eprosima::fastcdr::Cdr& scdr) const
 {
     (void) scdr;
-             
+                  
 }
 
 
