@@ -12,8 +12,7 @@
 #include "carla/PythonUtil.h"
 #include "carla/trafficmanager/TrafficManager.h"
 
-namespace carla {
-namespace client {
+namespace carla::client {
 
   using namespace carla::traffic_manager;
 
@@ -188,5 +187,4 @@ namespace client {
         new detail::Simulator(host, port, worker_threads),
         PythonUtil::ReleaseGILDeleter()) {}
 
-} // namespace client
-} // namespace carla
+} // namespace carla::client

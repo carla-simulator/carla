@@ -11,8 +11,7 @@
 
 #include <algorithm>
 
-namespace carla {
-namespace client {
+namespace carla::client {
 
   template <typename Map, typename Container>
   static void FillMap(Map &destination, Container &source) {
@@ -62,5 +61,4 @@ namespace client {
     return description;
   }
 
-} // namespace client
-} // namespace carla
+} // namespace carla::client

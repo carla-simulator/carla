@@ -11,8 +11,7 @@
 #include <algorithm>
 #include <iterator>
 
-namespace carla {
-namespace client {
+namespace carla::client {
 
   BlueprintLibrary::BlueprintLibrary(
       const std::vector<rpc::ActorDefinition> &blueprints) {
@@ -85,5 +84,4 @@ namespace client {
     return operator[](pos);
   }
 
-} // namespace client
-} // namespace carla
+} // namespace carla::client

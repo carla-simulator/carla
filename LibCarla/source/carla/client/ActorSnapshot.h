@@ -12,8 +12,7 @@
 #include "carla/rpc/ActorState.h"
 #include "carla/sensor/data/ActorDynamicState.h"
 
-namespace carla {
-namespace client {
+namespace carla::client {
 
   struct ActorSnapshot {
     ActorId id = 0u;
@@ -25,5 +24,4 @@ namespace client {
     sensor::data::ActorDynamicState::TypeDependentState state;
   };
 
-} // namespace client
-} // namespace carla
+} // namespace carla::client

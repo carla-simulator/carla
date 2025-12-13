@@ -2822,6 +2822,8 @@ void FCarlaServer::Tick()
 bool FCarlaServer::TickCueReceived()
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(FCarlaServer::TickCueReceived);
+  if (Pimpl->TickCuesReceived.load(std::memory_order_acquire) == 0)
+    return false;
   auto k = Pimpl->TickCuesReceived.fetch_sub(1, std::memory_order_acquire);
   bool flag = (k > 0);
   if (!flag)

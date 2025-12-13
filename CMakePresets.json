@@ -15,7 +15,8 @@
       "installDir": "${sourceDir}/Install/${presetName}",
       "cacheVariables":
       {
-        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/CMake/Toolchain.cmake"
+        "CMAKE_TOOLCHAIN_FILE": "${sourceDir}/CMake/Toolchain.cmake",
+        "CMAKE_POLICY_VERSION_MINIMUM" : "3.5"
       },
       "hidden": true
     },

@@ -11,8 +11,7 @@
 #include "carla/client/detail/ActorState.h"
 #include "carla/profiler/LifetimeProfiled.h"
 
-namespace carla {
-namespace client {
+namespace carla::client {
 
   /// Represents an actor in the simulation.
   class Actor
@@ -157,5 +156,4 @@ namespace client {
 
   };
 
-} // namespace client
-} // namespace carla
+} // namespace carla::client

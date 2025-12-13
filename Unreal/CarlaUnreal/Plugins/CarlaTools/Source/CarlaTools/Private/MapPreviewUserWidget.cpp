@@ -22,7 +22,6 @@
 #include "Misc/Paths.h"
 #include <util/ue-header-guard-end.h>
 
-namespace Asio = boost::asio;
 using AsioStreamBuf = boost::asio::streambuf;
 using AsioTCP = boost::asio::ip::tcp;
 using AsioSocket = boost::asio::ip::tcp::socket;
@@ -74,9 +73,9 @@ void UMapPreviewUserWidget::RenderMap(FString Latitude, FString Longitude, FStri
     {
       AsioStreamBuf Buffer;
       std::size_t BytesReceived =
-        Asio::read(*SocketPtr, Buffer, Asio::transfer_at_least(2));
+        boost::asio::read(*SocketPtr, Buffer, boost::asio::transfer_at_least(2));
       TArray<uint8_t> ThisReceivedData;
-      const char* DataPtr = Asio::buffer_cast<const char*>(Buffer.data());
+      const char* DataPtr = (const char*)Buffer.data().data();
       for (std::size_t i = 0; i < Buffer.size(); ++i)
       {
         ThisReceivedData.Add(DataPtr[i]);
@@ -118,8 +117,8 @@ FString UMapPreviewUserWidget::RecvCornersLatLonCoords()
 
   AsioStreamBuf Buffer;
   std::size_t BytesReceived =
-      Asio::read(*SocketPtr, Buffer, Asio::transfer_at_least(2));
-  std::string BytesStr = Asio::buffer_cast<const char*>(Buffer.data());
+    boost::asio::read(*SocketPtr, Buffer, boost::asio::transfer_at_least(2));
+  std::string BytesStr = (const char*)Buffer.data().data();
 
   FString CoordStr = FString(BytesStr.size(), UTF8_TO_TCHAR(BytesStr.c_str()));
   UE_LOG(LogTemp, Log, TEXT("Received Coords %s"), *CoordStr);
@@ -157,7 +156,7 @@ bool UMapPreviewUserWidget::SendStr(FString Msg)
   std::size_t BytesSent = 0;
   try
   {
-    BytesSent = Asio::write(*SocketPtr, Asio::buffer(MessageStr));
+    BytesSent = boost::asio::write(*SocketPtr, boost::asio::buffer(MessageStr));
   }
   catch (const boost::system::system_error& e)
   {

@@ -8,8 +8,7 @@
 
 #include "carla/client/Sensor.h"
 
-namespace carla {
-namespace client {
+namespace carla::client {
 
   class ClientSideSensor : public Sensor {
   public:
@@ -17,5 +16,4 @@ namespace client {
     using Sensor::Sensor;
   };
 
-} // namespace client
-} // namespace carla
+} // namespace carla::client

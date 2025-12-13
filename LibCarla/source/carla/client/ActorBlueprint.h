@@ -16,8 +16,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace carla {
-namespace client {
+namespace carla::client {
 
   /// Contains all the necessary information for spawning an Actor.
   class ActorBlueprint {
@@ -120,5 +119,4 @@ namespace client {
     std::unordered_map<std::string, ActorAttribute> _attributes;
   };
 
-} // namespace client
-} // namespace carla
+} // namespace carla::client

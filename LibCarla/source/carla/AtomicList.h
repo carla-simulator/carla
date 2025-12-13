@@ -13,9 +13,8 @@
 #include <mutex>
 #include <vector>
 
-namespace carla {
-namespace client {
-namespace detail {
+namespace carla::client::detail
+{
 
   /// Holds an atomic pointer to a list.
   ///
@@ -70,6 +69,4 @@ namespace detail {
     AtomicSharedPtr<const ListT> _list;
   };
 
-} // namespace detail
-} // namespace client
-} // namespace carla
+} // namespace carla::client::detail

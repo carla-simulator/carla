@@ -11,8 +11,7 @@
 
 #include <iterator>
 
-namespace carla {
-namespace client {
+namespace carla::client {
 
   ActorList::ActorList(
       detail::EpisodeProxy episode,
@@ -39,5 +38,4 @@ namespace client {
     return filtered;
   }
 
-} // namespace client
-} // namespace carla
+} // namespace carla::client

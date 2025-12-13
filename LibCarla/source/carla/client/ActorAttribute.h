@@ -13,8 +13,7 @@
 #include <exception>
 #include <type_traits>
 
-namespace carla {
-namespace client {
+namespace carla::client {
 
   // ===========================================================================
   // -- InvalidAttributeValue --------------------------------------------------
@@ -237,5 +236,4 @@ namespace client {
     return rhs.operator==(*this);
   }
 
-} // namespace client
-} // namespace carla
+} // namespace carla::client

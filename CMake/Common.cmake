@@ -50,13 +50,39 @@ endif ()
 #   Common Definitions
 # ================================
 
+macro (carla_add_compile_option FLAG)
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
+endmacro ()
+
+macro (carla_add_link_option FLAG)
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${FLAG}")
+endmacro ()
+
+macro (carla_try_add_compile_options)
+  foreach (NAME ${ARGN})
+    string (REPLACE "/" "__" NAME2 ${NAME})
+    string (MAKE_C_IDENTIFIER "CO_${NAME2}" RESULT)
+    check_c_compiler_flag(${NAME} ${RESULT})
+    if (${VARIABLE_IDENTIFIER})
+      carla_add_compile_option (${NAME})
+    endif ()
+  endforeach ()
+endmacro ()
+
+macro (carla_try_add_link_options)
+  foreach (NAME ${ARGN})
+    string (REPLACE "/" "__" NAME2 ${NAME})
+    string (MAKE_C_IDENTIFIER "LO_${NAME2}" RESULT)
+    check_linker_flag(C ${NAME} ${RESULT})
+    if (${RESULT})
+      carla_add_link_option (${NAME})
+    endif ()
+  endforeach ()
+endmacro ()
+
 if (WIN32)
   add_compile_definitions (_CRT_SECURE_NO_WARNINGS)
-  check_cxx_compiler_flag (/utf-8 HAS_MSVC_UTF8)
-  if (HAS_MSVC_UTF8)
-    # @TODO This causes warnings with MASM. A better approach should be looked into.
-    add_compile_options ($<$<COMPILE_LANGUAGE:CXX>:/utf-8>)
-  endif ()
+  carla_try_add_compile_options (/utf-8)
 endif ()
 
 set (CARLA_COMMON_DEFINITIONS)
@@ -107,13 +133,9 @@ else ()
 endif ()
 
 carla_message ("Checking for ${EXCEPTIONS_FLAG} support")
-check_cxx_compiler_flag (${EXCEPTIONS_FLAG} HAS_EXCEPTIONS_FLAG)
-if (HAS_EXCEPTIONS_FLAG)
-  add_compile_options ($<$<COMPILE_LANGUAGE:CXX>:${EXCEPTIONS_FLAG}>)
-endif ()
+carla_try_add_compile_options (${EXCEPTIONS_FLAG})
 
 set (CARLA_EXCEPTION_DEFINITIONS)
-
 if (ENABLE_EXCEPTIONS)
   # Nothing
 else ()
@@ -128,29 +150,15 @@ endif ()
 #   RTTI Definitions
 # ================================
 
-if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC" AND
-    NOT CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  if (ENABLE_RTTI)
-    set (RTTI_FLAG /GR)
-  else ()
-    set (RTTI_FLAG /GR-)
-  endif ()
+if (ENABLE_RTTI)
+  carla_try_add_compile_options (/GR)
+  carla_try_add_compile_options (-frtti)
 else ()
-  if (ENABLE_RTTI)
-    set (RTTI_FLAG -frtti)
-  else ()
-    set (RTTI_FLAG -fno-rtti)
-  endif ()
-endif ()
-
-carla_message ("Checking for ${RTTI_FLAG} support")
-check_cxx_compiler_flag (${RTTI_FLAG} HAS_RTTI_FLAG)
-if (HAS_RTTI_FLAG)
-  add_compile_options ($<$<COMPILE_LANGUAGE:CXX>:${RTTI_FLAG}>)
+  carla_try_add_compile_options (/GR-)
+  carla_try_add_compile_options (-fno-rtti)
 endif ()
 
 set (CARLA_RTTI_DEFINITIONS)
-
 if (ENABLE_RTTI)
   # Nothing
 else ()
@@ -163,76 +171,30 @@ endif ()
 # ================================
 
 if (ENABLE_ALL_WARNINGS)
-  check_cxx_compiler_flag(-Wall HAS_WALL_GNU)
-  if (HAS_WALL_GNU)
-    set (CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-  endif ()
-  check_cxx_compiler_flag(-Wextra HAS_WEXTRA_GNU)
-  if (HAS_WEXTRA_GNU)
-    set (CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
-  endif ()
-  check_cxx_compiler_flag(/Wall HAS_WALL_MSVC)
-  if (HAS_WALL_MSVC)
-    set (CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} /Wall")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wall")
+  if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+    carla_try_add_compile_options (/W4)
+  else ()
+    carla_try_add_compile_options (-Wall)
+    carla_try_add_compile_options (-Wextra)
   endif ()
 endif ()
 
-if (CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
-  set (SUPPRESS_WARNING_DIRECTIVE_PREFIX -Wno-)
-elseif (CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
-  set (SUPPRESS_WARNING_DIRECTIVE_PREFIX /wd)
-endif ()
-
-macro (carla_try_suppress_cxx_warning NAME FLAG)
-  check_cxx_compiler_flag (
-    ${SUPPRESS_WARNING_DIRECTIVE_PREFIX}${FLAG}
-    HAS_${NAME}
-  )
-  if (HAS_${NAME})
-    add_compile_options (
-      $<$<COMPILE_LANGUAGE:CXX>:${SUPPRESS_WARNING_DIRECTIVE_PREFIX}${FLAG}>)
+function (carla_try_suppress_warning WARNING_ID)
+  if (CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
+    carla_try_add_compile_options (-Wno-${WARNING_ID})
+  elseif (CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+    carla_try_add_compile_options (/wd${WARNING_ID})
   endif ()
-endmacro ()
-
-macro (carla_try_suppress_c_warning NAME FLAG)
-  check_c_compiler_flag (
-    ${SUPPRESS_WARNING_DIRECTIVE_PREFIX}${FLAG}
-    HAS_${NAME}
-  )
-  if (HAS_${NAME})
-    add_compile_options (
-      $<$<COMPILE_LANGUAGE:C>:${SUPPRESS_WARNING_DIRECTIVE_PREFIX}${FLAG}>)
-  endif ()
-endmacro ()
+endfunction ()
 
 set (
-  CARLA_C_SUPRESSED_WARNING_LIST
+  CARLA_SUPRESSED_WARNING_LIST
   macro-redefined 4005
   incompatible-pointer-types
 )
 
-set (
-  CARLA_CXX_SUPRESSED_WARNING_LIST
-  macro-redefined 4005
-)
-
-foreach (WARNING ${CARLA_C_SUPRESSED_WARNING_LIST})
-  string (MAKE_C_IDENTIFIER "${WARNING}" WARNING_NAME)
-  carla_try_suppress_c_warning (
-    ${WARNING_NAME}
-    ${WARNING}
-  )
-endforeach ()
-
-foreach (WARNING ${CARLA_CXX_SUPRESSED_WARNING_LIST})
-  string (MAKE_C_IDENTIFIER "${WARNING}" WARNING_NAME)
-  carla_try_suppress_cxx_warning (
-    ${WARNING_NAME}
-    ${WARNING}
-  )
+foreach (WARNING ${CARLA_SUPRESSED_WARNING_LIST})
+  carla_try_suppress_warning (${WARNING})
 endforeach ()
 
 # ================================
@@ -241,21 +203,8 @@ endforeach ()
 
 if (ENABLE_WARNINGS_TO_ERRORS)
   if (CMAKE_CXX_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-      check_cxx_compiler_flag(-Werror HAS_WALL)
-      if (HAS_WALL)
-        add_compile_options (-Werror)
-      endif ()
-    else ()
-      check_cxx_compiler_flag(/WX HAS_WALL)
-      if (HAS_WALL)
-        add_compile_options (/WX)
-      endif ()
-    endif ()
+    carla_try_add_compile_options (/WX)
   else ()
-    check_cxx_compiler_flag(-Werror HAS_WALL)
-    if (HAS_WALL)
-      add_compile_options (-Werror)
-    endif ()
+    carla_try_add_compile_options (-Werror)
   endif ()
 endif ()

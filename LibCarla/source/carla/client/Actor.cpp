@@ -9,8 +9,7 @@
 #include "carla/Logging.h"
 #include "carla/client/detail/Simulator.h"
 
-namespace carla {
-namespace client {
+namespace carla::client {
 
   geom::Location Actor::GetLocation() const {
     return GetEpisode().Lock()->GetActorLocation(*this);
@@ -137,5 +136,4 @@ namespace client {
     return result;
   }
 
-} // namespace client
-} // namespace carla
+} // namespace carla::client

@@ -10,8 +10,7 @@
 #include "carla/Logging.h"
 #include "carla/StringUtil.h"
 
-namespace carla {
-namespace client {
+namespace carla::client {
 
 #define LIBCARLA_THROW_INVALID_VALUE(message) throw_exception(InvalidAttributeValue(GetId() + ": " + message));
 #define LIBCARLA_THROW_BAD_VALUE_CAST(type) \
@@ -103,5 +102,4 @@ namespace client {
 #undef LIBCARLA_THROW_BAD_VALUE_CAST
 #undef LIBCARLA_THROW_INVALID_VALUE
 
-} // namespace client
-} // namespace carla
+} // namespace carla::client

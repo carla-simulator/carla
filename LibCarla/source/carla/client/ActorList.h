@@ -12,8 +12,7 @@
 
 #include <vector>
 
-namespace carla {
-namespace client {
+namespace carla::client {
 
   class ActorList : public EnableSharedFromThis<ActorList> {
   private:
@@ -68,5 +67,4 @@ namespace client {
     std::vector<detail::ActorVariant> _actors;
   };
 
-} // namespace client
-} // namespace carla
+} // namespace carla::client

@@ -268,7 +268,7 @@ carla_option (
 carla_string_option (
   CARLA_BOOST_VERSION
   "Target boost version."
-  1.84.0
+  1.89.0
 )
 
 carla_string_option (
@@ -309,7 +309,7 @@ carla_string_option (
 
 # We can not upgrade any further due to ZLIB.
 # See https://github.com/madler/zlib/issues/1019
-# Once this is resolved we can target 1.6.50
+# Once this is resolved we can target >1.6.40
 carla_string_option (
   CARLA_LIBPNG_VERSION
   "Target libpng version."

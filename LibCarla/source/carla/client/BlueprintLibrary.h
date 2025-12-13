@@ -16,8 +16,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace carla {
-namespace client {
+namespace carla::client {
 
   /// @todo Works as a list but its actually a map. We should assess the use
   /// cases and reconsider this implementation.
@@ -84,5 +83,4 @@ namespace client {
     map_type _blueprints;
   };
 
-} // namespace client
-} // namespace carla
+} // namespace carla::client
