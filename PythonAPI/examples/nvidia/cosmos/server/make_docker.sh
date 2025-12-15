@@ -9,6 +9,8 @@
 
 set -e  # Exit on any error
 
+ROOT_DIR=$(realpath "$(dirname "$1")")
+
 # Parse command line arguments
 DOWNLOAD_CHECKPOINTS=false
 DEV_MODE=false
@@ -172,6 +174,9 @@ else
 fi
 
 # Step 6: Build docker image
-docker build -f Dockerfile.server -t cosmos-transfer1-carla .
+
+cd $ROOT_DIR
+
+docker build -f $ROOT_DIR/Dockerfile.server -t cosmos-transfer1-carla .
 
 print_status "Docker image built successfully!"
