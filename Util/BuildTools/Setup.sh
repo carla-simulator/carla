@@ -52,9 +52,9 @@ done
 
 source $(dirname "$0")/Environment.sh
 
-export CC="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang"
-export CXX="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang++"
-export PATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin:$PATH"
+export CC=clang #"$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang"
+export CXX=clang++ #"$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang++"
+# export PATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin:$PATH"
 
 CXX_TAG=c10
 
@@ -171,7 +171,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     pushd ${BOOST_BASENAME}-source >/dev/null
 
-    BOOST_TOOLSET="clang-10.0"
+    BOOST_TOOLSET="clang"
     BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
     py3="/usr/bin/env python${PY_VERSION}"
@@ -714,23 +714,24 @@ PROJ_SERVER_LIB=${PROJ_INSTALL_SERVER_DIR_FULL}/lib/libproj.a
 if [[ -d ${PROJ_INSTALL_DIR} && -d ${PROJ_INSTALL_SERVER_DIR_FULL} ]] ; then
   log "PROJ already installed."
 else
-  log "Retrieving PROJ"
 
-  start=$(date +%s)
-  wget ${PROJ_REPO}
-  end=$(date +%s)
-  echo "Elapsed Time: $(($end-$start)) seconds"
-
-  log "Extracting PROJ"
-  start=$(date +%s)
-  tar -xzf ${PROJ_TAR}
-  end=$(date +%s)
-  echo "Elapsed Time Extracting for PROJ: $(($end-$start)) seconds"
-
-  mv ${PROJ_VERSION} ${PROJ_SRC_DIR}
-
-  mkdir -p ${PROJ_SRC_DIR}/build
-  mkdir -p ${PROJ_INSTALL_DIR}
+  if [[ -d ${PROJ_SRC_DIR} ]] ; then
+    log "Nothing"
+  else
+    log "Retrieving PROJ"
+    start=$(date +%s)
+    wget ${PROJ_REPO}
+    end=$(date +%s)
+    echo "Elapsed Time: $(($end-$start)) seconds"
+    log "Extracting PROJ"
+    start=$(date +%s)
+    tar -xzf ${PROJ_TAR}
+    end=$(date +%s)
+    echo "Elapsed Time Extracting for PROJ: $(($end-$start)) seconds"
+    mv ${PROJ_VERSION} ${PROJ_SRC_DIR}
+    mkdir -p ${PROJ_SRC_DIR}/build
+    mkdir -p ${PROJ_INSTALL_DIR}
+  fi
 
   pushd ${PROJ_SRC_DIR}/build >/dev/null
 
