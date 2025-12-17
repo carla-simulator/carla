@@ -27,7 +27,7 @@ namespace carla::client {
       return fs::path(override_path);
     fs::path path = std::getenv(HomePathEV);
     path /= "carlaCache";
-    return path;
+    return fs::absolute(path);
   }();
 
   bool FileTransfer::SetFilesBaseFolder(std::string_view path) {

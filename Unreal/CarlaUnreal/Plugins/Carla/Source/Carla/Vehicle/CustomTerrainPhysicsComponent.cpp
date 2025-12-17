@@ -57,6 +57,7 @@
 // #include <carla/pytorch/pytorch.h>
 #include <util/enable-ue4-macros.h>
 
+#include <filesystem>
 #include <algorithm>
 #include <fstream>
 #include <thread>
@@ -64,18 +65,28 @@
 
 #undef CreateDirectory
 
-
+namespace fs = std::filesystem;
 
 constexpr float MToCM = 100.f;
 constexpr float CMToM = 0.01f;
  
 const int CacheExtraRadius = 10;
 
+static std::string CachePath = [] {
+  constexpr char OverridePathEV[] = "CARLA_CACHE_DIR";
+  constexpr char HomePathEV[] =
 #ifdef _WIN32
-      std::string _filesBaseFolder = std::string(getenv("USERPROFILE")) + "/carlaCache/";
+      "USERPROFILE";
 #else
-      std::string _filesBaseFolder = std::string(getenv("HOME")) + "/carlaCache/";
+      "HOME";
 #endif
+  const char* override_path = std::getenv(OverridePathEV);
+  if (override_path != NULL)
+    return fs::path(override_path).string();
+  fs::path path = std::getenv(HomePathEV);
+  path /= "carlaCache";
+  return fs::absolute(path).string();
+}();
 
 FVector SIToUEFrame(const FVector& In)
 {
@@ -1298,7 +1309,7 @@ void UCustomTerrainPhysicsComponent::BeginPlay()
   FString LevelName = GetWorld()->GetMapName();
   LevelName.RemoveFromStart(GetWorld()->StreamingLevelsPrefix);
   
-  SavePath = FString(_filesBaseFolder.c_str()) + LevelName + "_Terrain/";
+  SavePath = FString(CachePath.c_str()) + LevelName + "_Terrain/";
   SparseMap.SavePath = SavePath;
   // Creating the FileManager
   IPlatformFile& FileManager = FPlatformFileManager::Get().GetPlatformFile();
