@@ -8,11 +8,14 @@
 
 import carla
 import numpy as np
+import cv2
 from pathlib import Path
 
 from agents.navigation.behavior_agent import BehaviorAgent  # pylint: disable=import-error
 from agents.navigation.basic_agent import BasicAgent  # pylint: disable=import-error
 from agents.navigation.constant_velocity_agent import ConstantVelocityAgent  # pylint: disable=import-error
+
+HERE = Path(__file__).parent
 
 def main():
     from argparse import ArgumentParser
@@ -50,9 +53,22 @@ def main():
         help='Choose one of the possible agent behaviors (default: normal)')
     parser.add_argument(
         '-s', '--seed', type=int, default=0xcdcdcdcd,
-        help='select which agent to run')
+        help='PRNG seed value')
+    parser.add_argument(
+        '-n', '--frame-count', type=int, default=50,
+        help='Number of frames to save')
+    parser.add_argument(
+        '-g', '--generate',
+        action='store_true',
+        help='Whether to generate the ground truth file.'
+    )
     argv = parser.parse_args()
     try:
+        output_path = HERE / '_ground_truth'
+        if output_path.exists():
+            import shutil
+            shutil.rmtree(output_path)
+        output_path.mkdir(exist_ok=True)
         print('Setting up client')
         underlying_prng = np.random.PCG64(argv.seed)
         prng = np.random.Generator(underlying_prng)
@@ -108,7 +124,8 @@ def main():
             attachment_type=carla.AttachmentType.Rigid)
         def SaveImage(image):
             image.convert(carla.ColorConverter.Raw)
-            image.save_to_disk(f'_ground_truth/{image.frame}.png')
+            path = HERE / '_ground_truth' / f'{image.frame}.png'
+            image.save_to_disk(str(path))
         sensor.listen(SaveImage)
         # Agent setup:
         agent = None
@@ -157,6 +174,80 @@ def main():
             
         TryDestroy(vehicle)
         TryDestroy(sensor)
+
+        frames = [
+            file
+            for file in (HERE / '_ground_truth').iterdir()
+            if file.name.endswith('.png')
+        ]
+        assert len(frames) != 0
+        first = cv2.imread(str(frames[0]))
+        height, width, layers = first.shape
+        path = HERE / '_ground_truth.mkv'
+        if argv.generate:
+            # Generate
+            fourcc = cv2.VideoWriter_fourcc(*"MJPG")
+            video = cv2.VideoWriter(
+                path,
+                fourcc,
+                60,
+                (width, height))
+            for frame_path in frames:
+                video.write(cv2.imread(str(frame_path)))
+            video.release()
+        elif path.is_file():
+            video = cv2.VideoCapture(path)
+            assert video.isOpened()
+            correlation_results = []
+            bhattacharyya_results = []
+            for frame_path in frames:
+                ok, reference = video.read()
+                if not ok:
+                    break
+                frame = cv2.imread(str(frame_path))
+                assert np.shape(reference) == np.shape(frame)
+                BIN_COUNT = 256
+                reference = cv2.cvtColor(reference, cv2.COLOR_BGR2HSV)
+                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+                H_BINS = 50
+                S_BINS = 60
+                hist1 = cv2.calcHist([frame], [0, 1], None, [H_BINS,S_BINS], [0, 180, 0, 256]).astype(np.float32)
+                hist1 = cv2.normalize(hist1, hist1).flatten()
+                hist2 = cv2.calcHist([reference], [0, 1], None, [H_BINS,S_BINS], [0, 180, 0, 256]).astype(np.float32)
+                hist2 = cv2.normalize(hist2, hist2).flatten()
+                correlation_results.append(cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL))
+                bhattacharyya_results.append(cv2.compareHist(hist1, hist2, cv2.HISTCMP_BHATTACHARYYA))
+            correlation_avg = np.mean(correlation_results)
+            bhattacharyya_avg = np.mean(bhattacharyya_results)
+            correlation_var = np.var(correlation_results)
+            bhattacharyya_var = np.var(bhattacharyya_results)
+            from matplotlib import pyplot as plt
+            plt.plot(
+                np.linspace(0, len(correlation_results), len(correlation_results)),
+                correlation_results)
+            plt.plot(
+                np.linspace(0, len(bhattacharyya_results), len(bhattacharyya_results)),
+                bhattacharyya_results)
+            plt.show()
+            print(
+                f'correlation_avg {correlation_avg}\n'
+                f'bhattacharyya_avg {bhattacharyya_avg}\n'
+                f'correlation_var {correlation_var}\n'
+                f'bhattacharyya_var {bhattacharyya_var}\n')
+            video.release()
+            exit_code = 0
+            if all([
+                np.round(correlation_avg, 2) >= 0.7,
+                np.round(bhattacharyya_avg, 2) <= 0.3,
+                np.round(correlation_var, 2) < 0.01,
+                np.round(bhattacharyya_var, 2) < 0.01
+            ]):
+                exit_code = 0
+            else:
+                exit_code = 1
+            print(f'Using exit_code={exit_code}')
+            exit(exit_code)
+
 
 
 if __name__ == '__main__':
