@@ -28,8 +28,8 @@ def main():
         '-p', '--port', metavar='P', default=2000, type=int,
         help='TCP port to listen to (default: 2000)')
     parser.add_argument(
-        '--res', metavar='WIDTHxHEIGHT', default='1280x720',
-        help='window resolution (default: 1280x720)')
+        '--res', metavar='WIDTHxHEIGHT', default='1920x1080',
+        help='window resolution (default: 1920x1080)')
     parser.add_argument(
         '--filter', metavar='PATTERN', default='lincoln',
         help='actor filter (default: "lincoln")')
@@ -55,13 +55,15 @@ def main():
         '-s', '--seed', type=int, default=0xcdcdcdcd,
         help='PRNG seed value')
     parser.add_argument(
-        '-n', '--frame-count', type=int, default=50,
+        '-n', '--frame-count', type=int, default=100,
         help='Number of frames to save')
     parser.add_argument(
         '-g', '--generate',
         action='store_true',
-        help='Whether to generate the ground truth file.'
-    )
+        help='Whether to generate the ground truth file.')
+    parser.add_argument(
+        '--plot', action='store_true',
+        help='Whether to plot results')
     argv = parser.parse_args()
     try:
         output_path = HERE / '_ground_truth'
@@ -122,10 +124,15 @@ def main():
             carla.Transform(carla.Location(x=+0.8*bound_x, y=+0.0*bound_y, z=1.3*bound_z)),
             attach_to=vehicle,
             attachment_type=carla.AttachmentType.Rigid)
+        
+        frame_count = 0
+
         def SaveImage(image):
             image.convert(carla.ColorConverter.Raw)
             path = HERE / '_ground_truth' / f'{image.frame}.png'
             image.save_to_disk(str(path))
+            frame_count += 1
+
         sensor.listen(SaveImage)
         # Agent setup:
         agent = None
@@ -147,6 +154,8 @@ def main():
         
         agent.set_destination(GetNextDestination())
         while True:
+            if frame_count == argv.frame_count:
+                break
             if argv.sync:
                 world.tick()
             else:
@@ -160,6 +169,7 @@ def main():
     except Exception as e:
         print(f'Exception thrown: {e}')
     finally:
+
         if world != None:
             settings = world.get_settings()
             settings.synchronous_mode = False
@@ -175,14 +185,16 @@ def main():
         TryDestroy(vehicle)
         TryDestroy(sensor)
 
-        frames = [
+        if frame_count != argv.frame_count:
+            exit(1)
+
+        frame_paths = [
             file
             for file in (HERE / '_ground_truth').iterdir()
             if file.name.endswith('.png')
         ]
-        assert len(frames) != 0
-        first = cv2.imread(str(frames[0]))
-        height, width, layers = first.shape
+        assert len(frame_paths) != 0
+        height, width, layers = cv2.imread(str(frame_paths[0])).shape
         path = HERE / '_ground_truth.mkv'
         if argv.generate:
             # Generate
@@ -192,7 +204,7 @@ def main():
                 fourcc,
                 60,
                 (width, height))
-            for frame_path in frames:
+            for frame_path in frame_paths:
                 video.write(cv2.imread(str(frame_path)))
             video.release()
         elif path.is_file():
@@ -200,13 +212,12 @@ def main():
             assert video.isOpened()
             correlation_results = []
             bhattacharyya_results = []
-            for frame_path in frames:
+            for frame_path in frame_paths:
                 ok, reference = video.read()
                 if not ok:
                     break
                 frame = cv2.imread(str(frame_path))
                 assert np.shape(reference) == np.shape(frame)
-                BIN_COUNT = 256
                 reference = cv2.cvtColor(reference, cv2.COLOR_BGR2HSV)
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
                 H_BINS = 50
@@ -221,14 +232,17 @@ def main():
             bhattacharyya_avg = np.mean(bhattacharyya_results)
             correlation_var = np.var(correlation_results)
             bhattacharyya_var = np.var(bhattacharyya_results)
-            from matplotlib import pyplot as plt
-            plt.plot(
-                np.linspace(0, len(correlation_results), len(correlation_results)),
-                correlation_results)
-            plt.plot(
-                np.linspace(0, len(bhattacharyya_results), len(bhattacharyya_results)),
-                bhattacharyya_results)
-            plt.show()
+
+            if argv.plot:
+                from matplotlib import pyplot as plt
+                plt.plot(
+                    np.linspace(0, len(correlation_results), len(correlation_results)),
+                    correlation_results)
+                plt.plot(
+                    np.linspace(0, len(bhattacharyya_results), len(bhattacharyya_results)),
+                    bhattacharyya_results)
+                plt.show()
+            
             print(
                 f'correlation_avg {correlation_avg}\n'
                 f'bhattacharyya_avg {bhattacharyya_avg}\n'
