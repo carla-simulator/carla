@@ -54,7 +54,13 @@ apt-get -y install \
     rsync \
     libxml2-dev \
     git \
-    git-lfs
+    git-lfs \
+    libnss3-dev \
+    libatk-bridge2.0-dev \
+    libxkbcommon-dev \
+    libgbm-dev \
+    libpango1.0-dev \
+    libasound2-dev
 
 if [ "$python_path" == "python3" ]; then
     apt-get -y install \

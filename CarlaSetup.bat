@@ -77,11 +77,22 @@ if exist "%cd%\Unreal\CarlaUnreal\Content" (
 )
 
 rem Activate VS terminal development environment:
+set "vs_env_bat="
 if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vs_env_bat=%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+)
+if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vs_env_bat=%PROGRAMFILES%\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat"
+)
+if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vs_env_bat=%PROGRAMFILES%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+)
+
+if not "%vs_env_bat%"=="" (
     echo Activating "x64 Native Tools Command Prompt" terminal environment.
-    call "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" || exit /b
+    call "%vs_env_bat%" || exit /b
 ) else (
-    echo Could not find vcvarsall.bat, aborting setup...
+    echo Could not find vcvars64.bat for VS 2022, aborting setup...
     exit 1
 )
 

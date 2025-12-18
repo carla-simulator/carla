@@ -11,6 +11,8 @@
 #include "SpeedLimitComponent.h"
 #include "Components/BoxComponent.h"
 #include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
+#include "OpenDrive/OpenDrive.h"
+#include "OpenDrive/MapLogicParser.h"
 
 #include "UObject/ConstructorHelpers.h"
 
@@ -197,7 +199,6 @@ void ATrafficLightManager::RegisterLightComponentFromOpenDRIVE(UTrafficLightComp
 
     auto *NewTrafficLightController = NewObject<UTrafficLightController>();
     NewTrafficLightController->SetControllerId(FString::FromInt(TrafficLightControllerMissingId));
-    // Set red time longer than the default 2s
     NewTrafficLightController->SetRedTime(10);
     TrafficLightGroup->GetControllers().Add(NewTrafficLightController);
     TrafficControllers.Add(NewTrafficLightController->GetControllerId(), NewTrafficLightController);
@@ -207,11 +208,8 @@ void ATrafficLightManager::RegisterLightComponentFromOpenDRIVE(UTrafficLightComp
     --TrafficLightControllerMissingId;
   }
 
-  // Add signal to controller
   TrafficLightController->AddTrafficLight(TrafficLightComponent);
   TrafficLightController->ResetState();
-
-  // Add signal to map
   TrafficSignComponents.Add(TrafficLightComponent->GetSignId(), TrafficLightComponent);
 
   TrafficLightGroup->ResetGroup();
@@ -371,17 +369,42 @@ void ATrafficLightManager::MatchTrafficLightActorsWithOpenDriveSignals()
 
 void ATrafficLightManager::InitializeTrafficLights()
 {
-
-  // Should not run in empty maps
   if (!GetMap())
   {
     carla::log_warning("Coud not generate traffic lights: missing map.");
     return;
   }
 
+  FString MapName = GetWorld()->GetMapName();
+  FString XODRPath = UOpenDrive::FindPathToXODRFile(MapName);
+  bool bHasMapLogic = false;
+
+  if (!XODRPath.IsEmpty())
+  {
+    FString DirectoryPath;
+    FString Filename, Extension;
+    FPaths::Split(XODRPath, DirectoryPath, Filename, Extension);
+    FString JsonFilePath = FPaths::Combine(DirectoryPath, TEXT("map_logic.json"));
+    bHasMapLogic = FPlatformFileManager::Get().GetPlatformFile().FileExists(*JsonFilePath);
+  }
+
   if (!TrafficLightsGenerated)
   {
-    GenerateSignalsAndTrafficLights();
+    if (bHasMapLogic)
+    {
+      RemoveRoadrunnerProps();
+      SpawnSignals();
+      TrafficLightsGenerated = true;
+    }
+    else
+    {
+      GenerateSignalsAndTrafficLights();
+    }
+  }
+
+  if (!XODRPath.IsEmpty() && bHasMapLogic)
+  {
+    UMapLogicParser::ApplyLaneIdsFromMapLogic(XODRPath, this);
   }
 }
 

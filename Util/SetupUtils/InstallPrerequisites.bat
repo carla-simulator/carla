@@ -47,7 +47,26 @@ rem -- MAIN --
 
 :main
 
-rem -- INSTALL VISUAL STUDIO --
+rem -- INSTALL VISUAL STUDIO IF NOT FOUND --
+setlocal EnableDelayedExpansion
+set "vs_found=false"
+if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vs_found=true"
+)
+if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Professional\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vs_found=true"
+)
+if exist "%PROGRAMFILES%\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat" (
+    set "vs_found=true"
+)
+
+if "!vs_found!"=="true" (
+    echo Found Visual Studio 2022.
+    goto end_vs_install
+) else (
+    echo Could not find Visual Studio 2022. Downloading...
+)
+
 if not exist %cd%\Temp (
     mkdir %cd%\Temp
 )
@@ -57,6 +76,8 @@ popd Temp
 %cd%\Temp\vs_community.exe --add %visual_studio_components% --installWhileDownloading --passive --wait || exit /b
 del %cd%\Temp\vs_community.exe
 rmdir %cd%\Temp
+
+:end_vs_install
 
 rem -- INSTALL NINJA --
 ninja --version >nul 2>nul
