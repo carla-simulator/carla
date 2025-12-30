@@ -124,6 +124,31 @@ namespace carla_msgs {
                     const CarlaWorldInfo& x) const;
 
             /*!
+             * @brief This function copies the value in member carla_version
+             * @param _carla_version New value to be copied in member carla_version
+             */
+            eProsima_user_DllExport void carla_version(
+                    const std::string& _carla_version);
+
+            /*!
+             * @brief This function moves the value in member carla_version
+             * @param _carla_version New value to be moved in member carla_version
+             */
+            eProsima_user_DllExport void carla_version(
+                    std::string&& _carla_version);
+
+            /*!
+             * @brief This function returns a constant reference to member carla_version
+             * @return Constant reference to member carla_version
+             */
+            eProsima_user_DllExport const std::string& carla_version() const;
+
+            /*!
+             * @brief This function returns a reference to member carla_version
+             * @return Reference to member carla_version
+             */
+            eProsima_user_DllExport std::string& carla_version();
+            /*!
              * @brief This function copies the value in member map_name
              * @param _map_name New value to be copied in member map_name
              */
@@ -233,6 +258,7 @@ namespace carla_msgs {
 
         private:
 
+            std::string m_carla_version;
             std::string m_map_name;
             std::string m_opendrive;
         };

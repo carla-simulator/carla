@@ -21,10 +21,8 @@ TrafficLightPublisher::TrafficLightPublisher(
     _traffic_light_object_publisher(std::make_shared<ObjectPublisher>(*this, objects_publisher)),
     _traffic_light_object_with_covariance_publisher(std::make_shared<ObjectWithCovariancePublisher>(*this, objects_with_covariance_publisher)),
     _traffic_lights_publisher(traffic_lights_publisher) {
-  // prefill some traffic_light info data
-  _traffic_light_info->Message().id(traffic_light_actor_definition->id);
-  // TODO: add respective data to actor definitions
-  //         _traffic_light_info->Message().trigger_volume(??);
+
+   _traffic_light_status->Message().state(carla_msgs::msg::CarlaTrafficLightStatus_Constants::UNKNOWN);    
 }
 
 bool TrafficLightPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
@@ -37,10 +35,7 @@ bool TrafficLightPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domai
 }
 
 bool TrafficLightPublisher::Publish() {
-  if (_traffic_light_info_initialized && (!_traffic_light_info_published)) {
-    _traffic_light_info_published = _traffic_light_info->Publish();
-  }
-  bool success = _traffic_light_info_published;
+  bool success = _traffic_light_info->Publish();
   success &= _traffic_light_status->Publish();
   success &= _traffic_light_object_publisher->Publish();
   success &= _traffic_light_object_with_covariance_publisher->Publish();
@@ -54,9 +49,22 @@ bool TrafficLightPublisher::SubscribersConnected() const {
 
 void TrafficLightPublisher::UpdateTrafficLight(std::shared_ptr<carla::ros2::types::Object> &object,
                                                carla::sensor::data::ActorDynamicState const &actor_dynamic_state) {
-  if (!_traffic_light_info_initialized) {
+  if ( (!_traffic_light_info_initialized) || (_traffic_light_info->Message().transform() != object->Transform().pose())) {
     _traffic_light_info_initialized = true;
+    _traffic_light_info->Message().id(object->Id());
     _traffic_light_info->Message().transform(object->Transform().pose());
+    // trigger volume
+    auto traffic_light_actor_definition = std::dynamic_pointer_cast<carla::ros2::types::TrafficLightActorDefinition>(_actor_name_definition);
+    auto global_location = traffic_light_actor_definition->trigger_volume.location;
+    object->Transform().GetTransform().TransformPoint(global_location);
+    _traffic_light_info->Message().trigger_volume().center().x(global_location.x);
+    _traffic_light_info->Message().trigger_volume().center().y(global_location.y);
+    _traffic_light_info->Message().trigger_volume().center().z(global_location.z);
+    auto const ros_extent = traffic_light_actor_definition->trigger_volume.extent * 2.;
+    _traffic_light_info->Message().trigger_volume().size().x(ros_extent.x);
+    _traffic_light_info->Message().trigger_volume().size().y(ros_extent.y);
+    _traffic_light_info->Message().trigger_volume().size().z(ros_extent.z);
+
     _traffic_light_info->SetMessageUpdated();
     _traffic_lights_publisher->UpdateTrafficLightInfo(_traffic_light_info->Message());
   }
@@ -65,11 +73,11 @@ void TrafficLightPublisher::UpdateTrafficLight(std::shared_ptr<carla::ros2::type
     _traffic_light_status->SetMessageHeader(object->Timestamp().time(), "map");
     _traffic_light_status->Message().id(_traffic_light_info->Message().id());
     _traffic_light_status->Message().state(carla::ros2::types::GetTrafficLightState(actor_dynamic_state));
+    _traffic_lights_publisher->UpdateTrafficLightStatus(_traffic_light_status->Message());
   }
 
   _traffic_light_object_publisher->UpdateObject(object);
   _traffic_light_object_with_covariance_publisher->UpdateObject(object);
-  _traffic_lights_publisher->UpdateTrafficLightStatus(_traffic_light_status->Message());
 }
 
 }  // namespace ros2

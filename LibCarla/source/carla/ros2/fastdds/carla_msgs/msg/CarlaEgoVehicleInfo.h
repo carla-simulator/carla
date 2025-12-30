@@ -23,7 +23,6 @@
 #define _FAST_DDS_GENERATED_CARLA_MSGS_MSG_CARLAEGOVEHICLEINFO_H_
 
 #include "carla_msgs/msg/CarlaEgoVehicleInfoWheel.h"
-#include "shape_msgs/msg/SolidPrimitive.h"
 
 #include <stdint.h>
 #include <array>
@@ -434,31 +433,6 @@ namespace carla_msgs {
              * @return Reference to member center_of_mass
              */
             eProsima_user_DllExport geometry_msgs::msg::Vector3& center_of_mass();
-            /*!
-             * @brief This function copies the value in member shape
-             * @param _shape New value to be copied in member shape
-             */
-            eProsima_user_DllExport void shape(
-                    const shape_msgs::msg::SolidPrimitive& _shape);
-
-            /*!
-             * @brief This function moves the value in member shape
-             * @param _shape New value to be moved in member shape
-             */
-            eProsima_user_DllExport void shape(
-                    shape_msgs::msg::SolidPrimitive&& _shape);
-
-            /*!
-             * @brief This function returns a constant reference to member shape
-             * @return Constant reference to member shape
-             */
-            eProsima_user_DllExport const shape_msgs::msg::SolidPrimitive& shape() const;
-
-            /*!
-             * @brief This function returns a reference to member shape
-             * @return Reference to member shape
-             */
-            eProsima_user_DllExport shape_msgs::msg::SolidPrimitive& shape();
 
             /*!
              * @brief This function returns the maximum serialized size of an object
@@ -534,7 +508,6 @@ namespace carla_msgs {
             float m_mass;
             float m_drag_coefficient;
             geometry_msgs::msg::Vector3 m_center_of_mass;
-            shape_msgs::msg::SolidPrimitive m_shape;
         };
     } // namespace msg
 } // namespace carla_msgs

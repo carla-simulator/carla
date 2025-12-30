@@ -68,7 +68,6 @@ public:
 private:
   carla::rpc::RpcServerInterface &_carla_server;
   std::shared_ptr<VehicleInfoPublisherImpl> _vehicle_info_publisher;
-  bool _vehicle_info_published{false};
   std::shared_ptr<EgoVehicleStatusPublisherImpl> _vehicle_status_publisher;
   std::shared_ptr<VehicleOdometryPublisherImpl> _vehicle_odometry_publisher;
   std::shared_ptr<VehicleSpeedPublisherImpl> _vehicle_speed_publisher;

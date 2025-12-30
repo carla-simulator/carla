@@ -5,6 +5,7 @@
 #include "WorldInfoPublisher.h"
 
 #include "carla/ros2/impl/DdsPublisherImpl.h"
+#include "carla/Version.h"
 
 namespace carla {
 namespace ros2 {
@@ -29,6 +30,7 @@ bool WorldInfoPublisher::SubscribersConnected() const {
 bool WorldInfoPublisher::ProcessMessages() {
   if ( _map_updated )
   {
+    _impl->Message().carla_version(carla::version());
     _impl->Message().map_name(_carla_server.call_get_map_info().Get().name);
     _impl->Message().opendrive(_carla_server.call_get_map_data().Get());
     _impl->SetMessageUpdated();

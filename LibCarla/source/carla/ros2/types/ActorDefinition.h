@@ -16,9 +16,8 @@ namespace types {
 using ActorSetTransformCallback = std::function<void(carla::ros2::types::Transform const &)>;
 
 struct ActorDefinition : public ActorNameDefinition {
-  ActorDefinition(ActorNameDefinition const &actor_name_definition, carla::geom::BoundingBox bounding_box_,
-                  carla::ros2::types::Polygon vertex_polygon_)
-    : ActorNameDefinition(actor_name_definition), bounding_box(bounding_box_), vertex_polygon(vertex_polygon_)
+  ActorDefinition(ActorNameDefinition const &actor_name_definition, carla::geom::BoundingBox bounding_box_)
+    : ActorNameDefinition(actor_name_definition), bounding_box(bounding_box_)
   {
     if ( std::fpclassify(bounding_box.extent.x) != FP_NORMAL )
     {
@@ -29,7 +28,6 @@ struct ActorDefinition : public ActorNameDefinition {
   }
 
   carla::geom::BoundingBox bounding_box;
-  carla::ros2::types::Polygon vertex_polygon;
 };
 
 

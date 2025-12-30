@@ -29,7 +29,11 @@ inline uint8_t GetTrafficLightState(carla::sensor::data::ActorDynamicState const
 }
 
 struct TrafficLightActorDefinition : public ActorDefinition {
-  TrafficLightActorDefinition(ActorDefinition const &actor_definitions) : ActorDefinition(actor_definitions) {}
+  TrafficLightActorDefinition(ActorDefinition const &actor_definitions, carla::geom::BoundingBox const &trigger_volume_in) 
+    : ActorDefinition(actor_definitions)
+    , trigger_volume(trigger_volume_in) {}
+
+  carla::geom::BoundingBox trigger_volume;
 };
 }  // namespace types
 }  // namespace ros2

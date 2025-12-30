@@ -7,6 +7,7 @@
 #include <functional>
 
 #include "carla/ros2/types/ActorDefinition.h"
+#include "carla/ros2/types/Polygon.h"
 #include "carla/ros2/types/VehicleAckermannControl.h"
 #include "carla/ros2/types/VehicleControl.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
@@ -32,8 +33,10 @@ inline uint8_t GetVehicleControlType(carla::sensor::data::ActorDynamicState cons
 }
 
 struct VehicleActorDefinition : public ActorDefinition {
-  VehicleActorDefinition(ActorDefinition const &actor_definition, rpc::VehiclePhysicsControl vehicle_physics_control_in)
-    : ActorDefinition(actor_definition), vehicle_physics_control(vehicle_physics_control_in) {}
+  VehicleActorDefinition(ActorDefinition const &actor_definition,
+                         rpc::VehiclePhysicsControl vehicle_physics_control_in)
+    : ActorDefinition(actor_definition)
+    , vehicle_physics_control(vehicle_physics_control_in) {}
 
   rpc::VehiclePhysicsControl vehicle_physics_control;
 };

@@ -36,15 +36,14 @@ public:
       _ros_polygon->push_back(CoordinateSystemTransform::TransformLocationToPoint32Msg(vertex));
     }
   }
-#ifdef LIBCARLA_INCLUDED_FROM_UE4
-  Polygon() : _ros_polygon(std::make_shared<std::vector<geometry_msgs::msg::Point32>>()) {}
-  void SetGlobalVertices(TArray<FVector> const &vertices) {
-    _ros_polygon->reserve(vertices.Num());
+
+  Polygon(std::vector<carla::geom::Location> const &vertices)
+    : _ros_polygon(std::make_shared<std::vector<geometry_msgs::msg::Point32>>()) {
+    _ros_polygon->reserve(vertices.size());
     for (auto const &vertex : vertices) {
-      _ros_polygon->push_back(CoordinateSystemTransform::TransformLocationToPoint32Msg(carla::geom::Location(vertex)));
+      _ros_polygon->push_back(CoordinateSystemTransform::TransformLocationToPoint32Msg(vertex));
     }
   }
-#endif  // LIBCARLA_INCLUDED_FROM_UE4
 
   ~Polygon() = default;
   Polygon(const Polygon &) = default;

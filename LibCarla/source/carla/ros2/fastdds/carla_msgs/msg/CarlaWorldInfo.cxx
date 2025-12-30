@@ -36,9 +36,11 @@ using namespace eprosima::fastcdr::exception;
 
 carla_msgs::msg::CarlaWorldInfo::CarlaWorldInfo()
 {
-    // m_map_name com.eprosima.idl.parser.typecode.StringTypeCode@6e15fe2
+    // m_carla_version com.eprosima.idl.parser.typecode.StringTypeCode@45afc369
+    m_carla_version ="";
+    // m_map_name com.eprosima.idl.parser.typecode.StringTypeCode@799d4f69
     m_map_name ="";
-    // m_opendrive com.eprosima.idl.parser.typecode.StringTypeCode@68f1b17f
+    // m_opendrive com.eprosima.idl.parser.typecode.StringTypeCode@49c43f4e
     m_opendrive ="";
 
 }
@@ -46,11 +48,13 @@ carla_msgs::msg::CarlaWorldInfo::CarlaWorldInfo()
 carla_msgs::msg::CarlaWorldInfo::~CarlaWorldInfo()
 {
 
+
 }
 
 carla_msgs::msg::CarlaWorldInfo::CarlaWorldInfo(
         const CarlaWorldInfo& x)
 {
+    m_carla_version = x.m_carla_version;
     m_map_name = x.m_map_name;
     m_opendrive = x.m_opendrive;
 }
@@ -58,6 +62,7 @@ carla_msgs::msg::CarlaWorldInfo::CarlaWorldInfo(
 carla_msgs::msg::CarlaWorldInfo::CarlaWorldInfo(
         CarlaWorldInfo&& x)
 {
+    m_carla_version = std::move(x.m_carla_version);
     m_map_name = std::move(x.m_map_name);
     m_opendrive = std::move(x.m_opendrive);
 }
@@ -66,6 +71,7 @@ carla_msgs::msg::CarlaWorldInfo& carla_msgs::msg::CarlaWorldInfo::operator =(
         const CarlaWorldInfo& x)
 {
 
+    m_carla_version = x.m_carla_version;
     m_map_name = x.m_map_name;
     m_opendrive = x.m_opendrive;
 
@@ -76,6 +82,7 @@ carla_msgs::msg::CarlaWorldInfo& carla_msgs::msg::CarlaWorldInfo::operator =(
         CarlaWorldInfo&& x)
 {
 
+    m_carla_version = std::move(x.m_carla_version);
     m_map_name = std::move(x.m_map_name);
     m_opendrive = std::move(x.m_opendrive);
 
@@ -86,7 +93,7 @@ bool carla_msgs::msg::CarlaWorldInfo::operator ==(
         const CarlaWorldInfo& x) const
 {
 
-    return (m_map_name == x.m_map_name && m_opendrive == x.m_opendrive);
+    return (m_carla_version == x.m_carla_version && m_map_name == x.m_map_name && m_opendrive == x.m_opendrive);
 }
 
 bool carla_msgs::msg::CarlaWorldInfo::operator !=(
@@ -105,6 +112,8 @@ size_t carla_msgs::msg::CarlaWorldInfo::getMaxCdrSerializedSize(
 
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + 255 + 1;
 
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + 255 + 1;
+
 
     return current_alignment - initial_alignment;
 }
@@ -116,6 +125,8 @@ size_t carla_msgs::msg::CarlaWorldInfo::getCdrSerializedSize(
     (void)data;
     size_t initial_alignment = current_alignment;
 
+
+    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.carla_version().size() + 1;
 
     current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + data.map_name().size() + 1;
 
@@ -129,6 +140,7 @@ void carla_msgs::msg::CarlaWorldInfo::serialize(
         eprosima::fastcdr::Cdr& scdr) const
 {
 
+    scdr << m_carla_version;
     scdr << m_map_name;
     scdr << m_opendrive;
 
@@ -138,10 +150,48 @@ void carla_msgs::msg::CarlaWorldInfo::deserialize(
         eprosima::fastcdr::Cdr& dcdr)
 {
 
+    dcdr >> m_carla_version;
     dcdr >> m_map_name;
     dcdr >> m_opendrive;
 }
 
+/*!
+ * @brief This function copies the value in member carla_version
+ * @param _carla_version New value to be copied in member carla_version
+ */
+void carla_msgs::msg::CarlaWorldInfo::carla_version(
+        const std::string& _carla_version)
+{
+    m_carla_version = _carla_version;
+}
+
+/*!
+ * @brief This function moves the value in member carla_version
+ * @param _carla_version New value to be moved in member carla_version
+ */
+void carla_msgs::msg::CarlaWorldInfo::carla_version(
+        std::string&& _carla_version)
+{
+    m_carla_version = std::move(_carla_version);
+}
+
+/*!
+ * @brief This function returns a constant reference to member carla_version
+ * @return Constant reference to member carla_version
+ */
+const std::string& carla_msgs::msg::CarlaWorldInfo::carla_version() const
+{
+    return m_carla_version;
+}
+
+/*!
+ * @brief This function returns a reference to member carla_version
+ * @return Reference to member carla_version
+ */
+std::string& carla_msgs::msg::CarlaWorldInfo::carla_version()
+{
+    return m_carla_version;
+}
 /*!
  * @brief This function copies the value in member map_name
  * @param _map_name New value to be copied in member map_name
@@ -236,7 +286,7 @@ void carla_msgs::msg::CarlaWorldInfo::serializeKey(
         eprosima::fastcdr::Cdr& scdr) const
 {
     (void) scdr;
-      
+       
 }
 
 

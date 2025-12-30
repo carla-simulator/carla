@@ -181,7 +181,6 @@ public:
       object.shape().type(shape_msgs::msg::SolidPrimitive_Constants::BOX);
       auto const ros_extent = _bounding_box.extent * 2.f;
       object.shape().dimensions({ros_extent.x, ros_extent.y, ros_extent.z});
-      //object.shape().polygon().points(*Polygon(_bounding_box.GetLocalVertices()).polygon());
     } else {
       object.shape().type(shape_msgs::msg::SolidPrimitive_Constants::BOX_X);
     }
@@ -246,6 +245,7 @@ public:
     return _actor_name_definition->carla_actor_info(name_registry);
   }
 
+  carla::streaming::detail::actor_id_type Id() { return _actor_name_definition->id; }
 private:
   std::shared_ptr<carla::ros2::types::ActorNameDefinition> _actor_name_definition;
   uint8_t _classification{derived_object_msgs::msg::Object_Constants::CLASSIFICATION_UNKNOWN};

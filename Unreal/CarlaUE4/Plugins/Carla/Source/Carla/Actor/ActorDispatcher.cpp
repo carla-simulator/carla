@@ -292,13 +292,8 @@ void RegisterActorROS2(std::shared_ptr<carla::ros2::ROS2> ROS2, FCarlaActor* Car
 
     auto VehicleActorDefinition = std::make_shared<carla::ros2::types::VehicleActorDefinition>(
       carla::ros2::types::ActorDefinition(ActorNameDefinition,
-        CarlaActor->GetActorInfo()->BoundingBox,
-        carla::ros2::types::Polygon()),
+        CarlaActor->GetActorInfo()->BoundingBox),
         PhysicsControl);
-    auto SkeletalMeshComponent = Vehicle->GetMesh();
-    if (SkeletalMeshComponent != nullptr) {
-      VehicleActorDefinition->vertex_polygon.SetGlobalVertices(UBoundingBoxCalculator::GetSkeletalMeshVertices(SkeletalMeshComponent->SkeletalMesh));
-    }
 
     carla::ros2::types::VehicleControlCallback VehicleControlCallback = [Vehicle](carla::ros2::types::VehicleControl const &Source) -> void {
       EVehicleInputPriority InputPriority = EVehicleInputPriority(Source.ControlPriority());
@@ -321,12 +316,7 @@ void RegisterActorROS2(std::shared_ptr<carla::ros2::ROS2> ROS2, FCarlaActor* Car
   else if ( Walker != nullptr ) {
     auto WalkerActorDefinition = std::make_shared<carla::ros2::types::WalkerActorDefinition>(
         carla::ros2::types::ActorDefinition(ActorNameDefinition,
-                          CarlaActor->GetActorInfo()->BoundingBox,
-              carla::ros2::types::Polygon()));
-    auto SkeletalMeshComponent = Walker->GetMesh();
-    if (SkeletalMeshComponent != nullptr) {
-      WalkerActorDefinition->vertex_polygon.SetGlobalVertices(UBoundingBoxCalculator::GetSkeletalMeshVertices(SkeletalMeshComponent->SkeletalMesh));
-    }
+                          CarlaActor->GetActorInfo()->BoundingBox));
 
     auto WalkerController = Cast<AWalkerController>(Walker->GetController());
     carla::ros2::types::WalkerControlCallback walker_control_callback = [WalkerController](carla::ros2::types::WalkerControl const &Source) -> void {
@@ -336,17 +326,16 @@ void RegisterActorROS2(std::shared_ptr<carla::ros2::ROS2> ROS2, FCarlaActor* Car
     ROS2->AddWalkerUe(WalkerActorDefinition, walker_control_callback);
   }
   else if ( TrafficLight != nullptr ) {
+    auto TrafficLightTriggerVolume = UBoundingBoxCalculator::GetTrafficSignTriggerVolume(TrafficLight);
     auto TrafficLightActorDefinition = std::make_shared<carla::ros2::types::TrafficLightActorDefinition>(
       carla::ros2::types::ActorDefinition(ActorNameDefinition,
-        CarlaActor->GetActorInfo()->BoundingBox,
-        carla::ros2::types::Polygon()));
+        CarlaActor->GetActorInfo()->BoundingBox), TrafficLightTriggerVolume);
     ROS2->AddTrafficLightUe(TrafficLightActorDefinition);
   }
   else if ( TrafficSign != nullptr ) {
     auto TrafficSignActorDefinition = std::make_shared<carla::ros2::types::TrafficSignActorDefinition>(
       carla::ros2::types::ActorDefinition(ActorNameDefinition,
-        CarlaActor->GetActorInfo()->BoundingBox,
-        carla::ros2::types::Polygon())
+        CarlaActor->GetActorInfo()->BoundingBox)
     );
     ROS2->AddTrafficSignUe(TrafficSignActorDefinition);
   }

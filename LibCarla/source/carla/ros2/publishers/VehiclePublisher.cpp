@@ -31,10 +31,6 @@ VehiclePublisher::VehiclePublisher(std::shared_ptr<carla::ros2::types::VehicleAc
   _vehicle_info_publisher->Message().id(vehicle_actor_definition->id);
   _vehicle_info_publisher->Message().type(vehicle_actor_definition->type_id);
   _vehicle_info_publisher->Message().rolename(vehicle_actor_definition->role_name);
-  _vehicle_info_publisher->Message().shape().type(shape_msgs::msg::SolidPrimitive_Constants::BOX);
-  auto const ros_extent = vehicle_actor_definition->bounding_box.extent * 2.f;
-  _vehicle_info_publisher->Message().shape().dimensions({ros_extent.x, ros_extent.y, ros_extent.z});
-  _vehicle_info_publisher->Message().shape().polygon().points(*vehicle_actor_definition->vertex_polygon.polygon());
   for (auto wheel : vehicle_actor_definition->vehicle_physics_control.GetWheels()) {
     auto wheel_info = carla_msgs::msg::CarlaEgoVehicleInfoWheel();
     wheel_info.tire_friction(wheel.tire_friction);
@@ -80,10 +76,7 @@ bool VehiclePublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_par
 }
 
 bool VehiclePublisher::Publish() {
-  if (!_vehicle_info_published) {
-    _vehicle_info_published = _vehicle_info_publisher->Publish();
-  }
-  bool success = _vehicle_info_published;
+  bool success = _vehicle_info_publisher->Publish();
   success &= _vehicle_status_publisher->Publish();
   success &= _vehicle_odometry_publisher->Publish();
   success &= _vehicle_speed_publisher->Publish();
@@ -137,6 +130,8 @@ bool VehiclePublisher::ProcessMessages() {
         wheel_msg.normalized_lat_force(wheel.normalized_lat_force);
         _vehicle_telemetry_publisher->Message().wheels().push_back(wheel_msg);
       }
+
+      _vehicle_telemetry_publisher->SetMessageUpdated();
     }
   }
   return true;

@@ -17,9 +17,9 @@ TrafficLightsPublisher::TrafficLightsPublisher()
 
 bool TrafficLightsPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
   return _traffic_light_info->InitHistoryPreallocatedWithReallocMemoryMode(domain_participant, get_topic_name("info"),
-                                                                           PublisherBase::get_topic_qos()) &&
+                                                                           PublisherBase::get_topic_qos().keep_last(1)) &&
          _traffic_light_status->InitHistoryPreallocatedWithReallocMemoryMode(
-             domain_participant, get_topic_name("status"), PublisherBase::get_topic_qos());
+             domain_participant, get_topic_name("status"), PublisherBase::get_topic_qos().keep_last(1));
 }
 
 bool TrafficLightsPublisher::Publish() {

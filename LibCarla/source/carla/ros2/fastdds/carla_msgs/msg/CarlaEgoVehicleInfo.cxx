@@ -36,37 +36,35 @@ using namespace eprosima::fastcdr::exception;
 
 carla_msgs::msg::CarlaEgoVehicleInfo::CarlaEgoVehicleInfo()
 {
-    // m_id com.eprosima.idl.parser.typecode.PrimitiveTypeCode@2d52216b
+    // m_id com.eprosima.idl.parser.typecode.PrimitiveTypeCode@45018215
     m_id = 0;
-    // m_type com.eprosima.idl.parser.typecode.StringTypeCode@242b836
+    // m_type com.eprosima.idl.parser.typecode.StringTypeCode@65d6b83b
     m_type ="";
-    // m_rolename com.eprosima.idl.parser.typecode.StringTypeCode@3f6f6701
+    // m_rolename com.eprosima.idl.parser.typecode.StringTypeCode@d706f19
     m_rolename ="";
-    // m_wheels com.eprosima.idl.parser.typecode.SequenceTypeCode@3527942a
+    // m_wheels com.eprosima.idl.parser.typecode.SequenceTypeCode@30b7c004
 
-    // m_max_rpm com.eprosima.idl.parser.typecode.PrimitiveTypeCode@942a29c
+    // m_max_rpm com.eprosima.idl.parser.typecode.PrimitiveTypeCode@79efed2d
     m_max_rpm = 0.0;
-    // m_moi com.eprosima.idl.parser.typecode.PrimitiveTypeCode@1ed6388a
+    // m_moi com.eprosima.idl.parser.typecode.PrimitiveTypeCode@2928854b
     m_moi = 0.0;
-    // m_damping_rate_full_throttle com.eprosima.idl.parser.typecode.PrimitiveTypeCode@5a45133e
+    // m_damping_rate_full_throttle com.eprosima.idl.parser.typecode.PrimitiveTypeCode@27ae2fd0
     m_damping_rate_full_throttle = 0.0;
-    // m_damping_rate_zero_throttle_clutch_engaged com.eprosima.idl.parser.typecode.PrimitiveTypeCode@534a5a98
+    // m_damping_rate_zero_throttle_clutch_engaged com.eprosima.idl.parser.typecode.PrimitiveTypeCode@29176cc1
     m_damping_rate_zero_throttle_clutch_engaged = 0.0;
-    // m_damping_rate_zero_throttle_clutch_disengaged com.eprosima.idl.parser.typecode.PrimitiveTypeCode@4f80542f
+    // m_damping_rate_zero_throttle_clutch_disengaged com.eprosima.idl.parser.typecode.PrimitiveTypeCode@2f177a4b
     m_damping_rate_zero_throttle_clutch_disengaged = 0.0;
-    // m_use_gear_autobox com.eprosima.idl.parser.typecode.PrimitiveTypeCode@60bd273d
+    // m_use_gear_autobox com.eprosima.idl.parser.typecode.PrimitiveTypeCode@4278a03f
     m_use_gear_autobox = false;
-    // m_gear_switch_time com.eprosima.idl.parser.typecode.PrimitiveTypeCode@121314f7
+    // m_gear_switch_time com.eprosima.idl.parser.typecode.PrimitiveTypeCode@61dd025
     m_gear_switch_time = 0.0;
-    // m_clutch_strength com.eprosima.idl.parser.typecode.PrimitiveTypeCode@130c12b7
+    // m_clutch_strength com.eprosima.idl.parser.typecode.PrimitiveTypeCode@124c278f
     m_clutch_strength = 0.0;
-    // m_mass com.eprosima.idl.parser.typecode.PrimitiveTypeCode@5e600dd5
+    // m_mass com.eprosima.idl.parser.typecode.PrimitiveTypeCode@15b204a1
     m_mass = 0.0;
-    // m_drag_coefficient com.eprosima.idl.parser.typecode.PrimitiveTypeCode@576d5deb
+    // m_drag_coefficient com.eprosima.idl.parser.typecode.PrimitiveTypeCode@77167fb7
     m_drag_coefficient = 0.0;
-    // m_center_of_mass com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@5d534f5d
-
-    // m_shape com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@2e3967ea
+    // m_center_of_mass com.eprosima.fastdds.idl.parser.typecode.StructTypeCode@1fe20588
 
 
 }
@@ -87,7 +85,6 @@ carla_msgs::msg::CarlaEgoVehicleInfo::~CarlaEgoVehicleInfo()
 
 
 
-
 }
 
 carla_msgs::msg::CarlaEgoVehicleInfo::CarlaEgoVehicleInfo(
@@ -108,7 +105,6 @@ carla_msgs::msg::CarlaEgoVehicleInfo::CarlaEgoVehicleInfo(
     m_mass = x.m_mass;
     m_drag_coefficient = x.m_drag_coefficient;
     m_center_of_mass = x.m_center_of_mass;
-    m_shape = x.m_shape;
 }
 
 carla_msgs::msg::CarlaEgoVehicleInfo::CarlaEgoVehicleInfo(
@@ -129,7 +125,6 @@ carla_msgs::msg::CarlaEgoVehicleInfo::CarlaEgoVehicleInfo(
     m_mass = x.m_mass;
     m_drag_coefficient = x.m_drag_coefficient;
     m_center_of_mass = std::move(x.m_center_of_mass);
-    m_shape = std::move(x.m_shape);
 }
 
 carla_msgs::msg::CarlaEgoVehicleInfo& carla_msgs::msg::CarlaEgoVehicleInfo::operator =(
@@ -151,7 +146,6 @@ carla_msgs::msg::CarlaEgoVehicleInfo& carla_msgs::msg::CarlaEgoVehicleInfo::oper
     m_mass = x.m_mass;
     m_drag_coefficient = x.m_drag_coefficient;
     m_center_of_mass = x.m_center_of_mass;
-    m_shape = x.m_shape;
 
     return *this;
 }
@@ -175,7 +169,6 @@ carla_msgs::msg::CarlaEgoVehicleInfo& carla_msgs::msg::CarlaEgoVehicleInfo::oper
     m_mass = x.m_mass;
     m_drag_coefficient = x.m_drag_coefficient;
     m_center_of_mass = std::move(x.m_center_of_mass);
-    m_shape = std::move(x.m_shape);
 
     return *this;
 }
@@ -184,7 +177,7 @@ bool carla_msgs::msg::CarlaEgoVehicleInfo::operator ==(
         const CarlaEgoVehicleInfo& x) const
 {
 
-    return (m_id == x.m_id && m_type == x.m_type && m_rolename == x.m_rolename && m_wheels == x.m_wheels && m_max_rpm == x.m_max_rpm && m_moi == x.m_moi && m_damping_rate_full_throttle == x.m_damping_rate_full_throttle && m_damping_rate_zero_throttle_clutch_engaged == x.m_damping_rate_zero_throttle_clutch_engaged && m_damping_rate_zero_throttle_clutch_disengaged == x.m_damping_rate_zero_throttle_clutch_disengaged && m_use_gear_autobox == x.m_use_gear_autobox && m_gear_switch_time == x.m_gear_switch_time && m_clutch_strength == x.m_clutch_strength && m_mass == x.m_mass && m_drag_coefficient == x.m_drag_coefficient && m_center_of_mass == x.m_center_of_mass && m_shape == x.m_shape);
+    return (m_id == x.m_id && m_type == x.m_type && m_rolename == x.m_rolename && m_wheels == x.m_wheels && m_max_rpm == x.m_max_rpm && m_moi == x.m_moi && m_damping_rate_full_throttle == x.m_damping_rate_full_throttle && m_damping_rate_zero_throttle_clutch_engaged == x.m_damping_rate_zero_throttle_clutch_engaged && m_damping_rate_zero_throttle_clutch_disengaged == x.m_damping_rate_zero_throttle_clutch_disengaged && m_use_gear_autobox == x.m_use_gear_autobox && m_gear_switch_time == x.m_gear_switch_time && m_clutch_strength == x.m_clutch_strength && m_mass == x.m_mass && m_drag_coefficient == x.m_drag_coefficient && m_center_of_mass == x.m_center_of_mass);
 }
 
 bool carla_msgs::msg::CarlaEgoVehicleInfo::operator !=(
@@ -244,7 +237,6 @@ size_t carla_msgs::msg::CarlaEgoVehicleInfo::getMaxCdrSerializedSize(
 
 
     current_alignment += geometry_msgs::msg::Vector3::getMaxCdrSerializedSize(current_alignment);
-    current_alignment += shape_msgs::msg::SolidPrimitive::getMaxCdrSerializedSize(current_alignment);
 
     return current_alignment - initial_alignment;
 }
@@ -302,7 +294,6 @@ size_t carla_msgs::msg::CarlaEgoVehicleInfo::getCdrSerializedSize(
 
 
     current_alignment += geometry_msgs::msg::Vector3::getCdrSerializedSize(data.center_of_mass(), current_alignment);
-    current_alignment += shape_msgs::msg::SolidPrimitive::getCdrSerializedSize(data.shape(), current_alignment);
 
     return current_alignment - initial_alignment;
 }
@@ -326,7 +317,6 @@ void carla_msgs::msg::CarlaEgoVehicleInfo::serialize(
     scdr << m_mass;
     scdr << m_drag_coefficient;
     scdr << m_center_of_mass;
-    scdr << m_shape;
 
 }
 
@@ -349,7 +339,6 @@ void carla_msgs::msg::CarlaEgoVehicleInfo::deserialize(
     dcdr >> m_mass;
     dcdr >> m_drag_coefficient;
     dcdr >> m_center_of_mass;
-    dcdr >> m_shape;
 }
 
 /*!
@@ -808,43 +797,6 @@ geometry_msgs::msg::Vector3& carla_msgs::msg::CarlaEgoVehicleInfo::center_of_mas
 {
     return m_center_of_mass;
 }
-/*!
- * @brief This function copies the value in member shape
- * @param _shape New value to be copied in member shape
- */
-void carla_msgs::msg::CarlaEgoVehicleInfo::shape(
-        const shape_msgs::msg::SolidPrimitive& _shape)
-{
-    m_shape = _shape;
-}
-
-/*!
- * @brief This function moves the value in member shape
- * @param _shape New value to be moved in member shape
- */
-void carla_msgs::msg::CarlaEgoVehicleInfo::shape(
-        shape_msgs::msg::SolidPrimitive&& _shape)
-{
-    m_shape = std::move(_shape);
-}
-
-/*!
- * @brief This function returns a constant reference to member shape
- * @return Constant reference to member shape
- */
-const shape_msgs::msg::SolidPrimitive& carla_msgs::msg::CarlaEgoVehicleInfo::shape() const
-{
-    return m_shape;
-}
-
-/*!
- * @brief This function returns a reference to member shape
- * @return Reference to member shape
- */
-shape_msgs::msg::SolidPrimitive& carla_msgs::msg::CarlaEgoVehicleInfo::shape()
-{
-    return m_shape;
-}
 
 size_t carla_msgs::msg::CarlaEgoVehicleInfo::getKeyMaxCdrSerializedSize(
         size_t current_alignment)
@@ -865,7 +817,7 @@ void carla_msgs::msg::CarlaEgoVehicleInfo::serializeKey(
         eprosima::fastcdr::Cdr& scdr) const
 {
     (void) scdr;
-                    
+                   
 }
 
 
