@@ -1,0 +1,248 @@
+// Copyright (c) 2025 NVIDIA CORPORATION.  All rights reserved.
+syntax = "proto3";
+
+package nre.grpc.protos.sensorsim;
+
+import "nre/grpc/protos/common.proto";
+
+////////////////////////////////////////////////////////////////////////////////
+// Sensor simulator <-> Runtime
+////////////////////////////////////////////////////////////////////////////////
+
+service SensorsimService {
+    rpc render_rgb (RGBRenderRequest) returns (RGBRenderReturn);
+    rpc render_lidar (LidarRenderRequest) returns (LidarRenderReturn);
+    rpc get_version (nre.grpc.protos.common.Empty) returns (nre.grpc.protos.common.VersionId);
+    rpc get_available_scenes (nre.grpc.protos.common.Empty) returns (nre.grpc.protos.common.AvailableScenesReturn);
+    rpc get_available_cameras (AvailableCamerasRequest) returns (AvailableCamerasReturn);
+    rpc shut_down (nre.grpc.protos.common.Empty) returns (nre.grpc.protos.common.Empty);
+    rpc get_available_trajectories (AvailableTrajectoriesRequest) returns (AvailableTrajectoriesReturn);
+    rpc get_available_ego_masks (nre.grpc.protos.common.Empty) returns (AvailableEgoMasksReturn);
+}
+
+message EgoMaskId {
+    string camera_logical_id = 1; // camera_front_wide_120fov, etc
+    string rig_config_id = 2; // hyperion 8.0, 8.1, etc
+}
+
+message AvailableEgoMasksReturn {
+    message EgoMaskMetadata {
+        EgoMaskId ego_mask_id = 1;
+        // future: extra metadata like nominal camera_to_rig pose
+    }
+
+    repeated EgoMaskMetadata ego_mask_metadata = 1;
+}
+
+enum ShutterType {
+    UNKNOWN = 0; // Unknown shutter type
+    ROLLING_TOP_TO_BOTTOM = 1; // Rolling shutter from top to bottom of the imager
+    ROLLING_LEFT_TO_RIGHT = 2; // Rolling shutter from left to right of the imager
+    ROLLING_BOTTOM_TO_TOP = 3; // Rolling shutter from bottom to top of the imager
+    ROLLING_RIGHT_TO_LEFT = 4; // Rolling shutter from right to left of the imager
+    GLOBAL = 5; //Instantaneous global shutter (no rolling shutter)
+}
+
+message LinearCde {
+    double linear_c = 1;
+    double linear_d = 2;
+    double linear_e = 3;
+}
+
+message FthetaCameraParam {
+    enum PolynomialType {
+        UNKNOWN = 0; // Unknown polynomial type
+        PIXELDIST_TO_ANGLE = 1; // Polynomial mapping pixeldistances-to-angles (also known as "backward" polynomial)
+        ANGLE_TO_PIXELDIST = 2; // Polynomial mapping angles-to-pixeldistances (also known as "forward" polynomial)
+    }
+
+    double principal_point_x = 1;
+    double principal_point_y = 2;
+
+    PolynomialType reference_poly = 3;
+
+    repeated double pixeldist_to_angle_poly = 4;
+
+    repeated double angle_to_pixeldist_poly = 5;
+
+    double max_angle = 6;
+
+    LinearCde linear_cde = 7;
+}
+
+//TODO: implentation of OpenCV pinhole camera model parameters
+message OpenCVPinholeCameraParam {
+
+}
+
+message OpenCVFisheyeCameraParam {
+   double principal_point_x = 1;
+
+   double principal_point_y = 2;
+
+   double focal_length_x = 3;
+
+   double focal_length_y = 4;
+
+   repeated double radial_coeffs = 5;
+
+   double max_angle = 6;
+}
+
+message BivariateWindshieldModelParameters {
+    enum ReferencePolynomial {
+        FORWARD = 0;
+        BACKWARD = 1;
+    }
+
+    ReferencePolynomial reference_poly = 1;
+
+    repeated double horizontal_poly = 2;
+
+    repeated double vertical_poly = 3;
+
+    repeated double horizontal_poly_inverse = 4;
+
+    repeated double vertical_poly_inverse = 5;
+}
+
+message CameraSpec {
+
+    string temporary_camera_spec = 1 [deprecated = true];
+
+    oneof camera_param {
+
+        FthetaCameraParam ftheta_param = 2;
+
+        OpenCVPinholeCameraParam opencv_pinhole_param = 3;
+
+        OpenCVFisheyeCameraParam opencv_fisheye_param = 4;
+    }
+    // these two are for book-keeping by the user
+    string logical_id = 5;
+    uint32 trajectory_idx = 6;
+    
+    uint32 resolution_h = 7;
+    uint32 resolution_w = 8;
+    ShutterType shutter_type = 9;
+
+    oneof external_distortion {
+        BivariateWindshieldModelParameters bivariate_windshield_model_param = 10;
+    }
+}
+
+message PosePair {
+    // represents poses at start and end of the frame
+    // TODO: replace with common.Trajectory (more general)
+    nre.grpc.protos.common.Pose start_pose = 1;
+    nre.grpc.protos.common.Pose end_pose = 2;
+}
+
+message DynamicObject {
+    string track_id = 1;
+    PosePair pose_pair = 2;
+}
+
+enum ImageFormat {
+    UNDEFINED = 0;
+    PNG = 1;
+    JPEG = 2;
+    // AlpaSim currently only supports PNG and JPEG.
+    JPEG2000 = 3;
+    RGB_UINT8_PLANAR = 4;
+    AVC = 5;
+    AV1 = 6;
+
+}
+
+message RGBRenderRequest {
+    string scene_id = 1;
+
+    // perhaps these two are merged into camera_intrinsics
+    uint32 resolution_h = 2;
+    uint32 resolution_w = 3;
+
+    CameraSpec camera_intrinsics = 4;
+
+    fixed64 frame_start_us = 5;
+    fixed64 frame_end_us = 6;
+
+    PosePair sensor_pose = 7;
+
+    repeated DynamicObject dynamic_objects = 8;
+
+    ImageFormat image_format = 9;
+    float image_quality = 10;
+
+    // if false, no ego mask will be applied
+    bool insert_ego_mask = 11;
+    // if `insert_ego_mask` is true, `ego_mask_id` has to correspond to one of the ego masks in the AvailableEgoMasksReturn
+    EgoMaskId ego_mask_id = 12;
+}
+
+message AvailableCamerasRequest {
+    string scene_id = 1;
+}
+
+message AvailableCamerasReturn {
+    message AvailableCamera {
+        CameraSpec intrinsics = 1;
+        nre.grpc.protos.common.Pose rig_to_camera = 2; // should be camera_to_rig -> silently breaks things, deprecate and create duplicate? or just fix and let people know
+
+        string logical_id = 3;
+        uint32 trajectory_idx = 4;
+    }
+
+    repeated AvailableCamera available_cameras = 1;
+}
+
+message AvailableTrajectoriesRequest {
+    string scene_id = 1;
+}
+
+message AvailableTrajectoriesReturn {
+    message AvailableTrajectory {
+        uint32 trajectory_idx = 1;
+        nre.grpc.protos.common.Trajectory trajectory = 2;
+    }
+
+    repeated AvailableTrajectory available_trajectories = 1;
+}
+
+message RGBRenderReturn {
+    bytes image_bytes = 1;
+}
+
+enum LidarDeviceType {
+    PANDAR128 = 0;
+    AT128 = 1;
+}
+
+message LidarSpec {
+    //Currently, support the lidar model [PANDAR128, AT128]
+    //TODO: Add lidar parameteriazation
+    LidarDeviceType lidar_type = 2;
+}
+
+message LidarRenderReturn {
+    // The xyz of the lidar points in the end-of-spin lidar space
+    // [x1, y1, z1, x2, y2, z2, .....]
+    repeated float point_xyzs = 1;
+    // The intensity of the points
+    // range [0, 1]
+    repeated float point_intensities = 2;
+}
+
+message LidarRenderRequest {
+
+    string scene_id = 1;
+
+    LidarSpec lidar_config = 2;
+
+    fixed64 frame_start_us = 3;
+    fixed64 frame_end_us = 4;
+
+    PosePair sensor_pose = 5;
+
+    repeated DynamicObject dynamic_objects = 6;
+}

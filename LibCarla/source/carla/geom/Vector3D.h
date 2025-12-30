@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <limits>
+#include <ostream>
 
 namespace carla {
 namespace geom {
@@ -50,6 +51,10 @@ namespace geom {
        return std::sqrt(SquaredLength());
     }
 
+    double ExactLength() const {
+       return std::sqrt(double(x) * x + double(y) * y + double(z) * z);
+    }
+
     float SquaredLength2D() const {
       return x * x + y * y;
     }
@@ -62,17 +67,25 @@ namespace geom {
        return Vector3D(abs(x), abs(y), abs(z));
     }
 
-    Vector3D MakeUnitVector() const {
-      const float length = Length();
-      DEVELOPMENT_ASSERT(length > 2.0f * std::numeric_limits<float>::epsilon());
-      const float k = 1.0f / length;
-      return Vector3D(x * k, y * k, z * k);
+    Vector3D MakeUnitVectorLengthInput(const double length, const float epsilon = 2.0f * std::numeric_limits<float>::epsilon()) const {
+      if (length < epsilon) {
+        DEVELOPMENT_ASSERT(length >= 2.0f * std::numeric_limits<float>::epsilon());
+        return *this;
+      }
+      const double k = 1.0 / length;
+      Vector3D result(float(x * k), float(y * k), float(z * k));
+      return result;
     }
 
-    Vector3D MakeSafeUnitVector(const float epsilon) const  {
-      const float length = Length();
-      const float k = (length > std::max(epsilon, 0.0f)) ? (1.0f / length) : 1.0f;
-      return Vector3D(x * k, y * k, z * k);
+    Vector3D MakeUnitVector(const float epsilon = 2.0f * std::numeric_limits<float>::epsilon()) const  {
+      const double length = ExactLength();
+      return MakeUnitVectorLengthInput(length, epsilon);
+    }
+
+    std::pair<Vector3D, double> GetUnitVectorAndLength() const {
+      const auto length = ExactLength();
+      const auto unit_vector = MakeUnitVectorLengthInput(length);
+      return std::make_pair(unit_vector, length);
     }
 
     // =========================================================================
@@ -206,6 +219,20 @@ namespace geom {
     }
     // =========================================================================
   };
+
+
+  template <typename T>
+  static void WriteVector3D(std::ostream &out, const char *name, const T &vector3D) {
+    out << name
+        << "(x=" << std::to_string(vector3D.x)
+        << ", y=" << std::to_string(vector3D.y)
+        << ", z=" << std::to_string(vector3D.z) << ')';
+  }
+
+  inline std::ostream &operator<<(std::ostream &out, const Vector3D &vector3D) {
+    WriteVector3D(out, "Vector3D", vector3D);
+    return out;
+  }
 
 } // namespace geom
 } // namespace carla

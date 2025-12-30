@@ -4,7 +4,7 @@ CARLA Simulator
 [![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](http://carla.readthedocs.io) 
 
 [![carla.org](Docs/img/btn/web.png)](http://carla.org)
-[![download](Docs/img/btn/download.png)](https://github.com/carla-simulator/carla/blob/master/Docs/download.md)
+[![download](Docs/img/btn/download.png)](https://carla.readthedocs.io/en/latest/download/)
 [![documentation](Docs/img/btn/docs.png)](http://carla.readthedocs.io)
 [![forum](Docs/img/btn/forum.png)](https://github.com/carla-simulator/carla/discussions)
 [![discord](Docs/img/btn/chat.png)](https://discord.gg/8kqACuC)
@@ -131,6 +131,8 @@ CARLA specific code is distributed under MIT License.
 CARLA specific assets are distributed under CC-BY License.
 
 #### CARLA Dependency and Integration licenses
+
+The ad-rss-lib library compiled and linked by the [RSS Integration build variant](Docs/adv_rss.md) introduces [LGPL-2.1-only License](https://opensource.org/licenses/LGPL-2.1).
 
 Unreal Engine 4 follows its [own license terms](https://www.unrealengine.com/en-US/faq).
 

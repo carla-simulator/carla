@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -83,14 +83,14 @@ namespace geom {
     std::array<Location, 8> GetLocalVertices() const {
 
         return {{
-            location + Location(rotation.RotateVector({-extent.x,-extent.y,-extent.z})),
-            location + Location(rotation.RotateVector({-extent.x,-extent.y, extent.z})),
-            location + Location(rotation.RotateVector({-extent.x, extent.y,-extent.z})),
-            location + Location(rotation.RotateVector({-extent.x, extent.y, extent.z})),
-            location + Location(rotation.RotateVector({ extent.x,-extent.y,-extent.z})),
-            location + Location(rotation.RotateVector({ extent.x,-extent.y, extent.z})),
-            location + Location(rotation.RotateVector({ extent.x, extent.y,-extent.z})),
-            location + Location(rotation.RotateVector({ extent.x, extent.y, extent.z}))
+            location + Location(rotation.RotatedVector(Location(-extent.x,-extent.y,-extent.z))),
+            location + Location(rotation.RotatedVector(Location(-extent.x,-extent.y, extent.z))),
+            location + Location(rotation.RotatedVector(Location(-extent.x, extent.y,-extent.z))),
+            location + Location(rotation.RotatedVector(Location(-extent.x, extent.y, extent.z))),
+            location + Location(rotation.RotatedVector(Location( extent.x,-extent.y,-extent.z))),
+            location + Location(rotation.RotatedVector(Location( extent.x,-extent.y, extent.z))),
+            location + Location(rotation.RotatedVector(Location( extent.x, extent.y,-extent.z))),
+            location + Location(rotation.RotatedVector(Location( extent.x, extent.y, extent.z)))
         }};
     }
 
@@ -151,6 +151,14 @@ namespace geom {
 
     MSGPACK_DEFINE_ARRAY(location, extent, rotation, actor_id);
   };
+
+  inline::std::ostream &operator<<(std::ostream &out, const BoundingBox &box) {
+    out << "BoundingBox(" << box.location << ", ";
+    carla::geom::WriteVector3D(out, "Extent", box.extent);
+    out << ", " << box.rotation;
+    out << ')';
+    return out;
+  }
 
 } // namespace geom
 } // namespace carla

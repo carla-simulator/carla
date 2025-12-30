@@ -1,0 +1,8 @@
+auditwheel==5.1.0
+build==1.2.2.post1
+distro==1.9.0
+packaging==24.0
+pip==24.0
+pyelftools==0.31
+setuptools==56.0.0
+wheel==0.43.0

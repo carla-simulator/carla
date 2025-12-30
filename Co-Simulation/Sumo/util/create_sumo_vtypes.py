@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -15,29 +15,14 @@ Script to create sumo vtypes based on carla blueprints.
 # ==================================================================================================
 
 import argparse
-import glob
 import datetime
 import json
 import logging
 import os
-import sys
 
 import lxml.etree as ET  # pylint: disable=import-error
 
-# ==================================================================================================
-# -- find carla module -----------------------------------------------------------------------------
-# ==================================================================================================
-
-try:
-    sys.path.append(
-        glob.glob('../../../PythonAPI/carla/dist/carla-*%d.%d-%s.egg' %
-                  (sys.version_info.major, sys.version_info.minor,
-                   'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
 import carla  # pylint: disable=import-error, wrong-import-position
-
 
 # ==================================================================================================
 # -- load specs definition -------------------------------------------------------------------------

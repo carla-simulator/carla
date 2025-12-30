@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <limits>
+#include <ostream>
 
 namespace carla {
 namespace geom {
@@ -39,6 +40,10 @@ namespace geom {
     // -- Other methods --------------------------------------------------------
     // =========================================================================
 
+    double ExactLength() const {
+       return std::sqrt(double(x) * x + double(y) * y);
+    }
+
     float SquaredLength() const {
       return x * x + y * y;
     }
@@ -47,11 +52,24 @@ namespace geom {
        return std::sqrt(SquaredLength());
     }
 
-    Vector2D MakeUnitVector() const {
-      const float len = Length();
-      DEVELOPMENT_ASSERT(len > 2.0f * std::numeric_limits<float>::epsilon());
-      const float k = 1.0f / len;
-      return Vector2D(x * k, y * k);
+    Vector2D MakeUnitVectorLengthInput(const double length, const float epsilon = 2.0f * std::numeric_limits<float>::epsilon()) const {
+      if (length < epsilon) {
+        return *this;
+      }
+      const double k = 1.0 / length;
+      Vector2D result(float(x * k), float(y * k));
+      return result;
+    }
+
+    Vector2D MakeUnitVector(const float epsilon = 2.0f * std::numeric_limits<float>::epsilon()) const  {
+      const double length = ExactLength();
+      return MakeUnitVectorLengthInput(length, epsilon);
+    }
+
+    std::pair<Vector2D, double> GetUnitVectorAndLength() const {
+      const auto length = ExactLength();
+      const auto unit_vector = MakeUnitVectorLengthInput(length);
+      return std::make_pair(unit_vector, length);
     }
 
     // =========================================================================
@@ -148,6 +166,19 @@ namespace geom {
 
     MSGPACK_DEFINE_ARRAY(x, y)
   };
+
+  template <typename T>
+  static void WriteVector2D(std::ostream &out, const char *name, const T &vector2D) {
+    out << name
+        << "(x=" << std::to_string(vector2D.x)
+        << ", y=" << std::to_string(vector2D.y) << ')';
+  }
+
+  inline std::ostream &operator<<(std::ostream &out, const Vector2D &vector2D) {
+    WriteVector2D(out, "Vector2D", vector2D);
+    return out;
+  }
+
 
 } // namespace geom
 } // namespace carla

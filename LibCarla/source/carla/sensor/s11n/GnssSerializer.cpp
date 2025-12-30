@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -12,8 +12,8 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
-  SharedPtr<SensorData> GnssSerializer::Deserialize(RawData &&data) {
-    return SharedPtr<SensorData>(new data::GnssMeasurement(std::move(data)));
+  SharedPtr<SensorData> GnssSerializer::Deserialize(RawData DESERIALIZE_DECL_DATA(data)) {
+    return SharedPtr<SensorData>(new data::GnssMeasurement(DESERIALIZE_MOVE_DATA(data)));
   }
 
 } // namespace s11n

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -16,6 +16,7 @@
 
 #include <future>
 #include <thread>
+#include <chrono>
 #include <type_traits>
 
 namespace carla {
@@ -29,6 +30,11 @@ namespace carla {
     /// Stops the ThreadPool and joins all its threads.
     ~ThreadPool() {
       Stop();
+      // Give some time to boost asio to properly stop.
+      // below 20ms this might be useless if there is heavy load.
+      // Without this, segmentation faults were observed
+      // within the boost asio code on destruction of the io_context.
+      std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
 
     /// Return the underlying io_context.

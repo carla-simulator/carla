@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -45,7 +45,7 @@ void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSe
     ActorLocation = LargeMap->LocalToGlobalLocation(ActorLocation);
   }
   carla::geom::Location Location = ActorLocation;
-  carla::geom::GeoLocation CurrentLocation = CurrentGeoReference.Transform(Location);
+  carla::geom::GeoLocation CurrentLocation = CurrentGeoProjection.TransformToGeoLocation(Location);
 
   // Compute the noise for the sensor
   const float LatError = RandomEngine->GetNormalDistribution(0.0f, LatitudeDeviation);
@@ -65,17 +65,9 @@ void AGnssSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSe
   if (ROS2->IsEnabled())
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
-    auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
     AActor* ParentActor = GetAttachParentActor();
-    if (ParentActor)
-    {
-      FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
-    }
-    else
-    {
-      ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
-    }
+    auto Transform = (ParentActor) ? GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : GetActorTransform();
+    ROS2->ProcessDataFromGNSS(Stream.GetSensorType(), Transform, carla::geom::GeoLocation{Latitude, Longitude, Altitude}, this);
   }
   #endif
   {
@@ -145,5 +137,5 @@ void AGnssSensor::BeginPlay()
   Super::BeginPlay();
 
   const UCarlaEpisode* episode = UCarlaStatics::GetCurrentEpisode(GetWorld());
-  CurrentGeoReference = episode->GetGeoReference();
+  CurrentGeoProjection = episode->GetGeoProjection();
 }

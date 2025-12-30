@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -10,7 +10,7 @@
 #include "carla/Exception.h"
 #include "carla/Logging.h"
 #include "carla/RecurrentSharedFuture.h"
-#include "carla/client/BlueprintLibrary.h"
+#include "carla/actors/BlueprintLibrary.h"
 #include "carla/client/FileTransfer.h"
 #include "carla/client/Map.h"
 #include "carla/client/Sensor.h"
@@ -23,6 +23,7 @@
 
 #include <exception>
 #include <thread>
+#include <chrono>
 
 using namespace std::string_literals;
 
@@ -50,7 +51,7 @@ namespace detail {
     bool result = true;
     auto start = std::chrono::system_clock::now();
     while (frame > episode.GetState()->GetTimestamp().frame) {
-      std::this_thread::yield();
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
       auto end = std::chrono::system_clock::now();
       auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
       if(timeout.to_chrono() < diff) {
@@ -245,9 +246,9 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   // -- Access to global objects in the episode --------------------------------
   // ===========================================================================
 
-  SharedPtr<BlueprintLibrary> Simulator::GetBlueprintLibrary() {
+  SharedPtr<actors::BlueprintLibrary> Simulator::GetBlueprintLibrary() {
     auto defs = _client.GetActorDefinitions();
-    return MakeShared<BlueprintLibrary>(std::move(defs));
+    return MakeShared<actors::BlueprintLibrary>(std::move(defs));
   }
 
   rpc::VehicleLightStateList Simulator::GetVehiclesLightStates() {
@@ -349,7 +350,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   // ===========================================================================
 
     SharedPtr<Actor> Simulator::SpawnActor(
-      const ActorBlueprint &blueprint,
+      const actors::ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent,
       rpc::AttachmentType attachment_type,
@@ -393,9 +394,26 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     return success;
   }
 
+  void Simulator::EnableForROS(const Actor &actor) {
+    _client.EnableForROS(actor.GetId());
+  }
+
+  void Simulator::DisableForROS(const Actor &actor) {
+    _client.DisableForROS(actor.GetId());
+  }
+
+  bool Simulator::IsEnabledForROS(const Actor &actor) {
+    return _client.IsEnabledForROS(actor.GetId());
+  }
+
+
   // ===========================================================================
   // -- Operations with sensors ------------------------------------------------
   // ===========================================================================
+
+  void Simulator::EnableGBuffers(const Sensor &sensor, bool bEnable) {
+    _client.EnableGBuffers(sensor.GetId(), bEnable);
+  }
 
   void Simulator::SubscribeToSensor(
       const Sensor &sensor,
@@ -404,7 +422,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     _client.SubscribeToStream(
         sensor.GetActorDescription().GetStreamToken(),
         [cb=std::move(callback), ep=WeakEpisodeProxy{shared_from_this()}](auto buffer) {
-          auto data = sensor::Deserializer::Deserialize(std::move(buffer));
+          auto data = sensor::Deserializer::Deserialize(DESERIALIZE_MOVE_DATA(buffer));
           data->_episode = ep.TryLock();
           cb(std::move(data));
         });
@@ -415,25 +433,13 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     // If in the future we need to unsubscribe from each gbuffer individually, it should be done here.
   }
 
-  void Simulator::EnableForROS(const Sensor &sensor) {
-    _client.EnableForROS(sensor.GetActorDescription().GetStreamToken());
-  }
-
-  void Simulator::DisableForROS(const Sensor &sensor) {
-    _client.DisableForROS(sensor.GetActorDescription().GetStreamToken());
-  }
-
-  bool Simulator::IsEnabledForROS(const Sensor &sensor) {
-    return _client.IsEnabledForROS(sensor.GetActorDescription().GetStreamToken());
-  }
-
   void Simulator::SubscribeToGBuffer(
       Actor &actor,
       uint32_t gbuffer_id,
       std::function<void(SharedPtr<sensor::SensorData>)> callback) {
     _client.SubscribeToGBuffer(actor.GetId(), gbuffer_id,
         [cb=std::move(callback), ep=WeakEpisodeProxy{shared_from_this()}](auto buffer) {
-          auto data = sensor::Deserializer::Deserialize(std::move(buffer));
+          auto data = sensor::Deserializer::Deserialize(DESERIALIZE_MOVE_DATA(buffer));
           data->_episode = ep.TryLock();
           cb(std::move(data));
         });
@@ -447,8 +453,12 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     _client.FreezeAllTrafficLights(frozen);
   }
 
-  void Simulator::Send(const Sensor &sensor, std::string message) {
-    _client.Send(sensor.GetId(), message);
+  void Simulator::Send(const Sensor &sensor, const carla::rpc::CustomV2XBytes &data) {
+    _client.Send(sensor.GetId(), data);
+  }
+
+  void Simulator::SetIgnoredVehicles(const Sensor &sensor, const std::vector<ActorId>& vehicle_ids) {
+    _client.SetIgnoredVehicles(sensor.GetId(), vehicle_ids);
   }
 
   // =========================================================================
@@ -472,6 +482,31 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   std::vector<std::string> Simulator::GetNamesOfAllObjects() const {
     return _client.GetNamesOfAllObjects();
   }
+
+  std::string Simulator::ExportCosmosCrosswalks(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosCrosswalks(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosRoadBoundaries(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosRoadBoundaries(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosLaneLines(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosLaneLines(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosTrafficSigns(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosTrafficSigns(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosWaitLines(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosWaitLines(session_id, output_path);
+  }
+
+  std::string Simulator::ExportCosmosRoadMarkings(const std::string& session_id, const std::string& output_path) const {
+    return _client.ExportCosmosRoadMarkings(session_id, output_path);
+  }
+
 
 } // namespace detail
 } // namespace client

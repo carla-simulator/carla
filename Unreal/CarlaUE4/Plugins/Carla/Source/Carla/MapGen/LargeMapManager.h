@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
@@ -174,7 +174,7 @@ public:
   FIntVector GetTileVectorID(TileID TileID) const;
 
   FVector GetTileLocation(TileID TileID) const;
-  
+
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   FVector GetTileLocation(FIntVector TileVectorID) const;
 
@@ -195,7 +195,7 @@ public:
 
   UFUNCTION(BlueprintCallable, Category = "Large Map Manager")
   FCarlaMapTile& GetCarlaMapTile(FIntVector TileVectorID);
-  
+
   FCarlaMapTile* GetCarlaMapTile(TileID TileID);
 
   FCarlaMapTile& LoadCarlaMapTile(FString TileMapPath, TileID TileId);
@@ -251,6 +251,11 @@ protected:
   void UpdateCurrentTilesLoaded(
     const TSet<TileID>& InTilesToBeVisible,
     const TSet<TileID>& InTilesToHidde);
+
+
+  bool AdjustSignHeightToGround(FVector& SpawnLocation, const FString& ActorName, const TArray<AActor*>& ActorsToIgnore) const;
+
+  void AdjustAllSignsToHeightGround();
 
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   TMap<uint64, FCarlaMapTile> MapTiles;
@@ -348,4 +353,7 @@ protected:
 
   UPROPERTY(VisibleAnywhere, Category = "Large Map Manager")
   bool bHasTerramechanics = false;
+
+  UPROPERTY()
+  FTimerHandle Handle;
 };

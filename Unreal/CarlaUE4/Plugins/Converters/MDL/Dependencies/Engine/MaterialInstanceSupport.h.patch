@@ -1,0 +1,21 @@
+--- a/Engine/Private/Materials/MaterialInstanceSupport.h
++++ b/MaterialInstanceSupport.h
+@@ -1,5 +1,8 @@
+ // Copyright Epic Games, Inc. All Rights Reserved.
+ 
++// Copied from Engine\Source\Runtime\Engine\Private\Materials\MaterialInstanceSupport.h
++// Modified by a patch from the CarlaUE4 project build process
++
+ /*=============================================================================
+ 	MaterialInstance.h: MaterialInstance definitions.
+ =============================================================================*/
+@@ -40,7 +43,8 @@ public:
+ 
+ 		if (Material->GetReentrantFlag() == true)
+ 		{
+-			UE_LOG(LogMaterial, Warning, TEXT("InMaterial: %s GameThread: %d RenderThread: %d"), *InMaterial->GetFullName(), IsInGameThread(), IsInRenderingThread());
++			//MDL
++			//UE_LOG(LogMaterial, Warning, TEXT("InMaterial: %s GameThread: %d RenderThread: %d"), *InMaterial->GetFullName(), IsInGameThread(), IsInRenderingThread());
+ 			check(!Material->GetReentrantFlag());
+ 		}
+ 		Material->SetReentrantFlag(true);

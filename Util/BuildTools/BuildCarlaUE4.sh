@@ -6,7 +6,7 @@
 
 DOC_STRING="Build and launch CarlaUE4."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean] [--opengl]"
+USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean] [--opengl] [--chrono] [--chrono-path=PATH]"
 
 REMOVE_INTERMEDIATE=false
 HARD_CLEAN=false
@@ -14,16 +14,18 @@ BUILD_CARLAUE4=false
 LAUNCH_UE4_EDITOR=false
 USE_CARSIM=false
 USE_CHRONO=false
+USE_SIMREADY=true
 USE_PYTORCH=false
 USE_UNITY=true
 USE_ROS2=false
+CHRONO_PATH=""
 
 EDITOR_FLAGS=""
 
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,ros2,no-unity,editor-flags: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,chrono-path:,ros2,no-simready,no-unity,editor-flags: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -61,11 +63,18 @@ while [[ $# -gt 0 ]]; do
     --chrono )
       USE_CHRONO=true
       shift ;;
+    --chrono-path )
+      CHRONO_PATH=$2
+      USE_CHRONO=true
+      shift 2 ;;
     --pytorch )
       USE_PYTORCH=true;
       shift ;;
     --ros2 )
       USE_ROS2=true;
+      shift ;;
+    --no-simready )
+      USE_SIMREADY=false
       shift ;;
     --no-unity )
       USE_UNITY=false
@@ -128,9 +137,7 @@ if ${REMOVE_INTERMEDIATE} ; then
 
   rm -Rf ${UE4_INTERMEDIATE_FOLDERS}
 
-  cd Plugins
-  rm -Rf HoudiniEngine
-  cd ..
+  rm -Rf Plugins/HoudiniEngine
 
   popd >/dev/null
 
@@ -143,11 +150,24 @@ fi
 if ${BUILD_CARLAUE4} ; then
 
   OPTIONAL_MODULES_TEXT=""
+
+  if ${USE_SIMREADY} ; then
+    OPTIONAL_MODULES_TEXT="SimReady ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
+    # fetch SimReady plugin dependencies
+    pushd "${CARLAUE4_ADDPLUGINS_FOLDER}/Converters" >/dev/null
+    ./get_dependencies.sh
+    popd >/dev/null
+  else
+    python3 ${PWD}/../../Util/BuildTools/enable_simready_to_uproject.py -f="CarlaUE4.uproject" -p="MDL"
+    python3 ${PWD}/../../Util/BuildTools/enable_simready_to_uproject.py -f="CarlaUE4.uproject" -p="SimReady"
+    python3 ${PWD}/../../Util/BuildTools/enable_simready_to_uproject.py -f="Plugins/CarlaTools/CarlaTools.uplugin" -p="SimReady"
+    OPTIONAL_MODULES_TEXT="SimReady OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
+  fi
   if ${USE_CARSIM} ; then
-    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject" -e
+    python3 ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject" -e
     OPTIONAL_MODULES_TEXT="CarSim ON"$'\n'"${OPTIONAL_MODULES_TEXT}"
   else
-    python ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject"
+    python3 ${PWD}/../../Util/BuildTools/enable_carsim_to_uproject.py -f="CarlaUE4.uproject"
     OPTIONAL_MODULES_TEXT="CarSim OFF"$'\n'"${OPTIONAL_MODULES_TEXT}"
   fi
   if ${USE_CHRONO} ; then
@@ -184,7 +204,7 @@ if ${BUILD_CARLAUE4} ; then
   fi
 
   log "Build CarlaUE4 project."
-  make CarlaUE4Editor
+  make CarlaUE4Editor ARGS=""
 
   #Providing the user with the ExportedMaps folder
   EXPORTED_MAPS="${CARLAUE4_ROOT_FOLDER}/Content/Carla/ExportedMaps"

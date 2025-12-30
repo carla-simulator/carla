@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -210,10 +210,10 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void ApplyVehicleControl(const FVehicleControl &Control, EVehicleInputPriority Priority)
   {
-    if (bAckermannControlActive) {
+    if (ActiveVehicleController::AckermannControl == CurrentActiveController) {
       AckermannController.Reset();
     }
-    bAckermannControlActive = false;
+    CurrentActiveController = ActiveVehicleController::VehicleControl;
 
     if (InputControl.Priority <= Priority)
     {
@@ -225,14 +225,14 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void ApplyVehicleAckermannControl(const FVehicleAckermannControl &AckermannControl, EVehicleInputPriority Priority)
   {
-    bAckermannControlActive = true;
+    CurrentActiveController = ActiveVehicleController::AckermannControl;
     LastAppliedAckermannControl = AckermannControl;
     AckermannController.SetTargetPoint(AckermannControl);
   }
 
   bool IsAckermannControlActive() const
   {
-    return bAckermannControlActive;
+    return ActiveVehicleController::AckermannControl == CurrentActiveController;
   }
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
@@ -311,6 +311,7 @@ public:
 protected:
 
   virtual void BeginPlay() override;
+  virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction) override;
   virtual void EndPlay(const EEndPlayReason::Type EndPlayReason);
 
   UFUNCTION(BlueprintImplementableEvent)
@@ -345,11 +346,14 @@ private:
   }
   InputControl;
 
+  enum class ActiveVehicleController {
+    VehicleControl,
+    AckermannControl
+  } CurrentActiveController;
   FVehicleControl LastAppliedControl;
   FVehicleAckermannControl LastAppliedAckermannControl;
-  FVehiclePhysicsControl LastPhysicsControl;
+  FVehiclePhysicsControl LastAppliedPhysicsControl;
 
-  bool bAckermannControlActive = false;
   FAckermannController AckermannController;
 
   float RolloverBehaviorForce = 0.35;
@@ -398,6 +402,15 @@ public:
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetWheelSteerAngle(EVehicleWheelLocation WheelLocation);
 
+  /// Set the pitch angle of the car wheels indicated by the user
+  /// 0 = FL_VehicleWheel, 1 = FR_VehicleWheel, 2 = BL_VehicleWheel, 3 = BR_VehicleWheel
+  /// NOTE : This is purely aesthetic. It will not modify the physics of the car in any way
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void SetWheelPitchAngle(EVehicleWheelLocation WheelLocation, float AngleInDeg);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  float GetWheelPitchAngle(EVehicleWheelLocation WheelLocation);
+
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void OpenDoor(const EVehicleDoor DoorIdx);
 
@@ -414,6 +427,9 @@ public:
   void RecordDoorChange(const EVehicleDoor DoorIdx, const bool bIsOpen); 
 
   virtual FVector GetVelocity() const override;
+
+  UFUNCTION()
+  FPoseSnapshot GetWorldTransformedPose();
 
 //-----CARSIM--------------------------------
   UPROPERTY(Category="CARLA Wheeled Vehicle", EditAnywhere)
@@ -470,6 +486,7 @@ private:
 public:
   float SpeedAnim { 0.0f };
   float RotationAnim { 0.0f };
+  FPoseSnapshot WorldTransformedPose;
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   float GetSpeedAnim() const { return SpeedAnim; }

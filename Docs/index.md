@@ -55,6 +55,7 @@ CARLA forum</a>
 [__Chrono__](tuto_G_chrono.md) — Details of the Chrono physics simulation integration with CARLA.   
 [__OpenDrive__](adv_opendrive.md) — Details of the OpenDrive support in CARLA.  
 [__PTV-Vissim__](adv_ptv.md) — Details of the co-simulation feature with PTV-Vissim.    
+[__RSS__](adv_rss.md) — Details of the Responsibility Sensitive Safety library integration with CARLA.  
 [__AWS__](tuto_G_rllib_integration) — Details of using RLlib to run CARLA as a distributed application on Amazon Web Services.  
 [__ANSYS__](ecosys_ansys.md) — Brief overview of how the Ansys Real Time Radar Model was integrated into CARLA.  
 [__carlaviz — web visualizer__](plugins_carlaviz.md) — Plugin that listens the simulation and shows the scene and some simulation data in a web browser.

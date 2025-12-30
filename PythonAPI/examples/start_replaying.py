@@ -1,22 +1,10 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
-
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 
@@ -76,9 +64,17 @@ def main():
         action='store_true',
         help='move spectator camera')
     argparser.add_argument(
+        '--top-view',
+        action='store_true',
+        help='enable top-down camera view when following an actor')
+    argparser.add_argument(
         '--spawn-sensors',
         action='store_true',
         help='spawn sensors in the replayed world')
+    argparser.add_argument(
+        '-m', '--map-override',
+        type=str,
+        help='The name of the map to load instead of whatever the log file indicates.')
     args = argparser.parse_args()
 
     try:
@@ -95,8 +91,20 @@ def main():
         # set to ignore the spectator camera or not
         client.set_replayer_ignore_spectator(not args.move_spectator)
 
+        # set desired offset
+        offset = carla.Transform(carla.Location(-10, 0, 5),  carla.Rotation(-25, 0, 0))
+        if args.top_view:
+            offset = carla.Transform(carla.Location(0, 0, 40), carla.Rotation(-90, 0, 0))
+
         # replay the session
-        print(client.replay_file(args.recorder_filename, args.start, args.duration, args.camera, args.spawn_sensors))
+        print(client.replay_file(
+            args.recorder_filename,
+            args.start,
+            args.duration,
+            args.camera,
+            args.spawn_sensors,
+            offset,
+            map_override=args.map_override if args.map_override != None else ""))
 
     finally:
         pass

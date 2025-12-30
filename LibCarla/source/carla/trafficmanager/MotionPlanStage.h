@@ -8,7 +8,7 @@
 #include "carla/trafficmanager/InMemoryMap.h"
 #include "carla/trafficmanager/LocalizationUtils.h"
 #include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/RandomGenerator.h"
+#include "carla/trafficmanager/UniformPRNG.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
 #include "carla/trafficmanager/TrackTraffic.h"
@@ -42,8 +42,9 @@ private:
   std::unordered_map<ActorId, cc::Timestamp> teleportation_instance;
   ControlFrame &output_array;
   cc::Timestamp current_timestamp;
-  RandomGenerator &random_device;
+  UniformPRNG &random_device;
   const LocalMapPtr &local_map;
+  std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles;
 
   std::pair<bool, float> CollisionHandling(const CollisionHazardData &collision_hazard,
                                            const bool tl_hazard,
@@ -54,6 +55,11 @@ private:
   bool SafeAfterJunction(const LocalizationData &localization,
                          const bool tl_hazard,
                          const bool collision_emergency_stop);
+
+  float CalculateBaseOffset(const ActorId actor_id, 
+                            const Buffer &waypoint_buffer,
+                            const bool is_target_junction,
+                            const uint64_t target_index);
 
   float GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
                                   const cg::Location vehicle_location,
@@ -66,6 +72,10 @@ private:
   float GetThreePointCircleRadius(cg::Location first_location,
                                   cg::Location middle_location,
                                   cg::Location last_location);
+
+  std::pair<cg::Location, uint64_t> GetTargetLocation(const Buffer &waypoint_buffer,
+                                                      float target_distance,
+                                                      cg::Location vehicle_location);
 
 public:
   MotionPlanStage(const std::vector<ActorId> &vehicle_id_list,
@@ -82,8 +92,9 @@ public:
                   const TLFrame &tl_frame,
                   const cc::World &world,
                   ControlFrame &output_array,
-                  RandomGenerator &random_device,
-                  const LocalMapPtr &local_map);
+                  UniformPRNG &random_device,
+                  const LocalMapPtr &local_map,
+                  std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles);
 
   void Update(const unsigned long index);
 

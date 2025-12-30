@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -6,79 +6,19 @@
 
 #include <carla/geom/BoundingBox.h>
 #include <carla/geom/GeoLocation.h>
+#include <carla/geom/GeoProjectionsParams.h>
+#include <carla/geom/Acceleration.h>
+#include <carla/geom/AngularVelocity.h>
 #include <carla/geom/Location.h>
 #include <carla/geom/Rotation.h>
+#include <carla/geom/Quaternion.h>
 #include <carla/geom/Transform.h>
 #include <carla/geom/Vector2D.h>
 #include <carla/geom/Vector3D.h>
+#include <carla/geom/Velocity.h>
 
 #include <boost/python/implicit.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-
-#include <ostream>
-
-namespace carla {
-namespace geom {
-
-  template <typename T>
-  static void WriteVector2D(std::ostream &out, const char *name, const T &vector2D) {
-    out << name
-        << "(x=" << std::to_string(vector2D.x)
-        << ", y=" << std::to_string(vector2D.y) << ')';
-  }
-
-  template <typename T>
-  static void WriteVector3D(std::ostream &out, const char *name, const T &vector3D) {
-    out << name
-        << "(x=" << std::to_string(vector3D.x)
-        << ", y=" << std::to_string(vector3D.y)
-        << ", z=" << std::to_string(vector3D.z) << ')';
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Vector2D &vector2D) {
-    WriteVector2D(out, "Vector2D", vector2D);
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Vector3D &vector3D) {
-    WriteVector3D(out, "Vector3D", vector3D);
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Location &location) {
-    WriteVector3D(out, "Location", location);
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Rotation &rotation) {
-    out << "Rotation(pitch=" << std::to_string(rotation.pitch)
-        << ", yaw=" << std::to_string(rotation.yaw)
-        << ", roll=" << std::to_string(rotation.roll) << ')';
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Transform &transform) {
-    out << "Transform(" << transform.location << ", " << transform.rotation << ')';
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const BoundingBox &box) {
-    out << "BoundingBox(" << box.location << ", ";
-    WriteVector3D(out, "Extent", box.extent);
-    out << ", " << box.rotation;
-    out << ')';
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const GeoLocation &geo_location) {
-    out << "GeoLocation(latitude=" << std::to_string(geo_location.latitude)
-        << ", longitude=" << std::to_string(geo_location.longitude)
-        << ", altitude=" << std::to_string(geo_location.altitude) << ')';
-    return out;
-  }
-
-} // namespace geom
-} // namespace carla
 
 static void TransformList(const carla::geom::Transform &self, boost::python::list &list) {
   auto length = boost::python::len(list);
@@ -87,6 +27,7 @@ static void TransformList(const carla::geom::Transform &self, boost::python::lis
   }
 }
 
+#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
 static boost::python::list BuildMatrix(const std::array<float, 16> &m) {
   boost::python::list r_out;
   boost::python::list r[4];
@@ -96,12 +37,13 @@ static boost::python::list BuildMatrix(const std::array<float, 16> &m) {
 }
 
 static auto GetTransformMatrix(const carla::geom::Transform &self) {
-  return BuildMatrix(self.GetMatrix());
+  return BuildMatrix(self.TransformationMatrix());
 }
 
 static auto GetInverseTransformMatrix(const carla::geom::Transform &self) {
-  return BuildMatrix(self.GetInverseMatrix());
+  return BuildMatrix(self.InverseTransformationMatrix());
 }
+#endif
 
 static auto Cross(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
   return carla::geom::Math::Cross(self, other);
@@ -214,6 +156,42 @@ void export_geom() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<cg::Acceleration, bases<cg::Vector3D>>("Acceleration")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def(init<const cg::Vector3D &>((arg("rhs"))))
+    .add_property("x", +[](const cg::Acceleration &self) { return self.x; }, +[](cg::Acceleration &self, float x) { self.x = x; })
+    .add_property("y", +[](const cg::Acceleration &self) { return self.y; }, +[](cg::Acceleration &self, float y) { self.y = y; })
+    .add_property("z", +[](const cg::Acceleration &self) { return self.z; }, +[](cg::Acceleration &self, float z) { self.z = z; })
+    .def("__eq__", &cg::Acceleration::operator==)
+    .def("__ne__", &cg::Acceleration::operator!=)
+    .def("__abs__", &cg::Acceleration::Abs)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::AngularVelocity, bases<cg::Vector3D>>("AngularVelocity")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def(init<const cg::Vector3D &>((arg("rhs"))))
+    .add_property("x", +[](const cg::AngularVelocity &self) { return self.x; }, +[](cg::AngularVelocity &self, float x) { self.x = x; })
+    .add_property("y", +[](const cg::AngularVelocity &self) { return self.y; }, +[](cg::AngularVelocity &self, float y) { self.y = y; })
+    .add_property("z", +[](const cg::AngularVelocity &self) { return self.z; }, +[](cg::AngularVelocity &self, float z) { self.z = z; })
+    .def("__eq__", &cg::AngularVelocity::operator==)
+    .def("__ne__", &cg::AngularVelocity::operator!=)
+    .def("__abs__", &cg::AngularVelocity::Abs)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::Velocity, bases<cg::Vector3D>>("Velocity")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def(init<const cg::Vector3D &>((arg("rhs"))))
+    .add_property("x", +[](const cg::Velocity &self) { return self.x; }, +[](cg::Velocity &self, float x) { self.x = x; })
+    .add_property("y", +[](const cg::Velocity &self) { return self.y; }, +[](cg::Velocity &self, float y) { self.y = y; })
+    .add_property("z", +[](const cg::Velocity &self) { return self.z; }, +[](cg::Velocity &self, float z) { self.z = z; })
+    .def("__eq__", &cg::Velocity::operator==)
+    .def("__ne__", &cg::Velocity::operator!=)
+    .def("__abs__", &cg::Velocity::Abs)
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<cg::Rotation>("Rotation")
     .def(init<float, float, float>((arg("pitch")=0.0f, arg("yaw")=0.0f, arg("roll")=0.0f)))
     .def_readwrite("pitch", &cg::Rotation::pitch)
@@ -224,6 +202,37 @@ void export_geom() {
     .def("get_up_vector", &cg::Rotation::GetUpVector)
     .def("__eq__", &cg::Rotation::operator==)
     .def("__ne__", &cg::Rotation::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::Quaternion>("Quaternion")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f, arg("w")=1.0f)))
+    .def(init<cg::Rotation>((arg("rotator"))))
+    .def_readwrite("x", &cg::Quaternion::x)
+    .def_readwrite("y", &cg::Quaternion::y)
+    .def_readwrite("z", &cg::Quaternion::z)
+    .def_readwrite("w", &cg::Quaternion::w)
+    .def("create_from_yaw_degree", &cg::Quaternion::CreateFromYawDegree, (arg("yaw")))
+    .def("identity", &cg::Quaternion::Identity)
+    .def("get_forward_vector", &cg::Quaternion::GetForwardVector)
+    .def("get_right_vector", &cg::Quaternion::GetRightVector)
+    .def("get_up_vector", &cg::Quaternion::GetUpVector)
+    .def("inverse", &cg::Quaternion::Inverse)
+    .def("length", &cg::Quaternion::Length)
+    .def("squared_length", &cg::Quaternion::SquaredLength)
+    .def("unit_quaternion", &cg::Quaternion::UnitQuaternion)
+#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
+    .def("rotation_matrix", &cg::Quaternion::RotationMatrix)
+    .def("inverse_rotation_matrix", &cg::Quaternion::InverseRotationMatrix)
+#endif
+    .def("rotated_quaternion", &cg::Quaternion::RotatedQuaternion, (arg("quaternion")))
+    .def("yaw_rad", &cg::Quaternion::YawRad)
+    .def("yaw_degree", &cg::Quaternion::YawDegree)
+    .def("rotator", &cg::Quaternion::Rotator)
+    .def("rotated_vector", &cg::Quaternion::RotatedVector<cg::Vector3D>, (arg("vector")))
+    .def("inverse_rotated_vector", &cg::Quaternion::InverseRotatedVector<cg::Vector3D>, (arg("vector")))
+    .def("__eq__", &cg::Quaternion::operator==)
+    .def("__ne__", &cg::Quaternion::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -248,8 +257,10 @@ void export_geom() {
     .def("get_forward_vector", &cg::Transform::GetForwardVector)
     .def("get_right_vector", &cg::Transform::GetRightVector)
     .def("get_up_vector", &cg::Transform::GetUpVector)
+#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
     .def("get_matrix", &GetTransformMatrix)
     .def("get_inverse_matrix", &GetInverseTransformMatrix)
+#endif
     .def("__eq__", &cg::Transform::operator==)
     .def("__ne__", &cg::Transform::operator!=)
     .def(self_ns::str(self_ns::self))
@@ -283,5 +294,56 @@ void export_geom() {
     .def("__eq__", &cg::GeoLocation::operator==)
     .def("__ne__", &cg::GeoLocation::operator!=)
     .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::Ellipsoid>("GeoEllipsoid")
+    .def(init<double, double>((arg("a")=6378137.0, arg("f_inv")=298.257223563)))
+    .def_readwrite("a", &cg::Ellipsoid::a)
+    .def_readwrite("f_inv", &cg::Ellipsoid::f_inv)
+    .def("__eq__", &cg::Ellipsoid::operator==)
+    .def("__ne__", &cg::Ellipsoid::operator!=)
+  ;
+
+  class_<cg::TransverseMercatorParams>("GeoProjectionTM")
+    .def(init<double, double, double, double, double, cg::Ellipsoid>(
+      (arg("lat_0")=0.0, arg("lon_0")=0.0, arg("k")=1.0, arg("x_0")=0.0, arg("y_0")=0.0, arg("ellps")=cg::Ellipsoid())))
+    .def_readwrite("lat_0", &cg::TransverseMercatorParams::lat_0)
+    .def_readwrite("lon_0", &cg::TransverseMercatorParams::lon_0)
+    .def_readwrite("k", &cg::TransverseMercatorParams::k)
+    .def_readwrite("x_0", &cg::TransverseMercatorParams::x_0)
+    .def_readwrite("y_0", &cg::TransverseMercatorParams::y_0)
+    .def_readwrite("ellps", &cg::TransverseMercatorParams::ellps)
+    .def("__eq__", &cg::TransverseMercatorParams::operator==)
+    .def("__ne__", &cg::TransverseMercatorParams::operator!=)
+  ;
+
+  class_<cg::UniversalTransverseMercatorParams>("GeoProjectionUTM")
+    .def(init<int, bool, cg::Ellipsoid>((arg("zone")=31, arg("north")=true, arg("ellps")=cg::Ellipsoid())))
+    .def_readwrite("zone", &cg::UniversalTransverseMercatorParams::zone)
+    .def_readwrite("north", &cg::UniversalTransverseMercatorParams::north)
+    .def_readwrite("ellps", &cg::UniversalTransverseMercatorParams::ellps)
+    .def("__eq__", &cg::UniversalTransverseMercatorParams::operator==)
+    .def("__ne__", &cg::UniversalTransverseMercatorParams::operator!=)
+  ;
+
+  class_<cg::WebMercatorParams>("GeoProjectionWebMerc")
+    .def(init<cg::Ellipsoid>((arg("ellps")=cg::Ellipsoid())))
+    .def_readwrite("ellps", &cg::WebMercatorParams::ellps)
+    .def("__eq__", &cg::WebMercatorParams::operator==)
+    .def("__ne__", &cg::WebMercatorParams::operator!=)
+  ;
+
+  class_<cg::LambertConformalConicParams>("GeoProjectionLCC2SP")
+    .def(init<double, double, double, double, double, double, cg::Ellipsoid>(
+      (arg("lat_0")=0.0, arg("lat_1")=-5.0, arg("lat_2")=5.0, arg("lon_0")=0.0, arg("x_0")=0.0, arg("y_0")=0.0, arg("ellps")=cg::Ellipsoid())))
+    .def_readwrite("lat_0", &cg::LambertConformalConicParams::lat_0)
+    .def_readwrite("lat_1", &cg::LambertConformalConicParams::lat_1)
+    .def_readwrite("lat_2", &cg::LambertConformalConicParams::lat_2)
+    .def_readwrite("lon_0", &cg::LambertConformalConicParams::lon_0)
+    .def_readwrite("x_0", &cg::LambertConformalConicParams::x_0)
+    .def_readwrite("y_0", &cg::LambertConformalConicParams::y_0)
+    .def_readwrite("ellps", &cg::LambertConformalConicParams::ellps)
+    .def("__eq__", &cg::LambertConformalConicParams::operator==)
+    .def("__ne__", &cg::LambertConformalConicParams::operator!=)
   ;
 }

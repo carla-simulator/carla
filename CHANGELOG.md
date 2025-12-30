@@ -1,4 +1,28 @@
 ## Latest Changes
+
+ * Improved the way the TrafficManager controls large vehicles at junctions, reducing the frequency of collisions with other elements in the simulation.
+ * Improved the turning behavior of vehicles controlled by the TrafficManager, making them smoother.
+ * Added a hybrid solid-state LiDAR with adjustable parameters (blueprint attributes)
+ * Fix OpenDrive Builder lane width
+ * Introduced geom::AngularVelocity, geom::Velocity, geom::Acceleration, geom::Quaternion types
+ * Fixed geom::Rotation::RotateVector() rotation directions of pitch and roll
+ * Prepare server for multistream support and ROS2 client calls
+ * Improved V2X sensor capabilities: send complex custom user-defined data, support V2I sensors not attached to a vehicle
+ * Introduced fine grained ServerSynchronization mechanism: each client decides for its own if it requires synchronization or not and provides its own synchronization window.
+   Be aware: some existing code using master/slave sync mechanism might need rework. See also generate_traffic.py.
+
+## CARLA 0.9.16
+
+ * Added NVIDIA Cosmos Transfer1 integration
+ * Added NVIDIA Neural Reconstruction Engine (NuRec) integration
+ * Added the SimReady OpenUSD and MDL Converters to provide export and import support for SimReady OpenUSD stages and MDL materials.
+ * Added support for left-handed traffic maps
+ * Renamed Ubuntu 18-based Dockerfile to CarlaLegacy for clarity
+ * Created documentation for using devcontainers
+ * Ensured CARLA scripts consistently use python3
+ * Replaced wget with curl for FBX SDK downloads
+ * Enabled mounting of UE4 from the host when running CARLA inside a container
+ * Added support for GUI inside containers with Ubuntu 22 image
  * Fixed waypoint.next and .previous causing loops when two opposite-direction lanes follow each other in the map.
  * Fixed a bug that caused navigation information not to be loaded when switching maps
  * Prevent from segfault on failing SignalReference identification when loading OpenDrive files
@@ -28,6 +52,19 @@
  * Fixed invisible terrain in instance segmentation
  * Importing from carla.command is now possible
  * carla.ad subpackages are now directly importable and are not directly importable anymore (e.g. import ad)
+ * Fixed segfault in traffic manager when trying to access not available vehicles
+ * Fixed invalid comparission in python examples/rss
+ * Updated inverted traffic PythonAPI example script, added support for waypoint-guided Inverted AI cars.
+ * Fixed invisible spline meshes in instance segmentation
+ * Set to default Visual Studio 2022 in Windows
+ * Added env CARLA_CACHE_DIR to be able to set CARLA CACHE location
+ * Support of masked materials in instance segmentation, resulting in fine-grained annotations on e.g. leaves or fences (as in semantic segmentation)
+ * Added API function `world.set_annotations_traverse_translucency` and implemented functionality to configure, whether depth and semantic + instance segmentation traverse translucent materials or not.
+ * Fixed `frame`, `timestamp` and `transform` of `SensorData` not matching to the actually sent image for camera sensors.
+ * Added  "geolocation_to_transform" function to the Map object in the PythonAPI
+ * Add support for NVIDIA NuRec 25.07 (CARLA-NuRec 0.2)
+ * Added `set_wheel_pitch_angle()` to change the bone pitch angle of each wheel of a vehicle
+ * Added `get_wheel_pitch_angle()` to get the rotation (pitch) angle of a vehicle wheel
 
 ## CARLA 0.9.15
 

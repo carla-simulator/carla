@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -55,14 +55,18 @@ namespace client {
     listening_mask.reset(0);
   }
 
-  void ServerSideSensor::Send(std::string message) {
+  void ServerSideSensor::Send(const rpc::CustomV2XBytes &data) {
     log_debug("calling sensor Send() ", GetDisplayId());
     if (GetActorDescription().description.id != "sensor.other.v2x_custom")
     {
       log_warning("Send methods are not supported on non-V2x sensors (sensor.other.v2x_custom).");
       return;
     }
-    GetEpisode().Lock()->Send(*this,message);
+    GetEpisode().Lock()->Send(*this,data);
+  }
+
+  void ServerSideSensor::EnableGBuffers(bool bEnabled) {
+    GetEpisode().Lock()->EnableGBuffers(*this, bEnabled);
   }
 
   void ServerSideSensor::ListenToGBuffer(uint32_t GBufferId, CallbackFunctionType callback) {
@@ -90,18 +94,6 @@ namespace client {
     listening_mask.reset(GBufferId + 1);
   }
 
-  void ServerSideSensor::EnableForROS() {
-    GetEpisode().Lock()->EnableForROS(*this);
-  }
-
-  void ServerSideSensor::DisableForROS() {
-    GetEpisode().Lock()->DisableForROS(*this);
-  }
-
-  bool ServerSideSensor::IsEnabledForROS(){
-    return GetEpisode().Lock()->IsEnabledForROS(*this);
-  }
-
   bool ServerSideSensor::Destroy() {
     log_debug("calling sensor Destroy() ", GetDisplayId());
     if (IsListening()) {
@@ -115,5 +107,16 @@ namespace client {
     return Actor::Destroy();
   }
 
+  //Only Functional in Cosmos Control Sensor
+  void ServerSideSensor::SetIgnoredVehicles(const std::vector<ActorId>& vehicle_ids) {
+    _ignored_actors = vehicle_ids;
+    GetEpisode().Lock()->SetIgnoredVehicles(*this, vehicle_ids);
+  }
+
+  std::vector<ActorId> ServerSideSensor::GetIgnoredVehicles() const {
+    return _ignored_actors;
+  }
+
 } // namespace client
 } // namespace carla
+

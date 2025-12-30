@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -553,12 +553,18 @@ void FFrameData::AddTriggerVolume(const ATrafficSignBase &TrafficSign)
   {
     return;
   }
+
+  auto CarlaActor = Episode->GetActorRegistry().FindCarlaActor(&TrafficSign);
+  if (!CarlaActor)
+  {
+      return;
+  }
   UBoxComponent* Trigger = Triggers.Top();
   auto VolumeOrigin = Trigger->GetComponentLocation();
   auto VolumeExtent = Trigger->GetScaledBoxExtent();
   CarlaRecorderActorBoundingBox TriggerVolume =
   {
-    Episode->GetActorRegistry().FindCarlaActor(&TrafficSign)->GetActorId(),
+    CarlaActor->GetActorId(),
     {VolumeOrigin, VolumeExtent}
   };
   TriggerVolumes.Add(TriggerVolume);
@@ -567,21 +573,29 @@ void FFrameData::AddTriggerVolume(const ATrafficSignBase &TrafficSign)
 void FFrameData::AddPhysicsControl(const ACarlaWheeledVehicle& Vehicle)
 {
   CarlaRecorderPhysicsControl Control;
-  Control.DatabaseId = Episode->GetActorRegistry().FindCarlaActor(&Vehicle)->GetActorId();
-  Control.VehiclePhysicsControl = Vehicle.GetVehiclePhysicsControl();
-  PhysicsControls.Add(Control);
+  auto CarlaActor = Episode->GetActorRegistry().FindCarlaActor(&Vehicle);
+  if (CarlaActor)
+  {
+      Control.DatabaseId = CarlaActor->GetActorId();
+      Control.VehiclePhysicsControl = Vehicle.GetVehiclePhysicsControl();
+      PhysicsControls.Add(Control);
+  }
 }
 
 void FFrameData::AddTrafficLightTime(const ATrafficLightBase& TrafficLight)
 {
-  auto DatabaseId = Episode->GetActorRegistry().FindCarlaActor(&TrafficLight)->GetActorId();
-  CarlaRecorderTrafficLightTime TrafficLightTime{
-    DatabaseId,
-    TrafficLight.GetGreenTime(),
-    TrafficLight.GetYellowTime(),
-    TrafficLight.GetRedTime()
-  };
-  TrafficLightTimes.Add(TrafficLightTime);
+    auto CarlaActor = Episode->GetActorRegistry().FindCarlaActor(&TrafficLight);
+    if (CarlaActor)
+    {
+        auto DatabaseId = CarlaActor->GetActorId();
+        CarlaRecorderTrafficLightTime TrafficLightTime{
+          DatabaseId,
+          TrafficLight.GetGreenTime(),
+          TrafficLight.GetYellowTime(),
+          TrafficLight.GetRedTime()
+        };
+        TrafficLightTimes.Add(TrafficLightTime);
+    }
 }
 
 void FFrameData::AddPosition(const CarlaRecorderPosition &Position)
@@ -719,7 +733,7 @@ std::pair<int, FCarlaActor*> FFrameData::CreateOrReuseActor(
   // check type of actor we need
   if (ActorDesc.Id.StartsWith("traffic."))
   {
-    FCarlaActor* CarlaActor = FindTrafficLightAt(Location);
+    FCarlaActor* CarlaActor = FindTrafficSignAt(Location);
     if (CarlaActor != nullptr)
     {
       // reuse that actor
@@ -1000,6 +1014,7 @@ void FFrameData::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Vehicle)
     Control.bReverse = (Vehicle.Gear < 0);
     Control.Gear = Vehicle.Gear;
     Control.bManualGearShift = false;
+    Control.Timestamp = float(Episode->GetElapsedGameTime());
     CarlaActor->ApplyControlToVehicle(Control, EVehicleInputPriority::User);
   }
 }
@@ -1109,6 +1124,7 @@ bool FFrameData::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, s
             Control.bReverse = false;
             Control.Gear = 1;
             Control.bManualGearShift = false;
+            Control.Timestamp = float(Episode->GetElapsedGameTime());
             CarlaActor->ApplyControlToVehicle(Control, EVehicleInputPriority::User);
         }
         break;
@@ -1167,7 +1183,7 @@ void FFrameData::SetFrameCounter()
   FCarlaEngine::ResetFrameCounter(FrameCounter.FrameCounter);
 }
 
-FCarlaActor *FFrameData::FindTrafficLightAt(FVector Location)
+FCarlaActor *FFrameData::FindTrafficSignAt(FVector Location)
 {
   check(Episode != nullptr);
   auto World = Episode->GetWorld();
@@ -1183,7 +1199,7 @@ FCarlaActor *FFrameData::FindTrafficLightAt(FVector Location)
   for (auto It = Registry.begin(); It != Registry.end(); ++It)
   {
     FCarlaActor* CarlaActor = It.Value().Get();
-    if(CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight)
+    if(CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight || CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficSign)
     {
       FVector vec = CarlaActor->GetActorGlobalLocation();
       int x2 = static_cast<int>(vec.X);

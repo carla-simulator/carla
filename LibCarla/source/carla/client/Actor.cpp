@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -20,20 +20,25 @@ namespace client {
     return GetEpisode().Lock()->GetActorTransform(*this);
   }
 
-  geom::Vector3D Actor::GetVelocity() const {
+  geom::Velocity Actor::GetVelocity() const {
     return GetEpisode().Lock()->GetActorVelocity(*this);
   }
 
-  geom::Vector3D Actor::GetAngularVelocity() const {
+  geom::AngularVelocity Actor::GetAngularVelocity() const {
     return GetEpisode().Lock()->GetActorAngularVelocity(*this);
   }
 
-  geom::Vector3D Actor::GetAcceleration() const {
+  geom::Acceleration Actor::GetAcceleration() const {
     return GetEpisode().Lock()->GetActorAcceleration(*this);
   }
 
   geom::BoundingBox Actor::GetBoundingBox() const {
-    return GetEpisode().Lock()->GetActorBoundingBox(*this);
+    geom::BoundingBox bounding_box = GetEpisode().Lock()->GetActorBoundingBox(*this); 
+    if (bounding_box.extent.x == 0.0f && bounding_box.extent.y == 0.0f && bounding_box.extent.z == 0.0f) {
+      // Only fall back to cached value if the server returns a zero bounding box
+      return Super::GetBoundingBox();
+    }
+    return bounding_box;  // Return the fresh calculation, not the cached one
   }
 
   geom::Transform Actor::GetComponentWorldTransform(const std::string componentName) const {
@@ -138,6 +143,18 @@ namespace client {
 
   rpc::ActorState Actor::GetActorState() const {
     return GetEpisode().Lock()->GetActorState(*this);
+  }
+
+  void Actor::EnableForROS() {
+    GetEpisode().Lock()->EnableForROS(*this);
+  }
+
+  void Actor::DisableForROS() {
+    GetEpisode().Lock()->DisableForROS(*this);
+  }
+
+  bool Actor::IsEnabledForROS(){
+    return GetEpisode().Lock()->IsEnabledForROS(*this);
   }
 
   bool Actor::Destroy() {

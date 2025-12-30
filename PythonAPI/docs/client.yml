@@ -256,7 +256,7 @@
       - param_name: filename
         type: str
         doc: >
-          Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUE4/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.
+          Name of the file to write the recorded data. An absolute path will be considered if some folder appears in the name. Otherwise, the chosen path will be one of the following: **Build from source** - `<CARLA_ROOT>/Unreal/CarlaUE4/Saved`, **Windows package** - `C:\Users\<user>\AppData\Local\CarlaUE4\Saved`, **Linux package** - `/home/<user>/.config/Epic/CarlaUE4/Saved/`.
       - param_name: additional_data
         type: bool
         default: False
@@ -622,7 +622,7 @@
       doc: >
         Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.
     # --------------------------------------
-    - def_name: keep_right_rule_percentage
+    - def_name: keep_slow_lane_rule_percentage
       params:
       - param_name: actor
         type: carla.Actor
@@ -631,9 +631,9 @@
       - param_name: perc
         type: float
         doc: >
-          Between 0 and 100. Amount of times the vehicle will follow the keep right rule.
+          Between 0 and 100. Amount of times the vehicle will follow the keep slow lane rule.
       doc: >
-        During the localization stage, this method sets a percent chance that vehicle will follow the *keep right* rule, and stay in the right lane.
+        During the localization stage, this method sets a percent chance that vehicle will follow the *keep slow lane* rule, and stay in the slowest lane. For right-handed traffic, vehicles will move to the righmost lane while left-handed traffic will make vehicles move to the left.
     # --------------------------------------
     - def_name: set_random_device_seed
       params:

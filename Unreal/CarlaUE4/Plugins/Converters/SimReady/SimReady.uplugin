@@ -1,0 +1,55 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.1",
+	"FriendlyName": "SimReady Converter",
+	"Description": "Plugin for importing and exporting SimReady OpenUSD content",
+	"Category": "Editor",
+	"CreatedBy": "NVIDIA Corporation",
+	"CreatedByURL": "https://docs.omniverse.nvidia.com/simready",
+	"DocsURL": "https://docs.omniverse.nvidia.com/simready",
+	"EngineVersion": "4.26.0",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"EnabledByDefault": true,
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "SimReadyAddDLLDirectory",
+			"Type": "Editor",
+			"LoadingPhase": "PreDefault"
+		},
+		{
+			"Name": "SimReadyRuntime",
+			"Type": "Editor"
+		},
+		{
+			"Name": "SimReadyUSD",
+			"Type": "Editor"
+		},
+		{
+			"Name": "SimReadyEditor",
+			"Type": "Editor"
+		}
+	],
+	"Plugins": [
+		{
+			"Name": "USDImporter",
+			"Enabled": false
+		},
+		{
+			"Name": "MDL",
+			"Enabled": true
+		},
+		{
+			"Name": "LevelSequenceEditor",
+			"Enabled": true
+		},
+		{
+			"Name": "ActorSequence",
+			"Enabled": true
+		}
+	]
+}

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -56,25 +56,6 @@ Use ARROWS or WASD keys for control.
 
 from __future__ import print_function
 
-
-# ==============================================================================
-# -- find carla module ---------------------------------------------------------
-# ==============================================================================
-
-
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-0.9.15-py*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
-
 # ==============================================================================
 # -- imports -------------------------------------------------------------------
 # ==============================================================================
@@ -89,8 +70,10 @@ import collections
 import datetime
 import logging
 import math
+import os
 import random
 import re
+import sys
 import weakref
 
 try:
@@ -479,7 +462,7 @@ class KeyboardControl(object):
                         world.recording_enabled = False
                         world.hud.notification("Recorder is OFF")
                     else:
-                        client.start_recorder("manual_recording.rec")
+                        client.start_recorder("manual_recording.log")
                         world.recording_enabled = True
                         world.hud.notification("Recorder is ON")
                 elif event.key == K_p and (pygame.key.get_mods() & KMOD_CTRL):
@@ -492,9 +475,9 @@ class KeyboardControl(object):
                     # disable autopilot
                     self._autopilot_enabled = False
                     world.player.set_autopilot(self._autopilot_enabled)
-                    world.hud.notification("Replaying file 'manual_recording.rec'")
+                    world.hud.notification("Replaying file 'manual_recording.log'")
                     # replayer
-                    client.replay_file("manual_recording.rec", world.recording_start, 0, 0)
+                    client.replay_file("manual_recording.log", world.recording_start, 0, 0)
                     world.camera_manager.set_sensor(current_index)
                 elif event.key == K_MINUS and (pygame.key.get_mods() & KMOD_CTRL):
                     if pygame.key.get_mods() & KMOD_SHIFT:
@@ -1016,33 +999,67 @@ class IMUSensor(object):
 class V2XSensor(object):
     def __init__(self, parent_actor, hud):
         self.sensor = None
+        self.sensor_custom = None
+        self.hud = hud
         self._parent = parent_actor
         world = self._parent.get_world()
-        #bp = world.get_blueprint_library().find('sensor.other.v2x_custom')
+
+        # create a v2x sensor to receive messages
         bp = world.get_blueprint_library().find('sensor.other.v2x')
         bp.set_attribute("path_loss_model", "geometric")
-        self.hud = hud
         self.sensor = world.spawn_actor(
             bp, carla.Transform(), attach_to=self._parent)
+        
+        # create a custom V2X sensors to demonstrate message sending/receiving
+        bp_custom = world.get_blueprint_library().find('sensor.other.v2x_custom')
+        bp_custom.set_attribute("path_loss_model", "geometric")
+        self.sensor_custom = world.spawn_actor(
+            bp_custom, carla.Transform(), attach_to=self._parent)
+        
         # We need to pass the lambda a weak reference to self to avoid circular
         # reference.
         weak_self = weakref.ref(self)
         self.sensor.listen(
             lambda sensor_data: V2XSensor._V2X_callback(weak_self, sensor_data))
+        self.sensor_custom.listen(
+            lambda sensor_data: V2XSensor._V2X_custom_callback(weak_self, sensor_data))
+
 
     @staticmethod
     def _V2X_callback(weak_self, sensor_data):
         self = weak_self()
         if not self:
             return
-        print(sensor_data.get_message_count())
         for data in sensor_data:
             msg = data.get()
-            # stationId = msg["Header"]["Station ID"]
+            stationId = msg["Message"]["Header"]["Station ID"]
             power = data.power 
-            print(msg)
-            # self.hud.notification('Cam message received from %s ' % stationId)
-            self.hud.notification('Cam message received with power %f ' % power)
+            print("V2X message: %s" % msg)
+            self.hud.notification('CAM received from %s with power %f ' % (stationId, power))
+        
+        # trigger custom sensor to send messages
+        message = carla.CustomV2XBytes()
+        bytes = bytearray("Hello CARLA Byte Array", 'utf-8')
+        message.set_bytes(bytes)
+        self.sensor_custom.send(message)
+        message.set_string("Hello CARLA String Message")
+        self.sensor_custom.send(message)
+
+    @staticmethod
+    def _V2X_custom_callback(weak_self, sensor_data):
+        self = weak_self()
+        if not self:
+            return
+        for data in sensor_data:
+            print("V2XCustom %s" % data)
+            msg = data.get()
+            stationId = msg["Message"]["Header"]["Station ID"]
+            power = data.power 
+            bytes = msg["Message"]["Message"]["Bytes"]
+            print("V2XCustom bytes hex %s" % bytes.hex())
+            print("V2XCustom bytes str %s" % bytes.decode('utf-8', errors='ignore'))
+            self.hud.notification('Custom CAM received from %s with power %f' % (stationId, power))
+
 # ==============================================================================
 # -- RadarSensor ---------------------------------------------------------------
 # ==============================================================================

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -34,6 +34,9 @@ public:
 
   UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")
   static FString LoadXODR(const FString &MapName);
+
+  UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")
+  static FString LoadXODRFullPath(const FString &FullPath);
 
   /// Load OpenDriveMap associated to the given MapName. Return nullptr if no
   /// XODR can be found with same MapName.

@@ -1,0 +1,42 @@
+--- a/Engine/Private/Materials/MaterialUniformExpressions.h
++++ b/MaterialUniformExpressions.h
+@@ -3,6 +3,9 @@
+ 	UniformExpressions.h: Uniform expression definitions.
+ =============================================================================*/
+ 
++// Copied from Engine\Source\Runtime\Engine\Private\Materials\MaterialUniformExpressions.h
++// Modified by a patch from the CarlaUE4 project build process
++
+ #pragma once
+ 
+ #include "CoreMinimal.h"
+@@ -326,7 +329,8 @@ static TextureType* GetIndexedTexture(const FMaterial& Material, int32 TextureIn
+ 		static bool bWarnedOnce = false;
+ 		if (!bWarnedOnce)
+ 		{
+-			UE_LOG(LogMaterial, Warning, TEXT("%s: Requesting an invalid TextureIndex! (%u / %u)"), *Material.GetFriendlyName(), TextureIndex, ReferencedTextures.Num());
++			//MDL
++			//UE_LOG(LogMaterial, Warning, TEXT("%s: Requesting an invalid TextureIndex! (%u / %u)"), *Material.GetFriendlyName(), TextureIndex, ReferencedTextures.Num());
+ 			bWarnedOnce = true;
+ 		}
+ 	}
+@@ -526,7 +530,8 @@ public:
+ 		case TMO_Acos: OutData.WriteOpcode(EMaterialPreshaderOpcode::Acos); break;
+ 		case TMO_Atan: OutData.WriteOpcode(EMaterialPreshaderOpcode::Atan); break;
+ 		case TMO_Atan2: OutData.WriteOpcode(EMaterialPreshaderOpcode::Atan2); break;
+-		default: checkNoEntry(); break;
++		//MDL
++		//default: checkNoEntry(); break;
+ 		}
+ 	}
+ 
+@@ -737,7 +742,8 @@ public:
+ 		case FMO_Div: OutData.WriteOpcode(EMaterialPreshaderOpcode::Div); break;
+ 		case FMO_Dot: OutData.WriteOpcode(EMaterialPreshaderOpcode::Dot).Write((uint8)ValueType); break;
+ 		case FMO_Cross: OutData.WriteOpcode(EMaterialPreshaderOpcode::Cross).Write((uint8)ValueType); break;
+-		default: checkNoEntry(); break;
++		//MDL
++		//default: checkNoEntry(); break;
+ 		}
+ 	}
+ 

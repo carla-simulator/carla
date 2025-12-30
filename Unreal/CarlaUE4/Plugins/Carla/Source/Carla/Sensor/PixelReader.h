@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -105,11 +105,13 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
   Sensor.EnqueueRenderSceneImmediate();
 
   // Enqueue a command in the render-thread that will write the image buffer to
-  // the data stream. The stream is created in the capture thus executed in the
-  // game-thread.
+  // the data stream. We need to get frame, timestamp and the sensor transform in the capture
+  // (thus executed in the game-thread), so that they reflect the current point in time.
+  // Otherwise the asynchronous execution could send a future header to the client.
   ENQUEUE_RENDER_COMMAND(FWritePixels_SendPixelsInRenderThread)
   (
-    [&Sensor, use16BitFormat, Conversor = std::move(Conversor)](auto &InRHICmdList) mutable
+    [&Sensor, use16BitFormat, Conversor = std::move(Conversor), Frame = FCarlaEngine::GetFrameCounter(),
+     Timestamp = Sensor.GetEpisode().GetElapsedGameTime(), Transform = Sensor.GetActorTransform()](auto &InRHICmdList) mutable
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("FWritePixels_SendPixelsInRenderThread");
 
@@ -117,7 +119,8 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
       if (!Sensor.IsPendingKill())
       {
         FPixelReader::Payload FuncForSending =
-          [&Sensor, Frame = FCarlaEngine::GetFrameCounter(), Conversor = std::move(Conversor)](void *LockedData, uint32 Size, uint32 Offset, uint32 ExpectedRowBytes)
+          [&Sensor, Frame, Timestamp, Transform, Conversor = std::move(Conversor)]
+          (void *LockedData, uint32 Size, uint32 Offset, uint32 ExpectedRowBytes)
           {
             if (Sensor.IsPendingKill()) return;
 
@@ -134,6 +137,8 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
 
             auto Stream = Sensor.GetDataStream(Sensor);
             Stream.SetFrameNumber(Frame);
+            Stream.SetTimestamp(Timestamp);
+            Stream.SetTransform(Transform);
             auto Buffer = Stream.PopBufferFromPool();
 
             uint32 CurrentRowBytes = ExpectedRowBytes;
@@ -184,32 +189,12 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
                 if (ROS2->IsEnabled())
                 {
                   TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send PixelReader");
-                  auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
-                  auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, StreamId, BufView]()
+                  // auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
+                  auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, BufView]()
                   {
-                    // get resolution of camera
-                    int W = -1, H = -1;
-                    float Fov = -1.0f;
-                    auto WidthOpt = Sensor.GetAttribute("image_size_x");
-                    if (WidthOpt.has_value())
-                      W = FCString::Atoi(*WidthOpt->Value);
-                    auto HeightOpt = Sensor.GetAttribute("image_size_y");
-                    if (HeightOpt.has_value())
-                      H = FCString::Atoi(*HeightOpt->Value);
-                    auto FovOpt = Sensor.GetAttribute("fov");
-                    if (FovOpt.has_value())
-                      Fov = FCString::Atof(*FovOpt->Value);
-                    // send data to ROS2
                     AActor* ParentActor = Sensor.GetAttachParentActor();
-                    if (ParentActor)
-                    {
-                      FTransform LocalTransformRelativeToParent = Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-                      ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, W, H, Fov, BufView, &Sensor);
-                    }
-                    else
-                    {
-                      ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), W, H, Fov, BufView, &Sensor);
-                    }
+                    auto Transform = (ParentActor) ? Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : Stream.GetSensorTransform();
+                    ROS2->ProcessDataFromCamera(Stream.GetSensorType(), Transform, BufView, &Sensor);
                   });
                 }
                 #endif

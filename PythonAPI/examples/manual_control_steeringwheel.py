@@ -20,25 +20,6 @@ To find out the values of your steering wheel use jstest-gtk in Ubuntu.
 
 from __future__ import print_function
 
-
-# ==============================================================================
-# -- find carla module ---------------------------------------------------------
-# ==============================================================================
-
-
-import glob
-import os
-import sys
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
-
-
 # ==============================================================================
 # -- imports -------------------------------------------------------------------
 # ==============================================================================
@@ -53,8 +34,10 @@ import collections
 import datetime
 import logging
 import math
+import os
 import random
 import re
+import sys
 import weakref
 
 if sys.version_info >= (3, 0):

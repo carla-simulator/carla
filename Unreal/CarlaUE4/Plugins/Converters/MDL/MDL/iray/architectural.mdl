@@ -1,0 +1,310 @@
+// SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-License-Identifier: MIT
+//
+
+mdl 1.0;
+
+import df::*;
+import state::*;
+import math::*;
+import base::*;
+import anno::*;
+
+//enum used to define direction of emission
+export enum emission_direction_enum {
+    direction_front = 1
+    [[
+        anno::display_name("emit forward")
+    ]],
+    direction_back = 2
+    [[
+        anno::display_name("emit backward")
+    ]],
+    direction_both = 3
+    [[
+        anno::display_name("doublesided emission")
+    ]]
+};
+
+export material architectural (
+    color diffuse = color(0.5)
+    [[
+        anno::display_name("Color"),
+        anno::in_group("Diffuse")
+    ]],
+    float diffuse_weight = 1.0
+    [[
+        anno::display_name("Weight"),
+        anno::in_group("Diffuse"),
+        anno::hard_range(0.0, 1.0)
+    ]],
+    float diffuse_roughness = 0.0
+    [[
+        anno::display_name("Roughness"),
+        anno::in_group("Diffuse")
+    ]],
+    color refl_color = color(1.0)
+    [[
+        anno::display_name("Color"),
+        anno::in_group("Reflection")
+    ]],
+    float reflectivity = 0.6
+    [[
+        anno::display_name("Reflectivity"),
+        anno::in_group("Reflection") ,
+        anno::hard_range(0.0, 1.0)
+    ]],
+    float refl_gloss = 1.0
+    [[
+        anno::display_name("Glossiness"),
+        anno::in_group("Reflection") ,
+        anno::hard_range(0.0, 1.0)
+    ]],
+    uniform bool refl_is_metal = false
+    [[
+        anno::display_name("Metal"),
+        anno::in_group("Reflection")
+    ]],
+    uniform bool brdf_fresnel = false
+    [[
+        anno::display_name("Use Fresnel Term"),
+        anno::in_group("Reflection weighting")
+    ]],
+    float  brdf_0_degree_refl = 0.2
+    [[
+        anno::display_name("0 Deg. Reflectivity"),
+        anno::in_group("Reflection weighting") ,
+        anno::hard_range(0.0, 1.0)
+    ]],
+    float  brdf_90_degree_refl = 1.0
+    [[
+        anno::display_name("90 Deg. Reflectivity"),
+        anno::in_group("Reflection weighting") ,
+        anno::hard_range(0.0, 1.0)
+    ]],
+    float  brdf_curve = 5.0
+    [[
+        anno::display_name("Curve Shape"),
+        anno::in_group("Reflection weighting"),
+        anno::soft_range(0.1, 20.0)
+    ]],
+
+    color   refr_color = color(1.0)
+    [[
+        anno::display_name("Color"),
+        anno::in_group("Refraction")
+    ]],
+    uniform float  refr_ior = 1.4
+    [[
+        anno::display_name("IOR"),
+        anno::in_group("Refraction")
+    ]],
+    float  transparency = 0.0
+    [[
+        anno::display_name("Transparency"),
+        anno::in_group("Refraction"),
+        anno::hard_range(0.0, 1.0)
+    ]],
+    float  refr_gloss = 1.0
+    [[
+        anno::display_name("Glossiness"),
+        anno::in_group("Refraction") ,
+        anno::hard_range(0.0, 1.0)
+    ]],
+    uniform bool refr_falloff_on = false
+    [[
+        anno::display_name("Enable"),
+        anno::in_group("Absorption")
+    ]],
+    uniform bool refr_falloff_color_on = false
+    [[
+        anno::display_name("Use Color"),
+        anno::in_group("Absorption")
+    ]],
+    uniform float  refr_falloff_dist = 10.0
+    [[
+        anno::display_name("Distance"),
+        anno::in_group("Absorption")
+    ]],
+    uniform color   refr_falloff_color = color(0.5)
+    [[
+        anno::display_name("Color"),
+        anno::in_group("Absorption")
+    ]],
+    uniform bool refr_translucency = false
+    [[
+        anno::display_name("Enable"),
+        anno::in_group("Translucency")
+    ]],
+    color   refr_trans_color = color(1.)
+    [[
+        anno::display_name("Color"),
+        anno::in_group("Translucency")
+    ]],
+    float  refr_trans_weight = 0.5
+    [[
+        anno::display_name("Weight"),
+        anno::in_group("Translucency"),
+        anno::hard_range(0.0, 1.0)
+    ]],
+    float  anisotropy = 1.0
+    [[
+        anno::display_name("Anisotropy"),
+        anno::in_group("Anisotropy"),
+        anno::soft_range(0.001, 100.0)
+    ]],
+    float  anisotropy_rotation = 0.0
+    [[
+        anno::display_name("Rotation"),
+        anno::in_group("Anisotropy")
+    ]],
+    uniform bool thin_walled = false
+    [[
+        anno::display_name("Thin walled"),
+        anno::in_group("Refraction")
+    ]],
+
+    float  cutout_opacity = 1.0
+    [[
+        anno::display_name("Cutout Opacity"),
+        anno::in_group("Extra"),
+        anno::hard_range(0.0, 1.0)
+    ]],
+    color   additional_color = color(0.0)
+    [[
+        anno::display_name("Emission"),
+        anno::in_group("Extra")
+    ]],
+    uniform emission_direction_enum emission_direction = direction_both
+    [[
+        anno::display_name("Emission Direction"),
+        anno::in_group("Extra"),
+        anno::unused()
+    ]],
+    float3  bump = state::normal()
+) [[
+    anno::copyright_notice (
+    "SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved. "
+    "SPDX-License-Identifier: MIT"
+    ),
+    anno::author("NVIDIA Corporation"),
+    anno::display_name("Architectural material"),
+    anno::description("An example how the so called mia-material can be implemented in MDL")
+]] =  let{
+
+    base::anisotropy_return aniso = base::anisotropy_conversion(
+        roughness: base::architectural_gloss_to_rough(refl_gloss),
+        anisotropy: anisotropy,
+        anisotropy_rotation:
+        anisotropy_rotation,
+        mia_anisotropy_semantic: true
+    );
+
+    color refl_tint = base::blend_color_layers(
+        base: color(1.0),
+        layers: base::color_layer[](
+            base::color_layer(
+                 layer_color: refl_color,
+                 mode: base::color_layer_color
+            )
+        )
+    ).tint;
+
+    float refl_weight = base::blend_color_layers(
+        base: color(0.0),
+        layers: base::color_layer[](
+            base::color_layer(
+                layer_color: refl_color,
+                weight: reflectivity,
+                mode: base::color_layer_blend
+            )),
+        mono_source: base::mono_maximum
+    ).mono;
+
+    bsdf diff_mix =df::normalized_mix(
+        components: df::bsdf_component[](
+            df::bsdf_component(
+                weight: diffuse_weight,
+                component: df::diffuse_reflection_bsdf (
+                    roughness:  diffuse_roughness,
+                    tint: diffuse
+                )
+            )
+        )
+    );
+
+    float metal_diffuse_compensation = refr_ior < 1.? 1.: 1.-(math::abs(refr_ior) - 1.) / (math::abs(refr_ior) + 1.);
+
+    bsdf base = df::weighted_layer(
+        weight: transparency,
+        layer: df::weighted_layer(
+            weight: refr_translucency?refr_trans_weight:0.0,
+            layer: df::diffuse_transmission_bsdf (
+                        tint: refr_trans_color
+            ),
+            base: df::simple_glossy_bsdf (
+                tint: refr_color,
+                roughness_u: base::architectural_gloss_to_rough(refr_gloss),
+                mode: df::scatter_transmit
+            )
+        ),
+        base: refl_is_metal ?
+            df::weighted_layer(    weight: brdf_fresnel?metal_diffuse_compensation: 1.- brdf_0_degree_refl,layer: diff_mix ):
+            diff_mix
+    );
+
+    bsdf coat = refl_is_metal ? df::tint(
+                            tint: diffuse,
+                            base:df::simple_glossy_bsdf (
+                                tint: refl_tint,
+                                roughness_u: aniso.roughness_u,
+                                roughness_v: aniso.roughness_v,
+                                tangent_u: aniso.tangent_u,
+                                mode: df::scatter_reflect)
+                        )
+                        : df::simple_glossy_bsdf (
+                            tint: refl_tint,
+                            roughness_u: aniso.roughness_u,
+                            roughness_v: aniso.roughness_v,
+                            tangent_u: aniso.tangent_u,
+                            mode: df::scatter_reflect
+                        );
+
+    float realdist = (refr_falloff_dist <= 0)? 1.:refr_falloff_dist;
+    color falloff_color = refr_falloff_color_on?refr_falloff_color:color(.3333);
+    color special_cased_falloff_color = (refr_falloff_dist <= 0)?color(0.):falloff_color;
+    color absorption_color_general =  math::log( special_cased_falloff_color )* -1./realdist;
+    color absorption_color = refr_falloff_on?absorption_color_general: color(0.);
+
+} in material (
+    ior: color(refr_ior),
+    thin_walled: thin_walled,
+
+    surface: material_surface (
+        scattering:  brdf_fresnel?
+            df::fresnel_layer(
+                weight: refl_weight,
+                ior: color(refr_ior),
+                layer: coat,base: base
+            ):
+            df::custom_curve_layer(
+                weight: refl_weight,
+                normal_reflectivity: brdf_0_degree_refl,
+                grazing_reflectivity: brdf_90_degree_refl,
+                exponent: brdf_curve,
+                layer: coat,base: base
+            ),
+
+       emission:  material_emission (
+            emission: df::diffuse_edf(),
+            intensity: additional_color
+        )
+    ),
+    geometry: material_geometry(
+            cutout_opacity: cutout_opacity,
+            normal: bump
+    ),
+    volume:  material_volume (
+        absorption_coefficient: absorption_color
+    )
+);

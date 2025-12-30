@@ -1,0 +1,11 @@
+<project toolsVersion="5.6">
+  <dependency name="MDL-SDK-windows" linkPath="../Source/ThirdParty/mdl_sdk">
+    <package name="MDL-SDK" version="2024.1.1-381500.4681-nt-x86-64" platforms="windows-x86_64"/>
+  </dependency>
+  <dependency name="MDL-SDK-linux" linkPath="../Source/ThirdParty/mdl_sdk">
+    <package name="MDL-SDK" version="2024.1.1-381500.4681-linux-x86-64" platforms="linux-x86_64"/>
+  </dependency>
+  <dependency name="omni_core_materials" linkPath="../Library/mdl">
+    <package name="omni_core_materials" version="1.3.2.1-b08f4d18"/>
+  </dependency>   
+</project>

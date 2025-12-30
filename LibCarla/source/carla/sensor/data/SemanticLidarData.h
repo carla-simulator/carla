@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -127,7 +127,7 @@ namespace data {
     }
 
     virtual void WriteChannelCount(std::vector<uint32_t> points_per_channel) {
-      for (auto idxChannel = 0u; idxChannel < GetChannelCount(); ++idxChannel)
+      for (auto idxChannel = 0u; idxChannel < GetChannelCount() && idxChannel < points_per_channel.size(); ++idxChannel)
         _header[Index::SIZE + idxChannel] = points_per_channel[idxChannel];
     }
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -11,8 +11,8 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
-  SharedPtr<SensorData> CollisionEventSerializer::Deserialize(RawData &&data) {
-    return SharedPtr<SensorData>(new data::CollisionEvent(std::move(data)));
+  SharedPtr<SensorData> CollisionEventSerializer::Deserialize(RawData DESERIALIZE_DECL_DATA(data)) {
+    return SharedPtr<SensorData>(new data::CollisionEvent(DESERIALIZE_MOVE_DATA(data)));
   }
 
 } // namespace s11n

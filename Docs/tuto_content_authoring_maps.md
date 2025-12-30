@@ -192,17 +192,17 @@ You can test the materials rapidly by drag and drop onto map elements:
 ![map_materials](img/tuto_content_authoring_maps/map_materials.gif)
 
 
-# Road Painter
+## Road Painter
 
 The road painter is a tool that can be used to customize the appearance of the road, adding extra realism with additional textures, decals and meshes.
 
-## What is the road painter?
+### What is the road painter?
 
 The Road Painter tool is a blueprint that uses OpenDRIVE information to paint roads quickly. It takes a master material and applies it to a render target of the road to use as a canvas. The master material is made up of a collection of materials that can be blended using brushes and applied as masks. There is no need to apply photometry techniques nor consider the UVs of the geometry.
 
 The road painter uses the OpenDRIVE information to paint the roads. Make sure that your `.xodr` file has the same name as your map for this to work correctly.
 
-## Establish the road painter, master material and render target
+### Establish the road painter, master material and render target
 
 __1. Create the `RoadPainter` actor.__
 
@@ -246,7 +246,7 @@ The `Tutorial_RenderTarget` will be the communication link between the road pain
 
 ---
 
-## Prepare the master material
+### Prepare the master material
 
 The `Tutorial_RoadMaster` material you created holds the base material, extra material information, and parameters that will be applied via your `Tutorial_RenderTarget`. You can configure one base material and up to three additional materials.
 
@@ -272,7 +272,7 @@ Explore some of the CARLA textures available in `Game > Carla > Static > Generic
 
 ---
 
-### Paint the road
+#### Paint the road
 
 __1. Create the link between the road painter and the roads.__
 
@@ -398,7 +398,7 @@ Drag the material onto the lane markings you wish to color. Repeat the whole pro
 
 The CARLA content library has a comprehensive set of vegetation blueprints for you to add further realism to the off-road areas of your maps like sidewalks, parks, hillsides, fields and forrest. 
 
-Navigate to the vegetation folder in the CARLA content library: `Carla > Static > Visitation`. You will find blueprints for multiple types of trees, bushes, shrubs. You can drag these elements into your map from the content browser. 
+Navigate to the vegetation folder in the CARLA content library: `Carla > Static > Vegetation`. You will find blueprints for multiple types of trees, bushes, shrubs. You can drag these elements into your map from the content browser. 
 
 ![map_materials](img/tuto_content_authoring_maps/add_tree.png)
 
@@ -419,37 +419,58 @@ Drag your desired foliage item into the box labeled `+ Drop Foliage Here`. Set a
 
 ### Exporting a map as a separate package
 
-To export a map as a map package that can be ingested into a standalone CARLA package installation, use the `make package` command as follows:
+To export a custom map as an independent content package, we use the `make package` command. Identify your custom map's location in the CARLA content directory through the Unreal content browser. We recommend creating your custom maps in with the existing CARLA maps in the `Content > Carla > Maps` directory. In this case, we are storing the map in its own folder named *MyMap*.
 
-```sh
-make package ARGS="--packages=<mapName>"
-```
+![mymap_to_export](img/tuto_content_authoring_maps/mymap_export.png)
 
-The `<mapName>` must point to a json file located in `CARLA_ROOT/Unreal/CarlaUE4/Content/Carla/Config` named *mapName.Package.json* which has the following structure:
+Remember that the map needs an associated OpenDRIVE file stored inside a directory named `OpenDrive` at the same level as the map asset (`.umap` file). The OpenDRIVE file should have the same name as the map itself with the `.xodr` extension. In this example I have named the map *MyMap* (the file will appear as `MyMap.umap` in a file browser), therefore my OpenDRIVE file is named `MyMap.xodr`. 
+
+![mymap_xodr](img/tuto_content_authoring_maps/mymap_xodr.png)
+
+Now we need to create a package config JSON file for the export process. In a file browser (not the Unreal content browser) navigate to `CARLA_ROOT/Unreal/CarlaUE4/Content/Carla/Config`. Inside this directory, you will see a number of JSON config files. Open a new one with a name corresponding to your map and the suffix `.Package.json`. In this case we name the file `exportMyMap.Package.json`.
+
+![export_mymap_config](img/tuto_content_authoring_maps/export_mymap_config.png)
+
+The JSON file should have the following structure:
 
 ```json
 {
-  "maps": [
-    {
-        "path": "/Game/Carla/Maps/",
-        "name": "MyMap",
-        "use_carla_materials": true
-      }
-  ],
-  "props": []
+    "props": [],
+    "maps": [
+        {
+            "name": "MyMap",
+            "path": "/Game/Carla/Maps/MyMap",
+            "use_carla_materials": true
+        }
+    ]
 }
 ```
 
-Your map should have been saved as `MyMap.umap` file in the `CARLA_ROOT/Unreal/CarlaUE4/Content/Carla/Maps` directory. 
+The `name` parameter should be the same as the name of your map asset file (without the `.umap` suffix). Ensure that the `path` parameter points to the correct directory location of your map asset (`.umap` file). The first part of the path `CARLA_ROOT/Unreal/CarlaUE4/Content/` should be replaced with `/Game/`. 
 
-The exported map archive will be saved in the `Dist` folder on Linux and the `/Build/UE4Carla/` folder on Windows.
+Now we call the `make package` command from a terminal in the `CARLA_ROOT` directory, with the following argument:
+
+```sh
+make package ARGS="--packages=exportMyMap"
+```
+
+The value of the argument `--packages` should match the name of the JSON configuration file without the `.Package.json` suffix. The package may take some time to build, depending on the size of the map. 
+
+When the export process is finished, the exported map package will be saved as a compressed archive:
+
+* **Linux**: `.tar.gz` archive in the `CARLA_ROOT/Dist` directory
+* **Windows**: `.zip` archive in the `CARLA_ROOT/Build/UE4Carla` directory
+
+The map package must be built using the target operating system. I.e. a map package built in Linux cannot be imported into a CARLA package for Windows. 
+
+To import the packaged map into a packaged version of CARLA, place the `.tar.gz` or `.zip` archive into the `CARLA_ROOT/Import` directory of an extracted CARLA package then run the `ImportAssets.bin/.sh` script. Once this is finished, launch CARLA and you will find the new custom map in the list of available maps. 
 
 ### Exporting a map as part of a complete CARLA package
 
 To export the map as part of a complete CARLA package, such that the map is available on launch of the package, include the following line in the `DefaultGame.ini` file in `CARLA_ROOT/Unreal/CarlaUE4/Config/`:
 
 ```
-+MapsToCook=(FilePath="/Game/Carla/Maps/MyMap")
++MapsToCook=(FilePath="/Game/Carla/Maps/MyMap/MyMap")
 ```
 
 This line should be added in the `[/Script/UnrealEd.ProjectPackagingSettings]` section, preferably next to the other `MapsToCook(...)` entries. Then run `make package` command to build a package containing your map. The exported CARLA package with your map will be saved in the `Dist` folder on Linux and the `/Build/UE4Carla/` folder on Windows.

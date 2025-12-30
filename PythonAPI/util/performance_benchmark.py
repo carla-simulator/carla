@@ -15,7 +15,7 @@ Please, make sure you install the following dependencies:
     * python -m pip install -U py-cpuinfo
     * python -m pip install psutil
     * python -m pip install python-tr
-    * python -m pip install gpuinfo
+    * python -m pip install GPUtil
 
 """
 
@@ -31,10 +31,8 @@ if sys.version_info[0] < 3:
 from tr import tr
 import argparse
 import cpuinfo
-import glob
 import math
 import numpy as np
-import os
 import psutil
 import pygame
 import shutil
@@ -42,14 +40,6 @@ import GPUtil
 import threading
 import time
 import logging
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 
@@ -167,7 +157,7 @@ def define_environments():
   return list_env_specs
 
 def define_maps(client):
-  maps = [m.replace('/Game/Carla/Maps/', '') for m in client.get_available_maps()]
+  maps = ['Town01', 'Town01_Opt', 'Town02', 'Town02_Opt', 'Town03', 'Town03_Opt', 'Town04', 'Town04_Opt', 'Town05', 'Town05_Opt', 'Town10HD', 'Town10HD_Opt']
   maps = sorted(maps)
 
   if args.maps is not None:

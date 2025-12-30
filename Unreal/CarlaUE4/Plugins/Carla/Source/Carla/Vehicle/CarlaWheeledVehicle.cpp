@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 // Copyright (c) 2019 Intel Corporation
 //
@@ -193,13 +193,27 @@ void ACarlaWheeledVehicle::BeginPlay()
 
     MovementComponent->WheelSetups = NewWheelSetups;
 
-    LastPhysicsControl = GetVehiclePhysicsControl();
+    LastAppliedPhysicsControl = GetVehiclePhysicsControl();
 
     // Update physics in the Ackermann Controller
     AckermannController.UpdateVehiclePhysics(this);
   }
 
   AddReferenceToManager();
+}
+
+void ACarlaWheeledVehicle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction){
+  Super::TickActor(DeltaTime, TickType, ThisTickFunction);
+
+  FPoseSnapshot pose;
+  GetMesh()->SnapshotPose(pose);
+  for(FTransform &transform : pose.LocalTransforms)
+  {
+    transform *= GetMesh()->GetComponentTransform();
+  }
+  
+  WorldTransformedPose = pose;
+
 }
 
 bool ACarlaWheeledVehicle::IsInVehicleRange(const FVector& Location) const
@@ -319,7 +333,7 @@ float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 
 void ACarlaWheeledVehicle::FlushVehicleControl()
 {
-  if (bAckermannControlActive) {
+  if (IsAckermannControlActive()) {
     AckermannController.UpdateVehicleState(this);
     AckermannController.RunLoop(InputControl.Control);
   }
@@ -473,15 +487,13 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
         PhysicsWheel.LatStiffMaxLoad = PTireData.mLatStiffX;
         PhysicsWheel.LatStiffValue = PTireData.mLatStiffY;
         PhysicsWheel.LongStiffValue = PTireData.mLongitudinalStiffnessPerUnitGravity;
+        PhysicsWheel.TireFriction = Vehicle4W->Wheels[i]->TireConfig->GetFrictionScale();
+        PhysicsWheel.Position = Vehicle4W->Wheels[i]->Location;
       } else {
-        if (i < LastPhysicsControl.Wheels.Num()) {
-          PhysicsWheel = LastPhysicsControl.Wheels[i];
+        if (i < LastAppliedPhysicsControl.Wheels.Num()) {
+          PhysicsWheel = LastAppliedPhysicsControl.Wheels[i];
         }
       }
-
-      PhysicsWheel.TireFriction = Vehicle4W->Wheels[i]->TireConfig->GetFrictionScale();
-      PhysicsWheel.Position = Vehicle4W->Wheels[i]->Location;
-
       Wheels.Add(PhysicsWheel);
     }
 
@@ -558,8 +570,8 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
         PhysicsWheel.LatStiffValue = PTireData.mLatStiffY;
         PhysicsWheel.LongStiffValue = PTireData.mLongitudinalStiffnessPerUnitGravity;
       } else {
-        if (i < LastPhysicsControl.Wheels.Num()) {
-          PhysicsWheel = LastPhysicsControl.Wheels[i];
+        if (i < LastAppliedPhysicsControl.Wheels.Num()) {
+          PhysicsWheel = LastAppliedPhysicsControl.Wheels[i];
         }
       }
 
@@ -582,12 +594,12 @@ FVehicleLightState ACarlaWheeledVehicle::GetVehicleLightState() const
 
 void ACarlaWheeledVehicle::RestoreVehiclePhysicsControl()
 {
-  ApplyVehiclePhysicsControl(LastPhysicsControl);
+  ApplyVehiclePhysicsControl(LastAppliedPhysicsControl);
 }
 
 void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(const FVehiclePhysicsControl &PhysicsControl)
 {
-  LastPhysicsControl = PhysicsControl;
+  LastAppliedPhysicsControl = PhysicsControl;
   if (!bIsNWVehicle) {
     UWheeledVehicleMovementComponent4W *Vehicle4W = Cast<UWheeledVehicleMovementComponent4W>(
           GetVehicleMovement());
@@ -933,7 +945,7 @@ void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLoc
   }
   else
   {
-    UE_LOG(LogTemp, Warning, TEXT("Cannot set wheel steer direction. Physics are enabled."))
+    UE_LOG(LogCarla, Warning, TEXT("Cannot set wheel steer direction. Physics are enabled."));
   }
 }
 
@@ -951,6 +963,38 @@ float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocati
   else
   {
     return VehicleAnim->GetWheelRotAngle((uint8)WheelLocation);
+  }
+}
+
+void ACarlaWheeledVehicle::SetWheelPitchAngle(EVehicleWheelLocation WheelLocation, float AngleInDeg) {
+
+  if (bPhysicsEnabled == false)
+  {
+    check((uint8)WheelLocation >= 0)
+    UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+    check(VehicleAnim != nullptr)
+    VehicleAnim->SetWheelPitchAngle((uint8)WheelLocation, AngleInDeg);
+  }
+  else
+  {
+    UE_LOG(LogCarla, Warning, TEXT("Cannot set wheel pitch angle. Physics are enabled."))
+  }
+}
+
+float ACarlaWheeledVehicle::GetWheelPitchAngle(EVehicleWheelLocation WheelLocation) {
+
+  check((uint8)WheelLocation >= 0)
+  UVehicleAnimInstance *VehicleAnim = Cast<UVehicleAnimInstance>(GetMesh()->GetAnimInstance());
+  check(VehicleAnim != nullptr)
+  check(VehicleAnim->GetWheeledVehicleMovementComponent() != nullptr)
+
+  if (bPhysicsEnabled == true) 
+  {
+    return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetRotationAngle();
+  }
+  else 
+  {
+    return VehicleAnim->GetWheelPitchAngle((uint8)WheelLocation);
   }
 }
 
@@ -1022,7 +1066,7 @@ void ACarlaWheeledVehicle::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void ACarlaWheeledVehicle::OpenDoor(const EVehicleDoor DoorIdx) {
   if (int(DoorIdx) >= ConstraintsComponents.Num() && DoorIdx != EVehicleDoor::All) {
-    UE_LOG(LogTemp, Warning, TEXT("This door is not configured for this car."));
+    UE_LOG(LogCarla, Warning, TEXT("This door is not configured for this car."));
     return;
   }
 
@@ -1039,7 +1083,7 @@ void ACarlaWheeledVehicle::OpenDoor(const EVehicleDoor DoorIdx) {
 
 void ACarlaWheeledVehicle::CloseDoor(const EVehicleDoor DoorIdx) {
   if (int(DoorIdx) >= ConstraintsComponents.Num() && DoorIdx != EVehicleDoor::All) {
-    UE_LOG(LogTemp, Warning, TEXT("This door is not configured for this car."));
+    UE_LOG(LogCarla, Warning, TEXT("This door is not configured for this car."));
     return;
   }
 
@@ -1197,4 +1241,18 @@ void ACarlaWheeledVehicle::SetPhysicsConstraintAngle(
     UPhysicsConstraintComponent* Component, const FRotator &NewAngle)
 {
   Component->ConstraintInstance.AngularRotationOffset = NewAngle;
+}
+
+FPoseSnapshot ACarlaWheeledVehicle::GetWorldTransformedPose()
+{
+  if(WorldTransformedPose.bIsValid == false)
+  {
+    SetActorTickEnabled(true);
+    GetMesh()->SnapshotPose(WorldTransformedPose);
+    for(FTransform &transform : WorldTransformedPose.LocalTransforms)
+    {
+      transform *= GetMesh()->GetComponentTransform();
+    }
+  }
+  return WorldTransformedPose;
 }

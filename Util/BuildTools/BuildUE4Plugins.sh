@@ -18,7 +18,7 @@ CURRENT_STREETMAP_COMMIT=260273d6b7c3f28988cda31fd33441de7e272958
 STREETMAP_BRANCH=master
 STREETMAP_REPO=https://github.com/carla-simulator/StreetMap.git
 
-OPTS=`getopt -o h --long build,rebuild,clean, -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long build,rebuild,clean,chrono,chrono-path: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -37,6 +37,10 @@ while [[ $# -gt 0 ]]; do
     --clean )
       REMOVE_INTERMEDIATE=true;
       shift ;;
+    --chrono )
+      shift ;;
+    --chrono-path )
+      shift 2 ;;
     -h | --help )
       echo "$DOC_STRING"
       echo "$USAGE_STRING"

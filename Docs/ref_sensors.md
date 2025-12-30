@@ -9,6 +9,8 @@
 - [__Obstacle detector__](#obstacle-detector)
 - [__Radar sensor__](#radar-sensor)
 - [__RGB camera__](#rgb-camera)
+- [__Wide-angle camera__](#wide-angle-cameras)
+- [__RSS sensor__](#rss-sensor)
 - [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
 - [__Semantic segmentation camera__](#semantic-segmentation-camera)
 - [__Instance segmentation camera__](#instance-segmentation-camera)
@@ -295,6 +297,71 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 
 <br>
 
+## Hybrid Solid State LiDAR sensor
+
+* __Blueprint:__ sensor.lidar.hss_lidar
+* __Output:__ [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) per step (unless `sensor_tick` says otherwise).
+
+This sensor simulates a Hybrid Solid State LIDAR implemented using ray-casting. For the default parameters, the Hesai AT128 specifications were selected.
+The points are computed by adding a laser for each channel distributed in the vertical FOV. The point cloud is calculated by doing a ray-cast for each laser in every step.
+
+
+The information of the LIDAR measurement is encoded 4D points. Being the first three, the space points in xyz coordinates and the last one intensity loss during the travel. This intensity is computed by the following formula.
+<br>
+![LidarIntensityComputation](img/lidar_intensity.jpg)
+
+`a` — Attenuation coefficient. This may depend on the sensor's wavelenght, and the conditions of the atmosphere. It can be modified with the LIDAR attribute `atmosphere_attenuation_rate`.
+`d` — Distance from the hit point to the sensor.
+
+For a better realism, points in the cloud can be dropped off. This is an easy way to simulate loss due to external perturbations. This can done combining two different.
+
+*   __General drop-off__ — Proportion of points that are dropped off randomly. This is done before the tracing, meaning the points being dropped are not calculated, and therefore improves the performance. If `dropoff_general_rate = 0.5`, half of the points will be dropped.
+*   __Instensity-based drop-off__ — For each point detected, and extra drop-off is performed with a probability based in the computed intensity. This probability is determined by two parameters. `dropoff_zero_intensity` is the probability of points with zero intensity to be dropped. `dropoff_intensity_limit` is a threshold intensity above which no points will be dropped. The probability of a point within the range to be dropped is a linear proportion based on these two parameters.
+
+Additionally, the `noise_stddev` attribute makes for a noise model to simulate unexpected deviations that appear in real-life sensors. For positive values, each point is randomly perturbed along the vector of the laser ray. The result is a LIDAR sensor with perfect angular positioning, but noisy distance measurement.
+
+The rotation of the LIDAR can be tuned to cover a specific angle on every simulation step (using a [fixed time-step](adv_synchrony_timestep.md)). For example, to rotate once per step (full circle output, as in the picture below), the rotation frequency and the simulated FPS should be equal. <br> __1.__ Set the sensor's frequency `sensors_bp['lidar'][0].set_attribute('rotation_frequency','10')`. <br> __2.__ Run the simulation using `python3 config.py --fps=10`.
+
+The LiDAR configured as AT128, AT360 and AT1440 shown in figure below:
+![LidarPointCloud](img/hss.gif)
+
+#### Lidar attributes
+
+
+| Blueprint attribute  | Type   | Default    | Description     |
+| ----------------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `channels`         | int    | 128     | Number of lasers.  |
+| `range`            | float  | 10.0  | Maximum distance to measure/raycast in meters (centimeters for CARLA 0.9.6 or previous).  |
+| `rotation_frequency`            | float  | 10.0  | LIDAR rotation frequency.       |
+| `upper_fov`        | float  | 12.9  | Angle in degrees of the highest laser.        |
+| `lower_fov`        | float  | -12.5 | Angle in degrees of the lowest laser.         |
+| `horizontal_fov`   | float | 120.0 | Horizontal field of view in degrees, ranging from -horizontal_fov/2 to +horizontal_fov/2, symmetric to the forward-pointing axis. |
+| `atmosphere_attenuation_rate`     | float  | 0.004 | Coefficient that measures the LIDAR instensity loss per meter. Check the intensity computation above. |
+| `dropoff_general_rate`          | float  | 0.45  | General proportion of points that are randomy dropped.    |
+| `dropoff_intensity_limit`       | float  | 0.8   | For the intensity based drop-off, the threshold intensity value above which no points are dropped.    |
+| `dropoff_zero_intensity`        | float  | 0.4   | For the intensity based drop-off, the probability of each point with zero intensity being dropped.    |
+| `sensor_tick`      | float  | 0.0   | Simulation seconds between sensor captures (ticks). |
+| `noise_stddev`     | float  | 0.0   | Standard deviation of the noise model to disturb each point along the vector of its raycast. |
+| `horizontal_resolution`   | float | 0.1   | Horizontal Resolution of the sensor. |
+
+
+
+
+#### Output attributes
+
+| Sensor data attribute            | Type  | Description        |
+| ----------------------- | ----------------------- | ----------------------- |
+| `frame`            | int   | Frame number when the measurement took place.      |
+| `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
+| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `horizontal_angle`   | float | Angle (radians) in the XY plane of the LIDAR in the current frame.           |
+| `channels`         | int   | Number of channels (lasers) of the LIDAR.    |
+| `get_point_count(channel)`       | int   | Number of points per channel captured this frame.  |
+| `raw_data`         | bytes | Array of 32-bits floats (XYZI of each point).      |
+
+
+<br>
+
 ## Obstacle detector
 
 * __Blueprint:__ sensor.other.obstacle
@@ -492,6 +559,181 @@ Since these effects are provided by UE, please make sure to check their document
 | `height`           | int   | Image height in pixels.          |
 | `fov` | float | Horizontal field of view in degrees.         |
 | `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
+
+---
+
+## Wide-angle cameras
+
+* __Blueprint RGB:__ sensor.camera.rgb.wide_angle_lens
+* __Blueprint depth:__ sensor.camera.depth.wide_angle_lens
+* __Blueprint semantic segmentation:__ sensor.camera.semantic_segmentation.wide_angle_lens
+* __Blueprint instance segmentation:__ sensor.camera.instance_segmentation.wide_angle_lens
+* __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise)..
+
+The wide-angle camera models multiple types of specialized cameras such as standard wide-angle, 360 degree cameras and fisheye lenses. The wide-angle camera model offers standard RGB output along with depth, semantic segmentation and instance segmentation. There are numerous projection models available, including perspective, stereographic, equidistant, equisolid, orthographic and Kannala-Brandt.
+
+The [Kannala-Brandt](https://www.researchgate.net/publication/6899685_A_Generic_Camera_Model_and_Calibration_Method_for_Conventional_Wide-Angle_and_Fish-Eye_Lenses) model used matches the [implementation used in OpenCV](https://docs.opencv.org/3.4/db/d58/group__calib3d__fisheye.html).
+
+| Blueprint attribute  | Type     | Default  | Description          |
+| ----------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- |
+| `camera_model`       | str     | `perspective`   | Options: <br>`perspective`,<br>`stereographic`,<br>`equidistant`,<br>`equisolid`,<br>`orthographic`,<br>`kannala-brandt`|
+| `fov`    | float    | 90\.0    | Horizontal field of view in degrees.   |
+| `image_size_x`       | int      | 800      | Image width in pixels.           |
+| `image_size_y`       | int      | 600      | Image height in pixels.          |
+| `k0`       | float      | 0.0831      | Kannala-Brandt K0 parameter.          |
+| `k1`       | float      | 0.0111      | Kannala-Brandt K1 parameter.          |
+| `k2`       | float      | 0.00858      | Kannala-Brandt K2 parameter.          |
+| `k3`       | float      | 0.000854      | Kannala-Brandt K3 parameter.          |
+| `sensor_tick`        | float    | 0\.0     | Simulation seconds between sensor captures (ticks).  |
+| `fov_mask`       | bool     | false      | Masks out pixels outside of the FOV.         |
+| `fov_fade_size`       | float     | 0.0      | Amount of blur of the edge of the `fov_mask`.        |
+| `perspective`       | bool     | false      | Turns on perspective mode.         |
+| `equirectangular`       | bool     | false      | Turns on equirectangular projection.         |
+| `longitude_offset` | float | 0.0 | Shifts view center by degrees for equirectangular model |
+
+#### Output attributes
+
+| Sensor data attribute            | Type  | Description        |
+| ----------------------- | ----------------------- | ----------------------- |
+| `frame`            | int   | Frame number when the measurement took place.      |
+| `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
+| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `width`            | int   | Image width in pixels.           |
+| `height`           | int   | Image height in pixels.          |
+| `fov` | float | Horizontal field of view in degrees.         |
+| `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
+
+---
+
+## RSS sensor
+
+*   __Blueprint:__ sensor.other.rss
+*   __Output:__ [carla.RssResponse](python_api.md#carla.RssResponse) per step (unless `sensor_tick` says otherwise).
+
+!!! Important
+    It is highly recommended to read the specific [rss documentation](adv_rss.md) before reading this.
+
+This sensor integrates the [C++ Library for Responsibility Sensitive Safety](https://github.com/intel/ad-rss-lib) in CARLA. It is disabled by default in CARLA, and it has to be explicitly built in order to be used.
+
+The RSS sensor calculates the RSS state of a vehicle and retrieves the current RSS Response as sensor data. The [carla.RssRestrictor](python_api.md#carla.RssRestrictor) will use this data to adapt a [carla.VehicleControl](python_api.md#carla.VehicleControl) before applying it to a vehicle.
+
+These controllers can be generated by an *Automated Driving* stack or user input. For instance, hereunder there is a fragment of code from `PythonAPI/examples/rss/manual_control_rss.py`, where the user input is modified using RSS when necessary.
+
+__1.__ Checks if the __RssSensor__ generates a valid response containing restrictions.
+__2.__ Gathers the current dynamics of the vehicle and the vehicle physics.
+__3.__ Applies restrictions to the vehicle control using the response from the RssSensor, and the current dynamics and physicis of the vehicle.
+
+```py
+rss_proper_response = self._world.rss_sensor.proper_response if self._world.rss_sensor and self._world.rss_sensor.response_valid else None
+if rss_proper_response:
+...
+        vehicle_control = self._restrictor.restrict_vehicle_control(
+            vehicle_control, rss_proper_response, self._world.rss_sensor.ego_dynamics_on_route, self._vehicle_physics)
+```
+
+
+#### The carla.RssSensor class
+
+The blueprint for this sensor has no modifiable attributes. However, the [carla.RssSensor](python_api.md#carla.RssSensor) object that it instantiates has attributes and methods that are detailed in the Python API reference. Here is a summary of them.
+
+| [carla.RssSensor variables](<../python_api#carlarsssensor>)     | Type    | Description         |
+| ---------------------------------------- | ---------------------------------------- | ---------------------------------------- |
+| `ego_vehicle_dynamics`    | [ad.rss.world.RssDynamics](<https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/>)  | RSS parameters to be applied for the ego vehicle    |
+| `other_vehicle_dynamics`  | [ad.rss.world.RssDynamics](<https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/>)  | RSS parameters to be applied for the other vehicles |
+| `pedestrian_dynamics`     | [ad.rss.world.RssDynamics](<https://intel.github.io/ad-rss-lib/ad_rss/Appendix-ParameterDiscussion/>)  | RSS parameters to be applied for pedestrians        |
+| `road_boundaries_mode`    | [carla.RssRoadBoundariesMode](<../python_api#carlarssroadboundariesmode>)      | Enables/Disables the [stay on road](<https://intel.github.io/ad-rss-lib/ad_rss_map_integration/HandleRoadBoundaries>) feature. Default is **Off**. |
+
+<br>
+
+
+```py
+# Fragment of rss_sensor.py
+# The carla.RssSensor is updated when listening for a new carla.RssResponse
+def _on_rss_response(weak_self, response):
+...
+        self.timestamp = response.timestamp
+        self.response_valid = response.response_valid
+        self.proper_response = response.proper_response
+        self.ego_dynamics_on_route = response.ego_dynamics_on_route
+        self.rss_state_snapshot = response.rss_state_snapshot
+        self.situation_snapshot = response.situation_snapshot
+        self.world_model = response.world_model
+```
+
+!!! Warning
+    This sensor works fully on the client side. There is no blueprint in the server. Changes on the attributes will have effect __after__ the *listen()* has been called.
+
+The methods available in this class are related to the routing of the vehicle. RSS calculations are always based on a route of the ego vehicle through the road network.
+
+The sensor allows to control the considered route by providing some key points, which could be the [carla.Transform](python_api.md#carla.Transform) in a [carla.Waypoint](python_api.md#carla.Waypoint). These points are best selected after the intersections to force the route to take the desired turn.
+
+| [carla.RssSensor methods](<../python_api#carlarsssensor>)     | Description       |
+| ----------------------------------------- | ----------------------------------------- |
+| `routing_targets` | Get the current list of routing targets used for route.       |
+| `append_routing_target` | Append an additional position to the current routing targets. |
+| `reset_routing_targets` | Deletes the appended routing targets.             |
+| `drop_route`      | Discards the current route and creates a new one. |
+| `register_actor_constellation_callback`           | Register a callback to customize the calculations.            |
+| `set_log_level`   | Sets the log level.     |
+| `set_map_log_level`     | Sets the log level used for map related logs.     |
+
+
+
+<br>
+
+---
+
+
+```py
+# Update the current route
+self.sensor.reset_routing_targets()
+if routing_targets:
+    for target in routing_targets:
+        self.sensor.append_routing_target(target)
+```
+
+!!! Note
+    If no routing targets are defined, a random route is created.
+
+#### Output attributes
+
+| [carla.RssResponse attributes](<../python_api#carlarssresponse>)           | Type  | Description       |
+| ------------------------------------- | ------------------------------------- | ------------------------------------- |
+| `response_valid`  | bool  | Validity of the response data.      |
+| `proper_response` | [ad.rss.state.ProperResponse](<https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1ProperResponse.html>)   | Proper response that the RSS calculated for the vehicle including acceleration restrictions.         |
+| `rss_state_snapshot`    | [ad.rss.state.RssStateSnapshot](<https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1state_1_1RssStateSnapshot.html>)           | RSS states at the current point in time. This is the detailed individual output of the RSS calclulations.  |
+| `situation_snapshot`    | [ad.rss.situation.SituationSnapshot](<https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1situation_1_1SituationSnapshot.html>) | RSS situation at the current point in time. This is the processed input data for the RSS calclulations.    |
+| `world_model`     | [ad.rss.world.WorldModel](<https://intel.github.io/ad-rss-lib/doxygen/ad_rss/structad_1_1rss_1_1world_1_1WorldModel.html>)           | RSS world model at the current point in time. This is the input data for the RSS calculations.       |
+| `ego_dynamics_on_route` | [carla.RssEgoDynamicsOnRoute](<../python_api#carlarssegodynamicsonroute>)    | Current ego vehicle dynamics regarding the route. |
+
+
+In case a actor_constellation_callback is registered, a call is triggered for:
+
+1. default calculation (`actor_constellation_data.other_actor=None`)
+2. per-actor calculation
+
+```py
+# Fragment of rss_sensor.py
+# The function is registered as actor_constellation_callback
+def _on_actor_constellation_request(self, actor_constellation_data):
+    actor_constellation_result = carla.RssActorConstellationResult()
+    actor_constellation_result.rss_calculation_mode = ad.rss.map.RssMode.NotRelevant
+    actor_constellation_result.restrict_speed_limit_mode = ad.rss.map.RssSceneCreation.RestrictSpeedLimitMode.IncreasedSpeedLimit10
+    actor_constellation_result.ego_vehicle_dynamics = self.current_vehicle_parameters
+    actor_constellation_result.actor_object_type = ad.rss.world.ObjectType.Invalid
+    actor_constellation_result.actor_dynamics = self.current_vehicle_parameters
+
+    actor_id = -1
+    actor_type_id = "none"
+    if actor_constellation_data.other_actor != None:
+        # customize actor_constellation_result for specific actor
+        ...
+    else:
+        # default
+        ...
+    return actor_constellation_result
+```
+
 
 ---
 ## Semantic LIDAR sensor
@@ -845,18 +1087,21 @@ The function the user has to call every time to send a message. This function ne
     - **Parameters:**
         - `data` (_function_) - The called function with one argument containing the sensor data.  
 
-The custom V2X message sensor works a little bit different than other sensors, because it has the *send* function in addition to the *listen* function, that needs to be called, before another sensor of this type will receive anything. The transmission of a custom message is only triggered, when *send* is called. Each message given to the *send* function is only transmitted once to all Custom V2X Message sensors currently spawned.
+The custom V2X message sensor works a little bit different than other sensors, because it has the *send* function in addition to the *listen* function, that needs to be called, before another sensor of this type will receive anything. The transmission of a custom message is only triggered, when *send* is called. Each message given to the *send* function is only transmitted once to all Custom V2X Message sensors currently spawned. Independent communcation channels can be created by the sensors 'channel_id' attribute. Only sensors having the same 'channel_id' are communicating with each other. This allows to create different sender/receiver groups within the system.
 
 Example:
 
     bp = world.get_blueprint_library().find('sensor.other.v2x_custom')
     sensor = world.spawn_actor(bp, carla.Transform(), attach_to=parent)
-    sensor.send("Hello CARLA")
+    message = carla.CustomV2XBytes()
+    message.set_bytes(bytearray("Hello CARLA", 'utf-8'))
+    sensor.send(message)
 
 ### V2X sensors blueprint attributes
 
 | Blueprint attribute     | Type   | Default | Description                        |
 |-------------------------|--------|-------------------------|------------------------------------|
+| channel\_id             | string  | ''       | Only Sender/Receiver with the same channel_id are communicating with each other    |
 | transmit\_power         | float  | 21.5       | Sender transmission power in dBm                         |
 | receiver\_sensitivity   | float  | -99        | Receiver sensitivity in dBm                                |
 | frequency\_ghz          | float  | 5.9 | Transmission frequency in GHz. 5.9 GHz is standard for several physical channels.                 |

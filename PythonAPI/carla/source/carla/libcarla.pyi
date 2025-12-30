@@ -4021,7 +4021,7 @@ class Vehicle(Actor):
             `vehicle_json (str)`: Path to vehicle json file relative to `base_json_path`.\n
             `powertrain_json (str)`: Path to powertrain json file relative to `base_json_path`.\n
             `tire_json (str)`: Path to tire json file relative to `base_json_path`.\n
-            `base_json_path (str)`: Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/chrono-install/share/chrono/data/vehicle/` (the final / character is required).
+            `base_json_path (str)`: Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/Co-Simulation/Chrono/Vehicles/` (the final / character is required).
         """
 
     def is_at_traffic_light(self) -> bool:
@@ -5286,6 +5286,15 @@ class World:
     # endregion
 
     # region Setters
+    def set_annotations_traverse_translucency(self, enable: bool):
+        """Sets CARLA's behavior whether the semantic + instance segmentation and depth annotations traverse translucent materials or not.
+        To find the closest obstacle, this should be set to false (default). If you are interested in annotations that detect objects
+        behind windows, this should be enabled.
+
+        Args:
+            `enable (bool)`: Enables or disables the traversal of translucent materials in semantic, instance and depth annotations. Defaults to False.
+        """
+
     def set_pedestrians_cross_factor(self, percentage: float):
         """Sets the percentage of pedestrians that can walk on the road or cross at any point on the road.
 

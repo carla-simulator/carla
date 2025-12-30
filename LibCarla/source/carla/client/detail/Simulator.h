@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -22,6 +22,7 @@
 #include "carla/client/detail/Episode.h"
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/profiler/LifetimeProfiled.h"
+#include "carla/rpc/CustomV2XBytes.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleLightStateList.h"
 #include "carla/rpc/LabelledPoint.h"
@@ -34,10 +35,14 @@
 #include <memory>
 
 namespace carla {
-namespace client {
 
+namespace actors {
   class ActorBlueprint;
   class BlueprintLibrary;
+}
+
+namespace client {
+
   class Map;
   class Sensor;
   class WalkerAIController;
@@ -237,7 +242,7 @@ namespace detail {
       _episode->AddPendingException(e);
     }
 
-    SharedPtr<BlueprintLibrary> GetBlueprintLibrary();
+    SharedPtr<actors::BlueprintLibrary> GetBlueprintLibrary();
 
     /// Returns a list of pairs where the firts element is the vehicle ID
     /// and the second one is the light state
@@ -300,6 +305,11 @@ namespace detail {
       return _client.CastRay(start_location, end_location);
     }
 
+    void SetAnnotationsTraverseTranslucency(
+      bool enable) {
+        _client.SetAnnotationsTraverseTranslucency(enable);
+      }
+
     /// @}
     // =========================================================================
     /// @name AI
@@ -361,7 +371,7 @@ namespace detail {
     /// actor. If @gc is GarbageCollectionPolicy::Inherit, the default garbage
     /// collection policy is used.
     SharedPtr<Actor> SpawnActor(
-        const ActorBlueprint &blueprint,
+        const actors::ActorBlueprint &blueprint,
         const geom::Transform &transform,
         Actor *parent = nullptr,
         rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid,
@@ -374,6 +384,12 @@ namespace detail {
     {
       return _client.DestroyActor(actor_id);
     }
+
+    void EnableForROS(const Actor &actor);
+
+    void DisableForROS(const Actor &actor);
+
+    bool IsEnabledForROS(const Actor &actor);
 
     ActorSnapshot GetActorSnapshot(ActorId actor_id) const {
       DEBUG_ASSERT(_episode != nullptr);
@@ -451,6 +467,10 @@ namespace detail {
       return _client.GetActorBoundingBox(actor.GetId());
     }
 
+    geom::BoundingBox GetTrafficSignTriggerVolume(const Actor &actor) {
+      return _client.GetTrafficSignTriggerVolume(actor.GetId());
+    }
+
     geom::Transform GetActorComponentWorldTransform(const Actor &actor, const std::string componentName) {
       return _client.GetActorComponentWorldTransform(actor.GetId(), componentName);
     }
@@ -461,6 +481,10 @@ namespace detail {
 
     std::vector<geom::Transform> GetActorBoneWorldTransforms(const Actor &actor) {
       return _client.GetActorBoneWorldTransforms(actor.GetId());
+    }
+    
+    std::vector<geom::Transform> GetVehicleBoneWorldTransforms(const Vehicle &vehicle) {
+      return _client.GetVehicleBoneWorldTransforms(vehicle.GetId());
     }
 
     std::vector<geom::Transform> GetActorBoneRelativeTransforms(const Actor &actor) {
@@ -601,6 +625,14 @@ namespace detail {
       return _client.GetWheelSteerAngle(vehicle.GetId(), wheel_location);
     }
 
+    void SetWheelPitchAngle(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location, float angle_in_deg) {
+      _client.SetWheelPitchAngle(vehicle.GetId(), wheel_location, angle_in_deg);
+    }
+
+    float GetWheelPitchAngle(Vehicle &vehicle, rpc::VehicleWheelLocation wheel_location) {
+      return _client.GetWheelPitchAngle(vehicle.GetId(), wheel_location);
+    }
+
     void EnableCarSim(Vehicle &vehicle, std::string simfile_path) {
       _client.EnableCarSim(vehicle.GetId(), simfile_path);
     }
@@ -655,9 +687,11 @@ namespace detail {
       return _client.ShowRecorderActorsBlocked(std::move(name), min_time, min_distance);
     }
 
-    std::string ReplayFile(std::string name, double start, double duration,
-        uint32_t follow_id, bool replay_sensors) {
-      return _client.ReplayFile(std::move(name), start, duration, follow_id, replay_sensors);
+    std::string ReplayFile(
+      std::string name, double start, double duration,
+      uint32_t follow_id, bool replay_sensors, geom::Transform offset,
+      std::string map_override) {
+      return _client.ReplayFile(std::move(name), start, duration, follow_id, replay_sensors, offset, map_override);
     }
 
     void SetReplayerTimeFactor(double time_factor) {
@@ -687,12 +721,7 @@ namespace detail {
         std::function<void(SharedPtr<sensor::SensorData>)> callback);
 
     void UnSubscribeFromSensor(Actor &sensor);
-
-    void EnableForROS(const Sensor &sensor);
-
-    void DisableForROS(const Sensor &sensor);
-
-    bool IsEnabledForROS(const Sensor &sensor);
+    void EnableGBuffers(const Sensor &sensor, bool bEnable);
 
     void SubscribeToGBuffer(
         Actor & sensor,
@@ -703,7 +732,9 @@ namespace detail {
         Actor & sensor,
         uint32_t gbuffer_id);
 
-    void Send(const Sensor &sensor, std::string message);        
+    void Send(const Sensor &sensor, const carla::rpc::CustomV2XBytes &data);
+
+    void SetIgnoredVehicles(const Sensor &sensor, const std::vector<ActorId>& vehicle_ids);
 
     /// @}
     // =========================================================================
@@ -756,6 +787,15 @@ namespace detail {
     void DrawDebugShape(const rpc::DebugShape &shape) {
       _client.DrawDebugShape(shape);
     }
+
+    void ClearDebugShape() {
+      _client.ClearDebugShape();
+    }
+
+    void ClearDebugString() {
+      _client.ClearDebugString();
+    }
+
 
     /// @}
     // =========================================================================
@@ -824,6 +864,14 @@ namespace detail {
         const rpc::TextureFloatColor& Texture);
 
     std::vector<std::string> GetNamesOfAllObjects() const;
+
+    /// Export cosmos data to JSON files
+    std::string ExportCosmosCrosswalks(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosRoadBoundaries(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosLaneLines(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosTrafficSigns(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosWaitLines(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosRoadMarkings(const std::string& session_id, const std::string& output_path) const;
 
     /// @}
 

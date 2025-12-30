@@ -1,0 +1,25 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "0.1",
+	"FriendlyName": "MDL Converter",
+	"Description": "Plugin for importing and exporting MDL Materials",
+	"Category": "Editor",
+	"CreatedBy": "NVIDIA Corporation",
+	"CreatedByURL": "https://docs.omniverse.nvidia.com/materials-and-rendering/latest/materials.html",
+	"DocsURL": "https://docs.omniverse.nvidia.com/materials-and-rendering/latest/materials.html",
+	"EngineVersion": "4.26.0",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"EnabledByDefault": true,
+	"CanContainContent": true,
+	"IsBetaVersion": true,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "MDL",
+			"Type": "Editor",
+			"LoadingPhase": "PostEngineInit"
+		}
+	]
+}

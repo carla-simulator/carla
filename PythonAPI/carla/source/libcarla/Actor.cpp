@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -49,9 +49,19 @@ static void AddActorImpulse(carla::client::Actor &self,
   self.AddImpulse(impulse);
 }
 
+static void AddActorImpulseAtLocation(carla::client::Actor &self,
+    const carla::geom::Vector3D &impulse, const carla::geom::Location &location) {
+  self.AddImpulse(impulse, location);
+}
+
 static void AddActorForce(carla::client::Actor &self,
     const carla::geom::Vector3D &force) {
   self.AddForce(force);
+}
+
+static void AddActorForceAtLocation(carla::client::Actor &self,
+  const carla::geom::Vector3D &force, const carla::geom::Location &location) {
+self.AddForce(force, location);
 }
 
 static auto GetGroupTrafficLights(carla::client::TrafficLight &self) {
@@ -129,13 +139,18 @@ void export_actor() {
       .def("enable_constant_velocity", &cc::Actor::EnableConstantVelocity, (arg("velocity")))
       .def("disable_constant_velocity", &cc::Actor::DisableConstantVelocity)
       .def("add_impulse", &AddActorImpulse, (arg("impulse")))
+      .def("add_impulse_at_location", &AddActorImpulseAtLocation, (arg("impulse"), arg("location")))
       .def("add_force", &AddActorForce, (arg("force")))
+      .def("add_force_at_location", &AddActorForceAtLocation, (arg("force"), arg("location")))
       .def("add_angular_impulse", &cc::Actor::AddAngularImpulse, (arg("angular_impulse")))
       .def("add_torque", &cc::Actor::AddTorque, (arg("torque")))
       .def("set_simulate_physics", &cc::Actor::SetSimulatePhysics, (arg("enabled") = true))
       .def("set_collisions", &cc::Actor::SetCollisions, (arg("enabled") = true))
       .def("set_enable_gravity", &cc::Actor::SetEnableGravity, (arg("enabled") = true))
       .def("destroy", CALL_WITHOUT_GIL(cc::Actor, Destroy))
+      .def("enable_for_ros", &cc::Actor::EnableForROS)
+      .def("disable_for_ros", &cc::Actor::DisableForROS)
+      .def("is_enabled_for_ros", &cc::Actor::IsEnabledForROS)
       .def(self_ns::str(self_ns::self))
   ;
 
@@ -189,6 +204,8 @@ void export_actor() {
       .def("close_door", &cc::Vehicle::CloseDoor, (arg("door_idx")))
       .def("set_wheel_steer_direction", &cc::Vehicle::SetWheelSteerDirection, (arg("wheel_location")), (arg("angle_in_deg")))
       .def("get_wheel_steer_angle", &cc::Vehicle::GetWheelSteerAngle, (arg("wheel_location")))
+      .def("set_wheel_pitch_angle", &cc::Vehicle::SetWheelPitchAngle, (arg("wheel_location")), (arg("angle_in_deg")))
+      .def("get_wheel_pitch_angle", &cc::Vehicle::GetWheelPitchAngle, (arg("wheel_location")))
       .def("get_light_state", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetLightState))
       .def("apply_physics_control", &cc::Vehicle::ApplyPhysicsControl, (arg("physics_control")))
       .def("get_physics_control", CONST_CALL_WITHOUT_GIL(cc::Vehicle, GetPhysicsControl))
@@ -206,6 +223,7 @@ void export_actor() {
       .def("enable_chrono_physics", &cc::Vehicle::EnableChronoPhysics, (arg("max_substeps")=30, arg("max_substep_delta_time")=0.002, arg("vehicle_json")="", arg("powetrain_json")="", arg("tire_json")="", arg("base_json_path")=""))
       .def("restore_physx_physics", &cc::Vehicle::RestorePhysXPhysics)
       .def("get_failure_state", &cc::Vehicle::GetFailureState)
+      .def("get_vehicle_bone_world_transforms", &cc::Vehicle::GetVehicleBoneWorldTransforms)
       .def(self_ns::str(self_ns::self))
   ;
 

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -38,7 +38,15 @@ static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRe
     auto Vehicle = Cast<ACarlaWheeledVehicle>(View.GetActor());
     if (Vehicle != nullptr)
     {
-      state.vehicle_data.control = carla::rpc::VehicleControl{Vehicle->GetVehicleControl()};
+      if (Vehicle->IsAckermannControlActive()) { 
+        state.vehicle_data.control_type = carla::rpc::VehicleControlType::AckermannControl;
+        state.vehicle_data.control_data.ackermann_control = carla::rpc::VehicleAckermannControl{Vehicle->GetVehicleAckermannControl()};
+      }
+      else {
+        state.vehicle_data.control_type = carla::rpc::VehicleControlType::VehicleControl;
+        state.vehicle_data.control_data.vehicle_control = carla::rpc::VehicleControl{Vehicle->GetVehicleControl()};
+      }
+
       auto Controller = Cast<AWheeledVehicleAIController>(Vehicle->GetController());
       if (Controller != nullptr)
       {
@@ -174,7 +182,14 @@ static auto FWorldObserver_GetDormantActorState(const FCarlaActor &View, const F
   if (AType::Vehicle == View.GetActorType())
   {
       const FVehicleData* ActorData = View.GetActorData<FVehicleData>();
-      state.vehicle_data.control = carla::rpc::VehicleControl{ActorData->Control};
+      if (ActorData->bAckermannControlActive) { 
+        state.vehicle_data.control_type = carla::rpc::VehicleControlType::AckermannControl;
+        state.vehicle_data.control_data.ackermann_control = carla::rpc::VehicleAckermannControl{ActorData->AckermannControl};
+      }
+      else {
+        state.vehicle_data.control_type = carla::rpc::VehicleControlType::VehicleControl;
+        state.vehicle_data.control_data.vehicle_control = carla::rpc::VehicleControl{ActorData->Control};
+      }
       using TLS = carla::rpc::TrafficLightState;
       state.vehicle_data.traffic_light_state = TLS::Green;
       state.vehicle_data.speed_limit = ActorData->SpeedLimit;
@@ -344,15 +359,17 @@ static carla::Buffer FWorldObserver_Serialize(
     }
     ActorTransform = View->GetActorGlobalTransform();
 
-    ActorDynamicState info = {
+    ActorDynamicState info{
       View->GetActorId(),
       View->GetActorState(),
       carla::geom::Transform(ActorTransform),
+      carla::geom::Quaternion(ActorTransform.GetRotation()),
       carla::geom::Vector3D(Velocity.X, Velocity.Y, Velocity.Z),
       AngularVelocity,
       Acceleration,
       State,
     };
+
     write_data(info);
   }
 

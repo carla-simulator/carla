@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -182,6 +182,30 @@ namespace detail {
     return _pimpl->CallAndWait<std::vector<std::string>>("get_names_of_all_objects");
   }
 
+  std::string Client::ExportCosmosCrosswalks(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_crosswalks", session_id, output_path);
+  }
+
+  std::string Client::ExportCosmosRoadBoundaries(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_road_boundaries", session_id, output_path);
+  }
+
+  std::string Client::ExportCosmosLaneLines(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_lane_lines", session_id, output_path);
+  }
+
+  std::string Client::ExportCosmosTrafficSigns(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_traffic_signs", session_id, output_path);
+  }
+
+  std::string Client::ExportCosmosWaitLines(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_wait_lines", session_id, output_path);
+  }
+
+  std::string Client::ExportCosmosRoadMarkings(const std::string& session_id, const std::string& output_path) const {
+    return _pimpl->CallAndWait<std::string>("export_cosmos_road_markings", session_id, output_path);
+  }
+
   rpc::EpisodeInfo Client::GetEpisodeInfo() {
     return _pimpl->CallAndWait<rpc::EpisodeInfo>("get_episode_info");
   }
@@ -328,6 +352,19 @@ namespace detail {
     return _pimpl->CallAndWait<float>("get_wheel_steer_angle", vehicle, wheel_location);
   }
 
+  void Client::SetWheelPitchAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation vehicle_wheel,
+        float angle_in_deg) {
+    return _pimpl->AsyncCall("set_wheel_pitch_angle", vehicle, vehicle_wheel, angle_in_deg);
+  }
+
+  float Client::GetWheelPitchAngle(
+        rpc::ActorId vehicle,
+        rpc::VehicleWheelLocation wheel_location){
+    return _pimpl->CallAndWait<float>("get_wheel_pitch_angle", vehicle, wheel_location);
+  }
+
   rpc::Actor Client::SpawnActor(
       const rpc::ActorDescription &description,
       const geom::Transform &transform) {
@@ -344,7 +381,7 @@ namespace detail {
       if (attachment_type == rpc::AttachmentType::SpringArm ||
           attachment_type == rpc::AttachmentType::SpringArmGhost)
       {
-        const auto a = transform.location.MakeSafeUnitVector(std::numeric_limits<float>::epsilon());
+        const auto a = transform.location.MakeUnitVector(std::numeric_limits<float>::epsilon());
         const auto z = geom::Vector3D(0.0f, 0.f, 1.0f);
         constexpr float OneEps = 1.0f - std::numeric_limits<float>::epsilon();
         if (geom::Math::Dot(a, z) > OneEps) {
@@ -422,6 +459,10 @@ namespace detail {
     return _pimpl->CallAndWait<geom::BoundingBox>("get_actor_bounding_box", actor);
   }
 
+  geom::BoundingBox Client::GetTrafficSignTriggerVolume(rpc::ActorId actor) {
+    return _pimpl->CallAndWait<geom::BoundingBox>("get_traffic_sign_trigger_volume", actor);
+  }
+
   geom::Transform Client::GetActorComponentWorldTransform(rpc::ActorId actor, const std::string componentName) {
     return _pimpl->CallAndWait<geom::Transform>("get_actor_component_world_transform", actor, componentName);
   }
@@ -433,6 +474,11 @@ namespace detail {
   std::vector<geom::Transform> Client::GetActorBoneWorldTransforms(rpc::ActorId actor) {
     using return_t = std::vector<geom::Transform>;
     return _pimpl->CallAndWait<return_t>("get_actor_bone_world_transforms", actor);
+  }
+
+  std::vector<geom::Transform> Client::GetVehicleBoneWorldTransforms(rpc::ActorId actor) {
+    using return_t = std::vector<geom::Transform>;
+    return _pimpl->CallAndWait<return_t>("get_vehicle_bone_world_transforms", actor);
   }
 
   std::vector<geom::Transform> Client::GetActorBoneRelativeTransforms(rpc::ActorId actor) {
@@ -630,10 +676,12 @@ namespace detail {
     return _pimpl->CallAndWait<std::string>("show_recorder_actors_blocked", name, min_time, min_distance);
   }
 
-  std::string Client::ReplayFile(std::string name, double start, double duration,
-      uint32_t follow_id, bool replay_sensors) {
+  std::string Client::ReplayFile(
+    std::string name, double start, double duration,
+    uint32_t follow_id, bool replay_sensors, geom::Transform offset,
+    std::string map_override) {
     return _pimpl->CallAndWait<std::string>("replay_file", name, start, duration,
-        follow_id, replay_sensors);
+        follow_id, replay_sensors, offset, map_override);
   }
 
   void Client::StopReplayer(bool keep_actors) {
@@ -664,23 +712,32 @@ namespace detail {
     _pimpl->streaming_client.UnSubscribe(token);
   }
 
-  void Client::EnableForROS(const streaming::Token &token) {
-    carla::streaming::detail::token_type thisToken(token);
-    _pimpl->AsyncCall("enable_sensor_for_ros", thisToken.get_stream_id());
+  void Client::EnableForROS(const rpc::ActorId actor) {
+    _pimpl->AsyncCall("enable_actor_for_ros", actor);
   }
 
-  void Client::DisableForROS(const streaming::Token &token) {
-    carla::streaming::detail::token_type thisToken(token);
-    _pimpl->AsyncCall("disable_sensor_for_ros", thisToken.get_stream_id());
+  void Client::DisableForROS(const rpc::ActorId actor) {
+    _pimpl->AsyncCall("disable_actor_for_ros", actor);
   }
 
-  bool Client::IsEnabledForROS(const streaming::Token &token) {
-    carla::streaming::detail::token_type thisToken(token);
-    return _pimpl->CallAndWait<bool>("is_sensor_enabled_for_ros", thisToken.get_stream_id());
+  bool Client::IsEnabledForROS(const rpc::ActorId actor) {
+    return _pimpl->CallAndWait<bool>("is_actor_enabled_for_ros", actor);
   }
 
-  void Client::Send(rpc::ActorId ActorId, std::string message) {
-    _pimpl->AsyncCall("send", ActorId, message);
+  void Client::Send(rpc::ActorId ActorId, const rpc::CustomV2XBytes &data) {
+    _pimpl->AsyncCall("send", ActorId, data);
+  }
+
+  void Client::SetIgnoredVehicles(rpc::ActorId ActorId, const std::vector<rpc::ActorId>& vehicle_ids) {
+    _pimpl->CallAndWait<void>("set_ignored_vehicles", ActorId, vehicle_ids);
+  }
+
+  void Client::EnableGBuffers(rpc::ActorId ActorId, bool bEnabled) {
+    _pimpl->CallAndWait<void>("enable_gbuffers", ActorId, bEnabled);
+  }
+
+  bool Client::AreGBuffersEnabled(rpc::ActorId ActorId) {
+    return _pimpl->CallAndWait<bool>("are_gbuffers_enabled", ActorId);
   }
 
   void Client::SubscribeToGBuffer(
@@ -706,6 +763,14 @@ namespace detail {
 
   void Client::DrawDebugShape(const rpc::DebugShape &shape) {
     _pimpl->AsyncCall("draw_debug_shape", shape);
+  }
+
+  void Client::ClearDebugShape() {
+    _pimpl->AsyncCall("clear_debug_shape");
+  }
+
+  void Client::ClearDebugString() {
+    _pimpl->AsyncCall("clear_debug_string");
   }
 
   void Client::ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {
@@ -762,6 +827,11 @@ namespace detail {
       geom::Location start_location, geom::Location end_location) const {
     using return_t = std::vector<rpc::LabelledPoint>;
     return _pimpl->CallAndWait<return_t>("cast_ray", start_location, end_location);
+  }
+
+  void Client::SetAnnotationsTraverseTranslucency(
+      bool enable) {
+    _pimpl->AsyncCall("set_annotations_traverse_translucency", enable);
   }
 
 } // namespace detail
