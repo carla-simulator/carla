@@ -11,11 +11,6 @@ namespace ros2 {
 
 /*
  * Struct providing the most prominent ROS2 ROS2QoS parameters
- * Default values are selected to be the default used by the ROS2.
- *
- * Reliability::RELIABLE
- * Durability::VOLATILE
- * History::KEEP_LAST, depth: 10u
  */
 struct ROS2QoS {
   ROS2QoS &keep_last(size_t depth) {
@@ -58,15 +53,30 @@ struct ROS2QoS {
   int32_t _history_depth;
 };
 
+/**
+ * Default ROS2 QoS parameters.
+ */
 static constexpr ROS2QoS DEFAULT_ROS2_QOS{ ROS2QoS::Reliability::RELIABLE, ROS2QoS::Durability::VOLATILE,
                                            ROS2QoS::History::KEEP_LAST, 10};
 
+/**
+ * Default ROS2 QoS parameters for sensor data publisher: reliable, volatile, keep_last with history size 10.
+ * Doesn't allow for transient local subscribers and is best used for regularly updated data.
+ */
 static constexpr ROS2QoS DEFAULT_SENSOR_DATA_QOS{ROS2QoS::Reliability::RELIABLE, ROS2QoS::Durability::VOLATILE,
                                                  ROS2QoS::History::KEEP_LAST, 10};
 
+/**
+ * Default ROS2 QoS parameters for subscribers: best_effort, volatile, keep_last with history size 10.
+ * Connects to any publisher configuration.
+ */
 static constexpr ROS2QoS DEFAULT_SUBSCRIBER_QOS{ROS2QoS::Reliability::BEST_EFFORT, ROS2QoS::Durability::VOLATILE,
                                                 ROS2QoS::History::KEEP_LAST, 10};
 
+/**
+ * Default ROS2 QoS parameters for publishers: reliable, transient_local, keep_last with history size 10.
+ * Connects to any subscriber configuration and is best used for data not updated regularly.
+ */
 static constexpr ROS2QoS DEFAULT_PUBLISHER_QOS{ROS2QoS::Reliability::RELIABLE, ROS2QoS::Durability::TRANSIENT_LOCAL,
                                                ROS2QoS::History::KEEP_LAST, 10};
 

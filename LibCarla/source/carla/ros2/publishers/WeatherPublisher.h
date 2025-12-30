@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "carla/ros2/publishers/PublisherBaseSensor.h"
+#include "carla/ros2/publishers/PublisherBase.h"
 #include "carla/rpc/RpcServerInterface.h"
 #include "carla_msgs/msg/CarlaWeatherParametersPubSubTypes.h"
 
@@ -14,7 +14,7 @@ namespace ros2 {
 using CarlaWeatherParametersPublisherImpl =
     DdsPublisherImpl<carla_msgs::msg::CarlaWeatherParameters, carla_msgs::msg::CarlaWeatherParametersPubSubType>;
 
-class WeatherPublisher : public PublisherBaseSensor {
+class WeatherPublisher : public PublisherBase {
 public:
   WeatherPublisher(carla::rpc::RpcServerInterface &carla_server);
   virtual ~WeatherPublisher() = default;
@@ -39,8 +39,8 @@ public:
   bool ProcessMessages();
 
 private:
-  carla::rpc::RpcServerInterface &_carla_server;
   std::shared_ptr<CarlaWeatherParametersPublisherImpl> _impl;
+  carla::rpc::RpcServerInterface &_carla_server;
 };
 }  // namespace ros2
 }  // namespace carla

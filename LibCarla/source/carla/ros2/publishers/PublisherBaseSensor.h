@@ -22,11 +22,7 @@ public:
 
   /*
    * @brief Override ROS2NameRecord::get_topic_qos() for (pseudo) sensor publishers.
-   * I.e. deploy the rclcpp::SensorDataQoS.
-   *
-   * Reliability::BEST_EFFORT
-   * Durability::VOLATILE
-   * History::KEEP_LAST, depth: 5u
+   * I.e. deploy carla::ros2::DEFAULT_SENSOR_DATA_QOS
    */
   ROS2QoS get_topic_qos() const {
     return DEFAULT_SENSOR_DATA_QOS;

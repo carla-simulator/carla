@@ -41,9 +41,7 @@ public:
    * that receiption is possible for all possible subscriber configurations.
    * https://docs.ros.org/en/humble/Concepts/Intermediate/About-Quality-of-Service-Settings.html#qos-compatibilities
    *
-   * Reliability::RELIABLE
-   * Durability::TRANSIENT_LOCAL
-   * History::KEEP_LAST, depth: 10u
+   * see carla::ros2::DEFAULT_PUBLISHER_QOS
    */
   ROS2QoS get_topic_qos() const {
     return DEFAULT_PUBLISHER_QOS;

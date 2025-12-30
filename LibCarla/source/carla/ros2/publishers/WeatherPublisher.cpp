@@ -11,13 +11,13 @@ namespace carla {
 namespace ros2 {
 
 WeatherPublisher::WeatherPublisher(carla::rpc::RpcServerInterface &carla_server)
-  : PublisherBaseSensor(carla::ros2::types::ActorNameDefinition::CreateFromRoleName("weather")),
+  : PublisherBase(carla::ros2::types::ActorNameDefinition::CreateFromRoleName("weather")),
     _impl(std::make_shared<CarlaWeatherParametersPublisherImpl>()),
     _carla_server(carla_server)
 {}
 
 bool WeatherPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
-  return _impl->Init(domain_participant, get_topic_name(), get_topic_qos());
+  return _impl->Init(domain_participant, get_topic_name(), get_topic_qos().keep_last(1));
 }
 
 bool WeatherPublisher::Publish() {
@@ -41,8 +41,13 @@ bool WeatherPublisher::ProcessMessages() {
     }
     else {
       carla::ros2::types::WeatherParameters weather_parameters(response.Get());
-      _impl->Message() = weather_parameters.weather_parameters_msg();
-      _impl->SetMessageUpdated();
+      auto const new_weather_parameters = weather_parameters.weather_parameters_msg();
+      if ( new_weather_parameters != _impl->Message())
+      {
+        // send only out if parameters change
+        _impl->Message() = new_weather_parameters;
+        _impl->SetMessageUpdated();
+      }
     }
   }
   return true;
