@@ -20,7 +20,7 @@ UeWorldPublisher::UeWorldPublisher(carla::rpc::RpcServerInterface& carla_server,
     _carla_weather_publisher(std::make_shared<WeatherPublisher>(_carla_server)),
     _carla_actor_list_publisher(std::make_shared<CarlaActorListPublisher>("actor_list")),
     _clock_publisher(std::make_shared<ClockPublisher>()),
-    _map_publisher(std::make_shared<MapPublisher>()),
+    _world_info_publisher(std::make_shared<WorldInfoPublisher>(_carla_server)),
     _objects_publisher(std::make_shared<ObjectsPublisher>()),
     _objects_with_covariance_publisher(std::make_shared<ObjectsWithCovariancePublisher>()),
     _traffic_lights_publisher(std::make_shared<TrafficLightsPublisher>()),
@@ -34,7 +34,7 @@ bool UeWorldPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_par
   _initialized = _carla_status_publisher->Init(domain_participant) &&
                  _carla_weather_publisher->Init(domain_participant) &&
                  _carla_actor_list_publisher->Init(domain_participant) && _clock_publisher->Init(domain_participant) &&
-                 _map_publisher->Init(domain_participant) && _objects_publisher->Init(domain_participant) &&
+                 _world_info_publisher->Init(domain_participant) && _objects_publisher->Init(domain_participant) &&
                  _objects_with_covariance_publisher->Init(domain_participant) && _traffic_lights_publisher->Init(domain_participant) &&
                  _transform_publisher->Init(domain_participant) &&
                  _carla_control_subscriber->Init(domain_participant) && _sync_subscriber->Init(domain_participant) &&
@@ -46,7 +46,7 @@ bool UeWorldPublisher::Publish() {
   if (!_initialized) {
     return false;
   }
-  return _clock_publisher->Publish() && _map_publisher->Publish() && _carla_weather_publisher->Publish();
+  return _clock_publisher->Publish() && _world_info_publisher->Publish() && _carla_weather_publisher->Publish();
 }
 
 void UeWorldPublisher::ProcessMessages() {
@@ -57,6 +57,7 @@ void UeWorldPublisher::ProcessMessages() {
   _carla_control_subscriber->ProcessMessages();
   _sync_subscriber->ProcessMessages();
   _carla_weather_publisher->ProcessMessages();
+  _world_info_publisher->ProcessMessages();
   _weather_control_subscriber->ProcessMessages();
   for (auto& vehicle : _vehicles) {
     vehicle.second._vehicle_controller->ProcessMessages();
@@ -303,7 +304,7 @@ void UeWorldPublisher::UpdateSensorData(
   _episode_header = *header_view(buffer_view);
 
   if (_episode_header.simulation_state & carla::sensor::s11n::EpisodeStateSerializer::MapChange) {
-    _map_publisher->UpdateData(_carla_server.call_get_map_data().Get());
+    _world_info_publisher->SetMapUpdated();
   }
 
   for (auto const& actor_dynamic_state : buffer_data_2_vector(buffer_view)) {

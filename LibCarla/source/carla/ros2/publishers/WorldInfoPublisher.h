@@ -7,17 +7,18 @@
 #include <memory>
 
 #include "carla/ros2/publishers/PublisherBase.h"
-#include "std_msgs/msg/StringPubSubTypes.h"
+#include "carla/rpc/RpcServerInterface.h"
+#include "carla_msgs/msg/CarlaWorldInfoPubSubTypes.h"
 
 namespace carla {
 namespace ros2 {
 
-using MapPublisherImpl = DdsPublisherImpl<std_msgs::msg::String, std_msgs::msg::StringPubSubType>;
+using WorldInfoPublisherImpl = DdsPublisherImpl<carla_msgs::msg::CarlaWorldInfo, carla_msgs::msg::CarlaWorldInfoPubSubType>;
 
-class MapPublisher : public PublisherBase {
+class WorldInfoPublisher : public PublisherBase {
 public:
-  MapPublisher();
-  virtual ~MapPublisher() = default;
+  WorldInfoPublisher(carla::rpc::RpcServerInterface &carla_server);
+  virtual ~WorldInfoPublisher() = default;
 
   /**
    * Implements ROS2NameRecord::Init() interface
@@ -33,10 +34,20 @@ public:
    */
   bool SubscribersConnected() const override;
 
-  void UpdateData(std::string const &data);
+  /**
+   * Perform message processing. 
+   */
+  bool ProcessMessages();
+  
+  /**
+   * Indicate that the map has updated and the server should be quieried for map updates.
+   */
+  void SetMapUpdated() { _map_updated=true; } 
 
 private:
-  std::shared_ptr<MapPublisherImpl> _impl;
+  std::shared_ptr<WorldInfoPublisherImpl> _impl;
+  bool _map_updated=false;
+  carla::rpc::RpcServerInterface &_carla_server;
 };
 }  // namespace ros2
 }  // namespace carla

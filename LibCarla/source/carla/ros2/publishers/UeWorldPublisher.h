@@ -8,7 +8,7 @@
 #include "carla/ros2/publishers/CarlaActorListPublisher.h"
 #include "carla/ros2/publishers/CarlaStatusPublisher.h"
 #include "carla/ros2/publishers/ClockPublisher.h"
-#include "carla/ros2/publishers/MapPublisher.h"
+#include "carla/ros2/publishers/WorldInfoPublisher.h"
 #include "carla/ros2/publishers/ObjectsPublisher.h"
 #include "carla/ros2/publishers/ObjectsWithCovariancePublisher.h"
 #include "carla/ros2/publishers/TrafficLightPublisher.h"
@@ -205,7 +205,7 @@ private:
   std::shared_ptr<WeatherPublisher> _carla_weather_publisher;
   std::shared_ptr<CarlaActorListPublisher> _carla_actor_list_publisher;
   std::shared_ptr<ClockPublisher> _clock_publisher;
-  std::shared_ptr<MapPublisher> _map_publisher;
+  std::shared_ptr<WorldInfoPublisher> _world_info_publisher;
   std::shared_ptr<ObjectsPublisher> _objects_publisher;
   std::shared_ptr<ObjectsWithCovariancePublisher> _objects_with_covariance_publisher;
   std::shared_ptr<TrafficLightsPublisher> _traffic_lights_publisher;
