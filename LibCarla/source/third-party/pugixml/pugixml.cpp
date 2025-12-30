@@ -5826,7 +5826,7 @@ namespace pugi
 	PUGI__FN xml_node xml_node::insert_child_before(xml_node_type type_, const xml_node& node)
 	{
 		if (!impl::allow_insert_child(type(), type_)) return xml_node();
-		if (!node._root || node._root->parent != _root) return xml_node();
+		if (!_root || !node._root || node._root->parent != _root) return xml_node();
 
 		impl::xml_allocator& alloc = impl::get_allocator(_root);
 		if (!alloc.reserve()) return xml_node();
@@ -5844,7 +5844,7 @@ namespace pugi
 	PUGI__FN xml_node xml_node::insert_child_after(xml_node_type type_, const xml_node& node)
 	{
 		if (!impl::allow_insert_child(type(), type_)) return xml_node();
-		if (!node._root || node._root->parent != _root) return xml_node();
+		if (!_root || !node._root || node._root->parent != _root) return xml_node();
 
 		impl::xml_allocator& alloc = impl::get_allocator(_root);
 		if (!alloc.reserve()) return xml_node();
@@ -5933,7 +5933,7 @@ namespace pugi
 	{
 		xml_node_type type_ = proto.type();
 		if (!impl::allow_insert_child(type(), type_)) return xml_node();
-		if (!node._root || node._root->parent != _root) return xml_node();
+		if (!_root || !node._root || node._root->parent != _root) return xml_node();
 
 		impl::xml_allocator& alloc = impl::get_allocator(_root);
 		if (!alloc.reserve()) return xml_node();
@@ -5951,7 +5951,7 @@ namespace pugi
 	{
 		xml_node_type type_ = proto.type();
 		if (!impl::allow_insert_child(type(), type_)) return xml_node();
-		if (!node._root || node._root->parent != _root) return xml_node();
+		if (!_root || !node._root || node._root->parent != _root) return xml_node();
 
 		impl::xml_allocator& alloc = impl::get_allocator(_root);
 		if (!alloc.reserve()) return xml_node();
@@ -6000,7 +6000,7 @@ namespace pugi
 	PUGI__FN xml_node xml_node::insert_move_after(const xml_node& moved, const xml_node& node)
 	{
 		if (!impl::allow_move(*this, moved)) return xml_node();
-		if (!node._root || node._root->parent != _root) return xml_node();
+		if (!_root || !node._root || node._root->parent != _root) return xml_node();
 		if (moved._root == node._root) return xml_node();
 
 		impl::xml_allocator& alloc = impl::get_allocator(_root);
@@ -6018,7 +6018,7 @@ namespace pugi
 	PUGI__FN xml_node xml_node::insert_move_before(const xml_node& moved, const xml_node& node)
 	{
 		if (!impl::allow_move(*this, moved)) return xml_node();
-		if (!node._root || node._root->parent != _root) return xml_node();
+		if (!_root || !node._root || node._root->parent != _root) return xml_node();
 		if (moved._root == node._root) return xml_node();
 
 		impl::xml_allocator& alloc = impl::get_allocator(_root);

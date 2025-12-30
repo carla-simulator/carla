@@ -1,0 +1,49 @@
+name: UE4-Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check-branch:
+    name: Validate branch
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch
+        env:
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: |
+          if [[ ! "$GITHUB_REF_NAME" =~ ^ue4/[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "Invalid branch name '${GITHUB_REF_NAME}'."
+            echo "Expected branch name convention: 'ue4/x.y.z'"
+            exit 1
+          fi
+
+  ubuntu-release:
+    name: Ubuntu Release
+    needs: check-branch
+    uses: ./.github/workflows/_ci-ubuntu.yml
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+    with:
+      python-versions: "3.10,3.11,3.12"
+      smoke-test-python-versions: "3.12"
+      additional-maps: true
+      upload-package: true
+      upload-replace-latest: true
+      upload-docker: false
+
+  windows-release:
+    name: Windows Release
+    needs: check-branch
+    uses: ./.github/workflows/_ci-windows.yml
+    secrets:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+    with:
+      python-versions: "3.10,3.11,3.12"
+      additional-maps: true
+      upload-package: true
+      upload-replace-latest: true

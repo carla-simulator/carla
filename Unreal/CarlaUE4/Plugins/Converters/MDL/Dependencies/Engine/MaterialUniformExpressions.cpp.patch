@@ -1,0 +1,90 @@
+--- a/Engine/Private/Materials/MaterialUniformExpressions.cpp
++++ b/MaterialUniformExpressions.cpp
+@@ -1,14 +1,19 @@
+ // Copyright Epic Games, Inc. All Rights Reserved.
+ 
++// Copied from Engine\Source\Runtime\Engine\Private\Materials\MaterialUniformExpressions.cpp
++// Modified by a patch from the CarlaUE4 project build process
++
+ /*=============================================================================
+ 	MaterialShared.cpp: Shared material implementation.
+ =============================================================================*/
+ 
+-#include "Materials/MaterialUniformExpressions.h"
++//MDL
++#include "MaterialUniformExpressions.h"
+ #include "CoreGlobals.h"
+ #include "SceneManagement.h"
+ #include "Materials/MaterialInstance.h"
+-#include "Materials/MaterialInstanceSupport.h"
++//MDL
++#include "MaterialInstanceSupport.h"
+ #include "Materials/MaterialParameterCollection.h"
+ #include "ExternalTexture.h"
+ #include "Misc/UObjectToken.h"
+@@ -150,7 +155,8 @@ FMaterialUniformExpressionType::FMaterialUniformExpressionType(const TCHAR* InNa
+ 
+ void FMaterialUniformExpression::WriteNumberOpcodes(FMaterialPreshaderData& OutData) const
+ {
+-	UE_LOG(LogMaterial, Warning, TEXT("Missing WriteNumberOpcodes impl for %s"), GetType()->GetName());
++	//MDL
++	//UE_LOG(LogMaterial, Warning, TEXT("Missing WriteNumberOpcodes impl for %s"), GetType()->GetName());
+ 	OutData.WriteOpcode(EMaterialPreshaderOpcode::ConstantZero);
+ }
+ 
+@@ -817,7 +823,8 @@ static void EvaluateComponentSwizzle(FPreshaderStack& Stack, FPreshaderDataConte
+ 		Result.R = Value.Component(IndexR);
+ 		break;
+ 	default:
+-		UE_LOG(LogMaterial, Fatal, TEXT("Invalid number of swizzle elements: %d"), NumElements);
++		//MDL
++		//UE_LOG(LogMaterial, Fatal, TEXT("Invalid number of swizzle elements: %d"), NumElements);
+ 		break;
+ 	}
+ 	Stack.Add(Result);
+@@ -1015,7 +1022,8 @@ static void EvaluatePreshader(const FUniformExpressionSet* UniformExpressionSet,
+ 		case EMaterialPreshaderOpcode::ExternalTextureCoordinateOffset: EvaluateExternalTextureCoordinateOffset(Context, Stack, Data); break;
+ 		case EMaterialPreshaderOpcode::RuntimeVirtualTextureUniform: EvaluateRuntimeVirtualTextureUniform(Context, Stack, Data); break;
+ 		default:
+-			UE_LOG(LogMaterial, Fatal, TEXT("Unknown preshader opcode %d"), (uint8)Opcode);
++			//MDL
++			//UE_LOG(LogMaterial, Fatal, TEXT("Unknown preshader opcode %d"), (uint8)Opcode);
+ 			break;
+ 		}
+ 	}
+@@ -1062,6 +1070,8 @@ const FMaterialScalarParameterInfo* FUniformExpressionSet::FindScalarParameter(c
+ 	return nullptr;
+ }
+ 
++//MDL
++#if 0
+ void FUniformExpressionSet::GetGameThreadTextureValue(EMaterialTextureParameterType Type, int32 Index, const UMaterialInterface* MaterialInterface, const FMaterial& Material, UTexture*& OutValue, bool bAllowOverride) const
+ {
+ 	check(IsInGameThread());
+@@ -1642,6 +1652,8 @@ uint32 FUniformExpressionSet::GetReferencedTexture2DRHIHash(const FMaterialRende
+ 
+ 	return BaseHash;
+ }
++//MDL
++#endif
+ 
+ FMaterialUniformExpressionTexture::FMaterialUniformExpressionTexture() :
+ 	TextureIndex(INDEX_NONE),
+@@ -1822,6 +1834,8 @@ void FMaterialVectorParameterInfo::GetGameThreadNumberValue(const UMaterialInter
+ 	}
+ }
+ 
++//MDL
++#if 0
+ void FMaterialTextureParameterInfo::GetGameThreadTextureValue(const UMaterialInterface* MaterialInterface, const FMaterial& Material, UTexture*& OutValue) const
+ {
+ 	if (!ParameterInfo.Name.IsNone())
+@@ -1837,6 +1851,8 @@ void FMaterialTextureParameterInfo::GetGameThreadTextureValue(const UMaterialInt
+ 		OutValue = GetIndexedTexture<UTexture>(Material, TextureIndex);
+ 	}
+ }
++//MDL
++#endif
+ 
+ bool FMaterialExternalTextureParameterInfo::GetExternalTexture(const FMaterialRenderContext& Context, FTextureRHIRef& OutTextureRHI, FSamplerStateRHIRef& OutSamplerStateRHI) const
+ {

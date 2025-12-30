@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -10,12 +10,22 @@
 #include "Carla/Sensor/LidarDescription.h"
 #include "Carla/Sensor/SceneCaptureSensor.h"
 #include "Carla/Sensor/ShaderBasedSensor.h"
+#include "Carla/Sensor/SceneCaptureSensor_WideAngleLens.h"
+#include "Carla/Sensor/ShaderBasedSensor_WideAngleLens.h"
 #include "Carla/Sensor/V2X/PathLossModel.h"
 #include "Carla/Util/ScopedStack.h"
 
 #include <algorithm>
 #include <limits>
 #include <stack>
+
+static constexpr float DefaultKannalaBrandtCoefficients[] =
+{
+    0.08309221636708493f,
+    0.01112126630599195f,
+    0.008587261043925865f,
+    0.0008542188930970716f
+};
 
 /// Checks validity of FActorDefinition.
 class FActorDefinitionValidator
@@ -206,12 +216,25 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs && ... Strings)
   Def.Variations.Emplace(ActorRole);
 
   // ROS2
-  FActorVariation Var;
-  Var.Id = TEXT("ros_name");
-  Var.Type = EActorAttributeType::String;
-  Var.RecommendedValues = { Def.Id };
-  Var.bRestrictToRecommended = false;
-  Def.Variations.Emplace(Var);
+  FActorVariation RosTopicName;
+  RosTopicName.Id = TEXT("ros_name");
+  RosTopicName.Type = EActorAttributeType::String;
+  RosTopicName.RecommendedValues = { TEXT("") };  // empty by default
+  RosTopicName.bRestrictToRecommended = false;
+  Def.Variations.Emplace(RosTopicName);
+
+  FActorVariation RosFrameId;
+  RosFrameId.Id = TEXT("ros_frame_id");
+  RosFrameId.Type = EActorAttributeType::String;
+  RosFrameId.RecommendedValues = { TEXT("") };  // empty by default
+  RosFrameId.bRestrictToRecommended = false;
+  Def.Variations.Emplace(RosFrameId);
+
+  FActorVariation RosPublishTf;
+  RosPublishTf.Id = TEXT("ros_publish_tf");
+  RosPublishTf.Type = EActorAttributeType::Bool;
+  RosPublishTf.RecommendedValues = { TEXT("true")};  // true by default
+  Def.Variations.Emplace(RosPublishTf);
 }
 
 static void AddRecommendedValuesForActorRoleName(
@@ -303,6 +326,441 @@ FActorDefinition UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   return Definition;
 }
 
+void UActorBlueprintFunctionLibrary::AddCommonCameraParameters(
+    const FString &Id,
+    const bool bEnableModifyingPostProcessEffects,
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  // FOV
+  FActorVariation FOV;
+  FOV.Id = TEXT("fov");
+  FOV.Type = EActorAttributeType::Float;
+  FOV.RecommendedValues = { TEXT("90.0") };
+  FOV.bRestrictToRecommended = false;
+
+  // Resolution
+  FActorVariation ResX;
+  ResX.Id = TEXT("image_size_x");
+  ResX.Type = EActorAttributeType::Int;
+  ResX.RecommendedValues = { TEXT("800") };
+  ResX.bRestrictToRecommended = false;
+
+  FActorVariation ResY;
+  ResY.Id = TEXT("image_size_y");
+  ResY.Type = EActorAttributeType::Int;
+  ResY.RecommendedValues = { TEXT("600") };
+  ResY.bRestrictToRecommended = false;
+
+  // Lens parameters
+  FActorVariation LensCircleFalloff;
+  LensCircleFalloff.Id = TEXT("lens_circle_falloff");
+  LensCircleFalloff.Type = EActorAttributeType::Float;
+  LensCircleFalloff.RecommendedValues = { TEXT("5.0") };
+  LensCircleFalloff.bRestrictToRecommended = false;
+
+  FActorVariation LensCircleMultiplier;
+  LensCircleMultiplier.Id = TEXT("lens_circle_multiplier");
+  LensCircleMultiplier.Type = EActorAttributeType::Float;
+  LensCircleMultiplier.RecommendedValues = { TEXT("0.0") };
+  LensCircleMultiplier.bRestrictToRecommended = false;
+
+  FActorVariation LensK;
+  LensK.Id = TEXT("lens_k");
+  LensK.Type = EActorAttributeType::Float;
+  LensK.RecommendedValues = { TEXT("-1.0") };
+  LensK.bRestrictToRecommended = false;
+
+  FActorVariation LensKcube;
+  LensKcube.Id = TEXT("lens_kcube");
+  LensKcube.Type = EActorAttributeType::Float;
+  LensKcube.RecommendedValues = { TEXT("0.0") };
+  LensKcube.bRestrictToRecommended = false;
+
+  FActorVariation LensXSize;
+  LensXSize.Id = TEXT("lens_x_size");
+  LensXSize.Type = EActorAttributeType::Float;
+  LensXSize.RecommendedValues = { TEXT("0.08") };
+  LensXSize.bRestrictToRecommended = false;
+
+  FActorVariation LensYSize;
+  LensYSize.Id = TEXT("lens_y_size");
+  LensYSize.Type = EActorAttributeType::Float;
+  LensYSize.RecommendedValues = { TEXT("0.08") };
+  LensYSize.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+      ResX,
+      ResY,
+      FOV,
+      LensCircleFalloff,
+      LensCircleMultiplier,
+      LensK,
+      LensKcube,
+      LensXSize,
+      LensYSize});
+}
+
+void UActorBlueprintFunctionLibrary::AddCommonPostProcessingEffectsParameters(
+    const FString &Id,
+    const bool bEnableModifyingPostProcessEffects,
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FActorVariation PostProccess;
+  PostProccess.Id = TEXT("enable_postprocess_effects");
+  PostProccess.Type = EActorAttributeType::Bool;
+  PostProccess.RecommendedValues = { TEXT("true") };
+  PostProccess.bRestrictToRecommended = false;
+
+  // Gamma
+  FActorVariation Gamma;
+  Gamma.Id = TEXT("gamma");
+  Gamma.Type = EActorAttributeType::Float;
+  Gamma.RecommendedValues = { TEXT("2.2") };
+  Gamma.bRestrictToRecommended = false;
+
+  // Motion Blur
+  FActorVariation MBIntesity;
+  MBIntesity.Id = TEXT("motion_blur_intensity");
+  MBIntesity.Type = EActorAttributeType::Float;
+  MBIntesity.RecommendedValues = { TEXT("0.45") };
+  MBIntesity.bRestrictToRecommended = false;
+
+  FActorVariation MBMaxDistortion;
+  MBMaxDistortion.Id = TEXT("motion_blur_max_distortion");
+  MBMaxDistortion.Type = EActorAttributeType::Float;
+  MBMaxDistortion.RecommendedValues = { TEXT("0.35") };
+  MBMaxDistortion.bRestrictToRecommended = false;
+
+  FActorVariation MBMinObjectScreenSize;
+  MBMinObjectScreenSize.Id = TEXT("motion_blur_min_object_screen_size");
+  MBMinObjectScreenSize.Type = EActorAttributeType::Float;
+  MBMinObjectScreenSize.RecommendedValues = { TEXT("0.1") };
+  MBMinObjectScreenSize.bRestrictToRecommended = false;
+
+  // Lens Flare
+  FActorVariation LensFlareIntensity;
+  LensFlareIntensity.Id = TEXT("lens_flare_intensity");
+  LensFlareIntensity.Type = EActorAttributeType::Float;
+  LensFlareIntensity.RecommendedValues = { TEXT("0.1") };
+  LensFlareIntensity.bRestrictToRecommended = false;
+
+  // Bloom
+  FActorVariation BloomIntensity;
+  BloomIntensity.Id = TEXT("bloom_intensity");
+  BloomIntensity.Type = EActorAttributeType::Float;
+  BloomIntensity.RecommendedValues = { TEXT("0.675") };
+  BloomIntensity.bRestrictToRecommended = false;
+
+  // More info at:
+  // https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html
+  // https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/DepthOfField/CinematicDOFMethods/index.html
+  // https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/ColorGrading/index.html
+  // Exposure
+  FActorVariation ExposureMode;
+  ExposureMode.Id = TEXT("exposure_mode");
+  ExposureMode.Type = EActorAttributeType::String;
+  ExposureMode.RecommendedValues = { TEXT("histogram"), TEXT("manual") };
+  ExposureMode.bRestrictToRecommended = true;
+
+  // Logarithmic adjustment for the exposure. Only used if a tonemapper is
+  // specified.
+  //  0 : no adjustment
+  // -1 : 2x darker
+  // -2 : 4x darker
+  //  1 : 2x brighter
+  //  2 : 4x brighter.
+  FActorVariation ExposureCompensation;
+  ExposureCompensation.Id = TEXT("exposure_compensation");
+  ExposureCompensation.Type = EActorAttributeType::Float;
+  ExposureCompensation.RecommendedValues = { TEXT("0.0") };
+  ExposureCompensation.bRestrictToRecommended = false;
+
+  // - Manual ------------------------------------------------
+  // The formula used to compute the camera exposure scale is:
+  // Exposure = 1 / (1.2 * 2^(log2( N²/t * 100/S )))
+  // The camera shutter speed in seconds.
+  FActorVariation ShutterSpeed; // (1/t)
+  ShutterSpeed.Id = TEXT("shutter_speed");
+  ShutterSpeed.Type = EActorAttributeType::Float;
+  ShutterSpeed.RecommendedValues = { TEXT("200.0") };
+  ShutterSpeed.bRestrictToRecommended = false;
+
+  // The camera sensor sensitivity.
+  FActorVariation ISO; // S
+  ISO.Id = TEXT("iso");
+  ISO.Type = EActorAttributeType::Float;
+  ISO.RecommendedValues = { TEXT("100.0") };
+  ISO.bRestrictToRecommended = false;
+
+  // Defines the size of the opening for the camera lens.
+  // Using larger numbers will reduce the DOF effect.
+  FActorVariation Aperture; // N
+  Aperture.Id = TEXT("fstop");
+  Aperture.Type = EActorAttributeType::Float;
+  Aperture.RecommendedValues = { TEXT("1.4") };
+  Aperture.bRestrictToRecommended = false;
+
+  // - Histogram ---------------------------------------------
+  // The minimum brightness for auto exposure that limits the lower
+  // brightness the eye can adapt within
+  FActorVariation ExposureMinBright;
+  ExposureMinBright.Id = TEXT("exposure_min_bright");
+  ExposureMinBright.Type = EActorAttributeType::Float;
+  ExposureMinBright.RecommendedValues = { TEXT("10.0") };
+  ExposureMinBright.bRestrictToRecommended = false;
+
+  // The maximum brightness for auto exposure that limits the upper
+  // brightness the eye can adapt within
+  FActorVariation ExposureMaxBright;
+  ExposureMaxBright.Id = TEXT("exposure_max_bright");
+  ExposureMaxBright.Type = EActorAttributeType::Float;
+  ExposureMaxBright.RecommendedValues = { TEXT("12.0") };
+  ExposureMaxBright.bRestrictToRecommended = false;
+
+  // The speed at which the adaptation occurs from a dark environment
+  // to a bright environment.
+  FActorVariation ExposureSpeedUp;
+  ExposureSpeedUp.Id = TEXT("exposure_speed_up");
+  ExposureSpeedUp.Type = EActorAttributeType::Float;
+  ExposureSpeedUp.RecommendedValues = { TEXT("3.0") };
+  ExposureSpeedUp.bRestrictToRecommended = false;
+
+  // The speed at which the adaptation occurs from a bright environment
+  // to a dark environment.
+  FActorVariation ExposureSpeedDown;
+  ExposureSpeedDown.Id = TEXT("exposure_speed_down");
+  ExposureSpeedDown.Type = EActorAttributeType::Float;
+  ExposureSpeedDown.RecommendedValues = { TEXT("1.0") };
+  ExposureSpeedDown.bRestrictToRecommended = false;
+
+  // Calibration constant for 18% Albedo.
+  FActorVariation CalibrationConstant;
+  CalibrationConstant.Id = TEXT("calibration_constant");
+  CalibrationConstant.Type = EActorAttributeType::Float;
+  CalibrationConstant.RecommendedValues = { TEXT("16.0") };
+  CalibrationConstant.bRestrictToRecommended = false;
+
+  // Distance in which the Depth of Field effect should be sharp,
+  // in unreal units (cm)
+  FActorVariation FocalDistance;
+  FocalDistance.Id = TEXT("focal_distance");
+  FocalDistance.Type = EActorAttributeType::Float;
+  FocalDistance.RecommendedValues = { TEXT("1000.0") };
+  FocalDistance.bRestrictToRecommended = false;
+
+  // Depth blur km for 50%
+  FActorVariation DepthBlurAmount;
+  DepthBlurAmount.Id = TEXT("blur_amount");
+  DepthBlurAmount.Type = EActorAttributeType::Float;
+  DepthBlurAmount.RecommendedValues = { TEXT("1.0") };
+  DepthBlurAmount.bRestrictToRecommended = false;
+
+  // Depth blur radius in pixels at 1920x
+  FActorVariation DepthBlurRadius;
+  DepthBlurRadius.Id = TEXT("blur_radius");
+  DepthBlurRadius.Type = EActorAttributeType::Float;
+  DepthBlurRadius.RecommendedValues = { TEXT("0.0") };
+  DepthBlurRadius.bRestrictToRecommended = false;
+
+  // Defines the opening of the camera lens, Aperture is 1.0/fstop,
+  // typical lens go down to f/1.2 (large opening),
+  // larger numbers reduce the DOF effect
+  FActorVariation MaxAperture;
+  MaxAperture.Id = TEXT("min_fstop");
+  MaxAperture.Type = EActorAttributeType::Float;
+  MaxAperture.RecommendedValues = { TEXT("1.2") };
+  MaxAperture.bRestrictToRecommended = false;
+
+  // Defines the number of blades of the diaphragm within the
+  // lens (between 4 and 16)
+  FActorVariation BladeCount;
+  BladeCount.Id = TEXT("blade_count");
+  BladeCount.Type = EActorAttributeType::Int;
+  BladeCount.RecommendedValues = { TEXT("5") };
+  BladeCount.bRestrictToRecommended = false;
+
+  // - Tonemapper Settings -----------------------------------
+  // You can adjust these tonemapper controls to emulate other
+  // types of film stock for your project
+  FActorVariation FilmSlope;
+  FilmSlope.Id = TEXT("slope");
+  FilmSlope.Type = EActorAttributeType::Float;
+  FilmSlope.RecommendedValues = { TEXT("0.88") };
+  FilmSlope.bRestrictToRecommended = false;
+
+  FActorVariation FilmToe;
+  FilmToe.Id = TEXT("toe");
+  FilmToe.Type = EActorAttributeType::Float;
+  FilmToe.RecommendedValues = { TEXT("0.55") };
+  FilmToe.bRestrictToRecommended = false;
+
+  FActorVariation FilmShoulder;
+  FilmShoulder.Id = TEXT("shoulder");
+  FilmShoulder.Type = EActorAttributeType::Float;
+  FilmShoulder.RecommendedValues = { TEXT("0.26") };
+  FilmShoulder.bRestrictToRecommended = false;
+
+  FActorVariation FilmBlackClip;
+  FilmBlackClip.Id = TEXT("black_clip");
+  FilmBlackClip.Type = EActorAttributeType::Float;
+  FilmBlackClip.RecommendedValues = { TEXT("0.0") };
+  FilmBlackClip.bRestrictToRecommended = false;
+  FActorVariation FilmWhiteClip;
+  FilmWhiteClip.Id = TEXT("white_clip");
+  FilmWhiteClip.Type = EActorAttributeType::Float;
+  FilmWhiteClip.RecommendedValues = { TEXT("0.04") };
+  FilmWhiteClip.bRestrictToRecommended = false;
+  // Color
+  FActorVariation Temperature;
+  Temperature.Id = TEXT("temp");
+  Temperature.Type = EActorAttributeType::Float;
+  Temperature.RecommendedValues = { TEXT("6500.0") };
+  Temperature.bRestrictToRecommended = false;
+
+  FActorVariation Tint;
+  Tint.Id = TEXT("tint");
+  Tint.Type = EActorAttributeType::Float;
+  Tint.RecommendedValues = { TEXT("0.0") };
+  Tint.bRestrictToRecommended = false;
+
+  FActorVariation ChromaticIntensity;
+  ChromaticIntensity.Id = TEXT("chromatic_aberration_intensity");
+  ChromaticIntensity.Type = EActorAttributeType::Float;
+  ChromaticIntensity.RecommendedValues = { TEXT("0.0") };
+  ChromaticIntensity.bRestrictToRecommended = false;
+
+  FActorVariation ChromaticOffset;
+  ChromaticOffset.Id = TEXT("chromatic_aberration_offset");
+  ChromaticOffset.Type = EActorAttributeType::Float;
+  ChromaticOffset.RecommendedValues = { TEXT("0.0") };
+  ChromaticOffset.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+    ExposureMode,
+    ExposureCompensation,
+    ShutterSpeed,
+    ISO,
+    Aperture,
+    PostProccess,
+    Gamma,
+    MBIntesity,
+    MBMaxDistortion,
+    LensFlareIntensity,
+    BloomIntensity,
+    MBMinObjectScreenSize,
+    ExposureMinBright,
+    ExposureMaxBright,
+    ExposureSpeedUp,
+    ExposureSpeedDown,
+    CalibrationConstant,
+    FocalDistance,
+    MaxAperture,
+    BladeCount,
+    DepthBlurAmount,
+    DepthBlurRadius,
+    FilmSlope,
+    FilmToe,
+    FilmShoulder,
+    FilmBlackClip,
+    FilmWhiteClip,
+    Temperature,
+    Tint,
+    ChromaticIntensity,
+    ChromaticOffset});
+}
+
+void UActorBlueprintFunctionLibrary::AddCommonWideAngleLensCameraParameters(
+    const FString &Id,
+    const bool bEnableModifyingPostProcessEffects,
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  // Camera Model
+  FActorVariation CameraModel;
+  CameraModel.Id = TEXT("camera_model");
+  CameraModel.Type = EActorAttributeType::String;
+  CameraModel.RecommendedValues = { TEXT("perspective") };
+  CameraModel.bRestrictToRecommended = false;
+
+  // Coefficient #1
+  FActorVariation K0;
+  K0.Id = TEXT("k0");
+  K0.Type = EActorAttributeType::Float;
+  K0.RecommendedValues = { FString::SanitizeFloat(DefaultKannalaBrandtCoefficients[0]) };
+  K0.bRestrictToRecommended = false;
+
+  // Coefficient #2
+  FActorVariation K1;
+  K1.Id = TEXT("k1");
+  K1.Type = EActorAttributeType::Float;
+  K1.RecommendedValues = { FString::SanitizeFloat(DefaultKannalaBrandtCoefficients[1]) };
+  K1.bRestrictToRecommended = false;
+
+  // Coefficient #3
+  FActorVariation K2;
+  K2.Id = TEXT("k2");
+  K2.Type = EActorAttributeType::Float;
+  K2.RecommendedValues = { FString::SanitizeFloat(DefaultKannalaBrandtCoefficients[2]) };
+  K2.bRestrictToRecommended = false;
+
+  // Coefficient #4
+  FActorVariation K3;
+  K3.Id = TEXT("k3");
+  K3.Type = EActorAttributeType::Float;
+  K3.RecommendedValues = { FString::SanitizeFloat(DefaultKannalaBrandtCoefficients[3]) };
+  K3.bRestrictToRecommended = false;
+
+  // Focal Length
+  FActorVariation FocalLength;
+  FocalLength.Id = TEXT("focal_length");
+  FocalLength.Type = EActorAttributeType::Float;
+  FocalLength.RecommendedValues = { TEXT("0.0") };
+  FocalLength.bRestrictToRecommended = false;
+
+  FActorVariation Perspective;
+  Perspective.Id = TEXT("perspective");
+  Perspective.Type = EActorAttributeType::Bool;
+  Perspective.RecommendedValues = { TEXT("false") };
+  Perspective.bRestrictToRecommended = false;
+
+  FActorVariation Equirectangular;
+  Equirectangular.Id = TEXT("equirectangular");
+  Equirectangular.Type = EActorAttributeType::Bool;
+  Equirectangular.RecommendedValues = { TEXT("false") };
+  Equirectangular.bRestrictToRecommended = false;
+
+  FActorVariation FOVMask;
+  FOVMask.Id = TEXT("fov_mask");
+  FOVMask.Type = EActorAttributeType::Bool;
+  FOVMask.RecommendedValues = { TEXT("false") };
+  FOVMask.bRestrictToRecommended = false;
+
+  FActorVariation FOVFadeSize;
+  FOVFadeSize.Id = TEXT("fov_fade_size");
+  FOVFadeSize.Type = EActorAttributeType::Float;
+  FOVFadeSize.RecommendedValues = { TEXT("0.0") };
+  FOVFadeSize.bRestrictToRecommended = false;
+
+  FActorVariation LongitudeOffset;
+  LongitudeOffset.Id = TEXT("longitude_offset");
+  LongitudeOffset.Type = EActorAttributeType::Float;
+  LongitudeOffset.RecommendedValues = { TEXT("0.0") };
+  LongitudeOffset.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({
+      CameraModel,
+      K0, K1, K2, K3,
+      FocalLength,
+      Equirectangular,
+      FOVMask,
+      FOVFadeSize,
+      LongitudeOffset,
+      Perspective
+  });
+}
+
 void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     const FString &Id,
     const bool bEnableModifyingPostProcessEffects,
@@ -312,433 +770,42 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), Id);
   AddRecommendedValuesForSensorRoleNames(Definition);
   AddVariationsForSensor(Definition);
-
-  // FOV
-  FActorVariation FOV;
-  FOV.Id = TEXT("fov");
-  FOV.Type = EActorAttributeType::Float;
-  FOV.RecommendedValues = { TEXT("90.0") };
-  FOV.bRestrictToRecommended = false;
-
-  // Resolution
-  FActorVariation ResX;
-  ResX.Id = TEXT("image_size_x");
-  ResX.Type = EActorAttributeType::Int;
-  ResX.RecommendedValues = { TEXT("800") };
-  ResX.bRestrictToRecommended = false;
-
-  FActorVariation ResY;
-  ResY.Id = TEXT("image_size_y");
-  ResY.Type = EActorAttributeType::Int;
-  ResY.RecommendedValues = { TEXT("600") };
-  ResY.bRestrictToRecommended = false;
-
-  // Lens parameters
-  FActorVariation LensCircleFalloff;
-  LensCircleFalloff.Id = TEXT("lens_circle_falloff");
-  LensCircleFalloff.Type = EActorAttributeType::Float;
-  LensCircleFalloff.RecommendedValues = { TEXT("5.0") };
-  LensCircleFalloff.bRestrictToRecommended = false;
-
-  FActorVariation LensCircleMultiplier;
-  LensCircleMultiplier.Id = TEXT("lens_circle_multiplier");
-  LensCircleMultiplier.Type = EActorAttributeType::Float;
-  LensCircleMultiplier.RecommendedValues = { TEXT("0.0") };
-  LensCircleMultiplier.bRestrictToRecommended = false;
-
-  FActorVariation LensK;
-  LensK.Id = TEXT("lens_k");
-  LensK.Type = EActorAttributeType::Float;
-  LensK.RecommendedValues = { TEXT("-1.0") };
-  LensK.bRestrictToRecommended = false;
-
-  FActorVariation LensKcube;
-  LensKcube.Id = TEXT("lens_kcube");
-  LensKcube.Type = EActorAttributeType::Float;
-  LensKcube.RecommendedValues = { TEXT("0.0") };
-  LensKcube.bRestrictToRecommended = false;
-
-  FActorVariation LensXSize;
-  LensXSize.Id = TEXT("lens_x_size");
-  LensXSize.Type = EActorAttributeType::Float;
-  LensXSize.RecommendedValues = { TEXT("0.08") };
-  LensXSize.bRestrictToRecommended = false;
-
-  FActorVariation LensYSize;
-  LensYSize.Id = TEXT("lens_y_size");
-  LensYSize.Type = EActorAttributeType::Float;
-  LensYSize.RecommendedValues = { TEXT("0.08") };
-  LensYSize.bRestrictToRecommended = false;
-
-  Definition.Variations.Append({
-      ResX,
-      ResY,
-      FOV,
-      LensCircleFalloff,
-      LensCircleMultiplier,
-      LensK,
-      LensKcube,
-      LensXSize,
-      LensYSize});
-
+  AddCommonCameraParameters(Id, bEnableModifyingPostProcessEffects, Success, Definition);
   if (bEnableModifyingPostProcessEffects)
   {
-    FActorVariation PostProccess;
-    PostProccess.Id = TEXT("enable_postprocess_effects");
-    PostProccess.Type = EActorAttributeType::Bool;
-    PostProccess.RecommendedValues = { TEXT("true") };
-    PostProccess.bRestrictToRecommended = false;
-
-    // Gamma
-    FActorVariation Gamma;
-    Gamma.Id = TEXT("gamma");
-    Gamma.Type = EActorAttributeType::Float;
-    Gamma.RecommendedValues = { TEXT("2.2") };
-    Gamma.bRestrictToRecommended = false;
-
-    // Motion Blur
-    FActorVariation MBIntesity;
-    MBIntesity.Id = TEXT("motion_blur_intensity");
-    MBIntesity.Type = EActorAttributeType::Float;
-    MBIntesity.RecommendedValues = { TEXT("0.45") };
-    MBIntesity.bRestrictToRecommended = false;
-
-    FActorVariation MBMaxDistortion;
-    MBMaxDistortion.Id = TEXT("motion_blur_max_distortion");
-    MBMaxDistortion.Type = EActorAttributeType::Float;
-    MBMaxDistortion.RecommendedValues = { TEXT("0.35") };
-    MBMaxDistortion.bRestrictToRecommended = false;
-
-    FActorVariation MBMinObjectScreenSize;
-    MBMinObjectScreenSize.Id = TEXT("motion_blur_min_object_screen_size");
-    MBMinObjectScreenSize.Type = EActorAttributeType::Float;
-    MBMinObjectScreenSize.RecommendedValues = { TEXT("0.1") };
-    MBMinObjectScreenSize.bRestrictToRecommended = false;
-
-    // Lens Flare
-    FActorVariation LensFlareIntensity;
-    LensFlareIntensity.Id = TEXT("lens_flare_intensity");
-    LensFlareIntensity.Type = EActorAttributeType::Float;
-    LensFlareIntensity.RecommendedValues = { TEXT("0.1") };
-    LensFlareIntensity.bRestrictToRecommended = false;
-
-    // Bloom
-    FActorVariation BloomIntensity;
-    BloomIntensity.Id = TEXT("bloom_intensity");
-    BloomIntensity.Type = EActorAttributeType::Float;
-    BloomIntensity.RecommendedValues = { TEXT("0.675") };
-    BloomIntensity.bRestrictToRecommended = false;
-
-    // More info at:
-    // https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html
-    // https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/DepthOfField/CinematicDOFMethods/index.html
-    // https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/ColorGrading/index.html
-
-    // Exposure
-    FActorVariation ExposureMode;
-    ExposureMode.Id = TEXT("exposure_mode");
-    ExposureMode.Type = EActorAttributeType::String;
-    ExposureMode.RecommendedValues = { TEXT("histogram"), TEXT("manual") };
-    ExposureMode.bRestrictToRecommended = true;
-
-    // Logarithmic adjustment for the exposure. Only used if a tonemapper is
-    // specified.
-    //  0 : no adjustment
-    // -1 : 2x darker
-    // -2 : 4x darker
-    //  1 : 2x brighter
-    //  2 : 4x brighter.
-    FActorVariation ExposureCompensation;
-    ExposureCompensation.Id = TEXT("exposure_compensation");
-    ExposureCompensation.Type = EActorAttributeType::Float;
-    ExposureCompensation.RecommendedValues = { TEXT("0.0") };
-    ExposureCompensation.bRestrictToRecommended = false;
-
-    // - Manual ------------------------------------------------
-
-    // The formula used to compute the camera exposure scale is:
-    // Exposure = 1 / (1.2 * 2^(log2( N²/t * 100/S )))
-
-    // The camera shutter speed in seconds.
-    FActorVariation ShutterSpeed; // (1/t)
-    ShutterSpeed.Id = TEXT("shutter_speed");
-    ShutterSpeed.Type = EActorAttributeType::Float;
-    ShutterSpeed.RecommendedValues = { TEXT("200.0") };
-    ShutterSpeed.bRestrictToRecommended = false;
-
-    // The camera sensor sensitivity.
-    FActorVariation ISO; // S
-    ISO.Id = TEXT("iso");
-    ISO.Type = EActorAttributeType::Float;
-    ISO.RecommendedValues = { TEXT("100.0") };
-    ISO.bRestrictToRecommended = false;
-
-    // Defines the size of the opening for the camera lens.
-    // Using larger numbers will reduce the DOF effect.
-    FActorVariation Aperture; // N
-    Aperture.Id = TEXT("fstop");
-    Aperture.Type = EActorAttributeType::Float;
-    Aperture.RecommendedValues = { TEXT("1.4") };
-    Aperture.bRestrictToRecommended = false;
-
-    // - Histogram ---------------------------------------------
-
-    // The minimum brightness for auto exposure that limits the lower
-    // brightness the eye can adapt within
-    FActorVariation ExposureMinBright;
-    ExposureMinBright.Id = TEXT("exposure_min_bright");
-    ExposureMinBright.Type = EActorAttributeType::Float;
-    ExposureMinBright.RecommendedValues = { TEXT("10.0") };
-    ExposureMinBright.bRestrictToRecommended = false;
-
-    // The maximum brightness for auto exposure that limits the upper
-    // brightness the eye can adapt within
-    FActorVariation ExposureMaxBright;
-    ExposureMaxBright.Id = TEXT("exposure_max_bright");
-    ExposureMaxBright.Type = EActorAttributeType::Float;
-    ExposureMaxBright.RecommendedValues = { TEXT("12.0") };
-    ExposureMaxBright.bRestrictToRecommended = false;
-
-    // The speed at which the adaptation occurs from a dark environment
-    // to a bright environment.
-    FActorVariation ExposureSpeedUp;
-    ExposureSpeedUp.Id = TEXT("exposure_speed_up");
-    ExposureSpeedUp.Type = EActorAttributeType::Float;
-    ExposureSpeedUp.RecommendedValues = { TEXT("3.0") };
-    ExposureSpeedUp.bRestrictToRecommended = false;
-
-    // The speed at which the adaptation occurs from a bright environment
-    // to a dark environment.
-    FActorVariation ExposureSpeedDown;
-    ExposureSpeedDown.Id = TEXT("exposure_speed_down");
-    ExposureSpeedDown.Type = EActorAttributeType::Float;
-    ExposureSpeedDown.RecommendedValues = { TEXT("1.0") };
-    ExposureSpeedDown.bRestrictToRecommended = false;
-
-    // Calibration constant for 18% Albedo.
-    FActorVariation CalibrationConstant;
-    CalibrationConstant.Id = TEXT("calibration_constant");
-    CalibrationConstant.Type = EActorAttributeType::Float;
-    CalibrationConstant.RecommendedValues = { TEXT("16.0") };
-    CalibrationConstant.bRestrictToRecommended = false;
-
-    // Distance in which the Depth of Field effect should be sharp,
-    // in unreal units (cm)
-    FActorVariation FocalDistance;
-    FocalDistance.Id = TEXT("focal_distance");
-    FocalDistance.Type = EActorAttributeType::Float;
-    FocalDistance.RecommendedValues = { TEXT("1000.0") };
-    FocalDistance.bRestrictToRecommended = false;
-
-    // Depth blur km for 50%
-    FActorVariation DepthBlurAmount;
-    DepthBlurAmount.Id = TEXT("blur_amount");
-    DepthBlurAmount.Type = EActorAttributeType::Float;
-    DepthBlurAmount.RecommendedValues = { TEXT("1.0") };
-    DepthBlurAmount.bRestrictToRecommended = false;
-
-    // Depth blur radius in pixels at 1920x
-    FActorVariation DepthBlurRadius;
-    DepthBlurRadius.Id = TEXT("blur_radius");
-    DepthBlurRadius.Type = EActorAttributeType::Float;
-    DepthBlurRadius.RecommendedValues = { TEXT("0.0") };
-    DepthBlurRadius.bRestrictToRecommended = false;
-
-    // Defines the opening of the camera lens, Aperture is 1.0/fstop,
-    // typical lens go down to f/1.2 (large opening),
-    // larger numbers reduce the DOF effect
-    FActorVariation MaxAperture;
-    MaxAperture.Id = TEXT("min_fstop");
-    MaxAperture.Type = EActorAttributeType::Float;
-    MaxAperture.RecommendedValues = { TEXT("1.2") };
-    MaxAperture.bRestrictToRecommended = false;
-
-    // Defines the number of blades of the diaphragm within the
-    // lens (between 4 and 16)
-    FActorVariation BladeCount;
-    BladeCount.Id = TEXT("blade_count");
-    BladeCount.Type = EActorAttributeType::Int;
-    BladeCount.RecommendedValues = { TEXT("5") };
-    BladeCount.bRestrictToRecommended = false;
-
-    // - Tonemapper Settings -----------------------------------
-    // You can adjust these tonemapper controls to emulate other
-    // types of film stock for your project
-    FActorVariation FilmSlope;
-    FilmSlope.Id = TEXT("slope");
-    FilmSlope.Type = EActorAttributeType::Float;
-    FilmSlope.RecommendedValues = { TEXT("0.88") };
-    FilmSlope.bRestrictToRecommended = false;
-
-    FActorVariation FilmToe;
-    FilmToe.Id = TEXT("toe");
-    FilmToe.Type = EActorAttributeType::Float;
-    FilmToe.RecommendedValues = { TEXT("0.55") };
-    FilmToe.bRestrictToRecommended = false;
-
-    FActorVariation FilmShoulder;
-    FilmShoulder.Id = TEXT("shoulder");
-    FilmShoulder.Type = EActorAttributeType::Float;
-    FilmShoulder.RecommendedValues = { TEXT("0.26") };
-    FilmShoulder.bRestrictToRecommended = false;
-
-    FActorVariation FilmBlackClip;
-    FilmBlackClip.Id = TEXT("black_clip");
-    FilmBlackClip.Type = EActorAttributeType::Float;
-    FilmBlackClip.RecommendedValues = { TEXT("0.0") };
-    FilmBlackClip.bRestrictToRecommended = false;
-
-    FActorVariation FilmWhiteClip;
-    FilmWhiteClip.Id = TEXT("white_clip");
-    FilmWhiteClip.Type = EActorAttributeType::Float;
-    FilmWhiteClip.RecommendedValues = { TEXT("0.04") };
-    FilmWhiteClip.bRestrictToRecommended = false;
-
-    // Color
-    FActorVariation Temperature;
-    Temperature.Id = TEXT("temp");
-    Temperature.Type = EActorAttributeType::Float;
-    Temperature.RecommendedValues = { TEXT("6500.0") };
-    Temperature.bRestrictToRecommended = false;
-
-    FActorVariation Tint;
-    Tint.Id = TEXT("tint");
-    Tint.Type = EActorAttributeType::Float;
-    Tint.RecommendedValues = { TEXT("0.0") };
-    Tint.bRestrictToRecommended = false;
-
-    FActorVariation ChromaticIntensity;
-    ChromaticIntensity.Id = TEXT("chromatic_aberration_intensity");
-    ChromaticIntensity.Type = EActorAttributeType::Float;
-    ChromaticIntensity.RecommendedValues = { TEXT("0.0") };
-    ChromaticIntensity.bRestrictToRecommended = false;
-
-    FActorVariation ChromaticOffset;
-    ChromaticOffset.Id = TEXT("chromatic_aberration_offset");
-    ChromaticOffset.Type = EActorAttributeType::Float;
-    ChromaticOffset.RecommendedValues = { TEXT("0.0") };
-    ChromaticOffset.bRestrictToRecommended = false;
-
-    Definition.Variations.Append({
-      ExposureMode,
-      ExposureCompensation,
-      ShutterSpeed,
-      ISO,
-      Aperture,
-      PostProccess,
-      Gamma,
-      MBIntesity,
-      MBMaxDistortion,
-      LensFlareIntensity,
-      BloomIntensity,
-      MBMinObjectScreenSize,
-      ExposureMinBright,
-      ExposureMaxBright,
-      ExposureSpeedUp,
-      ExposureSpeedDown,
-      CalibrationConstant,
-      FocalDistance,
-      MaxAperture,
-      BladeCount,
-      DepthBlurAmount,
-      DepthBlurRadius,
-      FilmSlope,
-      FilmToe,
-      FilmShoulder,
-      FilmBlackClip,
-      FilmWhiteClip,
-      Temperature,
-      Tint,
-      ChromaticIntensity,
-      ChromaticOffset});
+    AddCommonPostProcessingEffectsParameters(
+      Id, bEnableModifyingPostProcessEffects, Success, Definition);
   }
-
   Success = CheckActorDefinition(Definition);
 }
 
-FActorDefinition UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition()
+FActorDefinition UActorBlueprintFunctionLibrary::MakeWideAngleLensCameraDefinition(
+    const FString& Id,
+    bool bEnableModifyingPostProcessEffects)
 {
   FActorDefinition Definition;
   bool Success;
-  MakeNormalsCameraDefinition(Success, Definition);
+  MakeWideAngleLensCameraDefinition(Id, bEnableModifyingPostProcessEffects, Success, Definition);
   check(Success);
   return Definition;
 }
 
-void UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition(bool &Success, FActorDefinition &Definition)
+void UActorBlueprintFunctionLibrary::MakeWideAngleLensCameraDefinition(
+    const FString& Id,
+    bool bEnableModifyingPostProcessEffects,
+    bool& Success,
+    FActorDefinition& Definition)
 {
-  FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), TEXT("normals"));
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), Id, TEXT("wide_angle_lens"));
   AddRecommendedValuesForSensorRoleNames(Definition);
   AddVariationsForSensor(Definition);
-
-  // FOV
-  FActorVariation FOV;
-  FOV.Id = TEXT("fov");
-  FOV.Type = EActorAttributeType::Float;
-  FOV.RecommendedValues = { TEXT("90.0") };
-  FOV.bRestrictToRecommended = false;
-
-  // Resolution
-  FActorVariation ResX;
-  ResX.Id = TEXT("image_size_x");
-  ResX.Type = EActorAttributeType::Int;
-  ResX.RecommendedValues = { TEXT("800") };
-  ResX.bRestrictToRecommended = false;
-
-  FActorVariation ResY;
-  ResY.Id = TEXT("image_size_y");
-  ResY.Type = EActorAttributeType::Int;
-  ResY.RecommendedValues = { TEXT("600") };
-  ResY.bRestrictToRecommended = false;
-
-  // Lens parameters
-  FActorVariation LensCircleFalloff;
-  LensCircleFalloff.Id = TEXT("lens_circle_falloff");
-  LensCircleFalloff.Type = EActorAttributeType::Float;
-  LensCircleFalloff.RecommendedValues = { TEXT("5.0") };
-  LensCircleFalloff.bRestrictToRecommended = false;
-
-  FActorVariation LensCircleMultiplier;
-  LensCircleMultiplier.Id = TEXT("lens_circle_multiplier");
-  LensCircleMultiplier.Type = EActorAttributeType::Float;
-  LensCircleMultiplier.RecommendedValues = { TEXT("0.0") };
-  LensCircleMultiplier.bRestrictToRecommended = false;
-
-  FActorVariation LensK;
-  LensK.Id = TEXT("lens_k");
-  LensK.Type = EActorAttributeType::Float;
-  LensK.RecommendedValues = { TEXT("-1.0") };
-  LensK.bRestrictToRecommended = false;
-
-  FActorVariation LensKcube;
-  LensKcube.Id = TEXT("lens_kcube");
-  LensKcube.Type = EActorAttributeType::Float;
-  LensKcube.RecommendedValues = { TEXT("0.0") };
-  LensKcube.bRestrictToRecommended = false;
-
-  FActorVariation LensXSize;
-  LensXSize.Id = TEXT("lens_x_size");
-  LensXSize.Type = EActorAttributeType::Float;
-  LensXSize.RecommendedValues = { TEXT("0.08") };
-  LensXSize.bRestrictToRecommended = false;
-
-  FActorVariation LensYSize;
-  LensYSize.Id = TEXT("lens_y_size");
-  LensYSize.Type = EActorAttributeType::Float;
-  LensYSize.RecommendedValues = { TEXT("0.08") };
-  LensYSize.bRestrictToRecommended = false;
-
-  Definition.Variations.Append({
-      ResX,
-      ResY,
-      FOV,
-      LensCircleFalloff,
-      LensCircleMultiplier,
-      LensK,
-      LensKcube,
-      LensXSize,
-      LensYSize});
-
+  AddCommonCameraParameters(Id, bEnableModifyingPostProcessEffects, Success, Definition);
+  AddCommonWideAngleLensCameraParameters(Id, bEnableModifyingPostProcessEffects, Success, Definition);
+  if (bEnableModifyingPostProcessEffects)
+  {
+    AddCommonPostProcessingEffectsParameters(
+      Id, bEnableModifyingPostProcessEffects, Success, Definition);
+  }
   Success = CheckActorDefinition(Definition);
 }
 
@@ -998,6 +1065,34 @@ void UActorBlueprintFunctionLibrary::MakeLidarDefinition(
       StdDevLidar,
       HorizontalFOV});
   }
+  else if (Id == "hss_lidar") {
+    // Horizontal Resolution
+    FActorVariation HorizontalResolution;
+    HorizontalResolution.Id = TEXT("horizontal_resolution");
+    HorizontalResolution.Type = EActorAttributeType::Float;
+    HorizontalResolution.RecommendedValues = { TEXT("0.1") };
+
+    Channels.RecommendedValues = { TEXT("128") };
+    UpperFOV.RecommendedValues = { TEXT("12.9") };
+    LowerFOV.RecommendedValues = { TEXT("-12.5") };
+    Range.RecommendedValues = { TEXT("200") };
+    Frequency.RecommendedValues = { TEXT("20") };
+    HorizontalFOV.RecommendedValues = { TEXT("120.0") };
+    Definition.Variations.Append({
+      Channels,
+      Range,
+      Frequency,
+      UpperFOV,
+      LowerFOV,
+      AtmospAttenRate,
+      NoiseSeed,
+      DropOffGenRate,
+      DropOffIntensityLimit,
+      DropOffAtZeroIntensity,
+      StdDevLidar,
+      HorizontalFOV,
+      HorizontalResolution});
+  }
   else if (Id == "ray_cast_semantic") {
     Definition.Variations.Append({
       Channels,
@@ -1030,6 +1125,13 @@ void UActorBlueprintFunctionLibrary::MakeV2XDefinition(
 {
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("v2x"));
   AddVariationsForSensor(Definition);
+
+  // - Channel id --------------------------------
+  FActorVariation ChannelId;
+  ChannelId.Id = TEXT("channel_id");
+  ChannelId.Type = EActorAttributeType::String;
+  ChannelId.RecommendedValues = { TEXT("Default") };
+  ChannelId.bRestrictToRecommended = false;  
 
   // - Noise seed --------------------------------
   FActorVariation NoiseSeed;
@@ -1216,6 +1318,7 @@ void UActorBlueprintFunctionLibrary::MakeV2XDefinition(
   StdDevVelX.bRestrictToRecommended = false;
 
   Definition.Variations.Append({
+    ChannelId,
     NoiseSeed,
     TransmitPower,
     ReceiverSensitivity,
@@ -1263,6 +1366,13 @@ void UActorBlueprintFunctionLibrary::MakeCustomV2XDefinition(
 {
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("v2x_custom"));
   AddVariationsForSensor(Definition);
+
+  // - Channel id --------------------------------
+  FActorVariation ChannelId;
+  ChannelId.Id = TEXT("channel_id");
+  ChannelId.Type = EActorAttributeType::String;
+  ChannelId.RecommendedValues = { TEXT("Default") };
+  ChannelId.bRestrictToRecommended = false;  
 
   // - Noise seed --------------------------------
   FActorVariation NoiseSeed;
@@ -1342,6 +1452,7 @@ void UActorBlueprintFunctionLibrary::MakeCustomV2XDefinition(
   
   
   Definition.Variations.Append({
+    ChannelId,
     NoiseSeed,
     TransmitPower,
     ReceiverSensitivity,
@@ -1902,6 +2013,84 @@ FColor UActorBlueprintFunctionLibrary::RetrieveActorAttributeToColor(
 #endif // WITH_EDITOR
 
 void UActorBlueprintFunctionLibrary::SetCamera(
+    const FActorDescription &Desc,
+    ASceneCaptureSensor_WideAngleLens *Camera)
+{
+  CARLA_ABFL_CHECK_ACTOR(Camera);
+
+  const auto& Variations = Desc.Variations;
+
+  const auto CameraModelName = RetrieveActorAttributeToString(
+      "camera_model", Variations, "perspective");
+
+  static const FString Lookup[] =
+  {
+    TEXT("perspective"),
+    TEXT("stereographic"),
+    TEXT("equidistant"),
+    TEXT("equisolid"),
+    TEXT("orthographic"),
+    TEXT("kannala-brandt")
+  };
+
+  using I = std::underlying_type_t<ECameraModel>;
+
+  static_assert(
+      sizeof(Lookup) / sizeof(Lookup[0]) == (I)ECameraModel::MaxEnum,
+      "CameraModel string lookup size mismatch.");
+
+  I CameraModelID = 0;
+
+  while (CameraModelID < (I)ECameraModel::MaxEnum && CameraModelName != Lookup[CameraModelID])
+      ++CameraModelID;
+
+  const auto CameraModel =
+      CameraModelID != (I)ECameraModel::MaxEnum ?
+      (ECameraModel)CameraModelID :
+      ECameraModel::Default;
+
+  Camera->SetImageSize(
+      RetrieveActorAttributeToInt("image_size_x", Variations, 800U),
+      RetrieveActorAttributeToInt("image_size_y", Variations, 600U));
+
+  Camera->SetCameraModel(CameraModel);
+
+  if (CameraModel == ECameraModel::KannalaBrandt)
+  {
+      const float Coefficients[] =
+      {
+          RetrieveActorAttributeToFloat("k0", Variations, 0.08309221636708493f),
+          RetrieveActorAttributeToFloat("k1", Variations, 0.01112126630599195f),
+          RetrieveActorAttributeToFloat("k2", Variations, 0.008587261043925865f),
+          RetrieveActorAttributeToFloat("k3", Variations, 0.0008542188930970716f)
+      };
+
+      Camera->SetCameraCoefficients(
+          TArrayView<const float>(Coefficients, 4));
+  }
+
+  const auto FOV = RetrieveActorAttributeToFloat("fov", Variations, 90.0f);
+  const auto FocalLength = RetrieveActorAttributeToFloat("focal_length", Variations, 0.0f);
+
+  if (FOV != 0.0f)
+      Camera->SetFOVAngle(FOV);
+
+  if (FocalLength != 0.0f)
+      Camera->SetFocalLength(FocalLength);
+
+  Camera->SetRenderPerspective(RetrieveActorAttributeToBool("perspective", Variations, false));
+  Camera->SetRenderEquirectangular(RetrieveActorAttributeToBool("equirectangular", Variations, false));
+  Camera->SetFOVMaskEnable(RetrieveActorAttributeToBool("fov_mask", Variations, false));
+
+  if (Camera->GetRenderEquirectangular())
+      Camera->SetRenderEquirectangularLongitudeOffset(RetrieveActorAttributeToFloat("longitude_offset", Variations, 0.0f));
+
+  if (Camera->GetFOVMaskEnable())
+      Camera->SetFOVFadeSize(RetrieveActorAttributeToFloat("fov_fade_size", Variations, 0.0f));
+
+}
+
+void UActorBlueprintFunctionLibrary::SetCamera(
     const FActorDescription &Description,
     ASceneCaptureSensor *Camera)
 {
@@ -2011,6 +2200,25 @@ void UActorBlueprintFunctionLibrary::SetCamera(
       RetrieveActorAttributeToFloat("lens_y_size", Description.Variations, 0.08f));
 }
 
+void UActorBlueprintFunctionLibrary::SetCamera(
+    const FActorDescription &Description,
+    AShaderBasedSensor_WideAngleLens *Camera)
+{
+  CARLA_ABFL_CHECK_ACTOR(Camera);
+  Camera->SetFloatShaderParameter(0, TEXT("CircleFalloff_NState"),
+      RetrieveActorAttributeToFloat("lens_circle_falloff", Description.Variations, 5.0f));
+  Camera->SetFloatShaderParameter(0, TEXT("CircleMultiplier_NState"),
+      RetrieveActorAttributeToFloat("lens_circle_multiplier", Description.Variations, 0.0f));
+  Camera->SetFloatShaderParameter(0, TEXT("K_NState"),
+      RetrieveActorAttributeToFloat("lens_k", Description.Variations, -1.0f));
+  Camera->SetFloatShaderParameter(0, TEXT("kcube"),
+      RetrieveActorAttributeToFloat("lens_kcube", Description.Variations, 0.0f));
+  Camera->SetFloatShaderParameter(0, TEXT("XSize_NState"),
+      RetrieveActorAttributeToFloat("lens_x_size", Description.Variations, 0.08f));
+  Camera->SetFloatShaderParameter(0, TEXT("YSize_NState"),
+      RetrieveActorAttributeToFloat("lens_y_size", Description.Variations, 0.08f));
+}
+
 void UActorBlueprintFunctionLibrary::SetLidar(
     const FActorDescription &Description,
     FLidarDescription &Lidar)
@@ -2042,6 +2250,8 @@ void UActorBlueprintFunctionLibrary::SetLidar(
       RetrieveActorAttributeToFloat("dropoff_zero_intensity", Description.Variations, Lidar.DropOffAtZeroIntensity);
   Lidar.NoiseStdDev =
       RetrieveActorAttributeToFloat("noise_stddev", Description.Variations, Lidar.NoiseStdDev);
+  Lidar.HorizontalResolution =
+      RetrieveActorAttributeToFloat("horizontal_resolution", Description.Variations, Lidar.HorizontalResolution);
 }
 
 void UActorBlueprintFunctionLibrary::SetGnss(

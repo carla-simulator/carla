@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -23,9 +23,19 @@ inline FAsyncDataStreamTmpl<T>::FAsyncDataStreamTmpl(
     Header([&Sensor, Timestamp]() {
       //check(IsInGameThread());
       using Serializer = carla::sensor::s11n::SensorHeaderSerializer;
+      FTransform Transform = Sensor.GetActorTransform();
+      FTransform RelativeTransform = Transform;
+      auto ParentActor = Sensor.GetAttachParentActor();
+      if (ParentActor)
+      {
+        RelativeTransform = RelativeTransform.GetRelativeTransform(ParentActor->GetActorTransform());
+      }
       return Serializer::Serialize(
           carla::sensor::SensorRegistry::template get<SensorT*>::index,
           FCarlaEngine::GetFrameCounter(),
           Timestamp,
-          Sensor.GetActorTransform());
+          Transform,
+          RelativeTransform,
+          RelativeTransform.GetRotation()
+          );
     }()) {}

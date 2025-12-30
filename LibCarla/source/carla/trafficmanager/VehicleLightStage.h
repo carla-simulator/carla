@@ -3,7 +3,7 @@
 
 #include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/RandomGenerator.h"
+#include "carla/trafficmanager/UniformPRNG.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
 

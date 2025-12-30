@@ -9,6 +9,7 @@ Plugins
 !Unreal/CarlaUE4/Plugins
 Unreal/CarlaUE4/Plugins/Streetmap
 Unreal/CarlaUE4/Plugins/HoudiniEngine
+build/
 
 
 /ExportedMaps
@@ -37,12 +38,14 @@ Unreal/CarlaUE4/Plugins/HoudiniEngine
 *CodeLitePreProcessor.txt
 .aria2c.input
 .codelite
+.debug
 .gdb_history
 .gtest
 .idea
 .tags*
 .vs
 .vscode
+.cache
 __pycache__
 _benchmarks_results
 _images*
@@ -50,3 +53,6 @@ _out*
 _site
 core
 profiler.csv
+.env
+.venv
+devcontainer.json

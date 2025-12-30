@@ -1,0 +1,10 @@
+<config remotes="cloudfront github-nvidia">
+    <remote2 name="cloudfront">
+        <transport actions="download" protocol="https" packageLocation="d4i3qtqj3r0z5.cloudfront.net/${name}@${version}" />
+    </remote2>
+    <remote2 name="github-nvidia">
+        <transport actions="download" protocol="https"
+            packageLocation="github.com/NVIDIA/${name}/releases/download/${version:0:8}/${name}-${version}"
+            packageExtensions="zip tgz" />
+    </remote2>    
+</config>

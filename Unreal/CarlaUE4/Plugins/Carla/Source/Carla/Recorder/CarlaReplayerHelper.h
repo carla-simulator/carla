@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -106,7 +106,7 @@ private:
     uint32_t DesiredId,
     bool SpawnSensors);
 
-  FCarlaActor* FindTrafficLightAt(FVector Location);
+  FCarlaActor* FindTrafficSignAt(FVector Location);
 
   // enable / disable physics for an actor
   bool SetActorSimulatePhysics(FCarlaActor *CarlaActor, bool bEnabled);

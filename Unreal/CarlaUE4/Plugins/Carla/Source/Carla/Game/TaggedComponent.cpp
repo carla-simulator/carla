@@ -1,6 +1,6 @@
 #include "Carla.h"
 #include "TaggedComponent.h"
-#include "ConstructorHelpers.h"
+#include "TaggedMaterials.h"
 
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "SkeletalRenderPublic.h"
@@ -12,11 +12,6 @@ UTaggedComponent::UTaggedComponent(const FObjectInitializer& ObjectInitializer) 
   UPrimitiveComponent(ObjectInitializer),
   Color(1, 1, 1, 1)
 {
-  FString MaterialPath = TEXT("Material'/Carla/PostProcessingMaterials/AnnotationColor.AnnotationColor'");
-  static ConstructorHelpers::FObjectFinder<UMaterial> TaggedMaterialObject(*MaterialPath);
-  // TODO: Replace with VertexColorViewModeMaterial_ColorOnly?
-
-  TaggedMaterial = TaggedMaterialObject.Object;
   PrimaryComponentTick.bCanEverTick = true;
   PrimaryComponentTick.bStartWithTickEnabled = false;
 }
@@ -25,11 +20,23 @@ void UTaggedComponent::OnRegister()
 {
   Super::OnRegister();
 
-  TaggedMID = UMaterialInstanceDynamic::Create(TaggedMaterial, this, TEXT("TaggedMaterialMID"));
+  TaggedMID = UTaggedMaterialsRegistry::Get()->GetTaggedMaterial();
 
   if (!IsValid(TaggedMID))
   {
     UE_LOG(LogCarla, Error, TEXT("Failed to create MID!"));
+  }
+
+  if(USceneComponent* ParentSceneComponent = GetAttachParent()) {
+    UPrimitiveComponent* ParentComponent = CastChecked<UPrimitiveComponent>(ParentSceneComponent);
+    TArray<UMaterialInterface*> UsedMaterials;
+    ParentComponent->GetUsedMaterials(UsedMaterials);
+    for (UMaterialInterface* UsedMaterial : UsedMaterials) {
+      UMaterialInstanceDynamic* TaggedMaterial = UTaggedMaterialsRegistry::Get()->GetTaggedMaterial(UsedMaterial);
+      if (TaggedMaterial) {
+        TaggedMaterials.Add(UsedMaterial, TaggedMaterial);
+      }
+    }
   }
 
   SetColor(Color);
@@ -43,11 +50,24 @@ void UTaggedComponent::SetColor(FLinearColor NewColor)
   {
     TaggedMID->SetVectorParameterValue("AnnotationColor", Color);
   }
+
+  for (auto& Pair : TaggedMaterials) {
+    Pair.Value->SetVectorParameterValue("AnnotationColor", Color);
+  }
 }
 
 FLinearColor UTaggedComponent::GetColor()
 {
   return Color;
+}
+
+TArray<UMaterialInstanceDynamic*> UTaggedComponent::GetTaggedMaterials()
+{
+  TArray<UMaterialInstanceDynamic*> Ret;
+  for (auto& Pair : TaggedMaterials) {
+    Ret.Add(Pair.Value);
+  }
+  return Ret;
 }
 
 FBoxSphereBounds UTaggedComponent::CalcBounds(const FTransform & LocalToWorld) const
@@ -125,9 +145,9 @@ FPrimitiveSceneProxy * UTaggedComponent::CreateSceneProxy(UStaticMeshComponent *
 
   USplineMeshComponent* SplineMeshComponent = Cast<USplineMeshComponent>(StaticMeshComponent);
   if (SplineMeshComponent) {
-    return new FTaggedSplineMeshSceneProxy(SplineMeshComponent, TaggedMID);
+    return new FTaggedSplineMeshSceneProxy(SplineMeshComponent, TaggedMID, TaggedMaterials);
   } else {
-    return new FTaggedStaticMeshSceneProxy(StaticMeshComponent, true, TaggedMID);
+    return new FTaggedStaticMeshSceneProxy(StaticMeshComponent, true, TaggedMID, TaggedMaterials);
   }
 }
 
@@ -152,7 +172,7 @@ FPrimitiveSceneProxy * UTaggedComponent::CreateSceneProxy(USkeletalMeshComponent
 		int32 MaxSupportedNumBones = SkeletalMeshComponent->MeshObject->IsCPUSkinned() ? MAX_int32 : GetFeatureLevelMaxNumberOfBones(SceneFeatureLevel);
 		if (MaxBonesPerChunk <= MaxSupportedNumBones)
 		{
-			return new FTaggedSkeletalMeshSceneProxy(SkeletalMeshComponent, SkelMeshRenderData, TaggedMID);
+			return new FTaggedSkeletalMeshSceneProxy(SkeletalMeshComponent, SkelMeshRenderData, TaggedMID, TaggedMaterials);
 		}
 	}
   return nullptr;
@@ -174,7 +194,7 @@ FPrimitiveSceneProxy * UTaggedComponent::CreateSceneProxy(UHierarchicalInstanced
 	if (bMeshIsValid)
 	{
 		bool bIsGrass = !MeshComponent->PerInstanceSMData.Num();
-		return new FTaggedHierarchicalStaticMeshSceneProxy(MeshComponent, bIsGrass, GetWorld()->FeatureLevel, TaggedMID);
+		return new FTaggedHierarchicalStaticMeshSceneProxy(MeshComponent, bIsGrass, GetWorld()->FeatureLevel, TaggedMID, TaggedMaterials);
 	}
 	return nullptr;
 }
@@ -194,7 +214,7 @@ FPrimitiveSceneProxy * UTaggedComponent::CreateSceneProxy(UInstancedStaticMeshCo
 
 	if (bMeshIsValid)
 	{
-		return new FTaggedInstancedStaticMeshSceneProxy(MeshComponent, GetWorld()->FeatureLevel, TaggedMID);
+		return new FTaggedInstancedStaticMeshSceneProxy(MeshComponent, GetWorld()->FeatureLevel, TaggedMID, TaggedMaterials);
 	}
 	return nullptr;
 }
@@ -222,7 +242,7 @@ void UTaggedComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 //
 // FTaggedStaticMeshSceneProxy
 //
-FTaggedStaticMeshSceneProxy::FTaggedStaticMeshSceneProxy(UStaticMeshComponent * Component, bool bForceLODsShareStaticLighting, UMaterialInstance * MaterialInstance) :
+FTaggedStaticMeshSceneProxy::FTaggedStaticMeshSceneProxy(UStaticMeshComponent * Component, bool bForceLODsShareStaticLighting, UMaterialInstance * MaterialInstance, TMap<UMaterialInterface*, UMaterialInstanceDynamic*> TaggedMaterials) :
   FStaticMeshSceneProxy(Component, bForceLODsShareStaticLighting)
 {
   TaggedMaterialInstance = MaterialInstance;
@@ -232,7 +252,12 @@ FTaggedStaticMeshSceneProxy::FTaggedStaticMeshSceneProxy(UStaticMeshComponent * 
 
   for (FLODInfo& LODInfo : LODs) {
     for (FLODInfo::FSectionInfo& SectionInfo : LODInfo.Sections) {
+      UMaterialInstanceDynamic** TaggedMaterial = TaggedMaterials.Find(SectionInfo.Material);
+      if (TaggedMaterial) {
+        SectionInfo.Material = *TaggedMaterial;
+      } else {
         SectionInfo.Material = TaggedMaterialInstance;
+      }
     }
   }
 }
@@ -250,7 +275,7 @@ FPrimitiveViewRelevance FTaggedStaticMeshSceneProxy::GetViewRelevance(const FSce
 //
 // FTaggedSplineMeshSceneProxy
 //
-FTaggedSplineMeshSceneProxy::FTaggedSplineMeshSceneProxy(USplineMeshComponent * Component, UMaterialInstance * MaterialInstance) :
+FTaggedSplineMeshSceneProxy::FTaggedSplineMeshSceneProxy(USplineMeshComponent * Component, UMaterialInstance * MaterialInstance, TMap<UMaterialInterface*, UMaterialInstanceDynamic*> TaggedMaterials) :
   FSplineMeshSceneProxy(Component)
 {
   TaggedMaterialInstance = MaterialInstance;
@@ -260,7 +285,12 @@ FTaggedSplineMeshSceneProxy::FTaggedSplineMeshSceneProxy(USplineMeshComponent * 
 
   for (FLODInfo& LODInfo : LODs) {
     for (FLODInfo::FSectionInfo& SectionInfo : LODInfo.Sections) {
-      SectionInfo.Material = TaggedMaterialInstance;
+      UMaterialInstanceDynamic** TaggedMaterial = TaggedMaterials.Find(SectionInfo.Material);
+      if (TaggedMaterial) {
+        SectionInfo.Material = *TaggedMaterial;
+      } else {
+        SectionInfo.Material = TaggedMaterialInstance;
+      }
     }
   }
 }
@@ -278,7 +308,7 @@ FPrimitiveViewRelevance FTaggedSplineMeshSceneProxy::GetViewRelevance(const FSce
 //
 // FTaggedSkeletalMeshSceneProxy
 //
-FTaggedSkeletalMeshSceneProxy::FTaggedSkeletalMeshSceneProxy(const USkinnedMeshComponent * Component, FSkeletalMeshRenderData * InSkeletalMeshRenderData, UMaterialInstance * MaterialInstance) :
+FTaggedSkeletalMeshSceneProxy::FTaggedSkeletalMeshSceneProxy(const USkinnedMeshComponent * Component, FSkeletalMeshRenderData * InSkeletalMeshRenderData, UMaterialInstance * MaterialInstance, TMap<UMaterialInterface*, UMaterialInstanceDynamic*> TaggedMaterials) :
   FSkeletalMeshSceneProxy(Component, InSkeletalMeshRenderData)
 {
   TaggedMaterialInstance = MaterialInstance;
@@ -288,7 +318,12 @@ FTaggedSkeletalMeshSceneProxy::FTaggedSkeletalMeshSceneProxy(const USkinnedMeshC
 
   for (FLODSectionElements& LODSection : LODSections) {
     for (FSectionElementInfo& ElementInfo : LODSection.SectionElements) {
+      UMaterialInstanceDynamic** TaggedMaterial = TaggedMaterials.Find(ElementInfo.Material);
+      if (TaggedMaterial) {
+        ElementInfo.Material = *TaggedMaterial;
+      } else {
         ElementInfo.Material = TaggedMaterialInstance;
+      }
     }
   }
 }
@@ -304,7 +339,7 @@ FPrimitiveViewRelevance FTaggedSkeletalMeshSceneProxy::GetViewRelevance(const FS
 }
 
 FTaggedInstancedStaticMeshSceneProxy::FTaggedInstancedStaticMeshSceneProxy(
-    UInstancedStaticMeshComponent * Component, ERHIFeatureLevel::Type InFeatureLevel, UMaterialInstance * MaterialInstance)
+    UInstancedStaticMeshComponent * Component, ERHIFeatureLevel::Type InFeatureLevel, UMaterialInstance * MaterialInstance, TMap<UMaterialInterface*, UMaterialInstanceDynamic*> TaggedMaterials)
   : FInstancedStaticMeshSceneProxy(Component, InFeatureLevel)
 {
   TaggedMaterialInstance = MaterialInstance;
@@ -314,7 +349,12 @@ FTaggedInstancedStaticMeshSceneProxy::FTaggedInstancedStaticMeshSceneProxy(
 
   for (FLODInfo& LODInfo : LODs) {
     for (FLODInfo::FSectionInfo& SectionInfo : LODInfo.Sections) {
+      UMaterialInstanceDynamic** TaggedMaterial = TaggedMaterials.Find(SectionInfo.Material);
+      if (TaggedMaterial) {
+        SectionInfo.Material = *TaggedMaterial;
+      } else {
         SectionInfo.Material = TaggedMaterialInstance;
+      }
     }
   }
 }
@@ -331,7 +371,7 @@ FPrimitiveViewRelevance FTaggedInstancedStaticMeshSceneProxy::GetViewRelevance(c
 
 
 FTaggedHierarchicalStaticMeshSceneProxy::FTaggedHierarchicalStaticMeshSceneProxy(
-    UHierarchicalInstancedStaticMeshComponent * Component, bool bInIsGrass, ERHIFeatureLevel::Type InFeatureLevel, UMaterialInstance * MaterialInstance)
+    UHierarchicalInstancedStaticMeshComponent * Component, bool bInIsGrass, ERHIFeatureLevel::Type InFeatureLevel, UMaterialInstance * MaterialInstance, TMap<UMaterialInterface*, UMaterialInstanceDynamic*> TaggedMaterials)
   : FHierarchicalStaticMeshSceneProxy(bInIsGrass, Component, InFeatureLevel)
 {
   TaggedMaterialInstance = MaterialInstance;
@@ -341,7 +381,12 @@ FTaggedHierarchicalStaticMeshSceneProxy::FTaggedHierarchicalStaticMeshSceneProxy
 
   for (FLODInfo& LODInfo : LODs) {
     for (FLODInfo::FSectionInfo& SectionInfo : LODInfo.Sections) {
+      UMaterialInstanceDynamic** TaggedMaterial = TaggedMaterials.Find(SectionInfo.Material);
+      if (TaggedMaterial) {
+        SectionInfo.Material = *TaggedMaterial;
+      } else {
         SectionInfo.Material = TaggedMaterialInstance;
+      }
     }
   }
 }

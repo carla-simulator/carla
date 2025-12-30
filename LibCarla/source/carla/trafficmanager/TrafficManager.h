@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -319,11 +319,11 @@ public:
     }
   }
 
-  /// Method to set % to keep on the right lane.
-  void SetKeepRightPercentage(const ActorPtr &actor, const float percentage) {
+  /// Method to set % to keep on the slow lane.
+  void SetKeepSlowLanePercentage(const ActorPtr &actor, const float percentage) {
     TrafficManagerBase* tm_ptr = GetTM(_port);
     if(tm_ptr != nullptr){
-      tm_ptr->SetKeepRightPercentage(actor, percentage);
+      tm_ptr->SetKeepSlowLanePercentage(actor, percentage);
     }
   }
 

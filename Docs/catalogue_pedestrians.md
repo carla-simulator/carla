@@ -79,11 +79,25 @@
 
 * [__Police - 1__](#police-1)
 * [__Police - 2__](#police-2)
+
+---
+
+## Wheelchair users
+
+A wheelchair model is available which is compatible with most of the pedestrian models. You can find out if a chosen pedestrian is compatible with the wheelchair model by using the `has_attribute` method of the pedestrian blueprint to test if it has the `can_use_wheelchair` attribute. Then set the `use_wheelchair` attribute to `True`:
+
+```py
+pedestrian_bp = bp_lib.find('walker.pedestrian.0028')
+if pedestrian_bp.has_attribute('can_use_wheelchair'):
+	pedestrian_bp.set_attribute('use_wheelchair', 'True')
+	pedestrian = world.spawn_actor(pedestrian_bp, spawn_point)
+```
+
+![wheelchair_pedestrians](../img/catalogue/pedestrians/vru_pedestrians.webp)
+
 ---
 
 ## Adults
-
----
 
 #### Adult pedestrian 1 - variant 1
 

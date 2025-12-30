@@ -1,4 +1,4 @@
-// Copyright (c) 2021 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -12,6 +12,9 @@ USTRUCT(BlueprintType)
 struct CARLA_API FVehicleAckermannControl
 {
   GENERATED_BODY()
+
+  UPROPERTY(Category = "Vehicle Ackermann Control", EditAnywhere, BlueprintReadWrite)
+  float Timestamp = 0.0f;
 
   UPROPERTY(Category = "Vehicle Ackermann Control", EditAnywhere, BlueprintReadWrite)
   float Steer = 0.0f;

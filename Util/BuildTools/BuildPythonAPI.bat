@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 rem BAT script that creates the client python api of LibCarla (carla.org).
 rem Run it through a cmd with the x64 Visual C++ Toolset enabled.
@@ -15,32 +15,29 @@ rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
 set DOC_STRING=Build and package CARLA Python API.
-set "USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--rebuild]  [--clean]"
+set "USAGE_STRING=Usage: %FILE_N% [-h^|--help] [--build-wheel] [--rebuild]  [--clean]"
 
 set REMOVE_INTERMEDIATE=false
-set BUILD_FOR_PYTHON2=false
-set BUILD_FOR_PYTHON3=false
+set BUILD_PYTHONAPI=true
+set INSTALL_PYTHONAPI=true
 
 :arg-parse
 if not "%1"=="" (
     if "%1"=="--rebuild" (
         set REMOVE_INTERMEDIATE=true
-        rem We don't provide support for py2 right now
-        set BUILD_FOR_PYTHON2=false
-        set BUILD_FOR_PYTHON3=true
+        set BUILD_PYTHONAPI=true
+        set INSTALL_PYTHONAPI=true
     )
 
-    if "%1"=="--py2" (
-        set BUILD_FOR_PYTHON2=true
+    if "%1"=="--build-wheel" (
+        set BUILD_PYTHONAPI=true
+        set INSTALL_PYTHONAPI=false
     )
-
-    if "%1"=="--py3" (
-        set BUILD_FOR_PYTHON3=true
-    )
-
 
     if "%1"=="--clean" (
         set REMOVE_INTERMEDIATE=true
+        set BUILD_PYTHONAPI=false
+        set INSTALL_PYTHONAPI=false
     )
 
     if "%1"=="-h" (
@@ -62,11 +59,9 @@ if not "%1"=="" (
 set PYTHON_LIB_PATH=%ROOT_PATH:/=\%PythonAPI\carla\
 
 if %REMOVE_INTERMEDIATE% == false (
-    if %BUILD_FOR_PYTHON3% == false (
-        if %BUILD_FOR_PYTHON2% == false (
-          echo Nothing selected to be done.
-          goto :eof
-        )
+    if %BUILD_PYTHONAPI% == false (
+        echo Nothing selected to be done.
+        goto :eof
     )
 )
 
@@ -82,10 +77,8 @@ if %REMOVE_INTERMEDIATE% == true (
             rmdir /s/q %%G
         )
     )
-    if %BUILD_FOR_PYTHON3% == false (
-        if %BUILD_FOR_PYTHON2% == false (
-            goto good_exit
-        )
+    if %BUILD_PYTHONAPI% == false (
+        goto good_exit
     )
 )
 
@@ -99,17 +92,22 @@ rem ============================================================================
 where python 1>nul
 if %errorlevel% neq 0 goto error_py
 
-rem Build for Python 2
-rem
-if %BUILD_FOR_PYTHON2%==true (
-    goto py2_not_supported
-)
-
 rem Build for Python 3
 rem
-if %BUILD_FOR_PYTHON3%==true (
-    echo Building Python API for Python 3.
-    python setup.py bdist_egg bdist_wheel
+if %BUILD_PYTHONAPI%==true (
+    echo Building Python API wheel for Python 3.
+    python -m build --wheel --outdir dist\.tmp .
+
+    set WHEEL_FILE=
+    for %%f in (dist\.tmp\*.whl) do set WHEEL_FILE=%%f
+
+    if %INSTALL_PYTHONAPI%==true (
+        python -m pip install --force-reinstall "!WHEEL_FILE!"
+    )
+
+    copy "!WHEEL_FILE!" dist
+    rmdir /s /q dist\.tmp
+
     if %errorlevel% neq 0 goto error_build_wheel
 )
 
@@ -121,18 +119,13 @@ rem ============================================================================
 
 :success
     echo.
-    if %BUILD_FOR_PYTHON3%==true echo %FILE_N% Carla lib for python has been successfully installed in "%PYTHON_LIB_PATH%dist"!
+    if %BUILD_PYTHONAPI%==true echo %FILE_N% Carla lib for python has been successfully installed in "%PYTHON_LIB_PATH%dist"!
     goto good_exit
 
 :already_installed
     echo.
     echo %FILE_N% [ERROR] Already installed in "%PYTHON_LIB_PATH%dist"
     goto good_exit
-
-:py2_not_supported
-    echo.
-    echo %FILE_N% [ERROR] Python 2 is not currently suported in Windows.
-    goto bad_exit
 
 :error_py
     echo.

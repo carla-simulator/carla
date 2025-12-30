@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -69,4 +69,8 @@ struct CARLA_API FLidarDescription
 
   UPROPERTY(EditAnywhere)
   float NoiseStdDev = 0.0f;
+
+  /// Horizontal resolution of the lidar, in degrees.
+  UPROPERTY(EditAnywhere)
+  float HorizontalResolution = 0.1f;
 };

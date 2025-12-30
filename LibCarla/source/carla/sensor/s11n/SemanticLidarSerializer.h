@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -41,6 +41,18 @@ namespace s11n {
       return _begin[Index::SIZE + channel];
     }
 
+    size_t GetHeaderOffset() const {
+      return sizeof(uint32_t) * (GetChannelCount() + Index::SIZE);
+    }
+
+    size_t GetDataSize() const {
+      size_t data_size=0u;
+      for (size_t i=0; i<GetChannelCount(); ++i) {
+        data_size+=GetPointCount(i)*sizeof(carla::sensor::data::SemanticLidarDetection);
+      }
+      return data_size;
+    }
+
   protected:
     friend class SemanticLidarSerializer;
 
@@ -65,7 +77,7 @@ namespace s11n {
 
     static size_t GetHeaderOffset(const RawData &data) {
       auto View = DeserializeHeader(data);
-      return sizeof(uint32_t) * (View.GetChannelCount() + data::SemanticLidarData::Index::SIZE);
+      return View.GetHeaderOffset();
     }
 
     template <typename Sensor>
@@ -74,7 +86,8 @@ namespace s11n {
         const data::SemanticLidarData &measurement,
         Buffer &&output);
 
-    static SharedPtr<SensorData> Deserialize(RawData &&data);
+    static SharedPtr<SensorData> Deserialize(RawData DESERIALIZE_DECL_DATA(data));
+
   };
 
   // ===========================================================================

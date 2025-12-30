@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -50,7 +50,13 @@ public:
     uint8 InTagQueried = 0xFF);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
+  static FBoundingBox GetSkeletalMeshBoundingBoxFromComponent(const USkeletalMeshComponent* SkeletalMeshComp);
+  
+  UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static FBoundingBox GetSkeletalMeshBoundingBox(const USkeletalMesh* SkeletalMesh);
+
+  UFUNCTION(Category = "Carla Util", BlueprintCallable)
+  static TArray<FVector> GetSkeletalMeshVertices(const USkeletalMesh* SkeletalMesh);
 
   UFUNCTION(Category = "Carla Util", BlueprintCallable)
   static FBoundingBox GetStaticMeshBoundingBox(const UStaticMesh* StaticMesh);
@@ -110,5 +116,9 @@ public:
     const AActor* Actor,
     const FBoundingBox& InBB,
     TArray<UStaticMeshComponent*>& OutStaticMeshComps);
+
+  /// Compute the trigger volume of a traffic sign
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static FBoundingBox GetTrafficSignTriggerVolume(const AActor *Actor);
 
 };

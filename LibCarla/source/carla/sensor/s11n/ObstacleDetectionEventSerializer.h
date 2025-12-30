@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -49,7 +49,8 @@ namespace s11n {
       return MsgPack::Pack(Data{self_actor, other_actor, distance});
     }
 
-    static SharedPtr<SensorData> Deserialize(RawData &&data);
+    static SharedPtr<SensorData> Deserialize(RawData DESERIALIZE_DECL_DATA(data));
+
   };
 
 } // namespace s11n

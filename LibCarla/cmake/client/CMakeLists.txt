@@ -98,6 +98,12 @@ file(GLOB libcarla_carla_sources
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_sources}")
 install(FILES ${libcarla_carla_sources} DESTINATION include/carla)
 
+file(GLOB libcarla_carla_actors_sources
+    "${libcarla_source_path}/carla/actors/*.cpp"
+    "${libcarla_source_path}/carla/actors/*.h")
+set(libcarla_sources "${libcarla_sources};${libcarla_carla_actors_sources}")
+install(FILES ${libcarla_carla_actors_sources} DESTINATION include/carla/actors)
+
 file(GLOB libcarla_carla_client_sources
     "${libcarla_source_path}/carla/client/*.cpp"
     "${libcarla_source_path}/carla/client/*.h")
@@ -265,12 +271,6 @@ file(GLOB libcarla_carla_trafficmanager_sources
     "${libcarla_source_path}/carla/trafficmanager/*.h")
 set(libcarla_sources "${libcarla_sources};${libcarla_carla_trafficmanager_sources}")
 install(FILES ${libcarla_carla_trafficmanager_sources} DESTINATION include/carla/trafficmanager)
-
-file(GLOB libcarla_carla_ros2_sources
-    "${libcarla_source_path}/carla/ros2/*.cpp"
-    "${libcarla_source_path}/carla/ros2/*.h")
-set(libcarla_sources "${libcarla_sources};${libcarla_carla_ros2_sources}")
-install(FILES ${libcarla_carla_ros2_sources} DESTINATION include/carla/ros2)
 
 # ==============================================================================
 # Create targets for debug and release in the same build type.

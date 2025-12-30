@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -29,7 +29,7 @@
 #include "carla/Memory.h"
 #include "carla/road/RoadTypes.h"
 
-#include "carla/trafficmanager/RandomGenerator.h"
+#include "carla/trafficmanager/UniformPRNG.h"
 #include "carla/trafficmanager/SimpleWaypoint.h"
 #include "carla/trafficmanager/CachedSimpleWaypoint.h"
 

@@ -1,0 +1,13 @@
+[tool.poetry]
+name = "carla"
+version = "0.2"
+description = ""
+authors = ["Your Name <your.email@example.com>"]
+
+[tool.poetry.dependencies]
+pygame = {version = "2.6.1", python = ">=3.10, <3.11"}
+numpy = {version = "2.2.5", python = ">=3.10, <3.11"}
+scipy = {version = "1.15.3", python = ">=3.10, <3.11"}
+grpcio = {version = "1.74.0", python = ">=3.10, <3.11"}
+protobuf = {version = "4.23.3", python = ">=3.10, <3.11"}
+nvidia-nvimgcodec-cu12 = {version = "^0.5.0.13", python = ">=3.10, <3.11"}

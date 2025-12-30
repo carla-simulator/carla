@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -23,6 +23,8 @@ namespace s11n {
       uint64_t frame;
       double timestamp;
       rpc::Transform sensor_transform;
+      rpc::Transform sensor_relative_transform;
+      rpc::Quaternion sensor_relative_transform_quaternion;
     };
 #pragma pack(pop)
 
@@ -32,7 +34,10 @@ namespace s11n {
         uint64_t index,
         uint64_t frame,
         double timestamp,
-        rpc::Transform transform);
+        const rpc::Transform &transform,
+        const rpc::Transform &sensor_relative_transform,
+        const rpc::Quaternion &sensor_relative_transform_quaternion
+    );
 
     static const Header &Deserialize(const Buffer &message) {
       return *reinterpret_cast<const Header *>(message.data());

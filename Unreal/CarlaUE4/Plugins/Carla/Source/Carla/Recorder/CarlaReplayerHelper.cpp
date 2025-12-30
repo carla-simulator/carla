@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -47,7 +47,7 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
   // check type of actor we need
   if (ActorDesc.Id.StartsWith("traffic."))
   {
-    FCarlaActor* CarlaActor = FindTrafficLightAt(Location);
+    FCarlaActor* CarlaActor = FindTrafficSignAt(Location);
     if (CarlaActor != nullptr)
     {
       // reuse that actor
@@ -62,21 +62,6 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
   }
   else if (SpawnSensors || !ActorDesc.Id.StartsWith("sensor."))
   {
-    // check if an actor of that type already exist with same id
-    if (Episode->GetActorRegistry().Contains(DesiredId))
-    {
-      auto* CarlaActor = Episode->FindCarlaActor(DesiredId);
-      const FActorDescription *desc = &CarlaActor->GetActorInfo()->Description;
-      if (desc->Id == ActorDesc.Id)
-      {
-        // we don't need to create, actor of same type already exist
-        // relocate
-        FRotator Rot = FRotator::MakeFromEuler(Rotation);
-        FTransform Trans2(Rot, Location, FVector(1, 1, 1));
-        CarlaActor->SetActorGlobalTransform(Trans2);
-        return std::pair<int, FCarlaActor*>(2, CarlaActor);
-      }
-    }
     // create the transform
     FRotator Rot = FRotator::MakeFromEuler(Rotation);
     FTransform Trans(Rot, FVector(0, 0, 100000), FVector(1, 1, 1));
@@ -107,7 +92,7 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
   }
 }
 
-FCarlaActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
+FCarlaActor *CarlaReplayerHelper::FindTrafficSignAt(FVector Location)
 {
   check(Episode != nullptr);
   auto World = Episode->GetWorld();
@@ -123,7 +108,7 @@ FCarlaActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
   for (auto It = Registry.begin(); It != Registry.end(); ++It)
   {
     FCarlaActor* CarlaActor = It.Value().Get();
-    if(CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight)
+    if(CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight || CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficSign)
     {
       FVector vec = CarlaActor->GetActorGlobalLocation();
       int x2 = static_cast<int>(vec.X);
@@ -421,6 +406,7 @@ void CarlaReplayerHelper::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Ve
     Control.bReverse = (Vehicle.Gear < 0);
     Control.Gear = Vehicle.Gear;
     Control.bManualGearShift = false;
+    Control.Timestamp = float(Episode->GetElapsedGameTime());
     CarlaActor->ApplyControlToVehicle(Control, EVehicleInputPriority::User);
   }
 }
@@ -552,6 +538,7 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgno
             Control.bReverse = false;
             Control.Gear = 1;
             Control.bManualGearShift = false;
+            Control.Timestamp = float(Episode->GetElapsedGameTime());
             CarlaActor->ApplyControlToVehicle(Control, EVehicleInputPriority::User);
         }
         break;

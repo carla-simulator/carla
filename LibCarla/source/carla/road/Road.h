@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -45,6 +45,8 @@ namespace road {
     bool IsJunction() const;
 
     JuncId GetJunctionId() const;
+
+    bool IsRHT() const;
 
     Lane &GetLaneByDistance(double s, LaneId lane_id);
 
@@ -193,6 +195,8 @@ namespace road {
     bool _is_junction { false };
 
     JuncId _junction_id { -1 };
+
+    bool _is_rht { true };
 
     LaneSectionMap _lane_sections;
 

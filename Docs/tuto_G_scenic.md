@@ -116,20 +116,20 @@ We will now define the starting positions for the vehicles and placement of obje
 - Place a trash can in the middle of the lane:
 
 ```scenic
-obstacle = Trash on lane.centerline
+obstacle = new Trash on lane.centerline
 ```
 
 - Place the leading car driving at the predefined speed along the road at a distance of between 50 and 30 meters behind the obstacle:
 
 ```scenic
-leadCar = Car following roadDirection from obstacle for Range(-50, -30),
+leadCar = new Car following roadDirection from obstacle for Range(-50, -30),
         with behavior LeadingCarBehavior(LEAD_CAR_SPEED)
 ```
 
 - Place the ego vehicle driving at the predefined speed along the road at a distance of between 15 to 10 meters behind the leading vehicle:
 
 ```scenic
-ego = Car following roadDirection from leadCar for Range(-15, -10),
+ego = new Car following roadDirection from leadCar for Range(-15, -10),
         with blueprint EGO_MODEL,
         with behavior EgoBehavior(EGO_SPEED)
 ```

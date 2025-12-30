@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -69,6 +69,10 @@ private:
 
   void RemoveAttachedProps(TArray<AActor*> Actors) const;
 
+  bool AdjustSignHeightToGround(FVector& SpawnLocation) const;
+
+  void AdjustAllSignsToHeightGround();
+  
   // Mapped references to ATrafficLightGroup (junction)
   UPROPERTY()
   TMap<int, ATrafficLightGroup *> TrafficGroups;
@@ -85,7 +89,11 @@ private:
   TArray<ATrafficSignBase*> TrafficSigns;
 
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
-  TSubclassOf<AActor> TrafficLightModel;
+  TSubclassOf<AActor> TrafficLightModel_RHT;
+
+  UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
+  TSubclassOf<AActor> TrafficLightModel_LHT;
+
 
   // Relates an OpenDRIVE type to a traffic sign blueprint
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
@@ -118,4 +126,11 @@ private:
   UPROPERTY()
   bool bTrafficLightsFrozen = false;
 
+  UPROPERTY()
+  TArray<UPrimitiveComponent*> IgnoredComponentsForHeightAdjustment;
+  UPROPERTY()
+  TArray<AActor*> IgnoredActorsForHeightAdjustment;
+
+  UPROPERTY()
+  FTimerHandle TimerHandle;
 };

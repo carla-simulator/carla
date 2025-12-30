@@ -7,7 +7,7 @@
 #include "carla/trafficmanager/InMemoryMap.h"
 #include "carla/trafficmanager/LocalizationUtils.h"
 #include "carla/trafficmanager/Parameters.h"
-#include "carla/trafficmanager/RandomGenerator.h"
+#include "carla/trafficmanager/UniformPRNG.h"
 #include "carla/trafficmanager/TrackTraffic.h"
 #include "carla/trafficmanager/SimulationState.h"
 #include "carla/trafficmanager/Stage.h"
@@ -44,7 +44,10 @@ private:
   ActorIdSet vehicles_at_junction;
   using SimpleWaypointPair = std::pair<SimpleWaypointPtr, SimpleWaypointPtr>;
   std::unordered_map<ActorId, SimpleWaypointPair> vehicles_at_junction_entrance;
-  RandomGenerator &random_device;
+  std::unordered_set<ActorId> large_vehicles_at_junction_entrance;
+  std::unordered_set<ActorId> large_vehicles_at_junction;
+  UniformPRNG &random_device;
+  std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles;
 
   SimpleWaypointPtr AssignLaneChange(const ActorId actor_id,
                                      const cg::Location vehicle_location,
@@ -54,6 +57,14 @@ private:
   void ExtendAndFindSafeSpace(const ActorId actor_id,
                               const bool is_at_junction_entrance,
                               Buffer &waypoint_buffer);
+
+  void HandleLargeVehicleJunction(const ActorId actor_id,
+                                  const bool is_at_junction_entrance,
+                                  Buffer &waypoint_buffer);
+
+  float GetThreePointCircleRadius(cg::Location first_location,
+                                  cg::Location middle_location,
+                                  cg::Location last_location);
 
   void ImportPath(Path &imported_path,
                   Buffer &waypoint_buffer,
@@ -71,10 +82,11 @@ public:
                     const SimulationState &simulation_state,
                     TrackTraffic &track_traffic,
                     const LocalMapPtr &local_map,
+                    std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles,
                     Parameters &parameters,
                     std::vector<ActorId>& marked_for_removal,
                     LocalizationFrame &output_array,
-                    RandomGenerator &random_device);
+                    UniformPRNG &random_device);
 
   void Update(const unsigned long index) override;
 

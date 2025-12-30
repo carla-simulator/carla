@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -94,6 +94,10 @@ namespace client {
         Color color = Color{255u, 0u, 0u},
         float life_time = -1.0f,
         bool persistent_lines = true);
+
+    void ClearDebugShape();
+
+    void ClearDebugString();
 
   private:
 

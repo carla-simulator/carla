@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -18,6 +18,13 @@ namespace detail {
   using stream_id_type = uint32_t;
 
   using message_size_type = uint32_t;
+
+  using actor_id_type = uint32_t;
+
+  struct stream_actor_id_type {
+    stream_id_type stream_id;
+    actor_id_type actor_id;
+  };
 
   static_assert(
       std::is_same<message_size_type, Buffer::size_type>::value,

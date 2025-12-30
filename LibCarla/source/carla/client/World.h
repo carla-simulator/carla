@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -33,12 +33,16 @@
 #include <boost/optional.hpp>
 
 namespace carla {
+
+namespace actors {
+  class ActorBlueprint;
+  class BlueprintLibrary;
+}
+
 namespace client {
 
   class Actor;
-  class ActorBlueprint;
   class ActorList;
-  class BlueprintLibrary;
   class Map;
   class TrafficLight;
   class TrafficSign;
@@ -70,7 +74,7 @@ namespace client {
 
     /// Return the list of blueprints available in this world. This blueprints
     /// can be used to spawning actor into the world.
-    SharedPtr<BlueprintLibrary> GetBlueprintLibrary() const;
+    SharedPtr<actors::BlueprintLibrary> GetBlueprintLibrary() const;
 
     /// Returns a list of pairs where the firts element is the vehicle ID
     /// and the second one is the light state
@@ -96,7 +100,7 @@ namespace client {
 
     /// Get Gravity value used for IMUI Sensor accelerometer calculation
     float GetIMUISensorGravity() const;
-    
+
     /// Set Gravity value used for IMUI Sensor accelerometer calculation
     void SetIMUISensorGravity(float NewIMUISensorGravity);
 
@@ -116,7 +120,7 @@ namespace client {
     /// transform. If a @a parent is provided, the actor is attached to
     /// @a parent.
     SharedPtr<Actor> SpawnActor(
-        const ActorBlueprint &blueprint,
+        const actors::ActorBlueprint &blueprint,
         const geom::Transform &transform,
         Actor *parent = nullptr,
         rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid,
@@ -125,7 +129,7 @@ namespace client {
     /// Same as SpawnActor but return nullptr on failure instead of throwing an
     /// exception.
     SharedPtr<Actor> TrySpawnActor(
-        const ActorBlueprint &blueprint,
+        const actors::ActorBlueprint &blueprint,
         const geom::Transform &transform,
         Actor *parent = nullptr,
         rpc::AttachmentType attachment_type = rpc::AttachmentType::Rigid,
@@ -237,7 +241,19 @@ namespace client {
         const rpc::TextureFloatColor& normal_texture,
         const rpc::TextureFloatColor& ao_roughness_metallic_emissive_texture);
 
+    /// Enables or disables the traversal of translucent materials in semantic, instance and depth annotations. Defaults to False.
+    void SetAnnotationsTraverseTranslucency(
+        bool enable);
+
     std::vector<std::string> GetNamesOfAllObjects() const;
+
+    /// Export cosmos data to JSON files
+    std::string ExportCosmosCrosswalks(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosRoadBoundaries(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosLaneLines(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosTrafficSigns(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosWaitLines(const std::string& session_id, const std::string& output_path) const;
+    std::string ExportCosmosRoadMarkings(const std::string& session_id, const std::string& output_path) const;
 
   private:
 

@@ -17,7 +17,7 @@ FBXSDK_URL=https://www.autodesk.com/content/dam/autodesk/www/adn/fbx/2020-0-1/${
 
 if [ ! -d "${FBX2OBJ_DEP_FOLDER}" ]; then
   log "Downloading FBX SDK..."
-  wget -c "${FBXSDK_URL}" -P "${CARLA_DOCKER_UTILS_FOLDER}" --user-agent="Mozilla"
+  curl -L -o "${CARLA_DOCKER_UTILS_FOLDER}/${LIB_NAME}.tar.gz" -H "User-Agent: Mozilla/5.0" "${FBXSDK_URL}"
 
   echo "Unpacking..."
   mkdir -p "${FBX2OBJ_DEP_FOLDER}"
@@ -38,6 +38,7 @@ pushd "${FBX2OBJ_BUILD_FOLDER}" >/dev/null
 
 cmake -G "Ninja" \
     -DCMAKE_CXX_FLAGS="-fPIC -std=c++14" \
+    -DCMAKE_EXE_LINKER_FLAGS="-Wl,-rpath,/usr/lib/x86_64-linux-gnu -Wl,-rpath-link,/usr/lib/x86_64-linux-gnu" \
     ..
 
 # copy the shared object 'libfbxsdk.so' to 'dist' folder

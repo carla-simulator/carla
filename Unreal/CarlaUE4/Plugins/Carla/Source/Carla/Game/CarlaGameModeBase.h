@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -77,6 +77,8 @@ public:
 
   void EnableEnvironmentObjects(const TSet<uint64>& EnvObjectIds, bool Enable);
 
+  void RegisterEnvironmentObjects();
+
   void EnableOverlapEvents();
 
   void CheckForEmptyMeshes();
@@ -116,6 +118,9 @@ public:
   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Sensor Gravity")
   float IMUISensorGravity = 9.81f;
 
+  UPROPERTY(BlueprintReadOnly, EditAnywhere, Category = "Road Spline")
+  float SampleDistance = 2.0f;
+
 protected:
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
@@ -138,7 +143,7 @@ private:
 
   void ParseOpenDrive();
 
-  void RegisterEnvironmentObjects();
+  void SpawnRoadSplines();
 
   void ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FName>& OutLevelNames);
 

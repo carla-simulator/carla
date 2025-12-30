@@ -1,0 +1,238 @@
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
+#include "/Engine/Public/Platform.ush"
+
+
+
+#ifndef CAMERA_TYPE
+	#error Unknown camera type.
+#endif
+
+
+
+#ifndef KANNALA_BRANDT_SOLVER_ITERATIONS
+	#define KANNALA_BRANDT_SOLVER_ITERATIONS 32
+#endif
+
+
+
+#define CAMERA_TYPE_PERSPECTIVE 0		// r = f * tan(Theta)
+#define CAMERA_TYPE_STEREOGRAPHIC 1		// r = f * tan(Theta / 2) * 2
+#define CAMERA_TYPE_EQUIDISTANCE 2		// r = f * Theta
+#define CAMERA_TYPE_EQUISOLID 3			// r = f * sin(Theta / 2) * 2
+#define CAMERA_TYPE_ORTHOGONAL 4		// r = f * sin(Theta)
+#define CAMERA_TYPE_CUSTOM 5			// r = <custom power series using Theta>
+
+
+
+#if CAMERA_TYPE == CAMERA_TYPE_CUSTOM
+	StructuredBuffer<float> Coefficients;
+#endif
+
+
+
+uint2 UVToPixelCoordinate(float2 UV, uint2 ImageShape)
+{
+	UV += float2(1, 1);
+	UV *= 0.5F;
+	return uint2(float2(ImageShape) * UV);
+}
+
+float2 PixelCoordinateToUV(uint2 PixelCoordinate, uint2 ImageShape)
+{
+	float2 UV = float2(PixelCoordinate) / float2(ImageShape);
+	UV *= 2.0F;
+	UV -= float2(1, 1);
+	return UV;
+}
+
+
+
+#if CAMERA_TYPE == CAMERA_TYPE_CUSTOM
+
+	float ComputeCameraPolynomial(float Theta)
+	{
+		float Result = 1.0F;
+		float Theta2 = Theta * Theta;
+		float ThetaN = 1.0f;
+		
+		uint CoefficientCount = 0;
+		uint Stride = 0;
+		Coefficients.GetDimensions(CoefficientCount, Stride);
+		
+		for (uint i = 0; i < CoefficientCount; ++i)
+		{
+			ThetaN *= Theta2;
+			Result += Coefficients[i] * ThetaN;
+		}
+	
+		return Result * Theta;
+	}
+	
+	float ComputeCameraPolynomialDerivative(float Theta)
+	{
+		float Result = 1.0F;
+		
+		float Theta2 = Theta * Theta;
+		float ThetaN = Theta2;
+		float A = 3.0F;
+	
+		uint CoefficientCount = 0;
+		uint Stride = 0;
+		Coefficients.GetDimensions(CoefficientCount, Stride);
+		
+		for (uint i = 0; i != CoefficientCount; ++i)
+		{
+			Result += A * Coefficients[i] * ThetaN;
+			A += 2.0F;
+			ThetaN *= Theta2;
+		}
+	
+		return Result;
+	}
+
+#endif
+
+
+
+// R(theta)
+
+float ComputeDistancePerspective(float Angle)
+{
+	return tan(Angle);
+}
+
+float ComputeDistanceStereographic(float Angle)
+{
+	return tan(Angle * 0.5F) * 2;
+}
+
+float ComputeDistanceEquidistance(float Angle)
+{
+	return Angle;
+}
+
+float ComputeDistanceEquisolid(float Angle)
+{
+	return sin(Angle * 0.5F) * 2;
+}
+
+float ComputeDistanceOrthogonal(float Angle)
+{
+	return sin(Angle);
+}
+
+float ComputeDistanceEquirectangular(float Angle)
+{
+	return Angle;
+}
+
+
+
+float ComputeDistance(float Angle)
+{
+#if CAMERA_TYPE == CAMERA_TYPE_CUSTOM
+
+	return ComputeCameraPolynomial(Angle);
+
+#elif CAMERA_TYPE == CAMERA_TYPE_PERSPECTIVE
+
+	return ComputeDistancePerspective(Angle);
+
+#elif CAMERA_TYPE == CAMERA_TYPE_STEREOGRAPHIC
+
+	return ComputeDistanceStereographic(Angle);
+
+#elif CAMERA_TYPE == CAMERA_TYPE_EQUIDISTANCE
+
+	return ComputeDistanceEquidistance(Angle);
+
+#elif CAMERA_TYPE == CAMERA_TYPE_EQUISOLID
+
+	return ComputeDistanceEquisolid(Angle);
+
+#elif CAMERA_TYPE == CAMERA_TYPE_ORTHOGONAL
+
+	return ComputeDistanceOrthogonal(Angle);
+
+#else
+	return 0.0F;
+#endif
+}
+
+
+
+
+
+
+// Theta(R)
+
+float ComputeAnglePerspective(float Distance)
+{
+	return atan(Distance);
+}
+
+float ComputeAngleStereographic(float Distance)
+{
+	return atan(Distance * 0.5F) * 2;
+}
+
+float ComputeAngleEquidistance(float Distance)
+{
+	return Distance;
+}
+
+float ComputeAngleEquisolid(float Distance)
+{
+	return asin(Distance * 0.5F) * 2;
+}
+
+float ComputeAngleOrthogonal(float Distance)
+{
+	return asin(Distance);
+}
+
+
+
+float ComputeAngle(float Distance)
+{
+#if CAMERA_TYPE == CAMERA_TYPE_CUSTOM // Use series expansion
+
+	float Theta = Distance;
+	UNROLL
+	for (uint i = 0; i != KANNALA_BRANDT_SOLVER_ITERATIONS; ++i) // Using Newton-Raphson
+	{
+		float N = Distance - ComputeCameraPolynomial(Theta);
+		float D = -ComputeCameraPolynomialDerivative(Theta);
+		Theta -= N / D;
+	}
+	return Theta;
+	
+#elif CAMERA_TYPE == CAMERA_TYPE_PERSPECTIVE
+
+	return ComputeAnglePerspective(Distance);
+
+#elif CAMERA_TYPE == CAMERA_TYPE_STEREOGRAPHIC
+
+	return ComputeAngleStereographic(Distance);
+
+#elif CAMERA_TYPE == CAMERA_TYPE_EQUIDISTANCE
+
+	return ComputeAngleEquidistance(Distance);
+
+#elif CAMERA_TYPE == CAMERA_TYPE_EQUISOLID
+
+	return ComputeAngleEquisolid(Distance);
+
+#elif CAMERA_TYPE == CAMERA_TYPE_ORTHOGONAL
+
+	return ComputeAngleOrthogonal(Distance);
+	
+#else
+	return 0.0F;
+#endif
+}

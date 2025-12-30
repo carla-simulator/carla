@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -9,6 +9,9 @@
 #include "carla/Debug.h"
 #include "carla/Memory.h"
 #include "carla/client/detail/ActorState.h"
+#include "carla/geom/Acceleration.h"
+#include "carla/geom/AngularVelocity.h"
+#include "carla/geom/Velocity.h"
 #include "carla/profiler/LifetimeProfiled.h"
 
 namespace carla {
@@ -45,19 +48,19 @@ namespace client {
     ///
     /// @note This function does not call the simulator, it returns the
     /// velocity received in the last tick.
-    geom::Vector3D GetVelocity() const;
+    geom::Velocity GetVelocity() const;
 
     /// Return the current 3D angular velocity of the actor.
     ///
     /// @note This function does not call the simulator, it returns the
     /// angular velocity received in the last tick.
-    geom::Vector3D GetAngularVelocity() const;
+    geom::AngularVelocity GetAngularVelocity() const;
 
     /// Return the current 3D acceleration of the actor.
     ///
     /// @note This function does not call the simulator, it returns the
     /// acceleration calculated after the actor's velocity.
-    geom::Vector3D GetAcceleration() const;
+    geom::Acceleration GetAcceleration() const;
 
     geom::BoundingBox GetBoundingBox() const;
 
@@ -140,6 +143,15 @@ namespace client {
     bool IsActive() const {
       return GetEpisode().IsValid() && GetActorState() == rpc::ActorState::Active;
     }
+
+    /// Enable this actor for ROS2 publishing
+    void EnableForROS();
+
+    /// Disable this actor for ROS2 publishing
+    void DisableForROS();
+
+    /// Return if the actor is publishing for ROS2
+    bool IsEnabledForROS();
 
     /// Tell the simulator to destroy this Actor, and return whether the actor
     /// was successfully destroyed.

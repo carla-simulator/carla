@@ -3,7 +3,6 @@ repo_url: https://github.com/carla-simulator/carla
 docs_dir: Docs
 edit_uri: 'edit/master/Docs/'
 theme: readthedocs
-extra_css: [extra.css]
 extra_javascript: [extra.js]
 
 nav:
@@ -17,13 +16,16 @@ nav:
 - Next steps:
   - 'Content authoring - maps': 'tuto_content_authoring_maps.md'  
   - 'Content authoring - vehicles': 'tuto_content_authoring_vehicles.md'  
+  - 'Content authoring - props': 'content_authoring_props.md'  
 
 - CARLA topics:
+  - 'Coordinates and transformations': 'coordinates.md'
   - 'Foundations': 'foundations.md'
   - 'Actors': 'core_actors.md'
   - 'Maps': 'core_map.md'
   - 'Sensors and data': 'core_sensors.md'
   - 'Traffic' : 'ts_traffic_simulation_overview.md'
+  - 'AI rendering': 'ai_rendering.md'
   - 'Development': 'development_tutorials.md'
   - 'Custom assets': 'custom_assets_tutorials.md'
 
@@ -34,6 +36,7 @@ nav:
   - 'Blueprint library': 'bp_library.md'  
   - 'Tutorials': 'tutorials.md'
   - 'Extended documentation': 'ext_docs.md'
+  - 'Downloads': 'download.md'
 
 - CARLA Ecosystem:
   - 'ANSYS': 'ecosys_ansys.md'
@@ -41,7 +44,8 @@ nav:
   - 'CarSIM': 'tuto_G_carsim_integration.md'
   - 'Chrono': 'tuto_G_chrono.md'
   - 'MathWorks': 'large_map_roadrunner.md'
-  - 'NVIDIA SimReady': 'ecosys_simready.md'
+  - 'Inverted AI': 'inverted_ai.md'
+  - 'NVIDIA': 'nvidia.md'
   - 'ASAM OpenDRIVE': 'adv_opendrive.md'
   - 'PTV Vissim': 'adv_ptv.md'
   - 'RSS': 'adv_rss.md'
@@ -58,4 +62,11 @@ nav:
  
 markdown_extensions:
   - admonition 
+  #- fenced_code
+  #- codehilite
+  #- pymdownx.superfences
+  - attr_list
+
+extra_css: 
+ - extra.css
  

@@ -1,0 +1,56 @@
+// SPDX-FileCopyrightText: Copyright (c) 2019-2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+// SPDX-License-Identifier: MIT
+//
+
+mdl 1.3;
+import ::df::*;
+import ::state::*;
+import ::math::*;
+
+export material Default(
+   color default_mat_display_color = color(0.95, 0.05, 0.05)
+) = let {
+
+   float default_mat_metallic = 0.0;
+   float default_mat_roughness = 0.1;
+   float default_mat_specular = 0.5;
+
+   // - compute final roughness by squaring the "roughness" parameter
+   float alpha = default_mat_roughness * default_mat_roughness;
+   // reduce the reflectivity at grazing angles to avoid "dark edges" for high roughness due to the layering
+   float grazing_refl = math::max((1.0 - default_mat_roughness), 0.0);
+   // for the dielectric component we layer the glossy component on top of the diffuse one,
+   // the glossy layer has no color tint
+
+   bsdf dielectric_component = df::custom_curve_layer(
+       weight: default_mat_specular,
+       normal_reflectivity: 0.08,
+       grazing_reflectivity: grazing_refl,
+       layer: df::microfacet_ggx_smith_bsdf(roughness_u: alpha),
+       base: df::diffuse_reflection_bsdf(tint: default_mat_display_color)
+       );
+
+   // the metallic component doesn't have a diffuse component, it's only glossy
+   // default_mat_display_color is applied to tint it
+   bsdf metallic_component = df::microfacet_ggx_smith_bsdf(tint: default_mat_display_color, roughness_u: alpha);
+
+   // final BSDF is a linear blend between dielectric and metallic component
+   bsdf dielectric_metal_mix =
+        df::normalized_mix(
+           components:
+               df::bsdf_component[](
+                   df::bsdf_component(
+                       component: metallic_component,
+                       weight: default_mat_metallic),
+                   df::bsdf_component(
+                       component: dielectric_component,
+                       weight: 1.0-default_mat_metallic)
+               )
+       );
+
+}
+in material(
+   surface: material_surface(
+       scattering: dielectric_metal_mix
+       )
+);

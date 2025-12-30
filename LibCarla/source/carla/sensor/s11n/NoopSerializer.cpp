@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -12,7 +12,8 @@ namespace carla {
 namespace sensor {
 namespace s11n {
 
-  SharedPtr<SensorData> NoopSerializer::Deserialize(RawData &&) {
+  SharedPtr<SensorData> NoopSerializer::Deserialize(RawData DESERIALIZE_DECL_DATA(data)) {
+    (void)data;
     throw_exception(std::runtime_error("NoopSerializer: Invalid data received."));
   }
 

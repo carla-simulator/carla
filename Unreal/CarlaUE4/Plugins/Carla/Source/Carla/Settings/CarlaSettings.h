@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -159,6 +159,14 @@ public:
       config,
       DisplayName = "Enable ROS2")
   bool ROS2 = false;
+
+  /// Default ROS2 Topic Visibility
+  UPROPERTY(Category = "Quality Settings/ROS2",
+      BlueprintReadOnly,
+      EditAnywhere,
+      config,
+      DisplayName = "  ROS2 Topics Visible On Startup")
+  bool ROS2TopicVisibility = true;
 
   /// @}
 };

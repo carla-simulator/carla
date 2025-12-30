@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -12,25 +12,13 @@ This script spawn all the raycast sensors in a simple scenario and check if thei
 output are deterministic.
 """
 
-import glob
 import os
-import sys
 import argparse
 import time
 import filecmp
-import shutil
 from queue import Queue
-from queue import Empty
 
 import numpy as np
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 

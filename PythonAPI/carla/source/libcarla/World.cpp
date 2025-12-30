@@ -1,10 +1,11 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <carla/PythonUtil.h>
+#include <carla/actors/ActorBlueprint.h>
 #include <carla/client/Actor.h>
 #include <carla/client/ActorList.h>
 #include <carla/client/World.h>
@@ -122,8 +123,57 @@ static void EnableEnvironmentObjects(
   self.EnableEnvironmentObjects(env_objects_ids, enable);
 }
 
+static std::string ExportCosmosCrosswalks(
+    carla::client::World &self,
+    const std::string &session_id,
+    const std::string &output_path) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return self.ExportCosmosCrosswalks(session_id, output_path);
+}
+
+static std::string ExportCosmosRoadBoundaries(
+    carla::client::World &self,
+    const std::string &session_id,
+    const std::string &output_path) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return self.ExportCosmosRoadBoundaries(session_id, output_path);
+}
+
+static std::string ExportCosmosLaneLines(
+    carla::client::World &self,
+    const std::string &session_id,
+    const std::string &output_path) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return self.ExportCosmosLaneLines(session_id, output_path);
+}
+
+static std::string ExportCosmosTrafficSigns(
+    carla::client::World &self,
+    const std::string &session_id,
+    const std::string &output_path) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return self.ExportCosmosTrafficSigns(session_id, output_path);
+}
+
+static std::string ExportCosmosWaitLines(
+    carla::client::World &self,
+    const std::string &session_id,
+    const std::string &output_path) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return self.ExportCosmosWaitLines(session_id, output_path);
+}
+
+static std::string ExportCosmosRoadMarkings(
+    carla::client::World &self,
+    const std::string &session_id,
+    const std::string &output_path) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  return self.ExportCosmosRoadMarkings(session_id, output_path);
+}
+
 void export_world() {
   using namespace boost::python;
+  namespace ca = carla::actors;
   namespace cc = carla::client;
   namespace cg = carla::geom;
   namespace cr = carla::rpc;
@@ -292,7 +342,7 @@ void export_world() {
 
 #define SPAWN_ACTOR_WITHOUT_GIL(fn) +[]( \
         cc::World &self, \
-        const cc::ActorBlueprint &blueprint, \
+        const ca::ActorBlueprint &blueprint, \
         const cg::Transform &transform, \
         cc::Actor *parent, \
         cr::AttachmentType attachment_type, \
@@ -363,6 +413,13 @@ void export_world() {
         self.ApplyTexturesToObjects(PythonLitstToVector<std::string>(list), diffuse_texture, emissive_texture, normal_texture, ao_roughness_metallic_emissive_texture);
       }, (arg("objects_name_list"), arg("diffuse_texture"), arg("emissive_texture"), arg("normal_texture"), arg("ao_roughness_metallic_emissive_texture")))
     .def(self_ns::str(self_ns::self))
+    .def("set_annotations_traverse_translucency", CALL_WITHOUT_GIL_1(cc::World, SetAnnotationsTraverseTranslucency, bool), (arg("enable")))
+    .def("export_cosmos_crosswalks", &ExportCosmosCrosswalks, (arg("session_id"), arg("output_path")))
+    .def("export_cosmos_road_boundaries", &ExportCosmosRoadBoundaries, (arg("session_id"), arg("output_path")))
+    .def("export_cosmos_lane_lines", &ExportCosmosLaneLines, (arg("session_id"), arg("output_path")))
+    .def("export_cosmos_traffic_signs", &ExportCosmosTrafficSigns, (arg("session_id"), arg("output_path")))
+    .def("export_cosmos_wait_lines", &ExportCosmosWaitLines, (arg("session_id"), arg("output_path")))
+    .def("export_cosmos_road_markings", &ExportCosmosRoadMarkings, (arg("session_id"), arg("output_path")))
   ;
 
 #undef SPAWN_ACTOR_WITHOUT_GIL
@@ -431,6 +488,8 @@ void export_world() {
          arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
          arg("life_time")=-1.0f,
          arg("persistent_lines")=true))
+    .def("clear_debug_shape", &cc::DebugHelper::ClearDebugShape)
+    .def("clear_debug_string", &cc::DebugHelper::ClearDebugString)
   ;
   // scope HUD = class_<cc::DebugHelper>(
 

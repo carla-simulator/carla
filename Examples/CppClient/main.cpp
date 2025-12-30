@@ -6,8 +6,8 @@
 #include <thread>
 #include <tuple>
 
-#include <carla/client/ActorBlueprint.h>
-#include <carla/client/BlueprintLibrary.h>
+#include <carla/actors/ActorBlueprint.h>
+#include <carla/actors/BlueprintLibrary.h>
 #include <carla/client/Client.h>
 #include <carla/client/Map.h>
 #include <carla/client/Sensor.h>
@@ -74,10 +74,8 @@ int main(int argc, const char *argv[]) {
     std::cout << "Client API version : " << client.GetClientVersion() << '\n';
     std::cout << "Server API version : " << client.GetServerVersion() << '\n';
 
-    // Load a random town.
-    auto town_name = RandomChoice(client.GetAvailableMaps(), rng);
-    std::cout << "Loading world: " << town_name << std::endl;
-    auto world = client.LoadWorld(town_name);
+    // Load town
+    auto world = client.LoadWorld("Town05_Opt");
 
     // Get a random vehicle blueprint.
     auto blueprint_library = world.GetBlueprintLibrary();

@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -43,7 +43,8 @@ namespace s11n {
       return MsgPack::UnPack<Data>(message.begin(), message.size());
     }
 
-    static SharedPtr<SensorData> Deserialize(RawData &&data);
+    static SharedPtr<SensorData> Deserialize(RawData DESERIALIZE_DECL_DATA(data));
+
   };
 
   template <typename SensorT>

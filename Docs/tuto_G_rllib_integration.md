@@ -39,7 +39,7 @@ In this guide we will outline the requirements needed for running the RLlib inte
 >>- [Install a package version of CARLA](https://github.com/carla-simulator/carla/releases) and import the [additional assets](https://carla.readthedocs.io/en/latest/start_quickstart/#import-additional-assets). __The recommended version is CARLA 0.9.11__ as the integration was designed and tested with this version. Other versions may be compatible but have not been fully tested, so use these at your own discretion. 
 >>- Navigate into the root folder of the RLlib integration repository and install the Python requirements:
 
-                pip3 install -r requirements.txt
+                python3 -m pip install -r requirements.txt
 
 >>- Set an environment variable to locate the CARLA package by running the command below or add `CARLA_ROOT=path/to/carla` to your `.bashrc` file:
 
@@ -129,7 +129,7 @@ To run the example locally:
 
 1. Install pytorch:
 
-        pip3 install -r dqn_example/dqn_requirements.txt
+        python3 -m pip install -r dqn_example/dqn_requirements.txt
 
 2. Run the training file:
 

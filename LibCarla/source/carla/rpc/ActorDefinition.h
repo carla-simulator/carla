@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -6,12 +6,18 @@
 
 #pragma once
 
+#include <vector>
+
 #include "carla/MsgPack.h"
 #include "carla/rpc/ActorAttribute.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/String.h"
 
-#include <vector>
+#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#include <compiler/enable-ue4-macros.h>
+#include "Actor/ActorDefinition.h"
+#include <compiler/disable-ue4-macros.h>
+#endif // LIBCARLA_INCLUDED_FROM_UE4
 
 namespace carla {
 namespace rpc {

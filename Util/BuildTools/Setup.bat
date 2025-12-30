@@ -24,7 +24,8 @@ rem ============================================================================
 rem -- Parse arguments ---------------------------------------------------------
 rem ============================================================================
 
-set BOOST_VERSION=1.80.0
+set GENERATOR=""
+set BOOST_VERSION=1.84.0
 set INSTALLERS_DIR=%ROOT_PATH:/=\%Util\InstallersWin\
 set VERSION_FILE=%ROOT_PATH:/=\%Util\ContentVersions.txt
 set CONTENT_DIR=%ROOT_PATH:/=\%Unreal\CarlaUE4\Content\Carla\
@@ -33,6 +34,7 @@ set CARLA_BINARIES_FOLDER=%ROOT_PATH:/=\%Unreal\CarlaUE4\Plugins\Carla\Binaries\
 set CARLA_PYTHON_DEPENDENCIES=%ROOT_PATH:/=\%PythonAPI\carla\dependencies\
 set USE_CHRONO=false
 set USE_ROS2=false
+set CHRONO_PATH=
 
 :arg-parse
 if not "%1"=="" (
@@ -44,6 +46,11 @@ if not "%1"=="" (
     )
     if "%1"=="--chrono" (
         set USE_CHRONO=true
+    )
+    if "%1"=="--chrono-path" (
+        set CHRONO_PATH=%2
+        set USE_CHRONO=true
+        shift
     )
     if "%1"=="--ros2" (
         set USE_ROS2=true
@@ -63,9 +70,9 @@ if not "%1"=="" (
     goto :arg-parse
 )
 
-rem If not defined, use Visual Studio 2019 as tool set
-if "%TOOLSET%" == "" set TOOLSET=msvc-14.2
-if %GENERATOR% == "" set GENERATOR="Visual Studio 16 2019"
+rem If not defined, use Visual Studio 2022 as tool set
+if "%TOOLSET%" == "" set TOOLSET=msvc-14.3
+if %GENERATOR% == "" set GENERATOR="Visual Studio 17 2022"
 
 rem If is not set, set the number of parallel jobs to the number of CPU threads
 if "%NUMBER_OF_ASYNC_JOBS%" == "" set NUMBER_OF_ASYNC_JOBS=%NUMBER_OF_PROCESSORS%
@@ -224,8 +231,8 @@ echo %FILE_N% Installing Xercesc...
 call "%INSTALLERS_DIR%install_xercesc.bat"^
  --build-dir "%INSTALLATION_DIR%"^
  --generator %GENERATOR%
-copy %INSTALLATION_DIR%\xerces-c-3.2.3-install\lib\xerces-c_3.lib %CARLA_PYTHON_DEPENDENCIES%\lib
-copy %INSTALLATION_DIR%\xerces-c-3.2.3-install\lib\xerces-c_3.lib %CARLA_DEPENDENCIES_FOLDER%\lib
+xcopy /Y /I %INSTALLATION_DIR%\xerces-c-3.2.3-install\lib\xerces-c_3.lib %CARLA_PYTHON_DEPENDENCIES%\lib\
+xcopy /Y /I %INSTALLATION_DIR%\xerces-c-3.2.3-install\lib\xerces-c_3.lib %CARLA_DEPENDENCIES_FOLDER%\lib\
 
 rem ============================================================================
 rem -- Download and install Sqlite3 --------------------------------------------
@@ -233,8 +240,8 @@ rem ============================================================================
 echo %FILE_N% Installing Sqlite3
 call "%INSTALLERS_DIR%install_sqlite3.bat"^
  --build-dir "%INSTALLATION_DIR%"
-copy %INSTALLATION_DIR%\sqlite3-install\lib\sqlite3.lib %CARLA_PYTHON_DEPENDENCIES%\lib
-copy %INSTALLATION_DIR%\sqlite3-install\lib\sqlite3.lib %CARLA_DEPENDENCIES_FOLDER%\lib
+xcopy /Y /I %INSTALLATION_DIR%\sqlite3-install\lib\sqlite3.lib %CARLA_PYTHON_DEPENDENCIES%\lib\
+xcopy /Y /I %INSTALLATION_DIR%\sqlite3-install\lib\sqlite3.lib %CARLA_DEPENDENCIES_FOLDER%\lib\
 
 rem ============================================================================
 rem -- Download and install PROJ --------------------------------------------
@@ -244,8 +251,8 @@ echo %FILE_N% Installing PROJ
 call "%INSTALLERS_DIR%install_proj.bat"^
  --build-dir "%INSTALLATION_DIR%"^
  --generator %GENERATOR%
-copy %INSTALLATION_DIR%\proj-install\lib\proj.lib %CARLA_PYTHON_DEPENDENCIES%\lib
-copy %INSTALLATION_DIR%\proj-install\lib\proj.lib %CARLA_DEPENDENCIES_FOLDER%\lib
+xcopy /Y /I %INSTALLATION_DIR%\proj-install\lib\proj.lib %CARLA_PYTHON_DEPENDENCIES%\lib\
+xcopy /Y /I %INSTALLATION_DIR%\proj-install\lib\proj.lib %CARLA_DEPENDENCIES_FOLDER%\lib\
 
 rem ============================================================================
 rem -- Download and install Eigen ----------------------------------------------
@@ -262,9 +269,16 @@ rem ============================================================================
 
 if %USE_CHRONO% == true (
     echo %FILE_N% Installing Chrono...
-    call "%INSTALLERS_DIR%install_chrono.bat"^
-     --build-dir "%INSTALLATION_DIR%" ^
-     --generator %GENERATOR%
+    if not "%CHRONO_PATH%"=="" (
+        call "%INSTALLERS_DIR%install_chrono.bat"^
+         --build-dir "%INSTALLATION_DIR%" ^
+         --generator %GENERATOR% ^
+         --chrono-path "%CHRONO_PATH%"
+    ) else (
+        call "%INSTALLERS_DIR%install_chrono.bat"^
+         --build-dir "%INSTALLATION_DIR%" ^
+         --generator %GENERATOR%
+    )
 
     if not exist "%CARLA_DEPENDENCIES_FOLDER%" (
         mkdir "%CARLA_DEPENDENCIES_FOLDER%"
@@ -374,7 +388,11 @@ rem ============================================================================
 rem -- Generate CMake ----------------------------------------------------------
 rem ============================================================================
 
-for /f %%i in ('git describe --tags --dirty --always') do set carla_version=%%i
+call :get_git_repository_version
+if not defined REPOSITORY_TAG goto error_carla_version
+set carla_version=!REPOSITORY_TAG!
+echo carla_version: %carla_version%
+
 set CMAKE_INSTALLATION_DIR=%INSTALLATION_DIR:\=/%
 
 echo %FILE_N% Creating "CMakeLists.txt.in"...
@@ -424,6 +442,13 @@ set CMAKE_CONFIG_FILE=%INSTALLATION_DIR%CMakeLists.txt.in
 goto success
 
 rem ============================================================================
+rem -- Helper functions --------------------------------------------------------
+rem ============================================================================
+
+:get_git_repository_version
+   %ROOT_PATH:/=\%Util\BuildTools\Environment.bat %*
+
+rem ============================================================================
 rem -- Messages and Errors -----------------------------------------------------
 rem ============================================================================
 
@@ -460,8 +485,10 @@ rem ============================================================================
     echo                               Visual Studio 2013 -^> msvc-12.0
     echo                               Visual Studio 2015 -^> msvc-14.0
     echo                               Visual Studio 2017 -^> msvc-14.1
-    echo                               Visual Studio 2019 -^> msvc-14.2 *
-    echo                               Visual Studio 2022 -^> msvc-14.3
+    echo                               Visual Studio 2019 -^> msvc-14.2
+    echo                               Visual Studio 2022 -^> msvc-14.3 *
+    echo     --chrono            -^> Enable Chrono library support.
+    echo     --chrono-path [P]   -^> Use existing Chrono source at path P instead of downloading.
     goto good_exit
 
 :error_cl
@@ -470,6 +497,11 @@ rem ============================================================================
     echo           [ERROR] Possible causes:
     echo           [ERROR]  - Make sure you use x64 (not x64_x86!)
     echo           [ERROR]  - You are not using "Visual Studio x64 Native Tools Command Prompt".
+    goto failed
+
+:error_carla_version
+    echo.
+    echo %FILE_N% [ERROR] Carla Version is not set
     goto failed
 
 :failed

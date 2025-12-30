@@ -3,8 +3,7 @@
 This page introduces the fundamental concepts required to understand how the CARLA server and client operate and communicate through the API. CARLA operates using a server-client architecture, whereby the CARLA server runs the simulation and instructions are sent to it by the client(s). The client code communicates with the server using the [__API__](python_api.md). To use the Python API you must install the module through PIP:
 
 ```sh
-pip install carla-simulator # Python 2
-pip3 install carla-simulator # Python 3
+python3 -m pip install carla
 ```
 
 Also make sure to import the CARLA package in your python scripts:
@@ -16,7 +15,7 @@ import carla
 - [__World and client__](#world-and-client)  
 	- [Client](#client) 
     - [World](#world)
-- [__Syncrhonous and asyncrhonous mode__](#synchronous-and-asynchronous-mode)  
+- [__Synchronous and asynchronous mode__](#synchronous-and-asynchronous-mode)  
 	- [Setting synchronous mode](#setting-synchronous-mode) 
     - [Using synchronous mode](#using-synchronous-mode)
 - [__Recorder__](#recorder)  

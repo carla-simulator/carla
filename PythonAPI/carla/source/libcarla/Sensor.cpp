@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -12,6 +12,10 @@
 
 static void SubscribeToStream(carla::client::Sensor &self, boost::python::object callback) {
   self.Listen(MakeCallback(std::move(callback)));
+}
+
+static void SetIgnoredVehiclesList(carla::client::ServerSideSensor &self, boost::python::list vehicle_ids) {
+  self.SetIgnoredVehicles(PythonLitstToVector<carla::rpc::ActorId>(vehicle_ids));
 }
 
 static void SubscribeToGBuffer(
@@ -34,12 +38,12 @@ void export_sensor() {
 
   class_<cc::ServerSideSensor, bases<cc::Sensor>, boost::noncopyable, boost::shared_ptr<cc::ServerSideSensor>>
       ("ServerSideSensor", no_init)
+    .def("enable_gbuffers", &cc::ServerSideSensor::EnableGBuffers, (arg("enable")))
+    .def("set_ignored_vehicles", &SetIgnoredVehiclesList, (arg("vehicle_ids")))
+    .def("get_ignored_vehicles", &cc::ServerSideSensor::GetIgnoredVehicles)
     .def("listen_to_gbuffer", &SubscribeToGBuffer, (arg("gbuffer_id"), arg("callback")))
     .def("is_listening_gbuffer", &cc::ServerSideSensor::IsListeningGBuffer, (arg("gbuffer_id")))
     .def("stop_gbuffer", &cc::ServerSideSensor::StopGBuffer, (arg("gbuffer_id")))
-    .def("enable_for_ros", &cc::ServerSideSensor::EnableForROS)
-    .def("disable_for_ros", &cc::ServerSideSensor::DisableForROS)
-    .def("is_enabled_for_ros", &cc::ServerSideSensor::IsEnabledForROS)
     .def("send", &cc::ServerSideSensor::Send, (arg("message")))
     .def(self_ns::str(self_ns::self))
   ;

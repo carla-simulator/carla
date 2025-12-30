@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -40,7 +40,13 @@ public:
   static UCarlaSettings *GetCarlaSettings(const UObject *WorldContextObject);
 
   UFUNCTION(BlueprintPure, Category="CARLA")
+  static TArray<FString> GetAllPluginContentPaths();
+  
+  UFUNCTION(BlueprintPure, Category="CARLA")
   static TArray<FString> GetAllMapNames();
+
+  UFUNCTION(BlueprintPure, Category="CARLA")
+  static FString FindMapPath(const FString &MapName);
 
   UFUNCTION(BlueprintPure, Category="CARLA", meta=(WorldContext="WorldContextObject"))
   static ACarlaRecorder* GetRecorder(const UObject *WorldContextObject);

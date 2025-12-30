@@ -1,0 +1,7 @@
+{
+  "Name":                       "Sedan Brake",
+  "Type":                       "Brake",
+  "Template":                   "BrakeSimple",
+
+  "Maximum Torque":             2000
+}

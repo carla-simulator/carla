@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -90,11 +90,14 @@ public:
     return PtrToId ? FindCarlaActor(*PtrToId) : nullptr;
   }
 
-  FString GetDescriptionFromStream(carla::streaming::detail::stream_id_type Id);
+  FCarlaActor* FindCarlaActorByStreamId(carla::streaming::detail::stream_id_type Id) const;
 
   void PutActorToSleep(IdType Id, UCarlaEpisode* CarlaEpisode);
 
   void WakeActorUp(IdType Id, UCarlaEpisode* CarlaEpisode);
+
+  static FCarlaActor::ActorType GetActorType(const AActor *Actor);
+
 
   /// @}
   // ===========================================================================

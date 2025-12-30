@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -25,8 +25,9 @@ namespace data {
 
     friend Serializer;
 
-    explicit RadarMeasurement(RawData &&data)
-      : Super(0u, std::move(data)) {}
+    explicit RadarMeasurement(RawData DESERIALIZE_DECL_DATA(data))
+      : Super(0u, DESERIALIZE_MOVE_DATA(data)) {}
+
 
   public:
 

@@ -19,6 +19,7 @@ set LAUNCH_UE4_EDITOR=false
 set REMOVE_INTERMEDIATE=false
 set USE_CARSIM=false
 set USE_CHRONO=false
+set USE_SIMREADY=true
 set USE_UNITY=true
 set CARSIM_STATE="CarSim OFF"
 set CHRONO_STATE="Chrono OFF"
@@ -52,6 +53,9 @@ if not "%1"=="" (
     )
     if "%1"=="--ros2" (
         set USE_ROS2=true
+    )
+    if "%1"=="--no-simready" (
+        set USE_SIMREADY=false
     )
     if "%1"=="--no-unity" (
         set USE_UNITY=false
@@ -133,16 +137,19 @@ if %REMOVE_INTERMEDIATE% == true (
 
 rem Build Carla Editor
 rem
-set OMNIVERSE_PATCH_FOLDER=%ROOT_PATH%Util\Patches\omniverse_4.26\
-set OMNIVERSE_PLUGIN_FOLDER=%UE4_ROOT%Engine\Plugins\Marketplace\NVIDIA\Omniverse\
-if exist %OMNIVERSE_PLUGIN_FOLDER% (
-    set OMNIVERSE_PLUGIN_INSTALLED="Omniverse ON"
-    xcopy /Y /S /I "%OMNIVERSE_PATCH_FOLDER%USDCARLAInterface.h" "%OMNIVERSE_PLUGIN_FOLDER%Source\OmniverseUSD\Public\" > NUL
-    xcopy /Y /S /I "%OMNIVERSE_PATCH_FOLDER%USDCARLAInterface.cpp" "%OMNIVERSE_PLUGIN_FOLDER%Source\OmniverseUSD\Private\" > NUL
-) else (
-    set OMNIVERSE_PLUGIN_INSTALLED="Omniverse OFF"
-)
 
+if %USE_SIMREADY% == true (
+    set SIMREADY_PLUGINS_INSTALLED="SimReady ON"
+    rem fetch SimReady plugin dependencies
+    pushd "%UE4_PROJECT_FOLDER%Plugins\Converters"
+    call get_dependencies.bat
+    popd
+) else (
+    python %ROOT_PATH%Util/BuildTools/enable_simready_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -p="MDL"
+    python %ROOT_PATH%Util/BuildTools/enable_simready_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -p="SimReady"
+    python %ROOT_PATH%Util/BuildTools/enable_simready_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/Plugins/CarlaTools/CarlaTools.uplugin" -p="SimReady"
+    set SIMREADY_PLUGINS_INSTALLED="SimReady OFF"
+)
 if %USE_CARSIM% == true (
     python %ROOT_PATH%Util/BuildTools/enable_carsim_to_uproject.py -f="%ROOT_PATH%Unreal/CarlaUE4/CarlaUE4.uproject" -e
     set CARSIM_STATE="CarSim ON"
@@ -165,7 +172,7 @@ if %USE_UNITY% == true (
 ) else (
     set UNITY_STATE="Unity OFF"
 )
-set OPTIONAL_MODULES_TEXT=%CARSIM_STATE% %CHRONO_STATE% %ROS2_STATE% %OMNIVERSE_PLUGIN_INSTALLED% %UNITY_STATE%
+set OPTIONAL_MODULES_TEXT=%CARSIM_STATE% %CHRONO_STATE% %ROS2_STATE% %SIMREADY_PLUGINS_INSTALLED% %UNITY_STATE%
 echo %OPTIONAL_MODULES_TEXT% > "%ROOT_PATH%Unreal/CarlaUE4/Config/OptionalModules.ini"
 
 

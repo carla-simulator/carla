@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -21,19 +21,8 @@ not the case, the clients needs to take in account at each frame how many
 sensors are going to tick at each frame.
 """
 
-import glob
-import os
-import sys
 from queue import Queue
 from queue import Empty
-
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 import carla
 
@@ -43,9 +32,13 @@ import carla
 # process it as you liked and the important part is that,
 # at the end, it should include an element into the sensor queue.
 def sensor_callback(sensor_data, sensor_queue, sensor_name):
-    # Do stuff with the sensor_data data like save it to disk
-    # Then you just need to add to the queue
+    # Do stuff with the sensor_data data like save it to disk,
+    # then you add it to the queue so the main loop is aware of it.
     sensor_queue.put((sensor_data.frame, sensor_name))
+
+    # # You could also put the sensor data in the queue
+    # # and process it in the main loop
+    # sensor_queue.put((sensor_name, sensor_data.frame, sensor_data))
 
 
 def main():
@@ -83,6 +76,14 @@ def main():
         cam01.listen(lambda data: sensor_callback(data, sensor_queue, "camera01"))
         sensor_list.append(cam01)
 
+        cam02 = world.spawn_actor(cam_bp, carla.Transform())
+        cam02.listen(lambda data: sensor_callback(data, sensor_queue, "camera02"))
+        sensor_list.append(cam02)
+
+        cam03 = world.spawn_actor(cam_bp, carla.Transform())
+        cam03.listen(lambda data: sensor_callback(data, sensor_queue, "camera03"))
+        sensor_list.append(cam03)
+
         lidar_bp.set_attribute('points_per_second', '100000')
         lidar01 = world.spawn_actor(lidar_bp, carla.Transform())
         lidar01.listen(lambda data: sensor_callback(data, sensor_queue, "lidar01"))
@@ -108,18 +109,17 @@ def main():
             w_frame = world.get_snapshot().frame
             print("\nWorld's frame: %d" % w_frame)
 
-            # Now, we wait to the sensors data to be received.
-            # As the queue is blocking, we will wait in the queue.get() methods
-            # until all the information is processed and we continue with the next frame.
-            # We include a timeout of 1.0 s (in the get method) and if some information is
-            # not received in this time we continue.
+            # Now, we wait to the sensors data to be received. The queue.get() method retrieves
+            # and item from the queue, blocking for up to the given 1.0s if the queue is empty,
+            # raising an Empty error if the queue hasn't been filled in that time.
             try:
                 for _ in range(len(sensor_list)):
                     s_frame = sensor_queue.get(True, 1.0)
                     print("    Frame: %d   Sensor: %s" % (s_frame[0], s_frame[1]))
-
             except Empty:
                 print("    Some of the sensor information is missed")
+                # # Or raise an error if it is paramount that all data is received
+                # raise RuntimeError(" Some of the sensor information is missed")
 
     finally:
         world.apply_settings(original_settings)

@@ -68,13 +68,13 @@ sudo apt-get install libgtest-dev libpython-dev libpugixml-dev libtbb-dev
 
 The dependencies are built using [colcon](https://colcon.readthedocs.io/en/released/user/installation.html), so it has to be installed.
 ```sh
-pip3 install --user -U colcon-common-extensions
+python3 -m pip install --user -U colcon-common-extensions
 ```
 
 There are some additional dependencies for the Python bindings.
 ```sh
 sudo apt-get install castxml
-pip3 install --user pygccxml pyplusplus
+python3 -m pip install --user pygccxml pyplusplus
 ```
 
 ### Build

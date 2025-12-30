@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -73,17 +73,9 @@ void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float Delta
   if (ROS2->IsEnabled())
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
-    auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
     AActor* ParentActor = GetAttachParentActor();
-    if (ParentActor)
-    {
-      FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, LocalTransformRelativeToParent, LidarData, this);
-    }
-    else
-    {
-      ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), StreamId, SensorTransform, LidarData, this);
-    }
+    auto Transform = (ParentActor) ? GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : GetActorTransform();
+    ROS2->ProcessDataFromLidar(DataStream.GetSensorType(), Transform, LidarData, this);
   }
   #endif
 

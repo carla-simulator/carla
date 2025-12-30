@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -11,10 +11,22 @@
 #include <carla/client/Waypoint.h>
 #include <carla/road/element/LaneMarking.h>
 #include <carla/client/Landmark.h>
+#include <carla/client/RoadMark.h>
 #include <carla/road/SignalType.h>
+#include <carla/geom/GeoProjectionsParams.h>
 
 #include <ostream>
 #include <fstream>
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4583)
+#pragma warning(disable:4582)
+#include <boost/variant2/variant.hpp>
+#pragma warning(pop)
+#else
+#include <boost/variant2/variant.hpp>
+#endif
 
 namespace carla {
 namespace client {
@@ -52,6 +64,17 @@ static auto GetTopology(const carla::client::Map &self) {
   return result;
 }
 
+static carla::geom::GeoLocation GetGeoReference(const carla::client::Map &self) {
+  return self.GetGeoReference();
+}
+
+static auto GetGeoProjection(const carla::client::Map &self) {
+  const auto &variant = self.GetGeoProjection().params;
+
+  return boost::variant2::visit([](const auto &params) -> boost::python::object {
+    return boost::python::object(params);}, variant);
+}
+
 static auto GetJunctionWaypoints(const carla::client::Junction &self, const carla::road::Lane::LaneType lane_type) {
   namespace py = boost::python;
   auto topology = self.GetWaypoints(lane_type);
@@ -72,11 +95,74 @@ static auto GetLaneValidities(const carla::client::Landmark &self){
   return result;
 }
 
-static carla::geom::GeoLocation ToGeolocation(
+static carla::geom::Location ToTransform(
     const carla::client::Map &self,
-    const carla::geom::Location &location) {
-  return self.GetGeoReference().Transform(location);
+    const carla::geom::GeoLocation& geo_location) {
+  return self.GetGeoProjection().GeoLocationToTransform(geo_location);
 }
+
+static carla::geom::Location ToTransformTM(
+  const carla::client::Map &self,
+  const carla::geom::GeoLocation& geo_location,
+  const carla::geom::TransverseMercatorParams& params) {
+return self.GetGeoProjection().GeoLocationToTransformTransverseMercator(geo_location, params);
+}
+
+static carla::geom::Location ToTransformUTM(
+  const carla::client::Map &self,
+  const carla::geom::GeoLocation& geo_location,
+  const carla::geom::UniversalTransverseMercatorParams& params) {
+return self.GetGeoProjection().GeoLocationToTransformUniversalTransverseMercator(geo_location, params);
+}
+
+static carla::geom::Location ToTransformWebMerc(
+  const carla::client::Map &self,
+  const carla::geom::GeoLocation& geo_location,
+  const carla::geom::WebMercatorParams& params) {
+return self.GetGeoProjection().GeoLocationToTransformWebMercator(geo_location, params);
+}
+
+static carla::geom::Location ToTransformLCC2SP(
+  const carla::client::Map &self,
+  const carla::geom::GeoLocation& geo_location,
+  const carla::geom::LambertConformalConicParams& params) {
+return self.GetGeoProjection().GeoLocationToTransformLambertConformalConic(geo_location, params);
+}
+
+static carla::geom::GeoLocation ToGeolocation(
+  const carla::client::Map &self,
+  const carla::geom::Location &location) {
+return self.GetGeoProjection().TransformToGeoLocation(location);
+}
+
+static carla::geom::GeoLocation ToGeolocationTM(
+    const carla::client::Map &self,
+    const carla::geom::Location &location,
+    const carla::geom::TransverseMercatorParams& params) {
+  return self.GetGeoProjection().TransformToGeoLocationTransverseMercator(location, params);
+}
+
+static carla::geom::GeoLocation ToGeolocationUTM(
+  const carla::client::Map &self,
+  const carla::geom::Location &location,
+  const carla::geom::UniversalTransverseMercatorParams& params) {
+  return self.GetGeoProjection().TransformToGeoLocationUniversalTransverseMercator(location, params);
+}
+
+static carla::geom::GeoLocation ToGeolocationWebMerc(
+  const carla::client::Map &self,
+  const carla::geom::Location &location,
+  const carla::geom::WebMercatorParams& params) {
+  return self.GetGeoProjection().TransformToGeoLocationWebMercator(location, params);
+}
+
+static carla::geom::GeoLocation ToGeolocationLCC2SP(
+  const carla::client::Map &self,
+  const carla::geom::Location &location,
+  const carla::geom::LambertConformalConicParams& params) {
+  return self.GetGeoProjection().TransformToGeoLocationLambertConformalConic(location, params);
+}
+
 
 void export_map() {
   using namespace boost::python;
@@ -150,6 +236,12 @@ void export_map() {
     .value("Negative", cr::SignalOrientation::Negative)
     .value("Both", cr::SignalOrientation::Both)
   ;
+
+  enum_<cr::StencilOrientation>("RoadMarkOrientation")
+    .value("Positive", cr::StencilOrientation::Positive)
+    .value("Negative", cr::StencilOrientation::Negative)
+    .value("Both", cr::StencilOrientation::Both)
+  ;
   // ===========================================================================
   // -- Map --------------------------------------------------------------------
   // ===========================================================================
@@ -163,6 +255,17 @@ void export_map() {
     .def("get_topology", &GetTopology)
     .def("generate_waypoints", CALL_RETURNING_LIST_1(cc::Map, GenerateWaypoints, double), (args("distance")))
     .def("transform_to_geolocation", &ToGeolocation, (arg("location")))
+    .def("transform_to_geolocation", &ToGeolocationTM, (arg("location"), arg("projection")))
+    .def("transform_to_geolocation", &ToGeolocationUTM, (arg("location"), arg("projection")))
+    .def("transform_to_geolocation", &ToGeolocationWebMerc, (arg("location"), arg("projection")))
+    .def("transform_to_geolocation", &ToGeolocationLCC2SP, (arg("location"), arg("projection")))
+    .def("geolocation_to_transform", &ToTransform, (arg("geo_location")))
+    .def("geolocation_to_transform", &ToTransformTM, (arg("geo_location"), args("projection")))
+    .def("geolocation_to_transform", &ToTransformUTM, (arg("geo_location"), args("projection")))
+    .def("geolocation_to_transform", &ToTransformWebMerc, (arg("geo_location"), args("projection")))
+    .def("geolocation_to_transform", &ToTransformLCC2SP, (arg("geo_location"), args("projection")))
+    .def("get_georeference", &GetGeoReference)
+    .def("get_geoprojection", &GetGeoProjection)
     .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
     .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))
     .def("get_crosswalks", CALL_RETURNING_LIST(cc::Map, GetAllCrosswalkZones))
@@ -170,6 +273,9 @@ void export_map() {
     .def("get_all_landmarks_from_id", CALL_RETURNING_LIST_1(cc::Map, GetLandmarksFromId, std::string), (args("opendrive_id")))
     .def("get_all_landmarks_of_type", CALL_RETURNING_LIST_1(cc::Map, GetAllLandmarksOfType, std::string), (args("type")))
     .def("get_landmark_group", CALL_RETURNING_LIST_1(cc::Map, GetLandmarkGroup, cc::Landmark), args("landmark"))
+    .def("get_all_road_marks", CALL_RETURNING_LIST(cc::Map, GetAllRoadMarks))
+    .def("get_road_marks_from_id", CALL_RETURNING_LIST_1(cc::Map, GetRoadMarksFromId, std::string), (args("opendrive_id")))
+    .def("get_all_road_marks_of_type", CALL_RETURNING_LIST_1(cc::Map, GetAllRoadMarksOfType, std::string), (args("type")))
     .def("cook_in_memory_map", &cc::Map::CookInMemoryMap, (arg("path")=""))
     .def(self_ns::str(self_ns::self))
   ;
@@ -200,6 +306,7 @@ void export_map() {
     .add_property("lane_type", &cc::Waypoint::GetType)
     .add_property("right_lane_marking", CALL_RETURNING_OPTIONAL(cc::Waypoint, GetRightLaneMarking))
     .add_property("left_lane_marking", CALL_RETURNING_OPTIONAL(cc::Waypoint, GetLeftLaneMarking))
+    .add_property("is_rht", &cc::Waypoint::IsRHT)
     .def("next", CALL_RETURNING_LIST_1(cc::Waypoint, GetNext, double), (args("distance")))
     .def("previous", CALL_RETURNING_LIST_1(cc::Waypoint, GetPrevious, double), (args("distance")))
     .def("next_until_lane_end", CALL_RETURNING_LIST_1(cc::Waypoint, GetNextUntilLaneEnd, double), (args("distance")))
@@ -280,5 +387,24 @@ void export_map() {
     .add_property("waypoint", &cc::Landmark::GetWaypoint)
     .add_property("transform", CALL_RETURNING_COPY(cc::Landmark, GetTransform))
     .def("get_lane_validities", &GetLaneValidities)
+  ;
+
+  class_<cc::RoadMark, boost::noncopyable, boost::shared_ptr<cc::RoadMark>>("RoadMark", no_init)
+    .add_property("road_id", &cc::RoadMark::GetRoadId)
+    .add_property("distance", &cc::RoadMark::GetDistance)
+    .add_property("s", &cc::RoadMark::GetS)
+    .add_property("t", &cc::RoadMark::GetT)
+    .add_property("id", &cc::RoadMark::GetId)
+    .add_property("name", &cc::RoadMark::GetName)
+    .add_property("orientation", &cc::RoadMark::GetOrientation)
+    .add_property("z_offset", &cc::RoadMark::GetZOffset)
+    .add_property("type", &cc::RoadMark::GetType)
+    .add_property("length", &cc::RoadMark::GetLength)
+    .add_property("width", &cc::RoadMark::GetWidth)
+    .add_property("heading", &cc::RoadMark::GetHeading)
+    .add_property("pitch", &cc::RoadMark::GetPitch)
+    .add_property("roll", &cc::RoadMark::GetRoll)
+    .add_property("waypoint", &cc::RoadMark::GetWaypoint)
+    .add_property("transform", CALL_RETURNING_COPY(cc::RoadMark, GetTransform))
   ;
 }

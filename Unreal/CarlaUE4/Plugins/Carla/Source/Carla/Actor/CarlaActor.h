@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -19,6 +19,7 @@
 #include "Carla/Server/CarlaServerResponse.h"
 
 class AActor;
+class ASensor;
 
 /// A view over an actor and its properties.
 class FCarlaActor
@@ -176,6 +177,8 @@ public:
     return dynamic_cast<T*>(ActorData.Get());
   }
 
+  FActorAttribute GetAttribute(const FString Name) const { return Info->Description.GetAttribute(Name); }
+
   // Actor function interface ----------------------
 
   // General functions
@@ -282,6 +285,16 @@ public:
   }
 
   virtual ECarlaServerResponse GetWheelSteerAngle(const EVehicleWheelLocation&, float&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetWheelPitchAngle(const EVehicleWheelLocation&, float)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse GetWheelPitchAngle(const EVehicleWheelLocation&, float&)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -489,64 +502,70 @@ public:
       carla::rpc::ActorState InState,
       UWorld* World);
 
-  virtual ECarlaServerResponse EnableActorConstantVelocity(const FVector& Velocity) final;
+  ECarlaServerResponse EnableActorConstantVelocity(const FVector& Velocity) override final;
 
-  virtual ECarlaServerResponse DisableActorConstantVelocity() final;
+  ECarlaServerResponse DisableActorConstantVelocity() override final;
 
-  virtual ECarlaServerResponse GetPhysicsControl(FVehiclePhysicsControl& PhysicsControl) final;
+  ECarlaServerResponse GetPhysicsControl(FVehiclePhysicsControl& PhysicsControl) override final;
 
-  virtual ECarlaServerResponse GetFailureState(carla::rpc::VehicleFailureState&) final;
+  ECarlaServerResponse GetFailureState(carla::rpc::VehicleFailureState&) override final;
 
-  virtual ECarlaServerResponse GetVehicleLightState(FVehicleLightState& LightState) final;
+  ECarlaServerResponse GetVehicleLightState(FVehicleLightState& LightState) override final;
 
-  virtual ECarlaServerResponse OpenVehicleDoor(const EVehicleDoor DoorIdx) final;
+  ECarlaServerResponse OpenVehicleDoor(const EVehicleDoor DoorIdx) override final;
 
-  virtual ECarlaServerResponse CloseVehicleDoor(const EVehicleDoor DoorIdx) final;
+  ECarlaServerResponse CloseVehicleDoor(const EVehicleDoor DoorIdx) override final;
 
-  virtual ECarlaServerResponse ApplyPhysicsControl(
-      const FVehiclePhysicsControl& PhysicsControl) final;
+  ECarlaServerResponse ApplyPhysicsControl(
+      const FVehiclePhysicsControl& PhysicsControl) override final;
 
-  virtual ECarlaServerResponse SetVehicleLightState(
-      const FVehicleLightState& LightState) final;
+  ECarlaServerResponse SetVehicleLightState(
+      const FVehicleLightState& LightState) override final;
 
-  virtual ECarlaServerResponse SetWheelSteerDirection(
-      const EVehicleWheelLocation& WheelLocation, float AngleInDeg) final;
+  ECarlaServerResponse SetWheelSteerDirection(
+      const EVehicleWheelLocation& WheelLocation, float AngleInDeg) override final;
 
-  virtual ECarlaServerResponse GetWheelSteerAngle(
-      const EVehicleWheelLocation& WheelLocation, float& Angle);
+  ECarlaServerResponse GetWheelSteerAngle(
+      const EVehicleWheelLocation& WheelLocation, float& Angle) override final;
 
-  virtual ECarlaServerResponse SetActorSimulatePhysics(bool bSimulatePhysics) final;
+  ECarlaServerResponse SetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float AngleInDeg) override final;
 
-  virtual ECarlaServerResponse ApplyControlToVehicle(
-      const FVehicleControl&, const EVehicleInputPriority&) final;
+  ECarlaServerResponse GetWheelPitchAngle(
+      const EVehicleWheelLocation& WheelLocation, float& Angle) override final;
 
-  virtual ECarlaServerResponse ApplyAckermannControlToVehicle(
-      const FVehicleAckermannControl&, const EVehicleInputPriority&) final;
+  ECarlaServerResponse SetActorSimulatePhysics(bool bSimulatePhysics) override final;
 
-  virtual ECarlaServerResponse GetVehicleControl(FVehicleControl&) final;
+  ECarlaServerResponse ApplyControlToVehicle(
+      const FVehicleControl&, const EVehicleInputPriority&) override final;
 
-  virtual ECarlaServerResponse GetVehicleAckermannControl(FVehicleAckermannControl&) final;
+  ECarlaServerResponse ApplyAckermannControlToVehicle(
+      const FVehicleAckermannControl&, const EVehicleInputPriority&) override final;
 
-  virtual ECarlaServerResponse GetAckermannControllerSettings(FAckermannControllerSettings&) final;
+  ECarlaServerResponse GetVehicleControl(FVehicleControl&) override final;
 
-  virtual ECarlaServerResponse ApplyAckermannControllerSettings(const FAckermannControllerSettings&) final;
+  ECarlaServerResponse GetVehicleAckermannControl(FVehicleAckermannControl&) override final;
 
-  virtual ECarlaServerResponse SetActorAutopilot(bool bEnabled, bool bKeepState = false) final;
+  ECarlaServerResponse GetAckermannControllerSettings(FAckermannControllerSettings&) override final;
 
-  virtual ECarlaServerResponse GetVehicleTelemetryData(FVehicleTelemetryData&) final;
+  ECarlaServerResponse ApplyAckermannControllerSettings(const FAckermannControllerSettings&) override final;
 
-  virtual ECarlaServerResponse ShowVehicleDebugTelemetry(bool bEnabled) final;
+  ECarlaServerResponse SetActorAutopilot(bool bEnabled, bool bKeepState = false) override final;
 
-  virtual ECarlaServerResponse EnableCarSim(const FString& SimfilePath) final;
+  ECarlaServerResponse GetVehicleTelemetryData(FVehicleTelemetryData&) override final;
 
-  virtual ECarlaServerResponse UseCarSimRoad(bool bEnabled) final;
+  ECarlaServerResponse ShowVehicleDebugTelemetry(bool bEnabled) override final;
 
-  virtual ECarlaServerResponse EnableChronoPhysics(
+  ECarlaServerResponse EnableCarSim(const FString& SimfilePath) override final;
+
+  ECarlaServerResponse UseCarSimRoad(bool bEnabled) override final;
+
+  ECarlaServerResponse EnableChronoPhysics(
       uint64_t MaxSubsteps, float MaxSubstepDeltaTime,
       const FString& VehicleJSON, const FString& PowertrainJSON,
-      const FString& TireJSON, const FString& BaseJSONPath) final;
+      const FString& TireJSON, const FString& BaseJSONPath) override final;
 
-  virtual ECarlaServerResponse RestorePhysXPhysics();
+  ECarlaServerResponse RestorePhysXPhysics() override final;
 };
 
 class FSensorActor : public FCarlaActor
@@ -559,6 +578,7 @@ public:
       carla::rpc::ActorState InState,
       UWorld* World);
 
+  ASensor* GetSensor();
 };
 
 class FTrafficSignActor : public FCarlaActor
@@ -582,21 +602,21 @@ public:
       carla::rpc::ActorState InState,
       UWorld* World);
 
-  virtual ECarlaServerResponse SetTrafficLightState(const ETrafficLightState& State) final;
+  ECarlaServerResponse SetTrafficLightState(const ETrafficLightState& State) override final;
 
-  virtual ETrafficLightState GetTrafficLightState() const final;
+  ETrafficLightState GetTrafficLightState() const override final;
 
-  virtual UTrafficLightController* GetTrafficLightController() final;
+  UTrafficLightController* GetTrafficLightController() override final;
 
-  virtual ECarlaServerResponse SetLightGreenTime(float time) final;
+  ECarlaServerResponse SetLightGreenTime(float time) override final;
 
-  virtual ECarlaServerResponse SetLightYellowTime(float time) final;
+  ECarlaServerResponse SetLightYellowTime(float time) override final;
 
-  virtual ECarlaServerResponse SetLightRedTime(float time) final;
+  ECarlaServerResponse SetLightRedTime(float time) override final;
 
-  virtual ECarlaServerResponse FreezeTrafficLight(bool bFreeze) final;
+  ECarlaServerResponse FreezeTrafficLight(bool bFreeze) override final;
 
-  virtual ECarlaServerResponse ResetTrafficLightGroup() final;
+  ECarlaServerResponse ResetTrafficLightGroup() override final;
 
 };
 
@@ -610,27 +630,27 @@ public:
       carla::rpc::ActorState InState,
       UWorld* World);
 
-  virtual ECarlaServerResponse SetWalkerState(
+  ECarlaServerResponse SetWalkerState(
       const FTransform& Transform,
-      carla::rpc::WalkerControl WalkerControl) final;
+      carla::rpc::WalkerControl WalkerControl) override final;
 
-  virtual ECarlaServerResponse SetActorSimulatePhysics(bool bSimulatePhysics) final;
+  ECarlaServerResponse SetActorSimulatePhysics(bool bSimulatePhysics) override final;
 
-  virtual ECarlaServerResponse SetActorEnableGravity(bool bEnabled) final;
+  ECarlaServerResponse SetActorEnableGravity(bool bEnabled) override final;
 
-  virtual ECarlaServerResponse ApplyControlToWalker(const FWalkerControl&) final;
+  ECarlaServerResponse ApplyControlToWalker(const FWalkerControl&) override final;
 
-  virtual ECarlaServerResponse GetWalkerControl(FWalkerControl&) final;
+  ECarlaServerResponse GetWalkerControl(FWalkerControl&) override final;
 
-  virtual ECarlaServerResponse GetBonesTransform(FWalkerBoneControlOut&) final;
+  ECarlaServerResponse GetBonesTransform(FWalkerBoneControlOut&) override final;
 
-  virtual ECarlaServerResponse SetBonesTransform(const FWalkerBoneControlIn&) final;
+  ECarlaServerResponse SetBonesTransform(const FWalkerBoneControlIn&) override final;
 
-  virtual ECarlaServerResponse BlendPose(float Blend);
+  ECarlaServerResponse BlendPose(float Blend) override final;
 
-  virtual ECarlaServerResponse GetPoseFromAnimation();
+  ECarlaServerResponse GetPoseFromAnimation() override final;
 
-  virtual ECarlaServerResponse SetActorDead();
+  ECarlaServerResponse SetActorDead() override final;
 };
 
 class FOtherActor : public FCarlaActor
