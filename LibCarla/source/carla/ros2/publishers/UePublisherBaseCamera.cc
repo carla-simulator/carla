@@ -39,8 +39,8 @@ bool UePublisherBaseCamera<ALLOCATOR>::SubscribersConnected() const {
 template <class ALLOCATOR>
 void UePublisherBaseCamera<ALLOCATOR>::UpdateCameraInfo(const builtin_interfaces::msg::Time &stamp,
                                                         sensor_msgs::msg::CameraInfo const &camera_info) {
-  _camera_info->SetMessageHeader(stamp, frame_id());
   _camera_info->Message() = camera_info;
+  _camera_info->SetMessageHeader(stamp, frame_id());
   _camera_info->Message().roi().x_offset(0);  // up-to-data: constantly 0
   _camera_info->Message().roi().y_offset(0);  // up-to-data: constantly 0
   _camera_info->Message().roi().height(camera_info.height());
