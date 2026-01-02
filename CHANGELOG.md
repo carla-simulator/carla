@@ -10,7 +10,8 @@
  * Improved V2X sensor capabilities: send complex custom user-defined data, support V2I sensors not attached to a vehicle
  * Introduced fine grained ServerSynchronization mechanism: each client decides for its own if it requires synchronization or not and provides its own synchronization window.
    Be aware: some existing code using master/slave sync mechanism might need rework. See also generate_traffic.py.
-
+ * Added support for parsing offsets from OpenDRIVE using optional offset transforms.
+ 
 ## CARLA 0.9.16
 
  * Added NVIDIA Cosmos Transfer1 integration

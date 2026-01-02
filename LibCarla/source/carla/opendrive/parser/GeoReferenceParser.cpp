@@ -50,6 +50,19 @@ namespace parser {
     return geo_parameters_map;
   }
 
+  static std::unordered_map<std::string, double> ParseOffsetParameters(const pugi::xml_node &geo_offset){
+
+    std::unordered_map<std::string, double> geo_offset_result;
+
+    for (auto attr = geo_offset.first_attribute(); attr; attr = attr.next_attribute()){
+      std::string key = attr.name();
+      double value = attr.as_double();
+      geo_offset_result[key] = value;
+    }
+    return geo_offset_result;
+  }
+
+
   template <typename M, typename S>
   static bool TryGetParameter(std::string& out, M& parameters, S&& name)
   {
@@ -96,36 +109,75 @@ namespace parser {
     return true;
   }
 
+  template <typename S, typename O>
+  static bool TryGetParameter(O& out,std::unordered_map<std::string, double>& parameters,S&& name)
+  {
+    auto i = parameters.find(std::forward<S>(name));
+    if (i == parameters.cend()){
+      return false;
+    }
+    out = static_cast<O>(i->second);
+    return true;
+  }
+
+
   static geom::Ellipsoid CreateEllipsoid(std::unordered_map<std::string, std::string> parameters){
     
     geom::Ellipsoid ellps;
     std::string value;
+    bool initialized=false;
     double x;
 
-    if (TryGetParameter(value, parameters, "ellps")) {
+    if (TryGetParameter(value, parameters, "ellps") || TryGetParameter(value, parameters, "datum")) {
       value = ToLowerCase(value);
       auto it = geom::custom_ellipsoids.find(value);
       if (it != geom::custom_ellipsoids.end()) {
         ellps.a = it->second.first;
         ellps.f_inv = it->second.second;
-      } else {
-        auto val = geom::custom_ellipsoids.find("wgs84");
-        ellps.a = val->second.first;
-        ellps.f_inv = val->second.second;
+        initialized=true;
       }
     }
 
+    initialized |= TryGetParameter(ellps.a, parameters, "a");
     // Specific semi-major axis
-    TryGetParameter(ellps.a, parameters, "a");
-    TryGetParameter(x, parameters, "b");
-    ellps.fromb(x);
-    TryGetParameter(x, parameters, "f");
-    ellps.fromf(x);
-    TryGetParameter(ellps.f_inv, parameters, "rf");
+    if (TryGetParameter(x, parameters, "b")) {
+      initialized = true;
+      ellps.fromb(x);
+    }
+    if (TryGetParameter(x, parameters, "f")) {
+      initialized = true;
+      ellps.fromf(x);
+    }
+    initialized |= TryGetParameter(ellps.f_inv, parameters, "rf");
+
+    if (!initialized)    {
+      auto val = geom::custom_ellipsoids.find("wgs84");
+      ellps.a = val->second.first;
+      ellps.f_inv = val->second.second;
+    }
 
     return ellps;
   }
 
+  static boost::optional<geom::OffsetTransform> CreateOffsetTransform(std::unordered_map<std::string, double>& offset_parameters){
+
+    if(offset_parameters.empty()){
+      return boost::none;
+    }
+
+    double x = 0.0;
+    double y = 0.0;
+    double z = 0.0;
+    double hdg = 0.0;
+
+    TryGetParameter(x, offset_parameters, "x");
+    TryGetParameter(y, offset_parameters, "y");
+    TryGetParameter(z, offset_parameters, "z");
+    TryGetParameter(hdg, offset_parameters, "hdg");
+
+    return geom::OffsetTransform{x, y, z, hdg};
+  }
+  
   static geom::GeoProjection CreateTransverseMercatorProjection(
     std::unordered_map<std::string, std::string> parameters,
     std::string proj_string,
@@ -146,7 +198,7 @@ namespace parser {
   static geom::GeoProjection CreateUniversalTransverseMercatorProjection(
     std::unordered_map<std::string, std::string> parameters,
     std::string proj_string,
-    geom::Ellipsoid ellipsoid){
+    geom::Ellipsoid ellipsoid, boost::optional<carla::geom::OffsetTransform> offset){
 
     geom::UniversalTransverseMercatorParams p;
     if (!TryGetParameter(p.zone, parameters, "zone")) {
@@ -154,6 +206,7 @@ namespace parser {
     }
     p.north = (parameters.count("south") > 0) ? false : true;
     p.ellps = ellipsoid;
+    p.offset = offset;
     auto projection = geom::GeoProjection::Make(p);
     projection.setPROJString(proj_string);
     return projection;
@@ -203,7 +256,7 @@ namespace parser {
   static geom::GeoLocation CreateTransverseMercatorGeoReference(std::unordered_map<std::string, std::string> parameters){
     geom::GeoLocation result{0.0, 0.0, 0.0};
     TryGetParameter(result.latitude, parameters, "lat_0");
-    TryGetParameter(result.longitude, parameters, "lon_0");
+-   TryGetParameter(result.longitude, parameters, "lon_0");
     return result;
   }
 
@@ -232,9 +285,11 @@ namespace parser {
     return result;
   }
 
-  static auto ParseGeoProjectionAndReference(const std::string& proj_string) {
+  static auto ParseGeoProjectionAndReference(const std::string& proj_string, const pugi::xml_node &geo_offset){
     auto parameters = ParseProjectionParameters(proj_string);
+    auto offset_parameters = ParseOffsetParameters(geo_offset);
     auto ellipsoid = CreateEllipsoid(parameters);
+    auto offset_transform = CreateOffsetTransform(offset_parameters);
 
     // Get the projection type
     std::string proj;
@@ -252,7 +307,7 @@ namespace parser {
         CreateTransverseMercatorGeoReference(parameters));
     } else if (proj == "utm") {
       return std::make_pair(
-        CreateUniversalTransverseMercatorProjection(parameters, proj_string, ellipsoid),
+        CreateUniversalTransverseMercatorProjection(parameters, proj_string, ellipsoid, offset_transform),
         CreateUniversalTransverseMercatorGeoReference(parameters));
     } else if (proj == "merc") {
       return std::make_pair(
@@ -280,10 +335,18 @@ namespace parser {
       .child("header")
       .child_value("geoReference");
     
+    auto georeference_offset_node =
+      xml
+      .child("OpenDRIVE")
+      .child("header")
+      .child("offset");
+    
     auto reference_and_projection = ParseGeoProjectionAndReference(
-      georeference_string);
+      georeference_string, georeference_offset_node);
     map_builder.SetGeoProjection(reference_and_projection.first);
     map_builder.SetGeoReference(reference_and_projection.second);
+
+
   }
 
 } // parser
