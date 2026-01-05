@@ -134,11 +134,11 @@ namespace geom {
         boost::optional<OffsetTransform> offset;
 
         bool operator==(const UniversalTransverseMercatorParams &rhs) const {
-            return (zone == rhs.zone) && (north == rhs.north) && (ellps == rhs.ellps);
+            return (zone == rhs.zone) && (north == rhs.north) && (ellps == rhs.ellps) && (offset == rhs.offset);
         }
 
         bool operator!=(const UniversalTransverseMercatorParams &rhs) const {
-            return (zone != rhs.zone) || (north != rhs.north) || (ellps != rhs.ellps);
+            return (zone != rhs.zone) || (north != rhs.north) || (ellps != rhs.ellps) || (offset == rhs.offset);
         }
     };
 
