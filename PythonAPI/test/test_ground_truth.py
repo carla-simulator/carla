@@ -157,7 +157,7 @@ def main():
         
         agent.set_destination(GetNextDestination())
         while True:
-            if frame_count == argv.frame_count:
+            if frame_count >= argv.frame_count:
                 break
             if argv.sync:
                 world.tick()
