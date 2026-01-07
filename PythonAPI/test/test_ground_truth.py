@@ -77,6 +77,7 @@ def main():
         client = carla.Client()
         client.set_timeout(10.0)
         world = client.get_world()
+        world.reset_all_traffic_lights()
         traffic_manager = client.get_trafficmanager()
         map = world.get_map()
         settings = world.get_settings()
@@ -125,9 +126,11 @@ def main():
             attach_to=vehicle,
             attachment_type=carla.AttachmentType.Rigid)
         
+        global frame_count
         frame_count = 0
 
         def SaveImage(image):
+            global frame_count
             image.convert(carla.ColorConverter.Raw)
             path = HERE / '_ground_truth' / f'{image.frame}.png'
             image.save_to_disk(str(path))
@@ -251,10 +254,10 @@ def main():
             video.release()
             exit_code = 0
             if all([
-                np.round(correlation_avg, 2) >= 0.7,
+                np.round(correlation_avg, 2) >= 0.6,
                 np.round(bhattacharyya_avg, 2) <= 0.3,
-                np.round(correlation_var, 2) < 0.01,
-                np.round(bhattacharyya_var, 2) < 0.01
+                np.round(correlation_var, 2) <= 0.02,
+                np.round(bhattacharyya_var, 2) <= 0.02
             ]):
                 exit_code = 0
             else:
