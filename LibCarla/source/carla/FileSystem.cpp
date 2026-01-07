@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -19,7 +19,7 @@ namespace carla {
     fs::path path(filepath);
     if (!ext.empty() && path.extension() != ext)
       path.replace_extension(ext);
-    auto parent = path.parent_path();
+    auto parent = fs::absolute(path.parent_path());
     if (!fs::exists(parent))
       fs::create_directories(parent);
     filepath = path.string();
