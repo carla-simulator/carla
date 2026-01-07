@@ -58,6 +58,9 @@ def main():
         '-n', '--frame-count', type=int, default=100,
         help='Number of frames to save')
     parser.add_argument(
+        '-w', '--warmup-frame-count', type=int, default=10,
+        help='Number of frames to save')
+    parser.add_argument(
         '-g', '--generate',
         action='store_true',
         help='Whether to generate the ground truth file.')
@@ -65,12 +68,20 @@ def main():
         '--plot', action='store_true',
         help='Whether to plot results')
     argv = parser.parse_args()
+
+    OUTPUT_DIR = HERE / '_ground_truth'
+    OUTPUT_FILE = OUTPUT_DIR.with_suffix('.mkv')
+
+    if not argv.generate:
+        assert OUTPUT_FILE.exists()
+
     try:
-        output_path = HERE / '_ground_truth'
-        if output_path.exists():
+
+        if OUTPUT_DIR.exists():
             import shutil
-            shutil.rmtree(output_path)
-        output_path.mkdir(exist_ok=True)
+            shutil.rmtree(OUTPUT_DIR)
+        OUTPUT_DIR.mkdir(exist_ok=True)
+        
         print('Setting up client')
         underlying_prng = np.random.PCG64(argv.seed)
         prng = np.random.Generator(underlying_prng)
@@ -94,6 +105,8 @@ def main():
         vehicle_bp = vehicle_bp[0]
         spawn_points = map.get_spawn_points()
         spawn_point_index = argv.spawn_point
+
+        print('Spawning vehicle')
         # Vehicle setup:
         vehicle = None
         while True:
@@ -105,6 +118,9 @@ def main():
             spawn_point_index += 1
             if spawn_point_index == 100:
                 raise Exception('Failed to spawn vehicle after 100 retries.')
+        print(f'Vehicle {vehicle} spawned at {spawn_point}')
+        
+        print('Spawning sensor')
         if argv.sensor.startswith('sensor.camera'):
             width, height = (float(e) for e in argv.res.split('x'))
             print(f'Image resolution: {width} x {height}')
@@ -125,19 +141,18 @@ def main():
             carla.Transform(carla.Location(x=+0.8*bound_x, y=+0.0*bound_y, z=1.3*bound_z)),
             attach_to=vehicle,
             attachment_type=carla.AttachmentType.Rigid)
-        
         global frame_count
         frame_count = 0
-
         def SaveImage(image):
             global frame_count
             image.convert(carla.ColorConverter.Raw)
-            path = HERE / '_ground_truth' / f'{image.frame}.png'
-            image.save_to_disk(str(path))
+            out_path = HERE / '_ground_truth' / f'{image.frame}.png'
+            print(f'Saving frame {out_path.relative_to(HERE)}.', end='\r')
+            image.save_to_disk(str(out_path))
             frame_count += 1
-
         sensor.listen(SaveImage)
-        # Agent setup:
+        
+        print('Configuring agent')
         agent = None
         if argv.agent == 'Basic':
             agent = BasicAgent(vehicle, 30)
@@ -150,14 +165,13 @@ def main():
             agent.follow_speed_limits(True)
         elif argv.agent == 'Behavior':
             agent = BehaviorAgent(vehicle, behavior=argv.behavior)
-        print(f'Vehicle {vehicle} spawned at {spawn_point}')
-
         def GetNextDestination():
             return prng.choice(spawn_points).location
-        
         agent.set_destination(GetNextDestination())
+
+        print('Setup finished\nRecording')
         while True:
-            if frame_count >= argv.frame_count:
+            if frame_count >= argv.frame_count + argv.warmup_frame_count:
                 break
             if argv.sync:
                 world.tick()
@@ -170,7 +184,9 @@ def main():
             vehicle.apply_control(control)
 
     except Exception as e:
+
         print(f'Exception thrown: {e}')
+
     finally:
 
         if world != None:
@@ -184,38 +200,44 @@ def main():
             if target == None:
                 return
             target.destroy()
-            
+        
         TryDestroy(vehicle)
         TryDestroy(sensor)
 
-        if frame_count != argv.frame_count:
+        if frame_count != argv.frame_count + argv.warmup_frame_count:
             exit(1)
 
         frame_paths = [
             file
-            for file in (HERE / '_ground_truth').iterdir()
+            for file in OUTPUT_DIR.iterdir()
             if file.name.endswith('.png')
         ]
-        assert len(frame_paths) != 0
-        height, width, layers = cv2.imread(str(frame_paths[0])).shape
-        path = HERE / '_ground_truth.mkv'
+        frame_paths = frame_paths[argv.warmup_frame_count:]
+        
         if argv.generate:
-            # Generate
+
+            print(f'Generating .MKV video at {OUTPUT_FILE}')
+            height, width, _ = cv2.imread(str(frame_paths[0])).shape
             fourcc = cv2.VideoWriter_fourcc(*"MJPG")
             video = cv2.VideoWriter(
-                path,
+                OUTPUT_FILE,
                 fourcc,
                 60,
                 (width, height))
             for frame_path in frame_paths:
                 video.write(cv2.imread(str(frame_path)))
             video.release()
-        elif path.is_file():
-            video = cv2.VideoCapture(path)
+
+        elif OUTPUT_FILE.is_file():
+
+            print(f'Comparing recorded frames against {OUTPUT_FILE.relative_to(HERE)}')
+            video = cv2.VideoCapture(OUTPUT_FILE)
             assert video.isOpened()
             correlation_results = []
             bhattacharyya_results = []
+
             for frame_path in frame_paths:
+                print(f'Checking frame {frame_path.relative_to(HERE)}', end='\r')
                 ok, reference = video.read()
                 if not ok:
                     break
@@ -231,11 +253,12 @@ def main():
                 hist2 = cv2.normalize(hist2, hist2).flatten()
                 correlation_results.append(cv2.compareHist(hist1, hist2, cv2.HISTCMP_CORREL))
                 bhattacharyya_results.append(cv2.compareHist(hist1, hist2, cv2.HISTCMP_BHATTACHARYYA))
+
+            video.release()
             correlation_avg = np.mean(correlation_results)
             bhattacharyya_avg = np.mean(bhattacharyya_results)
             correlation_var = np.var(correlation_results)
             bhattacharyya_var = np.var(bhattacharyya_results)
-
             if argv.plot:
                 from matplotlib import pyplot as plt
                 plt.plot(
@@ -245,23 +268,18 @@ def main():
                     np.linspace(0, len(bhattacharyya_results), len(bhattacharyya_results)),
                     bhattacharyya_results)
                 plt.show()
-            
             print(
-                f'correlation_avg {correlation_avg}\n'
-                f'bhattacharyya_avg {bhattacharyya_avg}\n'
-                f'correlation_var {correlation_var}\n'
-                f'bhattacharyya_var {bhattacharyya_var}\n')
-            video.release()
-            exit_code = 0
-            if all([
+                f'Final results:'
+                f' - correlation_avg: {correlation_avg} (expected >=0.6)\n'
+                f' - bhattacharyya_avg: {bhattacharyya_avg} (expected <=0.3)\n'
+                f' - correlation_var: {correlation_var} (expected <=0.02)\n'
+                f' - bhattacharyya_var: {bhattacharyya_var} (expected <=0.02)\n')
+            exit_code = 0 if all([
                 np.round(correlation_avg, 2) >= 0.6,
                 np.round(bhattacharyya_avg, 2) <= 0.3,
                 np.round(correlation_var, 2) <= 0.02,
                 np.round(bhattacharyya_var, 2) <= 0.02
-            ]):
-                exit_code = 0
-            else:
-                exit_code = 1
+            ]) else 1
             print(f'Using exit_code={exit_code}')
             exit(exit_code)
 
