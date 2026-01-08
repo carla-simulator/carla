@@ -18,6 +18,12 @@ cmake_minimum_required (
   ${CARLA_CMAKE_MINIMUM_REQUIRED_VERSION}
 )
 
+list (
+  APPEND
+  CMAKE_MODULE_PATH
+  ${CMAKE_SOURCE_DIR}/CMake
+)
+
 cmake_policy (SET CMP0097 NEW)
 cmake_policy (SET CMP0091 NEW)
 cmake_policy (SET CMP0074 NEW)
@@ -131,15 +137,23 @@ foreach (CARLA_TARGET ${CARLA_TARGET_LIST})
   string (
     APPEND
     CARLA_TARGETS_HELPER_TEXT
-    "${CARLA_TARGET}: ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${CARLA_TARGET}\n"
+    "${CARLA_TARGET}::${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${CARLA_TARGET}\n"
   )
 endforeach ()
+
 file (
   WRITE
-  ${CMAKE_CURRENT_BINARY_DIR}/Targets.md
+  ${CMAKE_CURRENT_BINARY_DIR}/targets.txt
   ${CARLA_TARGETS_HELPER_TEXT}
 )
 
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/targets.txt)
+  file (
+    CREATE_LINK
+      ${CMAKE_CURRENT_BINARY_DIR}/targets.txt
+      ${CMAKE_CURRENT_SOURCE_DIR}/targets.txt
+  )
+endif ()
 
 file (
   WRITE

@@ -1,1 +1,1 @@
-python3 Util/carlacmd.py "$@"
+python3 carlacmd.py "$@"

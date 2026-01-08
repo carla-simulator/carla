@@ -1,2 +1,2 @@
 @echo off
-python Util/carlacmd.py %*
+python carlacmd.py %*
