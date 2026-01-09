@@ -197,23 +197,6 @@ endfunction ()
 
 
 
-function (carla_create_symlink ${DESTINATION} ${SOURCE})
-  execute_process (
-    COMMAND
-      ${CMAKE_COMMAND}
-        -E create_symlink
-        ${SOURCE}
-        ${DESTINATION}
-    RESULT_VARIABLE
-      CREATE_SYMLINK_RESULT
-  )
-  if (${CREATE_SYMLINK_RESULT})
-    carla_error ("Failed to create symlink from ${SOURCE} to ${DESTINATION}")
-  endif ()
-endfunction ()
-
-
-
 if (VERBOSE_CONFIGURE)
   macro (carla_print_cmake_variable NAME)
     carla_message ("${NAME}: \'${${NAME}}\'")

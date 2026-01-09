@@ -90,10 +90,11 @@ if (CARLA_UNREAL_CONTENT_PREFER_CLONE)
       carla_test_is_valid_content_directory (CARLA_HAS_CONTENT "${ADDITIONAL_CONTENT_SEARCH_PATH}")
       if (${CARLA_HAS_CONTENT})
         carla_message ("Found CARLA Content in \"${ADDITIONAL_CONTENT_SEARCH_PATH}\", creating symlink.")
-        carla_create_symlink (
-          "${CARLA_UE_CONTENT_PATH}"
-          "${ADDITIONAL_CONTENT_SEARCH_PATH}")
-        break ()
+        file (
+          CREATE_LINK
+            "${CARLA_UE_CONTENT_PATH}"
+            "${ADDITIONAL_CONTENT_SEARCH_PATH}"
+        )
       endif ()
     endforeach ()
   endif ()
