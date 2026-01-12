@@ -277,7 +277,7 @@ void RegisterActorROS2(std::shared_ptr<carla::ros2::ROS2> ROS2, FCarlaActor* Car
     }
     else if (SceneCaptureCamera != nullptr) {
       // scene capture cameras are allowed to be moved by external user
-      carla::ros2::types::ActorSetTransformCallback ActorSetTransformCallback = [Sensor](carla::ros2::types::Transform const &Transform) -> void {
+      carla::ros2::types::ActorSetTransformCallback ActorSetTransformCallback = [Sensor](carla::ros2::types::Transform &Transform) -> void {
         Sensor->SetActorTransform(Transform.GetTransform());
       };
       ROS2->AddSensorUe(SensorActorDefinition, ActorSetTransformCallback);
@@ -289,10 +289,10 @@ void RegisterActorROS2(std::shared_ptr<carla::ros2::ROS2> ROS2, FCarlaActor* Car
   else if (Vehicle != nullptr ) {
     FVehiclePhysicsControl PhysicsControl;
     CarlaActor->GetPhysicsControl(PhysicsControl);
-
+    ActorNameDefinition.city_object_label = static_cast<carla::rpc::CityObjectLabel>(ATagger::GetTagOfTaggedComponent(*Vehicle->GetMesh()));
     auto VehicleActorDefinition = std::make_shared<carla::ros2::types::VehicleActorDefinition>(
-      carla::ros2::types::ActorDefinition(ActorNameDefinition,
-        CarlaActor->GetActorInfo()->BoundingBox),
+        ActorNameDefinition,
+        CarlaActor->GetActorInfo()->BoundingBox,
         PhysicsControl);
 
     carla::ros2::types::VehicleControlCallback VehicleControlCallback = [Vehicle](carla::ros2::types::VehicleControl const &Source) -> void {
@@ -307,16 +307,17 @@ void RegisterActorROS2(std::shared_ptr<carla::ros2::ROS2> ROS2, FCarlaActor* Car
     carla::ros2::types::VehicleAckermannControlCallback VehicleAckermannControlCallback = [Vehicle](carla::ros2::types::VehicleAckermannControl const &Source) -> void {
       Vehicle->ApplyVehicleAckermannControl(Source.GetVehicleAckermannControl(), EVehicleInputPriority::User);
     };
-    carla::ros2::types::ActorSetTransformCallback VehicleSetTransformCallback = [Vehicle](carla::ros2::types::Transform const &Transform) -> void {
+    carla::ros2::types::ActorSetTransformCallback VehicleSetTransformCallback = [Vehicle](carla::ros2::types::Transform &Transform) -> void {
       Vehicle->SetActorTransform(Transform.GetTransform());
     };
 
     ROS2->AddVehicleUe(VehicleActorDefinition, VehicleControlCallback, VehicleAckermannControlCallback, VehicleSetTransformCallback);
   }
   else if ( Walker != nullptr ) {
+    ActorNameDefinition.city_object_label = carla::rpc::CityObjectLabel::Pedestrians;
     auto WalkerActorDefinition = std::make_shared<carla::ros2::types::WalkerActorDefinition>(
-        carla::ros2::types::ActorDefinition(ActorNameDefinition,
-                          CarlaActor->GetActorInfo()->BoundingBox));
+        ActorNameDefinition,
+        CarlaActor->GetActorInfo()->BoundingBox);
 
     auto WalkerController = Cast<AWalkerController>(Walker->GetController());
     carla::ros2::types::WalkerControlCallback walker_control_callback = [WalkerController](carla::ros2::types::WalkerControl const &Source) -> void {
@@ -326,17 +327,19 @@ void RegisterActorROS2(std::shared_ptr<carla::ros2::ROS2> ROS2, FCarlaActor* Car
     ROS2->AddWalkerUe(WalkerActorDefinition, walker_control_callback);
   }
   else if ( TrafficLight != nullptr ) {
+    ActorNameDefinition.city_object_label = carla::rpc::CityObjectLabel::TrafficLight;
     auto TrafficLightTriggerVolume = UBoundingBoxCalculator::GetTrafficSignTriggerVolume(TrafficLight);
     auto TrafficLightActorDefinition = std::make_shared<carla::ros2::types::TrafficLightActorDefinition>(
-      carla::ros2::types::ActorDefinition(ActorNameDefinition,
-        CarlaActor->GetActorInfo()->BoundingBox), TrafficLightTriggerVolume);
+      ActorNameDefinition,
+      CarlaActor->GetActorInfo()->BoundingBox,
+      TrafficLightTriggerVolume);
     ROS2->AddTrafficLightUe(TrafficLightActorDefinition);
   }
   else if ( TrafficSign != nullptr ) {
+    ActorNameDefinition.city_object_label = carla::rpc::CityObjectLabel::TrafficSigns;
     auto TrafficSignActorDefinition = std::make_shared<carla::ros2::types::TrafficSignActorDefinition>(
-      carla::ros2::types::ActorDefinition(ActorNameDefinition,
-        CarlaActor->GetActorInfo()->BoundingBox)
-    );
+      ActorNameDefinition,
+      CarlaActor->GetActorInfo()->BoundingBox);
     ROS2->AddTrafficSignUe(TrafficSignActorDefinition);
   }
 }
@@ -356,22 +359,11 @@ FCarlaActor* UActorDispatcher::RegisterActor(
     auto ROS2 = carla::ros2::ROS2::GetInstance();
     if (ROS2->IsEnabled())
     {
-      bool EnabledForRos = false;
-      if ( (Description.GetAttribute("enabled_for_ros").Value.Equals(TEXT(""))) && (ROS2->VisibilityDefaultMode() == carla::ros2::ROS2::TopicVisibilityDefaultMode::eOn )) {
-          EnabledForRos = true;
-      }
-      else {
-        EnabledForRos = Description.GetAttribute("enabled_for_ros").Value.ToBool();
-      }
-
       carla::ros2::types::ActorNameDefinition ActorNameDefinition( 
         View->GetActorId(),
         std::string(TCHAR_TO_UTF8(*View->GetActorInfo()->Description.Id)),
-        std::string(TCHAR_TO_UTF8(*Description.GetAttribute("ros_name").Value)),
-        std::string(TCHAR_TO_UTF8(*Description.GetAttribute("role_name").Value)),
-        std::string(TCHAR_TO_UTF8(*Description.GetAttribute("object_type").Value)),
-        std::string(TCHAR_TO_UTF8(*Description.GetAttribute("base_type").Value)),
-        EnabledForRos);
+        Description,
+        ROS2->VisibilityDefaultMode());
       RegisterActorROS2(ROS2, View, ActorNameDefinition);
     }
     #endif

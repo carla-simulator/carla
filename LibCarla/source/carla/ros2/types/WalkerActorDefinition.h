@@ -16,7 +16,8 @@ namespace types {
 using WalkerControlCallback = std::function<void(WalkerControl const &)>;
 
 struct WalkerActorDefinition : public ActorDefinition {
-  WalkerActorDefinition(ActorDefinition const &actor_definition) : ActorDefinition(actor_definition) {}
+  WalkerActorDefinition(ActorNameDefinition const &actor_name_definition, carla::geom::BoundingBox const &bounding_box) 
+    : ActorDefinition(actor_name_definition, bounding_box) {}
   virtual ~WalkerActorDefinition() = default;
 };
 }  // namespace types

@@ -7,6 +7,7 @@
 #pragma once
 
 #include <ostream>
+#include <sstream>
 
 #include "carla/MsgPack.h"
 #include "carla/geom/Location.h"
@@ -151,3 +152,14 @@ namespace geom {
 
 } // namespace geom
 } // namespace carla
+
+
+namespace std {
+
+inline std::string to_string(carla::geom::Transform const &transform) {
+  std::stringstream str;
+  str << transform;
+  return str.str();
+}
+ 
+}  // namespace std

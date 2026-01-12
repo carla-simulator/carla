@@ -33,9 +33,9 @@ inline uint8_t GetVehicleControlType(carla::sensor::data::ActorDynamicState cons
 }
 
 struct VehicleActorDefinition : public ActorDefinition {
-  VehicleActorDefinition(ActorDefinition const &actor_definition,
+  VehicleActorDefinition(ActorNameDefinition const &actor_name_definition, carla::geom::BoundingBox const &bounding_box,
                          rpc::VehiclePhysicsControl vehicle_physics_control_in)
-    : ActorDefinition(actor_definition)
+    : ActorDefinition(actor_name_definition, bounding_box)
     , vehicle_physics_control(vehicle_physics_control_in) {}
 
   rpc::VehiclePhysicsControl vehicle_physics_control;

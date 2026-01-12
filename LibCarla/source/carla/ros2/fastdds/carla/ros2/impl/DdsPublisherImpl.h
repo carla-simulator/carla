@@ -68,12 +68,8 @@ public:
   }
 
   bool Publish() override {
-    if ( !SubscribersConnected() ) {
-      carla::log_debug("DdsPublisherImpl[", _topic->get_name(), "]::Publish() No subscribers connected, skipping publish");
-      return true;
-    }
     if (_message_updated) {
-      carla::log_debug("DdsPublisherImpl[", _topic->get_name(), "]::Publishing() updated message");
+      carla::log_verbose("DdsPublisherImpl[", _topic->get_name(), "]::Publishing() updated message");
       eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
       auto rcode = _datawriter->write(&_message, instance_handle);
       if (rcode == eprosima::fastrtps::types::ReturnCode_t::ReturnCodeValue::RETCODE_OK) {
@@ -82,7 +78,7 @@ public:
         carla::log_error("DdsPublisherImpl[", _topic->get_name(), "]::Publish() Failed to write data; Error ",
                          std::to_string(rcode));
       }
-      carla::log_debug("DdsPublisherImpl[", _topic->get_name(), "]::Publishing() done");
+      carla::log_verbose("DdsPublisherImpl[", _topic->get_name(), "]::Publishing() done");
     }
     return !_message_updated;
   }

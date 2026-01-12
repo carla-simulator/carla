@@ -16,7 +16,7 @@ ObjectWithCovariancePublisher::ObjectWithCovariancePublisher(ROS2NameRecord &par
 
 bool ObjectWithCovariancePublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
   return _impl->InitHistoryPreallocatedWithReallocMemoryMode(
-      domain_participant, _parent_publisher.get_topic_name("object_with_covariance"), DEFAULT_SENSOR_DATA_QOS);
+      domain_participant, _parent_publisher.get_topic_name("object_with_covariance"), DEFAULT_PUBLISHER_QOS);
 }
 
 bool ObjectWithCovariancePublisher::Publish() {
@@ -27,7 +27,7 @@ bool ObjectWithCovariancePublisher::SubscribersConnected() const {
   return _impl->SubscribersConnected();
 }
 
-void ObjectWithCovariancePublisher::UpdateObject(std::shared_ptr<carla::ros2::types::Object> &object) {
+void ObjectWithCovariancePublisher::UpdateObject(std::shared_ptr<const carla::ros2::types::Object> &object) {
   // forward the data to the objects publisher
   _objects_publisher->AddObject(object);
   derived_object_msgs::msg::ObjectWithCovariance ros_object_with_covariance = object->object_with_covariance();

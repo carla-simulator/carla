@@ -72,7 +72,7 @@ namespace data {
       std::allocator<T>(),
       _buffer(buffer),
       _header_offset(header_offset) {
-      log_debug("SerializerVectorAllocator[", this, ":", _buffer?static_cast<const void*>(_buffer->data()):nullptr, "|", _buffer.use_count(), "] created");
+      log_verbose("SerializerVectorAllocator[", this, ":", _buffer?static_cast<const void*>(_buffer->data()):nullptr, "|", _buffer.use_count(), "] created");
     }
 
     SerializerVectorAllocator(SerializerVectorAllocator &&other) :
@@ -80,7 +80,7 @@ namespace data {
       _buffer(std::move(other._buffer)),
       _header_offset(std::exchange(other._header_offset, 0u)),
       _is_allocated(std::exchange(other._is_allocated, false)) {
-      log_debug("SerializerVectorAllocator[", this, ":", _buffer?static_cast<const void*>(_buffer->data()):nullptr, "|", _buffer.use_count(),"] created by move from [", &other, "]");
+      log_verbose("SerializerVectorAllocator[", this, ":", _buffer?static_cast<const void*>(_buffer->data()):nullptr, "|", _buffer.use_count(),"] created by move from [", &other, "]");
     }   
 
     SerializerVectorAllocator(const SerializerVectorAllocator &other) :
@@ -88,15 +88,15 @@ namespace data {
       _buffer(other._buffer),
       _header_offset(other._header_offset),
       _is_allocated(other._is_allocated) {
-      log_debug("SerializerVectorAllocator[", this, ":", _buffer?static_cast<const void*>(_buffer->data()):nullptr, "|", _buffer.use_count(),"] created by copy from [", &other, "]");
+      log_verbose("SerializerVectorAllocator[", this, ":", _buffer?static_cast<const void*>(_buffer->data()):nullptr, "|", _buffer.use_count(),"] created by copy from [", &other, "]");
     }   
 
     ~SerializerVectorAllocator() {
-      log_debug("~SerializerVectorAllocator[", this, ":", _buffer?static_cast<const void*>(_buffer->data()):nullptr, "|", _buffer.use_count(),"] destroyed");
+      log_verbose("~SerializerVectorAllocator[", this, ":", _buffer?static_cast<const void*>(_buffer->data()):nullptr, "|", _buffer.use_count(),"] destroyed");
     }
 
     SerializerVectorAllocator& operator=(SerializerVectorAllocator &&other) {
-      log_debug("SerializerVectorAllocator[", this, ":", _buffer?static_cast<const void*>(_buffer->data()):nullptr, "|", _buffer.use_count(),"] move assigned from [", &other, "]");
+      log_verbose("SerializerVectorAllocator[", this, ":", _buffer?static_cast<const void*>(_buffer->data()):nullptr, "|", _buffer.use_count(),"] move assigned from [", &other, "]");
       _buffer = std::move(other._buffer);
       _header_offset = std::exchange(other._header_offset, 0u);
       _is_allocated = std::exchange(other._is_allocated, false);
@@ -104,7 +104,7 @@ namespace data {
     }
 
     SerializerVectorAllocator& operator=(const SerializerVectorAllocator &other) {
-      log_debug("SerializerVectorAllocator[", this, ":", _buffer?static_cast<const void*>(_buffer->data()):nullptr, "|", _buffer.use_count(),"] assigned from [", &other, "]");
+      log_verbose("SerializerVectorAllocator[", this, ":", _buffer?static_cast<const void*>(_buffer->data()):nullptr, "|", _buffer.use_count(),"] assigned from [", &other, "]");
       _buffer = other._buffer;
       _header_offset = other._header_offset;
       return *this;

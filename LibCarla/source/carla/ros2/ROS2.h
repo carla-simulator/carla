@@ -8,7 +8,7 @@
 
 #include "carla/BufferView.h"
 #include "carla/ros2/ROS2NameRegistry.h"
-#include "carla/ros2/ROS2Session.h"
+#include "carla/ros2/ROS2TopicVisibilityDefaultMode.h"
 #include "carla/ros2/types/SensorActorDefinition.h"
 #include "carla/ros2/types/TrafficLightActorDefinition.h"
 #include "carla/ros2/types/TrafficSignActorDefinition.h"
@@ -30,6 +30,7 @@ class TransformPublisher;
 class CarlaActorListPublisher;
 class UeWorldPublisher;
 class ServiceInterface;
+ 
 
 class ROS2 {
 public:
@@ -39,18 +40,14 @@ public:
 
   static std::shared_ptr<ROS2> GetInstance();
 
-  // starting/stopping
-  enum class TopicVisibilityDefaultMode {
-    eOn,
-    eOff
-  }; 
+
   void Enable(carla::rpc::RpcServerInterface* carla_server,
               carla::streaming::detail::stream_id_type const world_observer_stream_id,
-              TopicVisibilityDefaultMode topic_visibility_default_mode);
+              ROS2TopicVisibilityDefaultMode topic_visibility_default_mode);
   bool IsEnabled() const {
     return _enabled;
   }
-  TopicVisibilityDefaultMode VisibilityDefaultMode() const {
+  ROS2TopicVisibilityDefaultMode VisibilityDefaultMode() const {
     return _topic_visibility_default_mode;
   }
   void NotifyInitGame();
@@ -70,9 +67,9 @@ public:
   void AddTrafficLightUe(
       std::shared_ptr<carla::ros2::types::TrafficLightActorDefinition> traffic_light_actor_definition);
   void AddTrafficSignUe(std::shared_ptr<carla::ros2::types::TrafficSignActorDefinition> traffic_sign_actor_definition);
-  bool AddSensorUe(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
+  void AddSensorUe(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
                    carla::ros2::types::ActorSetTransformCallback actor_set_transform_callback = nullptr);
-  bool AddV2XCustomSensorUe(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition, 
+  void AddV2XCustomSensorUe(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition, 
     carla::ros2::types::V2XCustomSendCallback v2x_custom_send_callback);
 
   void RemoveActor(ActorId const actor);
@@ -106,35 +103,14 @@ public:
 
 private:
   bool _enabled{false};
-  TopicVisibilityDefaultMode _topic_visibility_default_mode{TopicVisibilityDefaultMode::eOn};
+  ROS2TopicVisibilityDefaultMode _topic_visibility_default_mode{ROS2TopicVisibilityDefaultMode::eOn};
   carla::rpc::RpcServerInterface* _carla_server{nullptr};
   std::shared_ptr<ROS2NameRegistry> _name_registry{nullptr};
-  std::shared_ptr<carla::streaming::detail::Dispatcher> _dispatcher;
   std::shared_ptr<DdsDomainParticipantImpl> _domain_participant_impl;
   std::shared_ptr<carla::ros2::types::SensorActorDefinition> _world_observer_sensor_actor_definition;
 
-  struct UeSensor {
-    UeSensor(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition_)
-      : sensor_actor_definition(sensor_actor_definition_) {}
-    std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition;
-    carla::ros2::types::V2XCustomSendCallback v2x_custom_send_callback{nullptr};
-    bool publisher_expected{true};
-    std::shared_ptr<UePublisherBaseSensor> publisher;
-    std::shared_ptr<ROS2Session> session;
-    carla::ros2::types::ActorSetTransformCallback actor_set_transform_callback{nullptr};
-  };
-  std::unordered_map<carla::streaming::detail::stream_id_type, UeSensor> _ue_sensors;
-  bool _ue_sensors_changed{false};
-  std::shared_ptr<TransformPublisher> _transform_publisher;
-
   std::shared_ptr<UeWorldPublisher> _world_publisher;
-
   std::list<std::shared_ptr<carla::ros2::ServiceInterface>> _services;
-
-  std::shared_ptr<CarlaActorListPublisher> _carla_sensor_actor_list_publisher;
-
-  UeSensor* AddSensorUeInternal(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition);
-  void CreateSensorUePublisher(UeSensor& sensor);
 
   // sigleton
   ROS2(){};

@@ -22,10 +22,10 @@ class PublisherBase : public PublisherInterface, public ROS2NameRecord {
 public:
   PublisherBase(std::shared_ptr<carla::ros2::types::ActorNameDefinition> actor_name_definition)
     : ROS2NameRecord(actor_name_definition) {
-      log_debug("PublisherBase created for topic {}", actor_name_definition->ros_name);
+      log_debug("PublisherBase created for topic ", actor_name_definition->ros_name);
   }
   virtual ~PublisherBase() {
-      log_debug("PublisherBase destroyed for topic {}", _actor_name_definition->ros_name);
+      log_debug("PublisherBase destroyed for topic ", _actor_name_definition->ros_name);
   };
 
   /**
@@ -70,6 +70,20 @@ public:
     (void) actor_id;
     return _actor_name_definition->enabled_for_ros;
   }
+
+  /*
+   * @brief is the publisher actually enabled for ROS tf publication
+   */
+  virtual bool do_publish_tf(carla::streaming::detail::actor_id_type actor_id=0) const {
+    (void) actor_id;
+    return _actor_name_definition->publish_tf;
+  }
+
+
+  carla_msgs::msg::CarlaActorInfo carla_actor_info(std::shared_ptr<ROS2NameRegistry> name_registry = nullptr) const {
+    return _actor_name_definition->carla_actor_info(name_registry);
+  }
+
 };
 }  // namespace ros2
 }  // namespace carla

@@ -9,6 +9,7 @@
 #include "carla/MsgPack.h"
 
 #include <cstdint>
+#include <string>
 
 namespace carla {
 namespace rpc {
@@ -52,4 +53,43 @@ namespace rpc {
 } // namespace rpc
 } // namespace carla
 
-MSGPACK_ADD_ENUM(carla::rpc::CityObjectLabel);
+MSGPACK_ADD_ENUM(carla::rpc::CityObjectLabel)
+
+namespace std {
+  inline std::string to_string(carla::rpc::CityObjectLabel label) {
+    switch (label)
+    {
+      case carla::rpc::CityObjectLabel::None: return "None";
+      case carla::rpc::CityObjectLabel::Roads: return "Roads";
+      case carla::rpc::CityObjectLabel::Sidewalks: return "Sidewalks";
+      case carla::rpc::CityObjectLabel::Buildings: return "Buildings";
+      case carla::rpc::CityObjectLabel::Walls: return "Walls";
+      case carla::rpc::CityObjectLabel::Fences: return "Fences";
+      case carla::rpc::CityObjectLabel::Poles: return "Poles";
+      case carla::rpc::CityObjectLabel::TrafficLight: return "TrafficLight";
+      case carla::rpc::CityObjectLabel::TrafficSigns: return "TrafficSigns";
+      case carla::rpc::CityObjectLabel::Vegetation: return "Vegetation";
+      case carla::rpc::CityObjectLabel::Terrain: return "Terrain";
+      case carla::rpc::CityObjectLabel::Sky: return "Sky";
+      case carla::rpc::CityObjectLabel::Pedestrians: return "Pedestrians";
+      case carla::rpc::CityObjectLabel::Rider: return "Rider";
+      case carla::rpc::CityObjectLabel::Car: return "Car";
+      case carla::rpc::CityObjectLabel::Truck: return "Truck";
+      case carla::rpc::CityObjectLabel::Bus: return "Bus";
+      case carla::rpc::CityObjectLabel::Train: return "Train";
+      case carla::rpc::CityObjectLabel::Motorcycle: return "Motorcycle";
+      case carla::rpc::CityObjectLabel::Bicycle: return "Bicycle";
+      case carla::rpc::CityObjectLabel::Static: return "Static";
+      case carla::rpc::CityObjectLabel::Dynamic: return "Dynamic";
+      case carla::rpc::CityObjectLabel::Other: return "Other";
+      case carla::rpc::CityObjectLabel::Water: return "Water";
+      case carla::rpc::CityObjectLabel::RoadLines: return "RoadLines";
+      case carla::rpc::CityObjectLabel::Ground: return "Ground";
+      case carla::rpc::CityObjectLabel::Bridge: return "Bridge";
+      case carla::rpc::CityObjectLabel::RailTrack: return "RailTrack";
+      case carla::rpc::CityObjectLabel::GuardRail: return "GuardRail";
+      case carla::rpc::CityObjectLabel::Any: return "Any";
+      default: return "Unknown";
+    }
+  };
+} // namespace std

@@ -6,6 +6,9 @@
 
 #pragma once
 
+#include <ostream>
+#include <sstream>
+
 #include "carla/geom/Vector3D.h"
 #include "carla/geom/Vector3DInt.h"
 #include "carla/geom/Math.h"
@@ -108,3 +111,13 @@ namespace geom {
 
 } // namespace geom
 } // namespace carla
+
+namespace std {
+
+inline std::string to_string(carla::geom::Location const &location) {
+  std::stringstream str;
+  str << location;
+  return str.str();
+}
+ 
+}  // namespace std

@@ -43,5 +43,9 @@ carla::streaming::detail::actor_id_type ROS2NameRecord::get_actor_id() const {
   return _actor_name_definition->id;
 }
 
+carla::streaming::detail::actor_id_type ROS2NameRecord::get_parent_actor_id() const {
+  return ROS2::GetInstance()->GetNameRegistry()->ParentActorId(_actor_name_definition->id);
+}
+
 }  // namespace ros2
 }  // namespace carla

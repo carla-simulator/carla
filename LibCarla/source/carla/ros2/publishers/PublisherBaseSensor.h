@@ -19,14 +19,6 @@ public:
   PublisherBaseSensor(std::shared_ptr<carla::ros2::types::ActorNameDefinition> actor_name_definition)
     : PublisherBase(actor_name_definition) {}
   virtual ~PublisherBaseSensor() = default;
-
-  /*
-   * @brief Override ROS2NameRecord::get_topic_qos() for (pseudo) sensor publishers.
-   * I.e. deploy carla::ros2::DEFAULT_SENSOR_DATA_QOS
-   */
-  ROS2QoS get_topic_qos() const {
-    return DEFAULT_SENSOR_DATA_QOS;
-  }
 };
 }  // namespace ros2
 }  // namespace carla

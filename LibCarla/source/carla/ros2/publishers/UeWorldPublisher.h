@@ -5,6 +5,7 @@
 #pragma once
 
 #include "carla/ros2/ROS2NameRegistry.h"
+#include "carla/ros2/ROS2Session.h"
 #include "carla/ros2/publishers/CarlaActorListPublisher.h"
 #include "carla/ros2/publishers/CarlaStatusPublisher.h"
 #include "carla/ros2/publishers/ClockPublisher.h"
@@ -43,9 +44,11 @@ namespace ros2 {
  * - vehicle
  * - traffic_light
  * - traffic_sign
- *
+ * - environment_objects
+ * -...
+ * 
  */
-class UeWorldPublisher : public UePublisherBaseSensor {
+class UeWorldPublisher : public UePublisherBaseSensor, public std::enable_shared_from_this<UeWorldPublisher>  {
 public:
   UeWorldPublisher(carla::rpc::RpcServerInterface &carla_server, std::shared_ptr<ROS2NameRegistry> name_registry,
                    std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition);
@@ -55,6 +58,8 @@ public:
    * Implements ROS2NameRecord::Init() interface
    */
   bool Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) override;
+
+  void Cleanup();
 
   /**
    * Implement PublisherInterface::Publish interface
@@ -79,6 +84,11 @@ public:
   void RemoveActor(ActorId actor);
 
   /**
+   * Implement UePublisherBaseSensor::UpdateSensorDataPreAction()
+   */
+  void UpdateSensorDataPreAction() override;
+
+  /**
    * Implement UePublisherBaseSensor::UpdateSensorData()
    */
   void UpdateSensorData(std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header,
@@ -88,6 +98,7 @@ public:
    */
   void UpdateSensorDataPostAction() override;
 
+  void AttachActors(ActorId const child, ActorId const parent);
 
   void AddVehicleUe(std::shared_ptr<carla::ros2::types::VehicleActorDefinition> vehicle_actor_definition,
                     carla::ros2::types::VehicleControlCallback vehicle_control_callback,
@@ -98,6 +109,14 @@ public:
   void AddTrafficLightUe(
       std::shared_ptr<carla::ros2::types::TrafficLightActorDefinition> traffic_light_actor_definition);
   void AddTrafficSignUe(std::shared_ptr<carla::ros2::types::TrafficSignActorDefinition> traffic_sign_actor_definition);
+  void AddSensorUe(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
+                   carla::ros2::types::ActorSetTransformCallback actor_set_transform_callback = nullptr);
+  void AddV2XCustomSensorUe(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition, 
+    carla::ros2::types::V2XCustomSendCallback v2x_custom_send_callback);
+
+  void ProcessDataFromUeSensor(carla::streaming::detail::stream_id_type const stream_id,
+              std::shared_ptr<const carla::streaming::detail::Message> message);
+
 
   uint64_t CurrentFrame() const {
     return _frame;
@@ -106,9 +125,6 @@ public:
     return _timestamp;
   }
 
-  auto GetTransformPublisher() const {
-    return _transform_publisher;
-  }
 
   /*
    * @brief enable actor ROS publication
@@ -127,6 +143,7 @@ public:
 
 private:
   void UpdateAndPublishStatus();
+  void UpdateAndPublishEnvironmentObjects();
 
   using EpisodeHeaderConst = carla::sensor::s11n::EpisodeStateSerializer::Header const;
 
@@ -148,12 +165,12 @@ private:
         buffer_view, carla::sensor::s11n::EpisodeStateSerializer::header_offset);
   }
 
+  carla::ros2::types::Transform get_transform(ActorId actor_id);
+
   carla::ros2::types::Timestamp _timestamp{};
   uint64_t _frame{0u};
   carla::sensor::s11n::EpisodeStateSerializer::Header _episode_header;
   bool _frame_changed{false};
-  // ensure to send out at least one message with empty object list
-  bool _objects_changed{true};
   std::unordered_map<ActorId, std::shared_ptr<carla::ros2::types::Object>> _objects;
 
   struct UeVehicle {
@@ -196,19 +213,57 @@ private:
   };
   std::unordered_map<ActorId, UeTrafficSign> _traffic_signs;
 
+  struct UeSensor {
+    UeSensor(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition_)
+      : sensor_actor_definition(sensor_actor_definition_) {}
+    std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition;
+    carla::ros2::types::V2XCustomSendCallback v2x_custom_send_callback{nullptr};
+    bool publisher_expected{true};
+    std::shared_ptr<UePublisherBaseSensor> publisher;
+    std::shared_ptr<ROS2Session> session;
+    carla::ros2::types::ActorSetTransformCallback actor_set_transform_callback{nullptr};
+    carla::ros2::types::Transform transform;
+  };
+  std::unordered_map<carla::streaming::detail::stream_id_type, UeSensor> _ue_sensors;
+
+  UeSensor* AddSensorUeInternal(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition);
+  void CreateSensorUePublisher(UeSensor& sensor);
+  std::unordered_map<carla::streaming::detail::stream_id_type, UeSensor>::iterator find_ue_sensor(ActorId actor_id);
+  std::unordered_map<carla::streaming::detail::stream_id_type, UeSensor>::const_iterator find_ue_sensor(ActorId actor_id) const;
+
   std::shared_ptr<DdsDomainParticipantImpl> _domain_participant_impl;
 
   carla::rpc::RpcServerInterface &_carla_server;
   std::shared_ptr<ROS2NameRegistry> _name_registry;
+  std::shared_ptr<carla::streaming::detail::Dispatcher> _dispatcher;
+
   // publisher
-  std::shared_ptr<CarlaStatusPublisher> _carla_status_publisher;
-  std::shared_ptr<WeatherPublisher> _carla_weather_publisher;
-  std::shared_ptr<CarlaActorListPublisher> _carla_actor_list_publisher;
   std::shared_ptr<ClockPublisher> _clock_publisher;
   std::shared_ptr<WorldInfoPublisher> _world_info_publisher;
+  std::shared_ptr<CarlaStatusPublisher> _status_publisher;
+  std::shared_ptr<WeatherPublisher> _weather_publisher;
+
+  bool _sensors_changed{false};
+  std::shared_ptr<CarlaActorListPublisher> _sensor_actor_list_publisher;
+
+  bool _objects_changed{true};
+  std::shared_ptr<CarlaActorListPublisher> _actor_list_publisher;
   std::shared_ptr<ObjectsPublisher> _objects_publisher;
   std::shared_ptr<ObjectsWithCovariancePublisher> _objects_with_covariance_publisher;
+
+  bool _traffic_lights_changed{true};
   std::shared_ptr<TrafficLightsPublisher> _traffic_lights_publisher;
+  std::shared_ptr<CarlaActorListPublisher> _traffic_light_actor_list_publisher;
+  std::shared_ptr<ObjectsPublisher> _traffic_light_objects_publisher;
+
+  bool _traffic_signs_changed{true};
+  std::shared_ptr<CarlaActorListPublisher> _traffic_sign_actor_list_publisher;
+  std::shared_ptr<ObjectsPublisher> _traffic_sign_objects_publisher;
+
+  std::shared_ptr<CarlaActorListPublisher> _environment_actor_list_publisher;
+  std::shared_ptr<ObjectsPublisher> _environment_objects_publisher;
+  bool _environment_objects_initialized{false};
+
   // subscriber
   std::shared_ptr<CarlaControlSubscriber> _carla_control_subscriber;
   std::shared_ptr<WeatherControlSubscriber> _weather_control_subscriber;

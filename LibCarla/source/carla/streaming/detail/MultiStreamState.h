@@ -36,7 +36,7 @@ namespace detail {
       if (session != nullptr) {
         auto message = Session::MakeMessage(buffers...);
         session->WriteMessage(std::move(message));
-        log_debug("MultiStreamState::Write>> sensor ", session->get_stream_id(), " data sent to single session");
+        log_verbose("MultiStreamState::Write>> sensor ", session->get_stream_id(), " data sent to single session");
         // Return here, _session is only valid if we have a
         // single session.
         return;
@@ -49,10 +49,10 @@ namespace detail {
         for (auto &s : _sessions) {
           if (s != nullptr) {
             s->WriteMessage(message);
-            log_debug("MultiStreamState::Write>> sensor ", s->get_stream_id(), " data sent to session ", message->GetBufferDetailsAsString());
+            log_verbose("MultiStreamState::Write>> sensor ", s->get_stream_id(), " data sent to session ", message->GetBufferDetailsAsString());
           }
         }
-        log_debug("MultiStreamState::Write>> Write finished for multiple sessions");
+        log_verbose("MultiStreamState::Write>> Write finished for multiple sessions");
       }
     }
 

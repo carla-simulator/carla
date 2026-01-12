@@ -34,7 +34,7 @@ public:
    */
   bool SubscribersConnected() const override;
 
-  void UpdateObject(std::shared_ptr<carla::ros2::types::Object> &object);
+  void UpdateObject(std::shared_ptr<const carla::ros2::types::Object> &object);
 
 private:
   ROS2NameRecord &_parent_publisher;

@@ -29,8 +29,8 @@ inline uint8_t GetTrafficLightState(carla::sensor::data::ActorDynamicState const
 }
 
 struct TrafficLightActorDefinition : public ActorDefinition {
-  TrafficLightActorDefinition(ActorDefinition const &actor_definitions, carla::geom::BoundingBox const &trigger_volume_in) 
-    : ActorDefinition(actor_definitions)
+  TrafficLightActorDefinition(ActorNameDefinition const &actor_name_definition, carla::geom::BoundingBox const &bounding_box, carla::geom::BoundingBox const &trigger_volume_in) 
+    : ActorDefinition(actor_name_definition, bounding_box)
     , trigger_volume(trigger_volume_in) {}
 
   carla::geom::BoundingBox trigger_volume;

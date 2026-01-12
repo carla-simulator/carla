@@ -37,7 +37,8 @@ carla_msgs::srv::SpawnObject_Response SpawnObjectService::SpawnObject(
     carla_msgs::srv::SpawnObject_Request const &request) {
   carla_msgs::srv::SpawnObject_Response response;
 
-  log_debug("ROS2:SpawnObjectService processing request for '", request.blueprint().id(), "' Pose: ", request.random_pose()?"random":"provided");
+  log_debug("ROS2:SpawnObjectService processing request for '", request.blueprint().id(), "' Pose: ", 
+    request.random_pose()?"random":std::to_string(carla::ros2::types::Transform(request.transform())));
   
   int32_t retry_count = 5;
   do {
@@ -61,7 +62,7 @@ carla_msgs::srv::SpawnObject_Response SpawnObjectService::SpawnObject(
       carla::ros2::types::Transform ros_transform(request.transform());
       transform = ros_transform.GetTransform();
     }
-    log_debug("ROS2:SpawnObjectService processing request. Pose: (", transform.location.x, ", ", transform.location.y, ", ", transform.location.z, ")");
+    log_debug("ROS2:SpawnObjectService processing request. Pose: ", std::to_string(transform), ")");
     auto blueprints =
         carla::actors::BlueprintLibrary(_carla_server.call_get_actor_definitions().Get()).Filter(request.blueprint().id());
     if (blueprints->empty()) {

@@ -22,7 +22,8 @@ bool ActorSetTransformSubscriber::Init(std::shared_ptr<DdsDomainParticipantImpl>
 void ActorSetTransformSubscriber::ProcessMessages() {
   while (_impl->HasPublishersConnected() && _impl->HasNewMessage()) {
     if (_actor_set_transform_callback != nullptr ) {
-      _actor_set_transform_callback(carla::ros2::types::Transform(_impl->GetMessage()));
+      carla::ros2::types::Transform transform(_impl->GetMessage());
+      _actor_set_transform_callback(transform);
     }
     else {
       carla::log_error("ActorSetTransformSubscriber::ProcessMessages >> set_transform callback is not available!");

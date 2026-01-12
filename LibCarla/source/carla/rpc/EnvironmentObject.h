@@ -14,6 +14,12 @@
 #include "carla/rpc/Transform.h"
 #include "carla/rpc/ObjectLabel.h"
 
+#ifdef LIBCARLA_INCLUDED_FROM_UE4
+#include <compiler/enable-ue4-macros.h>
+#include "Carla/Util/EnvironmentObject.h"
+#include <compiler/disable-ue4-macros.h>
+#endif // LIBCARLA_INCLUDED_FROM_UE4
+
 namespace carla {
 namespace rpc {
 

@@ -62,7 +62,7 @@ public:
    */
   bool ProcessMessages();
 
-  void UpdateVehicle(std::shared_ptr<carla::ros2::types::Object> &object,
+  void UpdateVehicle(std::shared_ptr<const carla::ros2::types::Object> &object,
                      carla::sensor::data::ActorDynamicState const &actor_dynamic_state);
 
 private:

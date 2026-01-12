@@ -34,6 +34,8 @@ public:
 
   carla::streaming::detail::actor_id_type get_actor_id() const;
 
+  carla::streaming::detail::actor_id_type get_parent_actor_id() const;
+
   std::shared_ptr<carla::ros2::types::ActorNameDefinition> _actor_name_definition;
 };
 

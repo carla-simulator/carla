@@ -253,7 +253,7 @@ namespace carla {
       if (_capacity < size) {
         _data = std::make_unique<value_type[]>(size);
         _capacity = size;
-        log_debug("Buffer[", static_cast<void*>(_data.get()), ":", size, "]::reset() Allocated buffer data (old size: ", _size, ")");
+        log_verbose("Buffer[", static_cast<void*>(_data.get()), ":", size, "]::reset() Allocated buffer data (old size: ", _size, ")");
       }
       _size = size;
     }

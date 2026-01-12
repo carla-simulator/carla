@@ -10,6 +10,7 @@
 
 #include <array>
 #include <ostream>
+#include <sstream>
 
 #include "carla/MsgPack.h"
 #include "carla/geom/Math.h"
@@ -398,3 +399,13 @@ inline std::ostream &operator<<(std::ostream &out, const Quaternion &quaternion)
 
 } // namespace geom
 } // namespace carla
+
+namespace std {
+
+inline std::string to_string(carla::geom::Quaternion const &quaternion) {
+  std::stringstream str;
+  str << quaternion;
+  return str.str();
+}
+ 
+}  // namespace std

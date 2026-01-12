@@ -5,11 +5,12 @@
 #pragma once
 
 #include "carla/ros2/publishers/ObjectPublisher.h"
-#include "carla/ros2/publishers/ObjectWithCovariancePublisher.h"
 #include "carla/ros2/publishers/PublisherBase.h"
 #include "carla/ros2/types/Object.h"
 #include "carla/ros2/types/TrafficSignActorDefinition.h"
 #include "carla/sensor/data/ActorDynamicState.h"
+
+#define PUBLISH_INDIVIDUAL_TRAFFIC_SIGN_DATA  0
 
 namespace carla {
 namespace ros2 {
@@ -17,8 +18,7 @@ namespace ros2 {
 class TrafficSignPublisher : public PublisherBase {
 public:
   TrafficSignPublisher(std::shared_ptr<carla::ros2::types::TrafficSignActorDefinition> traffic_sign_actor_definition,
-                       std::shared_ptr<ObjectsPublisher> objects_publisher,
-                       std::shared_ptr<ObjectsWithCovariancePublisher> objects_with_covariance_publisher);
+                       std::shared_ptr<ObjectsPublisher> objects_publisher);
   virtual ~TrafficSignPublisher() = default;
 
   /**
@@ -35,12 +35,15 @@ public:
    */
   bool SubscribersConnected() const override;
 
-  void UpdateTrafficSign(std::shared_ptr<carla::ros2::types::Object> &object,
+  void UpdateTrafficSign(std::shared_ptr<const carla::ros2::types::Object> &object,
                          carla::sensor::data::ActorDynamicState const &actor_dynamic_state);
 
 private:
+#if PUBLISH_INDIVIDUAL_TRAFFIC_SIGN_DATA
   std::shared_ptr<ObjectPublisher> _traffic_sign_object_publisher;
-  std::shared_ptr<ObjectWithCovariancePublisher> _traffic_sign_object_with_covariance_publisher;
+#else
+  std::shared_ptr<ObjectsPublisher> _traffic_sign_objects_publisher;
+#endif
 };
 }  // namespace ros2
 }  // namespace carla

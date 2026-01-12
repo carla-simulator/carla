@@ -32,7 +32,7 @@ void ObjectsWithCovariancePublisher::UpdateHeader(const builtin_interfaces::msg:
   _impl->SetMessageHeader(stamp, "map");
 }
 
-void ObjectsWithCovariancePublisher::AddObject(std::shared_ptr<carla::ros2::types::Object> &object) {
+void ObjectsWithCovariancePublisher::AddObject(std::shared_ptr<const carla::ros2::types::Object> &object) {
   derived_object_msgs::msg::ObjectWithCovariance ros_object_with_covariance = object->object_with_covariance();
   _impl->Message().objects().emplace_back(ros_object_with_covariance);
 }

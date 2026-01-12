@@ -201,6 +201,7 @@ public:
                                                        const std::string &socket_name) override;
   carla::rpc::Response<bool> call_destroy_actor(carla::rpc::ActorId ActorId) override;
   carla::rpc::Response<carla::rpc::VehicleTelemetryData> call_get_telemetry_data(carla::rpc::ActorId ActorId) override;
+  carla::rpc::Response<carla::rpc::VehicleLightState> call_get_vehicle_light_state(carla::rpc::ActorId ActorId) override;
   /**
    * @}
    */
@@ -264,6 +265,17 @@ public:
    * @}
    */
 
+   /**
+    * @brief environment objects related calls
+    * @{
+    */
+    carla::rpc::Response<std::vector<carla::rpc::EnvironmentObject>> call_get_environment_objects(uint8_t queried_tag) override;
+    carla::rpc::Response<void> call_enable_environment_objects(
+      const std::vector<uint64_t>& env_objects_ids,
+      bool enable) override;
+    /**
+     * @}
+     */
 
   void OnClientDisconnected(std::shared_ptr<rpc::detail::server_session> server_session);
   void OnClientConnected(std::shared_ptr<rpc::detail::server_session> server_session);
@@ -839,40 +851,13 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_environment_objects) << [this](uint8 QueriedTag) -> R<std::vector<cr::EnvironmentObject>>
   {
     REQUIRE_CARLA_EPISODE();
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    if (!GameMode)
-    {
-      RESPOND_ERROR("unable to find CARLA game mode");
-    }
-    TArray<FEnvironmentObject> Result = GameMode->GetEnvironmentObjects(QueriedTag);
-    ALargeMapManager* LargeMap = GameMode->GetLMManager();
-    if (LargeMap)
-    {
-      for(auto& Object : Result)
-      {
-        Object.Transform = LargeMap->LocalToGlobalTransform(Object.Transform);
-      }
-    }
-    return MakeVectorFromTArray<cr::EnvironmentObject>(Result);
+    return call_get_environment_objects(QueriedTag);
   };
 
   BIND_SYNC(enable_environment_objects) << [this](std::vector<uint64_t> EnvObjectIds, bool Enable) -> R<void>
   {
     REQUIRE_CARLA_EPISODE();
-    ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
-    if (!GameMode)
-    {
-      RESPOND_ERROR("unable to find CARLA game mode");
-    }
-
-    TSet<uint64> EnvObjectIdsSet;
-    for(uint64 Id : EnvObjectIds)
-    {
-      EnvObjectIdsSet.Emplace(Id);
-    }
-
-    GameMode->EnableEnvironmentObjects(EnvObjectIdsSet, Enable);
-    return R<void>::Success();
+    return call_enable_environment_objects(EnvObjectIds, Enable);
   };
 
   BIND_SYNC(set_annotations_traverse_translucency) << [this](bool Enable) -> R<void>
@@ -1866,25 +1851,7 @@ BIND_SYNC(send) << [this](
       cr::ActorId ActorId) -> R<cr::VehicleLightState>
   {
     REQUIRE_CARLA_EPISODE();
-    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
-    if (!CarlaActor)
-    {
-      return RespondError(
-          "get_vehicle_light_state",
-          ECarlaServerResponse::ActorNotFound,
-          " Actor Id: " + FString::FromInt(ActorId));
-    }
-    FVehicleLightState LightState;
-    ECarlaServerResponse Response =
-        CarlaActor->GetVehicleLightState(LightState);
-    if (Response != ECarlaServerResponse::Success)
-    {
-      return RespondError(
-          "get_vehicle_light_state",
-          Response,
-          " Actor Id: " + FString::FromInt(ActorId));
-    }
-    return cr::VehicleLightState(LightState);
+    return call_get_vehicle_light_state(ActorId);
   };
 
   BIND_SYNC(apply_physics_control) << [this](
@@ -3583,6 +3550,29 @@ carla::rpc::Response<carla::rpc::VehicleTelemetryData> FCarlaServer::FPimpl::cal
   return carla::rpc::VehicleTelemetryData(TelemetryData);
 }
 
+carla::rpc::Response<carla::rpc::VehicleLightState> FCarlaServer::FPimpl::call_get_vehicle_light_state(carla::rpc::ActorId ActorId)
+{
+  FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+  if (!CarlaActor)
+  {
+    return RespondError(
+        "get_vehicle_light_state",
+        ECarlaServerResponse::ActorNotFound,
+        " Actor Id: " + FString::FromInt(ActorId));
+  }
+  FVehicleLightState LightState;
+  ECarlaServerResponse Response =
+      CarlaActor->GetVehicleLightState(LightState);
+  if (Response != ECarlaServerResponse::Success)
+  {
+    return RespondError(
+        "get_vehicle_light_state",
+        Response,
+        " Actor Id: " + FString::FromInt(ActorId));
+  }
+  return carla::rpc::VehicleLightState(LightState);
+}
+
 FCarlaServer::FPimpl::CheckHandleActorInSecondaryServerResult FCarlaServer::FPimpl::CheckHandleSensorInSecondaryServer(carla::streaming::detail::stream_id_type stream_id) {
   FCarlaActor* CarlaActor = Episode->FindCarlaActorByStreamId(stream_id);
   if ( CarlaActor == nullptr ) 
@@ -3711,6 +3701,45 @@ carla::rpc::Response<void> FCarlaServer::FPimpl::call_set_weather_parameters(car
     RESPOND_ERROR("internal error: unable to find weather");
   }
   Weather->ApplyWeather(weather_parameters);
+  return R<void>::Success();
+}
+
+carla::rpc::Response<std::vector<carla::rpc::EnvironmentObject>> FCarlaServer::FPimpl::call_get_environment_objects(uint8_t QueriedTag)
+{
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+  if (!GameMode)
+  {
+    RESPOND_ERROR("unable to find CARLA game mode");
+  }
+  TArray<FEnvironmentObject> Result = GameMode->GetEnvironmentObjects(QueriedTag);
+  ALargeMapManager* LargeMap = GameMode->GetLMManager();
+  if (LargeMap)
+  {
+    for(auto& Object : Result)
+    {
+      Object.Transform = LargeMap->LocalToGlobalTransform(Object.Transform);
+    }
+  }
+  return MakeVectorFromTArray<carla::rpc::EnvironmentObject>(Result);
+}
+
+carla::rpc::Response<void> FCarlaServer::FPimpl::call_enable_environment_objects(
+    const std::vector<uint64_t>& EnvObjectIds,
+    bool Enable)
+{
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+  if (!GameMode)
+  {
+    RESPOND_ERROR("unable to find CARLA game mode");
+  }
+
+  TSet<uint64> EnvObjectIdsSet;
+  for(uint64 Id : EnvObjectIds)
+  {
+    EnvObjectIdsSet.Emplace(Id);
+  }
+
+  GameMode->EnableEnvironmentObjects(EnvObjectIdsSet, Enable);
   return R<void>::Success();
 }
 
@@ -4000,6 +4029,11 @@ carla::rpc::Response<carla::rpc::VehicleTelemetryData> FCarlaServer::call_get_te
   return Pimpl->call_get_telemetry_data(ActorId);
 }
 
+carla::rpc::Response<carla::rpc::VehicleLightState> FCarlaServer::call_get_vehicle_light_state(carla::rpc::ActorId ActorId)
+{
+  return Pimpl->call_get_vehicle_light_state(ActorId);
+}
+
 carla::rpc::Response<uint64_t> FCarlaServer::call_tick(
   carla::rpc::synchronization_client_id_type const &client_id,
   carla::rpc::synchronization_participant_id_type const&synchronization_participant,
@@ -4042,4 +4076,16 @@ carla::rpc::Response<carla::rpc::WeatherParameters> FCarlaServer::call_get_weath
 carla::rpc::Response<void> FCarlaServer::call_set_weather_parameters(carla::rpc::WeatherParameters const &weather_parameters)
 {
   return Pimpl->call_set_weather_parameters(weather_parameters);
+}
+
+carla::rpc::Response<std::vector<carla::rpc::EnvironmentObject>> FCarlaServer::call_get_environment_objects(uint8_t QueriedTag)
+{
+  return Pimpl->call_get_environment_objects(QueriedTag);
+}
+
+carla::rpc::Response<void> FCarlaServer::call_enable_environment_objects(
+    const std::vector<uint64_t>& EnvObjectIds,
+    bool Enable)
+{
+  return Pimpl->call_enable_environment_objects(EnvObjectIds, Enable);
 }

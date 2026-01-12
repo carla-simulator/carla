@@ -60,11 +60,11 @@ namespace detail {
       : MessageTmpl(sizeof...(Buffers) + 1u, buf, buffers...) {
       static_assert(sizeof...(Buffers) < max_size(), "Too many buffers!");
       _buffer_views[0u] = boost::asio::buffer(&_total_size, sizeof(_total_size));
-      log_debug("MessageTmpl[", this, "] Created message with ", _number_of_buffers, " buffers and total size ", _total_size, " bytes. ",  GetBufferDetailsAsString());
+      log_verbose("MessageTmpl[", this, "] Created message with ", _number_of_buffers, " buffers and total size ", _total_size, " bytes. ",  GetBufferDetailsAsString());
     }
 
     ~MessageTmpl(){
-      log_debug("MessageTmpl[", this, "] Destroyed.", GetBufferDetailsAsString());
+      log_verbose("MessageTmpl[", this, "] Destroyed.", GetBufferDetailsAsString());
     }
 
     /// Size in bytes of the message excluding the header.

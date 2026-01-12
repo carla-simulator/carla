@@ -236,7 +236,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       UE_LOG(LogCarla, Log, TEXT("ENABLE ROS: %s"), UTF8_TO_TCHAR(Settings.ROS2TopicVisibility?" Topics visible per default": " Topics invisible"));
       auto ROS2 = carla::ros2::ROS2::GetInstance();
       ROS2->Enable(&Server, carla::streaming::detail::token_type(WorldObserver.GetToken()).get_stream_id(), 
-        Settings.ROS2TopicVisibility?carla::ros2::ROS2::TopicVisibilityDefaultMode::eOn:carla::ros2::ROS2::TopicVisibilityDefaultMode::eOff);
+        Settings.ROS2TopicVisibility?carla::ros2::ROS2TopicVisibilityDefaultMode::eOn:carla::ros2::ROS2TopicVisibilityDefaultMode::eOff);
       Server.SetROS2TopicVisibilityDefaultEnabled(Settings.ROS2TopicVisibility);
     }
     #endif

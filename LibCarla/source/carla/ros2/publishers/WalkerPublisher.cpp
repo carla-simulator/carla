@@ -40,7 +40,7 @@ bool WalkerPublisher::SubscribersConnected() const {
     _walker_object_with_covariance_publisher->SubscribersConnected();
 }
 
-void WalkerPublisher::UpdateWalker(std::shared_ptr<carla::ros2::types::Object> &object,
+void WalkerPublisher::UpdateWalker(std::shared_ptr<const carla::ros2::types::Object> &object,
                                    carla::sensor::data::ActorDynamicState const &) {
   _walker_odometry_publisher->SetMessageHeader(object->Timestamp().time(), "map");
   _walker_odometry_publisher->Message().child_frame_id(frame_id());

@@ -108,7 +108,7 @@ namespace tcp {
         }
       };
 
-      log_debug("session", _session_id, ": sending message of", message->size(), "bytes ", message->GetBufferDetailsAsString());
+      log_verbose("session", _session_id, ": sending message of", message->size(), "bytes ", message->GetBufferDetailsAsString());
 
       _deadline.expires_from_now(_timeout);
       boost::asio::async_write(_socket, message->GetBufferSequence(), 

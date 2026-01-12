@@ -11,7 +11,8 @@ namespace ros2 {
 namespace types {
 
 struct TrafficSignActorDefinition : public ActorDefinition {
-  TrafficSignActorDefinition(ActorDefinition const &actor_definitions) : ActorDefinition(actor_definitions) {}
+  TrafficSignActorDefinition(ActorNameDefinition const &actor_name_definition, carla::geom::BoundingBox const &bounding_box) 
+     : ActorDefinition(actor_name_definition, bounding_box) {}
   virtual ~TrafficSignActorDefinition() = default;
 };
 

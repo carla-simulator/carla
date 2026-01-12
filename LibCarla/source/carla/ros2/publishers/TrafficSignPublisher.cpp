@@ -6,34 +6,53 @@
 
 #include "carla/ros2/impl/DdsPublisherImpl.h"
 
+
 namespace carla {
 namespace ros2 {
 
 TrafficSignPublisher::TrafficSignPublisher(
     std::shared_ptr<carla::ros2::types::TrafficSignActorDefinition> traffic_sign_actor_definition,
-    std::shared_ptr<ObjectsPublisher> objects_publisher,
-    std::shared_ptr<ObjectsWithCovariancePublisher> objects_with_covariance_publisher)
+    std::shared_ptr<ObjectsPublisher> objects_publisher)
   : PublisherBase(
-        std::static_pointer_cast<carla::ros2::types::ActorNameDefinition>(traffic_sign_actor_definition)),
-    _traffic_sign_object_publisher(std::make_shared<ObjectPublisher>(*this, objects_publisher)),
-    _traffic_sign_object_with_covariance_publisher(std::make_shared<ObjectWithCovariancePublisher>(*this, objects_with_covariance_publisher)) {}
+        std::static_pointer_cast<carla::ros2::types::ActorNameDefinition>(traffic_sign_actor_definition))
+#if PUBLISH_INDIVIDUAL_TRAFFIC_SIGN_DATA
+    , _traffic_sign_object_publisher(std::make_shared<ObjectPublisher>(*this, objects_publisher))
+#else
+    , _traffic_sign_objects_publisher(objects_publisher)
+#endif
+  {}
 
 bool TrafficSignPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
-  return _traffic_sign_object_publisher->Init(domain_participant) && _traffic_sign_object_with_covariance_publisher->Init(domain_participant);
+  bool success = true;
+#if PUBLISH_INDIVIDUAL_TRAFFIC_SIGN_DATA
+  success &= _traffic_sign_object_publisher->Init(domain_participant);
+#endif
+  return success;
 }
 
 bool TrafficSignPublisher::Publish() {
-  return _traffic_sign_object_publisher->Publish() && _traffic_sign_object_with_covariance_publisher->Publish();
+  bool success = true;
+#if PUBLISH_INDIVIDUAL_TRAFFIC_SIGN_DATA
+  success &= _traffic_sign_object_publisher->Publish();
+#endif
+  return success;
 }
 
 bool TrafficSignPublisher::SubscribersConnected() const {
-  return _traffic_sign_object_publisher->SubscribersConnected() || _traffic_sign_object_with_covariance_publisher->SubscribersConnected();
+  bool connected = false;
+#if PUBLISH_INDIVIDUAL_TRAFFIC_SIGN_DATA
+  connected |= _traffic_sign_object_publisher->SubscribersConnected();
+#endif
+  return connected;
 }
 
-void TrafficSignPublisher::UpdateTrafficSign(std::shared_ptr<carla::ros2::types::Object> &object,
+void TrafficSignPublisher::UpdateTrafficSign(std::shared_ptr<const carla::ros2::types::Object> &object,
                                              carla::sensor::data::ActorDynamicState const &) {
+#if PUBLISH_INDIVIDUAL_TRAFFIC_SIGN_DATA
   _traffic_sign_object_publisher->UpdateObject(object);
-  _traffic_sign_object_with_covariance_publisher->UpdateObject(object);
+#else
+  _traffic_sign_objects_publisher->UpdateObject(object);
+#endif
 }
 
 }  // namespace ros2

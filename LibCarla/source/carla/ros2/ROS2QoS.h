@@ -54,19 +54,6 @@ struct ROS2QoS {
 };
 
 /**
- * Default ROS2 QoS parameters.
- */
-static constexpr ROS2QoS DEFAULT_ROS2_QOS{ ROS2QoS::Reliability::RELIABLE, ROS2QoS::Durability::VOLATILE,
-                                           ROS2QoS::History::KEEP_LAST, 10};
-
-/**
- * Default ROS2 QoS parameters for sensor data publisher: reliable, volatile, keep_last with history size 10.
- * Doesn't allow for transient local subscribers and is best used for regularly updated data.
- */
-static constexpr ROS2QoS DEFAULT_SENSOR_DATA_QOS{ROS2QoS::Reliability::RELIABLE, ROS2QoS::Durability::VOLATILE,
-                                                 ROS2QoS::History::KEEP_LAST, 10};
-
-/**
  * Default ROS2 QoS parameters for subscribers: best_effort, volatile, keep_last with history size 10.
  * Connects to any publisher configuration.
  */
@@ -75,7 +62,10 @@ static constexpr ROS2QoS DEFAULT_SUBSCRIBER_QOS{ROS2QoS::Reliability::BEST_EFFOR
 
 /**
  * Default ROS2 QoS parameters for publishers: reliable, transient_local, keep_last with history size 10.
- * Connects to any subscriber configuration and is best used for data not updated regularly.
+ * Connects to any subscriber configuration.
+ * Note history size>1 are only meaningful for transient_local durability.
+ * Note history size=10 is a good compromise between memory consumption and data loss in case of high system load or late subscribers.
+ * Since CARLA subscribers might want to record all simulation frames, we use a larger history depth here.
  */
 static constexpr ROS2QoS DEFAULT_PUBLISHER_QOS{ROS2QoS::Reliability::RELIABLE, ROS2QoS::Durability::TRANSIENT_LOCAL,
                                                ROS2QoS::History::KEEP_LAST, 10};

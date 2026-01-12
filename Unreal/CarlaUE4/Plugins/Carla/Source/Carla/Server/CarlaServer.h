@@ -103,6 +103,7 @@ public:
                                                        const std::string &socket_name) override;
   carla::rpc::Response<bool> call_destroy_actor(carla::rpc::ActorId ActorId) override;
   carla::rpc::Response<carla::rpc::VehicleTelemetryData> call_get_telemetry_data(carla::rpc::ActorId ActorId) override;
+  carla::rpc::Response<carla::rpc::VehicleLightState> call_get_vehicle_light_state(carla::rpc::ActorId ActorId) override;
   /**
    * @}
    */
@@ -149,6 +150,17 @@ public:
    * @}
    */
 
+   /**
+    * @brief environment objects related calls
+    * @{
+    */
+    carla::rpc::Response<std::vector<carla::rpc::EnvironmentObject>> call_get_environment_objects(uint8_t queried_tag) override;
+    carla::rpc::Response<void> call_enable_environment_objects(
+      const std::vector<uint64_t>& env_objects_ids,
+      bool enable) override;
+    /**
+     * @}
+     */
 private:
 
   class FPimpl;

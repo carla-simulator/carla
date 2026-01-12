@@ -16,7 +16,13 @@ using ObjectsPublisherImpl =
 
 class ObjectsPublisher : public PublisherBaseSensor {
 public:
-  ObjectsPublisher();
+  enum class ObjectMode {
+    DYNAMIC_PUBLISH_ALWAYS,
+    DYNAMIC_PUBLISH_ON_CHANGE,
+    STATIC_PUBLISH_ONCE
+  };
+
+  ObjectsPublisher(ObjectMode const update_mode, std::string role_name = "objects");
   virtual ~ObjectsPublisher() = default;
 
   /**
@@ -35,10 +41,20 @@ public:
 
   void UpdateHeader(const builtin_interfaces::msg::Time &stamp);
 
-  void AddObject(std::shared_ptr<carla::ros2::types::Object> &object);
+  void UpdateObject(std::shared_ptr<const carla::ros2::types::Object> &object);
+
+  void AddObject(std::shared_ptr<const carla::ros2::types::Object> &object)
+  {
+    AddObject(*object);
+  }
+
+  void AddObject(carla::ros2::types::Object const &object);
+  
+  void RemoveObject(uint64_t const object_id);
 
 private:
   std::shared_ptr<ObjectsPublisherImpl> _impl;
+  ObjectMode const _update_mode;
 };
 }  // namespace ros2
 }  // namespace carla

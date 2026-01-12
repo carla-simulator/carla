@@ -8,6 +8,7 @@
 
 #include "carla/Platform.h"
 
+#define LIBCARLA_LOG_LEVEL_VERBOSE    1
 #define LIBCARLA_LOG_LEVEL_DEBUG     10
 #define LIBCARLA_LOG_LEVEL_INFO      20
 #define LIBCARLA_LOG_LEVEL_WARNING   30
@@ -61,6 +62,21 @@ namespace logging {
   }
 
 } // namespace logging
+
+#if LIBCARLA_LOG_LEVEL <= LIBCARLA_LOG_LEVEL_VERBOSE
+
+  template <typename ... Args>
+  static inline void log_verbose(Args && ... args) {
+    logging::write_to_stream(std::cout, "VERBOSE:", std::forward<Args>(args) ..., '\n');
+  }
+
+#else
+
+  template <typename ... Args>
+  static inline void log_verbose(Args && ...) {}
+
+#endif
+
 
 #if LIBCARLA_LOG_LEVEL <= LIBCARLA_LOG_LEVEL_DEBUG
 

@@ -11,11 +11,13 @@
 #include "carla/rpc/ActorDescription.h"
 #include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/EpisodeSettings.h"
+#include "carla/rpc/EnvironmentObject.h"
 #include "carla/rpc/MapInfo.h"
 #include "carla/rpc/MapLayer.h"
 #include "carla/rpc/Response.h"
 #include "carla/rpc/ServerSynchronizationTypes.h"
 #include "carla/rpc/Transform.h"
+#include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/VehicleTelemetryData.h"
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/streaming/detail/Dispatcher.h"
@@ -66,7 +68,8 @@ public:
                                                        ActorId ParentId, AttachmentType InAttachmentType,
                                                        const std::string &socket_name) = 0;
   virtual Response<bool> call_destroy_actor(ActorId ActorId) = 0;
-  virtual Response<carla::rpc::VehicleTelemetryData> call_get_telemetry_data(ActorId ActorId) = 0;
+  virtual Response<VehicleTelemetryData> call_get_telemetry_data(ActorId ActorId) = 0;
+  virtual Response<VehicleLightState> call_get_vehicle_light_state(ActorId ActorId) = 0;
 
   /**
    * @}
@@ -76,9 +79,9 @@ public:
    * @brief ros actor interaction calls
    * @{
    */
-  virtual carla::rpc::Response<void> call_enable_actor_for_ros(ActorId actor_id) = 0;
-  virtual carla::rpc::Response<void> call_disable_actor_for_ros(ActorId actor_id) = 0;
-  virtual carla::rpc::Response<bool> call_is_actor_enabled_for_ros(ActorId actor_id) = 0;
+  virtual Response<void> call_enable_actor_for_ros(ActorId actor_id) = 0;
+  virtual Response<void> call_disable_actor_for_ros(ActorId actor_id) = 0;
+  virtual Response<bool> call_is_actor_enabled_for_ros(ActorId actor_id) = 0;
   /**
    * @}
    */
@@ -90,7 +93,7 @@ public:
   virtual Response<uint64_t> call_tick(
       synchronization_client_id_type const &client_id,
       synchronization_participant_id_type const &participant_id,
-      carla::rpc::SynchronizationTickMode synchronization_tick_mode) = 0;
+      SynchronizationTickMode synchronization_tick_mode) = 0;
   virtual Response<synchronization_participant_id_type> call_register_synchronization_participant(
       synchronization_client_id_type const &client_id,
       synchronization_participant_id_type const &participant_id_hint = ALL_PARTICIPANTS) = 0;
@@ -99,7 +102,7 @@ public:
   virtual Response<bool> call_update_synchronization_window(
       synchronization_client_id_type const &client_id, synchronization_participant_id_type const &participant_id,
       synchronization_target_game_time const &target_game_time = NO_SYNC_TARGET_GAME_TIME) = 0;
-  virtual carla::rpc::Response<std::pair< bool , std::vector<carla::rpc::synchronization_window_participant_state> > >  call_get_synchronization_window_status() = 0;
+  virtual Response<std::pair< bool , std::vector<synchronization_window_participant_state> > >  call_get_synchronization_window_status() = 0;
   /**
    * @}
    */
@@ -113,6 +116,18 @@ public:
   /**
    * @}
    */
+
+    /**
+    * @brief environment objects related calls
+    * @{
+    */
+    virtual Response<std::vector<EnvironmentObject>> call_get_environment_objects(uint8_t queried_tag) =0;
+    virtual Response<void> call_enable_environment_objects(
+        const std::vector<uint64_t>& env_objects_ids,
+        bool enable) = 0;
+    /**
+     * @}
+     */
 };
 
 }  // namespace rpc

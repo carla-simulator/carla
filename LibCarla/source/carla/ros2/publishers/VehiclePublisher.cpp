@@ -100,13 +100,13 @@ bool VehiclePublisher::ProcessMessages() {
   // This should happen within the message processing step, when also other calls are expected
   // to ensure the simulation internal data is actually locked and its safe to acceess it. 
   if (_vehicle_telemetry_publisher->SubscribersConnected()) {
-    auto response = _carla_server.call_get_telemetry_data(_actor_name_definition->id);
-    if (response.HasError()) {
+    auto telemetry_data_response = _carla_server.call_get_telemetry_data(_actor_name_definition->id);
+    if (telemetry_data_response.HasError()) {
       carla::log_warning("VehiclePublisher: Failed to get telemetry data for actor id ",
-                        std::to_string(_actor_name_definition->id), ":", response.GetError().What());
+                        std::to_string(_actor_name_definition->id), ":", telemetry_data_response.GetError().What());
     }
     else {
-      auto const telemetry_data = response.Get();
+      auto const telemetry_data = telemetry_data_response.Get();
       _vehicle_telemetry_publisher->Message().throttle(telemetry_data.throttle);
       _vehicle_telemetry_publisher->Message().steer(telemetry_data.steer);
       _vehicle_telemetry_publisher->Message().brake(telemetry_data.brake);
@@ -133,11 +133,20 @@ bool VehiclePublisher::ProcessMessages() {
 
       _vehicle_telemetry_publisher->SetMessageUpdated();
     }
+    auto light_state_response = _carla_server.call_get_vehicle_light_state(_actor_name_definition->id);
+    if (light_state_response.HasError()) {
+      carla::log_warning("VehiclePublisher: Failed to get vehicle light state for actor id ",
+                        std::to_string(_actor_name_definition->id), ":", light_state_response.GetError().What());
+    } else {
+      auto const light_state = light_state_response.Get();
+      _vehicle_telemetry_publisher->Message().light_state_flags(light_state.light_state);
+      _vehicle_telemetry_publisher->SetMessageUpdated();
+    }
   }
   return true;
 }
 
-void VehiclePublisher::UpdateVehicle(std::shared_ptr<carla::ros2::types::Object> &object,
+void VehiclePublisher::UpdateVehicle(std::shared_ptr<const carla::ros2::types::Object> &object,
                                      carla::sensor::data::ActorDynamicState const &actor_dynamic_state) {
   _vehicle_odometry_publisher->SetMessageHeader(object->Timestamp().time(), "map");
   _vehicle_odometry_publisher->Message().child_frame_id(frame_id());

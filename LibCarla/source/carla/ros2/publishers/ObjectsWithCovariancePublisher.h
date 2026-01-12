@@ -35,7 +35,7 @@ public:
 
   void UpdateHeader(const builtin_interfaces::msg::Time &stamp);
 
-  void AddObject(std::shared_ptr<carla::ros2::types::Object> &object);
+  void AddObject(std::shared_ptr<const carla::ros2::types::Object> &object);
 
 private:
   std::shared_ptr<ObjectsWithCovariancePublisherImpl> _impl;

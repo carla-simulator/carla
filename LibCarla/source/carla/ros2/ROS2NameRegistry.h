@@ -53,6 +53,11 @@ public:
     @brief returns the shortest common prefix of all registered topic names for this actor_id
   */
   std::string TopicPrefix(carla::streaming::detail::actor_id_type const actor_id);
+  
+  /*!
+    @brief returns the FrameId for this actor_id
+  */
+  std::string FrameId(carla::streaming::detail::actor_id_type const actor_id);
 
   std::string FrameId(ROS2NameRecord const* record) {
     std::lock_guard<std::mutex> lock(access_mutex);
@@ -90,7 +95,8 @@ private:
   ROS2NameRegistry& operator=(ROS2NameRegistry&&) = delete;
 
   bool IsTopicNameAvailable(TopicAndFrame const& topic_and_frame, std::string const& individual_name);
-  TopicAndFrame ExpandTopicName(TopicAndFrame const& topic_and_frame, std::string const& postfix);
+  // per default frame and topic postfix are considered to be equal
+  TopicAndFrame ExpandTopicName(TopicAndFrame const& topic_and_frame, std::string const& postfix_topic, std::string const& postfix_frame="");
 
   struct KeyType {
     explicit KeyType(ROS2NameRecord const* record) : _record(record), _actor_id(record->_actor_name_definition->id) {}
