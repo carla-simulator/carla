@@ -9,6 +9,7 @@ import carla
 import unittest
 import math
 
+WGS84 = carla.GeoEllipsoid(a=6378137.0, f_inv=298.257223563)
 
 class TestLocation(unittest.TestCase):
     def test_default_values(self):
@@ -308,3 +309,22 @@ class TestTransform(unittest.TestCase):
         p2.offset = None
 
         self.assertFalse(p1 == p2) 
+    
+    def test_geo_projection_utm_constructor_3_args(self):
+        p =  carla.GeoProjectionUTM(zone=31, north=True, ellps=WGS84)
+
+        self.assertEqual(p.zone, 31)
+        self.assertTrue(p.north)
+        self.assertEqual(p.ellps, WGS84)
+        self.assertIsNone(p.offset)
+
+    def test_geo_projection_utm_constructor_3_args_positional(self):
+        p = carla.GeoProjectionUTM(31, True, WGS84)
+
+        self.assertEqual(p.zone, 31)
+        self.assertTrue(p.north)
+        self.assertEqual(p.ellps, WGS84)
+        self.assertIsNone(p.offset)
+
+
+

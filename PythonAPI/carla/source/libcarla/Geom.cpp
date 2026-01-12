@@ -329,13 +329,14 @@ void export_geom() {
   ;
 
   class_<cg::UniversalTransverseMercatorParams>("GeoProjectionUTM")
+    .def(init<int, bool, cg::Ellipsoid>((arg("zone")=31, arg("north")=true, arg("ellps")=cg::Ellipsoid())))
     .def(init<int, bool, cg::Ellipsoid, boost::optional<cg::OffsetTransform>>((arg("zone")=31, arg("north")=true, arg("ellps")=cg::Ellipsoid(), arg("offset")=boost::python::object())))
     .def_readwrite("zone", &cg::UniversalTransverseMercatorParams::zone)
     .def_readwrite("north", &cg::UniversalTransverseMercatorParams::north)
     .def_readwrite("ellps", &cg::UniversalTransverseMercatorParams::ellps)
     .add_property("offset",
         +[](const cg::UniversalTransverseMercatorParams &self) {
-          return OptionalToPythonObject(self.offset); //retruns None or OffsetTransform 
+          return OptionalToPythonObject(self.offset); //returns None or OffsetTransform 
         },
          +[](cg::UniversalTransverseMercatorParams& self, object value) {
             if (value.is_none()) {
