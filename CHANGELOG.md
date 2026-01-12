@@ -10,6 +10,7 @@
  * Improved V2X sensor capabilities: send complex custom user-defined data, support V2I sensors not attached to a vehicle
  * Introduced fine grained ServerSynchronization mechanism: each client decides for its own if it requires synchronization or not and provides its own synchronization window.
    Be aware: some existing code using master/slave sync mechanism might need rework. See also generate_traffic.py.
+ * Added ad-rss type-stubs for the PythonAPI when building with RSS support
 
 ## CARLA 0.9.16
 
@@ -65,6 +66,7 @@
  * Add support for NVIDIA NuRec 25.07 (CARLA-NuRec 0.2)
  * Added `set_wheel_pitch_angle()` to change the bone pitch angle of each wheel of a vehicle
  * Added `get_wheel_pitch_angle()` to get the rotation (pitch) angle of a vehicle wheel
+
 
 ## CARLA 0.9.15
 
