@@ -869,6 +869,10 @@
       type: carla.GeoEllipsoid
       doc: >
         Geoellipsoid used for the projection.
+    - var_name: offset
+      type: carla.GeoOffsetTransform
+      doc: >
+        Optional offset transformation applied before projection. If None, no offset is applied.
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -888,6 +892,11 @@
         default: carla.GeoEllipsoid
         doc: >
           Geoellipsoid used for the projection.
+      - param_name: offset
+        type: carla.GeoOffsetTransform
+        default: None
+        doc: >
+          Optional offset transformation applied before projection. If None, no offset is applied.
       return: carla.GeoProjectionUTM
       doc: >
         Constructor for this class.

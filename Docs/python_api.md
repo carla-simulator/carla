@@ -1184,14 +1184,17 @@ Longitude zone, 1-60.
 Boolean defining the northern (True) or southern (False) hemisphere.  
 - <a name="carla.GeoProjectionUTM.ellps"></a>**<font color="#f8805a">ellps</font>** (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_)  
 Geoellipsoid used for the projection.  
+- <a name="carla.GeoProjectionUTM.offset"></a>**<font color="#f8805a">offset</font>** (_[carla.GeoOffsetTransform](#carla.GeoOffsetTransform)_)  
+Optional offset transformation applied before projection. If None, no offset is applied.  
 
 ### Methods
-- <a name="carla.GeoProjectionUTM.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**zone**=31</font>, <font color="#00a6ed">**north**=True</font>, <font color="#00a6ed">**ellps**=[carla.GeoEllipsoid](#carla.GeoEllipsoid)</font>)  
+- <a name="carla.GeoProjectionUTM.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**zone**=31</font>, <font color="#00a6ed">**north**=True</font>, <font color="#00a6ed">**ellps**=[carla.GeoEllipsoid](#carla.GeoEllipsoid)</font>, <font color="#00a6ed">**offset**=None</font>)  
 Constructor for this class.  
     - **Parameters:**
         - `zone` (_int_) - Longitude zone, 1-60.  
         - `north` (_bool_) - Boolean defining the northern (True) or southern (False) hemisphere.  
         - `ellps` (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_) - Geoellipsoid used for the projection.  
+        - `offset` (_[carla.GeoOffsetTransform](#carla.GeoOffsetTransform)_) - Optional offset transformation applied before projection. If None, no offset is applied.  
     - **Return:** _[carla.GeoProjectionUTM](#carla.GeoProjectionUTM)_  
 
 ---
