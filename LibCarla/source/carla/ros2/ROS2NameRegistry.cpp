@@ -26,34 +26,43 @@ void ROS2NameRegistry::Clear() {
 
 void ROS2NameRegistry::RegisterRecord(ROS2NameRecord const* record) {
   std::lock_guard<std::mutex> lock(access_mutex);
-  record_set.insert(record);
+  KeyType key(record);
+  auto insert_result = record_set.insert(key);
+  insert_result.first->_number_of_register_calls++;
+  if (insert_result.second) {
+    log_debug("ROS2NameRegistry::RegisterRecord:  ",
+                std::to_string(*insert_result.first->_actor_name_definition));
+  }
 }
 
 void ROS2NameRegistry::UnregisterRecord(ROS2NameRecord const* record) {
   std::lock_guard<std::mutex> lock(access_mutex);
-  auto const actor_id = record->_actor_name_definition->id;
-  record_set.erase(record);
+  KeyType key(record);
+  auto find_result = record_set.find(key);
+  if ( find_result != record_set.end() ) {
+    find_result->_number_of_register_calls--;
+    if ( find_result->_number_of_register_calls == 0u) {
+      log_debug("ROS2NameRegistry::UnregisterRecord:  ",
+                  std::to_string(*find_result->_actor_name_definition));
 
-  for (auto iter = parent_map.begin(); iter != parent_map.end(); /*no update of iter*/) {
-    if (iter->first == actor_id) {
-      // erase this actor from the map
-      iter = parent_map.erase(iter);
-    } else if (iter->second == actor_id) {
-      // if this actor was the parent of another one, erase this dependency
-      auto const child = iter->first;
-      iter = parent_map.erase(iter);
-      // and update child data
-      UpdateTopicAndFrameLocked(child);
-    } else {
-      ++iter;
-    }
-  }
+      auto const actor_id = find_result->_actor_name_definition->id;
+      record_set.erase(find_result);
+      topic_and_frame_map.erase(key);
 
-  for (auto iter = topic_and_frame_map.begin(); iter != topic_and_frame_map.end(); /*no update of iter*/) {
-    if (iter->first._record == record) {
-      iter = topic_and_frame_map.erase(iter);
-    } else {
-      ++iter;
+      for (auto iter = parent_map.begin(); iter != parent_map.end(); /*no update of iter*/) {
+        if (iter->first == actor_id) {
+          // erase this actor from the map
+          iter = parent_map.erase(iter);
+        } else if (iter->second == actor_id) {
+          // if this actor was the parent of another one, erase this dependency
+          auto const child = iter->first;
+          iter = parent_map.erase(iter);
+          // and update child data
+          UpdateTopicAndFrameLocked(child);
+        } else {
+          ++iter;
+        }
+      }
     }
   }
 }
@@ -74,9 +83,9 @@ std::string ROS2NameRegistry::TopicPrefix(ActorId const actor_id) {
   std::lock_guard<std::mutex> lock(access_mutex);
   std::string result_topic_name = "";
   for (auto& record : record_set) {
-    auto const actor_definition = record->_actor_name_definition;
+    auto const actor_definition = record._actor_name_definition;
     if (actor_definition->id == actor_id) {
-      auto const topic_name = GetTopicAndFrameLocked(KeyType(record))._topic_name;
+      auto const topic_name = GetTopicAndFrameLocked(record)._topic_name;
       if (result_topic_name.empty()) {
         result_topic_name = topic_name;
       } else {
@@ -105,34 +114,30 @@ std::string ROS2NameRegistry::FrameId(carla::streaming::detail::actor_id_type co
   std::lock_guard<std::mutex> lock(access_mutex);
   std::string result_topic_name = "";
   for (auto& record : record_set) {
-    if (record->_actor_name_definition->id == actor_id) {
-      auto const frame_id = GetTopicAndFrameLocked(KeyType(record))._frame_id;
+    if (record._actor_name_definition->id == actor_id) {
+      auto const frame_id = GetTopicAndFrameLocked(record)._frame_id;
       return frame_id;
     }
   }
   return "";
 }
 
-ROS2NameRegistry::TopicAndFrame const& ROS2NameRegistry::GetTopicAndFrameLocked(ROS2NameRecord const* record) {
-  return GetTopicAndFrameLocked(KeyType(record));
-}
-
 ROS2NameRegistry::TopicAndFrame const& ROS2NameRegistry::GetParentTopicAndFrameLocked(
-    ROS2NameRecord const* child_record) {
-  ActorId const child_id = child_record->_actor_name_definition->id;
+    KeyType const& child_record) {
+  ActorId const child_id = child_record._actor_name_definition->id;
   // multiple parent entries are not allowed
   auto find_result = parent_map.find(child_id);
   if (find_result != parent_map.end()) {
     auto const parent_actor_id = find_result->second;
     std::map<KeyType, TopicAndFrame>::iterator parent_iter = topic_and_frame_map.end();
     for (auto iter = topic_and_frame_map.begin(); iter != topic_and_frame_map.end(); ++iter) {
-      if (iter->first._actor_id == parent_actor_id) {
+      if (iter->first.actor_id() == parent_actor_id) {
         if (parent_iter != topic_and_frame_map.end()) {
           log_error("ROS2NameRegistry::GetParentTopicAndFrameLocked: multiple parent candidates for child ",
-                    std::to_string(*child_record->_actor_name_definition), " found. ", " Potential Parents ",
-                    std::to_string(*iter->first._record->_actor_name_definition),
-                    std::to_string(*parent_iter->first._record->_actor_name_definition),
-                    " This is not an expected configuration. Cannot decide. Ignore parent");
+                    std::to_string(*child_record._actor_name_definition), " found. ", " Potential Parents ",
+                    std::to_string(*iter->first._actor_name_definition),
+                    std::to_string(*parent_iter->first._actor_name_definition),
+                    " This is not an expected configuration. Cannot decide what to return. Ignore parent");
           return g_empty_topic_and_frame;
         } else {
           parent_iter = iter;
@@ -143,27 +148,29 @@ ROS2NameRegistry::TopicAndFrame const& ROS2NameRegistry::GetParentTopicAndFrameL
       return parent_iter->second;
     } else {
       // create the parent topic and frame
-      ROS2NameRecord const* parent_record = nullptr;
+      KeyType parent_key(nullptr);
       for (auto& record : record_set) {
-        if (record->_actor_name_definition->id == parent_actor_id) {
-          if (parent_record != nullptr) {
+        if (record._actor_name_definition->id == parent_actor_id) {
+          if (parent_key._actor_name_definition != nullptr) {
             log_error("ROS2NameRegistry::GetParentTopicAndFrameLocked: multiple parent candidates for child ",
-                      std::to_string(*child_record->_actor_name_definition), " found. ", " Potential Parents ",
-                      std::to_string(*record->_actor_name_definition),
-                      std::to_string(*parent_record->_actor_name_definition),
-                      " This is not an expected configuration. Cannot decide. Ignore parent");
+                      std::to_string(*child_record._actor_name_definition), " found. ", " Potential Parents ",
+                      std::to_string(*record._actor_name_definition),
+                      std::to_string(*parent_key._actor_name_definition),
+                      " This is not an expected configuration. Cannot decide what to create. Ignore parent");
             return g_empty_topic_and_frame;
           } else {
-            parent_record = record;
+            parent_key = record;
           }
         }
       }
-      if (parent_record != nullptr) {
-        KeyType const key(parent_record);
-        return CreateTopicAndFrameLocked(key)->second;
+      if (parent_key._actor_name_definition != nullptr) {
+        log_debug("ROS2NameRegistry::GetParentTopicAndFrameLocked: child ",
+                    std::to_string(*child_record._actor_name_definition) ," found parent  ",
+                    std::to_string(*parent_key._actor_name_definition));  
+        return CreateTopicAndFrameLocked(parent_key)->second;
       } else {
         log_error("ROS2NameRegistry::GetParentTopicAndFrameLocked: no parent candidate found for child ",
-                  std::to_string(*child_record->_actor_name_definition), " found. ",
+                  std::to_string(*child_record._actor_name_definition), " found. ",
                   " This is not an expected configuration. Cannot decide. Ignore parent_id=", parent_actor_id);
         return g_empty_topic_and_frame;
       }
@@ -184,10 +191,9 @@ ROS2NameRegistry::TopicAndFrame const& ROS2NameRegistry::GetTopicAndFrameLocked(
 void ROS2NameRegistry::UpdateTopicAndFrameLocked(carla::streaming::detail::actor_id_type actor_id) {
   // update all of this
   for (auto& record : record_set) {
-    auto const actor_definition = record->_actor_name_definition;
+    auto const actor_definition = record._actor_name_definition;
     if (actor_definition->id == actor_id) {
-      KeyType const key(record);
-      (void)CreateTopicAndFrameLocked(key);
+      (void)CreateTopicAndFrameLocked(record);
     }
   }
 }
@@ -202,13 +208,13 @@ std::string number_to_three_letter_string(uint32_t number) {
 
 std::map<ROS2NameRegistry::KeyType, ROS2NameRegistry::TopicAndFrame>::iterator
 ROS2NameRegistry::CreateTopicAndFrameLocked(ROS2NameRegistry::KeyType const& key) {
-  auto const actor_definition = key._record->_actor_name_definition;
+  auto const actor_definition = key._actor_name_definition;
 
   TopicAndFrame parent_topic_and_frame;
-  auto parent_iter = parent_map.find(key._actor_id);
+  auto parent_iter = parent_map.find(key.actor_id());
   if (parent_iter != parent_map.end()) {
     // get the data, if not availble, update also the parent
-    parent_topic_and_frame = GetParentTopicAndFrameLocked(key._record);
+    parent_topic_and_frame = GetParentTopicAndFrameLocked(key);
   }
 
   ROS2NameRegistry::TopicAndFrame topic_and_frame("rt/carla");
@@ -226,13 +232,13 @@ ROS2NameRegistry::CreateTopicAndFrameLocked(ROS2NameRegistry::KeyType const& key
 
   // let us query the type of actor we have
   auto vehicle_actor_definition =
-      std::dynamic_pointer_cast<carla::ros2::types::VehicleActorDefinition>(actor_definition);
-  auto walker_actor_definition = std::dynamic_pointer_cast<carla::ros2::types::WalkerActorDefinition>(actor_definition);
-  auto sensor_actor_definition = std::dynamic_pointer_cast<carla::ros2::types::SensorActorDefinition>(actor_definition);
+      std::dynamic_pointer_cast<carla::ros2::types::VehicleActorDefinition const>(actor_definition);
+  auto walker_actor_definition = std::dynamic_pointer_cast<carla::ros2::types::WalkerActorDefinition const>(actor_definition);
+  auto sensor_actor_definition = std::dynamic_pointer_cast<carla::ros2::types::SensorActorDefinition const>(actor_definition);
   auto traffic_light_actor_definition =
-      std::dynamic_pointer_cast<carla::ros2::types::TrafficLightActorDefinition>(actor_definition);
+      std::dynamic_pointer_cast<carla::ros2::types::TrafficLightActorDefinition const>(actor_definition);
   auto traffic_sign_actor_definition =
-      std::dynamic_pointer_cast<carla::ros2::types::TrafficSignActorDefinition>(actor_definition);
+      std::dynamic_pointer_cast<carla::ros2::types::TrafficSignActorDefinition const>(actor_definition);
 
   // prefix with generic type prefix
   std::string type;

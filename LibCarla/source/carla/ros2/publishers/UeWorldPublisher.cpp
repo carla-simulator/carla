@@ -144,11 +144,11 @@ void UeWorldPublisher::UpdateSensorDataPreAction() {
     if (ue_sensor.second.publisher != nullptr) {
       if (ue_sensor.second.publisher->SubscribersConnected() && ue_sensor.second.session == nullptr) {
         ue_sensor.second.session = std::make_shared<ROS2Session>(ue_sensor.first);
-        log_debug("UeWorldPublisher::UpdateSensorDataPreAction[", std::to_string(*ue_sensor.second.sensor_actor_definition),
+        log_debug("UeWorldPublisher::UpdateSensorDataPreAction[", std::to_string(*ue_sensor.second.sensor_actor_definition()),
                     "]: Registering session");
         _dispatcher->RegisterSession(ue_sensor.second.session);
       } else if (!ue_sensor.second.publisher->SubscribersConnected() && ue_sensor.second.session != nullptr) {
-        log_debug("UeWorldPublisher::UpdateSensorDataPreAction[", std::to_string(*ue_sensor.second.sensor_actor_definition),
+        log_debug("UeWorldPublisher::UpdateSensorDataPreAction[", std::to_string(*ue_sensor.second.sensor_actor_definition()),
                     "]: Deregistering session");
         _dispatcher->DeregisterSession(ue_sensor.second.session);
         ue_sensor.second.session.reset();
@@ -166,8 +166,8 @@ void UeWorldPublisher::UpdateSensorDataPreAction() {
     _sensors_changed = false;
     carla_msgs::msg::CarlaActorList actor_list;
     for (auto &ue_sensor : _ue_sensors) {
-      if (ue_sensor.second.sensor_actor_definition->id != 0) {
-        actor_list.actors().push_back(ue_sensor.second.sensor_actor_definition->carla_actor_info(_name_registry));
+      if (ue_sensor.second.sensor_actor_definition()->id != 0) {
+        actor_list.actors().push_back(ue_sensor.second.sensor_actor_definition()->carla_actor_info(_name_registry));
       }
     }
     _sensor_actor_list_publisher->UpdateCarlaActorList(actor_list);
@@ -179,7 +179,7 @@ void UeWorldPublisher::ProcessDataFromUeSensor(carla::streaming::detail::stream_
                                    std::shared_ptr<const carla::streaming::detail::Message> message) {
   auto ue_sensor = _ue_sensors.find(stream_id);
   if (ue_sensor != _ue_sensors.end()) {
-    auto const &sensor_actor_definition = ue_sensor->second.sensor_actor_definition;
+    auto const &sensor_actor_definition = ue_sensor->second.sensor_actor_definition();
 
     auto buffer_list_view = message->GetBufferViewSequence();
     // currently we only support sensor header + data buffer
@@ -245,82 +245,82 @@ void UeWorldPublisher::UpdateSensorDataPostAction() {
 
 void UeWorldPublisher::CreateSensorUePublisher(UeSensor &sensor) {
   // Create the respective sensor publisher
-  switch (sensor.sensor_actor_definition->sensor_type) {
+  switch (sensor.sensor_actor_definition()->sensor_type) {
     case types::PublisherSensorType::CollisionSensor:
     {
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
-          std::make_shared<UeCollisionPublisher>(sensor.sensor_actor_definition, _transform_publisher));
+          std::make_shared<UeCollisionPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::DepthCamera:
     {
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
-          std::make_shared<UeDepthCameraPublisher>(sensor.sensor_actor_definition, _transform_publisher));
+          std::make_shared<UeDepthCameraPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::NormalsCamera:
     {
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
-          std::make_shared<UeNormalsCameraPublisher>(sensor.sensor_actor_definition, _transform_publisher));
+          std::make_shared<UeNormalsCameraPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::DVSCamera:
     {
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
-          std::make_shared<UeDVSCameraPublisher>(sensor.sensor_actor_definition, _transform_publisher));
+          std::make_shared<UeDVSCameraPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::GnssSensor:
     {
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
-          std::make_shared<UeGNSSPublisher>(sensor.sensor_actor_definition, _transform_publisher));
+          std::make_shared<UeGNSSPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::InertialMeasurementUnit:
     {
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
-          std::make_shared<UeIMUPublisher>(sensor.sensor_actor_definition, _transform_publisher));
+          std::make_shared<UeIMUPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::OpticalFlowCamera:
     {
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
-          std::make_shared<UeOpticalFlowCameraPublisher>(sensor.sensor_actor_definition, _transform_publisher));
+          std::make_shared<UeOpticalFlowCameraPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::Radar:
     {
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
-          std::make_shared<UeRadarPublisher>(sensor.sensor_actor_definition, _transform_publisher));
+          std::make_shared<UeRadarPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::RayCastSemanticLidar:
     {
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
-          std::make_shared<UeSemanticLidarPublisher>(sensor.sensor_actor_definition, _transform_publisher));
+          std::make_shared<UeSemanticLidarPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::RayCastLidar:
     case types::PublisherSensorType::HSSLidar: 
     {
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
-          std::make_shared<UeLidarPublisher>(sensor.sensor_actor_definition, _transform_publisher));
+          std::make_shared<UeLidarPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::SceneCaptureCamera:
     {
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
-          std::make_shared<UeRGBCameraPublisher>(sensor.sensor_actor_definition, _transform_publisher, sensor.actor_set_transform_callback));
+          std::make_shared<UeRGBCameraPublisher>(sensor.sensor_actor_definition(), _transform_publisher, sensor.actor_set_transform_callback));
     } break;
     case types::PublisherSensorType::SemanticSegmentationCamera:
     {
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
-          std::make_shared<UeSSCameraPublisher>(sensor.sensor_actor_definition, _transform_publisher));
+          std::make_shared<UeSSCameraPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::InstanceSegmentationCamera:
     {
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
-          std::make_shared<UeISCameraPublisher>(sensor.sensor_actor_definition, _transform_publisher));
+          std::make_shared<UeISCameraPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::V2X:
     {
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
-          std::make_shared<UeV2XPublisher>(sensor.sensor_actor_definition, _transform_publisher));
+          std::make_shared<UeV2XPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::V2XCustom:
     {
       sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
-          std::make_shared<UeV2XCustomPublisher>(sensor.sensor_actor_definition, sensor.v2x_custom_send_callback, _transform_publisher));
+          std::make_shared<UeV2XCustomPublisher>(sensor.sensor_actor_definition(), sensor.v2x_custom_send_callback, _transform_publisher));
     } break;
     case types::PublisherSensorType::WorldObserver:
     case types::PublisherSensorType::RssSensor:
@@ -333,16 +333,16 @@ void UeWorldPublisher::CreateSensorUePublisher(UeSensor &sensor) {
     case types::PublisherSensorType::ObstacleDetectionSensor:
     default: {
       sensor.publisher_expected = false;
-      log_error("UeWorldPublisher::CreateSensorUePublisher[", std::to_string(*sensor.sensor_actor_definition),
+      log_error("UeWorldPublisher::CreateSensorUePublisher[", std::to_string(*sensor.sensor_actor_definition()),
                 "]: Not a UE sensor or no publisher implemented yet");
     }
   }
   if (sensor.publisher != nullptr) {
     if (!sensor.publisher->Init(_domain_participant_impl)) {
-      log_error("UeWorldPublisher::CreateSensorUePublisher[", std::to_string(*sensor.sensor_actor_definition),
+      log_error("UeWorldPublisher::CreateSensorUePublisher[", std::to_string(*sensor.sensor_actor_definition()),
                 "]: Failed to init publisher");
     } else {
-      log_debug("UeWorldPublisher::CreateSensorUePublisher[", std::to_string(*sensor.sensor_actor_definition),
+      log_debug("UeWorldPublisher::CreateSensorUePublisher[", std::to_string(*sensor.sensor_actor_definition()),
                   "]: Publisher initialized");
     }
   }
@@ -554,7 +554,7 @@ void UeWorldPublisher::RemoveActor(ActorId actor) {
 
   auto sensor_iter = find_ue_sensor(actor);
   if (sensor_iter!=_ue_sensors.end()) {
-    log_debug("ROS2::RemoveSensorUe(", std::to_string(*sensor_iter->second.sensor_actor_definition), ")");
+    log_debug("ROS2::RemoveSensorUe(", std::to_string(*sensor_iter->second.sensor_actor_definition()), ")");
     _ue_sensors.erase(sensor_iter);
     _sensors_changed = true;
   }
@@ -877,7 +877,7 @@ void UeWorldPublisher::AttachActors(ActorId const child, ActorId const parent) {
   if ( find_result != _ue_sensors.end()) {
     UeSensor &sensor = find_result->second;
     if (sensor.publisher) {
-      log_error("UeWorldPublisher::AttachActors[", std::to_string(*sensor.sensor_actor_definition),
+      log_error("UeWorldPublisher::AttachActors[", std::to_string(*sensor.sensor_actor_definition()),
                 "]: Sensor attached to parent ", parent,
                 ". Sensor has already a running publisher with base topic name ", sensor.publisher->get_topic_name(),
                 " has to be destroyed due to re-attachment");
@@ -892,7 +892,7 @@ UeWorldPublisher::find_ue_sensor(ActorId actor_id)
 {
   auto find_result = std::find_if(_ue_sensors.begin(), _ue_sensors.end(), 
     [actor_id](std::pair<carla::streaming::detail::stream_id_type, UeWorldPublisher::UeSensor> element) {
-      return actor_id == element.second.sensor_actor_definition->id;
+      return actor_id == element.second.sensor_actor_definition()->id;
     });
   return find_result;
 }
@@ -902,7 +902,7 @@ UeWorldPublisher::find_ue_sensor(ActorId actor_id)const
 {
   auto find_result = std::find_if(_ue_sensors.begin(), _ue_sensors.end(), 
     [actor_id](std::pair<carla::streaming::detail::stream_id_type, UeWorldPublisher::UeSensor> element) {
-      return actor_id == element.second.sensor_actor_definition->id;
+      return actor_id == element.second.sensor_actor_definition()->id;
     });
   return find_result;
 }

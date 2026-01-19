@@ -28,8 +28,8 @@ struct ActorDefinition : public ActorNameDefinition {
 
     id = env_object.id;
     type_id = env_object.name;
-    object_type=std::to_string(env_object.type);
-    base_type="environment_object";
+    object_type="environment_object";
+    base_type=std::to_string(env_object.type);
     enabled_for_ros = enabled_for_ros_;
     city_object_label=env_object.type;
 

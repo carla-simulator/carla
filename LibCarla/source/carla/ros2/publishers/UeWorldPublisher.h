@@ -215,8 +215,10 @@ private:
 
   struct UeSensor {
     UeSensor(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition_)
-      : sensor_actor_definition(sensor_actor_definition_) {}
-    std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition;
+      : sensor_actor_record(std::make_shared<ROS2NameRecord>(sensor_actor_definition_)) {}
+    std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition() {
+       return std::dynamic_pointer_cast<carla::ros2::types::SensorActorDefinition>(sensor_actor_record->_actor_name_definition); }
+    std::shared_ptr<ROS2NameRecord> sensor_actor_record;
     carla::ros2::types::V2XCustomSendCallback v2x_custom_send_callback{nullptr};
     bool publisher_expected{true};
     std::shared_ptr<UePublisherBaseSensor> publisher;
