@@ -2,7 +2,7 @@ execute_process(
   COMMAND
     git log -1 --format=%H
   WORKING_DIRECTORY
-    ${CARLA_WORKSPACE_PATH}
+    ${CARLA_ROOT}
   OUTPUT_VARIABLE
     CARLA_GIT_HASH
   OUTPUT_STRIP_TRAILING_WHITESPACE
@@ -12,7 +12,7 @@ execute_process(
   COMMAND
     git log -1 --format=%H
   WORKING_DIRECTORY
-    ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Content/Carla
+    ${CARLA_ROOT}/Unreal/CarlaUnreal/Content/Carla
   OUTPUT_VARIABLE
     CONTENT_GIT_HASH
   OUTPUT_STRIP_TRAILING_WHITESPACE

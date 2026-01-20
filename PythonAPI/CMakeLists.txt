@@ -8,6 +8,7 @@ find_package (
   REQUIRED
 )
 
+#[[
 # -- Temporary check for numpy 2 presence, which breaks our current version of Boost.Python.
 execute_process (
   COMMAND
@@ -21,20 +22,21 @@ execute_process (
     NUMPY_VERSION_QUERY_RESULT
 )
 if (NUMPY_VERSION_QUERY_RESULT)
-  carla_warning ("Failed to query numpy version.")
+  message (WARNING "Failed to query numpy version.")
 endif ()
-carla_message ("Found Numpy ${NUMPY_VERSION_STRING} for Python ${Python3_VERSION} (${Python3_EXECUTABLE}).")
+message (STATUS "Found Numpy ${NUMPY_VERSION_STRING} for Python ${Python3_VERSION} (${Python3_EXECUTABLE}).")
 if ("${NUMPY_VERSION_STRING}" VERSION_GREATER "2.0.0")
-  carla_error ("Unsupported Numpy version, please downgrade to a version prior to numpy 2.")
+  message (FATAL_ERROR "Unsupported Numpy version, please downgrade to a version prior to numpy 2.")
 endif ()
 # --
+]]
 
 set (
   PYTHON_API_DEPENDENCIES
   carla-client
-  rpc
-  png_static
-  zlibstatic
+  RPC::RPC
+  PNG::PNG
+  ZLIB::ZLIB
   Boost::asio
   Boost::python
   Boost::geometry
@@ -52,7 +54,7 @@ get_target_property (
 
 get_target_property (
   Boost_python_TARGET_NAME
-  Boost::python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}
+  Boost::python
   ALIASED_TARGET
 )
 
@@ -113,14 +115,20 @@ if (CMAKE_TOOLCHAIN_FILE)
   )
 endif ()
 
-carla_two_step_configure_file (
-  ${CARLA_PYTHON_API_CARLA_PATH}/pyproject.toml
-  ${CARLA_PYTHON_API_CARLA_PATH}/pyproject.toml.in
+file (
+  GENERATE
+  OUTPUT
+    ${CARLA_PYTHON_API_CARLA_PATH}/pyproject.toml
+  INPUT
+    ${CARLA_PYTHON_API_CARLA_PATH}/pyproject.toml.in
 )
 
-carla_two_step_configure_file (
-  ${CARLA_PYTHON_API_CARLA_PATH}/CMakeLists.txt
-  ${CARLA_PYTHON_API_CARLA_PATH}/CMakeLists.txt.in
+file (
+  GENERATE
+  OUTPUT
+    ${CARLA_PYTHON_API_CARLA_PATH}/CMakeLists.txt
+  INPUT
+    ${CARLA_PYTHON_API_CARLA_PATH}/CMakeLists.txt.in
 )
 
 set (
@@ -130,7 +138,7 @@ set (
 
 file (
   COPY
-  ${CARLA_WORKSPACE_PATH}/LICENSE
+  ${CARLA_ROOT}/LICENSE
   DESTINATION ${CARLA_PYTHON_API_CARLA_PATH}
 )
 
@@ -158,13 +166,13 @@ else ()
   )
 endif ()
 
-carla_add_custom_target (
+add_custom_target (
   python-api
   "Build the CARLA Python API."
   COMMAND
     ${CMAKE_COMMAND}
       -E copy
-      ${CARLA_WORKSPACE_PATH}/LICENSE
+      ${CARLA_ROOT}/LICENSE
       ${CARLA_PYTHON_API_CARLA_PATH}/LICENSE
   COMMAND
     ${CARLA_PYTHON_API_BUILD_COMMAND}
@@ -174,12 +182,9 @@ carla_add_custom_target (
   USES_TERMINAL
 )
 
-carla_add_custom_target_alias (
-  carla-python-api
-  python-api
-)
+add_custom_target (carla-python-api DEPENDS python-api)
 
-carla_add_custom_target (
+add_custom_target (
   install-python-api
   "Build & install the CARLA Python API"
   COMMAND
@@ -192,17 +197,4 @@ carla_add_custom_target (
   USES_TERMINAL
 )
 
-carla_add_custom_target_alias (
-  carla-python-api-install
-  install-python-api
-)
-
-add_dependencies (
-  carla-python-api
-  ${PYTHON_API_DEPENDENCIES}
-)
-
-add_dependencies (
-  carla-python-api-install
-  carla-python-api
-)
+add_custom_target (carla-python-api-install DEPENDS install-python-api)

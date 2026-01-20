@@ -1,7 +1,6 @@
 import subprocess
 
 def run_command(command : list):
-    print(f'Running "{str().join(command)}"')
     subprocess.run(command).check_returncode()
 
 def main():
@@ -40,7 +39,6 @@ def main():
     main_parser.add_argument('-j', '--jobs', type=int, default=0, help='Max job count.')
     
     ARGV = main_parser.parse_args()
-    print(ARGV)
     
     match ARGV.primary_command:
         case 'configure':
@@ -48,19 +46,24 @@ def main():
             run_command(f'cmake --preset {config} -DCMAKE_POLICY_VERSION_MINIMUM=3.5'.split(' '))
             pass
         case _:
-            pass
-    
-    jobs = None if ARGV.jobs == 0 else ARGV.jobs
-    if jobs != 0:
-        with ProcessPoolExecutor(max_workers=jobs) as pool:
-            futures = []
-            if ARGV.primary_command:
-                pool.submit(run_command, target_map[ARGV.primary_command])
-            for f in futures:
-                f.result()
-    else:
-        if ARGV.primary_command in target_map:
-            run_command(target_map[ARGV.primary_command])
+            jobs = None if ARGV.jobs == 0 else ARGV.jobs
+            if jobs != 0:
+                with ProcessPoolExecutor(max_workers=jobs) as pool:
+                    futures = []
+                    futures.append(
+                        pool.submit(
+                            run_command,
+                            target_map[ARGV.primary_command]))
+                    for f in futures:
+                        f.result()
+            else:
+                if ARGV.primary_command in target_map:
+                    run_command(target_map[ARGV.primary_command])
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(e)
+    finally:
+        pass

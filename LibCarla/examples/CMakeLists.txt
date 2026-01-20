@@ -1,9 +1,9 @@
 set (
   CARLA_EXAMPLE_CPP_CLIENT_SOURCE_PATH
-  ${CARLA_WORKSPACE_PATH}/Examples/CppClient
+  ${CARLA_ROOT}/Examples/CppClient
 )
 
-carla_message ("CARLA Building C++ EXAMPLE CLIENT")
+message (STATUS "CARLA Building C++ EXAMPLE CLIENT")
 
 project (
   carla-example-cpp-client
@@ -27,7 +27,7 @@ file (
   ${CARLA_EXAMPLE_CPP_CLIENT_SOURCE_PATH}/*.h
 )
 
-carla_add_executable (
+add_executable (
   carla-example-client
   "Build the CARLA C++ client example."
   ${CARLA_EXAMPLE_CPP_SOURCES}

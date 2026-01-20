@@ -3,7 +3,7 @@ cmake_minimum_required (
   ${CARLA_CMAKE_MINIMUM_REQUIRED_VERSION}
 )
 
-project (carla-ros2-native-project)
+project (carla-ros2-native_project)
 
 include (ExternalProject)
 
@@ -68,7 +68,7 @@ add_custom_command (
     ${CARLA_PLUGIN_BINARY_PATH}
 )
 
-carla_add_custom_target (
+add_custom_target (
   carla-ros2-native
   "Build the ROS2-Native CARLA subproject."
   DEPENDS carla-ros2-native-lib
