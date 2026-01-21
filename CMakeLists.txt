@@ -10,7 +10,7 @@
 
 cmake_minimum_required (
   VERSION
-  3.30
+  3.28
 )
 
 cmake_policy (SET CMP0097 NEW)

@@ -1,6 +1,6 @@
 cmake_minimum_required (
   VERSION
-  3.30
+  3.28
 )
 
 set (CARLA_VERSION_MAJOR 0)
