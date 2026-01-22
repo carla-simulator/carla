@@ -121,7 +121,7 @@ set (
 
 set (
   PNG_VERSION
-  "1.6.53"
+  "1.6.54"
   CACHE STRING
   "Target libpng version."
 )

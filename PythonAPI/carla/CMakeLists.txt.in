@@ -19,15 +19,26 @@ if (${CMAKE_MINOR_VERSION} GREATER_EQUAL 24)
 endif ()
 
 find_package (
-  LibCarla @CARLA_VERSION@ EXACT REQUIRED
+  Boost ${BOOST_VERSION} EXACT REQUIRED
   COMPONENTS
-    Client
+    asio geometry algorithm assert gil python
 )
 
 find_package (
-  Boost ${BOOST_VERSION} EXACT REQUIRED
+  RecastNavigation REQUIRED
   COMPONENTS
-    python
+    Recast Detour DetourCrowd
+)
+
+find_package (Eigen3 @EIGEN_VERSION@ EXACT REQUIRED)
+find_package (ZLIB @ZLIB_VERSION@ EXACT REQUIRED)
+find_package (RPCLib REQUIRED)
+find_package (PNG @PNG_VERSION@ EXACT REQUIRED)
+
+find_package (
+  LibCarla @CARLA_VERSION@ EXACT REQUIRED
+  COMPONENTS
+    Client
 )
 
 set (CMAKE_CXX_STANDARD 20)
@@ -35,8 +46,6 @@ set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set (CMAKE_C_STANDARD 11)
 set (CMAKE_C_STANDARD_REQUIRED ON)
-
-list (APPEND CMAKE_PREFIX_PATH @CMAKE_PREFIX_PATH@)
 
 find_package (
   Python3
@@ -48,19 +57,9 @@ find_package (
   REQUIRED
 )
 
-if (WIN32)
-  set (PYTHON_MODULE_EXT .pyd)
-else ()
-  set (PYTHON_MODULE_EXT .so)
-endif ()
-
 message (
   STATUS
   "Selected Python executable: ${Python3_EXECUTABLE} (Interpreter ID: ${Python3_INTERPRETER_ID})"
-)
-
-set (
-  CARLA_PYTHON_API_DEPENDENCIES
 )
 
 set (CARLA_PYTHON_API_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
@@ -92,19 +91,11 @@ set (
 )
 
 if (ENABLE_OSM2ODR)
-  list (
-    APPEND
-    PYTHON_API_SOURCES
-    ${CARLA_PYTHON_API_SOURCE_PATH}/OSM2ODR.cpp
-  )
+  list (APPEND PYTHON_API_SOURCES ${CARLA_PYTHON_API_SOURCE_PATH}/OSM2ODR.cpp)
 endif ()
 
 if (ENABLE_RSS)
-  list (
-    APPEND
-    PYTHON_API_SOURCES
-    ${CARLA_PYTHON_API_SOURCE_PATH}/AdRss.cpp
-  )
+  list (APPEND PYTHON_API_SOURCES ${CARLA_PYTHON_API_SOURCE_PATH}/AdRss.cpp)
 endif ()
 
 set (
@@ -117,25 +108,17 @@ set (
 )
 
 if (USE_LIMITED_API)
-  list (
-    APPEND
-    PYTHON_API_ADD_LIBRARY_ARGS
-    USE_SABI ${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}
-  )
+  list (APPEND PYTHON_API_ADD_LIBRARY_ARGS USE_SABI ${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR})
 endif ()
 
-list (
-  APPEND
-  PYTHON_API_ADD_LIBRARY_ARGS
-  WITH_SOABI
-)
+list (APPEND PYTHON_API_ADD_LIBRARY_ARGS WITH_SOABI)
 
 Python3_add_library (
   ${SKBUILD_PROJECT_NAME}
   MODULE
-  ${PYTHON_API_ADD_LIBRARY_ARGS}
-  ${PYTHON_API_HEADERS}
-  ${PYTHON_API_SOURCES}
+    ${PYTHON_API_ADD_LIBRARY_ARGS}
+    ${PYTHON_API_HEADERS}
+    ${PYTHON_API_SOURCES}
 )
 
 target_link_libraries (

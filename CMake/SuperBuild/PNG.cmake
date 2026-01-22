@@ -44,7 +44,7 @@ if (NOT CARLA_PNG_USE_FIND_PACKAGE OR NOT PNG_FOUND)
 
     if (TARGET zlib_project)
       ExternalProject_get_property (zlib_project INSTALL_DIR)
-      if (${CMAKE_BUILD_TYPE} STREQUAL "Debug" OR ${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
+      if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
         if (WIN32)
           set (ZLIB_NAME zlibstaticd.lib)
         else ()

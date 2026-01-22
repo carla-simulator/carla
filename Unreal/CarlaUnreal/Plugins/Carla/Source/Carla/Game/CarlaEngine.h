@@ -18,8 +18,8 @@
 #include <carla/multigpu/primaryCommands.h>
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
-#if WITH_ROS2
-    #include <carla/ros2/ROS2.h>
+#if __has_include(<carla/ros2/ROS2.h>)
+#include <carla/ros2/ROS2.h>
 #endif
 #include <util/enable-ue4-macros.h>
 

@@ -77,6 +77,8 @@
 #include <carla/image/ImageIO.h>
 #include <carla/image/ImageView.h>
 
+#include <boost/python/object.hpp>
+
 #include <cstdio>
 #include <ostream>
 #include <iostream>

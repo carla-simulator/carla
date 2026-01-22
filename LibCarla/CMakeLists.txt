@@ -37,8 +37,8 @@ find_package (
 
 find_package (Eigen3 ${EIGEN_VERSION} EXACT REQUIRED)
 find_package (ZLIB ${ZLIB_VERSION} EXACT REQUIRED)
-find_package (RPCLib ${RPC_VERSION} EXACT REQUIRED)
-find_package (PNG ${PNG_VERSION} EXACT)
+find_package (RPCLib REQUIRED)
+find_package (PNG ${PNG_VERSION} EXACT REQUIRED)
 
 set (CMAKE_C_STANDARD 11)
 set (CMAKE_C_STANDARD_REQUIRED ON)
@@ -73,6 +73,7 @@ foreach (FORMAT ${LIBCARLA_IMAGE_SUPPORTED_FORMATS})
   message (STATUS "Enabling CARLA image support for \"${FORMAT}\".")
   string (TOUPPER "${FORMAT}" FORMAT_UPPERCASE)
   list (APPEND CARLA_COMMON_DEFINITIONS LIBCARLA_IMAGE_SUPPORT_${FORMAT_UPPERCASE}=1)
+  set (LIBCARLA_IMAGE_SUPPORT_${FORMAT_UPPERCASE} TRUE CACHE BOOL "")
 endforeach ()
 
 if (WIN32)
@@ -83,14 +84,6 @@ if (WIN32)
 endif ()
 
 
-
-file (
-  GENERATE
-  OUTPUT
-    ${CMAKE_BINARY_DIR}/carla/Version.h # @TODO This should be in a binary dir
-  INPUT
-    ${LIBCARLA_SOURCE_PATH}/carla/Version.h.in
-)
 
 if (WIN32)
 
@@ -123,6 +116,22 @@ else ()
   file (WRITE ${CMAKE_CURRENT_BINARY_DIR}/ue-header-guard-end.h "")
 
 endif ()
+
+configure_file (
+  ${LIBCARLA_SOURCE_PATH}/carla/Version.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/carla/Version.h
+)
+
+configure_file (
+  ${LIBCARLA_SOURCE_PATH}/carla/Config.h.in
+  ${CMAKE_CURRENT_BINARY_DIR}/carla/Config.h
+)
+
+set (
+  LIBCARLA_GENERATED_HEADERS
+  ${CMAKE_CURRENT_BINARY_DIR}/carla/Version.h
+  ${CMAKE_CURRENT_BINARY_DIR}/carla/Config.h
+)
 
 if (BUILD_SERVER)
 
@@ -189,6 +198,7 @@ if (BUILD_SERVER)
   list (
     APPEND
     LIBCARLA_SERVER_HEADERS
+    ${LIBCARLA_GENERATED_HEADERS}
     ${CMAKE_CURRENT_BINARY_DIR}/ue-header-guard-begin.h
     ${CMAKE_CURRENT_BINARY_DIR}/ue-header-guard-end.h
   )
@@ -244,7 +254,12 @@ if (BUILD_SERVER)
   target_include_directories (
     Server PUBLIC
     $<BUILD_INTERFACE:${LIBCARLA_SOURCE_PATH}>
-    $<INSTALL_INTERFACE:Source>
+    $<INSTALL_INTERFACE:include>
+  )
+  
+  target_include_directories (
+    Server PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}
   )
   
   target_compile_definitions (
@@ -254,13 +269,30 @@ if (BUILD_SERVER)
     ${CARLA_RTTI_DEFINITIONS}
     ${CARLA_ROS2_DEFINITIONS}
   )
+  
+  foreach (HEADER ${LIBCARLA_SERVER_HEADERS})
+    cmake_path (
+      GET
+        HEADER
+      PARENT_PATH
+        HEADER_PARENT
+    )
+    cmake_path (
+      RELATIVE_PATH
+        HEADER_PARENT
+      BASE_DIRECTORY
+        ${LIBCARLA_SOURCE_PATH}
+      OUTPUT_VARIABLE
+        HEADER_PARENT_RELATIVE
+    )
+    install (
+      FILES
+        ${HEADER}
+      DESTINATION
+        include/${HEADER_PARENT_RELATIVE}
+    )
+  endforeach ()
 
-  install (
-    FILES
-      ${LIBCARLA_SERVER_HEADERS}
-    DESTINATION
-      include
-  )
 endif ()
 
 
@@ -300,6 +332,7 @@ if (BUILD_CLIENT)
   list (
     APPEND
     LIBCARLA_CLIENT_HEADERS
+    ${LIBCARLA_GENERATED_HEADERS}
     ${CMAKE_CURRENT_BINARY_DIR}/ue-header-guard-begin.h
     ${CMAKE_CURRENT_BINARY_DIR}/ue-header-guard-end.h
   )
@@ -390,7 +423,12 @@ if (BUILD_CLIENT)
   target_include_directories (
     Client PUBLIC
     $<BUILD_INTERFACE:${LIBCARLA_SOURCE_PATH}>
-    $<INSTALL_INTERFACE:Source>
+    $<INSTALL_INTERFACE:include>
+  )
+  
+  target_include_directories (
+    Client PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}
   )
   
   target_compile_definitions (
@@ -400,12 +438,37 @@ if (BUILD_CLIENT)
     ${CARLA_RTTI_DEFINITIONS}
   )
 
-  install (
-    FILES
-      ${LIBCARLA_CLIENT_HEADERS}
-    DESTINATION
-      include
-  )
+  foreach (HEADER ${LIBCARLA_CLIENT_HEADERS})
+    cmake_path (
+      GET
+        HEADER
+      PARENT_PATH
+        HEADER_PARENT
+    )
+    cmake_path (IS_PREFIX LIBCARLA_SOURCE_PATH ${HEADER} FROM_SOURCE)
+    cmake_path (IS_PREFIX CMAKE_CURRENT_BINARY_DIR ${HEADER} FROM_BINARY)
+    if (FROM_SOURCE)
+      set (PARENT_PATH ${LIBCARLA_SOURCE_PATH})
+    elseif (FROM_BINARY)
+      set (PARENT_PATH ${CMAKE_CURRENT_BINARY_DIR})
+    else ()
+      message (FATAL_ERROR "Could not determine where to install ${HEADER}.")
+    endif ()
+    cmake_path (
+      RELATIVE_PATH
+        HEADER_PARENT
+      BASE_DIRECTORY
+        ${PARENT_PATH}
+      OUTPUT_VARIABLE
+        HEADER_PARENT_RELATIVE
+    )
+    install (
+      FILES
+        ${HEADER}
+      DESTINATION
+        include/${HEADER_PARENT_RELATIVE}
+    )
+  endforeach ()
 
 endif ()
 

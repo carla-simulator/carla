@@ -52,31 +52,10 @@ endif ()
 # --
 ]]
 
-set (
-  CARLA_PYTHON_API_CMAKE_ARGS
-  "\t'-G${CMAKE_GENERATOR}'"
-)
-
-set (
-  CARLA_PYTHON_API_CMAKE_ARGS
-  "${CARLA_PYTHON_API_CMAKE_ARGS},\n\t'-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}'"
-)
-
-set (
-  CARLA_PYTHON_API_CMAKE_ARGS
-  "${CARLA_PYTHON_API_CMAKE_ARGS},\n\t'-DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}'"
-)
-
-if (CMAKE_TOOLCHAIN_FILE)
-  set (
-    CARLA_PYTHON_API_CMAKE_ARGS
-    "${CARLA_PYTHON_API_CMAKE_ARGS},\n\t\'--toolchain=${CMAKE_TOOLCHAIN_FILE}\'"
-  )
-endif ()
-
 configure_file (
   ${CMAKE_CURRENT_SOURCE_DIR}/carla/pyproject.toml.in
   ${CMAKE_CURRENT_SOURCE_DIR}/carla/pyproject.toml
+  @ONLY
 )
 
 configure_file (
