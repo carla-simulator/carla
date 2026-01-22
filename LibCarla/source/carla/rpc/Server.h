@@ -17,6 +17,7 @@
 #include <rpc/server.h>
 #include <rpc/this_session.h>
 
+#include <atomic>
 #include <future>
 
 namespace carla {
@@ -80,7 +81,7 @@ namespace rpc {
     boost::asio::io_context _sync_io_context;
 
     ::rpc::server _server;
-    bool _shutdown_in_progress{false};
+    std::atomic_bool _shutdown_in_progress{false};
   };
 
   // ===========================================================================
@@ -117,7 +118,7 @@ namespace detail {
     /// I.e., we can use the io_context to run tasks on a specific thread (e.g.
     /// game thread).
     template <typename FuncT>
-    static auto WrapSyncCall(bool &shutdown_in_progress, boost::asio::io_context &io, FuncT &&functor) {
+    static auto WrapSyncCall(std::atomic_bool &shutdown_in_progress, boost::asio::io_context &io, FuncT &&functor) {
       return [&shutdown_in_progress, &io, functor=std::forward<FuncT>(functor)](Metadata metadata, Args... args) -> R {
         auto const session_id = ::rpc::this_session().id();
         auto task = std::packaged_task<R()>([session_id, functor=std::move(functor), args...]() {
@@ -134,7 +135,7 @@ namespace detail {
           boost::asio::post(io, MoveHandler(task));
           std::future_status status;
           do {
-            status = result.wait_for(std::chrono::seconds(1));
+            status = result.wait_for(std::chrono::milliseconds(100));
           } while (!shutdown_in_progress && (status != std::future_status::ready));
           if (status==std::future_status::ready) {
             return result.get();
