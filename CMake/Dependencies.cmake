@@ -265,6 +265,19 @@ endif ()
 
 
 
+# ==== GTEST ====
+carla_dependency_option (BUILD_GMOCK ON)
+carla_dependency_option (INSTALL_GTEST OFF)
+carla_dependency_option (GTEST_HAS_ABSL OFF)
+carla_dependency_add (
+  gtest
+  ${CARLA_GTEST_TAG}
+  https://github.com/google/googletest/archive/refs/tags/${CARLA_GTEST_TAG}.zip
+  https://github.com/google/googletest.git
+)
+
+
+
 if (BUILD_CARLA_UNREAL AND ENABLE_STREETMAP)
   # ==== STREETMAP ====
   carla_dependency_add (
