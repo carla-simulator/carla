@@ -296,7 +296,7 @@ carla_string_option (
 carla_string_option (
   CARLA_GTEST_VERSION
   "Target googletest version."
-  1.14.0
+  1.17.0
 )
 
 carla_string_option (

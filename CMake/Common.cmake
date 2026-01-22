@@ -162,27 +162,32 @@ endif ()
 #   WAll Config
 # ================================
 
-if (ENABLE_ALL_WARNINGS)
-  check_cxx_compiler_flag(-Wall HAS_WALL_GNU)
-  if (HAS_WALL_GNU)
-    set (CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-  endif ()
-  check_cxx_compiler_flag(-Wextra HAS_WEXTRA_GNU)
-  if (HAS_WEXTRA_GNU)
-    set (CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
-  endif ()
-  check_cxx_compiler_flag(/Wall HAS_WALL_MSVC)
-  if (HAS_WALL_MSVC)
-    set (CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} /Wall")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Wall")
-  endif ()
-endif ()
-
 if (CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "GNU")
+  
+  if (ENABLE_ALL_WARNINGS)
+    check_cxx_compiler_flag(-Wall HAS_WALL_GNU)
+    if (HAS_WALL_GNU)
+      set (CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
+    endif ()
+    check_cxx_compiler_flag(-Wextra HAS_WEXTRA_GNU)
+    if (HAS_WEXTRA_GNU)
+      set (CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wextra")
+    endif ()
+  endif ()
+  
   set (SUPPRESS_WARNING_DIRECTIVE_PREFIX -Wno-)
 elseif (CMAKE_C_COMPILER_FRONTEND_VARIANT STREQUAL "MSVC")
+
+  if (ENABLE_ALL_WARNINGS)
+    check_cxx_compiler_flag(/Wall HAS_WALL_MSVC)
+    if (HAS_WALL_MSVC)
+      set (CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+      set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4")
+    endif ()
+  endif ()
+  
   set (SUPPRESS_WARNING_DIRECTIVE_PREFIX /wd)
 endif ()
 
@@ -210,13 +215,37 @@ endmacro ()
 
 set (
   CARLA_C_SUPRESSED_WARNING_LIST
-  macro-redefined 4005
+  macro-redefined
   incompatible-pointer-types
+  4005
+  # GTest:
+  2220
+  4623
+  4365
+  4061
+  4820
+  4625
+  4626
+  5026
+  5027
+  5039
 )
 
 set (
   CARLA_CXX_SUPRESSED_WARNING_LIST
-  macro-redefined 4005
+  macro-redefined
+  4005
+
+  2220
+  4623
+  4365
+  4061
+  4820
+  4625
+  4626
+  5026
+  5027
+  5039
 )
 
 foreach (WARNING ${CARLA_C_SUPRESSED_WARNING_LIST})

@@ -8,7 +8,7 @@ project (
 
 set (
   LIBCARLA_SOURCE_PATH
-  ${CARLA_WORKSPACE_PATH}/LibCarla/source
+  ${CARLA_WORKSPACE_PATH}/LibCarla/Source
 )
 
 carla_two_step_configure_file (
@@ -379,3 +379,6 @@ if (BUILD_CARLA_CLIENT)
   )
 
 endif ()
+
+
+add_subdirectory (${CMAKE_CURRENT_LIST_DIR}/Test)
