@@ -50,8 +50,6 @@ include (CheckCCompilerFlag)
 include (CheckCXXCompilerFlag)
 include (CheckLinkerFlag)
 
-
-
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
   message (WARNING 
     "CARLA is set to be built in Debug mode. This may cause issues when building CarlaUnrealEditor."
@@ -85,7 +83,7 @@ include (${CARLA_ROOT}/CMake/Common.cmake)
 
 option (BUILD_SERVER "Build the CARLA server." ON)
 option (BUILD_CLIENT "Build the CARLA client." ON)
-option (BUILD_PYTHON_API "Build the CARLA Python API." OFF)
+option (BUILD_PYTHON_API "Build the CARLA Python API." ON)
 option (BUILD_EXAMPLES "Build CARLA examples." ON)
 option (ENABLE_ROS2 "Enable ROS2." OFF)
 option (ENABLE_ROS2_DEMO "Enable ROS2 demo." OFF)
@@ -101,24 +99,11 @@ option (ENABLE_WARNINGS_TO_ERRORS "Whether to convert build warnings to errors."
 
 option (ENABLE_STREETMAP "Whether to download the Streetmap UE plugin." ON)
 
-include (${CMAKE_CURRENT_LIST_DIR}/CMake/SuperBuild/Boost.cmake)
-include (${CMAKE_CURRENT_LIST_DIR}/CMake/SuperBuild/Eigen.cmake)
-include (${CMAKE_CURRENT_LIST_DIR}/CMake/SuperBuild/LibOSMScout.cmake)
-include (${CMAKE_CURRENT_LIST_DIR}/CMake/SuperBuild/LunaSVG.cmake)
-include (${CMAKE_CURRENT_LIST_DIR}/CMake/SuperBuild/ZLIB.cmake)
-include (${CMAKE_CURRENT_LIST_DIR}/CMake/SuperBuild/PNG.cmake)
-include (${CMAKE_CURRENT_LIST_DIR}/CMake/SuperBuild/PROJ.cmake)
-include (${CMAKE_CURRENT_LIST_DIR}/CMake/SuperBuild/Recast.cmake)
-include (${CMAKE_CURRENT_LIST_DIR}/CMake/SuperBuild/RPC.cmake)
-include (${CMAKE_CURRENT_LIST_DIR}/CMake/SuperBuild/SQLite3.cmake)
-include (${CMAKE_CURRENT_LIST_DIR}/CMake/SuperBuild/Streetmap.cmake)
-include (${CMAKE_CURRENT_LIST_DIR}/CMake/SuperBuild/XercesC.cmake)
+include (${CMAKE_CURRENT_LIST_DIR}/CMake/SuperBuild/Config.cmake)
 include (${CMAKE_CURRENT_LIST_DIR}/CMake/SuperBuild/LibCarla.cmake)
 
-include (ExternalProject)
-
 if (BUILD_PYTHON_API)
-  add_subdirectory (PythonAPI)
+  include (${CMAKE_CURRENT_LIST_DIR}/CMake/SuperBuild/PythonAPI.cmake)
 endif ()
 
 # if (BUILD_CARLA_UNREAL)

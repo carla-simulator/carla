@@ -41,6 +41,7 @@ if (NOT CARLA_EIGEN_USE_FIND_PACKAGE OR NOT Eigen_FOUND)
             eigen_project
             ${DOWNLOAD_OPTIONS}
             CMAKE_ARGS
+                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                 -DEIGEN_BUILD_PKGCONFIG=OFF
                 -DBUILD_TESTING=OFF
                 -DEIGEN_BUILD_DOC=OFF

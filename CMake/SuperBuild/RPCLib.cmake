@@ -40,6 +40,7 @@ if (NOT CARLA_RPC_USE_FIND_PACKAGE OR NOT RPC_FOUND)
             rpclib_project
             ${DOWNLOAD_OPTIONS}
             CMAKE_ARGS
+                -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                 -DRPCLIB_BUILD_TESTS=OFF
                 -DRPCLIB_GENERATE_COMPDB=OFF
                 -DRPCLIB_BUILD_EXAMPLES=OFF

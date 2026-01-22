@@ -1,5 +1,10 @@
 include (${CMAKE_CURRENT_LIST_DIR}/Config.cmake)
-include (ExternalProject)
+include (${CMAKE_CURRENT_LIST_DIR}/Boost.cmake)
+include (${CMAKE_CURRENT_LIST_DIR}/Eigen.cmake)
+include (${CMAKE_CURRENT_LIST_DIR}/ZLIB.cmake)
+include (${CMAKE_CURRENT_LIST_DIR}/PNG.cmake)
+include (${CMAKE_CURRENT_LIST_DIR}/Recast.cmake)
+include (${CMAKE_CURRENT_LIST_DIR}/RPCLib.cmake)
 
 set (PREFIX_PATHS ${CMAKE_PREFIX_PATH})
 
@@ -22,16 +27,6 @@ if (TARGET eigen_project)
   list (APPEND PREFIX_PATHS ${INSTALL_DIR}/share/eigen3/cmake)
 endif ()
 
-if (TARGET libosmscout_project)
-  ExternalProject_Get_Property (libosmscout_project INSTALL_DIR)
-  list (APPEND PREFIX_PATHS ${INSTALL_DIR})
-endif ()
-
-if (TARGET lunasvg_project)
-  ExternalProject_Get_Property (lunasvg_project INSTALL_DIR)
-  list (APPEND PREFIX_PATHS ${INSTALL_DIR})
-endif ()
-
 if (TARGET zlib_project)
   ExternalProject_Get_Property (zlib_project INSTALL_DIR)
   list (APPEND PREFIX_PATHS ${INSTALL_DIR})
@@ -40,11 +35,6 @@ endif ()
 if (TARGET png_project)
   ExternalProject_Get_Property (png_project INSTALL_DIR)
   list (APPEND PREFIX_PATHS ${INSTALL_DIR}/lib/cmake/PNG)
-endif ()
-
-if (TARGET proj_project)
-  ExternalProject_Get_Property (proj_project INSTALL_DIR)
-  list (APPEND PREFIX_PATHS ${INSTALL_DIR})
 endif ()
 
 if (TARGET recast_project)
@@ -57,44 +47,25 @@ if (TARGET rpclib_project)
   list (APPEND PREFIX_PATHS ${INSTALL_DIR}/lib/cmake/rpclib)
 endif ()
 
-if (TARGET sqlite3_project)
-  ExternalProject_Get_Property (sqlite3_project INSTALL_DIR)
-  list (APPEND PREFIX_PATHS ${INSTALL_DIR})
-endif ()
-
-if (TARGET streetmap_project)
-  ExternalProject_Get_Property (streetmap_project INSTALL_DIR)
-  list (APPEND PREFIX_PATHS ${INSTALL_DIR})
-endif ()
-
-if (TARGET xercesc_project)
-  ExternalProject_Get_Property (xercesc_project INSTALL_DIR)
-  list (APPEND PREFIX_PATHS ${INSTALL_DIR})
-endif ()
-
 string (REPLACE ";" "," PREFIX_PATHS_ESCAPED "${PREFIX_PATHS}")
 
 ExternalProject_Add (
-    libcarla_project
-    DOWNLOAD_COMMAND ""
-    SOURCE_DIR ${CARLA_ROOT}/LibCarla
-    LIST_SEPARATOR ,
-    CMAKE_ARGS
-      -DCMAKE_PREFIX_PATH:STRING=${PREFIX_PATHS_ESCAPED}
-      -DCMAKE_INSTALL_PREFIX:FILEPATH=<INSTALL_DIR>
-      -DCMAKE_TOOLCHAIN_FILE:FILEPATH=${CMAKE_TOOLCHAIN_FILE}
+  libcarla_project
+  DOWNLOAD_COMMAND ""
+  SOURCE_DIR ${CARLA_ROOT}/LibCarla
+  LIST_SEPARATOR ,
+  CMAKE_ARGS
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCARLA_CONFIG_FILEPATH=${CMAKE_CURRENT_LIST_DIR}/Config.cmake
+    -DCMAKE_PREFIX_PATH:STRING=${PREFIX_PATHS_ESCAPED}
+    -DCMAKE_INSTALL_PREFIX:FILEPATH=<INSTALL_DIR>
+    -DCMAKE_TOOLCHAIN_FILE:FILEPATH=${CMAKE_TOOLCHAIN_FILE}
+  DEPENDS
+    boost_project-install
+    eigen_project-install
+    zlib_project-install
+    png_project-install
+    recast_project-install
+    rpclib_project-install
 )
 ExternalProject_Add_StepTargets (libcarla_project install) # Generates libcarla_project-install
-ExternalProject_Add_StepTargets (libcarla_project configure) # Generates libcarla_project-configure
-add_dependencies (libcarla_project-configure boost_project-install)
-add_dependencies (libcarla_project-configure eigen_project-install)
-# add_dependencies (libcarla_project-configure libosmscout_project-install)
-# add_dependencies (libcarla_project-configure lunasvg_project-install)
-add_dependencies (libcarla_project-configure zlib_project-install)
-add_dependencies (libcarla_project-configure png_project-install)
-# add_dependencies (libcarla_project-configure proj_project-install)
-add_dependencies (libcarla_project-configure recast_project-install)
-add_dependencies (libcarla_project-configure rpclib_project-install)
-# add_dependencies (libcarla_project-configure sqlite3_project-install) Handled at configure time!
-# add_dependencies (libcarla_project-configure streetmap_project-install)
-# add_dependencies (libcarla_project-configure xercesc_project-install)

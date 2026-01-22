@@ -1,6 +1,6 @@
 cmake_minimum_required (
   VERSION
-  @CARLA_CMAKE_MINIMUM_REQUIRED_VERSION@
+  3.30
 )
 
 project (
@@ -18,13 +18,25 @@ if (${CMAKE_MINOR_VERSION} GREATER_EQUAL 24)
   cmake_policy (SET CMP0135 NEW)
 endif ()
 
-include (@CARLA_WORKSPACE_PATH@/CMake/Util.cmake)
+find_package (
+  LibCarla @CARLA_VERSION@ EXACT REQUIRED
+  COMPONENTS
+    Client
+)
+
+find_package (
+  Boost ${BOOST_VERSION} EXACT REQUIRED
+  COMPONENTS
+    python
+)
 
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set (CMAKE_C_STANDARD 11)
 set (CMAKE_C_STANDARD_REQUIRED ON)
+
+list (APPEND CMAKE_PREFIX_PATH @CMAKE_PREFIX_PATH@)
 
 find_package (
   Python3
@@ -42,12 +54,8 @@ else ()
   set (PYTHON_MODULE_EXT .so)
 endif ()
 
-set (
-  CARLA_PYTHON_API_CARLA_PATH
-  ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-carla_message_verbose (
+message (
+  STATUS
   "Selected Python executable: ${Python3_EXECUTABLE} (Interpreter ID: ${Python3_INTERPRETER_ID})"
 )
 
@@ -55,15 +63,8 @@ set (
   CARLA_PYTHON_API_DEPENDENCIES
 )
 
-set (
-  CARLA_PYTHON_API_INCLUDE_PATH
-  ${CARLA_PYTHON_API_CARLA_PATH}/include
-)
-
-set (
-  CARLA_PYTHON_API_SOURCE_PATH
-  ${CARLA_PYTHON_API_CARLA_PATH}/src
-)
+set (CARLA_PYTHON_API_INCLUDE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set (CARLA_PYTHON_API_SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set (
   PYTHON_API_HEADERS
@@ -135,6 +136,17 @@ Python3_add_library (
   ${PYTHON_API_ADD_LIBRARY_ARGS}
   ${PYTHON_API_HEADERS}
   ${PYTHON_API_SOURCES}
+)
+
+target_link_libraries (
+  ${SKBUILD_PROJECT_NAME} PRIVATE
+  LibCarla::Client
+  Boost::python
+)
+
+target_include_directories (
+  ${SKBUILD_PROJECT_NAME} PUBLIC
+  ${CARLA_PYTHON_API_INCLUDE_PATH}
 )
 
 install (

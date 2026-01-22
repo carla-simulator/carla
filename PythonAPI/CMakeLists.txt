@@ -1,3 +1,24 @@
+cmake_minimum_required (
+  VERSION
+  3.28
+)
+
+if (CARLA_CONFIG_FILEPATH)
+  include (${CARLA_CONFIG_FILEPATH})
+else ()
+  message (WARNING "Missing \"CARLA_CONFIG_FILEPATH\"")
+endif ()
+
+project (
+  PythonAPI
+  LANGUAGES
+    CXX
+  VERSION
+    ${CARLA_VERSION}
+)
+
+option (ENABLE_PEP517 "Whether to use PEP 517." ON)
+
 find_package (
   Python3
   COMPONENTS
@@ -32,68 +53,6 @@ endif ()
 ]]
 
 set (
-  PYTHON_API_DEPENDENCIES
-  carla-client
-  RPC::RPC
-  PNG::PNG
-  ZLIB::ZLIB
-  Boost::asio
-  Boost::python
-  Boost::geometry
-  Boost::gil
-  RecastNavigation::Recast
-  RecastNavigation::Detour
-  RecastNavigation::DetourCrowd
-)
-
-get_target_property (
-  Boost_asio_TARGET_NAME
-  Boost::asio
-  ALIASED_TARGET
-)
-
-get_target_property (
-  Boost_python_TARGET_NAME
-  Boost::python
-  ALIASED_TARGET
-)
-
-get_target_property (
-  Boost_geometry_TARGET_NAME
-  Boost::geometry
-  ALIASED_TARGET
-)
-
-get_target_property (
-  Boost_gil_TARGET_NAME
-  Boost::gil
-  ALIASED_TARGET
-)
-
-get_target_property (
-  RecastNavigation_Recast_TARGET_NAME
-  RecastNavigation::Recast
-  ALIASED_TARGET
-)
-
-get_target_property (
-  RecastNavigation_Detour_TARGET_NAME
-  RecastNavigation::Detour
-  ALIASED_TARGET
-)
-
-get_target_property (
-  RecastNavigation_DetourCrowd_TARGET_NAME
-  RecastNavigation::DetourCrowd
-  ALIASED_TARGET
-)
-
-set (
-  CARLA_PYTHON_API_CARLA_PATH
-  ${CMAKE_CURRENT_SOURCE_DIR}/carla
-)
-
-set (
   CARLA_PYTHON_API_CMAKE_ARGS
   "\t'-G${CMAKE_GENERATOR}'"
 )
@@ -115,31 +74,20 @@ if (CMAKE_TOOLCHAIN_FILE)
   )
 endif ()
 
-file (
-  GENERATE
-  OUTPUT
-    ${CARLA_PYTHON_API_CARLA_PATH}/pyproject.toml
-  INPUT
-    ${CARLA_PYTHON_API_CARLA_PATH}/pyproject.toml.in
+configure_file (
+  ${CMAKE_CURRENT_SOURCE_DIR}/carla/pyproject.toml.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/carla/pyproject.toml
 )
 
-file (
-  GENERATE
-  OUTPUT
-    ${CARLA_PYTHON_API_CARLA_PATH}/CMakeLists.txt
-  INPUT
-    ${CARLA_PYTHON_API_CARLA_PATH}/CMakeLists.txt.in
+configure_file (
+  ${CMAKE_CURRENT_SOURCE_DIR}/carla/CMakeLists.txt.in
+  ${CMAKE_CURRENT_SOURCE_DIR}/carla/CMakeLists.txt
+  @ONLY
 )
 
 set (
   CARLA_PYTHON_API_DIST_PATH
   ${CMAKE_CURRENT_BINARY_DIR}/dist
-)
-
-file (
-  COPY
-  ${CARLA_ROOT}/LICENSE
-  DESTINATION ${CARLA_PYTHON_API_CARLA_PATH}
 )
 
 if (ENABLE_PEP517)
@@ -153,7 +101,7 @@ if (ENABLE_PEP517)
 else ()
   file (
     WRITE
-    ${CARLA_PYTHON_API_CARLA_PATH}/setup.py
+    ${CMAKE_CURRENT_SOURCE_DIR}/carla/setup.py
     "from setuptools import setup\n"
     "setup()\n"
   )
@@ -167,34 +115,11 @@ else ()
 endif ()
 
 add_custom_target (
-  python-api
-  "Build the CARLA Python API."
-  COMMAND
-    ${CMAKE_COMMAND}
-      -E copy
-      ${CARLA_ROOT}/LICENSE
-      ${CARLA_PYTHON_API_CARLA_PATH}/LICENSE
+  python-api ALL
   COMMAND
     ${CARLA_PYTHON_API_BUILD_COMMAND}
   WORKING_DIRECTORY
-    ${CARLA_PYTHON_API_CARLA_PATH}
+    ${CMAKE_CURRENT_SOURCE_DIR}/carla
   VERBATIM
   USES_TERMINAL
 )
-
-add_custom_target (carla-python-api DEPENDS python-api)
-
-add_custom_target (
-  install-python-api
-  "Build & install the CARLA Python API"
-  COMMAND
-    ${Python3_EXECUTABLE}
-      -m pip install
-      -e ${CARLA_PYTHON_API_CARLA_PATH}
-  WORKING_DIRECTORY
-    ${CARLA_PYTHON_API_CARLA_PATH}
-  VERBATIM
-  USES_TERMINAL
-)
-
-add_custom_target (carla-python-api-install DEPENDS install-python-api)

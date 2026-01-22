@@ -1,3 +1,12 @@
+set (CARLA_VERSION_MAJOR 0)
+set (CARLA_VERSION_MINOR 10)
+set (CARLA_VERSION_PATCH 0)
+
+set (
+  CARLA_VERSION 
+  ${CARLA_VERSION_MAJOR}.${CARLA_VERSION_MINOR}.${CARLA_VERSION_PATCH}
+)
+
 set (
   BOOST_VERSION
   "1.84.0"
@@ -42,13 +51,13 @@ set (
 
 set (
   FASTDDS_VERSION
-  "2.11.2"
+  "3.4.1"
   CACHE STRING
   "Target Fast-DDS version."
 )
 
 set (
-  CARLA_FASTDDS_TAG
+  CARLA_FAST_DDS_TAG
   "v${FASTDDS_VERSION}"
   CACHE STRING
   "Target Fast-DDS git tag."
