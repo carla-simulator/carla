@@ -1157,6 +1157,14 @@ class CollisionEvent(SensorData):
     @property
     def normal_impulse(self) -> Vector3D:
         """Normal impulse resulting of the collision.(N*s)"""
+
+    @property
+    def location(self) -> Location:
+        """Impact location of the collision."""
+
+    @property
+    def normal_vector(self) -> Vector3D:
+        """Impact normal vector of the collision."""
     # endregion
 
 class Color:

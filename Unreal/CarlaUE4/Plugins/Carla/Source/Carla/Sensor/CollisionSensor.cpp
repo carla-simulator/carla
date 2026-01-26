@@ -113,15 +113,16 @@ void ACollisionSensor::OnCollisionEvent(
   const auto& CurrentEpisode = GetEpisode();
   constexpr float TO_METERS = 1e-2;
   NormalImpulse *= TO_METERS;
+  FVector ImpactLocation = Hit.ImpactPoint * TO_METERS;
+  FVector ImpactNormal = Hit.ImpactNormal;
   GetDataStream(*this).SerializeAndSend(
       *this,
       CurrentEpisode.SerializeActor(Actor),
       CurrentEpisode.SerializeActor(OtherActor),
-      carla::geom::Vector3D(
-          (float)NormalImpulse.X,
-          (float)NormalImpulse.Y,
-          (float)NormalImpulse.Z));
-
+      carla::geom::Vector3D((float)NormalImpulse.X, (float)NormalImpulse.Y, (float)NormalImpulse.Z),
+      carla::geom::Location((float)ImpactLocation.X, (float)ImpactLocation.Y, (float)ImpactLocation.Z),
+      carla::geom::Vector3D((float)ImpactNormal.X, (float)ImpactNormal.Y, (float)ImpactNormal.Z)
+  );
   // record the collision event
   if (CurrentEpisode.GetRecorder()->IsEnabled()){
       CurrentEpisode.GetRecorder()->AddCollision(Actor, OtherActor);

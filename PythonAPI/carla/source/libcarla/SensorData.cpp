@@ -75,6 +75,9 @@ namespace data {
     out << "CollisionEvent(frame=" << std::to_string(meas.GetFrame())
         << ", timestamp=" << std::to_string(meas.GetTimestamp())
         << ", other_actor=" << meas.GetOtherActor()
+        << ", normal_impulse=" << meas.GetNormalImpulse()
+        << ", location=" << meas.GetLocation()
+        << ", normal_vector=" << meas.GetNormalVector()
         << ')';
     return out;
   }
@@ -548,6 +551,8 @@ void export_sensor_data() {
     .add_property("actor", &csd::CollisionEvent::GetActor)
     .add_property("other_actor", &csd::CollisionEvent::GetOtherActor)
     .add_property("normal_impulse", CALL_RETURNING_COPY(csd::CollisionEvent, GetNormalImpulse))
+    .add_property("location", CALL_RETURNING_COPY(csd::CollisionEvent, GetLocation))
+    .add_property("normal_vector", CALL_RETURNING_COPY(csd::CollisionEvent, GetNormalVector))
     .def(self_ns::str(self_ns::self))
   ;
 

@@ -29,7 +29,9 @@ namespace data {
       : Super(data),
         _self_actor(Serializer::DeserializeRawData(data).self_actor),
         _other_actor(Serializer::DeserializeRawData(data).other_actor),
-        _normal_impulse(Serializer::DeserializeRawData(data).normal_impulse) {}
+        _normal_impulse(Serializer::DeserializeRawData(data).normal_impulse),
+        _location(Serializer::DeserializeRawData(data).location),
+        _normal_vector(Serializer::DeserializeRawData(data).normal_vector) {}
 
   public:
 
@@ -47,6 +49,16 @@ namespace data {
     const geom::Vector3D &GetNormalImpulse() const {
       return _normal_impulse;
     }
+  
+    /// Impact point of the collision.
+    const geom::Location &GetLocation() const {
+      return _location;
+    }
+  
+    /// Normal vector of the collision.
+    const geom::Vector3D &GetNormalVector() const {
+      return _normal_vector;
+    }
 
   private:
 
@@ -55,6 +67,10 @@ namespace data {
     client::detail::ActorVariant _other_actor;
 
     geom::Vector3D _normal_impulse;
+
+    geom::Location _location;
+
+    geom::Vector3D _normal_vector;
   };
 
 } // namespace data
