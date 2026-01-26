@@ -1077,8 +1077,7 @@ def main():
 if __name__ == '__main__':
 
     try:
-        for _ in range(100):
-            main()
+        main()
     except KeyboardInterrupt:
         pass
     finally:
