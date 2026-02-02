@@ -157,7 +157,7 @@ public:
   carla::ros2::types::Transform GetRelativeTransform(carla::ros2::types::Transform const &basis) const {
     auto const relative_quaternion_new_base = basis.GetQuaternion().Inverse() * GetQuaternion();
     auto const relative_location_current_base = GetLocation() - basis.GetLocation();
-    carla::geom::Location const relative_location_new_base = carla::geom::Vector3D(basis.GetQuaternion().RotatedPoint(relative_location_current_base));
+    carla::geom::Location const relative_location_new_base = carla::geom::Vector3D(basis.GetQuaternion().InverseRotatedPoint(relative_location_current_base));
     carla::ros2::types::Transform relative_transform(relative_location_new_base, relative_quaternion_new_base);
     return relative_transform;
   }
