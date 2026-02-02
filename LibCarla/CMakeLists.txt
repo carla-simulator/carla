@@ -394,7 +394,7 @@ if (BUILD_CARLA_CLIENT)
 
 endif ()
 
-# Conanパッケージインストール設定
+# Conan package installation settings
 if(INSTALL_LIBCARLA)
     # Install FetchContent dependencies (rpc, RecastNavigation) with export
     # They need to be in the export set to avoid CMake errors
@@ -443,13 +443,13 @@ if(INSTALL_LIBCARLA)
         )
     endif()
 
-    # ヘッダーファイルのインストール
+    # Install header files
     install(DIRECTORY ${LIBCARLA_SOURCE_PATH}/carla
         DESTINATION include
         FILES_MATCHING PATTERN "*.h"
     )
 
-    # third-partyヘッダーのインストール
+    # Install third-party headers
     install(DIRECTORY ${LIBCARLA_SOURCE_PATH}/third-party/
         DESTINATION include/third-party
         FILES_MATCHING
@@ -494,14 +494,14 @@ if(INSTALL_LIBCARLA)
         endif()
     endif()
 
-    # CMakeパッケージ設定のインストール
+    # Install CMake package configuration
     install(EXPORT carla-targets
         FILE carla-targets.cmake
         NAMESPACE carla::
         DESTINATION lib/cmake/carla
     )
 
-    # Config/ConfigVersionファイルの生成
+    # Generate Config/ConfigVersion files
     include(CMakePackageConfigHelpers)
 
     configure_package_config_file(

@@ -35,7 +35,7 @@ class LibCarlaConan(ConanFile):
     exports_sources = "LibCarla/*", "CMakeLists.txt", "CMake/*", "LICENSE"
 
     def requirements(self):
-        # ConanCenterから取得
+        # Fetch from ConanCenter
         self.requires("boost/1.84.0")
         self.requires("eigen/3.4.0")
         self.requires("zlib/1.3.1")
@@ -45,13 +45,13 @@ class LibCarlaConan(ConanFile):
         if self.options.shared:
             self.options.rm_safe("fPIC")
 
-        # Boostオプション設定
+        # Configure Boost options
         self.options["boost"].header_only = False
         self.options["boost"].without_cobalt = True
-        self.options["boost"].without_python = True  # Phase 1ではPython無効
+        self.options["boost"].without_python = True  # Python disabled in Phase 1
 
     def config_options(self):
-        # Ubuntu専用のため、fPICは常に有効
+        # fPIC always enabled for Ubuntu
         pass
 
     def layout(self):
@@ -60,7 +60,7 @@ class LibCarlaConan(ConanFile):
     def generate(self):
         tc = CMakeToolchain(self)
 
-        # CMakeオプションをマッピング
+        # Map CMake options
         tc.variables["BUILD_CARLA_CLIENT"] = self.options.with_client
         tc.variables["BUILD_CARLA_SERVER"] = self.options.with_server
         tc.variables["BUILD_PYTHON_API"] = False
@@ -92,7 +92,7 @@ class LibCarlaConan(ConanFile):
     def package_info(self):
         self.cpp_info.set_property("cmake_file_name", "carla")
 
-        # carla-serverコンポーネント
+        # carla-server component
         if self.options.with_server:
             self.cpp_info.components["server"].set_property(
                 "cmake_target_name", "carla::carla-server"
@@ -100,7 +100,7 @@ class LibCarlaConan(ConanFile):
             self.cpp_info.components["server"].libs = ["carla-server"]
             self.cpp_info.components["server"].includedirs = ["include"]
 
-        # carla-clientコンポーネント
+        # carla-client component
         if self.options.with_client:
             self.cpp_info.components["client"].set_property(
                 "cmake_target_name", "carla::carla-client"
