@@ -1,0 +1,16 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# 依存関係の検索
+find_dependency(Boost 1.84.0 REQUIRED COMPONENTS system filesystem)
+find_dependency(Eigen3 3.4.0 REQUIRED)
+find_dependency(ZLIB REQUIRED)
+find_dependency(PNG REQUIRED)
+
+# rpclib と RecastNavigation はFetchContentで取得されているため、
+# パッケージ内に含まれている
+
+include("${CMAKE_CURRENT_LIST_DIR}/carla-targets.cmake")
+
+check_required_components(carla)

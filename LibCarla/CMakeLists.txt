@@ -196,23 +196,28 @@ if (BUILD_CARLA_SERVER)
   )
 
   target_link_libraries (
-    carla-server PUBLIC SYSTEM
+    carla-server PRIVATE SYSTEM
     Boost::asio
     Boost::geometry
     Boost::algorithm
     Boost::assert
     Boost::gil
+    png_static
+    zlibstatic
+  )
+
+  target_link_libraries (
+    carla-server PUBLIC
     RecastNavigation::Recast
     RecastNavigation::Detour
     RecastNavigation::DetourCrowd
-    png_static
-    zlibstatic
     rpc
   )
   
   target_include_directories (
     carla-server PUBLIC
-    ${LIBCARLA_SOURCE_PATH}
+    $<BUILD_INTERFACE:${LIBCARLA_SOURCE_PATH}>
+    $<INSTALL_INTERFACE:include>
   )
 
   target_compile_definitions (
@@ -351,24 +356,33 @@ if (BUILD_CARLA_CLIENT)
   )
 
   target_link_libraries (
-    carla-client PUBLIC
+    carla-client PRIVATE
     Boost::asio
-    Boost::python
     Boost::algorithm
     Boost::geometry
     Boost::assert
     Boost::gil
+    png_static
+    zlibstatic
+  )
+
+  target_link_libraries (
+    carla-client PUBLIC
     RecastNavigation::Recast
     RecastNavigation::Detour
     RecastNavigation::DetourCrowd
-    png_static
-    zlibstatic
     rpc
   )
+
+  # Link Boost::python only when BUILD_PYTHON_API is enabled
+  if(BUILD_PYTHON_API)
+    target_link_libraries(carla-client PRIVATE Boost::python)
+  endif()
   
   target_include_directories (
     carla-client PUBLIC
-    ${LIBCARLA_SOURCE_PATH}
+    $<BUILD_INTERFACE:${LIBCARLA_SOURCE_PATH}>
+    $<INSTALL_INTERFACE:include>
   )
 
   target_compile_definitions (
@@ -379,3 +393,132 @@ if (BUILD_CARLA_CLIENT)
   )
 
 endif ()
+
+# Conanパッケージインストール設定
+if(INSTALL_LIBCARLA)
+    # Install FetchContent dependencies (rpc, RecastNavigation) with export
+    # They need to be in the export set to avoid CMake errors
+    install(TARGETS rpc
+        EXPORT carla-targets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+    )
+
+    install(TARGETS
+        Recast Detour DetourCrowd
+        EXPORT carla-targets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+    )
+
+    # Install carla targets
+    if(BUILD_CARLA_SERVER)
+        # Clear the INTERFACE_LINK_LIBRARIES to avoid exporting Conan dependencies
+        # Consumers will find them via find_dependency in carla-config.cmake
+        set_property(TARGET carla-server PROPERTY INTERFACE_LINK_LIBRARIES
+            RecastNavigation::Recast RecastNavigation::Detour RecastNavigation::DetourCrowd rpc)
+
+        install(TARGETS carla-server
+            EXPORT carla-targets
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+            RUNTIME DESTINATION bin
+            INCLUDES DESTINATION include
+        )
+    endif()
+
+    if(BUILD_CARLA_CLIENT)
+        # Clear the INTERFACE_LINK_LIBRARIES to avoid exporting Conan dependencies
+        set_property(TARGET carla-client PROPERTY INTERFACE_LINK_LIBRARIES
+            RecastNavigation::Recast RecastNavigation::Detour RecastNavigation::DetourCrowd rpc)
+
+        install(TARGETS carla-client
+            EXPORT carla-targets
+            LIBRARY DESTINATION lib
+            ARCHIVE DESTINATION lib
+            RUNTIME DESTINATION bin
+            INCLUDES DESTINATION include
+        )
+    endif()
+
+    # ヘッダーファイルのインストール
+    install(DIRECTORY ${LIBCARLA_SOURCE_PATH}/carla
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h"
+    )
+
+    # third-partyヘッダーのインストール
+    install(DIRECTORY ${LIBCARLA_SOURCE_PATH}/third-party/
+        DESTINATION include/third-party
+        FILES_MATCHING
+        PATTERN "*.h"
+        PATTERN "*.hpp"
+    )
+
+    # rpclib headers (from FetchContent)
+    get_target_property(rpclib_SOURCE_DIR rpc SOURCE_DIR)
+    if(EXISTS "${rpclib_SOURCE_DIR}/include/rpc")
+        install(DIRECTORY "${rpclib_SOURCE_DIR}/include/rpc"
+            DESTINATION include
+            FILES_MATCHING
+            PATTERN "*.h"
+            PATTERN "*.hpp"
+        )
+    endif()
+
+    # RecastNavigation headers (from FetchContent)
+    get_target_property(Recast_SOURCE_DIR Recast SOURCE_DIR)
+    if(EXISTS "${Recast_SOURCE_DIR}/../")
+        # Install Recast headers
+        if(EXISTS "${Recast_SOURCE_DIR}/../Recast/Include")
+            install(DIRECTORY "${Recast_SOURCE_DIR}/../Recast/Include/"
+                DESTINATION include/recast
+                FILES_MATCHING PATTERN "*.h"
+            )
+        endif()
+        # Install Detour headers
+        if(EXISTS "${Recast_SOURCE_DIR}/../Detour/Include")
+            install(DIRECTORY "${Recast_SOURCE_DIR}/../Detour/Include/"
+                DESTINATION include/detour
+                FILES_MATCHING PATTERN "*.h"
+            )
+        endif()
+        # Install DetourCrowd headers
+        if(EXISTS "${Recast_SOURCE_DIR}/../DetourCrowd/Include")
+            install(DIRECTORY "${Recast_SOURCE_DIR}/../DetourCrowd/Include/"
+                DESTINATION include/detourcrowd
+                FILES_MATCHING PATTERN "*.h"
+            )
+        endif()
+    endif()
+
+    # CMakeパッケージ設定のインストール
+    install(EXPORT carla-targets
+        FILE carla-targets.cmake
+        NAMESPACE carla::
+        DESTINATION lib/cmake/carla
+    )
+
+    # Config/ConfigVersionファイルの生成
+    include(CMakePackageConfigHelpers)
+
+    configure_package_config_file(
+        "${CMAKE_CURRENT_SOURCE_DIR}/../CMake/carla-config.cmake.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/carla-config.cmake"
+        INSTALL_DESTINATION lib/cmake/carla
+    )
+
+    write_basic_package_version_file(
+        "${CMAKE_CURRENT_BINARY_DIR}/carla-config-version.cmake"
+        VERSION ${CARLA_VERSION}
+        COMPATIBILITY SameMajorVersion
+    )
+
+    install(FILES
+        "${CMAKE_CURRENT_BINARY_DIR}/carla-config.cmake"
+        "${CMAKE_CURRENT_BINARY_DIR}/carla-config-version.cmake"
+        DESTINATION lib/cmake/carla
+    )
+endif()
