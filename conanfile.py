@@ -92,6 +92,21 @@ class LibCarlaConan(ConanFile):
     def package_info(self):
         self.cpp_info.set_property("cmake_file_name", "carla")
 
+        # Define internal library components first
+        # These are built by FetchContent but packaged with libcarla
+        self.cpp_info.components["rpc"].libs = ["rpc"]
+        self.cpp_info.components["rpc"].includedirs = ["include"]
+
+        self.cpp_info.components["recast"].libs = ["Recast"]
+        self.cpp_info.components["recast"].includedirs = ["include/recast"]
+
+        self.cpp_info.components["detour"].libs = ["Detour"]
+        self.cpp_info.components["detour"].includedirs = ["include/detour"]
+
+        self.cpp_info.components["detourcrowd"].libs = ["DetourCrowd"]
+        self.cpp_info.components["detourcrowd"].includedirs = ["include/detourcrowd"]
+        self.cpp_info.components["detourcrowd"].requires = ["detour"]
+
         # carla-server component
         if self.options.with_server:
             self.cpp_info.components["server"].set_property(
@@ -99,6 +114,10 @@ class LibCarlaConan(ConanFile):
             )
             self.cpp_info.components["server"].libs = ["carla-server"]
             self.cpp_info.components["server"].includedirs = ["include"]
+            self.cpp_info.components["server"].requires = [
+                "rpc", "recast", "detour", "detourcrowd",
+                "boost::boost", "libpng::libpng", "zlib::zlib", "eigen::eigen"
+            ]
 
         # carla-client component
         if self.options.with_client:
@@ -107,3 +126,7 @@ class LibCarlaConan(ConanFile):
             )
             self.cpp_info.components["client"].libs = ["carla-client"]
             self.cpp_info.components["client"].includedirs = ["include"]
+            self.cpp_info.components["client"].requires = [
+                "rpc", "recast", "detour", "detourcrowd",
+                "boost::boost", "libpng::libpng", "zlib::zlib", "eigen::eigen"
+            ]
