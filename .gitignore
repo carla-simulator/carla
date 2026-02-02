@@ -15,3 +15,13 @@ CMakeSettings.json
 .clangd
 
 Help.md
+
+# Conan package manager
+test_package/build/
+test_package/CMakeUserPresets.json
+build_test/
+CMakeUserPresets.json
+conan_toolchain.cmake
+conan.lock
+conanbuild.conf
+conanrun.conf
