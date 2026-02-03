@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Added Conan package manager support for libcarla (#9540)
 * Added actor description as Actor TAGs
 * Create class with functions to import points and polylines from satellite segmentation (#8946, #8949 #8950)
 
