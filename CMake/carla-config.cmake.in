@@ -2,14 +2,13 @@
 
 include(CMakeFindDependencyMacro)
 
-# 依存関係の検索
+# Find dependencies
 find_dependency(Boost 1.84.0 REQUIRED COMPONENTS system filesystem)
 find_dependency(Eigen3 3.4.0 REQUIRED)
 find_dependency(ZLIB REQUIRED)
 find_dependency(PNG REQUIRED)
 
-# rpclib と RecastNavigation はFetchContentで取得されているため、
-# パッケージ内に含まれている
+# rpclib and RecastNavigation are fetched via FetchContent and included in the package
 
 include("${CMAKE_CURRENT_LIST_DIR}/carla-targets.cmake")
 
