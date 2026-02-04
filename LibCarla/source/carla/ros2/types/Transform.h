@@ -110,7 +110,7 @@ public:
    *
    * Uses CARLA naming convention
    */
-  carla::geom::Transform GetTransform() {
+  carla::geom::Transform GetTransform() const {
     EnsureCarlaRotatorInitialized();
     return carla::geom::Transform(_carla_location, _carla_rotation);
   }
@@ -129,7 +129,7 @@ public:
    *
    * Uses CARLA naming convention
    */
-  const carla::geom::Rotation& GetRotator() {
+  const carla::geom::Rotation& GetRotator() const {
     EnsureCarlaRotatorInitialized();
     return _carla_rotation;
   }
@@ -163,7 +163,7 @@ public:
   }
 
 private:
-  void EnsureCarlaRotatorInitialized() {
+  void EnsureCarlaRotatorInitialized() const {
     if ( !_carla_rotation_initialized ) {
       _carla_rotation_initialized = true;
       _carla_rotation = _carla_quaternion.Rotator();
@@ -176,10 +176,12 @@ private:
     _ros_transform.rotation(carla::ros2::types::Quaternion(_carla_quaternion).quaternion());
   }
 
-  // keep the carla types, but with rotation optional (only to be calculated if required in case of ROS input)
+  // keep the carla types, but with rotation optional
   // be aware: rotation calculation requires some sin/cos calls and is rather expensive
-  carla::geom::Rotation _carla_rotation;
-  bool _carla_rotation_initialized = false;
+  // therefore, calculate rotation only if actually required (e.g. in case of ROS input)
+  // make the rotation mutable to allow lazy initialization in const methods
+  mutable carla::geom::Rotation _carla_rotation;
+  mutable bool _carla_rotation_initialized = false;
   carla::geom::Location _carla_location;
   carla::geom::Quaternion _carla_quaternion;
   geometry_msgs::msg::Transform _ros_transform;
@@ -205,7 +207,7 @@ inline std::string to_string(geometry_msgs::msg::Transform const &transform) {
 
 inline std::string to_string(carla::ros2::types::Transform const &transform) {
   return "Transform(" + std::to_string(transform.transform()) + " CARLA: " +
-     std::to_string(transform.GetQuaternion()) + std::to_string(transform.GetLocation());
+     std::to_string(transform.GetQuaternion()) + std::to_string(transform.GetLocation()) + std::to_string(transform.GetRotator()) + ")";
 }
 
 }  // namespace std

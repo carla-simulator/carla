@@ -15,9 +15,12 @@ namespace types {
 /**
   Convert a carla rotation to a ROS quaternion
 
-  Considers the conversion from left-handed system (unreal) to right-handed
-  system (ROS).
-  Considers the conversion from degrees (carla) to radians (ROS).
+  Considers the conversion from left-handed system (unreal) with axis x-forward, y-rightwards, z-up
+  to right-handed system (ROS) with axis x-forward, y-leftwards, z-up. 
+  If you were moving to a pure LH system where the Y-axis also pointed Left, you would negate everything.
+  But Unreal flipped the axis direction (Left to Right) and flipped the handedness (RH to LH), 
+  those two flips "cancel out" for the X and Y rotations.
+  Therefore, only the z component of the quaternion is negated!
 */
 class Quaternion {
 public:
@@ -25,11 +28,10 @@ public:
    * carla_rotation: the carla Rotation
    */
   explicit Quaternion(const geom::Quaternion& carla_quaternion) {
-    // left-handed to right-handed -> negate the rotation by negating all axis components
-    // switch y-axis from right to left -> negate y-axis
-    _ros_quaternion.x(-carla_quaternion.x);  // -(forward =  forward)
-    _ros_quaternion.y(carla_quaternion.y);   // -(  right = -left  )
-    _ros_quaternion.z(-carla_quaternion.z);  // -(     up =  up     )
+    // negate z component to convert from Unreal left-handed system to ROS right-handed system
+    _ros_quaternion.x(carla_quaternion.x);
+    _ros_quaternion.y(carla_quaternion.y);
+    _ros_quaternion.z(-carla_quaternion.z);
     _ros_quaternion.w(carla_quaternion.w);
   }
   /**
@@ -52,11 +54,10 @@ public:
 
   geom::Quaternion GetQuaternion() const {
     geom::Quaternion carla_quaternion;
-    // left-handed to right-handed -> negate the rotation by negating all axis components
-    // switch y-axis from right to left -> negate y-axis
-    carla_quaternion.x = float(-_ros_quaternion.x());  // -(forward =  forward)
-    carla_quaternion.y = float(_ros_quaternion.y());   // -(  right = -left  )
-    carla_quaternion.z = float(-_ros_quaternion.z());  // -(     up =  up     )
+    // negate z component to convert from Unreal left-handed system to ROS right-handed system
+    carla_quaternion.x = float(_ros_quaternion.x());
+    carla_quaternion.y = float(_ros_quaternion.y());
+    carla_quaternion.z = float(-_ros_quaternion.z());
     carla_quaternion.w = float(_ros_quaternion.w());
     return carla_quaternion;
   }

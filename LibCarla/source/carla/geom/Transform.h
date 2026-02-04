@@ -112,9 +112,6 @@ namespace geom {
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
-#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
-    // this matrix is rotating within a right handed-coordinate system, but Unreal coordinate frame is left-handed!
-    // If we want to make this public, a dedicated Matrix4x4 type has to be defined considiering that (see also Quaternion.h)
     std::array<float, 16> TransformationMatrix() const {
       auto const matrix = Quaternion(rotation).RotationMatrix();
 
@@ -142,7 +139,6 @@ namespace geom {
 
       return transform;
     }
-#endif
   };
 
   inline std::ostream &operator<<(std::ostream &out, const Transform &transform) {

@@ -149,8 +149,7 @@ class TestTransform(unittest.TestCase):
         point = carla.Location(x=0.0, y=0.0, z=2.0)
         t.transform(point)
 
-        #!!! This solution_list was wrong in CARLA version <= 0.9.16 due to invalid pitch AND roll rotations, (most relevant) yaw rotations were not affected
-        self.assertTrue(abs(point.x - (2.0)) <= error)
+        self.assertTrue(abs(point.x - (-2.0)) <= error)
         self.assertTrue(abs(point.y - 0.0) <= error)
         self.assertTrue(abs(point.z - (-1.0)) <= error)
 
@@ -166,10 +165,9 @@ class TestTransform(unittest.TestCase):
                       ]
         t.transform(point_list)
 
-        #!!! This solution_list was wrong in CARLA version <= 0.9.16 due to invalid pitch AND roll rotations, (most relevant) yaw rotations were not affected
-        solution_list = [carla.Location(2.0, 0.0, -1.0),   
-                         carla.Location(1.0, 10.0, -1.0),
-                         carla.Location(2.0, 18.0, -1.0)
+        solution_list = [carla.Location(-2.0, 0.0, -1.0),   
+                         carla.Location(-1.0, 10.0, -1.0),
+                         carla.Location(-2.0, 18.0, -1.0)
                          ]
 
         for i in range(len(point_list)):
@@ -189,10 +187,9 @@ class TestTransform(unittest.TestCase):
                       ]
         t.transform(point_list)
 
-        #!!! This solution_list was wrong in CARLA version <= 0.9.15 due to invalid pitch AND roll rotations, (most relevant) yaw rotations were not affected
-        solution_list = [carla.Vector3D(2.0, 0.0, -1.0),
-                         carla.Vector3D(1.0, 10.0, -1.0),
-                         carla.Vector3D(2.0, 18.0, -1.0)
+        solution_list = [carla.Vector3D(-2.0, 0.0, -1.0),
+                         carla.Vector3D(-1.0, 10.0, -1.0),
+                         carla.Vector3D(-2.0, 18.0, -1.0)
                          ]
 
         for i in range(len(point_list)):

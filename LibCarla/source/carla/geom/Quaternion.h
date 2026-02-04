@@ -6,8 +6,6 @@
 
 #pragma once
 
-#define ALLOW_UNSAFE_GEOM_MATRIX_ACCESS 1
-
 #include <array>
 #include <ostream>
 #include <sstream>
@@ -17,7 +15,6 @@
 #include "carla/geom/Location.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/geom/Rotation.h"
-#include "carla/geom/RightHandedVector3D.h"
 
 namespace carla {
 namespace geom {
@@ -34,22 +31,6 @@ namespace geom {
    * Stores the orientation of an entity as quaternion; 
    * The quaternion is existing in Unreal coordinate system.
    * This is considered by all defined operations on the quaternion (input/output vectors and angles are automatically converted where required)
-   * 
-   * Be aware: UE uses left-handed coordinate system!
-     Because nearly every writing on this is written in a form which let's room for interpretation
-     Even that one talks on clock-wise rotation: https://forums.unrealengine.com/t/ue4-coordinate-system-not-right-handed/80398/4, 
-     but it is not telling if you are watching into axis positive direction or negative direction; therefore "clockwise" can be interpreted in both ways.
-     Ok, the example given makes it definitely clear then.
-     
-     Therefore let's take the easiest way to explain: Your left hand!
-     Point thumb upwards (positive z-Axis direction),  index finger forwards (positive x-Axis direction), middle finger rightwards (positive y-Axis direction)
-     Positive rotation can be "visualized" with thumb of the left hand pointing into the respective positive direction of the rotation axis,
-     then the fingers when creating a fist are showing the positive rotation direction.
-
-     The same by the way, works for right-handed coordinate systems: just take the right hand instead, resulting in the y-axis beeing flipped and rotation direction switches!
-
-     The "problem" is that a linear algebra (matrix/quaternion/vector multiplication) is actually operating in a right-handed coordinate system. Don't ask why the hell the
-     compter graphics guys actually prefer left-handed systems. Robotics, of which automated driving is a sub area, does not.
   */
   class Quaternion {
   public:
@@ -79,8 +60,11 @@ namespace geom {
     explicit Quaternion(Rotation const &rotator) {
       // intermediate values in double to improve precision
       // calculation see https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
-      double const roll_2 = Math::ToRadians(rotator.roll) * 0.5;
-      double const pitch_2 = Math::ToRadians(rotator.pitch) * 0.5;
+      // geom::Quaternion is in unreal left handed system, rotating around all axis left handed
+      // geom::Rotation is in unreal left handed system, treating yaw as left-handed rotation
+      // but pitch and roll as right-handed ones! Therefore, we have to negate pitch and roll here
+      double const roll_2 = Math::ToRadians(-rotator.roll) * 0.5;
+      double const pitch_2 = Math::ToRadians(-rotator.pitch) * 0.5;
       double const yaw_2 = Math::ToRadians(rotator.yaw) * 0.5;
       double cr = std::cos(roll_2);
       double sr = std::sin(roll_2);
@@ -89,27 +73,25 @@ namespace geom {
       double cy = std::cos(yaw_2);
       double sy = std::sin(yaw_2);
 
-      // unreal rotates in counter direction, therefore the rotation has to be inverted.
-      // Unreal uses left handed system: negate x,y,z axis (counter direction), negate y-axis (pointing to the right)
-      x = -float(sr * cp * cy - cr * sp * sy); // negate
-      y = float(cr * sp * cy + sr * cp * sy); //  double negate
-      z = -float(cr * cp * sy - sr * sp * cy); // negate
+      x = float(sr * cp * cy - cr * sp * sy);
+      y = float(cr * sp * cy + sr * cp * sy);
+      z = float(cr * cp * sy - sr * sp * cy);
       w = float(cr * cp * cy + sr * sp * sy);
     }
 
     static Quaternion CreateFromYawDegree(float const &yaw_degree) {
       // intermediate values in double to improve precision
       // calculation see https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
-      // unreal rotates in left direction ! therefore we have to apply the inverse Euler rotation here 
       double const yaw_2 = Math::ToRadians(yaw_degree) * 0.5;
       double cy = std::cos(yaw_2);
       double sy = std::sin(yaw_2);
       Quaternion quat;
-      // unreal rotates in counter direction, therefore the rotation has to be inverted.
-      // Unreal uses left handed system: y-axis is negated (double negated)
+      // geom::Quaternion is in unreal left handed system, rotating around all axis left handed
+      // geom::Rotation is in unreal left handed system, treating yaw as left-handed rotation
+      // Therefore, no negation required for yaw component
       quat.x = 0.f;
       quat.y = 0.f;
-      quat.z = -float(sy); // negate
+      quat.z = float(sy);
       quat.w = float(cy);
       return quat;
     }
@@ -171,8 +153,10 @@ namespace geom {
         auto const cp = std::cos(pitch);
         yaw = std::atan2(matrix[3]/cp, matrix[0]/cp);
       }
-      // Unreal uses left handed system: y-axis is negated: apply on output vector
-      return -yaw;
+      // geom::Quaternion is in unreal left handed system, rotating around all axis left handed
+      // geom::Rotation is in unreal left handed system, treating yaw as left-handed rotation
+      // Therefore, no negation required for yaw component
+      return yaw;
     }
 
     /** shortened version of Rotator() providing the yaw component in degree
@@ -206,21 +190,23 @@ namespace geom {
         yaw = 0.f;
         roll = std::atan2(matrix[7], matrix[8]);
       }
-      // Unreal uses left handed system: negate all rotations
+      // geom::Quaternion is in unreal left handed system, rotating around all axis left handed
+      // geom::Rotation is in unreal left handed system, treating yaw as left-handed rotation
+      // but pitch and roll as right-handed ones! Therefore, we have to negate pitch and roll here
       carla::geom::Rotation rotator;
       rotator.roll = Math::ToDegrees(-roll);
       rotator.pitch = Math::ToDegrees(-pitch);
-      rotator.yaw = Math::ToDegrees(-yaw);
+      rotator.yaw = Math::ToDegrees(yaw);
       return rotator;
     }
 
     template <class VECTOR_TYPE>
-    RightHandedVector3D RotatedVector(VECTOR_TYPE const &in_point) const {
+    Vector3D RotatedVector(VECTOR_TYPE const &in_point) const {
        return RotatedPoint(in_point);
     }
 
     template <class VECTOR_TYPE>
-    RightHandedVector3D InverseRotatedVector(VECTOR_TYPE const &in_point) const {
+    Vector3D InverseRotatedVector(VECTOR_TYPE const &in_point) const {
       return InverseRotatedPoint(in_point);
     }
 
@@ -282,16 +268,7 @@ namespace geom {
     }
     // =========================================================================
 
-#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
   public:
-#else
-  private:
-#endif
-    // Computes the 3x3 rotation-matrix of the quaternion (as this matrix operates in right handed space as our quaternion, keept the matrix private for the moment.
-    // If required public input/output vectors of this operation will have to be ensured to be RightHandedVector3D
-    // Therefore, making it public reuires a dedicated Matrix class which is enforing this by it's interface. 
-    // Don't allow access on matrix members for people who don't know the background in detail: that will definitely go wrong!
-    // Best is to NOT use this function therefore at all.
     std::array<float, 9> RotationMatrix() const {
       // calculation see https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
       // in the matrix each component is multplied with another component; 
@@ -329,18 +306,18 @@ namespace geom {
       return Inverse().RotationMatrix();
     }
 
-    RightHandedVector3D RotatedPoint(RightHandedVector3D const &in_point) const {
+    Vector3D RotatedPoint(Vector3D const &in_point) const {
       Quaternion quat = *this * in_point * Inverse();
-      RightHandedVector3D out_point;
+      Vector3D out_point;
       out_point.x = quat.x;
       out_point.y = quat.y;
       out_point.z = quat.z;
       return out_point;
     }
 
-    RightHandedVector3D InverseRotatedPoint(RightHandedVector3D const &in_point) const {
+    Vector3D InverseRotatedPoint(Vector3D const &in_point) const {
       Quaternion quat = Inverse() * in_point * *this;
-      RightHandedVector3D out_point;
+      Vector3D out_point;
       out_point.x = quat.x;
       out_point.y = quat.y;
       out_point.z = quat.z;
@@ -358,7 +335,7 @@ inline Quaternion operator*(const Quaternion& q1, const Quaternion& q2) {
   return quat;
 }
 
-inline Quaternion operator*(const Quaternion& q, const RightHandedVector3D& v)
+inline Quaternion operator*(const Quaternion& q, const Vector3D& v)
 {
 	Quaternion quat;
   quat.x = q.w * v.x + q.y * v.z - q.z * v.y;
@@ -368,7 +345,7 @@ inline Quaternion operator*(const Quaternion& q, const RightHandedVector3D& v)
   return quat;
 }
 
-inline Quaternion operator*(const RightHandedVector3D& v, const Quaternion& q)
+inline Quaternion operator*(const Vector3D& v, const Quaternion& q)
 {
 	Quaternion quat;
   quat.x = v.x * q.w + v.y * q.z - v.z * q.y;
