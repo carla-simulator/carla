@@ -1,4 +1,5 @@
 ## Latest Changes
+ * Fix possible RPC Server deadlock on shutdown
  * Change foonathan memory vendor branch to v1.3.1.
  * Improved the way the TrafficManager controls large vehicles at junctions, reducing the frequency of collisions with other elements in the simulation.
  * Improved the turning behavior of vehicles controlled by the TrafficManager, making them smoother.
@@ -10,6 +11,7 @@
  * Improved V2X sensor capabilities: send complex custom user-defined data, support V2I sensors not attached to a vehicle
  * Introduced fine grained ServerSynchronization mechanism: each client decides for its own if it requires synchronization or not and provides its own synchronization window.
    Be aware: some existing code using master/slave sync mechanism might need rework. See also generate_traffic.py.
+ * Fixed issue with disabled environment objects (ISMs) appearing in segmentation and depth images.
  * Added support for parsing offsets from OpenDRIVE using optional offset transforms.
  * Added ad-rss type-stubs for the PythonAPI when building with RSS support
  * ROS2Native: Extended functionality and performance of ROS2 support
