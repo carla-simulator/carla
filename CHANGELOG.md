@@ -6,7 +6,6 @@
  * Added a hybrid solid-state LiDAR with adjustable parameters (blueprint attributes)
  * Fix OpenDrive Builder lane width
  * Introduced geom::AngularVelocity, geom::Velocity, geom::Acceleration, geom::Quaternion types
- * Fixed geom::Rotation::RotateVector() rotation directions of pitch and roll
  * Prepare server for multistream support and ROS2 client calls
  * Improved V2X sensor capabilities: send complex custom user-defined data, support V2I sensors not attached to a vehicle
  * Introduced fine grained ServerSynchronization mechanism: each client decides for its own if it requires synchronization or not and provides its own synchronization window.
