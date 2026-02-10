@@ -27,7 +27,6 @@ static void TransformList(const carla::geom::Transform &self, boost::python::lis
   }
 }
 
-#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
 static boost::python::list BuildMatrix(const std::array<float, 16> &m) {
   boost::python::list r_out;
   boost::python::list r[4];
@@ -43,7 +42,6 @@ static auto GetTransformMatrix(const carla::geom::Transform &self) {
 static auto GetInverseTransformMatrix(const carla::geom::Transform &self) {
   return BuildMatrix(self.InverseTransformationMatrix());
 }
-#endif
 
 static auto Cross(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
   return carla::geom::Math::Cross(self, other);
@@ -118,7 +116,12 @@ void export_geom() {
     .def_readwrite("z", &cg::Vector3D::z)
     .def("length", &cg::Vector3D::Length)
     .def("squared_length", &cg::Vector3D::SquaredLength)
-    .def("make_unit_vector", &cg::Vector3D::MakeUnitVector)
+    .def("make_unit_vector", +[](cg::Vector3D const&self) {
+      return self.MakeUnitVector();
+     })
+    .def("make_unit_vector", +[](cg::Vector3D const&self, float const epsilon) {
+      return self.MakeUnitVector(epsilon);
+     }, arg("epsilon"))
     .def("cross", &Cross, (arg("vector")))
     .def("dot", &Dot, (arg("vector")))
     .def("dot_2d", &Dot2D, (arg("vector")))
@@ -221,10 +224,8 @@ void export_geom() {
     .def("length", &cg::Quaternion::Length)
     .def("squared_length", &cg::Quaternion::SquaredLength)
     .def("unit_quaternion", &cg::Quaternion::UnitQuaternion)
-#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
     .def("rotation_matrix", &cg::Quaternion::RotationMatrix)
     .def("inverse_rotation_matrix", &cg::Quaternion::InverseRotationMatrix)
-#endif
     .def("rotated_quaternion", &cg::Quaternion::RotatedQuaternion, (arg("quaternion")))
     .def("yaw_rad", &cg::Quaternion::YawRad)
     .def("yaw_degree", &cg::Quaternion::YawDegree)
@@ -257,10 +258,8 @@ void export_geom() {
     .def("get_forward_vector", &cg::Transform::GetForwardVector)
     .def("get_right_vector", &cg::Transform::GetRightVector)
     .def("get_up_vector", &cg::Transform::GetUpVector)
-#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
     .def("get_matrix", &GetTransformMatrix)
     .def("get_inverse_matrix", &GetInverseTransformMatrix)
-#endif
     .def("__eq__", &cg::Transform::operator==)
     .def("__ne__", &cg::Transform::operator!=)
     .def(self_ns::str(self_ns::self))
