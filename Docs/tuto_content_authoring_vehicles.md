@@ -1,3 +1,154 @@
+# WVTruck Branch - Changelog
+
+This document provides a comprehensive summary of all the changes and fixes that have been applied to the original DReyeVR codebase in order to achieve a fully functional, out-of-the-box build on both Windows and Ubuntu platforms. These modifications address broken dependency URLs, outdated library versions, build script defects, and missing tooling that previously prevented a clean compilation. Additionally, new features have been introduced to provide greater flexibility during the installation process.
+
+---
+
+## 1. Dependency URL and Version Updates
+
+Several third-party dependency URLs used by the CARLA build system were broken or outdated, causing the build to fail during dependency resolution.
+
+### 1.1 Boost Download URL
+The original JFrog Artifactory host has been decommissioned. Updated to the official Boost archives mirror.
+
+| | URL |
+|---|---|
+| **Before** | `https://boostorg.jfrog.io/artifactory/main/release/${BOOST_VERSION}/source/...` |
+| **After** | `https://archives.boost.io/release/${BOOST_VERSION}/source/...` |
+
+### 1.2 libpng Download URL
+
+libpng 1.6.37 was relocated to an `older-releases` subdirectory on SourceForge, causing a 404 error. The URL has been corrected. The library version remains unchanged.
+
+| | URL |
+|---|---|
+| **Before** | `https://sourceforge.net/projects/libpng/files/libpng16/${LIBPNG_VERSION}/...` |
+| **After** | `https://sourceforge.net/projects/libpng/files/libpng16/older-releases/${LIBPNG_VERSION}/...` |
+
+### 1.3 Xerces-C Version Upgrade (3.2.3 to 3.3.0)
+
+Xerces-C has been upgraded from 3.2.3 to 3.3.0 across all build scripts and path references on both Linux and Windows.
+
+### 1.4 CMake Compatibility Fixes
+
+Added `-DCMAKE_POLICY_VERSION_MINIMUM=3.5` to the Xerces-C and zlib installer scripts to prevent build failures with recent CMake versions.
+
+### 1.5 CARLA Assets Download URL
+
+The original CARLA content assets server is no longer accessible. The download process has been updated to use Backblaze B2 storage:
+
+| Platform | URL |
+|---|---|
+| Linux/Mac | `https://carla-assets.s3.us-east-005.backblazeb2.com/${CONTENT_ID}.tar.gz` |
+| Windows | `https://carla-assets.s3.us-east-005.backblazeb2.com/%CONTENT_ID%.tar.gz` |
+
+---
+
+## 2. PythonAPI Build Fixes
+
+### 2.1 Python Version Compatibility
+
+Python 3.8+ can fail to compile the Boost b2 engine (Boost 1.72.0), which is required for building the CARLA PythonAPI. Python 3.7 has been verified to work correctly.
+
+If `pyenv` is used to manage Python versions, a symlink fix is required for the Python headers:
+
+```bash
+ln -s ~/.pyenv/versions/3.7.9/include/python3.7m ~/.pyenv/versions/3.7.9/include/python3.7
+```
+
+### 2.2 PythonAPI Segfault Fix (`import carla`)
+
+Once the PythonAPI is built, `import carla` crashes with a segmentation fault on Ubuntu 22.04. The root cause is that clang-14's optimizer enables strict aliasing at `-O2`/`-O3`, which conflicts with type-punning patterns used internally by boost::python. This corrupts exception handling cleanup during module initialization.
+
+The fix adds `-fno-strict-aliasing` to the compiler flags in `setup.py`, disabling the problematic optimization for the Python bindings only.
+
+### 2.3 New `setup.py` for the PythonAPI
+
+Added the `setup.py` file for building the CARLA Python API extension module (`carla.libcarla`). Supports both Linux and Windows builds, linking against all required static libraries (libcarla_client, rpc, boost, Recast, Detour, osm2odr, xerces-c, proj, sqlite3, etc.).
+
+### 2.3 Windows `BuildPythonAPI.bat` Fixes
+
+- Fixed Python detection logic: the fallback from `python` to `py -3` was not working due to incorrect error level handling.
+- Added `call` keyword to the Python invocation to prevent premature batch file termination.
+
+### 2.4 Windows `install_zlib.bat` Fix
+
+Fixed a trailing backslash in the source directory path that caused CMake to misinterpret it as an escape sequence.
+
+---
+
+## 3. Windows Build Support
+
+The original CARLA repository contained several `.bat` build and installer scripts with defects that prevented compilation on Windows. Corrected versions have been included and are deployed during `make install`, fixing the full dependency installation and CarlaUE4 compilation process:
+
+| Script | Purpose |
+|---|---|
+| `BuildCarlaUE4.bat` | Compile the CarlaUE4 Unreal Engine project |
+| `BuildOSM2ODR.bat` | Build the OpenStreetMap to OpenDRIVE converter |
+| `Package.bat` | Create an optimized shipping package |
+| `install_boost.bat` | Download and build Boost |
+| `install_chrono.bat` | Download and build Project Chrono |
+| `install_gtest.bat` | Download and build Google Test |
+| `install_proj.bat` | Download and build the PROJ library |
+| `install_recast.bat` | Download and build Recast & Detour |
+| `install_rpclib.bat` | Download and build rpclib |
+
+---
+
+## 4. Linux Build Modernization
+
+### 4.1 Compiler Toolchain Update
+
+The hard-coded `clang-8`/`lld-8` requirement has been replaced with the system default `clang`/`lld` packages, as the old versions are no longer available on modern Ubuntu distributions. Tested and verified with **clang-14** (default on Ubuntu 22.04).
+
+### 4.2 Extended Ubuntu Support
+
+The Linux installation guide now covers **Ubuntu 20.04 and newer** (including 22.04 LTS), replacing the previous guide that only addressed Ubuntu 20.04.
+
+---
+
+## 5. VehicleFactory Asset Management
+
+The `VehicleFactory.uasset` is a CARLA blueprint that defines the available vehicle catalog. Users with custom vehicle configurations typically maintain their own version of this asset. New flags have been added to support both workflows.
+
+### 5.1 Install (`make install`)
+
+By default, the installer **preserves** the user's existing `VehicleFactory.uasset`. To install the default CARLA version:
+
+```bash
+make install CARLA=../carla USE_DEFAULT_VEHICLE_FACTORY=1
+```
+
+### 5.2 Reverse-Install (`make r-install`)
+
+By default, the reverse-install **skips** `VehicleFactory.uasset` to prevent overwriting the repository's version. To include it:
+
+```bash
+make r-install CARLA=../carla OVERWRITE_DEFAULT_VEHICLE_FACTORY=1
+```
+
+---
+
+## 6. Git LFS Integration
+
+Git Large File Storage (LFS) has been configured for the repository to properly handle Unreal Engine binary assets (`.uasset` and `.umap` files):
+
+```
+*.uasset filter=lfs diff=lfs merge=lfs -text
+*.umap filter=lfs diff=lfs merge=lfs -text
+```
+
+---
+
+## 7. Documentation Updates
+
+- **`Install.md`**: Restructured into a step-by-step guide. Updated repository URLs, added Python compatibility notes, documented the Backblaze B2 asset download process, corrected the Scenario Runner repository name, and documented the `USE_DEFAULT_VEHICLE_FACTORY` option.
+
+- **`Install_Ubuntu.md`**: Rewritten for Ubuntu 20.04+. Replaced `clang-8` instructions with system defaults and added `pyenv`-based Python version management guidance.
+
+- **`DReyeVR.mk.help`**: Documented the `USE_DEFAULT_VEHICLE_FACTORY` and `OVERWRITE_DEFAULT_VEHICLE_FACTORY` options.
+
+<br><br><br>
 # Content authoring - vehicles
 
 CARLA provides a comprehensive set of vehicles out of the box in the blueprint library. CARLA allows the user to expand upon this with custom vehicles for maximum extensibility.
@@ -9,6 +160,7 @@ The key factors in preparing a custom vehicle for CARLA lie in rigging the vehic
 * __[Modeling](#modeling)__
 	* [Naming conventions](#naming-conventions)
 * __[Rigging](#rigging-the-vehicle-using-an-armature)__
+	* [Rigging troubleshooting](#rigging-troubleshooting)
 	* [Import](#import)
 	* [Armature](#add-an-armature)
     * [Parenting](#parenting)
@@ -35,7 +187,7 @@ The key factors in preparing a custom vehicle for CARLA lie in rigging the vehic
 	* [Collision mesh](#collision-mesh)
 	* [Tire configuration](#tire-configuration)
 	* [Wheel dimensions](#wheel-dimensions)
-* __[Lights](#lights)__
+* __[Emissive meshes](#emissive-meshes)__
 	* [UV map](#uv-map)
 	* [Importing](#importing)
 
@@ -63,6 +215,32 @@ Textures should be named using the format `T_CarPart_CarName`, e.g, `T_Bodywork_
 ## Rigging the vehicle using an armature
 
 To look realistic within the simulation, the car needs to have rotating and wheels, the front pair of which can turn with steering inputs. Therefore to prepare a vehicle for CARLA, an armature needs to be rigged to the car to identify the wheels and allow their movement.
+
+### Rigging troubleshooting
+
+The first step to prepare a vehicle for importing into Unreal is to build the rig correctly. After reviewing the rig of the assets you sent us, I confirmed that the rig is incorrect: it has an incorrect scale of 0.1, which is interfering with the rig’s behavior. This is most likely due to an error when creating the rig in Blender and importing it into Unreal Engine.
+
+It is also worth noting that the first bone in the rig you sent is named VehicleBase. It is best to name it exactly as shown in the documentation images: “Vehicle_Base”.
+
+<img src="img/WVTruck/WVTruck_1.png" alt="WVTruck_1" width="650">
+<br><br>
+Depending on the Blender version or the project configuration, a mismatch can occur between Blender and Unreal Engine scales. Since Unreal Engine uses centimeters as its unit of measurement, the best practice is to configure Blender the same way. You can do this in the Scene settings menu, as shown in the image.
+<br><br>
+
+<img src="img/WVTruck/wvtruck_3.png" alt="WVTruck_3" width="450">
+
+<br>
+After adjusting Blender’s scene scale, you may need to update the camera’s clipping distance in case your model disappears from the viewport.
+You can do this from Blender’s information panel. Press N in the viewport to open this panel, then go to the View tab, and then adjust the Clip Start and Clip End values. You can use values similar to those shown in the picture below.
+
+<img src="img/WVTruck/wvtruck_4.png" alt="WVTruck_4" width="450">
+
+<br>
+
+To make sure everything is correct, you can do this from the same menu mentioned above, in the Item tab, where you can inspect the transform of the selected object. Ideally, no bone in the armature should have any scale transforms—its scale should be 1. In addition, the first bone, “Vehicle_Base”, should be centered in the scene, meaning its location should be 0 on all three axes.
+
+<img src="img/WVTruck/wvtruck_2.png" alt="WVTruck_2" width="800">
+
 
 ### Import
 
@@ -126,7 +304,7 @@ You will now have 3 things in your content browser directory, the mesh, the skel
 
 ![regenerate_body](img/tuto_content_authoring_vehicles/physics_asset.png)
 
-First, select the main body, in the `Details` menu on the right, change the `Linear Damping` to 0.0 in the `Physics` section, check `Simulation Generates Hit Events` in the `Collision` section and change the `Primitive Type` from `Capsule` to `Box` in the `Body Creation` section. Then press `Regenerate bodies`. The capsule will now change to a rectangular box. Then select the wheels.
+First, select the main body, in the `Details` menu on the right, change the `Linear Damping` to 0.0 in the `Physics` section, check `Simulation Generates Hit Events` in the `Collision` section and change the `Primitive Type` from `Capsule` to `Box` in the `Body Creation` section. Then press `Regenerate bodies`. The capsule will now change to a rectangular box. It’s good practice not to place the collision box at ground level; it should cover the same area as the vehicle’s chassis. 
 
 ![physics_details](img/tuto_content_authoring_vehicles/physics_details.png)
 
@@ -164,6 +342,23 @@ Next, select `Vehicle Movement` in the `Components` menu of the blueprint class 
 
 ![wheel_setup](img/tuto_content_authoring_vehicles/vehicle_wheel_setup.gif)
 
+You can also add lights to the vehicle to simulate the headlights and interior lighting. To do this, click Add Component and select the type of light you want to use. 
+
+<img src="img/WVTruck/wvtruck_5.png"  width="400">
+
+<br><br>
+After that, place the light in the correct position using the Move gizmo, and use the light’s cone/preview shape as a guide to aim and adjust it.
+
+
+<img src="img/WVTruck/wvtruck_6.png">
+
+<br><br>
+Finally, you can tweak the light’s settings—such as its intensity and attenuation distance—from this panel, which appears once the light is selected. Any changes made here will update how the light preview looks in the viewport.
+
+<img src="img/WVTruck/wvtruck_7.png"  width="600">
+
+
+<br><br>
 Now navigate to `Content > Carla > Blueprints > Vehicles > VehicleFactory` and double click this to open the Vehicle Factory.
 
 Select the `Vehicles` node and expand the `Vehicles` item in the `Default value` section on the right hand side.
@@ -191,7 +386,10 @@ The Unreal Editor boasts a comprehensive materials workflow that facilitates the
 
 CARLA provides a prototype material for replicating the glossy finish of vehicles that can mimic numerous different types of vehicle paint jobs and features. Open Unreal editor and in the content browser, locate the material in `Content > Carla > Static > GenericMaterials > 00_MastersOpt`. The basic material is called `M_CarPaint_Master`. Right click on this material and choose `Create Material Instance` from the context material. Name it and move it into the folder where your new vehicle content is stored.
 
-In the Unreal Editor, move the spectator to a point near the floor and drag the skeletal mesh of the vehicle from the content browser into the scene, the body of your vehicle will now appear there.
+In the Unreal Editor, move the spectator to a point near the floor and drag the skeletal mesh of the vehicle from the content browser into the scene, the body of your vehicle will now appear there. 
+
+__Important:__ The following steps show how to apply materials to a vehicle using an asset dragged into the scene for easier preview and visualization. However, any changes made to this placed instance will not affect the original asset.
+To assign the final materials to the vehicle, open the corresponding components (e.g., Skeletal Mesh, glass meshes, etc.) by double-clicking them in the Content Browser, and then assign the materials in the editor window that opens for each component.
 
 ![add_model](img/tuto_content_authoring_vehicles/add_model.gif)
 
@@ -325,7 +523,7 @@ Now plug these numbers into the `Wheel` section of the blueprint.Take care to re
 The default values here provide a reasonable starting point. View [__this guide__](tuto_D_customize_vehicle_suspension.md) to set suspension characteristics appropriate to your vehicle type.
 
 
-## Lights
+## Emissive meshes
 
 The last element to complete a realistic vehicle for CARLA is the lights, headlights, brake lights, blinkers etc. In your 3D modelling application, you should model some shapes that resemble the lights of the vehicle you are replicating. This would be flat discs or flat cuboid structures for most headlights. Some vehicles may also have strips of LEDs.
 
@@ -336,6 +534,12 @@ The last element to complete a realistic vehicle for CARLA is the lights, headli
 The different types of lights (headlights, blinkers, brake lights, etc.) are distinguished using a texture. You need to create a UV map in your 3D modelling application and position the lights to match up with the relevant region of the texture.
 
 ![lights_uv](img/tuto_content_authoring_vehicles/lights_uv_map.png)
+<br>
+You can download the texture for the emissive meshes’ UV layout here: 
+<br>
+<img src="img/WVTruck/emissive.png">.
+
+
 
 ### Importing
 
