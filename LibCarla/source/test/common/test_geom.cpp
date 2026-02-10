@@ -125,36 +125,8 @@ TEST(geom, quaternion_inverse) {
   ASSERT_NEAR(unit.w, Quaternion().w, error)  << "unit: " << unit.x << " " << unit.y << " " << unit.z << " " << unit.w;
 }
 
-Vector3D carla_0_9_15_RotatedVector(Rotation const &rotator, Vector3D const &in_point)  {
-  // Rotates Rz(yaw) * Ry(pitch) * Rx(roll) = first x, then y, then z.
-  const float cy = std::cos(Math::ToRadians(rotator.yaw));
-  const float sy = std::sin(Math::ToRadians(rotator.yaw));
-  const float cr = std::cos(Math::ToRadians(rotator.roll));
-  const float sr = std::sin(Math::ToRadians(rotator.roll));
-  const float cp = std::cos(Math::ToRadians(rotator.pitch));
-  const float sp = std::sin(Math::ToRadians(rotator.pitch));
-
-  Vector3D out_point;
-  out_point.x =
-    in_point.x * (cp * cy) +
-    in_point.y * (cy * sp * sr - sy * cr) +
-    in_point.z * (-cy * sp * cr - sy * sr);
-
-  out_point.y =
-    in_point.x * (cp * sy) +
-    in_point.y * (sy * sp * sr + cy * cr) +
-    in_point.z * (-sy * sp * cr + cy * sr);
-
-  out_point.z =
-    in_point.x * (sp) +
-    in_point.y * (-cp * sr) +
-    in_point.z * (cp * cr);
-
-  return out_point;
-}
-
 TEST(geom, single_point_rotation_90) {
-  auto compare = [](int line, Rotation const &rotator, Vector3D point, Vector3D const &result_point)->void {
+  auto compare = [](int line, Rotation const &rotator, Vector3D point, Vector3D const &result_point, Quaternion const &result_quat)->void {
     constexpr double error = 0.001;
 
     Vector3D const in_point = point;
@@ -162,7 +134,7 @@ TEST(geom, single_point_rotation_90) {
     Location translation (0.0,0.0,0.0);
     Transform transform = Transform(translation, rotator);
     transform.TransformPoint(point);
-       EXPECT_NEAR(point.x, result_point.x, error)
+    EXPECT_NEAR(point.x, result_point.x, error)
       << " LINE " << line << " x: \n"
       << " point: " << point.x << " " << point.y << " " << point.z;
     EXPECT_NEAR(point.y, result_point.y, error)
@@ -183,7 +155,26 @@ TEST(geom, single_point_rotation_90) {
       << " LINE "<< line << " -z: \n"
       << " point: " << point.x << " " << point.y << " " << point.z;
 
+    // do we create the quaternion correctly?
     Quaternion quaternion(rotator);
+    EXPECT_NEAR(quaternion.x, result_quat.x, error) 
+      << " LINE " << line << " x: \n"
+      << " quat: " << quaternion.x << " " << quaternion.y << " " << quaternion.z << " " << quaternion.w << "\n"
+      << " res-quat: " << result_quat.x << " " << result_quat.y << " " << result_quat.z << " " << result_quat.w << "\n";
+    EXPECT_NEAR(quaternion.y, result_quat.y, error) 
+      << " LINE " << line << " y: \n"
+      << " quat: " << quaternion.x << " " << quaternion.y << " " << quaternion.z << " " << quaternion.w << "\n"
+      << " res-quat: " << result_quat.x << " " << result_quat.y << " " << result_quat.z << " " << result_quat.w << "\n";
+    EXPECT_NEAR(quaternion.z, result_quat.z, error) 
+      << " LINE " << line << " z: \n"
+      << " quat: " << quaternion.x << " " << quaternion.y << " " << quaternion.z << " " << quaternion.w << "\n"
+      << " res-quat: " << result_quat.x << " " << result_quat.y << " " << result_quat.z << " " << result_quat.w << "\n";
+    EXPECT_NEAR(quaternion.w, result_quat.w, error) 
+      << " LINE " << line << " w: \n"
+      << " quat: " << quaternion.x << " " << quaternion.y << " " << quaternion.z << " " << quaternion.w << "\n"
+      << " res-quat: " << result_quat.x << " " << result_quat.y << " " << result_quat.z << " " << result_quat.w << "\n";
+
+    // does the quaternion rotate the point correctly?
     Vector3D rotated_vector = quaternion.RotatedVector(in_point);
     EXPECT_NEAR(rotated_vector.x, result_point.x, error) 
       << " LINE " << line << " x: \n"
@@ -211,58 +202,124 @@ TEST(geom, single_point_rotation_90) {
       << " quat: " << quaternion.x << " " << quaternion.y << " " << quaternion.z << " " << quaternion.w << "\n"
       << " rotated_vector: " << rotated_vector.x << " " << rotated_vector.y << " " << rotated_vector.z;
 
-    auto const carla_0_9_15_result = carla_0_9_15_RotatedVector(rotator, in_point);
-    if ((std::fabs(carla_0_9_15_result.x-result_point.x) > error) ||
-        (std::fabs(carla_0_9_15_result.y-result_point.y) > error) ||
-        (std::fabs(carla_0_9_15_result.z-result_point.z) > error))  {
-      std::cerr << "Information: Rotation carla 0.9.16 test Rotation(pitch=" << rotator.pitch << ", yaw=" << rotator.yaw << ", roll=" << rotator.roll << ")" << std::endl
-                << " point: " << point.x << " " << point.y << " " << point.z << std::endl
-                << " resulted in point: " << carla_0_9_15_result.x << " " << carla_0_9_15_result.y << " " << carla_0_9_15_result.z << std::endl
-                << " but correct result is : " << result_point.x << " " << result_point.y << " " << result_point.z << std::endl;
-    }
+    // does the quaternion convert back to rotator correctly?
+    Rotation quat_rotator = quaternion.Rotator();
+    EXPECT_NEAR(quat_rotator.roll, rotator.roll, error) 
+      << " LINE " << line << " roll: \n"
+      << " quat: " << quaternion.x << " " << quaternion.y << " " << quaternion.z << " " << quaternion.w;
+    EXPECT_NEAR(quat_rotator.pitch, rotator.pitch, error) 
+      << " LINE "<< line << " pitch: \n"
+      << " quat: " << quaternion.x << " " << quaternion.y << " " << quaternion.z << " " << quaternion.w;
+    EXPECT_NEAR(quat_rotator.yaw, rotator.yaw, error) 
+      << " LINE "<< line << " yaw: \n"
+      << " quat: " << quaternion.x << " " << quaternion.y << " " << quaternion.z << " " << quaternion.w;
+    float quat_yaw_rad = quaternion.YawRad();
+    EXPECT_NEAR(quat_yaw_rad, Math::ToRadians(rotator.yaw), error) 
+      << " LINE "<< line << " quat-yaw-rad: \n"
+      << " quat: " << quaternion.x << " " << quaternion.y << " " << quaternion.z << " " << quaternion.w;
+
+    // also test the rotation matrix directly
+    auto matrix = quaternion.RotationMatrix();
+    point.x = matrix[0] * in_point.x + matrix[1] * in_point.y + matrix[2] * in_point.z;
+    point.y = matrix[3] * in_point.x + matrix[4] * in_point.y + matrix[5] * in_point.z;
+    point.z = matrix[6] * in_point.x + matrix[7] * in_point.y + matrix[8] * in_point.z;
+    EXPECT_NEAR(point.x, result_point.x, error)
+      << " LINE " << line << " x: \n"
+      << " point: " << point.x << " " << point.y << " " << point.z
+      << " quat: " << quaternion.x << " " << quaternion.y << " " << quaternion.z << " " << quaternion.w
+      << " matrix: " << matrix[0] << " " << matrix[1] << " " << matrix[2] 
+      << " \n" << matrix[3] << " " << matrix[4] << " " << matrix[5]
+      << " \n" << matrix[6] << " " << matrix[7] << " " << matrix[8];
+    EXPECT_NEAR(point.y, result_point.y, error)
+      << " LINE "<< line << " y: \n"
+      << " point: " << point.x << " " << point.y << " " << point.z
+      << " quat: " << quaternion.x << " " << quaternion.y << " " << quaternion.z << " " << quaternion.w
+      << " matrix: " << matrix[0] << " " << matrix[1] << " " << matrix[2] 
+      << " \n" << matrix[3] << " " << matrix[4] << " " << matrix[5]
+      << " \n" << matrix[6] << " " << matrix[7] << " " << matrix[8];
+    EXPECT_NEAR(point.z, result_point.z, error)
+      << " LINE "<< line << " z: \n"
+      << " point: " << point.x << " " << point.y << " " << point.z
+      << " quat: " << quaternion.x << " " << quaternion.y << " " << quaternion.z << " " << quaternion.w
+      << " matrix: " << matrix[0] << " " << matrix[1] << " " << matrix[2] 
+      << " \n" << matrix[3] << " " << matrix[4] << " " << matrix[5]
+      << " \n" << matrix[6] << " " << matrix[7] << " " << matrix[8];
+    matrix = quaternion.InverseRotationMatrix();
+    auto rotated_point = point;
+    point.x = matrix[0] * rotated_point.x + matrix[1] * rotated_point.y + matrix[2] * rotated_point.z;
+    point.y = matrix[3] * rotated_point.x + matrix[4] * rotated_point.y + matrix[5] * rotated_point.z;
+    point.z = matrix[6] * rotated_point.x + matrix[7] * rotated_point.y + matrix[8] * rotated_point.z;
+    EXPECT_NEAR(point.x, in_point.x, error)
+      << " LINE " << line << " x: \n"
+      << " point: " << point.x << " " << point.y << " " << point.z
+      << " quat: " << quaternion.x << " " << quaternion.y << " " << quaternion.z << " " << quaternion.w
+      << " matrix: " << matrix[0] << " " << matrix[1] << " " << matrix[2] 
+      << " \n" << matrix[3] << " " << matrix[4] << " " << matrix[5]
+      << " \n" << matrix[6] << " " << matrix[7] << " " << matrix[8];
+    EXPECT_NEAR(point.y, in_point.y, error)
+      << " LINE "<< line << " y: \n"
+      << " point: " << point.x << " " << point.y << " " << point.z
+      << " quat: " << quaternion.x << " " << quaternion.y << " " << quaternion.z << " " << quaternion.w
+      << " matrix: " << matrix[0] << " " << matrix[1] << " " << matrix[2] 
+      << " \n" << matrix[3] << " " << matrix[4] << " " << matrix[5]
+      << " \n" << matrix[6] << " " << matrix[7] << " " << matrix[8];
+    EXPECT_NEAR(point.z, in_point.z, error)
+      << " LINE "<< line << " z: \n"
+      << " point: " << point.x << " " << point.y << " " << point.z
+      << " quat: " << quaternion.x << " " << quaternion.y << " " << quaternion.z << " " << quaternion.w
+      << " matrix: " << matrix[0] << " " << matrix[1] << " " << matrix[2] 
+      << " \n" << matrix[3] << " " << matrix[4] << " " << matrix[5]
+      << " \n" << matrix[6] << " " << matrix[7] << " " << matrix[8];
   };
 
   // test all 90° rotations of positive unit vectors on axis; Remember:
-  // UE uses left-handed coordinate system!
-  // Because nearly every writing on this is written in a form which let's room for interpretation
-  // Even that one talks on clock-wise rotation: https://forums.unrealengine.com/t/ue4-coordinate-system-not-right-handed/80398/4, 
-  // but it is not telling if you are watching into axis positive direction or negative direction; therefore "clockwise" can be interpreted in both ways.
-  // Ok, the example given makes it definitely clear then, which is our test 7 below.
-  // 
-  // Therefore let's take the easiest way to explain: Your left hand!
-  // Point thumb upwards (positive z-Axis direction),  index finger forwards (positive x-Axis direction), middle finger rightwards (positive y-Axis direction)
-  // Positive rotation can be "visualized" with thumb of the left hand pointing into the respective positive direction of the rotation axis,
-  // then the fingers when creating a fist are showing the positive rotation direction.
-  // 
-  // The same by the way, works for right-handed coordinate systems: just take the right hand instead, resulting in the y-axis beeing flipped and rotation direction switches!
-  // 
-  //            pitch(y) yaw(z)  roll(x)   px    py   pz     r_x    r_y    r_z
-  // pitch hand index finger goes down
-  compare( 1, {  90.0f,   0.0f,   0.0f}, {1.0f, 0.f, 0.f}, { 0.0f,  0.0f, -1.0f}); // x-axis downwards
-  compare( 2, {  90.0f,   0.0f,   0.0f}, {0.0f, 1.f, 0.f}, { 0.0f,  1.0f,  0.0f}); // y-axis constant
-  compare( 3, {  90.0f,   0.0f,   0.0f}, {0.0f, 0.f, 1.f}, { 1.0f,  0.0f,  0.0f}); // z-axis forwards
+  // UE uses left-handed coordinate system: using the left hand we get:
+  // Point thumb upwards (positive z-Axis direction), index finger forwards (positive x-Axis direction), middle finger rightwards (positive y-Axis direction)
+  // All rotation values in the Rotator are stored in degrees.
+  // The angles are interpreted as intrinsic rotations applied in the order Yaw, then Pitch, then Roll. 
+  // I.e., an object would be rotated first by the specified yaw around its up axis 
+  // (with positive angles interpreted as clockwise when viewed from above, along -Z), 
+  // then pitched around its (new) right axis (with positive angles interpreted as 'nose up', i.e. clockwise when viewed along +Y),
+  // and then finally rolled around its (final) forward axis (with positive angles interpreted as clockwise rotations when viewed along +X).
+  // Note that these conventions differ from quaternion axis/angle. UE Quat always considers a positive angle to be a left-handed rotation, 
+  // whereas Rotator treats yaw as left-handed but pitch and roll as right-handed. 
+  //
+  // Since we need to reqroduce the existing behaviour from Unreal within our Rotator and Quaternion classes,
+  // we have to take care of these conventions here in the test cases as well.
+  // The result values have previously been verified within Unreal Engine results directly.
+  Quaternion const pitch_positive_90 = {0.000000, -0.707107, 0.000000, 0.707107};
+  Quaternion const pitch_negative_90 = {-0.000000, 0.707107, 0.000000, 0.707107};
+  Quaternion const yaw_positive_90   = {0.000000, -0.000000, 0.707107, 0.707107};
+  Quaternion const yaw_negative_90   = {-0.000000, 0.000000, -0.707107, 0.707107};
+  Quaternion const roll_positive_90  = {-0.707107, -0.000000, 0.000000, 0.707107};
+  Quaternion const roll_negative_90  = {0.707107, 0.000000, 0.000000, 0.707107};
+  //            pitch(y) yaw(z)  roll(x)   px    py   pz     r_x    r_y    r_z     q_x q_y q_z q_w
   // pitch hand index finger goes up
-  compare( 4, { -90.0f,   0.0f,   0.0f}, {1.0f, 0.f, 0.f}, { 0.0f,  0.0f,  1.0f}); // x-axis upwards
-  compare( 5, { -90.0f,   0.0f,   0.0f}, {0.0f, 1.f, 0.f}, { 0.0f,  1.0f,  0.0f}); // y-axis constant
-  compare( 6, { -90.0f,   0.0f,   0.0f}, {0.0f, 0.f, 1.f}, {-1.0f,  0.0f,  0.0f}); // z-axis backwards
+  compare( 1, {  90.0f,   0.0f,   0.0f}, {1.0f, 0.f, 0.f}, { 0.0f,  0.0f,  1.0f}, pitch_positive_90); // x-axis upwards
+  compare( 2, {  90.0f,   0.0f,   0.0f}, {0.0f, 1.f, 0.f}, { 0.0f,  1.0f,  0.0f}, pitch_positive_90); // y-axis constant
+  compare( 3, {  90.0f,   0.0f,   0.0f}, {0.0f, 0.f, 1.f}, {-1.0f,  0.0f,  0.0f}, pitch_positive_90); // z-axis backwards
+  // pitch hand index finger goes down
+  compare( 4, { -90.0f,   0.0f,   0.0f}, {1.0f, 0.f, 0.f}, { 0.0f,  0.0f, -1.0f}, pitch_negative_90); // x-axis downwards
+  compare( 5, { -90.0f,   0.0f,   0.0f}, {0.0f, 1.f, 0.f}, { 0.0f,  1.0f,  0.0f}, pitch_negative_90); // y-axis constant
+  compare( 6, { -90.0f,   0.0f,   0.0f}, {0.0f, 0.f, 1.f}, { 1.0f,  0.0f,  0.0f}, pitch_negative_90); // z-axis forwards
 
   // yaw hand index finger goes to the right
-  compare( 7, { 0.0f,  90.0f,   0.0f}, {1.0f, 0.f, 0.f}, { 0.0f,  1.0f,  0.0f}); // x-axis rightwards
-  compare( 8, { 0.0f,  90.0f,   0.0f}, {0.0f, 1.f, 0.f}, {-1.0f,  0.0f,  0.0f}); // y-axis backwards
-  compare( 9, { 0.0f,  90.0f,   0.0f}, {0.0f, 0.f, 1.f}, { 0.0f,  0.0f,  1.0f}); // z-axis constant
+  compare( 7, { 0.0f,  90.0f,   0.0f}, {1.0f, 0.f, 0.f}, { 0.0f,  1.0f,  0.0f}, yaw_positive_90); // x-axis rightwards
+  compare( 8, { 0.0f,  90.0f,   0.0f}, {0.0f, 1.f, 0.f}, {-1.0f,  0.0f,  0.0f}, yaw_positive_90); // y-axis backwards
+  compare( 9, { 0.0f,  90.0f,   0.0f}, {0.0f, 0.f, 1.f}, { 0.0f,  0.0f,  1.0f}, yaw_positive_90); // z-axis constant
   // yaw hand index finger goes to the left
-  compare(10, { 0.0f, -90.0f,   0.0f}, {1.0f, 0.f, 0.f}, { 0.0f, -1.0f,  0.0f}); // x-axis leftwards
-  compare(11, { 0.0f, -90.0f,   0.0f}, {0.0f, 1.f, 0.f}, { 1.0f,  0.0f,  0.0f}); // y-axis forwards
-  compare(12, { 0.0f, -90.0f,   0.0f}, {0.0f, 0.f, 1.f}, { 0.0f,  0.0f,  1.0f}); // z-axis constant
+  compare(10, { 0.0f, -90.0f,   0.0f}, {1.0f, 0.f, 0.f}, { 0.0f, -1.0f,  0.0f}, yaw_negative_90); // x-axis leftwards
+  compare(11, { 0.0f, -90.0f,   0.0f}, {0.0f, 1.f, 0.f}, { 1.0f,  0.0f,  0.0f}, yaw_negative_90); // y-axis forwards
+  compare(12, { 0.0f, -90.0f,   0.0f}, {0.0f, 0.f, 1.f}, { 0.0f,  0.0f,  1.0f}, yaw_negative_90); // z-axis constant
 
-  // roll hand: thumb points to the left
-  compare(13, { 0.0f,   0.0f,  90.0f}, {1.0f, 0.f, 0.f}, { 1.0f,  0.0f,  0.0f}); // x-axis constant
-  compare(14, { 0.0f,   0.0f,  90.0f}, {0.0f, 1.f, 0.f}, { 0.0f,  0.0f,  1.0f}); // y-axis upwards
-  compare(15, { 0.0f,   0.0f,  90.0f}, {0.0f, 0.f, 1.f}, { 0.0f, -1.0f,  0.0f}); // z-axis leftwards
   // roll hand: thumb points to the right
-  compare(16, { 0.0f,   0.0f, -90.0f}, {1.0f, 0.f, 0.f}, { 1.0f,  0.0f,  0.0f}); // x-axis constant
-  compare(17, { 0.0f,   0.0f, -90.0f}, {0.0f, 1.f, 0.f}, { 0.0f,  0.0f, -1.0f}); // y-axis downwards
-  compare(18, { 0.0f,   0.0f, -90.0f}, {0.0f, 0.f, 1.f}, { 0.0f,  1.0f,  0.0f}); // z-axis rightwards
+  compare(13, { 0.0f,   0.0f,  90.0f}, {1.0f, 0.f, 0.f}, { 1.0f,  0.0f,  0.0f}, roll_positive_90); // x-axis constant
+  compare(14, { 0.0f,   0.0f,  90.0f}, {0.0f, 1.f, 0.f}, { 0.0f,  0.0f, -1.0f}, roll_positive_90); // y-axis downwards
+  compare(15, { 0.0f,   0.0f,  90.0f}, {0.0f, 0.f, 1.f}, { 0.0f,  1.0f,  0.0f}, roll_positive_90); // z-axis rightwards
+  // roll hand: thumb points to the left
+  compare(16, { 0.0f,   0.0f, -90.0f}, {1.0f, 0.f, 0.f}, { 1.0f,  0.0f,  0.0f}, roll_negative_90); // x-axis constant
+  compare(17, { 0.0f,   0.0f, -90.0f}, {0.0f, 1.f, 0.f}, { 0.0f,  0.0f,  1.0f}, roll_negative_90); // y-axis upwards
+  compare(18, { 0.0f,   0.0f, -90.0f}, {0.0f, 0.f, 1.f}, { 0.0f, -1.0f,  0.0f}, roll_negative_90); // z-axis leftwards
 }
 
 TEST(geom, single_point_translation_and_rotation) {
@@ -274,9 +331,9 @@ TEST(geom, single_point_translation_and_rotation) {
 
   Location point (0.0, 0.0, 2.0);
   transform.TransformPoint(point);
-  Location result_point(2.0, 0.0, -1.0);   //!!! This line was wrong in CARLA version <= 0.9.16 due to invalid pitch AND roll rotations, (most relevant) yaw rotations were not affected
+  Location result_point(-2.0, 0.0, -1.0);
 
-  ASSERT_NEAR(point.x, result_point.x, error) <<  point.x << " " << point.y << " " << point.z;
+  ASSERT_NEAR(point.x, result_point.x, error);
   ASSERT_NEAR(point.y, result_point.y, error);
   ASSERT_NEAR(point.z, result_point.z, error);
 }
@@ -360,7 +417,7 @@ TEST(geom, forward_vector) {
   compare({360.0f, 360.0f,   0.0f}, {1.0f, 0.0f, 0.0f});
   compare({  0.0f,  90.0f,   0.0f}, {0.0f, 1.0f, 0.0f});
   compare({  0.0f, -90.0f,   0.0f}, {0.0f,-1.0f, 0.0f});
-  compare({ 90.0f,   0.0f,   0.0f}, {0.0f, 0.0f, -1.0f});    //!!! This line was wrong in CARLA version <= 0.9.16 due to invalid pitch AND roll rotations, (most relevant) yaw rotations were not affected
+  compare({ 90.0f,   0.0f,   0.0f}, {0.0f, 0.0f, 1.0f});
   compare({180.0f, -90.0f,   0.0f}, {0.0f, 1.0f, 0.0f});
 }
 
