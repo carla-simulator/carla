@@ -116,7 +116,12 @@ void export_geom() {
     .def_readwrite("z", &cg::Vector3D::z)
     .def("length", &cg::Vector3D::Length)
     .def("squared_length", &cg::Vector3D::SquaredLength)
-    .def("make_unit_vector", &cg::Vector3D::MakeUnitVector)
+    .def("make_unit_vector", +[](cg::Vector3D const&self) {
+      return self.MakeUnitVector();
+     })
+    .def("make_unit_vector", +[](cg::Vector3D const&self, float const epsilon) {
+      return self.MakeUnitVector(epsilon);
+     }, arg("epsilon"))
     .def("cross", &Cross, (arg("vector")))
     .def("dot", &Dot, (arg("vector")))
     .def("dot_2d", &Dot2D, (arg("vector")))
