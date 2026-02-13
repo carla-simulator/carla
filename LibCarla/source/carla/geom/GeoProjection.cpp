@@ -220,7 +220,11 @@ namespace geom {
         double e6 = e4 * e2;
 
         double x = (location.x - p.x_0) / p.k;
-        double y = (location.y - p.y_0) / p.k;
+        // Fixed: negate Y to account for Unreal left-handed coordinate system
+        // Reason: Unreal uses a left-handed coordinate system; negating the northing
+        // corrects latitude sign for maps without an explicit <offset> in OpenDRIVE.
+        // Applied: 2026-02-13
+        double y = -((location.y - p.y_0) / p.k);
 
         double M = a * ((1.0 - e2 / 4.0 - 3.0 * e4 / 64.0 - 5.0 * e6 / 256.0) * lat_0
             - (3.0 * e2 / 8.0 + 3.0 * e4 / 32.0 + 45.0 * e6 / 1024.0) * std::sin(2.0 * lat_0)
@@ -283,7 +287,11 @@ namespace geom {
 
         //Negate the value of y because of the unreal left hand rule
         double x = (location.x - x_0) / k;
-        double y = (location.y - y_0) / k;
+        // Fixed: negate Y to account for Unreal left-handed coordinate system
+        // Reason: Unreal uses a left-handed coordinate system; negating the northing
+        // corrects latitude sign for maps without an explicit <offset> in OpenDRIVE.
+        // Applied: 2026-02-13
+        double y = -((location.y - y_0) / k);
 
         double mu = y / (a * (1.0 - e2 / 4.0 - 3.0 * e4 / 64.0 - 5.0 * e6 / 256.0));
         double e1 = (1.0 - std::sqrt(1.0 - e2)) / (1.0 + std::sqrt(1.0 - e2));
