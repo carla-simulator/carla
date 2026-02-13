@@ -1,4 +1,5 @@
 ## Latest Changes
+ * Fixed North/South latitude inversion in geo-coordinate conversion for Transverse Mercator and UTM projections
  * Fix possible RPC Server deadlock on shutdown
  * Change foonathan memory vendor branch to v1.3.1.
  * Improved the way the TrafficManager controls large vehicles at junctions, reducing the frequency of collisions with other elements in the simulation.
