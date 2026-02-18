@@ -562,7 +562,7 @@ Reload the current world, note that a new world is created with default settings
         - `reset_settings` (_bool_) - Option to reset the episode setting to default values, set to false to keep the current settings. This is useful to keep sync mode when changing map and to keep deterministic scenarios.  
     - **Return:** _[carla.World](#carla.World)_  
     - **Raises:** RuntimeError when corresponding.  
-- <a name="carla.Client.replay_file"></a>**<font color="#7fb800">replay_file</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>, <font color="#00a6ed">**start**</font>, <font color="#00a6ed">**duration**</font>, <font color="#00a6ed">**follow_id**</font>, <font color="#00a6ed">**replay_sensors**</font>)  
+- <a name="carla.Client.replay_file"></a>**<font color="#7fb800">replay_file</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>, <font color="#00a6ed">**start**</font>, <font color="#00a6ed">**duration**</font>, <font color="#00a6ed">**follow_id**</font>, <font color="#00a6ed">**replay_sensors**=False</font>, <font color="#00a6ed">**replay_weather**=False</font>, <font color="#00a6ed">**offset**=[carla.Transform](#carla.Transform)([carla.Location](#carla.Location)(10, 0, 5), [carla.Rotation](#carla.Rotation)(25, 0, 0))</font>, <font color="#00a6ed">**map_override**=</font>)  
 Load a new world with default settings using `map_name` map. All actors present in the current world will be destroyed, __but__ traffic manager instances will stay alive.  
     - **Parameters:**
         - `name` (_str_) - Name of the file containing the information of the simulation.  
@@ -570,6 +570,9 @@ Load a new world with default settings using `map_name` map. All actors present 
         - `duration` (_float<small> - seconds</small>_) - Time that will be reenacted using the information `name` file. If the end is reached, the simulation will continue.  
         - `follow_id` (_int_) - ID of the actor to follow. If this is 0 then camera is disabled.  
         - `replay_sensors` (_bool_) - Flag to enable or disable the spawn of sensors during playback.  
+        - `replay_weather` (_bool_) - Flag to enable or disable the changing of the weather during playback.  
+        - `offset` (_[carla.Transform](#carla.Transform)_) - When using the "follow_id" argument, the position of the camera relative to the followed actor.  
+        - `map_override` (_string_) - Flag to load another map that isn't the one the log was recorded at.  
 - <a name="carla.Client.request_file"></a>**<font color="#7fb800">request_file</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>)  
 Requests one of the required files returned by [carla.Client.get_required_files](#carla.Client.get_required_files).  
     - **Parameters:**
@@ -601,11 +604,12 @@ The information saved by the recorder will be parsed and shown in your terminal 
         - `filename` (_str_) - Name or absolute path of the file recorded, depending on your previous choice.  
         - `show_all` (_bool_) - If __True__, returns all the information stored for every frame (traffic light states, positions of all actors, orientation and animation data...). If __False__, returns a summary of key events and frames.  
     - **Return:** _string_  
-- <a name="carla.Client.start_recorder"></a>**<font color="#7fb800">start_recorder</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**additional_data**=False</font>)  
+- <a name="carla.Client.start_recorder"></a>**<font color="#7fb800">start_recorder</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**filename**</font>, <font color="#00a6ed">**additional_data**=False</font>, <font color="#00a6ed">**stop_replayer**=True</font>)  
 Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.  
     - **Parameters:**
         - `filename` (_str_) - Name of the file to write the recorded data. An absolute path will be considered if some folder appears in the name. Otherwise, the chosen path will be one of the following: **Build from source** - `<CARLA_ROOT>/Unreal/CarlaUE4/Saved`, **Windows package** - `C:\Users\<user>\AppData\Local\CarlaUE4\Saved`, **Linux package** - `/home/<user>/.config/Epic/CarlaUE4/Saved/`.  
         - `additional_data` (_bool_) - Enables or disable recording non-essential data for reproducing the simulation (bounding box location, physics control parameters, etc).  
+        - `stop_replayer` (_bool_) - Flag to stop the replayer, if one is currently active.  
 - <a name="carla.Client.stop_recorder"></a>**<font color="#7fb800">stop_recorder</font>**(<font color="#00a6ed">**self**</font>)  
 Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUE4/Saved/`.  
 - <a name="carla.Client.stop_replayer"></a>**<font color="#7fb800">stop_replayer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**keep_actors**</font>)  
