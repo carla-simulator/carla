@@ -3096,6 +3096,7 @@ BIND_SYNC(send) << [this](
       double duration,
       uint32_t follow_id,
       bool replay_sensors,
+      bool replay_weather,
       const cr::Transform offset,
       std::string map_override) -> R<std::string>
   {
@@ -3107,6 +3108,7 @@ BIND_SYNC(send) << [this](
         follow_id,
         offset,
         replay_sensors,
+        replay_weather,
         map_override));
   };
 

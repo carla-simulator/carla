@@ -432,7 +432,7 @@ namespace detail {
 
     std::string ReplayFile(
         std::string name, double start, double duration,
-        uint32_t follow_id, bool replay_sensors, geom::Transform offset,
+        uint32_t follow_id, bool replay_sensors, bool replay_weather, geom::Transform offset,
         std::string map_override);
 
     void SetReplayerTimeFactor(double time_factor);

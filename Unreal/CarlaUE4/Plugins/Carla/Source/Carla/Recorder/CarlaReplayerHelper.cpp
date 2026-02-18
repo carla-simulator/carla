@@ -441,6 +441,32 @@ void CarlaReplayerHelper::ProcessReplayerLightVehicle(CarlaRecorderLightVehicle 
   }
 }
 
+void CarlaReplayerHelper::ProcessReplayerWeather(const CarlaRecorderWeather &Weather)
+{
+  check(Episode != nullptr);
+
+  AWeather *WeatherActor = Episode->GetWeather();
+  if (WeatherActor != nullptr)
+  {
+    FWeatherParameters Params;
+    Params.Cloudiness              = Weather.Cloudiness;
+    Params.Precipitation           = Weather.Precipitation;
+    Params.PrecipitationDeposits   = Weather.PrecipitationDeposits;
+    Params.WindIntensity           = Weather.WindIntensity;
+    Params.SunAzimuthAngle         = Weather.SunAzimuthAngle;
+    Params.SunAltitudeAngle        = Weather.SunAltitudeAngle;
+    Params.FogDensity              = Weather.FogDensity;
+    Params.FogDistance             = Weather.FogDistance;
+    Params.FogFalloff              = Weather.FogFalloff;
+    Params.Wetness                 = Weather.Wetness;
+    Params.ScatteringIntensity     = Weather.ScatteringIntensity;
+    Params.MieScatteringScale      = Weather.MieScatteringScale;
+    Params.RayleighScatteringScale = Weather.RayleighScatteringScale;
+    Params.DustStorm               = Weather.DustStorm;
+    WeatherActor->ApplyWeather(Params);
+  }
+}
+
 void CarlaReplayerHelper::ProcessReplayerLightScene(CarlaRecorderLightScene LightScene)
 {
   check(Episode != nullptr);
