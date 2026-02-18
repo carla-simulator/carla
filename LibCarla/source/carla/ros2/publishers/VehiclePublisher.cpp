@@ -18,7 +18,7 @@ VehiclePublisher::VehiclePublisher(std::shared_ptr<carla::ros2::types::VehicleAc
                                    std::shared_ptr<ObjectsWithCovariancePublisher> objects_with_covariance_publisher,
                                    carla::rpc::RpcServerInterface &carla_server)
   : PublisherBaseTransform(std::static_pointer_cast<carla::ros2::types::ActorNameDefinition>(vehicle_actor_definition),
-                           transform_publisher),
+                           transform_publisher, TransformPublisher::TransformPublisherMode::MODE_DYNAMIC),
     _carla_server(carla_server),
     _vehicle_info_publisher(std::make_shared<VehicleInfoPublisherImpl>()),
     _vehicle_status_publisher(std::make_shared<EgoVehicleStatusPublisherImpl>()),

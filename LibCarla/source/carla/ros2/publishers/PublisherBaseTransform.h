@@ -24,9 +24,14 @@ public:
   using CoordinateSystemTransform = carla::ros2::types::CoordinateSystemTransform;
 
   PublisherBaseTransform(std::shared_ptr<carla::ros2::types::ActorNameDefinition> actor_name_definition,
-                         std::shared_ptr<TransformPublisher> transform_publisher)
-    : PublisherBaseSensor(actor_name_definition), _transform_publisher(transform_publisher) {}
-  virtual ~PublisherBaseTransform() = default;
+                         std::shared_ptr<TransformPublisher> transform_publisher,
+                         TransformPublisher::TransformPublisherMode const mode)
+    : PublisherBaseSensor(actor_name_definition), _transform_publisher(transform_publisher), _mode(mode) {}
+  
+  virtual ~PublisherBaseTransform() {
+    // remove the transform from the TF tree when the publisher is destroyed
+    _transform_publisher->RemoveTransform(frame_id());
+  }
 
   /**
    * Update the internal transform state with the new transform.
@@ -43,7 +48,7 @@ public:
   void UpdateTransform(ros2::types::Timestamp const &ros_timestamp, ros2::types::Transform const &ros_transform) {
     _timestamp = ros_timestamp;
     _transform = ros_transform;
-    _transform_publisher->AddTransform(_timestamp.time(), frame_id(), parent_frame_id(), _transform.transform());
+    _transform_publisher->AddTransform(_timestamp.time(), frame_id(), parent_frame_id(), _transform.transform(), _mode);
   }
 
   /**
@@ -71,6 +76,7 @@ protected:
   carla::ros2::types::Timestamp _timestamp;
   carla::ros2::types::Transform _transform;
   std::shared_ptr<TransformPublisher> _transform_publisher;
+  TransformPublisher::TransformPublisherMode _mode;
 };
 }  // namespace ros2
 }  // namespace carla

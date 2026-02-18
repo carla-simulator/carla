@@ -13,12 +13,15 @@ namespace ros2 {
 /**
   A Publisher base class for sensors receiving their data directly from UE4 via buffers.
   Extends PublisherBaseTransform by UpdateSensorData() function.
-  */
+  Usually sensors are not moving in respect to their parent in the TF tree, so the transform is published as static and only updated if the sensor's position relatively to the parent changes.
+ */
 class UePublisherBaseSensor : public PublisherBaseTransform {
 public:
   UePublisherBaseSensor(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
                         std::shared_ptr<TransformPublisher> transform_publisher)
-    : PublisherBaseTransform(sensor_actor_definition, transform_publisher) {}
+    : PublisherBaseTransform(sensor_actor_definition, transform_publisher, 
+        TransformPublisher::TransformPublisherMode::MODE_STATIC) {}
+
   virtual ~UePublisherBaseSensor() = default;
 
   /**

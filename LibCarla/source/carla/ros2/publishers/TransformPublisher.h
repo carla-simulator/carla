@@ -32,11 +32,18 @@ public:
    */
   bool SubscribersConnected() const override;
 
+  enum class TransformPublisherMode {
+    MODE_STATIC = 0,
+    MODE_DYNAMIC = 1
+  };
+
   void AddTransform(const builtin_interfaces::msg::Time &stamp, const std::string &name, const std::string &parent,
-                    geometry_msgs::msg::Transform const &transform);
+                    geometry_msgs::msg::Transform const &transform, TransformPublisherMode const mode);
+  void RemoveTransform(const std::string &name);
 
 private:
-  std::shared_ptr<TransformPublisherImpl> _impl;
+  std::shared_ptr<TransformPublisherImpl> _impl_tf;
+  std::shared_ptr<TransformPublisherImpl> _impl_tf_static;
 };
 }  // namespace ros2
 }  // namespace carla

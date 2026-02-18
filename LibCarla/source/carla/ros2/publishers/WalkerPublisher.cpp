@@ -16,7 +16,7 @@ WalkerPublisher::WalkerPublisher(std::shared_ptr<carla::ros2::types::WalkerActor
                                  std::shared_ptr<ObjectsPublisher> objects_publisher,
                                  std::shared_ptr<ObjectsWithCovariancePublisher> objects_with_covariance_publisher)
   : PublisherBaseTransform(std::static_pointer_cast<carla::ros2::types::ActorNameDefinition>(walker_actor_definition),
-                           transform_publisher),
+                           transform_publisher, TransformPublisher::TransformPublisherMode::MODE_DYNAMIC),
     _walker_odometry_publisher(std::make_shared<WalkerOdometryPublisherImpl>()),
     _walker_object_publisher(std::make_shared<ObjectPublisher>(*this, objects_publisher)),
     _walker_object_with_covariance_publisher(std::make_shared<ObjectWithCovariancePublisher>(*this, objects_with_covariance_publisher)) {}
