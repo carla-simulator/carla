@@ -3140,10 +3140,10 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
 
   // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  BIND_SYNC(start_recorder) << [this](std::string name, bool AdditionalData) -> R<std::string>
+  BIND_SYNC(start_recorder) << [this](std::string name, bool AdditionalData, bool StopReplayer) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
-    return R<std::string>(Episode->StartRecorder(name, AdditionalData));
+    return R<std::string>(Episode->StartRecorder(name, AdditionalData, StopReplayer));
   };
 
   BIND_SYNC(stop_recorder) << [this]() -> R<void>

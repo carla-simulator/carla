@@ -100,7 +100,8 @@ public:
   std::string Start(
     std::string Name,
     FString MapName,
-    bool AdditionalData = false);
+    bool AdditionalData = false,
+    bool StopReplayer = true);
 
   void Stop(void);
 
