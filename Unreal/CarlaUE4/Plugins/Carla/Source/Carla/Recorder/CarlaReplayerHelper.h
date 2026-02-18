@@ -81,6 +81,9 @@ public:
   // set walker bones
   void ProcessReplayerWalkerBones(const CarlaRecorderWalkerBones &Walker);
 
+  // set weather
+  void ProcessReplayerWeather(const CarlaRecorderWeather &Weather);
+  
   // replay finish
   bool ProcessReplayerFinish(bool bApplyAutopilot, bool bIgnoreHero, std::unordered_map<uint32_t, bool> &IsHero);
 
