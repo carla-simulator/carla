@@ -656,8 +656,8 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("get_group_traffic_lights", traffic_light);
   }
 
-  std::string Client::StartRecorder(std::string name, bool additional_data) {
-    return _pimpl->CallAndWait<std::string>("start_recorder", name, additional_data);
+  std::string Client::StartRecorder(std::string name, bool additional_data, bool stop_replayer) {
+    return _pimpl->CallAndWait<std::string>("start_recorder", name, additional_data, stop_replayer);
   }
 
   void Client::StopRecorder() {

@@ -420,7 +420,7 @@ namespace detail {
     std::vector<ActorId> GetGroupTrafficLights(
         rpc::ActorId traffic_light);
 
-    std::string StartRecorder(std::string name, bool additional_data);
+    std::string StartRecorder(std::string name, bool additional_data, bool stop_replayer);
 
     void StopRecorder();
 
