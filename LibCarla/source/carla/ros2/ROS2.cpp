@@ -57,6 +57,12 @@ void ROS2::Enable(carla::rpc::RpcServerInterface *carla_server,
       carla::ros2::types::PublisherSensorType::WorldObserver, 
       world_observer_stream_id);
   log_info("ROS2 enabled");
+
+  // initialize the load map service immediately since that
+  // has to stay alive during a map reload to send the response back to the client
+  _load_map_service = std::make_shared<carla::ros2::LoadMapService>(
+      *_carla_server, carla::ros2::types::ActorNameDefinition::CreateFromRoleName("load_map"));
+  _load_map_service->Init(_domain_participant_impl);
 }
 
 void ROS2::NotifyInitGame() {
@@ -72,7 +78,7 @@ void ROS2::NotifyInitGame() {
                 "]: Publisher initialized");
   }
 
-    ProcessDataFromUeSensorPreAction();
+  ProcessDataFromUeSensorPreAction();
 }
 
 void ROS2::NotifyBeginEpisode() {
@@ -98,15 +104,14 @@ void ROS2::NotifyBeginEpisode() {
   get_available_maps_service->Init(_domain_participant_impl);
   _services.push_back(get_available_maps_service);
 
-  auto load_map_service = std::make_shared<carla::ros2::LoadMapService>(
-      *_carla_server, carla::ros2::types::ActorNameDefinition::CreateFromRoleName("load_map"));
-  load_map_service->Init(_domain_participant_impl);
-  _services.push_back(load_map_service);
-
   auto set_epsisode_settings_service = std::make_shared<carla::ros2::SetEpisodeSettingsService>(
       *_carla_server, carla::ros2::types::ActorNameDefinition::CreateFromRoleName("set_episode_settings"));
   set_epsisode_settings_service->Init(_domain_participant_impl);
   _services.push_back(set_epsisode_settings_service);
+  
+  // inform load map service about new episode to trigger pending map change if there is any
+  _load_map_service->NotifyBeginEpisode();
+  _services.push_back(_load_map_service);
 }
 
 void ROS2::NotifyEndEpisode() {
@@ -125,6 +130,7 @@ void ROS2::NotifyEndGame() {
 void ROS2::Disable() {
   NotifyEndEpisode();
   NotifyEndGame();
+  _load_map_service.reset();
   _world_observer_sensor_actor_definition.reset();
   _domain_participant_impl.reset();
   _name_registry.reset();

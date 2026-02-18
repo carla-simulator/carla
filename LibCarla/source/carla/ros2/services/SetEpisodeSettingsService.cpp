@@ -16,7 +16,7 @@ SetEpisodeSettingsService::SetEpisodeSettingsService(
   : ServiceBase(carla_server, actor_name_definition), _impl(std::make_shared<SetEpisodeSettingsServiceImpl>()) {}
 
 bool SetEpisodeSettingsService::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
-  _impl->SetServiceCallback(std::bind(&SetEpisodeSettingsService::SetEpisodeSettings, this, std::placeholders::_1));
+  _impl->SetSyncServiceCallback(std::bind(&SetEpisodeSettingsService::SetEpisodeSettings, this, std::placeholders::_1));
   return _impl->Init(domain_participant, get_topic_name());
 }
 

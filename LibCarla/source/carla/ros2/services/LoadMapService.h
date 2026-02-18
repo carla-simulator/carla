@@ -34,10 +34,17 @@ public:
    */
   bool Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) override;
 
+  void NotifyBeginEpisode();
 private:
-  carla_msgs::srv::LoadMap_Response LoadMap(carla_msgs::srv::LoadMap_Request const &request);
+  void LoadMap(std::shared_ptr<carla_msgs::srv::LoadMap_Request const> request);
 
   std::shared_ptr<LoadMapServiceImpl> _impl;
+  struct PendingMapChangeRequest {
+    std::shared_ptr<carla_msgs::srv::LoadMap_Request const> request;
+    uint64_t required_episode_begin_count;
+  };
+  std::deque<PendingMapChangeRequest> _pending_map_change_requests;
+  std::atomic<uint64_t> _episode_begin_count{0};
 };
 }  // namespace ros2
 }  // namespace carla

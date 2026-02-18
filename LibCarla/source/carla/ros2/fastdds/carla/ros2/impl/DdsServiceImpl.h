@@ -142,19 +142,24 @@ public:
     return true;
   }
 
-  using ServiceCallbackType = std::function<RESPONSE_TYPE(const REQUEST_TYPE&)>;
-  void SetServiceCallback(ServiceCallbackType callback) {
-    _callback = callback;
+  using SyncServiceCallbackType = std::function<RESPONSE_TYPE(const REQUEST_TYPE&)>;
+  void SetSyncServiceCallback(SyncServiceCallbackType callback) {
+    _sync_callback = callback;
+  }
+
+  using RequestPtrType = std::shared_ptr<const REQUEST_TYPE>;
+  using AsyncServiceCallbackType = std::function<void(RequestPtrType)>;
+  void SetAsyncServiceCallback(AsyncServiceCallbackType callback) {
+    _async_callback = callback;
   }
 
   void on_data_available(eprosima::fastdds::dds::DataReader* reader) override {
-    eprosima::fastdds::dds::SampleInfo info;
-    REQUEST_TYPE request;
-    auto rcode = reader->take_next_sample(&request, &info);
+    auto incoming_request = std::make_shared<IncomingRequest>();
+    auto rcode = reader->take_next_sample(&incoming_request->request, &incoming_request->info);
     if (rcode == eprosima::fastrtps::types::ReturnCode_t::ReturnCodeValue::RETCODE_OK) {
-      if (eprosima::fastdds::dds::InstanceStateKind::ALIVE_INSTANCE_STATE == info.instance_state) {
+      if (eprosima::fastdds::dds::InstanceStateKind::ALIVE_INSTANCE_STATE == incoming_request->info.instance_state) {
         carla::log_debug("DdsServiceImpl[", _request_topic->get_name(), "]::on_data_available(): Incoming request ");
-        _incoming_requests.push_back({request, info.sample_identity});
+        _incoming_requests.push_back(incoming_request);
       } else {
         carla::log_error("DdsServiceImpl[", _request_topic->get_name(),
                          "]::on_data_available(): Error not a request instance");
@@ -166,31 +171,54 @@ public:
   }
 
   void CheckRequest() override {
-    if (!_callback) {
-      carla::log_warning("DdsServiceImpl[", _request_topic->get_name(), "]::CheckRequest(): No callback defined yet");
-      return;
-    }
     while (!_incoming_requests.empty()) {
       carla::log_debug("DdsServiceImpl[", _request_topic->get_name(), "]::CheckRequest(): New Request");
       auto const incoming_request = _incoming_requests.front();
-      RESPONSE_TYPE response = _callback(incoming_request._request);
-      carla::log_debug("DdsServiceImpl[", _response_topic->get_name(), "]::CheckRequest(): Callback returned");
-
-      eprosima::fastrtps::rtps::WriteParams write_params;
-      write_params.related_sample_identity() = incoming_request._request_identity;
-      auto rcode = _datawriter->write(reinterpret_cast<void*>(&response), write_params);
-      if (rcode != bool(eprosima::fastrtps::types::ReturnCode_t::ReturnCodeValue::RETCODE_OK)) {
-        // strange: getting error while the result is actually sent out
-        carla::log_debug("DdsServiceImpl[", _response_topic->get_name(),
-                         "]::CheckRequest() Failed to write data; Error ", std::to_string(rcode));
+      if ( _sync_callback) {
+        carla::log_debug("DdsServiceImpl[", _request_topic->get_name(), "]::CheckRequest(): Calling sync callback");
+        auto response = _sync_callback(incoming_request->request);
+        carla::log_debug("DdsServiceImpl[", _request_topic->get_name(), "]::CheckRequest(): Sync callback returned");
+        SendResponseInternal(response, incoming_request->info.sample_identity);
+      } else if (_async_callback) {
+        carla::log_debug("DdsServiceImpl[", _request_topic->get_name(), "]::CheckRequest(): Calling async callback");
+        _pending_async_requests.push_back(incoming_request);
+        auto request_ptr = std::shared_ptr<REQUEST_TYPE>(incoming_request, &incoming_request->request);
+        _async_callback(request_ptr);
+      } else {
+        carla::log_warning("DdsServiceImpl[", _request_topic->get_name(),
+                           "]::CheckRequest(): No sync or async callback defined yet");
       }
-      carla::log_debug("DdsServiceImpl[", _response_topic->get_name(), "]::CheckRequest() Response sent");
-
       _incoming_requests.pop_front();
     }
   }
 
+  void SendResponse(RequestPtrType request_ptr, RESPONSE_TYPE response) {
+    carla::log_debug("DdsServiceImpl[", _request_topic->get_name(), "]::SendResponse(): Sending async response");
+    auto it = std::find_if(_pending_async_requests.begin(), _pending_async_requests.end(),
+                           [request_ptr](std::shared_ptr<IncomingRequest> const& pending_request) {
+                             return &pending_request->request == request_ptr.get();
+                           });
+    if (it != _pending_async_requests.end()) {
+       SendResponseInternal(response, it->get()->info.sample_identity);
+      _pending_async_requests.erase(it);
+    } else {
+      carla::log_error("DdsServiceImpl[", _request_topic->get_name(),
+                       "]::SendResponse(): Could not find matching pending request for async response");
+    }
+  }
 private:
+  void SendResponseInternal(RESPONSE_TYPE& response, const eprosima::fastrtps::rtps::SampleIdentity& related_request_identity) {
+    eprosima::fastrtps::rtps::WriteParams write_params;
+    write_params.related_sample_identity() = related_request_identity;
+    auto rcode = _datawriter->write(reinterpret_cast<void*>(&response), write_params);
+    if (rcode != bool(eprosima::fastrtps::types::ReturnCode_t::ReturnCodeValue::RETCODE_OK)) {
+      // strange: getting error while the result is actually sent out
+      carla::log_debug("DdsServiceImpl[", _response_topic->get_name(),
+                       "]::SendResponse() Failed to write data; Error ", std::to_string(rcode));
+    }
+    carla::log_debug("DdsServiceImpl[", _response_topic->get_name(), "]::SendResponse() Response sent");
+  }
+
   eprosima::fastdds::dds::DomainParticipant* _participant{nullptr};
 
   eprosima::fastdds::dds::TypeSupport _request_type{new REQUEST_PUB_TYPE()};
@@ -203,13 +231,16 @@ private:
   eprosima::fastdds::dds::Publisher* _publisher{nullptr};
   eprosima::fastdds::dds::DataWriter* _datawriter{nullptr};
 
-  ServiceCallbackType _callback{nullptr};
+  SyncServiceCallbackType _sync_callback{nullptr};
+  AsyncServiceCallbackType _async_callback{nullptr};
 
   struct IncomingRequest {
-    REQUEST_TYPE _request{};
-    eprosima::fastrtps::rtps::SampleIdentity _request_identity;
+    REQUEST_TYPE request{};
+    eprosima::fastdds::dds::SampleInfo info;
   };
-  std::deque<IncomingRequest> _incoming_requests;
+  std::deque<std::shared_ptr<IncomingRequest>> _incoming_requests;
+
+  std::list<std::shared_ptr<IncomingRequest>> _pending_async_requests;
 };
 }  // namespace ros2
 }  // namespace carla

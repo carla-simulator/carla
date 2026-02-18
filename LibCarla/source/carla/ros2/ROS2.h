@@ -30,7 +30,7 @@ class TransformPublisher;
 class CarlaActorListPublisher;
 class UeWorldPublisher;
 class ServiceInterface;
- 
+class LoadMapService;
 
 class ROS2 {
 public:
@@ -111,6 +111,7 @@ private:
 
   std::shared_ptr<UeWorldPublisher> _world_publisher;
   std::list<std::shared_ptr<carla::ros2::ServiceInterface>> _services;
+  std::shared_ptr<carla::ros2::LoadMapService> _load_map_service;
 
   // sigleton
   ROS2(){};

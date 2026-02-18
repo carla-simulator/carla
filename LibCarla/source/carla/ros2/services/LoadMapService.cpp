@@ -19,7 +19,7 @@ LoadMapService::LoadMapService(
 }
 
 bool LoadMapService::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
-  _impl->SetServiceCallback(std::bind(&LoadMapService::LoadMap, this, std::placeholders::_1));
+  _impl->SetAsyncServiceCallback(std::bind(&LoadMapService::LoadMap, this, std::placeholders::_1));
   return _impl->Init(domain_participant, get_topic_name());
 }
 
@@ -27,51 +27,74 @@ void LoadMapService::CheckRequest() {
   _impl->CheckRequest();
 }
 
-carla_msgs::srv::LoadMap_Response LoadMapService::LoadMap(
-    carla_msgs::srv::LoadMap_Request const &request) {
-  carla_msgs::srv::LoadMap_Response response;
+void LoadMapService::LoadMap(
+    std::shared_ptr<carla_msgs::srv::LoadMap_Request const> request) {
 
-  auto new_map_name = request.mapname();
+  bool request_failed = false;
+
+  auto new_map_name = request->mapname();
   auto current_map_name = _carla_server.call_get_map_info().Get().name;
   std::string map_name_prefix = "Carla/Maps/";
-  std::string map_name_without_prefix = request.mapname();
+  std::string map_name_without_prefix = request->mapname();
   if (map_name_without_prefix.find(map_name_prefix) == 0) {
     map_name_without_prefix.erase(0, map_name_prefix.length());
   }
   std::string map_name_with_prefix = map_name_prefix + map_name_without_prefix;
   std::string error_reason;
-  if( request.force_reload() || 
+  if( request->force_reload() || 
       (!(map_name_without_prefix == current_map_name) && !(map_name_with_prefix == current_map_name))) {
-    auto call_response = _carla_server.call_load_new_episode(map_name_without_prefix, request.reset_episode_settings(), static_cast<rpc::MapLayer>(request.map_layers()));
+    PendingMapChangeRequest pending_request{request, _episode_begin_count+1};
+    _pending_map_change_requests.push_back(pending_request);
+    auto call_response = _carla_server.call_load_new_episode(map_name_without_prefix, request->reset_episode_settings(), static_cast<rpc::MapLayer>(request->map_layers()));
     if ( call_response.HasError() ) {
-      response.success(false);
+      request_failed = true;
+      _pending_map_change_requests.pop_back();
       error_reason = call_response.GetError().What();
     }
-    else {
-      response.success(true);
-    }
   }
   else {
-    response.success(false);
+    request_failed = true;
     error_reason = "Map already loaded and no reload requested";
   }
-  if (response.success()) {
-    log_info("ROS2:LoadMapService(", request.mapname(), 
+
+  if (request_failed) {
+    log_error("ROS2:LoadMapService(", request->mapname(), 
       "): request to load new episode '", map_name_without_prefix, 
-      "' with force: ", request.force_reload()?"True":"False", 
-      ", reset_episode_settings: ", request.reset_episode_settings()?"True":"False", 
-      " and map_layers: ", request.map_layers(),
-      " succeeded");
+      "' with force: ", request->force_reload()?"True":"False", 
+      ", reset_episode_settings: ", request->reset_episode_settings()?"True":"False", 
+      " and map_layers: ", request->map_layers(), 
+      " failed: ", error_reason);
+    carla_msgs::srv::LoadMap_Response response;
+    response.success(false);
+    _impl->SendResponse(request, response);
   }
   else {
-    log_error("ROS2:LoadMapService(", request.mapname(), 
-      "): request to load new episode '", map_name_without_prefix, 
-      "' with force: ", request.force_reload()?"True":"False", 
-      ", reset_episode_settings: ", request.reset_episode_settings()?"True":"False", 
-      " and map_layers: ", request.map_layers(), 
-      " failed: ", error_reason);
+    /* waiting for new episode to begin */
   }
-  return response;
+}
+
+void LoadMapService::NotifyBeginEpisode() {
+  _episode_begin_count++;
+
+  /* process pending map change requests, if any */
+  auto pending_request_it = _pending_map_change_requests.begin();
+  while (pending_request_it != _pending_map_change_requests.end()) {
+    if (pending_request_it->required_episode_begin_count <= _episode_begin_count) {
+      auto request = pending_request_it->request;
+      log_info("ROS2:LoadMapService(", request->mapname(), 
+        "' with force: ", request->force_reload()?"True":"False", 
+        ", reset_episode_settings: ", request->reset_episode_settings()?"True":"False", 
+        " and map_layers: ", request->map_layers(), 
+        " succeeded");
+      carla_msgs::srv::LoadMap_Response response;
+      response.success(true);
+      _impl->SendResponse(request, response);
+      pending_request_it = _pending_map_change_requests.erase(pending_request_it);
+    }
+    else {
+      ++pending_request_it;
+    }
+  }
 }
 
 }  // namespace ros2
