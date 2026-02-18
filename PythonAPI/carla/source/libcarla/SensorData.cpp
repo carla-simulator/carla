@@ -169,40 +169,6 @@ namespace data {
     return out;
   }
 
-  std::ostream &operator<<(std::ostream &out, const CAMEvent &data) {
-    out << "CAMEvent(frame=" << std::to_string(data.GetFrame())
-        << ", timestamp=" << std::to_string(data.GetTimestamp())
-        << ", message_count=" << std::to_string(data.GetMessageCount())
-        << ')';
-    return out;
-  }
-
-    std::ostream &operator<<(std::ostream &out, const CustomV2XEvent &data) {
-    out << "CustomV2XEvent(frame=" << std::to_string(data.GetFrame())
-        << ", timestamp=" << std::to_string(data.GetTimestamp())
-        << ", message_count=" << std::to_string(data.GetMessageCount())
-        << ')';
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const CAMData &data) {
-    out << "CAMData(power=" << std::to_string(data.Power)
-        << ", stationId=" << std::to_string(data.Message.header.stationID)
-        << ", messageId=" << std::to_string(data.Message.header.messageID)
-        << ')';
-    return out;
-  }
-
-    std::ostream &operator<<(std::ostream &out, const CustomV2XData &data) {
-    out << "CustomV2XData(power=" << std::to_string(data.Power)
-        << ", stationId=" << std::to_string(data.Message.header.stationID)
-        << ", messageId=" << std::to_string(data.Message.header.messageID)
-        << ')';
-    return out;
-  }
-
-
-
 } // namespace s11n
 } // namespace sensor
 } // namespace carla
@@ -393,38 +359,6 @@ static std::string SavePointCloudToDisk(T &self, std::string path) {
   return carla::pointcloud::PointCloudIO::SaveToDisk(std::move(path), self.begin(), self.end());
 }
 
-static boost::python::dict GetCAMData(const carla::sensor::data::CAMData message)
-{
-    boost::python::dict myDict;
-    try
-    {
-        myDict["Power"] = message.Power;
-        myDict["Message"] = GetCAMMessage(message);
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-    
-    return myDict;
-}
-
-
-static boost::python::dict GetCustomV2XData(const carla::sensor::data::CustomV2XData message)
-{
-    boost::python::dict myDict;
-    try
-    {
-        myDict["Power"] = message.Power;
-        myDict["Message"] = GetCustomV2XMessage(message);
-    }
-    catch(const std::exception& e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-    
-    return myDict;
-}
 /**********************************************************************************************/
 void export_sensor_data() {
   using namespace boost::python;
@@ -650,9 +584,20 @@ void export_sensor_data() {
     .def(self_ns::str(self_ns::self))
   ;
 
-    class_<csd::CustomV2XData>("CustomV2XData")
+  class_<cr::CustomV2XBytes>("CustomV2XBytes")
+    .def_readwrite("data_size", &cr::CustomV2XBytes::data_size)
+    .def("get_bytes", GetCustomV2XBytes)
+    .def("get_string", GetCustomV2XString)
+    .def("set_bytes", SetCustomV2XBytes, (arg("bytes")))
+    .def("set_string", SetCustomV2XString, (arg("string")))
+    .def("max_data_size", CALL_RETURNING_COPY(cr::CustomV2XBytes, max_data_size))
+    .def("get", GetCustomV2XBytesDict)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<csd::CustomV2XData>("CustomV2XData")
     .def_readwrite("power", &csd::CustomV2XData::Power)
-    .def("get", GetCustomV2XData)
+    .def("get", GetCustomV2XDataDict)
     .def(self_ns::str(self_ns::self))
   ;
 

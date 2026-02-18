@@ -272,11 +272,34 @@ FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBoxFromComponent(
   return {Origin, Extent};
 }
 
+TArray<FVector> UBoundingBoxCalculator::GetSkeletalMeshVertices(const USkeletalMesh* SkeletalMesh)
+{
+  TArray<FVector> Vertices;
+  if(!SkeletalMesh)
+  {
+    UE_LOG(LogCarla, Error, TEXT("GetSkeletalMeshBoundingBox no SkeletalMesh"));
+    return Vertices;
+  }
+
+  // Get Vertex postion information from LOD 0 of the Skeletal Mesh
+  FSkeletalMeshRenderData* SkeletalMeshRenderData = SkeletalMesh->GetResourceForRendering();
+  FSkeletalMeshLODRenderData& LODRenderData = SkeletalMeshRenderData->LODRenderData[0];
+  FStaticMeshVertexBuffers& StaticMeshVertexBuffers = LODRenderData.StaticVertexBuffers;
+  FPositionVertexBuffer& FPositionVertexBuffer = StaticMeshVertexBuffers.PositionVertexBuffer;
+  uint32 NumVertices = FPositionVertexBuffer.GetNumVertices();
+
+  Vertices.Reserve(NumVertices);
+  for(uint32 i = 0; i < NumVertices; i++) {
+    Vertices.Add(FPositionVertexBuffer.VertexPosition(i));
+  }
+
+  return Vertices;
+}
+
 // TODO: update to calculate current animation pose
 FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBox(const USkeletalMesh* SkeletalMesh)
 {
-  if(!SkeletalMesh)
-  {
+  if(!SkeletalMesh) {
     UE_LOG(LogCarla, Error, TEXT("GetSkeletalMeshBoundingBox no SkeletalMesh"));
     return {};
   }

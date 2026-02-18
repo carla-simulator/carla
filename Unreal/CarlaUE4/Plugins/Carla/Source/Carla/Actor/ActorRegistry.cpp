@@ -23,7 +23,7 @@ namespace crp = carla::rpc;
 
 FActorRegistry::IdType FActorRegistry::ID_COUNTER = 0u;
 
-static FCarlaActor::ActorType FActorRegistry_GetActorType(const AActor *Actor)
+FCarlaActor::ActorType FActorRegistry::GetActorType(const AActor *Actor)
 {
   if (!Actor)
   {
@@ -34,7 +34,7 @@ static FCarlaActor::ActorType FActorRegistry_GetActorType(const AActor *Actor)
   {
     return FCarlaActor::ActorType::Vehicle;
   }
-  else if (nullptr != Cast<ACharacter>(Actor))
+  else if (nullptr != Cast<AWalkerBase>(Actor))
   {
     return FCarlaActor::ActorType::Walker;
   }
@@ -174,7 +174,7 @@ TSharedPtr<FCarlaActor> FActorRegistry::MakeCarlaActor(
         std::begin(Token.data),
         std::end(Token.data));
   }
-  auto Type = FActorRegistry_GetActorType(&Actor);
+  auto Type = GetActorType(&Actor);
   TSharedPtr<FCarlaActor> CarlaActor =
       FCarlaActor::ConstructCarlaActor(
         Id, &Actor,
@@ -237,7 +237,7 @@ void FActorRegistry::WakeActorUp(FCarlaActor::IdType Id, UCarlaEpisode* CarlaEpi
   }
 }
 
-FString FActorRegistry::GetDescriptionFromStream(carla::streaming::detail::stream_id_type Id)
+FCarlaActor* FActorRegistry::FindCarlaActorByStreamId(carla::streaming::detail::stream_id_type Id) const
 {
   for (auto &Item : ActorDatabase)
   {
@@ -248,9 +248,8 @@ FString FActorRegistry::GetDescriptionFromStream(carla::streaming::detail::strea
     carla::streaming::detail::token_type token(Sensor->GetToken());
     if (token.get_stream_id() == Id)
     {
-      const FActorInfo *Info = Item.Value->GetActorInfo();
-      return Info->Description.Id;
+      return Item.Value.Get();
     }
   }
-  return FString("");
+  return nullptr;
 }

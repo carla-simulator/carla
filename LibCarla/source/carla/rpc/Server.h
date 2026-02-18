@@ -15,7 +15,9 @@
 #include <boost/asio/post.hpp>
 
 #include <rpc/server.h>
+#include <rpc/this_session.h>
 
+#include <atomic>
 #include <future>
 
 namespace carla {
@@ -62,7 +64,16 @@ namespace rpc {
 
     /// @warning does not stop the game thread.
     void Stop() {
+      _shutdown_in_progress = true;
       _server.stop();
+    }
+
+    void BindOnClientConnected(::rpc::server::callback_type callback) {
+      _server.set_on_connection(callback);
+    }
+
+    void BindOnClientDisconnected(::rpc::server::callback_type callback) {
+      _server.set_on_disconnection(callback);
     }
 
   private:
@@ -70,6 +81,7 @@ namespace rpc {
     boost::asio::io_context _sync_io_context;
 
     ::rpc::server _server;
+    std::atomic_bool _shutdown_in_progress{false};
   };
 
   // ===========================================================================
@@ -106,9 +118,11 @@ namespace detail {
     /// I.e., we can use the io_context to run tasks on a specific thread (e.g.
     /// game thread).
     template <typename FuncT>
-    static auto WrapSyncCall(boost::asio::io_context &io, FuncT &&functor) {
-      return [&io, functor=std::forward<FuncT>(functor)](Metadata metadata, Args... args) -> R {
-        auto task = std::packaged_task<R()>([functor=std::move(functor), args...]() {
+    static auto WrapSyncCall(std::atomic_bool &shutdown_in_progress, boost::asio::io_context &io, FuncT &&functor) {
+      return [&shutdown_in_progress, &io, functor=std::forward<FuncT>(functor)](Metadata metadata, Args... args) -> R {
+        auto const session_id = ::rpc::this_session().id();
+        auto task = std::packaged_task<R()>([session_id, functor=std::move(functor), args...]() {
+          ::rpc::this_session().set_id(session_id);
           return functor(args...);
         });
         if (metadata.IsResponseIgnored()) {
@@ -119,7 +133,15 @@ namespace detail {
           // Post task and wait for result.
           auto result = task.get_future();
           boost::asio::post(io, MoveHandler(task));
-          return result.get();
+          std::future_status status;
+          do {
+            status = result.wait_for(std::chrono::milliseconds(100));
+          } while (!shutdown_in_progress && (status != std::future_status::ready));
+          if (status==std::future_status::ready) {
+            return result.get();
+          } else {
+            return R();
+          }
         }
       };
     }
@@ -153,7 +175,7 @@ namespace detail {
     using Wrapper = detail::FunctionWrapper<FunctorT>;
     _server.bind(
         name,
-        Wrapper::WrapSyncCall(_sync_io_context, std::forward<FunctorT>(functor)));
+        Wrapper::WrapSyncCall(_shutdown_in_progress, _sync_io_context, std::forward<FunctorT>(functor)));
   }
 
   template <typename FunctorT>

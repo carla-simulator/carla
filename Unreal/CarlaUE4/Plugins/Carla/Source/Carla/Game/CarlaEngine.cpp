@@ -164,10 +164,9 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
           }
           case carla::multigpu::MultiGPUCommand::ENABLE_ROS:
           {
-            // get the sensor id
-            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
+            auto stream_actor_id = *(reinterpret_cast<carla::streaming::detail::stream_actor_id_type *>(Data.data()));
             // query dispatcher
-            Server.GetStreamingServer().EnableForROS(sensor_id);
+            Server.GetStreamingServer().EnableForROS(stream_actor_id);
             // return a 'true'
             bool res = true;
             carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
@@ -177,10 +176,9 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
           }
           case carla::multigpu::MultiGPUCommand::DISABLE_ROS:
           {
-            // get the sensor id
-            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
+            auto stream_actor_id = *(reinterpret_cast<carla::streaming::detail::stream_actor_id_type *>(Data.data()));
             // query dispatcher
-            Server.GetStreamingServer().DisableForROS(sensor_id);
+            Server.GetStreamingServer().DisableForROS(stream_actor_id);
             // return a 'true'
             bool res = true;
             carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
@@ -190,10 +188,9 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
           }
           case carla::multigpu::MultiGPUCommand::IS_ENABLED_ROS:
           {
-            // get the sensor id
-            auto sensor_id = *(reinterpret_cast<carla::streaming::detail::stream_id_type *>(Data.data()));
+            auto stream_actor_id = *(reinterpret_cast<carla::streaming::detail::stream_actor_id_type *>(Data.data()));
             // query dispatcher
-            bool res = Server.GetStreamingServer().IsEnabledForROS(sensor_id);
+            bool res = Server.GetStreamingServer().IsEnabledForROS(stream_actor_id);
             carla::Buffer buf(reinterpret_cast<unsigned char *>(&res), (size_t) sizeof(bool));
             carla::log_info("responding IS_ENABLED_ROS with: ", res);
             Secondary->Write(std::move(buf));
@@ -205,7 +202,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       Secondary = std::make_shared<carla::multigpu::Secondary>(PrimaryIP, PrimaryPort, CommandExecutor);
       Secondary->Connect();
       // set this server in synchronous mode
-      bSynchronousMode = true;
+      Server.EnableSynchronousMode();
     }
     else
     {
@@ -284,21 +281,24 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 
     if (bIsPrimaryServer)
     {
-      if (CurrentEpisode && !bSynchronousMode && SecondaryServer->HasClientsConnected())
-      {
-        // set synchronous mode
-        CurrentSettings.bSynchronousMode = true;
-        CurrentSettings.FixedDeltaSeconds = 1 / 20.0f;
-        OnEpisodeSettingsChanged(CurrentSettings);
-        CurrentEpisode->ApplySettings(CurrentSettings);
-      }
-
       // process RPC commands
       do
       {
         Server.RunSome(1u);
       }
-      while (bSynchronousMode && !Server.TickCueReceived());
+      while (Server.IsSynchronousModeActive() && !Server.TickCueReceived());
+
+      if ( (CurrentEpisode && !Server.IsSynchronousModeActive() && SecondaryServer->HasClientsConnected())
+          || ( Server.IsSynchronousModeActive() && (!CurrentSettings.FixedDeltaSeconds || !CurrentSettings.bSynchronousMode) ) )
+      {
+        // ensure the delta seconds are also considered in this run
+        DeltaSeconds = Server.GetTickDeltaSeconds();
+
+        CurrentSettings.bSynchronousMode = true;
+        CurrentSettings.FixedDeltaSeconds = DeltaSeconds;
+        OnEpisodeSettingsChanged(CurrentSettings);
+        CurrentEpisode->ApplySettings(CurrentSettings);
+      }
     }
     else
     {
@@ -385,7 +385,12 @@ void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
 {
   CurrentSettings = FEpisodeSettings(Settings);
 
-  bSynchronousMode = Settings.bSynchronousMode;
+  if (Settings.bSynchronousMode && !Server.IsSynchronousModeActive()) {
+    Server.EnableSynchronousMode();
+  }
+  else if (!Settings.bSynchronousMode && Server.IsSynchronousModeActive()) {
+    Server.DisableSynchronousMode();
+  }
 
   if (GEngine && GEngine->GameViewport)
   {

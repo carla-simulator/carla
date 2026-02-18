@@ -75,16 +75,24 @@ namespace streaming {
       return _server.GetToken(sensor_id);
     }
 
-    void EnableForROS(stream_id sensor_id) {
-      _server.EnableForROS(sensor_id);
+    void SetROS2TopicVisibilityDefaultEnabled(bool _topic_visibility_default_enabled) {
+      _server.SetROS2TopicVisibilityDefaultEnabled(_topic_visibility_default_enabled);
     }
 
-    void DisableForROS(stream_id sensor_id) {
-      _server.DisableForROS(sensor_id);
+    void EnableForROS(detail::stream_actor_id_type stream_actor_id) {
+      _server.EnableForROS(stream_actor_id);
     }
 
-    bool IsEnabledForROS(stream_id sensor_id) {
-      return _server.IsEnabledForROS(sensor_id);
+    void DisableForROS(detail::stream_actor_id_type stream_actor_id) {
+      _server.DisableForROS(stream_actor_id);
+    }
+
+    bool IsEnabledForROS(detail::stream_actor_id_type stream_actor_id) {
+      return _server.IsEnabledForROS(stream_actor_id);
+    }
+    
+    std::shared_ptr<detail::Dispatcher> GetDispatcher() const {
+      return _server.GetDispatcher();
     }
 
   private:

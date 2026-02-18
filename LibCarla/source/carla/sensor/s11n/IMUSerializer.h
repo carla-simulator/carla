@@ -43,7 +43,8 @@ namespace s11n {
       return MsgPack::UnPack<Data>(message.begin(), message.size());
     }
 
-    static SharedPtr<SensorData> Deserialize(RawData &&data);
+    static SharedPtr<SensorData> Deserialize(RawData DESERIALIZE_DECL_DATA(data));
+
   };
 
   template <typename SensorT>

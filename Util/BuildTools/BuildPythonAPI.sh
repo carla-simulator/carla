@@ -101,7 +101,11 @@ if ${BUILD_PYTHONAPI} ; then
   
   for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     log "Building Python API wheel for Python ${PY_VERSION}."
-    /usr/bin/env python${PY_VERSION} -m build --wheel --outdir dist/.tmp .
+    
+    # Building the RSS variant adds files to SOURCES.txt we do not want included in a normal build
+    rm -Rf source/carla.egg-info 
+   
+   /usr/bin/env python${PY_VERSION} -m build --wheel --outdir dist/.tmp .
 
     if ${INSTALL_PYTHONAPI} ; then
       log "Installing Python API for Python ${PY_VERSION}."

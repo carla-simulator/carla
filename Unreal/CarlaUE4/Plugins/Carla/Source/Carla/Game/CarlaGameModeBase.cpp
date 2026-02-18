@@ -190,6 +190,11 @@ void ACarlaGameModeBase::BeginPlay()
   LoadMapLayer(GameInstance->GetCurrentMapLayer());
   ReadyToRegisterObjects = true;
 
+  if (true) { /// @todo If semantic segmentation enabled.
+    ATagger::TagActorsInLevel(*World, true);
+    TaggerDelegate->SetSemanticSegmentationEnabled();
+  }
+
   // HACK: fix transparency see-through issues
   // The problem: transparent objects are visible through walls.
   // This is due to a weird interaction between the SkyAtmosphere component,

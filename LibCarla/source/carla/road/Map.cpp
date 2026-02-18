@@ -1161,10 +1161,10 @@ namespace road {
 
           next_waypoint = next.front();
           geom::Transform next_transform = ComputeTransform(next_waypoint);
-          double angle = geom::Math::GetVectorAngle(
+          double abs_angle = geom::Math::GetVectorAngleAbs(
               current_transform.GetForwardVector(), next_transform.GetForwardVector());
 
-          if (std::abs(angle) > angle_threshold ||
+          if (abs_angle > angle_threshold ||
               std::abs(current_waypoint.s - next_waypoint.s) > max_segment_length) {
             AddElementToRtree(
                 rtree_elements,

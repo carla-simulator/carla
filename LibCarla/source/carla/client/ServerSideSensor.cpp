@@ -55,14 +55,14 @@ namespace client {
     listening_mask.reset(0);
   }
 
-  void ServerSideSensor::Send(std::string message) {
+  void ServerSideSensor::Send(const rpc::CustomV2XBytes &data) {
     log_debug("calling sensor Send() ", GetDisplayId());
     if (GetActorDescription().description.id != "sensor.other.v2x_custom")
     {
       log_warning("Send methods are not supported on non-V2x sensors (sensor.other.v2x_custom).");
       return;
     }
-    GetEpisode().Lock()->Send(*this,message);
+    GetEpisode().Lock()->Send(*this,data);
   }
 
   void ServerSideSensor::EnableGBuffers(bool bEnabled) {
@@ -92,18 +92,6 @@ namespace client {
     }
     GetEpisode().Lock()->UnSubscribeFromGBuffer(*this, GBufferId);
     listening_mask.reset(GBufferId + 1);
-  }
-
-  void ServerSideSensor::EnableForROS() {
-    GetEpisode().Lock()->EnableForROS(*this);
-  }
-
-  void ServerSideSensor::DisableForROS() {
-    GetEpisode().Lock()->DisableForROS(*this);
-  }
-
-  bool ServerSideSensor::IsEnabledForROS(){
-    return GetEpisode().Lock()->IsEnabledForROS(*this);
   }
 
   bool ServerSideSensor::Destroy() {

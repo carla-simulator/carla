@@ -6,13 +6,7 @@
 
 #pragma once
 
-#include "carla/Debug.h"
-#include "carla/Exception.h"
-#include "carla/sensor/SensorData.h"
-
-#include <exception>
-#include <iterator>
-#include <type_traits>
+#include "carla/sensor/data/ArrayConst.h"
 
 namespace carla {
 namespace sensor {
@@ -20,23 +14,23 @@ namespace data {
 
   /// Base class for all the sensor data consisting of an array of items.
   template <typename T>
-  class Array : public SensorData {
+  class Array : public ArrayConst<T> {
+  private:
+    using ArrayConst<T>::_data;
+    using ArrayConst<T>::_offset;
+
   public:
 
-    using value_type = T;
+    using value_type = typename ArrayConst<T>::value_type;
     using iterator = value_type *;
-    using const_iterator = typename std::add_const<value_type>::type *;
+    using const_iterator = typename ArrayConst<T>::const_iterator;
     using reverse_iterator = std::reverse_iterator<iterator>;
-    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
-    using size_type = size_t;
+    using const_reverse_iterator = typename ArrayConst<T>::const_reverse_iterator;
+    using size_type = typename ArrayConst<T>::size_type;
     using pointer = value_type *;
-    using const_pointer = typename std::add_const<value_type>::type *;
+    using const_pointer = typename ArrayConst<T>::const_pointer;
     using reference = value_type &;
-    using const_reference = typename std::add_const<value_type>::type &;
-
-    iterator begin() {
-      return reinterpret_cast<iterator>(_data.begin() + _offset);
-    }
+    using const_reference = typename ArrayConst<T>::const_reference;
 
     const_iterator cbegin() const {
       return reinterpret_cast<const_iterator>(_data.begin() + _offset);
@@ -46,10 +40,6 @@ namespace data {
       return cbegin();
     }
 
-    iterator end() {
-      return reinterpret_cast<iterator>(_data.end());
-    }
-
     const_iterator cend() const {
       return reinterpret_cast<const_iterator>(_data.end());
     }
@@ -57,21 +47,12 @@ namespace data {
     const_iterator end() const {
       return cend();
     }
-
-    reverse_iterator rbegin() {
-      return reverse_iterator(begin());
-    }
-
     const_reverse_iterator crbegin() const {
       return const_reverse_iterator(cbegin());
     }
 
     const_reverse_iterator rbegin() const {
       return crbegin();
-    }
-
-    reverse_iterator rend() {
-      return reverse_iterator(end());
     }
 
     const_reverse_iterator crend() const {
@@ -82,13 +63,24 @@ namespace data {
       return crend();
     }
 
-    bool empty() const {
-      return begin() == end();
+    iterator begin() {
+      return reinterpret_cast<iterator>(const_cast<RawData*>(&_data)->begin() + _offset);
     }
 
-    size_type size() const {
-      DEBUG_ASSERT(std::distance(begin(), end()) >= 0);
-      return static_cast<size_type>(std::distance(begin(), end()));
+    iterator end() {
+      return reinterpret_cast<iterator>(const_cast<RawData*>(&_data)->end());
+    }
+
+    reverse_iterator rbegin() {
+      return reverse_iterator(begin());
+    }
+
+    reverse_iterator rend() {
+      return reverse_iterator(end());
+    }
+
+    bool empty() const {
+      return begin() == end();
     }
 
     value_type *data() {
@@ -99,11 +91,18 @@ namespace data {
       return begin();
     }
 
-    reference operator[](size_type pos) {
+    const_reference operator[](size_type pos) const {
       return data()[pos];
     }
 
-    const_reference operator[](size_type pos) const {
+    const_reference at(size_type pos) const {
+      if (!(pos < size())) {
+        throw_exception(std::out_of_range("Array index out of range"));
+      }
+      return operator[](pos);
+    }
+
+    reference operator[](size_type pos) {
       return data()[pos];
     }
 
@@ -114,37 +113,19 @@ namespace data {
       return operator[](pos);
     }
 
-    const_reference at(size_type pos) const {
-      if (!(pos < size())) {
-        throw_exception(std::out_of_range("Array index out of range"));
-      }
-      return operator[](pos);
-    }
+    using ArrayConst<T>::size;
 
   protected:
 
     template <typename FuncT>
-    explicit Array(RawData &&data, FuncT get_offset)
-      : SensorData(data),
-        _data(std::move(data)),
-        _offset(get_offset(_data)) {
-      DEBUG_ASSERT(_data.size() >= _offset);
-      DEBUG_ASSERT((_data.size() - _offset) % sizeof(T) == 0u);
-      DEBUG_ASSERT(begin() <= end());
-    }
+    explicit Array(RawData DESERIALIZE_DECL_DATA(data), FuncT get_offset)
+      : ArrayConst<T>(DESERIALIZE_MOVE_DATA(data), get_offset) {}
+    
+    explicit Array(size_t offset, RawData DESERIALIZE_DECL_DATA(data))
+      : ArrayConst<T>(offset, DESERIALIZE_MOVE_DATA(data)) {}
 
-    explicit Array(size_t offset, RawData &&data)
-      : Array(std::move(data), [offset](const RawData &) { return offset; }) {}
+    using ArrayConst<T>::GetRawData;
 
-    const RawData &GetRawData() const {
-      return _data;
-    }
-
-  private:
-
-    RawData _data;
-
-    const size_t _offset;
   };
 
 } // namespace data

@@ -42,8 +42,8 @@ namespace data {
     friend s11n::GBufferFloatSerializer;
     friend SerializerNormals;
 
-    explicit ImageTmpl(RawData &&data)
-      : Super(Serializer::header_offset, std::move(data)) {
+    explicit ImageTmpl(RawData DESERIALIZE_DECL_DATA(data))
+      : Super(Serializer::header_offset, DESERIALIZE_MOVE_DATA(data)) {
       DEBUG_ASSERT(GetWidth() * GetHeight() == Super::size());
     }
 

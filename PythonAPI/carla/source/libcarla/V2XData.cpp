@@ -4,11 +4,14 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include <carla/sensor/data/V2XData.h>
-#include <carla/sensor/data/LibITS.h>
 #include <iostream>
 #include <ostream>
 #include <vector>
+#include <Python.h>
+
+#include <carla/sensor/data/LibITS.h>
+#include <carla/sensor/data/V2XData.h>
+#include <carla/sensor/data/V2XEvent.h>
 
 /**********************************************************************************************/
 // Functions to convert CAM message from V2X sensor to python dict
@@ -76,7 +79,7 @@ std::string GetSemiOrientationString(const long orientation)
   }
 }
 
-std::string GetAltitudeConfidenceString(ITSContainer::AltitudeConfidence_t altitudeConfidence)
+std::string GetAltitudeConfidenceString(const ITSContainer::AltitudeConfidence_t altitudeConfidence)
 {
   switch(altitudeConfidence)
   {
@@ -114,7 +117,7 @@ std::string GetAltitudeConfidenceString(ITSContainer::AltitudeConfidence_t altit
       return "AltitudeConfidence_unavailable";
   }
 }
-static boost::python::dict GetReferenceContainer(const CAM_t message)
+static boost::python::dict GetReferenceContainer(const CAM_t &message)
 {
   boost::python::dict ReferencePosition;
   ITSContainer::ReferencePosition_t ref = message.cam.camParameters.basicContainer.referencePosition;
@@ -130,7 +133,7 @@ static boost::python::dict GetReferenceContainer(const CAM_t message)
   Altitude["Altitude Confidence"] = GetAltitudeConfidenceString(ref.altitude.altitudeConfidence);
   return ReferencePosition;
 }
-static boost::python::dict GetBasicContainer(const CAM_t message)
+static boost::python::dict GetBasicContainer(const CAM_t &message)
 {
     boost::python::dict BasicContainer;
     BasicContainer["Station Type"] = GetStationTypeString(message.cam.camParameters.basicContainer.stationType);
@@ -138,7 +141,7 @@ static boost::python::dict GetBasicContainer(const CAM_t message)
     return BasicContainer;
 }
 
-std::string GetHeadingConfidenceString(ITSContainer::HeadingConfidence_t confidence)
+std::string GetHeadingConfidenceString(const ITSContainer::HeadingConfidence_t confidence)
 {
     switch (confidence)
     {
@@ -153,7 +156,7 @@ std::string GetHeadingConfidenceString(ITSContainer::HeadingConfidence_t confide
     }
 }
 
-std::string GetSpeedConfidenceString(ITSContainer::SpeedConfidence_t confidence)
+std::string GetSpeedConfidenceString(const ITSContainer::SpeedConfidence_t confidence)
 {
     switch (confidence)
     {
@@ -168,7 +171,7 @@ std::string GetSpeedConfidenceString(ITSContainer::SpeedConfidence_t confidence)
     }
 }
 
-std::string GetVehicleLengthConfidenceString(ITSContainer::VehicleLengthConfidenceIndication_t confidence)
+std::string GetVehicleLengthConfidenceString(const ITSContainer::VehicleLengthConfidenceIndication_t confidence)
 {
     switch (confidence)
     {
@@ -185,7 +188,7 @@ std::string GetVehicleLengthConfidenceString(ITSContainer::VehicleLengthConfiden
     }
 }
 
-std::string GetAccelerationConfidenceString(ITSContainer::AccelerationConfidence_t confidence)
+std::string GetAccelerationConfidenceString(const ITSContainer::AccelerationConfidence_t confidence)
 {
     switch (confidence)
     {
@@ -198,7 +201,7 @@ std::string GetAccelerationConfidenceString(ITSContainer::AccelerationConfidence
     }
 }
 
-std::string GetCurvatureConfidenceString(ITSContainer::CurvatureConfidence_t confidence)
+std::string GetCurvatureConfidenceString(const ITSContainer::CurvatureConfidence_t confidence)
 {
     switch (confidence)
     {
@@ -221,7 +224,7 @@ std::string GetCurvatureConfidenceString(ITSContainer::CurvatureConfidence_t con
     }
 }
 
-std::string GetYawRateConfidenceString(ITSContainer::YawRateConfidence_t confidence)
+std::string GetYawRateConfidenceString(const ITSContainer::YawRateConfidence_t confidence)
 {
     switch (confidence)
     {
@@ -246,7 +249,7 @@ std::string GetYawRateConfidenceString(ITSContainer::YawRateConfidence_t confide
     }
 }
 
-std::string GetSteeringWheelConfidenceString(ITSContainer::SteeringWheelAngleConfidence_t confidence)
+std::string GetSteeringWheelConfidenceString(const ITSContainer::SteeringWheelAngleConfidence_t confidence)
 {
     switch (confidence)
     {
@@ -259,7 +262,7 @@ std::string GetSteeringWheelConfidenceString(ITSContainer::SteeringWheelAngleCon
     }
 }
 
-static boost::python::dict GetBVCHighFrequency(const CAM_t message)
+static boost::python::dict GetBVCHighFrequency(const CAM_t &message)
 {
     boost::python::dict BVCHighFrequency;
     CAMContainer::BasicVehicleContainerHighFrequency_t bvchf = message.cam.camParameters.highFrequencyContainer.basicVehicleContainerHighFrequency;
@@ -380,12 +383,12 @@ static boost::python::dict GetBVCHighFrequency(const CAM_t message)
     return BVCHighFrequency;
 }
 
-static boost::python::list GetProtectedCommunicationZone(const CAMContainer::RSUContainerHighFrequency_t rsuMessage)
+static boost::python::list GetProtectedCommunicationZone(const CAMContainer::RSUContainerHighFrequency_t &rsuMessage)
 {
     boost::python::list PCZlist;
 
-    for (ITSContainer::ProtectedCommunicationZone_t data : rsuMessage.protectedCommunicationZonesRSU.list)
-    {
+    for (auto i=0u; i< rsuMessage.protectedCommunicationZonesRSU.ProtectedCommunicationZoneCount; ++i) {
+        ITSContainer::ProtectedCommunicationZone_t const &data=rsuMessage.protectedCommunicationZonesRSU.data[i];
         boost::python::dict PCZDict;
         PCZDict["Protected Zone Type"] = data.protectedZoneType;
         if (data.expiryTimeAvailable)
@@ -409,7 +412,7 @@ static boost::python::list GetProtectedCommunicationZone(const CAMContainer::RSU
     }
     return PCZlist;
 }
-static boost::python::dict GetRSUHighFrequency(const CAM_t message)
+static boost::python::dict GetRSUHighFrequency(const CAM_t &message)
 {
     boost::python::dict RSU;
     CAMContainer::RSUContainerHighFrequency_t rsu = message.cam.camParameters.highFrequencyContainer.rsuContainerHighFrequency;
@@ -417,7 +420,7 @@ static boost::python::dict GetRSUHighFrequency(const CAM_t message)
     return RSU;
 }
 
-static boost::python::dict GetHighFrequencyContainer(const CAM_t message)
+static boost::python::dict GetHighFrequencyContainer(const CAM_t &message)
 {
     boost::python::dict HFC;
     CAMContainer::HighFrequencyContainer_t hfc = message.cam.camParameters.highFrequencyContainer;
@@ -436,7 +439,8 @@ static boost::python::dict GetHighFrequencyContainer(const CAM_t message)
     }
     return HFC;
 }
-std::string GetVehicleRoleString(ITSContainer::VehicleRole_t vehicleRole)
+
+std::string GetVehicleRoleString(const ITSContainer::VehicleRole_t &vehicleRole)
 {
     switch (vehicleRole)
     {
@@ -475,12 +479,14 @@ std::string GetVehicleRoleString(ITSContainer::VehicleRole_t vehicleRole)
     }
 }
 
-boost::python::list GetPathHistory(const ITSContainer::PathHistory_t pathHistory)
+boost::python::list GetPathHistory(const ITSContainer::PathHistory_t &pathHistory)
 {
 
     boost::python::list PathHistoryList;
-    for (ITSContainer::PathPoint_t pathPoint : pathHistory.data)
+
+    for (auto i=0u; i<pathHistory.NumberOfPathPoint; ++i)
     {
+        ITSContainer::PathPoint_t const &pathPoint = pathHistory.data[i];
         boost::python::dict PathHistory;
         PathHistory["Delta Latitude"] = pathPoint.pathPosition.deltaLatitude;
         PathHistory["Delta Longitude"] = pathPoint.pathPosition.deltaLongitude;
@@ -497,7 +503,7 @@ boost::python::list GetPathHistory(const ITSContainer::PathHistory_t pathHistory
     }
     return PathHistoryList;
 }
-boost::python::dict GetBVCLowFrequency(const CAMContainer::BasicVehicleContainerLowFrequency_t bvc)
+boost::python::dict GetBVCLowFrequency(const CAMContainer::BasicVehicleContainerLowFrequency_t &bvc)
 {
     boost::python::dict BVC;
     BVC["Vehicle Role"] = GetVehicleRoleString(bvc.vehicleRole);
@@ -513,7 +519,7 @@ boost::python::dict GetBVCLowFrequency(const CAMContainer::BasicVehicleContainer
     return BVC;
 }
 
-boost::python::dict GetLowFrequencyContainer(const CAM_t message)
+boost::python::dict GetLowFrequencyContainer(const CAM_t &message)
 {
     boost::python::dict LFC = boost::python::dict();
     CAMContainer::LowFrequencyContainer_t lfc = message.cam.camParameters.lowFrequencyContainer;
@@ -529,7 +535,7 @@ boost::python::dict GetLowFrequencyContainer(const CAM_t message)
     }
     return LFC;
 }
-static boost::python::dict GetCAMParameters(const CAM_t message)
+static boost::python::dict GetCAMParameters(const CAM_t &message)
 {
     boost::python::dict CAMParams;
     try
@@ -546,7 +552,7 @@ static boost::python::dict GetCAMParameters(const CAM_t message)
     return CAMParams;
 }
 
-static boost::python::dict GetCoopAwarness(const CAM_t message)
+static boost::python::dict GetCoopAwarness(const CAM_t &message)
 {
 
     boost::python::dict Coop;
@@ -581,7 +587,50 @@ std::string GetMessageIDString(const long messageId)
     }
 }
 
-static boost::python::dict GetMessageHeader(const ITSContainer::ItsPduHeader_t header)
+static boost::python::object GetCustomV2XBytes(carla::rpc::CustomV2XBytes &self) {
+#if PY_MAJOR_VERSION >= 3
+  auto *ptr = PyBytes_FromStringAndSize(reinterpret_cast<char *>(self.bytes.data()), self.data_size);
+#else
+  auto *ptr = PyString_FromStringAndSize(reinterpret_cast<char *>(self.bytes.data()), self.data_size);
+#endif
+  return boost::python::object(boost::python::handle<>(ptr));
+}
+
+static void SetCustomV2XBytes(carla::rpc::CustomV2XBytes &self, boost::python::object const &object) {
+  if ( PyObject_CheckBuffer(object.ptr()) == 0 ) {
+    std::cerr << "SetCustomV2XBytes: object does not support buffer protocol!" << std::endl;
+    return;
+  }
+  Py_buffer buffer;
+  if (PyObject_GetBuffer(object.ptr(), &buffer, PyBUF_SIMPLE) == -1) {
+    std::cerr << "SetCustomV2XBytes: PyObject_GetBuffer failed!" << std::endl;
+    return;
+  }
+  self.data_size = static_cast<uint8_t>(self.bytes.max_size());
+  auto const object_len = static_cast<size_t>(boost::python::len(object));
+  if ( object_len < self.data_size ) {
+    self.data_size = static_cast<uint8_t>(object_len);
+  }
+  PyBuffer_ToContiguous(self.bytes.data(), &buffer, self.data_size, 'C');
+  std::fill(self.bytes.begin()+self.data_size, self.bytes.begin()+self.bytes.max_size(), 0);
+  PyBuffer_Release(&buffer);
+}
+
+static std::string GetCustomV2XString(carla::rpc::CustomV2XBytes const &self) {
+  return std::string(reinterpret_cast<char const *>(self.bytes.data()), self.data_size);
+}
+
+static void SetCustomV2XString(carla::rpc::CustomV2XBytes &self, std::string const &str) {
+  self.data_size = static_cast<uint8_t>(self.bytes.max_size());
+  auto const object_len = str.length();
+  if ( object_len < self.data_size ) {
+    self.data_size = static_cast<uint8_t>(object_len);
+  }
+  memcpy(self.bytes.data(), str.data(), self.data_size);
+  std::fill(self.bytes.begin()+self.data_size, self.bytes.begin()+self.bytes.max_size(), 0);
+}
+
+static boost::python::dict GetMessageHeader(const ITSContainer::ItsPduHeader_t &header)
 {
     boost::python::dict Header;
     Header["Protocol Version"] = header.protocolVersion;
@@ -590,7 +639,7 @@ static boost::python::dict GetMessageHeader(const ITSContainer::ItsPduHeader_t h
     return Header;
 }
 
-boost::python::dict GetCAMMessage(const carla::sensor::data::CAMData message)
+boost::python::dict GetCAMMessage(const carla::sensor::data::CAMData &message)
 {
     boost::python::dict CAM;
     CAM_t CAMMessage = message.Message;
@@ -599,11 +648,115 @@ boost::python::dict GetCAMMessage(const carla::sensor::data::CAMData message)
     return CAM;
 }
 
-boost::python::dict GetCustomV2XMessage(const carla::sensor::data::CustomV2XData message)
+boost::python::dict GetCustomV2XBytesDict(carla::rpc::CustomV2XBytes &data)
+{
+    boost::python::dict CustomV2XBytes;
+    CustomV2XBytes["DataSize"] = data.data_size;
+    CustomV2XBytes["MaxDataSize"] = data.max_data_size();
+    CustomV2XBytes["Bytes"] = GetCustomV2XBytes(data);
+    return CustomV2XBytes;
+}
+
+boost::python::dict GetCustomV2XMessageDict(const carla::sensor::data::CustomV2XData &message)
 {
     boost::python::dict CustomV2X;
     CustomV2XM V2XMessage = message.Message;
     CustomV2X["Header"] = GetMessageHeader(V2XMessage.header);
-    CustomV2X["Message"] = std::string(V2XMessage.message);
+    CustomV2X["Message"] = GetCustomV2XBytesDict(V2XMessage.data);
     return CustomV2X;
 }
+
+static boost::python::dict GetCAMData(const carla::sensor::data::CAMData message)
+{
+    boost::python::dict myDict;
+    try
+    {
+        myDict["Power"] = message.Power;
+        myDict["Message"] = GetCAMMessage(message);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
+    return myDict;
+}
+
+static boost::python::dict GetCustomV2XDataDict(const carla::sensor::data::CustomV2XData &message)
+{
+    boost::python::dict myDict;
+    try
+    {
+        myDict["Power"] = message.Power;
+        myDict["Message"] = GetCustomV2XMessageDict(message);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
+    return myDict;
+}
+
+
+namespace carla {
+namespace rpc {
+
+std::ostream &operator<<(std::ostream &out, const CustomV2XBytes &bytes) {
+    out << "CustomV2XData("
+        << "max_data_size=" << std::to_string(bytes.max_data_size())
+        << ", data_size=" << std::to_string(bytes.data_size)
+        << std::hex << ", bytes=["; 
+    for ( size_t i = 0; i < bytes.data_size && i < bytes.max_data_size(); ++i) {
+        if ( i > 0 ) {
+            out << ", ";
+        }
+        out << static_cast<int>(bytes.bytes[i]);
+    }
+    out << "])" << std::dec;
+    return out;
+}
+
+} // namespace rpc
+} // namespace carla
+
+namespace carla {
+namespace sensor {
+namespace data {
+
+  std::ostream &operator<<(std::ostream &out, const CAMEvent &data) {
+    out << "CAMEvent(frame=" << std::to_string(data.GetFrame())
+        << ", timestamp=" << std::to_string(data.GetTimestamp())
+        << ", message_count=" << std::to_string(data.GetMessageCount())
+        << ')';
+    return out;
+  }
+
+    std::ostream &operator<<(std::ostream &out, const CustomV2XEvent &data) {
+    out << "CustomV2XEvent(frame=" << std::to_string(data.GetFrame())
+        << ", timestamp=" << std::to_string(data.GetTimestamp())
+        << ", message_count=" << std::to_string(data.GetMessageCount())
+        << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const CAMData &data) {
+    out << "CAMData(power=" << std::to_string(data.Power)
+        << ", stationId=" << std::to_string(data.Message.header.stationID)
+        << ", messageId=" << std::to_string(data.Message.header.messageID)
+        << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const CustomV2XData &data) {
+    out << "CustomV2XData(power=" << std::to_string(data.Power)
+        << ", stationId=" << std::to_string(data.Message.header.stationID)
+        << ", messageId=" << std::to_string(data.Message.header.messageID)
+        << ", data=" << data.Message.data
+        << ')';
+    return out;
+  }
+
+} // namespace s11n
+} // namespace sensor
+} // namespace carla

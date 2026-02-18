@@ -7,79 +7,18 @@
 #include <carla/geom/BoundingBox.h>
 #include <carla/geom/GeoLocation.h>
 #include <carla/geom/GeoProjectionsParams.h>
+#include <carla/geom/Acceleration.h>
+#include <carla/geom/AngularVelocity.h>
 #include <carla/geom/Location.h>
 #include <carla/geom/Rotation.h>
+#include <carla/geom/Quaternion.h>
 #include <carla/geom/Transform.h>
 #include <carla/geom/Vector2D.h>
 #include <carla/geom/Vector3D.h>
+#include <carla/geom/Velocity.h>
 
 #include <boost/python/implicit.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-
-#include <ostream>
-
-namespace carla {
-namespace geom {
-
-  template <typename T>
-  static void WriteVector2D(std::ostream &out, const char *name, const T &vector2D) {
-    out << name
-        << "(x=" << std::to_string(vector2D.x)
-        << ", y=" << std::to_string(vector2D.y) << ')';
-  }
-
-  template <typename T>
-  static void WriteVector3D(std::ostream &out, const char *name, const T &vector3D) {
-    out << name
-        << "(x=" << std::to_string(vector3D.x)
-        << ", y=" << std::to_string(vector3D.y)
-        << ", z=" << std::to_string(vector3D.z) << ')';
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Vector2D &vector2D) {
-    WriteVector2D(out, "Vector2D", vector2D);
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Vector3D &vector3D) {
-    WriteVector3D(out, "Vector3D", vector3D);
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Location &location) {
-    WriteVector3D(out, "Location", location);
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Rotation &rotation) {
-    out << "Rotation(pitch=" << std::to_string(rotation.pitch)
-        << ", yaw=" << std::to_string(rotation.yaw)
-        << ", roll=" << std::to_string(rotation.roll) << ')';
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const Transform &transform) {
-    out << "Transform(" << transform.location << ", " << transform.rotation << ')';
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const BoundingBox &box) {
-    out << "BoundingBox(" << box.location << ", ";
-    WriteVector3D(out, "Extent", box.extent);
-    out << ", " << box.rotation;
-    out << ')';
-    return out;
-  }
-
-  std::ostream &operator<<(std::ostream &out, const GeoLocation &geo_location) {
-    out << "GeoLocation(latitude=" << std::to_string(geo_location.latitude)
-        << ", longitude=" << std::to_string(geo_location.longitude)
-        << ", altitude=" << std::to_string(geo_location.altitude) << ')';
-    return out;
-  }
-
-} // namespace geom
-} // namespace carla
 
 static void TransformList(const carla::geom::Transform &self, boost::python::list &list) {
   auto length = boost::python::len(list);
@@ -97,11 +36,11 @@ static boost::python::list BuildMatrix(const std::array<float, 16> &m) {
 }
 
 static auto GetTransformMatrix(const carla::geom::Transform &self) {
-  return BuildMatrix(self.GetMatrix());
+  return BuildMatrix(self.TransformationMatrix());
 }
 
 static auto GetInverseTransformMatrix(const carla::geom::Transform &self) {
-  return BuildMatrix(self.GetInverseMatrix());
+  return BuildMatrix(self.InverseTransformationMatrix());
 }
 
 static auto Cross(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
@@ -177,7 +116,12 @@ void export_geom() {
     .def_readwrite("z", &cg::Vector3D::z)
     .def("length", &cg::Vector3D::Length)
     .def("squared_length", &cg::Vector3D::SquaredLength)
-    .def("make_unit_vector", &cg::Vector3D::MakeUnitVector)
+    .def("make_unit_vector", +[](cg::Vector3D const&self) {
+      return self.MakeUnitVector();
+     })
+    .def("make_unit_vector", +[](cg::Vector3D const&self, float const epsilon) {
+      return self.MakeUnitVector(epsilon);
+     }, arg("epsilon"))
     .def("cross", &Cross, (arg("vector")))
     .def("dot", &Dot, (arg("vector")))
     .def("dot_2d", &Dot2D, (arg("vector")))
@@ -215,6 +159,42 @@ void export_geom() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<cg::Acceleration, bases<cg::Vector3D>>("Acceleration")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def(init<const cg::Vector3D &>((arg("rhs"))))
+    .add_property("x", +[](const cg::Acceleration &self) { return self.x; }, +[](cg::Acceleration &self, float x) { self.x = x; })
+    .add_property("y", +[](const cg::Acceleration &self) { return self.y; }, +[](cg::Acceleration &self, float y) { self.y = y; })
+    .add_property("z", +[](const cg::Acceleration &self) { return self.z; }, +[](cg::Acceleration &self, float z) { self.z = z; })
+    .def("__eq__", &cg::Acceleration::operator==)
+    .def("__ne__", &cg::Acceleration::operator!=)
+    .def("__abs__", &cg::Acceleration::Abs)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::AngularVelocity, bases<cg::Vector3D>>("AngularVelocity")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def(init<const cg::Vector3D &>((arg("rhs"))))
+    .add_property("x", +[](const cg::AngularVelocity &self) { return self.x; }, +[](cg::AngularVelocity &self, float x) { self.x = x; })
+    .add_property("y", +[](const cg::AngularVelocity &self) { return self.y; }, +[](cg::AngularVelocity &self, float y) { self.y = y; })
+    .add_property("z", +[](const cg::AngularVelocity &self) { return self.z; }, +[](cg::AngularVelocity &self, float z) { self.z = z; })
+    .def("__eq__", &cg::AngularVelocity::operator==)
+    .def("__ne__", &cg::AngularVelocity::operator!=)
+    .def("__abs__", &cg::AngularVelocity::Abs)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::Velocity, bases<cg::Vector3D>>("Velocity")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def(init<const cg::Vector3D &>((arg("rhs"))))
+    .add_property("x", +[](const cg::Velocity &self) { return self.x; }, +[](cg::Velocity &self, float x) { self.x = x; })
+    .add_property("y", +[](const cg::Velocity &self) { return self.y; }, +[](cg::Velocity &self, float y) { self.y = y; })
+    .add_property("z", +[](const cg::Velocity &self) { return self.z; }, +[](cg::Velocity &self, float z) { self.z = z; })
+    .def("__eq__", &cg::Velocity::operator==)
+    .def("__ne__", &cg::Velocity::operator!=)
+    .def("__abs__", &cg::Velocity::Abs)
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<cg::Rotation>("Rotation")
     .def(init<float, float, float>((arg("pitch")=0.0f, arg("yaw")=0.0f, arg("roll")=0.0f)))
     .def_readwrite("pitch", &cg::Rotation::pitch)
@@ -225,6 +205,35 @@ void export_geom() {
     .def("get_up_vector", &cg::Rotation::GetUpVector)
     .def("__eq__", &cg::Rotation::operator==)
     .def("__ne__", &cg::Rotation::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::Quaternion>("Quaternion")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f, arg("w")=1.0f)))
+    .def(init<cg::Rotation>((arg("rotator"))))
+    .def_readwrite("x", &cg::Quaternion::x)
+    .def_readwrite("y", &cg::Quaternion::y)
+    .def_readwrite("z", &cg::Quaternion::z)
+    .def_readwrite("w", &cg::Quaternion::w)
+    .def("create_from_yaw_degree", &cg::Quaternion::CreateFromYawDegree, (arg("yaw")))
+    .def("identity", &cg::Quaternion::Identity)
+    .def("get_forward_vector", &cg::Quaternion::GetForwardVector)
+    .def("get_right_vector", &cg::Quaternion::GetRightVector)
+    .def("get_up_vector", &cg::Quaternion::GetUpVector)
+    .def("inverse", &cg::Quaternion::Inverse)
+    .def("length", &cg::Quaternion::Length)
+    .def("squared_length", &cg::Quaternion::SquaredLength)
+    .def("unit_quaternion", &cg::Quaternion::UnitQuaternion)
+    .def("rotation_matrix", &cg::Quaternion::RotationMatrix)
+    .def("inverse_rotation_matrix", &cg::Quaternion::InverseRotationMatrix)
+    .def("rotated_quaternion", &cg::Quaternion::RotatedQuaternion, (arg("quaternion")))
+    .def("yaw_rad", &cg::Quaternion::YawRad)
+    .def("yaw_degree", &cg::Quaternion::YawDegree)
+    .def("rotator", &cg::Quaternion::Rotator)
+    .def("rotated_vector", &cg::Quaternion::RotatedVector<cg::Vector3D>, (arg("vector")))
+    .def("inverse_rotated_vector", &cg::Quaternion::InverseRotatedVector<cg::Vector3D>, (arg("vector")))
+    .def("__eq__", &cg::Quaternion::operator==)
+    .def("__ne__", &cg::Quaternion::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 
@@ -294,6 +303,17 @@ void export_geom() {
     .def("__ne__", &cg::Ellipsoid::operator!=)
   ;
 
+  class_<cg::OffsetTransform>("GeoOffsetTransform")
+  .def(init<double, double, double, double>((arg("offset_x")=0.0, arg("offset_y")=0.0, arg("offset_z")=0.0, arg("offset_hdg")=0.0)))
+  .def_readwrite("offset_x", &cg::OffsetTransform::offset_x)
+  .def_readwrite("offset_y", &cg::OffsetTransform::offset_y)
+  .def_readwrite("offset_z", &cg::OffsetTransform::offset_z)
+  .def_readwrite("offset_cos_h", &cg::OffsetTransform::offset_cos_h)
+  .def_readwrite("offset_sin_h", &cg::OffsetTransform::offset_sin_h)
+  .def("ApplyTransformation", &cg::OffsetTransform::ApplyTransformation)
+  .def("__eq__", &cg::OffsetTransform::operator==)
+  ;
+
   class_<cg::TransverseMercatorParams>("GeoProjectionTM")
     .def(init<double, double, double, double, double, cg::Ellipsoid>(
       (arg("lat_0")=0.0, arg("lon_0")=0.0, arg("k")=1.0, arg("x_0")=0.0, arg("y_0")=0.0, arg("ellps")=cg::Ellipsoid())))
@@ -309,9 +329,30 @@ void export_geom() {
 
   class_<cg::UniversalTransverseMercatorParams>("GeoProjectionUTM")
     .def(init<int, bool, cg::Ellipsoid>((arg("zone")=31, arg("north")=true, arg("ellps")=cg::Ellipsoid())))
+    .def(init<int, bool, cg::Ellipsoid, boost::optional<cg::OffsetTransform>>((arg("zone")=31, arg("north")=true, arg("ellps")=cg::Ellipsoid(), arg("offset")=boost::python::object())))
     .def_readwrite("zone", &cg::UniversalTransverseMercatorParams::zone)
     .def_readwrite("north", &cg::UniversalTransverseMercatorParams::north)
     .def_readwrite("ellps", &cg::UniversalTransverseMercatorParams::ellps)
+    .add_property("offset",
+        +[](const cg::UniversalTransverseMercatorParams &self) {
+          return OptionalToPythonObject(self.offset); //returns None or OffsetTransform 
+        },
+         +[](cg::UniversalTransverseMercatorParams& self, object value) {
+            if (value.is_none()) {
+                self.offset = boost::none;
+            } else {
+                extract<cg::OffsetTransform> ex(value);
+                if (!ex.check()) {
+                    PyErr_SetString(
+                        PyExc_TypeError,
+                        "offset must be OffsetTransform or None"
+                    );
+                    throw_error_already_set();
+                }
+                self.offset = ex();
+            }
+        }
+    )
     .def("__eq__", &cg::UniversalTransverseMercatorParams::operator==)
     .def("__ne__", &cg::UniversalTransverseMercatorParams::operator!=)
   ;

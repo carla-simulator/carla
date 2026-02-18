@@ -9,7 +9,7 @@
 // #include "carla/Logging.h"
 #include "carla/multigpu/commands.h"
 #include "carla/multigpu/primary.h"
-#include "carla/streaming/detail/tcp/Message.h"
+#include "carla/streaming/detail/Message.h"
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
 
@@ -43,21 +43,21 @@ class PrimaryCommands {
 
     token_type GetToken(stream_id sensor_id);
 
-    void EnableForROS(stream_id sensor_id);
+    void EnableForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id);
 
-    void DisableForROS(stream_id sensor_id);
+    void DisableForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id);
 
-    bool IsEnabledForROS(stream_id sensor_id);
+    bool IsEnabledForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id);
 
   private:
 
     // send to one secondary to get the token of a sensor
-    token_type SendGetToken(carla::streaming::detail::stream_id_type sensor_id);
+    token_type SendGetToken(carla::streaming::detail::stream_id_type stream_id);
 
-    // manage ROS enable/disable of sensor
-    void SendEnableForROS(stream_id sensor_id);
-    void SendDisableForROS(stream_id sensor_id);
-    bool SendIsEnabledForROS(stream_id sensor_id);
+    // manage ROS enable/disable of actors
+    void SendEnableForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id);
+    void SendDisableForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id);
+    bool SendIsEnabledForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id);
 
 
     std::shared_ptr<Router> _router;

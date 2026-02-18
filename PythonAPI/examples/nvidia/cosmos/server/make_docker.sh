@@ -9,6 +9,8 @@
 
 set -e  # Exit on any error
 
+ROOT_DIR=$(realpath "$(dirname "$1")")
+
 # Parse command line arguments
 DOWNLOAD_CHECKPOINTS=false
 DEV_MODE=false
@@ -108,7 +110,7 @@ if [ ! -d "cosmos-transfer1" ]; then
     print_status "Cloning cosmos-transfer1 repository..."
     git clone --recursive https://github.com/nvidia-cosmos/cosmos-transfer1.git
     cd cosmos-transfer1
-    git switch -c transfer1-stable 6f6701d1259bd4021457923e752b1924644dd089
+    git switch -c transfer1-stable dddf6aff7beaa82f81ad972773c152601fd0c934
     
 else
     cd cosmos-transfer1
@@ -172,6 +174,9 @@ else
 fi
 
 # Step 6: Build docker image
-docker build -f Dockerfile.server -t cosmos-transfer1-carla .
+
+cd $ROOT_DIR
+
+docker build -f $ROOT_DIR/Dockerfile.server -t cosmos-transfer1-carla .
 
 print_status "Docker image built successfully!"

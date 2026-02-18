@@ -7,12 +7,38 @@
 #include "carla/geom/Math.h"
 
 #include "carla/geom/Rotation.h"
+#include "carla/geom/Quaternion.h"
 
 namespace carla {
 namespace geom {
 
-  double Math::GetVectorAngle(const Vector3D &a, const Vector3D &b) {
-    return std::acos(Dot(a, b) / (a.Length() * b.Length()));
+  float Math::SineVectorAngleFromUnitVectors(Vector3D const &a_unit, Vector3D const &b_unit)
+  {
+    auto const cross = Math::Cross(a_unit, b_unit);
+    Vector3D const to_up(0.f, 0.f, 1.f);
+    auto const sine_angle_abs = Math::Length(cross);
+    if ( std::signbit(Math::Dot(cross, to_up) ) )
+    {
+      return -sine_angle_abs;
+    }
+    else
+    {
+      return sine_angle_abs;
+    }
+  }
+
+  float Math::GetVectorAngleAbs(const Vector3D &a, const Vector3D &b) {
+    float cosine_vector_angle = Math::CosineVectorAngle(a, b);
+    return std::acos(cosine_vector_angle);
+  }
+
+  float Math::GetVectorAngle(const Vector3D &a, const Vector3D &b) {
+    auto const a_unit = a.MakeUnitVector();
+    auto const b_unit = b.MakeUnitVector();
+    auto const cosine_vector_angle = Math::CosineVectorAngleFromUnitVectors(a_unit, b_unit);
+    auto const sine_vector_angle = Math::SineVectorAngleFromUnitVectors(a_unit, b_unit);
+    auto const angle = std::atan2(sine_vector_angle, cosine_vector_angle);
+    return angle;
   }
 
   std::pair<float, float> Math::DistanceSegmentToPoint(
@@ -114,39 +140,17 @@ namespace geom {
     return Vector3D(p.x * c - p.y * s, p.x * s + p.y * c, 0.0f);
   }
 
-  Vector3D Math::GetForwardVector(const Rotation &rotation) {
-    const float cp = std::cos(ToRadians(rotation.pitch));
-    const float sp = std::sin(ToRadians(rotation.pitch));
-    const float cy = std::cos(ToRadians(rotation.yaw));
-    const float sy = std::sin(ToRadians(rotation.yaw));
-    return {cy * cp, sy * cp, sp};
-  }
+  Vector3D GetForwardVector(const Rotation &rotation) { return rotation.GetForwardVector(); }
 
-  Vector3D Math::GetRightVector(const Rotation &rotation) {
-    const float cy = std::cos(ToRadians(rotation.yaw));
-    const float sy = std::sin(ToRadians(rotation.yaw));
-    const float cr = std::cos(ToRadians(rotation.roll));
-    const float sr = std::sin(ToRadians(rotation.roll));
-    const float cp = std::cos(ToRadians(rotation.pitch));
-    const float sp = std::sin(ToRadians(rotation.pitch));
-    return {
-         cy * sp * sr - sy * cr,
-         sy * sp * sr + cy * cr,
-        -cp * sr};
-  }
+  Vector3D GetRightVector(const Rotation &rotation) { return rotation.GetRightVector(); }
 
-  Vector3D Math::GetUpVector(const Rotation &rotation) {
-    const float cy = std::cos(ToRadians(rotation.yaw));
-    const float sy = std::sin(ToRadians(rotation.yaw));
-    const float cr = std::cos(ToRadians(rotation.roll));
-    const float sr = std::sin(ToRadians(rotation.roll));
-    const float cp = std::cos(ToRadians(rotation.pitch));
-    const float sp = std::sin(ToRadians(rotation.pitch));
-    return {
-        -cy * sp * cr - sy * sr,
-        -sy * sp * cr + cy * sr,
-        cp * cr};
-  }
+  Vector3D GetUpVector(const Rotation &rotation) { return rotation.GetUpVector(); }
+
+  Vector3D GetForwardVector(const Quaternion &quaternion) { return quaternion.GetForwardVector(); }
+
+  Vector3D GetRightVector(const Quaternion &quaternion) { return quaternion.GetRightVector(); }
+
+  Vector3D GetUpVector(const Quaternion &quaternion) { return quaternion.GetUpVector(); }
 
   std::vector<int> Math::GenerateRange(int a, int b) {
     std::vector<int> result;

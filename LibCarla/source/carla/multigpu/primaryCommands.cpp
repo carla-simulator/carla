@@ -10,7 +10,7 @@
 #include "carla/multigpu/commands.h"
 #include "carla/multigpu/primary.h"
 #include "carla/multigpu/router.h"
-#include "carla/streaming/detail/tcp/Message.h"
+#include "carla/streaming/detail/Message.h"
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
 
@@ -41,9 +41,9 @@ void PrimaryCommands::SendLoadMap(std::string map) {
 }
 
 // send to who the router wants the request for a token
-token_type PrimaryCommands::SendGetToken(stream_id sensor_id) {
+token_type PrimaryCommands::SendGetToken(stream_id stream_id) {
   log_info("asking for a token");
-  carla::Buffer buf((carla::Buffer::value_type *) &sensor_id,
+  carla::Buffer buf((carla::Buffer::value_type *) &stream_id,
                     (size_t) sizeof(stream_id));
   auto fut = _router->WriteToNext(MultiGPUCommand::GET_TOKEN, std::move(buf));
 
@@ -63,56 +63,56 @@ void PrimaryCommands::SendIsAlive() {
   log_info("response from alive command: ", response.buffer.data());
 }
 
-void PrimaryCommands::SendEnableForROS(stream_id sensor_id) {
-  // search if the sensor has been activated in any secondary server
-  auto it = _servers.find(sensor_id);
+void PrimaryCommands::SendEnableForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id) {
+  // search if the actor has been activated in any secondary server
+  auto it = _servers.find(stream_actor_id.stream_id);
   if (it != _servers.end()) {
-    carla::Buffer buf((carla::Buffer::value_type *) &sensor_id,
-                      (size_t) sizeof(stream_id));
+    carla::Buffer buf((carla::Buffer::value_type *) &stream_actor_id,
+                      (size_t) (sizeof(stream_actor_id)));
     auto fut = _router->WriteToOne(it->second, MultiGPUCommand::ENABLE_ROS, std::move(buf));
 
     auto response = fut.get();
     bool res = (*reinterpret_cast<bool *>(response.buffer.data()));
   } else {
-    log_error("enable_for_ros for sensor", sensor_id, " not found on any server");
+    log_error("enable_for_ros for actor ", stream_actor_id.stream_id, " not found on any server");
   }
 }
 
-void PrimaryCommands::SendDisableForROS(stream_id sensor_id) {
-  // search if the sensor has been activated in any secondary server
-  auto it = _servers.find(sensor_id);
+void PrimaryCommands::SendDisableForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id) {
+  // search if the actor has been activated in any secondary server
+  auto it = _servers.find(stream_actor_id.stream_id);
   if (it != _servers.end()) {
-    carla::Buffer buf((carla::Buffer::value_type *) &sensor_id,
-                      (size_t) sizeof(stream_id));
+    carla::Buffer buf((carla::Buffer::value_type *) &stream_actor_id,
+                      (size_t) (sizeof(stream_actor_id)));
     auto fut = _router->WriteToOne(it->second, MultiGPUCommand::DISABLE_ROS, std::move(buf));
 
     auto response = fut.get();
     bool res = (*reinterpret_cast<bool *>(response.buffer.data()));
   } else {
-    log_error("disable_for_ros for sensor", sensor_id, " not found on any server");
+    log_error("disable_for_ros for actor ", stream_actor_id.stream_id, " not found on any server");
   }
 }
 
-bool PrimaryCommands::SendIsEnabledForROS(stream_id sensor_id) {
-  // search if the sensor has been activated in any secondary server
-  auto it = _servers.find(sensor_id);
+bool PrimaryCommands::SendIsEnabledForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id) {
+  // search if the actor has been activated in any secondary server
+  auto it = _servers.find(stream_actor_id.stream_id);
   if (it != _servers.end()) {
-    carla::Buffer buf((carla::Buffer::value_type *) &sensor_id,
-                      (size_t) sizeof(stream_id));
+    carla::Buffer buf((carla::Buffer::value_type *) &stream_actor_id,
+                      (size_t) (sizeof(stream_actor_id)));
     auto fut = _router->WriteToOne(it->second, MultiGPUCommand::IS_ENABLED_ROS, std::move(buf));
 
     auto response = fut.get();
     bool res = (*reinterpret_cast<bool *>(response.buffer.data()));
     return res;
   } else {
-    log_error("is_enabled_for_ros for sensor", sensor_id, " not found on any server");
+    log_error("is_enabled_for_ros for actor ", stream_actor_id.stream_id, " not found on any server");
     return false;
   }
 }
 
-token_type PrimaryCommands::GetToken(stream_id sensor_id) {
+token_type PrimaryCommands::GetToken(stream_id stream_id) {
   // search if the sensor has been activated in any secondary server
-  auto it = _tokens.find(sensor_id);
+  auto it = _tokens.find(stream_id);
   if (it != _tokens.end()) {
     // return already activated sensor token
     log_debug("Using token from already activated sensor: ", it->second.get_stream_id(), ", ", it->second.get_port());
@@ -121,37 +121,37 @@ token_type PrimaryCommands::GetToken(stream_id sensor_id) {
   else {
     // enable the sensor on one secondary server
     auto server = _router->GetNextServer();
-    auto token = SendGetToken(sensor_id);
+    auto token = SendGetToken(stream_id);
     // add to the maps
-    _tokens[sensor_id] = token;
-    _servers[sensor_id] = server;
+    _tokens[stream_id] = token;
+    _servers[stream_id] = server;
     log_debug("Using token from new activated sensor: ", token.get_stream_id(), ", ", token.get_port());
     return token;
   }
 }
 
-void PrimaryCommands::EnableForROS(stream_id sensor_id) {
-  auto it = _servers.find(sensor_id);
+void PrimaryCommands::EnableForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id) {
+  auto it = _servers.find(stream_actor_id.stream_id);
   if (it != _servers.end()) {
-    SendEnableForROS(sensor_id);
+    SendEnableForROS(stream_actor_id);
   } else {
-    // we need to activate the sensor in any server yet, and repeat
-    GetToken(sensor_id);
-    EnableForROS(sensor_id);
+    // we need to activate the actor in any server yet, and repeat
+    GetToken(stream_actor_id.stream_id);
+    EnableForROS(stream_actor_id);
   }
 }
 
-void PrimaryCommands::DisableForROS(stream_id sensor_id) {
-  auto it = _servers.find(sensor_id);
+void PrimaryCommands::DisableForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id) {
+  auto it = _servers.find(stream_actor_id.stream_id);
   if (it != _servers.end()) {
-    SendDisableForROS(sensor_id);
+    SendDisableForROS(stream_actor_id);
   }
 }
 
-bool PrimaryCommands::IsEnabledForROS(stream_id sensor_id) {
-  auto it = _servers.find(sensor_id);
+bool PrimaryCommands::IsEnabledForROS(carla::streaming::detail::stream_actor_id_type stream_actor_id) {
+  auto it = _servers.find(stream_actor_id.stream_id);
   if (it != _servers.end()) {
-    return SendIsEnabledForROS(sensor_id);
+    return SendIsEnabledForROS(stream_actor_id);
   }
   return false;
 }

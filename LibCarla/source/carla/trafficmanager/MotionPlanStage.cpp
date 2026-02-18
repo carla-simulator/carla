@@ -171,17 +171,11 @@ void MotionPlanStage::Update(const unsigned long index) {
       auto right_vector = target_waypoint->GetTransform().GetRightVector();
       auto offset_location = cg::Location(cg::Vector3D(offset*right_vector.x, offset*right_vector.y, 0.0f));
       target_location = target_location + offset_location;
+      auto towards_target_vector = target_location - vehicle_location;
+      towards_target_vector.z = 0.;
+      auto angle_delta_rad = cg::Math::GetVectorAngle(vehicle_heading, towards_target_vector);
 
-      // Get the targer deviations.
-      cg::Vector3D target_vector = target_location - vehicle_location;
-      float target_yaw = std::atan2(target_vector.y, target_vector.x) *180.0f / PI;
-      float angular_deviation = target_yaw - vehicle_rotation.yaw;
-      if (angular_deviation > 180.0f) {
-        angular_deviation = angular_deviation - 360.0f;
-      } else if (angular_deviation < -180.0f) {
-        angular_deviation = angular_deviation + 360.0f;
-      }
-      angular_deviation = angular_deviation / 180.0f;  // Between -1 and 1
+      const float angular_deviation = angle_delta_rad / PI;
       const float velocity_deviation = (dynamic_target_velocity - vehicle_speed) / dynamic_target_velocity;
 
       // If previous state for vehicle not found, initialize state entry.
@@ -255,10 +249,10 @@ void MotionPlanStage::Update(const unsigned long index) {
         cg::Transform target_base_transform = teleport_target->GetTransform();
         cg::Location target_base_location = target_base_transform.location;
         cg::Vector3D target_heading = target_base_transform.GetForwardVector();
-        cg::Vector3D correct_heading = (target_base_location - vehicle_location).MakeSafeUnitVector(EPSILON);
+        cg::Vector3D correct_heading = (target_base_location - vehicle_location).MakeUnitVector(EPSILON);
 
         if (vehicle_location.Distance(target_base_location) < target_displacement) {
-          cg::Location teleportation_location = vehicle_location + cg::Location(target_heading.MakeSafeUnitVector(EPSILON) * target_displacement);
+          cg::Location teleportation_location = vehicle_location + cg::Location(target_heading.MakeUnitVector(EPSILON) * target_displacement);
           teleportation_transform = cg::Transform(teleportation_location, target_base_transform.rotation);
         }
         else {

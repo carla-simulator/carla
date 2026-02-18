@@ -102,7 +102,15 @@ namespace client {
     ///
     /// @note This function does not call the simulator, it returns the data
     /// received in the last tick.
+    /// @note This function only returns valid data if the ackermann control is inactive.
     Control GetControl() const;
+
+    /// Return the ackermann control last applied to this vehicle.
+    ///
+    /// @note This function does not call the simulator, it returns the data
+    /// received in the last tick.
+    /// @note This function only returns valid data if the vehicle control is inactive.
+    AckermannControl GetAckermannControl() const;
 
     /// Return the physics control last applied to this vehicle.
     ///

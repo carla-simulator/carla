@@ -1126,6 +1126,13 @@ void UActorBlueprintFunctionLibrary::MakeV2XDefinition(
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("v2x"));
   AddVariationsForSensor(Definition);
 
+  // - Channel id --------------------------------
+  FActorVariation ChannelId;
+  ChannelId.Id = TEXT("channel_id");
+  ChannelId.Type = EActorAttributeType::String;
+  ChannelId.RecommendedValues = { TEXT("Default") };
+  ChannelId.bRestrictToRecommended = false;  
+
   // - Noise seed --------------------------------
   FActorVariation NoiseSeed;
   NoiseSeed.Id = TEXT("noise_seed");
@@ -1311,6 +1318,7 @@ void UActorBlueprintFunctionLibrary::MakeV2XDefinition(
   StdDevVelX.bRestrictToRecommended = false;
 
   Definition.Variations.Append({
+    ChannelId,
     NoiseSeed,
     TransmitPower,
     ReceiverSensitivity,
@@ -1358,6 +1366,13 @@ void UActorBlueprintFunctionLibrary::MakeCustomV2XDefinition(
 {
   FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("v2x_custom"));
   AddVariationsForSensor(Definition);
+
+  // - Channel id --------------------------------
+  FActorVariation ChannelId;
+  ChannelId.Id = TEXT("channel_id");
+  ChannelId.Type = EActorAttributeType::String;
+  ChannelId.RecommendedValues = { TEXT("Default") };
+  ChannelId.bRestrictToRecommended = false;  
 
   // - Noise seed --------------------------------
   FActorVariation NoiseSeed;
@@ -1437,6 +1452,7 @@ void UActorBlueprintFunctionLibrary::MakeCustomV2XDefinition(
   
   
   Definition.Variations.Append({
+    ChannelId,
     NoiseSeed,
     TransmitPower,
     ReceiverSensitivity,

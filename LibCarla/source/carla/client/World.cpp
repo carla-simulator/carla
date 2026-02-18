@@ -8,7 +8,7 @@
 
 #include "carla/Logging.h"
 #include "carla/client/Actor.h"
-#include "carla/client/ActorBlueprint.h"
+#include "carla/actors/ActorBlueprint.h"
 #include "carla/client/ActorList.h"
 #include "carla/client/detail/Simulator.h"
 #include "carla/StringUtil.h"
@@ -33,7 +33,7 @@ namespace client {
     _episode.Lock()->UnloadLevelLayer(map_layers);
   }
 
-  SharedPtr<BlueprintLibrary> World::GetBlueprintLibrary() const {
+  SharedPtr<actors::BlueprintLibrary> World::GetBlueprintLibrary() const {
     return _episode.Lock()->GetBlueprintLibrary();
   }
 
@@ -75,7 +75,14 @@ namespace client {
         if (tics_correct >= 2)
           return id;
 
-        Tick(local_timeout);
+        if (settings.synchronous_mode) {
+          // tick if synchronous mode is active
+          Tick(local_timeout);
+        }
+        else {
+          WaitForTick(local_timeout);
+        } 
+
       }
 
       log_warning("World::ApplySettings: After", number_of_attemps, " attemps, the settings were not correctly set. Please check that everything is consistent.");
@@ -125,7 +132,7 @@ namespace client {
   }
 
   SharedPtr<Actor> World::SpawnActor(
-      const ActorBlueprint &blueprint,
+      const actors::ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent_actor,
       rpc::AttachmentType attachment_type,
@@ -134,7 +141,7 @@ namespace client {
   }
 
   SharedPtr<Actor> World::TrySpawnActor(
-      const ActorBlueprint &blueprint,
+      const actors::ActorBlueprint &blueprint,
       const geom::Transform &transform,
       Actor *parent_actor,
       rpc::AttachmentType attachment_type,

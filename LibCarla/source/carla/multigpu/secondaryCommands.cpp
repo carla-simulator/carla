@@ -6,7 +6,7 @@
 
 // #include "carla/Logging.h"
 #include "carla/multigpu/secondaryCommands.h"
-// #include "carla/streaming/detail/tcp/Message.h"
+// #include "carla/streaming/detail/Message.h"
 
 namespace carla {
 namespace multigpu {

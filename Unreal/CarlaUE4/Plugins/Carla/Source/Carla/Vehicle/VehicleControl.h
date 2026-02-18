@@ -14,6 +14,9 @@ struct CARLA_API FVehicleControl
   GENERATED_BODY()
 
   UPROPERTY(Category = "Vehicle Control", EditAnywhere, BlueprintReadWrite)
+  float Timestamp = 0.0f;
+
+  UPROPERTY(Category = "Vehicle Control", EditAnywhere, BlueprintReadWrite)
   float Throttle = 0.0f;
 
   UPROPERTY(Category = "Vehicle Control", EditAnywhere, BlueprintReadWrite)

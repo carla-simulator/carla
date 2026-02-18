@@ -104,7 +104,11 @@ namespace client {
   }
 
   Vehicle::Control Vehicle::GetControl() const {
-    return GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.control;
+    return GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.GetVehicleControl();
+  }
+
+  Vehicle::AckermannControl Vehicle::GetAckermannControl() const {
+    return GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.GetAckermannControl();
   }
 
   Vehicle::PhysicsControl Vehicle::GetPhysicsControl() const {

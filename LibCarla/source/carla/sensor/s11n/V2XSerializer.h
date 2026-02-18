@@ -38,7 +38,7 @@ namespace carla
                     const data::CAMDataS &data,
                     Buffer &&output);
 
-                static SharedPtr<SensorData> Deserialize(RawData &&data);
+                static SharedPtr<SensorData> Deserialize(RawData DESERIALIZE_DECL_DATA(data));
             };
 
             template <typename Sensor>
@@ -61,7 +61,7 @@ namespace carla
                     const data::CustomV2XDataS &data,
                     Buffer &&output);
 
-                static SharedPtr<SensorData> Deserialize(RawData &&data);
+                static SharedPtr<SensorData> Deserialize(RawData DESERIALIZE_DECL_DATA(data));
             };
 
             template <typename Sensor>

@@ -94,6 +94,8 @@ Tells the simulator to destroy this actor and returns <b>True</b> if it was succ
 _</font>  
 - <a name="carla.Actor.disable_constant_velocity"></a>**<font color="#7fb800">disable_constant_velocity</font>**(<font color="#00a6ed">**self**</font>)  
 Disables any constant velocity previously set for a [carla.Vehicle](#carla.Vehicle) actor.  
+- <a name="carla.Actor.disable_for_ros"></a>**<font color="#7fb800">disable_for_ros</font>**(<font color="#00a6ed">**self**</font>)  
+Commands the actor to stop publishing via ROS2.  
 - <a name="carla.Actor.enable_constant_velocity"></a>**<font color="#7fb800">enable_constant_velocity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**velocity**</font>)  
 Sets a vehicle's velocity vector to a constant value over time. The resulting velocity will be approximately the `velocity` being set, as with __<font color="#7fb800">set_target_velocity()</font>__.  
     - **Parameters:**
@@ -102,6 +104,11 @@ Sets a vehicle's velocity vector to a constant value over time. The resulting ve
 _</font>  
     - **Warning:** <font color="#ED2F2F">_Enabling a constant velocity for a vehicle managed by the [Traffic Manager](adv_traffic_manager.md) may cause conflicts. This method overrides any changes in velocity by the TM.  
 _</font>  
+- <a name="carla.Actor.enable_for_ros"></a>**<font color="#7fb800">enable_for_ros</font>**(<font color="#00a6ed">**self**</font>)  
+Commands the actor to publish their content via ROS2.  
+- <a name="carla.Actor.is_enabled_for_ros"></a>**<font color="#7fb800">is_enabled_for_ros</font>**(<font color="#00a6ed">**self**</font>)  
+Returns if the actor is enabled or not to publish via ROS2.  
+    - **Return:** _bool_  
 
 ##### Getters
 - <a name="carla.Actor.get_acceleration"></a>**<font color="#7fb800">get_acceleration</font>**(<font color="#00a6ed">**self**</font>)  
@@ -720,6 +727,48 @@ No changes applied to the image. Used by the [RGB camera](ref_sensors.md#rgb-cam
 
 ---
 
+## carla.CustomV2XBytes<a name="carla.CustomV2XBytes"></a>
+This is the data type defining the bytes of a custom V2X message. Sent by the method `[carla.Sensor.send](#carla.Sensor.send)` and received as part of a [CustomV2XEvent](#carlacustomv2xevent).  
+
+### Instance Variables
+- <a name="carla.CustomV2XBytes.data_size"></a>**<font color="#f8805a">data_size</font>** (_int_)  
+The actual number of bytes of the message.  
+
+### Methods
+- <a name="carla.CustomV2XBytes.get"></a>**<font color="#7fb800">get</font>**(<font color="#00a6ed">**self**</font>)  
+Get the custom bytes. Returns a nested dictionary containing the message. It has three primary keys: - `DataSize` : int - `MaxDataSize`: int - `Bytes`: memory view containing the bytes.  
+    - **Return:** _dict_  
+- <a name="carla.CustomV2XBytes.max_data_size"></a>**<font color="#7fb800">max_data_size</font>**(<font color="#00a6ed">**self**</font>)  
+Get the maximum data size that a single message is able to transport.  
+    - **Return:** _int_  
+
+##### Getters
+- <a name="carla.CustomV2XBytes.get_bytes"></a>**<font color="#7fb800">get_bytes</font>**(<font color="#00a6ed">**self**</font>)  
+Get the custom bytes.  
+    - **Return:** _bytes_  
+    - **Setter:** _[carla.CustomV2XBytes.set_bytes](#carla.CustomV2XBytes.set_bytes)_  
+- <a name="carla.CustomV2XBytes.get_string"></a>**<font color="#7fb800">get_string</font>**(<font color="#00a6ed">**self**</font>)  
+Get the custom bytes as string. Be aware: this is a convenience method for quick tests, no coding/decoding is performed.  
+    - **Return:** _str_  
+    - **Setter:** _[carla.CustomV2XBytes.set_string](#carla.CustomV2XBytes.set_string)_  
+
+##### Setters
+- <a name="carla.CustomV2XBytes.set_bytes"></a>**<font color="#7fb800">set_bytes</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**bytes**</font>)  
+Set the custom bytes from a bytearray. Be aware that only up to `MaxDataSize` bytes are considered. If you have larger data, you need to split it manually.  
+    - **Parameters:**
+        - `bytes` (_bytes_)  
+    - **Getter:** _[carla.CustomV2XBytes.get_bytes](#carla.CustomV2XBytes.get_bytes)_  
+- <a name="carla.CustomV2XBytes.set_string"></a>**<font color="#7fb800">set_string</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**string**</font>)  
+Set the custom bytes directly from a string. The null termination is not transmitted. Be aware that only up to `MaxDataSize` bytes are considered. If you have larger data, you need to split it manually. Be aware: this is a convenience method for quick tests, no coding/decoding is performed.  
+    - **Parameters:**
+        - `string` (_str_)  
+    - **Getter:** _[carla.CustomV2XBytes.get_string](#carla.CustomV2XBytes.get_string)_  
+
+##### Dunder methods
+- <a name="carla.CustomV2XBytes.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
 ## carla.CustomV2XData<a name="carla.CustomV2XData"></a>
 <small style="display:block;margin-top:-20px;">Inherited from _[carla.SensorData](#carla.SensorData)_</small></br>
 This is the data type defining a custom V2X message. Received as part of a [CustomV2XEvent](#carlacustomv2xevent).  
@@ -730,7 +779,7 @@ Received power.
 
 ### Methods
 - <a name="carla.CustomV2XData.get"></a>**<font color="#7fb800">get</font>**(<font color="#00a6ed">**self**</font>)  
-Get the custom message. Returns a nested dictionary containing the message. It has two primary keys: - `Header` : dict - `Message`: str.  
+Get the custom message. Returns a nested dictionary containing the message. It has two primary keys: - `Header` : dict - `Message`: dict.  
     - **Return:** _dict_  
 
 ##### Dunder methods
@@ -1139,14 +1188,17 @@ Longitude zone, 1-60.
 Boolean defining the northern (True) or southern (False) hemisphere.  
 - <a name="carla.GeoProjectionUTM.ellps"></a>**<font color="#f8805a">ellps</font>** (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_)  
 Geoellipsoid used for the projection.  
+- <a name="carla.GeoProjectionUTM.offset"></a>**<font color="#f8805a">offset</font>** (_[carla.GeoOffsetTransform](#carla.GeoOffsetTransform)_)  
+Optional offset transformation applied before projection. If None, no offset is applied.  
 
 ### Methods
-- <a name="carla.GeoProjectionUTM.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**zone**=31</font>, <font color="#00a6ed">**north**=True</font>, <font color="#00a6ed">**ellps**=[carla.GeoEllipsoid](#carla.GeoEllipsoid)</font>)  
+- <a name="carla.GeoProjectionUTM.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**zone**=31</font>, <font color="#00a6ed">**north**=True</font>, <font color="#00a6ed">**ellps**=[carla.GeoEllipsoid](#carla.GeoEllipsoid)</font>, <font color="#00a6ed">**offset**=None</font>)  
 Constructor for this class.  
     - **Parameters:**
         - `zone` (_int_) - Longitude zone, 1-60.  
         - `north` (_bool_) - Boolean defining the northern (True) or southern (False) hemisphere.  
         - `ellps` (_[carla.GeoEllipsoid](#carla.GeoEllipsoid)_) - Geoellipsoid used for the projection.  
+        - `offset` (_[carla.GeoOffsetTransform](#carla.GeoOffsetTransform)_) - Optional offset transformation applied before projection. If None, no offset is applied.  
     - **Return:** _[carla.GeoProjectionUTM](#carla.GeoProjectionUTM)_  
 
 ---
@@ -2472,13 +2524,6 @@ Sensors compound a specific family of actors quite diverse and unique. They are 
 When **True** the sensor will be waiting for data.  
 
 ### Methods
-- <a name="carla.Sensor.disable_for_ros"></a>**<font color="#7fb800">disable_for_ros</font>**(<font color="#00a6ed">**self**</font>)  
-Commands the sensor to not be processed for publishing in ROS2 if there is no any listen to it.  
-- <a name="carla.Sensor.enable_for_ros"></a>**<font color="#7fb800">enable_for_ros</font>**(<font color="#00a6ed">**self**</font>)  
-Commands the sensor to be processed to be able to publish in ROS2 without any listen to it.  
-- <a name="carla.Sensor.is_enabled_for_ros"></a>**<font color="#7fb800">is_enabled_for_ros</font>**(<font color="#00a6ed">**self**</font>)  
-Returns if the sensor is enabled or not to publish in ROS2 if there is no any listen to it.  
-    - **Return:** _bool_  
 - <a name="carla.Sensor.is_listening"></a>**<font color="#7fb800">is_listening</font>**(<font color="#00a6ed">**self**</font>)  
 Returns whether the sensor is in a listening state.  
     - **Return:** _bool_  
@@ -2497,9 +2542,9 @@ The function the sensor will be calling to every time the desired GBuffer textur
         - `gbuffer_id` (_[carla.GBufferTextureID](#carla.GBufferTextureID)_) - The ID of the target Unreal Engine GBuffer texture.  
         - `callback` (_function_) - The called function with one argument containing the received GBuffer texture.  
 - <a name="carla.Sensor.send"></a>**<font color="#7fb800">send</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**message**</font>)  
-Instructs the sensor to send the string given by `message` to all other CustomV2XSensors on the next tick.  
+Instructs the sensor to send the bytes given by `message` to all other CustomV2XSensors on the next tick.  
     - **Parameters:**
-        - `message` (_string_) - The data to send. Note: maximum string length is 100 chars.  
+        - `message` (_[carla.CustomV2XBytes](#carla.CustomV2XBytes)_) - The data to send. Note: There is a maximum data size for a single message see [carla.CustomV2XBytes](#carla.CustomV2XBytes) for more information.  
 - <a name="carla.Sensor.stop"></a>**<font color="#7fb800">stop</font>**(<font color="#00a6ed">**self**</font>)  
 Commands the sensor to stop listening for data.  
 - <a name="carla.Sensor.stop_gbuffer"></a>**<font color="#7fb800">stop_gbuffer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**gbuffer_id**</font>)  
@@ -3242,6 +3287,8 @@ Desired speed (m/s). Default is 0.0.
 Desired acceleration (m/s2) Default is 0.0.  
 - <a name="carla.VehicleAckermannControl.jerk"></a>**<font color="#f8805a">jerk</font>** (_float_)  
 Desired jerk (m/s3). Default is 0.0.  
+- <a name="carla.VehicleAckermannControl.timestamp"></a>**<font color="#f8805a">timestamp</font>** (_float_)  
+The timestamp of this control value.  
 
 ### Methods
 - <a name="carla.VehicleAckermannControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**steer**=0.0</font>, <font color="#00a6ed">**steer_speed**=0.0</font>, <font color="#00a6ed">**speed**=0.0</font>, <font color="#00a6ed">**acceleration**=0.0</font>, <font color="#00a6ed">**jerk**=0.0</font>)  
@@ -3277,6 +3324,8 @@ Determines whether the vehicle will move backwards. Default is <b>False</b>.
 Determines whether the vehicle will be controlled by changing gears manually. Default is <b>False</b>.  
 - <a name="carla.VehicleControl.gear"></a>**<font color="#f8805a">gear</font>** (_int_)  
 States which gear is the vehicle running on.  
+- <a name="carla.VehicleControl.timestamp"></a>**<font color="#f8805a">timestamp</font>** (_float_)  
+The timestamp of this control value.  
 
 ### Methods
 - <a name="carla.VehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**throttle**=0.0</font>, <font color="#00a6ed">**steer**=0.0</font>, <font color="#00a6ed">**brake**=0.0</font>, <font color="#00a6ed">**hand_brake**=False</font>, <font color="#00a6ed">**reverse**=False</font>, <font color="#00a6ed">**manual_gear_shift**=False</font>, <font color="#00a6ed">**gear**=0</font>)  
@@ -3560,6 +3609,8 @@ Vector using global coordinates that will correspond to the direction of the wal
 A scalar value to control the walker's speed.  
 - <a name="carla.WalkerControl.jump"></a>**<font color="#f8805a">jump</font>** (_bool_)  
 If <b>True</b>, the walker will perform a jump.  
+- <a name="carla.WalkerControl.timestamp"></a>**<font color="#f8805a">timestamp</font>** (_float_)  
+The timestamp of this control value.  
 
 ### Methods
 - <a name="carla.WalkerControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**direction**=[1.0, 0.0, 0.0]</font>, <font color="#00a6ed">**speed**=0.0</font>, <font color="#00a6ed">**jump**=False</font>)  

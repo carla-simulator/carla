@@ -1043,10 +1043,55 @@
     - def_name: get
       return: dict
       doc: >
-        Get the custom message. Returns a nested dictionary containing the message. It has two primary keys: - `Header` : dict - `Message`: str
+        Get the custom message. Returns a nested dictionary containing the message. It has two primary keys: - `Header` : dict - `Message`: dict.
     # --------------------------------------
     - def_name: __str__ 
     # --------------------------------------
 
 
+  - class_name: CustomV2XBytes
+    # - DESCRIPTION ------------------------
+    doc: >
+      This is the data type defining the bytes of a custom V2X message. Sent by the method `carla.Sensor.send` and received as part of a [CustomV2XEvent](#carlacustomv2xevent).
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: data_size
+      type: int
+      doc: >
+        The actual number of bytes of the message.
+
+    # - METHODS ----------------------------
+    # --------------------------------------
+    methods:
+    - def_name: get
+      return: dict
+      doc: >
+        Get the custom bytes. Returns a nested dictionary containing the message. It has three primary keys: - `DataSize` : int - `MaxDataSize`: int - `Bytes`: memory view containing the bytes.
+    - def_name: max_data_size
+      return: int
+      doc: >
+        Get the maximum data size that a single message is able to transport.
+    - def_name: get_bytes
+      return: bytes
+      doc: >
+        Get the custom bytes.
+    - def_name: get_string
+      return: str
+      doc: >
+        Get the custom bytes as string. Be aware: this is a convenience method for quick tests, no coding/decoding is performed.
+    - def_name: set_bytes
+      params:
+      - param_name: bytes
+        type: bytes
+      doc: >
+        Set the custom bytes from a bytearray. Be aware that only up to `MaxDataSize` bytes are considered. If you have larger data, you need to split it manually.
+    - def_name: set_string
+      params:
+      - param_name: string
+        type: str
+      doc: >
+        Set the custom bytes directly from a string. The null termination is not transmitted. Be aware that only up to `MaxDataSize` bytes are considered. If you have larger data, you need to split it manually. Be aware: this is a convenience method for quick tests, no coding/decoding is performed.
+    # --------------------------------------
+    - def_name: __str__ 
+    # --------------------------------------
 ...

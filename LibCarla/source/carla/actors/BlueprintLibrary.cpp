@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#include "carla/client/BlueprintLibrary.h"
+#include "carla/actors/BlueprintLibrary.h"
 
 #include "carla/Exception.h"
 
@@ -12,7 +12,7 @@
 #include <iterator>
 
 namespace carla {
-namespace client {
+namespace actors {
 
   BlueprintLibrary::BlueprintLibrary(
       const std::vector<rpc::ActorDefinition> &blueprints) {
@@ -85,5 +85,5 @@ namespace client {
     return operator[](pos);
   }
 
-} // namespace client
+} // namespace actors
 } // namespace carla

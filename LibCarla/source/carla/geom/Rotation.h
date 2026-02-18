@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <ostream>
+
 #include "carla/MsgPack.h"
 #include "carla/geom/Math.h"
 #include "carla/geom/Vector3D.h"
@@ -19,6 +21,10 @@
 namespace carla {
 namespace geom {
 
+
+  /**
+   * Class representing the UE4 Rotator (RPY in degrees) 
+  */
   class Rotation {
   public:
 
@@ -49,26 +55,34 @@ namespace geom {
     // -- Other methods --------------------------------------------------------
     // =========================================================================
 
+    /// Compute the unit vector pointing towards the X-axis of the rotation described by this rotator.
     Vector3D GetForwardVector() const {
-      return Math::GetForwardVector(*this);
+      Vector3D const forward_vector(1.0, 0.0, 0.0);
+      return RotatedVector(forward_vector);
     }
 
+    /// Compute the unit vector pointing towards the Y-axis of of the rotation described by this rotator.
     Vector3D GetRightVector() const {
-      return Math::GetRightVector(*this);
+      Vector3D const right_vector(0.0, 1.0, 0.0);
+      return RotatedVector(right_vector);
     }
 
+    /// Compute the unit vector pointing towards the Z-axis of of the rotation described by this rotator.
     Vector3D GetUpVector() const {
-      return Math::GetUpVector(*this);
+      Vector3D const up_vector(0.0, 0.0, 1.0);
+      return RotatedVector(up_vector);
     }
 
-    void RotateVector(Vector3D &in_point) const {
+    Vector3D RotatedVector(Vector3D const &in_point) const {
       // Rotates Rz(yaw) * Ry(pitch) * Rx(roll) = first x, then y, then z.
-      const float cy = std::cos(Math::ToRadians(yaw));
-      const float sy = std::sin(Math::ToRadians(yaw));
+      // Be aware that the Unreal Rotator interface uses a very special interpretation of rotation directions
+      // treating yaw as left-handed rotation but pitch and roll as right-handed ones! 
       const float cr = std::cos(Math::ToRadians(roll));
       const float sr = std::sin(Math::ToRadians(roll));
       const float cp = std::cos(Math::ToRadians(pitch));
       const float sp = std::sin(Math::ToRadians(pitch));
+      const float cy = std::cos(Math::ToRadians(yaw));
+      const float sy = std::sin(Math::ToRadians(yaw));
 
       Vector3D out_point;
       out_point.x =
@@ -86,25 +100,19 @@ namespace geom {
         in_point.y * (-cp * sr) +
         in_point.z * (cp * cr);
 
-      in_point = out_point;
-    }
-
-    Vector3D RotateVector(const Vector3D& in_point) const {
-      Vector3D out_point = in_point;
-      RotateVector(out_point);
       return out_point;
     }
 
-    void InverseRotateVector(Vector3D &in_point) const {
-      // Applies the transposed of the matrix used in RotateVector function,
-      // which is the rotation inverse.
-      const float cy = std::cos(Math::ToRadians(yaw));
-      const float sy = std::sin(Math::ToRadians(yaw));
+    Vector3D InverseRotatedVector(Vector3D const &in_point) const {
       const float cr = std::cos(Math::ToRadians(roll));
       const float sr = std::sin(Math::ToRadians(roll));
       const float cp = std::cos(Math::ToRadians(pitch));
       const float sp = std::sin(Math::ToRadians(pitch));
+      const float cy = std::cos(Math::ToRadians(yaw));
+      const float sy = std::sin(Math::ToRadians(yaw));
 
+      // Applies the transposed of the matrix used in RotateVector function,
+      // which is the rotation inverse.
       Vector3D out_point;
       out_point.x =
         in_point.x * (cp * cy) +
@@ -121,7 +129,7 @@ namespace geom {
         in_point.y * (-sy * sp * cr + cy * sr) +
         in_point.z * (cp * cr);
 
-      in_point = out_point;
+      return out_point;
     }
 
     // =========================================================================
@@ -151,6 +159,13 @@ namespace geom {
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
   };
+
+  inline std::ostream &operator<<(std::ostream &out, const Rotation &rotator) {
+    out << "Rotation(pitch=" << std::to_string(rotator.pitch)
+        << ", yaw=" << std::to_string(rotator.yaw)
+        << ", roll=" << std::to_string(rotator.roll) << ')';
+    return out;
+  }
 
 } // namespace geom
 } // namespace carla

@@ -14,7 +14,7 @@
 #include <chrono>
 static const float scLowFrequencyContainerInterval = 0.5;
 
-ITSContainer::SpeedValue_t CaService::BuildSpeedValue(const float vel)
+ITSContainer::SpeedValue_t CaService::BuildSpeedValue(const float vel)const
 {
     static const float lower = 0.0;    // meter_per_second
     static const float upper = 163.82; // meter_per_second
@@ -27,7 +27,7 @@ ITSContainer::SpeedValue_t CaService::BuildSpeedValue(const float vel)
     else if (vel >= lower)
     {
         // to cm per second
-        speed = std::round(vel * 100.0) * ITSContainer::SpeedValue_oneCentimeterPerSec;
+        speed = std::round(vel * 100.0) * static_cast<double>(ITSContainer::SpeedValue_oneCentimeterPerSec);
     }
     return speed;
 }
@@ -43,9 +43,8 @@ CaService::CaService(URandomEngine *random_engine)
     mGenerationDelta0 = std::chrono::duration_cast<std::chrono::milliseconds>(start_Point - ref_point);
 }
 
-void CaService::SetOwner(UWorld *world, AActor *Owner)
+void CaService::SetActor(UWorld *world, AActor *Owner)
 {
-    UE_LOG(LogCarla, Warning, TEXT("CaService:SetOwner function called"));
     mWorld = world;
     mCarlaEpisode = UCarlaStatics::GetCurrentEpisode(world);
 
@@ -55,12 +54,12 @@ void CaService::SetOwner(UWorld *world, AActor *Owner)
     mCarlaEpisode = UCarlaStatics::GetCurrentEpisode(mWorld);
     mCarlaActor = mCarlaEpisode->FindCarlaActor(Owner);
 
+    mVehicle = nullptr;
     if (mCarlaActor != nullptr)
     {
-        mVehicle = Cast<ACarlaWheeledVehicle>(Owner);
-
         if (mCarlaActor->GetActorType() == FCarlaActor::ActorType::Vehicle)
         {
+            mVehicle = Cast<ACarlaWheeledVehicle>(Owner);
             UE_LOG(LogCarla, Warning, TEXT("CaService:Initialize Vehicle type"));
 
             mLastCamTimeStamp = mCarlaEpisode->GetElapsedGameTime() - mGenCamMax;
@@ -77,7 +76,8 @@ void CaService::SetOwner(UWorld *world, AActor *Owner)
             mLastCamHeading = {0, 0, 0};
         }
         else if ((mCarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight) ||
-                 (mCarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficSign))
+                 (mCarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficSign)||
+                 (mCarlaActor->GetActorType() == FCarlaActor::ActorType::Sensor))
         {
             mGenerationInterval = 0.5;
             mLastCamTimeStamp = -mGenerationInterval;
@@ -85,8 +85,9 @@ void CaService::SetOwner(UWorld *world, AActor *Owner)
         }
 
         mStationId = static_cast<long>(mCarlaActor->GetActorId());
-        mStationType = GetStationType();
     }
+    mStationType = GetStationType();
+    UE_LOG(LogCarla, Warning, TEXT("CaService:Initialize station type %i"), mStationType);
 }
 
 void CaService::SetParams(const float GenCamMin, const float GenCamMax, const bool FixedRate)
@@ -128,7 +129,7 @@ bool CaService::Trigger(float DeltaSeconds)
 /*
  * Function to provide CAM message to other objects if necessary
  */
-CAM_t CaService::GetCamMessage()
+CAM_t CaService::GetCamMessage()const
 {
     return mCAMMessage;
 }
@@ -175,31 +176,34 @@ bool CaService::CheckTriggeringConditions(float DeltaSeconds)
 
 bool CaService::CheckPositionDelta(float DeltaSeconds)
 {
-    // If position change is more the 4m
-    VehiclePosition = mVehicle->GetActorLocation();
-    double Distance = FVector::Distance(VehiclePosition, mLastCamPosition) / 100.0f; // From cm to m
-    if (Distance > 4.0f)
-    {
-        return true;
+    if ( mVehicle != nullptr ) {
+        // If position change is more the 4m
+        VehiclePosition = mVehicle->GetActorLocation();
+        double Distance = FVector::Distance(VehiclePosition, mLastCamPosition) / 100.0f; // From cm to m
+        if (Distance > 4.0f)
+        {
+            return true;
+        }
     }
     return false;
 }
 
 bool CaService::CheckSpeedDelta(float DeltaSeconds)
 {
-    VehicleSpeed = mVehicle->GetVehicleForwardSpeed() / 100.0f; // From cm/s to m/s
-    float DeltaSpeed = std::abs(VehicleSpeed - mLastCamSpeed);
+    if ( mVehicle != nullptr ) {
+        VehicleSpeed = mVehicle->GetVehicleForwardSpeed() / 100.0f; // From cm/s to m/s
+        float DeltaSpeed = std::abs(VehicleSpeed - mLastCamSpeed);
 
-    // Speed differance is greater than 0.5m/s
-    if (DeltaSpeed > 0.5)
-    {
-        return true;
+        // Speed differance is greater than 0.5m/s
+        if (DeltaSpeed > 0.5)
+        {
+            return true;
+        }
     }
-
     return false;
 }
 
-double CaService::GetFVectorAngle(const FVector &a, const FVector &b)
+double CaService::GetFVectorAngle(const FVector &a, const FVector &b)const
 {
     double Dot = a.X * b.X + a.Y * b.Y + a.Z * b.Z;
     return std::acos(Dot / (a.Size() * b.Size()));
@@ -207,6 +211,8 @@ double CaService::GetFVectorAngle(const FVector &a, const FVector &b)
 
 void CaService::GenerateCamMessage(float DeltaTime)
 {
+        UE_LOG(LogCarla, Warning, TEXT("V2XSensor: generating cam message"));
+
     mCAMMessage = CreateCooperativeAwarenessMessage(DeltaTime);
     mLastCamPosition = VehiclePosition;
     mLastCamSpeed = VehicleSpeed;
@@ -215,75 +221,80 @@ void CaService::GenerateCamMessage(float DeltaTime)
 }
 
 // Function to get the station type
-ITSContainer::StationType_t CaService::GetStationType()
+ITSContainer::StationType_t CaService::GetStationType()const
 {
-    check(mActorOwner != nullptr);
-    mCarlaEpisode = UCarlaStatics::GetCurrentEpisode(mWorld);
-    mCarlaActor = mCarlaEpisode->FindCarlaActor(mActorOwner);
     ITSContainer::StationType_t stationType = ITSContainer::StationType_unknown;
     // return unknown if carla actor is gone
     if (mCarlaActor == nullptr)
     {
         return static_cast<long>(stationType);
     }
-    auto Tag = ATagger::GetTagOfTaggedComponent(*mVehicle->GetMesh());
 
-    switch (Tag)
-    {
-    case crp::CityObjectLabel::None:
-        stationType = ITSContainer::StationType_unknown;
-        break;
-    case crp::CityObjectLabel::Pedestrians:
-        stationType = ITSContainer::StationType_pedestrian;
-        break;
-    case crp::CityObjectLabel::Bicycle:
-        stationType = ITSContainer::StationType_cyclist;
-        break;
-    case crp::CityObjectLabel::Motorcycle:
-        stationType = ITSContainer::StationType_motorcycle;
-        break;
-    case crp::CityObjectLabel::Car:
-        stationType = ITSContainer::StationType_passengerCar;
-        break;
-    case crp::CityObjectLabel::Bus:
-        stationType = ITSContainer::StationType_bus;
-        break;
-    // TODO Modify this in future is CARLA adds difference truck
-    case crp::CityObjectLabel::Truck:
-        stationType = ITSContainer::StationType_lightTruck;
-        break;
-    case crp::CityObjectLabel::Buildings:
-    case crp::CityObjectLabel::Walls:
-    case crp::CityObjectLabel::Fences:
-    case crp::CityObjectLabel::Poles:
-    case crp::CityObjectLabel::TrafficLight:
-    case crp::CityObjectLabel::TrafficSigns:
-        stationType = ITSContainer::StationType_roadSideUnit;
-        break;
-    case crp::CityObjectLabel::Train:
-        stationType = ITSContainer::StationType_tram;
-        break;
-    default:
-        stationType = ITSContainer::StationType_unknown;
-    }
+    if ( mVehicle!= nullptr ) {
+        auto Tag = ATagger::GetTagOfTaggedComponent(*mVehicle->GetMesh());
 
-    // Can improve this later for different special vehicles once carla implements it
-    FCarlaActor::ActorType Type = mCarlaActor->GetActorType();
-    if (Type == FCarlaActor::ActorType::Vehicle)
-    {
-        if (mCarlaActor->GetActorInfo()->Description.Variations.Contains("special_type"))
+        switch (Tag)
         {
-            std::string special_type = carla::rpc::FromFString(*mCarlaActor->GetActorInfo()->Description.Variations["special_type"].Value);
-            if (special_type.compare("emergency") == 0)
+        case crp::CityObjectLabel::None:
+            stationType = ITSContainer::StationType_unknown;
+            break;
+        case crp::CityObjectLabel::Pedestrians:
+            stationType = ITSContainer::StationType_pedestrian;
+            break;
+        case crp::CityObjectLabel::Bicycle:
+            stationType = ITSContainer::StationType_cyclist;
+            break;
+        case crp::CityObjectLabel::Motorcycle:
+            stationType = ITSContainer::StationType_motorcycle;
+            break;
+        case crp::CityObjectLabel::Car:
+            stationType = ITSContainer::StationType_passengerCar;
+            break;
+        case crp::CityObjectLabel::Bus:
+            stationType = ITSContainer::StationType_bus;
+            break;
+        // TODO Modify this in future is CARLA adds difference truck
+        case crp::CityObjectLabel::Truck:
+            stationType = ITSContainer::StationType_lightTruck;
+            break;
+        case crp::CityObjectLabel::Buildings:
+        case crp::CityObjectLabel::Walls:
+        case crp::CityObjectLabel::Fences:
+        case crp::CityObjectLabel::Poles:
+        case crp::CityObjectLabel::TrafficLight:
+        case crp::CityObjectLabel::TrafficSigns:
+            stationType = ITSContainer::StationType_roadSideUnit;
+            break;
+        case crp::CityObjectLabel::Train:
+            stationType = ITSContainer::StationType_tram;
+            break;
+        default:
+            stationType = ITSContainer::StationType_unknown;
+        }
+
+        // Can improve this later for different special vehicles once carla implements it
+        FCarlaActor::ActorType Type = mCarlaActor->GetActorType();
+        if (Type == FCarlaActor::ActorType::Vehicle)
+        {
+            if (mCarlaActor->GetActorInfo()->Description.Variations.Contains("special_type"))
             {
-                stationType = ITSContainer::StationType_specialVehicles;
+                std::string special_type = carla::rpc::FromFString(*mCarlaActor->GetActorInfo()->Description.Variations["special_type"].Value);
+                if (special_type.compare("emergency") == 0)
+                {
+                    stationType = ITSContainer::StationType_specialVehicles;
+                }
             }
         }
     }
+    else {
+        // not a vehicle => RSU
+        stationType = ITSContainer::StationType_roadSideUnit;
+    }
+
     return static_cast<long>(stationType);
 }
 
-FVector CaService::GetReferencePosition()
+FVector CaService::GetReferencePosition()const
 {
     FVector RefPos;
     carla::geom::Location ActorLocation = mActorOwner->GetActorLocation();
@@ -311,7 +322,7 @@ FVector CaService::GetReferencePosition()
     return RefPos;
 }
 
-float CaService::GetHeading()
+float CaService::GetHeading()const
 {
     // Magnetometer: orientation with respect to the North in rad
     const FVector CarlaNorthVector = FVector(0.0f, -1.0f, 0.0f);
@@ -337,11 +348,10 @@ float CaService::GetHeading()
 }
 
 // Function to get the vehicle role
-long CaService::GetVehicleRole()
+long CaService::GetVehicleRole()const
 {
     long VehicleRole = ITSContainer::VehicleRole_default;
-    long StationType = GetStationType();
-    switch (StationType)
+    switch (mStationType)
     {
     case ITSContainer::StationType_cyclist:
     case ITSContainer::StationType_moped:
@@ -396,7 +406,7 @@ void CaService::AddCooperativeAwarenessMessage(CAMContainer::CoopAwareness_t &Co
     {
         // TODO no container available for Pedestrains
     }
-    else
+    else if (CoopAwarenessMessage.camParameters.basicContainer.stationType != ITSContainer::StationType_unknown)
     {
         // BasicVehicleContainer
         AddBasicVehicleContainerHighFrequency(CoopAwarenessMessage.camParameters.highFrequencyContainer, DeltaTime);
@@ -423,12 +433,12 @@ void CaService::AddBasicContainer(CAMContainer::BasicContainer_t &BasicContainer
 
     /* CamParameters ReferencePosition */
     FVector RefPos = GetReferencePosition();
-    BasicContainer.referencePosition.latitude = std::round(RefPos.X * 1e6) * ITSContainer::Latitude_oneMicroDegreeNorth;
-    BasicContainer.referencePosition.longitude = std::round(RefPos.Y * 1e6) * ITSContainer::Longitude_oneMicroDegreeEast;
+    BasicContainer.referencePosition.latitude = std::round(RefPos.X * 1e6) * static_cast<double>(ITSContainer::Latitude_oneMicroDegreeNorth);
+    BasicContainer.referencePosition.longitude = std::round(RefPos.Y * 1e6) * static_cast<double>(ITSContainer::Longitude_oneMicroDegreeEast);
     BasicContainer.referencePosition.positionConfidenceEllipse.semiMajorConfidence = ITSContainer::SemiAxisLength_unavailable;
     BasicContainer.referencePosition.positionConfidenceEllipse.semiMinorConfidence = ITSContainer::SemiAxisLength_unavailable;
     BasicContainer.referencePosition.positionConfidenceEllipse.semiMajorOrientation = ITSContainer::HeadingValue_unavailable;
-    BasicContainer.referencePosition.altitude.altitudeValue = std::round(RefPos.Z * 100.0) * ITSContainer::AltitudeValue_oneCentimeter;
+    BasicContainer.referencePosition.altitude.altitudeValue = std::round(RefPos.Z * 100.0) * static_cast<double>(ITSContainer::AltitudeValue_oneCentimeter);
     BasicContainer.referencePosition.altitude.altitudeConfidence = ITSContainer::AltitudeConfidence_unavailable;
 }
 
@@ -469,6 +479,10 @@ void CaService::SetYawrateDeviation(const float noise_yawrate_stddev, const floa
 
 void CaService::AddBasicVehicleContainerHighFrequency(CAMContainer::HighFrequencyContainer_t &hfc, float DeltaTime)
 {
+    if ( mVehicle == nullptr ) {
+        return;
+    }
+
     hfc.present = CAMContainer::HighFrequencyContainer_PR_basicVehicleContainerHighFrequency;
     CAMContainer::BasicVehicleContainerHighFrequency_t &bvc = hfc.basicVehicleContainerHighFrequency;
     // heading
@@ -496,7 +510,7 @@ void CaService::AddBasicVehicleContainerHighFrequency(CAMContainer::HighFrequenc
     // limit changes
     if (lonAccelValue >= -160.0 && lonAccelValue <= 161.0)
     {
-        bvc.longitudinalAcceleration.longitudinalAccelerationValue = std::round(lonAccelValue) * ITSContainer::LongitudinalAccelerationValue_pointOneMeterPerSecSquaredForward;
+        bvc.longitudinalAcceleration.longitudinalAccelerationValue = std::round(lonAccelValue) * static_cast<double>(ITSContainer::LongitudinalAccelerationValue_pointOneMeterPerSecSquaredForward);
     }
     else
     {
@@ -510,7 +524,7 @@ void CaService::AddBasicVehicleContainerHighFrequency(CAMContainer::HighFrequenc
     bvc.curvatureCalculationMode = ITSContainer::CurvatureCalculationMode_yarRateUsed;
 
     // yaw rate is in rad/s --> to centidegree per second
-    bvc.yawRate.yawRateValue = std::round(carla::geom::Math::ToDegrees(ComputeYawRate()) * 100.0) * ITSContainer::YawRateValue_degSec_000_01ToLeft;
+    bvc.yawRate.yawRateValue = std::round(carla::geom::Math::ToDegrees(ComputeYawRate()) * 100.0) * static_cast<double>(ITSContainer::YawRateValue_degSec_000_01ToLeft);
     if (bvc.yawRate.yawRateValue < -32766 || bvc.yawRate.yawRateValue > 32766)
     {
         bvc.yawRate.yawRateValue = ITSContainer::YawRateValue_unavailable;
@@ -522,7 +536,7 @@ void CaService::AddBasicVehicleContainerHighFrequency(CAMContainer::HighFrequenc
     const double latAccelValue = Accel.y * 10.0; // m/s to 0.1 m/s
     if (latAccelValue >= -160.0 && latAccelValue <= 161.0)
     {
-        bvc.lateralAcceleration.lateralAccelerationValue = std::round(latAccelValue) * ITSContainer::LateralAccelerationValue_pointOneMeterPerSecSquaredToLeft;
+        bvc.lateralAcceleration.lateralAccelerationValue = std::round(latAccelValue) * static_cast<double>(ITSContainer::LateralAccelerationValue_pointOneMeterPerSecSquaredToLeft);
     }
     else
     {
@@ -534,7 +548,7 @@ void CaService::AddBasicVehicleContainerHighFrequency(CAMContainer::HighFrequenc
     const double vertAccelValue = Accel.z * 10.0; // m/s to 0.1 m/s
     if (vertAccelValue >= -160.0 && vertAccelValue <= 161.0)
     {
-        bvc.verticalAcceleration.verticalAccelerationValue = std::round(vertAccelValue) * ITSContainer::VerticalAccelerationValue_pointOneMeterPerSecSquaredUp;
+        bvc.verticalAcceleration.verticalAccelerationValue = std::round(vertAccelValue) * static_cast<double>(ITSContainer::VerticalAccelerationValue_pointOneMeterPerSecSquaredUp);
     }
     else
     {
@@ -551,7 +565,7 @@ void CaService::AddBasicVehicleContainerHighFrequency(CAMContainer::HighFrequenc
 }
 
 const carla::geom::Vector3D CaService::ComputeAccelerometerNoise(
-    const FVector &Accelerometer)
+    const FVector &Accelerometer)const
 {
     // Normal (or Gaussian or Gauss) distribution will be used as noise function.
     // A mean of 0.0 is used as a first parameter, the standard deviation is
@@ -566,61 +580,66 @@ const carla::geom::Vector3D CaService::ComputeAccelerometerNoise(
 carla::geom::Vector3D CaService::ComputeAccelerometer(
     const float DeltaTime)
 {
-    // Used to convert from UE4's cm to meters
-    constexpr float TO_METERS = 1e-2;
-    // Earth's gravitational acceleration is approximately 9.81 m/s^2
-    constexpr float GRAVITY = 9.81f;
+    carla::geom::Vector3D Accelerometer(0.,0.,0.);
 
-    // 2nd derivative of the polynomic (quadratic) interpolation
-    // using the point in current time and two previous steps:
-    // d2[i] = -2.0*(y1/(h1*h2)-y2/((h2+h1)*h2)-y0/(h1*(h2+h1)))
-    const FVector CurrentLocation = mVehicle->GetActorLocation();
+    if ( mVehicle != nullptr ) {
+        // Used to convert from UE4's cm to meters
+        constexpr float TO_METERS = 1e-2;
+        // Earth's gravitational acceleration is approximately 9.81 m/s^2
+        constexpr float GRAVITY = 9.81f;
 
-    const FVector Y2 = PrevLocation[0];
-    const FVector Y1 = PrevLocation[1];
-    const FVector Y0 = CurrentLocation;
-    const float H1 = DeltaTime;
-    const float H2 = PrevDeltaTime;
+        // 2nd derivative of the polynomic (quadratic) interpolation
+        // using the point in current time and two previous steps:
+        // d2[i] = -2.0*(y1/(h1*h2)-y2/((h2+h1)*h2)-y0/(h1*(h2+h1)))
+        const FVector CurrentLocation = mVehicle->GetActorLocation();
 
-    const float H1AndH2 = H2 + H1;
-    const FVector A = Y1 / (H1 * H2);
-    const FVector B = Y2 / (H2 * (H1AndH2));
-    const FVector C = Y0 / (H1 * (H1AndH2));
-    FVector FVectorAccelerometer = TO_METERS * -2.0f * (A - B - C);
+        const FVector Y2 = PrevLocation[0];
+        const FVector Y1 = PrevLocation[1];
+        const FVector Y0 = CurrentLocation;
+        const float H1 = DeltaTime;
+        const float H2 = PrevDeltaTime;
 
-    // Update the previous locations
-    PrevLocation[0] = PrevLocation[1];
-    PrevLocation[1] = CurrentLocation;
-    PrevDeltaTime = DeltaTime;
+        const float H1AndH2 = H2 + H1;
+        const FVector A = Y1 / (H1 * H2);
+        const FVector B = Y2 / (H2 * (H1AndH2));
+        const FVector C = Y0 / (H1 * (H1AndH2));
+        FVector FVectorAccelerometer = TO_METERS * -2.0f * (A - B - C);
 
-    // Add gravitational acceleration
-    FVectorAccelerometer.Z += GRAVITY;
+        // Update the previous locations
+        PrevLocation[0] = PrevLocation[1];
+        PrevLocation[1] = CurrentLocation;
+        PrevDeltaTime = DeltaTime;
 
-    FQuat ImuRotation = mActorOwner->GetRootComponent()->GetComponentTransform().GetRotation();
-    FVectorAccelerometer = ImuRotation.UnrotateVector(FVectorAccelerometer);
+        // Add gravitational acceleration
+        FVectorAccelerometer.Z += GRAVITY;
 
-    // Cast from FVector to our Vector3D to correctly send the data in m/s^2
-    // and apply the desired noise function, in this case a normal distribution
-    const carla::geom::Vector3D Accelerometer =
-        ComputeAccelerometerNoise(FVectorAccelerometer);
+        FQuat ImuRotation = mActorOwner->GetRootComponent()->GetComponentTransform().GetRotation();
+        FVectorAccelerometer = ImuRotation.UnrotateVector(FVectorAccelerometer);
 
+        // Cast from FVector to our Vector3D to correctly send the data in m/s^2
+        // and apply the desired noise function, in this case a normal distribution
+        Accelerometer = ComputeAccelerometerNoise(FVectorAccelerometer);
+    }
     return Accelerometer;
 }
 
-float CaService::ComputeSpeed()
+float CaService::ComputeSpeed()const
 {
+    float speed = 0.;
+    if ( mVehicle != nullptr ) {
+        speed = mVehicle->GetVehicleForwardSpeed() / 100.0f;
 
-    const float speed = mVehicle->GetVehicleForwardSpeed() / 100.0f;
-
-    // Normal (or Gaussian or Gauss) distribution and a bias will be used as
-    // noise function.
-    // A mean of 0.0 is used as a first parameter.The standard deviation and the
-    // bias are determined by the client
-    constexpr float Mean = 0.0f;
-    return boost::algorithm::clamp(speed + mRandomEngine->GetNormalDistribution(Mean, VelocityDeviation), 0.0f, std::numeric_limits<float>::max());
+        // Normal (or Gaussian or Gauss) distribution and a bias will be used as
+        // noise function.
+        // A mean of 0.0 is used as a first parameter.The standard deviation and the
+        // bias are determined by the client
+        constexpr float Mean = 0.0f;
+        speed = boost::algorithm::clamp(speed + mRandomEngine->GetNormalDistribution(Mean, VelocityDeviation), 0.0f, std::numeric_limits<float>::max());
+    }
+    return speed;
 }
 
-float CaService::ComputeYawRate()
+float CaService::ComputeYawRate()const
 {
     check(mActorOwner != nullptr);
     const FVector AngularVelocity =
@@ -641,7 +660,7 @@ float CaService::ComputeYawRate()
 }
 
 const float CaService::ComputeYawNoise(
-    const FVector &Gyroscope)
+    const FVector &Gyroscope)const
 {
     // Normal (or Gaussian or Gauss) distribution and a bias will be used as
     // noise function.
@@ -676,9 +695,9 @@ void CaService::AddRSUContainerHighFrequency(CAMContainer::HighFrequencyContaine
     CAMContainer::RSUContainerHighFrequency_t &rsu = hfc.rsuContainerHighFrequency;
     // TODO For future implementation ITSContainer::ProtectedCommunicationZonesRSU_t PCZR
 
-    uint8_t ProtectedZoneDataLength = 16; // Maximum number of elements in path history
-
-    for (uint8_t i = 0; i <= ProtectedZoneDataLength; ++i)
+    uint8_t const ProtectedZoneDataLength = rsu.protectedCommunicationZonesRSU.data.size(); // Maximum number of elements in path history
+    rsu.protectedCommunicationZonesRSU.ProtectedCommunicationZoneCount = 0;
+    for (uint8_t i = 0; i < ProtectedZoneDataLength; ++i)
     {
         ITSContainer::ProtectedCommunicationZone_t PCZ;
         PCZ.protectedZoneType = ITSContainer::ProtectedZoneType_cenDsrcTolling;
@@ -687,13 +706,17 @@ void CaService::AddRSUContainerHighFrequency(CAMContainer::HighFrequencyContaine
         PCZ.protectedZoneLongitude = 50;
         PCZ.protectedZoneRadiusAvailable = false;
         PCZ.protectedZoneIDAvailable = false;
-        rsu.protectedCommunicationZonesRSU.list.push_back(PCZ);
+        rsu.protectedCommunicationZonesRSU.data[i]=PCZ;
         rsu.protectedCommunicationZonesRSU.ProtectedCommunicationZoneCount += 1;
     }
 }
 
 void CaService::AddLowFrequencyContainer(CAMContainer::LowFrequencyContainer_t &lfc)
 {
+    if (mVehicle == nullptr) {
+        return;
+    }
+
     lfc.present = CAMContainer::LowFrequencyContainer_PR_basicVehicleContainerLowFrequency;
     CAMContainer::BasicVehicleContainerLowFrequency_t &bvc = lfc.basicVehicleContainerLowFrequency;
 
@@ -736,12 +759,14 @@ void CaService::AddLowFrequencyContainer(CAMContainer::LowFrequencyContainer_t &
 
 bool CaService::CheckHeadingDelta(float DeltaSeconds)
 {
-    // if heading diff is more than 4degree
-    VehicleHeading = mVehicle->GetVehicleOrientation();
-    double HeadingDelta = carla::geom::Math::ToDegrees(GetFVectorAngle(mLastCamHeading, VehicleHeading));
-    if (HeadingDelta > 4.0)
-    {
-        return true;
+    if ( mVehicle != nullptr ) {
+        // if heading diff is more than 4degree
+        VehicleHeading = mVehicle->GetVehicleOrientation();
+        double HeadingDelta = carla::geom::Math::ToDegrees(GetFVectorAngle(mLastCamHeading, VehicleHeading));
+        if (HeadingDelta > 4.0)
+        {
+            return true;
+        }
     }
     return false;
 }

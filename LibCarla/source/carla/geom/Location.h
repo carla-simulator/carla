@@ -101,5 +101,10 @@ namespace geom {
 #endif // LIBCARLA_INCLUDED_FROM_UE4
   };
 
+  inline std::ostream &operator<<(std::ostream &out, const Location &location) {
+    carla::geom::WriteVector3D(out, "Location", location);
+    return out;
+  }
+
 } // namespace geom
 } // namespace carla

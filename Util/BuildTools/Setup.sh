@@ -217,7 +217,7 @@ unset BOOST_BASENAME
 # -- Get rpclib and compile it with libc++ and libstdc++ -----------------------
 # ==============================================================================
 
-RPCLIB_PATCH=v2.2.1_c5
+RPCLIB_PATCH=carla-callbacks
 RPCLIB_BASENAME=rpclib-${RPCLIB_PATCH}-${CXX_TAG}
 
 RPCLIB_LIBCXX_INCLUDE=${PWD}/${RPCLIB_BASENAME}-libcxx-install/include
@@ -422,7 +422,7 @@ unset RECAST_BASENAME
 # ==============================================================================
 
 LIBPNG_VERSION=1.6.37
-LIBPNG_REPO=https://sourceforge.net/projects/libpng/files/libpng16/${LIBPNG_VERSION}/libpng-${LIBPNG_VERSION}.tar.xz
+LIBPNG_REPO=https://sourceforge.net/projects/libpng/files/libpng16/older-releases/${LIBPNG_VERSION}/libpng-${LIBPNG_VERSION}.tar.xz
 LIBPNG_BASENAME=libpng-${LIBPNG_VERSION}
 LIBPNG_INSTALL=${LIBPNG_BASENAME}-install
 
@@ -929,7 +929,7 @@ if ${USE_ROS2} ; then
     FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan-memory-vendor
     FOONATHAN_MEMORY_VENDOR_SOURCE_DIR=${PWD}/${FOONATHAN_MEMORY_VENDOR_BASENAME}-source
     FOONATHAN_MEMORY_VENDOR_REPO="https://github.com/eProsima/foonathan_memory_vendor.git"
-    FOONATHAN_MEMORY_VENDOR_BRANCH=master
+    FOONATHAN_MEMORY_VENDOR_BRANCH=v1.3.1
 
     git clone --depth 1 --branch ${FOONATHAN_MEMORY_VENDOR_BRANCH} ${FOONATHAN_MEMORY_VENDOR_REPO} ${FOONATHAN_MEMORY_VENDOR_SOURCE_DIR}
 
