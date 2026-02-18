@@ -184,7 +184,7 @@
           When using the "follow_id" argument, the position of the camera relative to the followed actor.
       - param_name: map_override
         type: string
-        default: ""
+        default: '" "'
         doc: >
           Flag to load another map that isn't the one the log was recorded at.
       doc: >
