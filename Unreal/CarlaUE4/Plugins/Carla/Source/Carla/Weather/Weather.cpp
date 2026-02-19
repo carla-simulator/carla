@@ -75,7 +75,6 @@ void AWeather::ApplyWeather(const FWeatherParameters& InWeather)
     // Call the blueprint that actually changes the weather.
     RefreshWeather(Weather);
 
-    UE_LOG(LogCarla, Log, TEXT("Changing weather!!!!!!!!!!"));
     // record the weather event
     ACarlaRecorder *Recorder = UCarlaStatics::GetRecorder(GetWorld());
     if (Recorder && Recorder->IsEnabled())
