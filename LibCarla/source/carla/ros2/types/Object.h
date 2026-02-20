@@ -99,7 +99,6 @@ public:
     : _actor_definition(
           std::static_pointer_cast<carla::ros2::types::ActorDefinition>(traffic_light_actor_definition)) {
     _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_SIGN;
-    _classification_age = std::numeric_limits<uint32_t>::max();
     carla::log_verbose("Creating Traffic Light Object[", _actor_definition->type_id,
                     "] id: ", _actor_definition->id, " object_type: ", _actor_definition->object_type,
                     " base_type: ", _actor_definition->base_type, " ROS-class: ", classification_string());
@@ -113,7 +112,6 @@ public:
     : _actor_definition(
           std::static_pointer_cast<carla::ros2::types::ActorDefinition>(traffic_sign_actor_definition)) {
     _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_SIGN;
-    _classification_age = std::numeric_limits<uint32_t>::max();
     carla::log_verbose("Creating Traffic Sign Object[", _actor_definition->type_id,
                     "] id: ", _actor_definition->id, " object_type: ", _actor_definition->object_type,
                     " base_type: ", _actor_definition->base_type, " ROS-class: ", classification_string());
@@ -121,7 +119,6 @@ public:
 
   explicit Object(carla::rpc::EnvironmentObject environment_object, bool enable_for_ros)
     : _actor_definition(std::make_shared<carla::ros2::types::ActorDefinition>(environment_object, enable_for_ros)) {
-    _classification_age = std::numeric_limits<uint32_t>::max();
 
     // derived object msgs are somewhat limited in terms of classification support
     // therefore also an actor list for environment objects will be published
@@ -165,6 +162,12 @@ public:
     // and put in our object state update
     carla::sensor::data::ActorDynamicState actor_dynamic_state;
     actor_dynamic_state.id = actor_id();
+    // environment objects have a 64 bit unreal id, but Object.msg only supports uint32, 
+    // so we put the upper 32 bit of the actor id into the classification age, 
+    // so that we can correlate the object in the object list with the 64-bit id in the CarlaActorInfo list for environment objects
+    _classification_age = static_cast<uint32_t>((_actor_definition->id>>32) & 0xFFFFFFFF);
+    _actor_definition->attributes["Object.id"] = std::to_string(actor_id());
+    _actor_definition->attributes["Object.classification_age"] = std::to_string(_classification_age);
     actor_dynamic_state.transform = environment_object.transform;
     actor_dynamic_state.quaternion = carla::geom::Quaternion(environment_object.transform.rotation);
     UpdateObject(carla::ros2::types::Timestamp(), actor_dynamic_state);
@@ -189,16 +192,13 @@ public:
         carla::ros2::types::Speed(carla::geom::Velocity(actor_dynamic_state.velocity), actor_dynamic_state.quaternion),
         carla::ros2::types::AngularVelocity(carla::geom::AngularVelocity(actor_dynamic_state.angular_velocity)),
         timestamp);
-    if (_classification_age < std::numeric_limits<uint32_t>::max()) {
-      ++_classification_age;
-    }
   }
 
   derived_object_msgs::msg::Object object() const {
     derived_object_msgs::msg::Object object;
     object.header().stamp(_accelerated_movement.Timestamp().time());
     object.header().frame_id("map");
-    object.id(_actor_definition->id);
+    object.id(actor_id());
     object.detection_level(derived_object_msgs::msg::Object_Constants::OBJECT_TRACKED);
     object.object_classified(true);
     object.pose(_transform.pose());
@@ -218,7 +218,7 @@ public:
     derived_object_msgs::msg::ObjectWithCovariance object;
     object.header().stamp(_accelerated_movement.Timestamp().time());
     object.header().frame_id("map");
-    object.id(_actor_definition->id);
+    object.id(actor_id());
     object.detection_level(derived_object_msgs::msg::Object_Constants::OBJECT_TRACKED);
     object.object_classified(true);
     object.pose(_transform.pose_with_covariance());
@@ -298,7 +298,8 @@ public:
     return _actor_definition->carla_actor_info(name_registry);
   }
 
-  carla::streaming::detail::actor_id_type actor_id() const { return _actor_definition->id; }
+  carla::streaming::detail::actor_id_type actor_id() const {  
+    return static_cast<carla::streaming::detail::actor_id_type>(_actor_definition->id & 0xFFFFFFFF); }
 
   const carla::ros2::types::ActorDefinition& actor_definition()const { return *_actor_definition; }
 
@@ -310,7 +311,7 @@ private:
   carla::geom::BoundingBox _bounding_box;
   carla::ros2::types::Transform _transform;
   carla::ros2::types::AcceleratedMovement _accelerated_movement;
-  uint32_t _classification_age{0u};
+  uint32_t _classification_age{std::numeric_limits<uint32_t>::max()};
 };
 }  // namespace types
 }  // namespace ros2
