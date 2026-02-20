@@ -72,6 +72,10 @@ def main():
         action='store_true',
         help='spawn sensors in the replayed world')
     argparser.add_argument(
+        '--replay-weather',
+        action='store_true',
+        help='replays the logged weather')
+    argparser.add_argument(
         '-m', '--map-override',
         type=str,
         help='The name of the map to load instead of whatever the log file indicates.')
@@ -103,6 +107,7 @@ def main():
             args.duration,
             args.camera,
             args.spawn_sensors,
+            args.replay_weather,
             offset,
             map_override=args.map_override if args.map_override != None else ""))
 
