@@ -2,6 +2,7 @@
 
 * Added actor description as Actor TAGs
 * Create class with functions to import points and polylines from satellite segmentation (#8946, #8949 #8950)
+* Added Visual C++ Redistributable prerequisite and troubleshooting note to Windows quickstart guide (#9560)
 
 ## CARLA 0.10.0
 
