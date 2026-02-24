@@ -30,9 +30,12 @@ The following requirements should be fulfilled before installing CARLA:
 >>      pip3 install --upgrade pip
 
 * __Two TCP ports and a good internet connection.__ 2000 and 2001 by default. Make sure that these ports are not blocked by firewalls or any other applications. 
-* __Other requirements.__  CARLA requires some Python dependencies. Install the dependencies according to your operating system:
+* __Other requirements.__  CARLA requires some Python dependencies and platform-specific software. Install the requirements according to your operating system:
 
 ### Windows
+
+!!! important
+    CARLA requires the **Microsoft Visual C++ Redistributable** to run on Windows. Without it, the simulator will fail to launch without any error message. Download and install it from the [Microsoft website](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist). Choose the **x64** version under "Visual Studio 2015, 2017, 2019, and 2022".
 
 ```sh
 pip3 install --user pygame numpy
@@ -90,6 +93,9 @@ Windows:
 cd path/to/carla/root
 CarlaUnreal.exe
 ```
+
+!!! note
+    If CARLA fails to launch on Windows without any error message or log output, ensure that you have installed the [Microsoft Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist) (x64 version). This is a common issue on fresh Windows installations.
 
 A window containing a view over Town 10 will pop up. This is the _spectator view_. To fly around the city use the mouse and `WASD` keys, holding down the right mouse button to control the direction. 
 
