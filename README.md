@@ -87,7 +87,7 @@ Clone this repository locally from GitHub, specifying the *ue5-dev* branch:
 git clone -b ue5-dev https://github.com/carla-simulator/carla.git CarlaUE5
 ```
 
-In order to build CARLA, you need acces to the CARLA fork of Unreal Engine 5.5. In order to access this repository, you must first link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github). You then also need to use your git credentials to authorise the download of the Unreal Engine 5.5 repository. 
+In order to build CARLA, you need access to the CARLA fork of Unreal Engine 5.5. In order to access this repository, you must first link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github). You then also need to use your git credentials to authorise the download of the Unreal Engine 5.5 repository. 
 
 __Building in Linux__:
 
@@ -169,7 +169,7 @@ cmake --build Build
 __Build and install the Python API__:
 
 
-Linux and windows:
+Linux and Windows:
 
 ```sh
 cmake --build Build --target carla-python-api-install
