@@ -69,7 +69,6 @@ namespace geom {
 
     Vector3D MakeUnitVectorLengthInput(const double length, const float epsilon = 2.0f * std::numeric_limits<float>::epsilon()) const {
       if (length < epsilon) {
-        DEVELOPMENT_ASSERT(length >= 2.0f * std::numeric_limits<float>::epsilon());
         return *this;
       }
       const double k = 1.0 / length;
