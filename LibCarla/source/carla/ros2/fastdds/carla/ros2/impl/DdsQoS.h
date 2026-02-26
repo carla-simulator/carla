@@ -35,13 +35,10 @@ FAST_DDS_QOS_TYPE FastDdsQos(ROS2QoS const &qos) {
     fast_dds_qos.history().depth = qos._history_depth;
   } else if (qos._history == ROS2QoS::History::KEEP_ALL) {
     fast_dds_qos.history().kind = eprosima::fastdds::dds::HistoryQosPolicyKind::KEEP_ALL_HISTORY_QOS;
-    fast_dds_qos.history().depth = qos._history_depth;
+    fast_dds_qos.resource_limits().max_samples = 1000; // Or some high value
+    fast_dds_qos.resource_limits().allocated_samples = qos._history_depth;
   }
   return fast_dds_qos;
-}
-
-inline eprosima::fastdds::dds::TopicQos TopicQos(ROS2QoS const &qos) {
-  return FastDdsQos<eprosima::fastdds::dds::TopicQos, eprosima::fastdds::dds::TOPIC_QOS_DEFAULT>(qos);
 }
 
 inline eprosima::fastdds::dds::DataWriterQos DataWriterQos(ROS2QoS const &qos) {
@@ -52,17 +49,6 @@ inline eprosima::fastdds::dds::DataReaderQos DataReaderQos(ROS2QoS const &qos) {
   return FastDdsQos<eprosima::fastdds::dds::DataReaderQos, eprosima::fastdds::dds::DATAREADER_QOS_DEFAULT>(qos);
 }
 
-inline eprosima::fastdds::dds::PublisherQos PublisherQos(ROS2QoS const &qos) {
-  (void)qos;
-  eprosima::fastdds::dds::PublisherQos pubqos = eprosima::fastdds::dds::PUBLISHER_QOS_DEFAULT;
-  return pubqos;
-}
-
-inline eprosima::fastdds::dds::SubscriberQos SubscriberQos(ROS2QoS const &qos) {
-  (void)qos;
-  eprosima::fastdds::dds::SubscriberQos subqos = eprosima::fastdds::dds::SUBSCRIBER_QOS_DEFAULT;
-  return subqos;
-}
 
 }  // namespace ros2
 }  // namespace carla

@@ -30,11 +30,14 @@ carla_msgs::srv::SetEpisodeSettings_Response SetEpisodeSettingsService::SetEpiso
   carla_msgs::srv::SetEpisodeSettings_Response response;
   carla::ros2::types::EpisodeSettings episode_settings(request.episode_settings());
   auto result = _carla_server.call_set_episode_settings(episode_settings.GetEpisodeSettings());
-  if ( result > 0 ) {
-    response.success(true);
+  if ( result.HasError() ) {
+    log_error("ROS2:SetEpisodeSettings(): failed to apply episode settings: ", 
+      result.GetError().What());
+    response.success(false);
   }
   else {
-    response.success(false);
+    log_info("ROS2:SetEpisodeSettings(): applied episode settings successful");
+    response.success(true);
   }
 
   return response;

@@ -69,7 +69,7 @@ void LoadMapService::LoadMap(
     _impl->SendResponse(request, response);
   }
   else {
-    /* waiting for new episode to begin */
+    /* waiting with the respose for new episode to begin */
   }
 }
 

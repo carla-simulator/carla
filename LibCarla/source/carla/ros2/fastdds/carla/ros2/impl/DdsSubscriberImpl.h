@@ -55,10 +55,8 @@ public:
   }
 
   bool Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant, std::string topic_name, ROS2QoS qos) {
-    auto subqos = SubscriberQos(qos);
     auto rqos = DataReaderQos(qos);
-    auto tqos = TopicQos(qos);
-    return InitInternal(domain_participant, topic_name, tqos, subqos, rqos);
+    return InitInternal(domain_participant, topic_name, rqos);
   }
 
   void on_subscription_matched(eprosima::fastdds::dds::DataReader* reader,
@@ -93,7 +91,7 @@ public:
   void on_data_available(eprosima::fastdds::dds::DataReader* reader) override {
     eprosima::fastdds::dds::SampleInfo info;
     MESSAGE_TYPE message;
-    auto rcode = reader->take_next_sample(&message, &info);
+    eprosima::fastrtps::types::ReturnCode_t rcode = reader->take_next_sample(&message, &info);
     auto const publisher_guid = GetPublisherGuid(info.publication_handle);
     if (rcode == eprosima::fastrtps::types::ReturnCode_t::ReturnCodeValue::RETCODE_OK) {
       AddMessage(publisher_guid, message);
@@ -106,7 +104,6 @@ public:
   }
 
   bool InitInternal(std::shared_ptr<DdsDomainParticipantImpl> domain_participant, std::string topic_name,
-                    eprosima::fastdds::dds::TopicQos const& tqos, eprosima::fastdds::dds::SubscriberQos const& subqos,
                     eprosima::fastdds::dds::DataReaderQos const& rqos) {
     carla::log_debug("DdsSubscriberImpl[", topic_name, "]::Init()");
 
@@ -123,12 +120,14 @@ public:
 
     _type.register_type(_participant);
 
+    auto const subqos = eprosima::fastdds::dds::SUBSCRIBER_QOS_DEFAULT;
     _subscriber = _participant->create_subscriber(subqos);
     if (_subscriber == nullptr) {
       carla::log_error("DdsSubscriberImpl[", topic_name, "]::Init(): Failed to create Subscriber");
       return false;
     }
 
+    auto const tqos = eprosima::fastdds::dds::TOPIC_QOS_DEFAULT;
     _topic = _participant->create_topic(topic_name, _type->getName(), tqos);
     if (_topic == nullptr) {
       carla::log_error("DdsSubscriberImpl[", topic_name, "]::Init(): Failed to create Topic");

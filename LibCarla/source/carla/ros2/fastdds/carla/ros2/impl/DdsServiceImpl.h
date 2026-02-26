@@ -82,8 +82,6 @@ public:
     }
     _request_type.register_type(_participant);
     auto topic_qos = eprosima::fastdds::dds::TOPIC_QOS_DEFAULT;
-    topic_qos.history().kind = eprosima::fastdds::dds::KEEP_ALL_HISTORY_QOS;
-    topic_qos.reliability().kind = eprosima::fastdds::dds::RELIABLE_RELIABILITY_QOS;
     _request_topic =
         _participant->create_topic(request_name, _request_type->getName(), topic_qos);
     if (_request_topic == nullptr) {
@@ -96,11 +94,14 @@ public:
       carla::log_error("DdsServiceImpl[", topic_name, "]::Init(): Failed to create Subscriber");
       return false;
     }
+
     eprosima::fastdds::dds::DataReaderListener* reader_listener =
         static_cast<eprosima::fastdds::dds::DataReaderListener*>(this);
     auto datareader_qos = eprosima::fastdds::dds::DATAREADER_QOS_DEFAULT;
-    datareader_qos.history().kind = eprosima::fastdds::dds::KEEP_ALL_HISTORY_QOS;
+    datareader_qos.history().kind = eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS;
+    datareader_qos.history().depth = 50;
     datareader_qos.reliability().kind = eprosima::fastdds::dds::RELIABLE_RELIABILITY_QOS;
+    datareader_qos.durability().kind = eprosima::fastdds::dds::VOLATILE_DURABILITY_QOS;
     _datareader =
         _subscriber->create_datareader(_request_topic, datareader_qos, reader_listener);
     if (_datareader == nullptr) {
@@ -130,9 +131,11 @@ public:
 
     auto writer_qos = eprosima::fastdds::dds::DATAWRITER_QOS_DEFAULT;
     writer_qos.endpoint().history_memory_policy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-    writer_qos.history().kind = eprosima::fastdds::dds::KEEP_ALL_HISTORY_QOS;
-    writer_qos.durability().kind = eprosima::fastdds::dds::TRANSIENT_LOCAL_DURABILITY_QOS;
+    writer_qos.history().kind = eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS;
+    writer_qos.history().depth = 10;
+    writer_qos.durability().kind = eprosima::fastdds::dds::VOLATILE_DURABILITY_QOS;
     writer_qos.reliability().kind = eprosima::fastdds::dds::RELIABLE_RELIABILITY_QOS;
+    writer_qos.publish_mode().kind = eprosima::fastdds::dds::SYNCHRONOUS_PUBLISH_MODE;
     _datawriter = _publisher->create_datawriter(_response_topic, writer_qos);
     if (_datawriter == nullptr) {
       carla::log_error("DdsServiceImpl[", _response_topic->get_name(), "]::Init() Failed to create DataWriter");
@@ -155,7 +158,7 @@ public:
 
   void on_data_available(eprosima::fastdds::dds::DataReader* reader) override {
     auto incoming_request = std::make_shared<IncomingRequest>();
-    auto rcode = reader->take_next_sample(&incoming_request->request, &incoming_request->info);
+    eprosima::fastrtps::types::ReturnCode_t rcode = reader->take_next_sample(&incoming_request->request, &incoming_request->info);
     if (rcode == eprosima::fastrtps::types::ReturnCode_t::ReturnCodeValue::RETCODE_OK) {
       if (eprosima::fastdds::dds::InstanceStateKind::ALIVE_INSTANCE_STATE == incoming_request->info.instance_state) {
         carla::log_debug("DdsServiceImpl[", _request_topic->get_name(), "]::on_data_available(): Incoming request ");
@@ -209,12 +212,12 @@ public:
 private:
   void SendResponseInternal(RESPONSE_TYPE& response, const eprosima::fastrtps::rtps::SampleIdentity& related_request_identity) {
     eprosima::fastrtps::rtps::WriteParams write_params;
+
     write_params.related_sample_identity() = related_request_identity;
-    auto rcode = _datawriter->write(reinterpret_cast<void*>(&response), write_params);
-    if (rcode != bool(eprosima::fastrtps::types::ReturnCode_t::ReturnCodeValue::RETCODE_OK)) {
-      // strange: getting error while the result is actually sent out
+    eprosima::fastrtps::types::ReturnCode_t rcode = _datawriter->write(&response, write_params);
+    if (rcode != eprosima::fastrtps::types::ReturnCode_t::ReturnCodeValue::RETCODE_OK) {
       carla::log_debug("DdsServiceImpl[", _response_topic->get_name(),
-                       "]::SendResponse() Failed to write data; Error ", std::to_string(rcode));
+                       "]::SendResponse() Failed to write data; Error ", std::to_string(rcode), " , ", related_request_identity.sequence_number());
     }
     carla::log_debug("DdsServiceImpl[", _response_topic->get_name(), "]::SendResponse() Response sent");
   }
