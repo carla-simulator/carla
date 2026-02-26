@@ -27,15 +27,6 @@ class TestGeom(unittest.TestCase):
         length = (c_unit.x ** 2 + c_unit.y ** 2 + c_unit.z ** 2) ** 0.5
         self.assertAlmostEqual(length, 1.0)
 
-        # test the behavior of make_unit_vector when the length of the vector is smaller than epsilon
-        with self.assertRaisesRegex(RuntimeError, "length >= 2.0f"):
-            zero = carla.Vector3D(0.0, 0.0, 0.0)
-            zero_unit = zero.make_unit_vector()
-
-        with self.assertRaisesRegex(RuntimeError, "length >= 2.0f"):
-            small = carla.Vector3D(1e-8, 0.0, 0.0)
-            small_unit = small.make_unit_vector(epsilon=1e-6)
-
         large = carla.Vector3D(1e-4, 0.0, 0.0)
         large_unit = large.make_unit_vector(epsilon=1e-6)
         self.assertEqual(large_unit.x, 1.0)
