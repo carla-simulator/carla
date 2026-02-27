@@ -100,6 +100,13 @@ namespace client {
     std::vector<SharedPtr<Landmark>> GetLandmarksOfTypeInDistance(
         double distance, std::string filter_type, bool stop_at_junction = false) const;
 
+    /// Returns the speed limit (km/h) of the road at this waypoint's position
+    /// as defined by the OpenDRIVE <road><type><speed> tag.
+    /// Returns -1.0 (sentinel) if no speed information is defined.
+    /// Speed is physically non-negative, so -1.0 safely indicates "absent".
+    /// Callers should check (value > 0.0) before using the result.
+    double GetRoadSpeedLimit() const;
+
     bool IsPositiveDirection() const;
 
     bool IsRHT() const;

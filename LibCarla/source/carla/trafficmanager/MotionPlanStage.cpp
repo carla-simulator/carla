@@ -398,6 +398,14 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
       landmark_target_velocity = std::min(landmark_target_velocity, v);
     }
 
+    // Check RoadInfoSpeed (road-level speed limit from OpenDRIVE <road><type><speed> tag)
+    double road_speed_kmh = waypoint.GetWaypoint()->GetRoadSpeedLimit();
+    if (road_speed_kmh > 0.0) {
+      float road_speed_ms = parameters.GetVehicleTargetVelocity(
+          actor_id, static_cast<float>(road_speed_kmh) / 3.6f);
+      landmark_target_velocity = std::min(landmark_target_velocity, road_speed_ms);
+    }
+
     return landmark_target_velocity;
 }
 

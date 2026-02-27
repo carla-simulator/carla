@@ -9,6 +9,7 @@
 #include "carla/client/Map.h"
 #include "carla/client/Junction.h"
 #include "carla/client/Landmark.h"
+#include "carla/road/element/RoadInfoSpeed.h"
 
 #include <unordered_set>
 
@@ -264,6 +265,18 @@ namespace client {
 
   bool Waypoint::IsRHT() const {
     return _parent->GetMap().GetLane(_waypoint).GetRoad()->IsRHT();
+  }
+
+  double Waypoint::GetRoadSpeedLimit() const {
+    const auto *road = _parent->GetMap().GetLane(_waypoint).GetRoad();
+    const auto *speed_info = road->GetInfo<road::element::RoadInfoSpeed>(_waypoint.s);
+    if (speed_info == nullptr) {
+      // Return -1.0 as a sentinel value meaning "no speed info defined".
+      // Speed is physically non-negative, so -1.0 is safe to use as "absent".
+      // The caller can check (value > 0.0) to skip application.
+      return -1.0;
+    }
+    return speed_info->GetSpeed();
   }
 
 } // namespace client
