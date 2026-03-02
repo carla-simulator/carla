@@ -61,6 +61,8 @@ public:
                         const carla::SharedBufferView buffer_view) override;
 
 protected:
+  sensor_msgs::msg::CameraInfo CreateCameraInfo(uint32_t height, uint32_t width, double fov);
+
   void UpdateCameraInfo(const builtin_interfaces::msg::Time &stamp, sensor_msgs::msg::CameraInfo const &camera_info);
   void UpdateImageHeader(const builtin_interfaces::msg::Time &stamp, sensor_msgs::msg::CameraInfo const &camera_info);
 

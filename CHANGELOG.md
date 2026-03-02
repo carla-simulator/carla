@@ -14,6 +14,7 @@
  * Added support for parsing offsets from OpenDRIVE using optional offset transforms.
  * Added ad-rss type-stubs for the PythonAPI when building with RSS support
  * ROS2Native: Extended functionality and performance of ROS2 support
+ * ROS2Native: Update to fastdds 2.14.6
  
 ## CARLA 0.9.16
 

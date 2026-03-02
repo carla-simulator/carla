@@ -37,15 +37,40 @@ bool UePublisherBaseCamera<ALLOCATOR>::SubscribersConnected() const {
 }
 
 template <class ALLOCATOR>
+sensor_msgs::msg::CameraInfo UePublisherBaseCamera<ALLOCATOR>::CreateCameraInfo(uint32_t height, uint32_t width, double fov)
+{
+  sensor_msgs::msg::CameraInfo camera_info;
+  camera_info.height(height);
+  camera_info.width(width);
+  camera_info.distortion_model("plumb_bob");
+
+  const double cx = static_cast<double>(width) / 2.0;
+  const double cy = static_cast<double>(height) / 2.0;
+  const double fx = static_cast<double>(width) / (2.0 * std::tan(fov) * M_PI / 360.0);
+  const double fy = fx;
+
+  camera_info.d({ 0.0, 0.0, 0.0, 0.0, 0.0 });
+  camera_info.k({fx, 0.0, cx, 0.0, fy, cy, 0.0, 0.0, 1.0});
+  camera_info.r({ 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 });
+  camera_info.p({fx, 0.0, cx, 0.0, 0.0, fy, cy, 0.0, 0.0, 0.0, 1.0, 0.0});
+
+  camera_info.binning_x(0);
+  camera_info.binning_y(0);
+
+  camera_info.roi().x_offset(0);  // up-to-data: constantly 0
+  camera_info.roi().y_offset(0);  // up-to-data: constantly 0
+  camera_info.roi().height(camera_info.height());
+  camera_info.roi().width(camera_info.width());
+  camera_info.roi().do_rectify(true);  // up-to-data: constantly true
+
+  return camera_info;
+}
+
+template <class ALLOCATOR>
 void UePublisherBaseCamera<ALLOCATOR>::UpdateCameraInfo(const builtin_interfaces::msg::Time &stamp,
                                                         sensor_msgs::msg::CameraInfo const &camera_info) {
   _camera_info->Message() = camera_info;
   _camera_info->SetMessageHeader(stamp, frame_id());
-  _camera_info->Message().roi().x_offset(0);  // up-to-data: constantly 0
-  _camera_info->Message().roi().y_offset(0);  // up-to-data: constantly 0
-  _camera_info->Message().roi().height(camera_info.height());
-  _camera_info->Message().roi().width(camera_info.width());
-  _camera_info->Message().roi().do_rectify(true);  // up-to-data: constantly true
   _camera_info_initialized = true;
 }
 
@@ -70,7 +95,7 @@ void UePublisherBaseCamera<ALLOCATOR>::UpdateSensorData(
     return;
   }
 
-  const sensor_msgs::msg::CameraInfo camera_info(header_view->height, header_view->width, header_view->fov_angle);
+  const auto camera_info = CreateCameraInfo(header_view->height, header_view->width, header_view->fov_angle);
   auto const stamp = GetTime(sensor_header);
   UpdateCameraInfo(stamp, camera_info);
   UpdateImageHeader(stamp, _camera_info->Message());

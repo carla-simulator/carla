@@ -40,7 +40,7 @@ void UeDVSCameraPublisher::UpdateSensorData(
   auto header_view = this->header_view(buffer_view);
   auto data_vector_view = this->vector_view(buffer_view);
 
-  const sensor_msgs::msg::CameraInfo camera_info(header_view->height, header_view->width, header_view->fov_angle);
+  auto const camera_info = CreateCameraInfo(header_view->height, header_view->width, header_view->fov_angle);
   auto const stamp = GetTime(sensor_header);
   UpdateCameraInfo(stamp, camera_info);
   UpdateImageHeader(stamp, camera_info);
@@ -66,23 +66,23 @@ void UeDVSCameraPublisher::SetPointCloudData(std::vector<DVSEvent, DVSEventVecto
   sensor_msgs::msg::PointField descriptor1;
   descriptor1.name("x");
   descriptor1.offset(offsetof(DVSEvent, x));
-  descriptor1.datatype(sensor_msgs::msg::PointField__UINT16);
+  descriptor1.datatype(sensor_msgs::msg::PointField_Constants::UINT16);
   descriptor1.count(1);
   sensor_msgs::msg::PointField descriptor2;
   descriptor2.name("y");
   descriptor2.offset(offsetof(DVSEvent, y));
-  descriptor2.datatype(sensor_msgs::msg::PointField__UINT16);
+  descriptor2.datatype(sensor_msgs::msg::PointField_Constants::UINT16);
   descriptor2.count(1);
   sensor_msgs::msg::PointField descriptor3;
   descriptor3.name("t");
   descriptor3.offset(offsetof(DVSEvent, t));
   descriptor3.datatype(
-      sensor_msgs::msg::PointField__FLOAT64);  // PointField__INT64 is not existing, but would be required here!!
+      sensor_msgs::msg::PointField_Constants::FLOAT64);  // PointField_Constants::INT64 is not existing, but would be required here!!
   descriptor3.count(1);
   sensor_msgs::msg::PointField descriptor4;
   descriptor4.name("pol");
   descriptor4.offset(offsetof(DVSEvent, pol));
-  descriptor4.datatype(sensor_msgs::msg::PointField__INT8);
+  descriptor4.datatype(sensor_msgs::msg::PointField_Constants::INT8);
   descriptor4.count(1);
 
 

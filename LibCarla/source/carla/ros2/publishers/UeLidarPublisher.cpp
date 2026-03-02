@@ -17,22 +17,22 @@ std::vector<sensor_msgs::msg::PointField> UeLidarPublisher::GetPointFields() con
   sensor_msgs::msg::PointField descriptor1;
   descriptor1.name("x");
   descriptor1.offset(0);
-  descriptor1.datatype(sensor_msgs::msg::PointField__FLOAT32);
+  descriptor1.datatype(sensor_msgs::msg::PointField_Constants::FLOAT32);
   descriptor1.count(1);
   sensor_msgs::msg::PointField descriptor2;
   descriptor2.name("y");
   descriptor2.offset(4);
-  descriptor2.datatype(sensor_msgs::msg::PointField__FLOAT32);
+  descriptor2.datatype(sensor_msgs::msg::PointField_Constants::FLOAT32);
   descriptor2.count(1);
   sensor_msgs::msg::PointField descriptor3;
   descriptor3.name("z");
   descriptor3.offset(8);
-  descriptor3.datatype(sensor_msgs::msg::PointField__FLOAT32);
+  descriptor3.datatype(sensor_msgs::msg::PointField_Constants::FLOAT32);
   descriptor3.count(1);
   sensor_msgs::msg::PointField descriptor4;
   descriptor4.name("intensity");
   descriptor4.offset(12);
-  descriptor4.datatype(sensor_msgs::msg::PointField__FLOAT32);
+  descriptor4.datatype(sensor_msgs::msg::PointField_Constants::FLOAT32);
   descriptor4.count(1);
 
   return {descriptor1, descriptor2, descriptor3, descriptor4};
