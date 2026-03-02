@@ -131,7 +131,14 @@ void MotionPlanStage::Update(const unsigned long index) {
   else {
 
     // Target velocity for vehicle.
-    float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, vehicle_speed_limit) / 3.6f;
+    // Prefer the OpenDRIVE road-level speed limit over the actor snapshot value,
+    // because NPC-only maps (e.g. NishishinjukuMap) typically lack speed-limit
+    // sign Actors so vehicle_speed_limit stays at the default 30 km/h.
+    double road_speed_kmh = waypoint_buffer.at(0)->GetWaypoint()->GetRoadSpeedLimit();
+    float effective_speed_limit = (road_speed_kmh > 0.0)
+        ? static_cast<float>(road_speed_kmh)
+        : vehicle_speed_limit;
+    float max_target_velocity = parameters.GetVehicleTargetVelocity(actor_id, effective_speed_limit) / 3.6f;
 
     // Algorithm to reduce speed near landmarks
     float max_landmark_target_velocity = GetLandmarkTargetVelocity(*(waypoint_buffer.at(0)), vehicle_location, actor_id, max_target_velocity);
@@ -396,14 +403,6 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
 
       float v = std::max(((max_target_velocity - minimum_velocity) / max_distance) * distance + minimum_velocity, minimum_velocity);
       landmark_target_velocity = std::min(landmark_target_velocity, v);
-    }
-
-    // Check RoadInfoSpeed (road-level speed limit from OpenDRIVE <road><type><speed> tag)
-    double road_speed_kmh = waypoint.GetWaypoint()->GetRoadSpeedLimit();
-    if (road_speed_kmh > 0.0) {
-      float road_speed_ms = parameters.GetVehicleTargetVelocity(
-          actor_id, static_cast<float>(road_speed_kmh) / 3.6f);
-      landmark_target_velocity = std::min(landmark_target_velocity, road_speed_ms);
     }
 
     return landmark_target_velocity;
