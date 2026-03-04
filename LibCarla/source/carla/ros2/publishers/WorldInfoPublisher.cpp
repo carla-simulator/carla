@@ -16,7 +16,10 @@ WorldInfoPublisher::WorldInfoPublisher(carla::rpc::RpcServerInterface &carla_ser
     _carla_server(carla_server) {}
 
 bool WorldInfoPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
-  return _impl->InitHistoryPreallocatedWithReallocMemoryMode(domain_participant, get_topic_name(), get_topic_qos().keep_last(1));
+  auto topic_qos = get_topic_qos();
+  topic_qos.keep_last(1);
+  topic_qos.force_synchronous_writer();
+  return _impl->InitHistoryPreallocatedWithReallocMemoryMode(domain_participant, get_topic_name(), topic_qos);
 }
 
 bool WorldInfoPublisher::Publish() {

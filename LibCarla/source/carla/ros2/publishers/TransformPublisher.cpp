@@ -18,8 +18,10 @@ TransformPublisher::TransformPublisher()
     _impl_tf_static(std::make_shared<TransformPublisherImpl>()) {}
 
 bool TransformPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
-  return _impl_tf->InitHistoryPreallocatedWithReallocMemoryMode(domain_participant, "rt/tf", get_topic_qos())
-    && _impl_tf_static->InitHistoryPreallocatedWithReallocMemoryMode(domain_participant, "rt/tf_static", get_topic_qos());
+  auto topic_qos = get_topic_qos();
+  topic_qos.force_synchronous_writer();
+  return _impl_tf->InitHistoryPreallocatedWithReallocMemoryMode(domain_participant, "rt/tf", topic_qos)
+    && _impl_tf_static->InitHistoryPreallocatedWithReallocMemoryMode(domain_participant, "rt/tf_static", topic_qos);
 }
 
 bool TransformPublisher::Publish() {

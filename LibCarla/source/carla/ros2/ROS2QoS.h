@@ -44,6 +44,11 @@ struct ROS2QoS {
     return *this;
   }
 
+  ROS2QoS &force_synchronous_writer(bool force_synchronous_writer = true) {
+    _force_synchronous_writer = force_synchronous_writer;
+    return *this;
+  }
+
   enum class Reliability { SYSTEM_DEFAULT, BEST_EFFORT, RELIABLE } _reliability;
 
   enum class Durability { SYSTEM_DEFAULT, TRANSIENT_LOCAL, VOLATILE } _durability;
@@ -51,6 +56,8 @@ struct ROS2QoS {
   enum class History { SYSTEM_DEFAULT, KEEP_LAST, KEEP_ALL } _history;
 
   int32_t _history_depth;
+
+  bool _force_synchronous_writer = false;
 };
 
 /**

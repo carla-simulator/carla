@@ -35,14 +35,19 @@ FAST_DDS_QOS_TYPE FastDdsQos(ROS2QoS const &qos) {
     fast_dds_qos.history().depth = qos._history_depth;
   } else if (qos._history == ROS2QoS::History::KEEP_ALL) {
     fast_dds_qos.history().kind = eprosima::fastdds::dds::HistoryQosPolicyKind::KEEP_ALL_HISTORY_QOS;
-    fast_dds_qos.resource_limits().max_samples = 1000; // Or some high value
+    fast_dds_qos.resource_limits().max_samples = 1000;
     fast_dds_qos.resource_limits().allocated_samples = qos._history_depth;
   }
   return fast_dds_qos;
 }
 
 inline eprosima::fastdds::dds::DataWriterQos DataWriterQos(ROS2QoS const &qos) {
-  return FastDdsQos<eprosima::fastdds::dds::DataWriterQos, eprosima::fastdds::dds::DATAWRITER_QOS_DEFAULT>(qos);
+  auto writer_qos = FastDdsQos<eprosima::fastdds::dds::DataWriterQos, eprosima::fastdds::dds::DATAWRITER_QOS_DEFAULT>(qos);
+
+  if ( qos._force_synchronous_writer ) {
+     writer_qos.publish_mode().kind = eprosima::fastdds::dds::SYNCHRONOUS_PUBLISH_MODE;
+  }
+  return writer_qos;
 }
 
 inline eprosima::fastdds::dds::DataReaderQos DataReaderQos(ROS2QoS const &qos) {

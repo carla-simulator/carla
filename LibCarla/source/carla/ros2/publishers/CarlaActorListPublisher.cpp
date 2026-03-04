@@ -16,6 +16,7 @@ CarlaActorListPublisher::CarlaActorListPublisher(std::string const &role_name)
 bool CarlaActorListPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
   auto topic_qos = get_topic_qos();
   topic_qos.transient_local();
+  topic_qos.force_synchronous_writer();
   return _impl->Init(domain_participant, get_topic_name(), topic_qos);
 }
 

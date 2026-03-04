@@ -106,10 +106,9 @@ void UeWorldPublisher::Cleanup() {
 }
 
 bool UeWorldPublisher::Publish() {
-  if (!_initialized) {
-    return false;
-  }
-  return _clock_publisher->Publish() && _world_info_publisher->Publish() && _weather_publisher->Publish();
+  // publishing is performed in an ordered manner in the UpdateSensorDataPostAction()
+  // this is to ensure that the clock and TF messages are published before the other messages, which might depend on them.
+  return true;
 }
 
 void UeWorldPublisher::ProcessMessages() {
@@ -171,7 +170,6 @@ void UeWorldPublisher::UpdateSensorDataPreAction() {
       }
     }
     _sensor_actor_list_publisher->UpdateCarlaActorList(actor_list);
-    _sensor_actor_list_publisher->Publish();
   }
 }
 
@@ -199,7 +197,12 @@ void UeWorldPublisher::ProcessDataFromUeSensor(carla::streaming::detail::stream_
             ue_sensor->second.publisher->UpdateTransform(sensor_header);
           }
           ue_sensor->second.publisher->UpdateSensorData(sensor_header, *data_view_iter);
-          ue_sensor->second.publisher->Publish();
+          if ( ue_sensor->second.publisher->GetSensorDataPostActionFrameId() >= CurrentFrame() ) {
+            // camera sensors push their data streams within the rendering thread
+            // therefore, the UpdateSensorDataPostAction() of the world publisher might have already been called for the current frame, 
+            // which is used to trigger the publish of the sensor data. In this case, we need to force a publish here to make sure the data gets published in a timely manner.
+            ue_sensor->second.publisher->Publish();
+          }
         }
         log_verbose("Sensor Data to ROS data: frame.(", CurrentFrame(), ") stream.",
                   std::to_string(*sensor_actor_definition), " Processed.");
@@ -224,16 +227,18 @@ void UeWorldPublisher::UpdateSensorDataPostAction() {
     return;
   }
 
-  for (auto &ue_sensor : _ue_sensors) {
-    if ( (ue_sensor.second.publisher != nullptr)  && (ue_sensor.first != GetSensorActorDefinition()->stream_id) ) {
-      ue_sensor.second.publisher->UpdateSensorDataPostAction();
-    } 
-  }
-
-  UpdateAndPublishStatus();
-
+  // the actual publishing of data is triggered here for most of the data
+  // first the data is collected by the sensor updates and then published here in an ordered manner. 
+  // This is to ensure that the clock and TF messages are published before the other messages, which might depend on them.
+  // Most of the ROS2 applications might not have an issue with slightly later published clock and TF messages, 
+  // but some applications (e.g. rviz) might require the clock and TF messages to be published before the other messages.
   _transform_publisher->Publish();
+  _clock_publisher->Publish();
+  UpdateAndPublishStatus();
+  _world_info_publisher->Publish();
+  _weather_publisher->Publish();
   _actor_list_publisher->Publish();
+  _sensor_actor_list_publisher->Publish();
   _objects_publisher->Publish();
   _objects_with_covariance_publisher->Publish();
   _traffic_lights_publisher->Publish();
@@ -241,6 +246,39 @@ void UeWorldPublisher::UpdateSensorDataPostAction() {
   _traffic_light_objects_publisher->Publish();
   _traffic_sign_actor_list_publisher->Publish();
   _traffic_sign_objects_publisher->Publish();
+
+  for (auto& vehicle : _vehicles) {
+    auto publisher = vehicle.second._vehicle_publisher;
+    if (publisher != nullptr) {
+      publisher->Publish();
+    }
+  }
+  for (auto& walker : _walkers) {
+    auto publisher = walker.second._walker_publisher;
+    if (publisher != nullptr) {
+      publisher->Publish();
+    }
+  }
+  for (auto& traffic_light : _traffic_lights) {
+    auto publisher = traffic_light.second._traffic_light_publisher;
+    if (publisher != nullptr) {
+      publisher->Publish();
+    }
+  }
+  for (auto& traffic_sign : _traffic_signs) {
+    auto publisher = traffic_sign.second._traffic_sign_publisher;
+    if (publisher != nullptr) {
+      publisher->Publish();
+    }
+  }
+
+  for (auto &ue_sensor : _ue_sensors) {
+    if ( (ue_sensor.second.publisher != nullptr)  && (ue_sensor.first != GetSensorActorDefinition()->stream_id) ) {
+      ue_sensor.second.publisher->UpdateSensorDataPostAction(CurrentFrame());
+      ue_sensor.second.publisher->Publish();
+    } 
+  }
+
 }
 
 void UeWorldPublisher::CreateSensorUePublisher(UeSensor &sensor) {
@@ -586,7 +624,6 @@ void UeWorldPublisher::UpdateAndPublishStatus() {
     
     status.game_running(synchronization_target_game_time_min > _timestamp.Stamp());
     _status_publisher->UpdateCarlaStatus(status);
-
     _status_publisher->Publish();
   }
 }
@@ -630,7 +667,6 @@ void UeWorldPublisher::UpdateSensorData(
             publisher->UpdateTransform(_timestamp, transform);
           }
           publisher->UpdateVehicle(object, actor_dynamic_state);
-          publisher->Publish();
         }
       }
 
@@ -645,7 +681,6 @@ void UeWorldPublisher::UpdateSensorData(
               publisher->UpdateTransform(_timestamp, transform);
             }
             publisher->UpdateWalker(object, actor_dynamic_state);
-            publisher->Publish();
           }
         }
       }
@@ -658,7 +693,6 @@ void UeWorldPublisher::UpdateSensorData(
           auto publisher = ue_traffic_sign._traffic_sign_publisher;
           if ( publisher->is_enabled_for_ros() ) {
             publisher->UpdateTrafficSign(object, actor_dynamic_state);
-            publisher->Publish();
           }
         }
       }
@@ -671,7 +705,6 @@ void UeWorldPublisher::UpdateSensorData(
           auto publisher = ue_traffic_light._traffic_light_publisher;
           if ( publisher->is_enabled_for_ros() ) {
             publisher->UpdateTrafficLight(object, actor_dynamic_state);
-            publisher->Publish();
           }
         }
       }
@@ -691,9 +724,13 @@ void UeWorldPublisher::UpdateSensorData(
     if ( (ue_sensor.second.publisher != nullptr) && 
          (ue_sensor.first != GetSensorActorDefinition()->stream_id) &&
          (ue_sensor.second.publisher->is_enabled_for_ros()) &&
-         (ue_sensor.second.publisher->do_publish_tf()) &&
-         (!ue_sensor.second.publisher->SubscribersConnected())) {
-      // update sensor transform of sensors not subscribed, as their data stream is not deployed
+         (ue_sensor.second.publisher->do_publish_tf())) {
+      // update sensor transform of sensors:
+      // - have to cover not subscribed sensors, as their data stream is not deployed
+      // - have to cover PixelCamera sensors, as they are publishing their data stream within the rendering thread
+      //   and therefore might update their Transform possibly after the UpdateSensorDataPostAction() of the world publisher is called. 
+      //   In this case, we need to make sure the transform is updated before the data gets published.
+      //   Since the UE sensor transform is published as static tf, calling the UpdateTransform() twice doesn't duplicate the TF messages.
       auto const parent_actor_id = ue_sensor.second.publisher->get_parent_actor_id();
       auto const parent_transform = get_transform(parent_actor_id);
       auto const relative_transform = ue_sensor.second.transform.GetRelativeTransform(parent_transform);

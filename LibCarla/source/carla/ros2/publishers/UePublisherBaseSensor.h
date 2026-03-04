@@ -4,8 +4,11 @@
 
 #pragma once
 
+#include <atomic>
+
 #include "carla/ros2/publishers/PublisherBaseTransform.h"
 #include "carla/rpc/ActorId.h"
+
 
 namespace carla {
 namespace ros2 {
@@ -37,7 +40,19 @@ public:
   /**
    * Implement actions after sensor data updates
    */
-  virtual void UpdateSensorDataPostAction() {};
+  virtual void UpdateSensorDataPostAction() {}
+
+  /**
+   * calling UpdateSensorDataPostAction but store frame_id for later use
+   */
+  void UpdateSensorDataPostAction(uint64_t frame_id) {
+    sensor_data_post_action_frame_id = frame_id;
+    UpdateSensorDataPostAction();
+  }
+
+  uint64_t GetSensorDataPostActionFrameId() const {
+    return sensor_data_post_action_frame_id;
+  }
 
   builtin_interfaces::msg::Time GetTime(
       std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header) const {
@@ -47,6 +62,10 @@ public:
   std::shared_ptr<carla::ros2::types::SensorActorDefinition> GetSensorActorDefinition() const {
     return std::static_pointer_cast<carla::ros2::types::SensorActorDefinition>(_actor_name_definition);
   }
+
+private:
+  std::atomic<uint64_t> sensor_data_post_action_frame_id{0u};
+  
 };
 }  // namespace ros2
 }  // namespace carla

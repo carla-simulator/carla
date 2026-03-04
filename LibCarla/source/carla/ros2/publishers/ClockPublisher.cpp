@@ -14,7 +14,7 @@ ClockPublisher::ClockPublisher()
     _impl(std::make_shared<ClockPublisherImpl>()) {}
 
 bool ClockPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
-  return _impl->Init(domain_participant, "rt/clock", get_topic_qos());
+  return _impl->Init(domain_participant, "rt/clock", get_topic_qos().force_synchronous_writer());
 }
 
 bool ClockPublisher::Publish() {
