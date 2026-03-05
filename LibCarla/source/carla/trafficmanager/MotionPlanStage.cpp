@@ -221,7 +221,7 @@ void MotionPlanStage::Update(const unsigned long index) {
       output_array.at(index) = carla::rpc::Command::ApplyVehicleControl(actor_id, vehicle_control);
 
       // Updating PID state.
-      current_state.steer = actuation_signal.steer;
+      current_state.actuation_signal = actuation_signal;
       StateEntry &state = pid_state_map.at(actor_id);
       state = current_state;
     }
