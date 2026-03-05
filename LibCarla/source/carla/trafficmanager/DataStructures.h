@@ -64,7 +64,7 @@ struct StateEntry {
   cc::Timestamp time_instance;
   float angular_deviation;
   float velocity_deviation;
-  float steer;
+  ActuationSignal actuation_signal;
 };
 
 } // namespace traffic_manager

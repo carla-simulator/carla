@@ -15,6 +15,7 @@
  * Fixed issue with disabled environment objects (ISMs) appearing in segmentation and depth images.
  * Added support for parsing offsets from OpenDRIVE using optional offset transforms.
  * Added ad-rss type-stubs for the PythonAPI when building with RSS support
+ * Make TrafficManager PID controller use actual delta times to improve robustness to different fixed_delta_seconds
 
 ## CARLA 0.9.16
 
