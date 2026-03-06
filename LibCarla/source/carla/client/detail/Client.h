@@ -420,7 +420,7 @@ namespace detail {
     std::vector<ActorId> GetGroupTrafficLights(
         rpc::ActorId traffic_light);
 
-    std::string StartRecorder(std::string name, bool additional_data);
+    std::string StartRecorder(std::string name, bool additional_data, bool stop_replayer);
 
     void StopRecorder();
 
@@ -432,7 +432,7 @@ namespace detail {
 
     std::string ReplayFile(
         std::string name, double start, double duration,
-        uint32_t follow_id, bool replay_sensors, geom::Transform offset,
+        uint32_t follow_id, bool replay_sensors, bool replay_weather, geom::Transform offset,
         std::string map_override);
 
     void SetReplayerTimeFactor(double time_factor);

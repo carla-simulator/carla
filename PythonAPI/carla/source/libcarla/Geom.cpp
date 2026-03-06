@@ -27,7 +27,6 @@ static void TransformList(const carla::geom::Transform &self, boost::python::lis
   }
 }
 
-#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
 static boost::python::list BuildMatrix(const std::array<float, 16> &m) {
   boost::python::list r_out;
   boost::python::list r[4];
@@ -43,7 +42,6 @@ static auto GetTransformMatrix(const carla::geom::Transform &self) {
 static auto GetInverseTransformMatrix(const carla::geom::Transform &self) {
   return BuildMatrix(self.InverseTransformationMatrix());
 }
-#endif
 
 static auto Cross(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
   return carla::geom::Math::Cross(self, other);
@@ -118,7 +116,12 @@ void export_geom() {
     .def_readwrite("z", &cg::Vector3D::z)
     .def("length", &cg::Vector3D::Length)
     .def("squared_length", &cg::Vector3D::SquaredLength)
-    .def("make_unit_vector", &cg::Vector3D::MakeUnitVector)
+    .def("make_unit_vector", +[](cg::Vector3D const&self) {
+      return self.MakeUnitVector();
+     })
+    .def("make_unit_vector", +[](cg::Vector3D const&self, float const epsilon) {
+      return self.MakeUnitVector(epsilon);
+     }, arg("epsilon"))
     .def("cross", &Cross, (arg("vector")))
     .def("dot", &Dot, (arg("vector")))
     .def("dot_2d", &Dot2D, (arg("vector")))
@@ -221,10 +224,8 @@ void export_geom() {
     .def("length", &cg::Quaternion::Length)
     .def("squared_length", &cg::Quaternion::SquaredLength)
     .def("unit_quaternion", &cg::Quaternion::UnitQuaternion)
-#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
     .def("rotation_matrix", &cg::Quaternion::RotationMatrix)
     .def("inverse_rotation_matrix", &cg::Quaternion::InverseRotationMatrix)
-#endif
     .def("rotated_quaternion", &cg::Quaternion::RotatedQuaternion, (arg("quaternion")))
     .def("yaw_rad", &cg::Quaternion::YawRad)
     .def("yaw_degree", &cg::Quaternion::YawDegree)
@@ -257,10 +258,8 @@ void export_geom() {
     .def("get_forward_vector", &cg::Transform::GetForwardVector)
     .def("get_right_vector", &cg::Transform::GetRightVector)
     .def("get_up_vector", &cg::Transform::GetUpVector)
-#if ALLOW_UNSAFE_GEOM_MATRIX_ACCESS
     .def("get_matrix", &GetTransformMatrix)
     .def("get_inverse_matrix", &GetInverseTransformMatrix)
-#endif
     .def("__eq__", &cg::Transform::operator==)
     .def("__ne__", &cg::Transform::operator!=)
     .def(self_ns::str(self_ns::self))
@@ -304,6 +303,17 @@ void export_geom() {
     .def("__ne__", &cg::Ellipsoid::operator!=)
   ;
 
+  class_<cg::OffsetTransform>("GeoOffsetTransform")
+  .def(init<double, double, double, double>((arg("offset_x")=0.0, arg("offset_y")=0.0, arg("offset_z")=0.0, arg("offset_hdg")=0.0)))
+  .def_readwrite("offset_x", &cg::OffsetTransform::offset_x)
+  .def_readwrite("offset_y", &cg::OffsetTransform::offset_y)
+  .def_readwrite("offset_z", &cg::OffsetTransform::offset_z)
+  .def_readwrite("offset_cos_h", &cg::OffsetTransform::offset_cos_h)
+  .def_readwrite("offset_sin_h", &cg::OffsetTransform::offset_sin_h)
+  .def("ApplyTransformation", &cg::OffsetTransform::ApplyTransformation)
+  .def("__eq__", &cg::OffsetTransform::operator==)
+  ;
+
   class_<cg::TransverseMercatorParams>("GeoProjectionTM")
     .def(init<double, double, double, double, double, cg::Ellipsoid>(
       (arg("lat_0")=0.0, arg("lon_0")=0.0, arg("k")=1.0, arg("x_0")=0.0, arg("y_0")=0.0, arg("ellps")=cg::Ellipsoid())))
@@ -319,9 +329,30 @@ void export_geom() {
 
   class_<cg::UniversalTransverseMercatorParams>("GeoProjectionUTM")
     .def(init<int, bool, cg::Ellipsoid>((arg("zone")=31, arg("north")=true, arg("ellps")=cg::Ellipsoid())))
+    .def(init<int, bool, cg::Ellipsoid, boost::optional<cg::OffsetTransform>>((arg("zone")=31, arg("north")=true, arg("ellps")=cg::Ellipsoid(), arg("offset")=boost::python::object())))
     .def_readwrite("zone", &cg::UniversalTransverseMercatorParams::zone)
     .def_readwrite("north", &cg::UniversalTransverseMercatorParams::north)
     .def_readwrite("ellps", &cg::UniversalTransverseMercatorParams::ellps)
+    .add_property("offset",
+        +[](const cg::UniversalTransverseMercatorParams &self) {
+          return OptionalToPythonObject(self.offset); //returns None or OffsetTransform 
+        },
+         +[](cg::UniversalTransverseMercatorParams& self, object value) {
+            if (value.is_none()) {
+                self.offset = boost::none;
+            } else {
+                extract<cg::OffsetTransform> ex(value);
+                if (!ex.check()) {
+                    PyErr_SetString(
+                        PyExc_TypeError,
+                        "offset must be OffsetTransform or None"
+                    );
+                    throw_error_already_set();
+                }
+                self.offset = ex();
+            }
+        }
+    )
     .def("__eq__", &cg::UniversalTransverseMercatorParams::operator==)
     .def("__ne__", &cg::UniversalTransverseMercatorParams::operator!=)
   ;

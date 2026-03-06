@@ -119,8 +119,8 @@ namespace client {
       return _simulator->GetCurrentEpisode();
     }
 
-    std::string StartRecorder(std::string name, bool additional_data = false) {
-      return _simulator->StartRecorder(name, additional_data);
+    std::string StartRecorder(std::string name, bool additional_data = false, bool stop_replayer = true) {
+      return _simulator->StartRecorder(name, additional_data, stop_replayer);
     }
 
     void StopRecorder(void) {
@@ -141,9 +141,9 @@ namespace client {
 
     std::string ReplayFile(
       std::string name, double start, double duration,
-      uint32_t follow_id, bool replay_sensors, geom::Transform offset,
+      uint32_t follow_id, bool replay_sensors, bool replay_weather, geom::Transform offset,
       std::string map_override) {
-      return _simulator->ReplayFile(name, start, duration, follow_id, replay_sensors, offset, map_override);
+      return _simulator->ReplayFile(name, start, duration, follow_id, replay_sensors, replay_weather, offset, map_override);
     }
 
     void StopReplayer(bool keep_actors) {

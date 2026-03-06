@@ -177,6 +177,21 @@
         default: false
         doc: >
           Flag to enable or disable the spawn of sensors during playback.
+      - param_name: replay_weather
+        type: bool
+        default: false
+        doc: >
+          Flag to enable or disable the changing of the weather during playback.
+      - param_name: offset
+        type: carla.Transform
+        default: carla.Transform(carla.Location(10, 0, 5), carla.Rotation(25, 0, 0))
+        doc: >
+          When using the "follow_id" argument, the position of the camera relative to the followed actor.
+      - param_name: map_override
+        type: string
+        default: '" "'
+        doc: >
+          Flag to load another map that isn't the one the log was recorded at.
       doc: >
         Load a new world with default settings using `map_name` map. All actors
         present in the current world will be destroyed, __but__ traffic manager instances will stay alive.
@@ -262,6 +277,11 @@
         default: False
         doc: >
           Enables or disable recording non-essential data for reproducing the simulation (bounding box location, physics control parameters, etc)
+      - param_name: stop_replayer
+        type: bool
+        default: True
+        doc: >
+          Flag to stop the replayer, if one is currently active.
       doc: >
         Enables the recording feature, which will start saving every information possible needed by the server to replay the simulation.
     # --------------------------------------
