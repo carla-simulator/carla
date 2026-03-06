@@ -29,7 +29,7 @@ public:
     _linear_velocity_ros.x = carla_linear_velocity.x;
     _linear_velocity_ros.y = -carla_linear_velocity.y;
     _linear_velocity_ros.z = carla_linear_velocity.z;
-    _ros_speed.data(_linear_velocity_ros.Speed(carla_quat));
+    _ros_speed.data(carla_linear_velocity.Speed(carla_quat));
   }
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
   Speed(const FVector &carla_linear_velocity, const FQuat &carla_quat)
