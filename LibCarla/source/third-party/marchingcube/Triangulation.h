@@ -289,9 +289,9 @@ void MeshReconstruction::Triangulate(
 
   for (auto i = 0; tri[i] != -1; i += 3)
   {
-    auto const &v0 = intersect.edgeVertIndices[tri[i]];
-    auto const &v1 = intersect.edgeVertIndices[tri[i + 1]];
-    auto const &v2 = intersect.edgeVertIndices[tri[i + 2]];
+    auto const &v0 = intersect.edgeVertIndices[static_cast<size_t>(tri[i])];
+    auto const &v1 = intersect.edgeVertIndices[static_cast<size_t>(tri[i + 1])];
+    auto const &v2 = intersect.edgeVertIndices[static_cast<size_t>(tri[i + 2])];
 
     mesh.vertices.push_back(v0);
     mesh.vertices.push_back(v1);

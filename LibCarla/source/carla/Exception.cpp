@@ -21,7 +21,7 @@ namespace boost {
 
   void throw_exception(
       const std::exception &e,
-      boost::source_location const & loc) {
+      boost::source_location const & /*loc*/) {
     throw_exception(e);
   }
 
