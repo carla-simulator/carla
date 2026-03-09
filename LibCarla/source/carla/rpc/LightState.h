@@ -49,7 +49,7 @@ public:
   Color _color;
   bool _active = false;
 
-  MSGPACK_DEFINE_ARRAY(_id, _location, _intensity, _group, _color, _active);
+  MSGPACK_DEFINE_ARRAY(_id, _location, _intensity, _group, _color, _active)
 
 };
 

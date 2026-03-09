@@ -51,7 +51,7 @@ namespace rpc {
 
     MSGPACK_DEFINE_ARRAY(synchronous_mode, no_rendering_mode, fixed_delta_seconds, substepping,
         max_substep_delta_time, max_substeps, max_culling_distance, deterministic_ragdolls,
-        tile_stream_distance, actor_active_distance, spectator_as_ego);
+        tile_stream_distance, actor_active_distance, spectator_as_ego)
 
     // =========================================================================
     // -- Constructors ---------------------------------------------------------

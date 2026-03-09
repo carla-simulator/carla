@@ -39,7 +39,7 @@ namespace geom {
 
     float roll = 0.0f;
 
-    MSGPACK_DEFINE_ARRAY(pitch, yaw, roll);
+    MSGPACK_DEFINE_ARRAY(pitch, yaw, roll)
 
     // =========================================================================
     // -- Constructors ---------------------------------------------------------

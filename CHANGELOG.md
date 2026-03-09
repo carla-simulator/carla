@@ -19,6 +19,7 @@
  * Fix segfault on LaneCrossingCalculator nullptr access
  * ROS2Native: Extended functionality and performance of ROS2 support
  * ROS2Native: Update to fastdds 2.14.6
+ * Added Ubuntu 24.04 support
  
 ## CARLA 0.9.16
 

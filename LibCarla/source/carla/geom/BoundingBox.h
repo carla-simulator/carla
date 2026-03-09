@@ -149,7 +149,7 @@ namespace geom {
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
-    MSGPACK_DEFINE_ARRAY(location, extent, rotation, actor_id);
+    MSGPACK_DEFINE_ARRAY(location, extent, rotation, actor_id)
   };
 
   inline::std::ostream &operator<<(std::ostream &out, const BoundingBox &box) {

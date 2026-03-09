@@ -22,7 +22,7 @@ class CustomV2XBytes
     }
     uint8_t data_size{0u};
     std::array<unsigned char, 100> bytes;
-    MSGPACK_DEFINE_ARRAY(data_size, bytes);
+    MSGPACK_DEFINE_ARRAY(data_size, bytes)
 };
 
 }     // namespace rpc

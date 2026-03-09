@@ -35,7 +35,7 @@ namespace geom {
 
     Rotation rotation;
 
-    MSGPACK_DEFINE_ARRAY(location, rotation);
+    MSGPACK_DEFINE_ARRAY(location, rotation)
 
     // =========================================================================
     // -- Constructors ---------------------------------------------------------

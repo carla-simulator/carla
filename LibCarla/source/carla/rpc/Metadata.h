@@ -37,7 +37,7 @@ namespace rpc {
 
   public:
 
-    MSGPACK_DEFINE_ARRAY(_asynchronous_call);
+    MSGPACK_DEFINE_ARRAY(_asynchronous_call)
   };
 
 } // namespace rpc

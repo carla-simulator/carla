@@ -171,7 +171,7 @@ namespace rpc {
         scattering_intensity,
         mie_scattering_scale,
         rayleigh_scattering_scale,
-        dust_storm);
+        dust_storm)
   };
 
 } // namespace rpc

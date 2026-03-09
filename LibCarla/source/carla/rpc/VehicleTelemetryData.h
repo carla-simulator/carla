@@ -116,7 +116,7 @@ namespace rpc {
         engine_rpm,
         gear,
         drag,
-        wheels);
+        wheels)
   };
 
 } // namespace rpc

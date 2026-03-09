@@ -100,7 +100,7 @@ namespace rpc {
         reverse,
         manual_gear_shift,
         gear,
-        timestamp);
+        timestamp)
   };
 
 } // namespace rpc

@@ -19,7 +19,7 @@ namespace streaming {
 
     std::array<unsigned char, 24u> data;
 
-    MSGPACK_DEFINE_ARRAY(data);
+    MSGPACK_DEFINE_ARRAY(data)
   };
 
 } // namespace streaming

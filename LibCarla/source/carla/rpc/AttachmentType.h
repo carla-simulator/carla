@@ -25,4 +25,4 @@ namespace rpc {
 } // namespace rpc
 } // namespace carla
 
-MSGPACK_ADD_ENUM(carla::rpc::AttachmentType);
+MSGPACK_ADD_ENUM(carla::rpc::AttachmentType)

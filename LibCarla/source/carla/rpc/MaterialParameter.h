@@ -26,4 +26,4 @@ std::string MaterialParameterToString(MaterialParameter material_parameter);
 } // namespace rpc
 } // namespace carla
 
-MSGPACK_ADD_ENUM(carla::rpc::MaterialParameter);
+MSGPACK_ADD_ENUM(carla::rpc::MaterialParameter)

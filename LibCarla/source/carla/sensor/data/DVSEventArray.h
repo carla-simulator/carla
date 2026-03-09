@@ -109,7 +109,7 @@ namespace data {
     std::vector<short> ToArrayPol() const {
       std::vector<short> array;
       for (const auto &event : *this) {
-        array.push_back(2*static_cast<short>(event.pol) - 1);
+        array.push_back(static_cast<short>(2*event.pol - 1));
       }
       return array;
     }

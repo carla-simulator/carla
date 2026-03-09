@@ -68,7 +68,7 @@ namespace rpc {
       return !(*this != rhs);
     }
 
-    MSGPACK_DEFINE_ARRAY(direction, speed, jump, timestamp);
+    MSGPACK_DEFINE_ARRAY(direction, speed, jump, timestamp)
   };
 
 } // namespace rpc

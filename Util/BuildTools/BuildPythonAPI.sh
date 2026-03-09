@@ -55,11 +55,6 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-
-export CC="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang"
-export CXX="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang++"
-export PATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin:$PATH"
-
 source $(dirname "$0")/Environment.sh
 
 if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_PYTHONAPI} || ${BUILD_PYTHONAPI_WHEEL} ; }; then
@@ -109,7 +104,7 @@ if ${BUILD_PYTHONAPI} ; then
 
     if ${INSTALL_PYTHONAPI} ; then
       log "Installing Python API for Python ${PY_VERSION}."
-      /usr/bin/env python${PY_VERSION} -m pip install --force-reinstall dist/.tmp/$(ls dist/.tmp | grep .whl)
+      /usr/bin/env python${PY_VERSION} -m pip install --break-system-packages --force-reinstall dist/.tmp/$(ls dist/.tmp | grep .whl)
     fi
 
     if [[ -z ${TARGET_WHEEL_PLATFORM} ]] ; then

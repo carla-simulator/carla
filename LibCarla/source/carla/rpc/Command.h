@@ -74,7 +74,7 @@ namespace rpc {
       AttachmentType attachment_type;
       std::string socket_name;
       std::vector<Command> do_after;
-      MSGPACK_DEFINE_ARRAY(description, transform, parent, attachment_type, socket_name, do_after);
+      MSGPACK_DEFINE_ARRAY(description, transform, parent, attachment_type, socket_name, do_after)
     };
 
     struct DestroyActor : CommandBase<DestroyActor> {
@@ -82,7 +82,7 @@ namespace rpc {
       DestroyActor(ActorId id)
         : actor(id) {}
       ActorId actor;
-      MSGPACK_DEFINE_ARRAY(actor);
+      MSGPACK_DEFINE_ARRAY(actor)
     };
 
     struct ApplyVehicleControl : CommandBase<ApplyVehicleControl> {
@@ -92,7 +92,7 @@ namespace rpc {
           control(value) {}
       ActorId actor;
       VehicleControl control;
-      MSGPACK_DEFINE_ARRAY(actor, control);
+      MSGPACK_DEFINE_ARRAY(actor, control)
     };
 
     struct ApplyVehicleAckermannControl : CommandBase<ApplyVehicleAckermannControl> {
@@ -102,7 +102,7 @@ namespace rpc {
           control(value) {}
       ActorId actor;
       VehicleAckermannControl control;
-      MSGPACK_DEFINE_ARRAY(actor, control);
+      MSGPACK_DEFINE_ARRAY(actor, control)
     };
 
     struct ApplyWalkerControl : CommandBase<ApplyWalkerControl> {
@@ -112,7 +112,7 @@ namespace rpc {
           control(value) {}
       ActorId actor;
       WalkerControl control;
-      MSGPACK_DEFINE_ARRAY(actor, control);
+      MSGPACK_DEFINE_ARRAY(actor, control)
     };
 
     struct ApplyVehiclePhysicsControl : CommandBase<ApplyVehiclePhysicsControl> {
@@ -122,7 +122,7 @@ namespace rpc {
           physics_control(value) {}
       ActorId actor;
       VehiclePhysicsControl physics_control;
-      MSGPACK_DEFINE_ARRAY(actor, physics_control);
+      MSGPACK_DEFINE_ARRAY(actor, physics_control)
     };
 
     struct ApplyTransform : CommandBase<ApplyTransform> {
@@ -132,7 +132,7 @@ namespace rpc {
           transform(value) {}
       ActorId actor;
       geom::Transform transform;
-      MSGPACK_DEFINE_ARRAY(actor, transform);
+      MSGPACK_DEFINE_ARRAY(actor, transform)
     };
 
     struct ApplyLocation : CommandBase<ApplyLocation> {
@@ -142,7 +142,7 @@ namespace rpc {
           location(value) {}
       ActorId actor;
       geom::Location location;
-      MSGPACK_DEFINE_ARRAY(actor, location);
+      MSGPACK_DEFINE_ARRAY(actor, location)
     };
 
     struct ApplyWalkerState : CommandBase<ApplyWalkerState> {
@@ -151,7 +151,7 @@ namespace rpc {
       ActorId actor;
       geom::Transform transform;
       float speed;
-      MSGPACK_DEFINE_ARRAY(actor, transform, speed);
+      MSGPACK_DEFINE_ARRAY(actor, transform, speed)
     };
 
     struct ApplyTargetVelocity : CommandBase<ApplyTargetVelocity> {
@@ -161,7 +161,7 @@ namespace rpc {
           velocity(value) {}
       ActorId actor;
       geom::Vector3D velocity;
-      MSGPACK_DEFINE_ARRAY(actor, velocity);
+      MSGPACK_DEFINE_ARRAY(actor, velocity)
     };
 
     struct ApplyTargetAngularVelocity : CommandBase<ApplyTargetAngularVelocity> {
@@ -171,7 +171,7 @@ namespace rpc {
           angular_velocity(value) {}
       ActorId actor;
       geom::Vector3D angular_velocity;
-      MSGPACK_DEFINE_ARRAY(actor, angular_velocity);
+      MSGPACK_DEFINE_ARRAY(actor, angular_velocity)
     };
 
     struct ApplyImpulse : CommandBase<ApplyImpulse> {
@@ -181,7 +181,7 @@ namespace rpc {
           impulse(value) {}
       ActorId actor;
       geom::Vector3D impulse;
-      MSGPACK_DEFINE_ARRAY(actor, impulse);
+      MSGPACK_DEFINE_ARRAY(actor, impulse)
     };
 
     struct ApplyForce : CommandBase<ApplyForce> {
@@ -191,7 +191,7 @@ namespace rpc {
           force(value) {}
       ActorId actor;
       geom::Vector3D force;
-      MSGPACK_DEFINE_ARRAY(actor, force);
+      MSGPACK_DEFINE_ARRAY(actor, force)
     };
 
     struct ApplyAngularImpulse : CommandBase<ApplyAngularImpulse> {
@@ -201,7 +201,7 @@ namespace rpc {
           impulse(value) {}
       ActorId actor;
       geom::Vector3D impulse;
-      MSGPACK_DEFINE_ARRAY(actor, impulse);
+      MSGPACK_DEFINE_ARRAY(actor, impulse)
     };
 
     struct ApplyTorque : CommandBase<ApplyTorque> {
@@ -211,7 +211,7 @@ namespace rpc {
           torque(value) {}
       ActorId actor;
       geom::Vector3D torque;
-      MSGPACK_DEFINE_ARRAY(actor, torque);
+      MSGPACK_DEFINE_ARRAY(actor, torque)
     };
 
     struct SetSimulatePhysics : CommandBase<SetSimulatePhysics> {
@@ -221,7 +221,7 @@ namespace rpc {
           enabled(value) {}
       ActorId actor;
       bool enabled;
-      MSGPACK_DEFINE_ARRAY(actor, enabled);
+      MSGPACK_DEFINE_ARRAY(actor, enabled)
     };
 
     struct SetEnableGravity : CommandBase<SetEnableGravity> {
@@ -231,7 +231,7 @@ namespace rpc {
           enabled(value) {}
       ActorId actor;
       bool enabled;
-      MSGPACK_DEFINE_ARRAY(actor, enabled);
+      MSGPACK_DEFINE_ARRAY(actor, enabled)
     };
 
     struct SetAutopilot : CommandBase<SetAutopilot> {
@@ -246,7 +246,7 @@ namespace rpc {
       ActorId actor;
       bool enabled;
       uint16_t tm_port;
-      MSGPACK_DEFINE_ARRAY(actor, enabled);
+      MSGPACK_DEFINE_ARRAY(actor, enabled)
     };
 
     struct ShowDebugTelemetry : CommandBase<ShowDebugTelemetry> {
@@ -258,7 +258,7 @@ namespace rpc {
           enabled(value) {}
       ActorId actor;
       bool enabled;
-      MSGPACK_DEFINE_ARRAY(actor, enabled);
+      MSGPACK_DEFINE_ARRAY(actor, enabled)
     };
 
     struct SetVehicleLightState : CommandBase<SetVehicleLightState> {
@@ -270,14 +270,14 @@ namespace rpc {
           light_state(value) {}
       ActorId actor;
       VehicleLightState::flag_type light_state;
-      MSGPACK_DEFINE_ARRAY(actor, light_state);
+      MSGPACK_DEFINE_ARRAY(actor, light_state)
     };
 
     struct ConsoleCommand : CommandBase<ConsoleCommand> {
       ConsoleCommand() = default;
       ConsoleCommand(std::string cmd) : cmd(cmd) {}
       std::string cmd;
-      MSGPACK_DEFINE_ARRAY(cmd);
+      MSGPACK_DEFINE_ARRAY(cmd)
     };
 
     struct SetTrafficLightState : CommandBase<SetTrafficLightState> {
@@ -289,7 +289,7 @@ namespace rpc {
           traffic_light_state(state) {}
       ActorId actor;
       rpc::TrafficLightState traffic_light_state;
-      MSGPACK_DEFINE_ARRAY(actor, traffic_light_state);
+      MSGPACK_DEFINE_ARRAY(actor, traffic_light_state)
     };
 
     using CommandType = boost::variant2::variant<
@@ -318,7 +318,7 @@ namespace rpc {
 
     CommandType command;
 
-    MSGPACK_DEFINE_ARRAY(command);
+    MSGPACK_DEFINE_ARRAY(command)
   };
 
 } // namespace rpc

@@ -25,7 +25,7 @@ namespace rpc {
 
     streaming::Token token;
 
-    MSGPACK_DEFINE_ARRAY(id, token);
+    MSGPACK_DEFINE_ARRAY(id, token)
   };
 
 } // namespace rpc

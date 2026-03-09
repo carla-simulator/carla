@@ -25,4 +25,4 @@ namespace rpc {
 } // namespace rpc
 } // namespace carla
 
-MSGPACK_ADD_ENUM(carla::rpc::TrafficLightState);
+MSGPACK_ADD_ENUM(carla::rpc::TrafficLightState)

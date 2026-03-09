@@ -45,7 +45,7 @@ namespace data {
     uint8_t g = 0u;
     uint8_t r = 0u;
     uint8_t a = 0u;
-    MSGPACK_DEFINE_ARRAY(r, g, b, a);
+    MSGPACK_DEFINE_ARRAY(r, g, b, a)
   };
 #pragma pack(pop)
 
@@ -72,7 +72,7 @@ static_assert(sizeof(Color) == sizeof(uint32_t), "Invalid color size!");
 
     float x = 0;
     float y = 0;
-    MSGPACK_DEFINE_ARRAY(x, y);
+    MSGPACK_DEFINE_ARRAY(x, y)
   };
 #pragma pack(pop)
 

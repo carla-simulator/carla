@@ -26,4 +26,4 @@ namespace rpc {
 } // namespace rpc
 } // namespace carla
 
-MSGPACK_ADD_ENUM(carla::rpc::QualityLevel);
+MSGPACK_ADD_ENUM(carla::rpc::QualityLevel)

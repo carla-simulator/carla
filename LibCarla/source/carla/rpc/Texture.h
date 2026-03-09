@@ -60,7 +60,7 @@ namespace rpc {
 
   public:
 
-    MSGPACK_DEFINE_ARRAY(_width, _height, _texture_data);
+    MSGPACK_DEFINE_ARRAY(_width, _height, _texture_data)
   };
 
   using TextureColor = Texture<sensor::data::Color>;

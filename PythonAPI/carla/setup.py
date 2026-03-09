@@ -63,11 +63,10 @@ def get_libcarla_extensions():
                 '-Werror', '-Wall', '-Wextra', '-Wpedantic', '-Wno-self-assign-overloaded',
                 '-Wdeprecated', '-Wno-shadow', '-Wuninitialized', '-Wunreachable-code',
                 '-Wpessimizing-move', '-Wold-style-cast', '-Wnull-dereference',
-                '-Wduplicate-enum', '-Wnon-virtual-dtor', '-Wheader-hygiene',
-                '-Wconversion', '-Wfloat-overflow-conversion',
-                '-Wno-error=unused-command-line-argument',
-                '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT',
-                '-stdlib=libstdc++'
+                '-Wnon-virtual-dtor',
+                '-Wconversion',
+                '-Wno-error=null-dereference', '-Wno-error=maybe-uninitialized',
+                '-DBOOST_ERROR_CODE_HEADER_ONLY', '-DLIBCARLA_WITH_PYTHON_SUPPORT'
             ]
             if is_rss_variant_enabled():
                 extra_compile_args += ['-DLIBCARLA_RSS_ENABLED']

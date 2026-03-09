@@ -85,7 +85,7 @@ namespace rpc {
         accel_kp,
         accel_ki,
         accel_kd
-    );
+    )
   };
 
 } // namespace rpc

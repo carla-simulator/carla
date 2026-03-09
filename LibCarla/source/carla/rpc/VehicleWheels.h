@@ -26,4 +26,4 @@ namespace rpc {
 }
 }
 
-MSGPACK_ADD_ENUM(carla::rpc::VehicleWheelLocation);
+MSGPACK_ADD_ENUM(carla::rpc::VehicleWheelLocation)

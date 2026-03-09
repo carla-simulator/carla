@@ -51,7 +51,7 @@ namespace rpc {
 
     /// @}
 
-    MSGPACK_DEFINE_ARRAY(id, parent_id, description, bounding_box, semantic_tags, stream_token);
+    MSGPACK_DEFINE_ARRAY(id, parent_id, description, bounding_box, semantic_tags, stream_token)
   };
 
 } // namespace rpc

@@ -42,7 +42,7 @@ namespace rpc {
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
-    MSGPACK_DEFINE_ARRAY(transform, bounding_box, id, name, type);
+    MSGPACK_DEFINE_ARRAY(transform, bounding_box, id, name, type)
   };
 
 } // namespace rpc

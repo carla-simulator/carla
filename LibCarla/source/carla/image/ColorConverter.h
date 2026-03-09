@@ -32,10 +32,10 @@ namespace image {
         static_assert(
             sizeof(typename color_space_type<SrcPixelT>::type) == sizeof(uint8_t),
             "Invalid pixel type.");
-        const float depth =
+        const float depth = static_cast<float>(
              get_color(src, red_t()) +
             (get_color(src, green_t()) * 256) +
-            (get_color(src, blue_t())  * 256 * 256);
+            (get_color(src, blue_t())  * 256 * 256));
         const float normalized = depth / static_cast<float>(256 * 256 * 256 - 1);
         color_convert(gray32fc_pixel_t{normalized}, dst);
       }

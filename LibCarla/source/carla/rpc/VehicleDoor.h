@@ -26,4 +26,4 @@ namespace rpc {
 } // namespace rpc
 } // namespace carla
 
-MSGPACK_ADD_ENUM(carla::rpc::VehicleDoor);
+MSGPACK_ADD_ENUM(carla::rpc::VehicleDoor)

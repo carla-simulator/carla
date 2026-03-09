@@ -84,7 +84,7 @@ namespace rpc {
         speed,
         acceleration,
         jerk,
-        timestamp);
+        timestamp)
   };
 
 } // namespace rpc

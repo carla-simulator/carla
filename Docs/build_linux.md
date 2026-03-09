@@ -23,7 +23,7 @@ If you come across errors or difficulties then have a look at the **[F.A.Q.](bui
 
 ### System requirements
 
-* __Ubuntu 20.04 or 22.04__: The current dev branch of CARLA is tested regularly on Ubuntu 20.04 and Ubuntu 22.04. It may be possible to build CARLA in earlier Ubuntu versions but we recommend a minimum of version 20.04. CARLA has not been tested internally in Ubuntu 24.04, therefore we recommend to stay with a maximum of Ubuntu 22.04.
+* __Ubuntu 20.04 or 22.04__: The current dev branch of CARLA is tested regularly on Ubuntu 20.04 and Ubuntu 22.04. It may be possible to build CARLA in earlier Ubuntu versions but we recommend a minimum of version 20.04. CARLA briefly has been tested internally in Ubuntu 24.04, but no regular tests are available yet, therefore we recommend to stay with a maximum of Ubuntu 22.04.
 * __130 GB disk space__: CARLA will take around 31 GB and Unreal Engine will take around 91 GB so have about 130 GB free to account for both of these plus additional minor software installations. 
 * __A high-performance GPU__: CARLA places a high demand on the GPU, therefore it is recommended to use a minimum of an NVIDIA RTX 2000 series (e.g. 2070) or better with at least 6 Gb of VRAM, preferably 8 Gb or more.
 * __A high-performance CPU__: CARLA also benefits from a CPU with solid performance. We recommend a minimum of an Intel Core i7 with 4 or more cores (or equivalent). 
@@ -33,6 +33,17 @@ If you come across errors or difficulties then have a look at the **[F.A.Q.](bui
 ### Software requirements
 
 CARLA requires numerous software tools for compilation. Some are built during the CARLA build process itself, such as *Boost.Python*. Others are binaries that should be installed before starting the build (*cmake*, different versions of *Python*, etc.). 
+
+#### Ubuntu 24.04
+!!! Note
+    Experimental
+    Python: Ubuntu 24.04 is protecting the debian installed python packages. Therefore, either you make use of a virtual environment for the python steps below, or you take the risk and add `--break-system-packages` flag on the install command to allow the behaviour of previous Ubuntu versions.
+    ROS2: If you want to use the native ROS support, you should be aware, that virtual environments are ignored within the ROS2 environment -- even if the basis of the virtual environment is the system installed python version. In this case you should add `--break-system-packages` and install the packages on user-system level in `~/.local/share`.
+    If anybody has a better solution and is able to get virtual environments to work with ROS2, please don't hesitate to adapt this note, so everyone can benefit.
+```sh
+sudo apt-get update
+sudo apt-get install build-essential g++-13 cmake ninja-build libvulkan1 python3 python3-dev python3-pip python3-venv autoconf wget curl rsync unzip git git-lfs libpng-dev libtiff5-dev libjpeg-dev
+```
 
 #### Ubuntu 22.04
 ```sh

@@ -48,7 +48,7 @@ namespace rpc {
         additional_width,
         smooth_junctions,
         enable_mesh_visibility,
-        enable_pedestrian_navigation);
+        enable_pedestrian_navigation)
   };
 
 }

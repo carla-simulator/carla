@@ -32,60 +32,60 @@ namespace rpc {
     struct Point {
       geom::Location location;
       float size;
-      MSGPACK_DEFINE_ARRAY(location, size);
+      MSGPACK_DEFINE_ARRAY(location, size)
     };
 
     struct HUDPoint {
       geom::Location location;
       float size;
-      MSGPACK_DEFINE_ARRAY(location, size);
+      MSGPACK_DEFINE_ARRAY(location, size)
     };
 
     struct Line {
       geom::Location begin;
       geom::Location end;
       float thickness;
-      MSGPACK_DEFINE_ARRAY(begin, end, thickness);
+      MSGPACK_DEFINE_ARRAY(begin, end, thickness)
     };
 
     struct HUDLine {
       geom::Location begin;
       geom::Location end;
       float thickness;
-      MSGPACK_DEFINE_ARRAY(begin, end, thickness);
+      MSGPACK_DEFINE_ARRAY(begin, end, thickness)
     };
 
     struct Arrow {
       Line line;
       float arrow_size;
-      MSGPACK_DEFINE_ARRAY(line, arrow_size);
+      MSGPACK_DEFINE_ARRAY(line, arrow_size)
     };
 
     struct HUDArrow {
       HUDLine line;
       float arrow_size;
-      MSGPACK_DEFINE_ARRAY(line, arrow_size);
+      MSGPACK_DEFINE_ARRAY(line, arrow_size)
     };
 
     struct Box {
       geom::BoundingBox box;
       geom::Rotation rotation;
       float thickness;
-      MSGPACK_DEFINE_ARRAY(box, rotation, thickness);
+      MSGPACK_DEFINE_ARRAY(box, rotation, thickness)
     };
 
     struct HUDBox {
       geom::BoundingBox box;
       geom::Rotation rotation;
       float thickness;
-      MSGPACK_DEFINE_ARRAY(box, rotation, thickness);
+      MSGPACK_DEFINE_ARRAY(box, rotation, thickness)
     };
 
     struct String {
       geom::Location location;
       std::string text;
       bool draw_shadow;
-      MSGPACK_DEFINE_ARRAY(location, text, draw_shadow);
+      MSGPACK_DEFINE_ARRAY(location, text, draw_shadow)
     };
 
     boost::variant2::variant<Point, Line, Arrow, Box, String, HUDPoint, HUDLine, HUDArrow, HUDBox> primitive;
@@ -96,7 +96,7 @@ namespace rpc {
 
     bool persistent_lines = true;
 
-    MSGPACK_DEFINE_ARRAY(primitive, color, life_time, persistent_lines);
+    MSGPACK_DEFINE_ARRAY(primitive, color, life_time, persistent_lines)
   };
 
 } // namespace rpc

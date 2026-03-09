@@ -36,7 +36,7 @@ namespace rpc {
     }
 
 
-    MSGPACK_DEFINE_ARRAY(bone_name, world, component, relative);
+    MSGPACK_DEFINE_ARRAY(bone_name, world, component, relative)
   };
 
 } // namespace rpc

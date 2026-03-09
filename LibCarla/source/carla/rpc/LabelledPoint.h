@@ -24,7 +24,7 @@ namespace rpc {
 
     CityObjectLabel _label;
 
-    MSGPACK_DEFINE_ARRAY(_location, _label);
+    MSGPACK_DEFINE_ARRAY(_location, _label)
 
   };
 

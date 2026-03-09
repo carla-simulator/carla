@@ -35,4 +35,4 @@ std::string MapLayerToString(MapLayer MapLayerValue);
 } // namespace rpc
 } // namespace carla
 
-MSGPACK_ADD_ENUM(carla::rpc::MapLayer);
+MSGPACK_ADD_ENUM(carla::rpc::MapLayer)

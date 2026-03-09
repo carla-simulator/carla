@@ -52,7 +52,7 @@ namespace geom {
       return !(*this == rhs);
     }
 
-    MSGPACK_DEFINE_ARRAY(latitude, longitude, altitude);
+    MSGPACK_DEFINE_ARRAY(latitude, longitude, altitude)
   };
 
   inline std::ostream &operator<<(std::ostream &out, const GeoLocation &geo_location) {

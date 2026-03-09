@@ -52,7 +52,7 @@ namespace rpc {
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
-    MSGPACK_DEFINE_ARRAY(uid, id, tags, attributes);
+    MSGPACK_DEFINE_ARRAY(uid, id, tags, attributes)
   };
 
 } // namespace rpc

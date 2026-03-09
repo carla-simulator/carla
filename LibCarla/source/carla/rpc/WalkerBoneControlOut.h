@@ -33,7 +33,7 @@ namespace rpc {
 
     std::vector<rpc::BoneTransformDataOut> bone_transforms;
 
-    MSGPACK_DEFINE_ARRAY(bone_transforms);
+    MSGPACK_DEFINE_ARRAY(bone_transforms)
   };
 
 } // namespace rpc

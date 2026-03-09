@@ -267,7 +267,7 @@ namespace rpc {
         center_of_mass,
         steering_curve,
         wheels,
-        use_sweep_wheel_collision);
+        use_sweep_wheel_collision)
   };
 
 } // namespace rpc

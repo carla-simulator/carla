@@ -57,7 +57,7 @@ namespace rpc {
 
 #endif // LIBCARLA_INCLUDED_FROM_UE4
 
-    MSGPACK_DEFINE_ARRAY(r, g, b);
+    MSGPACK_DEFINE_ARRAY(r, g, b)
   };
 
 } // namespace rpc
