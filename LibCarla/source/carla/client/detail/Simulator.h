@@ -667,8 +667,8 @@ namespace detail {
     // =========================================================================
     /// @{
 
-    std::string StartRecorder(std::string name, bool additional_data) {
-      return _client.StartRecorder(std::move(name), additional_data);
+    std::string StartRecorder(std::string name, bool additional_data, bool stop_replayer) {
+      return _client.StartRecorder(std::move(name), additional_data, stop_replayer);
     }
 
     void StopRecorder(void) {
@@ -689,9 +689,9 @@ namespace detail {
 
     std::string ReplayFile(
       std::string name, double start, double duration,
-      uint32_t follow_id, bool replay_sensors, geom::Transform offset,
+      uint32_t follow_id, bool replay_sensors, bool replay_weather, geom::Transform offset,
       std::string map_override) {
-      return _client.ReplayFile(std::move(name), start, duration, follow_id, replay_sensors, offset, map_override);
+      return _client.ReplayFile(std::move(name), start, duration, follow_id, replay_sensors, replay_weather, offset, map_override);
     }
 
     void SetReplayerTimeFactor(double time_factor) {

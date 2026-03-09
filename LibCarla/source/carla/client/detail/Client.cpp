@@ -656,8 +656,8 @@ namespace detail {
     return _pimpl->CallAndWait<return_t>("get_group_traffic_lights", traffic_light);
   }
 
-  std::string Client::StartRecorder(std::string name, bool additional_data) {
-    return _pimpl->CallAndWait<std::string>("start_recorder", name, additional_data);
+  std::string Client::StartRecorder(std::string name, bool additional_data, bool stop_replayer) {
+    return _pimpl->CallAndWait<std::string>("start_recorder", name, additional_data, stop_replayer);
   }
 
   void Client::StopRecorder() {
@@ -678,10 +678,10 @@ namespace detail {
 
   std::string Client::ReplayFile(
     std::string name, double start, double duration,
-    uint32_t follow_id, bool replay_sensors, geom::Transform offset,
+    uint32_t follow_id, bool replay_sensors, bool replay_weather, geom::Transform offset,
     std::string map_override) {
     return _pimpl->CallAndWait<std::string>("replay_file", name, start, duration,
-        follow_id, replay_sensors, offset, map_override);
+        follow_id, replay_sensors, replay_weather, offset, map_override);
   }
 
   void Client::StopReplayer(bool keep_actors) {

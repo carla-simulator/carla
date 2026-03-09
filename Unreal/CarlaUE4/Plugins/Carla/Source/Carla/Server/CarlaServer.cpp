@@ -3011,10 +3011,10 @@ BIND_SYNC(send) << [this](
 
   // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  BIND_SYNC(start_recorder) << [this](std::string name, bool AdditionalData) -> R<std::string>
+  BIND_SYNC(start_recorder) << [this](std::string name, bool AdditionalData, bool StopReplayer) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
-    return R<std::string>(Episode->StartRecorder(name, AdditionalData));
+    return R<std::string>(Episode->StartRecorder(name, AdditionalData, StopReplayer));
   };
 
   BIND_SYNC(stop_recorder) << [this]() -> R<void>
@@ -3064,6 +3064,7 @@ BIND_SYNC(send) << [this](
       double duration,
       uint32_t follow_id,
       bool replay_sensors,
+      bool replay_weather,
       const cr::Transform offset,
       std::string map_override) -> R<std::string>
   {
@@ -3075,6 +3076,7 @@ BIND_SYNC(send) << [this](
         follow_id,
         offset,
         replay_sensors,
+        replay_weather,
         map_override));
   };
 
