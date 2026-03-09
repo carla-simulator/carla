@@ -1,4 +1,5 @@
 ## Latest Changes
+ * Fixed all 282 compiler warnings in LibCarla across 27 files (unused variables, missing braces, narrowing conversions, implicit casts, initializer order, etc.) establishing a zero-warning baseline for server and client release builds
  * Fix possible RPC Server deadlock on shutdown
  * Change foonathan memory vendor branch to v1.3.1.
  * Improved the way the TrafficManager controls large vehicles at junctions, reducing the frequency of collisions with other elements in the simulation.
