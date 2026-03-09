@@ -60,12 +60,12 @@ namespace detail {
     }
 
     void EnableForROS(actor_id_type actor_id) {
-      log_error("MultiStreamState enable for ros. Searching sessions.");
+      log_debug("MultiStreamState enable for ros. Searching sessions.");
       _enable_for_ros.insert(actor_id);
       for (auto &s : _sessions) {
         if (s != nullptr) {
           s->EnableForROS(actor_id);
-          log_error("sensor ", s->get_stream_id(), " enable for ros ");
+          log_debug("sensor ", s->get_stream_id(), " enable for ros ");
         }
       }
     }
@@ -75,7 +75,7 @@ namespace detail {
       for (auto &s : _sessions) {
         if (s != nullptr) {
           s->DisableForROS(actor_id);
-          log_error("sensor ", s->get_stream_id(), " disable for ros ");
+          log_debug("sensor ", s->get_stream_id(), " disable for ros ");
         }
       }
     }
@@ -92,7 +92,7 @@ namespace detail {
     }
 
     bool AreClientsListening() {
-      return (_sessions.size() > 0 || _force_active);
+      return (_sessions.size() > 0 || _force_active || !_enable_for_ros.empty());
     }
 
     void ConnectSession(std::shared_ptr<Session> session) final {
