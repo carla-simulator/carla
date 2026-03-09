@@ -287,12 +287,12 @@ TEST(geom, single_point_rotation_90) {
   // Since we need to reqroduce the existing behaviour from Unreal within our Rotator and Quaternion classes,
   // we have to take care of these conventions here in the test cases as well.
   // The result values have previously been verified within Unreal Engine results directly.
-  Quaternion const pitch_positive_90 = {0.000000, -0.707107, 0.000000, 0.707107};
-  Quaternion const pitch_negative_90 = {-0.000000, 0.707107, 0.000000, 0.707107};
-  Quaternion const yaw_positive_90   = {0.000000, -0.000000, 0.707107, 0.707107};
-  Quaternion const yaw_negative_90   = {-0.000000, 0.000000, -0.707107, 0.707107};
-  Quaternion const roll_positive_90  = {-0.707107, -0.000000, 0.000000, 0.707107};
-  Quaternion const roll_negative_90  = {0.707107, 0.000000, 0.000000, 0.707107};
+  Quaternion const pitch_positive_90 = {0.000000f, -0.707107f, 0.000000f, 0.707107f};
+  Quaternion const pitch_negative_90 = {-0.000000f, 0.707107f, 0.000000f, 0.707107f};
+  Quaternion const yaw_positive_90   = {0.000000f, -0.000000f, 0.707107f, 0.707107f};
+  Quaternion const yaw_negative_90   = {-0.000000f, 0.000000f, -0.707107f, 0.707107f};
+  Quaternion const roll_positive_90  = {-0.707107f, -0.000000f, 0.000000f, 0.707107f};
+  Quaternion const roll_negative_90  = {0.707107f, 0.000000f, 0.000000f, 0.707107f};
   //            pitch(y) yaw(z)  roll(x)   px    py   pz     r_x    r_y    r_z     q_x q_y q_z q_w
   // pitch hand index finger goes up
   compare( 1, {  90.0f,   0.0f,   0.0f}, {1.0f, 0.f, 0.f}, { 0.0f,  0.0f,  1.0f}, pitch_positive_90); // x-axis upwards
