@@ -880,7 +880,7 @@
   - class_name: GBufferTextureID
     # - DESCRIPTION ------------------------
     doc: >
-      Defines the of each GBuffer texture (See the method `carla.Sensor.listen_to_gbuffer`).
+      Defines the identifiers of each GBuffer texture (See the method carla.Sensor.listen_to_gbuffer).
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: SceneColor

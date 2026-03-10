@@ -75,7 +75,7 @@ class MarkdownFile:
 
     def first_title(self):
         self._data = join([
-            self._data, '#Python API reference\n'])
+            self._data, '# Python API reference\n'])
 
     def title(self, strongness, buf):
         self._data = join([
