@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "carla/Debug.h"
 #include "carla/MsgPack.h"
 
 #include <cmath>
@@ -68,6 +69,7 @@ namespace geom {
     }
 
     Vector3D MakeUnitVectorLengthInput(const double length, const float epsilon = 2.0f * std::numeric_limits<float>::epsilon()) const {
+      DEVELOPMENT_ASSERT(length >= epsilon);
       if (length < epsilon) {
         return *this;
       }
