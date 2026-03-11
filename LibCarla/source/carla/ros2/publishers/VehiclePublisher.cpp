@@ -107,6 +107,7 @@ bool VehiclePublisher::ProcessMessages() {
     }
     else {
       auto const telemetry_data = telemetry_data_response.Get();
+      _vehicle_telemetry_publisher->Message().speed(telemetry_data.speed);
       _vehicle_telemetry_publisher->Message().throttle(telemetry_data.throttle);
       _vehicle_telemetry_publisher->Message().steer(telemetry_data.steer);
       _vehicle_telemetry_publisher->Message().brake(telemetry_data.brake);
