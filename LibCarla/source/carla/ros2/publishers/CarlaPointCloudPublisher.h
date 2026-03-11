@@ -39,7 +39,7 @@ namespace ros2 {
       bool WritePointCloud(int32_t seconds, uint32_t nanoseconds, uint32_t height, uint32_t width, std::vector<uint8_t> data);
 
     private:
-      virtual const size_t GetPointSize() = 0;
+      virtual size_t GetPointSize() = 0;
       virtual std::vector<sensor_msgs::msg::PointField> GetFields() = 0;
 
       virtual std::vector<uint8_t> ComputePointCloud(uint32_t height, uint32_t width, uint8_t *data) = 0;

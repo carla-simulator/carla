@@ -47,7 +47,7 @@ namespace ros2 {
     efd::DataReader* _datareader { nullptr };
     efd::TypeSupport _type { new msg_pubsub_type() };
 
-    void on_subscription_matched(efd::DataReader* reader, const efd::SubscriptionMatchedStatus& info) override {
+    void on_subscription_matched(efd::DataReader* /*reader*/, const efd::SubscriptionMatchedStatus& info) override {
       _alive = (info.total_count > 0) ? true : false;
     }
 
@@ -109,7 +109,7 @@ namespace ros2 {
       }
 
       efd::DataReaderQos rqos = efd::DATAREADER_QOS_DEFAULT;
-      efd::DataReaderListener* listener = (efd::DataReaderListener*)(this);
+      efd::DataReaderListener* listener = static_cast<efd::DataReaderListener*>(this);
       _datareader = _subscriber->create_datareader(_topic, rqos, listener);
       if (_datareader == nullptr) {
         log_error("Failed to create DataReader");

@@ -30,8 +30,10 @@ namespace ros2 {
         _base_topic_name(base_topic_name),
         _frame_id(frame_id) {}
 
-      const std::string GetBaseTopicName() {return _base_topic_name; }
-      const std::string GetFrameId() { return _frame_id; }
+      virtual ~BaseSubscriber() = default;
+
+      std::string GetBaseTopicName() { return _base_topic_name; }
+      std::string GetFrameId() { return _frame_id; }
 
       virtual ROS2CallbackData GetMessage() = 0;
       virtual void ProcessMessages(ActorCallback callback) = 0;
@@ -39,10 +41,9 @@ namespace ros2 {
       void* GetActor() { return _actor; }
 
     protected:
-      std::string _frame_id = "";
-      std::string _base_topic_name = "";
-
       void* _actor { nullptr };
+      std::string _base_topic_name = "";
+      std::string _frame_id = "";
   };
 
 }  // namespace ros2

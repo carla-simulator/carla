@@ -20,8 +20,8 @@ bool CarlaPointCloudPublisher::WritePointCloud(int32_t seconds, uint32_t nanosec
   _impl->GetMessage()->height(height);
   _impl->GetMessage()->is_bigendian(false);
   _impl->GetMessage()->fields(fields);
-  _impl->GetMessage()->point_step(point_size);
-  _impl->GetMessage()->row_step(width * point_size);
+  _impl->GetMessage()->point_step(static_cast<uint32_t>(point_size));
+  _impl->GetMessage()->row_step(static_cast<uint32_t>(width * point_size));
   _impl->GetMessage()->is_dense(false); // True if there are not invalid points
   _impl->GetMessage()->data(std::move(data));
 

@@ -15,7 +15,8 @@ geometry_msgs::msg::Transform CarlaTransformPublisher::ComputeTransform(std::str
   // This is common for static sensors that are typically attached to other actors.
   auto it = _last_transforms.find(frame_id);
   if (it != _last_transforms.end()) {
-    const auto& [last_transform, last_tf] = it->second;
+    const auto& last_transform = it->second.first;
+    const auto& last_tf = it->second.second;
 
     // Do not use operator== directly on transforms.
     // Floating-point errors can cause two transforms that are equal to compare as different.
