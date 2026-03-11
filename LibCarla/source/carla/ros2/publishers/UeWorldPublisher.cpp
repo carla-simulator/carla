@@ -31,7 +31,6 @@
 #include "carla/ros2/types/Acceleration.h"
 #include "carla/ros2/types/AngularVelocity.h"
 #include "carla/ros2/types/Quaternion.h"
-#include "carla/ros2/types/Speed.h"
 #include "carla/ros2/types/VehicleAckermannControl.h"
 #include "carla/ros2/types/VehicleControl.h"
 

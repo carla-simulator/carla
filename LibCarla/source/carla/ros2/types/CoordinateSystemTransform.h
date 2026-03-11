@@ -24,7 +24,7 @@ public:
    * @param \in carla_linear_values: the carla linear values provided provided by UE4 coordinate system
    * @returns values in ROS coordinate system (x:forward = forward, y: right = -left, z; up = up)
    */
-  static geometry_msgs::msg::Vector3 TransformLinearAxisMsg(carla::geom::Location const &carla_linear_values) {
+  static geometry_msgs::msg::Vector3 TransformLinearAxisMsg(carla::geom::Vector3D const &carla_linear_values) {
     geometry_msgs::msg::Vector3 result;
     result.x(carla_linear_values.x);
     result.y(-carla_linear_values.y);
@@ -32,7 +32,7 @@ public:
     return result;
   }
 
-  static geometry_msgs::msg::Point32 TransformLocationToPoint32Msg(carla::geom::Location const &carla_location) {
+  static geometry_msgs::msg::Point32 TransformLocationToPoint32Msg(carla::geom::Vector3D const &carla_location) {
     geometry_msgs::msg::Point32 result;
     result.x(carla_location.x);
     result.y(-carla_location.y);
@@ -40,16 +40,9 @@ public:
     return result;
   }
 
-  static geometry_msgs::msg::Vector3 TransformLocationToVector3Msg(carla::geom::Location const &carla_location) {
-    geometry_msgs::msg::Vector3 result;
-    result.x(carla_location.x);
-    result.y(-carla_location.y);
-    result.z(carla_location.z);
-    return result;
-  }
 
-  static carla::geom::Location TransformLinearAxixVector3D(carla::geom::Location const &carla_linear_values) {
-    carla::geom::Location result(carla_linear_values);
+  static carla::geom::Vector3D TransformLinearAxixVector3D(carla::geom::Vector3D const &carla_linear_values) {
+    carla::geom::Vector3D result(carla_linear_values);
     result.y = -result.y;
     return result;
   }

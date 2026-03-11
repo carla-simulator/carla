@@ -5,7 +5,6 @@
 #include "WalkerPublisher.h"
 
 #include "carla/ros2/impl/DdsPublisherImpl.h"
-#include "carla/ros2/types/Speed.h"
 #include "carla/ros2/types/WalkerControl.h"
 
 namespace carla {
@@ -45,7 +44,7 @@ void WalkerPublisher::UpdateWalker(std::shared_ptr<const carla::ros2::types::Obj
   _walker_odometry_publisher->SetMessageHeader(object->Timestamp().time(), "map");
   _walker_odometry_publisher->Message().child_frame_id(frame_id());
   _walker_odometry_publisher->Message().pose(object->Transform().pose_with_covariance());
-  _walker_odometry_publisher->Message().twist(object->AcceleratedMovement().twist_with_covariance());
+  _walker_odometry_publisher->Message().twist(object->AcceleratedMovement().relative_twist_with_covariance());
 
   _walker_object_publisher->UpdateObject(object);
   _walker_object_with_covariance_publisher->UpdateObject(object);

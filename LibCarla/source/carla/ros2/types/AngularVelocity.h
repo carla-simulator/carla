@@ -6,7 +6,7 @@
 
 #include "carla/geom/AngularVelocity.h"
 #include "carla/geom/Math.h"
-#include "geometry_msgs/msg/Accel.h"
+#include "geometry_msgs/msg/Vector3.h"
 
 namespace carla {
 namespace ros2 {
@@ -28,16 +28,24 @@ public:
   AngularVelocity(AngularVelocity&&) = default;
   AngularVelocity& operator=(AngularVelocity&&) = default;
 
+  enum class AngularVelocityMode {
+    DEGREE,
+    RADIAN
+  };
+
   /**
    * carla_AngularVelocity: the carla linear AngularVelocity
    */
-  explicit AngularVelocity(const carla::geom::AngularVelocity& carla_angular_velocity) {
-    _angular_velocity_ros.x = -carla::geom::Math::ToRadians(carla_angular_velocity.x);  // -(forward =  forward)
-    _angular_velocity.x(_angular_velocity_ros.x);
-    _angular_velocity_ros.y = carla::geom::Math::ToRadians(carla_angular_velocity.y);  // -(  right = -left  )
-    _angular_velocity.y(_angular_velocity_ros.y);
-    _angular_velocity_ros.z = -carla::geom::Math::ToRadians(carla_angular_velocity.z);  // -(     up =  up     )
-    _angular_velocity.z(_angular_velocity_ros.z);
+  AngularVelocity(const carla::geom::AngularVelocity& carla_angular_velocity, AngularVelocityMode mode) {
+      if ( mode == AngularVelocityMode::RADIAN) {
+        _carla_angular_velocity_rad.x = carla_angular_velocity.x;
+        _carla_angular_velocity_rad.y = carla_angular_velocity.y;
+        _carla_angular_velocity_rad.z = carla_angular_velocity.z;
+      } else {
+        _carla_angular_velocity_rad.x = carla::geom::Math::ToRadians(carla_angular_velocity.x);
+        _carla_angular_velocity_rad.y = carla::geom::Math::ToRadians(carla_angular_velocity.y);
+        _carla_angular_velocity_rad.z = carla::geom::Math::ToRadians(carla_angular_velocity.z);
+      }
   }
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
   AngularVelocity(const FVector& carla_angular_velocity)
@@ -46,22 +54,34 @@ public:
 #endif  // LIBCARLA_INCLUDED_FROM_UE4
 
   /**
-   * The resulting ROS geometry_msgs::msg::Vector3
+   * The resulting ROS geometry_msgs::msg::Vector3 in ROS coordinates
    */
   geometry_msgs::msg::Vector3 angular_velocity() const {
-    return _angular_velocity;
+    geometry_msgs::msg::Vector3 angular_velocity_ros;
+    angular_velocity_ros.x() = -_carla_angular_velocity_rad.x;  // -(forward =  forward)
+    angular_velocity_ros.y() = _carla_angular_velocity_rad.y;  // -(  right = -left  )
+    angular_velocity_ros.z() = -_carla_angular_velocity_rad.z;  // -(     up =  up     )
+    return angular_velocity_ros;
   }
 
   /**
-   * The angular velocity as carla::geom::Vector3D but in ROS coordinates
+   * The angular velocity in the carla coordinate system in radians per second
    */
-  carla::geom::AngularVelocity AngularVelocityROS() const {
-    return _angular_velocity_ros;
+  carla::geom::AngularVelocity const & GetAngularVelocityRad() const {
+    return _carla_angular_velocity_rad;
+  }
+
+  /**
+   * Get the relative angular velocity in the reference frame of the provided transform
+   */
+  AngularVelocity GetRelative(carla::geom::Quaternion const& quat) const {
+    AngularVelocity relative_angular_velocity;
+    relative_angular_velocity._carla_angular_velocity_rad = quat.InverseRotatedVector(_carla_angular_velocity_rad);
+    return relative_angular_velocity;
   }
 
 private:
-  carla::geom::AngularVelocity _angular_velocity_ros;
-  geometry_msgs::msg::Vector3 _angular_velocity;
+  carla::geom::AngularVelocity _carla_angular_velocity_rad;
 };
 }  // namespace types
 }  // namespace ros2

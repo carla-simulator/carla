@@ -35,8 +35,10 @@ void UeIMUPublisher::UpdateSensorData(
     carla::SharedBufferView buffer_view) {
   auto imu_data = data(buffer_view);
   _impl->SetMessageHeader(GetTime(sensor_header), frame_id());
-  _impl->Message().angular_velocity(carla::ros2::types::AngularVelocity(imu_data.gyroscope).angular_velocity());
-  _impl->Message().linear_acceleration(carla::ros2::types::Acceleration(imu_data.accelerometer).accel().linear());
+  // the IMU message contains angular velocity in radians
+  _impl->Message().angular_velocity(carla::ros2::types::AngularVelocity(imu_data.gyroscope, 
+    carla::ros2::types::AngularVelocity::AngularVelocityMode::RADIAN).angular_velocity());
+  _impl->Message().linear_acceleration(carla::ros2::types::Acceleration(imu_data.accelerometer).linear_acceleration());
 
   /*
     TODO: original ROS bridge had taken the transform to provide a correct 3D orientation

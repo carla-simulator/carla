@@ -8,6 +8,7 @@
 
 #include "carla/geom/BoundingBox.h"
 #include "carla/ros2/types/AcceleratedMovement.h"
+#include "carla/ros2/types/AngularVelocity.h"
 #include "carla/ros2/types/Polygon.h"
 #include "carla/ros2/types/Timestamp.h"
 #include "carla/ros2/types/TrafficLightActorDefinition.h"
@@ -20,6 +21,7 @@
 #include "carla/sensor/data/ActorDynamicState.h"
 #include "derived_object_msgs/msg/Object.h"
 #include "derived_object_msgs/msg/ObjectWithCovariance.h"
+#include "std_msgs/msg/Float32.h"
 
 
 namespace carla {
@@ -188,9 +190,11 @@ public:
     _bounding_box.location = actor_dynamic_state.transform.location;
     _bounding_box.rotation = actor_dynamic_state.transform.rotation;
     _transform = carla::ros2::types::Transform(actor_dynamic_state.transform, actor_dynamic_state.quaternion);
-    _accelerated_movement.UpdateSpeed(
-        carla::ros2::types::Speed(carla::geom::Velocity(actor_dynamic_state.velocity), actor_dynamic_state.quaternion),
-        carla::ros2::types::AngularVelocity(carla::geom::AngularVelocity(actor_dynamic_state.angular_velocity)),
+    _accelerated_movement.Update(
+        carla::geom::Velocity(actor_dynamic_state.velocity),
+        AngularVelocity(actor_dynamic_state.angular_velocity, AngularVelocity::AngularVelocityMode::DEGREE),
+        carla::geom::Acceleration(actor_dynamic_state.acceleration),
+        actor_dynamic_state.quaternion,
         timestamp);
   }
 
@@ -202,8 +206,8 @@ public:
     object.detection_level(derived_object_msgs::msg::Object_Constants::OBJECT_TRACKED);
     object.object_classified(true);
     object.pose(_transform.pose());
-    object.twist(_accelerated_movement.twist());
-    object.accel(_accelerated_movement.accel());
+    object.twist(_accelerated_movement.absolute_twist());
+    object.accel(_accelerated_movement.absolute_accel());
     object.shape().type(shape_msgs::msg::SolidPrimitive_Constants::BOX);
     auto const ros_extent = _bounding_box.extent * 2.f;
     object.shape().dimensions({ros_extent.x, ros_extent.y, ros_extent.z});
@@ -222,8 +226,8 @@ public:
     object.detection_level(derived_object_msgs::msg::Object_Constants::OBJECT_TRACKED);
     object.object_classified(true);
     object.pose(_transform.pose_with_covariance());
-    object.twist(_accelerated_movement.twist_with_covariance());
-    object.accel(_accelerated_movement.accel_with_covariance());
+    object.twist(_accelerated_movement.absolute_twist_with_covariance());
+    object.accel(_accelerated_movement.absolute_accel_with_covariance());
     object.shape().type(shape_msgs::msg::SolidPrimitive_Constants::BOX);
     auto const ros_extent = _bounding_box.extent * 2.f;
     object.shape().dimensions({ros_extent.x, ros_extent.y, ros_extent.z});
@@ -239,22 +243,29 @@ public:
   bool has_dynamic_data_changed(derived_object_msgs::msg::Object const &other) const {
      return (other.id()!=_actor_definition->id)
            || (other.pose() != _transform.pose())
-           || (other.twist() != _accelerated_movement.twist())
-           || (other.accel() != _accelerated_movement.accel());
+           || (other.twist() != _accelerated_movement.absolute_twist())
+           || (other.accel() != _accelerated_movement.absolute_accel());
   }
+
+
+  /**
+   * The resulting ROS std_msgs::msg::Float32
+   */
+  std_msgs::msg::Float32 speed() const {
+    std_msgs::msg::Float32 ros_speed;
+    ros_speed.data(_accelerated_movement.LinearVelocity().Speed(_transform.GetQuaternion()));
+    return ros_speed;
+  }
+
 
   carla::ros2::types::Timestamp const& Timestamp() const {
     return _accelerated_movement.Timestamp();
   }
+
   carla::ros2::types::Transform const& Transform() const {
     return _transform;
   }
-  carla::ros2::types::Speed const& Speed() const {
-    return _accelerated_movement.Speed();
-  }
-  carla::ros2::types::AngularVelocity const& AngularVelocity() const {
-    return _accelerated_movement.AngularVelocity();
-  }
+
   carla::ros2::types::AcceleratedMovement const& AcceleratedMovement() const {
     return _accelerated_movement;
   }

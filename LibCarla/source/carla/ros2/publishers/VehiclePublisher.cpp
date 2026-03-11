@@ -5,7 +5,6 @@
 #include "VehiclePublisher.h"
 
 #include "carla/ros2/impl/DdsPublisherImpl.h"
-#include "carla/ros2/types/Speed.h"
 #include "carla/ros2/types/VehicleAckermannControl.h"
 #include "carla/ros2/types/VehicleControl.h"
 
@@ -27,42 +26,6 @@ VehiclePublisher::VehiclePublisher(std::shared_ptr<carla::ros2::types::VehicleAc
     _vehicle_telemetry_publisher(std::make_shared<VehicleTelemetryDataPublisherImpl>()),
     _vehicle_object_publisher(std::make_shared<ObjectPublisher>(*this, objects_publisher)),
     _vehicle_object_with_covariance_publisher(std::make_shared<ObjectWithCovariancePublisher>(*this, objects_with_covariance_publisher)) {
-  // prefill some vehicle info data
-  _vehicle_info_publisher->Message().id(vehicle_actor_definition->id);
-  _vehicle_info_publisher->Message().type(vehicle_actor_definition->type_id);
-  _vehicle_info_publisher->Message().rolename(vehicle_actor_definition->role_name);
-  for (auto wheel : vehicle_actor_definition->vehicle_physics_control.GetWheels()) {
-    auto wheel_info = carla_msgs::msg::CarlaEgoVehicleInfoWheel();
-    wheel_info.tire_friction(wheel.tire_friction);
-    wheel_info.damping_rate(wheel.damping_rate);
-    wheel_info.max_steer_angle(carla::geom::Math::ToRadians(wheel.max_steer_angle));
-    wheel_info.radius(wheel.radius);
-    wheel_info.max_brake_torque(wheel.max_brake_torque);
-    wheel_info.max_handbrake_torque(wheel.max_handbrake_torque);
-
-    auto wheel_position = wheel.position;
-    // TODO: do we have to divide here by 100? (such was in ros brigde, but to my undertanding and search in the source
-    // code, it might be already correct. If not, then better to switch type of wheel_position from Vector3D to Location
-    // to have automatic cm -> m conversion object->Transform().GetTransform().InverseTransformPoint(wheel_position);
-    wheel_info.position(CoordinateSystemTransform::TransformLocationToVector3Msg(wheel_position));
-    _vehicle_info_publisher->Message().wheels().push_back(wheel_info);
-  }
-  _vehicle_info_publisher->Message().max_rpm(vehicle_actor_definition->vehicle_physics_control.max_rpm);
-  _vehicle_info_publisher->Message().moi(vehicle_actor_definition->vehicle_physics_control.moi);
-  _vehicle_info_publisher->Message().damping_rate_full_throttle(
-      vehicle_actor_definition->vehicle_physics_control.damping_rate_full_throttle);
-  _vehicle_info_publisher->Message().damping_rate_zero_throttle_clutch_engaged(
-      vehicle_actor_definition->vehicle_physics_control.damping_rate_zero_throttle_clutch_engaged);
-  _vehicle_info_publisher->Message().damping_rate_zero_throttle_clutch_disengaged(
-      vehicle_actor_definition->vehicle_physics_control.damping_rate_zero_throttle_clutch_disengaged);
-  _vehicle_info_publisher->Message().use_gear_autobox(vehicle_actor_definition->vehicle_physics_control.use_gear_autobox);
-  _vehicle_info_publisher->Message().gear_switch_time(vehicle_actor_definition->vehicle_physics_control.gear_switch_time);
-  _vehicle_info_publisher->Message().clutch_strength(vehicle_actor_definition->vehicle_physics_control.clutch_strength);
-  _vehicle_info_publisher->Message().mass(vehicle_actor_definition->vehicle_physics_control.mass);
-  _vehicle_info_publisher->Message().drag_coefficient(vehicle_actor_definition->vehicle_physics_control.drag_coefficient);
-  _vehicle_info_publisher->Message().center_of_mass(CoordinateSystemTransform::TransformLocationToVector3Msg(
-      vehicle_actor_definition->vehicle_physics_control.center_of_mass));
-  _vehicle_info_publisher->SetMessageUpdated();
 }
 
 bool VehiclePublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
@@ -152,17 +115,18 @@ void VehiclePublisher::UpdateVehicle(std::shared_ptr<const carla::ros2::types::O
   _vehicle_odometry_publisher->SetMessageHeader(object->Timestamp().time(), "map");
   _vehicle_odometry_publisher->Message().child_frame_id(frame_id());
   _vehicle_odometry_publisher->Message().pose(object->Transform().pose_with_covariance());
-  _vehicle_odometry_publisher->Message().twist(object->AcceleratedMovement().twist_with_covariance());
-  
-  _vehicle_speed_publisher->Message().data(object->Speed().speed().data());
+  _vehicle_odometry_publisher->Message().twist(object->AcceleratedMovement().relative_twist_with_covariance());
+
+  auto const speed = object->speed().data();
+  _vehicle_speed_publisher->Message().data() = speed;
   _vehicle_speed_publisher->SetMessageUpdated();
 
   // add the timestamp and frame_id to telemetry data
   _vehicle_telemetry_publisher->SetMessageHeader(object->Timestamp().time(), "map");
 
   _vehicle_status_publisher->SetMessageHeader(object->Timestamp().time(), frame_id());
-  _vehicle_status_publisher->Message().velocity(object->Speed().speed().data());
-  _vehicle_status_publisher->Message().acceleration(object->AcceleratedMovement().accel());
+  _vehicle_status_publisher->Message().velocity() = speed;
+  _vehicle_status_publisher->Message().acceleration(object->AcceleratedMovement().relative_accel());
   _vehicle_status_publisher->Message().orientation(object->Transform().pose().orientation());
   _vehicle_status_publisher->Message().active_control_type(carla::ros2::types::GetVehicleControlType(actor_dynamic_state));
   _vehicle_status_publisher->Message().last_applied_vehicle_control(
@@ -174,6 +138,50 @@ void VehiclePublisher::UpdateVehicle(std::shared_ptr<const carla::ros2::types::O
 
   _vehicle_object_publisher->UpdateObject(object);
   _vehicle_object_with_covariance_publisher->UpdateObject(object);
+
+  if ( _vehicle_info_publisher->Message().id() != _actor_name_definition->id ) {
+    // only update the vehicle info message once, as it contains only static information about the vehicle
+    auto vehicle_actor_definition = std::static_pointer_cast<carla::ros2::types::VehicleActorDefinition>(_actor_name_definition);
+    _vehicle_info_publisher->Message().id(vehicle_actor_definition->id);
+    _vehicle_info_publisher->Message().type(vehicle_actor_definition->type_id);
+    _vehicle_info_publisher->Message().rolename(vehicle_actor_definition->role_name);
+
+    for (auto wheel : vehicle_actor_definition->vehicle_physics_control.GetWheels()) {
+      auto wheel_info = carla_msgs::msg::CarlaEgoVehicleInfoWheel();
+      wheel_info.tire_friction(wheel.tire_friction);
+      wheel_info.damping_rate(wheel.damping_rate);
+      wheel_info.max_steer_angle(carla::geom::Math::ToRadians(wheel.max_steer_angle));
+      wheel_info.radius(wheel.radius);
+      wheel_info.max_brake_torque(wheel.max_brake_torque);
+      wheel_info.max_handbrake_torque(wheel.max_handbrake_torque);
+
+      // convert from cm to m
+      // TODO: maybe we should change the type of wheel_position from Vector3D to Location in the WheelPhysicsControl, 
+      // as it semantically represents a location, and then we would not have to do this conversion here.
+      auto wheel_position = carla::geom::Vector3D(wheel.position.x * 1e-2f, wheel.position.y * 1e-2f, wheel.position.z * 1e-2f);
+      // then make wheel position relative to the vehicle center 
+      object->Transform().GetTransform().InverseTransformPoint(wheel_position);
+      // then transform it from UE4's left-handed coordinate system to ROS's right-handed coordinate system
+      wheel_info.position(CoordinateSystemTransform::TransformLinearAxisMsg(wheel_position));
+      _vehicle_info_publisher->Message().wheels().push_back(wheel_info);
+    }
+    _vehicle_info_publisher->Message().max_rpm(vehicle_actor_definition->vehicle_physics_control.max_rpm);
+    _vehicle_info_publisher->Message().moi(vehicle_actor_definition->vehicle_physics_control.moi);
+    _vehicle_info_publisher->Message().damping_rate_full_throttle(
+        vehicle_actor_definition->vehicle_physics_control.damping_rate_full_throttle);
+    _vehicle_info_publisher->Message().damping_rate_zero_throttle_clutch_engaged(
+        vehicle_actor_definition->vehicle_physics_control.damping_rate_zero_throttle_clutch_engaged);
+    _vehicle_info_publisher->Message().damping_rate_zero_throttle_clutch_disengaged(
+        vehicle_actor_definition->vehicle_physics_control.damping_rate_zero_throttle_clutch_disengaged);
+    _vehicle_info_publisher->Message().use_gear_autobox(vehicle_actor_definition->vehicle_physics_control.use_gear_autobox);
+    _vehicle_info_publisher->Message().gear_switch_time(vehicle_actor_definition->vehicle_physics_control.gear_switch_time);
+    _vehicle_info_publisher->Message().clutch_strength(vehicle_actor_definition->vehicle_physics_control.clutch_strength);
+    _vehicle_info_publisher->Message().mass(vehicle_actor_definition->vehicle_physics_control.mass);
+    _vehicle_info_publisher->Message().drag_coefficient(vehicle_actor_definition->vehicle_physics_control.drag_coefficient);
+    _vehicle_info_publisher->Message().center_of_mass(CoordinateSystemTransform::TransformLinearAxisMsg(
+        vehicle_actor_definition->vehicle_physics_control.center_of_mass));
+    _vehicle_info_publisher->SetMessageUpdated();
+  }
 }
 
 }  // namespace ros2
