@@ -37,12 +37,12 @@ ALSM::ALSM(
     world(world),
     local_map(local_map),
     simulation_state(simulation_state),
-    large_vehicles(large_vehicles),
     localization_stage(localization_stage),
     collision_stage(collision_stage),
     traffic_light_stage(traffic_light_stage),
     motion_plan_stage(motion_plan_stage),
-    vehicle_light_stage(vehicle_light_stage) {}
+    vehicle_light_stage(vehicle_light_stage),
+    large_vehicles(large_vehicles) {}
 
 void ALSM::Update() {
 

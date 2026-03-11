@@ -39,7 +39,7 @@ cd ${LIBOSMSCOUT_BUILD_FOLDER}
 cmake ${LIBOSMSCOUT_SOURCE_FOLDER} \
     -DCMAKE_INSTALL_PREFIX=${INSTALLATION_PATH}
 
-make
+make -j$(nproc)
 make install
 
 # ==============================================================================
@@ -47,7 +47,7 @@ make install
 # ==============================================================================
 echo "Cloning luna-svg"
 if [ ! -d ${LUNASVG_SOURCE_FOLDER} ] ; then
-  git clone ${LUNASVG_REPO} ${LUNASVG_SOURCE_FOLDER}
+  git clone -b v2.3.8 --depth 1 ${LUNASVG_REPO} ${LUNASVG_SOURCE_FOLDER}
 fi
 
 mkdir -p ${LUNASVG_BUILD_FOLDER}
@@ -56,7 +56,7 @@ cd ${LUNASVG_BUILD_FOLDER}
 cmake ${LUNASVG_SOURCE_FOLDER} \
     -DCMAKE_INSTALL_PREFIX=${INSTALLATION_PATH}
 
-make
+make -j$(nproc)
 make install
 
 
@@ -69,7 +69,8 @@ mkdir -p ${OSM_RENDERER_BUILD}
 cd ${OSM_RENDERER_BUILD}
 
 cmake -DCMAKE_CXX_FLAGS="-std=c++17 -g -pthread -I${CARLA_BUILD_FOLDER}/boost-1.84.0-c10-install/include" \
+-DCMAKE_EXE_LINKER_FLAGS="-L${CARLA_BUILD_FOLDER}/boost-1.84.0-c10-install/lib -lboost_system" \
     ${OSM_RENDERER_SOURCE}
-make
+make -j$(nproc)
 
 echo "SUCCESS! Finishing setting up renderer."

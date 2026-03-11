@@ -17,6 +17,11 @@
       type: int
       doc: >
         Simulation frame in which the snapshot was taken. 
+    - var_name: elapsed_seconds
+      type: float
+      var_units: seconds
+      doc: >
+        Simulated seconds elapsed since the beginning of the current episode.
     - var_name: timestamp
       type: carla.Timestamp
       var_units: seconds

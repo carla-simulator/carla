@@ -43,17 +43,17 @@ namespace deformation {
     float constraintX = 17.0f;
     float constraintY = 12.0f;
 
-    float BumpX = std::ceil(posx / constraintX);
-    float BumpY = std::floor(posy / constraintY);
+    float BumpX = static_cast<float>(std::ceil(posx / constraintX));
+    float BumpY = static_cast<float>(std::floor(posy / constraintY));
 
     BumpX *= constraintX;
     BumpY *= constraintY;
 
-    float DistanceToBumpOrigin = sqrt(pow(BumpX - posx, 2) + pow(BumpY - posy, 2) );
-    float MaxDistance = 2.0;
+    float DistanceToBumpOrigin = static_cast<float>(sqrt(pow(BumpX - posx, 2) + pow(BumpY - posy, 2)));
+    float MaxDistance = 2.0f;
 
     if (DistanceToBumpOrigin <= MaxDistance) {
-      bumpsoffset = sin(DistanceToBumpOrigin);
+      bumpsoffset = static_cast<float>(sin(DistanceToBumpOrigin));
     }
 
     return A3 * bumpsoffset;

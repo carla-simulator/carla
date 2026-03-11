@@ -296,7 +296,7 @@ namespace parser {
      */
 
     // map_builder calls
-    for (auto const r : roads) {
+    for (const auto& r : roads) {
       carla::road::Road *road = map_builder.AddRoad(r.id,
           r.name,
           r.length,
@@ -306,7 +306,7 @@ namespace parser {
           r.is_rht);
 
       // type speed
-      for (auto const s : r.speed) {
+      for (const auto& s : r.speed) {
         map_builder.CreateRoadSpeed(road, s.s, s.type, s.max, s.unit);
       }
 
@@ -317,7 +317,7 @@ namespace parser {
 
       // lane sections
       road::SectionId i = 0;
-      for (auto const s : r.sections) {
+      for (const auto& s : r.sections) {
         carla::road::LaneSection *section = map_builder.AddRoadSection(road, i++, s.s);
 
         // lanes
