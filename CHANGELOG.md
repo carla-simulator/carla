@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Fixed camera fx calculation in ROS2 CameraInfo, large map actor tagging, pedestrian bounding box using skeletal mesh bounds, and camera frame/timestamp consistency (ported from ue4-dev)
 * Fix typos in README.md
 * Added actor description as Actor TAGs
 * Create class with functions to import points and polylines from satellite segmentation (#8946, #8949 #8950)
