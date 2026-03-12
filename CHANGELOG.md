@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Fixed RPC server deadlock on shutdown, overly strict Vector3D assert, OpenDrive lane width for center lanes, busy-wait yield() calls, and strict RELEASE_ASSERTs in road Map (ported from ue4-dev)
 * Fix typos in README.md
 * Added actor description as Actor TAGs
 * Create class with functions to import points and polylines from satellite segmentation (#8946, #8949 #8950)
