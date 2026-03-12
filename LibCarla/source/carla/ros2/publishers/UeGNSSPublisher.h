@@ -48,6 +48,10 @@ private:
   }
 
   std::shared_ptr<UeGNSSPublisherImpl> _impl;
+
+  double _noise_lat_covar{0.};
+  double _noise_lon_covar{0.};
+  double _noise_alt_covar{0.};
 };
 }  // namespace ros2
 }  // namespace carla
