@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Fixed compiler warnings across 20 LibCarla files including signed/unsigned conversions, pessimizing moves, deep copies in range-for loops, and C-style casts (ported from ue4-dev)
 * Fix typos in README.md
 * Added actor description as Actor TAGs
 * Create class with functions to import points and polylines from satellite segmentation (#8946, #8949 #8950)
