@@ -25,7 +25,7 @@ namespace carla {
 namespace ros2 {
 
 class DdsDomainParticipantImpl;
-class UePublisherBaseSensor;
+class UePublisherBase;
 class TransformPublisher;
 class CarlaActorListPublisher;
 class UeWorldPublisher;

@@ -58,9 +58,9 @@ public:
   bool SubscribersConnected() const override;
 
   /**
-   * Perform message processing. 
+   * Query the not streamed data from the server before processing the sensor data.
    */
-  bool ProcessMessages();
+  void UpdateSensorDataPreAction() override;
 
   void UpdateVehicle(std::shared_ptr<const carla::ros2::types::Object> &object,
                      carla::sensor::data::ActorDynamicState const &actor_dynamic_state);

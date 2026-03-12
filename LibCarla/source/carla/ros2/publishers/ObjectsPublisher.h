@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "carla/ros2/publishers/PublisherBaseSensor.h"
+#include "carla/ros2/publishers/PublisherBase.h"
 #include "carla/ros2/types/Object.h"
 #include "derived_object_msgs/msg/ObjectArrayPubSubTypes.h"
 
@@ -14,7 +14,7 @@ namespace ros2 {
 using ObjectsPublisherImpl =
     DdsPublisherImpl<derived_object_msgs::msg::ObjectArray, derived_object_msgs::msg::ObjectArrayPubSubType>;
 
-class ObjectsPublisher : public PublisherBaseSensor {
+class ObjectsPublisher : public PublisherBase {
 public:
   enum class ObjectMode {
     DYNAMIC_PUBLISH_ALWAYS,

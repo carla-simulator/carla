@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "carla/ros2/publishers/UePublisherBaseSensor.h"
+#include "carla/ros2/publishers/UePublisherBase.h"
 #include "sensor_msgs/msg/PointCloud2PubSubTypes.h"
 
 namespace carla {
@@ -15,10 +15,10 @@ using UePublisherPointCloudImpl =
 
 /**
   A Publisher base class for point cloud publisher sensors.
-  Extends UePublisherBaseSensor by an point cloud publisher.
+  Extends UePublisherBase by an point cloud publisher.
 */
 template <class HEADER_TYPE, class DATA_TYPE>
-class UePublisherBasePointCloud : public UePublisherBaseSensor {
+class UePublisherBasePointCloud : public UePublisherBase {
 public:
   UePublisherBasePointCloud(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
                             std::shared_ptr<TransformPublisher> transform_publisher);
@@ -39,7 +39,7 @@ public:
   bool SubscribersConnected() const override;
 
   /**
-   * Implements UePublisherBaseSensor::UpdateSensorData() interface
+   * Implements UePublisherBase::UpdateSensorData() interface
    */
   void UpdateSensorData(std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header,
                         const carla::SharedBufferView buffer_view) override;

@@ -24,7 +24,7 @@ bool UeRGBCameraPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain
   return _initialized;
 }
 
-void UeRGBCameraPublisher::UpdateSensorDataPreAction() {
+void UeRGBCameraPublisher::ProcessMessages() {
   if (!_initialized) {
     return;
   }

@@ -15,7 +15,7 @@
 #include "carla/ros2/publishers/TrafficLightPublisher.h"
 #include "carla/ros2/publishers/TrafficLightsPublisher.h"
 #include "carla/ros2/publishers/TrafficSignPublisher.h"
-#include "carla/ros2/publishers/UePublisherBaseSensor.h"
+#include "carla/ros2/publishers/UePublisherBase.h"
 #include "carla/ros2/publishers/VehiclePublisher.h"
 #include "carla/ros2/publishers/WalkerPublisher.h"
 #include "carla/ros2/publishers/WeatherPublisher.h"
@@ -48,7 +48,7 @@ namespace ros2 {
  * -...
  * 
  */
-class UeWorldPublisher : public UePublisherBaseSensor, public std::enable_shared_from_this<UeWorldPublisher>  {
+class UeWorldPublisher : public UePublisherBase, public std::enable_shared_from_this<UeWorldPublisher>  {
 public:
   UeWorldPublisher(carla::rpc::RpcServerInterface &carla_server, std::shared_ptr<ROS2NameRegistry> name_registry,
                    std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition);
@@ -76,7 +76,7 @@ public:
   /**
    * Process incoming messages
    */
-  void ProcessMessages();
+  void ProcessMessages() override;
 
   /**
    * Implement actions on actors removed
@@ -84,17 +84,17 @@ public:
   void RemoveActor(ActorId actor);
 
   /**
-   * Implement UePublisherBaseSensor::UpdateSensorDataPreAction()
+   * Implement UePublisherBase::UpdateSensorDataPreAction()
    */
   void UpdateSensorDataPreAction() override;
 
   /**
-   * Implement UePublisherBaseSensor::UpdateSensorData()
+   * Implement UePublisherBase::UpdateSensorData()
    */
   void UpdateSensorData(std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header,
                         carla::SharedBufferView buffer_view) override;
   /**
-   * Implement UePublisherBaseSensor::UpdateSensorDataPostAction()
+   * Implement UePublisherBase::UpdateSensorDataPostAction()
    */
   void UpdateSensorDataPostAction() override;
 
@@ -221,7 +221,7 @@ private:
     std::shared_ptr<ROS2NameRecord> sensor_actor_record;
     carla::ros2::types::V2XCustomSendCallback v2x_custom_send_callback{nullptr};
     bool publisher_expected{true};
-    std::shared_ptr<UePublisherBaseSensor> publisher;
+    std::shared_ptr<UePublisherBase> publisher;
     std::shared_ptr<ROS2Session> session;
     carla::ros2::types::ActorSetTransformCallback actor_set_transform_callback{nullptr};
     carla::ros2::types::Transform transform;

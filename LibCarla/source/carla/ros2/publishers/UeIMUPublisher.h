@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "carla/ros2/publishers/UePublisherBaseSensor.h"
+#include "carla/ros2/publishers/UePublisherBase.h"
 #include "carla/sensor/s11n/IMUSerializer.h"
 #include "geometry_msgs/msg/Accel.h"
 #include "sensor_msgs/msg/ImuPubSubTypes.h"
@@ -14,7 +14,7 @@ namespace ros2 {
 
 using UeIMUPublisherImpl = DdsPublisherImpl<sensor_msgs::msg::Imu, sensor_msgs::msg::ImuPubSubType>;
 
-class UeIMUPublisher : public UePublisherBaseSensor {
+class UeIMUPublisher : public UePublisherBase {
 public:
   UeIMUPublisher(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
                  std::shared_ptr<TransformPublisher> transform_publisher);
@@ -35,7 +35,7 @@ public:
   bool SubscribersConnected() const override;
 
   /**
-   * Implements UePublisherBaseSensor::UpdateSensorData() interface
+   * Implements UePublisherBase::UpdateSensorData() interface
    */
   void UpdateSensorData(std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header,
                         const carla::SharedBufferView buffer_view) override;

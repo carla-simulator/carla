@@ -5,7 +5,7 @@
 #pragma once
 
 #include "carla/Exception.h"
-#include "carla/ros2/publishers/UePublisherBaseSensor.h"
+#include "carla/ros2/publishers/UePublisherBase.h"
 #include "carla/sensor/s11n/ImageSerializer.h"
 #include "sensor_msgs/msg/CameraInfoPubSubTypes.h"
 #include "sensor_msgs/msg/ImagePubSubTypes.h"
@@ -21,11 +21,11 @@ using UeCameraInfoPublisherImpl =
 
 /**
 A Publisher base class for camera sensors.
-Extends UePublisherBaseSensor by an image and camera_info publisher providing default implemenations for sending the
+Extends UePublisherBase by an image and camera_info publisher providing default implemenations for sending the
 camera data from the rendering buffer copyless via DDS
 */
 template <class ALLOCATOR>
-class UePublisherBaseCamera : public UePublisherBaseSensor {
+class UePublisherBaseCamera : public UePublisherBase {
 public:
   using allocator_type = ALLOCATOR;
 
@@ -55,7 +55,7 @@ public:
   bool SubscribersConnected() const override;
 
   /**
-   * Implements UePublisherBaseSensor::UpdateSensorData() interface
+   * Implements UePublisherBase::UpdateSensorData() interface
    */
   void UpdateSensorData(std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header,
                         const carla::SharedBufferView buffer_view) override;

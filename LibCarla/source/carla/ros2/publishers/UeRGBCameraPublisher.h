@@ -26,9 +26,9 @@ public:
   bool Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) override;
 
   /**
-   * Implement UePublisherBaseSensor::UpdateSensorDataPreAction()
+   * Process incoming messages.
    */
-  void UpdateSensorDataPreAction() override;
+  void ProcessMessages() override;
 
 private:
   std::shared_ptr<ActorSetTransformSubscriber> actor_set_transform_subscriber;

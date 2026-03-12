@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "carla/ros2/publishers/PublisherBaseSensor.h"
+#include "carla/ros2/publishers/PublisherBase.h"
 
 #include "carla/ros2/publishers/TransformPublisher.h"
 #include "carla/ros2/types/CoordinateSystemTransform.h"
@@ -19,14 +19,14 @@ namespace ros2 {
   A Publisher base class that is extended to store an internal Transform.
   Use this class for publisher that need a transform conversion for the TF tree in addition.
  */
-class PublisherBaseTransform : public PublisherBaseSensor {
+class PublisherBaseTransform : public PublisherBase {
 public:
   using CoordinateSystemTransform = carla::ros2::types::CoordinateSystemTransform;
 
   PublisherBaseTransform(std::shared_ptr<carla::ros2::types::ActorNameDefinition> actor_name_definition,
                          std::shared_ptr<TransformPublisher> transform_publisher,
                          TransformPublisher::TransformPublisherMode const mode)
-    : PublisherBaseSensor(actor_name_definition), _transform_publisher(transform_publisher), _mode(mode) {}
+    : PublisherBase(actor_name_definition), _transform_publisher(transform_publisher), _mode(mode) {}
   
   virtual ~PublisherBaseTransform() {
     // remove the transform from the TF tree when the publisher is destroyed

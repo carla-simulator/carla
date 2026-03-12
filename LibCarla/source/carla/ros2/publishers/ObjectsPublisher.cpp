@@ -11,7 +11,7 @@ namespace carla {
 namespace ros2 {
 
 ObjectsPublisher::ObjectsPublisher(ObjectsPublisher::ObjectMode const update_mode, std::string role_name)
-  : PublisherBaseSensor(carla::ros2::types::ActorNameDefinition::CreateFromRoleName(role_name))
+  : PublisherBase(carla::ros2::types::ActorNameDefinition::CreateFromRoleName(role_name))
   , _impl(std::make_shared<ObjectsPublisherImpl>())
   , _update_mode(update_mode)
 {

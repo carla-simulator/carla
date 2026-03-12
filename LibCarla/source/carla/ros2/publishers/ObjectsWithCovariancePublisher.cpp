@@ -10,7 +10,7 @@ namespace carla {
 namespace ros2 {
 
 ObjectsWithCovariancePublisher::ObjectsWithCovariancePublisher()
-  : PublisherBaseSensor(carla::ros2::types::ActorNameDefinition::CreateFromRoleName("objects_with_covariance")),
+  : PublisherBase(carla::ros2::types::ActorNameDefinition::CreateFromRoleName("objects_with_covariance")),
     _impl(std::make_shared<ObjectsWithCovariancePublisherImpl>()) {}
 
 bool ObjectsWithCovariancePublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {

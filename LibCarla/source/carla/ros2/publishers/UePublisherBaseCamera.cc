@@ -14,7 +14,7 @@ template <class ALLOCATOR>
 UePublisherBaseCamera<ALLOCATOR>::UePublisherBaseCamera(
     std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
     std::shared_ptr<TransformPublisher> transform_publisher)
-  : UePublisherBaseSensor(sensor_actor_definition, transform_publisher),
+  : UePublisherBase(sensor_actor_definition, transform_publisher),
     _image(std::make_shared<UeImagePublisherImpl<ALLOCATOR> >()),
     _camera_info(std::make_shared<UeCameraInfoPublisherImpl>()) {}
 

@@ -84,6 +84,21 @@ public:
     return _actor_name_definition->carla_actor_info(name_registry);
   }
 
+  /**
+   * Implement Message Processing in case the publisher has to do so.
+   */
+  virtual void ProcessMessages() {};
+
+  /**
+   * Implement actions before sensor data updates
+   */
+  virtual void UpdateSensorDataPreAction() {};
+
+  /**
+   * Implement actions after sensor data updates
+   */
+  virtual void UpdateSensorDataPostAction() {}
+
 };
 }  // namespace ros2
 }  // namespace carla

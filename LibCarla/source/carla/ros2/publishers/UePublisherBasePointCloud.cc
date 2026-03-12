@@ -12,7 +12,7 @@ template <class HEADER_TYPE, class DATA_TYPE>
 UePublisherBasePointCloud<HEADER_TYPE, DATA_TYPE>::UePublisherBasePointCloud(
     std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
     std::shared_ptr<TransformPublisher> transform_publisher)
-  : UePublisherBaseSensor(sensor_actor_definition, transform_publisher),
+  : UePublisherBase(sensor_actor_definition, transform_publisher),
     _point_cloud(std::make_shared<UePublisherPointCloudImpl>()) {}
 
 template <class HEADER_TYPE, class DATA_TYPE>

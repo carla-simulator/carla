@@ -10,7 +10,7 @@ namespace carla {
 namespace ros2 {
 
 CarlaStatusPublisher::CarlaStatusPublisher()
-  : PublisherBaseSensor(carla::ros2::types::ActorNameDefinition::CreateFromRoleName("status")),
+  : PublisherBase(carla::ros2::types::ActorNameDefinition::CreateFromRoleName("status")),
     _impl(std::make_shared<CarlaStatusPublisherImpl>()) {}
 
 bool CarlaStatusPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {

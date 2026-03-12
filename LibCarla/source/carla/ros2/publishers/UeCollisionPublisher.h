@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "carla/ros2/publishers/UePublisherBaseSensor.h"
+#include "carla/ros2/publishers/UePublisherBase.h"
 #include "carla/sensor/s11n/CollisionEventSerializer.h"
 #include "carla_msgs/msg/CarlaCollisionEventPubSubTypes.h"
 
@@ -14,7 +14,7 @@ namespace ros2 {
 using UeCollisionPublisherImpl =
     DdsPublisherImpl<carla_msgs::msg::CarlaCollisionEvent, carla_msgs::msg::CarlaCollisionEventPubSubType>;
 
-class UeCollisionPublisher : public UePublisherBaseSensor {
+class UeCollisionPublisher : public UePublisherBase {
 public:
   UeCollisionPublisher(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
                        std::shared_ptr<TransformPublisher> transform_publisher);
@@ -35,7 +35,7 @@ public:
   bool SubscribersConnected() const override;
 
   /**
-   * Implements UePublisherBaseSensor::UpdateSensorData() interface
+   * Implements UePublisherBase::UpdateSensorData() interface
    */
   void UpdateSensorData(std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header,
                         carla::SharedBufferView buffer_view) override;

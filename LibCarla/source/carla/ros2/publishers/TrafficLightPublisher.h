@@ -5,7 +5,7 @@
 #pragma once
 
 #include "carla/ros2/publishers/ObjectPublisher.h"
-#include "carla/ros2/publishers/PublisherBaseSensor.h"
+#include "carla/ros2/publishers/PublisherBase.h"
 #include "carla/ros2/publishers/TrafficLightsPublisher.h"
 #include "carla/ros2/types/Object.h"
 #include "carla/ros2/types/TrafficLightActorDefinition.h"
@@ -23,7 +23,7 @@ using TrafficLightInfoPublisherImpl =
 using TrafficLightStatusPublisherImpl =
     DdsPublisherImpl<carla_msgs::msg::CarlaTrafficLightStatus, carla_msgs::msg::CarlaTrafficLightStatusPubSubType>;
 
-class TrafficLightPublisher : public PublisherBaseSensor {
+class TrafficLightPublisher : public PublisherBase {
 public:
   TrafficLightPublisher(std::shared_ptr<carla::ros2::types::TrafficLightActorDefinition> traffic_light_actor_definition,
                         std::shared_ptr<ObjectsPublisher> objects_publisher,

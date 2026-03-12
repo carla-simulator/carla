@@ -57,11 +57,9 @@ bool VehiclePublisher::SubscribersConnected() const {
          _vehicle_object_with_covariance_publisher->SubscribersConnected();
 }
 
-bool VehiclePublisher::ProcessMessages() {
+void VehiclePublisher::UpdateSensorDataPreAction() {
   // the telemetry data is not transferred by the sensor data stream,
-  // it has to be requested separately from the server,
-  // This should happen within the message processing step, when also other calls are expected
-  // to ensure the simulation internal data is actually locked and its safe to acceess it. 
+  // it has to be requested separately before the sensor data is processed to be able to include it in the sensor data callback processing
   if (_vehicle_telemetry_publisher->SubscribersConnected()) {
     auto telemetry_data_response = _carla_server.call_get_telemetry_data(_actor_name_definition->id);
     if (telemetry_data_response.HasError()) {
@@ -107,7 +105,6 @@ bool VehiclePublisher::ProcessMessages() {
       _vehicle_telemetry_publisher->SetMessageUpdated();
     }
   }
-  return true;
 }
 
 void VehiclePublisher::UpdateVehicle(std::shared_ptr<const carla::ros2::types::Object> &object,

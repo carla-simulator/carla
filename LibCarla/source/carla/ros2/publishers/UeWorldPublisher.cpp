@@ -41,7 +41,7 @@ namespace ros2 {
 UeWorldPublisher::UeWorldPublisher(carla::rpc::RpcServerInterface& carla_server,
                                    std::shared_ptr<ROS2NameRegistry> name_registry,
                                    std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition)
-  : UePublisherBaseSensor(sensor_actor_definition, std::make_shared<TransformPublisher>()),
+  : UePublisherBase(sensor_actor_definition, std::make_shared<TransformPublisher>()),
     _carla_server(carla_server),
     _name_registry(name_registry),
     _clock_publisher(std::make_shared<ClockPublisher>()),
@@ -69,7 +69,7 @@ UeWorldPublisher::UeWorldPublisher(carla::rpc::RpcServerInterface& carla_server,
 bool UeWorldPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
   // add this to the list of sensors first
   auto sensor_ue = AddSensorUeInternal(GetSensorActorDefinition());
-  sensor_ue->publisher=std::static_pointer_cast<UePublisherBaseSensor>(shared_from_this());
+  sensor_ue->publisher=std::static_pointer_cast<UePublisherBase>(shared_from_this());
 
   _domain_participant_impl = domain_participant;
   _initialized =
@@ -117,17 +117,19 @@ void UeWorldPublisher::ProcessMessages() {
 
   _carla_control_subscriber->ProcessMessages();
   _sync_subscriber->ProcessMessages();
-  _weather_publisher->ProcessMessages();
-  _world_info_publisher->ProcessMessages();
   _weather_control_subscriber->ProcessMessages();
   for (auto& vehicle : _vehicles) {
     vehicle.second._vehicle_controller->ProcessMessages();
     vehicle.second._vehicle_ackermann_controller->ProcessMessages();
     vehicle.second._actor_set_transform_subscriber->ProcessMessages();
-    vehicle.second._vehicle_publisher->ProcessMessages();
   }
   for (auto& walker : _walkers) {
     walker.second._walker_controller->ProcessMessages();
+  }
+  for (auto &ue_sensor : _ue_sensors) {
+    if ( (ue_sensor.second.publisher != nullptr) && (ue_sensor.first != GetSensorActorDefinition()->stream_id) ) {
+      ue_sensor.second.publisher->ProcessMessages();
+    } 
   }
 
   UpdateAndPublishEnvironmentObjects();
@@ -154,11 +156,32 @@ void UeWorldPublisher::UpdateSensorDataPreAction() {
     }
   }
 
+  _world_info_publisher->UpdateSensorDataPreAction();
+
   for (auto &ue_sensor : _ue_sensors) {
     if ( (ue_sensor.second.publisher != nullptr) && (ue_sensor.first != GetSensorActorDefinition()->stream_id) ) {
       ue_sensor.second.publisher->UpdateSensorDataPreAction();
     } 
   }
+  for (auto& vehicle : _vehicles) {
+    auto publisher = vehicle.second._vehicle_publisher;
+    if (publisher != nullptr) {
+      publisher->UpdateSensorDataPreAction();
+    }
+  }
+  for (auto& walker : _walkers) {
+    auto publisher = walker.second._walker_publisher;
+    if (publisher != nullptr) {
+      publisher->UpdateSensorDataPreAction();
+    }
+  }
+  for (auto& traffic_light : _traffic_lights) {
+    auto publisher = traffic_light.second._traffic_light_publisher;
+    if (publisher != nullptr) {
+      publisher->UpdateSensorDataPreAction();
+    }
+  }
+
 
   if (_sensors_changed) {
     _sensors_changed = false;
@@ -231,6 +254,7 @@ void UeWorldPublisher::UpdateSensorDataPostAction() {
   // This is to ensure that the clock and TF messages are published before the other messages, which might depend on them.
   // Most of the ROS2 applications might not have an issue with slightly later published clock and TF messages, 
   // but some applications (e.g. rviz) might require the clock and TF messages to be published before the other messages.
+
   _transform_publisher->Publish();
   _clock_publisher->Publish();
   UpdateAndPublishStatus();
@@ -249,18 +273,21 @@ void UeWorldPublisher::UpdateSensorDataPostAction() {
   for (auto& vehicle : _vehicles) {
     auto publisher = vehicle.second._vehicle_publisher;
     if (publisher != nullptr) {
+      publisher->UpdateSensorDataPostAction();
       publisher->Publish();
     }
   }
   for (auto& walker : _walkers) {
     auto publisher = walker.second._walker_publisher;
     if (publisher != nullptr) {
+      publisher->UpdateSensorDataPostAction();
       publisher->Publish();
     }
   }
   for (auto& traffic_light : _traffic_lights) {
     auto publisher = traffic_light.second._traffic_light_publisher;
     if (publisher != nullptr) {
+      publisher->UpdateSensorDataPostAction();
       publisher->Publish();
     }
   }
@@ -285,78 +312,78 @@ void UeWorldPublisher::CreateSensorUePublisher(UeSensor &sensor) {
   switch (sensor.sensor_actor_definition()->sensor_type) {
     case types::PublisherSensorType::CollisionSensor:
     {
-      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+      sensor.publisher = std::static_pointer_cast<UePublisherBase>(
           std::make_shared<UeCollisionPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::DepthCamera:
     {
-      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+      sensor.publisher = std::static_pointer_cast<UePublisherBase>(
           std::make_shared<UeDepthCameraPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::NormalsCamera:
     {
-      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+      sensor.publisher = std::static_pointer_cast<UePublisherBase>(
           std::make_shared<UeNormalsCameraPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::DVSCamera:
     {
-      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+      sensor.publisher = std::static_pointer_cast<UePublisherBase>(
           std::make_shared<UeDVSCameraPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::GnssSensor:
     {
-      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+      sensor.publisher = std::static_pointer_cast<UePublisherBase>(
           std::make_shared<UeGNSSPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::InertialMeasurementUnit:
     {
-      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+      sensor.publisher = std::static_pointer_cast<UePublisherBase>(
           std::make_shared<UeIMUPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::OpticalFlowCamera:
     {
-      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+      sensor.publisher = std::static_pointer_cast<UePublisherBase>(
           std::make_shared<UeOpticalFlowCameraPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::Radar:
     {
-      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+      sensor.publisher = std::static_pointer_cast<UePublisherBase>(
           std::make_shared<UeRadarPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::RayCastSemanticLidar:
     {
-      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+      sensor.publisher = std::static_pointer_cast<UePublisherBase>(
           std::make_shared<UeSemanticLidarPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::RayCastLidar:
     case types::PublisherSensorType::HSSLidar: 
     {
-      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+      sensor.publisher = std::static_pointer_cast<UePublisherBase>(
           std::make_shared<UeLidarPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::SceneCaptureCamera:
     {
-      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+      sensor.publisher = std::static_pointer_cast<UePublisherBase>(
           std::make_shared<UeRGBCameraPublisher>(sensor.sensor_actor_definition(), _transform_publisher, sensor.actor_set_transform_callback));
     } break;
     case types::PublisherSensorType::SemanticSegmentationCamera:
     {
-      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+      sensor.publisher = std::static_pointer_cast<UePublisherBase>(
           std::make_shared<UeSSCameraPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::InstanceSegmentationCamera:
     {
-      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+      sensor.publisher = std::static_pointer_cast<UePublisherBase>(
           std::make_shared<UeISCameraPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::V2X:
     {
-      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+      sensor.publisher = std::static_pointer_cast<UePublisherBase>(
           std::make_shared<UeV2XPublisher>(sensor.sensor_actor_definition(), _transform_publisher));
     } break;
     case types::PublisherSensorType::V2XCustom:
     {
-      sensor.publisher = std::static_pointer_cast<UePublisherBaseSensor>(
+      sensor.publisher = std::static_pointer_cast<UePublisherBase>(
           std::make_shared<UeV2XCustomPublisher>(sensor.sensor_actor_definition(), sensor.v2x_custom_send_callback, _transform_publisher));
     } break;
     case types::PublisherSensorType::WorldObserver:

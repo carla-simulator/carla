@@ -13,7 +13,7 @@ TrafficLightPublisher::TrafficLightPublisher(
     std::shared_ptr<carla::ros2::types::TrafficLightActorDefinition> traffic_light_actor_definition,
     std::shared_ptr<ObjectsPublisher> objects_publisher,
     std::shared_ptr<TrafficLightsPublisher> traffic_lights_publisher)
-  : PublisherBaseSensor(
+  : PublisherBase(
         std::static_pointer_cast<carla::ros2::types::ActorNameDefinition>(traffic_light_actor_definition))
 #if PUBLISH_INDIVIDUAL_TRAFFIC_LIGHT_DATA
     , _traffic_light_info_publisher(std::make_shared<TrafficLightInfoPublisherImpl>())

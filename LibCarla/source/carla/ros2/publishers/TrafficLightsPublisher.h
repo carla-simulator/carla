@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "carla/ros2/publishers/PublisherBaseSensor.h"
+#include "carla/ros2/publishers/PublisherBase.h"
 #include "carla/rpc/ActorId.h"
 #include "carla_msgs/msg/CarlaTrafficLightInfoListPubSubTypes.h"
 #include "carla_msgs/msg/CarlaTrafficLightStatusListPubSubTypes.h"
@@ -17,7 +17,7 @@ using TrafficLightsInfoPublisherImpl =
 using TrafficLightsStatusPublisherImpl = DdsPublisherImpl<carla_msgs::msg::CarlaTrafficLightStatusList,
                                                           carla_msgs::msg::CarlaTrafficLightStatusListPubSubType>;
 
-class TrafficLightsPublisher : public PublisherBaseSensor {
+class TrafficLightsPublisher : public PublisherBase {
 public:
   TrafficLightsPublisher();
   virtual ~TrafficLightsPublisher() = default;

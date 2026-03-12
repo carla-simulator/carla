@@ -35,9 +35,9 @@ public:
   bool SubscribersConnected() const override;
 
   /**
-   * Perform message processing. 
+   * Query the not streamed data from the server before processing the sensor data.
    */
-  bool ProcessMessages();
+  void UpdateSensorDataPreAction() override;
   
   /**
    * Indicate that the map has updated and the server should be quieried for map updates.

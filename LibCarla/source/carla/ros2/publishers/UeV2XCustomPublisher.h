@@ -6,7 +6,7 @@
 
 #include <memory>
 
-#include "carla/ros2/publishers/UePublisherBaseSensor.h"
+#include "carla/ros2/publishers/UePublisherBase.h"
 #include "carla/ros2/subscribers/UeV2XCustomSubscriber.h"
 #include "carla/sensor/data/V2XEvent.h"
 #include "carla_msgs/msg/CarlaV2XCustomDataListPubSubTypes.h"
@@ -16,7 +16,7 @@ namespace ros2 {
 
 using UeV2XCustomPublisherImpl = DdsPublisherImpl<carla_msgs::msg::CarlaV2XCustomDataList, carla_msgs::msg::CarlaV2XCustomDataListPubSubType>;
 
-class UeV2XCustomPublisher : public UePublisherBaseSensor {
+class UeV2XCustomPublisher : public UePublisherBase {
 public:
   UeV2XCustomPublisher(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
                   carla::ros2::types::V2XCustomSendCallback v2x_custom_send_callback,
@@ -38,11 +38,11 @@ public:
   bool SubscribersConnected() const override;
 
   /**
-   * Implement UePublisherBaseSensor::UpdateSensorDataPreAction()
+   * Implement PublisherBase::ProcessMessages()
    */
-  void UpdateSensorDataPreAction() override;
+  void ProcessMessages() override;
   /**
-   * Implements UePublisherBaseSensor::UpdateSensorData() interface
+   * Implements UePublisherBase::UpdateSensorData() interface
    */
   void UpdateSensorData(std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header,
                         const carla::SharedBufferView buffer_view) override;

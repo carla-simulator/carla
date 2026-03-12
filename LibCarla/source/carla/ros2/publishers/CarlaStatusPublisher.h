@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "carla/ros2/publishers/PublisherBaseSensor.h"
+#include "carla/ros2/publishers/PublisherBase.h"
 #include "carla_msgs/msg/CarlaStatusPubSubTypes.h"
 
 namespace carla {
@@ -12,7 +12,7 @@ namespace ros2 {
 
 using CarlaStatusPublisherImpl = DdsPublisherImpl<carla_msgs::msg::CarlaStatus, carla_msgs::msg::CarlaStatusPubSubType>;
 
-class CarlaStatusPublisher : public PublisherBaseSensor {
+class CarlaStatusPublisher : public PublisherBase {
 public:
   CarlaStatusPublisher();
   virtual ~CarlaStatusPublisher() = default;

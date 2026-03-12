@@ -28,7 +28,7 @@ bool WeatherPublisher::SubscribersConnected() const {
   return _impl->SubscribersConnected();
 }
 
-bool WeatherPublisher::ProcessMessages() {
+void WeatherPublisher::UpdateSensorDataPreAction() {
   // the weather data is not transferred by the sensor data stream,
   // it has to be requested separately from the server,
   // This should happen within the message processing step, when also other calls are expected
@@ -50,7 +50,6 @@ bool WeatherPublisher::ProcessMessages() {
       }
     }
   }
-  return true;
 }
 
 }  // namespace ros2

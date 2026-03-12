@@ -11,7 +11,7 @@ namespace carla {
 namespace ros2 {
 
 TrafficLightsPublisher::TrafficLightsPublisher()
-  : PublisherBaseSensor(carla::ros2::types::ActorNameDefinition::CreateFromRoleName("traffic_lights")),
+  : PublisherBase(carla::ros2::types::ActorNameDefinition::CreateFromRoleName("traffic_lights")),
     _traffic_light_info(std::make_shared<TrafficLightsInfoPublisherImpl>()),
     _traffic_light_status(std::make_shared<TrafficLightsStatusPublisherImpl>()) {}
 

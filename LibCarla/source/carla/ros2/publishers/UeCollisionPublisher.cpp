@@ -14,7 +14,7 @@ namespace ros2 {
 UeCollisionPublisher::UeCollisionPublisher(
     std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
     std::shared_ptr<TransformPublisher> transform_publisher)
-  : UePublisherBaseSensor(sensor_actor_definition, transform_publisher),
+  : UePublisherBase(sensor_actor_definition, transform_publisher),
     _impl(std::make_shared<UeCollisionPublisherImpl>()) {}
 
 bool UeCollisionPublisher::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {

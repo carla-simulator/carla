@@ -34,9 +34,9 @@ public:
   bool SubscribersConnected() const override;
 
   /**
-   * Perform message processing. 
+   * Query the not streamed data from the server before processing the sensor data.
    */
-  bool ProcessMessages();
+  void UpdateSensorDataPreAction() override;
 
 private:
   std::shared_ptr<CarlaWeatherParametersPublisherImpl> _impl;

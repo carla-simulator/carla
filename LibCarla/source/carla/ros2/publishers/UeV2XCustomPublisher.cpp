@@ -12,7 +12,7 @@ namespace ros2 {
 UeV2XCustomPublisher::UeV2XCustomPublisher(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
                                  carla::ros2::types::V2XCustomSendCallback v2x_custom_send_callback,
                                  std::shared_ptr<TransformPublisher> transform_publisher)
-  : UePublisherBaseSensor(sensor_actor_definition, transform_publisher),
+  : UePublisherBase(sensor_actor_definition, transform_publisher),
     _subscriber(std::make_shared<UeV2XCustomSubscriber>(*this, v2x_custom_send_callback)),
     _impl(std::make_shared<UeV2XCustomPublisherImpl>()) {}
 
@@ -31,7 +31,7 @@ bool UeV2XCustomPublisher::SubscribersConnected() const {
   return _impl->SubscribersConnected();
 }
 
-void UeV2XCustomPublisher::UpdateSensorDataPreAction()
+void UeV2XCustomPublisher::ProcessMessages()
 {
   if (!_initialized) {
     return;

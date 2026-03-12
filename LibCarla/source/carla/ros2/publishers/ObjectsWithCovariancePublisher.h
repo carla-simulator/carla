@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "carla/ros2/publishers/PublisherBaseSensor.h"
+#include "carla/ros2/publishers/PublisherBase.h"
 #include "carla/ros2/types/Object.h"
 #include "derived_object_msgs/msg/ObjectWithCovarianceArrayPubSubTypes.h"
 
@@ -14,7 +14,7 @@ namespace ros2 {
 using ObjectsWithCovariancePublisherImpl =
     DdsPublisherImpl<derived_object_msgs::msg::ObjectWithCovarianceArray, derived_object_msgs::msg::ObjectWithCovarianceArrayPubSubType>;
 
-class ObjectsWithCovariancePublisher : public PublisherBaseSensor {
+class ObjectsWithCovariancePublisher : public PublisherBase {
 public:
   ObjectsWithCovariancePublisher();
   virtual ~ObjectsWithCovariancePublisher() = default;

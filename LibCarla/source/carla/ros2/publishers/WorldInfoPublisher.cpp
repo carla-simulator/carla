@@ -30,7 +30,7 @@ bool WorldInfoPublisher::SubscribersConnected() const {
   return _impl->SubscribersConnected();
 }
 
-bool WorldInfoPublisher::ProcessMessages() {
+void WorldInfoPublisher::UpdateSensorDataPreAction() {
   if ( _map_updated )
   {
     _impl->Message().carla_version(carla::version());
@@ -39,7 +39,6 @@ bool WorldInfoPublisher::ProcessMessages() {
     _impl->SetMessageUpdated();
     _map_updated = false;
   }
-  return true;
 }
 }  // namespace ros2
 }  // namespace carla

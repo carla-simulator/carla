@@ -7,6 +7,7 @@
 #include <atomic>
 
 #include "carla/ros2/publishers/PublisherBaseTransform.h"
+#include "carla/ros2/types/SensorActorDefinition.h"
 #include "carla/rpc/ActorId.h"
 
 
@@ -18,36 +19,28 @@ namespace ros2 {
   Extends PublisherBaseTransform by UpdateSensorData() function.
   Usually sensors are not moving in respect to their parent in the TF tree, so the transform is published as static and only updated if the sensor's position relatively to the parent changes.
  */
-class UePublisherBaseSensor : public PublisherBaseTransform {
+class UePublisherBase : public PublisherBaseTransform {
 public:
-  UePublisherBaseSensor(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
+  UePublisherBase(std::shared_ptr<carla::ros2::types::SensorActorDefinition> sensor_actor_definition,
                         std::shared_ptr<TransformPublisher> transform_publisher)
     : PublisherBaseTransform(sensor_actor_definition, transform_publisher, 
         TransformPublisher::TransformPublisherMode::MODE_STATIC) {}
 
-  virtual ~UePublisherBaseSensor() = default;
+  virtual ~UePublisherBase() = default;
 
-  /**
-   * Implement actions before sensor data updates
-   */
-  virtual void UpdateSensorDataPreAction() {};
   /**
    * Function to update the data for this sensor
    */
   virtual void UpdateSensorData(
       std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header,
       carla::SharedBufferView buffer_view) = 0;
-  /**
-   * Implement actions after sensor data updates
-   */
-  virtual void UpdateSensorDataPostAction() {}
 
   /**
    * calling UpdateSensorDataPostAction but store frame_id for later use
    */
   void UpdateSensorDataPostAction(uint64_t frame_id) {
     sensor_data_post_action_frame_id = frame_id;
-    UpdateSensorDataPostAction();
+    PublisherBase::UpdateSensorDataPostAction();
   }
 
   uint64_t GetSensorDataPostActionFrameId() const {
