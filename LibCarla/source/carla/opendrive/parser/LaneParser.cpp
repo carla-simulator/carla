@@ -38,10 +38,12 @@ namespace parser {
         map_builder.CreateLaneWidth(lane, s_offset + s, a, b, c, d);
         width_count++;
       }
-      if (width_count == 0 && lane->GetId() != 0) {
+      if (width_count == 0) {
         map_builder.CreateLaneWidth(lane, s, 0.0, 0.0, 0.0, 0.0);
-        std::cout << "WARNING: In road " << lane->GetRoad()->GetId() << " lane " << lane->GetId() <<
-        " no \"<width>\" parameter found under \"<lane>\" tag. Using default values." << std::endl;
+        if (lane->GetId() != 0) {
+          std::cout << "WARNING: In road " << lane->GetRoad()->GetId() << " lane " << lane->GetId() <<
+          " no \"<width>\" parameter found under \"<lane>\" tag. Using default values." << std::endl;
+        }
       }
 
       // Lane Border
