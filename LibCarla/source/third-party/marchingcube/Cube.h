@@ -69,9 +69,9 @@ namespace MeshReconstruction
 
     struct Edge
     {
-      int edgeFlag : 12; // flag: 1, 2, 4, ... 2048
-      int vert0;         // 0-7
-      int vert1;         // 0-7
+      unsigned edgeFlag : 12; // flag: 1, 2, 4, ... 2048
+      int vert0;              // 0-7
+      int vert1;              // 0-7
     };
 
     const Edge edges[12] =
@@ -163,7 +163,7 @@ namespace MeshReconstruction
     IntersectInfo intersect;
     intersect.signConfig = SignConfig(iso);
 
-    for (auto e = 0; e < 12; ++e)
+    for (size_t e = 0; e < 12; ++e)
     {
       if (signConfigToIntersectedEdges[intersect.signConfig] & edges[e].edgeFlag)
       {
