@@ -35,7 +35,7 @@ namespace ros2 {
         CarlaPointCloudPublisher(base_topic_name, frame_id) {}
 
     private:
-      const size_t GetPointSize() override;
+      size_t GetPointSize() override;
       std::vector<sensor_msgs::msg::PointField> GetFields() override;
 
       std::vector<uint8_t> ComputePointCloud(uint32_t height, uint32_t width, uint8_t *data) override;
@@ -64,7 +64,7 @@ namespace ros2 {
         const carla::sensor::data::DVSEvent* events = reinterpret_cast<const carla::sensor::data::DVSEvent*>(data);
         for (size_t i = 0; i < elements; ++i) {
           const auto& event = events[i];
-          size_t index = (event.y * im_width + event.x) * 3 + (static_cast<int>(event.pol) * 2);
+          size_t index = (event.y * im_width + event.x) * 3u + (event.pol ? 2u : 0u);
           im_data[index] = 255;
         }
 

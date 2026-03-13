@@ -45,7 +45,7 @@ namespace ros2 {
     efd::DataWriter* _datawriter { nullptr };
     efd::TypeSupport _type { new msg_pubsub_type() };
 
-    void on_publication_matched(efd::DataWriter* writer, const efd::PublicationMatchedStatus& info) override {
+    void on_publication_matched(efd::DataWriter* /*writer*/, const efd::PublicationMatchedStatus& info) override {
       _alive = (info.total_count > 0) ? true : false;
     }
 
@@ -94,7 +94,7 @@ namespace ros2 {
 
       efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
       wqos.endpoint().history_memory_policy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-      efd::DataWriterListener* listener = (efd::DataWriterListener*)(this);
+      efd::DataWriterListener* listener = static_cast<efd::DataWriterListener*>(this);
       _datawriter = _publisher->create_datawriter(_topic, wqos, listener);
       if (_datawriter == nullptr) {
         std::cerr << "Failed to create DataWriter" << std::endl;

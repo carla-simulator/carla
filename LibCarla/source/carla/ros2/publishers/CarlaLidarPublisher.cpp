@@ -9,7 +9,7 @@
 namespace carla {
 namespace ros2 {
 
-const size_t CarlaLidarPublisher::GetPointSize() {
+size_t CarlaLidarPublisher::GetPointSize() {
   return sizeof(sensor::data::LidarDetection);
 }
 

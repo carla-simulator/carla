@@ -246,6 +246,7 @@ std::shared_ptr<BasePublisher> ROS2::GetOrCreateSensor(int type, void* actor) {
     case ESensors::HSSLidar:
       return create_and_register(std::make_shared<CarlaLidarPublisher>(topic_name, frame_id));
   }
+  return nullptr;
 }
 
 void ROS2::ProcessDataFromCamera(
@@ -254,7 +255,7 @@ void ROS2::ProcessDataFromCamera(
     const carla::SharedBufferView buffer,
     void *actor) {
 
-  auto base_publisher = GetOrCreateSensor(sensor_type, actor);
+  auto base_publisher = GetOrCreateSensor(static_cast<int>(sensor_type), actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaCameraPublisher>(base_publisher);
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
 
@@ -264,7 +265,7 @@ void ROS2::ProcessDataFromCamera(
     return;
 
   sensor_publisher->WriteCameraInfo(_seconds, _nanoseconds, 0, 0, header->height, header->width, header->fov_angle, true);
-  sensor_publisher->WriteImage(_seconds, _nanoseconds, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+  sensor_publisher->WriteImage(_seconds, _nanoseconds, header->height, header->width, reinterpret_cast<const uint8_t*>(buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
   sensor_publisher->Publish();
 
   if (transform_publisher) {
@@ -274,7 +275,7 @@ void ROS2::ProcessDataFromCamera(
 }
 
 void ROS2::ProcessDataFromGNSS(
-    uint64_t sensor_type,
+    uint64_t /*sensor_type*/,
     const carla::geom::Transform sensor_transform,
     const carla::geom::GeoLocation &data,
     void *actor) {
@@ -293,7 +294,7 @@ void ROS2::ProcessDataFromGNSS(
 }
 
 void ROS2::ProcessDataFromIMU(
-    uint64_t sensor_type,
+    uint64_t /*sensor_type*/,
     const carla::geom::Transform sensor_transform,
     carla::geom::Vector3D accelerometer,
     carla::geom::Vector3D gyroscope,
@@ -314,7 +315,7 @@ void ROS2::ProcessDataFromIMU(
 }
 
 void ROS2::ProcessDataFromDVS(
-    uint64_t sensor_type,
+    uint64_t /*sensor_type*/,
     const carla::geom::Transform sensor_transform,
     const carla::SharedBufferView buffer,
     void *actor) {
@@ -332,9 +333,9 @@ void ROS2::ProcessDataFromDVS(
   const size_t im_width = header->width;
   const size_t im_height = header->height;
 
-  sensor_publisher->WriteCameraInfo(_seconds, _nanoseconds, 0, 0, im_height, im_width, header->fov_angle, true);
-  sensor_publisher->WriteImage(_seconds, _nanoseconds, elements, header->height, header->width, (const uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
-  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, 1, elements, (uint8_t*) (buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+  sensor_publisher->WriteCameraInfo(_seconds, _nanoseconds, 0, 0, static_cast<uint32_t>(im_height), static_cast<uint32_t>(im_width), header->fov_angle, true);
+  sensor_publisher->WriteImage(_seconds, _nanoseconds, static_cast<uint32_t>(elements), header->height, header->width, reinterpret_cast<const uint8_t*>(buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
+  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, 1, static_cast<uint32_t>(elements), const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset)));
   sensor_publisher->Publish();
 
   if (transform_publisher) {
@@ -344,7 +345,7 @@ void ROS2::ProcessDataFromDVS(
 }
 
 void ROS2::ProcessDataFromLidar(
-    uint64_t sensor_type,
+    uint64_t /*sensor_type*/,
     const carla::geom::Transform sensor_transform,
     carla::sensor::data::LidarData &data,
     void *actor) {
@@ -356,9 +357,9 @@ void ROS2::ProcessDataFromLidar(
   // The lidar returns a flat list of floats rather than structured detection points.
   // Each lidar detection consists of 4 floats: x, y, z, and intensity.
   // Divide the total number of floats by 4 to get the number of lidar detections.
-  size_t width = data._points.size() / 4;
-  size_t height = 1;
-  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, height, width, (uint8_t*)data._points.data());
+  const uint32_t width = static_cast<uint32_t>(data._points.size() / 4);
+  const uint32_t height = 1;
+  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, height, width, reinterpret_cast<uint8_t*>(data._points.data()));
   sensor_publisher->Publish();
 
   if (transform_publisher) {
@@ -368,7 +369,7 @@ void ROS2::ProcessDataFromLidar(
 }
 
 void ROS2::ProcessDataFromSemanticLidar(
-    uint64_t sensor_type,
+    uint64_t /*sensor_type*/,
     const carla::geom::Transform sensor_transform,
     carla::sensor::data::SemanticLidarData &data,
     void *actor) {
@@ -377,9 +378,9 @@ void ROS2::ProcessDataFromSemanticLidar(
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaSemanticLidarPublisher>(base_publisher);
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
 
-  size_t width = data._ser_points.size();
-  size_t height = 1;
-  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, height, width, (uint8_t*)data._ser_points.data());
+  const uint32_t width = static_cast<uint32_t>(data._ser_points.size());
+  const uint32_t height = 1;
+  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, height, width, reinterpret_cast<uint8_t*>(data._ser_points.data()));
   sensor_publisher->Publish();
 
   if (transform_publisher) {
@@ -389,7 +390,7 @@ void ROS2::ProcessDataFromSemanticLidar(
 }
 
 void ROS2::ProcessDataFromRadar(
-    uint64_t sensor_type,
+    uint64_t /*sensor_type*/,
     const carla::geom::Transform sensor_transform,
     const carla::sensor::data::RadarData &data,
     void *actor) {
@@ -398,9 +399,9 @@ void ROS2::ProcessDataFromRadar(
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaRadarPublisher>(base_publisher);
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
 
-  size_t width = data.GetDetectionCount();
-  size_t height = 1;
-  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, height, width, (uint8_t*)data._detections.data());
+  const uint32_t width = static_cast<uint32_t>(data.GetDetectionCount());
+  const uint32_t height = 1;
+  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, height, width, reinterpret_cast<uint8_t*>(const_cast<carla::sensor::data::RadarDetection*>(data._detections.data())));
   sensor_publisher->Publish();
 
   if (transform_publisher) {
@@ -411,16 +412,16 @@ void ROS2::ProcessDataFromRadar(
 
 void ROS2::ProcessDataFromObstacleDetection(
     uint64_t sensor_type,
-    const carla::geom::Transform sensor_transform,
-    AActor *first_ctor,
-    AActor *second_actor,
+    const carla::geom::Transform /*sensor_transform*/,
+    AActor * /*first_ctor*/,
+    AActor * /*second_actor*/,
     float distance,
-    void *actor) {
+    void * /*actor*/) {
   log_info("Sensor ObstacleDetector to ROS data: frame.", _frame, "sensor.", sensor_type, "distance.", distance);
 }
 
 void ROS2::ProcessDataFromCollisionSensor(
-    uint64_t sensor_type,
+    uint64_t /*sensor_type*/,
     const carla::geom::Transform sensor_transform,
     uint32_t other_actor,
     carla::geom::Vector3D impulse,

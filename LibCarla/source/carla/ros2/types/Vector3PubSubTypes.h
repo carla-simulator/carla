@@ -61,7 +61,7 @@ namespace geometry_msgs
 
             template <typename T, typename Tag>
             inline size_t constexpr Vector3_offset_of() {
-                return ((::size_t) &reinterpret_cast<char const volatile&>((((T*)0)->*get(Tag()))));
+                return reinterpret_cast<::size_t>(&reinterpret_cast<char const volatile&>((static_cast<T*>(nullptr)->*get(Tag()))));
             }
         }
         #endif

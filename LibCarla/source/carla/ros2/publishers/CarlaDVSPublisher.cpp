@@ -9,7 +9,7 @@
 namespace carla {
 namespace ros2 {
 
-const size_t CarlaDVSPointCloudPublisher::GetPointSize() {
+size_t CarlaDVSPointCloudPublisher::GetPointSize() {
   return sizeof(sensor::data::DVSEvent);
 }
 
@@ -44,7 +44,7 @@ std::vector<uint8_t> CarlaDVSPointCloudPublisher::ComputePointCloud(uint32_t hei
   sensor::data::DVSEvent* events = reinterpret_cast<sensor::data::DVSEvent*>(data);
   const size_t total_points = height * width;
   for (size_t i = 0; i < total_points; ++i) {
-    events[i].y *= -1.0f;
+    events[i].y = static_cast<std::uint16_t>(static_cast<float>(events[i].y) * -1.0f);
   }
 
   const size_t total_bytes = total_points * sizeof(sensor::data::DVSEvent);

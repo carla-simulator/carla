@@ -16,7 +16,7 @@ struct RadarDetectionWithPosition {
   carla::sensor::data::RadarDetection detection;
 };
 
-const size_t CarlaRadarPublisher::GetPointSize() {
+size_t CarlaRadarPublisher::GetPointSize() {
   return sizeof(RadarDetectionWithPosition);
 }
 
