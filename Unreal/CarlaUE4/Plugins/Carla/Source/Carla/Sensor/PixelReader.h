@@ -136,9 +136,6 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
             }
 
             auto Stream = Sensor.GetDataStream(Sensor);
-            Stream.SetFrameNumber(Frame);
-            Stream.SetTimestamp(Timestamp);
-            Stream.SetTransform(Transform);
             auto Buffer = Stream.PopBufferFromPool();
 
             uint32 CurrentRowBytes = ExpectedRowBytes;
@@ -179,14 +176,25 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
               TRACE_CPUPROFILER_EVENT_SCOPE_STR("Sending buffer");
               if(Buffer.data())
               {
-                // serialize data
-                carla::Buffer BufferReady(std::move(carla::sensor::SensorRegistry::Serialize(Sensor, std::move(Buffer))));
-                carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(BufferReady));
+                // Move the buffer and necessary context into a background task
+                // We want to exit the rendering thread as soon as possible to ensure the locks on the
+                // hardware buffers are released 
+                AsyncTask(ENamedThreads::AnyBackgroundHiPriTask, [Buffer = std::move(Buffer), &Sensor, Frame, Timestamp, Transform]() mutable 
+                {
+                    TRACE_CPUPROFILER_EVENT_SCOPE_STR("Async Network Send");
+                    
+                    // since we are again in another thread, re-check for sensor destruction
+                    if (Sensor.IsPendingKill()) return;
+                    
+                    carla::Buffer BufferReady(std::move(carla::sensor::SensorRegistry::Serialize(Sensor, std::move(Buffer))));
+                    carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(BufferReady));
 
-                // network
-                SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
-                TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
-                Stream.Send(Sensor, BufView);
+                    auto Stream = Sensor.GetDataStream(Sensor);
+                    Stream.SetFrameNumber(Frame);
+                    Stream.SetTimestamp(Timestamp);
+                    Stream.SetTransform(Transform);
+                    Stream.Send(Sensor, BufView);
+                });
               }
             }
           };
