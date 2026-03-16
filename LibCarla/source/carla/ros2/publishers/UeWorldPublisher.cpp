@@ -218,13 +218,7 @@ void UeWorldPublisher::ProcessDataFromUeSensor(carla::streaming::detail::stream_
           if (ue_sensor->second.publisher->do_publish_tf() ) {
             ue_sensor->second.publisher->UpdateTransform(sensor_header);
           }
-          ue_sensor->second.publisher->UpdateSensorData(sensor_header, *data_view_iter);
-          if ( ue_sensor->second.publisher->GetSensorDataPostActionFrameId() >= CurrentFrame() ) {
-            // camera sensors push their data streams within the rendering thread
-            // therefore, the UpdateSensorDataPostAction() of the world publisher might have already been called for the current frame, 
-            // which is used to trigger the publish of the sensor data. In this case, we need to force a publish here to make sure the data gets published in a timely manner.
-            ue_sensor->second.publisher->Publish();
-          }
+          ue_sensor->second.publisher->UpdateSensorDataAndCheckPublish(CurrentFrame(), sensor_header, *data_view_iter);
         }
         log_verbose("Sensor Data to ROS data: frame.(", CurrentFrame(), ") stream.",
                   std::to_string(*sensor_actor_definition), " Processed.");
@@ -300,8 +294,7 @@ void UeWorldPublisher::UpdateSensorDataPostAction() {
 
   for (auto &ue_sensor : _ue_sensors) {
     if ( (ue_sensor.second.publisher != nullptr)  && (ue_sensor.first != GetSensorActorDefinition()->stream_id) ) {
-      ue_sensor.second.publisher->UpdateSensorDataPostAction(CurrentFrame());
-      ue_sensor.second.publisher->Publish();
+      ue_sensor.second.publisher->UpdateSensorDataPostActionAndCheckPublish(CurrentFrame());
     } 
   }
 

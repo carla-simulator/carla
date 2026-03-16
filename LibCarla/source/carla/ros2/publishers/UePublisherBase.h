@@ -35,16 +35,41 @@ public:
       std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header,
       carla::SharedBufferView buffer_view) = 0;
 
+  void UpdateSensorDataAndCheckPublish(uint64_t frame_id,
+      std::shared_ptr<carla::sensor::s11n::SensorHeaderSerializer::Header const> sensor_header,
+      carla::SharedBufferView buffer_view) {
+
+      UpdateSensorData(sensor_header, buffer_view);
+      sensor_data_update_frame_id.store(frame_id);
+      if ( sensor_data_post_action_frame_id.load() >= frame_id ) {
+        // camera sensors trigger their data streams from the rendering thread
+        // therefore, the UpdateSensorDataPostAction() of the world publisher (running in the game thread) 
+        // might have already been called for the current frame, which usually triggers the publishing of the sensor data.
+        // In this case, we need to force a publish here to make sure the data gets published in a timely manner.
+        log_verbose("Sensor Data to ROS data: frame.(", frame_id, ") stream.",
+                    std::to_string(*std::static_pointer_cast<carla::ros2::types::SensorActorDefinition>(_actor_name_definition)), 
+                    " Late publishing in CheckPublishAfterDataUpdate().");
+        Publish();
+      }
+  }
+
   /**
    * calling UpdateSensorDataPostAction but store frame_id for later use
    */
-  void UpdateSensorDataPostAction(uint64_t frame_id) {
-    sensor_data_post_action_frame_id = frame_id;
-    PublisherBase::UpdateSensorDataPostAction();
-  }
-
-  uint64_t GetSensorDataPostActionFrameId() const {
-    return sensor_data_post_action_frame_id;
+  void UpdateSensorDataPostActionAndCheckPublish(uint64_t frame_id) {
+    sensor_data_post_action_frame_id.store(frame_id);
+    UpdateSensorDataPostAction();
+    if (sensor_data_update_frame_id.load() >= frame_id) {
+      // If the sensor data stream already updated the data for this frame, we publish in here
+      // which is the standard for all UePublisher
+      // If not, then either that UePublisher has nothing to publish this frame, or its stream
+      // didn't yet update it's data. In both cases we don't need to publish now. 
+      // In the later case publishing will be triggered in UpdateSensorDataAndCheckPublish() at a later point in time.
+      log_verbose("Sensor Data to ROS data: frame.(", frame_id, ") stream.",
+                  std::to_string(*std::static_pointer_cast<carla::ros2::types::SensorActorDefinition>(_actor_name_definition)),
+                  " Standard publishing in UpdateSensorDataPostActionAndCheckPublish().");
+      Publish();
+    }
   }
 
   builtin_interfaces::msg::Time GetTime(
@@ -58,7 +83,7 @@ public:
 
 private:
   std::atomic<uint64_t> sensor_data_post_action_frame_id{0u};
-  
+  std::atomic<uint64_t> sensor_data_update_frame_id{0u};
 };
 }  // namespace ros2
 }  // namespace carla
