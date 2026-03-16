@@ -1,0 +1,13 @@
+// CARLA-custom type derived from LibCarla/source/carla/ros2/types/CarlaCollisionEvent.h
+#include "std_msgs/Header.idl"
+#include "geometry_msgs/Vector3.idl"
+
+module carla_msgs {
+  module msg {
+    struct CarlaCollisionEvent {
+      std_msgs::msg::Header header;
+      unsigned long other_actor_id;
+      geometry_msgs::msg::Vector3 normal_impulse;
+    };
+  };
+};

@@ -1,0 +1,12 @@
+// Generated from ROS 2 geometry_msgs/msg/TwistWithCovariance
+#include "geometry_msgs/Twist.idl"
+
+module geometry_msgs {
+  module msg {
+    struct TwistWithCovariance {
+      // Field renamed to avoid case-insensitive collision with struct name
+      geometry_msgs::msg::Twist twist_value;
+      double covariance[36];
+    };
+  };
+};

@@ -9,13 +9,13 @@ namespace ros2 {
 
 bool CarlaGNSSPublisher::Write(int32_t seconds, uint32_t nanoseconds, const geom::GeoLocation data) {
 
-  _impl->GetMessage()->header().stamp().sec(seconds);
-  _impl->GetMessage()->header().stamp().nanosec(nanoseconds);
-  _impl->GetMessage()->header().frame_id(GetFrameId());
+  _impl->GetMessage()->header.stamp.sec = seconds;
+  _impl->GetMessage()->header.stamp.nanosec = nanoseconds;
+  _impl->GetMessage()->header.frame_id = GetFrameId();
 
-  _impl->GetMessage()->latitude(data.latitude);
-  _impl->GetMessage()->longitude(data.longitude);
-  _impl->GetMessage()->altitude(data.altitude);
+  _impl->GetMessage()->latitude = data.latitude;
+  _impl->GetMessage()->longitude = data.longitude;
+  _impl->GetMessage()->altitude = data.altitude;
 
   return true;
 }

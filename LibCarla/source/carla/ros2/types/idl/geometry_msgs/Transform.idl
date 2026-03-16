@@ -1,0 +1,12 @@
+// Generated from ROS 2 geometry_msgs/msg/Transform
+#include "geometry_msgs/Vector3.idl"
+#include "geometry_msgs/Quaternion.idl"
+
+module geometry_msgs {
+  module msg {
+    struct Transform {
+      geometry_msgs::msg::Vector3 translation;
+      geometry_msgs::msg::Quaternion rotation;
+    };
+  };
+};

@@ -1,0 +1,12 @@
+// Generated from ROS 2 rosgraph_msgs/msg/Clock
+#include "builtin_interfaces/Time.idl"
+
+module rosgraph_msgs {
+  module msg {
+    // Field renamed clock_time to avoid case-insensitive collision with struct Clock.
+    // CDR wire format is identical (single builtin_interfaces::msg::Time value).
+    struct Clock {
+      builtin_interfaces::msg::Time clock_time;
+    };
+  };
+};

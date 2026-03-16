@@ -1,0 +1,10 @@
+// Generated from ROS 2 tf2_msgs/msg/TFMessage
+#include "geometry_msgs/TransformStamped.idl"
+
+module tf2_msgs {
+  module msg {
+    struct TFMessage {
+      sequence<geometry_msgs::msg::TransformStamped> transforms;
+    };
+  };
+};

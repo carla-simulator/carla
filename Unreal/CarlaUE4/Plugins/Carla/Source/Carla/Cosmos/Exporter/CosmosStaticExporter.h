@@ -43,7 +43,7 @@ public:
 	 * @param World        The world/context to query (may be null if your data source is external).
 	 * @param SessionId    The full session ID string, e.g. "uuid_start_end".
 	 * @param OutFilePath  Absolute file path to write (the coordinator pre-creates dirs).
-	 * @param OutError     On failure, set a human-readable reason.
+	 * @param OutError     On failure, set a readable reason.
 	 * @return             true on success.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "Cosmos Static Exporter")
@@ -53,9 +53,15 @@ public:
 	{
 		// Expect: uuid_start_end (all as strings)
 		int32 A = INDEX_NONE, B = INDEX_NONE;
-		if (!In.FindChar(TEXT('_'), A)) return false;
-		if (!In.FindLastChar(TEXT('_'), B)) return false;
-		if (A <= 0 || B <= A+1 || B >= In.Len()-1) return false;
+		if (!In.FindChar(TEXT('_'), A)) {
+			return false;
+		}
+		if (!In.FindLastChar(TEXT('_'), B)) {
+			return false;
+		}
+		if (A <= 0 || B <= A+1 || B >= In.Len()-1) {
+			return false;
+		}
 		OutUuid  = In.Left(A);
 		OutStart = In.Mid(A+1, B-(A+1));
 		OutEnd   = In.Mid(B+1);

@@ -1,0 +1,10 @@
+// Generated from ROS 2 geometry_msgs/msg/Vector3
+module geometry_msgs {
+  module msg {
+    struct Vector3 {
+      double x;
+      double y;
+      double z;
+    };
+  };
+};

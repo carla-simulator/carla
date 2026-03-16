@@ -1,0 +1,11 @@
+// Generated from ROS 2 geometry_msgs/msg/Twist
+#include "geometry_msgs/Vector3.idl"
+
+module geometry_msgs {
+  module msg {
+    struct Twist {
+      geometry_msgs::msg::Vector3 linear;
+      geometry_msgs::msg::Vector3 angular;
+    };
+  };
+};

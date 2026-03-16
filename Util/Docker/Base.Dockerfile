@@ -62,6 +62,11 @@ RUN curl -L -O https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-
     && rm -rf cmake-3.28.3-linux-x86_64.tar.gz
 ENV PATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH
 
+# Java JDK for fastddsgen (IDL -> FastDDS C++ code generator)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends default-jdk \
+    && rm -rf /var/lib/apt/lists/*
+
 # SDL2 libraries:
 # Required for Unreal Engine to interact with the display.
 # - libsdl2-dev: development headers

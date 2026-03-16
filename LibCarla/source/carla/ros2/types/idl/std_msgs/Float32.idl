@@ -1,0 +1,8 @@
+// Generated from ROS 2 std_msgs/msg/Float32
+module std_msgs {
+  module msg {
+    struct Float32 {
+      float data;
+    };
+  };
+};

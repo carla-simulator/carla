@@ -24,7 +24,8 @@ foreach(dir ""
             "sensor/" "sensor/data/" "sensor/s11n/"
             "streaming/" "streaming/detail/" "streaming/detail/tcp/" "streaming/low_level/"
             "multigpu/"
-            "ros2/")
+            "ros2/"
+            "ros2/dds/")
 
   file(GLOB headers "${libcarla_source_path}/carla/${dir}*.h")
   install(FILES ${headers} DESTINATION include/carla/${dir})

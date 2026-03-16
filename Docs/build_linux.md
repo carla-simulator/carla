@@ -302,8 +302,15 @@ make package
 The Package will be created in the Dist folder, it will have a name dependent on the last commit, run the simulator from the newly build package. Substitute the appropriate package ID, which will depend on the latest commit:
 
 ```sh
+# With Fast DDS (default):
 ./Dist/CARLA_<package_id>/LinuxNoEditor/CarlaUE4.sh --ros2 -RenderOffScreen --carla-rpc-port=<port> --carla-streaming-port=0 -nosound
+
+# With Cyclone DDS (requires building with --included-dds=cyclonedds):
+./Dist/CARLA_<package_id>/LinuxNoEditor/CarlaUE4.sh --ros2 --dds-backend=cyclonedds -RenderOffScreen --carla-rpc-port=<port> --carla-streaming-port=0 -nosound
 ```
+
+!!! Note
+    If you launch with a `--dds-backend` that was not compiled into the build, the simulator will log an error and ROS2 will be disabled for that session. No silent fallback to another backend occurs. Check the log output for the list of available backends.
 
 Once the simulator is running, run the smoke tests:
 

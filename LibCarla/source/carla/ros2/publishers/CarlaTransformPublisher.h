@@ -12,8 +12,8 @@
 #include "carla/ros2/publishers/BasePublisher.h"
 #include "carla/ros2/publishers/PublisherImpl.h"
 
-#include "carla/ros2/types/TFMessage.h"
-#include "carla/ros2/types/TFMessagePubSubTypes.h"
+#include "carla/ros2/types/msg/TFMessage.h"
+#include "carla/ros2/types/msg/Transform.h"
 
 namespace carla {
 namespace ros2 {
@@ -21,14 +21,15 @@ namespace ros2 {
   class CarlaTransformPublisher : public BasePublisher {
     public:
       struct TransformMsgTraits {
-        using msg_type = tf2_msgs::msg::TFMessage;
-        using msg_pubsub_type = tf2_msgs::msg::TFMessagePubSubType;
+        using msg_type = msg::TFMessage;
       };
 
       CarlaTransformPublisher() :
         BasePublisher("rt/tf"),
         _impl(std::make_shared<PublisherImpl<TransformMsgTraits>>()) {
-          _impl->Init(GetBaseTopicName());
+          if (!_impl->Init(GetBaseTopicName())) {
+            log_warning("CarlaTransformPublisher: Init failed for topic: ", GetBaseTopicName());
+          }
       }
 
       bool Publish() {
@@ -38,12 +39,12 @@ namespace ros2 {
       bool Write(int32_t seconds, uint32_t nanoseconds, std::string frame_id, std::string child_frame_id, geom::Transform transform);
 
     private:
-      geometry_msgs::msg::Transform ComputeTransform(std::string frame_id, geom::Transform current_transform);
+      msg::Transform ComputeTransform(std::string frame_id, geom::Transform current_transform);
 
     private:
       std::shared_ptr<PublisherImpl<TransformMsgTraits>> _impl;
 
-      std::unordered_map<std::string, std::pair<geom::Transform, geometry_msgs::msg::Transform>> _last_transforms;
+      std::unordered_map<std::string, std::pair<geom::Transform, msg::Transform>> _last_transforms;
   };
 
 }  // namespace ros2

@@ -1,0 +1,11 @@
+// Generated from ROS 2 geometry_msgs/msg/Quaternion
+module geometry_msgs {
+  module msg {
+    struct Quaternion {
+      double x;
+      double y;
+      double z;
+      double w;
+    };
+  };
+};

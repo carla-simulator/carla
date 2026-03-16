@@ -179,7 +179,7 @@ rem ============================================================================
 
 :good_exit
     echo %FILE_N% Exiting...
-    endlocal & set install_recast=%FASTDDS_INSTALL_DIR%
+    endlocal & set install_dds=%FASTDDS_INSTALL_DIR%
     exit /b 0
 
 :bad_exit

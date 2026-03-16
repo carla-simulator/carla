@@ -35,8 +35,9 @@ BUILD_OPTION_DUMMY=false
 BUILD_RSS_VARIANT=false
 USE_PYTORCH=false
 USE_ROS2=false
+INCLUDED_DDS="fastdds,cyclonedds"
 
-OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss,pytorch,carsim,ros2,chrono,chrono-path: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,rebuild,server,client,clean,debug,release,rss,pytorch,carsim,ros2,chrono,chrono-path:,included-dds: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -71,6 +72,9 @@ while [[ $# -gt 0 ]]; do
     --ros2 )
       USE_ROS2=true;
       shift ;;
+    --included-dds )
+      INCLUDED_DDS="$2";
+      shift 2 ;;
     --chrono )
       shift ;;
     --chrono-path )
@@ -143,8 +147,9 @@ function build_libcarla {
     M_INSTALL_FOLDER=${LIBCARLA_INSTALL_SERVER_FOLDER}
   elif [ $1 == ros2 ] ; then
     M_TOOLCHAIN=${LIBCPP_TOOLCHAIN_FILE}
-    M_BUILD_FOLDER=${LIBCARLA_FASTDDS_FOLDER}.$(echo "$2" | tr '[:upper:]' '[:lower:]')
+    M_BUILD_FOLDER=${LIBCARLA_ROS2_FOLDER}.$(echo "$2" | tr '[:upper:]' '[:lower:]')
     M_INSTALL_FOLDER=${LIBCARLA_INSTALL_SERVER_FOLDER}
+    CMAKE_EXTRA_OPTIONS="-DINCLUDED_DDS=${INCLUDED_DDS}"
   elif [ $1 == ClientRSS ] ; then
     BUILD_TYPE='Client'
     M_TOOLCHAIN=${LIBSTDCPP_TOOLCHAIN_FILE}

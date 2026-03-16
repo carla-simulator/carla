@@ -8,7 +8,7 @@ DOC_STRING="Download and install the required libraries for carla."
 
 USAGE_STRING="Usage: $0 [--python-version=VERSION]"
 
-OPTS=`getopt -o h --long help,chrono,chrono-path:,ros2,pytorch,python-version: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,chrono,chrono-path:,ros2,pytorch,python-version:,included-dds: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -16,6 +16,7 @@ PY_VERSION_LIST=3
 USE_CHRONO=false
 USE_PYTORCH=false
 USE_ROS2=false
+INCLUDED_DDS="fastdds,cyclonedds"
 CHRONO_PATH=""
 
 while [[ $# -gt 0 ]]; do
@@ -36,6 +37,9 @@ while [[ $# -gt 0 ]]; do
     --ros2 )
       USE_ROS2=true;
       shift ;;
+    --included-dds )
+      INCLUDED_DDS="$2";
+      shift 2 ;;
     -h | --help )
       echo "$DOC_STRING"
       echo "$USAGE_STRING"
@@ -917,7 +921,7 @@ FASTDDS_BASENAME=fast-dds
 FASTDDS_INSTALL_DIR=${PWD}/${FASTDDS_BASENAME}-install
 FASTDDS_INCLUDE=${FASTDDS_INSTALL_DIR}/include
 FASTDDS_LIB=${FASTDDS_INSTALL_DIR}/lib
-if ${USE_ROS2} ; then
+if ${USE_ROS2} && [[ "${INCLUDED_DDS}" == *"fastdds"* ]] ; then
 
   if [[ -d ${FASTDDS_INSTALL_DIR} ]] ; then
     log "FastDDS already installed."
@@ -1001,6 +1005,84 @@ if ${USE_ROS2} ; then
     cp -p ${FASTDDS_LIB}/*.a ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
     cp -p -r ${FASTDDS_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
   fi
+
+  # Build fastddsgen (IDL -> FastDDS C++ code generator)
+  FASTDDSGEN_BASENAME=fast-dds-gen
+  FASTDDSGEN_SOURCE_DIR=${PWD}/${FASTDDSGEN_BASENAME}-source
+  FASTDDSGEN_INSTALL_DIR=${FASTDDS_INSTALL_DIR}
+
+  if [[ ! -f ${FASTDDSGEN_INSTALL_DIR}/bin/fastddsgen ]] ; then
+    log "Building fastddsgen"
+    FASTDDSGEN_REPO="https://github.com/eProsima/Fast-DDS-Gen.git"
+    FASTDDSGEN_BRANCH=v2.5.2
+
+    git clone --recurse-submodules --depth 1 --branch ${FASTDDSGEN_BRANCH} \
+      ${FASTDDSGEN_REPO} ${FASTDDSGEN_SOURCE_DIR}
+
+    pushd ${FASTDDSGEN_SOURCE_DIR} >/dev/null
+    ./gradlew assemble
+    # Install the scripts and jar to the FastDDS install prefix
+    mkdir -p ${FASTDDSGEN_INSTALL_DIR}/bin
+    mkdir -p ${FASTDDSGEN_INSTALL_DIR}/share/fastddsgen/java
+    cp scripts/fastddsgen ${FASTDDSGEN_INSTALL_DIR}/bin/
+    cp share/fastddsgen/java/fastddsgen.jar ${FASTDDSGEN_INSTALL_DIR}/share/fastddsgen/java/
+    chmod +x ${FASTDDSGEN_INSTALL_DIR}/bin/fastddsgen
+    popd >/dev/null
+    rm -Rf ${FASTDDSGEN_SOURCE_DIR}
+  else
+    log "fastddsgen already installed."
+  fi
+fi
+
+# ==============================================================================
+# -- Download Cyclone DDS and dependencies -------------------------------------
+# ==============================================================================
+
+CYCLONEDDS_BASENAME=cyclone-dds
+CYCLONEDDS_INSTALL_DIR=${PWD}/${CYCLONEDDS_BASENAME}-install
+CYCLONEDDS_INCLUDE=${CYCLONEDDS_INSTALL_DIR}/include
+CYCLONEDDS_LIB=${CYCLONEDDS_INSTALL_DIR}/lib
+
+if ${USE_ROS2} && [[ "${INCLUDED_DDS}" == *"cyclonedds"* ]] ; then
+
+  if [[ -d ${CYCLONEDDS_INSTALL_DIR} ]] ; then
+    log "CycloneDDS already installed."
+  else
+    log "Building CycloneDDS"
+    CYCLONEDDS_SOURCE_DIR=${PWD}/cyclonedds-source
+    CYCLONEDDS_REPO="https://github.com/eclipse-cyclonedds/cyclonedds.git"
+    CYCLONEDDS_BRANCH=0.10.5
+
+    git clone --depth 1 --branch ${CYCLONEDDS_BRANCH} ${CYCLONEDDS_REPO} ${CYCLONEDDS_SOURCE_DIR}
+
+    mkdir -p ${CYCLONEDDS_SOURCE_DIR}/build
+    pushd ${CYCLONEDDS_SOURCE_DIR}/build >/dev/null
+    # Use system compiler (not the UE4 toolchain) — Cyclone DDS C core is a
+    # standalone library and must not be built with UE4-specific sysroot paths.
+    cmake -G "Ninja" \
+      -DCMAKE_INSTALL_PREFIX="${CYCLONEDDS_INSTALL_DIR}" \
+      -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+      -DBUILD_SHARED_LIBS=OFF \
+      -DBUILD_TESTING=OFF \
+      -DBUILD_EXAMPLES=OFF \
+      -DBUILD_IDLC=ON \
+      -DENABLE_SSL=OFF \
+      -DENABLE_SECURITY=OFF \
+      -DENABLE_SHM=OFF \
+      ..
+    ninja
+    ninja install
+    popd >/dev/null
+    rm -Rf ${CYCLONEDDS_SOURCE_DIR}
+
+    # Note: cyclonedds-cxx (C++ binding) is NOT built because the UE4 toolchain
+    # disables exceptions (-fno-exceptions) which the C++ binding requires.
+    # The CARLA Cyclone DDS backend uses the C API (libddsc) directly.
+
+    mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+    cp -p ${CYCLONEDDS_LIB}/*.a ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+    cp -p -r ${CYCLONEDDS_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+  fi
 fi
 
 # ==============================================================================
@@ -1056,6 +1138,8 @@ if (CMAKE_BUILD_TYPE STREQUAL "Server")
   set(GTEST_LIB_PATH "${GTEST_LIBCXX_LIBPATH}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "ros2")
   list(APPEND CMAKE_PREFIX_PATH "${FASTDDS_INSTALL_DIR}")
+  set(CYCLONEDDS_INCLUDE_PATH "${CYCLONEDDS_INCLUDE}")
+  set(CYCLONEDDS_LIB_PATH "${CYCLONEDDS_LIB}")
   set(RPCLIB_INCLUDE_PATH "${RPCLIB_LIBCXX_INCLUDE}")
 elseif (CMAKE_BUILD_TYPE STREQUAL "Pytorch")
   list(APPEND CMAKE_PREFIX_PATH "${LIBTORCH_PATH}")

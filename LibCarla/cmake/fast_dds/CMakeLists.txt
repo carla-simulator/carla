@@ -12,6 +12,16 @@ file(GLOB libcarla_carla_fastdds_headers
   )
 install(FILES ${libcarla_carla_fastdds_headers} DESTINATION include/carla/ros2)
 
+file(GLOB libcarla_carla_fastdds_dds_headers
+  "${libcarla_source_path}/carla/ros2/dds/*.h"
+  )
+install(FILES ${libcarla_carla_fastdds_dds_headers} DESTINATION include/carla/ros2/dds)
+
+file(GLOB libcarla_carla_fastdds_dds_fastdds_headers
+  "${libcarla_source_path}/carla/ros2/dds/fastdds/*.h"
+  )
+install(FILES ${libcarla_carla_fastdds_dds_fastdds_headers} DESTINATION include/carla/ros2/dds/fastdds)
+
 file(GLOB fast_dds_dependencies "${FASTDDS_LIB_PATH}/*.a")
 install(FILES ${fast_dds_dependencies} DESTINATION lib)
 
@@ -21,7 +31,8 @@ file(GLOB libcarla_fastdds_sources
   "${libcarla_source_path}/carla/ros2/publishers/*.cpp"
   "${libcarla_source_path}/carla/ros2/subscribers/*.cpp"
   "${libcarla_source_path}/carla/ros2/listeners/*.cpp"
-  "${libcarla_source_path}/carla/ros2/types/*.cpp")
+  "${libcarla_source_path}/carla/ros2/types/*.cpp"
+  "${libcarla_source_path}/carla/ros2/dds/*.cpp")
 
 # ==============================================================================
 # Create targets for debug and release in the same build type.
@@ -30,7 +41,8 @@ file(GLOB libcarla_fastdds_sources
 if (LIBCARLA_BUILD_RELEASE)
   add_library(carla_fastdds STATIC ${libcarla_fastdds_sources})
 
-  target_compile_options(carla_fastdds PRIVATE -fexceptions)
+  target_compile_options(carla_fastdds PRIVATE -fexceptions -std=c++17)
+  target_compile_definitions(carla_fastdds PRIVATE CARLA_ROS2_DDS_FASTDDS)
 
   target_include_directories(carla_fastdds SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
@@ -38,6 +50,7 @@ if (LIBCARLA_BUILD_RELEASE)
 
   target_include_directories(carla_fastdds PRIVATE "${FASTDDS_INCLUDE_PATH}")
   target_include_directories(carla_fastdds PRIVATE "${libcarla_source_path}/carla/ros2")
+  target_include_directories(carla_fastdds PRIVATE "${libcarla_source_path}")
   target_link_libraries(carla_fastdds fastrtps fastcdr "${FAST_DDS_LIBRARIES}")
   install(TARGETS carla_fastdds DESTINATION lib)
   set_target_properties(carla_fastdds PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
@@ -48,11 +61,16 @@ if (LIBCARLA_BUILD_DEBUG)
 
   add_library(carla_fastdds_debug STATIC ${libcarla_fastdds_sources})
 
-  target_compile_options(carla_fastdds_debug PRIVATE -fexceptions)
+  target_compile_options(carla_fastdds_debug PRIVATE -fexceptions -std=c++17)
+  target_compile_definitions(carla_fastdds_debug PRIVATE CARLA_ROS2_DDS_FASTDDS)
 
   target_include_directories(carla_fastdds_debug SYSTEM PRIVATE
       "${BOOST_INCLUDE_PATH}"
       "${RPCLIB_INCLUDE_PATH}")
+
+  target_include_directories(carla_fastdds_debug PRIVATE "${FASTDDS_INCLUDE_PATH}")
+  target_include_directories(carla_fastdds_debug PRIVATE "${libcarla_source_path}/carla/ros2")
+  target_include_directories(carla_fastdds_debug PRIVATE "${libcarla_source_path}")
   install(TARGETS carla_fastdds_debug DESTINATION lib)
   set_target_properties(carla_fastdds_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
   target_compile_definitions(carla_fastdds_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)

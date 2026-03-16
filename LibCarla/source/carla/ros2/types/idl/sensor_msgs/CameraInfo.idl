@@ -1,0 +1,21 @@
+// Generated from ROS 2 sensor_msgs/msg/CameraInfo
+#include "std_msgs/Header.idl"
+#include "sensor_msgs/RegionOfInterest.idl"
+
+module sensor_msgs {
+  module msg {
+    struct CameraInfo {
+      std_msgs::msg::Header header;
+      unsigned long height;
+      unsigned long width;
+      string distortion_model;
+      sequence<double> d;
+      double k[9];
+      double r[9];
+      double p[12];
+      unsigned long binning_x;
+      unsigned long binning_y;
+      sensor_msgs::msg::RegionOfInterest roi;
+    };
+  };
+};

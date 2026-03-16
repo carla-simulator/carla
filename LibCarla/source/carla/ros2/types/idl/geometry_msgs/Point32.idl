@@ -1,0 +1,10 @@
+// Generated from ROS 2 geometry_msgs/msg/Point32
+module geometry_msgs {
+  module msg {
+    struct Point32 {
+      float x;
+      float y;
+      float z;
+    };
+  };
+};

@@ -168,5 +168,14 @@ public:
       DisplayName = "  ROS2 Topics Visible On Startup")
   bool ROS2TopicVisibility = true;
 
+  /// DDS backend to use for ROS2 publishing. Accepted values: "fastdds", "cyclonedds".
+  /// Corresponds to --dds-backend=<value> on the command line.
+  UPROPERTY(Category = "Quality Settings/ROS2",
+      BlueprintReadOnly,
+      EditAnywhere,
+      config,
+      DisplayName = "  DDS Backend")
+  FString DDSBackendName = TEXT("fastdds");
+
   /// @}
 };

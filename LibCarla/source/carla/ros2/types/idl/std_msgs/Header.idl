@@ -1,0 +1,11 @@
+// Generated from ROS 2 std_msgs/msg/Header
+#include "builtin_interfaces/Time.idl"
+
+module std_msgs {
+  module msg {
+    struct Header {
+      builtin_interfaces::msg::Time stamp;
+      string frame_id;
+    };
+  };
+};

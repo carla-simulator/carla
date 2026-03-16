@@ -9,7 +9,7 @@ namespace ros2 {
 
 constexpr double EPSILON = 1e-4;
 
-geometry_msgs::msg::Transform CarlaTransformPublisher::ComputeTransform(std::string frame_id, geom::Transform transform) {
+msg::Transform CarlaTransformPublisher::ComputeTransform(std::string frame_id, geom::Transform transform) {
 
   // Avoid recomputing the transform if it hasn't changed.
   // This is common for static sensors that are typically attached to other actors.
@@ -49,35 +49,34 @@ geometry_msgs::msg::Transform CarlaTransformPublisher::ComputeTransform(std::str
   const float cy = cosf(ry * 0.5f);
   const float sy = sinf(ry * 0.5f);
 
-  geometry_msgs::msg::Transform tf;
+  msg::Transform tf;
 
-  tf.translation().x(tx);
-  tf.translation().y(ty);
-  tf.translation().z(tz);
+  tf.translation.x = tx;
+  tf.translation.y = ty;
+  tf.translation.z = tz;
 
-  tf.rotation().w(cr * cp * cy + sr * sp * sy);
-  tf.rotation().x(sr * cp * cy - cr * sp * sy);
-  tf.rotation().y(cr * sp * cy + sr * cp * sy);
-  tf.rotation().z(cr * cp * sy - sr * sp * cy);
+  tf.rotation.w = cr * cp * cy + sr * sp * sy;
+  tf.rotation.x = sr * cp * cy - cr * sp * sy;
+  tf.rotation.y = cr * sp * cy + sr * cp * sy;
+  tf.rotation.z = cr * cp * sy - sr * sp * cy;
 
   return tf;
 }
 
 bool CarlaTransformPublisher::Write(int32_t seconds, uint32_t nanoseconds, std::string frame_id, std::string child_frame_id, geom::Transform transform) {
 
+  msg::TransformStamped ts;
 
-  geometry_msgs::msg::TransformStamped ts;
-
-  ts.header().stamp().sec(seconds);
-  ts.header().stamp().nanosec(nanoseconds);
-  ts.header().frame_id(frame_id);
+  ts.header.stamp.sec = seconds;
+  ts.header.stamp.nanosec = nanoseconds;
+  ts.header.frame_id = frame_id;
 
   auto tf = ComputeTransform(child_frame_id, transform);
-  ts.transform(tf);
+  ts.transform = tf;
 
-  ts.child_frame_id(child_frame_id);
+  ts.child_frame_id = child_frame_id;
 
-  _impl->GetMessage()->transforms({ts});
+  _impl->GetMessage()->transforms = {ts};
 
   // Update last transform information
   _last_transforms.insert({child_frame_id, {transform, tf}});

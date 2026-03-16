@@ -1,0 +1,17 @@
+// CARLA-custom type derived from LibCarla/source/carla/ros2/types/CarlaEgoVehicleControl.h
+#include "std_msgs/Header.idl"
+
+module carla_msgs {
+  module msg {
+    struct CarlaEgoVehicleControl {
+      std_msgs::msg::Header header;
+      float throttle;
+      float steer;
+      float brake;
+      boolean hand_brake;
+      boolean reverse;
+      long gear;
+      boolean manual_gear_shift;
+    };
+  };
+};

@@ -90,7 +90,7 @@ void MotionPlanStage::Update(const unsigned long index) {
     // Flushing controller state for vehicle.
     current_state = {current_timestamp,
                     0.0f, 0.0f,
-                    0.0f};
+                    {0.0f, 0.0f, 0.0f}};
 
     // Add entry to teleportation duration clock table if not present.
     if (teleportation_instance.find(actor_id) == teleportation_instance.end()) {
@@ -180,7 +180,7 @@ void MotionPlanStage::Update(const unsigned long index) {
 
       // If previous state for vehicle not found, initialize state entry.
       if (pid_state_map.find(actor_id) == pid_state_map.end()) {
-        const auto initial_state = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f};
+        const auto initial_state = StateEntry{current_timestamp, 0.0f, 0.0f, {0.0f, 0.0f, 0.0f}};
         pid_state_map.insert({actor_id, initial_state});
       }
 
@@ -201,7 +201,7 @@ void MotionPlanStage::Update(const unsigned long index) {
 
       // If physics is enabled for the vehicle, use PID controller.
       // State update for vehicle.
-      current_state = {current_timestamp, angular_deviation, velocity_deviation, 0.0f};
+      current_state = {current_timestamp, angular_deviation, velocity_deviation, {0.0f, 0.0f, 0.0f}};
 
       // Controller actuation.
       actuation_signal = PID::RunStep(current_state, previous_state,
@@ -230,7 +230,7 @@ void MotionPlanStage::Update(const unsigned long index) {
       // Flushing controller state for vehicle.
       current_state = {current_timestamp,
                       0.0f, 0.0f,
-                      0.0f};
+                      {0.0f, 0.0f, 0.0f}};
 
       // Add entry to teleportation duration clock table if not present.
       if (teleportation_instance.find(actor_id) == teleportation_instance.end()) {

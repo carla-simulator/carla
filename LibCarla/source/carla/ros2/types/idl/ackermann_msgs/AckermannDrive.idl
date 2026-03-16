@@ -1,0 +1,12 @@
+// Generated from ROS 2 ackermann_msgs/msg/AckermannDrive
+module ackermann_msgs {
+  module msg {
+    struct AckermannDrive {
+      float steering_angle;
+      float steering_angle_velocity;
+      float speed;
+      float acceleration;
+      float jerk;
+    };
+  };
+};

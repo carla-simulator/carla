@@ -321,11 +321,69 @@ public class Carla : ModuleRules
 
       if (UsingRos2)
       {
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_fastdds")));
+        string Ros2Lib = Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_ros2"));
+        string BackendsFile = Path.Combine(LibCarlaInstallPath, "included_dds_backends.txt");
 
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfoonathan_memory-0.7.3.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfastcdr.a"));
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfastrtps.a"));
+        if (File.Exists(Ros2Lib) && File.Exists(BackendsFile))
+        {
+          // Unified multi-backend library: read manifest to discover compiled-in backends.
+          PublicAdditionalLibraries.Add(Ros2Lib);
+          string[] backends = File.ReadAllText(BackendsFile).Trim().Split(',');
+          bool hasFastDDS = false;
+
+          foreach (string backend in backends)
+          {
+            string b = backend.Trim();
+            if (b == "fastdds")
+            {
+              Console.WriteLine("  + FastDDS backend");
+              PublicDefinitions.Add("CARLA_ROS2_DDS_FASTDDS");
+              hasFastDDS = true;
+            }
+            else if (b == "cyclonedds")
+            {
+              Console.WriteLine("  + CycloneDDS backend");
+              PublicDefinitions.Add("CARLA_ROS2_DDS_CYCLONEDDS");
+              PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libddsc.a"));
+              string CddsTypesLib = Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_ros2_cdds_types"));
+              if (File.Exists(CddsTypesLib))
+                PublicAdditionalLibraries.Add(CddsTypesLib);
+            }
+            // Future: else if (b == "opendds") { ... }
+          }
+
+          // FastCDR/FastRTPS always needed (PubSubTypes base class)
+          PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfastcdr.a"));
+          PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfastrtps.a"));
+          PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfoonathan_memory-0.7.3.a"));
+        }
+        else
+        {
+          // Legacy fallback: check for old-style per-backend libraries.
+          string CycloneDDSLib = Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_cyclonedds"));
+          if (File.Exists(CycloneDDSLib))
+          {
+            Console.WriteLine("ROS2: linking legacy CycloneDDS library");
+            PublicDefinitions.Add("CARLA_ROS2_DDS_CYCLONEDDS");
+            PublicAdditionalLibraries.Add(CycloneDDSLib);
+            string CycloneDDSTypesLib = Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_cyclonedds_types"));
+            if (File.Exists(CycloneDDSTypesLib))
+              PublicAdditionalLibraries.Add(CycloneDDSTypesLib);
+            PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libddsc.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfastcdr.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfastrtps.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfoonathan_memory-0.7.3.a"));
+          }
+          else
+          {
+            Console.WriteLine("ROS2: linking legacy FastDDS library");
+            PublicDefinitions.Add("CARLA_ROS2_DDS_FASTDDS");
+            PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_fastdds")));
+            PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfoonathan_memory-0.7.3.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfastcdr.a"));
+            PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfastrtps.a"));
+          }
+        }
       }
 
 

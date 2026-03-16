@@ -16,8 +16,9 @@ There are some configuration options available when launching CARLA and they can
     ./CarlaUE4.sh -carla-rpc-port=3000
 ```
 
-* `--ros2` - Launch CARLA with the native ROS2 connector enabled
-* `-carla-rpc-port=N` - Listen for client connections at port `N`. Streaming port is set to `N+1` by default.  
+* `--ros2` - Launch CARLA with the native ROS2 connector enabled. Uses Fast DDS by default.
+* `--dds-backend=<fastdds|cyclonedds>` - Select the DDS middleware backend for the native ROS2 interface. Must be used together with `--ros2`. The server must have been compiled with the corresponding backend (see [ROS ecosystem](ecosys_ros.md)). Default: `fastdds`. If the requested backend was not compiled in, or if the value is unrecognized (e.g. a typo), ROS2 is disabled for the session and an error is logged.
+* `-carla-rpc-port=N` - Listen for client connections at port `N`. Streaming port is set to `N+1` by default.
 * `-carla-streaming-port=N` - Specify the port for sensor data streaming. Use 0 to get a random unused port. The second port will be automatically set to `N+1`.  
 * `-quality-level={Low,Epic}` - Change graphics quality level. Find out more in [rendering options](adv_rendering_options.md).  
 * __[List of Unreal Engine 4 command-line arguments][ue4clilink].__ - There are a lot of options provided by Unreal Engine however not all of these are available in CARLA.  

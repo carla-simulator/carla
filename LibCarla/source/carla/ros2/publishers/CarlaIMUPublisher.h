@@ -11,8 +11,7 @@
 #include "carla/ros2/publishers/BasePublisher.h"
 #include "carla/ros2/publishers/PublisherImpl.h"
 
-#include "carla/ros2/types/Imu.h"
-#include "carla/ros2/types/ImuPubSubTypes.h"
+#include "carla/ros2/types/msg/Imu.h"
 
 namespace carla {
 namespace ros2 {
@@ -20,14 +19,15 @@ namespace ros2 {
   class CarlaIMUPublisher : public BasePublisher {
     public:
       struct ImuMsgTraits {
-        using msg_type = sensor_msgs::msg::Imu;
-        using msg_pubsub_type = sensor_msgs::msg::ImuPubSubType;
+        using msg_type = msg::Imu;
       };
 
       CarlaIMUPublisher(std::string base_topic_name, std::string frame_id) :
         BasePublisher(base_topic_name, frame_id),
         _impl(std::make_shared<PublisherImpl<ImuMsgTraits>>()) {
-          _impl->Init(this->GetBaseTopicName());
+          if (!_impl->Init(this->GetBaseTopicName())) {
+            log_warning("CarlaIMUPublisher: Init failed for topic: ", this->GetBaseTopicName());
+          }
       }
 
       bool Publish() {

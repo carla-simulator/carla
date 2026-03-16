@@ -1,0 +1,12 @@
+// CARLA-custom type derived from LibCarla/source/carla/ros2/types/CarlaLineInvasion.h
+// Class name in C++: carla_msgs::msg::LaneInvasionEvent
+#include "std_msgs/Header.idl"
+
+module carla_msgs {
+  module msg {
+    struct LaneInvasionEvent {
+      std_msgs::msg::Header header;
+      sequence<long> crossed_lane_markings;
+    };
+  };
+};

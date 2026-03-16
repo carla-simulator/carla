@@ -26,6 +26,7 @@
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
 #include <carla/ros2/ROS2.h>
+#include <carla/ros2/dds/DDSBackend.h>
 #include <carla/streaming/EndPoint.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
@@ -222,7 +223,27 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
   if (Settings.ROS2)
   {
     auto ROS2 = carla::ros2::ROS2::GetInstance();
-    ROS2->Enable(true);
+    std::string backend_str = TCHAR_TO_UTF8(*Settings.DDSBackendName);
+    auto parse_result = carla::ros2::DDSBackendFromString(backend_str);
+
+    if (!parse_result.valid)
+    {
+      std::string available = carla::ros2::GetAvailableBackendsString();
+      // Unreal log message
+      UE_LOG(LogCarla, Error, TEXT("ROS2: unrecognized --dds-backend value '%s'. "
+          "Compiled backends: %s. "
+          "ROS2 is DISABLED for this session."),
+          *Settings.DDSBackendName, UTF8_TO_TCHAR(available.c_str()));
+
+      // Terminal log error message.
+      carla::log_error("ROS2: unrecognized --dds-backend value '", backend_str,
+          "'. Compiled backends: ", available,
+          ". ROS2 is DISABLED for this session.");
+    }
+    else
+    {
+      ROS2->Enable(true, parse_result.backend);
+    }
   }
   #endif
 

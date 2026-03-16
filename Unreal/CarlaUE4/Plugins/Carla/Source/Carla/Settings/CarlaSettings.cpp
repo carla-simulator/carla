@@ -120,6 +120,10 @@ void UCarlaSettings::LoadSettings()
   // Override settings from command-line.
   {
     uint32 Value;
+    FString Tmp;
+    FString StringQualityLevel;
+    FString DDSBackendValue;
+
     if (FParse::Value(FCommandLine::Get(), TEXT("-world-port="), Value) ||
         FParse::Value(FCommandLine::Get(), TEXT("-carla-port="), Value) ||
         FParse::Value(FCommandLine::Get(), TEXT("-carla-rpc-port="), Value) ||
@@ -137,7 +141,6 @@ void UCarlaSettings::LoadSettings()
     {
       SecondaryPort = Value;
     }
-    FString Tmp;
     if (FParse::Value(FCommandLine::Get(), TEXT("-carla-primary-host="), Tmp))
     {
       PrimaryIP = TCHAR_TO_UTF8(*Tmp);
@@ -146,7 +149,6 @@ void UCarlaSettings::LoadSettings()
     {
       PrimaryPort = Value;
     }
-    FString StringQualityLevel;
     if (FParse::Value(FCommandLine::Get(), TEXT("-quality-level="), StringQualityLevel))
     {
       QualityLevel = QualityLevelFromString(StringQualityLevel, EQualityLevel::Epic);
@@ -158,6 +160,10 @@ void UCarlaSettings::LoadSettings()
     if (FParse::Param(FCommandLine::Get(), TEXT("-ros2")))
     {
       ROS2 = true;
+    }
+    if (FParse::Value(FCommandLine::Get(), TEXT("-dds-backend="), DDSBackendValue))
+    {
+      DDSBackendName = DDSBackendValue.ToLower();
     }
   }
 }

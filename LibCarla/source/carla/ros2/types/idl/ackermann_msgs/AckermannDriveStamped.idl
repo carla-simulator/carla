@@ -1,0 +1,12 @@
+// Generated from ROS 2 ackermann_msgs/msg/AckermannDriveStamped
+#include "std_msgs/Header.idl"
+#include "ackermann_msgs/AckermannDrive.idl"
+
+module ackermann_msgs {
+  module msg {
+    struct AckermannDriveStamped {
+      std_msgs::msg::Header header;
+      ackermann_msgs::msg::AckermannDrive drive;
+    };
+  };
+};

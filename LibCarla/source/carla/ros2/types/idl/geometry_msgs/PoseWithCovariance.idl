@@ -1,0 +1,12 @@
+// Generated from ROS 2 geometry_msgs/msg/PoseWithCovariance
+#include "geometry_msgs/Pose.idl"
+
+module geometry_msgs {
+  module msg {
+    struct PoseWithCovariance {
+      // Field renamed to avoid case-insensitive collision with struct name
+      geometry_msgs::msg::Pose pose_value;
+      double covariance[36];
+    };
+  };
+};

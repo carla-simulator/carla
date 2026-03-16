@@ -1,0 +1,12 @@
+// Generated from ROS 2 sensor_msgs/msg/RegionOfInterest
+module sensor_msgs {
+  module msg {
+    struct RegionOfInterest {
+      unsigned long x_offset;
+      unsigned long y_offset;
+      unsigned long height;
+      unsigned long width;
+      boolean do_rectify;
+    };
+  };
+};

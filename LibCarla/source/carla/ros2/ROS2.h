@@ -1,6 +1,4 @@
-// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
-// de Barcelona (UAB).
-//
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
@@ -10,6 +8,7 @@
 #include "carla/BufferView.h"
 #include "carla/geom/Transform.h"
 #include "carla/ros2/ROS2CallbackData.h"
+#include "carla/ros2/dds/DDSBackend.h"
 #include "carla/streaming/detail/Types.h"
 
 #include <unordered_set>
@@ -55,7 +54,7 @@ class ROS2
     }
 
     // General
-    void Enable(bool enable);
+    void Enable(bool enable, DDSBackend backend = DDSBackend::FastDDS);
     void Shutdown();
 
     bool IsEnabled() { return _enabled; }

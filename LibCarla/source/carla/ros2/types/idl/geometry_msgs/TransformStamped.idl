@@ -1,0 +1,14 @@
+// Generated from ROS 2 geometry_msgs/msg/TransformStamped
+#include "std_msgs/Header.idl"
+#include "geometry_msgs/Transform.idl"
+
+module geometry_msgs {
+  module msg {
+    struct TransformStamped {
+      std_msgs::msg::Header header;
+      string child_frame_id;
+      // Field renamed to avoid case-insensitive collision with struct name
+      geometry_msgs::msg::Transform transform_value;
+    };
+  };
+};

@@ -1,0 +1,10 @@
+// Generated from ROS 2 std_msgs/msg/String
+module std_msgs {
+  module msg {
+    // Struct renamed StringMsg to avoid case-insensitive collision with IDL built-in 'string'.
+    // CDR wire format is identical (single unbounded string field).
+    struct StringMsg {
+      string data;
+    };
+  };
+};

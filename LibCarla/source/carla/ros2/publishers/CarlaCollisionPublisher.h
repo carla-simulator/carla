@@ -11,8 +11,7 @@
 #include "carla/ros2/publishers/BasePublisher.h"
 #include "carla/ros2/publishers/PublisherImpl.h"
 
-#include "carla/ros2/types/CarlaCollisionEvent.h"
-#include "carla/ros2/types/CarlaCollisionEventPubSubTypes.h"
+#include "carla/ros2/types/msg/CarlaCollisionEvent.h"
 
 namespace carla {
 namespace ros2 {
@@ -20,14 +19,15 @@ namespace ros2 {
   class CarlaCollisionPublisher : public BasePublisher {
     public:
       struct CollisionMsgTraits {
-        using msg_type = carla_msgs::msg::CarlaCollisionEvent;
-        using msg_pubsub_type = carla_msgs::msg::CarlaCollisionEventPubSubType;
+        using msg_type = msg::CarlaCollisionEvent;
       };
 
       CarlaCollisionPublisher(std::string base_topic_name, std::string frame_id) :
         BasePublisher(base_topic_name, frame_id),
         _impl(std::make_shared<PublisherImpl<CollisionMsgTraits>>()) {
-          _impl->Init(this->GetBaseTopicName());
+          if (!_impl->Init(this->GetBaseTopicName())) {
+            log_warning("CarlaCollisionPublisher: Init failed for topic: ", this->GetBaseTopicName());
+          }
       }
 
       bool Publish() {
@@ -42,4 +42,3 @@ namespace ros2 {
 
 }  // namespace ros2
 }  // namespace carla
-

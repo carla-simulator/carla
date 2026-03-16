@@ -1,12 +1,11 @@
-// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma
-// de Barcelona (UAB).
-//
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "carla/ros2/ROS2.h"
 
 #include "carla/Logging.h"
+#include "carla/ros2/dds/DDSBackendFactory.h"
 #include "carla/geom/GeoLocation.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/sensor/data/DVSEvent.h"
@@ -69,9 +68,23 @@ enum ESensors {
   HSSLidar
 };
 
-void ROS2::Enable(bool enable) {
+void ROS2::Enable(bool enable, DDSBackend backend) {
+  if (enable) {
+    auto resolution = DDSBackendFactory::ResolveBackend(backend);
+    if (!resolution.success) {
+      log_error("ROS2: requested DDS backend '", DDSBackendToString(backend),
+                "' is not compiled into this build.");
+      log_error("ROS2: available backends: ",
+                DDSBackendFactory::GetAvailableBackendsString(), ".");
+      log_error("ROS2: ROS2 is DISABLED for this session. "
+                "Restart the server with one of the available backends listed above.");
+      _enabled = false;
+      return;
+    }
+    DDSBackendFactory::SetBackend(backend);
+    log_info("ROS2 enabled with DDS backend: ", DDSBackendToString(backend));
+  }
   _clock_publisher = std::make_shared<CarlaClockPublisher>();
-
   _enabled = enable;
 }
 
@@ -95,7 +108,9 @@ void ROS2::SetTimestamp(double timestamp) {
   _nanoseconds = static_cast<uint32_t>(fractional * multiplier);
  
   _clock_publisher->Write(_seconds, _nanoseconds);
-  _clock_publisher->Publish();
+  if (!_clock_publisher->Publish()) {
+    log_warning("ROS2: Clock publish failed");
+  }
 }
 
 void ROS2::RegisterActor(void *actor, std::string ros_name, std::string frame_id, bool publish_tf) {
@@ -257,6 +272,7 @@ void ROS2::ProcessDataFromCamera(
 
   auto base_publisher = GetOrCreateSensor(static_cast<int>(sensor_type), actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaCameraPublisher>(base_publisher);
+  if (!sensor_publisher) return;
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
 
   const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
@@ -275,13 +291,14 @@ void ROS2::ProcessDataFromCamera(
 }
 
 void ROS2::ProcessDataFromGNSS(
-    uint64_t /*sensor_type*/,
+    uint64_t sensor_type,
     const carla::geom::Transform sensor_transform,
     const carla::geom::GeoLocation &data,
     void *actor) {
-  
+  (void)sensor_type;
   auto base_publisher = GetOrCreateSensor(ESensors::GnssSensor, actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaGNSSPublisher>(base_publisher);
+  if (!sensor_publisher) return;
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
 
   sensor_publisher->Write(_seconds, _nanoseconds, data);
@@ -294,15 +311,16 @@ void ROS2::ProcessDataFromGNSS(
 }
 
 void ROS2::ProcessDataFromIMU(
-    uint64_t /*sensor_type*/,
+    uint64_t sensor_type,
     const carla::geom::Transform sensor_transform,
     carla::geom::Vector3D accelerometer,
     carla::geom::Vector3D gyroscope,
     float compass,
     void *actor) {
-
+  (void)sensor_type;
   auto base_publisher = GetOrCreateSensor(ESensors::InertialMeasurementUnit, actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaIMUPublisher>(base_publisher);
+  if (!sensor_publisher) return;
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
 
   sensor_publisher->Write(_seconds, _nanoseconds, accelerometer, gyroscope, compass);
@@ -315,13 +333,14 @@ void ROS2::ProcessDataFromIMU(
 }
 
 void ROS2::ProcessDataFromDVS(
-    uint64_t /*sensor_type*/,
+    uint64_t sensor_type,
     const carla::geom::Transform sensor_transform,
     const carla::SharedBufferView buffer,
     void *actor) {
-
+  (void)sensor_type;
   auto base_publisher = GetOrCreateSensor(ESensors::DVSCamera, actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaDVSPublisher>(base_publisher);
+  if (!sensor_publisher) return;
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
 
   const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
@@ -334,8 +353,11 @@ void ROS2::ProcessDataFromDVS(
   const size_t im_height = header->height;
 
   sensor_publisher->WriteCameraInfo(_seconds, _nanoseconds, 0, 0, static_cast<uint32_t>(im_height), static_cast<uint32_t>(im_width), header->fov_angle, true);
-  sensor_publisher->WriteImage(_seconds, _nanoseconds, static_cast<uint32_t>(elements), header->height, header->width, reinterpret_cast<const uint8_t*>(buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset));
-  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, 1, static_cast<uint32_t>(elements), const_cast<uint8_t*>(reinterpret_cast<const uint8_t*>(buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset)));
+  const uint8_t* dvs_data = buffer->data() + carla::sensor::s11n::ImageSerializer::header_offset;
+  sensor_publisher->WriteImage(_seconds, _nanoseconds, static_cast<uint32_t>(elements), header->height, header->width, dvs_data);
+  // ComputePointCloud negates event.y in-place; copy the const buffer slice so the original is not mutated.
+  std::vector<uint8_t> dvs_copy(dvs_data, dvs_data + elements * sizeof(carla::sensor::data::DVSEvent));
+  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, 1, static_cast<uint32_t>(elements), dvs_copy.data());
   sensor_publisher->Publish();
 
   if (transform_publisher) {
@@ -345,13 +367,14 @@ void ROS2::ProcessDataFromDVS(
 }
 
 void ROS2::ProcessDataFromLidar(
-    uint64_t /*sensor_type*/,
+    uint64_t sensor_type,
     const carla::geom::Transform sensor_transform,
     carla::sensor::data::LidarData &data,
     void *actor) {
-
+  (void)sensor_type;
   auto base_publisher = GetOrCreateSensor(ESensors::RayCastLidar, actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(base_publisher);
+  if (!sensor_publisher) return;
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
 
   // The lidar returns a flat list of floats rather than structured detection points.
@@ -369,13 +392,14 @@ void ROS2::ProcessDataFromLidar(
 }
 
 void ROS2::ProcessDataFromSemanticLidar(
-    uint64_t /*sensor_type*/,
+    uint64_t sensor_type,
     const carla::geom::Transform sensor_transform,
     carla::sensor::data::SemanticLidarData &data,
     void *actor) {
-
+  (void)sensor_type;
   auto base_publisher = GetOrCreateSensor(ESensors::RayCastSemanticLidar, actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaSemanticLidarPublisher>(base_publisher);
+  if (!sensor_publisher) return;
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
 
   const uint32_t width = static_cast<uint32_t>(data._ser_points.size());
@@ -390,18 +414,22 @@ void ROS2::ProcessDataFromSemanticLidar(
 }
 
 void ROS2::ProcessDataFromRadar(
-    uint64_t /*sensor_type*/,
+    uint64_t sensor_type,
     const carla::geom::Transform sensor_transform,
     const carla::sensor::data::RadarData &data,
     void *actor) {
-
+  (void)sensor_type;
   auto base_publisher = GetOrCreateSensor(ESensors::Radar, actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaRadarPublisher>(base_publisher);
+  if (!sensor_publisher) return;
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
 
   const uint32_t width = static_cast<uint32_t>(data.GetDetectionCount());
   const uint32_t height = 1;
-  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, height, width, reinterpret_cast<uint8_t*>(const_cast<carla::sensor::data::RadarDetection*>(data._detections.data())));
+  // data._detections is const; copy to mutable storage for ComputePointCloud.
+  std::vector<carla::sensor::data::RadarDetection> detections_copy(data._detections);
+  sensor_publisher->WritePointCloud(_seconds, _nanoseconds, height, width,
+      reinterpret_cast<uint8_t*>(detections_copy.data()));
   sensor_publisher->Publish();
 
   if (transform_publisher) {
@@ -421,14 +449,15 @@ void ROS2::ProcessDataFromObstacleDetection(
 }
 
 void ROS2::ProcessDataFromCollisionSensor(
-    uint64_t /*sensor_type*/,
+    uint64_t sensor_type,
     const carla::geom::Transform sensor_transform,
     uint32_t other_actor,
     carla::geom::Vector3D impulse,
     void* actor) {
-
+  (void)sensor_type;
   auto base_publisher = GetOrCreateSensor(ESensors::CollisionSensor, actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaCollisionPublisher>(base_publisher);
+  if (!sensor_publisher) return;
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
 
   sensor_publisher->Write(_seconds, _nanoseconds, other_actor, impulse);

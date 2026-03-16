@@ -1,0 +1,17 @@
+// Generated from ROS 2 sensor_msgs/msg/NavSatStatus
+module sensor_msgs {
+  module msg {
+    const octet NavSatStatus__STATUS_NO_FIX = 255;
+    const octet NavSatStatus__STATUS_FIX = 0;
+    const octet NavSatStatus__STATUS_SBAS_FIX = 1;
+    const octet NavSatStatus__STATUS_GBAS_FIX = 2;
+    const unsigned short NavSatStatus__SERVICE_GPS = 1;
+    const unsigned short NavSatStatus__SERVICE_GLONASS = 2;
+    const unsigned short NavSatStatus__SERVICE_COMPASS = 4;
+    const unsigned short NavSatStatus__SERVICE_GALILEO = 8;
+    struct NavSatStatus {
+      octet status;
+      unsigned short service;
+    };
+  };
+};

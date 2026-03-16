@@ -1,3 +1,7 @@
+// Copyright (c) 2025Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #include "CarlaEgoVehicleControlSubscriber.h"
 
 #include "carla/ros2/ROS2CallbackData.h"
@@ -9,13 +13,13 @@ namespace ros2 {
     auto message = _impl->GetMessage();
 
     VehicleControl control;
-    control.throttle = message.throttle();
-    control.steer = message.steer();
-    control.brake = message.brake();
-    control.hand_brake = message.hand_brake();
-    control.reverse = message.reverse();
-    control.gear = message.gear();
-    control.manual_gear_shift = message.manual_gear_shift();
+    control.throttle = message.throttle;
+    control.steer = message.steer;
+    control.brake = message.brake;
+    control.hand_brake = message.hand_brake;
+    control.reverse = message.reverse;
+    control.gear = message.gear;
+    control.manual_gear_shift = message.manual_gear_shift;
     return control;
   }
 

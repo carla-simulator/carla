@@ -1,0 +1,12 @@
+// Generated from ROS 2 geometry_msgs/msg/Pose
+#include "geometry_msgs/Point.idl"
+#include "geometry_msgs/Quaternion.idl"
+
+module geometry_msgs {
+  module msg {
+    struct Pose {
+      geometry_msgs::msg::Point position;
+      geometry_msgs::msg::Quaternion orientation;
+    };
+  };
+};

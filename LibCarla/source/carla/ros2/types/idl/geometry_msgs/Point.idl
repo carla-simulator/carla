@@ -1,0 +1,10 @@
+// Generated from ROS 2 geometry_msgs/msg/Point
+module geometry_msgs {
+  module msg {
+    struct Point {
+      double x;
+      double y;
+      double z;
+    };
+  };
+};

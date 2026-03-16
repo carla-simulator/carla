@@ -8,8 +8,8 @@ namespace carla {
 namespace ros2 {
 
 bool CarlaClockPublisher::Write(int32_t seconds, uint32_t nanoseconds) {
-  _impl->GetMessage()->clock().sec(seconds);
-  _impl->GetMessage()->clock().nanosec(nanoseconds);
+  _impl->GetMessage()->clock.sec = seconds;
+  _impl->GetMessage()->clock.nanosec = nanoseconds;
 
   return true;
 }
