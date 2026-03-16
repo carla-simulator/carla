@@ -1,4 +1,5 @@
 ## Latest Changes
+ * Fixed North/South latitude inversion in geo-coordinate conversion for Transverse Mercator and UTM projections
  * Fixed all 282 compiler warnings in LibCarla across 27 files (unused variables, missing braces, narrowing conversions, implicit casts, initializer order, etc.) establishing a zero-warning baseline for server and client release builds
  * Fixed ROS2 native sensors not streaming data when no Python client is listening for UE4, caused by a missing ROS2 enablement check in AreClientsListening() after the multistream refactor (PR #9431)
  * Fix possible RPC Server deadlock on shutdown

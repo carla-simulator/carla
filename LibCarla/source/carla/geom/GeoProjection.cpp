@@ -11,11 +11,11 @@ namespace carla {
 namespace geom {
 
     static double DegreesToRadians(double degrees) {
-    return degrees * Math::Pi<double>() / 180.0;
+        return degrees * Math::Pi<double>() / 180.0;
     }
 
     static double RadiansToDegrees(double radians) {
-    return radians * 180.0 / Math::Pi<double>();
+        return radians * 180.0 / Math::Pi<double>();
     }
 
     Location GeoProjection::GeoLocationToTransform(const GeoLocation& geolocation) const {
@@ -48,31 +48,31 @@ namespace geom {
         }
     }
 
-    GeoLocation GeoProjection::TransformToGeoLocation(const Location& location) const {
+    GeoLocation GeoProjection::TransformToGeoLocation(const Location& location_lh) const {
         switch (static_cast<ProjectionType>(params.index())) {
             case ProjectionType::TransverseMercator: {
                 auto& p = boost::variant2::get<TransverseMercatorParams>(params);
-                return TransformToGeoLocationTransverseMercator(location, p);
+                return TransformToGeoLocationTransverseMercator(location_lh, p);
             }
 
             case ProjectionType::UniversalTransverseMercator: {
                 auto& p = boost::variant2::get<UniversalTransverseMercatorParams>(params);
-                return TransformToGeoLocationUniversalTransverseMercator(location, p);
+                return TransformToGeoLocationUniversalTransverseMercator(location_lh, p);
             }
 
             case ProjectionType::WebMercator: {
                 auto& p = boost::variant2::get<WebMercatorParams>(params);
-                return TransformToGeoLocationWebMercator(location, p);
+                return TransformToGeoLocationWebMercator(location_lh, p);
             }
 
             case ProjectionType::LambertConformalConic:{
                 auto& p = boost::variant2::get<LambertConformalConicParams>(params);
-                return TransformToGeoLocationLambertConformalConic(location, p);
+                return TransformToGeoLocationLambertConformalConic(location_lh, p);
             }
 
             default: {
                 auto& p = boost::variant2::get<TransverseMercatorParams>(params);
-                return TransformToGeoLocationTransverseMercator(location, p);
+                return TransformToGeoLocationTransverseMercator(location_lh, p);
             }
         }
     }
@@ -116,7 +116,7 @@ namespace geom {
             + (5.0 - T + 9.0 * C + 4.0 * C * C) * std::pow(A, 4) / 24.0
             + (61.0 - 58.0 * T + T * T + 600.0 * C - 330.0 * ep2) * std::pow(A, 6) / 720.0));
 
-        return Location(static_cast<float>(x), static_cast<float>(y), static_cast<float>(geolocation.altitude));
+        return LocationRightHanded(x, y, geolocation.altitude);
     }
 
     Location GeoProjection::GeoLocationToTransformUniversalTransverseMercator(
@@ -153,7 +153,7 @@ namespace geom {
             + (5.0 - T + 9.0 * C + 4.0 * C * C) * std::pow(A, 4) / 24.0
             + (61.0 - 58.0 * T + T * T + 600.0 * C - 330.0 * ep2) * std::pow(A, 6) / 720.0));
 
-        return Location(static_cast<float>(x), static_cast<float>(y), static_cast<float>(geolocation.altitude));
+        return LocationRightHanded(x, y, geolocation.altitude);
     }
 
     Location GeoProjection::GeoLocationToTransformWebMercator(
@@ -165,7 +165,7 @@ namespace geom {
         double x = p.ellps.a * lon;
         double y = p.ellps.a * std::log(std::tan(Math::Pi<double>() / 4.0 + lat / 2.0));
 
-        return Location(static_cast<float>(x), static_cast<float>(y), static_cast<float>(geolocation.altitude));
+        return LocationRightHanded(x, y, geolocation.altitude);
     }
 
     Location GeoProjection::GeoLocationToTransformLambertConformalConic(
@@ -203,11 +203,16 @@ namespace geom {
         double x = p.x_0 + rho * std::sin(theta);
         double y = p.y_0 + rho0 - rho * std::cos(theta);
 
-        return Location(static_cast<float>(x), static_cast<float>(y), static_cast<float>(geolocation.altitude));
+        return LocationRightHanded(x, y, geolocation.altitude);
     }
 
     GeoLocation GeoProjection::TransformToGeoLocationTransverseMercator(
-        const Location& location, const TransverseMercatorParams p) const {
+        const Location& location_lh, const TransverseMercatorParams p) const {
+
+        LocationRightHanded location_rh(location_lh);
+        if (p.offset.has_value()) {
+            location_rh = LocationRightHanded(p.offset->ApplyTransformation(location_lh));
+        }
 
         // Using Snyder TM inverse (ellipsoidal) to 6th order
         double lat_0 = DegreesToRadians(p.lat_0);
@@ -219,8 +224,8 @@ namespace geom {
         double e4 = e2 * e2;
         double e6 = e4 * e2;
 
-        double x = (location.x - p.x_0) / p.k;
-        double y = (location.y - p.y_0) / p.k;
+        double x = (location_rh.x - p.x_0) / p.k;
+        double y = (location_rh.y - p.y_0) / p.k;
 
         double M = a * ((1.0 - e2 / 4.0 - 3.0 * e4 / 64.0 - 5.0 * e6 / 256.0) * lat_0
             - (3.0 * e2 / 8.0 + 3.0 * e4 / 32.0 + 45.0 * e6 / 1024.0) * std::sin(2.0 * lat_0)
@@ -255,11 +260,16 @@ namespace geom {
 
         lon = std::atan2(std::sin(lon), std::cos(lon));
 
-        return GeoLocation(RadiansToDegrees(lat), RadiansToDegrees(lon), location.z);
+        return GeoLocation(RadiansToDegrees(lat), RadiansToDegrees(lon), location_rh.z);
     }
 
     GeoLocation GeoProjection::TransformToGeoLocationUniversalTransverseMercator(
-        const Location& location_in, const UniversalTransverseMercatorParams p) const {
+        const Location& location_lh, const UniversalTransverseMercatorParams p) const {
+        
+        LocationRightHanded location_rh(location_lh);
+        if (p.offset.has_value()) {
+            location_rh = LocationRightHanded(p.offset->ApplyTransformation(location_lh));
+        }
 
         // Using Snyder TM inverse (ellipsoidal) to 6th order. Same formula as Transverse Mercator.
         double lon_0 = DegreesToRadians(6 * p.zone - 183); // central meridian
@@ -273,17 +283,8 @@ namespace geom {
         double e4 = e2 * e2;
         double e6 = e4 * e2;
 
-        Location location;
-        if (p.offset.has_value()) {
-            location = p.offset->ApplyTransformation(location_in);
-        }
-        else{
-            location = location_in;
-        }
-
-        //Negate the value of y because of the unreal left hand rule
-        double x = (location.x - x_0) / k;
-        double y = (location.y - y_0) / k;
+        double x = (location_rh.x - x_0) / k;
+        double y = (location_rh.y - y_0) / k;
 
         double mu = y / (a * (1.0 - e2 / 4.0 - 3.0 * e4 / 64.0 - 5.0 * e6 / 256.0));
         double e1 = (1.0 - std::sqrt(1.0 - e2)) / (1.0 + std::sqrt(1.0 - e2));
@@ -314,20 +315,30 @@ namespace geom {
 
         lon = std::atan2(std::sin(lon), std::cos(lon));
 
-        return GeoLocation(RadiansToDegrees(lat), RadiansToDegrees(lon), location.z);;
+        return GeoLocation(RadiansToDegrees(lat), RadiansToDegrees(lon), location_rh.z);;
     }
 
     GeoLocation GeoProjection::TransformToGeoLocationWebMercator(
-        const Location& location, const WebMercatorParams p) const {
+        const Location& location_lh, const WebMercatorParams p) const {
 
-        double lon = location.x / p.ellps.a;
-        double lat = 2*std::atan(std::exp(location.y / p.ellps.a)) - Math::Pi<double>()/2;
+        LocationRightHanded location_rh(location_lh);
+        if (p.offset.has_value()) {
+            location_rh = LocationRightHanded(p.offset->ApplyTransformation(location_lh));
+        }
+    
+        double lon = location_rh.x / p.ellps.a;
+        double lat = 2*std::atan(std::exp(location_rh.y / p.ellps.a)) - Math::Pi<double>()/2;
 
-        return GeoLocation(RadiansToDegrees(lat), RadiansToDegrees(lon), location.z);
+        return GeoLocation(RadiansToDegrees(lat), RadiansToDegrees(lon), location_rh.z);
     }
 
     GeoLocation GeoProjection::TransformToGeoLocationLambertConformalConic(
-        const Location& location, const LambertConformalConicParams p) const {
+        const Location& location_lh, const LambertConformalConicParams p) const {
+
+        LocationRightHanded location_rh(location_lh);
+        if (p.offset.has_value()) {
+            location_rh = LocationRightHanded(p.offset->ApplyTransformation(location_lh));
+        }
 
         double lon_0 = DegreesToRadians(p.lon_0);
         double lat_1 = DegreesToRadians(p.lat_1);
@@ -352,8 +363,8 @@ namespace geom {
         double F = m1 / (n * std::pow(t1, n));
         double rho0 = a * F * std::pow(t0, n);
 
-        double x = static_cast<double>(location.x) - p.x_0;
-        double y = static_cast<double>(location.y) - p.y_0;
+        double x = static_cast<double>(location_rh.x) - p.x_0;
+        double y = static_cast<double>(location_rh.y) - p.y_0;
 
         double sgn = (n >= 0.0) ? 1.0 : -1.0;
         double Y = rho0 - y;
@@ -375,7 +386,7 @@ namespace geom {
         double lon = lon_0 + theta / n;
         lon = std::atan2(std::sin(lon), std::cos(lon));
 
-        return GeoLocation(RadiansToDegrees(lat), RadiansToDegrees(lon), location.z);
+        return GeoLocation(RadiansToDegrees(lat), RadiansToDegrees(lon), location_rh.z);
     }
 } // namespace geom
 } // namespace carla

@@ -64,13 +64,39 @@ namespace geom {
         }
     };
 
+    // Since geo projections are using right handed systems, we have to negate the
+    // y-coordinate of the Unreal Location values before performing the geo conversion
+    // This supporting class is performing this automatically for us.
+    class LocationRightHanded {
+        public:
+            LocationRightHanded(double const _x, double const _y, double const _z)
+                : x(_x)
+                , y(_y)
+                , z(_z)
+            {}
+
+            explicit LocationRightHanded(Location const &location)
+                : x(location.x)
+                , y(-location.y)
+                , z(location.z)
+            {}
+
+            operator Location() {
+                return Location(static_cast<float>(x),static_cast<float>(-y),static_cast<float>(z));
+            }
+
+            double x;
+            double y;
+            double z;
+    };
+
     class OffsetTransform {
     public:
 
         OffsetTransform() = default;
         
         OffsetTransform(double offset_x, double offset_y, double offset_z, double offset_hdg): 
-            offset_x(offset_x), offset_y(offset_y), offset_z(offset_z), offset_cos_h(std::cos(-offset_hdg)), offset_sin_h(std::sin(-offset_hdg)) {}
+            offset_x(offset_x), offset_y(offset_y), offset_z(offset_z), offset_cos_h(std::cos(offset_hdg)), offset_sin_h(std::sin(offset_hdg)) {}
 
         double offset_x = 0.0;
         double offset_y = 0.0;
@@ -78,15 +104,17 @@ namespace geom {
         double offset_cos_h = 1.0;
         double offset_sin_h = 0.0;
 
-        Location ApplyTransformation(const Location& location) const{
+        Location ApplyTransformation(const Location& location_lh) const{
 
-            double tx = location.x + offset_x;
-            double ty = -location.y + offset_y;
+            LocationRightHanded location_rh(location_lh);
+
+            double tx = location_rh.x + offset_x;
+            double ty = location_rh.y + offset_y;
 
             double x_rot = (tx * offset_cos_h) - (ty * offset_sin_h);
             double y_rot = (tx * offset_sin_h) + (ty * offset_cos_h);
 
-            return Location{static_cast<float>(x_rot), static_cast<float>(y_rot), static_cast<float>(location.z + offset_z)};
+            return LocationRightHanded{x_rot, y_rot, location_rh.z + offset_z};
         }
 
         bool operator==(const OffsetTransform& rhs) const {
@@ -99,8 +127,8 @@ namespace geom {
 
         TransverseMercatorParams() = default;
 
-        TransverseMercatorParams(double lat_0, double lon_0, double k, double x_0, double y_0, Ellipsoid ellps):
-            lat_0(lat_0), lon_0(lon_0), k(k), x_0(x_0), y_0(y_0), ellps(ellps) {}
+        TransverseMercatorParams(double lat_0, double lon_0, double k, double x_0, double y_0, Ellipsoid ellps, boost::optional<OffsetTransform> offset = boost::none):
+            lat_0(lat_0), lon_0(lon_0), k(k), x_0(x_0), y_0(y_0), ellps(ellps), offset(offset) {}
 
         double lat_0 = 0.0f;
         double lon_0 = 0.0f;
@@ -108,15 +136,16 @@ namespace geom {
         double x_0 = 0.0f;
         double y_0 = 0.0f;
         Ellipsoid ellps = Ellipsoid();
+        boost::optional<OffsetTransform> offset;
 
         bool operator==(const TransverseMercatorParams &rhs) const {
             return (lat_0 == rhs.lat_0) && (lon_0 == rhs.lon_0) && (k == rhs.k)
-                && (x_0 == rhs.x_0) && (y_0 == rhs.y_0) && (ellps == rhs.ellps);
+                && (x_0 == rhs.x_0) && (y_0 == rhs.y_0) && (ellps == rhs.ellps) && (offset == rhs.offset);
         }
 
         bool operator!=(const TransverseMercatorParams &rhs) const {
             return (lat_0 != rhs.lat_0) || (lon_0 != rhs.lon_0) || (k != rhs.k)
-                || (x_0 != rhs.x_0) || (y_0 != rhs.y_0) || (ellps != rhs.ellps);
+                || (x_0 != rhs.x_0) || (y_0 != rhs.y_0) || (ellps != rhs.ellps) || (offset != rhs.offset);
         }
     };
 
@@ -138,7 +167,7 @@ namespace geom {
         }
 
         bool operator!=(const UniversalTransverseMercatorParams &rhs) const {
-            return (zone != rhs.zone) || (north != rhs.north) || (ellps != rhs.ellps) || (offset == rhs.offset);
+            return (zone != rhs.zone) || (north != rhs.north) || (ellps != rhs.ellps) || (offset != rhs.offset);
         }
     };
 
@@ -148,17 +177,18 @@ namespace geom {
 
         WebMercatorParams() = default;
     
-        WebMercatorParams(Ellipsoid ellps):
-            ellps(ellps) {}
+        WebMercatorParams(Ellipsoid ellps, boost::optional<OffsetTransform> offset = boost::none):
+            ellps(ellps), offset(offset) {}
 
         Ellipsoid ellps = Ellipsoid();
+        boost::optional<OffsetTransform> offset;
 
         bool operator==(const WebMercatorParams &rhs) const {
-            return (ellps == rhs.ellps);
+            return (ellps == rhs.ellps) && (offset == rhs.offset);
         }
 
         bool operator!=(const WebMercatorParams &rhs) const {
-            return (ellps != rhs.ellps);
+            return (ellps != rhs.ellps) || (offset != rhs.offset);
         }
     };
 
@@ -168,8 +198,8 @@ namespace geom {
         LambertConformalConicParams() = default;
     
         LambertConformalConicParams(
-            double lat_0, double lat_1, double lat_2, double lon_0, double x_0, double y_0, Ellipsoid ellps):
-            lat_0(lat_0), lat_1(lat_1), lat_2(lat_2), lon_0(lon_0), x_0(x_0), y_0(y_0), ellps(ellps) {}
+            double lat_0, double lat_1, double lat_2, double lon_0, double x_0, double y_0, Ellipsoid ellps, boost::optional<OffsetTransform> offset = boost::none):
+            lat_0(lat_0), lat_1(lat_1), lat_2(lat_2), lon_0(lon_0), x_0(x_0), y_0(y_0), ellps(ellps), offset(offset) {}
 
         double lat_0 = 0.0;
         double lat_1 = -5.0;
@@ -178,15 +208,16 @@ namespace geom {
         double x_0 = 0.0;
         double y_0 = 0.0;
         Ellipsoid ellps = Ellipsoid();
+        boost::optional<OffsetTransform> offset;
 
         bool operator==(const LambertConformalConicParams &rhs) const {
             return (lat_0 == rhs.lat_0) && (lat_1 == rhs.lat_1) && (lat_2 == rhs.lat_2) && (lon_0 == rhs.lon_0)
-                && (x_0 == rhs.x_0) && (y_0 == rhs.y_0) && (ellps == rhs.ellps);
+                && (x_0 == rhs.x_0) && (y_0 == rhs.y_0) && (ellps == rhs.ellps) && (offset == rhs.offset);
         }
 
         bool operator!=(const LambertConformalConicParams &rhs) const {
             return (lat_0 != rhs.lat_0) || (lat_1 != rhs.lat_1) || (lat_2 != rhs.lat_2) || (lon_0 != rhs.lon_0)
-                || (x_0 != rhs.x_0) || (y_0 != rhs.y_0) || (ellps != rhs.ellps);
+                || (x_0 != rhs.x_0) || (y_0 != rhs.y_0) || (ellps != rhs.ellps) || (offset != rhs.offset);
         }
     };
 
