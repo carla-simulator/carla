@@ -71,7 +71,17 @@ void UTrafficLightComponent::InitializeSign(const carla::road::Map &Map)
         double LaneLength = Map.GetLane(signal_waypoint).GetLength();
         double LaneDistance = Map.GetLane(signal_waypoint).GetDistance();
         float AdditionalDistance = 1.5f;
-        if(lane < 0)
+        // Place the trigger box upstream of the signal (before the stop line
+        // in the direction of travel).  The travel direction depends on the
+        // road's traffic rule (RHT/LHT) and the lane-id sign, which is
+        // captured by Lane::IsPositiveDirection().
+        //   +s travel → upstream is -s  (subtract offset)
+        //   -s travel → upstream is +s  (add offset)
+        // The previous code used the lane-id sign alone, which only works for
+        // RHT roads.  On LHT roads with positive lane ids the offset was
+        // applied in the wrong direction, pushing the box past the road end
+        // and causing vehicles to miss the trigger volume entirely.
+        if(Map.GetLane(signal_waypoint).IsPositiveDirection())
         {
           signal_waypoint.s = FMath::Clamp(signal_waypoint.s - (BoxLength + AdditionalDistance),
               LaneDistance + epsilon, LaneDistance + LaneLength - epsilon);
