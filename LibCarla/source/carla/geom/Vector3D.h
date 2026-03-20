@@ -66,6 +66,9 @@ namespace geom {
 
     inline Vector3D MakeUnitVector() const {
       const float length = Length();
+      if (length <= 0.0f) {
+        return Vector3D(0.0f, 0.0f, 0.0f);
+      }
       const float k = 1.0f / length;
       return Vector3D(x * k, y * k, z * k);
     }

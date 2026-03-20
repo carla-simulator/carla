@@ -19,6 +19,7 @@
 #include <chrono>
 #include <atomic>
 #include <future>
+#include <stdexcept>
 
 namespace carla {
 namespace rpc {
@@ -127,10 +128,10 @@ namespace detail {
           do {
             status = result.wait_for(std::chrono::milliseconds(100));
           } while (!shutdown_in_progress && (status != std::future_status::ready));
-          if (status==std::future_status::ready) {
+          if (status == std::future_status::ready) {
             return result.get();
           } else {
-            return R();
+            throw std::runtime_error("RPC server is shutting down");
           }
         }
       };
