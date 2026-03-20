@@ -36,7 +36,7 @@ void PrimaryCommands::SendFrameData(carla::Buffer buffer) {
 
 // broadcast to all secondary servers the map to load
 void PrimaryCommands::SendLoadMap(std::string map) {
-  carla::Buffer buf(reinterpret_cast<unsigned char *>(const_cast<char *>(map.c_str())), static_cast<size_t>(map.size() + 1));
+  carla::Buffer buf(reinterpret_cast<const unsigned char *>(map.c_str()), static_cast<size_t>(map.size() + 1));
   _router->Write(MultiGPUCommand::LOAD_MAP, std::move(buf));
 }
 
