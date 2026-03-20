@@ -28,7 +28,7 @@ environmental conditions.
 * Ubuntu 22.04 or 24.04, or Windows 11
 
  >[!NOTE]
-> Ubuntu 22.04 or 24.04, and Windows 11 are required. The Unreal Engine 5.5 version of CARLA will not work on Ubuntu 20.04 or Windows 10 or lower.
+> You must use either Ubuntu 22.04 or 24.04, or Windows 11. The Unreal Engine 5.5 version of CARLA will not work on Ubuntu 20.04 or Windows 10 or lower.
 
 ## Documentation
 
