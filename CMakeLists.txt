@@ -83,6 +83,7 @@ include (${CARLA_WORKSPACE_PATH}/CMake/Util.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Options.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Common.cmake)
 include (${CARLA_WORKSPACE_PATH}/CMake/Dependencies.cmake)
+include (${CARLA_WORKSPACE_PATH}/CMake/CUDA.cmake)
 
 if (BUILD_CARLA_CLIENT OR BUILD_CARLA_SERVER)
   add_subdirectory (LibCarla)

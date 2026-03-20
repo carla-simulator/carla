@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Added NVIDIA RTX 50 series (Blackwell) support with driver 570+, CUDA 12.8+ compatibility, CMake CUDA Toolkit detection, and CDI-based Docker instructions
 * Fix typos in README.md
 * Added actor description as Actor TAGs
 * Create class with functions to import points and polylines from satellite segmentation (#8946, #8949 #8950)
