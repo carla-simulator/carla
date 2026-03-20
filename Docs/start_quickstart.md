@@ -14,7 +14,7 @@ This guide shows how to download and install the packaged version of CARLA. The 
 The following requirements should be fulfilled before installing CARLA:
 
 * __System requirements__: CARLA is built for Windows and Linux systems.
-* __Operating system__: CARLA Unreal Engine 5 version requires **Ubuntu 22.04 or 24.04**, or **Windows 11**.
+* __Operating system__: CARLA Unreal Engine 5 version requires a minimum of **Ubuntu 22.04** or **Windows 11**.
 * __An adequate GPU__: CARLA aims for realistic simulations that require a lot of compute power. We recommend at minimum an NVIDIA RTX 3000 series or better with at least **16 Gb of VRAM**. A dedicated GPU, separate from the GPU used for CARLA, is highly recommended to handle large machine learning workloads. 
 * __GPU drivers__: CARLA Unreal Engine 5 version requires NVIDIA RTX driver release **550 or later for Ubuntu** and NVIDIA RTX driver release **560 or later for Windows**
 * __Disk space__: CARLA requires **130 GB** of hard disk (or SSD) space.
