@@ -56,7 +56,7 @@ token_type PrimaryCommands::SendGetToken(stream_id sensor_id) {
 // send to know if a connection is alive
 void PrimaryCommands::SendIsAlive() {
   std::string msg("Are you alive?");
-  carla::Buffer buf(reinterpret_cast<unsigned char *>(const_cast<char *>(msg.c_str())), static_cast<size_t>(msg.size()));
+  carla::Buffer buf(reinterpret_cast<const unsigned char *>(msg.c_str()), static_cast<size_t>(msg.size()));
   log_info("sending is alive command");
   auto fut = _router->WriteToNext(MultiGPUCommand::YOU_ALIVE, std::move(buf));
   auto response = fut.get();
