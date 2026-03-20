@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Added Ubuntu 24.04 support alongside Ubuntu 22.04
 * Fix typos in README.md
 * Added actor description as Actor TAGs
 * Create class with functions to import points and polylines from satellite segmentation (#8946, #8949 #8950)

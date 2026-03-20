@@ -1,7 +1,7 @@
 # Building CARLA in Linux with Unreal Engine 5.5
 
 !!! note
-    The Unreal Engine 5 version of CARLA requires Ubuntu version 22.04 at minimum. It has not been configured to build on older Ubuntu versions.
+    The Unreal Engine 5 version of CARLA requires Ubuntu 22.04 or 24.04. It has not been configured to build on older Ubuntu versions.
 
 * __[Set up the environment](#set-up-the-environment)__  
 * __[Build and run CARLA UE5](#build-and-run-carla-ue5)__  
