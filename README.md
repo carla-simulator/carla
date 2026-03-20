@@ -25,10 +25,10 @@ environmental conditions.
 * +32 Gb RAM memory 
 * NVIDIA RTX 3070/3080/3090 / NVIDIA RTX 4090 or better
 * 16 Gb or more VRAM
-* Ubuntu 22.04 or Windows 11
+* Ubuntu 22.04 or 24.04, or Windows 11
 
  >[!NOTE]
-> Ubuntu version 22.04 and Windows version 11 are required, the Unreal Engine 5.5 version of CARLA will not work on Ubuntu 20.04 or Windows 10 or lower. 
+> Ubuntu 22.04 or 24.04, and Windows 11 are required. The Unreal Engine 5.5 version of CARLA will not work on Ubuntu 20.04 or Windows 10 or lower.
 
 ## Documentation
 
