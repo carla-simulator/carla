@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Fix ISPC build race condition on Ubuntu 24.04+ by backporting UE5 UBT fixes (#8506)
 * Fix typos in README.md
 * Added actor description as Actor TAGs
 * Create class with functions to import points and polylines from satellite segmentation (#8946, #8949 #8950)

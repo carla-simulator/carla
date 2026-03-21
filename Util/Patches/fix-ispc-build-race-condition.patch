@@ -1,0 +1,75 @@
+--- a/Engine/Source/Programs/UnrealBuildTool/Configuration/UEBuildModuleCPP.cs
++++ b/Engine/Source/Programs/UnrealBuildTool/Configuration/UEBuildModuleCPP.cs
+@@ -463,12 +463,6 @@
+ 				MinFilesUsingPrecompiledHeader = 1;
+ 			}
+ 
+-			// Generate ISPC headers first so C++ can consume them
+-			if (InputFiles.ISPCFiles.Count > 0)
+-			{
+-				CreateHeadersForISPC(ToolChain, ModuleCompileEnvironment, InputFiles.ISPCFiles, IntermediateDirectory, Graph);
+-			}
+-
+ 			// Set up the environment with which to compile the CPP files
+ 			CppCompileEnvironment CompileEnvironment = new(ModuleCompileEnvironment);
+ 
+@@ -500,6 +494,16 @@
+ 				Logger.LogDebug("Module '{ModuleName}' uses PCH '{PCHIncludeFilename}'", Name, CompileEnvironment.PrecompiledHeaderFile);
+ 			}
+ 
++			// Generate ISPC headers before normal c++ actions but after pch since we don't want pch actions to wait for ispc (ispc headers are not allowed in pch)
++			if (InputFiles.ISPCFiles.Count > 0)
++			{
++				IEnumerable<FileItem> ISPCHeaders = ToolChain.GenerateAllISPCHeaders(CompileEnvironment, InputFiles.ISPCFiles, IntermediateDirectory, Graph).GeneratedHeaderFiles;
++				CompileEnvironment.AdditionalPrerequisites.AddRange(ISPCHeaders);
++				ModuleCompileEnvironment.AdditionalPrerequisites.AddRange(ISPCHeaders);
++				CompileEnvironment.UserIncludePaths.Add(IntermediateDirectory);
++				ModuleCompileEnvironment.UserIncludePaths.Add(IntermediateDirectory);
++			}
++
+ 			// Write all the definitions to a separate file
+ 			CreateHeaderForDefinitions(CompileEnvironment, IntermediateDirectory, null, Graph);
+ 
+@@ -779,7 +783,8 @@
+ 			// Compile ISPC files directly
+ 			if (InputFiles.ISPCFiles.Count > 0)
+ 			{
+-				LinkInputFiles.AddRange(ToolChain.CompileAllISPCFiles(ModuleCompileEnvironment, InputFiles.ISPCFiles, IntermediateDirectory, Graph).ObjectFiles);
++				CppCompileEnvironment IspcCompileEnvironment = new(ModuleCompileEnvironment);
++				LinkInputFiles.AddRange(ToolChain.CompileAllISPCFiles(IspcCompileEnvironment, InputFiles.ISPCFiles, IntermediateDirectory, Graph).ObjectFiles);
+ 			}
+ 
+ 			// Compile C files directly. Do not use a PCH here, because a C++ PCH is not compatible with C source files.
+@@ -1862,22 +1867,6 @@
+ 			return null;
+ 		}
+ 
+-		/// <summary>
+-		/// Creates header files from ISPC for inclusion and adds them as dependencies.
+-		/// </summary>
+-		/// <param name="ToolChain">The toolchain to generate the PCH</param>
+-		/// <param name="CompileEnvironment">Compile environment</param>
+-		/// <param name="InputFiles">List of ISPC source files</param>
+-		/// <param name="IntermediateDirectory">Directory to create the intermediate file</param>
+-		/// <param name="Graph">List of actions to be executed. Additional actions will be added to this list.</param>
+-		static void CreateHeadersForISPC(UEToolChain ToolChain, CppCompileEnvironment CompileEnvironment, List<FileItem> InputFiles, DirectoryReference IntermediateDirectory, IActionGraphBuilder Graph)
+-		{
+-			CPPOutput Output = ToolChain.GenerateAllISPCHeaders(CompileEnvironment, InputFiles, IntermediateDirectory, Graph);
+-
+-			CompileEnvironment.AdditionalPrerequisites.AddRange(Output.GeneratedHeaderFiles);
+-			CompileEnvironment.UserIncludePaths.Add(IntermediateDirectory);
+-		}
+-
+ 		static string GetIncludeString(FileItem FileItem)
+ 		{
+ 			string IncludeFileString = FileItem.AbsolutePath;
+@@ -1908,6 +1897,9 @@
+ 				WrapperContents.AppendLine("// PCH for {0}", IncludeFileString);
+ 				WrapperContents.AppendLine("#include \"{0}\"", DefinitionsFileString);
+ 				WrapperContents.AppendLine("#include \"{0}\"", IncludeFileString);
++				WrapperContents.AppendLine("#ifdef __ISPC_ALIGN__");
++				WrapperContents.AppendLine("#error ispc.generated.h files are not allowed in precompiled headers (This is a build time optimization to reduce action dependencies)");
++				WrapperContents.AppendLine("#endif");
+ 			}
+ 
+ 			// Create the item

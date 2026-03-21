@@ -114,6 +114,9 @@ else
     fi
     git clone -b ue5-dev-carla $UE5_URL UnrealEngine5_carla
     pushd UnrealEngine5_carla
+    echo "Applying ISPC build race condition fix..."
+    git apply "$workspace_path/Util/Patches/fix-ispc-build-race-condition.patch" || \
+        echo "Warning: ISPC patch already applied or not needed."
     echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$PWD >> ~/.bashrc
     export CARLA_UNREAL_ENGINE_PATH=$PWD
     echo "Running Unreal Engine pre-build steps..."
