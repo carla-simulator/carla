@@ -12,6 +12,7 @@
 #include "Carla/Vehicle/WheeledVehicleAIController.h"
 #include "TrafficLightComponent.generated.h"
 
+class ACarlaWheeledVehicle;
 class ATrafficLightManager;
 class ATrafficLightGroup;
 class UTrafficLightController;
@@ -94,4 +95,11 @@ private:
   UPROPERTY()
   TArray<AWheeledVehicleAIController*> Vehicles;
 
+  /// Vehicles that entered the trigger box before their AI controller
+  /// was available (e.g. spawned inside the box before set_autopilot).
+  /// Re-checked on the next tick via a timer.
+  UPROPERTY()
+  TArray<ACarlaWheeledVehicle*> PendingVehicles;
+
+  void RetryPendingVehicles();
 };
