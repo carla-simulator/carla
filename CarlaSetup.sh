@@ -76,7 +76,7 @@ if [ $skip_prerequisites -eq 0 ]; then
         python_path=${python_root}/python3
     fi
     echo "Installing prerequisites..."
-    sudo -E bash -x Util/SetupUtils/InstallPrerequisites.sh --python-path=$python_path
+    bash -x Util/SetupUtils/InstallPrerequisites.sh --python-path=$python_path
 else
     echo "Skipping prerequisites install step."
 fi

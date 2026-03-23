@@ -38,8 +38,8 @@ fi
 
 # -- INSTALL APT PACKAGES --
 echo "Installing Ubuntu Packages..."
-apt-get update
-apt-get -y install \
+sudo apt-get update
+sudo apt-get -y install \
     build-essential \
     make \
     ninja-build \
@@ -68,6 +68,9 @@ if [ "$python_path" == "python3" ]; then
         python3-dev \
         python3-pip
 fi
+
+# -- CONFIGURE GIT LFS --
+git lfs install
 
 # -- INSTALL PYTHON PACKAGES --
 echo "Installing Python Packages..."
