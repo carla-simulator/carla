@@ -44,16 +44,14 @@ while true; do
     esac
 done
 
-# Check for root privileges:
+# Check if root is asking for a password:
 if [ -z "$EUID" ]; then
     EUID=$(id -u)
 fi
-if [ "$EUID" -ne 0 ]; then
-    if [ $interactive -eq 0 ]; then
-        if [ $skip_prerequisites -eq 0 ]; then
-            echo "Please run this script as root. Otherwise pass --interactive to be prompted whenever root privileges or Git credentials are needed."
-            exit 1
-        fi
+if [ "$EUID" -ne 0 ] && [ $interactive -eq 0 ] && [ $skip_prerequisites -eq 0 ]; then
+    if ! sudo -n true 2>/dev/null; then
+        echo "Please run 'sudo -v' before running this script, or pass --interactive or --skip-prerequisites."
+        exit 1
     fi
 fi
 
