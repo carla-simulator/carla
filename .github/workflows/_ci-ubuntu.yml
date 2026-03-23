@@ -1,6 +1,10 @@
 on:
   workflow_call:
     inputs:
+      ubuntu-version:
+        type: string
+        required: false
+        default: "22.04"
       python-versions:
         required: true
         type: string
@@ -36,13 +40,13 @@ on:
 
 jobs:
   ubuntu:
-    name: Ubuntu CI/CD
+    name: Ubuntu ${{ inputs.ubuntu-version }} CI/CD
     defaults:
       run:
         shell: bash -leo pipefail {0}
     runs-on: self-hosted:ubuntu-gpu
     container:
-      image: carlasim/carla-builder:ue5-22.04
+      image: carlasim/carla-builder:ue5-${{ inputs.ubuntu-version }}
       options: --runtime=nvidia --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all --volume /home/jenkins/unreal-engine/ue5:/unreal-engine
     env:
       CARLA_UNREAL_ENGINE_PATH: /unreal-engine

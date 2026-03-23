@@ -11,8 +11,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ubuntu-dev:
-    name: Ubuntu Dev
+  ubuntu-22-dev:
+    name: Ubuntu 22.04 Dev
     uses: ./.github/workflows/_ci-ubuntu.yml
     secrets:
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -20,8 +20,26 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
     with:
+      ubuntu-version: "22.04"
       python-versions: "3.10"
       smoke-test-python-versions: "3.10"
+      additional-maps: false
+      upload-package: true
+      upload-replace-latest: true
+      upload-docker: false
+
+  ubuntu-24-dev:
+    name: Ubuntu 24.04 Dev
+    uses: ./.github/workflows/_ci-ubuntu.yml
+    secrets:
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+    with:
+      ubuntu-version: "24.04"
+      python-versions: "3.12"
+      smoke-test-python-versions: "3.12"
       additional-maps: false
       upload-package: true
       upload-replace-latest: true

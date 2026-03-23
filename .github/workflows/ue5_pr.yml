@@ -11,12 +11,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ubuntu-pr:
-    name: Ubuntu PR
+  ubuntu-22-pr:
+    name: Ubuntu 22.04 PR
     uses: ./.github/workflows/_ci-ubuntu.yml
     with:
+      ubuntu-version: "22.04"
       python-versions: "3.10"
       smoke-test-python-versions: "3.10"
+      additional-maps: false
+      upload-package: false
+      upload-replace-latest: false
+      upload-docker: false
+
+  ubuntu-24-pr:
+    name: Ubuntu 24.04 PR
+    uses: ./.github/workflows/_ci-ubuntu.yml
+    with:
+      ubuntu-version: "24.04"
+      python-versions: "3.12"
+      smoke-test-python-versions: "3.12"
       additional-maps: false
       upload-package: false
       upload-replace-latest: false
