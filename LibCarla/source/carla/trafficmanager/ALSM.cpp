@@ -58,6 +58,8 @@ void ALSM::Update() {
 
   const ActorIdSet &destroyed_registered = destroyed_actors.first;
   for (const auto &deletion_id: destroyed_registered) {
+    printf("[TM DESPAWN] EXTERNAL_DESTROY (registered) actor_id=%u\n", deletion_id);
+    fflush(stdout);
     RemoveActor(deletion_id, true);
   }
 
@@ -94,6 +96,10 @@ void ALSM::Update() {
   if (IsVehicleStuck(max_idle_time.first)
       && (current_timestamp.elapsed_seconds - elapsed_last_actor_destruction) > DELTA_TIME_BETWEEN_DESTRUCTIONS
       && hero_actors.find(max_idle_time.first) == hero_actors.end()) {
+    double idle_dur = current_timestamp.elapsed_seconds - idle_time.at(max_idle_time.first);
+    printf("[TM DESPAWN] STUCK actor_id=%u idle=%.1fs t=%.1fs\n",
+        max_idle_time.first, idle_dur, current_timestamp.elapsed_seconds);
+    fflush(stdout);
     registered_vehicles.Destroy(max_idle_time.first);
     RemoveActor(max_idle_time.first, true);
     elapsed_last_actor_destruction = current_timestamp.elapsed_seconds;
@@ -102,6 +108,8 @@ void ALSM::Update() {
   // Destorying vehicles for marked for removal by stages.
   if (parameters.GetOSMMode()) {
     for (const ActorId& actor_id: marked_for_removal) {
+      printf("[TM DESPAWN] DEAD_END (OSM) actor_id=%u\n", actor_id);
+      fflush(stdout);
       registered_vehicles.Destroy(actor_id);
       RemoveActor(actor_id, true);
     }

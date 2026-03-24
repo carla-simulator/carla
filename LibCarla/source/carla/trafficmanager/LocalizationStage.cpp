@@ -203,6 +203,9 @@ void LocalizationStage::Update(const unsigned long index) {
         if (!parameters.GetOSMMode()) {
           std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
         }
+        printf("[TM DESPAWN] DEAD_END actor_id=%u road_id=%u\n",
+            actor_id, waypoint_buffer.back()->GetWaypoint()->GetRoadId());
+        fflush(stdout);
         marked_for_removal.push_back(actor_id);
         break;
       }
@@ -506,6 +509,9 @@ void LocalizationStage::ImportPath(Path &imported_path, Buffer &waypoint_buffer,
         if (!parameters.GetOSMMode()) {
           std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
         }
+        printf("[TM DESPAWN] DEAD_END actor_id=%u road_id=%u\n",
+            actor_id, waypoint_buffer.back()->GetWaypoint()->GetRoadId());
+        fflush(stdout);
         marked_for_removal.push_back(actor_id);
         break;
       }
@@ -569,6 +575,9 @@ void LocalizationStage::ImportRoute(Route &imported_actions, Buffer &waypoint_bu
         if (!parameters.GetOSMMode()) {
           std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
         }
+        printf("[TM DESPAWN] DEAD_END actor_id=%u road_id=%u\n",
+            actor_id, waypoint_buffer.back()->GetWaypoint()->GetRoadId());
+        fflush(stdout);
         marked_for_removal.push_back(actor_id);
         break;
       }
