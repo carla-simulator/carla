@@ -10,6 +10,7 @@
 #include "carla/MsgPackAdaptors.h"
 #include "carla/geom/Transform.h"
 #include "carla/rpc/ActorDescription.h"
+#include "carla/rpc/AttachmentType.h"
 #include "carla/rpc/ActorId.h"
 #include "carla/rpc/TrafficLightState.h"
 #include "carla/rpc/VehicleAckermannControl.h"
@@ -17,6 +18,8 @@
 #include "carla/rpc/VehiclePhysicsControl.h"
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/WalkerControl.h"
+
+#include <string>
 
 #ifdef _MSC_VER
 #pragma warning(push)
@@ -59,11 +62,19 @@ namespace rpc {
         : description(std::move(description)),
           transform(transform),
           parent(parent) {}
+      SpawnActor(ActorDescription description, const geom::Transform &transform, ActorId parent, AttachmentType attachment_type, const std::string& bone)
+        : description(std::move(description)),
+          transform(transform),
+          parent(parent),
+          attachment_type(attachment_type),
+          socket_name(bone) {}
       ActorDescription description;
       geom::Transform transform;
       boost::optional<ActorId> parent;
+      AttachmentType attachment_type;
+      std::string socket_name;
       std::vector<Command> do_after;
-      MSGPACK_DEFINE_ARRAY(description, transform, parent, do_after);
+      MSGPACK_DEFINE_ARRAY(description, transform, parent, attachment_type, socket_name, do_after);
     };
 
     struct DestroyActor : CommandBase<DestroyActor> {

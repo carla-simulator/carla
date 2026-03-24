@@ -8,7 +8,6 @@
 #endif
 
 #include "GenericPlatform/GenericPlatformMath.h"
-//#include "GenericPlatform/GenericPlatformProcess.h"
 #include "GenericPlatform/GenericPlatformFile.h"
 
 #include "Sockets.h"
@@ -33,10 +32,12 @@
 #include "Misc/Paths.h"
 
 
-
-
-
-//#include "Unix/UnixPlatformProcess.h"
+namespace Asio = boost::asio;
+using AsioStreamBuf = boost::asio::streambuf;
+using AsioTCP = boost::asio::ip::tcp;
+using AsioSocket = boost::asio::ip::tcp::socket;
+using AsioAcceptor = boost::asio::ip::tcp::acceptor;
+using AsioEndpoint = boost::asio::ip::tcp::endpoint;
 
 void UMapPreviewUserWidget::CreateTexture()
 {
@@ -49,17 +50,10 @@ void UMapPreviewUserWidget::CreateTexture()
 
 void UMapPreviewUserWidget::ConnectToSocket(FString DatabasePath, FString StylesheetPath, int Size)
 {
-  //FSocket* Socket = FSocket::CreateTCPConnection(nullptr, TEXT("OSMRendererSocket"));
-  Socket = FTcpSocketBuilder(TEXT("OSMRendererSocket")).AsReusable();
-  FIPv4Address RemoteAddress;
-  FIPv4Address::Parse(FIPv4Address::InternalLoopback.ToString(), RemoteAddress);
-  TSharedRef<FInternetAddr> RemoteAddr = ISocketSubsystem::Get(PLATFORM_SOCKETSUBSYSTEM)->CreateInternetAddr();
-  RemoteAddr->SetIp(RemoteAddress.Value);
-  RemoteAddr->SetPort(5000);
-
-  // Connect to the remote server
-  bool Connected = Socket->Connect(*RemoteAddr);
-  if (!Connected)
+  const unsigned int PORT = 5000;
+  SocketPtr = std::make_unique<AsioSocket>(io_service);
+  SocketPtr->connect(AsioEndpoint(AsioTCP::v4(), PORT));
+  if(!SocketPtr->is_open())
   {
     UE_LOG(LogTemp, Error, TEXT("Error connecting to remote server"));
     return;
@@ -67,39 +61,40 @@ void UMapPreviewUserWidget::ConnectToSocket(FString DatabasePath, FString Styles
 
   // Send a message
   FString Message = "-C " + DatabasePath + " " + StylesheetPath + " " + FString::FromInt(Size);
-  SendStr(Message);
+  if( !SendStr(Message) ){
+    return;
+  }
   UE_LOG(LogTemp, Log, TEXT("Configuration Completed"));
 }
 
 void UMapPreviewUserWidget::RenderMap(FString Latitude, FString Longitude, FString Zoom)
 {
- FString Message = "-R " + Latitude + " " + Longitude + " " + Zoom;
-  //FString Message = "-R 40.415 -3.702 100000";
-  SendStr(Message);
+  FString Message = "-R " + Latitude + " " + Longitude + " " + Zoom;
+  if( !SendStr(Message) ){
+    UE_LOG(LogTemp, Log, TEXT("Send Str failed"));
+    return;
+  }
 
   TArray<uint8_t> ReceivedData;
-  uint32 ReceivedDataSize;
-  
-  if(Socket->Wait(ESocketWaitConditions::WaitForRead, FTimespan::FromSeconds(5)))
+  uint32 ReceivedDataSize = 0;
+
   {
-    while(Socket->HasPendingData(ReceivedDataSize))
+    SocketPtr->wait(boost::asio::ip::tcp::socket::wait_read);
+    while (SocketPtr->available())
     {
-      int32 BytesReceived = 0;
+      AsioStreamBuf Buffer;
+      std::size_t BytesReceived =
+        Asio::read(*SocketPtr, Buffer, Asio::transfer_at_least(2));
       TArray<uint8_t> ThisReceivedData;
-      ThisReceivedData.Init(0, FMath::Min(ReceivedDataSize, uint32(512*512*4)));
-      bool bRecv = Socket->Recv(ThisReceivedData.GetData(), ThisReceivedData.Num(), BytesReceived);
-      if (!bRecv)
+      const char* DataPtr = Asio::buffer_cast<const char*>(Buffer.data());
+      for (std::size_t i = 0; i < Buffer.size(); ++i)
       {
-        UE_LOG(LogTemp, Error, TEXT("Error receiving message"));
+        ThisReceivedData.Add(DataPtr[i]);
       }
-      else
-      {
-        UE_LOG(LogTemp, Log, TEXT("Received %d bytes. %d"), BytesReceived, ReceivedDataSize);
-        ReceivedData.Append(ThisReceivedData);
-        UE_LOG(LogTemp, Log, TEXT("Size of Data: %d"), ReceivedData.Num());
-      }
+      ReceivedData.Append(ThisReceivedData);
     }
-    
+    UE_LOG(LogTemp, Log, TEXT("Size of Data: %d"), ReceivedData.Num());
+
     // TODO: Move to function
     if(ReceivedData.Num() > 0)
     {
@@ -115,7 +110,7 @@ void UMapPreviewUserWidget::RenderMap(FString Latitude, FString Longitude, FStri
           Region.DestY = 0;
           Region.Width = Texture->GetSizeX();
           Region.Height = Texture->GetSizeY();
- 
+
           FTexture2DResource* Resource = (FTexture2DResource*)Texture->Resource;
           RHIUpdateTexture2D(Resource->GetTexture2DRHI(), 0, Region, Region.Width * sizeof(uint8_t) * 4, &NewData[0]);
         }
@@ -126,83 +121,85 @@ void UMapPreviewUserWidget::RenderMap(FString Latitude, FString Longitude, FStri
 
 FString UMapPreviewUserWidget::RecvCornersLatLonCoords()
 {
-  SendStr("-L");
-  uint8 TempBuffer[40];
-  int32 BytesReceived = 0;
-  if(Socket->Wait(ESocketWaitConditions::WaitForRead, FTimespan::FromSeconds(5)))
-  {
-    bool bRecv = Socket->Recv(TempBuffer, 40, BytesReceived);
-    if(!bRecv)
-    {
-      UE_LOG(LogTemp, Error, TEXT("Error receiving LatLon message"));
-      return "";
-    }
-    
-    FString CoordStr = FString(UTF8_TO_TCHAR((char*)TempBuffer));
-    return CoordStr;
+  if( !SendStr("-L") ){
+    UE_LOG(LogTemp, Error, TEXT("Error sending message: num bytes mismatch"));
+    return FString();
   }
-  return "";
+
+  AsioStreamBuf Buffer;
+  std::size_t BytesReceived =
+      Asio::read(*SocketPtr, Buffer, Asio::transfer_at_least(2));
+  std::string BytesStr = Asio::buffer_cast<const char*>(Buffer.data());
+
+  FString CoordStr = FString(BytesStr.size(), UTF8_TO_TCHAR(BytesStr.c_str()));
+  UE_LOG(LogTemp, Log, TEXT("Received Coords %s"), *CoordStr);
+  return CoordStr;
 }
 
 void UMapPreviewUserWidget::Shutdown()
 {
   // Close the socket
-  Socket->Close();
+  SocketPtr->close();
 }
 
 void UMapPreviewUserWidget::OpenServer()
 {
-  
-  /*FPlatformProcess::CreateProc(
-      TEXT("/home/adas/carla/osm-world-renderer/build/osm-world-renderer"), 
-      nullptr,  // Args
-      true,     // if true process will have its own window
-      false,     // if true it will be minimized
-      false,    // if true it will be hidden in task bar
-      nullptr,  // filled with PID
-      0,        // priority
-      nullptr,  // directory to place after running the program
-      nullptr   // redirection pipe
-  );*/
-
+  // Todo: automatically spawn the osm renderer process
 }
 
 void UMapPreviewUserWidget::CloseServer()
 {
-  SendStr("-X");
+  if( !SendStr("-X") ){
+    UE_LOG(LogTemp, Error, TEXT("Error sending message"));
+    return;
+  }
 }
 
 bool UMapPreviewUserWidget::SendStr(FString Msg)
 {
-  if(!Socket)
+  if(!SocketPtr)
   {
     UE_LOG(LogTemp, Error, TEXT("Error. No socket."));
     return false;
   }
 
   std::string MessageStr = std::string(TCHAR_TO_UTF8(*Msg));
-  int32 BytesSent = 0;
-  bool bSent = Socket->Send((uint8*)MessageStr.c_str(), MessageStr.size(), BytesSent);
-  if (!bSent)
+  std::size_t BytesSent = 0;
+  try
   {
-    UE_LOG(LogTemp, Error, TEXT("Error sending message"));
+    BytesSent = Asio::write(*SocketPtr, Asio::buffer(MessageStr));
+  }
+  catch (const boost::system::system_error& e)
+  {
+    FString ErrorMessage = e.what();
+    UE_LOG(LogTemp, Error, TEXT("Error sending message: %s"), *ErrorMessage);
+  }
+  if (BytesSent != MessageStr.size())
+  {
+    UE_LOG(LogTemp, Error, TEXT("Error sending message: num bytes mismatch"));
+    return false;
   }
   else
   {
     UE_LOG(LogTemp, Log, TEXT("Sent %d bytes"), BytesSent);
+    return true;
   }
-  return bSent;
 }
 
 void UMapPreviewUserWidget::UpdateLatLonCoordProperties()
 {
   FString CoordStr = RecvCornersLatLonCoords();
+  if(CoordStr.Len() == 0)
+  {
+    UE_LOG(LogTemp, Error, TEXT("Error during update of lat lon coord properties. Check osm server connection or use OSMURL to generate map") );
+    return;
+  }
   UE_LOG(LogTemp, Log, TEXT("Received laton [%s] with size %d"), *CoordStr, CoordStr.Len());
 
   TArray<FString> CoordsArray;
   CoordStr.ParseIntoArray(CoordsArray, TEXT("&"), true);
 
-  check(CoordsArray.Num() >= 4);
+  ensure(CoordsArray.Num() == 4);
 
   TopRightLat = FCString::Atof(*CoordsArray[0]);
   TopRightLon = FCString::Atof(*CoordsArray[1]);

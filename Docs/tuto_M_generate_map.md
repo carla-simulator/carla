@@ -32,7 +32,7 @@ You will need to install RoadRunner. You can follow the [installation guide][rr_
 
 ## Build a map in RoadRunner
 
-The specifics of how to build a map in RoadRunner go beyond the scope of this guide, however, there are video tutorials available in the [RoadRunner documentation][rr_tutorials].
+The specifics of how to build a map in RoadRunner go beyond the scope of this guide, however, there is an introductory tutorial series available on the [MathWorks website][rr_intro_tutorials] and there are video tutorials for specific actions available in the [RoadRunner documentation][rr_tutorials].
 
 __Keep in mind that a map heavy with props can slow the import process significantly.__ This is because Unreal Engine needs to convert every mesh to an Unreal asset. If you plan to import your map into a source build version of CARLA, we highly recommend that you only create the road layout in RoadRunner and leave any customization until after the map has been imported into Unreal Engine. CARLA provides several tools that you can use in the Unreal Engine editor to simplify the customization process.
 
@@ -41,6 +41,7 @@ __Keep in mind that a map heavy with props can slow the import process significa
 ## Export a map in RoadRunner
 
 [rr_tutorials]: https://www.mathworks.com/support/search.html?fq=asset_type_name:video%20category:roadrunner/index&page=1&s_tid=CRUX_topnav
+[rr_intro_tutorials]: https://www.mathworks.com/solutions/automated-driving/roadrunner-tutorial.html
 
 Below is a basic guideline to export your custom map from RoadRunner. You can find more detailed information about how to export to CARLA in [MathWorks' documentation][exportlink].
 

@@ -8,9 +8,12 @@
 
 #include "carla/NonCopyable.h"
 
+#include "carla/client/TrafficLight.h"
+#include "carla/client/World.h"
 #include "carla/geom/Location.h"
 #include "carla/nav/WalkerEvent.h"
 #include "carla/rpc/ActorId.h"
+#include "carla/rpc/TrafficLightState.h"
 
 namespace carla {
 namespace nav {
@@ -47,7 +50,10 @@ namespace nav {
     ~WalkerManager();
 
     /// assign the navigation module
-    void SetNav(Navigation *nav) { _nav = nav; };
+    void SetNav(Navigation *nav);
+
+    /// reference to the simulator to access API functions
+    void SetSimulator(std::weak_ptr<carla::client::detail::Simulator> simulator);
 
     /// create a new walker route
     bool AddWalker(ActorId id);
@@ -74,12 +80,19 @@ namespace nav {
     /// return the navigation object
     Navigation *GetNavigation() { return _nav; };
 
+    /// return the trafficlight affecting that position
+    SharedPtr<carla::client::TrafficLight> GetTrafficLightAffecting(carla::geom::Location UnrealPos, float max_distance = -1.0f);
+
     private:
+
+    void GetAllTrafficLightWaypoints();
 
     EventResult ExecuteEvent(ActorId id, WalkerInfo &info, double delta);
 
     std::unordered_map<ActorId, WalkerInfo> _walkers;
+    std::vector<std::pair<SharedPtr<carla::client::TrafficLight>, carla::geom::Location>> _traffic_lights;
     Navigation *_nav { nullptr };
+    std::weak_ptr<carla::client::detail::Simulator> _simulator;
   };
 
 } // namespace nav

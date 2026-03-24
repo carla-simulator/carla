@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal enabledelayedexpansion
 
 rem BAT script that downloads and installs a ready to use
 rem boost build for CARLA (carla.org).
@@ -66,12 +66,13 @@ rem -- Local Variables ---------------------------------------------------------
 rem ============================================================================
 
 set BOOST_BASENAME=boost-%BOOST_VERSION%
+set BOOST_SHA256SUM="e34756f63abe8ac34b35352743f17d061fcc825969a2dd8458264edb38781782"
 
 set BOOST_TEMP_FOLDER=boost_%BOOST_VERSION:.=_%
 set BOOST_TEMP_FILE=%BOOST_TEMP_FOLDER%.zip
 set BOOST_TEMP_FILE_DIR=%BUILD_DIR%%BOOST_TEMP_FILE%
 
-set BOOST_REPO=https://boostorg.jfrog.io/artifactory/main/release/%BOOST_VERSION%/source/%BOOST_TEMP_FILE%
+set BOOST_REPO=https://archives.boost.io/release/%BOOST_VERSION%/source/%BOOST_TEMP_FILE%
 set BOOST_SRC_DIR=%BUILD_DIR%%BOOST_BASENAME%-source\
 set BOOST_INSTALL_DIR=%BUILD_DIR%%BOOST_BASENAME%-install\
 set BOOST_LIB_DIR=%BOOST_INSTALL_DIR%lib\
@@ -84,16 +85,20 @@ if exist "%BOOST_INSTALL_DIR%" (
     goto already_build
 )
 
+set _checksum=""
+
 if not exist "%BOOST_SRC_DIR%" (
     if not exist "%BOOST_TEMP_FILE_DIR%" (
         echo %FILE_N% Retrieving boost.
         powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%BOOST_REPO%', '%BOOST_TEMP_FILE_DIR%')"
+        call :CheckSumEvaluate %BOOST_TEMP_FILE_DIR%,%BOOST_SHA256SUM%,_checksum
     )
-    if not exist "%BOOST_TEMP_FILE_DIR%" (
+    if "!_checksum!" == "1" (
         echo %FILE_N% Using Boost backup
-        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/%BOOST_TEMP_FILE%', '%BOOST_TEMP_FILE_DIR%')"
+        powershell -Command "(New-Object System.Net.WebClient).DownloadFile('https://carla-releases.s3.us-east-005.backblazeb2.com/Backup/%BOOST_TEMP_FILE%', '%BOOST_TEMP_FILE_DIR%')"
+        call :CheckSumEvaluate %BOOST_TEMP_FILE_DIR%,%BOOST_SHA256SUM%,_checksum
     )
-    if %errorlevel% neq 0 goto error_download
+    if "!_checksum!" == "1" goto error_download
     echo %FILE_N% Extracting boost from "%BOOST_TEMP_FILE%", this can take a while...
     if exist "%ProgramW6432%/7-Zip/7z.exe" (
         "%ProgramW6432%/7-Zip/7z.exe" x "%BOOST_TEMP_FILE_DIR%" -o"%BUILD_DIR%" -y
@@ -197,3 +202,25 @@ rem ============================================================================
     echo %FILE_N% Exiting with error...
     endlocal
     exit /b %errorlevel%
+
+:CheckSumEvaluate
+set filepath=%1
+set checksum=%2
+
+echo %FILE_N% calculating %filepath% checksum...
+
+set PsCommand="(Get-FileHash %filepath%).Hash -eq '%checksum%'"
+
+for /f %%F in ('Powershell -C %PsCommand%') do (
+	set filechecksum=%%F
+)
+
+if %filechecksum% == True (
+	echo %FILE_N% %filepath% checksum OK
+	set "%~3=0"
+    exit /b 0
+) else (
+	echo %FILE_N% %filepath% BAD SHA256 checksum
+	set "%~3=1"
+    exit /b 1
+)

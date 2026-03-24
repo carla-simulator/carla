@@ -41,6 +41,10 @@ namespace geom {
     // -- Other methods --------------------------------------------------------
     // =========================================================================
 
+    auto DistanceSquared(const Location &loc) const {
+      return Math::DistanceSquared(*this, loc);
+    }
+
     auto Distance(const Location &loc) const {
       return Math::Distance(*this, loc);
     }

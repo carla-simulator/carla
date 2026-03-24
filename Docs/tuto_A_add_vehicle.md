@@ -13,7 +13,7 @@ This tutorial details how to add a new vehicle to CARLA. There are two sections,
 ---
 ## Add a 4 wheeled vehicle
 
-Vehicles added to CARLA need to use a __common base skeleton__ which is found [__here__](https://carla-assets.s3.eu-west-3.amazonaws.com/fbx/VehicleSkeleton.rar). This link will download a folder called `VehicleSkeleton.rar` which contains the base skeleton in two different `.fbx` formats, one in ASCII and the other in binary. The format you use will depend on your 3D modeling software requirements.
+Vehicles added to CARLA need to use a __common base skeleton__ which is found [__here__](https://carla-assets.s3.us-east-005.backblazeb2.com/fbx/VehicleSkeleton.rar). This link will download a folder called `VehicleSkeleton.rar` which contains the base skeleton in two different `.fbx` formats, one in ASCII and the other in binary. The format you use will depend on your 3D modeling software requirements.
 
 __The positions of the skeleton bones can be changed but any other manipulation such as rotation, addition of new bones, or changing the current hierarchy will lead to errors. __
 
@@ -52,7 +52,7 @@ We recommend that you divide the vehicle into the following materials:
 - __Lights__: Headlights, indicator lights, etc.
 - __LightGlass_Ext__: A layer of glass that allows visibility from the outside to the inside of the light.
 - __LightGlass_Int__: A layer of glass that allows visibility from the inside to the outside of the light.
-- __LicensePlate__: A rectangular plane of 29x12 cm. You can use the CARLA provided `.fbx` for best results, download it [here](https://carla-assets.s3.eu-west-3.amazonaws.com/fbx/LicensePlate.rar). The texture will be assigned automatically in Unreal Engine.
+- __LicensePlate__: A rectangular plane of 29x12 cm. You can use the CARLA provided `.fbx` for best results, download it [here](https://carla-assets.s3.us-east-005.backblazeb2.com/fbx/LicensePlate.rar). The texture will be assigned automatically in Unreal Engine.
 - __Interior__: Any other details that don't fit in the above sections can go into _Interior_.
 
 Materials should be named using the format `M_CarPart_CarName`, e.g., `M_Bodywork_Mustang`.
@@ -278,7 +278,7 @@ All other parameters such as engine, transmission, steering curve, are the same 
 ---
 ## Add a 2 wheeled vehicle
 
-Adding 2 wheeled vehicles is similar to adding a 4 wheeled one but due to the complexity of the animation you'll need to set up aditional bones to guide the driver's animation. [Here](https://carla-assets.s3.eu-west-3.amazonaws.com/fbx/BikeSkeleton.rar) is the link to the reference skeleton for 2 wheeled vehicles.
+Adding 2 wheeled vehicles is similar to adding a 4 wheeled one but due to the complexity of the animation you'll need to set up aditional bones to guide the driver's animation. [Here](https://carla-assets.s3.us-east-005.backblazeb2.com/fbx/BikeSkeleton.rar) is the link to the reference skeleton for 2 wheeled vehicles.
 
 As with the 4 wheeled vehicles, orient the model towards positive "x" and every bone axis towards
 positive x and with the z axis facing upwards.

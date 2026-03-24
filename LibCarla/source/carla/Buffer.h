@@ -26,6 +26,7 @@
 namespace carla {
 
   class BufferPool;
+  class BufferView;
 
   /// A piece of raw data.
   ///
@@ -360,6 +361,7 @@ namespace carla {
     void ReuseThisBuffer();
 
     friend class BufferPool;
+    friend class BufferView;
 
     std::weak_ptr<BufferPool> _parent_pool;
 

@@ -9,6 +9,7 @@
 #include "Carla/Actor/ActorInfo.h"
 #include "Carla/Actor/ActorData.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Vehicle/VehicleTelemetryData.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Traffic/TrafficLightState.h"
 
@@ -225,6 +226,8 @@ public:
 
   virtual ECarlaServerResponse SetActorSimulatePhysics(bool bEnabled);
 
+  virtual ECarlaServerResponse SetActorCollisions(bool bEnabled);
+
   virtual ECarlaServerResponse SetActorEnableGravity(bool bEnabled);
 
   // Vehicle functions
@@ -320,6 +323,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse GetVehicleTelemetryData(FVehicleTelemetryData&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse ShowVehicleDebugTelemetry(bool)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -337,6 +345,11 @@ public:
 
   virtual ECarlaServerResponse EnableChronoPhysics(uint64_t, float,
       const FString&, const FString&, const FString&, const FString&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse RestorePhysXPhysics()
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -409,6 +422,11 @@ public:
   }
 
   virtual ECarlaServerResponse GetPoseFromAnimation()
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse SetActorDead()
   {
     return ECarlaServerResponse::ActorTypeMismatch;
   }
@@ -515,6 +533,8 @@ public:
 
   virtual ECarlaServerResponse SetActorAutopilot(bool bEnabled, bool bKeepState = false) final;
 
+  virtual ECarlaServerResponse GetVehicleTelemetryData(FVehicleTelemetryData&) final;
+
   virtual ECarlaServerResponse ShowVehicleDebugTelemetry(bool bEnabled) final;
 
   virtual ECarlaServerResponse EnableCarSim(const FString& SimfilePath) final;
@@ -525,6 +545,8 @@ public:
       uint64_t MaxSubsteps, float MaxSubstepDeltaTime,
       const FString& VehicleJSON, const FString& PowertrainJSON,
       const FString& TireJSON, const FString& BaseJSONPath) final;
+
+  virtual ECarlaServerResponse RestorePhysXPhysics();
 };
 
 class FSensorActor : public FCarlaActor
@@ -607,6 +629,8 @@ public:
   virtual ECarlaServerResponse BlendPose(float Blend);
 
   virtual ECarlaServerResponse GetPoseFromAnimation();
+
+  virtual ECarlaServerResponse SetActorDead();
 };
 
 class FOtherActor : public FCarlaActor

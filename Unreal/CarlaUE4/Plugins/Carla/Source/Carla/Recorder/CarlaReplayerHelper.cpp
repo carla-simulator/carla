@@ -202,7 +202,7 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
   }
 
   // check to ignore Hero or Spectator
-  if ((bIgnoreHero && IsHero) || 
+  if ((bIgnoreHero && IsHero) ||
       (bIgnoreSpectator && ActorDesc.Id.StartsWith("spectator")))
   {
     return std::make_pair(3, 0);
@@ -218,20 +218,30 @@ std::pair<int, uint32_t> CarlaReplayerHelper::ProcessReplayerEventAdd(
   if (result.first != 0)
   {
     // disable physics and autopilot on vehicles
-    if (result.second->GetActorType() == FCarlaActor::ActorType::Vehicle)
+    if (result.second->GetActorType() == FCarlaActor::ActorType::Vehicle ||
+        result.second->GetActorType() == FCarlaActor::ActorType::Walker)
     {
       // ignore hero ?
       if (!(bIgnoreHero && IsHero))
       {
         // disable physics
         SetActorSimulatePhysics(result.second, false);
-        // disable autopilot
-        SetActorAutopilot(result.second, false, false);
+        // disable collisions
+        result.second->GetActor()->SetActorEnableCollision(true);
+        auto RootComponent = Cast<UPrimitiveComponent>(
+            result.second->GetActor()->GetRootComponent());
+        RootComponent->SetSimulatePhysics(false);
+        RootComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+        // disable autopilot for vehicles
+        if (result.second->GetActorType() == FCarlaActor::ActorType::Vehicle)
+          SetActorAutopilot(result.second, false, false);
       }
       else
       {
-        // reenable physics just in case
+        // enable physics just in case
         SetActorSimulatePhysics(result.second, true);
+        // enable collisions
+        result.second->GetActor()->SetActorEnableCollision(true);
       }
     }
     return std::make_pair(result.first, result.second->GetActorId());
@@ -290,7 +300,7 @@ bool CarlaReplayerHelper::ProcessReplayerEventParent(uint32_t ChildId, uint32_t 
 }
 
 // reposition actors
-bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per, double DeltaTime)
+bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per, double DeltaTime, bool bIgnoreSpectator)
 {
   check(Episode != nullptr);
   FCarlaActor* CarlaActor = Episode->FindCarlaActor(Pos1.DatabaseId);
@@ -298,6 +308,11 @@ bool CarlaReplayerHelper::ProcessReplayerPosition(CarlaRecorderPosition Pos1, Ca
   FRotator Rotation;
   if(CarlaActor)
   {
+    //Hot fix to avoid spectator we should investigate why this case is possible here
+    if(bIgnoreSpectator && CarlaActor->GetActor()->GetClass()->GetFName().ToString().Contains("Spectator"))
+    {
+      return false;
+    }
     // check to assign first position or interpolate between both
     if (Per == 0.0)
     {
@@ -407,6 +422,24 @@ void CarlaReplayerHelper::ProcessReplayerAnimVehicle(CarlaRecorderAnimVehicle Ve
     Control.Gear = Vehicle.Gear;
     Control.bManualGearShift = false;
     CarlaActor->ApplyControlToVehicle(Control, EVehicleInputPriority::User);
+  }
+}
+
+// set the openings and closings of vehicle doors
+void CarlaReplayerHelper::ProcessReplayerDoorVehicle(CarlaRecorderDoorVehicle DoorVehicle)
+{
+  check(Episode != nullptr);
+  FCarlaActor * CarlaActor = Episode->FindCarlaActor(DoorVehicle.DatabaseId);
+  if (CarlaActor)
+  {
+    ACarlaWheeledVehicle * Vehicle = Cast<ACarlaWheeledVehicle>(CarlaActor->GetActor());
+    if (Vehicle) {
+      if(DoorVehicle.bIsOpen){
+        Vehicle->OpenDoor(static_cast<EVehicleDoor>(DoorVehicle.Doors));
+      }else{
+        Vehicle->CloseDoor(static_cast<EVehicleDoor>(DoorVehicle.Doors));
+      }
+    }
   }
 }
 

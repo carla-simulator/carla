@@ -15,6 +15,7 @@
 #include "CarlaRecorderAnimVehicleWheels.h"
 #include "CarlaRecorderLightVehicle.h"
 #include "CarlaRecorderLightScene.h"
+#include "CarlaRecorderDoorVehicle.h"	
 #include "CarlaRecorderWalkerBones.h"
 
 #include <unordered_map>
@@ -51,7 +52,7 @@ public:
   bool ProcessReplayerEventParent(uint32_t ChildId, uint32_t ParentId);
 
   // reposition actors
-  bool ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per, double DeltaTime);
+  bool ProcessReplayerPosition(CarlaRecorderPosition Pos1, CarlaRecorderPosition Pos2, double Per, double DeltaTime, bool bIgnoreSpectator);
 
   // replay event for traffic light state
   bool ProcessReplayerStateTrafficLight(CarlaRecorderStateTrafficLight State);
@@ -64,6 +65,9 @@ public:
 
   // set the animation for walkers
   void ProcessReplayerAnimWalker(CarlaRecorderAnimWalker Walker);
+
+  // set the openings and closing of vehicle doors
+  void ProcessReplayerDoorVehicle(CarlaRecorderDoorVehicle DoorVehicle);
 
   // set the animation for bikers
   void ProcessReplayerAnimBiker(CarlaRecorderAnimBiker Biker);

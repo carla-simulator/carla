@@ -34,6 +34,9 @@ static bool ValidateStaticMesh(UStaticMesh *Mesh)
   for (int i = 0; i < Mesh->StaticMaterials.Num(); i++)
   {
     UMaterialInterface *Material = Mesh->GetMaterial(i);
+    if (!Material) {
+      Material = UMaterial::GetDefaultMaterial(MD_Surface);
+    }
     const FString MaterialName = Material->GetName();
 
     if (MaterialName.Contains(TEXT("light"), ESearchCase::IgnoreCase) ||

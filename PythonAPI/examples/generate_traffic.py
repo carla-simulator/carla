@@ -43,7 +43,7 @@ def get_actor_blueprints(world, filter, generation):
     try:
         int_generation = int(generation)
         # Check if generation is in available generations
-        if int_generation in [1, 2]:
+        if int_generation in [1, 2, 3]:
             bps = [x for x in bps if int(x.get_attribute('generation')) == int_generation]
             return bps
         else:
@@ -279,8 +279,11 @@ def main():
         for spawn_point in spawn_points:
             walker_bp = random.choice(blueprintsWalkers)
             # set as not invincible
+            probability = random.randint(0,100 + 1);
             if walker_bp.has_attribute('is_invincible'):
                 walker_bp.set_attribute('is_invincible', 'false')
+            if walker_bp.has_attribute('can_use_wheelchair') and probability < 11:
+                walker_bp.set_attribute('use_wheelchair', 'true')
             # set the max speed
             if walker_bp.has_attribute('speed'):
                 if (random.random() > percentagePedestriansRunning):

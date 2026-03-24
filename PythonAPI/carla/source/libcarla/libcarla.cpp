@@ -139,8 +139,8 @@ std::vector<T> PythonLitstToVector(boost::python::list &input) {
     }
 
 #define CALL_RETURNING_OPTIONAL_WITHOUT_GIL(cls, fn) +[](const cls &self) { \
-      carla::PythonUtil::ReleaseGIL unlock; \
-      auto optional = self.fn(); \
+      auto call = CONST_CALL_WITHOUT_GIL(cls, fn); \
+      auto optional = call(self); \
       return optional.has_value() ? boost::python::object(*optional) : boost::python::object(); \
     }
 
@@ -216,6 +216,7 @@ static auto MakeCallback(boost::python::object callback) {
   };
 }
 
+#include "V2XData.cpp"
 #include "Geom.cpp"
 #include "Actor.cpp"
 #include "Blueprint.cpp"

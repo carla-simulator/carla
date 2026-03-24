@@ -69,7 +69,11 @@
       doc: >
         Links another command to be executed right after. It allows to ease very common flows such as spawning a set of vehicles by command and then using this method to set them to autopilot automatically.  
     # --------------------------------------
-
+  - class_name: FutureActor
+    # - DESCRIPTION ------------------------
+    doc: >
+      A utility object used to reference an actor that will be created in the command in the previous step, it has no parameters or methods.
+    # --------------------------------------
   - class_name: DestroyActor
     # - DESCRIPTION ------------------------
     doc: >

@@ -27,7 +27,7 @@ void Router::Stop() {
 }
 
 Router::Router(uint16_t port) :
-  _next(0) { 
+  _next(0) {
 
   _endpoint = boost::asio::ip::tcp::endpoint(boost::asio::ip::address::from_string("0.0.0.0"), port);
   _listener = std::make_shared<carla::multigpu::Listener>(_pool.io_context(), _endpoint);
@@ -37,20 +37,20 @@ void Router::SetCallbacks() {
   // prepare server
   std::weak_ptr<Router> weak = shared_from_this();
 
-  carla::multigpu::Listener::callback_function_type on_open = [=](std::shared_ptr<carla::multigpu::Primary> session) { 
+  carla::multigpu::Listener::callback_function_type on_open = [=](std::shared_ptr<carla::multigpu::Primary> session) {
     auto self = weak.lock();
     if (!self) return;
     self->ConnectSession(session);
   };
 
-  carla::multigpu::Listener::callback_function_type on_close = [=](std::shared_ptr<carla::multigpu::Primary> session) { 
+  carla::multigpu::Listener::callback_function_type on_close = [=](std::shared_ptr<carla::multigpu::Primary> session) {
     auto self = weak.lock();
     if (!self) return;
-    self->DisconnectSession(session); 
+    self->DisconnectSession(session);
   };
 
-  carla::multigpu::Listener::callback_function_type_response on_response = 
-    [=](std::shared_ptr<carla::multigpu::Primary> session, carla::Buffer buffer) { 
+  carla::multigpu::Listener::callback_function_type_response on_response =
+    [=](std::shared_ptr<carla::multigpu::Primary> session, carla::Buffer buffer) {
       auto self = weak.lock();
       if (!self) return;
       std::lock_guard<std::mutex> lock(self->_mutex);
@@ -89,7 +89,7 @@ void Router::ConnectSession(std::shared_ptr<Primary> session) {
   _sessions.emplace_back(std::move(session));
   log_info("Connected secondary servers:", _sessions.size());
   // run external callback for new connections
-  if (_callback) 
+  if (_callback)
     _callback();
 }
 
@@ -115,9 +115,11 @@ void Router::Write(MultiGPUCommand id, Buffer &&buffer) {
   header.id = id;
   header.size = buffer.size();
   Buffer buf_header((uint8_t *) &header, sizeof(header));
-  
-  auto message = Primary::MakeMessage(std::move(buf_header), std::move(buffer));
-  
+
+  auto view_header = carla::BufferView::CreateFrom(std::move(buf_header));
+  auto view_data = carla::BufferView::CreateFrom(std::move(buffer));
+  auto message = Primary::MakeMessage(view_header, view_data);
+
   // write to multiple servers
   std::lock_guard<std::mutex> lock(_mutex);
   for (auto &s : _sessions) {
@@ -134,7 +136,9 @@ std::future<SessionInfo> Router::WriteToNext(MultiGPUCommand id, Buffer &&buffer
   header.size = buffer.size();
   Buffer buf_header((uint8_t *) &header, sizeof(header));
 
-  auto message = Primary::MakeMessage(std::move(buf_header), std::move(buffer));
+  auto view_header = carla::BufferView::CreateFrom(std::move(buf_header));
+  auto view_data = carla::BufferView::CreateFrom(std::move(buffer));
+  auto message = Primary::MakeMessage(view_header, view_data);
 
   // create the promise for the posible answer
   auto response = std::make_shared<std::promise<SessionInfo>>();
@@ -155,6 +159,42 @@ std::future<SessionInfo> Router::WriteToNext(MultiGPUCommand id, Buffer &&buffer
   }
   ++_next;
   return response->get_future();
+}
+
+std::future<SessionInfo> Router::WriteToOne(std::weak_ptr<Primary> server, MultiGPUCommand id, Buffer &&buffer) {
+  // define the command header
+  CommandHeader header;
+  header.id = id;
+  header.size = buffer.size();
+  Buffer buf_header((uint8_t *) &header, sizeof(header));
+
+  auto view_header = carla::BufferView::CreateFrom(std::move(buf_header));
+  auto view_data = carla::BufferView::CreateFrom(std::move(buffer));
+  auto message = Primary::MakeMessage(view_header, view_data);
+
+  // create the promise for the posible answer
+  auto response = std::make_shared<std::promise<SessionInfo>>();
+
+  // write to the specific server only
+  std::lock_guard<std::mutex> lock(_mutex);
+  auto s = server.lock();
+  if (s) {
+    _promises[s.get()] = response;
+    s->Write(message);
+  }
+  return response->get_future();
+}
+
+std::weak_ptr<Primary> Router::GetNextServer() {
+  std::lock_guard<std::mutex> lock(_mutex);
+  if (_next >= _sessions.size()) {
+    _next = 0;
+  }
+  if (_next < _sessions.size()) {
+    return std::weak_ptr<Primary>(_sessions[_next]);
+  } else {
+    return std::weak_ptr<Primary>();
+  }
 }
 
 } // namespace multigpu

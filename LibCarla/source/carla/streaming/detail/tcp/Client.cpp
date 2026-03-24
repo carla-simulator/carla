@@ -15,7 +15,6 @@
 #include <boost/asio/connect.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
-#include <boost/asio/post.hpp>
 #include <boost/asio/bind_executor.hpp>
 
 #include <exception>
@@ -86,7 +85,6 @@ namespace tcp {
 
   void Client::Connect() {
     auto self = shared_from_this();
-    boost::asio::post(_strand, [this, self]() {
       if (_done) {
         return;
       }
@@ -139,18 +137,15 @@ namespace tcp {
 
       log_debug("streaming client: connecting to", ep);
       _socket.async_connect(ep, boost::asio::bind_executor(_strand, handle_connect));
-    });
   }
 
   void Client::Stop() {
     _connection_timer.cancel();
     auto self = shared_from_this();
-    boost::asio::post(_strand, [this, self]() {
       _done = true;
       if (_socket.is_open()) {
         _socket.close();
       }
-    });
   }
 
   void Client::Reconnect() {
@@ -165,7 +160,6 @@ namespace tcp {
 
   void Client::ReadData() {
     auto self = shared_from_this();
-    boost::asio::post(_strand, [this, self]() {
       if (_done) {
         return;
       }
@@ -182,7 +176,7 @@ namespace tcp {
           // Move the buffer to the callback function and start reading the next
           // piece of data.
           // log_debug("streaming client: success reading data, calling the callback");
-          boost::asio::post(_strand, [self, message]() { self->_callback(message->pop()); });
+          self->_callback(message->pop());
           ReadData();
         } else {
           // As usual, if anything fails start over from the very top.
@@ -219,7 +213,6 @@ namespace tcp {
           _socket,
           message->size_as_buffer(),
           boost::asio::bind_executor(_strand, handle_read_header));
-    });
   }
 
 } // namespace tcp

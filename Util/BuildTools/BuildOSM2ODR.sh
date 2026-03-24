@@ -14,8 +14,8 @@ END
 REMOVE_INTERMEDIATE=false
 BUILD_OSM2ODR=false
 GIT_PULL=true
-CURRENT_OSM2ODR_COMMIT=03f2f1de6dcbfde41f2af464829d96b582fc2909
-OSM2ODR_BRANCH=carla_osm2odr
+CURRENT_OSM2ODR_COMMIT=1835e1e9538d0778971acc8b19b111834aae7261
+OSM2ODR_BRANCH=aaron/defaultsidewalkwidth
 OSM2ODR_REPO=https://github.com/carla-simulator/sumo.git
 
 OPTS=`getopt -o h --long help,rebuild,build,clean,carsim,no-pull -n 'parse-options' -- "$@"`
@@ -76,18 +76,17 @@ fi
 
 if ${BUILD_OSM2ODR} ; then
   log "Building OSM2ODR."
-  # [ ! -d ${OSM2ODR_BUILD_FOLDER} ] && mkdir ${OSM2ODR_BUILD_FOLDER}
-  if ${GIT_PULL} ; then
-    if [ ! -d ${OSM2ODR_SOURCE_FOLDER} ] ; then
-      git clone -b ${OSM2ODR_BRANCH} ${OSM2ODR_REPO} ${OSM2ODR_SOURCE_FOLDER}
-    fi
-    cd ${OSM2ODR_SOURCE_FOLDER}
-    git fetch
-    git checkout ${CURRENT_OSM2ODR_COMMIT}
+  if [ ! -d ${OSM2ODR_SOURCE_FOLDER} ] ; then
+    cd ${CARLA_BUILD_FOLDER}
+    curl --retry 5 --retry-max-time 120 -L -o OSM2ODR.zip https://github.com/carla-simulator/sumo/archive/${CURRENT_OSM2ODR_COMMIT}.zip
+    unzip -qq OSM2ODR.zip
+    rm -f OSM2ODR.zip
+    mv sumo-${CURRENT_OSM2ODR_COMMIT} ${OSM2ODR_SOURCE_FOLDER}
   fi
 
   mkdir -p ${OSM2ODR_BUILD_FOLDER}
   cd ${OSM2ODR_BUILD_FOLDER}
+
 
   export CC="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang"
   export CXX="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin/clang++"
@@ -101,7 +100,7 @@ if ${BUILD_OSM2ODR} ; then
       -DPROJ_LIBRARY=${CARLA_BUILD_FOLDER}/proj-install/lib/libproj.a \
       -DXercesC_INCLUDE_DIR=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-install/include \
       -DXercesC_LIBRARY=${CARLA_BUILD_FOLDER}/xerces-c-3.2.3-install/lib/libxerces-c.a
-  
+
   ninja osm2odr
   ninja install
 
@@ -111,7 +110,7 @@ if ${BUILD_OSM2ODR} ; then
   LLVM_BASENAME=llvm-8.0
   LLVM_INCLUDE="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
   LLVM_LIBPATH="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
-  
+
   echo $LLVM_INCLUDE
   echo $LLVM_LIBPATH
 

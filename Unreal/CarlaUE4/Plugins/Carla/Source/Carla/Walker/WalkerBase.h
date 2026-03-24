@@ -16,9 +16,21 @@ class CARLA_API AWalkerBase : public ACharacter
 
   GENERATED_BODY()
 
+  AWalkerBase(const FObjectInitializer &ObjectInitializer);
 public:
 
   UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
   bool bAlive = true;
 
+  UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
+  float AfterLifeSpan = 10.0f;
+
+  UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
+  bool bUsesWheelChair = false;
+
+  UFUNCTION(BlueprintCallable)
+  void StartDeathLifeSpan()
+  {
+    SetLifeSpan(AfterLifeSpan);
+  }
 };

@@ -14,6 +14,7 @@
 #include "carla/rpc/VehicleDoor.h"
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
+#include "carla/rpc/VehicleTelemetryData.h"
 #include "carla/rpc/VehicleWheels.h"
 #include "carla/trafficmanager/TrafficManager.h"
 
@@ -35,6 +36,7 @@ namespace client {
     using Control = rpc::VehicleControl;
     using AckermannControl = rpc::VehicleAckermannControl;
     using PhysicsControl = rpc::VehiclePhysicsControl;
+    using TelemetryData = rpc::VehicleTelemetryData;
     using LightState = rpc::VehicleLightState::LightState;
     using TM = traffic_manager::TrafficManager;
     using VehicleDoor = rpc::VehicleDoor;
@@ -45,6 +47,11 @@ namespace client {
 
     /// Switch on/off this vehicle's autopilot.
     void SetAutopilot(bool enabled = true, uint16_t tm_port = TM_DEFAULT_PORT);
+
+    /// Return the telemetry data for this vehicle.
+    ///
+    /// @warning This function does call the simulator.
+    TelemetryData GetTelemetryData() const;
 
     /// Switch on/off this vehicle's autopilot.
     void ShowDebugTelemetry(bool enabled = true);
@@ -136,6 +143,8 @@ namespace client {
         std::string PowertrainJSON = "",
         std::string TireJSON = "",
         std::string BaseJSONPath = "");
+
+    void RestorePhysXPhysics();
 
     /// Returns the failure state of the vehicle
     rpc::VehicleFailureState GetFailureState() const;

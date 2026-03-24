@@ -76,7 +76,7 @@ CARLA forum</a>
 
 > CARLA is a performance demanding software. At the very minimum it requires a 6GB GPU or, even better, a dedicated GPU capable of running Unreal Engine.  
 >
-> Take a look at [Unreal Engine's recommended hardware](https://www.ue4community.wiki/recommended-hardware-x1p9qyg0).
+> Take a look at [Unreal Engine's recommended hardware](https://dev.epicgames.com/documentation/en-us/unreal-engine/hardware-and-software-specifications-for-unreal-engine).
 
 ---
 
@@ -365,7 +365,7 @@ CARLA forum</a>
 
 >In Windows it will be the default Python version for:
 
->       py -3 --version
+>       python --version
 
 >Make sure you are running your scripts with the version of Python that corresponds to your `.egg` file.
 >In Linux, you may also need to set your Python path to point to the CARLA `.egg`. To do this, run the following command:

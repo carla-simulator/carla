@@ -12,6 +12,10 @@ AWS_COPY="aws s3 cp"
 DOCKER="docker"
 UNTAR="tar -xvzf"
 UPLOAD_MAPS=true
+PROFILE="--profile Jenkins-CVC"
+ENDPOINT="--endpoint-url=https://s3.us-east-005.backblazeb2.com/"
+TEST=false
+
 
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
@@ -21,12 +25,15 @@ DOC_STRING="Upload latest build to S3."
 
 USAGE_STRING="Usage: $0 [-h|--help] [--replace-latest] [--docker-push] [--dry-run]"
 
-OPTS=`getopt -o h --long help,replace-latest,docker-push,dry-run -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,replace-latest,docker-push,dry-run,test -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --test )
+      TEST=true
+      shift ;;
     --replace-latest )
       REPLACE_LATEST=true;
       shift ;;
@@ -86,6 +93,25 @@ if [ ! -f ${LATEST_PACKAGE_PATH} ]; then
   fatal_error "Latest package not found, please run 'make package'."
 fi
 
+
+# ==============================================================================
+# -- TEST --------------------------------------------------------------------
+# ==============================================================================
+
+if ${TEST} ; then
+  LATEST_PACKAGE=test_CARLA_${REPOSITORY_TAG}.tar.gz
+  LATEST_PACKAGE_PATH=./${LATEST_PACKAGE}
+  LATEST_PACKAGE2=test_AdditionalMaps_${REPOSITORY_TAG}.tar.gz
+  LATEST_PACKAGE_PATH2=./${LATEST_PACKAGE2}
+
+  DEPLOY_NAME=test_CARLA_${REPOSITORY_TAG}.tar.gz
+  DEPLOY_NAME2=test_AdditionalMaps_${REPOSITORY_TAG}.tar.gz
+
+  touch ${LATEST_PACKAGE}
+  touch ${LATEST_PACKAGE2}
+
+fi
+
 # ==============================================================================
 # -- Upload --------------------------------------------------------------------
 # ==============================================================================
@@ -93,10 +119,10 @@ fi
 DEPLOY_URI=${S3_PREFIX}/${DEPLOY_NAME}
 DEPLOY_URI2=${S3_PREFIX}/${DEPLOY_NAME2}
 
-${AWS_COPY} ${LATEST_PACKAGE_PATH} ${DEPLOY_URI}
+${AWS_COPY} ${LATEST_PACKAGE_PATH} ${DEPLOY_URI} ${ENDPOINT} ${PROFILE}
 log "Latest build uploaded to ${DEPLOY_URI}."
 
-${AWS_COPY} ${LATEST_PACKAGE_PATH2} ${DEPLOY_URI2}
+${AWS_COPY} ${LATEST_PACKAGE_PATH2} ${DEPLOY_URI2} ${ENDPOINT} ${PROFILE}
 log "Latest build uploaded to ${DEPLOY_URI2}."
 
 # ==============================================================================
@@ -105,10 +131,10 @@ log "Latest build uploaded to ${DEPLOY_URI2}."
 
 if ${REPLACE_LATEST} ; then
 
-  ${AWS_COPY} ${DEPLOY_URI} ${LATEST_DEPLOY_URI}
+  ${AWS_COPY} ${DEPLOY_URI} ${LATEST_DEPLOY_URI} ${ENDPOINT} ${PROFILE}
   log "Latest build uploaded to ${LATEST_DEPLOY_URI}."
   
-  ${AWS_COPY} ${DEPLOY_URI2} ${LATEST_DEPLOY_URI2}
+  ${AWS_COPY} ${DEPLOY_URI2} ${LATEST_DEPLOY_URI2} ${ENDPOINT} ${PROFILE}
   log "Latest build uploaded to ${LATEST_DEPLOY_URI2}."
 
 fi

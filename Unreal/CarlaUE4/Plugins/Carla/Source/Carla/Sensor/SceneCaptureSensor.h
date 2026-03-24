@@ -104,7 +104,7 @@ struct FCameraGBufferFloat
   {
     return Stream.MakeAsyncDataStream(Self, Self.GetEpisode().GetElapsedGameTime());
   }
-  
+
   mutable bool bIsUsed = false;
   FDataStream Stream;
 };
@@ -420,7 +420,7 @@ public:
   } CameraGBuffers;
 
 protected:
-    
+
   void CaptureSceneExtended();
 
   virtual void SendGBufferTextures(FGBufferRequest& GBuffer);
@@ -521,7 +521,7 @@ private:
       }
       SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
-      GBufferStream.Send(
+      GBufferStream.SerializeAndSend(
         CameraGBuffer,
         std::move(Buffer),
         ViewSize.X,

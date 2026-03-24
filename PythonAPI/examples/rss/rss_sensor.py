@@ -334,6 +334,9 @@ class RssSensor(object):
             self.map_log_level = self.map_log_level-1
         self.sensor.set_map_log_level(self.map_log_level)
 
+    def drop_route(self):
+        self.sensor.drop_route()
+
     @staticmethod
     def get_default_parameters():
         ego_dynamics = ad.rss.world.RssDynamics()

@@ -10,6 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "FileHelpers.h"
+#include "EditorLevelLibrary.h"
 #include "Components/PrimitiveComponent.h"
 
 void UHoudiniImporterWidget::CreateSubLevels(ALargeMapManager* LargeMapManager)
@@ -17,11 +18,14 @@ void UHoudiniImporterWidget::CreateSubLevels(ALargeMapManager* LargeMapManager)
 
 }
 
-void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ALargeMapManager* LargeMapManager)
+void UHoudiniImporterWidget::MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Actors, ALargeMapManager* LargeMapManager)
 {
   TMap<FCarlaMapTile*, TArray<AActor*>> ActorsToMove;
   for (AActor* Actor : Actors)
   {
+    if (Actor == nullptr) {
+      continue;
+    }
     UHierarchicalInstancedStaticMeshComponent* Component
         = Cast<UHierarchicalInstancedStaticMeshComponent>(
           Actor->GetComponentByClass(
@@ -43,8 +47,8 @@ void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ALarge
     FCarlaMapTile* Tile = LargeMapManager->GetCarlaMapTile(ActorLocation);
     if(!Tile)
     {
-      UE_LOG(LogCarlaTools, Error, TEXT("Error: actor in location %s is outside the map"),
-          *ActorLocation.ToString());
+      UE_LOG(LogCarlaTools, Error, TEXT("Error: actor %s in location %s is outside the map"),
+          *Actor->GetName(),*ActorLocation.ToString());
       continue;
     }
 
@@ -67,22 +71,65 @@ void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ALarge
     {
       continue;
     }
-    UWorld* World = ActorList[0]->GetWorld();
+
+    UWorld* World = UEditorLevelLibrary::GetEditorWorld();
     ULevelStreamingDynamic* StreamingLevel = Tile->StreamingLevel;
-    UE_LOG(LogCarlaTools, Log, TEXT("Got Tile %s in location %s"),
-        *StreamingLevel->PackageNameToLoad.ToString(), *Tile->Location.ToString());
     StreamingLevel->bShouldBlockOnLoad = true;
     StreamingLevel->SetShouldBeVisible(true);
     StreamingLevel->SetShouldBeLoaded(true);
-    ULevelStreaming* Level = 
+    ULevelStreaming* Level =
         UEditorLevelUtils::AddLevelToWorld(
         World, *Tile->Name, ULevelStreamingDynamic::StaticClass(), FTransform());
-
     int MovedActors = UEditorLevelUtils::MoveActorsToLevel(ActorList, Level, false, false);
     // StreamingLevel->SetShouldBeLoaded(false);
     UE_LOG(LogCarlaTools, Log, TEXT("Moved %d actors"), MovedActors);
     FEditorFileUtils::SaveDirtyPackages(false, true, true, false, false, false, nullptr);
     UEditorLevelUtils::RemoveLevelFromWorld(Level->GetLoadedLevel());
+  }
+
+  GEngine->PerformGarbageCollectionAndCleanupActors();
+  FText TransResetText(FText::FromString("Clean up after Move actors to sublevels"));
+  if ( GEditor->Trans )
+  {
+    GEditor->Trans->Reset(TransResetText);
+    GEditor->Cleanse(true, true, TransResetText);
+  }
+}
+
+void UHoudiniImporterWidget::ForceStreamingLevelsToUnload( ALargeMapManager* LargeMapManager )
+{
+  UWorld* World = UEditorLevelLibrary::GetGameWorld();
+
+  FIntVector NumTilesInXY  = LargeMapManager->GetNumTilesInXY();
+
+  for(int x = 0; x < NumTilesInXY.X; ++x)
+  {
+    for(int y = 0; y < NumTilesInXY.Y; ++y)
+    {
+      FIntVector CurrentTileVector(x, y, 0);
+      FCarlaMapTile CarlaTile = LargeMapManager->GetCarlaMapTile(CurrentTileVector);
+      ULevelStreamingDynamic* StreamingLevel = CarlaTile.StreamingLevel;
+      ULevelStreaming* Level =
+        UEditorLevelUtils::AddLevelToWorld(
+        World, *CarlaTile.Name, ULevelStreamingDynamic::StaticClass(), FTransform());
+      FEditorFileUtils::SaveDirtyPackages(false, true, true, false, false, false, nullptr);
+      UEditorLevelUtils::RemoveLevelFromWorld(Level->GetLoadedLevel());
+    }
+  }
+
+}
+
+void UHoudiniImporterWidget::MoveActorsToSubLevel(TArray<AActor*> Actors, ULevelStreaming* Level)
+{
+  int MovedActors = UEditorLevelUtils::MoveActorsToLevel(Actors, Level, false, false);
+
+  UE_LOG(LogCarlaTools, Log, TEXT("Moved %d actors"), MovedActors);
+  FEditorFileUtils::SaveDirtyPackages(false, true, true, false, false, false, nullptr);
+  UEditorLevelUtils::RemoveLevelFromWorld(Level->GetLoadedLevel());
+  FText TransResetText(FText::FromString("Clean up after Move actors to sublevels"));
+  if ( GEditor->Trans )
+  {
+    GEditor->Trans->Reset(TransResetText);
   }
 }
 
@@ -91,8 +138,8 @@ void UHoudiniImporterWidget::UpdateGenericActorCoordinates(
 {
   FVector LocalLocation = Actor->GetActorLocation() - TileOrigin;
   Actor->SetActorLocation(LocalLocation);
-  UE_LOG(LogCarlaTools, Log, TEXT("New location %s"),
-    *LocalLocation.ToString());
+  UE_LOG(LogCarlaTools, Log, TEXT("%s New location %s"),
+    *Actor->GetName(), *LocalLocation.ToString());
 }
 
 void UHoudiniImporterWidget::UpdateInstancedMeshCoordinates(
@@ -122,13 +169,6 @@ void UHoudiniImporterWidget::UseCOMasActorLocation(TArray<AActor*> Actors)
       FBodyInstance* BodyInstance = Primitive->GetBodyInstance();
       FVector CenterOfMass = BodyInstance->COMNudge;
       Actor->SetActorLocation(CenterOfMass);
-      UE_LOG(LogCarlaTools, Log, TEXT("Updating actor %s to %s"),
-        *Actor->GetName(), *CenterOfMass.ToString());
-    }
-    else
-    {
-      UE_LOG(LogCarlaTools, Log, TEXT("Not updating actor %s"),
-        *Actor->GetName());
     }
   }
 }
@@ -136,7 +176,7 @@ void UHoudiniImporterWidget::UseCOMasActorLocation(TArray<AActor*> Actors)
 bool UHoudiniImporterWidget::GetNumberOfClusters(
     TArray<AActor*> ActorList, int& OutNumClusters)
 {
-  
+
   for (AActor* Actor : ActorList)
   {
     FString ObjectName = UKismetSystemLibrary::GetObjectName(Actor);

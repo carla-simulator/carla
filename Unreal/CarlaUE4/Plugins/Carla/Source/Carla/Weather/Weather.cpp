@@ -36,17 +36,11 @@ void AWeather::CheckWeatherPostProcessEffects()
     else
         ActiveBlendables.Remove(DustStormPostProcessMaterial);
 
-    for (int32 i = 0; i < Sensors.Num(); i++)
+    TArray<AActor*> SensorActors;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASceneCaptureCamera::StaticClass(), SensorActors);
+    for (AActor* SensorActor : SensorActors)
     {
-        auto& Sensor = Sensors[i];
-
-        if (!IsValid(Sensor))
-        {
-            Sensors.RemoveAtSwap(i);
-            if (i == Sensors.Num())
-                break;
-        }
-
+        ASceneCaptureCamera* Sensor = Cast<ASceneCaptureCamera>(SensorActor);
         for (auto& ActiveBlendable : ActiveBlendables)
             Sensor->GetCaptureComponent2D()->PostProcessSettings.AddBlendable(ActiveBlendable.Key, ActiveBlendable.Value);
     }
@@ -81,10 +75,6 @@ void AWeather::ApplyWeather(const FWeatherParameters& InWeather)
 
 void AWeather::NotifyWeather(ASensor* Sensor)
 {
-    auto AsSceneCaptureCamera = Cast<ASceneCaptureCamera>(Sensor);
-    if (AsSceneCaptureCamera != nullptr)
-        Sensors.Add(AsSceneCaptureCamera);
-
     CheckWeatherPostProcessEffects();
 
     // Call the blueprint that actually changes the weather.

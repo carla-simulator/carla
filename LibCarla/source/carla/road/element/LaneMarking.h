@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 namespace carla {
 namespace road {
@@ -62,6 +63,21 @@ namespace element {
     LaneChange lane_change = LaneChange::None;
 
     double width = 0.0;
+
+    std::string GetColorInfoAsString(){
+      switch(color){
+        case Color::Yellow:
+          return std::string("yellow");
+          break;
+        case Color::Standard:
+          return std::string("white");
+          break;
+        default:
+          return std::string("white");
+          break;
+      }
+      return std::string("white");
+    }
   };
 
 } // namespace element

@@ -13,6 +13,15 @@
 class FToolBarBuilder;
 class FMenuBuilder;
 
+enum AreaType
+{
+  ROAD,
+  GRASS,
+  SIDEWALK,
+  CROSSWALK,
+  BLOCK
+};
+
 class FCarlaExporterModule : public IModuleInterface
 {
 public:
@@ -27,6 +36,7 @@ public:
 private:
 
   void AddMenuExtension(FMenuBuilder& Builder);
+  int32 WriteObjectGeom(std::ofstream &f, FString ObjectName, UBodySetup *body, FTransform &CompTransform, AreaType Area, int32 Offset);
 
 private:
   TSharedPtr<class FUICommandList> PluginCommands;

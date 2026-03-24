@@ -20,6 +20,9 @@
 #include <carla/sensor/data/GnssMeasurement.h>
 #include <carla/sensor/data/RadarMeasurement.h>
 #include <carla/sensor/data/DVSEventArray.h>
+#include <carla/sensor/data/V2XEvent.h>
+#include <carla/sensor/data/V2XData.h>
+#include <carla/sensor/data/LibITS.h>
 
 #include <carla/sensor/data/RadarData.h>
 
@@ -165,6 +168,40 @@ namespace data {
         << ')';
     return out;
   }
+
+  std::ostream &operator<<(std::ostream &out, const CAMEvent &data) {
+    out << "CAMEvent(frame=" << std::to_string(data.GetFrame())
+        << ", timestamp=" << std::to_string(data.GetTimestamp())
+        << ", message_count=" << std::to_string(data.GetMessageCount())
+        << ')';
+    return out;
+  }
+
+    std::ostream &operator<<(std::ostream &out, const CustomV2XEvent &data) {
+    out << "CustomV2XEvent(frame=" << std::to_string(data.GetFrame())
+        << ", timestamp=" << std::to_string(data.GetTimestamp())
+        << ", message_count=" << std::to_string(data.GetMessageCount())
+        << ')';
+    return out;
+  }
+
+  std::ostream &operator<<(std::ostream &out, const CAMData &data) {
+    out << "CAMData(power=" << std::to_string(data.Power)
+        << ", stationId=" << std::to_string(data.Message.header.stationID)
+        << ", messageId=" << std::to_string(data.Message.header.messageID)
+        << ')';
+    return out;
+  }
+
+    std::ostream &operator<<(std::ostream &out, const CustomV2XData &data) {
+    out << "CustomV2XData(power=" << std::to_string(data.Power)
+        << ", stationId=" << std::to_string(data.Message.header.stationID)
+        << ", messageId=" << std::to_string(data.Message.header.messageID)
+        << ')';
+    return out;
+  }
+
+
 
 } // namespace s11n
 } // namespace sensor
@@ -356,6 +393,39 @@ static std::string SavePointCloudToDisk(T &self, std::string path) {
   return carla::pointcloud::PointCloudIO::SaveToDisk(std::move(path), self.begin(), self.end());
 }
 
+static boost::python::dict GetCAMData(const carla::sensor::data::CAMData message)
+{
+    boost::python::dict myDict;
+    try
+    {
+        myDict["Power"] = message.Power;
+        myDict["Message"] = GetCAMMessage(message);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
+    return myDict;
+}
+
+
+static boost::python::dict GetCustomV2XData(const carla::sensor::data::CustomV2XData message)
+{
+    boost::python::dict myDict;
+    try
+    {
+        myDict["Power"] = message.Power;
+        myDict["Message"] = GetCustomV2XMessage(message);
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    
+    return myDict;
+}
+/**********************************************************************************************/
 void export_sensor_data() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -572,5 +642,35 @@ void export_sensor_data() {
     .def("to_array_t", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayT))
     .def("to_array_pol", CALL_RETURNING_LIST(csd::DVSEventArray, ToArrayPol))
     .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<csd::CAMData>("CAMMessage")
+    .def_readwrite("power", &csd::CAMData::Power)
+    .def("get", GetCAMData)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+    class_<csd::CustomV2XData>("CustomV2XData")
+    .def_readwrite("power", &csd::CustomV2XData::Power)
+    .def("get", GetCustomV2XData)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<csd::CAMEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::CAMEvent>>("CAMEvent", no_init)
+    .def("get_message_count", &csd::CAMEvent::GetMessageCount)
+    .def("__len__", &csd::CAMEvent::size)
+    .def("__iter__", iterator<csd::CAMEvent>())
+    .def("__getitem__", +[](const csd::CAMEvent &self, size_t pos) -> csd::CAMData {
+      return self.at(pos);
+    })
+  ;
+
+    class_<csd::CustomV2XEvent, bases<cs::SensorData>, boost::noncopyable, boost::shared_ptr<csd::CustomV2XEvent>>("CustomV2XEvent", no_init)
+    .def("get_message_count", &csd::CustomV2XEvent::GetMessageCount)
+    .def("__len__", &csd::CustomV2XEvent::size)
+    .def("__iter__", iterator<csd::CustomV2XEvent>())
+    .def("__getitem__", +[](const csd::CustomV2XEvent &self, size_t pos) -> csd::CustomV2XData {
+      return self.at(pos);
+    })
   ;
 }

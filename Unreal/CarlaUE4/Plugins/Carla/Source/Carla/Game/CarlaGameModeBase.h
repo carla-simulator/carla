@@ -112,6 +112,10 @@ public:
 
   TArray<FString> GetNamesOfAllActors();
 
+  // Gravitational acceleration. Default is earth one, which is approximately 9.81 m/s^2
+  UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Sensor Gravity")
+  float IMUISensorGravity = 9.81f;
+
 protected:
 
   void InitGame(const FString &MapName, const FString &Options, FString &ErrorMessage) override;
@@ -176,6 +180,7 @@ private:
   UPROPERTY()
   ATrafficLightManager* TrafficLightManager = nullptr;
 
+  UPROPERTY()
   ALargeMapManager* LMManager = nullptr;
 
   FDelegateHandle OnEpisodeSettingsChangeHandle;

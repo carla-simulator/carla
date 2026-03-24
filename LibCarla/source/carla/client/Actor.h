@@ -60,6 +60,24 @@ namespace client {
     /// acceleration calculated after the actor's velocity.
     geom::Vector3D GetAcceleration() const;
 
+    geom::Transform GetComponentWorldTransform(const std::string componentName) const;
+
+    geom::Transform GetComponentRelativeTransform(const std::string componentName) const;
+
+    std::vector<geom::Transform> GetBoneWorldTransforms() const;
+
+    std::vector<geom::Transform> GetBoneRelativeTransforms() const;
+
+    std::vector<std::string> GetComponentNames() const; 
+
+    std::vector<std::string> GetBoneNames() const;
+
+    std::vector<geom::Transform> GetSocketWorldTransforms() const;
+
+    std::vector<geom::Transform> GetSocketRelativeTransforms() const;
+
+    std::vector<std::string> GetSocketNames() const;     
+
     /// Teleport the actor to @a location.
     void SetLocation(const geom::Location &location);
 
@@ -98,6 +116,12 @@ namespace client {
 
     /// Enable or disable physics simulation on this actor.
     void SetSimulatePhysics(bool enabled = true);
+
+    /// Enable or disable collisions on this actor.
+    void SetCollisions(bool enabled = true);
+
+    /// Set actor as dead and starts his life span
+    void SetActorDead();
 
     /// Enable or disable gravity on this actor.
     void SetEnableGravity(bool enabled = true);

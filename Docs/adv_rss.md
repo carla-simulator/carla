@@ -59,7 +59,7 @@ As a reminder, the feature is only available for the Linux build so far.
 
 ### Dependencies
 
-There are additional prerequisites required for building RSS and its dependencies. Take a look at the [official documentation](https://intel.github.io/ad-rss-lib/BUILDING)) to know more about this.
+There are additional prerequisites required for building RSS and its dependencies. Take a look at the [official documentation](https://intel.github.io/ad-rss-lib/BUILDING) to know more about this.
 
 Dependencies provided by Ubunutu (>= 16.04).
 ```sh

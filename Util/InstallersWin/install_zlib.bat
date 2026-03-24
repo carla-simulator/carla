@@ -54,8 +54,8 @@ set ZLIB_TEMP_FOLDER=%ZLIB_BASENAME%-%ZLIB_VERSION%
 set ZLIB_TEMP_FILE=%ZLIB_TEMP_FOLDER%.zip
 set ZLIB_TEMP_FILE_DIR=%BUILD_DIR%%ZLIB_TEMP_FILE%
 
-set ZLIB_REPO=https://www.zlib.net/zlib%ZLIB_VERSION:.=%.zip
-set ZLIB_BACKUP_REPO=https://carla-releases.s3.eu-west-3.amazonaws.com/Backup/zlib%ZLIB_VERSION:.=%.zip
+set ZLIB_REPO=https://github.com/madler/zlib/archive/refs/tags/v%ZLIB_VERSION%.zip
+set ZLIB_BACKUP_REPO=https://carla-releases.s3.us-east-005.backblazeb2.com/Backup/zlib%ZLIB_VERSION:.=%.zip
 set ZLIB_SRC_DIR=%BUILD_DIR%%ZLIB_BASENAME%-source\
 set ZLIB_INSTALL_DIR=%BUILD_DIR%%ZLIB_BASENAME%-install\
 

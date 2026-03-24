@@ -42,7 +42,7 @@ namespace multigpu {
         Listener &server);
 
     ~Primary();
-    
+
     /// Starts the session and calls @a on_opened after successfully reading the
     /// stream id, and @a on_closed once the session is closed.
     void Open(
@@ -51,16 +51,16 @@ namespace multigpu {
         Listener::callback_function_type_response on_response);
 
     template <typename... Buffers>
-    static auto MakeMessage(Buffers &&... buffers) {
+    static auto MakeMessage(Buffers... buffers) {
       static_assert(
-          are_same<Buffer, Buffers...>::value,
-          "This function only accepts arguments of type Buffer.");
-      return std::make_shared<const carla::streaming::detail::tcp::Message>(std::move(buffers)...);
+          are_same<SharedBufferView, Buffers...>::value,
+          "This function only accepts arguments of type BufferView.");
+      return std::make_shared<const carla::streaming::detail::tcp::Message>(buffers...);
     }
 
     /// Writes some data to the socket.
     void Write(std::shared_ptr<const carla::streaming::detail::tcp::Message> message);
-    
+
     /// Writes a string
     void Write(std::string text);
 
@@ -69,8 +69,8 @@ namespace multigpu {
 
     /// Writes some data to the socket.
     template <typename... Buffers>
-    void Write(Buffers &&... buffers) {
-      Write(MakeMessage(std::move(buffers)...));
+    void Write(Buffers... buffers) {
+      Write(MakeMessage(buffers...));
     }
 
     /// Post a job to close the session.
@@ -80,7 +80,7 @@ namespace multigpu {
 
     void StartTimer();
 
-    void CloseNow();
+    void CloseNow(boost::system::error_code ec = boost::system::error_code());
 
     friend class Listener;
 

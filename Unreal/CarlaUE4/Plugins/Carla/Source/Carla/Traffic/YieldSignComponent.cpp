@@ -36,11 +36,15 @@ void UYieldSignComponent::InitializeSign(const carla::road::Map &Map)
         if(lane == 0)
           continue;
 
-        auto signal_waypoint = Map.GetWaypoint(
-            RoadId, lane, SignalReference->GetS()).get();
-
-        if(Map.GetLane(signal_waypoint).GetType() != cr::Lane::LaneType::Driving)
+        auto signal_waypoint_optional = Map.GetWaypoint(RoadId, lane, SignalReference->GetS());
+        if (!signal_waypoint_optional) {
+            carla::log_warning("YieldSignComponent::InitializeSignsignal() waypoint seems to be invalid, ignoring. RoadId:", RoadId,  " LaneId:", lane,  " s:", SignalReference->GetS());
+            continue;
+        }
+        auto signal_waypoint = signal_waypoint_optional.value();
+        if(Map.GetLane(signal_waypoint).GetType() != cr::Lane::LaneType::Driving) {
           continue;
+        }
 
         auto box_waypoint = signal_waypoint;
         // Prevent adding the bounding box inside the intersection

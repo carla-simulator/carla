@@ -30,6 +30,13 @@ namespace client {
         float life_time = -1.0f,
         bool persistent_lines = true);
 
+    void DrawHUDPoint(
+        const geom::Location &location,
+        float size = 0.1f,
+        Color color = Color{255u, 0u, 0u},
+        float life_time = -1.0f,
+        bool persistent_lines = true);
+
     void DrawLine(
         const geom::Location &begin,
         const geom::Location &end,
@@ -37,6 +44,14 @@ namespace client {
         Color color = Color{255u, 0u, 0u},
         float life_time = -1.0f,
         bool persistent_lines = true);
+
+    void DrawHUDLine(
+        const geom::Location &begin,
+        const geom::Location &end,
+        float thickness = 1.0f,
+        Color color = Color{225u, 0u, 0u},
+        float life_time = -1.0f,
+        bool presistent_lines = true);
 
     void DrawArrow(
         const geom::Location &begin,
@@ -47,7 +62,24 @@ namespace client {
         float life_time = -1.0f,
         bool persistent_lines = true);
 
+    void DrawHUDArrow(
+        const geom::Location &begin,
+        const geom::Location &end,
+        float thickness = 0.1f,
+        float arrow_size = 0.1f,
+        Color color = Color{255u, 0u, 0u},
+        float life_time = -1.0f,
+        bool persistent_lines = true);
+
     void DrawBox(
+        const geom::BoundingBox &box,
+        const geom::Rotation &rotation,
+        float thickness = 0.1f,
+        Color color = Color{255u, 0u, 0u},
+        float life_time = -1.0f,
+        bool persistent_lines = true);
+
+    void DrawHUDBox(
         const geom::BoundingBox &box,
         const geom::Rotation &rotation,
         float thickness = 0.1f,

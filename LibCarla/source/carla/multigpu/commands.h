@@ -15,6 +15,9 @@ enum MultiGPUCommand : uint32_t {
   SEND_FRAME = 0,
   LOAD_MAP,
   GET_TOKEN,
+  ENABLE_ROS,
+  DISABLE_ROS,
+  IS_ENABLED_ROS,
   YOU_ALIVE
 };
 

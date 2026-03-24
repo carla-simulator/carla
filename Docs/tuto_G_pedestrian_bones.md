@@ -147,7 +147,7 @@ def build_projection_matrix(w, h, fov):
 
 ## Build the skeleton 
 
-Now we can put the moving parts together. First, gather the bone coordinates from the simulation using `pedestrian.get_bones()` and then put together the skeleton and project it onto the 2D imaging plane of the camera sensor. The bones are joined into the complete skeleton using the pairs defined in __skeleton.txt__ that can be downloaded [__here__](https://carla-assets.s3.eu-west-3.amazonaws.com/fbx/skeleton.txt).
+Now we can put the moving parts together. First, gather the bone coordinates from the simulation using `pedestrian.get_bones()` and then put together the skeleton and project it onto the 2D imaging plane of the camera sensor. The bones are joined into the complete skeleton using the pairs defined in __skeleton.txt__ that can be downloaded [__here__](https://carla-assets.s3.us-east-005.backblazeb2.com/fbx/skeleton.txt).
 
 We need a function to iterate through the bone pairs defined in __skeleton.txt__ and join the bone coordinates into lines that can be overlayed onto a camera sensor image. 
 

@@ -825,11 +825,16 @@ namespace road {
     for(const auto& junction : _map_data._junctions) {
       for(const auto& controller : junction.second._controllers) {
         auto it = _map_data._controllers.find(controller);
-        DEBUG_ASSERT(it != _map_data._controllers.end());
-        it->second->_junctions.insert(junction.first);
-        for(const auto & signal : it->second->_signals) {
-          auto signal_it = _map_data._signals.find(signal);
-          signal_it->second->_controllers.insert(controller);
+        if(it != _map_data._controllers.end()){
+          if( it->second != nullptr ){
+            it->second->_junctions.insert(junction.first);
+            for(const auto & signal : it->second->_signals) {
+              auto signal_it = _map_data._signals.find(signal);
+              if( signal_it->second != nullptr ){
+                signal_it->second->_controllers.insert(controller);
+              }
+            }
+          }
         }
       }
     }
@@ -1052,7 +1057,7 @@ void MapBuilder::CreateController(
         continue;
       }
       if(closest_waypoint_to_signal) {
-        auto road_transform = map.ComputeTransform(closest_waypoint_to_signal.get()); 
+        auto road_transform = map.ComputeTransform(closest_waypoint_to_signal.get());
         auto distance_to_road = (road_transform.location -signal_position).Length();
         double lane_width = map.GetLaneWidth(closest_waypoint_to_signal.get());
         int displacement_direction = 1;

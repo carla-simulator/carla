@@ -20,6 +20,7 @@
 #include <compiler/disable-ue4-macros.h>
 #include <carla/Logging.h>
 #include <carla/Buffer.h>
+#include <carla/BufferView.h>
 #include <carla/sensor/SensorRegistry.h>
 #include <compiler/enable-ue4-macros.h>
 
@@ -115,7 +116,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
       /// @todo Can we make sure the sensor is not going to be destroyed?
       if (!Sensor.IsPendingKill())
       {
-        FPixelReader::Payload FuncForSending = 
+        FPixelReader::Payload FuncForSending =
           [&Sensor, Frame = FCarlaEngine::GetFrameCounter(), Conversor = std::move(Conversor)](void *LockedData, uint32 Size, uint32 Offset, uint32 ExpectedRowBytes)
           {
             if (Sensor.IsPendingKill()) return;
@@ -130,15 +131,15 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
               LockedData = reinterpret_cast<void *>(Converted.GetData());
               Size = Converted.Num() * Converted.GetTypeSize();
             }
-    
+
             auto Stream = Sensor.GetDataStream(Sensor);
             Stream.SetFrameNumber(Frame);
             auto Buffer = Stream.PopBufferFromPool();
-            
+
             uint32 CurrentRowBytes = ExpectedRowBytes;
 
 #ifdef _WIN32
-            // DirectX uses additional bytes to align each row to 256 boundry, 
+            // DirectX uses additional bytes to align each row to 256 boundry,
             // so we need to remove that extra data
             if (IsD3DPlatform(GMaxRHIShaderPlatform, false))
             {
@@ -173,17 +174,58 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
               TRACE_CPUPROFILER_EVENT_SCOPE_STR("Sending buffer");
               if(Buffer.data())
               {
+                // serialize data
+                carla::Buffer BufferReady(std::move(carla::sensor::SensorRegistry::Serialize(Sensor, std::move(Buffer))));
+                carla::SharedBufferView BufView = carla::BufferView::CreateFrom(std::move(BufferReady));
+
+                // ROS2
+                #if defined(WITH_ROS2)
+                auto ROS2 = carla::ros2::ROS2::GetInstance();
+                if (ROS2->IsEnabled())
+                {
+                  TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send PixelReader");
+                  auto StreamId = carla::streaming::detail::token_type(Sensor.GetToken()).get_stream_id();
+                  auto Res = std::async(std::launch::async, [&Sensor, ROS2, &Stream, StreamId, BufView]()
+                  {
+                    // get resolution of camera
+                    int W = -1, H = -1;
+                    float Fov = -1.0f;
+                    auto WidthOpt = Sensor.GetAttribute("image_size_x");
+                    if (WidthOpt.has_value())
+                      W = FCString::Atoi(*WidthOpt->Value);
+                    auto HeightOpt = Sensor.GetAttribute("image_size_y");
+                    if (HeightOpt.has_value())
+                      H = FCString::Atoi(*HeightOpt->Value);
+                    auto FovOpt = Sensor.GetAttribute("fov");
+                    if (FovOpt.has_value())
+                      Fov = FCString::Atof(*FovOpt->Value);
+                    // send data to ROS2
+                    AActor* ParentActor = Sensor.GetAttachParentActor();
+                    if (ParentActor)
+                    {
+                      FTransform LocalTransformRelativeToParent = Sensor.GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
+                      ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, LocalTransformRelativeToParent, W, H, Fov, BufView, &Sensor);
+                    }
+                    else
+                    {
+                      ROS2->ProcessDataFromCamera(Stream.GetSensorType(), StreamId, Stream.GetSensorTransform(), W, H, Fov, BufView, &Sensor);
+                    }
+                  });
+                }
+                #endif
+
+                // network
                 SCOPE_CYCLE_COUNTER(STAT_CarlaSensorStreamSend);
                 TRACE_CPUPROFILER_EVENT_SCOPE_STR("Stream Send");
-                Stream.Send(Sensor, std::move(Buffer));
+                Stream.Send(Sensor, BufView);
               }
             }
           };
-          
+
           WritePixelsToBuffer(
               *Sensor.CaptureRenderTarget,
               carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
-              InRHICmdList, 
+              InRHICmdList,
               std::move(FuncForSending));
         }
       }

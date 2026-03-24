@@ -68,10 +68,11 @@ void OsmRenderer::RunCmd(string Cmd)
 
   if(CmdType == "-R")     // Render Command
   {
-    std::uint8_t* RenderedMap = new uint8_t[Drawer->GetImgSizeSqr() * 4];
-    RenderMapCmd(CmdVector, RenderedMap);
+    std::unique_ptr<std::uint8_t> RenderedMap = std::unique_ptr<std::uint8_t>(new uint8_t[Drawer->GetImgSizeSqr() * 4]);
+    RenderMapCmd(CmdVector, RenderedMap.get());
 
-    Asio::write(*SocketPtr, Asio::buffer(RenderedMap, (Drawer->GetImgSizeSqr() * 4 * sizeof(uint8_t))));
+    std::cout << LOG_PRFX << "Sending image data: " << (Drawer->GetImgSizeSqr() * 4 * sizeof(uint8_t)) << " bytes" << std::endl;
+    Asio::write(*SocketPtr, Asio::buffer(RenderedMap.get(), (Drawer->GetImgSizeSqr() * 4 * sizeof(uint8_t))));
 
     // TODO: delete RenderedMap after is sent
   }

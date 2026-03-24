@@ -13,6 +13,11 @@
 #include <numeric>
 
 namespace carla {
+
+namespace ros2 {
+  class ROS2;
+}
+
 namespace sensor {
 
 namespace s11n {
@@ -139,6 +144,8 @@ namespace data {
 
   friend class s11n::SemanticLidarHeaderView;
   friend class s11n::SemanticLidarSerializer;
+  friend class carla::ros2::ROS2;
+
   };
 
 } // namespace s11n

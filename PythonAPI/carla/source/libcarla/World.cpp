@@ -11,6 +11,8 @@
 #include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/ObjectLabel.h>
 
+#include <string>
+
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
 namespace carla {
@@ -293,15 +295,17 @@ void export_world() {
         const cc::ActorBlueprint &blueprint, \
         const cg::Transform &transform, \
         cc::Actor *parent, \
-        cr::AttachmentType attachment_type) { \
+        cr::AttachmentType attachment_type, \
+        const std::string& bone) { \
       carla::PythonUtil::ReleaseGIL unlock; \
-      return self.fn(blueprint, transform, parent, attachment_type); \
+      return self.fn(blueprint, transform, parent, attachment_type, bone); \
     }, \
     ( \
       arg("blueprint"), \
       arg("transform"), \
       arg("attach_to")=carla::SharedPtr<cc::Actor>(), \
-      arg("attachment_type")=cr::AttachmentType::Rigid)
+      arg("attachment_type")=cr::AttachmentType::Rigid, \
+      arg("bone")=std::string())
 
   class_<cc::World>("World", no_init)
     .add_property("id", &cc::World::GetId)
@@ -317,6 +321,8 @@ void export_world() {
     .def("apply_settings", &ApplySettings, (arg("settings"), arg("seconds")=0.0))
     .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
     .def("set_weather", &cc::World::SetWeather)
+    .def("get_imui_sensor_gravity", CONST_CALL_WITHOUT_GIL(cc::World, GetIMUISensorGravity))
+    .def("set_imui_sensor_gravity", &cc::World::SetIMUISensorGravity, (arg("NewIMUISensorGravity")) )
     .def("get_snapshot", &cc::World::GetSnapshot)
     .def("get_actor", CONST_CALL_WITHOUT_GIL_1(cc::World, GetActor, carla::ActorId), (arg("actor_id")))
     .def("get_actors", CONST_CALL_WITHOUT_GIL(cc::World, GetActors))
@@ -368,7 +374,20 @@ void export_world() {
          arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
          arg("life_time")=-1.0f,
          arg("persistent_lines")=true))
+    .def("draw_hud_point", &cc::DebugHelper::DrawHUDPoint,
+        (arg("location"),
+         arg("size")=0.1f,
+         arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
+         arg("life_time")=-1.0f,
+         arg("persistent_lines")=true))
     .def("draw_line", &cc::DebugHelper::DrawLine,
+        (arg("begin"),
+         arg("end"),
+         arg("thickness")=0.1f,
+         arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
+         arg("life_time")=-1.0f,
+         arg("persistent_lines")=true))
+    .def("draw_hud_line", &cc::DebugHelper::DrawHUDLine,
         (arg("begin"),
          arg("end"),
          arg("thickness")=0.1f,
@@ -383,7 +402,22 @@ void export_world() {
          arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
          arg("life_time")=-1.0f,
          arg("persistent_lines")=true))
+    .def("draw_hud_arrow", &cc::DebugHelper::DrawHUDArrow,
+        (arg("begin"),
+         arg("end"),
+         arg("thickness")=0.1f,
+         arg("arrow_size")=0.1f,
+         arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
+         arg("life_time")=-1.0f,
+         arg("persistent_lines")=true))
     .def("draw_box", &cc::DebugHelper::DrawBox,
+        (arg("box"),
+         arg("rotation"),
+         arg("thickness")=0.1f,
+         arg("color")=cc::DebugHelper::Color(255u, 0u, 0u),
+         arg("life_time")=-1.0f,
+         arg("persistent_lines")=true))
+    .def("draw_hud_box", &cc::DebugHelper::DrawHUDBox,
         (arg("box"),
          arg("rotation"),
          arg("thickness")=0.1f,
@@ -398,4 +432,6 @@ void export_world() {
          arg("life_time")=-1.0f,
          arg("persistent_lines")=true))
   ;
+  // scope HUD = class_<cc::DebugHelper>(
+
 }

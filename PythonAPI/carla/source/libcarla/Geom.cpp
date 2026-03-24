@@ -237,6 +237,10 @@ void export_geom() {
       self.TransformPoint(location);
       return location;
     }, arg("in_point"))
+    .def("inverse_transform", +[](const cg::Transform &self, cg::Vector3D &location) {
+      self.InverseTransformPoint(location);
+      return location;
+    }, arg("in_point"))
     .def("transform_vector", +[](const cg::Transform &self, cg::Vector3D &vector) {
       self.TransformVector(vector);
       return vector;

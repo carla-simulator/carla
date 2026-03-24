@@ -111,21 +111,25 @@ namespace geom {
     std::unique_ptr<Mesh> MergeAndSmooth(std::vector<std::unique_ptr<Mesh>> &lane_meshes) const;
 
     // -- LaneMarks --
-
-    void GenerateLaneMarkForRoad(const road::Road& road, std::vector<std::unique_ptr<Mesh>>& inout) const;
+    void GenerateLaneMarkForRoad(const road::Road& road,
+      std::vector<std::unique_ptr<Mesh>>& inout,
+      std::vector<std::string>& outinfo ) const;
 
     // Generate for NOT center line AKA All lines but the one which id 0
     void GenerateLaneMarksForNotCenterLine(
       const road::LaneSection& lane_section,
       const road::Lane& lane,
-      std::vector<std::unique_ptr<Mesh>>& inout) const;
+      std::vector<std::unique_ptr<Mesh>>& inout,
+      std::vector<std::string>& outinfo ) const;
 
     // Generate marks ONLY for line with ID 0
     void GenerateLaneMarksForCenterLine(
       const road::Road& road,
       const road::LaneSection& lane_section,
       const road::Lane& lane,
-      std::vector<std::unique_ptr<Mesh>>& inout) const;
+      std::vector<std::unique_ptr<Mesh>>& inout,
+      std::vector<std::string>& outinfo ) const;
+      
     // =========================================================================
     // -- Generation parameters ------------------------------------------------
     // =========================================================================
@@ -144,6 +148,21 @@ namespace geom {
     };
 
     RoadParameters road_param;
+
+
+    // =========================================================================
+    // -- Helper functions ------------------------------------------------
+    // =========================================================================
+
+    static uint32_t SelectVerticesInWidth(uint32_t default_num_vertices, road::Lane::LaneType type);
+  private:
+
+    // Calculate the points on both sides of the lane mark for the specified s_current
+    std::pair<geom::Vector3D, geom::Vector3D> ComputeEdgesForLanemark(
+      const road::LaneSection& lane_section,
+      const road::Lane& lane,
+      const double s_current,
+      const double lanemark_width) const;
 
   };
 

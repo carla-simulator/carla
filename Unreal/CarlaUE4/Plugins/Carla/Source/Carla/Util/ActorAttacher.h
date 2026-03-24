@@ -42,5 +42,5 @@ class CARLA_API UActorAttacher : public UBlueprintFunctionLibrary
 public:
 
   UFUNCTION(BlueprintCallable, Category="CARLA|Actor Attacher")
-  static void AttachActors(AActor *Child, AActor *Parent, EAttachmentType AttachmentType);
+  static void AttachActors(AActor *Child, AActor *Parent, EAttachmentType AttachmentType, const FString& SocketName = "");
 };

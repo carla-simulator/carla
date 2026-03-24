@@ -40,7 +40,7 @@ In this section you will find details of system requirements, minor and major so
 
 #### Minor installations
 
-* [__CMake__](https://cmake.org/download/) generates standard build files from simple configuration files.  
+* [__CMake__](https://cmake.org/download/) generates standard build files from simple configuration files. __We recommend you use version 3.15+__.
 * [__Git__](https://git-scm.com/downloads) is a version control system to manage CARLA repositories.  
 * [__Make__](http://gnuwin32.sourceforge.net/packages/make.htm) generates the executables. It is necessary to use __Make version 3.81__, otherwise the build may fail. If you have multiple versions of Make installed, check that you are using version 3.81 in your PATH when building CARLA. You can check your default version of Make by running `make --version`.
 * [__7Zip__](https://www.7-zip.org/) is a file compression software. This is required for automatic decompression of asset files and prevents errors during build time due to large files being extracted incorrectly or partially.
@@ -80,6 +80,9 @@ Get the 2019 version of Visual Studio from [here](https://developerinsider.co/do
 
 !!! Important
     Other Visual Studio versions may cause conflict. Even if these have been uninstalled, some registers may persist. To completely clean Visual Studio from the computer, go to `Program Files (x86)\Microsoft Visual Studio\Installer\resources\app\layout` and run `.\InstallCleanup.exe -full`  
+
+!!! Note
+    It is also possible to use Visual Studio 2022 using the above steps and substituting the Windows 8.1 SDK for the Windows 11/10 SDK. To override the default Visual Studio 2019 Generator in CMake, specify GENERATOR="Visual Studio 17 2022" when using the makefile commands (see [table](build_windows.md#other-make-commands)). You may specify any generator that works with the build commands as specific in the build scripts, for a full list run `cmake -G` (Ninja has been tested to work for building LibCarla so far).
 
 ##### Unreal Engine
 

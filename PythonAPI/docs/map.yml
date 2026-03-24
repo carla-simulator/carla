@@ -338,7 +338,7 @@
     - var_name: is_junction
       type: bool
       doc: >
-        True if the current Waypoint is on a junction as defined by OpenDRIVE.
+        <b>True</b> if the current Waypoint is on a junction as defined by OpenDRIVE.
     - var_name: junction_id
       type: int
       doc: >
@@ -352,10 +352,6 @@
       param_units: meters
       doc: >
         OpenDRIVE <b>s</b> value of the current position.
-    - var_name: is_junction
-      type: bool
-      doc: >
-        <b>True</b> if the current Waypoint is on a junction as defined by OpenDRIVE.
     - var_name: lane_width
       type: float
       param_units: meters

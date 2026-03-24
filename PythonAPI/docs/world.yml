@@ -125,11 +125,11 @@
     - var_name: substepping
       type: bool
       doc: >
-        Enable the physics substepping. This option allows computing some physics substeps between two render frames. If synchronous mode is set, the number of substeps and its time interval are fixed and computed are so they fulfilled the requirements of carla.WorldSettings.max_substep and carla.WorldSettings.max_substep_delta_time. These last two parameters need to be compatible with carla.WorldSettings.fixed_delta_seconds. Enabled by default.
+        Enable the physics substepping. This option allows computing some physics substeps between two render frames. If synchronous mode is set, the number of substeps and its time interval are fixed and computed are so they fulfilled the requirements of carla.WorldSettings.max_substeps and carla.WorldSettings.max_substep_delta_time. These last two parameters need to be compatible with carla.WorldSettings.fixed_delta_seconds. Enabled by default.
     - var_name: max_substep_delta_time
       type: float
       doc: >
-       Maximum delta time of the substeps. If the carla.WorldSettingsmax_substep is high enough, the substep delta time would be always below or equal to this value. By default, the value is set to 0.01.
+       Maximum delta time of the substeps. If the carla.WorldSettings.max_substeps is high enough, the substep delta time would be always below or equal to this value. By default, the value is set to 0.01.
     - var_name: max_substeps
       type: int
       doc: >
@@ -993,8 +993,140 @@
         doc: >
           Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes. 
       doc: >
-        Draws a box, ussually to act for object colliders. 
-        
+        Draws a box, usually to act for object colliders.
+
+    # --------------------------------------
+    - def_name: draw_hud_arrow
+      params:
+      - param_name: begin
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Point in the coordinate system where the arrow starts.
+      - param_name: end
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Point in the coordinate system where the arrow ends and points towards to.
+      - param_name: thickness
+        type: float
+        default: 0.1
+        param_units: meters
+        doc: >
+          Density of the line.
+      - param_name: arrow_size
+        type: float
+        default: 0.1
+        param_units: meters
+        doc: >
+          Size of the tip of the arrow.
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default.
+      - param_name: life_time
+        type: float
+        default: -1.0
+        param_units: seconds
+        doc: >
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.
+      doc: >
+        Draws an arrow on the HUD from `begin` to `end` which can only be seen server-side.
+
+    # --------------------------------------
+    - def_name: draw_hud_box
+      params:
+      - param_name: box
+        type: carla.BoundingBox
+        doc: >
+          Object containing a location and the length of a box for every axis.
+      - param_name: rotation
+        type: carla.Rotation
+        param_units: degrees (pitch,yaw,roll)
+        doc: >
+          Orientation of the box according to Unreal Engine's axis system.
+      - param_name: thickness
+        type: float
+        default: 0.1
+        param_units: meters
+        doc: >
+          Density of the lines that define the box.
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default.
+      - param_name: life_time
+        type: float
+        default: -1.0
+        param_units: seconds
+        doc: >
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.
+      doc: >
+        Draws a box on the HUD, usually to act for object colliders. The box can only be seen server-side.
+
+    # --------------------------------------
+    - def_name: draw_hud_line
+      params:
+      - param_name: begin
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Point in the coordinate system where the line starts.
+      - param_name: end
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Spot in the coordinate system where the line ends.
+      - param_name: thickness
+        type: float
+        default: 0.1
+        param_units: meters
+        doc: >
+          Density of the line.
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default.
+      - param_name: life_time
+        type: float
+        default: -1.0
+        param_units: seconds
+        doc: >
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.
+      doc: >
+        Draws a line on the HUD in between `begin` and `end`. The line can only be seen server-side.
+
+    # --------------------------------------
+    - def_name: draw_hud_point
+      params:
+      - param_name: location
+        type: carla.Location
+        param_units: meters
+        doc: >
+          Spot in the coordinate system to center the object.
+      - param_name: size
+        type: float
+        default: 0.1
+        param_units: meters
+        doc: >
+          Density of the point.
+      - param_name: color
+        type: carla.Color
+        default: (255,0,0)
+        doc: >
+          RGB code to color the object. Red by default.
+      - param_name: life_time
+        type: float
+        default: -1.0
+        param_units: seconds
+        doc: >
+          Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.
+      doc: >
+        Draws a point on the HUD at `location`. The point can only be seen server-side.
+
     # --------------------------------------
     - def_name: draw_line
       params:

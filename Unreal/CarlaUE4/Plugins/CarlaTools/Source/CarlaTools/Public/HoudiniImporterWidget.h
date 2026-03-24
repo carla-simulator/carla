@@ -18,13 +18,20 @@ UCLASS(BlueprintType)
 class CARLATOOLS_API UHoudiniImporterWidget : public UEditorUtilityWidget
 {
   GENERATED_BODY()
-
+public:
   UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
   static void CreateSubLevels(ALargeMapManager* LargeMapManager);
 
   UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
-  static void MoveActorsToSubLevel(TArray<AActor*> Actors, ALargeMapManager* LargeMapManager);
+  static void MoveActorsToSubLevelWithLargeMap(TArray<AActor*> Actors, ALargeMapManager* LargeMapManager);
 
+  UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
+  static void ForceStreamingLevelsToUnload( ALargeMapManager* LargeMapManager );
+
+  UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
+  static void MoveActorsToSubLevel(TArray<AActor*> Actors, ULevelStreaming* Level);
+
+  UFUNCTION(BlueprintCallable, Category="HoudiniImporterWidget")
   static void UpdateGenericActorCoordinates(AActor* Actor, FVector TileOrigin);
 
   static void UpdateInstancedMeshCoordinates(

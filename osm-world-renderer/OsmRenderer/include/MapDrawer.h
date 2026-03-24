@@ -11,7 +11,9 @@
 #include <osmscout/Database.h>
 #include <osmscoutmap/MapService.h>
 #include <osmscout/BasemapDatabase.h>
-
+#if defined(_MSC_VER)
+    #include <osmscout/projection/MercatorProjection.h>
+#endif
 class MapDrawer
 {
 public:
@@ -52,7 +54,7 @@ private:
     void SetDrawParameters();
 
     void DrawMap(std::uint8_t* OutMap);
-     
+
 };
 
 #endif
