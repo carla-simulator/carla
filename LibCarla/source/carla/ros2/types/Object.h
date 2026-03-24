@@ -9,6 +9,7 @@
 #include "carla/geom/BoundingBox.h"
 #include "carla/ros2/types/AcceleratedMovement.h"
 #include "carla/ros2/types/AngularVelocity.h"
+#include "carla/ros2/types/CoordinateSystemTransform.h"
 #include "carla/ros2/types/Polygon.h"
 #include "carla/ros2/types/Timestamp.h"
 #include "carla/ros2/types/TrafficLightActorDefinition.h"
@@ -47,14 +48,14 @@ public:
           std::static_pointer_cast<carla::ros2::types::ActorDefinition>(vehicle_actor_definition)) {
     
     _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_OTHER_VEHICLE;
-    if (_actor_definition->base_type == "Bus" || _actor_definition->base_type == "Truck"
-        || _actor_definition->base_type == "bus" || _actor_definition->base_type == "truck") {
+    if (actor_definition().base_type == "Bus" || actor_definition().base_type == "Truck"
+        || actor_definition().base_type == "bus" || actor_definition().base_type == "truck") {
       _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_TRUCK;
-    } else if (_actor_definition->base_type == "car" || _actor_definition->base_type == "van") {
+    } else if (actor_definition().base_type == "car" || actor_definition().base_type == "van") {
       _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_CAR;
-    } else if (_actor_definition->base_type == "motorcycle") {
+    } else if (actor_definition().base_type == "motorcycle") {
       _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_MOTORCYCLE;
-    } else if (_actor_definition->base_type == "bicycle") {
+    } else if (actor_definition().base_type == "bicycle") {
       _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_BIKE;
     } else {
       // as long as we don't have the concrete information within a blueprint ...
@@ -74,8 +75,8 @@ public:
         _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_BIKE;
       }
       carla::log_warning(
-          "Unknown Vehicle Object[", _actor_definition->type_id, "] id: ", _actor_definition->id,
-          " object_type: ", _actor_definition->object_type, " base_type: ", _actor_definition->base_type,
+          "Unknown Vehicle Object[", actor_definition().type_id, "] id: ", actor_definition().id,
+          " object_type: ", actor_definition().object_type, " base_type: ", actor_definition().base_type,
           " mass: ", vehicle_actor_definition->vehicle_physics_control.mass, " estimated ROS-class based on mass: ", classification_string());
     }
   }
@@ -88,9 +89,9 @@ public:
     : _actor_definition(
           std::static_pointer_cast<carla::ros2::types::ActorDefinition>(walker_actor_definition)) {
     _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_PEDESTRIAN;
-    carla::log_verbose("Creating Walker Object[", _actor_definition->type_id, "] id: ", _actor_definition->id,
-                    " object_type: ", _actor_definition->object_type,
-                    " base_type: ", _actor_definition->base_type, " ROS-class: ", classification_string());
+    carla::log_verbose("Creating Walker Object[", actor_definition().type_id, "] id: ", actor_definition().id,
+                    " object_type: ", actor_definition().object_type,
+                    " base_type: ", actor_definition().base_type, " ROS-class: ", classification_string());
   }
   /**
    * The representation of an object in the sense of derived_object_msgs::msg::Object.
@@ -101,9 +102,9 @@ public:
     : _actor_definition(
           std::static_pointer_cast<carla::ros2::types::ActorDefinition>(traffic_light_actor_definition)) {
     _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_SIGN;
-    carla::log_verbose("Creating Traffic Light Object[", _actor_definition->type_id,
-                    "] id: ", _actor_definition->id, " object_type: ", _actor_definition->object_type,
-                    " base_type: ", _actor_definition->base_type, " ROS-class: ", classification_string());
+    carla::log_verbose("Creating Traffic Light Object[", actor_definition().type_id,
+                    "] id: ", actor_definition().id, " object_type: ", actor_definition().object_type,
+                    " base_type: ", actor_definition().base_type, " ROS-class: ", classification_string());
   }
   /**
    * The representation of an object in the sense of derived_object_msgs::msg::Object.
@@ -114,9 +115,9 @@ public:
     : _actor_definition(
           std::static_pointer_cast<carla::ros2::types::ActorDefinition>(traffic_sign_actor_definition)) {
     _classification = derived_object_msgs::msg::Object_Constants::CLASSIFICATION_SIGN;
-    carla::log_verbose("Creating Traffic Sign Object[", _actor_definition->type_id,
-                    "] id: ", _actor_definition->id, " object_type: ", _actor_definition->object_type,
-                    " base_type: ", _actor_definition->base_type, " ROS-class: ", classification_string());
+    carla::log_verbose("Creating Traffic Sign Object[", actor_definition().type_id,
+                    "] id: ", actor_definition().id, " object_type: ", actor_definition().object_type,
+                    " base_type: ", actor_definition().base_type, " ROS-class: ", classification_string());
   }
 
   explicit Object(carla::rpc::EnvironmentObject environment_object, bool enable_for_ros)
@@ -167,15 +168,18 @@ public:
     // environment objects have a 64 bit unreal id, but Object.msg only supports uint32, 
     // so we put the upper 32 bit of the actor id into the classification age, 
     // so that we can correlate the object in the object list with the 64-bit id in the CarlaActorInfo list for environment objects
-    _classification_age = static_cast<uint32_t>((_actor_definition->id>>32) & 0xFFFFFFFF);
+    _classification_age = static_cast<uint32_t>((actor_definition().id>>32) & 0xFFFFFFFF);
     _actor_definition->attributes["Object.id"] = std::to_string(actor_id());
     _actor_definition->attributes["Object.classification_age"] = std::to_string(_classification_age);
     actor_dynamic_state.transform = environment_object.transform;
     actor_dynamic_state.quaternion = carla::geom::Quaternion(environment_object.transform.rotation);
+    // make the bounding box location relative to the object transform
+    _actor_definition->bounding_box.location = actor_definition().bounding_box.location - environment_object.transform.location;
+    _actor_definition->bounding_box.rotation = carla::geom::Rotation();
     UpdateObject(carla::ros2::types::Timestamp(), actor_dynamic_state);
-    carla::log_verbose("Creating Environment Object[", _actor_definition->type_id,
-                    "] id: ", actor_id(), " object_type: ", _actor_definition->object_type,
-                    " base_type: ", _actor_definition->base_type, " ROS-class: ", classification_string());
+    carla::log_verbose("Creating Environment Object[", actor_definition().type_id,
+                    "] id: ", actor_id(), " object_type: ", actor_definition().object_type,
+                    " base_type: ", actor_definition().base_type, " ROS-class: ", classification_string(), " Bounding Box Location ", _actor_definition->bounding_box.location);
   }
 
   ~Object() = default;
@@ -186,9 +190,6 @@ public:
 
   void UpdateObject(carla::ros2::types::Timestamp const& timestamp,
                     carla::sensor::data::ActorDynamicState const& actor_dynamic_state) {
-    _bounding_box.extent = _actor_definition->bounding_box.extent;
-    _bounding_box.location = actor_dynamic_state.transform.location;
-    _bounding_box.rotation = actor_dynamic_state.transform.rotation;
     _transform = carla::ros2::types::Transform(actor_dynamic_state.transform, actor_dynamic_state.quaternion);
     _accelerated_movement.Update(
         carla::geom::Velocity(actor_dynamic_state.velocity),
@@ -205,13 +206,15 @@ public:
     object.id(actor_id());
     object.detection_level(derived_object_msgs::msg::Object_Constants::OBJECT_TRACKED);
     object.object_classified(true);
-    object.pose(_transform.pose());
+    object.pose(get_center_pose());
     object.twist(_accelerated_movement.absolute_twist());
     object.accel(_accelerated_movement.absolute_accel());
     object.shape().type(shape_msgs::msg::SolidPrimitive_Constants::BOX);
-    auto const ros_extent = _bounding_box.extent * 2.f;
+    auto const ros_extent = actor_definition().bounding_box.extent * 2.f;
     object.shape().dimensions({ros_extent.x, ros_extent.y, ros_extent.z});
-    object.shape().polygon().points(*Polygon(_bounding_box.GetLocalVertices()).polygon());
+    auto bounding_box_relative_to_pose = actor_definition().bounding_box;
+    bounding_box_relative_to_pose.location = carla::geom::Location();
+    object.shape().polygon().points(*Polygon(bounding_box_relative_to_pose.GetLocalVertices()).polygon());
     object.classification(_classification);
     object.classification_certainty(255u);
     object.classification_age(_classification_age);
@@ -225,11 +228,11 @@ public:
     object.id(actor_id());
     object.detection_level(derived_object_msgs::msg::Object_Constants::OBJECT_TRACKED);
     object.object_classified(true);
-    object.pose(_transform.pose_with_covariance());
+    object.pose(get_center_pose_with_covariance());
     object.twist(_accelerated_movement.absolute_twist_with_covariance());
     object.accel(_accelerated_movement.absolute_accel_with_covariance());
     object.shape().type(shape_msgs::msg::SolidPrimitive_Constants::BOX);
-    auto const ros_extent = _bounding_box.extent * 2.f;
+    auto const ros_extent = actor_definition().bounding_box.extent * 2.f;
     object.shape().dimensions({ros_extent.x, ros_extent.y, ros_extent.z});
     object.classification(_classification);
     object.classification_certainty(255u);
@@ -237,11 +240,31 @@ public:
     return object;
   }
 
+  geometry_msgs::msg::Pose get_center_pose() const {
+    auto ros_pose=_transform.pose();
+    // the pose is the transform of the object reference point, the center of the bounding box
+    // might be shifted (usually half the height upwards)
+    auto center_offset = CoordinateSystemTransform::TransformLinearAxisMsg(actor_definition().bounding_box.location);
+    ros_pose.position().x(ros_pose.position().x() + center_offset.x());
+    ros_pose.position().y(ros_pose.position().y() + center_offset.y());
+    ros_pose.position().z(ros_pose.position().z() + center_offset.z());
+    return ros_pose;
+  }
+  
+  geometry_msgs::msg::PoseWithCovariance get_center_pose_with_covariance() const {
+    geometry_msgs::msg::PoseWithCovariance ros_pose_with_covariance;
+    ros_pose_with_covariance.pose(get_center_pose());
+    return ros_pose_with_covariance;
+  }
+
+
+
+
   /**
    * @brief check if dynamic content has changed (ignoring timestamp)
    */
   bool has_dynamic_data_changed(derived_object_msgs::msg::Object const &other) const {
-     return (other.id()!=_actor_definition->id)
+     return (other.id()!=actor_definition().id)
            || (other.pose() != _transform.pose())
            || (other.twist() != _accelerated_movement.absolute_twist())
            || (other.accel() != _accelerated_movement.absolute_accel());
@@ -306,11 +329,11 @@ public:
   }
 
   carla_msgs::msg::CarlaActorInfo carla_actor_info(std::shared_ptr<ROS2NameRegistry> name_registry = nullptr) const {
-    return _actor_definition->carla_actor_info(name_registry);
+    return actor_definition().carla_actor_info(name_registry);
   }
 
   carla::streaming::detail::actor_id_type actor_id() const {  
-    return static_cast<carla::streaming::detail::actor_id_type>(_actor_definition->id & 0xFFFFFFFF); }
+    return static_cast<carla::streaming::detail::actor_id_type>(actor_definition().id & 0xFFFFFFFF); }
 
   const carla::ros2::types::ActorDefinition& actor_definition()const { return *_actor_definition; }
 
@@ -319,7 +342,6 @@ public:
 private:
   std::shared_ptr<carla::ros2::types::ActorDefinition> _actor_definition;
   uint8_t _classification{derived_object_msgs::msg::Object_Constants::CLASSIFICATION_UNKNOWN};
-  carla::geom::BoundingBox _bounding_box;
   carla::ros2::types::Transform _transform;
   carla::ros2::types::AcceleratedMovement _accelerated_movement;
   uint32_t _classification_age{std::numeric_limits<uint32_t>::max()};

@@ -85,7 +85,7 @@ public:
    *
    * Uses ROS naming convention
    */
-  const geometry_msgs::msg::Pose pose() const {
+  geometry_msgs::msg::Pose pose() const {
     geometry_msgs::msg::Pose ros_pose;
     ros_pose.position().x(_ros_transform.translation().x());
     ros_pose.position().y(_ros_transform.translation().y());
@@ -99,7 +99,7 @@ public:
    *
    * Uses ROS naming convention
    */
-  const geometry_msgs::msg::PoseWithCovariance pose_with_covariance() const {
+  geometry_msgs::msg::PoseWithCovariance pose_with_covariance() const {
     geometry_msgs::msg::PoseWithCovariance ros_pose_with_covariance;
     ros_pose_with_covariance.pose(pose());
     return ros_pose_with_covariance;
