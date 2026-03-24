@@ -1,13 +1,13 @@
 FROM carla-prerequisites:latest
 
-ARG GIT_BRANCH
+ARG GIT_BRANCH=master
+ARG GIT_REPO=https://github.com/carla-simulator/carla.git
 
 USER carla
 WORKDIR /home/carla
 
-RUN cd /home/carla/ && \
-  if [ -z ${GIT_BRANCH+x} ]; then git clone --depth 1 https://github.com/carla-simulator/carla.git; \
-  else git clone --depth 1 --branch $GIT_BRANCH https://github.com/carla-simulator/carla.git; fi && \
+RUN cd /home/carla && \
+  git clone --depth 1 --branch $GIT_BRANCH "$GIT_REPO" && \
   cd /home/carla/carla && \
   ./Update.sh && \
   make CarlaUE4Editor && \
