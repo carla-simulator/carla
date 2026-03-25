@@ -203,8 +203,18 @@ void LocalizationStage::Update(const unsigned long index) {
         if (!parameters.GetOSMMode()) {
           std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
         }
-        printf("[TM DESPAWN] DEAD_END actor_id=%u road_id=%u\n",
-            actor_id, waypoint_buffer.back()->GetWaypoint()->GetRoadId());
+        auto dead_wp = waypoint_buffer.back();
+        auto dead_raw = dead_wp->GetWaypoint();
+        auto dead_loc = dead_wp->GetLocation();
+        auto prev_wps = dead_wp->GetPreviousWaypoint();
+        printf("[TM DESPAWN] DEAD_END actor_id=%u context=random_path osm_mode=%d\n"
+               "  dead_end_wp: road_id=%u section_id=%u lane_id=%d s=%.2f loc=(%.2f,%.2f,%.2f)\n"
+               "  vehicle_loc: (%.2f,%.2f,%.2f) prev_wp_count=%zu buffer_size=%zu\n",
+            actor_id, (int)parameters.GetOSMMode(),
+            dead_raw->GetRoadId(), dead_raw->GetSectionId(), dead_raw->GetLaneId(), dead_raw->GetDistance(),
+            dead_loc.x, dead_loc.y, dead_loc.z,
+            vehicle_location.x, vehicle_location.y, vehicle_location.z,
+            prev_wps.size(), waypoint_buffer.size());
         fflush(stdout);
         marked_for_removal.push_back(actor_id);
         break;
@@ -509,8 +519,21 @@ void LocalizationStage::ImportPath(Path &imported_path, Buffer &waypoint_buffer,
         if (!parameters.GetOSMMode()) {
           std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
         }
-        printf("[TM DESPAWN] DEAD_END actor_id=%u road_id=%u\n",
-            actor_id, waypoint_buffer.back()->GetWaypoint()->GetRoadId());
+        auto dead_wp = waypoint_buffer.back();
+        auto dead_raw = dead_wp->GetWaypoint();
+        auto dead_loc = dead_wp->GetLocation();
+        auto prev_wps = dead_wp->GetPreviousWaypoint();
+        auto imported_loc = imported->GetLocation();
+        printf("[TM DESPAWN] DEAD_END actor_id=%u context=import_path osm_mode=%d\n"
+               "  dead_end_wp: road_id=%u section_id=%u lane_id=%d s=%.2f loc=(%.2f,%.2f,%.2f)\n"
+               "  imported_target: road_id=%u loc=(%.2f,%.2f,%.2f) remaining_path=%zu\n"
+               "  prev_wp_count=%zu buffer_size=%zu\n",
+            actor_id, (int)parameters.GetOSMMode(),
+            dead_raw->GetRoadId(), dead_raw->GetSectionId(), dead_raw->GetLaneId(), dead_raw->GetDistance(),
+            dead_loc.x, dead_loc.y, dead_loc.z,
+            imported->GetWaypoint()->GetRoadId(), imported_loc.x, imported_loc.y, imported_loc.z,
+            imported_path.size(),
+            prev_wps.size(), waypoint_buffer.size());
         fflush(stdout);
         marked_for_removal.push_back(actor_id);
         break;
@@ -575,8 +598,19 @@ void LocalizationStage::ImportRoute(Route &imported_actions, Buffer &waypoint_bu
         if (!parameters.GetOSMMode()) {
           std::cout << "This map has dead-end roads, please change the set_open_street_map parameter to true" << std::endl;
         }
-        printf("[TM DESPAWN] DEAD_END actor_id=%u road_id=%u\n",
-            actor_id, waypoint_buffer.back()->GetWaypoint()->GetRoadId());
+        auto dead_wp = waypoint_buffer.back();
+        auto dead_raw = dead_wp->GetWaypoint();
+        auto dead_loc = dead_wp->GetLocation();
+        auto prev_wps = dead_wp->GetPreviousWaypoint();
+        printf("[TM DESPAWN] DEAD_END actor_id=%u context=import_route osm_mode=%d\n"
+               "  dead_end_wp: road_id=%u section_id=%u lane_id=%d s=%.2f loc=(%.2f,%.2f,%.2f)\n"
+               "  next_road_option=%u remaining_actions=%zu\n"
+               "  prev_wp_count=%zu buffer_size=%zu\n",
+            actor_id, (int)parameters.GetOSMMode(),
+            dead_raw->GetRoadId(), dead_raw->GetSectionId(), dead_raw->GetLaneId(), dead_raw->GetDistance(),
+            dead_loc.x, dead_loc.y, dead_loc.z,
+            static_cast<uint8_t>(next_road_option), imported_actions.size(),
+            prev_wps.size(), waypoint_buffer.size());
         fflush(stdout);
         marked_for_removal.push_back(actor_id);
         break;

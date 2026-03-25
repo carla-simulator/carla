@@ -108,7 +108,13 @@ void ALSM::Update() {
   // Destorying vehicles for marked for removal by stages.
   if (parameters.GetOSMMode()) {
     for (const ActorId& actor_id: marked_for_removal) {
-      printf("[TM DESPAWN] DEAD_END (OSM) actor_id=%u\n", actor_id);
+      if (simulation_state.ContainsActor(actor_id)) {
+        auto loc = simulation_state.GetLocation(actor_id);
+        printf("[TM DESPAWN] DEAD_END (OSM destroy) actor_id=%u vehicle_loc=(%.2f,%.2f,%.2f)\n",
+            actor_id, loc.x, loc.y, loc.z);
+      } else {
+        printf("[TM DESPAWN] DEAD_END (OSM destroy) actor_id=%u vehicle_loc=unknown\n", actor_id);
+      }
       fflush(stdout);
       registered_vehicles.Destroy(actor_id);
       RemoveActor(actor_id, true);
