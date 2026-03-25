@@ -82,6 +82,8 @@ inline std::string to_string(carla::ros2::types::PublisherSensorType sensor_type
       return "V2X";
     case carla::ros2::types::PublisherSensorType::V2XCustom:
       return "V2XCustom";
+    case carla::ros2::types::PublisherSensorType::HSSLidar:
+      return "HSSLidar";
     default:
       return "Unknown";
   }
