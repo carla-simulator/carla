@@ -718,25 +718,23 @@ namespace road {
       return result;
     }
 
-    // Completely remade, as the junctions have incoming roads, but not "exitting" ones
-    for (auto con : junction->_connections) {
+    // Use the junction connection table (incoming_road + lane_links) to resolve
+    // lane connectivity. The previous approach matched against the connecting
+    // road's predecessor/successor, which fails when a single connecting road
+    // is shared by multiple incoming roads (common in OSM-derived maps).
+    for (const auto &con : junction->_connections) {
+      if (con.second.incoming_road != road_id) {
+        continue;
+      }
+
       auto conn_road = GetRoad(con.second.connecting_road);
       auto conn_id = conn_road->_id;
 
-      auto road_pred = conn_road->_predecessor;
-      auto road_succ = conn_road->_successor;
-      if (road_id == road_pred) {
-        for (auto lane : conn_road->GetLanesAt(0)){
-          if (lane_id == lane.second->_predecessor){
-            result.push_back(std::make_pair(conn_id, lane.second));
-          }
-        }
-      }
-
-      if (road_id == road_succ) {
-        for (auto lane : conn_road->GetLanesAt(conn_road->GetLength())){
-          if (lane_id == lane.second->_successor){
-            result.push_back(std::make_pair(conn_id, lane.second));
+      for (const auto &lane_link : con.second.lane_links) {
+        if (lane_link.from == lane_id) {
+          Lane *lane = GetEdgeLanePointer(conn_id, lane_link.to);
+          if (lane != nullptr) {
+            result.push_back(std::make_pair(conn_id, lane));
           }
         }
       }
