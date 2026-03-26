@@ -30,27 +30,21 @@ The setup script will prompt you for your sudo password, in order to install the
 
 __Building in Linux unattended__:
 
-If you want to run the setup script unattended, your git credentials need to be stored in an environment variable. Add your github credentials to your `.bashrc` file:
+If you want to run the setup script unattended, store your sudo password and your git credentials in an environment variable.
 
 ```sh
-export GIT_LOCAL_CREDENTIALS=username@github_token
+sudo -v   # Used to cache the password for 15 minutes
+export GIT_LOCAL_CREDENTIALS=github_username@github_token 
 ```
 
-Then run the setup script using the following command:
+Then run the setup script without the interactive flag:
 
 ```sh
 cd CarlaUE5
-sudo -E ./CarlaSetup.sh
+./CarlaSetup.sh
 ```
 
 This will download and install Unreal Engine 5.5, install the prerequisites and build CARLA. It may take some time to complete and use a significant amount of disk space.
-
-If you prefer to add the git credentials in the terminal, use the following command:
-
-```sh
-cd CarlaUE5
-sudo -E env GIT_LOCAL_CREDENTIALS=github_username@github_token ./CarlaSetup.sh 
-```
 
 !!! note
     The setup script will install by default Python 3 using apt. If you want to target an existing Python installation, you should use the `--python-root=PATH_TO_PYTHON` argument with the relevant Python installation path. You can use whereis python3 in your chosen environment and strip the `/python3` suffix from the path.
