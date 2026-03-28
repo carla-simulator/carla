@@ -20,11 +20,17 @@ namespace ros2 {
     using msg_type = typename S::msg_type;
 
     bool Init(std::string topic_name) {
-      _middleware = DDSMiddlewareFactory::CreateSubscriber<S>();
+#ifdef LIBCARLA_WITH_GTEST
       if (!_middleware) {
-        log_error("SubscriberImpl: Failed to create middleware subscriber");
-        return false;
+#endif
+        _middleware = DDSMiddlewareFactory::CreateSubscriber<S>();
+        if (!_middleware) {
+          log_error("SubscriberImpl: Failed to create middleware subscriber");
+          return false;
+        }
+#ifdef LIBCARLA_WITH_GTEST
       }
+#endif
       return _middleware->Init(topic_name, &_message, &_new_message);
     }
 
@@ -48,6 +54,17 @@ namespace ros2 {
     }
 
     bool HasNewMessage() { return _new_message; }
+
+#ifdef LIBCARLA_WITH_GTEST
+    void SetMiddlewareForTesting(std::unique_ptr<IDDSSubscriberMiddleware> middleware) {
+      _middleware = std::move(middleware);
+    }
+
+    void SimulateMessageReceiptForTesting(const msg_type& msg) {
+      _message = msg;
+      _new_message = true;
+    }
+#endif
 
   private:
     std::unique_ptr<IDDSSubscriberMiddleware> _middleware;

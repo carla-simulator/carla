@@ -9,6 +9,7 @@ file(GLOB libcarla_carla_fastdds_headers
   "${libcarla_source_path}/carla/ros2/subscribers/*.h"
   "${libcarla_source_path}/carla/ros2/listeners/*.h"
   "${libcarla_source_path}/carla/ros2/types/*.h"
+  "${libcarla_source_path}/carla/ros2/types/msg/*.h"
   "${libcarla_source_path}/carla/ros2/dds/*.h"
   "${libcarla_source_path}/carla/ros2/dds/fastdds/*.h"
   )

@@ -19,11 +19,17 @@ namespace ros2 {
     using msg_type = typename T::msg_type;
 
     bool Init(std::string topic_name) {
-      _middleware = DDSMiddlewareFactory::CreatePublisher<T>();
+#ifdef LIBCARLA_WITH_GTEST
       if (!_middleware) {
-        log_error("PublisherImpl: Failed to create middleware publisher");
-        return false;
+#endif
+        _middleware = DDSMiddlewareFactory::CreatePublisher<T>();
+        if (!_middleware) {
+          log_error("PublisherImpl: Failed to create middleware publisher");
+          return false;
+        }
+#ifdef LIBCARLA_WITH_GTEST
       }
+#endif
       return _middleware->Init(topic_name);
     }
 
@@ -52,6 +58,12 @@ namespace ros2 {
       }
       return _middleware->Publish(&_message);
     }
+
+#ifdef LIBCARLA_WITH_GTEST
+    void SetMiddlewareForTesting(std::unique_ptr<IDDSPublisherMiddleware> middleware) {
+      _middleware = std::move(middleware);
+    }
+#endif
 
   private:
     std::unique_ptr<IDDSPublisherMiddleware> _middleware;

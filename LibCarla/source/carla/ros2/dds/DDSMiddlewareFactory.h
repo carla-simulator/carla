@@ -12,7 +12,7 @@
 #include "carla/ros2/dds/IDDSSubscriberMiddleware.h"
 #include "carla/Logging.h"
 
-#if defined(CARLA_ROS2_DDS_FASTDDS)
+#if defined(CARLA_ROS2_DDS_FASTDDS) && !defined(CARLA_ROS2_DDS_TESTING)
 #  include "carla/ros2/dds/fastdds/FastDDSPublisherMiddleware.h"
 #  include "carla/ros2/dds/fastdds/FastDDSSubscriberMiddleware.h"
 #endif
@@ -77,7 +77,7 @@ class DDSMiddlewareFactory {
   static std::unique_ptr<IDDSPublisherMiddleware> CreatePublisher() {
     switch (GetActiveMiddleware()) {
       case DDSMiddleware::FastDDS:
-#if defined(CARLA_ROS2_DDS_FASTDDS)
+#if defined(CARLA_ROS2_DDS_FASTDDS) && !defined(CARLA_ROS2_DDS_TESTING)
         return std::unique_ptr<IDDSPublisherMiddleware>(
             new FastDDSPublisherMiddleware<T>());
 #else
@@ -95,7 +95,7 @@ class DDSMiddlewareFactory {
   static std::unique_ptr<IDDSSubscriberMiddleware> CreateSubscriber() {
     switch (GetActiveMiddleware()) {
       case DDSMiddleware::FastDDS:
-#if defined(CARLA_ROS2_DDS_FASTDDS)
+#if defined(CARLA_ROS2_DDS_FASTDDS) && !defined(CARLA_ROS2_DDS_TESTING)
         return std::unique_ptr<IDDSSubscriberMiddleware>(
             new FastDDSSubscriberMiddleware<S>());
 #else
