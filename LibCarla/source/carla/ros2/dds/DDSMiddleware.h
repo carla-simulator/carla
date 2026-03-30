@@ -13,7 +13,8 @@ namespace ros2 {
 /// Passed to ROS2::Enable() to select the middleware at startup.
 /// Once set, the middleware cannot be changed without restarting.
 enum class DDSMiddleware {
-  FastDDS
+  FastDDS,
+  CycloneDDS
 };
 
 /// Convert a DDSMiddleware enum value to a readable string.
@@ -21,6 +22,8 @@ inline const char* DDSMiddlewareToString(DDSMiddleware middleware) {
   switch (middleware) {
     case DDSMiddleware::FastDDS:
       return "FastDDS";
+    case DDSMiddleware::CycloneDDS:
+      return "CycloneDDS";
   }
   return "Unknown";
 }
@@ -37,6 +40,9 @@ inline DDSMiddlewareParseResult DDSMiddlewareFromString(const std::string& name)
   if (name == "fastdds") {
     return {true, DDSMiddleware::FastDDS};
   }
+  if (name == "cyclonedds") {
+    return {true, DDSMiddleware::CycloneDDS};
+  }
   return {false, DDSMiddleware::FastDDS};
 }
 
@@ -45,6 +51,12 @@ inline std::string GetAvailableMiddlewareString() {
   std::string result;
 #if defined(CARLA_ROS2_DDS_FASTDDS)
   result += "FastDDS";
+#endif
+#if defined(CARLA_ROS2_DDS_CYCLONEDDS)
+  if (!result.empty()) {
+    result += ", ";
+  }
+  result += "CycloneDDS";
 #endif
   if (result.empty()) {
     result = "none";

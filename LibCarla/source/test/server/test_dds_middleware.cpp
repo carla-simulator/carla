@@ -107,19 +107,26 @@ class DDSMiddlewareFactoryFixture : public ::testing::Test {
 // ==========================================================================
 
 TEST(dds_middleware_enum, values_exist) {
-  DDSMiddleware mw = DDSMiddleware::FastDDS;
-  EXPECT_EQ(static_cast<int>(mw), 0);
+  DDSMiddleware mw_fast = DDSMiddleware::FastDDS;
+  EXPECT_EQ(static_cast<int>(mw_fast), 0);
+  DDSMiddleware mw_cyclone = DDSMiddleware::CycloneDDS;
+  EXPECT_EQ(static_cast<int>(mw_cyclone), 1);
 }
 
 TEST(dds_middleware_enum, switch_covers_all) {
-  DDSMiddleware mw = DDSMiddleware::FastDDS;
-  bool covered = false;
-  switch (mw) {
-    case DDSMiddleware::FastDDS:
-      covered = true;
-      break;
+  DDSMiddleware values[] = {DDSMiddleware::FastDDS, DDSMiddleware::CycloneDDS};
+  for (auto mw : values) {
+    bool covered = false;
+    switch (mw) {
+      case DDSMiddleware::FastDDS:
+        covered = true;
+        break;
+      case DDSMiddleware::CycloneDDS:
+        covered = true;
+        break;
+    }
+    EXPECT_TRUE(covered);
   }
-  EXPECT_TRUE(covered);
 }
 
 // ==========================================================================
@@ -140,6 +147,10 @@ TEST(dds_middleware_to_string, result_is_not_empty) {
   EXPECT_STRNE(result, "");
 }
 
+TEST(dds_middleware_to_string, cyclonedds_returns_correct_string) {
+  EXPECT_STREQ(DDSMiddlewareToString(DDSMiddleware::CycloneDDS), "CycloneDDS");
+}
+
 // ==========================================================================
 // Group 3: dds_middleware_from_string (5 tests)
 // ==========================================================================
@@ -151,8 +162,14 @@ TEST(dds_middleware_from_string, fastdds_lowercase_valid) {
 }
 
 TEST(dds_middleware_from_string, unknown_string_invalid) {
-  auto result = DDSMiddlewareFromString("cyclonedds");
+  auto result = DDSMiddlewareFromString("unknowndds");
   EXPECT_FALSE(result.valid);
+}
+
+TEST(dds_middleware_from_string, cyclonedds_lowercase_valid) {
+  auto result = DDSMiddlewareFromString("cyclonedds");
+  EXPECT_TRUE(result.valid);
+  EXPECT_EQ(result.middleware, DDSMiddleware::CycloneDDS);
 }
 
 TEST(dds_middleware_from_string, empty_string_invalid) {
@@ -182,6 +199,11 @@ TEST(dds_middleware_available, fastdds_available) {
 TEST(dds_middleware_available, available_string_contains_fastdds) {
   std::string available = GetAvailableMiddlewareString();
   EXPECT_NE(available.find("FastDDS"), std::string::npos);
+}
+
+TEST(dds_middleware_available, cyclonedds_not_available_without_macro) {
+  EXPECT_FALSE(
+      DDSMiddlewareFactory::IsMiddlewareAvailable(DDSMiddleware::CycloneDDS));
 }
 
 // ==========================================================================
@@ -234,6 +256,34 @@ TEST_F(DDSMiddlewareFactoryFixture, resolve_available_middleware) {
 TEST_F(DDSMiddlewareFactoryFixture, factory_available_string) {
   std::string available = DDSMiddlewareFactory::GetAvailableMiddlewareString();
   EXPECT_NE(available.find("FastDDS"), std::string::npos);
+}
+
+TEST_F(DDSMiddlewareFactoryFixture, set_and_get_cyclonedds) {
+  DDSMiddlewareFactory::SetMiddleware(DDSMiddleware::CycloneDDS);
+  EXPECT_EQ(DDSMiddlewareFactory::GetMiddleware(), DDSMiddleware::CycloneDDS);
+}
+
+TEST_F(DDSMiddlewareFactoryFixture, resolve_unavailable_cyclonedds) {
+  auto resolution =
+      DDSMiddlewareFactory::ResolveMiddleware(DDSMiddleware::CycloneDDS);
+  EXPECT_FALSE(resolution.success);
+  EXPECT_EQ(resolution.middleware, DDSMiddleware::CycloneDDS);
+}
+
+TEST_F(DDSMiddlewareFactoryFixture, create_publisher_cyclonedds_unavailable) {
+  DDSMiddlewareFactory::SetMiddleware(DDSMiddleware::CycloneDDS);
+  ::testing::internal::CaptureStderr();
+  auto pub = DDSMiddlewareFactory::CreatePublisher<TestPubTraits>();
+  ::testing::internal::GetCapturedStderr();
+  EXPECT_EQ(pub, nullptr);
+}
+
+TEST_F(DDSMiddlewareFactoryFixture, create_subscriber_cyclonedds_unavailable) {
+  DDSMiddlewareFactory::SetMiddleware(DDSMiddleware::CycloneDDS);
+  ::testing::internal::CaptureStderr();
+  auto sub = DDSMiddlewareFactory::CreateSubscriber<TestSubTraits>();
+  ::testing::internal::GetCapturedStderr();
+  EXPECT_EQ(sub, nullptr);
 }
 
 // ==========================================================================
