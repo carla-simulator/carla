@@ -15,6 +15,9 @@
 #include "RHIGPUReadback.h"
 #include <util/ue-header-guard-end.h>
 
+#include <chrono>
+#include <thread>
+
 // =============================================================================
 // -- FPixelReader -------------------------------------------------------------
 // =============================================================================
@@ -63,7 +66,7 @@ void FPixelReader::WritePixelsToBuffer(
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
       while (!Readback->IsReady())
       {
-        std::this_thread::yield();
+        std::this_thread::sleep_for(std::chrono::microseconds(100));
       }
     }
 

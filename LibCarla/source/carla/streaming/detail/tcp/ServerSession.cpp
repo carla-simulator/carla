@@ -16,6 +16,7 @@
 #include <boost/asio/post.hpp>
 
 #include <atomic>
+#include <chrono>
 #include <thread>
 
 namespace carla {
@@ -86,7 +87,7 @@ namespace tcp {
       if (_server.IsSynchronousMode()) {
         // wait until previous message has been sent
         while (_is_writing) {
-          std::this_thread::yield();
+          std::this_thread::sleep_for(std::chrono::microseconds(100));
         }
       } else {
         // ignore this message
