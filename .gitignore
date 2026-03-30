@@ -1,6 +1,9 @@
 .vs/
 .vscode/
 .cache/
+.devcontainer/
+.idea/
+cmake-build-*/
 __pycache__/
 
 Build/
