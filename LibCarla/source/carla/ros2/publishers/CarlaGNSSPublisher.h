@@ -11,8 +11,7 @@
 #include "carla/ros2/publishers/BasePublisher.h"
 #include "carla/ros2/publishers/PublisherImpl.h"
 
-#include "carla/ros2/types/NavSatFix.h"
-#include "carla/ros2/types/NavSatFixPubSubTypes.h"
+#include "carla/ros2/types/msg/NavSatFix.h"
 
 namespace carla {
 namespace ros2 {
@@ -20,14 +19,15 @@ namespace ros2 {
   class CarlaGNSSPublisher : public BasePublisher {
     public:
       struct GnssMsgTraits {
-        using msg_type = sensor_msgs::msg::NavSatFix;
-        using msg_pubsub_type = sensor_msgs::msg::NavSatFixPubSubType;
+        using msg_type = msg::NavSatFix;
       };
 
       CarlaGNSSPublisher(std::string base_topic_name, std::string frame_id):
         BasePublisher(base_topic_name, frame_id),
         _impl(std::make_shared<PublisherImpl<GnssMsgTraits>>()) {
-          _impl->Init(this->GetBaseTopicName());
+          if (!_impl->Init(this->GetBaseTopicName())) {
+            log_warning("CarlaGNSSPublisher: Init failed for topic: ", this->GetBaseTopicName());
+          }
       }
 
       bool Publish() {

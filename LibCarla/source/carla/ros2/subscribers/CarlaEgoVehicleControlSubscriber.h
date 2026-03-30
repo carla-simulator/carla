@@ -9,8 +9,7 @@
 #include "BaseSubscriber.h"
 #include "SubscriberImpl.h"
 
-#include "carla/ros2/types/CarlaEgoVehicleControl.h"
-#include "carla/ros2/types/CarlaEgoVehicleControlPubSubTypes.h"
+#include "carla/ros2/types/msg/CarlaEgoVehicleControl.h"
 
 #include "carla/ros2/ROS2CallbackData.h"
 
@@ -20,15 +19,17 @@ namespace ros2 {
   class CarlaEgoVehicleControlSubscriber : public BaseSubscriber {
     public:
       struct ControlMsgTraits {
-        using msg_type = carla_msgs::msg::CarlaEgoVehicleControl;
-        using msg_pubsub_type = carla_msgs::msg::CarlaEgoVehicleControlPubSubType;
+        using msg_type = msg::CarlaEgoVehicleControl;
       };
 
 
       CarlaEgoVehicleControlSubscriber(void* vehicle, std::string base_topic_name, std::string frame_id) :
         BaseSubscriber(vehicle, base_topic_name, frame_id),
         _impl(std::make_shared<SubscriberImpl<ControlMsgTraits>>()) {
-          _impl->Init(this->GetBaseTopicName() + "/vehicle_control_cmd");
+          if (!_impl->Init(this->GetBaseTopicName() + "/vehicle_control_cmd")) {
+            log_warning("CarlaEgoVehicleControlSubscriber: Init failed for topic: ",
+                        this->GetBaseTopicName() + "/vehicle_control_cmd");
+          }
         }
 
       ROS2CallbackData GetMessage();

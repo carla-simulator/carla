@@ -9,17 +9,17 @@ namespace ros2 {
 
 bool CarlaIMUPublisher::Write(int32_t seconds, uint32_t nanoseconds, geom::Vector3D accelerometer, geom::Vector3D gyroscope, float compass) {
 
-  _impl->GetMessage()->header().stamp().sec(seconds);
-  _impl->GetMessage()->header().stamp().nanosec(nanoseconds);
-  _impl->GetMessage()->header().frame_id(GetFrameId());
+  _impl->GetMessage()->header.stamp.sec = seconds;
+  _impl->GetMessage()->header.stamp.nanosec = nanoseconds;
+  _impl->GetMessage()->header.frame_id = GetFrameId();
 
-  _impl->GetMessage()->linear_acceleration().x(accelerometer.x);
-  _impl->GetMessage()->linear_acceleration().y(-accelerometer.y);
-  _impl->GetMessage()->linear_acceleration().z(accelerometer.z);
+  _impl->GetMessage()->linear_acceleration.x = accelerometer.x;
+  _impl->GetMessage()->linear_acceleration.y = -accelerometer.y;
+  _impl->GetMessage()->linear_acceleration.z = accelerometer.z;
 
-  _impl->GetMessage()->angular_velocity().x(-gyroscope.x);
-  _impl->GetMessage()->angular_velocity().y(gyroscope.y);
-  _impl->GetMessage()->angular_velocity().z(-gyroscope.z);
+  _impl->GetMessage()->angular_velocity.x = -gyroscope.x;
+  _impl->GetMessage()->angular_velocity.y = gyroscope.y;
+  _impl->GetMessage()->angular_velocity.z = -gyroscope.z;
 
   const float rx = 0.0f;                                 // pitch
   const float ry = (float(M_PI_2) / 2.0f) - compass;     // yaw
@@ -37,10 +37,10 @@ bool CarlaIMUPublisher::Write(int32_t seconds, uint32_t nanoseconds, geom::Vecto
   const float y = cr * sp * cy + sr * cp * sy;
   const float z = cr * cp * sy - sr * sp * cy;
 
-  _impl->GetMessage()->orientation().w(w);
-  _impl->GetMessage()->orientation().x(x);
-  _impl->GetMessage()->orientation().y(y);
-  _impl->GetMessage()->orientation().z(z);
+  _impl->GetMessage()->orientation.w = w;
+  _impl->GetMessage()->orientation.x = x;
+  _impl->GetMessage()->orientation.y = y;
+  _impl->GetMessage()->orientation.z = z;
 
   return true;
 }

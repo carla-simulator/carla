@@ -1,3 +1,7 @@
+// Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 #include "AckermannControlSubscriber.h"
 
 #include "carla/ros2/ROS2CallbackData.h"
@@ -9,11 +13,11 @@ namespace ros2 {
     auto message = _impl->GetMessage();
 
     AckermannControl control;
-    control.steer = message.drive().steering_angle();
-    control.steer_speed = message.drive().steering_angle_velocity();
-    control.speed = message.drive().speed();
-    control.acceleration = message.drive().acceleration();
-    control.jerk = message.drive().jerk();
+    control.steer = message.drive.steering_angle;
+    control.steer_speed = message.drive.steering_angle_velocity;
+    control.speed = message.drive.speed;
+    control.acceleration = message.drive.acceleration;
+    control.jerk = message.drive.jerk;
     return control;
   }
 
