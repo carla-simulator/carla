@@ -434,6 +434,7 @@ function (
       -archive
       -package
       -iterate
+      -IgnoreCookErrors
       -clientconfig=${UE_BUILD_CONFIGURATION}
       -TargetPlatform=${UE_SYSTEM_NAME}
       -Platform=${UE_SYSTEM_NAME}
