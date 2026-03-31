@@ -27,15 +27,6 @@ while true; do
     esac
 done
 
-if [ -z "$EUID" ]; then
-    EUID=$(id -u)
-fi
-
-if [ "$EUID" -ne 0 ]; then
-    echo "Please run this script as root."
-    exit 1
-fi
-
 # -- DETECT UBUNTU VERSION --
 if [ -f /etc/os-release ]; then
     . /etc/os-release
