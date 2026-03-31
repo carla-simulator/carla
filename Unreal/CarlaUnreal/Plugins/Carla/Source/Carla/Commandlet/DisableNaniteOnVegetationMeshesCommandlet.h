@@ -10,17 +10,17 @@
 #include "Commandlets/Commandlet.h"
 #include <util/ue-header-guard-end.h>
 
-#include "DisableNaniteOnInvalidMeshesCommandlet.generated.h"
+#include "DisableNaniteOnVegetationMeshesCommandlet.generated.h"
 
 UCLASS()
-class CARLA_API UDisableNaniteOnInvalidMeshesCommandlet
+class CARLA_API UDisableNaniteOnVegetationMeshesCommandlet
   : public UCommandlet
 {
   GENERATED_BODY()
 
 public:
 
-  UDisableNaniteOnInvalidMeshesCommandlet();
+  UDisableNaniteOnVegetationMeshesCommandlet();
 
 #if WITH_EDITORONLY_DATA
   virtual int32 Main(const FString &Params) override;

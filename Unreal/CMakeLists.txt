@@ -426,7 +426,7 @@ function (
     COMMAND
       ${UNREAL_EDITOR_PATH}
       ${CARLA_UE_PROJECT_PATH}
-      -run=DisableNaniteOnInvalidMeshes
+      -run=DisableNaniteOnVegetationMeshes
       -unattended
       -nosplash
       -nullrhi
