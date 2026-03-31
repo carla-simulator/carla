@@ -424,6 +424,13 @@ function (
       -game
       -buildscw
     COMMAND
+      ${UNREAL_EDITOR_PATH}
+      ${CARLA_UE_PROJECT_PATH}
+      -run=DisableNaniteOnInvalidMeshes
+      -unattended
+      -nosplash
+      -nullrhi
+    COMMAND
       ${CARLA_UE_UAT_COMMAND_PREFIX}
       BuildCookRun
       -project=${CARLA_UE_PROJECT_PATH}
