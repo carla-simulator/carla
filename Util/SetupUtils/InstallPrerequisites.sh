@@ -53,8 +53,8 @@ fi
 
 # -- INSTALL APT PACKAGES --
 echo "Installing Ubuntu Packages..."
-apt-get update
-apt-get -y install \
+sudo apt-get update
+sudo apt-get -y install \
     build-essential \
     make \
     ninja-build \
@@ -78,11 +78,14 @@ apt-get -y install \
     libasound2-dev
 
 if [ "$python_path" == "python3" ]; then
-    apt-get -y install \
+    sudo apt-get -y install \
         python3 \
         python3-dev \
         python3-pip
 fi
+
+# -- CONFIGURE GIT LFS --
+git lfs install
 
 # -- INSTALL PYTHON PACKAGES --
 echo "Installing Python Packages..."
@@ -123,8 +126,8 @@ else
     echo "Could not find CMake >=$CMAKE_MINIMUM_VERSION."
     echo "Installing CMake 3.28.3..."
     curl -L -O https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3-linux-x86_64.tar.gz
-    mkdir -p /opt
-    tar -xzf cmake-3.28.3-linux-x86_64.tar.gz -C /opt
+    sudo mkdir -p /opt
+    sudo tar -xzf cmake-3.28.3-linux-x86_64.tar.gz -C /opt
     if [[ ":$PATH:" != *":/opt/cmake-3.28.3-linux-x86_64/bin:"* ]]; then
         echo -e '\n#CARLA CMake 3.28.3\nPATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH' >> ~/.bashrc
         export PATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH
