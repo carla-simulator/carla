@@ -1197,7 +1197,7 @@ namespace road {
       std::thread neworker(
         [this, &write_mutex, &mesh_factory, &RoadsIDToGenerate, &road_out_mesh_list, i, num_roads_per_thread]() {
         std::map<road::Lane::LaneType, std::vector<std::unique_ptr<geom::Mesh>>> Current =
-          std::move(GenerateRoadsMultithreaded(mesh_factory, RoadsIDToGenerate,i, num_roads_per_thread ));
+          GenerateRoadsMultithreaded(mesh_factory, RoadsIDToGenerate,i, num_roads_per_thread );
         std::scoped_lock<std::mutex> guard(write_mutex);
         for ( auto&& pair : Current ) {
           if (road_out_mesh_list.find(pair.first) != road_out_mesh_list.end()) {
@@ -1339,7 +1339,7 @@ namespace road {
       }
     }
 
-    return std::move(LineMarks);
+    return LineMarks;
   }
 
   std::vector<carla::geom::BoundingBox> Map::GetJunctionsBoundingBoxes() const {
@@ -1370,7 +1370,7 @@ namespace road {
     size_t endoffset = (index+1) * number_of_roads_per_thread;
     size_t end = RoadsId.size();
 
-    for (int i = start; i < endoffset && i < end; ++i) {
+    for (size_t i = start; i < endoffset && i < end; ++i) {
       const auto& road = _data.GetRoads().at(RoadsId[i]);
       if (!road.IsJunction()) {
         mesh_factory.GenerateAllOrderedWithMaxLen(road, out);
@@ -1381,7 +1381,7 @@ namespace road {
   }
 
   void Map::GenerateJunctions(const carla::geom::MeshFactory& mesh_factory,
-    const rpc::OpendriveGenerationParameters& params,
+    const rpc::OpendriveGenerationParameters& /*params*/,
     const geom::Vector3D& minpos,
     const geom::Vector3D& maxpos,
     std::map<road::Lane::LaneType,
@@ -1390,7 +1390,6 @@ namespace road {
     std::vector<JuncId> JunctionsToGenerate = FilterJunctionsByPosition(minpos, maxpos);
     size_t num_junctions = JunctionsToGenerate.size();
     std::cout << "Generating " << std::to_string(num_junctions) << " junctions" << std::endl;
-    size_t junctionindex = 0;
     size_t num_junctions_per_thread = 5;
     size_t num_threads = (num_junctions / num_junctions_per_thread) + 1;
     num_threads = num_threads > 1 ? num_threads : 1;
@@ -1482,20 +1481,16 @@ namespace road {
   }
 
   std::unique_ptr<geom::Mesh> Map::SDFToMesh(const road::Junction& jinput,
-    const std::vector<geom::Vector3D>& sdfinput,
-    int grid_cells_per_dim) const {
+    const std::vector<geom::Vector3D>& /*sdfinput*/,
+    int /*grid_cells_per_dim*/) const {
 
-    int junctionid = jinput.GetId();
     float box_extraextension_factor = 1.2f;
     const double CubeSize = 0.5;
     carla::geom::BoundingBox bb = jinput.GetBoundingBox();
     carla::geom::Vector3D MinOffset = bb.location - geom::Location(bb.extent * box_extraextension_factor);
-    carla::geom::Vector3D MaxOffset = bb.location + geom::Location(bb.extent * box_extraextension_factor);
-    carla::geom::Vector3D OffsetPerCell = ( bb.extent * box_extraextension_factor * 2 ) / grid_cells_per_dim;
-
-    auto junctionsdf = [this, OffsetPerCell, CubeSize, MinOffset, junctionid](MeshReconstruction::Vec3 const& pos)
+    auto junctionsdf = [this, CubeSize](MeshReconstruction::Vec3 const& pos)
     {
-      geom::Vector3D worldloc(pos.x, pos.y, pos.z);
+      geom::Vector3D worldloc(static_cast<float>(pos.x), static_cast<float>(pos.y), static_cast<float>(pos.z));
       std::optional<element::Waypoint> CheckingWaypoint = GetWaypoint(geom::Location(worldloc), 0x1 << 1);
       if (CheckingWaypoint) {
         if ( pos.z < 0.2) {
@@ -1508,7 +1503,7 @@ namespace road {
       geom::Transform InRoadWPTransform = ComputeTransform(*InRoadWaypoint);
 
       geom::Vector3D director = geom::Location(worldloc) - (InRoadWPTransform.location);
-      geom::Vector3D laneborder = InRoadWPTransform.location + geom::Location(director.MakeUnitVector() * GetLaneWidth(*InRoadWaypoint) * 0.5f);
+      geom::Vector3D laneborder = InRoadWPTransform.location + geom::Location(director.MakeUnitVector() * static_cast<float>(GetLaneWidth(*InRoadWaypoint) * 0.5));
 
       geom::Vector3D Distance = laneborder - worldloc;
       if (Distance.Length2D() < CubeSize * 1.1 && pos.z < 0.2) {
@@ -1517,30 +1512,27 @@ namespace road {
       return Distance.Length() * -1.0;
     };
 
-    double gridsizeindouble = grid_cells_per_dim;
     MeshReconstruction::Rect3 domain;
     domain.min = { MinOffset.x, MinOffset.y, MinOffset.z };
     domain.size = { bb.extent.x * box_extraextension_factor * 2, bb.extent.y * box_extraextension_factor * 2, 0.4 };
 
     MeshReconstruction::Vec3 cubeSize{ CubeSize, CubeSize, 0.2 };
     auto mesh = MeshReconstruction::MarchCube(junctionsdf, domain, cubeSize );
-    carla::geom::Rotation inverse = bb.rotation;
-    carla::geom::Vector3D trasltation = bb.location;
     geom::Mesh out_mesh;
 
     for (auto& cv : mesh.vertices) {
       geom::Vector3D newvertex;
-      newvertex.x = cv.x;
-      newvertex.y = cv.y;
-      newvertex.z = cv.z;
+      newvertex.x = static_cast<float>(cv.x);
+      newvertex.y = static_cast<float>(cv.y);
+      newvertex.z = static_cast<float>(cv.z);
       out_mesh.AddVertex(newvertex);
     }
 
     auto finalvertices = out_mesh.GetVertices();
     for (auto ct : mesh.triangles) {
-      out_mesh.AddIndex(ct[1] + 1);
-      out_mesh.AddIndex(ct[0] + 1);
-      out_mesh.AddIndex(ct[2] + 1);
+      out_mesh.AddIndex(static_cast<size_t>(ct[1] + 1));
+      out_mesh.AddIndex(static_cast<size_t>(ct[0] + 1));
+      out_mesh.AddIndex(static_cast<size_t>(ct[2] + 1));
     }
 
     for (auto& cv : out_mesh.GetVertices() ) {
@@ -1551,7 +1543,7 @@ namespace road {
         geom::Transform InRoadWPTransform = ComputeTransform(*InRoadWaypoint);
 
         geom::Vector3D director = geom::Location(cv) - (InRoadWPTransform.location);
-        geom::Vector3D laneborder = InRoadWPTransform.location + geom::Location(director.MakeUnitVector() * GetLaneWidth(*InRoadWaypoint) * 0.5f);
+        geom::Vector3D laneborder = InRoadWPTransform.location + geom::Location(director.MakeUnitVector() * static_cast<float>(GetLaneWidth(*InRoadWaypoint) * 0.5));
         cv = laneborder;
       }
     }
@@ -1580,7 +1572,7 @@ namespace road {
               const auto& lane = lane_pair.second;
               if ( lane.GetType() == road::Lane::LaneType::Sidewalk ) {
                 std::optional<element::Waypoint> sw =
-                  GetWaypoint(road.GetId(), lane_pair.first, lane.GetDistance() + (lane.GetLength() * 0.5f));
+                  GetWaypoint(road.GetId(), lane_pair.first, static_cast<float>(lane.GetDistance() + (lane.GetLength() * 0.5)));
                 if (!GetWaypoint(ComputeTransform(*sw).location).has_value()){
                   sidewalk_lane_meshes.push_back(mesh_factory.GenerateSidewalk(lane));
                 }

@@ -290,7 +290,7 @@ namespace road {
       const double roll) {
     std::unique_ptr<Signal> &signal = _temp_signal_container[signal_id];
     signal->_using_inertial_position = true;
-    geom::Location location = geom::Location(x, -y, z);
+    geom::Location location = geom::Location(static_cast<float>(x), static_cast<float>(-y), static_cast<float>(z));
     signal->_transform = geom::Transform (location, geom::Rotation(
         geom::Math::ToDegrees(static_cast<float>(pitch)),
         geom::Math::ToDegrees(static_cast<float>(-hdg)),
@@ -1132,7 +1132,7 @@ void MapBuilder::CreateController(
 
           geom::Vector3D displacement = 1.f*(road_transform.GetRightVector()) *
               static_cast<float>(abs(lane_width))*0.2f;
-          signal_position += (displacement * displacement_direction);
+          signal_position += (displacement * static_cast<float>(displacement_direction));
           signal_rotation = road_transform.rotation;
           closest_waypoint_to_signal =
               map.GetClosestWaypointOnRoad(signal_position,
