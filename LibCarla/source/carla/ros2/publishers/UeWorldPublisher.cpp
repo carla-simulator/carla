@@ -157,6 +157,7 @@ void UeWorldPublisher::UpdateSensorDataPreAction() {
   }
 
   _world_info_publisher->UpdateSensorDataPreAction();
+  _weather_publisher->UpdateSensorDataPreAction();
 
   for (auto &ue_sensor : _ue_sensors) {
     if ( (ue_sensor.second.publisher != nullptr) && (ue_sensor.first != GetSensorActorDefinition()->stream_id) ) {
