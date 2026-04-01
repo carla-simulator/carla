@@ -147,6 +147,8 @@ docker run \
 docker run \
     --runtime=nvidia \
     --net=host \
+    --env=NVIDIA_VISIBLE_DEVICES=all \
+    --env=NVIDIA_DRIVER_CAPABILITIES=all \
     carlasim/carla:0.10.0 bash CarlaUnreal.sh -RenderOffScreen -nosound
 ```
 
@@ -174,6 +176,8 @@ docker run \
     --net=host \
     --user=$(id -u):$(id -g) \
     --env=DISPLAY=$DISPLAY \
+    --env=NVIDIA_VISIBLE_DEVICES=all \
+    --env=NVIDIA_DRIVER_CAPABILITIES=all \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
     carlasim/carla:0.10.0 bash CarlaUnreal.sh -nosound
 ```
