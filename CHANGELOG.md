@@ -16,6 +16,7 @@
  * Added support for parsing offsets from OpenDRIVE using optional offset transforms.
  * Added ad-rss type-stubs for the PythonAPI when building with RSS support
  * Make TrafficManager PID controller use actual delta times to improve robustness to different fixed_delta_seconds
+ * Fix segfault on LaneCrossingCalculator nullptr access
  * ROS2Native: Extended functionality and performance of ROS2 support
  * ROS2Native: Update to fastdds 2.14.6
  
