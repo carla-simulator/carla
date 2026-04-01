@@ -76,14 +76,12 @@ namespace multigpu {
         return;
       }
 
-      auto handle_sent = [weak, message](const boost::system::error_code &ec, size_t DEBUG_ONLY(bytes)) {
+      auto handle_sent = [weak, message](const boost::system::error_code &ec, size_t) {
         auto self = weak.lock();
         if (!self) return;
         if (ec) {
           log_error("session ", self->_session_id, ": error sending data: ", ec.message());
           self->CloseNow(ec);
-        } else {
-          // DEBUG_ASSERT_EQ(bytes, sizeof(message_size_type) + message->size());
         }
       };
 
@@ -106,7 +104,7 @@ namespace multigpu {
 
       // sent first size buffer
       self->_deadline.expires_from_now(self->_timeout);
-      int this_size = text.size();
+      int this_size = static_cast<int>(text.size());
       boost::asio::async_write(
           self->_socket,
           boost::asio::buffer(&this_size, sizeof(this_size)),
@@ -146,7 +144,7 @@ namespace multigpu {
 
       auto handle_read_header = [weak, message, handle_read_data](
           boost::system::error_code ec,
-          size_t DEBUG_ONLY(bytes)) {
+          size_t) {
         auto self = weak.lock();
         if (!self) return;
         if (!ec && (message->size() > 0u)) {

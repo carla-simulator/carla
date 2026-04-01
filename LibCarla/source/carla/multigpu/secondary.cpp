@@ -142,7 +142,7 @@ namespace multigpu {
         return;
       }
 
-      auto handle_sent = [weak, message](const boost::system::error_code &ec, size_t DEBUG_ONLY(bytes)) {
+      auto handle_sent = [weak, message](const boost::system::error_code &ec, size_t) {
         auto self = weak.lock();
         if (!self) return;
         if (ec) {
@@ -172,7 +172,7 @@ namespace multigpu {
         return;
       }
 
-      auto handle_sent = [weak, message](const boost::system::error_code &ec, size_t DEBUG_ONLY(bytes)) {
+      auto handle_sent = [weak, message](const boost::system::error_code &ec, size_t) {
         auto self = weak.lock();
         if (!self) return;
         if (ec) {
@@ -197,7 +197,7 @@ namespace multigpu {
         return;
       }
 
-      auto handle_sent = [weak](const boost::system::error_code &ec, size_t DEBUG_ONLY(bytes)) {
+      auto handle_sent = [weak](const boost::system::error_code &ec, size_t) {
         auto self = weak.lock();
         if (!self) return;
         if (ec) {
@@ -207,7 +207,7 @@ namespace multigpu {
 
       // _deadline.expires_from_now(_timeout);
       // sent first size buffer
-      int this_size = text.size();
+      uint32_t this_size = static_cast<uint32_t>(text.size());
       boost::asio::async_write(
           self->_socket,
           boost::asio::buffer(&this_size, sizeof(this_size)),
