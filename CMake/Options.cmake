@@ -44,18 +44,6 @@ carla_option (
   OFF
 )
 
-carla_string_option (
-  CARLA_CUDA_ARCHITECTURES
-  "Semicolon-separated list of CUDA GPU architectures (e.g. 75;80;86;89;100;120). Used when ENABLE_PYTORCH=ON and CUDA is available."
-  "75;80;86;89;100;120"
-)
-
-carla_string_option (
-  CARLA_CUDA_MIN_VERSION
-  "Minimum required CUDA Toolkit version when ENABLE_PYTORCH=ON."
-  "11.0"
-)
-
 carla_option (
   BUILD_PYTHON_API
   "Build the CARLA Python API."
