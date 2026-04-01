@@ -27,8 +27,8 @@ from tqdm import tqdm
 from enum import Enum
 from dataclasses import dataclass
 from invertedai.common import AgentProperties, AgentState, TrafficLightState, Point, RecurrentState, AgentType
-from invertedai.common import AgentData as IaiAgentData  # NEW: iai AgentData for SimulationManager external_agent_data dicts
-from invertedai import SimulationManager, RegionsConfig, LogWriterConfig  # NEW: SimulationManager cosim integration
+from invertedai.common import AgentData as IaiAgentData
+from invertedai import SimulationManager, RegionsConfig, LogWriterConfig 
 from carla import command, Location
 from typing import List, Tuple, Any, Optional, Dict
 
