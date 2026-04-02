@@ -20,6 +20,8 @@ COPY --chown=carla:carla . .
 
 USER carla
 
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=all
 ENV SDL_VIDEODRIVER="x11"
 
 # You can also run CARLA in offscreen mode with -RenderOffScreen
