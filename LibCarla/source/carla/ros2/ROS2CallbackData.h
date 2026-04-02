@@ -23,12 +23,24 @@ namespace ros2 {
     bool    manual_gear_shift;
   };
 
+  struct AckermannControl
+  {
+    float steer;
+    float steer_speed;
+    float speed;
+    float acceleration;
+    float jerk;
+  };
+
     struct MessageControl
   {
     const char* message;
   };
 
-  using ROS2CallbackData = std::variant<VehicleControl>;
+  using ROS2CallbackData = std::variant<
+    VehicleControl,
+    AckermannControl
+  >;
   using ROS2MessageCallbackData = std::variant<MessageControl>;
 
   using ActorCallback = std::function<void(void *actor, ROS2CallbackData data)>;
