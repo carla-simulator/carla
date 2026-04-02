@@ -48,7 +48,11 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
+        gnss:
+          Value: true
         hero:
+          Value: true
+        imu:
           Value: true
         lidar:
           Value: true
@@ -61,6 +65,10 @@ Visualization Manager:
       Show Names: true
       Tree:
         hero:
+          gnss:
+            {}
+          imu:
+            {}
           lidar:
             {}
           rgb:
@@ -102,9 +110,9 @@ Visualization Manager:
           Enabled: true
           Invert Rainbow: false
           Max Color: 255; 255; 255
-          Max Intensity: 0.9900385737419128
+          Max Intensity: 0.9897720217704773
           Min Color: 0; 0; 0
-          Min Intensity: 0.7121721506118774
+          Min Intensity: 0.7122171521186829
           Name: PointCloud
           Position Transformer: XYZ
           Selectable: true
@@ -117,7 +125,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /carla/hero/lidar
+            Value: /carla/hero/lidar/point_cloud
           Use Fixed Frame: true
           Use rainbow: true
           Value: true

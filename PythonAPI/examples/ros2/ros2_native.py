@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
@@ -8,6 +8,18 @@
 
 # Allows controlling a vehicle with a keyboard. For a simpler and more
 # documented example, please take a look at tutorial.py.
+
+import glob
+import os
+import sys
+
+try:
+    sys.path.append(glob.glob('../../carla/dist/carla-*%d.%d-%s.egg' % (
+        sys.version_info.major,
+        sys.version_info.minor,
+        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
+except IndexError:
+    pass
 
 import argparse
 import json
@@ -24,7 +36,7 @@ def _setup_vehicle(world, config):
 
     bp = bp_library.filter(config.get("type"))[0]
     bp.set_attribute("role_name", config.get("id"))
-    bp.set_attribute("ros_name", config.get("id")) 
+    bp.set_attribute("ros_name", config.get("id"))
 
     return  world.spawn_actor(
         bp,
@@ -40,8 +52,8 @@ def _setup_sensors(world, vehicle, sensors_config):
         logging.debug("Spawning sensor: {}".format(sensor))
 
         bp = bp_library.filter(sensor.get("type"))[0]
-        bp.set_attribute("ros_name", sensor.get("id")) 
-        bp.set_attribute("role_name", sensor.get("id")) 
+        bp.set_attribute("ros_name", sensor.get("id"))
+        bp.set_attribute("role_name", sensor.get("id"))
         for key, value in sensor.get("attributes", {}).items():
             bp.set_attribute(str(key), str(value))
 
@@ -72,7 +84,7 @@ def main(args):
 
     try:
         client = carla.Client(args.host, args.port)
-        client.set_timeout(60.0)
+        client.set_timeout(10.0)
 
         world = client.get_world()
 
