@@ -8,15 +8,20 @@ project (
     "Open-source simulator for autonomous driving research."
 )
 
-carla_option (
+option (
   ENABLE_DIRECTORY_CLEAN
   "Enable ADDITIONAL_CLEAN_FILES on directory level"
   ON
 )
 
 set (
+  CARLA_PACKAGE_PATH
+  ${CMAKE_BINARY_DIR}/Package
+)
+
+set (
   CARLA_UE_PATH
-  ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal
+  ${CARLA_ROOT}/Unreal/CarlaUnreal
 )
 
 set (
@@ -49,8 +54,170 @@ set (
   ${CARLA_UE_PATH}/Content/Carla
 )
 
-if (NOT EXISTS ${CARLA_UE_CONTENT_PATH}/.git)
-  carla_error ("Missing CARLA content.")
+set (
+  CARLA_UE_CONTENT_ORIGIN_URL
+  https://bitbucket.org/carla-simulator/carla-content.git
+)
+
+cmake_path (
+  CONVERT
+    "$ENV{CARLA_UNREAL_ENGINE_PATH}"
+  TO_CMAKE_PATH_LIST
+    CARLA_UNREAL_ENGINE_PATH_INFERRED
+  NORMALIZE
+)
+
+set (
+  CARLA_UNREAL_ENGINE_PATH
+  "${CARLA_UNREAL_ENGINE_PATH_INFERRED}"
+  CACHE FILEPATH
+  "Path to the CARLA fork of Unreal Engine."
+)
+
+message (STATUS "Using ${CARLA_UNREAL_ENGINE_PATH} as Unreal Engine root path.")
+
+if (EXISTS ${CARLA_UNREAL_ENGINE_PATH})
+  set (CARLA_HAS_UNREAL_ENGINE_PATH ON)
+else ()
+  set (CARLA_HAS_UNREAL_ENGINE_PATH OFF)
+endif ()
+
+option (BUILD_CARLA_UNREAL "Build the Carla Unreal Engine project." ${CARLA_HAS_UNREAL_ENGINE_PATH})
+if (WIN32)
+  set (CARLA_UNREAL_RHI_DEFAULT d3d12)
+elseif (LINUX)
+  set (CARLA_UNREAL_RHI_DEFAULT vulkan)
+endif ()
+
+set (
+  CARLA_UNREAL_RHI
+  "${CARLA_UNREAL_RHI_DEFAULT}"
+  CACHE STRING
+  "Target CARLA Unreal Engine RHI."
+)
+
+if (BUILD_CARLA_UNREAL)
+  if (NOT ${CARLA_HAS_UNREAL_ENGINE_PATH})
+    message (FATAL_ERROR 
+      "Could not add UE project to build since the option CARLA_UNREAL_ENGINE_PATH "
+      "is not set to a valid path (\"${CARLA_UNREAL_ENGINE_PATH}\")."
+      "Please set it to point to the root path of your CARLA Unreal Engine installation."
+    )
+  endif ()
+endif ()
+
+# Docs for UE5 build configurations:
+# https://docs.unrealengine.com/4.27/en-US/ProductionPipelines/DevelopmentSetup/BuildConfigurations/
+
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+  set (CARLA_UNREAL_BUILD_TYPE Debug)
+elseif (${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo")
+  set (CARLA_UNREAL_BUILD_TYPE Development)
+elseif (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+  set (CARLA_UNREAL_BUILD_TYPE Shipping)
+else ()
+  message (WARNING "Unexpected CMAKE_BUILD_TYPE \"${CMAKE_BUILD_TYPE}\". Unreal packages will default to Development. Manually override DEFAULT_PACKAGE_CONFIGURATION if this behavior is not desired.")
+  set (CARLA_UNREAL_BUILD_TYPE Development)
+endif ()
+
+set (
+  CARLA_UNREAL_BUILD_TYPE
+  "${CARLA_UNREAL_BUILD_TYPE}"
+  CACHE STRING
+  "Override the CARLA Unreal build configuration."
+)
+
+set (CARLA_UNREAL_PACKAGE_NO_COMPRESSION_DEFAULT OFF)
+if ("${CARLA_UNREAL_BUILD_TYPE}" STREQUAL "Shipping")
+  set (CARLA_UNREAL_PACKAGE_NO_COMPRESSION_DEFAULT ON)
+endif ()
+
+option (CARLA_UNREAL_PACKAGE_NO_COMPRESSION "Whether to skip the package compression step." ${CARLA_UNREAL_PACKAGE_NO_COMPRESSION_DEFAULT})
+
+set (
+  CARLA_ADDITIONAL_CONTENT_SEARCH_PATHS
+  ""
+  CACHE STRING
+  "Comma-separated list of additional paths to look for a cloned CARLA Unreal Engine Content repo."
+)
+
+set (CARLA_HAS_CONTENT FALSE)
+set (ASSUME_CONTENT_IS_GIT_REPO TRUE) # TODO VERIFY USING HASH IF RAW DOWNLOAD.
+if (ASSUME_CONTENT_IS_GIT_REPO)
+
+  # Assume CARLA Content has been downloaded using git.
+  # Therefore, we can use git commands to test the validity of the repo.
+
+  function (carla_test_is_valid_content_directory RETURN_VALUE PATH)
+    if (IS_DIRECTORY "${PATH}")
+      message (STATUS "Searching CARLA Content in ${PATH}")
+      execute_process (
+        COMMAND
+          git -C ${PATH} config --get remote.origin.url
+        OUTPUT_VARIABLE
+          GIT_ORIGIN_URL
+        RESULT_VARIABLE
+          GIT_ORIGIN_URL_RESULT
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+      )
+      if (NOT ${GIT_ORIGIN_URL_RESULT})
+        if ("${GIT_ORIGIN_URL}" STREQUAL "${CARLA_UE_CONTENT_ORIGIN_URL}")
+          set (${RETURN_VALUE} TRUE PARENT_SCOPE)
+          return ()
+        endif ()
+      endif ()
+    endif ()
+    set (${RETURN_VALUE} FALSE PARENT_SCOPE)
+  endfunction ()
+
+  carla_test_is_valid_content_directory (CARLA_HAS_CONTENT "${CARLA_UE_CONTENT_PATH}")
+
+  if (NOT ${CARLA_HAS_CONTENT})
+    foreach (ADDITIONAL_CONTENT_SEARCH_PATH ${CARLA_ADDITIONAL_CONTENT_SEARCH_PATHS})
+      carla_test_is_valid_content_directory (CARLA_HAS_CONTENT "${ADDITIONAL_CONTENT_SEARCH_PATH}")
+      if (${CARLA_HAS_CONTENT})
+        message (STATUS "Found CARLA Content in \"${ADDITIONAL_CONTENT_SEARCH_PATH}\", creating symlink.")
+        file (
+          CREATE_LINK
+            "${CARLA_UE_CONTENT_PATH}"
+            "${ADDITIONAL_CONTENT_SEARCH_PATH}"
+        )
+      endif ()
+    endforeach ()
+  endif ()
+
+else ()
+
+  # Assume CARLA Content has been downloaded directly, without using git.
+  # In this case use a simple directory existence check.
+
+  if (IS_DIRECTORY ${CARLA_UE_CONTENT_PATH})
+    set (CARLA_HAS_CONTENT TRUE)
+  endif ()
+
+endif ()
+
+if (NOT ${CARLA_HAS_CONTENT})
+  message (FATAL_ERROR 
+    "Could not find CARLA Content. Either clone it from ${CARLA_UE_CONTENT_ORIGIN_URL} or, if you already downloaded it somewhere else in your system, add its path to CARLA_ADDITIONAL_CONTENT_SEARCH_PATHS.")
+else ()
+  message (STATUS 
+    "Found CARLA Content."
+  )
+endif ()
+
+if (WIN32)
+  set (UE_SYSTEM_NAME Win64)
+  set (UE_PLATFORM_NAME Windows)
+else ()
+  if (LINUX)
+    set (UE_SYSTEM_NAME Linux)
+  elseif (APPLE)
+    set (UE_SYSTEM_NAME Mac)
+  else ()
+    message (FATAL_ERROR "Unknown target system.")
+  endif ()
+  set (UE_PLATFORM_NAME ${UE_SYSTEM_NAME})
 endif ()
 
 set (
@@ -58,42 +225,26 @@ set (
   ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
 )
 
-set (CARLA_UE_CONTENT_CHECK_PATH ${CARLA_UE_PATH}/Content/Carla/Blueprints)
-if (IS_DIRECTORY ${CARLA_UE_CONTENT_CHECK_PATH})
-  carla_message_verbose ("CARLA Unreal Content - FOUND")
-else ()
-  carla_warning ("Could not find CARLA Content, download it or running the editor will result in a crash.")
-endif ()
-
-
-
 set (
   UE_DEPENDENCIES
   carla-server
-  libsqlite3
+  SQLite::SQLite3
   Boost::asio
   Boost::python
   Boost::geometry
   Boost::gil
   Eigen3::Eigen
-  zlibstatic
-  png_static
-  rpc
+  ZLIB::ZLIB
+  PNG::PNG
+  RPC::RPC
 )
 
-set (UE_DEPENDENCIES_ORDER_ONLY ${UE_DEPENDENCIES})
-
-if (BUILD_CARLA_CLIENT)
-  list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-client)
-endif ()
-
-list (
-  APPEND
+set (
   UE_DEPENDENCIES_ORDER_ONLY
+  ${UE_DEPENDENCIES}
+  carla-client
   RecastBuilder
 )
-
-
 
 set (
   CARLA_UNREAL_INCLUDE_PATHS_FILE_NAME
@@ -135,11 +286,6 @@ set (
   ${CMAKE_CURRENT_BINARY_DIR}/${CARLA_UNREAL_DEFINITIONS_FILE_NAME}
 )
 
-set (
-  CARLA_UNREAL_INCLUDE_PATHS
-  ${sqlite3_SOURCE_DIR}
-)
-
 foreach (UE_DEP ${UE_DEPENDENCIES})
   list (
     APPEND
@@ -148,9 +294,11 @@ foreach (UE_DEP ${UE_DEPENDENCIES})
   )
 endforeach ()
 
+#[[ @TODO
+
 set (
   CARLA_UNREAL_LIBRARIES
-  $<TARGET_FILE:libsqlite3>
+  $<TARGET_FILE:SQLite::SQLite3>
 )
 
 foreach (UE_DEP ${UE_DEPENDENCIES})
@@ -168,6 +316,7 @@ set (
   CARLA_UNREAL_DEFINITIONS
   RECASTBUILDER_PATH="$<TARGET_FILE:RecastBuilder>"
 )
+]]
 
 set (CARLA_UNREAL_OPTIONS)
 
@@ -322,12 +471,34 @@ list (
 
 file (
   MAKE_DIRECTORY
-  ${CARLA_UE_PATH}/Content/Carla/ExportedMaps
+  ${CARLA_UE_CONTENT_PATH}/ExportedMaps
 )
 
 
 
-carla_add_custom_target (
+add_custom_target (
+  ue-compile-shaders
+  "Compile all CARLA Unreal Engine Shaders."
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor-Cmd${EXE_EXT}
+    ${CARLA_UE_PROJECT_PATH}
+    -run=DerivedDataCache
+    -fill
+)
+
+add_custom_target (
+  ue-cook-content
+  "Compile all CARLA Unreal Engine Shaders."
+  COMMAND
+    ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor-Cmd${EXE_EXT}
+    ${CARLA_UE_PROJECT_PATH}
+    -run=Cook
+    -TargetPlatform=${UE_SYSTEM_NAME}
+    -unattended
+    -nop4
+)
+
+add_custom_target (
   carla-unreal
   "Build the CarlaUnreal subproject."
   COMMAND
@@ -335,27 +506,22 @@ carla_add_custom_target (
     CarlaUnreal
     ${UE_SYSTEM_NAME}
     ${CARLA_UNREAL_BUILD_TYPE}
-    -project=${CARLA_UE_PROJECT_PATH}
+    _project=${CARLA_UE_PROJECT_PATH}
     -game
     -buildscw
   USES_TERMINAL
   VERBATIM
 )
 
-add_dependencies (
-  carla-unreal
-  ${UE_DEPENDENCIES_ORDER_ONLY}
-)
-
-carla_add_custom_target (
-  carla-unreal-editor
+add_custom_target (
+  ue-editor
   "Build the CarlaUnrealEditor subproject."
   COMMAND
     ${CARLA_UE_BUILD_COMMAND_PREFIX}
     CarlaUnrealEditor
     ${UE_SYSTEM_NAME}
     ${CARLA_UNREAL_BUILD_TYPE}
-    -project=${CARLA_UE_PROJECT_PATH}
+    _project=${CARLA_UE_PROJECT_PATH}
     -game
     -buildscw
   DEPENDS
@@ -364,10 +530,10 @@ carla_add_custom_target (
   VERBATIM
 )
 
-add_dependencies (
+add_custom_target (
   carla-unreal-editor
-  carla-unreal
-  ${UE_DEPENDENCIES_ORDER_ONLY}
+  DEPENDS
+    ue-editor
 )
 
 
@@ -410,9 +576,10 @@ function (
   endif ()
 
   set (TARGET_NAME_SHORT package${TARGET_NAME_SUFFIX})
-  set (TARGET_NAME carla-unreal-${TARGET_NAME_SHORT})
+  set (TARGET_NAME ue-${TARGET_NAME_SHORT})
+  set (TARGET_NAME_LONG carla-${TARGET_NAME})
 
-  carla_add_custom_target (
+  add_custom_target (
     ${TARGET_NAME}
     "Create a CARLA package in ${PACKAGE_CONFIGURATION} mode."
     COMMAND
@@ -420,16 +587,16 @@ function (
       CarlaUnreal
       ${UE_SYSTEM_NAME}
       ${UE_BUILD_CONFIGURATION}
-      -project=${CARLA_UE_PROJECT_PATH}
+      _project=${CARLA_UE_PROJECT_PATH}
       -game
       -buildscw
     COMMAND
       ${CARLA_UE_UAT_COMMAND_PREFIX}
       BuildCookRun
-      -project=${CARLA_UE_PROJECT_PATH}
+      _project=${CARLA_UE_PROJECT_PATH}
       -nocompileeditor
       -nop4
-      -cook
+      -cookonthefly
       -stage
       -archive
       -package
@@ -445,11 +612,14 @@ function (
     VERBATIM
   )
   
+  add_custom_target (${TARGET_NAME_SHORT} DEPENDS ${TARGET_NAME})
+  add_custom_target (${TARGET_NAME_LONG} DEPENDS ${TARGET_NAME})
+
   set (
     PACKAGE_POST_BUILD_COMMANDS
     COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE CREATING VERSION FILE UNREAL PACKAGE EXTRA FILES STARTED **********"
     COMMAND ${CMAKE_COMMAND}
-      -DCARLA_WORKSPACE_PATH=${CARLA_WORKSPACE_PATH}
+      -DCARLA_ROOT_PATH=${CARLA_ROOT}
       -DCARLA_UNREAL_ENGINE_PATH=${CARLA_UNREAL_ENGINE_PATH}
       -DCARLA_PACKAGE_VERSION_FILE=${CARLA_PACKAGE_ARCHIVE_PATH}/VERSION
       -P${CMAKE_CURRENT_SOURCE_DIR}/Package/CreateCarlaVersionFile.cmake
@@ -463,8 +633,8 @@ function (
 
     COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE COPYING CARLA ADDITIONAL FILES STARTED **********"
     COMMAND ${CMAKE_COMMAND}
-      -DCARLA_BUILD_PATH=${CARLA_BUILD_PATH}
-      -DCARLA_WORKSPACE_PATH=${CARLA_WORKSPACE_PATH}
+      -DCARLA_BUILD_PATH=${CMAKE_BINARY_DIR}
+      -DCARLA_ROOT_PATH=${CARLA_ROOT}
       -DCARLA_PACKAGE_ARCHIVE_PATH=${CARLA_PACKAGE_ARCHIVE_PATH}
       -P${CMAKE_CURRENT_SOURCE_DIR}/Package/CopyCarlaAdditionalFiles.cmake
     COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE COPYING CARLA ADDITIONAL FILES COMPLETED **********"
@@ -492,22 +662,6 @@ function (
     VERBATIM
   )
 
-  add_dependencies (
-    ${TARGET_NAME}
-    carla-python-api
-    carla-unreal-editor
-  )
-
-  carla_add_custom_target (
-    ${TARGET_NAME_SHORT}
-    "Create a CARLA package in ${PACKAGE_CONFIGURATION} mode."
-  )
-
-  add_dependencies (
-    ${TARGET_NAME_SHORT}
-    ${TARGET_NAME}
-  )
-
 endfunction()
 
 
@@ -515,83 +669,12 @@ endfunction()
 # Docs for UE5 build configurations:
 # https://docs.unrealengine.com/4.27/en-US/ProductionPipelines/DevelopmentSetup/BuildConfigurations/
 
-add_carla_ue_package_target("" ${CARLA_UNREAL_PACKAGE_BUILD_TYPE})
+add_carla_ue_package_target("" ${CARLA_UNREAL_BUILD_TYPE})
 add_carla_ue_package_target(Shipping Shipping)
 add_carla_ue_package_target(Debug Debug)
 add_carla_ue_package_target(DebugGame DebugGame)
 add_carla_ue_package_target(Development Development)
 add_carla_ue_package_target(Test Test)
-
-
-
-set (LAUNCH_ARGS ${CARLA_LAUNCH_ARGS})
-
-if (ENABLE_ROS2)
-  list (APPEND LAUNCH_ARGS --ros2)
-endif()
-
-if (ENABLE_ROS2_DEMO)
-  list (APPEND LAUNCH_ARGS --ros2-demo)
-endif()
-
-set (
-  CARLA_LAUNCH_TARGET_OPTIONS
-  COMMENT
-    "Launching Carla Unreal..."
-  COMMAND
-    ${UNREAL_EDITOR_PATH}
-      ${CARLA_UE_PROJECT_PATH}
-      -${CARLA_UNREAL_RHI}
-      ${LAUNCH_ARGS}
-  USES_TERMINAL
-  VERBATIM
-)
-
-if (WIN32)
-  set (
-    PRELAUNCH_CONTENT_CHECK_COMMAND
-    if exist ${CARLA_UE_CONTENT_CHECK_PATH} (exit 0) else (exit 1)
-  )
-else ()
-  set (
-    PRELAUNCH_CONTENT_CHECK_COMMAND
-    test -d ${CARLA_UE_CONTENT_CHECK_PATH}
-  )
-endif ()
-
-carla_add_custom_target (
-  check-unreal-content
-  "Perform some basic checks to ensure that the CARLA Unreal Editor will not open without its assets."
-  COMMAND
-    ${PRELAUNCH_CONTENT_CHECK_COMMAND}
-  COMMENT
-    "Performing prelaunch check for CARLA Content presence."
-  USES_TERMINAL
-  VERBATIM
-)
-
-carla_add_custom_target (
-  launch-only
-  "Open CARLA in the Unreal Editor. This will not rebuild outdated targets."
-  ${CARLA_LAUNCH_TARGET_OPTIONS}
-)
-
-add_dependencies (
-  launch-only
-  check-unreal-content
-)
-
-carla_add_custom_target (
-  launch
-  "Build and open CARLA in the Unreal Editor."
-  ${CARLA_LAUNCH_TARGET_OPTIONS}
-)
-
-add_dependencies (
-  launch
-  carla-unreal-editor
-  check-unreal-content
-)
 
 set_property (
   DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES
@@ -609,9 +692,13 @@ set_property (
   "${CARLA_UE_CARLA_PATH}/Binaries"
   "${CARLA_UE_CARLA_PATH}/Intermediate"
   "${CARLA_UE_CARLA_PATH}/Saved"
-  "${CARLA_UE_PLUGINS_PATH}/StreetMap/Binaries"
-  "${CARLA_UE_PLUGINS_PATH}/StreetMap/Intermediate"
-  "${CARLA_UE_PLUGINS_PATH}/StreetMap/Saved"
-  "${CARLA_BUILD_PATH}/Package"
-  "${CARLA_BUILD_PATH}/PythonAPI/dist"
 )
+
+if (ENABLE_STREETMAP)
+  set_property (
+    DIRECTORY APPEND PROPERTY ADDITIONAL_CLEAN_FILES
+    "${CARLA_UE_PLUGINS_PATH}/StreetMap/Binaries"
+    "${CARLA_UE_PLUGINS_PATH}/StreetMap/Intermediate"
+    "${CARLA_UE_PLUGINS_PATH}/StreetMap/Saved"
+  )
+endif ()

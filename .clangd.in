@@ -1,2 +1,2 @@
 CompileFlags:
-  CompilationDatabase: "@CMAKE_CURRENT_BINARY_DIR@"
+  CompilationDatabase: "@CMAKE_BINARY_DIR@"

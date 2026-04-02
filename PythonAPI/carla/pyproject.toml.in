@@ -7,7 +7,9 @@ wheel.packages = ['carla']
 cmake.version = '>=@CMAKE_MAJOR_VERSION@.@CMAKE_MINOR_VERSION@'
 cmake.build-type = '@CMAKE_BUILD_TYPE@'
 cmake.args = [
-  @CARLA_PYTHON_API_CMAKE_ARGS@
+	"-G@CMAKE_GENERATOR@",
+	"-DCMAKE_PREFIX_PATH=@CMAKE_PREFIX_PATH@",
+	"--toolchain=@CMAKE_TOOLCHAIN_FILE@"
 ]
 ninja.version=">=1.10"
 ninja.make-fallback=true

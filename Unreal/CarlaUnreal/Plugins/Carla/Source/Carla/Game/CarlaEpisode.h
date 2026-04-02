@@ -19,8 +19,8 @@
 #include <util/disable-ue4-macros.h>
 #include <carla/geom/BoundingBox.h>
 #include <carla/geom/GeoLocation.h>
-#if WITH_ROS2
-    #include <carla/ros2/ROS2.h>
+#if __has_include(<carla/ros2/ROS2.h>)
+#include <carla/ros2/ROS2.h>
 #endif
 #include <carla/rpc/Actor.h>
 #include <carla/rpc/ActorDescription.h>

@@ -1,9 +1,9 @@
 cmake_minimum_required (
   VERSION
-  ${CARLA_CMAKE_MINIMUM_REQUIRED_VERSION}
+  3.30
 )
 
-project (carla-ros2-native-project)
+project (carla-ros2-native_project)
 
 include (ExternalProject)
 
@@ -16,7 +16,7 @@ ExternalProject_add (
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
     -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
-    -DBUILD_SHARED_LIBS=ON
+    # -DBUILD_SHARED_LIBS=ON
     -DFOONATHAN_MEMORY_FORCE_VENDORED_BUILD=ON
 )
 
@@ -25,7 +25,7 @@ ExternalProject_add (
 ExternalProject_add (
   fastdds
   GIT_REPOSITORY https://github.com/eProsima/Fast-DDS.git
-  GIT_TAG ${CARLA_FASTDDS_TAG}
+  GIT_TAG ${CARLA_FAST_DDS_TAG}
   CMAKE_ARGS
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
     -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
@@ -68,7 +68,7 @@ add_custom_command (
     ${CARLA_PLUGIN_BINARY_PATH}
 )
 
-carla_add_custom_target (
+add_custom_target (
   carla-ros2-native
   "Build the ROS2-Native CARLA subproject."
   DEPENDS carla-ros2-native-lib

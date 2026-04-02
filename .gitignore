@@ -7,7 +7,6 @@ cmake-build-*/
 __pycache__/
 
 Build/
-Install/
 Doxygen/
 Dist/
 Temp/
@@ -38,3 +37,4 @@ _images*
 
 # Temp
 Help.md
+targets.txt
