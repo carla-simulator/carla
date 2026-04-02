@@ -97,30 +97,14 @@ void ACollisionSensor::OnCollisionEvent(
   if (ROS2->IsEnabled())
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
-    auto StreamId = carla::streaming::detail::token_type(GetToken()).get_stream_id();
-    auto NormalImpulseVector = carla::geom::Vector3D(
-      (float)NormalImpulse.X,
-      (float)NormalImpulse.Y,
-      (float)NormalImpulse.Z);
-    AActor* ParentActor = GetAttachParentActor();
-    if (ParentActor)
-    {
-      FTransform LocalTransformRelativeToParent = GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform());
-      ROS2->ProcessDataFromCollisionSensor(
-        0, StreamId,
-        LocalTransformRelativeToParent,
-        OtherActor->GetUniqueID(),
-        NormalImpulseVector,
-        this);
-    }
-    else
-    {
-      ROS2->ProcessDataFromCollisionSensor(
-        0, StreamId,
-        GetActorTransform(),
-        OtherActor->GetUniqueID(),
-        NormalImpulseVector,
-        this);
+
+    // Retrieve the corresponding Carla actor to access its ID for collision processing
+    FCarlaActor* OtherCarlaActor = CurrentEpisode.FindCarlaActor(OtherActor);
+
+    if (OtherCarlaActor) {
+      AActor* ParentActor = GetAttachParentActor();
+      auto Transform = (ParentActor) ? GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : GetActorTransform();
+      ROS2->ProcessDataFromCollisionSensor(0, Transform, OtherCarlaActor->GetActorId(), carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z}, this);
     }
   }
 #endif
