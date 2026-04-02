@@ -4,7 +4,6 @@
 
 #include "carla/ros2/types/String.h"
 #include "carla/ros2/types/StringPubSubTypes.h"
-#include "carla/ros2/listeners/CarlaListener.h"
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
 #include <fastdds/dds/publisher/Publisher.hpp>
@@ -22,11 +21,18 @@
 #include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
 #include <fastdds/dds/publisher/DataWriterListener.hpp>
 
+#include <fastdds/dds/core/status/PublicationMatchedStatus.hpp>
+
 
 namespace carla {
 namespace ros2 {
   namespace efd = eprosima::fastdds::dds;
   using erc = eprosima::fastrtps::types::ReturnCode_t;
+
+  class BasicPublisherListener : public efd::DataWriterListener {
+    public:
+      void on_publication_matched(efd::DataWriter*, const efd::PublicationMatchedStatus&) override {}
+  };
 
   struct BasicPublisherImpl {
     efd::DomainParticipant* _participant { nullptr };
@@ -34,7 +40,7 @@ namespace ros2 {
     efd::Topic* _topic { nullptr };
     efd::DataWriter* _datawriter { nullptr };
     efd::TypeSupport _type { new std_msgs::msg::StringPubSubType() };
-    CarlaListener _listener {};
+    BasicPublisherListener _listener {};
     std_msgs::msg::String _message {};
   };
 
@@ -69,7 +75,7 @@ namespace ros2 {
     }
 
     efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
-    efd::DataWriterListener* listener = (efd::DataWriterListener*)_impl->_listener._impl.get();
+    efd::DataWriterListener* listener = &_impl->_listener;
     _impl->_datawriter = _impl->_publisher->create_datawriter(_impl->_topic, wqos, listener);
     if (_impl->_datawriter == nullptr) {
         std::cerr << "Failed to create DataWriter" << std::endl;

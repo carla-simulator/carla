@@ -5,9 +5,9 @@
 #pragma once
 
 #include <memory>
+#include <string>
 #include <vector>
 
-#include "CarlaSubscriber.h"
 #include "carla/ros2/ROS2CallbackData.h"
 
 namespace carla {
@@ -15,7 +15,7 @@ namespace ros2 {
 
   struct BasicSubscriberImpl;
 
-  class BasicSubscriber : public CarlaSubscriber {
+  class BasicSubscriber {
     public:
       BasicSubscriber(void* actor, const char* ros_name = "", const char* parent = "");
       ~BasicSubscriber();
@@ -30,12 +30,16 @@ namespace ros2 {
       void* GetActor();
 
       bool Init();
-      // bool Read();
-      const char* type() const override { return "basic_subscriber"; }
+      const char* type() const { return "basic_subscriber"; }
 
       //Do not call, for internal use only
       void ForwardMessage(const std::string& message);
       void DestroySubscriber();
+
+    protected:
+      std::string _frame_id = "";
+      std::string _name = "";
+      std::string _parent = "";
 
     private:
       std::shared_ptr<BasicSubscriberImpl> _impl;

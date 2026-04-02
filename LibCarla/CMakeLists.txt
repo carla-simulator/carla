@@ -112,16 +112,9 @@ if (BUILD_CARLA_SERVER)
   )
 
   if (ENABLE_ROS2)
-    file (
-      GLOB
-      LIBCARLA_SERVER_SOURCES_ROS2
-      ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.cpp
-    )
-    list (
-      APPEND
-      LIBCARLA_SERVER_SOURCES
-      ${LIBCARLA_SERVER_SOURCES_ROS2}
-    )
+    # ROS2.cpp is compiled as part of the Ros2Native shared library
+    # (not here) because it includes publisher headers that depend on FastDDS.
+    # LibCarla server only needs ROS2.h (forward declarations, no FastDDS).
   endif ()
 
   file (

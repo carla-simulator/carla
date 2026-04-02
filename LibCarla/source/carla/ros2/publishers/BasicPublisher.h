@@ -5,14 +5,14 @@
 #pragma once
 
 #include <memory>
-#include "CarlaPublisher.h"
+#include <string>
 
 namespace carla {
 namespace ros2 {
 
   struct BasicPublisherImpl;
 
-  class BasicPublisher : public CarlaPublisher {
+  class BasicPublisher {
     public:
       BasicPublisher(const char* ros_name = "", const char* parent = "");
       ~BasicPublisher();
@@ -24,7 +24,15 @@ namespace ros2 {
       bool Init();
       bool Publish();
       void SetData(const char* msg);
-      const char* type() const override { return "basic_publisher"; }
+      const char* type() const { return "basic_publisher"; }
+
+      const std::string& name() const { return _name; }
+      const std::string& parent() const { return _parent; }
+
+    protected:
+      std::string _frame_id = "";
+      std::string _name = "";
+      std::string _parent = "";
 
     private:
       std::shared_ptr<BasicPublisherImpl> _impl;

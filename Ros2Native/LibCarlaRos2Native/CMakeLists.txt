@@ -15,6 +15,7 @@ set (
 file (
   GLOB
   LIBCARLA_ROS2_SOURCES
+  ${LIBCARLA_SOURCE_PATH}/carla/ros2/*.cpp
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/publishers/*.cpp
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/subscribers/*.cpp
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/listeners/*.cpp
@@ -42,6 +43,7 @@ target_include_directories (
   SYSTEM PRIVATE
   ${LIBCARLA_SOURCE_PATH}
   ${CMAKE_INSTALL_PREFIX}/include
+  ${RPCLIB_INCLUDE_PATH}
 )
 
 target_compile_definitions (
