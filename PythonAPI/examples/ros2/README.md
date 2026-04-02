@@ -13,7 +13,11 @@ To run this example, ensure `docker` is installed in your system, which is used 
 Launch the CARLA simulator with the ROS 2 integration enabled:
 
 ```bash
-./CarlaUnreal.sh --ros2
+# If running a package:
+./CarlaUE4sh --ros2
+
+# If running the editor:
+make launch ARGS="--ros2 --editor-flags='--ros2'"
 ```
 
 ### Step 2: Run the ROS2 Example
