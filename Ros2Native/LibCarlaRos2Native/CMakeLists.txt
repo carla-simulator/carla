@@ -17,8 +17,6 @@ file (
   LIBCARLA_ROS2_SOURCES
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/publishers/*.cpp
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/subscribers/*.cpp
-  ${LIBCARLA_SOURCE_PATH}/carla/ros2/listeners/*.cpp
-  ${LIBCARLA_SOURCE_PATH}/carla/ros2/types/*.cpp
 )
 
 file (
@@ -26,8 +24,6 @@ file (
   LIBCARLA_ROS2_HEADERS
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/publishers/*.h
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/subscribers/*.h
-  ${LIBCARLA_SOURCE_PATH}/carla/ros2/listeners/*.h
-  ${LIBCARLA_SOURCE_PATH}/carla/ros2/types/*.h
 )
 
 add_library (
@@ -37,22 +33,29 @@ add_library (
   ${LIBCARLA_ROS2_SOURCES}
 )
 
+file (
+  GLOB
+  ROS2_INCLUDE_DIRS
+  ${CMAKE_INSTALL_PREFIX}/include/*/
+)
+
 target_include_directories (
   carla-ros2-native
   SYSTEM PRIVATE
   ${LIBCARLA_SOURCE_PATH}
-  ${CMAKE_INSTALL_PREFIX}/include
-)
-
-target_compile_definitions (
-  carla-ros2-native
-  PUBLIC
-  BOOST_ASIO_ENABLE_BUFFER_DEBUGGING
+  ${ROS2_INCLUDE_DIRS}
 )
 
 target_link_libraries (
   carla-ros2-native PUBLIC
-  ${CMAKE_INSTALL_PREFIX}/lib/libfastrtps.so
+  ${CMAKE_INSTALL_PREFIX}/lib/librclcpp.so
+  ${CMAKE_INSTALL_PREFIX}/lib/libsensor_msgs__rosidl_typesupport_cpp.so
+  ${CMAKE_INSTALL_PREFIX}/lib/libnav_msgs__rosidl_typesupport_cpp.so
+  ${CMAKE_INSTALL_PREFIX}/lib/libgeometry_msgs__rosidl_typesupport_cpp.so
+  ${CMAKE_INSTALL_PREFIX}/lib/libstd_msgs__rosidl_typesupport_cpp.so
+  ${CMAKE_INSTALL_PREFIX}/lib/libtf2_msgs__rosidl_typesupport_cpp.so
+  ${CMAKE_INSTALL_PREFIX}/lib/libbuiltin_interfaces__rosidl_typesupport_cpp.so
+  ${CMAKE_INSTALL_PREFIX}/lib/libcarla_msgs__rosidl_typesupport_cpp.so
 )
 
 install (

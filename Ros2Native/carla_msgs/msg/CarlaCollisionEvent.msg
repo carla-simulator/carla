@@ -1,0 +1,3 @@
+std_msgs/Header header
+uint32 other_actor_id
+geometry_msgs/Vector3 normal_impulse
