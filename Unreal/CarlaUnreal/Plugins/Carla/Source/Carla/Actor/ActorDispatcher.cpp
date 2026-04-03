@@ -201,13 +201,13 @@ FCarlaActor* UActorDispatcher::RegisterActor(
       {
         ROS2->RegisterSensor(static_cast<void*>(&Actor), RosName, FrameId, PublishTF);
       }
-      else if (Vehicle != nullptr && Description.GetAttribute("role_name").Value == "hero")
+      else if (Vehicle != nullptr && Description.GetAttribute(TEXT("role_name")).Value == TEXT("hero"))
       {
         ROS2->RegisterVehicle(static_cast<void*>(&Actor), RosName, RosName, [RosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
           {
             AActor *UEActor = reinterpret_cast<AActor *>(Actor);
             ActorROS2Handler Handler(UEActor, RosName);
-            boost::variant2::visit(Handler, Data);
+            std::visit(Handler, Data);
           });
       }
     }

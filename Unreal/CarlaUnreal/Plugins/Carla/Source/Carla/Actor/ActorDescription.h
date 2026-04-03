@@ -40,14 +40,7 @@ struct FActorDescription
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   TMap<FString, FActorAttribute> Variations;
 
-  FActorAttribute GetAttribute(const FString Name) const {
-    if (Variations.Contains(Name))
-    {
-      return Variations[Name];
-    }
-    else
-    {
-      return FActorAttribute();
-    }
+  FActorAttribute GetAttribute(const FString& Name) const {
+    return Variations.FindRef(Name);
   }
 };

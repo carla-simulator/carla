@@ -98,14 +98,11 @@ void ACollisionSensor::OnCollisionEvent(
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("ROS2 Send");
 
-    // Retrieve the corresponding Carla actor to access its ID for collision processing
+    AActor* ParentActor = GetAttachParentActor();
+    auto Transform = (ParentActor) ? GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : GetActorTransform();
     FCarlaActor* OtherCarlaActor = CurrentEpisode.FindCarlaActor(OtherActor);
-
-    if (OtherCarlaActor) {
-      AActor* ParentActor = GetAttachParentActor();
-      auto Transform = (ParentActor) ? GetActorTransform().GetRelativeTransform(ParentActor->GetActorTransform()) : GetActorTransform();
-      ROS2->ProcessDataFromCollisionSensor(0, Transform, OtherCarlaActor->GetActorId(), carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z}, this);
-    }
+    uint32_t OtherId = OtherCarlaActor ? OtherCarlaActor->GetActorId() : OtherActor->GetUniqueID();
+    ROS2->ProcessDataFromCollisionSensor(0, Transform, OtherId, carla::geom::Vector3D{NormalImpulse.X, NormalImpulse.Y, NormalImpulse.Z}, this);
   }
 #endif
 }
