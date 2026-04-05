@@ -54,6 +54,15 @@ foreach(target ${build_targets})
   target_include_directories(${target} PRIVATE
       "${libcarla_source_path}/test")
 
+  # Server tests exercise CDR serialization (CdrSerialization.h) which
+  # requires Fast-CDR headers and the libfastcdr runtime.  Enable exceptions
+  # for this target because Fast-CDR templates use try/catch internally.
+  if (CMAKE_BUILD_TYPE STREQUAL "Server")
+    target_include_directories(${target} SYSTEM PRIVATE "${FASTDDS_INCLUDE_PATH}")
+    target_compile_options(${target} PRIVATE -fexceptions)
+    target_link_libraries(${target} "${FASTDDS_LIB_PATH}/libfastcdr.a")
+  endif()
+
   if (WIN32)
       target_link_libraries(${target} "gtest_main.lib")
       target_link_libraries(${target} "gtest.lib")
