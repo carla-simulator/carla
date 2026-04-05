@@ -5,7 +5,7 @@
 #pragma once
 
 #include "carla/ros2/dds/IDDSSubscriberMiddleware.h"
-#include "carla/ros2/dds/fastdds/FastDDSTypeMap.h"
+#include "carla/ros2/dds/fastdds/GenericCdrPubSubType.h"
 #include "carla/Logging.h"
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
@@ -31,17 +31,14 @@ using erc = eprosima::fastrtps::types::ReturnCode_t;
 
 /// FastDDS implementation of IDDSSubscriberMiddleware.
 /// Parameterized on traits type S that provides:
-///   S::msg_type  — the message type
-/// Native FastDDS types are resolved via FastDDSTypeMap<S::msg_type>.
+///   S::msg_type  — the message type (a carla::ros2::msg::* POD struct)
+/// Deserialization is handled by GenericCdrPubSubType<msg_type> via CdrSerialization.h.
 template<typename S>
 class FastDDSSubscriberMiddleware
     : public IDDSSubscriberMiddleware,
       public eprosima::fastdds::dds::DataReaderListener {
  public:
   using msg_type = typename S::msg_type;
-  using type_map = FastDDSTypeMap<msg_type>;
-  using fastdds_type = typename type_map::fastdds_type;
-  using fastdds_pubsub_type = typename type_map::fastdds_pubsub_type;
 
   void on_subscription_matched(
       efd::DataReader* reader,
@@ -51,9 +48,8 @@ class FastDDSSubscriberMiddleware
 
   void on_data_available(efd::DataReader* reader) override {
     efd::SampleInfo info;
-    erc rcode = reader->take_next_sample(&_fastdds_msg, &info);
+    erc rcode = reader->take_next_sample(_message_ptr, &info);
     if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
-      from_fastdds(_fastdds_msg, *_message_ptr);
       *_new_message_ptr = true;
     } else {
       log_error("FastDDSSubscriberMiddleware::on_data_available (",
@@ -137,11 +133,10 @@ class FastDDSSubscriberMiddleware
   efd::Subscriber*        _subscriber  { nullptr };
   efd::Topic*             _topic       { nullptr };
   efd::DataReader*        _datareader  { nullptr };
-  efd::TypeSupport        _type        { new fastdds_pubsub_type() };
+  efd::TypeSupport        _type        { new GenericCdrPubSubType<msg_type>() };
 
-  fastdds_type _fastdds_msg;
-  msg_type*    _message_ptr     { nullptr };
-  bool*        _new_message_ptr { nullptr };
+  msg_type* _message_ptr     { nullptr };
+  bool*     _new_message_ptr { nullptr };
 
   std::string _topic_name;
   bool        _alive { false };

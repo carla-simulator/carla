@@ -15,6 +15,7 @@
 #include <carla/ros2/dds/IDDSSubscriberMiddleware.h>
 #include <carla/ros2/publishers/PublisherImpl.h>
 #include <carla/ros2/subscribers/SubscriberImpl.h>
+#include <carla/ros2/dds/fastdds/GenericCdrPubSubType.h>
 #include <carla/ros2/types/CdrSerialization.h>
 #include <carla/ros2/types/CdrTopicInfo.h>
 
@@ -837,4 +838,102 @@ TEST(cdr_serialization, empty_tfmessage_round_trip) {
   carla::ros2::msg::TFMessage recovered{};
   EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
   EXPECT_TRUE(recovered.transforms.empty());
+}
+
+// ==========================================================================
+// Group 11: generic_cdr_pubsubtype (6 tests)
+// Tests for GenericCdrPubSubType<T> — the single FastDDS TopicDataType
+// implementation that replaces 30 fastddsgen-generated PubSubType classes.
+// ==========================================================================
+
+TEST(generic_cdr_pubsubtype, type_name_matches_cdr_topic_info) {
+  // The name set in the GenericCdrPubSubType constructor must equal
+  // CdrTopicInfo::type_name() — FastDDS uses it for publisher/subscriber matching.
+  EXPECT_STREQ(
+      CdrTopicInfo<msg::Clock>::type_name(),
+      GenericCdrPubSubType<msg::Clock>().getName());
+  EXPECT_STREQ(
+      CdrTopicInfo<msg::Image>::type_name(),
+      GenericCdrPubSubType<msg::Image>().getName());
+  EXPECT_STREQ(
+      CdrTopicInfo<msg::Imu>::type_name(),
+      GenericCdrPubSubType<msg::Imu>().getName());
+  EXPECT_STREQ(
+      CdrTopicInfo<msg::TFMessage>::type_name(),
+      GenericCdrPubSubType<msg::TFMessage>().getName());
+  EXPECT_STREQ(
+      CdrTopicInfo<msg::CarlaEgoVehicleControl>::type_name(),
+      GenericCdrPubSubType<msg::CarlaEgoVehicleControl>().getName());
+}
+
+TEST(generic_cdr_pubsubtype, m_typesize_is_positive) {
+  // FastDDS uses m_typeSize to pre-allocate payload buffers.
+  // It must be > 0 for every type (min: max_serialized_size + 4 encapsulation bytes).
+  EXPECT_GT(GenericCdrPubSubType<msg::Time>().m_typeSize, 0u);
+  EXPECT_GT(GenericCdrPubSubType<msg::Clock>().m_typeSize, 0u);
+  EXPECT_GT(GenericCdrPubSubType<msg::Header>().m_typeSize, 0u);
+  EXPECT_GT(GenericCdrPubSubType<msg::Imu>().m_typeSize, 0u);
+  EXPECT_GT(GenericCdrPubSubType<msg::Image>().m_typeSize, 0u);
+  EXPECT_GT(GenericCdrPubSubType<msg::PointCloud2>().m_typeSize, 0u);
+}
+
+TEST(generic_cdr_pubsubtype, serialize_deserialize_fixed_size_via_payload) {
+  // Round-trip a fixed-size type (Clock) through a SerializedPayload_t buffer.
+  // This exercises the exact code path FastDDS DataWriter/DataReader use.
+  using SerializedPayload_t = eprosima::fastrtps::rtps::SerializedPayload_t;
+
+  GenericCdrPubSubType<msg::Clock> pubsub_type;
+  msg::Clock original{};
+  original.clock.sec = 100;
+  original.clock.nanosec = 500u;
+
+  SerializedPayload_t payload(1024u);
+  ASSERT_TRUE(pubsub_type.serialize(static_cast<void*>(&original), &payload));
+  EXPECT_GT(payload.length, 0u);
+
+  msg::Clock recovered{};
+  ASSERT_TRUE(pubsub_type.deserialize(&payload, static_cast<void*>(&recovered)));
+  EXPECT_EQ(recovered.clock.sec, 100);
+  EXPECT_EQ(recovered.clock.nanosec, 500u);
+}
+
+TEST(generic_cdr_pubsubtype, serialize_deserialize_string_type_via_payload) {
+  // Round-trip a type containing a std::string (Header) through SerializedPayload_t.
+  using SerializedPayload_t = eprosima::fastrtps::rtps::SerializedPayload_t;
+
+  GenericCdrPubSubType<msg::Header> pubsub_type;
+  msg::Header original{};
+  original.stamp.sec = 42;
+  original.frame_id = "test_frame";
+
+  SerializedPayload_t payload(4096u);
+  ASSERT_TRUE(pubsub_type.serialize(static_cast<void*>(&original), &payload));
+  EXPECT_GT(payload.length, 0u);
+
+  msg::Header recovered{};
+  ASSERT_TRUE(pubsub_type.deserialize(&payload, static_cast<void*>(&recovered)));
+  EXPECT_EQ(recovered.stamp.sec, 42);
+  EXPECT_EQ(recovered.frame_id, "test_frame");
+}
+
+TEST(generic_cdr_pubsubtype, create_and_delete_data) {
+  GenericCdrPubSubType<msg::Clock> pubsub_type;
+
+  void* data = pubsub_type.createData();
+  ASSERT_NE(data, nullptr);
+
+  // Cast to verify it is a properly-constructed Clock
+  msg::Clock* clock = static_cast<msg::Clock*>(data);
+  EXPECT_EQ(clock->clock.sec, 0);
+  EXPECT_EQ(clock->clock.nanosec, 0u);
+
+  // Must not crash
+  pubsub_type.deleteData(data);
+}
+
+TEST(generic_cdr_pubsubtype, getkey_returns_false) {
+  // CARLA has no keyed topics — getKey must always return false.
+  GenericCdrPubSubType<msg::Clock> pubsub_type;
+  EXPECT_FALSE(pubsub_type.m_isGetKeyDefined);
+  EXPECT_FALSE(pubsub_type.getKey(nullptr, nullptr, false));
 }

@@ -5,7 +5,7 @@
 #pragma once
 
 #include "carla/ros2/dds/IDDSPublisherMiddleware.h"
-#include "carla/ros2/dds/fastdds/FastDDSTypeMap.h"
+#include "carla/ros2/dds/fastdds/GenericCdrPubSubType.h"
 #include "carla/Logging.h"
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
@@ -30,17 +30,14 @@ using erc = eprosima::fastrtps::types::ReturnCode_t;
 
 /// FastDDS implementation of IDDSPublisherMiddleware.
 /// Parameterized on a traits type T that provides:
-///   T::msg_type  — the message type
-/// Native FastDDS types are resolved via FastDDSTypeMap<T::msg_type>.
+///   T::msg_type  — the message type (a carla::ros2::msg::* POD struct)
+/// Serialization is handled by GenericCdrPubSubType<msg_type> via CdrSerialization.h.
 template<typename T>
 class FastDDSPublisherMiddleware
     : public IDDSPublisherMiddleware,
       public eprosima::fastdds::dds::DataWriterListener {
  public:
   using msg_type = typename T::msg_type;
-  using type_map = FastDDSTypeMap<msg_type>;
-  using fastdds_type = typename type_map::fastdds_type;
-  using fastdds_pubsub_type = typename type_map::fastdds_pubsub_type;
 
   void on_publication_matched(
       efd::DataWriter* writer,
@@ -108,10 +105,8 @@ class FastDDSPublisherMiddleware
   }
 
   bool Publish(void* message_data) override {
-    auto* msg = static_cast<msg_type*>(message_data);
-    to_fastdds(*msg, _fastdds_msg);
     eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
-    erc rcode = _datawriter->write(&_fastdds_msg, instance_handle);
+    erc rcode = _datawriter->write(message_data, instance_handle);
     if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
       return true;
     }
@@ -133,11 +128,10 @@ class FastDDSPublisherMiddleware
   efd::Publisher*         _publisher   { nullptr };
   efd::Topic*             _topic       { nullptr };
   efd::DataWriter*        _datawriter  { nullptr };
-  efd::TypeSupport        _type        { new fastdds_pubsub_type() };
+  efd::TypeSupport        _type        { new GenericCdrPubSubType<msg_type>() };
 
-  fastdds_type _fastdds_msg;
-  std::string  _topic_name;
-  bool         _alive { false };
+  std::string _topic_name;
+  bool        _alive { false };
 };
 
 } // namespace ros2
