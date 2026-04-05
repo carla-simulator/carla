@@ -13,6 +13,7 @@
 #include <fastcdr/Cdr.h>
 
 #include <cstdint>
+#include <cstring>
 #include <functional>
 
 namespace carla {
@@ -46,18 +47,18 @@ class GenericCdrPubSubType : public eprosima::fastdds::dds::TopicDataType {
 
   ~GenericCdrPubSubType() override = default;
 
-  /// Serialize a MsgType instance into the pre-allocated FastDDS payload buffer.
+  /// Serialize a MsgType instance into the FastDDS payload buffer.
   /// Called by FastDDS DataWriter::write() before sending on the wire.
+  /// Serializes into an auto-growing buffer first so variable-length fields
+  /// (e.g. Image::data) are not constrained by the pre-allocated buffer size.
   bool serialize(
       void* data,
       SerializedPayload_t* payload) override {
     const MsgType* msg = static_cast<const MsgType*>(data);
 
-    eprosima::fastcdr::FastBuffer fastbuffer(
-        reinterpret_cast<char*>(payload->data),
-        static_cast<size_t>(payload->max_size));
+    eprosima::fastcdr::FastBuffer fb;
     eprosima::fastcdr::Cdr ser(
-        fastbuffer,
+        fb,
         eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
         eprosima::fastcdr::Cdr::DDS_CDR);
     payload->encapsulation = (ser.endianness() ==
@@ -70,7 +71,13 @@ class GenericCdrPubSubType : public eprosima::fastdds::dds::TopicDataType {
       return false;
     }
 
-    payload->length = static_cast<uint32_t>(ser.getSerializedDataLength());
+    uint32_t len = static_cast<uint32_t>(ser.getSerializedDataLength());
+    if (len > payload->max_size) {
+      return false;
+    }
+
+    std::memcpy(payload->data, fb.getBuffer(), len);
+    payload->length = len;
     return true;
   }
 
@@ -101,12 +108,14 @@ class GenericCdrPubSubType : public eprosima::fastdds::dds::TopicDataType {
     return true;
   }
 
-  /// Return a function that gives the CDR-serialized size for the given instance.
-  /// FastDDS uses this to size the payload buffer before calling serialize().
-  std::function<uint32_t()> getSerializedSizeProvider(void* /*data*/) override {
-    return []() -> uint32_t {
-      return static_cast<uint32_t>(
-          CdrTopicInfo<MsgType>::max_serialized_size()) + 4u;
+  /// Return a function that gives the actual CDR-serialized size for this
+  /// specific message instance. FastDDS calls this before serialize() to
+  /// size (or resize) the payload buffer, so the buffer is always large enough
+  /// for variable-length fields like Image::data or PointCloud2::data.
+  std::function<uint32_t()> getSerializedSizeProvider(void* data) override {
+    const MsgType* msg = static_cast<const MsgType*>(data);
+    return [msg]() -> uint32_t {
+      return cdr_serialized_size(*msg);
     };
   }
 

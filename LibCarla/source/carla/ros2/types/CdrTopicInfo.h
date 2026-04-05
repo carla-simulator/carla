@@ -47,12 +47,13 @@ namespace ros2 {
 ///                         registering the type with a DomainParticipant.
 ///                         Follows the "pkg::msg::dds_::TypeName_" pattern.
 ///
-/// max_serialized_size() — Conservative upper bound on the CDR payload size
+/// max_serialized_size() — Initial preallocation hint for the CDR payload size
 ///                         in bytes, excluding the 4-byte DDS encapsulation
-///                         header. Used to pre-allocate topic buffers.
-///                         For types with variable-length fields (strings,
-///                         vectors) this is a practical maximum, not
-///                         an absolute one.
+///                         header. Used by FastDDS to pre-allocate payload
+///                         buffers. For types with variable-length fields
+///                         (strings, vectors) this is a minimum hint, not a
+///                         hard limit. The actual size per message instance is
+///                         computed dynamically by cdr_serialized_size().
 ///
 /// Primary template is intentionally undefined — only specializations are
 /// valid.

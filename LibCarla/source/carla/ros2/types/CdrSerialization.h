@@ -635,6 +635,22 @@ std::vector<uint8_t> serialize_to_cdr(const T& msg) {
       reinterpret_cast<const uint8_t*>(buf) + len};
 }
 
+/// Return the exact CDR-serialized size in bytes for a message instance,
+/// including the 4-byte DDS encapsulation header. Used by GenericCdrPubSubType
+/// to tell FastDDS the actual payload size before write(), so the payload
+/// buffer is sized correctly for variable-length fields (e.g. Image data).
+template<typename T>
+uint32_t cdr_serialized_size(const T& msg) {
+  eprosima::fastcdr::FastBuffer fb;
+  eprosima::fastcdr::Cdr cdr{
+      fb,
+      eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
+      eprosima::fastcdr::Cdr::DDS_CDR};
+  cdr.serialize_encapsulation();
+  serialize_cdr(cdr, msg);
+  return static_cast<uint32_t>(cdr.getSerializedDataLength());
+}
+
 /// Deserialize a msg::X from a CDR byte buffer that was produced by
 /// serialize_to_cdr() or by any ROS2-compatible DDS middleware.
 /// Returns true on success. The buffer must include the DDS encapsulation

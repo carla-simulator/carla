@@ -917,6 +917,12 @@ FASTDDS_BASENAME=fast-dds
 FASTDDS_INSTALL_DIR=${PWD}/${FASTDDS_BASENAME}-install
 FASTDDS_INCLUDE=${FASTDDS_INSTALL_DIR}/include
 FASTDDS_LIB=${FASTDDS_INSTALL_DIR}/lib
+
+CYCLONEDDS_BASENAME=cyclone-dds
+CYCLONEDDS_INSTALL_DIR=${PWD}/${CYCLONEDDS_BASENAME}-install
+CYCLONEDDS_INCLUDE=${CYCLONEDDS_INSTALL_DIR}/include
+CYCLONEDDS_LIB=${CYCLONEDDS_INSTALL_DIR}/lib
+
 if ${USE_ROS2} ; then
 
   if [[ -d ${FASTDDS_INSTALL_DIR} ]] ; then
@@ -1001,6 +1007,48 @@ if ${USE_ROS2} ; then
     cp -p ${FASTDDS_LIB}/*.a ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
     cp -p -r ${FASTDDS_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
   fi
+
+  # ==============================================================================
+  # -- Download CycloneDDS -------------------------------------------------------
+  # ==============================================================================
+
+  if [[ -d ${CYCLONEDDS_INSTALL_DIR} ]] ; then
+      log "CycloneDDS already installed."
+    else
+      mkdir -p ${CYCLONEDDS_INSTALL_DIR}
+
+      log "Building CycloneDDS"
+      CYCLONE_DDS_SOURCE_DIR=${PWD}/cyclone-dds-source
+      CYCLONE_DDS_REPO="https://github.com/eclipse-cyclonedds/cyclonedds.git"
+      CYCLONE_DDS_BRANCH=0.10.5
+
+      git clone --depth 1 --branch ${CYCLONE_DDS_BRANCH} ${CYCLONE_DDS_REPO} ${CYCLONE_DDS_SOURCE_DIR}
+
+      mkdir -p ${CYCLONE_DDS_SOURCE_DIR}/build
+      pushd ${CYCLONE_DDS_SOURCE_DIR}/build >/dev/null
+      cmake -G "Ninja" \
+        -DCMAKE_C_COMPILER="${CC}" \
+        -DCMAKE_INSTALL_PREFIX="${CYCLONEDDS_INSTALL_DIR}" \
+        -DCMAKE_C_FLAGS="-fPIC ${UNREAL_HOSTED_CFLAGS}" \
+        -DBUILD_SHARED_LIBS=OFF \
+        -DBUILD_TESTING=OFF \
+        -DBUILD_EXAMPLES=OFF \
+        -DBUILD_IDLC=OFF \
+        -DBUILD_DDSPERF=OFF \
+        -DENABLE_SSL=OFF \
+        -DENABLE_SECURITY=OFF \
+        -DENABLE_SHM=OFF \
+        ..
+      ninja
+      ninja install
+      popd >/dev/null
+      rm -Rf ${CYCLONE_DDS_SOURCE_DIR}
+
+      mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+      cp -p ${CYCLONEDDS_LIB}/*.a ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+      cp -p -r ${CYCLONEDDS_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+    fi
+
 fi
 
 # ==============================================================================
@@ -1045,6 +1093,8 @@ add_definitions(-DLIBCARLA_TEST_CONTENT_FOLDER="${LIBCARLA_TEST_CONTENT_FOLDER}"
 set(BOOST_INCLUDE_PATH "${BOOST_INCLUDE}")
 set(FASTDDS_INCLUDE_PATH "${FASTDDS_INCLUDE}")
 set(FASTDDS_LIB_PATH "${FASTDDS_LIB}")
+set(CYCLONEDDS_INCLUDE_PATH "${CYCLONEDDS_INCLUDE}")
+set(CYCLONEDDS_LIB_PATH "${CYCLONEDDS_LIB}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Server")
   # Here libraries linking libc++.
