@@ -1198,3 +1198,129 @@ TEST(generic_cdr_pubsubtype, getkey_returns_false) {
   EXPECT_FALSE(pubsub_type.m_isGetKeyDefined);
   EXPECT_FALSE(pubsub_type.getKey(nullptr, nullptr, false));
 }
+
+// ==========================================================================
+// Group 12: generic_cdr_pubsubtype_large_payload (3 tests)
+// Tests that getSerializedSizeProvider() returns the actual instance size and
+// that serialize/deserialize succeed for payloads exceeding max_serialized_size().
+// These tests catch the runtime bug where Image and PointCloud2 publish failed
+// with RETCODE_ERROR because the static max size (~648 bytes for Image) was far
+// smaller than a real camera frame (~1-8 MB).
+// ==========================================================================
+
+TEST(generic_cdr_pubsubtype_large_payload, image_large_payload_serialize_succeeds) {
+  using SerializedPayload_t = eprosima::fastrtps::rtps::SerializedPayload_t;
+
+  // 640x480 BGRA image: 1,228,800 bytes of pixel data.
+  // This is vastly larger than CdrTopicInfo<msg::Image>::max_serialized_size() = 648.
+  constexpr uint32_t width  = 640u;
+  constexpr uint32_t height = 480u;
+  constexpr uint32_t channels = 4u;
+  const uint32_t pixel_bytes = width * height * channels;
+
+  msg::Image original{};
+  original.header.stamp.sec = 42;
+  original.header.frame_id = "camera";
+  original.height = height;
+  original.width  = width;
+  original.encoding = "bgra8";
+  original.is_bigendian = 0u;
+  original.step = width * channels;
+  original.data.assign(pixel_bytes, 0xABu);
+
+  GenericCdrPubSubType<msg::Image> pubsub_type;
+
+  // getSerializedSizeProvider() must report the actual instance size, not the
+  // static max. The returned size must accommodate all pixel data.
+  auto size_fn = pubsub_type.getSerializedSizeProvider(
+      static_cast<void*>(&original));
+  uint32_t reported_size = size_fn();
+  EXPECT_GT(reported_size, pixel_bytes)
+      << "getSerializedSizeProvider must exceed the raw pixel count";
+
+  SerializedPayload_t payload(reported_size);
+  ASSERT_TRUE(pubsub_type.serialize(static_cast<void*>(&original), &payload));
+  EXPECT_GT(payload.length, pixel_bytes);
+
+  msg::Image recovered{};
+  ASSERT_TRUE(pubsub_type.deserialize(&payload, static_cast<void*>(&recovered)));
+  EXPECT_EQ(recovered.header.frame_id, "camera");
+  EXPECT_EQ(recovered.height, height);
+  EXPECT_EQ(recovered.width, width);
+  EXPECT_EQ(recovered.encoding, "bgra8");
+  ASSERT_EQ(recovered.data.size(), pixel_bytes);
+  EXPECT_EQ(recovered.data[0], 0xABu);
+  EXPECT_EQ(recovered.data[pixel_bytes - 1u], 0xABu);
+}
+
+TEST(generic_cdr_pubsubtype_large_payload, pointcloud2_large_payload_serialize_succeeds) {
+  using SerializedPayload_t = eprosima::fastrtps::rtps::SerializedPayload_t;
+
+  // 10,000 points x 16 bytes/point = 160,000 bytes of point data.
+  // This exceeds CdrTopicInfo<msg::PointCloud2>::max_serialized_size() = 27,597.
+  constexpr uint32_t num_points = 10000u;
+  constexpr uint32_t point_step = 16u;
+  const uint32_t data_bytes = num_points * point_step;
+
+  msg::PointCloud2 original{};
+  original.header.frame_id = "velodyne";
+  original.height = 1u;
+  original.width  = num_points;
+  original.point_step = point_step;
+  original.row_step   = num_points * point_step;
+  original.is_dense   = true;
+  original.data.assign(data_bytes, 0x55u);
+
+  msg::PointField field{};
+  field.name     = "x";
+  field.offset   = 0u;
+  field.datatype = static_cast<uint8_t>(msg::PointField::FLOAT32);
+  field.count    = 1u;
+  original.fields.push_back(field);
+
+  GenericCdrPubSubType<msg::PointCloud2> pubsub_type;
+
+  auto size_fn = pubsub_type.getSerializedSizeProvider(
+      static_cast<void*>(&original));
+  uint32_t reported_size = size_fn();
+  EXPECT_GT(reported_size, data_bytes)
+      << "getSerializedSizeProvider must exceed the raw point data size";
+
+  SerializedPayload_t payload(reported_size);
+  ASSERT_TRUE(pubsub_type.serialize(static_cast<void*>(&original), &payload));
+  EXPECT_GT(payload.length, data_bytes);
+
+  msg::PointCloud2 recovered{};
+  ASSERT_TRUE(pubsub_type.deserialize(&payload, static_cast<void*>(&recovered)));
+  EXPECT_EQ(recovered.header.frame_id, "velodyne");
+  EXPECT_EQ(recovered.height, 1u);
+  EXPECT_EQ(recovered.width, num_points);
+  EXPECT_EQ(recovered.is_dense, true);
+  ASSERT_EQ(recovered.data.size(), data_bytes);
+  EXPECT_EQ(recovered.data[0], 0x55u);
+}
+
+TEST(generic_cdr_pubsubtype_large_payload, size_provider_returns_actual_size_not_max) {
+  // getSerializedSizeProvider() must return different sizes for messages with
+  // different amounts of variable-length data, proving it is instance-dependent.
+  msg::Image small_img{};
+  small_img.data.assign(100u, 0u);
+
+  msg::Image large_img{};
+  large_img.data.assign(100000u, 0u);
+
+  GenericCdrPubSubType<msg::Image> pubsub_type;
+
+  auto small_fn = pubsub_type.getSerializedSizeProvider(
+      static_cast<void*>(&small_img));
+  auto large_fn = pubsub_type.getSerializedSizeProvider(
+      static_cast<void*>(&large_img));
+
+  uint32_t small_size = small_fn();
+  uint32_t large_size = large_fn();
+
+  EXPECT_LT(small_size, large_size)
+      << "Size must grow with the data vector length";
+  EXPECT_GT(large_size, 100000u)
+      << "Size must at least cover the raw data bytes";
+}
