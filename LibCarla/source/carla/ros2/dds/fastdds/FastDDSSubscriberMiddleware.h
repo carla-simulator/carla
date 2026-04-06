@@ -23,6 +23,8 @@
 #include <fastrtps/attributes/ParticipantAttributes.h>
 #include <fastrtps/qos/QosPolicies.h>
 
+#include <atomic>
+
 namespace carla {
 namespace ros2 {
 
@@ -40,10 +42,14 @@ class FastDDSSubscriberMiddleware
  public:
   using msg_type = typename S::msg_type;
 
+  FastDDSSubscriberMiddleware() = default;
+  FastDDSSubscriberMiddleware(const FastDDSSubscriberMiddleware&) = delete;
+  FastDDSSubscriberMiddleware& operator=(const FastDDSSubscriberMiddleware&) = delete;
+
   void on_subscription_matched(
       efd::DataReader* reader,
       const efd::SubscriptionMatchedStatus& info) override {
-    _alive = (info.total_count > 0);
+    _alive.store(info.total_count > 0, std::memory_order_relaxed);
   }
 
   void on_data_available(efd::DataReader* reader) override {
@@ -59,6 +65,9 @@ class FastDDSSubscriberMiddleware
 
   ~FastDDSSubscriberMiddleware() override {
     if (_datareader) {
+      // Detach listener before deletion so that on_data_available cannot
+      // fire on a partially-destroyed object.
+      _datareader->set_listener(nullptr);
       _subscriber->delete_datareader(_datareader);
     }
     if (_subscriber) {
@@ -121,7 +130,7 @@ class FastDDSSubscriberMiddleware
   }
 
   bool IsAlive() const override {
-    return _alive;
+    return _alive.load(std::memory_order_relaxed);
   }
 
   std::string GetTopicName() const override {
@@ -138,8 +147,8 @@ class FastDDSSubscriberMiddleware
   msg_type* _message_ptr     { nullptr };
   bool*     _new_message_ptr { nullptr };
 
-  std::string _topic_name;
-  bool        _alive { false };
+  std::string        _topic_name;
+  std::atomic<bool>  _alive { false };
 };
 
 } // namespace ros2

@@ -10,8 +10,10 @@
 #include "carla/BufferView.h"
 #include "carla/geom/Transform.h"
 #include "carla/ros2/ROS2CallbackData.h"
+#include "carla/ros2/dds/DDSMiddleware.h"
 #include "carla/streaming/detail/Types.h"
 
+#include <mutex>
 #include <unordered_set>
 #include <unordered_map>
 #include <memory>
@@ -55,7 +57,9 @@ class ROS2
     }
 
     // General
-    void Enable(bool enable);
+    // Returns true when enabling succeeds (middleware compiled in), false otherwise.
+    // Callers pass enable=false to shut down; the return value is always true in that case.
+    bool Enable(bool enable, DDSMiddleware middleware = DDSMiddleware::FastDDS);
     void Shutdown();
 
     bool IsEnabled() { return _enabled; }
@@ -141,6 +145,12 @@ class ROS2
   ROS2() {};
 
   static std::shared_ptr<ROS2> _instance;
+
+  // Protects all map members from concurrent access by the UE4 tick thread
+  // (ProcessDataFrom*, SetFrame) and the RPC thread (Register*, Unregister*).
+  // recursive_mutex is required because RegisterSensor calls RegisterActor,
+  // and UnregisterSensor calls UnregisterActor.
+  mutable std::recursive_mutex _mutex;
 
   bool _enabled { false };
   uint64_t _frame { 0 };

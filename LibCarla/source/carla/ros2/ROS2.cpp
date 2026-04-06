@@ -7,6 +7,7 @@
 #include "carla/ros2/ROS2.h"
 
 #include "carla/Logging.h"
+#include "carla/ros2/dds/DDSMiddlewareFactory.h"
 #include "carla/geom/GeoLocation.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/sensor/data/DVSEvent.h"
@@ -69,25 +70,41 @@ enum ESensors {
   HSSLidar
 };
 
-void ROS2::Enable(bool enable) {
-  _clock_publisher = std::make_shared<CarlaClockPublisher>();
-
+bool ROS2::Enable(bool enable, DDSMiddleware middleware) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
+  if (enable) {
+    auto resolve = DDSMiddlewareFactory::ResolveMiddleware(middleware);
+    if (!resolve.success) {
+      log_error("ROS2: middleware '", DDSMiddlewareToString(middleware),
+          "' is not compiled into this binary. ROS2 is DISABLED.");
+      return false;
+    }
+    DDSMiddlewareFactory::SetMiddleware(middleware);
+    log_info("ROS2: using DDS middleware: ",
+        DDSMiddlewareToString(middleware));
+    _clock_publisher = std::make_shared<CarlaClockPublisher>();
+  }
   _enabled = enable;
+  return true;
 }
 
 void ROS2::SetFrame(uint64_t frame) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   _frame = frame;
 
   for (auto& element : _subscribers) {
     auto actor = element.first;
     auto subscriber = element.second;
-    auto callback = _actor_callbacks.find(actor)->second;
+    auto cb_it = _actor_callbacks.find(actor);
+    if (cb_it == _actor_callbacks.end()) continue;
+    auto callback = cb_it->second;
 
     subscriber->ProcessMessages(callback);
   }
 }
 
 void ROS2::SetTimestamp(double timestamp) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   double integral;
   const double fractional = modf(timestamp, &integral);
   const double multiplier = 1000000000.0;
@@ -99,12 +116,14 @@ void ROS2::SetTimestamp(double timestamp) {
 }
 
 void ROS2::RegisterActor(void *actor, std::string ros_name, std::string frame_id, bool publish_tf) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   _registered_actors.insert({actor, ros_name});
   _frame_ids.insert({actor, frame_id});
   _tfs.insert({actor, publish_tf});
 }
 
 void ROS2::UnregisterActor(void *actor) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   _registered_actors.erase(actor);
   _frame_ids.erase(actor);
   _actor_parent_map.erase(actor);
@@ -112,19 +131,23 @@ void ROS2::UnregisterActor(void *actor) {
 }
 
 void ROS2::RegisterActorParent(void *actor, void *parent) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   _actor_parent_map.insert({actor, parent});
 }
 
 void ROS2::RegisterSensor(void *actor, std::string ros_name, std::string frame_id, bool publish_tf) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   RegisterActor(actor, ros_name, frame_id, publish_tf);
 }
 
 void ROS2::UnregisterSensor(void *actor) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   UnregisterActor(actor);
   _publishers.erase(actor);
 }
 
 void ROS2::RegisterVehicle(void *actor, std::string ros_name, std::string frame_id, ActorCallback callback) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   RegisterActor(actor, ros_name, frame_id);
 
   // Register actor callback
@@ -142,17 +165,20 @@ void ROS2::RegisterVehicle(void *actor, std::string ros_name, std::string frame_
 }
 
 void ROS2::UnregisterVehicle(void *actor) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   UnregisterActor(actor);
   _actor_callbacks.erase(actor);
   _subscribers.erase(actor);
 }
 
 std::string ROS2::GetActorRosName(void *actor) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   auto it = _registered_actors.find(actor);
   return it != _registered_actors.end() ? it->second : "";
 }
 
 std::string ROS2::GetActorBaseTopicName(void *actor) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   auto it = _actor_parent_map.find(actor);
   if (it != _actor_parent_map.end()) {
     return GetActorBaseTopicName(it->second) + "/" + GetActorRosName(actor);
@@ -162,11 +188,13 @@ std::string ROS2::GetActorBaseTopicName(void *actor) {
 }
 
 std::string ROS2::GetFrameId(void *actor) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   auto it = _frame_ids.find(actor);
   return it != _frame_ids.end() ? it->second : "";
 }
 
 std::string ROS2::GetParentFrameId(void *actor) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   auto it = _actor_parent_map.find(actor);
   if (it != _actor_parent_map.end()) {
     return GetFrameId(it->second);
@@ -254,7 +282,7 @@ void ROS2::ProcessDataFromCamera(
     const carla::geom::Transform sensor_transform,
     const carla::SharedBufferView buffer,
     void *actor) {
-
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   auto base_publisher = GetOrCreateSensor(static_cast<int>(sensor_type), actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaCameraPublisher>(base_publisher);
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
@@ -279,7 +307,7 @@ void ROS2::ProcessDataFromGNSS(
     const carla::geom::Transform sensor_transform,
     const carla::geom::GeoLocation &data,
     void *actor) {
-  
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   auto base_publisher = GetOrCreateSensor(ESensors::GnssSensor, actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaGNSSPublisher>(base_publisher);
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
@@ -300,7 +328,7 @@ void ROS2::ProcessDataFromIMU(
     carla::geom::Vector3D gyroscope,
     float compass,
     void *actor) {
-
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   auto base_publisher = GetOrCreateSensor(ESensors::InertialMeasurementUnit, actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaIMUPublisher>(base_publisher);
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
@@ -319,7 +347,7 @@ void ROS2::ProcessDataFromDVS(
     const carla::geom::Transform sensor_transform,
     const carla::SharedBufferView buffer,
     void *actor) {
-
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   auto base_publisher = GetOrCreateSensor(ESensors::DVSCamera, actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaDVSPublisher>(base_publisher);
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
@@ -349,7 +377,7 @@ void ROS2::ProcessDataFromLidar(
     const carla::geom::Transform sensor_transform,
     carla::sensor::data::LidarData &data,
     void *actor) {
-
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   auto base_publisher = GetOrCreateSensor(ESensors::RayCastLidar, actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(base_publisher);
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
@@ -373,7 +401,7 @@ void ROS2::ProcessDataFromSemanticLidar(
     const carla::geom::Transform sensor_transform,
     carla::sensor::data::SemanticLidarData &data,
     void *actor) {
-
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   auto base_publisher = GetOrCreateSensor(ESensors::RayCastSemanticLidar, actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaSemanticLidarPublisher>(base_publisher);
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
@@ -394,7 +422,7 @@ void ROS2::ProcessDataFromRadar(
     const carla::geom::Transform sensor_transform,
     const carla::sensor::data::RadarData &data,
     void *actor) {
-
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   auto base_publisher = GetOrCreateSensor(ESensors::Radar, actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaRadarPublisher>(base_publisher);
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
@@ -417,6 +445,7 @@ void ROS2::ProcessDataFromObstacleDetection(
     AActor * /*second_actor*/,
     float distance,
     void * /*actor*/) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   log_info("Sensor ObstacleDetector to ROS data: frame.", _frame, "sensor.", sensor_type, "distance.", distance);
 }
 
@@ -426,7 +455,7 @@ void ROS2::ProcessDataFromCollisionSensor(
     uint32_t other_actor,
     carla::geom::Vector3D impulse,
     void* actor) {
-
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   auto base_publisher = GetOrCreateSensor(ESensors::CollisionSensor, actor);
   auto sensor_publisher = std::dynamic_pointer_cast<CarlaCollisionPublisher>(base_publisher);
   auto transform_publisher = GetOrCreateTransformPublisher(actor);
@@ -441,6 +470,7 @@ void ROS2::ProcessDataFromCollisionSensor(
 }
 
 void ROS2::Shutdown() {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
   _publishers.clear();
   _subscribers.clear();
 

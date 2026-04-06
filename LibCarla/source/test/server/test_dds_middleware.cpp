@@ -109,48 +109,11 @@ class DDSMiddlewareFactoryFixture : public ::testing::Test {
 };
 
 // ==========================================================================
-// Group 1: dds_middleware_enum (2 tests)
-// ==========================================================================
-
-TEST(dds_middleware_enum, values_exist) {
-  DDSMiddleware mw_fast = DDSMiddleware::FastDDS;
-  EXPECT_EQ(static_cast<int>(mw_fast), 0);
-  DDSMiddleware mw_cyclone = DDSMiddleware::CycloneDDS;
-  EXPECT_EQ(static_cast<int>(mw_cyclone), 1);
-}
-
-TEST(dds_middleware_enum, switch_covers_all) {
-  DDSMiddleware values[] = {DDSMiddleware::FastDDS, DDSMiddleware::CycloneDDS};
-  for (auto mw : values) {
-    bool covered = false;
-    switch (mw) {
-      case DDSMiddleware::FastDDS:
-        covered = true;
-        break;
-      case DDSMiddleware::CycloneDDS:
-        covered = true;
-        break;
-    }
-    EXPECT_TRUE(covered);
-  }
-}
-
-// ==========================================================================
-// Group 2: dds_middleware_to_string (3 tests)
+// Group 1: dds_middleware_to_string (2 tests)
 // ==========================================================================
 
 TEST(dds_middleware_to_string, fastdds_returns_correct_string) {
   EXPECT_STREQ(DDSMiddlewareToString(DDSMiddleware::FastDDS), "FastDDS");
-}
-
-TEST(dds_middleware_to_string, result_is_not_null) {
-  const char* result = DDSMiddlewareToString(DDSMiddleware::FastDDS);
-  ASSERT_NE(result, nullptr);
-}
-
-TEST(dds_middleware_to_string, result_is_not_empty) {
-  const char* result = DDSMiddlewareToString(DDSMiddleware::FastDDS);
-  EXPECT_STRNE(result, "");
 }
 
 TEST(dds_middleware_to_string, cyclonedds_returns_correct_string) {
@@ -158,7 +121,7 @@ TEST(dds_middleware_to_string, cyclonedds_returns_correct_string) {
 }
 
 // ==========================================================================
-// Group 3: dds_middleware_from_string (5 tests)
+// Group 2: dds_middleware_from_string (5 tests)
 // ==========================================================================
 
 TEST(dds_middleware_from_string, fastdds_lowercase_valid) {
@@ -194,7 +157,7 @@ TEST(dds_middleware_from_string, partial_match_rejected) {
 }
 
 // ==========================================================================
-// Group 4: dds_middleware_available (2 tests)
+// Group 3: dds_middleware_available (2 tests)
 // ==========================================================================
 
 TEST(dds_middleware_available, fastdds_available) {
@@ -213,7 +176,7 @@ TEST(dds_middleware_available, cyclonedds_not_available_without_macro) {
 }
 
 // ==========================================================================
-// Group 5: dds_middleware_type_name (4 tests)
+// Group 4: dds_middleware_type_name (4 tests)
 // ==========================================================================
 
 TEST(dds_middleware_type_name, bare_name) {
@@ -235,7 +198,7 @@ TEST(dds_middleware_type_name, empty_string) {
 }
 
 // ==========================================================================
-// Group 6: DDSMiddlewareFactoryFixture (5 tests)
+// Group 5: DDSMiddlewareFactoryFixture (8 tests)
 // ==========================================================================
 
 TEST_F(DDSMiddlewareFactoryFixture, set_and_get_middleware) {
@@ -245,11 +208,6 @@ TEST_F(DDSMiddlewareFactoryFixture, set_and_get_middleware) {
 
 TEST_F(DDSMiddlewareFactoryFixture, default_is_fastdds) {
   EXPECT_EQ(DDSMiddlewareFactory::GetMiddleware(), DDSMiddleware::FastDDS);
-}
-
-TEST_F(DDSMiddlewareFactoryFixture, is_middleware_available_fastdds) {
-  EXPECT_TRUE(
-      DDSMiddlewareFactory::IsMiddlewareAvailable(DDSMiddleware::FastDDS));
 }
 
 TEST_F(DDSMiddlewareFactoryFixture, resolve_available_middleware) {
@@ -293,101 +251,7 @@ TEST_F(DDSMiddlewareFactoryFixture, create_subscriber_cyclonedds_unavailable) {
 }
 
 // ==========================================================================
-// Group 7: dds_publisher_interface (5 tests)
-// ==========================================================================
-
-TEST(dds_publisher_interface, mock_init_success) {
-  MockPublisherMiddleware mock;
-  mock.init_return_value = true;
-  EXPECT_TRUE(mock.Init("rt/test_topic"));
-  EXPECT_TRUE(mock.init_called);
-  EXPECT_EQ(mock.last_topic_name, "rt/test_topic");
-}
-
-TEST(dds_publisher_interface, mock_init_failure) {
-  MockPublisherMiddleware mock;
-  mock.init_return_value = false;
-  EXPECT_FALSE(mock.Init("rt/test_topic"));
-  EXPECT_TRUE(mock.init_called);
-}
-
-TEST(dds_publisher_interface, mock_publish_records_data) {
-  MockPublisherMiddleware mock;
-  TestMsg msg;
-  msg.value = 42;
-  EXPECT_TRUE(mock.Publish(&msg));
-  EXPECT_TRUE(mock.publish_called);
-  EXPECT_EQ(mock.last_published_data, &msg);
-}
-
-TEST(dds_publisher_interface, mock_topic_name) {
-  MockPublisherMiddleware mock;
-  mock.Init("rt/camera/image");
-  EXPECT_EQ(mock.GetTopicName(), "rt/camera/image");
-}
-
-TEST(dds_publisher_interface, mock_is_alive) {
-  MockPublisherMiddleware mock;
-  mock.alive = true;
-  EXPECT_TRUE(mock.IsAlive());
-  mock.alive = false;
-  EXPECT_FALSE(mock.IsAlive());
-}
-
-// ==========================================================================
-// Group 8: dds_subscriber_interface (5 tests)
-// ==========================================================================
-
-TEST(dds_subscriber_interface, mock_init_stores_pointers) {
-  MockSubscriberMiddleware mock;
-  TestMsg msg;
-  bool flag = false;
-  EXPECT_TRUE(mock.Init("rt/test_topic", &msg, &flag));
-  EXPECT_TRUE(mock.init_called);
-  EXPECT_EQ(mock.stored_message_ptr, &msg);
-  EXPECT_EQ(mock.stored_flag_ptr, &flag);
-}
-
-TEST(dds_subscriber_interface, mock_init_failure) {
-  MockSubscriberMiddleware mock;
-  mock.init_return_value = false;
-  TestMsg msg;
-  bool flag = false;
-  EXPECT_FALSE(mock.Init("rt/test_topic", &msg, &flag));
-}
-
-TEST(dds_subscriber_interface, mock_topic_name) {
-  MockSubscriberMiddleware mock;
-  TestMsg msg;
-  bool flag = false;
-  mock.Init("rt/lidar/points", &msg, &flag);
-  EXPECT_EQ(mock.GetTopicName(), "rt/lidar/points");
-}
-
-TEST(dds_subscriber_interface, mock_is_alive) {
-  MockSubscriberMiddleware mock;
-  mock.alive = true;
-  EXPECT_TRUE(mock.IsAlive());
-  mock.alive = false;
-  EXPECT_FALSE(mock.IsAlive());
-}
-
-TEST(dds_subscriber_interface, mock_simulates_message_receipt) {
-  MockSubscriberMiddleware mock;
-  TestMsg msg;
-  bool flag = false;
-  mock.Init("rt/test", &msg, &flag);
-  ASSERT_NE(mock.stored_message_ptr, nullptr);
-  ASSERT_NE(mock.stored_flag_ptr, nullptr);
-  auto* typed_ptr = static_cast<TestMsg*>(mock.stored_message_ptr);
-  typed_ptr->value = 99;
-  *mock.stored_flag_ptr = true;
-  EXPECT_EQ(msg.value, 99);
-  EXPECT_TRUE(flag);
-}
-
-// ==========================================================================
-// Group 9: publisher_impl (7 tests)
+// Group 6: publisher_impl (7 tests)
 // ==========================================================================
 
 TEST(publisher_impl, get_message_returns_pointer) {
@@ -463,7 +327,7 @@ TEST(publisher_impl, data_flows_through_publish) {
 }
 
 // ==========================================================================
-// Group 10: subscriber_impl (7 tests)
+// Group 7: subscriber_impl (7 tests)
 // ==========================================================================
 
 TEST(subscriber_impl, has_new_message_initially_false) {
@@ -546,7 +410,7 @@ TEST(subscriber_impl, init_failure_propagated) {
 }
 
 // ==========================================================================
-// Group 9: cdr_topic_info (2 tests)
+// Group 8: cdr_topic_info (2 tests)
 // ==========================================================================
 
 TEST(cdr_topic_info, type_names_are_non_empty) {
@@ -581,7 +445,7 @@ TEST(cdr_topic_info, max_sizes_are_positive) {
 }
 
 // ==========================================================================
-// Group 10: cdr_serialization (12 tests)
+// Group 9: cdr_serialization (12 tests)
 // ==========================================================================
 
 TEST(cdr_serialization, time_round_trip) {
@@ -841,7 +705,7 @@ TEST(cdr_serialization, empty_tfmessage_round_trip) {
 }
 
 // ==========================================================================
-// Group 11: generic_cdr_pubsubtype (6 tests)
+// Group 10: generic_cdr_pubsubtype (6 tests)
 // Tests for GenericCdrPubSubType<T> — the single FastDDS TopicDataType
 // implementation that replaces 30 fastddsgen-generated PubSubType classes.
 // ==========================================================================
@@ -939,7 +803,7 @@ TEST(generic_cdr_pubsubtype, getkey_returns_false) {
 }
 
 // ==========================================================================
-// Group 12: generic_cdr_pubsubtype_large_payload (3 tests)
+// Group 11: generic_cdr_pubsubtype_large_payload (3 tests)
 // Tests that getSerializedSizeProvider() returns the actual instance size and
 // that serialize/deserialize succeed for payloads exceeding max_serialized_size().
 // These tests catch the runtime bug where Image and PointCloud2 publish failed

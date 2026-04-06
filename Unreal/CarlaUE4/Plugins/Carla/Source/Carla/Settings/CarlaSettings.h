@@ -168,5 +168,14 @@ public:
       DisplayName = "  ROS2 Topics Visible On Startup")
   bool ROS2TopicVisibility = true;
 
+  /// DDS middleware for ROS2 publishing. Accepted values: "fastdds", "cyclonedds".
+  /// Set via --dds-middleware=<value> on the command line.
+  UPROPERTY(Category = "Quality Settings/ROS2",
+      BlueprintReadOnly,
+      EditAnywhere,
+      config,
+      DisplayName = "  DDS Middleware")
+  FString DDSMiddlewareName = TEXT("fastdds");
+
   /// @}
 };

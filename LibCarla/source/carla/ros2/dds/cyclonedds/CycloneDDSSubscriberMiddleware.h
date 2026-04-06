@@ -10,6 +10,8 @@
 #include "carla/ros2/types/CdrTopicInfo.h"
 #include "carla/Logging.h"
 
+#include <atomic>
+
 #ifndef CARLA_ROS2_DDS_TESTING
 #ifdef CARLA_ROS2_DDS_CYCLONEDDS
 
@@ -33,10 +35,24 @@ class CycloneDDSSubscriberMiddleware : public IDDSSubscriberMiddleware {
  public:
   using msg_type = typename S::msg_type;
 
+  CycloneDDSSubscriberMiddleware() = default;
+  CycloneDDSSubscriberMiddleware(const CycloneDDSSubscriberMiddleware&) = delete;
+  CycloneDDSSubscriberMiddleware& operator=(const CycloneDDSSubscriberMiddleware&) = delete;
+
   ~CycloneDDSSubscriberMiddleware() override {
-    if (_participant != DDS_ENTITY_NIL) {
-      dds_delete(_participant);  // cascades to reader, topic, sertype
+    // Delete only our own entities. The shared participant is NOT deleted here;
+    // it lives for the process lifetime so that sertypes interned by CycloneDDS
+    // are never freed while other subscribers are still using them.
+    if (_reader > 0) {
+      // Detach the listener before deleting the reader.  dds_set_listener with
+      // a null listener acquires the entity lock and waits for any in-flight
+      // carla_on_data_available / carla_on_subscription_matched callback to
+      // complete before returning, preventing a use-after-free of `this` on
+      // the CycloneDDS receive thread.
+      dds_set_listener(_reader, nullptr);
+      dds_delete(_reader);
     }
+    if (_topic  > 0) { dds_delete(_topic);  }
   }
 
   bool Init(
@@ -47,16 +63,16 @@ class CycloneDDSSubscriberMiddleware : public IDDSSubscriberMiddleware {
     _message_ptr     = static_cast<msg_type*>(message_ptr);
     _new_message_ptr = new_message_flag;
 
-    _participant = dds_create_participant(DDS_DOMAIN_DEFAULT, nullptr, nullptr);
-    if (_participant < 0) {
-      log_error("CycloneDDSSubscriberMiddleware: Failed to create participant "
-                "(topic '", topic_name, "', code:", _participant, ")");
+    dds_entity_t participant = carla_cdr_get_participant();
+    if (participant < 0) {
+      log_error("CycloneDDSSubscriberMiddleware: Shared participant unavailable "
+                "(topic '", topic_name, "', code:", participant, ")");
       return false;
     }
 
     const char* type_name = CdrTopicInfo<msg_type>::type_name();
     _topic = carla_cdr_create_topic(
-        _participant, topic_name.c_str(), type_name, &_sertype);
+        participant, topic_name.c_str(), type_name, &_sertype);
     if (_topic < 0) {
       log_error("CycloneDDSSubscriberMiddleware: Failed to create topic '",
                 topic_name, "' (code:", _topic, ")");
@@ -71,7 +87,7 @@ class CycloneDDSSubscriberMiddleware : public IDDSSubscriberMiddleware {
     dds_lset_subscription_matched(listener, carla_on_subscription_matched);
     dds_lset_data_available(listener, carla_on_data_available);
 
-    _reader = dds_create_reader(_participant, _topic, qos, listener);
+    _reader = dds_create_reader(participant, _topic, qos, listener);
     dds_delete_listener(listener);
     dds_delete_qos(qos);
     if (_reader < 0) {
@@ -85,7 +101,7 @@ class CycloneDDSSubscriberMiddleware : public IDDSSubscriberMiddleware {
   }
 
   bool IsAlive() const override {
-    return _alive;
+    return _alive.load(std::memory_order_relaxed);
   }
 
   std::string GetTopicName() const override {
@@ -100,7 +116,7 @@ class CycloneDDSSubscriberMiddleware : public IDDSSubscriberMiddleware {
   {
     CycloneDDSSubscriberMiddleware* self =
         static_cast<CycloneDDSSubscriberMiddleware*>(arg);
-    self->_alive = (status.current_count > 0);
+    self->_alive.store(status.current_count > 0, std::memory_order_relaxed);
   }
 
   static void carla_on_data_available(dds_entity_t reader, void* arg) {
@@ -126,16 +142,15 @@ class CycloneDDSSubscriberMiddleware : public IDDSSubscriberMiddleware {
     ddsi_serdata_unref(sd);
   }
 
-  dds_entity_t          _participant { DDS_ENTITY_NIL };
-  dds_entity_t          _topic       { DDS_ENTITY_NIL };
-  dds_entity_t          _reader      { DDS_ENTITY_NIL };
-  struct ddsi_sertype*  _sertype     { nullptr };
+  dds_entity_t          _topic   { DDS_ENTITY_NIL };
+  dds_entity_t          _reader  { DDS_ENTITY_NIL };
+  struct ddsi_sertype*  _sertype { nullptr };
 
   msg_type* _message_ptr     { nullptr };
   bool*     _new_message_ptr { nullptr };
 
-  std::string _topic_name;
-  bool        _alive { false };
+  std::string        _topic_name;
+  std::atomic<bool>  _alive { false };
 };
 
 } // namespace ros2

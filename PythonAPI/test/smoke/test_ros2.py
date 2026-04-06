@@ -82,6 +82,8 @@ class TestROS2(SyncSmokeTest):
         camera_offset = carla.Transform(carla.Location(x=1.5, z=2.4))
         lidar_offset = carla.Transform(carla.Location(x=0.0, z=2.8))
 
+        camera = None
+        lidar = None
         camera = self.world.spawn_actor(camera_bp, camera_offset, attach_to=vehicle)
         lidar = self.world.spawn_actor(lidar_bp, lidar_offset, attach_to=vehicle)
 
@@ -120,6 +122,144 @@ class TestROS2(SyncSmokeTest):
             self.assertGreaterEqual(received_lidar, 5,
                 'LiDAR callback should fire while ROS2 is enabled')
         finally:
-            camera.destroy()
-            lidar.destroy()
+            if camera is not None:
+                camera.destroy()
+            if lidar is not None:
+                lidar.destroy()
+            vehicle.destroy()
+
+    def test_ros2_additional_sensors(self):
+        """Radar, DVS camera, and semantic LiDAR publish paths.
+
+        Exercises ProcessDataFromRadar, ProcessDataFromDVS, and
+        ProcessDataFromSemanticLidar — the three sensor publish paths not covered
+        by test_ros2_sensor_publish or test_ros2_multi_sensor_publish.
+        """
+        bp_lib = self.world.get_blueprint_library()
+        spawn_point = self.world.get_map().get_spawn_points()[0]
+
+        radar_bp = bp_lib.filter('sensor.other.radar')[0]
+        radar_bp.set_attribute('ros_name', 'test_radar')
+
+        dvs_bp = bp_lib.filter('sensor.camera.dvs')[0]
+        dvs_bp.set_attribute('ros_name', 'test_dvs')
+
+        sem_lidar_bp = bp_lib.filter('sensor.lidar.ray_cast_semantic')[0]
+        sem_lidar_bp.set_attribute('ros_name', 'test_sem_lidar')
+
+        radar = self.world.spawn_actor(radar_bp, spawn_point)
+        dvs = self.world.spawn_actor(dvs_bp, spawn_point)
+        sem_lidar = self.world.spawn_actor(sem_lidar_bp, spawn_point)
+
+        try:
+            radar.enable_for_ros()
+            dvs.enable_for_ros()
+            sem_lidar.enable_for_ros()
+
+            self.world.tick()
+
+            self.assertTrue(radar.is_enabled_for_ros())
+            self.assertTrue(dvs.is_enabled_for_ros())
+            self.assertTrue(sem_lidar.is_enabled_for_ros())
+
+            for _ in range(19):
+                self.world.tick()
+
+        finally:
+            radar.destroy()
+            dvs.destroy()
+            sem_lidar.destroy()
+
+    def test_ros2_enable_disable_cycle(self):
+        """Enable → tick → disable → tick → re-enable → tick: no crash or state leak.
+
+        Verifies that calling enable_for_ros() and disable_for_ros() multiple
+        times on the same sensor does not leave the DDS publisher in a bad state.
+        """
+        bp_lib = self.world.get_blueprint_library()
+        camera_bp = bp_lib.filter('sensor.camera.rgb')[0]
+        camera_bp.set_attribute('ros_name', 'test_cycle')
+        spawn_point = self.world.get_map().get_spawn_points()[0]
+        sensor = self.world.spawn_actor(camera_bp, spawn_point)
+
+        try:
+            # Cycle 1
+            sensor.enable_for_ros()
+            self.world.tick()
+            self.assertTrue(sensor.is_enabled_for_ros())
+            for _ in range(5):
+                self.world.tick()
+
+            sensor.disable_for_ros()
+            self.world.tick()
+            self.assertFalse(sensor.is_enabled_for_ros())
+            for _ in range(5):
+                self.world.tick()
+
+            # Cycle 2 — re-enable
+            sensor.enable_for_ros()
+            self.world.tick()
+            self.assertTrue(sensor.is_enabled_for_ros())
+            for _ in range(5):
+                self.world.tick()
+
+        finally:
+            sensor.destroy()
+
+    def test_ros2_multi_sensor_publish(self):
+        """4 sensors + hero vehicle: 100-tick stress run then sequential teardown.
+
+        Replicates the ros2_native.py -f stack.json workload that triggered a
+        CycloneDDS heap corruption (double-free from ddsi_serdata_unref after
+        dds_writecdr) and a segfault when multiple publishers share the same DDS
+        type name (TFMessage).  The hero role_name triggers RegisterVehicle()
+        which creates 2 CycloneDDS subscribers.  Each sensor gets an internal
+        CarlaTransformPublisher, so 4 sensors == 4 TF publishers all using the
+        same type name.
+
+        100 ticks provide stronger assurance than 30 against heap corruption.
+        Sequential teardown with a tick between each destroy verifies the server
+        remains alive as each publisher and subscriber is cleaned up.
+        """
+        bp_lib = self.world.get_blueprint_library()
+
+        vehicle_bp = bp_lib.filter('vehicle.lincoln.mkz_2017')[0]
+        vehicle_bp.set_attribute('role_name', 'hero')
+        vehicle_bp.set_attribute('ros_name', 'hero')
+        spawn_point = self.world.get_map().get_spawn_points()[0]
+        vehicle = self.world.spawn_actor(vehicle_bp, spawn_point)
+
+        sensor_configs = [
+            ('sensor.camera.rgb',     carla.Transform(carla.Location(x=1.5, z=2.4))),
+            ('sensor.lidar.ray_cast', carla.Transform(carla.Location(x=0.0, z=2.8))),
+            ('sensor.other.gnss',     carla.Transform(carla.Location(x=1.0, z=2.0))),
+            ('sensor.other.imu',      carla.Transform(carla.Location(x=2.0, z=2.0))),
+        ]
+
+        sensors = []
+        try:
+            for bp_name, offset in sensor_configs:
+                bp = bp_lib.filter(bp_name)[0]
+                bp.set_attribute('ros_name', bp_name.split('.')[-1])
+                sensor = self.world.spawn_actor(bp, offset, attach_to=vehicle)
+                sensor.enable_for_ros()
+                sensors.append(sensor)
+
+            # Publish phase: 100 ticks to stress-test DDS publishing.
+            for _ in range(100):
+                self.world.tick()
+
+            # Teardown phase: destroy sensors one by one.
+            # world.tick() after each destroy verifies the server is still alive.
+            for sensor in sensors:
+                sensor.destroy()
+                self.world.tick()
+            sensors = []
+
+            # Final liveness check after all sensors and subscribers are gone.
+            self.world.tick()
+
+        finally:
+            for sensor in sensors:
+                sensor.destroy()
             vehicle.destroy()

@@ -12,7 +12,6 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-#include <cstdio>
 
 #include <dds/dds.h>
 #include <dds/ddsi/ddsi_serdata.h>
@@ -44,8 +43,14 @@ struct carla_cdr_sertype {
   struct ddsi_sertype c;     ///< Base — must be first member (C struct embedding)
 };
 
+// CDR encoding requires 4-byte alignment for multi-byte primitives.
+// The CDR bytes follow immediately after carla_cdr_serdata in the allocation,
+// so the struct size must be a multiple of 4 to preserve alignment.
+static_assert(sizeof(struct carla_cdr_serdata) % 4 == 0,
+    "carla_cdr_serdata size must be 4-byte aligned for CDR encoding");
+
 // ============================================================
-// Public accessor helpers
+// Public accessor helpers (inline — trivial, used by pub/sub)
 // ============================================================
 
 /// Return a pointer to the inline CDR bytes (including the 4-byte header).
@@ -61,253 +66,36 @@ inline uint32_t carla_cdr_size(const struct ddsi_serdata* sd) {
 }
 
 // ============================================================
-// Internal: serdata allocation
+// Declarations — defined once in CycloneDDSSertype.cpp
 // ============================================================
 
-static struct ddsi_serdata* carla_cdr_alloc_serdata(
+/// Ops tables — defined in CycloneDDSSertype.cpp so that every translation
+/// unit sees the same object address. CycloneDDS compares ops table pointers
+/// (not just the equal() callback) when checking sertype compatibility.
+extern const struct ddsi_serdata_ops carla_cdr_serdata_ops;
+extern const struct ddsi_sertype_ops carla_cdr_sertype_ops;
+
+/// Allocate a carla_cdr_serdata with cdr_size bytes of inline storage.
+/// Defined in CycloneDDSSertype.cpp.
+extern struct ddsi_serdata* carla_cdr_alloc_serdata(
     const struct ddsi_sertype* type,
     enum ddsi_serdata_kind kind,
-    uint32_t cdr_size)
-{
-  void* mem = malloc(sizeof(struct carla_cdr_serdata) + static_cast<size_t>(cdr_size));
-  if (!mem) { return nullptr; }
-  struct carla_cdr_serdata* csd = reinterpret_cast<struct carla_cdr_serdata*>(mem);
-  ddsi_serdata_init(&csd->sd, type, kind);
-  csd->cdr_size = cdr_size;
-  return &csd->sd;
-}
+    uint32_t cdr_size);
+
+/// Return the single shared CycloneDDS participant for this process.
+///
+/// DDS best practice is one participant per application. All CARLA publishers
+/// and subscribers share this participant so that:
+///  - Sertype interning across topics with the same type name is correct.
+///  - No cascading dds_delete() from individual pub/sub destructors can
+///    invalidate sertypes that other endpoints are still using.
+///
+/// The participant is created lazily on the first call (C++11 function-local
+/// static, thread-safe) and lives until process exit.
+extern dds_entity_t carla_cdr_get_participant();
 
 // ============================================================
-// serdata ops
-// ============================================================
-
-static bool carla_cdr_serdata_eqkey(
-    const struct ddsi_serdata* /*a*/,
-    const struct ddsi_serdata* /*b*/)
-{
-  return true;  // no keyed topics — all instances are equivalent
-}
-
-static uint32_t carla_cdr_serdata_get_size(const struct ddsi_serdata* d) {
-  return reinterpret_cast<const struct carla_cdr_serdata*>(d)->cdr_size;
-}
-
-static struct ddsi_serdata* carla_cdr_from_ser(
-    const struct ddsi_sertype* type,
-    enum ddsi_serdata_kind kind,
-    const struct nn_rdata* /*fragchain*/,
-    size_t size)
-{
-  // Fragment-based receive: allocate storage without copying.
-  // CARLA uses local IPC so fragmented delivery does not occur in practice.
-  return carla_cdr_alloc_serdata(type, kind, static_cast<uint32_t>(size));
-}
-
-static struct ddsi_serdata* carla_cdr_from_ser_iov(
-    const struct ddsi_sertype* type,
-    enum ddsi_serdata_kind kind,
-    ddsrt_msg_iovlen_t niov,
-    const ddsrt_iovec_t* iov,
-    size_t size)
-{
-  struct ddsi_serdata* sd =
-      carla_cdr_alloc_serdata(type, kind, static_cast<uint32_t>(size));
-  if (!sd) { return nullptr; }
-  uint8_t* dest = reinterpret_cast<uint8_t*>(
-      reinterpret_cast<struct carla_cdr_serdata*>(sd) + 1);
-  size_t off = 0u;
-  for (ddsrt_msg_iovlen_t i = 0; i < niov && off < size; ++i) {
-    const size_t avail = static_cast<size_t>(iov[i].iov_len);
-    const size_t copy  = (off + avail > size) ? (size - off) : avail;
-    memcpy(dest + off, iov[i].iov_base, copy);
-    off += copy;
-  }
-  return sd;
-}
-
-static struct ddsi_serdata* carla_cdr_from_keyhash(
-    const struct ddsi_sertype* type,
-    const struct ddsi_keyhash* /*keyhash*/)
-{
-  return carla_cdr_alloc_serdata(type, SDK_KEY, 0u);
-}
-
-static struct ddsi_serdata* carla_cdr_from_sample(
-    const struct ddsi_sertype* type,
-    enum ddsi_serdata_kind kind,
-    const void* /*sample*/)
-{
-  // Publishing via dds_write() is not supported — use dds_writecdr() instead.
-  // Provide a stub to satisfy the ops table contract.
-  return carla_cdr_alloc_serdata(type, kind, 0u);
-}
-
-static void carla_cdr_to_ser(
-    const struct ddsi_serdata* d,
-    size_t off,
-    size_t sz,
-    void* buf)
-{
-  memcpy(buf, carla_cdr_data(d) + off, sz);
-}
-
-static struct ddsi_serdata* carla_cdr_to_ser_ref(
-    const struct ddsi_serdata* d,
-    size_t off,
-    size_t sz,
-    ddsrt_iovec_t* ref)
-{
-  // NOLINTNEXTLINE — CycloneDDS iov_base is void*; we provide a non-const pointer
-  ref->iov_base = const_cast<void*>(
-      static_cast<const void*>(carla_cdr_data(d) + off));
-  ref->iov_len = static_cast<ddsrt_iov_len_t>(sz);
-  return ddsi_serdata_ref(d);
-}
-
-static void carla_cdr_to_ser_unref(
-    struct ddsi_serdata* d,
-    const ddsrt_iovec_t* /*ref*/)
-{
-  ddsi_serdata_unref(d);
-}
-
-static bool carla_cdr_to_sample(
-    const struct ddsi_serdata* /*d*/,
-    void* /*sample*/,
-    void** /*bufptr*/,
-    void* /*buflim*/)
-{
-  // Receiving via dds_take() is not supported — use dds_takecdr() instead.
-  return false;
-}
-
-static struct ddsi_serdata* carla_cdr_to_untyped(const struct ddsi_serdata* d) {
-  return ddsi_serdata_ref(d);
-}
-
-static bool carla_cdr_untyped_to_sample(
-    const struct ddsi_sertype* /*type*/,
-    const struct ddsi_serdata* /*d*/,
-    void* /*sample*/,
-    void** /*bufptr*/,
-    void* /*buflim*/)
-{
-  return false;
-}
-
-static void carla_cdr_serdata_free(struct ddsi_serdata* d) {
-  free(d);
-}
-
-static size_t carla_cdr_serdata_print(
-    const struct ddsi_sertype* /*type*/,
-    const struct ddsi_serdata* d,
-    char* buf,
-    size_t size)
-{
-  if (size == 0u) { return 0u; }
-  int n = snprintf(buf, size, "<carla_cdr %u bytes>", carla_cdr_size(d));
-  return static_cast<size_t>(n < 0 ? 0 : n);
-}
-
-static void carla_cdr_serdata_get_keyhash(
-    const struct ddsi_serdata* /*d*/,
-    struct ddsi_keyhash* buf,
-    bool /*force_md5*/)
-{
-  memset(buf, 0, sizeof(*buf));
-}
-
-static const struct ddsi_serdata_ops carla_cdr_serdata_ops = {
-  carla_cdr_serdata_eqkey,      // eqkey
-  carla_cdr_serdata_get_size,   // get_size
-  carla_cdr_from_ser,           // from_ser
-  carla_cdr_from_ser_iov,       // from_ser_iov
-  carla_cdr_from_keyhash,       // from_keyhash
-  carla_cdr_from_sample,        // from_sample
-  carla_cdr_to_ser,             // to_ser
-  carla_cdr_to_ser_ref,         // to_ser_ref
-  carla_cdr_to_ser_unref,       // to_ser_unref
-  carla_cdr_to_sample,          // to_sample
-  carla_cdr_to_untyped,         // to_untyped
-  carla_cdr_untyped_to_sample,  // untyped_to_sample
-  carla_cdr_serdata_free,       // free
-  carla_cdr_serdata_print,      // print
-  carla_cdr_serdata_get_keyhash // get_keyhash
-};
-
-// ============================================================
-// sertype ops
-// ============================================================
-
-static void carla_cdr_sertype_free(struct ddsi_sertype* tp) {
-  ddsi_sertype_fini(tp);
-  free(tp);
-}
-
-static void carla_cdr_sertype_zero_samples(
-    const struct ddsi_sertype* /*d*/,
-    void* /*samples*/,
-    size_t /*count*/)
-{
-  // CDR passthrough — no typed samples to zero
-}
-
-static void carla_cdr_sertype_realloc_samples(
-    void** ptrs,
-    const struct ddsi_sertype* /*d*/,
-    void* /*old*/,
-    size_t /*oldcount*/,
-    size_t count)
-{
-  for (size_t i = 0u; i < count; ++i) {
-    ptrs[i] = nullptr;
-  }
-}
-
-static void carla_cdr_sertype_free_samples(
-    const struct ddsi_sertype* /*d*/,
-    void** ptrs,
-    size_t count,
-    dds_free_op_t /*op*/)
-{
-  for (size_t i = 0u; i < count; ++i) {
-    free(ptrs[i]);
-  }
-}
-
-static bool carla_cdr_sertype_equal(
-    const struct ddsi_sertype* /*a*/,
-    const struct ddsi_sertype* /*b*/)
-{
-  // Type names are already matched by the caller before invoking this.
-  // Two carla_cdr_sertypes with the same name are considered equal.
-  return true;
-}
-
-static uint32_t carla_cdr_sertype_hash(const struct ddsi_sertype* /*tp*/) {
-  return 0u;
-}
-
-static const struct ddsi_sertype_ops carla_cdr_sertype_ops = {
-  ddsi_sertype_v0,                    // version
-  nullptr,                            // arg
-  carla_cdr_sertype_free,             // free
-  carla_cdr_sertype_zero_samples,     // zero_samples
-  carla_cdr_sertype_realloc_samples,  // realloc_samples
-  carla_cdr_sertype_free_samples,     // free_samples
-  carla_cdr_sertype_equal,            // equal
-  carla_cdr_sertype_hash,             // hash
-  nullptr,                            // type_id
-  nullptr,                            // type_map
-  nullptr,                            // type_info
-  nullptr,                            // derive_sertype
-  nullptr,                            // get_serialized_size
-  nullptr                             // serialize_into
-};
-
-// ============================================================
-// Public API
+// Public API (inline — reference extern declarations above)
 // ============================================================
 
 /// Create a CycloneDDS topic that transports raw CDR bytes.
@@ -340,9 +128,17 @@ inline dds_entity_t carla_cdr_create_topic(
       &carla_cdr_serdata_ops,
       DDSI_SERTYPE_FLAG_TOPICKIND_NO_KEY);
   *registered_sertype = &st->c;
-  return dds_create_topic_sertype(
+  dds_entity_t topic = dds_create_topic_sertype(
       participant, topic_name, registered_sertype,
       nullptr, nullptr, nullptr);
+  if (topic < 0) {
+    // dds_create_topic_sertype takes ownership only on success.
+    // On failure, release the sertype we allocated to avoid a leak.
+    ddsi_sertype_fini(&st->c);
+    free(st);
+    *registered_sertype = nullptr;
+  }
+  return topic;
 }
 
 /// Wrap pre-serialized CDR bytes in a ddsi_serdata for use with dds_writecdr().
