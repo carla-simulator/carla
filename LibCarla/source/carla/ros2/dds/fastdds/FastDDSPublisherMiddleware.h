@@ -22,6 +22,8 @@
 #include <fastrtps/attributes/ParticipantAttributes.h>
 #include <fastrtps/qos/QosPolicies.h>
 
+#include <atomic>
+
 namespace carla {
 namespace ros2 {
 
@@ -39,14 +41,21 @@ class FastDDSPublisherMiddleware
  public:
   using msg_type = typename T::msg_type;
 
+  FastDDSPublisherMiddleware() = default;
+  FastDDSPublisherMiddleware(const FastDDSPublisherMiddleware&) = delete;
+  FastDDSPublisherMiddleware& operator=(const FastDDSPublisherMiddleware&) = delete;
+
   void on_publication_matched(
       efd::DataWriter* writer,
       const efd::PublicationMatchedStatus& info) override {
-    _alive = (info.total_count > 0);
+    _alive.store(info.total_count > 0, std::memory_order_relaxed);
   }
 
   ~FastDDSPublisherMiddleware() override {
     if (_datawriter) {
+      // Detach listener before deletion so that on_publication_matched cannot
+      // fire on a partially-destroyed object.
+      _datawriter->set_listener(nullptr);
       _publisher->delete_datawriter(_datawriter);
     }
     if (_publisher) {
@@ -116,7 +125,7 @@ class FastDDSPublisherMiddleware
   }
 
   bool IsAlive() const override {
-    return _alive;
+    return _alive.load(std::memory_order_relaxed);
   }
 
   std::string GetTopicName() const override {
@@ -130,8 +139,8 @@ class FastDDSPublisherMiddleware
   efd::DataWriter*        _datawriter  { nullptr };
   efd::TypeSupport        _type        { new GenericCdrPubSubType<msg_type>() };
 
-  std::string _topic_name;
-  bool        _alive { false };
+  std::string        _topic_name;
+  std::atomic<bool>  _alive { false };
 };
 
 } // namespace ros2
