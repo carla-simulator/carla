@@ -28,12 +28,12 @@ std::vector<sensor_msgs::msg::PointField> CarlaDVSPointCloudPublisher::GetFields
     sensor_msgs::msg::PointField descriptor3;
     descriptor3.name("t");
     descriptor3.offset(4);
-    descriptor3.datatype(sensor_msgs::msg::PointField__INT64);
+    descriptor3.datatype(sensor_msgs::msg::PointField__FLOAT64);
     descriptor3.count(1);
     sensor_msgs::msg::PointField descriptor4;
     descriptor4.name("pol");
     descriptor4.offset(12);
-    descriptor4.datatype(sensor_msgs::msg::PointField__INT8);
+    descriptor4.datatype(sensor_msgs::msg::PointField__UINT8);
     descriptor4.count(1);
 
   return {descriptor1, descriptor2, descriptor3, descriptor4};
