@@ -13,17 +13,28 @@ For further details, visit
 https://carla.readthedocs.io/en/latest/configuring_the_simulation/
 """
 
-import os
-import sys
+from __future__ import annotations
+
 import argparse
 import datetime
+import os
 import socket
+import sys
 import textwrap
 
 import carla
 
 
-def get_ip(host):
+def get_ip(host: str) -> str:
+    """
+    Get local IP address for a given host.
+
+    Args:
+        host: Hostname to check (e.g., 'localhost', '127.0.0.1')
+
+    Returns:
+        Local IP address if host is localhost, otherwise the original host.
+    """
     if host in ['localhost', '127.0.0.1']:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
@@ -36,26 +47,58 @@ def get_ip(host):
     return host
 
 
-def list_options(client):
+def list_options(client: carla.Client) -> None:
+    """
+    List all available maps in the CARLA server.
+
+    Args:
+        client: CARLA client instance.
+    """
     maps = [m.replace('/Game/Carla/Maps/', '') for m in client.get_available_maps()]
     indent = 4 * ' '
+
     def wrap(text):
         return '\n'.join(textwrap.wrap(text, initial_indent=indent, subsequent_indent=indent))
+
     print('available maps:\n')
     print(wrap(', '.join(sorted(maps))) + '.\n')
 
 
-def list_blueprints(world, bp_filter):
+def list_blueprints(world: carla.World, bp_filter: str) -> None:
+    """
+    List all available blueprints matching a filter.
+
+    Args:
+        world: CARLA world instance.
+        bp_filter: Filter pattern for blueprints (e.g., 'vehicle.*').
+
+    Raises:
+        ValueError: If world is None.
+    """
+    if world is None:
+        raise ValueError('world')
     blueprint_library = world.get_blueprint_library()
     blueprints = [bp.id for bp in blueprint_library.filter(bp_filter)]
-    print('available blueprints (filter %r):\n' % bp_filter)
+    print(f'available blueprints (filter {bp_filter!r}):\n')
     for bp in sorted(blueprints):
         print('    ' + bp)
-    print('')
+    print()
 
 
-def inspect(args, client):
-    address = '%s:%d' % (get_ip(args.host), args.port)
+def inspect(args: argparse.Namespace, client: carla.Client) -> None:
+    """
+    Inspect and print details about a CARLA server instance.
+
+    Args:
+        args: Parsed command-line arguments.
+        client: CARLA client instance.
+
+    Raises:
+        ValueError: If client is None.
+    """
+    if client is None:
+        raise ValueError('client')
+    address = f'{get_ip(args.host)}:{args.port}'
 
     world = client.get_world()
     elapsed_time = world.get_snapshot().timestamp.elapsed_seconds
@@ -67,79 +110,69 @@ def inspect(args, client):
     if s.fixed_delta_seconds is None:
         frame_rate = 'variable'
     else:
-        frame_rate = '%.2f ms (%d FPS)' % (
-            1000.0 * s.fixed_delta_seconds,
-            1.0 / s.fixed_delta_seconds)
+        frame_rate = f'{1000.0 * s.fixed_delta_seconds:.2f} ms ({int(1.0 / s.fixed_delta_seconds)} FPS)'
 
     print('---------------------------------')
-    print('address:% 26s' % address)
-    print('version:% 26s\n' % client.get_server_version())
-    print('map:        % 22s' % world.get_map().name)
-    print('time:       % 22s\n' % elapsed_time)
-    print('frame rate: % 22s' % frame_rate)
-    print('rendering:  % 22s' % ('disabled' if s.no_rendering_mode else 'enabled'))
-    print('sync mode:  % 22s\n' % ('disabled' if not s.synchronous_mode else 'enabled'))
-    print('actors:     % 22d' % len(actors))
-    print('  * spectator:% 20d' % len(actors.filter('spectator')))
-    print('  * static:   % 20d' % len(actors.filter('static.*')))
-    print('  * traffic:  % 20d' % len(actors.filter('traffic.*')))
-    print('  * vehicles: % 20d' % len(actors.filter('vehicle.*')))
-    print('  * walkers:  % 20d' % len(actors.filter('walker.*')))
+    print(f'address:{address:>26}')
+    print(f'version:{client.get_server_version():>26}\n')
+    print(f'map:        {world.get_map().name:>22}')
+    print(f'time:       {elapsed_time!s:>22}\n')
+    print(f'frame rate: {frame_rate:>22}')
+    print(f'rendering:  {"disabled" if s.no_rendering_mode else "enabled":>22}')
+    print(f'sync mode:  {"disabled" if not s.synchronous_mode else "enabled":>22}\n')
+    print(f'actors:     {len(actors):>22}')
+    print(f'  * spectator:{len(actors.filter("spectator")):>20}')
+    print(f'  * static:   {len(actors.filter("static.*")):>20}')
+    print(f'  * traffic:  {len(actors.filter("traffic.*")):>20}')
+    print(f'  * vehicles: {len(actors.filter("vehicle.*")):>20}')
+    print(f'  * walkers:  {len(actors.filter("walker.*")):>20}')
     print('---------------------------------')
 
 
 def main():
-    argparser = argparse.ArgumentParser(
-        description=__doc__)
+    argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument(
-        '--host', metavar='H', default='localhost',
-        help='IP of the host CARLA Simulator (default: localhost)')
+        '--host', metavar='H', default='localhost', help='IP of the host CARLA Simulator (default: localhost)'
+    )
     argparser.add_argument(
-        '-p', '--port', metavar='P', default=2000, type=int,
-        help='TCP port of CARLA Simulator (default: 2000)')
+        '-p', '--port', metavar='P', default=2000, type=int, help='TCP port of CARLA Simulator (default: 2000)'
+    )
+    argparser.add_argument('-l', '--list', action='store_true', help='list available options')
     argparser.add_argument(
-        '-l', '--list', action='store_true',
-        help='list available options')
+        '-b',
+        '--list-blueprints',
+        metavar='FILTER',
+        help="list available blueprints matching FILTER (use '*' to list them all)",
+    )
+    argparser.add_argument('-m', '--map', help='load a new map, use --list to see available maps')
+    argparser.add_argument('-r', '--reload-map', action='store_true', help='reload current map')
     argparser.add_argument(
-        '-b', '--list-blueprints', metavar='FILTER',
-        help='list available blueprints matching FILTER (use \'*\' to list them all)')
+        '--delta-seconds', metavar='S', type=float, help='set fixed delta seconds, zero for variable frame rate'
+    )
     argparser.add_argument(
-        '-m', '--map',
-        help='load a new map, use --list to see available maps')
+        '--fps', metavar='N', type=float, help='set fixed FPS, zero for variable FPS (similar to --delta-seconds)'
+    )
+    argparser.add_argument('--rendering', action='store_true', help='enable rendering')
+    argparser.add_argument('--no-rendering', action='store_true', help='disable rendering')
+    argparser.add_argument('--no-sync', action='store_true', help='disable synchronous mode')
+    argparser.add_argument('-i', '--inspect', action='store_true', help='inspect simulation')
     argparser.add_argument(
-        '-r', '--reload-map', action='store_true',
-        help='reload current map')
+        '-x',
+        '--xodr-path',
+        metavar='XODR_FILE_PATH',
+        help='load a new map with a minimum physical road representation of the provided OpenDRIVE',
+    )
     argparser.add_argument(
-        '--delta-seconds', metavar='S',
-        type=float,
-        help='set fixed delta seconds, zero for variable frame rate')
+        '--osm-path',
+        metavar='OSM_FILE_PATH',
+        help='load a new map with a minimum physical road representation of the provided OpenStreetMaps',
+    )
     argparser.add_argument(
-        '--fps', metavar='N', type=float,
-        help='set fixed FPS, zero for variable FPS (similar to --delta-seconds)')
+        '--tile-stream-distance', metavar='N', type=float, help='Set tile streaming distance (large maps only)'
+    )
     argparser.add_argument(
-        '--rendering', action='store_true',
-        help='enable rendering')
-    argparser.add_argument(
-        '--no-rendering', action='store_true',
-        help='disable rendering')
-    argparser.add_argument(
-        '--no-sync', action='store_true',
-        help='disable synchronous mode')
-    argparser.add_argument(
-        '-i', '--inspect', action='store_true',
-        help='inspect simulation')
-    argparser.add_argument(
-        '-x', '--xodr-path', metavar='XODR_FILE_PATH',
-        help='load a new map with a minimum physical road representation of the provided OpenDRIVE')
-    argparser.add_argument(
-        '--osm-path', metavar='OSM_FILE_PATH',
-        help='load a new map with a minimum physical road representation of the provided OpenStreetMaps')
-    argparser.add_argument(
-        '--tile-stream-distance', metavar='N', type=float,
-        help='Set tile streaming distance (large maps only)')
-    argparser.add_argument(
-        '--actor-active-distance', metavar='N', type=float,
-        help='Set actor active distance (large maps only)')
+        '--actor-active-distance', metavar='N', type=float, help='Set actor active distance (large maps only)'
+    )
 
     args = argparser.parse_args()
 
@@ -151,7 +184,7 @@ def main():
     client.set_timeout(10.0)
 
     if args.map is not None:
-        print('Load map %r' % args.map)
+        print(f'Load map {args.map!r}')
         world = client.load_world(args.map)
 
     elif args.reload_map:
@@ -166,15 +199,18 @@ def main():
                 except OSError:
                     print('File could not be readed')
                     sys.exit()
-            print('Loading opendrive map %r' % os.path.basename(args.xodr_path))
+            print(f'Loading opendrive map {os.path.basename(args.xodr_path)!r}')
             world = client.generate_opendrive_world(
-                data, carla.OpendriveGenerationParameters(
+                data,
+                carla.OpendriveGenerationParameters(
                     vertex_distance=2.0,
                     max_road_length=500.0,
                     wall_height=1.0,
                     additional_width=0.6,
                     smooth_junctions=True,
-                    enable_mesh_visibility=True))
+                    enable_mesh_visibility=True,
+                ),
+            )
 
         else:
             print('File not found')
@@ -191,13 +227,16 @@ def main():
             xodr_data = carla.Osm2Odr.convert(data)
             print('Loading opendrive map')
             world = client.generate_opendrive_world(
-                xodr_data, carla.OpendriveGenerationParameters(
+                xodr_data,
+                carla.OpendriveGenerationParameters(
                     vertex_distance=2.0,
                     max_road_length=500.0,
                     wall_height=1.0,
                     additional_width=0.6,
                     smooth_junctions=True,
-                    enable_mesh_visibility=True))
+                    enable_mesh_visibility=True,
+                ),
+            )
 
         else:
             print('File not found.')
@@ -225,9 +264,9 @@ def main():
 
     if args.delta_seconds is not None or args.fps is not None:
         if settings.fixed_delta_seconds > 0.0:
-            print('Set fixed frame rate %.2f milliseconds (%d FPS)' % (
-                1000.0 * settings.fixed_delta_seconds,
-                1.0 / settings.fixed_delta_seconds))
+            print(
+                f'Set fixed frame rate {1000.0 * settings.fixed_delta_seconds:.2f} milliseconds ({int(1.0 / settings.fixed_delta_seconds)} FPS)'
+            )
         else:
             print('Set variable frame rate.')
             settings.fixed_delta_seconds = None
@@ -248,9 +287,7 @@ def main():
 
 
 if __name__ == '__main__':
-
     try:
-
         main()
 
     except KeyboardInterrupt:
