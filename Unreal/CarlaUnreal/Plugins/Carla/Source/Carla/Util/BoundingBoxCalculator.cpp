@@ -72,15 +72,26 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
     auto TrafficSign = Cast<ATrafficSignBase>(Actor);
     if (TrafficSign != nullptr)
     {
-      // first return a merge of the generated trigger boxes, if any
+      // Return the first generated trigger box (OpenDRIVE-based signals)
+      // Newer traffic signs may have multiple trigger volumes (EffectBox, CheckBox, etc.)
+      // but for the Python API we return only the first one to preserve its rotation
       auto TriggerVolumes = TrafficSign->GetTriggerVolumes();
       if (TriggerVolumes.Num() > 0)
       {
-        FBoundingBox Box = UBoundingBoxCalculator::CombineBoxes(TriggerVolumes);
+        UBoxComponent* FirstTriggerVolume = TriggerVolumes[0];
         FTransform Transform = Actor->GetActorTransform();
-        Box.Origin = Transform.InverseTransformPosition(Box.Origin);
-        Box.Rotation = Transform.InverseTransformRotation(Box.Rotation.Quaternion()).Rotator();
-        return Box;
+
+        FBoundingBox TVWorld;
+        TVWorld.Origin = FirstTriggerVolume->GetComponentLocation();
+        TVWorld.Extent = FirstTriggerVolume->GetScaledBoxExtent();
+        TVWorld.Rotation = FirstTriggerVolume->GetComponentRotation();
+
+        FBoundingBox TVLocal;
+        TVLocal.Origin = Transform.InverseTransformPosition(TVWorld.Origin);
+        TVLocal.Extent = TVWorld.Extent;
+        TVLocal.Rotation = Transform.InverseTransformRotation(TVWorld.Rotation.Quaternion()).Rotator();
+
+        return TVLocal;
       }
       // try to return the original bounding box
       auto TriggerVolume = TrafficSign->GetTriggerVolume();

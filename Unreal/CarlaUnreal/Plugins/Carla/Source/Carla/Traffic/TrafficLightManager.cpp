@@ -594,6 +594,8 @@ void ATrafficLightManager::SpawnTrafficLights()
     SpawnRotation.Roll = 0;
     SpawnRotation.Pitch = 0;
 
+    AdjustSignHeightToGround(SpawnLocation);
+
     FActorSpawnParameters SpawnParams;
     SpawnParams.Owner = this;
     SpawnParams.SpawnCollisionHandlingOverride =
@@ -689,6 +691,8 @@ void ATrafficLightManager::SpawnSignals()
       SpawnRotation.Roll = 0;
       SpawnRotation.Pitch = 0;
 
+      AdjustSignHeightToGround(SpawnLocation);
+
       FActorSpawnParameters SpawnParams;
       SpawnParams.Owner = this;
       SpawnParams.SpawnCollisionHandlingOverride =
@@ -745,6 +749,8 @@ void ATrafficLightManager::SpawnSignals()
       // Remove road inclination
       SpawnRotation.Roll = 0;
       SpawnRotation.Pitch = 0;
+
+      AdjustSignHeightToGround(SpawnLocation);
 
       FActorSpawnParameters SpawnParams;
       SpawnParams.Owner = this;
@@ -883,5 +889,85 @@ void ATrafficLightManager::RemoveAttachedProps(TArray<AActor*> Actors) const
     Actor->GetAttachedActors(AttachedActors, true);
     RemoveAttachedProps(AttachedActors);
     Actor->Destroy();
+  }
+}
+
+bool ATrafficLightManager::AdjustSignHeightToGround(FVector& SpawnLocation) const
+{
+  const FVector Start = SpawnLocation + FVector(0, 0, 200.0f);
+  const FVector End = SpawnLocation - FVector(0, 0, 10000.0f);
+
+  FHitResult HitResult;
+  FCollisionQueryParams CollisionParams;
+  CollisionParams.bTraceComplex = true;
+  CollisionParams.bReturnPhysicalMaterial = false;
+
+  constexpr float ZOffsetSignToGround = 0.5f;
+  if (GetWorld()->LineTraceSingleByChannel(
+      HitResult,
+      Start,
+      End,
+      ECC_WorldStatic,
+      CollisionParams))
+  {
+    SpawnLocation.Z = HitResult.Location.Z + ZOffsetSignToGround;
+    return true;
+  }
+  else
+  {
+    carla::log_warning("Could not find ground for traffic sign placement at location",
+        TCHAR_TO_UTF8(*SpawnLocation.ToString()));
+    return false;
+  }
+}
+
+void ATrafficLightManager::AdjustAllSignsToHeightGround()
+{
+  for(ATrafficSignBase* TS : TrafficSigns)
+  {
+    if (!IsValid(TS))
+      continue;
+    if (TS->bPositioned)
+      continue;
+
+    FVector OriginalLocation = TS->GetActorLocation();
+    FVector AdjustedLocation = OriginalLocation;
+
+    TS->bPositioned = AdjustSignHeightToGround(AdjustedLocation);
+
+    if (TS->bPositioned)
+    {
+      float ZOffset = AdjustedLocation.Z - OriginalLocation.Z;
+
+      TS->GetRootComponent()->SetMobility(EComponentMobility::Movable);
+
+      // Get all static mesh components
+      TArray<UStaticMeshComponent*> StaticMeshComps;
+      TS->GetComponents<UStaticMeshComponent>(StaticMeshComps);
+
+      for (UStaticMeshComponent* MeshComp : StaticMeshComps)
+      {
+        if (!MeshComp) continue;
+
+        // Skip if this has a mesh parent (it's a child)
+        USceneComponent* ParentComp = MeshComp->GetAttachParent();
+        if (ParentComp && Cast<UStaticMeshComponent>(ParentComp))
+        {
+          continue;
+        }
+
+        // Move the mesh component down
+        FVector CompLocation = MeshComp->GetRelativeLocation();
+        CompLocation.Z += ZOffset;
+        MeshComp->SetRelativeLocation(CompLocation);
+
+        MeshComp->UpdateBounds();
+
+        UE_LOG(LogCarla, Log, TEXT("Moved mesh %s by %f cm"), *TS->GetName(), ZOffset);
+      }
+
+      TS->UpdateComponentTransforms();
+      TS->GetRootComponent()->SetMobility(EComponentMobility::Static);
+    }
   }
 }
