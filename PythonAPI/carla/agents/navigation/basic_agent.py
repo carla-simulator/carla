@@ -9,17 +9,19 @@ waypoints and avoiding other vehicles. The agent also responds to traffic lights
 It can also make use of the global route planner to follow a specifed route
 """
 
-import carla
+from __future__ import annotations
+
+from typing import Any
+
 from shapely.geometry import Polygon
 
-from agents.navigation.local_planner import LocalPlanner, RoadOption
+import carla
 from agents.navigation.global_route_planner import GlobalRoutePlanner
-from agents.tools.misc import (get_speed, is_within_distance,
-                               get_trafficlight_trigger_location,
-                               compute_distance)
+from agents.navigation.local_planner import LocalPlanner, RoadOption
+from agents.tools.misc import compute_distance, get_speed, get_trafficlight_trigger_location, is_within_distance
 
 
-class BasicAgent(object):
+class BasicAgent:
     """
     BasicAgent implements an agent that navigates the scene.
     This agent respects traffic lights and other vehicles, but ignores stop signs.
@@ -27,20 +29,40 @@ class BasicAgent(object):
     as well as to change its parameters in case a different driving mode is desired.
     """
 
-    def __init__(self, vehicle, target_speed=20, opt_dict={}, map_inst=None, grp_inst=None):
+    def __init__(
+        self,
+        vehicle: carla.Vehicle,
+        target_speed: float = 20,
+        opt_dict: dict[str, Any] | None = None,
+        map_inst: carla.Map | None = None,
+        grp_inst: GlobalRoutePlanner | None = None,
+    ) -> None:
         """
-        Initialization the agent paramters, the local and the global planner.
+        Initialize the agent parameters, the local and the global planner.
 
-            :param vehicle: actor to apply to agent logic onto
-            :param target_speed: speed (in Km/h) at which the vehicle will move
-            :param opt_dict: dictionary in case some of its parameters want to be changed.
+        Args:
+            vehicle: Actor to apply to agent logic onto
+            target_speed: Speed (in Km/h) at which the vehicle will move
+            opt_dict: Dictionary in case some of its parameters want to be changed.
                 This also applies to parameters related to the LocalPlanner.
-            :param map_inst: carla.Map instance to avoid the expensive call of getting it.
-            :param grp_inst: GlobalRoutePlanner instance to avoid the expensive call of getting it.
+            map_inst: Carla.Map instance to avoid the expensive call of getting it.
+            grp_inst: GlobalRoutePlanner instance to avoid the expensive call of getting it.
 
+        Raises:
+            ValueError: If vehicle is None or invalid
         """
+        if vehicle is None:
+            raise ValueError('Vehicle cannot be None')
+
+        if opt_dict is None:
+            opt_dict = {}
+
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
+
+        if self._world is None:
+            raise ValueError('Vehicle world is None - vehicle may be destroyed')
+
         if map_inst:
             if isinstance(map_inst, carla.Map):
                 self._map = map_inst
@@ -99,22 +121,22 @@ class BasicAgent(object):
             self._global_planner = GlobalRoutePlanner(self._map, self._sampling_resolution)
 
         # Get the static elements of the scene
-        self._lights_list = self._world.get_actors().filter("*traffic_light*")
+        self._lights_list = self._world.get_actors().filter('*traffic_light*')
         self._lights_map = {}  # Dictionary mapping a traffic light to a wp corrspoing to its trigger volume location
 
-    def add_emergency_stop(self, control):
+    def add_emergency_stop(self, control: carla.VehicleControl) -> carla.VehicleControl:
         """
         Overwrites the throttle a brake values of a control to perform an emergency stop.
         The steering is kept the same to avoid going out of the lane when stopping during turns
 
-            :param speed (carl.VehicleControl): control to be modified
+            :param control (carl.VehicleControl): control to be modified
         """
         control.throttle = 0.0
         control.brake = self._max_brake
         control.hand_brake = False
         return control
 
-    def set_target_speed(self, speed):
+    def set_target_speed(self, speed: float) -> None:
         """
         Changes the target speed of the agent
             :param speed (float): target speed in Km/h
@@ -122,7 +144,7 @@ class BasicAgent(object):
         self._target_speed = speed
         self._local_planner.set_speed(speed)
 
-    def follow_speed_limits(self, value=True):
+    def follow_speed_limits(self, value: bool = True) -> None:
         """
         If active, the agent will dynamically change the target speed according to the speed limits
 
@@ -130,24 +152,32 @@ class BasicAgent(object):
         """
         self._local_planner.follow_speed_limits(value)
 
-    def get_local_planner(self):
+    def get_local_planner(self) -> LocalPlanner:
         """Get method for protected member local planner"""
         return self._local_planner
 
-    def get_global_planner(self):
+    def get_global_planner(self) -> GlobalRoutePlanner:
         """Get method for protected member local planner"""
         return self._global_planner
 
-    def set_destination(self, end_location, start_location=None):
+    def set_destination(self, end_location: carla.Location, start_location: carla.Location | None = None) -> None:
         """
-        This method creates a list of waypoints between a starting and ending location,
-        based on the route returned by the global router, and adds it to the local planner.
+        Create a list of waypoints between a starting and ending location,
+        based on the route returned by the global router, and add it to the local planner.
         If no starting location is passed, the vehicle local planner's target location is chosen,
         which corresponds (by default), to a location about 5 meters in front of the vehicle.
 
-            :param end_location (carla.Location): final location of the route
-            :param start_location (carla.Location): starting location of the route
+        Args:
+            end_location: Final location of the route
+            start_location: Starting location of the route
+
+        Raises:
+            ValueError: If end_location is None
+            RuntimeError: If waypoints cannot be found
         """
+        if end_location is None:
+            raise ValueError('End location cannot be None')
+
         if not start_location:
             start_location = self._local_planner.target_waypoint.transform.location
             clean_queue = True
@@ -158,10 +188,18 @@ class BasicAgent(object):
         start_waypoint = self._map.get_waypoint(start_location)
         end_waypoint = self._map.get_waypoint(end_location)
 
+        if start_waypoint is None or end_waypoint is None:
+            raise RuntimeError('Could not find waypoints for start or end location')
+
         route_trace = self.trace_route(start_waypoint, end_waypoint)
         self._local_planner.set_global_plan(route_trace, clean_queue=clean_queue)
 
-    def set_global_plan(self, plan, stop_waypoint_creation=True, clean_queue=True):
+    def set_global_plan(
+        self,
+        plan: list[tuple[carla.Waypoint, RoadOption]],
+        stop_waypoint_creation: bool = True,
+        clean_queue: bool = True,
+    ) -> None:
         """
         Adds a specific plan to the agent.
 
@@ -170,12 +208,12 @@ class BasicAgent(object):
             :param clean_queue: resets the current agent's plan
         """
         self._local_planner.set_global_plan(
-            plan,
-            stop_waypoint_creation=stop_waypoint_creation,
-            clean_queue=clean_queue
+            plan, stop_waypoint_creation=stop_waypoint_creation, clean_queue=clean_queue
         )
 
-    def trace_route(self, start_waypoint, end_waypoint):
+    def trace_route(
+        self, start_waypoint: carla.Waypoint, end_waypoint: carla.Waypoint
+    ) -> list[tuple[carla.Waypoint, RoadOption]]:
         """
         Calculates the shortest route between a starting and ending waypoint.
 
@@ -186,12 +224,12 @@ class BasicAgent(object):
         end_location = end_waypoint.transform.location
         return self._global_planner.trace_route(start_location, end_location)
 
-    def run_step(self):
+    def run_step(self) -> carla.VehicleControl:
         """Execute one step of navigation."""
         hazard_detected = False
 
         # Retrieve all relevant actors
-        vehicle_list = self._world.get_actors().filter("*vehicle*")
+        vehicle_list = self._world.get_actors().filter('*vehicle*')
 
         vehicle_speed = get_speed(self._vehicle) / 3.6
 
@@ -213,27 +251,33 @@ class BasicAgent(object):
 
         return control
 
-    def done(self):
+    def done(self) -> bool:
         """Check whether the agent has reached its destination."""
         return self._local_planner.done()
 
-    def ignore_traffic_lights(self, active=True):
+    def ignore_traffic_lights(self, active: bool = True) -> None:
         """(De)activates the checks for traffic lights"""
         self._ignore_traffic_lights = active
 
-    def ignore_stop_signs(self, active=True):
+    def ignore_stop_signs(self, active: bool = True) -> None:
         """(De)activates the checks for stop signs"""
         self._ignore_stop_signs = active
 
-    def ignore_vehicles(self, active=True):
+    def ignore_vehicles(self, active: bool = True) -> None:
         """(De)activates the checks for stop signs"""
         self._ignore_vehicles = active
 
-    def set_offset(self, offset):
+    def set_offset(self, offset: float) -> None:
         """Sets an offset for the vehicle"""
         self._local_planner.set_offset(offset)
 
-    def lane_change(self, direction, same_lane_time=0, other_lane_time=0, lane_change_time=2):
+    def lane_change(
+        self,
+        direction: str,
+        same_lane_time: float = 0,
+        other_lane_time: float = 0,
+        lane_change_time: float = 2,
+    ) -> None:
         """
         Changes the path so that the vehicle performs a lane change.
         Use 'direction' to specify either a 'left' or 'right' lane change,
@@ -248,14 +292,18 @@ class BasicAgent(object):
             lane_change_time * speed,
             False,
             1,
-            self._sampling_resolution
+            self._sampling_resolution,
         )
         if not path:
-            print("WARNING: Ignoring the lane change as no path was found")
+            print('WARNING: Ignoring the lane change as no path was found')
 
         self.set_global_plan(path)
 
-    def _affected_by_traffic_light(self, lights_list=None, max_distance=None):
+    def _affected_by_traffic_light(
+        self,
+        lights_list: list[carla.TrafficLight] | None = None,
+        max_distance: float | None = None,
+    ) -> tuple[bool, carla.TrafficLight | None]:
         """
         Method to check if there is a red light affecting the vehicle.
 
@@ -268,7 +316,7 @@ class BasicAgent(object):
             return (False, None)
 
         if not lights_list:
-            lights_list = self._world.get_actors().filter("*traffic_light*")
+            lights_list = self._world.get_actors().filter('*traffic_light*')
 
         if not max_distance:
             max_distance = self._base_tlight_threshold
@@ -312,7 +360,14 @@ class BasicAgent(object):
 
         return (False, None)
 
-    def _vehicle_obstacle_detected(self, vehicle_list=None, max_distance=None, up_angle_th=90, low_angle_th=0, lane_offset=0):
+    def _vehicle_obstacle_detected(
+        self,
+        vehicle_list: list[carla.Vehicle] | None = None,
+        max_distance: float | None = None,
+        up_angle_th: float = 90,
+        low_angle_th: float = 0,
+        lane_offset: int = 0,
+    ) -> carla.Vehicle | None:
         """
         Method to check if there is a vehicle in front of the agent blocking its path.
 
@@ -321,7 +376,8 @@ class BasicAgent(object):
             :param max_distance: max freespace to check for obstacles.
                 If None, the base threshold value is used
         """
-        def get_route_polygon():
+
+        def get_route_polygon() -> Polygon | None:
             route_bb = []
             extent_y = self._vehicle.bounding_box.extent.y
             r_ext = extent_y + self._offset
@@ -350,7 +406,7 @@ class BasicAgent(object):
             return (False, None, -1)
 
         if not vehicle_list:
-            vehicle_list = self._world.get_actors().filter("*vehicle*")
+            vehicle_list = self._world.get_actors().filter('*vehicle*')
 
         if not max_distance:
             max_distance = self._base_vehicle_threshold
@@ -366,7 +422,8 @@ class BasicAgent(object):
         # Get the transform of the front of the ego
         ego_front_transform = ego_transform
         ego_front_transform.location += carla.Location(
-            self._vehicle.bounding_box.extent.x * ego_transform.get_forward_vector())
+            self._vehicle.bounding_box.extent.x * ego_transform.get_forward_vector()
+        )
 
         opposite_invasion = abs(self._offset) + self._vehicle.bounding_box.extent.y > ego_wpt.lane_width / 2
         use_bbs = self._use_bbs_detection or opposite_invasion or ego_wpt.is_junction
@@ -386,7 +443,6 @@ class BasicAgent(object):
 
             # General approach for junctions and vehicles invading other lanes due to the offset
             if (use_bbs or target_wpt.is_junction) and route_polygon:
-
                 target_bb = target_vehicle.bounding_box
                 target_vertices = target_bb.get_world_vertices(target_vehicle.get_transform())
                 target_list = [[v.x, v.y, v.z] for v in target_vertices]
@@ -397,12 +453,11 @@ class BasicAgent(object):
 
             # Simplified approach, using only the plan waypoints (similar to TM)
             else:
-
-                if target_wpt.road_id != ego_wpt.road_id or target_wpt.lane_id != ego_wpt.lane_id  + lane_offset:
+                if target_wpt.road_id != ego_wpt.road_id or target_wpt.lane_id != ego_wpt.lane_id + lane_offset:
                     next_wpt = self._local_planner.get_incoming_waypoint_and_direction(steps=3)[0]
                     if not next_wpt:
                         continue
-                    if target_wpt.road_id != next_wpt.road_id or target_wpt.lane_id != next_wpt.lane_id  + lane_offset:
+                    if target_wpt.road_id != next_wpt.road_id or target_wpt.lane_id != next_wpt.lane_id + lane_offset:
                         continue
 
                 target_forward_vector = target_transform.get_forward_vector()
@@ -413,14 +468,24 @@ class BasicAgent(object):
                     y=target_extent * target_forward_vector.y,
                 )
 
-                if is_within_distance(target_rear_transform, ego_front_transform, max_distance, [low_angle_th, up_angle_th]):
+                if is_within_distance(
+                    target_rear_transform, ego_front_transform, max_distance, [low_angle_th, up_angle_th]
+                ):
                     return (True, target_vehicle, compute_distance(target_transform.location, ego_transform.location))
 
         return (False, None, -1)
 
-    def _generate_lane_change_path(self, waypoint, direction='left', distance_same_lane=10,
-                                distance_other_lane=25, lane_change_distance=25,
-                                check=True, lane_changes=1, step_distance=2):
+    def _generate_lane_change_path(
+        self,
+        waypoint: carla.Waypoint,
+        direction: str = 'left',
+        distance_same_lane: float = 10,
+        distance_other_lane: float = 25,
+        lane_change_distance: float = 25,
+        check: bool = True,
+        lane_changes: int = 1,
+        step_distance: float = 2,
+    ) -> list[tuple[carla.Waypoint, RoadOption]]:
         """
         This methods generates a path that results in a lane change.
         Use the different distances to fine-tune the maneuver.
@@ -458,7 +523,6 @@ class BasicAgent(object):
 
         # Lane change
         while lane_changes_done < lane_changes:
-
             # Move forward
             next_wps = plan[-1][0].next(lane_change_distance)
             if not next_wps:

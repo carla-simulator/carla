@@ -3,11 +3,14 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-""" This module contains a local planner to perform low-level waypoint following based on PID controllers. """
+"""This module contains a local planner to perform low-level waypoint following based on PID controllers."""
 
-from enum import IntEnum
-from collections import deque
+from __future__ import annotations
+
 import random
+from collections import deque
+from enum import IntEnum
+from typing import Any
 
 import carla
 from agents.navigation.controller import VehiclePIDController
@@ -17,8 +20,8 @@ from agents.tools.misc import draw_waypoints, get_speed
 class RoadOption(IntEnum):
     """
     RoadOption represents the possible topological configurations when moving from a segment of lane to other.
-
     """
+
     VOID = -1
     LEFT = 1
     RIGHT = 2
@@ -28,7 +31,7 @@ class RoadOption(IntEnum):
     CHANGELANERIGHT = 6
 
 
-class LocalPlanner(object):
+class LocalPlanner:
     """
     LocalPlanner implements the basic behavior of following a
     trajectory of waypoints that is generated on-the-fly.
@@ -40,23 +43,44 @@ class LocalPlanner(object):
     unless a given global plan has already been specified.
     """
 
-    def __init__(self, vehicle, opt_dict={}, map_inst=None):
+    def __init__(
+        self,
+        vehicle: carla.Vehicle,
+        opt_dict: dict[str, Any] | None = None,
+        map_inst: carla.Map | None = None,
+    ) -> None:
         """
-        :param vehicle: actor to apply to local planner logic onto
-        :param opt_dict: dictionary of arguments with different parameters:
-            dt: time between simulation steps
-            target_speed: desired cruise speed in Km/h
-            sampling_radius: distance between the waypoints part of the plan
-            lateral_control_dict: values of the lateral PID controller
-            longitudinal_control_dict: values of the longitudinal PID controller
-            max_throttle: maximum throttle applied to the vehicle
-            max_brake: maximum brake applied to the vehicle
-            max_steering: maximum steering applied to the vehicle
-            offset: distance between the route waypoints and the center of the lane
-        :param map_inst: carla.Map instance to avoid the expensive call of getting it.
+        Initialize the local planner.
+
+        Args:
+            vehicle: Actor to apply to local planner logic onto
+            opt_dict: Dictionary of arguments with different parameters:
+                dt: time between simulation steps
+                target_speed: desired cruise speed in Km/h
+                sampling_radius: distance between the waypoints part of the plan
+                lateral_control_dict: values of the lateral PID controller
+                longitudinal_control_dict: values of the longitudinal PID controller
+                max_throttle: maximum throttle applied to the vehicle
+                max_brake: maximum brake applied to the vehicle
+                max_steering: maximum steering applied to the vehicle
+                offset: distance between the route waypoints and the center of the lane
+            map_inst: Carla.Map instance to avoid the expensive call of getting it.
+
+        Raises:
+            ValueError: If vehicle is None or invalid
         """
+        if vehicle is None:
+            raise ValueError('Vehicle cannot be None')
+
+        if opt_dict is None:
+            opt_dict = {}
+
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
+
+        if self._world is None:
+            raise ValueError('Vehicle world is None - vehicle may be destroyed')
+
         if map_inst:
             if isinstance(map_inst, carla.Map):
                 self._map = map_inst
@@ -124,13 +148,15 @@ class LocalPlanner(object):
 
     def _init_controller(self):
         """Controller initialization"""
-        self._vehicle_controller = VehiclePIDController(self._vehicle,
-                                                        args_lateral=self._args_lateral_dict,
-                                                        args_longitudinal=self._args_longitudinal_dict,
-                                                        offset=self._offset,
-                                                        max_throttle=self._max_throt,
-                                                        max_brake=self._max_brake,
-                                                        max_steering=self._max_steer)
+        self._vehicle_controller = VehiclePIDController(
+            self._vehicle,
+            args_lateral=self._args_lateral_dict,
+            args_longitudinal=self._args_longitudinal_dict,
+            offset=self._offset,
+            max_throttle=self._max_throt,
+            max_brake=self._max_brake,
+            max_steering=self._max_steer,
+        )
 
         # Compute the current vehicle waypoint
         current_waypoint = self._map.get_waypoint(self._vehicle.get_location())
@@ -145,8 +171,10 @@ class LocalPlanner(object):
         :return:
         """
         if self._follow_speed_limits:
-            print("WARNING: The max speed is currently set to follow the speed limits. "
-                  "Use 'follow_speed_limits' to deactivate this")
+            print(
+                'WARNING: The max speed is currently set to follow the speed limits. '
+                "Use 'follow_speed_limits' to deactivate this"
+            )
         self._target_speed = speed
 
     def follow_speed_limits(self, value=True):
@@ -175,17 +203,15 @@ class LocalPlanner(object):
 
             if len(next_waypoints) == 0:
                 break
-            elif len(next_waypoints) == 1:
+            if len(next_waypoints) == 1:
                 # only one option available ==> lanefollowing
                 next_waypoint = next_waypoints[0]
                 road_option = RoadOption.LANEFOLLOW
             else:
                 # random choice between the possible options
-                road_options_list = _retrieve_options(
-                    next_waypoints, last_waypoint)
+                road_options_list = _retrieve_options(next_waypoints, last_waypoint)
                 road_option = random.choice(road_options_list)
-                next_waypoint = next_waypoints[road_options_list.index(
-                    road_option)]
+                next_waypoint = next_waypoints[road_options_list.index(road_option)]
 
             self._waypoints_queue.append((next_waypoint, road_option))
 
@@ -242,7 +268,6 @@ class LocalPlanner(object):
 
         num_waypoint_removed = 0
         for waypoint, _ in self._waypoints_queue:
-
             if len(self._waypoints_queue) - num_waypoint_removed == 1:
                 min_distance = 1  # Don't remove the last waypoint until very close by
             else:
@@ -283,12 +308,12 @@ class LocalPlanner(object):
         if len(self._waypoints_queue) > steps:
             return self._waypoints_queue[steps]
 
+        try:
+            wpt, direction = self._waypoints_queue[-1]
+        except IndexError:
+            return None, RoadOption.VOID
         else:
-            try:
-                wpt, direction = self._waypoints_queue[-1]
-                return wpt, direction
-            except IndexError as i:
-                return None, RoadOption.VOID
+            return wpt, direction
 
     def get_plan(self):
         """Returns the current plan of the local planner"""
@@ -346,7 +371,6 @@ def _compute_connection(current_waypoint, next_waypoint, threshold=35):
     diff_angle = (n - c) % 180.0
     if diff_angle < threshold or diff_angle > (180 - threshold):
         return RoadOption.STRAIGHT
-    elif diff_angle > 90.0:
+    if diff_angle > 90.0:
         return RoadOption.LEFT
-    else:
-        return RoadOption.RIGHT
+    return RoadOption.RIGHT
