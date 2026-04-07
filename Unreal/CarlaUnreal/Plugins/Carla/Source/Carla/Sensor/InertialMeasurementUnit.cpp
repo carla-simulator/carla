@@ -106,7 +106,7 @@ carla::geom::Vector3D AInertialMeasurementUnit::ComputeAccelerometer(
   // Used to convert from UE4's cm to meters
   constexpr float TO_METERS = 1e-2;
   // Earth's gravitational acceleration is approximately 9.81 m/s^2
-  constexpr float GRAVITY = 9.81f;
+  constexpr float GRAVITY = -9.81f;
 
   // 2nd derivative of the polynomic (quadratic) interpolation
   // using the point in current time and two previous steps:
