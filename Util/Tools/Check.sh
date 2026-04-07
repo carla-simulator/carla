@@ -1,10 +1,34 @@
 #! /bin/bash
+# ==============================================================================
+# Shell Script Robustness
+# ==============================================================================
+# Strict mode for better error handling
+set -euo pipefail
 
 # ==============================================================================
 # -- Parse arguments -----------------------------------------------------------
 # ==============================================================================
 
 DOC_STRING="Run unit tests."
+
+# Error handling
+error() {
+    echo -e "\033[0;31mERROR: $*\033[0m" >&2
+    exit 1
+}
+
+warn() {
+    echo -e "\033[0;33mWARNING: $*\033[0m" >&2
+}
+
+info() {
+    echo -e "\033[0;32mINFO: $*\033[0m"
+}
+
+# Validate required environment
+if [ -z "${CARLA_ROOT_FOLDER:-}" ]; then
+    error "CARLA_ROOT_FOLDER environment variable is not set"
+fi
 
 USAGE_STRING=$(cat <<- END
 Usage: $0 [-h|--help] [--gdb] [--xml] [--gtest_args=ARGS] [--python-version=VERSION]
@@ -29,18 +53,18 @@ END
 
 GDB=
 XML_OUTPUT=false
-GTEST_ARGS=`sed -e 's/#.*$//g' ${CARLA_ROOT_FOLDER}/.gtest | sed -e '/^[[:space:]]*$/!s/^/--/g' | sed -e ':a;N;$!ba;s/\n/ /g'`
+GTEST_ARGS=$(sed -e 's/#.*$//g' "${CARLA_ROOT_FOLDER}/.gtest" | sed -e '/^[[:space:]]*$/!s/^/--/g' | sed -e ':a;N;$!ba;s/\n/ /g')
 LIBCARLA_RELEASE=false
 LIBCARLA_DEBUG=false
 SMOKE_TESTS=false
 PYTHON_API=false
 RUN_BENCHMARK=false
 
-OPTS=`getopt -o h --long help,gdb,xml,gtest_args:,all,libcarla-release,libcarla-debug,python-api,smoke,benchmark,python-version:, -n 'parse-options' -- "$@"`
+OPTS=$(getopt -o h --long help,gdb,xml,gtest_args:,all,libcarla-release,libcarla-debug,python-api,smoke,benchmark,python-version:, -n 'parse-options' -- "$@")
 
 eval set -- "$OPTS"
 
-source $(dirname "$0")/Environment.sh
+source "$(dirname "$0")/Environment.sh"
 
 PY_VERSION_LIST=3
 
@@ -107,13 +131,13 @@ if { ${LIBCARLA_RELEASE} || ${LIBCARLA_DEBUG}; }; then
 
   CONTENT_TAG=0.1.4
 
-  mkdir -p ${LIBCARLA_TEST_CONTENT_FOLDER}
+  mkdir -p "${LIBCARLA_TEST_CONTENT_FOLDER}"
   pushd "${LIBCARLA_TEST_CONTENT_FOLDER}" >/dev/null
 
   if [ "$(get_git_repository_version)" != "${CONTENT_TAG}" ]; then
     pushd .. >/dev/null
-    rm -Rf ${LIBCARLA_TEST_CONTENT_FOLDER}
-    git clone -b ${CONTENT_TAG} https://github.com/carla-simulator/opendrive-test-files.git ${LIBCARLA_TEST_CONTENT_FOLDER}
+    rm -Rf "${LIBCARLA_TEST_CONTENT_FOLDER}"
+    git clone -b "${CONTENT_TAG}" https://github.com/carla-simulator/opendrive-test-files.git "${LIBCARLA_TEST_CONTENT_FOLDER}"
     popd >/dev/null
   fi
 
@@ -202,7 +226,7 @@ popd >/dev/null
 if ${SMOKE_TESTS} ; then
   pushd "${CARLA_PYTHONAPI_ROOT_FOLDER}/util" >/dev/null
     log "Checking connection with the simulator."
-    for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
+    for PY_VERSION in "${PY_VERSION_LIST[@]}" ; do
       /usr/bin/env python${PY_VERSION} test_connection.py -p 3654 --timeout=60.0
     done
   popd >/dev/null
@@ -217,14 +241,14 @@ else
 fi
 
 if ${SMOKE_TESTS} ; then
-  smoke_list=`cat smoke_test_list.txt`
-  for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
+  smoke_list=$(cat smoke_test_list.txt)
+  for PY_VERSION in "${PY_VERSION_LIST[@]}" ; do
     log "Running smoke tests for Python ${PY_VERSION}."
     /usr/bin/env python${PY_VERSION} -m nose2 -v ${EXTRA_ARGS} ${smoke_list}
   done
 
   if ${XML_OUTPUT} ; then
-    mv test-results.xml ${CARLA_TEST_RESULTS_FOLDER}/smoke-tests-3.xml
+    mv test-results.xml "${CARLA_TEST_RESULTS_FOLDER}/smoke-tests-3.xml"
   fi
 
 fi

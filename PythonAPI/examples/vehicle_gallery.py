@@ -8,9 +8,9 @@
 
 """Visualize the catalog of vehicles present in CARLA"""
 
-import carla
-
 import math
+
+import carla
 
 
 def get_transform(vehicle, angle, d=2.5):
@@ -36,7 +36,6 @@ def main():
         vehicle = world.spawn_actor(blueprint, transform)
 
         try:
-
             print(vehicle.type_id)
 
             angle = 0
@@ -46,10 +45,8 @@ def main():
                 spectator.set_transform(get_transform(vehicle, angle - 90))
 
         finally:
-
             vehicle.destroy()
 
 
 if __name__ == '__main__':
-
     main()

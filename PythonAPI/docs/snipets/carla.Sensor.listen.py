@@ -1,4 +1,3 @@
-
 # This recipe applies a color conversion to the image taken by a camera sensor,
 # so it is converted to a semantic segmentation image.
 

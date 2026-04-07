@@ -19,7 +19,7 @@ DOC_STRING="Upload latest build to S3."
 
 USAGE_STRING="Usage: $0 [-h|--help] [--replace-latest] [--docker-push] [--dry-run] [--summary-output SUMMARY_OUTPUT]"
 
-OPTS=`getopt -o h --long help,replace-latest,docker-push,dry-run,summary-output: -n 'parse-options' -- "$@"`
+OPTS=$(getopt -o h --long help,replace-latest,docker-push,dry-run,summary-output: -n 'parse-options' -- "$@")
 
 eval set -- "$OPTS"
 

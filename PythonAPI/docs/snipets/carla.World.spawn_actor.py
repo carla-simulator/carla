@@ -1,4 +1,3 @@
-
 # This recipe attaches different camera / sensors to a vehicle with different attachments.
 
 # ...

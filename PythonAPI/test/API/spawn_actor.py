@@ -6,26 +6,29 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 import argparse
-import carla
 import time
+
+import carla
+
 
 def get_transform(transform_data):
     if len(transform_data) != 6:
-        raise ValueError("Transform needs 6 parameters but {} were given".format(len(transform_data)))
+        raise ValueError(f'Transform needs 6 parameters but {len(transform_data)} were given')
     location = carla.Location(float(transform_data[0]), float(transform_data[1]), float(transform_data[2]))
     rotation = carla.Rotation(float(transform_data[3]), float(transform_data[4]), float(transform_data[5]))
     return carla.Transform(location, rotation)
 
+
 def tick_carla(sync, world):
     world.tick() if sync else world.wait_for_tick()
 
+
 def main():
-    argparser = argparse.ArgumentParser(
-        description=__doc__)
+    argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument('--host', default='localhost', help='IP of the host CARLA Simulator (default: localhost)')
     argparser.add_argument('-p', '--port', default=2000, type=int, help='TCP port of CARLA Simulator (default: 2000)')
     argparser.add_argument('-b', '--blueprint', required=True, help='Blueprint to be spawned')
-    argparser.add_argument('-t', '--transform', default='0 0 0 0 0 0', nargs="+", help="Transform to be spawned")
+    argparser.add_argument('-t', '--transform', default='0 0 0 0 0 0', nargs='+', help='Transform to be spawned')
     argparser.add_argument('--sync', action='store_true', help='Changes to sync mode')
 
     args = argparser.parse_args()
@@ -47,7 +50,7 @@ def main():
 
     # Spawn the actor
     bp = world.get_blueprint_library().filter(args.blueprint)[0]
-    print(f"Spawning blueprint: {bp}")
+    print(f'Spawning blueprint: {bp}')
     actor = world.spawn_actor(bp, args.transform)
     tick_carla(args.sync, world)
     spectator.set_transform(carla.Transform(args.transform.location + carla.Location(z=10), carla.Rotation(pitch=-90)))

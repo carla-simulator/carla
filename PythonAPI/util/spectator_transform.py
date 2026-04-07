@@ -10,33 +10,41 @@
 
 import argparse
 import sys
+
 import carla
 
+
 def main():
-    argparser = argparse.ArgumentParser(
-        description=__doc__)
+    argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument(
-        '--host', metavar='H', default='localhost',
-        help='IP of the host CARLA Simulator (default: localhost)')
+        '--host', metavar='H', default='localhost', help='IP of the host CARLA Simulator (default: localhost)'
+    )
     argparser.add_argument(
-        '--port', metavar='P', default=2000, type=int,
-        help='TCP port of CARLA Simulator (default: 2000)')
+        '--port', metavar='P', default=2000, type=int, help='TCP port of CARLA Simulator (default: 2000)'
+    )
     argparser.add_argument(
-        '-w', '--use-waypoint', action='store_true',
-        help='Return the driving waypoint closest to the spectator')
+        '-w', '--use-waypoint', action='store_true', help='Return the driving waypoint closest to the spectator'
+    )
     argparser.add_argument(
-        '-p', '--use-projection', action='store_true',
-        help="Projects the spectator's location onto the ground")
+        '-p', '--use-projection', action='store_true', help="Projects the spectator's location onto the ground"
+    )
     argparser.add_argument(
-        '-z', '--height-diff', default=0, type=int,
-        help="Adds a height diff to the output point. Useful with '-w' or '-p' to get a point z meters above ground")
+        '-z',
+        '--height-diff',
+        default=0,
+        type=int,
+        help="Adds a height diff to the output point. Useful with '-w' or '-p' to get a point z meters above ground",
+    )
     argparser.add_argument(
-        '-if', '--interpolation-format', action='store_true',
-        help="Return the data as an interpolation format, to be used by 'interpolate_camera.py'")
+        '-if',
+        '--interpolation-format',
+        action='store_true',
+        help="Return the data as an interpolation format, to be used by 'interpolate_camera.py'",
+    )
 
     args = argparser.parse_args()
     if args.use_waypoint and args.use_projection:
-        print("Cannot use waypoint and projection at the same time")
+        print('Cannot use waypoint and projection at the same time')
         return
 
     # Get the client
@@ -63,18 +71,23 @@ def main():
         transform = spec_transform
 
     transform.location.z += args.height_diff
-    world.debug.draw_point(transform.location + carla.Location(z=0.2), size=0.3, color=carla.Color(0, 100, 0), life_time=30)
+    world.debug.draw_point(
+        transform.location + carla.Location(z=0.2), size=0.3, color=carla.Color(0, 100, 0), life_time=30
+    )
 
     if args.interpolation_format:
-        print(f"<point time=\"0\""
-            f" x=\"{round(transform.location.x, 2)}\""
-            f" y=\"{round(transform.location.y, 2)}\""
-            f" z=\"{round(transform.location.z, 2)}\""
-            f" pitch=\"{round(transform.rotation.pitch, 2)}\""
-            f" yaw=\"{round(transform.rotation.yaw, 2)}\""
-            f" roll=\"{round(transform.rotation.roll, 2)}\"/>")
+        print(
+            f'<point time="0"'
+            f' x="{round(transform.location.x, 2)}"'
+            f' y="{round(transform.location.y, 2)}"'
+            f' z="{round(transform.location.z, 2)}"'
+            f' pitch="{round(transform.rotation.pitch, 2)}"'
+            f' yaw="{round(transform.rotation.yaw, 2)}"'
+            f' roll="{round(transform.rotation.roll, 2)}"/>'
+        )
     else:
         print(transform)
+
 
 if __name__ == '__main__':
     try:

@@ -1,4 +1,3 @@
-
 # This recipe changes attributes of different type of blueprint actors.
 
 # ...

@@ -10,10 +10,10 @@
 # documented example, please take a look at tutorial.py.
 
 import argparse
-import sys
 import math
 
 import carla
+
 
 def get_traffic_light_bbs(traffic_light):
     def rotate_point(point, angle):
@@ -33,10 +33,7 @@ def get_traffic_light_bbs(traffic_light):
     point = rotate_point(carla.Vector3D(0, 0, area_ext.z), base_rot)
     point_location = area_loc + carla.Location(x=point.x, y=point.y)
 
-    trigger_volume = carla.BoundingBox(
-        carla.Location(point_location.x, point_location.y, point_location.z),
-        area_ext
-    )
+    trigger_volume = carla.BoundingBox(carla.Location(point_location.x, point_location.y, point_location.z), area_ext)
     trigger_volume.rotation = traffic_light.get_transform().rotation
 
     area_loc = base_transform.transform(traffic_light.bounding_box.location)
@@ -44,27 +41,21 @@ def get_traffic_light_bbs(traffic_light):
     point = rotate_point(carla.Vector3D(0, 0, area_ext.z), base_rot)
     point_location = area_loc + carla.Location(x=point.x, y=point.y)
 
-    bounding_box = carla.BoundingBox(
-        carla.Location(point_location.x, point_location.y, point_location.z),
-        area_ext
-    )
+    bounding_box = carla.BoundingBox(carla.Location(point_location.x, point_location.y, point_location.z), area_ext)
     bounding_box.rotation = traffic_light.get_transform().rotation
 
     return bounding_box, trigger_volume
 
 
 def main():
-    argparser = argparse.ArgumentParser(
-        description='CARLA Manual Control Client')
+    argparser = argparse.ArgumentParser(description='CARLA Manual Control Client')
     argparser.add_argument(
-        '--host', metavar='H', default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
+        '--host', metavar='H', default='127.0.0.1', help='IP of the host server (default: 127.0.0.1)'
+    )
     argparser.add_argument(
-        '-p', '--port', metavar='P', default=2000, type=int,
-        help='TCP port to listen to (default: 2000)')
-    argparser.add_argument(
-        '--show', default='100', type=float,
-        help='Duration of the visualization of the junctions')
+        '-p', '--port', metavar='P', default=2000, type=int, help='TCP port to listen to (default: 2000)'
+    )
+    argparser.add_argument('--show', default='100', type=float, help='Duration of the visualization of the junctions')
     args = argparser.parse_args()
 
     client = carla.Client(args.host, args.port)
@@ -74,7 +65,7 @@ def main():
     topology = tmap.get_topology()
     junction_ids = []
     junctions = []
-    for (entry_wp, _) in topology:
+    for entry_wp, _ in topology:
         if entry_wp.is_junction and entry_wp.junction_id not in junction_ids:
             junctions.append(entry_wp.get_junction())
             junction_ids.append(entry_wp.junction_id)
@@ -92,10 +83,14 @@ def main():
 
         bounding_box.location.z += offset
         trigger_volume.location.z += offset
-        world.debug.draw_box(bounding_box, bounding_box.rotation, life_time=args.show, thickness=0.1, color=carla.Color(0, 0, 200))
-        world.debug.draw_box(trigger_volume, trigger_volume.rotation, life_time=args.show, thickness=0.1, color=carla.Color(0, 200, 0))
+        world.debug.draw_box(
+            bounding_box, bounding_box.rotation, life_time=args.show, thickness=0.1, color=carla.Color(0, 0, 200)
+        )
+        world.debug.draw_box(
+            trigger_volume, trigger_volume.rotation, life_time=args.show, thickness=0.1, color=carla.Color(0, 200, 0)
+        )
 
-        text = f"[{tl.get_pole_index()}] - [{tl.get_opendrive_id()}]"
+        text = f'[{tl.get_pole_index()}] - [{tl.get_opendrive_id()}]'
         world.debug.draw_string(location, text, life_time=args.show, color=color)
 
         light_boxes = tl.get_light_boxes()
@@ -106,24 +101,32 @@ def main():
         for wp in tl.get_affected_lane_waypoints():
             world.debug.draw_point(wp.transform.location, life_time=args.show, size=0.3, color=carla.Color(200, 0, 200))
             world.debug.draw_arrow(
-                location + carla.Location(z=offset), wp.transform.location + carla.Location(z=offset),
-                life_time=args.show, arrow_size=0.5, thickness=0.1, color=carla.Color(200, 0, 200)
+                location + carla.Location(z=offset),
+                wp.transform.location + carla.Location(z=offset),
+                life_time=args.show,
+                arrow_size=0.5,
+                thickness=0.1,
+                color=carla.Color(200, 0, 200),
             )
 
         for wp in tl.get_stop_waypoints():
             world.debug.draw_point(wp.transform.location, life_time=args.show, size=0.3, color=carla.Color(0, 200, 200))
             world.debug.draw_arrow(
-                location + carla.Location(z=offset), wp.transform.location + carla.Location(z=offset),
-                life_time=args.show, arrow_size=0.5, thickness=0.1, color=carla.Color(0, 200, 200)
+                location + carla.Location(z=offset),
+                wp.transform.location + carla.Location(z=offset),
+                life_time=args.show,
+                arrow_size=0.5,
+                thickness=0.1,
+                color=carla.Color(0, 200, 200),
             )
 
-    print("Showing all the static information available for the traffic light. This includes:")
-    print("- Bounding box (blue box)")
-    print("- Trigger volume (green box)")
-    print("- Light boxes (Red boxes)")
-    print("- Affected waypoints (Pink arrows and points)")
-    print("- Stop waypoints (Teal arrows and points)")
-    print("- Pole index and OpenDrive ID (Dark blue text)")
+    print('Showing all the static information available for the traffic light. This includes:')
+    print('- Bounding box (blue box)')
+    print('- Trigger volume (green box)')
+    print('- Light boxes (Red boxes)')
+    print('- Affected waypoints (Pink arrows and points)')
+    print('- Stop waypoints (Teal arrows and points)')
+    print('- Pole index and OpenDrive ID (Dark blue text)')
 
 
 if __name__ == '__main__':

@@ -1,5 +1,4 @@
-
-# This recipe changes from red to green the traffic light that affects the vehicle. 
+# This recipe changes from red to green the traffic light that affects the vehicle.
 # This is done by detecting if the vehicle actor is at a traffic light.
 
 # ...
@@ -22,7 +21,6 @@ spectator.set_transform(actor_snapshot.get_transform())
 if vehicle_actor.is_at_traffic_light():
     traffic_light = vehicle_actor.get_traffic_light()
     if traffic_light.get_state() == carla.TrafficLightState.Red:
-       # world.hud.notification("Traffic light changed! Good to go!")
+        # world.hud.notification("Traffic light changed! Good to go!")
         traffic_light.set_state(carla.TrafficLightState.Green)
 # ...
-

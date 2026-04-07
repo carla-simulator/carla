@@ -17,19 +17,16 @@ import carla
 
 
 def _setup_vehicle(world, config):
-    logging.debug("Spawning vehicle: {}".format(config.get("type")))
+    logging.debug('Spawning vehicle: {}'.format(config.get('type')))
 
     bp_library = world.get_blueprint_library()
     map_ = world.get_map()
 
-    bp = bp_library.filter(config.get("type"))[0]
-    bp.set_attribute("role_name", config.get("id"))
-    bp.set_attribute("ros_name", config.get("id")) 
+    bp = bp_library.filter(config.get('type'))[0]
+    bp.set_attribute('role_name', config.get('id'))
+    bp.set_attribute('ros_name', config.get('id'))
 
-    return  world.spawn_actor(
-        bp,
-        map_.get_spawn_points()[0],
-        attach_to=None)
+    return world.spawn_actor(bp, map_.get_spawn_points()[0], attach_to=None)
 
 
 def _setup_sensors(world, vehicle, sensors_config):
@@ -37,26 +34,26 @@ def _setup_sensors(world, vehicle, sensors_config):
 
     sensors = []
     for sensor in sensors_config:
-        logging.debug("Spawning sensor: {}".format(sensor))
+        logging.debug(f'Spawning sensor: {sensor}')
 
-        bp = bp_library.filter(sensor.get("type"))[0]
-        bp.set_attribute("ros_name", sensor.get("id")) 
-        bp.set_attribute("role_name", sensor.get("id")) 
-        for key, value in sensor.get("attributes", {}).items():
+        bp = bp_library.filter(sensor.get('type'))[0]
+        bp.set_attribute('ros_name', sensor.get('id'))
+        bp.set_attribute('role_name', sensor.get('id'))
+        for key, value in sensor.get('attributes', {}).items():
             bp.set_attribute(str(key), str(value))
 
         wp = carla.Transform(
-            location=carla.Location(x=sensor["spawn_point"]["x"], y=-sensor["spawn_point"]["y"], z=sensor["spawn_point"]["z"]),
-            rotation=carla.Rotation(roll=sensor["spawn_point"]["roll"], pitch=-sensor["spawn_point"]["pitch"], yaw=-sensor["spawn_point"]["yaw"])
+            location=carla.Location(
+                x=sensor['spawn_point']['x'], y=-sensor['spawn_point']['y'], z=sensor['spawn_point']['z']
+            ),
+            rotation=carla.Rotation(
+                roll=sensor['spawn_point']['roll'],
+                pitch=-sensor['spawn_point']['pitch'],
+                yaw=-sensor['spawn_point']['yaw'],
+            ),
         )
 
-        sensors.append(
-            world.spawn_actor(
-                bp,
-                wp,
-                attach_to=vehicle
-            )
-        )
+        sensors.append(world.spawn_actor(bp, wp, attach_to=vehicle))
 
         sensors[-1].enable_for_ros()
 
@@ -64,7 +61,6 @@ def _setup_sensors(world, vehicle, sensors_config):
 
 
 def main(args):
-
     world = None
     vehicle = None
     sensors = []
@@ -89,13 +85,13 @@ def main(args):
             config = json.load(f)
 
         vehicle = _setup_vehicle(world, config)
-        sensors = _setup_sensors(world, vehicle, config.get("sensors", []))
+        sensors = _setup_sensors(world, vehicle, config.get('sensors', []))
 
         _ = world.tick()
 
         vehicle.set_autopilot(True)
 
-        logging.info("Running...")
+        logging.info('Running...')
 
         while True:
             _ = world.tick()
@@ -116,8 +112,12 @@ def main(args):
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='CARLA ROS2 native')
-    argparser.add_argument('--host', metavar='H', default='localhost', help='IP of the host CARLA Simulator (default: localhost)')
-    argparser.add_argument('--port', metavar='P', default=2000, type=int, help='TCP port of CARLA Simulator (default: 2000)')
+    argparser.add_argument(
+        '--host', metavar='H', default='localhost', help='IP of the host CARLA Simulator (default: localhost)'
+    )
+    argparser.add_argument(
+        '--port', metavar='P', default=2000, type=int, help='TCP port of CARLA Simulator (default: 2000)'
+    )
     argparser.add_argument('-f', '--file', default='', required=True, help='File to be executed')
     argparser.add_argument('-v', '--verbose', action='store_true', dest='debug', help='print debug information')
 

@@ -1,7 +1,7 @@
 # This recipe toggles on several layers in our "_Opt" maps
 
 # Load town one with only minimum layout (roads, sidewalks, traffic lights and traffic signs)
-world = client.load_world('Town01_Opt', carla.MapLayer.None)
+world = client.load_world('Town01_Opt', carla.MapLayer.NONE)
 
 # Toggle all buildings on
 world.load_map_layer(carla.MapLayer.Buildings)

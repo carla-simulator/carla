@@ -8,27 +8,22 @@
 
 """Blocks until the simulator is ready or the time-out is met."""
 
+import argparse
 import sys
-
+import time
 
 import carla
 
-import argparse
-import time
-
 
 def main():
-    argparser = argparse.ArgumentParser(
-        description=__doc__)
+    argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument(
-        '--host', metavar='H', default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
+        '--host', metavar='H', default='127.0.0.1', help='IP of the host server (default: 127.0.0.1)'
+    )
     argparser.add_argument(
-        '-p', '--port', metavar='P', default=2000, type=int,
-        help='TCP port to listen to (default: 2000)')
-    argparser.add_argument(
-        '--timeout', metavar='T', default=10.0, type=float,
-        help='time-out in seconds (default: 10)')
+        '-p', '--port', metavar='P', default=2000, type=int, help='TCP port to listen to (default: 2000)'
+    )
+    argparser.add_argument('--timeout', metavar='T', default=10.0, type=float, help='time-out in seconds (default: 10)')
     args = argparser.parse_args()
 
     t0 = time.time()
@@ -47,5 +42,4 @@ def main():
 
 
 if __name__ == '__main__':
-
     sys.exit(main())

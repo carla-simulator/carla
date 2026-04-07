@@ -10,8 +10,8 @@ It can also make use of the global route planner to follow a specifed route
 """
 
 import carla
-
 from agents.navigation.basic_agent import BasicAgent
+
 
 class ConstantVelocityAgent(BasicAgent):
     """
@@ -21,7 +21,7 @@ class ConstantVelocityAgent(BasicAgent):
     wait for a bit, and then start again.
     """
 
-    def __init__(self, vehicle, target_speed=20, opt_dict={}, map_inst=None, grp_inst=None):
+    def __init__(self, vehicle, target_speed=20, opt_dict=None, map_inst=None, grp_inst=None):
         """
         Initialization the agent parameters, the local and the global planner.
 
@@ -32,9 +32,13 @@ class ConstantVelocityAgent(BasicAgent):
             :param map_inst: carla.Map instance to avoid the expensive call of getting it.
             :param grp_inst: GlobalRoutePlanner instance to avoid the expensive call of getting it.
         """
+        if opt_dict is None:
+            opt_dict = {}
         super().__init__(vehicle, target_speed, opt_dict=opt_dict, map_inst=map_inst, grp_inst=grp_inst)
 
-        self._use_basic_behavior = False  # Whether or not to use the BasicAgent behavior when the constant velocity is down
+        self._use_basic_behavior = (
+            False  # Whether or not to use the BasicAgent behavior when the constant velocity is down
+        )
         self._target_speed = target_speed / 3.6  # [m/s]
         self._current_speed = vehicle.get_velocity().length()  # [m/s]
         self._constant_velocity_stop_time = None
@@ -74,11 +78,14 @@ class ConstantVelocityAgent(BasicAgent):
     def run_step(self):
         """Execute one step of navigation."""
         if not self.is_constant_velocity_active:
-            if self._world.get_snapshot().timestamp.elapsed_seconds - self._constant_velocity_stop_time > self._restart_time:
+            if (
+                self._world.get_snapshot().timestamp.elapsed_seconds - self._constant_velocity_stop_time
+                > self._restart_time
+            ):
                 self.restart_constant_velocity()
                 self.is_constant_velocity_active = True
             elif self._use_basic_behavior:
-                return super(ConstantVelocityAgent, self).run_step()
+                return super().run_step()
             else:
                 return carla.VehicleControl()
 
@@ -86,8 +93,8 @@ class ConstantVelocityAgent(BasicAgent):
 
         # Retrieve all relevant actors
         actor_list = self._world.get_actors()
-        vehicle_list = actor_list.filter("*vehicle*")
-        lights_list = actor_list.filter("*traffic_light*")
+        vehicle_list = actor_list.filter('*vehicle*')
+        lights_list = actor_list.filter('*traffic_light*')
 
         vehicle_speed = self._vehicle.get_velocity().length()
 
@@ -121,7 +128,7 @@ class ConstantVelocityAgent(BasicAgent):
     def _set_collision_sensor(self):
         blueprint = self._world.get_blueprint_library().find('sensor.other.collision')
         self._collision_sensor = self._world.spawn_actor(blueprint, carla.Transform(), attach_to=self._vehicle)
-        self._collision_sensor.listen(lambda event: self.stop_constant_velocity())
+        self._collision_sensor.listen(lambda _: self.stop_constant_velocity())
 
     def destroy_sensor(self):
         if self._collision_sensor:

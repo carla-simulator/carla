@@ -8,6 +8,7 @@
 
 import argparse
 import sys
+
 import carla
 
 OBJECT_LABELS = {
@@ -40,33 +41,27 @@ OBJECT_LABELS = {
     'Water': carla.CityObjectLabel.Water,
     'Terrain': carla.CityObjectLabel.Terrain,
     'Any': carla.CityObjectLabel.Any,
-    'NONE': carla.CityObjectLabel.NONE
+    'NONE': carla.CityObjectLabel.NONE,
 }
 
+
 def main():
-    argparser = argparse.ArgumentParser(
-        description='CARLA Manual Control Client')
+    argparser = argparse.ArgumentParser(description='CARLA Manual Control Client')
     argparser.add_argument(
-        '--host', metavar='H', default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
+        '--host', metavar='H', default='127.0.0.1', help='IP of the host server (default: 127.0.0.1)'
+    )
     argparser.add_argument(
-        '-p', '--port', metavar='P', default=2000, type=int,
-        help='TCP port to listen to (default: 2000)')
+        '-p', '--port', metavar='P', default=2000, type=int, help='TCP port to listen to (default: 2000)'
+    )
+    argparser.add_argument('-l', '--label', default='Any', help='Layer to manage')
+    argparser.add_argument('--id', default=None, type=int, help='ID to manage')
     argparser.add_argument(
-        '-l', '--label', default='Any',
-        help='Layer to manage')
+        '--show', default=None, type=float, help='Duration of the visualization of objects data. 0 = disabled'
+    )
+    argparser.add_argument('--action', choices=['enable', 'disable'], help='Action done to the selected layer')
     argparser.add_argument(
-        '--id', default=None, type=int,
-        help='ID to manage')
-    argparser.add_argument(
-        '--show', default=None, type=float,
-        help='Duration of the visualization of objects data. 0 = disabled')
-    argparser.add_argument(
-        '--action', choices=["enable", "disable"],
-        help='Action done to the selected layer')
-    argparser.add_argument(
-        '--summary', action='store_true',
-        help='Print a summary of the amount of objects in each label')
+        '--summary', action='store_true', help='Print a summary of the amount of objects in each label'
+    )
     args = argparser.parse_args()
 
     client = carla.Client(args.host, args.port)
@@ -77,9 +72,9 @@ def main():
         print("Use '--id' to manage one specific object or '--label' for all the ones part of the label")
 
     if args.summary:
-        print("Showcasing a summary of the labels and amount of object in them")
+        print('Showcasing a summary of the labels and amount of object in them')
         for v in list(OBJECT_LABELS.values()):
-            print(f"{v} - {len(world.get_environment_objects(v))}")
+            print(f'{v} - {len(world.get_environment_objects(v))}')
         sys.exit()
 
     # Manage one object
@@ -94,22 +89,24 @@ def main():
         object = objects[0]
 
         if args.show:
-            print(f"Showing the data of the environment object with id {args.id}. Stopping")
+            print(f'Showing the data of the environment object with id {args.id}. Stopping')
             obj_location = object.transform.location
             obj_bb = object.bounding_box
-            text = f"[{object.id}] {object.name}"
+            text = f'[{object.id}] {object.name}'
             text_location = carla.Location(x=obj_bb.location.x, y=obj_bb.location.y, z=obj_bb.location.z)
-            text_location += 1.2*obj_bb.extent.z * object.transform.get_up_vector()
+            text_location += 1.2 * obj_bb.extent.z * object.transform.get_up_vector()
 
             world.debug.draw_point(obj_location, life_time=args.show, size=0.05, color=carla.Color(0, 0, 200))
-            world.debug.draw_box(obj_bb, obj_bb.rotation, life_time=args.show, thickness=0.05, color=carla.Color(0, 0, 200))
+            world.debug.draw_box(
+                obj_bb, obj_bb.rotation, life_time=args.show, thickness=0.05, color=carla.Color(0, 0, 200)
+            )
             world.debug.draw_string(text_location, text, life_time=args.show, color=carla.Color(0, 0, 200))
 
         if args.action == 'enable':
-            print(f"Enabling the enviroment object with id {args.id}")
+            print(f'Enabling the enviroment object with id {args.id}')
             world.enable_environment_objects([object.id], True)
         elif args.action == 'disable':
-            print(f"Disabling the enviroment object with id {args.id}")
+            print(f'Disabling the enviroment object with id {args.id}')
             world.enable_environment_objects([object.id], False)
 
     # Manage an object label
@@ -122,23 +119,25 @@ def main():
             sys.exit()
 
         if args.show:
-            print(f"Showing all the data of the environment objects with label {args.label}")
+            print(f'Showing all the data of the environment objects with label {args.label}')
             for obj in objects:
                 obj_location = obj.transform.location
                 obj_bb = obj.bounding_box
-                text = f"[{obj.id}] {obj.name}"
+                text = f'[{obj.id}] {obj.name}'
                 text_location = carla.Location(x=obj_bb.location.x, y=obj_bb.location.y, z=obj_bb.location.z)
-                text_location += 1.2*obj_bb.extent.z * obj.transform.get_up_vector()
+                text_location += 1.2 * obj_bb.extent.z * obj.transform.get_up_vector()
 
                 world.debug.draw_point(obj_location, life_time=args.show, size=0.05, color=carla.Color(0, 0, 200))
-                world.debug.draw_box(obj_bb, obj_bb.rotation, life_time=args.show, thickness=0.05, color=carla.Color(0, 0, 200))
+                world.debug.draw_box(
+                    obj_bb, obj_bb.rotation, life_time=args.show, thickness=0.05, color=carla.Color(0, 0, 200)
+                )
                 world.debug.draw_string(text_location, text, life_time=args.show, color=carla.Color(0, 0, 200))
 
         if args.action == 'enable':
-            print(f"Enabling the enviroment objects with label {args.label}")
+            print(f'Enabling the enviroment objects with label {args.label}')
             world.enable_environment_objects([obj.id for obj in objects], True)
         elif args.action == 'disable':
-            print(f"Disabling enviroment objects with label {args.label}")
+            print(f'Disabling enviroment objects with label {args.label}')
             world.enable_environment_objects([obj.id for obj in objects], False)
 
 

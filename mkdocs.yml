@@ -1,63 +1,43 @@
+---
 site_name: CARLA Simulator UE5
 repo_url: https://github.com/carla-simulator/carla
 docs_dir: Docs
 edit_uri: 'edit/master/Docs/'
-extra_css: [extra.css]
-extra_javascript: [extra.js]
+extra_css: ['extra.css']
+extra_javascript: ['extra.js']
 theme: readthedocs
-  
 
 nav:
-- Home: 'index.md'
-- Getting started:
-  - 'Introduction': 'start_introduction.md'
-  - 'Quick start package installation': 'start_quickstart.md'
-  - 'First steps' : 'tuto_first_steps.md'
-  - 'Building CARLA' : 'build_carla.md'
+  - Home: 'index.md'
+  - Getting started:
+      - 'Introduction': 'start_introduction.md'
+      - 'Quick start package installation': 'start_quickstart.md'
+      - 'First steps': 'tuto_first_steps.md'
+      - 'Building CARLA': 'build_carla.md'
+  - Next steps:
+      - 'Content authoring - vehicles': 'tuto_content_authoring_vehicles.md'
+  - CARLA topics:
+      - 'Foundations': 'foundations.md'
+      - 'Actors': 'core_actors.md'
+      - 'Maps': 'core_map.md'
+      - 'Sensors and data': 'core_sensors.md'
+      - 'Traffic': 'ts_traffic_simulation_overview.md'
+  - Resources:
+      - 'Python API': 'python_api.md'
+      - 'Catalogue': 'catalogue.md'
+      - 'C++ reference': 'ref_cpp.md'
+      - 'Blueprint library': 'bp_library.md'
+      - 'Tutorials': 'tutorials.md'
+  - CARLA Ecosystem:
+      - 'MathWorks': 'large_map_roadrunner.md'
+      - 'ROS2': 'ros2_native.md'
+      - 'Scenic': 'tuto_G_scenic.md'
+      - 'SYNKROTRON': 'ecosys_synkrotron.md'
+      - 'InvertedAI': 'inverted_ai.md'
+  - Contributing:
+      - 'Guidelines': 'cont_contribution_guidelines.md'
+      - 'Coding standards': 'cont_coding_standard.md'
+      - 'Documentation standard': 'cont_doc_standard.md'
 
-- Next steps:
-  #- 'Content authoring - maps': 'tuto_content_authoring_maps.md'  
-  - 'Content authoring - vehicles': 'tuto_content_authoring_vehicles.md'  
-
-- CARLA topics:
-  - 'Foundations': 'foundations.md'
-  - 'Actors': 'core_actors.md'
-  - 'Maps': 'core_map.md'
-  - 'Sensors and data': 'core_sensors.md'
-  - 'Traffic' : 'ts_traffic_simulation_overview.md'
-
-- Resources:
-  - 'Python API': 'python_api.md'
-  - 'Catalogue': 'catalogue.md'  
-  - 'C++ reference': 'ref_cpp.md'
-  - 'Blueprint library': 'bp_library.md'  
-  - 'Tutorials': 'tutorials.md'
-  #- 'Extended documentation': 'ext_docs.md'
-
-- CARLA Ecosystem:
-  - 'MathWorks': 'large_map_roadrunner.md'
-  # - 'ASAM OpenDRIVE': 'adv_opendrive.md'
-  - 'ROS2': 'ros2_native.md'
-  - 'Scenic': 'tuto_G_scenic.md'
-  - 'SYNKROTRON': 'ecosys_synkrotron.md'
-  - 'InvertedAI': 'inverted_ai.md'
-
-- Contributing:
-  - 'Guidelines': 'cont_contribution_guidelines.md' 
-  - 'Coding standards': 'cont_coding_standard.md'
-  - 'Documentation standard': 'cont_doc_standard.md'
-  - '': ''
- 
 markdown_extensions:
   - admonition 
-
-theme:
-  name: 'readthedocs'
-  logo: img/logos/carla_ue5_logo.png
-  palette:
-        # Dark mode
-    - scheme: slate
-      primary: blue
-      accent: blue
-      toggle:
- 

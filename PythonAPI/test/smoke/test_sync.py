@@ -4,48 +4,43 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-from . import SyncSmokeTest
+import time
 
 import carla
-import time
+
+from . import SyncSmokeTest
 
 try:
     # python 3
-    from queue import Queue as Queue
-    from queue import Empty
+    from queue import Empty, Queue
 except ImportError:
     # python 2
-    from Queue import Queue as Queue
-    from Queue import Empty
+    from Queue import Empty, Queue
 
 
 class TestSynchronousMode(SyncSmokeTest):
     def test_reloading_map(self):
-        print("TestSynchronousMode.test_reloading_map")
-        settings = carla.WorldSettings(
-            no_rendering_mode=False,
-            synchronous_mode=True,
-            fixed_delta_seconds=0.05)
-        for _ in range(0, 4):
+        print('TestSynchronousMode.test_reloading_map')
+        settings = carla.WorldSettings(no_rendering_mode=False, synchronous_mode=True, fixed_delta_seconds=0.05)
+        for _ in range(4):
             self.world = self.client.reload_world()
             self.world.apply_settings(settings)
             # workaround: give time to UE4 to clean memory after loading (old assets)
             time.sleep(5)
 
     def _test_camera_on_synchronous_mode(self):
-        print("TestSynchronousMode.test_camera_on_synchronous_mode")
+        print('TestSynchronousMode.test_camera_on_synchronous_mode')
 
         cam_bp = self.world.get_blueprint_library().find('sensor.camera.rgb')
         t = carla.Transform(carla.Location(z=10))
         camera = self.world.spawn_actor(cam_bp, t)
         try:
-
             image_queue = Queue()
             camera.listen(image_queue.put)
 
             frame = None
 
-            for _ in range(0, 100):
+            for _ in range(100):
                 self.world.tick()
                 ts = self.world.get_snapshot().timestamp
 
@@ -62,7 +57,7 @@ class TestSynchronousMode(SyncSmokeTest):
             camera.destroy()
 
     def test_sensor_transform_on_synchronous_mode(self):
-        print("TestSynchronousMode.test_sensor_transform_on_synchronous_mode")
+        print('TestSynchronousMode.test_sensor_transform_on_synchronous_mode')
         bp_lib = self.world.get_blueprint_library()
 
         spawn_points = self.world.get_map().get_spawn_points()
@@ -72,15 +67,15 @@ class TestSynchronousMode(SyncSmokeTest):
         car = self.world.spawn_actor(car_bp, spawn_points[0])
         # List of sensors that are not events, these are retrieved every frame
         sensor_ids = [
-            "sensor.lidar.ray_cast",
-            "sensor.lidar.ray_cast_semantic",
-            "sensor.other.gnss",
-            "sensor.other.radar",
-            "sensor.other.imu",
-#            "sensor.camera.rgb",
-#            "sensor.camera.depth",
-#            "sensor.camera.semantic_segmentation"
-            ]
+            'sensor.lidar.ray_cast',
+            'sensor.lidar.ray_cast_semantic',
+            'sensor.other.gnss',
+            'sensor.other.radar',
+            'sensor.other.imu',
+            #            "sensor.camera.rgb",
+            #            "sensor.camera.depth",
+            #            "sensor.camera.semantic_segmentation"
+        ]
         sensor_bps = [bp_lib.find(n) for n in sensor_ids]
         trans = carla.Transform(carla.Location(x=1.6, z=1.7))
         sensors = [self.world.spawn_actor(sensor, trans, car) for sensor in sensor_bps]
@@ -93,10 +88,9 @@ class TestSynchronousMode(SyncSmokeTest):
 
         try:
             for i in range(len(sensors)):
-                sensors[i].listen(lambda data, i=i: sensor_callback(
-                    data, sensor_ids[i], queues[i]))
+                sensors[i].listen(lambda data, i=i: sensor_callback(data, sensor_ids[i], queues[i]))
             local_frame = 0
-            for _ in range(0, 100):
+            for _ in range(100):
                 self.world.tick()
                 snapshot_frame = self.world.get_snapshot().frame
                 sensors_data = []
@@ -106,11 +100,10 @@ class TestSynchronousMode(SyncSmokeTest):
                     for queue in queues:
                         sensors_data.append(queue.get(True, 1.0))
                 except Empty:
-                    print("[Warning] Some sensor data has been missed")
+                    print('[Warning] Some sensor data has been missed')
 
                 for i in range(len(queues)):
-                    self.assertEqual(
-                        queues[i].qsize(), 0, "\nQueue " + str(sensor_ids[i]) + "oversized")
+                    self.assertEqual(queues[i].qsize(), 0, '\nQueue ' + str(sensor_ids[i]) + 'oversized')
 
                 # Just in case some sensors do not have the correct transform the same frame
                 # they are spawned, like the IMU.
@@ -128,11 +121,15 @@ class TestSynchronousMode(SyncSmokeTest):
                     self.assertEqual(
                         sensors_data[i][0].transform,
                         sensors[i].get_transform(),
-                        "\n\nThe sensor and sensor_data transforms from '" +
-                        str(sensors_data[i][1]) + "' does not match in the same frame! (" +
-                        str(local_frame) + ")\nSensor Data:\n  " +
-                        str(sensors_data[i][0].transform) + "\nSensor Transform:\n  " +
-                        str(sensors[i].get_transform()))
+                        "\n\nThe sensor and sensor_data transforms from '"
+                        + str(sensors_data[i][1])
+                        + "' does not match in the same frame! ("
+                        + str(local_frame)
+                        + ')\nSensor Data:\n  '
+                        + str(sensors_data[i][0].transform)
+                        + '\nSensor Transform:\n  '
+                        + str(sensors[i].get_transform()),
+                    )
                 local_frame += 1
 
         finally:
@@ -144,7 +141,7 @@ class TestSynchronousMode(SyncSmokeTest):
                 car.destroy()
 
     def batch_scenario(self, batch_tick, after_tick):
-        bp_veh = self.world.get_blueprint_library().filter("vehicle.*")[0]
+        bp_veh = self.world.get_blueprint_library().filter('vehicle.*')[0]
         veh_transf = self.world.get_map().get_spawn_points()[0]
 
         frame_init = self.world.get_snapshot().frame
@@ -156,7 +153,7 @@ class TestSynchronousMode(SyncSmokeTest):
             self.world.tick()
 
         if len(responses) != 1 or responses[0].error:
-            self.fail("%s: The test car could not be correctly spawned" % (bp_veh.id))
+            self.fail(f'{bp_veh.id}: The test car could not be correctly spawned')
 
         vehicle_id = responses[0].actor_id
 
@@ -167,13 +164,25 @@ class TestSynchronousMode(SyncSmokeTest):
         return frame_init, frame_after
 
     def test_apply_batch_sync(self):
-        print("TestSynchronousMode.test_apply_batch_sync")
+        print('TestSynchronousMode.test_apply_batch_sync')
 
         a_t0, a_t1 = self.batch_scenario(False, False)
-        self.assertEqual(a_t0, a_t1, "Something has failed with the apply_batch_sync. These frames should be equal: %d %d" % (a_t0, a_t1))
+        self.assertEqual(
+            a_t0,
+            a_t1,
+            'Something has failed with the apply_batch_sync. These frames should be equal: %d %d' % (a_t0, a_t1),
+        )
 
         a_t0, a_t1 = self.batch_scenario(True, False)
-        self.assertEqual(a_t0+1, a_t1, "Something has failed with the apply_batch_sync. These frames should be consecutive: %d %d" % (a_t0, a_t1))
+        self.assertEqual(
+            a_t0 + 1,
+            a_t1,
+            'Something has failed with the apply_batch_sync. These frames should be consecutive: %d %d' % (a_t0, a_t1),
+        )
 
         a_t0, a_t1 = self.batch_scenario(False, True)
-        self.assertEqual(a_t0+1, a_t1, "Something has failed with the apply_batch_sync. These frames should be consecutive: %d %d" % (a_t0, a_t1))
+        self.assertEqual(
+            a_t0 + 1,
+            a_t1,
+            'Something has failed with the apply_batch_sync. These frames should be consecutive: %d %d' % (a_t0, a_t1),
+        )

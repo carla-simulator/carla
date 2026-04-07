@@ -4,26 +4,24 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-import carla
 import random
 import time
+
+import carla
 
 from . import SyncSmokeTest
 
 
 class TestSnapshot(SyncSmokeTest):
     def test_spawn_points(self):
-        print("TestSnapshot.test_spawn_points")
+        print('TestSnapshot.test_spawn_points')
         self.world = self.client.reload_world()
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
 
         # Check why the world settings aren't applied after a reload
         self.settings = self.world.get_settings()
-        settings = carla.WorldSettings(
-            no_rendering_mode=False,
-            synchronous_mode=True,
-            fixed_delta_seconds=0.05)
+        settings = carla.WorldSettings(no_rendering_mode=False, synchronous_mode=True, fixed_delta_seconds=0.05)
         self.world.apply_settings(settings)
 
         spawn_points = self.world.get_map().get_spawn_points()[:20]
@@ -43,7 +41,7 @@ class TestSnapshot(SyncSmokeTest):
         actors = self.world.get_actors()
         self.assertTrue(all(snapshot.has_actor(x.id) for x in actors))
 
-        for actor_id, t0 in zip(ids, spawn_points):
+        for actor_id, t0 in zip(ids, spawn_points, strict=False):
             actor_snapshot = snapshot.find(actor_id)
             self.assertIsNotNone(actor_snapshot)
             t1 = actor_snapshot.get_transform()

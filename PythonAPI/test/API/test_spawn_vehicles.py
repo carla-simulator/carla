@@ -5,6 +5,7 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 import unittest
+
 import carla
 
 
@@ -14,19 +15,21 @@ class TestVehiclesSpawnTest(unittest.TestCase):
         world = client.load_world('Town10HD_Opt')
         bp_lib = world.get_blueprint_library()
         spectator = world.get_spectator()
-        spectator.set_transform(carla.Transform(carla.Location(-27.8, -63.28, 10.6), carla.Rotation(pitch=-29, yaw=135)))
+        spectator.set_transform(
+            carla.Transform(carla.Location(-27.8, -63.28, 10.6), carla.Rotation(pitch=-29, yaw=135))
+        )
 
-        vehicles_bp_to_spawn = bp_lib.filter("*vehicle*")
+        vehicles_bp_to_spawn = bp_lib.filter('*vehicle*')
         # Spawn the actor
         vehicles = []
         counter = 0
         for bp in vehicles_bp_to_spawn:
-            location = carla.Location(-70.8 + (counter * 4) , -61.28, 6.0)
-            vehicle = world.spawn_actor(bp, carla.Transform(location, carla.Rotation(0,-90,0)))
+            location = carla.Location(-70.8 + (counter * 4), -61.28, 6.0)
+            vehicle = world.spawn_actor(bp, carla.Transform(location, carla.Rotation(0, -90, 0)))
             self.assertIsNotNone(vehicle)
             vehicles.append(vehicle)
             counter += 1
-        
+
         # Tick for Engine do it's stuff
         world.tick()
         actors = world.get_actors().filter('*vehicle*')
@@ -34,7 +37,7 @@ class TestVehiclesSpawnTest(unittest.TestCase):
 
         for _ in range(300):
             world.tick()
-        
+
         self.assertEqual(counter, gotactors)
 
         for vehicle in vehicles:

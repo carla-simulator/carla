@@ -4,21 +4,22 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-import carla
 import random
+
+import carla
 
 from . import SmokeTest
 
 
 class TestPropsLoading(SmokeTest):
     def test_spawn_loaded_props(self):
-        print("TestPropsLoading.test_spawn_loaded_props")
+        print('TestPropsLoading.test_spawn_loaded_props')
         client = self.client
         world = client.get_world()
 
         SpawnActor = carla.command.SpawnActor
 
-        props = world.get_blueprint_library().filter("static.prop.*")
+        props = world.get_blueprint_library().filter('static.prop.*')
         spawned_props = []
 
         spawn_points = world.get_map().get_spawn_points()

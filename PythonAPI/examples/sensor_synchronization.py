@@ -21,8 +21,7 @@ not the case, the clients needs to take in account at each frame how many
 sensors are going to tick at each frame.
 """
 
-from queue import Queue
-from queue import Empty
+from queue import Empty, Queue
 
 import carla
 
@@ -69,25 +68,25 @@ def main():
         sensor_list = []
 
         cam01 = world.spawn_actor(cam_bp, carla.Transform())
-        cam01.listen(lambda data: sensor_callback(data, sensor_queue, "camera01"))
+        cam01.listen(lambda data: sensor_callback(data, sensor_queue, 'camera01'))
         sensor_list.append(cam01)
 
         lidar_bp.set_attribute('points_per_second', '100000')
         lidar01 = world.spawn_actor(lidar_bp, carla.Transform())
-        lidar01.listen(lambda data: sensor_callback(data, sensor_queue, "lidar01"))
+        lidar01.listen(lambda data: sensor_callback(data, sensor_queue, 'lidar01'))
         sensor_list.append(lidar01)
 
         lidar_bp.set_attribute('points_per_second', '1000000')
         lidar02 = world.spawn_actor(lidar_bp, carla.Transform())
-        lidar02.listen(lambda data: sensor_callback(data, sensor_queue, "lidar02"))
+        lidar02.listen(lambda data: sensor_callback(data, sensor_queue, 'lidar02'))
         sensor_list.append(lidar02)
 
         radar01 = world.spawn_actor(radar_bp, carla.Transform())
-        radar01.listen(lambda data: sensor_callback(data, sensor_queue, "radar01"))
+        radar01.listen(lambda data: sensor_callback(data, sensor_queue, 'radar01'))
         sensor_list.append(radar01)
 
         radar02 = world.spawn_actor(radar_bp, carla.Transform())
-        radar02.listen(lambda data: sensor_callback(data, sensor_queue, "radar02"))
+        radar02.listen(lambda data: sensor_callback(data, sensor_queue, 'radar02'))
         sensor_list.append(radar02)
 
         # Main loop
@@ -105,10 +104,10 @@ def main():
             try:
                 for _ in range(len(sensor_list)):
                     s_frame = sensor_queue.get(True, 1.0)
-                    print("    Frame: %d   Sensor: %s" % (s_frame[0], s_frame[1]))
+                    print('    Frame: %d   Sensor: %s' % (s_frame[0], s_frame[1]))
 
             except Empty:
-                print("    Some of the sensor information is missed")
+                print('    Some of the sensor information is missed')
 
     finally:
         world.apply_settings(original_settings)
@@ -116,7 +115,7 @@ def main():
             sensor.destroy()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     try:
         main()
     except KeyboardInterrupt:

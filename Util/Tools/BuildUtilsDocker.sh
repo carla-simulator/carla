@@ -1,6 +1,6 @@
 #! /bin/bash
 
-source $(dirname "$0")/Environment.sh
+source "$(dirname "$0")/Environment.sh"
 
 FBX2OBJ_DIST=${CARLA_DOCKER_UTILS_FOLDER}/dist
 FBX2OBJ_FOLDER=${CARLA_DOCKER_UTILS_FOLDER}/fbx

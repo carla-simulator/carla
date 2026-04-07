@@ -17,14 +17,24 @@ Uses:
 
 import argparse
 import time
+
 import numpy as np
 
 import carla
 
-class VehicleControlStop:
-    def __init__(self, x_min = -100000, x_max = +100000, y_min = -100000, y_max = +100000,
-            yaw_min = -500, yaw_max = +500, speed_min = -1, speed_max = +100000):
 
+class VehicleControlStop:
+    def __init__(
+        self,
+        x_min=-100000,
+        x_max=+100000,
+        y_min=-100000,
+        y_max=+100000,
+        yaw_min=-500,
+        yaw_max=+500,
+        speed_min=-1,
+        speed_max=+100000,
+    ):
         self.x_min = x_min
         self.x_max = x_max
         self.y_min = y_min
@@ -35,37 +45,31 @@ class VehicleControlStop:
         self.speed_max = speed_max
 
     def stop_control(self, vehicle):
-
         loc = vehicle.get_location()
-        if loc.x > self.x_max :
+        if loc.x > self.x_max:
             return True
         if loc.x < self.x_min:
             return True
 
-        if loc.y > self.y_max :
+        if loc.y > self.y_max:
             return True
         if loc.y < self.y_min:
             return True
 
         rot = vehicle.get_transform().rotation
 
-        if rot.yaw > self.yaw_max :
+        if rot.yaw > self.yaw_max:
             return True
         if rot.yaw < self.yaw_min:
             return True
 
         speed = norm(vehicle.get_velocity())
-        if speed > self.speed_max :
+        if speed > self.speed_max:
             return True
-        if speed < self.speed_min:
-            return True
-
-        return False
+        return speed < self.speed_min
 
 
-def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_sweep = None, 
-    max_rpm = None):
-
+def change_physics_control(vehicle, tire_friction=None, drag=None, wheel_sweep=None, max_rpm=None):
     physics_control = vehicle.get_physics_control()
 
     if drag is not None:
@@ -101,20 +105,35 @@ def change_physics_control(vehicle, tire_friction = None, drag = None, wheel_swe
 
     return physics_control
 
+
 def print_step_info(world, vehicle):
     snapshot = world.get_snapshot()
-    print("%d %06.03f %+8.03f %+8.03f %+8.03f %+8.03f %+8.03f %+8.03f %+8.03f %+8.03f %+8.03f" %
-            (snapshot.frame, snapshot.timestamp.elapsed_seconds, \
-            vehicle.get_acceleration().x, vehicle.get_acceleration().y, vehicle.get_acceleration().z, \
-            vehicle.get_velocity().x, vehicle.get_velocity().y, vehicle.get_velocity().z, \
-            vehicle.get_location().x, vehicle.get_location().y, vehicle.get_location().z))
+    print(
+        '%d %06.03f %+8.03f %+8.03f %+8.03f %+8.03f %+8.03f %+8.03f %+8.03f %+8.03f %+8.03f'
+        % (
+            snapshot.frame,
+            snapshot.timestamp.elapsed_seconds,
+            vehicle.get_acceleration().x,
+            vehicle.get_acceleration().y,
+            vehicle.get_acceleration().z,
+            vehicle.get_velocity().x,
+            vehicle.get_velocity().y,
+            vehicle.get_velocity().z,
+            vehicle.get_location().x,
+            vehicle.get_location().y,
+            vehicle.get_location().z,
+        )
+    )
+
 
 def wait(world, frames=100):
-    for _i in range(0, frames):
+    for _i in range(frames):
         world.tick()
 
+
 def norm(vec):
-    return np.sqrt(vec.x*vec.x + vec.y*vec.y + vec.z*vec.z)
+    return np.sqrt(vec.x * vec.x + vec.y * vec.y + vec.z * vec.z)
+
 
 class TelemetryPoint:
     def __init__(self, curr_time=None, location=None, rotation=None, velocity=None):
@@ -124,7 +143,7 @@ class TelemetryPoint:
         self.velocity = velocity
 
     def __str__(self):
-        return "%.2f %s %s %s" % (self.time, str(self.location), str(self.rotation), str(self.velocity))
+        return f'{self.time:.2f} {self.location!s} {self.rotation!s} {self.velocity!s}'
 
     def __sub__(self, other):
         t = self.time - other.time
@@ -132,6 +151,7 @@ class TelemetryPoint:
         r = carla.Rotation()
         v = self.velocity - other.velocity
         return TelemetryPoint(t, l, r, v)
+
 
 class TelemetryData:
     def __init__(self, curr_time, vehicle):
@@ -142,9 +162,9 @@ class TelemetryData:
         self.list_of_telemetries.append(TelemetryPoint(curr_time, location, rotation, velocity))
 
     def __str__(self):
-        ret_str = ""
+        ret_str = ''
         for idx, val in enumerate(self.list_of_telemetries):
-            ret_str += "%d: %s\n" % (idx, str(val))
+            ret_str += '%d: %s\n' % (idx, str(val))
 
         return ret_str
 
@@ -164,24 +184,31 @@ class TelemetryData:
         return self.list_of_telemetries[index]
 
     def get_telemetry_delta(self, index):
-        if index >= (self.number_of_telemetries()-1):
+        if index >= (self.number_of_telemetries() - 1):
             return TelemetryPoint()
 
-        return self.list_of_telemetries[index+1] - self.list_of_telemetries[index]
+        return self.list_of_telemetries[index + 1] - self.list_of_telemetries[index]
 
     def get_scalar_delta(self, index):
-        if index >= (self.number_of_telemetries()-1):
+        if index >= (self.number_of_telemetries() - 1):
             return TelemetryPoint()
 
-        delta = self.list_of_telemetries[index+1] - self.list_of_telemetries[index]
+        delta = self.list_of_telemetries[index + 1] - self.list_of_telemetries[index]
 
         return delta.time, norm(delta.location), norm(delta.velocity)
 
 
-def run_scenario(world, bp_veh, init_loc, init_speed = 0.0, init_frames=10,
-        controls=[(150, carla.VehicleControl(), VehicleControlStop())],
-        apply_phys_control = None):
-
+def run_scenario(
+    world,
+    bp_veh,
+    init_loc,
+    init_speed=0.0,
+    init_frames=10,
+    controls=None,
+    apply_phys_control=None,
+):
+    if controls is None:
+        controls = [(150, carla.VehicleControl(), VehicleControlStop())]
     veh_transf = init_loc
 
     vehicle = world.spawn_actor(bp_veh, veh_transf)
@@ -204,7 +231,7 @@ def run_scenario(world, bp_veh, init_loc, init_speed = 0.0, init_frames=10,
 
         # Apply control
         vehicle.apply_control(control)
-        for _i in range(0, control_frames):
+        for _i in range(control_frames):
             world.tick()
             check = stopper.stop_control(vehicle)
             if check:
@@ -217,48 +244,46 @@ def run_scenario(world, bp_veh, init_loc, init_speed = 0.0, init_frames=10,
 
     return data
 
-def brake_scenario(world, bp_veh, speed):
 
+def brake_scenario(world, bp_veh, speed):
     spectator_transform = carla.Transform(carla.Location(20, -190, 10), carla.Rotation(yaw=67, pitch=-13))
     try:
         spectator = world.get_spectator()
         spectator.set_transform(spectator_transform)
     except:
-        print("No spectator")
+        print('No spectator')
 
     init_loc = carla.Transform(carla.Location(32, -180, 0.5), carla.Rotation(yaw=90))
 
-    controls = [
-        (1000, carla.VehicleControl(brake=1.0), VehicleControlStop(speed_min=0.1))]
-    
-    data = run_scenario(world, bp_veh, init_loc, init_speed=speed/3.6, controls=controls)
+    controls = [(1000, carla.VehicleControl(brake=1.0), VehicleControlStop(speed_min=0.1))]
+
+    data = run_scenario(world, bp_veh, init_loc, init_speed=speed / 3.6, controls=controls)
 
     delta = data.get_scalar_delta(1)
-    end_vel = 3.6*norm(data.get_telemetry(2).velocity)
-    print("  %.0f -> 0 km/h: (%.1f s, %.1f m)" % (speed, delta[0], delta[1]), end="")
+    3.6 * norm(data.get_telemetry(2).velocity)
+    print(f'  {speed:.0f} -> 0 km/h: ({delta[0]:.1f} s, {delta[1]:.1f} m)', end='')
+
 
 def accel_scenario(world, bp_veh, max_vel):
-
     spectator_transform = carla.Transform(carla.Location(20, -190, 10), carla.Rotation(yaw=67, pitch=-13))
     try:
         spectator = world.get_spectator()
         spectator.set_transform(spectator_transform)
     except:
-        print("No spectator")
+        print('No spectator')
 
     init_loc = carla.Transform(carla.Location(32, -180, 0.5), carla.Rotation(yaw=90))
 
-    controls = [
-        (1000, carla.VehicleControl(throttle=1.0), VehicleControlStop(speed_max=max_vel/3.6))]
+    controls = [(1000, carla.VehicleControl(throttle=1.0), VehicleControlStop(speed_max=max_vel / 3.6))]
 
     data = run_scenario(world, bp_veh, init_loc=init_loc, controls=controls)
 
     delta = data.get_scalar_delta(1)
-    end_vel = 3.6*norm(data.get_telemetry(2).velocity)
-    print("  0 -> %.0f km/h: (%.1f s, %.1f m)" % (max_vel, delta[0], delta[1]), end="")
+    3.6 * norm(data.get_telemetry(2).velocity)
+    print(f'  0 -> {max_vel:.0f} km/h: ({delta[0]:.1f} s, {delta[1]:.1f} m)', end='')
+
 
 def uturn_scenario(world, bp_veh):
-
     spectator_transform = carla.Transform(carla.Location(30, -180, 20), carla.Rotation(yaw=-140, pitch=-36))
     try:
         spectator = world.get_spectator()
@@ -270,11 +295,12 @@ def uturn_scenario(world, bp_veh):
     controls = [
         (1000, carla.VehicleControl(throttle=1.0), VehicleControlStop(x_max=19)),
         (1000, carla.VehicleControl(throttle=0.25, steer=-0.4), VehicleControlStop(yaw_min=-170)),
-        (100, carla.VehicleControl(throttle=0.4), VehicleControlStop(x_min =10))
-        ]
+        (100, carla.VehicleControl(throttle=0.4), VehicleControlStop(x_min=10)),
+    ]
 
     data = run_scenario(world, bp_veh, init_loc=init_pos, controls=controls)
-    end_vel = 3.6*norm(data.get_telemetry(3).velocity)
+    3.6 * norm(data.get_telemetry(3).velocity)
+
 
 def highspeed_turn_scenario(world, bp_veh, steer):
     spectator_transform = carla.Transform(carla.Location(70, -200, 15), carla.Rotation(yaw=0, pitch=-12))
@@ -288,13 +314,16 @@ def highspeed_turn_scenario(world, bp_veh, steer):
     init_pos = carla.Transform(carla.Location(50, -204, 0.2), carla.Rotation(yaw=0))
     init_frames = 2
     init_speed = 100 / 3.6
-    controls = [(100, carla.VehicleControl(throttle=0.5), VehicleControlStop(x_max=100)),
-        (200, carla.VehicleControl(throttle=1.0, steer = steer), VehicleControlStop(yaw_max=45, speed_min=3)),
-        (200, carla.VehicleControl(brake=1), VehicleControlStop())]
+    controls = [
+        (100, carla.VehicleControl(throttle=0.5), VehicleControlStop(x_max=100)),
+        (200, carla.VehicleControl(throttle=1.0, steer=steer), VehicleControlStop(yaw_max=45, speed_min=3)),
+        (200, carla.VehicleControl(brake=1), VehicleControlStop()),
+    ]
 
-    data = run_scenario(world, bp_veh, init_loc=init_pos, init_speed=init_speed, init_frames = init_frames, controls=controls)
+    run_scenario(world, bp_veh, init_loc=init_pos, init_speed=init_speed, init_frames=init_frames, controls=controls)
 
     time.sleep(1)
+
 
 def main(arg):
     """Main function of the script"""
@@ -312,12 +341,12 @@ def main(arg):
         settings.synchronous_mode = True
         world.apply_settings(settings)
 
-        if world.get_map().name != "Town05":
-            client.load_world("Town05", False)
+        if world.get_map().name != 'Town05':
+            client.load_world('Town05', False)
 
         for bp_veh in world.get_blueprint_library().filter(args.filter):
-            print("-------------------------------------------")
-            print(bp_veh.id, end="", flush=True)
+            print('-------------------------------------------')
+            print(bp_veh.id, end='', flush=True)
 
             if args.show_physics_control:
                 try:
@@ -349,76 +378,42 @@ def main(arg):
 
             print()
 
-        print("-------------------------------------------")
-
+        print('-------------------------------------------')
 
     finally:
         world.apply_settings(original_settings)
 
 
-
-if __name__ == "__main__":
-
-    argparser = argparse.ArgumentParser(
-        description=__doc__)
+if __name__ == '__main__':
+    argparser = argparse.ArgumentParser(description=__doc__)
     argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='localhost',
-        help='IP of the host CARLA Simulator (default: localhost)')
+        '--host', metavar='H', default='localhost', help='IP of the host CARLA Simulator (default: localhost)'
+    )
     argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
-        help='TCP port of CARLA Simulator (default: 2000)')
+        '-p', '--port', metavar='P', default=2000, type=int, help='TCP port of CARLA Simulator (default: 2000)'
+    )
     argparser.add_argument(
-        '--filter',
-        metavar='PATTERN',
-        default='vehicle.*',
-        help='actor filter (default: "vehicle.*")')
+        '--filter', metavar='PATTERN', default='vehicle.*', help='actor filter (default: "vehicle.*")'
+    )
     argparser.set_defaults(accel=False)
-    argparser.add_argument(
-        '--accel',
-        dest='accel',
-        action='store_true',
-        help='Execute accel scenarios')
+    argparser.add_argument('--accel', dest='accel', action='store_true', help='Execute accel scenarios')
     argparser.set_defaults(brake=False)
-    argparser.add_argument(
-        '--brake',
-        dest='brake',
-        action='store_true',
-        help='Execute brake scenarios')
+    argparser.add_argument('--brake', dest='brake', action='store_true', help='Execute brake scenarios')
     argparser.set_defaults(uturn=False)
-    argparser.add_argument(
-        '--uturn',
-        dest='uturn',
-        action='store_true',
-        help='Execute brake scenarios')
+    argparser.add_argument('--uturn', dest='uturn', action='store_true', help='Execute brake scenarios')
     argparser.set_defaults(turn=False)
-    argparser.add_argument(
-        '--turn',
-        dest='turn',
-        action='store_true',
-        help='Execute basic scenarios')
+    argparser.add_argument('--turn', dest='turn', action='store_true', help='Execute basic scenarios')
     argparser.set_defaults(all=True)
-    argparser.add_argument(
-        '--all',
-        dest='all',
-        action='store_true',
-        help='Execute all scenarios')
+    argparser.add_argument('--all', dest='all', action='store_true', help='Execute all scenarios')
     argparser.set_defaults(none=False)
-    argparser.add_argument(
-        '--none',
-        dest='none',
-        action='store_true',
-        help='Do not execute any scenarios')
+    argparser.add_argument('--none', dest='none', action='store_true', help='Do not execute any scenarios')
     argparser.set_defaults(show_physics_control=False)
     argparser.add_argument(
         '--show_physics_control',
         dest='show_physics_control',
         action='store_true',
-        help='Show default physics control of cars')
+        help='Show default physics control of cars',
+    )
 
     args = argparser.parse_args()
     if args.accel or args.brake or args.uturn or args.turn:

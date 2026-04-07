@@ -13,8 +13,8 @@ import math
 
 import carla
 
-def get_transform(vehicle, angle, d=2.5):
 
+def get_transform(vehicle, angle, d=2.5):
     vehicle_location = vehicle.get_location()
     radius = vehicle.bounding_box.extent.x * d
     height = vehicle.bounding_box.extent.x * 0.8
@@ -22,21 +22,19 @@ def get_transform(vehicle, angle, d=2.5):
     location = carla.Location(radius * math.cos(a), radius * math.sin(a), height) + vehicle_location
     return carla.Transform(location, carla.Rotation(yaw=180 + angle, pitch=-15))
 
+
 def main():
-    argparser = argparse.ArgumentParser(
-        description='CARLA Manual Control Client')
+    argparser = argparse.ArgumentParser(description='CARLA Manual Control Client')
     argparser.add_argument(
-        '--host', metavar='H', default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
+        '--host', metavar='H', default='127.0.0.1', help='IP of the host server (default: 127.0.0.1)'
+    )
     argparser.add_argument(
-        '-p', '--port', metavar='P', default=2000,
-        type=int, help='TCP port to listen to (default: 2000)')
+        '-p', '--port', metavar='P', default=2000, type=int, help='TCP port to listen to (default: 2000)'
+    )
     argparser.add_argument(
-        '-b', '--blueprint', default='all',
-        help="Blueprint to be used. 'all' cycles through all vehicles")
-    argparser.add_argument(
-        '--speed', default=60, type=int,
-        help="Camera rotation speed")
+        '-b', '--blueprint', default='all', help="Blueprint to be used. 'all' cycles through all vehicles"
+    )
+    argparser.add_argument('--speed', default=60, type=int, help='Camera rotation speed')
     args = argparser.parse_args()
 
     client = carla.Client(args.host, args.port)
@@ -107,6 +105,7 @@ def main():
     finally:
         if vehicle is not None:
             vehicle.destroy()
+
 
 if __name__ == '__main__':
     main()

@@ -5,14 +5,15 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 
-from . import SmokeTest
-
-import time
 import threading
+import time
+
 import carla
 
-class TestStreamming(SmokeTest):
+from . import SmokeTest
 
+
+class TestStreamming(SmokeTest):
     lat = 0.0
     lon = 0.0
 
@@ -30,21 +31,20 @@ class TestStreamming(SmokeTest):
         world = client.get_world()
         actors = world.get_actors()
         for actor in actors:
-            if (actor.type_id == "sensor.other.gnss"):
+            if actor.type_id == 'sensor.other.gnss':
                 actor.listen(self.on_gnss_check)
         time.sleep(5)
         # stop
         for actor in actors:
-            if (actor.type_id == "sensor.other.gnss"):
+            if actor.type_id == 'sensor.other.gnss':
                 actor.stop()
 
-
     def test_multistream(self):
-        print("TestStreamming.test_multistream")
+        print('TestStreamming.test_multistream')
         # create the sensor
         world = self.client.get_world()
         bp = world.get_blueprint_library().find('sensor.other.gnss')
-        bp.set_attribute("sensor_tick", str(1.0))
+        bp.set_attribute('sensor_tick', str(1.0))
         gnss_sensor = world.spawn_actor(bp, carla.Transform())
         gnss_sensor.listen(self.on_gnss_set)
         world.wait_for_tick()

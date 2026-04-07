@@ -1,7 +1,11 @@
-
 # This recipe spawns an actor and the spectator camera at the actor's location.
 
+import random
+
+import carla
+
 # ...
+client = carla.Client('localhost', 2000)
 world = client.get_world()
 spectator = world.get_spectator()
 

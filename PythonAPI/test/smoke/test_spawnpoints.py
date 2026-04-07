@@ -4,30 +4,33 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-import carla
 import time
+
+import carla
 
 from . import SyncSmokeTest
 
 
 class TestSpawnpoints(SyncSmokeTest):
     def test_spawn_points(self):
-        print("TestSpawnpoints.test_spawn_points")
+        print('TestSpawnpoints.test_spawn_points')
         self.world = self.client.get_world()
-        blueprints = self.world.get_blueprint_library().filter("vehicle.*")
+        blueprints = self.world.get_blueprint_library().filter('vehicle.*')
         blueprints = self.filter_vehicles_for_old_towns(blueprints)
 
         # get all available maps
         maps = self.client.get_available_maps()
         for m in maps:
-
-            if m != '/Game/Carla/Maps/BaseMap/BaseMap' and m != '/Game/Carla/Maps/Town11/Town11' and m != '/Game/Carla/Maps/Town12/Town12':
-
+            if m not in {
+                '/Game/Carla/Maps/BaseMap/BaseMap',
+                '/Game/Carla/Maps/Town11/Town11',
+                '/Game/Carla/Maps/Town12/Town12',
+            }:
                 # load the map
                 self.client.load_world(m)
                 # workaround: give time to UE4 to clean memory after loading (old assets)
                 time.sleep(5)
-                
+
                 self.world = self.client.get_world()
 
                 # get all spawn points
@@ -35,10 +38,7 @@ class TestSpawnpoints(SyncSmokeTest):
 
                 # Check why the world settings aren't applied after a reload
                 self.settings = self.world.get_settings()
-                settings = carla.WorldSettings(
-                    no_rendering_mode=False,
-                    synchronous_mode=True,
-                    fixed_delta_seconds=0.05)
+                settings = carla.WorldSettings(no_rendering_mode=False, synchronous_mode=True, fixed_delta_seconds=0.05)
                 self.world.apply_settings(settings)
 
                 # spawn all kind of vehicle
@@ -58,7 +58,7 @@ class TestSpawnpoints(SyncSmokeTest):
                     actors = self.world.get_actors()
                     self.assertTrue(all(snapshot.has_actor(x.id) for x in actors))
 
-                    for actor_id, t0 in zip(ids, spawn_points):
+                    for actor_id, t0 in zip(ids, spawn_points, strict=False):
                         actor_snapshot = snapshot.find(actor_id)
                         self.assertIsNotNone(actor_snapshot)
                         t1 = actor_snapshot.get_transform()

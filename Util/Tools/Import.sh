@@ -11,13 +11,13 @@ Usage: $0 [-h|--help] [--python-version=VERSION]
 END
 )
 
-OPTS=`getopt -o h --long batch:,package:,no-carla-materials,json-only,python-version:, -n 'parse-options' -- "$@"`
+OPTS=$(getopt -o h --long batch:,package:,no-carla-materials,json-only,python-version:, -n 'parse-options' -- "$@")
 
 ARGS=""
 
 eval set -- "$OPTS"
 
-source $(dirname "$0")/Environment.sh
+source "$(dirname "$0")/Environment.sh"
 
 PY_VERSION_LIST=3
 

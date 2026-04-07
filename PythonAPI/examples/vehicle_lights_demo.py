@@ -13,8 +13,8 @@ import carla
 
 """Visualize the different vehicle lights"""
 
-def get_transform(vehicle, angle, d=2.5):
 
+def get_transform(vehicle, angle, d=2.5):
     vehicle_location = vehicle.get_location()
     radius = vehicle.bounding_box.extent.x * d
     height = vehicle.bounding_box.extent.x * 0.8
@@ -24,20 +24,17 @@ def get_transform(vehicle, angle, d=2.5):
 
 
 def main():
-    argparser = argparse.ArgumentParser(
-        description='CARLA Manual Control Client')
+    argparser = argparse.ArgumentParser(description='CARLA Manual Control Client')
     argparser.add_argument(
-        '--host', metavar='H', default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
+        '--host', metavar='H', default='127.0.0.1', help='IP of the host server (default: 127.0.0.1)'
+    )
     argparser.add_argument(
-        '-p', '--port', metavar='P', default=2000, type=int,
-        help='TCP port to listen to (default: 2000)')
+        '-p', '--port', metavar='P', default=2000, type=int, help='TCP port to listen to (default: 2000)'
+    )
     argparser.add_argument(
-        '-b', '--blueprint', default='lincoln',
-        help="Blueprint to be used. 'all' cycles through all vehicles")
-    argparser.add_argument(
-        '--speed', default=60, type=int,
-        help="Camera rotation speed")
+        '-b', '--blueprint', default='lincoln', help="Blueprint to be used. 'all' cycles through all vehicles"
+    )
+    argparser.add_argument('--speed', default=60, type=int, help='Camera rotation speed')
     args = argparser.parse_args()
 
     client = carla.Client(args.host, args.port)
@@ -63,11 +60,11 @@ def main():
             world.wait_for_tick()
 
             lights = vehicle.get_light_state()
-            lights |= carla.VehicleLightState.Interior          # Add a specific light
-            lights |= carla.VehicleLightState.LowBeam           # Add a specific light
-            lights |= carla.VehicleLightState.Position          # Add a specific light
-            lights |= carla.VehicleLightState.Reverse           # Add a specific light
-            
+            lights |= carla.VehicleLightState.Interior  # Add a specific light
+            lights |= carla.VehicleLightState.LowBeam  # Add a specific light
+            lights |= carla.VehicleLightState.Position  # Add a specific light
+            lights |= carla.VehicleLightState.Reverse  # Add a specific light
+
             vehicle.set_light_state(carla.VehicleLightState(lights))
 
             angle_315 = False
@@ -81,31 +78,31 @@ def main():
 
                 if not angle_315 and angle >= 315:
                     lights = vehicle.get_light_state()
-                    lights &= ~carla.VehicleLightState.LowBeam          # Remove specific light
-                    lights &= ~carla.VehicleLightState.Position         # Remove specific light
-                    lights &= ~carla.VehicleLightState.Reverse         # Remove specific light
-                    lights |= carla.VehicleLightState.HighBeam          # Add a specific light
-                    lights |= carla.VehicleLightState.Brake             # Add a specific light
+                    lights &= ~carla.VehicleLightState.LowBeam  # Remove specific light
+                    lights &= ~carla.VehicleLightState.Position  # Remove specific light
+                    lights &= ~carla.VehicleLightState.Reverse  # Remove specific light
+                    lights |= carla.VehicleLightState.HighBeam  # Add a specific light
+                    lights |= carla.VehicleLightState.Brake  # Add a specific light
                     vehicle.set_light_state(carla.VehicleLightState(lights))
                     angle_315 = True
 
                 if not angle_675 and angle >= 675:
                     lights = vehicle.get_light_state()
-                    lights &= ~carla.VehicleLightState.HighBeam         # Remove specific light
-                    lights &= ~carla.VehicleLightState.Brake            # Remove specific light
-                    lights |= carla.VehicleLightState.Fog             # Add a specific light
+                    lights &= ~carla.VehicleLightState.HighBeam  # Remove specific light
+                    lights &= ~carla.VehicleLightState.Brake  # Remove specific light
+                    lights |= carla.VehicleLightState.Fog  # Add a specific light
                     lights |= carla.VehicleLightState.RightBlinker  # Add a specific light
-                    lights |= carla.VehicleLightState.LeftBlinker   # Add a specific light
+                    lights |= carla.VehicleLightState.LeftBlinker  # Add a specific light
                     lights |= carla.VehicleLightState.Special1  # Add a specific light
-                    lights |= carla.VehicleLightState.Special2   # Add a specific light
+                    lights |= carla.VehicleLightState.Special2  # Add a specific light
                     vehicle.set_light_state(carla.VehicleLightState(lights))
                     angle_675 = True
 
             lights = vehicle.get_light_state()
-            lights |= carla.VehicleLightState.HighBeam      # Add a specific light
-            lights |= carla.VehicleLightState.Brake      # Add a specific light
-            lights |= carla.VehicleLightState.RightBlinker      # Add a specific light
-            lights |= carla.VehicleLightState.LeftBlinker      # Add a specific light
+            lights |= carla.VehicleLightState.HighBeam  # Add a specific light
+            lights |= carla.VehicleLightState.Brake  # Add a specific light
+            lights |= carla.VehicleLightState.RightBlinker  # Add a specific light
+            lights |= carla.VehicleLightState.LeftBlinker  # Add a specific light
 
             vehicle.destroy()
             vehicle = None
@@ -118,6 +115,7 @@ def main():
     finally:
         if vehicle is not None:
             vehicle.destroy()
+
 
 if __name__ == '__main__':
     main()

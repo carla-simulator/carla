@@ -4,13 +4,14 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
+import carla
+
 from . import SyncSmokeTest
 
-import carla
 
 class TestCollisionSensor(SyncSmokeTest):
     def wait(self, frames=100):
-        for _i in range(0, frames):
+        for _i in range(frames):
             self.world.tick()
 
     def collision_callback(self, event, event_list):
@@ -27,7 +28,7 @@ class TestCollisionSensor(SyncSmokeTest):
         col_sensor.listen(lambda data: self.collision_callback(data, event_list))
 
         self.wait(100)
-        vehicle.set_target_velocity(10.0*veh_transf.rotation.get_forward_vector())
+        vehicle.set_target_velocity(10.0 * veh_transf.rotation.get_forward_vector())
 
         self.wait(100)
 
@@ -37,18 +38,18 @@ class TestCollisionSensor(SyncSmokeTest):
         return event_list
 
     def test_single_car(self):
-        print("TestCollisionSensor.test_single_car")
+        print('TestCollisionSensor.test_single_car')
 
-        bp_vehicles = self.world.get_blueprint_library().filter("vehicle.*")
+        bp_vehicles = self.world.get_blueprint_library().filter('vehicle.*')
         bp_vehicles = self.filter_vehicles_for_old_towns(bp_vehicles)
-        cars_failing = ""
+        cars_failing = ''
         for bp_veh in bp_vehicles:
             # Run collision agains wall
             event_list = self.run_collision_single_car_against_wall(bp_veh)
 
             if len(event_list) == 0:
-                cars_failing += " %s" % bp_veh.id
+                cars_failing += f' {bp_veh.id}'
 
         # Check result events
-        if cars_failing != "":
-            self.fail("The collision sensor have failed for the cars: %s" % cars_failing)
+        if cars_failing != '':
+            self.fail(f'The collision sensor have failed for the cars: {cars_failing}')

@@ -10,8 +10,9 @@
 
 import argparse
 import math
-from numpy import random
+
 import pygame
+from numpy import random
 
 import carla
 
@@ -24,40 +25,30 @@ def radar_callback(radar_data, world):
         fw_vec = carla.Vector3D(x=detect.depth - 0.25)
         carla.Transform(
             carla.Location(),
-            carla.Rotation(
-                pitch=current_rot.pitch + alt,
-                yaw=current_rot.yaw + azi,
-                roll=current_rot.roll)
-            ).transform(fw_vec)
+            carla.Rotation(pitch=current_rot.pitch + alt, yaw=current_rot.yaw + azi, roll=current_rot.roll),
+        ).transform(fw_vec)
 
-        norm_velocity = detect.velocity / 7.5 # range [-1, 1]
+        norm_velocity = detect.velocity / 7.5  # range [-1, 1]
         r = int(max(0.0, min(1.0, 1.0 - norm_velocity)) * 255.0)
         g = int(max(0.0, min(1.0, 1.0 - abs(norm_velocity))) * 255.0)
-        b = int(abs(max(- 1.0, min(0.0, - 1.0 - norm_velocity))) * 255.0)
-        world.debug.draw_point(radar_data.transform.location + fw_vec, size=0.1, life_time=0.06, color=carla.Color(r, g, b))
+        b = int(abs(max(-1.0, min(0.0, -1.0 - norm_velocity))) * 255.0)
+        world.debug.draw_point(
+            radar_data.transform.location + fw_vec, size=0.1, life_time=0.06, color=carla.Color(r, g, b)
+        )
 
 
 def main():
-    argparser = argparse.ArgumentParser(
-        description='CARLA Manual Control Client')
+    argparser = argparse.ArgumentParser(description='CARLA Manual Control Client')
     argparser.add_argument(
-        '--host', metavar='H', default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
+        '--host', metavar='H', default='127.0.0.1', help='IP of the host server (default: 127.0.0.1)'
+    )
     argparser.add_argument(
-        '-p', '--port', metavar='P', default=2000, type=int,
-        help='TCP port to listen to (default: 2000)')
-    argparser.add_argument(
-        '-hfov', '--horizontal-fov', default='35',
-        help="RADAR's horizontal fov")
-    argparser.add_argument(
-        '-vfov', '--vertical-fov', default='20',
-        help="RADAR's vertical fov")
-    argparser.add_argument(
-        '-pps', '--points', default='1500',
-        help="RADAR's points per second")
-    argparser.add_argument(
-        '-r', '--range', default='100',
-        help="RADAR's range")
+        '-p', '--port', metavar='P', default=2000, type=int, help='TCP port to listen to (default: 2000)'
+    )
+    argparser.add_argument('-hfov', '--horizontal-fov', default='35', help="RADAR's horizontal fov")
+    argparser.add_argument('-vfov', '--vertical-fov', default='20', help="RADAR's vertical fov")
+    argparser.add_argument('-pps', '--points', default='1500', help="RADAR's points per second")
+    argparser.add_argument('-r', '--range', default='100', help="RADAR's range")
     args = argparser.parse_args()
 
     client = carla.Client(args.host, args.port)
@@ -85,12 +76,13 @@ def main():
 
     radar_bp = blueprint_library.find('sensor.other.radar')
     radar_bp.set_attribute('horizontal_fov', args.horizontal_fov)
-    radar_bp.set_attribute('vertical_fov',  args.vertical_fov)
-    radar_bp.set_attribute('points_per_second',  args.points)
-    radar_bp.set_attribute('range',  args.range)
+    radar_bp.set_attribute('vertical_fov', args.vertical_fov)
+    radar_bp.set_attribute('points_per_second', args.points)
+    radar_bp.set_attribute('range', args.range)
 
     radar = world.spawn_actor(
-        radar_bp, carla.Transform(carla.Location(x=3, z=2), carla.Rotation(pitch=5)), attach_to=vehicle)
+        radar_bp, carla.Transform(carla.Location(x=3, z=2), carla.Rotation(pitch=5)), attach_to=vehicle
+    )
     radar.listen(lambda radar_data: radar_callback(radar_data, world))
 
     world.tick()
@@ -116,7 +108,6 @@ def main():
             spectator_t = carla.Transform(spectator_l, carla.Rotation(pitch=spec_offset_pitch, yaw=yaw))
             spectator.set_transform(spectator_t)
 
-
     except KeyboardInterrupt:
         pass
 
@@ -129,6 +120,7 @@ def main():
         settings.synchronous_mode = False
         settings.fixed_delta_seconds = None
         world.apply_settings(settings)
+
 
 if __name__ == '__main__':
     main()

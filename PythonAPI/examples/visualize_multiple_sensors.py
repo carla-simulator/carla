@@ -10,21 +10,21 @@
 Script that render multiple sensors in the same pygame window
 
 By default, it renders four cameras, one LiDAR and one Semantic LiDAR.
-It can easily be configure for any different number of sensors. 
+It can easily be configure for any different number of sensors.
 To do that, check lines 290-308.
 """
 
-import carla
 import argparse
 import random
 import time
+
 import numpy as np
-from numpy import random
+
+import carla
 
 try:
     import pygame
-    from pygame.locals import K_ESCAPE
-    from pygame.locals import K_q
+    from pygame.locals import K_ESCAPE, K_q
 except ImportError:
     raise RuntimeError('cannot import pygame, make sure pygame package is installed')
 
@@ -38,6 +38,7 @@ class CustomTimer:
 
     def time(self):
         return self.timer()
+
 
 class DisplayManager:
     def __init__(self, grid_size, window_size):
@@ -53,7 +54,7 @@ class DisplayManager:
         return [int(self.window_size[0]), int(self.window_size[1])]
 
     def get_display_size(self):
-        return [int(self.window_size[0]/self.grid_size[1]), int(self.window_size[1]/self.grid_size[0])]
+        return [int(self.window_size[0] / self.grid_size[1]), int(self.window_size[1] / self.grid_size[0])]
 
     def get_display_offset(self, gridPos):
         dis_size = self.get_display_size()
@@ -79,7 +80,8 @@ class DisplayManager:
             s.destroy()
 
     def render_enabled(self):
-        return self.display != None
+        return self.display is not None
+
 
 class SensorManager:
     def __init__(self, world, display_man, sensor_type, transform, attached, sensor_options, display_pos):
@@ -111,12 +113,18 @@ class SensorManager:
 
             return camera
 
-        elif sensor_type == 'LiDAR':
+        if sensor_type == 'LiDAR':
             lidar_bp = self.world.get_blueprint_library().find('sensor.lidar.ray_cast')
             lidar_bp.set_attribute('range', '100')
-            lidar_bp.set_attribute('dropoff_general_rate', lidar_bp.get_attribute('dropoff_general_rate').recommended_values[0])
-            lidar_bp.set_attribute('dropoff_intensity_limit', lidar_bp.get_attribute('dropoff_intensity_limit').recommended_values[0])
-            lidar_bp.set_attribute('dropoff_zero_intensity', lidar_bp.get_attribute('dropoff_zero_intensity').recommended_values[0])
+            lidar_bp.set_attribute(
+                'dropoff_general_rate', lidar_bp.get_attribute('dropoff_general_rate').recommended_values[0]
+            )
+            lidar_bp.set_attribute(
+                'dropoff_intensity_limit', lidar_bp.get_attribute('dropoff_intensity_limit').recommended_values[0]
+            )
+            lidar_bp.set_attribute(
+                'dropoff_zero_intensity', lidar_bp.get_attribute('dropoff_zero_intensity').recommended_values[0]
+            )
 
             for key in sensor_options:
                 lidar_bp.set_attribute(key, sensor_options[key])
@@ -126,8 +134,8 @@ class SensorManager:
             lidar.listen(self.save_lidar_image)
 
             return lidar
-        
-        elif sensor_type == 'SemanticLiDAR':
+
+        if sensor_type == 'SemanticLiDAR':
             lidar_bp = self.world.get_blueprint_library().find('sensor.lidar.ray_cast_semantic')
             lidar_bp.set_attribute('range', '100')
 
@@ -139,8 +147,8 @@ class SensorManager:
             lidar.listen(self.save_semanticlidar_image)
 
             return lidar
-        
-        elif sensor_type == "Radar":
+
+        if sensor_type == 'Radar':
             radar_bp = self.world.get_blueprint_library().find('sensor.other.radar')
             for key in sensor_options:
                 radar_bp.set_attribute(key, sensor_options[key])
@@ -149,9 +157,8 @@ class SensorManager:
             radar.listen(self.save_radar_image)
 
             return radar
-        
-        else:
-            return None
+
+        return None
 
     def get_sensor(self):
         return self.sensor
@@ -160,7 +167,7 @@ class SensorManager:
         t_start = self.timer.time()
 
         image.convert(carla.ColorConverter.Raw)
-        array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
+        array = np.frombuffer(image.raw_data, dtype=np.dtype('uint8'))
         array = np.reshape(array, (image.height, image.width, 4))
         array = array[:, :, :3]
         array = array[:, :, ::-1]
@@ -169,14 +176,14 @@ class SensorManager:
             self.surface = pygame.surfarray.make_surface(array.swapaxes(0, 1))
 
         t_end = self.timer.time()
-        self.time_processing += (t_end-t_start)
+        self.time_processing += t_end - t_start
         self.tics_processing += 1
 
     def save_lidar_image(self, image):
         t_start = self.timer.time()
 
         disp_size = self.display_man.get_display_size()
-        lidar_range = 2.0*float(self.sensor_options['range'])
+        lidar_range = 2.0 * float(self.sensor_options['range'])
 
         points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
         points = np.reshape(points, (int(points.shape[0] / 4), 4))
@@ -195,14 +202,14 @@ class SensorManager:
             self.surface = pygame.surfarray.make_surface(lidar_img)
 
         t_end = self.timer.time()
-        self.time_processing += (t_end-t_start)
+        self.time_processing += t_end - t_start
         self.tics_processing += 1
 
     def save_semanticlidar_image(self, image):
         t_start = self.timer.time()
 
         disp_size = self.display_man.get_display_size()
-        lidar_range = 2.0*float(self.sensor_options['range'])
+        lidar_range = 2.0 * float(self.sensor_options['range'])
 
         points = np.frombuffer(image.raw_data, dtype=np.dtype('f4'))
         points = np.reshape(points, (int(points.shape[0] / 6), 6))
@@ -221,7 +228,7 @@ class SensorManager:
             self.surface = pygame.surfarray.make_surface(lidar_img)
 
         t_end = self.timer.time()
-        self.time_processing += (t_end-t_start)
+        self.time_processing += t_end - t_start
         self.tics_processing += 1
 
     def save_radar_image(self, radar_data):
@@ -230,7 +237,7 @@ class SensorManager:
         points = np.reshape(points, (len(radar_data), 4))
 
         t_end = self.timer.time()
-        self.time_processing += (t_end-t_start)
+        self.time_processing += t_end - t_start
         self.tics_processing += 1
 
     def render(self):
@@ -240,6 +247,7 @@ class SensorManager:
 
     def destroy(self):
         self.sensor.destroy()
+
 
 def run_simulation(args, client):
     """This function performed one test run using the args parameters
@@ -252,7 +260,6 @@ def run_simulation(args, client):
     timer = CustomTimer()
 
     try:
-
         # Getting the world and
         world = client.get_world()
         original_settings = world.get_settings()
@@ -276,24 +283,66 @@ def run_simulation(args, client):
         display_manager = DisplayManager(grid_size=[2, 3], window_size=[args.width, args.height])
 
         # Then, SensorManager can be used to spawn RGBCamera, LiDARs and SemanticLiDARs as needed
-        # and assign each of them to a grid position, 
-        SensorManager(world, display_manager, 'RGBCamera', carla.Transform(carla.Location(x=0, z=2.4), carla.Rotation(yaw=-90)), 
-                      vehicle, {}, display_pos=[0, 0])
-        SensorManager(world, display_manager, 'RGBCamera', carla.Transform(carla.Location(x=0, z=2.4), carla.Rotation(yaw=+00)), 
-                      vehicle, {}, display_pos=[0, 1])
-        SensorManager(world, display_manager, 'RGBCamera', carla.Transform(carla.Location(x=0, z=2.4), carla.Rotation(yaw=+90)), 
-                      vehicle, {}, display_pos=[0, 2])
-        SensorManager(world, display_manager, 'RGBCamera', carla.Transform(carla.Location(x=0, z=2.4), carla.Rotation(yaw=180)), 
-                      vehicle, {}, display_pos=[1, 1])
+        # and assign each of them to a grid position,
+        SensorManager(
+            world,
+            display_manager,
+            'RGBCamera',
+            carla.Transform(carla.Location(x=0, z=2.4), carla.Rotation(yaw=-90)),
+            vehicle,
+            {},
+            display_pos=[0, 0],
+        )
+        SensorManager(
+            world,
+            display_manager,
+            'RGBCamera',
+            carla.Transform(carla.Location(x=0, z=2.4), carla.Rotation(yaw=+00)),
+            vehicle,
+            {},
+            display_pos=[0, 1],
+        )
+        SensorManager(
+            world,
+            display_manager,
+            'RGBCamera',
+            carla.Transform(carla.Location(x=0, z=2.4), carla.Rotation(yaw=+90)),
+            vehicle,
+            {},
+            display_pos=[0, 2],
+        )
+        SensorManager(
+            world,
+            display_manager,
+            'RGBCamera',
+            carla.Transform(carla.Location(x=0, z=2.4), carla.Rotation(yaw=180)),
+            vehicle,
+            {},
+            display_pos=[1, 1],
+        )
 
-        SensorManager(world, display_manager, 'LiDAR', carla.Transform(carla.Location(x=0, z=2.4)), 
-                      vehicle, {'channels' : '64', 'range' : '100',  'points_per_second': '250000', 'rotation_frequency': '20'}, display_pos=[1, 0])
-        SensorManager(world, display_manager, 'SemanticLiDAR', carla.Transform(carla.Location(x=0, z=2.4)), 
-                      vehicle, {'channels' : '64', 'range' : '100', 'points_per_second': '100000', 'rotation_frequency': '20'}, display_pos=[1, 2])
+        SensorManager(
+            world,
+            display_manager,
+            'LiDAR',
+            carla.Transform(carla.Location(x=0, z=2.4)),
+            vehicle,
+            {'channels': '64', 'range': '100', 'points_per_second': '250000', 'rotation_frequency': '20'},
+            display_pos=[1, 0],
+        )
+        SensorManager(
+            world,
+            display_manager,
+            'SemanticLiDAR',
+            carla.Transform(carla.Location(x=0, z=2.4)),
+            vehicle,
+            {'channels': '64', 'range': '100', 'points_per_second': '100000', 'rotation_frequency': '20'},
+            display_pos=[1, 2],
+        )
 
-        #Simulation loop
+        # Simulation loop
         call_exit = False
-        time_init_sim = timer.time()
+        timer.time()
         while True:
             # Carla Tick
             world.tick()
@@ -304,10 +353,9 @@ def run_simulation(args, client):
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     call_exit = True
-                elif event.type == pygame.KEYDOWN:
-                    if event.key == K_ESCAPE or event.key == K_q:
-                        call_exit = True
-                        break
+                elif event.type == pygame.KEYDOWN and (event.key in (K_ESCAPE, K_q)):
+                    call_exit = True
+                    break
 
             if call_exit:
                 break
@@ -322,20 +370,19 @@ def run_simulation(args, client):
 
 
 def main():
-    argparser = argparse.ArgumentParser(
-        description='CARLA Sensor tutorial')
+    argparser = argparse.ArgumentParser(description='CARLA Sensor tutorial')
     argparser.add_argument(
-        '--host', metavar='H', default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
+        '--host', metavar='H', default='127.0.0.1', help='IP of the host server (default: 127.0.0.1)'
+    )
     argparser.add_argument(
-        '-p', '--port', metavar='P', default=2000, type=int,
-        help='TCP port to listen to (default: 2000)')
+        '-p', '--port', metavar='P', default=2000, type=int, help='TCP port to listen to (default: 2000)'
+    )
     argparser.add_argument(
-        '--res', metavar='WIDTHxHEIGHT', default='1280x720',
-        help='window resolution (default: 1280x720)')
+        '--res', metavar='WIDTHxHEIGHT', default='1280x720', help='window resolution (default: 1280x720)'
+    )
     argparser.add_argument(
-        '--filter', metavar='PATTERN', default='vehicle.*',
-        help='actor filter (default: "vehicle.*")')
+        '--filter', metavar='PATTERN', default='vehicle.*', help='actor filter (default: "vehicle.*")'
+    )
 
     args = argparser.parse_args()
 
@@ -352,5 +399,4 @@ def main():
 
 
 if __name__ == '__main__':
-
     main()

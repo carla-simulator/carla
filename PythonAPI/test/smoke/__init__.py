@@ -4,24 +4,31 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
+import contextlib
 import glob
 import os
 import sys
 import unittest
 
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
+with contextlib.suppress(IndexError):
+    sys.path.append(
+        glob.glob(
+            '../carla/dist/carla-*%d.%d-%s.egg'
+            % (sys.version_info.major, sys.version_info.minor, 'win-amd64' if os.name == 'nt' else 'linux-x86_64')
+        )[0]
+    )
 
-import carla
 import time
 
+import carla
+
 TESTING_ADDRESS = ('localhost', 3654)
-VEHICLE_VEHICLES_EXCLUDE_FROM_OLD_TOWNS = ['vehicle.mitsubishi.fusorosa', 'vehicle.carlamotors.european_hgv', 'vehicle.carlamotors.firetruck']
+VEHICLE_VEHICLES_EXCLUDE_FROM_OLD_TOWNS = [
+    'vehicle.mitsubishi.fusorosa',
+    'vehicle.carlamotors.european_hgv',
+    'vehicle.carlamotors.firetruck',
+]
+
 
 class SmokeTest(unittest.TestCase):
     def setUp(self):
@@ -32,12 +39,12 @@ class SmokeTest(unittest.TestCase):
         self.world = self.client.get_world()
 
     def tearDown(self):
-        self.client.load_world("Town03")
+        self.client.load_world('Town03')
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
         self.world = None
         self.client = None
-    
+
     def filter_vehicles_for_old_towns(self, blueprint_list):
         new_list = []
         for blueprint in blueprint_list:
@@ -48,12 +55,9 @@ class SmokeTest(unittest.TestCase):
 
 class SyncSmokeTest(SmokeTest):
     def setUp(self):
-        super(SyncSmokeTest, self).setUp()
+        super().setUp()
         self.settings = self.world.get_settings()
-        settings = carla.WorldSettings(
-            no_rendering_mode=False,
-            synchronous_mode=True,
-            fixed_delta_seconds=0.05)
+        settings = carla.WorldSettings(no_rendering_mode=False, synchronous_mode=True, fixed_delta_seconds=0.05)
         self.world.apply_settings(settings)
         self.world.tick()
 
@@ -61,4 +65,4 @@ class SyncSmokeTest(SmokeTest):
         self.world.apply_settings(self.settings)
         self.world.tick()
         self.settings = None
-        super(SyncSmokeTest, self).tearDown()
+        super().tearDown()

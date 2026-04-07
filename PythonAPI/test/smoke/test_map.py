@@ -4,26 +4,32 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-import carla
 import random
+import time
+
+import carla
 
 from . import SmokeTest
-import time
+
 
 class TestMap(SmokeTest):
     def test_reload_world(self):
-        print("TestMap.test_reload_world")
+        print('TestMap.test_reload_world')
         map_name = self.client.get_world().get_map().name
         world = self.client.reload_world()
         self.assertEqual(map_name, world.get_map().name)
 
     def test_load_all_maps(self):
-        print("TestMap.test_load_all_maps")
+        print('TestMap.test_load_all_maps')
         map_names = list(self.client.get_available_maps())
         random.shuffle(map_names)
         for map_name in map_names:
             # ignore empty or large maps by now
-            if map_name != '/Game/Carla/Maps/BaseMap/BaseMap' and map_name != '/Game/Carla/Maps/Town11/Town11' and map_name != '/Game/Carla/Maps/Town12/Town12':
+            if map_name not in {
+                '/Game/Carla/Maps/BaseMap/BaseMap',
+                '/Game/Carla/Maps/Town11/Town11',
+                '/Game/Carla/Maps/Town12/Town12',
+            }:
                 world = self.client.load_world(map_name)
                 # workaround: give time to UE4 to clean memory after loading (old assets)
                 time.sleep(5)
@@ -41,7 +47,7 @@ class TestMap(SmokeTest):
         self.assertGreater(len(waypoints), 0)
         random.shuffle(waypoints)
         for waypoint in waypoints[:200]:
-            for _ in range(0, 20):
+            for _ in range(20):
                 self.assertGreaterEqual(waypoint.lane_width, 0.0)
                 _ = waypoint.get_right_lane()
                 _ = waypoint.get_left_lane()
