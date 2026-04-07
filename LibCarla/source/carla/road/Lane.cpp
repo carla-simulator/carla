@@ -61,7 +61,7 @@ namespace road {
     if(width_info != nullptr){
       return width_info->GetPolynomial().Evaluate(s);
     }
-    return 0.0f;
+    return 0.0;
   }
 
   bool Lane::IsStraight() const {
