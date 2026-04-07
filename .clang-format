@@ -1,0 +1,33 @@
+---
+# C/C++ Formatting Configuration
+# Docs: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+
+BasedOnStyle: LLVM
+
+# Indentation
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ContinuationIndentWidth: 4
+
+# Line length
+ColumnLimit: 120
+
+# Braces
+BreakBeforeBraces: Attach
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: None
+
+# Namespaces
+IndentWrappedFunctionNames: false
+
+# Pointer alignment
+PointerAlignment: Right
+
+# Access modifiers
+AccessModifierOffset: -4
+
+# Other
+SortIncludes: true
+FixNamespaceComments: true

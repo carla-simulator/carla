@@ -1,0 +1,83 @@
+---
+# Tight clang-tidy configuration for CARLA project
+# Full documentation: https://clang.llvm.org/extra/clang-tidy/
+#
+# Usage:
+#   Without build:  clang-tidy file.cpp (limited checks)
+#   With build:     clang-tidy -p Build file.cpp (full checks)
+#
+# Note: Full checks require compilation database from CMake build
+
+Checks: >
+  -*,
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  misc-*,
+  modernize-*,
+  performance-*,
+  portability-*,
+  readability-*,
+  -modernize-use-trailing-return-type,
+  -readability-magic-numbers,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -readability-identifier-length,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-type-vararg,
+  -misc-non-private-member-variables-in-classes,
+  -readability-convert-member-functions-to-static,
+  -cppcoreguidelines-avoid-capture-default-when-capturing-everything,
+  -bugprone-easily-swappable-parameters,
+  -misc-include-cleaner,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-init-variables,
+  -misc-confusable-identifiers,
+  -readability-function-cognitive-complexity,
+  -readability-use-concise-preprocessor-directives,
+  -portability-avoid-pragma-once,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -clang-diagnostic-missing-system-header,
+  -clang-diagnostic-error
+
+CheckOptions:
+  # Naming conventions (Unreal Engine compatible)
+  - key: readability-identifier-naming.ClassConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.ConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.EnumConstantCase
+    value: CamelCase
+  - key: readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key: readability-identifier-naming.LocalVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.MemberCase
+    value: lower_case
+  - key: readability-identifier-naming.MethodCase
+    value: camelBack
+  - key: readability-identifier-naming.ParameterCase
+    value: lower_case
+  - key: readability-identifier-naming.StaticConstantCase
+    value: lower_case
+  - key: readability-identifier-naming.StaticVariableCase
+    value: lower_case
+  - key: readability-identifier-naming.VariableCase
+    value: lower_case
+  - key: readability-identifier-naming.PrivateMemberSuffix
+    value: '_'
+  - key: readability-identifier-naming.FunctionMinLength
+    value: '2'
+  - key: readability-identifier-naming.VariableMinLength
+    value: '2'
+
+# Treat warnings as errors for CI/CD
+WarningsAsErrors: ''
+
+# Apply checks to all headers
+HeaderFilterRegex: '.*'
+
+# Use project's .clang-format
+FormatStyle: file
+...
+...
