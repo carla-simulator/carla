@@ -4,6 +4,11 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+/// @file BufferView.h
+/// @brief Immutable view over a buffer's data
+///
+/// Provides read-only access to buffer data without ownership.
+
 #pragma once
 
 #include "carla/Buffer.h"
@@ -28,7 +33,18 @@ namespace carla {
 
   class BufferPool;
 
-  /// Creating a constant view from an existing buffer
+  /// @brief Creating a constant view from an existing buffer
+  ///
+  /// BufferView provides read-only access to buffer data without taking
+  /// ownership. The underlying buffer is moved into the view and cannot be
+  /// modified through the view.
+  ///
+  /// @example
+  /// ```cpp
+  /// auto view = BufferView::CreateFrom(std::move(buffer));
+  /// const auto* data = view->data();
+  /// const auto size = view->size();
+  /// ```
   class BufferView : public std::enable_shared_from_this<BufferView> {
 
     // =========================================================================
@@ -53,12 +69,17 @@ namespace carla {
     BufferView() = delete;
     BufferView(const BufferView &) = delete;
 
+    /// @brief Create a BufferView from a buffer.
+    /// @param buffer Buffer to view (moved into view).
+    /// @return Shared pointer to BufferView.
     static std::shared_ptr<BufferView> CreateFrom(Buffer &&buffer) {
       return std::shared_ptr<BufferView>(new BufferView(std::move(buffer)));
     }
 
   private:
 
+    /// @brief Private constructor from buffer.
+    /// @param rhs Buffer to move into view.
     BufferView(Buffer &&rhs) noexcept
       : _buffer(std::move(rhs)) {}
 
@@ -70,27 +91,30 @@ namespace carla {
 
   public:
 
-    /// Access the byte at position @a i.
+    /// @brief Access the byte at position @a i.
+    /// @param i Index to access.
+    /// @return Reference to byte at index.
     const value_type &operator[](size_t i) const {
       return _buffer.data()[i];
     }
 
-    /// Direct access to the allocated memory or nullptr if no memory is
-    /// allocated.
+    /// @brief Direct access to the allocated memory.
+    /// @return Pointer to data or nullptr if empty.
     const value_type *data() const noexcept {
       return _buffer.data();
     }
 
-    /// Make a boost::asio::buffer from this buffer.
-    ///
-    /// @warning Boost.Asio buffers do not own the data, it's up to the caller
-    /// to not delete the memory that this buffer holds until the asio buffer is
-    /// no longer used.
+    /// @brief Make a boost::asio::buffer from this buffer.
+    /// @return Boost ASIO const buffer.
+    /// @warning Boost.Asio buffers do not own the data. Caller must ensure
+    ///          the memory is not deleted while the asio buffer is in use.
     boost::asio::const_buffer cbuffer() const noexcept {
       return {_buffer.data(), _buffer.size()};
     }
 
-    /// @copydoc cbuffer()
+    /// @brief Make a boost::asio::buffer from this buffer.
+    /// @return Boost ASIO const buffer.
+    /// @copydetails cbuffer()
     boost::asio::const_buffer buffer() const noexcept {
       return cbuffer();
     }
@@ -103,18 +127,26 @@ namespace carla {
 
   public:
 
+    /// @brief Check if buffer is empty.
+    /// @return true if size is 0.
     bool empty() const noexcept {
       return _buffer.size() == 0u;
     }
 
+    /// @brief Get the number of bytes in the buffer.
+    /// @return Size in bytes.
     size_type size() const noexcept {
       return _buffer.size();
     }
 
+    /// @brief Get the maximum possible size.
+    /// @return Maximum size for size_type.
     static constexpr size_type max_size() noexcept {
       return (std::numeric_limits<size_type>::max)();
     }
 
+    /// @brief Get the capacity of the underlying buffer.
+    /// @return Capacity in bytes.
     size_type capacity() const noexcept {
       return _buffer.capacity();
     }
@@ -127,25 +159,33 @@ namespace carla {
 
   public:
 
+    /// @brief Get const iterator to beginning.
+    /// @return Iterator to first element.
     const_iterator cbegin() const noexcept {
       return _buffer.data();
     }
 
+    /// @brief Get const iterator to beginning.
+    /// @return Iterator to first element.
     const_iterator begin() const noexcept {
       return _buffer.cbegin();
     }
 
+    /// @brief Get const iterator to end.
+    /// @return Iterator past last element.
     const_iterator cend() const noexcept {
       return _buffer.cbegin() + _buffer.size();
     }
 
+    /// @brief Get const iterator to end.
+    /// @return Iterator past last element.
     const_iterator end() const noexcept {
       return _buffer.cend();
     }
 
   private:
 
-    const Buffer _buffer;
+    const Buffer _buffer;  ///< Underlying buffer (immutable)
   };
 
   using SharedBufferView = std::shared_ptr<BufferView>;
