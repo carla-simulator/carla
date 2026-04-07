@@ -9,7 +9,6 @@
 #include "Carla/Game/Tagger.h"
 #include "Carla/Traffic/TrafficSignBase.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
-#include "Carla/Game/Tagger.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
