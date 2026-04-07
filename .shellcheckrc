@@ -1,0 +1,8 @@
+# ShellCheck configuration for CARLA project
+# Docs: https://github.com/koalaman/shellcheck/wiki/Settings
+
+# Shell script dialect
+# shellcheck shell=bash
+
+# Exclude certain checks globally
+# shellcheck disable=SC1091
