@@ -1,0 +1,125 @@
+[project]
+name = "carla-python"
+version = "0.9.15"
+description = "CARLA Python API and agents"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy>=1.24.4,<2.0",
+    "pygame",
+    "psutil",
+    "requests",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.9.0",
+    "ty>=0.0.1a8",
+    "pydantic>=2.0",
+    "mypy>=1.0",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 120
+exclude = [
+    ".git",
+    "__pycache__",
+    "build",
+    "dist",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "SIM",    # flake8-simplify
+    "PTH",    # flake8-use-pathlib
+    "RUF",    # ruff-specific rules
+    "TCH",    # flake8-type-checking
+    "ANN",    # flake8-annotations
+    "A",      # flake8-builtins
+    "COM",    # flake8-commas
+    "DTZ",    # flake8-datetimez
+    "FA",     # flake8-future-annotations
+    "ISC",    # flake8-implicit-str-concat
+    "ICN",    # flake8-import-conventions
+    "PIE",    # flake8-pie
+    "Q",      # flake8-quotes
+    "RET",    # flake8-return
+    "SLF",    # flake8-self
+    "SLOT",   # flake8-slots
+    "TID",    # flake8-tidy-imports
+    "INT",    # flake8-gettext
+    "ARG",    # flake8-unused-arguments
+    "ERA",    # eradicate
+    "PGH",    # pygrep-hooks
+    "PL",     # pylint
+    "TRY",    # tryceratops
+    "FLY",    # flynt
+    "NPY",    # numpy-specific rules
+    "PERF",   # perflint
+    "FURB",   # refurb
+    "LOG",    # flake8-logging
+]
+
+ignore = [
+    "ANN401",  # Dynamically typed expressions (typing.Any) are disallowed
+    "COM812",  # Missing trailing comma (handled by formatter)
+    "ISC001",  # Single line implicit string concatenation (handled by formatter)
+    "ERA001",  # Commented-out code (copyright headers trigger false positives)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"PythonAPI/carla/__init__.py" = ["F403", "F401"]
+"PythonAPI/carla/agents/**" = ["ANN", "N803", "PLR0912", "PLR0913", "PLR0915", "PLR0911", "PLR2004", "N806", "N802", "N813", "PLW", "TRY", "A", "PERF", "PLC", "SIM", "DTZ"]
+"PythonAPI/carla/scene_layout.py" = ["PLR0912", "PLR0915", "PLR2004", "TRY", "A", "PERF", "SIM"]
+"PythonAPI/carla/agents/tools/misc.py" = ["PLR2004", "N806"]
+"PythonAPI/docs/**" = ["ANN", "ARG", "F821", "E501", "E402", "UP031", "PTH", "PLR", "N", "B", "LOG", "PLW", "E722", "TRY", "A", "PERF", "PLC", "SIM", "DTZ"]
+"PythonAPI/examples/**" = ["ANN", "ARG", "T201", "F821", "E501", "E741", "NPY", "UP031", "PTH", "N", "PLR", "B", "LOG", "E402", "E722", "PLW", "TRY", "A", "PERF", "PLC", "SIM", "DTZ"]
+"PythonAPI/test/**" = ["ANN", "ARG", "SLF001", "F401", "E501", "E741", "E711", "E712", "NPY", "UP031", "PTH", "N", "PLR", "B", "LOG", "E402", "E722", "PLW", "TRY", "A", "PERF", "PLC", "SIM", "DTZ"]
+"PythonAPI/util/**" = ["ANN", "ARG", "T201", "E501", "E741", "UP031", "PTH", "N", "PLR", "LOG", "E402", "E722", "PLW", "TRY", "A", "PERF", "PLC", "SIM", "DTZ"]
+
+[tool.ruff.lint.flake8-annotations]
+mypy-init-return = true
+suppress-dummy-args = true
+suppress-none-returning = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["carla", "agents"]
+combine-as-imports = true
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "lf"
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+
+[tool.ty.environment]
+python-version = "3.10"
+
+[tool.ty.rules]
+unresolved-import = "warn"
+unresolved-attribute = "warn"
+unresolved-reference = "warn"
+possibly-unbound = "warn"
+invalid-argument-type = "warn"
+invalid-return-type = "warn"
+assignment-type-mismatch = "warn"
+incompatible-return-type = "warn"
+non-subscriptable = "warn"
+not-iterable = "warn"
+not-callable = "warn"
+invalid-type-form = "warn"
+undefined-name = "error"

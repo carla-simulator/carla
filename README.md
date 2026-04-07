@@ -48,6 +48,42 @@ Repositories associated with the CARLA simulation platform:
 * [**Scenario_Runner**](https://github.com/carla-simulator/scenario_runner): Engine to execute traffic scenarios in CARLA 0.9.X
 * [**ROS-bridge**](https://github.com/carla-simulator/ros-bridge): Interface to connect CARLA 0.9.X to ROS
 * [**Driving-benchmarks**](https://github.com/carla-simulator/driving-benchmarks): Benchmark tools for Autonomous Driving tasks
+
+## Code Quality & Linting
+
+CARLA uses tight linting for Python, C++, Shell, and YAML to ensure code quality.
+
+### Quick Start
+```bash
+# Install tools
+pip install ruff yamllint && brew install llvm clang-format shellcheck
+
+# Run all linters
+./lint-all.sh
+
+# Run with auto-fix
+./lint-all.sh --fix
+```
+
+### Individual Commands
+```bash
+# Python
+python3 -m ruff check PythonAPI/ --fix
+python3 -m ruff format PythonAPI/
+
+# Shell
+./lint-shell.sh
+
+# YAML
+python3 -m yamllint -c .yamllint .
+
+# C++ (requires build)
+./lint-cpp.sh
+```
+
+### Documentation
+- [`LINTING_QUICKSTART.md`](LINTING_QUICKSTART.md) - Quick reference
+- [`Docs/LINTING.md`](Docs/LINTING.md) - Complete guide
 * [**Conditional Imitation-Learning**](https://github.com/felipecode/coiltraine): Training and testing Conditional Imitation Learning models in CARLA
 * [**AutoWare AV stack**](https://github.com/carla-simulator/carla-autoware): Bridge to connect AutoWare AV stack to CARLA
 * [**Reinforcement-Learning**](https://github.com/carla-simulator/reinforcement-learning): Code for running Conditional Reinforcement Learning models in CARLA
