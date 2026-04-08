@@ -38,3 +38,9 @@ _images*
 
 # Temp
 Help.md
+
+# Linting artifacts
+.ruff_cache/
+__pycache__/
+*.pyc
+*.pyo
