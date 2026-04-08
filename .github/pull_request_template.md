@@ -1,32 +1,23 @@
-<!--
+## Description
+<!--- Describe your changes in detail -->
 
-Thanks for sending a pull request! Please make sure you click the link above to
-view the contribution guidelines, then fill out the blanks below.
-Please, make sure if your contribution is for UE4 version of CARLA you merge against ue4-dev branch. 
-if it is for UE5 version of CARLA you merge agaisnt ue5-dev branch
+## Related Issue
+<!--- This project only accepts pull requests related to open issues -->
+<!--- If suggesting a new feature or change, please discuss it in an issue first -->
+<!--- If fixing a bug, there should be an issue describing it with steps to reproduce -->
+<!--- Please link to the issue here: -->
 
-Checklist:
+## Motivation and Context
+<!--- Why is this change required? What problem does it solve? -->
 
-  - [ ] Your branch is up-to-date with the  `ue4-dev/ue5-dev` branch and tested with latest changes
-  - [ ] Extended the README / documentation, if necessary
-  - [ ] Code compiles correctly
-  - [ ] All tests passing with `make check` (only Linux)
-  - [ ] If relevant, update CHANGELOG.md with your changes
+## How Has This Been Tested?
+<!--- Please describe in detail how you tested your changes. -->
+<!--- Include details of your testing environment, and the tests you ran to -->
+<!--- see how your change affects other areas of the code, etc. -->
 
--->
-
-#### Description
-
-<!-- Please explain the changes you made here as detailed as possible. -->
-
-Fixes #  <!-- If fixes an issue, please add here the issue number. -->
-
-#### Where has this been tested?
-
-  * **Platform(s):** ...
-  * **Python version(s):** ...
-  * **Unreal Engine version(s):** ...
-
-#### Possible Drawbacks
-
-<!-- What are the possible side-effects or negative impacts of the code change? -->
+## Checklist:
+- [ ] My code follows the code style of this project
+- [ ] I have added tests that prove my fix is effective or that my feature works
+- [ ] All new and existing tests passed
+- [ ] I have run linting: `./lint-all.sh`
+- [ ] My changes generate no new warnings
