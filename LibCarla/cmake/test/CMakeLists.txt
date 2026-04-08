@@ -54,6 +54,17 @@ foreach(target ${build_targets})
   target_include_directories(${target} PRIVATE
       "${libcarla_source_path}/test")
 
+  # Server tests exercise CDR serialization (CdrSerialization.h) and
+  # GenericCdrPubSubType (inherits TopicDataType from fastrtps).
+  # Enable exceptions because Fast-CDR templates use try/catch internally.
+  if (CMAKE_BUILD_TYPE STREQUAL "Server")
+    target_include_directories(${target} SYSTEM PRIVATE "${FASTDDS_INCLUDE_PATH}")
+    target_compile_options(${target} PRIVATE -fexceptions)
+    target_link_libraries(${target} "${FASTDDS_LIB_PATH}/libfastrtps.a")
+    target_link_libraries(${target} "${FASTDDS_LIB_PATH}/libfastcdr.a")
+    target_link_libraries(${target} "${FASTDDS_LIB_PATH}/libfoonathan_memory-0.7.3.a")
+  endif()
+
   if (WIN32)
       target_link_libraries(${target} "gtest_main.lib")
       target_link_libraries(${target} "gtest.lib")
