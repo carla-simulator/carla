@@ -9,8 +9,7 @@
 #include "carla/ros2/publishers/BasePublisher.h"
 #include "carla/ros2/publishers/PublisherImpl.h"
 
-#include "carla/ros2/types/Clock.h"
-#include "carla/ros2/types/ClockPubSubTypes.h"
+#include "carla/ros2/types/msg/Clock.h"
 
 namespace carla {
 namespace ros2 {
@@ -18,14 +17,15 @@ namespace ros2 {
   class CarlaClockPublisher : public BasePublisher {
     public:
       struct ClockMsgTraits {
-        using msg_type = rosgraph::msg::Clock;
-        using msg_pubsub_type = rosgraph::msg::ClockPubSubType;
+        using msg_type = msg::Clock;
       };
 
       CarlaClockPublisher() :
         BasePublisher("rt/clock"),
         _impl(std::make_shared<PublisherImpl<ClockMsgTraits>>()) {
-          _impl->Init(GetBaseTopicName());
+          if (!_impl->Init(GetBaseTopicName())) {
+            log_warning("CarlaClockPublisher: Init failed for topic: ", GetBaseTopicName());
+          }
       }
 
       bool Publish() {

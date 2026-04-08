@@ -47,76 +47,8 @@ namespace ros2 {
 template<typename MsgType> struct FastDDSTypeMap;
 
 // ============================================================
-// Identity specializations (msg_type IS the FastDDS type)
-// Used by current publishers/subscribers until they are migrated
-// to POD message types in PR #2b.
-// ============================================================
-
-template<> struct FastDDSTypeMap<sensor_msgs::msg::NavSatFix> {
-  using fastdds_type = sensor_msgs::msg::NavSatFix;
-  using fastdds_pubsub_type = sensor_msgs::msg::NavSatFixPubSubType;
-};
-
-template<> struct FastDDSTypeMap<sensor_msgs::msg::Image> {
-  using fastdds_type = sensor_msgs::msg::Image;
-  using fastdds_pubsub_type = sensor_msgs::msg::ImagePubSubType;
-};
-
-template<> struct FastDDSTypeMap<sensor_msgs::msg::CameraInfo> {
-  using fastdds_type = sensor_msgs::msg::CameraInfo;
-  using fastdds_pubsub_type = sensor_msgs::msg::CameraInfoPubSubType;
-};
-
-template<> struct FastDDSTypeMap<sensor_msgs::msg::Imu> {
-  using fastdds_type = sensor_msgs::msg::Imu;
-  using fastdds_pubsub_type = sensor_msgs::msg::ImuPubSubType;
-};
-
-template<> struct FastDDSTypeMap<sensor_msgs::msg::PointCloud2> {
-  using fastdds_type = sensor_msgs::msg::PointCloud2;
-  using fastdds_pubsub_type = sensor_msgs::msg::PointCloud2PubSubType;
-};
-
-template<> struct FastDDSTypeMap<rosgraph::msg::Clock> {
-  using fastdds_type = rosgraph::msg::Clock;
-  using fastdds_pubsub_type = rosgraph::msg::ClockPubSubType;
-};
-
-template<> struct FastDDSTypeMap<tf2_msgs::msg::TFMessage> {
-  using fastdds_type = tf2_msgs::msg::TFMessage;
-  using fastdds_pubsub_type = tf2_msgs::msg::TFMessagePubSubType;
-};
-
-template<> struct FastDDSTypeMap<carla_msgs::msg::CarlaCollisionEvent> {
-  using fastdds_type = carla_msgs::msg::CarlaCollisionEvent;
-  using fastdds_pubsub_type = carla_msgs::msg::CarlaCollisionEventPubSubType;
-};
-
-template<> struct FastDDSTypeMap<carla_msgs::msg::CarlaEgoVehicleControl> {
-  using fastdds_type = carla_msgs::msg::CarlaEgoVehicleControl;
-  using fastdds_pubsub_type = carla_msgs::msg::CarlaEgoVehicleControlPubSubType;
-};
-
-template<> struct FastDDSTypeMap<ackermann_msgs::msg::AckermannDriveStamped> {
-  using fastdds_type = ackermann_msgs::msg::AckermannDriveStamped;
-  using fastdds_pubsub_type = ackermann_msgs::msg::AckermannDriveStampedPubSubType;
-};
-
-/// Identity conversion: copy src to dst when both types are the same.
-/// Used by publishers/subscribers that have not yet migrated to POD types.
-template<typename T>
-inline void to_fastdds(const T& src, T& dst) {
-  dst = src;
-}
-
-template<typename T>
-inline void from_fastdds(const T& src, T& dst) {
-  dst = src;
-}
-
-// ============================================================
-// Real specializations (POD msg types -> FastDDS types)
-// These map backend-neutral POD structs to FastDDS-generated types.
+// Specializations (POD msg types -> FastDDS types)
+// These map middleware-neutral POD structs to FastDDS-generated types.
 // Conversion functions are in types/FastDDSConversions.h.
 // ============================================================
 
