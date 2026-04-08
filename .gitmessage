@@ -1,0 +1,14 @@
+# <type>: <subject>
+#
+# Types: chore, docs, feat, fix, refactor, style, test
+#
+# Body: Explain what and why, not how
+#
+# Footer: Closes #<issue-number>
+#
+# Examples:
+# feat: Add new sensor type
+# fix: Resolve memory leak in navigation
+# docs: Update API documentation
+#
+# --- COMMIT END ---
