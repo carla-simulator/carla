@@ -1,0 +1,36 @@
+---
+# YAML Linting Configuration for CARLA
+# Docs: https://yamllint.readthedocs.io/
+
+extends: default
+
+rules:
+  # 80 chars should be enough, but don't fail if a line is longer
+  line-length:
+    max: 120
+    level: warning
+
+  # Don't worry about truthy values
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no']
+    level: warning
+
+  # Allow empty lines
+  empty-lines:
+    max: 2
+
+  # Document start is optional
+  document-start: disable
+
+  # Allow quoted strings
+  quoted-strings:
+    level: warning
+
+# Ignore certain files
+ignore: |
+  node_modules/
+  .git/
+  __pycache__/
+  *.egg-info/
+  build/
+  dist/
