@@ -5,9 +5,12 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 # Provides map data for users.
 
+from __future__ import annotations
+
 import glob
 import os
 import sys
+from typing import Any
 
 try:
     sys.path.append(glob.glob('dist/carla-*%d.%d-%s.egg' % (
@@ -21,14 +24,16 @@ import carla
 import random
 
 
-def get_scene_layout(carla_map):
+def get_scene_layout(carla_map: carla.Map) -> dict[str, Any]:
     """
     Function to extract the full scene layout to be used as a full scene description to be
     given to the user
     :return: a dictionary describing the scene.
     """
+    if carla_map is None:
+        raise ValueError('carla_map is None')
 
-    def _lateral_shift(transform, shift):
+    def _lateral_shift(transform: carla.Transform, shift: float) -> carla.Location:
         transform.rotation.yaw += 90
         return transform.location + shift * transform.get_forward_vector()
 
@@ -118,9 +123,24 @@ def get_scene_layout(carla_map):
     return waypoints_graph
 
 
-def get_dynamic_objects(carla_world, carla_map):
+def get_dynamic_objects(carla_world: carla.World, carla_map: carla.Map) -> dict[str, Any]:
+    """
+    Extract dynamic objects from the scene.
+    
+    Args:
+        carla_world: CARLA world instance
+        carla_map: CARLA map instance
+        
+    Returns:
+        Dictionary containing dynamic objects
+    """
+    if carla_world is None:
+        raise ValueError('carla_world is None')
+    if carla_map is None:
+        raise ValueError('carla_map is None')
+    
     # Private helper functions
-    def _get_bounding_box(actor):
+    def _get_bounding_box(actor: carla.Actor) -> list[carla.Location]:
         bb = actor.bounding_box.extent
         corners = [
             carla.Location(x=-bb.x, y=-bb.y),

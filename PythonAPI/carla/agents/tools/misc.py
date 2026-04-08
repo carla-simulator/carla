@@ -8,17 +8,15 @@
 
 """ Module with auxiliary functions. """
 
+from __future__ import annotations
+
 import math
 import numpy as np
 import carla
 
-def draw_waypoints(world, waypoints, z=0.5):
+def draw_waypoints(world: carla.World, waypoints: list[carla.Waypoint], z: float = 0.5) -> None:
     """
     Draw a list of waypoints at a certain height given in z.
-
-        :param world: carla.world object
-        :param waypoints: list or iterable container with the waypoints to draw
-        :param z: height in meters
     """
     for wpt in waypoints:
         wpt_t = wpt.transform
@@ -28,26 +26,18 @@ def draw_waypoints(world, waypoints, z=0.5):
         world.debug.draw_arrow(begin, end, arrow_size=0.3, life_time=1.0)
 
 
-def get_speed(vehicle):
+def get_speed(vehicle: carla.Vehicle) -> float:
     """
     Compute speed of a vehicle in Km/h.
-
-        :param vehicle: the vehicle for which speed is calculated
-        :return: speed as a float in Km/h
     """
     vel = vehicle.get_velocity()
-
     return 3.6 * math.sqrt(vel.x ** 2 + vel.y ** 2 + vel.z ** 2)
 
-def get_trafficlight_trigger_location(traffic_light):
+def get_trafficlight_trigger_location(traffic_light: carla.TrafficLight) -> carla.Location:
     """
     Calculates the yaw of the waypoint that represents the trigger volume of the traffic light
     """
-    def rotate_point(point, radians):
-        """
-        rotate a given point by a given angle
-        """
-        rotated_x = math.cos(radians) * point.x - math.sin(radians) * point.y
+    def rotate_point(point: carla.Location, radians: float) -> carla.Location:
         rotated_y = math.sin(radians) * point.x - math.cos(radians) * point.y
 
         return carla.Vector3D(rotated_x, rotated_y, point.z)

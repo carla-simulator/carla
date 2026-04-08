@@ -8,6 +8,8 @@
 This module provides GlobalRoutePlanner implementation.
 """
 
+from __future__ import annotations
+
 import math
 import numpy as np
 import networkx as nx
@@ -15,13 +17,17 @@ import networkx as nx
 import carla
 from agents.navigation.local_planner import RoadOption
 from agents.tools.misc import vector
+from typing import Any
 
 class GlobalRoutePlanner(object):
     """
     This class provides a very high level route plan.
     """
 
-    def __init__(self, wmap, sampling_resolution):
+    def __init__(self, wmap: carla.Map, sampling_resolution: float) -> None:
+        if wmap is None:
+            raise ValueError('wmap is None')
+        
         self._sampling_resolution = sampling_resolution
         self._wmap = wmap
         self._topology = None
@@ -38,11 +44,16 @@ class GlobalRoutePlanner(object):
         self._find_loose_ends()
         self._lane_change_link()
 
-    def trace_route(self, origin, destination):
+    def trace_route(self, origin: carla.Location, destination: carla.Location) -> list[tuple[carla.Waypoint, RoadOption]]:
         """
         This method returns list of (carla.Waypoint, RoadOption)
         from origin to destination
         """
+        if origin is None:
+            raise ValueError('origin is None')
+        if destination is None:
+            raise ValueError('destination is None')
+        
         route_trace = []
         route = self._path_search(origin, destination)
         current_waypoint = self._wmap.get_waypoint(origin)

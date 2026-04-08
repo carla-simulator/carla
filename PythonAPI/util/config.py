@@ -1,17 +1,10 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB).
-#
-# This work is licensed under the terms of the MIT license.
-# For a copy, see <https://opensource.org/licenses/MIT>.
-
 """
 Configure and inspect an instance of CARLA Simulator.
-
-For further details, visit
-https://carla.readthedocs.io/en/latest/configuring_the_simulation/
 """
+
+from __future__ import annotations
 
 import os
 import sys
@@ -23,7 +16,7 @@ import textwrap
 import carla
 
 
-def get_ip(host):
+def get_ip(host: str) -> str:
     if host in ['localhost', '127.0.0.1']:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         try:
@@ -36,16 +29,19 @@ def get_ip(host):
     return host
 
 
-def list_options(client):
+def list_options(client: carla.Client) -> None:
     maps = [m.replace('/Game/Carla/Maps/', '') for m in client.get_available_maps()]
     indent = 4 * ' '
-    def wrap(text):
+    def wrap(text: str) -> str:
         return '\n'.join(textwrap.wrap(text, initial_indent=indent, subsequent_indent=indent))
     print('available maps:\n')
     print(wrap(', '.join(sorted(maps))) + '.\n')
 
 
-def list_blueprints(world, bp_filter):
+def list_blueprints(world: carla.World, bp_filter: str) -> None:
+    if world is None:
+        raise ValueError('world is None')
+    
     blueprint_library = world.get_blueprint_library()
     blueprints = [bp.id for bp in blueprint_library.filter(bp_filter)]
     print('available blueprints (filter %r):\n' % bp_filter)

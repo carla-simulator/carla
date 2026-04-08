@@ -9,6 +9,8 @@ waypoints and avoiding other vehicles. The agent also responds to traffic lights
 It can also make use of the global route planner to follow a specifed route
 """
 
+from __future__ import annotations
+
 import carla
 from shapely.geometry import Polygon
 
@@ -27,7 +29,14 @@ class BasicAgent(object):
     as well as to change its parameters in case a different driving mode is desired.
     """
 
-    def __init__(self, vehicle, target_speed=20, opt_dict={}, map_inst=None, grp_inst=None):
+    def __init__(
+        self,
+        vehicle: carla.Vehicle,
+        target_speed: float = 20,
+        opt_dict: dict | None = None,
+        map_inst: carla.Map | None = None,
+        grp_inst: GlobalRoutePlanner | None = None
+    ) -> None:
         """
         Initialization the agent paramters, the local and the global planner.
 
@@ -39,6 +48,11 @@ class BasicAgent(object):
             :param grp_inst: GlobalRoutePlanner instance to avoid the expensive call of getting it.
 
         """
+        if opt_dict is None:
+            opt_dict = {}
+        if vehicle is None:
+            raise ValueError('vehicle is None')
+        
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
         if map_inst:

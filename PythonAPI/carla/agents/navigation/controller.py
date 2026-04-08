@@ -5,11 +5,14 @@
 
 """ This module contains PID controllers to perform lateral and longitudinal control. """
 
+from __future__ import annotations
+
 from collections import deque
 import math
 import numpy as np
 import carla
 from agents.tools.misc import get_speed
+from typing import Any
 
 
 class VehiclePIDController():
@@ -20,27 +23,30 @@ class VehiclePIDController():
     """
 
 
-    def __init__(self, vehicle, args_lateral, args_longitudinal, offset=0, max_throttle=0.75, max_brake=0.3,
-                 max_steering=0.8):
+    def __init__(
+        self,
+        vehicle: carla.Vehicle,
+        args_lateral: dict[str, float],
+        args_longitudinal: dict[str, float],
+        offset: float = 0,
+        max_throttle: float = 0.75,
+        max_brake: float = 0.3,
+        max_steering: float = 0.8
+    ) -> None:
         """
         Constructor method.
 
         :param vehicle: actor to apply to local planner logic onto
         :param args_lateral: dictionary of arguments to set the lateral PID controller
-        using the following semantics:
-            K_P -- Proportional term
-            K_D -- Differential term
-            K_I -- Integral term
-        :param args_longitudinal: dictionary of arguments to set the longitudinal
-        PID controller using the following semantics:
-            K_P -- Proportional term
-            K_D -- Differential term
-            K_I -- Integral term
-        :param offset: If different than zero, the vehicle will drive displaced from the center line.
-        Positive values imply a right offset while negative ones mean a left one. Numbers high enough
-        to cause the vehicle to drive through other lanes might break the controller.
+        :param args_longitudinal: dictionary of arguments to set the longitudinal PID controller
+        :param offset: Lateral offset from center line
+        :param max_throttle: Maximum throttle value
+        :param max_brake: Maximum brake value
+        :param max_steering: Maximum steering value
         """
-
+        if vehicle is None:
+            raise ValueError('vehicle is None')
+        
         self.max_brake = max_brake
         self.max_throt = max_throttle
         self.max_steer = max_steering

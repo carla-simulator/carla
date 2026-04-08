@@ -5,6 +5,8 @@
 
 """ This module contains a local planner to perform low-level waypoint following based on PID controllers. """
 
+from __future__ import annotations
+
 from enum import IntEnum
 from collections import deque
 import random
@@ -12,49 +14,31 @@ import random
 import carla
 from agents.navigation.controller import VehiclePIDController
 from agents.tools.misc import draw_waypoints, get_speed
-
-
-class RoadOption(IntEnum):
-    """
-    RoadOption represents the possible topological configurations when moving from a segment of lane to other.
-
-    """
-    VOID = -1
-    LEFT = 1
-    RIGHT = 2
-    STRAIGHT = 3
-    LANEFOLLOW = 4
-    CHANGELANELEFT = 5
-    CHANGELANERIGHT = 6
+from typing import Any
 
 
 class LocalPlanner(object):
     """
     LocalPlanner implements the basic behavior of following a
     trajectory of waypoints that is generated on-the-fly.
-
-    The low-level motion of the vehicle is computed by using two PID controllers,
-    one is used for the lateral control and the other for the longitudinal control (cruise speed).
-
-    When multiple paths are available (intersections) this local planner makes a random choice,
-    unless a given global plan has already been specified.
     """
 
-    def __init__(self, vehicle, opt_dict={}, map_inst=None):
+    def __init__(
+        self,
+        vehicle: carla.Vehicle,
+        opt_dict: dict[str, Any] | None = None,
+        map_inst: carla.Map | None = None
+    ) -> None:
         """
         :param vehicle: actor to apply to local planner logic onto
-        :param opt_dict: dictionary of arguments with different parameters:
-            dt: time between simulation steps
-            target_speed: desired cruise speed in Km/h
-            sampling_radius: distance between the waypoints part of the plan
-            lateral_control_dict: values of the lateral PID controller
-            longitudinal_control_dict: values of the longitudinal PID controller
-            max_throttle: maximum throttle applied to the vehicle
-            max_brake: maximum brake applied to the vehicle
-            max_steering: maximum steering applied to the vehicle
-            offset: distance between the route waypoints and the center of the lane
+        :param opt_dict: dictionary of arguments with different parameters
         :param map_inst: carla.Map instance to avoid the expensive call of getting it.
         """
+        if opt_dict is None:
+            opt_dict = {}
+        if vehicle is None:
+            raise ValueError('vehicle is None')
+        
         self._vehicle = vehicle
         self._world = self._vehicle.get_world()
         if map_inst:
