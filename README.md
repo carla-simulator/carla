@@ -248,3 +248,24 @@ CARLA uses some dependencies related to 3rd party integrations:
 CARLA uses the Autodesk FBX SDK for converting FBX to OBJ in the import process of maps. This step is optional, and the SDK is located [here](https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-0)
 
 This software contains Autodesk® FBX® code developed by Autodesk, Inc. Copyright 2020 Autodesk, Inc. All rights, reserved. Such code is provided "as is" and Autodesk, Inc. disclaims any and all warranties, whether express or implied, including without limitation the implied warranties of merchantability, fitness for a particular purpose or non-infringement of third party rights. In no event shall Autodesk, Inc. be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of such code."
+
+## Linting
+
+CARLA uses comprehensive linting for code quality:
+
+### Quick Start
+```bash
+# Install tools
+pip install ruff yamllint
+
+# Run all linters
+./lint-all.sh
+```
+
+### Configuration
+- **Python**: Ruff (70+ rules)
+- **C++**: clang-tidy (70+ rules)
+- **Shell**: shellcheck
+- **YAML**: yamllint
+
+See [`LINTING_QUICKSTART.md`](LINTING_QUICKSTART.md) for details.
