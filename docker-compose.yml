@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  carla:
+    build: .
+    volumes:
+      - ./PythonAPI:/app/PythonAPI
+      - ./Docs:/app/Docs
+    environment:
+      - PYTHONPATH=/app/PythonAPI
+    command: python3 -m pytest PythonAPI/test -v
+
+  carla-dev:
+    build: .
+    volumes:
+      - ./PythonAPI:/app/PythonAPI
+      - ./Docs:/app/Docs
+    environment:
+      - PYTHONPATH=/app/PythonAPI
+    command: tail -f /dev/null
