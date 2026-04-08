@@ -1,0 +1,28 @@
+# Labeler configuration
+# Automatically labels PRs based on file paths
+
+documentation:
+  - Docs/**/*
+  - README.md
+  - CONTRIBUTING.md
+
+python:
+  - PythonAPI/**/*.py
+
+cpp:
+  - LibCarla/**/*.cpp
+  - LibCarla/**/*.h
+  - Unreal/**/*.cpp
+  - Unreal/**/*.h
+
+tests:
+  - PythonAPI/test/**/*
+  - "**/*_test.py"
+  - "**/test_*.py"
+
+infrastructure:
+  - .github/**/*
+  - .gitignore
+  - Dockerfile
+  - docker-compose.yml
+  - Makefile
