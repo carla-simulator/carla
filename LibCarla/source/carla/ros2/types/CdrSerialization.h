@@ -6,6 +6,8 @@
 
 #include <fastcdr/Cdr.h>
 #include <fastcdr/FastBuffer.h>
+#include <fastcdr/exceptions/BadParamException.h>
+#include <fastcdr/exceptions/Exception.h>
 
 #include <cstdint>
 #include <vector>
@@ -49,7 +51,20 @@ namespace ros2 {
 // Internal CDR helpers — one overload pair per message type.
 // Ordered from least-dependent to most-dependent so each helper's body
 // can call the helpers for its nested types without forward declarations.
+//
+// Wire format: OMG DDSI-RTPS v2.5 Section 10 + DDS-XTypes 1.3 clause 7.4.1.1
+// (Classic CDR, encoding version 1, little-endian). Sequences are encoded
+// as a uint32_t length followed by elements; strings as a uint32_t length
+// (including the terminating NUL) followed by bytes; bool as a single octet.
 // ==========================================================================
+
+/// Sanity cap for the length field of a CDR sequence read from the wire.
+/// Protects against malformed/hostile payloads claiming a multi-GB sequence,
+/// which would otherwise OOM-abort the process inside std::vector::resize().
+/// 1,048,576 elements is far above any realistic ROS2 message (PointCloud2
+/// rarely has more than a dozen fields; TFMessage rarely has more than a few
+/// hundred transforms) while bounding the worst-case allocation to ~80 MiB.
+static constexpr uint32_t kMaxCdrSequenceElements = 1u << 20;
 
 // --------------------------------------------------------------------------
 // Leaf types (no nested msg:: fields)
@@ -560,7 +575,8 @@ inline void serialize_cdr(
   serialize_cdr(cdr, m.header);
   cdr << m.height;
   cdr << m.width;
-  cdr << static_cast<int32_t>(m.fields.size());
+  // CDR sequence length is uint32_t per DDS-XTypes 1.3 clause 7.4.1.1.
+  cdr << static_cast<uint32_t>(m.fields.size());
   for (const auto& f : m.fields) {
     serialize_cdr(cdr, f);
   }
@@ -576,8 +592,12 @@ inline void deserialize_cdr(
   deserialize_cdr(cdr, m.header);
   cdr >> m.height;
   cdr >> m.width;
-  int32_t fields_size{0};
+  uint32_t fields_size{0u};
   cdr >> fields_size;
+  if (fields_size > kMaxCdrSequenceElements) {
+    throw eprosima::fastcdr::exception::BadParamException(
+        "PointCloud2::fields length exceeds sane CDR sequence cap");
+  }
   m.fields.resize(static_cast<size_t>(fields_size));
   for (auto& f : m.fields) {
     deserialize_cdr(cdr, f);
@@ -595,7 +615,8 @@ inline void deserialize_cdr(
 /// Write length + elements manually.
 inline void serialize_cdr(
     eprosima::fastcdr::Cdr& cdr, const msg::TFMessage& m) {
-  cdr << static_cast<int32_t>(m.transforms.size());
+  // CDR sequence length is uint32_t per DDS-XTypes 1.3 clause 7.4.1.1.
+  cdr << static_cast<uint32_t>(m.transforms.size());
   for (const auto& t : m.transforms) {
     serialize_cdr(cdr, t);
   }
@@ -603,8 +624,12 @@ inline void serialize_cdr(
 
 inline void deserialize_cdr(
     eprosima::fastcdr::Cdr& cdr, msg::TFMessage& m) {
-  int32_t transforms_size{0};
+  uint32_t transforms_size{0u};
   cdr >> transforms_size;
+  if (transforms_size > kMaxCdrSequenceElements) {
+    throw eprosima::fastcdr::exception::BadParamException(
+        "TFMessage::transforms length exceeds sane CDR sequence cap");
+  }
   m.transforms.resize(static_cast<size_t>(transforms_size));
   for (auto& t : m.transforms) {
     deserialize_cdr(cdr, t);
@@ -616,18 +641,27 @@ inline void deserialize_cdr(
 // ==========================================================================
 
 /// Serialize a msg::X to a CDR byte buffer including the DDS encapsulation
-/// header (XCDR1 little-endian). The returned buffer is wire-compatible with
-/// all ROS2 distros and can be passed to FastDDS write_serialized_payload()
-/// or CycloneDDS dds_writecdr().
+/// header (Classic CDR, encoding version 1, little-endian). The returned
+/// buffer is wire-compatible with all ROS2 distros and can be passed to
+/// FastDDS write_serialized_payload() or CycloneDDS dds_writecdr().
+/// Returns an empty vector if Fast-CDR raises an exception (e.g. out of
+/// memory while growing the internal FastBuffer).
 template<typename T>
 std::vector<uint8_t> serialize_to_cdr(const T& msg) {
   eprosima::fastcdr::FastBuffer fb;
+  // Force LITTLE_ENDIANNESS so the encapsulation header is CDR_LE
+  // ({0x00, 0x01}) per DDSI-RTPS v2.5 Table 10.3, regardless of host
+  // endianness. ROS2 ecosystems test against CDR_LE.
   eprosima::fastcdr::Cdr cdr{
       fb,
-      eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
+      eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
       eprosima::fastcdr::Cdr::DDS_CDR};
-  cdr.serialize_encapsulation();
-  serialize_cdr(cdr, msg);
+  try {
+    cdr.serialize_encapsulation();
+    serialize_cdr(cdr, msg);
+  } catch (const eprosima::fastcdr::exception::Exception&) {
+    return std::vector<uint8_t>{};
+  }
   const char* buf{fb.getBuffer()};
   const size_t len{cdr.getSerializedDataLength()};
   return std::vector<uint8_t>{
@@ -635,10 +669,28 @@ std::vector<uint8_t> serialize_to_cdr(const T& msg) {
       reinterpret_cast<const uint8_t*>(buf) + len};
 }
 
+/// Return the exact CDR-serialized size in bytes for a message instance,
+/// including the 4-byte DDS encapsulation header. Used by GenericCdrPubSubType
+/// to tell FastDDS the actual payload size before write(), so the payload
+/// buffer is sized correctly for variable-length fields (e.g. Image::data,
+/// PointCloud2::data). The result is provably equal to serialize_to_cdr(msg).size().
+template<typename T>
+uint32_t cdr_serialized_size(const T& msg) {
+  eprosima::fastcdr::FastBuffer fb;
+  eprosima::fastcdr::Cdr cdr{
+      fb,
+      eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
+      eprosima::fastcdr::Cdr::DDS_CDR};
+  cdr.serialize_encapsulation();
+  serialize_cdr(cdr, msg);
+  return static_cast<uint32_t>(cdr.getSerializedDataLength());
+}
+
 /// Deserialize a msg::X from a CDR byte buffer that was produced by
 /// serialize_to_cdr() or by any ROS2-compatible DDS middleware.
-/// Returns true on success. The buffer must include the DDS encapsulation
-/// header.
+/// Returns true on success, false on any Fast-CDR error (truncated buffer,
+/// malformed encapsulation header, sequence length exceeding the sanity
+/// cap, etc.). The buffer must include the 4-byte DDS encapsulation header.
 template<typename T>
 bool deserialize_from_cdr(
     const uint8_t* data, size_t size, T& msg) {
@@ -648,10 +700,14 @@ bool deserialize_from_cdr(
       size};
   eprosima::fastcdr::Cdr cdr{
       fb,
-      eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
+      eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
       eprosima::fastcdr::Cdr::DDS_CDR};
-  cdr.read_encapsulation();
-  deserialize_cdr(cdr, msg);
+  try {
+    cdr.read_encapsulation();
+    deserialize_cdr(cdr, msg);
+  } catch (const eprosima::fastcdr::exception::Exception&) {
+    return false;
+  }
   return true;
 }
 

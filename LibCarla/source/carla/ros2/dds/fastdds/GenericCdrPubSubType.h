@@ -13,6 +13,7 @@
 #include <fastcdr/Cdr.h>
 
 #include <cstdint>
+#include <cstring>
 #include <functional>
 
 namespace carla {
@@ -46,22 +47,28 @@ class GenericCdrPubSubType : public eprosima::fastdds::dds::TopicDataType {
 
   ~GenericCdrPubSubType() override = default;
 
-  /// Serialize a MsgType instance into the pre-allocated FastDDS payload buffer.
+  /// Serialize a MsgType instance into the FastDDS payload buffer.
   /// Called by FastDDS DataWriter::write() before sending on the wire.
+  /// Serializes into an auto-growing heap buffer first so variable-length
+  /// fields (e.g. Image::data, PointCloud2::data) are not bounded by the
+  /// pre-allocated payload->data size. The bytes are then memcpy'd across.
+  /// FastDDS resizes payload->data before this call via getSerializedSizeProvider,
+  /// so the copy will always fit for correctly sized messages.
   bool serialize(
       void* data,
       SerializedPayload_t* payload) override {
     const MsgType* msg = static_cast<const MsgType*>(data);
 
-    eprosima::fastcdr::FastBuffer fastbuffer(
-        reinterpret_cast<char*>(payload->data),
-        static_cast<size_t>(payload->max_size));
+    // Auto-growing FastBuffer: no fixed-size ceiling, handles any payload.
+    eprosima::fastcdr::FastBuffer fb;
+    // Force LITTLE_ENDIANNESS so the encapsulation header is CDR_LE
+    // ({0x00, 0x01}) per DDSI-RTPS v2.5 Table 10.3, regardless of host
+    // endianness. ROS2 ecosystems test against CDR_LE.
     eprosima::fastcdr::Cdr ser(
-        fastbuffer,
-        eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
+        fb,
+        eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
         eprosima::fastcdr::Cdr::DDS_CDR);
-    payload->encapsulation = (ser.endianness() ==
-        eprosima::fastcdr::Cdr::BIG_ENDIANNESS) ? CDR_BE : CDR_LE;
+    payload->encapsulation = CDR_LE;
 
     try {
       ser.serialize_encapsulation();
@@ -70,7 +77,12 @@ class GenericCdrPubSubType : public eprosima::fastdds::dds::TopicDataType {
       return false;
     }
 
-    payload->length = static_cast<uint32_t>(ser.getSerializedDataLength());
+    const uint32_t len = static_cast<uint32_t>(ser.getSerializedDataLength());
+    if (len > payload->max_size) {
+      return false;
+    }
+    std::memcpy(payload->data, fb.getBuffer(), len);
+    payload->length = len;
     return true;
   }
 
@@ -84,9 +96,13 @@ class GenericCdrPubSubType : public eprosima::fastdds::dds::TopicDataType {
     eprosima::fastcdr::FastBuffer fastbuffer(
         reinterpret_cast<char*>(payload->data),
         static_cast<size_t>(payload->length));
+    // The deserializer must accept either endianness on the wire, the
+    // actual byte order is determined from the encapsulation header by
+    // read_encapsulation(). LITTLE_ENDIANNESS here is just the initial
+    // hint Fast-CDR uses before the header is parsed.
     eprosima::fastcdr::Cdr deser(
         fastbuffer,
-        eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
+        eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
         eprosima::fastcdr::Cdr::DDS_CDR);
 
     try {
@@ -101,12 +117,14 @@ class GenericCdrPubSubType : public eprosima::fastdds::dds::TopicDataType {
     return true;
   }
 
-  /// Return a function that gives the CDR-serialized size for the given instance.
-  /// FastDDS uses this to size the payload buffer before calling serialize().
-  std::function<uint32_t()> getSerializedSizeProvider(void* /*data*/) override {
-    return []() -> uint32_t {
-      return static_cast<uint32_t>(
-          CdrTopicInfo<MsgType>::max_serialized_size()) + 4u;
+  /// Return a function that gives the actual CDR-serialized size for this
+  /// specific message instance. FastDDS calls this before serialize() to
+  /// size (or resize) the payload buffer, so the buffer is always large enough
+  /// for variable-length fields like Image::data or PointCloud2::data.
+  std::function<uint32_t()> getSerializedSizeProvider(void* data) override {
+    const MsgType* msg = static_cast<const MsgType*>(data);
+    return [msg]() -> uint32_t {
+      return cdr_serialized_size(*msg);
     };
   }
 

@@ -581,7 +581,7 @@ TEST(cdr_topic_info, max_sizes_are_positive) {
 }
 
 // ==========================================================================
-// Group 10: cdr_serialization (12 tests)
+// Group 10: cdr_serialization (21 tests)
 // ==========================================================================
 
 TEST(cdr_serialization, time_round_trip) {
@@ -838,6 +838,267 @@ TEST(cdr_serialization, empty_tfmessage_round_trip) {
   carla::ros2::msg::TFMessage recovered{};
   EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
   EXPECT_TRUE(recovered.transforms.empty());
+}
+
+TEST(cdr_serialization, pointcloud2_multi_field_round_trip) {
+  // Exercises the manual sequence loop in serialize_cdr/deserialize_cdr for
+  // PointCloud2::fields with more than one element. The single-field
+  // round-trip above does not catch a bug in the loop step.
+  carla::ros2::msg::PointCloud2 original{};
+  original.header.frame_id = "lidar";
+  original.height = 1u;
+  original.width = 4u;
+
+  carla::ros2::msg::PointField fx{};
+  fx.name = "x";
+  fx.offset = 0u;
+  fx.datatype = carla::ros2::msg::PointField::FLOAT32;
+  fx.count = 1u;
+
+  carla::ros2::msg::PointField fy{};
+  fy.name = "y";
+  fy.offset = 4u;
+  fy.datatype = carla::ros2::msg::PointField::FLOAT32;
+  fy.count = 1u;
+
+  carla::ros2::msg::PointField fz{};
+  fz.name = "z";
+  fz.offset = 8u;
+  fz.datatype = carla::ros2::msg::PointField::FLOAT32;
+  fz.count = 1u;
+
+  original.fields.push_back(fx);
+  original.fields.push_back(fy);
+  original.fields.push_back(fz);
+  original.is_bigendian = false;
+  original.point_step = 12u;
+  original.row_step = 48u;
+  original.data.resize(48u, 0u);
+  original.is_dense = true;
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::PointCloud2 recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  ASSERT_EQ(recovered.fields.size(), 3u);
+  EXPECT_EQ(recovered.fields[0].name, "x");
+  EXPECT_EQ(recovered.fields[0].offset, 0u);
+  EXPECT_EQ(recovered.fields[1].name, "y");
+  EXPECT_EQ(recovered.fields[1].offset, 4u);
+  EXPECT_EQ(recovered.fields[2].name, "z");
+  EXPECT_EQ(recovered.fields[2].offset, 8u);
+  EXPECT_EQ(recovered.point_step, 12u);
+  EXPECT_EQ(recovered.row_step, 48u);
+  ASSERT_EQ(recovered.data.size(), 48u);
+}
+
+TEST(cdr_serialization, tfmessage_multi_transform_round_trip) {
+  // Exercises the manual sequence loop for TFMessage::transforms with more
+  // than one element.
+  carla::ros2::msg::TFMessage original{};
+
+  carla::ros2::msg::TransformStamped a{};
+  a.header.stamp.sec = 1;
+  a.header.frame_id = "world";
+  a.child_frame_id = "robot_a";
+  a.transform.translation.x = 1.0;
+  a.transform.rotation.w = 1.0;
+
+  carla::ros2::msg::TransformStamped b{};
+  b.header.stamp.sec = 2;
+  b.header.frame_id = "world";
+  b.child_frame_id = "robot_b";
+  b.transform.translation.y = 2.0;
+  b.transform.rotation.w = 1.0;
+
+  original.transforms.push_back(a);
+  original.transforms.push_back(b);
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::TFMessage recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  ASSERT_EQ(recovered.transforms.size(), 2u);
+  EXPECT_EQ(recovered.transforms[0].child_frame_id, "robot_a");
+  EXPECT_DOUBLE_EQ(recovered.transforms[0].transform.translation.x, 1.0);
+  EXPECT_EQ(recovered.transforms[1].child_frame_id, "robot_b");
+  EXPECT_DOUBLE_EQ(recovered.transforms[1].transform.translation.y, 2.0);
+}
+
+TEST(cdr_serialization, deserialize_truncated_returns_false) {
+  // A truncated buffer must produce a clean false return, not an uncaught
+  // Fast-CDR exception leaking out of the bool API.
+  carla::ros2::msg::Header original{};
+  original.stamp.sec = 7;
+  original.frame_id = "needs_more_bytes";
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_GT(buf.size(), 8u);
+
+  carla::ros2::msg::Header recovered{};
+  EXPECT_FALSE(carla::ros2::deserialize_from_cdr(
+      buf.data(), buf.size() / 2u, recovered));
+}
+
+TEST(cdr_serialization, deserialize_corrupt_encapsulation_returns_false) {
+  // A buffer too small to even hold the 4-byte encapsulation header must
+  // produce a clean false return.
+  const uint8_t bogus[2] = {0xFFu, 0xFFu};
+  carla::ros2::msg::Time recovered{};
+  EXPECT_FALSE(carla::ros2::deserialize_from_cdr(bogus, sizeof(bogus), recovered));
+}
+
+TEST(cdr_serialization, deserialize_pointcloud2_hostile_length_returns_false) {
+  // Hand-craft a PointCloud2 buffer that claims its sequence has a hostile
+  // length (max uint32). Without the kMaxCdrSequenceElements cap, the
+  // call would attempt a multi-GB resize and abort the process.
+  std::vector<uint8_t> buf;
+  // Encapsulation header: CDR_LE + options.
+  buf.push_back(0x00u);
+  buf.push_back(0x01u);
+  buf.push_back(0x00u);
+  buf.push_back(0x00u);
+  // Header.stamp.sec (int32) + nanosec (uint32) = 8 bytes of zeros.
+  for (int i = 0; i < 8; ++i) buf.push_back(0x00u);
+  // Header.frame_id (string): length 1 (NUL only) + "\0" + 3 padding bytes
+  // to keep alignment for the next uint32.
+  buf.push_back(0x01u);
+  buf.push_back(0x00u);
+  buf.push_back(0x00u);
+  buf.push_back(0x00u);
+  buf.push_back(0x00u);
+  buf.push_back(0x00u);
+  buf.push_back(0x00u);
+  buf.push_back(0x00u);
+  // PointCloud2.height (uint32) + width (uint32).
+  for (int i = 0; i < 8; ++i) buf.push_back(0x00u);
+  // fields_size = 0xFFFFFFFF (hostile).
+  buf.push_back(0xFFu);
+  buf.push_back(0xFFu);
+  buf.push_back(0xFFu);
+  buf.push_back(0xFFu);
+
+  carla::ros2::msg::PointCloud2 recovered{};
+  EXPECT_FALSE(carla::ros2::deserialize_from_cdr(
+      buf.data(), buf.size(), recovered));
+}
+
+TEST(cdr_serialization, deserialize_tfmessage_hostile_length_returns_false) {
+  // Same idea for TFMessage::transforms — claim a 4-billion-element
+  // sequence and verify the cap rejects it instead of OOM-aborting.
+  std::vector<uint8_t> buf;
+  buf.push_back(0x00u);
+  buf.push_back(0x01u);
+  buf.push_back(0x00u);
+  buf.push_back(0x00u);
+  buf.push_back(0xFFu);
+  buf.push_back(0xFFu);
+  buf.push_back(0xFFu);
+  buf.push_back(0xFFu);
+
+  carla::ros2::msg::TFMessage recovered{};
+  EXPECT_FALSE(carla::ros2::deserialize_from_cdr(
+      buf.data(), buf.size(), recovered));
+}
+
+TEST(cdr_serialization, cdr_serialized_size_matches_serialize_to_cdr) {
+  // cdr_serialized_size(msg) must return the same byte count as
+  // serialize_to_cdr(msg).size() for every message type. This is the contract
+  // that GenericCdrPubSubType::getSerializedSizeProvider relies on.
+  {
+    carla::ros2::msg::Header msg{};
+    msg.stamp.sec = 42;
+    msg.frame_id = "map";
+    EXPECT_EQ(carla::ros2::cdr_serialized_size(msg),
+              carla::ros2::serialize_to_cdr(msg).size());
+  }
+  {
+    carla::ros2::msg::Image msg{};
+    msg.height = 2u;
+    msg.width  = 3u;
+    msg.encoding = "rgb8";
+    msg.data.assign(6u, 0xAAu);
+    EXPECT_EQ(carla::ros2::cdr_serialized_size(msg),
+              carla::ros2::serialize_to_cdr(msg).size());
+  }
+  {
+    carla::ros2::msg::PointCloud2 msg{};
+    msg.height = 1u;
+    msg.width  = 4u;
+    msg.data.assign(48u, 0xBBu);
+    EXPECT_EQ(carla::ros2::cdr_serialized_size(msg),
+              carla::ros2::serialize_to_cdr(msg).size());
+  }
+  {
+    carla::ros2::msg::TFMessage msg{};
+    msg.transforms.resize(2u);
+    msg.transforms[0].header.frame_id = "world";
+    msg.transforms[1].header.frame_id = "base_link";
+    EXPECT_EQ(carla::ros2::cdr_serialized_size(msg),
+              carla::ros2::serialize_to_cdr(msg).size());
+  }
+}
+
+TEST(cdr_serialization, cdr_serialized_size_image_exceeds_static_max) {
+  // A real 800x600 RGB camera frame is ~1.4 MB. The static
+  // CdrTopicInfo<Image>::max_serialized_size() is only 648 bytes.
+  // cdr_serialized_size() must return a value greater than the static max,
+  // and the round-trip must recover the original data.size().
+  carla::ros2::msg::Image msg{};
+  msg.height = 600u;
+  msg.width  = 800u;
+  msg.encoding = "rgb8";
+  msg.step = 800u * 3u;
+  const size_t data_bytes = 800u * 600u * 3u;  // 1,440,000 bytes
+  msg.data.assign(data_bytes, 0x7Fu);
+
+  const uint32_t computed = carla::ros2::cdr_serialized_size(msg);
+  EXPECT_GT(computed,
+      static_cast<uint32_t>(
+          carla::ros2::CdrTopicInfo<carla::ros2::msg::Image>::max_serialized_size()));
+
+  const auto bytes = carla::ros2::serialize_to_cdr(msg);
+  ASSERT_FALSE(bytes.empty());
+  EXPECT_EQ(computed, static_cast<uint32_t>(bytes.size()));
+
+  carla::ros2::msg::Image recovered{};
+  ASSERT_TRUE(carla::ros2::deserialize_from_cdr(
+      bytes.data(), bytes.size(), recovered));
+  EXPECT_EQ(recovered.data.size(), data_bytes);
+}
+
+TEST(cdr_serialization, cdr_serialized_size_pointcloud2_exceeds_static_max) {
+  // A typical LiDAR scan is 1-20 MB. The static max_serialized_size() for
+  // PointCloud2 is 27597 bytes. This test uses ~1 MB of data to verify the
+  // same contract as the Image test above.
+  carla::ros2::msg::PointCloud2 msg{};
+  msg.height = 1u;
+  msg.width  = 22000u;
+  msg.row_step = 22000u * 16u;
+  const size_t data_bytes = 22000u * 16u;  // ~352,000 bytes (~0.35 MB)
+  msg.data.assign(data_bytes, 0x3Cu);
+  carla::ros2::msg::PointField pf{};
+  pf.name = "x";
+  pf.offset = 0u;
+  pf.datatype = 7u;  // FLOAT32
+  pf.count = 1u;
+  msg.fields.push_back(pf);
+
+  const uint32_t computed = carla::ros2::cdr_serialized_size(msg);
+  EXPECT_GT(computed,
+      static_cast<uint32_t>(
+          carla::ros2::CdrTopicInfo<carla::ros2::msg::PointCloud2>::max_serialized_size()));
+
+  const auto bytes = carla::ros2::serialize_to_cdr(msg);
+  ASSERT_FALSE(bytes.empty());
+  EXPECT_EQ(computed, static_cast<uint32_t>(bytes.size()));
+
+  carla::ros2::msg::PointCloud2 recovered{};
+  ASSERT_TRUE(carla::ros2::deserialize_from_cdr(
+      bytes.data(), bytes.size(), recovered));
+  EXPECT_EQ(recovered.data.size(), data_bytes);
 }
 
 // ==========================================================================
