@@ -599,8 +599,8 @@ namespace road {
           successor.road_id != waypoint.road_id ||
           successor.section_id != waypoint.section_id ||
           successor.lane_id != waypoint.lane_id);
-      // Fix situations, when next waypoint is in the opposite direction and
-      // this waypoint is his successor, so this function would end up in a loop
+      // Fix situations where the next waypoint is in the opposite direction and
+      // this waypoint is its successor, so this function would end up in a loop
       bool is_broken = false;
       for (const auto &future_successor : GetSuccessors(successor)) {
           if (future_successor.road_id == waypoint.road_id
