@@ -4,6 +4,8 @@
 
 #include "CarlaRadarPublisher.h"
 
+#include <cmath>
+
 #include "carla/sensor/data/RadarData.h"
 
 namespace carla {

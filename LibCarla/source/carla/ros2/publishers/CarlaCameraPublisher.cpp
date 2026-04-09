@@ -4,6 +4,8 @@
 
 #include "CarlaCameraPublisher.h"
 
+#include <cmath>
+
 namespace carla {
 namespace ros2 {
 

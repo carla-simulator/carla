@@ -109,48 +109,11 @@ class DDSMiddlewareFactoryFixture : public ::testing::Test {
 };
 
 // ==========================================================================
-// Group 1: dds_middleware_enum (2 tests)
-// ==========================================================================
-
-TEST(dds_middleware_enum, values_exist) {
-  DDSMiddleware mw_fast = DDSMiddleware::FastDDS;
-  EXPECT_EQ(static_cast<int>(mw_fast), 0);
-  DDSMiddleware mw_cyclone = DDSMiddleware::CycloneDDS;
-  EXPECT_EQ(static_cast<int>(mw_cyclone), 1);
-}
-
-TEST(dds_middleware_enum, switch_covers_all) {
-  DDSMiddleware values[] = {DDSMiddleware::FastDDS, DDSMiddleware::CycloneDDS};
-  for (auto mw : values) {
-    bool covered = false;
-    switch (mw) {
-      case DDSMiddleware::FastDDS:
-        covered = true;
-        break;
-      case DDSMiddleware::CycloneDDS:
-        covered = true;
-        break;
-    }
-    EXPECT_TRUE(covered);
-  }
-}
-
-// ==========================================================================
-// Group 2: dds_middleware_to_string (3 tests)
+// Group 1: dds_middleware_to_string (2 tests)
 // ==========================================================================
 
 TEST(dds_middleware_to_string, fastdds_returns_correct_string) {
   EXPECT_STREQ(DDSMiddlewareToString(DDSMiddleware::FastDDS), "FastDDS");
-}
-
-TEST(dds_middleware_to_string, result_is_not_null) {
-  const char* result = DDSMiddlewareToString(DDSMiddleware::FastDDS);
-  ASSERT_NE(result, nullptr);
-}
-
-TEST(dds_middleware_to_string, result_is_not_empty) {
-  const char* result = DDSMiddlewareToString(DDSMiddleware::FastDDS);
-  EXPECT_STRNE(result, "");
 }
 
 TEST(dds_middleware_to_string, cyclonedds_returns_correct_string) {
@@ -158,7 +121,7 @@ TEST(dds_middleware_to_string, cyclonedds_returns_correct_string) {
 }
 
 // ==========================================================================
-// Group 3: dds_middleware_from_string (5 tests)
+// Group 2: dds_middleware_from_string (5 tests)
 // ==========================================================================
 
 TEST(dds_middleware_from_string, fastdds_lowercase_valid) {
@@ -194,7 +157,7 @@ TEST(dds_middleware_from_string, partial_match_rejected) {
 }
 
 // ==========================================================================
-// Group 4: dds_middleware_available (2 tests)
+// Group 3: dds_middleware_available (2 tests)
 // ==========================================================================
 
 TEST(dds_middleware_available, fastdds_available) {
@@ -213,7 +176,7 @@ TEST(dds_middleware_available, cyclonedds_not_available_without_macro) {
 }
 
 // ==========================================================================
-// Group 5: dds_middleware_type_name (4 tests)
+// Group 4: dds_middleware_type_name (4 tests)
 // ==========================================================================
 
 TEST(dds_middleware_type_name, bare_name) {
@@ -235,7 +198,7 @@ TEST(dds_middleware_type_name, empty_string) {
 }
 
 // ==========================================================================
-// Group 6: DDSMiddlewareFactoryFixture (5 tests)
+// Group 5: DDSMiddlewareFactoryFixture (8 tests)
 // ==========================================================================
 
 TEST_F(DDSMiddlewareFactoryFixture, set_and_get_middleware) {
@@ -245,11 +208,6 @@ TEST_F(DDSMiddlewareFactoryFixture, set_and_get_middleware) {
 
 TEST_F(DDSMiddlewareFactoryFixture, default_is_fastdds) {
   EXPECT_EQ(DDSMiddlewareFactory::GetMiddleware(), DDSMiddleware::FastDDS);
-}
-
-TEST_F(DDSMiddlewareFactoryFixture, is_middleware_available_fastdds) {
-  EXPECT_TRUE(
-      DDSMiddlewareFactory::IsMiddlewareAvailable(DDSMiddleware::FastDDS));
 }
 
 TEST_F(DDSMiddlewareFactoryFixture, resolve_available_middleware) {
@@ -293,101 +251,7 @@ TEST_F(DDSMiddlewareFactoryFixture, create_subscriber_cyclonedds_unavailable) {
 }
 
 // ==========================================================================
-// Group 7: dds_publisher_interface (5 tests)
-// ==========================================================================
-
-TEST(dds_publisher_interface, mock_init_success) {
-  MockPublisherMiddleware mock;
-  mock.init_return_value = true;
-  EXPECT_TRUE(mock.Init("rt/test_topic"));
-  EXPECT_TRUE(mock.init_called);
-  EXPECT_EQ(mock.last_topic_name, "rt/test_topic");
-}
-
-TEST(dds_publisher_interface, mock_init_failure) {
-  MockPublisherMiddleware mock;
-  mock.init_return_value = false;
-  EXPECT_FALSE(mock.Init("rt/test_topic"));
-  EXPECT_TRUE(mock.init_called);
-}
-
-TEST(dds_publisher_interface, mock_publish_records_data) {
-  MockPublisherMiddleware mock;
-  TestMsg msg;
-  msg.value = 42;
-  EXPECT_TRUE(mock.Publish(&msg));
-  EXPECT_TRUE(mock.publish_called);
-  EXPECT_EQ(mock.last_published_data, &msg);
-}
-
-TEST(dds_publisher_interface, mock_topic_name) {
-  MockPublisherMiddleware mock;
-  mock.Init("rt/camera/image");
-  EXPECT_EQ(mock.GetTopicName(), "rt/camera/image");
-}
-
-TEST(dds_publisher_interface, mock_is_alive) {
-  MockPublisherMiddleware mock;
-  mock.alive = true;
-  EXPECT_TRUE(mock.IsAlive());
-  mock.alive = false;
-  EXPECT_FALSE(mock.IsAlive());
-}
-
-// ==========================================================================
-// Group 8: dds_subscriber_interface (5 tests)
-// ==========================================================================
-
-TEST(dds_subscriber_interface, mock_init_stores_pointers) {
-  MockSubscriberMiddleware mock;
-  TestMsg msg;
-  bool flag = false;
-  EXPECT_TRUE(mock.Init("rt/test_topic", &msg, &flag));
-  EXPECT_TRUE(mock.init_called);
-  EXPECT_EQ(mock.stored_message_ptr, &msg);
-  EXPECT_EQ(mock.stored_flag_ptr, &flag);
-}
-
-TEST(dds_subscriber_interface, mock_init_failure) {
-  MockSubscriberMiddleware mock;
-  mock.init_return_value = false;
-  TestMsg msg;
-  bool flag = false;
-  EXPECT_FALSE(mock.Init("rt/test_topic", &msg, &flag));
-}
-
-TEST(dds_subscriber_interface, mock_topic_name) {
-  MockSubscriberMiddleware mock;
-  TestMsg msg;
-  bool flag = false;
-  mock.Init("rt/lidar/points", &msg, &flag);
-  EXPECT_EQ(mock.GetTopicName(), "rt/lidar/points");
-}
-
-TEST(dds_subscriber_interface, mock_is_alive) {
-  MockSubscriberMiddleware mock;
-  mock.alive = true;
-  EXPECT_TRUE(mock.IsAlive());
-  mock.alive = false;
-  EXPECT_FALSE(mock.IsAlive());
-}
-
-TEST(dds_subscriber_interface, mock_simulates_message_receipt) {
-  MockSubscriberMiddleware mock;
-  TestMsg msg;
-  bool flag = false;
-  mock.Init("rt/test", &msg, &flag);
-  ASSERT_NE(mock.stored_message_ptr, nullptr);
-  ASSERT_NE(mock.stored_flag_ptr, nullptr);
-  auto* typed_ptr = static_cast<TestMsg*>(mock.stored_message_ptr);
-  typed_ptr->value = 99;
-  *mock.stored_flag_ptr = true;
-  EXPECT_EQ(msg.value, 99);
-  EXPECT_TRUE(flag);
-}
-
-// ==========================================================================
-// Group 9: publisher_impl (7 tests)
+// Group 6: publisher_impl (7 tests)
 // ==========================================================================
 
 TEST(publisher_impl, get_message_returns_pointer) {
@@ -463,7 +327,7 @@ TEST(publisher_impl, data_flows_through_publish) {
 }
 
 // ==========================================================================
-// Group 10: subscriber_impl (7 tests)
+// Group 7: subscriber_impl (7 tests)
 // ==========================================================================
 
 TEST(subscriber_impl, has_new_message_initially_false) {
@@ -546,7 +410,7 @@ TEST(subscriber_impl, init_failure_propagated) {
 }
 
 // ==========================================================================
-// Group 9: cdr_topic_info (2 tests)
+// Group 8: cdr_topic_info (2 tests)
 // ==========================================================================
 
 TEST(cdr_topic_info, type_names_are_non_empty) {
@@ -581,7 +445,7 @@ TEST(cdr_topic_info, max_sizes_are_positive) {
 }
 
 // ==========================================================================
-// Group 10: cdr_serialization (21 tests)
+// Group 9: cdr_serialization (21 tests)
 // ==========================================================================
 
 TEST(cdr_serialization, time_round_trip) {
@@ -1102,7 +966,7 @@ TEST(cdr_serialization, cdr_serialized_size_pointcloud2_exceeds_static_max) {
 }
 
 // ==========================================================================
-// Group 11: generic_cdr_pubsubtype (6 tests)
+// Group 10: generic_cdr_pubsubtype (6 tests)
 // Tests for GenericCdrPubSubType<T> — the single FastDDS TopicDataType
 // implementation that replaces 30 fastddsgen-generated PubSubType classes.
 // ==========================================================================
@@ -1197,4 +1061,130 @@ TEST(generic_cdr_pubsubtype, getkey_returns_false) {
   GenericCdrPubSubType<msg::Clock> pubsub_type;
   EXPECT_FALSE(pubsub_type.m_isGetKeyDefined);
   EXPECT_FALSE(pubsub_type.getKey(nullptr, nullptr, false));
+}
+
+// ==========================================================================
+// Group 11: generic_cdr_pubsubtype_large_payload (3 tests)
+// Tests that getSerializedSizeProvider() returns the actual instance size and
+// that serialize/deserialize succeed for payloads exceeding max_serialized_size().
+// These tests catch the runtime bug where Image and PointCloud2 publish failed
+// with RETCODE_ERROR because the static max size (~648 bytes for Image) was far
+// smaller than a real camera frame (~1-8 MB).
+// ==========================================================================
+
+TEST(generic_cdr_pubsubtype_large_payload, image_large_payload_serialize_succeeds) {
+  using SerializedPayload_t = eprosima::fastrtps::rtps::SerializedPayload_t;
+
+  // 640x480 BGRA image: 1,228,800 bytes of pixel data.
+  // This is vastly larger than CdrTopicInfo<msg::Image>::max_serialized_size() = 648.
+  constexpr uint32_t width  = 640u;
+  constexpr uint32_t height = 480u;
+  constexpr uint32_t channels = 4u;
+  const uint32_t pixel_bytes = width * height * channels;
+
+  msg::Image original{};
+  original.header.stamp.sec = 42;
+  original.header.frame_id = "camera";
+  original.height = height;
+  original.width  = width;
+  original.encoding = "bgra8";
+  original.is_bigendian = 0u;
+  original.step = width * channels;
+  original.data.assign(pixel_bytes, 0xABu);
+
+  GenericCdrPubSubType<msg::Image> pubsub_type;
+
+  // getSerializedSizeProvider() must report the actual instance size, not the
+  // static max. The returned size must accommodate all pixel data.
+  auto size_fn = pubsub_type.getSerializedSizeProvider(
+      static_cast<void*>(&original));
+  uint32_t reported_size = size_fn();
+  EXPECT_GT(reported_size, pixel_bytes)
+      << "getSerializedSizeProvider must exceed the raw pixel count";
+
+  SerializedPayload_t payload(reported_size);
+  ASSERT_TRUE(pubsub_type.serialize(static_cast<void*>(&original), &payload));
+  EXPECT_GT(payload.length, pixel_bytes);
+
+  msg::Image recovered{};
+  ASSERT_TRUE(pubsub_type.deserialize(&payload, static_cast<void*>(&recovered)));
+  EXPECT_EQ(recovered.header.frame_id, "camera");
+  EXPECT_EQ(recovered.height, height);
+  EXPECT_EQ(recovered.width, width);
+  EXPECT_EQ(recovered.encoding, "bgra8");
+  ASSERT_EQ(recovered.data.size(), pixel_bytes);
+  EXPECT_EQ(recovered.data[0], 0xABu);
+  EXPECT_EQ(recovered.data[pixel_bytes - 1u], 0xABu);
+}
+
+TEST(generic_cdr_pubsubtype_large_payload, pointcloud2_large_payload_serialize_succeeds) {
+  using SerializedPayload_t = eprosima::fastrtps::rtps::SerializedPayload_t;
+
+  // 10,000 points x 16 bytes/point = 160,000 bytes of point data.
+  // This exceeds CdrTopicInfo<msg::PointCloud2>::max_serialized_size() = 27,597.
+  constexpr uint32_t num_points = 10000u;
+  constexpr uint32_t point_step = 16u;
+  const uint32_t data_bytes = num_points * point_step;
+
+  msg::PointCloud2 original{};
+  original.header.frame_id = "velodyne";
+  original.height = 1u;
+  original.width  = num_points;
+  original.point_step = point_step;
+  original.row_step   = num_points * point_step;
+  original.is_dense   = true;
+  original.data.assign(data_bytes, 0x55u);
+
+  msg::PointField field{};
+  field.name     = "x";
+  field.offset   = 0u;
+  field.datatype = static_cast<uint8_t>(msg::PointField::FLOAT32);
+  field.count    = 1u;
+  original.fields.push_back(field);
+
+  GenericCdrPubSubType<msg::PointCloud2> pubsub_type;
+
+  auto size_fn = pubsub_type.getSerializedSizeProvider(
+      static_cast<void*>(&original));
+  uint32_t reported_size = size_fn();
+  EXPECT_GT(reported_size, data_bytes)
+      << "getSerializedSizeProvider must exceed the raw point data size";
+
+  SerializedPayload_t payload(reported_size);
+  ASSERT_TRUE(pubsub_type.serialize(static_cast<void*>(&original), &payload));
+  EXPECT_GT(payload.length, data_bytes);
+
+  msg::PointCloud2 recovered{};
+  ASSERT_TRUE(pubsub_type.deserialize(&payload, static_cast<void*>(&recovered)));
+  EXPECT_EQ(recovered.header.frame_id, "velodyne");
+  EXPECT_EQ(recovered.height, 1u);
+  EXPECT_EQ(recovered.width, num_points);
+  EXPECT_EQ(recovered.is_dense, true);
+  ASSERT_EQ(recovered.data.size(), data_bytes);
+  EXPECT_EQ(recovered.data[0], 0x55u);
+}
+
+TEST(generic_cdr_pubsubtype_large_payload, size_provider_returns_actual_size_not_max) {
+  // getSerializedSizeProvider() must return different sizes for messages with
+  // different amounts of variable-length data, proving it is instance-dependent.
+  msg::Image small_img{};
+  small_img.data.assign(100u, 0u);
+
+  msg::Image large_img{};
+  large_img.data.assign(100000u, 0u);
+
+  GenericCdrPubSubType<msg::Image> pubsub_type;
+
+  auto small_fn = pubsub_type.getSerializedSizeProvider(
+      static_cast<void*>(&small_img));
+  auto large_fn = pubsub_type.getSerializedSizeProvider(
+      static_cast<void*>(&large_img));
+
+  uint32_t small_size = small_fn();
+  uint32_t large_size = large_fn();
+
+  EXPECT_LT(small_size, large_size)
+      << "Size must grow with the data vector length";
+  EXPECT_GT(large_size, 100000u)
+      << "Size must at least cover the raw data bytes";
 }

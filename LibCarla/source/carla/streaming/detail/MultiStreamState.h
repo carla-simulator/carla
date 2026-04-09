@@ -81,14 +81,7 @@ namespace detail {
     }
 
     bool IsEnabledForROS(actor_id_type actor_id) {
-      for (auto &s : _sessions) {
-        if (s != nullptr) {
-          if (s->IsEnabledForROS(actor_id)) {
-            return true;
-          }
-        }
-      }
-      return false;
+      return _enable_for_ros.count(actor_id) > 0u;
     }
 
     bool AreClientsListening() {
