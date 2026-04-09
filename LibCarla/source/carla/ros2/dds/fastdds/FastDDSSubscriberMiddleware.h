@@ -49,7 +49,7 @@ class FastDDSSubscriberMiddleware
   void on_subscription_matched(
       efd::DataReader* reader,
       const efd::SubscriptionMatchedStatus& info) override {
-    _alive.store(info.total_count > 0, std::memory_order_relaxed);
+    _alive.store(info.current_count > 0, std::memory_order_relaxed);
   }
 
   void on_data_available(efd::DataReader* reader) override {

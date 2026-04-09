@@ -48,7 +48,7 @@ class FastDDSPublisherMiddleware
   void on_publication_matched(
       efd::DataWriter* writer,
       const efd::PublicationMatchedStatus& info) override {
-    _alive.store(info.total_count > 0, std::memory_order_relaxed);
+    _alive.store(info.current_count > 0, std::memory_order_relaxed);
   }
 
   ~FastDDSPublisherMiddleware() override {

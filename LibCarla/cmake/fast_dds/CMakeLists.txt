@@ -27,54 +27,6 @@ install(DIRECTORY "${FASTDDS_INCLUDE_PATH}/fastcdr"   DESTINATION include)
 install(DIRECTORY "${FASTDDS_INCLUDE_PATH}/fastdds"   DESTINATION include)
 install(DIRECTORY "${FASTDDS_INCLUDE_PATH}/fastrtps"  DESTINATION include)
 
-
-file(GLOB libcarla_fastdds_sources
-  "${libcarla_source_path}/carla/ros2/*.cpp"
-  "${libcarla_source_path}/carla/ros2/publishers/*.cpp"
-  "${libcarla_source_path}/carla/ros2/subscribers/*.cpp"
-  "${libcarla_source_path}/carla/ros2/listeners/*.cpp"
-  "${libcarla_source_path}/carla/ros2/types/*.cpp"
-  "${libcarla_source_path}/carla/ros2/dds/cyclonedds/*.cpp")
-
-# ==============================================================================
-# Create targets for debug and release in the same build type.
-# ==============================================================================
-
-if (LIBCARLA_BUILD_RELEASE)
-  add_library(carla_fastdds STATIC ${libcarla_fastdds_sources})
-
-  target_compile_definitions(carla_fastdds PRIVATE CARLA_ROS2_DDS_FASTDDS CARLA_ROS2_DDS_CYCLONEDDS)
-  target_compile_options(carla_fastdds PRIVATE -fexceptions)
-
-  target_include_directories(carla_fastdds SYSTEM PRIVATE
-      "${BOOST_INCLUDE_PATH}"
-      "${RPCLIB_INCLUDE_PATH}")
-
-  target_include_directories(carla_fastdds PRIVATE "${FASTDDS_INCLUDE_PATH}")
-  target_include_directories(carla_fastdds PRIVATE "${CYCLONEDDS_INCLUDE_PATH}")
-  target_include_directories(carla_fastdds PRIVATE "${libcarla_source_path}/carla/ros2")
-  target_link_libraries(carla_fastdds fastrtps fastcdr "${FAST_DDS_LIBRARIES}")
-  install(TARGETS carla_fastdds DESTINATION lib)
-  set_target_properties(carla_fastdds PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_RELEASE}")
-
-endif()
-
-if (LIBCARLA_BUILD_DEBUG)
-
-  add_library(carla_fastdds_debug STATIC ${libcarla_fastdds_sources})
-
-  target_compile_definitions(carla_fastdds_debug PRIVATE CARLA_ROS2_DDS_FASTDDS CARLA_ROS2_DDS_CYCLONEDDS)
-  target_compile_options(carla_fastdds_debug PRIVATE -fexceptions)
-
-  target_include_directories(carla_fastdds_debug SYSTEM PRIVATE
-      "${BOOST_INCLUDE_PATH}"
-      "${RPCLIB_INCLUDE_PATH}")
-
-  target_include_directories(carla_fastdds_debug PRIVATE "${FASTDDS_INCLUDE_PATH}")
-  target_include_directories(carla_fastdds_debug PRIVATE "${CYCLONEDDS_INCLUDE_PATH}")
-  target_include_directories(carla_fastdds_debug PRIVATE "${libcarla_source_path}/carla/ros2")
-  install(TARGETS carla_fastdds_debug DESTINATION lib)
-  set_target_properties(carla_fastdds_debug PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS_DEBUG}")
-  target_compile_definitions(carla_fastdds_debug PUBLIC -DBOOST_ASIO_ENABLE_BUFFER_DEBUGGING)
-
-endif()
+# Note: dds/fastdds/ contains only header-only templates (no .cpp sources).
+# All compiled ros2 code is in cmake/ros2/ (carla_ros2), compiled once with
+# both CARLA_ROS2_DDS_FASTDDS and CARLA_ROS2_DDS_CYCLONEDDS defined.

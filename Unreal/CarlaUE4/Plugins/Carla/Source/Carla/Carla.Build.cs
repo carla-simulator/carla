@@ -324,8 +324,7 @@ public class Carla : ModuleRules
         PublicDefinitions.Add("CARLA_ROS2_DDS_FASTDDS");
         PublicDefinitions.Add("CARLA_ROS2_DDS_CYCLONEDDS");
 
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_fastdds")));
-        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_cyclonedds")));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_ros2")));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libddsc.a"));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfoonathan_memory-0.7.3.a"));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfastcdr.a"));
