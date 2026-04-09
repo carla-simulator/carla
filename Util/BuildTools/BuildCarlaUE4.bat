@@ -75,6 +75,11 @@ if not "%1"=="" (
 rem remove quotes from arguments
 set EDITOR_FLAGS=%EDITOR_FLAGS:"=%
 
+rem Forward ROS2 runtime flags to the UE4 editor command line
+if %USE_ROS2% == true (
+    set EDITOR_FLAGS=%EDITOR_FLAGS% --ros2
+)
+
 if %REMOVE_INTERMEDIATE% == false (
     if %LAUNCH_UE4_EDITOR% == false (
         if %BUILD_UE4_EDITOR% == false (

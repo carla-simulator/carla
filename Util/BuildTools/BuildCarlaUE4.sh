@@ -19,13 +19,14 @@ USE_PYTORCH=false
 USE_UNITY=true
 USE_ROS2=false
 CHRONO_PATH=""
+DDS_MIDDLEWARE=""
 
 EDITOR_FLAGS=""
 
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,chrono-path:,ros2,no-simready,no-unity,editor-flags: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,chrono-path:,ros2,dds-middleware:,no-simready,no-unity,editor-flags: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -73,6 +74,9 @@ while [[ $# -gt 0 ]]; do
     --ros2 )
       USE_ROS2=true;
       shift ;;
+    --dds-middleware )
+      DDS_MIDDLEWARE=$2;
+      shift 2 ;;
     --no-simready )
       USE_SIMREADY=false
       shift ;;
@@ -88,6 +92,16 @@ while [[ $# -gt 0 ]]; do
       shift ;;
   esac
 done
+
+# Forward ROS2 runtime flags to the UE4 editor command line.
+# --ros2 is consumed above for build-time config (OptionalModules.ini);
+# the editor also needs it as a runtime flag for CarlaSettings.
+if ${USE_ROS2} ; then
+  EDITOR_FLAGS="${EDITOR_FLAGS} --ros2"
+fi
+if [ -n "${DDS_MIDDLEWARE}" ] ; then
+  EDITOR_FLAGS="${EDITOR_FLAGS} --dds-middleware=${DDS_MIDDLEWARE}"
+fi
 
 # ==============================================================================
 # -- Set up environment --------------------------------------------------------
