@@ -11,6 +11,7 @@
 #include <ostream>
 #include <type_traits>
 #include <vector>
+#include <boost/optional.hpp>
 
 template <typename OptionalT>
 static boost::python::object OptionalToPythonObject(OptionalT &optional) {
@@ -143,6 +144,57 @@ std::vector<T> PythonLitstToVector(boost::python::list &input) {
       auto optional = call(self); \
       return optional.has_value() ? boost::python::object(*optional) : boost::python::object(); \
     }
+
+template <typename T>
+struct OptionalToPythonConverter {
+    static PyObject* convert(const boost::optional<T>& opt) {
+        if (opt) {
+            // If the optional has a value, convert the underlying type to Python
+            return boost::python::incref(boost::python::object(*opt).ptr());
+        }
+        // If the optional is empty, return Python's None
+        return boost::python::incref(Py_None);
+    }
+};
+
+template <typename T>
+struct OptionalFromPythonConverter {
+    OptionalFromPythonConverter() {
+        boost::python::converter::registry::push_back(
+            &convertible,
+            &construct,
+            boost::python::type_id<boost::optional<T>>());
+    }
+
+    // Checks if the Python object can be converted
+    static void* convertible(PyObject* obj_ptr) {
+        if (obj_ptr == Py_None) {
+            return obj_ptr;
+        }
+        boost::python::extract<T> ex(obj_ptr);
+        if (ex.check()) {
+            return obj_ptr;
+        }
+        return nullptr;
+    }
+
+    // Actually constructs the C++ boost::optional
+    static void construct(
+        PyObject* obj_ptr,
+        boost::python::converter::rvalue_from_python_stage1_data* data) 
+    {
+        void* storage = reinterpret_cast<boost::python::converter::rvalue_from_python_storage<boost::optional<T>>*>(data)->storage.bytes;
+
+        if (obj_ptr == Py_None) {
+            new (storage) boost::optional<T>(); // Create empty optional
+        } else {
+            boost::python::extract<T> ex(obj_ptr);
+            new (storage) boost::optional<T>(ex()); // Create populated optional
+        }
+
+        data->convertible = storage;
+    }
+};
 
 template <typename T>
 static void PrintListItem_(std::ostream &out, const T &item) {

@@ -336,5 +336,24 @@ class TestTransform(unittest.TestCase):
         self.assertEqual(p.ellps, WGS84)
         self.assertIsNone(p.offset)
 
+    def test_geo_projection_utm_constructor_4_args(self):
+        t = carla.GeoOffsetTransform(1.0, 2.0, 3.0, 0.0)
+        p = carla.GeoProjectionUTM(zone=31, north=True, ellps=WGS84, offset=t)
+
+        self.assertEqual(p.zone, 31)
+        self.assertTrue(p.north)
+        self.assertEqual(p.ellps, WGS84)
+        self.assertIsNotNone(p.offset)
+        self.assertEqual(p.offset, t)
+
+    def test_geo_projection_utm_constructor_4_args_positional(self):
+        t = carla.GeoOffsetTransform(1.0, 2.0, 3.0, 0.0)
+        p = carla.GeoProjectionUTM(31, True, WGS84, t)
+
+        self.assertEqual(p.zone, 31)
+        self.assertTrue(p.north)
+        self.assertEqual(p.ellps, WGS84)
+        self.assertIsNotNone(p.offset)
+        self.assertEqual(p.offset, t)
 
 
