@@ -303,6 +303,13 @@ void export_geom() {
     .def("__ne__", &cg::Ellipsoid::operator!=)
   ;
 
+  boost::python::to_python_converter<
+        boost::optional<cg::OffsetTransform>, 
+        OptionalToPythonConverter<cg::OffsetTransform>
+    >();
+
+  OptionalFromPythonConverter<cg::OffsetTransform>();
+
   class_<cg::OffsetTransform>("GeoOffsetTransform")
   .def(init<double, double, double, double>((arg("offset_x")=0.0, arg("offset_y")=0.0, arg("offset_z")=0.0, arg("offset_hdg")=0.0)))
   .def_readwrite("offset_x", &cg::OffsetTransform::offset_x)
@@ -315,103 +322,46 @@ void export_geom() {
   ;
 
   class_<cg::TransverseMercatorParams>("GeoProjectionTM")
-    .def(init<double, double, double, double, double, cg::Ellipsoid>(
-      (arg("lat_0")=0.0, arg("lon_0")=0.0, arg("k")=1.0, arg("x_0")=0.0, arg("y_0")=0.0, arg("ellps")=cg::Ellipsoid())))
     .def(init<double, double, double, double, double, cg::Ellipsoid, boost::optional<cg::OffsetTransform>>(
-      (arg("lat_0")=0.0, arg("lon_0")=0.0, arg("k")=1.0, arg("x_0")=0.0, arg("y_0")=0.0, arg("ellps")=cg::Ellipsoid(), arg("offset")=boost::python::object())))
+      (arg("lat_0")=0.0, arg("lon_0")=0.0, arg("k")=1.0, arg("x_0")=0.0, arg("y_0")=0.0, arg("ellps")=cg::Ellipsoid(), arg("offset")=boost::optional<cg::OffsetTransform>())))
     .def_readwrite("lat_0", &cg::TransverseMercatorParams::lat_0)
     .def_readwrite("lon_0", &cg::TransverseMercatorParams::lon_0)
     .def_readwrite("k", &cg::TransverseMercatorParams::k)
     .def_readwrite("x_0", &cg::TransverseMercatorParams::x_0)
     .def_readwrite("y_0", &cg::TransverseMercatorParams::y_0)
     .def_readwrite("ellps", &cg::TransverseMercatorParams::ellps)
-    .add_property("offset",
-        +[](const cg::TransverseMercatorParams &self) {
-          return OptionalToPythonObject(self.offset); //returns None or OffsetTransform 
-        },
-         +[](cg::TransverseMercatorParams& self, object value) {
-            if (value.is_none()) {
-                self.offset = boost::none;
-            } else {
-                extract<cg::OffsetTransform> ex(value);
-                if (!ex.check()) {
-                    PyErr_SetString(
-                        PyExc_TypeError,
-                        "offset must be OffsetTransform or None"
-                    );
-                    throw_error_already_set();
-                }
-                self.offset = ex();
-            }
-        }
-    )
+    .add_property("offset", 
+        make_getter(&cg::TransverseMercatorParams::offset, return_value_policy<return_by_value>()),
+        make_setter(&cg::TransverseMercatorParams::offset))
     .def("__eq__", &cg::TransverseMercatorParams::operator==)
     .def("__ne__", &cg::TransverseMercatorParams::operator!=)
   ;
 
   class_<cg::UniversalTransverseMercatorParams>("GeoProjectionUTM")
-    .def(init<int, bool, cg::Ellipsoid>((arg("zone")=31, arg("north")=true, arg("ellps")=cg::Ellipsoid())))
-    .def(init<int, bool, cg::Ellipsoid, boost::optional<cg::OffsetTransform>>((arg("zone")=31, arg("north")=true, arg("ellps")=cg::Ellipsoid(), arg("offset")=boost::python::object())))
+    .def(init<int, bool, cg::Ellipsoid, boost::optional<cg::OffsetTransform>>((arg("zone")=31, arg("north")=true, arg("ellps")=cg::Ellipsoid(), arg("offset")=boost::optional<cg::OffsetTransform>())))
     .def_readwrite("zone", &cg::UniversalTransverseMercatorParams::zone)
     .def_readwrite("north", &cg::UniversalTransverseMercatorParams::north)
     .def_readwrite("ellps", &cg::UniversalTransverseMercatorParams::ellps)
-    .add_property("offset",
-        +[](const cg::UniversalTransverseMercatorParams &self) {
-          return OptionalToPythonObject(self.offset); //returns None or OffsetTransform 
-        },
-         +[](cg::UniversalTransverseMercatorParams& self, object value) {
-            if (value.is_none()) {
-                self.offset = boost::none;
-            } else {
-                extract<cg::OffsetTransform> ex(value);
-                if (!ex.check()) {
-                    PyErr_SetString(
-                        PyExc_TypeError,
-                        "offset must be OffsetTransform or None"
-                    );
-                    throw_error_already_set();
-                }
-                self.offset = ex();
-            }
-        }
-    )
+    .add_property("offset", 
+        make_getter(&cg::UniversalTransverseMercatorParams::offset, return_value_policy<return_by_value>()),
+        make_setter(&cg::UniversalTransverseMercatorParams::offset))
     .def("__eq__", &cg::UniversalTransverseMercatorParams::operator==)
     .def("__ne__", &cg::UniversalTransverseMercatorParams::operator!=)
   ;
 
   class_<cg::WebMercatorParams>("GeoProjectionWebMerc")
-    .def(init<cg::Ellipsoid>((arg("ellps")=cg::Ellipsoid())))
-    .def(init<cg::Ellipsoid, boost::optional<cg::OffsetTransform>>((arg("ellps")=cg::Ellipsoid(), arg("offset")=boost::python::object())))
+    .def(init<cg::Ellipsoid, boost::optional<cg::OffsetTransform>>((arg("ellps")=cg::Ellipsoid(), arg("offset")=boost::optional<cg::OffsetTransform>())))
     .def_readwrite("ellps", &cg::WebMercatorParams::ellps)
-    .add_property("offset",
-        +[](const cg::WebMercatorParams &self) {
-          return OptionalToPythonObject(self.offset); //returns None or OffsetTransform 
-        },
-         +[](cg::WebMercatorParams& self, object value) {
-            if (value.is_none()) {
-                self.offset = boost::none;
-            } else {
-                extract<cg::OffsetTransform> ex(value);
-                if (!ex.check()) {
-                    PyErr_SetString(
-                        PyExc_TypeError,
-                        "offset must be OffsetTransform or None"
-                    );
-                    throw_error_already_set();
-                }
-                self.offset = ex();
-            }
-        }
-    )
+    .add_property("offset", 
+        make_getter(&cg::WebMercatorParams::offset, return_value_policy<return_by_value>()),
+        make_setter(&cg::WebMercatorParams::offset))
     .def("__eq__", &cg::WebMercatorParams::operator==)
     .def("__ne__", &cg::WebMercatorParams::operator!=)
   ;
 
   class_<cg::LambertConformalConicParams>("GeoProjectionLCC2SP")
-    .def(init<double, double, double, double, double, double, cg::Ellipsoid>(
-      (arg("lat_0")=0.0, arg("lat_1")=-5.0, arg("lat_2")=5.0, arg("lon_0")=0.0, arg("x_0")=0.0, arg("y_0")=0.0, arg("ellps")=cg::Ellipsoid())))
     .def(init<double, double, double, double, double, double, cg::Ellipsoid, boost::optional<cg::OffsetTransform>>(
-      (arg("lat_0")=0.0, arg("lat_1")=-5.0, arg("lat_2")=5.0, arg("lon_0")=0.0, arg("x_0")=0.0, arg("y_0")=0.0, arg("ellps")=cg::Ellipsoid(), arg("offset")=boost::python::object())))
+      (arg("lat_0")=0.0, arg("lat_1")=-5.0, arg("lat_2")=5.0, arg("lon_0")=0.0, arg("x_0")=0.0, arg("y_0")=0.0, arg("ellps")=cg::Ellipsoid(), arg("offset")=boost::optional<cg::OffsetTransform>())))
     .def_readwrite("lat_0", &cg::LambertConformalConicParams::lat_0)
     .def_readwrite("lat_1", &cg::LambertConformalConicParams::lat_1)
     .def_readwrite("lat_2", &cg::LambertConformalConicParams::lat_2)
@@ -419,26 +369,9 @@ void export_geom() {
     .def_readwrite("x_0", &cg::LambertConformalConicParams::x_0)
     .def_readwrite("y_0", &cg::LambertConformalConicParams::y_0)
     .def_readwrite("ellps", &cg::LambertConformalConicParams::ellps)
-    .add_property("offset",
-        +[](const cg::LambertConformalConicParams &self) {
-          return OptionalToPythonObject(self.offset); //returns None or OffsetTransform 
-        },
-         +[](cg::LambertConformalConicParams& self, object value) {
-            if (value.is_none()) {
-                self.offset = boost::none;
-            } else {
-                extract<cg::OffsetTransform> ex(value);
-                if (!ex.check()) {
-                    PyErr_SetString(
-                        PyExc_TypeError,
-                        "offset must be OffsetTransform or None"
-                    );
-                    throw_error_already_set();
-                }
-                self.offset = ex();
-            }
-        }
-    )
+    .add_property("offset", 
+        make_getter(&cg::LambertConformalConicParams::offset, return_value_policy<return_by_value>()),
+        make_setter(&cg::LambertConformalConicParams::offset))
     .def("__eq__", &cg::LambertConformalConicParams::operator==)
     .def("__ne__", &cg::LambertConformalConicParams::operator!=)
   ;
