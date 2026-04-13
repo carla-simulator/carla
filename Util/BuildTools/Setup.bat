@@ -312,12 +312,16 @@ IF "%USE_ROS2%"=="true" (
   :build_fastdds_extension
   SET LIB_SOURCE=%1
   SET LIB_REPO=%2
-  SET CMAKE_FLAGS=%3
+  SET LIB_BRANCH=%3
 
   IF NOT EXIST "%LIB_SOURCE%" (
     mkdir "%LIB_SOURCE%"
     echo %LIB_REPO%
-    git clone %LIB_REPO% %LIB_SOURCE%
+    if "%LIB_BRANCH%"=="" (
+      git clone %LIB_REPO% %LIB_SOURCE%
+    ) else (
+      git clone --depth 1 --branch %LIB_BRANCH% %LIB_REPO% %LIB_SOURCE%
+    )
     mkdir "%LIB_SOURCE%\build"
   )
 
@@ -327,8 +331,8 @@ IF "%USE_ROS2%"=="true" (
     SET FOONATHAN_MEMORY_VENDOR_BASENAME=foonathan-memory-vendor
     SET FOONATHAN_MEMORY_VENDOR_SOURCE_DIR=%CD%\%FOONATHAN_MEMORY_VENDOR_BASENAME%-source
     SET FOONATHAN_MEMORY_VENDOR_REPO="https://github.com/eProsima/foonathan_memory_vendor.git"
-    SET FOONATHAN_MEMORY_VENDOR_CMAKE_FLAGS=-DBUILD_SHARED_LIBS=ON
-    CALL :build_fastdds_extension "%FOONATHAN_MEMORY_VENDOR_SOURCE_DIR%" "%FOONATHAN_MEMORY_VENDOR_REPO%"
+    SET FOONATHAN_MEMORY_VENDOR_BRANCH=v1.3.2
+    CALL :build_fastdds_extension "%FOONATHAN_MEMORY_VENDOR_SOURCE_DIR%" "%FOONATHAN_MEMORY_VENDOR_REPO%" "%FOONATHAN_MEMORY_VENDOR_BRANCH%"
     pushd "%FOONATHAN_MEMORY_VENDOR_SOURCE_DIR%\build" >nul
     cmake -G "Ninja" ^
       -DCMAKE_INSTALL_PREFIX="%FASTDDS_INSTALL_DIR%" ^
@@ -411,6 +415,14 @@ set CMAKE_CONFIG_FILE=%INSTALLATION_DIR%CMakeLists.txt.in
 >>"%CMAKE_CONFIG_FILE%" echo.
 >>"%CMAKE_CONFIG_FILE%" echo add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 >>"%CMAKE_CONFIG_FILE%" echo add_definitions(-DLIBCARLA_IMAGE_WITH_PNG_SUPPORT)
+>>"%CMAKE_CONFIG_FILE%" echo.
+if "%USE_ROS2%"=="true" (
+    >>"%CMAKE_CONFIG_FILE%" echo set(LIBCARLA_WITH_ROS2 true)
+    >>"%CMAKE_CONFIG_FILE%" echo set(FASTDDS_INCLUDE_PATH "%FASTDDS_INCLUDE:\=/%")
+    >>"%CMAKE_CONFIG_FILE%" echo set(FASTDDS_LIB_PATH "%FASTDDS_LIB:\=/%")
+) else (
+    >>"%CMAKE_CONFIG_FILE%" echo set(LIBCARLA_WITH_ROS2 false)
+)
 >>"%CMAKE_CONFIG_FILE%" echo.
 >>"%CMAKE_CONFIG_FILE%" echo set(BOOST_INCLUDE_PATH "%CMAKE_INSTALLATION_DIR%boost-%BOOST_VERSION%-install/include")
 >>"%CMAKE_CONFIG_FILE%" echo set(BOOST_LIB_PATH "%CMAKE_INSTALLATION_DIR%boost-%BOOST_VERSION%-install/lib")

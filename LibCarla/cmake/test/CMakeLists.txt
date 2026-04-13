@@ -26,6 +26,11 @@ file(GLOB libcarla_test_sources
     "${libcarla_source_path}/test/common/*.cpp"
     "${libcarla_source_path}/test/common/*.h")
 
+if (NOT LIBCARLA_WITH_ROS2)
+  list(REMOVE_ITEM libcarla_test_sources
+      "${libcarla_source_path}/test/server/test_dds_middleware.cpp")
+endif()
+
 file(GLOB libcarla_test_client_sources "")
 
 if (LIBCARLA_BUILD_DEBUG)
@@ -57,12 +62,28 @@ foreach(target ${build_targets})
   # Server tests exercise CDR serialization (CdrSerialization.h) and
   # GenericCdrPubSubType (inherits TopicDataType from fastrtps).
   # Enable exceptions because Fast-CDR templates use try/catch internally.
-  if (CMAKE_BUILD_TYPE STREQUAL "Server")
+  # Only link FastDDS when ROS2 support was explicitly enabled via --ros2.
+  if (CMAKE_BUILD_TYPE STREQUAL "Server" AND LIBCARLA_WITH_ROS2)
     target_include_directories(${target} SYSTEM PRIVATE "${FASTDDS_INCLUDE_PATH}")
-    target_compile_options(${target} PRIVATE -fexceptions)
-    target_link_libraries(${target} "${FASTDDS_LIB_PATH}/libfastrtps.a")
-    target_link_libraries(${target} "${FASTDDS_LIB_PATH}/libfastcdr.a")
-    target_link_libraries(${target} "${FASTDDS_LIB_PATH}/libfoonathan_memory-0.7.3.a")
+    if (WIN32)
+      target_compile_options(${target} PRIVATE /EHsc)
+      file(GLOB _foonathan_lib "${FASTDDS_LIB_PATH}/foonathan_memory-*.lib")
+      if (NOT _foonathan_lib)
+        message(FATAL_ERROR "foonathan_memory .lib not found in ${FASTDDS_LIB_PATH}")
+      endif()
+      target_link_libraries(${target} "${FASTDDS_LIB_PATH}/fastrtps.lib")
+      target_link_libraries(${target} "${FASTDDS_LIB_PATH}/fastcdr.lib")
+      target_link_libraries(${target} ${_foonathan_lib})
+    else()
+      target_compile_options(${target} PRIVATE -fexceptions)
+      file(GLOB _foonathan_lib "${FASTDDS_LIB_PATH}/libfoonathan_memory-*.a")
+      if (NOT _foonathan_lib)
+        message(FATAL_ERROR "libfoonathan_memory .a not found in ${FASTDDS_LIB_PATH}")
+      endif()
+      target_link_libraries(${target} "${FASTDDS_LIB_PATH}/libfastrtps.a")
+      target_link_libraries(${target} "${FASTDDS_LIB_PATH}/libfastcdr.a")
+      target_link_libraries(${target} ${_foonathan_lib})
+    endif()
   endif()
 
   if (WIN32)
