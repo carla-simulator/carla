@@ -181,7 +181,8 @@ namespace parser {
   static geom::GeoProjection CreateTransverseMercatorProjection(
     std::unordered_map<std::string, std::string> parameters,
     std::string proj_string,
-    geom::Ellipsoid ellipsoid){
+    geom::Ellipsoid ellipsoid,
+    boost::optional<carla::geom::OffsetTransform> offset){
 
     geom::TransverseMercatorParams p;
     TryGetParameter(p.lat_0, parameters, "lat_0");
@@ -190,6 +191,7 @@ namespace parser {
     TryGetParameter(p.x_0, parameters, "x_0");
     TryGetParameter(p.y_0, parameters, "y_0");
     p.ellps = ellipsoid;
+    p.offset = offset;
     auto projection = geom::GeoProjection::Make(p);
     projection.setPROJString(proj_string);
     return projection;
@@ -198,7 +200,8 @@ namespace parser {
   static geom::GeoProjection CreateUniversalTransverseMercatorProjection(
     std::unordered_map<std::string, std::string> parameters,
     std::string proj_string,
-    geom::Ellipsoid ellipsoid, boost::optional<carla::geom::OffsetTransform> offset){
+    geom::Ellipsoid ellipsoid,
+    boost::optional<carla::geom::OffsetTransform> offset){
 
     geom::UniversalTransverseMercatorParams p;
     if (!TryGetParameter(p.zone, parameters, "zone")) {
@@ -214,11 +217,13 @@ namespace parser {
 
   static geom::GeoProjection CreateWebMercatorProjection(
     std::string proj_string,
-    geom::Ellipsoid ellipsoid){
+    geom::Ellipsoid ellipsoid,
+    boost::optional<carla::geom::OffsetTransform> offset){
 
     // Parameters are fixed.
     geom::WebMercatorParams p;
     p.ellps = ellipsoid;
+    p.offset = offset;
     auto projection = geom::GeoProjection::Make(p);
     projection.setPROJString(proj_string);
     return projection;
@@ -227,7 +232,8 @@ namespace parser {
   static geom::GeoProjection CreateLambertConformalConicProjection(
     std::unordered_map<std::string, std::string> parameters,
     std::string proj_string,
-    geom::Ellipsoid ellipsoid){
+    geom::Ellipsoid ellipsoid,
+    boost::optional<carla::geom::OffsetTransform> offset){
 
     geom::LambertConformalConicParams p;
     TryGetParameter(p.lon_0, parameters, "lon_0");
@@ -239,16 +245,19 @@ namespace parser {
     TryGetParameter(p.x_0, parameters, "x_0");
     TryGetParameter(p.y_0, parameters, "y_0");
     p.ellps = ellipsoid;
+    p.offset = offset;
     auto projection = geom::GeoProjection::Make(p);
     projection.setPROJString(proj_string);
     return projection;
   }
 
   // TransverseMercator projection with default parameters.
-  static geom::GeoProjection CreateDefaultProjection(geom::Ellipsoid ellipsoid){
+  static geom::GeoProjection CreateDefaultProjection(geom::Ellipsoid ellipsoid,
+    boost::optional<carla::geom::OffsetTransform> offset) {
     geom::TransverseMercatorParams p;
 
     p.ellps = ellipsoid;
+    p.offset = offset;
     auto projection = geom::GeoProjection::Make(p);
     return projection;
   }
@@ -296,14 +305,14 @@ namespace parser {
     if (!TryGetParameter(proj, parameters, "proj")) {
       log_warning("cannot find the type of projection, using default transverse mercator");
       return std::make_pair(
-        CreateDefaultProjection(ellipsoid),
+        CreateDefaultProjection(ellipsoid, offset_transform),
         CreateDefaultGeoReference());
     }
 
     // Parse the parameters
     if (proj == "tmerc") {
       return std::make_pair(
-        CreateTransverseMercatorProjection(parameters, proj_string, ellipsoid),
+        CreateTransverseMercatorProjection(parameters, proj_string, ellipsoid, offset_transform),
         CreateTransverseMercatorGeoReference(parameters));
     } else if (proj == "utm") {
       return std::make_pair(
@@ -311,16 +320,16 @@ namespace parser {
         CreateUniversalTransverseMercatorGeoReference(parameters));
     } else if (proj == "merc") {
       return std::make_pair(
-        CreateWebMercatorProjection(proj_string, ellipsoid),
+        CreateWebMercatorProjection(proj_string, ellipsoid, offset_transform),
         CreateWebMercatorGeoReference());
     } else if (proj == "lcc") {
       return std::make_pair(
-        CreateLambertConformalConicProjection(parameters, proj_string, ellipsoid),
+        CreateLambertConformalConicProjection(parameters, proj_string, ellipsoid, offset_transform),
         CreateLamberConic2SPGeoReference(parameters));
     } else {
       log_debug("projection '" + proj + "' is not supported, using default transverse mercator.");
       return std::make_pair(
-        CreateDefaultProjection(ellipsoid),
+        CreateDefaultProjection(ellipsoid, offset_transform),
         CreateDefaultGeoReference());
     }
   }
