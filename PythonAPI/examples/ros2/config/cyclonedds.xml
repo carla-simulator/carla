@@ -6,5 +6,8 @@
         <SharedMemory>
             <Enable>false</Enable>
         </SharedMemory>
+        <General>
+            <Transport>udp</Transport>
+        </General>
     </Domain>
 </CycloneDDS>
