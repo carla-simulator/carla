@@ -28,11 +28,10 @@ namespace MeshReconstruction
       Fun3v sdfGrad = nullptr);
 }
 
-using namespace MeshReconstruction;
-using namespace std;
-
 // Adapted from here: http://paulbourke.net/geometry/polygonise/
 
+namespace MeshReconstruction
+{
 namespace
 {
   Vec3 NumGrad(Fun3s const &f, Vec3 const &p)
@@ -46,7 +45,7 @@ namespace
   }
 }
 
-Mesh MeshReconstruction::MarchCube(Fun3s const &sdf, Rect3 const &domain)
+Mesh MarchCube(Fun3s const &sdf, Rect3 const &domain)
 {
   auto const NumCubes = 50;
   auto cubeSize = domain.size * (1.0 / NumCubes);
@@ -54,14 +53,13 @@ Mesh MeshReconstruction::MarchCube(Fun3s const &sdf, Rect3 const &domain)
   return MarchCube(sdf, domain, cubeSize);
 }
 
-Mesh MeshReconstruction::MarchCube(
+Mesh MarchCube(
     Fun3s const &sdf,
     Rect3 const &domain,
     Vec3 const &cubeSize,
     double isoLevel,
     Fun3v sdfGrad)
 {
-  // Default value.
   sdfGrad = sdfGrad == nullptr
                 ? [&sdf](Vec3 const &p)
   { return NumGrad(sdf, p); }
@@ -104,3 +102,4 @@ Mesh MeshReconstruction::MarchCube(
 
   return mesh;
 }
+} // namespace MeshReconstruction

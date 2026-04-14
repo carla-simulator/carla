@@ -23,10 +23,9 @@
 #include <math.h>
 #include <float.h> //FLT_EPSILON, DBL_EPSILON
 
-#define loopi(start_l, end_l) for (int i = start_l; i < end_l; ++i)
-#define loopi(start_l, end_l) for (int i = start_l; i < end_l; ++i)
-#define loopj(start_l, end_l) for (int j = start_l; j < end_l; ++j)
-#define loopk(start_l, end_l) for (int k = start_l; k < end_l; ++k)
+#define loopi(start_l, end_l) for (size_t i = static_cast<size_t>(start_l); i < static_cast<size_t>(end_l); ++i)
+#define loopj(start_l, end_l) for (size_t j = static_cast<size_t>(start_l); j < static_cast<size_t>(end_l); ++j)
+#define loopk(start_l, end_l) for (size_t k = static_cast<size_t>(start_l); k < static_cast<size_t>(end_l); ++k)
 
 struct vector3
 {
@@ -39,8 +38,7 @@ struct vec3f
 
   inline vec3f(void) {}
 
-  // inline vec3f operator =( vector3 a )
-  // { vec3f b ; b.x = a.x; b.y = a.y; b.z = a.z; return b;}
+  inline vec3f(const vec3f &a) : x(a.x), y(a.y), z(a.z) {}
 
   inline vec3f(vector3 a)
   {
@@ -137,7 +135,7 @@ struct vec3f
       input = -1;
     if (input > 1)
       input = 1;
-    return (double)acos(input);
+    return acos(input);
   }
 
   inline double angle2(const vec3f &v, const vec3f &w)
@@ -152,9 +150,9 @@ struct vec3f
     plane.cross(b, w);
 
     if (plane.x * a.x + plane.y * a.y + plane.z * a.z > 0)
-      return (double)-acos(dot / len);
+      return -acos(dot / len);
 
-    return (double)acos(dot / len);
+    return acos(dot / len);
   }
 
   inline vec3f rot_x(double a)
@@ -221,19 +219,12 @@ struct vec3f
 
   inline double length() const
   {
-    return (double)sqrt(x * x + y * y + z * z);
+    return sqrt(x * x + y * y + z * z);
   }
 
-  inline vec3f normalize(double desired_length = 1)
+  inline vec3f normalize(double /*desired_length*/ = 1)
   {
     double square = sqrt(x * x + y * y + z * z);
-    /*
-    if (square <= 0.00001f )
-    {
-      x=1;y=0;z=0;
-      return *this;
-    }*/
-    // double len = desired_length / square;
     x /= square;
     y /= square;
     z /= square;
@@ -251,15 +242,15 @@ struct vec3f
   double random_double_01(double a)
   {
     double rnf = a * 14.434252 + a * 364.2343 + a * 4213.45352 + a * 2341.43255 + a * 254341.43535 + a * 223454341.3523534245 + 23453.423412;
-    int rni = ((int)rnf) % 100000;
+    int rni = static_cast<int>(rnf) % 100000;
     return double(rni) / (100000.0f - 1.0f);
   }
 
   vec3f random01_fxyz()
   {
-    x = (double)random_double_01(x);
-    y = (double)random_double_01(y);
-    z = (double)random_double_01(z);
+    x = random_double_01(x);
+    y = random_double_01(y);
+    z = random_double_01(z);
     return *this;
   }
 };
@@ -484,9 +475,9 @@ namespace Simplify
           {
 
             int i0 = t.v[j];
-            Vertex &v0 = vertices[i0];
+            Vertex &v0 = vertices[static_cast<size_t>(i0)];
             int i1 = t.v[(j + 1) % 3];
-            Vertex &v1 = vertices[i1];
+            Vertex &v1 = vertices[static_cast<size_t>(i1)];
             // Border check
             if (v0.border || v1.border)
               continue;
@@ -494,8 +485,8 @@ namespace Simplify
             // Compute vertex to collapse to
             vec3f p;
             calculate_error(i0, i1, p);
-            deleted0.resize(v0.tcount); // normals temporarily
-            deleted1.resize(v1.tcount); // normals temporarily
+            deleted0.resize(static_cast<size_t>(v0.tcount)); // normals temporarily
+            deleted1.resize(static_cast<size_t>(v1.tcount)); // normals temporarily
             // don't remove if flipped
             if (flipped(p, i0, i1, v0, v1, deleted0))
               continue;
@@ -512,18 +503,18 @@ namespace Simplify
             // not flipped, so remove edge
             v0.p = p;
             v0.q = v1.q + v0.q;
-            int tstart = refs.size();
+            int tstart = static_cast<int>(refs.size());
 
             update_triangles(i0, v0, deleted0, deleted_triangles);
             update_triangles(i0, v1, deleted1, deleted_triangles);
 
-            int tcount = refs.size() - tstart;
+            int tcount = static_cast<int>(refs.size()) - tstart;
 
             if (tcount <= v0.tcount)
             {
               // save ram
               if (tcount)
-                memcpy(&refs[v0.tstart], &refs[tstart], tcount * sizeof(Ref));
+                memcpy(&refs[static_cast<size_t>(v0.tstart)], &refs[static_cast<size_t>(tstart)], static_cast<size_t>(tcount) * sizeof(Ref));
             }
             else
               // append
@@ -584,9 +575,9 @@ namespace Simplify
           loopj(0, 3) if (t.err[j] < threshold)
           {
             int i0 = t.v[j];
-            Vertex &v0 = vertices[i0];
+            Vertex &v0 = vertices[static_cast<size_t>(i0)];
             int i1 = t.v[(j + 1) % 3];
-            Vertex &v1 = vertices[i1];
+            Vertex &v1 = vertices[static_cast<size_t>(i1)];
 
             // Border check
             if (v0.border != v1.border)
@@ -596,8 +587,8 @@ namespace Simplify
             vec3f p;
             calculate_error(i0, i1, p);
 
-            deleted0.resize(v0.tcount); // normals temporarily
-            deleted1.resize(v1.tcount); // normals temporarily
+            deleted0.resize(static_cast<size_t>(v0.tcount)); // normals temporarily
+            deleted1.resize(static_cast<size_t>(v1.tcount)); // normals temporarily
 
             // don't remove if flipped
             if (flipped(p, i0, i1, v0, v1, deleted0))
@@ -614,18 +605,18 @@ namespace Simplify
             // not flipped, so remove edge
             v0.p = p;
             v0.q = v1.q + v0.q;
-            int tstart = refs.size();
+            int tstart = static_cast<int>(refs.size());
 
             update_triangles(i0, v0, deleted0, deleted_triangles);
             update_triangles(i0, v1, deleted1, deleted_triangles);
 
-            int tcount = refs.size() - tstart;
+            int tcount = static_cast<int>(refs.size()) - tstart;
 
             if (tcount <= v0.tcount)
             {
               // save ram
               if (tcount)
-                memcpy(&refs[v0.tstart], &refs[tstart], tcount * sizeof(Ref));
+                memcpy(&refs[static_cast<size_t>(v0.tstart)], &refs[static_cast<size_t>(tstart)], static_cast<size_t>(tcount) * sizeof(Ref));
             }
             else
               // append
@@ -645,16 +636,16 @@ namespace Simplify
 
     // Check if a triangle flips when this edge is removed
 
-    bool flipped(vec3f p, int i0, int i1, Vertex &v0, Vertex &v1, std::vector<int> &deleted)
+    bool flipped(vec3f p, int /*i0*/, int i1, Vertex &v0, Vertex &/*v1*/, std::vector<int> &deleted)
     {
 
-      loopk(0, v0.tcount)
+      loopk(0, static_cast<size_t>(v0.tcount))
       {
-        Triangle &t = triangles[refs[v0.tstart + k].tid];
+        Triangle &t = triangles[static_cast<size_t>(refs[static_cast<size_t>(v0.tstart) + k].tid)];
         if (t.deleted)
           continue;
 
-        int s = refs[v0.tstart + k].tvertex;
+        int s = refs[static_cast<size_t>(v0.tstart) + k].tvertex;
         int id1 = t.v[(s + 1) % 3];
         int id2 = t.v[(s + 2) % 3];
 
@@ -664,9 +655,9 @@ namespace Simplify
           deleted[k] = 1;
           continue;
         }
-        vec3f d1 = vertices[id1].p - p;
+        vec3f d1 = vertices[static_cast<size_t>(id1)].p - p;
         d1.normalize();
-        vec3f d2 = vertices[id2].p - p;
+        vec3f d2 = vertices[static_cast<size_t>(id2)].p - p;
         d2.normalize();
         if (fabs(d1.dot(d2)) > 0.999)
           return true;
@@ -682,20 +673,20 @@ namespace Simplify
 
     // update_uvs
 
-    void update_uvs(int i0, const Vertex &v, const vec3f &p, std::vector<int> &deleted)
+    void update_uvs(int /*i0*/, const Vertex &v, const vec3f &p, std::vector<int> &deleted)
     {
-      loopk(0, v.tcount)
+      loopk(0, static_cast<size_t>(v.tcount))
       {
-        Ref &r = refs[v.tstart + k];
-        Triangle &t = triangles[r.tid];
+        Ref &r = refs[static_cast<size_t>(v.tstart) + k];
+        Triangle &t = triangles[static_cast<size_t>(r.tid)];
         if (t.deleted)
           continue;
         if (deleted[k])
           continue;
-        vec3f p1 = vertices[t.v[0]].p;
-        vec3f p2 = vertices[t.v[1]].p;
-        vec3f p3 = vertices[t.v[2]].p;
-        t.uvs[r.tvertex] = interpolate(p, p1, p2, p3, t.uvs);
+        vec3f p1 = vertices[static_cast<size_t>(t.v[0])].p;
+        vec3f p2 = vertices[static_cast<size_t>(t.v[1])].p;
+        vec3f p3 = vertices[static_cast<size_t>(t.v[2])].p;
+        t.uvs[static_cast<size_t>(r.tvertex)] = interpolate(p, p1, p2, p3, t.uvs);
       }
     }
 
@@ -704,10 +695,10 @@ namespace Simplify
     void update_triangles(int i0, Vertex &v, std::vector<int> &deleted, int &deleted_triangles)
     {
       vec3f p;
-      loopk(0, v.tcount)
+      loopk(0, static_cast<size_t>(v.tcount))
       {
-        Ref &r = refs[v.tstart + k];
-        Triangle &t = triangles[r.tid];
+        Ref &r = refs[static_cast<size_t>(v.tstart) + k];
+        Triangle &t = triangles[static_cast<size_t>(r.tid)];
         if (t.deleted)
           continue;
         if (deleted[k])
@@ -716,7 +707,7 @@ namespace Simplify
           deleted_triangles++;
           continue;
         }
-        t.v[r.tvertex] = i0;
+        t.v[static_cast<size_t>(r.tvertex)] = i0;
         t.dirty = 1;
         t.err[0] = calculate_error(t.v[0], t.v[1], p);
         t.err[1] = calculate_error(t.v[1], t.v[2], p);
@@ -732,7 +723,7 @@ namespace Simplify
     {
       if (iteration > 0) // compact triangles
       {
-        int dst = 0;
+        size_t dst = 0;
         loopi(0, triangles.size()) if (!triangles[i].deleted)
         {
           triangles[dst++] = triangles[i];
@@ -751,7 +742,7 @@ namespace Simplify
       loopi(0, triangles.size())
       {
         Triangle &t = triangles[i];
-        loopj(0, 3) vertices[t.v[j]].tcount++;
+        loopj(0, 3) vertices[static_cast<size_t>(t.v[j])].tcount++;
       }
       int tstart = 0;
       loopi(0, vertices.size())
@@ -769,9 +760,9 @@ namespace Simplify
         Triangle &t = triangles[i];
         loopj(0, 3)
         {
-          Vertex &v = vertices[t.v[j]];
-          refs[v.tstart + v.tcount].tid = i;
-          refs[v.tstart + v.tcount].tvertex = j;
+          Vertex &v = vertices[static_cast<size_t>(t.v[j])];
+          refs[static_cast<size_t>(v.tstart + v.tcount)].tid = static_cast<int>(i);
+          refs[static_cast<size_t>(v.tstart + v.tcount)].tvertex = static_cast<int>(j);
           v.tcount++;
         }
       }
@@ -797,13 +788,14 @@ namespace Simplify
           Vertex &v = vertices[i];
           vcount.clear();
           vids.clear();
-          loopj(0, v.tcount)
+          loopj(0, static_cast<size_t>(v.tcount))
           {
-            int k = refs[v.tstart + j].tid;
-            Triangle &t = triangles[k];
+            int k = refs[static_cast<size_t>(v.tstart) + j].tid;
+            Triangle &t = triangles[static_cast<size_t>(k)];
             loopk(0, 3)
             {
-              int ofs = 0, id = t.v[k];
+              size_t ofs = 0;
+              int id = t.v[k];
               while (ofs < vcount.size())
               {
                 if (vids[ofs] == id)
@@ -820,7 +812,7 @@ namespace Simplify
             }
           }
           loopj(0, vcount.size()) if (vcount[j] == 1)
-              vertices[vids[j]]
+              vertices[static_cast<size_t>(vids[j])]
                   .border = 1;
         }
         // initialize errors
@@ -832,12 +824,12 @@ namespace Simplify
         {
           Triangle &t = triangles[i];
           vec3f n, p[3];
-          loopj(0, 3) p[j] = vertices[t.v[j]].p;
+          loopj(0, 3) p[j] = vertices[static_cast<size_t>(t.v[j])].p;
           n.cross(p[1] - p[0], p[2] - p[0]);
           n.normalize();
           t.n = n;
-          loopj(0, 3) vertices[t.v[j]].q =
-              vertices[t.v[j]].q + SymetricMatrix(n.x, n.y, n.z, -n.dot(p[0]));
+          loopj(0, 3) vertices[static_cast<size_t>(t.v[j])].q =
+              vertices[static_cast<size_t>(t.v[j])].q + SymetricMatrix(n.x, n.y, n.z, -n.dot(p[0]));
         }
         loopi(0, triangles.size())
         {
@@ -854,7 +846,7 @@ namespace Simplify
 
     void compact_mesh()
     {
-      int dst = 0;
+      size_t dst = 0;
       loopi(0, vertices.size())
       {
         vertices[i].tcount = 0;
@@ -863,20 +855,20 @@ namespace Simplify
       {
         Triangle &t = triangles[i];
         triangles[dst++] = t;
-        loopj(0, 3) vertices[t.v[j]].tcount = 1;
+        loopj(0, 3) vertices[static_cast<size_t>(t.v[j])].tcount = 1;
       }
       triangles.resize(dst);
       dst = 0;
       loopi(0, vertices.size()) if (vertices[i].tcount)
       {
-        vertices[i].tstart = dst;
+        vertices[i].tstart = static_cast<int>(dst);
         vertices[dst].p = vertices[i].p;
         dst++;
       }
       loopi(0, triangles.size())
       {
         Triangle &t = triangles[i];
-        loopj(0, 3) t.v[j] = vertices[t.v[j]].tstart;
+        loopj(0, 3) t.v[j] = vertices[static_cast<size_t>(t.v[j])].tstart;
       }
       vertices.resize(dst);
     }
@@ -894,8 +886,8 @@ namespace Simplify
     {
       // compute interpolated vertex
 
-      SymetricMatrix q = vertices[id_v1].q + vertices[id_v2].q;
-      bool border = vertices[id_v1].border & vertices[id_v2].border;
+      SymetricMatrix q = vertices[static_cast<size_t>(id_v1)].q + vertices[static_cast<size_t>(id_v2)].q;
+      bool border = vertices[static_cast<size_t>(id_v1)].border & vertices[static_cast<size_t>(id_v2)].border;
       double error = 0;
       double det = q.det(0, 1, 2, 1, 4, 5, 2, 5, 7);
       if (det != 0 && !border)
@@ -911,8 +903,8 @@ namespace Simplify
       else
       {
         // det = 0 -> try to find best result
-        vec3f p1 = vertices[id_v1].p;
-        vec3f p2 = vertices[id_v2].p;
+        vec3f p1 = vertices[static_cast<size_t>(id_v1)].p;
+        vec3f p2 = vertices[static_cast<size_t>(id_v2)].p;
         vec3f p3 = (p1 + p2) / 2;
         double error1 = vertex_error(q, p1.x, p1.y, p1.z);
         double error2 = vertex_error(q, p2.x, p2.y, p2.z);
@@ -933,7 +925,7 @@ namespace Simplify
       char *end;
 
       // Trim leading space
-      while (isspace((unsigned char)*str))
+      while (isspace(static_cast<unsigned char>(*str)))
         str++;
 
       if (*str == 0) // All spaces?
@@ -941,7 +933,7 @@ namespace Simplify
 
       // Trim trailing space
       end = str + strlen(str) - 1;
-      while (end > str && isspace((unsigned char)*end))
+      while (end > str && isspace(static_cast<unsigned char>(*end)))
         end--;
 
       // Write new null terminator
@@ -959,7 +951,7 @@ namespace Simplify
       FILE *fn;
       if (filename == NULL)
         return;
-      if ((char)filename[0] == 0)
+      if (static_cast<char>(filename[0]) == 0)
         return;
       if ((fn = fopen(filename, "rb")) == NULL)
       {
@@ -988,7 +980,7 @@ namespace Simplify
           std::string usemtl = trimwhitespace(&line[7]);
           if (material_map.find(usemtl) == material_map.end())
           {
-            material_map[usemtl] = materials.size();
+            material_map[usemtl] = static_cast<int>(materials.size());
             materials.push_back(usemtl);
           }
           material = material_map[usemtl];
@@ -997,6 +989,7 @@ namespace Simplify
         if (line[0] == 'v' && line[1] == 't')
         {
           if (line[2] == ' ')
+          {
             if (sscanf(line, "vt %lf %lf",
                        &uv.x, &uv.y) == 2)
             {
@@ -1008,6 +1001,7 @@ namespace Simplify
             {
               uvs.push_back(uv);
             }
+          }
         }
         else if (line[0] == 'v')
         {
@@ -1098,7 +1092,7 @@ namespace Simplify
         {
           loopj(0, 3)
               triangles[i]
-                  .uvs[j] = uvs[uvMap[i][j]];
+                  .uvs[j] = uvs[static_cast<size_t>(uvMap[i][j])];
         }
       }
 
@@ -1112,7 +1106,6 @@ namespace Simplify
     void write_obj(const char *filename)
     {
       FILE *file = fopen(filename, "w");
-      int cur_material = -1;
       bool has_uv = (triangles.size() && (triangles[0].attr & TEXCOORD) == TEXCOORD);
 
       if (!file)

@@ -1,7 +1,15 @@
 ## LATEST Changes
 
+* Added Ubuntu 24.04 support alongside Ubuntu 22.04
+* Added NVIDIA RTX 50 series (Blackwell) support with driver 570+ and CDI-based Docker instructions
+* Fixed compiler warnings across 20 LibCarla files including signed/unsigned conversions, pessimizing moves, deep copies in range-for loops, and C-style casts (ported from ue4-dev)
+* Fixed camera fx calculation in ROS2 CameraInfo, large map actor tagging, pedestrian bounding box using skeletal mesh bounds, and camera frame/timestamp consistency (ported from ue4-dev)
+* Fixed RPC server deadlock on shutdown, overly strict Vector3D assert, OpenDrive lane width for center lanes, busy-wait yield() calls, and strict RELEASE_ASSERTs in road Map (ported from ue4-dev)
+* Fix typos in README.md
 * Added actor description as Actor TAGs
 * Create class with functions to import points and polylines from satellite segmentation (#8946, #8949 #8950)
+* Added Visual C++ Redistributable prerequisite and troubleshooting note to Windows quickstart guide (#9560)
+* Added Docker-based development environment for CARLA UE5
 
 ## CARLA 0.10.0
 

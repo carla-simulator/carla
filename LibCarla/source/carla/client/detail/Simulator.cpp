@@ -21,6 +21,7 @@
 #include "carla/trafficmanager/TrafficManager.h"
 #include "carla/sensor/Deserializer.h"
 
+#include <chrono>
 #include <exception>
 #include <thread>
 
@@ -50,7 +51,7 @@ namespace detail {
     bool result = true;
     auto start = std::chrono::system_clock::now();
     while (frame > episode.GetState()->GetTimestamp().frame) {
-      std::this_thread::yield();
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
       auto end = std::chrono::system_clock::now();
       auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
       if(timeout.to_chrono() < diff) {
@@ -161,7 +162,8 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
       std::string map_name;
       std::string map_base_path;
       bool fill_base_string = false;
-      for (int i = map_info.name.size() - 1; i >= 0; --i) {
+      for (size_t ri = map_info.name.size(); ri > 0; --ri) {
+        size_t i = ri - 1;
         if (fill_base_string == false && map_info.name[i] != '/') {
           map_name += map_info.name[i];
         } else {

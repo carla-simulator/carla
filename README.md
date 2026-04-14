@@ -23,12 +23,12 @@ environmental conditions.
 
 * Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD Ryzen 7 / AMD Ryzen 9
 * +32 Gb RAM memory 
-* NVIDIA RTX 3070/3080/3090 / NVIDIA RTX 4090 or better
+* NVIDIA RTX 3070/3080/3090 / NVIDIA RTX 4090 / NVIDIA RTX 5090 or better
 * 16 Gb or more VRAM
-* Ubuntu 22.04 or Windows 11
+* Ubuntu 22.04 or 24.04, or Windows 11
 
  >[!NOTE]
-> Ubuntu version 22.04 and Windows version 11 are required, the Unreal Engine 5.5 version of CARLA will not work on Ubuntu 20.04 or Windows 10 or lower. 
+> You must use either Ubuntu 22.04 or 24.04, or Windows 11. The Unreal Engine 5.5 version of CARLA will not work on Ubuntu 20.04 or Windows 10 or lower.
 
 ## Documentation
 
@@ -87,7 +87,7 @@ Clone this repository locally from GitHub, specifying the *ue5-dev* branch:
 git clone -b ue5-dev https://github.com/carla-simulator/carla.git CarlaUE5
 ```
 
-In order to build CARLA, you need acces to the CARLA fork of Unreal Engine 5.5. In order to access this repository, you must first link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github). You then also need to use your git credentials to authorise the download of the Unreal Engine 5.5 repository. 
+In order to build CARLA, you need access to the CARLA fork of Unreal Engine 5.5. In order to access this repository, you must first link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github). You then also need to use your git credentials to authorise the download of the Unreal Engine 5.5 repository. 
 
 __Building in Linux__:
 
@@ -169,7 +169,7 @@ cmake --build Build
 __Build and install the Python API__:
 
 
-Linux and windows:
+Linux and Windows:
 
 ```sh
 cmake --build Build --target carla-python-api-install

@@ -15,10 +15,10 @@ The following requirements should be fulfilled before installing CARLA:
 
 * __System requirements__: CARLA is built for Windows and Linux systems.
 * __Operating system__: CARLA Unreal Engine 5 version requires a minimum of **Ubuntu 22.04** or **Windows 11**.
-* __An adequate GPU__: CARLA aims for realistic simulations that require a lot of compute power. We recommend at minimum an NVIDIA RTX 3000 series or better with at least **16 Gb of VRAM**. A dedicated GPU, separate from the GPU used for CARLA, is highly recommended to handle large machine learning workloads. 
-* __GPU drivers__: CARLA Unreal Engine 5 version requires NVIDIA RTX driver release **550 or later for Ubuntu** and NVIDIA RTX driver release **560 or later for Windows**
+* __An adequate GPU__: CARLA aims for realistic simulations that require a lot of compute power. We recommend at minimum an NVIDIA RTX 3000 series or better with at least **16 Gb of VRAM**. NVIDIA RTX 40 and 50 series GPUs are also supported. A dedicated GPU, separate from the GPU used for CARLA, is highly recommended to handle large machine learning workloads.
+* __GPU drivers__: CARLA Unreal Engine 5 version requires NVIDIA RTX driver release **550 or later for Ubuntu** and NVIDIA RTX driver release **560 or later for Windows**. For NVIDIA RTX 50 series (Blackwell) GPUs, driver release **570 or later** is required.
 * __Disk space__: CARLA requires **130 GB** of hard disk (or SSD) space.
-* __Python__: [Python]((https://www.python.org/downloads/)) is the main scripting language in CARLA. CARLA supports Python 3 on Linux and Windows.
+* __Python__: [Python](https://www.python.org/downloads/) is the main scripting language in CARLA. CARLA supports Python 3 on Linux and Windows.
 * __Pip__: The CARLA Python client requires __pip3__ version 20.3 or higher for installation. To check your __pip__ version:
 
 >>      # For Python 3
@@ -30,9 +30,12 @@ The following requirements should be fulfilled before installing CARLA:
 >>      pip3 install --upgrade pip
 
 * __Two TCP ports and a good internet connection.__ 2000 and 2001 by default. Make sure that these ports are not blocked by firewalls or any other applications. 
-* __Other requirements.__  CARLA requires some Python dependencies. Install the dependencies according to your operating system:
+* __Other requirements.__  CARLA requires some Python dependencies and platform-specific software. Install the requirements according to your operating system:
 
 ### Windows
+
+!!! important
+    CARLA requires the **Microsoft Visual C++ Redistributable** to run on Windows. Without it, the simulator will fail to launch without any error message. Download and install it from the [Microsoft website](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist). Choose the **x64** version under "Visual Studio 2015, 2017, 2019, and 2022".
 
 ```sh
 pip3 install --user pygame numpy
@@ -91,6 +94,9 @@ cd path/to/carla/root
 CarlaUnreal.exe
 ```
 
+!!! note
+    If CARLA fails to launch on Windows without any error message or log output, ensure that you have installed the [Microsoft Visual C++ Redistributable](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist) (x64 version). This is a common issue on fresh Windows installations.
+
 A window containing a view over Town 10 will pop up. This is the _spectator view_. To fly around the city use the mouse and `WASD` keys, holding down the right mouse button to control the direction. 
 
 ![town_10_default](../img/catalogue/maps/town10/town10default.png)
@@ -117,11 +123,25 @@ For Linux users, CARLA is available in a Docker image, which you may use if you 
 
 Firstly, install Docker by following the [installation instructions](https://docs.docker.com/engine/install/ubuntu/). You may want to follow the [post installation instructions](https://docs.docker.com/engine/install/linux-postinstall/) to avoid the need for `sudo` commands. 
 
-Next, install the NVIDIA container toolkit using the [installation instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#installing-with-apt) and then follow the [configuration instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html#configuring-docker).
+Next, install the NVIDIA Container Toolkit v2 using the [installation guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html). After installation, configure CDI (Container Device Interface) support:
+
+```sh
+sudo nvidia-ctk cdi generate --output=/etc/cdi/nvidia.yaml
+sudo systemctl restart docker
+```
 
 Then you may run CARLA in the Docker container using the following commands:
 
-**Running the Docker image without display**:
+**Running the Docker image without display (CDI — recommended)**:
+
+```sh
+docker run \
+    --device=nvidia.com/gpu=all \
+    --net=host \
+    carlasim/carla:0.10.0 bash CarlaUnreal.sh -RenderOffScreen -nosound
+```
+
+**Running the Docker image without display (legacy runtime)**:
 
 ```sh
 docker run \
@@ -134,9 +154,21 @@ docker run \
 
 ---
 
-**Running the Docker image with a display**:
+**Running the Docker image with a display (CDI — recommended)**:
 
 To run the Docker image with a display, you will need the `x11` display protocol:
+
+```sh
+docker run \
+    --device=nvidia.com/gpu=all \
+    --net=host \
+    --user=$(id -u):$(id -g) \
+    --env=DISPLAY=$DISPLAY \
+    --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \
+    carlasim/carla:0.10.0 bash CarlaUnreal.sh -nosound
+```
+
+**Running the Docker image with a display (legacy runtime)**:
 
 ```sh
 docker run \
