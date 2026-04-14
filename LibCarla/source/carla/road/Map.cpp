@@ -1254,14 +1254,26 @@ namespace road {
       const auto& road = _data.GetRoads().at(id);
       if (!road.IsJunction()) {
         for (auto &&lane_section : road.GetLaneSections()) {
-          LaneId min_lane = 0;
+          LaneId min_lane = 0; // most negative (outermost right-side) driving lane
+          LaneId max_lane = 0; // most positive (outermost left-side) driving lane
           for (auto &pairlane : lane_section.GetLanes()) {
-            if (min_lane > pairlane.first && pairlane.second.GetType() == Lane::LaneType::Driving) {
-              min_lane = pairlane.first;
+            if (pairlane.second.GetType() == Lane::LaneType::Driving) {
+              if (pairlane.first < 0 && (min_lane == 0 || pairlane.first < min_lane)) {
+                min_lane = pairlane.first;
+              } else if (pairlane.first > 0 && pairlane.first > max_lane) {
+                max_lane = pairlane.first;
+              }
             }
           }
 
-          const road::Lane* lane = lane_section.GetLane(min_lane);
+          // Prefer the outermost right-side lane; fall back to the outermost
+          // left-side lane for one-way roads that only have positive-ID lanes.
+          // Skip if no driving lane is found on either side (avoids using the
+          // reference lane whose near-zero width places trees at road centre).
+          const LaneId outer_lane = (min_lane != 0) ? min_lane : max_lane;
+          if (outer_lane == 0) continue;
+
+          const road::Lane* lane = lane_section.GetLane(outer_lane);
           if( lane ) {
             double s_current = lane_section.GetDistance() + s_offset;
             const double s_end = lane_section.GetDistance() + lane_section.GetLength();
@@ -1269,11 +1281,30 @@ namespace road {
               if(lane->GetWidth(s_current) != 0.0f){
                 const auto edges = lane->GetCornerPositions(s_current, 0);
                 geom::Vector3D director = edges.second - edges.first;
+                // Use double precision for the length check to avoid false
+                // negatives from float cancellation on near-equal corners.
+                const double director_squared_length =
+                    static_cast<double>(director.x) * director.x +
+                    static_cast<double>(director.y) * director.y +
+                    static_cast<double>(director.z) * director.z;
+                // Skip degenerate or near-degenerate lane widths; normalising a
+                // near-zero vector produces unstable directions and can place
+                // trees on or very close to the road surface.
+                if (director_squared_length <= (EPSILON * EPSILON)) {
+                  s_current += distancebetweentrees;
+                  continue;
+                }
                 geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
                 geom::Transform lanetransform = lane->ComputeTransform(s_current);
                 geom::Transform treeTransform(treeposition, lanetransform.rotation);
                 const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
-                transforms.push_back(std::make_pair(treeTransform,roadinfo->GetType()));
+                // roadinfo is null for roads without an explicit maxspeed OSM tag
+                // (common in urban areas that rely on default speed limits).
+                if (roadinfo) {
+                  transforms.push_back(std::make_pair(treeTransform, roadinfo->GetType()));
+                } else {
+                  transforms.push_back(std::make_pair(treeTransform, "Town"));
+                }
               }
               s_current += distancebetweentrees;
             }
@@ -1467,6 +1498,22 @@ namespace road {
     for( auto& road : _data.GetRoads() ){
       auto &&lane_section = (*road.second.GetLaneSections().begin());
       const road::Lane* lane = road.second.IsRHT() ? lane_section.GetLane(-1) : lane_section.GetLane(1);
+      if (!lane) {
+        // Fallback: the expected innermost lane (−1 for RHT, +1 for LHT) is
+        // absent (common on one-way streets and complex urban junctions).
+        // Pick the driving lane closest to the reference line (smallest abs id)
+        // to minimise the position error used for bounding-box filtering.
+        int best_abs_id = std::numeric_limits<int>::max();
+        for (const auto& pairlane : lane_section.GetLanes()) {
+          if (pairlane.first != 0 && pairlane.second.GetType() == Lane::LaneType::Driving) {
+            const int abs_id = std::abs(pairlane.first);
+            if (abs_id < best_abs_id) {
+              best_abs_id = abs_id;
+              lane = &pairlane.second;
+            }
+          }
+        }
+      }
       if( lane ) {
         const double s_check = lane_section.GetDistance() + lane_section.GetLength() * 0.5;
         geom::Location roadLocation = lane->ComputeTransform(s_check).location;
