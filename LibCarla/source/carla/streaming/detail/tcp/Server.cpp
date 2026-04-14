@@ -11,6 +11,13 @@
 #include <boost/asio/post.hpp>
 
 #include <memory>
+#include <cstdlib>
+
+// Workaround for Ubuntu 24.04 glibc 2.39+ / UE5 clang toolchain compatibility.
+// See: https://github.com/carla-simulator/carla/issues/8865
+extern "C" long __isoc23_strtol(const char* nptr, char** endptr, int base) {
+    return strtol(nptr, endptr, base);
+}
 
 namespace carla {
 namespace streaming {

@@ -38,6 +38,8 @@ file (
   ROS2_INCLUDE_DIRS
   ${CMAKE_INSTALL_PREFIX}/include/*/
 )
+# CycloneDDS installs a features.h that shadows glibc's features.h
+list (FILTER ROS2_INCLUDE_DIRS EXCLUDE REGEX "/include/(dds|ddsc|idl|idlc)$")
 
 target_include_directories (
   carla-ros2-native

@@ -50,6 +50,9 @@ download_ros2_repo (rmw_implementation        https://github.com/ros2/rmw_implem
 download_ros2_repo (common_interfaces         https://github.com/ros2/common_interfaces.git)
 download_ros2_repo (geometry2                 https://github.com/ros2/geometry2.git)
 download_ros2_repo (rmw_zenoh                 https://github.com/ros2/rmw_zenoh.git)
+download_ros2_repo (rmw_fastrtps              https://github.com/ros2/rmw_fastrtps.git)
+download_ros2_repo (rmw_cyclonedds            https://github.com/ros2/rmw_cyclonedds.git)
+download_ros2_repo (rmw_dds_common            https://github.com/ros2/rmw_dds_common.git)
 
 # ====================
 # base libraries
@@ -454,12 +457,127 @@ ExternalProject_Add(rmw_zenoh_cpp
           rosidl_typesupport_fastrtps_cpp
 )
 
+# ====================
+# rmw common (shared by rmw backends)
+# ====================
+
+ExternalProject_Add(rmw_dds_common
+  DOWNLOAD_COMMAND ""
+  SOURCE_DIR ${SRC_DIR}/rmw_dds_common
+  SOURCE_SUBDIR rmw_dds_common
+  CMAKE_ARGS ${COMMON_CMAKE_ARGS}
+  DEPENDS _dl_rmw_dds_common rcutils rcpputils rmw rosidl_runtime_c
+          rosidl_typesupport_c rosidl_typesupport_cpp
+)
+
+# ====================
+# rmw_fastrtps backend
+# ====================
+
+ExternalProject_Add(foonathan_memory
+  GIT_REPOSITORY https://github.com/eProsima/foonathan_memory_vendor.git
+  GIT_TAG master
+  GIT_SHALLOW TRUE
+  SOURCE_DIR ${SRC_DIR}/foonathan_memory
+  CMAKE_ARGS
+    -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
+    -DBUILD_SHARED_LIBS=ON
+    -DFOONATHAN_MEMORY_FORCE_VENDORED_BUILD=ON
+    "-DCMAKE_CXX_FLAGS=-D_GNU_SOURCE -stdlib=libc++"
+)
+
+ExternalProject_Add(fastdds
+  GIT_REPOSITORY https://github.com/eProsima/Fast-DDS.git
+  GIT_TAG 2.14.x
+  SOURCE_DIR ${SRC_DIR}/fastdds
+  CMAKE_ARGS
+    -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
+    -DCMAKE_PREFIX_PATH=${PROJECT_INSTALL_PATH}
+    -DBUILD_SHARED_LIBS=ON
+    -DBUILD_TESTING=OFF
+    -DCOMPILE_EXAMPLES=OFF
+    -DCOMPILE_TOOLS=OFF
+    -DTHIRDPARTY_Asio=FORCE
+    -DTHIRDPARTY_TinyXML2=FORCE
+    -DSQLITE3_SUPPORT=OFF
+    "-DCMAKE_CXX_FLAGS=-D_GNU_SOURCE -stdlib=libc++"
+  DEPENDS foonathan_memory fastcdr
+)
+
+ExternalProject_Add(rmw_fastrtps_shared_cpp
+  DOWNLOAD_COMMAND ""
+  SOURCE_DIR ${SRC_DIR}/rmw_fastrtps
+  SOURCE_SUBDIR rmw_fastrtps_shared_cpp
+  CMAKE_ARGS ${COMMON_CMAKE_ARGS}
+  DEPENDS _dl_rmw_fastrtps fastcdr fastdds rcutils rcpputils rmw rmw_dds_common tracetools
+)
+
+ExternalProject_Add(rosidl_dynamic_typesupport_fastrtps
+  GIT_REPOSITORY https://github.com/ros2/rosidl_dynamic_typesupport_fastrtps.git
+  GIT_TAG ${ROS2_TAG}
+  GIT_SHALLOW TRUE
+  SOURCE_DIR ${SRC_DIR}/rosidl_dynamic_typesupport_fastrtps
+  CMAKE_ARGS ${COMMON_CMAKE_ARGS}
+  DEPENDS fastcdr fastdds rcutils rosidl_dynamic_typesupport
+)
+
+ExternalProject_Add(rmw_fastrtps_cpp
+  DOWNLOAD_COMMAND ""
+  SOURCE_DIR ${SRC_DIR}/rmw_fastrtps
+  SOURCE_SUBDIR rmw_fastrtps_cpp
+  CMAKE_ARGS ${COMMON_CMAKE_ARGS}
+  DEPENDS _dl_rmw_fastrtps fastcdr fastdds rmw rmw_fastrtps_shared_cpp
+          rmw_dds_common rcutils rcpputils tracetools
+          rosidl_dynamic_typesupport rosidl_dynamic_typesupport_fastrtps
+          rosidl_runtime_c rosidl_typesupport_fastrtps_c
+          rosidl_typesupport_fastrtps_cpp
+)
+
+# ====================
+# rmw_cyclonedds backend
+# ====================
+
+ExternalProject_Add(cyclonedds
+  GIT_REPOSITORY https://github.com/eclipse-cyclonedds/cyclonedds.git
+  GIT_TAG releases/0.10.x
+  SOURCE_DIR ${SRC_DIR}/cyclonedds
+  CMAKE_ARGS
+    -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
+    -DBUILD_SHARED_LIBS=ON
+    -DBUILD_TESTING=OFF
+    -DBUILD_EXAMPLES=OFF
+    -DBUILD_DDSPERF=OFF
+    -DENABLE_SHM=OFF
+    -DENABLE_SECURITY=OFF
+    -DENABLE_SSL=OFF
+    "-DCMAKE_C_FLAGS=-D_GNU_SOURCE -D__STDC_FORMAT_MACROS -include errno.h"
+    "-DCMAKE_CXX_FLAGS=-D_GNU_SOURCE -stdlib=libc++"
+)
+
+ExternalProject_Add(rmw_cyclonedds_cpp
+  DOWNLOAD_COMMAND ""
+  SOURCE_DIR ${SRC_DIR}/rmw_cyclonedds
+  SOURCE_SUBDIR rmw_cyclonedds_cpp
+  CMAKE_ARGS ${COMMON_CMAKE_ARGS}
+  DEPENDS _dl_rmw_cyclonedds cyclonedds rmw rmw_dds_common
+          rcutils rcpputils tracetools rosidl_runtime_c
+          rosidl_typesupport_introspection_c rosidl_typesupport_introspection_cpp
+)
+
+# ====================
 ExternalProject_Add(rmw_implementation
   DOWNLOAD_COMMAND ""
   SOURCE_DIR ${SRC_DIR}/rmw_implementation
   SOURCE_SUBDIR rmw_implementation
   CMAKE_ARGS ${COMMON_CMAKE_ARGS}
-  DEPENDS _dl_rmw_implementation rmw rcutils rcpputils ament_index_cpp rmw_zenoh_cpp
+  DEPENDS _dl_rmw_implementation rmw rcutils rcpputils ament_index_cpp
+          rmw_zenoh_cpp rmw_fastrtps_cpp rmw_cyclonedds_cpp
 )
 
 # ====================
@@ -468,7 +586,7 @@ ExternalProject_Add(rmw_implementation
 
 ExternalProject_Add (
   carla-ros2-native-lib
-  DEPENDS rclcpp rmw_zenoh_cpp rmw_implementation
+  DEPENDS rclcpp rmw_zenoh_cpp rmw_fastrtps_cpp rmw_cyclonedds_cpp rmw_implementation
           sensor_msgs nav_msgs tf2_msgs carla_msgs
           rosidl_typesupport_cpp rosidl_typesupport_c
           rcl_logging_spdlog action_msgs
