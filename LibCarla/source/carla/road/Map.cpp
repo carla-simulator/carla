@@ -1261,6 +1261,12 @@ namespace road {
             }
           }
 
+          // Skip lane 0 (reference lane): it has no physical road surface and
+          // its near-zero width causes degenerate corner positions that place
+          // trees at the road centre. This happens when a lane section has no
+          // negative driving lanes (e.g. one-way streets with only positive IDs).
+          if (min_lane == 0) continue;
+
           const road::Lane* lane = lane_section.GetLane(min_lane);
           if( lane ) {
             double s_current = lane_section.GetDistance() + s_offset;
@@ -1268,12 +1274,25 @@ namespace road {
             while(s_current < s_end){
               if(lane->GetWidth(s_current) != 0.0f){
                 const auto edges = lane->GetCornerPositions(s_current, 0);
+                // Skip degenerate case where both corners coincide (zero-width
+                // lane); MakeUnitVector() on a zero vector returns (0,0,0) and
+                // would place the tree at edges.first, which is on the road.
+                if (edges.first == edges.second) {
+                  s_current += distancebetweentrees;
+                  continue;
+                }
                 geom::Vector3D director = edges.second - edges.first;
                 geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
                 geom::Transform lanetransform = lane->ComputeTransform(s_current);
                 geom::Transform treeTransform(treeposition, lanetransform.rotation);
                 const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
-                transforms.push_back(std::make_pair(treeTransform,roadinfo->GetType()));
+                // roadinfo is null for roads without an explicit maxspeed OSM tag
+                // (common in urban areas that rely on default speed limits).
+                if (roadinfo) {
+                  transforms.push_back(std::make_pair(treeTransform, roadinfo->GetType()));
+                } else {
+                  transforms.push_back(std::make_pair(treeTransform, "urban"));
+                }
               }
               s_current += distancebetweentrees;
             }
@@ -1467,6 +1486,18 @@ namespace road {
     for( auto& road : _data.GetRoads() ){
       auto &&lane_section = (*road.second.GetLaneSections().begin());
       const road::Lane* lane = road.second.IsRHT() ? lane_section.GetLane(-1) : lane_section.GetLane(1);
+      if (!lane) {
+        // Fallback: the expected innermost lane (−1 for RHT, +1 for LHT) is
+        // absent (common on one-way streets and complex urban junctions).
+        // Find any non-reference driving lane so this road is not silently
+        // excluded from generation, which caused incorrect maps in dense cities.
+        for (const auto& pairlane : lane_section.GetLanes()) {
+          if (pairlane.first != 0 && pairlane.second.GetType() == Lane::LaneType::Driving) {
+            lane = &pairlane.second;
+            break;
+          }
+        }
+      }
       if( lane ) {
         const double s_check = lane_section.GetDistance() + lane_section.GetLength() * 0.5;
         geom::Location roadLocation = lane->ComputeTransform(s_check).location;
