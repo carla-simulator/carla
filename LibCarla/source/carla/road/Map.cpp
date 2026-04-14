@@ -1294,7 +1294,17 @@ namespace road {
                   s_current += distancebetweentrees;
                   continue;
                 }
-                geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
+                const geom::Vector3D unit_director = director.MakeUnitVector();
+                // GetCornerPositions returns (outer, inner) for negative-ID lanes
+                // and (inner, outer) for positive-ID lanes.  Always offset outward
+                // from the true outer edge so trees are never placed on the road.
+                const bool is_positive_lane = (lane->GetId() > 0);
+                const geom::Vector3D outer_edge =
+                    is_positive_lane ? edges.second : edges.first;
+                const geom::Vector3D outward_direction =
+                    is_positive_lane ? unit_director : (unit_director * -1.0f);
+                geom::Vector3D treeposition =
+                    outer_edge + outward_direction * distancefromdrivinglineborder;
                 geom::Transform lanetransform = lane->ComputeTransform(s_current);
                 geom::Transform treeTransform(treeposition, lanetransform.rotation);
                 const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);

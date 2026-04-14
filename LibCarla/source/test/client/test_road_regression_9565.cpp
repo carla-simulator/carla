@@ -14,12 +14,15 @@
 #include <carla/opendrive/OpenDriveParser.h>
 #include <carla/road/Map.h>
 
+#include <cmath>
 #include <string>
+#include <utility>
+#include <vector>
 
 using namespace carla::opendrive;
 using namespace carla::geom;
 
-// ─── minimal OpenDRIVE helpers ────────────────────────────────────────────────
+// --- minimal OpenDRIVE helpers -----------------------------------------------
 
 static std::string MakeHeader() {
   return R"(<?xml version="1.0" encoding="UTF-8"?>
@@ -70,7 +73,7 @@ static std::string BidirectionalLanes() {
     </lanes>)";
 }
 
-// One-way road with ONLY positive lanes — no lane -1.
+// One-way road with ONLY positive lanes --no lane -1.
 // This road was silently excluded by FilterRoadsByPosition before the fix.
 static std::string PositiveOnlyLanes() {
   return R"(
@@ -104,16 +107,16 @@ static std::string NegativeOnlyLanes() {
     </lanes>)";
 }
 
-// ─── Bug 3: FilterRoadsByPosition includes one-way positive-lane roads ────────
+// --- Bug 3: FilterRoadsByPosition includes one-way positive-lane roads -------
 //
 // Before fix: only queried lane -1; roads without it were silently excluded.
 // After fix:  falls back to the driving lane with smallest abs(id).
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 TEST(road, filter_roads_includes_positive_only_lanes_9565) {
   // Three roads side-by-side along X axis, all centred around Y=0.
-  //   Road 0 (x=0..50):  bidirectional   — has lane -1, was always included
-  //   Road 1 (x=60..110): positive-only  — no lane -1, was EXCLUDED before fix
-  //   Road 2 (x=120..170): negative-only — has lane -1, was always included
+  //   Road 0 (x=0..50):  bidirectional   -- has lane -1, was always included
+  //   Road 1 (x=60..110): positive-only  -- no lane -1, was EXCLUDED before fix
+  //   Road 2 (x=120..170): negative-only -- has lane -1, was always included
   std::string xodr = MakeHeader()
       + MakeRoad(0, 0.f,   50.f, BidirectionalLanes())
       + MakeRoad(1, 60.f,  50.f, PositiveOnlyLanes())
@@ -134,13 +137,13 @@ TEST(road, filter_roads_includes_positive_only_lanes_9565) {
       << "FilterRoadsByPosition excluded a road with positive-only lanes";
 }
 
-// ─── Bug 1 + Bug 2: GetTreesTransform robustness ─────────────────────────────
+// --- Bug 1 + Bug 2: GetTreesTransform robustness -----------------------------
 //
 // Bug 1: roadinfo==nullptr (no maxspeed tag) caused SIGSEGV.
 // Bug 2: min_lane==0 / degenerate corners placed trees on the road surface.
-// ─────────────────────────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------------
 TEST(road, get_trees_transform_no_crash_without_speed_9565) {
-  // Road without any <speed> element — roadinfo will be nullptr.
+  // Road without any <speed> element --roadinfo will be nullptr.
   std::string xodr = MakeHeader()
       + MakeRoad(0, 0.f, 100.f, BidirectionalLanes(), /*with_speed=*/false)
       + "</OpenDRIVE>\n";
@@ -157,6 +160,10 @@ TEST(road, get_trees_transform_no_crash_without_speed_9565) {
     result = map->GetMap().GetTreesTransform(minpos, maxpos, 10.f, 2.f)
   );
 
+  // Must produce at least one tree so the fallback-type loop below is not vacuous.
+  ASSERT_GT(result.size(), 0u)
+      << "No trees generated for road without maxspeed tag";
+
   // Fallback type "Town" must be used for all entries.
   for (const auto& entry : result) {
     EXPECT_EQ(entry.second, "Town")
@@ -166,7 +173,7 @@ TEST(road, get_trees_transform_no_crash_without_speed_9565) {
 
 TEST(road, get_trees_transform_positive_lane_road_gets_trees_9565) {
   // One-way road with positive-only lanes: before the fix, min_lane stayed 0
-  // and the lane section was skipped — no trees were generated at all.
+  // and the lane section was skipped --no trees were generated at all.
   std::string xodr = MakeHeader()
       + MakeRoad(0, 0.f, 100.f, PositiveOnlyLanes())
       + "</OpenDRIVE>\n";
@@ -179,8 +186,20 @@ TEST(road, get_trees_transform_positive_lane_road_gets_trees_9565) {
 
   auto result = map->GetMap().GetTreesTransform(minpos, maxpos, 10.f, 2.f);
 
-  EXPECT_GT(result.size(), 0u)
+  ASSERT_GT(result.size(), 0u)
       << "No trees generated for one-way road with positive-only lanes";
+
+  // The outermost positive lane (id=2, width=3.5m) sits beyond lane id=1 (3.5m),
+  // so its outer edge is at |Y| = 7.0m from road centre.  Trees must be outside
+  // the driving surface, i.e. |Y| >= 3.5 (at minimum beyond the inner lane edge).
+  const float min_outer_edge = 3.5f;
+  for (const auto& entry : result) {
+    const float tree_y = std::abs(entry.first.location.y);
+    EXPECT_GE(tree_y, min_outer_edge)
+        << "Tree Y=" << entry.first.location.y
+        << " is inside the driving surface for positive-only lanes"
+        << " (|Y| must be >= " << min_outer_edge << ")";
+  }
 }
 
 TEST(road, get_trees_transform_trees_outside_road_9565) {
@@ -201,18 +220,18 @@ TEST(road, get_trees_transform_trees_outside_road_9565) {
   auto result = map->GetMap().GetTreesTransform(minpos, maxpos, 10.f, 2.f);
   ASSERT_GT(result.size(), 0u) << "No trees generated for negative-only lane road";
 
-  // Lane half-width = 3.5/2 = 1.75m, lane centre at t=1.75m from road centre.
   // Outer edge of lane -1 is at t=3.5m from road centre.
-  // After Y-flip, outer edge is at |Y| >= 3.5. Tree must be even further out.
-  const float lane_outer_edge = 3.5f;
-  const float dist_from_edge  = 2.0f;
+  // distancefromdrivinglineborder=2.0 => trees placed 2.0m beyond that edge.
+  // After Y-flip, trees must be at |Y| >= 3.5 + 2.0 = 5.5.
+  const float lane_outer_edge   = 3.5f;
+  const float dist_from_edge    = 2.0f;
   const float min_expected_dist = lane_outer_edge + dist_from_edge;
 
   for (const auto& entry : result) {
     const float tree_y = std::abs(entry.first.location.y);
-    EXPECT_GE(tree_y, lane_outer_edge)
+    EXPECT_GE(tree_y, min_expected_dist)
         << "Tree Y=" << entry.first.location.y
-        << " is inside the driving lane (|Y| must be >= " << lane_outer_edge << ")";
-    (void)min_expected_dist; // checked implicitly via the >= outer_edge assertion
+        << " is too close to or inside the driving lane"
+        << " (|Y| must be >= " << min_expected_dist << ")";
   }
 }
