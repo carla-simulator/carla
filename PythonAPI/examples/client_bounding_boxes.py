@@ -179,7 +179,7 @@ class ClientSideBoundingBoxes(object):
         s_r = np.sin(np.radians(rotation.roll))
         c_p = np.cos(np.radians(rotation.pitch))
         s_p = np.sin(np.radians(rotation.pitch))
-        matrix = np.matrix(np.identity(4))
+        matrix = np.array(np.identity(4))
         matrix[0, 3] = location.x
         matrix[1, 3] = location.y
         matrix[2, 3] = location.z
