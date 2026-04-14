@@ -22,6 +22,7 @@
 
 #include <third-party/marchingcube/MeshReconstruction.h>
 
+#include <limits>
 #include <vector>
 #include <unordered_map>
 #include <stdexcept>
@@ -1294,17 +1295,26 @@ namespace road {
                   s_current += distancebetweentrees;
                   continue;
                 }
-                const geom::Vector3D unit_director = director.MakeUnitVector();
-                // GetCornerPositions returns (outer, inner) for negative-ID lanes
-                // and (inner, outer) for positive-ID lanes.  Always offset outward
-                // from the true outer edge so trees are never placed on the road.
+                // GetCornerPositions returns (dp_r, dp_l) where
+                //   dp_r = ApplyLateralOffset(lane_t_offset + lane_width)
+                //   dp_l = ApplyLateralOffset(lane_t_offset - lane_width)
+                // followed by Unreal's Y-flip (y *= -1).
+                // lane_t_offset is positive for negative-ID (right-side) lanes
+                // and negative for positive-ID (left-side) lanes.  After the
+                // Y-flip this means:
+                //   negative-ID lanes: edges.first is the outer corner (higher |y|)
+                //   positive-ID lanes: edges.second is the outer corner (higher |y|)
+                // Always offset outward from the true outer corner so that trees
+                // are placed beyond the road edge, not on the driving surface.
                 const bool is_positive_lane = (lane->GetId() > 0);
-                const geom::Vector3D outer_edge =
+                const geom::Vector3D outer_corner =
                     is_positive_lane ? edges.second : edges.first;
+                const geom::Vector3D inner_corner =
+                    is_positive_lane ? edges.first  : edges.second;
                 const geom::Vector3D outward_direction =
-                    is_positive_lane ? unit_director : (unit_director * -1.0f);
+                    (outer_corner - inner_corner).MakeUnitVector();
                 geom::Vector3D treeposition =
-                    outer_edge + outward_direction * distancefromdrivinglineborder;
+                    outer_corner + outward_direction * distancefromdrivinglineborder;
                 geom::Transform lanetransform = lane->ComputeTransform(s_current);
                 geom::Transform treeTransform(treeposition, lanetransform.rotation);
                 const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);

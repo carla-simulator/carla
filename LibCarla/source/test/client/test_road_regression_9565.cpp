@@ -189,16 +189,21 @@ TEST(road, get_trees_transform_positive_lane_road_gets_trees_9565) {
   ASSERT_GT(result.size(), 0u)
       << "No trees generated for one-way road with positive-only lanes";
 
-  // The outermost positive lane (id=2, width=3.5m) sits beyond lane id=1 (3.5m),
-  // so its outer edge is at |Y| = 7.0m from road centre.  Trees must be outside
-  // the driving surface, i.e. |Y| >= 3.5 (at minimum beyond the inner lane edge).
-  const float min_outer_edge = 3.5f;
+  // PositiveOnlyLanes: lane id=1 (3.5m wide) and lane id=2 (3.5m wide).
+  // Outer edge of lane id=2 is at |Y| = 3.5 + 3.5 = 7.0m from road centre.
+  // distancefromdrivinglineborder=2.0 => trees placed 2.0m beyond that edge.
+  // Trees must satisfy |Y| >= 7.0 + 2.0 = 9.0.
+  const float lane1_width      = 3.5f;
+  const float lane2_width      = 3.5f;
+  const float dist_from_edge   = 2.0f;
+  const float outer_road_edge  = lane1_width + lane2_width;
+  const float min_expected_dist = outer_road_edge + dist_from_edge;  // 9.0
   for (const auto& entry : result) {
     const float tree_y = std::abs(entry.first.location.y);
-    EXPECT_GE(tree_y, min_outer_edge)
+    EXPECT_GE(tree_y, min_expected_dist)
         << "Tree Y=" << entry.first.location.y
-        << " is inside the driving surface for positive-only lanes"
-        << " (|Y| must be >= " << min_outer_edge << ")";
+        << " is too close to or inside the driving surface for positive-only lanes"
+        << " (|Y| must be >= " << min_expected_dist << ")";
   }
 }
 
