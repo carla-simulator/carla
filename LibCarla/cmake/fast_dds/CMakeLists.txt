@@ -27,6 +27,7 @@ install(DIRECTORY "${FASTDDS_INCLUDE_PATH}/fastcdr"   DESTINATION include)
 install(DIRECTORY "${FASTDDS_INCLUDE_PATH}/fastdds"   DESTINATION include)
 install(DIRECTORY "${FASTDDS_INCLUDE_PATH}/fastrtps"  DESTINATION include)
 
-# Note: dds/fastdds/ contains only header-only templates (no .cpp sources).
-# All compiled ros2 code is in cmake/ros2/ (carla_ros2), compiled once with
-# both CARLA_ROS2_DDS_FASTDDS and CARLA_ROS2_DDS_CYCLONEDDS defined.
+# Note: dds/fastdds/ headers are installed here.  The one .cpp source
+# (FastDDSSharedParticipant.cpp) is compiled via cmake/ros2/ (carla_ros2),
+# together with all other ros2 sources, once with both
+# CARLA_ROS2_DDS_FASTDDS and CARLA_ROS2_DDS_CYCLONEDDS defined.

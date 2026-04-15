@@ -5,12 +5,12 @@
 #pragma once
 
 #include "carla/ros2/dds/IDDSPublisherMiddleware.h"
+#include "carla/ros2/dds/fastdds/FastDDSSharedParticipant.h"
 #include "carla/ros2/dds/fastdds/GenericCdrPubSubType.h"
+#include "carla/ros2/types/UserDataFormat.h"
 #include "carla/Logging.h"
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
-#include <fastdds/dds/domain/DomainParticipantFactory.hpp>
-#include <fastdds/dds/domain/qos/DomainParticipantQos.hpp>
 #include <fastdds/dds/topic/Topic.hpp>
 #include <fastdds/dds/topic/TypeSupport.hpp>
 #include <fastdds/dds/publisher/Publisher.hpp>
@@ -34,6 +34,16 @@ using erc = eprosima::fastrtps::types::ReturnCode_t;
 /// Parameterized on a traits type T that provides:
 ///   T::msg_type  — the message type (a carla::ros2::msg::* POD struct)
 /// Serialization is handled by GenericCdrPubSubType<msg_type> via CdrSerialization.h.
+///
+/// Uses FastDDSSharedParticipant for a single refcounted DomainParticipant
+/// across all FastDDS endpoints, mirroring CycloneDDS's shared-participant
+/// model.  This avoids the discovery storm that occurred when N independent
+/// participants were destroyed back-to-back on ROS2::Shutdown().
+///
+/// Sets USER_DATA QoS on the DataWriter to the REP-2016 KV payload
+/// "typehash=RIHS01_<hex>;" (PID_USER_DATA = 0x002c in DDSI-RTPS v2.5
+/// §9.6.2.2.2) so that Jazzy rmw_cyclonedds_cpp and rmw_fastrtps_cpp can
+/// perform REP-2011 type-hash-based endpoint matching without warning.
 template<typename T>
 class FastDDSPublisherMiddleware
     : public IDDSPublisherMiddleware,
@@ -65,7 +75,11 @@ class FastDDSPublisherMiddleware
       _participant->delete_topic(_topic);
     }
     if (_participant) {
-      efd::DomainParticipantFactory::get_instance()->delete_participant(_participant);
+      // Release the per-type refcount so unregister_type() fires when the last
+      // user of this TypeSupport goes away, before the shared participant drops.
+      FastDDSSharedParticipant::release_type(_type->getName());
+      FastDDSSharedParticipant::release();
+      _participant = nullptr;
     }
   }
 
@@ -75,14 +89,14 @@ class FastDDSPublisherMiddleware
       return false;
     }
 
-    efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-    auto factory = efd::DomainParticipantFactory::get_instance();
-    _participant = factory->create_participant(0, pqos);
+    _participant = FastDDSSharedParticipant::acquire();
     if (_participant == nullptr) {
-      log_error("FastDDSPublisherMiddleware: Failed to create DomainParticipant");
+      log_error("FastDDSPublisherMiddleware: Shared participant unavailable");
       return false;
     }
+
     _type.register_type(_participant);
+    FastDDSSharedParticipant::retain_type(_type->getName());
 
     efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
     _publisher = _participant->create_publisher(pubqos, nullptr);
@@ -91,8 +105,17 @@ class FastDDSPublisherMiddleware
       return false;
     }
 
-    efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
-    _topic = _participant->create_topic(topic_name, _type->getName(), tqos);
+    // Multiple endpoints may share the same topic on the shared participant
+    // (e.g. every actor publishes on rt/tf). FastDDS's create_topic rejects a
+    // duplicate name, so probe first and reuse via find_topic if it already
+    // exists; find_topic increments an internal refcount that the matching
+    // delete_topic in the destructor balances.
+    if (_participant->lookup_topicdescription(topic_name) != nullptr) {
+      _topic = _participant->find_topic(topic_name, eprosima::fastrtps::Duration_t{0, 0});
+    } else {
+      efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
+      _topic = _participant->create_topic(topic_name, _type->getName(), tqos);
+    }
     if (_topic == nullptr) {
       log_error("FastDDSPublisherMiddleware: Failed to create Topic");
       return false;
@@ -101,6 +124,16 @@ class FastDDSPublisherMiddleware
     efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
     wqos.endpoint().history_memory_policy =
         eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+
+    // Set USER_DATA (PID_USER_DATA = 0x002c per OMG DDSI-RTPS v2.5 §9.6.2.2.2)
+    // to the REP-2011/REP-2016 type-hash KV payload "typehash=RIHS01_<hex>;".
+    // Jazzy rmw_cyclonedds_cpp / rmw_fastrtps_cpp parse this during SEDP
+    // endpoint discovery to verify type compatibility.
+    auto ud = build_user_data_for<msg_type>();
+    if (!ud.empty()) {
+      wqos.user_data().data_vec(ud);
+    }
+
     efd::DataWriterListener* listener =
         static_cast<efd::DataWriterListener*>(this);
     _datawriter = _publisher->create_datawriter(_topic, wqos, listener);

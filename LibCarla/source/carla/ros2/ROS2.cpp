@@ -471,12 +471,16 @@ void ROS2::ProcessDataFromCollisionSensor(
 
 void ROS2::Shutdown() {
   std::lock_guard<std::recursive_mutex> lock(_mutex);
+  // Destroy publishers first so DataWriter unregister-dispose messages are
+  // sent while the shared DomainParticipant is still alive, then clear
+  // subscribers.  Order matters: the FastDDS shared participant is refcounted;
+  // destroying all endpoints (publishers and subscribers) drives the refcount
+  // to zero and triggers delete_contained_entities() + delete_participant().
   _publishers.clear();
-  _subscribers.clear();
-
   _tf_publishers.clear();
-
   _clock_publisher.reset();
+
+  _subscribers.clear();
 
   _enabled = false;
 }

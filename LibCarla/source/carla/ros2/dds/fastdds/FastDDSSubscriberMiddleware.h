@@ -5,12 +5,12 @@
 #pragma once
 
 #include "carla/ros2/dds/IDDSSubscriberMiddleware.h"
+#include "carla/ros2/dds/fastdds/FastDDSSharedParticipant.h"
 #include "carla/ros2/dds/fastdds/GenericCdrPubSubType.h"
+#include "carla/ros2/types/UserDataFormat.h"
 #include "carla/Logging.h"
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
-#include <fastdds/dds/domain/DomainParticipantFactory.hpp>
-#include <fastdds/dds/domain/qos/DomainParticipantQos.hpp>
 #include <fastdds/dds/topic/Topic.hpp>
 #include <fastdds/dds/topic/TypeSupport.hpp>
 #include <fastdds/dds/subscriber/Subscriber.hpp>
@@ -35,6 +35,9 @@ using erc = eprosima::fastrtps::types::ReturnCode_t;
 /// Parameterized on traits type S that provides:
 ///   S::msg_type  — the message type (a carla::ros2::msg::* POD struct)
 /// Deserialization is handled by GenericCdrPubSubType<msg_type> via CdrSerialization.h.
+///
+/// Uses FastDDSSharedParticipant for a single refcounted DomainParticipant
+/// across all FastDDS endpoints.  See FastDDSPublisherMiddleware.h for the
 template<typename S>
 class FastDDSSubscriberMiddleware
     : public IDDSSubscriberMiddleware,
@@ -77,7 +80,9 @@ class FastDDSSubscriberMiddleware
       _participant->delete_topic(_topic);
     }
     if (_participant) {
-      efd::DomainParticipantFactory::get_instance()->delete_participant(_participant);
+      FastDDSSharedParticipant::release_type(_type->getName());
+      FastDDSSharedParticipant::release();
+      _participant = nullptr;
     }
   }
 
@@ -93,14 +98,14 @@ class FastDDSSubscriberMiddleware
       return false;
     }
 
-    efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-    auto factory = efd::DomainParticipantFactory::get_instance();
-    _participant = factory->create_participant(0, pqos);
+    _participant = FastDDSSharedParticipant::acquire();
     if (_participant == nullptr) {
-      log_error("FastDDSSubscriberMiddleware: Failed to create DomainParticipant");
+      log_error("FastDDSSubscriberMiddleware: Shared participant unavailable");
       return false;
     }
+
     _type.register_type(_participant);
+    FastDDSSharedParticipant::retain_type(_type->getName());
 
     efd::SubscriberQos subqos = efd::SUBSCRIBER_QOS_DEFAULT;
     _subscriber = _participant->create_subscriber(subqos, nullptr);
@@ -109,14 +114,29 @@ class FastDDSSubscriberMiddleware
       return false;
     }
 
-    efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
-    _topic = _participant->create_topic(topic_name, _type->getName(), tqos);
+    // Reuse an existing topic on the shared participant when present: FastDDS
+    // rejects duplicate create_topic for the same name. find_topic bumps the
+    // participant's topic refcount, balanced by delete_topic in the destructor.
+    if (_participant->lookup_topicdescription(topic_name) != nullptr) {
+      _topic = _participant->find_topic(topic_name, eprosima::fastrtps::Duration_t{0, 0});
+    } else {
+      efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
+      _topic = _participant->create_topic(topic_name, _type->getName(), tqos);
+    }
     if (_topic == nullptr) {
       log_error("FastDDSSubscriberMiddleware: Failed to create Topic");
       return false;
     }
 
     efd::DataReaderQos rqos = efd::DATAREADER_QOS_DEFAULT;
+
+    // Set USER_DATA (PID_USER_DATA = 0x002c per OMG DDSI-RTPS v2.5 §9.6.2.2.2)
+    // to the REP-2016 type-hash KV payload "typehash=RIHS01_<hex>;".
+    auto ud = build_user_data_for<msg_type>();
+    if (!ud.empty()) {
+      rqos.user_data().data_vec(ud);
+    }
+
     efd::DataReaderListener* listener =
         static_cast<efd::DataReaderListener*>(this);
     _datareader = _subscriber->create_datareader(_topic, rqos, listener);

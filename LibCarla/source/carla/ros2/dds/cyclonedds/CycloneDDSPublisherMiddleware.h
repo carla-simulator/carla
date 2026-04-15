@@ -8,6 +8,7 @@
 #include "carla/ros2/dds/cyclonedds/CycloneDDSSertype.h"
 #include "carla/ros2/types/CdrSerialization.h"
 #include "carla/ros2/types/CdrTopicInfo.h"
+#include "carla/ros2/types/UserDataFormat.h"
 #include "carla/Logging.h"
 
 #include <atomic>
@@ -75,6 +76,12 @@ class CycloneDDSPublisherMiddleware : public IDDSPublisherMiddleware {
     dds_qset_reliability(qos, DDS_RELIABILITY_RELIABLE,
                          DDS_SECS(1));
     dds_qset_history(qos, DDS_HISTORY_KEEP_LAST, 1);
+    // Set USER_DATA (PID_USER_DATA = 0x002c per OMG DDSI-RTPS v2.5 §9.6.2.2.2)
+    // to the REP-2016 type-hash KV payload "typehash=RIHS01_<hex>;".
+    auto ud = build_user_data_for<msg_type>();
+    if (!ud.empty()) {
+      dds_qset_userdata(qos, ud.data(), ud.size());
+    }
     dds_listener_t* listener = dds_create_listener(this);
     dds_lset_publication_matched(listener, carla_on_publication_matched);
 
