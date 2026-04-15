@@ -37,7 +37,12 @@ using erc = eprosima::fastrtps::types::ReturnCode_t;
 /// Deserialization is handled by GenericCdrPubSubType<msg_type> via CdrSerialization.h.
 ///
 /// Uses FastDDSSharedParticipant for a single refcounted DomainParticipant
-/// across all FastDDS endpoints.  See FastDDSPublisherMiddleware.h for the
+/// across all FastDDS endpoints. See FastDDSPublisherMiddleware.h for the rationale.
+///
+/// Sets USER_DATA QoS on the DataReader to the REP-2016 KV payload
+/// "typehash=RIHS01_<hex>;" (PID_USER_DATA = 0x002c in DDSI-RTPS v2.5
+/// §9.6.2.2.2) so that Jazzy rmw_cyclonedds_cpp and rmw_fastrtps_cpp can
+/// perform REP-2011 type-hash-based endpoint matching without warning.
 template<typename S>
 class FastDDSSubscriberMiddleware
     : public IDDSSubscriberMiddleware,

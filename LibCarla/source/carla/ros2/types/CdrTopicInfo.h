@@ -53,12 +53,11 @@ namespace ros2 {
 ///                         Format: "RIHS01_<64 lowercase hex>" (71 chars).
 ///                         Consumed by UserDataFormat.h to build the
 ///                         REP-2016 KV payload "typehash=RIHS01_<hex>;".
-///                         Hashes sourced from ros-jazzy installed packages
-///                         via rosidl_generator_type_description (stable per
-///                         message definition across Humble and Jazzy).
-///                         Returns nullptr for CARLA-specific types whose
-///                         canonical hash depends on the carla_msgs package
-///                         IDL version — callers must skip setting user_data.
+///                         The hash is pinned per message definition and is
+///                         stable across ROS 2 distributions. A specialization
+///                         may return nullptr when no hash is available for the
+///                         type; UserDataFormat.h then emits an empty user_data
+///                         payload and callers skip setting the QoS field.
 ///                         To compute the hash for a new type, use
 ///                         Util/ros2/compute_type_hash.sh (Docker required).
 ///                         Full workflow: Docs/ros2/adding_message_types.md.

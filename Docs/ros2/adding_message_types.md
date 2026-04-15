@@ -316,9 +316,33 @@ Also add an `#include` for the new header at the top of `CdrTopicInfo.h`.
 **`type_name()`:** follows the DDS mangled name convention used by ROS 2 RMWs:
 `<package>::msg::dds_::<TypeName>_` (note the trailing underscore).
 
-**`type_hash()`:** paste the `RIHS01_...` string from Step 4. For
-CARLA-specific types whose hash depends on a `carla_msgs` version that may
-vary across installations, return `nullptr` to skip setting `USER_DATA`.
+**`type_hash()`:** the REP-2011 type hash, published by every writer and
+reader in the `USER_DATA` QoS field (REP-2016 payload
+`typehash=RIHS01_<hex>;`). Peer ROS 2 RMWs read this during discovery to
+perform type-hash-based endpoint matching and, on Jazzy and newer, to
+suppress the `Failed to parse type hash for topic ...` warning.
+
+Paste the `RIHS01_...` string from Step 4. The hash is pinned per message
+definition; update it if the `.msg` definition ever changes.
+
+```cpp
+// Typical case: pin the hash computed from the .msg definition.
+static const char* type_hash() {
+  return "RIHS01_7d9a00ff...";  // 64 hex chars after "RIHS01_"
+}
+```
+
+Return `nullptr` only when no canonical hash can be computed for the type
+(for example, a custom payload with no `.msg` counterpart). The middleware
+then emits an empty `USER_DATA` payload for that endpoint; peers will log
+the missing-type-hash warning on Jazzy but the connection still forms.
+
+```cpp
+// Fallback: no canonical .msg exists for this type.
+static const char* type_hash() {
+  return nullptr;
+}
+```
 
 **`max_serialized_size()`:** a preallocation hint in bytes, excluding the
 4-byte DDS encapsulation header. For fixed types, sum the byte sizes of all
