@@ -155,7 +155,8 @@ namespace geom {
       const road::LaneSection& lane_section,
       const road::Lane& lane,
       const double s_current,
-      const double lanemark_width) const;
+      const double lanemark_width,
+      const float extra_width) const;
 
   };
 

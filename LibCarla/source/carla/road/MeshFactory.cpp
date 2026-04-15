@@ -761,7 +761,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             size_t currentIndex = out_mesh.GetVertices().size() + 1;
 
             std::pair<geom::Vector3D, geom::Vector3D> edges =
-              ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width);
+              ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width, 0.0f);
 
             out_mesh.AddVertex(edges.first);
             out_mesh.AddVertex(edges.second);
@@ -781,7 +781,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             size_t currentIndex = out_mesh.GetVertices().size() + 1;
 
             std::pair<geom::Vector3D, geom::Vector3D> edges =
-              ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width);
+              ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width, road_param.extra_lane_width);
 
             out_mesh.AddVertex(edges.first);
             out_mesh.AddVertex(edges.second);
@@ -792,7 +792,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
               s_current = s_end;
             }
 
-            edges = ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width);
+            edges = ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width, road_param.extra_lane_width);
 
             out_mesh.AddVertex(edges.first);
             out_mesh.AddVertex(edges.second);
@@ -855,7 +855,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
         carla::road::element::LaneMarking lane_mark_info(*road_info_mark);
 
         std::pair<geom::Vector3D, geom::Vector3D> edges =
-              ComputeEdgesForLanemark(lane_section, lane, s_end, lane_mark_info.width);
+              ComputeEdgesForLanemark(lane_section, lane, s_end, lane_mark_info.width, 0.0f);
 
         out_mesh.AddVertex(edges.first);
         out_mesh.AddVertex(edges.second);
@@ -916,7 +916,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             size_t currentIndex = out_mesh.GetVertices().size() + 1;
 
             std::pair<geom::Vector3D, geom::Vector3D> edges =
-              ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width);
+              ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width, road_param.extra_lane_width);
 
             out_mesh.AddVertex(edges.first);
             out_mesh.AddVertex(edges.second);
@@ -926,7 +926,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
               s_current = s_end;
             }
 
-            edges = ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width);
+            edges = ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width, road_param.extra_lane_width);
 
             out_mesh.AddVertex(edges.first);
             out_mesh.AddVertex(edges.second);
@@ -1135,9 +1135,10 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
       const road::LaneSection& lane_section,
       const road::Lane& lane,
       const double s_current,
-      const double lanemark_width) const {
+      const double lanemark_width,
+      const float extra_width) const {
     std::pair<geom::Vector3D, geom::Vector3D> edges =
-      lane.GetCornerPositions(s_current, road_param.extra_lane_width);
+      lane.GetCornerPositions(s_current, extra_width);
 
     geom::Vector3D director;
     if (edges.first != edges.second) {
@@ -1147,7 +1148,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
       const std::map<road::LaneId, road::Lane> & lanes = lane_section.GetLanes();
       for (const auto& lane_pair : lanes) {
         std::pair<geom::Vector3D, geom::Vector3D> another_edge =
-          lane_pair.second.GetCornerPositions(s_current, road_param.extra_lane_width);
+          lane_pair.second.GetCornerPositions(s_current, extra_width);
         if (another_edge.first != another_edge.second) {
           director = another_edge.second - another_edge.first;
           director /= director.Length();
