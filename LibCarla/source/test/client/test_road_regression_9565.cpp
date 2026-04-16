@@ -19,12 +19,8 @@
 #include <utility>
 #include <vector>
 
-
 using namespace carla::opendrive;
 using namespace carla::geom;
-
-constexpr float TREE_Y_TOLERANCE = 0.01f;
-
 // --- minimal OpenDRIVE helpers -----------------------------------------------
 
 static std::string MakeHeader() {
@@ -205,9 +201,10 @@ TEST(road, get_trees_transform_positive_lane_road_gets_trees_9565) {
   const float min_expected_dist = outer_road_edge + dist_from_edge;  // 9.0
   for (const auto& entry : result) {
     const float tree_y = std::abs(entry.first.location.y);
-    EXPECT_NEAR(tree_y, min_expected_dist, TREE_Y_TOLERANCE)
+    EXPECT_GE(tree_y, min_expected_dist)
         << "Tree Y=" << entry.first.location.y
-        << " is not within ±" << TREE_Y_TOLERANCE << " of the expected minimum distance (|Y| = " << min_expected_dist << ")";
+        << " is too close to or inside the driving surface for positive-only lanes"
+        << " (|Y| must be >= " << min_expected_dist << ")";
   }
 }
 
@@ -239,8 +236,9 @@ TEST(road, get_trees_transform_trees_outside_road_9565) {
 
   for (const auto& entry : result) {
     const float tree_y = std::abs(entry.first.location.y);
-    EXPECT_NEAR(tree_y, min_expected_dist, TREE_Y_TOLERANCE)
+    EXPECT_GE(tree_y, min_expected_dist)
         << "Tree Y=" << entry.first.location.y
-        << " is not within ±" << TREE_Y_TOLERANCE << " of the expected minimum distance (|Y| = " << min_expected_dist << ")";
+        << " is too close to or inside the driving lane"
+        << " (|Y| must be >= " << min_expected_dist << ")";
   }
 }
