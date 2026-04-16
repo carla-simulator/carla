@@ -1330,9 +1330,9 @@ namespace road {
                 const geom::Vector3D positive_lateral_corner = edges.first;
                 const geom::Vector3D negative_lateral_corner = edges.second;
                 const geom::Vector3D outer_corner =
-                  is_positive_lane ? positive_lateral_corner : negative_lateral_corner;
-                const geom::Vector3D inner_corner =
                   is_positive_lane ? negative_lateral_corner : positive_lateral_corner;
+                const geom::Vector3D inner_corner =
+                  is_positive_lane ? positive_lateral_corner : negative_lateral_corner;
                 const geom::Vector3D outward_direction =
                     (outer_corner - inner_corner).MakeUnitVector();
                 geom::Vector3D treeposition =
