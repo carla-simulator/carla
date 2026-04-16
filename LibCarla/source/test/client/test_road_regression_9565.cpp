@@ -157,11 +157,9 @@ TEST(road, get_trees_transform_no_crash_without_speed_9565) {
   const Vector3D minpos(-10.f,  20.f, -10.f);
   const Vector3D maxpos(110.f, -20.f,  10.f);
 
-  // Must not crash (no SIGSEGV from null roadinfo dereference).
-  std::vector<std::pair<carla::geom::Transform, std::string>> result;
-  ASSERT_NO_FATAL_FAILURE(
-    result = map->GetMap().GetTreesTransform(minpos, maxpos, 10.f, 2.f)
-  );
+  // Must not crash (a regression to the null dereference will fail by crashing).
+  std::vector<std::pair<carla::geom::Transform, std::string>> result =
+      map->GetMap().GetTreesTransform(minpos, maxpos, 10.f, 2.f);
 
   // Must produce at least one tree so the fallback-type loop below is not vacuous.
   ASSERT_GT(result.size(), 0u)

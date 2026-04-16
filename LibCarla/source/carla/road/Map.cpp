@@ -39,6 +39,7 @@ namespace road {
   /// We use this epsilon to shift the waypoints away from the edges of the lane
   /// sections to avoid floating point precision errors.
   static constexpr double EPSILON = 10.0 * std::numeric_limits<double>::epsilon();
+  static constexpr double TREE_PLACEMENT_EPSILON = 1.0e-4;
 
   // ===========================================================================
   // -- Static local methods ---------------------------------------------------
@@ -1317,26 +1318,18 @@ namespace road {
                 // Skip degenerate or near-degenerate lane widths; normalising a
                 // near-zero vector produces unstable directions and can place
                 // trees on or very close to the road surface.
-                if (director_squared_length <= (EPSILON * EPSILON)) {
+                if (director_squared_length <= (TREE_PLACEMENT_EPSILON * TREE_PLACEMENT_EPSILON)) {
                   s_current += distancebetweentrees;
                   continue;
                 }
-                // GetCornerPositions returns (dp_r, dp_l) where
-                //   dp_r = ApplyLateralOffset(lane_t_offset + lane_width)
-                //   dp_l = ApplyLateralOffset(lane_t_offset - lane_width)
-                // followed by Unreal's Y-flip (y *= -1).
-                // lane_t_offset is positive for negative-ID (right-side) lanes
-                // and negative for positive-ID (left-side) lanes.  After the
-                // Y-flip this means:
-                //   negative-ID lanes: edges.first is the outer corner (higher |y|)
-                //   positive-ID lanes: edges.second is the outer corner (higher |y|)
-                // Always offset outward from the true outer corner so that trees
-                // are placed beyond the road edge, not on the driving surface.
+                // GetCornerPositions returns (inner, outer) for negative-ID lanes
+                // and (outer, inner) for positive-ID lanes. Always offset outward
+                // from the true outer edge so trees are never placed on the road.
                 const bool is_positive_lane = (lane->GetId() > 0);
-                const geom::Vector3D outer_corner =
-                    is_positive_lane ? edges.second : edges.first;
                 const geom::Vector3D inner_corner =
-                    is_positive_lane ? edges.first  : edges.second;
+                  is_positive_lane ? edges.second : edges.first;
+                const geom::Vector3D outer_corner =
+                  is_positive_lane ? edges.first  : edges.second;
                 const geom::Vector3D outward_direction =
                     (outer_corner - inner_corner).MakeUnitVector();
                 geom::Vector3D treeposition =
