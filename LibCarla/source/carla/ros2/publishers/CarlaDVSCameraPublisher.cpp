@@ -489,10 +489,10 @@ namespace ros2 {
     descriptor3.datatype(sensor_msgs::msg::PointField__FLOAT64);
     descriptor3.count(1);
     sensor_msgs::msg::PointField descriptor4;
-    descriptor3.name("pol");
-    descriptor3.offset(12);
-    descriptor3.datatype(sensor_msgs::msg::PointField__INT8);
-    descriptor3.count(1);
+    descriptor4.name("pol");
+    descriptor4.offset(12);
+    descriptor4.datatype(sensor_msgs::msg::PointField__INT8);
+    descriptor4.count(1);
 
     const size_t point_size = sizeof(carla::sensor::data::DVSEvent);
     _point_cloud->_pc.width(width);

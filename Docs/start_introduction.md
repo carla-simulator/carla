@@ -38,11 +38,11 @@ Welcome to CARLA.
 
 <div class="build-buttons">
 <p>
-<a href="../build_linux" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+<a href="../build_linux_ue5" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
 <b>Linux</b> build</a>
 </p>
 <p>
-<a href="../build_windows" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
+<a href="../build_windows_ue5" target="_blank" class="btn btn-neutral" title="Go to the latest CARLA release">
 <b>Windows</b> build</a>
 </p>
 </div>

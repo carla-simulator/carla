@@ -1201,6 +1201,8 @@ class CameraManager(object):
     def get_post_process_profile(self, map_name: str) -> str:
         if "Town10HD_Opt" in map_name:
             return "Town10HD_Opt"
+        if "Town_C" in map_name:
+            return "Town_C"
         return "Default"
 
     @staticmethod

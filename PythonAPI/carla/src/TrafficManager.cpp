@@ -55,8 +55,10 @@ void InterSetImportedRoute(carla::traffic_manager::TrafficManager& self, const A
 boost::python::list InterGetNextAction(carla::traffic_manager::TrafficManager& self, const ActorPtr &actor_ptr) {
   boost::python::list l;
   auto next_action = self.GetNextAction(actor_ptr->GetId());
-  l.append(RoadOptionToString(next_action.first));
-  l.append(next_action.second);
+  if (next_action.second != nullptr) {
+    l.append(RoadOptionToString(next_action.first));
+    l.append(next_action.second);
+  }
   return l;
 }
 

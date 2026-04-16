@@ -341,6 +341,9 @@ SimpleWaypointPtr LocalizationStage::AssignLaneChange(const ActorId actor_id,
   SimpleWaypointPtr change_over_point = nullptr;
 
   // Retrieve waypoint buffer for current vehicle.
+  if (buffer_map.find(actor_id) == buffer_map.end()) {
+    return change_over_point;
+  }
   const Buffer &waypoint_buffer = buffer_map.at(actor_id);
 
   // Check buffer is not empty.
@@ -592,6 +595,9 @@ void LocalizationStage::ImportRoute(Route &imported_actions, Buffer &waypoint_bu
 }
 
 Action LocalizationStage::ComputeNextAction(const ActorId& actor_id) {
+  if (buffer_map.find(actor_id) == buffer_map.end()) {
+    return std::make_pair(RoadOption::Void, nullptr);
+  }
   auto waypoint_buffer = buffer_map.at(actor_id);
   auto next_action = std::make_pair(RoadOption::LaneFollow, waypoint_buffer.back()->GetWaypoint());
   bool is_lane_change = false;
@@ -626,8 +632,11 @@ Action LocalizationStage::ComputeNextAction(const ActorId& actor_id) {
 
 ActionBuffer LocalizationStage::ComputeActionBuffer(const ActorId& actor_id) {
 
-  auto waypoint_buffer = buffer_map.at(actor_id);
   ActionBuffer action_buffer;
+  if (buffer_map.find(actor_id) == buffer_map.end()) {
+    return action_buffer;
+  }
+  auto waypoint_buffer = buffer_map.at(actor_id);
   Action lane_change;
   bool is_lane_change = false;
   SimpleWaypointPtr buffer_front = waypoint_buffer.front();
