@@ -4,9 +4,9 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""Verify that the installed Boost used to build carla.libcarla is 1.89.0.
+"""Verify that the installed Boost used to build carla.libcarla is 1.90.0.
 
-Guards against silent cache hits from the old Boost 1.84.0 install directory
+Guards against silent cache hits from the old Boost 1.89.0 install directory
 that would otherwise pass the NumPy 2 test suite while still linking against
 the pre-upgrade Boost.
 """
@@ -17,7 +17,7 @@ import subprocess
 import sys
 import unittest
 
-EXPECTED_BOOST_VERSION = "1.89.0"
+EXPECTED_BOOST_VERSION = "1.90.0"
 EXPECTED_BOOST_DIR = "boost-{}-".format(EXPECTED_BOOST_VERSION)
 
 
@@ -33,10 +33,10 @@ def _carla_so_path():
 
 
 class TestBoostInstallVersion(unittest.TestCase):
-    """Static check: Setup.sh must pin Boost 1.89.0."""
+    """Static check: Setup.sh must pin Boost 1.90.0."""
 
     def test_setup_sh_pins_correct_version(self):
-        """BOOST_VERSION in Setup.sh must be 1.89.0."""
+        """BOOST_VERSION in Setup.sh must be 1.90.0."""
         repo_root = os.path.abspath(
             os.path.join(os.path.dirname(__file__), "..", "..", ".."))
         setup_sh = os.path.join(repo_root, "Util", "BuildTools", "Setup.sh")
@@ -80,10 +80,10 @@ class TestBoostInstallVersion(unittest.TestCase):
 
 
 class TestBoostRuntimeVersion(unittest.TestCase):
-    """Runtime check: carla.libcarla must link against Boost 1.89.0.
+    """Runtime check: carla.libcarla must link against Boost 1.90.0.
 
     This catches the case where the build cache held a stale
-    boost-1.84.0-install/ tree and the linker used that instead of 1.89.0.
+    boost-1.89.0-install/ tree and the linker used that instead of 1.90.0.
     """
 
     def _get_linked_libs(self, so_path):
@@ -99,14 +99,14 @@ class TestBoostRuntimeVersion(unittest.TestCase):
         import carla  # noqa: F401 — import is the assertion
         self.assertIsNotNone(carla.__file__)
 
-    def test_no_boost_184_in_linked_libs(self):
-        """libcarla.so must not be linked to a boost-1.84.0 library."""
+    def test_no_boost_189_in_linked_libs(self):
+        """libcarla.so must not be linked to a boost-1.89.0 library."""
         so_path = _carla_so_path()
         if so_path is None:
             self.skipTest("Could not locate libcarla .so file")
         linked = self._get_linked_libs(so_path)
         self.assertNotIn(
-            "boost-1.84.0",
+            "boost-1.89.0",
             linked,
-            "libcarla is still linked against boost-1.84.0 (stale build cache?)",
+            "libcarla is still linked against boost-1.89.0 (stale build cache?)",
         )

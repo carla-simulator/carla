@@ -4,7 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-// Regression guard for boost::geometry::index::rtree after the Boost 1.84->1.89
+// Regression guard for boost::geometry::index::rtree after the Boost 1.84->1.90
 // upgrade.  Mirrors how InMemoryMap.h and geom/Rtree.h consume the rtree:
 // 2D and 3D point insertions, nearest-neighbour queries, and within-box queries.
 

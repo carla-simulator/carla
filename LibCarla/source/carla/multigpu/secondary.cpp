@@ -14,6 +14,8 @@
 #include "carla/Time.h"
 
 #include <boost/asio/connect.hpp>
+
+#include <chrono>
 #include <boost/asio/read.hpp>
 #include <boost/asio/write.hpp>
 #include <boost/asio/post.hpp>
@@ -117,7 +119,7 @@ namespace multigpu {
 
   void Secondary::Reconnect() {
     std::weak_ptr<Secondary> weak = shared_from_this();
-    _connection_timer.expires_from_now(time_duration::seconds(1u));
+    _connection_timer.expires_after(std::chrono::seconds(1));
     _connection_timer.async_wait([weak](boost::system::error_code ec) {
       auto self = weak.lock();
       if (!self) return;
