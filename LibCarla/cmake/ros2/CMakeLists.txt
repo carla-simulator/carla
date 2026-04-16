@@ -14,6 +14,7 @@ file(GLOB libcarla_ros2_sources
   "${libcarla_source_path}/carla/ros2/subscribers/*.cpp"
   "${libcarla_source_path}/carla/ros2/listeners/*.cpp"
   "${libcarla_source_path}/carla/ros2/types/*.cpp"
+  "${libcarla_source_path}/carla/ros2/dds/fastdds/*.cpp"
   "${libcarla_source_path}/carla/ros2/dds/cyclonedds/*.cpp")
 
 # ==============================================================================
