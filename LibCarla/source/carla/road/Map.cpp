@@ -1322,17 +1322,16 @@ namespace road {
                   s_current += distancebetweentrees;
                   continue;
                 }
-                // GetCornerPositions returns (+lateral-offset corner,
-                // -lateral-offset corner). Select the true outer edge from that
-                // ordering based on lane ID sign, then offset farther outward so
-                // trees are always placed away from the driving surface.
+                // GetCornerPositions returns the lane corners in (t_offset + width, t_offset - width) order.
+                // The true outer edge therefore depends on the lane side: for positive lane IDs it is the second corner,
+                // and for negative lane IDs it is the first. Offset farther outward so trees are always placed away from the driving surface.
                 const bool is_positive_lane = (lane->GetId() > 0);
-                const geom::Vector3D positive_lateral_corner = edges.first;
-                const geom::Vector3D negative_lateral_corner = edges.second;
+                const geom::Vector3D first_corner = edges.first;
+                const geom::Vector3D second_corner = edges.second;
                 const geom::Vector3D outer_corner =
-                  is_positive_lane ? negative_lateral_corner : positive_lateral_corner;
+                  is_positive_lane ? second_corner : first_corner;
                 const geom::Vector3D inner_corner =
-                  is_positive_lane ? positive_lateral_corner : negative_lateral_corner;
+                  is_positive_lane ? first_corner : second_corner;
                 const geom::Vector3D outward_direction =
                     (outer_corner - inner_corner).MakeUnitVector();
                 geom::Vector3D treeposition =
