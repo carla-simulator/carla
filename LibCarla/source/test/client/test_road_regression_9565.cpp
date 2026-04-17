@@ -23,7 +23,7 @@
 using namespace carla::opendrive;
 using namespace carla::geom;
 
-#define TREE_Y_TOLERANCE 0.01f
+constexpr float TREE_Y_TOLERANCE = 0.01f;
 
 // --- minimal OpenDRIVE helpers -----------------------------------------------
 
