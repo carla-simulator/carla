@@ -6,30 +6,18 @@
 
 """Verify that the installed Boost used to build carla.libcarla is 1.90.0.
 
-Guards against silent cache hits from the old Boost 1.89.0 install directory
-that would otherwise pass the NumPy 2 test suite while still linking against
-the pre-upgrade Boost.
+Guards against silent cache hits from any pre-1.90.0 Boost install directory
+(1.84.0 or 1.89.0) that would otherwise pass the NumPy 2 test suite while
+still linking against an old Boost.
 """
 
 import os
 import re
-import subprocess
-import sys
 import unittest
 
 EXPECTED_BOOST_VERSION = "1.90.0"
 EXPECTED_BOOST_DIR = "boost-{}-".format(EXPECTED_BOOST_VERSION)
-
-
-def _carla_so_path():
-    """Return the absolute path of the compiled carla .so/.pyd extension."""
-    import carla
-    carla_pkg_dir = os.path.dirname(carla.__file__)
-    # The compiled extension sits next to __init__.py, named libcarla*.so
-    for name in os.listdir(carla_pkg_dir):
-        if name.startswith("libcarla") and (name.endswith(".so") or name.endswith(".pyd")):
-            return os.path.join(carla_pkg_dir, name)
-    return None
+STALE_BOOST_VERSIONS = ("1.84.0", "1.89.0")
 
 
 class TestBoostInstallVersion(unittest.TestCase):
@@ -80,33 +68,54 @@ class TestBoostInstallVersion(unittest.TestCase):
 
 
 class TestBoostRuntimeVersion(unittest.TestCase):
-    """Runtime check: carla.libcarla must link against Boost 1.90.0.
+    """Runtime check: PythonAPI dependencies must use Boost 1.90.0.
 
-    This catches the case where the build cache held a stale
-    boost-1.89.0-install/ tree and the linker used that instead of 1.90.0.
+    Boost is statically linked into libcarla.so, so ldd does not show it.
+    We inspect the versioned .so symlinks in PythonAPI/carla/dependencies/lib/
+    instead, which are the authoritative record of which Boost the PythonAPI
+    build consumed.  This catches the case where the build cache held a stale
+    Boost install tree (1.84.0 or 1.89.0) and the linker used it instead of
+    1.90.0.
     """
 
-    def _get_linked_libs(self, so_path):
-        """Return the ldd output for so_path, or '' on unsupported platforms."""
-        if sys.platform.startswith("linux"):
-            result = subprocess.run(
-                ["ldd", so_path], capture_output=True, text=True)
-            return result.stdout
-        return ""
+    def _deps_lib(self):
+        """Return the absolute path of PythonAPI/carla/dependencies/lib/."""
+        return os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..", "carla", "dependencies", "lib"))
 
     def test_libcarla_imports(self):
         """carla module must be importable (basic sanity)."""
         import carla  # noqa: F401 — import is the assertion
         self.assertIsNotNone(carla.__file__)
 
-    def test_no_boost_189_in_linked_libs(self):
-        """libcarla.so must not be linked to a boost-1.89.0 library."""
-        so_path = _carla_so_path()
-        if so_path is None:
-            self.skipTest("Could not locate libcarla .so file")
-        linked = self._get_linked_libs(so_path)
-        self.assertNotIn(
-            "boost-1.89.0",
-            linked,
-            "libcarla is still linked against boost-1.89.0 (stale build cache?)",
+    def test_libcarla_links_expected_boost_version(self):
+        """PythonAPI dependencies/lib must contain libboost_*.so.1.90.0 files."""
+        deps_lib = self._deps_lib()
+        if not os.path.isdir(deps_lib):
+            self.skipTest("PythonAPI dependencies/lib not found (not built yet?)")
+        found = any(
+            f.startswith("libboost_") and ".so.{}".format(EXPECTED_BOOST_VERSION) in f
+            for f in os.listdir(deps_lib)
         )
+        self.assertTrue(
+            found,
+            "No libboost_*.so.{} found in {} (wrong or missing Boost install?)".format(
+                EXPECTED_BOOST_VERSION, deps_lib),
+        )
+
+    def test_no_stale_boost_in_linked_libs(self):
+        """PythonAPI dependencies/lib must not contain any pre-1.90.0 Boost library."""
+        deps_lib = self._deps_lib()
+        if not os.path.isdir(deps_lib):
+            self.skipTest("PythonAPI dependencies/lib not found (not built yet?)")
+        for stale_version in STALE_BOOST_VERSIONS:
+            stale_files = [
+                f for f in os.listdir(deps_lib)
+                if f.startswith("libboost_") and ".so.{}".format(stale_version) in f
+            ]
+            self.assertEqual(
+                stale_files,
+                [],
+                "Found stale boost-{} libraries in {} (stale build cache?): {}".format(
+                    stale_version, deps_lib, stale_files),
+            )
