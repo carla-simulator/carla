@@ -17,6 +17,7 @@
 #include <boost/asio/post.hpp>
 
 #include <atomic>
+#include <chrono>
 #include <thread>
 
 namespace carla {
@@ -34,7 +35,7 @@ namespace multigpu {
       _session_id(SESSION_COUNTER++),
       _socket(io_context),
       _timeout(timeout),
-      _deadline(io_context),
+      _deadline(io_context, std::chrono::steady_clock::time_point::max()),
       _strand(io_context),
       _buffer_pool(std::make_shared<BufferPool>()) {}
 
@@ -85,7 +86,7 @@ namespace multigpu {
         }
       };
 
-      self->_deadline.expires_from_now(self->_timeout);
+      self->_deadline.expires_after(self->_timeout.to_chrono());
       boost::asio::async_write(
           self->_socket,
           message->GetBufferSequence(),
@@ -103,7 +104,7 @@ namespace multigpu {
       }
 
       // sent first size buffer
-      self->_deadline.expires_from_now(self->_timeout);
+      self->_deadline.expires_after(self->_timeout.to_chrono());
       int this_size = static_cast<int>(text.size());
       boost::asio::async_write(
           self->_socket,
@@ -181,7 +182,7 @@ namespace multigpu {
   }
 
   void Primary::StartTimer() {
-    if (_deadline.expires_at() <= boost::asio::deadline_timer::traits_type::now()) {
+    if (_deadline.expiry() <= std::chrono::steady_clock::now()) {
       log_debug("session ", _session_id, " time out");
       Close();
     } else {

@@ -10,6 +10,7 @@
 #include "carla/StringUtil.h"
 
 #include <boost/filesystem/operations.hpp>
+#include <boost/filesystem/directory.hpp>
 
 namespace carla {
 

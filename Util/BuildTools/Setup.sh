@@ -117,9 +117,9 @@ move_if_changed "${LIBCPP_TOOLCHAIN_FILE}.gen" "${LIBCPP_TOOLCHAIN_FILE}"
 # -- Get boost includes --------------------------------------------------------
 # ==============================================================================
 
-BOOST_VERSION=1.84.0
+BOOST_VERSION=1.90.0
 BOOST_BASENAME="boost-${BOOST_VERSION}-${CXX_TAG}"
-BOOST_SHA256SUM="a5800f405508f5df8114558ca9855d2640a2de8f0445f051fa1c7c3383045724"
+BOOST_SHA256SUM="5e93d582aff26868d581a52ae78c7d8edf3f3064742c6e77901a1f18a437eea9"
 
 BOOST_INCLUDE=${PWD}/${BOOST_BASENAME}-install/include
 BOOST_LIBPATH=${PWD}/${BOOST_BASENAME}-install/lib

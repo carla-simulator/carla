@@ -1,6 +1,6 @@
 invertedai@git+https://github.com/inverted-ai/invertedai.git@develop ; python_version >= "3.10"
 future
-numpy<2.0.0
+numpy>=1.18.4
 networkx
 Shapely
 pygame

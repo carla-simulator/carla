@@ -1,4 +1,5 @@
 ## Latest Changes
+ * Added NumPy 2 compatibility to the PythonAPI: replaced removed aliases (`np.bool`, `np.matrix`) in example scripts and upgraded Boost to 1.90.0, which ships the upstream NumPy 2 C ABI fix (boostorg/python#432) so the C extension builds against both NumPy 1.x (>=1.18.4) and NumPy 2.x
  * Fixed North/South latitude inversion in geo-coordinate conversion for Transverse Mercator and UTM projections
  * Decoupled ROS2 DDS middleware from a hard FastDDS dependency to an agnostic strategy-pattern abstraction supporting both FastDDS and CycloneDDS, selectable at runtime via `--dds-middleware=` CLI flag
  * Fixed all 282 compiler warnings in LibCarla across 27 files (unused variables, missing braces, narrowing conversions, implicit casts, initializer order, etc.) establishing a zero-warning baseline for server and client release builds

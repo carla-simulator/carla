@@ -1,2 +1,2 @@
 nose2
-numpy<2.0.0
+numpy>=1.18.4
