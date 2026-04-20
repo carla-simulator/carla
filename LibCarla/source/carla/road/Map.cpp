@@ -1312,9 +1312,9 @@ namespace road {
                 // Use double precision for the length check to avoid false
                 // negatives from float cancellation on near-equal corners.
                 const double director_squared_length =
-                    static_cast<double>(director.x) * director.x +
-                    static_cast<double>(director.y) * director.y +
-                    static_cast<double>(director.z) * director.z;
+                  static_cast<double>(director.x) * static_cast<double>(director.x) +
+                  static_cast<double>(director.y) * static_cast<double>(director.y) +
+                  static_cast<double>(director.z) * static_cast<double>(director.z);
                 // Skip degenerate or near-degenerate lane widths; normalising a
                 // near-zero vector produces unstable directions and can place
                 // trees on or very close to the road surface.
@@ -1326,12 +1326,10 @@ namespace road {
                 // The true outer edge therefore depends on the lane side: for positive lane IDs it is the second corner,
                 // and for negative lane IDs it is the first. Offset farther outward so trees are always placed away from the driving surface.
                 const bool is_positive_lane = (lane->GetId() > 0);
-                const geom::Vector3D first_corner = edges.first;
-                const geom::Vector3D second_corner = edges.second;
                 const geom::Vector3D outer_corner =
-                  is_positive_lane ? second_corner : first_corner;
+                  is_positive_lane ? edges.second : edges.first;
                 const geom::Vector3D inner_corner =
-                  is_positive_lane ? first_corner : second_corner;
+                  is_positive_lane ? edges.first : edges.second;
                 const geom::Vector3D outward_direction =
                     (outer_corner - inner_corner).MakeUnitVector();
                 geom::Vector3D treeposition =

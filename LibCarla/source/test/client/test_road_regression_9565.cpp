@@ -73,7 +73,7 @@ static std::string BidirectionalLanes() {
           </lane>
         </right>
       </laneSection>
-    </lanes>";
+    </lanes>)";
 }
 
 // One-way road with ONLY positive lanes --no lane -1.
@@ -92,7 +92,7 @@ static std::string PositiveOnlyLanes() {
         </left>
         <center><lane id="0" type="none" level="false"/></center>
       </laneSection>
-    </lanes>";
+    </lanes>)";
 }
 
 // One-way road with ONLY negative lanes (normal right-side traffic).
@@ -107,7 +107,7 @@ static std::string NegativeOnlyLanes() {
           </lane>
         </right>
       </laneSection>
-    </lanes>";
+    </lanes>)";
 }
 
 // --- Bug 3: FilterRoadsByPosition includes one-way positive-lane roads -------
