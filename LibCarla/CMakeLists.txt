@@ -468,6 +468,8 @@ if (BUILD_LIBCARLA_TESTS)
     target_include_directories (
       libcarla_test_client PRIVATE
       ${LIBCARLA_SOURCE_PATH}
+      ${LIBCARLA_SOURCE_PATH}/test
+      ${LIBCARLA_SOURCE_PATH}/third-party
     )
 
     target_compile_definitions (
