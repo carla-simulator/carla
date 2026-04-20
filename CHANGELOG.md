@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Enabled the LibCarla GoogleTest suite (server + client) on ue5-dev and gated both in CI (98 tests across 21 suites)
 * Added Ubuntu 24.04 support alongside Ubuntu 22.04
 * Added NVIDIA RTX 50 series (Blackwell) support with driver 570+ and CDI-based Docker instructions
 * Fixed compiler warnings across 20 LibCarla files including signed/unsigned conversions, pessimizing moves, deep copies in range-for loops, and C-style casts (ported from ue4-dev)
