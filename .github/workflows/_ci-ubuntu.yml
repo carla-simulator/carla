@@ -73,7 +73,7 @@ jobs:
 
       - name: Preset
         run: |
-          cmake --preset Release -DENABLE_ROS2=ON
+          cmake --preset Release -DENABLE_ROS2=ON -DBUILD_LIBCARLA_TESTS=ON
 
       - name: Build LibCarla
         run: |
@@ -86,6 +86,21 @@ jobs:
       - name: Build CarlaServer
         run: |
           cmake --build Build/Release --target carla-server
+
+      - name: Build LibCarla Tests
+        run: |
+          cmake --build Build/Release --target libcarla_test_server
+          cmake --build Build/Release --target libcarla_test_client
+
+      - name: Fetch LibCarla test content
+        run: |
+          rm -rf Build/test-content
+          git clone --depth 1 -b 0.1.4 https://github.com/carla-simulator/opendrive-test-files.git Build/test-content
+
+      - name: Run LibCarla Tests
+        run: |
+          ./Build/Release/LibCarla/libcarla_test_server
+          ./Build/Release/LibCarla/libcarla_test_client
 
       - name: Build Package
         run: |
