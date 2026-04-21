@@ -135,7 +135,7 @@ TEST(road, filter_roads_includes_positive_only_lanes_9565) {
   const Vector3D minpos(-10.f,  20.f, -10.f);
   const Vector3D maxpos(200.f, -20.f,  10.f);
 
-  auto included = map->GetMap().FilterRoadsByPosition(minpos, maxpos);
+  auto included = map->FilterRoadsByPosition(minpos, maxpos);
 
   // All three roads must be included after the fix.
   EXPECT_EQ(included.size(), 3u)
@@ -162,7 +162,7 @@ TEST(road, get_trees_transform_no_crash_without_speed_9565) {
 
   // Must not crash (a regression to the null dereference will fail by crashing).
   std::vector<std::pair<carla::geom::Transform, std::string>> result =
-      map->GetMap().GetTreesTransform(minpos, maxpos, 10.f, 2.f);
+      map->GetTreesTransform(minpos, maxpos, 10.f, 2.f);
 
   // Must produce at least one tree so the fallback-type loop below is not vacuous.
   ASSERT_GT(result.size(), 0u)
@@ -189,7 +189,7 @@ TEST(road, get_trees_transform_positive_lane_road_gets_trees_9565) {
   const Vector3D minpos(-10.f,  20.f, -10.f);
   const Vector3D maxpos(110.f, -20.f,  10.f);
 
-  auto result = map->GetMap().GetTreesTransform(minpos, maxpos, 10.f, 2.f);
+  auto result = map->GetTreesTransform(minpos, maxpos, 10.f, 2.f);
 
   ASSERT_GT(result.size(), 0u)
       << "No trees generated for one-way road with positive-only lanes";
@@ -227,7 +227,7 @@ TEST(road, get_trees_transform_trees_outside_road_9565) {
   const Vector3D minpos(-10.f,  20.f, -10.f);
   const Vector3D maxpos(110.f, -20.f,  10.f);
 
-  auto result = map->GetMap().GetTreesTransform(minpos, maxpos, 10.f, 2.f);
+  auto result = map->GetTreesTransform(minpos, maxpos, 10.f, 2.f);
   ASSERT_GT(result.size(), 0u) << "No trees generated for negative-only lane road";
 
   // Outer edge of lane -1 is at t=3.5m from road centre.
