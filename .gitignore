@@ -11,7 +11,6 @@ Unreal/CarlaUE4/Plugins/Streetmap
 Unreal/CarlaUE4/Plugins/HoudiniEngine
 build/
 
-
 /ExportedMaps
 /Import/*
 !/Import/README.md
@@ -45,6 +44,7 @@ build/
 .tags*
 .vs
 .vscode
+.zed
 .cache
 __pycache__
 _benchmarks_results
@@ -55,4 +55,6 @@ core
 profiler.csv
 .env
 .venv
+Unreal/CarlaUE4/.ignore
 devcontainer.json
+compile_commands.json
