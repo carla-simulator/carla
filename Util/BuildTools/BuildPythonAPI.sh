@@ -61,6 +61,7 @@ export CXX="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17
 export PATH="$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/bin:$PATH"
 
 source $(dirname "$0")/Environment.sh
+source $(dirname "$0")/Ubuntu24Compat.sh
 
 if ! { ${REMOVE_INTERMEDIATE} || ${BUILD_PYTHONAPI} || ${BUILD_PYTHONAPI_WHEEL} ; }; then
   fatal_error "Nothing selected to be done."
@@ -98,18 +99,26 @@ fi
 if ${BUILD_PYTHONAPI} ; then
   # Add patchelf to the path. Auditwheel relies on patchelf to repair ELF files.
   export PATH="${LIBCARLA_INSTALL_CLIENT_FOLDER}/bin:${PATH}"
-  
+
   for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     log "Building Python API wheel for Python ${PY_VERSION}."
-    
+
     # Building the RSS variant adds files to SOURCES.txt we do not want included in a normal build
-    rm -Rf source/carla.egg-info 
-   
+    rm -Rf source/carla.egg-info
+
    /usr/bin/env python${PY_VERSION} -m build --wheel --outdir dist/.tmp .
 
-    if ${INSTALL_PYTHONAPI} ; then
+    if ${INSTALL_PYTHONAPI} && ! ${_SKIP_PIP_INSTALL:-false} ; then
       log "Installing Python API for Python ${PY_VERSION}."
       /usr/bin/env python${PY_VERSION} -m pip install --force-reinstall dist/.tmp/$(ls dist/.tmp | grep .whl)
+    elif ${_SKIP_PIP_INSTALL:-false} ; then
+      _WHEEL_FILE=$(ls dist/.tmp | grep .whl)
+      log "Python API wheel built: PythonAPI/carla/dist/${_WHEEL_FILE}"
+      log "System Python is externally managed (PEP 668) — install the wheel manually:"
+      log "  pip install --break-system-packages PythonAPI/carla/dist/${_WHEEL_FILE}"
+      log "  uv pip install PythonAPI/carla/dist/${_WHEEL_FILE}"
+      log "  conda run -n <env> pip install PythonAPI/carla/dist/${_WHEEL_FILE}"
+      log "  pyenv exec pip install PythonAPI/carla/dist/${_WHEEL_FILE}"
     fi
 
     if [[ -z ${TARGET_WHEEL_PLATFORM} ]] ; then

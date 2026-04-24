@@ -64,9 +64,11 @@ IFS="," read -r -a PY_VERSION_LIST <<< "${PY_VERSION_LIST}"
 mkdir -p ${CARLA_BUILD_FOLDER}
 pushd ${CARLA_BUILD_FOLDER} >/dev/null
 
+source $(dirname "$0")/Ubuntu24Compat.sh
+
 LLVM_INCLUDE="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/include/c++/v1"
 LLVM_LIBPATH="$UE4_ROOT/Engine/Source/ThirdParty/Linux/LibCxx/lib/Linux/x86_64-unknown-linux-gnu"
-UNREAL_HOSTED_CFLAGS="--sysroot=$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/"
+UNREAL_HOSTED_CFLAGS="--sysroot=$UE4_ROOT/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64/v17_clang-10.0.1-centos7/x86_64-unknown-linux-gnu/ -idirafter /usr/include -idirafter /usr/include/x86_64-linux-gnu"
 
 # ==============================================================================
 # -- Generate CMake toolchains -------------------------------------------------
@@ -171,7 +173,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
 
     pushd ${BOOST_BASENAME}-source >/dev/null
 
-    BOOST_TOOLSET="clang-10.0"
+    BOOST_TOOLSET="clang"
     BOOST_CFLAGS="-fPIC -std=c++14 -DBOOST_ERROR_CODE_HEADER_ONLY"
 
     py3="/usr/bin/env python${PY_VERSION}"
@@ -180,7 +182,7 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
     py3_lib=$(${py3} -c "from sysconfig import get_paths as gp; print(gp()['stdlib'])")
     pyv=`$py3 -c "import sys;x='{v[0]}.{v[1]}'.format(v=list(sys.version_info[:2]));sys.stdout.write(x)";`
     ./bootstrap.sh \
-        --with-toolset=clang \
+        --with-toolset=gcc \
         --prefix=../boost-install \
         --with-libraries=python,filesystem,system,program_options \
         --with-python=${py3} --with-python-root=${py3_root}
@@ -192,9 +194,16 @@ for PY_VERSION in ${PY_VERSION_LIST[@]} ; do
         echo "using python : ${pyv} : ${py3_root}/bin/python${PY_VERSION} : \
         ${py3_include} : ${py3_lib} ;" > project-config.jam
     fi
+    if ${_NEED_LLD:-false}; then
+        echo "using clang : : \"${_CXX_REAL}\" : <linkflags>-fuse-ld=lld ;" >> project-config.jam
+        _B2_LINK_EXTRA="linkflags=-fuse-ld=lld"
+    else
+        echo "using clang : : \"${CXX}\" ;" >> project-config.jam
+        _B2_LINK_EXTRA=""
+    fi
 
-    ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
-    ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
+    ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" ${_B2_LINK_EXTRA} --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} stage release
+    ./b2 toolset="${BOOST_TOOLSET}" cxxflags="${BOOST_CFLAGS}" ${_B2_LINK_EXTRA} --prefix="../${BOOST_BASENAME}-install" -j ${CARLA_BUILD_CONCURRENCY} install
 
     popd >/dev/null
 
@@ -499,6 +508,7 @@ else
   echo "Elapsed Time Extracting xerces-c: $(($end-$start)) seconds"
 
   mv ${XERCESC_BASENAME} ${XERCESC_SRC_DIR}
+
   mkdir -p ${XERCESC_INSTALL_DIR}
   mkdir -p ${XERCESC_SRC_DIR}/build
 
@@ -522,7 +532,7 @@ else
   pushd ${XERCESC_SRC_DIR}/build >/dev/null
 
   cmake -G "Ninja" \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -fPIC -w -I${LLVM_INCLUDE} -L${LLVM_LIBPATH}" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -stdlib=libc++ -fPIC -w ${UNREAL_HOSTED_CFLAGS} -I${LLVM_INCLUDE} -L${LLVM_LIBPATH}" \
       -DCMAKE_INSTALL_PREFIX="../../${XERCESC_INSTALL_SERVER_DIR}" \
       -DCMAKE_BUILD_TYPE=Release \
       -DBUILD_SHARED_LIBS=OFF \
@@ -735,7 +745,7 @@ else
   pushd ${PROJ_SRC_DIR}/build >/dev/null
 
   cmake -G "Ninja" .. \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC" \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -include cstdint" \
       -DSQLITE3_INCLUDE_DIR=${SQLITE_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_LIB} \
       -DEXE_SQLITE3=${SQLITE_EXE} \
       -DENABLE_TIFF=OFF -DENABLE_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF \
@@ -753,7 +763,7 @@ else
   pushd ${PROJ_SRC_DIR}/build >/dev/null
 
   cmake -G "Ninja" .. \
-      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -stdlib=libc++ -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}"  \
+      -DCMAKE_CXX_FLAGS="-std=c++14 -fPIC -include cstdint -stdlib=libc++ ${UNREAL_HOSTED_CFLAGS} -I${LLVM_INCLUDE} -Wl,-L${LLVM_LIBPATH}"  \
       -DSQLITE3_INCLUDE_DIR=${SQLITE_INCLUDE_DIR} -DSQLITE3_LIBRARY=${SQLITE_LIB} \
       -DEXE_SQLITE3=${SQLITE_EXE} \
       -DENABLE_TIFF=OFF -DENABLE_CURL=OFF -DBUILD_SHARED_LIBS=OFF -DBUILD_PROJSYNC=OFF \
