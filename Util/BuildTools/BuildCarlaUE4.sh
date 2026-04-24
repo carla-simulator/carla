@@ -19,14 +19,14 @@ USE_PYTORCH=false
 USE_UNITY=true
 USE_ROS2=false
 CHRONO_PATH=""
-DDS_MIDDLEWARE=""
+RMW=""
 
 EDITOR_FLAGS=""
 
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,chrono-path:,ros2,dds-middleware:,no-simready,no-unity,editor-flags: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,chrono-path:,ros2,rmw:,no-simready,no-unity,editor-flags: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -74,8 +74,8 @@ while [[ $# -gt 0 ]]; do
     --ros2 )
       USE_ROS2=true;
       shift ;;
-    --dds-middleware )
-      DDS_MIDDLEWARE=$2;
+    --rmw )
+      RMW=$2;
       shift 2 ;;
     --no-simready )
       USE_SIMREADY=false
@@ -99,8 +99,8 @@ done
 if ${USE_ROS2} ; then
   EDITOR_FLAGS="${EDITOR_FLAGS} --ros2"
 fi
-if [ -n "${DDS_MIDDLEWARE}" ] ; then
-  EDITOR_FLAGS="${EDITOR_FLAGS} --dds-middleware=${DDS_MIDDLEWARE}"
+if [ -n "${RMW}" ] ; then
+  EDITOR_FLAGS="${EDITOR_FLAGS} --rmw=${RMW}"
 fi
 
 # ==============================================================================

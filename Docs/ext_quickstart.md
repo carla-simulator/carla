@@ -17,6 +17,7 @@ There are some configuration options available when launching CARLA and they can
 ```
 
 * `--ros2` - Launch CARLA with the native ROS2 connector enabled
+* `--rmw=<middleware>` - Select the ROS2 middleware (RMW) used by the native connector. Accepted values: `fastdds`, `cyclonedds`. Default: `fastdds`. Only valid together with `--ros2`. CycloneDDS is Linux only; on Windows only `fastdds` is supported.
 * `-carla-rpc-port=N` - Listen for client connections at port `N`. Streaming port is set to `N+1` by default.  
 * `-carla-streaming-port=N` - Specify the port for sensor data streaming. Use 0 to get a random unused port. The second port will be automatically set to `N+1`.  
 * `-quality-level={Low,Epic}` - Change graphics quality level. Find out more in [rendering options](adv_rendering_options.md).  

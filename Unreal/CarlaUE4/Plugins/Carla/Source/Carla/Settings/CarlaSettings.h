@@ -169,7 +169,7 @@ public:
   bool ROS2TopicVisibility = true;
 
   /// DDS middleware for ROS2 publishing. Accepted values: "fastdds", "cyclonedds".
-  /// Set via --dds-middleware=<value> on the command line.
+  /// Set via --rmw=<value> on the command line.
   UPROPERTY(Category = "Quality Settings/ROS2",
       BlueprintReadOnly,
       EditAnywhere,

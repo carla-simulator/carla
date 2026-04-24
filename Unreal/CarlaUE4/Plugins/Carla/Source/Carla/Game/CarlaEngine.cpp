@@ -229,7 +229,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     {
       std::string available = carla::ros2::GetAvailableMiddlewareString();
       UE_LOG(LogCarla, Error,
-          TEXT("ROS2: unrecognized --dds-middleware value '%s'. "
+          TEXT("ROS2: unrecognized --rmw value '%s'. "
                "Available: %s. ROS2 is DISABLED for this session."),
           *Settings.DDSMiddlewareName,
           UTF8_TO_TCHAR(available.c_str()));
@@ -240,7 +240,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       {
         std::string available = carla::ros2::GetAvailableMiddlewareString();
         UE_LOG(LogCarla, Error,
-            TEXT("ROS2: --dds-middleware='%s' is not compiled into this binary. "
+            TEXT("ROS2: --rmw='%s' is not compiled into this binary. "
                  "Available: %s. ROS2 is DISABLED for this session."),
             *Settings.DDSMiddlewareName,
             UTF8_TO_TCHAR(available.c_str()));
