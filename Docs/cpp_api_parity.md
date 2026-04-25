@@ -36,6 +36,7 @@ Implemented in current docs/examples:
 - C++ quickstart and run instructions
 - Python → C++ API mapping (core client/world/spawn/destroy)
 - Basic client workflow example (connect/load world/spawn/control/destroy)
+- `carla-client` decoupled from Python: `Boost::python` and the `LIBCARLA_WITH_PYTHON_SUPPORT` macro removed, `PythonUtil.h` relocated into PythonAPI. Downstream C++ projects can now link `carla-client` without pulling in any Python dependency — partial step toward #3731's underlying concern about Boost.Python footprint.
 
 Still pending to fully satisfy this roadmap:
 

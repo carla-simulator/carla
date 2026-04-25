@@ -68,6 +68,36 @@ int main() {
 }
 ```
 
+### Linking against an installed CARLA
+
+CARLA ships a `find_package(Carla CONFIG REQUIRED)` integration. Build CARLA
+once with the C++ client enabled, install it to a prefix, then consume from
+any external CMake project:
+
+```bash
+# in CARLA's source tree
+cmake -B Build -DBUILD_CARLA_CLIENT=ON -DBUILD_PYTHON_API=OFF
+cmake --build Build --target carla-client -j
+cmake --install Build --prefix /opt/carla
+```
+
+In your own project's `CMakeLists.txt`:
+
+```cmake
+find_package(Carla CONFIG REQUIRED)
+add_executable(myapp main.cpp)
+target_link_libraries(myapp PRIVATE Carla::carla-client)
+```
+
+```bash
+cmake -B build -DCMAKE_PREFIX_PATH=/opt/carla
+cmake --build build -j
+```
+
+A complete end-to-end demo project lives at
+[`Examples/CppClient/Standalone/`](https://github.com/carla-simulator/carla/tree/master/Examples/CppClient/Standalone)
+— covers install, configure, build, and run.
+
 ## 3) Batch commands (spawn/destroy efficiently)
 
 Use batch commands when applying many actor operations in one tick.

@@ -381,6 +381,53 @@ if (BUILD_CARLA_CLIENT)
     ${CARLA_RTTI_DEFINITIONS}
   )
 
+  # Install + find_package(Carla) integration — closes #6091.
+  #
+  # carla-client links a number of vendored static libs (Boost, Recast,
+  # png, zlib, rpc) that are not themselves exported. We can't use
+  # install(EXPORT ...) for this reason. Instead we install the static
+  # archive + public headers + a hand-rolled CarlaConfig.cmake that
+  # declares Carla::carla-client as an IMPORTED STATIC target.
+  # Downstream consumers also need to provide system equivalents of
+  # the vendored deps (Boost, zlib) — see Examples/CppClient/Standalone/
+  # README.md for the practical recipe.
+  include (GNUInstallDirs)
+  include (CMakePackageConfigHelpers)
+
+  install (
+    TARGETS carla-client
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+
+  install (
+    DIRECTORY   ${LIBCARLA_SOURCE_PATH}/carla
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING
+      PATTERN "*.h"
+      PATTERN "*.hpp"
+      PATTERN "*.inl"
+  )
+
+  write_basic_package_version_file (
+    ${CMAKE_CURRENT_BINARY_DIR}/CarlaConfigVersion.cmake
+    VERSION       ${CARLA_VERSION}
+    COMPATIBILITY SameMajorVersion
+  )
+
+  configure_package_config_file (
+    ${CARLA_WORKSPACE_PATH}/CMake/CarlaConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/CarlaConfig.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Carla
+  )
+
+  install (
+    FILES
+      ${CMAKE_CURRENT_BINARY_DIR}/CarlaConfig.cmake
+      ${CMAKE_CURRENT_BINARY_DIR}/CarlaConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Carla
+  )
+
 endif ()
 
 
