@@ -201,7 +201,7 @@ if (BUILD_CARLA_SERVER)
   )
 
   target_link_libraries (
-    carla-server PUBLIC SYSTEM
+    carla-server PUBLIC
     Boost::asio
     Boost::geometry
     Boost::algorithm
@@ -382,5 +382,102 @@ if (BUILD_CARLA_CLIENT)
     ${CARLA_EXCEPTION_DEFINITIONS}
     ${CARLA_RTTI_DEFINITIONS}
   )
+
+endif ()
+
+
+
+if (BUILD_LIBCARLA_TESTS)
+
+  set (
+    LIBCARLA_TEST_HARNESS_SOURCES
+    ${LIBCARLA_SOURCE_PATH}/test/test.cpp
+    ${LIBCARLA_SOURCE_PATH}/test/test.h
+    ${LIBCARLA_SOURCE_PATH}/test/Buffer.cpp
+    ${LIBCARLA_SOURCE_PATH}/test/Buffer.h
+    ${LIBCARLA_SOURCE_PATH}/test/Random.h
+  )
+
+  file (
+    GLOB
+    LIBCARLA_TEST_COMMON_SOURCES
+    ${LIBCARLA_SOURCE_PATH}/test/common/*.cpp
+  )
+
+  if (BUILD_CARLA_SERVER)
+
+    file (
+      GLOB
+      LIBCARLA_TEST_SERVER_SOURCES
+      ${LIBCARLA_SOURCE_PATH}/test/server/*.cpp
+    )
+
+    carla_add_executable (
+      libcarla_test_server
+      "Build the LibCarla server-side gtest suite."
+      ${LIBCARLA_TEST_HARNESS_SOURCES}
+      ${LIBCARLA_TEST_COMMON_SOURCES}
+      ${LIBCARLA_TEST_SERVER_SOURCES}
+    )
+
+    target_link_libraries (
+      libcarla_test_server PRIVATE
+      carla-server
+      GTest::gtest
+      GTest::gtest_main
+    )
+
+    target_include_directories (
+      libcarla_test_server PRIVATE
+      ${LIBCARLA_SOURCE_PATH}
+      ${LIBCARLA_SOURCE_PATH}/test
+      ${LIBCARLA_SOURCE_PATH}/third-party
+    )
+
+    target_compile_definitions (
+      libcarla_test_server PRIVATE
+      LIBCARLA_WITH_GTEST
+      LIBCARLA_TEST_CONTENT_FOLDER="${CARLA_WORKSPACE_PATH}/Build/test-content"
+    )
+
+  endif ()
+
+  if (BUILD_CARLA_CLIENT)
+
+    file (
+      GLOB
+      LIBCARLA_TEST_CLIENT_SOURCES
+      ${LIBCARLA_SOURCE_PATH}/test/client/*.cpp
+    )
+
+    carla_add_executable (
+      libcarla_test_client
+      "Build the LibCarla client-side gtest suite."
+      ${LIBCARLA_TEST_HARNESS_SOURCES}
+      ${LIBCARLA_TEST_COMMON_SOURCES}
+      ${LIBCARLA_TEST_CLIENT_SOURCES}
+    )
+
+    target_link_libraries (
+      libcarla_test_client PRIVATE
+      carla-client
+      GTest::gtest
+      GTest::gtest_main
+    )
+
+    target_include_directories (
+      libcarla_test_client PRIVATE
+      ${LIBCARLA_SOURCE_PATH}
+      ${LIBCARLA_SOURCE_PATH}/test
+      ${LIBCARLA_SOURCE_PATH}/third-party
+    )
+
+    target_compile_definitions (
+      libcarla_test_client PRIVATE
+      LIBCARLA_WITH_GTEST
+      LIBCARLA_TEST_CONTENT_FOLDER="${CARLA_WORKSPACE_PATH}/Build/test-content"
+    )
+
+  endif ()
 
 endif ()

@@ -1,5 +1,6 @@
 .vs/
 .vscode/
+.zed/
 .cache/
 .devcontainer/
 .idea/

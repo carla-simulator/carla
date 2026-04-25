@@ -14,7 +14,6 @@
 
 template <typename ViewT, typename PixelT>
 struct TestImage {
-  TestImage(TestImage &&) = default;
   using pixel_type = PixelT;
   std::unique_ptr<PixelT[]> data;
   ViewT view;
