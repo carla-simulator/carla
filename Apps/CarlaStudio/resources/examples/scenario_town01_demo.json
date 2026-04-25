@@ -1,0 +1,9 @@
+{
+  "_comment": "Bundled CARLA Studio demo scenario. Loads Town01 with moderate traffic and pedestrians at noon. Open via Scenario Builder → Examples → 'Town01 traffic at noon', then click 'Apply to sim [sim]'.",
+  "name": "town01_traffic_noon",
+  "map": "/Game/Carla/Maps/Town01",
+  "weather": "ClearNoon",
+  "vehicles": 30,
+  "pedestrians": 50,
+  "seed": 42
+}

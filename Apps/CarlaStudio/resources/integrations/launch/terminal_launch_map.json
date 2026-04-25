@@ -1,0 +1,154 @@
+{
+  "tabs": [
+    { "id": 1, "label": "CARLA Core" },
+    { "id": 2, "label": "Simulation & AI" },
+    { "id": 3, "label": "Monitoring & Viz" },
+    { "id": 4, "label": "Debug" }
+  ],
+  "terminals": [
+    {
+      "id": 1,
+      "title": "[1] CARLA Server",
+      "tab": 1,
+      "pane": 1,
+      "post_spawn_sleep": 3,
+      "modes": { "gnome": true, "terminator": true },
+      "command": "cd '__CARLA_DIR__'; export DISPLAY=\"${DISPLAY:-:0}\"; echo 'CARLA Server starting on port __CARLA_PORT__ on DISPLAY='\"$DISPLAY\"; ./CarlaUE4.sh -carla-rpc-port=__CARLA_PORT__ -quality-level=Low"
+    },
+    {
+      "id": 2,
+      "title": "[2] Load Mcity Map",
+      "tab": 1,
+      "pane": 2,
+      "post_spawn_sleep": 2,
+      "modes": { "gnome": true, "terminator": true },
+      "command": "sleep 5; echo 'Loading map: __DEFAULT_MAP_NAME__'; cd '__PARENT_DIR__/launch/examples/carla_examples'; __PYTHON_BIN__ load_mcity_map.py"
+    },
+    {
+      "id": 3,
+      "title": "[3] Manual CAV Driver",
+      "tab": 1,
+      "pane": 3,
+      "post_spawn_sleep": 2,
+      "modes": { "gnome": true, "terminator": true },
+      "command": "sleep 10; echo 'Starting Manual CAV Driver'; . /opt/ros/*/setup.bash 2>/dev/null || true; cd '__PARENT_DIR__/launch/examples/carla_examples'; export DISPLAY=\"${DISPLAY:-:0}\"; export SDL_VIDEODRIVER=\"x11\"; export SDL_AUDIODRIVER=\"dummy\"; export PYTHONPATH=\"${PYTHONPATH:-}:__PARENT_DIR__/launch/python_packages:__CARLA_DIR__/PythonAPI/carla\"; export CARLA_VEHICLE_TYPE='__CARLA_VEHICLE_TYPE__'; __PYTHON_BIN__ carla_av_ros2.py 2>&1 | tee '__PARENT_DIR__/manual_cav.log'"
+    },
+    {
+      "id": 4,
+      "title": "[4] Sensor Publisher",
+      "tab": 1,
+      "pane": 4,
+      "post_spawn_sleep": 2,
+      "modes": { "gnome": true, "terminator": true },
+      "command": "sleep 12; echo 'Starting Sensor Publisher'; . /opt/ros/*/setup.bash 2>/dev/null || true; cd '__PARENT_DIR__/launch/examples/carla_examples'; export PYTHONPATH=\"${PYTHONPATH:-}:__PARENT_DIR__/launch/python_packages:__CARLA_DIR__/PythonAPI/carla\"; __PYTHON_BIN__ carla_sensor_ros2.py 2>&1 | tee '__PARENT_DIR__/sensor_publisher.log'"
+    },
+    {
+      "id": 5,
+      "title": "[5] TeraSim Co-simulation",
+      "tab": 2,
+      "pane": 1,
+      "post_spawn_sleep": 2,
+      "modes": { "gnome": true, "terminator": true },
+      "command": "sleep 20; echo 'Starting TeraSim Co-simulation'; . /opt/ros/*/setup.bash 2>/dev/null || true; export TERASIM_SCENARIO='__TERASIM_SCENARIO__'; bash '__PARENT_DIR__/launch/run/terminal5_cosim_runner.sh'"
+    },
+    {
+      "id": 6,
+      "title": "[6] GNSS Decoder",
+      "tab": 2,
+      "pane": 2,
+      "post_spawn_sleep": 2,
+      "modes": { "gnome": true, "terminator": true },
+      "command": "sleep 15; echo 'Starting GNSS Decoder'; . /opt/ros/*/setup.bash 2>/dev/null || true; cd '__PARENT_DIR__/launch/examples/carla_examples'; export PYTHONPATH=\"${PYTHONPATH:-}:__PARENT_DIR__/launch/python_packages:__CARLA_DIR__/PythonAPI/carla\"; __PYTHON_BIN__ gnss_decoder_fallback.py 2>&1 | tee '__PARENT_DIR__/gnss_decoder.log'"
+    },
+    {
+      "id": 7,
+      "title": "[7] Autoware Planning",
+      "tab": 2,
+      "pane": 3,
+      "post_spawn_sleep": 2,
+      "modes": { "gnome": true, "terminator": true },
+      "command": "sleep 17; echo 'Starting Autoware Planning Bridge'; . /opt/ros/*/setup.bash 2>/dev/null || true; cd '__PARENT_DIR__/launch/examples/carla_examples'; export PYTHONPATH=\"${PYTHONPATH:-}:__PARENT_DIR__/launch/python_packages:__CARLA_DIR__/PythonAPI/carla\"; __PYTHON_BIN__ planning_simulator_fallback.py 2>&1 | tee '__PARENT_DIR__/autoware_launch.log'"
+    },
+    {
+      "id": 8,
+      "title": "[8] Preview Control",
+      "tab": 2,
+      "pane": 4,
+      "post_spawn_sleep": 2,
+      "modes": { "gnome": true, "terminator": true },
+      "command": "sleep 20; echo 'Starting Preview Control'; . /opt/ros/*/setup.bash 2>/dev/null || true; bash '__PARENT_DIR__/launch/run/terminal8_preview_runner.sh'"
+    },
+    {
+      "id": 9,
+      "title": "[9] TeraSim Scenario",
+      "tab": 3,
+      "pane": 1,
+      "post_spawn_sleep": 2,
+      "modes": { "gnome": true, "terminator": true },
+      "command": "sleep 22; echo 'Starting TeraSim Scenario: __TERASIM_SCENARIO__'; . /opt/ros/*/setup.bash 2>/dev/null || true; export TERASIM_SCENARIO='__TERASIM_SCENARIO__'; bash '__PARENT_DIR__/launch/run/terminal9_scenario_runner.sh'"
+    },
+    {
+      "id": 10,
+      "title": "[10] RViz2",
+      "tab": 3,
+      "pane": 2,
+      "post_spawn_sleep": 2,
+      "modes": { "gnome": true, "terminator": true },
+      "command": "sleep 25; echo 'Starting RViz2'; . /opt/ros/*/setup.bash 2>/dev/null || true; rviz2 -d '__SCRIPT_DIR__/../rviz_config/carla_mcity_ros2.rviz' 2>&1 | tee '__PARENT_DIR__/rviz2.log'"
+    },
+    {
+      "id": 11,
+      "title": "[11] htop (CPU/Mem)",
+      "tab": 3,
+      "pane": 3,
+      "post_spawn_sleep": 0,
+      "modes": { "gnome": false, "terminator": true },
+      "command": "htop"
+    },
+    {
+      "id": 12,
+      "title": "[12] nvtop (GPU)",
+      "tab": 3,
+      "pane": 4,
+      "post_spawn_sleep": 0,
+      "modes": { "gnome": false, "terminator": true },
+      "command": "nvtop"
+    },
+    {
+      "id": 13,
+      "title": "Debug-1",
+      "tab": 4,
+      "pane": 1,
+      "post_spawn_sleep": 0,
+      "modes": { "gnome": false, "terminator": true },
+      "command": "bash"
+    },
+    {
+      "id": 14,
+      "title": "Debug-2",
+      "tab": 4,
+      "pane": 2,
+      "post_spawn_sleep": 0,
+      "modes": { "gnome": false, "terminator": true },
+      "command": "bash"
+    },
+    {
+      "id": 15,
+      "title": "Debug-3",
+      "tab": 4,
+      "pane": 3,
+      "post_spawn_sleep": 0,
+      "modes": { "gnome": false, "terminator": true },
+      "command": "bash"
+    },
+    {
+      "id": 16,
+      "title": "Debug-4",
+      "tab": 4,
+      "pane": 4,
+      "post_spawn_sleep": 0,
+      "modes": { "gnome": false, "terminator": true },
+      "command": "bash"
+    }
+  ]
+}

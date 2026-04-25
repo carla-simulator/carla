@@ -1,0 +1,60 @@
+# Citation File Format — https://citation-file-format.github.io/
+#
+# GitHub renders a "Cite this repository" button from this file and emits
+# BibTeX, APA, and Chicago citations on demand. Update the `version:` and
+# `date-released:` fields with each tagged release; everything else is
+# stable for the life of the project.
+cff-version: 1.2.0
+title: CARLA Studio
+message: >-
+  If you use CARLA Studio in research, demos, products, or derivative
+  works, please cite it using the metadata below. Citation is requested
+  in addition to the source-redistribution obligations of the
+  AGPL-3.0-or-later license under which CARLA Studio is distributed.
+type: software
+authors:
+  - family-names: Abdul
+    given-names: Hashim
+    alias: im-hashim
+    website: "https://github.com/im-hashim"
+    affiliation: ""
+identifiers:
+  - type: url
+    value: "https://github.com/im-hashim"
+    description: Maintainer GitHub profile
+  - type: url
+    value: "https://linkedin.com/in/HashimAbdul"
+    description: Maintainer LinkedIn profile
+keywords:
+  - carla
+  - autonomous-driving
+  - simulation
+  - autoware
+  - terasim
+  - ros2
+  - nvidia-nurec
+  - alpamayo
+  - alpasim
+  - lyra
+  - asset-harvester
+  - hugging-face
+  - qt
+  - cpp
+license: AGPL-3.0-or-later
+license-url: "https://www.gnu.org/licenses/agpl-3.0.html"
+# Bumped in lockstep with CARLA_STUDIO_VERSION in
+# Apps/CarlaStudio/CMakeLists.txt and the corresponding CHANGELOG.md
+# entry. Treat all three as one source of truth.
+version: 1.0.0
+date-released: 2026-04-25
+abstract: >-
+  CARLA Studio is a Qt-based desktop application for the CARLA
+  autonomous-driving simulator. It provides a graphical front-end for
+  scenario authoring, sensor configuration, vehicle assembly, runtime
+  control across Local / Docker / Remote / Cloud (Brev) backends, and
+  integrations with TeraSim co-simulation, Autoware planning stacks,
+  and the NVIDIA reconstruction-stack tools (NuRec, Alpamayo, AlpaSim,
+  NCore, Lyra 2.0, Asset-Harvester). Studio orchestrates downloads,
+  manages Hugging Face datasets and models, gates GPU-heavy operations
+  via local-resource probes, and offers cloud-GPU offload via NVIDIA
+  Brev. License: AGPL-3.0-or-later.
