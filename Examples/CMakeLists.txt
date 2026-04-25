@@ -33,9 +33,13 @@ carla_add_executable (
   ${CARLA_EXAMPLE_CPP_SOURCES}
   ${CARLA_EXAMPLE_CPP_HEADERS}
 )
-  
+
 target_link_libraries (
   carla-example-client PUBLIC
   carla-client
 )
+
+# Qt-based community tool example (builds a dockable plugin + standalone exe).
+# Skips itself cleanly when Qt is not installed.
+add_subdirectory (${CARLA_WORKSPACE_PATH}/Examples/QtClient QtClient)
 
