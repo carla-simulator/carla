@@ -28,10 +28,17 @@ nav:
 
 - Resources:
   - 'Python API': 'python_api.md'
-  - 'Catalogue': 'catalogue.md'  
+  - 'Catalogue': 'catalogue.md'
+  - 'C++ tutorial': 'tuto_cpp.md'
   - 'C++ reference': 'ref_cpp.md'
-  - 'Blueprint library': 'bp_library.md'  
+  - 'Blueprint library': 'bp_library.md'
   - 'Tutorials': 'tutorials.md'
+  - 'CARLA Studio':
+    - 'Overview': 'carla_studio.md'
+    - 'Tabs': 'carla_studio_tabs.md'
+    - 'Menus': 'carla_studio_menus.md'
+    - 'Build & Configuration': 'carla_studio_build.md'
+    - 'Crash protection': 'carla_studio_crash.md'
   #- 'Extended documentation': 'ext_docs.md'
 
 - CARLA Ecosystem:
