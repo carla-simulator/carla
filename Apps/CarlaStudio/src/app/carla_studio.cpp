@@ -67,6 +67,8 @@
 #include <QJsonParseError>
 #include <QSet>
 #include <QSettings>
+#include <chrono>
+#include <thread>
 #include <QPalette>
 #include <QStyleFactory>
 #include <QImage>
@@ -122,6 +124,10 @@
 
 #if defined(Q_OS_LINUX) || defined(__linux__)
 #include <fcntl.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/select.h>
 #include <linux/joystick.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -156,6 +162,7 @@
 #include <carla/client/Waypoint.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/rpc/OpendriveGenerationParameters.h>
+#include <carla/agents/navigation/BehaviorAgent.h>
 #endif
 
 #include "core/PlayerSlots.h"
@@ -839,14 +846,68 @@ int main(int argc, char *argv[]) {
   QGroupBox *launchGroup = new QGroupBox("Scenario");
   QVBoxLayout *launchLayout = new QVBoxLayout();
   
-  const QString root_str = QString::fromLocal8Bit(qgetenv("CARLA_ROOT"));
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  auto discoverCarlaRoot = []() -> QString {
+    const QString home = QDir::homePath();
+    QStringList candidates;
+    for (const QString &dir : { home + "/carla", QString("/opt/carla"), QString("/simulators/carla") }) {
+      QDir d(dir);
+      if (!d.exists()) continue;
+      candidates << d.absolutePath();
+      for (const QString &sub : d.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name | QDir::Reversed)) {
+        const QString subPath = d.absoluteFilePath(sub);
+        candidates << subPath;
+        QDir ss(subPath);
+        for (const QString &deep : ss.entryList(QDir::Dirs | QDir::NoDotAndDotDot, QDir::Name | QDir::Reversed)) {
+          candidates << ss.absoluteFilePath(deep);
+        }
+      }
+    }
+    QString bestUnreal, bestUE5, bestUE4;
+    for (const QString &c : candidates) {
+      if (QFileInfo(c + "/CarlaUnreal.sh").isFile() && bestUnreal.isEmpty()) bestUnreal = c;
+      if (QFileInfo(c + "/CarlaUE5.sh").isFile()    && bestUE5.isEmpty())    bestUE5    = c;
+      if (QFileInfo(c + "/CarlaUE4.sh").isFile()    && bestUE4.isEmpty())    bestUE4    = c;
+    }
+    if (!bestUnreal.isEmpty()) return bestUnreal;
+    if (!bestUE5.isEmpty())    return bestUE5;
+    if (!bestUE4.isEmpty())    return bestUE4;
+    return QString();
+  };
+
+  QString root_str = QString::fromLocal8Bit(qgetenv("CARLA_ROOT"));
+  {
+    const bool envHasUnreal = !root_str.isEmpty()
+                              && QFileInfo(root_str + "/CarlaUnreal.sh").isFile();
+    if (!envHasUnreal) {
+      const QString discovered = discoverCarlaRoot();
+      const bool discoveredHasUnreal = !discovered.isEmpty()
+                                       && QFileInfo(discovered + "/CarlaUnreal.sh").isFile();
+      const bool envValid = !root_str.isEmpty() &&
+        (QFileInfo(root_str + "/CarlaUE4.sh").isFile() ||
+         QFileInfo(root_str + "/CarlaUE5.sh").isFile() ||
+         QFileInfo(root_str + "/CarlaUnreal.sh").isFile());
+      if (discoveredHasUnreal || (!envValid && !discovered.isEmpty())) {
+        root_str = discovered;
+      }
+    }
+  }
 
   QLineEdit *carlaRootPath = new QLineEdit();
   carlaRootPath->setPlaceholderText(
     "Enter $CARLA_ROOT path or 👆 bottom right of this page");
   carlaRootPath->setToolTip(
-    "Path to your CARLA install (the directory that holds CarlaUE4.sh "
-    "or CarlaUE5.sh). Use Cfg → Install / Update CARLA to fetch one.");
+    "Path to your CARLA install (the directory that holds CarlaUE4.sh, "
+    "CarlaUE5.sh, or CarlaUnreal.sh). Use Cfg → Install / Update CARLA "
+    "to fetch one.");
   {
     QPalette pal = carlaRootPath->palette();
     pal.setColor(QPalette::PlaceholderText, QColor(0, 0, 0, 153));
@@ -872,7 +933,21 @@ int main(int argc, char *argv[]) {
   scenarioSelect->setToolTip(
     "Map loaded into the simulator at start. Refresh (⟳) repopulates "
     "from the running sim; + Maps installs additional packs.");
-  scenarioSelect->addItems(QStringList() << "Town01" << "Town02" << "Town03" << "Town04" << "Town05" << "Town06");
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  scenarioSelect->addItems(QStringList() << "Basic" << "Town10HD_Opt");
+  scenarioSelect->setCurrentIndex(0);
   scenarioSelect->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   scenarioLayout->addWidget(scenarioSelect, 1);
   QPushButton *refreshScenarioBtn = new QPushButton("⟳");
@@ -892,6 +967,10 @@ int main(int argc, char *argv[]) {
 
   QAction *optRenderOffscreen = new QAction("Off-screen (-RenderOffScreen)", &window);
   optRenderOffscreen->setCheckable(true);
+  
+  
+  QAction *optWindowSmall = new QAction("Windowed 640×480 (default)", &window);
+  optWindowSmall->setCheckable(true);
   QAction *optQualityEpic = new QAction("Quality Epic (-quality-level=Epic)", &window);
   optQualityEpic->setCheckable(true);
   QAction *optQualityLow = new QAction("Quality Low (-quality-level=Low)", &window);
@@ -902,6 +981,43 @@ int main(int argc, char *argv[]) {
   optRos2->setCheckable(true);
   QAction *optPreferNvidia = new QAction("Prefer NVIDIA (-prefernvidia)", &window);
   optPreferNvidia->setCheckable(true);
+  
+  
+  
+  
+  
+  
+  optPreferNvidia->setChecked(true);
+  {
+    const bool savedExplicit = QSettings().contains("render/prefer_nvidia");
+    if (savedExplicit) {
+      optPreferNvidia->setChecked(QSettings().value("render/prefer_nvidia").toBool());
+    }
+    QProcess nv;
+    nv.setProcessEnvironment(QProcessEnvironment::systemEnvironment());
+    nv.start("/usr/bin/nvidia-smi", QStringList() << "-L");
+    const bool ok = nv.waitForFinished(1500)
+                    && nv.exitStatus() == QProcess::NormalExit
+                    && nv.exitCode() == 0;
+    const QString out = ok
+        ? QString::fromLocal8Bit(nv.readAllStandardOutput()).trimmed()
+        : QString();
+    if (!out.isEmpty()) {
+      optPreferNvidia->setToolTip(
+          QString("Auto-enabled — NVIDIA GPU detected:\n%1\n\nToggle off if "
+                  "you want CARLA to pick its own renderer (llvmpipe fallback).")
+              .arg(out));
+    } else {
+      optPreferNvidia->setToolTip(
+          "Default-on. Forces CARLA to use the NVIDIA Vulkan driver instead "
+          "of the llvmpipe software fallback (which produces ~0 % GPU load "
+          "and an unusably slow simulator). Toggle off only if you don't "
+          "have an NVIDIA card.");
+    }
+  }
+  QObject::connect(optPreferNvidia, &QAction::toggled, &window, [](bool on) {
+    QSettings().setValue("render/prefer_nvidia", on);
+  });
   QAction *optDriverInApp = new QAction("In-app LibCarla driver (default)", &window);
   optDriverInApp->setCheckable(true);
   QAction *optDriverPython = new QAction("Python manual_control.py (optional)", &window);
@@ -961,7 +1077,8 @@ int main(int argc, char *argv[]) {
   simRequiredButtons.push_back(cpvBtn);
   simRequiredButtons.push_back(bevBtn);
   for (QPushButton *b : {fpvBtn, tpvBtn, cpvBtn, bevBtn}) b->setEnabled(false);
-  tpvBtn->setChecked(true);
+  
+  
   auto *viewBtnGroup = new QButtonGroup(&window);
   viewBtnGroup->setExclusive(true);
   viewBtnGroup->addButton(fpvBtn);
@@ -1359,7 +1476,7 @@ int main(int argc, char *argv[]) {
     std::cerr.rdbuf(g_origCerr);
   });
 
-  QGroupBox *perfGroup = new QGroupBox("Process Control");
+  QGroupBox *perfGroup = new QGroupBox("Processes");
   QVBoxLayout *perfLayout = new QVBoxLayout();
   QTableWidget *carlaProcessTable = new QTableWidget();
   carlaProcessTable->setColumnCount(5);
@@ -1452,6 +1569,30 @@ int main(int argc, char *argv[]) {
     startBtn->setEnabled(rootConfiguredOk && !isBusy);
     stopBtn->setEnabled(rootConfiguredOk);
     setSimReachable(state.startsWith("Running"));
+
+    
+    const bool isConnecting = isBusy && (state.contains("connecting", Qt::CaseInsensitive)
+                                         || state.contains("Initializing", Qt::CaseInsensitive)
+                                         || state.contains("loading", Qt::CaseInsensitive));
+    const bool isRunning    = state.startsWith("Running") && !isConnecting;
+    
+    static const char kBtnBase[] =
+      "QPushButton { color: white; font-weight: 700; padding: 7px 14px;"
+      "  border: 1px solid %3; border-radius: 4px;"
+      "  background: qlineargradient(x1:0,y1:0,x2:0,y2:1, stop:0 %1, stop:1 %2); }"
+      "QPushButton:hover  { background: %2; }"
+      "QPushButton:pressed{ background: %3; }"
+      "QPushButton:disabled{ background: #C5E1A5; color: #F5F5F5; border-color: #9CCC65; }";
+    if (isConnecting) {
+      startBtn->setText("Connecting…");
+      startBtn->setStyleSheet(QString(kBtnBase).arg("#F9A825", "#F57F17", "#E65100"));
+    } else if (isRunning) {
+      startBtn->setText("Running");
+      startBtn->setStyleSheet(QString(kBtnBase).arg("#43A047", "#2E7D32", "#1B5E20"));
+    } else {
+      startBtn->setText("START");
+      startBtn->setStyleSheet(QString(kBtnBase).arg("#43A047", "#2E7D32", "#1B5E20"));
+    }
   };
 
   auto refreshRememberedPidList = [&]() {
@@ -1494,12 +1635,22 @@ int main(int argc, char *argv[]) {
   };
 
   auto killAllCarlaProcesses = [&]() {
-    QProcess::execute("/bin/bash", QStringList() << "-lc" << "pkill -TERM -f 'CarlaUE4|CarlaUE5|CarlaUE' 2>/dev/null || true");
+    
+    
+    
+    
+    
+    
+    QProcess::execute("/bin/bash", QStringList() << "-lc"
+        << "pkill -TERM -f 'CarlaUE4|CarlaUE5|CarlaUnreal|CarlaUE' 2>/dev/null || true");
   };
 
   auto forceStopNow = [&]() {
-    killTrackedPids();
-    killAllCarlaProcesses();
+    
+    QProcess::execute("/bin/bash", QStringList() << "-lc"
+        << "pkill -KILL -f 'CarlaUE4|CarlaUE5|CarlaUnreal|CarlaUE' 2>/dev/null || true");
+    trackedCarlaPids.clear();
+    refreshRememberedPidList();
     refreshProcessList();
     setSimulationStatus("Stopped");
   };
@@ -2140,17 +2291,32 @@ int main(int argc, char *argv[]) {
   auto probeInstalledCarlaVersion = [&]() -> QString {
     const QString root = carlaRootPath->text().trimmed();
     if (root.isEmpty()) return QString();
+    
+    
+    
+    
     for (const QString &p : { root + "/VERSION", root + "/version.txt" }) {
       QFile f(p);
       if (f.open(QIODevice::ReadOnly)) {
         const QString v = QString::fromLocal8Bit(f.readLine()).trimmed();
-        if (!v.isEmpty()) return v;
+        if (!v.isEmpty() && v[0].isDigit()) return v;
       }
     }
     QRegularExpression dirVer("CARLA[_-]v?([0-9]+\\.[0-9]+(?:\\.[0-9]+)?)",
                               QRegularExpression::CaseInsensitiveOption);
-    const auto m = dirVer.match(QFileInfo(root).fileName());
-    if (m.hasMatch()) return m.captured(1);
+    
+    
+    
+    QString cur = root;
+    for (int i = 0; i < 3 && !cur.isEmpty(); ++i) {
+      const auto m = dirVer.match(QFileInfo(cur).fileName());
+      if (m.hasMatch()) return m.captured(1);
+      const QString parent = QFileInfo(cur).path();
+      if (parent == cur) break;
+      cur = parent;
+    }
+    
+    if (QFileInfo(root + "/CarlaUnreal.sh").isFile()) return "0.10.0";
     return QString();
   };
 
@@ -2193,22 +2359,30 @@ int main(int argc, char *argv[]) {
 
   auto validateCarlaRoot = [&]() {
     const QString path = carlaRootPath->text().trimmed();
-    const bool hasUE4 = QFileInfo(path + "/CarlaUE4.sh").isFile();
-    const bool hasUE5 = QFileInfo(path + "/CarlaUE5.sh").isFile();
+    
+    
+    const bool hasUE4    = QFileInfo(path + "/CarlaUE4.sh").isFile();
+    const bool hasUE5    = QFileInfo(path + "/CarlaUE5.sh").isFile();
+    const bool hasUnreal = QFileInfo(path + "/CarlaUnreal.sh").isFile();
     const QString envUnrealPath = QString::fromLocal8Bit(qgetenv("CARLA_UNREAL_ENGINE_PATH")).trimmed();
 
     auto inferEngine = [&]() -> QString {
       const QString envLower = envUnrealPath.toLower();
       if (envLower.contains("ue5") || envLower.contains("unrealengine5") || envLower.contains("5.")) return "Unreal 5";
       if (envLower.contains("ue4") || envLower.contains("unrealengine4") || envLower.contains("4.")) return "Unreal 4";
+      
+      
+      
+      
       if (hasUE5 && !hasUE4) return "Unreal 5";
       if (hasUE4 && !hasUE5) return "Unreal 4";
       if (hasUE5 &&  hasUE4) return "Unreal 4/5";
+      if (hasUnreal)         return "Unreal 5";
       return "Unreal ?";
     };
 
     detectedEngineLabel = inferEngine();
-    rootConfiguredOk    = (!path.isEmpty() && (hasUE4 || hasUE5));
+    rootConfiguredOk    = (!path.isEmpty() && (hasUE4 || hasUE5 || hasUnreal));
 
     const bool showPathRow = !rootConfiguredOk;
     carlaRootPath->setVisible(showPathRow);
@@ -2237,11 +2411,22 @@ int main(int argc, char *argv[]) {
     QStringList args;
     if (optRenderOffscreen->isChecked()) {
       args << "-RenderOffScreen";
+    } else if (optWindowSmall->isChecked()) {
+      
+      
+      
+      args << "-windowed" << "-ResX=640" << "-ResY=480";
     }
+    
+    
+    
+    
     if (optQualityLow->isChecked()) {
       args << "-quality-level=Low";
     } else if (optQualityEpic->isChecked()) {
       args << "-quality-level=Epic";
+    } else {
+      args << "-quality-level=Low";
     }
     if (optNoSound->isChecked()) {
       args << "-nosound";
@@ -2255,16 +2440,88 @@ int main(int argc, char *argv[]) {
     return args;
   };
 
+  
+  
+  
+  auto fitCarlaWindowToSafeSize = []() {
+    auto *poll = new QTimer();
+    poll->setInterval(1000);
+    auto *deadline = new QTimer();
+    deadline->setSingleShot(true);
+    deadline->setInterval(30000);
+    QObject::connect(poll, &QTimer::timeout, [poll, deadline]() {
+      QProcess find;
+      find.start("xdotool", QStringList() << "search" << "--name" << "CarlaUnreal");
+      if (!find.waitForFinished(800)) { return; }
+      const QString out = QString::fromLocal8Bit(find.readAllStandardOutput()).trimmed();
+      if (out.isEmpty()) return;
+      const QStringList wids = out.split('\n');
+      const QString wid = wids.last();
+      QProcess geom;
+      geom.start("xdotool", QStringList() << "getwindowgeometry" << wid);
+      geom.waitForFinished(500);
+      const QString g = QString::fromLocal8Bit(geom.readAllStandardOutput());
+      
+      if (g.contains(QRegularExpression(R"(Geometry:\s*(\d{4,})x(\d{3,}))"))) {
+        QProcess resize;
+        resize.start("xdotool",
+            QStringList() << "windowsize" << wid << "640" << "480");
+        resize.waitForFinished(500);
+      }
+      poll->stop();
+      deadline->stop();
+      poll->deleteLater();
+      deadline->deleteLater();
+    });
+    QObject::connect(deadline, &QTimer::timeout, [poll, deadline]() {
+      poll->stop();
+      poll->deleteLater();
+      deadline->deleteLater();
+    });
+    poll->start();
+    deadline->start();
+  };
+
   QObject::connect(optQualityEpic, &QAction::toggled, &window, [&](bool checked) {
     if (checked && optQualityLow->isChecked()) {
       optQualityLow->setChecked(false);
     }
+    QSettings().setValue("render/quality_epic", checked);
   });
   QObject::connect(optQualityLow, &QAction::toggled, &window, [&](bool checked) {
     if (checked && optQualityEpic->isChecked()) {
       optQualityEpic->setChecked(false);
     }
+    QSettings().setValue("render/quality_low", checked);
   });
+  QObject::connect(optNoSound, &QAction::toggled, &window, [](bool on) {
+    QSettings().setValue("render/no_sound", on);
+  });
+  QObject::connect(optRenderOffscreen, &QAction::toggled, &window, [&](bool on) {
+    QSettings().setValue("render/offscreen", on);
+    if (on && optWindowSmall->isChecked()) optWindowSmall->setChecked(false);
+  });
+  QObject::connect(optWindowSmall, &QAction::toggled, &window, [&](bool on) {
+    QSettings().setValue("render/window_small", on);
+    if (on && optRenderOffscreen->isChecked()) optRenderOffscreen->setChecked(false);
+  });
+
+  
+  
+  
+  {
+    QSettings s;
+    optQualityLow->setChecked(s.value("render/quality_low",     true ).toBool());
+    optQualityEpic->setChecked(s.value("render/quality_epic",   false).toBool());
+    optNoSound->setChecked(s.value("render/no_sound",           true ).toBool());
+    
+    
+    
+    
+    
+    optWindowSmall->setChecked(s.value("render/window_small",   true ).toBool());
+    optRenderOffscreen->setChecked(s.value("render/offscreen",  false).toBool());
+  }
 
   auto refreshRuntimeOptions = [&]() {
     const QString previous = runtimeTarget->currentText();
@@ -2331,6 +2588,11 @@ int main(int argc, char *argv[]) {
     QStringList sorted = scenarios.values();
     sorted.sort(Qt::CaseInsensitive);
     scenarioSelect->clear();
+    
+    
+    
+    
+    scenarioSelect->addItem("Basic");
     scenarioSelect->addItems(sorted);
     const int idx = scenarioSelect->findText(previous);
     scenarioSelect->setCurrentIndex(idx >= 0 ? idx : 0);
@@ -2522,13 +2784,14 @@ int main(int argc, char *argv[]) {
       const QString processName = parts[4];
       const double rssMiB  = rssKib / 1024.0;
 
-      static const std::array<std::pair<const char *, const char *>, 12> kPrettyProcs = {{
+      static const std::array<std::pair<const char *, const char *>, 13> kPrettyProcs = {{
         {"CarlaUE4-Linux",   "Simulator (UE4)"},
         {"CarlaUE5-Linux",   "Simulator (UE5)"},
         {"CarlaUnreal",      "Simulator (Unreal)"},
         {"UnrealEditor",     "Unreal Editor"},
         {"CarlaUE4.sh",      "Launcher (.sh)"},
         {"CarlaUE5.sh",      "Launcher (.sh)"},
+        {"CarlaUnreal.sh",   "Launcher (.sh)"},
         {"manual_control",   "manual_control.py"},
         {"python3",          "Python driver"},
         {"python",           "Python driver"},
@@ -2670,16 +2933,116 @@ int main(int argc, char *argv[]) {
   QTimer *inAppCameraTick = new QTimer(&window);
   inAppCameraTick->setInterval(80);
 
+  
+  QDockWidget *viewDock = nullptr;
+  QVBoxLayout *viewGridLayout = nullptr;
+  QMap<QString, QGroupBox *> viewTiles;
+
 #ifdef CARLA_STUDIO_WITH_LIBCARLA
+  QMap<QString, carla::SharedPtr<cc::Sensor>> activeViewSensors;
+
   std::shared_ptr<cc::Client> inAppDriveClient;
   carla::SharedPtr<cc::Vehicle> inAppDriveVehicle;
   bool inAppDriveSpawnedVehicle = false;
+
+  
+  
+  
+  
+  enum class SelfDriveMode {
+    Off              = 0,   
+    ACC              = 1,   
+    LaneKeep         = 2,   
+    AssistNormal     = 3,   
+    AssistAggressive = 4,   
+    AutonomousLoop   = 5,   
+  };
+  std::unique_ptr<carla::agents::navigation::BehaviorAgent> selfDriveAgent;
+  SelfDriveMode selfDriveMode = SelfDriveMode::Off;
+
+  
+  
+  
+  
+  
+  auto pickForwardDestination = [&](const cg::Transform &from,
+                                     float maxDist = 400.0f,
+                                     float minDot  = 0.2f)
+      -> std::optional<cg::Transform> {
+    if (!inAppDriveClient) return std::nullopt;
+    try {
+      auto world = inAppDriveClient->GetWorld();
+      auto map = world.GetMap();
+      if (!map) return std::nullopt;
+      const auto spawnPts = map->GetRecommendedSpawnPoints();
+      if (spawnPts.empty()) return std::nullopt;
+      const auto fwd = from.GetForwardVector();
+      cg::Transform best;
+      float bestScore = -1.0f;
+      for (const auto &c : spawnPts) {
+        const float dx = c.location.x - from.location.x;
+        const float dy = c.location.y - from.location.y;
+        const float dist = std::sqrt(dx * dx + dy * dy);
+        if (dist < 60.0f || dist > maxDist) continue;
+        const float dotForward = (dx * fwd.x + dy * fwd.y) / dist;
+        if (dotForward < minDot) continue;
+        
+        
+        const float score = dotForward * std::min(dist, 800.0f);
+        if (score > bestScore) {
+          bestScore = score;
+          best = c;
+        }
+      }
+      if (bestScore < 0.0f) return std::nullopt;
+      return best;
+    } catch (...) {
+      return std::nullopt;
+    }
+  };
+
+  auto engageSelfDrive = [&](SelfDriveMode mode) -> bool {
+    if (mode == SelfDriveMode::Off) {
+      selfDriveAgent.reset();
+      selfDriveMode = SelfDriveMode::Off;
+      return true;
+    }
+    if (!inAppDriveClient || !inAppDriveVehicle) return false;
+    try {
+      using BA = carla::agents::navigation::BehaviorAgent;
+      BA::Behavior behavior = BA::Behavior::Normal;
+      if (mode == SelfDriveMode::AssistAggressive ||
+          mode == SelfDriveMode::AutonomousLoop) {
+        behavior = BA::Behavior::Aggressive;
+      }
+      auto agent = std::make_unique<BA>(inAppDriveVehicle, behavior);
+      const auto vt = inAppDriveVehicle->GetTransform();
+      
+      
+      
+      const bool isAuto = (mode == SelfDriveMode::AutonomousLoop);
+      const float destMaxDist = isAuto ? 20000.0f : 400.0f;
+      const float destMinDot  = isAuto ? -0.3f    : 0.2f;
+      if (auto dest = pickForwardDestination(vt, destMaxDist, destMinDot)) {
+        agent->SetDestination(dest->location);
+      }
+      selfDriveAgent = std::move(agent);
+      selfDriveMode = mode;
+      return true;
+    } catch (...) {
+      selfDriveAgent.reset();
+      selfDriveMode = SelfDriveMode::Off;
+      return false;
+    }
+  };
 
   auto stopInAppDriver = [&]() {
     inAppDriverControlActive = false;
     driveKeys = {};
     inAppDriveTick->stop();
     inAppCameraTick->stop();
+    selfDriveAgent.reset();
+    selfDriveMode = SelfDriveMode::Off;
     try {
       if (inAppDriveSpawnedVehicle && inAppDriveVehicle) {
         inAppDriveVehicle->Destroy();
@@ -2689,6 +3052,18 @@ int main(int argc, char *argv[]) {
     inAppDriveVehicle = nullptr;
     inAppDriveClient.reset();
     inAppDriveSpawnedVehicle = false;
+    
+    for (auto it = activeViewSensors.begin(); it != activeViewSensors.end(); ++it) {
+      try { if (it.value()) { it.value()->Stop(); it.value()->Destroy(); } } catch (...) {}
+    }
+    activeViewSensors.clear();
+    for (auto *t : viewTiles) t->deleteLater();
+    viewTiles.clear();
+    if (viewDock) viewDock->hide();
+    { QSignalBlocker b(fpvBtn); fpvBtn->setChecked(false); }
+    { QSignalBlocker b(tpvBtn); tpvBtn->setChecked(false); }
+    { QSignalBlocker b(cpvBtn); cpvBtn->setChecked(false); }
+    { QSignalBlocker b(bevBtn); bevBtn->setChecked(false); }
   };
 
   auto updateThirdPersonCamera = [&]() {
@@ -2701,28 +3076,15 @@ int main(int argc, char *argv[]) {
       const auto vehicleTransform = inAppDriveVehicle->GetTransform();
       const double yawRad = static_cast<double>(vehicleTransform.rotation.yaw) * M_PI / 180.0;
 
-      const QString mode = driverViewMode->currentText();
+      
+      
+      
+      const float cameraDistance = 6.0f;
       cg::Location cameraLocation = vehicleTransform.location;
+      cameraLocation.x -= static_cast<float>(std::cos(yawRad) * cameraDistance);
+      cameraLocation.y -= static_cast<float>(std::sin(yawRad) * cameraDistance);
+      cameraLocation.z += 2.6f;
       cg::Rotation cameraRotation(-12.0f, vehicleTransform.rotation.yaw, 0.0f);
-
-      if (mode == "First Person") {
-        cameraLocation.x += static_cast<float>(std::cos(yawRad) * 0.9);
-        cameraLocation.y += static_cast<float>(std::sin(yawRad) * 0.9);
-        cameraLocation.z += 1.25f;
-        cameraRotation = cg::Rotation(-2.0f, vehicleTransform.rotation.yaw, 0.0f);
-      } else if (mode == "Cockpit") {
-        cameraLocation.z += 1.05f;
-        cameraRotation = cg::Rotation(-8.0f, vehicleTransform.rotation.yaw, 0.0f);
-      } else if (mode == "Bird Eye") {
-        cameraLocation.z += 38.0f;
-        cameraRotation = cg::Rotation(-90.0f, vehicleTransform.rotation.yaw, 0.0f);
-      } else {
-        const float cameraDistance = 6.0f;
-        cameraLocation.x -= static_cast<float>(std::cos(yawRad) * cameraDistance);
-        cameraLocation.y -= static_cast<float>(std::sin(yawRad) * cameraDistance);
-        cameraLocation.z += 2.6f;
-        cameraRotation = cg::Rotation(-12.0f, vehicleTransform.rotation.yaw, 0.0f);
-      }
 
       spectator->SetTransform(cg::Transform(cameraLocation, cameraRotation));
     } catch (...) {
@@ -2734,16 +3096,56 @@ int main(int argc, char *argv[]) {
       return;
     }
     carla::rpc::VehicleControl control;
-    control.throttle = driveKeys.throttle ? 0.55f : 0.0f;
-    control.brake = driveKeys.brake ? 0.65f : 0.0f;
-    control.hand_brake = driveKeys.handbrake;
 
-    if (driveKeys.steerLeft == driveKeys.steerRight) {
-      control.steer = 0.0f;
-    } else if (driveKeys.steerLeft) {
-      control.steer = -0.45f;
+    
+    if (selfDriveAgent && selfDriveMode != SelfDriveMode::Off) {
+      try {
+        
+        
+        
+        
+        if (selfDriveMode == SelfDriveMode::AutonomousLoop &&
+            selfDriveAgent->Done()) {
+          const auto vt = inAppDriveVehicle->GetTransform();
+          if (auto dest = pickForwardDestination(vt, 20000.0f, -0.3f)) {
+            selfDriveAgent->SetDestination(dest->location);
+          }
+        }
+        control = selfDriveAgent->RunStep();
+
+        
+        if (selfDriveMode == SelfDriveMode::ACC) {
+          if (driveKeys.steerLeft == driveKeys.steerRight) {
+            control.steer = 0.0f;
+          } else if (driveKeys.steerLeft) {
+            control.steer = -0.45f;
+          } else {
+            control.steer = 0.45f;
+          }
+          if (driveKeys.handbrake) control.hand_brake = true;
+        }
+        
+        else if (selfDriveMode == SelfDriveMode::LaneKeep) {
+          control.throttle = driveKeys.throttle ? 0.55f : 0.0f;
+          control.brake    = driveKeys.brake    ? 0.65f : 0.0f;
+          control.hand_brake = driveKeys.handbrake;
+        }
+      } catch (...) {
+        return;
+      }
     } else {
-      control.steer = 0.45f;
+      
+      control.throttle = driveKeys.throttle ? 0.55f : 0.0f;
+      control.brake = driveKeys.brake ? 0.65f : 0.0f;
+      control.hand_brake = driveKeys.handbrake;
+
+      if (driveKeys.steerLeft == driveKeys.steerRight) {
+        control.steer = 0.0f;
+      } else if (driveKeys.steerLeft) {
+        control.steer = -0.45f;
+      } else {
+        control.steer = 0.45f;
+      }
     }
 
     control.reverse = false;
@@ -2755,20 +3157,228 @@ int main(int argc, char *argv[]) {
   };
 
   auto startInAppDriver = [&](const QString &host, int port, const QString &scenarioName) -> bool {
-    Q_UNUSED(scenarioName);
     stopInAppDriver();
     try {
-      inAppDriveClient = std::make_shared<cc::Client>(host.toStdString(), static_cast<uint16_t>(port));
-      inAppDriveClient->SetTimeout(std::chrono::seconds(4));
+      
+      
+      
+      
+      
+      std::string hostStr = host.toStdString();
+      if (hostStr == "localhost" || hostStr == "::1") {
+        hostStr = "127.0.0.1";
+      }
+      std::cerr << "[in-app driver] connecting to " << hostStr
+                << ":" << port << " (scenario=\"" << scenarioName.toStdString()
+                << "\")\n";
+
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+
+      
+      
+      auto tcpOpen = [&hostStr, port]() -> bool {
+        int fd = ::socket(AF_INET, SOCK_STREAM, 0);
+        if (fd < 0) return false;
+        ::fcntl(fd, F_SETFL, O_NONBLOCK);
+        struct sockaddr_in sa{};
+        sa.sin_family = AF_INET;
+        sa.sin_port = htons(static_cast<uint16_t>(port));
+        ::inet_pton(AF_INET, hostStr.c_str(), &sa.sin_addr);
+        ::connect(fd, reinterpret_cast<sockaddr *>(&sa), sizeof(sa));
+        fd_set ws; FD_ZERO(&ws); FD_SET(fd, &ws);
+        struct timeval tv{0, 100'000}; // 100 ms — localhost ECONNREFUSED is near-instant
+        const bool open = ::select(fd + 1, nullptr, &ws, nullptr, &tv) == 1;
+        ::close(fd);
+        return open;
+      };
+
+      // Combined probe: TCP check → fresh cc::Client → GetServerVersion().
+      // Creates a new cc::Client on each TCP-success to guarantee a live
+      // rpclib socket. The successful client is promoted to inAppDriveClient.
+      auto rpcReadyProbe = [&, last_err = std::string()]() mutable -> bool {
+        if (!tcpOpen()) return false;
+        auto candidate = std::make_shared<cc::Client>(hostStr, static_cast<uint16_t>(port));
+        candidate->SetTimeout(std::chrono::seconds(2)); // GetServerVersion is sub-ms on a live server
+        try {
+          (void)candidate->GetServerVersion();
+          inAppDriveClient = std::move(candidate);
+          inAppDriveClient->SetTimeout(std::chrono::seconds(30));
+          return true;
+        } catch (const std::exception &e) {
+          const std::string msg = e.what();
+          if (msg != last_err) {
+            std::cerr << "[in-app driver] rpcReady probe: " << msg << '\n';
+            last_err = msg;
+          }
+          candidate.reset();
+          return false;
+        } catch (...) {
+          candidate.reset();
+          return false;
+        }
+      };
+
+      // Probe loop: retry until probe() succeeds OR the user presses STOP.
+      // max_seconds > 0 adds a hard timeout for post-load checks; 0 = unlimited.
+      // Sleep is broken into 50 ms event-processing slices so the UI stays
+      // responsive and STOP takes effect within ~50 ms.
+      auto waitFor = [&](const char *label,
+                         const std::function<bool()> &probe,
+                         int max_seconds = 0) -> bool {
+        const auto start = std::chrono::steady_clock::now();
+        int attempt = 0;
+        while (launchRequestedOrRunning) {
+          if (probe()) {
+            const auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                std::chrono::steady_clock::now() - start).count();
+            std::cerr << "[in-app driver] " << label
+                      << " READY after " << attempt
+                      << " probes (" << elapsed_ms << " ms)\n";
+            setSimulationStatus(QString("Running (%1 ready, %2 ms)")
+                                  .arg(QString::fromLatin1(label))
+                                  .arg(qint64(elapsed_ms)));
+            return true;
+          }
+          ++attempt;
+          const auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
+              std::chrono::steady_clock::now() - start).count();
+          if (max_seconds > 0 && elapsed >= max_seconds) {
+            std::cerr << "[in-app driver] " << label << " TIMED OUT after "
+                      << elapsed << " s (" << attempt << " probes)\n";
+            return false;
+          }
+          if (attempt % 4 == 0) {
+            setSimulationStatus(QString("Running (connecting… %1 s)")
+                                  .arg(qint64(elapsed)));
+          }
+          // 5 × 50 ms = 250 ms sleep, but processEvents each slice so STOP
+          // button clicks are dispatched and launchRequestedOrRunning updates.
+          for (int i = 0; i < 5 && launchRequestedOrRunning; ++i) {
+            QApplication::processEvents(QEventLoop::AllEvents, 50);
+          }
+        }
+        std::cerr << "[in-app driver] " << label << " aborted (STOP)\n";
+        return false;
+      };
+
+      // Retry until STOP is pressed (max_seconds=0 → unlimited).
+      if (!waitFor("rpc-ready", rpcReadyProbe)) {
+        setSimulationStatus("Idle");
+        return false;
+      }
+      // inAppDriveClient is now set by rpcReadyProbe.
+
+      // Post-load world probe used after GenerateOpenDriveWorld / LoadWorld.
+      auto worldQueryable = [&]() -> bool {
+        try {
+          auto world = inAppDriveClient->GetWorld();
+          return true;
+        } catch (...) { return false; }
+      };
+
+      // -------- Honour the Map dropdown selection ----------------------
+      // "Basic" → bundled 10-mile two-lane OpenDRIVE via
+      //           GenerateOpenDriveWorld() (heavy RPC, up to ~60 s).
+      // "Town*" → standard CARLA umap via LoadWorld(town).
+      const QString chosenMap = scenarioName.trimmed();
+      const bool wantMinimal =
+          chosenMap.compare("Basic", Qt::CaseInsensitive) == 0 ||
+          chosenMap.compare("Minimal", Qt::CaseInsensitive) == 0 ||  // legacy alias
+          (chosenMap.isEmpty() &&
+           QSettings().value("render/load_default_scenario", true).toBool());
+      if (wantMinimal) {
+        QFile xodrFile(":/examples/two_lane_10mi.xodr");
+        if (xodrFile.open(QIODevice::ReadOnly)) {
+          const QByteArray xml = xodrFile.readAll();
+          xodrFile.close();
+          inAppDriveClient->SetTimeout(std::chrono::seconds(120));
+          bool generated = false;
+          for (int attempt = 0; attempt < 4 && !generated; ++attempt) {
+            try {
+              carla::rpc::OpendriveGenerationParameters params;
+              params.vertex_distance = 5.0;
+              params.max_road_length = 500.0;
+              // 1.5 m wall at both outer shoulder edges — acts as guard-rail fence
+              params.wall_height = 1.5;
+              // 50 m each side of centreline gives a stable physics ground plane
+              // without triggering UE5 RecastNavMesh tile-build crashes.
+              params.additional_width = 50.0;
+              params.smooth_junctions = true;
+              params.enable_mesh_visibility = true;
+              setSimulationStatus(QString("Running (loading Basic map, attempt %1/4)")
+                                    .arg(attempt + 1));
+              inAppDriveClient->GenerateOpenDriveWorld(xml.toStdString(), params);
+              generated = true;
+            } catch (const std::exception &e) {
+              std::cerr << "[in-app driver] GenerateOpenDriveWorld attempt "
+                        << (attempt + 1) << "/4 failed: " << e.what() << '\n';
+              std::this_thread::sleep_for(std::chrono::seconds(5));
+            }
+          }
+          inAppDriveClient->SetTimeout(std::chrono::seconds(30));
+          if (generated) {
+            waitFor("post-load world", worldQueryable, 60);
+          } else {
+            std::cerr << "[in-app driver] GenerateOpenDriveWorld gave up; "
+                         "continuing on boot map\n";
+          }
+        }
+      } else if (!chosenMap.isEmpty()) {
+        // LoadWorld() picks the umap by short name (Town01, Town10HD, etc).
+        inAppDriveClient->SetTimeout(std::chrono::seconds(120));
+        try {
+          setSimulationStatus(QString("Running (loading %1)").arg(chosenMap));
+          inAppDriveClient->LoadWorld(chosenMap.toStdString());
+          waitFor("post-load world", worldQueryable, 60);
+        } catch (const std::exception &e) {
+          std::cerr << "[in-app driver] LoadWorld(" << chosenMap.toStdString()
+                    << ") failed: " << e.what() << '\n';
+        }
+        inAppDriveClient->SetTimeout(std::chrono::seconds(30));
+      }
+
       auto world = inAppDriveClient->GetWorld();
 
-      auto actors = world.GetActors();
-      auto vehicles = actors->Filter("vehicle.*");
+      // Each step below runs on the GUI thread and can throw via the RPC.
+      // Wrap each in its own try/catch with stderr logging so a failure
+      // localizes instead of bubbling up as an opaque "std::exception"
+      // through the outer catch (which has bitten us repeatedly with the
+      // InMemoryMap cache build on generated-OpenDRIVE worlds).
+      carla::SharedPtr<cc::ActorList> actors;
+      try {
+        std::cerr << "[in-app driver] step: GetActors\n";
+        actors = world.GetActors();
+      } catch (const std::exception &e) {
+        std::cerr << "[in-app driver] GetActors threw: " << e.what() << '\n';
+      }
+      carla::SharedPtr<cc::ActorList> vehicles =
+          actors ? actors->Filter("vehicle.*") : nullptr;
       if (vehicles && !vehicles->empty()) {
         inAppDriveVehicle = std::static_pointer_cast<cc::Vehicle>(vehicles->at(0u));
         inAppDriveSpawnedVehicle = false;
+        std::cerr << "[in-app driver] reused existing vehicle id="
+                  << inAppDriveVehicle->GetId() << '\n';
       } else {
-        auto blueprints = world.GetBlueprintLibrary();
+        carla::SharedPtr<cc::BlueprintLibrary> blueprints;
+        try {
+          std::cerr << "[in-app driver] step: GetBlueprintLibrary\n";
+          blueprints = world.GetBlueprintLibrary();
+        } catch (const std::exception &e) {
+          std::cerr << "[in-app driver] GetBlueprintLibrary threw: " << e.what() << '\n';
+        }
         if (!blueprints) {
           setSimulationStatus("Running (in-app driver failed: no blueprint library)");
           return false;
@@ -2779,16 +3389,59 @@ int main(int argc, char *argv[]) {
           return false;
         }
 
-        auto map = world.GetMap();
-        auto spawnPoints = map ? map->GetRecommendedSpawnPoints() : std::vector<cg::Transform>{};
-        if (spawnPoints.empty()) {
-          setSimulationStatus("Running (in-app driver failed: no spawn points)");
-          return false;
+        // Spawn-point selection.
+        //   • Basic map (procedural OpenDRIVE): SKIP GetRecommendedSpawnPoints()
+        //     because libcarla's InMemoryMap build for our 16 km straight
+        
+        
+        
+        
+        
+        
+        cg::Transform spawn;
+        if (wantMinimal) {
+          spawn = cg::Transform(cg::Location(50.0f, -1.75f, 0.5f),
+                                cg::Rotation(0.0f, 0.0f, 0.0f));
+          std::cerr << "[in-app driver] using hardcoded Basic spawn (50, -1.75, 0.5)\n";
+        } else {
+          try {
+            std::cerr << "[in-app driver] step: GetMap + GetRecommendedSpawnPoints\n";
+            auto map = world.GetMap();
+            auto spawnPoints = map ? map->GetRecommendedSpawnPoints()
+                                   : std::vector<cg::Transform>{};
+            if (spawnPoints.empty()) {
+              setSimulationStatus("Running (in-app driver failed: no spawn points)");
+              return false;
+            }
+            spawn = spawnPoints.front();
+          } catch (const std::exception &e) {
+            std::cerr << "[in-app driver] spawn-point lookup threw: " << e.what() << '\n';
+            setSimulationStatus("Running (in-app driver failed: spawn-point lookup)");
+            return false;
+          }
         }
 
-        auto actor = world.TrySpawnActor(vehicleBps->at(0u), spawnPoints.front());
-        inAppDriveVehicle = actor ? std::static_pointer_cast<cc::Vehicle>(actor) : nullptr;
-        inAppDriveSpawnedVehicle = (inAppDriveVehicle != nullptr);
+        
+        
+        
+        
+        auto bp = vehicleBps->at(0u);
+        if (bp.ContainsAttribute("role_name")) {
+          bp.SetAttribute("role_name", "hero");
+        }
+        try {
+          std::cerr << "[in-app driver] step: TrySpawnActor at ("
+                    << spawn.location.x << ", " << spawn.location.y
+                    << ", " << spawn.location.z << ")\n";
+          auto actor = world.TrySpawnActor(bp, spawn);
+          inAppDriveVehicle = actor ? std::static_pointer_cast<cc::Vehicle>(actor) : nullptr;
+          inAppDriveSpawnedVehicle = (inAppDriveVehicle != nullptr);
+          std::cerr << "[in-app driver] spawn result: "
+                    << (inAppDriveVehicle ? "OK id=" : "FAILED ")
+                    << (inAppDriveVehicle ? inAppDriveVehicle->GetId() : 0u) << '\n';
+        } catch (const std::exception &e) {
+          std::cerr << "[in-app driver] TrySpawnActor threw: " << e.what() << '\n';
+        }
       }
 
       if (!inAppDriveVehicle) {
@@ -2797,6 +3450,175 @@ int main(int argc, char *argv[]) {
       }
 
       inAppDriveVehicle->SetAutopilot(false);
+
+      
+      
+      
+      try {
+        auto wt = inAppDriveClient->GetWorld();
+        carla::rpc::WeatherParameters weather;
+        weather.cloudiness             = 8.0f;
+        weather.precipitation          = 0.0f;
+        weather.precipitation_deposits = 0.0f;
+        weather.wind_intensity         = 5.0f;
+        weather.sun_azimuth_angle      = 270.0f;  
+        weather.sun_altitude_angle     = 40.0f;   
+        weather.fog_density            = 0.0f;
+        weather.fog_distance           = 0.0f;
+        weather.wetness                = 0.0f;
+        wt.SetWeather(weather);
+      } catch (...) {}
+
+      
+      
+      
+      
+      
+      
+      
+      try {
+        auto wt = inAppDriveClient->GetWorld();
+        auto lib = wt.GetBlueprintLibrary();
+        if (lib) {
+          
+          
+          
+          auto bpContainsWord = [](const std::string &lc, const std::string &word) {
+            size_t pos = lc.find(word);
+            while (pos != std::string::npos) {
+              const bool leftOk  = (pos == 0 || lc[pos - 1] == '.' || lc[pos - 1] == '_');
+              const bool rightOk = (pos + word.size() >= lc.size()
+                                    || lc[pos + word.size()] == '.'
+                                    || lc[pos + word.size()] == '_');
+              if (leftOk && rightOk) return true;
+              pos = lc.find(word, pos + 1);
+            }
+            return false;
+          };
+
+          std::string palmBpId, cherryBpId, fallbackTreeId;
+          for (const auto &bp : *lib) {
+            const std::string id = bp.GetId();
+            auto lc = id;
+            std::transform(lc.begin(), lc.end(), lc.begin(), ::tolower);
+            if (palmBpId.empty() && (bpContainsWord(lc, "palm")
+                                     || bpContainsWord(lc, "date"))) {
+              palmBpId = id;
+            }
+            if (cherryBpId.empty() && (bpContainsWord(lc, "cherry")
+                                       || bpContainsWord(lc, "jacaranda")
+                                       || bpContainsWord(lc, "japanese")
+                                       || bpContainsWord(lc, "orchard"))) {
+              cherryBpId = id;
+            }
+            
+            
+            if (fallbackTreeId.empty() && !bpContainsWord(lc, "palm")
+                && (bpContainsWord(lc, "tree") || bpContainsWord(lc, "bush")
+                    || bpContainsWord(lc, "pine") || bpContainsWord(lc, "oak")
+                    || bpContainsWord(lc, "vegetation"))) {
+              fallbackTreeId = id;
+            }
+          }
+          if (cherryBpId.empty()) cherryBpId = fallbackTreeId;
+
+          std::cerr << "[in-app driver] tree blueprints: palm=\"" << palmBpId
+                    << "\" cherry=\"" << cherryBpId << "\"\n";
+
+          
+          const float interval  = 804.0f;
+          const float roadLen   = 16093.0f;
+          const float offsetY   = 10.0f;  
+          int spawned = 0;
+          for (float s = 250.0f; s < roadLen && spawned < 60; s += interval) {
+            
+            if (!palmBpId.empty()) {
+              auto bp = lib->Find(palmBpId);
+              if (bp) {
+                float yaw = std::fmod(s * 37.1f, 360.0f);
+                cg::Transform t(cg::Location(s, offsetY, 0.0f),
+                                cg::Rotation(0.0f, yaw, 0.0f));
+                wt.TrySpawnActor(*bp, t);
+                ++spawned;
+              }
+            }
+            
+            if (!cherryBpId.empty()) {
+              auto bp = lib->Find(cherryBpId);
+              if (bp) {
+                float yaw = std::fmod(s * 53.7f, 360.0f);
+                cg::Transform t(cg::Location(s, -offsetY, 0.0f),
+                                cg::Rotation(0.0f, yaw, 0.0f));
+                wt.TrySpawnActor(*bp, t);
+                ++spawned;
+              }
+            }
+          }
+          std::cerr << "[in-app driver] spawned " << spawned << " roadside trees\n";
+        }
+      } catch (const std::exception &e) {
+        std::cerr << "[in-app driver] tree spawn: " << e.what() << '\n';
+      } catch (...) {}
+
+      
+      
+      
+      
+      
+      try {
+        auto wt = inAppDriveClient->GetWorld();
+        auto dbg = wt.MakeDebugHelper();
+        using C = cc::DebugHelper::Color;
+        const C white{255, 255, 255, 255};
+        const C yellow{255, 210, 0,   255};
+
+        
+        dbg.DrawString(cg::Location(125.0f,  0.0f, 1.8f), "CARLA",
+                       true, yellow, -1.0f, true);
+        
+        dbg.DrawString(cg::Location(98.0f,   0.0f, 0.8f), "START",
+                       true, white, -1.0f, true);
+
+        
+        const float rHW = 5.5f;  
+        dbg.DrawLine(cg::Location(92.0f, -rHW, 0.12f),
+                     cg::Location(92.0f,  rHW, 0.12f),
+                     0.30f, white, -1.0f, true);
+
+        
+        
+        for (int xi = 0; xi < 4; ++xi) {
+          for (int yi = 0; yi < 11; ++yi) {
+            if ((xi + yi) % 2 != 0) continue;   
+            const float x0 = 88.0f + xi * 1.0f;
+            const float y0 = -5.5f + yi * 1.0f;
+            for (float dy = 0.0f; dy <= 1.0f; dy += 0.12f) {
+              dbg.DrawLine(cg::Location(x0,        y0 + dy, 0.12f),
+                           cg::Location(x0 + 1.0f, y0 + dy, 0.12f),
+                           0.07f, white, -1.0f, true);
+            }
+          }
+        }
+        std::cerr << "[in-app driver] start-line decoration drawn\n";
+      } catch (...) {}
+
+      
+      
+      
+      
+      try {
+        auto wt = inAppDriveClient->GetWorld();
+        auto spec = wt.GetSpectator();
+        const auto vt = inAppDriveVehicle->GetTransform();
+        const auto fwd = vt.GetForwardVector();
+        cg::Location camLoc(vt.location.x - 6.0f * fwd.x,
+                            vt.location.y - 6.0f * fwd.y,
+                            vt.location.z + 2.5f);
+        cg::Rotation camRot(-12.0f, vt.rotation.yaw, 0.0f);
+        spec->SetTransform(cg::Transform(camLoc, camRot));
+      } catch (...) {
+      }
+
       inAppDriverControlActive = true;
       driveKeys = {};
       inAppDriveTick->start();
@@ -2812,11 +3634,26 @@ int main(int argc, char *argv[]) {
     }
   };
 
+  
+  
+  
   QObject::connect(inAppDriveTick, &QTimer::timeout, &window, [&]() {
-    applyInAppVehicleControl();
+    try {
+      applyInAppVehicleControl();
+    } catch (const std::exception &e) {
+      std::cerr << "[in-app driver tick] " << e.what() << '\n';
+    } catch (...) {
+      std::cerr << "[in-app driver tick] unknown exception\n";
+    }
   });
   QObject::connect(inAppCameraTick, &QTimer::timeout, &window, [&]() {
-    updateThirdPersonCamera();
+    try {
+      updateThirdPersonCamera();
+    } catch (const std::exception &e) {
+      std::cerr << "[in-app camera tick] " << e.what() << '\n';
+    } catch (...) {
+      std::cerr << "[in-app camera tick] unknown exception\n";
+    }
   });
 #else
   auto stopInAppDriver = [&]() {
@@ -2840,141 +3677,183 @@ int main(int argc, char *argv[]) {
       else                             { QSignalBlocker b(tpvBtn); tpvBtn->setChecked(true); }
     });
 
-  std::function<void(const QString &)> openViewPopout;
+  std::function<void(const QString &)> openViewTile;
   QObject::connect(fpvBtn, &QPushButton::clicked, &window, [&]() {
-    driverViewMode->setCurrentText("First Person");
-    if (openViewPopout) openViewPopout("FPV");
+    if (openViewTile) openViewTile("FPV");
   });
   QObject::connect(tpvBtn, &QPushButton::clicked, &window, [&]() {
-    driverViewMode->setCurrentText("Third Person");
-    if (openViewPopout) openViewPopout("TPV");
+    if (openViewTile) openViewTile("TPV");
   });
   QObject::connect(cpvBtn, &QPushButton::clicked, &window, [&]() {
-    driverViewMode->setCurrentText("Cockpit");
-    if (openViewPopout) openViewPopout("CPV");
+    if (openViewTile) openViewTile("CPV");
   });
   QObject::connect(bevBtn, &QPushButton::clicked, &window, [&]() {
-    driverViewMode->setCurrentText("Bird Eye");
-    if (openViewPopout) openViewPopout("BEV");
+    if (openViewTile) openViewTile("BEV");
   });
 
-  openViewPopout = [&](const QString &mode) {
+  openViewTile = [&](const QString &mode) {
+    if (!viewDock || !viewGridLayout) return;
 #ifdef CARLA_STUDIO_WITH_LIBCARLA
+    
+    if (viewTiles.contains(mode)) {
+      viewDock->show();
+      viewDock->raise();
+      return;
+    }
+
     const QString host = targetHost->text().trimmed().isEmpty()
                           ? QStringLiteral("localhost")
                           : targetHost->text().trimmed();
     const int port = portSpin->value();
     std::shared_ptr<cc::Client> c;
     try {
-      try {
-        c = std::make_shared<cc::Client>(host.toStdString(), static_cast<uint16_t>(port));
-        c->SetTimeout(std::chrono::seconds(4));
-        (void)c->GetClientVersion();
-      } catch (...) {
-        QMessageBox::warning(&window, "CARLA unreachable",
-          QString("Could not reach %1:%2 — is the sim running?").arg(host).arg(port));
+      c = std::make_shared<cc::Client>(host.toStdString(), static_cast<uint16_t>(port));
+      c->SetTimeout(std::chrono::seconds(4));
+      (void)c->GetClientVersion();
+    } catch (...) {
+      QMessageBox::warning(&window, "CARLA unreachable",
+        QString("Could not reach %1:%2 — is the sim running?").arg(host).arg(port));
+      return;
+    }
+    try {
+      auto world = c->GetWorld();
+      carla::SharedPtr<cc::Actor> hero;
+      
+      if (inAppDriveVehicle) {
+        hero = inAppDriveVehicle;
+      } else {
+        auto actorList = world.GetActors();
+        auto vehicleList = actorList ? actorList->Filter("vehicle.*") : nullptr;
+        if (vehicleList) {
+          for (auto a : *vehicleList) {
+            if (!a) continue;
+            for (const auto &attr : a->GetAttributes()) {
+              if (attr.GetId() == "role_name" && attr.GetValue() == "hero") { hero = a; break; }
+            }
+            if (hero) break;
+          }
+          if (!hero && !vehicleList->empty()) hero = (*vehicleList)[0];
+        }
+      }
+      if (!hero) {
+        QMessageBox::warning(&window, "No vehicle",
+          "No hero vehicle in the world yet. Press START first and wait for "
+          "the in-app driver to spawn one (~4 s).");
         return;
       }
-    auto world = c->GetWorld();
-    auto actorList = world.GetActors();
-    auto vehicleList = actorList ? actorList->Filter("vehicle.*") : nullptr;
-    carla::SharedPtr<cc::Actor> hero;
-    if (vehicleList) {
-      for (auto a : *vehicleList) {
-        if (!a) continue;
-        for (const auto &attr : a->GetAttributes()) {
-          if (attr.GetId() == "role_name" && attr.GetValue() == "hero") { hero = a; break; }
-        }
-        if (hero) break;
+
+      auto bps = world.GetBlueprintLibrary();
+      const auto *rgb = bps ? bps->Find("sensor.camera.rgb") : nullptr;
+      if (!rgb) { QMessageBox::warning(&window, "Blueprint missing", "sensor.camera.rgb not found"); return; }
+      auto bpCopy = *rgb;
+      auto trySet = [&](const char *k, const QString &v) {
+        if (bpCopy.ContainsAttribute(k)) bpCopy.SetAttribute(k, v.toStdString());
+      };
+
+      int imgW = 640, imgH = 360;
+      QString modeFov = "90";
+      QString tileTitle;
+      cg::Transform tr;
+
+      if (mode == "FPV") {
+        tileTitle = "Driver (FPV)";
+        tr.location = cg::Location(0.5f, 0.0f, 1.4f);
+        tr.rotation = cg::Rotation(-2.0f, 0.0f, 0.0f);
+      } else if (mode == "CPV") {
+        tileTitle = "Cockpit";
+        tr.location = cg::Location(0.0f, -0.32f, 1.05f);
+        tr.rotation = cg::Rotation(-8.0f, 0.0f, 0.0f);
+        modeFov = "115";
+        imgW = 960; imgH = 300;
+      } else if (mode == "BEV") {
+        tileTitle = "Bird Eye";
+        tr.location = cg::Location(0.0f, 0.0f, 22.0f);
+        tr.rotation = cg::Rotation(-89.5f, 0.0f, 0.0f);
+      } else { 
+        tileTitle = "Chase (TPV)";
+        tr.location = cg::Location(-6.0f, 0.0f, 2.6f);
+        tr.rotation = cg::Rotation(-12.0f, 0.0f, 0.0f);
       }
-      if (!hero && !vehicleList->empty()) hero = (*vehicleList)[0];
-    }
-    if (!hero) {
-      QMessageBox::warning(&window, "No vehicle",
-        "No hero vehicle in the world yet. Press START first.");
-      return;
-    }
 
-    auto bps = world.GetBlueprintLibrary();
-    const auto *rgb = bps ? bps->Find("sensor.camera.rgb") : nullptr;
-    if (!rgb) { QMessageBox::warning(&window, "Blueprint missing", "sensor.camera.rgb not found"); return; }
-    auto bpCopy = *rgb;
-    auto trySet = [&](const char *k, const QString &v) {
-      if (bpCopy.ContainsAttribute(k)) bpCopy.SetAttribute(k, v.toStdString());
-    };
-    int imgW = 640, imgH = 360;
-    QString modeFov = "90";
+      trySet("image_size_x", QString::number(imgW));
+      trySet("image_size_y", QString::number(imgH));
+      trySet("fov", modeFov);
 
-    cg::Transform tr;
-    if (mode == "FPV") {
-      tr.location = cg::Location(0.5f, 0.0f, 1.4f);
-      tr.rotation = cg::Rotation(-2.0f, 0.0f, 0.0f);
-    } else if (mode == "CPV") {
-      tr.location = cg::Location(0.0f, -0.32f, 1.05f);
-      tr.rotation = cg::Rotation(-8.0f, 0.0f, 0.0f);
-      modeFov = "115";
-      imgW = 1280;
-      imgH = 400;
-    } else if (mode == "BEV") {
-      tr.location = cg::Location(0.0f, 0.0f, 22.0f);
-      tr.rotation = cg::Rotation(-89.5f, 0.0f, 0.0f);
-    } else {
-      tr.location = cg::Location(-6.0f, 0.0f, 2.6f);
-      tr.rotation = cg::Rotation(-12.0f, 0.0f, 0.0f);
-    }
+      carla::SharedPtr<cc::Actor> rawActor;
+      try {
+        rawActor = world.SpawnActor(bpCopy, tr, hero.get());
+      } catch (const std::exception &e) {
+        QMessageBox::warning(&window, "Spawn failed",
+          QString("Couldn't spawn %1 camera: %2").arg(mode, e.what()));
+        return;
+      }
+      auto camera = std::static_pointer_cast<cc::Sensor>(rawActor);
+      if (!camera) return;
 
-    trySet("image_size_x", QString::number(imgW));
-    trySet("image_size_y", QString::number(imgH));
-    trySet("fov", modeFov);
+      
+      QGroupBox *tile = new QGroupBox(tileTitle);
+      QVBoxLayout *tileLayout = new QVBoxLayout(tile);
+      tileLayout->setContentsMargins(4, 4, 4, 4);
+      tileLayout->setSpacing(4);
 
-    carla::SharedPtr<cc::Actor> rawActor;
-    try {
-      rawActor = world.SpawnActor(bpCopy, tr, hero.get());
-    } catch (const std::exception &e) {
-      QMessageBox::warning(&window, "Spawn failed",
-        QString("Couldn't spawn camera: %1").arg(e.what()));
-      return;
-    }
-    auto camera = std::static_pointer_cast<cc::Sensor>(rawActor);
-    if (!camera) return;
+      QLabel *imgLabel = new QLabel();
+      imgLabel->setAlignment(Qt::AlignCenter);
+      imgLabel->setMinimumHeight(180);
+      imgLabel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+      imgLabel->setStyleSheet("background-color: black; color: #888;");
+      imgLabel->setText("Connecting…");
+      tileLayout->addWidget(imgLabel, 1);
 
-    QDialog *dlg = new QDialog(&window);
-    dlg->setAttribute(Qt::WA_DeleteOnClose);
-    dlg->setModal(false);
-    dlg->setWindowTitle(QString("CARLA Studio · %1 view").arg(mode));
-    if (mode == "CPV") dlg->resize(1280, 420);
-    else               dlg->resize(680, 400);
-    QVBoxLayout *l = new QVBoxLayout(dlg);
-    l->setContentsMargins(0, 0, 0, 0);
-    QLabel *imgLabel = new QLabel();
-    imgLabel->setAlignment(Qt::AlignCenter);
-    imgLabel->setMinimumSize(imgW, imgH);
-    imgLabel->setStyleSheet("background-color: black; color: #888;");
-    imgLabel->setText("Connecting…");
-    l->addWidget(imgLabel);
+      QPushButton *closeBtn = new QPushButton("Close");
+      closeBtn->setFixedHeight(22);
+      tileLayout->addWidget(closeBtn);
 
-    auto labelPtr = QPointer<QLabel>(imgLabel);
-    camera->Listen([labelPtr](carla::SharedPtr<carla::sensor::SensorData> data) {
-      auto img = std::static_pointer_cast<csd::Image>(data);
-      if (!img) return;
-      const int w = static_cast<int>(img->GetWidth());
-      const int h = static_cast<int>(img->GetHeight());
-      const auto *raw = reinterpret_cast<const unsigned char *>(img->data());
-      QImage src(raw, w, h, QImage::Format_ARGB32);
-      QImage frame = src.rgbSwapped().copy();
-      QMetaObject::invokeMethod(labelPtr.data(), [labelPtr, frame]() {
-        if (!labelPtr) return;
-        labelPtr->setPixmap(QPixmap::fromImage(frame).scaled(
-          labelPtr->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
-      }, Qt::QueuedConnection);
-    });
+      auto labelPtr = QPointer<QLabel>(imgLabel);
+      camera->Listen([labelPtr](carla::SharedPtr<carla::sensor::SensorData> data) {
+        auto img = std::static_pointer_cast<csd::Image>(data);
+        if (!img) return;
+        const int w = static_cast<int>(img->GetWidth());
+        const int h = static_cast<int>(img->GetHeight());
+        const auto *raw = reinterpret_cast<const unsigned char *>(img->data());
+        QImage src(raw, w, h, QImage::Format_ARGB32);
+        QImage frame = src.rgbSwapped().copy();
+        QMetaObject::invokeMethod(labelPtr.data(), [labelPtr, frame]() {
+          if (!labelPtr) return;
+          labelPtr->setPixmap(QPixmap::fromImage(frame).scaled(
+            labelPtr->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
+        }, Qt::QueuedConnection);
+      });
 
-    QObject::connect(dlg, &QObject::destroyed, [camera]() {
-      try { camera->Stop(); camera->Destroy(); } catch (...) {}
-    });
+      activeViewSensors.insert(mode, camera);
+      viewTiles.insert(mode, tile);
 
-    dlg->show();
-    dlg->raise();
+      
+      auto setViewBtn = [&](const QString &m, bool on) {
+        if      (m == "FPV") { QSignalBlocker b(fpvBtn); fpvBtn->setChecked(on); }
+        else if (m == "TPV") { QSignalBlocker b(tpvBtn); tpvBtn->setChecked(on); }
+        else if (m == "CPV") { QSignalBlocker b(cpvBtn); cpvBtn->setChecked(on); }
+        else if (m == "BEV") { QSignalBlocker b(bevBtn); bevBtn->setChecked(on); }
+      };
+      setViewBtn(mode, true);
+
+      QObject::connect(closeBtn, &QPushButton::clicked, tile,
+        [&, mode, camera, tile]() mutable {
+          try { camera->Stop(); camera->Destroy(); } catch (...) {}
+          activeViewSensors.remove(mode);
+          viewTiles.remove(mode);
+          if      (mode == "FPV") { QSignalBlocker b(fpvBtn); fpvBtn->setChecked(false); }
+          else if (mode == "TPV") { QSignalBlocker b(tpvBtn); tpvBtn->setChecked(false); }
+          else if (mode == "CPV") { QSignalBlocker b(cpvBtn); cpvBtn->setChecked(false); }
+          else if (mode == "BEV") { QSignalBlocker b(bevBtn); bevBtn->setChecked(false); }
+          tile->deleteLater();
+          if (viewTiles.isEmpty()) viewDock->hide();
+        });
+
+      const int stretchIdx = viewGridLayout->count() - 1;
+      viewGridLayout->insertWidget(stretchIdx, tile);
+
+      viewDock->show();
+      viewDock->raise();
     } catch (const std::exception &e) {
       QMessageBox::warning(&window, "CARLA error",
         QString("Couldn't open %1 view: %2").arg(mode, e.what()));
@@ -3109,20 +3988,16 @@ int main(int argc, char *argv[]) {
     stopInAppDriver();
     killTrackedPids();
     killAllCarlaProcesses();
+    
+    
     if (!g_dockerContainerId.isEmpty()) {
-      QProcess p;
-      p.start("docker", QStringList() << "stop" << g_dockerContainerId.left(12));
-      p.waitForFinished(15000);
+      QProcess::startDetached("docker",
+        QStringList() << "stop" << g_dockerContainerId.left(12));
       g_dockerContainerId.clear();
-    } else {
-      const QString cName = QSettings().value(
-        "docker/container_name", "carla-studio-sim").toString();
-      QProcess p;
-      p.start("docker", QStringList() << "stop" << cName);
-      p.waitForFinished(8000);
     }
+    
+    forceStopTimer->start(5000);
     refreshProcessList();
-    forceStopTimer->stop();
     setSimulationStatus("Stopped");
   });
 
@@ -3145,36 +4020,93 @@ int main(int argc, char *argv[]) {
         return;
       }
       const QString rootPath = carlaRootPath->text().trimmed();
-      QString scriptPath = rootPath + "/CarlaUE5.sh";
+      
+      
+      QString scriptPath = rootPath + "/CarlaUnreal.sh";
+      if (!QFileInfo(scriptPath).isFile()) {
+        scriptPath = rootPath + "/CarlaUE5.sh";
+      }
       if (!QFileInfo(scriptPath).isFile()) {
         scriptPath = rootPath + "/CarlaUE4.sh";
       }
 
-      QStringList modeArgs = getSelectedLaunchArgs();
-      modeArgs << QString("-carla-world-port=%1").arg(launchPort);
+      
+      
+      
+      
+      bool carlaAlreadyRunning = false;
+      {
+        QProcess probe;
+        probe.start("/bin/bash", QStringList() << "-lc"
+            << QString("ss -ltn 2>/dev/null | grep -q ':%1 '").arg(launchPort));
+        probe.waitForFinished(1500);
+        carlaAlreadyRunning = (probe.exitCode() == 0);
+      }
 
-      const QString cmd = QString("\"%1\" %2 >/tmp/carla_studio_launch.log 2>&1 & echo $!")
-                            .arg(scriptPath)
-                            .arg(modeArgs.join(' '));
-      QProcess shell;
-      shell.start("/bin/bash", QStringList() << "-lc" << cmd);
-      if (!shell.waitForFinished(15000)) {
-        shell.terminate();
-        if (!shell.waitForFinished(1500)) {
-          shell.kill();
-          shell.waitForFinished(-1);
+      
+      
+      
+      
+      qint64 launchDelayMs = 1500;
+      if (carlaAlreadyRunning) {
+        setSimulationStatus(QString("Running (attaching to existing CARLA on port %1)")
+                              .arg(launchPort));
+        launchDelayMs = 100;   
+      } else {
+        QStringList modeArgs;
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        if (scriptPath.endsWith("/CarlaUnreal.sh")) {
+          QFile::remove(QDir::homePath() +
+                        "/.config/Epic/CarlaUnreal/Saved/Config/Linux/Engine.ini");
+        }
+        modeArgs << getSelectedLaunchArgs();
+        
+        
+        modeArgs << QString("-carla-rpc-port=%1").arg(launchPort)
+                 << QString("-carla-streaming-port=%1").arg(launchPort + 1);
+
+        const QString cmd = QString("\"%1\" %2 >/tmp/carla_studio_launch.log 2>&1 & echo $!")
+                              .arg(scriptPath)
+                              .arg(modeArgs.join(' '));
+        QProcess shell;
+        shell.start("/bin/bash", QStringList() << "-lc" << cmd);
+        if (!shell.waitForFinished(15000)) {
+          shell.terminate();
+          if (!shell.waitForFinished(1500)) {
+            shell.kill();
+            shell.waitForFinished(-1);
+          }
+        }
+        const QString pidText = QString::fromLocal8Bit(shell.readAllStandardOutput()).trimmed();
+        bool ok = false;
+        const qint64 pid = pidText.toLongLong(&ok);
+        if (ok) {
+          rememberPid(pid);
         }
       }
-      const QString pidText = QString::fromLocal8Bit(shell.readAllStandardOutput()).trimmed();
-      bool ok = false;
-      const qint64 pid = pidText.toLongLong(&ok);
-      if (ok) {
-        rememberPid(pid);
-      }
 
-      QTimer::singleShot(4000, &window, [=, &window]() {
+      
+      
+      
+      QTimer::singleShot(launchDelayMs, &window, [=, &window]() {
         launchSelectedDriverMode(rootPath, target, launchPort, scenarioName);
       });
+      
+      
+      if (!optRenderOffscreen->isChecked()) {
+        fitCarlaWindowToSafeSize();
+      }
     } else if (runtimeName.startsWith("container") || runtimeName.startsWith("Docker")) {
       QSettings s;
       const QString image    = s.value("docker/image", "carlasim/carla:0.9.16").toString();
@@ -3200,7 +4132,8 @@ int main(int argc, char *argv[]) {
       args << extraParts;
       args << image;
       args << "/bin/bash" << "-lc"
-           << QString("if [ -f ./CarlaUE5.sh ]; then ./CarlaUE5.sh %1 -carla-world-port=%2; "
+           << QString("if [ -f ./CarlaUnreal.sh ]; then ./CarlaUnreal.sh %1 -carla-world-port=%2; "
+                      "elif [ -f ./CarlaUE5.sh ]; then ./CarlaUE5.sh %1 -carla-world-port=%2; "
                       "else ./CarlaUE4.sh %1 -carla-world-port=%2; fi")
                 .arg(getSelectedLaunchArgs().join(' '))
                 .arg(launchPort);
@@ -3648,8 +4581,8 @@ int main(int argc, char *argv[]) {
     auto isExtractedCarlaInstall = [](const QString &dir) -> bool {
       if (dir.isEmpty() || !QDir(dir).exists()) return false;
       static const QStringList markers = {
-        "CarlaUE4.sh", "CarlaUE5.sh", "LinuxNoEditor/CarlaUE4.sh",
-        "PythonAPI", "Engine"
+        "CarlaUE4.sh", "CarlaUE5.sh", "CarlaUnreal.sh",
+        "LinuxNoEditor/CarlaUE4.sh", "PythonAPI", "Engine"
       };
       for (const QString &m : markers) {
         if (QFileInfo::exists(dir + "/" + m)) return true;
@@ -5269,7 +6202,9 @@ int main(int argc, char *argv[]) {
     const QString root = carlaRootPath->text().trimmed();
     if (root.isEmpty()) return false;
     return QFileInfo(root + "/CarlaUE5.sh").exists() ||
-           QDir(root + "/CarlaUE5").exists();
+           QDir(root + "/CarlaUE5").exists() ||
+           QFileInfo(root + "/CarlaUnreal.sh").exists() ||  
+           QDir(root + "/CarlaUnreal").exists();
   };
   if (!detectUe5Available()) {
     QStandardItemModel *finishModel =
@@ -6471,9 +7406,11 @@ int main(int argc, char *argv[]) {
     [updatePovGating](bool) { updatePovGating(); });
   updatePovGating();
 
-  QGroupBox *saeGroup = new QGroupBox("Self Drive");
+  QGroupBox *saeGroup = new QGroupBox("Self Driving Demo");
   saeGroup->setToolTip(
-    "Self Drive (enabled with supported repo integration)");
+    "Self Driving Demo — drives the in-app vehicle through the C++ "
+    "BehaviorAgent. SAE level selects the automation tier (L0 manual → "
+    "L5 full).");
   QVBoxLayout *saeRow = new QVBoxLayout();
   saeRow->setSpacing(2);
   saeRow->setContentsMargins(8, 4, 8, 4);
@@ -6566,6 +7503,54 @@ int main(int argc, char *argv[]) {
       "Keyboard / joystick controls become inapplicable at this level — "
       "the AI driver owns every manoeuvre."},
   }};
+  
+  
+  auto makeLaneKeepPixmap = []() -> QPixmap {
+    const int sz = 18;
+    QPixmap pm(sz, sz);
+    pm.fill(Qt::transparent);
+    QPainter p(&pm);
+    p.setRenderHint(QPainter::Antialiasing);
+    QPen pen(QColor(40, 40, 46), 1.6);
+    p.setPen(pen);
+    p.drawLine(QPointF(sz * 0.30, 1), QPointF(sz * 0.30, sz - 1));
+    p.drawLine(QPointF(sz * 0.70, 1), QPointF(sz * 0.70, sz - 1));
+    pen.setStyle(Qt::DashLine);
+    pen.setWidthF(1.2);
+    p.setPen(pen);
+    p.drawLine(QPointF(sz * 0.50, 2), QPointF(sz * 0.50, sz - 2));
+    return pm;
+  };
+  auto makeAccPixmap = []() -> QPixmap {
+    const int sz = 18;
+    QPixmap pm(sz, sz);
+    pm.fill(Qt::transparent);
+    QPainter p(&pm);
+    p.setRenderHint(QPainter::Antialiasing);
+    p.setPen(QPen(QColor(40, 40, 46), 1.4));
+    p.setBrush(Qt::NoBrush);
+    const QRectF outer = QRectF(2, 2, sz - 4, sz - 4);
+    p.drawArc(outer, 30 * 16, 120 * 16);
+    p.setPen(QPen(QColor(225, 110, 30), 1.6));
+    const QPointF cx = outer.center();
+    const qreal r = outer.width() / 2.0;
+    p.drawLine(cx, QPointF(cx.x() + r * 0.65, cx.y() - r * 0.45));
+    p.setBrush(QColor(40, 40, 46));
+    p.setPen(Qt::NoPen);
+    p.drawEllipse(cx, 1.4, 1.4);
+    return pm;
+  };
+
+  
+  
+  QSettings actuateSelfDriveSettings;
+  bool l1FeatureIsLaneKeep =
+      actuateSelfDriveSettings.value("actuate/sae_l1_feature", QString("acc"))
+                              .toString()
+                              .toLower() == "lanekeep";
+  QPushButton *l1LaneKeepBtn = nullptr;
+  QPushButton *l1AccBtn      = nullptr;
+
   std::vector<QPushButton *> saeButtons;
   saeButtons.reserve(kSaeLevels.size());
   for (size_t i = 0; i < kSaeLevels.size(); ++i) {
@@ -6588,12 +7573,49 @@ int main(int argc, char *argv[]) {
     btn->setCheckable(true);
     btn->setMinimumHeight(28);
     btn->setToolTip(QString::fromLatin1(kSaeLevels[i].second));
+#ifndef CARLA_STUDIO_WITH_LIBCARLA
+    
     if (i > 0) btn->setEnabled(false);
+#endif
     saeBtnGroup->addButton(btn, static_cast<int>(i));
     saeButtons.push_back(btn);
 
     rowLay->addWidget(leftIcon, 0, Qt::AlignVCenter);
-    rowLay->addWidget(btn,       1);
+
+    
+    
+    
+    
+    if (i == 1) {
+      l1LaneKeepBtn = new QPushButton();
+      l1AccBtn      = new QPushButton();
+      l1LaneKeepBtn->setIcon(QIcon(makeLaneKeepPixmap()));
+      l1AccBtn->setIcon(QIcon(makeAccPixmap()));
+      l1LaneKeepBtn->setIconSize(QSize(14, 14));
+      l1AccBtn->setIconSize(QSize(14, 14));
+      l1LaneKeepBtn->setFixedSize(20, 22);
+      l1AccBtn->setFixedSize(20, 22);
+      l1LaneKeepBtn->setCheckable(true);
+      l1AccBtn->setCheckable(true);
+      l1LaneKeepBtn->setToolTip(
+          "<b>L1 — Lane Keeping only</b><br>"
+          "Agent steers; you control throttle and brake. Click to enable.");
+      l1AccBtn->setToolTip(
+          "<b>L1 — Adaptive Cruise Control only</b><br>"
+          "Agent paces speed; you steer. Click to enable.");
+      auto *l1Group = new QButtonGroup(&window);
+      l1Group->setExclusive(true);
+      l1Group->addButton(l1LaneKeepBtn);
+      l1Group->addButton(l1AccBtn);
+      if (l1FeatureIsLaneKeep) l1LaneKeepBtn->setChecked(true);
+      else                     l1AccBtn->setChecked(true);
+      rowLay->addWidget(l1LaneKeepBtn, 0, Qt::AlignVCenter);
+      rowLay->addWidget(btn,           1);
+      rowLay->addWidget(l1AccBtn,      0, Qt::AlignVCenter);
+    } else {
+      rowLay->addWidget(btn, 1);
+    }
+
     rowLay->addWidget(rightIcon, 0, Qt::AlignVCenter);
     saeRow->addWidget(rowHost);
   }
@@ -6602,9 +7624,95 @@ int main(int argc, char *argv[]) {
     const int clamped = (saved < 0 || saved >= static_cast<int>(saeButtons.size())) ? 0 : saved;
     saeButtons[static_cast<size_t>(clamped)]->setChecked(true);
   }
-  QObject::connect(saeBtnGroup, &QButtonGroup::idClicked, &window, [](int level) {
+  
+  
+  
+  auto applyL5InputLockout = [actuatePlayers](int level) {
+    if (actuatePlayers->empty()) return;
+    auto *combo = (*actuatePlayers)[0].control;   
+    if (!combo) return;
+    const bool lockout = (level == 5);
+    combo->setEnabled(!lockout);
+    combo->setToolTip(lockout
+        ? QString("Locked at SAE Level 5 — Full Automation. The C++ "
+                  "BehaviorAgent has exclusive control of the vehicle.")
+        : QString());
+  };
+
+  QObject::connect(saeBtnGroup, &QButtonGroup::idClicked, &window,
+    [&, applyL5InputLockout](int level) {
+    try {
     QSettings().setValue("actuate/sae_level", level);
+    applyL5InputLockout(level);
+#ifdef CARLA_STUDIO_WITH_LIBCARLA
+    SelfDriveMode mode = SelfDriveMode::Off;
+    switch (level) {
+      case 0: mode = SelfDriveMode::Off;              break;
+      case 1:
+        mode = l1FeatureIsLaneKeep ? SelfDriveMode::LaneKeep
+                                    : SelfDriveMode::ACC;
+        break;
+      case 2: mode = SelfDriveMode::AssistNormal;     break;
+      case 3: mode = SelfDriveMode::AssistAggressive; break;
+      case 4: mode = SelfDriveMode::AutonomousLoop;   break;
+      case 5: mode = SelfDriveMode::AutonomousLoop;   break;
+      default: mode = SelfDriveMode::Off;             break;
+    }
+    if (mode != SelfDriveMode::Off && !inAppDriveVehicle) {
+      setSimulationStatus(QString("Self-Drive L%1 needs a running in-app vehicle").arg(level));
+      return;
+    }
+    if (engageSelfDrive(mode)) {
+      static const char *kLevelLabel[6] = {
+          "manual",
+          "L1 ACC",       
+          "L2 Partial Automation (Normal)",
+          "L3 Conditional (Aggressive)",
+          "L4 High Automation (continuous)",
+          "L5 Full Automation (continuous)",
+      };
+      const int li = std::clamp(level, 0, 5);
+      QString label = QString::fromLatin1(kLevelLabel[li]);
+      if (level == 1 && l1FeatureIsLaneKeep) label = "L1 Lane Keeping";
+      setSimulationStatus(QString("Running (Self-Drive %1)").arg(label));
+    } else {
+      setSimulationStatus(QString("Self-Drive L%1 engagement failed").arg(level));
+    }
+#else
+    Q_UNUSED(level);
+#endif
+    } catch (const std::exception &e) {
+      std::cerr << "[SAE click L" << level << "] " << e.what() << '\n';
+      setSimulationStatus(QString("Self-Drive L%1 raised: %2")
+                            .arg(level).arg(QString::fromLocal8Bit(e.what())));
+    } catch (...) {
+      std::cerr << "[SAE click L" << level << "] unknown exception\n";
+      setSimulationStatus(QString("Self-Drive L%1 raised an unknown exception").arg(level));
+    }
   });
+
+  
+  
+  applyL5InputLockout(saeBtnGroup->checkedId());
+
+  
+  
+  if (l1LaneKeepBtn && l1AccBtn) {
+    auto onL1FeaturePicked = [&, l1LaneKeepBtn, l1AccBtn]() {
+      l1FeatureIsLaneKeep = l1LaneKeepBtn->isChecked();
+      QSettings().setValue("actuate/sae_l1_feature",
+                           l1FeatureIsLaneKeep ? "lanekeep" : "acc");
+      
+      if (saeButtons.size() > 1) {
+        saeButtons[1]->setChecked(true);
+        saeBtnGroup->idClicked(1);   
+      }
+    };
+    QObject::connect(l1LaneKeepBtn, &QPushButton::toggled, &window,
+      [onL1FeaturePicked](bool on) { if (on) onL1FeaturePicked(); });
+    QObject::connect(l1AccBtn, &QPushButton::toggled, &window,
+      [onL1FeaturePicked](bool on) { if (on) onL1FeaturePicked(); });
+  }
   saeGroup->setLayout(saeRow);
   actuateLayout->addWidget(saeGroup, 1);
 
@@ -7654,6 +8762,32 @@ int main(int argc, char *argv[]) {
   previewDock->setWidget(previewDockContent);
   window.addDockWidget(Qt::RightDockWidgetArea, previewDock);
   previewDock->hide();
+
+  
+  {
+    QDockWidget *vd = new QDockWidget("Camera Views", &window);
+    vd->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea);
+    vd->setFeatures(QDockWidget::DockWidgetMovable | QDockWidget::DockWidgetFloatable | QDockWidget::DockWidgetClosable);
+    QWidget *vdContent = new QWidget();
+    QVBoxLayout *vdLayout = new QVBoxLayout(vdContent);
+    vdLayout->setContentsMargins(4, 4, 4, 4);
+    vdLayout->setSpacing(6);
+    QScrollArea *vdScroll = new QScrollArea(vdContent);
+    vdScroll->setWidgetResizable(true);
+    vdScroll->setFrameShape(QFrame::NoFrame);
+    vdScroll->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    QWidget *vdHost = new QWidget();
+    viewGridLayout = new QVBoxLayout(vdHost);
+    viewGridLayout->setContentsMargins(0, 0, 0, 0);
+    viewGridLayout->setSpacing(6);
+    viewGridLayout->addStretch(1);
+    vdScroll->setWidget(vdHost);
+    vdLayout->addWidget(vdScroll, 1);
+    vd->setWidget(vdContent);
+    window.addDockWidget(Qt::RightDockWidgetArea, vd);
+    vd->hide();
+    viewDock = vd;
+  }
 
   QMap<QString, QGroupBox *> previewTiles;
 
@@ -10765,6 +11899,187 @@ int main(int argc, char *argv[]) {
   toggleHealthCheckAction->setCheckable(true);
   toggleHealthCheckAction->setChecked(false);
 
+  
+  
+  
+  
+  
+  
+  
+  helpMenu->setToolTipsVisible(true);
+  
+  
+  
+  
+  struct SysInfo {
+    QString distro, kernel, host, user, cpu, gpu, ram;
+  };
+  auto gatherSystemInfo = []() -> SysInfo {
+    auto runCmd = [](const QString &cmd) -> QString {
+      QProcess p;
+      p.start("/bin/bash", QStringList() << "-lc" << cmd);
+      p.waitForFinished(1500);
+      return QString::fromLocal8Bit(p.readAllStandardOutput()).trimmed();
+    };
+    auto readField = [](const QString &path, const QString &field) -> QString {
+      QFile f(path);
+      if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return QString();
+      while (!f.atEnd()) {
+        const QString line = QString::fromLocal8Bit(f.readLine());
+        const int colon = line.indexOf(QLatin1Char(':'));
+        if (colon < 0) continue;
+        if (line.left(colon).trimmed().compare(field, Qt::CaseInsensitive) == 0) {
+          return line.mid(colon + 1).trimmed();
+        }
+      }
+      return QString();
+    };
+    auto readKv = [](const QString &path, const QString &key) -> QString {
+      QFile f(path);
+      if (!f.open(QIODevice::ReadOnly | QIODevice::Text)) return QString();
+      while (!f.atEnd()) {
+        const QString line = QString::fromLocal8Bit(f.readLine()).trimmed();
+        const int eq = line.indexOf(QLatin1Char('='));
+        if (eq < 0) continue;
+        if (line.left(eq) == key) {
+          QString v = line.mid(eq + 1);
+          if (v.startsWith('"') && v.endsWith('"')) v = v.mid(1, v.size() - 2);
+          return v;
+        }
+      }
+      return QString();
+    };
+
+    SysInfo s;
+    s.distro = readKv("/etc/os-release", "PRETTY_NAME");
+    if (s.distro.isEmpty()) s.distro = "Unknown distro";
+    s.kernel = runCmd("uname -srm");
+    s.host   = QSysInfo::machineHostName();
+    s.user   = QString::fromLocal8Bit(qgetenv("USER"));
+
+    
+    const QString cpuModel = readField("/proc/cpuinfo", "model name");
+    QString clockGhz;
+    bool ok = false;
+    const double mhz = readField("/proc/cpuinfo", "cpu MHz").toDouble(&ok);
+    if (ok && mhz > 0.0) clockGhz = QString::number(mhz / 1000.0, 'f', 2) + " GHz";
+    const QString cpuCount = runCmd("nproc");
+    QStringList tags;
+    if (!cpuCount.isEmpty()) tags << cpuCount + " cores";
+    if (!clockGhz.isEmpty()) tags << clockGhz;
+    s.cpu = cpuModel.isEmpty() ? QString() : cpuModel;
+    if (!tags.isEmpty()) {
+      s.cpu = s.cpu.isEmpty() ? tags.join(", ")
+                              : s.cpu + " (" + tags.join(", ") + ")";
+    }
+    if (s.cpu.isEmpty()) s.cpu = "n/a";
+
+    
+    const QString smi = runCmd(
+      "nvidia-smi --query-gpu=name,driver_version,memory.total "
+      "--format=csv,noheader,nounits 2>/dev/null | head -1");
+    if (!smi.isEmpty()) {
+      const QStringList parts = smi.split(',', Qt::SkipEmptyParts);
+      if (parts.size() >= 3) {
+        const QString name = parts[0].trimmed();
+        const QString drv  = parts[1].trimmed();
+        bool gok = false;
+        const qint64 mib = parts[2].trimmed().toLongLong(&gok);
+        s.gpu = name + " · driver " + drv;
+        if (gok) s.gpu += " · " + QString::number(mib / 1024.0, 'f', 1) + " GB VRAM";
+      } else {
+        s.gpu = smi;
+      }
+    } else {
+      s.gpu = runCmd("lspci 2>/dev/null | grep -E 'VGA|3D' | head -1 "
+                     "| sed 's/^[^:]*: //'");
+    }
+    if (s.gpu.isEmpty()) s.gpu = "n/a";
+
+    QString memKb = readField("/proc/meminfo", "MemTotal");
+    if (memKb.endsWith(" kB")) memKb.chop(3);
+    bool mok = false;
+    const qint64 kb = memKb.trimmed().toLongLong(&mok);
+    s.ram = mok ? QString::number(kb / 1024.0 / 1024.0, 'f', 1) + " GiB"
+                : QStringLiteral("n/a");
+    return s;
+  };
+
+  auto sysInfoToTooltip = [](const SysInfo &s) -> QString {
+    return QStringLiteral(
+      "Distro:  %1\n"
+      "Kernel:  %2\n"
+      "Host:    %3\n"
+      "User:    %4\n"
+      "CPU:     %5\n"
+      "GPU:     %6\n"
+      "RAM:     %7"
+    ).arg(s.distro, s.kernel, s.host, s.user, s.cpu, s.gpu, s.ram);
+  };
+
+  QAction *helpSysInfo = helpMenu->addAction("System Info");
+  helpSysInfo->setToolTip(sysInfoToTooltip(gatherSystemInfo()));
+  QObject::connect(helpMenu, &QMenu::aboutToShow, &window,
+    [helpSysInfo, gatherSystemInfo, sysInfoToTooltip]() {
+      helpSysInfo->setToolTip(sysInfoToTooltip(gatherSystemInfo()));
+    });
+  QObject::connect(helpSysInfo, &QAction::triggered, &window,
+    [&window, gatherSystemInfo]() {
+      const SysInfo s = gatherSystemInfo();
+      QDialog *dlg = new QDialog(&window);
+      dlg->setAttribute(Qt::WA_DeleteOnClose);
+      dlg->setWindowTitle("CARLA Studio — System Info");
+      dlg->resize(560, 320);
+      QVBoxLayout *outer = new QVBoxLayout(dlg);
+      outer->setContentsMargins(16, 14, 16, 12);
+      outer->setSpacing(10);
+
+      QLabel *title = new QLabel("<h2 style='margin:0'>System Info</h2>");
+      title->setTextFormat(Qt::RichText);
+      outer->addWidget(title);
+
+      
+      
+      auto *frame = new QFrame();
+      frame->setFrameShape(QFrame::StyledPanel);
+      frame->setStyleSheet("QFrame { background: palette(base); border-radius: 6px; }");
+      auto *grid = new QGridLayout(frame);
+      grid->setContentsMargins(14, 12, 14, 12);
+      grid->setHorizontalSpacing(18);
+      grid->setVerticalSpacing(8);
+      grid->setColumnStretch(1, 1);
+
+      const QFont monoFont = QFontDatabase::systemFont(QFontDatabase::FixedFont);
+      const QList<QPair<QString, QString>> rows = {
+        {"Distro",  s.distro}, {"Kernel",  s.kernel},
+        {"Host",    s.host},   {"User",    s.user},
+        {"CPU",     s.cpu},    {"GPU",     s.gpu},
+        {"RAM",     s.ram},
+      };
+      int r = 0;
+      for (const auto &kv : rows) {
+        auto *k = new QLabel("<b>" + kv.first + "</b>");
+        k->setTextFormat(Qt::RichText);
+        k->setStyleSheet("color: palette(text);");
+        auto *v = new QLabel(kv.second);
+        v->setFont(monoFont);
+        v->setTextInteractionFlags(Qt::TextSelectableByMouse);
+        v->setWordWrap(true);
+        grid->addWidget(k, r, 0, Qt::AlignTop | Qt::AlignLeft);
+        grid->addWidget(v, r, 1, Qt::AlignTop | Qt::AlignLeft);
+        ++r;
+      }
+      outer->addWidget(frame, 1);
+
+      auto *btnRow = new QHBoxLayout();
+      btnRow->addStretch(1);
+      auto *closeBtn = new QPushButton("Close");
+      QObject::connect(closeBtn, &QPushButton::clicked, dlg, &QDialog::accept);
+      btnRow->addWidget(closeBtn);
+      outer->addLayout(btnRow);
+      dlg->show();
+    });
+
   helpMenu->addSeparator();
   QAction *helpLicense = helpMenu->addAction("License");
   QObject::connect(helpLicense, &QAction::triggered, &window, [&]() {
@@ -10839,6 +12154,7 @@ int main(int argc, char *argv[]) {
   });
 
   cfgMenu->addAction(optRenderOffscreen);
+  cfgMenu->addAction(optWindowSmall);
   cfgMenu->addAction(optQualityEpic);
   cfgMenu->addAction(optQualityLow);
   cfgMenu->addSeparator();

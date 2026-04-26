@@ -11,6 +11,7 @@
   </qresource>
   <qresource prefix="/examples">
     <file alias="empty_flat.xodr">examples/empty_flat.xodr</file>
+    <file alias="two_lane_10mi.xodr">examples/two_lane_10mi.xodr</file>
     <file alias="sample_osm_rural.xodr">examples/sample_osm_rural.xodr</file>
     <file alias="scenario_town01_demo.json">examples/scenario_town01_demo.json</file>
   </qresource>
