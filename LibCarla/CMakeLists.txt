@@ -266,6 +266,7 @@ if (BUILD_CARLA_CLIENT)
     ${LIBCARLA_SOURCE_PATH}/carla/streaming/low_level/*.h
     ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.h
     ${LIBCARLA_SOURCE_PATH}/carla/trafficmanager/*.h
+    ${LIBCARLA_SOURCE_PATH}/carla/agents/navigation/*.h
     ${LIBCARLA_SOURCE_PATH}/util/*.h
   )
 
@@ -324,6 +325,7 @@ if (BUILD_CARLA_CLIENT)
     ${LIBCARLA_SOURCE_PATH}/carla/streaming/low_level/*.cpp
     ${LIBCARLA_SOURCE_PATH}/carla/multigpu/*.cpp
     ${LIBCARLA_SOURCE_PATH}/carla/trafficmanager/*.cpp
+    ${LIBCARLA_SOURCE_PATH}/carla/agents/navigation/*.cpp
   )
 
   if (ENABLE_RSS)
