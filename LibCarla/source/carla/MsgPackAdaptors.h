@@ -124,7 +124,7 @@ namespace adaptor {
       v = o.via.array.ptr[1].as<T>();
     }
 
-    template <uint64_t... Is>
+    template <size_t... Is>
     static void copy_to_variant(
         const uint64_t index,
         const clmdep_msgpack::object &o,

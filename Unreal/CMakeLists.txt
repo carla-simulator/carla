@@ -327,6 +327,15 @@ file (
 
 
 
+# On macOS, building ShaderCompileWorker (-buildscw) trips Apple Clang 21
+# strictness in Slate's STextBlock (FInvalidateWidgetReasonAttribute constructor
+# ambiguity). UE5 ships precompiled SCW dylibs so the build can proceed without
+# rebuilding the SCW executable from source. Linux/Windows still pass -buildscw.
+set (CARLA_UE_BUILDSCW_FLAG "-buildscw")
+if (APPLE)
+  set (CARLA_UE_BUILDSCW_FLAG "")
+endif ()
+
 carla_add_custom_target (
   carla-unreal
   "Build the CarlaUnreal subproject."
@@ -337,7 +346,7 @@ carla_add_custom_target (
     ${CARLA_UNREAL_BUILD_TYPE}
     -project=${CARLA_UE_PROJECT_PATH}
     -game
-    -buildscw
+    ${CARLA_UE_BUILDSCW_FLAG}
   USES_TERMINAL
   VERBATIM
 )
@@ -357,7 +366,7 @@ carla_add_custom_target (
     ${CARLA_UNREAL_BUILD_TYPE}
     -project=${CARLA_UE_PROJECT_PATH}
     -game
-    -buildscw
+    ${CARLA_UE_BUILDSCW_FLAG}
   DEPENDS
     ${CARLA_UNREAL_CONFIGURE_OUTPUTS}
   USES_TERMINAL
@@ -412,6 +421,18 @@ function (
   set (TARGET_NAME_SHORT package${TARGET_NAME_SUFFIX})
   set (TARGET_NAME carla-unreal-${TARGET_NAME_SHORT})
 
+  if (APPLE)
+    # Aggressive memory throttle + restrict to one starter map; full multi-map
+    # cook OOM-kills on 32 GB Macs even with -iterate. Town10HD_Opt is the
+    # default startup map; Town15 cooks separately if needed later.
+    set (CARLA_UAT_COOK_MEMORY_OPTS
+      "-MapsToCook=/Game/Carla/Maps/Town10HD_Opt"
+      "-AdditionalCookerOptions=-CookMemoryMaxUsedVirtualMB=10000 -CookMemoryMinFreePhysicalMB=2048 -CookMemoryMaxUsedPhysicalMB=18000 -CookSoftGCJustInit"
+    )
+  else ()
+    set (CARLA_UAT_COOK_MEMORY_OPTS "")
+  endif ()
+
   carla_add_custom_target (
     ${TARGET_NAME}
     "Create a CARLA package in ${PACKAGE_CONFIGURATION} mode."
@@ -422,7 +443,7 @@ function (
       ${UE_BUILD_CONFIGURATION}
       -project=${CARLA_UE_PROJECT_PATH}
       -game
-      -buildscw
+      ${CARLA_UE_BUILDSCW_FLAG}
     COMMAND
       ${CARLA_UE_UAT_COMMAND_PREFIX}
       BuildCookRun
@@ -439,6 +460,7 @@ function (
       -Platform=${UE_SYSTEM_NAME}
       -prereqs
       -build
+      ${CARLA_UAT_COOK_MEMORY_OPTS}
       -stagingdirectory=${CARLA_PACKAGE_STAGING_PATH}
       -archivedirectory=${CARLA_PACKAGE_ARCHIVE_PATH}
     USES_TERMINAL

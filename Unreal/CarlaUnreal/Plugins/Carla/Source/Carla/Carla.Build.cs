@@ -54,6 +54,12 @@ public class Carla :
         PrivateDefinitions.Add(Trimmed.Trim());
     }
 
+    // rpclib's msgpack header uses `nil` as an identifier (typedef nil_t nil).
+    // Apple's MacTypes.h defines `nil` as a macro to `nullptr`, which collides
+    // and breaks the typedef on macOS. The header has a build-time guard;
+    // defining MSGPACK_DISABLE_LEGACY_NIL skips the offending typedef.
+    PublicDefinitions.Add("MSGPACK_DISABLE_LEGACY_NIL");
+
     foreach (var Path in File.ReadAllText(Path.Combine(PluginDirectory, "Includes.def")).Split(';'))
     {
       var Trimmed = Path.Trim();
@@ -172,16 +178,25 @@ public class Carla :
       TestOptionalFeature(EnableRos2, "Ros2 support", "WITH_ROS2");
       TestOptionalFeature(EnableRos2Demo, "Ros2 demo", "WITH_ROS2_DEMO");
 
-      string CarlaPluginSourcePath = Path.GetFullPath(ModuleDirectory);
-      string CarlaPluginBinariesLinuxPath = Path.Combine(CarlaPluginSourcePath, "..", "..", "Binaries", "Linux");
-      AddDynamicLibrary(Path.Combine(CarlaPluginBinariesLinuxPath, "libcarla-ros2-native.so"));
-      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfoonathan_memory-0.7.4.so"));
-      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so"));
-      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so.1"));
-      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so.1.1.0"));
-      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so"));
-      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so.2.11"));
-      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so.2.11.2"));
+      // The ROS2 native bridge is currently only built for Linux. The hardcoded
+      // .so library names below would not resolve on macOS or Windows. Gating
+      // this block on Linux keeps the plugin compilable on other platforms when
+      // EnableRos2 is true; ROS2 functionality on Mac/Windows is a separate
+      // workstream (the Ros2Native CMake target itself has Linux-only binary
+      // copy paths, see Ros2Native/CMakeLists.txt).
+      if (Target.Platform == UnrealTargetPlatform.Linux)
+      {
+        string CarlaPluginSourcePath = Path.GetFullPath(ModuleDirectory);
+        string CarlaPluginBinariesLinuxPath = Path.Combine(CarlaPluginSourcePath, "..", "..", "Binaries", "Linux");
+        AddDynamicLibrary(Path.Combine(CarlaPluginBinariesLinuxPath, "libcarla-ros2-native.so"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfoonathan_memory-0.7.4.so"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so.1"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastcdr.so.1.1.0"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so.2.11"));
+        RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so.2.11.2"));
+      }
     }
   }
 }

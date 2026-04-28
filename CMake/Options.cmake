@@ -33,6 +33,12 @@ carla_option (
 )
 
 carla_option (
+  BUILD_CARLA_STUDIO
+  "Build CARLA Studio application layer."
+  OFF
+)
+
+carla_option (
   BUILD_LIBCARLA_TESTS
   "Build LibCarla tests."
   ON
@@ -184,6 +190,8 @@ if (WIN32)
   set (CARLA_UNREAL_RHI_DEFAULT d3d12)
 elseif (LINUX)
   set (CARLA_UNREAL_RHI_DEFAULT vulkan)
+elseif (APPLE)
+  set (CARLA_UNREAL_RHI_DEFAULT metal)
 endif ()
 
 carla_string_option (
@@ -310,6 +318,9 @@ carla_string_option (
 # We can not upgrade any further due to ZLIB.
 # See https://github.com/madler/zlib/issues/1019
 # Once this is resolved we can target 1.6.50
+# Note: 1.6.40 has a stale `TARGET_OS_MAC` clause in pngpriv.h that includes
+# the deprecated <fp.h> header on modern macOS. CMake/Dependencies.cmake
+# strips that clause via a post-fetch sed on macOS.
 carla_string_option (
   CARLA_LIBPNG_VERSION
   "Target libpng version."
