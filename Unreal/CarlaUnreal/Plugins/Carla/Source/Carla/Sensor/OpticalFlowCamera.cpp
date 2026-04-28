@@ -26,7 +26,12 @@ AOpticalFlowCamera::AOpticalFlowCamera(const FObjectInitializer &ObjectInitializ
   AddPostProcessingMaterial(
       TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
   AddPostProcessingMaterial(
-          TEXT("Material'/Carla/PostProcessingMaterials/VelocityMaterial.VelocityMaterial'"));
+      TEXT("Material'/Carla/PostProcessingMaterials/VelocityMaterial.VelocityMaterial'"));
+  // Velocity material needs persistent history between captures.
+  if (USceneCaptureComponent2D *Capture = GetCaptureComponent2D())
+  {
+    Capture->bAlwaysPersistRenderingState = true;
+  }
 }
 
 void AOpticalFlowCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
@@ -34,9 +39,14 @@ void AOpticalFlowCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float 
   TRACE_CPUPROFILER_EVENT_SCOPE(AOpticalFlowCamera::PostPhysTick);
   Super::PostPhysTick(World, TickType, DeltaSeconds);
 
-  auto FrameIndex = FCarlaEngine::GetFrameCounter();
-  ImageUtil::ReadImageDataAsync(
-      *GetCaptureRenderTarget(),
+  if (!AreClientsListening())
+  {
+    return;
+  }
+
+  const auto FrameIndex = FCarlaEngine::GetFrameCounter();
+  ImageUtil::ReadSensorImageDataAsync(
+      *this,
       [this, FrameIndex](
           const void* MappedPtr,
           size_t RowPitch,

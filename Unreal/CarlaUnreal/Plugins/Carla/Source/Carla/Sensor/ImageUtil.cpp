@@ -203,12 +203,18 @@ namespace ImageUtil
     EPixelFormat Format;
     FIntPoint Size;
     ReadImageDataAsyncCallback Callback;
-    TUniquePtr<FRHIGPUTextureReadback> Readback;
+    // Pool-owned readback: lifetime managed by Pool/SlotIndex pair. Pointer
+    // is non-owning when Pool is set, owning (via FallbackReadback) otherwise.
+    FRHIGPUTextureReadback* Readback = nullptr;
+    TUniquePtr<FRHIGPUTextureReadback> FallbackReadback;
+    FRHIGPUReadbackPoolPtr Pool;
+    int32 SlotIndex = INDEX_NONE;
   };
 
   static void ReadImageDataBegin(
     ReadImageDataContext& Self,
     UTextureRenderTarget2D& RenderTarget,
+    FRHIGPUReadbackPoolPtr Pool,
     ReadImageDataAsyncCallback&& Callback)
   {
     static thread_local auto RenderQueryPool =
@@ -221,8 +227,17 @@ namespace ImageUtil
     if (Texture == nullptr)
       return;
     Self.Callback = std::move(Callback);
-    Self.Readback = MakeUnique<FRHIGPUTextureReadback>(
-      TEXT("ReadImageData-Readback"));
+    Self.Pool = std::move(Pool);
+    if (Self.Pool)
+    {
+      Self.Readback = Self.Pool->Acquire(Self.SlotIndex);
+    }
+    if (Self.Readback == nullptr)
+    {
+      Self.FallbackReadback = MakeUnique<FRHIGPUTextureReadback>(
+        TEXT("ReadImageData-Readback"));
+      Self.Readback = Self.FallbackReadback.Get();
+    }
     Self.Size = Texture->GetSizeXY();
     Self.Format = Texture->GetFormat();
     auto ResolveRect = FResolveRect();
@@ -246,6 +261,11 @@ namespace ImageUtil
       ScopedCallback Unlock = [&] { Self.Readback->Unlock(); };
       Self.Callback(MappedPtr, RowPitch, BufferHeight, Self.Format, Self.Size);
     }
+    if (Self.Pool && Self.SlotIndex != INDEX_NONE)
+    {
+      Self.Pool->Release(Self.SlotIndex);
+      Self.SlotIndex = INDEX_NONE;
+    }
   }
 
   static void ReadImageDataEndAsync(
@@ -263,10 +283,11 @@ namespace ImageUtil
 
   static void ReadImageDataAsyncCommand(
     UTextureRenderTarget2D& RenderTarget,
+    FRHIGPUReadbackPoolPtr Pool,
     ReadImageDataAsyncCallback&& Callback)
   {
     ReadImageDataContext Context = { };
-    ReadImageDataBegin(Context, RenderTarget, std::move(Callback));
+    ReadImageDataBegin(Context, RenderTarget, std::move(Pool), std::move(Callback));
     ReadImageDataEndAsync(std::move(Context));
   }
 
@@ -274,22 +295,24 @@ namespace ImageUtil
 
   bool ReadImageDataAsync(
     UTextureRenderTarget2D& RenderTarget,
+    FRHIGPUReadbackPoolPtr Pool,
     ReadImageDataAsyncCallback&& Callback)
   {
     if (IsInRenderingThread())
     {
       ReadImageDataAsyncCommand(
         RenderTarget,
+        std::move(Pool),
         std::move(Callback));
     }
     else
     {
       ENQUEUE_RENDER_COMMAND(ReadImageDataAsyncCmd)([
-        &RenderTarget, Callback = std::move(Callback)
+        &RenderTarget, Pool = std::move(Pool), Callback = std::move(Callback)
       ](auto& CmdList) mutable
       {
         ReadImageDataContext Context = { };
-        ReadImageDataBegin(Context, RenderTarget, std::move(Callback));
+        ReadImageDataBegin(Context, RenderTarget, std::move(Pool), std::move(Callback));
         ReadImageDataEnd(Context);
       });
 
@@ -299,16 +322,25 @@ namespace ImageUtil
 
 
 
+  bool ReadImageDataAsync(
+    UTextureRenderTarget2D& RenderTarget,
+    ReadImageDataAsyncCallback&& Callback)
+  {
+    return ReadImageDataAsync(RenderTarget, nullptr, std::move(Callback));
+  }
+
+
+
   bool ReadSensorImageDataAsync(
     AShaderBasedSensor& Sensor,
     ReadImageDataAsyncCallback&& Callback)
   {
-    TArray<FColor> Pixels;
     auto RenderTarget = Sensor.GetCaptureRenderTarget();
     if (RenderTarget == nullptr)
       return false;
     return ReadImageDataAsync(
       *RenderTarget,
+      Sensor.GetReadbackPool(),
       std::move(Callback));
   }
 
