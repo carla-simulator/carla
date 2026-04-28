@@ -169,6 +169,9 @@
 #include "core/SensorMountKey.h"
 #include "utils/ResourceFit.h"
 #include "integrations/HuggingFace.h"
+#include "setup_wizard/SetupWizardDialog.h"
+#include "vehicle_import/PrebuiltPackagePage.h"
+#include "vehicle_import/VehicleImportContainer.h"
 
 #ifdef CARLA_STUDIO_WITH_LIBCARLA
 namespace cc = carla::client;
@@ -894,8 +897,11 @@ int main(int argc, char *argv[]) {
       const bool envValid = !root_str.isEmpty() &&
         (QFileInfo(root_str + "/CarlaUE4.sh").isFile() ||
          QFileInfo(root_str + "/CarlaUE5.sh").isFile() ||
-         QFileInfo(root_str + "/CarlaUnreal.sh").isFile());
-      if (discoveredHasUnreal || (!envValid && !discovered.isEmpty())) {
+         QFileInfo(root_str + "/CarlaUnreal.sh").isFile() ||
+         QFileInfo(root_str + "/Unreal/CarlaUnreal/Source").isDir() ||
+         QFileInfo(root_str + "/Unreal/CarlaUE4/Source").isDir() ||
+         QFileInfo(root_str + "/Unreal/CarlaUE5/Source").isDir());
+      if (!envValid && (discoveredHasUnreal || !discovered.isEmpty())) {
         root_str = discovered;
       }
     }
@@ -1280,7 +1286,7 @@ int main(int argc, char *argv[]) {
 
   launchLayout->addLayout(launchForm);
 
-  QGroupBox *integrationsGroup = new QGroupBox("Integrations");
+  QGroupBox *integrationsGroup = new QGroupBox("Co-Simulation");
   QVBoxLayout *integrationsLayout = new QVBoxLayout();
 
   QFormLayout *tpForm = new QFormLayout();
@@ -2342,7 +2348,17 @@ int main(int argc, char *argv[]) {
         v = QStringLiteral("offline");
 #endif
       }
-      text  = QString("CARLA %1 with %2").arg(v, detectedEngineLabel);
+      const QString sbRoot = carlaRootPath ? carlaRootPath->text().trimmed() : QString();
+      const bool hasUE5Tree = !sbRoot.isEmpty() && (
+          QFileInfo(sbRoot + "/Unreal/CarlaUnreal/Source").isDir()
+          || QFileInfo(sbRoot + "/Unreal/CarlaUE5/Source").isDir());
+      const bool hasUE4Tree = !sbRoot.isEmpty()
+          && QFileInfo(sbRoot + "/Unreal/CarlaUE4/Source").isDir();
+      if (hasUE5Tree || hasUE4Tree) {
+        text = QString("Carla (src) w/UE.%1").arg(hasUE5Tree ? 5 : 4);
+      } else {
+        text = QString("CARLA %1 with %2").arg(v, detectedEngineLabel);
+      }
       color = "";
     }
     apiWarningLabel->setText(text);
@@ -2382,7 +2398,12 @@ int main(int argc, char *argv[]) {
     };
 
     detectedEngineLabel = inferEngine();
-    rootConfiguredOk    = (!path.isEmpty() && (hasUE4 || hasUE5 || hasUnreal));
+    const bool hasSourceTree =
+        !path.isEmpty() && (
+          QFileInfo(path + "/Unreal/CarlaUnreal/Source").isDir()
+          || QFileInfo(path + "/Unreal/CarlaUE4/Source").isDir()
+          || QFileInfo(path + "/Unreal/CarlaUE5/Source").isDir());
+    rootConfiguredOk    = (!path.isEmpty() && (hasUE4 || hasUE5 || hasUnreal || hasSourceTree));
 
     const bool showPathRow = !rootConfiguredOk;
     carlaRootPath->setVisible(showPathRow);
@@ -11346,6 +11367,105 @@ int main(int argc, char *argv[]) {
   tabs->setTabToolTip(healthCheckTabIndex, "Health Check");
   const int scenarioBuilderTabIndex = tabs->addTab(w3, scenarioBuilderIcon, QString());
   tabs->setTabToolTip(scenarioBuilderTabIndex, "Scenario Builder");
+
+  const QIcon vehicleIcon = makeTabIcon([](QPainter &p) {
+    QPen thin = p.pen();
+    thin.setWidthF(1.1);
+    p.setPen(thin);
+    QPainterPath car;
+    car.moveTo(5,  14);
+    car.lineTo(5,  11);
+    car.lineTo(8,  11);
+    car.lineTo(9,  7);
+    car.lineTo(13, 7);
+    car.lineTo(14, 11);
+    car.lineTo(17, 11);
+    car.lineTo(17, 14);
+    car.closeSubpath();
+    p.drawPath(car);
+    p.drawEllipse(QPointF(8.0,  15.0), 1.6, 1.6);
+    p.drawEllipse(QPointF(14.0, 15.0), 1.6, 1.6);
+  });
+  tabs->setIconSize(QSize(22, 22));
+
+  auto findUnrealEditorBin = [&]() -> QString {
+    QStringList candidates;
+    const QString ueEnv = QString::fromLocal8Bit(qgetenv("CARLA_UNREAL_ENGINE_PATH")).trimmed();
+    if (!ueEnv.isEmpty())
+      candidates << ueEnv + "/Engine/Binaries/Linux/UnrealEditor";
+    const QString carlaRoot = carlaRootPath ? carlaRootPath->text().trimmed() : QString();
+    if (!carlaRoot.isEmpty()) {
+      candidates << carlaRoot + "/Engine/Binaries/Linux/UnrealEditor";
+      QDir d(carlaRoot); d.cdUp();
+      candidates << d.absolutePath() + "/Engine/Binaries/Linux/UnrealEditor";
+      candidates << d.absolutePath() + "/UnrealEngine/Engine/Binaries/Linux/UnrealEditor";
+    }
+    for (const QString &p : candidates)
+      if (QFileInfo(p).isExecutable()) return p;
+    return QString();
+  };
+  auto findVehicleUproject = [&]() -> QString {
+    QStringList roots;
+    if (carlaRootPath) roots << QDir::cleanPath(carlaRootPath->text().trimmed());
+    {
+      QDir d(QCoreApplication::applicationDirPath());
+      for (int i = 0; i < 6; ++i) { roots << d.absolutePath(); if (!d.cdUp()) break; }
+    }
+    const QString src = QString::fromLocal8Bit(qgetenv("CARLA_SRC_ROOT")).trimmed();
+    if (!src.isEmpty()) roots << QDir::cleanPath(src);
+
+    auto hasVehicleImporter = [](const QString &uproj) {
+      const QDir d(QFileInfo(uproj).absolutePath());
+      return QFileInfo(d.absoluteFilePath(
+          "Plugins/CarlaTools/Source/CarlaTools/Public/VehicleImporter.h")).isFile();
+    };
+    auto hasCarlaPlugin = [](const QString &uproj) {
+      const QDir d(QFileInfo(uproj).absolutePath());
+      return QFileInfo(d.absoluteFilePath("Plugins/Carla/Carla.uplugin")).isFile();
+    };
+    QString carlaOnly, anyUproject;
+    for (const QString &root : roots) {
+      for (const QString &c : {
+          root + "/Unreal/CarlaUnreal/CarlaUnreal.uproject",
+          root + "/Unreal/CarlaUE4/CarlaUE4.uproject",
+      }) {
+        if (!QFileInfo(c).isFile()) continue;
+        if (hasCarlaPlugin(c) && hasVehicleImporter(c)) return c;
+        if (carlaOnly.isEmpty()   && hasCarlaPlugin(c)) carlaOnly   = c;
+        if (anyUproject.isEmpty())                       anyUproject = c;
+      }
+    }
+    return !carlaOnly.isEmpty() ? carlaOnly : anyUproject;
+  };
+
+  auto findCarlaRootForPkg = [&]() -> QString {
+    return carlaRootPath ? carlaRootPath->text().trimmed() : QString();
+  };
+  auto *vehicleImportContainer = new carla_studio::vehicle_import::VehicleImportContainer(
+      findUnrealEditorBin, findVehicleUproject, findCarlaRootForPkg);
+  vehicleImportContainer->setVisible(false);
+  bool vehicleImportTabVisible = false;
+  auto setVehicleImportTabVisible = [&, vehicleImportContainer, vehicleIcon](bool on) {
+    if (on == vehicleImportTabVisible) return;
+    vehicleImportTabVisible = on;
+    if (on) {
+      vehicleImportContainer->setVisible(true);
+      const int idx = tabs->addTab(vehicleImportContainer, vehicleIcon, QString());
+      tabs->setTabToolTip(idx, "Vehicle Import");
+      tabs->setCurrentIndex(idx);
+      if (auto *pkg = vehicleImportContainer->prebuiltPage()) pkg->refreshDestination();
+    } else {
+      const int idx = tabs->indexOf(vehicleImportContainer);
+      if (idx >= 0) tabs->removeTab(idx);
+      vehicleImportContainer->setVisible(false);
+    }
+  };
+  if (carlaRootPath) {
+    QObject::connect(carlaRootPath, &QLineEdit::textChanged,
+        vehicleImportContainer, [vehicleImportContainer](const QString &) {
+          if (auto *pkg = vehicleImportContainer->prebuiltPage()) pkg->refreshDestination();
+        });
+  }
   const int loggingTabIndex = -1;
   Q_UNUSED(loggingIcon);
 
@@ -11444,7 +11564,25 @@ int main(int argc, char *argv[]) {
                       "saved to /tmp/carla_studio_v…/<date>/snippets/ and "
                       "copied to the clipboard.");
   snipBtn->setFixedSize(28, 28);
-  tabs->setCornerWidget(snipBtn, Qt::TopRightCorner);
+
+  QLabel *docsLink = new QLabel(QStringLiteral(
+    "<a href='https://carla.readthedocs.io/en/latest/tuto_content_authoring_vehicles/'"
+    " style='color:#9BA3B5;'>guide</a>"));
+  docsLink->setOpenExternalLinks(true);
+  docsLink->setAlignment(Qt::AlignCenter);
+  docsLink->setStyleSheet("font-size: 10px;");
+  docsLink->setMinimumWidth(28);
+  docsLink->setToolTip("Content authoring guide — supported formats and conversion tips.");
+
+  QWidget *cornerBox = new QWidget();
+  QVBoxLayout *cornerLayout = new QVBoxLayout(cornerBox);
+  cornerLayout->setContentsMargins(0, 1, 4, 1);
+  cornerLayout->setSpacing(0);
+  cornerLayout->addStretch();
+  cornerLayout->addWidget(snipBtn,  0, Qt::AlignHCenter);
+  cornerLayout->addWidget(docsLink, 0, Qt::AlignHCenter);
+  cornerLayout->addStretch();
+  tabs->setCornerWidget(cornerBox, Qt::TopRightCorner);
 
   QObject::connect(snipBtn, &QToolButton::clicked, &window,
                     [&, versionStr = QString(CARLA_STUDIO_VERSION_STRING),
@@ -11862,14 +12000,6 @@ int main(int argc, char *argv[]) {
         "Foxglove Studio");
     });
 
-  {
-    bool anyVisible = false;
-    for (QAction *a : toolsTopMenu->actions()) {
-      if (a->isVisible() && !a->isSeparator()) { anyVisible = true; break; }
-    }
-    toolsTopMenu->menuAction()->setVisible(anyVisible);
-  }
-
   auto makeMenuIcon = [](std::function<void(QPainter &)> draw) -> QIcon {
     QPixmap pm(16, 16);
     pm.fill(Qt::transparent);
@@ -11880,6 +12010,117 @@ int main(int argc, char *argv[]) {
     draw(p);
     return QIcon(pm);
   };
+
+  toolsTopMenu->addSeparator();
+  QAction *vehicleImportAct = toolsTopMenu->addAction("Vehicle Import");
+  vehicleImportAct->setCheckable(true);
+  vehicleImportAct->setChecked(false);
+  vehicleImportAct->setIcon(makeMenuIcon([](QPainter &p) {
+    p.drawRect(2, 8, 12, 4);
+    p.drawLine(4, 8, 5, 5);
+    p.drawLine(5, 5, 10, 5);
+    p.drawLine(10, 5, 12, 8);
+    p.drawEllipse(4, 11, 3, 3);
+    p.drawEllipse(10, 11, 3, 3);
+  }));
+  vehicleImportAct->setToolTip(
+    "Import a 3D model (OBJ, glTF, GLB, DAE) as a driveable CARLA vehicle.\n"
+    "Toggle to add/remove the Vehicle Import tab.");
+  QObject::connect(vehicleImportAct, &QAction::toggled, &window,
+    [setVehicleImportTabVisible](bool checked) {
+      setVehicleImportTabVisible(checked);
+    });
+
+  QAction *toolsInstallSdk = toolsTopMenu->addAction("Install / Update CARLA…");
+  toolsInstallSdk->setIcon(makeMenuIcon([](QPainter &p) {
+    p.drawEllipse(2, 2, 12, 12);
+    for (int i = 0; i < 8; ++i) {
+      const double a = i * 3.14159 / 4.0;
+      p.drawLine(QPointF(8 + 5 * std::cos(a), 8 + 5 * std::sin(a)),
+                 QPointF(8 + 7 * std::cos(a), 8 + 7 * std::sin(a)));
+    }
+  }));
+  QObject::connect(toolsInstallSdk, &QAction::triggered, &window,
+    [&]() { openInstallerDialog(InstallerMode::InstallSdk); });
+
+  QAction *toolsBuildSrc = toolsTopMenu->addAction("Build CARLA from Source…");
+  toolsBuildSrc->setIcon(makeMenuIcon([](QPainter &p) {
+    p.drawLine(3, 13, 7, 5);
+    p.drawLine(13, 13, 9, 5);
+    p.drawText(QRect(0,0,16,16), Qt::AlignCenter, "/");
+  }));
+  QObject::connect(toolsBuildSrc, &QAction::triggered, &window, [&]() {
+    auto setRoot = [&](const QString &path) {
+      if (carlaRootPath) carlaRootPath->setText(path);
+    };
+    auto *dlg = new carla_studio::setup_wizard::SetupWizardDialog(setRoot, 1, &window);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    dlg->setModal(false);
+    dlg->show();
+    dlg->raise();
+  });
+
+  QAction *toolsLoadMaps = toolsTopMenu->addAction("Load Additional Maps…");
+  toolsLoadMaps->setIcon(makeMenuIcon([](QPainter &p) {
+    p.drawRect(2, 2, 5, 5);
+    p.drawRect(9, 2, 5, 5);
+    p.drawRect(2, 9, 5, 5);
+    p.drawRect(9, 9, 5, 5);
+  }));
+  QObject::connect(toolsLoadMaps, &QAction::triggered, &window,
+    [&]() { openInstallerDialog(InstallerMode::InstallAdditionalMaps); });
+
+  QAction *toolsCommunityMaps = toolsTopMenu->addAction("Community Maps…");
+  toolsCommunityMaps->setIcon(makeMenuIcon([](QPainter &p) {
+    p.drawEllipse(2, 2, 12, 12);
+    p.drawLine(2, 8, 14, 8);
+    p.drawLine(8, 2, 8, 14);
+    p.drawArc(4, 2, 8, 12, 0, 5760);
+  }));
+  QObject::connect(toolsCommunityMaps, &QAction::triggered, &window,
+    [&]() { openCommunityMapsDialog(); });
+
+  QAction *toolsCleanup = toolsTopMenu->addAction("Cleanup / Uninstall…");
+  toolsCleanup->setIcon(makeMenuIcon([](QPainter &p) {
+    p.drawLine(3, 4, 13, 4);
+    p.drawRect(4, 4, 8, 10);
+    p.drawLine(6, 2, 10, 2);
+    p.drawLine(6, 2, 6, 4);
+    p.drawLine(10, 2, 10, 4);
+  }));
+  QObject::connect(toolsCleanup, &QAction::triggered, &window,
+    [&]() { openCleanupDialog(); });
+
+  QAction *toolsDocker = toolsTopMenu->addAction("Docker Settings…");
+  toolsDocker->setIcon(makeMenuIcon([](QPainter &p) {
+    p.drawRect(2, 8, 3, 3);
+    p.drawRect(6, 8, 3, 3);
+    p.drawRect(10, 8, 3, 3);
+    p.drawRect(2, 4, 3, 3);
+    p.drawRect(6, 4, 3, 3);
+    p.drawArc(2, 11, 12, 4, 180 * 16, 180 * 16);
+  }));
+  QObject::connect(toolsDocker, &QAction::triggered, &window,
+    [&]() { openDockerSettingsDialog(); });
+
+  QAction *toolsThirdParty = toolsTopMenu->addAction("Third-Party Tools…");
+  toolsThirdParty->setIcon(makeMenuIcon([](QPainter &p) {
+    p.drawLine(3, 13, 9, 7);
+    p.drawEllipse(8, 2, 6, 6);
+    p.drawLine(2, 14, 4, 12);
+  }));
+  if (openThirdParty) {
+    QObject::connect(toolsThirdParty, &QAction::triggered, &window,
+      [&]() { if (openThirdParty) openThirdParty->trigger(); });
+  }
+
+  {
+    bool anyVisible = false;
+    for (QAction *a : toolsTopMenu->actions()) {
+      if (a->isVisible() && !a->isSeparator()) { anyVisible = true; break; }
+    }
+    toolsTopMenu->menuAction()->setVisible(anyVisible);
+  }
 
   QMenu *helpMenu = window.menuBar()->addMenu("Help");
   QAction *helpDocs = helpMenu->addAction("CARLA Documentation");
@@ -12018,6 +12259,11 @@ int main(int argc, char *argv[]) {
   };
 
   QAction *helpSysInfo = helpMenu->addAction("System Info");
+  helpSysInfo->setIcon(makeMenuIcon([](QPainter &p) {
+    p.drawEllipse(2, 2, 12, 12);
+    p.drawLine(8, 6, 8, 12);
+    p.drawPoint(8, 4);
+  }));
   helpSysInfo->setToolTip(sysInfoToTooltip(gatherSystemInfo()));
   QObject::connect(helpMenu, &QMenu::aboutToShow, &window,
     [helpSysInfo, gatherSystemInfo, sysInfoToTooltip]() {
@@ -12082,6 +12328,12 @@ int main(int argc, char *argv[]) {
 
   helpMenu->addSeparator();
   QAction *helpLicense = helpMenu->addAction("License");
+  helpLicense->setIcon(makeMenuIcon([](QPainter &p) {
+    p.drawRect(3, 2, 10, 12);
+    p.drawLine(5, 5, 11, 5);
+    p.drawLine(5, 8, 11, 8);
+    p.drawLine(5, 11, 9, 11);
+  }));
   QObject::connect(helpLicense, &QAction::triggered, &window, [&]() {
     auto loadResource = [](const char *path) -> QString {
       QFile f(QString::fromLatin1(path));

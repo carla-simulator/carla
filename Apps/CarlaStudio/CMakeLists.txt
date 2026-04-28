@@ -14,7 +14,7 @@ endif ()
 # is the source of truth — bump in lockstep with the matching CHANGELOG.md
 # entry sitting next to this file.
 # -----------------------------------------------------------------------------
-set (CARLA_STUDIO_VERSION "1.0.0")
+set (CARLA_STUDIO_VERSION "1.1.0")
 
 if (NOT COMMAND carla_message)
   function (carla_message msg)
@@ -109,6 +109,54 @@ target_link_libraries (
   carla-studio-utils
 )
 
+add_library (
+  carla-studio-setup-wizard STATIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/setup_wizard/PrereqProbe.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/setup_wizard/SetupWizardDialog.cpp
+)
+
+set_target_properties (
+  carla-studio-setup-wizard PROPERTIES
+  AUTOMOC ON
+)
+
+target_include_directories (
+  carla-studio-setup-wizard PUBLIC
+  ${CARLA_STUDIO_SOURCE_DIR}
+)
+
+target_link_libraries (
+  carla-studio-setup-wizard PUBLIC
+  ${CARLA_STUDIO_QT_WIDGETS_TARGET}
+)
+
+add_library (
+  carla-studio-vehicle-import STATIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/vehicle_import/MeshAABB.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/vehicle_import/ObjSanitizer.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/vehicle_import/ImporterClient.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/vehicle_import/BPAutopicker.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/vehicle_import/PrebuiltPackagePage.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/vehicle_import/VehicleImportPage.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/vehicle_import/VehicleImportContainer.cpp
+)
+
+set_target_properties (
+  carla-studio-vehicle-import PROPERTIES
+  AUTOMOC ON
+)
+
+target_include_directories (
+  carla-studio-vehicle-import PUBLIC
+  ${CARLA_STUDIO_SOURCE_DIR}
+)
+
+target_link_libraries (
+  carla-studio-vehicle-import PUBLIC
+  ${CARLA_STUDIO_QT_WIDGETS_TARGET}
+  ${CARLA_STUDIO_QT_CONCURRENT_TARGET}
+)
+
 # Platform-specific icon resources that live alongside the executable sources.
 set (CARLA_STUDIO_PLATFORM_SOURCES "")
 
@@ -161,6 +209,8 @@ target_link_libraries (
   carla-studio-core
   carla-studio-utils
   carla-studio-integ
+  carla-studio-vehicle-import
+  carla-studio-setup-wizard
 )
 
 # Export version as a compile-time string. Quoted-stringify so the source can
@@ -280,6 +330,7 @@ if (CARLA_STUDIO_QT_TEST_TARGET)
     ${CARLA_STUDIO_QT_WIDGETS_TARGET}
     carla-studio-core
     carla-studio-utils
+    carla-studio-vehicle-import
   )
 
   target_compile_definitions (

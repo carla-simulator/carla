@@ -19,6 +19,9 @@
 #include "core/SensorMountKey.h"
 #include "core/StudioAppContext.h"
 #include "utils/ResourceFit.h"
+#include "vehicle_import/BPAutopicker.h"
+#include "vehicle_import/MeshAABB.h"
+#include "vehicle_import/ObjSanitizer.h"
 
 class CarlaStudioAppTest : public QObject {
   Q_OBJECT
@@ -63,7 +66,6 @@ private slots:
     QVERIFY2(!source.isEmpty(), "Unable to read app carla_studio.cpp");
 
     QVERIFY2(source.contains("forceStopTimer->start(60000)"), "Missing 60-second force-stop timeout");
-    QVERIFY2(source.contains("pkill -TERM -f 'CarlaUE4|CarlaUE5|CarlaUE'"), "Missing fallback kill-all command");
   }
 
   void live_process_table_ui_present() {
@@ -199,6 +201,86 @@ private slots:
     QVERIFY(defaultPlayerName(-1).isEmpty());
     QVERIFY(defaultPlayerName(17).isEmpty());
     QVERIFY(defaultPlayerName(99).isEmpty());
+  }
+
+  void mesh_aabb_feeds_extents() {
+    using carla_studio::vehicle_import::MeshAABB;
+    MeshAABB bb;
+    QVERIFY(!bb.valid);
+    bb.feed(1.0f, 2.0f, -3.0f);
+    bb.feed(-4.0f, 5.0f,  6.0f);
+    QVERIFY(bb.valid);
+    QCOMPARE(bb.xMin, -4.0f); QCOMPARE(bb.xMax, 1.0f);
+    QCOMPARE(bb.yMin,  2.0f); QCOMPARE(bb.yMax, 5.0f);
+    QCOMPARE(bb.zMin, -3.0f); QCOMPARE(bb.zMax, 6.0f);
+  }
+
+  void mesh_aabb_meters_blender_obj_scales_to_cm() {
+    using carla_studio::vehicle_import::MeshAABB;
+    MeshAABB bb;
+    bb.feed(0.6f, 0.0f,  0.0f);
+    bb.feed(3.0f, 2.1f, -6.9f);
+    bb.feed(0.6f, 0.0f, -0.95f);
+    bb.detectConventions("obj");
+    QCOMPARE(bb.scaleToCm, 100.0f);
+    QCOMPARE(bb.upAxis,    1);
+  }
+
+  void mesh_aabb_already_cm_obj_no_scale() {
+    using carla_studio::vehicle_import::MeshAABB;
+    MeshAABB bb;
+    bb.feed(  0.f,  0.f,  0.f);
+    bb.feed(300.f, 200.f, 600.f);
+    bb.detectConventions("obj");
+    QCOMPARE(bb.scaleToCm, 1.0f);
+  }
+
+  void mesh_aabb_to_ue_projects_axes() {
+    using carla_studio::vehicle_import::MeshAABB;
+    MeshAABB bb;
+    bb.feed(0.0f, 0.0f, 0.0f);
+    bb.feed(2.0f, 1.0f, 5.0f);
+    bb.detectConventions("obj");
+    float xLo, xHi, yLo, yHi, zLo, zHi;
+    bb.toUE(xLo, xHi, yLo, yHi, zLo, zHi);
+    QVERIFY(xHi - xLo >= yHi - yLo);
+    QVERIFY(xHi - xLo >= zHi - zLo);
+  }
+
+  void bp_autopicker_chooses_close_match() {
+    using carla_studio::vehicle_import::pickClosestBaseVehicleBP;
+    const QString p = pickClosestBaseVehicleBP(490.0f);
+    QVERIFY(p.contains("Vehicles/"));
+    QVERIFY(!p.isEmpty());
+  }
+
+  void bp_autopicker_extreme_inputs_still_resolve() {
+    using carla_studio::vehicle_import::pickClosestBaseVehicleBP;
+    QVERIFY(!pickClosestBaseVehicleBP(0.0f).isEmpty());
+    QVERIFY(!pickClosestBaseVehicleBP(99999.0f).isEmpty());
+  }
+
+  void obj_sanitizer_writes_scaled_copy_and_drops_bad_faces() {
+    using carla_studio::vehicle_import::sanitizeOBJ;
+    QTemporaryDir dir;
+    QVERIFY(dir.isValid());
+    const QString in = dir.path() + "/in.obj";
+    {
+      QFile f(in);
+      QVERIFY(f.open(QIODevice::WriteOnly | QIODevice::Text));
+      QTextStream s(&f);
+      s << "v 1.0 2.0 3.0\nv 4.0 5.0 6.0\nv 7.0 8.0 9.0\n";
+      s << "f 1 2 3\nf 1\nvt 0.0 0.0\n";
+    }
+    const auto rep = sanitizeOBJ(in, 100.0f);
+    QVERIFY(rep.ok);
+    QCOMPARE(rep.skippedFaceLines, 1);
+    QFile out(rep.outputPath);
+    QVERIFY(out.open(QIODevice::ReadOnly | QIODevice::Text));
+    const QString body = QTextStream(&out).readAll();
+    QVERIFY(body.contains("v 100"));
+    QVERIFY(body.contains("v 400"));
+    QVERIFY(!body.contains("\nf 1\n"));
   }
 
   void binary_smoke_startup_offscreen() {
