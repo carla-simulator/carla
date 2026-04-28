@@ -168,4 +168,14 @@ Once you have finished with the customization, you can [generate the pedestrian 
 
 ---
 
+## Include Map in packaged Carla Version
+
+If you want to use the created map in a packaged version of carla created with `make package` you need to modify the project settings:
+
+Go go `settings` --> `Project Settings...` --> `Project/Packaging` --> `List of maps to include in a packaged build` \
+and add the path of the created map to the displayed array.\
+This option modifies the DefaultGame.ini file and adds the created map to the maps to be cooked.
+
+---
+
 It is recommended to use the automated processes for importing maps detailed in the guides for [CARLA packages](tuto_M_add_map_package.md) and [CARLA source build](tuto_M_add_map_source.md), however the methods listed in this section can be used if required. If you encounter any issues with the alternative methods, feel free to post in the [forum](https://github.com/carla-simulator/carla/discussions).
