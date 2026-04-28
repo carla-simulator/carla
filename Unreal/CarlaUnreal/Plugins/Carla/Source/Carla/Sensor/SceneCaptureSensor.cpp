@@ -26,6 +26,15 @@
 // load) cannot hand out the same index twice.
 static std::atomic<int> SCENE_CAPTURE_COUNTER{0};
 
+static TAutoConsoleVariable<int32> CVarCarlaCameraUseRayTracing(
+    TEXT("carla.Camera.UseRayTracing"),
+    -1,
+    TEXT("Global override for per-camera hardware ray-tracing on CARLA sensors.\n")
+    TEXT("  -1: Respect the per-sensor bUseRayTracing attribute (default).\n")
+    TEXT("   0: Force ray-tracing OFF on every camera.\n")
+    TEXT("   1: Force ray-tracing ON on every camera."),
+    ECVF_Default);
+
 // Rollback / debug switch for the lazy GBuffer capture path. GBuffer captures
 // are only allocated when a client subscribes via listen_to_gbuffer(); setting
 // this to 1 forces every frame to request the full GBuffer set regardless of
@@ -87,8 +96,9 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureComponent2D->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
   CaptureComponent2D->bCaptureOnMovement = false;
   CaptureComponent2D->bCaptureEveryFrame = false;
+  // Required by the encoding cameras' post-process material pipeline.
   CaptureComponent2D->bAlwaysPersistRenderingState = true;
-  CaptureComponent2D->bUseRayTracingIfEnabled = true;
+  ApplyRayTracingSetting();
 
   SceneCaptureSensor_local_ns::SetCameraDefaultOverrides(*CaptureComponent2D);
 }
@@ -103,6 +113,23 @@ void ASceneCaptureSensor::SetImageSize(uint32 InWidth, uint32 InHeight)
 {
   ImageWidth = InWidth;
   ImageHeight = InHeight;
+}
+
+void ASceneCaptureSensor::SetUseRayTracing(bool Enable)
+{
+  bUseRayTracing = Enable;
+  ApplyRayTracingSetting();
+}
+
+void ASceneCaptureSensor::ApplyRayTracingSetting()
+{
+  if (CaptureComponent2D == nullptr)
+  {
+    return;
+  }
+  const int32 CVarOverride = CVarCarlaCameraUseRayTracing.GetValueOnAnyThread();
+  const bool bEffective = (CVarOverride < 0) ? bUseRayTracing : (CVarOverride > 0);
+  CaptureComponent2D->bUseRayTracingIfEnabled = bEffective;
 }
 
 void ASceneCaptureSensor::SetFOVAngle(const float FOVAngle)
