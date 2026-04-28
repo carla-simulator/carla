@@ -31,7 +31,7 @@ bool ATrafficLightGroup::IsFrozen() const
 
 void ATrafficLightGroup::ResetGroup()
 {
-  for(auto * Controller : Controllers)
+  for(auto& Controller : Controllers)
   {
     Controller->ResetState();
   }

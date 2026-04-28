@@ -67,8 +67,21 @@ FActorSpawnResult AStaticMeshFactory::SpawnActor(
     {
       FString MeshPath = ABFL::ActorAttributeToString(
           ActorDescription.Variations["mesh_path"], "");
-      
-      UStaticMesh *Mesh = LoadObject<UStaticMesh>(nullptr, *MeshPath);
+
+      UStaticMesh* Mesh = nullptr;
+      if (TObjectPtr<UStaticMesh>* Cached = MeshCacheByPath.Find(MeshPath))
+      {
+        Mesh = Cached->Get();
+      }
+      else
+      {
+        Mesh = LoadObject<UStaticMesh>(nullptr, *MeshPath);
+        if (Mesh != nullptr)
+        {
+          MeshCacheByPath.Add(MeshPath, Mesh);
+        }
+      }
+
       StaticMeshComponent->SetMobility(EComponentMobility::Movable);
       if (!StaticMeshComponent->SetStaticMesh(Mesh))
         UE_LOG(LogCarla, Warning, TEXT("Failed to set the mesh"));
