@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Added macOS (Apple Silicon) build support for the UE5 simulator, libCARLA and PythonAPI client. See [Docs/build_macos.md](Docs/build_macos.md).
 * Enabled the LibCarla GoogleTest suite (server + client) on ue5-dev and gated both in CI.
 * Fixed Digital Twin Tool crashes on dense metropolitan OSM data, vegetation spawning inside driving lanes on rural maps, and one-way streets being silently excluded from generation (#9565, #9678)
 * Added Ubuntu 24.04 support alongside Ubuntu 22.04
