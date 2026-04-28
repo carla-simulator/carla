@@ -167,7 +167,7 @@ namespace ImageUtil
       RenderTarget.GetSurfaceHeight());
     auto PixelData = MakeUnique<TImagePixelData<FColor>>(Size);
     ReadImageData(RenderTarget, PixelData->Pixels);
-    return TUniquePtr<TImagePixelData<FColor>>();
+    return PixelData;
   }
 
 

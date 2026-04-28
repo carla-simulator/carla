@@ -69,6 +69,7 @@ import math
 import random
 import re
 import os
+import time
 import weakref
 
 try:
@@ -1172,6 +1173,12 @@ class CameraManager(object):
             (force_respawn or (self.sensors[index][2] != self.sensors[self.index][2]))
         if needs_respawn:
             if self.sensor is not None:
+                # Drain in-flight callbacks before tearing the actor down.
+                # Bare destroy() races the streaming session and segfaults the
+                # client when the user toggles cameras quickly. stop() detaches
+                # the listener; the short sleep lets queued frames flush.
+                self.sensor.stop()
+                time.sleep(0.4)
                 self.sensor.destroy()
                 self.surface = None
             self.sensor = self._parent.get_world().spawn_actor(
