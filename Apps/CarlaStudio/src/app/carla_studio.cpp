@@ -952,7 +952,7 @@ int main(int argc, char *argv[]) {
   
   
   
-  scenarioSelect->addItems(QStringList() << "Basic" << "Town10HD_Opt");
+  scenarioSelect->addItems(QStringList() << "Town10HD_Opt");
   scenarioSelect->setCurrentIndex(0);
   scenarioSelect->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   scenarioLayout->addWidget(scenarioSelect, 1);
@@ -2609,11 +2609,6 @@ int main(int argc, char *argv[]) {
     QStringList sorted = scenarios.values();
     sorted.sort(Qt::CaseInsensitive);
     scenarioSelect->clear();
-    
-    
-    
-    
-    scenarioSelect->addItem("Basic");
     scenarioSelect->addItems(sorted);
     const int idx = scenarioSelect->findText(previous);
     scenarioSelect->setCurrentIndex(idx >= 0 ? idx : 0);
@@ -3446,7 +3441,18 @@ int main(int argc, char *argv[]) {
         
         
         
-        auto bp = vehicleBps->at(0u);
+        // Prefer a Studio-imported vehicle (deployed under Make="Custom" →
+        // blueprint id "vehicle.custom.<name>") so the freshly-imported BP
+        // becomes the default ego on next CARLA start. Falls back to
+        // whatever the library reports first (typically Charger or whatever
+        // the map's default ego is) when no Custom vehicle is present.
+        cc::ActorBlueprint bp = vehicleBps->at(0u);
+        if (auto customBps = blueprints->Filter("vehicle.custom.*");
+            customBps && !customBps->empty()) {
+          bp = customBps->at(0u);
+          std::cerr << "[in-app driver] preferring imported custom vehicle: "
+                    << bp.GetId() << '\n';
+        }
         if (bp.ContainsAttribute("role_name")) {
           bp.SetAttribute("role_name", "hero");
         }
@@ -7187,8 +7193,25 @@ int main(int argc, char *argv[]) {
     QString       slot;
     QString       defaultName;
     QLineEdit    *nameEdit = nullptr;
-    QComboBox    *control = nullptr;
+    QComboBox    *actor   = nullptr;
+    QPushButton  *control = nullptr;
     QPushButton  *popOut  = nullptr;
+  };
+  auto controlText = [](QPushButton *b) -> QString {
+    if (!b) return QString();
+    const QVariant v = b->property("controlText");
+    return v.isValid() ? v.toString() : QStringLiteral("(unassigned)");
+  };
+  auto controlGlyphFor = [](const QString &t) -> QString {
+    if (t == QStringLiteral("Keyboard")) return QStringLiteral("⌨");
+    if (t.startsWith(QStringLiteral("Joystick"))) return QStringLiteral("\U0001F579");
+    return QStringLiteral("—");
+  };
+  auto setControlText = [controlGlyphFor](QPushButton *b, const QString &t) {
+    if (!b) return;
+    b->setProperty("controlText", t);
+    b->setText(controlGlyphFor(t));
+    b->setToolTip(t);
   };
   auto actuatePlayers = std::make_shared<std::vector<ActuatePlayerRow>>(17);
   (*actuatePlayers)[0].slot = "EGO";
@@ -7210,42 +7233,48 @@ int main(int argc, char *argv[]) {
   };
   auto detectedJoystickCount = std::make_shared<int>(detectJoystickCount());
 
-  auto repopulateControlCombos =
-      [actuatePlayers, detectedJoystickCount]() {
+  auto controlOptionsFor =
+      [actuatePlayers, detectedJoystickCount, controlText](size_t i) -> QStringList {
     const int joyCount = *detectedJoystickCount;
-    for (size_t i = 0; i < actuatePlayers->size(); ++i) {
-      QComboBox *combo = (*actuatePlayers)[i].control;
-      if (!combo) continue;
-      const QString prev = combo->currentText();
-      QSignalBlocker blocker(combo);
-      combo->clear();
-      combo->addItem("(unassigned)");
-      bool kbTaken = false;
+    QStringList out;
+    out << QStringLiteral("(unassigned)");
+    const QString prev = controlText((*actuatePlayers)[i].control);
+    bool kbTaken = false;
+    for (size_t j = 0; j < actuatePlayers->size(); ++j) {
+      if (j == i) continue;
+      if (controlText((*actuatePlayers)[j].control) == QStringLiteral("Keyboard")) {
+        kbTaken = true; break;
+      }
+    }
+    if (!kbTaken || prev == QStringLiteral("Keyboard"))
+      out << QStringLiteral("Keyboard");
+    for (int k = 1; k <= joyCount; ++k) {
+      const QString jname = QString("Joystick %1").arg(k);
+      bool taken = false;
       for (size_t j = 0; j < actuatePlayers->size(); ++j) {
         if (j == i) continue;
-        QComboBox *other = (*actuatePlayers)[j].control;
-        if (other && other->currentText() == "Keyboard") { kbTaken = true; break; }
-      }
-      if (!kbTaken || prev == "Keyboard") combo->addItem("Keyboard");
-      for (int k = 1; k <= joyCount; ++k) {
-        const QString jname = QString("Joystick %1").arg(k);
-        bool taken = false;
-        for (size_t j = 0; j < actuatePlayers->size(); ++j) {
-          if (j == i) continue;
-          QComboBox *other = (*actuatePlayers)[j].control;
-          if (other && other->currentText() == jname) { taken = true; break; }
+        if (controlText((*actuatePlayers)[j].control) == jname) {
+          taken = true; break;
         }
-        if (!taken || prev == jname) combo->addItem(jname);
       }
-      const int restoreIdx = combo->findText(prev);
-      combo->setCurrentIndex(restoreIdx >= 0 ? restoreIdx : 0);
-      if (combo->count() <= 1) {
-        combo->setToolTip(
+      if (!taken || prev == jname) out << jname;
+    }
+    return out;
+  };
+  auto repopulateControlCombos =
+      [actuatePlayers, controlText, setControlText, controlOptionsFor]() {
+    for (size_t i = 0; i < actuatePlayers->size(); ++i) {
+      QPushButton *btn = (*actuatePlayers)[i].control;
+      if (!btn) continue;
+      const QStringList opts = controlOptionsFor(i);
+      QString cur = controlText(btn);
+      if (!opts.contains(cur)) cur = QStringLiteral("(unassigned)");
+      setControlText(btn, cur);
+      if (opts.size() <= 1) {
+        btn->setToolTip(
           "No joystick connected and no integration (e.g. SUMO / TeraSim) "
           "enabled. Plug in a controller and click ↻ to re-scan, or enable "
           "an integration via Cfg → Third-Party Tools.");
-      } else {
-        combo->setToolTip(QString());
       }
     }
   };
@@ -7254,9 +7283,9 @@ int main(int argc, char *argv[]) {
     if (p.nameEdit && !p.nameEdit->text().isEmpty()) return p.nameEdit->text();
     return p.defaultName;
   };
-  auto openControlPopout = [&](int rowIdx) {
+  auto openControlPopout = [&, controlText](int rowIdx) {
     const ActuatePlayerRow &p = (*actuatePlayers)[rowIdx];
-    const QString assigned = p.control ? p.control->currentText() : QString();
+    const QString assigned = controlText(p.control);
     const QString shown = displayName(p);
     QDialog *dlg = new QDialog(&window);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
@@ -7286,7 +7315,64 @@ int main(int argc, char *argv[]) {
   };
 
   QSettings actuateSettings;
-  auto buildPlayerRow = [&](size_t i, QGridLayout *grid, int row) {
+
+  auto actorBlueprintIds = std::make_shared<QStringList>();
+  auto refreshActorBlueprints = [&, actorBlueprintIds, actuatePlayers]() -> bool {
+    QStringList ids;
+#ifdef CARLA_STUDIO_WITH_LIBCARLA
+    const QString host = targetHost->text().trimmed().isEmpty()
+                          ? QStringLiteral("localhost")
+                          : targetHost->text().trimmed();
+    const int port = portSpin->value();
+    try {
+      cc::Client probe(host.toStdString(), static_cast<uint16_t>(port));
+      probe.SetTimeout(std::chrono::milliseconds(800));
+      (void)probe.GetClientVersion();
+      auto world = probe.GetWorld();
+      auto bps = world.GetBlueprintLibrary();
+      if (bps) {
+        auto vbp = bps->Filter("vehicle.*");
+        if (vbp) {
+          for (const auto &b : *vbp) {
+            ids << QString::fromStdString(b.GetId());
+          }
+        }
+      }
+    } catch (...) {
+    }
+#endif
+    ids.sort();
+    if (ids == *actorBlueprintIds && !ids.isEmpty()) {
+      return true;
+    }
+    *actorBlueprintIds = ids;
+    QSettings s;
+    for (size_t i = 0; i < actuatePlayers->size(); ++i) {
+      QComboBox *ac = (*actuatePlayers)[i].actor;
+      if (!ac) continue;
+      QString prev = ac->currentText();
+      if (prev.isEmpty() || prev == QStringLiteral("(no CARLA)")) {
+        prev = s.value(
+          QString("actuate/actor_%1").arg((*actuatePlayers)[i].slot)).toString();
+      }
+      QSignalBlocker bl(ac);
+      ac->clear();
+      if (ids.isEmpty()) {
+        ac->addItem(QStringLiteral("(no CARLA)"));
+        ac->setEnabled(false);
+      } else {
+        ac->setEnabled(true);
+        ac->addItem(QStringLiteral("(any vehicle)"));
+        ac->addItems(ids);
+        const int idx = ac->findText(prev);
+        if (idx >= 0) ac->setCurrentIndex(idx);
+      }
+    }
+    return !ids.isEmpty();
+  };
+
+  auto onControlChanged = std::make_shared<std::function<void()>>();
+  auto buildPlayerRow = [&, onControlChanged](size_t i, QGridLayout *grid, int row) {
     ActuatePlayerRow &pl = (*actuatePlayers)[i];
 
     QLineEdit *nameEdit = new QLineEdit();
@@ -7304,12 +7390,37 @@ int main(int argc, char *argv[]) {
     pl.nameEdit = nameEdit;
     grid->addWidget(nameEdit, row, 0);
 
-    QComboBox *combo = new QComboBox();
-    combo->addItem("(unassigned)");
-    combo->setStyleSheet(
+    QComboBox *actorCombo = new QComboBox();
+    actorCombo->setSizeAdjustPolicy(QComboBox::AdjustToMinimumContentsLengthWithIcon);
+    actorCombo->setMinimumContentsLength(14);
+    actorCombo->addItem("(no CARLA)");
+    actorCombo->setEnabled(false);
+    actorCombo->setStyleSheet(
       "QComboBox:disabled { color: #c0c0c0; background: #f4f4f4; }");
-    pl.control = combo;
-    grid->addWidget(combo, row, 1);
+    pl.actor = actorCombo;
+    grid->addWidget(actorCombo, row, 1);
+    {
+      const QString savedActor = actuateSettings.value(
+        QString("actuate/actor_%1").arg(pl.slot)).toString();
+      if (!savedActor.isEmpty()) {
+        actorCombo->addItem(savedActor);
+        actorCombo->setCurrentText(savedActor);
+      }
+    }
+
+    QPushButton *ctrlBtn = new QPushButton();
+    ctrlBtn->setFixedSize(24, 24);
+    ctrlBtn->setProperty("controlText", QStringLiteral("(unassigned)"));
+    ctrlBtn->setText(QStringLiteral("—"));
+    ctrlBtn->setStyleSheet(
+      "QPushButton { padding: 0; margin: 0; border: 1px solid #b0b0b0; "
+      "  border-radius: 3px; font-size: 14px; background: #fafafa; }"
+      "QPushButton:hover { background: #eef2f7; }"
+      "QPushButton:pressed { background: #dde3ec; }"
+      "QPushButton:disabled { color: #c8c8c8; border-color: #dcdcdc; "
+      "  background: #f4f4f4; }");
+    pl.control = ctrlBtn;
+    grid->addWidget(ctrlBtn, row, 2);
 
     QPushButton *popBtn = new QPushButton("⊞");
     popBtn->setFixedSize(16, 16);
@@ -7319,7 +7430,7 @@ int main(int argc, char *argv[]) {
       "QPushButton:disabled { color: #c8c8c8; border-color: #dcdcdc; }");
     popBtn->setToolTip("Pop out the live control viewer for this player.");
     pl.popOut = popBtn;
-    grid->addWidget(popBtn, row, 2);
+    grid->addWidget(popBtn, row, 3);
 
     QObject::connect(nameEdit, &QLineEdit::textEdited, &window,
       [actuatePlayers, i](const QString &text) {
@@ -7327,15 +7438,31 @@ int main(int argc, char *argv[]) {
           QString("actuate/displayname_%1").arg((*actuatePlayers)[i].slot),
           text);
       });
-    QObject::connect(combo,
-      QOverload<int>::of(&QComboBox::currentIndexChanged), &window,
-      [actuatePlayers, repopulateControlCombos, i]() {
-        repopulateControlCombos();
-        QComboBox *c = (*actuatePlayers)[i].control;
-        if (!c) return;
+    QObject::connect(actorCombo, &QComboBox::currentTextChanged, &window,
+      [actuatePlayers, i](const QString &t) {
+        QSettings().setValue(
+          QString("actuate/actor_%1").arg((*actuatePlayers)[i].slot), t);
+      });
+    QObject::connect(ctrlBtn, &QPushButton::clicked, &window,
+      [actuatePlayers, repopulateControlCombos, controlOptionsFor,
+       setControlText, controlText, onControlChanged, i, ctrlBtn]() {
+        QMenu menu(ctrlBtn);
+        const QStringList opts = controlOptionsFor(i);
+        const QString cur = controlText(ctrlBtn);
+        for (const QString &opt : opts) {
+          QAction *a = menu.addAction(opt);
+          a->setCheckable(true);
+          a->setChecked(opt == cur);
+        }
+        QAction *picked = menu.exec(ctrlBtn->mapToGlobal(
+          QPoint(0, ctrlBtn->height())));
+        if (!picked) return;
+        setControlText(ctrlBtn, picked->text());
         QSettings().setValue(
           QString("actuate/player_%1").arg((*actuatePlayers)[i].slot),
-          c->currentText());
+          picked->text());
+        repopulateControlCombos();
+        if (onControlChanged && *onControlChanged) (*onControlChanged)();
       });
     QObject::connect(popBtn, &QPushButton::clicked, &window,
       [openControlPopout, i]() { openControlPopout(static_cast<int>(i)); });
@@ -7377,15 +7504,25 @@ int main(int argc, char *argv[]) {
     QString saved = actuateSettings.value(key).toString();
     if (i == 0 && saved.isEmpty()) saved = "Keyboard";
     if (!saved.isEmpty() && (*actuatePlayers)[i].control) {
-      (*actuatePlayers)[i].control->setCurrentText(saved);
+      setControlText((*actuatePlayers)[i].control, saved);
     }
   }
   repopulateControlCombos();
+  refreshActorBlueprints();
 
-  auto isAssigned = [](QComboBox *c) {
-    if (!c) return false;
-    const QString s = c->currentText();
-    return !s.isEmpty() && s != "(unassigned)";
+  QTimer *actorPollTimer = new QTimer(&window);
+  actorPollTimer->setInterval(3000);
+  QObject::connect(actorPollTimer, &QTimer::timeout, &window,
+    [actorPollTimer, refreshActorBlueprints]() {
+      const bool populated = refreshActorBlueprints();
+      actorPollTimer->setInterval(populated ? 30000 : 3000);
+    });
+  actorPollTimer->start();
+
+  auto isAssigned = [controlText](QPushButton *b) {
+    if (!b) return false;
+    const QString s = controlText(b);
+    return !s.isEmpty() && s != QStringLiteral("(unassigned)");
   };
   auto updatePovGating = [actuatePlayers, &terasimEnable, &autowareEnable,
                           isAssigned]() {
@@ -7396,31 +7533,32 @@ int main(int argc, char *argv[]) {
     bool prevAssigned = isAssigned((*actuatePlayers)[0].control) ||
                          integrationActive;
     for (size_t i = 1; i < 11; ++i) {
-      QComboBox   *cb  = (*actuatePlayers)[i].control;
+      QPushButton *cb  = (*actuatePlayers)[i].control;
+      QComboBox   *ac  = (*actuatePlayers)[i].actor;
       QPushButton *pop = (*actuatePlayers)[i].popOut;
       QLineEdit   *nm  = (*actuatePlayers)[i].nameEdit;
       if (cb)  cb->setEnabled(prevAssigned);
+      if (ac)  ac->setEnabled(prevAssigned && ac->count() > 0
+                              && ac->itemText(0) != QStringLiteral("(no CARLA)"));
       if (pop) pop->setEnabled(prevAssigned);
       if (nm)  nm->setEnabled(prevAssigned);
       prevAssigned = prevAssigned && isAssigned(cb);
     }
     bool prevV2x = isAssigned((*actuatePlayers)[0].control) || integrationActive;
     for (size_t i = 11; i < actuatePlayers->size(); ++i) {
-      QComboBox   *cb  = (*actuatePlayers)[i].control;
+      QPushButton *cb  = (*actuatePlayers)[i].control;
+      QComboBox   *ac  = (*actuatePlayers)[i].actor;
       QPushButton *pop = (*actuatePlayers)[i].popOut;
       QLineEdit   *nm  = (*actuatePlayers)[i].nameEdit;
       if (cb)  cb->setEnabled(prevV2x);
+      if (ac)  ac->setEnabled(prevV2x && ac->count() > 0
+                              && ac->itemText(0) != QStringLiteral("(no CARLA)"));
       if (pop) pop->setEnabled(prevV2x);
       if (nm)  nm->setEnabled(prevV2x);
       prevV2x = prevV2x && isAssigned(cb);
     }
   };
-  for (size_t i = 0; i < actuatePlayers->size(); ++i) {
-    QComboBox *c = (*actuatePlayers)[i].control;
-    if (!c) continue;
-    QObject::connect(c, &QComboBox::currentTextChanged, &window,
-      [updatePovGating](const QString &) { updatePovGating(); });
-  }
+  *onControlChanged = updatePovGating;
   QObject::connect(terasimEnable, &QCheckBox::toggled, &window,
     [updatePovGating](bool) { updatePovGating(); });
   QObject::connect(autowareEnable, &QCheckBox::toggled, &window,
@@ -7650,11 +7788,11 @@ int main(int argc, char *argv[]) {
   
   auto applyL5InputLockout = [actuatePlayers](int level) {
     if (actuatePlayers->empty()) return;
-    auto *combo = (*actuatePlayers)[0].control;   
-    if (!combo) return;
+    auto *btn = (*actuatePlayers)[0].control;
+    if (!btn) return;
     const bool lockout = (level == 5);
-    combo->setEnabled(!lockout);
-    combo->setToolTip(lockout
+    btn->setEnabled(!lockout);
+    btn->setToolTip(lockout
         ? QString("Locked at SAE Level 5 — Full Automation. The C++ "
                   "BehaviorAgent has exclusive control of the vehicle.")
         : QString());
@@ -7820,9 +7958,11 @@ int main(int argc, char *argv[]) {
   rescanJsBtn->setToolTip("Re-scan /dev/input/js* for newly-connected "
                             "joysticks. Useful after plugging in a controller.");
   QObject::connect(rescanJsBtn, &QPushButton::clicked, &window,
-    [detectedJoystickCount, detectJoystickCount, repopulateControlCombos]() {
+    [detectedJoystickCount, detectJoystickCount, repopulateControlCombos,
+     refreshActorBlueprints]() {
       *detectedJoystickCount = detectJoystickCount();
       repopulateControlCombos();
+      refreshActorBlueprints();
     });
   backendBtnRow->addWidget(rescanJsBtn);
 
@@ -11406,13 +11546,13 @@ int main(int argc, char *argv[]) {
   };
   auto findVehicleUproject = [&]() -> QString {
     QStringList roots;
+    const QString src = QString::fromLocal8Bit(qgetenv("CARLA_SRC_ROOT")).trimmed();
+    if (!src.isEmpty()) roots << QDir::cleanPath(src);
     if (carlaRootPath) roots << QDir::cleanPath(carlaRootPath->text().trimmed());
     {
       QDir d(QCoreApplication::applicationDirPath());
       for (int i = 0; i < 6; ++i) { roots << d.absolutePath(); if (!d.cdUp()) break; }
     }
-    const QString src = QString::fromLocal8Bit(qgetenv("CARLA_SRC_ROOT")).trimmed();
-    if (!src.isEmpty()) roots << QDir::cleanPath(src);
 
     auto hasVehicleImporter = [](const QString &uproj) {
       const QDir d(QFileInfo(uproj).absolutePath());
@@ -11421,7 +11561,13 @@ int main(int argc, char *argv[]) {
     };
     auto hasCarlaPlugin = [](const QString &uproj) {
       const QDir d(QFileInfo(uproj).absolutePath());
-      return QFileInfo(d.absoluteFilePath("Plugins/Carla/Carla.uplugin")).isFile();
+      // .uplugin alone isn't enough — the workspace tree carries the .uplugin
+      // but no Definitions.def, which makes UE refuse to load the Carla
+      // module ("Plugin 'Carla' failed to load because module 'Carla' could
+      // not be found"). Require the build-config def to be present too so
+      // we only ever pick uprojects whose Carla plugin is actually loadable.
+      return QFileInfo(d.absoluteFilePath("Plugins/Carla/Carla.uplugin")).isFile()
+          && QFileInfo(d.absoluteFilePath("Plugins/Carla/Definitions.def")).exists();
     };
     QString carlaOnly, anyUproject;
     for (const QString &root : roots) {
@@ -11441,8 +11587,11 @@ int main(int argc, char *argv[]) {
   auto findCarlaRootForPkg = [&]() -> QString {
     return carlaRootPath ? carlaRootPath->text().trimmed() : QString();
   };
+  auto requestStartCarla = [startBtn]() {
+    if (startBtn && startBtn->isEnabled()) startBtn->click();
+  };
   auto *vehicleImportContainer = new carla_studio::vehicle_import::VehicleImportContainer(
-      findUnrealEditorBin, findVehicleUproject, findCarlaRootForPkg);
+      findUnrealEditorBin, findVehicleUproject, findCarlaRootForPkg, requestStartCarla);
   vehicleImportContainer->setVisible(false);
   bool vehicleImportTabVisible = false;
   auto setVehicleImportTabVisible = [&, vehicleImportContainer, vehicleIcon](bool on) {
@@ -11570,8 +11719,8 @@ int main(int argc, char *argv[]) {
     " style='color:#9BA3B5;'>guide</a>"));
   docsLink->setOpenExternalLinks(true);
   docsLink->setAlignment(Qt::AlignCenter);
-  docsLink->setStyleSheet("font-size: 10px;");
-  docsLink->setMinimumWidth(28);
+  docsLink->setStyleSheet("font-size: 13px; padding: 0 8px;");
+  docsLink->setMinimumWidth(40);
   docsLink->setToolTip("Content authoring guide — supported formats and conversion tips.");
 
   QWidget *cornerBox = new QWidget();
@@ -11580,9 +11729,10 @@ int main(int argc, char *argv[]) {
   cornerLayout->setSpacing(0);
   cornerLayout->addStretch();
   cornerLayout->addWidget(snipBtn,  0, Qt::AlignHCenter);
-  cornerLayout->addWidget(docsLink, 0, Qt::AlignHCenter);
   cornerLayout->addStretch();
   tabs->setCornerWidget(cornerBox, Qt::TopRightCorner);
+
+  vehicleImportContainer->setSubTabCornerWidget(docsLink);
 
   QObject::connect(snipBtn, &QToolButton::clicked, &window,
                     [&, versionStr = QString(CARLA_STUDIO_VERSION_STRING),
@@ -12113,6 +12263,25 @@ int main(int argc, char *argv[]) {
     QObject::connect(toolsThirdParty, &QAction::triggered, &window,
       [&]() { if (openThirdParty) openThirdParty->trigger(); });
   }
+
+  for (QAction *a : toolsTopMenu->actions()) toolsTopMenu->removeAction(a);
+  toolsTopMenu->addAction(toolsInstallSdk);
+  toolsTopMenu->addAction(toolsBuildSrc);
+  toolsTopMenu->addAction(vehicleImportAct);
+  toolsTopMenu->addSeparator();
+  toolsTopMenu->addAction(toolsLoadMaps);
+  toolsTopMenu->addAction(toolsCommunityMaps);
+  toolsTopMenu->addSeparator();
+  toolsTopMenu->addAction(toolsCleanup);
+  toolsTopMenu->addAction(toolsDocker);
+  toolsTopMenu->addAction(toolsThirdParty);
+  if (gazeboAct->isVisible() || foxgloveAct->isVisible()) {
+    toolsTopMenu->addSeparator();
+    if (gazeboAct->isVisible())   toolsTopMenu->addAction(gazeboAct);
+    if (foxgloveAct->isVisible()) toolsTopMenu->addAction(foxgloveAct);
+  }
+  toolsTopMenu->addSeparator();
+  toolsTopMenu->addAction(rosToolsMenu->menuAction());
 
   {
     bool anyVisible = false;

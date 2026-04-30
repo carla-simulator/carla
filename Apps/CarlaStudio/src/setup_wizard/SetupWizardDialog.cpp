@@ -358,9 +358,10 @@ void SetupWizardDialog::onBuild() {
   const QString uePath = mUePath->text().trimmed();
   appendLog("Configuring + building (cmake + ninja) — see terminal for live output.");
   const QString cmd = QString(
-      "cd %1 && CARLA_UNREAL_ENGINE_PATH=%2 cmake -G Ninja -S . -B Build "
-      "--toolchain=$PWD/CMake/Toolchain.cmake -DBUILD_CARLA_UNREAL=ON && "
-      "cmake --build Build --target carla-unreal 2>&1")
+      "cd %1 && CARLA_UNREAL_ENGINE_PATH=%2 cmake -G Ninja -S . -B Build/Development "
+      "--toolchain=$PWD/CMake/Toolchain.cmake "
+      "-DCMAKE_BUILD_TYPE=Development -DBUILD_CARLA_UNREAL=ON && "
+      "cmake --build Build/Development --target carla-unreal 2>&1")
         .arg(dest, uePath);
   QProcess::startDetached("/bin/bash", QStringList() << "-lc"
       << QString("x-terminal-emulator -e 'bash -c \"%1; read\"' || gnome-terminal -- bash -c '%1; read'")
