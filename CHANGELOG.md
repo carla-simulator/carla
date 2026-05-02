@@ -1,5 +1,5 @@
 ## CARLA 0.9.15
-
+ * Corrected the Semantic Segmentation camera class table in `Docs/ref_sensors.md` to match the actual 28-class taxonomy defined in `ObjectLabel.h` and `CityScapesPalette.h`. The previous table reflected the legacy 0.8.x CityScapes taxonomy (22 classes), which caused mismatches between documentation and engine output. This update aligns the documentation with the true engine enum values and RGB palette, preventing ground-truth mapping errors when building perception pipelines.
   * Added Digital Twins feature version 0.1. Now you can create your own map based on OpenStreetMaps
   * Added compatibility with SymReady Assets, using NVIDIA Omniverse
   * Added new maps: Town13 (is a large map) and Town15
