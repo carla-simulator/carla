@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -6,9 +6,9 @@
 
 #include "carla/streaming/detail/tcp/Server.h"
 
-#include <boost/asio/post.hpp>
-
 #include "carla/Logging.h"
+
+#include <boost/asio/post.hpp>
 
 #include <memory>
 
@@ -41,7 +41,7 @@ namespace tcp {
 
     _acceptor.async_accept(session->_socket, [=](error_code ec) {
       // Handle query and open a new session immediately.
-      boost::asio::post(_io_context, [=]() { handle_query(ec); });
+      boost::asio::post(_io_context, [=, this]() { handle_query(ec); });
       OpenSession(timeout, on_opened, on_closed);
     });
   }

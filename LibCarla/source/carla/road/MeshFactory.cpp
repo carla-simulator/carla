@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -125,8 +125,8 @@ namespace geom {
 
     std::vector<geom::Vector3D> vertices;
     // Ensure minimum vertices in width are two
-    const int vertices_in_width = road_param.vertex_width_resolution >= 2 ? road_param.vertex_width_resolution : 2;
-    const int segments_number = vertices_in_width - 1;
+    const size_t vertices_in_width = road_param.vertex_width_resolution >= 2 ? static_cast<size_t>(road_param.vertex_width_resolution) : size_t{2};
+    const size_t segments_number = vertices_in_width - 1;
 
     std::vector<geom::Vector2D> uvs;
     int uvx = 0;
@@ -135,11 +135,11 @@ namespace geom {
     do {
       // Get the location of the edges of the current lane at the current waypoint
       std::pair<geom::Vector3D, geom::Vector3D> edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
-      const geom::Vector3D segments_size = ( edges.second - edges.first ) / segments_number;
+      const geom::Vector3D segments_size = ( edges.second - edges.first ) / static_cast<float>(segments_number);
       geom::Vector3D current_vertex = edges.first;
       uvx = 0;
-      for (int i = 0; i < vertices_in_width; ++i) {
-        uvs.push_back(geom::Vector2D(uvx, uvy));
+      for (size_t i = 0; i < vertices_in_width; ++i) {
+        uvs.push_back(geom::Vector2D(static_cast<float>(uvx), static_cast<float>(uvy)));
         vertices.push_back(current_vertex);
         current_vertex = current_vertex + segments_size;
         uvx++;
@@ -155,12 +155,12 @@ namespace geom {
     if (s_end - (s_current - road_param.resolution) > EPSILON) {
       std::pair<carla::geom::Vector3D, carla::geom::Vector3D> edges =
         lane.GetCornerPositions(s_end - MESH_EPSILON, road_param.extra_lane_width);
-      const geom::Vector3D segments_size = (edges.second - edges.first) / segments_number;
+      const geom::Vector3D segments_size = (edges.second - edges.first) / static_cast<float>(segments_number);
       geom::Vector3D current_vertex = edges.first;
       uvx = 0;
-      for (int i = 0; i < vertices_in_width; ++i)
+      for (size_t i = 0; i < vertices_in_width; ++i)
       {
-        uvs.push_back(geom::Vector2D(uvx, uvy));
+        uvs.push_back(geom::Vector2D(static_cast<float>(uvx), static_cast<float>(uvy)));
         vertices.push_back(current_vertex);
         current_vertex = current_vertex + segments_size;
         uvx++;
@@ -195,15 +195,15 @@ namespace geom {
     const road::LaneSection &lane_section,
     std::map<carla::road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>>& result) const {
 
-    const int vertices_in_width = road_param.vertex_width_resolution >= 2 ? road_param.vertex_width_resolution : 2;
+    const size_t vertices_in_width = road_param.vertex_width_resolution >= 2 ? static_cast<size_t>(road_param.vertex_width_resolution) : size_t{2};
     std::vector<size_t> redirections;
     for (auto &&lane_pair : lane_section.GetLanes()) {
-      auto it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+      auto it = std::find(redirections.begin(), redirections.end(), static_cast<size_t>(lane_pair.first));
       if ( it == redirections.end() ) {
-        redirections.push_back(lane_pair.first);
-        it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+        redirections.push_back(static_cast<size_t>(lane_pair.first));
+        it = std::find(redirections.begin(), redirections.end(), static_cast<size_t>(lane_pair.first));
       }
-      size_t PosToAdd = it - redirections.begin();
+      size_t PosToAdd = static_cast<size_t>(it - redirections.begin());
 
       Mesh out_mesh;
       if(lane_pair.second.GetType() == road::Lane::LaneType::Driving ){
@@ -217,13 +217,13 @@ namespace geom {
       } else {
         uint32_t verticesinwidth  = 0;
         if(lane_pair.second.GetType() == road::Lane::LaneType::Driving) {
-          verticesinwidth = vertices_in_width;
+          verticesinwidth = static_cast<uint32_t>(vertices_in_width);
         }else if(lane_pair.second.GetType() == road::Lane::LaneType::Sidewalk){
           verticesinwidth = 6;
         }else{
           verticesinwidth = 2;
         }
-        (result[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(out_mesh, verticesinwidth);
+        (result[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(out_mesh, static_cast<int>(verticesinwidth));
       }
     }
   }
@@ -261,8 +261,7 @@ namespace geom {
 
     std::vector<geom::Vector3D> vertices;
     // Ensure minimum vertices in width are two
-    const int vertices_in_width = 6;
-    const int segments_number = vertices_in_width - 1;
+    const size_t vertices_in_width = 6;
     std::vector<geom::Vector2D> uvs;
     int uvy = 0;
 
@@ -275,22 +274,22 @@ namespace geom {
       geom::Vector3D low_vertex_first = edges.first - geom::Vector3D(0,0,1);
       geom::Vector3D low_vertex_second = edges.second - geom::Vector3D(0,0,1);
       vertices.push_back(low_vertex_first);
-      uvs.push_back(geom::Vector2D(0, uvy));
+      uvs.push_back(geom::Vector2D(0.0f, static_cast<float>(uvy)));
 
       vertices.push_back(edges.first);
-      uvs.push_back(geom::Vector2D(1, uvy));
+      uvs.push_back(geom::Vector2D(1.0f, static_cast<float>(uvy)));
 
       vertices.push_back(edges.first);
-      uvs.push_back(geom::Vector2D(1, uvy));
+      uvs.push_back(geom::Vector2D(1.0f, static_cast<float>(uvy)));
 
       vertices.push_back(edges.second);
-      uvs.push_back(geom::Vector2D(2, uvy));
+      uvs.push_back(geom::Vector2D(2.0f, static_cast<float>(uvy)));
 
       vertices.push_back(edges.second);
-      uvs.push_back(geom::Vector2D(2, uvy));
+      uvs.push_back(geom::Vector2D(2.0f, static_cast<float>(uvy)));
 
       vertices.push_back(low_vertex_second);
-      uvs.push_back(geom::Vector2D(3, uvy));
+      uvs.push_back(geom::Vector2D(3.0f, static_cast<float>(uvy)));
 
       // Update the current waypoint's "s"
       s_current += road_param.resolution;
@@ -308,22 +307,22 @@ namespace geom {
       geom::Vector3D low_vertex_second = edges.second - geom::Vector3D(0,0,1);
 
       vertices.push_back(low_vertex_first);
-      uvs.push_back(geom::Vector2D(0, uvy));
+      uvs.push_back(geom::Vector2D(0.0f, static_cast<float>(uvy)));
 
       vertices.push_back(edges.first);
-      uvs.push_back(geom::Vector2D(1, uvy));
+      uvs.push_back(geom::Vector2D(1.0f, static_cast<float>(uvy)));
 
       vertices.push_back(edges.first);
-      uvs.push_back(geom::Vector2D(1, uvy));
+      uvs.push_back(geom::Vector2D(1.0f, static_cast<float>(uvy)));
 
       vertices.push_back(edges.second);
-      uvs.push_back(geom::Vector2D(2, uvy));
+      uvs.push_back(geom::Vector2D(2.0f, static_cast<float>(uvy)));
 
       vertices.push_back(edges.second);
-      uvs.push_back(geom::Vector2D(2, uvy));
+      uvs.push_back(geom::Vector2D(2.0f, static_cast<float>(uvy)));
 
       vertices.push_back(low_vertex_second);
-      uvs.push_back(geom::Vector2D(3, uvy));
+      uvs.push_back(geom::Vector2D(3.0f, static_cast<float>(uvy)));
 
     }
 
@@ -333,7 +332,7 @@ namespace geom {
     out_mesh.AddMaterial(
       lane.GetType() == road::Lane::LaneType::Sidewalk ? "sidewalk" : "road");
 
-    const int number_of_rows = (vertices.size() / vertices_in_width);
+    const size_t number_of_rows = (vertices.size() / vertices_in_width);
 
     for (size_t i = 0; i < (number_of_rows - 1); ++i) {
       for (size_t j = 0; j < vertices_in_width - 1; ++j) {
@@ -534,7 +533,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
 
   std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory::GenerateOrderedWithMaxLen(
     const road::LaneSection &lane_section) const {
-      const int vertices_in_width = road_param.vertex_width_resolution >= 2 ? road_param.vertex_width_resolution : 2;
+      const size_t vertices_in_width = road_param.vertex_width_resolution >= 2 ? static_cast<size_t>(road_param.vertex_width_resolution) : size_t{2};
       std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> mesh_uptr_list;
 
       if (lane_section.GetLength() < road_param.max_road_len) {
@@ -554,25 +553,25 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
               lane_section_mesh += *GenerateSidewalk(lane_pair.second, s_current, s_until);
             }
 
-            auto it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+            auto it = std::find(redirections.begin(), redirections.end(), static_cast<size_t>(lane_pair.first));
             if (it == redirections.end()) {
-              redirections.push_back(lane_pair.first);
-              it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+              redirections.push_back(static_cast<size_t>(lane_pair.first));
+              it = std::find(redirections.begin(), redirections.end(), static_cast<size_t>(lane_pair.first));
             }
 
-            size_t PosToAdd = it - redirections.begin();
+            size_t PosToAdd = static_cast<size_t>(it - redirections.begin());
             if (mesh_uptr_list[lane_pair.second.GetType()].size() <= PosToAdd) {
               mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
             } else {
               uint32_t verticesinwidth  = 0;
               if(lane_pair.second.GetType() == road::Lane::LaneType::Driving) {
-                verticesinwidth = vertices_in_width;
+                verticesinwidth = static_cast<uint32_t>(vertices_in_width);
               }else if(lane_pair.second.GetType() == road::Lane::LaneType::Sidewalk){
                 verticesinwidth = 6;
               }else{
                 verticesinwidth = 2;
               }
-              (mesh_uptr_list[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(lane_section_mesh, verticesinwidth);
+              (mesh_uptr_list[lane_pair.second.GetType()][PosToAdd])->ConcatMesh(lane_section_mesh, static_cast<int>(verticesinwidth));
             }
           }
           s_current = s_until;
@@ -586,20 +585,20 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
               lane_section_mesh += *GenerateSidewalk(lane_pair.second, s_current, s_end);
             }
 
-            auto it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+            auto it = std::find(redirections.begin(), redirections.end(), static_cast<size_t>(lane_pair.first));
             if (it == redirections.end()) {
-              redirections.push_back(lane_pair.first);
-              it = std::find(redirections.begin(), redirections.end(), lane_pair.first);
+              redirections.push_back(static_cast<size_t>(lane_pair.first));
+              it = std::find(redirections.begin(), redirections.end(), static_cast<size_t>(lane_pair.first));
             }
 
-            size_t PosToAdd = it - redirections.begin();
+            size_t PosToAdd = static_cast<size_t>(it - redirections.begin());
 
             if (mesh_uptr_list[lane_pair.second.GetType()].size() <= PosToAdd) {
               mesh_uptr_list[lane_pair.second.GetType()].push_back(std::make_unique<Mesh>(lane_section_mesh));
             } else {
               uint32_t verticesinwidth  = 0;
               if(lane_pair.second.GetType() == road::Lane::LaneType::Driving) {
-                verticesinwidth = vertices_in_width;
+                verticesinwidth = static_cast<uint32_t>(vertices_in_width);
               }else if(lane_pair.second.GetType() == road::Lane::LaneType::Sidewalk){
                 verticesinwidth = 6;
               }else{
@@ -743,7 +742,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
     const road::LaneSection& lane_section,
     const road::Lane& lane,
     std::vector<std::unique_ptr<Mesh>>& inout,
-    std::vector<std::string>& outinfo ) const {
+    std::vector<std::string>& /*outinfo*/ ) const {
     Mesh out_mesh;
     const double s_start = lane_section.GetDistance();
     const double s_end = lane_section.GetDistance() + lane_section.GetLength();
@@ -761,14 +760,11 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
           case carla::road::element::LaneMarking::Type::Solid: {
             size_t currentIndex = out_mesh.GetVertices().size() + 1;
 
-            std::pair<geom::Vector3D, geom::Vector3D> edges = lane.GetCornerPositions(s_current, 0);
-
-            geom::Vector3D director = edges.second - edges.first;
-            director /= director.Length();
-            geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
+            std::pair<geom::Vector3D, geom::Vector3D> edges =
+              ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width, 0.0f);
 
             out_mesh.AddVertex(edges.first);
-            out_mesh.AddVertex(endmarking);
+            out_mesh.AddVertex(edges.second);
 
             out_mesh.AddIndex(currentIndex);
             out_mesh.AddIndex(currentIndex + 1);
@@ -785,28 +781,21 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             size_t currentIndex = out_mesh.GetVertices().size() + 1;
 
             std::pair<geom::Vector3D, geom::Vector3D> edges =
-              lane.GetCornerPositions(s_current, road_param.extra_lane_width);
-
-            geom::Vector3D director = edges.second - edges.first;
-            director /= director.Length();
-            geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
+              ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width, road_param.extra_lane_width);
 
             out_mesh.AddVertex(edges.first);
-            out_mesh.AddVertex(endmarking);
+            out_mesh.AddVertex(edges.second);
 
             s_current += road_param.resolution * 3;
             if (s_current > s_end)
             {
               s_current = s_end;
             }
-            edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
 
-            director = edges.second - edges.first;
-            director /= director.Length();
-            endmarking = edges.first + director * lane_mark_info.width;
+            edges = ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width, road_param.extra_lane_width);
 
             out_mesh.AddVertex(edges.first);
-            out_mesh.AddVertex(endmarking);
+            out_mesh.AddVertex(edges.second);
 
             out_mesh.AddIndex(currentIndex);
             out_mesh.AddIndex(currentIndex + 1);
@@ -864,13 +853,12 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
       const carla::road::element::RoadInfoMarkRecord* road_info_mark = lane.GetInfo<carla::road::element::RoadInfoMarkRecord>(s_current);
       if (road_info_mark != nullptr) {
         carla::road::element::LaneMarking lane_mark_info(*road_info_mark);
-        std::pair<geom::Vector3D, geom::Vector3D> edges = lane.GetCornerPositions(s_end, 0);
-        geom::Vector3D director = edges.second - edges.first;
-        director /= director.Length();
-        geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
+
+        std::pair<geom::Vector3D, geom::Vector3D> edges =
+              ComputeEdgesForLanemark(lane_section, lane, s_end, lane_mark_info.width, 0.0f);
 
         out_mesh.AddVertex(edges.first);
-        out_mesh.AddVertex(endmarking);
+        out_mesh.AddVertex(edges.second);
       }
       inout.push_back(std::make_unique<Mesh>(out_mesh));
     }
@@ -881,7 +869,7 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
     const road::LaneSection& lane_section,
     const road::Lane& lane,
     std::vector<std::unique_ptr<Mesh>>& inout,
-    std::vector<std::string>& outinfo ) const
+    std::vector<std::string>& /*outinfo*/ ) const
   {
     Mesh out_mesh;
     const double s_start = lane_section.GetDistance();
@@ -903,8 +891,8 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             carla::road::element::DirectedPoint rightpoint = road.GetDirectedPointIn(s_current);
             carla::road::element::DirectedPoint leftpoint = rightpoint;
 
-            rightpoint.ApplyLateralOffset(lane_mark_info.width * 0.5);
-            leftpoint.ApplyLateralOffset(lane_mark_info.width * -0.5);
+            rightpoint.ApplyLateralOffset(static_cast<float>(lane_mark_info.width * 0.5));
+            leftpoint.ApplyLateralOffset(static_cast<float>(lane_mark_info.width * -0.5));
 
             // Unreal's Y axis hack
             rightpoint.location.y *= -1;
@@ -928,28 +916,20 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             size_t currentIndex = out_mesh.GetVertices().size() + 1;
 
             std::pair<geom::Vector3D, geom::Vector3D> edges =
-              lane.GetCornerPositions(s_current, road_param.extra_lane_width);
-
-            geom::Vector3D director = edges.second - edges.first;
-            director /= director.Length();
-            geom::Vector3D endmarking = edges.first + director * lane_mark_info.width;
+              ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width, road_param.extra_lane_width);
 
             out_mesh.AddVertex(edges.first);
-            out_mesh.AddVertex(endmarking);
+            out_mesh.AddVertex(edges.second);
 
             s_current += road_param.resolution * 3;
             if (s_current > s_end) {
               s_current = s_end;
             }
 
-            edges = lane.GetCornerPositions(s_current, road_param.extra_lane_width);
-
-            director = edges.second - edges.first;
-            director /= director.Length();
-            endmarking = edges.first + director * lane_mark_info.width;
+            edges = ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width, road_param.extra_lane_width);
 
             out_mesh.AddVertex(edges.first);
-            out_mesh.AddVertex(endmarking);
+            out_mesh.AddVertex(edges.second);
 
             out_mesh.AddIndex(currentIndex);
             out_mesh.AddIndex(currentIndex + 1);
@@ -1011,8 +991,8 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
         carla::road::element::DirectedPoint rightpoint = road.GetDirectedPointIn(s_current);
         carla::road::element::DirectedPoint leftpoint = rightpoint;
 
-        rightpoint.ApplyLateralOffset(lane_mark_info.width * 0.5f);
-        leftpoint.ApplyLateralOffset(lane_mark_info.width * -0.5f);
+        rightpoint.ApplyLateralOffset(static_cast<float>(lane_mark_info.width * 0.5));
+        leftpoint.ApplyLateralOffset(static_cast<float>(lane_mark_info.width * -0.5));
 
         // Unreal's Y axis hack
         rightpoint.location.y *= -1;
@@ -1150,6 +1130,35 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
     return std::make_unique<Mesh>(out_mesh);
   }
 
+
+  std::pair<geom::Vector3D, geom::Vector3D> MeshFactory::ComputeEdgesForLanemark(
+      const road::LaneSection& lane_section,
+      const road::Lane& lane,
+      const double s_current,
+      const double lanemark_width,
+      const float extra_width) const {
+    std::pair<geom::Vector3D, geom::Vector3D> edges =
+      lane.GetCornerPositions(s_current, extra_width);
+
+    geom::Vector3D director;
+    if (edges.first != edges.second) {
+      director = edges.second - edges.first;
+      director /= director.Length();
+    } else {
+      const std::map<road::LaneId, road::Lane> & lanes = lane_section.GetLanes();
+      for (const auto& lane_pair : lanes) {
+        std::pair<geom::Vector3D, geom::Vector3D> another_edge =
+          lane_pair.second.GetCornerPositions(s_current, extra_width);
+        if (another_edge.first != another_edge.second) {
+          director = another_edge.second - another_edge.first;
+          director /= director.Length();
+          break;
+        }
+      }
+    }
+    geom::Vector3D endmarking = edges.first + director * static_cast<float>(lanemark_width);
+    return std::make_pair(edges.first, endmarking);
+  }
 
 } // namespace geom
 } // namespace carla

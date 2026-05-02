@@ -1,0 +1,16 @@
+<interpolations>
+   <interpolation id="Town10_showcase" order="3">
+      <point time="0" x="-247.28" y="121.61" z="16.84" pitch="-17.76" yaw="-18.42" roll="0.0"/>
+      <point time="7" x="-144.79" y="63.14" z="4.61" pitch="-12.96" yaw="-30.87" roll="0.0"/>
+      <point time="14" x="-67.19" y="26.45" z="3.19" pitch="-7.35" yaw="-10.69" roll="-0.0"/>
+      <point time="16" x="-51.27" y="26.63" z="3.72" pitch="-4.0" yaw="-60.09" roll="0.0"/>
+      <point time="18" x="-43.72" y="27.57" z="3.72" pitch="-2.68" yaw="-103.39" roll="0.0"/>
+      <point time="20" x="-29.24" y="28.51" z="3.27" pitch="-0.54" yaw="157.23" roll="0.0"/>
+      <point time="22" x="-17.55" y="25.56" z="3.07" pitch="-0.59" yaw="88.57" roll="0.0"/>
+      <point time="28" x="34.03" y="27.0" z="2.59" pitch="-3.04" yaw="3.04" roll="0.0"/>
+      <point time="32" x="81.46" y="27.96" z="4.32" pitch="-6.98" yaw="-4.32" roll="0.0"/>
+      <point time="36" x="91.34" y="26.95" z="8.8" pitch="-10.34" yaw="-1.67" roll="0.0"/>
+      <point time="39" x="93.88" y="24.18" z="19.64" pitch="-15.26" yaw="0.06" roll="0.0"/>
+      <point time="42" x="79.79" y="2.2" z="24.26" pitch="-23.66" yaw="19.27" roll="0.0"/>
+   </interpolation>
+</interpolations>

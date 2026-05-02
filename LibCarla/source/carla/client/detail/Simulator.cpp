@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -21,6 +21,7 @@
 #include "carla/trafficmanager/TrafficManager.h"
 #include "carla/sensor/Deserializer.h"
 
+#include <chrono>
 #include <exception>
 #include <thread>
 
@@ -50,7 +51,7 @@ namespace detail {
     bool result = true;
     auto start = std::chrono::system_clock::now();
     while (frame > episode.GetState()->GetTimestamp().frame) {
-      std::this_thread::yield();
+      std::this_thread::sleep_for(std::chrono::microseconds(100));
       auto end = std::chrono::system_clock::now();
       auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(end-start);
       if(timeout.to_chrono() < diff) {
@@ -116,7 +117,7 @@ namespace detail {
       std::string opendrive,
       const rpc::OpendriveGenerationParameters & params, bool reset_settings) {
     // The "OpenDriveMap" is an ".umap" located in:
-    // "carla/Unreal/CarlaUE4/Content/Carla/Maps/"
+    // "carla/Unreal/CarlaUnreal/Content/Carla/Maps/"
     // It will load the last sended OpenDRIVE by client's "LoadOpenDriveEpisode()"
     constexpr auto custom_opendrive_map = "OpenDriveMap";
     _client.CopyOpenDriveToServer(std::move(opendrive), params);
@@ -161,7 +162,8 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
       std::string map_name;
       std::string map_base_path;
       bool fill_base_string = false;
-      for (int i = map_info.name.size() - 1; i >= 0; --i) {
+      for (size_t ri = map_info.name.size(); ri > 0; --ri) {
+        size_t i = ri - 1;
         if (fill_base_string == false && map_info.name[i] != '/') {
           map_name += map_info.name[i];
         } else {
@@ -264,7 +266,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
             "synchronous mode and substepping are enabled but the number of substeps is not valid. "
             "Please be aware that this value needs to be in the range [1-16].");
       }
-      double n_substeps = settings.fixed_delta_seconds.get() / settings.max_substep_delta_time;
+      double n_substeps = settings.fixed_delta_seconds.value() / settings.max_substep_delta_time;
 
       if (n_substeps > static_cast<double>(settings.max_substeps)) {
         log_warning(
@@ -320,7 +322,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     nav->UnregisterWalker(walker->GetId(), controller.GetId());
   }
 
-  boost::optional<geom::Location> Simulator::GetRandomLocationFromNavigation() {
+  std::optional<geom::Location> Simulator::GetRandomLocationFromNavigation() {
     DEBUG_ASSERT(_episode != nullptr);
     auto nav = _episode->CreateNavigationIfMissing();
     return nav->GetRandomLocation();

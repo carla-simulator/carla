@@ -27,7 +27,6 @@
 	- [Multi-TM simulations](#multi-tm-simulations)
 	- [Multi-simulation](#multi-simulation)
 - [__Synchronous mode__](#synchronous-mode)
-- [__Traffic manager in large maps__](#traffic-manager-in-large-maps)
 
 ---
 ## What is the Traffic Manager?
@@ -458,7 +457,7 @@ The CARLA server keeps a register of all TM instances by storing the port and th
 In a multi-client simulation, multiple TMs are created on the same port. The first TM will be a TM-Server and the rest will be TM-Clients connecting to it. The TM-Server will dictate the behavior of all the TM instances:
 
 ```py
-terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000
+terminal 1: ./CarlaUnreal.sh -carla-rpc-port=4000
 terminal 2: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Server
 terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Client
 ```
@@ -468,7 +467,7 @@ terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Client
 In a multi-TM simulation, multiple TM instances are created on distinct ports. Each TM instance will control its own behavior:
 
 ```py
-terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000
+terminal 1: ./CarlaUnreal.sh -carla-rpc-port=4000
 terminal 2: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Server A
 terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4550 # TM-Server B
 ```
@@ -478,8 +477,8 @@ terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4550 # TM-Server B
 Multi-simulation is when more than one CARLA server is running at the same time. The TM needs to connect to the relevant CARLA server port. As long as the computational power allows for it, the TM can run multiple simulations at a time without any problems:
 
 ```py
-terminal 1: ./CarlaUE4.sh -carla-rpc-port=4000 # simulation A 
-terminal 2: ./CarlaUE4.sh -carla-rpc-port=5000 # simulation B
+terminal 1: ./CarlaUnreal.sh -carla-rpc-port=4000 # simulation A 
+terminal 2: ./CarlaUnreal.sh -carla-rpc-port=5000 # simulation B
 terminal 3: python3 generate_traffic.py --port 4000 --tm-port 4050 # TM-Server A connected to simulation A
 terminal 4: python3 generate_traffic.py --port 5000 --tm-port 5050 # TM-Server B connected to simulation B
 ```
@@ -535,44 +534,6 @@ If more than one TM is set to synchronous mode, synchrony will fail. Follow thes
 
 !!! Warning
     Disable synchronous mode (for both the world and TM) in your script managing ticks before it finishes to prevent the server blocking, waiting forever for a tick.
-
----
-
-## Traffic manager in large maps
-
-To understand how the TM works on large maps, make sure to first familiarise yourself with how large maps work by reading the documentation [here](large_map_overview.md).
-
-The behavior of autopilot vehicles in large maps depends on whether or not there is a hero vehicle present:
-
-__Hero vehicle not present__
-
-All autopilot vehicles will be considered dormant actors. The dormant autopilot actors will be moved around the map as in hybrid mode. The vehicles will not be rendered since there is no hero vehicle to trigger map tile streaming.
-
-__Hero vehicle present__
-
-Autopilot vehicles will become dormant when they exceed the value defined by `actor_active_distance`. To set this value, use the Python API:
-
-```py
-settings = world.get_settings()
-
-# Actors will become dormant 2km away from the ego vehicle
-settings.actor_active_distance = 2000
-
-world.apply_settings(settings)
-```
-
-In the TM, dormant actors can be configured to continually respawn around the hero vehicle instead of remaining dormant on other parts of the map. This option can be configured using the `set_respawn_dormant_vehicles` method in the Python API. Vehicles will be respawned within a user-definable distance of the hero vehicle. The upper and lower boundaries of the respawnable distance can be set using the `set_boundaries_respawn_dormant_vehicles` method. Note that the upper distance will not be bigger than the tile streaming distance of the large map and the minimum lower distance is 20m.
-
-To enable respawning of dormant vehicles within 25 and 700 meters of the hero vehicle:
-
-```py
-my_tm.set_respawn_dormant_vehicles(True)
-my_tm.set_boundaries_respawn_dormant_vehicles(25,700)
-```
-
-If collisions prevent a dormant actor from being respawned, the TM will retry on the next simulation step.
-
-If dormant vehicles are not respawned, their behavior will depend on whether hybrid mode is enabled. If hybrid mode has been enabled, then the dormant actors will be teleported around the map. If hybrid mode is not enabled, then dormant actor's physics will not be computed and they will stay in place until they are no longer dormant.
 
 ---
 

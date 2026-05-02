@@ -1,4 +1,4 @@
-// Copyright (c) 2022 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -7,9 +7,9 @@
 #include "carla/multigpu/listener.h"
 #include "carla/multigpu/primary.h"
 
-#include <boost/asio/post.hpp>
-
 #include "carla/Logging.h"
+
+#include <boost/asio/post.hpp>
 
 #include <memory>
 
@@ -45,19 +45,28 @@ namespace multigpu {
     auto session = std::make_shared<Primary>(_io_context, timeout, *this);
     auto self = shared_from_this();
     
-    auto handle_query = [on_opened, on_closed, on_response, session, self](const error_code &ec) {
-    if (!ec) {
-      session->Open(std::move(on_opened), std::move(on_closed), std::move(on_response));
-    } else {
-      log_error("Secondary server:", ec.message());
-    }
-  };
+    auto handle_query = [on_opened, on_closed, on_response, session, self](const error_code &ec)
+    {
+      if (!ec) {
+        session->Open(std::move(on_opened), std::move(on_closed), std::move(on_response));
+      } else {
+        log_error("Secondary server:", ec.message());
+      }
+    };
 
-    _acceptor.async_accept(session->_socket, [=](error_code ec) {
-      // Handle query and open a new session immediately.
-      boost::asio::post(_io_context, [=]() { handle_query(ec); });
-      OpenSession(timeout, on_opened, on_closed, on_response);
-    });
+    _acceptor.async_accept(
+      session->_socket,
+      [this, handle_query, timeout, on_opened, on_closed, on_response](error_code ec)
+      {
+        boost::asio::post(
+          _io_context,
+          [ec, handle_query]()
+          {
+            handle_query(ec);
+          });
+
+        OpenSession(timeout, on_opened, on_closed, on_response);
+      });
   }
 
 } // namespace multigpu

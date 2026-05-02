@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -29,7 +29,7 @@
 #include "carla/rpc/Texture.h"
 #include "carla/rpc/MaterialParameter.h"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 #include <memory>
 
@@ -259,12 +259,20 @@ namespace detail {
       _client.SetWeatherParameters(weather);
     }
 
+    bool IsWeatherEnabled() {
+      return _client.IsWeatherEnabled();
+    }
+
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
       return _client.GetVehiclePhysicsControl(vehicle.GetId());
     }
 
     rpc::VehicleLightState GetVehicleLightState(const Vehicle &vehicle) const {
       return _client.GetVehicleLightState(vehicle.GetId());
+    }
+
+    std::vector<geom::Transform> GetVehicleBoneWorldTransforms(const Vehicle &vehicle) {
+      return _client.GetVehicleBoneWorldTransforms(vehicle.GetId());
     }
 
     /// Returns all the BBs of all the elements of the level
@@ -306,7 +314,7 @@ namespace detail {
 
     void UnregisterAIController(const WalkerAIController &controller);
 
-    boost::optional<geom::Location> GetRandomLocationFromNavigation();
+    std::optional<geom::Location> GetRandomLocationFromNavigation();
 
     void SetPedestriansCrossFactor(float percentage);
 
@@ -318,7 +326,7 @@ namespace detail {
     // =========================================================================
     /// @{
 
-    boost::optional<rpc::Actor> GetActorById(ActorId id) const {
+    std::optional<rpc::Actor> GetActorById(ActorId id) const {
       DEBUG_ASSERT(_episode != nullptr);
       return _episode->GetActorById(id);
     }
@@ -438,6 +446,16 @@ namespace detail {
       return GetActorSnapshot(actor).acceleration;
     }
 
+    std::string GetActorName(const Actor& actor) const
+    {
+      return _client.GetActorName(actor.GetId());
+    }
+
+    std::string GetActorClassName(const Actor& actor) const
+    {
+      return _client.GetActorClassName(actor.GetId());
+    }
+
     void SetActorLocation(Actor &actor, const geom::Location &location) {
       _client.SetActorLocation(actor.GetId(), location);
     }
@@ -468,6 +486,22 @@ namespace detail {
 
     void SetActorEnableGravity(Actor &actor, bool enabled) {
       _client.SetActorEnableGravity(actor.GetId(), enabled);
+    }
+
+    void ApplyTextureToActor(
+      Actor& actor,
+      const rpc::MaterialParameter& MaterialParameter,
+      const rpc::TextureColor& Texture)
+    {
+      _client.ApplyTextureToActor(actor.GetId(), MaterialParameter, Texture);
+    }
+
+    void ApplyTextureToActor(
+      Actor& actor,
+      const rpc::MaterialParameter& MaterialParameter,
+      const rpc::TextureFloatColor& Texture)
+    {
+      _client.ApplyTextureToActor(actor.GetId(), MaterialParameter, Texture);
     }
 
     /// @}

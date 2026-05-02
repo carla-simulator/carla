@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -61,7 +61,7 @@ namespace road {
     if(width_info != nullptr){
       return width_info->GetPolynomial().Evaluate(s);
     }
-    return 0.0f;
+    return 0.0;
   }
 
   bool Lane::IsStraight() const {
@@ -195,7 +195,7 @@ namespace road {
         0.0f);
 
     // Fix the direction of the possitive lanes
-    if (GetId() > 0) {
+    if (!IsPositiveDirection()) {
       rot.yaw += 180.0f;
       rot.pitch = 360.0f - rot.pitch;
     }
@@ -204,7 +204,7 @@ namespace road {
   }
 
   std::pair<geom::Vector3D, geom::Vector3D> Lane::GetCornerPositions(
-      const double s, const float extra_width) const {
+      const double parameter_s, const float extra_width) const {
     const Road *road = GetRoad();
     DEBUG_ASSERT(road != nullptr);
 
@@ -217,6 +217,7 @@ namespace road {
     RELEASE_ASSERT(GetId() >= lanes.begin()->first);
     RELEASE_ASSERT(GetId() <= lanes.rbegin()->first);
 
+    const double s = geom::Math::Clamp(parameter_s, 0.0, road->GetLength());
     float lane_t_offset = 0.0f;
 
     if (GetId() < 0) {
@@ -261,6 +262,17 @@ namespace road {
     }
 
     return std::make_pair(dp_r.location, dp_l.location);
+  }
+
+  bool Lane::IsPositiveDirection() const {
+    const auto *road = GetRoad();
+    DEBUG_ASSERT(road != nullptr);
+    if (road->IsRHT() && GetId() <= 0){
+      return true;
+    } else if (!road->IsRHT() && GetId() >= 0){
+      return true;
+    }
+    return false;
   }
 
 } // road

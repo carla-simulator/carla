@@ -4,17 +4,9 @@
 * __Barrels__
 	* [__Barrel__](#barrel)
 * __Bins__
-	* [__Bin__](#bin)
-	* [__Cloth container__](#cloth-container)
 	* [__Garbage container__](#garbage-container)
-	* [__Glass container__](#glass-container)
 * __Boxes__
-	* [__Box 01__](#box-01)
-	* [__Box 02__](#box-02)
-	* [__Box 03__](#box-03)
 	* [__Creased box 01__](#creased-box-01)
-	* [__Creased box 02__](#creased-box-02)
-	* [__Creased box 03__](#creased-box-03)
 ## __Garbage__
 * __Bags__
 	* [__Trash bag__](#trash-bag)
@@ -33,28 +25,21 @@
 	* [__Trash can 02__](#trash-can-02)
 	* [__Trash can 03__](#trash-can-03)
 	* [__Trash can 04__](#trash-can-04)
-	* [__Trash can 05__](#trash-can-05)
 ## __Park / garden__
 * __Furniture__
-	* [__Bench 03__](#bench-03)
 	* [__Garden lamp__](#garden-lamp)
 	* [__Pergola__](#pergola)
 	* [__Plastic chair__](#plastic-chair)
 	* [__Plastic table__](#plastic-table)
-	* [__Slide__](#slide)
 	* [__Swing__](#swing)
 	* [__Swingcouch__](#swingcouch)
-	* [__Table__](#table)
 	* [__Trampoline__](#trampoline)
 * __Misc__
 	* [__Barbeque__](#barbeque)
-	* [__Clothesline__](#clothesline)
 	* [__Doghouse__](#doghouse)
 	* [__Gnome__](#gnome)
-	* [__Wateringcan__](#wateringcan)
 * __Other__
 	* [__Haybale__](#haybale)
-	* [__Haybale alternate__](#haybale-alternate)
 * __Plantpots__
 	* [__Plantpot 01__](#plantpot-01)
 	* [__Plantpot 02__](#plantpot-02)
@@ -63,7 +48,6 @@
 	* [__Plantpot 05__](#plantpot-05)
 	* [__Plantpot 06__](#plantpot-06)
 	* [__Plantpot 07__](#plantpot-07)
-	* [__Plantpot 08__](#plantpot-08)
 ## __Personal__
 * __Bags__
 	* [__Plastic bag__](#plastic-bag)
@@ -89,7 +73,6 @@
 	* [__Traffic cone 01__](#traffic-cone-01)
 	* [__Traffic cone 02__](#traffic-cone-02)
 * __Construction__
-	* [__Iron plank__](#iron-plank)
 	* [__Warning construction__](#warning-construction)
 * __Debris__
 	* [__Brokentile 01__](#brokentile-01)
@@ -123,7 +106,6 @@
 	* [__Street sign 04__](#street-sign-04)
 * __Transport__
 	* [__Bus stop__](#bus-stop)
-	* [__Bus stopl alternate__](#bus-stopl-alternate)
 * __Utilities__
 	* [__ATM__](#atm)
 	* [__Mailbox__](#mailbox)
@@ -144,20 +126,6 @@
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.barrel<span>
 
-### Bin
-
-![static_prop_bin](../img/catalogue/props/static_prop_bin.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.bin<span>
-
-### Cloth container
-
-![static_prop_clothcontainer](../img/catalogue/props/static_prop_clothcontainer.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.clothcontainer<span>
-
 ### Garbage container
 
 ![static_prop_container](../img/catalogue/props/static_prop_container.webp)
@@ -165,54 +133,12 @@
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.container<span>
 
-### Glass container
-
-![static_prop_glasscontainer](../img/catalogue/props/static_prop_glasscontainer.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.glasscontainer<span>
-
-### Box 01
-
-![static_prop_box01](../img/catalogue/props/static_prop_box01.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.box01<span>
-
-### Box 02
-
-![static_prop_box02](../img/catalogue/props/static_prop_box02.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.box02<span>
-
-### Box 03
-
-![static_prop_box03](../img/catalogue/props/static_prop_box03.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.box03<span>
-
 ### Creased box 01
 
 ![static_prop_creasedbox01](../img/catalogue/props/static_prop_creasedbox01.webp)
 
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.creasedbox01<span>
-
-### Creased box 02
-
-![static_prop_creasedbox02](../img/catalogue/props/static_prop_creasedbox02.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.creasedbox02<span>
-
-### Creased box 03
-
-![static_prop_creasedbox03](../img/catalogue/props/static_prop_creasedbox03.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.creasedbox03<span>
 
 ---
 
@@ -308,22 +234,7 @@
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashcan04<span>
 
-### Trash can 05
-
-![static_prop_trashcan05](../img/catalogue/props/static_prop_trashcan05.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trashcan05<span>
-
 ---
-
-## __Park / garden__
-### Bench 03
-
-![static_prop_bench03](../img/catalogue/props/static_prop_bench03.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.bench03<span>
 
 ### Garden lamp
 
@@ -353,13 +264,6 @@
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plastictable<span>
 
-### Slide
-
-![static_prop_slide](../img/catalogue/props/static_prop_slide.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.slide<span>
-
 ### Swing
 
 ![static_prop_swing](../img/catalogue/props/static_prop_swing.webp)
@@ -373,13 +277,6 @@
 
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.swingcouch<span>
-
-### Table
-
-![static_prop_table](../img/catalogue/props/static_prop_table.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.table<span>
 
 ### Trampoline
 
@@ -395,13 +292,6 @@
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.barbeque<span>
 
-### Clothesline
-
-![static_prop_clothesline](../img/catalogue/props/static_prop_clothesline.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.clothesline<span>
-
 ### Doghouse
 
 ![static_prop_doghouse](../img/catalogue/props/static_prop_doghouse.webp)
@@ -416,26 +306,12 @@
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.gnome<span>
 
-### Wateringcan
-
-![static_prop_wateringcan](../img/catalogue/props/static_prop_wateringcan.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.wateringcan<span>
-
 ### Haybale
 
 ![static_prop_haybale](../img/catalogue/props/static_prop_haybale.webp)
 
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.haybale<span>
-
-### Haybale alternate
-
-![static_prop_haybalelb](../img/catalogue/props/static_prop_haybalelb.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.haybalelb<span>
 
 ### Plantpot 01
 
@@ -485,13 +361,6 @@
 
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot07<span>
-
-### Plantpot 08
-
-![static_prop_plantpot08](../img/catalogue/props/static_prop_plantpot08.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.plantpot08<span>
 
 ---
 
@@ -603,13 +472,6 @@
 
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.trafficcone02<span>
-
-### Iron plank
-
-![static_prop_ironplank](../img/catalogue/props/static_prop_ironplank.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.ironplank<span>
 
 ### Warning construction
 
@@ -775,12 +637,6 @@
 
 * __Blueprint ID__: <span style="color:#00a6ed;">static.prop.busstop<span>
 
-### Bus stopl alternate
-
-![static_prop_busstoplb](../img/catalogue/props/static_prop_busstoplb.webp)
-
-
-* __Blueprint ID__: <span style="color:#00a6ed;">static.prop.busstoplb<span>
 
 ### ATM
 

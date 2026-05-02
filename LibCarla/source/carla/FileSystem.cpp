@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -9,24 +9,19 @@
 #include "carla/Exception.h"
 #include "carla/StringUtil.h"
 
-#include <boost/filesystem/operations.hpp>
+#include <filesystem>
 
 namespace carla {
 
-  namespace fs = boost::filesystem;
+  namespace fs = std::filesystem;
 
   void FileSystem::ValidateFilePath(std::string &filepath, const std::string &ext) {
     fs::path path(filepath);
-    if (path.extension().empty() && !ext.empty()) {
-      if (ext[0] != '.') {
-        path += '.';
-      }
-      path += ext;
-    }
-    auto parent = path.parent_path();
-    if (!parent.empty()) {
+    if (!ext.empty() && path.extension() != ext)
+      path.replace_extension(ext);
+    auto parent = fs::absolute(path.parent_path());
+    if (!fs::exists(parent))
       fs::create_directories(parent);
-    }
     filepath = path.string();
   }
 

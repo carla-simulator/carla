@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -8,7 +8,7 @@
 
 #include "carla/road/MapBuilder.h"
 
-#include <pugixml/pugixml.hpp>
+#include <third-party/pugixml/pugixml.hpp>
 
 namespace carla {
 namespace opendrive {
@@ -38,10 +38,12 @@ namespace parser {
         map_builder.CreateLaneWidth(lane, s_offset + s, a, b, c, d);
         width_count++;
       }
-      if (width_count == 0 && lane->GetId() != 0) {
+      if (width_count == 0) {
         map_builder.CreateLaneWidth(lane, s, 0.0, 0.0, 0.0, 0.0);
-        std::cout << "WARNING: In road " << lane->GetRoad()->GetId() << " lane " << lane->GetId() <<
-        " no \"<width>\" parameter found under \"<lane>\" tag. Using default values." << std::endl;
+        if (lane->GetId() != 0) {
+          std::cout << "WARNING: In road " << lane->GetRoad()->GetId() << " lane " << lane->GetId() <<
+          " no \"<width>\" parameter found under \"<lane>\" tag. Using default values." << std::endl;
+        }
       }
 
       // Lane Border
@@ -80,6 +82,7 @@ namespace parser {
             type_width = road_mark_type.attribute("width").as_double();
           }
 
+          bool is_rht = lane->GetRoad()->IsRHT();
           // Call map builder for LaneRoadMark
           map_builder.CreateRoadMark(
               lane,
@@ -93,7 +96,8 @@ namespace parser {
               lane_change,
               height,
               type_name,
-              type_width);
+              type_width,
+              is_rht);
         }
 
         for (pugi::xml_node road_mark_type_line_node : road_mark_type.children("line")) {

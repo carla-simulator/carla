@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -9,7 +9,6 @@
 #include "Random.h"
 
 #include <carla/StopWatch.h>
-#include <carla/ThreadPool.h>
 #include <carla/geom/Location.h>
 #include <carla/geom/Math.h>
 #include <carla/opendrive/OpenDriveParser.h>
@@ -19,7 +18,7 @@
 #include <carla/road/element/RoadInfoMarkRecord.h>
 #include <carla/road/element/RoadInfoVisitor.h>
 
-#include <pugixml/pugixml.hpp>
+#include <third-party/pugixml/pugixml.hpp>
 
 #include <fstream>
 #include <string>
@@ -33,7 +32,7 @@ using namespace util;
 const std::string BASE_PATH = LIBCARLA_TEST_CONTENT_FOLDER "/OpenDrive/";
 
 // Road Elevation
-static void test_road_elevation(const pugi::xml_document &xml, boost::optional<Map>& map) {
+static void test_road_elevation(const pugi::xml_document &xml, std::optional<Map>& map) {
   pugi::xml_node open_drive_node = xml.child("OpenDRIVE");
 
   for (pugi::xml_node road_node : open_drive_node.children("road")) {
@@ -57,7 +56,7 @@ static void test_road_elevation(const pugi::xml_document &xml, boost::optional<M
 }
 
 // Geometry
-static void test_geometry(const pugi::xml_document &xml, boost::optional<Map>& map) {
+static void test_geometry(const pugi::xml_document &xml, std::optional<Map>& map) {
   pugi::xml_node open_drive_node = xml.child("OpenDRIVE");
 
   for (pugi::xml_node road_node : open_drive_node.children("road")) {
@@ -114,7 +113,7 @@ static auto get_total_road_marks(
   return std::make_pair(total_road_mark, total_road_mark_parser);
 }
 
-static void test_roads(const pugi::xml_document &xml, boost::optional<Map>& map) {
+static void test_roads(const pugi::xml_document &xml, std::optional<Map>& map) {
   pugi::xml_node open_drive_node = xml.child("OpenDRIVE");
 
   // Check total Roads
@@ -169,7 +168,7 @@ static void test_roads(const pugi::xml_document &xml, boost::optional<Map>& map)
 }
 
 // Junctions
-static void test_junctions(const pugi::xml_document &xml, boost::optional<Map>& map) {
+static void test_junctions(const pugi::xml_document &xml, std::optional<Map>& map) {
   pugi::xml_node open_drive_node = xml.child("OpenDRIVE");
 
   // Check total number of junctions
@@ -203,7 +202,7 @@ static void test_junctions(const pugi::xml_document &xml, boost::optional<Map>& 
   }
 }
 
-static void test_road_links(boost::optional<Map>& map) {
+static void test_road_links(std::optional<Map>& map) {
 
   // process all roads, sections and lanes
   for (auto &road : map->GetMap().GetRoads()) {
@@ -302,125 +301,109 @@ TEST(road, parse_geometry) {
 }
 
 TEST(road, iterate_waypoints) {
-  carla::ThreadPool pool;
-  pool.AsyncRun();
-  std::vector<std::future<void>> results;
   for (const auto& file : util::OpenDrive::GetAvailableFiles()) {
     carla::logging::log("Parsing", file);
-    results.push_back(pool.Post([file]() {
-      carla::StopWatch stop_watch;
-      auto m = OpenDriveParser::Load(util::OpenDrive::Load(file));
-      ASSERT_TRUE(m.has_value());
-      auto &map = *m;
-      const auto topology = map.GenerateTopology();
-      ASSERT_FALSE(topology.empty());
-      auto count = 0u;
-      auto waypoints = map.GenerateWaypoints(0.5);
-      ASSERT_FALSE(waypoints.empty());
-      Random::Shuffle(waypoints);
-      const auto number_of_waypoints_to_explore =
-          std::min<size_t>(2000u, waypoints.size());
-      for (auto i = 0u; i < number_of_waypoints_to_explore; ++i) {
-        auto wp = waypoints[i];
-        map.ComputeTransform(wp);
-        if (i != 0u) {
-          ASSERT_NE(wp, waypoints[0u]);
-        }
-        for (auto &&successor : map.GetSuccessors(wp)) {
-          ASSERT_TRUE(
-              successor.road_id != wp.road_id ||
-              successor.section_id != wp.section_id ||
-              successor.lane_id != wp.lane_id ||
-              successor.s != wp.s);
-        }
-        auto origin = wp;
-        for (auto j = 0u; j < 200u; ++j) {
-          auto next_wps = map.GetNext(origin, Random::Uniform(0.0001, 150.0));
-          if (next_wps.empty()) {
-            break;
-          }
-          const auto number_of_next_wps_to_explore =
-              std::min<size_t>(10u, next_wps.size());
-          Random::Shuffle(next_wps);
-          for (auto k = 0u; k < number_of_next_wps_to_explore; ++k) {
-            auto next = next_wps[k];
-            ++count;
-            ASSERT_TRUE(
-                next.road_id != wp.road_id ||
-                next.section_id != wp.section_id ||
-                next.lane_id != wp.lane_id ||
-                next.s != wp.s);
-            auto right = map.GetRight(next);
-            if (right.has_value()) {
-              ASSERT_EQ(right->road_id, next.road_id);
-              ASSERT_EQ(right->section_id, next.section_id);
-              ASSERT_NE(right->lane_id, next.lane_id);
-              ASSERT_EQ(right->s, next.s);
-            }
-            auto left = map.GetLeft(next);
-            if (left.has_value()) {
-              ASSERT_EQ(left->road_id, next.road_id);
-              ASSERT_EQ(left->section_id, next.section_id);
-              ASSERT_NE(left->lane_id, next.lane_id);
-              ASSERT_EQ(left->s, next.s);
-            }
-          }
-          origin = next_wps[0u];
-        }
+    carla::StopWatch stop_watch;
+    auto m = OpenDriveParser::Load(util::OpenDrive::Load(file));
+    ASSERT_TRUE(m.has_value());
+    auto &map = *m;
+    const auto topology = map.GenerateTopology();
+    ASSERT_FALSE(topology.empty());
+    auto count = 0u;
+    auto waypoints = map.GenerateWaypoints(0.5);
+    ASSERT_FALSE(waypoints.empty());
+    Random::Shuffle(waypoints);
+    const auto number_of_waypoints_to_explore =
+        std::min<size_t>(2000u, waypoints.size());
+    for (auto i = 0u; i < number_of_waypoints_to_explore; ++i) {
+      auto wp = waypoints[i];
+      map.ComputeTransform(wp);
+      if (i != 0u) {
+        ASSERT_NE(wp, waypoints[0u]);
       }
-      ASSERT_GT(count, 0u);
-      float seconds = 1e-3f * stop_watch.GetElapsedTime();
-      carla::logging::log(file, "done in", seconds, "seconds.");
-    }));
-  }
-  for (auto &result : results) {
-    result.get();
-  }
-}
-
-TEST(road, get_waypoint) {
-  carla::ThreadPool pool;
-  pool.AsyncRun();
-  std::vector<std::future<void>> results;
-  for (const auto& file : util::OpenDrive::GetAvailableFiles()) {
-    carla::logging::log("Parsing", file);
-    results.push_back(pool.Post([file]() {
-      carla::StopWatch stop_watch;
-      auto m = OpenDriveParser::Load(util::OpenDrive::Load(file));
-      ASSERT_TRUE(m.has_value());
-      auto &map = *m;
-      for (auto i = 0u; i < 10'000u; ++i) {
-        const auto location = Random::Location(-500.0f, 500.0f);
-        auto owp = map.GetClosestWaypointOnRoad(location);
-        ASSERT_TRUE(owp.has_value());
-        auto &wp = *owp;
-        for (auto &next : map.GetNext(wp, 0.5)) {
+      for (auto &&successor : map.GetSuccessors(wp)) {
+        ASSERT_TRUE(
+            successor.road_id != wp.road_id ||
+            successor.section_id != wp.section_id ||
+            successor.lane_id != wp.lane_id ||
+            successor.s != wp.s);
+      }
+      auto origin = wp;
+      for (auto j = 0u; j < 200u; ++j) {
+        auto next_wps = map.GetNext(origin, Random::Uniform(0.0001, 150.0));
+        if (next_wps.empty()) {
+          break;
+        }
+        const auto number_of_next_wps_to_explore =
+            std::min<size_t>(10u, next_wps.size());
+        Random::Shuffle(next_wps);
+        for (auto k = 0u; k < number_of_next_wps_to_explore; ++k) {
+          auto next = next_wps[k];
+          ++count;
           ASSERT_TRUE(
               next.road_id != wp.road_id ||
               next.section_id != wp.section_id ||
               next.lane_id != wp.lane_id ||
               next.s != wp.s);
+          auto right = map.GetRight(next);
+          if (right.has_value()) {
+            ASSERT_EQ(right->road_id, next.road_id);
+            ASSERT_EQ(right->section_id, next.section_id);
+            ASSERT_NE(right->lane_id, next.lane_id);
+            ASSERT_EQ(right->s, next.s);
+          }
+          auto left = map.GetLeft(next);
+          if (left.has_value()) {
+            ASSERT_EQ(left->road_id, next.road_id);
+            ASSERT_EQ(left->section_id, next.section_id);
+            ASSERT_NE(left->lane_id, next.lane_id);
+            ASSERT_EQ(left->s, next.s);
+          }
         }
-        auto left = map.GetLeft(wp);
-        if (left.has_value()) {
-          ASSERT_EQ(left->road_id, wp.road_id);
-          ASSERT_EQ(left->section_id, wp.section_id);
-          ASSERT_NE(left->lane_id, wp.lane_id);
-          ASSERT_EQ(left->s, wp.s);
-        }
-        auto right = map.GetRight(wp);
-        if (right.has_value()) {
-          ASSERT_EQ(right->road_id, wp.road_id);
-          ASSERT_EQ(right->section_id, wp.section_id);
-          ASSERT_NE(right->lane_id, wp.lane_id);
-          ASSERT_EQ(right->s, wp.s);
-        }
+        origin = next_wps[0u];
       }
-      float seconds = 1e-3f * stop_watch.GetElapsedTime();
-      carla::logging::log(file, "done in", seconds, "seconds.");
-    }));
+    }
+    ASSERT_GT(count, 0u);
+    float seconds = 1e-3f * static_cast<float>(stop_watch.GetElapsedTime());
+    carla::logging::log(file, "done in", seconds, "seconds.");
   }
-  for (auto &result : results) {
-    result.get();
+}
+
+TEST(road, get_waypoint) {
+  for (const auto& file : util::OpenDrive::GetAvailableFiles()) {
+    carla::logging::log("Parsing", file);
+    carla::StopWatch stop_watch;
+    auto m = OpenDriveParser::Load(util::OpenDrive::Load(file));
+    ASSERT_TRUE(m.has_value());
+    auto &map = *m;
+    for (auto i = 0u; i < 10'000u; ++i) {
+      const auto location = Random::Location(-500.0f, 500.0f);
+      auto owp = map.GetClosestWaypointOnRoad(location);
+      ASSERT_TRUE(owp.has_value());
+      auto &wp = *owp;
+      for (auto &next : map.GetNext(wp, 0.5)) {
+        ASSERT_TRUE(
+            next.road_id != wp.road_id ||
+            next.section_id != wp.section_id ||
+            next.lane_id != wp.lane_id ||
+            next.s != wp.s);
+      }
+      auto left = map.GetLeft(wp);
+      if (left.has_value()) {
+        ASSERT_EQ(left->road_id, wp.road_id);
+        ASSERT_EQ(left->section_id, wp.section_id);
+        ASSERT_NE(left->lane_id, wp.lane_id);
+        ASSERT_EQ(left->s, wp.s);
+      }
+      auto right = map.GetRight(wp);
+      if (right.has_value()) {
+        ASSERT_EQ(right->road_id, wp.road_id);
+        ASSERT_EQ(right->section_id, wp.section_id);
+        ASSERT_NE(right->lane_id, wp.lane_id);
+        ASSERT_EQ(right->s, wp.s);
+      }
+    }
+    float seconds = 1e-3f * static_cast<float>(stop_watch.GetElapsedTime());
+    carla::logging::log(file, "done in", seconds, "seconds.");
   }
 }

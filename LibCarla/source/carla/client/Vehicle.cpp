@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -103,6 +103,10 @@ namespace client {
     return GetEpisode().Lock()->GetVehicleLightState(*this).GetLightStateEnum();
   }
 
+  std::vector<geom::Transform> Vehicle::GetVehicleBoneWorldTransforms() const {
+    return GetEpisode().Lock()->GetVehicleBoneWorldTransforms(*this);
+  }
+
   float Vehicle::GetSpeedLimit() const {
     return GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.speed_limit;
   }
@@ -117,7 +121,7 @@ namespace client {
 
   SharedPtr<TrafficLight> Vehicle::GetTrafficLight() const {
     auto id = GetEpisode().Lock()->GetActorSnapshot(*this).state.vehicle_data.traffic_light_id;
-    return boost::static_pointer_cast<TrafficLight>(GetWorld().GetActor(id));
+    return std::static_pointer_cast<TrafficLight>(GetWorld().GetActor(id));
   }
 
   void Vehicle::EnableCarSim(std::string simfile_path) {

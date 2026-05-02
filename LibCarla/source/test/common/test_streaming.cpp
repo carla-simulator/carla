@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -231,8 +231,13 @@ TEST(streaming, stream_outlives_server) {
       std::this_thread::sleep_for(20ms);
     } // client dies here.
     ASSERT_GT(messages_received, 0u);
+    // Detach the sender from this iteration's stream before the server tears
+    // down. Otherwise the sender can call Session::Write on a session whose
+    // io_context is being stopped inside ~Server, which segfaults
+    // intermittently in Release builds on slow runners.
+    std::atomic_store_explicit(&stream, std::shared_ptr<Stream>(), std::memory_order_relaxed);
+    std::this_thread::sleep_for(20ms);
   } // server dies here.
-  std::this_thread::sleep_for(20ms);
   done = true;
 } // stream dies here.
 

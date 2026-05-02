@@ -1,5 +1,3 @@
-#define _GLIBCXX_USE_CXX11_ABI 0
-
 #include "CarlaEgoVehicleControlSubscriber.h"
 
 #include "carla/ros2/types/CarlaEgoVehicleControl.h"

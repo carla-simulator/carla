@@ -53,7 +53,7 @@ m_width(width)
 
     const double cx = static_cast<double>(m_width) / 2.0;
     const double cy = static_cast<double>(m_height) / 2.0;
-    const double fx = static_cast<double>(m_width) / (2.0 * std::tan(fov) * M_PI / 360.0);
+    const double fx = static_cast<double>(m_width) / (2.0 * std::tan(fov * M_PI / 360.0));
     const double fy = fx;
 
     m_d = { 0.0, 0.0, 0.0, 0.0, 0.0 };

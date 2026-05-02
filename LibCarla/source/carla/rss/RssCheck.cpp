@@ -153,11 +153,11 @@ RssCheck::RssCheck(float maximum_steering_angle)
     actor_constellation_result.actor_dynamics = this->_default_actor_constellation_callback_other_vehicle_dynamics;
 
     if (actor_constellation_data->other_actor != nullptr) {
-      if (boost::dynamic_pointer_cast<carla::client::Walker>(actor_constellation_data->other_actor) != nullptr) {
+      if (std::dynamic_pointer_cast<carla::client::Walker>(actor_constellation_data->other_actor) != nullptr) {
         actor_constellation_result.rss_calculation_mode = ::ad::rss::map::RssMode::Unstructured;
         actor_constellation_result.actor_object_type = ad::rss::world::ObjectType::Pedestrian;
         actor_constellation_result.actor_dynamics = this->_default_actor_constellation_callback_pedestrian_dynamics;
-      } else if (boost::dynamic_pointer_cast<carla::client::Vehicle>(actor_constellation_data->other_actor) !=
+      } else if (std::dynamic_pointer_cast<carla::client::Vehicle>(actor_constellation_data->other_actor) !=
                  nullptr) {
         actor_constellation_result.rss_calculation_mode = ::ad::rss::map::RssMode::Structured;
         actor_constellation_result.actor_object_type = ad::rss::world::ObjectType::OtherVehicle;
@@ -313,7 +313,7 @@ bool RssCheck::CheckObjects(carla::client::Timestamp const &timestamp,
               << std::endl;
 #endif
 
-    const auto carla_ego_vehicle = boost::dynamic_pointer_cast<carla::client::Vehicle>(carla_ego_actor);
+    const auto carla_ego_vehicle = std::dynamic_pointer_cast<carla::client::Vehicle>(carla_ego_actor);
     if (carla_ego_vehicle == nullptr) {
       _logger->error("RSS Sensor only support vehicles as ego.");
     }
@@ -426,8 +426,8 @@ bool RssCheck::CheckObjects(carla::client::Timestamp const &timestamp,
   match_object.enuPosition.heading =
       ::ad::map::point::createENUHeading(-1 * vehicle_transform.rotation.yaw * to_radians);
 
-  auto const vehicle = boost::dynamic_pointer_cast<carla::client::Vehicle>(actor);
-  auto const walker = boost::dynamic_pointer_cast<carla::client::Walker>(actor);
+  auto const vehicle = std::dynamic_pointer_cast<carla::client::Vehicle>(actor);
+  auto const walker = std::dynamic_pointer_cast<carla::client::Walker>(actor);
   if (vehicle != nullptr) {
     const auto &bounding_box = vehicle->GetBoundingBox();
     match_object.enuPosition.dimension.length = ::ad::physics::Distance(2 * bounding_box.extent.x);
@@ -870,14 +870,14 @@ void RssCheck::CreateWorldModel(carla::client::Timestamp const &timestamp, carla
   std::vector<SharedPtr<carla::client::TrafficLight>> traffic_lights;
   std::vector<SharedPtr<carla::client::Actor>> other_traffic_participants;
   for (const auto &actor : actors) {
-    const auto traffic_light = boost::dynamic_pointer_cast<carla::client::TrafficLight>(actor);
+    const auto traffic_light = std::dynamic_pointer_cast<carla::client::TrafficLight>(actor);
     if (traffic_light != nullptr) {
       traffic_lights.push_back(traffic_light);
       continue;
     }
 
-    if ((boost::dynamic_pointer_cast<carla::client::Vehicle>(actor) != nullptr) ||
-        (boost::dynamic_pointer_cast<carla::client::Walker>(actor) != nullptr)) {
+    if ((std::dynamic_pointer_cast<carla::client::Vehicle>(actor) != nullptr) ||
+        (std::dynamic_pointer_cast<carla::client::Walker>(actor) != nullptr)) {
       if (actor->GetId() == carla_ego_vehicle.GetId()) {
         continue;
       }

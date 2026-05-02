@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -60,6 +60,18 @@ namespace client {
     /// acceleration calculated after the actor's velocity.
     geom::Vector3D GetAcceleration() const;
 
+    /// Return the name of the underlying Unreal actor.
+    ///
+    /// @note This function does not call the simulator, it returns the
+    /// acceleration calculated after the actor's velocity.
+    std::string GetActorName() const;
+
+    /// Return the name of the underlying actor's Unreal class.
+    ///
+    /// @note This function does not call the simulator, it returns the
+    /// acceleration calculated after the actor's velocity.
+    std::string GetActorClassName() const;
+
     /// Teleport the actor to @a location.
     void SetLocation(const geom::Location &location);
 
@@ -107,6 +119,14 @@ namespace client {
 
     /// Enable or disable gravity on this actor.
     void SetEnableGravity(bool enabled = true);
+
+    void ApplyTexture(
+      const rpc::MaterialParameter& MaterialParameter,
+      const rpc::TextureColor& Texture);
+
+    void ApplyTexture(
+      const rpc::MaterialParameter& MaterialParameter,
+      const rpc::TextureFloatColor& Texture);
 
     rpc::ActorState GetActorState() const;
 

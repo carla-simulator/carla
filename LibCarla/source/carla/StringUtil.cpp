@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -6,10 +6,13 @@
 
 #include "carla/StringUtil.h"
 
+// @TODO: This is not great; we can implement this better.
+
 #ifdef _WIN32
-#  include <shlwapi.h>
+  #include <shlwapi.h>
+  #pragma comment(lib, "Shlwapi.lib")
 #else
-#  include <fnmatch.h>
+  #include <fnmatch.h>
 #endif // _WIN32
 
 namespace carla {

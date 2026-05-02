@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -14,8 +14,9 @@
 namespace carla {
 namespace geom {
 
-  class Vector2D {
-  public:
+  struct Vector2D {
+
+    static constexpr auto Dim = 2;
 
     // =========================================================================
     // -- Public data members --------------------------------------------------

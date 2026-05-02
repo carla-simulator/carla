@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -15,7 +15,7 @@
 #include "carla/road/Lane.h"
 #include "carla/road/RoadTypes.h"
 
-#include <boost/optional.hpp>
+#include <optional>
 
 namespace carla {
 namespace client {
@@ -85,9 +85,9 @@ namespace client {
 
     SharedPtr<Waypoint> GetLeft() const;
 
-    boost::optional<road::element::LaneMarking> GetRightLaneMarking() const;
+    std::optional<road::element::LaneMarking> GetRightLaneMarking() const;
 
-    boost::optional<road::element::LaneMarking> GetLeftLaneMarking() const;
+    std::optional<road::element::LaneMarking> GetLeftLaneMarking() const;
 
     road::element::LaneMarking::LaneChange GetLaneChange() const;
 
@@ -99,6 +99,10 @@ namespace client {
     /// Filters by specified type
     std::vector<SharedPtr<Landmark>> GetLandmarksOfTypeInDistance(
         double distance, std::string filter_type, bool stop_at_junction = false) const;
+
+    bool IsPositiveDirection() const;
+
+    bool IsRHT() const;
 
   private:
 

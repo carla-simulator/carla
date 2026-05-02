@@ -373,6 +373,10 @@
       type: carla.LaneMarking
       doc: >
         The left lane marking information based on the direction of the Waypoint.
+    - var_name: is_rht
+      type: bool
+      doc: >
+        Flag indicating whether the waypoint is part of a right-handed traffic road.
     # - METHODS ----------------------------
     methods:
     - def_name: next

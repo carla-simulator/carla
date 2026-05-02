@@ -8,7 +8,7 @@ project(FBX2OBJ)
 
 set(CMAKE_GENERATOR_PLATFORM x64)
 
-#find_package(LibXml2 REQUIRED)
+#find_package (LibXml2 REQUIRED)
 
 # include folders
 include_directories(src)

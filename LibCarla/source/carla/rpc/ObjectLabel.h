@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -45,6 +45,7 @@ namespace rpc {
     Bridge       =   26u,
     RailTrack    =   27u,
     GuardRail    =   28u,
+    Rock         =   29u,
 
     Any          =  0xFF
   };

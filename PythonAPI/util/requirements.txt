@@ -1,5 +1,4 @@
-numpy; python_version < '3.0'
-numpy==1.18.4; python_version >= '3.0'
+numpy<2.0,>=1.24.4
 psutil
 py-cpuinfo
 pygame

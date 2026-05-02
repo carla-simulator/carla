@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -105,6 +105,8 @@ namespace client {
     /// @note This function does not call the simulator, it returns the data
     /// received in the last tick.
     float GetSpeedLimit() const;
+
+    std::vector<geom::Transform> GetVehicleBoneWorldTransforms() const;
 
     /// Return the state of the traffic light currently affecting this vehicle.
     ///

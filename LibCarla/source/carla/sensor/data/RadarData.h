@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -68,6 +68,10 @@ namespace data {
     /// Adds a new detection.
     void WriteDetection(RadarDetection detection) {
       _detections.push_back(detection);
+    }
+
+    const std::vector<RadarDetection>& GetDetections() const {
+      return _detections;
     }
 
   private:

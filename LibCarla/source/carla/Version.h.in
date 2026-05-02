@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2024 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -9,7 +9,7 @@
 namespace carla {
 
   constexpr const char *version() {
-    return "${CARLA_VERSION}";
+    return "@CARLA_VERSION@";
   }
 
 } // namespace carla

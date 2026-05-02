@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -11,7 +11,7 @@
 #include "carla/geom/GeoLocation.h"
 #include "carla/road/MapBuilder.h"
 
-#include <pugixml/pugixml.hpp>
+#include <third-party/pugixml/pugixml.hpp>
 
 #include <limits>
 #include <string>

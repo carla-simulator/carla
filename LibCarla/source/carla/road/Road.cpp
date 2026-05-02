@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -45,6 +45,10 @@ namespace road {
 
   JuncId Road::GetJunctionId() const {
     return _junction_id;
+  }
+
+  bool Road::IsRHT() const {
+    return _is_rht;
   }
 
   RoadId Road::GetSuccessor() const {

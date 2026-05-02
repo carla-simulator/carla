@@ -1,0 +1,33 @@
+{
+    "type": "vehicle.lincoln.mkz",
+    "id": "hero",
+    "sensors": [
+        {
+            "type": "sensor.camera.rgb",
+            "id": "rgb",
+            "spawn_point": {"x": -4.5, "y": 0.0, "z": 2.5, "roll": 0.0, "pitch": 20.0, "yaw": 0.0},
+            "attributes": {
+                "image_size_x": 400,
+                "image_size_y": 200,
+                "fov": 90.0
+            }
+        },
+        {
+            "type": "sensor.lidar.ray_cast",
+            "id": "lidar",
+            "spawn_point": {"x": 0.0, "y": 0.0, "z": 2.4, "roll": 0.0, "pitch": 0.0, "yaw": 0.0},
+            "attributes": {
+                "range": 85,
+                "channels": 64,
+                "points_per_second": 600000,
+                "rotation_frequency": 20,
+                "upper_fov": 10,
+                "lower_fov": -30,
+                "atmosphere_attenuation_rate": 0.004,
+                "dropoff_general_rate": 0.45,
+                "dropoff_intensity_limit": 0.8,
+                "dropoff_zero_intensity": 0.4
+            }
+        }
+    ]
+}

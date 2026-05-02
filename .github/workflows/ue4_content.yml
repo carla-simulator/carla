@@ -1,0 +1,23 @@
+name: UE4-Content
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: "Specify the target branch for the content build"
+        required: true
+        default: "master"
+        type: string
+
+jobs:
+  content:
+    name: Dummy Content
+    runs-on: ubuntu-latest
+    steps:
+      - name: Info Only - Do not use on this branch
+        run: |
+          echo "This is a placeholder workflow on the default branch."
+          echo "It exists solely to make the 'Run workflow' button visible in the GitHub Actions page."
+          echo "The actual workflow should run on ue4-dev."
+          echo "Exiting intentionally."
+          exit 1

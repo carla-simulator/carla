@@ -31,10 +31,10 @@ def main():
     vehicle = random.choice([actor for actor in actors if 'vehicle' in actor.type_id])
 
     # Create Wheels Physics Control
-    front_left_wheel  = carla.WheelPhysicsControl(tire_friction=2.0, damping_rate=1.5, max_steer_angle=70.0, long_stiff_value=1000)
-    front_right_wheel = carla.WheelPhysicsControl(tire_friction=2.0, damping_rate=1.5, max_steer_angle=70.0, long_stiff_value=1000)
-    rear_left_wheel   = carla.WheelPhysicsControl(tire_friction=3.0, damping_rate=1.5, max_steer_angle=0.0,  long_stiff_value=1000)
-    rear_right_wheel  = carla.WheelPhysicsControl(tire_friction=3.0, damping_rate=1.5, max_steer_angle=0.0,  long_stiff_value=1000)
+    front_left_wheel  = carla.WheelPhysicsControl(tire_friction=2.0, max_steer_angle=70.0)
+    front_right_wheel = carla.WheelPhysicsControl(tire_friction=2.0, max_steer_angle=70.0)
+    rear_left_wheel   = carla.WheelPhysicsControl(tire_friction=3.0, max_steer_angle=0.0)
+    rear_right_wheel  = carla.WheelPhysicsControl(tire_friction=3.0, max_steer_angle=0.0)
 
     wheels = [front_left_wheel, front_right_wheel, rear_left_wheel, rear_right_wheel]
 
@@ -44,10 +44,8 @@ def main():
     physics_control.torque_curve = [carla.Vector2D(x=0, y=400), carla.Vector2D(x=1300, y=600)]
     physics_control.max_rpm = 10000
     physics_control.moi = 1.0
-    physics_control.damping_rate_full_throttle = 0.0
     physics_control.use_gear_autobox = True
     physics_control.gear_switch_time = 0.5
-    physics_control.clutch_strength = 10
     physics_control.mass = 10000
     physics_control.drag_coefficient = 0.25
     physics_control.steering_curve = [carla.Vector2D(x=0, y=1), carla.Vector2D(x=100, y=1), carla.Vector2D(x=300, y=1)]

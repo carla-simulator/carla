@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -174,9 +174,10 @@ public:
       });
 
       /// Method to set % to keep on the right lane.
-      server->bind("set_percentage_keep_right_rule", [=](carla::rpc::Actor actor, const float percentage) {
-        tm->SetKeepRightPercentage(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
+      server->bind("set_percentage_keep_slow_lane_rule", [=](carla::rpc::Actor actor, const float percentage) {
+        tm->SetKeepSlowLanePercentage(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), percentage);
       });
+
 
       /// Method to set % to randomly do a left lane change.
       server->bind("set_percentage_random_left_lanechange", [=](carla::rpc::Actor actor, const float percentage) {

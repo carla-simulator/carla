@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -16,7 +16,10 @@
 
 #include <rpc/server.h>
 
+#include <chrono>
+#include <atomic>
 #include <future>
+#include <stdexcept>
 
 namespace carla {
 namespace rpc {
@@ -52,9 +55,9 @@ namespace rpc {
 
     void SyncRunFor(time_duration duration) {
       #ifdef LIBCARLA_INCLUDED_FROM_UE4
-      #include <compiler/enable-ue4-macros.h>
+      #include <util/enable-ue4-macros.h>
       TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
-      #include <compiler/disable-ue4-macros.h>
+      #include <util/disable-ue4-macros.h>
       #endif // LIBCARLA_INCLUDED_FROM_UE4
       _sync_io_context.reset();
       _sync_io_context.run_for(duration.to_chrono());
@@ -62,6 +65,7 @@ namespace rpc {
 
     /// @warning does not stop the game thread.
     void Stop() {
+      _shutdown_in_progress = true;
       _server.stop();
     }
 
@@ -70,6 +74,7 @@ namespace rpc {
     boost::asio::io_context _sync_io_context;
 
     ::rpc::server _server;
+    std::atomic_bool _shutdown_in_progress{false};
   };
 
   // ===========================================================================
@@ -106,8 +111,8 @@ namespace detail {
     /// I.e., we can use the io_context to run tasks on a specific thread (e.g.
     /// game thread).
     template <typename FuncT>
-    static auto WrapSyncCall(boost::asio::io_context &io, FuncT &&functor) {
-      return [&io, functor=std::forward<FuncT>(functor)](Metadata metadata, Args... args) -> R {
+    static auto WrapSyncCall(std::atomic_bool &shutdown_in_progress, boost::asio::io_context &io, FuncT &&functor) {
+      return [&shutdown_in_progress, &io, functor=std::forward<FuncT>(functor)](Metadata metadata, Args... args) -> R {
         auto task = std::packaged_task<R()>([functor=std::move(functor), args...]() {
           return functor(args...);
         });
@@ -119,7 +124,15 @@ namespace detail {
           // Post task and wait for result.
           auto result = task.get_future();
           boost::asio::post(io, MoveHandler(task));
-          return result.get();
+          std::future_status status;
+          do {
+            status = result.wait_for(std::chrono::milliseconds(100));
+          } while (!shutdown_in_progress && (status != std::future_status::ready));
+          if (status == std::future_status::ready) {
+            return result.get();
+          } else {
+            throw std::runtime_error("RPC server is shutting down");
+          }
         }
       };
     }
@@ -153,7 +166,7 @@ namespace detail {
     using Wrapper = detail::FunctionWrapper<FunctorT>;
     _server.bind(
         name,
-        Wrapper::WrapSyncCall(_sync_io_context, std::forward<FunctorT>(functor)));
+        Wrapper::WrapSyncCall(_shutdown_in_progress, _sync_io_context, std::forward<FunctorT>(functor)));
   }
 
   template <typename FunctorT>

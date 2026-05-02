@@ -1,4 +1,4 @@
-// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -6,15 +6,8 @@
 
 #pragma once
 
-#ifdef _MSC_VER
-#pragma warning(push)
-#pragma warning(disable:4583)
-#pragma warning(disable:4582)
-#include <boost/variant2/variant.hpp>
-#pragma warning(pop)
-#else
-#include <boost/variant2/variant.hpp>
-#endif
+#include <variant>
+#include <functional>
 
 namespace carla {
 namespace ros2 {
@@ -30,9 +23,16 @@ namespace ros2 {
     bool    manual_gear_shift;
   };
 
-  using ROS2CallbackData = boost::variant2::variant<VehicleControl>;
+    struct MessageControl
+  {
+    const char* message;
+  };
+
+  using ROS2CallbackData = std::variant<VehicleControl>;
+  using ROS2MessageCallbackData = std::variant<MessageControl>;
 
   using ActorCallback = std::function<void(void *actor, ROS2CallbackData data)>;
-
+  using ActorMessageCallback = std::function<void(void *actor, ROS2MessageCallbackData data)>;
+  
 } // namespace ros2
 } // namespace carla

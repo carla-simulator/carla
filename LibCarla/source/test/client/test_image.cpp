@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -14,7 +14,6 @@
 
 template <typename ViewT, typename PixelT>
 struct TestImage {
-  TestImage(TestImage &&) = default;
   using pixel_type = PixelT;
   std::unique_ptr<PixelT[]> data;
   ViewT view;
@@ -80,7 +79,7 @@ TEST(image, depth) {
           get_color(p_bgra8, red_t()) = static_cast<uint8_t>(r);
           get_color(p_bgra8, green_t()) = static_cast<uint8_t>(g);
           get_color(p_bgra8, blue_t()) = static_cast<uint8_t>(b);
-          const float depth = r + (g * 256) + (b  * 256 * 256);
+          const float depth = static_cast<float>(r + (g * 256) + (b  * 256 * 256));
           const float normalized = depth / static_cast<float>(256 * 256 * 256 - 1);
           p_gray8[0] = static_cast<uint8_t>(255.0 * normalized);
 

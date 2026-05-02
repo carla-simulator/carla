@@ -223,7 +223,7 @@
       - param_name: filename
         type: str
         doc: >
-          Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUE4/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.
+          Name of the file to write the recorded data. A simple name will save the recording in 'CarlaUnreal/Saved/recording.log'. Otherwise, if some folder appears in the name, it will be considered an absolute path.
       - param_name: additional_data
         type: bool
         default: False
@@ -235,7 +235,7 @@
     - def_name: stop_recorder
       params:
       doc: >
-        Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUE4/Saved/`.
+        Stops the recording in progress. If you specified a path in `filename`, the recording will be there. If not, look inside `CarlaUnreal/Saved/`.
     # --------------------------------------
     - def_name: get_available_maps
       params:
@@ -589,7 +589,7 @@
       doc: >
         Enables or disables the OSM mode. This mode allows the user to run TM in a map created with the [OSM feature](tuto_G_openstreetmap.md). These maps allow having dead-end streets. Normally, if vehicles cannot find the next waypoint, TM crashes. If OSM mode is enabled, it will show a warning, and destroy vehicles when necessary.
     # --------------------------------------
-    - def_name: keep_right_rule_percentage
+    - def_name: keep_slow_lane_rule_percentage
       params:
       - param_name: actor
         type: carla.Actor
@@ -598,9 +598,9 @@
       - param_name: perc
         type: float
         doc: >
-          Between 0 and 100. Amount of times the vehicle will follow the keep right rule.
+          Between 0 and 100. Amount of times the vehicle will follow the keep slow lane rule.
       doc: >
-        During the localization stage, this method sets a percent chance that vehicle will follow the *keep right* rule, and stay in the right lane.
+        During the localization stage, this method sets a percent chance that vehicle will follow the *keep slow lane* rule, and stay in the slowest lane. For right-handed traffic, vehicles will move to the righmost lane while left-handed traffic will make vehicles move to the left.
     # --------------------------------------
     - def_name: set_random_device_seed
       params:

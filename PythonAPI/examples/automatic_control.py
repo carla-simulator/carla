@@ -6,14 +6,11 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""Example of automatic vehicle control from client side."""
-
-from __future__ import print_function
+"""Example of automatic vehicle control from client side, with a python defined agent"""
 
 import argparse
 import collections
 import datetime
-import glob
 import logging
 import math
 import os
@@ -35,17 +32,6 @@ try:
 except ImportError:
     raise RuntimeError(
         'cannot import numpy, make sure numpy package is installed')
-
-# ==============================================================================
-# -- Find CARLA module ---------------------------------------------------------
-# ==============================================================================
-try:
-    sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
-        sys.version_info.major,
-        sys.version_info.minor,
-        'win-amd64' if os.name == 'nt' else 'linux-x86_64'))[0])
-except IndexError:
-    pass
 
 # ==============================================================================
 # -- Add PythonAPI for release mode --------------------------------------------
@@ -807,60 +793,38 @@ def main():
     argparser = argparse.ArgumentParser(
         description='CARLA Automatic Control Client')
     argparser.add_argument(
-        '-v', '--verbose',
-        action='store_true',
-        dest='debug',
+        '-v', '--verbose', action='store_true', dest='debug',
         help='Print debug information')
     argparser.add_argument(
-        '--host',
-        metavar='H',
-        default='127.0.0.1',
+        '--host', metavar='H', default='127.0.0.1',
         help='IP of the host server (default: 127.0.0.1)')
     argparser.add_argument(
-        '-p', '--port',
-        metavar='P',
-        default=2000,
-        type=int,
+        '-p', '--port', metavar='P', default=2000, type=int,
         help='TCP port to listen to (default: 2000)')
     argparser.add_argument(
-        '--res',
-        metavar='WIDTHxHEIGHT',
-        default='1280x720',
+        '--res', metavar='WIDTHxHEIGHT', default='1280x720',
         help='Window resolution (default: 1280x720)')
     argparser.add_argument(
-        '--sync',
-        action='store_true',
+        '--sync', action='store_true',
         help='Synchronous mode execution')
     argparser.add_argument(
-        '--filter',
-        metavar='PATTERN',
-        default='vehicle.*',
+        '--filter', metavar='PATTERN', default='vehicle.*',
         help='Actor filter (default: "vehicle.*")')
     argparser.add_argument(
-        '--generation',
-        metavar='G',
-        default='2',
-        help='restrict to certain actor generation (values: "1","2","All" - default: "2")')
+        '--generation', metavar='G', default='All',
+        help='restrict to certain actor generation (values: "2","3","All" - default: "All")')
     argparser.add_argument(
-        '-l', '--loop',
-        action='store_true',
-        dest='loop',
+        '-l', '--loop', action='store_true', dest='loop',
         help='Sets a new random destination upon reaching the previous one (default: False)')
     argparser.add_argument(
-        "-a", "--agent", type=str,
-        choices=["Behavior", "Basic", "Constant"],
-        help="select which agent to run",
-        default="Behavior")
+        "-a", "--agent", type=str, choices=["Behavior", "Basic", "Constant"], default="Behavior",
+        help="select which agent to run")
     argparser.add_argument(
-        '-b', '--behavior', type=str,
-        choices=["cautious", "normal", "aggressive"],
-        help='Choose one of the possible agent behaviors (default: normal) ',
-        default='normal')
+        '-b', '--behavior', type=str, choices=["cautious", "normal", "aggressive"], default='normal',
+        help='Choose one of the possible agent behaviors (default: normal)')
     argparser.add_argument(
-        '-s', '--seed',
-        help='Set seed for repeating executions (default: None)',
-        default=None,
-        type=int)
+        '-s', '--seed', default=None, type=int,
+        help='Set seed for repeating executions (default: None)')
 
     args = argparser.parse_args()
 

@@ -24,11 +24,7 @@ The benchmark script can be found in `PythonAPI/util`. It has several flags avai
 The benchmarking script requires some dependencies to be installed before you can run it:
 
 ```python
-python -m pip install -U py-cpuinfo==5.0.0
-python -m pip install psutil
-python -m pip install python-tr
-python -m pip install gpuinfo
-python -m pip install GPUtil
+python -m pip install -U py-cpuinfo==5.0.0 psutil python-tr gpuinfo GPUtil
 ```
 
 ### Synopsis
@@ -45,65 +41,47 @@ python -m pip install GPUtil
 
 #### Flags
 
-###### `--host`: IP_ADDRESS
->> __Default__: Localhost.
+* `--host`: __IP_ADDRESS__
+__Default__: Localhost.  
+Configures the host of the server.
 
->> Configures the host of the server.
+* `--port`: __PORT__  
+__Default__: 2000  
+Configures the TCP port to listen to.
 
+* `--file`: __filename.md__
+__Default__: benchmark.md  
+Writes results in markdown table format to a file.
 
-###### `--port`: PORT
->> __Default__: 2000
+* `--tm`
+Switch to Traffic Manager benchmark
 
->> Configures the TCP port to listen to.
+* `--ticks`
+__Default__: 100  
+Sets the number of ticks to use for each scenario.
 
-###### `--file`: filename.md
->> __Default__: benchmark.md 
+* `--sync`
+__Default mode.__  
+Runs benchmark in synchronous mode. 
 
->> Writes results in markdown table format to a file.
+* `--async`
+Runs benchmark in asynchronous mode.
 
-###### `--tm`
+* `--fixed_dt`
+__Default__: 0.05  
+For use with synchronous mode if you would like to set the delta timestep.
 
->> Switch to Traffic Manager benchmark
+* `--render_mode`
+Runs benchmark in rendering mode.
 
-###### `--ticks`
+* `--no_render_mode`
+__Default mode.__  
+Runs benchmark in non-rendering mode.
 
->> __Default__: 100
+* `--show_scenarios`
+When the script is run with only this flag you will see a list of all the scenario parameters available. When combined with other flags you will see a preview of the scenarios that will be run without actually executing them.
 
->>  Sets the number of ticks to use for each scenario.
-
-###### `--sync`
-
->> __Default mode.__
-
->> Runs benchmark in synchronous mode. 
-
-###### `--async`
-
->> Runs benchmark in asynchronous mode.
-
-###### `--fixed_dt`
-
->> __Default__: 0.05
-
->> For use with synchronous mode if you would like to set the delta timestep.
-
-###### `--render_mode`
-
->>  Runs benchmark in rendering mode.
-
-###### `--no_render_mode`
-
->> __Default mode.__
-
->>  Runs benchmark in non-rendering mode.
-
-###### `--show_scenarios`
-
->> When the script is run with only this flag you will see a list of all the scenario parameters available.
-
->> When combined with other flags you will see a preview of the scenarios that will be run without actually executing them.
-
-###### `--sensors`: INTEGER
+* `--sensors`: INTEGER
 >> __Default__: All
 
 >> Sensors to be used in the benchmark. Chose between LIDAR and RGB camera:
@@ -117,34 +95,29 @@ python -m pip install GPUtil
 >> * __`6`__: LIDAR: 1M
 
 
-###### `--maps`: TownName
-
->> __Default__: All maps
-
->> All [CARLA maps][carla_maps], both layered and sub-layered, are available.
+* `--maps`: __TownName__
+__Default__: All maps  
+All [CARLA maps][carla_maps], both layered and sub-layered, are available.
 
 [carla_maps]: https://carla.readthedocs.io/en/latest/core_map/#carla-maps
 
-###### `--weather`: INTEGER
-
->> __Default__: All weather conditions
-
->> Change the weather conditions:
-
->> * __`0`__: ClearNoon
->> * __`1`__: CloudyNoon
->> * __`2`__: SoftRainSunset
+* `--weather`: __INTEGER__
+__Default__: All weather conditions
+Change the weather conditions:
+* __`0`__: ClearNoon
+* __`1`__: CloudyNoon
+* __`2`__: SoftRainSunset
 
 ## How to run the benchmark
 
 1. Start CARLA:
 
         # Linux:
-        ./CarlaUE4.sh
+        ./CarlaUnreal.sh
         # Windows:
-        CarlaUE4.exe
+        CarlaUnreal.exe
         # Source:
-        make launch
+        cmake --build Build --target launch
 
 
 2. In a separate terminal navigate to `PythonAPI/util` to find the `performance_benchmark.py` script:
@@ -170,29 +143,6 @@ python3 performance_benchmark.py --async --render_mode
 ```
 
 ---
-## CARLA performance report
-
-
-The following table details the performance effect on average FPS when running CARLA with increasing numbers of vehicles and different combinations of enabling and/or disabling physics and Traffic Manager.
-
-* CARLA Version: Dev branch on 29/01/21 (commit 198fa38c9b1317c114ac15dff130766253c02832)
-* Environment Specs: Intel(R) Xeon(R) CPU E5-1620 v3 @ 3.50GHz / 32 GB / NVIDIA GeForce GTX 1080 Ti
-
-
-|Num Vehicles|Phy: Off TM: Off|Phy: On TM: Off|Phy: Off TM: On|Phy: On TM: On|
-|------------|----------------|---------------|---------------|--------------|
-|0           |1220            |1102           |702            |729           |
-|1           |805             |579            |564            |422           |
-|10          |473             |223            |119            |98            |
-|50          |179             |64             |37             |26            |
-|100         |92              |34             |22             |15            |
-|150         |62              |21             |17             |10            |
-|200         |47              |15             |14             |7             |
-|250         |37              |11             |12             |6             |
-
----
-
-If you have any questions regarding the performance benchmarks then don't hesitate to post in the forum.
 
 <div class="build-buttons">
 <!-- Latest release button -->

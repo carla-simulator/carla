@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -113,8 +113,8 @@ public:
   /// Method to set Global Distance to Leading Vehicle.
   virtual void SetGlobalDistanceToLeadingVehicle(const float dist) = 0;
 
-  /// Method to set % to keep on the right lane.
-  virtual void SetKeepRightPercentage(const ActorPtr &actor,const float percentage) = 0;
+  /// Method to set % to keep on the slow lane.
+  virtual void SetKeepSlowLanePercentage(const ActorPtr &actor,const float percentage) = 0;
 
   /// Method to set % to randomly do a left lane change.
   virtual void SetRandomLeftLaneChangePercentage(const ActorPtr &actor, const float percentage) = 0;

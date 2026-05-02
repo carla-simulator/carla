@@ -1,0 +1,135 @@
+on:
+  workflow_call:
+    inputs:
+      python-versions:
+        required: true
+        type: string
+      smoke-test-python-versions:
+        type: string
+        required: true
+      additional-args:
+        type: string
+        required: false
+        default: ""
+      additional-maps:
+        type: boolean
+        default: true
+      upload-package:
+        type: boolean
+        required: true
+      upload-replace-latest:
+        type: boolean
+        required: true
+      upload-docker:
+        type: boolean
+        required: true
+
+    secrets:
+      DOCKERHUB_USERNAME:
+        required: false
+      DOCKERHUB_TOKEN:
+        required: false
+      AWS_ACCESS_KEY_ID:
+        required: false
+      AWS_ACCESS_KEY:
+        required: false
+
+jobs:
+  ubuntu:
+    name: Ubuntu CI/CD
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+    runs-on: self-hosted:ubuntu-gpu
+    container:
+      image: carlasim/carla-builder:ue5-22.04
+      options: --runtime=nvidia --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all --volume /home/jenkins/unreal-engine/ue5:/unreal-engine
+    env:
+      CARLA_UNREAL_ENGINE_PATH: /unreal-engine
+
+    steps:
+
+      - name: Init conda
+        run: |
+          conda init bash
+          echo "source activate carla310" >> ~/.bashrc
+
+          cat <<'EOF' > ~/.bash_profile
+          if [ -f ~/.bashrc ]; then
+            source ~/.bashrc
+          fi
+          EOF
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download content
+        run: |
+          git clone -b ue5-dev --depth 1 https://bitbucket.org/carla-simulator/carla-content.git Unreal/CarlaUnreal/Content/Carla
+
+      - name: Activate conda environment
+        run: |
+          conda activate carla310
+
+      - name: Preset
+        run: |
+          cmake --preset Release -DENABLE_ROS2=ON -DBUILD_LIBCARLA_TESTS=ON
+
+      - name: Build LibCarla
+        run: |
+          cmake --build Build/Release --target carla-client
+
+      - name: Build PythonAPI
+        run: |
+          cmake --build Build/Release --target carla-python-api
+
+      - name: Build CarlaServer
+        run: |
+          cmake --build Build/Release --target carla-server
+
+      - name: Build LibCarla Tests
+        run: |
+          cmake --build Build/Release --target libcarla_test_server
+          cmake --build Build/Release --target libcarla_test_client
+
+      - name: Fetch LibCarla test content
+        run: |
+          rm -rf Build/test-content
+          git clone --depth 1 -b 0.1.4 https://github.com/carla-simulator/opendrive-test-files.git Build/test-content
+
+      - name: Run LibCarla Tests
+        run: |
+          ./Build/Release/LibCarla/libcarla_test_server
+          ./Build/Release/LibCarla/libcarla_test_client
+
+      - name: Build Package
+        run: |
+          cmake --build Build/Release --target package
+
+      - name: Configure Backblaze
+        if: inputs.upload-package == true
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
+
+      - name: Upload package
+        if: inputs.upload-package == true
+        id: upload_step
+        run: |
+          if [ "${{ inputs.upload-replace-latest }}" = "true" ]; then
+            ARGS="--replace-latest"
+          fi
+          ./Util/Tools/Deploy.sh ${ARGS} --summary-output $GITHUB_OUTPUT
+
+      - name: Write summary
+        if: inputs.upload-package == true
+        run: |
+          echo "## [Ubuntu] CARLA UE5 CI/CD Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- CARLA Package: ${{ steps.upload_step.outputs.package_uri }}" >> $GITHUB_STEP_SUMMARY
+
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@v3
+      #   with:
+      #     username: ${{ vars.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_TOKEN }}

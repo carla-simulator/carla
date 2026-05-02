@@ -1,5 +1,3 @@
-#define _GLIBCXX_USE_CXX11_ABI 0
-
 #include "CarlaTransformPublisher.h"
 
 #include <string>
@@ -161,9 +159,9 @@ namespace ros2 {
         const float ty = *translation++;
         const float tz = *translation++;
 
-        const float rx = ((*rotation++) * -1.0f) * (M_PIf32 / 180.0f);
-        const float ry = ((*rotation++) * -1.0f) * (M_PIf32 / 180.0f);
-        const float rz = *rotation++ * (M_PIf32 / 180.0f);
+        const float rx = ((*rotation++) * -1.0f) * (static_cast<float>(M_PI) / 180.0f);
+        const float ry = ((*rotation++) * -1.0f) * (static_cast<float>(M_PI) / 180.0f);
+        const float rz = *rotation++ * (static_cast<float>(M_PI) / 180.0f);
 
         const float cr = cosf(rz * 0.5f);
         const float sr = sinf(rz * 0.5f);

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -134,7 +134,6 @@ namespace detail {
     geom::Vector3D angular_velocity;
 
     geom::Vector3D acceleration;
-
     union TypeDependentState {
       detail::TrafficLightData traffic_light_data;
       detail::TrafficSignData traffic_sign_data;

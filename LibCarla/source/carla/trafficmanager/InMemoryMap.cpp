@@ -1,4 +1,4 @@
-// Copyright (c) 2020 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -8,7 +8,6 @@
 
 #include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/InMemoryMap.h"
-#include <boost/geometry/geometries/box.hpp>
 
 namespace carla {
 namespace traffic_manager {
@@ -261,8 +260,8 @@ namespace traffic_manager {
 
       // Ordering waypoints according to road direction.
       std::sort(segment_waypoints.begin(), segment_waypoints.end(), compare_s);
-      auto lane_id = segment_waypoints.front()->GetWaypoint()->GetLaneId();
-      if (lane_id > 0) {
+      auto is_positive_direction = segment_waypoints.front()->GetWaypoint()->IsPositiveDirection();
+      if (!is_positive_direction) {
         std::reverse(segment_waypoints.begin(), segment_waypoints.end());
       }
 

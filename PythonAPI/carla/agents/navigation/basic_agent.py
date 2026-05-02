@@ -61,7 +61,7 @@ class BasicAgent(object):
         self._base_tlight_threshold = 5.0  # meters
         self._base_vehicle_threshold = 5.0  # meters
         self._speed_ratio = 1
-        self._max_brake = 0.5
+        self._max_brake = 0.6
         self._offset = 0
 
         # Change parameters according to the dictionary

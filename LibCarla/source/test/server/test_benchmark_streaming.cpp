@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -130,7 +130,7 @@ private:
 
 static size_t get_max_concurrency() {
   size_t concurrency = std::thread::hardware_concurrency() / 2u;
-  return std::max((size_t) 2u, concurrency);
+  return std::max(static_cast<size_t>(2u), concurrency);
 }
 
 static void benchmark_image(

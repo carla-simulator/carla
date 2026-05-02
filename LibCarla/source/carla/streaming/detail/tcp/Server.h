@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -46,7 +46,7 @@ namespace tcp {
     /// is closed.
     template <typename FunctorT1, typename FunctorT2>
     void Listen(FunctorT1 on_session_opened, FunctorT2 on_session_closed) {
-      boost::asio::post(_io_context, [=]() {
+      boost::asio::post(_io_context, [=, this]() {
         OpenSession(
             _timeout,
             std::move(on_session_opened),
