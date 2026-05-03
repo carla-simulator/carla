@@ -75,33 +75,19 @@ Should output: `Using Qt version 5.x.x` or `6.x.x`
 ## Build
 
 ```sh
-cd Build
-cmake .. -DBUILD_QT_TOOLING=ON
-cmake --build . --target carla-example-qt-client
+cmake -S . -B Build
+cmake --build Build --target carla-studio
 ```
 
 ## Run
 
 ```sh
-./Examples/carla-example-qt-client
-```
-
-Shows:
-- Host: localhost:2000
-- Client/Server API versions
-- Connection status
-
-## Configure
-
-Edit [Examples/QtClient/main.cpp](../../Examples/QtClient/main.cpp):
-```cpp
-carla::client::Client client("192.168.1.100", 2000u);
+./Build/Apps/CarlaStudio/carla-studio
 ```
 
 ## Requirements
 
-- Qt6 development libraries
-- `BUILD_QT_TOOLING=ON`
+- Qt6 (recommended) or Qt5 development libraries
 
 ## Optional
 

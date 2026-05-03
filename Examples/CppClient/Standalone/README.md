@@ -19,9 +19,10 @@ cmake --install Build --prefix /opt/carla
 This installs:
 
 ```
-/opt/carla/include/carla/...        # public C++ headers
-/opt/carla/lib/libcarla-client.a    # the static library
-/opt/carla/lib/cmake/Carla/         # CarlaConfig.cmake, CarlaTargets.cmake, version
+/opt/carla/include/carla/...                 # public C++ headers
+/opt/carla/lib/libcarla-client.a             # the static library
+/opt/carla/lib/cmake/Carla/CarlaConfig.cmake # find_package() entry point
+/opt/carla/lib/cmake/Carla/CarlaConfigVersion.cmake
 ```
 
 ## Step 2 — Build the consumer project

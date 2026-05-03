@@ -68,8 +68,8 @@ fi
 elapsed_time=0
 
 while true; do
-    keep_alive "xdotool"
-    
+    keep_alive "xdotool" || true
+
     if [ "$DURATION" -gt 0 ]; then
         elapsed_time=$((elapsed_time + INTERVAL))
         if [ "$elapsed_time" -ge "$DURATION" ]; then

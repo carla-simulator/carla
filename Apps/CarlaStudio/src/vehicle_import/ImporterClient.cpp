@@ -66,6 +66,23 @@ QString sendJson(const QJsonObject &spec) {
     return QString();
   }
 
+  struct timeval rcvTimeout{30, 0};
+  ::setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &rcvTimeout, sizeof(rcvTimeout));
+  struct timeval sndTimeout{30, 0};
+  ::setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &sndTimeout, sizeof(sndTimeout));
+
+  auto sendAll = [sock](const void *data, size_t total) -> bool {
+    const auto *p = static_cast<const char *>(data);
+    size_t sent = 0;
+    while (sent < total) {
+      const ssize_t w = ::send(sock, p + sent, total - sent, 0);
+      if (w > 0) { sent += static_cast<size_t>(w); continue; }
+      if (w < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) continue;
+      return false;
+    }
+    return true;
+  };
+
   const quint32 len = (quint32)payload.size();
   unsigned char hdr[4] = {
     (unsigned char)(len & 0xFF),
@@ -73,18 +90,16 @@ QString sendJson(const QJsonObject &spec) {
     (unsigned char)((len >> 16) & 0xFF),
     (unsigned char)((len >> 24) & 0xFF),
   };
-  if (::send(sock, hdr, 4, 0) != 4) { ::close(sock); return QString(); }
-  if (::send(sock, payload.constData(), payload.size(), 0) != payload.size()) {
-    ::close(sock);
-    return QString();
-  }
+  if (!sendAll(hdr, 4)) { ::close(sock); return QString(); }
+  if (!sendAll(payload.constData(), payload.size())) { ::close(sock); return QString(); }
 
   unsigned char rhdr[4] = {0};
   ssize_t n = 0;
   while (n < 4) {
     const ssize_t r = ::recv(sock, rhdr + n, 4 - n, 0);
-    if (r <= 0) { ::close(sock); return QString(); }
-    n += r;
+    if (r > 0) { n += r; continue; }
+    if (r < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) continue;
+    ::close(sock); return QString();
   }
   const quint32 rlen = (quint32)rhdr[0]
                      | ((quint32)rhdr[1] <<  8)
@@ -96,8 +111,9 @@ QString sendJson(const QJsonObject &spec) {
   ssize_t got = 0;
   while (got < (ssize_t)rlen) {
     const ssize_t r = ::recv(sock, body.data() + got, rlen - got, 0);
-    if (r <= 0) { ::close(sock); return QString(); }
-    got += r;
+    if (r > 0) { got += r; continue; }
+    if (r < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) continue;
+    ::close(sock); return QString();
   }
   ::close(sock);
   return QString::fromUtf8(body);

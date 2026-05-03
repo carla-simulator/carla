@@ -15,7 +15,6 @@ Covered here:
 Not covered here:
 
 - Unreal plugin authoring
-- A full C++ equivalent of Python `BasicAgent` / `BehaviorAgent`
 
 ## Prerequisites
 
@@ -155,10 +154,11 @@ client.ReplayFile("session.log", 0.0, 0.0, 0u, false);
 
 ## Parity note
 
-The C++ API is first-class for low-level simulation control. Some high-level Python helpers (`BasicAgent`, `BehaviorAgent`, `GlobalRoutePlanner`) are not exposed as ready-made C++ classes in this repository state.
+The C++ API is first-class for low-level simulation control. The high-level navigation helpers `BasicAgent`, `BehaviorAgent`, and `ConstantVelocityAgent` are now available in C++ under [LibCarla/source/carla/agents/navigation/](../LibCarla/source/carla/agents/navigation/).
 
 Typical C++ approach today:
 
+- High-level navigation via the `BasicAgent` / `BehaviorAgent` C++ classes
 - Traffic Manager autopilot for baseline behavior
 - Custom route/planning/control modules for explicit ego behavior
 

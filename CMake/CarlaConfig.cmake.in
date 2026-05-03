@@ -17,9 +17,15 @@ set_and_check (Carla_INCLUDE_DIR  "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
 set_and_check (Carla_LIBRARY_DIR  "@PACKAGE_CMAKE_INSTALL_LIBDIR@")
 
 if (NOT TARGET Carla::carla-client)
+  find_library (Carla_CLIENT_LIBRARY
+    NAMES carla-client
+    PATHS "${Carla_LIBRARY_DIR}"
+    NO_DEFAULT_PATH
+    REQUIRED
+  )
   add_library (Carla::carla-client STATIC IMPORTED)
   set_target_properties (Carla::carla-client PROPERTIES
-    IMPORTED_LOCATION             "${Carla_LIBRARY_DIR}/libcarla-client.a"
+    IMPORTED_LOCATION             "${Carla_CLIENT_LIBRARY}"
     INTERFACE_INCLUDE_DIRECTORIES "${Carla_INCLUDE_DIR}"
   )
 endif ()
