@@ -6338,6 +6338,7 @@ int main(int argc, char *argv[]) {
   QVBoxLayout *sensorLayout = new QVBoxLayout();
 
   std::function<void(const QString &)> openSensorConfigDialog;
+  std::function<void(const QString &)> startSensorPreview;
 
   struct SensorMountConfig {
     QString framePreset;
@@ -6717,8 +6718,8 @@ int main(int argc, char *argv[]) {
       sensorPreview->setToolTip(QString(
         "Open a live preview tile for this sensor (%1).").arg(sensorName));
       QObject::connect(sensorPreview, &QPushButton::clicked, &window,
-        [sensorName]() {
-          Q_UNUSED(sensorName);
+        [&, sensorName]() {
+          if (startSensorPreview) startSensorPreview(sensorName);
         });
       sensorRow->addWidget(sensorCheck);
       sensorRow->addWidget(sensorPlus);
@@ -7330,25 +7331,79 @@ int main(int argc, char *argv[]) {
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     dlg->setModal(false);
     dlg->setWindowTitle(QString("Actuate · %1").arg(shown));
-    dlg->resize(420, 240);
+    dlg->resize(440, 260);
     QVBoxLayout *l = new QVBoxLayout(dlg);
     l->setContentsMargins(12, 12, 12, 12);
     QLabel *title = new QLabel(QString("<h3>%1</h3>").arg(shown));
     title->setTextFormat(Qt::RichText);
     l->addWidget(title);
-    QLabel *info = new QLabel(QString(
-      "<p><b>Control:</b> %1</p>"
-      "<p>Live input state will appear here while the simulation is "
-      "running.</p>"
-      "<p><i>EGO + Keyboard</i> already routes through the in-app "
-      "LibCarla driver. Other player×device combinations capture the "
-      "mapping into the scenario but full multi-player input dispatch "
-      "is the next step.</i></p>")
+    QLabel *header = new QLabel(QString("<b>Control:</b> %1")
       .arg(assigned.isEmpty() ? "(unassigned)" : assigned));
-    info->setWordWrap(true);
-    info->setTextFormat(Qt::RichText);
-    l->addWidget(info);
-    l->addStretch();
+    header->setTextFormat(Qt::RichText);
+    l->addWidget(header);
+
+    QLabel *liveLabel = new QLabel("Live input:");
+    l->addWidget(liveLabel);
+    QLabel *stateLabel = new QLabel("waiting…");
+    stateLabel->setTextFormat(Qt::PlainText);
+    stateLabel->setStyleSheet(
+      "QLabel { font-family: monospace; background: #111; color: #6f6; "
+      "padding: 8px; border-radius: 4px; }");
+    stateLabel->setAlignment(Qt::AlignTop | Qt::AlignLeft);
+    stateLabel->setMinimumHeight(120);
+    l->addWidget(stateLabel, 1);
+
+    QTimer *liveTimer = new QTimer(dlg);
+    QObject::connect(liveTimer, &QTimer::timeout, dlg, [&, assigned, stateLabel]() {
+      QStringList lines;
+      if (assigned == "Keyboard") {
+        auto mark = [](bool b) -> QString { return b ? "[X]" : "[ ]"; };
+        lines << QString("throttle  %1   W / Up").arg(mark(driveKeys.throttle));
+        lines << QString("brake     %1   S / Down").arg(mark(driveKeys.brake));
+        lines << QString("steer L   %1   A / Left").arg(mark(driveKeys.steerLeft));
+        lines << QString("steer R   %1   D / Right").arg(mark(driveKeys.steerRight));
+        lines << QString("handbrake %1   Space").arg(mark(driveKeys.handbrake));
+        if (!inAppDriverControlActive) {
+          lines << QString();
+          lines << "(driver control inactive — START the sim to activate)";
+        }
+      } else if (assigned.startsWith("Joystick")) {
+#ifdef CARLA_STUDIO_HAS_LINUX_JOYSTICK
+        auto bar = [](double v) -> QString {
+          int n = qBound(0, static_cast<int>((v + 1.0) * 10.0), 20);
+          QString s; s.fill(' ', 20); for (int i = 0; i < n; ++i) s[i] = '#'; return s;
+        };
+        auto trig = [](double v) -> QString {
+          int n = qBound(0, static_cast<int>(v * 20.0), 20);
+          QString s; s.fill(' ', 20); for (int i = 0; i < n; ++i) s[i] = '#'; return s;
+        };
+        auto mark = [](bool b) -> QString { return b ? "[X]" : "[ ]"; };
+        lines << QString("LX  [%1]  %2").arg(bar(lx)).arg(lx, 6, 'f', 2);
+        lines << QString("LY  [%1]  %2").arg(bar(ly)).arg(ly, 6, 'f', 2);
+        lines << QString("RX  [%1]  %2").arg(bar(rx)).arg(rx, 6, 'f', 2);
+        lines << QString("RY  [%1]  %2").arg(bar(ry)).arg(ry, 6, 'f', 2);
+        lines << QString("LT  [%1]  %2").arg(trig(lt)).arg(lt, 6, 'f', 2);
+        lines << QString("RT  [%1]  %2").arg(trig(rt)).arg(rt, 6, 'f', 2);
+        lines << QString("A%1 B%2 X%3 Y%4 L1%5 R1%6")
+                  .arg(mark(aPressed)).arg(mark(bPressed)).arg(mark(xPressed))
+                  .arg(mark(yPressed)).arg(mark(l1Pressed)).arg(mark(r1Pressed));
+        if (jsFd < 0) {
+          lines << QString();
+          lines << "(no joystick device open — plug in a controller)";
+        }
+#else
+        lines << "(joystick support not compiled in)";
+#endif
+      } else {
+        lines << "(no device assigned)";
+        lines << QString();
+        lines << "Pick Keyboard or Joystick N from the dropdown";
+        lines << "to wire input into this player slot.";
+      }
+      stateLabel->setText(lines.join("\n"));
+    });
+    liveTimer->start(50);
+
     dlg->show();
     dlg->raise();
   };
@@ -9338,7 +9393,6 @@ int main(int argc, char *argv[]) {
   };
 #endif
 
-  std::function<void(const QString &)> startSensorPreview;
   startSensorPreview = [&](const QString &sensorName) {
 #ifdef CARLA_STUDIO_WITH_LIBCARLA
     const SensorDescriptor desc = kSensorCatalog.value(sensorName);
@@ -11509,12 +11563,9 @@ int main(int argc, char *argv[]) {
   auto findCarlaRootForPkg = [&]() -> QString {
     return carlaRootPath ? carlaRootPath->text().trimmed() : QString();
   };
-  auto requestStartCarla = [startBtn]() {
-    if (startBtn && startBtn->isEnabled()) startBtn->click();
-  };
   auto *vehicleImportContainer = new carla_studio::vehicle_import::VehicleImportContainer(
-      findUnrealEditorBin, findVehicleUproject, findCarlaRootForPkg,
-      requestStartCarla);
+      findUnrealEditorBin, findVehicleUproject, findCarlaRootForPkg);
+  Q_UNUSED(startBtn);
   vehicleImportContainer->setVisible(false);
   bool vehicleImportTabVisible = false;
   auto setVehicleImportTabVisible = [&, vehicleImportContainer, vehicleIcon](bool on) {
