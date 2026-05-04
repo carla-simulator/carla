@@ -47,6 +47,13 @@ if (Qt6_FOUND)
   set (CARLA_STUDIO_QT_CORE_TARGET Qt6::Core)
   set (CARLA_STUDIO_QT_CONCURRENT_TARGET Qt6::Concurrent)
   find_package (Qt6 COMPONENTS Gamepad Test QUIET)
+  find_package (Qt6 COMPONENTS 3DCore 3DRender 3DInput 3DExtras QUIET)
+  if (TARGET Qt6::3DCore AND TARGET Qt6::3DRender
+      AND TARGET Qt6::3DInput AND TARGET Qt6::3DExtras)
+    set (CARLA_STUDIO_QT3D_AVAILABLE TRUE)
+    set (CARLA_STUDIO_QT_3D_TARGETS
+      Qt6::3DCore Qt6::3DRender Qt6::3DInput Qt6::3DExtras)
+  endif ()
 else ()
   find_package (Qt5 COMPONENTS Widgets Core Concurrent QUIET)
   if (NOT Qt5_FOUND)
@@ -60,6 +67,13 @@ else ()
   set (CARLA_STUDIO_QT_CORE_TARGET Qt5::Core)
   set (CARLA_STUDIO_QT_CONCURRENT_TARGET Qt5::Concurrent)
   find_package (Qt5 COMPONENTS Gamepad Test QUIET)
+  find_package (Qt5 COMPONENTS 3DCore 3DRender 3DInput 3DExtras QUIET)
+  if (TARGET Qt5::3DCore AND TARGET Qt5::3DRender
+      AND TARGET Qt5::3DInput AND TARGET Qt5::3DExtras)
+    set (CARLA_STUDIO_QT3D_AVAILABLE TRUE)
+    set (CARLA_STUDIO_QT_3D_TARGETS
+      Qt5::3DCore Qt5::3DRender Qt5::3DInput Qt5::3DExtras)
+  endif ()
 endif ()
 
 carla_message ("CARLA Building CarlaStudio application (top-layer app module)")
@@ -186,6 +200,14 @@ if (APPLE)
   list (APPEND CARLA_STUDIO_PLATFORM_SOURCES ${CARLA_STUDIO_MACOS_ICNS})
 endif ()
 
+set (CARLA_STUDIO_CALIBRATION_SOURCES
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/calibration/CalibrationScene.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/calibration/CalibrationScene.h
+)
+if (NOT CARLA_STUDIO_QT3D_AVAILABLE)
+  set (CARLA_STUDIO_CALIBRATION_SOURCES "")
+endif ()
+
 carla_add_executable (
   carla-studio
   "Build the CARLA Studio main application."
@@ -193,6 +215,7 @@ carla_add_executable (
   ${CARLA_STUDIO_APP_SOURCE}
   ${CARLA_STUDIO_QRC}
   ${CARLA_STUDIO_PLATFORM_SOURCES}
+  ${CARLA_STUDIO_CALIBRATION_SOURCES}
 )
 
 set_target_properties (
@@ -245,6 +268,13 @@ if (TARGET carla-client)
   target_compile_definitions (carla-studio PRIVATE CARLA_STUDIO_WITH_LIBCARLA)
 else ()
   carla_warning ("carla-client target is unavailable; configure from the CARLA workspace root with BUILD_CARLA_CLIENT=ON and BUILD_CARLA_STUDIO=ON for full LibCarla integration.")
+endif ()
+
+if (CARLA_STUDIO_QT3D_AVAILABLE)
+  target_link_libraries (carla-studio PUBLIC ${CARLA_STUDIO_QT_3D_TARGETS})
+  target_compile_definitions (carla-studio PRIVATE CARLA_STUDIO_WITH_QT3D)
+else ()
+  carla_warning ("Qt3D modules not found; Calibration View 3D scene will be disabled. Install qt6-3d-dev / libqt63dcore6-dev (or Qt5 equivalents) to enable.")
 endif ()
 
 # Linux install rules: hicolor icons + .desktop entry so the app appears in menus.

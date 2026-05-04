@@ -8,6 +8,7 @@
 
 #include <QApplication>
 #include <QColor>
+#include <QThread>
 #include <QDockWidget>
 #include <QIcon>
 #include <QLibrary>
@@ -138,6 +139,8 @@
 #define CARLA_STUDIO_HAS_LINUX_JOYSTICK 1
 #endif
 
+#include "utils/PlatformProc.h"
+
 #ifdef CARLA_STUDIO_WITH_LIBCARLA
 #include <carla/Version.h>
 #include <carla/client/Client.h>
@@ -158,15 +161,23 @@
 #include <carla/sensor/data/CollisionEvent.h>
 #include <carla/sensor/data/LaneInvasionEvent.h>
 #include <carla/sensor/data/ObstacleDetectionEvent.h>
+#include <carla/client/DebugHelper.h>
 #include <carla/geom/Transform.h>
 #include <carla/geom/Location.h>
 #include <carla/geom/Rotation.h>
+#include <carla/geom/BoundingBox.h>
+#include <carla/sensor/data/Color.h>
 #include <carla/rpc/VehicleControl.h>
 #include <carla/client/TimeoutException.h>
 #include <carla/client/Waypoint.h>
 #include <carla/rpc/WeatherParameters.h>
 #include <carla/rpc/OpendriveGenerationParameters.h>
 #include <carla/agents/navigation/BehaviorAgent.h>
+#endif
+
+#ifdef CARLA_STUDIO_WITH_QT3D
+#include "calibration/CalibrationScene.h"
+#include <QListWidget>
 #endif
 
 #include "core/PlayerSlots.h"
@@ -2712,6 +2723,7 @@ int main(int argc, char *argv[]) {
     QMap<qint64, double> gpuMemPctByPid;
     QMap<qint64, qint64> gpuMemMiBByPid;
 
+#if !defined(Q_OS_MAC) && !defined(__APPLE__)
     {
       QProcess smProbe;
       smProbe.start("/bin/bash", QStringList() << "-lc"
@@ -2765,6 +2777,7 @@ int main(int argc, char *argv[]) {
         }
       }
     }
+#endif
 
     QProcess proc;
     proc.start("/bin/bash", QStringList() << "-lc"
@@ -2779,15 +2792,7 @@ int main(int argc, char *argv[]) {
       return;
     }
 
-    qint64 systemRamMiB = 0;
-    {
-      QProcess meminfo;
-      meminfo.start("/bin/bash", QStringList() << "-lc"
-        << "awk '/^MemTotal:/ { print int($2/1024); exit }' /proc/meminfo 2>/dev/null");
-      meminfo.waitForFinished(500);
-      systemRamMiB = QString::fromLocal8Bit(meminfo.readAllStandardOutput())
-                       .trimmed().toLongLong();
-    }
+    qint64 systemRamMiB = carla_studio_proc::systemTotalRamMiB();
 
     auto fmtMiB = [](double mib) -> QString {
       if (mib < 1.0)     return QString("%1 MB").arg(mib, 0, 'f', 1);
@@ -3513,13 +3518,136 @@ int main(int argc, char *argv[]) {
         weather.precipitation          = 0.0f;
         weather.precipitation_deposits = 0.0f;
         weather.wind_intensity         = 5.0f;
-        weather.sun_azimuth_angle      = 270.0f;  
-        weather.sun_altitude_angle     = 40.0f;   
+        weather.sun_azimuth_angle      = 270.0f;
+        weather.sun_altitude_angle     = 40.0f;
         weather.fog_density            = 0.0f;
         weather.fog_distance           = 0.0f;
         weather.wetness                = 0.0f;
         wt.SetWeather(weather);
       } catch (...) {}
+
+#ifdef CARLA_STUDIO_WITH_QT3D
+      try {
+        auto wt = inAppDriveClient->GetWorld();
+        const QString scenarioId = qEnvironmentVariableIsSet("CARLA_STUDIO_SCENARIO")
+          ? qEnvironmentVariable("CARLA_STUDIO_SCENARIO")
+          : QStringLiteral("default");
+        const QStringList sensors = carla_studio::calibration::listPersistedSensors(scenarioId);
+        if (!sensors.isEmpty()) {
+          auto bps = wt.GetBlueprintLibrary();
+          const auto *coneBp = bps ? bps->Find("static.prop.constructioncone") : nullptr;
+          static auto sCalibCells = std::make_shared<
+            std::vector<std::tuple<cg::Location, float, carla::sensor::data::Color>>>();
+          sCalibCells->clear();
+          int spawnedActors = 0, drawnCells = 0;
+          for (const QString &sensorName : sensors) {
+            const auto targets = carla_studio::calibration::loadPersisted(scenarioId, sensorName);
+            for (const auto &t : targets) {
+              cg::Location base(static_cast<float>(t.x),
+                                static_cast<float>(t.y),
+                                static_cast<float>(t.z));
+              if (t.type == carla_studio::calibration::TargetType::ConeSquare
+               || t.type == carla_studio::calibration::TargetType::ConeLine
+               || t.type == carla_studio::calibration::TargetType::PylonWall) {
+                if (!coneBp) continue;
+                std::vector<std::pair<double, double>> offs;
+                if (t.type == carla_studio::calibration::TargetType::ConeSquare)
+                  offs = {{-0.5,-0.5},{0.5,-0.5},{-0.5,0.5},{0.5,0.5}};
+                else if (t.type == carla_studio::calibration::TargetType::ConeLine)
+                  for (int i = -3; i <= 4; ++i) offs.push_back({i * 0.4, 0.0});
+                else
+                  for (int i = -2; i <= 2; ++i)
+                    for (int j = 0; j <= 1; ++j) offs.push_back({i * 0.5, j * 0.5});
+                const double yawRad = t.yawDeg * M_PI / 180.0;
+                const double cy = std::cos(yawRad), sy = std::sin(yawRad);
+                for (auto &o : offs) {
+                  cg::Location loc(
+                    base.x + static_cast<float>(o.first * cy - o.second * sy),
+                    base.y + static_cast<float>(o.first * sy + o.second * cy),
+                    base.z);
+                  cg::Transform xf(loc, cg::Rotation(0, 0, 0));
+                  try { if (wt.TrySpawnActor(*coneBp, xf)) ++spawnedActors; } catch (...) {}
+                }
+              } else {
+                int cols = 8, rows = 6;
+                std::vector<std::tuple<int,int,uint8_t,uint8_t,uint8_t>> cells;
+                if (t.type == carla_studio::calibration::TargetType::Checkerboard) {
+                  cols = t.cols; rows = t.rows;
+                  for (int r = 0; r < rows; ++r) for (int c = 0; c < cols; ++c) {
+                    bool w = ((r+c)%2==0);
+                    cells.push_back({c, r,
+                      uint8_t(w?240:20), uint8_t(w?240:20), uint8_t(w?240:20)});
+                  }
+                } else if (t.type == carla_studio::calibration::TargetType::AprilTag) {
+                  static const int M[8][8] = {
+                    {0,0,0,0,0,0,0,0},{0,1,1,0,0,1,1,0},{0,1,0,1,0,0,1,0},
+                    {0,0,1,1,0,1,1,0},{0,0,0,1,1,0,1,0},{0,1,1,0,0,1,0,0},
+                    {0,0,1,1,1,1,1,0},{0,0,0,0,0,0,0,0}};
+                  cols = 8; rows = 8;
+                  for (int r = 0; r < rows; ++r) for (int c = 0; c < cols; ++c) {
+                    bool w = M[r][c]!=0;
+                    cells.push_back({c, r,
+                      uint8_t(w?240:20), uint8_t(w?240:20), uint8_t(w?240:20)});
+                  }
+                } else {
+                  static const int MB[4][6][3] = {
+                    {{115,82,68},{194,150,130},{98,122,157},{87,108,67},
+                     {133,128,177},{103,189,170}},
+                    {{214,126,44},{80,91,166},{193,90,99},{94,60,108},
+                     {157,188,64},{224,163,46}},
+                    {{56,61,150},{70,148,73},{175,54,60},{231,199,31},
+                     {187,86,149},{8,133,161}},
+                    {{243,243,242},{200,200,200},{160,160,160},{122,122,121},
+                     {85,85,85},{52,52,52}}};
+                  cols = 6; rows = 4;
+                  for (int r = 0; r < rows; ++r) for (int c = 0; c < cols; ++c)
+                    cells.push_back({c, r,
+                      uint8_t(MB[r][c][0]), uint8_t(MB[r][c][1]), uint8_t(MB[r][c][2])});
+                }
+                const double cellSize = t.sizeM / cols;
+                const double yawRad = t.yawDeg * M_PI / 180.0;
+                const double cy = std::cos(yawRad), sy = std::sin(yawRad);
+                for (const auto &cell : cells) {
+                  const double oR = (std::get<0>(cell) - cols/2.0 + 0.5) * cellSize;
+                  const double oU = (rows/2.0 - 0.5 - std::get<1>(cell)) * cellSize;
+                  cg::Location p(
+                    base.x + static_cast<float>(oR * cy),
+                    base.y + static_cast<float>(oR * sy),
+                    base.z + static_cast<float>(oU));
+                  carla::sensor::data::Color col{
+                    std::get<2>(cell), std::get<3>(cell), std::get<4>(cell)};
+                  sCalibCells->emplace_back(p, static_cast<float>(cellSize * 0.5), col);
+                  ++drawnCells;
+                }
+              }
+            }
+          }
+          if (!sCalibCells->empty()) {
+            static QTimer *sCalibTimer = nullptr;
+            if (!sCalibTimer) {
+              sCalibTimer = new QTimer(&window);
+              sCalibTimer->setInterval(900);
+              auto clientCopy = inAppDriveClient;
+              QObject::connect(sCalibTimer, &QTimer::timeout, &window,
+                [clientCopy]() {
+                  if (!clientCopy) return;
+                  try {
+                    auto dh = clientCopy->GetWorld().MakeDebugHelper();
+                    for (const auto &c : *sCalibCells)
+                      dh.DrawPoint(std::get<0>(c), std::get<1>(c),
+                                   std::get<2>(c), 1.5f, false);
+                  } catch (...) {}
+                });
+            }
+            sCalibTimer->start();
+          }
+          std::cerr << "[calibration] spawned " << spawnedActors
+                    << " actors, drawing " << drawnCells << " debug cells\n";
+        }
+      } catch (const std::exception &e) {
+        std::cerr << "[calibration] auto-spawn failed: " << e.what() << '\n';
+      } catch (...) {}
+#endif
 
       
       
@@ -4151,8 +4279,7 @@ int main(int argc, char *argv[]) {
           // and surface the last few lines so the user sees the actual error
           // (e.g. RenderThread timeout / SIGSEGV from a GPU driver hang).
           QTimer::singleShot(30000, &window, [pid, &window, &setSimulationStatus]() {
-            const QString procPath = QString("/proc/%1").arg(pid);
-            if (QFileInfo(procPath).exists()) return;   // sim still alive — fine
+            if (carla_studio_proc::pidIsAlive(pid)) return;   // sim still alive — fine
             QProcess tailProc;
             tailProc.start("/bin/bash", QStringList() << "-lc"
                 << "tail -n 25 /tmp/carla_studio_launch.log 2>/dev/null");
@@ -6719,7 +6846,7 @@ int main(int argc, char *argv[]) {
         "Open a live preview tile for this sensor (%1).").arg(sensorName));
       QObject::connect(sensorPreview, &QPushButton::clicked, &window,
         [&, sensorName]() {
-          if (startSensorPreview) startSensorPreview(sensorName);
+          if (openSensorConfigDialog) openSensorConfigDialog(sensorName);
         });
       sensorRow->addWidget(sensorCheck);
       sensorRow->addWidget(sensorPlus);
@@ -7975,8 +8102,8 @@ int main(int argc, char *argv[]) {
         ? QString("%1 #%2").arg(sensorName).arg(idx)
         : sensorName;
     };
-    dialog.setWindowTitle(QString("Sensor Config - %1").arg(fallbackName(1)));
-    dialog.resize(960, 520);
+    dialog.setWindowTitle(QString("Calibration View - %1").arg(fallbackName(1)));
+    dialog.resize(1500, 720);
     QVBoxLayout *dialogLayout = new QVBoxLayout();
 
     SensorMountConfig mount = getOrCreateSensorMount(sensorMountKey(sensorName, 1));
@@ -8236,6 +8363,185 @@ int main(int argc, char *argv[]) {
     QVBoxLayout *configCol = new QVBoxLayout(configPanel);
     configCol->setContentsMargins(0, 0, 0, 0);
     bodyRow->addWidget(configPanel, 1);
+
+#ifdef CARLA_STUDIO_WITH_QT3D
+    QGroupBox *calibrationGroup = new QGroupBox("Calibration View");
+    calibrationGroup->setStyleSheet(
+      "QGroupBox { font-weight: 600; }"
+      "QGroupBox::title { color: #D08770; }");
+    QVBoxLayout *calibrationLayout = new QVBoxLayout(calibrationGroup);
+    calibrationLayout->setContentsMargins(8, 14, 8, 8);
+
+    auto *calibScene = new carla_studio::calibration::CalibrationScene();
+    calibScene->setMinimumHeight(280);
+    calibrationLayout->addWidget(calibScene, 1);
+
+    QLabel *sceneHint = new QLabel(
+      "Tip: pick a target type below, then click on the dark ground "
+      "in the 3D scene to place it at that exact spot. Drag with the "
+      "right mouse button to orbit, scroll to zoom.");
+    sceneHint->setWordWrap(true);
+    sceneHint->setStyleSheet(
+      "QLabel { color: #6E7790; padding: 2px 4px; font-size: 9pt; "
+      "background: #f5f5f5; border-radius: 3px; }");
+    calibrationLayout->addWidget(sceneHint);
+
+    QHBoxLayout *paletteRow = new QHBoxLayout();
+    auto *paletteList = new QListWidget();
+    paletteList->setDragEnabled(false);
+    paletteList->setMaximumHeight(140);
+    paletteList->setSelectionMode(QAbstractItemView::SingleSelection);
+    paletteList->addItem("Checkerboard");
+    paletteList->addItem("April Tag");
+    paletteList->addItem("Color Checker");
+    paletteList->addItem("Cone Square");
+    paletteList->addItem("Cone Line");
+    paletteList->addItem("Pylon Wall");
+    paletteList->setCurrentRow(0);
+    paletteRow->addWidget(paletteList, 1);
+
+    QVBoxLayout *paletteBtnCol = new QVBoxLayout();
+    QPushButton *addBtn   = new QPushButton("Add at center");
+    QPushButton *clearBtn = new QPushButton("Clear all");
+    paletteBtnCol->addWidget(addBtn);
+    paletteBtnCol->addWidget(clearBtn);
+    paletteBtnCol->addStretch();
+    paletteRow->addLayout(paletteBtnCol);
+    calibrationLayout->addLayout(paletteRow);
+
+    auto *placedList = new QListWidget();
+    placedList->setMaximumHeight(120);
+    calibrationLayout->addWidget(new QLabel("Placed targets:"));
+    calibrationLayout->addWidget(placedList);
+
+    QGroupBox *coordEditGroup = new QGroupBox("Selected target pose");
+    QGridLayout *coordGrid = new QGridLayout(coordEditGroup);
+    coordGrid->setContentsMargins(6, 12, 6, 6);
+    QDoubleSpinBox *coordX = new QDoubleSpinBox();
+    QDoubleSpinBox *coordY = new QDoubleSpinBox();
+    QDoubleSpinBox *coordZ = new QDoubleSpinBox();
+    QDoubleSpinBox *coordYaw = new QDoubleSpinBox();
+    for (auto *sp : {coordX, coordY, coordZ}) {
+      sp->setRange(-2000.0, 2000.0); sp->setDecimals(2); sp->setSingleStep(0.1);
+      sp->setEnabled(false);
+    }
+    coordYaw->setRange(-180.0, 180.0); coordYaw->setDecimals(1);
+    coordYaw->setSingleStep(5.0); coordYaw->setEnabled(false);
+    coordGrid->addWidget(new QLabel("X (m)"),   0, 0); coordGrid->addWidget(coordX,   0, 1);
+    coordGrid->addWidget(new QLabel("Y (m)"),   0, 2); coordGrid->addWidget(coordY,   0, 3);
+    coordGrid->addWidget(new QLabel("Z (m)"),   1, 0); coordGrid->addWidget(coordZ,   1, 1);
+    coordGrid->addWidget(new QLabel("Yaw (°)"), 1, 2); coordGrid->addWidget(coordYaw, 1, 3);
+    calibrationLayout->addWidget(coordEditGroup);
+
+    QHBoxLayout *applyRow = new QHBoxLayout();
+    QPushButton *removeBtn = new QPushButton("Remove selected");
+    QPushButton *applyBtn  = new QPushButton("Save && Apply");
+    applyRow->addWidget(removeBtn);
+    applyRow->addStretch();
+    applyRow->addWidget(applyBtn);
+    calibrationLayout->addLayout(applyRow);
+
+    QLabel *calibStatus = new QLabel("(idle)");
+    calibStatus->setStyleSheet(
+      "QLabel { color: #6E7790; padding: 2px 4px; font-size: 9pt; }");
+    calibStatus->setWordWrap(true);
+    calibrationLayout->addWidget(calibStatus);
+
+    bodyRow->addWidget(calibrationGroup, 2);
+
+    const QString scenarioId = qEnvironmentVariableIsSet("CARLA_STUDIO_SCENARIO")
+      ? qEnvironmentVariable("CARLA_STUDIO_SCENARIO")
+      : QStringLiteral("default");
+    calibScene->setTargets(
+      carla_studio::calibration::loadPersisted(scenarioId, sensorName));
+
+    auto syncCoordEditor = [calibScene, coordX, coordY, coordZ, coordYaw]() {
+      const int sel = calibScene->selectedIndex();
+      const auto ts = calibScene->targets();
+      const bool valid = (sel >= 0 && sel < ts.size());
+      for (auto *sp : {coordX, coordY, coordZ, coordYaw}) sp->setEnabled(valid);
+      if (!valid) return;
+      const auto &t = ts[sel];
+      QSignalBlocker b1(coordX), b2(coordY), b3(coordZ), b4(coordYaw);
+      coordX->setValue(t.x);
+      coordY->setValue(t.y);
+      coordZ->setValue(t.z);
+      coordYaw->setValue(t.yawDeg);
+    };
+
+    auto refreshPlacedList = [placedList, calibScene, syncCoordEditor]() {
+      placedList->clear();
+      const auto ts = calibScene->targets();
+      for (int i = 0; i < ts.size(); ++i) {
+        const auto &t = ts[i];
+        placedList->addItem(QString("%1: %2  (%3, %4) z=%5")
+          .arg(i + 1)
+          .arg(carla_studio::calibration::labelFor(t.type))
+          .arg(t.x, 0, 'f', 2).arg(t.y, 0, 'f', 2).arg(t.z, 0, 'f', 2));
+      }
+      const int sel = calibScene->selectedIndex();
+      if (sel >= 0 && sel < placedList->count())
+        placedList->setCurrentRow(sel);
+      syncCoordEditor();
+    };
+    refreshPlacedList();
+    QObject::connect(calibScene, &carla_studio::calibration::CalibrationScene::targetsChanged,
+                     &dialog, [refreshPlacedList](const auto &) { refreshPlacedList(); });
+    QObject::connect(calibScene, &carla_studio::calibration::CalibrationScene::selectionChanged,
+                     &dialog, [refreshPlacedList](int) { refreshPlacedList(); });
+
+    QObject::connect(paletteList, &QListWidget::currentRowChanged, &dialog,
+      [calibScene](int row) {
+        if (row >= 0 && row <= 5)
+          calibScene->setNextDropType(
+            static_cast<carla_studio::calibration::TargetType>(row));
+      });
+    if (paletteList->currentRow() >= 0)
+      calibScene->setNextDropType(
+        static_cast<carla_studio::calibration::TargetType>(paletteList->currentRow()));
+
+    QObject::connect(placedList, &QListWidget::currentRowChanged, &dialog,
+      [syncCoordEditor](int) { syncCoordEditor(); });
+
+    auto pushCoords = [calibScene, coordX, coordY, coordZ, coordYaw]() {
+      const int sel = calibScene->selectedIndex();
+      if (sel < 0) return;
+      calibScene->updateTargetPose(sel,
+        coordX->value(), coordY->value(), coordZ->value(), coordYaw->value());
+    };
+    QObject::connect(coordX,   QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+                     &dialog, [pushCoords](double) { pushCoords(); });
+    QObject::connect(coordY,   QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+                     &dialog, [pushCoords](double) { pushCoords(); });
+    QObject::connect(coordZ,   QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+                     &dialog, [pushCoords](double) { pushCoords(); });
+    QObject::connect(coordYaw, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+                     &dialog, [pushCoords](double) { pushCoords(); });
+
+    QObject::connect(addBtn, &QPushButton::clicked, &dialog,
+      [calibScene, paletteList]() {
+        const int idx = paletteList->currentRow();
+        if (idx < 0) return;
+        calibScene->addTargetAtCenter(
+          static_cast<carla_studio::calibration::TargetType>(idx));
+      });
+    QObject::connect(clearBtn, &QPushButton::clicked, &dialog,
+      [calibScene]() { calibScene->clearAll(); });
+    QObject::connect(removeBtn, &QPushButton::clicked, &dialog,
+      [calibScene, placedList]() {
+        const int idx = placedList->currentRow();
+        if (idx >= 0) calibScene->removeAt(idx);
+      });
+    QObject::connect(applyBtn, &QPushButton::clicked, &dialog,
+      [calibScene, calibStatus, scenarioId, sensorName]() {
+        const auto ts = calibScene->targets();
+        carla_studio::calibration::savePersisted(scenarioId, sensorName, ts);
+        calibStatus->setText(
+          QString("Saved %1 target(s). Will spawn on next START / immediately if sim is running.")
+            .arg(ts.size()));
+      });
+#endif
+
     dialogLayout->addLayout(bodyRow, 1);
 
     auto renderAssemblyView = [&](AssemblyViewKey view, QLabel *target) {
@@ -12315,14 +12621,13 @@ int main(int argc, char *argv[]) {
     s.user   = QString::fromLocal8Bit(qgetenv("USER"));
 
     
-    const QString cpuModel = readField("/proc/cpuinfo", "model name");
+    const QString cpuModel = carla_studio_proc::cpuModelString();
     QString clockGhz;
-    bool ok = false;
-    const double mhz = readField("/proc/cpuinfo", "cpu MHz").toDouble(&ok);
-    if (ok && mhz > 0.0) clockGhz = QString::number(mhz / 1000.0, 'f', 2) + " GHz";
-    const QString cpuCount = runCmd("nproc");
+    const double ghz = carla_studio_proc::cpuClockGHz();
+    if (ghz > 0.0) clockGhz = QString::number(ghz, 'f', 2) + " GHz";
+    const int logicalCount = carla_studio_proc::cpuLogicalCount();
     QStringList tags;
-    if (!cpuCount.isEmpty()) tags << cpuCount + " cores";
+    if (logicalCount > 0) tags << QString::number(logicalCount) + " cores";
     if (!clockGhz.isEmpty()) tags << clockGhz;
     s.cpu = cpuModel.isEmpty() ? QString() : cpuModel;
     if (!tags.isEmpty()) {
@@ -12332,6 +12637,16 @@ int main(int argc, char *argv[]) {
     if (s.cpu.isEmpty()) s.cpu = "n/a";
 
     
+#if defined(Q_OS_MAC) || defined(__APPLE__)
+    s.gpu = runCmd(
+      "system_profiler SPDisplaysDataType 2>/dev/null "
+      "| awk -F': *' '/Chipset Model:/ { name=$2 } "
+      "                /VRAM \\(Total\\):/ { vram=$2 } "
+      "                /Vendor:/ { vendor=$2 } "
+      "                END { if (name) printf \"%s\", name; "
+      "                      if (vendor) printf \" \\xc2\\xb7 %s\", vendor; "
+      "                      if (vram) printf \" \\xc2\\xb7 %s\", vram }'");
+#else
     const QString smi = runCmd(
       "nvidia-smi --query-gpu=name,driver_version,memory.total "
       "--format=csv,noheader,nounits 2>/dev/null | head -1");
@@ -12351,14 +12666,13 @@ int main(int argc, char *argv[]) {
       s.gpu = runCmd("lspci 2>/dev/null | grep -E 'VGA|3D' | head -1 "
                      "| sed 's/^[^:]*: //'");
     }
+#endif
     if (s.gpu.isEmpty()) s.gpu = "n/a";
 
-    QString memKb = readField("/proc/meminfo", "MemTotal");
-    if (memKb.endsWith(" kB")) memKb.chop(3);
-    bool mok = false;
-    const qint64 kb = memKb.trimmed().toLongLong(&mok);
-    s.ram = mok ? QString::number(kb / 1024.0 / 1024.0, 'f', 1) + " GiB"
-                : QStringLiteral("n/a");
+    const qint64 mib = carla_studio_proc::systemTotalRamMiB();
+    s.ram = (mib > 0)
+              ? QString::number(mib / 1024.0, 'f', 1) + " GiB"
+              : QStringLiteral("n/a");
     return s;
   };
 
