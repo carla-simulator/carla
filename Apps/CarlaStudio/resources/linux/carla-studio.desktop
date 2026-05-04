@@ -1,9 +1,0 @@
-[Desktop Entry]
-Type=Application
-Name=Carla Studio
-Comment=Driving simulation
-Exec=carla-studio %U
-Icon=carla-studio
-Terminal=false
-Categories=Game;Simulation;
-StartupNotify=true
