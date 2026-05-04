@@ -24,9 +24,13 @@ if (NOT TARGET Carla::carla-client)
     REQUIRED
   )
   add_library (Carla::carla-client STATIC IMPORTED)
+  separate_arguments (Carla_INTERFACE_DEFINITIONS NATIVE_COMMAND
+    "@CARLA_EXPORTED_DEFINITIONS@")
   set_target_properties (Carla::carla-client PROPERTIES
     IMPORTED_LOCATION             "${Carla_CLIENT_LIBRARY}"
     INTERFACE_INCLUDE_DIRECTORIES "${Carla_INCLUDE_DIR}"
+    INTERFACE_COMPILE_DEFINITIONS "${Carla_INTERFACE_DEFINITIONS}"
+    INTERFACE_COMPILE_FEATURES    cxx_std_20
   )
 endif ()
 

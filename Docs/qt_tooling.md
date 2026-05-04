@@ -75,7 +75,7 @@ Should output: `Using Qt version 5.x.x` or `6.x.x`
 ## Build
 
 ```sh
-cmake -S . -B Build
+cmake -S . -B Build -DBUILD_CARLA_STUDIO=ON
 cmake --build Build --target carla-studio
 ```
 
@@ -91,7 +91,9 @@ cmake --build Build --target carla-studio
 
 ## Optional
 
-`BUILD_QT_TOOLING` defaults to `OFF`. If Qt6 missing, build skips Qt and continues normally.
+`BUILD_CARLA_STUDIO` defaults to `OFF`. If Qt6/Qt5 dev libs are not installed,
+the `carla-studio` target is silently skipped (warning logged) and the rest
+of the workspace builds normally.
 
 ## CarlaStudio docs
 

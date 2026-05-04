@@ -9,113 +9,77 @@
 #include "vehicle_import/ImporterClient.h"
 
 #include <QByteArray>
+#include <QHostAddress>
 #include <QJsonDocument>
-
-#include <arpa/inet.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <QTcpSocket>
 
 namespace carla_studio::vehicle_import {
 
+namespace {
+constexpr int kProbeTimeoutMs = 200;
+constexpr int kIoTimeoutMs    = 30000;
+constexpr quint32 kMaxBody    = 10u * 1024u * 1024u;
+}
+
 bool probeImporterPort() {
-  int sock = ::socket(AF_INET, SOCK_STREAM, 0);
-  if (sock < 0) return false;
-  struct sockaddr_in addr{};
-  addr.sin_family = AF_INET;
-  addr.sin_port   = htons(kImporterPort);
-  inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
-
-  const int flags = fcntl(sock, F_GETFL, 0);
-  fcntl(sock, F_SETFL, flags | O_NONBLOCK);
-
-  bool ok = false;
-  const int r = ::connect(sock, (struct sockaddr *)&addr, sizeof(addr));
-  if (r == 0) {
-    ok = true;
-  } else if (errno == EINPROGRESS) {
-    fd_set wfds; FD_ZERO(&wfds); FD_SET(sock, &wfds);
-    struct timeval tv{0, 200 * 1000};
-    if (::select(sock + 1, nullptr, &wfds, nullptr, &tv) > 0) {
-      int err = 0;
-      socklen_t len = sizeof(err);
-      getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &len);
-      ok = (err == 0);
-    }
-  }
-  ::close(sock);
-  return ok;
+  QTcpSocket sock;
+  sock.connectToHost(QHostAddress::LocalHost, kImporterPort);
+  return sock.waitForConnected(kProbeTimeoutMs);
 }
 
 QString sendJson(const QJsonObject &spec) {
   const QByteArray payload = QJsonDocument(spec).toJson(QJsonDocument::Compact);
 
-  int sock = ::socket(AF_INET, SOCK_STREAM, 0);
-  if (sock < 0) return QString();
+  QTcpSocket sock;
+  sock.connectToHost(QHostAddress::LocalHost, kImporterPort);
+  if (!sock.waitForConnected(kIoTimeoutMs)) return QString();
 
-  struct sockaddr_in addr{};
-  addr.sin_family = AF_INET;
-  addr.sin_port   = htons(kImporterPort);
-  inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
+  const quint32 len = static_cast<quint32>(payload.size());
+  unsigned char hdr[4] = {
+    static_cast<unsigned char>(len & 0xFF),
+    static_cast<unsigned char>((len >> 8)  & 0xFF),
+    static_cast<unsigned char>((len >> 16) & 0xFF),
+    static_cast<unsigned char>((len >> 24) & 0xFF),
+  };
 
-  if (::connect(sock, (struct sockaddr *)&addr, sizeof(addr)) != 0) {
-    ::close(sock);
-    return QString();
-  }
-
-  struct timeval rcvTimeout{30, 0};
-  ::setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &rcvTimeout, sizeof(rcvTimeout));
-  struct timeval sndTimeout{30, 0};
-  ::setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &sndTimeout, sizeof(sndTimeout));
-
-  auto sendAll = [sock](const void *data, size_t total) -> bool {
-    const auto *p = static_cast<const char *>(data);
-    size_t sent = 0;
+  auto writeAll = [&](const char *data, qint64 total) -> bool {
+    qint64 sent = 0;
     while (sent < total) {
-      const ssize_t w = ::send(sock, p + sent, total - sent, 0);
-      if (w > 0) { sent += static_cast<size_t>(w); continue; }
-      if (w < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) continue;
-      return false;
+      const qint64 n = sock.write(data + sent, total - sent);
+      if (n < 0) return false;
+      sent += n;
+      if (!sock.waitForBytesWritten(kIoTimeoutMs)) return false;
     }
     return true;
   };
 
-  const quint32 len = (quint32)payload.size();
-  unsigned char hdr[4] = {
-    (unsigned char)(len & 0xFF),
-    (unsigned char)((len >> 8)  & 0xFF),
-    (unsigned char)((len >> 16) & 0xFF),
-    (unsigned char)((len >> 24) & 0xFF),
-  };
-  if (!sendAll(hdr, 4)) { ::close(sock); return QString(); }
-  if (!sendAll(payload.constData(), payload.size())) { ::close(sock); return QString(); }
+  if (!writeAll(reinterpret_cast<const char *>(hdr), 4)) return QString();
+  if (!writeAll(payload.constData(), payload.size()))    return QString();
 
   unsigned char rhdr[4] = {0};
-  ssize_t n = 0;
+  qint64 n = 0;
   while (n < 4) {
-    const ssize_t r = ::recv(sock, rhdr + n, 4 - n, 0);
-    if (r > 0) { n += r; continue; }
-    if (r < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) continue;
-    ::close(sock); return QString();
+    if (sock.bytesAvailable() <= 0 && !sock.waitForReadyRead(kIoTimeoutMs))
+      return QString();
+    const qint64 r = sock.read(reinterpret_cast<char *>(rhdr) + n, 4 - n);
+    if (r <= 0) return QString();
+    n += r;
   }
-  const quint32 rlen = (quint32)rhdr[0]
-                     | ((quint32)rhdr[1] <<  8)
-                     | ((quint32)rhdr[2] << 16)
-                     | ((quint32)rhdr[3] << 24);
-  if (rlen == 0 || rlen > 10u * 1024u * 1024u) { ::close(sock); return QString(); }
+  const quint32 rlen = static_cast<quint32>(rhdr[0])
+                     | (static_cast<quint32>(rhdr[1]) <<  8)
+                     | (static_cast<quint32>(rhdr[2]) << 16)
+                     | (static_cast<quint32>(rhdr[3]) << 24);
+  if (rlen == 0 || rlen > kMaxBody) return QString();
 
   QByteArray body(rlen, 0);
-  ssize_t got = 0;
-  while (got < (ssize_t)rlen) {
-    const ssize_t r = ::recv(sock, body.data() + got, rlen - got, 0);
-    if (r > 0) { got += r; continue; }
-    if (r < 0 && (errno == EINTR || errno == EAGAIN || errno == EWOULDBLOCK)) continue;
-    ::close(sock); return QString();
+  qint64 got = 0;
+  while (got < static_cast<qint64>(rlen)) {
+    if (sock.bytesAvailable() <= 0 && !sock.waitForReadyRead(kIoTimeoutMs))
+      return QString();
+    const qint64 r = sock.read(body.data() + got, rlen - got);
+    if (r <= 0) return QString();
+    got += r;
   }
-  ::close(sock);
   return QString::fromUtf8(body);
 }
 

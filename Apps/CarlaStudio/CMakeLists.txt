@@ -40,12 +40,13 @@ set (CARLA_STUDIO_APP_SOURCE "${CARLA_STUDIO_SOURCE_DIR}/app/carla_studio.cpp")
 set (CARLA_STUDIO_APP_TEST_SOURCE "${CARLA_STUDIO_SOURCE_DIR}/tests/CarlaStudioAppTest.cpp")
 set (CARLA_STUDIO_QRC "${CARLA_STUDIO_RESOURCE_DIR}/carla-studio.qrc")
 
-find_package (Qt6 COMPONENTS Widgets Core Concurrent QUIET)
+find_package (Qt6 COMPONENTS Widgets Core Concurrent Network QUIET)
 if (Qt6_FOUND)
   set (CARLA_STUDIO_QT_VERSION 6)
   set (CARLA_STUDIO_QT_WIDGETS_TARGET Qt6::Widgets)
   set (CARLA_STUDIO_QT_CORE_TARGET Qt6::Core)
   set (CARLA_STUDIO_QT_CONCURRENT_TARGET Qt6::Concurrent)
+  set (CARLA_STUDIO_QT_NETWORK_TARGET Qt6::Network)
   find_package (Qt6 COMPONENTS Gamepad Test QUIET)
   find_package (Qt6 COMPONENTS 3DCore 3DRender 3DInput 3DExtras QUIET)
   if (TARGET Qt6::3DCore AND TARGET Qt6::3DRender
@@ -55,10 +56,10 @@ if (Qt6_FOUND)
       Qt6::3DCore Qt6::3DRender Qt6::3DInput Qt6::3DExtras)
   endif ()
 else ()
-  find_package (Qt5 COMPONENTS Widgets Core Concurrent QUIET)
+  find_package (Qt5 COMPONENTS Widgets Core Concurrent Network QUIET)
   if (NOT Qt5_FOUND)
     message (WARNING
-      "CARLA Studio: Qt6 (Widgets/Core/Concurrent) and Qt5 (Widgets/Core/Concurrent) "
+      "CARLA Studio: Qt6 (Widgets/Core/Concurrent/Network) and Qt5 (Widgets/Core/Concurrent/Network) "
       "were both not found. Skipping CarlaStudio build. Install Qt to enable.")
     return ()
   endif ()
@@ -66,6 +67,7 @@ else ()
   set (CARLA_STUDIO_QT_WIDGETS_TARGET Qt5::Widgets)
   set (CARLA_STUDIO_QT_CORE_TARGET Qt5::Core)
   set (CARLA_STUDIO_QT_CONCURRENT_TARGET Qt5::Concurrent)
+  set (CARLA_STUDIO_QT_NETWORK_TARGET Qt5::Network)
   find_package (Qt5 COMPONENTS Gamepad Test QUIET)
   find_package (Qt5 COMPONENTS 3DCore 3DRender 3DInput 3DExtras QUIET)
   if (TARGET Qt5::3DCore AND TARGET Qt5::3DRender
@@ -177,6 +179,7 @@ target_link_libraries (
   carla-studio-vehicle-import PUBLIC
   ${CARLA_STUDIO_QT_WIDGETS_TARGET}
   ${CARLA_STUDIO_QT_CONCURRENT_TARGET}
+  ${CARLA_STUDIO_QT_NETWORK_TARGET}
 )
 
 # Platform-specific icon resources that live alongside the executable sources.

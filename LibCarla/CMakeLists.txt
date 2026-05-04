@@ -417,6 +417,9 @@ if (BUILD_CARLA_CLIENT)
     COMPATIBILITY SameMajorVersion
   )
 
+  string (REPLACE ";" " " CARLA_EXPORTED_DEFINITIONS
+    "${CARLA_COMMON_DEFINITIONS};${CARLA_EXCEPTION_DEFINITIONS};${CARLA_RTTI_DEFINITIONS}")
+
   configure_package_config_file (
     ${CARLA_WORKSPACE_PATH}/CMake/CarlaConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/CarlaConfig.cmake

@@ -79,9 +79,15 @@ QProcess *verifyAsync(QObject *parent,
     "--max-time", "12",
     "-w", "\n%{http_code}",
     "-H", "Accept: application/json",
-    "-H", QStringLiteral("Authorization: Bearer %1").arg(token),
+    "--config", "-",
     "https://huggingface.co/api/whoami-v2",
   };
+  QString sanitized = token;
+  sanitized.replace('\\', QStringLiteral("\\\\"));
+  sanitized.replace('"',  QStringLiteral("\\\""));
+  const QByteArray curlConfig =
+      QStringLiteral("header = \"Authorization: Bearer %1\"\n")
+        .arg(sanitized).toUtf8();
 
   QObject::connect(proc, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
     parent, [proc, done](int , QProcess::ExitStatus exitStatus) {
@@ -146,6 +152,10 @@ QProcess *verifyAsync(QObject *parent,
     });
 
   proc->start("curl", args);
+  if (proc->waitForStarted(5000)) {
+    proc->write(curlConfig);
+    proc->closeWriteChannel();
+  }
   return proc;
 }
 
