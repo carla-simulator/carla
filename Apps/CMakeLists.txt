@@ -1,3 +1,5 @@
 carla_message ("CARLA Building application layer")
 
-add_subdirectory (CarlaStudio)
+if (EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/CarlaStudio")
+  add_subdirectory (CarlaStudio)
+endif ()

@@ -138,7 +138,7 @@ void BasicAgent::SetDestination(const geom::Location &end,
     start_location = target_wpt->GetTransform().location;
     clean_queue = true;
   } else {
-    start_location = _vehicle->GetLocation();
+    start_location = *start;  // Use the provided start location
     clean_queue = false;
   }
 
@@ -158,6 +158,7 @@ void BasicAgent::SetGlobalPlan(const std::vector<LocalPlanner::PlanItem> &plan,
 std::vector<LocalPlanner::PlanItem>
 BasicAgent::TraceRoute(SharedPtr<client::Waypoint> start,
                        SharedPtr<client::Waypoint> end) {
+  if (!start || !end) return {};  // Null check before dereference
   const auto &start_loc = start->GetTransform().location;
   const auto &end_loc   = end->GetTransform().location;
   return _global_planner->TraceRoute(start_loc, end_loc);

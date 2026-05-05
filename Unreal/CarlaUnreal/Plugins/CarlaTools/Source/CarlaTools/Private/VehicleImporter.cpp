@@ -90,7 +90,7 @@ bool FVehicleImporterServer::Init()
 
   ListenSocket = FTcpSocketBuilder(TEXT("CarlaVehicleImporterListen"))
     .AsReusable()
-    .BoundToEndpoint(FIPv4Endpoint(FIPv4Address::Any, GImporterPort))
+    .BoundToEndpoint(FIPv4Endpoint(FIPv4Address::Loopback, GImporterPort))
     .Listening(1)
     .Build();
 
@@ -107,7 +107,9 @@ bool FVehicleImporterServer::Init()
 
 uint32 FVehicleImporterServer::Run()
 {
-  while (bRunning)
+  FSocket* LocalSocket = ListenSocket;  // Local copy to prevent race condition
+  if (!LocalSocket) return 0;
+  while (bRunning && LocalSocket)
   {
     bool bPending = false;
     if (ListenSocket->WaitForPendingConnection(bPending, FTimespan::FromSeconds(1.0)))
@@ -188,9 +190,11 @@ void FVehicleImporterServer::ServeClient(FSocket* Client)
   }
 
   TArray<uint8> Body;
-  Body.SetNumUninitialized(MsgLen);
+  Body.SetNumUninitialized(MsgLen + 1);  // +1 for null terminator
   if (!RecvAll(Client, Body.GetData(), MsgLen))
     return;
+
+  Body[MsgLen] = \'\0\';  // Null-terminate before UTF8_TO_TCHAR
 
   const FString JsonStr = FString(UTF8_TO_TCHAR(
     reinterpret_cast<const ANSICHAR*>(Body.GetData())));
