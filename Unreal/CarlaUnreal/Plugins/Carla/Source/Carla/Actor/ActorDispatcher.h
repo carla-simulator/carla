@@ -105,7 +105,7 @@ private:
 
   TArray<SpawnFunctionType> SpawnFunctions;
 
-  TArray<TSubclassOf<AActor>> Classes;
+  TMap<FString, TSubclassOf<AActor>> Classes;
 
   FActorRegistry Registry;
 
