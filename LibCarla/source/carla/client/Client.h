@@ -9,6 +9,7 @@
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/World.h"
 #include "carla/client/Map.h"
+#include "carla/geom/Transform.h"
 #include "carla/PythonUtil.h"
 #include "carla/trafficmanager/TrafficManager.h"
 
@@ -139,8 +140,8 @@ namespace client {
     }
 
     std::string ReplayFile(std::string name, double start, double duration,
-        uint32_t follow_id, bool replay_sensors) {
-      return _simulator->ReplayFile(name, start, duration, follow_id, replay_sensors);
+        uint32_t follow_id, bool replay_sensors, geom::Transform offset) {
+      return _simulator->ReplayFile(name, start, duration, follow_id, replay_sensors, offset);
     }
 
     void StopReplayer(bool keep_actors) {

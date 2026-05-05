@@ -12,7 +12,7 @@
 #include <sstream>
 
 // structure to save replaying info when need to load a new map (static member by now)
-CarlaReplayer::PlayAfterLoadMap CarlaReplayer::Autoplay { false, "", "", 0.0, 0.0, 0, 1.0, false };
+CarlaReplayer::PlayAfterLoadMap CarlaReplayer::Autoplay { false, "", "", 0.0, 0.0, 0, FTransform(), 1.0, false };
 
 void CarlaReplayer::Stop(bool bKeepActors)
 {
@@ -104,7 +104,7 @@ double CarlaReplayer::GetTotalTime(void)
 }
 
 std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, double Duration,
-    uint32_t ThisFollowId, bool ReplaySensors)
+    uint32_t ThisFollowId, const FTransform Offset, bool ReplaySensors)
 {
   std::stringstream Info;
   std::string s;
@@ -151,6 +151,7 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
     Autoplay.TimeStart = TimeStart;
     Autoplay.Duration = Duration;
     Autoplay.FollowId = ThisFollowId;
+    Autoplay.FollowOffset = Offset;
     Autoplay.TimeFactor = TimeFactor;
     Autoplay.ReplaySensors = ReplaySensors;
   }
@@ -182,8 +183,9 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
   if (IgnoreSpectator)
     Info << "Ignoring Spectator camera" << std::endl;
 
-  // set the follow Id
+  // set the follow Id and offset
   FollowId = ThisFollowId;
+  FollowOffset = Offset;
 
   bReplaySensors = ReplaySensors;
   // if we don't need to load a new map, then start
@@ -243,8 +245,9 @@ void CarlaReplayer::CheckPlayAfterMapLoaded(void)
   else
     TimeToStop = TotalTime;
 
-  // set the follow Id
+  // set the follow Id and offset
   FollowId = Autoplay.FollowId;
+  FollowOffset = Autoplay.FollowOffset;
 
   bReplaySensors = Autoplay.ReplaySensors;
 
@@ -790,13 +793,12 @@ void CarlaReplayer::UpdatePositions(double Per, double DeltaTime)
         InterpolatePosition(Pos, Pos, 0.0, DeltaTime);
       }
     }
+  }
 
-    // move the camera to follow this actor if required
-    if (NewFollowId != 0)
-    {
-      if (NewFollowId == Pos.DatabaseId)
-        Helper.SetCameraPosition(NewFollowId, FVector(-1000, 0, 500), FQuat::MakeFromEuler({0, -25, 0}));
-    }
+  // move the camera to follow the desired actor
+  if (NewFollowId != 0)
+  {
+    Helper.SetCameraPosition(NewFollowId, FollowOffset.GetTranslation(), FollowOffset.GetRotation());
   }
 }
 
