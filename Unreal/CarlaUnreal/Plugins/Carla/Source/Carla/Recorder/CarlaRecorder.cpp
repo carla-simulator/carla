@@ -157,7 +157,7 @@ void ACarlaRecorder::Ticking(float DeltaSeconds)
     // write all data for this frame
     Write(DeltaSeconds);
   }
-  else if (Episode->GetReplayer()->IsEnabled())
+  if (Episode->GetReplayer()->IsEnabled())
   {
     // replayer
     Episode->GetReplayer()->Tick(DeltaSeconds);
@@ -435,9 +435,6 @@ std::string ACarlaRecorder::Start(
   FString MapName,
   bool AdditionalData)
 {
-  // stop replayer if any in course
-  if (Replayer.IsEnabled())
-    Replayer.Stop();
 
   // stop recording
   Stop();
