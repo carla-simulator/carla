@@ -94,7 +94,10 @@ public:
   void Disable(void);
 
   // start / stop
-  std::string Start(std::string Name, FString MapName, bool AdditionalData = false);
+  std::string Start(
+    std::string Name,
+    FString MapName,
+    bool AdditionalData = false);
 
   void Stop(void);
 
@@ -168,8 +171,10 @@ public:
   std::string ShowFileActorsBlocked(std::string Name, double MinTime = 30, double MinDistance = 10);
 
   // replayer
-  std::string ReplayFile(std::string Name, double TimeStart, double Duration,
-      uint32_t FollowId, const FTransform Offset, bool ReplaySensors);
+  std::string ReplayFile(
+    std::string Name, double TimeStart, double Duration,
+    uint32_t FollowId, const FTransform Offset, bool ReplaySensors,
+    std::string MapOverride);
   void SetReplayerTimeFactor(double TimeFactor);
   void SetReplayerIgnoreHero(bool IgnoreHero);
   void SetReplayerIgnoreSpectator(bool IgnoreSpectator);

@@ -75,6 +75,10 @@ def main():
         '--top-view', action="store_true",
         help='enable top-down camera view when following an actor')
     argparser.add_argument(
+        '-m', '--map-override',
+        type=str,
+        help='The name of the map to load instead of whatever the log file indicates.')
+    argparser.add_argument(
         '--factor', default=1, type=float,
         help='Initial recorder factor')
 
@@ -131,7 +135,14 @@ def main():
         offset = carla.Transform(carla.Location(0, 0, 40), carla.Rotation(-90, 0, 0))
 
     print("\033[1m> Starting the replayer\033[0m")
-    client.replay_file(args.file, args.start_time, args.end_time, follow_id, False, offset)
+    client.replay_file(
+        args.file,
+        args.start_time,
+        args.end_time,
+        follow_id,
+        False,
+        offset,
+        map_override=args.map_override if args.map_override is not None else "")
     client.set_replayer_time_factor(args.factor)
 
     tick(world)

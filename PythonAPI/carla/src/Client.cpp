@@ -193,9 +193,10 @@ void export_client() {
         double duration, \
         uint32_t follow_id, \
         bool replay_sensors, \
-        cg::Transform offset) { \
+        cg::Transform offset, \
+        std::string map_override) { \
       carla::PythonUtil::ReleaseGIL unlock; \
-      return self.fn(name, time_start, duration, follow_id, replay_sensors, offset); \
+      return self.fn(name, time_start, duration, follow_id, replay_sensors, offset, map_override); \
     }, \
     ( \
       arg("name"), \
@@ -203,7 +204,8 @@ void export_client() {
       arg("duration"), \
       arg("follow_id"), \
       arg("replay_sensors")=false, \
-      arg("offset")=cg::Transform(cg::Location(cg::Vector3D(-10, 0, 5)), cg::Rotation(-25, 0, 0)))
+      arg("offset")=cg::Transform(cg::Location(cg::Vector3D(-10, 0, 5)), cg::Rotation(-25, 0, 0)), \
+      arg("map_override")="")
 
   class_<cc::Client>("Client",
       init<std::string, uint16_t, size_t>((arg("host")="127.0.0.1", arg("port")=2000, arg("worker_threads")=0u)))
