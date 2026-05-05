@@ -110,6 +110,7 @@ std::string CarlaReplayer::ReplayFile(
   uint32_t ThisFollowId,
   const FTransform Offset,
   bool ReplaySensors,
+  bool ReplayWeather,
   std::string MapOverride)
 {
   std::stringstream Info;
@@ -163,6 +164,7 @@ std::string CarlaReplayer::ReplayFile(
     Autoplay.FollowOffset = Offset;
     Autoplay.TimeFactor = TimeFactor;
     Autoplay.ReplaySensors = ReplaySensors;
+    Autoplay.ReplayWeather = ReplayWeather;
   }
 
   // get Total time of recorder
@@ -197,6 +199,7 @@ std::string CarlaReplayer::ReplayFile(
   FollowOffset = Offset;
 
   bReplaySensors = ReplaySensors;
+  bReplayWeather = ReplayWeather;
   // if we don't need to load a new map, then start
   if (!Autoplay.Enabled)
   {
@@ -259,6 +262,7 @@ void CarlaReplayer::CheckPlayAfterMapLoaded(void)
   FollowOffset = Autoplay.FollowOffset;
 
   bReplaySensors = Autoplay.ReplaySensors;
+  bReplayWeather = Autoplay.ReplayWeather;
 
   // apply time factor
   TimeFactor = Autoplay.TimeFactor;
@@ -412,6 +416,11 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
           ProcessWalkerBones();
         else
           SkipPacket();
+        break;
+
+      // weather
+      case static_cast<char>(CarlaRecorderPacketId::Weather):
+        ProcessWeather();
         break;
 
       // frame end
@@ -684,6 +693,22 @@ void CarlaReplayer::ProcessDoorVehicle(void)
     if (!(IgnoreHero && IsHeroMap[DoorVehicle.DatabaseId]))
     {
       Helper.ProcessReplayerDoorVehicle(DoorVehicle);
+    }
+  }
+}
+
+void CarlaReplayer::ProcessWeather(void)
+{
+  uint16_t Total;
+  CarlaRecorderWeather Weather;
+
+  // read Total weathers
+  ReadValue<uint16_t>(File, Total);
+  for (uint16_t i = 0; i < Total; ++i)
+  {
+    Weather.Read(File);
+    if (bReplayWeather){
+      Helper.ProcessReplayerWeather(Weather);
     }
   }
 }

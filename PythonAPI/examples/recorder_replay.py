@@ -79,6 +79,9 @@ def main():
         type=str,
         help='The name of the map to load instead of whatever the log file indicates.')
     argparser.add_argument(
+        '--replay-weather', action="store_true",
+        help='reapply the weather changes recorded in the log')
+    argparser.add_argument(
         '--factor', default=1, type=float,
         help='Initial recorder factor')
 
@@ -141,6 +144,7 @@ def main():
         args.end_time,
         follow_id,
         False,
+        args.replay_weather,
         offset,
         map_override=args.map_override if args.map_override is not None else "")
     client.set_replayer_time_factor(args.factor)

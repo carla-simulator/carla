@@ -2477,6 +2477,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       double duration,
       uint32_t follow_id,
       bool replay_sensors,
+      bool replay_weather,
       const cr::Transform offset,
       std::string map_override) -> R<std::string>
   {
@@ -2488,6 +2489,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
         follow_id,
         offset,
         replay_sensors,
+        replay_weather,
         map_override));
   };
 
