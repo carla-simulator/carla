@@ -8,7 +8,7 @@
 #include <string>
 
 #include "carla/ros2/subscribers/BaseSubscriber.h"
-#include "carla/ros2/dds/DDSMiddlewareFactory.h"
+#include "carla/ros2/middleware/MiddlewareFactory.h"
 #include "carla/Logging.h"
 
 namespace carla {
@@ -23,7 +23,7 @@ namespace ros2 {
 #ifdef LIBCARLA_WITH_GTEST
       if (!_middleware) {
 #endif
-        _middleware = DDSMiddlewareFactory::CreateSubscriber<S>();
+        _middleware = MiddlewareFactory::CreateSubscriber<S>();
         if (!_middleware) {
           log_error("SubscriberImpl: Failed to create middleware subscriber");
           return false;
@@ -56,7 +56,7 @@ namespace ros2 {
     bool HasNewMessage() { return _new_message; }
 
 #ifdef LIBCARLA_WITH_GTEST
-    void SetMiddlewareForTesting(std::unique_ptr<IDDSSubscriberMiddleware> middleware) {
+    void SetMiddlewareForTesting(std::unique_ptr<ISubscriberMiddleware> middleware) {
       _middleware = std::move(middleware);
     }
 
@@ -67,7 +67,7 @@ namespace ros2 {
 #endif
 
   private:
-    std::unique_ptr<IDDSSubscriberMiddleware> _middleware;
+    std::unique_ptr<ISubscriberMiddleware> _middleware;
     msg_type _message;
     bool _new_message { false };
   };

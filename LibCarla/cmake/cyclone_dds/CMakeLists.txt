@@ -9,8 +9,8 @@ file(GLOB libcarla_carla_subscribers_headers "${libcarla_source_path}/carla/ros2
 file(GLOB libcarla_carla_listeners_headers   "${libcarla_source_path}/carla/ros2/listeners/*.h")
 file(GLOB libcarla_carla_types_headers       "${libcarla_source_path}/carla/ros2/types/*.h")
 file(GLOB libcarla_carla_types_msg_headers   "${libcarla_source_path}/carla/ros2/types/msg/*.h")
-file(GLOB libcarla_carla_dds_headers         "${libcarla_source_path}/carla/ros2/dds/*.h")
-file(GLOB libcarla_carla_dds_cyclonedds_headers "${libcarla_source_path}/carla/ros2/dds/cyclonedds/*.h")
+file(GLOB libcarla_carla_middleware_headers         "${libcarla_source_path}/carla/ros2/middleware/*.h")
+file(GLOB libcarla_carla_middleware_cyclonedds_headers "${libcarla_source_path}/carla/ros2/middleware/cyclonedds/*.h")
 
 install(FILES ${libcarla_carla_ros2_headers}          DESTINATION include/carla/ros2)
 install(FILES ${libcarla_carla_publishers_headers}    DESTINATION include/carla/ros2/publishers)
@@ -18,13 +18,13 @@ install(FILES ${libcarla_carla_subscribers_headers}   DESTINATION include/carla/
 install(FILES ${libcarla_carla_listeners_headers}     DESTINATION include/carla/ros2/listeners)
 install(FILES ${libcarla_carla_types_headers}         DESTINATION include/carla/ros2/types)
 install(FILES ${libcarla_carla_types_msg_headers}     DESTINATION include/carla/ros2/types/msg)
-install(FILES ${libcarla_carla_dds_headers}           DESTINATION include/carla/ros2/dds)
-install(FILES ${libcarla_carla_dds_cyclonedds_headers} DESTINATION include/carla/ros2/dds/cyclonedds)
+install(FILES ${libcarla_carla_middleware_headers}           DESTINATION include/carla/ros2/middleware)
+install(FILES ${libcarla_carla_middleware_cyclonedds_headers} DESTINATION include/carla/ros2/middleware/cyclonedds)
 
 file(GLOB cyclonedds_dependencies "${CYCLONEDDS_LIB_PATH}/*.a")
 install(FILES ${cyclonedds_dependencies} DESTINATION lib)
 install(DIRECTORY "${CYCLONEDDS_INCLUDE_PATH}/dds"   DESTINATION include)
 install(DIRECTORY "${CYCLONEDDS_INCLUDE_PATH}/ddsc"  DESTINATION include)
 
-# Note: dds/cyclonedds/ compiled sources (CycloneDDSSertype.cpp) are included
+# Note: middleware/cyclonedds/ compiled sources (CycloneDDSSertype.cpp) are included
 # in cmake/ros2/ (carla_ros2), compiled once with both middleware macros defined.

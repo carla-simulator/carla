@@ -2,9 +2,9 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
-#ifndef CARLA_ROS2_DDS_TESTING
+#ifndef CARLA_ROS2_MIDDLEWARE_TESTING
 
-#include "carla/ros2/dds/fastdds/FastDDSSharedParticipant.h"
+#include "carla/ros2/middleware/fastdds/FastDDSSharedParticipant.h"
 #include "carla/Logging.h"
 
 #include <fastdds/dds/domain/DomainParticipantFactory.hpp>
@@ -80,4 +80,4 @@ void FastDDSSharedParticipant::release_type(const std::string& type_name) {
 } // namespace ros2
 } // namespace carla
 
-#endif // !CARLA_ROS2_DDS_TESTING
+#endif // !CARLA_ROS2_MIDDLEWARE_TESTING

@@ -26,7 +26,7 @@
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
 #include <carla/ros2/ROS2.h>
-#include <carla/ros2/dds/DDSMiddleware.h>
+#include <carla/ros2/middleware/Middleware.h>
 #include <carla/streaming/EndPoint.h>
 #include <carla/streaming/Server.h>
 #include <compiler/enable-ue4-macros.h>
@@ -223,15 +223,15 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
   if (Settings.ROS2)
   {
     auto ROS2 = carla::ros2::ROS2::GetInstance();
-    std::string middleware_str = TCHAR_TO_UTF8(*Settings.DDSMiddlewareName);
-    auto parse_result = carla::ros2::DDSMiddlewareFromString(middleware_str);
+    std::string middleware_str = TCHAR_TO_UTF8(*Settings.MiddlewareName);
+    auto parse_result = carla::ros2::MiddlewareFromString(middleware_str);
     if (!parse_result.valid)
     {
       std::string available = carla::ros2::GetAvailableMiddlewareString();
       UE_LOG(LogCarla, Error,
           TEXT("ROS2: unrecognized --rmw value '%s'. "
                "Available: %s. ROS2 is DISABLED for this session."),
-          *Settings.DDSMiddlewareName,
+          *Settings.MiddlewareName,
           UTF8_TO_TCHAR(available.c_str()));
     }
     else
@@ -242,7 +242,7 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
         UE_LOG(LogCarla, Error,
             TEXT("ROS2: --rmw='%s' is not compiled into this binary. "
                  "Available: %s. ROS2 is DISABLED for this session."),
-            *Settings.DDSMiddlewareName,
+            *Settings.MiddlewareName,
             UTF8_TO_TCHAR(available.c_str()));
       }
     }

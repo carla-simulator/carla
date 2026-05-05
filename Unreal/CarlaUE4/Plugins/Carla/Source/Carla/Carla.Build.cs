@@ -321,8 +321,8 @@ public class Carla : ModuleRules
 
       if (UsingRos2)
       {
-        PublicDefinitions.Add("CARLA_ROS2_DDS_FASTDDS");
-        PublicDefinitions.Add("CARLA_ROS2_DDS_CYCLONEDDS");
+        PublicDefinitions.Add("CARLA_ROS2_MIDDLEWARE_FASTDDS");
+        PublicDefinitions.Add("CARLA_ROS2_MIDDLEWARE_CYCLONEDDS");
 
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_ros2")));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libddsc.a"));

@@ -1,4 +1,5 @@
 ## Latest Changes
+ * Renamed the ROS2 middleware abstraction directory `LibCarla/source/carla/ros2/dds/` to `middleware/` and dropped the `DDS` prefix from all abstraction-layer symbols (`IDDSPublisherMiddleware` → `IPublisherMiddleware`, `DDSMiddleware` enum → `Middleware`, `DDSMiddlewareFactory` → `MiddlewareFactory`, `CARLA_ROS2_DDS_*` macros → `CARLA_ROS2_MIDDLEWARE_*`, `Settings.DDSMiddlewareName` → `MiddlewareName`) to prepare for non-DDS middleware backends such as Zenoh. Vendor-specific FastDDS and CycloneDDS class names are unchanged. Pure rename, no behavior change
  * Added NumPy 2 compatibility to the PythonAPI: replaced removed aliases (`np.bool`, `np.matrix`) in example scripts and upgraded Boost to 1.90.0, which ships the upstream NumPy 2 C ABI fix (boostorg/python#432) so the C extension builds against both NumPy 1.x (>=1.18.4) and NumPy 2.x
  * Fixed North/South latitude inversion in geo-coordinate conversion for Transverse Mercator and UTM projections
  * Decoupled ROS2 DDS middleware from a hard FastDDS dependency to an agnostic strategy-pattern abstraction supporting both FastDDS and CycloneDDS, selectable at runtime via `--rmw=` CLI flag

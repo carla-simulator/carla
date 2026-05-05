@@ -3,10 +3,10 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 // Only meaningful when building the CycloneDDS middleware target.
-#ifndef CARLA_ROS2_DDS_TESTING
-#ifdef CARLA_ROS2_DDS_CYCLONEDDS
+#ifndef CARLA_ROS2_MIDDLEWARE_TESTING
+#ifdef CARLA_ROS2_MIDDLEWARE_CYCLONEDDS
 
-#include "carla/ros2/dds/cyclonedds/CycloneDDSSertype.h"
+#include "carla/ros2/middleware/cyclonedds/CycloneDDSSertype.h"
 #include "carla/Logging.h"
 
 #include <cstdlib>
@@ -291,5 +291,5 @@ dds_entity_t carla_cdr_get_participant() {
 } // namespace ros2
 } // namespace carla
 
-#endif // CARLA_ROS2_DDS_CYCLONEDDS
-#endif // !CARLA_ROS2_DDS_TESTING
+#endif // CARLA_ROS2_MIDDLEWARE_CYCLONEDDS
+#endif // !CARLA_ROS2_MIDDLEWARE_TESTING

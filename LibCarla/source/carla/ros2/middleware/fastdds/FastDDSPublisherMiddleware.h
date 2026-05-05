@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "carla/ros2/dds/IDDSPublisherMiddleware.h"
-#include "carla/ros2/dds/fastdds/FastDDSSharedParticipant.h"
-#include "carla/ros2/dds/fastdds/GenericCdrPubSubType.h"
+#include "carla/ros2/middleware/IPublisherMiddleware.h"
+#include "carla/ros2/middleware/fastdds/FastDDSSharedParticipant.h"
+#include "carla/ros2/middleware/fastdds/GenericCdrPubSubType.h"
 #include "carla/ros2/types/UserDataFormat.h"
 #include "carla/Logging.h"
 
@@ -30,7 +30,7 @@ namespace ros2 {
 namespace efd = eprosima::fastdds::dds;
 using erc = eprosima::fastrtps::types::ReturnCode_t;
 
-/// FastDDS implementation of IDDSPublisherMiddleware.
+/// FastDDS implementation of IPublisherMiddleware.
 /// Parameterized on a traits type T that provides:
 ///   T::msg_type  — the message type (a carla::ros2::msg::* POD struct)
 /// Serialization is handled by GenericCdrPubSubType<msg_type> via CdrSerialization.h.
@@ -46,7 +46,7 @@ using erc = eprosima::fastrtps::types::ReturnCode_t;
 /// perform REP-2011 type-hash-based endpoint matching without warning.
 template<typename T>
 class FastDDSPublisherMiddleware
-    : public IDDSPublisherMiddleware,
+    : public IPublisherMiddleware,
       public eprosima::fastdds::dds::DataWriterListener {
  public:
   using msg_type = typename T::msg_type;

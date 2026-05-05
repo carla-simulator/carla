@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "carla/ros2/dds/IDDSPublisherMiddleware.h"
-#include "carla/ros2/dds/cyclonedds/CycloneDDSSertype.h"
+#include "carla/ros2/middleware/IPublisherMiddleware.h"
+#include "carla/ros2/middleware/cyclonedds/CycloneDDSSertype.h"
 #include "carla/ros2/types/CdrSerialization.h"
 #include "carla/ros2/types/CdrTopicInfo.h"
 #include "carla/ros2/types/UserDataFormat.h"
@@ -13,8 +13,8 @@
 
 #include <atomic>
 
-#ifndef CARLA_ROS2_DDS_TESTING
-#ifdef CARLA_ROS2_DDS_CYCLONEDDS
+#ifndef CARLA_ROS2_MIDDLEWARE_TESTING
+#ifdef CARLA_ROS2_MIDDLEWARE_CYCLONEDDS
 
 #include <dds/dds.h>
 #include <dds/ddsi/ddsi_serdata.h>
@@ -23,7 +23,7 @@
 namespace carla {
 namespace ros2 {
 
-/// CycloneDDS implementation of IDDSPublisherMiddleware.
+/// CycloneDDS implementation of IPublisherMiddleware.
 ///
 /// Serializes msg::* POD structs to CDR via CdrSerialization.h and
 /// publishes them as raw CDR bytes using dds_writecdr().  No IDL-generated
@@ -32,7 +32,7 @@ namespace ros2 {
 /// Parameterized on a traits type T that provides:
 ///   T::msg_type  — the message type (a carla::ros2::msg::* POD struct)
 template<typename T>
-class CycloneDDSPublisherMiddleware : public IDDSPublisherMiddleware {
+class CycloneDDSPublisherMiddleware : public IPublisherMiddleware {
  public:
   using msg_type = typename T::msg_type;
 
@@ -155,5 +155,5 @@ class CycloneDDSPublisherMiddleware : public IDDSPublisherMiddleware {
 } // namespace ros2
 } // namespace carla
 
-#endif // CARLA_ROS2_DDS_CYCLONEDDS
-#endif // !CARLA_ROS2_DDS_TESTING
+#endif // CARLA_ROS2_MIDDLEWARE_CYCLONEDDS
+#endif // !CARLA_ROS2_MIDDLEWARE_TESTING

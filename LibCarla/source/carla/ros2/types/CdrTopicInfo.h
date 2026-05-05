@@ -41,9 +41,9 @@
 namespace carla {
 namespace ros2 {
 
-/// Per-type metadata needed by the DDS middleware layer.
+/// Per-type metadata needed by the middleware layer.
 ///
-/// type_name()           — ROS2-compatible DDS type name string used when
+/// type_name()           — ROS2-compatible type name string used when
 ///                         registering the type with a DomainParticipant.
 ///                         Follows the "pkg::msg::dds_::TypeName_" pattern.
 ///

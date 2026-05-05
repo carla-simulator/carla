@@ -9,50 +9,50 @@
 namespace carla {
 namespace ros2 {
 
-/// Enumeration of available DDS middleware implementations.
+/// Enumeration of available middleware implementations.
 /// Passed to ROS2::Enable() to select the middleware at startup.
 /// Once set, the middleware cannot be changed without restarting.
-enum class DDSMiddleware {
+enum class Middleware {
   FastDDS,
   CycloneDDS
 };
 
-/// Convert a DDSMiddleware enum value to a readable string.
-inline const char* DDSMiddlewareToString(DDSMiddleware middleware) {
+/// Convert a Middleware enum value to a readable string.
+inline const char* MiddlewareToString(Middleware middleware) {
   switch (middleware) {
-    case DDSMiddleware::FastDDS:
+    case Middleware::FastDDS:
       return "FastDDS";
-    case DDSMiddleware::CycloneDDS:
+    case Middleware::CycloneDDS:
       return "CycloneDDS";
   }
   return "Unknown";
 }
 
 /// Result of parsing a middleware name string.
-struct DDSMiddlewareParseResult {
+struct MiddlewareParseResult {
   bool valid;
-  DDSMiddleware middleware;
+  Middleware middleware;
 };
 
 /// Parse a middleware name string (lowercase). Returns {true, middleware} on match,
 /// {false, FastDDS} for unrecognized values.
-inline DDSMiddlewareParseResult DDSMiddlewareFromString(const std::string& name) {
+inline MiddlewareParseResult MiddlewareFromString(const std::string& name) {
   if (name == "fastdds") {
-    return {true, DDSMiddleware::FastDDS};
+    return {true, Middleware::FastDDS};
   }
   if (name == "cyclonedds") {
-    return {true, DDSMiddleware::CycloneDDS};
+    return {true, Middleware::CycloneDDS};
   }
-  return {false, DDSMiddleware::FastDDS};
+  return {false, Middleware::FastDDS};
 }
 
 /// Return a readable list of middleware implementations compiled into this binary.
 inline std::string GetAvailableMiddlewareString() {
   std::string result;
-#if defined(CARLA_ROS2_DDS_FASTDDS)
+#if defined(CARLA_ROS2_MIDDLEWARE_FASTDDS)
   result += "FastDDS";
 #endif
-#if defined(CARLA_ROS2_DDS_CYCLONEDDS)
+#if defined(CARLA_ROS2_MIDDLEWARE_CYCLONEDDS)
   if (!result.empty()) {
     result += ", ";
   }
@@ -64,10 +64,10 @@ inline std::string GetAvailableMiddlewareString() {
   return result;
 }
 
-/// Mangle a DDS type name into the ROS2-compatible format.
+/// Mangle a type name into the ROS2-compatible format.
 /// "sensor_msgs::msg::Image" becomes "sensor_msgs::msg::dds_::Image_".
 /// A bare name like "Image" becomes "dds_::Image_".
-inline std::string ToROS2DDSTypeName(const std::string& dds_type_name) {
+inline std::string ToROS2TypeName(const std::string& dds_type_name) {
   auto pos = dds_type_name.rfind("::");
   if (pos == std::string::npos) {
     return "dds_::" + dds_type_name + "_";

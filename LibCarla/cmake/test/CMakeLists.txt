@@ -28,7 +28,7 @@ file(GLOB libcarla_test_sources
 
 if (NOT LIBCARLA_WITH_ROS2)
   list(REMOVE_ITEM libcarla_test_sources
-      "${libcarla_source_path}/test/server/test_dds_middleware.cpp")
+      "${libcarla_source_path}/test/server/test_middleware.cpp")
 endif()
 
 file(GLOB libcarla_test_client_sources "")
