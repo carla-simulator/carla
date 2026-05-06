@@ -298,6 +298,11 @@ namespace detail {
     return _pimpl->CallAndWait<carla::rpc::VehiclePhysicsControl>("get_physics_control", vehicle);
   }
 
+  rpc::VehicleTelemetryData Client::GetVehicleTelemetryData(
+      rpc::ActorId vehicle) const {
+    return _pimpl->CallAndWait<carla::rpc::VehicleTelemetryData>("get_telemetry_data", vehicle);
+  }
+
   rpc::VehicleLightState Client::GetVehicleLightState(
       rpc::ActorId vehicle) const {
     return _pimpl->CallAndWait<carla::rpc::VehicleLightState>("get_vehicle_light_state", vehicle);
