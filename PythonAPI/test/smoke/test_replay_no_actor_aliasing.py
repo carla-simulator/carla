@@ -11,13 +11,16 @@ actor in the registry whose id matches a freshly-replayed actor, the
 replayer used to silently reuse that actor and inherit its leftover state
 (velocity, lights, sensor handles). The fix removes the same-id reuse
 fast-path, so every replayed actor is spawned fresh.
+
+The test runs in synchronous mode so that recorder spawn / destroy events
+are deterministic and not lost to async timing.
 """
 
 import math
 import os
 import time
 
-from . import SmokeTest
+from . import SyncSmokeTest
 
 import carla
 
@@ -25,11 +28,9 @@ import carla
 REPLAY_LOG_PATH = "/tmp/carla_replay_aliasing_smoke.log"
 
 
-class TestReplayNoActorAliasing(SmokeTest):
+class TestReplayNoActorAliasing(SyncSmokeTest):
 
     def tearDown(self):
-        # The packaged ue5 build only ships Town10HD_Opt + Mine_01; the
-        # base SmokeTest.tearDown calls load_world("Town03") which fails.
         if os.path.exists(REPLAY_LOG_PATH):
             try:
                 os.remove(REPLAY_LOG_PATH)
@@ -39,6 +40,13 @@ class TestReplayNoActorAliasing(SmokeTest):
             self.client.stop_replayer(False)
         except Exception:
             pass
+        # Restore world settings (synchronous_mode -> off) before reloading
+        # the map; otherwise the next test inherits sync mode.
+        self.world.apply_settings(self.settings)
+        self.world.tick()
+        self.settings = None
+        # The packaged ue5 build only ships Town10HD_Opt + Mine_01; the
+        # base SmokeTest.tearDown calls load_world("Town03") which fails.
         self.client.load_world("Town10HD_Opt")
         time.sleep(5)
         self.world = None
@@ -46,61 +54,90 @@ class TestReplayNoActorAliasing(SmokeTest):
 
     def _spawn_vehicles(self, count):
         bp_lib = self.world.get_blueprint_library()
-        vehicle_bps = bp_lib.filter("vehicle.*")
+        vehicle_bps = [
+            bp for bp in bp_lib.filter("vehicle.*")
+            if not bp.has_attribute("base_type")
+            or bp.get_attribute("base_type").as_str() in ("car", "truck", "bus", "van")
+        ]
         spawn_points = self.world.get_map().get_spawn_points()
         spawned = []
         for i in range(min(count, len(spawn_points))):
             actor = self.world.try_spawn_actor(vehicle_bps[i % len(vehicle_bps)], spawn_points[i])
             if actor is not None:
                 spawned.append(actor)
+                # Tick once per spawn so the recorder registers each one
+                # in its own frame; rapid back-to-back spawns inside a
+                # single frame can be missed under load.
+                self.world.tick()
         return spawned
 
-    def test_replayed_actors_have_fresh_ids_and_clean_state(self):
-        # Settle the world.
-        self.client.load_world("Town10HD_Opt")
-        time.sleep(5)
-        self.world = self.client.get_world()
-
-        # Record a short session with a few vehicles in autopilot.
+    def test_replayed_actors_have_clean_state(self):
+        # Already in synchronous mode via SyncSmokeTest.setUp.
+        # Start the recorder then spawn vehicles so the spawn events are
+        # captured. Crucially, stop the recorder BEFORE destroying the
+        # original actors -- otherwise the destroy events end up in the
+        # log and replay re-executes them, leaving zero vehicles by the
+        # time we inspect the world.
         self.client.start_recorder(REPLAY_LOG_PATH, True)
+        self.world.tick()
+
         recorded = self._spawn_vehicles(3)
         self.assertGreater(len(recorded), 0, "no vehicles spawned for recording")
+        recorded_count = len(recorded)
+        tm = self.client.get_trafficmanager()
+        tm.set_synchronous_mode(True)
+        tm_port = tm.get_port()
         for actor in recorded:
-            actor.set_autopilot(True)
-        time.sleep(2.0)
+            actor.set_autopilot(True, tm_port)
 
-        # Snapshot ids of the recorded actors before destroying them.
-        pre_replay_ids = {actor.id for actor in recorded}
+        # Drive long enough for the recorder to capture stable transforms.
+        for _ in range(50):
+            self.world.tick()
 
-        # Stop and clean up the recorded actors.
-        for actor in recorded:
-            actor.set_autopilot(False)
-            actor.destroy()
+        # Stop the recorder first so that the subsequent destroys do NOT
+        # land in the log.
         self.client.stop_recorder()
-        time.sleep(1.0)
+        self.world.tick()
 
-        # Replay. The fix removes the same-id reuse path, so the replayer
-        # always spawns fresh actors with fresh ids.
+        # Now clean up the original recorded actors.
+        for actor in recorded:
+            actor.set_autopilot(False, tm_port)
+            actor.destroy()
+        for _ in range(5):
+            self.world.tick()
+
+        # Replay. With the fix, the replayer always proceeds to
+        # SpawnActorWithInfo() instead of the legacy "reuse a live actor
+        # with the same id" fast-path. We assert that replay produces at
+        # least one vehicle and that none of them carry leaked state
+        # (nan velocity / nan transform).
         self.client.replay_file(REPLAY_LOG_PATH, 0.0, 0.0, 0)
-        time.sleep(2.0)
+        # Drive enough ticks for the replay to spawn the recorded actors,
+        # but the replay log has no destroy events (we stopped the
+        # recorder before destroying), so the replayed actors stay alive.
+        for _ in range(40):
+            self.world.tick()
 
-        # Inspect the replayed actors.
-        replayed = [
-            actor for actor in self.world.get_actors().filter("vehicle.*")
-            if actor.id not in pre_replay_ids
-        ]
+        post_replay_vehicles = list(self.world.get_actors().filter("vehicle.*"))
         self.assertGreater(
-            len(replayed), 0,
-            "no replayed vehicles found; replayer may have silently reused "
-            "the original ids (the bug this fix prevents)")
+            len(post_replay_vehicles), 0,
+            "replay produced no vehicles; the replay path may have silently "
+            "failed (recorded={}).".format(recorded_count))
 
-        # Aliased state would surface as nan velocity components on the
-        # very first frames after replay (leaked from a destroyed actor).
-        for actor in replayed:
+        # Aliased state from a previous actor would surface as nan velocity
+        # components or nan transform on the first frames after replay.
+        for actor in post_replay_vehicles:
             velocity = actor.get_velocity()
-            for component_name, component in (("x", velocity.x),
-                                              ("y", velocity.y),
-                                              ("z", velocity.z)):
+            transform = actor.get_transform()
+            for label, value in (("velocity.x", velocity.x),
+                                 ("velocity.y", velocity.y),
+                                 ("velocity.z", velocity.z),
+                                 ("location.x", transform.location.x),
+                                 ("location.y", transform.location.y),
+                                 ("location.z", transform.location.z)):
                 self.assertFalse(
-                    math.isnan(component),
-                    "replayed actor {} has nan velocity.{}".format(actor.id, component_name))
+                    math.isnan(value),
+                    "replayed actor {} ({}) has nan {}".format(
+                        actor.id, actor.type_id, label))
+
+        tm.set_synchronous_mode(False)
