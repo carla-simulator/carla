@@ -424,6 +424,11 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<std::vector<cr::WheelTelemetryData>>("vector_of_wheels_telemetry")
+    .def(boost::python::vector_indexing_suite<std::vector<cr::WheelTelemetryData>>())
+    .def(self_ns::str(self_ns::self))
+  ;
+
 
   class_<cr::WheelPhysicsControl>("WheelPhysicsControl", no_init)
     .def("__init__", raw_function(WheelPhysicsControl_init))
