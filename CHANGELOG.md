@@ -5,6 +5,7 @@
 * Removed Traffic Manager internal mutex and condition variables; synchronous mode now executes inline
 * Avoid actor aliasing on replay caused by reusing actors with the same id
 * Fixed segfault in traffic manager when trying to access not available vehicles
+* Fixed pre-existing UE4-era latent bugs in LibCarla and the Carla plugin: LidarData/SemanticLidarData `ResetMemory` boundary, DVSCamera `IsValid` inversion, SceneCaptureCamera profiler gating, `ViewActor` `TObjectPtr` wrap, ImageUtil `ReadImageData` null return, ShaderBasedSensor runtime-safe material loader, and `manual_control.py` sensor teardown drain.
 * Enabled the LibCarla GoogleTest suite (server + client) on ue5-dev and gated both in CI.
 * Fixed Digital Twin Tool crashes on dense metropolitan OSM data, vegetation spawning inside driving lanes on rural maps, and one-way streets being silently excluded from generation (#9565, #9678)
 * Added Ubuntu 24.04 support alongside Ubuntu 22.04
