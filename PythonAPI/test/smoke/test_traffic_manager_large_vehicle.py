@@ -22,11 +22,11 @@ from . import SyncSmokeTest
 import carla
 
 
-LARGE_VEHICLE_BLUEPRINTS = [
-    "vehicle.carlamotors.firetruck",
-    "vehicle.mercedes.sprinter",
-    "vehicle.mitsubishi.fusorosa",
-]
+# The TrafficManager classifies a vehicle as "large" via its base_type
+# attribute (matching ALSM's large_vehicle_types: bus / truck). We discover
+# the blueprint by attribute rather than hardcoded id so the test stays
+# robust across packaged-build naming differences.
+LARGE_VEHICLE_BASE_TYPES = ("truck", "bus")
 
 
 class TestTrafficManagerLargeVehicle(SyncSmokeTest):
@@ -45,12 +45,13 @@ class TestTrafficManagerLargeVehicle(SyncSmokeTest):
         self.world = None
         self.client = None
 
-    def _find_blueprint(self, ids):
+    def _find_large_vehicle_blueprint(self):
         bp_lib = self.world.get_blueprint_library()
-        for bp_id in ids:
-            matches = bp_lib.filter(bp_id)
-            if len(matches) > 0:
-                return matches[0]
+        for bp in bp_lib.filter("vehicle.*"):
+            if not bp.has_attribute("base_type"):
+                continue
+            if bp.get_attribute("base_type").as_str() in LARGE_VEHICLE_BASE_TYPES:
+                return bp
         return None
 
     def test_large_vehicle_autopilot_runs_without_nans(self):
@@ -58,7 +59,7 @@ class TestTrafficManagerLargeVehicle(SyncSmokeTest):
         tm.set_synchronous_mode(True)
         tm_port = tm.get_port()
 
-        truck_bp = self._find_blueprint(LARGE_VEHICLE_BLUEPRINTS)
+        truck_bp = self._find_large_vehicle_blueprint()
         self.assertIsNotNone(
             truck_bp, "no large-vehicle blueprint found; test cannot exercise wide-turn path")
 
