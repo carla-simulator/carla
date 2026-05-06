@@ -141,8 +141,12 @@ TEST(TrafficManagerInterpolation, InterpolateBufferAt_DistanceShorterThanFirstWa
 }
 
 TEST(TrafficManagerInterpolation, InterpolateBufferAt_DistanceBeyondLastWaypoint) {
-  // All waypoints fall within target_distance. Implementation should clamp
-  // to the last bracketing pair (n-2, n-1) and extrapolate forward.
+  // All waypoints fall within target_distance. The bracketing loop never
+  // breaks, so farthest_index stays 0 and the farthest_index == 0 edge-case
+  // fix-up takes us to indices (0, 1). Linear interp between waypoint 0
+  // (x=1) and waypoint 1 (x=2) at target_distance = 100:
+  //   t = (100 - 1) / (2 - 1) = 99
+  //   x = 1 + (2 - 1) * 99 = 100
   const std::vector<cg::Location> buffer{
       {1.0f, 0.0f, 0.0f},
       {2.0f, 0.0f, 0.0f},
@@ -150,13 +154,8 @@ TEST(TrafficManagerInterpolation, InterpolateBufferAt_DistanceBeyondLastWaypoint
   const cg::Location vehicle_location{0.0f, 0.0f, 0.0f};
 
   const auto [location, index] = InterpolateBufferAt(buffer, 100.0f, vehicle_location);
-  // closest_index loops to 2 (size-1), then edge-case fixup sets
-  // farthest_index = 2, closest_index = 1. Then linear interp between
-  // waypoint 1 (x=2) and waypoint 2 (x=3) at target_distance = 100:
-  //   t = (100 - 2) / (3 - 2) = 98
-  //   x = 2 + (3 - 2) * 98 = 100
   ExpectLocationNear(location, cg::Location{100.0f, 0.0f, 0.0f}, kLocationTolerance);
-  EXPECT_EQ(index, 1u);
+  EXPECT_EQ(index, 0u);
 }
 
 TEST(TrafficManagerInterpolation, InterpolateBufferAt_CoincidentBracketReturnsClosest) {

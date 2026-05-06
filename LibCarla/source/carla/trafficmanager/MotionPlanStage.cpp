@@ -363,8 +363,8 @@ float MotionPlanStage::CalculateBaseOffset(
 
   const float junction_length{large_vehicles[actor_id].first};
   const bool turn_flag{large_vehicles[actor_id].second};
-  constexpr float max_offset{LARGE_VEHICLES_JUNCTION_OFFSET};
-  constexpr float max_offset_point{LARGE_VEHICLES_JUNCTION_POINT};
+  const float max_offset{LARGE_VEHICLES_JUNCTION_OFFSET};
+  const float max_offset_point{LARGE_VEHICLES_JUNCTION_POINT};
 
   // From +offset to -offset; entries and exits stay at 0 for a smooth transition.
   // The vehicle opens up at the entry to perform a wider turn, then exits along a
