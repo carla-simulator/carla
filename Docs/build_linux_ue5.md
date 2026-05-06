@@ -1,10 +1,10 @@
 # Building CARLA in Linux with Unreal Engine 5.5
 
 !!! note
-    The Unreal Engine 5 version of CARLA requires Ubuntu version 22.04 at minimum. It has not been configured to build on older Ubuntu versions.
+    The Unreal Engine 5 version of CARLA supports Ubuntu 22.04 and Ubuntu 24.04. Older Ubuntu versions are not configured to build.
 
 !!! note
-    If you are using a different Ubuntu version (e.g., 24.04) and experiencing compilation issues, you can use the Docker-based development environment to build CARLA inside an Ubuntu 22.04 container. See [CARLA Docker Dev Environment (UE5)](build_devcontainer.md) for instructions.
+    If your host OS does not match either supported Ubuntu version (or you want to validate against a specific one without changing your host), use the Docker-based development environment. The `Util/Docker/build.sh` script defaults to Ubuntu 24.04 and accepts `--ubuntu-distro 22.04` to build the older variant. See [CARLA Docker Dev Environment (UE5)](build_devcontainer.md) for instructions.
 
 * __[Set up the environment](#set-up-the-environment)__  
 * __[Build and run CARLA UE5](#build-and-run-carla-ue5)__  

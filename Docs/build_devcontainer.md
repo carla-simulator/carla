@@ -1,6 +1,6 @@
 # CARLA Docker Dev Environment (UE5)
 
-CARLA UE5 can be built inside a Docker container running Ubuntu 22.04. This is useful when your host OS (e.g., Ubuntu 24.04) does not meet UE5's compilation requirements. The container provides the correct toolchain and dependencies while you keep all source code on the host.
+CARLA UE5 can be built inside a Docker container running Ubuntu 24.04 (default) or Ubuntu 22.04. This is useful when your host OS does not meet UE5's compilation requirements, or when you want to validate the build on a specific Ubuntu version without changing your host. The container provides the correct toolchain and dependencies while you keep all source code on the host.
 
 ## Prerequisites
 
@@ -20,16 +20,26 @@ Util/Docker/build.sh
 
 This builds two images:
 
-1. `carla-base:ue5-22.04` — base image with all build dependencies
-2. `carla-development:ue5-22.04` — development image with user matching your host UID/GID
+1. `carla-base:ue5-24.04` — base image with all build dependencies
+2. `carla-development:ue5-24.04` — development image with user matching your host UID/GID
 
 Options:
 
 ```sh
 Util/Docker/build.sh --force-rebuild                  # Rebuild from scratch (no cache)
 Util/Docker/build.sh --user 1000:1000                 # Custom UID:GID
-Util/Docker/build.sh --ubuntu-distro 22.04            # Specify Ubuntu version (default: 22.04)
+Util/Docker/build.sh --ubuntu-distro 24.04            # Specify Ubuntu version (default: 24.04, also supports 22.04)
 ```
+
+### Build for a different Ubuntu version
+
+The default is Ubuntu 24.04. To build the image (and the matching development container) on Ubuntu 22.04 instead, pass `--ubuntu-distro`:
+
+```sh
+Util/Docker/build.sh --ubuntu-distro 22.04
+```
+
+This produces `carla-base:ue5-22.04` and `carla-development:ue5-22.04`, with a separate `carla-development-ue5-22.04` volume so the two distros never share state. You can keep both images on the same host and switch between them by passing the matching `--ubuntu-distro` flag to `run.sh`.
 
 ---
 
@@ -66,7 +76,7 @@ Both are **bind mounts** — they point directly to the directories on your host
 - **Stop and restart** the container without losing any work — source code and build artifacts live on the host.
 - **Share the same UE5 build** across multiple containers or workflows.
 
-The container itself only provides the Ubuntu 22.04 environment, toolchain, and dependencies. Your actual project data never lives inside the container.
+The container itself only provides the Ubuntu environment (24.04 by default, 22.04 if you passed `--ubuntu-distro 22.04` at build time), toolchain, and dependencies. Your actual project data never lives inside the container.
 
 Use `--rebuild` to rebuild the image before running:
 
@@ -146,28 +156,28 @@ cmake --build Build --target package
 
 ## Running commands from additional terminals
 
-While the container is running, you can execute commands inside it from any terminal on the host using `docker exec`. The container name is `carla-development-ue5-22.04`.
+While the container is running, you can execute commands inside it from any terminal on the host using `docker exec`. The container name follows the pattern `carla-development-ue5-${UBUNTU_DISTRO}`, so the default 24.04 build is named `carla-development-ue5-24.04`. If you launched with `--ubuntu-distro 22.04`, swap the suffix in every example below to `22.04`.
 
 **Open an interactive shell** in the running container:
 
 ```sh
-docker exec -it carla-development-ue5-22.04 bash
+docker exec -it carla-development-ue5-24.04 bash
 ```
 
 **Run a single command** without entering the container:
 
 ```sh
 # Build the Python API from a second terminal while the editor is running
-docker exec carla-development-ue5-22.04 cmake --build Build --target carla-python-api-install
+docker exec carla-development-ue5-24.04 cmake --build Build --target carla-python-api-install
 
 # Build a package in the background
-docker exec carla-development-ue5-22.04 cmake --build Build --target package
+docker exec carla-development-ue5-24.04 cmake --build Build --target package
 
 # Run a Python example against the running simulator
-docker exec carla-development-ue5-22.04 python3 PythonAPI/examples/generate_traffic.py
+docker exec carla-development-ue5-24.04 python3 PythonAPI/examples/generate_traffic.py
 
 # Check build configuration
-docker exec carla-development-ue5-22.04 cmake --build Build --target help
+docker exec carla-development-ue5-24.04 cmake --build Build --target help
 ```
 
 This is useful for running parallel builds, launching Python scripts against a running simulator, or integrating with external tools (CI runners, editors, etc.) that need to invoke build commands inside the container.
@@ -181,9 +191,9 @@ Create `.devcontainer/devcontainer.json` in your CARLA repository:
 ```json
 {
     "name": "CARLA UE5 Dev",
-    "image": "carla-development:ue5-22.04",
+    "image": "carla-development:ue5-24.04",
 
-    "initializeCommand": "./Util/Docker/build.sh --ubuntu-distro 22.04",
+    "initializeCommand": "./Util/Docker/build.sh --ubuntu-distro 24.04",
 
     "updateRemoteUserUID": false,
 
@@ -201,18 +211,20 @@ Create `.devcontainer/devcontainer.json` in your CARLA repository:
     "runArgs": [
       "--rm",
       "--runtime", "nvidia",
-      "--name", "carla-ue5-development-22.04",
+      "--name", "carla-ue5-development-24.04",
       "--env", "NVIDIA_VISIBLE_DEVICES=all",
       "--env", "NVIDIA_DRIVER_CAPABILITIES=all",
       "--env", "CARLA_UNREAL_ENGINE_PATH=/workspaces/unreal-engine",
       "--env", "DISPLAY=${localEnv:DISPLAY}",
       "--volume", "/tmp/.X11-unix:/tmp/.X11-unix",
       "--volume", "${localEnv:CARLA_UNREAL_ENGINE_PATH}:/workspaces/unreal-engine",
-      "--mount", "source=carla-development-ue5-22.04,target=/home/carla",
+      "--mount", "source=carla-development-ue5-24.04,target=/home/carla",
       "--gpus", "all"
     ]
 }
 ```
+
+To target Ubuntu 22.04 instead, replace every `24.04` suffix above with `22.04` (image tag, container name, mount source) and pass `--ubuntu-distro 22.04` in `initializeCommand`.
 
 ---
 
