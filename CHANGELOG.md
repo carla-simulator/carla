@@ -1,5 +1,10 @@
 ## LATEST Changes
 
+* Improved Traffic Manager handling of large vehicles at junctions, including wide-turn behaviour and a smoothed lateral offset profile
+* Improved Traffic Manager PID controller using a direct angle to the target waypoint and smoother waypoint interpolation
+* Removed Traffic Manager internal mutex and condition variables; synchronous mode now executes inline
+* Avoid actor aliasing on replay caused by reusing actors with the same id
+* Fixed segfault in traffic manager when trying to access not available vehicles
 * Enabled the LibCarla GoogleTest suite (server + client) on ue5-dev and gated both in CI.
 * Fixed Digital Twin Tool crashes on dense metropolitan OSM data, vegetation spawning inside driving lanes on rural maps, and one-way streets being silently excluded from generation (#9565, #9678)
 * Added Ubuntu 24.04 support alongside Ubuntu 22.04
