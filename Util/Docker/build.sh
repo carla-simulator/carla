@@ -14,7 +14,7 @@ User and group options:
 
 Ubuntu distribution:
 
-    --ubuntu-distro DISTRO   Specify ubuntu distro (default: 22.04).
+    --ubuntu-distro DISTRO   Specify ubuntu distro (default: 24.04, also supports 22.04).
 
 Build options:
 
@@ -26,7 +26,7 @@ Other commands:
 END
 )
 
-UBUNTU_DISTRO=22.04
+UBUNTU_DISTRO=24.04
 
 HOST_UID=$(id -u)
 HOST_GID=$(id -g)
@@ -64,19 +64,25 @@ done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CARLA_ROOT=${SCRIPT_DIR}/../..
+DISTRO_DIR=${SCRIPT_DIR}/${UBUNTU_DISTRO}
 
-# Copy python requirements into the Docker build context
-rm -rf ${SCRIPT_DIR}/.tmp && mkdir ${SCRIPT_DIR}/.tmp
-cp ${CARLA_ROOT}/requirements.txt ${SCRIPT_DIR}/.tmp/requirements.txt
-cp ${CARLA_ROOT}/PythonAPI/examples/requirements.txt ${SCRIPT_DIR}/.tmp/examples_requirements.txt
-cp ${CARLA_ROOT}/PythonAPI/util/requirements.txt ${SCRIPT_DIR}/.tmp/util_requirements.txt
+if [ ! -d "${DISTRO_DIR}" ]; then
+  echo "[ERROR] Unsupported --ubuntu-distro '${UBUNTU_DISTRO}'. Expected one of:"
+  for d in ${SCRIPT_DIR}/*/; do
+    name=$(basename "${d}")
+    [ -f "${d}/Base.Dockerfile" ] && echo "  - ${name}"
+  done
+  exit 1
+fi
+
+CARLA_ROOT_ABS="$(cd "${CARLA_ROOT}" && pwd)"
 
 # Build base image
 echo "Building base image carla-base:ue5-${UBUNTU_DISTRO}"
 docker build ${FORCE_REBUILD:+--no-cache} \
-  --build-arg UBUNTU_DISTRO=${UBUNTU_DISTRO} \
+  --build-context carla-root=${CARLA_ROOT_ABS} \
   -t carla-base:ue5-${UBUNTU_DISTRO} \
-  -f ${SCRIPT_DIR}/Base.Dockerfile ${SCRIPT_DIR}
+  -f ${DISTRO_DIR}/Base.Dockerfile ${DISTRO_DIR}
 
 # Build development image
 if [ "$FORCE_REBUILD" = true ]; then
@@ -88,9 +94,9 @@ docker volume create carla-development-ue5-${UBUNTU_DISTRO}
 
 echo "Building development image carla-development:ue5-${UBUNTU_DISTRO} with user ${HOST_UID}:${HOST_GID}"
 docker build ${FORCE_REBUILD:+--no-cache} \
-  --build-arg UBUNTU_DISTRO=${UBUNTU_DISTRO} \
+  --build-context carla-root=${CARLA_ROOT_ABS} \
   --build-arg UID=${HOST_UID} \
   --build-arg GID=${HOST_GID} \
   --build-arg DOCKER_GID=${DOCKER_GID} \
   -t carla-development:ue5-${UBUNTU_DISTRO} \
-  -f ${SCRIPT_DIR}/Development.Dockerfile ${SCRIPT_DIR}
+  -f ${DISTRO_DIR}/Development.Dockerfile ${DISTRO_DIR}

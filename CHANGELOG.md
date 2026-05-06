@@ -32,6 +32,7 @@
 * Enabled the LibCarla GoogleTest suite (server + client) on ue5-dev and gated both in CI.
 * Fixed Digital Twin Tool crashes on dense metropolitan OSM data, vegetation spawning inside driving lanes on rural maps, and one-way streets being silently excluded from generation (#9565, #9678)
 * Added Ubuntu 24.04 support alongside Ubuntu 22.04
+* Docker dev environment now defaults to Ubuntu 24.04 and ships a per-distro Dockerfile layout under `Util/Docker/22.04/` and `Util/Docker/24.04/`. The 24.04 image installs Python 3.10 from source alongside the system Python 3.12 so the CARLA Python API can target either interpreter via `-DPython_ROOT_DIR`. Use `Util/Docker/build.sh --ubuntu-distro 22.04` to opt back into the older base.
 * Added NVIDIA RTX 50 series (Blackwell) support with driver 570+ and CDI-based Docker instructions
 * Fixed compiler warnings across 20 LibCarla files including signed/unsigned conversions, pessimizing moves, deep copies in range-for loops, and C-style casts (ported from ue4-dev)
 * Fixed camera fx calculation in ROS2 CameraInfo, large map actor tagging, pedestrian bounding box using skeletal mesh bounds, and camera frame/timestamp consistency (ported from ue4-dev)

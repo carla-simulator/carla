@@ -1,8 +1,4 @@
-ARG UBUNTU_DISTRO="22.04"
-
-FROM ubuntu:${UBUNTU_DISTRO}
-
-ARG UBUNTU_DISTRO
+FROM ubuntu:22.04
 
 # Disable interactive prompts during package installation.
 ENV DEBIAN_FRONTEND=noninteractive
@@ -20,7 +16,7 @@ RUN apt-get update && \
 ENV LANG=en_US.UTF-8
 ENV LC_ALL=en_US.UTF-8
 
-COPY .tmp/requirements.txt /tmp/requirements.txt
+COPY --from=carla-root requirements.txt /tmp/requirements.txt
 
 # ---------------------------
 # Install CARLA prerequisites
@@ -31,10 +27,11 @@ USER root
 # Core build tools and UE5-specific dependencies:
 # - build-essential make ninja-build: core compilation tools
 # - libvulkan1: Vulkan runtime needed by Unreal Engine for rendering
-# - python3 python3-dev python3-pip python-is-python3: Python runtime, headers, package manager
+# - python3 python3-dev python3-pip python-is-python3: system Python (3.10 on jammy), headers, pip
 # - autoconf libtool: required for building dependencies from source
 # - wget curl rsync unzip git git-lfs: essential CLI tools used in CARLA build scripts
-# - libpng-dev libtiff5-dev libjpeg-dev: image libraries for CARLA's Python API
+# - libpng-dev libtiff-dev libjpeg-dev: image libraries for CARLA's Python API
+#   (libtiff-dev on 22.04 is a transitional metapackage that pulls libtiff5-dev)
 # - tzdata sed libxml2-dev: build utilities
 # - libnss3-dev libatk-bridge2.0-dev libxkbcommon-dev libgbm-dev: required by UE5 editor
 # - libpango1.0-dev libasound2-dev: display and audio support for UE5
@@ -57,7 +54,7 @@ RUN apt-get update && \
         git \
         git-lfs \
         libpng-dev \
-        libtiff5-dev \
+        libtiff-dev \
         libjpeg-dev \
         tzdata \
         sed \
@@ -73,13 +70,12 @@ RUN apt-get update && \
 # Enable git lfs
 RUN git lfs install
 
-# Minimum required version is 3.28.0.
-# Install a newer version manually, as Ubuntu 22.04 includes an outdated CMake from the upstream repository.
-RUN curl -L -O https://github.com/Kitware/CMake/releases/download/v3.28.3/cmake-3.28.3-linux-x86_64.tar.gz \
-    && mkdir -p /opt \
-    && tar -xzf cmake-3.28.3-linux-x86_64.tar.gz -C /opt \
-    && rm -rf cmake-3.28.3-linux-x86_64.tar.gz
-ENV PATH=/opt/cmake-3.28.3-linux-x86_64/bin:$PATH
+# Install CMake from the distro's apt repository. Ubuntu 22.04 ships CMake 3.22.1,
+# which is below CARLA's current minimum (3.27.2), so users on 22.04 may need to
+# upgrade CMake out-of-band before running `cmake` against this repo.
+RUN apt-get update \
+    && apt-get install -y cmake \
+    && rm -rf /var/lib/apt/lists/*
 
 # SDL2 libraries:
 # Required for Unreal Engine to interact with the display.
@@ -91,10 +87,6 @@ RUN packages='libsdl2-dev libsdl2-2.0' \
 # -------------------
 # Install pip packages
 # -------------------
-# Allow pip to install packages system-wide (required on Ubuntu 22.04 due to PEP 668).
-RUN echo '[global]' > /etc/pip.conf && \
-    echo 'break-system-packages = true' >> /etc/pip.conf
-
 RUN python3 -m pip install --upgrade pip \
     && python3 -m pip install -r /tmp/requirements.txt \
     && rm /tmp/requirements.txt
