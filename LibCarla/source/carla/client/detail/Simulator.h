@@ -267,6 +267,10 @@ namespace detail {
       return _client.GetVehiclePhysicsControl(vehicle.GetId());
     }
 
+    rpc::VehicleTelemetryData GetVehicleTelemetryData(const Vehicle &vehicle) const {
+      return _client.GetVehicleTelemetryData(vehicle.GetId());
+    }
+
     rpc::VehicleLightState GetVehicleLightState(const Vehicle &vehicle) const {
       return _client.GetVehicleLightState(vehicle.GetId());
     }

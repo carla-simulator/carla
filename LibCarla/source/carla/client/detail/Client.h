@@ -29,6 +29,7 @@
 #include "carla/rpc/VehicleLightStateList.h"
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
+#include "carla/rpc/VehicleTelemetryData.h"
 #include "carla/rpc/VehicleWheels.h"
 #include "carla/rpc/WeatherParameters.h"
 #include "carla/rpc/Texture.h"
@@ -164,6 +165,8 @@ namespace detail {
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
 
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(rpc::ActorId vehicle) const;
+
+    rpc::VehicleTelemetryData GetVehicleTelemetryData(rpc::ActorId vehicle) const;
 
     rpc::VehicleLightState GetVehicleLightState(rpc::ActorId vehicle) const;
     

@@ -53,6 +53,7 @@
 #include <carla/rpc/VehicleAckermannControl.h>
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
+#include <carla/rpc/VehicleTelemetryData.h>
 #include <carla/rpc/VehicleLightState.h>
 #include <carla/rpc/VehicleLightStateList.h>
 #include <carla/rpc/WalkerBoneControlIn.h>
@@ -1367,6 +1368,31 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
           " Actor Id: " + FString::FromInt(ActorId));
     }
     return cr::VehiclePhysicsControl::FromFVehiclePhysicsControl(PhysicsControl);
+  };
+
+  BIND_SYNC(get_telemetry_data) << [this](
+      cr::ActorId ActorId) -> R<cr::VehicleTelemetryData>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "get_telemetry_data",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    FVehicleTelemetryData TelemetryData;
+    ECarlaServerResponse Response =
+        CarlaActor->GetVehicleTelemetryData(TelemetryData);
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "get_telemetry_data",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    return cr::VehicleTelemetryData(TelemetryData);
   };
 
   BIND_SYNC(get_vehicle_light_state) << [this](
