@@ -1,0 +1,174 @@
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
+#include "test.h"
+
+#include <cmath>
+#include <limits>
+#include <vector>
+
+#include <carla/geom/Location.h>
+#include <carla/trafficmanager/Constants.h>
+#include <carla/trafficmanager/TrafficManagerGeometry.h>
+
+namespace cg = carla::geom;
+using carla::traffic_manager::GetThreePointCircleRadius;
+using carla::traffic_manager::InterpolateBufferAt;
+
+namespace {
+
+constexpr float kRadiusTolerance{1e-2f};
+constexpr float kLocationTolerance{1e-3f};
+
+void ExpectLocationNear(
+    const cg::Location &actual,
+    const cg::Location &expected,
+    float tolerance) {
+  EXPECT_NEAR(actual.x, expected.x, tolerance);
+  EXPECT_NEAR(actual.y, expected.y, tolerance);
+  EXPECT_NEAR(actual.z, expected.z, tolerance);
+}
+
+}  // namespace
+
+// -----------------------------------------------------------------------------
+// GetThreePointCircleRadius
+// -----------------------------------------------------------------------------
+
+TEST(TrafficManagerGeometry, ThreePointCircleRadius_EquilateralTriangle) {
+  // Equilateral triangle with side s has circumradius s / sqrt(3).
+  constexpr float side{6.0f};
+  const float expected_radius{side / std::sqrt(3.0f)};
+
+  const cg::Location p1{0.0f, 0.0f, 0.0f};
+  const cg::Location p2{side, 0.0f, 0.0f};
+  const cg::Location p3{side / 2.0f, side * std::sqrt(3.0f) / 2.0f, 0.0f};
+
+  const float radius{GetThreePointCircleRadius(p1, p2, p3)};
+  EXPECT_NEAR(radius, expected_radius, kRadiusTolerance);
+}
+
+TEST(TrafficManagerGeometry, ThreePointCircleRadius_RightTriangle) {
+  // A right triangle's circumradius equals half the hypotenuse.
+  // Triangle with legs 3 and 4, hypotenuse 5, expected radius 2.5.
+  const cg::Location p1{0.0f, 0.0f, 0.0f};
+  const cg::Location p2{3.0f, 0.0f, 0.0f};
+  const cg::Location p3{0.0f, 4.0f, 0.0f};
+
+  const float radius{GetThreePointCircleRadius(p1, p2, p3)};
+  EXPECT_NEAR(radius, 2.5f, kRadiusTolerance);
+}
+
+TEST(TrafficManagerGeometry, ThreePointCircleRadius_NearlyCollinearReturnsLarge) {
+  // Three nearly-collinear points should produce a radius above the
+  // junction gating threshold so callers fall through the "no offset" branch.
+  const cg::Location p1{0.0f, 0.0f, 0.0f};
+  const cg::Location p2{1.0f, 0.0f, 0.0f};
+  const cg::Location p3{2.0f, 0.0f, 0.0f};
+
+  const float radius{GetThreePointCircleRadius(p1, p2, p3)};
+  EXPECT_GT(radius, carla::traffic_manager::constants::WaypointSelection::LARGE_VEHICLES_JUNCTION_MAX_RADIUS);
+}
+
+TEST(TrafficManagerGeometry, ThreePointCircleRadius_PerfectlyCollinearReturnsMax) {
+  // Perfectly collinear points have no circumscribing circle. The
+  // implementation returns std::numeric_limits<float>::max() as a sentinel
+  // to flag the degenerate case.
+  const cg::Location p1{0.0f, 0.0f, 0.0f};
+  const cg::Location p2{5.0f, 0.0f, 0.0f};
+  const cg::Location p3{10.0f, 0.0f, 0.0f};
+
+  const float radius{GetThreePointCircleRadius(p1, p2, p3)};
+  EXPECT_EQ(radius, std::numeric_limits<float>::max());
+}
+
+// -----------------------------------------------------------------------------
+// InterpolateBufferAt (the SimpleWaypoint-free seam used by GetTargetData)
+// -----------------------------------------------------------------------------
+
+TEST(TrafficManagerInterpolation, InterpolateBufferAt_EmptyBufferReturnsVehicleLocation) {
+  const std::vector<cg::Location> empty;
+  const cg::Location vehicle_location{1.0f, 2.0f, 3.0f};
+
+  const auto [location, index] = InterpolateBufferAt(empty, 5.0f, vehicle_location);
+  ExpectLocationNear(location, vehicle_location, kLocationTolerance);
+  EXPECT_EQ(index, 0u);
+}
+
+TEST(TrafficManagerInterpolation, InterpolateBufferAt_SingleElementReturnsThatElement) {
+  const std::vector<cg::Location> single{{7.0f, 0.0f, 0.0f}};
+  const cg::Location vehicle_location{0.0f, 0.0f, 0.0f};
+
+  const auto [location, index] = InterpolateBufferAt(single, 5.0f, vehicle_location);
+  ExpectLocationNear(location, single.front(), kLocationTolerance);
+  EXPECT_EQ(index, 0u);
+}
+
+TEST(TrafficManagerInterpolation, InterpolateBufferAt_LinearInterpBetweenTwoPoints) {
+  // Two waypoints at x=0 and x=10. Vehicle at origin. Asking for distance
+  // 5 should land at the midpoint (5, 0, 0) with closest_index 0.
+  const std::vector<cg::Location> buffer{
+      {0.0f, 0.0f, 0.0f},
+      {10.0f, 0.0f, 0.0f}};
+  const cg::Location vehicle_location{0.0f, 0.0f, 0.0f};
+
+  const auto [location, index] = InterpolateBufferAt(buffer, 5.0f, vehicle_location);
+  ExpectLocationNear(location, cg::Location{5.0f, 0.0f, 0.0f}, kLocationTolerance);
+  EXPECT_EQ(index, 0u);
+}
+
+TEST(TrafficManagerInterpolation, InterpolateBufferAt_DistanceShorterThanFirstWaypoint) {
+  // Vehicle at origin; first waypoint at x=10. Asking for distance 3 should
+  // produce a location interpolated between waypoint 0 and waypoint 1
+  // (the implementation never extrapolates behind the vehicle; it picks the
+  // first bracketing pair).
+  const std::vector<cg::Location> buffer{
+      {10.0f, 0.0f, 0.0f},
+      {20.0f, 0.0f, 0.0f}};
+  const cg::Location vehicle_location{0.0f, 0.0f, 0.0f};
+
+  const auto [location, index] = InterpolateBufferAt(buffer, 3.0f, vehicle_location);
+  // Both close (10) and far (20) are beyond target_distance; the
+  // implementation falls into the farthest_index == 0 edge case and uses
+  // indices (0, 1). Expected interpolation:
+  //   t = (3 - 10) / (20 - 10) = -0.7
+  //   x = 10 + (20 - 10) * -0.7 = 3
+  ExpectLocationNear(location, cg::Location{3.0f, 0.0f, 0.0f}, kLocationTolerance);
+  EXPECT_EQ(index, 0u);
+}
+
+TEST(TrafficManagerInterpolation, InterpolateBufferAt_DistanceBeyondLastWaypoint) {
+  // All waypoints fall within target_distance. Implementation should clamp
+  // to the last bracketing pair (n-2, n-1) and extrapolate forward.
+  const std::vector<cg::Location> buffer{
+      {1.0f, 0.0f, 0.0f},
+      {2.0f, 0.0f, 0.0f},
+      {3.0f, 0.0f, 0.0f}};
+  const cg::Location vehicle_location{0.0f, 0.0f, 0.0f};
+
+  const auto [location, index] = InterpolateBufferAt(buffer, 100.0f, vehicle_location);
+  // closest_index loops to 2 (size-1), then edge-case fixup sets
+  // farthest_index = 2, closest_index = 1. Then linear interp between
+  // waypoint 1 (x=2) and waypoint 2 (x=3) at target_distance = 100:
+  //   t = (100 - 2) / (3 - 2) = 98
+  //   x = 2 + (3 - 2) * 98 = 100
+  ExpectLocationNear(location, cg::Location{100.0f, 0.0f, 0.0f}, kLocationTolerance);
+  EXPECT_EQ(index, 1u);
+}
+
+TEST(TrafficManagerInterpolation, InterpolateBufferAt_CoincidentBracketReturnsClosest) {
+  // Two consecutive waypoints at the same location. The span is zero and
+  // the implementation must return the close location to avoid divide-by-zero.
+  const std::vector<cg::Location> buffer{
+      {5.0f, 0.0f, 0.0f},
+      {5.0f, 0.0f, 0.0f},
+      {15.0f, 0.0f, 0.0f}};
+  const cg::Location vehicle_location{0.0f, 0.0f, 0.0f};
+
+  const auto [location, index] = InterpolateBufferAt(buffer, 5.0f, vehicle_location);
+  ExpectLocationNear(location, cg::Location{5.0f, 0.0f, 0.0f}, kLocationTolerance);
+  EXPECT_EQ(index, 0u);
+}
