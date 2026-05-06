@@ -1,4 +1,3 @@
-=======
 ## LATEST Changes
 
 * Fixed three latent bugs in the `FPixelReader` GPU pixel-readback path: an inverted validity guard in `SendPixelsInRenderThread` that discarded every valid sensor's frame, the readback-wait task being scheduled onto a render-pipeline thread (deadlocking game/render/RHI threads), and `FRHIGPUTextureReadback::Lock` truncating the payload to a single row by aliasing its row-pitch out-parameter.
@@ -18,6 +17,11 @@
 * Hardened UObject ownership in the Carla plugin by migrating UPROPERTY raw pointers to `TObjectPtr<>`, adding mesh caches, enabling async heightmap streaming, and converting catalog assets to soft references.
 * Corrected the Semantic Segmentation camera class table in `Docs/ref_sensors.md` to match the actual 29-class taxonomy defined in `ObjectLabel.h` and `CityScapesPalette.h`. The previous table reflected the legacy 0.8.x CityScapes taxonomy (22 classes), which caused mismatches between documentation and engine output. This update aligns the documentation with the true engine enum values and RGB palette, preventing ground-truth mapping errors when building perception pipelines.
 * Fixed several legacy UE4-era bugs across LibCarla and the Carla plugin affecting lidar memory reset, DVS validation, camera profiling, image reads, sensor materials, and Python sensor teardown.
+* Improved Traffic Manager handling of large vehicles at junctions, including wide-turn behaviour and a smoothed lateral offset profile
+* Improved Traffic Manager PID controller using a direct angle to the target waypoint and smoother waypoint interpolation
+* Removed Traffic Manager internal mutex and condition variables; synchronous mode now executes inline
+* Avoid actor aliasing on replay caused by reusing actors with the same id
+* Fixed segfault in traffic manager when trying to access not available vehicles
 * Enabled the LibCarla GoogleTest suite (server + client) on ue5-dev and gated both in CI.
 * Fixed Digital Twin Tool crashes on dense metropolitan OSM data, vegetation spawning inside driving lanes on rural maps, and one-way streets being silently excluded from generation (#9565, #9678)
 * Added Ubuntu 24.04 support alongside Ubuntu 22.04
