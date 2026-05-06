@@ -30,11 +30,11 @@ LocalizationStage::LocalizationStage(
     simulation_state(simulation_state),
     track_traffic(track_traffic),
     local_map(local_map),
-    large_vehicles(large_vehicles),
     parameters(parameters),
     marked_for_removal(marked_for_removal),
     output_array(output_array),
-    random_device(random_device){}
+    random_device(random_device),
+    large_vehicles(large_vehicles) {}
 
 void LocalizationStage::Update(const unsigned long index) {
 
