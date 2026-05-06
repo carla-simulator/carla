@@ -174,8 +174,8 @@ public:
       BlueprintReadOnly,
       EditAnywhere,
       config,
-      DisplayName = "  Middleware")
-  FString MiddlewareName = TEXT("fastdds");
+      DisplayName = "  ROS2 Middleware")
+  FString ROS2MiddlewareName = TEXT("fastdds");
 
   /// @}
 };

@@ -9,8 +9,8 @@ file(GLOB libcarla_carla_subscribers_headers "${libcarla_source_path}/carla/ros2
 file(GLOB libcarla_carla_listeners_headers  "${libcarla_source_path}/carla/ros2/listeners/*.h")
 file(GLOB libcarla_carla_types_headers      "${libcarla_source_path}/carla/ros2/types/*.h")
 file(GLOB libcarla_carla_types_msg_headers  "${libcarla_source_path}/carla/ros2/types/msg/*.h")
-file(GLOB libcarla_carla_middleware_headers        "${libcarla_source_path}/carla/ros2/middleware/*.h")
-file(GLOB libcarla_carla_middleware_fastdds_headers "${libcarla_source_path}/carla/ros2/middleware/fastdds/*.h")
+file(GLOB libcarla_carla_ros2_middleware_headers        "${libcarla_source_path}/carla/ros2/middleware/*.h")
+file(GLOB libcarla_carla_ros2_middleware_fastdds_headers "${libcarla_source_path}/carla/ros2/middleware/fastdds/*.h")
 
 install(FILES ${libcarla_carla_ros2_headers}       DESTINATION include/carla/ros2)
 install(FILES ${libcarla_carla_publishers_headers}  DESTINATION include/carla/ros2/publishers)
@@ -18,8 +18,8 @@ install(FILES ${libcarla_carla_subscribers_headers} DESTINATION include/carla/ro
 install(FILES ${libcarla_carla_listeners_headers}   DESTINATION include/carla/ros2/listeners)
 install(FILES ${libcarla_carla_types_headers}       DESTINATION include/carla/ros2/types)
 install(FILES ${libcarla_carla_types_msg_headers}   DESTINATION include/carla/ros2/types/msg)
-install(FILES ${libcarla_carla_middleware_headers}         DESTINATION include/carla/ros2/middleware)
-install(FILES ${libcarla_carla_middleware_fastdds_headers} DESTINATION include/carla/ros2/middleware/fastdds)
+install(FILES ${libcarla_carla_ros2_middleware_headers}         DESTINATION include/carla/ros2/middleware)
+install(FILES ${libcarla_carla_ros2_middleware_fastdds_headers} DESTINATION include/carla/ros2/middleware/fastdds)
 
 file(GLOB fast_dds_dependencies "${FASTDDS_LIB_PATH}/*.a")
 install(FILES ${fast_dds_dependencies} DESTINATION lib)

@@ -162,7 +162,7 @@ void UCarlaSettings::LoadSettings()
     FString RmwValue;
     if (FParse::Value(FCommandLine::Get(), TEXT("-rmw="), RmwValue))
     {
-      MiddlewareName = RmwValue.ToLower();
+      ROS2MiddlewareName = RmwValue.ToLower();
     }
   }
 }
