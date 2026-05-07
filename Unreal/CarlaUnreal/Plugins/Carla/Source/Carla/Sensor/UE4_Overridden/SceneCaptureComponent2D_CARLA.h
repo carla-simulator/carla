@@ -23,7 +23,8 @@ public:
 
   USceneCaptureComponent2D_CARLA(const FObjectInitializer& = FObjectInitializer::Get());
 
-  const AActor* ViewActor;
+  UPROPERTY()
+  TObjectPtr<AActor> ViewActor;
 
 	virtual const AActor* GetViewOwner() const override;
 };
