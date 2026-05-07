@@ -56,6 +56,6 @@ private:
 	/// GetDefinitions() so that SpawnActor() avoids the per-spawn
 	/// synchronous LoadObject on the game thread. Cache-miss fall back to
 	/// LoadObject with a warning log.
-	UPROPERTY()
+	UPROPERTY(Transient, DuplicateTransient)
 	TMap<FString, TObjectPtr<UStaticMesh>> MeshCacheByPath;
 };

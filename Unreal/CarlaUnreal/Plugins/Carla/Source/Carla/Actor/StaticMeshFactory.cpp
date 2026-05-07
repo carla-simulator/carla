@@ -67,6 +67,13 @@ FActorSpawnResult AStaticMeshFactory::SpawnActor(
     {
       FString MeshPath = ABFL::ActorAttributeToString(
           ActorDescription.Variations["mesh_path"], "");
+      if (MeshPath.IsEmpty())
+      {
+        UE_LOG(LogCarla, Warning,
+            TEXT("AStaticMeshFactory: empty mesh_path for actor %s; mesh not assigned."),
+            *ActorDescription.Id);
+        return FActorSpawnResult(StaticMeshActor);
+      }
 
       UStaticMesh* Mesh = nullptr;
       if (TObjectPtr<UStaticMesh>* Cached = MeshCacheByPath.Find(MeshPath))
@@ -80,11 +87,21 @@ FActorSpawnResult AStaticMeshFactory::SpawnActor(
         {
           MeshCacheByPath.Add(MeshPath, Mesh);
         }
+        else
+        {
+          UE_LOG(LogCarla, Warning,
+              TEXT("AStaticMeshFactory: failed to load mesh '%s' for actor %s."),
+              *MeshPath, *ActorDescription.Id);
+        }
       }
 
       StaticMeshComponent->SetMobility(EComponentMobility::Movable);
       if (!StaticMeshComponent->SetStaticMesh(Mesh))
-        UE_LOG(LogCarla, Warning, TEXT("Failed to set the mesh"));
+      {
+        UE_LOG(LogCarla, Warning,
+            TEXT("AStaticMeshFactory: failed to set mesh '%s' on actor %s."),
+            *MeshPath, *ActorDescription.Id);
+      }
       StaticMeshComponent->SetMobility(EComponentMobility::Static);
 
       if (ActorDescription.Variations.Contains("mass"))

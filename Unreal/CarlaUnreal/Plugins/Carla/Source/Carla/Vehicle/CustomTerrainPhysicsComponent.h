@@ -526,7 +526,7 @@ private:
   // Async heightmap streaming state.
   // ActiveHeightMap keeps the most recently applied data asset rooted for GC
   // while the streaming handle is the primary owner during the in-flight load.
-  UPROPERTY()
+  UPROPERTY(Transient, DuplicateTransient)
   TObjectPtr<UHeightMapDataAsset> ActiveHeightMap = nullptr;
   TSharedPtr<FStreamableHandle> PendingHeightMapHandle;
   FIntVector PendingHeightMapTileId = FIntVector(-1, -1, 0);
