@@ -43,13 +43,13 @@ float GetThreePointCircleRadius(
   const float sy21{y2 * y2 - y1 * y1};
 
   const float f_denom{2.0f * (y31 * x12 - y21 * x13)};
-  if (f_denom == 0.0f) {
+  if (std::abs(f_denom) <= EPSILON) {
     return std::numeric_limits<float>::max();
   }
   const float f{(sx13 * x12 + sy13 * x12 + sx21 * x13 + sy21 * x13) / f_denom};
 
   const float g_denom{2.0f * (x31 * y12 - x21 * y13)};
-  if (g_denom == 0.0f) {
+  if (std::abs(g_denom) <= EPSILON) {
     return std::numeric_limits<float>::max();
   }
   const float g{(sx13 * y12 + sy13 * y12 + sx21 * y13 + sy21 * y13) / g_denom};
@@ -76,27 +76,36 @@ std::pair<cg::Location, uint64_t> InterpolateBufferAt(
 
   const float target_square_distance{target_distance * target_distance};
 
-  // Walk the locations until the cumulative reach passes target_square_distance.
+  // Walk every waypoint and find the first one whose distance is greater than
+  // or equal to target_distance. That waypoint is the upper bracket; the one
+  // before it is the lower bracket.
   size_t closest_index{0u};
   size_t farthest_index{0u};
-  for (uint64_t i = 0u; i < waypoint_locations.size() - 1u; ++i) {
+  bool found_bracket{false};
+  for (size_t i = 0u; i < waypoint_locations.size(); ++i) {
     const float close_dist_square{vehicle_location.DistanceSquared(waypoint_locations.at(i))};
 
     if (close_dist_square < target_square_distance) {
       closest_index = i;
     } else {
       farthest_index = i;
+      found_bracket = true;
       break;
     }
   }
 
-  // Edge cases: target falls before the first waypoint or beyond the last.
-  if (farthest_index == 0u) {
-    closest_index = 0u;
+  // Target distance is beyond every waypoint in the buffer: clamp to the
+  // last waypoint instead of extrapolating off the front segment.
+  if (!found_bracket) {
+    const size_t last_index{waypoint_locations.size() - 1u};
+    return std::make_pair(waypoint_locations.at(last_index), last_index);
+  }
+
+  // Target distance is shorter than the distance to the first waypoint:
+  // bracket with the first segment so the interpolation produces a point
+  // ahead of the vehicle along the planned path.
+  if (closest_index == 0u && farthest_index == 0u) {
     farthest_index = 1u;
-  } else if (closest_index == waypoint_locations.size() - 1u) {
-    farthest_index = closest_index;
-    closest_index = closest_index - 1u;
   }
 
   const cg::Location target_close_location{waypoint_locations.at(closest_index)};
