@@ -610,6 +610,7 @@ The following tags are currently available:
 | 26 | **Bridge** | (150, 100, 100) | Only the structure of the bridge. Fences, people, vehicles, an other elements on top of it are labeled separately. |
 | 27 | **RailTrack** | (230, 150, 140) | All kind of rail tracks that are non-drivable by cars. E.g. subway and train rail tracks. |
 | 28 | **GuardRail** | (180, 165, 180) | All types of guard rails/crash barriers. |
+| 29 | **Rock** | (170, 100, 50) | Natural rock formations and large stones. |
 
 <br>
 
