@@ -15,10 +15,11 @@ class TestVehicleTelemetry(SyncSmokeTest):
     """End-to-end smoke for `Vehicle.get_telemetry_data()`.
 
     Spawns a vehicle in Town10HD_Opt (the only town shipped with the
-    packaged build), drives it under autopilot for a short window, and
-    asserts the telemetry RPC returns a sane snapshot wired all the way
-    from `ACarlaWheeledVehicle::GetVehicleTelemetryData()` (Chaos read)
-    through `LibCarla` to the Python `VehicleTelemetryData` binding.
+    packaged build), applies full throttle for a short window, and asserts
+    the telemetry RPC returns live values from the Chaos solver. The
+    assertions check magnitude (non-zero engine RPM, at least one rolling
+    wheel) so a regression that drops the simulator side back to default
+    zeros cannot pass silently.
     """
 
     def tearDown(self):
@@ -51,7 +52,10 @@ class TestVehicleTelemetry(SyncSmokeTest):
 
         vehicle = self.world.spawn_actor(vehicle_bps[0], spawn_points[0])
         try:
-            vehicle.set_autopilot(True)
+            # Apply full throttle so the powertrain is loaded; this guarantees
+            # engine RPM and at least one rolling wheel are non-zero on a
+            # working build.
+            vehicle.apply_control(carla.VehicleControl(throttle=1.0))
             for _ in range(30):
                 self.world.tick()
 
@@ -59,7 +63,7 @@ class TestVehicleTelemetry(SyncSmokeTest):
             self.assertIsNotNone(telemetry)
             self.assertIsInstance(telemetry, carla.VehicleTelemetryData)
 
-            # Vehicle-level fields are floats and finite (sane sensors).
+            # Vehicle-level fields are floats and finite.
             self.assertIsInstance(telemetry.speed, float)
             self.assertTrue(math.isfinite(telemetry.speed))
             self.assertIsInstance(telemetry.throttle, float)
@@ -71,8 +75,15 @@ class TestVehicleTelemetry(SyncSmokeTest):
             self.assertIsInstance(telemetry.engine_rpm, float)
             self.assertTrue(math.isfinite(telemetry.engine_rpm))
             self.assertIsInstance(telemetry.gear, int)
-            self.assertIsInstance(telemetry.drag, float)
-            self.assertTrue(math.isfinite(telemetry.drag))
+
+            # Magnitude check: under full throttle the engine must be turning
+            # well above zero. A regression that wires this to a never-written
+            # debug field would read 0.0 and trip this assertion.
+            self.assertGreater(
+                telemetry.engine_rpm, 100.0,
+                "engine_rpm is suspiciously low; the simulator may be "
+                "reporting an unwired field as zero.")
+            self.assertEqual(telemetry.throttle, 1.0)
 
             # The wheel vector size matches the physics control's wheel array.
             physics_control = vehicle.get_physics_control()
@@ -80,20 +91,18 @@ class TestVehicleTelemetry(SyncSmokeTest):
             self.assertEqual(len(wheels), len(physics_control.wheels))
             self.assertGreater(len(wheels), 0)
 
-            # Per-wheel fields are finite floats.
+            # Per-wheel fields are finite floats; at least one wheel must be
+            # rolling under throttle.
             for wheel in wheels:
                 self.assertIsInstance(wheel, carla.WheelTelemetryData)
-                self.assertTrue(math.isfinite(wheel.tire_friction))
                 self.assertTrue(math.isfinite(wheel.lat_slip))
                 self.assertTrue(math.isfinite(wheel.long_slip))
                 self.assertTrue(math.isfinite(wheel.omega))
-                self.assertTrue(math.isfinite(wheel.tire_load))
-                self.assertTrue(math.isfinite(wheel.normalized_tire_load))
-                self.assertTrue(math.isfinite(wheel.torque))
-                self.assertTrue(math.isfinite(wheel.long_force))
-                self.assertTrue(math.isfinite(wheel.lat_force))
-                self.assertTrue(math.isfinite(wheel.normalized_long_force))
-                self.assertTrue(math.isfinite(wheel.normalized_lat_force))
+
+            self.assertGreater(
+                max(abs(wheel.omega) for wheel in wheels), 0.0,
+                "no wheel is rolling under full throttle; the omega field "
+                "may have been disconnected from the Chaos solver.")
 
             # repr() of the wheel vector exercises the operator<< chain.
             self.assertGreater(len(repr(telemetry.wheels)), 0)

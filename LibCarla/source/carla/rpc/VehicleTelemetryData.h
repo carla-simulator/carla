@@ -18,6 +18,12 @@
 namespace carla {
 namespace rpc {
 
+  // Vehicle-level runtime telemetry exposed to clients.
+  //
+  // Only fields backed by live Chaos solver state are kept. The PhysX-era
+  // aerodynamic-drag readout was driven by UChaosVehicleMovementComponent::
+  // DebugDragMagnitude, which the Chaos plugin declares but never writes;
+  // exposing it on UE5 would always read zero, so it is omitted.
   class VehicleTelemetryData {
   public:
 
@@ -30,7 +36,6 @@ namespace rpc {
         float brake,
         float engine_rpm,
         int32_t gear,
-        float drag,
         std::vector<WheelTelemetryData> wheels)
       : speed(speed),
         steer(steer),
@@ -38,7 +43,6 @@ namespace rpc {
         brake(brake),
         engine_rpm(engine_rpm),
         gear(gear),
-        drag(drag),
         wheels(std::move(wheels)) {}
 
     float speed = 0.0f;
@@ -47,7 +51,6 @@ namespace rpc {
     float brake = 0.0f;
     float engine_rpm = 0.0f;
     int32_t gear = 0;
-    float drag = 0.0f;
     std::vector<WheelTelemetryData> wheels = {};
 
     const std::vector<WheelTelemetryData> &GetWheels() const {
@@ -66,8 +69,7 @@ namespace rpc {
         throttle(Data.Throttle),
         brake(Data.Brake),
         engine_rpm(Data.EngineRPM),
-        gear(Data.Gear),
-        drag(Data.Drag) {
+        gear(Data.Gear) {
       wheels.reserve(static_cast<size_t>(Data.Wheels.Num()));
       for (const auto &Wheel : Data.Wheels) {
         wheels.emplace_back(Wheel);
@@ -82,7 +84,6 @@ namespace rpc {
       Data.Brake = brake;
       Data.EngineRPM = engine_rpm;
       Data.Gear = gear;
-      Data.Drag = drag;
       Data.Wheels.Reserve(static_cast<int32>(wheels.size()));
       for (const auto &Wheel : wheels) {
         Data.Wheels.Add(Wheel);
@@ -100,7 +101,6 @@ namespace rpc {
           brake != rhs.brake ||
           engine_rpm != rhs.engine_rpm ||
           gear != rhs.gear ||
-          drag != rhs.drag ||
           wheels != rhs.wheels;
     }
 
@@ -115,7 +115,6 @@ namespace rpc {
         brake,
         engine_rpm,
         gear,
-        drag,
         wheels
     );
   };

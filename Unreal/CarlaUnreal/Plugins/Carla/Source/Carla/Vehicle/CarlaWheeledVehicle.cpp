@@ -663,19 +663,23 @@ FVehicleTelemetryData ACarlaWheeledVehicle::GetVehicleTelemetryData() const
   auto *VehicleMovComponent = GetChaosWheeledVehicleMovementComponent();
   check(VehicleMovComponent != nullptr);
 
-  // Vehicle-level telemetry. Forward speed is exposed by the engine in cm/s
-  // and the aerodynamic drag magnitude in kg*cm/s^2; convert both to SI units.
+  // Vehicle-level telemetry. Forward speed is reported by the engine in cm/s
+  // and converted to m/s. Aerodynamic drag is intentionally not exposed: the
+  // Chaos plugin's DebugDragMagnitude is declared but never written, so any
+  // value reported here would be a permanent zero.
   TelemetryData.Speed = GetVehicleForwardSpeed() / 100.0f;
   TelemetryData.Steer = LastAppliedControl.Steer;
   TelemetryData.Throttle = LastAppliedControl.Throttle;
   TelemetryData.Brake = LastAppliedControl.Brake;
   TelemetryData.EngineRPM = VehicleMovComponent->GetEngineRotationSpeed();
   TelemetryData.Gear = GetVehicleCurrentGear();
-  TelemetryData.Drag = VehicleMovComponent->DebugDragMagnitude / 100.0f;
 
-  // Per-wheel telemetry. UChaosVehicleWheel exposes the same Debug* fields as
-  // the legacy PhysX UVehicleWheel; UChaosWheeledVehicleMovementComponent
-  // exposes the live Chaos slip data via GetWheelState().
+  // Per-wheel telemetry. UChaosWheeledVehicleMovementComponent::GetWheelState
+  // returns live solver slip data; UChaosVehicleWheel::GetWheelAngularVelocity
+  // is also live. The legacy PhysX surface (tire load, torque, long/lat force)
+  // has no Chaos equivalent that is populated in stock UE 5.5 (the Debug*
+  // UPROPERTYs on UChaosVehicleWheel are never written by the plugin), so it
+  // is omitted here rather than reported as silent zeros.
   const int32 WheelCount = VehicleMovComponent->Wheels.Num();
   TelemetryData.Wheels.Reserve(WheelCount);
   for (int32 i = 0; i < WheelCount; ++i)
@@ -693,22 +697,9 @@ FVehicleTelemetryData ACarlaWheeledVehicle::GetVehicleTelemetryData() const
 
     const FWheelStatus &WheelStatus = VehicleMovComponent->GetWheelState(i);
 
-    WheelData.TireFriction = Wheel->FrictionForceMultiplier;
     WheelData.LatSlip = FMath::RadiansToDegrees(WheelStatus.SlipAngle);
     WheelData.LongSlip = WheelStatus.SlipMagnitude;
     WheelData.Omega = Wheel->GetWheelAngularVelocity();
-    WheelData.TireLoad = Wheel->DebugTireLoad / 100.0f;
-    WheelData.NormalizedTireLoad = Wheel->DebugNormalizedTireLoad;
-    // Wheel torque is reported in kg*cm^2/s^2; convert to kg*m^2/s^2.
-    WheelData.Torque = Wheel->DebugWheelTorque / (100.0f * 100.0f);
-    WheelData.LongForce = Wheel->DebugLongForce / 100.0f;
-    WheelData.LatForce = Wheel->DebugLatForce / 100.0f;
-    if (WheelData.TireLoad > 0.0f)
-    {
-      const float LoadRatio = WheelData.NormalizedTireLoad / WheelData.TireLoad;
-      WheelData.NormalizedLongForce = FMath::Abs(WheelData.LongForce) * LoadRatio;
-      WheelData.NormalizedLatForce = FMath::Abs(WheelData.LatForce) * LoadRatio;
-    }
 
     TelemetryData.Wheels.Add(WheelData);
   }

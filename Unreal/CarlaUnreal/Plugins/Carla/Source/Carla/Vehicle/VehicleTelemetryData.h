@@ -18,9 +18,6 @@ struct CARLA_API FWheelTelemetryData
   GENERATED_BODY()
 
   UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
-  float TireFriction = 0.0f;
-
-  UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
   float LatSlip = 0.0f;
 
   UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
@@ -28,27 +25,6 @@ struct CARLA_API FWheelTelemetryData
 
   UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
   float Omega = 0.0f;
-
-  UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
-  float TireLoad = 0.0f;
-
-  UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
-  float NormalizedTireLoad = 0.0f;
-
-  UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
-  float Torque = 0.0f;
-
-  UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
-  float LongForce = 0.0f;
-
-  UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
-  float LatForce = 0.0f;
-
-  UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
-  float NormalizedLongForce = 0.0f;
-
-  UPROPERTY(Category = "Wheel Telemetry Data", EditAnywhere, BlueprintReadWrite)
-  float NormalizedLatForce = 0.0f;
 };
 
 USTRUCT(BlueprintType)
@@ -73,9 +49,6 @@ struct CARLA_API FVehicleTelemetryData
 
   UPROPERTY(Category = "Vehicle Telemetry Data", EditAnywhere, BlueprintReadWrite)
   int32 Gear = 0;
-
-  UPROPERTY(Category = "Vehicle Telemetry Data", EditAnywhere, BlueprintReadWrite)
-  float Drag = 0.0f;
 
   UPROPERTY(Category = "Vehicle Telemetry Data", EditAnywhere, BlueprintReadWrite)
   TArray<FWheelTelemetryData> Wheels;
