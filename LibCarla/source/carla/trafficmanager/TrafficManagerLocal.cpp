@@ -476,7 +476,14 @@ void TrafficManagerLocal::SetSynchronousMode(bool mode) {
   }
   else { // Switch from synchronous to async, start worker thread again.
     if (worker_thread) {
-      std::cout << "Error: Worker thread exists but should not." << std::endl;
+      // A worker thread should not exist while in synchronous mode. Tear it
+      // down before spawning a fresh one so a buggy prior transition does
+      // not leak running threads.
+      log_error("TrafficManagerLocal: worker thread present in synchronous mode; joining before async restart.");
+      if (worker_thread->joinable()) {
+        worker_thread->join();
+      }
+      worker_thread.reset();
     }
     worker_thread = std::make_unique<std::thread>(&TrafficManagerLocal::Run, this);
   }

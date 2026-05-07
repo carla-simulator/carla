@@ -1,4 +1,8 @@
 
+#include <algorithm>
+#include <cctype>
+#include <string>
+
 #include "boost/pointer_cast.hpp"
 
 #include "carla/client/Actor.h"
