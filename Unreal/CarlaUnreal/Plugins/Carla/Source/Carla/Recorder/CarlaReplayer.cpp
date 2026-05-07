@@ -707,7 +707,8 @@ void CarlaReplayer::ProcessWeather(void)
   for (uint16_t i = 0; i < Total; ++i)
   {
     Weather.Read(File);
-    if (bReplayWeather){
+    if (bReplayWeather)
+    {
       Helper.ProcessReplayerWeather(Weather);
     }
   }

@@ -140,10 +140,14 @@ namespace client {
     }
 
     std::string ReplayFile(
-      std::string name, double start, double duration,
-      uint32_t follow_id, bool replay_sensors, bool replay_weather, geom::Transform offset,
-      std::string map_override) {
-      return _simulator->ReplayFile(name, start, duration, follow_id, replay_sensors, replay_weather, offset, map_override);
+        std::string name, double start, double duration,
+        uint32_t follow_id, bool replay_sensors,
+        bool replay_weather = false,
+        geom::Transform offset = geom::Transform(),
+        std::string map_override = "") {
+      return _simulator->ReplayFile(
+          std::move(name), start, duration, follow_id, replay_sensors,
+          replay_weather, offset, std::move(map_override));
     }
 
     void StopReplayer(bool keep_actors) {

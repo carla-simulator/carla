@@ -468,6 +468,9 @@ std::string ACarlaRecorder::Start(
   Frames.Reset();
   PlatformTime.SetStartTime();
 
+  // reset first-tick flag so the initial weather is captured on every recording session
+  bFirstTick = true;
+
   Enable();
 
   bAdditionalData = AdditionalData;
