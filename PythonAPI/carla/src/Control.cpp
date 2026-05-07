@@ -477,29 +477,13 @@ void export_control() {
   ;
 
   class_<cr::WheelTelemetryData>("WheelTelemetryData")
-    .def(init<float, float, float, float, float, float, float, float, float, float, float>(
-      (arg("tire_friction") = 0.0f,
-      arg("lat_slip") = 0.0f,
+    .def(init<float, float, float>(
+      (arg("lat_slip") = 0.0f,
       arg("long_slip") = 0.0f,
-      arg("omega") = 0.0f,
-      arg("tire_load") = 0.0f,
-      arg("normalized_tire_load") = 0.0f,
-      arg("torque") = 0.0f,
-      arg("long_force") = 0.0f,
-      arg("lat_force") = 0.0f,
-      arg("normalized_long_force") = 0.0f,
-      arg("normalized_lat_force") = 0.0f)))
-    .def_readwrite("tire_friction", &cr::WheelTelemetryData::tire_friction)
+      arg("omega") = 0.0f)))
     .def_readwrite("lat_slip", &cr::WheelTelemetryData::lat_slip)
     .def_readwrite("long_slip", &cr::WheelTelemetryData::long_slip)
     .def_readwrite("omega", &cr::WheelTelemetryData::omega)
-    .def_readwrite("tire_load", &cr::WheelTelemetryData::tire_load)
-    .def_readwrite("normalized_tire_load", &cr::WheelTelemetryData::normalized_tire_load)
-    .def_readwrite("torque", &cr::WheelTelemetryData::torque)
-    .def_readwrite("long_force", &cr::WheelTelemetryData::long_force)
-    .def_readwrite("lat_force", &cr::WheelTelemetryData::lat_force)
-    .def_readwrite("normalized_long_force", &cr::WheelTelemetryData::normalized_long_force)
-    .def_readwrite("normalized_lat_force", &cr::WheelTelemetryData::normalized_lat_force)
     .def("__eq__", &cr::WheelTelemetryData::operator==)
     .def("__ne__", &cr::WheelTelemetryData::operator!=)
     .def(self_ns::str(self_ns::self))
@@ -513,7 +497,6 @@ void export_control() {
     .def_readwrite("brake", &cr::VehicleTelemetryData::brake)
     .def_readwrite("engine_rpm", &cr::VehicleTelemetryData::engine_rpm)
     .def_readwrite("gear", &cr::VehicleTelemetryData::gear)
-    .def_readwrite("drag", &cr::VehicleTelemetryData::drag)
     .add_property("wheels", &GetTelemetryWheels, &SetTelemetryWheels)
     .def("__eq__", &cr::VehicleTelemetryData::operator==)
     .def("__ne__", &cr::VehicleTelemetryData::operator!=)

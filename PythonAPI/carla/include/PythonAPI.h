@@ -546,17 +546,9 @@ namespace rpc {
   }
 
   inline std::ostream &operator<<(std::ostream &out, const WheelTelemetryData &data) {
-    out << "WheelTelemetryData(tire_friction=" << std::to_string(data.tire_friction)
-        << ", lat_slip=" << std::to_string(data.lat_slip)
+    out << "WheelTelemetryData(lat_slip=" << std::to_string(data.lat_slip)
         << ", long_slip=" << std::to_string(data.long_slip)
-        << ", omega=" << std::to_string(data.omega)
-        << ", tire_load=" << std::to_string(data.tire_load)
-        << ", normalized_tire_load=" << std::to_string(data.normalized_tire_load)
-        << ", torque=" << std::to_string(data.torque)
-        << ", long_force=" << std::to_string(data.long_force)
-        << ", lat_force=" << std::to_string(data.lat_force)
-        << ", normalized_long_force=" << std::to_string(data.normalized_long_force)
-        << ", normalized_lat_force=" << std::to_string(data.normalized_lat_force) << ')';
+        << ", omega=" << std::to_string(data.omega) << ')';
     return out;
   }
 
@@ -567,7 +559,6 @@ namespace rpc {
         << ", brake=" << std::to_string(data.brake)
         << ", engine_rpm=" << std::to_string(data.engine_rpm)
         << ", gear=" << std::to_string(data.gear)
-        << ", drag=" << std::to_string(data.drag)
         << ", wheels=" << data.wheels << ')';
     return out;
   }
