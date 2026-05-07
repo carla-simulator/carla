@@ -25,6 +25,7 @@ The two test cases below cover the two regressions the PR fixes:
 """
 
 import os
+import tempfile
 import time
 import unittest
 
@@ -37,6 +38,7 @@ class TestRecorder(SyncSmokeTest):
         self.client.load_world('Town10HD_Opt')
         time.sleep(2)
         self.world = self.client.get_world()
+        self._original_settings = self.world.get_settings()
         settings = self.world.get_settings()
         settings.synchronous_mode = True
         settings.fixed_delta_seconds = 0.05
@@ -54,13 +56,24 @@ class TestRecorder(SyncSmokeTest):
             self.client.stop_recorder()
         except RuntimeError:
             pass
+        try:
+            self.client.stop_replayer(True)
+        except RuntimeError:
+            pass
+        if self._original_settings is not None:
+            self.world.apply_settings(self._original_settings)
+            self.world.tick()
+        self._original_settings = None
+        # SmokeTest.tearDown reloads Town03, which is not shipped in the
+        # packaged ue5-dev build, so reset to Town10HD_Opt directly here
+        # instead of chaining to super().
         self.client.load_world('Town10HD_Opt')
         time.sleep(2)
         self.world = None
         self.client = None
 
     def _log_path(self, basename):
-        path = os.path.join('/tmp', basename)
+        path = os.path.join(tempfile.gettempdir(), basename)
         self._log_paths.append(path)
         return path
 
