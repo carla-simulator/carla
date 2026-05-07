@@ -63,14 +63,17 @@ TEST(TrafficManagerGeometry, ThreePointCircleRadius_RightTriangle) {
 }
 
 TEST(TrafficManagerGeometry, ThreePointCircleRadius_NearlyCollinearReturnsLarge) {
-  // Three nearly-collinear points should produce a radius above the
-  // junction gating threshold so callers fall through the "no offset" branch.
+  // Three nearly-collinear points (tiny y offset on the middle point) should
+  // produce a radius above the junction gating threshold so callers fall
+  // through the "no offset" branch, while staying finite (distinct from the
+  // perfectly-collinear sentinel asserted in the next test).
   const cg::Location p1{0.0f, 0.0f, 0.0f};
-  const cg::Location p2{1.0f, 0.0f, 0.0f};
+  const cg::Location p2{1.0f, 1e-3f, 0.0f};
   const cg::Location p3{2.0f, 0.0f, 0.0f};
 
   const float radius{GetThreePointCircleRadius(p1, p2, p3)};
   EXPECT_GT(radius, carla::traffic_manager::constants::WaypointSelection::LARGE_VEHICLES_JUNCTION_MAX_RADIUS);
+  EXPECT_LT(radius, std::numeric_limits<float>::max());
 }
 
 TEST(TrafficManagerGeometry, ThreePointCircleRadius_PerfectlyCollinearReturnsMax) {
@@ -121,19 +124,17 @@ TEST(TrafficManagerInterpolation, InterpolateBufferAt_LinearInterpBetweenTwoPoin
 }
 
 TEST(TrafficManagerInterpolation, InterpolateBufferAt_DistanceShorterThanFirstWaypoint) {
-  // Vehicle at origin; first waypoint at x=10. Asking for distance 3 should
-  // produce a location interpolated between waypoint 0 and waypoint 1
-  // (the implementation never extrapolates behind the vehicle; it picks the
-  // first bracketing pair).
+  // Vehicle at origin; first waypoint at x=10. Asking for distance 3 falls
+  // before the first waypoint, so the helper brackets with the first segment
+  // (indices 0 and 1) and interpolates a point ahead of the vehicle along
+  // the planned path.
   const std::vector<cg::Location> buffer{
       {10.0f, 0.0f, 0.0f},
       {20.0f, 0.0f, 0.0f}};
   const cg::Location vehicle_location{0.0f, 0.0f, 0.0f};
 
   const auto [location, index] = InterpolateBufferAt(buffer, 3.0f, vehicle_location);
-  // Both close (10) and far (20) are beyond target_distance; the
-  // implementation falls into the farthest_index == 0 edge case and uses
-  // indices (0, 1). Expected interpolation:
+  // closest=0, farthest=0 → fix-up to (0, 1):
   //   t = (3 - 10) / (20 - 10) = -0.7
   //   x = 10 + (20 - 10) * -0.7 = 3
   ExpectLocationNear(location, cg::Location{3.0f, 0.0f, 0.0f}, kLocationTolerance);
@@ -141,12 +142,8 @@ TEST(TrafficManagerInterpolation, InterpolateBufferAt_DistanceShorterThanFirstWa
 }
 
 TEST(TrafficManagerInterpolation, InterpolateBufferAt_DistanceBeyondLastWaypoint) {
-  // All waypoints fall within target_distance. The bracketing loop never
-  // breaks, so farthest_index stays 0 and the farthest_index == 0 edge-case
-  // fix-up takes us to indices (0, 1). Linear interp between waypoint 0
-  // (x=1) and waypoint 1 (x=2) at target_distance = 100:
-  //   t = (100 - 1) / (2 - 1) = 99
-  //   x = 1 + (2 - 1) * 99 = 100
+  // Every waypoint is closer than target_distance, so the helper clamps to
+  // the last waypoint instead of extrapolating off the front segment.
   const std::vector<cg::Location> buffer{
       {1.0f, 0.0f, 0.0f},
       {2.0f, 0.0f, 0.0f},
@@ -154,8 +151,26 @@ TEST(TrafficManagerInterpolation, InterpolateBufferAt_DistanceBeyondLastWaypoint
   const cg::Location vehicle_location{0.0f, 0.0f, 0.0f};
 
   const auto [location, index] = InterpolateBufferAt(buffer, 100.0f, vehicle_location);
-  ExpectLocationNear(location, cg::Location{100.0f, 0.0f, 0.0f}, kLocationTolerance);
-  EXPECT_EQ(index, 0u);
+  ExpectLocationNear(location, buffer.back(), kLocationTolerance);
+  EXPECT_EQ(index, buffer.size() - 1u);
+}
+
+TEST(TrafficManagerInterpolation, InterpolateBufferAt_BracketBetweenLastTwoWaypoints) {
+  // Target falls between the second-to-last and last waypoints. The
+  // corrected loop must walk the full buffer to find the bracketing pair
+  // (the previous implementation stopped at size - 1 and missed it).
+  const std::vector<cg::Location> buffer{
+      {1.0f, 0.0f, 0.0f},
+      {5.0f, 0.0f, 0.0f},
+      {100.0f, 0.0f, 0.0f}};
+  const cg::Location vehicle_location{0.0f, 0.0f, 0.0f};
+
+  const auto [location, index] = InterpolateBufferAt(buffer, 10.0f, vehicle_location);
+  // closest=1 (dist 5), farthest=2 (dist 100):
+  //   t = (10 - 5) / (100 - 5) ≈ 0.0526
+  //   x ≈ 5 + (100 - 5) * 0.0526 = 10
+  ExpectLocationNear(location, cg::Location{10.0f, 0.0f, 0.0f}, kLocationTolerance);
+  EXPECT_EQ(index, 1u);
 }
 
 TEST(TrafficManagerInterpolation, InterpolateBufferAt_CoincidentBracketReturnsClosest) {
