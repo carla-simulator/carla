@@ -33,12 +33,7 @@ nav:
   - 'C++ reference': 'ref_cpp.md'
   - 'Blueprint library': 'bp_library.md'
   - 'Tutorials': 'tutorials.md'
-  - 'CARLA Studio':
-    - 'Overview': 'carla_studio.md'
-    - 'Tabs': 'carla_studio_tabs.md'
-    - 'Menus': 'carla_studio_menus.md'
-    - 'Build & Configuration': 'carla_studio_build.md'
-    - 'Crash protection': 'carla_studio_crash.md'
+  - 'CARLA Studio': 'https://github.com/carla-simulator/carla-studio'
   #- 'Extended documentation': 'ext_docs.md'
 
 - CARLA Ecosystem:
