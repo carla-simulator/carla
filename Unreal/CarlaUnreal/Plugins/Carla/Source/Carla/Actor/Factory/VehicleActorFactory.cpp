@@ -61,7 +61,7 @@ TSharedPtr<FJsonObject> AVehicleActorFactory::FVehicleParametersToJsonObject(con
 
   JsonObject->SetStringField(TEXT("Make"), VehicleParams.Make);
   JsonObject->SetStringField(TEXT("Model"), VehicleParams.Model);
-  JsonObject->SetStringField(TEXT("Class"), VehicleParams.Class ? VehicleParams.Class->GetPathName() : "");
+  JsonObject->SetStringField(TEXT("Class"), VehicleParams.Class.ToSoftObjectPath().ToString());
   JsonObject->SetNumberField(TEXT("NumberOfWheels"), VehicleParams.NumberOfWheels);
   JsonObject->SetNumberField(TEXT("Generation"), VehicleParams.Generation);
   JsonObject->SetStringField(TEXT("ObjectType"), VehicleParams.ObjectType);
@@ -140,10 +140,12 @@ bool AVehicleActorFactory::JsonToFVehicleParameters(const TSharedPtr<FJsonObject
 
     JsonObject->TryGetStringField(TEXT("Make"), OutVehicleParams.Make);
     JsonObject->TryGetStringField(TEXT("Model"), OutVehicleParams.Model);
-    // Convert "Class" string back to a class reference if necessary
+    // Build the soft class reference from the path string; the actual UClass
+    // load is deferred to MakeVehicleDefinition so the JSON parse itself does
+    // not block on disk I/O.
     FString ClassPath;
-    JsonObject->TryGetStringField(TEXT("Class"), ClassPath); // Custom conversion required if needed
-    OutVehicleParams.Class = StaticLoadClass(ACarlaWheeledVehicle::StaticClass(), nullptr, *ClassPath);
+    JsonObject->TryGetStringField(TEXT("Class"), ClassPath);
+    OutVehicleParams.Class = TSoftClassPtr<ACarlaWheeledVehicle>(FSoftObjectPath(ClassPath));
 
     JsonObject->TryGetNumberField(TEXT("NumberOfWheels"), OutVehicleParams.NumberOfWheels);
     JsonObject->TryGetNumberField(TEXT("Generation"), OutVehicleParams.Generation);

@@ -80,6 +80,6 @@ private:
   FString SignId = "";
 
   UPROPERTY()
-  TArray<UBoxComponent*> EffectTriggerVolumes;
+  TArray<TObjectPtr<UBoxComponent>> EffectTriggerVolumes;
 
 };
