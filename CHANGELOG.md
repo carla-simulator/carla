@@ -1,6 +1,8 @@
+=======
 ## LATEST Changes
 
 * Added weather recording and replay, simultaneous record-and-replay, `stop_replayer` flag on `start_recorder`, `map_override` and follow-offset arguments on `replay_file`, and traffic-sign follow targets in the replayer (ported from ue4-dev)
+* Corrected the Semantic Segmentation camera class table in `Docs/ref_sensors.md` to match the actual 29-class taxonomy defined in `ObjectLabel.h` and `CityScapesPalette.h`. The previous table reflected the legacy 0.8.x CityScapes taxonomy (22 classes), which caused mismatches between documentation and engine output. This update aligns the documentation with the true engine enum values and RGB palette, preventing ground-truth mapping errors when building perception pipelines.
 * Fixed pre-existing UE4-era latent bugs in LibCarla and the Carla plugin: LidarData/SemanticLidarData `ResetMemory` boundary, DVSCamera `IsValid` inversion, SceneCaptureCamera profiler gating, `ViewActor` `TObjectPtr` wrap, ImageUtil `ReadImageData` null return, ShaderBasedSensor runtime-safe material loader, and `manual_control.py` sensor teardown drain.
 * Enabled the LibCarla GoogleTest suite (server + client) on ue5-dev and gated both in CI.
 * Fixed Digital Twin Tool crashes on dense metropolitan OSM data, vegetation spawning inside driving lanes on rural maps, and one-way streets being silently excluded from generation (#9565, #9678)
@@ -68,6 +70,5 @@
 * RSS functionality removed from docs
 * Removed Light Manager from API and docs
 * Added Mine01 off-road mining map from Synkrotron
-
 
 
