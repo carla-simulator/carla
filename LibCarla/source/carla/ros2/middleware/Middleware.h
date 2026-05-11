@@ -67,13 +67,13 @@ inline std::string GetAvailableMiddlewareString() {
 /// Mangle a type name into the ROS2-compatible format.
 /// "sensor_msgs::msg::Image" becomes "sensor_msgs::msg::dds_::Image_".
 /// A bare name like "Image" becomes "dds_::Image_".
-inline std::string ToROS2TypeName(const std::string& dds_type_name) {
-  auto pos = dds_type_name.rfind("::");
+inline std::string ToROS2TypeName(const std::string& type_name) {
+  auto pos = type_name.rfind("::");
   if (pos == std::string::npos) {
-    return "dds_::" + dds_type_name + "_";
+    return "dds_::" + type_name + "_";
   }
-  return dds_type_name.substr(0, pos) +
-      "::dds_::" + dds_type_name.substr(pos + 2) + "_";
+  return type_name.substr(0, pos) +
+      "::dds_::" + type_name.substr(pos + 2) + "_";
 }
 
 } // namespace ros2
