@@ -1,6 +1,9 @@
 =======
 ## LATEST Changes
 
+* Added `Actor.get_component_world_transform`, `Actor.get_component_relative_transform`, `Actor.get_bone_world_transforms`, `Actor.get_bone_relative_transforms`, `Actor.get_component_names`, `Actor.get_bone_names`, `Actor.get_socket_world_transforms`, `Actor.get_socket_relative_transforms`, and `Actor.get_socket_names` Python APIs for introspecting an actor's scene components, skeletal bones, and sockets by name.
+* Added `World.debug.clear_debug_shape` and `World.debug.clear_debug_string` Python APIs to flush persistent debug shapes and HUD strings drawn from the client.
+* Added `Map.geolocation_to_transform` Python API that maps a `GeoLocation` back to a world-space `Location`, the inverse of `Map.transform_to_geolocation`.
 * Hardened UObject ownership in the Carla plugin by migrating UPROPERTY raw pointers to `TObjectPtr<>`, adding mesh caches, enabling async heightmap streaming, and converting catalog assets to soft references.
 * Corrected the Semantic Segmentation camera class table in `Docs/ref_sensors.md` to match the actual 29-class taxonomy defined in `ObjectLabel.h` and `CityScapesPalette.h`. The previous table reflected the legacy 0.8.x CityScapes taxonomy (22 classes), which caused mismatches between documentation and engine output. This update aligns the documentation with the true engine enum values and RGB palette, preventing ground-truth mapping errors when building perception pipelines.
 * Fixed several legacy UE4-era bugs across LibCarla and the Carla plugin affecting lidar memory reset, DVS validation, camera profiling, image reads, sensor materials, and Python sensor teardown.
