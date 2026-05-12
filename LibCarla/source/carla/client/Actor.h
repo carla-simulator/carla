@@ -72,8 +72,11 @@ namespace client {
     /// actor's skinned mesh components.
     std::vector<geom::Transform> GetBoneWorldTransforms() const;
 
-    /// Return the parent-relative transforms of every bone reachable from
-    /// the actor's skinned mesh components.
+    /// Return the component-space transforms of every bone reachable from
+    /// the actor's skinned mesh components. Each transform is the bone's
+    /// local pose multiplied by `FTransform::Identity`, so the result is
+    /// expressed in the owning `USkinnedMeshComponent`'s space, not
+    /// relative to the bone's parent.
     std::vector<geom::Transform> GetBoneRelativeTransforms() const;
 
     /// Return the names of every actor component attached to the actor.
