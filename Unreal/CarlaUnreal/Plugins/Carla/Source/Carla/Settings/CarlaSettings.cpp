@@ -42,19 +42,23 @@ static EQualityLevel QualityLevelFromString(
     const FString &SQualitySettingsLevel,
     const EQualityLevel Default = EQualityLevel::INVALID)
 {
-  if (SQualitySettingsLevel.Equals("Low"))
+  // Case-insensitive match: CarlaDeviceProfileSelectorModule lowercases
+  // -quality-level before resolving the DeviceProfile, so accept the same
+  // forms here to keep the runtime quality level and the active profile in
+  // sync regardless of casing.
+  if (SQualitySettingsLevel.Equals(TEXT("Low"), ESearchCase::IgnoreCase))
   {
     return EQualityLevel::Low;
   }
-  if (SQualitySettingsLevel.Equals("Medium"))
+  if (SQualitySettingsLevel.Equals(TEXT("Medium"), ESearchCase::IgnoreCase))
   {
     return EQualityLevel::Medium;
   }
-  if (SQualitySettingsLevel.Equals("High"))
+  if (SQualitySettingsLevel.Equals(TEXT("High"), ESearchCase::IgnoreCase))
   {
     return EQualityLevel::High;
   }
-  if (SQualitySettingsLevel.Equals("Epic"))
+  if (SQualitySettingsLevel.Equals(TEXT("Epic"), ESearchCase::IgnoreCase))
   {
     return EQualityLevel::Epic;
   }

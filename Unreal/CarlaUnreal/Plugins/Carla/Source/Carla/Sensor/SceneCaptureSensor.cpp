@@ -96,7 +96,11 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureComponent2D->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
   CaptureComponent2D->bCaptureOnMovement = false;
   CaptureComponent2D->bCaptureEveryFrame = false;
-  // Required by the encoding cameras' post-process material pipeline.
+  // Keep the per-component rendering state alive between captures. Both the
+  // encoding-camera post-process materials (depth / semseg / instance /
+  // normals / DVS) and the RGB / optical-flow sensors that consume TSR /
+  // Lumen / velocity history depend on this; set once in the base so every
+  // scene-capture subclass inherits the same behaviour.
   CaptureComponent2D->bAlwaysPersistRenderingState = true;
   ApplyRayTracingSetting();
 

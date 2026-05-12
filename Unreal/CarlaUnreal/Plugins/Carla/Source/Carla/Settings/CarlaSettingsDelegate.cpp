@@ -188,8 +188,8 @@ void UCarlaSettingsDelegate::LaunchLowQualityCommands(UWorld *world) const
 {
   // Per-tier CVars are applied at engine init via the CarlaQuality_Low
   // DeviceProfile (Unreal/CarlaUnreal/Config/DefaultDeviceProfiles.ini).
-  // The post-bucket override `r.SSR.Quality 2` is passed at engine init via
-  // `-execcmds=` from run-carla-host.sh because it must override
+  // The post-bucket override `r.SSR.Quality 2` is injected as `-execcmds=`
+  // by CarlaDeviceProfileSelectorModule because it must override
   // [ReflectionQuality@0]'s SetByScalability assignment.
   (void)world;
 }
@@ -205,10 +205,10 @@ void UCarlaSettingsDelegate::LaunchHighQualityCommands(UWorld *world) const
 {
   // Per-tier CVars are applied at engine init via the CarlaQuality_High
   // DeviceProfile (Unreal/CarlaUnreal/Config/DefaultDeviceProfiles.ini).
-  // The 6 High axes that override [GroupName@3] bucket members are passed
-  // at engine init via `-execcmds=` from run-carla-host.sh because they
-  // need SetByConsole priority (DeviceProfile values lose to the bucket
-  // apply for keys both layers touch).
+  // The 6 High axes that override [GroupName@3] bucket members are injected
+  // as `-execcmds=` by CarlaDeviceProfileSelectorModule because they need
+  // SetByConsole priority (DeviceProfile values lose to the bucket apply
+  // for keys both layers touch).
   //
   // The runtime CVar burst that used to live here was the trigger of NVIDIA
   // Xid 109 GR CTX SWITCH TIMEOUT on Blackwell + recent OKM. Moving the

@@ -27,11 +27,6 @@ AOpticalFlowCamera::AOpticalFlowCamera(const FObjectInitializer &ObjectInitializ
       TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
   AddPostProcessingMaterial(
       TEXT("Material'/Carla/PostProcessingMaterials/VelocityMaterial.VelocityMaterial'"));
-  // Velocity material needs persistent history between captures.
-  if (USceneCaptureComponent2D *Capture = GetCaptureComponent2D())
-  {
-    Capture->bAlwaysPersistRenderingState = true;
-  }
 }
 
 void AOpticalFlowCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
