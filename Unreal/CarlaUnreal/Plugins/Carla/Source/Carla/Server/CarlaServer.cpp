@@ -26,6 +26,7 @@
 #include "Carla/Game/CarlaHUD.h"
 #include "Components/SceneComponent.h"
 #include "Components/SkinnedMeshComponent.h"
+#include "Engine/Engine.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/Functional.h>
