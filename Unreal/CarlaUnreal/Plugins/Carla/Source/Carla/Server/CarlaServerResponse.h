@@ -21,7 +21,7 @@ enum class ECarlaServerResponse
   AutoPilotNotSupported,
   CarSimPluginNotEnabled,
   NotATrafficLight,
-  FunctionNotAvailiableWhenDormant,
+  FunctionNotAvailableWhenDormant,
   ComponentNotFound
 };
 

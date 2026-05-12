@@ -21,7 +21,6 @@
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
 #include "Carla/Actor/ActorData.h"
-#include "CarlaServerResponse.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Game/CarlaHUD.h"
 #include "Components/SceneComponent.h"
@@ -2594,7 +2593,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     {
       return RespondError(
           "get_light_boxes",
-          ECarlaServerResponse::FunctionNotAvailiableWhenDormant,
+          ECarlaServerResponse::FunctionNotAvailableWhenDormant,
           " Actor Id: " + FString::FromInt(ActorId));
     }
     else
@@ -2632,7 +2631,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     {
       return RespondError(
           "get_gbuffer_token",
-          ECarlaServerResponse::FunctionNotAvailiableWhenDormant,
+          ECarlaServerResponse::FunctionNotAvailableWhenDormant,
           " Actor Id: " + FString::FromInt(ActorId));
     }
     ASceneCaptureSensor* Sensor = Cast<ASceneCaptureSensor>(CarlaActor->GetActor());

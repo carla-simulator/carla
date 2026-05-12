@@ -11,7 +11,7 @@ FString CarlaGetStringError(ECarlaServerResponse Response)
   switch (Response)
   {
     case ECarlaServerResponse::Success:
-      return "Sucess";
+      return "Success";
     case ECarlaServerResponse::ActorNotFound:
       return "Actor could not be found in the registry";
     case ECarlaServerResponse::ComponentNotFound:
@@ -36,8 +36,8 @@ FString CarlaGetStringError(ECarlaServerResponse Response)
       return "CarSim plugin is not enabled";
     case ECarlaServerResponse::NotATrafficLight:
       return "Actor is not a traffic light";
-    case ECarlaServerResponse::FunctionNotAvailiableWhenDormant:
-      return "Function not availiable when the actor is dormant";
+    case ECarlaServerResponse::FunctionNotAvailableWhenDormant:
+      return "Function not available when the actor is dormant";
   }
   return "unknown error";
 }
