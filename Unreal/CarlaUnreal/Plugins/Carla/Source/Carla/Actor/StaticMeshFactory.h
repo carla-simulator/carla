@@ -24,4 +24,12 @@ class CARLA_API AStaticMeshFactory : public ACarlaActorFactory
   FActorSpawnResult SpawnActor(
       const FTransform &SpawnAtTransform,
       const FActorDescription &ActorDescription) final;
+
+private:
+  /// Lazy, memoizing mesh cache keyed by mesh path. This factory takes an
+  /// arbitrary mesh path at spawn time (there is no catalog to pre-populate
+  /// from), so the cache fills on first spawn of a given path and spares
+  /// subsequent spawns of the same path the synchronous LoadObject hit.
+  UPROPERTY(Transient, DuplicateTransient)
+  TMap<FString, TObjectPtr<UStaticMesh>> MeshCacheByPath;
 };

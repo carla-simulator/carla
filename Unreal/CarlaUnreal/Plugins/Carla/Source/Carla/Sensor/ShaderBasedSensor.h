@@ -122,7 +122,7 @@ protected:
 private:
 
   UPROPERTY()
-  TArray<UMaterial*> MaterialsFound;
+  TArray<TObjectPtr<UMaterial>> MaterialsFound;
 
   UPROPERTY()
   TArray<FSensorShader> Shaders;

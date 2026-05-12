@@ -61,7 +61,7 @@ TSharedPtr<FJsonObject> AWalkerActorFactory::FWalkerParametersToJsonObject(const
 {
   TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject);
   JsonObject->SetStringField(TEXT("Id"), WalkerParams.Id);
-  JsonObject->SetStringField(TEXT("Class"), WalkerParams.Class ? WalkerParams.Class->GetPathName() : "");
+  JsonObject->SetStringField(TEXT("Class"), WalkerParams.Class.ToSoftObjectPath().ToString());
 
   FString GenderString;
   switch(WalkerParams.Gender)
@@ -163,9 +163,12 @@ bool AWalkerActorFactory::JsonToFWalkerParameters(const TSharedPtr<FJsonObject> 
 
     JsonObject->TryGetStringField(TEXT("Id"), OutWalkerParams.Id);
 
+    // Build the soft class reference from the path string; the actual UClass
+    // load is deferred to MakePedestrianDefinition so the JSON parse itself
+    // does not block on disk I/O.
     FString ClassPath;
-    JsonObject->TryGetStringField(TEXT("Class"), ClassPath); // Custom conversion required if needed
-    OutWalkerParams.Class = StaticLoadClass(AWalkerBase::StaticClass(), nullptr, *ClassPath);
+    JsonObject->TryGetStringField(TEXT("Class"), ClassPath);
+    OutWalkerParams.Class = TSoftClassPtr<ACharacter>(FSoftObjectPath(ClassPath));
 
     FString GenderString;
     JsonObject->TryGetStringField(TEXT("Gender"), GenderString);

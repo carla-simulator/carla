@@ -25,11 +25,11 @@ UHierarchicalInstancedStaticMeshComponent* AProceduralBuilding::GetHISMComp(
 
   FString SMName = SM->GetName();
 
-  UHierarchicalInstancedStaticMeshComponent** HISMCompPtr = HISMComps.Find(SMName);
+  TObjectPtr<UHierarchicalInstancedStaticMeshComponent>* HISMCompPtr = HISMComps.Find(SMName);
 
   if(HISMCompPtr) return *HISMCompPtr;
 
-  UHierarchicalInstancedStaticMeshComponent* HISMComp = *HISMCompPtr;
+  UHierarchicalInstancedStaticMeshComponent* HISMComp = nullptr;
 
   // If it doesn't exist, create the component
   HISMComp = NewObject<UHierarchicalInstancedStaticMeshComponent>(this,
