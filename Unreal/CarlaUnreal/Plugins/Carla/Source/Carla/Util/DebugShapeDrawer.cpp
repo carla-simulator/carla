@@ -242,3 +242,11 @@ void FDebugShapeDrawer::Draw(const carla::rpc::DebugShape &Shape)
   auto Visitor = FShapeVisitor(World, Shape.color, Shape.life_time, Shape.persistent_lines);
   std::visit(Visitor, Shape.primitive);
 }
+
+void FDebugShapeDrawer::Clear()
+{
+  if (World.PersistentLineBatcher != nullptr)
+  {
+    World.PersistentLineBatcher->Flush();
+  }
+}

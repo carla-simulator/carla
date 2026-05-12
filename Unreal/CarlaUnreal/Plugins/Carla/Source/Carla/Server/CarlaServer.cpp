@@ -23,6 +23,7 @@
 #include "Carla/Actor/ActorData.h"
 #include "CarlaServerResponse.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
+#include "Carla/Game/CarlaHUD.h"
 #include "Components/SceneComponent.h"
 #include "Components/SkinnedMeshComponent.h"
 
@@ -2817,6 +2818,41 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     check(World != nullptr);
     FDebugShapeDrawer Drawer(*World);
     Drawer.Draw(shape);
+    return R<void>::Success();
+  };
+
+  // ~~ Clear debug shapes ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(clear_debug_shape) << [this]() -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    check(World != nullptr);
+    FDebugShapeDrawer Drawer(*World);
+    Drawer.Clear();
+    return R<void>::Success();
+  };
+
+  // ~~ Clear debug strings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(clear_debug_string) << [this]() -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    check(World != nullptr);
+    APlayerController *PlayerController = World->GetFirstPlayerController();
+    if (PlayerController != nullptr)
+    {
+      ACarlaHUD *CarlaHUD = Cast<ACarlaHUD>(PlayerController->GetHUD());
+      if (CarlaHUD != nullptr)
+      {
+        CarlaHUD->ClearDebugStrings();
+      }
+    }
+    if (GEngine != nullptr)
+    {
+      GEngine->ClearOnScreenDebugMessages();
+    }
     return R<void>::Success();
   };
 
