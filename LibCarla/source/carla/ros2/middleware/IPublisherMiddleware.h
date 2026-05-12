@@ -9,19 +9,19 @@
 namespace carla {
 namespace ros2 {
 
-/// Type-erased abstract interface for a DDS publisher middleware.
-/// Concrete implementations handle all vendor-specific DDS entity creation,
+/// Type-erased abstract interface for a publisher middleware.
+/// Concrete implementations handle all vendor-specific entity creation,
 /// type registration, and data writing.
-class IDDSPublisherMiddleware {
+class IPublisherMiddleware {
  public:
-  virtual ~IDDSPublisherMiddleware() = default;
+  virtual ~IPublisherMiddleware() = default;
 
-  /// Initialize DDS entities (participant, publisher, topic, writer).
-  /// @param topic_name  Full DDS topic name including "rt/" prefix.
+  /// Initialize the underlying middleware entities.
+  /// @param topic_name  Full topic name including "rt/" prefix.
   /// @return true on success.
   virtual bool Init(const std::string& topic_name) = 0;
 
-  /// Serialize and write a message to the DDS network.
+  /// Serialize and write a message to the network.
   /// @param message_data  Pointer to the message object (type-erased, cast internally).
   /// @return true if the write succeeded.
   virtual bool Publish(void* message_data) = 0;
@@ -29,7 +29,7 @@ class IDDSPublisherMiddleware {
   /// @return true if at least one subscriber is matched.
   virtual bool IsAlive() const = 0;
 
-  /// @return The DDS topic name this publisher is bound to.
+  /// @return The topic name this publisher is bound to.
   virtual std::string GetTopicName() const = 0;
 };
 

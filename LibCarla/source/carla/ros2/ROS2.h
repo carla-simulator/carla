@@ -10,7 +10,7 @@
 #include "carla/BufferView.h"
 #include "carla/geom/Transform.h"
 #include "carla/ros2/ROS2CallbackData.h"
-#include "carla/ros2/dds/DDSMiddleware.h"
+#include "carla/ros2/middleware/Middleware.h"
 #include "carla/streaming/detail/Types.h"
 
 #include <mutex>
@@ -59,7 +59,7 @@ class ROS2
     // General
     // Returns true when enabling succeeds (middleware compiled in), false otherwise.
     // Callers pass enable=false to shut down; the return value is always true in that case.
-    bool Enable(bool enable, DDSMiddleware middleware = DDSMiddleware::FastDDS);
+    bool Enable(bool enable, Middleware middleware = Middleware::FastDDS);
     void Shutdown();
 
     bool IsEnabled() { return _enabled; }

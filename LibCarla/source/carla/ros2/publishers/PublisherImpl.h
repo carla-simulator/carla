@@ -7,7 +7,7 @@
 #include <memory>
 #include <string>
 
-#include "carla/ros2/dds/DDSMiddlewareFactory.h"
+#include "carla/ros2/middleware/MiddlewareFactory.h"
 #include "carla/Logging.h"
 
 namespace carla {
@@ -22,7 +22,7 @@ namespace ros2 {
 #ifdef LIBCARLA_WITH_GTEST
       if (!_middleware) {
 #endif
-        _middleware = DDSMiddlewareFactory::CreatePublisher<T>();
+        _middleware = MiddlewareFactory::CreatePublisher<T>();
         if (!_middleware) {
           log_error("PublisherImpl: Failed to create middleware publisher");
           return false;
@@ -60,13 +60,13 @@ namespace ros2 {
     }
 
 #ifdef LIBCARLA_WITH_GTEST
-    void SetMiddlewareForTesting(std::unique_ptr<IDDSPublisherMiddleware> middleware) {
+    void SetMiddlewareForTesting(std::unique_ptr<IPublisherMiddleware> middleware) {
       _middleware = std::move(middleware);
     }
 #endif
 
   private:
-    std::unique_ptr<IDDSPublisherMiddleware> _middleware;
+    std::unique_ptr<IPublisherMiddleware> _middleware;
     msg_type _message;
   };
 

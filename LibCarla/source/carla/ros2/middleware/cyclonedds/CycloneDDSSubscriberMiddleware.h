@@ -4,8 +4,8 @@
 
 #pragma once
 
-#include "carla/ros2/dds/IDDSSubscriberMiddleware.h"
-#include "carla/ros2/dds/cyclonedds/CycloneDDSSertype.h"
+#include "carla/ros2/middleware/ISubscriberMiddleware.h"
+#include "carla/ros2/middleware/cyclonedds/CycloneDDSSertype.h"
 #include "carla/ros2/types/CdrSerialization.h"
 #include "carla/ros2/types/CdrTopicInfo.h"
 #include "carla/ros2/types/UserDataFormat.h"
@@ -13,8 +13,8 @@
 
 #include <atomic>
 
-#ifndef CARLA_ROS2_DDS_TESTING
-#ifdef CARLA_ROS2_DDS_CYCLONEDDS
+#ifndef CARLA_ROS2_MIDDLEWARE_TESTING
+#ifdef CARLA_ROS2_MIDDLEWARE_CYCLONEDDS
 
 #include <dds/dds.h>
 #include <dds/ddsi/ddsi_serdata.h>
@@ -23,7 +23,7 @@
 namespace carla {
 namespace ros2 {
 
-/// CycloneDDS implementation of IDDSSubscriberMiddleware.
+/// CycloneDDS implementation of ISubscriberMiddleware.
 ///
 /// Receives raw CDR bytes via dds_takecdr() and deserializes them into the
 /// caller-supplied msg::* POD struct via CdrSerialization.h.  No IDL-generated
@@ -32,7 +32,7 @@ namespace ros2 {
 /// Parameterized on a traits type S that provides:
 ///   S::msg_type  — the message type (a carla::ros2::msg::* POD struct)
 template<typename S>
-class CycloneDDSSubscriberMiddleware : public IDDSSubscriberMiddleware {
+class CycloneDDSSubscriberMiddleware : public ISubscriberMiddleware {
  public:
   using msg_type = typename S::msg_type;
 
@@ -163,5 +163,5 @@ class CycloneDDSSubscriberMiddleware : public IDDSSubscriberMiddleware {
 } // namespace ros2
 } // namespace carla
 
-#endif // CARLA_ROS2_DDS_CYCLONEDDS
-#endif // !CARLA_ROS2_DDS_TESTING
+#endif // CARLA_ROS2_MIDDLEWARE_CYCLONEDDS
+#endif // !CARLA_ROS2_MIDDLEWARE_TESTING

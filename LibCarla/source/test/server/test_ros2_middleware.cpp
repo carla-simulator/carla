@@ -3,19 +3,19 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 // Must be defined before any includes to suppress real DDS auto-includes
-// while keeping CARLA_ROS2_DDS_FASTDDS compile-time checks active.
-#define CARLA_ROS2_DDS_TESTING
-#define CARLA_ROS2_DDS_FASTDDS
+// while keeping CARLA_ROS2_MIDDLEWARE_FASTDDS compile-time checks active.
+#define CARLA_ROS2_MIDDLEWARE_TESTING
+#define CARLA_ROS2_MIDDLEWARE_FASTDDS
 
 #include "test.h"
 
-#include <carla/ros2/dds/DDSMiddleware.h>
-#include <carla/ros2/dds/DDSMiddlewareFactory.h>
-#include <carla/ros2/dds/IDDSPublisherMiddleware.h>
-#include <carla/ros2/dds/IDDSSubscriberMiddleware.h>
+#include <carla/ros2/middleware/Middleware.h>
+#include <carla/ros2/middleware/MiddlewareFactory.h>
+#include <carla/ros2/middleware/IPublisherMiddleware.h>
+#include <carla/ros2/middleware/ISubscriberMiddleware.h>
 #include <carla/ros2/publishers/PublisherImpl.h>
 #include <carla/ros2/subscribers/SubscriberImpl.h>
-#include <carla/ros2/dds/fastdds/GenericCdrPubSubType.h>
+#include <carla/ros2/middleware/fastdds/GenericCdrPubSubType.h>
 #include <carla/ros2/types/CdrSerialization.h>
 #include <carla/ros2/types/CdrTopicInfo.h>
 
@@ -45,7 +45,7 @@ struct TestSubTraits {
 
 // -- Mock publisher middleware ------------------------------------------------
 
-class MockPublisherMiddleware : public IDDSPublisherMiddleware {
+class MockPublisherMiddleware : public IPublisherMiddleware {
  public:
   bool init_return_value{true};
   bool publish_return_value{true};
@@ -74,7 +74,7 @@ class MockPublisherMiddleware : public IDDSPublisherMiddleware {
 
 // -- Mock subscriber middleware -----------------------------------------------
 
-class MockSubscriberMiddleware : public IDDSSubscriberMiddleware {
+class MockSubscriberMiddleware : public ISubscriberMiddleware {
  public:
   bool init_return_value{true};
   bool alive{true};
@@ -101,151 +101,151 @@ class MockSubscriberMiddleware : public IDDSSubscriberMiddleware {
 
 // -- Factory fixture (resets static state) ------------------------------------
 
-class DDSMiddlewareFactoryFixture : public ::testing::Test {
+class MiddlewareFactoryFixture : public ::testing::Test {
  protected:
   void SetUp() override {
-    DDSMiddlewareFactory::SetMiddleware(DDSMiddleware::FastDDS);
+    MiddlewareFactory::SetMiddleware(Middleware::FastDDS);
   }
 };
 
 // ==========================================================================
-// Group 1: dds_middleware_to_string (2 tests)
+// Group 1: middleware_to_string (2 tests)
 // ==========================================================================
 
-TEST(dds_middleware_to_string, fastdds_returns_correct_string) {
-  EXPECT_STREQ(DDSMiddlewareToString(DDSMiddleware::FastDDS), "FastDDS");
+TEST(middleware_to_string, fastdds_returns_correct_string) {
+  EXPECT_STREQ(MiddlewareToString(Middleware::FastDDS), "FastDDS");
 }
 
-TEST(dds_middleware_to_string, cyclonedds_returns_correct_string) {
-  EXPECT_STREQ(DDSMiddlewareToString(DDSMiddleware::CycloneDDS), "CycloneDDS");
+TEST(middleware_to_string, cyclonedds_returns_correct_string) {
+  EXPECT_STREQ(MiddlewareToString(Middleware::CycloneDDS), "CycloneDDS");
 }
 
 // ==========================================================================
-// Group 2: dds_middleware_from_string (5 tests)
+// Group 2: middleware_from_string (5 tests)
 // ==========================================================================
 
-TEST(dds_middleware_from_string, fastdds_lowercase_valid) {
-  auto result = DDSMiddlewareFromString("fastdds");
+TEST(middleware_from_string, fastdds_lowercase_valid) {
+  auto result = MiddlewareFromString("fastdds");
   EXPECT_TRUE(result.valid);
-  EXPECT_EQ(result.middleware, DDSMiddleware::FastDDS);
+  EXPECT_EQ(result.middleware, Middleware::FastDDS);
 }
 
-TEST(dds_middleware_from_string, unknown_string_invalid) {
-  auto result = DDSMiddlewareFromString("unknowndds");
+TEST(middleware_from_string, unknown_string_invalid) {
+  auto result = MiddlewareFromString("unknowndds");
   EXPECT_FALSE(result.valid);
 }
 
-TEST(dds_middleware_from_string, cyclonedds_lowercase_valid) {
-  auto result = DDSMiddlewareFromString("cyclonedds");
+TEST(middleware_from_string, cyclonedds_lowercase_valid) {
+  auto result = MiddlewareFromString("cyclonedds");
   EXPECT_TRUE(result.valid);
-  EXPECT_EQ(result.middleware, DDSMiddleware::CycloneDDS);
+  EXPECT_EQ(result.middleware, Middleware::CycloneDDS);
 }
 
-TEST(dds_middleware_from_string, empty_string_invalid) {
-  auto result = DDSMiddlewareFromString("");
+TEST(middleware_from_string, empty_string_invalid) {
+  auto result = MiddlewareFromString("");
   EXPECT_FALSE(result.valid);
 }
 
-TEST(dds_middleware_from_string, uppercase_rejected) {
-  auto result = DDSMiddlewareFromString("FastDDS");
+TEST(middleware_from_string, uppercase_rejected) {
+  auto result = MiddlewareFromString("FastDDS");
   EXPECT_FALSE(result.valid);
 }
 
-TEST(dds_middleware_from_string, partial_match_rejected) {
-  auto result = DDSMiddlewareFromString("fast");
+TEST(middleware_from_string, partial_match_rejected) {
+  auto result = MiddlewareFromString("fast");
   EXPECT_FALSE(result.valid);
 }
 
 // ==========================================================================
-// Group 3: dds_middleware_available (2 tests)
+// Group 3: middleware_available (2 tests)
 // ==========================================================================
 
-TEST(dds_middleware_available, fastdds_available) {
+TEST(middleware_available, fastdds_available) {
   EXPECT_TRUE(
-      DDSMiddlewareFactory::IsMiddlewareAvailable(DDSMiddleware::FastDDS));
+      MiddlewareFactory::IsMiddlewareAvailable(Middleware::FastDDS));
 }
 
-TEST(dds_middleware_available, available_string_contains_fastdds) {
+TEST(middleware_available, available_string_contains_fastdds) {
   std::string available = GetAvailableMiddlewareString();
   EXPECT_NE(available.find("FastDDS"), std::string::npos);
 }
 
-TEST(dds_middleware_available, cyclonedds_not_available_without_macro) {
+TEST(middleware_available, cyclonedds_not_available_without_macro) {
   EXPECT_FALSE(
-      DDSMiddlewareFactory::IsMiddlewareAvailable(DDSMiddleware::CycloneDDS));
+      MiddlewareFactory::IsMiddlewareAvailable(Middleware::CycloneDDS));
 }
 
 // ==========================================================================
-// Group 4: dds_middleware_type_name (4 tests)
+// Group 4: middleware_type_name (4 tests)
 // ==========================================================================
 
-TEST(dds_middleware_type_name, bare_name) {
-  EXPECT_EQ(ToROS2DDSTypeName("Image"), "dds_::Image_");
+TEST(middleware_type_name, bare_name) {
+  EXPECT_EQ(ToROS2TypeName("Image"), "dds_::Image_");
 }
 
-TEST(dds_middleware_type_name, fully_qualified) {
+TEST(middleware_type_name, fully_qualified) {
   EXPECT_EQ(
-      ToROS2DDSTypeName("sensor_msgs::msg::Image"),
+      ToROS2TypeName("sensor_msgs::msg::Image"),
       "sensor_msgs::msg::dds_::Image_");
 }
 
-TEST(dds_middleware_type_name, single_namespace) {
-  EXPECT_EQ(ToROS2DDSTypeName("msg::Image"), "msg::dds_::Image_");
+TEST(middleware_type_name, single_namespace) {
+  EXPECT_EQ(ToROS2TypeName("msg::Image"), "msg::dds_::Image_");
 }
 
-TEST(dds_middleware_type_name, empty_string) {
-  EXPECT_EQ(ToROS2DDSTypeName(""), "dds_::_");
+TEST(middleware_type_name, empty_string) {
+  EXPECT_EQ(ToROS2TypeName(""), "dds_::_");
 }
 
 // ==========================================================================
-// Group 5: DDSMiddlewareFactoryFixture (8 tests)
+// Group 5: MiddlewareFactoryFixture (8 tests)
 // ==========================================================================
 
-TEST_F(DDSMiddlewareFactoryFixture, set_and_get_middleware) {
-  DDSMiddlewareFactory::SetMiddleware(DDSMiddleware::FastDDS);
-  EXPECT_EQ(DDSMiddlewareFactory::GetMiddleware(), DDSMiddleware::FastDDS);
+TEST_F(MiddlewareFactoryFixture, set_and_get_middleware) {
+  MiddlewareFactory::SetMiddleware(Middleware::FastDDS);
+  EXPECT_EQ(MiddlewareFactory::GetMiddleware(), Middleware::FastDDS);
 }
 
-TEST_F(DDSMiddlewareFactoryFixture, default_is_fastdds) {
-  EXPECT_EQ(DDSMiddlewareFactory::GetMiddleware(), DDSMiddleware::FastDDS);
+TEST_F(MiddlewareFactoryFixture, default_is_fastdds) {
+  EXPECT_EQ(MiddlewareFactory::GetMiddleware(), Middleware::FastDDS);
 }
 
-TEST_F(DDSMiddlewareFactoryFixture, resolve_available_middleware) {
+TEST_F(MiddlewareFactoryFixture, resolve_available_middleware) {
   auto resolution =
-      DDSMiddlewareFactory::ResolveMiddleware(DDSMiddleware::FastDDS);
+      MiddlewareFactory::ResolveMiddleware(Middleware::FastDDS);
   EXPECT_TRUE(resolution.success);
-  EXPECT_EQ(resolution.middleware, DDSMiddleware::FastDDS);
+  EXPECT_EQ(resolution.middleware, Middleware::FastDDS);
 }
 
-TEST_F(DDSMiddlewareFactoryFixture, factory_available_string) {
-  std::string available = DDSMiddlewareFactory::GetAvailableMiddlewareString();
+TEST_F(MiddlewareFactoryFixture, factory_available_string) {
+  std::string available = MiddlewareFactory::GetAvailableMiddlewareString();
   EXPECT_NE(available.find("FastDDS"), std::string::npos);
 }
 
-TEST_F(DDSMiddlewareFactoryFixture, set_and_get_cyclonedds) {
-  DDSMiddlewareFactory::SetMiddleware(DDSMiddleware::CycloneDDS);
-  EXPECT_EQ(DDSMiddlewareFactory::GetMiddleware(), DDSMiddleware::CycloneDDS);
+TEST_F(MiddlewareFactoryFixture, set_and_get_cyclonedds) {
+  MiddlewareFactory::SetMiddleware(Middleware::CycloneDDS);
+  EXPECT_EQ(MiddlewareFactory::GetMiddleware(), Middleware::CycloneDDS);
 }
 
-TEST_F(DDSMiddlewareFactoryFixture, resolve_unavailable_cyclonedds) {
+TEST_F(MiddlewareFactoryFixture, resolve_unavailable_cyclonedds) {
   auto resolution =
-      DDSMiddlewareFactory::ResolveMiddleware(DDSMiddleware::CycloneDDS);
+      MiddlewareFactory::ResolveMiddleware(Middleware::CycloneDDS);
   EXPECT_FALSE(resolution.success);
-  EXPECT_EQ(resolution.middleware, DDSMiddleware::CycloneDDS);
+  EXPECT_EQ(resolution.middleware, Middleware::CycloneDDS);
 }
 
-TEST_F(DDSMiddlewareFactoryFixture, create_publisher_cyclonedds_unavailable) {
-  DDSMiddlewareFactory::SetMiddleware(DDSMiddleware::CycloneDDS);
+TEST_F(MiddlewareFactoryFixture, create_publisher_cyclonedds_unavailable) {
+  MiddlewareFactory::SetMiddleware(Middleware::CycloneDDS);
   ::testing::internal::CaptureStderr();
-  auto pub = DDSMiddlewareFactory::CreatePublisher<TestPubTraits>();
+  auto pub = MiddlewareFactory::CreatePublisher<TestPubTraits>();
   ::testing::internal::GetCapturedStderr();
   EXPECT_EQ(pub, nullptr);
 }
 
-TEST_F(DDSMiddlewareFactoryFixture, create_subscriber_cyclonedds_unavailable) {
-  DDSMiddlewareFactory::SetMiddleware(DDSMiddleware::CycloneDDS);
+TEST_F(MiddlewareFactoryFixture, create_subscriber_cyclonedds_unavailable) {
+  MiddlewareFactory::SetMiddleware(Middleware::CycloneDDS);
   ::testing::internal::CaptureStderr();
-  auto sub = DDSMiddlewareFactory::CreateSubscriber<TestSubTraits>();
+  auto sub = MiddlewareFactory::CreateSubscriber<TestSubTraits>();
   ::testing::internal::GetCapturedStderr();
   EXPECT_EQ(sub, nullptr);
 }
@@ -266,7 +266,7 @@ TEST(publisher_impl, init_delegates_to_middleware) {
   PublisherImpl<TestPubTraits> pub;
   auto* mock = new MockPublisherMiddleware();
   pub.SetMiddlewareForTesting(
-      std::unique_ptr<IDDSPublisherMiddleware>(mock));
+      std::unique_ptr<IPublisherMiddleware>(mock));
   EXPECT_TRUE(pub.Init("rt/test_topic"));
   EXPECT_TRUE(mock->init_called);
   EXPECT_EQ(mock->last_topic_name, "rt/test_topic");
@@ -276,7 +276,7 @@ TEST(publisher_impl, publish_delegates_to_middleware) {
   PublisherImpl<TestPubTraits> pub;
   auto* mock = new MockPublisherMiddleware();
   pub.SetMiddlewareForTesting(
-      std::unique_ptr<IDDSPublisherMiddleware>(mock));
+      std::unique_ptr<IPublisherMiddleware>(mock));
   pub.Init("rt/test_topic");
   EXPECT_TRUE(pub.Publish());
   EXPECT_TRUE(mock->publish_called);
@@ -295,7 +295,7 @@ TEST(publisher_impl, is_alive_delegates) {
   auto* mock = new MockPublisherMiddleware();
   mock->alive = true;
   pub.SetMiddlewareForTesting(
-      std::unique_ptr<IDDSPublisherMiddleware>(mock));
+      std::unique_ptr<IPublisherMiddleware>(mock));
   pub.Init("rt/test_topic");
   EXPECT_TRUE(pub.IsAlive());
   mock->alive = false;
@@ -306,7 +306,7 @@ TEST(publisher_impl, topic_name_delegates) {
   PublisherImpl<TestPubTraits> pub;
   auto* mock = new MockPublisherMiddleware();
   pub.SetMiddlewareForTesting(
-      std::unique_ptr<IDDSPublisherMiddleware>(mock));
+      std::unique_ptr<IPublisherMiddleware>(mock));
   pub.Init("rt/camera/image");
   EXPECT_EQ(pub.GetTopicName(), "rt/camera/image");
 }
@@ -315,7 +315,7 @@ TEST(publisher_impl, data_flows_through_publish) {
   PublisherImpl<TestPubTraits> pub;
   auto* mock = new MockPublisherMiddleware();
   pub.SetMiddlewareForTesting(
-      std::unique_ptr<IDDSPublisherMiddleware>(mock));
+      std::unique_ptr<IPublisherMiddleware>(mock));
   pub.Init("rt/test_topic");
 
   pub.GetMessage()->value = 42;
@@ -339,7 +339,7 @@ TEST(subscriber_impl, init_delegates_to_middleware) {
   SubscriberImpl<TestSubTraits> sub;
   auto* mock = new MockSubscriberMiddleware();
   sub.SetMiddlewareForTesting(
-      std::unique_ptr<IDDSSubscriberMiddleware>(mock));
+      std::unique_ptr<ISubscriberMiddleware>(mock));
   EXPECT_TRUE(sub.Init("rt/test_topic"));
   EXPECT_TRUE(mock->init_called);
   EXPECT_EQ(mock->last_topic_name, "rt/test_topic");
@@ -351,7 +351,7 @@ TEST(subscriber_impl, get_message_clears_flag) {
   SubscriberImpl<TestSubTraits> sub;
   auto* mock = new MockSubscriberMiddleware();
   sub.SetMiddlewareForTesting(
-      std::unique_ptr<IDDSSubscriberMiddleware>(mock));
+      std::unique_ptr<ISubscriberMiddleware>(mock));
   sub.Init("rt/test_topic");
 
   TestMsg msg;
@@ -369,7 +369,7 @@ TEST(subscriber_impl, is_alive_delegates) {
   auto* mock = new MockSubscriberMiddleware();
   mock->alive = true;
   sub.SetMiddlewareForTesting(
-      std::unique_ptr<IDDSSubscriberMiddleware>(mock));
+      std::unique_ptr<ISubscriberMiddleware>(mock));
   sub.Init("rt/test_topic");
   EXPECT_TRUE(sub.IsAlive());
   mock->alive = false;
@@ -380,7 +380,7 @@ TEST(subscriber_impl, topic_name_delegates) {
   SubscriberImpl<TestSubTraits> sub;
   auto* mock = new MockSubscriberMiddleware();
   sub.SetMiddlewareForTesting(
-      std::unique_ptr<IDDSSubscriberMiddleware>(mock));
+      std::unique_ptr<ISubscriberMiddleware>(mock));
   sub.Init("rt/lidar/points");
   EXPECT_EQ(sub.GetTopicName(), "rt/lidar/points");
 }
@@ -389,7 +389,7 @@ TEST(subscriber_impl, simulate_message_receipt) {
   SubscriberImpl<TestSubTraits> sub;
   auto* mock = new MockSubscriberMiddleware();
   sub.SetMiddlewareForTesting(
-      std::unique_ptr<IDDSSubscriberMiddleware>(mock));
+      std::unique_ptr<ISubscriberMiddleware>(mock));
   sub.Init("rt/test_topic");
 
   EXPECT_FALSE(sub.HasNewMessage());
@@ -405,7 +405,7 @@ TEST(subscriber_impl, init_failure_propagated) {
   auto* mock = new MockSubscriberMiddleware();
   mock->init_return_value = false;
   sub.SetMiddlewareForTesting(
-      std::unique_ptr<IDDSSubscriberMiddleware>(mock));
+      std::unique_ptr<ISubscriberMiddleware>(mock));
   EXPECT_FALSE(sub.Init("rt/test_topic"));
 }
 

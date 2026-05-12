@@ -5,9 +5,9 @@
 #pragma once
 
 // Only meaningful when building the CycloneDDS middleware target.
-// CARLA_ROS2_DDS_TESTING suppresses DDS includes for unit tests.
-#ifndef CARLA_ROS2_DDS_TESTING
-#ifdef CARLA_ROS2_DDS_CYCLONEDDS
+// CARLA_ROS2_MIDDLEWARE_TESTING suppresses DDS includes for unit tests.
+#ifndef CARLA_ROS2_MIDDLEWARE_TESTING
+#ifdef CARLA_ROS2_MIDDLEWARE_CYCLONEDDS
 
 #include <cstdint>
 #include <cstdlib>
@@ -166,5 +166,5 @@ inline struct ddsi_serdata* carla_cdr_wrap(
 } // namespace ros2
 } // namespace carla
 
-#endif // CARLA_ROS2_DDS_CYCLONEDDS
-#endif // !CARLA_ROS2_DDS_TESTING
+#endif // CARLA_ROS2_MIDDLEWARE_CYCLONEDDS
+#endif // !CARLA_ROS2_MIDDLEWARE_TESTING

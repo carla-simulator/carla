@@ -7,7 +7,7 @@
 #include "carla/ros2/ROS2.h"
 
 #include "carla/Logging.h"
-#include "carla/ros2/dds/DDSMiddlewareFactory.h"
+#include "carla/ros2/middleware/MiddlewareFactory.h"
 #include "carla/geom/GeoLocation.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/sensor/data/DVSEvent.h"
@@ -70,18 +70,18 @@ enum ESensors {
   HSSLidar
 };
 
-bool ROS2::Enable(bool enable, DDSMiddleware middleware) {
+bool ROS2::Enable(bool enable, Middleware middleware) {
   std::lock_guard<std::recursive_mutex> lock(_mutex);
   if (enable) {
-    auto resolve = DDSMiddlewareFactory::ResolveMiddleware(middleware);
+    auto resolve = MiddlewareFactory::ResolveMiddleware(middleware);
     if (!resolve.success) {
-      log_error("ROS2: middleware '", DDSMiddlewareToString(middleware),
+      log_error("ROS2: middleware '", MiddlewareToString(middleware),
           "' is not compiled into this binary. ROS2 is DISABLED.");
       return false;
     }
-    DDSMiddlewareFactory::SetMiddleware(middleware);
-    log_info("ROS2: using DDS middleware: ",
-        DDSMiddlewareToString(middleware));
+    MiddlewareFactory::SetMiddleware(middleware);
+    log_info("ROS2: using middleware: ",
+        MiddlewareToString(middleware));
     _clock_publisher = std::make_shared<CarlaClockPublisher>();
   }
   _enabled = enable;

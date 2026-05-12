@@ -4,7 +4,7 @@
 
 #pragma once
 
-#ifndef CARLA_ROS2_DDS_TESTING
+#ifndef CARLA_ROS2_MIDDLEWARE_TESTING
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
 
@@ -57,4 +57,4 @@ class FastDDSSharedParticipant {
 } // namespace ros2
 } // namespace carla
 
-#endif // !CARLA_ROS2_DDS_TESTING
+#endif // !CARLA_ROS2_MIDDLEWARE_TESTING

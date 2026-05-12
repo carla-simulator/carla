@@ -6,7 +6,7 @@
 // Verifies format RIHS01_[0-9a-f]{64} for all 31 specializations and
 // uniqueness across the set.
 
-#define CARLA_ROS2_DDS_TESTING
+#define CARLA_ROS2_MIDDLEWARE_TESTING
 #include "test.h"
 
 #include <carla/ros2/types/CdrTopicInfo.h>

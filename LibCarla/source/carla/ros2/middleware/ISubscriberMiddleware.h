@@ -9,16 +9,16 @@
 namespace carla {
 namespace ros2 {
 
-/// Type-erased abstract interface for a DDS subscriber middleware.
+/// Type-erased abstract interface for a subscriber middleware.
 /// Concrete implementations write received messages directly into the caller-provided
 /// storage (message_ptr / new_message_flag) to avoid an extra copy.
-class IDDSSubscriberMiddleware {
+class ISubscriberMiddleware {
  public:
-  virtual ~IDDSSubscriberMiddleware() = default;
+  virtual ~ISubscriberMiddleware() = default;
 
-  /// Initialize DDS entities (participant, subscriber, topic, reader).
+  /// Initialize the underlying middleware entities.
   /// The middleware writes incoming messages to *message_ptr and sets *new_message_flag = true.
-  /// @param topic_name       Full DDS topic name.
+  /// @param topic_name       Full topic name.
   /// @param message_ptr      Pointer to the message storage owned by SubscriberImpl<S>.
   /// @param new_message_flag Pointer to the new-message flag owned by SubscriberImpl<S>.
   /// @return true on success.
@@ -30,7 +30,7 @@ class IDDSSubscriberMiddleware {
   /// @return true if at least one publisher is matched.
   virtual bool IsAlive() const = 0;
 
-  /// @return The DDS topic name this subscriber is bound to.
+  /// @return The topic name this subscriber is bound to.
   virtual std::string GetTopicName() const = 0;
 };
 
