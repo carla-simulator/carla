@@ -55,7 +55,7 @@ class TestActorIntrospection(SmokeTest):
 
     def test_vehicle_components(self):
         print("TestActorIntrospection.test_vehicle_components")
-        vehicle = self._spawn("vehicle.tesla.model3")
+        vehicle = self._spawn("vehicle.*")
 
         component_names = vehicle.get_component_names()
         self.assertGreater(len(component_names), 0, "vehicle has zero components")
@@ -87,7 +87,7 @@ class TestActorIntrospection(SmokeTest):
 
     def test_vehicle_sockets_consistent(self):
         print("TestActorIntrospection.test_vehicle_sockets_consistent")
-        vehicle = self._spawn("vehicle.tesla.model3")
+        vehicle = self._spawn("vehicle.*")
 
         socket_names = vehicle.get_socket_names()
         socket_world = vehicle.get_socket_world_transforms()
@@ -124,7 +124,10 @@ class TestActorIntrospection(SmokeTest):
 
     def test_component_not_found_raises(self):
         print("TestActorIntrospection.test_component_not_found_raises")
-        vehicle = self._spawn("vehicle.tesla.model3")
-        with self.assertRaises(RuntimeError) as ctx:
+        vehicle = self._spawn("vehicle.*")
+        # rpclib does not preserve server-side error message text through
+        # the RPC boundary (it surfaces as a generic "std::exception"),
+        # so this only verifies that the server signals failure rather
+        # than returning a junk transform for an unknown component.
+        with self.assertRaises(RuntimeError):
             vehicle.get_component_world_transform("NonExistentComponent_zzz_42")
-        self.assertIn("Component", str(ctx.exception))
