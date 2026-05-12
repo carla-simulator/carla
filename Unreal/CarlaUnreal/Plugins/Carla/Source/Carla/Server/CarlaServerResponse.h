@@ -10,7 +10,6 @@ enum class ECarlaServerResponse
 {
   Success,
   ActorNotFound,
-  ComponentNotFound,
   ActorTypeMismatch,
   FunctionNotSupported,
   NullActor,
@@ -22,7 +21,8 @@ enum class ECarlaServerResponse
   AutoPilotNotSupported,
   CarSimPluginNotEnabled,
   NotATrafficLight,
-  FunctionNotAvailiableWhenDormant
+  FunctionNotAvailiableWhenDormant,
+  ComponentNotFound
 };
 
 FString CarlaGetStringError(ECarlaServerResponse Response);
