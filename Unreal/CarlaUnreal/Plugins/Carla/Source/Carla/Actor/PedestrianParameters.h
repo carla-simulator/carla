@@ -43,8 +43,10 @@ struct CARLA_API FPedestrianParameters
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString Id;
 
+  // Soft reference so catalog parsing does not force-load the class; resolution
+  // happens in MakePedestrianDefinition before the class is handed to the dispatcher.
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TSubclassOf<ACharacter> Class;
+  TSoftClassPtr<ACharacter> Class;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   EPedestrianGender Gender = EPedestrianGender::Other;

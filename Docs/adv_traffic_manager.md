@@ -530,7 +530,7 @@ If more than one TM is set to synchronous mode, synchrony will fail. Follow thes
 
 - In a __[multiclient](#multiclient)__ situation, only the __TM-Server__ should be set to synchronous mode.
 - In a __[multiTM](#multitm)__ situation, only __one TM-Server__ should be set to synchronous mode.
-- The __[ScenarioRunner module](https://carla-scenariorunner.readthedocs.io/en/latest/)__ runs a TM automatically. The TM inside ScenarioRunner will automatically be the one set to sync mode.
+- The __[ScenarioRunner module](https://scenario-runner.readthedocs.io/en/latest/)__ runs a TM automatically. The TM inside ScenarioRunner will automatically be the one set to sync mode.
 
 !!! Warning
     Disable synchronous mode (for both the world and TM) in your script managing ticks before it finishes to prevent the server blocking, waiting forever for a tick.

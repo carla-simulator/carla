@@ -21,8 +21,10 @@ struct CARLA_API FVehicleParameters
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString Model;
 
+  // Soft reference so catalog parsing does not force-load the class; resolution
+  // happens in MakeVehicleDefinition before the class is handed to the dispatcher.
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  TSubclassOf<ACarlaWheeledVehicle> Class;
+  TSoftClassPtr<ACarlaWheeledVehicle> Class;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   int32 NumberOfWheels = 4;

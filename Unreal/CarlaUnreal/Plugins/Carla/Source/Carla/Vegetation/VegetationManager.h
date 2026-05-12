@@ -51,7 +51,11 @@ USTRUCT()
 struct FFoliageBlueprint
 {
   GENERATED_BODY()
+
+  UPROPERTY()
   FString BPFullClassName {};
+
+  UPROPERTY()
   TSubclassOf<AActor> SpawnedClass { nullptr };
 
   bool IsValid() const;

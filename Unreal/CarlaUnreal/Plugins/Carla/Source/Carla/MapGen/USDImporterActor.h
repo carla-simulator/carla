@@ -27,6 +27,6 @@ public:
 
 private:
   UPROPERTY(Category="Carla USD Importer", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-  USceneComponent* RootSceneComponent;
+  TObjectPtr<USceneComponent> RootSceneComponent;
 
 };

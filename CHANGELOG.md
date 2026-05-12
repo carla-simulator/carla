@@ -2,8 +2,9 @@
 ## LATEST Changes
 
 * Fixed recorder crashes during actor cleanup and replayer spawning incorrect actor blueprints
+* Hardened UObject ownership in the Carla plugin by migrating UPROPERTY raw pointers to `TObjectPtr<>`, adding mesh caches, enabling async heightmap streaming, and converting catalog assets to soft references.
 * Corrected the Semantic Segmentation camera class table in `Docs/ref_sensors.md` to match the actual 29-class taxonomy defined in `ObjectLabel.h` and `CityScapesPalette.h`. The previous table reflected the legacy 0.8.x CityScapes taxonomy (22 classes), which caused mismatches between documentation and engine output. This update aligns the documentation with the true engine enum values and RGB palette, preventing ground-truth mapping errors when building perception pipelines.
-* Fixed pre-existing UE4-era latent bugs in LibCarla and the Carla plugin: LidarData/SemanticLidarData `ResetMemory` boundary, DVSCamera `IsValid` inversion, SceneCaptureCamera profiler gating, `ViewActor` `TObjectPtr` wrap, ImageUtil `ReadImageData` null return, ShaderBasedSensor runtime-safe material loader, and `manual_control.py` sensor teardown drain.
+* Fixed several legacy UE4-era bugs across LibCarla and the Carla plugin affecting lidar memory reset, DVS validation, camera profiling, image reads, sensor materials, and Python sensor teardown.
 * Enabled the LibCarla GoogleTest suite (server + client) on ue5-dev and gated both in CI.
 * Fixed Digital Twin Tool crashes on dense metropolitan OSM data, vegetation spawning inside driving lanes on rural maps, and one-way streets being silently excluded from generation (#9565, #9678)
 * Added Ubuntu 24.04 support alongside Ubuntu 22.04

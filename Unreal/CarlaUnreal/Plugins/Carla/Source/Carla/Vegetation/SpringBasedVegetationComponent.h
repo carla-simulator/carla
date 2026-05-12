@@ -151,9 +151,10 @@ public:
 
   UFUNCTION(CallInEditor, Category = "Spring Based Vegetation Component")
   void GenerateSkeletonHierarchy();
-  // UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Spring Based Vegetation Component")
-  // TArray<AActor*> OverlappingActors;
-  // UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
+
+  // Nested TArray value is not supported by UE5 UHT inside a UPROPERTY TMap;
+  // a USTRUCT wrapper would be required to make this GC-safe.
+  //UPROPERTY(EditAnywhere, Category = "Spring Based Vegetation Component")
   TMap<AActor*, TArray<UPrimitiveComponent*>> OverlappingActors;
 
   UFUNCTION(BlueprintCallable)
@@ -187,13 +188,13 @@ private:
 
 public:
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
-  USkeletalMeshComponent* SkeletalMesh;
+  TObjectPtr<USkeletalMeshComponent> SkeletalMesh;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
-  TArray<UPrimitiveComponent*> BoneCapsules;
+  TArray<TObjectPtr<UPrimitiveComponent>> BoneCapsules;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
-  TMap<UPrimitiveComponent*, int> CapsuleToJointId;
+  TMap<TObjectPtr<UPrimitiveComponent>, int> CapsuleToJointId;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spring Based Vegetation Component")
   float Beta = 0.5f;

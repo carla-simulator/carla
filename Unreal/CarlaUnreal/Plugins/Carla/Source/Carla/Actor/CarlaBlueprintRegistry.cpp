@@ -94,7 +94,7 @@ void UCarlaBlueprintRegistry::AddToCarlaBlueprintRegistry(const TArray<FPropPara
 
     // Fill Prop Json
     PropJsonObject->SetStringField(PropAttributes::NAME, PropParameter.Name);
-    PropJsonObject->SetStringField(PropAttributes::MESH_PATH, PropParameter.Mesh->GetPathName());
+    PropJsonObject->SetStringField(PropAttributes::MESH_PATH, PropParameter.Mesh.ToSoftObjectPath().ToString());
     PropJsonObject->SetStringField(PropAttributes::SIZE, PropSizeTypeToString(PropParameter.Size));
 
     // Add or Update
@@ -178,10 +178,13 @@ void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FPropParameters> &PropP
           FString PropMeshPath = PropJsonObject->GetStringField(PropAttributes::MESH_PATH);
           FString PropSize = PropJsonObject->GetStringField(PropAttributes::SIZE);
 
-          // Build Prop Parameter
-          UStaticMesh *PropMesh = LoadObject<UStaticMesh>(nullptr, *PropMeshPath);
+          // Build Prop Parameter; the mesh stays a soft reference so the
+          // registry walk does not force-load every asset from disk.
           EPropSize PropSizeType = StringToPropSizeType(PropSize);
-          FPropParameters Params {PropName, PropMesh, PropSizeType};
+          FPropParameters Params{
+              PropName,
+              TSoftObjectPtr<UStaticMesh>(FSoftObjectPath(PropMeshPath)),
+              PropSizeType};
 
           // Add or Update
           if (PropIndexes.Contains(PropName))
