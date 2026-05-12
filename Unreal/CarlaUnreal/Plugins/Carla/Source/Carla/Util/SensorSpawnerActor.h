@@ -63,7 +63,7 @@ protected:
 
   // Root
   UPROPERTY(BlueprintReadOnly, Category="Components")
-  USceneComponent* SceneComp;
+  TObjectPtr<USceneComponent> SceneComp;
   
   // Array with sensors to spawn
   UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Config")
@@ -139,17 +139,18 @@ private:
   void DrawRadarSensorPoints() const;
 
   UPROPERTY()
-  UCarlaEpisode* CarlaEpisode;
+  TObjectPtr<UCarlaEpisode> CarlaEpisode;
 
   FTimerHandle InitialDelaySpawnTimerHandle;
 
   // Used for delayed spawn.
   FTimerHandle SpawnSensorsDelayedTimerHandle;
-  
+
   // Used for delayed spawn. Track cameras taking pictures on tick.
   TArray<FSensorTuple> SensorsToSpawnCopy;
 
   // Track cameras saving pictures on tick.
-  TArray<class ASensor*> SpawnedSensorsArray;
+  UPROPERTY()
+  TArray<TObjectPtr<ASensor>> SpawnedSensorsArray;
   
 };

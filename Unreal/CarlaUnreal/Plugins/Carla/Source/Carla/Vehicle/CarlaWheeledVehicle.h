@@ -346,7 +346,7 @@ private:
   ECarlaWheeledVehicleState State = ECarlaWheeledVehicleState::UNKNOWN;
 
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
-  UVehicleVelocityControl* VelocityControl;
+  TObjectPtr<UVehicleVelocityControl> VelocityControl;
 
 
   FVehicleControl LastAppliedControl;
@@ -370,7 +370,7 @@ public:
   FBox FoliageBoundingBox;
 
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
-  UBoxComponent *VehicleBounds;
+  TObjectPtr<UBoxComponent> VehicleBounds;
 
   UFUNCTION()
   FBox GetDetectionBox() const;

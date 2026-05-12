@@ -49,4 +49,13 @@ protected:
 	TArray<FActorDefinition> Definitions;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FPropParameters> PropsParams;
+
+private:
+	/// Mesh cache keyed by mesh path (same string stored in
+	/// ActorDescription.Variations["mesh_path"]). Populated from PropsParams in
+	/// GetDefinitions() so that SpawnActor() avoids the per-spawn
+	/// synchronous LoadObject on the game thread. Cache-miss fall back to
+	/// LoadObject with a warning log.
+	UPROPERTY(Transient, DuplicateTransient)
+	TMap<FString, TObjectPtr<UStaticMesh>> MeshCacheByPath;
 };

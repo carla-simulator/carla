@@ -845,7 +845,10 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
   FillIdAndTags(Definition, TEXT("vehicle"), Parameters.Make, Parameters.Model);
   AddRecommendedValuesForActorRoleName(Definition,
                                        {TEXT("autopilot"), TEXT("scenario"), TEXT("ego_vehicle")});
-  Definition.Class = Parameters.Class;
+  // Resolve the soft class at definition time. The catalog stores
+  // TSoftClassPtr so JSON parsing does not force-load; the UClass is needed
+  // here to hand the dispatcher a concrete spawn target.
+  Definition.Class = Parameters.Class.LoadSynchronous();
 
   if (Parameters.RecommendedColors.Num() > 0)
   {
@@ -962,7 +965,8 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
   /// @todo We need to validate here the params.
   FillIdAndTags(Definition, TEXT("walker"), TEXT("pedestrian"), Parameters.Id);
   AddRecommendedValuesForActorRoleName(Definition, {TEXT("pedestrian")});
-  Definition.Class = Parameters.Class;
+  // Resolve the soft class at definition time (see MakeVehicleDefinition).
+  Definition.Class = Parameters.Class.LoadSynchronous();
 
   auto GetGender = [](EPedestrianGender Value)
   {
@@ -1065,12 +1069,12 @@ void UActorBlueprintFunctionLibrary::MakePropDefinition(
   AddRecommendedValuesForActorRoleName(Definition, {TEXT("prop")});
 
   Definition.Class = AStaticMeshActor::StaticClass();
-  if (Parameters.Mesh != nullptr)
+  if (!Parameters.Mesh.IsNull())
   {
     Definition.Variations.Emplace(FActorVariation{
         TEXT("mesh_path"),
         EActorAttributeType::String,
-        {Parameters.Mesh->GetPathName()},
+        {Parameters.Mesh.ToSoftObjectPath().ToString()},
         false});
   }
 
