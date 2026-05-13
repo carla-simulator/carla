@@ -8,20 +8,18 @@
 
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
-#include "IDeviceProfileSelectorModule.h"
 
-// CARLA DeviceProfileSelectorModule. Loaded by UDeviceProfileManager during
-// engine init when [DeviceProfileManager] DeviceProfileSelectorModule= names
-// this module in DefaultEngine.ini. Translates the CARLA-specific
-// `-quality-level=<Tier>` command-line flag into a CarlaQuality_<Tier>
-// DeviceProfile selection so per-tier CVars apply at engine init (no runtime
-// CVar burst, no Xid 109 risk).
-class FCarlaDeviceProfileSelectorModule : public IDeviceProfileSelectorModule
-{
+// Carla per-quality tier module. Loaded at LoadingPhase=PostConfigInit per
+// CarlaUnreal.uproject. Reads `-quality-level=<Tier>` from the command line,
+// resolves it case-sensitively against `Low / Medium / High / Epic`, falls
+// back to `Epic` when absent, and applies the per-tier CVar set at
+// ECVF_SetByDeviceProfile priority. A FCoreDelegates::OnPostEngineInit
+// callback re-applies the tier scalability levels after
+// UGameUserSettings::ApplyNonResolutionSettings, so persisted
+// GameUserSettings.ini state cannot shadow the tier-selected buckets.
+class FCarlaDeviceProfileSelectorModule : public IModuleInterface {
 public:
+
   virtual void StartupModule() override;
   virtual void ShutdownModule() override;
-
-  // IDeviceProfileSelectorModule
-  virtual const FString GetRuntimeDeviceProfileName() override;
 };
