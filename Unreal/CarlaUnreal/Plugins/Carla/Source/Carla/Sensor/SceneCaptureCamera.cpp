@@ -27,11 +27,6 @@ ASceneCaptureCamera::ASceneCaptureCamera(const FObjectInitializer& ObjectInitial
 {
     AddPostProcessingMaterial(
         TEXT("Material'/Carla/PostProcessingMaterials/PhysicLensDistortion.PhysicLensDistortion'"));
-    // RGB benefits from persistent TSR/Lumen history between captures.
-    if (USceneCaptureComponent2D *Capture = GetCaptureComponent2D())
-    {
-        Capture->bAlwaysPersistRenderingState = true;
-    }
 }
 
 void ASceneCaptureCamera::BeginPlay()

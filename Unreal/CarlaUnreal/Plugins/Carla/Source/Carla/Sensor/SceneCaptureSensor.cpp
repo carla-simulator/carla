@@ -96,7 +96,11 @@ ASceneCaptureSensor::ASceneCaptureSensor(const FObjectInitializer &ObjectInitial
   CaptureComponent2D->PrimitiveRenderMode = ESceneCapturePrimitiveRenderMode::PRM_RenderScenePrimitives;
   CaptureComponent2D->bCaptureOnMovement = false;
   CaptureComponent2D->bCaptureEveryFrame = false;
-  // Required by the encoding cameras' post-process material pipeline.
+  // Persistent rendering state is the baseline for every scene-capture
+  // subclass. The encoding cameras (depth, semantic / instance
+  // segmentation, normals, DVS) require it for their post-process
+  // material pipeline; RGB and optical-flow inherit it without needing
+  // to re-assert in their own ctors.
   CaptureComponent2D->bAlwaysPersistRenderingState = true;
   ApplyRayTracingSetting();
 
