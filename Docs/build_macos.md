@@ -48,7 +48,7 @@ cmake --preset Release \
 ```
 
 !!! note
-    Both `Python_EXECUTABLE` and `Python3_EXECUTABLE` must be set explicitly. Boost.Python's nested `find_package(Python)` does not honour `Python3_EXECUTABLE` alone or you will need to find modify lines find_package(Python3) in some packages if you wish to later re-build your-way
+    Both `Python_EXECUTABLE` and `Python3_EXECUTABLE` must be set explicitly, and they must point at the same Python interpreter. Boost.Python issues a nested `find_package(Python)` (not `Python3`) during configuration; if only `Python3_EXECUTABLE` is provided, Boost.Python falls back to whatever `find_package(Python)` picks up — typically the system Python — and the build ends up linking against a different interpreter than the one CARLA's own CMake selected. Setting both variables to the same path keeps the two `find_package` calls in agreement. If you ever want to rebuild against a different interpreter without re-configuring from scratch, you would need to patch the `find_package(Python3)` calls in the affected packages to honour `Python3_EXECUTABLE` directly.
 
 Build CARLA:
 
@@ -182,6 +182,17 @@ Build Unreal Engine 5.5:
 
 !!! note
     The first build of Unreal Engine may take 1–3 hours.
+
+!!! note
+    ShaderCompileWorker is built once here as part of UE engine setup; the
+    resulting binary is what cooks shaders. The CARLA CMake build (see
+    `Unreal/CMakeLists.txt`) intentionally **does not** pass `-buildscw` on
+    macOS, so SCW is never rebuilt from source during the CARLA cook step —
+    the precompiled binary produced by the line above is reused. The Apple
+    Clang 21 Slate strictness that historically made `-buildscw` fail on
+    macOS is patched in the `CarlaUnreal/UnrealEngine` `ue5-dev-carla-mac`
+    branch; the skip is retained as a safety net and to avoid the
+    unnecessary rebuild on every CARLA build.
 
 Set up an environment variable pointing to the engine:
 

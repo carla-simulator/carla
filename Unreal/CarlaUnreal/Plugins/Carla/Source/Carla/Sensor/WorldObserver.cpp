@@ -293,10 +293,12 @@ static carla::Buffer FWorldObserver_Serialize(
 
   auto total_size = sizeof(Serializer::Header) + sizeof(ActorDynamicState) * Registry.Num();
   auto current_size = 0;
-  // Set up buffer for writing. Cast required because Apple Clang distinguishes
-  // size_t (unsigned long) from uint64_t (unsigned long long), making the
-  // Buffer::reset(size_type) vs Buffer::reset(uint64_t) overload ambiguous.
-  buffer.reset(static_cast<carla::Buffer::size_type>(total_size));
+  // Set up buffer for writing. Apple Clang treats size_t (unsigned long) and
+  // uint64_t (unsigned long long) as distinct types, making the
+  // Buffer::reset(size_type) vs Buffer::reset(uint64_t) overload ambiguous —
+  // disambiguate by casting to uint64_t (not size_type) so the checked
+  // overload is selected and oversized totals throw instead of truncating.
+  buffer.reset(static_cast<uint64_t>(total_size));
   auto write_data = [&current_size, &buffer](const auto &data)
   {
     auto begin = buffer.begin() + current_size;

@@ -54,8 +54,10 @@ namespace s11n {
       sensor.GetFOVAngle(),
     };
 
-    /// Reset the output buffer
-    output.reset(static_cast<Buffer::size_type>(sizeof(DVSHeader) + (events.size() * sizeof(data::DVSEvent))));
+    /// Reset the output buffer. Cast to uint64_t (not Buffer::size_type) so
+    /// the checked Buffer::reset(uint64_t) overload is selected — bypassing it
+    /// with a uint32_t cast would silently truncate oversized event arrays.
+    output.reset(static_cast<uint64_t>(sizeof(DVSHeader) + (events.size() * sizeof(data::DVSEvent))));
 
     /// Pointer to data in buffer
     unsigned char *it = output.data();
