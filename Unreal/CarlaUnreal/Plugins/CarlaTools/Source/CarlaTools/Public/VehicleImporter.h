@@ -60,6 +60,9 @@ public:
   uint32 Run()  override;
   void   Stop() override;
 
+public:
+  TAtomic<bool>    bDone { false };
+
 private:
   class FSocket*   ListenSocket = nullptr;
   TAtomic<bool>    bRunning { false };

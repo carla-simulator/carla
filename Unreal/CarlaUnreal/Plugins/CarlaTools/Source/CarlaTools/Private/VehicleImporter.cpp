@@ -7,6 +7,7 @@
 #include "CarlaTools.h"
 
 #include <util/ue-header-guard-begin.h>
+#include "HAL/PlatformProcess.h"
 #include "Sockets.h"
 #include "SocketSubsystem.h"
 #include "IPAddress.h"
@@ -67,6 +68,11 @@ void UVehicleImporter::StopServer()
 
   if (ServerThread)
   {
+    while (ServerRunnable && !ServerRunnable->bDone.Load())
+    {
+      FTSTicker::GetCoreTicker().Tick(0.0f);
+      FPlatformProcess::Sleep(0.001f);
+    }
     ServerThread->WaitForCompletion();
     delete ServerThread;
     ServerThread = nullptr;
@@ -90,7 +96,7 @@ bool FVehicleImporterServer::Init()
 
   ListenSocket = FTcpSocketBuilder(TEXT("CarlaVehicleImporterListen"))
     .AsReusable()
-    .BoundToEndpoint(FIPv4Endpoint(FIPv4Address::Loopback, GImporterPort))
+    .BoundToEndpoint(FIPv4Endpoint(FIPv4Address::InternalLoopback, GImporterPort))
     .Listening(1)
     .Build();
 
@@ -107,16 +113,16 @@ bool FVehicleImporterServer::Init()
 
 uint32 FVehicleImporterServer::Run()
 {
-  FSocket* LocalSocket = ListenSocket;  // Local copy to prevent race condition
-  if (!LocalSocket) return 0;
+  FSocket* LocalSocket = ListenSocket;
+  if (!LocalSocket) { bDone = true; return 0; }
   while (bRunning && LocalSocket)
   {
     bool bPending = false;
-    if (ListenSocket->WaitForPendingConnection(bPending, FTimespan::FromSeconds(1.0)))
+    if (LocalSocket->WaitForPendingConnection(bPending, FTimespan::FromSeconds(1.0)))
     {
       if (bPending)
       {
-        FSocket* Client = ListenSocket->Accept(TEXT("CarlaStudio"));
+        FSocket* Client = LocalSocket->Accept(TEXT("CarlaStudio"));
         if (Client)
         {
           ServeClient(Client);
@@ -126,6 +132,7 @@ uint32 FVehicleImporterServer::Run()
       }
     }
   }
+  bDone = true;
   return 0;
 }
 
@@ -194,7 +201,7 @@ void FVehicleImporterServer::ServeClient(FSocket* Client)
   if (!RecvAll(Client, Body.GetData(), MsgLen))
     return;
 
-  Body[MsgLen] = \'\0\';  // Null-terminate before UTF8_TO_TCHAR
+  Body[MsgLen] = '\0';
 
   const FString JsonStr = FString(UTF8_TO_TCHAR(
     reinterpret_cast<const ANSICHAR*>(Body.GetData())));
