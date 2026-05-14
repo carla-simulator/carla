@@ -72,7 +72,6 @@ set (
   carla-server
   libsqlite3
   Boost::asio
-  Boost::python
   Boost::geometry
   Boost::gil
   Eigen3::Eigen
@@ -80,6 +79,10 @@ set (
   png_static
   rpc
 )
+
+if (BUILD_PYTHON_API)
+  list (APPEND UE_DEPENDENCIES Boost::python)
+endif ()
 
 set (UE_DEPENDENCIES_ORDER_ONLY ${UE_DEPENDENCIES})
 
@@ -141,11 +144,16 @@ set (
 )
 
 foreach (UE_DEP ${UE_DEPENDENCIES})
-  list (
-    APPEND
-    CARLA_UNREAL_INCLUDE_PATHS
-    "$<TARGET_PROPERTY:${UE_DEP},INTERFACE_INCLUDE_DIRECTORIES>"
-  )
+  get_target_property (UE_DEP_INCLUDES ${UE_DEP} INTERFACE_INCLUDE_DIRECTORIES)
+  if (UE_DEP_INCLUDES)
+    foreach (INC ${UE_DEP_INCLUDES})
+      if (INC MATCHES "^\\$<BUILD_INTERFACE:(.*)>$")
+        list (APPEND CARLA_UNREAL_INCLUDE_PATHS "${CMAKE_MATCH_1}")
+      elseif (NOT INC MATCHES "^\\$<")
+        list (APPEND CARLA_UNREAL_INCLUDE_PATHS "${INC}")
+      endif ()
+    endforeach ()
+  endif ()
 endforeach ()
 
 set (
@@ -220,11 +228,9 @@ endif ()
 
 
 file (
-  GENERATE
-  OUTPUT
-    ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
-  CONTENT
-    "${CARLA_UNREAL_INCLUDE_PATHS}"
+  WRITE
+  ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
+  "${CARLA_UNREAL_INCLUDE_PATHS}"
 )
 
 file (
@@ -494,9 +500,12 @@ function (
 
   add_dependencies (
     ${TARGET_NAME}
-    carla-python-api
     carla-unreal-editor
   )
+
+  if (BUILD_PYTHON_API)
+    add_dependencies (${TARGET_NAME} carla-python-api)
+  endif ()
 
   carla_add_custom_target (
     ${TARGET_NAME_SHORT}
