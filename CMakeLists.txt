@@ -114,9 +114,6 @@ if (BUILD_EXAMPLES)
   add_subdirectory (Examples)
 endif ()
 
-if (BUILD_CARLA_STUDIO)
-  add_subdirectory (Apps)
-endif ()
 
 carla_add_custom_target (
   carla-help

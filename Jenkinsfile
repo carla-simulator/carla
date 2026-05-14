@@ -18,18 +18,6 @@ pipeline
                         sh "cmake --build Build --target package"
                     }
                 }
-                stage('Build CarlaStudio')
-                {
-                    steps {
-                        sh '''
-                          if cmake --build Build --target help 2>/dev/null | grep -qE "^\\.\\.\\. carla-studio$"; then
-                            cmake --build Build --target carla-studio
-                          else
-                            echo "carla-studio target not configured (Qt5/Qt6 dev libs not installed on agent); skipping."
-                          fi
-                        '''
-                    }
-                }
                 stage('Build CARLA')
                 {
                     steps {

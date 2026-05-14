@@ -32,11 +32,6 @@ carla_option (
   ON
 )
 
-carla_option (
-  BUILD_CARLA_STUDIO
-  "Build CARLA Studio application layer."
-  OFF
-)
 
 carla_option (
   BUILD_LIBCARLA_TESTS
