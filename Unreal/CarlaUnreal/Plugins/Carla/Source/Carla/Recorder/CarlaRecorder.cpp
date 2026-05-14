@@ -62,7 +62,7 @@ std::string ACarlaRecorder::ShowFileActorsBlocked(std::string Name, double MinTi
 
 std::string ACarlaRecorder::ReplayFile(
   std::string Name, double TimeStart, double Duration,
-  uint32_t FollowId, const FTransform Offset, bool ReplaySensors, bool ReplayWeather,
+  uint32_t FollowId, const FTransform& Offset, bool ReplaySensors, bool ReplayWeather,
   std::string MapOverride)
 {
   Stop();

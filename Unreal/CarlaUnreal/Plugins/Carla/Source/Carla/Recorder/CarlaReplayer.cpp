@@ -108,7 +108,7 @@ std::string CarlaReplayer::ReplayFile(
   double TimeStart,
   double Duration,
   uint32_t ThisFollowId,
-  const FTransform Offset,
+  const FTransform& Offset,
   bool ReplaySensors,
   bool ReplayWeather,
   std::string MapOverride)

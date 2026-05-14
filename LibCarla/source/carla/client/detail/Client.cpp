@@ -591,7 +591,7 @@ namespace detail {
 
   std::string Client::ReplayFile(
     std::string name, double start, double duration,
-    uint32_t follow_id, bool replay_sensors, bool replay_weather, geom::Transform offset,
+    uint32_t follow_id, bool replay_sensors, bool replay_weather, const geom::Transform& offset,
     std::string map_override) {
     return _pimpl->CallAndWait<std::string>("replay_file", name, start, duration,
         follow_id, replay_sensors, replay_weather, offset, map_override);

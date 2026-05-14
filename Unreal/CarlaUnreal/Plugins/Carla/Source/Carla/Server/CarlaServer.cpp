@@ -2478,7 +2478,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       uint32_t follow_id,
       bool replay_sensors,
       bool replay_weather,
-      const cr::Transform offset,
+      const cr::Transform& offset,
       std::string map_override) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();

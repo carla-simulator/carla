@@ -178,7 +178,7 @@ public:
   // replayer
   std::string ReplayFile(
     std::string Name, double TimeStart, double Duration,
-    uint32_t FollowId, const FTransform Offset, bool ReplaySensors, bool ReplayWeather,
+    uint32_t FollowId, const FTransform& Offset, bool ReplaySensors, bool ReplayWeather,
     std::string MapOverride);
   void SetReplayerTimeFactor(double TimeFactor);
   void SetReplayerIgnoreHero(bool IgnoreHero);
