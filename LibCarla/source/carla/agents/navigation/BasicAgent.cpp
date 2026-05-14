@@ -135,7 +135,15 @@ void BasicAgent::SetDestination(const geom::Location &end,
   bool clean_queue;
   if (!start.has_value()) {
     auto target_wpt = _local_planner->TargetWaypoint();
-    start_location = target_wpt->GetTransform().location;
+    // LocalPlanner::_target_waypoint is seeded via Map::GetWaypoint(), which
+    // can return nullptr (e.g. vehicle starts off-road, or the planner has
+    // not been re-targeted since construction). Fall back to the vehicle's
+    // current location so a route can still be planned.
+    if (target_wpt) {
+      start_location = target_wpt->GetTransform().location;
+    } else {
+      start_location = _vehicle->GetLocation();
+    }
     clean_queue = true;
   } else {
     start_location = *start;  // Use the provided start location
@@ -254,6 +262,11 @@ BasicAgent::AffectedByTrafficLight(SharedPtr<client::ActorList> lights_list,
 
   const auto ego_location = _vehicle->GetLocation();
   auto ego_wpt = _map->GetWaypoint(ego_location);
+  if (!ego_wpt) {
+    // Vehicle is not on a road waypoint (off-road, mid-air, etc.); no
+    // road-based traffic-light association can be computed.
+    return {false, nullptr};
+  }
 
   for (auto actor : *lights_list) {
     auto traffic_light =
@@ -273,6 +286,13 @@ BasicAgent::AffectedByTrafficLight(SharedPtr<client::ActorList> lights_list,
           GetTrafficLightTriggerLocation(traffic_light);
       trigger_wp = _map->GetWaypoint(trigger_location);
       _lights_map.emplace(tl_id, trigger_wp);
+    }
+
+    if (!trigger_wp) {
+      // Trigger box for this light isn't on the road network — it can't
+      // affect an on-road vehicle. Skip (and the null cache entry above
+      // makes subsequent lookups short-circuit at the same point).
+      continue;
     }
 
     if (trigger_wp->GetTransform().location.Distance(ego_location) > max_distance) {
