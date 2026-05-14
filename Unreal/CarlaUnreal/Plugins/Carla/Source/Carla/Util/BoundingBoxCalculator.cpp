@@ -257,22 +257,23 @@ FBoundingBox UBoundingBoxCalculator::GetSkeletalMeshBoundingBoxFromComponent(
   const USkeletalMeshComponent* SkeletalMeshComp
 )
 {
-  if(!SkeletalMeshComp || !SkeletalMeshComp->GetSkeletalMeshAsset())
+  if (!SkeletalMeshComp || !SkeletalMeshComp->GetSkeletalMeshAsset())
   {
-    UE_LOG(LogCarla, Error, TEXT("GetSkeletalMeshBoundingBoxFromComponent no SkeletalMeshComponent or SkeletalMesh"));
+    UE_LOG(
+        LogCarla,
+        Error,
+        TEXT("GetSkeletalMeshBoundingBoxFromComponent: missing SkeletalMeshComponent or SkeletalMesh"));
     return {};
   }
 
-  // Force update bounds to current pose
-  const_cast<USkeletalMeshComponent*>(SkeletalMeshComp)->UpdateBounds();
+  // Bounds in mesh-component space: passing an identity transform yields a
+  // local AABB that already reflects the current animation pose, so the
+  // returned Origin is the actual mesh centre relative to its component (not
+  // the component's world position).
+  const FBoxSphereBounds LocalBounds =
+      SkeletalMeshComp->CalcBounds(FTransform::Identity);
 
-  // Get bounds in component space (already includes current animation pose)
-  FBoxSphereBounds Bounds = SkeletalMeshComp->Bounds;
-
-  FVector Origin = FVector::ZeroVector;
-  FVector Extent = Bounds.BoxExtent;
-
-  return {Origin, Extent};
+  return {LocalBounds.Origin, LocalBounds.BoxExtent};
 }
 
 // TODO: update to calculate current animation pose
