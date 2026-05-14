@@ -57,6 +57,14 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
       {
         FBoundingBox Box = GetSkeletalMeshBoundingBoxFromComponent(ParentComp);
 
+        // The skeletal mesh component on ACharacter is offset from the actor
+        // root (typically -Z by the capsule half-height so the feet line up
+        // with the capsule bottom). Re-express the mesh-component-space
+        // centre in actor-local space so callers do not place the box at the
+        // actor pivot.
+        const FTransform &MeshRelative = ParentComp->GetRelativeTransform();
+        Box.Origin = MeshRelative.TransformPosition(Box.Origin);
+
         if (Character->GetName().Contains("_AB001_G3")
           || Character->GetName().Contains("_AG001_G3"))
         {
