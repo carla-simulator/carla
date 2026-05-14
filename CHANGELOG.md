@@ -1,7 +1,7 @@
 =======
 ## LATEST Changes
 
-* Reworked the sensor render pipeline and quality tiers by pooling GPU readbacks, gating GBuffer capture on listeners, adding a per-camera ray-tracing toggle, and moving Low/Medium/High/Epic tiers to `DefaultDeviceProfiles.ini`.
+* Reworked the sensor render pipeline and quality tiers by pooling GPU readbacks, gating GBuffer capture on listeners, adding a per-camera ray-tracing toggle, and introducing four server launch tiers (Low, Medium, High, Epic) selectable via `-quality-level=<Tier>` (case-sensitive, Epic by default). Each tier applies a coherent CVar configuration at engine init that persists across runs without manual `GameUserSettings.ini` cleanup.
 * Hardened UObject ownership in the Carla plugin by migrating UPROPERTY raw pointers to `TObjectPtr<>`, adding mesh caches, enabling async heightmap streaming, and converting catalog assets to soft references.
 * Corrected the Semantic Segmentation camera class table in `Docs/ref_sensors.md` to match the actual 29-class taxonomy defined in `ObjectLabel.h` and `CityScapesPalette.h`. The previous table reflected the legacy 0.8.x CityScapes taxonomy (22 classes), which caused mismatches between documentation and engine output. This update aligns the documentation with the true engine enum values and RGB palette, preventing ground-truth mapping errors when building perception pipelines.
 * Fixed several legacy UE4-era bugs across LibCarla and the Carla plugin affecting lidar memory reset, DVS validation, camera profiling, image reads, sensor materials, and Python sensor teardown.
