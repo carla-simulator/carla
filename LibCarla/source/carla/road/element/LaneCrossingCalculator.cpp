@@ -38,21 +38,21 @@ namespace element {
 
     if (dest_is_at_right) {
       if (w0_is_offroad) {
-        if ( w1_marks.second != nullptr ) {
+        if (w1_marks.second != nullptr) {
           return { LaneMarking(*w1_marks.second) };
         }
       } else {
-        if ( w0_marks.first != nullptr ) {
+        if (w0_marks.first != nullptr) {
           return { LaneMarking(*w0_marks.first) };
         }
       }
     } else {
       if (w0_is_offroad) {
-        if ( w1_marks.first != nullptr ) {
+        if (w1_marks.first != nullptr) {
           return { LaneMarking(*w1_marks.first) };
         }
       } else {
-        if ( w0_marks.second != nullptr ) {
+        if (w0_marks.second != nullptr) {
           return { LaneMarking(*w0_marks.second) };
         }
       }
