@@ -98,14 +98,14 @@ protected:
 private:
 
   UPROPERTY(Category = "Traffic Light", VisibleAnywhere)
-  TArray<AWheeledVehicleAIController *> Vehicles;
+  TArray<TObjectPtr<AWheeledVehicleAIController>> Vehicles;
 
   UPROPERTY(Category = "Traffic Light", VisibleAnywhere)
   int PoleIndex = 0;
 
   UPROPERTY(Category = "Traffic Light", VisibleAnywhere)
-  TArray<ATrafficLightBase *> GroupTrafficLights;
+  TArray<TObjectPtr<ATrafficLightBase>> GroupTrafficLights;
 
   UPROPERTY(Category = "Traffic Light", EditAnywhere)
-  UTrafficLightComponent * TrafficLightComponent = nullptr;
+  TObjectPtr<UTrafficLightComponent> TrafficLightComponent = nullptr;
 };

@@ -52,19 +52,21 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureCamera::PostPhysTick);
   Super::PostPhysTick(World, TickType, DeltaSeconds);
   
+#if STATS || CSV_PROFILER
   ENQUEUE_RENDER_COMMAND(MeasureTime)
   (
     [](auto &InRHICmdList)
     {
-      std::chrono::time_point<std::chrono::high_resolution_clock> Time = 
+      std::chrono::time_point<std::chrono::high_resolution_clock> Time =
           std::chrono::high_resolution_clock::now();
       auto Duration = std::chrono::duration_cast< std::chrono::milliseconds >(Time.time_since_epoch());
       uint64_t Milliseconds = Duration.count();
-      FString ProfilerText = FString("(Render)Frame: ") + FString::FromInt(FCarlaEngine::GetFrameCounter()) + 
+      FString ProfilerText = FString("(Render)Frame: ") + FString::FromInt(FCarlaEngine::GetFrameCounter()) +
           FString(" Time: ") + FString::FromInt(Milliseconds);
       TRACE_CPUPROFILER_EVENT_SCOPE_TEXT(*ProfilerText);
     }
   );
+#endif
 
   if (!AreClientsListening())
       return;

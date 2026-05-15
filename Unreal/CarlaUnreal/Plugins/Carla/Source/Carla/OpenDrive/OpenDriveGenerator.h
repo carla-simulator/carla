@@ -29,7 +29,7 @@ public:
   AProceduralMeshActor();
 
   UPROPERTY(Category = "Procedural Mesh Actor", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-  UProceduralMeshComponent* MeshComponent;
+  TObjectPtr<UProceduralMeshComponent> MeshComponent;
 };
 
 UCLASS()
@@ -72,12 +72,12 @@ protected:
   float SpawnersHeight = 300.f;
 
   UPROPERTY(Category = "Spawners", EditAnywhere)
-  TArray<AVehicleSpawnPoint *> VehicleSpawners;
+  TArray<TObjectPtr<AVehicleSpawnPoint>> VehicleSpawners;
 
   UPROPERTY(EditAnywhere)
   FString OpenDriveData;
 
   UPROPERTY(EditAnywhere)
-  TArray<AActor *> ActorMeshList;
+  TArray<TObjectPtr<AActor>> ActorMeshList;
 
 };

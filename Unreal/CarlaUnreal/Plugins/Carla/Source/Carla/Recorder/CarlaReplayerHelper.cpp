@@ -24,6 +24,7 @@
 #include "Carla/Vehicle/WheeledVehicleAIController.h"
 #include "Carla/Walker/WalkerControl.h"
 #include "Carla/Walker/WalkerController.h"
+#include "Carla/Weather/Weather.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Components/BoxComponent.h"
@@ -52,7 +53,7 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
   // check type of actor we need
   if (ActorDesc.Id.StartsWith("traffic."))
   {
-    FCarlaActor* CarlaActor = FindTrafficLightAt(Location);
+    FCarlaActor* CarlaActor = FindTrafficSignAt(Location);
     if (CarlaActor != nullptr)
     {
       // reuse that actor
@@ -112,7 +113,7 @@ std::pair<int, FCarlaActor*>CarlaReplayerHelper::TryToCreateReplayerActor(
   }
 }
 
-FCarlaActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
+FCarlaActor *CarlaReplayerHelper::FindTrafficSignAt(FVector Location)
 {
   check(Episode != nullptr);
   auto World = Episode->GetWorld();
@@ -128,7 +129,8 @@ FCarlaActor *CarlaReplayerHelper::FindTrafficLightAt(FVector Location)
   for (auto It = Registry.begin(); It != Registry.end(); ++It)
   {
     FCarlaActor* CarlaActor = It.Value().Get();
-    if(CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight)
+    if (CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight ||
+        CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficSign)
     {
       FVector vec = CarlaActor->GetActorGlobalLocation();
       int x2 = static_cast<int>(vec.X);
@@ -450,6 +452,32 @@ void CarlaReplayerHelper::ProcessReplayerLightVehicle(CarlaRecorderLightVehicle 
   {
     carla::rpc::VehicleLightState LightState(LightVehicle.State);
     CarlaActor->SetVehicleLightState(FVehicleLightState(LightState));
+  }
+}
+
+void CarlaReplayerHelper::ProcessReplayerWeather(const CarlaRecorderWeather &Weather)
+{
+  check(Episode != nullptr);
+
+  AWeather *WeatherActor = Episode->GetWeather();
+  if (WeatherActor != nullptr)
+  {
+    FWeatherParameters Params;
+    Params.Cloudiness              = Weather.Cloudiness;
+    Params.Precipitation           = Weather.Precipitation;
+    Params.PrecipitationDeposits   = Weather.PrecipitationDeposits;
+    Params.WindIntensity           = Weather.WindIntensity;
+    Params.SunAzimuthAngle         = Weather.SunAzimuthAngle;
+    Params.SunAltitudeAngle        = Weather.SunAltitudeAngle;
+    Params.FogDensity              = Weather.FogDensity;
+    Params.FogDistance             = Weather.FogDistance;
+    Params.FogFalloff              = Weather.FogFalloff;
+    Params.Wetness                 = Weather.Wetness;
+    Params.ScatteringIntensity     = Weather.ScatteringIntensity;
+    Params.MieScatteringScale      = Weather.MieScatteringScale;
+    Params.RayleighScatteringScale = Weather.RayleighScatteringScale;
+    Params.DustStorm               = Weather.DustStorm;
+    WeatherActor->ApplyWeather(Params);
   }
 }
 

@@ -108,16 +108,16 @@ private:
 
 
   UPROPERTY()
-  USceneComponent *SceneRootComponent;
+  TObjectPtr<USceneComponent> SceneRootComponent;
 
   UPROPERTY(Category = "Map Generation", VisibleAnywhere)
   float MapScale = 1.0f;
 
   UPROPERTY(Category = "Meshes", EditAnywhere)
-  TMap<ECityMapMeshTag, UStaticMesh *> StaticMeshes;
+  TMap<ECityMapMeshTag, TObjectPtr<UStaticMesh>> StaticMeshes;
 
   UPROPERTY()
-  TMap<UStaticMesh *, ECityMapMeshTag> TagMap;
+  TMap<TObjectPtr<UStaticMesh>, ECityMapMeshTag> TagMap;
 
 
 };

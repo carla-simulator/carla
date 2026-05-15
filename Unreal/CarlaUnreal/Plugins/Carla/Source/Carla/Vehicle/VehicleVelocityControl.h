@@ -52,7 +52,10 @@ private:
   UPROPERTY(Category = "Vehicle Velocity Control", VisibleAnywhere)
   FVector TargetVelocity;
 
-  UPrimitiveComponent* PrimitiveComponent;
-  AActor* OwnerVehicle;
+  UPROPERTY(Transient, DuplicateTransient)
+  TObjectPtr<UPrimitiveComponent> PrimitiveComponent;
+
+  UPROPERTY(Transient, DuplicateTransient)
+  TObjectPtr<AActor> OwnerVehicle;
 
 };

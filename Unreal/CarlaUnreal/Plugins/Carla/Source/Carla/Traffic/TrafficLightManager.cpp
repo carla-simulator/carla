@@ -802,7 +802,7 @@ void ATrafficLightManager::SetFrozen(bool InFrozen)
   {
     for (auto& TrafficGroupPair : TrafficGroups)
     {
-      auto* TrafficGroup = TrafficGroupPair.Value;
+      auto& TrafficGroup = TrafficGroupPair.Value;
       TrafficGroup->SetFrozenGroup(true);
     }
   }
@@ -810,7 +810,7 @@ void ATrafficLightManager::SetFrozen(bool InFrozen)
   {
     for (auto& TrafficGroupPair : TrafficGroups)
     {
-      auto* TrafficGroup = TrafficGroupPair.Value;
+      auto& TrafficGroup = TrafficGroupPair.Value;
       TrafficGroup->SetFrozenGroup(false);
     }
   }

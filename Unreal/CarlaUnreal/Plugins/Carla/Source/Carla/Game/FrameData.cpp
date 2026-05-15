@@ -723,7 +723,7 @@ std::pair<int, FCarlaActor*> FFrameData::CreateOrReuseActor(
   // check type of actor we need
   if (ActorDesc.Id.StartsWith("traffic."))
   {
-    FCarlaActor* CarlaActor = FindTrafficLightAt(Location);
+    FCarlaActor* CarlaActor = FindTrafficSignAt(Location);
     if (CarlaActor != nullptr)
     {
       // reuse that actor
@@ -1173,7 +1173,7 @@ void FFrameData::SetFrameCounter()
   FCarlaEngine::ResetFrameCounter(FrameCounter.FrameCounter);
 }
 
-FCarlaActor *FFrameData::FindTrafficLightAt(FVector Location)
+FCarlaActor *FFrameData::FindTrafficSignAt(FVector Location)
 {
   check(Episode != nullptr);
   auto World = Episode->GetWorld();
@@ -1189,7 +1189,7 @@ FCarlaActor *FFrameData::FindTrafficLightAt(FVector Location)
   for (auto It = Registry.begin(); It != Registry.end(); ++It)
   {
     FCarlaActor* CarlaActor = It.Value().Get();
-    if(CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight)
+    if(CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight || CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficSign)
     {
       FVector vec = CarlaActor->GetActorGlobalLocation();
       int x2 = static_cast<int>(vec.X);

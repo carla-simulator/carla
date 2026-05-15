@@ -34,8 +34,10 @@ struct CARLA_API FPropParameters
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   FString Name;
 
+  // Soft reference so catalog parsing does not force-load the mesh; resolution
+  // happens in MakePropDefinition / the prop factory mesh cache.
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
-  UStaticMesh* Mesh = nullptr;
+  TSoftObjectPtr<UStaticMesh> Mesh;
 
   UPROPERTY(EditAnywhere, BlueprintReadWrite)
   EPropSize Size = EPropSize::INVALID;

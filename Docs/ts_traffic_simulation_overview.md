@@ -29,20 +29,20 @@ Go to Traffic Manager</a>
 
 ## Scenario Runner and OpenScenario
 
-Scenario Runner provides [predefined traffic scenarios](https://carla-scenariorunner.readthedocs.io/en/latest/list_of_scenarios/) out of the box and also allows users to [define their own](https://carla-scenariorunner.readthedocs.io/en/latest/creating_new_scenario/) scenarios using either Python or the [OpenSCENARIO 1.0 standard](https://releases.asam.net/OpenSCENARIO/1.0.0/ASAM_OpenSCENARIO_BS-1-2_User-Guide_V1-0-0.html#_foreword).
+Scenario Runner provides [predefined traffic scenarios](https://scenario-runner.readthedocs.io/en/latest/list_of_scenarios/) out of the box and also allows users to [define their own](https://scenario-runner.readthedocs.io/en/latest/creating_new_scenario/) scenarios using either Python or the [OpenSCENARIO 1.0 standard](https://releases.asam.net/OpenSCENARIO/1.0.0/ASAM_OpenSCENARIO_BS-1-2_User-Guide_V1-0-0.html#_foreword).
 
-The primary use of OpenSCENARIO is the description of complex maneuvers that involve multiple vehicles. Users can see which features of OpenSCENARIO are supported by Scenario Runner [here](https://carla-scenariorunner.readthedocs.io/en/latest/openscenario_support/). These features include Maneuvers, Actions, Conditions, Stories and the Storyboard. 
+The primary use of OpenSCENARIO is the description of complex maneuvers that involve multiple vehicles. Users can see which features of OpenSCENARIO are supported by Scenario Runner [here](https://scenario-runner.readthedocs.io/en/latest/openscenario_support/). These features include Maneuvers, Actions, Conditions, Stories and the Storyboard.
 
 Scenario Runner has to be installed [separately](https://github.com/carla-simulator/scenario_runner) from the main CARLA package.
 
 __Useful for:__
 
 - Creating complex traffic scenarios and routes to prepare AD agents for evaluation in the [CARLA leaderboard](https://leaderboard.carla.org/).
-- Defining bespoke [metrics](https://carla-scenariorunner.readthedocs.io/en/latest/metrics_module/) that can be run against recordings of the scenario simulation, foregoing the need to run simulations repeatedly.
+- Defining bespoke [metrics](https://scenario-runner.readthedocs.io/en/latest/metrics_module/) that can be run against recordings of the scenario simulation, foregoing the need to run simulations repeatedly.
 
 <div class="build-buttons">
 <p>
-<a href="https://carla-scenariorunner.readthedocs.io" target="_blank" class="btn btn-neutral" title="Go to Scenario Runner">
+<a href="https://scenario-runner.readthedocs.io" target="_blank" class="btn btn-neutral" title="Go to Scenario Runner">
 Go to Scenario Runner</a>
 </p>
 </div>
