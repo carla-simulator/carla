@@ -81,7 +81,7 @@ set (
 )
 
 if (BUILD_PYTHON_API)
-  list (APPEND UE_DEPENDENCIES Boost::python)
+  list (APPEND UE_DEPENDENCIES Boost::python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR})
 endif ()
 
 set (UE_DEPENDENCIES_ORDER_ONLY ${UE_DEPENDENCIES})
