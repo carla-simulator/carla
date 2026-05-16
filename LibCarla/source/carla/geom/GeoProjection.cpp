@@ -56,7 +56,6 @@ namespace geom {
 
     GeoLocation GeoProjection::TransformToGeoLocation(const Location& location) const {
         switch (static_cast<ProjectionType>(params.index())) {
-
             case ProjectionType::TransverseMercator: {
                 auto& p = boost::variant2::get<TransverseMercatorParams>(params);
                 return TransformToGeoLocationTransverseMercator(location, p);
@@ -262,11 +261,11 @@ namespace geom {
 
         lon = std::atan2(std::sin(lon), std::cos(lon));
 
-        return GeoLocation(RadiansToDegrees(lat), RadiansToDegrees(lon), location.z);;
+        return GeoLocation(RadiansToDegrees(lat), RadiansToDegrees(lon), location.z);
     }
 
     GeoLocation GeoProjection::TransformToGeoLocationUniversalTransverseMercator(
-        const Location& location, const UniversalTransverseMercatorParams p) const {
+        const Location& location_in, const UniversalTransverseMercatorParams p) const {
 
         // Using Snyder TM inverse (ellipsoidal) to 6th order. Same formula as Transverse Mercator.
         double lon_0 = DegreesToRadians(6 * p.zone - 183); // central meridian
@@ -280,6 +279,15 @@ namespace geom {
         double e4 = e2 * e2;
         double e6 = e4 * e2;
 
+        Location location;
+        if (p.offset.has_value()) {
+            location = p.offset->ApplyTransformation(location_in);
+        }
+        else{
+            location = location_in;
+        }
+
+        //Negate the value of y because of the unreal left hand rule
         double x = (location.x - x_0) / k;
         double y = (location.y - y_0) / k;
 

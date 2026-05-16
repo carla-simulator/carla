@@ -25,6 +25,7 @@
 * Added Docker-based development environment for CARLA UE5
 * Fixed potential segfault in LaneCrossingCalculator by adding a nullptr guard for missing lane marking records
 * Fixed traffic sign bounding box returned through the Python API to use the first valid trigger volume and preserve its rotation, with a guard against null trigger volumes
+* Added support for parsing offsets from OpenDRIVE using optional offset transforms.
 
 ## CARLA 0.10.0
 
