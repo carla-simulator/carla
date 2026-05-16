@@ -718,6 +718,23 @@ void FCarlaServer::FPimpl::BindActions()
     return R<void>::Success();
   };
 
+  // ~~ IMU gravity ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(get_imu_gravity) << [this]() -> R<float>
+  {
+    REQUIRE_CARLA_EPISODE();
+    REQUIRE_CARLA_GAME_MODE()
+    return GameMode->IMUSensorGravity;
+  };
+
+  BIND_SYNC(set_imu_gravity) << [this](float new_imu_gravity) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    REQUIRE_CARLA_GAME_MODE()
+    GameMode->IMUSensorGravity = new_imu_gravity;
+    return R<void>::Success();
+  };
+
   BIND_SYNC(is_weather_enabled) << [this]() -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();

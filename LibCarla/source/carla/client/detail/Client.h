@@ -159,7 +159,11 @@ namespace detail {
 
     void SetWeatherParameters(const rpc::WeatherParameters &weather);
 
-    bool IsWeatherEnabled(); 
+    float GetIMUSensorGravity();
+
+    void SetIMUSensorGravity(float gravity);
+
+    bool IsWeatherEnabled();
 
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
 

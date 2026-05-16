@@ -7,6 +7,7 @@
 #include "Carla/Sensor/InertialMeasurementUnit.h"
 #include "Carla.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Game/CarlaStatics.h"
 #include "Carla/Sensor/WorldObserver.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
@@ -105,8 +106,10 @@ carla::geom::Vector3D AInertialMeasurementUnit::ComputeAccelerometer(
 {
   // Used to convert from UE4's cm to meters
   constexpr float TO_METERS = 1e-2;
-  // Earth's gravitational acceleration is approximately 9.81 m/s^2
-  constexpr float GRAVITY = 9.81f;
+  // Gravity is configured per-simulation on the game mode; fall back to
+  // Earth's ~9.81 m/s^2 if the CARLA game mode is unavailable.
+  ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(GetWorld());
+  const float GRAVITY = (GameMode != nullptr) ? GameMode->IMUSensorGravity : 9.81f;
 
   // 2nd derivative of the polynomic (quadratic) interpolation
   // using the point in current time and two previous steps:
