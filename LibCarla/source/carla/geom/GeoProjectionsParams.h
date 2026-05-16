@@ -8,6 +8,10 @@
 #include <string>
 #include <limits>
 #include <unordered_map>
+#include <boost/optional.hpp>
+
+#include "carla/geom/Math.h"
+#include "carla/geom/Location.h"
 
 namespace carla {
 namespace geom {
@@ -66,6 +70,36 @@ namespace geom {
         }
     };
 
+    class OffsetTransform {
+    public:
+
+        OffsetTransform() = default;
+        
+        OffsetTransform(double offset_x, double offset_y, double offset_z, double offset_hdg): 
+            offset_x(offset_x), offset_y(offset_y), offset_z(offset_z), offset_cos_h(std::cos(-offset_hdg)), offset_sin_h(std::sin(-offset_hdg)) {}
+
+        double offset_x = 0.0;
+        double offset_y = 0.0;
+        double offset_z = 0.0;
+        double offset_cos_h = 1.0;
+        double offset_sin_h = 0.0;
+
+        Location ApplyTransformation(const Location& location) const{
+
+            double tx = location.x + offset_x;
+            double ty = -location.y + offset_y;
+
+            double x_rot = (tx * offset_cos_h) - (ty * offset_sin_h);
+            double y_rot = (tx * offset_sin_h) + (ty * offset_cos_h);
+
+            return Location{static_cast<float>(x_rot), static_cast<float>(y_rot), static_cast<float>(location.z + offset_z)};
+        }
+
+        bool operator==(const OffsetTransform& rhs) const {
+            return (offset_x == rhs.offset_x) && (offset_y == rhs.offset_y) && (offset_z == rhs.offset_z) && (offset_cos_h == rhs.offset_cos_h) && (offset_sin_h == rhs.offset_sin_h);
+        }
+    };
+
     class TransverseMercatorParams {
     public:
 
@@ -97,21 +131,23 @@ namespace geom {
 
         UniversalTransverseMercatorParams() = default;
 
-        UniversalTransverseMercatorParams(int zone, bool north, Ellipsoid ellps):
-            zone(zone), north(north), ellps(ellps) {}
+        UniversalTransverseMercatorParams(int zone, bool north, Ellipsoid ellps, boost::optional<OffsetTransform> offset = boost::none):
+            zone(zone), north(north), ellps(ellps), offset(offset) {}
 
         int zone = 31;
         bool north = true;
         Ellipsoid ellps = Ellipsoid();
+        boost::optional<OffsetTransform> offset;
 
         bool operator==(const UniversalTransverseMercatorParams &rhs) const {
-            return (zone == rhs.zone) && (north == rhs.north) && (ellps == rhs.ellps);
+            return (zone == rhs.zone) && (north == rhs.north) && (ellps == rhs.ellps) && (offset == rhs.offset);
         }
 
         bool operator!=(const UniversalTransverseMercatorParams &rhs) const {
-            return (zone != rhs.zone) || (north != rhs.north) || (ellps != rhs.ellps);
+            return (zone != rhs.zone) || (north != rhs.north) || (ellps != rhs.ellps) || (offset == rhs.offset);
         }
     };
+
 
     class WebMercatorParams {
     public:
