@@ -207,6 +207,36 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
       }
       break;
 
+      // weather
+    case static_cast<char>(CarlaRecorderPacketId::Weather):
+      ReadValue<uint16_t>(File, Total);
+      if (Total > 0 && !bFramePrinted)
+      {
+        PrintFrame(Info);
+        bFramePrinted = true;
+      }
+
+      Info << " Weathers: " << Total << std::endl;
+      for (i = 0; i < Total; ++i)
+      {
+        Weather.Read(File);
+        Info << "  Cloudiness: " << Weather.Cloudiness
+            << " Precipitation: " << Weather.Precipitation
+            << " PrecipitationDeposits: " << Weather.PrecipitationDeposits
+            << " WindIntensity: " << Weather.WindIntensity
+            << " SunAzimuthAngle: " << Weather.SunAzimuthAngle
+            << " SunAltitudeAngle: " << Weather.SunAltitudeAngle
+            << " FogDensity: " << Weather.FogDensity
+            << " FogDistance: " << Weather.FogDistance
+            << " FogFalloff: " << Weather.FogFalloff
+            << " Wetness: " << Weather.Wetness
+            << " ScatteringIntensity: " << Weather.ScatteringIntensity
+            << " MieScatteringScale: " << Weather.MieScatteringScale
+            << " RayleighScatteringScale: " << Weather.RayleighScatteringScale
+            << " DustStorm: " << Weather.DustStorm << "\n";
+      }
+      break;
+
       // events del
     case static_cast<char>(CarlaRecorderPacketId::EventDel):
       ReadValue<uint16_t>(File, Total);
@@ -725,7 +755,6 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
               << Bone.Rotation.X << ", " << Bone.Rotation.Y << ", " << Bone.Rotation.Z << ")\n";
           }
         }
-        Info << std::endl;
       }
       else
         SkipPacket();
@@ -733,7 +762,7 @@ std::string CarlaRecorderQuery::QueryInfo(std::string Filename, bool bShowAll)
 
       // frame end
     case static_cast<char>(CarlaRecorderPacketId::FrameEnd):
-      // do nothing, it is empty
+      Info << std::endl;
       break;
 
     default:

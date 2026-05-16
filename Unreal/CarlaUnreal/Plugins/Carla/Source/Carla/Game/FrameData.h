@@ -175,7 +175,7 @@ private:
 
   void SetFrameCounter();
 
-  FCarlaActor* FindTrafficLightAt(FVector Location);
+  FCarlaActor* FindTrafficSignAt(FVector Location);
 
   void AddExistingActors(void);
 
