@@ -256,7 +256,7 @@ namespace parser {
   static geom::GeoLocation CreateTransverseMercatorGeoReference(std::unordered_map<std::string, std::string> parameters){
     geom::GeoLocation result{0.0, 0.0, 0.0};
     TryGetParameter(result.latitude, parameters, "lat_0");
--   TryGetParameter(result.longitude, parameters, "lon_0");
+    TryGetParameter(result.longitude, parameters, "lon_0");
     return result;
   }
 
@@ -264,7 +264,7 @@ namespace parser {
     geom::GeoLocation result{0.0, 0.0, 0.0};
     result.latitude = 0.0;
     if (TryGetParameter(result.longitude, parameters, "zone"))
-      result.longitude = geom::Math::ToRadians(6 * result.longitude - 183);
+      result.longitude = 6.0 * result.longitude - 183.0;
     return result;
   }
 

@@ -144,7 +144,7 @@ namespace geom {
         }
 
         bool operator!=(const UniversalTransverseMercatorParams &rhs) const {
-            return (zone != rhs.zone) || (north != rhs.north) || (ellps != rhs.ellps) || (offset == rhs.offset);
+            return (zone != rhs.zone) || (north != rhs.north) || (ellps != rhs.ellps) || (offset != rhs.offset);
         }
     };
 
