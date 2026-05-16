@@ -2424,10 +2424,10 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
 
   // ~~ Logging and playback ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  BIND_SYNC(start_recorder) << [this](std::string name, bool AdditionalData) -> R<std::string>
+  BIND_SYNC(start_recorder) << [this](std::string name, bool AdditionalData, bool StopReplayer) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
-    return R<std::string>(Episode->StartRecorder(name, AdditionalData));
+    return R<std::string>(Episode->StartRecorder(name, AdditionalData, StopReplayer));
   };
 
   BIND_SYNC(stop_recorder) << [this]() -> R<void>
@@ -2476,7 +2476,10 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       double start,
       double duration,
       uint32_t follow_id,
-      bool replay_sensors) -> R<std::string>
+      bool replay_sensors,
+      bool replay_weather,
+      const cr::Transform& offset,
+      std::string map_override) -> R<std::string>
   {
     REQUIRE_CARLA_EPISODE();
     return R<std::string>(Episode->GetRecorder()->ReplayFile(
@@ -2484,7 +2487,10 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
         start,
         duration,
         follow_id,
-        replay_sensors));
+        offset,
+        replay_sensors,
+        replay_weather,
+        map_override));
   };
 
   BIND_SYNC(set_replayer_time_factor) << [this](double time_factor) -> R<void>

@@ -60,11 +60,13 @@ std::string ACarlaRecorder::ShowFileActorsBlocked(std::string Name, double MinTi
   return Query.QueryBlocked(Name, MinTime, MinDistance);
 }
 
-std::string ACarlaRecorder::ReplayFile(std::string Name, double TimeStart, double Duration,
-    uint32_t FollowId, bool ReplaySensors)
+std::string ACarlaRecorder::ReplayFile(
+  std::string Name, double TimeStart, double Duration,
+  uint32_t FollowId, const FTransform& Offset, bool ReplaySensors, bool ReplayWeather,
+  std::string MapOverride)
 {
   Stop();
-  return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId, ReplaySensors);
+  return Replayer.ReplayFile(Name, TimeStart, Duration, FollowId, Offset, ReplaySensors, ReplayWeather, MapOverride);
 }
 
 void ACarlaRecorder::SetReplayerTimeFactor(double TimeFactor)
@@ -145,10 +147,17 @@ void ACarlaRecorder::Ticking(float DeltaSeconds)
       }
     }
 
+    // save the initial weather
+    if (bFirstTick)
+    {
+      AddExistingWeather();
+      bFirstTick = false;
+    }
+
     // write all data for this frame
     Write(DeltaSeconds);
   }
-  else if (Episode->GetReplayer()->IsEnabled())
+  if (Episode->GetReplayer()->IsEnabled())
   {
     // replayer
     Episode->GetReplayer()->Tick(DeltaSeconds);
@@ -421,10 +430,14 @@ void ACarlaRecorder::AddActorBones(FCarlaActor *CarlaActor)
   WalkersBones.Add(std::move(Walker));
 }
 
-std::string ACarlaRecorder::Start(std::string Name, FString MapName, bool AdditionalData)
+std::string ACarlaRecorder::Start(
+  std::string Name,
+  FString MapName,
+  bool AdditionalData,
+  bool StopReplayer)
 {
   // stop replayer if any in course
-  if (Replayer.IsEnabled())
+  if (StopReplayer && Replayer.IsEnabled())
     Replayer.Stop();
 
   // stop recording
@@ -454,6 +467,9 @@ std::string ACarlaRecorder::Start(std::string Name, FString MapName, bool Additi
 
   Frames.Reset();
   PlatformTime.SetStartTime();
+
+  // reset first-tick flag so the initial weather is captured on every recording session
+  bFirstTick = true;
 
   Enable();
 
@@ -498,6 +514,7 @@ void ACarlaRecorder::Clear(void)
   DoorVehicles.Clear();
   Wheels.Clear();
   Bikers.Clear();
+  Weathers.Clear();
 }
 
 void ACarlaRecorder::Write(double DeltaSeconds)
@@ -527,6 +544,7 @@ void ACarlaRecorder::Write(double DeltaSeconds)
   LightScenes.Write(File);
   Wheels.Write(File);
   Bikers.Write(File);
+  Weathers.Write(File);
 
   // additional info
   if (bAdditionalData)
@@ -551,6 +569,14 @@ void ACarlaRecorder::AddPosition(const CarlaRecorderPosition &Position)
   if (Enabled)
   {
     Positions.Add(Position);
+  }
+}
+
+void ACarlaRecorder::AddWeather(const CarlaRecorderWeather &Weather)
+{
+  if (Enabled)
+  {
+    Weathers.Add(Weather);
   }
 }
 
@@ -742,6 +768,31 @@ void ACarlaRecorder::AddExistingActors(void)
     }
   }
 
+}
+
+void ACarlaRecorder::AddExistingWeather(void)
+{
+  AWeather *WeatherActor = Episode->GetWeather();
+  if (WeatherActor != nullptr)
+  {
+    CarlaRecorderWeather RecorderWeather;
+    const auto &Params = WeatherActor->GetCurrentWeather();
+    RecorderWeather.Cloudiness              = Params.Cloudiness;
+    RecorderWeather.Precipitation           = Params.Precipitation;
+    RecorderWeather.PrecipitationDeposits   = Params.PrecipitationDeposits;
+    RecorderWeather.WindIntensity           = Params.WindIntensity;
+    RecorderWeather.SunAzimuthAngle         = Params.SunAzimuthAngle;
+    RecorderWeather.SunAltitudeAngle        = Params.SunAltitudeAngle;
+    RecorderWeather.FogDensity              = Params.FogDensity;
+    RecorderWeather.FogDistance             = Params.FogDistance;
+    RecorderWeather.FogFalloff              = Params.FogFalloff;
+    RecorderWeather.Wetness                 = Params.Wetness;
+    RecorderWeather.ScatteringIntensity     = Params.ScatteringIntensity;
+    RecorderWeather.MieScatteringScale      = Params.MieScatteringScale;
+    RecorderWeather.RayleighScatteringScale = Params.RayleighScatteringScale;
+    RecorderWeather.DustStorm               = Params.DustStorm;
+    AddWeather(RecorderWeather);
+  }
 }
 
 void ACarlaRecorder::CreateRecorderEventAdd(

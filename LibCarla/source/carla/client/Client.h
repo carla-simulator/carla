@@ -9,6 +9,7 @@
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/World.h"
 #include "carla/client/Map.h"
+#include "carla/geom/Transform.h"
 #include "carla/PythonUtil.h"
 #include "carla/trafficmanager/TrafficManager.h"
 
@@ -118,8 +119,8 @@ namespace client {
       return _simulator->GetCurrentEpisode();
     }
 
-    std::string StartRecorder(std::string name, bool additional_data = false) {
-      return _simulator->StartRecorder(name, additional_data);
+    std::string StartRecorder(std::string name, bool additional_data = false, bool stop_replayer = true) {
+      return _simulator->StartRecorder(name, additional_data, stop_replayer);
     }
 
     void StopRecorder(void) {
@@ -138,9 +139,15 @@ namespace client {
       return _simulator->ShowRecorderActorsBlocked(name, min_time, min_distance);
     }
 
-    std::string ReplayFile(std::string name, double start, double duration,
-        uint32_t follow_id, bool replay_sensors) {
-      return _simulator->ReplayFile(name, start, duration, follow_id, replay_sensors);
+    std::string ReplayFile(
+        std::string name, double start, double duration,
+        uint32_t follow_id, bool replay_sensors,
+        bool replay_weather = false,
+        const geom::Transform& offset = geom::Transform(),
+        std::string map_override = "") {
+      return _simulator->ReplayFile(
+          std::move(name), start, duration, follow_id, replay_sensors,
+          replay_weather, offset, std::move(map_override));
     }
 
     void StopReplayer(bool keep_actors) {
