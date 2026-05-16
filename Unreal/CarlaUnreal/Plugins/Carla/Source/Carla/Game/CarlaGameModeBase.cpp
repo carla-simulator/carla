@@ -140,10 +140,23 @@ void ACarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Log, TEXT("Existing weather actor. Doing nothing then!"));
     Episode->Weather = static_cast<AWeather*>(WeatherActor);
   }
-  else if (WeatherClass != nullptr) {
-    Episode->Weather = World->SpawnActor<AWeather>(WeatherClass);
-  } else {
-    UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
+  else {
+    // Fall back to BP_CarlaWeather if WeatherClass is unset on the BP
+    // game mode. Without this, set_weather() RPCs silently no-op because
+    // Episode->Weather stays null and CarlaServer::get_weather_parameters
+    // returns the default-constructed FWeatherParameters{}. Resolved at
+    // runtime (rather than via ConstructorHelpers) so the package cook is
+    // not forced to re-validate the BP asset registry every C++ rebuild.
+    if (WeatherClass == nullptr) {
+      WeatherClass = LoadClass<AWeather>(
+          nullptr,
+          TEXT("/Game/Carla/Blueprints/Weather/BP_CarlaWeather.BP_CarlaWeather_C"));
+    }
+    if (WeatherClass != nullptr) {
+      Episode->Weather = World->SpawnActor<AWeather>(WeatherClass);
+    } else {
+      UE_LOG(LogCarla, Error, TEXT("Missing weather class!"));
+    }
   }
 
   GameInstance->NotifyInitGame();

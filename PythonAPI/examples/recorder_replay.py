@@ -72,6 +72,16 @@ def main():
         '--follow-ego', action="store_true",
         help='follow the ego vehicle')
     argparser.add_argument(
+        '--top-view', action="store_true",
+        help='enable top-down camera view when following an actor')
+    argparser.add_argument(
+        '-m', '--map-override',
+        type=str,
+        help='The name of the map to load instead of whatever the log file indicates.')
+    argparser.add_argument(
+        '--replay-weather', action="store_true",
+        help='reapply the weather changes recorded in the log')
+    argparser.add_argument(
         '--factor', default=1, type=float,
         help='Initial recorder factor')
 
@@ -122,8 +132,21 @@ def main():
     if not duration:
         duration = float(file_info.split("Duration: ")[-1].split(" ")[0])
 
+    # set desired offset
+    offset = carla.Transform(carla.Location(-10, 0, 5), carla.Rotation(-25, 0, 0))
+    if args.top_view:
+        offset = carla.Transform(carla.Location(0, 0, 40), carla.Rotation(-90, 0, 0))
+
     print("\033[1m> Starting the replayer\033[0m")
-    client.replay_file(args.file, args.start_time, args.end_time, follow_id)
+    client.replay_file(
+        args.file,
+        args.start_time,
+        args.end_time,
+        follow_id,
+        False,
+        args.replay_weather,
+        offset,
+        map_override=args.map_override if args.map_override is not None else "")
     client.set_replayer_time_factor(args.factor)
 
     tick(world)
