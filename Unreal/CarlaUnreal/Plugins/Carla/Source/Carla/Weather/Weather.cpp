@@ -6,6 +6,9 @@
 
 #include "Carla/Weather/Weather.h"
 #include "Carla.h"
+#include "Carla/Game/CarlaStatics.h"
+#include "Carla/Recorder/CarlaRecorder.h"
+#include "Carla/Recorder/CarlaRecorderWeather.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
 
 #include <util/ue-header-guard-begin.h>
@@ -75,6 +78,28 @@ void AWeather::ApplyWeather(const FWeatherParameters& InWeather)
 
     // Call the blueprint that actually changes the weather.
     RefreshWeather(Weather);
+
+    // record the weather event
+    ACarlaRecorder *Recorder = UCarlaStatics::GetRecorder(GetWorld());
+    if (Recorder && Recorder->IsEnabled())
+    {
+        CarlaRecorderWeather RecorderWeather;
+        RecorderWeather.Cloudiness              = InWeather.Cloudiness;
+        RecorderWeather.Precipitation           = InWeather.Precipitation;
+        RecorderWeather.PrecipitationDeposits   = InWeather.PrecipitationDeposits;
+        RecorderWeather.WindIntensity           = InWeather.WindIntensity;
+        RecorderWeather.SunAzimuthAngle         = InWeather.SunAzimuthAngle;
+        RecorderWeather.SunAltitudeAngle        = InWeather.SunAltitudeAngle;
+        RecorderWeather.FogDensity              = InWeather.FogDensity;
+        RecorderWeather.FogDistance             = InWeather.FogDistance;
+        RecorderWeather.FogFalloff              = InWeather.FogFalloff;
+        RecorderWeather.Wetness                 = InWeather.Wetness;
+        RecorderWeather.ScatteringIntensity     = InWeather.ScatteringIntensity;
+        RecorderWeather.MieScatteringScale      = InWeather.MieScatteringScale;
+        RecorderWeather.RayleighScatteringScale = InWeather.RayleighScatteringScale;
+        RecorderWeather.DustStorm               = InWeather.DustStorm;
+        Recorder->AddWeather(RecorderWeather);
+    }
 }
 
 void AWeather::NotifyWeather(ASensor* Sensor)

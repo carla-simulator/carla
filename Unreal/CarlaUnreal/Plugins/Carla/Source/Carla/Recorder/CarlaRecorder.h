@@ -33,6 +33,7 @@
 #include "CarlaRecorderVisualTime.h"
 #include "CarlaRecorderWalkerBones.h"
 #include "CarlaRecorderDoorVehicle.h"
+#include "CarlaRecorderWeather.h"
 #include "CarlaReplayer.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 
@@ -70,7 +71,8 @@ enum class CarlaRecorderPacketId : uint8_t
   VisualTime,
   VehicleDoor,
   AnimVehicleWheels,
-  AnimBiker
+  AnimBiker,
+  Weather
 };
 
 /// Recorder for the simulation
@@ -94,7 +96,11 @@ public:
   void Disable(void);
 
   // start / stop
-  std::string Start(std::string Name, FString MapName, bool AdditionalData = false);
+  std::string Start(
+    std::string Name,
+    FString MapName,
+    bool AdditionalData = false,
+    bool StopReplayer = true);
 
   void Stop(void);
 
@@ -112,6 +118,8 @@ public:
   void AddCollision(AActor *Actor1, AActor *Actor2);
 
   void AddPosition(const CarlaRecorderPosition &Position);
+
+  void AddWeather(const CarlaRecorderWeather &Weather);
 
   void AddState(const CarlaRecorderStateTrafficLight &State);
 
@@ -168,8 +176,10 @@ public:
   std::string ShowFileActorsBlocked(std::string Name, double MinTime = 30, double MinDistance = 10);
 
   // replayer
-  std::string ReplayFile(std::string Name, double TimeStart, double Duration,
-      uint32_t FollowId, bool ReplaySensors);
+  std::string ReplayFile(
+    std::string Name, double TimeStart, double Duration,
+    uint32_t FollowId, const FTransform& Offset, bool ReplaySensors, bool ReplayWeather,
+    std::string MapOverride);
   void SetReplayerTimeFactor(double TimeFactor);
   void SetReplayerIgnoreHero(bool IgnoreHero);
   void SetReplayerIgnoreSpectator(bool IgnoreSpectator);
@@ -190,6 +200,8 @@ private:
   std::ofstream File;
 
   UCarlaEpisode *Episode = nullptr;
+
+  bool bFirstTick = true;
 
   // structures
   CarlaRecorderInfo Info;
@@ -215,6 +227,7 @@ private:
   CarlaRecorderWalkersBones WalkersBones;
   CarlaRecorderVisualTime VisualTime;
   CarlaRecorderDoorVehicles DoorVehicles;
+  CarlaRecorderWeathers Weathers;
 
   // replayer
   CarlaReplayer Replayer;
@@ -223,6 +236,7 @@ private:
   CarlaRecorderQuery Query;
 
   void AddExistingActors(void);
+  void AddExistingWeather(void);
   void AddActorPosition(FCarlaActor *CarlaActor);
   void AddWalkerAnimation(FCarlaActor *CarlaActor);
   void AddBikerAnimation(FCarlaActor *CarlaActor);
