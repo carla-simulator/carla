@@ -47,6 +47,10 @@ namespace road {
       return _data.GetGeoReference();
     }
 
+    const geom::GeoProjection &GetGeoProjection() const {
+      return _data.GetGeoProjection();
+    }
+
     /// ========================================================================
     /// -- Geometry ------------------------------------------------------------
     /// ========================================================================

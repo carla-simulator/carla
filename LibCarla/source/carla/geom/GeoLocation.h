@@ -11,8 +11,6 @@
 namespace carla {
 namespace geom {
 
-  struct Location;
-
   class GeoLocation {
   public:
 
@@ -36,14 +34,6 @@ namespace geom {
       : latitude(latitude),
         longitude(longitude),
         altitude(altitude) {}
-
-    // =========================================================================
-    // -- Transform locations --------------------------------------------------
-    // =========================================================================
-
-    /// Transform the given @a location to a GeoLocation using this as
-    /// geo-reference.
-    GeoLocation Transform(const Location &location) const;
 
     // =========================================================================
     // -- Comparison operators -------------------------------------------------

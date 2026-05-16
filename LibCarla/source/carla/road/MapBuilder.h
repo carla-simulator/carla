@@ -364,6 +364,10 @@ namespace road {
       _map_data._geo_reference = geo_reference;
     }
 
+    void SetGeoProjection(const geom::GeoProjection &geo_projection) {
+      _map_data._geo_projection = geo_projection;
+    }
+
   private:
 
     MapData _map_data;

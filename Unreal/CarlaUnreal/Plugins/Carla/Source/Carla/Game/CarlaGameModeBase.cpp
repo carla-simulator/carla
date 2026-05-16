@@ -472,7 +472,7 @@ void ACarlaGameModeBase::ParseOpenDrive()
   }
   else
   {
-    Episode->MapGeoReference = Map->GetGeoReference();
+    Episode->MapGeoProjection = Map->GetGeoProjection();
   }
 }
 
