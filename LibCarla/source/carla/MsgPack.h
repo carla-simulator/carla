@@ -20,7 +20,11 @@ namespace carla {
       namespace mp = ::clmdep_msgpack;
       mp::sbuffer sbuf;
       mp::pack(sbuf, obj);
-      return Buffer(reinterpret_cast<const unsigned char *>(sbuf.data()), sbuf.size());
+      // Cast to size_t (not Buffer::size_type) so the checked
+      // Buffer(const value_type*, size_t) constructor is selected and
+      // oversized messages throw instead of silently truncating to uint32_t.
+      return Buffer(reinterpret_cast<const unsigned char *>(sbuf.data()),
+                    static_cast<size_t>(sbuf.size()));
     }
 
     template <typename T>

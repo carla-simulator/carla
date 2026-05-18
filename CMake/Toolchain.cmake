@@ -207,4 +207,24 @@ set (
 	${UE_INCLUDE} ${UE_INCLUDE}/c++/v1
 )
 
+elseif (APPLE)
+
+# macOS uses Apple Xcode clang (auto-detected by CMake) and the system SDK.
+# Stage 1 (client + Python API) does not require Unreal Engine paths.
+# Stage 2 (Unreal plugin) will need to extend this branch with UE_*-equivalents
+# from the CarlaUnreal/UnrealEngine fork's Mac toolchain.
+set (
+	CMAKE_OSX_ARCHITECTURES
+	${CMAKE_HOST_SYSTEM_PROCESSOR}
+	CACHE STRING ""
+)
+
+# Apple Clang defaults to libc++ on Darwin; explicit for clarity and to match
+# the libcarla / boost / rpclib build configurations.
+add_compile_options (
+	$<$<COMPILE_LANGUAGE:CXX>:-stdlib=libc++>
+)
+
+add_link_options (-stdlib=libc++)
+
 endif ()

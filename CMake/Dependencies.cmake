@@ -112,6 +112,12 @@ include_directories (
   ${zlib_BINARY_DIR}
 ) # @TODO HACK
 
+# zlib 1.3.1 creates the `zlibstatic` target but not the modern `ZLIB::ZLIB`
+# alias that downstream FetchContent users (e.g. libpng 1.6.41+) expect.
+if (NOT TARGET ZLIB::ZLIB)
+  add_library (ZLIB::ZLIB ALIAS zlibstatic)
+endif ()
+
 if (WIN32)
   carla_dependency_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/zlibstatic${CARLA_DEBUG_AFFIX}.lib)
 else ()
@@ -138,11 +144,32 @@ carla_dependency_add (
   https://github.com/pnggroup/libpng/archive/refs/tags/${CARLA_LIBPNG_TAG}.zip
   https://github.com/pnggroup/libpng.git
 )
+
+# libpng 1.6.40's pngpriv.h still triggers a classic-MacOS <fp.h> include on
+# TARGET_OS_MAC, which is defined on every modern macOS build (the header
+# itself was removed long ago). Strip the offending clause before MakeAvailable
+# triggers any code generation that reads pngpriv.h.
+if (APPLE AND EXISTS "${libpng_SOURCE_DIR}/pngpriv.h")
+  carla_message ("Patching libpng pngpriv.h: removing TARGET_OS_MAC clause for modern macOS.")
+  execute_process (
+    COMMAND sed -i.bak "s/ || defined(TARGET_OS_MAC)//" "${libpng_SOURCE_DIR}/pngpriv.h"
+  )
+endif ()
+
 carla_dependencies_make_available ()
 include_directories (
   ${libpng_SOURCE_DIR}
   ${libpng_BINARY_DIR}
 ) # @TODO HACK
+
+# Post-fetch fallback: if libpng was just fetched by MakeAvailable (so
+# libpng_SOURCE_DIR didn't exist at the pre-MakeAvailable check above), patch
+# now. Idempotent (the sed has nothing to replace on a previously-patched file).
+if (APPLE AND EXISTS "${libpng_SOURCE_DIR}/pngpriv.h")
+  execute_process (
+    COMMAND sed -i.bak "s/ || defined(TARGET_OS_MAC)//" "${libpng_SOURCE_DIR}/pngpriv.h"
+  )
+endif ()
 
 
 
@@ -204,6 +231,14 @@ carla_dependency_add (
   https://github.com/carla-simulator/rpclib/archive/refs/heads/${CARLA_RPCLIB_TAG}.zip
   https://github.com/carla-simulator/rpclib.git
 )
+
+# rpclib's msgpack header `nil_decl.hpp` declares `typedef nil_t nil;`. On
+# macOS, Apple's `MacTypes.h` does `#define nil nullptr`, which collides and
+# breaks any consumer that transitively includes both (e.g. CARLA's UE plugin
+# pulling rpclib through libcarla-server). The header itself is gated on
+# `MSGPACK_DISABLE_LEGACY_NIL`; defining it globally makes consumers skip the
+# offending typedef. No effect on Linux/Windows (MacTypes.h is mac-only).
+add_compile_definitions (MSGPACK_DISABLE_LEGACY_NIL)
 
 
 

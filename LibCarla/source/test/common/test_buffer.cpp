@@ -117,9 +117,9 @@ TEST(buffer, message_too_big) {
   // carla::throw_exception(const std::exception&) slices the derived type
   // before rethrow, so std::invalid_argument arrives at the catch site as
   // std::exception. The test still verifies the protective behavior.
-  ASSERT_THROW(Buffer(4294967296ul), std::exception);
+  ASSERT_THROW(Buffer(static_cast<size_t>(4294967296ul)), std::exception);
   Buffer buf;
-  ASSERT_THROW(buf.reset(4294967296ul), std::exception);
+  ASSERT_THROW(buf.reset(static_cast<uint64_t>(4294967296ul)), std::exception);
 }
 #endif // LIBCARLA_NO_EXCEPTIONS
 
