@@ -97,6 +97,17 @@ cmake --build Build/Release --target carla-unreal-package
 
 The package is generated in `Build/Release/Package/`. After packaging, three Mac-only post-cook steps are required before the `.app` will launch.
 
+### Cook Memory Tuning
+
+The CARLA packaging process cooks all game assets into a single compressed `.uasset`. On macOS with limited physical RAM, aggressive cook memory settings cause swap thrashing and significantly slow build times.
+
+**Recommended `CookMemoryMaxUsedPhysicalMB` values:**
+- **16 GB systems:** 12000–14000 (leaves 2–4 GB for macOS + background services)
+- **32 GB systems:** 18000–24000 (leaves 8–14 GB headroom)  
+- **64 GB+ systems:** 30000–40000 (defaults are fine, can increase further)
+
+If cooking is slow or system becomes unresponsive during packaging, reduce the value further (e.g., 10000 for 16 GB systems like base model of M4 Mac Mini).
+
 ### 1. Fix `@rpath` entries
 
 UE5's macOS packaging emits `@loader_path` rpaths that resolve outside the `.app` bundle. Add the correct paths:

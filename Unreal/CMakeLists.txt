@@ -422,12 +422,14 @@ function (
   set (TARGET_NAME carla-unreal-${TARGET_NAME_SHORT})
 
   if (APPLE)
-    # Aggressive memory throttle + restrict to one starter map; full multi-map
-    # cook OOM-kills on 32 GB Macs even with -iterate. Town10HD_Opt is the
-    # default startup map; Town15 cooks separately if needed later.
+    # Tuned cook memory for macOS hardware constraints. 
+    # 16 GB systems: 12000–14000 (leaves ~2–4 GB for macOS + background services)
+    # 32 GB systems: 18000–24000 (leaves ~8–14 GB headroom)
+    # 64 GB+ systems: 30000–40000 (increase further as needed)
+    # refer: build_macos.md for more details/ suggestions on further tuning based on specific hardware configurations. 
     set (CARLA_UAT_COOK_MEMORY_OPTS
       "-MapsToCook=/Game/Carla/Maps/Town10HD_Opt"
-      "-AdditionalCookerOptions=-CookMemoryMaxUsedVirtualMB=10000 -CookMemoryMinFreePhysicalMB=2048 -CookMemoryMaxUsedPhysicalMB=18000 -CookSoftGCJustInit"
+      "-AdditionalCookerOptions=-CookMemoryMaxUsedVirtualMB=10000 -CookMemoryMinFreePhysicalMB=2048 -CookMemoryMaxUsedPhysicalMB=12000 -CookSoftGCJustInit"
     )
   else ()
     set (CARLA_UAT_COOK_MEMORY_OPTS "")
