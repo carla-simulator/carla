@@ -30,6 +30,7 @@ pipeline
                         sh "cmake --build Build --target package"
                     }
                 }
+                // TODO: move these stages to carla-studio as its own Jenkinsfile
                 stage('Prepare CarlaStudio')
                 {
                     steps {
