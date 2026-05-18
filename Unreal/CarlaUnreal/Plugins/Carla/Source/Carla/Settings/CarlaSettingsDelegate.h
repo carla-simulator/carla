@@ -62,6 +62,12 @@ private:
   /// Execute engine commands to apply the low quality level to the world.
   void LaunchLowQualityCommands(UWorld *world) const;
 
+  /// Execute engine commands to apply the medium quality level to the world.
+  void LaunchMediumQualityCommands(UWorld *world) const;
+
+  /// Execute engine commands to apply the high quality level to the world.
+  void LaunchHighQualityCommands(UWorld *world) const;
+
   void SetAllRoads(
       UWorld *world,
       float max_draw_distance,
@@ -79,6 +85,16 @@ private:
       float max_distance_fade,
       bool cast_shadows,
       bool hide_non_directional) const;
+
+  /// Single-pass replacement for SetAllLights + SetAllActorsDrawDistance
+  /// when applying a quality tier. Walks the actor list once and dispatches
+  /// per-type, halving the cost of a tier change.
+  void ApplyPerActorQualitySettings(
+      UWorld *world,
+      float light_fade_distance,
+      bool cast_directional_shadows,
+      bool hide_non_directional_lights,
+      float draw_distance) const;
 
 private:
 
