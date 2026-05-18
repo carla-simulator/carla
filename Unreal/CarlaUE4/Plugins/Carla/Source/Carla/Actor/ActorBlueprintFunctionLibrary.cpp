@@ -235,6 +235,12 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs && ... Strings)
   RosPublishTf.Type = EActorAttributeType::Bool;
   RosPublishTf.RecommendedValues = { TEXT("true")};  // true by default
   Def.Variations.Emplace(RosPublishTf);
+
+  FActorVariation RosTopicNameAbsolute;
+  RosTopicNameAbsolute.Id = TEXT("ros_name_is_absolute");
+  RosTopicNameAbsolute.Type = EActorAttributeType::Bool;
+  RosTopicNameAbsolute.RecommendedValues = { TEXT("false")};  // false by default
+  Def.Variations.Emplace(RosTopicNameAbsolute);
 }
 
 static void AddRecommendedValuesForActorRoleName(

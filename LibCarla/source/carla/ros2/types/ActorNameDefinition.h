@@ -33,6 +33,7 @@ struct ActorNameDefinition {
       base_type(other.base_type),
       enabled_for_ros(other.enabled_for_ros),
       publish_tf(other.publish_tf),
+      ros_name_is_absolute(other.ros_name_is_absolute),
       frame_id(other.frame_id),
       city_object_label(city_object_label_),
       attributes(other.attributes) {
@@ -63,6 +64,13 @@ struct ActorNameDefinition {
       }
       else {
         publish_tf = Description.GetAttribute("ros_publish_tf").Value.ToBool();
+      }
+      std::string ros_name_absolute_string = TCHAR_TO_UTF8(*Description.GetAttribute("ros_name_is_absolute").Value);
+      if ( ros_name_absolute_string == "") {
+        ros_name_is_absolute = false;
+      }
+      else {
+        ros_name_is_absolute = Description.GetAttribute("ros_name_is_absolute").Value.ToBool();
       }
 
       for (auto const &ActorVariation: Description.Variations) {
@@ -100,6 +108,7 @@ struct ActorNameDefinition {
   std::string base_type;
   bool enabled_for_ros{false};
   bool publish_tf{true};
+  bool ros_name_is_absolute{false};
   std::string frame_id;
   carla::rpc::CityObjectLabel city_object_label{carla::rpc::CityObjectLabel::None};
   std::map<std::string, std::string> attributes;
@@ -121,6 +130,7 @@ inline std::string to_string(carla::ros2::types::ActorNameDefinition const &acto
       << " base_type=" << actor_definition.base_type
       << " enabled_for_ros=" << std::to_string(actor_definition.enabled_for_ros)
       << " publish_tf=" << std::to_string(actor_definition.publish_tf)
+      << " ros_name_is_absolute" << std::to_string(actor_definition.ros_name_is_absolute)
       << " frame_id=" << actor_definition.frame_id;
   for (auto const &attribute: actor_definition.attributes) {
     str << " " << attribute.first << "=" << attribute.second;

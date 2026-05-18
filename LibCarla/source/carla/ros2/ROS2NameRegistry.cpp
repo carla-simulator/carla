@@ -220,7 +220,7 @@ ROS2NameRegistry::CreateTopicAndFrameLocked(ROS2NameRegistry::KeyType const& key
   ROS2NameRegistry::TopicAndFrame topic_and_frame("rt/carla");
   // first bring in the parent hierarchy if present
   if (!parent_topic_and_frame._topic_name.empty()) {
-    if (parent_topic_and_frame._topic_name.find("rt/carla") == 0) {
+    if (parent_topic_and_frame._topic_name.find("rt") == 0) {
       topic_and_frame._topic_name = parent_topic_and_frame._topic_name;
     } else {
       topic_and_frame._topic_name += "/" + parent_topic_and_frame._topic_name;
@@ -261,38 +261,48 @@ ROS2NameRegistry::CreateTopicAndFrameLocked(ROS2NameRegistry::KeyType const& key
   std::string individual_name;
   if (sensor_actor_definition != nullptr) {
     // on sensors we use the sensor name as additions type prefix
-    auto pos = actor_definition->ros_name.find_last_of('.');
-    if (pos != std::string::npos) {
-      topic_and_frame = ExpandTopicName(topic_and_frame, actor_definition->ros_name.substr(pos + 1u), actor_definition->frame_id);
-    } else {
+    if ( actor_definition->ros_name_is_absolute ) {
+      // user wants to configure the full absolute names
+      topic_and_frame._topic_name = "rt";
+      topic_and_frame._frame_id = "";
       topic_and_frame = ExpandTopicName(topic_and_frame, actor_definition->ros_name, actor_definition->frame_id);
     }
-    // and use stream id as individualization
-    auto const stream_id_string = "/stream_" + number_to_three_letter_string(sensor_actor_definition->stream_id);
-    if (IsTopicNameAvailable(topic_and_frame, stream_id_string)) {
-      individual_name = stream_id_string;
+    else {
+      auto pos = actor_definition->ros_name.find_last_of('.');
+      if (pos != std::string::npos) {
+        topic_and_frame = ExpandTopicName(topic_and_frame, actor_definition->ros_name.substr(pos + 1u), actor_definition->frame_id);
+      } else {
+        topic_and_frame = ExpandTopicName(topic_and_frame, actor_definition->ros_name, actor_definition->frame_id);
+      }
+      // and use stream id as individualization
+      auto const stream_id_string = "/stream_" + number_to_three_letter_string(sensor_actor_definition->stream_id);
+      if (IsTopicNameAvailable(topic_and_frame, stream_id_string)) {
+        individual_name = stream_id_string;
+      }
     }
   }
 
-  // the role name overrules other individualization
-  if (!actor_definition->role_name.empty()) {
-    if (IsTopicNameAvailable(topic_and_frame, actor_definition->role_name)) {
-      individual_name = actor_definition->role_name;
+  if ( (!actor_definition->ros_name_is_absolute) || !IsTopicNameAvailable(topic_and_frame, "")) {
+    // the role name overrules other individualization
+    if (!actor_definition->role_name.empty()) {
+      if (IsTopicNameAvailable(topic_and_frame, actor_definition->role_name)) {
+        individual_name = actor_definition->role_name;
+      }
     }
-  }
-  // no valid individualization yet, use actor id
-  if (individual_name.empty()) {
-    auto const actor_id_string = "actor_" + number_to_three_letter_string(actor_definition->id);
-    if (IsTopicNameAvailable(topic_and_frame, actor_id_string)) {
-      individual_name = actor_id_string;
+    // no valid individualization yet, use actor id
+    if (individual_name.empty()) {
+      auto const actor_id_string = "actor_" + number_to_three_letter_string(actor_definition->id);
+      if (IsTopicNameAvailable(topic_and_frame, actor_id_string)) {
+        individual_name = actor_id_string;
+      }
     }
+    // if also this doesn't help, we try with a random number using the actor_id as initialization
+    if (individual_name.empty()) {
+      std::srand(actor_definition->id);
+      individual_name = "randomid_" + number_to_three_letter_string(uint32_t(std::rand()));
+    }
+    topic_and_frame = ExpandTopicName(topic_and_frame, individual_name);
   }
-  // if also this doesn't help, we try with a random number using the actor_id as initialization
-  if (individual_name.empty()) {
-    std::srand(actor_definition->id);
-    individual_name = "randomid_" + number_to_three_letter_string(uint32_t(std::rand()));
-  }
-  topic_and_frame = ExpandTopicName(topic_and_frame, individual_name);
 
   auto insert_result = topic_and_frame_map.insert({key, topic_and_frame});
   if (!insert_result.second) {
@@ -309,8 +319,8 @@ ROS2NameRegistry::TopicAndFrame ROS2NameRegistry::ExpandTopicName(TopicAndFrame 
   while (postfix_topic_adapted.front() == '/') {
     postfix_topic_adapted.erase(postfix_topic_adapted.begin());
   }
-  std::string postfix_frame_adapted;
-  if ( postfix_frame.empty()) {
+  std::string postfix_frame_adapted = postfix_frame;
+  if ( postfix_frame_adapted.empty()) {
     postfix_frame_adapted = postfix_topic_adapted;
   }
   else {
@@ -320,11 +330,13 @@ ROS2NameRegistry::TopicAndFrame ROS2NameRegistry::ExpandTopicName(TopicAndFrame 
   }
   TopicAndFrame expanded_topic_and_frame = topic_and_frame;
   if ( !postfix_frame_adapted.empty() ) {
-    if (expanded_topic_and_frame._frame_id.back() != '/') {
-      expanded_topic_and_frame._frame_id.push_back('/');
-    }
-    if (expanded_topic_and_frame._frame_id.front() == '/') {
-      expanded_topic_and_frame._frame_id.erase(0u, 1u);
+    if ( !expanded_topic_and_frame._frame_id.empty() ) {
+      if (expanded_topic_and_frame._frame_id.back() != '/') {
+        expanded_topic_and_frame._frame_id.push_back('/');
+      }
+      if (expanded_topic_and_frame._frame_id.front() == '/') {
+        expanded_topic_and_frame._frame_id.erase(0u, 1u);
+      }
     }
     expanded_topic_and_frame._frame_id += postfix_frame_adapted;
   }

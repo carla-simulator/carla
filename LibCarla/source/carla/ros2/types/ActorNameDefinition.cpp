@@ -21,10 +21,16 @@ carla_msgs::msg::CarlaActorInfo ActorNameDefinition::carla_actor_info(std::share
     actor_info.base_type(base_type);
     if ( name_registry != nullptr ) {
         actor_info.parent_id(name_registry->ParentActorId(id));
-        auto topic_prefix = name_registry->TopicPrefix(id);
-        if ( topic_prefix.length() >= 3 ) {
-            // remove "rt/" prefix
-            topic_prefix = topic_prefix.substr(3);
+        std::string topic_prefix;
+        if ( ros_name_is_absolute ) {
+            topic_prefix = ros_name;
+        }
+        else {
+            topic_prefix = name_registry->TopicPrefix(id);
+            if ( topic_prefix.length() >= 3 ) {
+                // remove "rt/" prefix
+                topic_prefix = topic_prefix.substr(3);
+            }
         }
         if ( topic_prefix.front() == '/') {
             // remove any leading "/"

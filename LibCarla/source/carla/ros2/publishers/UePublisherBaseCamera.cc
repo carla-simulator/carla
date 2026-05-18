@@ -20,7 +20,12 @@ UePublisherBaseCamera<ALLOCATOR>::UePublisherBaseCamera(
 
 template <class ALLOCATOR>
 bool UePublisherBaseCamera<ALLOCATOR>::Init(std::shared_ptr<DdsDomainParticipantImpl> domain_participant) {
-  return _image->InitHistoryPreallocatedWithReallocMemoryMode(domain_participant, get_topic_name("image"),
+  std::string image_topic_name = "image";
+  if ( GetSensorActorDefinition()->ros_name_is_absolute ) {
+    // user wants exact topic name for image
+    image_topic_name = "";
+  }
+  return _image->InitHistoryPreallocatedWithReallocMemoryMode(domain_participant, get_topic_name(image_topic_name),
                                                               get_topic_qos()) &&
          // camera info uses standard publisher qos
          _camera_info->Init(domain_participant, get_topic_name("camera_info"), PublisherBase::get_topic_qos());
