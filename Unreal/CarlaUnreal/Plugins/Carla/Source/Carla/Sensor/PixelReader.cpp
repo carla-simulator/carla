@@ -22,11 +22,23 @@
 // -- FPixelReader -------------------------------------------------------------
 // =============================================================================
 
+static TAutoConsoleVariable<int32> CVarPixelReaderLegacyVulkanFenceFlush(
+    TEXT("carla.PixelReader.LegacyVulkanFenceFlush"),
+    0,
+    TEXT("UE4-era Vulkan fence-flush workaround inside FPixelReader::WritePixelsToBuffer.\n")
+    TEXT("Creates an RQT_AbsoluteTime render query, flushes the RHI thread, and\n")
+    TEXT("synchronously waits for the result after every EnqueueCopy. UE 5.5 Vulkan\n")
+    TEXT("rewrote fence handling; the workaround is believed unnecessary.\n")
+    TEXT("  0: Skip the workaround (default).\n")
+    TEXT("  1: Run the legacy fence-flush block (rollback)."),
+    ECVF_Default);
+
 void FPixelReader::WritePixelsToBuffer(
     UTextureRenderTarget2D &RenderTarget,
     uint32 Offset,
     FRHICommandListImmediate &RHICmdList,
-    FPixelReader::Payload FuncForSending)
+    FPixelReader::Payload FuncForSending,
+    FRHIGPUReadbackPoolPtr Pool)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR("WritePixelsToBuffer");
   check(IsInRenderingThread());
@@ -39,18 +51,33 @@ void FPixelReader::WritePixelsToBuffer(
     return;
   }
 
-  auto BackBufferReadback = std::make_unique<FRHIGPUTextureReadback>(TEXT("CameraBufferReadback"));
+  // Acquire from per-sensor pool when available; fall back to per-call alloc
+  // if the pool is missing or every slot is in use.
+  FRHIGPUTextureReadback *Readback = nullptr;
+  int32 SlotIndex = INDEX_NONE;
+  TUniquePtr<FRHIGPUTextureReadback> FallbackReadback;
+  if (Pool)
+  {
+    Readback = Pool->Acquire(SlotIndex);
+  }
+  if (Readback == nullptr)
+  {
+    FallbackReadback = MakeUnique<FRHIGPUTextureReadback>(TEXT("CameraBufferReadback"));
+    Readback = FallbackReadback.Get();
+  }
+
   FIntPoint BackBufferSize = Texture->GetSizeXY();
   EPixelFormat BackBufferPixelFormat = Texture->GetFormat();
   {
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("EnqueueCopy");
-    BackBufferReadback->EnqueueCopy(RHICmdList,
-                                    Texture,
-                                    FResolveRect(0, 0, BackBufferSize.X, BackBufferSize.Y));
+    Readback->EnqueueCopy(RHICmdList,
+                          Texture,
+                          FResolveRect(0, 0, BackBufferSize.X, BackBufferSize.Y));
   }
 
-  // workaround to force RHI with Vulkan to refresh the fences state in the middle of frame
+  if (CVarPixelReaderLegacyVulkanFenceFlush.GetValueOnRenderThread() != 0)
   {
+    // workaround to force RHI with Vulkan to refresh the fences state in the middle of frame
     FRenderQueryRHIRef Query = RHICreateRenderQuery(RQT_AbsoluteTime);
     TRACE_CPUPROFILER_EVENT_SCOPE_STR("create query");
     RHICmdList.EndRenderQuery(Query);
@@ -61,7 +88,9 @@ void FPixelReader::WritePixelsToBuffer(
     RHIGetRenderQueryResult(Query, OldAbsTime, true);
   }
 
-  AsyncTask(ENamedThreads::HighTaskPriority, [=, Readback=std::move(BackBufferReadback)]() mutable {
+  AsyncTask(ENamedThreads::HighTaskPriority,
+    [=, Pool = std::move(Pool),
+        Fallback = std::move(FallbackReadback)]() mutable {
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
       while (!Readback->IsReady())
@@ -81,8 +110,13 @@ void FPixelReader::WritePixelsToBuffer(
         FuncForSending(LockedData, Size, Offset, ExpectedRowBytes);
       }
       Readback->Unlock();
-      Readback.reset();
     }
+
+    if (Pool && SlotIndex != INDEX_NONE)
+    {
+      Pool->Release(SlotIndex);
+    }
+    // Fallback (if any) destructs here, freeing its staging buffer.
   });
 }
 

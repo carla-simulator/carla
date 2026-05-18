@@ -46,6 +46,14 @@ static EQualityLevel QualityLevelFromString(
   {
     return EQualityLevel::Low;
   }
+  if (SQualitySettingsLevel.Equals("Medium"))
+  {
+    return EQualityLevel::Medium;
+  }
+  if (SQualitySettingsLevel.Equals("High"))
+  {
+    return EQualityLevel::High;
+  }
   if (SQualitySettingsLevel.Equals("Epic"))
   {
     return EQualityLevel::Epic;

@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Carla/Sensor/PixelReader.h"
+#include "Carla/Sensor/RHIGPUReadbackPool.h"
 #include "Carla/Sensor/Sensor.h"
 #include "Carla/Sensor/UE4_Overridden/SceneCaptureComponent2D_CARLA.h"
 #include "Carla/Sensor/ImageUtil.h"
@@ -159,6 +160,15 @@ public:
   bool ArePostProcessingEffectsEnabled() const
   {
     return bEnablePostProcessingEffects;
+  }
+
+  UFUNCTION(BlueprintCallable)
+  void SetUseRayTracing(bool Enable);
+
+  UFUNCTION(BlueprintCallable)
+  bool GetUseRayTracing() const
+  {
+    return bUseRayTracing;
   }
 
   UFUNCTION(BlueprintCallable)
@@ -540,6 +550,11 @@ public:
     return CaptureRenderTarget;
   }
 
+  /// Per-sensor pool of recyclable RHI readback objects. May be null before
+  /// BeginPlay or after EndPlay; consumers fall back to a per-call alloc in
+  /// that case.
+  FRHIGPUReadbackPoolPtr GetReadbackPool() const { return ReadbackPool; }
+
   /// Immediate enqueues render commands of the scene at the current time.
   void EnqueueRenderSceneImmediate();
 
@@ -609,11 +624,35 @@ protected:
   UPROPERTY(EditAnywhere)
   bool bEnablePostProcessingEffects = true;
 
+  /// Whether this sensor uses hardware ray tracing for its scene capture.
+  /// Defaults to true so cameras follow upstream behaviour out of the box.
+  /// Setting false saves ~700 MiB-1 GiB on the GPU and is intended for
+  /// sensors that do not need RT (depth, semantic, lidar). The global CVar
+  /// carla.Camera.UseRayTracing forces on/off across every camera regardless
+  /// of the per-sensor attribute.
+  UPROPERTY(EditAnywhere)
+  bool bUseRayTracing = true;
+
   /// Whether to change render target format to PF_A16B16G16R16, offering 16bit / channel
   UPROPERTY(EditAnywhere)
   bool bEnable16BitFormat = false;
 
+  /// Per-sensor pool of recyclable RHI readback objects. Created in BeginPlay,
+  /// dropped in EndPlay; outstanding AsyncTasks keep it alive via shared
+  /// ownership.
+  FRHIGPUReadbackPoolPtr ReadbackPool;
+
+  /// Returns true if any GBuffer stream has an active listener.
+  bool IsAnyGBufferClientListening() const;
+
+  /// Aggregate gate: main stream or any GBuffer stream has listeners,
+  /// or CVarCarlaCameraForceAllGBuffers forces every frame.
+  /// Non-const because ASensor::AreClientsListening() is non-const.
+  bool ShouldCaptureThisFrame();
+
 private:
+  void ApplyRayTracingSetting();
+
 #ifdef CARLA_HAS_GBUFFER_API
   template <
       typename SensorT,

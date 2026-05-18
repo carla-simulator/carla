@@ -13,6 +13,11 @@
 				"Carla",
 				"CoreUObject"
 			]
+		},
+		{
+			"Name": "CarlaDeviceProfileSelector",
+			"Type": "Runtime",
+			"LoadingPhase": "PostConfigInit"
 		}
 	],
 	"Plugins": [

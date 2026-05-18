@@ -96,17 +96,31 @@ void UCarlaSettingsDelegate::ApplyQualityLevelPostRestart()
   {
     case EQualityLevel::Low:
     {
-      // execute tweaks for quality
       LaunchLowQualityCommands(InWorld);
-      // iterate all directional lights, deactivate shadows
-      SetAllLights(InWorld, CarlaSettings->LowLightFadeDistance, false, true);
-      // Set all the roads the low quality materials
       SetAllRoads(InWorld, CarlaSettings->LowRoadPieceMeshMaxDrawDistance, CarlaSettings->LowRoadMaterials);
-      // Set all actors with static meshes a max disntace configured in the
-      // global settings for the low quality
-      SetAllActorsDrawDistance(InWorld, CarlaSettings->LowStaticMeshMaxDrawDistance);
-      // Disable all post process volumes
+      ApplyPerActorQualitySettings(
+          InWorld,
+          CarlaSettings->LowLightFadeDistance,
+          false,
+          true,
+          CarlaSettings->LowStaticMeshMaxDrawDistance);
       SetPostProcessEffectsEnabled(InWorld, false);
+      break;
+    }
+    case EQualityLevel::Medium:
+    {
+      LaunchMediumQualityCommands(InWorld);
+      SetAllRoads(InWorld, 0, CarlaSettings->EpicRoadMaterials);
+      ApplyPerActorQualitySettings(InWorld, 0.0f, true, false, 0);
+      SetPostProcessEffectsEnabled(InWorld, true);
+      break;
+    }
+    case EQualityLevel::High:
+    {
+      LaunchHighQualityCommands(InWorld);
+      SetAllRoads(InWorld, 0, CarlaSettings->EpicRoadMaterials);
+      ApplyPerActorQualitySettings(InWorld, 0.0f, true, false, 0);
+      SetPostProcessEffectsEnabled(InWorld, true);
       break;
     }
     default:
@@ -114,9 +128,8 @@ void UCarlaSettingsDelegate::ApplyQualityLevelPostRestart()
     case EQualityLevel::Epic:
     {
       LaunchEpicQualityCommands(InWorld);
-      SetAllLights(InWorld, 0.0f, true, false);
       SetAllRoads(InWorld, 0, CarlaSettings->EpicRoadMaterials);
-      SetAllActorsDrawDistance(InWorld, 0);
+      ApplyPerActorQualitySettings(InWorld, 0.0f, true, false, 0);
       SetPostProcessEffectsEnabled(InWorld, true);
       break;
     }
@@ -171,62 +184,28 @@ void UCarlaSettingsDelegate::CheckCarlaSettings(UWorld *world)
   check(CarlaSettings != nullptr);
 }
 
+// LaunchLowQualityCommands, LaunchMediumQualityCommands,
+// LaunchHighQualityCommands, and LaunchEpicQualityCommands are retained as
+// no-op stubs for the legacy UCarlaSettingsDelegate interface. The active
+// CarlaQuality_<Tier> configuration -- memory pools, scalability bucket
+// selection, per-tier r.* overrides -- is applied at engine init by
+// CarlaDeviceProfileSelectorModule::StartupModule
+// (Unreal/CarlaUnreal/Source/CarlaDeviceProfileSelector). There is no
+// runtime CVar burst from this delegate.
+
 void UCarlaSettingsDelegate::LaunchLowQualityCommands(UWorld *world) const
 {
-  if (!world)
-  {
-    return;
-  }
+  (void)world;
+}
 
-  // launch commands to lower quality settings
-  GEngine->Exec(world, TEXT("r.DefaultFeature.MotionBlur 0"));
-  GEngine->Exec(world, TEXT("r.DefaultFeature.Bloom 0"));
-  GEngine->Exec(world, TEXT("r.DefaultFeature.AmbientOcclusion 0"));
-  GEngine->Exec(world, TEXT("r.AmbientOcclusionLevels 0"));
-  GEngine->Exec(world, TEXT("r.DefaultFeature.AmbientOcclusionStaticFraction 0"));
-  GEngine->Exec(world, TEXT("r.RHICmdBypass 0"));
-  GEngine->Exec(world, TEXT("r.DefaultFeature.AntiAliasing 1"));
-  GEngine->Exec(world, TEXT("r.Streaming.PoolSize 2000"));
-  GEngine->Exec(world, TEXT("r.HZBOcclusion 0"));
-  GEngine->Exec(world, TEXT("r.MinScreenRadiusForLights 0.01"));
-  GEngine->Exec(world, TEXT("r.SeparateTranslucency 0"));
-  GEngine->Exec(world, TEXT("r.FinishCurrentFrame 0"));
-  GEngine->Exec(world, TEXT("r.MotionBlurQuality 0"));
-  GEngine->Exec(world, TEXT("r.PostProcessAAQuality 0"));
-  GEngine->Exec(world, TEXT("r.BloomQuality 1"));
-  GEngine->Exec(world, TEXT("r.SSR.Quality 0"));
-  GEngine->Exec(world, TEXT("r.DepthOfFieldQuality 0"));
-  GEngine->Exec(world, TEXT("r.SceneColorFormat 2"));
-  GEngine->Exec(world, TEXT("r.TranslucencyVolumeBlur 0"));
-  GEngine->Exec(world, TEXT("r.TranslucencyLightingVolumeDim 4"));
-  GEngine->Exec(world, TEXT("r.MaxAnisotropy 8"));
-  GEngine->Exec(world, TEXT("r.LensFlareQuality 0"));
-  GEngine->Exec(world, TEXT("r.SceneColorFringeQuality 0"));
-  GEngine->Exec(world, TEXT("r.FastBlurThreshold 0"));
-  GEngine->Exec(world, TEXT("r.SSR.MaxRoughness 0.1"));
-  GEngine->Exec(world, TEXT("r.AllowOcclusionQueries 1"));
-  GEngine->Exec(world, TEXT("r.SSR 0"));
-  // GEngine->Exec(world,TEXT("r.StencilForLODDither 1")); //readonly
-  GEngine->Exec(world, TEXT("r.EarlyZPass 2")); // transparent before opaque
-  GEngine->Exec(world, TEXT("r.EarlyZPassMovable 1"));
-  GEngine->Exec(world, TEXT("Foliage.DitheredLOD 0"));
-  // GEngine->Exec(world,TEXT("r.ForwardShading 0")); //readonly
-  GEngine->Exec(world, TEXT("sg.PostProcessQuality 0"));
-  // GEngine->Exec(world,TEXT("r.ViewDistanceScale 0.1")); //--> too extreme
-  // (far clip too short)
-  GEngine->Exec(world, TEXT("sg.ShadowQuality 0"));
-  GEngine->Exec(world, TEXT("sg.TextureQuality 0"));
-  GEngine->Exec(world, TEXT("sg.EffectsQuality 0"));
-  GEngine->Exec(world, TEXT("sg.FoliageQuality 0"));
-  GEngine->Exec(world, TEXT("foliage.DensityScale 0"));
-  GEngine->Exec(world, TEXT("grass.DensityScale 0"));
-  GEngine->Exec(world, TEXT("r.TranslucentLightingVolume 0"));
-  GEngine->Exec(world, TEXT("r.LightShaftDownSampleFactor 4"));
-  GEngine->Exec(world, TEXT("r.OcclusionQueryLocation 1"));
-  // GEngine->Exec(world,TEXT("r.VelocityOutputPass 0")); //--> readonly
-  // GEngine->Exec(world,TEXT("r.DetailMode 0")); //-->will change to lods 0
-  GEngine->Exec(world, TEXT("r.DefaultFeature.AutoExposure 1"));
+void UCarlaSettingsDelegate::LaunchMediumQualityCommands(UWorld *world) const
+{
+  (void)world;
+}
 
+void UCarlaSettingsDelegate::LaunchHighQualityCommands(UWorld *world) const
+{
+  (void)world;
 }
 
 void UCarlaSettingsDelegate::SetAllRoads(
@@ -375,47 +354,7 @@ void UCarlaSettingsDelegate::SetPostProcessEffectsEnabled(UWorld *world, const b
 
 void UCarlaSettingsDelegate::LaunchEpicQualityCommands(UWorld *world) const
 {
-  if (!world)
-  {
-    return;
-  }
-
-  GEngine->Exec(world, TEXT("r.AmbientOcclusionLevels -1"));
-  GEngine->Exec(world, TEXT("r.RHICmdBypass 1"));
-  GEngine->Exec(world, TEXT("r.DefaultFeature.AntiAliasing 1"));
-  GEngine->Exec(world, TEXT("r.Streaming.PoolSize 2000"));
-  GEngine->Exec(world, TEXT("r.MinScreenRadiusForLights 0.03"));
-  GEngine->Exec(world, TEXT("r.SeparateTranslucency 1"));
-  GEngine->Exec(world, TEXT("r.PostProcessAAQuality 4"));
-  GEngine->Exec(world, TEXT("r.BloomQuality 5"));
-  GEngine->Exec(world, TEXT("r.SSR.Quality 3"));
-  GEngine->Exec(world, TEXT("r.DepthOfFieldQuality 2"));
-  GEngine->Exec(world, TEXT("r.SceneColorFormat 4"));
-  GEngine->Exec(world, TEXT("r.TranslucencyVolumeBlur 1"));
-  GEngine->Exec(world, TEXT("r.TranslucencyLightingVolumeDim 64"));
-  GEngine->Exec(world, TEXT("r.MaxAnisotropy 8"));
-  GEngine->Exec(world, TEXT("r.LensFlareQuality 2"));
-  GEngine->Exec(world, TEXT("r.SceneColorFringeQuality 1"));
-  GEngine->Exec(world, TEXT("r.FastBlurThreshold 100"));
-  GEngine->Exec(world, TEXT("r.SSR.MaxRoughness -1"));
-  // GEngine->Exec(world,TEXT("r.StencilForLODDither 0")); //readonly
-  GEngine->Exec(world, TEXT("r.EarlyZPass 3"));
-  GEngine->Exec(world, TEXT("r.EarlyZPassMovable 1"));
-  GEngine->Exec(world, TEXT("Foliage.DitheredLOD 1"));
-  GEngine->Exec(world, TEXT("sg.PostProcessQuality 3"));
-  GEngine->Exec(world, TEXT("r.ViewDistanceScale 1")); // --> too extreme (far
-                                                       // clip too short)
-  GEngine->Exec(world, TEXT("sg.ShadowQuality 3"));
-  GEngine->Exec(world, TEXT("sg.TextureQuality 3"));
-  GEngine->Exec(world, TEXT("sg.EffectsQuality 3"));
-  GEngine->Exec(world, TEXT("sg.FoliageQuality 3"));
-  GEngine->Exec(world, TEXT("foliage.DensityScale 1"));
-  GEngine->Exec(world, TEXT("grass.DensityScale 1"));
-  GEngine->Exec(world, TEXT("r.TranslucentLightingVolume 1"));
-  GEngine->Exec(world, TEXT("r.LightShaftDownSampleFactor 2"));
-  // GEngine->Exec(world,TEXT("r.OcclusionQueryLocation 0"));
-  // GEngine->Exec(world,TEXT("r.VelocityOutputPass 0")); //readonly
-  GEngine->Exec(world, TEXT("r.DetailMode 2"));
+  (void)world;
 }
 
 void UCarlaSettingsDelegate::SetAllLights(
@@ -454,4 +393,55 @@ void UCarlaSettingsDelegate::SetAllLights(
     }
   });
 
+}
+
+void UCarlaSettingsDelegate::ApplyPerActorQualitySettings(
+    UWorld *world,
+    const float light_fade_distance,
+    const bool cast_directional_shadows,
+    const bool hide_non_directional_lights,
+    const float draw_distance) const
+{
+  if (!IsValid(world))
+  {
+    return;
+  }
+  AsyncTask(ENamedThreads::GameThread, [=, this]() {
+    if (!IsValid(world))
+    {
+      return;
+    }
+    TArray<AActor *> actors;
+    UGameplayStatics::GetAllActorsOfClass(world, AActor::StaticClass(), actors);
+    for (int32 i = 0; i < actors.Num(); i++)
+    {
+      AActor *actor = actors[i];
+      if (!IsValid(actor))
+      {
+        continue;
+      }
+
+      if (ADirectionalLight *directional = Cast<ADirectionalLight>(actor))
+      {
+        directional->SetCastShadows(cast_directional_shadows);
+        directional->SetLightFunctionFadeDistance(light_fade_distance);
+        continue;
+      }
+      if (actor->IsA<ALight>())
+      {
+        actor->SetActorHiddenInGame(hide_non_directional_lights);
+        continue;
+      }
+
+      if (actor->IsA<AInstancedFoliageActor>() ||
+          actor->IsA<ALandscape>() ||
+          actor->ActorHasTag(UCarlaSettings::CARLA_ROAD_TAG) ||
+          actor->ActorHasTag(UCarlaSettings::CARLA_SKY_TAG))
+      {
+        continue;
+      }
+
+      SetActorComponentsDrawDistance(actor, draw_distance);
+    }
+  });
 }
