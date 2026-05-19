@@ -179,9 +179,9 @@ public:
   FVehiclePhysicsControl GetVehiclePhysicsControl() const;
 
   /// Returns a snapshot of the vehicle's runtime telemetry: forward speed,
-  /// last applied control inputs, engine RPM, current gear, aerodynamic drag,
-  /// and per-wheel slip / load / force / torque readings sourced from the
-  /// Chaos vehicle physics state.
+  /// last applied control inputs, engine RPM, current gear, and per-wheel
+  /// lateral slip, longitudinal slip, and angular velocity sourced from
+  /// the Chaos vehicle physics state.
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   FVehicleTelemetryData GetVehicleTelemetryData() const;
 

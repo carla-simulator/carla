@@ -97,9 +97,9 @@ namespace client {
     PhysicsControl GetPhysicsControl() const;
 
     /// Return the runtime telemetry of this vehicle: forward speed, last
-    /// applied control inputs, engine RPM, current gear, aerodynamic drag,
-    /// and per-wheel slip / load / force / torque readings sourced from the
-    /// Chaos vehicle physics state.
+    /// applied control inputs, engine RPM, current gear, and per-wheel
+    /// lateral slip, longitudinal slip, and angular velocity sourced from
+    /// the Chaos vehicle physics state.
     ///
     /// @warning This function does call the simulator.
     TelemetryData GetTelemetryData() const;

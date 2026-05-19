@@ -669,7 +669,7 @@ ECarlaServerResponse FVehicleActor::GetVehicleTelemetryData(FVehicleTelemetryDat
 {
   if (IsDormant())
   {
-    return ECarlaServerResponse::FunctionNotAvailiableWhenDormant;
+    return ECarlaServerResponse::FunctionNotAvailableWhenDormant;
   }
   auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
   if (Vehicle == nullptr)
