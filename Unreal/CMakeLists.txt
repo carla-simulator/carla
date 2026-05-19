@@ -144,16 +144,11 @@ set (
 )
 
 foreach (UE_DEP ${UE_DEPENDENCIES})
-  get_target_property (UE_DEP_INCLUDES ${UE_DEP} INTERFACE_INCLUDE_DIRECTORIES)
-  if (UE_DEP_INCLUDES)
-    foreach (INC ${UE_DEP_INCLUDES})
-      if (INC MATCHES "^\\$<BUILD_INTERFACE:(.*)>$")
-        list (APPEND CARLA_UNREAL_INCLUDE_PATHS "${CMAKE_MATCH_1}")
-      elseif (NOT INC MATCHES "^\\$<")
-        list (APPEND CARLA_UNREAL_INCLUDE_PATHS "${INC}")
-      endif ()
-    endforeach ()
-  endif ()
+  list (
+    APPEND
+    CARLA_UNREAL_INCLUDE_PATHS
+    "$<TARGET_PROPERTY:${UE_DEP},INTERFACE_INCLUDE_DIRECTORIES>"
+  )
 endforeach ()
 
 set (
@@ -228,9 +223,11 @@ endif ()
 
 
 file (
-  WRITE
-  ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
-  "${CARLA_UNREAL_INCLUDE_PATHS}"
+  GENERATE
+  OUTPUT
+    ${CARLA_UNREAL_INCLUDE_PATHS_FILE_PATH}
+  CONTENT
+    "${CARLA_UNREAL_INCLUDE_PATHS}"
 )
 
 file (
