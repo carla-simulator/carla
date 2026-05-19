@@ -45,6 +45,13 @@ namespace geom {
     /// geo-reference.
     GeoLocation Transform(const Location &location) const;
 
+    /// Transform the given @a geo_location to a world-space Location
+    /// relative to this geo-reference. Inverse of @ref Transform — for
+    /// every Location `l` the identity
+    /// `this->InverseTransform(this->Transform(l)) == l` holds within
+    /// the round-trip tolerance of the underlying Mercator projection.
+    Location InverseTransform(const GeoLocation &geo_location) const;
+
     // =========================================================================
     // -- Comparison operators -------------------------------------------------
     // =========================================================================

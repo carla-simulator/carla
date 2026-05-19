@@ -52,6 +52,12 @@ static carla::geom::GeoLocation ToGeolocation(
   return self.GetGeoReference().Transform(location);
 }
 
+static carla::geom::Location ToLocation(
+    const carla::client::Map &self,
+    const carla::geom::GeoLocation &geo_location) {
+  return self.GetGeoReference().InverseTransform(geo_location);
+}
+
 void export_map() {
   using namespace boost::python;
   namespace cc = carla::client;
@@ -137,6 +143,7 @@ void export_map() {
     .def("get_topology", &GetTopology)
     .def("generate_waypoints", CALL_RETURNING_LIST_1(cc::Map, GenerateWaypoints, double), (args("distance")))
     .def("transform_to_geolocation", &ToGeolocation, (arg("location")))
+    .def("geolocation_to_transform", &ToLocation, (arg("geo_location")))
     .def("to_opendrive", CALL_RETURNING_COPY(cc::Map, GetOpenDrive))
     .def("save_to_disk", &SaveOpenDriveToDisk, (arg("path")=""))
     .def("get_crosswalks", CALL_RETURNING_LIST(cc::Map, GetAllCrosswalkZones))

@@ -377,6 +377,17 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   LensYSize.RecommendedValues = {TEXT("0.08")};
   LensYSize.bRestrictToRecommended = false;
 
+  // Per-sensor hardware ray-tracing opt-out. Defaults to true so camera
+  // output matches the simulator viewport. Set to false to skip the ~700
+  // MiB-1 GiB VRAM cost of per-camera HW-RT for sensors that do not need
+  // it (depth, semantic, lidar). The global CVar carla.Camera.UseRayTracing
+  // forces on/off across every camera regardless of this attribute.
+  FActorVariation UseRayTracing;
+  UseRayTracing.Id = TEXT("use_ray_tracing");
+  UseRayTracing.Type = EActorAttributeType::Bool;
+  UseRayTracing.RecommendedValues = {TEXT("true")};
+  UseRayTracing.bRestrictToRecommended = false;
+
   Definition.Variations.Append({ResX,
                                 ResY,
                                 FOV,
@@ -385,7 +396,8 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
                                 LensK,
                                 LensKcube,
                                 LensXSize,
-                                LensYSize});
+                                LensYSize,
+                                UseRayTracing});
 
   if (bEnableModifyingPostProcessEffects)
   {
@@ -481,6 +493,16 @@ void UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition(bool &Success, 
   LensYSize.RecommendedValues = {TEXT("0.08")};
   LensYSize.bRestrictToRecommended = false;
 
+  // Per-sensor hardware ray-tracing opt-out. See MakeCameraDefinition for the
+  // full rationale; the normals pipeline does not need RT, so leaving the
+  // default at "true" still costs ~700 MiB-1 GiB of GPU memory until the
+  // attribute is set false.
+  FActorVariation UseRayTracing;
+  UseRayTracing.Id = TEXT("use_ray_tracing");
+  UseRayTracing.Type = EActorAttributeType::Bool;
+  UseRayTracing.RecommendedValues = {TEXT("true")};
+  UseRayTracing.bRestrictToRecommended = false;
+
   Definition.Variations.Append({ResX,
                                 ResY,
                                 FOV,
@@ -489,7 +511,8 @@ void UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition(bool &Success, 
                                 LensK,
                                 LensKcube,
                                 LensXSize,
-                                LensYSize});
+                                LensYSize,
+                                UseRayTracing});
 
   Success = CheckActorDefinition(Definition);
 }
@@ -1370,6 +1393,13 @@ void UActorBlueprintFunctionLibrary::SetCamera(
       RetrieveActorAttributeToInt("image_size_y", Description.Variations, 600));
   Camera->SetFOVAngle(
       RetrieveActorAttributeToFloat("fov", Description.Variations, 90.0f));
+  if (Description.Variations.Contains("use_ray_tracing"))
+  {
+    Camera->SetUseRayTracing(
+        ActorAttributeToBool(
+            Description.Variations["use_ray_tracing"],
+            true));
+  }
   if (Description.Variations.Contains("enable_postprocess_effects"))
   {
     Camera->EnablePostProcessingEffects(

@@ -72,5 +72,27 @@ namespace geom {
     return result;
   }
 
+  Location GeoLocation::InverseTransform(const GeoLocation &geo_location) const {
+    const double scale = LatToScale(latitude);
+    double mx_origin{0.0};
+    double my_origin{0.0};
+    LatLonToMercator(latitude, longitude, scale, mx_origin, my_origin);
+
+    double mx_target{0.0};
+    double my_target{0.0};
+    LatLonToMercator(geo_location.latitude, geo_location.longitude, scale, mx_target, my_target);
+
+    // Forward Transform stores +x along east (mx) and +y along south
+    // (-my). Inverse must mirror that: the y axis is negated so a target
+    // latitude north of the origin returns a negative location.y.
+    const double location_x = mx_target - mx_origin;
+    const double location_y = -(my_target - my_origin);
+    const double location_z = geo_location.altitude - altitude;
+    return Location(
+        static_cast<float>(location_x),
+        static_cast<float>(location_y),
+        static_cast<float>(location_z));
+  }
+
 } // namespace geom
 } // namespace carla
