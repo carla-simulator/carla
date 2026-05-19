@@ -15,7 +15,6 @@
 #include "carla/trafficmanager/TrafficManagerGeometry.h"
 
 #include "carla/trafficmanager/MotionPlanStage.h"
-#include "carla/sensor/data/Color.h"
 
 namespace carla {
 namespace traffic_manager {
@@ -350,7 +349,7 @@ float MotionPlanStage::CalculateBaseOffset(
   for (unsigned long i = target_index; i < waypoint_buffer.size(); ++i) {
     const SimpleWaypointPtr current_waypoint = waypoint_buffer.at(i);
 
-    if (i > 0u) {
+    if (i > target_index) {
       const SimpleWaypointPtr prev_waypoint = waypoint_buffer.at(i - 1u);
       const float new_distance = current_waypoint->Distance(prev_waypoint->GetLocation());
       junction_missing_length += new_distance;
@@ -491,7 +490,7 @@ float MotionPlanStage::GetTurnTargetVelocity(const Buffer &waypoint_buffer,
   else {
     const SimpleWaypointPtr first_waypoint = waypoint_buffer.front();
     const SimpleWaypointPtr last_waypoint = waypoint_buffer.back();
-    const SimpleWaypointPtr middle_waypoint = waypoint_buffer.at(static_cast<uint16_t>(waypoint_buffer.size() / 2));
+    const SimpleWaypointPtr middle_waypoint = waypoint_buffer.at(waypoint_buffer.size() / 2);
 
     float radius = GetThreePointCircleRadius(first_waypoint->GetLocation(),
                                              middle_waypoint->GetLocation(),
