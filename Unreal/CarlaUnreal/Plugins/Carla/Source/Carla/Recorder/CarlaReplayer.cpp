@@ -12,7 +12,7 @@
 #include <sstream>
 
 // structure to save replaying info when need to load a new map (static member by now)
-CarlaReplayer::PlayAfterLoadMap CarlaReplayer::Autoplay { false, "", "", 0.0, 0.0, 0, 1.0, false };
+CarlaReplayer::PlayAfterLoadMap CarlaReplayer::Autoplay { false, "", "", 0.0, 0.0, 0, FTransform(), 1.0, false };
 
 void CarlaReplayer::Stop(bool bKeepActors)
 {
@@ -103,8 +103,15 @@ double CarlaReplayer::GetTotalTime(void)
   return Frame.Elapsed;
 }
 
-std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, double Duration,
-    uint32_t ThisFollowId, bool ReplaySensors)
+std::string CarlaReplayer::ReplayFile(
+  std::string Filename,
+  double TimeStart,
+  double Duration,
+  uint32_t ThisFollowId,
+  const FTransform& Offset,
+  bool ReplaySensors,
+  bool ReplayWeather,
+  std::string MapOverride)
 {
   std::stringstream Info;
   std::string s;
@@ -132,6 +139,9 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
   // from start
   Rewind();
 
+  if (!MapOverride.empty())
+    RecInfo.Mapfile = UTF8_TO_TCHAR(MapOverride.c_str());
+  
   // check to load map if different
   if (Episode->GetMapName() != RecInfo.Mapfile)
   {
@@ -143,7 +153,7 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
     }
     Info << "Loading map " << TCHAR_TO_UTF8(*RecInfo.Mapfile) << std::endl;
     Info << "Replayer will start after map is loaded..." << std::endl;
-
+  
     // prepare autoplay after map is loaded
     Autoplay.Enabled = true;
     Autoplay.Filename = Filename2;
@@ -151,8 +161,10 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
     Autoplay.TimeStart = TimeStart;
     Autoplay.Duration = Duration;
     Autoplay.FollowId = ThisFollowId;
+    Autoplay.FollowOffset = Offset;
     Autoplay.TimeFactor = TimeFactor;
     Autoplay.ReplaySensors = ReplaySensors;
+    Autoplay.ReplayWeather = ReplayWeather;
   }
 
   // get Total time of recorder
@@ -182,10 +194,12 @@ std::string CarlaReplayer::ReplayFile(std::string Filename, double TimeStart, do
   if (IgnoreSpectator)
     Info << "Ignoring Spectator camera" << std::endl;
 
-  // set the follow Id
+  // set the follow Id and offset
   FollowId = ThisFollowId;
+  FollowOffset = Offset;
 
   bReplaySensors = ReplaySensors;
+  bReplayWeather = ReplayWeather;
   // if we don't need to load a new map, then start
   if (!Autoplay.Enabled)
   {
@@ -243,10 +257,12 @@ void CarlaReplayer::CheckPlayAfterMapLoaded(void)
   else
     TimeToStop = TotalTime;
 
-  // set the follow Id
+  // set the follow Id and offset
   FollowId = Autoplay.FollowId;
+  FollowOffset = Autoplay.FollowOffset;
 
   bReplaySensors = Autoplay.ReplaySensors;
+  bReplayWeather = Autoplay.ReplayWeather;
 
   // apply time factor
   TimeFactor = Autoplay.TimeFactor;
@@ -400,6 +416,11 @@ void CarlaReplayer::ProcessToTime(double Time, bool IsFirstTime)
           ProcessWalkerBones();
         else
           SkipPacket();
+        break;
+
+      // weather
+      case static_cast<char>(CarlaRecorderPacketId::Weather):
+        ProcessWeather();
         break;
 
       // frame end
@@ -676,6 +697,23 @@ void CarlaReplayer::ProcessDoorVehicle(void)
   }
 }
 
+void CarlaReplayer::ProcessWeather(void)
+{
+  uint16_t Total;
+  CarlaRecorderWeather Weather;
+
+  // read Total weathers
+  ReadValue<uint16_t>(File, Total);
+  for (uint16_t i = 0; i < Total; ++i)
+  {
+    Weather.Read(File);
+    if (bReplayWeather)
+    {
+      Helper.ProcessReplayerWeather(Weather);
+    }
+  }
+}
+
 void CarlaReplayer::ProcessLightScene(void)
 {
   uint16_t Total;
@@ -790,13 +828,12 @@ void CarlaReplayer::UpdatePositions(double Per, double DeltaTime)
         InterpolatePosition(Pos, Pos, 0.0, DeltaTime);
       }
     }
+  }
 
-    // move the camera to follow this actor if required
-    if (NewFollowId != 0)
-    {
-      if (NewFollowId == Pos.DatabaseId)
-        Helper.SetCameraPosition(NewFollowId, FVector(-1000, 0, 500), FQuat::MakeFromEuler({0, -25, 0}));
-    }
+  // move the camera to follow the desired actor
+  if (NewFollowId != 0)
+  {
+    Helper.SetCameraPosition(NewFollowId, FollowOffset.GetTranslation(), FollowOffset.GetRotation());
   }
 }
 

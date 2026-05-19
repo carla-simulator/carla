@@ -28,6 +28,12 @@ if (${CMAKE_MINOR_VERSION} GREATER_EQUAL 24)
   cmake_policy (SET CMP0135 NEW)
 endif ()
 
+# CMake 4.x removed support for cmake_minimum_required < 3.5; set the floor
+# so third-party FetchContent dependencies with old requirements still build.
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "4.0")
+  set (CMAKE_POLICY_VERSION_MINIMUM 3.5)
+endif ()
+
 set (CARLA_VERSION_MAJOR 0)
 set (CARLA_VERSION_MINOR 10)
 set (CARLA_VERSION_PATCH 0)

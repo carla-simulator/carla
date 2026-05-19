@@ -71,18 +71,19 @@ private:
 
   // Mapped references to ATrafficLightGroup (junction)
   UPROPERTY()
-  TMap<int, ATrafficLightGroup *> TrafficGroups;
+  TMap<int, TObjectPtr<ATrafficLightGroup>> TrafficGroups;
 
   // Mapped references to UTrafficLightController (controllers)
   UPROPERTY()
-  TMap<FString, UTrafficLightController *> TrafficControllers;
+  TMap<FString, TObjectPtr<UTrafficLightController>> TrafficControllers;
 
   // Mapped references to individual TrafficLightComponents
   UPROPERTY()
-  TMap<FString, USignComponent *> TrafficSignComponents;
+  TMap<FString, TObjectPtr<USignComponent>> TrafficSignComponents;
 
   // Mapped references to TrafficSigns
-  TArray<ATrafficSignBase*> TrafficSigns;
+  UPROPERTY()
+  TArray<TObjectPtr<ATrafficSignBase>> TrafficSigns;
 
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
   TSubclassOf<AActor> TrafficLightModel_RHT;
@@ -102,7 +103,7 @@ private:
   TMap<FString, TSubclassOf<AActor>> SpeedLimitModels;
 
   UPROPERTY(Category = "Traffic Light Manager", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-  USceneComponent *SceneComponent;
+  TObjectPtr<USceneComponent> SceneComponent;
 
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
   bool TrafficLightsGenerated = false;

@@ -18,6 +18,8 @@ public:
 
   void Draw(const carla::rpc::DebugShape &Shape);
 
+  void Clear();
+
 private:
 
   UWorld &World;

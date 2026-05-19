@@ -9,7 +9,7 @@
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 
 #include <util/ue-header-guard-begin.h>
-#include "UObject/ConstructorHelpers.h"
+#include "Materials/Material.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include <util/ue-header-guard-end.h>
@@ -22,12 +22,21 @@ AShaderBasedSensor::AShaderBasedSensor(const FObjectInitializer& ObjectInitializ
 
 bool AShaderBasedSensor::AddPostProcessingMaterial(const FString &Path)
 {
-  ConstructorHelpers::FObjectFinder<UMaterial> Loader(*Path);
-  if (Loader.Succeeded())
+  // ConstructorHelpers::FObjectFinder is documented as constructor-only and
+  // has undefined behavior when used from runtime functions. FSoftObjectPath
+  // is the runtime-safe path resolver; it accepts both plain object paths
+  // and the class-prefixed export-text form ("Material'/Game/.../Foo'") that
+  // FObjectFinder previously normalised internally.
+  UMaterial *Material = Cast<UMaterial>(FSoftObjectPath(Path).TryLoad());
+  if (Material != nullptr)
   {
-    MaterialsFound.Add(Loader.Object);
+    MaterialsFound.Add(Material);
+    return true;
   }
-  return Loader.Succeeded();
+  UE_LOG(LogCarla, Error,
+      TEXT("AShaderBasedSensor::AddPostProcessingMaterial: failed to load material '%s'"),
+      *Path);
+  return false;
 }
 
 void AShaderBasedSensor::SetUpSceneCaptureComponent(USceneCaptureComponent2D &SceneCapture)

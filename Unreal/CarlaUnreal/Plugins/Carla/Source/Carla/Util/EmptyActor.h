@@ -19,5 +19,5 @@ public:
 
 private:
   UPROPERTY(Category="Empty Actor", VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-  USceneComponent* RootSceneComponent;
+  TObjectPtr<USceneComponent> RootSceneComponent;
 };

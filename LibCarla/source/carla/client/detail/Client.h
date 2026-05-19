@@ -246,6 +246,35 @@ namespace detail {
         rpc::ActorId actor,
         const geom::Vector3D &vector);
 
+    geom::Transform GetActorComponentWorldTransform(
+        rpc::ActorId actor,
+        const std::string &component_name);
+
+    geom::Transform GetActorComponentRelativeTransform(
+        rpc::ActorId actor,
+        const std::string &component_name);
+
+    std::vector<geom::Transform> GetActorBoneWorldTransforms(
+        rpc::ActorId actor);
+
+    std::vector<geom::Transform> GetActorBoneRelativeTransforms(
+        rpc::ActorId actor);
+
+    std::vector<std::string> GetActorComponentNames(
+        rpc::ActorId actor);
+
+    std::vector<std::string> GetActorBoneNames(
+        rpc::ActorId actor);
+
+    std::vector<geom::Transform> GetActorSocketWorldTransforms(
+        rpc::ActorId actor);
+
+    std::vector<geom::Transform> GetActorSocketRelativeTransforms(
+        rpc::ActorId actor);
+
+    std::vector<std::string> GetActorSocketNames(
+        rpc::ActorId actor);
+
     void SetActorSimulatePhysics(
         rpc::ActorId actor,
         bool enabled);
@@ -366,7 +395,7 @@ namespace detail {
     std::vector<ActorId> GetGroupTrafficLights(
         rpc::ActorId traffic_light);
 
-    std::string StartRecorder(std::string name, bool additional_data);
+    std::string StartRecorder(std::string name, bool additional_data, bool stop_replayer);
 
     void StopRecorder();
 
@@ -376,8 +405,10 @@ namespace detail {
 
     std::string ShowRecorderActorsBlocked(std::string name, double min_time, double min_distance);
 
-    std::string ReplayFile(std::string name, double start, double duration,
-        uint32_t follow_id, bool replay_sensors);
+    std::string ReplayFile(
+        std::string name, double start, double duration,
+        uint32_t follow_id, bool replay_sensors, bool replay_weather, const geom::Transform& offset,
+        std::string map_override);
 
     void SetReplayerTimeFactor(double time_factor);
 
@@ -409,6 +440,10 @@ namespace detail {
         uint32_t GBufferId);
 
     void DrawDebugShape(const rpc::DebugShape &shape);
+
+    void ClearDebugShape();
+
+    void ClearDebugString();
 
     void ApplyBatch(
         std::vector<rpc::Command> commands,

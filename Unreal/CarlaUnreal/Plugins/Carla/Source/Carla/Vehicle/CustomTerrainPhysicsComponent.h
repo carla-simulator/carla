@@ -21,6 +21,7 @@ THIRD_PARTY_INCLUDES_END
 #include "Engine/StaticMeshActor.h"
 #include "Engine/TextureRenderTarget2D.h"
 #include "Engine/DataAsset.h"
+#include "Engine/StreamableManager.h"
 #include "Async/Future.h"
 #include "Misc/ScopeLock.h"
 #include <util/ue-header-guard-end.h>
@@ -390,7 +391,7 @@ private:
   UPROPERTY(EditAnywhere)
   TArray<FForceAtLocation> ForcesToApply;
   UPROPERTY(EditAnywhere)
-  UPrimitiveComponent* RootComponent;
+  TObjectPtr<UPrimitiveComponent> RootComponent;
   UPROPERTY(EditAnywhere)
   float RayCastRange = 10.0f;
 
@@ -442,14 +443,14 @@ private:
   UPROPERTY(EditAnywhere, Category="DeformationMesh")
   bool bUseDeformationPlane = false;
   UPROPERTY(EditAnywhere, Category="DeformationMesh")
-  UStaticMesh* DeformationPlaneMesh = nullptr;
+  TObjectPtr<UStaticMesh> DeformationPlaneMesh = nullptr;
   UPROPERTY(EditAnywhere, Category="DeformationMesh")
-  UMaterialInstance* DeformationPlaneMaterial = nullptr;
+  TObjectPtr<UMaterialInstance> DeformationPlaneMaterial = nullptr;
   UPROPERTY(VisibleAnywhere, Category="DeformationMesh")
-  AStaticMeshActor* DeformationPlaneActor = nullptr;
+  TObjectPtr<AStaticMeshActor> DeformationPlaneActor = nullptr;
 
   UPROPERTY()
-  UMaterialParameterCollectionInstance* MPCInstance;
+  TObjectPtr<UMaterialParameterCollectionInstance> MPCInstance;
 
   UPROPERTY(EditAnywhere, Category="Forces")
   float NormalForceIntensity = 100;
@@ -461,7 +462,7 @@ private:
   UPROPERTY(EditAnywhere)
   float TerrainDepth = 40;
   UPROPERTY(EditAnywhere)
-  AActor *FloorActor = nullptr;
+  TObjectPtr<AActor> FloorActor = nullptr;
   UPROPERTY(EditAnywhere)
   bool bUseDynamicModel = false;
   UPROPERTY(EditAnywhere)
@@ -520,9 +521,20 @@ private:
   UPROPERTY(VisibleAnywhere)
   FIntVector CurrentLargeMapTileId = FIntVector(-1,-1,0);
   UPROPERTY(VisibleAnywhere)
-  ALargeMapManager* LargeMapManager = nullptr;
+  TObjectPtr<ALargeMapManager> LargeMapManager = nullptr;
 
-  TArray<ACarlaWheeledVehicle*> Vehicles;
+  // Async heightmap streaming state.
+  // ActiveHeightMap keeps the most recently applied data asset rooted for GC
+  // while the streaming handle is the primary owner during the in-flight load.
+  UPROPERTY(Transient, DuplicateTransient)
+  TObjectPtr<UHeightMapDataAsset> ActiveHeightMap = nullptr;
+  TSharedPtr<FStreamableHandle> PendingHeightMapHandle;
+  FIntVector PendingHeightMapTileId = FIntVector(-1, -1, 0);
+
+  void OnHeightMapLoaded();
+
+  UPROPERTY()
+  TArray<TObjectPtr<ACarlaWheeledVehicle>> Vehicles;
   FSparseHighDetailMap SparseMap;
   TArray<uint8> Data;
   TArray<uint8> LargeData;

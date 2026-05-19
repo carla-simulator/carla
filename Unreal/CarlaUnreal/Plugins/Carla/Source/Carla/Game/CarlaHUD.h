@@ -67,6 +67,11 @@ public:
 
   void AddHUDString(const FString Str, const FVector Location, const FColor Color, double LifeTime);
 
+  void ClearDebugStrings()
+  {
+    StringList.Empty();
+  }
+
 private:
   TArray<HUDString> StringList;
 };

@@ -276,4 +276,16 @@ if (BUILD_CARLA_UNREAL AND ENABLE_STREETMAP)
   )
 endif ()
 
+if (BUILD_LIBCARLA_TESTS)
+  # ==== GOOGLETEST ====
+  carla_dependency_option (BUILD_GMOCK OFF)
+  carla_dependency_option (INSTALL_GTEST OFF)
+  carla_dependency_add (
+    googletest
+    ${CARLA_GTEST_TAG}
+    https://github.com/google/googletest/archive/refs/tags/${CARLA_GTEST_TAG}.zip
+    https://github.com/google/googletest.git
+  )
+endif ()
+
 carla_dependencies_make_available ()

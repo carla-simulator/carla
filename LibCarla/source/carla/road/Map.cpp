@@ -22,6 +22,7 @@
 
 #include <third-party/marchingcube/MeshReconstruction.h>
 
+#include <limits>
 #include <vector>
 #include <unordered_map>
 #include <stdexcept>
@@ -38,6 +39,7 @@ namespace road {
   /// We use this epsilon to shift the waypoints away from the edges of the lane
   /// sections to avoid floating point precision errors.
   static constexpr double EPSILON = 10.0 * std::numeric_limits<double>::epsilon();
+  static constexpr double TREE_PLACEMENT_EPSILON = 1.0e-4;
 
   // ===========================================================================
   // -- Static local methods ---------------------------------------------------
@@ -599,7 +601,20 @@ namespace road {
           successor.road_id != waypoint.road_id ||
           successor.section_id != waypoint.section_id ||
           successor.lane_id != waypoint.lane_id);
-      result = ConcatVectors(result, GetNext(successor, distance - remaining_lane_length));
+      // Fix situations where the next waypoint is in the opposite direction and
+      // this waypoint is its successor, so this function would end up in a loop
+      bool is_broken = false;
+      for (const auto &future_successor : GetSuccessors(successor)) {
+          if (future_successor.road_id == waypoint.road_id
+               && future_successor.lane_id == waypoint.lane_id
+               && future_successor.section_id == waypoint.section_id){
+            is_broken = true;
+            break;
+          }
+      }
+      if (!is_broken){
+        result = ConcatVectors(result, GetNext(successor, distance - remaining_lane_length));
+      }
     }
     return result;
   }
@@ -635,7 +650,20 @@ namespace road {
           successor.road_id != waypoint.road_id ||
           successor.section_id != waypoint.section_id ||
           successor.lane_id != waypoint.lane_id);
-      result = ConcatVectors(result, GetPrevious(successor, distance - remaining_lane_length));
+      // Fix situations, when next waypoint is in the opposite direction and
+      // this waypoint is his predecessor, so this function would end up in a loop
+      bool is_broken = false;
+      for (const auto &future_predecessor : GetPredecessors(successor)) {
+          if (future_predecessor.road_id == waypoint.road_id
+               && future_predecessor.lane_id == waypoint.lane_id
+               && future_predecessor.section_id == waypoint.section_id){
+            is_broken = true;
+            break;
+          }
+      }
+      if (!is_broken){
+        result = ConcatVectors(result, GetPrevious(successor, distance - remaining_lane_length));
+      }
     }
     return result;
   }
@@ -1254,14 +1282,26 @@ namespace road {
       const auto& road = _data.GetRoads().at(id);
       if (!road.IsJunction()) {
         for (auto &&lane_section : road.GetLaneSections()) {
-          LaneId min_lane = 0;
+          LaneId min_lane = 0; // most negative (outermost right-side) driving lane
+          LaneId max_lane = 0; // most positive (outermost left-side) driving lane
           for (auto &pairlane : lane_section.GetLanes()) {
-            if (min_lane > pairlane.first && pairlane.second.GetType() == Lane::LaneType::Driving) {
-              min_lane = pairlane.first;
+            if (pairlane.second.GetType() == Lane::LaneType::Driving) {
+              if (pairlane.first < 0 && (min_lane == 0 || pairlane.first < min_lane)) {
+                min_lane = pairlane.first;
+              } else if (pairlane.first > 0 && pairlane.first > max_lane) {
+                max_lane = pairlane.first;
+              }
             }
           }
 
-          const road::Lane* lane = lane_section.GetLane(min_lane);
+          // Prefer the outermost right-side lane; fall back to the outermost
+          // left-side lane for one-way roads that only have positive-ID lanes.
+          // Skip if no driving lane is found on either side (avoids using the
+          // reference lane whose near-zero width places trees at road centre).
+          const LaneId outer_lane = (min_lane != 0) ? min_lane : max_lane;
+          if (outer_lane == 0) continue;
+
+          const road::Lane* lane = lane_section.GetLane(outer_lane);
           if( lane ) {
             double s_current = lane_section.GetDistance() + s_offset;
             const double s_end = lane_section.GetDistance() + lane_section.GetLength();
@@ -1269,11 +1309,41 @@ namespace road {
               if(lane->GetWidth(s_current) != 0.0f){
                 const auto edges = lane->GetCornerPositions(s_current, 0);
                 geom::Vector3D director = edges.second - edges.first;
-                geom::Vector3D treeposition = edges.first - director.MakeUnitVector() * distancefromdrivinglineborder;
+                // Use double precision for the length check to avoid false
+                // negatives from float cancellation on near-equal corners.
+                const double director_squared_length =
+                  static_cast<double>(director.x) * static_cast<double>(director.x) +
+                  static_cast<double>(director.y) * static_cast<double>(director.y) +
+                  static_cast<double>(director.z) * static_cast<double>(director.z);
+                // Skip degenerate or near-degenerate lane widths; normalising a
+                // near-zero vector produces unstable directions and can place
+                // trees on or very close to the road surface.
+                if (director_squared_length <= (TREE_PLACEMENT_EPSILON * TREE_PLACEMENT_EPSILON)) {
+                  s_current += distancebetweentrees;
+                  continue;
+                }
+                // GetCornerPositions returns the lane corners in (t_offset + width, t_offset - width) order.
+                // The true outer edge therefore depends on the lane side: for positive lane IDs it is the second corner,
+                // and for negative lane IDs it is the first. Offset farther outward so trees are always placed away from the driving surface.
+                const bool is_positive_lane = (lane->GetId() > 0);
+                const geom::Vector3D outer_corner =
+                  is_positive_lane ? edges.second : edges.first;
+                const geom::Vector3D inner_corner =
+                  is_positive_lane ? edges.first : edges.second;
+                const geom::Vector3D outward_direction =
+                    (outer_corner - inner_corner).MakeUnitVector();
+                geom::Vector3D treeposition =
+                    outer_corner + outward_direction * distancefromdrivinglineborder;
                 geom::Transform lanetransform = lane->ComputeTransform(s_current);
                 geom::Transform treeTransform(treeposition, lanetransform.rotation);
                 const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
-                transforms.push_back(std::make_pair(treeTransform,roadinfo->GetType()));
+                // roadinfo is null for roads without an explicit maxspeed OSM tag
+                // (common in urban areas that rely on default speed limits).
+                if (roadinfo) {
+                  transforms.push_back(std::make_pair(treeTransform, roadinfo->GetType()));
+                } else {
+                  transforms.push_back(std::make_pair(treeTransform, "Town"));
+                }
               }
               s_current += distancebetweentrees;
             }
@@ -1467,6 +1537,22 @@ namespace road {
     for( auto& road : _data.GetRoads() ){
       auto &&lane_section = (*road.second.GetLaneSections().begin());
       const road::Lane* lane = road.second.IsRHT() ? lane_section.GetLane(-1) : lane_section.GetLane(1);
+      if (!lane) {
+        // Fallback: the expected innermost lane (−1 for RHT, +1 for LHT) is
+        // absent (common on one-way streets and complex urban junctions).
+        // Pick the driving lane closest to the reference line (smallest abs id)
+        // to minimise the position error used for bounding-box filtering.
+        int best_abs_id = std::numeric_limits<int>::max();
+        for (const auto& pairlane : lane_section.GetLanes()) {
+          if (pairlane.first != 0 && pairlane.second.GetType() == Lane::LaneType::Driving) {
+            const int abs_id = std::abs(pairlane.first);
+            if (abs_id < best_abs_id) {
+              best_abs_id = abs_id;
+              lane = &pairlane.second;
+            }
+          }
+        }
+      }
       if( lane ) {
         const double s_check = lane_section.GetDistance() + lane_section.GetLength() * 0.5;
         geom::Location roadLocation = lane->ComputeTransform(s_check).location;

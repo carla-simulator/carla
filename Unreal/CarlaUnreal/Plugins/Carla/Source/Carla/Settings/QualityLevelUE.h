@@ -19,8 +19,8 @@ enum class EQualityLevel : uint8
 {
   Null = 0, // Workarround for UE4.24 issue with enums
   Low    = CARLA_ENUM_FROM_RPC(Low)    UMETA(DisplayName = "Low"),
-  // Medium = CARLA_ENUM_FROM_RPC(Medium) UMETA(DisplayName = "Medium"),
-  // High   = CARLA_ENUM_FROM_RPC(High)   UMETA(DisplayName = "High"),
+  Medium = CARLA_ENUM_FROM_RPC(Medium) UMETA(DisplayName = "Medium"),
+  High   = CARLA_ENUM_FROM_RPC(High)   UMETA(DisplayName = "High"),
   Epic   = CARLA_ENUM_FROM_RPC(Epic)   UMETA(DisplayName = "Epic"),
 
   SIZE      UMETA(Hidden),

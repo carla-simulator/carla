@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Carla/Game/CarlaEngine.h"
+#include "Carla/Sensor/RHIGPUReadbackPool.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/Logging.h>
@@ -84,11 +85,14 @@ public:
   /// Copy the pixels in @a RenderTarget into @a Buffer.
   ///
   /// @pre To be called from render-thread.
+  /// @param Pool Optional per-sensor readback pool; when null falls back to a
+  ///        per-call alloc.
   static void WritePixelsToBuffer(
       UTextureRenderTarget2D &RenderTarget,
       uint32 Offset,
       FRHICommandListImmediate &InRHICmdList,
-      FPixelReader::Payload FuncForSending);
+      FPixelReader::Payload FuncForSending,
+      FRHIGPUReadbackPoolPtr Pool = nullptr);
 
 };
 
@@ -241,7 +245,8 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
               *Sensor.CaptureRenderTarget,
               carla::sensor::SensorRegistry::get<TSensor *>::type::header_offset,
               InRHICmdList,
-              std::move(FuncForSending));
+              std::move(FuncForSending),
+              Sensor.GetReadbackPool());
           
         }
       }

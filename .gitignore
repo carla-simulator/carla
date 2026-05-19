@@ -1,5 +1,6 @@
 .vs/
 .vscode/
+.zed/
 .cache/
 .devcontainer/
 .idea/
@@ -7,6 +8,7 @@ cmake-build-*/
 __pycache__/
 
 Build/
+Build-Tests/
 Install/
 Doxygen/
 Dist/

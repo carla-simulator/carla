@@ -101,14 +101,14 @@ protected:
   // TODO: AdvancedDisplay
   // Map containing the pair with the name of the mesh and the component that uses it
   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Procedural Building|Debug")
-  TMap<FString, UHierarchicalInstancedStaticMeshComponent*> HISMComps;
+  TMap<FString, TObjectPtr<UHierarchicalInstancedStaticMeshComponent>> HISMComps;
 
   // Contains all the ChildActorComps spawned for this Actor
   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Procedural Building|Debug")
-  TArray<UChildActorComponent*> ChildActorComps;
+  TArray<TObjectPtr<UChildActorComponent>> ChildActorComps;
 
   UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Procedural Building")
-  UStaticMeshComponent* RootSMComp = nullptr;
+  TObjectPtr<UStaticMeshComponent> RootSMComp = nullptr;
 
   /**
    *  Base Parameters

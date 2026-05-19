@@ -1,5 +1,16 @@
+=======
 ## LATEST Changes
 
+* Added `Actor.get_component_world_transform`, `Actor.get_component_relative_transform`, `Actor.get_bone_world_transforms`, `Actor.get_bone_relative_transforms`, `Actor.get_component_names`, `Actor.get_bone_names`, `Actor.get_socket_world_transforms`, `Actor.get_socket_relative_transforms`, and `Actor.get_socket_names` Python APIs for introspecting an actor's scene components, skeletal bones, and sockets by name.
+* Added `World.debug.clear_debug_shape` and `World.debug.clear_debug_string` Python APIs to flush persistent debug shapes and HUD strings drawn from the client.
+* Added `Map.geolocation_to_transform` Python API that maps a `GeoLocation` back to a world-space `Location`, the inverse of `Map.transform_to_geolocation`.
+* Reworked the sensor render pipeline and quality tiers by pooling GPU readbacks, gating GBuffer capture on listeners, adding a per-camera ray-tracing toggle, and introducing four server launch tiers (Low, Medium, High, Epic) selectable via `-quality-level=<Tier>` (case-sensitive, Epic by default). Each tier applies a coherent CVar configuration at engine init that persists across runs without manual `GameUserSettings.ini` cleanup.
+* Added weather recording and replay, simultaneous record-and-replay, `stop_replayer` flag on `start_recorder`, `map_override` and follow-offset arguments on `replay_file`, and traffic-sign follow targets in the replayer (ported from ue4-dev)
+* Hardened UObject ownership in the Carla plugin by migrating UPROPERTY raw pointers to `TObjectPtr<>`, adding mesh caches, enabling async heightmap streaming, and converting catalog assets to soft references.
+* Corrected the Semantic Segmentation camera class table in `Docs/ref_sensors.md` to match the actual 29-class taxonomy defined in `ObjectLabel.h` and `CityScapesPalette.h`. The previous table reflected the legacy 0.8.x CityScapes taxonomy (22 classes), which caused mismatches between documentation and engine output. This update aligns the documentation with the true engine enum values and RGB palette, preventing ground-truth mapping errors when building perception pipelines.
+* Fixed several legacy UE4-era bugs across LibCarla and the Carla plugin affecting lidar memory reset, DVS validation, camera profiling, image reads, sensor materials, and Python sensor teardown.
+* Enabled the LibCarla GoogleTest suite (server + client) on ue5-dev and gated both in CI.
+* Fixed Digital Twin Tool crashes on dense metropolitan OSM data, vegetation spawning inside driving lanes on rural maps, and one-way streets being silently excluded from generation (#9565, #9678)
 * Added Ubuntu 24.04 support alongside Ubuntu 22.04
 * Added NVIDIA RTX 50 series (Blackwell) support with driver 570+ and CDI-based Docker instructions
 * Fixed compiler warnings across 20 LibCarla files including signed/unsigned conversions, pessimizing moves, deep copies in range-for loops, and C-style casts (ported from ue4-dev)
@@ -11,6 +22,7 @@
 * Added Visual C++ Redistributable prerequisite and troubleshooting note to Windows quickstart guide (#9560)
 * Added Docker-based development environment for CARLA UE5
 * Fixed potential segfault in LaneCrossingCalculator by adding a nullptr guard for missing lane marking records
+* Fixed traffic sign bounding box returned through the Python API to use the first valid trigger volume and preserve its rotation, with a guard against null trigger volumes
 
 ## CARLA 0.10.0
 
@@ -65,6 +77,5 @@
 * RSS functionality removed from docs
 * Removed Light Manager from API and docs
 * Added Mine01 off-road mining map from Synkrotron
-
 
 
