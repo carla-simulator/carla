@@ -63,6 +63,13 @@ namespace client {
         float life_time = -1.0f,
         bool persistent_lines = true);
 
+    /// Clear every persistent debug shape (lines, points, boxes, arrows)
+    /// previously drawn from this world.
+    void ClearDebugShape();
+
+    /// Clear every persistent debug string currently shown in the HUD.
+    void ClearDebugString();
+
   private:
 
     detail::EpisodeProxy _episode;

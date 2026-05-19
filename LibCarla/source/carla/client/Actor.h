@@ -60,6 +60,44 @@ namespace client {
     /// acceleration calculated after the actor's velocity.
     geom::Vector3D GetAcceleration() const;
 
+    /// Return the world-space transform of the scene component named
+    /// @a component_name attached to the actor.
+    geom::Transform GetComponentWorldTransform(const std::string &component_name) const;
+
+    /// Return the parent-relative transform of the scene component named
+    /// @a component_name attached to the actor.
+    geom::Transform GetComponentRelativeTransform(const std::string &component_name) const;
+
+    /// Return the world-space transforms of every bone reachable from the
+    /// actor's skinned mesh components.
+    std::vector<geom::Transform> GetBoneWorldTransforms() const;
+
+    /// Return the component-space transforms of every bone reachable from
+    /// the actor's skinned mesh components. Each transform is the bone's
+    /// local pose multiplied by `FTransform::Identity`, so the result is
+    /// expressed in the owning `USkinnedMeshComponent`'s space, not
+    /// relative to the bone's parent.
+    std::vector<geom::Transform> GetBoneRelativeTransforms() const;
+
+    /// Return the names of every actor component attached to the actor.
+    std::vector<std::string> GetComponentNames() const;
+
+    /// Return the names of every bone reachable from the actor's first
+    /// skinned mesh component.
+    std::vector<std::string> GetBoneNames() const;
+
+    /// Return the world-space transforms of every socket on every scene
+    /// component attached to the actor.
+    std::vector<geom::Transform> GetSocketWorldTransforms() const;
+
+    /// Return the actor-relative transforms of every socket on every scene
+    /// component attached to the actor.
+    std::vector<geom::Transform> GetSocketRelativeTransforms() const;
+
+    /// Return the names of every socket on every scene component attached
+    /// to the actor.
+    std::vector<std::string> GetSocketNames() const;
+
     /// Return the name of the underlying Unreal actor.
     ///
     /// @note This function does not call the simulator, it returns the
