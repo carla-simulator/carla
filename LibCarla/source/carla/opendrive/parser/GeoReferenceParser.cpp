@@ -30,8 +30,8 @@ namespace parser {
   static std::string ToLowerCase(S&& s) {
     std::string r = s;
     for (auto& c : r)
-      c = static_cast<char>(std::tolower(c));
-    return s;
+      c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    return r;
   }
 
   static std::unordered_map<std::string, std::string> ParseProjectionParameters(const std::string &s){
@@ -191,7 +191,7 @@ namespace parser {
     TryGetParameter(p.y_0, parameters, "y_0");
     p.ellps = ellipsoid;
     auto projection = geom::GeoProjection::Make(p);
-    projection.setPROJString(proj_string);
+    projection.SetPROJString(proj_string);
     return projection;
   }
 
@@ -208,7 +208,7 @@ namespace parser {
     p.ellps = ellipsoid;
     p.offset = offset;
     auto projection = geom::GeoProjection::Make(p);
-    projection.setPROJString(proj_string);
+    projection.SetPROJString(proj_string);
     return projection;
   }
 
@@ -220,7 +220,7 @@ namespace parser {
     geom::WebMercatorParams p;
     p.ellps = ellipsoid;
     auto projection = geom::GeoProjection::Make(p);
-    projection.setPROJString(proj_string);
+    projection.SetPROJString(proj_string);
     return projection;
   }
 
@@ -240,7 +240,7 @@ namespace parser {
     TryGetParameter(p.y_0, parameters, "y_0");
     p.ellps = ellipsoid;
     auto projection = geom::GeoProjection::Make(p);
-    projection.setPROJString(proj_string);
+    projection.SetPROJString(proj_string);
     return projection;
   }
 
@@ -262,9 +262,9 @@ namespace parser {
 
   static geom::GeoLocation CreateUniversalTransverseMercatorGeoReference(std::unordered_map<std::string, std::string> parameters){
     geom::GeoLocation result{0.0, 0.0, 0.0};
-    result.latitude = 0.0;
-    if (TryGetParameter(result.longitude, parameters, "zone"))
-      result.longitude = 6.0 * result.longitude - 183.0;
+    double zone = 0.0;
+    if (TryGetParameter(zone, parameters, "zone"))
+      result.longitude = 6.0 * zone - 183.0;
     return result;
   }
 
@@ -273,7 +273,7 @@ namespace parser {
     return result;
   }
 
-  static geom::GeoLocation CreateLamberConic2SPGeoReference(std::unordered_map<std::string, std::string> parameters){
+  static geom::GeoLocation CreateLambertConic2SPGeoReference(std::unordered_map<std::string, std::string> parameters){
     geom::GeoLocation result{0.0, 0.0, 0.0};
     TryGetParameter(result.latitude, parameters, "lat_0");
     TryGetParameter(result.longitude, parameters, "lon_0");
@@ -316,7 +316,7 @@ namespace parser {
     } else if (proj == "lcc") {
       return std::make_pair(
         CreateLambertConformalConicProjection(parameters, proj_string, ellipsoid),
-        CreateLamberConic2SPGeoReference(parameters));
+        CreateLambertConic2SPGeoReference(parameters));
     } else {
       log_debug("projection '" + proj + "' is not supported, using default transverse mercator.");
       return std::make_pair(

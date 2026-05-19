@@ -159,7 +159,16 @@ namespace geom {
             + (5.0 - T + 9.0 * C + 4.0 * C * C) * std::pow(A, 4) / 24.0
             + (61.0 - 58.0 * T + T * T + 600.0 * C - 330.0 * ep2) * std::pow(A, 6) / 720.0));
 
-        return Location(static_cast<float>(x), static_cast<float>(y), static_cast<float>(geolocation.altitude));
+        Location result(static_cast<float>(x), static_cast<float>(y), static_cast<float>(geolocation.altitude));
+
+        // The inverse transform applies p.offset to the input location before
+        // un-projecting; mirror it here with the inverse offset so a
+        // geo -> location -> geo round-trip stays the identity.
+        if (p.offset.has_value()) {
+            result = p.offset->ApplyInverseTransformation(result);
+        }
+
+        return result;
     }
 
     Location GeoProjection::GeoLocationToTransformWebMercator(

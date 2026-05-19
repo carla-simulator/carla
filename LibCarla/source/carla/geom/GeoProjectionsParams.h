@@ -95,8 +95,25 @@ namespace geom {
             return Location{static_cast<float>(x_rot), static_cast<float>(y_rot), static_cast<float>(location.z + offset_z)};
         }
 
+        /// Inverse of @ref ApplyTransformation: recovers the pre-offset location
+        /// so that `ApplyTransformation(ApplyInverseTransformation(l)) == l`.
+        Location ApplyInverseTransformation(const Location& location) const{
+
+            double tx = (location.x * offset_cos_h) + (location.y * offset_sin_h);
+            double ty = -(location.x * offset_sin_h) + (location.y * offset_cos_h);
+
+            double x = tx - offset_x;
+            double y = offset_y - ty;
+
+            return Location{static_cast<float>(x), static_cast<float>(y), static_cast<float>(location.z - offset_z)};
+        }
+
         bool operator==(const OffsetTransform& rhs) const {
             return (offset_x == rhs.offset_x) && (offset_y == rhs.offset_y) && (offset_z == rhs.offset_z) && (offset_cos_h == rhs.offset_cos_h) && (offset_sin_h == rhs.offset_sin_h);
+        }
+
+        bool operator!=(const OffsetTransform& rhs) const {
+            return !(*this == rhs);
         }
     };
 
@@ -108,11 +125,11 @@ namespace geom {
         TransverseMercatorParams(double lat_0, double lon_0, double k, double x_0, double y_0, Ellipsoid ellps):
             lat_0(lat_0), lon_0(lon_0), k(k), x_0(x_0), y_0(y_0), ellps(ellps) {}
 
-        double lat_0 = 0.0f;
-        double lon_0 = 0.0f;
-        double k = 1.0f;
-        double x_0 = 0.0f;
-        double y_0 = 0.0f;
+        double lat_0 = 0.0;
+        double lon_0 = 0.0;
+        double k = 1.0;
+        double x_0 = 0.0;
+        double y_0 = 0.0;
         Ellipsoid ellps = Ellipsoid();
 
         bool operator==(const TransverseMercatorParams &rhs) const {

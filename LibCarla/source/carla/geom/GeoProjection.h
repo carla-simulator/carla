@@ -51,22 +51,22 @@ namespace geom {
         }
 
         /// Get the type of projection.
-        ProjectionType getType() const {
+        ProjectionType GetType() const {
             return static_cast<ProjectionType>(params.index());
         }
 
-        /// Get the paramaters.
-        const ProjectionParams& getParams() const {
+        /// Get the parameters.
+        const ProjectionParams& GetParams() const {
             return params;
         }
 
         /// Set the Proj raw string.
-        void setPROJString(std::string s) {
+        void SetPROJString(std::string s) {
             proj_string = std::move(s);
         }
 
         /// Get the Proj raw string.
-        const std::string& getPROJString() const {
+        const std::string& GetPROJString() const {
             return proj_string;
         }
 
