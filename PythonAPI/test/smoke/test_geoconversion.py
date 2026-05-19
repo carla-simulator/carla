@@ -94,6 +94,29 @@ class TestGeoLocationConversion(SmokeTest):
             geo2 = self.map.transform_to_geolocation(loc)
             self._assert_geolocation_close(geo, geo2)
 
+    def test_zero_conversion(self):
+        print("TestGeoLocationConversion.test_zero_conversion")
+        # The origin Location must survive a transform_to_geolocation /
+        # geolocation_to_transform round-trip (carried over from #9726).
+        origin = carla.Location(0.0, 0.0, 0.0)
+        geo = self.map.transform_to_geolocation(origin)
+        back = self.map.geolocation_to_transform(geo)
+        self._assert_location_close(origin, back)
+
+    def test_relative_offset_preserved(self):
+        print("TestGeoLocationConversion.test_relative_offset_preserved")
+        # A known XY offset round-tripped through the geo conversion must
+        # come back as the same offset, pinning the sign convention
+        # (carried over from #9726).
+        a = carla.Location(x=100.0, y=200.0, z=0.0)
+        b = carla.Location(x=110.0, y=210.0, z=0.0)
+
+        back_a = self.map.geolocation_to_transform(self.map.transform_to_geolocation(a))
+        back_b = self.map.geolocation_to_transform(self.map.transform_to_geolocation(b))
+
+        self.assertAlmostEqual(back_b.x - back_a.x, b.x - a.x, delta=0.2)
+        self.assertAlmostEqual(back_b.y - back_a.y, b.y - a.y, delta=0.2)
+
     def test_tm_location_to_geo_and_back(self):
         print("TestGeoLocationConversion.test_tm_location_to_geo_and_back")
         x_list = np.linspace(300000, 700000, AMOUNT_STEPS).tolist()
