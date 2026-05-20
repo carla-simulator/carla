@@ -329,7 +329,7 @@ namespace geom {
 
         lon = std::atan2(std::sin(lon), std::cos(lon));
 
-        return GeoLocation(RadiansToDegrees(lat), RadiansToDegrees(lon), location.z);;
+        return GeoLocation(RadiansToDegrees(lat), RadiansToDegrees(lon), location.z);
     }
 
     GeoLocation GeoProjection::TransformToGeoLocationWebMercator(
