@@ -15,6 +15,8 @@
 #include <carla/streaming/low_level/Client.h>
 #include <carla/streaming/low_level/Server.h>
 
+#include <boost/asio/executor_work_guard.hpp>
+
 #include <atomic>
 
 using namespace std::chrono_literals;
@@ -27,7 +29,7 @@ public:
   boost::asio::io_context service;
 
   explicit io_context_running(size_t threads = 2u)
-    : _work_to_do(service) {
+    : _work_to_do(boost::asio::make_work_guard(service)) {
     _threads.CreateThreads(threads, [this]() { service.run(); });
   }
 
@@ -37,7 +39,7 @@ public:
 
 private:
 
-  boost::asio::io_context::work _work_to_do;
+  boost::asio::executor_work_guard<boost::asio::io_context::executor_type> _work_to_do;
 
   carla::ThreadGroup _threads;
 };

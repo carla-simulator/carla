@@ -17,9 +17,9 @@
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wshadow"
 #endif
-#include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <boost/asio/strand.hpp>
 #if defined(__clang__)
 #  pragma clang diagnostic pop
@@ -102,7 +102,7 @@ namespace tcp {
 
     time_duration _timeout;
 
-    boost::asio::deadline_timer _deadline;
+    boost::asio::steady_timer _deadline;
 
     boost::asio::io_context::strand _strand;
 

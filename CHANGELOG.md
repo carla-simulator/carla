@@ -1,6 +1,7 @@
 =======
 ## LATEST Changes
 
+* Added NumPy 2 compatibility to the PythonAPI by upgrading Boost to 1.90.0, which ships the upstream NumPy 2 C ABI fix. LibCarla networking migrated from `boost::asio::deadline_timer` to `boost::asio::steady_timer`, and the deprecated `io_service`, `address::from_string`, `resolver::query`, `buffer_cast`, and `io_context::work` APIs replaced across LibCarla and the CarlaTools plugin.
 * Fixed recorder crashes during actor cleanup and replayer spawning incorrect actor blueprints
 * Fixed walker bounding box being centred on the actor pivot instead of the skeletal mesh: the box reported by `actor.bounding_box` now reflects the mesh component's offset from the character root, so pedestrian boxes line up with the visible mesh.
 * Added `Actor.get_component_world_transform`, `Actor.get_component_relative_transform`, `Actor.get_bone_world_transforms`, `Actor.get_bone_relative_transforms`, `Actor.get_component_names`, `Actor.get_bone_names`, `Actor.get_socket_world_transforms`, `Actor.get_socket_relative_transforms`, and `Actor.get_socket_names` Python APIs for introspecting an actor's scene components, skeletal bones, and sockets by name.

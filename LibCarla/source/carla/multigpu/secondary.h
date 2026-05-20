@@ -16,9 +16,9 @@
 #include "carla/streaming/detail/Types.h"
 #include "carla/ThreadPool.h"
 
-#include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <boost/asio/strand.hpp>
 
 #include <atomic>
@@ -76,7 +76,7 @@ namespace multigpu {
     boost::asio::ip::tcp::socket      _socket;
     boost::asio::ip::tcp::endpoint    _endpoint;
     boost::asio::io_context::strand   _strand;
-    boost::asio::deadline_timer       _connection_timer;
+    boost::asio::steady_timer         _connection_timer;
     std::shared_ptr<BufferPool>       _buffer_pool;
     std::atomic_bool                  _done {false};
     SecondaryCommands                 _commander;

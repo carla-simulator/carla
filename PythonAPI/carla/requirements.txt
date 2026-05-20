@@ -1,2 +1,2 @@
 networkx
-numpy<2.0,>=1.24.4
+numpy>=1.24.4

@@ -14,9 +14,9 @@
 #include "carla/streaming/detail/tcp/Message.h"
 #include "carla/multigpu/listener.h"
 
-#include <boost/asio/deadline_timer.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/steady_timer.hpp>
 #include <boost/asio/strand.hpp>
 
 #include <functional>
@@ -92,7 +92,7 @@ namespace multigpu {
 
     time_duration _timeout;
 
-    boost::asio::deadline_timer _deadline;
+    boost::asio::steady_timer _deadline;
 
     boost::asio::io_context::strand _strand;
 

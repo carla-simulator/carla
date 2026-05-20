@@ -150,7 +150,7 @@ namespace tcp {
 
   void Client::Reconnect() {
     auto self = shared_from_this();
-    _connection_timer.expires_from_now(time_duration::seconds(1u));
+    _connection_timer.expires_after(time_duration::seconds(1u).to_chrono());
     _connection_timer.async_wait([this, self](boost::system::error_code ec) {
       if (!ec) {
         Connect();

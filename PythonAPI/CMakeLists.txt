@@ -8,7 +8,6 @@ find_package (
   REQUIRED
 )
 
-# -- Temporary check for numpy 2 presence, which breaks our current version of Boost.Python.
 execute_process (
   COMMAND
     ${Python3_EXECUTABLE}
@@ -24,10 +23,6 @@ if (NUMPY_VERSION_QUERY_RESULT)
   carla_warning ("Failed to query numpy version.")
 endif ()
 carla_message ("Found Numpy ${NUMPY_VERSION_STRING} for Python ${Python3_VERSION} (${Python3_EXECUTABLE}).")
-if ("${NUMPY_VERSION_STRING}" VERSION_GREATER "2.0.0")
-  carla_error ("Unsupported Numpy version, please downgrade to a version prior to numpy 2.")
-endif ()
-# --
 
 set (
   PYTHON_API_DEPENDENCIES

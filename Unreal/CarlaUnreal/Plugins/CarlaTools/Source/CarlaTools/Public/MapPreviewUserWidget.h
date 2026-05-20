@@ -8,7 +8,14 @@
 #include <util/ue-header-guard-end.h>
 
 #include <util/disable-ue4-macros.h>
+#ifdef _WIN32
+#pragma warning(push)
+#pragma warning(disable : 4459)
+#endif
 #include <boost/asio.hpp>
+#ifdef _WIN32
+#pragma warning(pop)
+#endif
 #include <util/enable-ue4-macros.h>
 
 #include <memory>
@@ -25,7 +32,7 @@ class CARLATOOLS_API UMapPreviewUserWidget : public UUserWidget
 
 private:
 	// Boost socket
-  boost::asio::io_service io_service;
+  boost::asio::io_context io_service;
   std::unique_ptr<boost::asio::ip::tcp::socket> SocketPtr;
 
 

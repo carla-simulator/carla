@@ -75,13 +75,12 @@ namespace detail {
   static inline auto make_address(const std::string &address) {
     boost::asio::io_context io_context;
     boost::asio::ip::tcp::resolver resolver(io_context);
-    boost::asio::ip::tcp::resolver::query query(boost::asio::ip::tcp::v4(), address, "", boost::asio::ip::tcp::resolver::query::canonical_name);
-    boost::asio::ip::tcp::resolver::iterator iter = resolver.resolve(query);
-    boost::asio::ip::tcp::resolver::iterator end;
-    while (iter != end)
-    {
-      boost::asio::ip::tcp::endpoint endpoint = *iter++;
-      return endpoint.address();
+    boost::system::error_code ec;
+    auto results = resolver.resolve(boost::asio::ip::tcp::v4(), address, "", ec);
+    if (!ec) {
+      for (const auto &entry : results) {
+        return entry.endpoint().address();
+      }
     }
     return boost::asio::ip::make_address(address);
   }

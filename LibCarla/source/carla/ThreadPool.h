@@ -11,6 +11,7 @@
 #include "carla/ThreadGroup.h"
 #include "carla/Time.h"
 
+#include <boost/asio/executor_work_guard.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
 
@@ -24,7 +25,7 @@ namespace carla {
   class ThreadPool : private NonCopyable {
   public:
 
-    ThreadPool() : _work_to_do(_io_context) {}
+    ThreadPool() : _work_to_do(boost::asio::make_work_guard(_io_context)) {}
 
     /// Stops the ThreadPool and joins all its threads.
     ~ThreadPool() {
@@ -76,6 +77,7 @@ namespace carla {
 
     /// Stop the ThreadPool and join all its threads.
     void Stop() {
+      _work_to_do.reset();
       _io_context.stop();
       _workers.JoinAll();
     }
@@ -84,7 +86,7 @@ namespace carla {
 
     boost::asio::io_context _io_context;
 
-    boost::asio::io_context::work _work_to_do;
+    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> _work_to_do;
 
     ThreadGroup _workers;
   };
