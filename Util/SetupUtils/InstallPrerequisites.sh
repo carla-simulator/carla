@@ -86,7 +86,7 @@ PIP_EXTRA_ARGS=""
 if dpkg --compare-versions "$UBUNTU_VERSION_ID" ge "24.04"; then
     PIP_EXTRA_ARGS="--break-system-packages"
 fi
-if dpkg --compare-versions "$UBUNTU_VERSION_ID" ge "26.04"; then
+if dpkg --compare-versions "$UBUNTU_VERSION_ID" eq "26.04"; then
     # Ubuntu 26.04's python3-pip package is Debian-managed and cannot be
     # uninstalled by pip during a self-upgrade. Keep the distro pip and only
     # install the project requirements.
