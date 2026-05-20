@@ -135,6 +135,16 @@ namespace tcp {
   }
 
   void ServerSession::CloseNow(boost::system::error_code ec) {
+    // Guard against double-close. CloseNow() can be reached more than once for
+    // the same session: the deadline timer firing, an async read/write
+    // completing with an error, and an explicit Close() can all race. Without
+    // this guard the session invokes _on_closed twice, which calls
+    // DisconnectSession twice on the stream state, tripping the DEBUG_ASSERT in
+    // MultiStreamState::DisconnectSession (and corrupting session bookkeeping
+    // in release builds).
+    if (_is_closed.exchange(true)) {
+      return;
+    }
     _deadline.cancel();
     if (!ec)
     {
