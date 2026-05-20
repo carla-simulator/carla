@@ -41,7 +41,7 @@ void UMapPreviewUserWidget::CreateTexture()
 void UMapPreviewUserWidget::ConnectToSocket(FString DatabasePath, FString StylesheetPath, int Size)
 {
   const unsigned int PORT = 5000;
-  SocketPtr = std::make_unique<AsioSocket>(io_service);
+  SocketPtr = std::make_unique<AsioSocket>(io_context);
   SocketPtr->connect(AsioEndpoint(AsioTCP::v4(), PORT));
   if(!SocketPtr->is_open())
   {
@@ -76,10 +76,11 @@ void UMapPreviewUserWidget::RenderMap(FString Latitude, FString Longitude, FStri
       std::size_t BytesReceived =
         Asio::read(*SocketPtr, Buffer, Asio::transfer_at_least(2));
       TArray<uint8_t> ThisReceivedData;
-      const char* DataPtr = static_cast<const char*>(Buffer.data().data());
-      for (std::size_t i = 0; i < Buffer.size(); ++i)
+      const auto Bytes = Buffer.data();
+      ThisReceivedData.Reserve(static_cast<int32>(Buffer.size()));
+      for (auto It = Asio::buffers_begin(Bytes); It != Asio::buffers_end(Bytes); ++It)
       {
-        ThisReceivedData.Add(DataPtr[i]);
+        ThisReceivedData.Add(static_cast<uint8_t>(*It));
       }
       ReceivedData.Append(ThisReceivedData);
     }
@@ -119,7 +120,7 @@ FString UMapPreviewUserWidget::RecvCornersLatLonCoords()
   AsioStreamBuf Buffer;
   std::size_t BytesReceived =
       Asio::read(*SocketPtr, Buffer, Asio::transfer_at_least(2));
-  std::string BytesStr(static_cast<const char*>(Buffer.data().data()), Buffer.size());
+  std::string BytesStr(Asio::buffers_begin(Buffer.data()), Asio::buffers_end(Buffer.data()));
 
   FString CoordStr = FString(BytesStr.size(), UTF8_TO_TCHAR(BytesStr.c_str()));
   UE_LOG(LogTemp, Log, TEXT("Received Coords %s"), *CoordStr);

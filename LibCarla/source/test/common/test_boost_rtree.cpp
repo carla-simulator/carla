@@ -16,6 +16,7 @@
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/index/rtree.hpp>
 
+#include <algorithm>
 #include <utility>
 #include <vector>
 

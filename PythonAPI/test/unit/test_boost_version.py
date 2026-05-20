@@ -105,7 +105,7 @@ class TestCarlaImports(unittest.TestCase):
     def test_carla_imports(self):
         try:
             import carla  # noqa: F401
-        except ImportError:
+        except ModuleNotFoundError:
             self.skipTest("carla wheel not installed in this environment")
         else:
             self.assertIsNotNone(carla.__file__)
