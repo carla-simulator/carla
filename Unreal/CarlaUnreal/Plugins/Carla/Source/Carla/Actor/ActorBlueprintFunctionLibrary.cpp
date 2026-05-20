@@ -411,7 +411,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation post_process_profile;
     post_process_profile.Id = TEXT("post_process_profile");
     post_process_profile.Type = EActorAttributeType::String;
-    post_process_profile.RecommendedValues = {TEXT("default")};
+    post_process_profile.RecommendedValues = {TEXT("Default")};
     post_process_profile.bRestrictToRecommended = false;
 
     Definition.Variations.Append({PostProccess, post_process_profile});
@@ -1407,11 +1407,35 @@ void UActorBlueprintFunctionLibrary::SetCamera(
             Description.Variations["enable_postprocess_effects"],
             true));
 
-    FString PostProcessDefaultName = RetrieveActorAttributeToString("post_process_profile",
-        Description.Variations, TEXT("default"));
+    FString PostProcessProfileName = RetrieveActorAttributeToString(
+        "post_process_profile",
+        Description.Variations,
+        TEXT(""));
+
+    // When the client does not pick a profile, fall back to the JSON named
+    // after the active map (e.g. Town10HD_Opt.json on Town10HD_Opt). The
+    // "Default" profile is calibrated for a brighter scene than the shipped
+    // maps; applying it leaves Town10HD_Opt rendering near-black except for
+    // emissive surfaces. Treat the legacy lowercase "default" sentinel as
+    // "no preference" so existing clients pick up the per-map profile too.
+    if (PostProcessProfileName.IsEmpty() ||
+        PostProcessProfileName.Equals(TEXT("default"), ESearchCase::IgnoreCase))
+    {
+      const UWorld *World = Camera->GetWorld();
+      FString MapName{};
+      if (World != nullptr)
+      {
+        MapName = World->GetMapName();
+        MapName.RemoveFromStart(World->StreamingLevelsPrefix);
+      }
+      const FString MapJsonPath =
+          FPaths::ProjectContentDir() / TEXT("Carla/Config/PostProcess/") + MapName + TEXT(".json");
+      PostProcessProfileName = FPaths::FileExists(MapJsonPath) ? MapName : TEXT("Default");
+    }
+
     UPostProcessJsonUtils::LoadAllPostProcessFromJsonToSceneCapture(
         Camera->GetCaptureComponent(),
-        PostProcessDefaultName);
+        PostProcessProfileName);
   }
 }
 
