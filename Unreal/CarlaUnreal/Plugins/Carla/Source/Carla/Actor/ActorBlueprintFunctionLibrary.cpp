@@ -1424,8 +1424,12 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         MapName = World->GetMapName();
         MapName.RemoveFromStart(World->StreamingLevelsPrefix);
       }
-      const FString MapJsonPath =
-          FPaths::ProjectContentDir() / TEXT("Carla/Config/PostProcess/") + MapName + TEXT(".json");
+      else
+      {
+        UE_LOG(LogCarla, Warning,
+            TEXT("SetCamera: camera has no UWorld; falling back to Default post-process profile."));
+      }
+      const FString MapJsonPath = UPostProcessJsonUtils::GetPostProcessConfigPath(MapName);
       PostProcessProfileName = FPaths::FileExists(MapJsonPath) ? MapName : TEXT("Default");
     }
 
