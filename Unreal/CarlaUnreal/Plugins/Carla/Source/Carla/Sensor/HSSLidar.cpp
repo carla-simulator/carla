@@ -25,6 +25,7 @@
 #include <util/ue-header-guard-end.h>
 
 #include <cmath>
+#include <numeric>
 
 FActorDefinition AHSSLidar::GetSensorDefinition()
 {
@@ -53,8 +54,19 @@ void AHSSLidar::Set(const FLidarDescription &LidarDescription)
   CreateLasers();
   PointsPerChannel.resize(Description.Channels);
 
+  // Apply the user-supplied noise_seed; the constructor's SetSeed ran before
+  // Description was populated from the blueprint attributes, so the engine
+  // would otherwise be stuck on the FLidarDescription default seed.
+  SetSeed(Description.RandomSeed);
+
   DropOffBeta = 1.0f - Description.DropOffAtZeroIntensity;
-  DropOffAlpha = Description.DropOffAtZeroIntensity / Description.DropOffIntensityLimit;
+  // Guard against dropoff_intensity_limit == 0: alpha = x/0 would propagate
+  // inf/NaN through PostprocessDetection and silently disable the
+  // intensity-based dropoff branch. With alpha = 0 the postprocess simply
+  // falls back to the constant beta probability for low-intensity points.
+  DropOffAlpha = (Description.DropOffIntensityLimit > std::numeric_limits<float>::epsilon())
+      ? Description.DropOffAtZeroIntensity / Description.DropOffIntensityLimit
+      : 0.0f;
   DropOffGenActive = Description.DropOffGenRate > std::numeric_limits<float>::epsilon();
 }
 
@@ -89,19 +101,6 @@ void AHSSLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime
     }
   }
   #endif
-}
-
-float AHSSLidar::ComputeIntensity(const FSemanticDetection& RawDetection) const
-{
-  const carla::geom::Location HitPoint = RawDetection.point;
-  const float Distance = HitPoint.Length();
-
-  const float AttenAtm = Description.AtmospAttenRate;
-  const float AbsAtm = exp(-AttenAtm * Distance);
-
-  const float IntRec = AbsAtm;
-
-  return IntRec;
 }
 
 AHSSLidar::FDetection AHSSLidar::ComputeDetection(

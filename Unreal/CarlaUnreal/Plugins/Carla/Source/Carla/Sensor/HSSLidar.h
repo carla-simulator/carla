@@ -46,8 +46,6 @@ protected:
   virtual void SimulateLidar(const float DeltaTime);
 
 private:
-  /// Compute the received intensity of the point.
-  float ComputeIntensity(const FSemanticDetection& RawDetection) const;
   FDetection ComputeDetection(const FHitResult& HitInfo, const FTransform& SensorTransf) const;
 
   void PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel) override;
@@ -61,8 +59,8 @@ private:
   bool DropOffGenActive;
 
   /// Slope for the intensity dropoff of lidar points: alpha*Intensity + beta
-  /// where alpha = (1 - dropoff_zero_intensity) / dropoff_limit and
-  /// beta = (1 - dropoff_zero_intensity).
+  /// where alpha = dropoff_zero_intensity / dropoff_limit and
+  /// beta = 1 - dropoff_zero_intensity.
   float DropOffAlpha;
   float DropOffBeta;
 
