@@ -246,6 +246,11 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse GetVehicleTelemetryData(FVehicleTelemetryData&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse GetFailureState(carla::rpc::VehicleFailureState&)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -484,6 +489,8 @@ public:
   virtual ECarlaServerResponse DisableActorConstantVelocity() final;
 
   virtual ECarlaServerResponse GetPhysicsControl(FVehiclePhysicsControl& PhysicsControl) final;
+
+  virtual ECarlaServerResponse GetVehicleTelemetryData(FVehicleTelemetryData& TelemetryData) final;
 
   virtual ECarlaServerResponse GetFailureState(carla::rpc::VehicleFailureState&) final;
 

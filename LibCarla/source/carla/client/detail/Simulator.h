@@ -259,12 +259,24 @@ namespace detail {
       _client.SetWeatherParameters(weather);
     }
 
+    float GetIMUSensorGravity() {
+      return _client.GetIMUSensorGravity();
+    }
+
+    void SetIMUSensorGravity(float gravity) {
+      _client.SetIMUSensorGravity(gravity);
+    }
+
     bool IsWeatherEnabled() {
       return _client.IsWeatherEnabled();
     }
 
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
       return _client.GetVehiclePhysicsControl(vehicle.GetId());
+    }
+
+    rpc::VehicleTelemetryData GetVehicleTelemetryData(const Vehicle &vehicle) const {
+      return _client.GetVehicleTelemetryData(vehicle.GetId());
     }
 
     rpc::VehicleLightState GetVehicleLightState(const Vehicle &vehicle) const {

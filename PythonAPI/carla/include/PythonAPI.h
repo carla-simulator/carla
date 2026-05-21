@@ -17,7 +17,9 @@
 #include <carla/rpc/VehicleAckermannControl.h>
 #include <carla/rpc/VehicleControl.h>
 #include <carla/rpc/VehiclePhysicsControl.h>
+#include <carla/rpc/VehicleTelemetryData.h>
 #include <carla/rpc/WheelPhysicsControl.h>
+#include <carla/rpc/WheelTelemetryData.h>
 #include <carla/rpc/WalkerControl.h>
 #include <carla/rpc/WalkerBoneControlIn.h>
 #include <carla/rpc/WalkerBoneControlOut.h>
@@ -540,6 +542,24 @@ namespace rpc {
       << ", wheels=" << control.wheels
       << ", use_sweep_wheel_collision=" << control.use_sweep_wheel_collision
       << ")";
+    return out;
+  }
+
+  inline std::ostream &operator<<(std::ostream &out, const WheelTelemetryData &data) {
+    out << "WheelTelemetryData(lat_slip=" << std::to_string(data.lat_slip)
+        << ", long_slip=" << std::to_string(data.long_slip)
+        << ", omega=" << std::to_string(data.omega) << ')';
+    return out;
+  }
+
+  inline std::ostream &operator<<(std::ostream &out, const VehicleTelemetryData &data) {
+    out << "VehicleTelemetryData(speed=" << std::to_string(data.speed)
+        << ", steer=" << std::to_string(data.steer)
+        << ", throttle=" << std::to_string(data.throttle)
+        << ", brake=" << std::to_string(data.brake)
+        << ", engine_rpm=" << std::to_string(data.engine_rpm)
+        << ", gear=" << std::to_string(data.gear)
+        << ", wheels=" << data.wheels << ')';
     return out;
   }
 

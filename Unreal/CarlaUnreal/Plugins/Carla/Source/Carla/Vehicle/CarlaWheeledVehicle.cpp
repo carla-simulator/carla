@@ -656,6 +656,57 @@ void ACarlaWheeledVehicle::DeactivateVelocityControl()
   VelocityControl->Deactivate();
 }
 
+FVehicleTelemetryData ACarlaWheeledVehicle::GetVehicleTelemetryData() const
+{
+  FVehicleTelemetryData TelemetryData{};
+
+  auto *VehicleMovComponent = GetChaosWheeledVehicleMovementComponent();
+  check(VehicleMovComponent != nullptr);
+
+  // Vehicle-level telemetry. Forward speed is reported by the engine in cm/s
+  // and converted to m/s. Aerodynamic drag is intentionally not exposed: the
+  // Chaos plugin's DebugDragMagnitude is declared but never written, so any
+  // value reported here would be a permanent zero.
+  TelemetryData.Speed = GetVehicleForwardSpeed() / 100.0f;
+  TelemetryData.Steer = LastAppliedControl.Steer;
+  TelemetryData.Throttle = LastAppliedControl.Throttle;
+  TelemetryData.Brake = LastAppliedControl.Brake;
+  TelemetryData.EngineRPM = VehicleMovComponent->GetEngineRotationSpeed();
+  TelemetryData.Gear = GetVehicleCurrentGear();
+
+  // Per-wheel telemetry. UChaosWheeledVehicleMovementComponent::GetWheelState
+  // returns live solver slip data; UChaosVehicleWheel::GetWheelAngularVelocity
+  // is also live. The legacy PhysX surface (tire load, torque, long/lat force)
+  // has no Chaos equivalent that is populated in stock UE 5.5 (the Debug*
+  // UPROPERTYs on UChaosVehicleWheel are never written by the plugin), so it
+  // is omitted here rather than reported as silent zeros.
+  const int32 WheelCount = VehicleMovComponent->Wheels.Num();
+  TelemetryData.Wheels.Reserve(WheelCount);
+  for (int32 i = 0; i < WheelCount; ++i)
+  {
+    FWheelTelemetryData WheelData{};
+    // VehicleMovComponent->Wheels is TArray<TObjectPtr<UChaosVehicleWheel>>;
+    // bind to a reference so TObjectPtr's implicit conversion handles the
+    // dereferences below (raw `auto *` does not deduce through TObjectPtr).
+    const auto &Wheel = VehicleMovComponent->Wheels[i];
+    if (!Wheel)
+    {
+      TelemetryData.Wheels.Add(WheelData);
+      continue;
+    }
+
+    const FWheelStatus &WheelStatus = VehicleMovComponent->GetWheelState(i);
+
+    WheelData.LatSlip = FMath::RadiansToDegrees(WheelStatus.SlipAngle);
+    WheelData.LongSlip = WheelStatus.SlipMagnitude;
+    WheelData.Omega = Wheel->GetWheelAngularVelocity();
+
+    TelemetryData.Wheels.Add(WheelData);
+  }
+
+  return TelemetryData;
+}
+
 void ACarlaWheeledVehicle::ShowDebugTelemetry(bool Enabled)
 {
   if (GetWorld()->GetFirstPlayerController())

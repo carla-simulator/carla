@@ -665,6 +665,21 @@ ECarlaServerResponse FVehicleActor::GetPhysicsControl(FVehiclePhysicsControl& Ph
   return ECarlaServerResponse::Success;
 }
 
+ECarlaServerResponse FVehicleActor::GetVehicleTelemetryData(FVehicleTelemetryData& TelemetryData)
+{
+  if (IsDormant())
+  {
+    return ECarlaServerResponse::FunctionNotAvailableWhenDormant;
+  }
+  auto Vehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+  if (Vehicle == nullptr)
+  {
+    return ECarlaServerResponse::NotAVehicle;
+  }
+  TelemetryData = Vehicle->GetVehicleTelemetryData();
+  return ECarlaServerResponse::Success;
+}
+
 ECarlaServerResponse FVehicleActor::GetFailureState(carla::rpc::VehicleFailureState& FailureState)
 {
   if (IsDormant())

@@ -6,6 +6,7 @@
 
 #include "carla/client/Map.h"
 
+#include "carla/geom/GeoProjection.h"
 #include "carla/client/Junction.h"
 #include "carla/client/Waypoint.h"
 #include "carla/opendrive/OpenDriveParser.h"
@@ -110,6 +111,10 @@ namespace client {
 
   const geom::GeoLocation &Map::GetGeoReference() const {
     return _map.GetGeoReference();
+  }
+
+  const geom::GeoProjection &Map::GetGeoProjection() const {
+    return _map.GetGeoProjection();
   }
 
   std::vector<geom::Location> Map::GetAllCrosswalkZones() const {

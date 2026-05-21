@@ -61,6 +61,26 @@ static void SetWheels(carla::rpc::VehiclePhysicsControl &self, const boost::pyth
   self.wheels = wheels;
 }
 
+static auto GetTelemetryWheels(const carla::rpc::VehicleTelemetryData &self) {
+  auto &wheels = self.wheels;
+  boost::python::object get_iter =
+      boost::python::iterator<std::vector<carla::rpc::WheelTelemetryData>>();
+  boost::python::object iter = get_iter(wheels);
+  return boost::python::list(iter);
+}
+
+static void SetTelemetryWheels(
+    carla::rpc::VehicleTelemetryData &self,
+    const boost::python::list &list) {
+  std::vector<carla::rpc::WheelTelemetryData> wheels;
+  auto length = boost::python::len(list);
+  wheels.reserve(static_cast<size_t>(length));
+  for (auto i = 0u; i < length; ++i) {
+    wheels.push_back(boost::python::extract<carla::rpc::WheelTelemetryData &>(list[i]));
+  }
+  self.wheels = std::move(wheels);
+}
+
 static auto GetForwardGearRatios(const carla::rpc::VehiclePhysicsControl &self) {
   auto &gears = self.forward_gear_ratios;
   boost::python::object get_iter = boost::python::iterator<std::vector<float>>();
@@ -404,6 +424,11 @@ void export_control() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<std::vector<cr::WheelTelemetryData>>("vector_of_wheels_telemetry")
+    .def(boost::python::vector_indexing_suite<std::vector<cr::WheelTelemetryData>>())
+    .def(self_ns::str(self_ns::self))
+  ;
+
 
   class_<cr::WheelPhysicsControl>("WheelPhysicsControl", no_init)
     .def("__init__", raw_function(WheelPhysicsControl_init))
@@ -448,6 +473,33 @@ void export_control() {
     .def_readwrite("velocity", &cr::WheelPhysicsControl::velocity)
     .def("__eq__", &cr::WheelPhysicsControl::operator==)
     .def("__ne__", &cr::WheelPhysicsControl::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cr::WheelTelemetryData>("WheelTelemetryData")
+    .def(init<float, float, float>(
+      (arg("lat_slip") = 0.0f,
+      arg("long_slip") = 0.0f,
+      arg("omega") = 0.0f)))
+    .def_readwrite("lat_slip", &cr::WheelTelemetryData::lat_slip)
+    .def_readwrite("long_slip", &cr::WheelTelemetryData::long_slip)
+    .def_readwrite("omega", &cr::WheelTelemetryData::omega)
+    .def("__eq__", &cr::WheelTelemetryData::operator==)
+    .def("__ne__", &cr::WheelTelemetryData::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cr::VehicleTelemetryData>("VehicleTelemetryData")
+    .def(init<>())
+    .def_readwrite("speed", &cr::VehicleTelemetryData::speed)
+    .def_readwrite("steer", &cr::VehicleTelemetryData::steer)
+    .def_readwrite("throttle", &cr::VehicleTelemetryData::throttle)
+    .def_readwrite("brake", &cr::VehicleTelemetryData::brake)
+    .def_readwrite("engine_rpm", &cr::VehicleTelemetryData::engine_rpm)
+    .def_readwrite("gear", &cr::VehicleTelemetryData::gear)
+    .add_property("wheels", &GetTelemetryWheels, &SetTelemetryWheels)
+    .def("__eq__", &cr::VehicleTelemetryData::operator==)
+    .def("__ne__", &cr::VehicleTelemetryData::operator!=)
     .def(self_ns::str(self_ns::self))
   ;
 

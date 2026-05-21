@@ -6,6 +6,11 @@
 
 #include <PythonAPI.h>
 
+#include <carla/geom/GeoProjectionsParams.h>
+
+#include <limits>
+
+#include <boost/optional.hpp>
 #include <boost/python/implicit.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
@@ -62,6 +67,14 @@ static auto DistanceSquared2D(const carla::geom::Vector3D &self, const carla::ge
 
 static auto GetVectorAngle(const carla::geom::Vector3D &self, const carla::geom::Vector3D &other) {
   return carla::geom::Math::GetVectorAngle(self, other);
+}
+
+template <typename T>
+static boost::python::object OptionalToPythonObject(const boost::optional<T>& opt) {
+  if (opt.has_value()) {
+    return boost::python::object(*opt);
+  }
+  return boost::python::object(); // None
 }
 
 void export_geom() {
@@ -208,5 +221,85 @@ void export_geom() {
     .def("__eq__", &cg::GeoLocation::operator==)
     .def("__ne__", &cg::GeoLocation::operator!=)
     .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::Ellipsoid>("GeoEllipsoid")
+    .def(init<double, double>((arg("a")=6378137.0, arg("f_inv")=std::numeric_limits<double>::infinity())))
+    .def_readwrite("a", &cg::Ellipsoid::a)
+    .def_readwrite("f_inv", &cg::Ellipsoid::f_inv)
+    .def("__eq__", &cg::Ellipsoid::operator==)
+    .def("__ne__", &cg::Ellipsoid::operator!=)
+  ;
+
+  class_<cg::OffsetTransform>("GeoOffsetTransform")
+  .def(init<double, double, double, double>((arg("offset_x")=0.0, arg("offset_y")=0.0, arg("offset_z")=0.0, arg("offset_hdg")=0.0)))
+  .def_readwrite("offset_x", &cg::OffsetTransform::offset_x)
+  .def_readwrite("offset_y", &cg::OffsetTransform::offset_y)
+  .def_readwrite("offset_z", &cg::OffsetTransform::offset_z)
+  .def_readwrite("offset_cos_h", &cg::OffsetTransform::offset_cos_h)
+  .def_readwrite("offset_sin_h", &cg::OffsetTransform::offset_sin_h)
+  .def("ApplyTransformation", &cg::OffsetTransform::ApplyTransformation)
+  .def("__eq__", &cg::OffsetTransform::operator==)
+  ;
+
+  class_<cg::TransverseMercatorParams>("GeoProjectionTM")
+    .def(init<double, double, double, double, double, cg::Ellipsoid>(
+      (arg("lat_0")=0.0, arg("lon_0")=0.0, arg("k")=1.0, arg("x_0")=0.0, arg("y_0")=0.0, arg("ellps")=cg::Ellipsoid())))
+    .def_readwrite("lat_0", &cg::TransverseMercatorParams::lat_0)
+    .def_readwrite("lon_0", &cg::TransverseMercatorParams::lon_0)
+    .def_readwrite("k", &cg::TransverseMercatorParams::k)
+    .def_readwrite("x_0", &cg::TransverseMercatorParams::x_0)
+    .def_readwrite("y_0", &cg::TransverseMercatorParams::y_0)
+    .def("__eq__", &cg::TransverseMercatorParams::operator==)
+    .def("__ne__", &cg::TransverseMercatorParams::operator!=)
+  ;
+
+  class_<cg::UniversalTransverseMercatorParams>("GeoProjectionUTM")
+    .def(init<int, bool, cg::Ellipsoid>((arg("zone")=31, arg("north")=true, arg("ellps")=cg::Ellipsoid())))
+    .def_readwrite("zone", &cg::UniversalTransverseMercatorParams::zone)
+    .def_readwrite("north", &cg::UniversalTransverseMercatorParams::north)
+    .def_readwrite("ellps", &cg::UniversalTransverseMercatorParams::ellps)
+    .add_property("offset",
+        +[](const cg::UniversalTransverseMercatorParams &self) {
+          return OptionalToPythonObject(self.offset); //returns None or OffsetTransform
+        },
+         +[](cg::UniversalTransverseMercatorParams& self, object value) {
+            if (value.is_none()) {
+                self.offset = boost::none;
+            } else {
+                extract<cg::OffsetTransform> ex(value);
+                if (!ex.check()) {
+                    PyErr_SetString(
+                        PyExc_TypeError,
+                        "offset must be OffsetTransform or None"
+                    );
+                    throw_error_already_set();
+                }
+                self.offset = ex();
+            }
+        }
+    )
+    .def("__eq__", &cg::UniversalTransverseMercatorParams::operator==)
+    .def("__ne__", &cg::UniversalTransverseMercatorParams::operator!=)
+  ;
+
+  class_<cg::WebMercatorParams>("GeoProjectionWebMerc")
+    .def(init<cg::Ellipsoid>((arg("ellps")=cg::Ellipsoid())))
+    .def_readwrite("ellps", &cg::WebMercatorParams::ellps)
+    .def("__eq__", &cg::WebMercatorParams::operator==)
+    .def("__ne__", &cg::WebMercatorParams::operator!=)
+  ;
+
+  class_<cg::LambertConformalConicParams>("GeoProjectionLCC2SP")
+    .def(init<double, double, double, double, double, double, cg::Ellipsoid>(
+      (arg("lat_0")=0.0, arg("lat_1")=0.0, arg("lat_2")=0.0, arg("lon_0")=0.0, arg("x_0")=0.0, arg("y_0")=0.0, arg("ellps")=cg::Ellipsoid())))
+    .def_readwrite("lat_0", &cg::LambertConformalConicParams::lat_0)
+    .def_readwrite("lat_1", &cg::LambertConformalConicParams::lat_1)
+    .def_readwrite("lat_2", &cg::LambertConformalConicParams::lat_2)
+    .def_readwrite("lon_0", &cg::LambertConformalConicParams::lon_0)
+    .def_readwrite("x_0", &cg::LambertConformalConicParams::x_0)
+    .def_readwrite("y_0", &cg::LambertConformalConicParams::y_0)
+    .def("__eq__", &cg::LambertConformalConicParams::operator==)
+    .def("__ne__", &cg::LambertConformalConicParams::operator!=)
   ;
 }

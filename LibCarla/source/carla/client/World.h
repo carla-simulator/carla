@@ -93,6 +93,12 @@ namespace client {
     /// Change the weather in the simulation.
     void SetWeather(const rpc::WeatherParameters &weather);
 
+    /// Get gravity value used for the IMU sensor accelerometer calculation.
+    float GetIMUSensorGravity() const;
+
+    /// Set gravity value used for the IMU sensor accelerometer calculation.
+    void SetIMUSensorGravity(float gravity);
+
     /// Query if the Weather is enabled or not
     bool IsWeatherEnabled() const;
 

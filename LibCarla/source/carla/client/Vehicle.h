@@ -14,6 +14,7 @@
 #include "carla/rpc/VehicleDoor.h"
 #include "carla/rpc/VehicleLightState.h"
 #include "carla/rpc/VehiclePhysicsControl.h"
+#include "carla/rpc/VehicleTelemetryData.h"
 #include "carla/rpc/VehicleWheels.h"
 #include "carla/trafficmanager/TrafficManager.h"
 
@@ -35,6 +36,7 @@ namespace client {
     using Control = rpc::VehicleControl;
     using AckermannControl = rpc::VehicleAckermannControl;
     using PhysicsControl = rpc::VehiclePhysicsControl;
+    using TelemetryData = rpc::VehicleTelemetryData;
     using LightState = rpc::VehicleLightState::LightState;
     using TM = traffic_manager::TrafficManager;
     using VehicleDoor = rpc::VehicleDoor;
@@ -93,6 +95,14 @@ namespace client {
     ///
     /// @warning This function does call the simulator.
     PhysicsControl GetPhysicsControl() const;
+
+    /// Return the runtime telemetry of this vehicle: forward speed, last
+    /// applied control inputs, engine RPM, current gear, and per-wheel
+    /// lateral slip, longitudinal slip, and angular velocity sourced from
+    /// the Chaos vehicle physics state.
+    ///
+    /// @warning This function does call the simulator.
+    TelemetryData GetTelemetryData() const;
 
     /// Return the current open lights (LightState) of this vehicle.
     ///

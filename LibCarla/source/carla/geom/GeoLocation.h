@@ -11,8 +11,6 @@
 namespace carla {
 namespace geom {
 
-  struct Location;
-
   class GeoLocation {
   public:
 
@@ -36,21 +34,6 @@ namespace geom {
       : latitude(latitude),
         longitude(longitude),
         altitude(altitude) {}
-
-    // =========================================================================
-    // -- Transform locations --------------------------------------------------
-    // =========================================================================
-
-    /// Transform the given @a location to a GeoLocation using this as
-    /// geo-reference.
-    GeoLocation Transform(const Location &location) const;
-
-    /// Transform the given @a geo_location to a world-space Location
-    /// relative to this geo-reference. Inverse of @ref Transform — for
-    /// every Location `l` the identity
-    /// `this->InverseTransform(this->Transform(l)) == l` holds within
-    /// the round-trip tolerance of the underlying Mercator projection.
-    Location InverseTransform(const GeoLocation &geo_location) const;
 
     // =========================================================================
     // -- Comparison operators -------------------------------------------------

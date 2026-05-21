@@ -18,7 +18,7 @@
 #include <string>
 
 namespace carla {
-namespace geom { class GeoLocation; }
+namespace geom { class GeoLocation; struct GeoProjection; }
 namespace client {
 
   class Waypoint;
@@ -72,6 +72,8 @@ namespace client {
         const geom::Location &destination) const;
 
     const geom::GeoLocation &GetGeoReference() const;
+
+    const geom::GeoProjection &GetGeoProjection() const;
 
     std::vector<geom::Location> GetAllCrosswalkZones() const;
 
