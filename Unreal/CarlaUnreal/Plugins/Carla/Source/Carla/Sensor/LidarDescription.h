@@ -69,4 +69,8 @@ struct CARLA_API FLidarDescription
 
   UPROPERTY(EditAnywhere)
   float NoiseStdDev = 0.0f;
+
+  /// Horizontal resolution of the lidar, in degrees.
+  UPROPERTY(EditAnywhere)
+  float HorizontalResolution = 0.1f;
 };
