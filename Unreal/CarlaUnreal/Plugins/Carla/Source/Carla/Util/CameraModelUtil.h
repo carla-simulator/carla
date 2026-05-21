@@ -20,7 +20,6 @@ class FRDGBuilder;
 class FRDGTexture;
 class FRHISamplerState;
 class UTextureRenderTarget2D;
-struct FIntPoint;
 
 
 
