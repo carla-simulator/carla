@@ -6,6 +6,8 @@
 
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla.h"
+#include "Carla/Actor/CarlaActor.h"
+#include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Traffic/TrafficSignBase.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
