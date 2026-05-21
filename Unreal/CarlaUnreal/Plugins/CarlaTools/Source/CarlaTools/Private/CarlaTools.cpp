@@ -9,12 +9,12 @@ DEFINE_LOG_CATEGORY(LogCarlaTools);
 
 void FCarlaToolsModule::StartupModule()
 {
-	UVehicleImporter::StartServer();
+	// Module startup only ensures the class is available, doesn't auto-start server
 }
 
 void FCarlaToolsModule::ShutdownModule()
 {
-	UVehicleImporter::StopServer();
+	// No automatic cleanup needed here
 }
 
 #undef LOCTEXT_NAMESPACE
