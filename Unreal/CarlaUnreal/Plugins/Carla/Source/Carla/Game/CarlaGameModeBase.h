@@ -117,7 +117,12 @@ public:
 
   [[deprecated("This command no longer makes sense since the apply_textures API relies on IDs.")]]
   TArray<FString> GetNamesOfAllActors();
-  
+
+  /// Gravitational acceleration used by IMU sensors.
+  /// Default is Earth's, approximately 9.81 m/s^2.
+  UPROPERTY(BlueprintReadOnly, EditAnywhere, Category="Sensor Gravity")
+  float IMUSensorGravity = 9.81f;
+
   FOnEpisodeInitialisedDelegate OnEpisodeInitialisedDelegate;
 
 protected:

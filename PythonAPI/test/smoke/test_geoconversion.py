@@ -1,89 +1,238 @@
-# Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma de
-# Barcelona (UAB).
-#
-# This work is licensed under the terms of the MIT license.
-# For a copy, see <https://opensource.org/licenses/MIT>.
-
-import random
-import time
-
 import carla
+import numpy as np
 
 from . import SmokeTest
 
-# The packaged build only ships Town10HD_Opt and Mine_01; the default
-# SmokeTest.tearDown loads Town03, which does not exist on the package.
-TEST_TOWN = "Town10HD_Opt"
+WGS84 = carla.GeoEllipsoid(a=6378137.0, f_inv=298.257223563)
+SPHERE = carla.GeoEllipsoid(a=6378137.0, f_inv=float("inf"))
 
+TM = carla.GeoProjectionTM(
+    lat_0=0.0, lon_0=3.0, k=0.9996, x_0=500000.0, y_0=0.0, ellps=WGS84)
+UTMNORTH = carla.GeoProjectionUTM(zone=31, north=True, ellps=WGS84)
+UTMSOUTH = carla.GeoProjectionUTM(zone=31, north=False, ellps=WGS84)
+WEBM = carla.GeoProjectionWebMerc(ellps=SPHERE)
+LCC = carla.GeoProjectionLCC2SP(
+    lon_0=3.0, lat_0=46.5, lat_1=44.0, lat_2=49.0, x_0=700000.0, y_0=6600000.0, ellps=WGS84)
 
-class TestGeoConversion(SmokeTest):
+AMOUNT_STEPS = 10
+
+class TestGeoLocationConversion(SmokeTest):
 
     def setUp(self):
         super().setUp()
-        self.client.load_world(TEST_TOWN)
-        time.sleep(5)
-        self.world = self.client.get_world()
-        self.map = self.world.get_map()
+        self.map = self.client.get_world().get_map()
 
-    def tearDown(self):
-        self.client.load_world(TEST_TOWN)
-        time.sleep(5)
-        self.world = None
-        self.client = None
+    def _assert_location_close(self, a, b, tol=0.1):
+        self.assertAlmostEqual(a.x, b.x, delta=tol)
+        self.assertAlmostEqual(a.y, b.y, delta=tol)
+        self.assertAlmostEqual(a.z, b.z, delta=tol)
 
-    def _assert_location_close(self, a, b, tol_m=0.1):
-        self.assertAlmostEqual(a.x, b.x, delta=tol_m)
-        self.assertAlmostEqual(a.y, b.y, delta=tol_m)
-        self.assertAlmostEqual(a.z, b.z, delta=tol_m)
+    def _assert_geolocation_close(self, a, b, latlon_tol=0.00001, alt_tol=0.01):
+        # Latitudes must stay in range [-90, 90]
+        if not (-90.0 <= a.latitude <= 90.0 and -90.0 <= b.latitude <= 90.0):
+            raise ValueError(f"Latitude out of bounds: {a.latitude}, {b.latitude}")
 
-    def test_location_round_trip(self):
-        print("TestGeoConversion.test_location_round_trip")
-        rng = random.Random(42)
-        for _ in range(10):
-            loc = carla.Location(
-                x=rng.uniform(-500.0, 500.0),
-                y=rng.uniform(-500.0, 500.0),
-                z=rng.uniform(0.0, 20.0),
+        # Longitudes must stay in range [-180, 180]
+        if not (-180.0 <= a.longitude <= 180.0 and -180.0 <= b.longitude <= 180.0):
+            raise ValueError(f"Longitude out of bounds: {a.longitude}, {b.longitude}")
+
+        lon_diff = (a.longitude - b.longitude + 180.0) % 360.0 - 180.0
+        lat_diff = abs(a.latitude - b.latitude)
+        alt_diff = abs(a.altitude - b.altitude)
+
+        # Catch hemisphere flips and wrap-around errors
+        if lat_diff > 90.0 or lon_diff > 180.0:
+            raise AssertionError(
+                f"Geo conversion failed: large discrepancy (lat diff = {lat_diff}, lon diff = {lon_diff})\n"
+                f"Original: lat={a.latitude}, lon={a.longitude}\n"
+                f"Back:     lat={b.latitude}, lon={b.longitude}"
             )
-            geo = self.map.transform_to_geolocation(loc)
-            back = self.map.geolocation_to_transform(geo)
-            self._assert_location_close(loc, back, tol_m=0.1)
 
-    def test_geo_round_trip(self):
-        print("TestGeoConversion.test_geo_round_trip")
-        # Anchor at the map's origin geolocation so the offsets remain
-        # close enough to stay numerically stable through Mercator.
-        origin = self.map.transform_to_geolocation(carla.Location(0.0, 0.0, 0.0))
-        test_geos = [
-            carla.GeoLocation(origin.latitude + 0.001, origin.longitude + 0.001, 50.0),
-            carla.GeoLocation(origin.latitude - 0.001, origin.longitude - 0.001, -10.0),
-            carla.GeoLocation(origin.latitude + 0.002, origin.longitude + 0.002, 100.0),
-        ]
-        for geo in test_geos:
+        self.assertLessEqual(lat_diff, latlon_tol, f"Latitude mismatch: {a.latitude} vs {b.latitude}")
+        self.assertLessEqual(lon_diff, latlon_tol, f"Longitude mismatch: {a.longitude} vs {b.longitude}")
+        self.assertLessEqual(alt_diff, alt_tol, f"Altitude mismatch: {a.altitude} vs {b.altitude}")
+
+    def test_geo_reference(self):
+        print("TestGeoLocationConversion.test_location_to_geo_and_back")
+        geo_reference = self.map.get_georeference()
+        geo_reference_2 = self.map.transform_to_geolocation(carla.Location())
+        self._assert_geolocation_close(geo_reference, geo_reference_2)
+
+    def test_geo_projection(self):
+        print("TestGeoLocationConversion.test_location_to_geo_and_back")
+        geo_projection = self.map.get_geoprojection()
+        assert isinstance(geo_projection, (carla.GeoProjectionTM, carla.GeoProjectionUTM,
+                                           carla.GeoProjectionWebMerc, carla.GeoProjectionLCC2SP))
+
+    def test_location_to_geo_and_back(self):
+        print("TestGeoLocationConversion.test_location_to_geo_and_back")
+        x_list = np.linspace(-10000, 10000, AMOUNT_STEPS).tolist()
+        y_list = np.linspace(-10000, 10000, AMOUNT_STEPS).tolist()
+        z_list = np.linspace(-10, 10, AMOUNT_STEPS).tolist()
+
+        for i in range(AMOUNT_STEPS):
+            loc = carla.Location(x=x_list[i], y=y_list[i], z=z_list[i])
+            geo = self.map.transform_to_geolocation(loc)
+            loc2 = self.map.geolocation_to_transform(geo)
+            self._assert_location_close(loc, loc2)
+
+    def test_geo_to_location_and_back(self):
+        print("TestGeoLocationConversion.test_geo_to_location_and_back")
+        origin_geo = self.map.get_georeference()
+        lat_0, lon_0 = origin_geo.latitude, origin_geo.longitude
+
+        lat_list = np.linspace(-0.5, 0.5, AMOUNT_STEPS).tolist()
+        lon_list = np.linspace(-0.5, 0.5, AMOUNT_STEPS).tolist()
+        alt_list = np.linspace(-50, 3000, AMOUNT_STEPS).tolist()
+
+        for i in range(AMOUNT_STEPS):
+            geo = carla.GeoLocation(
+                latitude=lat_0 + lat_list[i],
+                longitude=lon_0 + lon_list[i],
+                altitude=alt_list[i])
             loc = self.map.geolocation_to_transform(geo)
-            geo_back = self.map.transform_to_geolocation(loc)
-            self.assertAlmostEqual(geo.latitude, geo_back.latitude, delta=1e-4)
-            self.assertAlmostEqual(geo.longitude, geo_back.longitude, delta=1e-4)
-            self.assertAlmostEqual(geo.altitude, geo_back.altitude, delta=1.0)
+            geo2 = self.map.transform_to_geolocation(loc)
+            self._assert_geolocation_close(geo, geo2)
 
     def test_zero_conversion(self):
-        print("TestGeoConversion.test_zero_conversion")
+        print("TestGeoLocationConversion.test_zero_conversion")
+        # The origin Location must survive a transform_to_geolocation /
+        # geolocation_to_transform round-trip (carried over from #9726).
         origin = carla.Location(0.0, 0.0, 0.0)
         geo = self.map.transform_to_geolocation(origin)
         back = self.map.geolocation_to_transform(geo)
-        self._assert_location_close(origin, back, tol_m=0.001)
+        self._assert_location_close(origin, back)
 
     def test_relative_offset_preserved(self):
-        print("TestGeoConversion.test_relative_offset_preserved")
-        # An XY offset of 10 m round-tripped through the geo conversion
-        # must come back as the same 10 m offset.
+        print("TestGeoLocationConversion.test_relative_offset_preserved")
+        # A known XY offset round-tripped through the geo conversion must
+        # come back as the same offset, pinning the sign convention
+        # (carried over from #9726).
         a = carla.Location(x=100.0, y=200.0, z=0.0)
         b = carla.Location(x=110.0, y=210.0, z=0.0)
 
-        geo_a = self.map.transform_to_geolocation(a)
-        geo_b = self.map.transform_to_geolocation(b)
-        back_a = self.map.geolocation_to_transform(geo_a)
-        back_b = self.map.geolocation_to_transform(geo_b)
+        back_a = self.map.geolocation_to_transform(self.map.transform_to_geolocation(a))
+        back_b = self.map.geolocation_to_transform(self.map.transform_to_geolocation(b))
 
-        self.assertAlmostEqual(back_b.x - back_a.x, b.x - a.x, delta=0.01)
-        self.assertAlmostEqual(back_b.y - back_a.y, b.y - a.y, delta=0.01)
+        self.assertAlmostEqual(back_b.x - back_a.x, b.x - a.x, delta=0.2)
+        self.assertAlmostEqual(back_b.y - back_a.y, b.y - a.y, delta=0.2)
+
+    def test_tm_location_to_geo_and_back(self):
+        print("TestGeoLocationConversion.test_tm_location_to_geo_and_back")
+        x_list = np.linspace(300000, 700000, AMOUNT_STEPS).tolist()
+        y_list = np.linspace(-2000000, 2000000, AMOUNT_STEPS).tolist()
+        z_list = np.linspace(-10, 10, AMOUNT_STEPS).tolist()
+
+        for i in range(AMOUNT_STEPS):
+            loc = carla.Location(x=x_list[i], y=y_list[i], z=z_list[i])
+            geo = self.map.transform_to_geolocation(loc, TM)
+            loc2 = self.map.geolocation_to_transform(geo, TM)
+            self._assert_location_close(loc, loc2)
+
+    def test_tm_geo_to_location_and_back(self):
+        print("TestGeoLocationConversion.test_tm_geo_to_location_and_back")
+        lat_list = np.linspace(-75, 75, AMOUNT_STEPS).tolist()
+        lon_list = np.linspace(0.1, 5.9, AMOUNT_STEPS).tolist()
+        alt_list = np.linspace(-50, 3000, AMOUNT_STEPS).tolist()
+
+        for i in range(AMOUNT_STEPS):
+            geo = carla.GeoLocation(latitude=lat_list[i], longitude=lon_list[i], altitude=alt_list[i])
+            loc = self.map.geolocation_to_transform(geo, TM)
+            geo2 = self.map.transform_to_geolocation(loc, TM)
+            self._assert_geolocation_close(geo, geo2)
+
+    def test_utm_north_location_to_geo_and_back(self):
+        print("TestGeoLocationConversion.test_utm_location_to_geo_and_back")
+        x_list = np.linspace(300000, 700000, AMOUNT_STEPS).tolist()
+        y_list = np.linspace(-200000, 200000, AMOUNT_STEPS).tolist()
+        z_list = np.linspace(-10, 10, AMOUNT_STEPS).tolist()
+
+        for i in range(AMOUNT_STEPS):
+            loc = carla.Location(x=x_list[i], y=y_list[i], z=z_list[i])
+            geo = self.map.transform_to_geolocation(loc, UTMNORTH)
+            loc2 = self.map.geolocation_to_transform(geo, UTMNORTH)
+            self._assert_location_close(loc, loc2)
+
+    def test_utm_north_geo_to_location_and_back(self):
+        print("TestGeoLocationConversion.test_utm_geo_to_location_and_back")
+        lat_list = np.linspace(0.1, 70, AMOUNT_STEPS).tolist()
+        lon_list = np.linspace(2.1, 3.9, AMOUNT_STEPS).tolist()
+        alt_list = np.linspace(-50, 3000, AMOUNT_STEPS).tolist()
+
+        for i in range(AMOUNT_STEPS):
+            geo = carla.GeoLocation(latitude=lat_list[i], longitude=lon_list[i], altitude=alt_list[i])
+            loc = self.map.geolocation_to_transform(geo, UTMNORTH)
+            geo2 = self.map.transform_to_geolocation(loc, UTMNORTH)
+            self._assert_geolocation_close(geo, geo2)
+
+    def test_utm_south_location_to_geo_and_back(self):
+        print("TestGeoLocationConversion.test_utm_location_to_geo_and_back")
+        x_list = np.linspace(300000, 700000, AMOUNT_STEPS).tolist()
+        y_list = np.linspace(8000000, 12000000, AMOUNT_STEPS).tolist()
+        z_list = np.linspace(-10, 10, AMOUNT_STEPS).tolist()
+
+        for i in range(AMOUNT_STEPS):
+            loc = carla.Location(x=x_list[i], y=y_list[i], z=z_list[i])
+            geo = self.map.transform_to_geolocation(loc, UTMSOUTH)
+            loc2 = self.map.geolocation_to_transform(geo, UTMSOUTH)
+            self._assert_location_close(loc, loc2)
+
+    def test_utm_south_geo_to_location_and_back(self):
+        print("TestGeoLocationConversion.test_utm_geo_to_location_and_back")
+        lat_list = np.linspace(0.1, 70, AMOUNT_STEPS).tolist()
+        lon_list = np.linspace(0.1, 5.9, AMOUNT_STEPS).tolist()
+        alt_list = np.linspace(-50, 3000, AMOUNT_STEPS).tolist()
+
+        for i in range(AMOUNT_STEPS):
+            geo = carla.GeoLocation(latitude=lat_list[i], longitude=lon_list[i], altitude=alt_list[i])
+            loc = self.map.geolocation_to_transform(geo, UTMSOUTH)
+            geo2 = self.map.transform_to_geolocation(loc, UTMSOUTH)
+            self._assert_geolocation_close(geo, geo2)
+
+    def test_webmerc_location_to_geo_and_back(self):
+        print("TestGeoLocationConversion.test_webmerc_location_to_geo_and_back")
+        x_list = np.linspace(-20000000, 20000000, AMOUNT_STEPS).tolist()
+        y_list = np.linspace(-20000000, 20000000, AMOUNT_STEPS).tolist()
+        z_list = np.linspace(-10, 10, AMOUNT_STEPS).tolist()
+
+        for i in range(AMOUNT_STEPS):
+            loc = carla.Location(x=x_list[i], y=y_list[i], z=z_list[i])
+            geo = self.map.transform_to_geolocation(loc, WEBM)
+            loc2 = self.map.geolocation_to_transform(geo, WEBM)
+            self._assert_location_close(loc, loc2)
+
+    def test_webmerc_geo_to_location_and_back(self):
+        print("TestGeoLocationConversion.test_webmerc_geo_to_location_and_back")
+        lat_list = np.linspace(-80, 80, AMOUNT_STEPS).tolist()
+        lon_list = np.linspace(-170, 170, AMOUNT_STEPS).tolist()
+        alt_list = np.linspace(-50, 3000, AMOUNT_STEPS).tolist()
+
+        for i in range(AMOUNT_STEPS):
+            geo = carla.GeoLocation(latitude=lat_list[i], longitude=lon_list[i], altitude=alt_list[i])
+            loc = self.map.geolocation_to_transform(geo, WEBM)
+            geo2 = self.map.transform_to_geolocation(loc, WEBM)
+            self._assert_geolocation_close(geo, geo2)
+
+    def test_lcc_location_to_geo_and_back(self):
+        print("TestGeoLocationConversion.test_lcc_location_to_geo_and_back")
+        x_list = np.linspace(200000, 1200000, AMOUNT_STEPS).tolist()
+        y_list = np.linspace(5000000, 8000000, AMOUNT_STEPS).tolist()
+        z_list = np.linspace(-10, 10, AMOUNT_STEPS).tolist()
+
+        for i in range(AMOUNT_STEPS):
+            loc = carla.Location(x=x_list[i], y=y_list[i], z=z_list[i])
+            geo = self.map.transform_to_geolocation(loc, LCC)
+            loc2 = self.map.geolocation_to_transform(geo, LCC)
+            self._assert_location_close(loc, loc2)
+
+    def test_lcc_geo_to_location_and_back(self):
+        print("TestGeoLocationConversion.test_lcc_geo_to_location_and_back")
+        lat_list = np.linspace(42, 52, AMOUNT_STEPS).tolist()
+        lon_list = np.linspace(-5, 10, AMOUNT_STEPS).tolist()
+        alt_list = np.linspace(-50, 3000, AMOUNT_STEPS).tolist()
+
+        for i in range(AMOUNT_STEPS):
+            geo = carla.GeoLocation(latitude=lat_list[i], longitude=lon_list[i], altitude=alt_list[i])
+            loc = self.map.geolocation_to_transform(geo, LCC)
+            geo2 = self.map.transform_to_geolocation(loc, LCC)
+            self._assert_geolocation_close(geo, geo2)

@@ -259,6 +259,14 @@ namespace detail {
       _client.SetWeatherParameters(weather);
     }
 
+    float GetIMUSensorGravity() {
+      return _client.GetIMUSensorGravity();
+    }
+
+    void SetIMUSensorGravity(float gravity) {
+      _client.SetIMUSensorGravity(gravity);
+    }
+
     bool IsWeatherEnabled() {
       return _client.IsWeatherEnabled();
     }

@@ -283,6 +283,14 @@ namespace detail {
     _pimpl->AsyncCall("set_weather_parameters", weather);
   }
 
+  float Client::GetIMUSensorGravity() {
+    return _pimpl->CallAndWait<float>("get_imu_gravity");
+  }
+
+  void Client::SetIMUSensorGravity(float gravity) {
+    _pimpl->AsyncCall("set_imu_gravity", gravity);
+  }
+
   bool Client::IsWeatherEnabled() {
     return _pimpl->CallAndWait<bool>("is_weather_enabled");
   }

@@ -91,6 +91,14 @@ namespace client {
     _episode.Lock()->SetWeatherParameters(weather);
   }
 
+  float World::GetIMUSensorGravity() const {
+    return _episode.Lock()->GetIMUSensorGravity();
+  }
+
+  void World::SetIMUSensorGravity(float gravity) {
+    _episode.Lock()->SetIMUSensorGravity(gravity);
+  }
+
   bool World::IsWeatherEnabled() const {
     return _episode.Lock()->IsWeatherEnabled();
   }
