@@ -1,3 +1,7 @@
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
+
 /// This file attempts to list and document available configuration elements.
 /// For a more complete view of the configuration's structure, check out `zenoh/src/config.rs`'s `Config` structure.
 /// Note that the values here are correctly typed, but may not be sensible, so copying this file to change only the parts that matter to you is not good practice.
