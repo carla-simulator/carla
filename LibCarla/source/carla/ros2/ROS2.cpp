@@ -71,7 +71,8 @@ enum ESensors {
   InstanceSegmentationCamera,
   WorldObserver,
   CameraGBufferUint8,
-  CameraGBufferFloat
+  CameraGBufferFloat,
+  HSSLidar
 };
 
 void ROS2::Enable(bool enable) {
@@ -431,6 +432,24 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
       } break;
       case ESensors::RayCastLidar: {
         if (ros_name == "ray_cast__") {
+          ros_name.pop_back();
+          ros_name.pop_back();
+          ros_name += string_id;
+          UpdateActorRosName(actor, ros_name);
+        }
+        std::shared_ptr<CarlaLidarPublisher> new_publisher = std::make_shared<CarlaLidarPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        if (new_publisher->Init()) {
+          _publishers.insert({actor, new_publisher});
+          publisher = new_publisher;
+        }
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        if (new_transform->Init()) {
+          _transforms.insert({actor, new_transform});
+          transform = new_transform;
+        }
+      } break;
+      case ESensors::HSSLidar: {
+        if (ros_name == "hss_lidar__") {
           ros_name.pop_back();
           ros_name.pop_back();
           ros_name += string_id;
