@@ -10,6 +10,7 @@
 #include "Carla/Sensor/PostProcessConfig.h"
 
 #include <util/ue-header-guard-begin.h>
+#include "Engine/Engine.h"
 #include "RenderGraphBuilder.h"
 #include "RenderGraphUtils.h"
 #include "HAL/IConsoleManager.h"
@@ -770,7 +771,7 @@ namespace SceneCaptureSensorWideAngleLens_local_ns {
         // ShowFlags.SetLandscape(false);
         // ShowFlags.SetLargeVertices(false);
         ShowFlags.SetLensFlares(false);
-        ShowFlags.SetLevelColoration(false);
+        // ShowFlags.SetLevelColoration(false); // removed in UE5.5
         ShowFlags.SetLightComplexity(false);
         ShowFlags.SetLightFunctions(false);
         ShowFlags.SetLightInfluences(false);
@@ -800,7 +801,7 @@ namespace SceneCaptureSensorWideAngleLens_local_ns {
         // ShowFlags.SetPrecomputedVisibilityCells(false);
         // ShowFlags.SetPreviewShadowsIndicator(false);
         // ShowFlags.SetPrimitiveDistanceAccuracy(false);
-        ShowFlags.SetPropertyColoration(false);
+        // ShowFlags.SetPropertyColoration(false); // removed in UE5.5
         // ShowFlags.SetQuadOverdraw(false);
         // ShowFlags.SetReflectionEnvironment(false);
         // ShowFlags.SetReflectionOverride(false);
@@ -846,7 +847,7 @@ namespace SceneCaptureSensorWideAngleLens_local_ns {
         ShowFlags.SetVisualizeDOF(false);
         ShowFlags.SetVisualizeHDR(false);
         ShowFlags.SetVisualizeLightCulling(false);
-        ShowFlags.SetVisualizeLPV(false);
+        // ShowFlags.SetVisualizeLPV(false); // LPV removed in UE5
         ShowFlags.SetVisualizeMeshDistanceFields(false);
         ShowFlags.SetVisualizeMotionBlur(false);
         ShowFlags.SetVisualizeOutOfBoundsPixels(false);

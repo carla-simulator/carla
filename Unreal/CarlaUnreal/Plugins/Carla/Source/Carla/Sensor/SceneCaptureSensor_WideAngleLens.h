@@ -144,6 +144,11 @@ public:
     return CubemapSampler;
   }
 
+  /// Returns null to opt the wide-angle sensor pipeline into FPixelReader's
+  /// per-call readback fallback. The wide-angle compute-shader path does not
+  /// own a persistent FRHIGPUReadbackPool.
+  FRHIGPUReadbackPoolPtr GetReadbackPool() const { return nullptr; }
+
   UFUNCTION(BlueprintCallable)
   void SetUseRayTracing(bool Enable);
 
