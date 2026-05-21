@@ -448,7 +448,7 @@ void UActorBlueprintFunctionLibrary::MakeWideAngleLensCameraDefinition(
     bool &Success,
     FActorDefinition &Definition)
 {
-  FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), Id, TEXT("wide_angle_lens"));
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), Id + TEXT("_fisheye"));
   AddRecommendedValuesForSensorRoleNames(Definition);
   AddVariationsForSensor(Definition);
 
