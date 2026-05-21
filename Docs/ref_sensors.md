@@ -291,6 +291,75 @@ The rotation of the LIDAR can be tuned to cover a specific angle on every simula
 
 <br>
 
+## Hybrid Solid-State LiDAR sensor
+
+* __Blueprint:__ sensor.lidar.hss_lidar
+* __Output:__ [carla.LidarMeasurement](python_api.md#carla.LidarMeasurement) per step (unless `sensor_tick` says otherwise).
+
+This sensor simulates a Hybrid Solid-State LiDAR implemented using
+ray-casting. The default parameters are based on the Hesai AT128
+specification. The point cloud is produced by sweeping a configurable
+horizontal field of view at a fixed angular resolution centred on the
+sensor's forward axis. The sensor does not rotate; each tick re-scans the
+same fan, so vehicle motion is the only source of change between frames.
+
+The information of the LiDAR measurement is encoded as 4D points. The first
+three components are the hit position in the sensor's local frame (xyz);
+the fourth is the intensity after atmospheric attenuation, computed as:
+
+![LidarIntensityComputation](img/lidar_intensity.jpg)
+
+`a` — Attenuation coefficient (`atmosphere_attenuation_rate`). Depends on
+the sensor's wavelength and atmospheric conditions.
+`d` — Distance from the hit point to the sensor.
+
+Two independent drop-off mechanisms simulate point loss:
+
+* __General drop-off__ — Fraction of rays discarded before tracing. Set with
+  `dropoff_general_rate`. Improves performance because dropped rays are not
+  cast.
+* __Intensity-based drop-off__ — Each detected point has a per-point chance
+  of being discarded based on its intensity. `dropoff_zero_intensity` is the
+  drop probability at zero intensity; `dropoff_intensity_limit` is the
+  intensity above which no points are dropped. Between those, the
+  probability is linear.
+
+The `noise_stddev` attribute applies per-ray Gaussian noise along the laser
+direction, leaving angular position unaffected.
+
+#### LiDAR attributes
+
+| Blueprint attribute | Type | Default | Description |
+| --- | --- | --- | --- |
+| `channels` | int | 128 | Number of vertical lasers. |
+| `range` | float | 200.0 | Maximum trace distance in metres. |
+| `rotation_frequency` | float | 20.0 | Kept for API compatibility; HSS does not rotate. |
+| `upper_fov` | float | 12.9 | Angle in degrees of the highest laser. |
+| `lower_fov` | float | -12.5 | Angle in degrees of the lowest laser. |
+| `horizontal_fov` | float | 120.0 | Horizontal field of view (degrees), symmetric about the forward axis. |
+| `horizontal_resolution` | float | 0.1 | Angular spacing (degrees) between consecutive rays in the sweep. Snapped to 0.01° increments internally. |
+| `atmosphere_attenuation_rate` | float | 0.004 | Per-metre intensity attenuation coefficient. |
+| `dropoff_general_rate` | float | 0.45 | Fraction of rays randomly dropped before tracing. |
+| `dropoff_intensity_limit` | float | 0.8 | Intensity threshold above which points are never dropped. |
+| `dropoff_zero_intensity` | float | 0.4 | Drop probability for zero-intensity points. |
+| `noise_stddev` | float | 0.0 | Stddev of per-point Gaussian distance noise. |
+| `noise_seed` | int | 0 | Seed for the per-sensor random engine. |
+| `sensor_tick` | float | 0.0 | Simulated seconds between captures. 0 means every tick. |
+
+#### Output attributes
+
+| Sensor data attribute | Type | Description |
+| --- | --- | --- |
+| `frame` | int | Frame number when the measurement was taken. |
+| `timestamp` | double | Simulation time in seconds since episode start. |
+| `transform` | [carla.Transform](<../python_api#carlatransform>) | Sensor pose at measurement time. |
+| `horizontal_angle` | float | Always 0 for HSS (does not rotate). |
+| `channels` | int | Number of channels (lasers). |
+| `get_point_count(channel)` | int | Points captured this frame in the given channel. |
+| `raw_data` | bytes | 32-bit floats laid out as XYZI per point. |
+
+<br>
+
 ## Obstacle detector
 
 * __Blueprint:__ sensor.other.obstacle
