@@ -1,6 +1,7 @@
 =======
 ## LATEST Changes
 
+* Added a Hybrid Solid-State LiDAR sensor (`sensor.lidar.hss_lidar`) modelled on the Hesai AT128, with configurable channels, horizontal/vertical FOV, and horizontal resolution. Reuses the rotating LiDAR's intensity, drop-off, and noise model.
 * Added NumPy 2 compatibility to the PythonAPI by upgrading Boost to 1.90.0, which ships the upstream NumPy 2 C ABI fix. LibCarla networking migrated from `boost::asio::deadline_timer` to `boost::asio::steady_timer`, and the deprecated `io_service`, `address::from_string`, `resolver::query`, `buffer_cast`, and `io_context::work` APIs replaced across LibCarla and the CarlaTools plugin.
 * Added `Vehicle.get_telemetry_data()` returning `VehicleTelemetryData` with last-applied control, forward speed, engine RPM, current gear, and per-wheel lateral slip, longitudinal slip, and angular velocity sourced from the Chaos vehicle physics state.
 * Added a GeoProjection engine that parses the OpenDRIVE `geoReference` PROJ string into a typed cartographic projection (Transverse Mercator, UTM, Web Mercator, or Lambert Conformal Conic) and exposes it via `Map.get_geoprojection`. `Map.transform_to_geolocation` and `Map.geolocation_to_transform` now accept an optional projection argument together with the new `carla.GeoProjectionTM`/`GeoProjectionUTM`/`GeoProjectionWebMerc`/`GeoProjectionLCC2SP` and `carla.GeoEllipsoid` types, replacing the previous fixed Mercator conversion.
