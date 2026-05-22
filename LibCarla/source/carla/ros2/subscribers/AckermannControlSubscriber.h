@@ -17,21 +17,21 @@ namespace ros2 {
 
 // Forward declarations keep the FastDDS-heavy SubscriberImpl<> definition out of the
 // main carla-server compile unit. The full instantiation lives in
-// CarlaEgoVehicleControlSubscriber.cpp, which is built by the carla-ros2-native
+// AckermannControlSubscriber.cpp, which is built by the carla-ros2-native
 // ExternalProject (where FastDDS headers are on the include path).
 template <typename Traits> class SubscriberImpl;
-struct CarlaEgoVehicleControlTraits;
+struct AckermannControlTraits;
 
-class CarlaEgoVehicleControlSubscriber : public BaseSubscriber {
+class AckermannControlSubscriber : public BaseSubscriber {
 public:
-  CarlaEgoVehicleControlSubscriber(void *vehicle, std::string base_topic_name, std::string frame_id);
-  ~CarlaEgoVehicleControlSubscriber() override;
+  AckermannControlSubscriber(void *vehicle, std::string base_topic_name, std::string frame_id);
+  ~AckermannControlSubscriber() override;
 
   ROS2CallbackData GetMessage() override;
   void ProcessMessages(ActorCallback callback) override;
 
 private:
-  std::shared_ptr<SubscriberImpl<CarlaEgoVehicleControlTraits>> _impl;
+  std::shared_ptr<SubscriberImpl<AckermannControlTraits>> _impl;
 };
 
 }  // namespace ros2
