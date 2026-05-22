@@ -8,6 +8,7 @@
 #include "Carla.h"
 
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Util/CameraModelUtil.h"
 
 #include "Carla/Sensor/PixelReader.h"
 
@@ -20,6 +21,11 @@ FActorDefinition ADepthCamera_WideAngleLens::GetSensorDefinition()
 ADepthCamera_WideAngleLens::ADepthCamera_WideAngleLens(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
+  // Depth is encoded as a base-256 value across the R/G/B channels, so the
+  // cubemap-to-fisheye resample must use point sampling; linear filtering
+  // would interpolate the encoded bytes and decode to nonsense depth.
+  Super::SetCubemapSampler(CameraModelUtil::GetSampler(ESamplerFilter::SF_Point));
+
   AddPostProcessingMaterial(
 #if PLATFORM_LINUX
       TEXT("Material'/Carla/PostProcessingMaterials/WideAngleLens/DepthEffectMaterial_GLSL_WAL.DepthEffectMaterial_GLSL_WAL'")

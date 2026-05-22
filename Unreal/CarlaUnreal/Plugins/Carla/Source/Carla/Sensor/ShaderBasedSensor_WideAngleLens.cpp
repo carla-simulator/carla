@@ -40,14 +40,19 @@ bool AShaderBasedSensor_WideAngleLens::AddPostProcessingMaterial(const FString& 
 
 void AShaderBasedSensor_WideAngleLens::SetUpSceneCaptureComponents(TArrayView<USceneCaptureComponent2D_CARLA*> SceneCaptures)
 {
+    // Create one dynamic instance per post-processing material. The six face
+    // captures of a wide-angle sensor must share an identical post-process
+    // chain, so the instances are created once and reused across all faces.
+    // Creating them inside the per-face loop would append 6x the materials to
+    // the shared Shaders array and give each face a different blendable set.
+    for (const auto& MaterialFound : MaterialsFound)
+    {
+        // Create a dynamic instance of the Material (Shader)
+        AddShader({ UMaterialInstanceDynamic::Create(MaterialFound, this), 1.0 });
+    }
+
     for (auto SceneCapture : SceneCaptures)
     {
-        for (const auto& MaterialFound : MaterialsFound)
-        {
-            // Create a dynamic instance of the Material (Shader)
-            AddShader({ UMaterialInstanceDynamic::Create(MaterialFound, this), 1.0 });
-        }
-
         for (const auto& Shader : Shaders)
         {
             // Attach the instance into the blendables
@@ -55,17 +60,16 @@ void AShaderBasedSensor_WideAngleLens::SetUpSceneCaptureComponents(TArrayView<US
         }
     }
 
-    // Set the value for each Float parameter in the shader
+    // Set the value for each Float parameter in the shader. The dynamic
+    // material instances are shared across faces, so each parameter only
+    // needs to be applied once.
     if (Shaders.Num() != 0)
     {
-        for (auto SceneCapture : SceneCaptures)
+        for (const auto& ParameterValue : FloatShaderParams)
         {
-            for (const auto& ParameterValue : FloatShaderParams)
-            {
-                Shaders[ParameterValue.ShaderIndex].PostProcessMaterial->SetScalarParameterValue(
-                    ParameterValue.ParameterName,
-                    ParameterValue.Value);
-            }
+            Shaders[ParameterValue.ShaderIndex].PostProcessMaterial->SetScalarParameterValue(
+                ParameterValue.ParameterName,
+                ParameterValue.Value);
         }
     }
 }
