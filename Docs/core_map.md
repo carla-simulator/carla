@@ -12,6 +12,7 @@ After discussing about the world and its actors, it is time to put everything in
 - [__Navigation in CARLA__](#navigation-in-carla)  
 	- [Navigating through waypoints](#navigating-through-waypoints)  
 	- [Generating a map navigation](#generating-a-map-navigation)
+- [__Left-handed traffic__](#left-handed-traffic)
 
 
 ---
@@ -200,6 +201,28 @@ Use the following example to __save road information__ in OpenDRIVE format to di
 ```py
 info_map = map.to_opendrive()
 ```
+
+---
+## Left-handed traffic
+
+CARLA supports left-handed traffic rules defined in the OpenDRIVE files. To invoke a left-handed traffic rule on any road, apply the left-handed traffic attribute in the OpenDRIVE XML file like so:
+
+```xml
+<road name="Road 0" length="1.3310253693587601e+1" id="0" junction="-1" rule="LHT">
+    <link>
+        <predecessor elementType="road" elementId="3" contactPoint="end" />
+        <successor elementType="road" elementId="10" contactPoint="start" />
+    </link>
+...
+</road>
+```
+
+!!! note
+	The right-handed traffic convention is the default. A road with no `rule` attribute (or an unrecognized value) is treated as a right-handed road. You may also wish to set it explicitly by adding `rule="RHT"`.
+
+CARLA applies left-handed traffic conventions to each road with the `rule="LHT"` attribute applied.
+
+Note that the left- or right-handed traffic convention affects not only the behaviour of traffic but also the traffic signs and signals affecting the road. Therefore, if the map has assets placed manually for right-handed traffic conventions (e.g. road signs or traffic lights), these will need to be adjusted. Traffic lights defined in the OpenDRIVE definition for left-handed traffic are automatically placed by CARLA in the appropriate position upon importing the map.
 
 ---
 
