@@ -263,7 +263,15 @@ void UActorDispatcher::OnActorDestroyed(AActor *Actor)
   auto ROS2 = carla::ros2::ROS2::GetInstance();
   if (ROS2->IsEnabled())
   {
-    ROS2->RemoveActorRosName(reinterpret_cast<void *>(Actor));
+    void *ActorKey = reinterpret_cast<void *>(Actor);
+    // Tear down per-actor subscribers + callbacks before the legacy ros_name
+    // cleanup so SetFrame cannot dispatch to a destroyed actor. Both calls are
+    // idempotent on a missing key.
+    ROS2->RemoveActorCallback(ActorKey);
+    #if defined(WITH_ROS2_DEMO)
+    ROS2->RemoveBasicSubscriberCallback(ActorKey);
+    #endif
+    ROS2->RemoveActorRosName(ActorKey);
   }
   #endif
 

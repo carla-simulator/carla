@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <string>
 
@@ -54,7 +55,7 @@ public:
   void on_publication_matched(
       efd::DataWriter * /*writer*/,
       const efd::PublicationMatchedStatus &info) override {
-    _alive = (info.total_count > 0);
+    _alive.store(info.total_count > 0, std::memory_order_release);
   }
 
   ~PublisherImpl() override {
@@ -116,7 +117,7 @@ public:
 
   [[nodiscard]] const std::string &GetTopicName() const noexcept { return _topic_name; }
 
-  [[nodiscard]] bool IsAlive() const noexcept { return _alive; }
+  [[nodiscard]] bool IsAlive() const noexcept { return _alive.load(std::memory_order_acquire); }
 
   msg_type *GetMessage() { return &_message; }
 
@@ -132,7 +133,7 @@ public:
 
 private:
   std::string _topic_name;
-  bool _alive{false};
+  std::atomic<bool> _alive{false};
   msg_type _message{};
 };
 

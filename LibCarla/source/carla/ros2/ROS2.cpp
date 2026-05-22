@@ -197,7 +197,7 @@ std::string ROS2::GetActorParentRosName(void *actor) {
 
 void ROS2::AddBasicSubscriberCallback(void* actor, std::string ros_name, ActorMessageCallback callback) {
   #if defined(WITH_ROS2_DEMO)
-  _actor_message_callbacks.insert({actor, std::move(callback)});
+  _actor_message_callbacks.insert_or_assign(actor, std::move(callback));
 
   _basic_subscriber.reset();
   _basic_subscriber = std::make_shared<BasicSubscriber>(actor, ros_name.c_str());
@@ -228,7 +228,12 @@ void ROS2::RegisterVehicle(void *actor, std::string ros_name, std::string frame_
   // GetActorRosName(actor) keeps working after migration.
   AddActorRosName(actor, ros_name);
 
-  _actor_callbacks.insert({actor, std::move(callback)});
+  // Idempotency: drop any prior subscribers / callbacks bound to this actor so
+  // a re-registration does not accumulate duplicate DataReaders nor leave the
+  // previous callback wired (unordered_map::insert is a no-op on existing
+  // keys, multimap::insert would stack additional entries).
+  _subscribers.erase(actor);
+  _actor_callbacks.insert_or_assign(actor, std::move(callback));
 
   // The legacy CarlaEgoVehicleControlSubscriber::Init built its topic as
   // "rt/carla/" + [parent + "/"] + name + "/vehicle_control_cmd". With the new
