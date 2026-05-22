@@ -211,11 +211,20 @@ void AHSSLidar::SimulateLidar(const float DeltaTime)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AHSSLidar::SimulateLidar);
   const uint32 ChannelCount = Description.Channels;
-  const float HorizontalResolution = SnapToStep(Description.HorizontalResolution, 0.01f);
-  const uint32 PointsToScanWithOneLaser =
-      static_cast<uint32>(Description.HorizontalFov / HorizontalResolution);
 
-  if (PointsToScanWithOneLaser <= 0)
+  // horizontal_resolution and horizontal_fov are user-supplied attributes;
+  // clamp them to safe positive values before dividing. A zero or negative
+  // resolution would divide to inf/NaN and then cast to a huge uint32,
+  // triggering an OOM-sized allocation in ResetRecordedHits/PreprocessRays.
+  constexpr float MinHorizontalResolution = 0.01f;
+  const float HorizontalResolution = FMath::Max(
+      SnapToStep(Description.HorizontalResolution, MinHorizontalResolution),
+      MinHorizontalResolution);
+  const float HorizontalFov = FMath::Max(Description.HorizontalFov, 0.0f);
+  const uint32 PointsToScanWithOneLaser = static_cast<uint32>(
+      FMath::RoundHalfFromZero(HorizontalFov / HorizontalResolution));
+
+  if (PointsToScanWithOneLaser == 0)
   {
     UE_LOG(
         LogCarla,
@@ -244,7 +253,7 @@ void AHSSLidar::SimulateLidar(const float DeltaTime)
       for (auto idxPtsOneLaser = 0u; idxPtsOneLaser < PointsToScanWithOneLaser; idxPtsOneLaser++) {
         FHitResult HitResult;
         const float HorizAngle =
-            -Description.HorizontalFov / 2.0f + static_cast<float>(idxPtsOneLaser) * HorizontalResolution;
+            -HorizontalFov / 2.0f + static_cast<float>(idxPtsOneLaser) * HorizontalResolution;
         const bool PreprocessResult = RayPreprocessCondition[idxChannel][idxPtsOneLaser];
 
         if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult, TraceParams)) {
