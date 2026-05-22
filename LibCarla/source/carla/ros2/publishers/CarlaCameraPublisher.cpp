@@ -46,7 +46,11 @@ CarlaCameraPublisher::CarlaCameraPublisher(
 CarlaCameraPublisher::~CarlaCameraPublisher() = default;
 
 bool CarlaCameraPublisher::Publish() {
-  return _impl_camera_info->Publish() && _impl_image->Publish();
+  // Publish both writers unconditionally so a failure on one does not silence
+  // the other. Image goes first to match the previous per-sensor publishers.
+  const bool image_ok = _impl_image->Publish();
+  const bool info_ok = _impl_camera_info->Publish();
+  return image_ok && info_ok;
 }
 
 std::vector<uint8_t> CarlaCameraPublisher::ComputeImage(
