@@ -93,7 +93,7 @@ void FPixelReader::WritePixelsToBuffer(
   // completion the RHI thread itself has to drive; scheduling it on the RHI
   // (or render) thread deadlocks the whole pipeline.
   AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask,
-    [=, Pool = std::move(Pool),
+    [=, FuncForSending = std::move(FuncForSending), Pool = std::move(Pool),
         Fallback = std::move(FallbackReadback)]() mutable {
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
