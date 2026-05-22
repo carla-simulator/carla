@@ -119,6 +119,10 @@ public:
   msg_type *GetMessage() { return &_message; }
 
   bool Publish() {
+    if (_datawriter == nullptr) {
+      log_error("PublisherImpl::Publish (", _topic_name, ") called before successful Init()");
+      return false;
+    }
     eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
     erc rcode = _datawriter->write(&_message, instance_handle);
     if (rcode == erc::ReturnCodeValue::RETCODE_OK) {

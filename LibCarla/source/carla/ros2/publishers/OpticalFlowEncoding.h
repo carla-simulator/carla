@@ -19,8 +19,10 @@ namespace ros2 {
 //   hue   = atan2(vy, vx) + pi, mapped to [0, 360) degrees
 //   sat   = 1
 //   value = clamp(a * log(magnitude + shift), 0, 1)
-// where shift = 0.999 and a = 1 / log(0.1 + shift) so a unit-magnitude flow
-// saturates the brightness channel.
+// where shift = 0.999 and a = 1 / log(0.1 + shift), so the intensity reaches 1
+// (full brightness) when magnitude == 0.1 and stays clamped at 1 above that.
+// Small flows therefore brighten quickly while large ones plateau, matching
+// the legacy ue5-dev wire format that existing ROS 2 subscribers depend on.
 //
 // Output is BGRA8: B, G, R, A with the alpha byte deliberately set to 0 to
 // match the existing on-the-wire format ue5-dev clients are subscribed to.
