@@ -38,6 +38,7 @@ namespace carla {
 namespace ros2 {
 
   class CarlaPublisher;
+  class CarlaCameraPublisher;
   class CarlaTransformPublisher;
   class CarlaClockPublisher;
   class BaseSubscriber;
@@ -162,6 +163,17 @@ void ProcessDataFromCollisionSensor(
   private:
   std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, void* actor);
 
+  // Camera-side counterpart of GetOrCreateSensor for publishers that inherit
+  // the new CarlaCameraPublisher base. Used by ProcessDataFromCamera for the
+  // unified RGB/Depth/SS/IS/Normals/OpticalFlow path. DVS still uses the
+  // legacy GetOrCreateSensor route until PR-4 introduces CarlaPointCloudPublisher.
+  template <typename CameraT>
+  std::pair<std::shared_ptr<CarlaCameraPublisher>, std::shared_ptr<CarlaTransformPublisher>>
+  GetOrCreateCameraSensor(
+      carla::streaming::detail::stream_id_type id,
+      void *actor,
+      std::string default_prefix);
+
   // sigleton
   ROS2() {};
 
@@ -175,6 +187,7 @@ void ProcessDataFromCollisionSensor(
   std::unordered_map<void *, std::vector<void*> > _actor_parent_ros_name;
   std::shared_ptr<CarlaClockPublisher> _clock_publisher;
   std::unordered_map<void *, std::shared_ptr<CarlaPublisher>> _publishers;
+  std::unordered_map<void *, std::shared_ptr<CarlaCameraPublisher>> _camera_publishers;
   std::unordered_map<void *, std::shared_ptr<CarlaTransformPublisher>> _transforms;
   std::unordered_set<carla::streaming::detail::stream_id_type> _publish_stream;
   std::unordered_map<void *, ActorCallback> _actor_callbacks;
