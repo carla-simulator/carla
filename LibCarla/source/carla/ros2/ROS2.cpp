@@ -37,8 +37,10 @@
 #include "publishers/CarlaLineInvasionPublisher.h"
 #include "publishers/BasicPublisher.h"
 
-#include "subscribers/CarlaSubscriber.h"
+#include "subscribers/AckermannControlSubscriber.h"
+#include "subscribers/BaseSubscriber.h"
 #include "subscribers/CarlaEgoVehicleControlSubscriber.h"
+#include "subscribers/CarlaSubscriber.h"
 #if defined(WITH_ROS2_DEMO)
   #include "subscribers/BasicSubscriber.h"
 #endif
@@ -88,21 +90,14 @@ void ROS2::Enable(bool enable) {
 
 void ROS2::SetFrame(uint64_t frame) {
   _frame = frame;
-   //log_info("ROS2 new frame: ", _frame);
-   if (_controller) {
-    void* actor = _controller->GetVehicle();
-    if (_controller->IsAlive()) {
-      if (_controller->HasNewMessage()) {
-        auto it = _actor_callbacks.find(actor);
-        if (it != _actor_callbacks.end()) {
-          VehicleControl control = _controller->GetMessage();
-          it->second(actor, control);
-        }
-      }
-    } else {
-      RemoveActorCallback(actor);
+  for (auto& element : _subscribers) {
+    void* actor = element.first;
+    auto& subscriber = element.second;
+    auto callback_it = _actor_callbacks.find(actor);
+    if (callback_it != _actor_callbacks.end()) {
+      subscriber->ProcessMessages(callback_it->second);
     }
-   }
+  }
 #if defined(WITH_ROS2_DEMO)
    if (_basic_subscriber)
    {
@@ -218,17 +213,49 @@ void ROS2::RemoveBasicSubscriberCallback(void* actor) {
   #endif
 }
 
-void ROS2::AddActorCallback(void* actor, std::string ros_name, ActorCallback callback) {
+void ROS2::RegisterSensor(void *actor, std::string ros_name, std::string /*frame_id*/, bool /*publish_tf*/) {
+  // PR-2 thin shim: keep the legacy _actor_ros_name map populated so the existing
+  // GetOrCreateSensor publisher path still finds the sensor. PR-3/PR-4 will route
+  // publisher creation through this entry point as they migrate cohorts.
+  AddActorRosName(actor, std::move(ros_name));
+}
+
+void ROS2::UnregisterSensor(void *actor) {
+  RemoveActorRosName(actor);
+}
+
+void ROS2::RegisterVehicle(void *actor, std::string ros_name, std::string frame_id, ActorCallback callback) {
+  // Keep the legacy ros_name map populated so any consumer that still queries
+  // GetActorRosName(actor) keeps working after migration.
+  AddActorRosName(actor, ros_name);
+
   _actor_callbacks.insert({actor, std::move(callback)});
 
-  _controller.reset();
-  _controller = std::make_shared<CarlaEgoVehicleControlSubscriber>(actor, ros_name.c_str());
-  _controller->Init();
+  // The legacy CarlaEgoVehicleControlSubscriber::Init built its topic as
+  // "rt/carla/" + [parent + "/"] + name + "/vehicle_control_cmd". With the new
+  // template constructors the suffix is appended inside each subscriber, so we
+  // hand them the base path only.
+  const std::string base_topic_name = "rt/carla/" + ros_name;
+
+  _subscribers.insert({actor, std::make_shared<CarlaEgoVehicleControlSubscriber>(actor, base_topic_name, frame_id)});
+  _subscribers.insert({actor, std::make_shared<AckermannControlSubscriber>(actor, base_topic_name, frame_id)});
+}
+
+void ROS2::UnregisterVehicle(void *actor) {
+  _subscribers.erase(actor);
+  _actor_callbacks.erase(actor);
+  RemoveActorRosName(actor);
+}
+
+void ROS2::AddActorCallback(void* actor, std::string ros_name, ActorCallback callback) {
+  // Legacy entry point delegates to RegisterVehicle so the new Ackermann subscriber
+  // is wired automatically. frame_id mirrors ros_name because the legacy callers
+  // did not carry a separate frame.
+  RegisterVehicle(actor, ros_name, ros_name, std::move(callback));
 }
 
 void ROS2::RemoveActorCallback(void* actor) {
-  _controller.reset();
-  _actor_callbacks.erase(actor);
+  UnregisterVehicle(actor);
 }
 
 std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> ROS2::GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, void* actor) {
@@ -903,8 +930,9 @@ void ROS2::Shutdown() {
   for (auto& element : _transforms) {
     element.second.reset();
   }
+  _subscribers.clear();
+  _actor_callbacks.clear();
   _clock_publisher.reset();
-  _controller.reset();
   _enabled = false;
 #if defined(WITH_ROS2_DEMO)
   _basic_publisher.reset();
