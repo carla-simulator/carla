@@ -6,7 +6,9 @@
 
 #pragma once
 
+#include <atomic>
 #include <memory>
+#include <mutex>
 #include <string>
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
@@ -54,17 +56,29 @@ public:
   void on_subscription_matched(
       efd::DataReader * /*reader*/,
       const efd::SubscriptionMatchedStatus &info) override {
-    _alive = (info.total_count > 0);
+    _alive.store(info.total_count > 0, std::memory_order_release);
   }
 
   void on_data_available(efd::DataReader *reader) override {
+    // FastDDS invokes this on a DDS listener thread. Take into a stack-local
+    // sample first so the lock only spans the copy into _message, and so a
+    // dispose/unregister notification (RETCODE_OK with !info.valid_data) does
+    // not flip _new_message.
     efd::SampleInfo info;
-    erc rcode = reader->take_next_sample(&_message, &info);
-    if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
-      _new_message = true;
-    } else {
+    msg_type sample{};
+    erc rcode = reader->take_next_sample(&sample, &info);
+    if (rcode != erc::ReturnCodeValue::RETCODE_OK) {
       log_error("SubscriberImpl::on_data_available (", _topic_name, ") failed with code:", rcode());
+      return;
     }
+    if (!info.valid_data) {
+      return;
+    }
+    {
+      std::lock_guard<std::mutex> lock(_message_mutex);
+      _message = std::move(sample);
+    }
+    _new_message.store(true, std::memory_order_release);
   }
 
   ~SubscriberImpl() override {
@@ -124,19 +138,27 @@ public:
 
   [[nodiscard]] const std::string &GetTopicName() const noexcept { return _topic_name; }
 
-  [[nodiscard]] bool IsAlive() const noexcept { return _alive; }
+  [[nodiscard]] bool IsAlive() const noexcept { return _alive.load(std::memory_order_acquire); }
 
   msg_type GetMessage() {
-    _new_message = false;
-    return _message;
+    msg_type copy;
+    {
+      std::lock_guard<std::mutex> lock(_message_mutex);
+      copy = _message;
+    }
+    _new_message.store(false, std::memory_order_release);
+    return copy;
   }
 
-  [[nodiscard]] bool HasNewMessage() const noexcept { return _new_message; }
+  [[nodiscard]] bool HasNewMessage() const noexcept {
+    return _new_message.load(std::memory_order_acquire);
+  }
 
 private:
   std::string _topic_name;
-  bool _alive{false};
-  bool _new_message{false};
+  std::atomic<bool> _alive{false};
+  std::atomic<bool> _new_message{false};
+  std::mutex _message_mutex;
   msg_type _message{};
 };
 
