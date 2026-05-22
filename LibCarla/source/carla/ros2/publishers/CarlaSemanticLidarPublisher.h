@@ -1,38 +1,28 @@
-// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
 
-#include <memory>
-#include <vector>
-
-#include "CarlaPublisher.h"
+#include "carla/ros2/publishers/CarlaPointCloudPublisher.h"
 
 namespace carla {
 namespace ros2 {
 
-  struct CarlaSemanticLidarPublisherImpl;
+class CarlaSemanticLidarPublisher : public CarlaPointCloudPublisher {
+public:
+  CarlaSemanticLidarPublisher(std::string base_topic_name, std::string frame_id)
+    : CarlaPointCloudPublisher(std::move(base_topic_name), std::move(frame_id)) {}
 
-  class CarlaSemanticLidarPublisher : public CarlaPublisher {
-    public:
-      CarlaSemanticLidarPublisher(const char* ros_name = "", const char* parent = "");
-      ~CarlaSemanticLidarPublisher();
-      CarlaSemanticLidarPublisher(const CarlaSemanticLidarPublisher&);
-      CarlaSemanticLidarPublisher& operator=(const CarlaSemanticLidarPublisher&);
-      CarlaSemanticLidarPublisher(CarlaSemanticLidarPublisher&&);
-      CarlaSemanticLidarPublisher& operator=(CarlaSemanticLidarPublisher&&);
+private:
+  [[nodiscard]] std::size_t GetPointSize() const override;
+  [[nodiscard]] const PointFieldDescriptor *GetFieldDescriptors() const override;
+  [[nodiscard]] std::size_t GetFieldDescriptorCount() const override;
+  [[nodiscard]] std::vector<std::uint8_t> ComputePointCloud(
+      std::uint32_t height, std::uint32_t width, const std::uint8_t *data) const override;
+};
 
-      bool Init();
-      bool Publish();
-      void SetData(int32_t seconds, uint32_t nanoseconds, size_t elements, size_t height, size_t width, float* data);
-      const char* type() const override { return "semantic lidar"; }
-
-    private:
-      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data);
-
-    private:
-      std::shared_ptr<CarlaSemanticLidarPublisherImpl> _impl;
-  };
-}
-}
+}  // namespace ros2
+}  // namespace carla
