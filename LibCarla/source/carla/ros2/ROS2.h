@@ -12,9 +12,10 @@
 #include "carla/ros2/ROS2CallbackData.h"
 #include "carla/streaming/detail/Types.h"
 
-#include <unordered_set>
-#include <unordered_map>
 #include <memory>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 // forward declarations

@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include <variant>
+#include <cstdint>
 #include <functional>
+#include <variant>
 
 namespace carla {
 namespace ros2 {
