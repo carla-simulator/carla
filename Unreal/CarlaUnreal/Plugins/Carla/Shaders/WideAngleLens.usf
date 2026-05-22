@@ -110,7 +110,7 @@ void MainCS(
 	
 	const uint2 PixelPosition = ThreadID.xy;
 
-	float Width, Height;
+	uint Width, Height;
 	OutImage.GetDimensions(Width, Height);
 
 	const uint2 ImageShape = uint2(Width, Height);

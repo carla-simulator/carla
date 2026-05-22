@@ -41,10 +41,10 @@ float4 CameraParams;
 void MainCS(
 	in uint3 ThreadID : SV_DispatchThreadID)
 {
-	float Width, Height;
+	uint Width, Height;
 	OutImage.GetDimensions(Width, Height);
 
-	if (ThreadID.x >= uint(Width) || uint(ThreadID.y) >= Height)
+	if (ThreadID.x >= Width || ThreadID.y >= Height)
 		return;
 
 	const float2 FocalDistance = CameraParams.xy;

@@ -23,7 +23,7 @@ class UTextureRenderTarget2D;
 
 
 
-UENUM()
+UENUM(BlueprintType)
 enum class ECameraModel : uint8
 {
     Perspective,
@@ -32,8 +32,8 @@ enum class ECameraModel : uint8
     Equisolid,
     Orthographic,
     KannalaBrandt,
-    MaxEnum,
-    Default = Perspective
+    MaxEnum UMETA(Hidden),
+    Default = Perspective UMETA(Hidden)
 };
 
 

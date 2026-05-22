@@ -212,9 +212,11 @@ void ASceneCaptureSensor_WideAngleLens::SetImageSize(uint32 InWidth, uint32 InHe
 
 void ASceneCaptureSensor_WideAngleLens::SetImageSize(int32 Width, int32 Height)
 {
+    // Clamp to a sane minimum: negative values would wrap to enormous
+    // dimensions when cast to uint32.
     SetImageSize(
-        static_cast<uint32>(Width),
-        static_cast<uint32>(Height));
+        static_cast<uint32>(FMath::Max(Width, 1)),
+        static_cast<uint32>(FMath::Max(Height, 1)));
 }
 
 ECameraModel ASceneCaptureSensor_WideAngleLens::GetCameraModel() const

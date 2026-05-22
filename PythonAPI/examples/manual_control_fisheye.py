@@ -1398,7 +1398,7 @@ def main():
     argparser.add_argument(
         '--fov_mask',
         action='store_true',
-        help='Wheter to draw pixels outside the FOV as black (default: "false").')
+        help='Whether to draw pixels outside the FOV as black (default: "false").')
     argparser.add_argument(
         '--longitude_shift',
         default=0.0,

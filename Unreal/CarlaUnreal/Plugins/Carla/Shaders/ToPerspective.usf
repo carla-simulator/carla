@@ -66,10 +66,10 @@ void UndistortImage(uint2 Position, uint2 Shape)
 void MainCS(
 	in uint3 ThreadID : SV_DispatchThreadID)
 {
-	float Width, Height;
+	uint Width, Height;
 	Destination.GetDimensions(Width, Height);
 
-	if (ThreadID.x >= uint(Width) || uint(ThreadID.y) >= Height)
+	if (ThreadID.x >= Width || ThreadID.y >= Height)
 		return;
 
 	const uint Begin = min(ThreadID.x * WORK_PER_INVOCATION, Width);
