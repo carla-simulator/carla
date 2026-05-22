@@ -108,7 +108,11 @@ void FPixelReader::WritePixelsToBuffer(
       FPixelFormatInfo PixelFormat = GPixelFormats[BackBufferPixelFormat];
       uint32 ExpectedRowBytes = BackBufferSize.X * PixelFormat.BlockBytes;
       int32 Size = (BackBufferSize.Y * (PixelFormat.BlockBytes * BackBufferSize.X));
-      void* LockedData = Readback->Lock(Size);
+      // FRHIGPUTextureReadback::Lock takes its argument by reference and writes
+      // the row stride (in pixels) back into it. It must not alias `Size`, or
+      // the payload length collapses to a single row's pixel count.
+      int32 RowPitchInPixels = 0;
+      void* LockedData = Readback->Lock(RowPitchInPixels);
       if (LockedData)
       {
         FuncForSending(LockedData, Size, Offset, ExpectedRowBytes);
