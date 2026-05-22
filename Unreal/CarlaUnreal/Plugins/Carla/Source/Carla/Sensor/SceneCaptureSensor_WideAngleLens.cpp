@@ -59,15 +59,6 @@ namespace SceneCaptureSensorWideAngleLens_local_ns {
 
     static void SetCameraDefaultOverrides(USceneCaptureComponent2D_CARLA& CaptureComponent);
 
-    static void ConfigureShowFlags(FEngineShowFlags& ShowFlags, bool bPostProcessing = true);
-
-    static auto GetQualitySettings(UWorld* World)
-    {
-        auto Settings = UCarlaStatics::GetCarlaSettings(World);
-        check(Settings != nullptr);
-        return Settings->GetQualityLevel();
-    }
-
 } // namespace SceneCaptureSensorWideAngleLens_local_ns
 
 // =============================================================================
@@ -100,7 +91,7 @@ ASceneCaptureSensor_WideAngleLens::ASceneCaptureSensor_WideAngleLens(const FObje
             KannalaBrandtCameraCoefficients)),
     LongitudeOffset(),
     FOVFadeSize(),
-    CubemapRenderMask(ComputeCubemapRenderMask()),
+    CubemapRenderMask(0),
     CubemapSampler(CameraModelUtil::GetSampler(SF_AnisotropicLinear)),
     bUseRayTracing(true),
     bEnablePostProcessingEffects(true),
@@ -111,6 +102,12 @@ ASceneCaptureSensor_WideAngleLens::ASceneCaptureSensor_WideAngleLens(const FObje
 {
     FaceCaptures.SetNum(6);
     FaceRenderTargets.SetNum(6);
+
+    // Computed in the constructor body, not the initializer list:
+    // ComputeCubemapRenderMask() reads bFOVMaskEnable / bRenderEquirectangular,
+    // which are declared after CubemapRenderMask and would still be
+    // uninitialized during initializer-list evaluation.
+    CubemapRenderMask = ComputeCubemapRenderMask();
 
     PrimaryActorTick.bCanEverTick = true;
     PrimaryActorTick.TickGroup = TG_PrePhysics;
@@ -438,7 +435,13 @@ uint8 ASceneCaptureSensor_WideAngleLens::FindFaceIndex(FVector2D UV) const
 
 uint8 ASceneCaptureSensor_WideAngleLens::ComputeCubemapRenderMask() const
 {
-    static const float Threshold = 1e-2;
+    // Equirectangular projection samples the full sphere, so every cube face
+    // must be rendered regardless of the configured FOV.
+    if (bRenderEquirectangular)
+        return (1U << CubeFace_PosX) | (1U << CubeFace_NegX) |
+               (1U << CubeFace_PosY) | (1U << CubeFace_NegY) |
+               (1U << CubeFace_PosZ) | (1U << CubeFace_NegZ);
+
     static const float Pi = PI;
     static const float HalfPi = Pi / 2.0f;
     static const float Sqrt2 = sqrtf(2.0f);
@@ -473,10 +476,22 @@ void ASceneCaptureSensor_WideAngleLens::CaptureSceneExtended()
 
     bool SkipVFTR = CVarWideAngleSensorSkipVFTR.GetValueOnAnyThread() != 0;
 
+    // Capture the previous value so it can be restored afterwards, instead of
+    // unconditionally forcing the cvar back on and clobbering the project /
+    // scalability setting for every other view in the scene.
+    IConsoleVariable* VolumetricFogTRVar = nullptr;
+    int32 PreviousVolumetricFogTR = 1;
+
     if (!SkipVFTR)
     {
-        FlushRenderingCommands();
-        GEngine->Exec(GetWorld(), TEXT("r.VolumetricFog.TemporalReprojection 0"));
+        VolumetricFogTRVar = IConsoleManager::Get().FindConsoleVariable(
+            TEXT("r.VolumetricFog.TemporalReprojection"));
+        if (VolumetricFogTRVar != nullptr)
+        {
+            PreviousVolumetricFogTR = VolumetricFogTRVar->GetInt();
+            FlushRenderingCommands();
+            VolumetricFogTRVar->Set(TEXT("0"), ECVF_SetByCode);
+        }
     }
 
     for (uint8 i = 0; i < 6; ++i)
@@ -568,10 +583,10 @@ void ASceneCaptureSensor_WideAngleLens::CaptureSceneExtended()
         ++FrameCounter;
     }
 
-    if (!SkipVFTR)
+    if (VolumetricFogTRVar != nullptr)
     {
         FlushRenderingCommands();
-        GEngine->Exec(GetWorld(), TEXT("r.VolumetricFog.TemporalReprojection 1"));
+        VolumetricFogTRVar->Set(*FString::FromInt(PreviousVolumetricFogTR), ECVF_SetByCode);
     }
 }
 
@@ -650,10 +665,14 @@ void ASceneCaptureSensor_WideAngleLens::PrePhysTick(float DeltaSeconds)
 
     // Add the view information every tick. It's only used for one tick and then
     // removed by the streamer.
+    // FOVAngle is stored in degrees; convert to radians and use the
+    // half-angle tangent, guarding against a non-positive denominator.
+    const float HalfFOVTan = FMath::Tan(
+        0.5f * FMath::DegreesToRadians(CaptureComponents[0]->FOVAngle));
     IStreamingManager::Get().AddViewInformation(
         CaptureComponents[0]->GetComponentLocation(),
         ImageWidth,
-        ImageWidth / FMath::Tan(CaptureComponents[0]->FOVAngle));
+        HalfFOVTan > 0.0f ? ImageWidth / HalfFOVTan : ImageWidth);
 }
 
 void ASceneCaptureSensor_WideAngleLens::PostPhysTick(UWorld* World, ELevelTick TickType, float DeltaTime)
@@ -700,165 +719,5 @@ namespace SceneCaptureSensorWideAngleLens_local_ns {
         PostProcessSettings.AutoExposureMethod = EAutoExposureMethod::AEM_Manual;
     }
 
-    // Remove the show flags that might interfere with post-processing effects
-    // like depth and semantic segmentation.
-    static void ConfigureShowFlags(FEngineShowFlags& ShowFlags, bool bPostProcessing)
-    {
-        if (bPostProcessing)
-            ShowFlags.EnableAdvancedFeatures();
-
-        ShowFlags.SetTemporalAA(false);
-        ShowFlags.SetScreenSpaceReflections(false);
-        // ShowFlags.SetVolumetricFogTemporalReprojection(false);
-        ShowFlags.SetDistanceFieldAO(false);
-
-        if (bPostProcessing)
-        {
-            ShowFlags.SetMotionBlur(true);
-            return;
-        }
-
-        // ShowFlags.SetAtmosphericFog(false);
-        // ShowFlags.SetAudioRadius(false);
-        // ShowFlags.SetBillboardSprites(false);
-        ShowFlags.SetBloom(false);
-        // ShowFlags.SetBounds(false);
-        // ShowFlags.SetBrushes(false);
-        // ShowFlags.SetBSP(false);
-        // ShowFlags.SetBSPSplit(false);
-        // ShowFlags.SetBSPTriangles(false);
-        // ShowFlags.SetBuilderBrush(false);
-        // ShowFlags.SetCameraAspectRatioBars(false);
-        // ShowFlags.SetCameraFrustums(false);
-        ShowFlags.SetCameraImperfections(false);
-        ShowFlags.SetCameraInterpolation(false);
-        // ShowFlags.SetCameraSafeFrames(false);
-        // ShowFlags.SetCollision(false);
-        // ShowFlags.SetCollisionPawn(false);
-        // ShowFlags.SetCollisionVisibility(false);
-        ShowFlags.SetColorGrading(false);
-        // ShowFlags.SetCompositeEditorPrimitives(false);
-        // ShowFlags.SetConstraints(false);
-        // ShowFlags.SetCover(false);
-        // ShowFlags.SetDebugAI(false);
-        // ShowFlags.SetDecals(false);
-        // ShowFlags.SetDeferredLighting(false);
-        ShowFlags.SetDepthOfField(false);
-        ShowFlags.SetDiffuse(false);
-        ShowFlags.SetDirectionalLights(false);
-        ShowFlags.SetDirectLighting(false);
-        // ShowFlags.SetDistanceCulledPrimitives(false);
-        // ShowFlags.SetDistanceFieldAO(false);
-        // ShowFlags.SetDistanceFieldGI(false);
-        ShowFlags.SetDynamicShadows(false);
-        // ShowFlags.SetEditor(false);
-        ShowFlags.SetEyeAdaptation(false);
-        ShowFlags.SetFog(false);
-        // ShowFlags.SetGame(false);
-        // ShowFlags.SetGameplayDebug(false);
-        // ShowFlags.SetGBufferHints(false);
-        ShowFlags.SetGlobalIllumination(false);
-        ShowFlags.SetGrain(false);
-        // ShowFlags.SetGrid(false);
-        // ShowFlags.SetHighResScreenshotMask(false);
-        // ShowFlags.SetHitProxies(false);
-        ShowFlags.SetHLODColoration(false);
-        ShowFlags.SetHMDDistortion(false);
-        // ShowFlags.SetIndirectLightingCache(false);
-        // ShowFlags.SetInstancedFoliage(false);
-        // ShowFlags.SetInstancedGrass(false);
-        // ShowFlags.SetInstancedStaticMeshes(false);
-        // ShowFlags.SetLandscape(false);
-        // ShowFlags.SetLargeVertices(false);
-        ShowFlags.SetLensFlares(false);
-        // ShowFlags.SetLevelColoration(false); // removed in UE5.5
-        ShowFlags.SetLightComplexity(false);
-        ShowFlags.SetLightFunctions(false);
-        ShowFlags.SetLightInfluences(false);
-        ShowFlags.SetLighting(false);
-        ShowFlags.SetLightMapDensity(false);
-        ShowFlags.SetLightRadius(false);
-        ShowFlags.SetLightShafts(false);
-        // ShowFlags.SetLOD(false);
-        ShowFlags.SetLODColoration(false);
-        // ShowFlags.SetMaterials(false);
-        // ShowFlags.SetMaterialTextureScaleAccuracy(false);
-        // ShowFlags.SetMeshEdges(false);
-        // ShowFlags.SetMeshUVDensityAccuracy(false);
-        // ShowFlags.SetModeWidgets(false);
-        ShowFlags.SetMotionBlur(false);
-        // ShowFlags.SetNavigation(false);
-        ShowFlags.SetOnScreenDebug(false);
-        // ShowFlags.SetOutputMaterialTextureScales(false);
-        // ShowFlags.SetOverrideDiffuseAndSpecular(false);
-        // ShowFlags.SetPaper2DSprites(false);
-        ShowFlags.SetParticles(false);
-        // ShowFlags.SetPivot(false);
-        ShowFlags.SetPointLights(false);
-        // ShowFlags.SetPostProcessing(false);
-        // ShowFlags.SetPostProcessMaterial(false);
-        // ShowFlags.SetPrecomputedVisibility(false);
-        // ShowFlags.SetPrecomputedVisibilityCells(false);
-        // ShowFlags.SetPreviewShadowsIndicator(false);
-        // ShowFlags.SetPrimitiveDistanceAccuracy(false);
-        // ShowFlags.SetPropertyColoration(false); // removed in UE5.5
-        // ShowFlags.SetQuadOverdraw(false);
-        // ShowFlags.SetReflectionEnvironment(false);
-        // ShowFlags.SetReflectionOverride(false);
-        ShowFlags.SetRefraction(false);
-        // ShowFlags.SetRendering(false);
-        ShowFlags.SetSceneColorFringe(false);
-        // ShowFlags.SetScreenPercentage(false);
-        ShowFlags.SetScreenSpaceAO(false);
-        ShowFlags.SetScreenSpaceReflections(false);
-        // ShowFlags.SetSelection(false);
-        // ShowFlags.SetSelectionOutline(false);
-        // ShowFlags.SetSeparateTranslucency(false);
-        // ShowFlags.SetShaderComplexity(false);
-        // ShowFlags.SetShaderComplexityWithQuadOverdraw(false);
-        // ShowFlags.SetShadowFrustums(false);
-        // ShowFlags.SetSkeletalMeshes(false);
-        // ShowFlags.SetSkinCache(false);
-        ShowFlags.SetSkyLighting(false);
-        // ShowFlags.SetSnap(false);
-        // ShowFlags.SetSpecular(false);
-        // ShowFlags.SetSplines(false);
-        ShowFlags.SetSpotLights(false);
-        // ShowFlags.SetStaticMeshes(false);
-        ShowFlags.SetStationaryLightOverlap(false);
-        // ShowFlags.SetStereoRendering(false);
-        // ShowFlags.SetStreamingBounds(false);
-        ShowFlags.SetSubsurfaceScattering(false);
-        // ShowFlags.SetTemporalAA(false);
-        // ShowFlags.SetTessellation(false);
-        // ShowFlags.SetTestImage(false);
-        // ShowFlags.SetTextRender(false);
-        // ShowFlags.SetTexturedLightProfiles(false);
-        ShowFlags.SetTonemapper(false);
-        // ShowFlags.SetTranslucency(false);
-        // ShowFlags.SetVectorFields(false);
-        // ShowFlags.SetVertexColors(false);
-        // ShowFlags.SetVignette(false);
-        // ShowFlags.SetVisLog(false);
-        // ShowFlags.SetVisualizeAdaptiveDOF(false);
-        // ShowFlags.SetVisualizeBloom(false);
-        ShowFlags.SetVisualizeBuffer(false);
-        ShowFlags.SetVisualizeDistanceFieldAO(false);
-        ShowFlags.SetVisualizeDOF(false);
-        ShowFlags.SetVisualizeHDR(false);
-        ShowFlags.SetVisualizeLightCulling(false);
-        // ShowFlags.SetVisualizeLPV(false); // LPV removed in UE5
-        ShowFlags.SetVisualizeMeshDistanceFields(false);
-        ShowFlags.SetVisualizeMotionBlur(false);
-        ShowFlags.SetVisualizeOutOfBoundsPixels(false);
-        ShowFlags.SetVisualizeSenses(false);
-        ShowFlags.SetVisualizeShadingModels(false);
-        ShowFlags.SetVisualizeSSR(false);
-        ShowFlags.SetVisualizeSSS(false);
-        // ShowFlags.SetVolumeLightingSamples(false);
-        // ShowFlags.SetVolumes(false);
-        // ShowFlags.SetWidgetComponents(false);
-        // ShowFlags.SetWireframe(false);
-    }
 
 } // namespace SceneCaptureSensorWideAngleLens_local_ns

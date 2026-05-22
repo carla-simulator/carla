@@ -38,5 +38,9 @@ ADepthCamera_WideAngleLens::ADepthCamera_WideAngleLens(const FObjectInitializer 
 void ADepthCamera_WideAngleLens::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ADepthCamera_WideAngleLens::PostPhysTick);
+  // Skip the whole 6-face capture + compute + readback pipeline when no
+  // client is subscribed.
+  if (!AreClientsListening())
+    return;
   FPixelReader::SendPixelsInRenderThread<ADepthCamera_WideAngleLens, FColor>(*this);
 }

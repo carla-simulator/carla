@@ -471,9 +471,9 @@ namespace CameraModelUtil
         case ECameraModel::Equidistant:
             return Distance;
         case ECameraModel::Equisolid:
-            return std::asin(Distance * 0.5F) * 2;
+            return std::asin(FMath::Clamp(Distance * 0.5F, -1.0F, 1.0F)) * 2;
         case ECameraModel::Orthographic:
-            return std::asin(Distance);
+            return std::asin(FMath::Clamp(Distance, -1.0F, 1.0F));
         case ECameraModel::KannalaBrandt:
         {
             float Theta = Distance;

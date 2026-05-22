@@ -188,12 +188,12 @@ float ComputeAngleEquidistance(float Distance)
 
 float ComputeAngleEquisolid(float Distance)
 {
-	return asin(Distance * 0.5F) * 2;
+	return asin(clamp(Distance * 0.5F, -1.0F, 1.0F)) * 2;
 }
 
 float ComputeAngleOrthogonal(float Distance)
 {
-	return asin(Distance);
+	return asin(clamp(Distance, -1.0F, 1.0F));
 }
 
 

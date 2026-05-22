@@ -24,14 +24,32 @@ void FCarlaModule::StartupModule()
 
 void FCarlaModule::AddShaderSearchPaths()
 {
-	FString PluginBaseDir = IPluginManager::Get().FindPlugin(TEXT("Carla"))->GetBaseDir();
-	UE_LOG(LogCarla, Log, TEXT("PluginBaseDir: %s"), *PluginBaseDir);
-	check(FPaths::DirectoryExists(PluginBaseDir));
-	FString ShadersDirectoryPath = FPaths::Combine(PluginBaseDir, TEXT("Shaders"));
-	UE_LOG(LogCarla, Log, TEXT("ShadersDirectoryPath: %s"), *ShadersDirectoryPath);
-	check(FPaths::DirectoryExists(ShadersDirectoryPath));
-	ShadersDirectoryPath = FPaths::ConvertRelativePathToFull(ShadersDirectoryPath);
-	AddShaderSourceDirectoryMapping("/Plugin/Carla", ShadersDirectoryPath);
+	// The shader virtual path is process-global. Re-running StartupModule
+	// (editor Live Coding / hot-reload) must not register it twice, as
+	// AddShaderSourceDirectoryMapping asserts the path is not already mapped.
+	if (AllShaderSourceDirectoryMappings().Contains(TEXT("/Plugin/Carla")))
+		return;
+
+	const TSharedPtr<IPlugin> Plugin = IPluginManager::Get().FindPlugin(TEXT("Carla"));
+	if (!Plugin.IsValid())
+	{
+		UE_LOG(LogCarla, Error,
+			TEXT("AddShaderSearchPaths: Carla plugin not found; shaders will be unavailable."));
+		return;
+	}
+
+	const FString ShadersDirectoryPath = FPaths::ConvertRelativePathToFull(
+		FPaths::Combine(Plugin->GetBaseDir(), TEXT("Shaders")));
+	if (!FPaths::DirectoryExists(ShadersDirectoryPath))
+	{
+		UE_LOG(LogCarla, Error,
+			TEXT("AddShaderSearchPaths: shader directory '%s' does not exist; shaders will be unavailable."),
+			*ShadersDirectoryPath);
+		return;
+	}
+
+	UE_LOG(LogCarla, Log, TEXT("Carla shader directory: %s"), *ShadersDirectoryPath);
+	AddShaderSourceDirectoryMapping(TEXT("/Plugin/Carla"), ShadersDirectoryPath);
 }
 
 void FCarlaModule::LoadChronoDll()

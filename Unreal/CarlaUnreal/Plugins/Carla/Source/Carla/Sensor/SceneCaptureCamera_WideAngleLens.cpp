@@ -49,5 +49,9 @@ void ASceneCaptureCamera_WideAngleLens::EndPlay(const EEndPlayReason::Type EndPl
 void ASceneCaptureCamera_WideAngleLens::PostPhysTick(UWorld* World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureCamera_WideAngleLens::PostPhysTick);
+  // Skip the whole 6-face capture + compute + readback pipeline when no
+  // client is subscribed.
+  if (!AreClientsListening())
+    return;
   FPixelReader::SendPixelsInRenderThread<ASceneCaptureCamera_WideAngleLens, FColor>(*this);
 }

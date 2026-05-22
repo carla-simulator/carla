@@ -1927,6 +1927,17 @@ void UActorBlueprintFunctionLibrary::SetCamera(
 
   if (Camera->GetFOVMaskEnable())
     Camera->SetFOVFadeSize(RetrieveActorAttributeToFloat("fov_fade_size", Variations, 0.0f));
+
+  // Apply the post-processing attributes only when advertised (the RGB
+  // fisheye camera adds them); leaving them untouched preserves the
+  // post-processing state each derived sensor sets in its constructor.
+  if (Variations.Contains("enable_postprocess_effects"))
+    Camera->EnablePostProcessingEffects(
+        ActorAttributeToBool(Variations["enable_postprocess_effects"], true));
+
+  if (Variations.Contains("gamma"))
+    Camera->SetTargetGamma(
+        RetrieveActorAttributeToFloat("gamma", Variations, 2.2f));
 }
 
 void UActorBlueprintFunctionLibrary::SetCamera(

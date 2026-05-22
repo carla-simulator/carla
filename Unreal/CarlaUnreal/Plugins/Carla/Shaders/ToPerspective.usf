@@ -41,7 +41,8 @@ void UndistortImage(uint2 Position, uint2 Shape)
 	const float Theta = ComputeAnglePerspective(R);
 	const float RDeformed = ComputeDistance(Theta);
 	
-	const float Scale = RDeformed / R;
+	// Guard the image-centre pixel, where R == 0 would make Scale a 0/0 NaN.
+	const float Scale = (R > 1e-8F) ? (RDeformed / R) : 1.0F;
 	const float2 DeformedPixelUV = PixelUV * Scale;
 	
 	const float2 UV =

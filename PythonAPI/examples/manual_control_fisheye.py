@@ -338,7 +338,13 @@ class World(object):
         self.hud.render(display)
 
     def destroy_sensors(self):
-        self.camera_manager.sensor.destroy()
+        if self.camera_manager.sensor is not None:
+            # Detach the listener and let queued frames flush before
+            # destroying, mirroring CameraManager.set_sensor(); a bare
+            # destroy() races the streaming session and can segfault the client.
+            self.camera_manager.sensor.stop()
+            time.sleep(0.4)
+            self.camera_manager.sensor.destroy()
         self.camera_manager.sensor = None
         self.camera_manager.index = None
 

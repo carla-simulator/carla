@@ -29,5 +29,9 @@ ASemanticSegmentationCamera_WideAngleLens::ASemanticSegmentationCamera_WideAngle
 void ASemanticSegmentationCamera_WideAngleLens::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASemanticSegmentationCamera_WideAngleLens::PostPhysTick);
+  // Skip the whole 6-face capture + compute + readback pipeline when no
+  // client is subscribed.
+  if (!AreClientsListening())
+    return;
   FPixelReader::SendPixelsInRenderThread<ASemanticSegmentationCamera_WideAngleLens, FColor>(*this);
 }
