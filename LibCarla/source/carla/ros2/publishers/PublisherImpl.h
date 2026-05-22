@@ -55,7 +55,7 @@ public:
   void on_publication_matched(
       efd::DataWriter * /*writer*/,
       const efd::PublicationMatchedStatus &info) override {
-    _alive.store(info.total_count > 0, std::memory_order_release);
+    _alive.store(info.current_count > 0, std::memory_order_release);
   }
 
   ~PublisherImpl() override {

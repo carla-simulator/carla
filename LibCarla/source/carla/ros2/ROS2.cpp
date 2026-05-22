@@ -132,7 +132,9 @@ void ROS2::SetTimestamp(double timestamp) {
 }
 
 void ROS2::AddActorRosName(void *actor, std::string ros_name) {
-  _actor_ros_name.insert({actor, ros_name});
+  // insert_or_assign so re-registering an actor with a new ros_name actually
+  // updates the entry; unordered_map::insert would silently keep the stale one.
+  _actor_ros_name.insert_or_assign(actor, std::move(ros_name));
 }
 
 void ROS2::AddActorParentRosName(void *actor, void* parent) {

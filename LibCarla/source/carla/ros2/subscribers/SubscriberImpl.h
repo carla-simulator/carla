@@ -56,14 +56,16 @@ public:
   void on_subscription_matched(
       efd::DataReader * /*reader*/,
       const efd::SubscriptionMatchedStatus &info) override {
-    _alive.store(info.total_count > 0, std::memory_order_release);
+    _alive.store(info.current_count > 0, std::memory_order_release);
   }
 
   void on_data_available(efd::DataReader *reader) override {
     // FastDDS invokes this on a DDS listener thread. Take into a stack-local
     // sample first so the lock only spans the copy into _message, and so a
     // dispose/unregister notification (RETCODE_OK with !info.valid_data) does
-    // not flip _new_message.
+    // not flip _new_message. The _new_message store is held inside the lock
+    // so a concurrent GetMessage cannot race-clear the flag after we publish
+    // a fresh sample.
     efd::SampleInfo info;
     msg_type sample{};
     erc rcode = reader->take_next_sample(&sample, &info);
@@ -74,10 +76,8 @@ public:
     if (!info.valid_data) {
       return;
     }
-    {
-      std::lock_guard<std::mutex> lock(_message_mutex);
-      _message = std::move(sample);
-    }
+    std::lock_guard<std::mutex> lock(_message_mutex);
+    _message = std::move(sample);
     _new_message.store(true, std::memory_order_release);
   }
 
@@ -141,11 +141,8 @@ public:
   [[nodiscard]] bool IsAlive() const noexcept { return _alive.load(std::memory_order_acquire); }
 
   msg_type GetMessage() {
-    msg_type copy;
-    {
-      std::lock_guard<std::mutex> lock(_message_mutex);
-      copy = _message;
-    }
+    std::lock_guard<std::mutex> lock(_message_mutex);
+    msg_type copy = _message;
     _new_message.store(false, std::memory_order_release);
     return copy;
   }
