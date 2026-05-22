@@ -1,50 +1,23 @@
-// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
 
-#include <memory>
-#include <vector>
-
-#include "CarlaPublisher.h"
+#include "carla/ros2/publishers/CarlaRGBCameraPublisher.h"
 
 namespace carla {
 namespace ros2 {
 
-  struct CarlaDepthCameraPublisherImpl;
-  struct CarlaCameraInfoPublisherImpl;
+// Depth, SS, IS, Normals and the base RGB camera share the same on-the-wire
+// shape: 4-channel BGRA uint8 packed by ImageSerializer on the UE side. The
+// pixel content differs (depth packed as 24-bit + alpha, semantic labels in
+// the red channel, instance ids encoded across BGR, world-space normals in
+// BGR), but the ROS 2 sensor_msgs/Image fields (encoding, step, channels)
+// are identical, so they alias the same publisher.
+using CarlaDepthCameraPublisher = CarlaRGBCameraPublisher;
 
-  class CarlaDepthCameraPublisher : public CarlaPublisher {
-    public:
-      CarlaDepthCameraPublisher(const char* ros_name = "", const char* parent = "");
-      ~CarlaDepthCameraPublisher();
-      CarlaDepthCameraPublisher(const CarlaDepthCameraPublisher&);
-      CarlaDepthCameraPublisher& operator=(const CarlaDepthCameraPublisher&);
-      CarlaDepthCameraPublisher(CarlaDepthCameraPublisher&&);
-      CarlaDepthCameraPublisher& operator=(CarlaDepthCameraPublisher&&);
-
-      bool Init();
-      void InitInfoData(uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, float fov, bool do_rectify);
-      bool Publish();
-
-      bool HasBeenInitialized() const;
-      void SetImageData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, const uint8_t* data);
-      void SetCameraInfoData(int32_t seconds, uint32_t nanoseconds);
-      const char* type() const override { return "depth camera"; }
-
-    private:
-      bool InitImage();
-      bool InitInfo();
-      bool PublishImage();
-      bool PublishInfo();
-
-      void SetInfoRegionOfInterest( uint32_t x_offset, uint32_t y_offset, uint32_t height, uint32_t width, bool do_rectify);
-      void SetData(int32_t seconds, uint32_t nanoseconds, size_t height, size_t width, std::vector<uint8_t>&& data);
-
-    private:
-      std::shared_ptr<CarlaDepthCameraPublisherImpl> _impl;
-      std::shared_ptr<CarlaCameraInfoPublisherImpl> _impl_info;
-  };
-}
-}
+}  // namespace ros2
+}  // namespace carla
