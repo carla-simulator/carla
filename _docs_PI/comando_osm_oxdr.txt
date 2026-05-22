@@ -1,0 +1,3 @@
+netconvert --osm-files mapa_maua_openstreetmap.osm --opendrive-output clean_maua.xodr --geometry.remove --junctions.join
+
+é necessário baixar o programa SUMO (https://eclipse.dev/sumo/)
