@@ -258,13 +258,6 @@ void UActorDispatcher::WakeActorUp(FCarlaActor::IdType Id, UCarlaEpisode* CarlaE
 void UActorDispatcher::OnActorDestroyed(AActor *Actor)
 {
   FCarlaActor* CarlaActor = Registry.FindCarlaActor(Actor);
-  if (CarlaActor)
-  {
-    if (CarlaActor->IsActive())
-    {
-      Registry.Deregister(CarlaActor->GetActorId());
-    }
-  }
 
   #ifdef WITH_ROS2
   auto ROS2 = carla::ros2::ROS2::GetInstance();
@@ -273,4 +266,9 @@ void UActorDispatcher::OnActorDestroyed(AActor *Actor)
     ROS2->RemoveActorRosName(reinterpret_cast<void *>(Actor));
   }
   #endif
+
+  if (CarlaActor && CarlaActor->IsActive())
+  {
+    Registry.Deregister(CarlaActor->GetActorId());
+  }
 }
