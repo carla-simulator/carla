@@ -6,7 +6,11 @@
 
 #include <PythonAPI.h>
 
+#include <carla/geom/Acceleration.h>
+#include <carla/geom/AngularVelocity.h>
 #include <carla/geom/GeoProjectionsParams.h>
+#include <carla/geom/Quaternion.h>
+#include <carla/geom/Velocity.h>
 
 #include <limits>
 
@@ -156,6 +160,24 @@ void export_geom() {
     .def(self_ns::str(self_ns::self))
   ;
 
+  class_<cg::Velocity, bases<cg::Vector3D>>("Velocity")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def(init<const cg::Vector3D &>((arg("rhs"))))
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::AngularVelocity, bases<cg::Vector3D>>("AngularVelocity")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def(init<const cg::Vector3D &>((arg("rhs"))))
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::Acceleration, bases<cg::Vector3D>>("Acceleration")
+    .def(init<float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f)))
+    .def(init<const cg::Vector3D &>((arg("rhs"))))
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<cg::Rotation>("Rotation")
     .def(init<float, float, float>((arg("pitch")=0.0f, arg("yaw")=0.0f, arg("roll")=0.0f)))
     .def_readwrite("pitch", &cg::Rotation::pitch)
@@ -167,6 +189,27 @@ void export_geom() {
     .def("get_normalized", &cg::Rotation::Normalize)
     .def("__eq__", &cg::Rotation::operator==)
     .def("__ne__", &cg::Rotation::operator!=)
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  class_<cg::Quaternion>("Quaternion")
+    .def(init<float, float, float, float>((arg("x")=0.0f, arg("y")=0.0f, arg("z")=0.0f, arg("w")=1.0f)))
+    .def(init<const cg::Rotation &>((arg("rotation"))))
+    .def_readwrite("x", &cg::Quaternion::x)
+    .def_readwrite("y", &cg::Quaternion::y)
+    .def_readwrite("z", &cg::Quaternion::z)
+    .def_readwrite("w", &cg::Quaternion::w)
+    .def("rotator", &cg::Quaternion::Rotator)
+    .def("get_forward_vector", &cg::Quaternion::GetForwardVector)
+    .def("get_right_vector", &cg::Quaternion::GetRightVector)
+    .def("get_up_vector", &cg::Quaternion::GetUpVector)
+    .def("conjugate", &cg::Quaternion::Conjugate)
+    .def("inverse", &cg::Quaternion::Inverse)
+    .def("length", &cg::Quaternion::Length)
+    .def("unit_quaternion", &cg::Quaternion::UnitQuaternion)
+    .def("__eq__", &cg::Quaternion::operator==)
+    .def("__ne__", &cg::Quaternion::operator!=)
+    .def(self * self)
     .def(self_ns::str(self_ns::self))
   ;
 

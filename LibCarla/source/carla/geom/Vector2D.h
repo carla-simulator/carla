@@ -48,9 +48,15 @@ namespace geom {
        return std::sqrt(SquaredLength());
     }
 
-    Vector2D MakeUnitVector() const {
+    /// Return a unit-length copy of this vector. When the vector's length
+    /// is at or below `epsilon`, the input is returned unchanged (no
+    /// runtime assert, no NaN).
+    Vector2D MakeUnitVector(
+        const float epsilon = 2.0f * std::numeric_limits<float>::epsilon()) const {
       const float len = Length();
-      DEVELOPMENT_ASSERT(len > 2.0f * std::numeric_limits<float>::epsilon());
+      if (len <= std::max(epsilon, 0.0f)) {
+        return *this;
+      }
       const float k = 1.0f / len;
       return Vector2D(x * k, y * k);
     }

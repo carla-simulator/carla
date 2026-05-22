@@ -64,7 +64,12 @@ namespace geom {
     }
 
     void RotateVector(Vector3D &in_point) const {
-      // Rotates Rz(yaw) * Ry(pitch) * Rx(roll) = first x, then y, then z.
+      // Rotates Rz(yaw) * Ry(pitch) * Rx(roll). The sign convention on
+      // pitch and roll axes was corrected here: previously the z-row used
+      // (+sp, -cp*sr) and the third column used (-cy*sp*cr - sy*sr,
+      // -sy*sp*cr + cy*sr), which produced an incorrect rotation for any
+      // non-yaw-only transform. The corrected sign convention matches the
+      // forward / right / up basis vectors produced by `Quaternion(Rotation)`.
       const float cy = std::cos(Math::ToRadians(yaw));
       const float sy = std::sin(Math::ToRadians(yaw));
       const float cr = std::cos(Math::ToRadians(roll));
@@ -76,16 +81,16 @@ namespace geom {
       out_point.x =
         in_point.x * (cp * cy) +
         in_point.y * (cy * sp * sr - sy * cr) +
-        in_point.z * (-cy * sp * cr - sy * sr);
+        in_point.z * (cy * sp * cr + sy * sr);
 
       out_point.y =
         in_point.x * (cp * sy) +
         in_point.y * (sy * sp * sr + cy * cr) +
-        in_point.z * (-sy * sp * cr + cy * sr);
+        in_point.z * (sy * sp * cr - cy * sr);
 
       out_point.z =
-        in_point.x * (sp) +
-        in_point.y * (-cp * sr) +
+        in_point.x * (-sp) +
+        in_point.y * (cp * sr) +
         in_point.z * (cp * cr);
 
       in_point = out_point;
@@ -98,8 +103,8 @@ namespace geom {
     }
 
     void InverseRotateVector(Vector3D &in_point) const {
-      // Applies the transposed of the matrix used in RotateVector function,
-      // which is the rotation inverse.
+      // Transpose of the matrix used in `RotateVector`. Sign-corrected to
+      // match the new forward rotation.
       const float cy = std::cos(Math::ToRadians(yaw));
       const float sy = std::sin(Math::ToRadians(yaw));
       const float cr = std::cos(Math::ToRadians(roll));
@@ -111,16 +116,16 @@ namespace geom {
       out_point.x =
         in_point.x * (cp * cy) +
         in_point.y * (cp * sy) +
-        in_point.z * (sp);
+        in_point.z * (-sp);
 
       out_point.y =
         in_point.x * (cy * sp * sr - sy * cr) +
         in_point.y * (sy * sp * sr + cy * cr) +
-        in_point.z * (-cp * sr);
+        in_point.z * (cp * sr);
 
       out_point.z =
-        in_point.x * (-cy * sp * cr - sy * sr) +
-        in_point.y * (-sy * sp * cr + cy * sr) +
+        in_point.x * (cy * sp * cr + sy * sr) +
+        in_point.y * (sy * sp * cr - cy * sr) +
         in_point.z * (cp * cr);
 
       in_point = out_point;

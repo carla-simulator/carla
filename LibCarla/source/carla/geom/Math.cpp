@@ -115,14 +115,18 @@ namespace geom {
   }
 
   Vector3D Math::GetForwardVector(const Rotation &rotation) {
+    // Forward = `Rotation::RotateVector({1, 0, 0})`. Sign on the z row
+    // follows the corrected pitch convention.
     const float cp = std::cos(ToRadians(rotation.pitch));
     const float sp = std::sin(ToRadians(rotation.pitch));
     const float cy = std::cos(ToRadians(rotation.yaw));
     const float sy = std::sin(ToRadians(rotation.yaw));
-    return {cy * cp, sy * cp, sp};
+    return {cy * cp, sy * cp, -sp};
   }
 
   Vector3D Math::GetRightVector(const Rotation &rotation) {
+    // Right = `Rotation::RotateVector({0, 1, 0})`. Sign on the z row
+    // follows the corrected pitch/roll convention.
     const float cy = std::cos(ToRadians(rotation.yaw));
     const float sy = std::sin(ToRadians(rotation.yaw));
     const float cr = std::cos(ToRadians(rotation.roll));
@@ -130,12 +134,14 @@ namespace geom {
     const float cp = std::cos(ToRadians(rotation.pitch));
     const float sp = std::sin(ToRadians(rotation.pitch));
     return {
-         cy * sp * sr - sy * cr,
-         sy * sp * sr + cy * cr,
-        -cp * sr};
+        cy * sp * sr - sy * cr,
+        sy * sp * sr + cy * cr,
+        cp * sr};
   }
 
   Vector3D Math::GetUpVector(const Rotation &rotation) {
+    // Up = `Rotation::RotateVector({0, 0, 1})`. Signs on the x and y rows
+    // follow the corrected pitch/roll convention.
     const float cy = std::cos(ToRadians(rotation.yaw));
     const float sy = std::sin(ToRadians(rotation.yaw));
     const float cr = std::cos(ToRadians(rotation.roll));
@@ -143,8 +149,8 @@ namespace geom {
     const float cp = std::cos(ToRadians(rotation.pitch));
     const float sp = std::sin(ToRadians(rotation.pitch));
     return {
-        -cy * sp * cr - sy * sr,
-        -sy * sp * cr + cy * sr,
+        cy * sp * cr + sy * sr,
+        sy * sp * cr - cy * sr,
         cp * cr};
   }
 
