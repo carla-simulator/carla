@@ -645,7 +645,12 @@ void ASceneCaptureSensor_WideAngleLens::BeginPlay()
         FaceCapture->Activate();
     }
 
-    // Make sure that there is enough time in the render queue.
+    // Raise the render-fence block timeout: a single wide-angle capture
+    // enqueues up to 6 face scene-captures plus the RDG composite pass, which
+    // can exceed the default timeout on heavy scenes and trip a false-positive
+    // render-fence fatal assert. This is a process-wide setting; CARLA already
+    // runs the render pipeline outside interactive-latency budgets, so a wider
+    // watchdog is harmless for other views.
     UKismetSystemLibrary::ExecuteConsoleCommand(
         GetWorld(),
         FString("g.TimeoutForBlockOnRenderFence 300000"));
