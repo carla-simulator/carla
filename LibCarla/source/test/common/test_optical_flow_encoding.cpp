@@ -8,6 +8,7 @@
 
 #include <carla/ros2/publishers/OpticalFlowEncoding.h>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <vector>

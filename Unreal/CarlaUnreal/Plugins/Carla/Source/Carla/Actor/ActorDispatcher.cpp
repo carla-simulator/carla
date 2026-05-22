@@ -276,14 +276,14 @@ void UActorDispatcher::OnActorDestroyed(AActor *Actor)
   if (ROS2->IsEnabled())
   {
     void *ActorKey = reinterpret_cast<void *>(Actor);
-    // Tear down per-actor subscribers + callbacks before the legacy ros_name
-    // cleanup so SetFrame cannot dispatch to a destroyed actor. Both calls are
-    // idempotent on a missing key.
+    // RemoveActorCallback routes to UnregisterVehicle, which clears the
+    // per-actor subscribers, the actor-callback map, and the ros_name maps in
+    // a single step. The call is idempotent on a missing key, so it works for
+    // both vehicles and sensors that never registered a callback.
     ROS2->RemoveActorCallback(ActorKey);
     #if defined(WITH_ROS2_DEMO)
     ROS2->RemoveBasicSubscriberCallback(ActorKey);
     #endif
-    ROS2->RemoveActorRosName(ActorKey);
   }
   #endif
 
