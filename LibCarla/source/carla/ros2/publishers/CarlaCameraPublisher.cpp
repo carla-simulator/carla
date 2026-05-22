@@ -6,6 +6,7 @@
 
 #include "carla/ros2/publishers/CarlaCameraPublisher.h"
 
+#include "carla/Logging.h"
 #include "carla/ros2/publishers/CameraIntrinsics.h"
 #include "carla/ros2/publishers/PublisherImpl.h"
 #include "carla/ros2/types/CameraInfo.h"
@@ -34,8 +35,12 @@ CarlaCameraPublisher::CarlaCameraPublisher(
   : BasePublisher(std::move(base_topic_name), std::move(frame_id)),
     _impl_image(std::make_shared<PublisherImpl<CarlaCameraImageMsgTraits>>()),
     _impl_camera_info(std::make_shared<PublisherImpl<CarlaCameraInfoMsgTraits>>()) {
-  _impl_image->Init(GetBaseTopicName() + "/image");
-  _impl_camera_info->Init(GetBaseTopicName() + "/camera_info");
+  if (!_impl_image->Init(GetBaseTopicName() + "/image")) {
+    log_error("CarlaCameraPublisher: failed to initialise image writer for", GetBaseTopicName());
+  }
+  if (!_impl_camera_info->Init(GetBaseTopicName() + "/camera_info")) {
+    log_error("CarlaCameraPublisher: failed to initialise camera_info writer for", GetBaseTopicName());
+  }
 }
 
 CarlaCameraPublisher::~CarlaCameraPublisher() = default;
