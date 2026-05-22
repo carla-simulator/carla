@@ -88,7 +88,11 @@ void FPixelReader::WritePixelsToBuffer(
     RHIGetRenderQueryResult(Query, OldAbsTime, true);
   }
 
-  AsyncTask(ENamedThreads::HighTaskPriority,
+  // Must run on a generic background worker, never a render-pipeline named
+  // thread. The task busy-waits on FRHIGPUTextureReadback::IsReady(), whose
+  // completion the RHI thread itself has to drive; scheduling it on the RHI
+  // (or render) thread deadlocks the whole pipeline.
+  AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask,
     [=, Pool = std::move(Pool),
         Fallback = std::move(FallbackReadback)]() mutable {
     {
