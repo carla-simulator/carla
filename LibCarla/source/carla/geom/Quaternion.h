@@ -123,21 +123,23 @@ namespace geom {
     }
 
     /// Unit vector pointing toward the local X axis of this rotation,
-    /// expressed in CARLA's left-handed frame.
+    /// expressed in CARLA's left-handed frame. The canonical axes are
+    /// passed through the `Vector3D -> RightHandedVector3D` boundary
+    /// conversion so the Y-sign flip happens on both ends of the rotation.
     Vector3D GetForwardVector() const {
-      return static_cast<Vector3D>(RotatedVector(RightHandedVector3D(1.0f, 0.0f, 0.0f)));
+      return static_cast<Vector3D>(RotatedVector(Vector3D(1.0f, 0.0f, 0.0f)));
     }
 
     /// Unit vector pointing toward the local Y axis of this rotation,
     /// expressed in CARLA's left-handed frame.
     Vector3D GetRightVector() const {
-      return static_cast<Vector3D>(RotatedVector(RightHandedVector3D(0.0f, 1.0f, 0.0f)));
+      return static_cast<Vector3D>(RotatedVector(Vector3D(0.0f, 1.0f, 0.0f)));
     }
 
     /// Unit vector pointing toward the local Z axis of this rotation,
     /// expressed in CARLA's left-handed frame.
     Vector3D GetUpVector() const {
-      return static_cast<Vector3D>(RotatedVector(RightHandedVector3D(0.0f, 0.0f, 1.0f)));
+      return static_cast<Vector3D>(RotatedVector(Vector3D(0.0f, 0.0f, 1.0f)));
     }
 
     /// Conjugate of this quaternion. For a unit quaternion the conjugate is

@@ -371,3 +371,83 @@ TEST(geom, angular_velocity_and_acceleration_inherit_vector3d_storage) {
   static_assert(sizeof(Acceleration) == sizeof(Vector3D),
                 "Acceleration must stay layout-compatible with Vector3D");
 }
+
+TEST(geom, quaternion_basis_vectors_for_identity) {
+  // Identity quaternion's three basis vectors must be the canonical
+  // CARLA left-handed axes.
+  constexpr float eps = 1e-5f;
+  const Quaternion q;
+
+  const Vector3D forward = q.GetForwardVector();
+  EXPECT_NEAR(forward.x, 1.0f, eps);
+  EXPECT_NEAR(forward.y, 0.0f, eps);
+  EXPECT_NEAR(forward.z, 0.0f, eps);
+
+  const Vector3D right = q.GetRightVector();
+  EXPECT_NEAR(right.x, 0.0f, eps);
+  EXPECT_NEAR(right.y, 1.0f, eps);
+  EXPECT_NEAR(right.z, 0.0f, eps);
+
+  const Vector3D up = q.GetUpVector();
+  EXPECT_NEAR(up.x, 0.0f, eps);
+  EXPECT_NEAR(up.y, 0.0f, eps);
+  EXPECT_NEAR(up.z, 1.0f, eps);
+}
+
+TEST(geom, quaternion_basis_vectors_for_yaw_90) {
+  // Yaw=90 deg in CARLA's left-handed convention sends:
+  //   forward (+X) -> (+Y), right (+Y) -> (-X), up (+Z) -> (+Z).
+  constexpr float eps = 1e-4f;
+  const Quaternion q{Rotation{0.0f, 90.0f, 0.0f}};
+
+  const Vector3D forward = q.GetForwardVector();
+  EXPECT_NEAR(forward.x, 0.0f, eps);
+  EXPECT_NEAR(forward.y, 1.0f, eps);
+  EXPECT_NEAR(forward.z, 0.0f, eps);
+
+  const Vector3D right = q.GetRightVector();
+  EXPECT_NEAR(right.x, -1.0f, eps);
+  EXPECT_NEAR(right.y, 0.0f, eps);
+  EXPECT_NEAR(right.z, 0.0f, eps);
+
+  const Vector3D up = q.GetUpVector();
+  EXPECT_NEAR(up.x, 0.0f, eps);
+  EXPECT_NEAR(up.y, 0.0f, eps);
+  EXPECT_NEAR(up.z, 1.0f, eps);
+}
+
+TEST(geom, quaternion_hamilton_product_yaw_compose) {
+  // Two consecutive yaw=45 rotations compose to a yaw=90 rotation:
+  // applying the product to the forward axis sends (1,0,0) -> (0,1,0).
+  constexpr float eps = 1e-4f;
+  const Quaternion q45{Rotation{0.0f, 45.0f, 0.0f}};
+  const Quaternion q90 = q45 * q45;
+
+  const Vector3D forward = q90.GetForwardVector();
+  EXPECT_NEAR(forward.x, 0.0f, eps);
+  EXPECT_NEAR(forward.y, 1.0f, eps);
+  EXPECT_NEAR(forward.z, 0.0f, eps);
+}
+
+TEST(geom, quaternion_conjugate_equals_inverse_for_unit_quaternion) {
+  // For a unit quaternion built from any Rotation, conjugate and inverse
+  // are mathematically identical. Sample a few axis-aligned and combined
+  // rotations.
+  constexpr float eps = 1e-5f;
+  const Rotation samples[] = {
+    {0.0f, 0.0f, 0.0f},
+    {30.0f, 0.0f, 0.0f},
+    {0.0f, 45.0f, 0.0f},
+    {0.0f, 0.0f, 60.0f},
+    {15.0f, 25.0f, 10.0f},
+  };
+  for (const auto &r : samples) {
+    const Quaternion q{r};
+    const Quaternion qc = q.Conjugate();
+    const Quaternion qi = q.Inverse();
+    EXPECT_NEAR(qc.x, qi.x, eps) << r.pitch << "/" << r.yaw << "/" << r.roll;
+    EXPECT_NEAR(qc.y, qi.y, eps);
+    EXPECT_NEAR(qc.z, qi.z, eps);
+    EXPECT_NEAR(qc.w, qi.w, eps);
+  }
+}

@@ -92,7 +92,7 @@ void ROS2::Enable(bool enable) {
   log_info("ROS2 enabled: ", _enabled);
   _clock_publisher = std::make_shared<CarlaClockPublisher>();
 #if defined(WITH_ROS2_DEMO)
-  _basic_publisher = std::make_shared<BasicPublisher>("basic_publisher", "");
+  _basic_publisher = std::make_shared<BasicPublisher>();
   _basic_publisher->Init();
 #endif
 }
