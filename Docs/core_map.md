@@ -218,7 +218,7 @@ CARLA supports left-handed traffic rules defined in the OpenDRIVE files. To invo
 ```
 
 !!! note
-	The right-handed traffic convention is the default. A road with no `rule` attribute (or an unrecognized value) is treated as a right-handed road. You may also wish to set it explicitly by adding `rule="RHT"`.
+    The right-handed traffic convention is the default. A road with no `rule` attribute (or an unrecognized value) is treated as a right-handed road. You may also wish to set it explicitly by adding `rule="RHT"`.
 
 CARLA applies left-handed traffic conventions to each road with the `rule="LHT"` attribute applied.
 
