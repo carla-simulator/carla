@@ -48,7 +48,11 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
+        gnss:
+          Value: true
         hero:
+          Value: true
+        imu:
           Value: true
         lidar:
           Value: true
@@ -61,6 +65,10 @@ Visualization Manager:
       Show Names: true
       Tree:
         hero:
+          gnss:
+            {}
+          imu:
+            {}
           lidar:
             {}
           rgb:
