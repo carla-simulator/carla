@@ -603,7 +603,10 @@ void ROS2::ProcessDataFromLidar(
     void *actor) {
   if (auto base = GetOrCreateSensor(ESensors::RayCastLidar, stream_id, actor)) {
     auto publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(base);
-    const auto width = static_cast<std::uint32_t>(data._points.size());
+    // The lidar returns a flat list of floats rather than structured detection
+    // points. Each detection is 4 floats: x, y, z, intensity. Divide the total
+    // float count by 4 to recover the number of detections.
+    const auto width = static_cast<std::uint32_t>(data._points.size() / 4u);
     publisher->WritePointCloud(
         _seconds, _nanoseconds, 1u, width,
         reinterpret_cast<const std::uint8_t *>(data._points.data()));

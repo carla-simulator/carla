@@ -117,7 +117,7 @@ Visualization Manager:
             Filter size: 10
             History Policy: Keep Last
             Reliability Policy: Reliable
-            Value: /carla/hero/lidar
+            Value: /carla/hero/lidar/point_cloud
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
