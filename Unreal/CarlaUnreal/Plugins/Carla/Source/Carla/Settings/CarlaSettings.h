@@ -161,5 +161,15 @@ public:
       DisplayName = "Enable ROS2")
   bool ROS2 = false;
 
+  /// Default ROS2 topic visibility on startup. When true, every topic offered by
+  /// the implementation is visible from the beginning; when false, only the
+  /// sensors/actors explicitly enabled via EnableForROS calls are visible.
+  UPROPERTY(Category = "Quality Settings/ROS2",
+      BlueprintReadOnly,
+      EditAnywhere,
+      config,
+      DisplayName = "ROS2 Topics Visible On Startup")
+  bool ROS2TopicVisibility = true;
+
   /// @}
 };

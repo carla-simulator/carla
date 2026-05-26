@@ -81,6 +81,10 @@ namespace low_level {
       return _dispatcher.GetToken(sensor_id);
     }
 
+    void SetROS2TopicVisibilityDefaultEnabled(bool enabled) {
+      _dispatcher.SetROS2TopicVisibilityDefaultEnabled(enabled);
+    }
+
     void EnableForROS(stream_id sensor_id) {
       _dispatcher.EnableForROS(sensor_id);
     }

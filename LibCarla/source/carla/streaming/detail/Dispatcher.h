@@ -43,6 +43,10 @@ namespace detail {
 
     token_type GetToken(stream_id_type sensor_id);
 
+    void SetROS2TopicVisibilityDefaultEnabled(bool enabled) {
+      _topic_visibility_default_enabled = enabled;
+    }
+
     void EnableForROS(stream_id_type sensor_id) {
       auto search = _stream_map.find(sensor_id);
       if (search != _stream_map.end()) {
@@ -74,6 +78,10 @@ namespace detail {
     token_type _cached_token;
 
     StreamMap _stream_map;
+
+    // When true, every newly created stream starts visible to ROS 2 without an
+    // explicit EnableForROS call. Driven by the ROS2TopicVisibility setting.
+    bool _topic_visibility_default_enabled{false};
   };
 
 } // namespace detail
