@@ -40,6 +40,7 @@ CARLA forum</a>
 [__Catalogue__](catalogue.md) — Catalogue of CARLA's available maps, vehicles, pedestrians and props.  
 [__Blueprint library__](bp_library.md) — Blueprints provided to spawn actors.  
 [__Tutorials__](tutorials.md) — Tutorials covering CARLA's important functionality.  
+[__C++ tutorial__](tuto_cpp.md) — Practical C++ client workflow, external integration, batch commands, snapshots, and recorder/replay.  
 [__C++ reference__](ref_cpp.md) — Classes and methods in CARLA C++.    
 
 ## CARLA ecosystem

@@ -135,6 +135,7 @@ namespace tcp {
   }
 
   void ServerSession::CloseNow(boost::system::error_code ec) {
+    if (_is_closed.exchange(true)) return;
     _deadline.cancel();
     if (!ec)
     {

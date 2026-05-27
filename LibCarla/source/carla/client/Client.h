@@ -9,8 +9,8 @@
 #include "carla/client/detail/Simulator.h"
 #include "carla/client/World.h"
 #include "carla/client/Map.h"
+// #include "carla/PythonUtil.h" // Architectural correction: this header used to include "carla/PythonUtil.h" and pass PythonUtil::ReleaseGILDeleter() to the simulator shared_ptr below. PythonUtil.h has been moved into PythonAPI (it was the sole Python touchpoint in LibCarla). The C++ client now uses the default shared_ptr deleter; PythonAPI bindings can re-introduce GIL-aware destruction at the bindings layer if a future workload requires it.
 #include "carla/geom/Transform.h"
-#include "carla/PythonUtil.h"
 #include "carla/trafficmanager/TrafficManager.h"
 
 namespace carla {
@@ -192,8 +192,7 @@ namespace client {
       uint16_t port,
       size_t worker_threads)
     : _simulator(
-        new detail::Simulator(host, port, worker_threads),
-        PythonUtil::ReleaseGILDeleter()) {}
+        std::make_shared<detail::Simulator>(host, port, worker_threads)) {}
 
 } // namespace client
 } // namespace carla

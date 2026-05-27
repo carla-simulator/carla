@@ -72,7 +72,6 @@ set (
   carla-server
   libsqlite3
   Boost::asio
-  Boost::python
   Boost::geometry
   Boost::gil
   Eigen3::Eigen
@@ -80,6 +79,10 @@ set (
   png_static
   rpc
 )
+
+if (BUILD_PYTHON_API)
+  list (APPEND UE_DEPENDENCIES Boost::python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR})
+endif ()
 
 set (UE_DEPENDENCIES_ORDER_ONLY ${UE_DEPENDENCIES})
 
@@ -494,9 +497,12 @@ function (
 
   add_dependencies (
     ${TARGET_NAME}
-    carla-python-api
     carla-unreal-editor
   )
+
+  if (BUILD_PYTHON_API)
+    add_dependencies (${TARGET_NAME} carla-python-api)
+  endif ()
 
   carla_add_custom_target (
     ${TARGET_NAME_SHORT}

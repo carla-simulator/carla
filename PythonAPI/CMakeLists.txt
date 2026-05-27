@@ -31,7 +31,7 @@ set (
   png_static
   zlibstatic
   Boost::asio
-  Boost::python
+  Boost::python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}
   Boost::geometry
   Boost::gil
   RecastNavigation::Recast

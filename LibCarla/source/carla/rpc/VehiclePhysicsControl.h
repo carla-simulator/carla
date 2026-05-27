@@ -101,7 +101,7 @@ namespace carla {
         return std::all_of(
           std::begin(cmp),
           std::end(cmp),
-          std::identity());
+          [](bool b) noexcept { return b; });
       }
 
       inline bool operator!=(const VehiclePhysicsControl& rhs) const {

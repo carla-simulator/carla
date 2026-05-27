@@ -3,21 +3,21 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Architectural correction: this header was previously LibCarla/source/carla/PythonUtil.h, gated behind LIBCARLA_WITH_PYTHON_SUPPORT and pulling Boost::python into the otherwise-Python-free C++ client (carla-client). It only ever served PythonAPI bindings, so it was relocated here. LibCarla now has zero Python touchpoints; carla-client builds without any Python dependency. PythonAPI continues to use these GIL helpers as before.
 
 #pragma once
 
 #include "carla/NonCopyable.h"
 
-#ifdef LIBCARLA_WITH_PYTHON_SUPPORT
-#  if defined(__clang__)
-#    pragma clang diagnostic push
-#    pragma clang diagnostic ignored "-Wdeprecated-register"
-#  endif
-#    include <boost/python.hpp>
-#  if defined(__clang__)
-#    pragma clang diagnostic pop
-#  endif
-#endif // LIBCARLA_WITH_PYTHON_SUPPORT
+#if defined(__clang__)
+#  pragma clang diagnostic push
+#  pragma clang diagnostic ignored "-Wdeprecated-register"
+#endif
+#include <boost/python.hpp>
+#if defined(__clang__)
+#  pragma clang diagnostic pop
+#endif
 
 namespace carla {
 
@@ -25,22 +25,14 @@ namespace carla {
   public:
 
     static bool ThisThreadHasTheGIL() {
-#ifdef LIBCARLA_WITH_PYTHON_SUPPORT
-#  if PY_MAJOR_VERSION >= 3
+#if PY_MAJOR_VERSION >= 3
       return PyGILState_Check();
-#  else
+#else
       PyThreadState *tstate = _PyThreadState_Current;
       return (tstate != nullptr) && (tstate == PyGILState_GetThisThreadState());
-#  endif // PYTHON3
-#else
-      return false;
-#endif // LIBCARLA_WITH_PYTHON_SUPPORT
+#endif
     }
 
-#ifdef LIBCARLA_WITH_PYTHON_SUPPORT
-
-    /// Acquires a lock on the Python's Global Interpreter Lock, necessary for
-    /// calling Python code from a different thread.
     class AcquireGIL : private NonCopyable {
     public:
 
@@ -55,8 +47,6 @@ namespace carla {
       PyGILState_STATE _state;
     };
 
-    /// Releases the lock on the Python's Global Interpreter Lock, use it when doing
-    /// blocking I/O operations.
     class ReleaseGIL : private NonCopyable {
     public:
 
@@ -71,44 +61,31 @@ namespace carla {
       PyThreadState *_state;
     };
 
-#else // LIBCARLA_WITH_PYTHON_SUPPORT
-
-    class AcquireGIL : private NonCopyable {};
-    class ReleaseGIL : private NonCopyable {};
-
-#endif // LIBCARLA_WITH_PYTHON_SUPPORT
-
-    /// A deleter that can be passed to a smart pointer to acquire the GIL
-    /// before destroying the object.
     class AcquireGILDeleter {
     public:
 
       template <typename T>
       void operator()(T *ptr) const {
-#ifdef LIBCARLA_WITH_PYTHON_SUPPORT
         if (ptr != nullptr && !PythonUtil::ThisThreadHasTheGIL()) {
           AcquireGIL lock;
           delete ptr;
-        } else
-#endif // LIBCARLA_WITH_PYTHON_SUPPORT
-        delete ptr;
+        } else {
+          delete ptr;
+        }
       }
     };
 
-    /// A deleter that can be passed to a smart pointer to release the GIL
-    /// before destroying the object.
     class ReleaseGILDeleter {
     public:
 
       template <typename T>
       void operator()(T *ptr) const {
-#ifdef LIBCARLA_WITH_PYTHON_SUPPORT
         if (ptr != nullptr && PythonUtil::ThisThreadHasTheGIL()) {
           ReleaseGIL lock;
           delete ptr;
-        } else
-#endif // LIBCARLA_WITH_PYTHON_SUPPORT
-        delete ptr;
+        } else {
+          delete ptr;
+        }
       }
     };
   };
