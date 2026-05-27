@@ -437,6 +437,10 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     _client.UnSubscribeFromGBuffer(actor.GetId(), gbuffer_id);
   }
 
+  void Simulator::Send(const Sensor &sensor, const rpc::CustomV2XBytes &data) {
+    _client.Send(sensor.GetId(), data);
+  }
+
   void Simulator::FreezeAllTrafficLights(bool frozen) {
     _client.FreezeAllTrafficLights(frozen);
   }

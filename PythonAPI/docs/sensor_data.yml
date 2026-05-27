@@ -14,7 +14,9 @@
         - LIDAR sensor: carla.LidarMeasurement.<br>
         - Obstacle detector: carla.ObstacleDetectionEvent.<br>
         - Radar sensor: carla.RadarMeasurement.<br>
-        - Semantic LIDAR sensor: carla.SemanticLidarMeasurement.
+        - Semantic LIDAR sensor: carla.SemanticLidarMeasurement.<br>
+        - Cooperative awareness messages V2X sensor: carla.CAMEvent.<br>
+        - Custom V2X messages V2X sensor: carla.CustomV2XEvent.
     # - PROPERTIES -------------------------
     instance_variables:
     - var_name: frame
@@ -733,4 +735,154 @@
         The texture "CustomStencil" contains the Unreal Engine custom stencil data.
     # --------------------------------------
 
+  - class_name: CAMData
+    parent: carla.SensorData
+    # - DESCRIPTION ------------------------
+    doc: >
+      This is the data type for cooperative awareness message reception, contained in a [CAMEvent](#carlacamevent)
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: power
+      type: float - dBm
+      doc: >
+        Received power.
+
+    # - METHODS ----------------------------
+    # --------------------------------------
+    methods:
+    - def_name: get
+      return: dict
+      doc: >
+        Get the CAM data. Returns a nested dictionary containing the message following the ETSI standard: - `Header`: dict - `Message`: dict
+    # --------------------------------------
+    - def_name: __str__
+    # --------------------------------------
+
+  - class_name: CAMEvent
+    parent: carla.SensorData
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines the data provided by a **sensor.other.v2x**. This is a collection type to combine returning several [CAMData](#carlacamdata).
+    # - PROPERTIES -------------------------
+    instance_variables:
+
+    # - METHODS ----------------------------
+    # --------------------------------------
+    methods:
+    - def_name: get_message_count
+      return: int
+      doc: >
+        Get the number of received CAM's.
+    # --------------------------------------
+    - def_name: __get_item__
+      params:
+      - param_name: pos
+        type: int
+    # --------------------------------------
+    - def_name: __iter__
+      doc: > 
+        Iterate over the [CAMData](#carlacamdata) retrieved as data. 
+      # --------------------------------------
+    - def_name: __len__  
+    # --------------------------------------
+
+
+  - class_name: CustomV2XEvent
+    parent: carla.SensorData
+    # - DESCRIPTION ------------------------
+    doc: >
+      Class that defines the data provided by a **sensor.other.v2x_custom**. This is a collection type to combine returning several [CustomV2XData](#carlacustomv2xdata).
+    # - PROPERTIES -------------------------
+    instance_variables:
+
+    # - METHODS ----------------------------
+    # --------------------------------------
+    methods:
+    - def_name: get_message_count
+      return: int
+      doc: >
+        Get the number of received CAM's.
+    # --------------------------------------
+    - def_name: __get_item__
+      params:
+      - param_name: pos
+        type: int
+    # --------------------------------------
+    - def_name: __iter__
+      doc: > 
+        Iterate over the [CustomV2XData](#carlacustomv2xdata) retrieved as data. 
+      # --------------------------------------
+    - def_name: __len__ 
+    # --------------------------------------
+
+
+  - class_name: CustomV2XData
+    parent: carla.SensorData
+    # - DESCRIPTION ------------------------
+    doc: >
+      This is the data type defining a custom V2X message. Received as part of a [CustomV2XEvent](#carlacustomv2xevent).
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: power
+      type: float - dBm
+      doc: >
+        Received power.
+
+    # - METHODS ----------------------------
+    # --------------------------------------
+    methods:
+    - def_name: get
+      return: dict
+      doc: >
+        Get the custom message. Returns a nested dictionary containing the message. It has two primary keys: - `Header` : dict - `Message`: dict.
+    # --------------------------------------
+    - def_name: __str__ 
+    # --------------------------------------
+
+
+  - class_name: CustomV2XBytes
+    # - DESCRIPTION ------------------------
+    doc: >
+      This is the data type defining the bytes of a custom V2X message. Sent by the method `carla.Sensor.send` and received as part of a [CustomV2XEvent](#carlacustomv2xevent).
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: data_size
+      type: int
+      doc: >
+        The actual number of bytes of the message.
+
+    # - METHODS ----------------------------
+    # --------------------------------------
+    methods:
+    - def_name: get
+      return: dict
+      doc: >
+        Get the custom bytes. Returns a nested dictionary containing the message. It has three primary keys: - `DataSize` : int - `MaxDataSize`: int - `Bytes`: memory view containing the bytes.
+    - def_name: max_data_size
+      return: int
+      doc: >
+        Get the maximum data size that a single message is able to transport.
+    - def_name: get_bytes
+      return: bytes
+      doc: >
+        Get the custom bytes.
+    - def_name: get_string
+      return: str
+      doc: >
+        Get the custom bytes as string. Be aware: this is a convenience method for quick tests, no coding/decoding is performed.
+    - def_name: set_bytes
+      params:
+      - param_name: bytes
+        type: bytes
+      doc: >
+        Set the custom bytes from a bytearray. Be aware that only up to `MaxDataSize` bytes are considered. If you have larger data, you need to split it manually.
+    - def_name: set_string
+      params:
+      - param_name: string
+        type: str
+      doc: >
+        Set the custom bytes directly from a string. The null termination is not transmitted. Be aware that only up to `MaxDataSize` bytes are considered. If you have larger data, you need to split it manually. Be aware: this is a convenience method for quick tests, no coding/decoding is performed.
+    # --------------------------------------
+    - def_name: __str__ 
+    # --------------------------------------
 ...
