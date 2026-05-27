@@ -22,6 +22,8 @@
 #  pragma clang diagnostic pop
 #endif
 
+#include <atomic>
+
 namespace carla {
 namespace streaming {
 namespace detail {
@@ -81,6 +83,8 @@ namespace tcp {
     callback_function_type _on_closed;
 
     bool _is_writing = false;
+
+    std::atomic_bool _is_closed{false};
   };
 
 } // namespace tcp
