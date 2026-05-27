@@ -1,6 +1,7 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
 #include "CarlaTools.h"
+#include "VehicleImporter.h"
 
 #define LOCTEXT_NAMESPACE "FCarlaToolsModule"
 
@@ -8,13 +9,12 @@ DEFINE_LOG_CATEGORY(LogCarlaTools);
 
 void FCarlaToolsModule::StartupModule()
 {
-	// This code will execute after your module is loaded into memory; the exact timing is specified in the .uplugin file per-module
+	// Module startup only ensures the class is available, doesn't auto-start server
 }
 
 void FCarlaToolsModule::ShutdownModule()
 {
-	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
-	// we call this function before unloading the module.
+	// No automatic cleanup needed here
 }
 
 #undef LOCTEXT_NAMESPACE

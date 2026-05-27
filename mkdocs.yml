@@ -28,10 +28,12 @@ nav:
 
 - Resources:
   - 'Python API': 'python_api.md'
-  - 'Catalogue': 'catalogue.md'  
+  - 'Catalogue': 'catalogue.md'
+  - 'C++ tutorial': 'tuto_cpp.md'
   - 'C++ reference': 'ref_cpp.md'
-  - 'Blueprint library': 'bp_library.md'  
+  - 'Blueprint library': 'bp_library.md'
   - 'Tutorials': 'tutorials.md'
+  - 'CARLA Studio': 'https://github.com/carla-simulator/carla-studio'
   #- 'Extended documentation': 'ext_docs.md'
 
 - CARLA Ecosystem:

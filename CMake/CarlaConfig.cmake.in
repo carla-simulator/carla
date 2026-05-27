@@ -1,0 +1,37 @@
+# CarlaConfig.cmake — produced by configure_package_config_file().
+# Declares Carla::carla-client as an IMPORTED STATIC target backed by
+# the libcarla-client.a installed alongside this file.
+#
+# Downstream usage:
+#
+#     find_package(Carla CONFIG REQUIRED)
+#     target_link_libraries(myapp PRIVATE Carla::carla-client)
+#
+# The consumer must also provide the system equivalents of CARLA's
+# vendored static deps (Boost, zlib, libpng) on its own link line —
+# see Examples/CppClient/Standalone/ for a worked example.
+
+@PACKAGE_INIT@
+
+set_and_check (Carla_INCLUDE_DIR  "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
+set_and_check (Carla_LIBRARY_DIR  "@PACKAGE_CMAKE_INSTALL_LIBDIR@")
+
+if (NOT TARGET Carla::carla-client)
+  find_library (Carla_CLIENT_LIBRARY
+    NAMES carla-client
+    PATHS "${Carla_LIBRARY_DIR}"
+    NO_DEFAULT_PATH
+    REQUIRED
+  )
+  add_library (Carla::carla-client STATIC IMPORTED)
+  separate_arguments (Carla_INTERFACE_DEFINITIONS NATIVE_COMMAND
+    "@CARLA_EXPORTED_DEFINITIONS@")
+  set_target_properties (Carla::carla-client PROPERTIES
+    IMPORTED_LOCATION             "${Carla_CLIENT_LIBRARY}"
+    INTERFACE_INCLUDE_DIRECTORIES "${Carla_INCLUDE_DIR}"
+    INTERFACE_COMPILE_DEFINITIONS "${Carla_INTERFACE_DEFINITIONS}"
+    INTERFACE_COMPILE_FEATURES    cxx_std_20
+  )
+endif ()
+
+check_required_components (Carla)

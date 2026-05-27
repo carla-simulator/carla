@@ -32,7 +32,8 @@ CMakeSettings.json
 
 # Logs and core dumps
 *.log
-core
+/core
+core.[0-9]*
 
 # Script output directories
 _out*
