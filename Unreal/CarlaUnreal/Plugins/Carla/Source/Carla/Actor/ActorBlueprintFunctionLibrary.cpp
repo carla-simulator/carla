@@ -411,7 +411,7 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
     FActorVariation post_process_profile;
     post_process_profile.Id = TEXT("post_process_profile");
     post_process_profile.Type = EActorAttributeType::String;
-    post_process_profile.RecommendedValues = {TEXT("default")};
+    post_process_profile.RecommendedValues = {TEXT("Default")};
     post_process_profile.bRestrictToRecommended = false;
 
     Definition.Variations.Append({PostProccess, post_process_profile});
@@ -1407,11 +1407,35 @@ void UActorBlueprintFunctionLibrary::SetCamera(
             Description.Variations["enable_postprocess_effects"],
             true));
 
-    FString PostProcessDefaultName = RetrieveActorAttributeToString("post_process_profile",
-        Description.Variations, TEXT("default"));
+    FString PostProcessProfileName = RetrieveActorAttributeToString(
+        "post_process_profile",
+        Description.Variations,
+        TEXT(""));
+
+    // Empty or the legacy lowercase "default" sentinel means "no preference":
+    // load the profile named after the active map. Case-sensitive so an
+    // explicit "Default" still force-loads Default.json.
+    if (PostProcessProfileName.IsEmpty() || PostProcessProfileName == TEXT("default"))
+    {
+      const UWorld *World = Camera->GetWorld();
+      FString MapName{};
+      if (World != nullptr)
+      {
+        MapName = World->GetMapName();
+        MapName.RemoveFromStart(World->StreamingLevelsPrefix);
+      }
+      else
+      {
+        UE_LOG(LogCarla, Warning,
+            TEXT("SetCamera: camera has no UWorld; falling back to Default post-process profile."));
+      }
+      const FString MapJsonPath = UPostProcessJsonUtils::GetPostProcessConfigPath(MapName);
+      PostProcessProfileName = FPaths::FileExists(MapJsonPath) ? MapName : TEXT("Default");
+    }
+
     UPostProcessJsonUtils::LoadAllPostProcessFromJsonToSceneCapture(
         Camera->GetCaptureComponent(),
-        PostProcessDefaultName);
+        PostProcessProfileName);
   }
 }
 

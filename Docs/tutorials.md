@@ -6,6 +6,7 @@ Here you will find the multitude of tutorials available to help you understand h
 
 ### CARLA features
 
+[__C++ tutorial__](tuto_cpp.md) — Practical C++ client workflow and API usage.  
 [__Traffic manager__](tuto_G_traffic_manager.md) — How to use traffic manager to guide traffic around your town.    
 [__Texture streaming__](tuto_G_texture_streaming.md) — Modify textures of map objects in real time to add variation.  
 [__Instance segmentation camera__](tuto_G_instance_segmentation_sensor.md) — Use an instance segmentation camera to distinguish objects of the same class.  

@@ -12,7 +12,6 @@
 #include "carla/MsgPack.h"
 
 
-
 namespace carla {
   namespace rpc {
 
@@ -99,7 +98,7 @@ namespace carla {
           old_location == rhs.old_location,
           velocity == rhs.velocity
         };
-        return std::all_of(std::begin(cmp), std::end(cmp), std::identity());
+        return std::all_of(std::begin(cmp), std::end(cmp), [](bool b) noexcept { return b; });
       }
 
       inline bool operator!=(const WheelPhysicsControl& rhs) const {
