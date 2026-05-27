@@ -43,12 +43,12 @@ public:
 
   uint32 GetImageWidth() const
   {
-    return static_cast<int32>(ImageWidth);
+    return ImageWidth;
   }
 
   uint32 GetImageHeight() const
   {
-    return static_cast<int32>(ImageHeight);
+    return ImageHeight;
   }
 
   UFUNCTION(BlueprintCallable, BlueprintPure)

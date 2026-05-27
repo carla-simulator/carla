@@ -48,7 +48,7 @@ static TAutoConsoleVariable<int32> CVarWideAngleSensorSkipVFTR(
     TEXT("0: Disabled\n")
     TEXT("1: Enabled\n"));
 
-static auto WIDE_ANGLE_LENS_SENSOR_COUNTER_COUNTER = 0u;
+static auto WIDE_ANGLE_LENS_SENSOR_COUNTER = 0u;
 
 // =============================================================================
 // -- Local static methods -----------------------------------------------------
@@ -121,7 +121,7 @@ ASceneCaptureSensor_WideAngleLens::ASceneCaptureSensor_WideAngleLens(const FObje
     constexpr auto FOV = 90.0F * Deg2Rad;
     constexpr auto HalfFOV = FOV * 0.5F;
 
-    const auto SensorIndex = WIDE_ANGLE_LENS_SENSOR_COUNTER_COUNTER++;
+    const auto SensorIndex = WIDE_ANGLE_LENS_SENSOR_COUNTER++;
     const auto FaceIndexBase = SensorIndex * 6;
     const auto ProjectionMatrix = ProjectionMatrixType(HalfFOV, 1.0F, 1.0F, GNearClippingPlane);
 
@@ -500,43 +500,63 @@ void ASceneCaptureSensor_WideAngleLens::CaptureSceneExtended()
         if (CubemapRenderMask & (1U << i))
             FaceCaptures[i]->CaptureScene();
 
-    ENQUEUE_RENDER_COMMAND(WideAngleLensCommand)([this](FRHICommandListImmediate& RHICmdList)
+    // Snapshot the data the render-thread pass needs so the lambda does not
+    // dereference `this` after the actor may have been destroyed. The render
+    // targets and sampler are still resolved through a TWeakObjectPtr so we
+    // skip the dispatch cleanly if the owning actor is gone.
+    TWeakObjectPtr<ASceneCaptureSensor_WideAngleLens> WeakSelf(this);
+    UTextureRenderTarget2D* RenderTargetsSnapshot[] =
+    {
+        FaceRenderTargets[0],
+        FaceRenderTargets[1],
+        FaceRenderTargets[2],
+        FaceRenderTargets[3],
+        FaceRenderTargets[4],
+        FaceRenderTargets[5]
+    };
+    UTextureRenderTarget2D* CaptureRenderTargetSnapshot = CaptureRenderTarget;
+    FRHISamplerState* CubemapSamplerSnapshot = CubemapSampler;
+
+    CameraModelUtil::FDistortCubemapToImageOptions DistortedOptions = { };
+    DistortedOptions.KannalaBrandtCoefficients = KannalaBrandtCameraCoefficients;
+    DistortedOptions.YFOVAngle = YFOVAngle;
+    DistortedOptions.YFocalLength = YFocalLength;
+    DistortedOptions.LongitudeOffset = LongitudeOffset;
+    DistortedOptions.FOVFadeSize = FOVFadeSize;
+    DistortedOptions.CameraModel = CameraModel;
+    DistortedOptions.bRenderEquirectangular = bRenderEquirectangular;
+    DistortedOptions.bFOVMaskEnable = bFOVMaskEnable;
+    DistortedOptions.bRenderPerspective = bRenderPerspective;
+
+    ENQUEUE_RENDER_COMMAND(WideAngleLensCommand)(
+        [WeakSelf,
+         RenderTargetsSnapshot,
+         CaptureRenderTargetSnapshot,
+         CubemapSamplerSnapshot,
+         DistortedOptions](FRHICommandListImmediate& RHICmdList)
     {
         TRACE_CPUPROFILER_EVENT_SCOPE(WideAngleLensCommand);
 
-        if (!IsValid(this))
+        if (!WeakSelf.IsValid())
             return;
 
         FRDGBuilder GraphBuilder(RHICmdList);
 
         UTextureRenderTarget2D* RenderTargets[] =
         {
-            FaceRenderTargets[0],
-            FaceRenderTargets[1],
-            FaceRenderTargets[2],
-            FaceRenderTargets[3],
-            FaceRenderTargets[4],
-            FaceRenderTargets[5]
+            RenderTargetsSnapshot[0],
+            RenderTargetsSnapshot[1],
+            RenderTargetsSnapshot[2],
+            RenderTargetsSnapshot[3],
+            RenderTargetsSnapshot[4],
+            RenderTargetsSnapshot[5]
         };
 
-        using namespace CameraModelUtil;
-
-        FDistortCubemapToImageOptions DistortedOptions = { };
-        DistortedOptions.KannalaBrandtCoefficients = KannalaBrandtCameraCoefficients;
-        DistortedOptions.YFOVAngle = YFOVAngle;
-        DistortedOptions.YFocalLength = YFocalLength;
-        DistortedOptions.LongitudeOffset = LongitudeOffset;
-        DistortedOptions.FOVFadeSize = FOVFadeSize;
-        DistortedOptions.CameraModel = CameraModel;
-        DistortedOptions.bRenderEquirectangular = bRenderEquirectangular;
-        DistortedOptions.bFOVMaskEnable = bFOVMaskEnable;
-        DistortedOptions.bRenderPerspective = bRenderPerspective;
-
-        DistortCubemapToImage(
+        CameraModelUtil::DistortCubemapToImage(
             GraphBuilder,
-            CaptureRenderTarget,
+            CaptureRenderTargetSnapshot,
             RenderTargets,
-            CubemapSampler,
+            CubemapSamplerSnapshot,
             DistortedOptions);
 
         GraphBuilder.Execute();
@@ -690,7 +710,10 @@ void ASceneCaptureSensor_WideAngleLens::PostPhysTick(UWorld* World, ELevelTick T
 void ASceneCaptureSensor_WideAngleLens::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
     Super::EndPlay(EndPlayReason);
-    WIDE_ANGLE_LENS_SENSOR_COUNTER_COUNTER = 0u;
+    // The sensor counter is process-wide and only used to derive unique
+    // subobject names at construction. Resetting it here would let a
+    // surviving sibling sensor collide with the indices of the next spawned
+    // sensor.
     FlushRenderingCommands();
 }
 

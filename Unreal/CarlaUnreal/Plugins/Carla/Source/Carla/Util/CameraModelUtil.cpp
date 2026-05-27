@@ -223,7 +223,6 @@ static auto CreateDistortionParameters(
         Parameters->Flags |= WAL_SHADER_FLAGS_EQUIRECTANGULAR;
     if (FovMaskEnable)
         Parameters->Flags |= WAL_SHADER_FLAGS_FOV_MASK;
-    Parameters->FaceSampler = Sampler;
     return Parameters;
 }
 
