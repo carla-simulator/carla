@@ -15,11 +15,12 @@ Usage: $0 [--distro=<distro>] [--rmw=<middleware>]
 
 Options:
   --distro    ROS 2 distribution to use. Supported: humble, jazzy  (default: humble)
-  --rmw       DDS middleware to use. Supported: fastdds, cyclonedds  (default: fastdds)
+  --rmw       RMW implementation to use. Supported: fastdds, cyclonedds, zenoh  (default: fastdds)
 
 Examples:
   $0 --distro=humble --rmw=fastdds
   $0 --distro=jazzy  --rmw=cyclonedds
+  $0 --distro=jazzy  --rmw=zenoh
 EOF
     exit 1
 }
@@ -40,13 +41,15 @@ case "$DISTRO" in
 esac
 
 case "$RMW" in
-    fastdds|cyclonedds) ;;
-    *) echo "Unsupported RMW '${RMW}'. Supported values: fastdds, cyclonedds"; exit 1 ;;
+    fastdds|cyclonedds|zenoh) ;;
+    *) echo "Unsupported RMW '${RMW}'. Supported values: fastdds, cyclonedds, zenoh"; exit 1 ;;
 esac
 
 # Map short names to ROS RMW implementation identifiers
 if [ "$RMW" = "cyclonedds" ]; then
     RMW_IMPLEMENTATION="rmw_cyclonedds_cpp"
+elif [ "$RMW" = "zenoh" ]; then
+    RMW_IMPLEMENTATION="rmw_zenoh_cpp"
 else
     RMW_IMPLEMENTATION="rmw_fastrtps_cpp"
 fi
@@ -77,7 +80,7 @@ xauth nlist "$DISPLAY" | sed -e 's/^..../ffff/' | xauth -f "$XAUTH" nmerge -
 EXTRA_ENV=()
 if [ "$RMW" = "cyclonedds" ]; then
     EXTRA_ENV+=(--env="CYCLONEDDS_URI=/config/cyclonedds.xml")
-else
+elif [ "$RMW" = "fastdds" ]; then
     EXTRA_ENV+=(--env="FASTRTPS_DEFAULT_PROFILES_FILE=/config/fastrtps-profile.xml")
 fi
 
