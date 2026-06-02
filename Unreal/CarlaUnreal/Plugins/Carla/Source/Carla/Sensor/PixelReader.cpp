@@ -88,12 +88,12 @@ void FPixelReader::WritePixelsToBuffer(
     RHIGetRenderQueryResult(Query, OldAbsTime, true);
   }
 
-  // Must run on a generic background worker, never a render-pipeline named
-  // thread. The task busy-waits on FRHIGPUTextureReadback::IsReady(), whose
-  // completion the RHI thread itself has to drive; scheduling it on the RHI
-  // (or render) thread deadlocks the whole pipeline.
-  AsyncTask(ENamedThreads::AnyBackgroundThreadNormalTask,
-    [=, Pool = std::move(Pool),
+  // Must stay off the render-pipeline named threads: the task busy-waits
+  // on FRHIGPUTextureReadback::IsReady(), which the RHI thread itself has
+  // to drive — dispatching there deadlocks. AnyBackgroundHiPriTask keeps
+  // the original high-priority intent.
+  AsyncTask(ENamedThreads::AnyBackgroundHiPriTask,
+    [=, FuncForSending = std::move(FuncForSending), Pool = std::move(Pool),
         Fallback = std::move(FallbackReadback)]() mutable {
     {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR("Wait GPU transfer");
