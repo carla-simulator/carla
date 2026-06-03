@@ -1,6 +1,8 @@
 =======
 ## LATEST Changes
 
+* Modernized the Python navigation agents with type hints and code cleanup ported from `ue4-dev`, added typed obstacle/traffic-light detection-result tuples in `agents/tools/hints.py`, reworked `BasicAgent.set_destination` to accept an optional start location and queue-clean flag, and fixed obstacle detection treating an empty `vehicle_list` as "all vehicles".
+* Updated the `invertedai_traffic.py` example with InvertedAI quality-of-life improvements for ego-vehicle integration and video generation.
 * Fixed three latent bugs in the `FPixelReader` GPU pixel-readback path: an inverted validity guard in `SendPixelsInRenderThread` that discarded every valid sensor's frame, the readback-wait task being scheduled onto a render-pipeline thread (deadlocking game/render/RHI threads), and `FRHIGPUTextureReadback::Lock` truncating the payload to a single row by aliasing its row-pitch out-parameter.
 * Fixed ServerSession::CloseNow double-invocation on ue5-dev by guarding with std::atomic_bool _is_closed so the close path runs exactly once, preventing a dropped client from evicting a still-alive subscriber (port of ue4-dev fix #9740)
 * Added NumPy 2 compatibility to the PythonAPI by upgrading Boost to 1.90.0, which ships the upstream NumPy 2 C ABI fix. LibCarla networking migrated from `boost::asio::deadline_timer` to `boost::asio::steady_timer`, and the deprecated `io_service`, `address::from_string`, `resolver::query`, `buffer_cast`, and `io_context::work` APIs replaced across LibCarla and the CarlaTools plugin.
