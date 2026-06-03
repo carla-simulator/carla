@@ -12,6 +12,9 @@
 
 #include "Walker/WalkerBase.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Game/CarlaGameModeBase.h"
+#include "Carla/Traffic/TrafficSignBase.h"
+#include "Carla/Traffic/TrafficSignHeightUtils.h"
 #include "Carla/Vehicle/CustomTerrainPhysicsComponent.h"
 
 #include <util/ue-header-guard-begin.h>
@@ -141,6 +144,7 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
   LM_LOG(Warning, "OnLevelAddedToWorld");
   ATagger::TagActorsInLevel(*InLevel, true);
 
+  AdjustSignsHeightToGround();
 
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }
@@ -151,6 +155,40 @@ void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
   FCarlaMapTile& Tile = GetCarlaMapTile(InLevel);
   Tile.TilesSpawned = false;
+}
+
+void ALargeMapManager::AdjustSignsHeightToGround()
+{
+  UWorld* World = GetWorld();
+  if (!World)
+  {
+    return;
+  }
+
+  TArray<AActor*> SignActors;
+  UGameplayStatics::GetAllActorsOfClass(
+      World, ATrafficSignBase::StaticClass(), SignActors);
+
+  const TArray<AActor*> NoIgnoredActors;
+  const TArray<UPrimitiveComponent*> NoIgnoredComponents;
+  bool bAnyAdjusted = false;
+  for (AActor* Actor : SignActors)
+  {
+    ATrafficSignBase* Sign = Cast<ATrafficSignBase>(Actor);
+    if (TrafficSignHeightUtils::AdjustSignToGround(
+            World, Sign, NoIgnoredActors, NoIgnoredComponents))
+    {
+      bAnyAdjusted = true;
+    }
+  }
+
+  if (bAnyAdjusted)
+  {
+    if (ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World))
+    {
+      GameMode->RegisterEnvironmentObjects();
+    }
+  }
 }
 
 void ALargeMapManager::RegisterInitialObjects()
@@ -205,6 +243,8 @@ void ALargeMapManager::OnActorSpawned(
       // Wait until the pending levels changes are finished to avoid spawning
       // the car without ground underneath
       World->FlushLevelStreaming();
+
+      AdjustSignsHeightToGround();
 
       IsHeroVehicle = true;
     }

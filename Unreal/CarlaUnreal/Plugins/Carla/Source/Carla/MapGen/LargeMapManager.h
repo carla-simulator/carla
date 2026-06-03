@@ -87,6 +87,10 @@ public:
 
   void OnActorSpawned(const FCarlaActor& CarlaActor);
 
+  // Snap every ATrafficSignBase in the world to the ground (used after tiles
+  // stream in) and re-register environment objects if anything moved.
+  void AdjustSignsHeightToGround();
+
   UFUNCTION(Category="Large Map Manager")
   void OnActorDestroyed(AActor* DestroyedActor);
 
