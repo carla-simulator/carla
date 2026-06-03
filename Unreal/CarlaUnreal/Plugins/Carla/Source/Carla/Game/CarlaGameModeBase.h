@@ -147,7 +147,13 @@ private:
 
   void ParseOpenDrive();
 
+public:
+
+  // Public so map managers can refresh environment objects after relocating
+  // actors (e.g. traffic sign height adjustment).
   void RegisterEnvironmentObjects();
+
+private:
 
   void ConvertMapLayerMaskToMapNames(int32 MapLayer, TArray<FName>& OutLevelNames);
 

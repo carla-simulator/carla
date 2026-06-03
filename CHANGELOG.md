@@ -1,7 +1,7 @@
 =======
 ## LATEST Changes
 
-  * Adjusted OpenDRIVE traffic signs and traffic lights to the ground height on spawn, keeping their trigger volumes aligned (ported from `ue4-dev`).
+* Adjusted OpenDRIVE traffic signs and traffic lights to the ground height on spawn, keeping their trigger volumes aligned (ported from `ue4-dev`).
 
 * Fixed three latent bugs in the `FPixelReader` GPU pixel-readback path: an inverted validity guard in `SendPixelsInRenderThread` that discarded every valid sensor's frame, the readback-wait task being scheduled onto a render-pipeline thread (deadlocking game/render/RHI threads), and `FRHIGPUTextureReadback::Lock` truncating the payload to a single row by aliasing its row-pitch out-parameter.
 * Fixed ServerSession::CloseNow double-invocation on ue5-dev by guarding with std::atomic_bool _is_closed so the close path runs exactly once, preventing a dropped client from evicting a still-alive subscriber (port of ue4-dev fix #9740)

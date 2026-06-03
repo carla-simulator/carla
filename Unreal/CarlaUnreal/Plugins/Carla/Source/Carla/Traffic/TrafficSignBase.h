@@ -59,7 +59,7 @@ public:
 
   /// True once this sign has been snapped to the ground, to avoid adjusting
   /// it more than once.
-  UPROPERTY(Category = "Traffic Sign", VisibleAnywhere, BlueprintReadOnly)
+  UPROPERTY(Category = "Traffic Sign", VisibleAnywhere, BlueprintReadOnly, Transient)
   bool bPositioned = false;
 
 private:
