@@ -50,7 +50,7 @@ void export_commands() {
 
   using ActorPtr = carla::SharedPtr<cc::Actor>;
 
-  object command_module(handle<>(borrowed(PyImport_AddModule("libcarla.command"))));
+  object command_module(handle<>(borrowed(PyImport_AddModule("carla.command"))));
   scope().attr("command") = command_module;
   scope submodule_scope = command_module;
 
