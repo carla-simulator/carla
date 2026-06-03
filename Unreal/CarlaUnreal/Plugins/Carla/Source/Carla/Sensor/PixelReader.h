@@ -106,7 +106,7 @@ void FPixelReader::SendPixelsInRenderThread(TSensor &Sensor, bool use16BitFormat
   TRACE_CPUPROFILER_EVENT_SCOPE(FPixelReader::SendPixelsInRenderThread);
   check(Sensor.CaptureRenderTarget != nullptr);
 
-  if (!Sensor.HasActorBegunPlay() || IsValidChecked(&Sensor))
+  if (!Sensor.HasActorBegunPlay() || !IsValidChecked(&Sensor))
   {
     return;
   }
