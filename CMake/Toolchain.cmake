@@ -199,7 +199,7 @@ set (
 
 set (
 	CMAKE_CXX_STANDARD_LIBRARIES
-	"${UE_LIBS}/libc++.a ${UE_LIBS}/libc++abi.a"
+	"${UE_LIBS}/libc++.a ${UE_LIBS}/libc++abi.a -lm"
 )
 
 set (
