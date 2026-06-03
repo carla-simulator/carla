@@ -1,6 +1,8 @@
 =======
 ## LATEST Changes
 
+* Modernized the Python navigation agents with type hints and code cleanup ported from `ue4-dev`, added typed obstacle/traffic-light detection-result tuples in `agents/tools/hints.py`, reworked `BasicAgent.set_destination` to accept an optional start location and queue-clean flag, and fixed obstacle detection treating an empty `vehicle_list` as "all vehicles".
+* Updated the `invertedai_traffic.py` example with InvertedAI quality-of-life improvements for ego-vehicle integration and video generation.
 * Added a Hybrid Solid-State LiDAR sensor (`sensor.lidar.hss_lidar`) modelled on the Hesai AT128, with configurable channels, horizontal/vertical FOV, and horizontal resolution. Reuses the rotating LiDAR's intensity, drop-off, and noise model.
 * Documented left-hand traffic (LHT) support in `Docs/core_map.md`, covering the OpenDRIVE `rule="LHT"` road attribute, the RHT default, and the impact on traffic signs and signals.
 * Fixed three latent bugs in the `FPixelReader` GPU pixel-readback path: an inverted validity guard in `SendPixelsInRenderThread` that discarded every valid sensor's frame, the readback-wait task being scheduled onto a render-pipeline thread (deadlocking game/render/RHI threads), and `FRHIGPUTextureReadback::Lock` truncating the payload to a single row by aliasing its row-pitch out-parameter.
