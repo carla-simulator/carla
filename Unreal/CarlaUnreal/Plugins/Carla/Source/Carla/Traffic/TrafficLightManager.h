@@ -85,6 +85,10 @@ private:
   UPROPERTY()
   TArray<TObjectPtr<ATrafficSignBase>> TrafficSigns;
 
+  // When true, snap generated signs/lights to the ground after spawning.
+  UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
+  bool bAdjustSignsHeightToGround = true;
+
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
   TSubclassOf<AActor> TrafficLightModel_RHT;
 

@@ -9,6 +9,7 @@
 #include "StopSignComponent.h"
 #include "YieldSignComponent.h"
 #include "SpeedLimitComponent.h"
+#include "TrafficSignHeightUtils.h"
 #include "Components/BoxComponent.h"
 #include "Runtime/CoreUObject/Public/UObject/ConstructorHelpers.h"
 #include "OpenDrive/OpenDrive.h"
@@ -275,6 +276,18 @@ void ATrafficLightManager::GenerateSignalsAndTrafficLights()
     SpawnTrafficLights();
 
     SpawnSignals();
+
+    if (bAdjustSignsHeightToGround)
+    {
+      UWorld* World = GetWorld();
+      const TArray<AActor*> NoIgnoredActors;
+      const TArray<UPrimitiveComponent*> NoIgnoredComponents;
+      for (ATrafficSignBase* Sign : TrafficSigns)
+      {
+        TrafficSignHeightUtils::AdjustSignToGround(
+            World, Sign, NoIgnoredActors, NoIgnoredComponents);
+      }
+    }
 
     TrafficLightsGenerated = true;
   }
