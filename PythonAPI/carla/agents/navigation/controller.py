@@ -12,7 +12,7 @@ import carla
 from agents.tools.misc import get_speed
 
 
-class VehiclePIDController():
+class VehiclePIDController:
     """
     VehiclePIDController is the combination of two PID controllers
     (lateral and longitudinal) to perform the
@@ -105,7 +105,7 @@ class VehiclePIDController():
         self._lat_controller.set_offset(offset)
 
 
-class PIDLongitudinalController():
+class PIDLongitudinalController:
     """
     PIDLongitudinalController implements longitudinal control using a PID.
     """
@@ -171,7 +171,7 @@ class PIDLongitudinalController():
         self._dt = dt
 
 
-class PIDLateralController():
+class PIDLateralController:
     """
     PIDLateralController implements lateral control using a PID.
     """
@@ -199,7 +199,7 @@ class PIDLateralController():
     def run_step(self, waypoint):
         """
         Execute one step of lateral control to steer
-        the vehicle towards a certain waypoin.
+        the vehicle towards a certain waypoint.
 
             :param waypoint: target waypoint
             :return: steering control in the range [-1, 1] where:
