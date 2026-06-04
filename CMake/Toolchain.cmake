@@ -197,6 +197,9 @@ set (
 	CACHE FILEPATH ""
 )
 
+# UE's static libc++/libc++abi reference math symbols (e.g. fmod, sqrt) but
+# do not pull in libm themselves, so the final link must request it explicitly.
+# Without -lm the link fails with undefined references to those symbols.
 set (
 	CMAKE_CXX_STANDARD_LIBRARIES
 	"${UE_LIBS}/libc++.a ${UE_LIBS}/libc++abi.a -lm"
