@@ -28,6 +28,10 @@ struct SemanticLidarPoint {
   std::uint32_t object_tag;
 };
 
+static_assert(
+    sizeof(SemanticLidarPoint) == 24u,
+    "SemanticLidarPoint must be tightly packed (4 float32s + 2 uint32s) for the wire layout");
+
 }  // namespace
 
 std::size_t CarlaSemanticLidarPublisher::GetPointSize() const {

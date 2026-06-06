@@ -9,6 +9,8 @@
 #include <carla/ros2/publishers/DvsEventEncoding.h>
 
 #include <array>
+#include <cstdint>
+#include <cstring>
 
 TEST(DvsEventEncoding, empty_event_stream_produces_all_zeros) {
   const auto buffer = carla::ros2::EncodeDvsEventsToBgr(
@@ -111,5 +113,83 @@ TEST(DvsEventEncoding, raw_byte_overload_matches_struct_overload) {
       sizeof(PackedEvent));
   const auto from_typed = carla::ros2::EncodeDvsEventsToBgr(
       4u, 4u, typed_events, 2u);
+  EXPECT_EQ(from_raw, from_typed);
+}
+
+namespace {
+
+// Reads a field of type T back out of the packed PointCloud2 byte buffer at the
+// given byte offset within the per-event record (stride = sizeof(DvsEvent)).
+template <typename T>
+T ReadDvsPointCloudField(
+    const std::vector<std::uint8_t> &bytes, std::size_t event_index, std::size_t offset) {
+  T value{};
+  std::memcpy(
+      &value,
+      bytes.data() + event_index * sizeof(carla::ros2::DvsEvent) + offset,
+      sizeof(T));
+  return value;
+}
+
+}  // namespace
+
+TEST(DvsEventEncoding, point_cloud_buffer_length_is_event_count_times_stride) {
+  const std::array<carla::ros2::DvsEvent, 3> events = {
+      carla::ros2::DvsEvent{0, 0, 0, true},
+      carla::ros2::DvsEvent{1, 1, 1, false},
+      carla::ros2::DvsEvent{2, 2, 2, true},
+  };
+  const auto bytes = carla::ros2::EncodeDvsEventsToPointCloud(
+      events.data(), events.size());
+  EXPECT_EQ(bytes.size(), events.size() * sizeof(carla::ros2::DvsEvent));
+  EXPECT_EQ(sizeof(carla::ros2::DvsEvent), 13u);
+}
+
+TEST(DvsEventEncoding, point_cloud_timestamp_is_a_real_double_not_reinterpreted_bytes) {
+  // The headline fix: the int64 timestamp must land in the FLOAT64 `t` slot as
+  // a converted double, not as raw int64 bits. 1234567 as a double reads back
+  // exactly; as reinterpreted int64 bits it would be a denormal near zero.
+  const std::array<carla::ros2::DvsEvent, 1> events = {
+      carla::ros2::DvsEvent{7, 9, 1234567, true},
+  };
+  const auto bytes = carla::ros2::EncodeDvsEventsToPointCloud(
+      events.data(), events.size());
+  const double t = ReadDvsPointCloudField<double>(bytes, 0u, 4u);
+  EXPECT_DOUBLE_EQ(t, 1234567.0);
+}
+
+TEST(DvsEventEncoding, point_cloud_packs_x_y_pol_at_declared_offsets) {
+  // kDvsFields layout: x UINT16 @0, y UINT16 @2, t FLOAT64 @4, pol INT8 @12.
+  const std::array<carla::ros2::DvsEvent, 2> events = {
+      carla::ros2::DvsEvent{11, 22, 100, true},
+      carla::ros2::DvsEvent{33, 44, 200, false},
+  };
+  const auto bytes = carla::ros2::EncodeDvsEventsToPointCloud(
+      events.data(), events.size());
+
+  EXPECT_EQ(ReadDvsPointCloudField<std::uint16_t>(bytes, 0u, 0u), 11u);
+  EXPECT_EQ(ReadDvsPointCloudField<std::uint16_t>(bytes, 0u, 2u), 22u);
+  EXPECT_DOUBLE_EQ(ReadDvsPointCloudField<double>(bytes, 0u, 4u), 100.0);
+  EXPECT_EQ(ReadDvsPointCloudField<std::int8_t>(bytes, 0u, 12u), 1);
+
+  EXPECT_EQ(ReadDvsPointCloudField<std::uint16_t>(bytes, 1u, 0u), 33u);
+  EXPECT_EQ(ReadDvsPointCloudField<std::uint16_t>(bytes, 1u, 2u), 44u);
+  EXPECT_DOUBLE_EQ(ReadDvsPointCloudField<double>(bytes, 1u, 4u), 200.0);
+  EXPECT_EQ(ReadDvsPointCloudField<std::int8_t>(bytes, 1u, 12u), 0);
+}
+
+TEST(DvsEventEncoding, point_cloud_raw_byte_overload_matches_struct_overload) {
+  const carla::ros2::DvsEvent typed_events[2] = {
+      {2u, 1u, 100, true},
+      {0u, 5u, -9, false},
+  };
+  // The seam's own DvsEvent is already #pragma pack(push, 1), so it doubles as
+  // a portable packed wire record for the raw-byte overload.
+  const auto from_raw = carla::ros2::EncodeDvsEventsToPointCloud(
+      reinterpret_cast<const std::uint8_t *>(typed_events),
+      2u,
+      sizeof(carla::ros2::DvsEvent));
+  const auto from_typed = carla::ros2::EncodeDvsEventsToPointCloud(
+      typed_events, 2u);
   EXPECT_EQ(from_raw, from_typed);
 }

@@ -27,6 +27,10 @@ struct LidarPoint {
   float intensity;
 };
 
+static_assert(
+    sizeof(LidarPoint) == 16u,
+    "LidarPoint must be tightly packed (4 float32s) for the wire layout");
+
 }  // namespace
 
 std::size_t CarlaLidarPublisher::GetPointSize() const {

@@ -47,8 +47,11 @@ std::vector<std::uint8_t> CarlaDVSPointCloudPublisher::ComputePointCloud(
     std::uint32_t height, std::uint32_t width, const std::uint8_t *data) const {
   const std::size_t total_points =
       static_cast<std::size_t>(height) * static_cast<std::size_t>(width);
-  const std::size_t total_bytes = total_points * sizeof(sensor::data::DVSEvent);
-  return std::vector<std::uint8_t>(data, data + total_bytes);
+  // The int64 event timestamp is converted to a real double in the FLOAT64 `t`
+  // slot inside the seam (see EncodeDvsEventsToPointCloud); a raw byte copy
+  // would leave int64 bits in a field a subscriber decodes as a double.
+  return EncodeDvsEventsToPointCloud(
+      data, total_points, sizeof(sensor::data::DVSEvent));
 }
 
 CarlaDVSCameraPublisher::CarlaDVSCameraPublisher(

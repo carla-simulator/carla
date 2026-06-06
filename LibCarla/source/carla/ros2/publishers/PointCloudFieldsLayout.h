@@ -71,9 +71,10 @@ inline constexpr std::array<PointFieldDescriptor, 7> kRadarFields = {{
     {"depth",    24u, PointFieldDataType::Float32, 1u},
 }};
 
-// DVS events: x/y UINT16, t FLOAT64 (8 bytes of int64 wire-compatible
-// reinterpretation), pol INT8. Underlying payload is the packed
-// sensor::data::DVSEvent (13 B with #pragma pack(push, 1)).
+// DVS events: x/y UINT16, t FLOAT64, pol INT8. The producer converts the
+// underlying int64 event timestamp to a real double in the 8-byte t slot
+// (sensor_msgs PointField has no 8-byte integer datatype). Per-point stride
+// matches the packed sensor::data::DVSEvent (13 B with #pragma pack(push, 1)).
 inline constexpr std::array<PointFieldDescriptor, 4> kDvsFields = {{
     {"x",   0u,  PointFieldDataType::UInt16,  1u},
     {"y",   2u,  PointFieldDataType::UInt16,  1u},

@@ -83,5 +83,50 @@ static_assert(sizeof(DvsEvent) == 13u, "DvsEvent must be packed to 13 bytes");
   return buffer;
 }
 
+// Packs a stream of DVS events into the sensor_msgs/PointCloud2 wire layout
+// declared by kDvsFields: x (UINT16 @0), y (UINT16 @2), t (FLOAT64 @4),
+// pol (INT8 @12), 13 B stride. The int64 event timestamp is converted to a
+// real double in the t slot because sensor_msgs PointField has no 8-byte
+// integer datatype, so a raw int64 byte copy would be misdecoded as a double.
+[[nodiscard]] inline std::vector<std::uint8_t> EncodeDvsEventsToPointCloud(
+    const DvsEvent *events,
+    std::size_t event_count) {
+  std::vector<std::uint8_t> bytes(event_count * sizeof(DvsEvent));
+  for (std::size_t i = 0; i < event_count; ++i) {
+    const DvsEvent &event = events[i];
+    std::uint8_t *out = bytes.data() + i * sizeof(DvsEvent);
+    const double t = static_cast<double>(event.t);
+    const std::int8_t pol = event.pol ? 1 : 0;
+    std::memcpy(out + 0u, &event.x, sizeof(event.x));
+    std::memcpy(out + 2u, &event.y, sizeof(event.y));
+    std::memcpy(out + 4u, &t, sizeof(t));
+    std::memcpy(out + 12u, &pol, sizeof(pol));
+  }
+  return bytes;
+}
+
+// Same packing but starting from a raw byte buffer of packed
+// sensor::data::DVSEvent records. Used by CarlaDVSPointCloudPublisher to bridge
+// the void* boundary into the seam without pulling DVSEvent into the
+// FastDDS-free header.
+[[nodiscard]] inline std::vector<std::uint8_t> EncodeDvsEventsToPointCloud(
+    const std::uint8_t *raw_events,
+    std::size_t event_count,
+    std::size_t event_stride) {
+  std::vector<std::uint8_t> bytes(event_count * sizeof(DvsEvent));
+  for (std::size_t i = 0; i < event_count; ++i) {
+    DvsEvent event{};
+    std::memcpy(&event, raw_events + i * event_stride, sizeof(DvsEvent));
+    std::uint8_t *out = bytes.data() + i * sizeof(DvsEvent);
+    const double t = static_cast<double>(event.t);
+    const std::int8_t pol = event.pol ? 1 : 0;
+    std::memcpy(out + 0u, &event.x, sizeof(event.x));
+    std::memcpy(out + 2u, &event.y, sizeof(event.y));
+    std::memcpy(out + 4u, &t, sizeof(t));
+    std::memcpy(out + 12u, &pol, sizeof(pol));
+  }
+  return bytes;
+}
+
 }  // namespace ros2
 }  // namespace carla
