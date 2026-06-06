@@ -95,7 +95,8 @@ void export_geom() {
     .def_readwrite("y", &cg::Vector2D::y)
     .def("squared_length", &cg::Vector2D::SquaredLength)
     .def("length", &cg::Vector2D::Length)
-    .def("make_unit_vector", &cg::Vector2D::MakeUnitVector)
+    .def("make_unit_vector", &cg::Vector2D::MakeUnitVector,
+        (arg("epsilon") = 2.0f * std::numeric_limits<float>::epsilon()))
     .def("__eq__", &cg::Vector2D::operator==)
     .def("__ne__", &cg::Vector2D::operator!=)
     .def(self += self)
@@ -122,7 +123,8 @@ void export_geom() {
     .def_readwrite("z", &cg::Vector3D::z)
     .def("length", &cg::Vector3D::Length)
     .def("squared_length", &cg::Vector3D::SquaredLength)
-    .def("make_unit_vector", &cg::Vector3D::MakeUnitVector)
+    .def("make_unit_vector", &cg::Vector3D::MakeUnitVector,
+        (arg("epsilon") = 2.0f * std::numeric_limits<float>::epsilon()))
     .def("cross", &Cross, (arg("vector")))
     .def("dot", &Dot, (arg("vector")))
     .def("dot_2d", &Dot2D, (arg("vector")))
