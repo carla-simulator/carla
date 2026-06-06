@@ -294,7 +294,20 @@ ROS2::GetOrCreateCameraSensor(
   std::shared_ptr<CarlaCameraPublisher> publisher;
   std::shared_ptr<CarlaTransformPublisher> transform;
   if (it_camera != _camera_publishers.end()) {
-    publisher = it_camera->second;
+    // Enforce the one-actor-one-camera-type invariant on the cache-hit path.
+    // RGB/Depth/SS/IS/Normals all alias CarlaRGBCameraPublisher (shared BGRA
+    // passthrough), so a hit across those types casts cleanly and is expected.
+    // Only an RGB <-> OpticalFlow mismatch fails the cast: that would route
+    // optical-flow float bytes through an RGB publisher (or vice versa). Surface
+    // it and skip the sample instead of letting the first-created type silently
+    // win and corrupt the published image.
+    publisher = std::dynamic_pointer_cast<CameraT>(it_camera->second);
+    if (publisher == nullptr) {
+      log_error(
+          "ROS2 camera publisher type mismatch for actor", actor,
+          "- the actor was dispatched as two different camera types; ignoring this sample.");
+      return {nullptr, nullptr};
+    }
     if (it_transform != _transforms.end()) {
       transform = it_transform->second;
     }
