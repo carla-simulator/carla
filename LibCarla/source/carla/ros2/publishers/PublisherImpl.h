@@ -26,12 +26,10 @@
 #include <fastrtps/qos/QosPolicies.h>
 
 #include "carla/Logging.h"
+#include "carla/ros2/FastDDSAliases.h"
 
 namespace carla {
 namespace ros2 {
-
-namespace efd = eprosima::fastdds::dds;
-using erc = eprosima::fastrtps::types::ReturnCode_t;
 
 // PublisherImpl wraps the per-message-type FastDDS plumbing (DomainParticipant,
 // Publisher, Topic, DataWriter, TypeSupport) into a single template parameterised by
@@ -45,12 +43,6 @@ class PublisherImpl : public efd::DataWriterListener {
 public:
   using msg_type = typename Traits::msg_type;
   using msg_pubsub_type = typename Traits::msg_pubsub_type;
-
-  efd::DomainParticipant *_participant{nullptr};
-  efd::Publisher *_publisher{nullptr};
-  efd::Topic *_topic{nullptr};
-  efd::DataWriter *_datawriter{nullptr};
-  efd::TypeSupport _type{new msg_pubsub_type()};
 
   void on_publication_matched(
       efd::DataWriter * /*writer*/,
@@ -85,7 +77,12 @@ public:
       log_error("PublisherImpl::Init failed to create DomainParticipant");
       return false;
     }
-    _type.register_type(_participant);
+
+    erc type_rcode = _type.register_type(_participant);
+    if (type_rcode != erc::ReturnCodeValue::RETCODE_OK) {
+      log_error("PublisherImpl::Init failed to register type with code:", type_rcode());
+      return false;
+    }
 
     efd::PublisherQos pubqos = efd::PUBLISHER_QOS_DEFAULT;
     _publisher = _participant->create_publisher(pubqos, nullptr);
@@ -132,6 +129,12 @@ public:
   }
 
 private:
+  efd::DomainParticipant *_participant{nullptr};
+  efd::Publisher *_publisher{nullptr};
+  efd::Topic *_topic{nullptr};
+  efd::DataWriter *_datawriter{nullptr};
+  efd::TypeSupport _type{new msg_pubsub_type()};
+
   std::string _topic_name;
   std::atomic<bool> _alive{false};
   msg_type _message{};

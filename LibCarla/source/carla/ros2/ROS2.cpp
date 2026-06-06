@@ -226,7 +226,8 @@ void ROS2::UnregisterSensor(void *actor) {
   RemoveActorRosName(actor);
 }
 
-void ROS2::RegisterVehicle(void *actor, std::string ros_name, std::string frame_id, ActorCallback callback) {
+void ROS2::RegisterVehicle(void *actor, std::string ros_name, std::string frame_id, ActorCallback callback,
+                           bool enable_ackermann_control) {
   // Keep the legacy ros_name map populated so any consumer that still queries
   // GetActorRosName(actor) keeps working after migration.
   AddActorRosName(actor, ros_name);
@@ -244,8 +245,15 @@ void ROS2::RegisterVehicle(void *actor, std::string ros_name, std::string frame_
   // hand them the base path only.
   const std::string base_topic_name = "rt/carla/" + ros_name;
 
-  _subscribers.insert({actor, std::make_shared<CarlaEgoVehicleControlSubscriber>(actor, base_topic_name, frame_id)});
-  _subscribers.insert({actor, std::make_shared<AckermannControlSubscriber>(actor, base_topic_name, frame_id)});
+  // The two control modes are mutually exclusive: a vehicle listens on either the
+  // Ackermann topic or the direct VehicleControl topic, never both, so an Ackermann
+  // message can never latch ApplyVehicleAckermannControl while plain VehicleControl
+  // messages keep arriving on the other topic. Ackermann is opt-in per youtalk's review.
+  if (enable_ackermann_control) {
+    _subscribers.insert({actor, std::make_shared<AckermannControlSubscriber>(actor, base_topic_name, frame_id)});
+  } else {
+    _subscribers.insert({actor, std::make_shared<CarlaEgoVehicleControlSubscriber>(actor, base_topic_name, frame_id)});
+  }
 }
 
 void ROS2::UnregisterVehicle(void *actor) {
@@ -254,11 +262,12 @@ void ROS2::UnregisterVehicle(void *actor) {
   RemoveActorRosName(actor);
 }
 
-void ROS2::AddActorCallback(void* actor, std::string ros_name, ActorCallback callback) {
-  // Legacy entry point delegates to RegisterVehicle so the new Ackermann subscriber
-  // is wired automatically. frame_id mirrors ros_name because the legacy callers
-  // did not carry a separate frame.
-  RegisterVehicle(actor, ros_name, ros_name, std::move(callback));
+void ROS2::AddActorCallback(void* actor, std::string ros_name, ActorCallback callback,
+                            bool enable_ackermann_control) {
+  // Legacy entry point delegates to RegisterVehicle. frame_id mirrors ros_name because
+  // the legacy callers did not carry a separate frame; the Ackermann subscriber is wired
+  // only when the caller opts in.
+  RegisterVehicle(actor, ros_name, ros_name, std::move(callback), enable_ackermann_control);
 }
 
 void ROS2::RemoveActorCallback(void* actor) {

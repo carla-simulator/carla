@@ -31,12 +31,13 @@ public:
 
   virtual ~BaseSubscriber() = default;
 
-  BaseSubscriber(const BaseSubscriber &) = default;
-  BaseSubscriber &operator=(const BaseSubscriber &) = default;
-  BaseSubscriber(BaseSubscriber &&) noexcept = default;
-  BaseSubscriber &operator=(BaseSubscriber &&) noexcept = default;
+  // Polymorphic base held only via std::shared_ptr<BaseSubscriber>; copying or
+  // moving one would slice the derived subscriber, so disable it outright.
+  BaseSubscriber(const BaseSubscriber &) = delete;
+  BaseSubscriber &operator=(const BaseSubscriber &) = delete;
+  BaseSubscriber(BaseSubscriber &&) = delete;
+  BaseSubscriber &operator=(BaseSubscriber &&) = delete;
 
-  virtual ROS2CallbackData GetMessage() = 0;
   virtual void ProcessMessages(ActorCallback callback) = 0;
 
   [[nodiscard]] void *GetActor() const noexcept { return _actor; }
@@ -44,6 +45,10 @@ public:
   [[nodiscard]] const std::string &GetFrameId() const noexcept { return _frame_id; }
 
 protected:
+  // Decoding the latest sample yields stale data unless gated behind the impl's
+  // HasNewMessage(); kept protected so only ProcessMessages can reach it.
+  virtual ROS2CallbackData GetMessage() = 0;
+
   void *_actor{nullptr};
   std::string _base_topic_name;
   std::string _frame_id;

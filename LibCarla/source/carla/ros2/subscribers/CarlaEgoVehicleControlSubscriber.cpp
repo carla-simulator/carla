@@ -6,6 +6,7 @@
 
 #include "carla/ros2/subscribers/CarlaEgoVehicleControlSubscriber.h"
 
+#include "carla/Logging.h"
 #include "carla/ros2/ROS2CallbackData.h"
 #include "carla/ros2/subscribers/SubscriberImpl.h"
 #include "carla/ros2/types/CarlaEgoVehicleControl.h"
@@ -23,7 +24,10 @@ CarlaEgoVehicleControlSubscriber::CarlaEgoVehicleControlSubscriber(
     void *vehicle, std::string base_topic_name, std::string frame_id)
   : BaseSubscriber(vehicle, std::move(base_topic_name), std::move(frame_id)),
     _impl(std::make_shared<SubscriberImpl<CarlaEgoVehicleControlTraits>>()) {
-  _impl->Init(this->GetBaseTopicName() + "/vehicle_control_cmd");
+  if (!_impl->Init(this->GetBaseTopicName() + "/vehicle_control_cmd")) {
+    log_error("CarlaEgoVehicleControlSubscriber failed to initialize on base topic",
+              this->GetBaseTopicName());
+  }
 }
 
 CarlaEgoVehicleControlSubscriber::~CarlaEgoVehicleControlSubscriber() = default;

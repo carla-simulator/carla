@@ -218,26 +218,38 @@ FCarlaActor* UActorDispatcher::RegisterActor(
         ROS2->AddActorRosName(static_cast<void*>(&Actor), RosName);
       }
 
-      // vehicle controller for hero
+      // vehicle controller for hero. Scan the variations once for the hero role and the
+      // opt-in Ackermann control flag; the two control topics are mutually exclusive on
+      // the ROS 2 side, so only request Ackermann when the attribute asks for it.
+      bool bIsHero = false;
+      bool bEnableAckermannControl = false;
       for (auto &&Attr : Description.Variations)
       {
         if (Attr.Key == "role_name" && (Attr.Value.Value == "hero" || Attr.Value.Value == "ego"))
         {
-          ROS2->AddActorCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
-          {
-            AActor *UEActor = reinterpret_cast<AActor *>(Actor);
-            ActorROS2Handler Handler(UEActor, RosName);
-            std::visit(Handler, Data);
-          });
-          #if defined(WITH_ROS2_DEMO)
-          ROS2->AddBasicSubscriberCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2MessageCallbackData Data) -> void
-          {
-            AActor *UEActor = reinterpret_cast<AActor *>(Actor);
-            ActorROS2Handler Handler(UEActor, RosName);
-            std::visit(Handler, Data);
-          });
-          #endif
+          bIsHero = true;
         }
+        else if (Attr.Key == "ros2_ackermann_control")
+        {
+          bEnableAckermannControl = Attr.Value.Value.ToBool();
+        }
+      }
+      if (bIsHero)
+      {
+        ROS2->AddActorCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
+        {
+          AActor *UEActor = reinterpret_cast<AActor *>(Actor);
+          ActorROS2Handler Handler(UEActor, RosName);
+          std::visit(Handler, Data);
+        }, bEnableAckermannControl);
+        #if defined(WITH_ROS2_DEMO)
+        ROS2->AddBasicSubscriberCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2MessageCallbackData Data) -> void
+        {
+          AActor *UEActor = reinterpret_cast<AActor *>(Actor);
+          ActorROS2Handler Handler(UEActor, RosName);
+          std::visit(Handler, Data);
+        });
+        #endif
       }
     }
     #endif

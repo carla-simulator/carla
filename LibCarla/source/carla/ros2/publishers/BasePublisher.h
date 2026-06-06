@@ -29,10 +29,12 @@ public:
 
   virtual ~BasePublisher() = default;
 
-  BasePublisher(const BasePublisher &) = default;
-  BasePublisher &operator=(const BasePublisher &) = default;
-  BasePublisher(BasePublisher &&) noexcept = default;
-  BasePublisher &operator=(BasePublisher &&) noexcept = default;
+  // Polymorphic base held only via std::shared_ptr<BasePublisher>; copying or
+  // moving one would slice the derived publisher, so disable it outright.
+  BasePublisher(const BasePublisher &) = delete;
+  BasePublisher &operator=(const BasePublisher &) = delete;
+  BasePublisher(BasePublisher &&) = delete;
+  BasePublisher &operator=(BasePublisher &&) = delete;
 
   virtual bool Publish() = 0;
 

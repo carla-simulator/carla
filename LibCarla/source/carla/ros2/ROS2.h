@@ -73,15 +73,20 @@ class ROS2
 
   // new actor-based registration API (PR-3/PR-4 will migrate publishers cohort by cohort
   // over RegisterSensor / UnregisterSensor; RegisterVehicle is the subscriber-side entry
-  // point and wires both VehicleControl and Ackermann subscribers).
+  // point). The vehicle gets exactly one control subscriber: the Ackermann subscriber
+  // when enable_ackermann_control is true, otherwise the direct VehicleControl one. The
+  // two control topics are mutually exclusive so they cannot contend frame to frame.
   void RegisterSensor(void *actor, std::string ros_name, std::string frame_id, bool publish_tf);
   void UnregisterSensor(void *actor);
-  void RegisterVehicle(void *actor, std::string ros_name, std::string frame_id, ActorCallback callback);
+  void RegisterVehicle(void *actor, std::string ros_name, std::string frame_id, ActorCallback callback,
+                       bool enable_ackermann_control = false);
   void UnregisterVehicle(void *actor);
 
   // callbacks (legacy entry points kept callable; AddActorCallback delegates to
-  // RegisterVehicle so new Ackermann wiring lands automatically on the existing path).
-  void AddActorCallback(void* actor, std::string ros_name, ActorCallback callback);
+  // RegisterVehicle, defaulting to the direct VehicleControl subscriber unless the
+  // caller opts into Ackermann control).
+  void AddActorCallback(void* actor, std::string ros_name, ActorCallback callback,
+                        bool enable_ackermann_control = false);
   void RemoveActorCallback(void* actor);
   void RemoveBasicSubscriberCallback(void* actor);
   void AddBasicSubscriberCallback(void* actor, std::string ros_name, ActorMessageCallback callback);

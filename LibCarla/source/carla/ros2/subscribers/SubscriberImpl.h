@@ -28,12 +28,10 @@
 #include <fastrtps/qos/QosPolicies.h>
 
 #include "carla/Logging.h"
+#include "carla/ros2/FastDDSAliases.h"
 
 namespace carla {
 namespace ros2 {
-
-namespace efd = eprosima::fastdds::dds;
-using erc = eprosima::fastrtps::types::ReturnCode_t;
 
 // SubscriberImpl mirrors PublisherImpl on the subscriber side: it bundles the FastDDS
 // DomainParticipant/Subscriber/Topic/DataReader plumbing into a template parameterised
@@ -46,12 +44,6 @@ class SubscriberImpl : public efd::DataReaderListener {
 public:
   using msg_type = typename Traits::msg_type;
   using msg_pubsub_type = typename Traits::msg_pubsub_type;
-
-  efd::DomainParticipant *_participant{nullptr};
-  efd::Subscriber *_subscriber{nullptr};
-  efd::Topic *_topic{nullptr};
-  efd::DataReader *_datareader{nullptr};
-  efd::TypeSupport _type{new msg_pubsub_type()};
 
   void on_subscription_matched(
       efd::DataReader * /*reader*/,
@@ -108,7 +100,12 @@ public:
       log_error("SubscriberImpl::Init failed to create DomainParticipant");
       return false;
     }
-    _type.register_type(_participant);
+
+    erc type_rcode = _type.register_type(_participant);
+    if (type_rcode != erc::ReturnCodeValue::RETCODE_OK) {
+      log_error("SubscriberImpl::Init failed to register type with code:", type_rcode());
+      return false;
+    }
 
     efd::SubscriberQos subqos = efd::SUBSCRIBER_QOS_DEFAULT;
     _subscriber = _participant->create_subscriber(subqos, nullptr);
@@ -152,6 +149,12 @@ public:
   }
 
 private:
+  efd::DomainParticipant *_participant{nullptr};
+  efd::Subscriber *_subscriber{nullptr};
+  efd::Topic *_topic{nullptr};
+  efd::DataReader *_datareader{nullptr};
+  efd::TypeSupport _type{new msg_pubsub_type()};
+
   std::string _topic_name;
   std::atomic<bool> _alive{false};
   std::atomic<bool> _new_message{false};

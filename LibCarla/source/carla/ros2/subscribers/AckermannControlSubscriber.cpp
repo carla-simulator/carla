@@ -6,6 +6,7 @@
 
 #include "carla/ros2/subscribers/AckermannControlSubscriber.h"
 
+#include "carla/Logging.h"
 #include "carla/ros2/ROS2CallbackData.h"
 #include "carla/ros2/subscribers/AckermannControlConversion.h"
 #include "carla/ros2/subscribers/SubscriberImpl.h"
@@ -24,7 +25,10 @@ AckermannControlSubscriber::AckermannControlSubscriber(
     void *vehicle, std::string base_topic_name, std::string frame_id)
   : BaseSubscriber(vehicle, std::move(base_topic_name), std::move(frame_id)),
     _impl(std::make_shared<SubscriberImpl<AckermannControlTraits>>()) {
-  _impl->Init(this->GetBaseTopicName() + "/ackermann_control_cmd");
+  if (!_impl->Init(this->GetBaseTopicName() + "/ackermann_control_cmd")) {
+    log_error("AckermannControlSubscriber failed to initialize on base topic",
+              this->GetBaseTopicName());
+  }
 }
 
 AckermannControlSubscriber::~AckermannControlSubscriber() = default;

@@ -1359,6 +1359,16 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
   TerramechanicsAttribute.RecommendedValues.Emplace(TEXT("false"));
   Definition.Variations.Emplace(TerramechanicsAttribute);
 
+  // Opt-in to the ROS 2 Ackermann control topic. When true the vehicle subscribes to
+  // the Ackermann control command instead of the direct VehicleControl command; the two
+  // are mutually exclusive so they cannot fight over the actor frame to frame.
+  FActorVariation ROS2AckermannControl;
+  ROS2AckermannControl.Id = TEXT("ros2_ackermann_control");
+  ROS2AckermannControl.Type = EActorAttributeType::Bool;
+  ROS2AckermannControl.bRestrictToRecommended = false;
+  ROS2AckermannControl.RecommendedValues.Emplace(TEXT("false"));
+  Definition.Variations.Emplace(ROS2AckermannControl);
+
   Definition.Attributes.Emplace(FActorAttribute{
       TEXT("object_type"),
       EActorAttributeType::String,

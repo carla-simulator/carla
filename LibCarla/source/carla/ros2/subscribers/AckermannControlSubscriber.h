@@ -27,8 +27,10 @@ public:
   AckermannControlSubscriber(void *vehicle, std::string base_topic_name, std::string frame_id);
   ~AckermannControlSubscriber() override;
 
-  ROS2CallbackData GetMessage() override;
   void ProcessMessages(ActorCallback callback) override;
+
+protected:
+  ROS2CallbackData GetMessage() override;
 
 private:
   std::shared_ptr<SubscriberImpl<AckermannControlTraits>> _impl;
