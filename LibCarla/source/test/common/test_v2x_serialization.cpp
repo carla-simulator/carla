@@ -13,6 +13,7 @@
 #include <carla/sensor/s11n/V2XSerializer.h>
 
 #include <cstring>
+#include <type_traits>
 
 namespace csd = carla::sensor::data;
 namespace css = carla::sensor::s11n;
@@ -118,6 +119,50 @@ TEST(CAMDataSerializer, serialize_copies_messages_byte_for_byte) {
   EXPECT_EQ(messages[0].Message.header.stationID, 11);
   EXPECT_EQ(messages[1].Power, 33.25f);
   EXPECT_EQ(messages[1].Message.header.stationID, 22);
+}
+
+// The CAM wire type must carry the optional pathDeltaTime by value (with an
+// availability flag) instead of a raw pointer: CAMDataSerializer memcpys the
+// whole message onto the data stream, so a server-side pointer must never reach
+// the wire.
+TEST(PathPoint, delta_time_is_an_inline_value_not_a_pointer) {
+  static_assert(
+      std::is_same<decltype(ITSContainer::PathPoint_t::pathDeltaTime),
+                   ITSContainer::PathDeltaTime_t>::value,
+      "pathDeltaTime must be stored by value so no server pointer reaches the wire");
+  static_assert(
+      std::is_trivially_copyable<ITSContainer::PathPoint_t>::value,
+      "PathPoint_t is copied byte-for-byte by the V2X serializer");
+
+  ITSContainer::PathPoint_t point{};
+  EXPECT_FALSE(point.pathDeltaTimeAvailable);
+  EXPECT_EQ(point.pathDeltaTime, 0);
+}
+
+TEST(CAMDataSerializer, serialize_preserves_inline_path_delta_time) {
+  csd::CAMDataS data;
+
+  csd::CAMData message{};
+  message.Power = 7.5f;
+  message.Message.header.stationID = 99;
+  auto &history =
+      message.Message.cam.camParameters.lowFrequencyContainer
+          .basicVehicleContainerLowFrequency.pathHistory;
+  history.NumberOfPathPoint = 1;
+  history.data[0].pathDeltaTime = 1234;
+  history.data[0].pathDeltaTimeAvailable = true;
+  data.WriteMessage(message);
+
+  carla::Buffer output = css::CAMDataSerializer::Serialize(0, data, carla::Buffer{});
+
+  ASSERT_EQ(output.size(), sizeof(csd::CAMData));
+  const auto *restored = reinterpret_cast<const csd::CAMData *>(output.data());
+  const auto &restored_history =
+      restored->Message.cam.camParameters.lowFrequencyContainer
+          .basicVehicleContainerLowFrequency.pathHistory;
+  EXPECT_EQ(restored_history.NumberOfPathPoint, 1);
+  EXPECT_TRUE(restored_history.data[0].pathDeltaTimeAvailable);
+  EXPECT_EQ(restored_history.data[0].pathDeltaTime, 1234);
 }
 
 TEST(CustomV2XDataSerializer, serialize_preserves_binary_payload) {

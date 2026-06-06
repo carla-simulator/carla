@@ -16,6 +16,7 @@
 
 #include <boost/algorithm/clamp.hpp>
 #include <chrono>
+#include <limits>
 static const float scLowFrequencyContainerInterval = 0.5;
 
 ITSContainer::SpeedValue_t CaService::BuildSpeedValue(const float vel)const
@@ -88,6 +89,13 @@ void CaService::SetActor(UWorld *world, AActor *Owner)
             mLastCamSpeed = 0;
             mLastCamPosition = {0, 0, 0};
             mLastCamHeading = {0, 0, 0};
+
+            // Seed the acceleration history so the first ComputeAccelerometer call
+            // does not read uninitialized FVector components or divide by a zero
+            // PrevDeltaTime. Mirrors AInertialMeasurementUnit: a max() previous
+            // delta time drives the first acceleration estimate to ~0.
+            PrevLocation = {FVector::ZeroVector, FVector::ZeroVector};
+            PrevDeltaTime = std::numeric_limits<float>::max();
         }
         else if ((mCarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight) ||
                  (mCarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficSign)||
@@ -208,7 +216,7 @@ bool CaService::CheckSpeedDelta(float DeltaSeconds)
         VehicleSpeed = mVehicle->GetVehicleForwardSpeed() / 100.0f; // From cm/s to m/s
         float DeltaSpeed = std::abs(VehicleSpeed - mLastCamSpeed);
 
-        // Speed differance is greater than 0.5m/s
+        // Speed difference is greater than 0.5m/s
         if (DeltaSpeed > 0.5)
         {
             return true;

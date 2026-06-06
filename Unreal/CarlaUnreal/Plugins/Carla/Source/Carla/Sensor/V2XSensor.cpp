@@ -208,7 +208,14 @@ void AV2XSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTim
         for (const auto &pair : actor_receivepower_map)
         {
             // Note: AActor* sender_actor = pair.first;
-            carla::sensor::data::CAMData const &send_msg_and_pw = AV2XSensor::mActorV2XDataMap.at(pair.first);
+            // find + skip-on-miss: at() would throw std::out_of_range if the
+            // sender dropped out of the map between simulate and retrieval.
+            const auto sender_it = AV2XSensor::mActorV2XDataMap.find(pair.first);
+            if (sender_it == AV2XSensor::mActorV2XDataMap.end())
+            {
+                continue;
+            }
+            carla::sensor::data::CAMData const &send_msg_and_pw = sender_it->second;
             carla::sensor::data::CAMData received_msg_and_pw;
             // sent CAM
             received_msg_and_pw.Message = send_msg_and_pw.Message;

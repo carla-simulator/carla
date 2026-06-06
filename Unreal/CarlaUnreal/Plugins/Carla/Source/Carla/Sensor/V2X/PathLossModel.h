@@ -89,9 +89,13 @@ private:
     const double epsilon_r = 1.02;
 
     // params
-    static double Frequency_GHz;   // 5.9f;//5.9 GHz
-    static double Frequency;       // Frequency_GHz * std::pow(10,9);
-    static double lambda;          // c_speedoflight/Frequency;
+    // Per-instance so that two V2X / CustomV2X sensors configured with different
+    // frequencies do not clobber each other (these were previously static, which
+    // made the last SetParams win globally and corrupted the path-loss math for
+    // every sensor).
+    double Frequency_GHz{5.9};               // 5.9 GHz
+    double Frequency{5.9 * 1e9};             // Frequency_GHz * 1e9
+    double lambda{c_speedoflight / (5.9 * 1e9)}; // c_speedoflight / Frequency
     float reference_distance_fspl; // m
     float TransmitPower;           // dBm
     float ReceiverSensitivity;     // dBm

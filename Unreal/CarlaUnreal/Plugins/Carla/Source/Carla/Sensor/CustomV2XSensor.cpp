@@ -164,6 +164,12 @@ void ACustomV2XSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float De
             // only different sensors with the same ChannelId talk to each other
             if ((pair.first.Actor != this) && (mChannelId == pair.first.ChannelId))
             {
+                // Skip senders with no queued message this tick; front() on an
+                // empty list is undefined behaviour.
+                if (pair.second.empty())
+                {
+                    continue;
+                }
                 ActorPowerPair actor_power_pair;
                 actor_power_pair.first = pair.first.Actor;
                 // actor sending with transmit power (identical for all messages of this tick)
@@ -186,7 +192,14 @@ void ACustomV2XSensor::PostPhysTick(UWorld *World, ELevelTick TickType, float De
             std::lock_guard<std::mutex> lock(v2xDataLock);
             for (const auto &pair : actor_receivepower_map)
             {
-                for ( const auto & send_msg_and_pw: gActorV2XDataMap.at({pair.first, mChannelId}))
+                // find + skip-on-miss: at() would throw std::out_of_range if the
+                // sender's queue was cleared between the two locked sections.
+                const auto sender_it = gActorV2XDataMap.find({pair.first, mChannelId});
+                if (sender_it == gActorV2XDataMap.end())
+                {
+                    continue;
+                }
+                for ( const auto & send_msg_and_pw: sender_it->second)
                 {
                     carla::sensor::data::CustomV2XData received_msg_and_pw;
                     // sent CAM

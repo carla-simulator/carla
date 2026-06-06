@@ -54,8 +54,8 @@ private:
   float mGenDeltaTimeMod;
   bool mDccRestriction;
   bool mFixedRate;
-  unsigned int mGenCamLowDynamicsCounter;
-  unsigned int mGenCamLowDynamicsLimit;
+  unsigned int mGenCamLowDynamicsCounter{0};
+  unsigned int mGenCamLowDynamicsLimit{3};
   float mGenerationInterval;
 
   float VehicleSpeed;

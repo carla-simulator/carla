@@ -631,10 +631,13 @@ public:
     typedef long PathDeltaTime_t;
 
     /* PathPoint */
+    // pathDeltaTime is stored inline (with an availability flag) rather than as a
+    // raw pointer: this struct is copied byte-for-byte onto the sensor data stream
+    // (see V2XSerializer), so a server-side pointer must never travel on the wire.
     typedef struct PathPoint {
         DeltaReferencePosition_t     pathPosition;
-        PathDeltaTime_t *pathDeltaTime  /* OPTIONAL */;
-
+        PathDeltaTime_t pathDeltaTime{0}    /* OPTIONAL: valid only when pathDeltaTimeAvailable is true */;
+        bool pathDeltaTimeAvailable{false};
     } PathPoint_t;
 
     /* PathHistory */

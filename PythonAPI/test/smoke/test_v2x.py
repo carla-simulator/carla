@@ -6,6 +6,7 @@
 
 from . import SyncSmokeTest
 
+import array
 import carla
 import time
 
@@ -81,6 +82,43 @@ class TestV2X(SyncSmokeTest):
         payload = first[0].get()["Message"]["Message"]
         self.assertEqual(payload["DataSize"], len("hello v2x"))
         self.assertEqual(payload["Bytes"], b"hello v2x")
+
+    def test_custom_v2x_set_bytes_uses_buffer_byte_length(self):
+        print("TestV2X.test_custom_v2x_set_bytes_uses_buffer_byte_length")
+
+        sender_vehicle, receiver_vehicle = self.spawn_pair()
+
+        bp_custom = self.world.get_blueprint_library().find('sensor.other.v2x_custom')
+        sender = self.world.spawn_actor(bp_custom, carla.Transform(), attach_to=sender_vehicle)
+        receiver = self.world.spawn_actor(bp_custom, carla.Transform(), attach_to=receiver_vehicle)
+
+        received = []
+        receiver.listen(lambda data: received.append(data))
+
+        # array.array('i', ...) has itemsize 4, so the byte length (8) differs
+        # from the element count (2). set_bytes must size the copy from the byte
+        # length, not the element count.
+        payload = array.array('i', [0x04030201, 0x08070605])
+        raw = payload.tobytes()
+
+        self.wait(5)
+        for _ in range(0, 20):
+            message = carla.CustomV2XBytes()
+            message.set_bytes(payload)
+            sender.send(message)
+            self.world.tick()
+
+        self.wait(5)
+
+        sender.destroy()
+        receiver.destroy()
+        sender_vehicle.destroy()
+        receiver_vehicle.destroy()
+
+        self.assertGreater(len(received), 0, "custom V2X receiver did not get any message")
+        payload_dict = received[0][0].get()["Message"]["Message"]
+        self.assertEqual(payload_dict["DataSize"], len(raw))
+        self.assertEqual(payload_dict["Bytes"], raw)
 
     def test_v2x_cam_generation(self):
         print("TestV2X.test_v2x_cam_generation")

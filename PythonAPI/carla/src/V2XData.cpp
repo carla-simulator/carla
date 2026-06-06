@@ -22,7 +22,7 @@ std::string GetStationTypeString(const ITSContainer::StationType_t stationType)
     switch (stationType)
     {
     case ITSContainer::StationType_unknown:
-        return "Uunknown";
+        return "Unknown";
     case ITSContainer::StationType_pedestrian:
         return "Pedestrian";
     case ITSContainer::StationType_cyclist:
@@ -493,9 +493,9 @@ boost::python::list GetPathHistory(const ITSContainer::PathHistory_t &pathHistor
         PathHistory["Delta Latitude"] = pathPoint.pathPosition.deltaLatitude;
         PathHistory["Delta Longitude"] = pathPoint.pathPosition.deltaLongitude;
         PathHistory["Delta Altitude"] = pathPoint.pathPosition.deltaAltitude;
-        if (pathPoint.pathDeltaTime != nullptr)
+        if (pathPoint.pathDeltaTimeAvailable)
         {
-            PathHistory["Delta Time"] = *pathPoint.pathDeltaTime;
+            PathHistory["Delta Time"] = pathPoint.pathDeltaTime;
         }
         else
         {
@@ -609,9 +609,12 @@ static void SetCustomV2XBytes(carla::rpc::CustomV2XBytes &self, boost::python::o
     return;
   }
   self.data_size = static_cast<uint8_t>(self.bytes.max_size());
-  auto const object_len = static_cast<size_t>(boost::python::len(object));
-  if ( object_len < self.data_size ) {
-    self.data_size = static_cast<uint8_t>(object_len);
+  // Size the copy from the buffer's byte length, not boost::python::len() (the
+  // element count): for an itemsize > 1 buffer (e.g. a NumPy int32 array) the
+  // element count under-counts the bytes to copy.
+  auto const buffer_len = static_cast<size_t>(buffer.len);
+  if ( buffer_len < self.data_size ) {
+    self.data_size = static_cast<uint8_t>(buffer_len);
   }
   PyBuffer_ToContiguous(self.bytes.data(), &buffer, self.data_size, 'C');
   std::fill(self.bytes.begin()+self.data_size, self.bytes.begin()+self.bytes.max_size(), 0);

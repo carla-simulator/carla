@@ -13,12 +13,9 @@
 #include "DrawDebugHelpers.h"
 #include "Math/UnrealMathUtility.h"
 
+#include <algorithm>
 #include <limits>
 #include <random>
-
-double PathLossModel::Frequency_GHz = 5.9f;
-double PathLossModel::Frequency = 5.9f * std::pow(10, 9);
-double PathLossModel::lambda = PathLossModel::c_speedoflight / (5.9f * std::pow(10, 9));
 
 PathLossModel::PathLossModel(URandomEngine *random_engine, AActor *Owner)
 {
@@ -44,9 +41,11 @@ void PathLossModel::SetParams(const float TransmitPower,
     this->use_etsi_fading = use_etsi_fading;
     this->custom_fading_stddev = custom_fading_stddev;
     this->combined_antenna_gain = combined_antenna_gain;
-    PathLossModel::Frequency_GHz = Frequency;
-    PathLossModel::Frequency = PathLossModel::Frequency_GHz * std::pow(10, 9);
-    PathLossModel::lambda = PathLossModel::c_speedoflight / PathLossModel::Frequency;
+    // The parameter is named Frequency and shadows the member of the same name,
+    // so disambiguate the member writes with this->.
+    this->Frequency_GHz = Frequency;
+    this->Frequency = this->Frequency_GHz * std::pow(10, 9);
+    this->lambda = PathLossModel::c_speedoflight / this->Frequency;
     // when reference distance is set, we prepare the FSPL for the reference distance to be used in LDPL
     CalculateFSPL_d0();
 }
@@ -102,12 +101,17 @@ void PathLossModel::Simulate(const std::vector<ActorPowerPair> ActorList, UCarla
 
         if (Distance3d < filter_distance) // maybe change this for highway
         {
+            // Two actors sharing a location give Distance3d == 0, which would feed
+            // log10(0) = -inf (and a divide-by-zero in the NLOSb branch) into the
+            // path-loss math. Floor it at the FSPL reference distance before any
+            // downstream log10/division consumes it.
+            const double Distance3dGuarded = std::max(Distance3d, static_cast<double>(reference_distance_fspl));
             float OtherTransmitPower = actor_power_pair.second;
             ReceivedPower = CalculateReceivedPower(actor_power_pair.first,
                                                    OtherTransmitPower,
                                                    CurrentActorLocation,
                                                    OtherActorLocation,
-                                                   Distance3d,
+                                                   Distance3dGuarded,
                                                    ht,
                                                    hr,
                                                    ref0);
