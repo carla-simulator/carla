@@ -68,6 +68,7 @@ def main(args):
     world = None
     vehicle = None
     sensors = []
+    traffic_manager = None
     original_settings = None
     synchronous_master = False
 
@@ -126,8 +127,15 @@ def main(args):
         print('\nCancelled by user. Bye!')
 
     finally:
-        if synchronous_master and original_settings:
-            world.apply_settings(original_settings)
+        # Only the synchronous master that took ownership of the clock should
+        # release it: drop Traffic Manager back to async and restore the world
+        # settings. If another client (e.g. generate_traffic.py) owns the clock
+        # we leave its synchronous mode untouched.
+        if synchronous_master:
+            if traffic_manager:
+                traffic_manager.set_synchronous_mode(False)
+            if original_settings:
+                world.apply_settings(original_settings)
 
         for sensor in sensors:
             sensor.destroy()
