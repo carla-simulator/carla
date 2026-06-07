@@ -11,6 +11,7 @@
 #include "carla/geom/Transform.h"
 #include "carla/ros2/ROS2CallbackData.h"
 #include "carla/ros2/middleware/Middleware.h"
+#include "carla/ros2/middleware/MiddlewareConfig.h"
 #include "carla/streaming/detail/Types.h"
 
 #include <mutex>
@@ -59,7 +60,10 @@ class ROS2
     // General
     // Returns true when enabling succeeds (middleware compiled in), false otherwise.
     // Callers pass enable=false to shut down; the return value is always true in that case.
-    bool Enable(bool enable, Middleware middleware = Middleware::FastDDS);
+    // domain_id selects the ROS 2 domain id for the chosen middleware; kUnsetDomainId
+    // (the default) keeps each middleware's native default.
+    bool Enable(bool enable, Middleware middleware = Middleware::FastDDS,
+        int domain_id = kUnsetDomainId);
     void Shutdown();
 
     bool IsEnabled() { return _enabled; }

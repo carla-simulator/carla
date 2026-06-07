@@ -12,6 +12,12 @@ namespace ros2 {
 /// Type-erased abstract interface for a publisher middleware.
 /// Concrete implementations handle all vendor-specific entity creation,
 /// type registration, and data writing.
+///
+/// Contract: when an implementation establishes its process-wide transport
+/// context (a DDS DomainParticipant, a Zenoh session, ...) it must honor
+/// carla::ros2::MiddlewareConfig::GetDomainId(), mapping kUnsetDomainId to its
+/// own native default. This keeps the ROS 2 domain id configurable and
+/// middleware-agnostic (see MiddlewareConfig.h).
 class IPublisherMiddleware {
  public:
   virtual ~IPublisherMiddleware() = default;

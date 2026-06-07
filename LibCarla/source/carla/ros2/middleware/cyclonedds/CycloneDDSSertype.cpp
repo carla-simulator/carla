@@ -7,6 +7,7 @@
 #ifdef CARLA_ROS2_MIDDLEWARE_CYCLONEDDS
 
 #include "carla/ros2/middleware/cyclonedds/CycloneDDSSertype.h"
+#include "carla/ros2/middleware/MiddlewareConfig.h"
 #include "carla/Logging.h"
 
 #include <cstdlib>
@@ -283,8 +284,15 @@ const struct ddsi_sertype_ops carla_cdr_sertype_ops = {
 dds_entity_t carla_cdr_get_participant() {
   // Function-local static: created once on first call, thread-safe in C++11.
   // The participant lives until process exit; CycloneDDS cleans up internally.
-  static dds_entity_t participant =
-      dds_create_participant(DDS_DOMAIN_DEFAULT, nullptr, nullptr);
+  // Honor the configured ROS 2 domain id; the unset sentinel keeps CycloneDDS's
+  // native default (DDS_DOMAIN_DEFAULT, which also honors the ROS_DOMAIN_ID env).
+  static dds_entity_t participant = []() {
+    const int configured = MiddlewareConfig::GetDomainId();
+    const dds_domainid_t domain_id = (configured == kUnsetDomainId)
+        ? DDS_DOMAIN_DEFAULT
+        : static_cast<dds_domainid_t>(configured);
+    return dds_create_participant(domain_id, nullptr, nullptr);
+  }();
   return participant;
 }
 

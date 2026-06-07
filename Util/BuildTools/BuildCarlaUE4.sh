@@ -6,7 +6,7 @@
 
 DOC_STRING="Build and launch CarlaUE4."
 
-USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean] [--opengl] [--chrono] [--chrono-path=PATH]"
+USAGE_STRING="Usage: $0 [-h|--help] [--build] [--rebuild] [--launch] [--clean] [--hard-clean] [--opengl] [--chrono] [--chrono-path=PATH] [--ros2] [--rmw=MIDDLEWARE] [--ros-domain-id=N]"
 
 REMOVE_INTERMEDIATE=false
 HARD_CLEAN=false
@@ -20,13 +20,14 @@ USE_UNITY=true
 USE_ROS2=false
 CHRONO_PATH=""
 RMW=""
+ROS_DOMAIN_ID=""
 
 EDITOR_FLAGS=""
 
 GDB=
 RHI="-vulkan"
 
-OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,chrono-path:,ros2,rmw:,no-simready,no-unity,editor-flags: -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,build,rebuild,launch,clean,hard-clean,gdb,opengl,carsim,pytorch,chrono,chrono-path:,ros2,rmw:,ros-domain-id:,no-simready,no-unity,editor-flags: -n 'parse-options' -- "$@"`
 
 eval set -- "$OPTS"
 
@@ -77,6 +78,9 @@ while [[ $# -gt 0 ]]; do
     --rmw )
       RMW=$2;
       shift 2 ;;
+    --ros-domain-id )
+      ROS_DOMAIN_ID=$2;
+      shift 2 ;;
     --no-simready )
       USE_SIMREADY=false
       shift ;;
@@ -101,6 +105,9 @@ if ${USE_ROS2} ; then
 fi
 if [ -n "${RMW}" ] ; then
   EDITOR_FLAGS="${EDITOR_FLAGS} --rmw=${RMW}"
+fi
+if [ -n "${ROS_DOMAIN_ID}" ] ; then
+  EDITOR_FLAGS="${EDITOR_FLAGS} --ros-domain-id=${ROS_DOMAIN_ID}"
 fi
 
 # ==============================================================================

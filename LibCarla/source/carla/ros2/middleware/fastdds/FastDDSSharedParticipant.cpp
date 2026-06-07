@@ -5,6 +5,7 @@
 #ifndef CARLA_ROS2_MIDDLEWARE_TESTING
 
 #include "carla/ros2/middleware/fastdds/FastDDSSharedParticipant.h"
+#include "carla/ros2/middleware/MiddlewareConfig.h"
 #include "carla/Logging.h"
 
 #include <fastdds/dds/domain/DomainParticipantFactory.hpp>
@@ -25,8 +26,14 @@ efd::DomainParticipant* FastDDSSharedParticipant::acquire() {
   std::lock_guard<std::mutex> lock(_mutex);
   if (_refcount == 0u) {
     efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
+    // Honor the configured ROS 2 domain id; the unset sentinel keeps FastDDS's
+    // native default of domain 0.
+    const int configured = MiddlewareConfig::GetDomainId();
+    const uint32_t domain_id = (configured == kUnsetDomainId)
+        ? 0u
+        : static_cast<uint32_t>(configured);
     _participant =
-        efd::DomainParticipantFactory::get_instance()->create_participant(0, pqos);
+        efd::DomainParticipantFactory::get_instance()->create_participant(domain_id, pqos);
     if (_participant == nullptr) {
       log_error("FastDDSSharedParticipant: Failed to create DomainParticipant");
       return nullptr;

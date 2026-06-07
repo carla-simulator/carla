@@ -10,6 +10,7 @@
 #include "test.h"
 
 #include <carla/ros2/middleware/Middleware.h>
+#include <carla/ros2/middleware/MiddlewareConfig.h>
 #include <carla/ros2/middleware/MiddlewareFactory.h>
 #include <carla/ros2/middleware/IPublisherMiddleware.h>
 #include <carla/ros2/middleware/ISubscriberMiddleware.h>
@@ -210,6 +211,53 @@ TEST(middleware_type_name, single_namespace) {
 
 TEST(middleware_type_name, empty_string) {
   EXPECT_EQ(ToROS2TypeName(""), "dds_::_");
+}
+
+// ==========================================================================
+// Group 5: middleware_config (domain id) (8 tests)
+// ==========================================================================
+
+// Restores the global domain id to the unset sentinel after each test so the
+// process-wide MiddlewareConfig state does not leak between cases.
+class MiddlewareConfigFixture : public ::testing::Test {
+ protected:
+  void TearDown() override {
+    MiddlewareConfig::SetDomainId(kUnsetDomainId);
+  }
+};
+
+TEST_F(MiddlewareConfigFixture, default_domain_id_is_unset) {
+  EXPECT_EQ(MiddlewareConfig::GetDomainId(), kUnsetDomainId);
+}
+
+TEST_F(MiddlewareConfigFixture, set_and_get_round_trip) {
+  MiddlewareConfig::SetDomainId(42);
+  EXPECT_EQ(MiddlewareConfig::GetDomainId(), 42);
+}
+
+TEST_F(MiddlewareConfigFixture, set_zero_is_stored) {
+  MiddlewareConfig::SetDomainId(0);
+  EXPECT_EQ(MiddlewareConfig::GetDomainId(), 0);
+}
+
+TEST(middleware_config_valid, zero_is_valid) {
+  EXPECT_TRUE(IsValidDomainId(0));
+}
+
+TEST(middleware_config_valid, one_is_valid) {
+  EXPECT_TRUE(IsValidDomainId(1));
+}
+
+TEST(middleware_config_valid, max_is_valid) {
+  EXPECT_TRUE(IsValidDomainId(kMaxDomainId));
+}
+
+TEST(middleware_config_valid, above_max_is_invalid) {
+  EXPECT_FALSE(IsValidDomainId(kMaxDomainId + 1));
+}
+
+TEST(middleware_config_valid, unset_sentinel_is_invalid) {
+  EXPECT_FALSE(IsValidDomainId(kUnsetDomainId));
 }
 
 // ==========================================================================
