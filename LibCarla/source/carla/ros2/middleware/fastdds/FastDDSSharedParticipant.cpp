@@ -26,12 +26,10 @@ efd::DomainParticipant* FastDDSSharedParticipant::acquire() {
   std::lock_guard<std::mutex> lock(_mutex);
   if (_refcount == 0u) {
     efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
-    // Honor the configured ROS 2 domain id; the unset sentinel keeps FastDDS's
-    // native default of domain 0.
-    const int configured = MiddlewareConfig::GetDomainId();
-    const uint32_t domain_id = (configured == kUnsetDomainId)
-        ? 0u
-        : static_cast<uint32_t>(configured);
+    // Use the effective domain id resolved by the abstraction layer
+    // (--ros-domain-id, else ROS_DOMAIN_ID, else the default domain 0).
+    const uint32_t domain_id =
+        static_cast<uint32_t>(MiddlewareConfig::GetEffectiveDomainId());
     _participant =
         efd::DomainParticipantFactory::get_instance()->create_participant(domain_id, pqos);
     if (_participant == nullptr) {

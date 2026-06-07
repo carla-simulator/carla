@@ -7,7 +7,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # --- Defaults ---
 DISTRO="humble"
 RMW="fastdds"
-ROS_DOMAIN_ID=""
+# Holds the value of --ros-domain-id. Named differently from ROS_DOMAIN_ID so it
+# does not clobber the inherited environment variable; it defaults to that env
+# var so exporting ROS_DOMAIN_ID works without the flag, and --ros-domain-id
+# overrides it. The value is then forwarded into the container.
+ROS_DOMAIN_ID_ARG="${ROS_DOMAIN_ID:-}"
 
 # --- Argument parsing ---
 usage() {
@@ -33,7 +37,7 @@ for arg in "$@"; do
     case "$arg" in
         --distro=*)         DISTRO="${arg#*=}" ;;
         --rmw=*)            RMW="${arg#*=}" ;;
-        --ros-domain-id=*)  ROS_DOMAIN_ID="${arg#*=}" ;;
+        --ros-domain-id=*)  ROS_DOMAIN_ID_ARG="${arg#*=}" ;;
         --help|-h)          usage ;;
         *) echo "Unknown argument: $arg"; usage ;;
     esac
@@ -50,9 +54,9 @@ case "$RMW" in
     *) echo "Unsupported RMW '${RMW}'. Supported values: fastdds, cyclonedds, zenoh"; exit 1 ;;
 esac
 
-if [ -n "${ROS_DOMAIN_ID}" ]; then
-    if ! [[ "${ROS_DOMAIN_ID}" =~ ^[0-9]+$ ]] || [ "${ROS_DOMAIN_ID}" -lt 0 ] || [ "${ROS_DOMAIN_ID}" -gt 232 ]; then
-        echo "Invalid ROS domain id '${ROS_DOMAIN_ID}'. Must be an integer in the range 0-232."
+if [ -n "${ROS_DOMAIN_ID_ARG}" ]; then
+    if ! [[ "${ROS_DOMAIN_ID_ARG}" =~ ^[0-9]+$ ]] || [ "${ROS_DOMAIN_ID_ARG}" -lt 0 ] || [ "${ROS_DOMAIN_ID_ARG}" -gt 232 ]; then
+        echo "Invalid ROS domain id '${ROS_DOMAIN_ID_ARG}'. Must be an integer in the range 0-232."
         exit 1
     fi
 fi
@@ -99,12 +103,12 @@ fi
 # --- ROS domain id ---
 # Forward ROS_DOMAIN_ID so the container discovers a CARLA server launched with
 # the matching --ros-domain-id. When unset, the container uses the default domain.
-if [ -n "${ROS_DOMAIN_ID}" ]; then
-    EXTRA_ENV+=(--env="ROS_DOMAIN_ID=${ROS_DOMAIN_ID}")
+if [ -n "${ROS_DOMAIN_ID_ARG}" ]; then
+    EXTRA_ENV+=(--env="ROS_DOMAIN_ID=${ROS_DOMAIN_ID_ARG}")
 fi
 
 # --- Run ---
-echo "[RViz] Launching RViz2 (distro=${DISTRO}, rmw=${RMW}, ros-domain-id=${ROS_DOMAIN_ID:-default})..."
+echo "[RViz] Launching RViz2 (distro=${DISTRO}, rmw=${RMW}, ros-domain-id=${ROS_DOMAIN_ID_ARG:-default})..."
 docker run \
     --rm \
     --net=host \

@@ -22,6 +22,7 @@
 
 #include <array>
 #include <cstdint>
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <vector>
@@ -1279,3 +1280,150 @@ TEST(generic_cdr_pubsubtype_large_payload, size_provider_returns_actual_size_not
   EXPECT_GT(large_size, 100000u)
       << "Size must at least cover the raw data bytes";
 }
+
+// ==========================================================================
+// Group 13: domain_id_resolution (15 tests)
+// Pure tests for TryParseDomainId and ResolveDomainId. The environment value is
+// passed as a string, so the precedence rules need no real environment.
+// ==========================================================================
+
+TEST(domain_id_parsing, nullptr_is_rejected) {
+  int out = -99;
+  EXPECT_FALSE(TryParseDomainId(nullptr, out));
+}
+
+TEST(domain_id_parsing, empty_string_is_rejected) {
+  int out = -99;
+  EXPECT_FALSE(TryParseDomainId("", out));
+}
+
+TEST(domain_id_parsing, non_numeric_is_rejected) {
+  int out = -99;
+  EXPECT_FALSE(TryParseDomainId("abc", out));
+}
+
+TEST(domain_id_parsing, trailing_garbage_is_rejected) {
+  int out = -99;
+  EXPECT_FALSE(TryParseDomainId("12abc", out));
+}
+
+TEST(domain_id_parsing, above_max_is_rejected) {
+  int out = -99;
+  EXPECT_FALSE(TryParseDomainId("233", out));
+}
+
+TEST(domain_id_parsing, negative_is_rejected) {
+  int out = -99;
+  EXPECT_FALSE(TryParseDomainId("-1", out));
+}
+
+TEST(domain_id_parsing, zero_is_accepted) {
+  int out = -99;
+  EXPECT_TRUE(TryParseDomainId("0", out));
+  EXPECT_EQ(out, 0);
+}
+
+TEST(domain_id_parsing, mid_value_is_accepted) {
+  int out = -99;
+  EXPECT_TRUE(TryParseDomainId("42", out));
+  EXPECT_EQ(out, 42);
+}
+
+TEST(domain_id_parsing, max_value_is_accepted) {
+  int out = -99;
+  EXPECT_TRUE(TryParseDomainId("232", out));
+  EXPECT_EQ(out, kMaxDomainId);
+}
+
+TEST(domain_id_resolution, command_line_wins_over_environment) {
+  auto resolved = ResolveDomainId(42, "7");
+  EXPECT_EQ(resolved.id, 42);
+  EXPECT_EQ(resolved.source, DomainIdSource::CommandLine);
+}
+
+TEST(domain_id_resolution, command_line_zero_wins_over_environment) {
+  auto resolved = ResolveDomainId(0, "7");
+  EXPECT_EQ(resolved.id, 0);
+  EXPECT_EQ(resolved.source, DomainIdSource::CommandLine);
+}
+
+TEST(domain_id_resolution, environment_used_when_command_line_unset) {
+  auto resolved = ResolveDomainId(kUnsetDomainId, "7");
+  EXPECT_EQ(resolved.id, 7);
+  EXPECT_EQ(resolved.source, DomainIdSource::Environment);
+}
+
+TEST(domain_id_resolution, default_when_both_absent) {
+  auto resolved = ResolveDomainId(kUnsetDomainId, nullptr);
+  EXPECT_EQ(resolved.id, kDefaultDomainId);
+  EXPECT_EQ(resolved.source, DomainIdSource::Default);
+}
+
+TEST(domain_id_resolution, default_when_environment_empty) {
+  auto resolved = ResolveDomainId(kUnsetDomainId, "");
+  EXPECT_EQ(resolved.id, kDefaultDomainId);
+  EXPECT_EQ(resolved.source, DomainIdSource::Default);
+}
+
+TEST(domain_id_resolution, invalid_environment_falls_back_to_default) {
+  auto resolved = ResolveDomainId(kUnsetDomainId, "999");
+  EXPECT_EQ(resolved.id, kDefaultDomainId);
+  EXPECT_EQ(resolved.source, DomainIdSource::Default);
+}
+
+TEST(domain_id_resolution, invalid_command_line_falls_through_to_environment) {
+  auto resolved = ResolveDomainId(500, "7");
+  EXPECT_EQ(resolved.id, 7);
+  EXPECT_EQ(resolved.source, DomainIdSource::Environment);
+}
+
+#ifndef _WIN32
+// ==========================================================================
+// Group 14: effective_domain_id_env (3 tests)
+// Exercises the thin std::getenv wrapper in MiddlewareConfig. POSIX-only:
+// setenv/unsetenv are not available on Windows, and Windows does not build the
+// ROS 2 middleware anyway.
+// ==========================================================================
+
+// Saves and restores ROS_DOMAIN_ID and the configured domain id so the
+// process-wide state does not leak between tests.
+class RosDomainIdEnvFixture : public ::testing::Test {
+ protected:
+  void SetUp() override {
+    const char* existing = std::getenv(kRosDomainIdEnvVar);
+    had_env_ = existing != nullptr;
+    if (had_env_) {
+      saved_ = existing;
+    }
+    MiddlewareConfig::SetDomainId(kUnsetDomainId);
+  }
+
+  void TearDown() override {
+    MiddlewareConfig::SetDomainId(kUnsetDomainId);
+    if (had_env_) {
+      ::setenv(kRosDomainIdEnvVar, saved_.c_str(), 1);
+    } else {
+      ::unsetenv(kRosDomainIdEnvVar);
+    }
+  }
+
+  bool had_env_{false};
+  std::string saved_;
+};
+
+TEST_F(RosDomainIdEnvFixture, environment_applies_when_command_line_unset) {
+  ::setenv(kRosDomainIdEnvVar, "13", 1);
+  EXPECT_EQ(MiddlewareConfig::GetEffectiveDomainId(), 13);
+}
+
+TEST_F(RosDomainIdEnvFixture, command_line_overrides_environment) {
+  ::setenv(kRosDomainIdEnvVar, "13", 1);
+  MiddlewareConfig::SetDomainId(99);
+  EXPECT_EQ(MiddlewareConfig::GetEffectiveDomainId(), 99);
+}
+
+TEST_F(RosDomainIdEnvFixture, default_when_environment_unset) {
+  ::unsetenv(kRosDomainIdEnvVar);
+  EXPECT_EQ(MiddlewareConfig::GetEffectiveDomainId(), kDefaultDomainId);
+}
+#endif  // _WIN32

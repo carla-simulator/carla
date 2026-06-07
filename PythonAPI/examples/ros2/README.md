@@ -67,3 +67,15 @@ make launch ARGS="--ros2 --ros-domain-id=42"
 
 The domain id must be an integer in the range 0-232 and must match on both sides for the
 topics to be discovered.
+
+If you omit `--ros-domain-id`, the server falls back to the standard `ROS_DOMAIN_ID`
+environment variable, and then to the default domain 0. For example, exporting the variable
+before launching applies the same domain without the option:
+
+```bash
+export ROS_DOMAIN_ID=42
+./CarlaUE4.sh --ros2          # server uses domain 42
+./run_rviz.sh --ros-domain-id=42
+```
+
+When both are set, `--ros-domain-id` takes precedence over `ROS_DOMAIN_ID`.

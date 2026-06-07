@@ -20,7 +20,10 @@ USE_UNITY=true
 USE_ROS2=false
 CHRONO_PATH=""
 RMW=""
-ROS_DOMAIN_ID=""
+# Holds the value of --ros-domain-id. Deliberately NOT named ROS_DOMAIN_ID so it
+# does not shadow the standard ROS_DOMAIN_ID environment variable, which the
+# launched editor reads as a fallback when --ros-domain-id is not given.
+ROS_DOMAIN_ID_ARG=""
 
 EDITOR_FLAGS=""
 
@@ -79,7 +82,7 @@ while [[ $# -gt 0 ]]; do
       RMW=$2;
       shift 2 ;;
     --ros-domain-id )
-      ROS_DOMAIN_ID=$2;
+      ROS_DOMAIN_ID_ARG=$2;
       shift 2 ;;
     --no-simready )
       USE_SIMREADY=false
@@ -106,8 +109,8 @@ fi
 if [ -n "${RMW}" ] ; then
   EDITOR_FLAGS="${EDITOR_FLAGS} --rmw=${RMW}"
 fi
-if [ -n "${ROS_DOMAIN_ID}" ] ; then
-  EDITOR_FLAGS="${EDITOR_FLAGS} --ros-domain-id=${ROS_DOMAIN_ID}"
+if [ -n "${ROS_DOMAIN_ID_ARG}" ] ; then
+  EDITOR_FLAGS="${EDITOR_FLAGS} --ros-domain-id=${ROS_DOMAIN_ID_ARG}"
 fi
 
 # ==============================================================================

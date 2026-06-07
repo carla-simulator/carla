@@ -284,13 +284,12 @@ const struct ddsi_sertype_ops carla_cdr_sertype_ops = {
 dds_entity_t carla_cdr_get_participant() {
   // Function-local static: created once on first call, thread-safe in C++11.
   // The participant lives until process exit; CycloneDDS cleans up internally.
-  // Honor the configured ROS 2 domain id; the unset sentinel keeps CycloneDDS's
-  // native default (DDS_DOMAIN_DEFAULT, which also honors the ROS_DOMAIN_ID env).
+  // Use the effective domain id resolved by the abstraction layer
+  // (--ros-domain-id, else ROS_DOMAIN_ID, else the default domain 0), so the
+  // domain selection matches FastDDS instead of relying on DDS_DOMAIN_DEFAULT.
   static dds_entity_t participant = []() {
-    const int configured = MiddlewareConfig::GetDomainId();
-    const dds_domainid_t domain_id = (configured == kUnsetDomainId)
-        ? DDS_DOMAIN_DEFAULT
-        : static_cast<dds_domainid_t>(configured);
+    const dds_domainid_t domain_id =
+        static_cast<dds_domainid_t>(MiddlewareConfig::GetEffectiveDomainId());
     return dds_create_participant(domain_id, nullptr, nullptr);
   }();
   return participant;
