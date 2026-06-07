@@ -183,7 +183,7 @@ public:
       BlueprintReadOnly,
       EditAnywhere,
       config,
-      DisplayName = "  ROS2 Domain Id")
+      DisplayName = "  ROS2 Domain ID")
   int32 ROS2DomainId = -1;
 
   /// @}

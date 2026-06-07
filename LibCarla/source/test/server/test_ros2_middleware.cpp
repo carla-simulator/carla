@@ -261,7 +261,7 @@ TEST(middleware_config_valid, unset_sentinel_is_invalid) {
 }
 
 // ==========================================================================
-// Group 5: MiddlewareFactoryFixture (12 tests)
+// Group 6: MiddlewareFactoryFixture (12 tests)
 // ==========================================================================
 
 TEST_F(MiddlewareFactoryFixture, set_and_get_middleware) {
@@ -342,7 +342,7 @@ TEST_F(MiddlewareFactoryFixture, create_subscriber_zenoh_unavailable) {
 }
 
 // ==========================================================================
-// Group 6: publisher_impl (7 tests)
+// Group 7: publisher_impl (7 tests)
 // ==========================================================================
 
 TEST(publisher_impl, get_message_returns_pointer) {
@@ -418,7 +418,7 @@ TEST(publisher_impl, data_flows_through_publish) {
 }
 
 // ==========================================================================
-// Group 7: subscriber_impl (7 tests)
+// Group 8: subscriber_impl (7 tests)
 // ==========================================================================
 
 TEST(subscriber_impl, has_new_message_initially_false) {
@@ -501,7 +501,7 @@ TEST(subscriber_impl, init_failure_propagated) {
 }
 
 // ==========================================================================
-// Group 8: cdr_topic_info (2 tests)
+// Group 9: cdr_topic_info (2 tests)
 // ==========================================================================
 
 TEST(cdr_topic_info, type_names_are_non_empty) {
@@ -536,7 +536,7 @@ TEST(cdr_topic_info, max_sizes_are_positive) {
 }
 
 // ==========================================================================
-// Group 9: cdr_serialization (21 tests)
+// Group 10: cdr_serialization (21 tests)
 // ==========================================================================
 
 TEST(cdr_serialization, time_round_trip) {
@@ -1057,7 +1057,7 @@ TEST(cdr_serialization, cdr_serialized_size_pointcloud2_exceeds_static_max) {
 }
 
 // ==========================================================================
-// Group 10: generic_cdr_pubsubtype (6 tests)
+// Group 11: generic_cdr_pubsubtype (6 tests)
 // Tests for GenericCdrPubSubType<T> — the single FastDDS TopicDataType
 // implementation that replaces 30 fastddsgen-generated PubSubType classes.
 // ==========================================================================
@@ -1155,7 +1155,7 @@ TEST(generic_cdr_pubsubtype, getkey_returns_false) {
 }
 
 // ==========================================================================
-// Group 11: generic_cdr_pubsubtype_large_payload (3 tests)
+// Group 12: generic_cdr_pubsubtype_large_payload (3 tests)
 // Tests that getSerializedSizeProvider() returns the actual instance size and
 // that serialize/deserialize succeed for payloads exceeding max_serialized_size().
 // These tests catch the runtime bug where Image and PointCloud2 publish failed
