@@ -7,28 +7,33 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # --- Defaults ---
 DISTRO="humble"
 RMW="fastdds"
+ROS_DOMAIN_ID=""
 
 # --- Argument parsing ---
 usage() {
     cat <<EOF
-Usage: $0 [--distro=<distro>] [--rmw=<middleware>]
+Usage: $0 [--distro=<distro>] [--rmw=<middleware>] [--ros-domain-id=<N>]
 
 Options:
-  --distro    ROS 2 distribution to use. Supported: humble, jazzy  (default: humble)
-  --rmw       DDS middleware to use. Supported: fastdds, cyclonedds  (default: fastdds)
+  --distro          ROS 2 distribution to use. Supported: humble, jazzy  (default: humble)
+  --rmw             DDS middleware to use. Supported: fastdds, cyclonedds  (default: fastdds)
+  --ros-domain-id   ROS 2 domain id (0-232). Must match the CARLA server's
+                    --ros-domain-id. When omitted, the default domain is used.
 
 Examples:
   $0 --distro=humble --rmw=fastdds
   $0 --distro=jazzy  --rmw=cyclonedds
+  $0 --ros-domain-id=42
 EOF
     exit 1
 }
 
 for arg in "$@"; do
     case "$arg" in
-        --distro=*) DISTRO="${arg#*=}" ;;
-        --rmw=*)    RMW="${arg#*=}" ;;
-        --help|-h)  usage ;;
+        --distro=*)         DISTRO="${arg#*=}" ;;
+        --rmw=*)            RMW="${arg#*=}" ;;
+        --ros-domain-id=*)  ROS_DOMAIN_ID="${arg#*=}" ;;
+        --help|-h)          usage ;;
         *) echo "Unknown argument: $arg"; usage ;;
     esac
 done
@@ -43,6 +48,13 @@ case "$RMW" in
     fastdds|cyclonedds) ;;
     *) echo "Unsupported RMW '${RMW}'. Supported values: fastdds, cyclonedds"; exit 1 ;;
 esac
+
+if [ -n "${ROS_DOMAIN_ID}" ]; then
+    if ! [[ "${ROS_DOMAIN_ID}" =~ ^[0-9]+$ ]] || [ "${ROS_DOMAIN_ID}" -lt 0 ] || [ "${ROS_DOMAIN_ID}" -gt 232 ]; then
+        echo "Invalid ROS domain id '${ROS_DOMAIN_ID}'. Must be an integer in the range 0-232."
+        exit 1
+    fi
+fi
 
 # Map short names to ROS RMW implementation identifiers
 if [ "$RMW" = "cyclonedds" ]; then
@@ -81,8 +93,15 @@ else
     EXTRA_ENV+=(--env="FASTRTPS_DEFAULT_PROFILES_FILE=/config/fastrtps-profile.xml")
 fi
 
+# --- ROS domain id ---
+# Forward ROS_DOMAIN_ID so the container discovers a CARLA server launched with
+# the matching --ros-domain-id. When unset, the container uses the default domain.
+if [ -n "${ROS_DOMAIN_ID}" ]; then
+    EXTRA_ENV+=(--env="ROS_DOMAIN_ID=${ROS_DOMAIN_ID}")
+fi
+
 # --- Run ---
-echo "[RViz] Launching RViz2 (distro=${DISTRO}, rmw=${RMW})..."
+echo "[RViz] Launching RViz2 (distro=${DISTRO}, rmw=${RMW}, ros-domain-id=${ROS_DOMAIN_ID:-default})..."
 docker run \
     --rm \
     --net=host \
