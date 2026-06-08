@@ -62,6 +62,15 @@ private:
       const bool is_target_junction,
       const uint64_t target_index);
 
+  /// Returns true when the lateral band that the wide-turn offset would swing
+  /// `actor_id` into is occupied by a nearby vehicle. Gathers the overlapping
+  /// vehicles from track_traffic and delegates the geometric decision to the
+  /// pure IsOffsetSideOccupied helper.
+  [[nodiscard]] bool IsWideTurnSideOccupied(
+      const ActorId actor_id,
+      const cg::Vector3D offset_direction,
+      const float offset_magnitude);
+
   float GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
                                   const cg::Location vehicle_location,
                                   const ActorId actor_id,

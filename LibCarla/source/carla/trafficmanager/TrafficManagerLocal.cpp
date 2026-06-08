@@ -336,6 +336,14 @@ void TrafficManagerLocal::SetGlobalLaneOffset(const float offset) {
   parameters.SetGlobalLaneOffset(offset);
 }
 
+void TrafficManagerLocal::SetLargeVehicleWideTurn(const ActorPtr &actor, const bool enable) {
+  parameters.SetLargeVehicleWideTurn(actor, enable);
+}
+
+void TrafficManagerLocal::SetGlobalLargeVehicleWideTurn(const bool enable) {
+  parameters.SetGlobalLargeVehicleWideTurn(enable);
+}
+
 void TrafficManagerLocal::SetDesiredSpeed(const ActorPtr &actor, const float value) {
   parameters.SetDesiredSpeed(actor, value);
 }

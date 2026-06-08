@@ -87,6 +87,8 @@ void export_trafficmanager() {
     .def("set_desired_speed", &ctm::TrafficManager::SetDesiredSpeed, (arg("actor"), arg("speed")))
     .def("global_percentage_speed_difference", &ctm::TrafficManager::SetGlobalPercentageSpeedDifference, (arg("percentage")))
     .def("global_lane_offset", &ctm::TrafficManager::SetGlobalLaneOffset, (arg("offset")))
+    .def("vehicle_large_vehicle_wide_turn", &ctm::TrafficManager::SetLargeVehicleWideTurn, (arg("actor"), arg("enable")))
+    .def("global_large_vehicle_wide_turn", &ctm::TrafficManager::SetGlobalLargeVehicleWideTurn, (arg("enable")))
     .def("update_vehicle_lights", &ctm::TrafficManager::SetUpdateVehicleLights, (arg("actor"), arg("do_update")))
     .def("collision_detection", &ctm::TrafficManager::SetCollisionDetection, (arg("reference_actor"), arg("other_actor"), arg("detect_collision")))
     .def("force_lane_change", &ctm::TrafficManager::SetForceLaneChange, (arg("actor"), arg("direction")))

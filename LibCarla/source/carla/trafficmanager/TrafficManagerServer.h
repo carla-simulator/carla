@@ -122,6 +122,16 @@ public:
         tm->SetGlobalLaneOffset(offset);
       });
 
+      /// Method to enable/disable the wide-turn manoeuvre for a single large vehicle.
+      server->bind("set_large_vehicle_wide_turn", [=](carla::rpc::Actor actor, const bool enable) {
+        tm->SetLargeVehicleWideTurn(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), enable);
+      });
+
+      /// Method to enable/disable the wide-turn manoeuvre globally for large vehicles.
+      server->bind("set_global_large_vehicle_wide_turn", [=](const bool enable) {
+        tm->SetGlobalLargeVehicleWideTurn(enable);
+      });
+
 
       /// Method to set collision detection rules between vehicles.
       server->bind("set_collision_detection", [=](const carla::rpc::Actor &reference_actor, const carla::rpc::Actor &other_actor, const bool detect_collision) {

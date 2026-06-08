@@ -47,6 +47,10 @@ private:
   float global_percentage_difference_from_limit = 0;
   /// Global lane offset
   float global_lane_offset = 0;
+  /// Per-vehicle enable flag for the large-vehicle wide-turn manoeuvre.
+  AtomicMap<ActorId, bool> large_vehicle_wide_turn;
+  /// Global enable flag for the large-vehicle wide-turn manoeuvre.
+  bool global_large_vehicle_wide_turn = true;
   /// Map containing a set of actors to be ignored during collision detection.
   AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> ignore_collision;
   /// Map containing distance to leading vehicle command.
@@ -124,6 +128,14 @@ public:
   /// Method to set a global lane offset displacement from the center line.
   /// Positive values imply a right offset while negative ones mean a left one.
   void SetGlobalLaneOffset(float const offset);
+
+  /// Method to enable/disable the wide-turn manoeuvre for a single large
+  /// vehicle (bus/truck). Enabled by default.
+  void SetLargeVehicleWideTurn(const ActorPtr &actor, const bool enable);
+
+  /// Method to enable/disable the wide-turn manoeuvre globally for all large
+  /// vehicles. Enabled by default.
+  void SetGlobalLargeVehicleWideTurn(const bool enable);
 
   /// Method to set collision detection rules between vehicles.
   void SetCollisionDetection(
@@ -221,6 +233,10 @@ public:
 
   /// Method to query lane offset for a vehicle.
   float GetLaneOffset(const ActorId &actor_id) const;
+
+  /// Method to query whether the wide-turn manoeuvre is enabled for a large
+  /// vehicle (per-vehicle override, otherwise the global flag).
+  bool GetLargeVehicleWideTurn(const ActorId &actor_id) const;
 
   /// Method to query collision avoidance rule between a pair of vehicles.
   bool GetCollisionDetection(const ActorId &reference_actor_id, const ActorId &other_actor_id) const;

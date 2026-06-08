@@ -108,6 +108,18 @@ public:
     _client->call("set_global_lane_offset", offset);
   }
 
+  /// Method to enable/disable the wide-turn manoeuvre for a single large vehicle.
+  void SetLargeVehicleWideTurn(const carla::rpc::Actor &_actor, const bool enable) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_large_vehicle_wide_turn", std::move(_actor), enable);
+  }
+
+  /// Method to enable/disable the wide-turn manoeuvre globally for large vehicles.
+  void SetGlobalLargeVehicleWideTurn(const bool enable) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_global_large_vehicle_wide_turn", enable);
+  }
+
   /// Method to set the automatic management of the vehicle lights
   void SetUpdateVehicleLights(const carla::rpc::Actor &_actor, const bool do_update) {
     DEBUG_ASSERT(_client != nullptr);
