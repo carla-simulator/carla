@@ -49,31 +49,57 @@ jobs:
       run:
         shell: bash -leo pipefail {0}
     runs-on: self-hosted:ubuntu-gpu
-    container:
-      image: carlasim/carla-builder:ue5-22.04
-      options: --runtime=nvidia --gpus all -e NVIDIA_DRIVER_CAPABILITIES=all --volume /home/jenkins/unreal-engine/ue5:/unreal-engine
     env:
+      UBUNTU_DISTRO: "22.04"
       CARLA_UNREAL_ENGINE_PATH: /unreal-engine
+      CARLA_DOCKER_IMAGE: carla-development:ue5-22.04
+      CARLA_DOCKER_UID: "1000"
+      CARLA_DOCKER_GID: "1000"
+      CARLA_DOCKER_GROUP_GID: "999"
+      CARLA_DOCKER_RUN_FLAGS: >-
+        --rm
+        --runtime=nvidia
+        --gpus all
+        --net=host
+        --env NVIDIA_VISIBLE_DEVICES=all
+        --env NVIDIA_DRIVER_CAPABILITIES=all
+        --env CARLA_UNREAL_ENGINE_PATH=/unreal-engine
+        --volume /home/jenkins/unreal-engine/ue5:/unreal-engine
 
     steps:
-
-      - name: Init conda
-        run: |
-          conda init bash
-          echo "source activate carla310" >> ~/.bashrc
-
-          cat <<'EOF' > ~/.bash_profile
-          if [ -f ~/.bashrc ]; then
-            source ~/.bashrc
-          fi
-          EOF
 
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Build CARLA development image
+        run: |
+          HOST_UID="$(id -u)"
+          HOST_GID="$(id -g)"
+          if [ "$HOST_UID" = "0" ]; then
+            HOST_UID="$CARLA_DOCKER_UID"
+            HOST_GID="$CARLA_DOCKER_GID"
+          fi
+
+          DOCKER_GROUP_GID="$(getent group docker | cut -d: -f3 || true)"
+          if [ -z "$DOCKER_GROUP_GID" ]; then
+            DOCKER_GROUP_GID="$CARLA_DOCKER_GROUP_GID"
+          fi
+
+          bash Util/Docker/build.sh \
+            --ubuntu-distro "$UBUNTU_DISTRO" \
+            --user "${HOST_UID}:${HOST_GID}" \
+            --docker-gid "$DOCKER_GROUP_GID"
+
       - name: Download content
         run: |
+          docker run $CARLA_DOCKER_RUN_FLAGS \
+            --volume "$GITHUB_WORKSPACE:/workspaces/carla" \
+            --workdir /workspaces/carla \
+            --user carla \
+            "$CARLA_DOCKER_IMAGE" \
+            bash -leo pipefail <<'EOF'
           git clone -b ue5-dev --depth 1 https://bitbucket.org/carla-simulator/carla-content.git Unreal/CarlaUnreal/Content/Carla
+          EOF
 
       - name: Download OpenADS content
         if: inputs.content-overlay == true
@@ -83,6 +109,16 @@ jobs:
           CARLA_CONTENT_REPOSITORY: ${{ inputs.content-overlay-repository }}
           CARLA_CONTENT_BRANCH: ${{ inputs.content-overlay-branch }}
         run: |
+          docker run $CARLA_DOCKER_RUN_FLAGS \
+            --env GITLAB_CONTENT_USERNAME="$GITLAB_CONTENT_USERNAME" \
+            --env GITLAB_CONTENT_TOKEN="$GITLAB_CONTENT_TOKEN" \
+            --env CARLA_CONTENT_REPOSITORY="$CARLA_CONTENT_REPOSITORY" \
+            --env CARLA_CONTENT_BRANCH="$CARLA_CONTENT_BRANCH" \
+            --volume "$GITHUB_WORKSPACE:/workspaces/carla" \
+            --workdir /workspaces/carla \
+            --user carla \
+            "$CARLA_DOCKER_IMAGE" \
+            bash -leo pipefail <<'EOF'
           rm -rf Unreal/CarlaUnreal/content-openads
           content_auth_header="$(printf '%s:%s' "$GITLAB_CONTENT_USERNAME" "$GITLAB_CONTENT_TOKEN" | base64 | tr -d '\n')"
           git -c http.extraHeader="Authorization: Basic ${content_auth_header}" \
@@ -91,45 +127,98 @@ jobs:
             Unreal/CarlaUnreal/content-openads
           unset content_auth_header
           cp -a Unreal/CarlaUnreal/content-openads/Carla/. Unreal/CarlaUnreal/Content/Carla/
-
-      - name: Activate conda environment
-        run: |
-          conda activate carla310
+          EOF
 
       - name: Preset
         run: |
+          docker run $CARLA_DOCKER_RUN_FLAGS \
+            --volume "$GITHUB_WORKSPACE:/workspaces/carla" \
+            --workdir /workspaces/carla \
+            --user carla \
+            "$CARLA_DOCKER_IMAGE" \
+            bash -leo pipefail <<'EOF'
           cmake --preset Release -DENABLE_ROS2=ON -DBUILD_LIBCARLA_TESTS=ON
+          EOF
 
       - name: Build LibCarla
         run: |
+          docker run $CARLA_DOCKER_RUN_FLAGS \
+            --volume "$GITHUB_WORKSPACE:/workspaces/carla" \
+            --workdir /workspaces/carla \
+            --user carla \
+            "$CARLA_DOCKER_IMAGE" \
+            bash -leo pipefail <<'EOF'
           cmake --build Build/Release --target carla-client
+          EOF
 
       - name: Build PythonAPI
         run: |
+          docker run $CARLA_DOCKER_RUN_FLAGS \
+            --volume "$GITHUB_WORKSPACE:/workspaces/carla" \
+            --workdir /workspaces/carla \
+            --user carla \
+            "$CARLA_DOCKER_IMAGE" \
+            bash -leo pipefail <<'EOF'
           cmake --build Build/Release --target carla-python-api
+          EOF
 
       - name: Build CarlaServer
         run: |
+          docker run $CARLA_DOCKER_RUN_FLAGS \
+            --volume "$GITHUB_WORKSPACE:/workspaces/carla" \
+            --workdir /workspaces/carla \
+            --user carla \
+            "$CARLA_DOCKER_IMAGE" \
+            bash -leo pipefail <<'EOF'
           cmake --build Build/Release --target carla-server
+          EOF
 
       - name: Build LibCarla Tests
         run: |
+          docker run $CARLA_DOCKER_RUN_FLAGS \
+            --volume "$GITHUB_WORKSPACE:/workspaces/carla" \
+            --workdir /workspaces/carla \
+            --user carla \
+            "$CARLA_DOCKER_IMAGE" \
+            bash -leo pipefail <<'EOF'
           cmake --build Build/Release --target libcarla_test_server
           cmake --build Build/Release --target libcarla_test_client
+          EOF
 
       - name: Fetch LibCarla test content
         run: |
+          docker run $CARLA_DOCKER_RUN_FLAGS \
+            --volume "$GITHUB_WORKSPACE:/workspaces/carla" \
+            --workdir /workspaces/carla \
+            --user carla \
+            "$CARLA_DOCKER_IMAGE" \
+            bash -leo pipefail <<'EOF'
           rm -rf Build/test-content
           git clone --depth 1 -b 0.1.4 https://github.com/carla-simulator/opendrive-test-files.git Build/test-content
+          EOF
 
       - name: Run LibCarla Tests
         run: |
+          docker run $CARLA_DOCKER_RUN_FLAGS \
+            --volume "$GITHUB_WORKSPACE:/workspaces/carla" \
+            --workdir /workspaces/carla \
+            --user carla \
+            "$CARLA_DOCKER_IMAGE" \
+            bash -leo pipefail <<'EOF'
           ./Build/Release/LibCarla/libcarla_test_server
           ./Build/Release/LibCarla/libcarla_test_client
+          EOF
 
       - name: Build Package
         run: |
+          docker run $CARLA_DOCKER_RUN_FLAGS \
+            --volume "$GITHUB_WORKSPACE:/workspaces/carla" \
+            --workdir /workspaces/carla \
+            --user carla \
+            "$CARLA_DOCKER_IMAGE" \
+            bash -leo pipefail <<'EOF'
           cmake --build Build/Release --target package
+          EOF
 
       - name: Prepare publish artifacts
         if: inputs.upload-docker == true || inputs.upload-package == true
