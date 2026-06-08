@@ -97,9 +97,9 @@ jobs:
             --workdir /workspaces/carla \
             --user carla \
             "$CARLA_DOCKER_IMAGE" \
-            bash -leo pipefail <<'EOF'
+            bash -leo pipefail -c '
           git clone -b ue5-dev --depth 1 https://bitbucket.org/carla-simulator/carla-content.git Unreal/CarlaUnreal/Content/Carla
-          EOF
+          '
 
       - name: Download OpenADS content
         if: inputs.content-overlay == true
@@ -118,7 +118,7 @@ jobs:
             --workdir /workspaces/carla \
             --user carla \
             "$CARLA_DOCKER_IMAGE" \
-            bash -leo pipefail <<'EOF'
+            bash -leo pipefail -c '
           rm -rf Unreal/CarlaUnreal/content-openads
           content_auth_header="$(printf '%s:%s' "$GITLAB_CONTENT_USERNAME" "$GITLAB_CONTENT_TOKEN" | base64 | tr -d '\n')"
           git -c http.extraHeader="Authorization: Basic ${content_auth_header}" \
@@ -127,7 +127,7 @@ jobs:
             Unreal/CarlaUnreal/content-openads
           unset content_auth_header
           cp -a Unreal/CarlaUnreal/content-openads/Carla/. Unreal/CarlaUnreal/Content/Carla/
-          EOF
+          '
 
       - name: Preset
         run: |
@@ -136,9 +136,9 @@ jobs:
             --workdir /workspaces/carla \
             --user carla \
             "$CARLA_DOCKER_IMAGE" \
-            bash -leo pipefail <<'EOF'
+            bash -leo pipefail -c '
           cmake --preset Release -DENABLE_ROS2=ON -DBUILD_LIBCARLA_TESTS=ON
-          EOF
+          '
 
       - name: Build LibCarla
         run: |
@@ -147,9 +147,9 @@ jobs:
             --workdir /workspaces/carla \
             --user carla \
             "$CARLA_DOCKER_IMAGE" \
-            bash -leo pipefail <<'EOF'
+            bash -leo pipefail -c '
           cmake --build Build/Release --target carla-client
-          EOF
+          '
 
       - name: Build PythonAPI
         run: |
@@ -158,9 +158,9 @@ jobs:
             --workdir /workspaces/carla \
             --user carla \
             "$CARLA_DOCKER_IMAGE" \
-            bash -leo pipefail <<'EOF'
+            bash -leo pipefail -c '
           cmake --build Build/Release --target carla-python-api
-          EOF
+          '
 
       - name: Build CarlaServer
         run: |
@@ -169,9 +169,9 @@ jobs:
             --workdir /workspaces/carla \
             --user carla \
             "$CARLA_DOCKER_IMAGE" \
-            bash -leo pipefail <<'EOF'
+            bash -leo pipefail -c '
           cmake --build Build/Release --target carla-server
-          EOF
+          '
 
       - name: Build LibCarla Tests
         run: |
@@ -180,10 +180,10 @@ jobs:
             --workdir /workspaces/carla \
             --user carla \
             "$CARLA_DOCKER_IMAGE" \
-            bash -leo pipefail <<'EOF'
+            bash -leo pipefail -c '
           cmake --build Build/Release --target libcarla_test_server
           cmake --build Build/Release --target libcarla_test_client
-          EOF
+          '
 
       - name: Fetch LibCarla test content
         run: |
@@ -192,10 +192,10 @@ jobs:
             --workdir /workspaces/carla \
             --user carla \
             "$CARLA_DOCKER_IMAGE" \
-            bash -leo pipefail <<'EOF'
+            bash -leo pipefail -c '
           rm -rf Build/test-content
           git clone --depth 1 -b 0.1.4 https://github.com/carla-simulator/opendrive-test-files.git Build/test-content
-          EOF
+          '
 
       - name: Run LibCarla Tests
         run: |
@@ -204,10 +204,10 @@ jobs:
             --workdir /workspaces/carla \
             --user carla \
             "$CARLA_DOCKER_IMAGE" \
-            bash -leo pipefail <<'EOF'
+            bash -leo pipefail -c '
           ./Build/Release/LibCarla/libcarla_test_server
           ./Build/Release/LibCarla/libcarla_test_client
-          EOF
+          '
 
       - name: Build Package
         run: |
@@ -216,9 +216,9 @@ jobs:
             --workdir /workspaces/carla \
             --user carla \
             "$CARLA_DOCKER_IMAGE" \
-            bash -leo pipefail <<'EOF'
+            bash -leo pipefail -c '
           cmake --build Build/Release --target package
-          EOF
+          '
 
       - name: Prepare publish artifacts
         if: inputs.upload-docker == true || inputs.upload-package == true
