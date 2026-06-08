@@ -18,6 +18,7 @@ are deterministic and not lost to async timing.
 
 import math
 import os
+import tempfile
 import time
 
 from . import SyncSmokeTest
@@ -25,15 +26,30 @@ from . import SyncSmokeTest
 import carla
 
 
-REPLAY_LOG_PATH = "/tmp/carla_replay_aliasing_smoke.log"
+def make_temp_log_path():
+    """Return a unique, OS-agnostic path for the recorder log.
+
+    Uses the platform temporary directory and a unique filename so the test
+    never relies on a hardcoded location and never collides with another run.
+    The caller owns the file and is responsible for removing it.
+    """
+    handle, path = tempfile.mkstemp(
+        prefix="carla_replay_aliasing_smoke_", suffix=".log")
+    os.close(handle)
+    return path
 
 
 class TestReplayNoActorAliasing(SyncSmokeTest):
 
+    def setUp(self):
+        super().setUp()
+        self.replay_log_path = make_temp_log_path()
+
     def tearDown(self):
-        if os.path.exists(REPLAY_LOG_PATH):
+        log_path = getattr(self, "replay_log_path", None)
+        if log_path and os.path.exists(log_path):
             try:
-                os.remove(REPLAY_LOG_PATH)
+                os.remove(log_path)
             except OSError:
                 pass
         try:
@@ -78,7 +94,7 @@ class TestReplayNoActorAliasing(SyncSmokeTest):
         # original actors -- otherwise the destroy events end up in the
         # log and replay re-executes them, leaving zero vehicles by the
         # time we inspect the world.
-        self.client.start_recorder(REPLAY_LOG_PATH, True)
+        self.client.start_recorder(self.replay_log_path, True)
         self.world.tick()
 
         recorded = self._spawn_vehicles(3)
@@ -111,7 +127,7 @@ class TestReplayNoActorAliasing(SyncSmokeTest):
         # with the same id" fast-path. We assert that replay produces at
         # least one vehicle and that none of them carry leaked state
         # (nan velocity / nan transform).
-        self.client.replay_file(REPLAY_LOG_PATH, 0.0, 0.0, 0)
+        self.client.replay_file(self.replay_log_path, 0.0, 0.0, 0)
         # Drive enough ticks for the replay to spawn the recorded actors,
         # but the replay log has no destroy events (we stopped the
         # recorder before destroying), so the replayed actors stay alive.
