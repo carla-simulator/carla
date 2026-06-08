@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <limits>
+#include <utility>
 #include <vector>
 
 #include <carla/geom/Location.h>
@@ -17,6 +18,9 @@
 namespace cg = carla::geom;
 using carla::traffic_manager::GetThreePointCircleRadius;
 using carla::traffic_manager::InterpolateBufferAt;
+using carla::traffic_manager::IsOffsetSideOccupied;
+using carla::traffic_manager::LargeVehicleJunctionOffsetProfile;
+using carla::traffic_manager::LargeVehicleOffsetMagnitude;
 
 namespace {
 
@@ -185,4 +189,147 @@ TEST(TrafficManagerInterpolation, InterpolateBufferAt_CoincidentBracketReturnsCl
   const auto [location, index] = InterpolateBufferAt(buffer, 5.0f, vehicle_location);
   ExpectLocationNear(location, cg::Location{5.0f, 0.0f, 0.0f}, kLocationTolerance);
   EXPECT_EQ(index, 0u);
+}
+
+// -----------------------------------------------------------------------------
+// LargeVehicleJunctionOffsetProfile (Option C: bounded inboard excursion)
+// -----------------------------------------------------------------------------
+
+namespace {
+
+constexpr float kProfileMaxOffset{2.0f};
+constexpr float kProfileMaxOffsetPoint{0.3f};
+constexpr float kProfileInboardScale{0.25f};
+constexpr float kProfileTolerance{1e-3f};
+
+float SampleProfile(float t, float inboard_scale) {
+  return LargeVehicleJunctionOffsetProfile(
+      t, kProfileMaxOffset, kProfileMaxOffsetPoint, inboard_scale);
+}
+
+}  // namespace
+
+TEST(TrafficManagerWideTurn, OffsetProfile_ZeroAtEntryAndExit) {
+  // t = 0 is the junction exit, t = 1 is the entry; both must produce no
+  // offset so the manoeuvre starts and ends on the centreline.
+  EXPECT_NEAR(SampleProfile(0.0f, kProfileInboardScale), 0.0f, kProfileTolerance);
+  EXPECT_NEAR(SampleProfile(1.0f, kProfileInboardScale), 0.0f, kProfileTolerance);
+}
+
+TEST(TrafficManagerWideTurn, OffsetProfile_OutboardSwingReachesFullMagnitude) {
+  // The outboard (negative) swing near the entry is preserved at full
+  // magnitude so the vehicle still opens the turn up. Its peak sits at
+  // t = 1 - max_offset_point.
+  const float outboard{SampleProfile(1.0f - kProfileMaxOffsetPoint, kProfileInboardScale)};
+  EXPECT_NEAR(outboard, -kProfileMaxOffset, kProfileTolerance);
+}
+
+TEST(TrafficManagerWideTurn, OffsetProfile_InboardExcursionIsCapped) {
+  // The inboard (positive) excursion is the exit cut-in that drives the rear
+  // into the inside shoulder. Across the whole junction it must never exceed
+  // inboard_scale * max_offset, and never fall below -max_offset.
+  const float inboard_cap{kProfileInboardScale * kProfileMaxOffset};
+  for (int i = 0; i <= 100; ++i) {
+    const float t{static_cast<float>(i) / 100.0f};
+    const float offset{SampleProfile(t, kProfileInboardScale)};
+    EXPECT_LE(offset, inboard_cap + kProfileTolerance);
+    EXPECT_GE(offset, -kProfileMaxOffset - kProfileTolerance);
+  }
+}
+
+TEST(TrafficManagerWideTurn, OffsetProfile_ZeroInboardScaleRemovesCutIn) {
+  // With inboard_scale = 0 the exit cut-in is removed entirely: the profile is
+  // never positive (it only swings outboard, then returns to the centreline).
+  for (int i = 0; i <= 100; ++i) {
+    const float t{static_cast<float>(i) / 100.0f};
+    EXPECT_LE(SampleProfile(t, 0.0f), kProfileTolerance);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// LargeVehicleOffsetMagnitude (Option B: dimension-aware magnitude)
+// -----------------------------------------------------------------------------
+
+namespace {
+
+constexpr float kRefLength{6.0f};
+constexpr float kOffsetGain{0.25f};
+constexpr float kOffsetCap{1.5f};
+
+float SampleMagnitude(float length) {
+  return LargeVehicleOffsetMagnitude(length, kRefLength, kOffsetGain, kOffsetCap);
+}
+
+}  // namespace
+
+TEST(TrafficManagerWideTurn, OffsetMagnitude_ZeroAtOrBelowReferenceLength) {
+  EXPECT_NEAR(SampleMagnitude(kRefLength), 0.0f, kProfileTolerance);
+  EXPECT_NEAR(SampleMagnitude(kRefLength - 2.0f), 0.0f, kProfileTolerance);
+}
+
+TEST(TrafficManagerWideTurn, OffsetMagnitude_RampsThenClampsToCap) {
+  // length 8 -> 0.25 * 2 = 0.5; length 12 -> 0.25 * 6 = 1.5 (cap); beyond is clamped.
+  EXPECT_NEAR(SampleMagnitude(8.0f), 0.5f, kProfileTolerance);
+  EXPECT_NEAR(SampleMagnitude(12.0f), kOffsetCap, kProfileTolerance);
+  EXPECT_NEAR(SampleMagnitude(20.0f), kOffsetCap, kProfileTolerance);
+}
+
+TEST(TrafficManagerWideTurn, OffsetMagnitude_MonotonicNonDecreasingInLength) {
+  float previous{SampleMagnitude(0.0f)};
+  for (float length = 0.0f; length <= 20.0f; length += 0.5f) {
+    const float current{SampleMagnitude(length)};
+    EXPECT_GE(current, previous - kProfileTolerance);
+    previous = current;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// IsOffsetSideOccupied (Option A: collision-aware gating decision)
+// -----------------------------------------------------------------------------
+
+namespace {
+
+// Ego at the origin, heading +x, swinging toward +y.
+const cg::Location kEgoLocation{0.0f, 0.0f, 0.0f};
+const cg::Vector3D kEgoForward{1.0f, 0.0f, 0.0f};
+const cg::Vector3D kOffsetDirection{0.0f, 1.0f, 0.0f};
+constexpr float kOffsetMagnitude{1.5f};
+constexpr float kLateralClearance{1.0f};
+constexpr float kLongitudinalWindow{5.0f};
+
+bool SampleOccupied(const std::vector<std::pair<cg::Location, float>> &neighbours) {
+  return IsOffsetSideOccupied(
+      kEgoLocation,
+      kEgoForward,
+      kOffsetDirection,
+      kOffsetMagnitude,
+      kLateralClearance,
+      kLongitudinalWindow,
+      neighbours);
+}
+
+}  // namespace
+
+TEST(TrafficManagerWideTurn, OffsetSideOccupied_EmptyNeighboursIsClear) {
+  EXPECT_FALSE(SampleOccupied({}));
+}
+
+TEST(TrafficManagerWideTurn, OffsetSideOccupied_NeighbourInBandBlocks) {
+  // 2 m to the offset side, alongside the ego: within the swing band.
+  EXPECT_TRUE(SampleOccupied({{{0.0f, 2.0f, 0.0f}, 1.0f}}));
+}
+
+TEST(TrafficManagerWideTurn, OffsetSideOccupied_FarLateralNeighbourIsClear) {
+  // 10 m to the side is well beyond offset_magnitude + clearance + radius.
+  EXPECT_FALSE(SampleOccupied({{{0.0f, 10.0f, 0.0f}, 1.0f}}));
+}
+
+TEST(TrafficManagerWideTurn, OffsetSideOccupied_OppositeSideNeighbourIsClear) {
+  // A neighbour on the far side of the offset direction does not block.
+  EXPECT_FALSE(SampleOccupied({{{0.0f, -3.0f, 0.0f}, 1.0f}}));
+}
+
+TEST(TrafficManagerWideTurn, OffsetSideOccupied_NeighbourAheadOutsideWindowIsClear) {
+  // On the offset side but 20 m ahead: outside the longitudinal window.
+  EXPECT_FALSE(SampleOccupied({{{20.0f, 1.0f, 0.0f}, 1.0f}}));
 }

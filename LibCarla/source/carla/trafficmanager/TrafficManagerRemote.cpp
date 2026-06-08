@@ -131,6 +131,16 @@ void TrafficManagerRemote::SetGlobalLaneOffset(const float offset) {
   client.SetGlobalLaneOffset(offset);
 }
 
+void TrafficManagerRemote::SetLargeVehicleWideTurn(const ActorPtr &_actor, const bool enable) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetLargeVehicleWideTurn(actor, enable);
+}
+
+void TrafficManagerRemote::SetGlobalLargeVehicleWideTurn(const bool enable) {
+  client.SetGlobalLargeVehicleWideTurn(enable);
+}
+
 void TrafficManagerRemote::SetUpdateVehicleLights(const ActorPtr &_actor, const bool do_update) {
   carla::rpc::Actor actor(_actor->Serialize());
 

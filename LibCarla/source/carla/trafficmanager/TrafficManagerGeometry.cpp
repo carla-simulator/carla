@@ -6,6 +6,7 @@
 
 #include "carla/trafficmanager/TrafficManagerGeometry.h"
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 
@@ -15,6 +16,7 @@ namespace carla {
 namespace traffic_manager {
 
 using constants::Collision::EPSILON;
+using constants::MotionPlan::PI;
 
 float GetThreePointCircleRadius(
     cg::Location first_location,
@@ -139,6 +141,78 @@ std::pair<cg::Location, uint64_t> GetTargetData(
     locations.emplace_back(waypoint->GetLocation());
   }
   return InterpolateBufferAt(locations, target_distance, vehicle_location);
+}
+
+float LargeVehicleJunctionOffsetProfile(
+    float t,
+    float max_offset,
+    float max_offset_point,
+    float inboard_scale) {
+
+  t = std::clamp(t, 0.0f, 1.0f);
+
+  // From +offset (inboard, near the exit) to -offset (outboard, near the
+  // entry); entry and exit stay at 0 for a smooth transition. The vehicle
+  // opens up at the entry to perform a wider turn, then returns along a
+  // straighter trajectory.
+  float offset{0.0f};
+  if (t < max_offset_point) {
+    const float a{t / max_offset_point};
+    offset = max_offset * 0.5f * (1.0f - std::cos(PI * a));
+  } else if (t < 1.0f - max_offset_point) {
+    const float a{(t - max_offset_point) / (1.0f - 2.0f * max_offset_point)};
+    offset = max_offset * std::cos(PI * a);
+  } else {
+    const float a{(t - (1.0f - max_offset_point)) / max_offset_point};
+    offset = -max_offset * 0.5f * (1.0f + std::cos(PI * a));
+  }
+
+  // Attenuate the inboard (positive) excursion — the exit "cut-in" that drives
+  // a long vehicle's rear into the inside shoulder — while preserving the
+  // outboard (negative) swing that opens the turn up.
+  if (offset > 0.0f) {
+    offset *= inboard_scale;
+  }
+  return offset;
+}
+
+float LargeVehicleOffsetMagnitude(
+    float vehicle_length,
+    float reference_length,
+    float gain,
+    float offset_cap) {
+
+  const float scaled{gain * (vehicle_length - reference_length)};
+  return std::clamp(scaled, 0.0f, offset_cap);
+}
+
+bool IsOffsetSideOccupied(
+    cg::Location ego_location,
+    cg::Vector3D ego_forward,
+    cg::Vector3D offset_direction,
+    float offset_magnitude,
+    float lateral_clearance,
+    float longitudinal_window,
+    const std::vector<std::pair<cg::Location, float>> &neighbours) {
+
+  for (const auto &[location, radius] : neighbours) {
+    const cg::Vector3D relative{
+        location.x - ego_location.x,
+        location.y - ego_location.y,
+        0.0f};
+    const float lateral{relative.x * offset_direction.x + relative.y * offset_direction.y};
+    const float longitudinal{relative.x * ego_forward.x + relative.y * ego_forward.y};
+
+    const bool on_offset_side{
+        lateral > -radius
+        && lateral <= offset_magnitude + lateral_clearance + radius};
+    const bool alongside{std::abs(longitudinal) <= longitudinal_window + radius};
+
+    if (on_offset_side && alongside) {
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace traffic_manager

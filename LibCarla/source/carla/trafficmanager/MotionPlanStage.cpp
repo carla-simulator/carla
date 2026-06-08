@@ -170,13 +170,24 @@ void MotionPlanStage::Update(const unsigned long index) {
       cg::Location target_location{interp_target_location};
       const SimpleWaypointPtr target_waypoint = waypoint_buffer.at(target_index);
 
-      const float base_offset{CalculateBaseOffset(
+      float base_offset{CalculateBaseOffset(
           actor_id,
           waypoint_buffer,
           target_waypoint->CheckJunction(),
           target_index)};
-      const float offset{parameters.GetLaneOffset(actor_id) + base_offset};
       const auto right_vector = target_waypoint->GetTransform().GetRightVector();
+
+      // Suppress the wide-turn swing when the side it would move into is
+      // occupied by a nearby vehicle (parked, stopped or adjacent traffic).
+      if (std::abs(base_offset) > EPSILON) {
+        const cg::Vector3D offset_direction{
+            (base_offset > 0.0f) ? right_vector : (-1.0f * right_vector)};
+        if (IsWideTurnSideOccupied(actor_id, offset_direction, std::abs(base_offset))) {
+          base_offset = 0.0f;
+        }
+      }
+
+      const float offset{parameters.GetLaneOffset(actor_id) + base_offset};
       const auto offset_location = cg::Location(cg::Vector3D(
           offset * right_vector.x,
           offset * right_vector.y,
@@ -340,6 +351,11 @@ float MotionPlanStage::CalculateBaseOffset(
     return 0.0f;
   }
 
+  // The wide-turn manoeuvre can be disabled per-vehicle or globally.
+  if (!parameters.GetLargeVehicleWideTurn(actor_id)) {
+    return 0.0f;
+  }
+
   // Going straight at the intersection: no offset to apply.
   if (large_vehicles[actor_id].first == 0.0f) {
     return 0.0f;
@@ -362,27 +378,66 @@ float MotionPlanStage::CalculateBaseOffset(
 
   const float junction_length{large_vehicles[actor_id].first};
   const bool turn_flag{large_vehicles[actor_id].second};
-  const float max_offset{LARGE_VEHICLES_JUNCTION_OFFSET};
-  const float max_offset_point{LARGE_VEHICLES_JUNCTION_POINT};
 
-  // From +offset to -offset; entries and exits stay at 0 for a smooth transition.
-  // The vehicle opens up at the entry to perform a wider turn, then exits along a
-  // straighter trajectory.
-  const float t{cg::Math::Clamp(junction_missing_length / junction_length, 0.0f, 1.0f)};
-  float offset{0.0f};
-  if (t < max_offset_point) {
-    const float a{t / max_offset_point};
-    offset = max_offset * 0.5f * (1.0f - std::cos(PI * a));
-  } else if (t < 1.0f - max_offset_point) {
-    const float a{(t - max_offset_point) / (1.0f - 2.0f * max_offset_point)};
-    offset = max_offset * std::cos(PI * a);
-  } else if (t <= 1.0f) {
-    const float a{(t - (1.0f - max_offset_point)) / max_offset_point};
-    offset = -max_offset * 0.5f * (1.0f + std::cos(PI * a));
-  }
+  // Scale the offset magnitude by the vehicle's actual length so a short bus
+  // and a long truck no longer share the same fixed displacement.
+  // GetDimensions returns half-extents, so the full length is twice the x extent.
+  const float vehicle_length{2.0f * simulation_state.GetDimensions(actor_id).x};
+  const float max_offset{LargeVehicleOffsetMagnitude(
+      vehicle_length,
+      LARGE_VEHICLES_JUNCTION_REF_LENGTH,
+      LARGE_VEHICLES_JUNCTION_OFFSET_GAIN,
+      LARGE_VEHICLES_JUNCTION_OFFSET)};
+
+  // Fraction of the junction still ahead of the target waypoint (1 at the
+  // entry, 0 at the exit). The profile opens the vehicle up at the entry and
+  // attenuates the inboard cut-in near the exit.
+  const float t{junction_missing_length / junction_length};
+  float offset{LargeVehicleJunctionOffsetProfile(
+      t,
+      max_offset,
+      LARGE_VEHICLES_JUNCTION_POINT,
+      LARGE_VEHICLES_JUNCTION_INBOARD_SCALE)};
+
   // Sign depends on the turn direction (right vs. left).
   offset = turn_flag ? offset : -offset;
   return offset;
+}
+
+bool MotionPlanStage::IsWideTurnSideOccupied(
+    const ActorId actor_id,
+    const cg::Vector3D offset_direction,
+    const float offset_magnitude) {
+
+  const ActorIdSet overlapping_vehicles{track_traffic.GetOverlappingVehicles(actor_id)};
+  if (overlapping_vehicles.empty()) {
+    return false;
+  }
+
+  std::vector<std::pair<cg::Location, float>> neighbours;
+  neighbours.reserve(overlapping_vehicles.size());
+  for (const ActorId other_id : overlapping_vehicles) {
+    if (other_id == actor_id) {
+      continue;
+    }
+    const cg::Vector3D other_dimensions{simulation_state.GetDimensions(other_id)};
+    const float radius{std::max(other_dimensions.x, other_dimensions.y)};
+    neighbours.emplace_back(simulation_state.GetLocation(other_id), radius);
+  }
+
+  const cg::Location ego_location{simulation_state.GetLocation(actor_id)};
+  const cg::Vector3D ego_forward{simulation_state.GetHeading(actor_id)};
+  const float longitudinal_window{
+      simulation_state.GetDimensions(actor_id).x + LARGE_VEHICLES_JUNCTION_SIDE_MARGIN};
+
+  return IsOffsetSideOccupied(
+      ego_location,
+      ego_forward,
+      offset_direction,
+      offset_magnitude,
+      LARGE_VEHICLES_JUNCTION_CLEARANCE,
+      longitudinal_window,
+      neighbours);
 }
 
 std::pair<bool, float> MotionPlanStage::CollisionHandling(const CollisionHazardData &collision_hazard,

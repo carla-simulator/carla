@@ -21,6 +21,7 @@
 * Corrected the Semantic Segmentation camera class table in `Docs/ref_sensors.md` to match the actual 29-class taxonomy defined in `ObjectLabel.h` and `CityScapesPalette.h`. The previous table reflected the legacy 0.8.x CityScapes taxonomy (22 classes), which caused mismatches between documentation and engine output. This update aligns the documentation with the true engine enum values and RGB palette, preventing ground-truth mapping errors when building perception pipelines.
 * Fixed several legacy UE4-era bugs across LibCarla and the Carla plugin affecting lidar memory reset, DVS validation, camera profiling, image reads, sensor materials, and Python sensor teardown.
 * Improved Traffic Manager handling of large vehicles at junctions, including wide-turn behaviour and a smoothed lateral offset profile
+* Made the Traffic Manager large-vehicle wide turn safer by scaling the lateral offset to the vehicle's length, limiting the inboard cut-in that pushed long vehicles into the inside shoulder, suppressing the swing when the side it moves into is occupied, and adding `traffic_manager.vehicle_large_vehicle_wide_turn` and `traffic_manager.global_large_vehicle_wide_turn` toggles
 * Improved Traffic Manager PID controller using a direct angle to the target waypoint and smoother waypoint interpolation
 * Removed Traffic Manager internal mutex and condition variables; synchronous mode now executes inline
 * Avoid actor aliasing on replay caused by reusing actors with the same id
