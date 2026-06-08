@@ -120,7 +120,7 @@ void ALSM::IdentifyNewActors(const ActorList &actor_list) {
     if (actor->GetTypeId().front() == 'v') {
      if (hero_actors.size() == 0u || hero_actors.find(actor_id) == hero_actors.end()) {
       for (auto&& attribute: actor->GetAttributes()) {
-        if (attribute.GetId() == "role_name" && attribute.GetValue() == "hero") {
+        if ((attribute.GetId() == "role_name" && attribute.GetValue() == "hero") ||  (attribute.GetId() == "role_name" && attribute.GetValue() == "ego_vehicle")) {
           hero_actors.insert({actor_id, actor});
         }
       }

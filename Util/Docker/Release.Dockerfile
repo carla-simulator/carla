@@ -25,4 +25,4 @@ ENV NVIDIA_DRIVER_CAPABILITIES=all
 ENV SDL_VIDEODRIVER="x11"
 
 # You can also run CARLA in offscreen mode with -RenderOffScreen
-CMD ["/bin/bash", "CarlaUnreal.sh"]
+CMD ["/bin/bash", "Linux/CarlaUnreal.sh", "-RenderOffScreen", "--ros2"]

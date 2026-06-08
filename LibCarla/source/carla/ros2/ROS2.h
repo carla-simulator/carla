@@ -89,13 +89,15 @@ class ROS2
       const carla::geom::Transform sensor_transform,
       int W, int H, float Fov,
       const carla::SharedBufferView buffer,
-      void *actor = nullptr);
+      void *actor = nullptr,
+      bool has_parent = false);
   void ProcessDataFromGNSS(
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
       const carla::geom::GeoLocation &data,
-      void *actor = nullptr);
+      void *actor = nullptr,
+      bool has_parent = false);
   void ProcessDataFromIMU(
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
@@ -103,32 +105,37 @@ class ROS2
       carla::geom::Vector3D accelerometer,
       carla::geom::Vector3D gyroscope,
       float compass,
-      void *actor = nullptr);
+      void *actor = nullptr,
+      bool has_parent = false);
   void ProcessDataFromDVS(
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
       const carla::SharedBufferView buffer,
       int W, int H, float Fov,
-      void *actor = nullptr);
+      void *actor = nullptr,
+      bool has_parent = false);
   void ProcessDataFromLidar(
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
       carla::sensor::data::LidarData &data,
-      void *actor = nullptr);
+      void *actor = nullptr,
+      bool has_parent = false);
   void ProcessDataFromSemanticLidar(
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
       carla::sensor::data::SemanticLidarData &data,
-      void *actor = nullptr);
+      void *actor = nullptr,
+      bool has_parent = false);
   void ProcessDataFromRadar(
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
       const carla::sensor::data::RadarData &data,
-      void *actor = nullptr);
+      void *actor = nullptr,
+      bool has_parent = false);
   void ProcessDataFromObstacleDetection(
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
@@ -143,10 +150,11 @@ void ProcessDataFromCollisionSensor(
     const carla::geom::Transform sensor_transform,
     uint32_t other_actor,
     carla::geom::Vector3D impulse,
-    void* actor);
+    void* actor,
+    bool has_parent = false);
 
   private:
-  std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, void* actor);
+  std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, void* actor, bool is_static_transform);
 
   // sigleton
   ROS2() {};

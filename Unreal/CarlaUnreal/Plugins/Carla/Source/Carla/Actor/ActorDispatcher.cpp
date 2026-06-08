@@ -207,7 +207,8 @@ FCarlaActor* UActorDispatcher::RegisterActor(
       // vehicle controller for hero
       for (auto &&Attr : Description.Variations)
       {
-        if (Attr.Key == "role_name" && (Attr.Value.Value == "hero" || Attr.Value.Value == "ego"))
+        if (Attr.Key == "role_name" &&
+            (Attr.Value.Value == "hero" || Attr.Value.Value == "ego" || Attr.Value.Value == "ego_vehicle"))
         {
           ROS2->AddActorCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
           {

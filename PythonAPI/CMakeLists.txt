@@ -1,3 +1,11 @@
+if (NOT Python3_EXECUTABLE)
+  find_program (
+    Python3_EXECUTABLE
+    python3.12
+    REQUIRED
+  )
+endif ()
+
 find_package (
   Python3
   COMPONENTS

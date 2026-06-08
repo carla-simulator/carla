@@ -230,7 +230,7 @@ void ROS2::RemoveActorCallback(void* actor) {
   _actor_callbacks.erase(actor);
 }
 
-std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> ROS2::GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, void* actor) {
+std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> ROS2::GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, void* actor, bool is_static_transform) {
   auto it_publishers = _publishers.find(actor);
   auto it_transforms = _transforms.find(actor);
   std::shared_ptr<CarlaPublisher> publisher {};
@@ -258,7 +258,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str(), is_static_transform);
         if (new_transform->Init()) {
           _transforms.insert({actor, new_transform});
           transform = new_transform;
@@ -276,7 +276,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str(), is_static_transform);
         if (new_transform->Init()) {
           _transforms.insert({actor, new_transform});
           transform = new_transform;
@@ -294,7 +294,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str(), is_static_transform);
         if (new_transform->Init()) {
           _transforms.insert({actor, new_transform});
           transform = new_transform;
@@ -312,7 +312,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str(), is_static_transform);
         if (new_transform->Init()) {
           _transforms.insert({actor, new_transform});
           transform = new_transform;
@@ -330,7 +330,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str(), is_static_transform);
         if (new_transform->Init()) {
           _transforms.insert({actor, new_transform});
           transform = new_transform;
@@ -348,7 +348,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str(), is_static_transform);
         if (new_transform->Init()) {
           _transforms.insert({actor, new_transform});
           transform = new_transform;
@@ -366,7 +366,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str(), is_static_transform);
         if (new_transform->Init()) {
           _transforms.insert({actor, new_transform});
           transform = new_transform;
@@ -387,7 +387,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str(), is_static_transform);
         if (new_transform->Init()) {
           _transforms.insert({actor, new_transform});
           transform = new_transform;
@@ -405,7 +405,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str(), is_static_transform);
         if (new_transform->Init()) {
           _transforms.insert({actor, new_transform});
           transform = new_transform;
@@ -423,7 +423,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str(), is_static_transform);
         if (new_transform->Init()) {
           _transforms.insert({actor, new_transform});
           transform = new_transform;
@@ -441,7 +441,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str(), is_static_transform);
         if (new_transform->Init()) {
           _transforms.insert({actor, new_transform});
           transform = new_transform;
@@ -462,7 +462,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str(), is_static_transform);
         if (new_transform->Init()) {
           _transforms.insert({actor, new_transform});
           transform = new_transform;
@@ -480,7 +480,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str(), is_static_transform);
         if (new_transform->Init()) {
           _transforms.insert({actor, new_transform});
           transform = new_transform;
@@ -498,7 +498,7 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           _publishers.insert({actor, new_publisher});
           publisher = new_publisher;
         }
-        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str(), is_static_transform);
         if (new_transform->Init()) {
           _transforms.insert({actor, new_transform});
           transform = new_transform;
@@ -527,7 +527,8 @@ void ROS2::ProcessDataFromCamera(
     const carla::geom::Transform sensor_transform,
     int W, int H, float Fov,
     const carla::SharedBufferView buffer,
-    void *actor) {
+    void *actor,
+    bool has_parent) {
 
   switch (sensor_type) {
     case ESensors::CollisionSensor:
@@ -536,7 +537,7 @@ void ROS2::ProcessDataFromCamera(
     case ESensors::DepthCamera:
       {
         log_info("Sensor DepthCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
-        auto sensors = GetOrCreateSensor(ESensors::DepthCamera, stream_id, actor);
+        auto sensors = GetOrCreateSensor(ESensors::DepthCamera, stream_id, actor, has_parent);
         if (sensors.first) {
           std::shared_ptr<CarlaDepthCameraPublisher> publisher = std::dynamic_pointer_cast<CarlaDepthCameraPublisher>(sensors.first);
           const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
@@ -559,7 +560,7 @@ void ROS2::ProcessDataFromCamera(
     case ESensors::NormalsCamera:
       log_info("Sensor NormalsCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       {
-        auto sensors = GetOrCreateSensor(ESensors::NormalsCamera, stream_id, actor);
+        auto sensors = GetOrCreateSensor(ESensors::NormalsCamera, stream_id, actor, has_parent);
         if (sensors.first) {
           std::shared_ptr<CarlaNormalsCameraPublisher> publisher = std::dynamic_pointer_cast<CarlaNormalsCameraPublisher>(sensors.first);
           const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
@@ -582,7 +583,7 @@ void ROS2::ProcessDataFromCamera(
     case ESensors::LaneInvasionSensor:
       log_info("Sensor LaneInvasionSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       {
-        auto sensors = GetOrCreateSensor(ESensors::LaneInvasionSensor, stream_id, actor);
+        auto sensors = GetOrCreateSensor(ESensors::LaneInvasionSensor, stream_id, actor, has_parent);
         if (sensors.first) {
           std::shared_ptr<CarlaLineInvasionPublisher> publisher = std::dynamic_pointer_cast<CarlaLineInvasionPublisher>(sensors.first);
           publisher->SetData(_seconds, _nanoseconds, (const int32_t*) buffer->data());
@@ -598,7 +599,7 @@ void ROS2::ProcessDataFromCamera(
     case ESensors::OpticalFlowCamera:
       log_info("Sensor OpticalFlowCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       {
-        auto sensors = GetOrCreateSensor(ESensors::OpticalFlowCamera, stream_id, actor);
+        auto sensors = GetOrCreateSensor(ESensors::OpticalFlowCamera, stream_id, actor, has_parent);
         if (sensors.first) {
           std::shared_ptr<CarlaOpticalFlowCameraPublisher> publisher = std::dynamic_pointer_cast<CarlaOpticalFlowCameraPublisher>(sensors.first);
           const carla::sensor::s11n::OpticalFlowImageSerializer::ImageHeader *header =
@@ -625,7 +626,7 @@ void ROS2::ProcessDataFromCamera(
     {
       log_info("Sensor SceneCaptureCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       {
-        auto sensors = GetOrCreateSensor(ESensors::SceneCaptureCamera, stream_id, actor);
+        auto sensors = GetOrCreateSensor(ESensors::SceneCaptureCamera, stream_id, actor, has_parent);
         if (sensors.first) {
           std::shared_ptr<CarlaRGBCameraPublisher> publisher = std::dynamic_pointer_cast<CarlaRGBCameraPublisher>(sensors.first);
           const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
@@ -649,7 +650,7 @@ void ROS2::ProcessDataFromCamera(
     case ESensors::SemanticSegmentationCamera:
       log_info("Sensor SemanticSegmentationCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       {
-        auto sensors = GetOrCreateSensor(ESensors::SemanticSegmentationCamera, stream_id, actor);
+        auto sensors = GetOrCreateSensor(ESensors::SemanticSegmentationCamera, stream_id, actor, has_parent);
         if (sensors.first) {
           std::shared_ptr<CarlaSSCameraPublisher> publisher = std::dynamic_pointer_cast<CarlaSSCameraPublisher>(sensors.first);
           const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
@@ -672,7 +673,7 @@ void ROS2::ProcessDataFromCamera(
     case ESensors::InstanceSegmentationCamera:
       log_info("Sensor InstanceSegmentationCamera to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "buffer.", buffer->size());
       {
-        auto sensors = GetOrCreateSensor(ESensors::InstanceSegmentationCamera, stream_id, actor);
+        auto sensors = GetOrCreateSensor(ESensors::InstanceSegmentationCamera, stream_id, actor, has_parent);
         if (sensors.first) {
           std::shared_ptr<CarlaISCameraPublisher> publisher = std::dynamic_pointer_cast<CarlaISCameraPublisher>(sensors.first);
           const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
@@ -711,9 +712,10 @@ void ROS2::ProcessDataFromGNSS(
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
     const carla::geom::GeoLocation &data,
-    void *actor) {
+    void *actor,
+    bool has_parent) {
   log_info("Sensor GnssSensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "geo.", data.latitude, data.longitude, data.altitude);
-  auto sensors = GetOrCreateSensor(ESensors::GnssSensor, stream_id, actor);
+  auto sensors = GetOrCreateSensor(ESensors::GnssSensor, stream_id, actor, has_parent);
   if (sensors.first) {
     std::shared_ptr<CarlaGNSSPublisher> publisher = std::dynamic_pointer_cast<CarlaGNSSPublisher>(sensors.first);
     publisher->SetData(_seconds, _nanoseconds, reinterpret_cast<const double*>(&data));
@@ -733,9 +735,10 @@ void ROS2::ProcessDataFromIMU(
     carla::geom::Vector3D accelerometer,
     carla::geom::Vector3D gyroscope,
     float compass,
-    void *actor) {
+    void *actor,
+    bool has_parent) {
   log_info("Sensor InertialMeasurementUnit to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "imu.", accelerometer.x, gyroscope.x, compass);
-  auto sensors = GetOrCreateSensor(ESensors::InertialMeasurementUnit, stream_id, actor);
+  auto sensors = GetOrCreateSensor(ESensors::InertialMeasurementUnit, stream_id, actor, has_parent);
   if (sensors.first) {
     std::shared_ptr<CarlaIMUPublisher> publisher = std::dynamic_pointer_cast<CarlaIMUPublisher>(sensors.first);
     publisher->SetData(_seconds, _nanoseconds, reinterpret_cast<float*>(&accelerometer), reinterpret_cast<float*>(&gyroscope), compass);
@@ -754,9 +757,10 @@ void ROS2::ProcessDataFromDVS(
     const carla::geom::Transform sensor_transform,
     const carla::SharedBufferView buffer,
     int W, int H, float Fov,
-    void *actor) {
+    void *actor,
+    bool has_parent) {
   log_info("Sensor DVS to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id);
-  auto sensors = GetOrCreateSensor(ESensors::DVSCamera, stream_id, actor);
+  auto sensors = GetOrCreateSensor(ESensors::DVSCamera, stream_id, actor, has_parent);
   if (sensors.first) {
     std::shared_ptr<CarlaDVSCameraPublisher> publisher = std::dynamic_pointer_cast<CarlaDVSCameraPublisher>(sensors.first);
     const carla::sensor::s11n::ImageSerializer::ImageHeader *header =
@@ -783,9 +787,10 @@ void ROS2::ProcessDataFromLidar(
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
     carla::sensor::data::LidarData &data,
-    void *actor) {
+    void *actor,
+    bool has_parent) {
   log_info("Sensor Lidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._points.size());
-  auto sensors = GetOrCreateSensor(ESensors::RayCastLidar, stream_id, actor);
+  auto sensors = GetOrCreateSensor(ESensors::RayCastLidar, stream_id, actor, has_parent);
   if (sensors.first) {
     std::shared_ptr<CarlaLidarPublisher> publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(sensors.first);
     size_t width = data._points.size();
@@ -805,10 +810,11 @@ void ROS2::ProcessDataFromSemanticLidar(
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
     carla::sensor::data::SemanticLidarData &data,
-    void *actor) {
+    void *actor,
+    bool has_parent) {
   static_assert(sizeof(float) == sizeof(uint32_t), "Invalid float size");
   log_info("Sensor SemanticLidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._ser_points.size());
-  auto sensors = GetOrCreateSensor(ESensors::RayCastSemanticLidar, stream_id, actor);
+  auto sensors = GetOrCreateSensor(ESensors::RayCastSemanticLidar, stream_id, actor, has_parent);
   if (sensors.first) {
     std::shared_ptr<CarlaSemanticLidarPublisher> publisher = std::dynamic_pointer_cast<CarlaSemanticLidarPublisher>(sensors.first);
     size_t width = data._ser_points.size();
@@ -828,9 +834,10 @@ void ROS2::ProcessDataFromRadar(
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
     const carla::sensor::data::RadarData &data,
-    void *actor) {
+    void *actor,
+    bool has_parent) {
   log_info("Sensor Radar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._detections.size());
-  auto sensors = GetOrCreateSensor(ESensors::Radar, stream_id, actor);
+  auto sensors = GetOrCreateSensor(ESensors::Radar, stream_id, actor, has_parent);
   if (sensors.first) {
     std::shared_ptr<CarlaRadarPublisher> publisher = std::dynamic_pointer_cast<CarlaRadarPublisher>(sensors.first);
     size_t elements = data.GetDetectionCount();
@@ -863,8 +870,9 @@ void ROS2::ProcessDataFromCollisionSensor(
     const carla::geom::Transform sensor_transform,
     uint32_t other_actor,
     carla::geom::Vector3D impulse,
-    void* actor) {
-  auto sensors = GetOrCreateSensor(ESensors::CollisionSensor, stream_id, actor);
+    void* actor,
+    bool has_parent) {
+  auto sensors = GetOrCreateSensor(ESensors::CollisionSensor, stream_id, actor, has_parent);
   if (sensors.first) {
     std::shared_ptr<CarlaCollisionPublisher> publisher = std::dynamic_pointer_cast<CarlaCollisionPublisher>(sensors.first);
     publisher->SetData(_seconds, _nanoseconds, other_actor, impulse.x, impulse.y, impulse.z);

@@ -32,6 +32,10 @@ HOST_UID=$(id -u)
 HOST_GID=$(id -g)
 DOCKER_GID=$(getent group docker | cut -d: -f3)
 
+[ "$HOST_UID" = "0" ] && HOST_UID=1000
+[ "$HOST_GID" = "0" ] && HOST_GID=1000
+[ -z "$DOCKER_GID" ] && DOCKER_GID="$HOST_GID"
+
 FORCE_REBUILD=
 
 OPTS=`getopt -o h --long help,ubuntu-distro:,user:,docker-gid:,force-rebuild -n 'parse-options' -- "$@"`

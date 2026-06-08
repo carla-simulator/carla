@@ -35,6 +35,8 @@ namespace ros2 {
     efd::TypeSupport _type { new tf2_msgs::msg::TFMessagePubSubType() };
     CarlaListener _listener {};
     tf2_msgs::msg::TFMessage _transform {};
+    bool has_published { false };
+    bool has_transform_data { false };
 
     float last_translation[3] = {0.0f};
     float last_rotation[3] = {0.0f};
@@ -66,7 +68,7 @@ namespace ros2 {
     }
 
     efd::TopicQos tqos = efd::TOPIC_QOS_DEFAULT;
-    const std::string topic_name { "rt/tf" };
+    const std::string topic_name { _is_static ? "rt/tf_static" : "rt/tf" };
     _impl->_topic = _impl->_participant->create_topic(topic_name, _impl->_type->getName(), tqos);
     if (_impl->_topic == nullptr) {
         std::cerr << "Failed to create Topic" << std::endl;
@@ -74,6 +76,12 @@ namespace ros2 {
     }
 
     efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
+    if (_is_static) {
+      wqos.durability().kind = efd::TRANSIENT_LOCAL_DURABILITY_QOS;
+      wqos.reliability().kind = efd::RELIABLE_RELIABILITY_QOS;
+      wqos.history().kind = efd::KEEP_LAST_HISTORY_QOS;
+      wqos.history().depth = 1;
+    }
     wqos.endpoint().history_memory_policy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
     efd::DataWriterListener* listener = (efd::DataWriterListener*)_impl->_listener._impl.get();
     _impl->_datawriter = _impl->_publisher->create_datawriter(_impl->_topic, wqos, listener);
@@ -86,9 +94,14 @@ namespace ros2 {
   }
 
   bool CarlaTransformPublisher::Publish() {
+    if (_is_static && _impl->has_published) {
+      return true;
+    }
+
     eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
     eprosima::fastrtps::types::ReturnCode_t rcode = _impl->_datawriter->write(&_impl->_transform, instance_handle);
     if (rcode == erc::ReturnCodeValue::RETCODE_OK) {
+        _impl->has_published = true;
         return true;
     }
     if (rcode == erc::ReturnCodeValue::RETCODE_ERROR) {
@@ -151,7 +164,8 @@ namespace ros2 {
 
     int same_translation = std::memcmp(translation, _impl->last_translation, sizeof(float) * 3);
     int same_rotation = std::memcmp(rotation, _impl->last_rotation, sizeof(float) * 3);
-    if (same_translation != 0 || same_rotation != 0) {
+    if (!_impl->has_transform_data || same_translation != 0 || same_rotation != 0) {
+        _impl->has_transform_data = true;
         std::memcpy(_impl->last_translation, translation, sizeof(float) * 3);
         std::memcpy(_impl->last_rotation, rotation, sizeof(float) * 3);
 
@@ -181,8 +195,13 @@ namespace ros2 {
     }
 
     builtin_interfaces::msg::Time time;
-    time.sec(seconds);
-    time.nanosec(nanoseconds);
+    if (_is_static) {
+      time.sec(0);
+      time.nanosec(0);
+    } else {
+      time.sec(seconds);
+      time.nanosec(nanoseconds);
+    }
 
     std_msgs::msg::Header header;
     header.stamp(std::move(time));
@@ -199,8 +218,9 @@ namespace ros2 {
     _impl->_transform.transforms({ts});
   }
 
-  CarlaTransformPublisher::CarlaTransformPublisher(const char* ros_name, const char* parent) :
-  _impl(std::make_shared<CarlaTransformPublisherImpl>()) {
+  CarlaTransformPublisher::CarlaTransformPublisher(const char* ros_name, const char* parent, bool is_static) :
+  _impl(std::make_shared<CarlaTransformPublisherImpl>()),
+  _is_static(is_static) {
     _name = ros_name;
     _parent = parent;
   }
@@ -226,6 +246,7 @@ namespace ros2 {
     _frame_id = other._frame_id;
     _name = other._name;
     _parent = other._parent;
+    _is_static = other._is_static;
     _impl = other._impl;
   }
 
@@ -233,6 +254,7 @@ namespace ros2 {
     _frame_id = other._frame_id;
     _name = other._name;
     _parent = other._parent;
+    _is_static = other._is_static;
     _impl = other._impl;
 
     return *this;
@@ -242,6 +264,7 @@ namespace ros2 {
     _frame_id = std::move(other._frame_id);
     _name = std::move(other._name);
     _parent = std::move(other._parent);
+    _is_static = other._is_static;
     _impl = std::move(other._impl);
   }
 
@@ -249,6 +272,7 @@ namespace ros2 {
     _frame_id = std::move(other._frame_id);
     _name = std::move(other._name);
     _parent = std::move(other._parent);
+    _is_static = other._is_static;
     _impl = std::move(other._impl);
 
     return *this;

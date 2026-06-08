@@ -28,6 +28,21 @@
 #include "PhysicsEngine/PhysicsObjectExternalInterface.h"
 #include <util/ue-header-guard-end.h>
 
+namespace {
+
+void ConfigureCarlaSteeringInput(UChaosWheeledVehicleMovementComponent& MovementComponent)
+{
+  // CARLA exposes VehicleControl.Steer as a linear normalized scalar.
+  MovementComponent.SteeringInputRate.InputCurveFunction = EInputFunctionType::LinearFunction;
+
+  // Chaos defaults to a fixed AngleRatio, while Ackermann keeps the left/right
+  // wheel angles tied to the vehicle geometry.
+  MovementComponent.SteeringSetup.SteeringType = ESteeringType::Ackermann;
+
+}
+
+} // namespace
+
 // =============================================================================
 // -- Constructor and destructor -----------------------------------------------
 // =============================================================================
@@ -50,7 +65,9 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VelocityControl = CreateDefaultSubobject<UVehicleVelocityControl>(TEXT("VelocityControl"));
   VelocityControl->Deactivate();
 
-  GetChaosWheeledVehicleMovementComponent()->bReverseAsBrake = false;
+  UChaosWheeledVehicleMovementComponent* MovementComponent = GetChaosWheeledVehicleMovementComponent();
+  MovementComponent->bReverseAsBrake = false;
+  ConfigureCarlaSteeringInput(*MovementComponent);
   BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
 
 }
@@ -60,6 +77,8 @@ ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
 void ACarlaWheeledVehicle::BeginPlay()
 {
   Super::BeginPlay();
+
+  ConfigureCarlaSteeringInput(*GetChaosWheeledVehicleMovementComponent());
 
   UDefaultMovementComponent::CreateDefaultMovementComponent(this);
 
