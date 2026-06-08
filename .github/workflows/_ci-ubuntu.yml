@@ -112,7 +112,7 @@ jobs:
             --env UE_GITHUB_TOKEN="$UE_GITHUB_TOKEN" \
             --user carla \
             "$CARLA_DOCKER_IMAGE" \
-            bash --noprofile --norc -eo pipefail <<'EOF'
+            bash -leo pipefail -c '
           cd /workspaces
 
           find_unreal_clang_sysroot() {
@@ -121,7 +121,7 @@ jobs:
               -mindepth 2 \
               -maxdepth 2 \
               -type d \
-              -name '*unknown-linux-*' \
+              -name "*unknown-linux-*" \
               -print \
               -quit 2>/dev/null
           }
@@ -155,7 +155,7 @@ jobs:
           if [ ! -x Engine/Binaries/Linux/UnrealEditor ]; then
             make
           fi
-          EOF
+          '
 
       - name: Download content
         run: |
