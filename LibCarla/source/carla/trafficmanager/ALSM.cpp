@@ -390,6 +390,9 @@ void ALSM::AddActor(const Actor actor) {
     if (match != large_vehicle_types.end()) {
       large_vehicles[actor_id] = std::make_pair(0.0f, false);
     }
+    // There is at most one "base_type" attribute, so stop scanning once it
+    // has been handled.
+    break;
   }
 }
 

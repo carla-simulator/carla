@@ -344,8 +344,7 @@ void LocalizationStage::HandleLargeVehicleJunction(const ActorId actor_id,
 
     const SimpleWaypointPtr first_waypoint = waypoint_buffer.front();
     const SimpleWaypointPtr last_waypoint = waypoint_buffer.back();
-    const SimpleWaypointPtr middle_waypoint = waypoint_buffer.at(
-        static_cast<uint16_t>(waypoint_buffer.size() / 2));
+    const SimpleWaypointPtr middle_waypoint = waypoint_buffer.at(waypoint_buffer.size() / 2);
 
     const float radius = GetThreePointCircleRadius(
         first_waypoint->GetLocation(),
