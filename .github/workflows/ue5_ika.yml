@@ -22,6 +22,8 @@ jobs:
     secrets:
       GITLAB_CONTENT_USERNAME: ${{ secrets.GITLAB_CONTENT_USERNAME }}
       GITLAB_CONTENT_TOKEN: ${{ secrets.GITLAB_CONTENT_TOKEN }}
+      UE_GITHUB_USERNAME: ${{ secrets.UE_GITHUB_USERNAME }}
+      UE_GITHUB_TOKEN: ${{ secrets.UE_GITHUB_TOKEN }}
     with:
       python-versions: "3.10"
       smoke-test-python-versions: "3.10"

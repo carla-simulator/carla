@@ -32,6 +32,9 @@ on:
       content-overlay-branch:
         type: string
         default: "ue5"
+      unreal-engine-branch:
+        type: string
+        default: "ue5-dev-carla"
       docker-image-repository:
         type: string
         default: "ghcr.io/rwthika/carla-simulator"
@@ -40,6 +43,10 @@ on:
       GITLAB_CONTENT_USERNAME:
         required: false
       GITLAB_CONTENT_TOKEN:
+        required: false
+      UE_GITHUB_USERNAME:
+        required: false
+      UE_GITHUB_TOKEN:
         required: false
 
 jobs:
@@ -51,7 +58,9 @@ jobs:
     runs-on: self-hosted:ubuntu-gpu
     env:
       UBUNTU_DISTRO: "22.04"
-      CARLA_UNREAL_ENGINE_PATH: /unreal-engine
+      UE5_BRANCH: ${{ inputs.unreal-engine-branch }}
+      CARLA_UNREAL_ENGINE_HOST_PATH: /work/unreal-engine
+      CARLA_UNREAL_ENGINE_PATH: /workspaces/unreal-engine
       CARLA_DOCKER_IMAGE: carla-development:ue5-22.04
       CARLA_DOCKER_UID: "1000"
       CARLA_DOCKER_GID: "1000"
@@ -63,8 +72,8 @@ jobs:
         --net=host
         --env NVIDIA_VISIBLE_DEVICES=all
         --env NVIDIA_DRIVER_CAPABILITIES=all
-        --env CARLA_UNREAL_ENGINE_PATH=/unreal-engine
-        --volume /home/jenkins/unreal-engine/ue5:/unreal-engine
+        --env CARLA_UNREAL_ENGINE_PATH=/workspaces/unreal-engine
+        --volume /work/unreal-engine:/workspaces/unreal-engine
 
     steps:
 
@@ -89,6 +98,64 @@ jobs:
             --ubuntu-distro "$UBUNTU_DISTRO" \
             --user "${HOST_UID}:${HOST_GID}" \
             --docker-gid "$DOCKER_GROUP_GID"
+
+      - name: Prepare Unreal Engine
+        env:
+          UE_GITHUB_USERNAME: ${{ secrets.UE_GITHUB_USERNAME }}
+          UE_GITHUB_TOKEN: ${{ secrets.UE_GITHUB_TOKEN }}
+        run: |
+          mkdir -p "$CARLA_UNREAL_ENGINE_HOST_PATH"
+
+          docker run $CARLA_DOCKER_RUN_FLAGS \
+            --env UE5_BRANCH="$UE5_BRANCH" \
+            --env UE_GITHUB_USERNAME="$UE_GITHUB_USERNAME" \
+            --env UE_GITHUB_TOKEN="$UE_GITHUB_TOKEN" \
+            --user carla \
+            "$CARLA_DOCKER_IMAGE" \
+            bash --noprofile --norc -eo pipefail <<'EOF'
+          cd /workspaces
+
+          find_unreal_clang_sysroot() {
+            find \
+              "${CARLA_UNREAL_ENGINE_PATH}/Engine/Extras/ThirdPartyNotUE/SDKs/HostLinux/Linux_x64" \
+              -mindepth 2 \
+              -maxdepth 2 \
+              -type d \
+              -name '*unknown-linux-*' \
+              -print \
+              -quit 2>/dev/null
+          }
+
+          if [ -d unreal-engine/.git ]; then
+            git -C unreal-engine fetch origin "${UE5_BRANCH}"
+            git -C unreal-engine checkout "${UE5_BRANCH}"
+            git -C unreal-engine reset --hard "origin/${UE5_BRANCH}"
+          elif [ -f unreal-engine/Setup.sh ]; then
+            echo "Using existing Unreal Engine source tree at ${CARLA_UNREAL_ENGINE_PATH}."
+          elif [ -z "$(find unreal-engine -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]; then
+            if [ -z "${UE_GITHUB_USERNAME}" ] || [ -z "${UE_GITHUB_TOKEN}" ]; then
+              echo "Missing UE_GITHUB_USERNAME/UE_GITHUB_TOKEN for Unreal Engine clone."
+              exit 1
+            fi
+            git clone -b "${UE5_BRANCH}" "https://${UE_GITHUB_USERNAME}:${UE_GITHUB_TOKEN}@github.com/CarlaUnreal/UnrealEngine.git" unreal-engine
+          elif [ -z "$(find_unreal_clang_sysroot)" ]; then
+            echo "Unreal Engine exists at ${CARLA_UNREAL_ENGINE_PATH}, but its clang sysroot is missing."
+            echo "Provide a complete UE checkout or make the directory empty so CI can clone and prepare it."
+            exit 1
+          fi
+
+          cd unreal-engine
+
+          if [ -z "$(find_unreal_clang_sysroot)" ]; then
+            ./Setup.sh
+          fi
+
+          ./GenerateProjectFiles.sh
+
+          if [ ! -x Engine/Binaries/Linux/UnrealEditor ]; then
+            make
+          fi
+          EOF
 
       - name: Download content
         run: |
