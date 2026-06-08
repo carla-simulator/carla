@@ -1,0 +1,35 @@
+name: UE5-IKA
+
+on:
+  push:
+     branches:
+       - ue5-ika
+  workflow_dispatch:  # Allow manual trigger
+
+concurrency:
+  group: push-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  actions: read
+  packages: write
+
+jobs:
+  ubuntu-ika:
+    name: Ubuntu IKA
+    uses: ./.github/workflows/_ci-ubuntu.yml
+    secrets:
+      GITLAB_CONTENT_USERNAME: ${{ secrets.GITLAB_CONTENT_USERNAME }}
+      GITLAB_CONTENT_TOKEN: ${{ secrets.GITLAB_CONTENT_TOKEN }}
+    with:
+      python-versions: "3.10"
+      smoke-test-python-versions: "3.10"
+      additional-maps: false
+      upload-package: true
+      upload-replace-latest: true
+      upload-docker: true
+      content-overlay: true
+      content-overlay-repository: "https://gitlab.ika.rwth-aachen.de/fb-fi/simulation/carla/carla-content"
+      content-overlay-branch: "ue5"
+      docker-image-repository: "ghcr.io/${{ github.repository }}"

@@ -23,15 +23,23 @@ on:
       upload-docker:
         type: boolean
         required: true
+      content-overlay:
+        type: boolean
+        default: false
+      content-overlay-repository:
+        type: string
+        default: "https://gitlab.ika.rwth-aachen.de/fb-fi/simulation/carla/carla-content"
+      content-overlay-branch:
+        type: string
+        default: "ue5"
+      docker-image-repository:
+        type: string
+        default: "ghcr.io/rwthika/carla-simulator"
 
     secrets:
-      DOCKERHUB_USERNAME:
+      GITLAB_CONTENT_USERNAME:
         required: false
-      DOCKERHUB_TOKEN:
-        required: false
-      AWS_ACCESS_KEY_ID:
-        required: false
-      AWS_ACCESS_KEY:
+      GITLAB_CONTENT_TOKEN:
         required: false
 
 jobs:
@@ -66,6 +74,23 @@ jobs:
       - name: Download content
         run: |
           git clone -b ue5-dev --depth 1 https://bitbucket.org/carla-simulator/carla-content.git Unreal/CarlaUnreal/Content/Carla
+
+      - name: Download OpenADS content
+        if: inputs.content-overlay == true
+        env:
+          GITLAB_CONTENT_USERNAME: ${{ secrets.GITLAB_CONTENT_USERNAME }}
+          GITLAB_CONTENT_TOKEN: ${{ secrets.GITLAB_CONTENT_TOKEN }}
+          CARLA_CONTENT_REPOSITORY: ${{ inputs.content-overlay-repository }}
+          CARLA_CONTENT_BRANCH: ${{ inputs.content-overlay-branch }}
+        run: |
+          rm -rf Unreal/CarlaUnreal/content-openads
+          content_auth_header="$(printf '%s:%s' "$GITLAB_CONTENT_USERNAME" "$GITLAB_CONTENT_TOKEN" | base64 | tr -d '\n')"
+          git -c http.extraHeader="Authorization: Basic ${content_auth_header}" \
+            clone --single-branch --depth 1 -b "$CARLA_CONTENT_BRANCH" \
+            "$CARLA_CONTENT_REPOSITORY" \
+            Unreal/CarlaUnreal/content-openads
+          unset content_auth_header
+          cp -a Unreal/CarlaUnreal/content-openads/Carla/. Unreal/CarlaUnreal/Content/Carla/
 
       - name: Activate conda environment
         run: |
@@ -106,30 +131,147 @@ jobs:
         run: |
           cmake --build Build/Release --target package
 
-      - name: Configure Backblaze
-        if: inputs.upload-package == true
+      - name: Prepare publish artifacts
+        if: inputs.upload-docker == true || inputs.upload-package == true
         run: |
-          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws configure set aws_secret_access_key ${{ secrets.AWS_ACCESS_KEY }}
+          rm -rf artifacts
+          mkdir -p artifacts
+          cp -a PythonAPI artifacts/PythonAPI
+          mkdir -p artifacts/PythonAPI/carla
+          rm -rf artifacts/PythonAPI/carla/dist
+          cp -a Build/Release/PythonAPI/dist artifacts/PythonAPI/carla/dist
+          cp -a Build/Release/Package/*.tar.gz artifacts/
 
-      - name: Upload package
+      - name: Upload Docker artifacts
+        if: inputs.upload-docker == true
+        uses: actions/upload-artifact@v4
+        with:
+          name: ue5-docker-artifacts
+          path: |
+            artifacts/PythonAPI
+            artifacts/*.tar.gz
+
+      - name: Prepare GitHub package release
         if: inputs.upload-package == true
-        id: upload_step
+        id: package_release
         run: |
-          if [ "${{ inputs.upload-replace-latest }}" = "true" ]; then
-            ARGS="--replace-latest"
+          package_file="$(find artifacts -maxdepth 1 -name 'Carla-*-Linux-Shipping.tar.gz' -print -quit)"
+          test -n "$package_file"
+
+          rm -rf github-package
+          mkdir -p github-package
+
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            release_tag="$GITHUB_REF_NAME"
+            release_name="$GITHUB_REF_NAME"
+            asset_name="$(basename "$package_file")"
+          elif [ "${{ inputs.upload-replace-latest }}" = "true" ]; then
+            ref_slug="$(printf '%s' "$GITHUB_REF_NAME" | tr '[:upper:]' '[:lower:]' | tr '/' '-')"
+            release_tag="${ref_slug}-latest"
+            release_name="${GITHUB_REF_NAME} latest"
+            asset_name="CARLA_UE5_Latest.tar.gz"
+          else
+            ref_slug="$(printf '%s' "$GITHUB_REF_NAME" | tr '[:upper:]' '[:lower:]' | tr '/' '-')"
+            release_tag="${ref_slug}-${GITHUB_SHA::8}"
+            release_name="$release_tag"
+            asset_name="$(basename "$package_file")"
           fi
-          ./Util/Tools/Deploy.sh ${ARGS} --summary-output $GITHUB_OUTPUT
+
+          cp "$package_file" "github-package/$asset_name"
+          echo "release_tag=$release_tag" >> "$GITHUB_OUTPUT"
+          echo "release_name=$release_name" >> "$GITHUB_OUTPUT"
+          echo "release_url=https://github.com/${GITHUB_REPOSITORY}/releases/tag/${release_tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Upload package to GitHub Releases
+        if: inputs.upload-package == true
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          replacesArtifacts: true
+          tag: ${{ steps.package_release.outputs.release_tag }}
+          commit: ${{ github.sha }}
+          name: ${{ steps.package_release.outputs.release_name }}
+          artifacts: github-package/*.tar.gz
+          token: ${{ github.token }}
 
       - name: Write summary
         if: inputs.upload-package == true
         run: |
           echo "## [Ubuntu] CARLA UE5 CI/CD Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- CARLA Package: ${{ steps.upload_step.outputs.package_uri }}" >> $GITHUB_STEP_SUMMARY
+          echo "- CARLA Package: ${{ steps.package_release.outputs.release_url }}" >> $GITHUB_STEP_SUMMARY
 
-      # - name: Login to Docker Hub
-      #   uses: docker/login-action@v3
-      #   with:
-      #     username: ${{ vars.DOCKERHUB_USERNAME }}
-      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+  docker:
+    name: Docker Images
+    if: inputs.upload-docker == true
+    needs: ubuntu
+    runs-on: self-hosted
+    defaults:
+      run:
+        shell: bash -leo pipefail {0}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Clean Docker workspace
+        run: |
+          rm -rf artifacts docker-release-context
+
+      - name: Download Docker artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ue5-docker-artifacts
+          path: artifacts
+
+      - name: Set image tag
+        id: image_tag
+        run: |
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            image_publish_postfix="$GITHUB_REF_NAME"
+          elif [ "$GITHUB_REF_NAME" = "ue5-ika" ]; then
+            image_publish_postfix="latest"
+          else
+            ref_slug="$(printf '%s' "$GITHUB_REF_NAME" | tr '[:upper:]' '[:lower:]' | tr '/' '-')"
+            image_publish_postfix="${ref_slug}_${GITHUB_SHA::8}"
+          fi
+          image_repository="$(printf '%s' '${{ inputs.docker-image-repository }}' | tr '[:upper:]' '[:lower:]')"
+          echo "postfix=${image_publish_postfix}" >> "$GITHUB_OUTPUT"
+          echo "repository=${image_repository}" >> "$GITHUB_OUTPUT"
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Build and push client image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Util/Docker/client/Client.Dockerfile
+          tags: ${{ steps.image_tag.outputs.repository }}:client_${{ steps.image_tag.outputs.postfix }}
+          push: true
+
+      - name: Prepare release Docker context
+        id: release_context
+        run: |
+          package_file="$(find artifacts -maxdepth 1 -name 'Carla-*-Linux-Shipping.tar.gz' -print -quit)"
+          test -n "$package_file"
+          rm -rf docker-release-context
+          mkdir -p docker-release-context
+          tar -xzf "$package_file" -C docker-release-context
+          package_root="$(find docker-release-context -mindepth 1 -maxdepth 1 -type d -print -quit)"
+          test -f "$package_root/Dockerfile"
+          echo "package_root=$package_root" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push release image
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ steps.release_context.outputs.package_root }}
+          file: ${{ steps.release_context.outputs.package_root }}/Dockerfile
+          tags: ${{ steps.image_tag.outputs.repository }}:release_${{ steps.image_tag.outputs.postfix }}
+          push: true
+          build-args: |
+            UBUNTU_DISTRO=22.04
