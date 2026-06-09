@@ -15,8 +15,7 @@ import networkx as nx
 import carla
 from agents.navigation.local_planner import RoadOption
 
-# Python 2 compatibility
-TYPE_CHECKING = False
+from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import sys
     if sys.version_info >= (3, 11):

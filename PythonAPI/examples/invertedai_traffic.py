@@ -23,7 +23,7 @@ import imageio
 
 from tqdm import tqdm
 from enum import Enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from invertedai.common import AgentProperties, AgentState, TrafficLightState, Point, RecurrentState
 from carla import command, Location
 from typing import List, Tuple, Any, Optional
@@ -220,6 +220,8 @@ def get_default_cam_attachment(
             transform = transform
         )
 
+    raise ValueError(f"Unsupported camera attachment configuration: {attachment}.")
+
 @dataclass
 class CameraSpecification:
     attachment_cfg: CameraAttachmentConfiguration
@@ -227,8 +229,8 @@ class CameraSpecification:
     fps: int
     fov: int = 110
     resolution: VideoResolutionEnum = VideoResolutionEnum.FULLHD
-    name: str = str(int(time.time()))
-    save_path: str = os.getcwd()
+    name: str = field(default_factory=lambda: str(int(time.time())))
+    save_path: str = field(default_factory=os.getcwd)
     
 class CameraRecorder:
     def __init__(
@@ -240,7 +242,7 @@ class CameraRecorder:
         self.name = name
 
         self.full_dir_path = os.path.join(save_dir_path,name)
-        os.mkdir(self.full_dir_path)
+        os.makedirs(self.full_dir_path, exist_ok=True)
 
         self.data = None
 
@@ -252,7 +254,7 @@ class CameraRecorder:
         elif self.sensor_type == CameraType.DEPTH:
             data.convert(carla.ColorConverter.LogarithmicDepth)
             
-        data.save_to_disk(path = os.path.join(self.full_dir_path,'%08d' % data.frame))
+        data.save_to_disk(path = os.path.join(self.full_dir_path,'%08d.png' % data.frame))
 
 @dataclass
 class CarlaSensorObject:
@@ -280,10 +282,19 @@ class SensorManager:
             attached_actor = cam.cam_spec.attachment_cfg.actor_to_attach
             transform = cam.cam_spec.attachment_cfg.transform
             if attached_actor is not None:
+                actor_transform = attached_actor.get_transform()
                 x, y, z = transform.location.x, transform.location.y, transform.location.z
+                actor_rotation = actor_transform.rotation
+                offset_rotation = transform.rotation
+                # Compose the configured relative rotation on top of the actor's
+                # rotation so a camera's pitch/yaw/roll offset is preserved.
                 sensor_transform = carla.Transform(
-                    attached_actor.get_transform().transform(carla.Location(x, y, z)),
-                    attached_actor.get_transform().rotation,
+                    actor_transform.transform(carla.Location(x, y, z)),
+                    carla.Rotation(
+                        pitch=actor_rotation.pitch + offset_rotation.pitch,
+                        yaw=actor_rotation.yaw + offset_rotation.yaw,
+                        roll=actor_rotation.roll + offset_rotation.roll,
+                    ),
                 )
             else:
                 sensor_transform = transform
@@ -301,14 +312,25 @@ class SensorManager:
         if cam_spec.attachment_cfg.actor_to_attach is None:
             sensor_transform = cam_spec.attachment_cfg.transform
         else:
+            attached_actor = cam_spec.attachment_cfg.actor_to_attach
+            offset_transform = cam_spec.attachment_cfg.transform
+            actor_transform = attached_actor.get_transform()
             x, y, z = (
-                cam_spec.attachment_cfg.transform.location.x, 
-                cam_spec.attachment_cfg.transform.location.y, 
-                cam_spec.attachment_cfg.transform.location.z
+                offset_transform.location.x,
+                offset_transform.location.y,
+                offset_transform.location.z
             )
+            actor_rotation = actor_transform.rotation
+            offset_rotation = offset_transform.rotation
+            # Compose the configured relative rotation on top of the actor's
+            # rotation so a camera's pitch/yaw/roll offset is preserved.
             sensor_transform = carla.Transform(
-                cam_spec.attachment_cfg.actor_to_attach.get_transform().transform(carla.Location(x, y, z)),
-                cam_spec.attachment_cfg.actor_to_attach.get_transform().rotation,
+                actor_transform.transform(carla.Location(x, y, z)),
+                carla.Rotation(
+                    pitch=actor_rotation.pitch + offset_rotation.pitch,
+                    yaw=actor_rotation.yaw + offset_rotation.yaw,
+                    roll=actor_rotation.roll + offset_rotation.roll,
+                ),
             )
         
         camera_bp = self.world.get_blueprint_library().find(cam_spec.type.value)
@@ -321,7 +343,7 @@ class SensorManager:
         recorder = CameraRecorder(
             name=cam_spec.name,
             save_dir_path=cam_spec.save_path,
-            sensor_type=cam_spec.type.value,
+            sensor_type=cam_spec.type,
         )
         sensor.listen(recorder.sensor_callback)
 
@@ -339,11 +361,13 @@ class SensorManager:
             img_list = []
 
             for img_path in sorted(os.listdir(cam.recorder.full_dir_path)):
+                if not img_path.endswith('.png'):
+                    continue
                 img = imageio.imread(os.path.join(cam.recorder.full_dir_path,img_path))
                 img_list.append(img)
 
             full_video_dir = os.path.join(cam.recorder.full_dir_path,"video")
-            os.mkdir(full_video_dir)
+            os.makedirs(full_video_dir, exist_ok=True)
             full_video_path = os.path.join(full_video_dir,f"{cam.recorder.name}.mp4")
             imageio.mimsave(
                 full_video_path, 
@@ -619,7 +643,10 @@ def assign_carla_blueprints_to_agents(
     agents_to_pop = []
 
     for agent_id, data in enumerate(agent_data):
-        if not data.type == AgentType.CARLA:
+        # Only IAI-controlled agents need a CARLA blueprint spawned for them.
+        # EGO agents are provided/controlled externally and CARLA agents
+        # already have their own actors, so both are left untouched here.
+        if data.type == AgentType.IAI:
             blueprint = random.choice(vehicle_blueprints)
             if blueprint.has_attribute('color'):
                 color = random.choice(blueprint.get_attribute('color').recommended_values)
@@ -845,13 +872,15 @@ def main():
         args.location
     )
 
-    # Specify the IAI API key
-    try:
-        api_key = os.environ.get("IAI_API_KEY", None)
-        if api_key is None:
-            iai.add_apikey(args.iai_key)
-    except:
-        print("\n\tYou need to indicate the InvertedAI API key with the argument --iai-key. To obtain one, please go to https://www.inverted.ai \n")
+    # Specify the IAI API key. Prefer the IAI_API_KEY environment variable and
+    # fall back to the --iai-key argument. Registering it explicitly avoids
+    # relying on the SDK's implicit environment lookup, so requests are always
+    # authenticated when a key is available.
+    api_key = os.environ.get("IAI_API_KEY") or args.iai_key
+    if api_key:
+        iai.add_apikey(api_key)
+    else:
+        print("\n\tYou need to indicate the InvertedAI API key with the argument --iai-key or the IAI_API_KEY environment variable. To obtain one, please go to https://www.inverted.ai \n")
 
     num_pedestrians = args.number_of_walkers
 

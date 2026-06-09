@@ -158,9 +158,9 @@ class BasicAgent(object):
             if clean_queue and self._local_planner.target_waypoint:
                 # Plan from the waypoint in front of the vehicle onwards
                 start_location = self._local_planner.target_waypoint.transform.location 
-            elif not clean_queue and self._local_planner._waypoints_queue:
+            elif not clean_queue and self._local_planner.get_plan():
                 # Append to the current plan
-                start_location = self._local_planner._waypoints_queue[-1][0].transform.location
+                start_location = self._local_planner.get_plan()[-1][0].transform.location
             else:
                 # no target_waypoint or _waypoints_queue empty, use vehicle location
                 start_location = self._vehicle.get_location() 
