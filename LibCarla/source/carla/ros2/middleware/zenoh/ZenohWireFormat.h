@@ -80,7 +80,7 @@ inline std::string zenoh_make_topic_keyexpr(
     const char*        type_name,
     const char*        type_hash)
 {
-  return domain + "/" + topic_no_rt + "/" + type_name + "/" + type_hash;
+  return domain + "/" + topic_no_rt + "/" + type_name + "/*";
 }
 
 /// Liveliness keyexpr that registers carla_bridge as a node in rmw_zenoh's
