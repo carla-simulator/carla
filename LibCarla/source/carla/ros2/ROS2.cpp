@@ -71,7 +71,8 @@ enum ESensors {
   InstanceSegmentationCamera,
   WorldObserver,
   CameraGBufferUint8,
-  CameraGBufferFloat
+  CameraGBufferFloat,
+  HSSLidar
 };
 
 void ROS2::Enable(bool enable) {
@@ -447,6 +448,24 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
           transform = new_transform;
         }
       } break;
+      case ESensors::HSSLidar: {
+        if (ros_name == "hss_lidar__") {
+          ros_name.pop_back();
+          ros_name.pop_back();
+          ros_name += string_id;
+          UpdateActorRosName(actor, ros_name);
+        }
+        std::shared_ptr<CarlaLidarPublisher> new_publisher = std::make_shared<CarlaLidarPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        if (new_publisher->Init()) {
+          _publishers.insert({actor, new_publisher});
+          publisher = new_publisher;
+        }
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        if (new_transform->Init()) {
+          _transforms.insert({actor, new_transform});
+          transform = new_transform;
+        }
+      } break;
       case ESensors::RssSensor: {
         std::cerr << "RSS sensor does not have an available publisher" << std::endl;
       } break;
@@ -785,7 +804,7 @@ void ROS2::ProcessDataFromLidar(
     carla::sensor::data::LidarData &data,
     void *actor) {
   log_info("Sensor Lidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._points.size());
-  auto sensors = GetOrCreateSensor(ESensors::RayCastLidar, stream_id, actor);
+  auto sensors = GetOrCreateSensor(static_cast<int>(sensor_type), stream_id, actor);
   if (sensors.first) {
     std::shared_ptr<CarlaLidarPublisher> publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(sensors.first);
     size_t width = data._points.size();

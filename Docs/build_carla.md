@@ -7,7 +7,7 @@ Users can build CARLA from source code for development purposes. This is recomme
 
 Build instructions are available for both Linux and Windows. You can also build CARLA in a Docker container for deployment in AWS, Azure or Google cloud services. Visit the [__CARLA GitHub__](https://github.com/carla-simulator/carla) and clone the repository. 
 
-The Unreal Engine 5 version of CARLA requires a minimum of Windows 10 or Ubuntu 22.04. 
+The Unreal Engine 5 version of CARLA requires a minimum of Windows 11 or Ubuntu 22.04, and also supports Ubuntu 24.04. 
 
 * [__Linux build__](build_linux_ue5.md)  
 * [__Windows build__](build_windows_ue5.md)
