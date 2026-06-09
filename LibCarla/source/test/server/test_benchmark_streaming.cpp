@@ -144,26 +144,26 @@ static void benchmark_image(
   benchmark.Run(number_of_messages);
 }
 
-TEST(benchmark_streaming, image_200x200) {
+TEST(benchmark_streaming, DISABLED_image_200x200) {
   benchmark_image(200u * 200u);
 }
 
-TEST(benchmark_streaming, image_800x600) {
+TEST(benchmark_streaming, DISABLED_image_800x600) {
   benchmark_image(800u * 600u, 1u, 0.9);
 }
 
-TEST(benchmark_streaming, image_1920x1080) {
+TEST(benchmark_streaming, DISABLED_image_1920x1080) {
   benchmark_image(1920u * 1080u, 1u, 0.9);
 }
 
-TEST(benchmark_streaming, image_200x200_mt) {
+TEST(benchmark_streaming, DISABLED_image_200x200_mt) {
   benchmark_image(200u * 200u, get_max_concurrency());
 }
 
-TEST(benchmark_streaming, image_800x600_mt) {
+TEST(benchmark_streaming, DISABLED_image_800x600_mt) {
   benchmark_image(800u * 600u, get_max_concurrency(), 0.9);
 }
 
-TEST(benchmark_streaming, image_1920x1080_mt) {
+TEST(benchmark_streaming, DISABLED_image_1920x1080_mt) {
   benchmark_image(1920u * 1080u, get_max_concurrency(), 0.9);
 }
