@@ -17,6 +17,7 @@
 #include <carla/ros2/publishers/PublisherImpl.h>
 #include <carla/ros2/subscribers/SubscriberImpl.h>
 #include <carla/ros2/middleware/fastdds/GenericCdrPubSubType.h>
+#include <carla/ros2/middleware/zenoh/ZenohWireFormat.h>
 #include <carla/ros2/types/CdrSerialization.h>
 #include <carla/ros2/types/CdrTopicInfo.h>
 
@@ -1377,9 +1378,36 @@ TEST(domain_id_resolution, invalid_command_line_falls_through_to_environment) {
   EXPECT_EQ(resolved.source, DomainIdSource::Environment);
 }
 
+// ==========================================================================
+// Group 14: zenoh_wire_format (3 tests)
+// Pure string tests for the rmw_zenoh keyexpr builders: the domain id must be
+// the leading segment of every keyexpr so we only match rmw_zenoh peers on
+// the same domain.
+// ==========================================================================
+
+TEST(zenoh_wire_format, topic_keyexpr_starts_with_domain_segment) {
+  const std::string ke = zenoh_make_topic_keyexpr(
+      "42", "vehicle/imu", "sensor_msgs::msg::dds_::Imu_", "RIHS01_abc");
+  EXPECT_EQ(ke.compare(0, 3, "42/"), 0) << "keyexpr: " << ke;
+  EXPECT_NE(ke.find("/vehicle/imu/"), std::string::npos);
+}
+
+TEST(zenoh_wire_format, node_liveliness_keyexpr_starts_with_domain_segment) {
+  const std::string ke = zenoh_make_node_liveliness_keyexpr("42", "deadbeef");
+  EXPECT_EQ(ke.compare(0, 12, "@ros2_lv/42/"), 0) << "keyexpr: " << ke;
+}
+
+TEST(zenoh_wire_format, topic_liveliness_keyexpr_has_domain_and_mangled_topic) {
+  const std::string ke = zenoh_make_topic_liveliness_keyexpr(
+      "42", "deadbeef", 7u, kZenohEntityKindPub, "vehicle/imu",
+      "sensor_msgs::msg::dds_::Imu_", "RIHS01_abc", kZenohDefaultQos);
+  EXPECT_EQ(ke.compare(0, 12, "@ros2_lv/42/"), 0) << "keyexpr: " << ke;
+  EXPECT_NE(ke.find("%vehicle%imu"), std::string::npos);
+}
+
 #ifndef _WIN32
 // ==========================================================================
-// Group 14: effective_domain_id_env (3 tests)
+// Group 15: effective_domain_id_env (3 tests)
 // Exercises the thin std::getenv wrapper in MiddlewareConfig. POSIX-only:
 // setenv/unsetenv are not available on Windows, and Windows does not build the
 // ROS 2 middleware anyway.
@@ -1425,5 +1453,43 @@ TEST_F(RosDomainIdEnvFixture, command_line_overrides_environment) {
 TEST_F(RosDomainIdEnvFixture, default_when_environment_unset) {
   ::unsetenv(kRosDomainIdEnvVar);
   EXPECT_EQ(MiddlewareConfig::GetEffectiveDomainId(), kDefaultDomainId);
+}
+
+// ==========================================================================
+// Group 16: zenoh_domain_id (5 tests)
+// zenoh_ros_domain_id() feeds the leading keyexpr segment and must honor the
+// MiddlewareConfig resolution order (--ros-domain-id, then ROS_DOMAIN_ID,
+// then the default domain 0), like the DDS middlewares do for their
+// DomainParticipant.
+// ==========================================================================
+
+// Same save/restore needs as the effective_domain_id_env group.
+class ZenohDomainIdFixture : public RosDomainIdEnvFixture {};
+
+TEST_F(ZenohDomainIdFixture, command_line_value_is_used) {
+  ::unsetenv(kRosDomainIdEnvVar);
+  MiddlewareConfig::SetDomainId(42);
+  EXPECT_EQ(zenoh_ros_domain_id(), "42");
+}
+
+TEST_F(ZenohDomainIdFixture, environment_used_when_command_line_unset) {
+  ::setenv(kRosDomainIdEnvVar, "13", 1);
+  EXPECT_EQ(zenoh_ros_domain_id(), "13");
+}
+
+TEST_F(ZenohDomainIdFixture, command_line_overrides_environment) {
+  ::setenv(kRosDomainIdEnvVar, "13", 1);
+  MiddlewareConfig::SetDomainId(99);
+  EXPECT_EQ(zenoh_ros_domain_id(), "99");
+}
+
+TEST_F(ZenohDomainIdFixture, default_is_zero) {
+  ::unsetenv(kRosDomainIdEnvVar);
+  EXPECT_EQ(zenoh_ros_domain_id(), "0");
+}
+
+TEST_F(ZenohDomainIdFixture, invalid_environment_falls_back_to_default) {
+  ::setenv(kRosDomainIdEnvVar, "abc", 1);
+  EXPECT_EQ(zenoh_ros_domain_id(), "0");
 }
 #endif  // _WIN32
