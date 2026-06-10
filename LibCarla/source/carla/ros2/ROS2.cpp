@@ -70,6 +70,14 @@ enum ESensors {
   SemanticSegmentationCamera,
   InstanceSegmentationCamera,
   WorldObserver,
+  // Keep these in lock-step with the SensorRegistry tuple order: the fisheye /
+  // wide-angle-lens cameras (ported in #9741) were added to SensorRegistry but
+  // were missing here, which shifted every following value out of sync with the
+  // registry index.
+  SceneCaptureCamera_WideAngleLens,
+  DepthCamera_WideAngleLens,
+  InstanceSegmentationCamera_WideAngleLens,
+  SemanticSegmentationCamera_WideAngleLens,
   CameraGBufferUint8,
   CameraGBufferFloat,
   HSSLidar
@@ -431,7 +439,9 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
       } break;
       case ESensors::RayCastLidar: {
-        if (ros_name == "ray_cast__") {
+        // Both ray-cast and HSS lidars are dispatched here (see
+        // ProcessDataFromLidar), so rewrite either default placeholder name.
+        if (ros_name == "ray_cast__" || ros_name == "hss_lidar__") {
           ros_name.pop_back();
           ros_name.pop_back();
           ros_name += string_id;
@@ -804,13 +814,21 @@ void ROS2::ProcessDataFromLidar(
     carla::sensor::data::LidarData &data,
     void *actor) {
   log_info("Sensor Lidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._points.size());
-  auto sensors = GetOrCreateSensor(static_cast<int>(sensor_type), stream_id, actor);
+  // sensor_type here is DataStream::GetSensorType(), which actually returns the
+  // per-stream id (a sequential counter), not an ESensors value. Dispatching
+  // GetOrCreateSensor on it created a wrong-typed (or no) publisher and the
+  // dynamic_pointer_cast below then yielded null -> segfault. Both ray-cast and
+  // HSS lidars publish through the same CarlaLidarPublisher, so pin the type the
+  // way the other ProcessDataFrom* helpers already do.
+  auto sensors = GetOrCreateSensor(ESensors::RayCastLidar, stream_id, actor);
   if (sensors.first) {
     std::shared_ptr<CarlaLidarPublisher> publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(sensors.first);
-    size_t width = data._points.size();
-    size_t height = 1;
-    publisher->SetData(_seconds, _nanoseconds, height, width, (float*)data._points.data());
-    publisher->Publish();
+    if (publisher) {
+      size_t width = data._points.size();
+      size_t height = 1;
+      publisher->SetData(_seconds, _nanoseconds, height, width, (float*)data._points.data());
+      publisher->Publish();
+    }
   }
   if (sensors.second) {
     std::shared_ptr<CarlaTransformPublisher> publisher = std::dynamic_pointer_cast<CarlaTransformPublisher>(sensors.second);
