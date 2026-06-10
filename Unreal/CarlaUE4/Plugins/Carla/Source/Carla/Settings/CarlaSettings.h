@@ -168,7 +168,7 @@ public:
       DisplayName = "  ROS2 Topics Visible On Startup")
   bool ROS2TopicVisibility = true;
 
-  /// Middleware for ROS2 publishing. Accepted values: "fastdds", "cyclonedds".
+  /// Middleware for ROS2 publishing. Accepted values: "fastdds", "cyclonedds", "zenoh".
   /// Set via --rmw=<value> on the command line.
   UPROPERTY(Category = "Quality Settings/ROS2",
       BlueprintReadOnly,

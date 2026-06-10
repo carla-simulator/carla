@@ -20,6 +20,13 @@ Launch the CARLA simulator with the ROS 2 integration enabled:
 make launch ARGS="--ros2 --editor-flags='--ros2'"
 ```
 
+> [!NOTE]
+> To use the Zenoh middleware, add `--rmw=zenoh` to the launch command above and to `run_rviz.sh`, and start a Zenoh router first:
+> ```bash
+> docker run --rm --net=host carla-rviz-<distro>-zenoh ros2 run rmw_zenoh_cpp rmw_zenohd
+> ```
+> The `carla-rviz-<distro>-zenoh` image is built the first time you run `run_rviz.sh` (`<distro>` is `humble` or `jazzy`).
+
 ### Step 2: Run the ROS2 Example
 
 Execute the ROS 2 example script:

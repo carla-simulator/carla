@@ -323,12 +323,14 @@ public class Carla : ModuleRules
       {
         PublicDefinitions.Add("CARLA_ROS2_MIDDLEWARE_FASTDDS");
         PublicDefinitions.Add("CARLA_ROS2_MIDDLEWARE_CYCLONEDDS");
+        PublicDefinitions.Add("CARLA_ROS2_MIDDLEWARE_ZENOH");
 
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", GetLibName("carla_ros2")));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libddsc.a"));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfoonathan_memory-0.7.3.a"));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfastcdr.a"));
         PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libfastrtps.a"));
+        PublicAdditionalLibraries.Add(Path.Combine(LibCarlaInstallPath, "lib", "libzenohc.a"));
       }
 
 

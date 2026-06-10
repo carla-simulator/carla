@@ -933,6 +933,12 @@ CYCLONEDDS_INSTALL_DIR=${PWD}/${CYCLONEDDS_BASENAME}-install
 CYCLONEDDS_INCLUDE=${CYCLONEDDS_INSTALL_DIR}/include
 CYCLONEDDS_LIB=${CYCLONEDDS_INSTALL_DIR}/lib
 
+ZENOH_VERSION=1.8.0
+ZENOH_BASENAME=zenoh
+ZENOH_INSTALL_DIR=${PWD}/${ZENOH_BASENAME}-install
+ZENOH_INCLUDE=${ZENOH_INSTALL_DIR}/include
+ZENOH_LIB=${ZENOH_INSTALL_DIR}/lib
+
 if ${USE_ROS2} ; then
 
   if [[ -d ${FASTDDS_INSTALL_DIR} ]] ; then
@@ -1059,6 +1065,40 @@ if ${USE_ROS2} ; then
       cp -p -r ${CYCLONEDDS_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
     fi
 
+  # ==============================================================================
+  # -- Download prebuilt Zenoh-c -------------------------------------------------
+  # ==============================================================================
+
+  if [[ -d ${ZENOH_INSTALL_DIR} ]] ; then
+    log "Zenoh already installed."
+  else
+    log "Downloading prebuilt zenoh-c ${ZENOH_VERSION}"
+    ZENOH_C_ARCHIVE_NAME=zenoh-c-${ZENOH_VERSION}-x86_64-unknown-linux-gnu-standalone.zip
+    ZENOH_C_DOWNLOAD_URL=https://github.com/eclipse-zenoh/zenoh-c/releases/download/${ZENOH_VERSION}/${ZENOH_C_ARCHIVE_NAME}
+    ZENOH_C_DOWNLOAD_DIR=${PWD}/zenoh-c-download
+
+    mkdir -p ${ZENOH_C_DOWNLOAD_DIR}
+    pushd ${ZENOH_C_DOWNLOAD_DIR} >/dev/null
+    wget -q --show-progress ${ZENOH_C_DOWNLOAD_URL}
+    unzip -q -o ${ZENOH_C_ARCHIVE_NAME}
+    popd >/dev/null
+
+    # Archive extracts include/ and lib/ at the top level.
+    mkdir -p ${ZENOH_INCLUDE} ${ZENOH_LIB}
+    cp -p -r ${ZENOH_C_DOWNLOAD_DIR}/include/* ${ZENOH_INCLUDE}/
+    cp -p ${ZENOH_C_DOWNLOAD_DIR}/lib/*.a ${ZENOH_LIB}/
+    rm -Rf ${ZENOH_C_DOWNLOAD_DIR}
+
+    # UE4's dump_syms aborts on Rust's DWARF debug info in libzenohc.a, which
+    # UBT then misreports as a "Link (lld)" failure. Strip the debug sections
+    # to keep linkage but skip symbolication of the prebuilt binary.
+    strip --strip-debug ${ZENOH_LIB}/libzenohc.a
+
+    mkdir -p ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+    cp -p ${ZENOH_LIB}/*.a ${LIBCARLA_INSTALL_SERVER_FOLDER}/lib/
+    cp -p -r ${ZENOH_INCLUDE}/* ${LIBCARLA_INSTALL_SERVER_FOLDER}/include/
+  fi
+
 fi
 
 # ==============================================================================
@@ -1107,6 +1147,8 @@ set(FASTDDS_INCLUDE_PATH "${FASTDDS_INCLUDE}")
 set(FASTDDS_LIB_PATH "${FASTDDS_LIB}")
 set(CYCLONEDDS_INCLUDE_PATH "${CYCLONEDDS_INCLUDE}")
 set(CYCLONEDDS_LIB_PATH "${CYCLONEDDS_LIB}")
+set(ZENOH_INCLUDE_PATH "${ZENOH_INCLUDE}")
+set(ZENOH_LIB_PATH "${ZENOH_LIB}")
 
 if (CMAKE_BUILD_TYPE STREQUAL "Server")
   # Here libraries linking libc++.

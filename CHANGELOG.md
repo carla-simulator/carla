@@ -1,4 +1,5 @@
 ## Latest Changes
+ * Added Zenoh as a third ROS 2 middleware backend, selectable at runtime via `--rmw=zenoh` alongside `--rmw=fastdds` and `--rmw=cyclonedds`.
  * Renamed the ROS2 abstraction layer from dds/DDS* to generic middleware/Middleware* naming to support future non-DDS backends like Zenoh. FastDDS and CycloneDDS vendor classes are unchanged.
  * Added NumPy 2 compatibility to the PythonAPI: replaced removed aliases (`np.bool`, `np.matrix`) in example scripts and upgraded Boost to 1.90.0, which ships the upstream NumPy 2 C ABI fix (boostorg/python#432) so the C extension builds against both NumPy 1.x (>=1.18.4) and NumPy 2.x
  * Fixed North/South latitude inversion in geo-coordinate conversion for Transverse Mercator and UTM projections
