@@ -180,6 +180,8 @@ build-carla:
       python3 Util/SetupUtils/MergeContentOverlay.py \
         --base Unreal/CarlaUnreal/Content/Carla \
         --overlay Unreal/CarlaUnreal/content-openads/Carla
+      echo "Merged content target tree: Unreal/CarlaUnreal/Content/Carla"
+      find Unreal/CarlaUnreal/Content/Carla -print | sort
 
       cmake --preset Release -DENABLE_ROS2=ON -DBUILD_LIBCARLA_TESTS=ON
 
