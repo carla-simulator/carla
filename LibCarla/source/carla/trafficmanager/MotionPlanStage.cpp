@@ -356,8 +356,10 @@ float MotionPlanStage::CalculateBaseOffset(
     return 0.0f;
   }
 
+  const auto &large_vehicle = large_vehicles.at(actor_id);
+
   // Going straight at the intersection: no offset to apply.
-  if (large_vehicles[actor_id].first == 0.0f) {
+  if (large_vehicle.first == 0.0f) {
     return 0.0f;
   }
 
@@ -376,8 +378,8 @@ float MotionPlanStage::CalculateBaseOffset(
     }
   }
 
-  const float junction_length{large_vehicles[actor_id].first};
-  const bool turn_flag{large_vehicles[actor_id].second};
+  const float junction_length{large_vehicle.first};
+  const bool turn_flag{large_vehicle.second};
 
   // Scale the offset magnitude by the vehicle's actual length so a short bus
   // and a long truck no longer share the same fixed displacement.

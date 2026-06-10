@@ -407,9 +407,7 @@ void ALSM::RemoveActor(const ActorId actor_id, const bool registered_actor) {
     motion_plan_stage.RemoveActor(actor_id);
     vehicle_light_stage.RemoveActor(actor_id);
 
-    if (large_vehicles.find(actor_id) != large_vehicles.end()){
-      large_vehicles.erase(actor_id);
-    }
+    large_vehicles.erase(actor_id);
   }
   else {
     unregistered_actors.erase(actor_id);
