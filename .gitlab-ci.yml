@@ -177,7 +177,9 @@ build-carla:
         --single-branch --depth 1 -b "${CARLA_CONTENT_BRANCH}" \
         "https://gitlab-ci-token:${CI_JOB_TOKEN}@gitlab.ika.rwth-aachen.de/fb-fi/simulation/carla/carla-content.git" \
         Unreal/CarlaUnreal/content-openads
-      cp -a Unreal/CarlaUnreal/content-openads/Carla/. Unreal/CarlaUnreal/Content/Carla/
+      python3 Util/SetupUtils/MergeContentOverlay.py \
+        --base Unreal/CarlaUnreal/Content/Carla \
+        --overlay Unreal/CarlaUnreal/content-openads/Carla
 
       cmake --preset Release -DENABLE_ROS2=ON -DBUILD_LIBCARLA_TESTS=ON
 

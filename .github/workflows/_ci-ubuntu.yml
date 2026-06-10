@@ -168,7 +168,7 @@ jobs:
           git clone -b ue5-dev --depth 1 https://bitbucket.org/carla-simulator/carla-content.git Unreal/CarlaUnreal/Content/Carla
           '
 
-      - name: Download OpenADS content
+      - name: Download and merge OpenADS content
         if: inputs.content-overlay == true
         env:
           GITLAB_CONTENT_USERNAME: ${{ secrets.GITLAB_CONTENT_USERNAME }}
@@ -193,7 +193,9 @@ jobs:
             "$CARLA_CONTENT_REPOSITORY" \
             Unreal/CarlaUnreal/content-openads
           unset content_auth_header
-          cp -a Unreal/CarlaUnreal/content-openads/Carla/. Unreal/CarlaUnreal/Content/Carla/
+          python3 Util/SetupUtils/MergeContentOverlay.py \
+            --base Unreal/CarlaUnreal/Content/Carla \
+            --overlay Unreal/CarlaUnreal/content-openads/Carla
           '
 
       - name: Preset
