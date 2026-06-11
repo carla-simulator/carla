@@ -127,12 +127,16 @@ class FastDDSPublisherMiddleware
     wqos.endpoint().history_memory_policy =
         eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
+    // Keep-last writer history with the requested depth. The default depth 1
+    // matches DATAWRITER_QOS_DEFAULT, so volatile publishers are unchanged.
+    wqos.history().kind = efd::KEEP_LAST_HISTORY_QOS;
+    wqos.history().depth =
+        static_cast<int32_t>(publisher_qos.effective_history_depth());
+
     if (publisher_qos.durability == DurabilityKind::TransientLocal) {
       // Latched topic: the writer keeps the last history_depth samples and
       // hands them to late-joining subscribers that request transient_local.
       wqos.durability().kind = efd::TRANSIENT_LOCAL_DURABILITY_QOS;
-      wqos.history().kind = efd::KEEP_LAST_HISTORY_QOS;
-      wqos.history().depth = static_cast<int32_t>(publisher_qos.history_depth);
     }
 
     // Set USER_DATA (PID_USER_DATA = 0x002c per OMG DDSI-RTPS v2.5 §9.6.2.2.2)

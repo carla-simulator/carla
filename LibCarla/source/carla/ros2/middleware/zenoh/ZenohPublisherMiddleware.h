@@ -96,7 +96,7 @@ class ZenohPublisherMiddleware : public IPublisherMiddleware {
       ze_advanced_publisher_options_default(&adv_opts);
       adv_opts.cache.is_enabled = true;
       adv_opts.cache.max_samples =
-          static_cast<size_t>(publisher_qos.history_depth);
+          static_cast<size_t>(publisher_qos.effective_history_depth());
       if (ze_declare_advanced_publisher(
               session, &_advanced_publisher, z_loan(ke), &adv_opts)
           != Z_OK) {
