@@ -800,6 +800,44 @@ void ROS2::ProcessDataFromOdometry(
   }
 }
 
+void ROS2::ProcessDataFromTF(
+    carla::streaming::detail::stream_id_type stream_id,
+    const carla::geom::Transform actor_transform,
+    void *actor) {
+  log_info("Sensor TFSensor to ROS data: frame.", _frame, "stream.", stream_id);
+
+  if (actor == nullptr) {
+    return;
+  }
+
+  std::shared_ptr<CarlaTransformPublisher> publisher {};
+  auto it = _transforms.find(actor);
+  if (it != _transforms.end()) {
+    publisher = it->second;
+  } else {
+    std::string ros_name = GetActorRosName(actor);
+    if (ros_name.empty()) {
+      return;
+    }
+
+    std::shared_ptr<CarlaTransformPublisher> new_transform =
+        std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), "carla_map", false);
+    if (new_transform->Init()) {
+      _transforms.insert({actor, new_transform});
+      publisher = new_transform;
+    }
+  }
+
+  if (publisher) {
+    publisher->SetData(
+        _seconds,
+        _nanoseconds,
+        (const float*)&actor_transform.location,
+        (const float*)&actor_transform.rotation);
+    publisher->Publish();
+  }
+}
+
 void ROS2::ProcessDataFromDVS(
     uint64_t sensor_type,
     carla::streaming::detail::stream_id_type stream_id,

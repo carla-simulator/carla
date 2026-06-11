@@ -116,6 +116,10 @@ class ROS2
       carla::geom::Vector3D angular_velocity,
       void *actor = nullptr,
       bool has_parent = false);
+      void ProcessDataFromTF(
+        carla::streaming::detail::stream_id_type stream_id,
+        const carla::geom::Transform actor_transform,
+        void *actor = nullptr);
   void ProcessDataFromDVS(
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
