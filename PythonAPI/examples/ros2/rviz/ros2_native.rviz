@@ -131,10 +131,23 @@ Visualization Manager:
           Value: true
       Enabled: true
       Name: Lidar
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Map
+      Namespaces:
+        lane_boundaries: true
+        lane_centerlines: false
+      Topic:
+        Depth: 1
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /carla/map_markers
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: hero
+    Fixed Frame: map
     Frame Rate: 30
   Name: root
   Tools:
