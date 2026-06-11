@@ -58,10 +58,14 @@ class MockPublisherMiddleware : public IPublisherMiddleware {
   bool publish_called{false};
   std::string last_topic_name;
   void* last_published_data{nullptr};
+  PublisherQos last_publisher_qos;
 
-  bool Init(const std::string& topic_name) override {
+  bool Init(
+      const std::string& topic_name,
+      const PublisherQos& publisher_qos) override {
     init_called = true;
     last_topic_name = topic_name;
+    last_publisher_qos = publisher_qos;
     return init_return_value;
   }
 
@@ -344,7 +348,7 @@ TEST_F(MiddlewareFactoryFixture, create_subscriber_zenoh_unavailable) {
 }
 
 // ==========================================================================
-// Group 7: publisher_impl (7 tests)
+// Group 7: publisher_impl (10 tests)
 // ==========================================================================
 
 TEST(publisher_impl, get_message_returns_pointer) {
@@ -417,6 +421,37 @@ TEST(publisher_impl, data_flows_through_publish) {
   ASSERT_NE(mock->last_published_data, nullptr);
   auto* published = static_cast<TestMsg*>(mock->last_published_data);
   EXPECT_EQ(published->value, 42);
+}
+
+TEST(publisher_impl, default_qos_is_volatile_depth_one) {
+  // The default PublisherQos must reproduce the historical behavior of every
+  // publisher created before QoS support existed.
+  PublisherQos qos;
+  EXPECT_EQ(qos.durability, DurabilityKind::Volatile);
+  EXPECT_EQ(qos.history_depth, 1u);
+}
+
+TEST(publisher_impl, init_without_qos_passes_default_qos) {
+  PublisherImpl<TestPubTraits> pub;
+  auto* mock = new MockPublisherMiddleware();
+  pub.SetMiddlewareForTesting(
+      std::unique_ptr<IPublisherMiddleware>(mock));
+  EXPECT_TRUE(pub.Init("rt/test_topic"));
+  EXPECT_EQ(mock->last_publisher_qos.durability, DurabilityKind::Volatile);
+  EXPECT_EQ(mock->last_publisher_qos.history_depth, 1u);
+}
+
+TEST(publisher_impl, init_passes_transient_local_qos) {
+  PublisherImpl<TestPubTraits> pub;
+  auto* mock = new MockPublisherMiddleware();
+  pub.SetMiddlewareForTesting(
+      std::unique_ptr<IPublisherMiddleware>(mock));
+  PublisherQos qos;
+  qos.durability = DurabilityKind::TransientLocal;
+  qos.history_depth = 5u;
+  EXPECT_TRUE(pub.Init("rt/carla/map", qos));
+  EXPECT_EQ(mock->last_publisher_qos.durability, DurabilityKind::TransientLocal);
+  EXPECT_EQ(mock->last_publisher_qos.history_depth, 5u);
 }
 
 // ==========================================================================

@@ -83,7 +83,9 @@ class FastDDSPublisherMiddleware
     }
   }
 
-  bool Init(const std::string& topic_name) override {
+  bool Init(
+      const std::string& topic_name,
+      const PublisherQos& publisher_qos) override {
     if (_type == nullptr) {
       log_error("FastDDSPublisherMiddleware: Invalid TypeSupport");
       return false;
@@ -124,6 +126,14 @@ class FastDDSPublisherMiddleware
     efd::DataWriterQos wqos = efd::DATAWRITER_QOS_DEFAULT;
     wqos.endpoint().history_memory_policy =
         eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+
+    if (publisher_qos.durability == DurabilityKind::TransientLocal) {
+      // Latched topic: the writer keeps the last history_depth samples and
+      // hands them to late-joining subscribers that request transient_local.
+      wqos.durability().kind = efd::TRANSIENT_LOCAL_DURABILITY_QOS;
+      wqos.history().kind = efd::KEEP_LAST_HISTORY_QOS;
+      wqos.history().depth = static_cast<int32_t>(publisher_qos.history_depth);
+    }
 
     // Set USER_DATA (PID_USER_DATA = 0x002c per OMG DDSI-RTPS v2.5 §9.6.2.2.2)
     // to the REP-2011/REP-2016 type-hash KV payload "typehash=RIHS01_<hex>;".

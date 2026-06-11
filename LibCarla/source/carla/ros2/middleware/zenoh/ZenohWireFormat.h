@@ -9,6 +9,8 @@
 #if defined(CARLA_ROS2_MIDDLEWARE_ZENOH) || defined(CARLA_ROS2_MIDDLEWARE_TESTING)
 
 #include "carla/ros2/middleware/MiddlewareConfig.h"
+#include "carla/ros2/middleware/PublisherQos.h"
+#include "carla/Logging.h"
 
 #include <atomic>
 #include <cstdint>
@@ -42,6 +44,19 @@ inline uint64_t zenoh_next_entity_id() {
 /// FastDDS/CycloneDDS middlewares pass to their DomainParticipant.
 inline std::string zenoh_ros_domain_id() {
   return std::to_string(MiddlewareConfig::GetEffectiveDomainId());
+}
+
+/// QoS segment of an endpoint liveliness keyexpr, rmw_zenoh format: six
+/// ':'-separated fields (reliability : durability : history_kind,history_depth
+/// : deadline : lifespan : liveliness) holding numeric rmw_qos enum values,
+/// where an empty field means "default". Durability TRANSIENT_LOCAL is rmw
+/// enum value 1. The default PublisherQos (volatile, depth 1) produces a
+/// string byte-identical to kZenohDefaultQos.
+inline std::string zenoh_make_qos_string(const PublisherQos& publisher_qos) {
+  const char* durability =
+      publisher_qos.durability == DurabilityKind::TransientLocal ? "1" : "";
+  return std::string(":") + durability + ":," +
+         std::to_string(publisher_qos.history_depth) + ":,:,:,,";
 }
 
 /// Strip the "rt/" prefix that ROS2-to-DDS mapping adds to message topics.
