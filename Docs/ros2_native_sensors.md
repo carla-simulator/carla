@@ -86,6 +86,12 @@ CARLA server is responsible for publishing the Clock (/clock) based on the simul
 |-------|------|
 | `/carla/[<PARENT ROLE NAME>]/<SENSOR ROLE NAME>` | [sensor_msgs/NavSatFix](https://docs.ros.org/en/api/sensor_msgs/html/msg/NavSatFix.html) |
 
+###### Odometry
+
+| Topic | Type |
+|-------|------|
+| `/carla/[<PARENT ROLE NAME>]/<SENSOR ROLE NAME>` | [nav_msgs/Odometry](https://docs.ros.org/en/api/nav_msgs/html/msg/Odometry.html) |
+
 
 ###### Lane Invasion Sensor
 

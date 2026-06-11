@@ -30,6 +30,7 @@
 #include "publishers/CarlaRadarPublisher.h"
 #include "publishers/CarlaIMUPublisher.h"
 #include "publishers/CarlaGNSSPublisher.h"
+#include "publishers/CarlaOdometryPublisher.h"
 #include "publishers/CarlaMapSensorPublisher.h"
 #include "publishers/CarlaSpeedometerSensor.h"
 #include "publishers/CarlaTransformPublisher.h"
@@ -71,7 +72,8 @@ enum ESensors {
   InstanceSegmentationCamera,
   WorldObserver,
   CameraGBufferUint8,
-  CameraGBufferFloat
+  CameraGBufferFloat,
+  OdometrySensor
 };
 
 void ROS2::Enable(bool enable) {
@@ -513,6 +515,24 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
       case ESensors::CameraGBufferFloat: {
         std::cerr << "Camera GBuffer float does not have an available publisher" << std::endl;
       } break;
+      case ESensors::OdometrySensor: {
+        if (ros_name == "odometry__") {
+          ros_name.pop_back();
+          ros_name.pop_back();
+          ros_name += string_id;
+          UpdateActorRosName(actor, ros_name);
+        }
+        std::shared_ptr<CarlaOdometryPublisher> new_publisher = std::make_shared<CarlaOdometryPublisher>(ros_name.c_str(), parent_ros_name.c_str());
+        if (new_publisher->Init()) {
+          _publishers.insert({actor, new_publisher});
+          publisher = new_publisher;
+        }
+        std::shared_ptr<CarlaTransformPublisher> new_transform = std::make_shared<CarlaTransformPublisher>(ros_name.c_str(), parent_ros_name.c_str(), is_static_transform);
+        if (new_transform->Init()) {
+          _transforms.insert({actor, new_transform});
+          transform = new_transform;
+        }
+      } break;
       default: {
         std::cerr << "Unknown sensor type" << std::endl;
       }
@@ -742,6 +762,35 @@ void ROS2::ProcessDataFromIMU(
   if (sensors.first) {
     std::shared_ptr<CarlaIMUPublisher> publisher = std::dynamic_pointer_cast<CarlaIMUPublisher>(sensors.first);
     publisher->SetData(_seconds, _nanoseconds, reinterpret_cast<float*>(&accelerometer), reinterpret_cast<float*>(&gyroscope), compass);
+    publisher->Publish();
+  }
+  if (sensors.second) {
+    std::shared_ptr<CarlaTransformPublisher> publisher = std::dynamic_pointer_cast<CarlaTransformPublisher>(sensors.second);
+    publisher->SetData(_seconds, _nanoseconds, (const float*)&sensor_transform.location, (const float*)&sensor_transform.rotation);
+    publisher->Publish();
+  }
+}
+
+void ROS2::ProcessDataFromOdometry(
+    uint64_t sensor_type,
+    carla::streaming::detail::stream_id_type stream_id,
+    const carla::geom::Transform sensor_transform,
+    const carla::geom::Transform odometry_transform,
+    carla::geom::Vector3D linear_velocity,
+    carla::geom::Vector3D angular_velocity,
+    void *actor,
+    bool has_parent) {
+  log_info("Sensor OdometrySensor to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id);
+  auto sensors = GetOrCreateSensor(ESensors::OdometrySensor, stream_id, actor, has_parent);
+  if (sensors.first) {
+    std::shared_ptr<CarlaOdometryPublisher> publisher = std::dynamic_pointer_cast<CarlaOdometryPublisher>(sensors.first);
+    publisher->SetData(
+        _seconds,
+        _nanoseconds,
+        (const float*)&odometry_transform.location,
+        (const float*)&odometry_transform.rotation,
+        (const float*)&linear_velocity,
+        (const float*)&angular_velocity);
     publisher->Publish();
   }
   if (sensors.second) {

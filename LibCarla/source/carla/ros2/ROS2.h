@@ -107,6 +107,15 @@ class ROS2
       float compass,
       void *actor = nullptr,
       bool has_parent = false);
+  void ProcessDataFromOdometry(
+      uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
+      const carla::geom::Transform sensor_transform,
+      const carla::geom::Transform odometry_transform,
+      carla::geom::Vector3D linear_velocity,
+      carla::geom::Vector3D angular_velocity,
+      void *actor = nullptr,
+      bool has_parent = false);
   void ProcessDataFromDVS(
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,

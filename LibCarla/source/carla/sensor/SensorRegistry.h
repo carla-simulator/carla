@@ -47,6 +47,7 @@ class ASceneCaptureCamera;
 class ASemanticSegmentationCamera;
 class AInstanceSegmentationCamera;
 class ARssSensor;
+class AOdometrySensor;
 class FWorldObserver;
 struct FCameraGBufferUint8;
 struct FCameraGBufferFloat;
@@ -80,7 +81,8 @@ namespace sensor {
     std::pair<AInstanceSegmentationCamera *, s11n::ImageSerializer>,
     std::pair<FWorldObserver *, s11n::EpisodeStateSerializer>,
     std::pair<FCameraGBufferUint8 *, s11n::GBufferUint8Serializer>,
-    std::pair<FCameraGBufferFloat *, s11n::GBufferFloatSerializer>
+    std::pair<FCameraGBufferFloat *, s11n::GBufferFloatSerializer>,
+    std::pair<AOdometrySensor *, s11n::NoopSerializer>
   >;
 
 } // namespace sensor
@@ -107,6 +109,7 @@ namespace sensor {
 #include "Carla/Sensor/SceneCaptureCamera.h"
 #include "Carla/Sensor/SemanticSegmentationCamera.h"
 #include "Carla/Sensor/InstanceSegmentationCamera.h"
+#include "Carla/Sensor/OdometrySensor.h"
 #include "Carla/Sensor/WorldObserver.h"
 
 #endif // LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES
