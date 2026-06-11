@@ -23,6 +23,8 @@ class AInertialMeasurementUnit;
 class ARadar;
 class ASceneCaptureSensor;
 class AShaderBasedSensor;
+class ASceneCaptureSensor_WideAngleLens;
+class AShaderBasedSensor_WideAngleLens;
 struct FLidarDescription;
 struct FActorDescription;
 
@@ -69,6 +71,17 @@ public:
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakeCameraDefinition(
+      const FString &Id,
+      bool bEnableModifyingPostProcessEffects,
+      bool &Success,
+      FActorDefinition &Definition);
+
+  static FActorDefinition MakeWideAngleLensCameraDefinition(
+      const FString &Id,
+      bool bEnableModifyingPostProcessEffects = false);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeWideAngleLensCameraDefinition(
       const FString &Id,
       bool bEnableModifyingPostProcessEffects,
       bool &Success,
@@ -241,6 +254,9 @@ public:
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void SetCamera(const FActorDescription &Description, ASceneCaptureSensor *Camera);
   static void SetCamera(const FActorDescription &Description, AShaderBasedSensor *Camera);
+
+  static void SetCamera(const FActorDescription &Description, ASceneCaptureSensor_WideAngleLens *Camera);
+  static void SetCamera(const FActorDescription &Description, AShaderBasedSensor_WideAngleLens *Camera);
 
   static void SetLidar(const FActorDescription &Description, FLidarDescription &Lidar);
 

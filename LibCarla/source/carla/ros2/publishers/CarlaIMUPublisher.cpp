@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "carla/ros2/publishers/ImuMath.h"
 #include "carla/ros2/types/ImuPubSubTypes.h"
 #include "carla/ros2/listeners/CarlaListener.h"
 
@@ -170,23 +171,13 @@ namespace ros2 {
     header.stamp(std::move(time));
     header.frame_id(_frame_id);
 
+    const auto q = OrientationFromCompass(compass);
+
     geometry_msgs::msg::Quaternion orientation;
-
-    const float rx = 0.0f;                           // pitch
-    const float ry = (float(M_PI_2) / 2.0f) - compass;  // yaw
-    const float rz = 0.0f;                           // roll
-
-    const float cr = cosf(rz * 0.5f);
-    const float sr = sinf(rz * 0.5f);
-    const float cp = cosf(rx * 0.5f);
-    const float sp = sinf(rx * 0.5f);
-    const float cy = cosf(ry * 0.5f);
-    const float sy = sinf(ry * 0.5f);
-
-    orientation.w(cr * cp * cy + sr * sp * sy);
-    orientation.x(sr * cp * cy - cr * sp * sy);
-    orientation.y(cr * sp * cy + sr * cp * sy);
-    orientation.z(cr * cp * sy - sr * sp * cy);
+    orientation.w(q[0]);
+    orientation.x(q[1]);
+    orientation.y(q[2]);
+    orientation.z(q[3]);
 
     _impl->_imu.header(std::move(header));
     _impl->_imu.orientation(orientation);

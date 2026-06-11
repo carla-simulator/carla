@@ -37,8 +37,10 @@
 #include "publishers/CarlaLineInvasionPublisher.h"
 #include "publishers/BasicPublisher.h"
 
-#include "subscribers/CarlaSubscriber.h"
+#include "subscribers/AckermannControlSubscriber.h"
+#include "subscribers/BaseSubscriber.h"
 #include "subscribers/CarlaEgoVehicleControlSubscriber.h"
+#include "subscribers/CarlaSubscriber.h"
 #if defined(WITH_ROS2_DEMO)
   #include "subscribers/BasicSubscriber.h"
 #endif
@@ -70,6 +72,14 @@ enum ESensors {
   SemanticSegmentationCamera,
   InstanceSegmentationCamera,
   WorldObserver,
+  // Keep these in lock-step with the SensorRegistry tuple order: the fisheye /
+  // wide-angle-lens cameras (ported in #9741) were added to SensorRegistry but
+  // were missing here, which shifted every following value out of sync with the
+  // registry index.
+  SceneCaptureCamera_WideAngleLens,
+  DepthCamera_WideAngleLens,
+  InstanceSegmentationCamera_WideAngleLens,
+  SemanticSegmentationCamera_WideAngleLens,
   CameraGBufferUint8,
   CameraGBufferFloat,
   HSSLidar
@@ -88,21 +98,14 @@ void ROS2::Enable(bool enable) {
 
 void ROS2::SetFrame(uint64_t frame) {
   _frame = frame;
-   //log_info("ROS2 new frame: ", _frame);
-   if (_controller) {
-    void* actor = _controller->GetVehicle();
-    if (_controller->IsAlive()) {
-      if (_controller->HasNewMessage()) {
-        auto it = _actor_callbacks.find(actor);
-        if (it != _actor_callbacks.end()) {
-          VehicleControl control = _controller->GetMessage();
-          it->second(actor, control);
-        }
-      }
-    } else {
-      RemoveActorCallback(actor);
+  for (auto& element : _subscribers) {
+    void* actor = element.first;
+    auto& subscriber = element.second;
+    auto callback_it = _actor_callbacks.find(actor);
+    if (callback_it != _actor_callbacks.end()) {
+      subscriber->ProcessMessages(callback_it->second);
     }
-   }
+  }
 #if defined(WITH_ROS2_DEMO)
    if (_basic_subscriber)
    {
@@ -138,7 +141,9 @@ void ROS2::SetTimestamp(double timestamp) {
 }
 
 void ROS2::AddActorRosName(void *actor, std::string ros_name) {
-  _actor_ros_name.insert({actor, ros_name});
+  // insert_or_assign so re-registering an actor with a new ros_name actually
+  // updates the entry; unordered_map::insert would silently keep the stale one.
+  _actor_ros_name.insert_or_assign(actor, std::move(ros_name));
 }
 
 void ROS2::AddActorParentRosName(void *actor, void* parent) {
@@ -203,7 +208,7 @@ std::string ROS2::GetActorParentRosName(void *actor) {
 
 void ROS2::AddBasicSubscriberCallback(void* actor, std::string ros_name, ActorMessageCallback callback) {
   #if defined(WITH_ROS2_DEMO)
-  _actor_message_callbacks.insert({actor, std::move(callback)});
+  _actor_message_callbacks.insert_or_assign(actor, std::move(callback));
 
   _basic_subscriber.reset();
   _basic_subscriber = std::make_shared<BasicSubscriber>(actor, ros_name.c_str());
@@ -218,17 +223,63 @@ void ROS2::RemoveBasicSubscriberCallback(void* actor) {
   #endif
 }
 
-void ROS2::AddActorCallback(void* actor, std::string ros_name, ActorCallback callback) {
-  _actor_callbacks.insert({actor, std::move(callback)});
+void ROS2::RegisterSensor(void *actor, std::string ros_name, std::string /*frame_id*/, bool /*publish_tf*/) {
+  // PR-2 thin shim: keep the legacy _actor_ros_name map populated so the existing
+  // GetOrCreateSensor publisher path still finds the sensor. PR-3/PR-4 will route
+  // publisher creation through this entry point as they migrate cohorts.
+  AddActorRosName(actor, std::move(ros_name));
+}
 
-  _controller.reset();
-  _controller = std::make_shared<CarlaEgoVehicleControlSubscriber>(actor, ros_name.c_str());
-  _controller->Init();
+void ROS2::UnregisterSensor(void *actor) {
+  RemoveActorRosName(actor);
+}
+
+void ROS2::RegisterVehicle(void *actor, std::string ros_name, std::string frame_id, ActorCallback callback,
+                           bool enable_ackermann_control) {
+  // Keep the legacy ros_name map populated so any consumer that still queries
+  // GetActorRosName(actor) keeps working after migration.
+  AddActorRosName(actor, ros_name);
+
+  // Idempotency: drop any prior subscribers / callbacks bound to this actor so
+  // a re-registration does not accumulate duplicate DataReaders nor leave the
+  // previous callback wired (unordered_map::insert is a no-op on existing
+  // keys, multimap::insert would stack additional entries).
+  _subscribers.erase(actor);
+  _actor_callbacks.insert_or_assign(actor, std::move(callback));
+
+  // The legacy CarlaEgoVehicleControlSubscriber::Init built its topic as
+  // "rt/carla/" + [parent + "/"] + name + "/vehicle_control_cmd". With the new
+  // template constructors the suffix is appended inside each subscriber, so we
+  // hand them the base path only.
+  const std::string base_topic_name = "rt/carla/" + ros_name;
+
+  // The two control modes are mutually exclusive: a vehicle listens on either the
+  // Ackermann topic or the direct VehicleControl topic, never both, so an Ackermann
+  // message can never latch ApplyVehicleAckermannControl while plain VehicleControl
+  // messages keep arriving on the other topic. Ackermann is opt-in per youtalk's review.
+  if (enable_ackermann_control) {
+    _subscribers.insert({actor, std::make_shared<AckermannControlSubscriber>(actor, base_topic_name, frame_id)});
+  } else {
+    _subscribers.insert({actor, std::make_shared<CarlaEgoVehicleControlSubscriber>(actor, base_topic_name, frame_id)});
+  }
+}
+
+void ROS2::UnregisterVehicle(void *actor) {
+  _subscribers.erase(actor);
+  _actor_callbacks.erase(actor);
+  RemoveActorRosName(actor);
+}
+
+void ROS2::AddActorCallback(void* actor, std::string ros_name, ActorCallback callback,
+                            bool enable_ackermann_control) {
+  // Legacy entry point delegates to RegisterVehicle. frame_id mirrors ros_name because
+  // the legacy callers did not carry a separate frame; the Ackermann subscriber is wired
+  // only when the caller opts in.
+  RegisterVehicle(actor, ros_name, ros_name, std::move(callback), enable_ackermann_control);
 }
 
 void ROS2::RemoveActorCallback(void* actor) {
-  _controller.reset();
-  _actor_callbacks.erase(actor);
+  UnregisterVehicle(actor);
 }
 
 std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublisher>> ROS2::GetOrCreateSensor(int type, carla::streaming::detail::stream_id_type id, void* actor) {
@@ -431,7 +482,9 @@ std::pair<std::shared_ptr<CarlaPublisher>, std::shared_ptr<CarlaTransformPublish
         }
       } break;
       case ESensors::RayCastLidar: {
-        if (ros_name == "ray_cast__") {
+        // Both ray-cast and HSS lidars are dispatched here (see
+        // ProcessDataFromLidar), so rewrite either default placeholder name.
+        if (ros_name == "ray_cast__" || ros_name == "hss_lidar__") {
           ros_name.pop_back();
           ros_name.pop_back();
           ros_name += string_id;
@@ -804,13 +857,21 @@ void ROS2::ProcessDataFromLidar(
     carla::sensor::data::LidarData &data,
     void *actor) {
   log_info("Sensor Lidar to ROS data: frame.", _frame, "sensor.", sensor_type, "stream.", stream_id, "points.", data._points.size());
-  auto sensors = GetOrCreateSensor(static_cast<int>(sensor_type), stream_id, actor);
+  // sensor_type here is DataStream::GetSensorType(), which actually returns the
+  // per-stream id (a sequential counter), not an ESensors value. Dispatching
+  // GetOrCreateSensor on it created a wrong-typed (or no) publisher and the
+  // dynamic_pointer_cast below then yielded null -> segfault. Both ray-cast and
+  // HSS lidars publish through the same CarlaLidarPublisher, so pin the type the
+  // way the other ProcessDataFrom* helpers already do.
+  auto sensors = GetOrCreateSensor(ESensors::RayCastLidar, stream_id, actor);
   if (sensors.first) {
     std::shared_ptr<CarlaLidarPublisher> publisher = std::dynamic_pointer_cast<CarlaLidarPublisher>(sensors.first);
-    size_t width = data._points.size();
-    size_t height = 1;
-    publisher->SetData(_seconds, _nanoseconds, height, width, (float*)data._points.data());
-    publisher->Publish();
+    if (publisher) {
+      size_t width = data._points.size();
+      size_t height = 1;
+      publisher->SetData(_seconds, _nanoseconds, height, width, (float*)data._points.data());
+      publisher->Publish();
+    }
   }
   if (sensors.second) {
     std::shared_ptr<CarlaTransformPublisher> publisher = std::dynamic_pointer_cast<CarlaTransformPublisher>(sensors.second);
@@ -903,8 +964,9 @@ void ROS2::Shutdown() {
   for (auto& element : _transforms) {
     element.second.reset();
   }
+  _subscribers.clear();
+  _actor_callbacks.clear();
   _clock_publisher.reset();
-  _controller.reset();
   _enabled = false;
 #if defined(WITH_ROS2_DEMO)
   _basic_publisher.reset();

@@ -48,6 +48,10 @@ class ASemanticSegmentationCamera;
 class AInstanceSegmentationCamera;
 class ARssSensor;
 class FWorldObserver;
+class ASceneCaptureCamera_WideAngleLens;
+class ADepthCamera_WideAngleLens;
+class AInstanceSegmentationCamera_WideAngleLens;
+class ASemanticSegmentationCamera_WideAngleLens;
 struct FCameraGBufferUint8;
 struct FCameraGBufferFloat;
 class AHSSLidar;
@@ -80,6 +84,10 @@ namespace sensor {
     std::pair<ASemanticSegmentationCamera *, s11n::ImageSerializer>,
     std::pair<AInstanceSegmentationCamera *, s11n::ImageSerializer>,
     std::pair<FWorldObserver *, s11n::EpisodeStateSerializer>,
+    std::pair<ASceneCaptureCamera_WideAngleLens *, s11n::ImageSerializer>,
+    std::pair<ADepthCamera_WideAngleLens *, s11n::ImageSerializer>,
+    std::pair<AInstanceSegmentationCamera_WideAngleLens *, s11n::ImageSerializer>,
+    std::pair<ASemanticSegmentationCamera_WideAngleLens *, s11n::ImageSerializer>,
     std::pair<FCameraGBufferUint8 *, s11n::GBufferUint8Serializer>,
     std::pair<FCameraGBufferFloat *, s11n::GBufferFloatSerializer>,
     std::pair<AHSSLidar *, s11n::LidarSerializer>
@@ -110,6 +118,10 @@ namespace sensor {
 #include "Carla/Sensor/SemanticSegmentationCamera.h"
 #include "Carla/Sensor/InstanceSegmentationCamera.h"
 #include "Carla/Sensor/WorldObserver.h"
+#include "Carla/Sensor/DepthCamera_WideAngleLens.h"
+#include "Carla/Sensor/SceneCaptureCamera_WideAngleLens.h"
+#include "Carla/Sensor/SemanticSegmentationCamera_WideAngleLens.h"
+#include "Carla/Sensor/InstanceSegmentationCamera_WideAngleLens.h"
 #include "Carla/Sensor/HSSLidar.h"
 
 #endif // LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES

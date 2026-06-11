@@ -212,6 +212,22 @@ public:
     }
   }
 
+  /// Method to enable/disable the wide-turn manoeuvre for a single large vehicle.
+  void SetLargeVehicleWideTurn(const ActorPtr &actor, const bool enable) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetLargeVehicleWideTurn(actor, enable);
+    }
+  }
+
+  /// Method to enable/disable the wide-turn manoeuvre globally for large vehicles.
+  void SetGlobalLargeVehicleWideTurn(const bool enable) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetGlobalLargeVehicleWideTurn(enable);
+    }
+  }
+
   /// Set the automatic management of the vehicle lights
   void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update){
     TrafficManagerBase* tm_ptr = GetTM(_port);

@@ -57,6 +57,23 @@ static const float JUNCTION_LOOK_AHEAD = 5.0f;
 static const float SAFE_DISTANCE_AFTER_JUNCTION = 4.0f;
 static const float MIN_JUNCTION_LENGTH = 8.0f;
 static const float MIN_SAFE_INTERVAL_LENGTH = 0.5f * SAFE_DISTANCE_AFTER_JUNCTION;
+static const float LARGE_VEHICLES_JUNCTION_OFFSET = 1.5f;
+static const float LARGE_VEHICLES_JUNCTION_POINT = 0.3f;
+static const float LARGE_VEHICLES_JUNCTION_MAX_RADIUS = 20.0f;
+// Fraction of the inboard (exit "cut-in") excursion retained for large
+// vehicles. The cut-in is what drives a long vehicle's rear into the inside
+// shoulder; 0.0f removes it entirely, 1.0f keeps the original profile.
+static const float LARGE_VEHICLES_JUNCTION_INBOARD_SCALE = 0.25f;
+// Vehicle length (m) at or below which the wide-turn offset is zero. Above it
+// the offset ramps up linearly at OFFSET_GAIN per metre, capped by
+// LARGE_VEHICLES_JUNCTION_OFFSET. Sim-tuned.
+static const float LARGE_VEHICLES_JUNCTION_REF_LENGTH = 6.0f;
+static const float LARGE_VEHICLES_JUNCTION_OFFSET_GAIN = 0.25f;
+// Lateral clearance (m) added beyond the swing band when checking whether the
+// offset side is occupied, and longitudinal margin (m) added to the vehicle's
+// half-length to define the "alongside" window.
+static const float LARGE_VEHICLES_JUNCTION_CLEARANCE = 1.0f;
+static const float LARGE_VEHICLES_JUNCTION_SIDE_MARGIN = 2.0f;
 } // namespace WaypointSelection
 
 namespace LaneChange {

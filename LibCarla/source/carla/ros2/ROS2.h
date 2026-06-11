@@ -40,7 +40,7 @@ namespace ros2 {
   class CarlaPublisher;
   class CarlaTransformPublisher;
   class CarlaClockPublisher;
-  class CarlaEgoVehicleControlSubscriber;
+  class BaseSubscriber;
   class BasicSubscriber;
   class BasicPublisher;
 
@@ -71,8 +71,22 @@ class ROS2
   std::string GetActorRosName(void *actor);
   std::string GetActorParentRosName(void *actor);
 
-  // callbacks
-  void AddActorCallback(void* actor, std::string ros_name, ActorCallback callback);
+  // new actor-based registration API (PR-3/PR-4 will migrate publishers cohort by cohort
+  // over RegisterSensor / UnregisterSensor; RegisterVehicle is the subscriber-side entry
+  // point). The vehicle gets exactly one control subscriber: the Ackermann subscriber
+  // when enable_ackermann_control is true, otherwise the direct VehicleControl one. The
+  // two control topics are mutually exclusive so they cannot contend frame to frame.
+  void RegisterSensor(void *actor, std::string ros_name, std::string frame_id, bool publish_tf);
+  void UnregisterSensor(void *actor);
+  void RegisterVehicle(void *actor, std::string ros_name, std::string frame_id, ActorCallback callback,
+                       bool enable_ackermann_control = false);
+  void UnregisterVehicle(void *actor);
+
+  // callbacks (legacy entry points kept callable; AddActorCallback delegates to
+  // RegisterVehicle, defaulting to the direct VehicleControl subscriber unless the
+  // caller opts into Ackermann control).
+  void AddActorCallback(void* actor, std::string ros_name, ActorCallback callback,
+                        bool enable_ackermann_control = false);
   void RemoveActorCallback(void* actor);
   void RemoveBasicSubscriberCallback(void* actor);
   void AddBasicSubscriberCallback(void* actor, std::string ros_name, ActorMessageCallback callback);
@@ -159,12 +173,14 @@ void ProcessDataFromCollisionSensor(
   uint32_t _nanoseconds { 0 };
   std::unordered_map<void *, std::string> _actor_ros_name;
   std::unordered_map<void *, std::vector<void*> > _actor_parent_ros_name;
-  std::shared_ptr<CarlaEgoVehicleControlSubscriber> _controller;
   std::shared_ptr<CarlaClockPublisher> _clock_publisher;
   std::unordered_map<void *, std::shared_ptr<CarlaPublisher>> _publishers;
   std::unordered_map<void *, std::shared_ptr<CarlaTransformPublisher>> _transforms;
   std::unordered_set<carla::streaming::detail::stream_id_type> _publish_stream;
   std::unordered_map<void *, ActorCallback> _actor_callbacks;
+  // multimap: a single actor may own multiple subscribers (e.g. VehicleControl +
+  // Ackermann). Each is polled per frame and routed back via _actor_callbacks.
+  std::unordered_multimap<void *, std::shared_ptr<BaseSubscriber>> _subscribers;
 #if defined(WITH_ROS2_DEMO)
   std::shared_ptr<BasicSubscriber> _basic_subscriber;
   std::shared_ptr<BasicPublisher> _basic_publisher;

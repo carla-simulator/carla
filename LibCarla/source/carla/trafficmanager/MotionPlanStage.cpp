@@ -12,6 +12,7 @@
 
 #include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/PIDController.h"
+#include "carla/trafficmanager/TrafficManagerGeometry.h"
 
 #include "carla/trafficmanager/MotionPlanStage.h"
 
@@ -42,7 +43,8 @@ MotionPlanStage::MotionPlanStage(
   const cc::World &world,
   ControlFrame &output_array,
   RandomGenerator &random_device,
-  const LocalMapPtr &local_map)
+  const LocalMapPtr &local_map,
+  std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles)
     : vehicle_id_list(vehicle_id_list),
     simulation_state(simulation_state),
     parameters(parameters),
@@ -58,7 +60,8 @@ MotionPlanStage::MotionPlanStage(
     world(world),
     output_array(output_array),
     random_device(random_device),
-    local_map(local_map) {}
+    local_map(local_map),
+    large_vehicles(large_vehicles) {}
 
 void MotionPlanStage::Update(const unsigned long index) {
   const ActorId actor_id = vehicle_id_list.at(index);
@@ -155,24 +158,57 @@ void MotionPlanStage::Update(const unsigned long index) {
     if (vehicle_physics_enabled && !simulation_state.IsDormant(actor_id)) {
       ActuationSignal actuation_signal{0.0f, 0.0f, 0.0f};
 
-      const float target_point_distance = std::max(vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
-                                                  MIN_TARGET_WAYPOINT_DISTANCE);
-      const SimpleWaypointPtr &target_waypoint = GetTargetWaypoint(waypoint_buffer, target_point_distance).first;
-      cg::Location target_location = target_waypoint->GetLocation();
+      // Resolve the target waypoint by interpolating along the buffer at
+      // target_point_distance ahead of the vehicle.
+      const float target_point_distance{std::max(
+          vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
+          MIN_TARGET_WAYPOINT_DISTANCE)};
+      const auto [interp_target_location, target_index] = GetTargetData(
+          waypoint_buffer,
+          target_point_distance,
+          vehicle_location);
+      cg::Location target_location{interp_target_location};
+      const SimpleWaypointPtr target_waypoint = waypoint_buffer.at(target_index);
 
-      float offset = parameters.GetLaneOffset(actor_id);
-      auto right_vector = target_waypoint->GetTransform().GetRightVector();
-      auto offset_location = cg::Location(cg::Vector3D(offset*right_vector.x, offset*right_vector.y, 0.0f));
+      float base_offset{CalculateBaseOffset(
+          actor_id,
+          waypoint_buffer,
+          target_waypoint->CheckJunction(),
+          target_index)};
+      const auto right_vector = target_waypoint->GetTransform().GetRightVector();
+
+      // Suppress the wide-turn swing when the side it would move into is
+      // occupied by a nearby vehicle (parked, stopped or adjacent traffic).
+      if (std::abs(base_offset) > EPSILON) {
+        const cg::Vector3D offset_direction{
+            (base_offset > 0.0f) ? right_vector : (-1.0f * right_vector)};
+        if (IsWideTurnSideOccupied(actor_id, offset_direction, std::abs(base_offset))) {
+          base_offset = 0.0f;
+        }
+      }
+
+      const float offset{parameters.GetLaneOffset(actor_id) + base_offset};
+      const auto offset_location = cg::Location(cg::Vector3D(
+          offset * right_vector.x,
+          offset * right_vector.y,
+          0.0f));
       target_location = target_location + offset_location;
 
-      float dot_product = DeviationDotProduct(vehicle_location, vehicle_heading, target_location);
-      float cross_product = DeviationCrossProduct(vehicle_location, vehicle_heading, target_location);
-      dot_product = acos(dot_product) / PI;
-      if (cross_product < 0.0f) {
-        dot_product *= -1.0f;
+      // Compute the angular deviation directly as the angle between the
+      // vehicle heading and the target direction. atan2(0, 0) is well-defined
+      // and returns 0 when the vehicle and target locations coincide on the
+      // very first tick before any displacement.
+      const cg::Vector3D target_vector{target_location - vehicle_location};
+      const float target_yaw{std::atan2(target_vector.y, target_vector.x) * 180.0f / PI};
+      float angular_deviation{target_yaw - vehicle_rotation.yaw};
+      if (angular_deviation > 180.0f) {
+        angular_deviation -= 360.0f;
+      } else if (angular_deviation < -180.0f) {
+        angular_deviation += 360.0f;
       }
-      const float angular_deviation = dot_product;
-      const float velocity_deviation = (dynamic_target_velocity - vehicle_speed) / dynamic_target_velocity;
+      angular_deviation /= 180.0f;  // Normalised to [-1, 1].
+      const float velocity_deviation{(dynamic_target_velocity - vehicle_speed) / dynamic_target_velocity};
+
       // If previous state for vehicle not found, initialize state entry.
       if (pid_state_map.find(actor_id) == pid_state_map.end()) {
         const auto initial_state = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f};
@@ -208,7 +244,6 @@ void MotionPlanStage::Update(const unsigned long index) {
       }
 
       // Constructing the actuation signal.
-
       carla::rpc::VehicleControl vehicle_control;
       vehicle_control.throttle = actuation_signal.throttle;
       vehicle_control.brake = actuation_signal.brake;
@@ -303,6 +338,108 @@ bool MotionPlanStage::SafeAfterJunction(const LocalizationData &localization,
   }
 
   return safe_after_junction;
+}
+
+float MotionPlanStage::CalculateBaseOffset(
+    const ActorId actor_id,
+    const Buffer &waypoint_buffer,
+    const bool is_target_junction,
+    const uint64_t target_index) {
+
+  // This offset is meant to make large vehicles do wider turns at intersections.
+  if (large_vehicles.find(actor_id) == large_vehicles.end() || !is_target_junction) {
+    return 0.0f;
+  }
+
+  // The wide-turn manoeuvre can be disabled per-vehicle or globally.
+  if (!parameters.GetLargeVehicleWideTurn(actor_id)) {
+    return 0.0f;
+  }
+
+  const auto &large_vehicle = large_vehicles.at(actor_id);
+
+  // Going straight at the intersection: no offset to apply.
+  if (large_vehicle.first == 0.0f) {
+    return 0.0f;
+  }
+
+  float junction_missing_length{0.0f};
+  for (unsigned long i = target_index; i < waypoint_buffer.size(); ++i) {
+    const SimpleWaypointPtr current_waypoint = waypoint_buffer.at(i);
+
+    if (i > target_index) {
+      const SimpleWaypointPtr prev_waypoint = waypoint_buffer.at(i - 1u);
+      const float new_distance = current_waypoint->Distance(prev_waypoint->GetLocation());
+      junction_missing_length += new_distance;
+    }
+
+    if (!current_waypoint->CheckJunction()) {
+      break;
+    }
+  }
+
+  const float junction_length{large_vehicle.first};
+  const bool turn_flag{large_vehicle.second};
+
+  // Scale the offset magnitude by the vehicle's actual length so a short bus
+  // and a long truck no longer share the same fixed displacement.
+  // GetDimensions returns half-extents, so the full length is twice the x extent.
+  const float vehicle_length{2.0f * simulation_state.GetDimensions(actor_id).x};
+  const float max_offset{LargeVehicleOffsetMagnitude(
+      vehicle_length,
+      LARGE_VEHICLES_JUNCTION_REF_LENGTH,
+      LARGE_VEHICLES_JUNCTION_OFFSET_GAIN,
+      LARGE_VEHICLES_JUNCTION_OFFSET)};
+
+  // Fraction of the junction still ahead of the target waypoint (1 at the
+  // entry, 0 at the exit). The profile opens the vehicle up at the entry and
+  // attenuates the inboard cut-in near the exit.
+  const float t{junction_missing_length / junction_length};
+  float offset{LargeVehicleJunctionOffsetProfile(
+      t,
+      max_offset,
+      LARGE_VEHICLES_JUNCTION_POINT,
+      LARGE_VEHICLES_JUNCTION_INBOARD_SCALE)};
+
+  // Sign depends on the turn direction (right vs. left).
+  offset = turn_flag ? offset : -offset;
+  return offset;
+}
+
+bool MotionPlanStage::IsWideTurnSideOccupied(
+    const ActorId actor_id,
+    const cg::Vector3D offset_direction,
+    const float offset_magnitude) {
+
+  const ActorIdSet overlapping_vehicles{track_traffic.GetOverlappingVehicles(actor_id)};
+  if (overlapping_vehicles.empty()) {
+    return false;
+  }
+
+  std::vector<std::pair<cg::Location, float>> neighbours;
+  neighbours.reserve(overlapping_vehicles.size());
+  for (const ActorId other_id : overlapping_vehicles) {
+    if (other_id == actor_id) {
+      continue;
+    }
+    const cg::Vector3D other_dimensions{simulation_state.GetDimensions(other_id)};
+    const float radius{std::max(other_dimensions.x, other_dimensions.y)};
+    neighbours.emplace_back(simulation_state.GetLocation(other_id), radius);
+  }
+
+  const cg::Location ego_location{simulation_state.GetLocation(actor_id)};
+  const cg::Vector3D ego_forward{simulation_state.GetHeading(actor_id)};
+  const float longitudinal_window{
+      simulation_state.GetDimensions(actor_id).x + LARGE_VEHICLES_JUNCTION_SIDE_MARGIN};
+
+  return IsOffsetSideOccupied(
+      ego_location,
+      ego_forward,
+      offset_direction,
+      offset_magnitude,
+      LARGE_VEHICLES_JUNCTION_CLEARANCE,
+      longitudinal_window,
+      neighbours);
 }
 
 std::pair<bool, float> MotionPlanStage::CollisionHandling(const CollisionHazardData &collision_hazard,
@@ -410,7 +547,7 @@ float MotionPlanStage::GetTurnTargetVelocity(const Buffer &waypoint_buffer,
   else {
     const SimpleWaypointPtr first_waypoint = waypoint_buffer.front();
     const SimpleWaypointPtr last_waypoint = waypoint_buffer.back();
-    const SimpleWaypointPtr middle_waypoint = waypoint_buffer.at(static_cast<uint16_t>(waypoint_buffer.size() / 2));
+    const SimpleWaypointPtr middle_waypoint = waypoint_buffer.at(waypoint_buffer.size() / 2);
 
     float radius = GetThreePointCircleRadius(first_waypoint->GetLocation(),
                                              middle_waypoint->GetLocation(),
@@ -419,50 +556,6 @@ float MotionPlanStage::GetTurnTargetVelocity(const Buffer &waypoint_buffer,
     // Return the max velocity at the turn
     return std::sqrt(radius * FRICTION * GRAVITY);
   }
-}
-
-float MotionPlanStage::GetThreePointCircleRadius(cg::Location first_location,
-                                                 cg::Location middle_location,
-                                                 cg::Location last_location) {
-
-    float x1 = first_location.x;
-    float y1 = first_location.y;
-    float x2 = middle_location.x;
-    float y2 = middle_location.y;
-    float x3 = last_location.x;
-    float y3 = last_location.y;
-
-    float x12 = x1 - x2;
-    float x13 = x1 - x3;
-    float y12 = y1 - y2;
-    float y13 = y1 - y3;
-    float y31 = y3 - y1;
-    float y21 = y2 - y1;
-    float x31 = x3 - x1;
-    float x21 = x2 - x1;
-
-    float sx13 = x1 * x1 - x3 * x3;
-    float sy13 = y1 * y1 - y3 * y3;
-    float sx21 = x2 * x2 - x1 * x1;
-    float sy21 = y2 * y2 - y1 * y1;
-
-    float f_denom = 2 * (y31 * x12 - y21 * x13);
-    if (f_denom == 0) {
-      return std::numeric_limits<float>::max();
-    }
-    float f = (sx13 * x12 + sy13 * x12 + sx21 * x13 + sy21 * x13) / f_denom;
-
-    float g_denom = 2 * (x31 * y12 - x21 * y13);
-    if (g_denom == 0) {
-      return std::numeric_limits<float>::max();
-    }
-    float g = (sx13 * y12 + sy13 * y12 + sx21 * y13 + sy21 * y13) / g_denom;
-
-    float c = - (x1 * x1 + y1 * y1) - 2 * g * x1 - 2 * f * y1;
-    float h = -g;
-    float k = -f;
-
-  return std::sqrt(h * h + k * k - c);
 }
 
 void MotionPlanStage::RemoveActor(const ActorId actor_id) {
