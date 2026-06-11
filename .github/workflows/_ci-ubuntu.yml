@@ -68,7 +68,6 @@ jobs:
       CARLA_DOCKER_GROUP_GID: "999"
       CARLA_DOCKER_RUN_FLAGS: >-
         --rm
-        --runtime=nvidia
         --gpus all
         --net=host
         --env NVIDIA_VISIBLE_DEVICES=all
