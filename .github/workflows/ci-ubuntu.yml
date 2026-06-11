@@ -98,7 +98,6 @@ jobs:
         --volume /work/unreal-engine:/workspaces/unreal-engine
         --user carla
     env:
-      UE5_BRANCH: ${{ env.UE5_BRANCH }}
       CARLA_UNREAL_ENGINE_PATH: /workspaces/unreal-engine
       NVIDIA_VISIBLE_DEVICES: all
       NVIDIA_DRIVER_CAPABILITIES: all
@@ -173,7 +172,7 @@ jobs:
         -e NVIDIA_VISIBLE_DEVICES=all
         -e NVIDIA_DRIVER_CAPABILITIES=all
         --volume /work/unreal-engine:/workspaces/unreal-engine
-        --volume ${{ env.ARTIFACTS_DIR }}:/workspaces/carla/artifacts
+        --volume /work/carla-ci-artifacts:/workspaces/carla/artifacts
         --user carla
     env:
       NVIDIA_VISIBLE_DEVICES: all
