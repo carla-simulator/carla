@@ -43,6 +43,7 @@ namespace ros2 {
 
   class CarlaTransformPublisher;
   class CarlaClockPublisher;
+  class CarlaMapPublisher;
 
 class ROS2
 {
@@ -136,6 +137,10 @@ class ROS2
       uint32_t other_actor,
       carla::geom::Vector3D impulse,
       void* actor);
+    // Publishes the OpenDRIVE description of the current map as a latched
+    // topic. Called once per episode; re-publishing refreshes the latched
+    // sample after a map change.
+    void ProcessDataFromMap(const std::string &open_drive);
 
   private:
     std::shared_ptr<CarlaTransformPublisher> GetOrCreateTransformPublisher(void *actor);
@@ -158,6 +163,7 @@ class ROS2
   uint32_t _nanoseconds { 0 };
 
   std::shared_ptr<CarlaClockPublisher> _clock_publisher;
+  std::shared_ptr<CarlaMapPublisher> _map_publisher;
 
   // actor->parent relationship
   std::unordered_map<void *, void *> _actor_parent_map;
