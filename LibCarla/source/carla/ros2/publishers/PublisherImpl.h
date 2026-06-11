@@ -120,7 +120,15 @@ public:
 
   bool Publish() {
     if (_datawriter == nullptr) {
-      log_error("PublisherImpl::Publish (", _topic_name, ") called before successful Init()");
+      // A failed Init() leaves the publisher cached, so Publish() is invoked
+      // once per frame for the lifetime of the sensor. Log this only once to
+      // avoid flooding the server log every frame.
+      if (!_init_error_logged) {
+        log_error(
+            "PublisherImpl::Publish (", _topic_name,
+            ") called before successful Init(); suppressing further messages for this publisher.");
+        _init_error_logged = true;
+      }
       return false;
     }
     eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
@@ -141,6 +149,7 @@ private:
 
   std::string _topic_name;
   std::atomic<bool> _alive{false};
+  bool _init_error_logged{false};
   msg_type _message{};
 };
 
