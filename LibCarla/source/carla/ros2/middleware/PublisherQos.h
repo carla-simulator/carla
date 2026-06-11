@@ -24,6 +24,12 @@ enum class DurabilityKind : uint8_t {
 struct PublisherQos {
   DurabilityKind durability{DurabilityKind::Volatile};
   uint32_t history_depth{1u};
+
+  /// History depth to hand to the middleware: a keep-last history needs a
+  /// positive depth, so the invalid value 0 is clamped to 1.
+  uint32_t effective_history_depth() const {
+    return history_depth == 0u ? 1u : history_depth;
+  }
 };
 
 } // namespace ros2

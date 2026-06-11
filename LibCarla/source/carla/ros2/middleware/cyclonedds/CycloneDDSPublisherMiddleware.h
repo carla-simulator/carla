@@ -77,14 +77,17 @@ class CycloneDDSPublisherMiddleware : public IPublisherMiddleware {
     dds_qos_t* qos = dds_create_qos();
     dds_qset_reliability(qos, DDS_RELIABILITY_RELIABLE,
                          DDS_SECS(1));
-    dds_qset_history(qos, DDS_HISTORY_KEEP_LAST, 1);
+    // Keep-last writer history with the requested depth. The default depth 1
+    // matches the previous hardcoded value, so volatile publishers are
+    // unchanged.
+    const int32_t depth =
+        static_cast<int32_t>(publisher_qos.effective_history_depth());
+    dds_qset_history(qos, DDS_HISTORY_KEEP_LAST, depth);
     if (publisher_qos.durability == DurabilityKind::TransientLocal) {
       // Latched topic: keep the last history_depth samples for late joiners.
       // durability_service governs what the writer's transient-local cache
       // delivers to a late-joining reader.
-      const int32_t depth = static_cast<int32_t>(publisher_qos.history_depth);
       dds_qset_durability(qos, DDS_DURABILITY_TRANSIENT_LOCAL);
-      dds_qset_history(qos, DDS_HISTORY_KEEP_LAST, depth);
       dds_qset_durability_service(
           qos,
           0,

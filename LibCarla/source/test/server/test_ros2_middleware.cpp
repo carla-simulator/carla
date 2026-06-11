@@ -431,6 +431,17 @@ TEST(publisher_impl, default_qos_is_volatile_depth_one) {
   EXPECT_EQ(qos.history_depth, 1u);
 }
 
+TEST(publisher_impl, effective_history_depth_clamps_zero_to_one) {
+  // A keep-last history needs a positive depth, so the middlewares apply the
+  // clamped value instead of the raw field.
+  PublisherQos qos;
+  EXPECT_EQ(qos.effective_history_depth(), 1u);
+  qos.history_depth = 0u;
+  EXPECT_EQ(qos.effective_history_depth(), 1u);
+  qos.history_depth = 10u;
+  EXPECT_EQ(qos.effective_history_depth(), 10u);
+}
+
 TEST(publisher_impl, init_without_qos_passes_default_qos) {
   PublisherImpl<TestPubTraits> pub;
   auto* mock = new MockPublisherMiddleware();

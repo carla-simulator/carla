@@ -56,7 +56,7 @@ inline std::string zenoh_make_qos_string(const PublisherQos& publisher_qos) {
   const char* durability =
       publisher_qos.durability == DurabilityKind::TransientLocal ? "1" : "";
   return std::string(":") + durability + ":," +
-         std::to_string(publisher_qos.history_depth) + ":,:,:,,";
+         std::to_string(publisher_qos.effective_history_depth()) + ":,:,:,,";
 }
 
 /// Strip the "rt/" prefix that ROS2-to-DDS mapping adds to message topics.
