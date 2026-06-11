@@ -170,6 +170,23 @@ class TestROS2(SyncSmokeTest):
             dvs.destroy()
             sem_lidar.destroy()
 
+    def test_ros2_map_publish_on_reload(self):
+        """World reload re-publishes the latched OpenDRIVE map without crashing.
+
+        Every episode start publishes the map as a latched std_msgs/String on
+        rt/carla/map (NotifyBeginEpisode -> ROS2::ProcessDataFromMap). A crash
+        in the transient_local publisher or in the OpenDRIVE retrieval would
+        abort the reload or stop the world from ticking afterwards.
+        """
+        self.world = self.client.reload_world()
+        settings = carla.WorldSettings(
+            no_rendering_mode=False,
+            synchronous_mode=True,
+            fixed_delta_seconds=0.05)
+        self.world.apply_settings(settings)
+        for _ in range(5):
+            self.world.tick()
+
     def test_ros2_enable_disable_cycle(self):
         """Enable → tick → disable → tick → re-enable → tick: no crash or state leak.
 

@@ -27,6 +27,7 @@
 #include "publishers/CarlaIMUPublisher.h"
 #include "publishers/CarlaISCameraPublisher.h"
 #include "publishers/CarlaLidarPublisher.h"
+#include "publishers/CarlaMapPublisher.h"
 #include "publishers/CarlaNormalsCameraPublisher.h"
 #include "publishers/CarlaOpticalFlowCameraPublisher.h"
 #include "publishers/CarlaRadarPublisher.h"
@@ -478,6 +479,24 @@ void ROS2::ProcessDataFromCollisionSensor(
   }
 }
 
+void ROS2::ProcessDataFromMap(const std::string &open_drive) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
+  if (!_enabled) {
+    return;
+  }
+  if (open_drive.empty()) {
+    // Reached once per episode start, never per frame, so logging
+    // unconditionally cannot flood the output.
+    log_warning("ROS2: empty OpenDRIVE description, skipping map publish");
+    return;
+  }
+  if (!_map_publisher) {
+    _map_publisher = std::make_shared<CarlaMapPublisher>();
+  }
+  _map_publisher->Write(open_drive);
+  _map_publisher->Publish();
+}
+
 void ROS2::Shutdown() {
   std::lock_guard<std::recursive_mutex> lock(_mutex);
   // Destroy publishers first so DataWriter unregister-dispose messages are
@@ -488,6 +507,7 @@ void ROS2::Shutdown() {
   _publishers.clear();
   _tf_publishers.clear();
   _clock_publisher.reset();
+  _map_publisher.reset();
 
   _subscribers.clear();
 
