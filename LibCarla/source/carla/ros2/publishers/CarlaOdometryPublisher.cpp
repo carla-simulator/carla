@@ -135,11 +135,9 @@ namespace ros2 {
       const float* linear_velocity,
       const float* angular_velocity) {
 
-    constexpr double TO_METERS = 1e-2;
-
-    const double tx = static_cast<double>(*location++) * TO_METERS;
-    const double ty = static_cast<double>(*location++) * TO_METERS;
-    const double tz = static_cast<double>(*location++) * TO_METERS;
+    const double tx = static_cast<double>(*location++);
+    const double ty = static_cast<double>(*location++);
+    const double tz = static_cast<double>(*location++);
 
     const float rx = ((*rotation++) * -1.0f) * (static_cast<float>(M_PI) / 180.0f);
     const float ry = ((*rotation++) * -1.0f) * (static_cast<float>(M_PI) / 180.0f);
