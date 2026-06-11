@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -36,6 +36,11 @@ LATCHED_QOS = QoSProfile(
     reliability=QoSReliabilityPolicy.RELIABLE,
     durability=QoSDurabilityPolicy.TRANSIENT_LOCAL)
 
+# Safety cap on the waypoints walked per lane, in case a malformed map makes
+# next() loop forever. No real town comes close: at the default 2.0 m sampling
+# this allows lanes up to 200 km.
+MAX_CHAIN_WAYPOINTS = 100000
+
 
 def _make_line_marker(ns, red, green, blue):
     marker = Marker()
@@ -62,7 +67,7 @@ def _lane_edge(waypoint, side):
             location.z + right.z * offset)
 
 
-def _lane_chains(carla_map, distance):
+def _lane_chains(carla_map, distance, logger):
     """Yields each lane of the map as one list of consecutive waypoints.
 
     Walks every lane returned by get_topology() in driving direction at the
@@ -74,9 +79,13 @@ def _lane_chains(carla_map, distance):
     for start, _ in carla_map.get_topology():
         chain = [start]
         following = start.next(distance)
-        while following and following[0].road_id == start.road_id and len(chain) < 100000:
+        while following and following[0].road_id == start.road_id and len(chain) < MAX_CHAIN_WAYPOINTS:
             chain.append(following[0])
             following = chain[-1].next(distance)
+        if len(chain) >= MAX_CHAIN_WAYPOINTS:
+            logger.warning(
+                'Lane chain on road {} truncated at {} waypoints, '
+                'its polyline may be incomplete'.format(start.road_id, MAX_CHAIN_WAYPOINTS))
         if following:
             chain.append(following[0])
         yield chain
@@ -110,7 +119,7 @@ class MapToMarkers(Node):
                 marker.points.append(Point(x=x, y=-y, z=z + 0.1))
             markers.append(marker)
 
-        for chain in _lane_chains(carla_map, self._waypoint_distance):
+        for chain in _lane_chains(carla_map, self._waypoint_distance, self.get_logger()):
             add_strip('lane_centerlines', (0.2, 0.8, 1.0),
                       [(w.transform.location.x, w.transform.location.y, w.transform.location.z)
                        for w in chain])
