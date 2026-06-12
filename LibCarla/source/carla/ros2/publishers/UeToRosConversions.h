@@ -4,7 +4,6 @@
 
 #pragma once
 
-#define _USE_MATH_DEFINES
 #include <cmath>
 
 #include "carla/geom/Math.h"
@@ -21,7 +20,7 @@ namespace ros2 {
   /// CarlaTransformPublisher::ComputeTransform: y negated; roll, -pitch,
   /// -yaw converted from degrees to radians.
 
-  constexpr float UE_DEG_TO_RAD = static_cast<float>(M_PI) / 180.0f;
+  constexpr float UE_DEG_TO_RAD = geom::Math::Pi<float>() / 180.0f;
 
   /// UE rotation (degrees) to ROS orientation quaternion.
   inline msg::Quaternion ue_rotation_to_ros_quaternion(
