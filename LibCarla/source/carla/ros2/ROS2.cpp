@@ -38,6 +38,8 @@
 #include "publishers/CarlaSemanticLidarPublisher.h"
 #include "publishers/CarlaSSCameraPublisher.h"
 #include "publishers/CarlaStaticTransformPublisher.h"
+#include "publishers/CarlaTrafficLightInfoPublisher.h"
+#include "publishers/CarlaTrafficLightStatusPublisher.h"
 #include "publishers/CarlaTransformPublisher.h"
 
 #include "subscribers/AckermannControlSubscriber.h"
@@ -568,6 +570,33 @@ void ROS2::ProcessVehicleInfo(
   it->second.info->Publish();
 }
 
+void ROS2::ProcessTrafficLightStates(const std::vector<TrafficLightState> &states) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
+  if (!_enabled) {
+    return;
+  }
+  if (!_traffic_lights_status_publisher) {
+    _traffic_lights_status_publisher = std::make_shared<CarlaTrafficLightStatusPublisher>();
+  }
+  // Write reports whether any light changed state since the last publish;
+  // the latched sample keeps the previous list available to late joiners.
+  if (_traffic_lights_status_publisher->Write(states)) {
+    _traffic_lights_status_publisher->Publish();
+  }
+}
+
+void ROS2::ProcessTrafficLightInfo(const std::vector<TrafficLightInfo> &info) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
+  if (!_enabled) {
+    return;
+  }
+  if (!_traffic_lights_info_publisher) {
+    _traffic_lights_info_publisher = std::make_shared<CarlaTrafficLightInfoPublisher>();
+  }
+  _traffic_lights_info_publisher->Write(info);
+  _traffic_lights_info_publisher->Publish();
+}
+
 void ROS2::Shutdown() {
   std::lock_guard<std::recursive_mutex> lock(_mutex);
   // Destroy publishers first so DataWriter unregister-dispose messages are
@@ -581,6 +610,8 @@ void ROS2::Shutdown() {
   _clock_publisher.reset();
   _map_publisher.reset();
   _static_tf_publisher.reset();
+  _traffic_lights_info_publisher.reset();
+  _traffic_lights_status_publisher.reset();
 
   _subscribers.clear();
 

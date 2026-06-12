@@ -1,4 +1,5 @@
 ## Latest Changes
+ * Extended the native ROS2 interface (`--ros2`) with the data outputs standard AD stacks need: a latched OpenDRIVE map on `/carla/map`, ego vehicle odometry, status and info topics, a REP-105 TF tree (`map -> odom -> vehicle -> sensors`), and always-on traffic light info/status topics. Every topic uses standard or ros-carla-msgs message definitions and no new CARLA flags are introduced; see `Docs/ros2/topics.md` for the full topic reference.
  * Added Zenoh as a third ROS 2 middleware backend, selectable at runtime via `--rmw=zenoh` alongside `--rmw=fastdds` and `--rmw=cyclonedds`.
  * Renamed the ROS2 abstraction layer from dds/DDS* to generic middleware/Middleware* naming to support future non-DDS backends like Zenoh. FastDDS and CycloneDDS vendor classes are unchanged.
  * Added NumPy 2 compatibility to the PythonAPI: replaced removed aliases (`np.bool`, `np.matrix`) in example scripts and upgraded Boost to 1.90.0, which ships the upstream NumPy 2 C ABI fix (boostorg/python#432) so the C extension builds against both NumPy 1.x (>=1.18.4) and NumPy 2.x
