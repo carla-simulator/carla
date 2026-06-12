@@ -253,6 +253,48 @@ class TestROS2(SyncSmokeTest):
             for _ in range(3):
                 self.world.tick()
 
+    def test_ros2_traffic_lights_lifecycle(self):
+        """Traffic light status on-change publish and per-episode info latch.
+
+        With --ros2 enabled every post-tick gathers all traffic lights
+        (CarlaEngine::PublishROS2TrafficLights): the info list publishes
+        latched once per episode and the status list republishes only when a
+        light changes state. Forcing state transitions exercises the on-change
+        path; reloading the world exercises the per-episode info re-latch. A
+        crash in any of those paths would stop the world from ticking.
+        """
+        lights = self.world.get_actors().filter('traffic.traffic_light')
+        self.assertTrue(len(lights) > 0,
+                        'expected traffic lights in the default map')
+
+        # Let the first post-tick gather and latch the info list.
+        for _ in range(5):
+            self.world.tick()
+
+        # Force state transitions to exercise the on-change status publish.
+        light = lights[0]
+        light.freeze(True)
+        try:
+            for state in (carla.TrafficLightState.Red,
+                          carla.TrafficLightState.Green,
+                          carla.TrafficLightState.Off):
+                light.set_state(state)
+                for _ in range(3):
+                    self.world.tick()
+        finally:
+            light.freeze(False)
+
+        # A reload starts a new episode, which re-gathers and re-latches the
+        # info list on its first post-tick.
+        self.world = self.client.reload_world()
+        settings = carla.WorldSettings(
+            no_rendering_mode=False,
+            synchronous_mode=True,
+            fixed_delta_seconds=0.05)
+        self.world.apply_settings(settings)
+        for _ in range(5):
+            self.world.tick()
+
     def test_ros2_multi_sensor_publish(self):
         """4 sensors + hero vehicle: 100-tick stress run then sequential teardown.
 

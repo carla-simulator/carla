@@ -16,12 +16,17 @@
 #include "carla/ros2/types/msg/AckermannDrive.h"
 #include "carla/ros2/types/msg/AckermannDriveStamped.h"
 #include "carla/ros2/types/msg/CameraInfo.h"
+#include "carla/ros2/types/msg/CarlaBoundingBox.h"
 #include "carla/ros2/types/msg/CarlaCollisionEvent.h"
 #include "carla/ros2/types/msg/CarlaEgoVehicleControl.h"
 #include "carla/ros2/types/msg/CarlaEgoVehicleInfo.h"
 #include "carla/ros2/types/msg/CarlaEgoVehicleInfoWheel.h"
 #include "carla/ros2/types/msg/CarlaEgoVehicleStatus.h"
 #include "carla/ros2/types/msg/CarlaLineInvasion.h"
+#include "carla/ros2/types/msg/CarlaTrafficLightInfo.h"
+#include "carla/ros2/types/msg/CarlaTrafficLightInfoList.h"
+#include "carla/ros2/types/msg/CarlaTrafficLightStatus.h"
+#include "carla/ros2/types/msg/CarlaTrafficLightStatusList.h"
 #include "carla/ros2/types/msg/Clock.h"
 #include "carla/ros2/types/msg/Float32.h"
 #include "carla/ros2/types/msg/Header.h"
@@ -605,6 +610,106 @@ inline void deserialize_cdr(
   cdr >> m.mass;
   cdr >> m.drag_coefficient;
   deserialize_cdr(cdr, m.center_of_mass);
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::CarlaBoundingBox& m) {
+  serialize_cdr(cdr, m.center);
+  serialize_cdr(cdr, m.size);
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::CarlaBoundingBox& m) {
+  deserialize_cdr(cdr, m.center);
+  deserialize_cdr(cdr, m.size);
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::CarlaTrafficLightStatus& m) {
+  cdr << m.id;
+  cdr << m.state;
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::CarlaTrafficLightStatus& m) {
+  cdr >> m.id;
+  cdr >> m.state;
+}
+
+// --
+
+/// CarlaTrafficLightStatusList::traffic_lights is a sequence of structs.
+/// Write length + elements manually.
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::CarlaTrafficLightStatusList& m) {
+  serialize_cdr_sequence_length(
+      cdr, m.traffic_lights.size(),
+      "CarlaTrafficLightStatusList::traffic_lights length exceeds sane CDR sequence cap");
+  for (const auto& light : m.traffic_lights) {
+    serialize_cdr(cdr, light);
+  }
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::CarlaTrafficLightStatusList& m) {
+  uint32_t lights_size{0u};
+  cdr >> lights_size;
+  if (lights_size > kMaxCdrSequenceElements) {
+    throw eprosima::fastcdr::exception::BadParamException(
+        "CarlaTrafficLightStatusList::traffic_lights length exceeds sane CDR sequence cap");
+  }
+  m.traffic_lights.resize(static_cast<size_t>(lights_size));
+  for (auto& light : m.traffic_lights) {
+    deserialize_cdr(cdr, light);
+  }
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::CarlaTrafficLightInfo& m) {
+  cdr << m.id;
+  serialize_cdr(cdr, m.transform);
+  serialize_cdr(cdr, m.trigger_volume);
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::CarlaTrafficLightInfo& m) {
+  cdr >> m.id;
+  deserialize_cdr(cdr, m.transform);
+  deserialize_cdr(cdr, m.trigger_volume);
+}
+
+// --
+
+/// CarlaTrafficLightInfoList::traffic_lights is a sequence of structs.
+/// Write length + elements manually.
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::CarlaTrafficLightInfoList& m) {
+  serialize_cdr_sequence_length(
+      cdr, m.traffic_lights.size(),
+      "CarlaTrafficLightInfoList::traffic_lights length exceeds sane CDR sequence cap");
+  for (const auto& light : m.traffic_lights) {
+    serialize_cdr(cdr, light);
+  }
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::CarlaTrafficLightInfoList& m) {
+  uint32_t lights_size{0u};
+  cdr >> lights_size;
+  if (lights_size > kMaxCdrSequenceElements) {
+    throw eprosima::fastcdr::exception::BadParamException(
+        "CarlaTrafficLightInfoList::traffic_lights length exceeds sane CDR sequence cap");
+  }
+  m.traffic_lights.resize(static_cast<size_t>(lights_size));
+  for (auto& light : m.traffic_lights) {
+    deserialize_cdr(cdr, light);
+  }
 }
 
 // --
