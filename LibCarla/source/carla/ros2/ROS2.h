@@ -10,6 +10,7 @@
 #include "carla/BufferView.h"
 #include "carla/geom/Transform.h"
 #include "carla/ros2/ROS2CallbackData.h"
+#include "carla/ros2/TrafficLightData.h"
 #include "carla/ros2/middleware/Middleware.h"
 #include "carla/ros2/middleware/MiddlewareConfig.h"
 #include "carla/streaming/detail/Types.h"
@@ -53,6 +54,8 @@ namespace ros2 {
   class CarlaEgoVehicleStatusPublisher;
   class CarlaEgoVehicleInfoPublisher;
   class CarlaStaticTransformPublisher;
+  class CarlaTrafficLightInfoPublisher;
+  class CarlaTrafficLightStatusPublisher;
 
 class ROS2
 {
@@ -175,6 +178,12 @@ class ROS2
       const std::string &role_name,
       const carla::geom::Transform vehicle_transform,
       const carla::rpc::VehiclePhysicsControl &physics_control);
+    // Publishes the full traffic light status list, but only when any light
+    // changed state since the last publish. Called once per frame.
+    void ProcessTrafficLightStates(const std::vector<TrafficLightState> &states);
+    // Publishes the latched static description of every traffic light.
+    // Called once per episode, after the lights spawn.
+    void ProcessTrafficLightInfo(const std::vector<TrafficLightInfo> &info);
 
   private:
     std::shared_ptr<CarlaTransformPublisher> GetOrCreateTransformPublisher(void *actor);
@@ -221,6 +230,9 @@ class ROS2
   };
   std::unordered_map<void *, VehiclePublishers> _vehicle_publishers;
   std::shared_ptr<CarlaStaticTransformPublisher> _static_tf_publisher;
+
+  std::shared_ptr<CarlaTrafficLightInfoPublisher> _traffic_lights_info_publisher;
+  std::shared_ptr<CarlaTrafficLightStatusPublisher> _traffic_lights_status_publisher;
 };
 
 } // namespace ros2

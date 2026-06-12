@@ -3,7 +3,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 // Tests for REP-2011 type hash values embedded in CdrTopicInfo<T>::type_hash().
-// Verifies format RIHS01_[0-9a-f]{64} for all 35 specializations, uniqueness
+// Verifies format RIHS01_[0-9a-f]{64} for all 40 specializations, uniqueness
 // across the set, and equality with the golden hashes the canonical message
 // packages compute, so a field-layout drift from the canonical definition
 // fails here instead of silently breaking decode on a real subscriber.
@@ -44,12 +44,17 @@ TEST(TypeHash, FormatAllTypes) {
   CHECK_HASH(AckermannDrive);
   CHECK_HASH(AckermannDriveStamped);
   CHECK_HASH(CameraInfo);
+  CHECK_HASH(CarlaBoundingBox);
   CHECK_HASH(CarlaCollisionEvent);
   CHECK_HASH(CarlaEgoVehicleControl);
   CHECK_HASH(CarlaEgoVehicleInfo);
   CHECK_HASH(CarlaEgoVehicleInfoWheel);
   CHECK_HASH(CarlaEgoVehicleStatus);
   CHECK_HASH(CarlaLineInvasion);
+  CHECK_HASH(CarlaTrafficLightInfo);
+  CHECK_HASH(CarlaTrafficLightInfoList);
+  CHECK_HASH(CarlaTrafficLightStatus);
+  CHECK_HASH(CarlaTrafficLightStatusList);
   CHECK_HASH(Clock);
   CHECK_HASH(Float32);
   CHECK_HASH(Header);
@@ -83,12 +88,17 @@ TEST(TypeHash, UniqueAcrossAllTypes) {
     CdrTopicInfo<msg::AckermannDrive>::type_hash(),
     CdrTopicInfo<msg::AckermannDriveStamped>::type_hash(),
     CdrTopicInfo<msg::CameraInfo>::type_hash(),
+    CdrTopicInfo<msg::CarlaBoundingBox>::type_hash(),
     CdrTopicInfo<msg::CarlaCollisionEvent>::type_hash(),
     CdrTopicInfo<msg::CarlaEgoVehicleControl>::type_hash(),
     CdrTopicInfo<msg::CarlaEgoVehicleInfo>::type_hash(),
     CdrTopicInfo<msg::CarlaEgoVehicleInfoWheel>::type_hash(),
     CdrTopicInfo<msg::CarlaEgoVehicleStatus>::type_hash(),
     CdrTopicInfo<msg::CarlaLineInvasion>::type_hash(),
+    CdrTopicInfo<msg::CarlaTrafficLightInfo>::type_hash(),
+    CdrTopicInfo<msg::CarlaTrafficLightInfoList>::type_hash(),
+    CdrTopicInfo<msg::CarlaTrafficLightStatus>::type_hash(),
+    CdrTopicInfo<msg::CarlaTrafficLightStatusList>::type_hash(),
     CdrTopicInfo<msg::Clock>::type_hash(),
     CdrTopicInfo<msg::Float32>::type_hash(),
     CdrTopicInfo<msg::Header>::type_hash(),
