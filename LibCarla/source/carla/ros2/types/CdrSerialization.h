@@ -70,6 +70,17 @@ namespace ros2 {
 /// hundred transforms) while bounding the worst-case allocation to ~80 MiB.
 static constexpr uint32_t kMaxCdrSequenceElements = 1u << 20;
 
+/// Write the uint32_t length field of a CDR sequence, rejecting sizes above the
+/// sane cap so the cast to uint32_t cannot wrap and produce a malformed stream.
+/// Mirrors the guard applied when reading sequence lengths back from the wire.
+inline void serialize_cdr_sequence_length(
+    eprosima::fastcdr::Cdr& cdr, size_t size, const char* what) {
+  if (size > kMaxCdrSequenceElements) {
+    throw eprosima::fastcdr::exception::BadParamException(what);
+  }
+  cdr << static_cast<uint32_t>(size);
+}
+
 // --------------------------------------------------------------------------
 // Leaf types (no nested msg:: fields)
 // --------------------------------------------------------------------------
@@ -549,7 +560,9 @@ inline void serialize_cdr(
   cdr << m.type;
   cdr << m.rolename;
   // CDR sequence length is uint32_t per DDS-XTypes 1.3 clause 7.4.1.1.
-  cdr << static_cast<uint32_t>(m.wheels.size());
+  serialize_cdr_sequence_length(
+      cdr, m.wheels.size(),
+      "CarlaEgoVehicleInfo::wheels length exceeds sane CDR sequence cap");
   for (const auto& w : m.wheels) {
     serialize_cdr(cdr, w);
   }
@@ -693,7 +706,9 @@ inline void serialize_cdr(
   cdr << m.height;
   cdr << m.width;
   // CDR sequence length is uint32_t per DDS-XTypes 1.3 clause 7.4.1.1.
-  cdr << static_cast<uint32_t>(m.fields.size());
+  serialize_cdr_sequence_length(
+      cdr, m.fields.size(),
+      "PointCloud2::fields length exceeds sane CDR sequence cap");
   for (const auto& f : m.fields) {
     serialize_cdr(cdr, f);
   }
@@ -733,7 +748,9 @@ inline void deserialize_cdr(
 inline void serialize_cdr(
     eprosima::fastcdr::Cdr& cdr, const msg::TFMessage& m) {
   // CDR sequence length is uint32_t per DDS-XTypes 1.3 clause 7.4.1.1.
-  cdr << static_cast<uint32_t>(m.transforms.size());
+  serialize_cdr_sequence_length(
+      cdr, m.transforms.size(),
+      "TFMessage::transforms length exceeds sane CDR sequence cap");
   for (const auto& t : m.transforms) {
     serialize_cdr(cdr, t);
   }
