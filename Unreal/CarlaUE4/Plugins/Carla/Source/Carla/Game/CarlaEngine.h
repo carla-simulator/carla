@@ -99,6 +99,11 @@ private:
 
   void OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds);
 
+#if defined(WITH_ROS2)
+  // Publishes odometry, status and TF for every ROS2-registered vehicle.
+  void PublishROS2VehicleState(float DeltaSeconds);
+#endif
+
   void OnEpisodeSettingsChanged(const FEpisodeSettings &Settings);
 
   void ResetSimulationState();

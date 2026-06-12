@@ -3,7 +3,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 // Tests for REP-2011 type hash values embedded in CdrTopicInfo<T>::type_hash().
-// Verifies format RIHS01_[0-9a-f]{64} for all 31 specializations and
+// Verifies format RIHS01_[0-9a-f]{64} for all 35 specializations and
 // uniqueness across the set.
 
 #define CARLA_ROS2_MIDDLEWARE_TESTING
@@ -38,11 +38,15 @@ static void check_hash(const char* hash, const std::string& type_label) {
   check_hash(CdrTopicInfo<msg::MsgType>::type_hash(), #MsgType)
 
 TEST(TypeHash, FormatAllTypes) {
+  CHECK_HASH(Accel);
   CHECK_HASH(AckermannDrive);
   CHECK_HASH(AckermannDriveStamped);
   CHECK_HASH(CameraInfo);
   CHECK_HASH(CarlaCollisionEvent);
   CHECK_HASH(CarlaEgoVehicleControl);
+  CHECK_HASH(CarlaEgoVehicleInfo);
+  CHECK_HASH(CarlaEgoVehicleInfoWheel);
+  CHECK_HASH(CarlaEgoVehicleStatus);
   CHECK_HASH(CarlaLineInvasion);
   CHECK_HASH(Clock);
   CHECK_HASH(Float32);
@@ -73,11 +77,15 @@ TEST(TypeHash, FormatAllTypes) {
 
 TEST(TypeHash, UniqueAcrossAllTypes) {
   std::vector<std::string> hashes = {
+    CdrTopicInfo<msg::Accel>::type_hash(),
     CdrTopicInfo<msg::AckermannDrive>::type_hash(),
     CdrTopicInfo<msg::AckermannDriveStamped>::type_hash(),
     CdrTopicInfo<msg::CameraInfo>::type_hash(),
     CdrTopicInfo<msg::CarlaCollisionEvent>::type_hash(),
     CdrTopicInfo<msg::CarlaEgoVehicleControl>::type_hash(),
+    CdrTopicInfo<msg::CarlaEgoVehicleInfo>::type_hash(),
+    CdrTopicInfo<msg::CarlaEgoVehicleInfoWheel>::type_hash(),
+    CdrTopicInfo<msg::CarlaEgoVehicleStatus>::type_hash(),
     CdrTopicInfo<msg::CarlaLineInvasion>::type_hash(),
     CdrTopicInfo<msg::Clock>::type_hash(),
     CdrTopicInfo<msg::Float32>::type_hash(),
