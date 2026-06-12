@@ -17,7 +17,7 @@ Usage: $0 [--distro=<distro>] [--rmw=<middleware>] [--wheel=<path>]
 
 Builds the carla-map-and-lidar-demo-<distro>-<rmw> Docker image: the RViz image
 extended with the carla Python wheel and the demo helpers (ros2_native.py,
-map_to_markers.py, ego_tf_broadcaster.py) installed.
+map_to_markers.py) installed.
 
 Options:
   --distro    ROS 2 distribution to use. Supported: humble, jazzy  (default: humble)
@@ -94,7 +94,6 @@ cp "${SCRIPT_DIR}/Dockerfile" "${BUILD_DIR}/Dockerfile"
 cp "${EXAMPLES_DIR}/ros2_native.py" \
    "${EXAMPLES_DIR}/stack.json" \
    "${SCRIPT_DIR}/map_to_markers.py" \
-   "${SCRIPT_DIR}/ego_tf_broadcaster.py" \
    "${SCRIPT_DIR}/cleanup.py" \
    "${SCRIPT_DIR}/launcher.sh" \
    "${BUILD_DIR}/"
