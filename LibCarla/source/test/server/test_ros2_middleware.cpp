@@ -527,10 +527,12 @@ TEST(cdr_serialization, time_golden_xcdrv1_bytes) {
       0x00u, 0x01u, 0x00u, 0x00u,
       0x2Au, 0x00u, 0x00u, 0x00u,
       0x15u, 0xCDu, 0x5Bu, 0x07u};
+  // Assert the size first: a failed or short serialization then yields a
+  // targeted size mismatch instead of a noisy full-vector diff.
+  ASSERT_EQ(buf.size(), expected.size());
   EXPECT_EQ(buf, expected);
   // Discriminator byte: classic CDR_LE is 0x01; any XCDRv2 representation
   // (PLAIN_CDR2 / DELIMIT_CDR2 / PL_CDR2) would change byte 1.
-  ASSERT_GE(buf.size(), 2u);
   EXPECT_EQ(buf[0], 0x00u);
   EXPECT_EQ(buf[1], 0x01u);
 }
