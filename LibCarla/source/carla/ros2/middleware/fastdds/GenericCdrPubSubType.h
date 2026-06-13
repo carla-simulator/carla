@@ -67,7 +67,7 @@ class GenericCdrPubSubType : public eprosima::fastdds::dds::TopicDataType {
     eprosima::fastcdr::Cdr ser(
         fb,
         eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
-        eprosima::fastcdr::Cdr::DDS_CDR);
+        eprosima::fastcdr::CdrVersion::XCDRv1);
     payload->encapsulation = CDR_LE;
 
     try {
@@ -77,13 +77,26 @@ class GenericCdrPubSubType : public eprosima::fastdds::dds::TopicDataType {
       return false;
     }
 
-    const uint32_t len = static_cast<uint32_t>(ser.getSerializedDataLength());
+    const uint32_t len = static_cast<uint32_t>(ser.get_serialized_data_length());
     if (len > payload->max_size) {
       return false;
     }
     std::memcpy(payload->data, fb.getBuffer(), len);
     payload->length = len;
     return true;
+  }
+
+  /// FastDDS 2.13+ data-representation-aware serialize overload. CARLA always
+  /// emits classic CDR (XCDRv1, little-endian) regardless of the requested
+  /// representation, so this simply delegates to the 2-argument override. It
+  /// guarantees the writer path reaches our CDR serializer whichever overload
+  /// FastDDS calls internally.
+  bool serialize(
+      void* data,
+      SerializedPayload_t* payload,
+      eprosima::fastdds::dds::DataRepresentationId_t /*data_representation*/)
+      override {
+    return serialize(data, payload);
   }
 
   /// Deserialize a FastDDS payload buffer into a MsgType instance.
@@ -103,7 +116,7 @@ class GenericCdrPubSubType : public eprosima::fastdds::dds::TopicDataType {
     eprosima::fastcdr::Cdr deser(
         fastbuffer,
         eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
-        eprosima::fastcdr::Cdr::DDS_CDR);
+        eprosima::fastcdr::CdrVersion::XCDRv1);
 
     try {
       deser.read_encapsulation();
@@ -126,6 +139,16 @@ class GenericCdrPubSubType : public eprosima::fastdds::dds::TopicDataType {
     return [msg]() -> uint32_t {
       return cdr_serialized_size(*msg);
     };
+  }
+
+  /// FastDDS 2.13+ data-representation-aware size-provider overload. CARLA
+  /// serializes the same classic-CDR bytes regardless of the requested
+  /// representation, so this delegates to the 1-argument override.
+  std::function<uint32_t()> getSerializedSizeProvider(
+      void* data,
+      eprosima::fastdds::dds::DataRepresentationId_t /*data_representation*/)
+      override {
+    return getSerializedSizeProvider(data);
   }
 
   /// Allocate a new default-initialized MsgType on the heap.

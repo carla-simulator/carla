@@ -655,7 +655,7 @@ std::vector<uint8_t> serialize_to_cdr(const T& msg) {
   eprosima::fastcdr::Cdr cdr{
       fb,
       eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
-      eprosima::fastcdr::Cdr::DDS_CDR};
+      eprosima::fastcdr::CdrVersion::XCDRv1};
   try {
     cdr.serialize_encapsulation();
     serialize_cdr(cdr, msg);
@@ -663,7 +663,7 @@ std::vector<uint8_t> serialize_to_cdr(const T& msg) {
     return std::vector<uint8_t>{};
   }
   const char* buf{fb.getBuffer()};
-  const size_t len{cdr.getSerializedDataLength()};
+  const size_t len{cdr.get_serialized_data_length()};
   return std::vector<uint8_t>{
       reinterpret_cast<const uint8_t*>(buf),
       reinterpret_cast<const uint8_t*>(buf) + len};
@@ -680,10 +680,10 @@ uint32_t cdr_serialized_size(const T& msg) {
   eprosima::fastcdr::Cdr cdr{
       fb,
       eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
-      eprosima::fastcdr::Cdr::DDS_CDR};
+      eprosima::fastcdr::CdrVersion::XCDRv1};
   cdr.serialize_encapsulation();
   serialize_cdr(cdr, msg);
-  return static_cast<uint32_t>(cdr.getSerializedDataLength());
+  return static_cast<uint32_t>(cdr.get_serialized_data_length());
 }
 
 /// Deserialize a msg::X from a CDR byte buffer that was produced by
@@ -701,7 +701,7 @@ bool deserialize_from_cdr(
   eprosima::fastcdr::Cdr cdr{
       fb,
       eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
-      eprosima::fastcdr::Cdr::DDS_CDR};
+      eprosima::fastcdr::CdrVersion::XCDRv1};
   try {
     cdr.read_encapsulation();
     deserialize_cdr(cdr, msg);
