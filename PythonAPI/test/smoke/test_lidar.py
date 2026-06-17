@@ -88,7 +88,7 @@ class Sensor():
     def is_correct(self):
         return self.error is None
 
-    def get_current_detection_points():
+    def get_current_detection_points(self):
         return self.curr_det_pts
 
 class TestSyncLidar(SyncSmokeTest):
