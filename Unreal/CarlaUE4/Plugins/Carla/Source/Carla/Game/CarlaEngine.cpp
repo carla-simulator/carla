@@ -236,7 +236,15 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     }
     else
     {
-      if (!ROS2->Enable(true, parse_result.middleware))
+      int32 DomainId = Settings.ROS2DomainId;
+      if (DomainId != carla::ros2::kUnsetDomainId && !carla::ros2::IsValidDomainId(DomainId))
+      {
+        UE_LOG(LogCarla, Error,
+            TEXT("ROS2: --ros-domain-id=%d is out of range [%d, %d]; using the default domain."),
+            DomainId, carla::ros2::kMinDomainId, carla::ros2::kMaxDomainId);
+        DomainId = carla::ros2::kUnsetDomainId;
+      }
+      if (!ROS2->Enable(true, parse_result.middleware, DomainId))
       {
         std::string available = carla::ros2::GetAvailableMiddlewareString();
         UE_LOG(LogCarla, Error,

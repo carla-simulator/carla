@@ -4,14 +4,14 @@
 
 #pragma once
 
-#ifndef CARLA_ROS2_MIDDLEWARE_TESTING
-#ifdef CARLA_ROS2_MIDDLEWARE_ZENOH
+// Pure keyexpr/wire-format helpers with no zenoh-c dependency; also compiled
+// under CARLA_ROS2_MIDDLEWARE_TESTING so unit tests cover them.
+#if defined(CARLA_ROS2_MIDDLEWARE_ZENOH) || defined(CARLA_ROS2_MIDDLEWARE_TESTING)
 
-#include "carla/Logging.h"
+#include "carla/ros2/middleware/MiddlewareConfig.h"
 
 #include <atomic>
 #include <cstdint>
-#include <cstdlib>
 #include <string>
 #include <vector>
 
@@ -35,25 +35,13 @@ inline uint64_t zenoh_next_entity_id() {
   return counter.fetch_add(1, std::memory_order_relaxed);
 }
 
-/// ROS_DOMAIN_ID resolved once at startup. Populates the leading segment of
-/// every keyexpr so we only match rmw_zenoh peers on the same domain.
-/// Falls back to "0" when the env var is unset or non-numeric, matching
-/// rclcpp/rclpy and the hardcoded domain used by the FastDDS/CycloneDDS
-/// middleware.
-inline const std::string& zenoh_ros_domain_id() {
-  static const std::string id = [] {
-    const char* env = std::getenv("ROS_DOMAIN_ID");
-    if (env == nullptr || env[0] == '\0') return std::string("0");
-    for (const char* p = env; *p; ++p) {
-      if (*p < '0' || *p > '9') {
-        log_warning("ROS_DOMAIN_ID='", env,
-                    "' is not numeric; falling back to 0");
-        return std::string("0");
-      }
-    }
-    return std::string(env);
-  }();
-  return id;
+/// Effective ROS 2 domain id as a string, resolved by the middleware
+/// abstraction layer (--ros-domain-id, else ROS_DOMAIN_ID, else the default
+/// domain 0). Populates the leading segment of every keyexpr so we only match
+/// rmw_zenoh peers on the same domain, mirroring the domain id the
+/// FastDDS/CycloneDDS middlewares pass to their DomainParticipant.
+inline std::string zenoh_ros_domain_id() {
+  return std::to_string(MiddlewareConfig::GetEffectiveDomainId());
 }
 
 /// Strip the "rt/" prefix that ROS2-to-DDS mapping adds to message topics.
@@ -129,5 +117,4 @@ inline std::vector<uint8_t> zenoh_attachment() {
 } // namespace ros2
 } // namespace carla
 
-#endif // CARLA_ROS2_MIDDLEWARE_ZENOH
-#endif // !CARLA_ROS2_MIDDLEWARE_TESTING
+#endif // CARLA_ROS2_MIDDLEWARE_ZENOH || CARLA_ROS2_MIDDLEWARE_TESTING

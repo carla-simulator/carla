@@ -177,5 +177,14 @@ public:
       DisplayName = "  ROS2 Middleware")
   FString ROS2MiddlewareName = TEXT("fastdds");
 
+  /// ROS2 domain id. Set via --ros-domain-id=<N> on the command line.
+  /// -1 (the default) keeps each middleware's native default domain.
+  UPROPERTY(Category = "Quality Settings/ROS2",
+      BlueprintReadOnly,
+      EditAnywhere,
+      config,
+      DisplayName = "  ROS2 Domain ID")
+  int32 ROS2DomainId = -1;
+
   /// @}
 };

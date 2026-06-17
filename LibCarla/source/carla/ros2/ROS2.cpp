@@ -70,7 +70,7 @@ enum ESensors {
   HSSLidar
 };
 
-bool ROS2::Enable(bool enable, Middleware middleware) {
+bool ROS2::Enable(bool enable, Middleware middleware, int domain_id) {
   std::lock_guard<std::recursive_mutex> lock(_mutex);
   if (enable) {
     auto resolve = MiddlewareFactory::ResolveMiddleware(middleware);
@@ -80,8 +80,17 @@ bool ROS2::Enable(bool enable, Middleware middleware) {
       return false;
     }
     MiddlewareFactory::SetMiddleware(middleware);
+    // Configure the domain id before any transport context is created (the
+    // shared participants are created lazily on first publisher/subscriber).
+    MiddlewareConfig::SetDomainId(domain_id);
+    const ResolvedDomainId resolved = MiddlewareConfig::ResolveEffective();
+    const char* domain_source =
+        (resolved.source == DomainIdSource::CommandLine)  ? "--ros-domain-id"
+        : (resolved.source == DomainIdSource::Environment) ? "ROS_DOMAIN_ID"
+                                                           : "default";
     log_info("ROS2: using middleware: ",
-        MiddlewareToString(middleware));
+        MiddlewareToString(middleware), ", domain id: ", resolved.id,
+        " (", domain_source, ")");
     _clock_publisher = std::make_shared<CarlaClockPublisher>();
   }
   _enabled = enable;

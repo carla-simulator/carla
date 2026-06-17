@@ -1,6 +1,7 @@
 ## Latest Changes
  * Upgraded the bundled eProsima Fast-DDS used by the native ROS 2 integration from v2.11.2 to the v2.14.6 LTS line, moving serialization onto Fast-CDR 2.x while keeping the classic XCDRv1 wire format so published topics stay compatible with every ROS 2 distribution.
  * Added Zenoh as a third ROS 2 middleware backend, selectable at runtime via `--rmw=zenoh` alongside `--rmw=fastdds` and `--rmw=cyclonedds`.
+ * Added a `--ros-domain-id=<N>` server option to set the ROS2 domain ID at startup. The value (0 to 232) is stored in the middleware abstraction layer and honored by every middleware (FastDDS, CycloneDDS, and Zenoh), so future middlewares pick it up automatically. When the option is omitted, the server falls back to the `ROS_DOMAIN_ID` environment variable, and then to the default domain 0. The resolution order is: `--ros-domain-id`, then `ROS_DOMAIN_ID`, then 0.
  * Renamed the ROS2 abstraction layer from dds/DDS* to generic middleware/Middleware* naming to support future non-DDS backends like Zenoh. FastDDS and CycloneDDS vendor classes are unchanged.
  * Added NumPy 2 compatibility to the PythonAPI: replaced removed aliases (`np.bool`, `np.matrix`) in example scripts and upgraded Boost to 1.90.0, which ships the upstream NumPy 2 C ABI fix (boostorg/python#432) so the C extension builds against both NumPy 1.x (>=1.18.4) and NumPy 2.x
  * Fixed North/South latitude inversion in geo-coordinate conversion for Transverse Mercator and UTM projections

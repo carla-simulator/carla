@@ -10,17 +10,20 @@
 #include "test.h"
 
 #include <carla/ros2/middleware/Middleware.h>
+#include <carla/ros2/middleware/MiddlewareConfig.h>
 #include <carla/ros2/middleware/MiddlewareFactory.h>
 #include <carla/ros2/middleware/IPublisherMiddleware.h>
 #include <carla/ros2/middleware/ISubscriberMiddleware.h>
 #include <carla/ros2/publishers/PublisherImpl.h>
 #include <carla/ros2/subscribers/SubscriberImpl.h>
 #include <carla/ros2/middleware/fastdds/GenericCdrPubSubType.h>
+#include <carla/ros2/middleware/zenoh/ZenohWireFormat.h>
 #include <carla/ros2/types/CdrSerialization.h>
 #include <carla/ros2/types/CdrTopicInfo.h>
 
 #include <array>
 #include <cstdint>
+#include <cstdlib>
 #include <memory>
 #include <string>
 #include <vector>
@@ -213,7 +216,54 @@ TEST(middleware_type_name, empty_string) {
 }
 
 // ==========================================================================
-// Group 5: MiddlewareFactoryFixture (12 tests)
+// Group 5: middleware_config (domain id) (8 tests)
+// ==========================================================================
+
+// Restores the global domain id to the unset sentinel after each test so the
+// process-wide MiddlewareConfig state does not leak between cases.
+class MiddlewareConfigFixture : public ::testing::Test {
+ protected:
+  void TearDown() override {
+    MiddlewareConfig::SetDomainId(kUnsetDomainId);
+  }
+};
+
+TEST_F(MiddlewareConfigFixture, default_domain_id_is_unset) {
+  EXPECT_EQ(MiddlewareConfig::GetDomainId(), kUnsetDomainId);
+}
+
+TEST_F(MiddlewareConfigFixture, set_and_get_round_trip) {
+  MiddlewareConfig::SetDomainId(42);
+  EXPECT_EQ(MiddlewareConfig::GetDomainId(), 42);
+}
+
+TEST_F(MiddlewareConfigFixture, set_zero_is_stored) {
+  MiddlewareConfig::SetDomainId(0);
+  EXPECT_EQ(MiddlewareConfig::GetDomainId(), 0);
+}
+
+TEST(middleware_config_valid, zero_is_valid) {
+  EXPECT_TRUE(IsValidDomainId(0));
+}
+
+TEST(middleware_config_valid, one_is_valid) {
+  EXPECT_TRUE(IsValidDomainId(1));
+}
+
+TEST(middleware_config_valid, max_is_valid) {
+  EXPECT_TRUE(IsValidDomainId(kMaxDomainId));
+}
+
+TEST(middleware_config_valid, above_max_is_invalid) {
+  EXPECT_FALSE(IsValidDomainId(kMaxDomainId + 1));
+}
+
+TEST(middleware_config_valid, unset_sentinel_is_invalid) {
+  EXPECT_FALSE(IsValidDomainId(kUnsetDomainId));
+}
+
+// ==========================================================================
+// Group 6: MiddlewareFactoryFixture (12 tests)
 // ==========================================================================
 
 TEST_F(MiddlewareFactoryFixture, set_and_get_middleware) {
@@ -294,7 +344,7 @@ TEST_F(MiddlewareFactoryFixture, create_subscriber_zenoh_unavailable) {
 }
 
 // ==========================================================================
-// Group 6: publisher_impl (7 tests)
+// Group 7: publisher_impl (7 tests)
 // ==========================================================================
 
 TEST(publisher_impl, get_message_returns_pointer) {
@@ -370,7 +420,7 @@ TEST(publisher_impl, data_flows_through_publish) {
 }
 
 // ==========================================================================
-// Group 7: subscriber_impl (7 tests)
+// Group 8: subscriber_impl (7 tests)
 // ==========================================================================
 
 TEST(subscriber_impl, has_new_message_initially_false) {
@@ -453,7 +503,7 @@ TEST(subscriber_impl, init_failure_propagated) {
 }
 
 // ==========================================================================
-// Group 8: cdr_topic_info (2 tests)
+// Group 9: cdr_topic_info (2 tests)
 // ==========================================================================
 
 TEST(cdr_topic_info, type_names_are_non_empty) {
@@ -488,7 +538,7 @@ TEST(cdr_topic_info, max_sizes_are_positive) {
 }
 
 // ==========================================================================
-// Group 9: cdr_serialization (21 tests)
+// Group 10: cdr_serialization (21 tests)
 // ==========================================================================
 
 TEST(cdr_serialization, time_round_trip) {
@@ -1041,7 +1091,7 @@ TEST(cdr_serialization, cdr_serialized_size_pointcloud2_exceeds_static_max) {
 }
 
 // ==========================================================================
-// Group 10: generic_cdr_pubsubtype (6 tests)
+// Group 11: generic_cdr_pubsubtype (6 tests)
 // Tests for GenericCdrPubSubType<T> — the single FastDDS TopicDataType
 // implementation that replaces 30 fastddsgen-generated PubSubType classes.
 // ==========================================================================
@@ -1139,7 +1189,7 @@ TEST(generic_cdr_pubsubtype, getkey_returns_false) {
 }
 
 // ==========================================================================
-// Group 11: generic_cdr_pubsubtype_large_payload (3 tests)
+// Group 12: generic_cdr_pubsubtype_large_payload (3 tests)
 // Tests that getSerializedSizeProvider() returns the actual instance size and
 // that serialize/deserialize succeed for payloads exceeding max_serialized_size().
 // These tests catch the runtime bug where Image and PointCloud2 publish failed
@@ -1263,3 +1313,215 @@ TEST(generic_cdr_pubsubtype_large_payload, size_provider_returns_actual_size_not
   EXPECT_GT(large_size, 100000u)
       << "Size must at least cover the raw data bytes";
 }
+
+// ==========================================================================
+// Group 13: domain_id_resolution (15 tests)
+// Pure tests for TryParseDomainId and ResolveDomainId. The environment value is
+// passed as a string, so the precedence rules need no real environment.
+// ==========================================================================
+
+TEST(domain_id_parsing, nullptr_is_rejected) {
+  int out = -99;
+  EXPECT_FALSE(TryParseDomainId(nullptr, out));
+}
+
+TEST(domain_id_parsing, empty_string_is_rejected) {
+  int out = -99;
+  EXPECT_FALSE(TryParseDomainId("", out));
+}
+
+TEST(domain_id_parsing, non_numeric_is_rejected) {
+  int out = -99;
+  EXPECT_FALSE(TryParseDomainId("abc", out));
+}
+
+TEST(domain_id_parsing, trailing_garbage_is_rejected) {
+  int out = -99;
+  EXPECT_FALSE(TryParseDomainId("12abc", out));
+}
+
+TEST(domain_id_parsing, above_max_is_rejected) {
+  int out = -99;
+  EXPECT_FALSE(TryParseDomainId("233", out));
+}
+
+TEST(domain_id_parsing, negative_is_rejected) {
+  int out = -99;
+  EXPECT_FALSE(TryParseDomainId("-1", out));
+}
+
+TEST(domain_id_parsing, zero_is_accepted) {
+  int out = -99;
+  EXPECT_TRUE(TryParseDomainId("0", out));
+  EXPECT_EQ(out, 0);
+}
+
+TEST(domain_id_parsing, mid_value_is_accepted) {
+  int out = -99;
+  EXPECT_TRUE(TryParseDomainId("42", out));
+  EXPECT_EQ(out, 42);
+}
+
+TEST(domain_id_parsing, max_value_is_accepted) {
+  int out = -99;
+  EXPECT_TRUE(TryParseDomainId("232", out));
+  EXPECT_EQ(out, kMaxDomainId);
+}
+
+TEST(domain_id_resolution, command_line_wins_over_environment) {
+  auto resolved = ResolveDomainId(42, "7");
+  EXPECT_EQ(resolved.id, 42);
+  EXPECT_EQ(resolved.source, DomainIdSource::CommandLine);
+}
+
+TEST(domain_id_resolution, command_line_zero_wins_over_environment) {
+  auto resolved = ResolveDomainId(0, "7");
+  EXPECT_EQ(resolved.id, 0);
+  EXPECT_EQ(resolved.source, DomainIdSource::CommandLine);
+}
+
+TEST(domain_id_resolution, environment_used_when_command_line_unset) {
+  auto resolved = ResolveDomainId(kUnsetDomainId, "7");
+  EXPECT_EQ(resolved.id, 7);
+  EXPECT_EQ(resolved.source, DomainIdSource::Environment);
+}
+
+TEST(domain_id_resolution, default_when_both_absent) {
+  auto resolved = ResolveDomainId(kUnsetDomainId, nullptr);
+  EXPECT_EQ(resolved.id, kDefaultDomainId);
+  EXPECT_EQ(resolved.source, DomainIdSource::Default);
+}
+
+TEST(domain_id_resolution, default_when_environment_empty) {
+  auto resolved = ResolveDomainId(kUnsetDomainId, "");
+  EXPECT_EQ(resolved.id, kDefaultDomainId);
+  EXPECT_EQ(resolved.source, DomainIdSource::Default);
+}
+
+TEST(domain_id_resolution, invalid_environment_falls_back_to_default) {
+  auto resolved = ResolveDomainId(kUnsetDomainId, "999");
+  EXPECT_EQ(resolved.id, kDefaultDomainId);
+  EXPECT_EQ(resolved.source, DomainIdSource::Default);
+}
+
+TEST(domain_id_resolution, invalid_command_line_falls_through_to_environment) {
+  auto resolved = ResolveDomainId(500, "7");
+  EXPECT_EQ(resolved.id, 7);
+  EXPECT_EQ(resolved.source, DomainIdSource::Environment);
+}
+
+// ==========================================================================
+// Group 14: zenoh_wire_format (3 tests)
+// Pure string tests for the rmw_zenoh keyexpr builders: the domain id must be
+// the leading segment of every keyexpr so we only match rmw_zenoh peers on
+// the same domain.
+// ==========================================================================
+
+TEST(zenoh_wire_format, topic_keyexpr_starts_with_domain_segment) {
+  const std::string ke = zenoh_make_topic_keyexpr(
+      "42", "vehicle/imu", "sensor_msgs::msg::dds_::Imu_", "RIHS01_abc");
+  EXPECT_EQ(ke.compare(0, 3, "42/"), 0) << "keyexpr: " << ke;
+  EXPECT_NE(ke.find("/vehicle/imu/"), std::string::npos);
+}
+
+TEST(zenoh_wire_format, node_liveliness_keyexpr_starts_with_domain_segment) {
+  const std::string ke = zenoh_make_node_liveliness_keyexpr("42", "deadbeef");
+  EXPECT_EQ(ke.compare(0, 12, "@ros2_lv/42/"), 0) << "keyexpr: " << ke;
+}
+
+TEST(zenoh_wire_format, topic_liveliness_keyexpr_has_domain_and_mangled_topic) {
+  const std::string ke = zenoh_make_topic_liveliness_keyexpr(
+      "42", "deadbeef", 7u, kZenohEntityKindPub, "vehicle/imu",
+      "sensor_msgs::msg::dds_::Imu_", "RIHS01_abc", kZenohDefaultQos);
+  EXPECT_EQ(ke.compare(0, 12, "@ros2_lv/42/"), 0) << "keyexpr: " << ke;
+  EXPECT_NE(ke.find("%vehicle%imu"), std::string::npos);
+}
+
+#ifndef _WIN32
+// ==========================================================================
+// Group 15: effective_domain_id_env (3 tests)
+// Exercises the thin std::getenv wrapper in MiddlewareConfig. POSIX-only:
+// setenv/unsetenv are not available on Windows, and Windows does not build the
+// ROS 2 middleware anyway.
+// ==========================================================================
+
+// Saves and restores ROS_DOMAIN_ID and the configured domain id so the
+// process-wide state does not leak between tests.
+class RosDomainIdEnvFixture : public ::testing::Test {
+ protected:
+  void SetUp() override {
+    const char* existing = std::getenv(kRosDomainIdEnvVar);
+    had_env_ = existing != nullptr;
+    if (had_env_) {
+      saved_ = existing;
+    }
+    MiddlewareConfig::SetDomainId(kUnsetDomainId);
+  }
+
+  void TearDown() override {
+    MiddlewareConfig::SetDomainId(kUnsetDomainId);
+    if (had_env_) {
+      ::setenv(kRosDomainIdEnvVar, saved_.c_str(), 1);
+    } else {
+      ::unsetenv(kRosDomainIdEnvVar);
+    }
+  }
+
+  bool had_env_{false};
+  std::string saved_;
+};
+
+TEST_F(RosDomainIdEnvFixture, environment_applies_when_command_line_unset) {
+  ::setenv(kRosDomainIdEnvVar, "13", 1);
+  EXPECT_EQ(MiddlewareConfig::GetEffectiveDomainId(), 13);
+}
+
+TEST_F(RosDomainIdEnvFixture, command_line_overrides_environment) {
+  ::setenv(kRosDomainIdEnvVar, "13", 1);
+  MiddlewareConfig::SetDomainId(99);
+  EXPECT_EQ(MiddlewareConfig::GetEffectiveDomainId(), 99);
+}
+
+TEST_F(RosDomainIdEnvFixture, default_when_environment_unset) {
+  ::unsetenv(kRosDomainIdEnvVar);
+  EXPECT_EQ(MiddlewareConfig::GetEffectiveDomainId(), kDefaultDomainId);
+}
+
+// ==========================================================================
+// Group 16: zenoh_domain_id (5 tests)
+// zenoh_ros_domain_id() feeds the leading keyexpr segment and must honor the
+// MiddlewareConfig resolution order (--ros-domain-id, then ROS_DOMAIN_ID,
+// then the default domain 0), like the DDS middlewares do for their
+// DomainParticipant.
+// ==========================================================================
+
+// Same save/restore needs as the effective_domain_id_env group.
+class ZenohDomainIdFixture : public RosDomainIdEnvFixture {};
+
+TEST_F(ZenohDomainIdFixture, command_line_value_is_used) {
+  ::unsetenv(kRosDomainIdEnvVar);
+  MiddlewareConfig::SetDomainId(42);
+  EXPECT_EQ(zenoh_ros_domain_id(), "42");
+}
+
+TEST_F(ZenohDomainIdFixture, environment_used_when_command_line_unset) {
+  ::setenv(kRosDomainIdEnvVar, "13", 1);
+  EXPECT_EQ(zenoh_ros_domain_id(), "13");
+}
+
+TEST_F(ZenohDomainIdFixture, command_line_overrides_environment) {
+  ::setenv(kRosDomainIdEnvVar, "13", 1);
+  MiddlewareConfig::SetDomainId(99);
+  EXPECT_EQ(zenoh_ros_domain_id(), "99");
+}
+
+TEST_F(ZenohDomainIdFixture, default_is_zero) {
+  ::unsetenv(kRosDomainIdEnvVar);
+  EXPECT_EQ(zenoh_ros_domain_id(), "0");
+}
+
+TEST_F(ZenohDomainIdFixture, invalid_environment_falls_back_to_default) {
+  ::setenv(kRosDomainIdEnvVar, "abc", 1);
+  EXPECT_EQ(zenoh_ros_domain_id(), "0");
+}
+#endif  // _WIN32
