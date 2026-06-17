@@ -505,6 +505,38 @@ TEST(cdr_serialization, time_round_trip) {
   EXPECT_EQ(recovered.nanosec, 123456789u);
 }
 
+// Byte-exact wire-format guard. The symmetric round-trip tests above cannot
+// detect an encoding drift (e.g. Fast-CDR defaulting to XCDRv2, which inserts
+// DHEADERs) because deserialize_from_cdr would consume whatever encoding
+// serialize_to_cdr emitted. This test pins the literal bytes so a regression
+// to XCDRv2 or big-endian is caught deterministically. These exact bytes are
+// what every backend puts on the wire: FastDDS via write_serialized_payload,
+// CycloneDDS via dds_writecdr (raw passthrough of serialize_to_cdr), and Zenoh.
+// Layout (classic CDR, encoding version 1, little-endian):
+//   00 01 00 00  encapsulation header (PLAIN_CDR little-endian + 2 option bytes)
+//   2A 00 00 00  sec    = int32  42        (0x0000002A, LE)
+//   15 CD 5B 07  nanosec= uint32 123456789 (0x075BCD15, LE)
+TEST(cdr_serialization, time_golden_xcdrv1_bytes) {
+  carla::ros2::msg::Time original{};
+  original.sec = 42;
+  original.nanosec = 123456789u;
+
+  const auto buf = carla::ros2::serialize_to_cdr(original);
+
+  const std::vector<uint8_t> expected{
+      0x00u, 0x01u, 0x00u, 0x00u,
+      0x2Au, 0x00u, 0x00u, 0x00u,
+      0x15u, 0xCDu, 0x5Bu, 0x07u};
+  // Assert the size first: a failed or short serialization then yields a
+  // targeted size mismatch instead of a noisy full-vector diff.
+  ASSERT_EQ(buf.size(), expected.size());
+  EXPECT_EQ(buf, expected);
+  // Discriminator byte: classic CDR_LE is 0x01; any XCDRv2 representation
+  // (PLAIN_CDR2 / DELIMIT_CDR2 / PL_CDR2) would change byte 1.
+  EXPECT_EQ(buf[0], 0x00u);
+  EXPECT_EQ(buf[1], 0x01u);
+}
+
 TEST(cdr_serialization, header_round_trip) {
   carla::ros2::msg::Header original{};
   original.stamp.sec = 10;
