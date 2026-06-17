@@ -231,8 +231,8 @@ def tutorial(args):
             intensity = intensity[points_in_canvas_mask]
 
             # Extract the screen coords (uv) as integers.
-            u_coord = points_2d[:, 0].astype(np.int)
-            v_coord = points_2d[:, 1].astype(np.int)
+            u_coord = points_2d[:, 0].astype(int)
+            v_coord = points_2d[:, 1].astype(int)
 
             # Since at the time of the creation of this script, the intensity function
             # is returning high values, these are adjusted to be nicely visualized.
@@ -240,7 +240,7 @@ def tutorial(args):
             color_map = np.array([
                 np.interp(intensity, VID_RANGE, VIRIDIS[:, 0]) * 255.0,
                 np.interp(intensity, VID_RANGE, VIRIDIS[:, 1]) * 255.0,
-                np.interp(intensity, VID_RANGE, VIRIDIS[:, 2]) * 255.0]).astype(np.int).T
+                np.interp(intensity, VID_RANGE, VIRIDIS[:, 2]) * 255.0]).astype(int).T
 
             if args.dot_extent <= 0:
                 # Draw the 2d points on the image as a single pixel using numpy.
