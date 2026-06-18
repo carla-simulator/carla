@@ -87,6 +87,43 @@ class TestRotation(unittest.TestCase):
         self.assertEqual(rotation.roll, 3.0)
 
 
+class TestVector(unittest.TestCase):
+    def test_make_unit_vector_3d_no_argument(self):
+        # The defaulted epsilon must remain optional through the Boost.Python
+        # binding, so a no-argument call keeps working.
+        error = .001
+        unit = carla.Vector3D(10.0, 0.0, 0.0).make_unit_vector()
+        self.assertTrue(abs(unit.x - 1.0) <= error)
+        self.assertTrue(abs(unit.y - 0.0) <= error)
+        self.assertTrue(abs(unit.z - 0.0) <= error)
+
+    def test_make_unit_vector_3d_epsilon_keyword(self):
+        # A length at or below epsilon returns the input unchanged.
+        v = carla.Vector3D(0.0, 0.0, 0.5)
+        unchanged = v.make_unit_vector(epsilon=1.0)
+        self.assertEqual(unchanged.x, 0.0)
+        self.assertEqual(unchanged.y, 0.0)
+        self.assertEqual(unchanged.z, 0.5)
+
+    def test_make_unit_vector_3d_zero_length(self):
+        zero = carla.Vector3D().make_unit_vector()
+        self.assertEqual(zero.x, 0.0)
+        self.assertEqual(zero.y, 0.0)
+        self.assertEqual(zero.z, 0.0)
+
+    def test_make_unit_vector_2d_no_argument(self):
+        error = .001
+        unit = carla.Vector2D(0.0, 4.0).make_unit_vector()
+        self.assertTrue(abs(unit.x - 0.0) <= error)
+        self.assertTrue(abs(unit.y - 1.0) <= error)
+
+    def test_make_unit_vector_2d_epsilon_keyword(self):
+        v = carla.Vector2D(0.5, 0.0)
+        unchanged = v.make_unit_vector(epsilon=1.0)
+        self.assertEqual(unchanged.x, 0.5)
+        self.assertEqual(unchanged.y, 0.0)
+
+
 class TestTransform(unittest.TestCase):
     def test_values(self):
         t = carla.Transform()
@@ -149,7 +186,10 @@ class TestTransform(unittest.TestCase):
         point = carla.Location(x=0.0, y=0.0, z=2.0)
         t.transform(point)
 
-        self.assertTrue(abs(point.x - (-2.0)) <= error)
+        # The point {0, 0, 2} rotated by pitch=90 lands at {2, 0, 0} under the
+        # corrected sign convention (pre-fix this returned {-2, 0, 0}); the
+        # translation by {0, 0, -1} then brings it to {2, 0, -1}.
+        self.assertTrue(abs(point.x - 2.0) <= error)
         self.assertTrue(abs(point.y - 0.0) <= error)
         self.assertTrue(abs(point.z - (-1.0)) <= error)
 
@@ -165,9 +205,12 @@ class TestTransform(unittest.TestCase):
                       ]
         t.transform(point_list)
 
-        solution_list = [carla.Location(-2.0, 0.0, -1.0),
-                         carla.Location(-1.0, 10.0, -1.0),
-                         carla.Location(-2.0, 18.0, -1.0)
+        # pitch=90 maps (x, y, z) -> (z, y, -x) under the corrected sign
+        # convention (pre-fix the x column was negated); the translation by
+        # {0, 0, -1} is then added.
+        solution_list = [carla.Location(2.0, 0.0, -1.0),
+                         carla.Location(1.0, 10.0, -1.0),
+                         carla.Location(2.0, 18.0, -1.0)
                          ]
 
         for i in range(len(point_list)):
@@ -187,9 +230,12 @@ class TestTransform(unittest.TestCase):
                       ]
         t.transform(point_list)
 
-        solution_list = [carla.Vector3D(-2.0, 0.0, -1.0),
-                         carla.Vector3D(-1.0, 10.0, -1.0),
-                         carla.Vector3D(-2.0, 18.0, -1.0)
+        # pitch=90 maps (x, y, z) -> (z, y, -x) under the corrected sign
+        # convention (pre-fix the x column was negated); the translation by
+        # {0, 0, -1} is then added.
+        solution_list = [carla.Vector3D(2.0, 0.0, -1.0),
+                         carla.Vector3D(1.0, 10.0, -1.0),
+                         carla.Vector3D(2.0, 18.0, -1.0)
                          ]
 
         for i in range(len(point_list)):

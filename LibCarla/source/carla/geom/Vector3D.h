@@ -64,18 +64,17 @@ namespace geom {
        return Vector3D(abs(x), abs(y), abs(z));
     }
 
-    inline Vector3D MakeUnitVector() const {
+    /// Return a unit-length copy of this vector. When the vector's length
+    /// is at or below `epsilon`, the input is returned unchanged (no
+    /// runtime exception, no NaN). Callers that need the strict
+    /// `1.0 / length` normalization should pass `epsilon = 0`.
+    inline Vector3D MakeUnitVector(
+        const float epsilon = 2.0f * std::numeric_limits<float>::epsilon()) const {
       const float length = Length();
-      if (length <= 0.0f) {
-        return Vector3D(0.0f, 0.0f, 0.0f);
+      if (length <= std::max(epsilon, 0.0f)) {
+        return *this;
       }
       const float k = 1.0f / length;
-      return Vector3D(x * k, y * k, z * k);
-    }
-
-    inline Vector3D MakeSafeUnitVector(const float epsilon) const {
-      const float length = Length();
-      const float k = (length > std::max(epsilon, 0.0f)) ? (1.0f / length) : 1.0f;
       return Vector3D(x * k, y * k, z * k);
     }
 

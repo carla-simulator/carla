@@ -17,12 +17,13 @@ namespace ros2 {
 template <typename Traits> class PublisherImpl;
 struct BasicPublisherMsgTraits;
 
-// Developer scaffold: publishes a std_msgs::String to a fixed topic. Only
-// reachable from the WITH_ROS2_DEMO code paths in ROS2.cpp, but compiles
-// unconditionally so the carla-ros2-native ExternalProject can pick it up.
+// Developer scaffold: publishes a std_msgs::String to a fixed topic
+// (`rt/basic_publisher_example`). Only reachable from the WITH_ROS2_DEMO
+// code paths in ROS2.cpp, but compiles unconditionally so the
+// carla-ros2-native ExternalProject can pick it up.
 class BasicPublisher : public BasePublisher {
 public:
-  BasicPublisher(std::string ros_name, std::string parent);
+  BasicPublisher();
   ~BasicPublisher() override;
 
   BasicPublisher(const BasicPublisher &) = delete;

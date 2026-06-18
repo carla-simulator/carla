@@ -6,10 +6,16 @@
 
 #include "test.h"
 
-#include <carla/geom/Vector3D.h>
-#include <carla/geom/Math.h>
+#include <carla/geom/Acceleration.h>
+#include <carla/geom/AngularVelocity.h>
 #include <carla/geom/BoundingBox.h>
+#include <carla/geom/Math.h>
+#include <carla/geom/Quaternion.h>
+#include <carla/geom/RightHandedVector3D.h>
 #include <carla/geom/Transform.h>
+#include <carla/geom/Vector3D.h>
+#include <carla/geom/Velocity.h>
+#include <cmath>
 #include <limits>
 
 namespace carla {
@@ -123,13 +129,17 @@ TEST(geom, single_point_rotation) {
 TEST(geom, single_point_translation_and_rotation) {
   constexpr double error = 0.001;
 
+  // The point {0, 0, 2} rotated by pitch=90 lands at {2, 0, 0} under the
+  // corrected sign convention (pre-fix this returned {-2, 0, 0}). The
+  // subsequent translation by {0, 0, -1} brings the final point to
+  // {2, 0, -1}.
   Location translation (0.0,0.0,-1.0); // x y z
   Rotation rotation (90.0,0.0,0.0); // y z x
   Transform transform (translation, rotation);
 
   Location point (0.0, 0.0, 2.0);
   transform.TransformPoint(point);
-  Location result_point(-2.0, 0.0, -1.0);
+  Location result_point(2.0, 0.0, -1.0);
   ASSERT_NEAR(point.x, result_point.x, error);
   ASSERT_NEAR(point.y, result_point.y, error);
   ASSERT_NEAR(point.z, result_point.z, error);
@@ -213,7 +223,9 @@ TEST(geom, forward_vector) {
   compare({360.0f, 360.0f,   0.0f}, {1.0f, 0.0f, 0.0f});
   compare({  0.0f,  90.0f,   0.0f}, {0.0f, 1.0f, 0.0f});
   compare({  0.0f, -90.0f,   0.0f}, {0.0f,-1.0f, 0.0f});
-  compare({ 90.0f,   0.0f,   0.0f}, {0.0f, 0.0f, 1.0f});
+  // Regression guard for the pitch/roll fix: pitch=90 now produces
+  // {0, 0, -1}, not {0, 0, 1} as on the pre-fix matrix.
+  compare({ 90.0f,   0.0f,   0.0f}, {0.0f, 0.0f,-1.0f});
   compare({180.0f, -90.0f,   0.0f}, {0.0f, 1.0f, 0.0f});
 }
 
@@ -226,4 +238,216 @@ TEST(geom, nearest_point_arc) {
       Vector3D(0,0,0), 1.57f, 0, 1).second, 1.0f, 0.01f);
   ASSERT_NEAR(Math::DistanceArcToPoint(Vector3D(1,2,0),
       Vector3D(0,0,0), 1.57f, 0, 1).second, 1.0f, 0.01f);
+}
+
+TEST(geom, right_handed_vector3d_boundary_negation) {
+  // Going Vector3D -> RightHandedVector3D negates Y exactly once.
+  const Vector3D lh{1.0f, 2.0f, 3.0f};
+  const RightHandedVector3D rh{lh};
+  ASSERT_FLOAT_EQ(rh.x, 1.0f);
+  ASSERT_FLOAT_EQ(rh.y, -2.0f);
+  ASSERT_FLOAT_EQ(rh.z, 3.0f);
+
+  // Round-trip back to Vector3D restores the original.
+  const Vector3D round_trip = static_cast<Vector3D>(rh);
+  ASSERT_FLOAT_EQ(round_trip.x, 1.0f);
+  ASSERT_FLOAT_EQ(round_trip.y, 2.0f);
+  ASSERT_FLOAT_EQ(round_trip.z, 3.0f);
+}
+
+TEST(geom, quaternion_default_is_identity) {
+  const Quaternion q;
+  ASSERT_FLOAT_EQ(q.x, 0.0f);
+  ASSERT_FLOAT_EQ(q.y, 0.0f);
+  ASSERT_FLOAT_EQ(q.z, 0.0f);
+  ASSERT_FLOAT_EQ(q.w, 1.0f);
+
+  // Identity quaternion rotates a vector to itself.
+  const Vector3D v{1.0f, 2.0f, 3.0f};
+  const Vector3D out = static_cast<Vector3D>(q.RotatedVector(RightHandedVector3D{v}));
+  ASSERT_NEAR(out.x, v.x, 1e-5f);
+  ASSERT_NEAR(out.y, v.y, 1e-5f);
+  ASSERT_NEAR(out.z, v.z, 1e-5f);
+}
+
+TEST(geom, quaternion_get_forward_matches_rotation_get_forward) {
+  // The quaternion built from a Rotation must agree with that Rotation's
+  // forward-vector for every axis-aligned angle. This is the canonical
+  // regression guard against drift between the two math paths.
+  constexpr float eps = 1e-4f;
+  const float angles[] = {-180.0f, -90.0f, -45.0f, 0.0f, 30.0f, 90.0f, 123.0f, 180.0f};
+  for (const float a : angles) {
+    for (const auto axis : {0, 1, 2}) {
+      Rotation r{};
+      if (axis == 0) r.pitch = a;
+      else if (axis == 1) r.yaw = a;
+      else r.roll = a;
+
+      const Vector3D r_forward = r.GetForwardVector();
+      const Vector3D q_forward = Quaternion(r).GetForwardVector();
+      EXPECT_NEAR(q_forward.x, r_forward.x, eps) << "axis=" << axis << " angle=" << a;
+      EXPECT_NEAR(q_forward.y, r_forward.y, eps) << "axis=" << axis << " angle=" << a;
+      EXPECT_NEAR(q_forward.z, r_forward.z, eps) << "axis=" << axis << " angle=" << a;
+    }
+  }
+}
+
+TEST(geom, quaternion_get_yaw_round_trip) {
+  // Yaw component of Rotation -> Quaternion -> Rotation must round-trip.
+  // Pitch and roll left at zero so the Rotator extraction is unambiguous.
+  constexpr float eps = 1e-3f;
+  for (float yaw_deg = -150.0f; yaw_deg <= 150.0f; yaw_deg += 30.0f) {
+    const Quaternion q{Rotation{0.0f, yaw_deg, 0.0f}};
+    const Rotation r = q.Rotator();
+    EXPECT_NEAR(r.yaw, yaw_deg, eps) << "yaw=" << yaw_deg;
+    EXPECT_NEAR(r.pitch, 0.0f, eps);
+    EXPECT_NEAR(r.roll, 0.0f, eps);
+  }
+}
+
+TEST(geom, quaternion_inverse_is_left_inverse) {
+  // q * q^-1 must be the identity for sampled axis-aligned and combined
+  // rotations. Tolerances are generous to accommodate float accumulation.
+  constexpr float eps = 1e-4f;
+  const Rotation samples[] = {
+    {0.0f, 0.0f, 0.0f},
+    {30.0f, 0.0f, 0.0f},
+    {0.0f, 45.0f, 0.0f},
+    {0.0f, 0.0f, 60.0f},
+    {15.0f, 25.0f, 10.0f},
+    {-45.0f, 90.0f, -30.0f},
+  };
+  for (const auto &r : samples) {
+    const Quaternion q{r};
+    const Quaternion identity = q * q.Inverse();
+    EXPECT_NEAR(identity.x, 0.0f, eps) << r.pitch << "/" << r.yaw << "/" << r.roll;
+    EXPECT_NEAR(identity.y, 0.0f, eps);
+    EXPECT_NEAR(identity.z, 0.0f, eps);
+    EXPECT_NEAR(std::abs(identity.w), 1.0f, eps);
+  }
+}
+
+TEST(geom, quaternion_pitch_90_forward_is_negative_z) {
+  // Regression guard for the pitch/roll fix from the ROS 2 port.
+  // Pre-fix the forward vector of pitch=90 was {0, 0, +1}; the corrected
+  // sign convention now yields {0, 0, -1}.
+  const Quaternion q{Rotation{90.0f, 0.0f, 0.0f}};
+  const Vector3D forward = q.GetForwardVector();
+  EXPECT_NEAR(forward.x, 0.0f, 1e-5f);
+  EXPECT_NEAR(forward.y, 0.0f, 1e-5f);
+  EXPECT_NEAR(forward.z, -1.0f, 1e-5f);
+}
+
+TEST(geom, velocity_inherits_vector3d_storage) {
+  // Velocity is a Vector3D-inheriting POD that carries m/s unit semantics
+  // without adding any data members. Wire-compatibility with Vector3D is
+  // preserved (msgpack adapter inherited).
+  const Velocity v{1.5f, -2.0f, 0.25f};
+  EXPECT_FLOAT_EQ(v.x, 1.5f);
+  EXPECT_FLOAT_EQ(v.y, -2.0f);
+  EXPECT_FLOAT_EQ(v.z, 0.25f);
+
+  // Arithmetic operations inherit from Vector3D.
+  const Velocity v2 = Velocity{v + Vector3D{0.5f, 1.0f, 0.0f}};
+  EXPECT_FLOAT_EQ(v2.x, 2.0f);
+  EXPECT_FLOAT_EQ(v2.y, -1.0f);
+  EXPECT_FLOAT_EQ(v2.z, 0.25f);
+}
+
+TEST(geom, angular_velocity_and_acceleration_inherit_vector3d_storage) {
+  const AngularVelocity w{45.0f, 0.0f, 0.0f};
+  EXPECT_FLOAT_EQ(w.x, 45.0f);
+  EXPECT_FLOAT_EQ(w.y, 0.0f);
+
+  const Acceleration a{0.0f, 9.81f, 0.0f};
+  EXPECT_FLOAT_EQ(a.y, 9.81f);
+
+  // The new types are layout-compatible with Vector3D so the
+  // serialization wire format stays unchanged.
+  static_assert(sizeof(Velocity) == sizeof(Vector3D),
+                "Velocity must stay layout-compatible with Vector3D");
+  static_assert(sizeof(AngularVelocity) == sizeof(Vector3D),
+                "AngularVelocity must stay layout-compatible with Vector3D");
+  static_assert(sizeof(Acceleration) == sizeof(Vector3D),
+                "Acceleration must stay layout-compatible with Vector3D");
+}
+
+TEST(geom, quaternion_basis_vectors_for_identity) {
+  // Identity quaternion's three basis vectors must be the canonical
+  // CARLA left-handed axes.
+  constexpr float eps = 1e-5f;
+  const Quaternion q;
+
+  const Vector3D forward = q.GetForwardVector();
+  EXPECT_NEAR(forward.x, 1.0f, eps);
+  EXPECT_NEAR(forward.y, 0.0f, eps);
+  EXPECT_NEAR(forward.z, 0.0f, eps);
+
+  const Vector3D right = q.GetRightVector();
+  EXPECT_NEAR(right.x, 0.0f, eps);
+  EXPECT_NEAR(right.y, 1.0f, eps);
+  EXPECT_NEAR(right.z, 0.0f, eps);
+
+  const Vector3D up = q.GetUpVector();
+  EXPECT_NEAR(up.x, 0.0f, eps);
+  EXPECT_NEAR(up.y, 0.0f, eps);
+  EXPECT_NEAR(up.z, 1.0f, eps);
+}
+
+TEST(geom, quaternion_basis_vectors_for_yaw_90) {
+  // Yaw=90 deg in CARLA's left-handed convention sends:
+  //   forward (+X) -> (+Y), right (+Y) -> (-X), up (+Z) -> (+Z).
+  constexpr float eps = 1e-4f;
+  const Quaternion q{Rotation{0.0f, 90.0f, 0.0f}};
+
+  const Vector3D forward = q.GetForwardVector();
+  EXPECT_NEAR(forward.x, 0.0f, eps);
+  EXPECT_NEAR(forward.y, 1.0f, eps);
+  EXPECT_NEAR(forward.z, 0.0f, eps);
+
+  const Vector3D right = q.GetRightVector();
+  EXPECT_NEAR(right.x, -1.0f, eps);
+  EXPECT_NEAR(right.y, 0.0f, eps);
+  EXPECT_NEAR(right.z, 0.0f, eps);
+
+  const Vector3D up = q.GetUpVector();
+  EXPECT_NEAR(up.x, 0.0f, eps);
+  EXPECT_NEAR(up.y, 0.0f, eps);
+  EXPECT_NEAR(up.z, 1.0f, eps);
+}
+
+TEST(geom, quaternion_hamilton_product_yaw_compose) {
+  // Two consecutive yaw=45 rotations compose to a yaw=90 rotation:
+  // applying the product to the forward axis sends (1,0,0) -> (0,1,0).
+  constexpr float eps = 1e-4f;
+  const Quaternion q45{Rotation{0.0f, 45.0f, 0.0f}};
+  const Quaternion q90 = q45 * q45;
+
+  const Vector3D forward = q90.GetForwardVector();
+  EXPECT_NEAR(forward.x, 0.0f, eps);
+  EXPECT_NEAR(forward.y, 1.0f, eps);
+  EXPECT_NEAR(forward.z, 0.0f, eps);
+}
+
+TEST(geom, quaternion_conjugate_equals_inverse_for_unit_quaternion) {
+  // For a unit quaternion built from any Rotation, conjugate and inverse
+  // are mathematically identical. Sample a few axis-aligned and combined
+  // rotations.
+  constexpr float eps = 1e-5f;
+  const Rotation samples[] = {
+    {0.0f, 0.0f, 0.0f},
+    {30.0f, 0.0f, 0.0f},
+    {0.0f, 45.0f, 0.0f},
+    {0.0f, 0.0f, 60.0f},
+    {15.0f, 25.0f, 10.0f},
+  };
+  for (const auto &r : samples) {
+    const Quaternion q{r};
+    const Quaternion qc = q.Conjugate();
+    const Quaternion qi = q.Inverse();
+    EXPECT_NEAR(qc.x, qi.x, eps) << r.pitch << "/" << r.yaw << "/" << r.roll;
+    EXPECT_NEAR(qc.y, qi.y, eps);
+    EXPECT_NEAR(qc.z, qi.z, eps);
+    EXPECT_NEAR(qc.w, qi.w, eps);
+  }
 }

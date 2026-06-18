@@ -14,19 +14,23 @@
 namespace carla {
 namespace ros2 {
 
+namespace {
+constexpr const char *kBasicPublisherTopic = "rt/basic_publisher_example";
+}  // namespace
+
 struct BasicPublisherMsgTraits {
   using msg_type = std_msgs::msg::String;
   using msg_pubsub_type = std_msgs::msg::StringPubSubType;
 };
 
-BasicPublisher::BasicPublisher(std::string ros_name, std::string parent)
-  : BasePublisher(std::move(parent), std::move(ros_name)),
+BasicPublisher::BasicPublisher()
+  : BasePublisher(kBasicPublisherTopic, ""),
     _impl(std::make_shared<PublisherImpl<BasicPublisherMsgTraits>>()) {}
 
 BasicPublisher::~BasicPublisher() = default;
 
 bool BasicPublisher::Init() {
-  return _impl->Init("rt/basic_publisher_example");
+  return _impl->Init(kBasicPublisherTopic);
 }
 
 bool BasicPublisher::Publish() {
