@@ -90,12 +90,22 @@ TEST(DvsEventEncoding, out_of_bounds_events_are_dropped) {
 TEST(DvsEventEncoding, raw_byte_overload_matches_struct_overload) {
   // Packed wire layout for sensor::data::DVSEvent: 13 bytes (2 + 2 + 8 + 1).
   // Build a stride-13 byte stream and confirm both overloads agree.
+  // MSVC does not support GCC's `__attribute__((packed))`; use `#pragma pack`
+  // there (including clang-cl, which defines `_MSC_VER`).
+#ifdef _MSC_VER
+#pragma pack(push, 1)
+#endif
   struct PackedEvent {
     std::uint16_t x;
     std::uint16_t y;
     std::int64_t t;
     bool pol;
+#ifdef _MSC_VER
+  };
+#pragma pack(pop)
+#else
   } __attribute__((packed));
+#endif
 
   PackedEvent raw_events[2] = {
       {2u, 1u, 100, true},
