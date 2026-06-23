@@ -1,4 +1,8 @@
 
+#include <algorithm>
+#include <cctype>
+#include <string>
+
 #include "boost/pointer_cast.hpp"
 
 #include "carla/client/Actor.h"
@@ -23,6 +27,7 @@ ALSM::ALSM(
   const cc::World &world,
   const LocalMapPtr &local_map,
   SimulationState &simulation_state,
+  std::unordered_map<ActorId, std::pair<float, bool>> &large_vehicles,
   LocalizationStage &localization_stage,
   CollisionStage &collision_stage,
   TrafficLightStage &traffic_light_stage,
@@ -40,7 +45,8 @@ ALSM::ALSM(
     collision_stage(collision_stage),
     traffic_light_stage(traffic_light_stage),
     motion_plan_stage(motion_plan_stage),
-    vehicle_light_stage(vehicle_light_stage) {}
+    vehicle_light_stage(vehicle_light_stage),
+    large_vehicles(large_vehicles) {}
 
 void ALSM::Update() {
 
@@ -364,6 +370,32 @@ bool ALSM::IsVehicleStuck(const ActorId& actor_id) {
   return false;
 }
 
+void ALSM::AddActor(const Actor actor) {
+  const ActorId actor_id = actor->GetId();
+  for (auto &&attribute : actor->GetAttributes()) {
+    if (attribute.GetId() != "base_type") {
+      continue;
+    }
+    std::string value = attribute.GetValue();
+    std::transform(
+        value.begin(),
+        value.end(),
+        value.begin(),
+        [](unsigned char c) { return std::tolower(c); });
+    const std::string_view value_view{value};
+    const auto match = std::find(
+        large_vehicle_types.begin(),
+        large_vehicle_types.end(),
+        value_view);
+    if (match != large_vehicle_types.end()) {
+      large_vehicles[actor_id] = std::make_pair(0.0f, false);
+    }
+    // There is at most one "base_type" attribute, so stop scanning once it
+    // has been handled.
+    break;
+  }
+}
+
 void ALSM::RemoveActor(const ActorId actor_id, const bool registered_actor) {
   if (registered_actor) {
     registered_vehicles.Remove({actor_id});
@@ -374,6 +406,8 @@ void ALSM::RemoveActor(const ActorId actor_id, const bool registered_actor) {
     traffic_light_stage.RemoveActor(actor_id);
     motion_plan_stage.RemoveActor(actor_id);
     vehicle_light_stage.RemoveActor(actor_id);
+
+    large_vehicles.erase(actor_id);
   }
   else {
     unregistered_actors.erase(actor_id);

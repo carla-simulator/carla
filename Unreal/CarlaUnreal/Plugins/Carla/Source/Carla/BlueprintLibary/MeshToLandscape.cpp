@@ -8,6 +8,7 @@
 #include "Engine/StaticMeshActor.h"
 #include "Components/StaticMeshComponent.h"
 #include "StaticMeshLODResourcesAdapter.h"
+#include "Physics/Experimental/PhysScene_Chaos.h"
 #include "PhysicsEngine/PhysicsObjectExternalInterface.h"
 #include "Async/ParallelFor.h"
 #include "Kismet/KismetMathLibrary.h"

@@ -1,46 +1,40 @@
-// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
+// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
+//
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
 
 #include <memory>
-#include <vector>
+#include <string>
 
-#include "CarlaSubscriber.h"
 #include "carla/ros2/ROS2CallbackData.h"
+#include "carla/ros2/subscribers/BaseSubscriber.h"
 
 namespace carla {
 namespace ros2 {
 
-  struct CarlaEgoVehicleControlSubscriberImpl;
+// Forward declarations keep the FastDDS-heavy SubscriberImpl<> definition out of the
+// main carla-server compile unit. The full instantiation lives in
+// CarlaEgoVehicleControlSubscriber.cpp, which is built by the carla-ros2-native
+// ExternalProject (where FastDDS headers are on the include path).
+template <typename Traits> class SubscriberImpl;
+struct CarlaEgoVehicleControlTraits;
 
-  class CarlaEgoVehicleControlSubscriber : public CarlaSubscriber {
-    public:
-      CarlaEgoVehicleControlSubscriber(void* vehicle, const char* ros_name = "", const char* parent = "");
-      ~CarlaEgoVehicleControlSubscriber();
-      CarlaEgoVehicleControlSubscriber(const CarlaEgoVehicleControlSubscriber&);
-      CarlaEgoVehicleControlSubscriber& operator=(const CarlaEgoVehicleControlSubscriber&);
-      CarlaEgoVehicleControlSubscriber(CarlaEgoVehicleControlSubscriber&&);
-      CarlaEgoVehicleControlSubscriber& operator=(CarlaEgoVehicleControlSubscriber&&);
+class CarlaEgoVehicleControlSubscriber : public BaseSubscriber {
+public:
+  CarlaEgoVehicleControlSubscriber(void *vehicle, std::string base_topic_name, std::string frame_id);
+  ~CarlaEgoVehicleControlSubscriber() override;
 
-      bool HasNewMessage();
-      bool IsAlive();
-      VehicleControl GetMessage();
-      void* GetVehicle();
+  void ProcessMessages(ActorCallback callback) override;
 
-      bool Init();
-      bool Read();
-      const char* type() const override { return "Ego vehicle control"; }
+protected:
+  ROS2CallbackData GetMessage() override;
 
-      //Do not call, for internal use only
-      void ForwardMessage(VehicleControl control);
-      void DestroySubscriber();
-    private:
-      void SetData(int32_t seconds, uint32_t nanoseconds, uint32_t actor_id, std::vector<float>&& data);
+private:
+  std::shared_ptr<SubscriberImpl<CarlaEgoVehicleControlTraits>> _impl;
+};
 
-    private:
-      std::shared_ptr<CarlaEgoVehicleControlSubscriberImpl> _impl;
-  };
-}
-}
+}  // namespace ros2
+}  // namespace carla

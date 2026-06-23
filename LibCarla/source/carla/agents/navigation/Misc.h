@@ -22,7 +22,7 @@ namespace client {
 } // namespace client
 
 namespace geom {
-  class Location;
+  struct Location;
   class Transform;
 } // namespace geom
 

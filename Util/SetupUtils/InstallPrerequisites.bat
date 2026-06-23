@@ -17,7 +17,7 @@ set visual_studio_components=^
     Microsoft.VisualStudio.Component.VC.Llvm.Clang ^
     Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset ^
     Microsoft.VisualStudio.ComponentGroup.NativeDesktop.Llvm.Clang ^
-    Microsoft.VisualStudio.Component.VC.14.36.17.6.x86.x64 ^
+    Microsoft.VisualStudio.Component.VC.14.38.17.8.x86.x64 ^
     Microsoft.Component.PythonTools
 
 rem -- PARSE COMMAND LINE ARGUMENTS --

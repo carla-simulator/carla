@@ -1,0 +1,66 @@
+{
+    "type": "vehicle.lincoln.mkz",
+    "id": "hero",
+    "sensors": [
+        {
+            "type": "sensor.camera.rgb",
+            "id": "rgb",
+            "spawn_point": {"x": -4.5, "y": 0.0, "z": 2.5, "roll": 0.0, "pitch": 20.0, "yaw": 0.0},
+            "attributes": {
+                "image_size_x": 600,
+                "image_size_y": 400,
+                "fov": 90.0
+            }
+        },
+        {
+            "type": "sensor.camera.depth",
+            "id": "depth",
+            "spawn_point": {"x": -4.5, "y": 0.0, "z": 2.5, "roll": 0.0, "pitch": 20.0, "yaw": 0.0},
+            "attributes": {
+                "image_size_x": 600,
+                "image_size_y": 400,
+                "fov": 90.0
+            }
+        },
+        {
+            "type": "sensor.camera.semantic_segmentation",
+            "id": "semseg",
+            "spawn_point": {"x": -4.5, "y": 0.0, "z": 2.5, "roll": 0.0, "pitch": 20.0, "yaw": 0.0},
+            "attributes": {
+                "image_size_x": 600,
+                "image_size_y": 400,
+                "fov": 90.0
+            }
+        },
+        {
+            "type": "sensor.camera.instance_segmentation",
+            "id": "instseg",
+            "spawn_point": {"x": -4.5, "y": 0.0, "z": 2.5, "roll": 0.0, "pitch": 20.0, "yaw": 0.0},
+            "attributes": {
+                "image_size_x": 600,
+                "image_size_y": 400,
+                "fov": 90.0
+            }
+        },
+        {
+            "type": "sensor.camera.normals",
+            "id": "normals",
+            "spawn_point": {"x": -4.5, "y": 0.0, "z": 2.5, "roll": 0.0, "pitch": 20.0, "yaw": 0.0},
+            "attributes": {
+                "image_size_x": 600,
+                "image_size_y": 400,
+                "fov": 90.0
+            }
+        },
+        {
+            "type": "sensor.camera.optical_flow",
+            "id": "optflow",
+            "spawn_point": {"x": -4.5, "y": 0.0, "z": 2.5, "roll": 0.0, "pitch": 20.0, "yaw": 0.0},
+            "attributes": {
+                "image_size_x": 600,
+                "image_size_y": 400,
+                "fov": 90.0
+            }
+        }
+    ]
+}

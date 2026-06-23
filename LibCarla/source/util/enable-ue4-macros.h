@@ -6,9 +6,51 @@
 
 #if defined(_MSC_VER)
 #  pragma warning(pop)
-#  ifdef UpdateResource
-#    undef UpdateResource
-#  endif
+#endif
+
+// Restore UE macros and scrub <windows.h> macros left behind when a LibCarla
+// dependency (rpclib/msgpack, asio) includes it raw, which would otherwise
+// break engine code (e.g. FApp::GetCurrentTime). Mirrors UE's
+// Windows/PostWindowsApi.h.
+// TRUE/FALSE are deliberately left defined: UE has no macro for them, and
+// asio Win32 code parsed after this bracket still needs them.
+#if defined(_WIN32)
+#  pragma pop_macro("TEXT")
+#  undef CaptureStackBackTrace
+#  undef CopyFile
+#  undef CreateDesktop
+#  undef CreateDirectory
+#  undef CreateFont
+#  undef DeleteFile
+#  undef DrawText
+#  undef FindWindow
+#  undef GetClassInfo
+#  undef GetClassName
+#  undef GetCommandLine
+#  undef GetCurrentTime
+#  undef GetEnvironmentVariable
+#  undef GetFileAttributes
+#  undef GetFreeSpace
+#  undef GetMessage
+#  undef GetNextSibling
+#  undef GetObject
+#  undef GetProp
+#  undef GetTempFileName
+#  undef IsMaximized
+#  undef IsMinimized
+#  undef LoadString
+#  undef MemoryBarrier
+#  undef MoveFile
+#  undef PlaySound
+#  undef PostMessage
+#  undef ReportEvent
+#  undef SendMessage
+#  undef SetPort
+#  undef SetProp
+#  undef UpdateResource
+#  undef Yield
+#  undef min
+#  undef max
 #endif
 
 #if defined(__clang__)

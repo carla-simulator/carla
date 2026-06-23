@@ -7,8 +7,8 @@
             "id": "rgb",
             "spawn_point": {"x": -4.5, "y": 0.0, "z": 2.5, "roll": 0.0, "pitch": 20.0, "yaw": 0.0},
             "attributes": {
-                "image_size_x": 400,
-                "image_size_y": 200,
+                "image_size_x": 600,
+                "image_size_y": 400,
                 "fov": 90.0
             }
         },

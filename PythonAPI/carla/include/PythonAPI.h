@@ -4,13 +4,17 @@
 #include <carla/PythonUtil.h>
 #include <carla/Time.h>
 
+#include <carla/geom/Acceleration.h>
+#include <carla/geom/AngularVelocity.h>
 #include <carla/geom/BoundingBox.h>
 #include <carla/geom/GeoLocation.h>
 #include <carla/geom/Location.h>
+#include <carla/geom/Quaternion.h>
 #include <carla/geom/Rotation.h>
 #include <carla/geom/Transform.h>
 #include <carla/geom/Vector2D.h>
 #include <carla/geom/Vector3D.h>
+#include <carla/geom/Velocity.h>
 
 #include <rpc/config.h>
 #include <rpc/rpc_error.h>
@@ -309,6 +313,29 @@ namespace geom {
     out << "Rotation(pitch=" << std::to_string(rotation.pitch)
         << ", yaw=" << std::to_string(rotation.yaw)
         << ", roll=" << std::to_string(rotation.roll) << ')';
+    return out;
+  }
+
+  inline std::ostream &operator<<(std::ostream &out, const Velocity &v) {
+    WriteVector3D(out, "Velocity", v);
+    return out;
+  }
+
+  inline std::ostream &operator<<(std::ostream &out, const AngularVelocity &v) {
+    WriteVector3D(out, "AngularVelocity", v);
+    return out;
+  }
+
+  inline std::ostream &operator<<(std::ostream &out, const Acceleration &v) {
+    WriteVector3D(out, "Acceleration", v);
+    return out;
+  }
+
+  inline std::ostream &operator<<(std::ostream &out, const Quaternion &q) {
+    out << "Quaternion(x=" << std::to_string(q.x)
+        << ", y=" << std::to_string(q.y)
+        << ", z=" << std::to_string(q.z)
+        << ", w=" << std::to_string(q.w) << ')';
     return out;
   }
 

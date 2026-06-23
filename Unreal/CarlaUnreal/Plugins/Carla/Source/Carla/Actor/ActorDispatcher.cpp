@@ -200,44 +200,59 @@ FCarlaActor* UActorDispatcher::RegisterActor(
         }
       }
       const std::string id = std::string(TCHAR_TO_UTF8(*Description.Id));
+      std::string ResolvedRosName;
       if (RosName == id) {
         if(RosName.find("vehicle") != std::string::npos)
         {
-          std::string VehicleName = "vehicle" + std::to_string(View->GetActorId());
-          ROS2->AddActorRosName(static_cast<void*>(&Actor), VehicleName);
+          ResolvedRosName = "vehicle" + std::to_string(View->GetActorId());
         }
         else
         {
           size_t pos = RosName.find_last_of('.');
           if (pos != std::string::npos) {
-            std::string lastToken = RosName.substr(pos + 1) + "__";
-            ROS2->AddActorRosName(static_cast<void*>(&Actor), lastToken);
+            ResolvedRosName = RosName.substr(pos + 1) + "__";
           }
         }
       } else {
-        ROS2->AddActorRosName(static_cast<void*>(&Actor), RosName);
+        ResolvedRosName = RosName;
+      }
+      if (!ResolvedRosName.empty())
+      {
+        ROS2->RegisterSensor(static_cast<void*>(&Actor), ResolvedRosName, ResolvedRosName, true);
       }
 
-      // vehicle controller for hero
+      // vehicle controller for hero. Scan the variations once for the hero role and the
+      // opt-in Ackermann control flag; the two control topics are mutually exclusive on
+      // the ROS 2 side, so only request Ackermann when the attribute asks for it.
+      bool bIsHero = false;
+      bool bEnableAckermannControl = false;
       for (auto &&Attr : Description.Variations)
       {
         if (Attr.Key == "role_name" && (Attr.Value.Value == "hero" || Attr.Value.Value == "ego"))
         {
-          ROS2->AddActorCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
-          {
-            AActor *UEActor = reinterpret_cast<AActor *>(Actor);
-            ActorROS2Handler Handler(UEActor, RosName);
-            std::visit(Handler, Data);
-          });
-          #if defined(WITH_ROS2_DEMO)
-          ROS2->AddBasicSubscriberCallback(static_cast<void*>(&Actor), RosName, [RosName](void *Actor, carla::ros2::ROS2MessageCallbackData Data) -> void
-          {
-            AActor *UEActor = reinterpret_cast<AActor *>(Actor);
-            ActorROS2Handler Handler(UEActor, RosName);
-            std::visit(Handler, Data);
-          });
-          #endif
+          bIsHero = true;
         }
+        else if (Attr.Key == "ros2_ackermann_control")
+        {
+          bEnableAckermannControl = Attr.Value.Value.ToBool();
+        }
+      }
+      if (bIsHero)
+      {
+        ROS2->RegisterVehicle(static_cast<void*>(&Actor), ResolvedRosName, ResolvedRosName, [ResolvedRosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
+        {
+          AActor *UEActor = reinterpret_cast<AActor *>(Actor);
+          ActorROS2Handler Handler(UEActor, ResolvedRosName);
+          std::visit(Handler, Data);
+        }, bEnableAckermannControl);
+        #if defined(WITH_ROS2_DEMO)
+        ROS2->AddBasicSubscriberCallback(static_cast<void*>(&Actor), ResolvedRosName, [ResolvedRosName](void *Actor, carla::ros2::ROS2MessageCallbackData Data) -> void
+        {
+          AActor *UEActor = reinterpret_cast<AActor *>(Actor);
+          ActorROS2Handler Handler(UEActor, ResolvedRosName);
+          std::visit(Handler, Data);
+        });
+        #endif
       }
     }
     #endif
@@ -258,19 +273,25 @@ void UActorDispatcher::WakeActorUp(FCarlaActor::IdType Id, UCarlaEpisode* CarlaE
 void UActorDispatcher::OnActorDestroyed(AActor *Actor)
 {
   FCarlaActor* CarlaActor = Registry.FindCarlaActor(Actor);
-  if (CarlaActor)
-  {
-    if (CarlaActor->IsActive())
-    {
-      Registry.Deregister(CarlaActor->GetActorId());
-    }
-  }
 
   #ifdef WITH_ROS2
   auto ROS2 = carla::ros2::ROS2::GetInstance();
   if (ROS2->IsEnabled())
   {
-    ROS2->RemoveActorRosName(reinterpret_cast<void *>(Actor));
+    void *ActorKey = reinterpret_cast<void *>(Actor);
+    // UnregisterVehicle clears the per-actor subscribers, the actor-callback
+    // map, and the ros_name maps in a single step. The call is idempotent on
+    // a missing key, so it works for both vehicles and sensors that never
+    // registered a callback.
+    ROS2->UnregisterVehicle(ActorKey);
+    #if defined(WITH_ROS2_DEMO)
+    ROS2->RemoveBasicSubscriberCallback(ActorKey);
+    #endif
   }
   #endif
+
+  if (CarlaActor && CarlaActor->IsActive())
+  {
+    Registry.Deregister(CarlaActor->GetActorId());
+  }
 }
