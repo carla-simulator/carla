@@ -284,3 +284,58 @@ TEST(streaming, multi_stream) {
     }
   }
 }
+
+// When the ROS2 topic-visibility default is left off (the out-of-the-box
+// behavior), a freshly created stream is not visible to ROS 2 until something
+// explicitly enables it.
+TEST(streaming, ros_topic_visibility_default_off) {
+  using namespace carla::streaming;
+  using namespace carla::streaming::detail;
+
+  Server srv(TESTING_PORT);
+  constexpr stream_id_type sensor_id{1u};
+  srv.GetToken(sensor_id); // Materializes the stream in the dispatcher.
+  EXPECT_FALSE(srv.IsEnabledForROS(sensor_id));
+}
+
+// With the default flag on, every stream created afterwards is ROS-visible from
+// the moment it is born (this is what ROS2TopicVisibility=true delivers).
+TEST(streaming, ros_topic_visibility_default_on) {
+  using namespace carla::streaming;
+  using namespace carla::streaming::detail;
+
+  Server srv(TESTING_PORT);
+  srv.SetROS2TopicVisibilityDefaultEnabled(true);
+  constexpr stream_id_type sensor_id{1u};
+  srv.GetToken(sensor_id);
+  EXPECT_TRUE(srv.IsEnabledForROS(sensor_id));
+}
+
+// The default flag must also apply to streams born through MakeStream(), not
+// only through the GetToken() create-on-miss path.
+TEST(streaming, ros_topic_visibility_make_stream_path) {
+  using namespace carla::streaming;
+  using namespace carla::streaming::detail;
+
+  Server srv(TESTING_PORT);
+  srv.SetROS2TopicVisibilityDefaultEnabled(true);
+  auto stream = srv.MakeStream();
+  const auto sensor_id = token_type(stream.token()).get_stream_id();
+  EXPECT_TRUE(srv.IsEnabledForROS(sensor_id));
+}
+
+// Independently of the startup default, the per-stream EnableForROS /
+// DisableForROS surface this feature relies on must round-trip.
+TEST(streaming, ros_topic_visibility_manual_toggle) {
+  using namespace carla::streaming;
+  using namespace carla::streaming::detail;
+
+  Server srv(TESTING_PORT);
+  constexpr stream_id_type sensor_id{1u};
+  srv.GetToken(sensor_id);
+  EXPECT_FALSE(srv.IsEnabledForROS(sensor_id));
+  srv.EnableForROS(sensor_id);
+  EXPECT_TRUE(srv.IsEnabledForROS(sensor_id));
+  srv.DisableForROS(sensor_id);
+  EXPECT_FALSE(srv.IsEnabledForROS(sensor_id));
+}

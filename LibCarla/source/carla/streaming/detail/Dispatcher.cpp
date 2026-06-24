@@ -47,6 +47,9 @@ namespace detail {
       if (!result.second) {
         throw_exception(std::runtime_error("failed to create stream!"));
       }
+      if (_topic_visibility_default_enabled) {
+        ptr->EnableForROS();
+      }
       log_debug("Stream created");
       return carla::streaming::Stream(ptr);
     } else {
@@ -120,9 +123,14 @@ namespace detail {
       auto ptr = std::make_shared<MultiStreamState>(temp_token);
       auto result = _stream_map.emplace(std::make_pair(temp_token.get_stream_id(), ptr));
       ptr->ForceActive();
+
+      if (_topic_visibility_default_enabled) {
+        ptr->EnableForROS();
+      }
       if (!result.second) {
         log_debug("Failed to create multistream for stream ", sensor_id, " on port ", temp_token.get_port());
       }
+
       log_debug("Created token from stream ", sensor_id, " on port ", temp_token.get_port());
       return temp_token;
     }

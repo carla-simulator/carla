@@ -75,6 +75,10 @@ namespace streaming {
       return _server.GetToken(sensor_id);
     }
 
+    void SetROS2TopicVisibilityDefaultEnabled(bool enabled) {
+      _server.SetROS2TopicVisibilityDefaultEnabled(enabled);
+    }
+
     void EnableForROS(stream_id sensor_id) {
       _server.EnableForROS(sensor_id);
     }

@@ -226,6 +226,10 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     UE_LOG(LogCarla, Log, TEXT("ROS2: Enabling ROS2..."));
     ROS2->Enable(true);
     UE_LOG(LogCarla, Log, TEXT("ROS2: ROS2 enabled..."));
+    // Apply the configured default topic visibility before any sensor stream is
+    // created. Gated on Settings.ROS2 so non-ROS2 runs never force every stream
+    // active (which would make every sensor produce data each tick).
+    Server.GetStreamingServer().SetROS2TopicVisibilityDefaultEnabled(Settings.ROS2TopicVisibility);
   } else {
     UE_LOG(LogCarla, Log, TEXT("ROS2: ROS2 enabled..."));
   }
