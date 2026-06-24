@@ -197,6 +197,24 @@ namespace road {
       return _data.GetControllers();
     }
 
+    const std::unordered_map<StencilId, std::unique_ptr<Stencil>>& GetStencils() const {
+      return _data.GetStencils();
+    }
+    /// Data structure for the stencil search
+    struct StencilSearchData {
+      const element::RoadInfoStencil *stencil;
+      Waypoint waypoint;
+      double accumulated_s = 0;
+    };
+
+    /// Searches stencils from an initial waypoint until the defined distance.
+    std::vector<StencilSearchData> GetStencilsInDistance(
+        Waypoint waypoint, double distance, bool stop_at_junction = false) const;
+
+    /// Return all RoadInfoStencil in the map
+    std::vector<const element::RoadInfoStencil*>
+        GetAllStencilReferences() const;
+
     std::vector<carla::geom::BoundingBox> GetJunctionsBoundingBoxes() const;
 
 #ifdef LIBCARLA_WITH_GTEST
