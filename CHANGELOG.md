@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Added export_cosmos_* HD-map exporters and RPCs for Cosmos Transfer
 * Added road stencil subsystem to LibCarla (Stencil, RoadInfoStencil, Map/MapBuilder/ObjectParser support)
 * Modernized the Python navigation agents with type hints and code cleanup ported from `ue4-dev`, added typed obstacle/traffic-light detection-result tuples in `agents/tools/hints.py`, reworked `BasicAgent.set_destination` to accept an optional start location and queue-clean flag, and fixed obstacle detection treating an empty `vehicle_list` as "all vehicles".
 * Updated the `invertedai_traffic.py` example with InvertedAI quality-of-life improvements for ego-vehicle integration and video generation.
