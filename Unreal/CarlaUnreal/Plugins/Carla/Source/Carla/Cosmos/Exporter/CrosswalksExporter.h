@@ -20,7 +20,7 @@
 UCLASS()
 class CARLA_API UCrosswalksExporter : public UCosmosStaticExporter
 {
-	GENERATED_BODY()
+  GENERATED_BODY()
 
 public:
   static bool ExportCosmosCrosswalk(UWorld* World, const FString& SessionId, const FString& OutFilePath, FString& OutError);

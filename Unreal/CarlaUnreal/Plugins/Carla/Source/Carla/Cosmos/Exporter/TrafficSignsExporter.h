@@ -20,32 +20,32 @@
 UCLASS()
 class CARLA_API UTrafficSignsExporter : public UCosmosStaticExporter
 {
-	GENERATED_BODY()
+  GENERATED_BODY()
 
 public:
   static bool ExportCosmosTrafficSigns(UWorld* World, const FString& SessionId, const FString& OutFilePath, FString& OutError);
 
 private:
-	static bool ParseSessionIdParts(const FString& In, FString& OutUuid, FString& OutStart, FString& OutEnd);
+  static bool ParseSessionIdParts(const FString& In, FString& OutUuid, FString& OutStart, FString& OutEnd);
 
-	// Simplified export functions for each type
-	static void AppendPoleLabel(
-		TArray<TSharedPtr<FJsonValue>>& Labels,
-		const FString& StartTs,
-		const FVector& TopM,
-		const FVector& BaseM);
+  // Simplified export functions for each type
+  static void AppendPoleLabel(
+    TArray<TSharedPtr<FJsonValue>>& Labels,
+    const FString& StartTs,
+    const FVector& TopM,
+    const FVector& BaseM);
 
-	static void AppendTrafficSignLabel(
-		TArray<TSharedPtr<FJsonValue>>& Labels,
-		const FString& StartTs,
-		const TArray<FVector>& V8Meters);
+  static void AppendTrafficSignLabel(
+    TArray<TSharedPtr<FJsonValue>>& Labels,
+    const FString& StartTs,
+    const TArray<FVector>& V8Meters);
 
-	static void AppendTrafficLightLabel(
-		TArray<TSharedPtr<FJsonValue>>& Labels,
-		const FString& StartTs,
-		const TArray<FVector>& V8Meters);
+  static void AppendTrafficLightLabel(
+    TArray<TSharedPtr<FJsonValue>>& Labels,
+    const FString& StartTs,
+    const TArray<FVector>& V8Meters);
 
-	// Helper functions
-	static void BuildPolePolylineMeters(const UStaticMeshComponent* Comp, FVector& OutTopM, FVector& OutBaseM);
-	static void BuildComponentCuboidMeters(const UStaticMeshComponent* Comp, TArray<FVector>& Out8VertsMeters);
+  // Helper functions
+  static void BuildPolePolylineMeters(const UStaticMeshComponent* Comp, FVector& OutTopM, FVector& OutBaseM);
+  static void BuildComponentCuboidMeters(const UStaticMeshComponent* Comp, TArray<FVector>& Out8VertsMeters);
 };

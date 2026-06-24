@@ -20,7 +20,7 @@
 UCLASS()
 class CARLA_API URoadMarkingExporter : public UCosmosStaticExporter
 {
-	GENERATED_BODY()
+  GENERATED_BODY()
 
 public:
 
