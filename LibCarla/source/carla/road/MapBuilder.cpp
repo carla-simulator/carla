@@ -20,6 +20,7 @@
 #include "carla/road/element/RoadInfoMarkTypeLine.h"
 #include "carla/road/element/RoadInfoSpeed.h"
 #include "carla/road/element/RoadInfoSignal.h"
+#include "carla/road/element/RoadInfoStencil.h"
 #include "carla/road/element/RoadInfoVisitor.h"
 #include "carla/road/element/RoadInfoCrosswalk.h"
 #include "carla/road/InformationSet.h"
@@ -348,6 +349,49 @@ namespace road {
         const std::string dependency_type) {
       _temp_signal_container[signal_id]->_dependencies.emplace_back(
           SignalDependency(dependency_id, dependency_type));
+    }
+
+    element::RoadInfoStencil* MapBuilder::AddStencil(
+        Road* road,
+        const StencilId stencil_id,
+        const double s,
+        const double t,
+        const std::string name,
+        const std::string orientation,
+        const std::string type,
+        const double zOffset,
+        const double heading,
+        const double length,
+        const double width,
+        const double pitch,
+        const double roll) {
+
+      // Create the stencil object
+      _temp_stencil_container[stencil_id] = std::make_unique<Stencil>(
+          road->GetId(),
+          stencil_id,
+          s,
+          t,
+          name,
+          orientation,
+          type,
+          zOffset,
+          heading,
+          length,
+          width,
+          pitch,
+          roll);
+
+      const double epsilon = 0.00001;
+      RELEASE_ASSERT(s >= 0.0);
+      // Prevent s_position from being equal to the road length
+      double fixed_s = geom::Math::Clamp(s, 0.0, road->GetLength() - epsilon);
+      _temp_road_info_container[road].emplace_back(std::make_unique<element::RoadInfoStencil>(
+          stencil_id, road->GetId(), fixed_s, t, orientation));
+      auto road_info_stencil = static_cast<element::RoadInfoStencil*>(
+          _temp_road_info_container[road].back().get());
+      _temp_stencil_reference_container.emplace_back(road_info_stencil);
+      return road_info_stencil;
     }
 
     // build road objects
