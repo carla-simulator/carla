@@ -23,11 +23,9 @@ class CARLA_API URoadBoundaryExporter : public UCosmosStaticExporter
   GENERATED_BODY()
 
 public:
-
   static bool ExportCosmosRoadBoundaries(UWorld* World, const FString& SessionId, const FString& OutFilePath, FString& OutError);
 
 private:
-
   static bool ParseSessionIdParts(const FString& In, FString& OutUuid, FString& OutStart, FString& OutEnd);
   static void AppendRoadBoundaryLabel(
       TArray<TSharedPtr<FJsonValue>>& LabelsArr,

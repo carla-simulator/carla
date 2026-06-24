@@ -164,7 +164,6 @@ void UCrosswalksExporter::AppendCrosswalkLabel(
     LabelData->SetObjectField(TEXT("shape3d"), Shape3D);
   }
   Label->SetObjectField(TEXT("labelData"), LabelData);
-
   Label->SetStringField(TEXT("timestampMicroseconds"), StartTs);
 
   LabelsArr.Add(MakeShared<FJsonValueObject>(Label));

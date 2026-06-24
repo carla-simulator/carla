@@ -24,11 +24,9 @@ class CARLA_API UWaitLinesExporter : public UCosmosStaticExporter
   GENERATED_BODY()
 
 public:
-
   static bool ExportCosmosWaitLines(UWorld* World, const FString& SessionId, const FString& OutFilePath, FString& OutError);
 
 private:
-
   static bool ParseSessionIdParts(const FString& In, FString& OutUuid, FString& OutStart, FString& OutEnd);
   static void AppendWaitLineLabel(
       TArray<TSharedPtr<FJsonValue>>& LabelsArr,

@@ -26,7 +26,6 @@ public:
   static bool ExportCosmosCrosswalk(UWorld* World, const FString& SessionId, const FString& OutFilePath, FString& OutError);
 
 private:
-
   static bool ParseSessionIdParts(const FString& In, FString& OutUuid, FString& OutStart, FString& OutEnd);
   static FString MakeStableLabelId(const FString& Uuid, const TArray<FVector>& Vertices);
   static void AppendCrosswalkLabel(
@@ -46,6 +45,4 @@ private:
       const FString& OptionalFeatureId,
       const FString& OptionalFeatureVer,
       const FString& OptionalClipVerId);
-
-
 };
