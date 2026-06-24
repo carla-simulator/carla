@@ -53,6 +53,7 @@ namespace road {
 
     // compute transform requires the roads to have the RoadInfo
     SolveSignalReferencesAndTransforms();
+    SolveStencilReferencesAndTransforms();
 
     SolveControllerAndJuntionReferences();
 
@@ -873,6 +874,18 @@ namespace road {
     return transform;
   }
 
+  geom::Transform MapBuilder::ComputeStencilTransform(std::unique_ptr<Stencil> &stencil, MapData &data) {
+    DirectedPoint point = data.GetRoad(stencil->GetRoadId()).GetDirectedPointInNoLaneOffset(stencil->GetS());
+    point.ApplyLateralOffset(static_cast<float>(-stencil->GetT()));
+    point.location.y *= -1; // Unreal Y axis hack
+    point.location.z += static_cast<float>(stencil->GetZOffset());
+    geom::Transform transform(point.location, geom::Rotation(
+        geom::Math::ToDegrees(static_cast<float>(stencil->GetPitch())),
+        geom::Math::ToDegrees(static_cast<float>(-(point.tangent + stencil->GetHeading()))),
+        geom::Math::ToDegrees(static_cast<float>(stencil->GetRoll()))));
+    return transform;
+  }
+
   void MapBuilder::SolveSignalReferencesAndTransforms() {
     for(auto signal_reference : _temp_signal_reference_container){
       signal_reference->_signal =
@@ -895,6 +908,24 @@ namespace road {
     _map_data._signals = std::move(_temp_signal_container);
 
     GenerateDefaultValiditiesForSignalReferences();
+  }
+
+  void MapBuilder::SolveStencilReferencesAndTransforms() {
+    // Link stencil references to actual stencils
+    for(auto stencil_reference : _temp_stencil_reference_container){
+      stencil_reference->_stencil =
+          _temp_stencil_container[stencil_reference->_stencil_id].get();
+    }
+
+    // Compute transforms for stencils
+    for(auto& stencil_pair : _temp_stencil_container) {
+      auto& stencil = stencil_pair.second;
+      auto transform = ComputeStencilTransform(stencil, _map_data);
+      stencil->_transform = transform;
+    }
+
+    // Move stencils to map data
+    _map_data._stencils = std::move(_temp_stencil_container);
   }
 
   void MapBuilder::SolveControllerAndJuntionReferences() {
