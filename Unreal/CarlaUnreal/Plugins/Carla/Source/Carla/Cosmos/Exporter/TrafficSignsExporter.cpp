@@ -4,8 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 // TrafficSignsExporter.cpp
-#include "Carla.h"
 #include "TrafficSignsExporter.h"
+#include "Carla.h"
 #include "Carla/Game/Tagger.h"
 
 #include <util/ue-header-guard-begin.h>

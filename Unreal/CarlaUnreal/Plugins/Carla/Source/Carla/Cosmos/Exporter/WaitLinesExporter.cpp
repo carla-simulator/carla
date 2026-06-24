@@ -4,8 +4,8 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 // WaitLinesExporter.cpp
-#include "Carla.h"
 #include "WaitLinesExporter.h"
+#include "Carla.h"
 #include "Carla/Traffic/TrafficLightBase.h"
 
 #include <util/ue-header-guard-begin.h>
