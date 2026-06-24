@@ -1,0 +1,3 @@
+[submodule "PythonAPI/examples/nvidia/cosmos/utils/cosmos-drive-dreams"]
+	path = PythonAPI/examples/nvidia/cosmos/utils/cosmos-drive-dreams
+	url = https://github.com/nv-tlabs/Cosmos-Drive-Dreams.git

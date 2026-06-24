@@ -1,0 +1,37 @@
+prompt = "Captured from a camera mounted on a vehicle roof, we see a quiet rural intersection on a clear morning where a two lane road meets a narrower farm track, faded white lines and a lone stop sign guide sparse traffic, modest single story buildings with tin roofs sit back from grassy verges, and fields of corn stretch beyond wooden fences. cinematic, photorealistic, ultra high quality, ultra high resolution, high fidelity, high definition, expert cinematography, realism, structure of the scene maintained, vehicles maintained."
+input_video_path = "input_video.mp4"
+
+# Negative prompt for improved quality
+negative_prompt = "The video captures a game with low resolution graphics. The video is a cartoon. It represents a recording of old outdated games. The images are very pixelated and of poor CG quality. There are many subtitles in the footage. Overall, the video is unrealistic and appears cg. The video lacks contrast and detail. Everything looks the same with a lack of visual interest in color. Everything looks grey and metallic. The video captures a series of frames showing ugly scenes, static with no motion, motion blur, over-saturation, shaky footage, low resolution, grainy texture, pixelated images, poorly lit areas, underexposed and overexposed scenes, poor color balance, washed out colors, choppy sequences, jerky movements, low frame rate, artifacting, color banding, unnatural transitions, outdated special effects, fake elements, unconvincing visuals, poorly edited content, jump cuts, visual noise, and flickering. The video is of the lowest quality. Vehicles change appearance. Vehicles are ignored. Scene is flat. Colors are unrealistic."
+
+# Number of diffusion steps
+num_steps = 35
+
+# CFG guidance scale
+guidance = 7.0
+
+# The level of partial noise added to the input video in the range [0, 80.0]. Any value equal or higher than 80.0 will result in not using the input video and providing the model with pure noise.
+sigma_max = 78
+
+# The strength of blurring when preparing the control input for the vis controlnet. Valid values are 'very_low', 'low', 'medium', 'high', and 'very_high'.
+blur_strength = "medium"
+
+# Random seed
+seed = 1024
+
+[edge]
+input_control = "edges.mp4"
+control_weight = 0.5
+
+[seg]
+input_control = "semantic_segmentation.mp4"
+control_weight = 0.9
+
+#[depth]
+#input_control = "depth.mp4"
+#control_weight = 0.1
+#
+
+#[vis]
+#control_weight = 0.3
+#
