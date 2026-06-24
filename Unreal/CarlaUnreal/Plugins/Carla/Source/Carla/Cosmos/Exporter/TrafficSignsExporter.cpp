@@ -214,9 +214,11 @@ bool UTrafficSignsExporter::ExportCosmosTrafficSigns(UWorld* World, const FStrin
 
   // Scan all mesh components with tags (same approach as CosmosControlSensor)
   TArray<UObject*> AllMeshComponents;
-  // UE 5.5: EInternalObjectFlags::AllFlags was replaced by the composite
-  // EInternalObjectFlags_AllFlags constant (same all-flags exclusion mask).
-  GetObjectsOfClass(UMeshComponent::StaticClass(), AllMeshComponents, true, EObjectFlags::RF_ClassDefaultObject, EInternalObjectFlags_AllFlags);
+  // Exclude only class-default objects; the internal-flags mask must stay at the
+  // default None. Passing EInternalObjectFlags_AllFlags here would exclude every
+  // live object (it sets Native/RootSet/RefCounted/ReachableInCluster/... which
+  // every in-world component carries), yielding an empty result.
+  GetObjectsOfClass(UMeshComponent::StaticClass(), AllMeshComponents, true, EObjectFlags::RF_ClassDefaultObject, EInternalObjectFlags::None);
 
   UE_LOG(LogCarla, Warning, TEXT("TrafficSignsExporter: Found %d total mesh components"), AllMeshComponents.Num());
 
