@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
-# Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma de
+# Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
 #
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-"""Example script to generate realistic traffic with the InvertedAI API"""
+"""
+Example script to generate realistic traffic with the InvertedAI API
+"""
 
 import os
 import time
@@ -16,9 +18,15 @@ import logging
 import math
 import random
 import invertedai as iai
-from invertedai.common import AgentProperties, AgentState, TrafficLightState
+import numpy as np
+import imageio
 
-SpawnActor = carla.command.SpawnActor
+from tqdm import tqdm
+from enum import Enum
+from dataclasses import dataclass, field
+from invertedai.common import AgentProperties, AgentState, TrafficLightState, Point, RecurrentState
+from carla import command, Location
+from typing import List, Tuple, Any, Optional
 
 #---------
 # CARLA Utils
@@ -28,65 +36,62 @@ SpawnActor = carla.command.SpawnActor
 def argument_parser():
 
     argparser = argparse.ArgumentParser(
-        description=__doc__)
+        description=__doc__,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    
     argparser.add_argument(
         '--host',
         metavar='H',
         default='127.0.0.1',
-        help='IP of the host server (default: 127.0.0.1)')
+        help='IP of the host server')
     argparser.add_argument(
         '-p', '--port',
         metavar='P',
         default=2000,
         type=int,
-        help='TCP port to listen to (default: 2000)')
+        help='TCP port to listen to')
     argparser.add_argument(
         '-n', '--number-of-vehicles',
         metavar='N',
-        default=30,
+        default=50,
         type=int,
-        help='Number of vehicles spawned by InvertedAI (default: 30)')
+        help='Number of vehicles spawned by InvertedAI')
     argparser.add_argument(
         '-w', '--number-of-walkers',
         metavar='W',
-        default=10,
+        default=0,
         type=int,
-        help='Number of walkers (default: 10)')
+        help='Number of walkers')
     argparser.add_argument(
         '--safe',
         type=bool,
         default=True,
-        help='Avoid spawning vehicles prone to accidents (default True)')
+        help='Avoid spawning vehicles prone to accidents')
     argparser.add_argument(
         '--filterv',
         metavar='PATTERN',
         default='vehicle.*',
-        help='Filter vehicle model (default: "vehicle.*")')
+        help='Filter vehicle model')
     argparser.add_argument(
         '--generationv',
         metavar='G',
-        default='3',
-        help='restrict to certain vehicle generation (values: "2","3","All" - default: "3")')
+        default='All',
+        help='restrict to certain vehicle generation')
     argparser.add_argument(
         '--filterw',
         metavar='PATTERN',
         default='walker.pedestrian.*',
-        help='Filter pedestrian type (default: "walker.pedestrian.*")')
+        help='Filter pedestrian type')
     argparser.add_argument(
         '--generationw',
         metavar='G',
-        default='3',
-        help='restrict to certain pedestrian generation (values: "2","3","All" - default: "3")')
+        default='All',
+        help='restrict to certain pedestrian generation')
     argparser.add_argument(
         '-s', '--seed',
         metavar='S',
         type=int,
         help='Set random seed')
-    argparser.add_argument(
-        '--hero',
-        action='store_true',
-        default=False,
-        help='Set one of the vehicles as hero')
     argparser.add_argument(
         '--iai-key',
         type=str,
@@ -99,55 +104,377 @@ def argument_parser():
     argparser.add_argument(
         '--sim-length',
         type=int,
-        default=120,
-        help="Length of the simulation in seconds (default: 120)")
+        default=60,
+        help="Length of the simulation in seconds")
     argparser.add_argument(
         '--location',
         type=str,
-        help=f"IAI formatted map on which to create simulate (default: carla:Town10HD)",
+        help=f"IAI formatted map on which to create simulate (default: carla:Town10HD, only tested there)",
         default='carla:Town10HD')
     argparser.add_argument(
         '--capacity',
         type=int,
-        help=f"The capacity parameter of a quadtree leaf before splitting (default: 100)",
+        help=f"The capacity parameter of a quadtree leaf before splitting",
         default=100)
     argparser.add_argument(
         '--width',
         type=int,
-        help=f"Full width of the area to initialize (default: 250)",
+        help=f"Full width of the area to initialize",
         default=250)
     argparser.add_argument(
         '--height',
         type=int,
-        help=f"Full height of the area to initialize (default: 250)",
+        help=f"Full height of the area to initialize",
         default=250)
     argparser.add_argument(
         '--map-center',
         type=int,
         nargs='+',
-        help=f"Center of the area to initialize (default: [0,30])",
-        default=tuple([0,30]))
+        help=f"Center of the area to initialize",
+        default=tuple([-50,20]))
     argparser.add_argument(
         '--iai-async',
         type=bool,
-        help=f"Whether to call drive asynchronously (default: True)",
+        help=f"Whether to call drive asynchronously",
         default=True)
     argparser.add_argument(
         '--api-model',
         type=str,
-        help=f"IAI API model version (default: bI5p)",
-        default="bI5p")
+        help=f"IAI API model version",
+        default="nBu1")
     argparser.add_argument(
         '--iai-log',
         action="store_true",
         help=f"Export a log file for the InvertedAI cosimulation, which can be replayed afterwards")
+    argparser.add_argument(
+        '--capture-video',
+        action="store_true",
+        help=f"Capture video within Carla.")
 
     args = argparser.parse_args()
 
     return args
 
+#---------
+# Video Capture
+#---------    
+
+@dataclass
+class VideoResolution:
+    res_x: int
+    res_y: int
+
+class VideoResolutionEnum(Enum):
+    ULTRAHD = VideoResolution(res_x=3840,res_y=2160)
+    FULLHD = VideoResolution(res_x=1920,res_y=1080)
+    HD = VideoResolution(res_x=1280,res_y=720)
+
+class CameraType(Enum):
+    RGB = "sensor.camera.rgb"
+    SEGMENTATION = "sensor.camera.semantic_segmentation"
+    DEPTH = "sensor.camera.depth"
+
+class CameraAttachment(Enum):
+    FPV = "fpv"
+    REARPOLE = "rearpole"
+    CCTV = "cctv"
+
+@dataclass
+class CameraAttachmentConfiguration:
+    attachment: CameraAttachment
+    transform: carla.Transform
+    actor_to_attach: Optional[carla.Actor] = None
+
+def get_default_cam_attachment(
+    attachment: CameraAttachment,
+    transform: Optional[carla.Transform] = None,
+    actor_to_attach: Optional[carla.Actor] = None
+) -> CameraAttachmentConfiguration:
+    if attachment == CameraAttachment.REARPOLE:
+        if actor_to_attach is None: 
+            raise ValueError(f"Must include an actor to attach for this camera attachment configuration: {attachment}.")
+        return CameraAttachmentConfiguration(
+            attachment = attachment,
+            actor_to_attach = actor_to_attach,
+            transform = carla.Transform(
+                carla.Location(x=-10.0, z=3.0),
+                carla.Rotation(yaw=0.0,pitch=-10.0,roll=0.0)
+            ) if transform is None else transform
+        )
+    if attachment == CameraAttachment.FPV:
+        if actor_to_attach is None: 
+            raise ValueError(f"Must include an actor to attach for camera attachment configuration: {attachment}.")
+        return CameraAttachmentConfiguration(
+            attachment = attachment,
+            actor_to_attach = actor_to_attach,
+            transform = carla.Transform(
+                carla.Location(x=2.8, z=1.5)
+            ) if transform is None else transform
+        )
+    if attachment == CameraAttachment.CCTV:
+        if transform is None:
+            raise ValueError(f"Must include a transform for camera attachment configuration: {attachment}.")
+        return CameraAttachmentConfiguration(
+            attachment = attachment,
+            actor_to_attach = None,
+            transform = transform
+        )
+
+    raise ValueError(f"Unsupported camera attachment configuration: {attachment}.")
+
+@dataclass
+class CameraSpecification:
+    attachment_cfg: CameraAttachmentConfiguration
+    type: CameraType
+    fps: int
+    fov: int = 110
+    resolution: VideoResolutionEnum = VideoResolutionEnum.FULLHD
+    name: str = field(default_factory=lambda: str(int(time.time())))
+    save_path: str = field(default_factory=os.getcwd)
+    
+class CameraRecorder:
+    def __init__(
+        self,
+        name,
+        save_dir_path,
+        sensor_type
+    ):
+        self.name = name
+
+        self.full_dir_path = os.path.join(save_dir_path,name)
+        os.makedirs(self.full_dir_path, exist_ok=True)
+
+        self.data = None
+
+        self.sensor_type = sensor_type
+
+    def sensor_callback(self,data):
+        if self.sensor_type == CameraType.SEGMENTATION:
+            data.convert(carla.ColorConverter.CityScapesPalette)
+        elif self.sensor_type == CameraType.DEPTH:
+            data.convert(carla.ColorConverter.LogarithmicDepth)
+            
+        data.save_to_disk(path = os.path.join(self.full_dir_path,'%08d.png' % data.frame))
+
+@dataclass
+class CarlaSensorObject:
+    cam_spec: CameraSpecification
+    sensor: carla.Sensor
+    recorder: CameraRecorder
+
+class SensorManager:
+    def __init__(
+        self,
+        camera_specs: List[CameraSpecification],
+        world: carla.World,
+        spectator_id: Optional[int] = None
+    ):
+        self.world = world
+        self.spectator_id = spectator_id
+        self.cameras = [self.add_camera(spec) for spec in camera_specs]
+
+    def update_all_sensors(self):
+        self.update_cameras()
+        self.update_spectator()
+
+    def update_cameras(self):
+        for cam in self.cameras:
+            attached_actor = cam.cam_spec.attachment_cfg.actor_to_attach
+            transform = cam.cam_spec.attachment_cfg.transform
+            if attached_actor is not None:
+                actor_transform = attached_actor.get_transform()
+                x, y, z = transform.location.x, transform.location.y, transform.location.z
+                actor_rotation = actor_transform.rotation
+                offset_rotation = transform.rotation
+                # Compose the configured relative rotation on top of the actor's
+                # rotation so a camera's pitch/yaw/roll offset is preserved.
+                sensor_transform = carla.Transform(
+                    actor_transform.transform(carla.Location(x, y, z)),
+                    carla.Rotation(
+                        pitch=actor_rotation.pitch + offset_rotation.pitch,
+                        yaw=actor_rotation.yaw + offset_rotation.yaw,
+                        roll=actor_rotation.roll + offset_rotation.roll,
+                    ),
+                )
+            else:
+                sensor_transform = transform
+
+            cam.sensor.set_transform(sensor_transform)
+
+    def update_spectator(self):
+        if self.spectator_id is not None:
+            self.world.get_spectator().set_transform(self.cameras[self.spectator_id].sensor.get_transform())
+
+    def add_camera(
+        self,
+        cam_spec: CameraSpecification,
+    ) -> CarlaSensorObject:
+        if cam_spec.attachment_cfg.actor_to_attach is None:
+            sensor_transform = cam_spec.attachment_cfg.transform
+        else:
+            attached_actor = cam_spec.attachment_cfg.actor_to_attach
+            offset_transform = cam_spec.attachment_cfg.transform
+            actor_transform = attached_actor.get_transform()
+            x, y, z = (
+                offset_transform.location.x,
+                offset_transform.location.y,
+                offset_transform.location.z
+            )
+            actor_rotation = actor_transform.rotation
+            offset_rotation = offset_transform.rotation
+            # Compose the configured relative rotation on top of the actor's
+            # rotation so a camera's pitch/yaw/roll offset is preserved.
+            sensor_transform = carla.Transform(
+                actor_transform.transform(carla.Location(x, y, z)),
+                carla.Rotation(
+                    pitch=actor_rotation.pitch + offset_rotation.pitch,
+                    yaw=actor_rotation.yaw + offset_rotation.yaw,
+                    roll=actor_rotation.roll + offset_rotation.roll,
+                ),
+            )
+        
+        camera_bp = self.world.get_blueprint_library().find(cam_spec.type.value)
+        camera_bp.set_attribute('image_size_x', str(cam_spec.resolution.value.res_x))
+        camera_bp.set_attribute('image_size_y', str(cam_spec.resolution.value.res_y))
+        camera_bp.set_attribute('sensor_tick', str(1/cam_spec.fps))
+        camera_bp.set_attribute('fov', str(cam_spec.fov))
+        sensor = self.world.spawn_actor(camera_bp, sensor_transform)
+
+        recorder = CameraRecorder(
+            name=cam_spec.name,
+            save_dir_path=cam_spec.save_path,
+            sensor_type=cam_spec.type,
+        )
+        sensor.listen(recorder.sensor_callback)
+
+        return CarlaSensorObject(
+            cam_spec = cam_spec,
+            sensor = sensor,
+            recorder = recorder
+        )
+    
+    def write_videos(
+        self,
+        delete_images: bool = True
+    ):
+        for cam in self.cameras:
+            img_list = []
+
+            for img_path in sorted(os.listdir(cam.recorder.full_dir_path)):
+                if not img_path.endswith('.png'):
+                    continue
+                img = imageio.imread(os.path.join(cam.recorder.full_dir_path,img_path))
+                img_list.append(img)
+
+            full_video_dir = os.path.join(cam.recorder.full_dir_path,"video")
+            os.makedirs(full_video_dir, exist_ok=True)
+            full_video_path = os.path.join(full_video_dir,f"{cam.recorder.name}.mp4")
+            imageio.mimsave(
+                full_video_path, 
+                img_list, 
+                format='FFMPEG', 
+                fps=cam.cam_spec.fps,
+                macro_block_size = 1
+            )
+
+            if delete_images:
+                for filename in os.listdir(cam.recorder.full_dir_path):
+                    if filename.endswith('.png'):
+                        os.remove(os.path.join(cam.recorder.full_dir_path, filename))
+
+
+#---------
+# Simulation Agent Data
+#---------    
+
+class AgentType(Enum):
+    CARLA = 0
+    IAI = 1
+    EGO = 2
+
+@dataclass
+class AgentData:
+    type: AgentType
+    properties: AgentProperties
+    state: AgentState
+    recurrent_state: Optional[RecurrentState] = None
+    other: Optional[Any] = None
+    carla_actor: Optional[carla.Actor] = None
+
+class SimulationData:
+    def __init__(
+        self,
+        agent_data: List[AgentData]
+    ):
+        self.all_agent_data = agent_data
+
+    def get_all_states(self) -> List[AgentState]:
+        return [agent.state for agent in self.all_agent_data]
+
+    def get_all_properties(self) -> List[AgentProperties]:
+        return [agent.properties for agent in self.all_agent_data]
+
+    def get_all_recurrent_states(self) -> List[Optional[RecurrentState]]:
+        return [agent.recurrent_state for agent in self.all_agent_data]
+
+    def get_all_carla_states(self ) -> List[Optional[carla.Actor]]:
+        return [agent.carla_actor for agent in self.all_agent_data]
+
+    def get_all_other_data_per_type(
+        self,
+        agent_type: AgentType
+    ) -> List[Optional[Any]]:
+        return [agent.other for agent in self.all_agent_data if agent.type == agent_type]
+    
+    def update_non_carla_iai_states(
+        self,
+        agent_states: List[AgentState],
+        agent_properties: List[AgentProperties],
+        agent_recurrent_states: List[RecurrentState]
+    ):
+        for agent_id in range(len(self.all_agent_data)):
+            if not self.all_agent_data[agent_id].type == AgentType.CARLA:
+                self.all_agent_data[agent_id].state = agent_states[agent_id]
+                self.all_agent_data[agent_id].properties = agent_properties[agent_id]
+                self.all_agent_data[agent_id].recurrent_state = agent_recurrent_states[agent_id]
+
+    # Update transforms of CARLA agents driven by IAI and tick the world
+    def update_carla_states_from_iai(self):
+        """
+        Tick the carla simulation forward one time step
+        Assume carla_actors is a list of carla actors controlled by IAI
+        """
+        for agent in self.all_agent_data:
+            if not agent.type == AgentType.CARLA:
+                agent_transform = transform_iai_to_carla(agent.state)
+                try:     
+                    agent.carla_actor.set_transform(agent_transform)
+                except:
+                    pass
+
+    def update_iai_states_from_carla(self):
+        for agent_id, agent in enumerate(self.all_agent_data):
+            if agent.type == AgentType.CARLA:
+                state, properties = initialize_iai_agent(agent.carla_actor, agent.properties.agent_type)
+                self.all_agent_data[agent_id].state = state
+                self.all_agent_data[agent_id].properties = properties
+
+    def get_type_indexes(
+        self,
+        agent_type: AgentType
+    ) -> List[int]:
+        return [ind for ind in range(len(self.all_agent_data)) if self.all_agent_data[ind].type == agent_type]
+    
+    def get_all_types(self) -> List[AgentType]:
+        return [agent.type for agent in self.all_agent_data]
+
+#---------
+# Carla Environment Setup
+#---------
+
 # Setup CARLA client and world
-def setup_carla_environment(host, port):
+def setup_carla_environment(host, port, location):
+    map_name = location.split(":")[-1]
 
     step_length = 0.1 # 0.1 is the only step length that is supported by invertedai so far
 
@@ -155,7 +482,7 @@ def setup_carla_environment(host, port):
     client.set_timeout(200.0)
 
     # Configure the simulation environment
-    world = client.get_world()
+    world = client.load_world(map_name)
     world_settings = carla.WorldSettings(
         synchronous_mode=True,
         fixed_delta_seconds=step_length,
@@ -163,25 +490,6 @@ def setup_carla_environment(host, port):
     world.apply_settings(world_settings)
 
     return client, world
-
-# Set spectator view on a hero vehicle
-def set_spectator(world, hero_v):
-
-    spectator_offset_x = -6.
-    spectator_offset_z = 6.
-    spectator_offset_pitch = 20
-
-    hero_t = hero_v.get_transform()
-
-    yaw = hero_t.rotation.yaw
-    spectator_l = hero_t.location + carla.Location(
-        spectator_offset_x * math.cos(math.radians(yaw)),
-        spectator_offset_x * math.sin(math.radians(yaw)),
-        spectator_offset_z,
-    )
-    spectator_t = carla.Transform(spectator_l, hero_t.rotation)
-    spectator_t.rotation.pitch -= spectator_offset_pitch
-    world.get_spectator().set_transform(spectator_t)
 
 #---------
 # Initialize actors
@@ -195,11 +503,11 @@ def initialize_iai_agent(actor, agent_type):
     speed = math.sqrt(vel.x**2. + vel.y**2. +vel.z**2.)
 
     agent_state = AgentState.fromlist([
-                                        transf.location.x,
-                                        transf.location.y,
-                                        transf.rotation.yaw,
-                                        speed
-                                    ])
+        transf.location.x,
+        transf.location.y,
+        math.radians(transf.rotation.yaw),
+        speed
+    ])
 
     bb = actor.bounding_box
     length, width = bb.extent.x*2, bb.extent.y*2
@@ -222,7 +530,12 @@ def initialize_pedestrians(pedestrians):
     return iai_pedestrians_states, iai_pedestrians_properties
 
 # Spawn pedestrians in the simulation, which are driven by CARLA controllers (not by invertedai)
-def spawn_pedestrians(client, world, num_pedestrians, bps):
+def spawn_pedestrians(
+    client, 
+    world, 
+    num_pedestrians, 
+    bps
+):
 
     batch = []
 
@@ -246,7 +559,7 @@ def spawn_pedestrians(client, world, num_pedestrians, bps):
         if walker_bp.has_attribute('is_invincible'):
             walker_bp.set_attribute('is_invincible', 'false')
         spawn_point = spawn_points[i]
-        batch.append(SpawnActor(walker_bp, spawn_point))
+        batch.append(command.SpawnActor(walker_bp, spawn_point))
 
     results = client.apply_batch_sync(batch, True)
     pedestrians = world.get_actors().filter('walker.*')
@@ -260,7 +573,7 @@ def spawn_pedestrians(client, world, num_pedestrians, bps):
     batch = []
     walker_controller_bp = world.get_blueprint_library().find('controller.ai.walker')
     for i in range(len(walkers_list)):
-        batch.append(SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
+        batch.append(command.SpawnActor(walker_controller_bp, carla.Transform(), walkers_list[i]["id"]))
     results = client.apply_batch_sync(batch, True)
 
     world.tick()
@@ -274,7 +587,11 @@ def spawn_pedestrians(client, world, num_pedestrians, bps):
     return pedestrians
 
 # Get blueprints according to the given filters
-def get_actor_blueprints(world, filter, generation):
+def get_actor_blueprints(
+    world, 
+    filter, 
+    generation
+):
     bps = world.get_blueprint_library().filter(filter)
 
     if generation.lower() == "all":
@@ -308,7 +625,7 @@ def transform_iai_to_carla(agent_state):
         carla.Location(
             agent_state.center.x,
             agent_state.center.y,
-            0.
+            0.1
         ),
         carla.Rotation(
             yaw=math.degrees(agent_state.orientation)
@@ -317,80 +634,62 @@ def transform_iai_to_carla(agent_state):
 
     return agent_transform
 
-# Update transforms of CARLA agents driven by IAI and tick the world
-def update_transforms(iai2carla,response):
-    """
-    Tick the carla simulation forward one time step
-    Assume carla_actors is a list of carla actors controlled by IAI
-    """
-    for agent_id in iai2carla.keys():
-        agentdict = iai2carla[agent_id]
-        if agentdict["is_iai"]:            
-            agent = response.agent_states[agent_id]
-            agent_transform = transform_iai_to_carla(agent)
-            try:     
-                actor = agentdict["actor"]
-                actor.set_transform(agent_transform)
-            except:
-                pass
-
 # Assign existing IAI agents to CARLA vehicle blueprints and add these agents to the CARLA simulation
-def assign_carla_blueprints_to_iai_agents(world,vehicle_blueprints,agent_properties,agent_states,recurrent_states,is_iai,noniai_actors):
+def assign_carla_blueprints_to_agents(
+    world,
+    vehicle_blueprints,
+    agent_data
+):
+    agents_to_pop = []
 
-    agent_properties_new = []
-    agent_states_new = []
-    recurrent_states_new = []
-    new_agent_id = 0
-    iai2carla = {}
-
-    for agent_id, state in enumerate(agent_states):
-
-        if not is_iai[agent_id]:
-            agent_properties_new.append(agent_properties[agent_id])
-            agent_states_new.append(agent_states[agent_id])
-            recurrent_states_new.append(recurrent_states[agent_id])
-            actor = noniai_actors[agent_id]
-            new_agent_id += 1
-            iai2carla[len(iai2carla)] = {"actor":actor, "is_iai":False, "type":agent_properties[agent_id].agent_type}
-             
-        else:
-
+    for agent_id, data in enumerate(agent_data):
+        # Only IAI-controlled agents need a CARLA blueprint spawned for them.
+        # EGO agents are provided/controlled externally and CARLA agents
+        # already have their own actors, so both are left untouched here.
+        if data.type == AgentType.IAI:
             blueprint = random.choice(vehicle_blueprints)
             if blueprint.has_attribute('color'):
                 color = random.choice(blueprint.get_attribute('color').recommended_values)
                 blueprint.set_attribute('color', color)
-            agent_transform = transform_iai_to_carla(state)
+            agent_transform = transform_iai_to_carla(data.state)
 
             actor = world.try_spawn_actor(blueprint,agent_transform)
             
             if actor is not None:
                 bb = actor.bounding_box.extent
-
-                agent_attr = agent_properties[agent_id]
-
-                agent_attr.length = 2*bb.x
-                agent_attr.width = 2*bb.y
-                agent_attr.rear_axis_offset = 2*bb.x/3
-
-                new_agent_id += 1
-
-                agent_properties_new.append(agent_attr)
-                agent_states_new.append(agent_states[agent_id])
-                recurrent_states_new.append(recurrent_states[agent_id])
-
                 actor.set_simulate_physics(False)
 
-                iai2carla[len(iai2carla)] = {"actor":actor, "is_iai":True, "type":agent_properties[agent_id].agent_type}
+                agent_prop = data.properties
 
-    if len(agent_properties_new) == 0:
+                agent_prop.length = 2*bb.x
+                agent_prop.width = 2*bb.y
+                agent_prop.rear_axis_offset = 2*bb.x/3
+
+                agent_data[agent_id].properties = agent_prop
+                agent_data[agent_id].carla_actor = actor
+
+            else:
+                agents_to_pop.append(agent_id)
+
+    for agent_id in reversed(agents_to_pop):
+        agent_data.pop(agent_id)
+    
+    if len(agent_data) == 0:
         raise Exception("No vehicles could be placed in Carla environment.")
     
-    return agent_properties_new, agent_states_new, recurrent_states_new, iai2carla
+    return agent_data
 
 # Initialize InvertedAI co-simulation
-def initialize_simulation(args, world, agent_states=None, agent_properties=None):
-
-    iai_seed = args.seed if args.seed is not None else random.randint(1,10000)
+def initialize_simulation(
+    args, 
+    world,
+    seed,
+    vehicle_blueprints,
+    agent_data,
+    existing_agent_states=None, 
+    existing_agent_properties=None
+):
+    
     traffic_lights_states, carla2iai_tl = initialize_tl_states(world)
 
     #################################################################################################
@@ -399,6 +698,7 @@ def initialize_simulation(args, world, agent_states=None, agent_properties=None)
     print(f"Call location info.")
     location_info_response = iai.location_info(
         location = args.location,
+        include_map_source=True,
         rendering_center = map_center
     )
     print(f"Begin initialization.") 
@@ -414,12 +714,82 @@ def initialize_simulation(args, world, agent_states=None, agent_properties=None)
         location = args.location,
         regions = regions,
         traffic_light_state_history = [traffic_lights_states],
-        agent_states = agent_states,
-        agent_properties = agent_properties,
-        random_seed = iai_seed
+        agent_states = existing_agent_states,
+        agent_properties = existing_agent_properties,
+        random_seed = seed
     )
 
-    return response, carla2iai_tl, location_info_response
+    num_sampled_agents = len(response.agent_properties)
+    agent_data += [AgentData(
+        type = AgentType.IAI,
+        state = response.agent_states[ind],
+        properties = response.agent_properties[ind],
+        recurrent_state = response.recurrent_states[ind]
+    ) for ind in range(num_sampled_agents)]
+    
+    agent_data = assign_carla_blueprints_to_agents(
+        world = world,
+        vehicle_blueprints = vehicle_blueprints,
+        agent_data = agent_data
+    )
+
+    agent_states = []
+    agent_properties = []
+    agent_recurrent_states = []
+    for data in agent_data:
+        agent_states.append(data.state)
+        agent_properties.append(data.properties)
+        agent_recurrent_states.append(data.recurrent_state)
+    response.agent_states = agent_states
+    response.agent_properties = agent_properties
+    response.recurrent_states = agent_recurrent_states
+
+    return response, carla2iai_tl, location_info_response, agent_data
+
+#---------
+# Ego Simulator-in-the-Loop Integration
+# EDIT THESE FUNCTIONS HERE TO INTEGRATE YOUR OWN EGO VEHICLE
+# Every "pass" is where your own code should be added
+#---------
+def convert_ego_states_to_iai_format(
+    ego_states: List
+) -> List[AgentState]:
+    agent_states = []
+
+    pass
+
+    return agent_states
+
+def convert_ego_properties_to_iai_format(
+    ego_properties: List
+) -> List[AgentProperties]:
+    agent_properties = []
+
+    pass
+
+    return agent_properties
+
+def initialize_ego_vehicle() -> Tuple[List[AgentState],List[AgentProperties]]:
+    ego_states = []
+    ego_properties = []
+
+    pass
+    
+    ego_agent_states = convert_ego_states_to_iai_format(ego_states)
+    ego_agent_properties = convert_ego_properties_to_iai_format(ego_properties)
+
+    return ego_agent_states, ego_agent_properties
+
+def tick_ego_vehicle() -> Tuple[List[AgentState],List[AgentProperties]]:
+    ego_states = []
+    ego_properties = []
+
+    pass
+    
+    updated_ego_agent_states = convert_ego_states_to_iai_format(ego_states)
+    updated_ego_agent_properties= convert_ego_properties_to_iai_format(ego_properties)
+
+    return updated_ego_agent_states, updated_ego_agent_properties
 
 #---------
 # Synchronize InvertedAI and CARLA traffic lights
@@ -454,7 +824,11 @@ def get_traffic_light_state_from_carla(carla_tl_state):
         return TrafficLightState.Off
 
 # Assign IAI traffic lights based on the CARLA ones
-def assign_iai_traffic_lights_from_carla(world, iai_tl, carla2iai_tl):
+def assign_iai_traffic_lights_from_carla(
+    world, 
+    iai_tl, 
+    carla2iai_tl
+):
 
     traffic_lights = world.get_actors().filter('traffic.traffic_light*')
     
@@ -480,6 +854,10 @@ def initialize_tl_states(world):
     iai_tl_states = assign_iai_traffic_lights_from_carla(world, iai_tl_states, carla2iai_tl)
     return iai_tl_states, carla2iai_tl
 
+
+def get_distance(point1, point2):
+    return np.sqrt((point2[0] - point1[0])**2 + (point2[1] - point1[1])**2)
+
 #---------
 # Main
 #---------
@@ -488,13 +866,21 @@ def main():
     args = argument_parser()
 
     # Setup CARLA client and world
-    client, world = setup_carla_environment(args.host, args.port)
+    client, world = setup_carla_environment(
+        args.host, 
+        args.port, 
+        args.location
+    )
 
-    # Specify the IAI API key
-    try:
-        iai.add_apikey(args.iai_key)  
-    except:
-        print("\n\tYou need to indicate the InvertedAI API key with the argument --iai-key. To obtain one, please go to https://www.inverted.ai \n")
+    # Specify the IAI API key. Prefer the IAI_API_KEY environment variable and
+    # fall back to the --iai-key argument. Registering it explicitly avoids
+    # relying on the SDK's implicit environment lookup, so requests are always
+    # authenticated when a key is available.
+    api_key = os.environ.get("IAI_API_KEY") or args.iai_key
+    if api_key:
+        iai.add_apikey(api_key)
+    else:
+        print("\n\tYou need to indicate the InvertedAI API key with the argument --iai-key or the IAI_API_KEY environment variable. To obtain one, please go to https://www.inverted.ai \n")
 
     num_pedestrians = args.number_of_walkers
 
@@ -508,151 +894,214 @@ def main():
         client.start_recorder(logfile)
         print("Recording on file: %s" % logfile)
 
-    seed = args.seed
-
-    if seed:
-        random.seed(seed)
+    seed = args.seed if args.seed is not None else int(time.time())
+    random.seed(seed)
     
-    vehicle_blueprints = get_actor_blueprints(world, args.filterv, args.generationv)
+    vehicle_blueprints = get_actor_blueprints(
+        world, 
+        args.filterv, 
+        args.generationv
+    )
     if args.safe:
         vehicle_blueprints = [x for x in vehicle_blueprints if x.get_attribute('base_type') == 'car']   
 
-    agent_states, agent_properties = [], []
-    is_iai = []
-    noniai_actors = []
-        
-    # Add pedestrians (not driven by IAI)
+    agent_data = []
+    ego_agent_states, ego_agent_properties = initialize_ego_vehicle()
+    agent_data += [AgentData(
+        type = AgentType.EGO,
+        state = state,
+        properties = props,
+        recurrent_state = RecurrentState()
+    ) for state, props in zip(ego_agent_states,ego_agent_properties)]
+
+    # Add Carla-driven pedestrians
     if num_pedestrians>0:
-        if seed:
-            world.set_pedestrians_seed(seed)
+        world.set_pedestrians_seed(seed)
         blueprintsWalkers = get_actor_blueprints(world, args.filterw, args.generationw)
         if not blueprintsWalkers:
             raise ValueError("Couldn't find any walkers with the specified filters")
         pedestrians = spawn_pedestrians(client, world, num_pedestrians, blueprintsWalkers)
         iai_pedestrians_states, iai_pedestrians_properties = initialize_pedestrians(pedestrians)
-        agent_states.extend(iai_pedestrians_states)
-        agent_properties.extend(iai_pedestrians_properties)
-        is_iai.extend( [False]*len(iai_pedestrians_states) )
-        noniai_actors.extend(pedestrians)
-    
-    else:
-        pedestrians = []
-    
-    num_noniai = len(agent_properties)
 
+        agent_data += [AgentData(
+            type = AgentType.CARLA,
+            state = iai_pedestrians_states[ind],
+            properties = iai_pedestrians_properties[ind],
+            carla_actor = pedestrians[ind],
+            recurrent_state = RecurrentState()
+        ) for ind in range(len(iai_pedestrians_states))]
+    
+    sim_pre_data = SimulationData(agent_data)
     # Initialize InvertedAI co-simulation
-    response, carla2iai_tl, location_info_response = initialize_simulation(args, world, agent_states=agent_states, agent_properties=agent_properties)
-    agent_properties = response.agent_properties
-    is_iai.extend( [True]*(len(agent_properties)-num_noniai) )
+    response, carla2iai_tl, location_info_response, agent_data = initialize_simulation(
+        args=args, 
+        world=world,
+        seed=seed,
+        vehicle_blueprints=vehicle_blueprints,
+        agent_data=agent_data,
+        existing_agent_states=sim_pre_data.get_all_states(), 
+        existing_agent_properties=sim_pre_data.get_all_properties()
+    )
+    sim_agent_data = SimulationData(agent_data)
+    agent_properties = sim_agent_data.get_all_properties()
+    # Map IAI agents to CARLA actors and update response properties and states
+    print(f"Number of agents initialized: {len(response.agent_states)}")
+
+    wp_manager = iai.WaypointManager(
+        location_info_response = location_info_response,
+        cfg = iai.WaypointManagerConfig(
+            random_seed=seed,
+            fail_soft=True
+        )
+    )
 
     # Write InvertedAI log file, which can be opened afterwards to visualize a gif and further analysis
     # See an example of usage here: https://github.com/inverted-ai/invertedai/blob/master/examples/scenario_log_example.py
-    if args.iai_log:
 
+    if args.iai_log or args.capture_video:
+        sim_name = str(int(time.time()))
+        iai_output_dir = os.path.join(os.getcwd(),sim_name)
+        os.mkdir(iai_output_dir)
+    
+    if args.iai_log:
         log_writer = iai.LogWriter()
         log_writer.initialize(
             location=args.location,
             location_info_response=location_info_response,
             init_response=response
         )
-        iailog_path = os.path.join(os.getcwd(),f"iai_log.json")
+        iai_log_output_dir = os.path.join(iai_output_dir,f"iai_log")
+        os.mkdir(iai_log_output_dir)
+        iai_output_data = os.path.join(iai_log_output_dir,f"{sim_name}_iai_log")
 
-    # Map IAI agents to CARLA actors and update response properties and states
-    agent_properties, agent_states_new, recurrent_states_new, iai2carla = assign_carla_blueprints_to_iai_agents(world,vehicle_blueprints,agent_properties,response.agent_states,response.recurrent_states,is_iai,noniai_actors)
-    traffic_lights_states = assign_iai_traffic_lights_from_carla(world,response.traffic_lights_states, carla2iai_tl)
-    response.agent_states = agent_states_new
-    response.recurrent_states = recurrent_states_new
-    response.traffic_lights_states = traffic_lights_states
-
-    # Perform first CARLA simulation tick
+    # Perform CARLA simulation tick to spawn vehicles
     world.tick()
-
+    
+    sensor_manager = None
     try:
-
         vehicles = world.get_actors().filter('vehicle.*')
-        print("Total number of agents:",len(agent_properties),"Vehicles",len(vehicles), "Pedestrians:",len(pedestrians))
 
-        # Get hero vehicle
-        hero_v = None
-        if args.hero:
-            hero_v = vehicles[0]
+        if args.capture_video:
+            sensor_manager = SensorManager(
+                world = world,
+                spectator_id = 0,
+                camera_specs = [
+                    CameraSpecification(
+                        attachment_cfg = get_default_cam_attachment(
+                            attachment = CameraAttachment.REARPOLE,
+                            actor_to_attach = vehicles[random.randint(0,len(vehicles)-1)]
+                        ),
+                        type = CameraType.RGB,
+                        fps = FPS,
+                        save_path = iai_output_dir,
+                        name = f"{sim_name}_carla_camera_0"
+                    )
+                ]
+            )
 
-        for frame in range(args.sim_length * FPS):
+            # Perform CARLA simulation tick to spawn sensors
+            world.tick()
+        for frame in tqdm(range(args.sim_length * FPS)):
+            traffic_lights_states = assign_iai_traffic_lights_from_carla(world, response.traffic_lights_states, carla2iai_tl)
+            agent_properties = wp_manager.update(
+                response = response,
+                agent_properties = agent_properties,
+                agents_mask = [agent_type == AgentType.IAI for agent_type in sim_agent_data.get_all_types()]
+            )
 
-            response.traffic_lights_states = assign_iai_traffic_lights_from_carla(world, response.traffic_lights_states, carla2iai_tl)
+            #=================================================
+            #Tick Ego
 
-            # IAI update step
+            updated_ego_agent_states, updated_ego_agent_properties = tick_ego_vehicle()
+
+            #=================================================
+            #=================================================
+            #Tick Carla
+            world.tick()
+            time.sleep(1/FPS)
+
+            # Update spectator view if there is hero vehicle
+            if args.capture_video:
+                sensor_manager.update_all_sensors()
+
+            #=================================================
+            #=================================================
+            #Tick IAI
+
             response = iai.large_drive(
                 location = args.location,
                 agent_states = response.agent_states,
                 agent_properties = agent_properties,
                 recurrent_states = response.recurrent_states,
-                traffic_lights_states = response.traffic_lights_states,
-                light_recurrent_states = None,
+                traffic_lights_states = traffic_lights_states,
                 single_call_agent_limit = args.capacity,
                 async_api_calls = args.iai_async,
                 api_model_version = args.api_model,
                 random_seed = seed
             )
 
-            if args.iai_log:
-                log_writer.drive(drive_response=response)
+            #=================================================
+            #=================================================
+            #Update All Simulation Data
 
             # Update CARLA actors with new transforms from IAI agents
-            update_transforms(iai2carla,response)
+            for ind, state, props in zip(
+                sim_agent_data.get_type_indexes(AgentType.EGO),
+                updated_ego_agent_states,
+                updated_ego_agent_properties
+            ):
+                response.agent_states[ind] = state
+                agent_properties[ind] = props
 
-            # Tick CARLA simulation
-            world.tick()
+            sim_agent_data.update_non_carla_iai_states(
+                agent_states = response.agent_states,
+                agent_properties = agent_properties,
+                agent_recurrent_states = response.recurrent_states
+            )
 
-            # Update agents not driven by IAI in IAI cosimulation, like pedestrians
-            for agent_id in iai2carla.keys():
-                agentdict = iai2carla[agent_id]
+            sim_agent_data.update_carla_states_from_iai()
+            sim_agent_data.update_iai_states_from_carla()
 
-                if not agentdict["is_iai"]:
-                    actor = agentdict["actor"]
-                    state, properties = initialize_iai_agent(actor, agentdict["type"])
-                    response.agent_states[agent_id] = state
-                    agent_properties[agent_id] = properties
+            response.agent_states = sim_agent_data.get_all_states()
+            agent_properties = sim_agent_data.get_all_properties()
 
-            # Include possible new actors (vehicles) from other clients (using automatic_control.py or manual_control.py for instance)
-            actors_all = world.get_actors().filter('vehicle.*')
-            actsids = [act["actor"].id for act in iai2carla.values()]
-            for actor in actors_all:
-                if not (actor.id in actsids):
-                    state, properties = initialize_iai_agent(actor, "car")
-                    response.agent_states.append( state )
-                    agent_properties.append( properties )
-                    response.recurrent_states.append( response.recurrent_states[-1] )   # temporal fix
-                    iai2carla[len(iai2carla)] = {"actor":actor, "is_iai":False, "type":properties.agent_type}
-
-            # Update spectator view if there is hero vehicle
-            if hero_v is not None:
-                set_spectator(world, hero_v)
-
-            
-
-    finally:
-
-        vehicles_list = world.get_actors().filter('vehicle.*')
-        print('\ndestroying %d vehicles' % len(vehicles_list))
-        client.apply_batch([carla.command.DestroyActor(x) for x in vehicles_list])
-
-        walkercontrollers_list = world.get_actors().filter('controller.*')
-        for control in walkercontrollers_list:
-            control.stop()
-            control.destroy()
-
-        walkers_list = world.get_actors().filter('walker.*')
-        print('\ndestroying %d walkers' % len(walkers_list))
-        client.apply_batch([carla.command.DestroyActor(x) for x in walkers_list])
+            if args.iai_log:
+                log_writer.drive(
+                    drive_response=response,
+                    agent_properties=agent_properties
+                )
+            #=================================================
 
         time.sleep(0.5)
 
+        if args.capture_video:
+            print(f"Writing sensor videos to disk.")
+            sensor_manager.write_videos(
+                delete_images = True
+            )
+        
         if args.record:
             client.stop_recorder()
 
         if args.iai_log:
-            log_writer.export_to_file(log_path=iailog_path)
+            print(f"Writing log data.")
+            log_writer.export_to_file(log_path=f"{iai_output_data}.json")
+            print(f"Generating birdview GIF.")
+            log_writer.visualize(
+                gif_path=f"{iai_output_data}.gif",
+                fov = max(args.width,args.height),
+                resolution = (2048,2048),
+                dpi = 300,
+                direction_vec = True,
+                velocity_vec = False,
+                plot_frame_number = True,
+                map_center = args.map_center,
+                left_hand_coordinates = True,
+                agent_ids = list(range(len(agent_properties)))
+            )
+    except Exception as e:
+        print(f"{e}")
+
 
 if __name__ == '__main__':
 
