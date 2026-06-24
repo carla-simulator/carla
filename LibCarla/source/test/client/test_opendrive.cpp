@@ -409,9 +409,9 @@ TEST(road, get_waypoint) {
 }
 
 // Minimal OpenDRIVE with a single road (id=1) carrying one stencil <object>.
-// Mirrors the fixture LibCarla/source/test/Stencil.xodr. The stencil object is
-// named "Stencil_Arrow" so the parser keys on the "Stencil_" prefix while the
-// existing "Stencil_STOP" stop-line branch is left untouched.
+// The stencil object is named "Stencil_Arrow" so the parser keys on the
+// "Stencil_" prefix while the existing "Stencil_STOP" stop-line branch is
+// left untouched.
 static constexpr const char* kStencilXodr = R"(<?xml version="1.0" encoding="UTF-8"?>
 <OpenDRIVE>
     <header revMajor="1" revMinor="4" name="" version="1" date="2026-01-01T00:00:00" north="0.0" south="0.0" east="0.0" west="0.0" vendor="CARLA"/>
