@@ -458,4 +458,13 @@ TEST(road, stencil_parsing) {
   auto stencils = map->GetAllStencilReferences();
   ASSERT_EQ(stencils.size(), 1u);
   EXPECT_EQ(stencils[0]->GetRoadId(), 1u);
+
+  // The build finalization must populate the map-level stencil container and
+  // link each RoadInfoStencil to the corresponding Stencil.
+  const auto &map_stencils = map->GetStencils();
+  ASSERT_EQ(map_stencils.size(), 1u);
+  const auto stencil_id = stencils[0]->GetStencilId();
+  auto it = map_stencils.find(stencil_id);
+  ASSERT_NE(it, map_stencils.end());
+  EXPECT_EQ(stencils[0]->GetStencil(), it->second.get());
 }

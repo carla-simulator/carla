@@ -410,8 +410,13 @@ namespace road {
 
     geom::Transform ComputeSignalTransform(std::unique_ptr<Signal> &signal,  MapData &data);
 
+    geom::Transform ComputeStencilTransform(std::unique_ptr<Stencil> &stencil,  MapData &data);
+
     /// Solves the signal references in the road
     void SolveSignalReferencesAndTransforms();
+
+    /// Solves the stencil references in the road
+    void SolveStencilReferencesAndTransforms();
 
     /// Solve the references between Controllers and Juntions
     void SolveControllerAndJuntionReferences();
