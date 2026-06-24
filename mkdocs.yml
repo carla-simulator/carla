@@ -43,6 +43,7 @@ nav:
   - 'Scenic': 'tuto_G_scenic.md'
   - 'SYNKROTRON': 'ecosys_synkrotron.md'
   - 'InvertedAI': 'inverted_ai.md'
+  - 'NVIDIA Cosmos Transfer': 'nvidia_cosmos_transfer.md'
 
 - Contributing:
   - 'Guidelines': 'cont_contribution_guidelines.md' 

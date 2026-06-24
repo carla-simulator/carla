@@ -39,6 +39,7 @@ class TestSensorTickTime(SyncSmokeTest):
       "sensor.camera.dvs",
       "sensor.other.obstacle",
       "sensor.camera.instance_segmentation",
+      "sensor.camera.cosmos_visualization",
       "sensor.camera.rgb_fisheye",
       "sensor.camera.depth_fisheye",
       "sensor.camera.semantic_segmentation_fisheye",
