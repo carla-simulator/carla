@@ -42,7 +42,7 @@ We use a REST client, located at `client/cosmos_client.py` that sends queries to
     cmake --build Build/Development --target launch
     ```
 
-2. If you want to generate new control inputs, you can run the `PythonAPI/examples/nvidia/cosmos-transfer/client/carla_cosmos_gen.py` with the `PythonAPI/examples/nvidia/cosmos-transfer/client/example_data/logs/inverted_ai/iai_carla_synthetic_log_1731622446_actorPOV4641_startTime3.7s_log`. A typical invocation will look like this:
+2. If you want to generate new control inputs, you can run `PythonAPI/examples/nvidia/cosmos/client/carla_cosmos_gen.py` with the bundled example log `PythonAPI/examples/nvidia/cosmos/client/example_data/logs/town10hd_opt_actorPOV298.log` (recorded on `Town10HD_Opt` with the ue5-dev / 0.10.0 recorder). A typical invocation will look like this:
 
     ```bash
     cd client
@@ -50,7 +50,7 @@ We use a REST client, located at `client/cosmos_client.py` that sends queries to
     python carla_cosmos_gen.py -f /full_path_to_log/your_log.log --sensors cosmos_aov.yaml --class-filter-config filter_semantic_classes.yaml -c ego_sim_id -s 0.0 -d 5.0 -o output_path
     ```
 
-    **Note**: For the example log, please replace ego_sim_id with 4641.
+    **Note**: For the bundled example log, replace `ego_sim_id` with `298` (the hero vehicle's actor id, also encoded in the log filename). The log is 8 s long, so `-d` may be set up to `8.0`.
 
 ## Making Requests
 
