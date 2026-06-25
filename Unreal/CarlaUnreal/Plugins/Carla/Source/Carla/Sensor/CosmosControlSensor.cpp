@@ -359,51 +359,56 @@ void ACosmosControlSensor::PostPhysTick(
   // Crosswalks.
   if (!added_persisted_crosswalks && carla_game_mode != nullptr)
   {
-    added_persisted_crosswalks = true;
-
-    std::vector<carla::geom::Location> crosswalks_points =
-        carla_game_mode->GetMap()->GetAllCrosswalkZones();
-
-    if (crosswalks_points.size() > 0)
+    const std::optional<carla::road::Map>& CarlaMap =
+        carla_game_mode->GetMap();
+    if (CarlaMap)
     {
-      TArray<FVector> current_polygon;
-      carla::geom::Location first_in_loop = crosswalks_points[0];
-      current_polygon.Add(first_in_loop.ToFVector() * 100.0f);
+      added_persisted_crosswalks = true;
 
-      for (int i = 1; i < crosswalks_points.size(); ++i)
+      std::vector<carla::geom::Location> crosswalks_points =
+          CarlaMap->GetAllCrosswalkZones();
+
+      if (crosswalks_points.size() > 0)
       {
-        if (crosswalks_points[i] == first_in_loop)
-        {
-          if (current_polygon.Num() >= 3)
-          {
-            TArray<FVector> mesh_vertices = current_polygon;
-            TArray<int32> mesh_indices;
+        TArray<FVector> current_polygon;
+        carla::geom::Location first_in_loop = crosswalks_points[0];
+        current_polygon.Add(first_in_loop.ToFVector() * 100.0f);
 
-            // Simple triangulation.
-            for (int j = 1; j < current_polygon.Num() - 1; ++j)
+        for (int i = 1; i < crosswalks_points.size(); ++i)
+        {
+          if (crosswalks_points[i] == first_in_loop)
+          {
+            if (current_polygon.Num() >= 3)
             {
-              mesh_indices.Add(0);
-              mesh_indices.Add(j);
-              mesh_indices.Add(j + 1);
+              TArray<FVector> mesh_vertices = current_polygon;
+              TArray<int32> mesh_indices;
+
+              // Simple triangulation.
+              for (int j = 1; j < current_polygon.Num() - 1; ++j)
+              {
+                mesh_indices.Add(0);
+                mesh_indices.Add(j);
+                mesh_indices.Add(j + 1);
+              }
+
+              DrawDebugMesh(
+                  World, mesh_vertices, mesh_indices,
+                  CosmosColors::Crosswalks.WithAlpha(dist_alpha), true, -1.0f,
+                  depth_prio);
             }
 
-            DrawDebugMesh(
-                World, mesh_vertices, mesh_indices,
-                CosmosColors::Crosswalks.WithAlpha(dist_alpha), true, -1.0f,
-                depth_prio);
+            // Start new polygon if more points remain.
+            current_polygon.Empty();
+            if (i < crosswalks_points.size() - 1)
+            {
+              first_in_loop = crosswalks_points[++i];
+              current_polygon.Add(first_in_loop.ToFVector() * 100.0f);
+            }
           }
-
-          // Start new polygon if more points remain.
-          current_polygon.Empty();
-          if (i < crosswalks_points.size() - 1)
+          else
           {
-            first_in_loop = crosswalks_points[++i];
-            current_polygon.Add(first_in_loop.ToFVector() * 100.0f);
+            current_polygon.Add(crosswalks_points[i].ToFVector() * 100.0f);
           }
-        }
-        else
-        {
-          current_polygon.Add(crosswalks_points[i].ToFVector() * 100.0f);
         }
       }
     }
@@ -412,45 +417,50 @@ void ACosmosControlSensor::PostPhysTick(
   // Stencils.
   if (!added_persisted_stencils && carla_game_mode != nullptr)
   {
-    added_persisted_stencils = true;
-
-    const auto& road_stencils = carla_game_mode->GetMap()->GetStencils();
-
-    for (const auto& StencilPair : road_stencils)
+    const std::optional<carla::road::Map>& CarlaMap =
+        carla_game_mode->GetMap();
+    if (CarlaMap)
     {
-      const auto& Stencil = StencilPair.second;
-      if (!Stencil)
+      added_persisted_stencils = true;
+
+      const auto& road_stencils = CarlaMap->GetStencils();
+
+      for (const auto& StencilPair : road_stencils)
       {
-        continue;
+        const auto& Stencil = StencilPair.second;
+        if (!Stencil)
+        {
+          continue;
+        }
+
+        // road::Map is metric; convert to Unreal centimeters for the overlay.
+        const FTransform Transform = Stencil->GetTransform();
+        const FVector Location = Transform.GetLocation() * 100.0;
+        const float StencilWidth = Stencil->GetWidth() * 100.0;
+        const float StencilLength = Stencil->GetLength() * 100.0;
+        const FQuat StencilOrientation = Transform.GetRotation();
+
+        TArray<FVector> mesh_vertices = {
+          Location + StencilOrientation.RotateVector(
+              FVector(-StencilLength / 2, -StencilWidth / 2, 0)),
+          Location + StencilOrientation.RotateVector(
+              FVector(StencilLength / 2, -StencilWidth / 2, 0)),
+          Location + StencilOrientation.RotateVector(
+              FVector(StencilLength / 2, StencilWidth / 2, 0)),
+          Location + StencilOrientation.RotateVector(
+              FVector(-StencilLength / 2, StencilWidth / 2, 0))
+        };
+
+        TArray<int32> mesh_indices = {
+          0, 1, 2,
+          0, 2, 3
+        };
+
+        DrawDebugMesh(
+            World, mesh_vertices, mesh_indices,
+            CosmosColors::RoadMarkings.WithAlpha(dist_alpha), true, -1.0f,
+            depth_prio);
       }
-
-      // road::Map is metric; convert to Unreal centimeters for the overlay.
-      const FTransform Transform = Stencil->GetTransform();
-      const FVector Location = Transform.GetLocation() * 100.0;
-      const float StencilWidth = Stencil->GetWidth() * 100.0;
-      const float StencilLength = Stencil->GetLength() * 100.0;
-      const FQuat StencilOrientation = Transform.GetRotation();
-
-      TArray<FVector> mesh_vertices = {
-        Location + StencilOrientation.RotateVector(
-            FVector(-StencilLength / 2, -StencilWidth / 2, 0)),
-        Location + StencilOrientation.RotateVector(
-            FVector(StencilLength / 2, -StencilWidth / 2, 0)),
-        Location + StencilOrientation.RotateVector(
-            FVector(StencilLength / 2, StencilWidth / 2, 0)),
-        Location + StencilOrientation.RotateVector(
-            FVector(-StencilLength / 2, StencilWidth / 2, 0))
-      };
-
-      TArray<int32> mesh_indices = {
-        0, 1, 2,
-        0, 2, 3
-      };
-
-      DrawDebugMesh(
-          World, mesh_vertices, mesh_indices,
-          CosmosColors::RoadMarkings.WithAlpha(dist_alpha), true, -1.0f,
-          depth_prio);
     }
   }
 
