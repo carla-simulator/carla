@@ -30,8 +30,12 @@
 #include "Engine/Engine.h"
 #include "Engine/SkeletalMesh.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/TextureRenderTarget2D.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "RHICommandList.h"
+#include "RenderingThread.h"
+#include "TextureResource.h"
 #include "UObject/UObjectHash.h"
 #include <util/ue-header-guard-end.h>
 
@@ -466,6 +470,28 @@ void ACosmosControlSensor::PostPhysTick(
 
   if (!AreClientsListening())
     return;
+
+  // The overlay scene capture leaves its render target as a sampled shader
+  // resource (VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL). The async readback
+  // copies it with RHICopyTexture, which on UE5.5 requires the source in
+  // CopySrc (VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) and does not transition it
+  // itself, so do it explicitly here before the readback below.
+  if (UTextureRenderTarget2D* RenderTarget = GetCaptureRenderTarget())
+  {
+    ENQUEUE_RENDER_COMMAND(CosmosTransitionCaptureToCopySrc)(
+        [RenderTarget](FRHICommandListImmediate& RHICmdList)
+    {
+      auto* Resource = static_cast<FTextureRenderTarget2DResource*>(
+          RenderTarget->GetResource());
+      if (Resource == nullptr)
+        return;
+      if (FRHITexture* Texture = Resource->GetRenderTargetTexture())
+      {
+        RHICmdList.Transition(FRHITransitionInfo(
+            Texture, ERHIAccess::SRVMask, ERHIAccess::CopySrc));
+      }
+    });
+  }
 
   auto FrameIndex = FCarlaEngine::GetFrameCounter();
   ImageUtil::ReadSensorImageDataAsyncFColor(*this, [this, FrameIndex](
