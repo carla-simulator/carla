@@ -41,15 +41,12 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaGameModeBase.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/Cosmos/CosmosRoadGeometry.h"
 
 // libcarla
 #include <util/disable-ue4-macros.h>
 #include <carla/road/Map.h>
 #include <carla/road/Lane.h>
-#include <carla/road/element/Waypoint.h>
-#include <carla/road/element/RoadInfoMarkRecord.h>
-#include <carla/geom/Transform.h>
-#include <carla/geom/Vector3D.h>
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
@@ -58,8 +55,6 @@
 #include "Serialization/JsonWriter.h"
 #include "Serialization/JsonSerializer.h"
 #include <util/ue-header-guard-end.h>
-
-#include <set>
 
 // --------------------- helpers ---------------------
 
@@ -146,82 +141,20 @@ bool ULaneLineExporter::ExportCosmosLaneLines(UWorld* World, const FString& Sess
   TSharedRef<FJsonObject> Root = MakeShared<FJsonObject>();
   TArray<TSharedPtr<FJsonValue>> LabelsArr;
 
-  // Sampling step along s, in meters (road::Map is metric).
-  const double SampleStep = 1.0;
-  const double HalfLaneWidthEpsilon = 1e-3;
+  // Reconstruct the painted lane-line polylines from road::Map (driving lanes,
+  // outer painted-mark records only). Shared with ACosmosControlSensor so the
+  // exported geometry and the in-engine overlay stay identical. Vertices are
+  // in meters.
+  TArray<TArray<FVector>> Polylines;
+  CosmosRoadGeometry::BuildOuterBorderPolylines(
+      *CarlaMap,
+      carla::road::Lane::LaneType::Driving,
+      /*bRequirePaintedMark=*/true,
+      Polylines);
 
-  // Collect the set of road IDs that carry driving lanes. The const Map does
-  // not expose its road map publicly, so derive the road set from the
-  // per-road-entry driving waypoints.
-  std::set<carla::road::RoadId> RoadIds;
-  for (const auto& Waypoint :
-       CarlaMap->GenerateWaypointsOnRoadEntries(carla::road::Lane::LaneType::Driving))
+  for (const TArray<FVector>& PolyMeters : Polylines)
   {
-    RoadIds.insert(Waypoint.road_id);
-  }
-
-  for (const carla::road::RoadId RoadId : RoadIds)
-  {
-    // One waypoint per driving lane at the lane entry of this road.
-    const std::vector<carla::road::element::Waypoint> LaneEntries =
-        CarlaMap->GenerateWaypointsInRoad(RoadId, carla::road::Lane::LaneType::Driving);
-
-    for (const carla::road::element::Waypoint& Entry : LaneEntries)
-    {
-      const carla::road::Lane& Lane = CarlaMap->GetLane(Entry);
-      const double LaneStart = Lane.GetDistance();
-      const double LaneEnd = LaneStart + Lane.GetLength();
-
-      // Walk s and offset the lane center outward by half the lane width along
-      // the lane right vector to reconstruct the painted outer-border polyline.
-      // Reference geometry walk: MeshFactory.cpp (s_start..s_end, sample at a
-      // fixed resolution, query the lane mark record at each s).
-      TArray<FVector> PolyMeters;
-      double S = LaneStart;
-      bool bMore = true;
-      while (bMore)
-      {
-        if (S >= LaneEnd)
-        {
-          S = LaneEnd;
-          bMore = false;
-        }
-
-        carla::road::element::Waypoint Waypoint = Entry;
-        Waypoint.s = S;
-
-        // Inner/outer painted-mark records at this s. A mark record is required
-        // for the border to be a painted lane line (ue4 only rendered painted
-        // driving-lane boundaries).
-        const auto MarkRecords = CarlaMap->GetMarkRecord(Waypoint);
-        const carla::road::element::RoadInfoMarkRecord* OuterMark = MarkRecords.second;
-        if (OuterMark != nullptr)
-        {
-          const carla::geom::Transform Transform = CarlaMap->ComputeTransform(Waypoint);
-          const double HalfWidth = CarlaMap->GetLaneWidth(Waypoint) * 0.5;
-          if (HalfWidth > HalfLaneWidthEpsilon)
-          {
-            const carla::geom::Vector3D Right = Transform.GetRightVector();
-            const carla::geom::Location& Center = Transform.location;
-            // Right lanes (positive direction) have their outer border on the
-            // +right side; left lanes on the -right side.
-            const double Sign = Lane.IsPositiveDirection() ? 1.0 : -1.0;
-            const FVector Point(
-                static_cast<float>(Center.x + Sign * HalfWidth * Right.x),
-                static_cast<float>(Center.y + Sign * HalfWidth * Right.y),
-                static_cast<float>(Center.z + Sign * HalfWidth * Right.z));
-            PolyMeters.Add(Point);
-          }
-        }
-
-        S += SampleStep;
-      }
-
-      if (PolyMeters.Num() > 0)
-      {
-        AppendLaneLineLabel(LabelsArr, StartTs, PolyMeters);
-      }
-    }
+    AppendLaneLineLabel(LabelsArr, StartTs, PolyMeters);
   }
 
   Root->SetArrayField(TEXT("labels"), LabelsArr);

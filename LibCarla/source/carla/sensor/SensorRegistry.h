@@ -55,6 +55,7 @@ class ASemanticSegmentationCamera_WideAngleLens;
 struct FCameraGBufferUint8;
 struct FCameraGBufferFloat;
 class AHSSLidar;
+class ACosmosControlSensor;
 
 namespace carla {
 namespace sensor {
@@ -90,7 +91,8 @@ namespace sensor {
     std::pair<ASemanticSegmentationCamera_WideAngleLens *, s11n::ImageSerializer>,
     std::pair<FCameraGBufferUint8 *, s11n::GBufferUint8Serializer>,
     std::pair<FCameraGBufferFloat *, s11n::GBufferFloatSerializer>,
-    std::pair<AHSSLidar *, s11n::LidarSerializer>
+    std::pair<AHSSLidar *, s11n::LidarSerializer>,
+    std::pair<ACosmosControlSensor *, s11n::ImageSerializer>
   >;
 
 } // namespace sensor
@@ -123,5 +125,6 @@ namespace sensor {
 #include "Carla/Sensor/SemanticSegmentationCamera_WideAngleLens.h"
 #include "Carla/Sensor/InstanceSegmentationCamera_WideAngleLens.h"
 #include "Carla/Sensor/HSSLidar.h"
+#include "Carla/Sensor/CosmosControlSensor.h"
 
 #endif // LIBCARLA_SENSOR_REGISTRY_WITH_SENSOR_INCLUDES
