@@ -1,0 +1,13 @@
+# Core requirements for building (and auditing) the CARLA Python API wheel.
+# Installed strictly into every interpreter the image ships (Python 3.8 - 3.14).
+# Version specifiers use the same '>=' style as the repository's top-level
+# requirements.txt so pip resolves a per-interpreter-compatible release
+# (e.g. numpy 1.24.x on Python 3.8, numpy 2.x on Python 3.13/3.14).
+build
+scikit-build-core
+wheel
+setuptools>=47.3.1
+numpy>=1.24.4
+auditwheel
+pyelftools
+packaging

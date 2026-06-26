@@ -2,7 +2,13 @@
 
 set -e
 
-DOC_STRING="Build the CARLA UE5 development docker image."
+DOC_STRING="Build the CARLA UE5 development docker image.
+
+The image bundles Python 3.8 through 3.14 (each compiled from source alongside
+the distro's system interpreter). Inside the container, build the
+'carla-python-api-wheels' CMake target (configure with
+-DCARLA_PYTHON_API_VERSIONS=\"3.8;...;3.14\") to produce a CARLA Python API wheel
+for any or all of those versions."
 
 USAGE_STRING=$(cat <<- END
 Usage: $0 [options]

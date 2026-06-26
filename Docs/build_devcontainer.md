@@ -154,6 +154,85 @@ cmake --build Build --target package
 
 ---
 
+## Generate Python API wheels for multiple Python versions
+
+Both images bundle every supported interpreter, Python 3.8 through 3.14, each compiled from source and available as `python3.8` … `python3.14` (the distro's own interpreter remains the default `python3`). Wheel building itself is part of the CMake build, through the `carla-python-api-wheels` target and the `CARLA_PYTHON_API_VERSIONS` option, so the workflow is the same inside or outside the container; the container's only job is to provide the interpreters.
+
+By default (`CARLA_PYTHON_API_VERSIONS` empty) the target builds a wheel for **only the current configured interpreter**, exactly like `carla-python-api`:
+
+```sh
+cmake --build Build --target carla-python-api-wheels
+```
+
+To build wheels for specific versions, set the option at configure time to a `;`- or `,`-separated list. The build then looks up each `python3.X` on the system and builds the ones it finds:
+
+```sh
+# Build wheels for a chosen set of interpreters.
+# 1. Reconfigure with the desired versions (';' or ',' separated):
+cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release \
+  --toolchain="$PWD/CMake/Toolchain.cmake" \
+  -DCARLA_PYTHON_API_VERSIONS="3.10;3.11;3.12"
+
+# 2. Build the target. Each version is located as 'python3.X' on PATH:
+cmake --build Build --target carla-python-api-wheels
+
+# 3. Collect the finished wheels:
+ls Build/PythonAPI/dist/
+#   carla-0.10.0-cp310-cp310-manylinux_2_35_x86_64.whl
+#   carla-0.10.0-cp311-cp311-manylinux_2_35_x86_64.whl
+#   carla-0.10.0-cp312-cp312-manylinux_2_35_x86_64.whl
+```
+
+To build the full supported range in one go, pass every version:
+
+```sh
+cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release \
+  --toolchain="$PWD/CMake/Toolchain.cmake" \
+  -DCARLA_PYTHON_API_VERSIONS="3.8;3.9;3.10;3.11;3.12;3.13;3.14"
+cmake --build Build --target carla-python-api-wheels
+```
+
+If a requested interpreter is not installed, the build prints an error for that version and continues with the rest; it stops with an error only if no wheel could be built at all (none of the requested interpreters are present, or the only one available is outside the supported 3.8–3.14 range). Finished wheels are collected in `Build/PythonAPI/dist/`, the same directory `carla-python-api` already uses for the single-interpreter wheel (which, through the bind mount, is the same `Build/PythonAPI/dist/` on your host). The `manylinux` tag follows the image's glibc: `manylinux_2_38` on 24.04, `manylinux_2_35` on 22.04.
+
+The Python API is client side, so the wheel build needs neither the Unreal Engine editor nor the CARLA content. To build wheels without cloning the content repository, add `-DBUILD_CARLA_UNREAL=OFF` to the configure:
+
+```sh
+cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release \
+  --toolchain="$PWD/CMake/Toolchain.cmake" \
+  -DBUILD_CARLA_UNREAL=OFF \
+  -DCARLA_PYTHON_API_VERSIONS="3.8;3.9;3.10;3.11;3.12;3.13;3.14"
+cmake --build Build --target carla-python-api-wheels
+```
+
+### Prerequisites for each target interpreter
+
+Every version you list must be present **on the host as a usable build interpreter**, not just installed. For each `python3.X` you want a wheel for, you need three things:
+
+1. **The interpreter** itself, reachable as `python3.X` on `PATH`.
+2. **Its development package** (the `Python.h` headers and shared library), which the Boost.Python extension is compiled against. On Debian/Ubuntu that is `python3.X-dev`; an interpreter built from source via `make altinstall` already includes them.
+3. **`build` and `numpy` installed into that interpreter.** The PEP 517 build runs in an isolated environment, so it pulls its own backend (`scikit-build-core`, `wheel`, `setuptools`) automatically; you only add `auditwheel` if you want the manylinux repair (without it the plain `linux_x86_64` wheel is kept).
+
+Inside the dev container all three are already provided for Python 3.8–3.14, so nothing extra is needed. On a bare host you must provision each interpreter yourself, for example with the deadsnakes PPA:
+
+```sh
+# Example: add Python 3.11 as a build target on Ubuntu.
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt-get update
+sudo apt-get install -y python3.11 python3.11-dev python3.11-venv
+
+# Install the build requirements into that interpreter (auditwheel optional, for manylinux).
+python3.11 -m pip install build numpy auditwheel
+```
+
+Repeat for every interpreter in `CARLA_PYTHON_API_VERSIONS`. A version whose interpreter, headers, or build requirements are missing fails only that version (you will see the error in the build log) and the rest still build.
+
+By default each wheel is repaired to the most portable `manylinux` tag its symbols allow (`CARLA_PYTHON_API_WHEEL_MANYLINUX=ON`); the repair is best-effort, so on a host without `auditwheel` the plain wheel is kept instead. Set `CARLA_PYTHON_API_WHEEL_PLATFORM` to force a specific tag, or `CARLA_PYTHON_API_WHEEL_MANYLINUX=OFF` to skip the repair.
+
+!!! note
+    The current interpreter reuses the main build tree, but every other version is built in its own nested `Build/python-wheels/py<version>/` configure (the wheel links a version-specific Boost.Python target). A full 3.8 → 3.14 run rebuilds Boost.Python and `carla-client` once per non-current version and is therefore significantly slower than a single build. Build only the versions you need during development; reserve the full set for a release build.
+
+---
+
 ## Running commands from additional terminals
 
 While the container is running, you can execute commands inside it from any terminal on the host using `docker exec`. The container name follows the pattern `carla-development-ue5-${UBUNTU_DISTRO}`, so the default 24.04 build is named `carla-development-ue5-24.04`. If you launched with `--ubuntu-distro 22.04`, swap the suffix in every example below to `22.04`.
