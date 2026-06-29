@@ -258,6 +258,15 @@ carla_option (
   ${CARLA_UNREAL_PACKAGE_NO_COMPRESSION_DEFAULT}
 )
 
+set (
+  CARLA_MAPS_TO_COOK
+  ""
+  CACHE STRING
+  "Override the cooked map list ('+'-separated full package paths, e.g. \
+\"/Game/Carla/Maps/Town10HD_Opt+/Game/Carla/Maps/Mine_01\"). \
+Empty means use the +MapsToCook list from DefaultGame.ini (cook all maps)."
+)
+
 
 
 # ================================

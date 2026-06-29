@@ -114,6 +114,25 @@ The package will be generated in the directory `$CARLA_PATH/Build/Package`
 
 To build a development package, use the `package-development` target. This will build a package that outputs logs for debugging. 
 
+### Select which maps to cook
+
+By default a package cooks every map listed in `DefaultGame.ini` (`Town10HD_Opt`, `Mine_01`, `Town15`, `Town_C`), which produces a package of around 28 GB. If you only need a subset of the maps, set the `CARLA_MAPS_TO_COOK` option when you configure the build to a `+`-separated list of map package paths. The package then cooks only those maps and is correspondingly smaller (a Town10-only package is around 16 GB).
+
+```sh
+# Cook a single map
+cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release \
+    -DCARLA_MAPS_TO_COOK="/Game/Carla/Maps/Town10HD_Opt"
+
+# Cook several maps
+cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release \
+    -DCARLA_MAPS_TO_COOK="/Game/Carla/Maps/Town10HD_Opt+/Game/Carla/Maps/Mine_01"
+```
+
+Use the full map package path (`/Game/Carla/Maps/<MapName>`), not a filesystem path. Leaving `CARLA_MAPS_TO_COOK` empty (the default) cooks the full map list from `DefaultGame.ini`, so the standard build is unchanged.
+
+!!! Note
+    `Town10HD_Opt` is the default map a package boots into. If your selection excludes it, set a different default map in `DefaultEngine.ini` before packaging, otherwise the packaged server starts with a missing-map error.
+
 ### Run the package
 
 Run the package with the following command from inside the package root folder.
