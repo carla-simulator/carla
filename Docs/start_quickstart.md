@@ -1,6 +1,6 @@
 # Quick start package installation
 
-This guide shows how to download and install the packaged version of CARLA. The package includes the CARLA server and two options for the client library. There are additional assets that can be downloaded and imported into the package. Advanced customization and development options that require use of the Unreal Engine editor are not available but these can be accessed by using the build version of CARLA for either [Windows](build_windows.md) or [Linux](build_linux.md).
+This guide shows how to download and install the packaged version of CARLA. The package includes the CARLA server and two options for the client library. There are additional assets that can be downloaded and imported into the package. Advanced customization and development options that require use of the Unreal Engine editor are not available but these can be accessed by using the build version of CARLA for either [Windows](build_windows.md) / [Linux](build_linux.md).
 
 * __[Before you begin](#before-you-begin)__  
 * __[CARLA installation](#carla-installation)__  
