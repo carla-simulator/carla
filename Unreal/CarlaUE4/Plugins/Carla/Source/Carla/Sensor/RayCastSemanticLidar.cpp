@@ -126,6 +126,13 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
   ResetRecordedHits(ChannelCount, PointsToScanWithOneLaser);
   PreprocessRays(ChannelCount, PointsToScanWithOneLaser);
 
+  // Body/corner-mounted lidars (as opposed to roof-mounted) can have a large
+  // fraction of their rays immediately blocked by the parent vehicle's own
+  // mesh, since the trace only ignores the sensor actor itself (see #1797,
+  // #1498). Ignoring the attach parent too removes this self-occlusion,
+  // mirroring the same pattern already used in ObstacleDetectionSensor.cpp.
+  AActor* ParentActor = GetAttachParentActor();
+
   GetWorld()->GetPhysicsScene()->GetPxScene()->lockRead();
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
@@ -135,6 +142,10 @@ void ARayCastSemanticLidar::SimulateLidar(const float DeltaTime)
       FCollisionQueryParams TraceParams = FCollisionQueryParams(FName(TEXT("Laser_Trace")), true, this);
       TraceParams.bTraceComplex = true;
       TraceParams.bReturnPhysicalMaterial = false;
+      if (ParentActor)
+      {
+        TraceParams.AddIgnoredActor(ParentActor);
+      }
 
       for (auto idxPtsOneLaser = 0u; idxPtsOneLaser < PointsToScanWithOneLaser; idxPtsOneLaser++) {
         FHitResult HitResult;
