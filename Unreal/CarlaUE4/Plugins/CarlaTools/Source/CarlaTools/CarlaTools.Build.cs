@@ -92,7 +92,12 @@ public class CarlaTools : ModuleRules
         "RenderCore",
         "MeshMergeUtilities",
         "StreetMapImporting",
-        "StreetMapRuntime"
+        "StreetMapRuntime",
+        "KismetCompiler",
+        "BlueprintGraph",
+        "AssetRegistry",
+        "PhysicsCore",
+        "AnimGraph"
 				// ... add private dependencies that you statically link with here ...
 			}
 			);
