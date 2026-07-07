@@ -19,10 +19,12 @@ class TestROS2(SyncSmokeTest):
     does not crash when publishing large-payload sensor data (Image, PointCloud2)
     over DDS.
 
-    No ROS2 subscriber is needed: the tests exercise the full server-side
-    publish path (PublisherImpl -> FastDDSPublisherMiddleware ->
+    No ROS2 subscriber is needed for most tests: they exercise the full
+    server-side publish path (PublisherImpl -> FastDDSPublisherMiddleware ->
     GenericCdrPubSubType::serialize()) without verifying that data arrives at
-    an external ROS2 node.
+    an external ROS2 node. The exception is
+    test_ros2_traffic_light_decode_with_carla_msgs, which subscribes with the
+    real ros-carla-msgs package when rclpy is importable and skips otherwise.
     """
 
     def test_ros2_api(self):
@@ -294,6 +296,75 @@ class TestROS2(SyncSmokeTest):
         self.world.apply_settings(settings)
         for _ in range(5):
             self.world.tick()
+
+    def test_ros2_traffic_light_decode_with_carla_msgs(self):
+        """Traffic light topics decode with the real ros-carla-msgs package.
+
+        The type-hash unit tests pin the REP-2011 hashes, but only a real
+        subscriber proves the CDR payload decodes with the canonical
+        carla_msgs definitions, catching wire-format drift a hash test alone
+        cannot. Subscribes to both latched traffic light topics, decodes one
+        sample of each, and cross-checks the published ids against the
+        client-visible traffic light actors. Skips when rclpy or carla_msgs
+        is not importable (both come from sourcing a ROS2 environment with
+        ros-carla-msgs built), so plain smoke runs are unaffected.
+        """
+        try:
+            import rclpy
+            from rclpy.qos import (DurabilityPolicy, HistoryPolicy,
+                                   QoSProfile, ReliabilityPolicy)
+            from carla_msgs.msg import (CarlaTrafficLightInfoList,
+                                        CarlaTrafficLightStatus,
+                                        CarlaTrafficLightStatusList)
+        except ImportError:
+            self.skipTest('rclpy and ros-carla-msgs are required '
+                          'for the decode test')
+
+        lights = self.world.get_actors().filter('traffic.traffic_light')
+        self.assertTrue(len(lights) > 0,
+                        'expected traffic lights in the default map')
+        expected_ids = {light.id for light in lights}
+
+        rclpy.init()
+        node = rclpy.create_node('carla_smoke_traffic_light_decode')
+        latched = QoSProfile(
+            depth=1,
+            history=HistoryPolicy.KEEP_LAST,
+            reliability=ReliabilityPolicy.RELIABLE,
+            durability=DurabilityPolicy.TRANSIENT_LOCAL)
+        received = {}
+        node.create_subscription(
+            CarlaTrafficLightInfoList, '/carla/traffic_lights/info',
+            lambda msg: received.__setitem__('info', msg), latched)
+        node.create_subscription(
+            CarlaTrafficLightStatusList, '/carla/traffic_lights/status',
+            lambda msg: received.__setitem__('status', msg), latched)
+        try:
+            deadline = time.time() + 30.0
+            while time.time() < deadline and len(received) < 2:
+                self.world.tick()
+                rclpy.spin_once(node, timeout_sec=0.1)
+
+            self.assertIn('info', received,
+                          'no decodable CarlaTrafficLightInfoList arrived '
+                          'on /carla/traffic_lights/info')
+            self.assertIn('status', received,
+                          'no decodable CarlaTrafficLightStatusList arrived '
+                          'on /carla/traffic_lights/status')
+
+            info = received['info'].traffic_lights
+            status = received['status'].traffic_lights
+            self.assertEqual({entry.id for entry in info}, expected_ids,
+                             'info ids should match the traffic light actors')
+            self.assertEqual({entry.id for entry in status}, expected_ids,
+                             'status ids should match the traffic light actors')
+            for entry in status:
+                self.assertLessEqual(entry.state, CarlaTrafficLightStatus.UNKNOWN)
+            for entry in info:
+                self.assertGreater(entry.trigger_volume.size.x, 0.0)
+        finally:
+            node.destroy_node()
+            rclpy.shutdown()
 
     def test_ros2_multi_sensor_publish(self):
         """4 sensors + hero vehicle: 100-tick stress run then sequential teardown.
