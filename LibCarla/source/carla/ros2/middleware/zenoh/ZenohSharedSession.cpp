@@ -71,6 +71,17 @@ const z_loaned_session_t* zenoh_get_shared_session() {
       log_error("ZenohSharedSession: failed to read config at '", path,
                 "'; falling back to zenoh defaults");
       z_config_default(&cfg);
+      // The advanced-publisher cache backing transient_local latching only
+      // works on a session with timestamping enabled. The bundled config
+      // turns it on, but the zenoh default config does not, which would
+      // silently degrade latched topics (rt/carla/map) to volatile. Patch
+      // the fallback so latching stays on by default.
+      if (zc_config_insert_json5(z_loan_mut(cfg), "timestamping/enabled",
+                                 "true") != Z_OK) {
+        log_warning("ZenohSharedSession: failed to enable timestamping on "
+                    "the fallback config; transient_local latching may be "
+                    "unavailable");
+      }
     }
     apply_config_overrides(z_loan_mut(cfg));
 
