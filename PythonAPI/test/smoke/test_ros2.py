@@ -170,6 +170,23 @@ class TestROS2(SyncSmokeTest):
             dvs.destroy()
             sem_lidar.destroy()
 
+    def test_ros2_map_publish_on_reload(self):
+        """World reload re-publishes the latched OpenDRIVE map without crashing.
+
+        Every episode start publishes the map as a latched std_msgs/String on
+        rt/carla/map (NotifyBeginEpisode -> ROS2::ProcessDataFromMap). A crash
+        in the transient_local publisher or in the OpenDRIVE retrieval would
+        abort the reload or stop the world from ticking afterwards.
+        """
+        self.world = self.client.reload_world()
+        settings = carla.WorldSettings(
+            no_rendering_mode=False,
+            synchronous_mode=True,
+            fixed_delta_seconds=0.05)
+        self.world.apply_settings(settings)
+        for _ in range(5):
+            self.world.tick()
+
     def test_ros2_enable_disable_cycle(self):
         """Enable → tick → disable → tick → re-enable → tick: no crash or state leak.
 
@@ -205,6 +222,36 @@ class TestROS2(SyncSmokeTest):
 
         finally:
             sensor.destroy()
+
+    def test_ros2_hero_vehicle_topics_lifecycle(self):
+        """Hero vehicle register -> publish -> destroy -> re-register cycle.
+
+        A hero vehicle triggers RegisterVehicle(), which now also creates the
+        odometry, vehicle_status and latched vehicle_info publishers plus the
+        latched map -> odom transform on rt/tf_static, and every tick publishes
+        odometry/status/TF from CarlaEngine::PublishROS2VehicleState. Destroying
+        the hero and spawning a new one with the same ros_name re-creates the
+        same topics, so this exercises the DDS writer cleanup in
+        UnregisterVehicle and the latched re-publish on re-registration. A crash
+        in any of those paths would stop the world from ticking.
+        """
+        bp_lib = self.world.get_blueprint_library()
+        vehicle_bp = bp_lib.filter('vehicle.lincoln.mkz_2017')[0]
+        vehicle_bp.set_attribute('role_name', 'hero')
+        vehicle_bp.set_attribute('ros_name', 'hero')
+        spawn_point = self.world.get_map().get_spawn_points()[0]
+
+        for _ in range(2):
+            vehicle = self.world.spawn_actor(vehicle_bp, spawn_point)
+            try:
+                vehicle.apply_control(carla.VehicleControl(throttle=0.5))
+                for _ in range(20):
+                    self.world.tick()
+            finally:
+                vehicle.destroy()
+            # Liveness check after the vehicle publishers are destroyed.
+            for _ in range(3):
+                self.world.tick()
 
     def test_ros2_multi_sensor_publish(self):
         """4 sensors + hero vehicle: 100-tick stress run then sequential teardown.

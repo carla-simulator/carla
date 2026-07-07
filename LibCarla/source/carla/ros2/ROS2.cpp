@@ -23,16 +23,21 @@
 #include "publishers/CarlaCollisionPublisher.h"
 #include "publishers/CarlaDepthCameraPublisher.h"
 #include "publishers/CarlaDVSPublisher.h"
+#include "publishers/CarlaEgoVehicleInfoPublisher.h"
+#include "publishers/CarlaEgoVehicleStatusPublisher.h"
 #include "publishers/CarlaGNSSPublisher.h"
 #include "publishers/CarlaIMUPublisher.h"
 #include "publishers/CarlaISCameraPublisher.h"
 #include "publishers/CarlaLidarPublisher.h"
+#include "publishers/CarlaMapPublisher.h"
 #include "publishers/CarlaNormalsCameraPublisher.h"
+#include "publishers/CarlaOdometryPublisher.h"
 #include "publishers/CarlaOpticalFlowCameraPublisher.h"
 #include "publishers/CarlaRadarPublisher.h"
 #include "publishers/CarlaRGBCameraPublisher.h"
 #include "publishers/CarlaSemanticLidarPublisher.h"
 #include "publishers/CarlaSSCameraPublisher.h"
+#include "publishers/CarlaStaticTransformPublisher.h"
 #include "publishers/CarlaTransformPublisher.h"
 
 #include "subscribers/AckermannControlSubscriber.h"
@@ -171,6 +176,21 @@ void ROS2::RegisterVehicle(void *actor, std::string ros_name, std::string frame_
   auto _ackermann_control_subscriber = std::make_shared<AckermannControlSubscriber>(actor, base_topic_name, frame_id);
   _subscribers.insert({actor, _ackermann_control_subscriber});
 
+  // Register the per-vehicle data publishers
+  VehiclePublishers vehicle_publishers;
+  vehicle_publishers.odometry = std::make_shared<CarlaOdometryPublisher>(base_topic_name);
+  vehicle_publishers.status = std::make_shared<CarlaEgoVehicleStatusPublisher>(base_topic_name);
+  vehicle_publishers.info = std::make_shared<CarlaEgoVehicleInfoPublisher>(base_topic_name);
+  _vehicle_publishers.insert({actor, std::move(vehicle_publishers)});
+
+  // Anchor the REP-105 tree with a latched map -> odom identity transform.
+  // Re-publishing on every registration refreshes the latched sample with a
+  // current timestamp.
+  if (!_static_tf_publisher) {
+    _static_tf_publisher = std::make_shared<CarlaStaticTransformPublisher>();
+  }
+  _static_tf_publisher->Write(_seconds, _nanoseconds, "map", "odom", geom::Transform());
+  _static_tf_publisher->Publish();
 }
 
 void ROS2::UnregisterVehicle(void *actor) {
@@ -178,6 +198,13 @@ void ROS2::UnregisterVehicle(void *actor) {
   UnregisterActor(actor);
   _actor_callbacks.erase(actor);
   _subscribers.erase(actor);
+  _vehicle_publishers.erase(actor);
+  _tf_publishers.erase(actor);
+}
+
+bool ROS2::IsVehicleRegistered(void *actor) const {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
+  return _vehicle_publishers.find(actor) != _vehicle_publishers.end();
 }
 
 std::string ROS2::GetActorRosName(void *actor) {
@@ -478,6 +505,78 @@ void ROS2::ProcessDataFromCollisionSensor(
   }
 }
 
+void ROS2::ProcessDataFromMap(const std::string &open_drive) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
+  if (!_enabled) {
+    return;
+  }
+  if (open_drive.empty()) {
+    // Reached once per episode start, never per frame, so logging
+    // unconditionally cannot flood the output.
+    log_warning("ROS2: empty OpenDRIVE description, skipping map publish");
+    return;
+  }
+  if (!_map_publisher) {
+    _map_publisher = std::make_shared<CarlaMapPublisher>();
+  }
+  _map_publisher->Write(open_drive);
+  _map_publisher->Publish();
+}
+
+void ROS2::ProcessDataFromVehicle(
+    void *actor,
+    const carla::geom::Transform vehicle_transform,
+    carla::geom::Vector3D velocity,
+    carla::geom::Vector3D angular_velocity,
+    float delta_seconds,
+    const carla::rpc::VehicleControl &control) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
+  if (!_enabled) {
+    return;
+  }
+  auto it = _vehicle_publishers.find(actor);
+  if (it == _vehicle_publishers.end()) {
+    return;
+  }
+  const std::string frame_id = GetFrameId(actor);
+
+  it->second.odometry->Write(
+      _seconds, _nanoseconds, "odom", frame_id, vehicle_transform, velocity, angular_velocity);
+  it->second.odometry->Publish();
+
+  it->second.status->Write(
+      _seconds, _nanoseconds, "map", vehicle_transform, velocity, delta_seconds, control);
+  it->second.status->Publish();
+
+  // Dynamic odom -> <vehicle frame>. The "odom" parent is passed explicitly
+  // because GetParentFrameId returns "map" for root actors and the static
+  // map -> odom identity already anchors the tree.
+  auto transform_publisher = GetOrCreateTransformPublisher(actor);
+  if (transform_publisher) {
+    transform_publisher->Write(_seconds, _nanoseconds, "odom", frame_id, vehicle_transform);
+    transform_publisher->Publish();
+  }
+}
+
+void ROS2::ProcessVehicleInfo(
+    void *actor,
+    uint32_t id,
+    const std::string &type_id,
+    const std::string &role_name,
+    const carla::geom::Transform vehicle_transform,
+    const carla::rpc::VehiclePhysicsControl &physics_control) {
+  std::lock_guard<std::recursive_mutex> lock(_mutex);
+  if (!_enabled) {
+    return;
+  }
+  auto it = _vehicle_publishers.find(actor);
+  if (it == _vehicle_publishers.end()) {
+    return;
+  }
+  it->second.info->Write(id, type_id, role_name, vehicle_transform, physics_control);
+  it->second.info->Publish();
+}
+
 void ROS2::Shutdown() {
   std::lock_guard<std::recursive_mutex> lock(_mutex);
   // Destroy publishers first so DataWriter unregister-dispose messages are
@@ -487,7 +586,10 @@ void ROS2::Shutdown() {
   // to zero and triggers delete_contained_entities() + delete_participant().
   _publishers.clear();
   _tf_publishers.clear();
+  _vehicle_publishers.clear();
   _clock_publisher.reset();
+  _map_publisher.reset();
+  _static_tf_publisher.reset();
 
   _subscribers.clear();
 

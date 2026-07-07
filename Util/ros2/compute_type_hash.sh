@@ -27,6 +27,11 @@
 # Package dependencies (std_msgs, geometry_msgs, ...) are detected
 # automatically from field type declarations in the .msg file.
 #
+# Every .msg file in the same directory as <path/to/TypeName.msg> is copied
+# into the temporary package as a same-package message, so types that
+# reference siblings by bare name (e.g. "CarlaEgoVehicleControl control")
+# resolve during the build. Keep one directory per package.
+#
 # Examples:
 #   # Standard ROS 2 type (hash matches what is already in CdrTopicInfo.h):
 #   ./compute_type_hash.sh sensor_msgs/msg/Imu \
@@ -92,28 +97,34 @@ trap 'rm -rf "$WS"' EXIT
 
 PKG_DIR="$WS/src/$PKG_NAME"
 mkdir -p "$PKG_DIR/msg"
+# Copy every sibling .msg file as a same-package message so that bare-name
+# field references (e.g. "CarlaEgoVehicleControl control") resolve.
+MSG_DIR=$(cd "$(dirname "$MSG_FILE")" && pwd)
+cp "$MSG_DIR"/*.msg "$PKG_DIR/msg/"
 cp "$MSG_FILE" "$PKG_DIR/msg/${TYPE_NAME}.msg"
 
 # Generate package.xml and CMakeLists.txt.
-# Dependencies are detected by scanning the .msg file for "pkg/TypeName" field
-# type declarations (e.g. "std_msgs/Header header").
-python3 - "$MSG_FILE" "$PKG_NAME" "$TYPE_NAME" "$PKG_DIR" <<'PYEOF'
-import re, sys, os
+# Dependencies are detected by scanning every packaged .msg file for
+# "pkg/TypeName" field type declarations (e.g. "std_msgs/Header header").
+python3 - "$PKG_NAME" "$TYPE_NAME" "$PKG_DIR" <<'PYEOF'
+import glob, re, sys, os
 
-msg_file, pkg_name, type_name, pkg_dir = sys.argv[1:]
+pkg_name, type_name, pkg_dir = sys.argv[1:]
 
-with open(msg_file) as f:
-    content = f.read()
+msg_files = sorted(glob.glob(os.path.join(pkg_dir, 'msg', '*.msg')))
 
 deps = set()
-for line in content.splitlines():
-    line = line.strip().split('#')[0].strip()   # strip inline comments
-    # Match "pkg_name/TypeName[optional_array] field_name"
-    m = re.match(r'^([a-zA-Z_][a-zA-Z0-9_]*)/[a-zA-Z_][a-zA-Z0-9_]*(\[.*?\])?\s+\w', line)
-    if m:
-        dep = m.group(1)
-        if dep != pkg_name:
-            deps.add(dep)
+for path in msg_files:
+    with open(path) as f:
+        content = f.read()
+    for line in content.splitlines():
+        line = line.strip().split('#')[0].strip()   # strip inline comments
+        # Match "pkg_name/TypeName[optional_array] field_name"
+        m = re.match(r'^([a-zA-Z_][a-zA-Z0-9_]*)/[a-zA-Z_][a-zA-Z0-9_]*(\[.*?\])?\s+\w', line)
+        if m:
+            dep = m.group(1)
+            if dep != pkg_name:
+                deps.add(dep)
 
 deps = sorted(deps)
 
@@ -136,6 +147,8 @@ with open(os.path.join(pkg_dir, 'package.xml'), 'w') as f:
 
 find_pkgs = '\n'.join(f'find_package({d} REQUIRED)' for d in deps)
 rosidl_deps = ('  DEPENDENCIES ' + ' '.join(deps)) if deps else ''
+msg_entries = '\n'.join(
+    f'  "msg/{os.path.basename(p)}"' for p in msg_files)
 
 with open(os.path.join(pkg_dir, 'CMakeLists.txt'), 'w') as f:
     f.write(f"""cmake_minimum_required(VERSION 3.8)
@@ -144,7 +157,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 {find_pkgs}
 rosidl_generate_interfaces(${{PROJECT_NAME}}
-  "msg/{type_name}.msg"
+{msg_entries}
 {rosidl_deps}
 )
 ament_package()
@@ -158,15 +171,19 @@ echo "[hash] Building ${ROS_TYPE} inside osrf/ros:jazzy-desktop ..." >&2
 
 docker run --rm \
     --volume="${WS}:/ws" \
+    --user="$(id -u):$(id -g)" \
+    --env=HOME=/tmp \
     osrf/ros:jazzy-desktop \
     bash -c "
-        set -euo pipefail
+        set -eo pipefail
+        # setup.bash reads variables that are unset on a fresh container, so
+        # enable nounset only after sourcing it.
         source /opt/ros/jazzy/setup.bash
+        set -u
         cd /ws
-        colcon build \
+        colcon --log-base /tmp/colcon-log build \
             --packages-select ${PKG_NAME} \
             --cmake-args -DCMAKE_BUILD_TYPE=Release \
-            --log-base /tmp/colcon-log \
             > /tmp/colcon-out.txt 2>&1 \
         || { echo 'ERROR: colcon build failed:' >&2; cat /tmp/colcon-out.txt >&2; exit 1; }
         JSON_FILE=/ws/install/${PKG_NAME}/share/${PKG_NAME}/msg/${TYPE_NAME}.json
@@ -174,8 +191,15 @@ docker run --rm \
             echo 'ERROR: generated JSON not found: '\"\$JSON_FILE\" >&2
             exit 1
         fi
-        jq -re --arg t '${ROS_TYPE}' \
-            '.type_hashes[] | select(.type_name == \$t) | .hash_string' \
-            \"\$JSON_FILE\" \
+        python3 -c '
+import json, sys
+with open(sys.argv[1]) as f:
+    data = json.load(f)
+for entry in data[\"type_hashes\"]:
+    if entry[\"type_name\"] == sys.argv[2]:
+        print(entry[\"hash_string\"])
+        sys.exit(0)
+sys.exit(1)
+' \"\$JSON_FILE\" '${ROS_TYPE}' \
         || { echo \"ERROR: '${ROS_TYPE}' not found in \$JSON_FILE\" >&2; exit 1; }
     "
