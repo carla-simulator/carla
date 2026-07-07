@@ -139,6 +139,13 @@ class FastDDSPublisherMiddleware
       wqos.durability().kind = efd::TRANSIENT_LOCAL_DURABILITY_QOS;
     }
 
+    if (publisher_qos.reliability == ReliabilityKind::BestEffort) {
+      // High-rate sensor stream: drop samples instead of blocking the publish
+      // call on retransmissions to slow subscribers. The default stays
+      // RELIABLE (DATAWRITER_QOS_DEFAULT), unchanged for existing publishers.
+      wqos.reliability().kind = efd::BEST_EFFORT_RELIABILITY_QOS;
+    }
+
     // Set USER_DATA (PID_USER_DATA = 0x002c per OMG DDSI-RTPS v2.5 §9.6.2.2.2)
     // to the REP-2011/REP-2016 type-hash KV payload "typehash=RIHS01_<hex>;".
     // Jazzy rmw_cyclonedds_cpp / rmw_fastrtps_cpp parse this during SEDP

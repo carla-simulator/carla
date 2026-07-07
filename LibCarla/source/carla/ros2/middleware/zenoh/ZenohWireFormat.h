@@ -49,13 +49,18 @@ inline std::string zenoh_ros_domain_id() {
 /// QoS segment of an endpoint liveliness keyexpr, rmw_zenoh format: six
 /// ':'-separated fields (reliability : durability : history_kind,history_depth
 /// : deadline : lifespan : liveliness) holding numeric rmw_qos enum values,
-/// where an empty field means "default". Durability TRANSIENT_LOCAL is rmw
-/// enum value 1. The default PublisherQos (volatile, depth 1) produces a
-/// string byte-identical to kZenohDefaultQos.
+/// where an empty field means "default". Reliability BEST_EFFORT is rmw enum
+/// value 2; durability TRANSIENT_LOCAL is rmw enum value 1. The default
+/// PublisherQos (reliable, volatile, depth 1) produces a string
+/// byte-identical to kZenohDefaultQos. Reliability only needs advertising
+/// here: zenoh itself has no per-publisher reliability knob, rmw_zenoh
+/// matches endpoints on this liveliness QoS segment.
 inline std::string zenoh_make_qos_string(const PublisherQos& publisher_qos) {
+  const char* reliability =
+      publisher_qos.reliability == ReliabilityKind::BestEffort ? "2" : "";
   const char* durability =
       publisher_qos.durability == DurabilityKind::TransientLocal ? "1" : "";
-  return std::string(":") + durability + ":," +
+  return std::string(reliability) + ":" + durability + ":," +
          std::to_string(publisher_qos.effective_history_depth()) + ":,:,:,,";
 }
 

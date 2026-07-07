@@ -30,10 +30,13 @@ namespace ros2 {
         BasePublisher(base_topic_name, frame_id),
         _impl_image(std::make_shared<PublisherImpl<ImageMsgTraits>>()),
         _impl_camera_info(std::make_shared<PublisherImpl<CameraInfoMsgTraits>>()) {
-          if (!_impl_image->Init(GetBaseTopicName() + "/image")) {
+          // Best-effort sensor-data QoS: image frames are large and per-tick,
+          // so a slow subscriber must never block the publishing thread.
+          // camera_info shares the image QoS, the image_transport convention.
+          if (!_impl_image->Init(GetBaseTopicName() + "/image", PublisherQos::SensorData())) {
             log_warning("CarlaCameraPublisher: Init failed for topic: ", GetBaseTopicName(), "/image");
           }
-          if (!_impl_camera_info->Init(GetBaseTopicName() + "/camera_info")) {
+          if (!_impl_camera_info->Init(GetBaseTopicName() + "/camera_info", PublisherQos::SensorData())) {
             log_warning("CarlaCameraPublisher: Init failed for topic: ", GetBaseTopicName(), "/camera_info");
           }
         }

@@ -18,12 +18,33 @@ enum class DurabilityKind : uint8_t {
   TransientLocal
 };
 
+/// Reliability of a publisher endpoint, mirroring the DDS reliability QoS.
+enum class ReliabilityKind : uint8_t {
+  /// The writer retransmits until every matched reliable subscriber acks the
+  /// sample, blocking the publish call while the writer history is full.
+  Reliable,
+  /// Samples are sent once and may be dropped; the publish call never blocks
+  /// on slow subscribers (the ROS 2 sensor-data idiom for high-rate streams).
+  BestEffort
+};
+
 /// QoS settings applied to a publisher middleware at Init time.
 /// The defaults reproduce the exact behavior every publisher had before QoS
-/// support was added: volatile durability with a keep-last history of 1.
+/// support was added: reliable delivery, volatile durability, and a
+/// keep-last history of 1.
 struct PublisherQos {
   DurabilityKind durability{DurabilityKind::Volatile};
+  ReliabilityKind reliability{ReliabilityKind::Reliable};
   uint32_t history_depth{1u};
+
+  /// Profile for high-rate sensor streams (camera images, point clouds):
+  /// best-effort delivery so a slow or vanished subscriber can never stall
+  /// the publishing thread, matching the ROS 2 sensor-data QoS reliability.
+  static PublisherQos SensorData() {
+    PublisherQos qos;
+    qos.reliability = ReliabilityKind::BestEffort;
+    return qos;
+  }
 
   /// History depth to hand to the middleware: a keep-last history needs a
   /// positive depth, so the invalid value 0 is clamped to 1.

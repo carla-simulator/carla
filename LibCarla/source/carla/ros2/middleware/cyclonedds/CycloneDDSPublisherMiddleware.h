@@ -75,8 +75,15 @@ class CycloneDDSPublisherMiddleware : public IPublisherMiddleware {
     }
 
     dds_qos_t* qos = dds_create_qos();
-    dds_qset_reliability(qos, DDS_RELIABILITY_RELIABLE,
-                         DDS_SECS(1));
+    if (publisher_qos.reliability == ReliabilityKind::BestEffort) {
+      // High-rate sensor stream: drop samples instead of blocking the publish
+      // call on retransmissions to slow subscribers. max_blocking_time is
+      // meaningless for best-effort writers, so pass 0.
+      dds_qset_reliability(qos, DDS_RELIABILITY_BEST_EFFORT, 0);
+    } else {
+      dds_qset_reliability(qos, DDS_RELIABILITY_RELIABLE,
+                           DDS_SECS(1));
+    }
     // Keep-last writer history with the requested depth. The default depth 1
     // matches the previous hardcoded value, so volatile publishers are
     // unchanged.
