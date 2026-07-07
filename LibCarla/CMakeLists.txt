@@ -468,6 +468,7 @@ if (BUILD_LIBCARLA_TESTS)
         REMOVE_ITEM
         LIBCARLA_TEST_SERVER_SOURCES
         ${LIBCARLA_SOURCE_PATH}/test/server/test_ros2_middleware.cpp
+        ${LIBCARLA_SOURCE_PATH}/test/server/test_ros2_serialization.cpp
       )
     endif ()
 
