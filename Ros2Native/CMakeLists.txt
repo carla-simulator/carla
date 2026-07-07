@@ -44,6 +44,7 @@ ExternalProject_add (
     -DOPENSSL_CRYPTO_LIBRARY:FILEPATH=${UE_OPENSSL_LIBS}/libcrypto.a
   INSTALL_BYPRODUCTS
     ${PROJECT_INSTALL_PATH}/lib/libfastcdr.so
+    ${PROJECT_INSTALL_PATH}/lib/libfastrtps.so
   DEPENDS foonathan_memory
 )
 
