@@ -22,9 +22,7 @@ bool CarlaStaticTransformPublisher::Write(
   ts.header.frame_id = frame_id;
   ts.child_frame_id = child_frame_id;
 
-  ts.transform.translation.x = transform.location.x;
-  ts.transform.translation.y = -transform.location.y;
-  ts.transform.translation.z = transform.location.z;
+  ts.transform.translation = ue_vector_to_ros_vector(transform.location);
   ts.transform.rotation = ue_rotation_to_ros_quaternion(transform.rotation);
 
   _impl->GetMessage()->transforms = {ts};
