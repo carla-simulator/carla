@@ -4,7 +4,7 @@ This example demonstrates how to utilize the ROS 2 native interface in CARLA. It
 
 ## What the demo shows
 
-The native ROS 2 interface publishes a latched `std_msgs/String` with the full OpenDRIVE description of the current map on `/carla/map` (transient local durability, re-published on every map load). Any node can join late, read the map once, and combine it with the live sensor streams. The demo uses that topic to draw the real lane geometry of the town in RViz:
+The native ROS 2 interface publishes a latched `std_msgs/String` with the full OpenDRIVE description of the current map on `/carla/map` (transient local durability, re-published on every map load). `std_msgs/String` carries no `Header`, matching the carla-ros-bridge `/carla/map` topic: the latched sample has no stamp or episode id, but it always describes the currently loaded map because the single cached sample is overwritten on every map load. Any node can join late, read the map once, and combine it with the live sensor streams. The demo uses that topic to draw the real lane geometry of the town in RViz:
 
 * **Lane markers**: the OpenDRIVE string is parsed client-side and converted into a latched `visualization_msgs/MarkerArray` on `/carla/map_markers`. Lane boundaries are computed from the true lane width given by the OpenDRIVE (centerline plus and minus half the lane width), and each lane edge is published as one continuous polyline.
 * **Hero vehicle and sensors**: a vehicle with camera, lidar, GNSS and IMU drives on autopilot, with every sensor publishing natively (no bridge).

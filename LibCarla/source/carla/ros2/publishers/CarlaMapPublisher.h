@@ -18,6 +18,18 @@ namespace ros2 {
   /// Publishes the OpenDRIVE description of the current map as a latched
   /// std_msgs/String on rt/carla/map. The transient_local durability lets
   /// late-joining subscribers receive the map without CARLA re-publishing it.
+  ///
+  /// std_msgs/String carries no Header, and that is deliberate: it keeps the
+  /// topic wire-compatible with carla-ros-bridge's /carla/map, which existing
+  /// tooling already consumes. The message therefore has no stamp or episode
+  /// id of its own; its identity contract is positional instead. The writer
+  /// cache holds exactly one sample (keep-last depth 1) and the map is
+  /// re-published on every episode start / map load, overwriting that sample,
+  /// so the latched payload a late joiner receives always describes the map
+  /// of the current episode. Consumers that need to detect a map change
+  /// should watch for a new sample arriving on this topic (the OpenDRIVE
+  /// header's own revision/name attributes identify the map) rather than
+  /// expect a ROS stamp.
   class CarlaMapPublisher : public BasePublisher {
     public:
       struct MapMsgTraits {
