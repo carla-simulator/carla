@@ -18,6 +18,8 @@ set (
 file (
   GLOB
   LIBCARLA_ROS2_SOURCES
+  ${LIBCARLA_SOURCE_PATH}/carla/ros2/middleware/*.cpp
+  ${LIBCARLA_SOURCE_PATH}/carla/ros2/middleware/fastdds/*.cpp
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/publishers/*.cpp
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/subscribers/*.cpp
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/listeners/*.cpp
@@ -27,6 +29,8 @@ file (
 file (
   GLOB
   LIBCARLA_ROS2_HEADERS
+  ${LIBCARLA_SOURCE_PATH}/carla/ros2/middleware/*.h
+  ${LIBCARLA_SOURCE_PATH}/carla/ros2/middleware/fastdds/*.h
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/publishers/*.h
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/subscribers/*.h
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/listeners/*.h
@@ -51,6 +55,8 @@ target_compile_definitions (
   carla-ros2-native
   PUBLIC
   BOOST_ASIO_ENABLE_BUFFER_DEBUGGING
+  PRIVATE
+  CARLA_ROS2_MIDDLEWARE_FASTDDS
 )
 
 target_link_libraries (
