@@ -16,9 +16,9 @@ namespace carla {
 namespace ros2 {
 
   /// Conversions from UE coordinates (left-handed, z-up, degrees) to ROS
-  /// coordinates (right-handed, z-up, radians). Same convention as
-  /// CarlaTransformPublisher::ComputeTransform: y negated; roll, -pitch,
-  /// -yaw converted from degrees to radians.
+  /// coordinates (right-handed, z-up, radians): y negated; roll, -pitch,
+  /// -yaw converted from degrees to radians. Single source of the sign
+  /// convention, shared by the TF publishers and the ego vehicle publishers.
 
   constexpr float UE_DEG_TO_RAD = geom::Math::Pi<float>() / 180.0f;
 
