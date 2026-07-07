@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "carla/ros2/middleware/PublisherQos.h"
+
 #include <string>
 
 namespace carla {
@@ -23,9 +25,13 @@ class IPublisherMiddleware {
   virtual ~IPublisherMiddleware() = default;
 
   /// Initialize the underlying middleware entities.
-  /// @param topic_name  Full topic name including "rt/" prefix.
+  /// @param topic_name     Full topic name including "rt/" prefix.
+  /// @param publisher_qos  QoS applied to the underlying writer; the default
+  ///                       PublisherQos reproduces the historical behavior.
   /// @return true on success.
-  virtual bool Init(const std::string& topic_name) = 0;
+  virtual bool Init(
+      const std::string& topic_name,
+      const PublisherQos& publisher_qos) = 0;
 
   /// Serialize and write a message to the network.
   /// @param message_data  Pointer to the message object (type-erased, cast internally).

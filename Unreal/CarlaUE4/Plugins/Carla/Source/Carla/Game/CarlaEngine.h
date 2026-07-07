@@ -99,6 +99,15 @@ private:
 
   void OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds);
 
+#if defined(WITH_ROS2)
+  // Publishes odometry, status and TF for every ROS2-registered vehicle.
+  void PublishROS2VehicleState(float DeltaSeconds);
+
+  // Publishes the traffic light status list (on change) and, once per
+  // episode, the latched traffic light info list.
+  void PublishROS2TrafficLights();
+#endif
+
   void OnEpisodeSettingsChanged(const FEpisodeSettings &Settings);
 
   void ResetSimulationState();
@@ -106,6 +115,14 @@ private:
   bool bIsRunning = false;
 
   bool bMapChanged = false;
+
+#if defined(WITH_ROS2)
+  // True once the latched traffic light info list of the current episode has
+  // been published; reset on every NotifyBeginEpisode. The gather waits for
+  // the first post-tick because the lights spawn during level BeginPlay,
+  // after NotifyBeginEpisode.
+  bool bROS2TrafficLightsInfoPublished = false;
+#endif
 
   FCarlaServer Server;
 

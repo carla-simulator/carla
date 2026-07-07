@@ -10,6 +10,7 @@
 #include "carla/BufferView.h"
 #include "carla/geom/Transform.h"
 #include "carla/ros2/ROS2CallbackData.h"
+#include "carla/ros2/TrafficLightData.h"
 #include "carla/ros2/middleware/Middleware.h"
 #include "carla/ros2/middleware/MiddlewareConfig.h"
 #include "carla/streaming/detail/Types.h"
@@ -26,6 +27,10 @@ namespace carla {
   namespace geom {
     class GeoLocation;
     class Vector3D;
+  }
+  namespace rpc {
+    class VehicleControl;
+    class VehiclePhysicsControl;
   }
   namespace sensor {
     namespace data {
@@ -44,6 +49,13 @@ namespace ros2 {
 
   class CarlaTransformPublisher;
   class CarlaClockPublisher;
+  class CarlaMapPublisher;
+  class CarlaOdometryPublisher;
+  class CarlaEgoVehicleStatusPublisher;
+  class CarlaEgoVehicleInfoPublisher;
+  class CarlaStaticTransformPublisher;
+  class CarlaTrafficLightInfoPublisher;
+  class CarlaTrafficLightStatusPublisher;
 
 class ROS2
 {
@@ -88,6 +100,10 @@ class ROS2
 
     void RegisterVehicle(void *actor, std::string ros_name, std::string frame_id, ActorCallback callback);
     void UnregisterVehicle(void *actor);
+
+    // True when RegisterVehicle created the per-vehicle data publishers for
+    // this actor and UnregisterVehicle has not destroyed them yet.
+    bool IsVehicleRegistered(void *actor) const;
 
     // Receiving data to publish
     void ProcessDataFromCamera(
@@ -140,6 +156,34 @@ class ROS2
       uint32_t other_actor,
       carla::geom::Vector3D impulse,
       void* actor);
+    // Publishes the OpenDRIVE description of the current map as a latched
+    // topic. Called once per episode; re-publishing refreshes the latched
+    // sample after a map change.
+    void ProcessDataFromMap(const std::string &open_drive);
+    // Publishes odometry, vehicle status and the dynamic odom -> <vehicle>
+    // transform for a registered vehicle. Called once per frame.
+    void ProcessDataFromVehicle(
+      void *actor,
+      const carla::geom::Transform vehicle_transform,
+      carla::geom::Vector3D velocity,
+      carla::geom::Vector3D angular_velocity,
+      float delta_seconds,
+      const carla::rpc::VehicleControl &control);
+    // Publishes the latched static description of a registered vehicle.
+    // Called once at registration.
+    void ProcessVehicleInfo(
+      void *actor,
+      uint32_t id,
+      const std::string &type_id,
+      const std::string &role_name,
+      const carla::geom::Transform vehicle_transform,
+      const carla::rpc::VehiclePhysicsControl &physics_control);
+    // Publishes the full traffic light status list, but only when any light
+    // changed state since the last publish. Called once per frame.
+    void ProcessTrafficLightStates(const std::vector<TrafficLightState> &states);
+    // Publishes the latched static description of every traffic light.
+    // Called once per episode, after the lights spawn.
+    void ProcessTrafficLightInfo(const std::vector<TrafficLightInfo> &info);
 
   private:
     std::shared_ptr<CarlaTransformPublisher> GetOrCreateTransformPublisher(void *actor);
@@ -162,6 +206,7 @@ class ROS2
   uint32_t _nanoseconds { 0 };
 
   std::shared_ptr<CarlaClockPublisher> _clock_publisher;
+  std::shared_ptr<CarlaMapPublisher> _map_publisher;
 
   // actor->parent relationship
   std::unordered_map<void *, void *> _actor_parent_map;
@@ -175,6 +220,19 @@ class ROS2
 
   std::unordered_map<void *, bool> _tfs;
   std::unordered_map<void *, std::shared_ptr<CarlaTransformPublisher>> _tf_publishers;
+
+  // Per-vehicle data publishers, created at RegisterVehicle and destroyed at
+  // UnregisterVehicle/Shutdown.
+  struct VehiclePublishers {
+    std::shared_ptr<CarlaOdometryPublisher> odometry;
+    std::shared_ptr<CarlaEgoVehicleStatusPublisher> status;
+    std::shared_ptr<CarlaEgoVehicleInfoPublisher> info;
+  };
+  std::unordered_map<void *, VehiclePublishers> _vehicle_publishers;
+  std::shared_ptr<CarlaStaticTransformPublisher> _static_tf_publisher;
+
+  std::shared_ptr<CarlaTrafficLightInfoPublisher> _traffic_lights_info_publisher;
+  std::shared_ptr<CarlaTrafficLightStatusPublisher> _traffic_lights_status_publisher;
 };
 
 } // namespace ros2

@@ -15,6 +15,9 @@
 #include <carla/ros2/middleware/IPublisherMiddleware.h>
 #include <carla/ros2/middleware/ISubscriberMiddleware.h>
 #include <carla/ros2/publishers/PublisherImpl.h>
+#include <carla/ros2/publishers/CarlaEgoVehicleStatusPublisher.h>
+#include <carla/ros2/publishers/CarlaTrafficLightStatusPublisher.h>
+#include <carla/ros2/publishers/UeToRosConversions.h>
 #include <carla/ros2/subscribers/SubscriberImpl.h>
 #include <carla/ros2/middleware/fastdds/GenericCdrPubSubType.h>
 #include <carla/ros2/middleware/zenoh/ZenohWireFormat.h>
@@ -24,6 +27,7 @@
 #include <array>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <vector>
@@ -58,10 +62,14 @@ class MockPublisherMiddleware : public IPublisherMiddleware {
   bool publish_called{false};
   std::string last_topic_name;
   void* last_published_data{nullptr};
+  PublisherQos last_publisher_qos;
 
-  bool Init(const std::string& topic_name) override {
+  bool Init(
+      const std::string& topic_name,
+      const PublisherQos& publisher_qos) override {
     init_called = true;
     last_topic_name = topic_name;
+    last_publisher_qos = publisher_qos;
     return init_return_value;
   }
 
@@ -344,7 +352,7 @@ TEST_F(MiddlewareFactoryFixture, create_subscriber_zenoh_unavailable) {
 }
 
 // ==========================================================================
-// Group 7: publisher_impl (7 tests)
+// Group 7: publisher_impl (12 tests)
 // ==========================================================================
 
 TEST(publisher_impl, get_message_returns_pointer) {
@@ -417,6 +425,69 @@ TEST(publisher_impl, data_flows_through_publish) {
   ASSERT_NE(mock->last_published_data, nullptr);
   auto* published = static_cast<TestMsg*>(mock->last_published_data);
   EXPECT_EQ(published->value, 42);
+}
+
+TEST(publisher_impl, default_qos_is_reliable_volatile_depth_one) {
+  // The default PublisherQos must reproduce the historical behavior of every
+  // publisher created before QoS support existed.
+  PublisherQos qos;
+  EXPECT_EQ(qos.durability, DurabilityKind::Volatile);
+  EXPECT_EQ(qos.reliability, ReliabilityKind::Reliable);
+  EXPECT_EQ(qos.history_depth, 1u);
+}
+
+TEST(publisher_impl, sensor_data_qos_is_best_effort) {
+  // The sensor-data profile only relaxes reliability; durability and history
+  // stay at the defaults so high-rate streams keep the same memory footprint.
+  const PublisherQos qos = PublisherQos::SensorData();
+  EXPECT_EQ(qos.reliability, ReliabilityKind::BestEffort);
+  EXPECT_EQ(qos.durability, DurabilityKind::Volatile);
+  EXPECT_EQ(qos.history_depth, 1u);
+}
+
+TEST(publisher_impl, effective_history_depth_clamps_zero_to_one) {
+  // A keep-last history needs a positive depth, so the middlewares apply the
+  // clamped value instead of the raw field.
+  PublisherQos qos;
+  EXPECT_EQ(qos.effective_history_depth(), 1u);
+  qos.history_depth = 0u;
+  EXPECT_EQ(qos.effective_history_depth(), 1u);
+  qos.history_depth = 10u;
+  EXPECT_EQ(qos.effective_history_depth(), 10u);
+}
+
+TEST(publisher_impl, init_without_qos_passes_default_qos) {
+  PublisherImpl<TestPubTraits> pub;
+  auto* mock = new MockPublisherMiddleware();
+  pub.SetMiddlewareForTesting(
+      std::unique_ptr<IPublisherMiddleware>(mock));
+  EXPECT_TRUE(pub.Init("rt/test_topic"));
+  EXPECT_EQ(mock->last_publisher_qos.durability, DurabilityKind::Volatile);
+  EXPECT_EQ(mock->last_publisher_qos.reliability, ReliabilityKind::Reliable);
+  EXPECT_EQ(mock->last_publisher_qos.history_depth, 1u);
+}
+
+TEST(publisher_impl, init_passes_sensor_data_qos) {
+  PublisherImpl<TestPubTraits> pub;
+  auto* mock = new MockPublisherMiddleware();
+  pub.SetMiddlewareForTesting(
+      std::unique_ptr<IPublisherMiddleware>(mock));
+  EXPECT_TRUE(pub.Init("rt/carla/hero/lidar/point_cloud", PublisherQos::SensorData()));
+  EXPECT_EQ(mock->last_publisher_qos.reliability, ReliabilityKind::BestEffort);
+  EXPECT_EQ(mock->last_publisher_qos.durability, DurabilityKind::Volatile);
+}
+
+TEST(publisher_impl, init_passes_transient_local_qos) {
+  PublisherImpl<TestPubTraits> pub;
+  auto* mock = new MockPublisherMiddleware();
+  pub.SetMiddlewareForTesting(
+      std::unique_ptr<IPublisherMiddleware>(mock));
+  PublisherQos qos;
+  qos.durability = DurabilityKind::TransientLocal;
+  qos.history_depth = 5u;
+  EXPECT_TRUE(pub.Init("rt/carla/map", qos));
+  EXPECT_EQ(mock->last_publisher_qos.durability, DurabilityKind::TransientLocal);
+  EXPECT_EQ(mock->last_publisher_qos.history_depth, 5u);
 }
 
 // ==========================================================================
@@ -503,8 +574,48 @@ TEST(subscriber_impl, init_failure_propagated) {
 }
 
 // ==========================================================================
-// Group 9: cdr_topic_info (2 tests)
+// Group 9: cdr_topic_info (5 tests)
 // ==========================================================================
+
+TEST(cdr_topic_info, ego_vehicle_type_names_match_packages) {
+  EXPECT_STREQ(
+      "geometry_msgs::msg::dds_::Accel_",
+      carla::ros2::CdrTopicInfo<carla::ros2::msg::Accel>::type_name());
+  EXPECT_STREQ(
+      "carla_msgs::msg::dds_::CarlaEgoVehicleStatus_",
+      carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaEgoVehicleStatus>::type_name());
+  EXPECT_STREQ(
+      "carla_msgs::msg::dds_::CarlaEgoVehicleInfo_",
+      carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaEgoVehicleInfo>::type_name());
+  EXPECT_STREQ(
+      "carla_msgs::msg::dds_::CarlaEgoVehicleInfoWheel_",
+      carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaEgoVehicleInfoWheel>::type_name());
+}
+
+TEST(cdr_topic_info, ego_vehicle_max_sizes_are_positive) {
+  EXPECT_GT(carla::ros2::CdrTopicInfo<carla::ros2::msg::Accel>::max_serialized_size(), 0u);
+  EXPECT_GT(carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaEgoVehicleStatus>::max_serialized_size(), 0u);
+  EXPECT_GT(carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaEgoVehicleInfo>::max_serialized_size(), 0u);
+  EXPECT_GT(carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaEgoVehicleInfoWheel>::max_serialized_size(), 0u);
+}
+
+TEST(cdr_topic_info, traffic_light_type_names_match_packages) {
+  EXPECT_STREQ(
+      "carla_msgs::msg::dds_::CarlaBoundingBox_",
+      carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaBoundingBox>::type_name());
+  EXPECT_STREQ(
+      "carla_msgs::msg::dds_::CarlaTrafficLightStatus_",
+      carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaTrafficLightStatus>::type_name());
+  EXPECT_STREQ(
+      "carla_msgs::msg::dds_::CarlaTrafficLightStatusList_",
+      carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaTrafficLightStatusList>::type_name());
+  EXPECT_STREQ(
+      "carla_msgs::msg::dds_::CarlaTrafficLightInfo_",
+      carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaTrafficLightInfo>::type_name());
+  EXPECT_STREQ(
+      "carla_msgs::msg::dds_::CarlaTrafficLightInfoList_",
+      carla::ros2::CdrTopicInfo<carla::ros2::msg::CarlaTrafficLightInfoList>::type_name());
+}
 
 TEST(cdr_topic_info, type_names_are_non_empty) {
   EXPECT_STRNE("", carla::ros2::CdrTopicInfo<carla::ros2::msg::Time>::type_name());
@@ -1411,7 +1522,7 @@ TEST(domain_id_resolution, invalid_command_line_falls_through_to_environment) {
 }
 
 // ==========================================================================
-// Group 14: zenoh_wire_format (3 tests)
+// Group 14: zenoh_wire_format (5 tests)
 // Pure string tests for the rmw_zenoh keyexpr builders: the domain id must be
 // the leading segment of every keyexpr so we only match rmw_zenoh peers on
 // the same domain.
@@ -1435,6 +1546,21 @@ TEST(zenoh_wire_format, topic_liveliness_keyexpr_has_domain_and_mangled_topic) {
       "sensor_msgs::msg::dds_::Imu_", "RIHS01_abc", kZenohDefaultQos);
   EXPECT_EQ(ke.compare(0, 12, "@ros2_lv/42/"), 0) << "keyexpr: " << ke;
   EXPECT_NE(ke.find("%vehicle%imu"), std::string::npos);
+}
+
+TEST(zenoh_wire_format, default_qos_string_matches_rmw_zenoh_default) {
+  // The default PublisherQos must advertise the exact QoS segment rmw_zenoh
+  // peers used before QoS support existed.
+  EXPECT_EQ(zenoh_make_qos_string(PublisherQos()), kZenohDefaultQos);
+}
+
+TEST(zenoh_wire_format, qos_string_advertises_reliability_and_durability) {
+  // rmw enum values: reliability BEST_EFFORT = 2, durability TRANSIENT_LOCAL = 1.
+  EXPECT_EQ(zenoh_make_qos_string(PublisherQos::SensorData()), "2::,1:,:,:,,");
+  PublisherQos latched;
+  latched.durability = DurabilityKind::TransientLocal;
+  latched.history_depth = 5u;
+  EXPECT_EQ(zenoh_make_qos_string(latched), ":1:,5:,:,:,,");
 }
 
 #ifndef _WIN32
@@ -1525,3 +1651,428 @@ TEST_F(ZenohDomainIdFixture, invalid_environment_falls_back_to_default) {
   EXPECT_EQ(zenoh_ros_domain_id(), "0");
 }
 #endif  // _WIN32
+
+// ==========================================================================
+// Group 17: ego vehicle types CDR round-trips (5 tests)
+// ==========================================================================
+
+TEST(cdr_serialization, accel_round_trip) {
+  carla::ros2::msg::Accel original{};
+  original.linear.x = 1.5;
+  original.linear.y = -2.5;
+  original.linear.z = 0.25;
+  original.angular.x = -0.1;
+  original.angular.y = 0.2;
+  original.angular.z = -0.3;
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::Accel recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  EXPECT_DOUBLE_EQ(recovered.linear.x, 1.5);
+  EXPECT_DOUBLE_EQ(recovered.linear.y, -2.5);
+  EXPECT_DOUBLE_EQ(recovered.linear.z, 0.25);
+  EXPECT_DOUBLE_EQ(recovered.angular.x, -0.1);
+  EXPECT_DOUBLE_EQ(recovered.angular.y, 0.2);
+  EXPECT_DOUBLE_EQ(recovered.angular.z, -0.3);
+}
+
+TEST(cdr_serialization, carla_ego_vehicle_status_round_trip) {
+  carla::ros2::msg::CarlaEgoVehicleStatus original{};
+  original.header.stamp.sec = 12;
+  original.header.stamp.nanosec = 345u;
+  original.header.frame_id = "map";
+  original.velocity = 13.9f;
+  original.acceleration.linear.x = 0.5;
+  original.acceleration.linear.y = -0.25;
+  original.orientation.w = 0.7071;
+  original.orientation.z = -0.7071;
+  original.control.throttle = 0.6f;
+  original.control.steer = -0.1f;
+  original.control.gear = 3;
+  original.control.reverse = true;
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::CarlaEgoVehicleStatus recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  EXPECT_EQ(recovered.header.stamp.sec, 12);
+  EXPECT_EQ(recovered.header.stamp.nanosec, 345u);
+  EXPECT_EQ(recovered.header.frame_id, "map");
+  EXPECT_FLOAT_EQ(recovered.velocity, 13.9f);
+  EXPECT_DOUBLE_EQ(recovered.acceleration.linear.x, 0.5);
+  EXPECT_DOUBLE_EQ(recovered.acceleration.linear.y, -0.25);
+  EXPECT_DOUBLE_EQ(recovered.orientation.w, 0.7071);
+  EXPECT_DOUBLE_EQ(recovered.orientation.z, -0.7071);
+  EXPECT_FLOAT_EQ(recovered.control.throttle, 0.6f);
+  EXPECT_FLOAT_EQ(recovered.control.steer, -0.1f);
+  EXPECT_EQ(recovered.control.gear, 3);
+  EXPECT_EQ(recovered.control.reverse, true);
+}
+
+TEST(cdr_serialization, carla_ego_vehicle_info_round_trip) {
+  carla::ros2::msg::CarlaEgoVehicleInfo original{};
+  original.id = 42u;
+  original.type = "vehicle.tesla.model3";
+  original.rolename = "hero";
+  original.max_rpm = 8000.0f;
+  original.moi = 1.0f;
+  original.damping_rate_full_throttle = 0.15f;
+  original.damping_rate_zero_throttle_clutch_engaged = 2.0f;
+  original.damping_rate_zero_throttle_clutch_disengaged = 0.35f;
+  original.use_gear_autobox = true;
+  original.gear_switch_time = 0.5f;
+  original.clutch_strength = 10.0f;
+  original.mass = 1845.0f;
+  original.drag_coefficient = 0.15f;
+  original.center_of_mass.x = 0.45;
+  original.center_of_mass.z = -0.2;
+
+  carla::ros2::msg::CarlaEgoVehicleInfoWheel front_left{};
+  front_left.tire_friction = 3.5f;
+  front_left.damping_rate = 0.25f;
+  front_left.max_steer_angle = 1.22f;
+  front_left.radius = 37.0f;
+  front_left.max_brake_torque = 700.0f;
+  front_left.max_handbrake_torque = 0.0f;
+  front_left.position.x = 1.4;
+  front_left.position.y = -0.8;
+  front_left.position.z = 0.3;
+
+  carla::ros2::msg::CarlaEgoVehicleInfoWheel rear_right{};
+  rear_right.tire_friction = 3.5f;
+  rear_right.max_handbrake_torque = 1400.0f;
+  rear_right.position.x = -1.4;
+  rear_right.position.y = 0.8;
+
+  original.wheels = {front_left, rear_right};
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::CarlaEgoVehicleInfo recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  EXPECT_EQ(recovered.id, 42u);
+  EXPECT_EQ(recovered.type, "vehicle.tesla.model3");
+  EXPECT_EQ(recovered.rolename, "hero");
+  EXPECT_FLOAT_EQ(recovered.max_rpm, 8000.0f);
+  EXPECT_FLOAT_EQ(recovered.moi, 1.0f);
+  EXPECT_FLOAT_EQ(recovered.damping_rate_full_throttle, 0.15f);
+  EXPECT_FLOAT_EQ(recovered.damping_rate_zero_throttle_clutch_engaged, 2.0f);
+  EXPECT_FLOAT_EQ(recovered.damping_rate_zero_throttle_clutch_disengaged, 0.35f);
+  EXPECT_EQ(recovered.use_gear_autobox, true);
+  EXPECT_FLOAT_EQ(recovered.gear_switch_time, 0.5f);
+  EXPECT_FLOAT_EQ(recovered.clutch_strength, 10.0f);
+  EXPECT_FLOAT_EQ(recovered.mass, 1845.0f);
+  EXPECT_FLOAT_EQ(recovered.drag_coefficient, 0.15f);
+  EXPECT_DOUBLE_EQ(recovered.center_of_mass.x, 0.45);
+  EXPECT_DOUBLE_EQ(recovered.center_of_mass.z, -0.2);
+  ASSERT_EQ(recovered.wheels.size(), 2u);
+  EXPECT_FLOAT_EQ(recovered.wheels[0].tire_friction, 3.5f);
+  EXPECT_FLOAT_EQ(recovered.wheels[0].damping_rate, 0.25f);
+  EXPECT_FLOAT_EQ(recovered.wheels[0].max_steer_angle, 1.22f);
+  EXPECT_FLOAT_EQ(recovered.wheels[0].radius, 37.0f);
+  EXPECT_FLOAT_EQ(recovered.wheels[0].max_brake_torque, 700.0f);
+  EXPECT_DOUBLE_EQ(recovered.wheels[0].position.x, 1.4);
+  EXPECT_DOUBLE_EQ(recovered.wheels[0].position.y, -0.8);
+  EXPECT_DOUBLE_EQ(recovered.wheels[0].position.z, 0.3);
+  EXPECT_FLOAT_EQ(recovered.wheels[1].max_handbrake_torque, 1400.0f);
+  EXPECT_DOUBLE_EQ(recovered.wheels[1].position.x, -1.4);
+  EXPECT_DOUBLE_EQ(recovered.wheels[1].position.y, 0.8);
+}
+
+TEST(cdr_serialization, carla_ego_vehicle_info_empty_wheels_round_trip) {
+  carla::ros2::msg::CarlaEgoVehicleInfo original{};
+  original.id = 7u;
+  original.type = "vehicle.test.empty";
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::CarlaEgoVehicleInfo recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  EXPECT_EQ(recovered.id, 7u);
+  EXPECT_EQ(recovered.type, "vehicle.test.empty");
+  EXPECT_TRUE(recovered.wheels.empty());
+}
+
+TEST(cdr_serialization, deserialize_vehicle_info_hostile_wheels_length_returns_false) {
+  // A wheels sequence length above the sanity cap must be rejected instead of
+  // resizing the vector to a multi-GB allocation.
+  carla::ros2::msg::CarlaEgoVehicleInfo original{};
+  original.id = 1u;
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  // Layout after the 4-byte encapsulation header: id (uint32), type
+  // (uint32 length + 1 NUL byte), padding to 4, rolename (uint32 length +
+  // 1 NUL byte), padding to 4, wheels length (uint32).
+  // id at offset 4; type length at 8 (value 1), NUL at 12; pad to 16;
+  // rolename length at 16 (value 1), NUL at 20; pad to 24 -> wheels length.
+  const size_t wheels_length_offset = 24u;
+  ASSERT_GE(buf.size(), wheels_length_offset + 4u);
+  const uint32_t hostile_length = 0xFFFFFFFFu;
+  std::memcpy(buf.data() + wheels_length_offset, &hostile_length, sizeof(hostile_length));
+
+  carla::ros2::msg::CarlaEgoVehicleInfo recovered{};
+  EXPECT_FALSE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+}
+
+// ==========================================================================
+// Group 18: UE to ROS conversions (5 tests)
+// ==========================================================================
+
+TEST(ue_to_ros_conversions, identity_rotation_gives_identity_quaternion) {
+  const auto q = ue_rotation_to_ros_quaternion(carla::geom::Rotation());
+  EXPECT_DOUBLE_EQ(q.w, 1.0);
+  EXPECT_DOUBLE_EQ(q.x, 0.0);
+  EXPECT_DOUBLE_EQ(q.y, 0.0);
+  EXPECT_DOUBLE_EQ(q.z, 0.0);
+}
+
+TEST(ue_to_ros_conversions, positive_ue_yaw_gives_negative_ros_yaw) {
+  // UE yaw 90 deg (left-handed) maps to ROS yaw -pi/2 (right-handed):
+  // q = (w=cos(-pi/4), x=0, y=0, z=sin(-pi/4)).
+  const carla::geom::Rotation rotation(0.0f, 90.0f, 0.0f); // pitch, yaw, roll
+  const auto q = ue_rotation_to_ros_quaternion(rotation);
+  EXPECT_NEAR(q.w, 0.70710678, 1e-6);
+  EXPECT_NEAR(q.x, 0.0, 1e-6);
+  EXPECT_NEAR(q.y, 0.0, 1e-6);
+  EXPECT_NEAR(q.z, -0.70710678, 1e-6);
+}
+
+TEST(ue_to_ros_conversions, vector_flips_y_axis) {
+  const auto v = ue_vector_to_ros_vector(carla::geom::Vector3D(1.0f, 2.0f, 3.0f));
+  EXPECT_DOUBLE_EQ(v.x, 1.0);
+  EXPECT_DOUBLE_EQ(v.y, -2.0);
+  EXPECT_DOUBLE_EQ(v.z, 3.0);
+}
+
+TEST(ue_to_ros_conversions, body_velocity_projects_onto_vehicle_axes) {
+  // Vehicle heading +y (UE yaw 90) moving along +y at 5 m/s drives forward:
+  // the body-frame velocity must be (5, 0, 0).
+  const carla::geom::Rotation rotation(0.0f, 90.0f, 0.0f);
+  const auto forward = ue_world_velocity_to_ros_body_velocity(
+      carla::geom::Vector3D(0.0f, 5.0f, 0.0f), rotation);
+  EXPECT_NEAR(forward.x, 5.0, 1e-5);
+  EXPECT_NEAR(forward.y, 0.0, 1e-5);
+  EXPECT_NEAR(forward.z, 0.0, 1e-5);
+
+  // The same vehicle sliding along +x (its left in ROS terms, since UE right
+  // points to -x at yaw 90) must report positive lateral velocity.
+  const auto lateral = ue_world_velocity_to_ros_body_velocity(
+      carla::geom::Vector3D(2.0f, 0.0f, 0.0f), rotation);
+  EXPECT_NEAR(lateral.x, 0.0, 1e-5);
+  EXPECT_NEAR(lateral.y, 2.0, 1e-5);
+  EXPECT_NEAR(lateral.z, 0.0, 1e-5);
+}
+
+TEST(ue_to_ros_conversions, angular_velocity_converts_to_rad_and_flips) {
+  const auto w = ue_angular_velocity_to_ros(
+      carla::geom::Vector3D(90.0f, 90.0f, 90.0f));
+  EXPECT_NEAR(w.x, M_PI / 2.0, 1e-6);
+  EXPECT_NEAR(w.y, -M_PI / 2.0, 1e-6);
+  EXPECT_NEAR(w.z, -M_PI / 2.0, 1e-6);
+}
+
+// ==========================================================================
+// Group 19: vehicle status acceleration (3 tests)
+// ==========================================================================
+
+TEST(vehicle_status_acceleration, first_frame_returns_zero) {
+  const auto a = CarlaEgoVehicleStatusPublisher::ComputeAcceleration(
+      carla::geom::Vector3D(10.0f, 0.0f, 0.0f),
+      carla::geom::Vector3D(),
+      false,
+      0.05f);
+  EXPECT_FLOAT_EQ(a.x, 0.0f);
+  EXPECT_FLOAT_EQ(a.y, 0.0f);
+  EXPECT_FLOAT_EQ(a.z, 0.0f);
+}
+
+TEST(vehicle_status_acceleration, second_frame_computes_velocity_delta) {
+  const auto a = CarlaEgoVehicleStatusPublisher::ComputeAcceleration(
+      carla::geom::Vector3D(3.0f, -1.0f, 0.5f),
+      carla::geom::Vector3D(1.0f, 1.0f, 0.5f),
+      true,
+      0.5f);
+  EXPECT_FLOAT_EQ(a.x, 4.0f);
+  EXPECT_FLOAT_EQ(a.y, -4.0f);
+  EXPECT_FLOAT_EQ(a.z, 0.0f);
+}
+
+TEST(vehicle_status_acceleration, non_positive_delta_returns_zero) {
+  const auto a = CarlaEgoVehicleStatusPublisher::ComputeAcceleration(
+      carla::geom::Vector3D(3.0f, 0.0f, 0.0f),
+      carla::geom::Vector3D(1.0f, 0.0f, 0.0f),
+      true,
+      0.0f);
+  EXPECT_FLOAT_EQ(a.x, 0.0f);
+  EXPECT_FLOAT_EQ(a.y, 0.0f);
+  EXPECT_FLOAT_EQ(a.z, 0.0f);
+}
+
+// ==========================================================================
+// Group 20: traffic light types CDR round-trips (6 tests)
+// ==========================================================================
+
+TEST(cdr_serialization, carla_bounding_box_round_trip) {
+  carla::ros2::msg::CarlaBoundingBox original{};
+  original.center.x = 1.5;
+  original.center.y = -2.5;
+  original.center.z = 0.75;
+  original.size.x = 4.0;
+  original.size.y = 2.0;
+  original.size.z = 1.5;
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::CarlaBoundingBox recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  EXPECT_DOUBLE_EQ(recovered.center.x, 1.5);
+  EXPECT_DOUBLE_EQ(recovered.center.y, -2.5);
+  EXPECT_DOUBLE_EQ(recovered.center.z, 0.75);
+  EXPECT_DOUBLE_EQ(recovered.size.x, 4.0);
+  EXPECT_DOUBLE_EQ(recovered.size.y, 2.0);
+  EXPECT_DOUBLE_EQ(recovered.size.z, 1.5);
+}
+
+TEST(cdr_serialization, carla_traffic_light_status_round_trip) {
+  carla::ros2::msg::CarlaTrafficLightStatus original{};
+  original.id = 123u;
+  original.state = 2u; // GREEN
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::CarlaTrafficLightStatus recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  EXPECT_EQ(recovered.id, 123u);
+  EXPECT_EQ(recovered.state, 2u);
+}
+
+TEST(cdr_serialization, carla_traffic_light_status_list_round_trip) {
+  // Three entries exercise the alignment between the uint8 state of one
+  // element and the uint32 id of the next.
+  carla::ros2::msg::CarlaTrafficLightStatusList original{};
+  original.traffic_lights.resize(3u);
+  original.traffic_lights[0].id = 10u;
+  original.traffic_lights[0].state = 0u; // RED
+  original.traffic_lights[1].id = 11u;
+  original.traffic_lights[1].state = 1u; // YELLOW
+  original.traffic_lights[2].id = 12u;
+  original.traffic_lights[2].state = 4u; // UNKNOWN
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::CarlaTrafficLightStatusList recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  ASSERT_EQ(recovered.traffic_lights.size(), 3u);
+  EXPECT_EQ(recovered.traffic_lights[0].id, 10u);
+  EXPECT_EQ(recovered.traffic_lights[0].state, 0u);
+  EXPECT_EQ(recovered.traffic_lights[1].id, 11u);
+  EXPECT_EQ(recovered.traffic_lights[1].state, 1u);
+  EXPECT_EQ(recovered.traffic_lights[2].id, 12u);
+  EXPECT_EQ(recovered.traffic_lights[2].state, 4u);
+}
+
+TEST(cdr_serialization, carla_traffic_light_status_list_empty_round_trip) {
+  carla::ros2::msg::CarlaTrafficLightStatusList original{};
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::CarlaTrafficLightStatusList recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  EXPECT_TRUE(recovered.traffic_lights.empty());
+}
+
+TEST(cdr_serialization, carla_traffic_light_info_list_round_trip) {
+  carla::ros2::msg::CarlaTrafficLightInfoList original{};
+  original.traffic_lights.resize(2u);
+
+  original.traffic_lights[0].id = 30u;
+  original.traffic_lights[0].transform.position.x = 100.5;
+  original.traffic_lights[0].transform.position.y = -20.25;
+  original.traffic_lights[0].transform.position.z = 0.3;
+  original.traffic_lights[0].transform.orientation.w = 0.7071;
+  original.traffic_lights[0].transform.orientation.z = -0.7071;
+  original.traffic_lights[0].trigger_volume.center.x = 1.0;
+  original.traffic_lights[0].trigger_volume.center.y = -14.6;
+  original.traffic_lights[0].trigger_volume.size.x = 9.0;
+  original.traffic_lights[0].trigger_volume.size.y = 1.5;
+  original.traffic_lights[0].trigger_volume.size.z = 2.0;
+
+  original.traffic_lights[1].id = 31u;
+  original.traffic_lights[1].transform.orientation.w = 1.0;
+
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  carla::ros2::msg::CarlaTrafficLightInfoList recovered{};
+  EXPECT_TRUE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+  ASSERT_EQ(recovered.traffic_lights.size(), 2u);
+  EXPECT_EQ(recovered.traffic_lights[0].id, 30u);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].transform.position.x, 100.5);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].transform.position.y, -20.25);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].transform.position.z, 0.3);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].transform.orientation.w, 0.7071);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].transform.orientation.z, -0.7071);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].trigger_volume.center.x, 1.0);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].trigger_volume.center.y, -14.6);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].trigger_volume.size.x, 9.0);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].trigger_volume.size.y, 1.5);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[0].trigger_volume.size.z, 2.0);
+  EXPECT_EQ(recovered.traffic_lights[1].id, 31u);
+  EXPECT_DOUBLE_EQ(recovered.traffic_lights[1].transform.orientation.w, 1.0);
+}
+
+TEST(cdr_serialization, deserialize_traffic_light_status_list_hostile_length_returns_false) {
+  // A traffic_lights sequence length above the sanity cap must be rejected
+  // instead of resizing the vector to a multi-GB allocation.
+  carla::ros2::msg::CarlaTrafficLightStatusList original{};
+  auto buf = carla::ros2::serialize_to_cdr(original);
+  ASSERT_FALSE(buf.empty());
+
+  // Layout after the 4-byte encapsulation header: traffic_lights length
+  // (uint32) at offset 4.
+  const size_t length_offset = 4u;
+  ASSERT_GE(buf.size(), length_offset + 4u);
+  const uint32_t hostile_length = 0xFFFFFFFFu;
+  std::memcpy(buf.data() + length_offset, &hostile_length, sizeof(hostile_length));
+
+  carla::ros2::msg::CarlaTrafficLightStatusList recovered{};
+  EXPECT_FALSE(carla::ros2::deserialize_from_cdr(buf.data(), buf.size(), recovered));
+}
+
+// ==========================================================================
+// Group 21: traffic light status change detection (4 tests)
+// ==========================================================================
+
+TEST(traffic_light_status_change, equal_lists_report_no_change) {
+  const std::vector<TrafficLightState> previous = {{10u, 0u}, {11u, 2u}};
+  const std::vector<TrafficLightState> current = {{10u, 0u}, {11u, 2u}};
+  EXPECT_TRUE(CarlaTrafficLightStatusPublisher::StatesEqual(previous, current));
+}
+
+TEST(traffic_light_status_change, changed_state_reports_change) {
+  const std::vector<TrafficLightState> previous = {{10u, 0u}, {11u, 2u}};
+  const std::vector<TrafficLightState> current = {{10u, 0u}, {11u, 1u}};
+  EXPECT_FALSE(CarlaTrafficLightStatusPublisher::StatesEqual(previous, current));
+}
+
+TEST(traffic_light_status_change, added_light_reports_change) {
+  const std::vector<TrafficLightState> previous = {{10u, 0u}};
+  const std::vector<TrafficLightState> current = {{10u, 0u}, {11u, 2u}};
+  EXPECT_FALSE(CarlaTrafficLightStatusPublisher::StatesEqual(previous, current));
+}
+
+TEST(traffic_light_status_change, same_states_different_ids_report_change) {
+  const std::vector<TrafficLightState> previous = {{10u, 0u}, {11u, 2u}};
+  const std::vector<TrafficLightState> current = {{10u, 0u}, {12u, 2u}};
+  EXPECT_FALSE(CarlaTrafficLightStatusPublisher::StatesEqual(previous, current));
+}

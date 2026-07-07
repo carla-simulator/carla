@@ -24,7 +24,9 @@ namespace ros2 {
       CarlaPointCloudPublisher(std::string base_topic_name, std::string frame_id) :
         BasePublisher(base_topic_name, frame_id),
         _impl(std::make_shared<PublisherImpl<PointCloudMsgTraits>>()) {
-          if (!_impl->Init(GetBaseTopicName() + "/point_cloud")) {
+          // Best-effort sensor-data QoS: point clouds are large and per-tick,
+          // so a slow subscriber must never block the publishing thread.
+          if (!_impl->Init(GetBaseTopicName() + "/point_cloud", PublisherQos::SensorData())) {
             log_warning("CarlaPointCloudPublisher: Init failed for topic: ", GetBaseTopicName(), "/point_cloud");
           }
         }
