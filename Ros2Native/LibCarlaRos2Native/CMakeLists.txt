@@ -21,6 +21,7 @@ file (
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/middleware/*.cpp
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/middleware/fastdds/*.cpp
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/middleware/cyclonedds/*.cpp
+  ${LIBCARLA_SOURCE_PATH}/carla/ros2/middleware/zenoh/*.cpp
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/publishers/*.cpp
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/subscribers/*.cpp
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/listeners/*.cpp
@@ -33,6 +34,7 @@ file (
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/middleware/*.h
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/middleware/fastdds/*.h
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/middleware/cyclonedds/*.h
+  ${LIBCARLA_SOURCE_PATH}/carla/ros2/middleware/zenoh/*.h
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/publishers/*.h
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/subscribers/*.h
   ${LIBCARLA_SOURCE_PATH}/carla/ros2/listeners/*.h
@@ -60,12 +62,21 @@ target_compile_definitions (
   PRIVATE
   CARLA_ROS2_MIDDLEWARE_FASTDDS
   CARLA_ROS2_MIDDLEWARE_CYCLONEDDS
+  CARLA_ROS2_MIDDLEWARE_ZENOH
 )
 
 target_link_libraries (
   carla-ros2-native PUBLIC
   ${CMAKE_INSTALL_PREFIX}/lib/libfastrtps.so
   ${CMAKE_INSTALL_PREFIX}/lib/libddsc.so
+  # zenoh-c is a static PIC archive (Rust); link it into the shared lib and
+  # pull in the system libraries the Rust runtime needs. dl is also required
+  # by ZenohSharedSession's dladdr-based config path resolution.
+  ${CMAKE_INSTALL_PREFIX}/lib/libzenohc.a
+  pthread
+  ${CMAKE_DL_LIBS}
+  m
+  rt
 )
 
 install (

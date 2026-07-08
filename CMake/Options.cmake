@@ -474,6 +474,20 @@ carla_string_option (
   ${CARLA_CYCLONEDDS_VERSION}
 )
 
+# ==== ZENOH-C ====
+
+carla_string_option (
+  CARLA_ZENOH_C_VERSION
+  "Target zenoh-c version."
+  1.8.0
+)
+
+carla_string_option (
+  CARLA_ZENOH_C_TAG
+  "Target zenoh-c release tag."
+  ${CARLA_ZENOH_C_VERSION}
+)
+
 # ==== FASTCDR ====
 
 carla_string_option (
