@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Decoupled the native ROS2 connector from a hard FastDDS dependency into a strategy-pattern middleware abstraction supporting both FastDDS and CycloneDDS, selectable at server launch via the `--rmw=` command-line flag.
 * Integrated the follow-up UE 5.8 migration branches (`ue58-dev-carla`, `ue58-mapgen-features`, `ue58-migration-02/-03`) into `ue58-dev`, which is now the integration branch for all UE 5.8 migration work. Highlights of the integrated stack:
   * **Large maps on World Partition**: legacy tiled towns (Town12) migrated to native World Partition streaming with double-precision Large World Coordinates; a `CarlaLargeMapConvert` commandlet converts legacy tiled towns in place; hero vehicles get streaming sources so the ground under them always loads; World Partition streaming crashes fixed in traffic lights, the actor registry (weak actor handles), the LiDAR, and semantic tagging of streamed cells.
   * **Weather and night lighting**: the weather API reconnected to the UE5 sky rig (fixes near-black maps at noon), height-fog parameters remapped, night lighting reworked end to end (street lamps emit real light under 5.8, ambient moon/skylight floor, vehicle headlight beams, night sky stars), and the street light API exposed in `manual_control`.

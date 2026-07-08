@@ -10,6 +10,7 @@
 #include "carla/BufferView.h"
 #include "carla/geom/Transform.h"
 #include "carla/ros2/ROS2CallbackData.h"
+#include "carla/ros2/middleware/Middleware.h"
 #include "carla/streaming/detail/Types.h"
 
 #include <memory>
@@ -57,7 +58,11 @@ public:
   }
 
   // general
-  void Enable(bool enable);
+  /// Enable or disable ROS 2 publishing. When enabling, @a middleware selects the
+  /// DDS middleware; it must have been compiled into the shared library.
+  /// @return true on success, false if the requested middleware is unavailable
+  /// (ROS 2 is then left disabled).
+  bool Enable(bool enable, Middleware middleware = Middleware::FastDDS);
   void Shutdown();
   bool IsEnabled() { return _enabled; }
   void SetFrame(uint64_t frame);

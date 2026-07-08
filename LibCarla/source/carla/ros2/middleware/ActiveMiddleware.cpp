@@ -8,8 +8,16 @@
 namespace carla {
 namespace ros2 {
 
-void SetActiveMiddleware(Middleware middleware) {
-  MiddlewareFactory::SetMiddleware(middleware);
+bool SetActiveMiddleware(Middleware requested) {
+  const auto resolution = MiddlewareFactory::ResolveMiddleware(requested);
+  if (resolution.success) {
+    MiddlewareFactory::SetMiddleware(resolution.middleware);
+  }
+  return resolution.success;
+}
+
+std::string GetAvailableMiddleware() {
+  return MiddlewareFactory::GetAvailableMiddlewareString();
 }
 
 } // namespace ros2
