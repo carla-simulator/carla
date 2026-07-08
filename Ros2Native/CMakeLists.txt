@@ -48,9 +48,34 @@ ExternalProject_add (
   DEPENDS foonathan_memory
 )
 
+# Note: We are using GIT_REPOSITORY instead of URL for cyclonedds because it
+#       contains submodules and we need the .git folders to fetch them.
+#       Built as a shared library (libddsc.so) so it is staged into the plugin
+#       Binaries alongside the FastDDS shared libraries.
+ExternalProject_add (
+  cyclonedds
+  GIT_REPOSITORY https://github.com/eclipse-cyclonedds/cyclonedds.git
+  GIT_TAG ${CARLA_CYCLONEDDS_TAG}
+  CMAKE_ARGS
+    -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+    -DCMAKE_INSTALL_PREFIX=${PROJECT_INSTALL_PATH}
+    -DCMAKE_TOOLCHAIN_FILE=${CMAKE_TOOLCHAIN_FILE}
+    -DBUILD_SHARED_LIBS=ON
+    -DBUILD_TESTING=OFF
+    -DBUILD_EXAMPLES=OFF
+    -DBUILD_IDLC=OFF
+    -DBUILD_DDSPERF=OFF
+    -DENABLE_SSL=OFF
+    -DENABLE_SECURITY=OFF
+    -DENABLE_SHM=OFF
+  INSTALL_BYPRODUCTS
+    ${PROJECT_INSTALL_PATH}/lib/libddsc.so
+  DEPENDS foonathan_memory
+)
+
 ExternalProject_Add (
   carla-ros2-native-lib
-  DEPENDS fastdds
+  DEPENDS fastdds cyclonedds
   SOURCE_DIR ${PROJECT_SOURCE_DIR}/LibCarlaRos2Native
   CMAKE_ARGS
     -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
