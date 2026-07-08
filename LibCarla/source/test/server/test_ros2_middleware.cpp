@@ -14,6 +14,8 @@
 #include <carla/ros2/middleware/MiddlewareFactory.h>
 #include <carla/ros2/middleware/IPublisherMiddleware.h>
 #include <carla/ros2/middleware/ISubscriberMiddleware.h>
+#include <carla/ros2/publishers/PublisherImpl.h>
+#include <carla/ros2/subscribers/SubscriberImpl.h>
 #include <carla/ros2/middleware/fastdds/GenericCdrPubSubType.h>
 #include <carla/ros2/types/CdrSerialization.h>
 #include <carla/ros2/types/CdrTopicInfo.h>
@@ -1006,4 +1008,225 @@ TEST(generic_cdr_pubsubtype_large_payload, size_provider_returns_actual_size_not
       << "Size must grow with the data vector length";
   EXPECT_GT(large_size, 100000u)
       << "Size must at least cover the raw data bytes";
+}
+
+// ==========================================================================
+// PublisherImpl / SubscriberImpl test infrastructure
+// ==========================================================================
+// Reuses the TestMsg / TestPubTraits / TestSubTraits helpers defined above for
+// the middleware abstraction groups.
+
+// -- Mock publisher middleware ------------------------------------------------
+
+class MockPublisherMiddleware : public IPublisherMiddleware {
+public:
+  bool init_return_value{true};
+  bool publish_return_value{true};
+  bool alive{true};
+
+  bool init_called{false};
+  bool publish_called{false};
+  std::string last_topic_name;
+  void *last_published_data{nullptr};
+
+  bool Init(const std::string &topic_name) override {
+    init_called = true;
+    last_topic_name = topic_name;
+    return init_return_value;
+  }
+
+  bool Publish(void *message_data) override {
+    publish_called = true;
+    last_published_data = message_data;
+    return publish_return_value;
+  }
+
+  bool IsAlive() const override { return alive; }
+  std::string GetTopicName() const override { return last_topic_name; }
+};
+
+// -- Mock subscriber middleware -----------------------------------------------
+
+class MockSubscriberMiddleware : public ISubscriberMiddleware {
+public:
+  bool init_return_value{true};
+  bool alive{true};
+
+  bool init_called{false};
+  std::string last_topic_name;
+  void *stored_message_ptr{nullptr};
+  bool *stored_flag_ptr{nullptr};
+
+  bool Init(
+      const std::string &topic_name,
+      void *message_ptr,
+      bool *new_message_flag) override {
+    init_called = true;
+    last_topic_name = topic_name;
+    stored_message_ptr = message_ptr;
+    stored_flag_ptr = new_message_flag;
+    return init_return_value;
+  }
+
+  bool IsAlive() const override { return alive; }
+  std::string GetTopicName() const override { return last_topic_name; }
+};
+
+// ==========================================================================
+// Group 10: publisher_impl (7 tests)
+// ==========================================================================
+
+TEST(publisher_impl, get_message_returns_pointer) {
+  PublisherImpl<TestPubTraits> pub;
+  TestMsg *msg = pub.GetMessage();
+  ASSERT_NE(msg, nullptr);
+  msg->value = 7;
+  EXPECT_EQ(pub.GetMessage()->value, 7);
+}
+
+TEST(publisher_impl, init_delegates_to_middleware) {
+  PublisherImpl<TestPubTraits> pub;
+  auto *mock = new MockPublisherMiddleware();
+  pub.SetMiddlewareForTesting(
+      std::unique_ptr<IPublisherMiddleware>(mock));
+  EXPECT_TRUE(pub.Init("rt/test_topic"));
+  EXPECT_TRUE(mock->init_called);
+  EXPECT_EQ(mock->last_topic_name, "rt/test_topic");
+}
+
+TEST(publisher_impl, publish_delegates_to_middleware) {
+  PublisherImpl<TestPubTraits> pub;
+  auto *mock = new MockPublisherMiddleware();
+  pub.SetMiddlewareForTesting(
+      std::unique_ptr<IPublisherMiddleware>(mock));
+  pub.Init("rt/test_topic");
+  EXPECT_TRUE(pub.Publish());
+  EXPECT_TRUE(mock->publish_called);
+  EXPECT_EQ(mock->last_published_data, pub.GetMessage());
+}
+
+TEST(publisher_impl, publish_before_init_fails) {
+  PublisherImpl<TestPubTraits> pub;
+  ::testing::internal::CaptureStderr();
+  EXPECT_FALSE(pub.Publish());
+  ::testing::internal::GetCapturedStderr();
+}
+
+TEST(publisher_impl, is_alive_delegates) {
+  PublisherImpl<TestPubTraits> pub;
+  auto *mock = new MockPublisherMiddleware();
+  mock->alive = true;
+  pub.SetMiddlewareForTesting(
+      std::unique_ptr<IPublisherMiddleware>(mock));
+  pub.Init("rt/test_topic");
+  EXPECT_TRUE(pub.IsAlive());
+  mock->alive = false;
+  EXPECT_FALSE(pub.IsAlive());
+}
+
+TEST(publisher_impl, topic_name_delegates) {
+  PublisherImpl<TestPubTraits> pub;
+  auto *mock = new MockPublisherMiddleware();
+  pub.SetMiddlewareForTesting(
+      std::unique_ptr<IPublisherMiddleware>(mock));
+  pub.Init("rt/camera/image");
+  EXPECT_EQ(pub.GetTopicName(), "rt/camera/image");
+}
+
+TEST(publisher_impl, data_flows_through_publish) {
+  PublisherImpl<TestPubTraits> pub;
+  auto *mock = new MockPublisherMiddleware();
+  pub.SetMiddlewareForTesting(
+      std::unique_ptr<IPublisherMiddleware>(mock));
+  pub.Init("rt/test_topic");
+
+  pub.GetMessage()->value = 42;
+  pub.Publish();
+
+  ASSERT_NE(mock->last_published_data, nullptr);
+  auto *published = static_cast<TestMsg *>(mock->last_published_data);
+  EXPECT_EQ(published->value, 42);
+}
+
+// ==========================================================================
+// Group 11: subscriber_impl (7 tests)
+// ==========================================================================
+
+TEST(subscriber_impl, has_new_message_initially_false) {
+  SubscriberImpl<TestSubTraits> sub;
+  EXPECT_FALSE(sub.HasNewMessage());
+}
+
+TEST(subscriber_impl, init_delegates_to_middleware) {
+  SubscriberImpl<TestSubTraits> sub;
+  auto *mock = new MockSubscriberMiddleware();
+  sub.SetMiddlewareForTesting(
+      std::unique_ptr<ISubscriberMiddleware>(mock));
+  EXPECT_TRUE(sub.Init("rt/test_topic"));
+  EXPECT_TRUE(mock->init_called);
+  EXPECT_EQ(mock->last_topic_name, "rt/test_topic");
+  EXPECT_NE(mock->stored_message_ptr, nullptr);
+  EXPECT_NE(mock->stored_flag_ptr, nullptr);
+}
+
+TEST(subscriber_impl, get_message_clears_flag) {
+  SubscriberImpl<TestSubTraits> sub;
+  auto *mock = new MockSubscriberMiddleware();
+  sub.SetMiddlewareForTesting(
+      std::unique_ptr<ISubscriberMiddleware>(mock));
+  sub.Init("rt/test_topic");
+
+  TestMsg msg;
+  msg.value = 77;
+  sub.SimulateMessageReceiptForTesting(msg);
+  EXPECT_TRUE(sub.HasNewMessage());
+
+  TestMsg retrieved = sub.GetMessage();
+  EXPECT_EQ(retrieved.value, 77);
+  EXPECT_FALSE(sub.HasNewMessage());
+}
+
+TEST(subscriber_impl, is_alive_delegates) {
+  SubscriberImpl<TestSubTraits> sub;
+  auto *mock = new MockSubscriberMiddleware();
+  mock->alive = true;
+  sub.SetMiddlewareForTesting(
+      std::unique_ptr<ISubscriberMiddleware>(mock));
+  sub.Init("rt/test_topic");
+  EXPECT_TRUE(sub.IsAlive());
+  mock->alive = false;
+  EXPECT_FALSE(sub.IsAlive());
+}
+
+TEST(subscriber_impl, topic_name_delegates) {
+  SubscriberImpl<TestSubTraits> sub;
+  auto *mock = new MockSubscriberMiddleware();
+  sub.SetMiddlewareForTesting(
+      std::unique_ptr<ISubscriberMiddleware>(mock));
+  sub.Init("rt/lidar/points");
+  EXPECT_EQ(sub.GetTopicName(), "rt/lidar/points");
+}
+
+TEST(subscriber_impl, simulate_message_receipt) {
+  SubscriberImpl<TestSubTraits> sub;
+  auto *mock = new MockSubscriberMiddleware();
+  sub.SetMiddlewareForTesting(
+      std::unique_ptr<ISubscriberMiddleware>(mock));
+  sub.Init("rt/test_topic");
+
+  EXPECT_FALSE(sub.HasNewMessage());
+  TestMsg msg;
+  msg.value = 123;
+  sub.SimulateMessageReceiptForTesting(msg);
+  EXPECT_TRUE(sub.HasNewMessage());
+  EXPECT_EQ(sub.GetMessage().value, 123);
+}
+
+TEST(subscriber_impl, init_failure_propagated) {
+  SubscriberImpl<TestSubTraits> sub;
+  auto *mock = new MockSubscriberMiddleware();
+  mock->init_return_value = false;
+  sub.SetMiddlewareForTesting(
+      std::unique_ptr<ISubscriberMiddleware>(mock));
+  EXPECT_FALSE(sub.Init("rt/test_topic"));
 }
