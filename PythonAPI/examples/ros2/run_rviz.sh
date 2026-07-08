@@ -15,11 +15,15 @@ Usage: $0 [--distro=<distro>] [--rmw=<middleware>]
 
 Options:
   --distro    ROS 2 distribution to use. Supported: humble, jazzy  (default: humble)
-  --rmw       DDS middleware to use. Supported: fastdds, cyclonedds  (default: fastdds)
+  --rmw       Middleware to use. Supported: fastdds, cyclonedds, zenoh  (default: fastdds)
 
 Examples:
   $0 --distro=humble --rmw=fastdds
   $0 --distro=jazzy  --rmw=cyclonedds
+  $0 --distro=humble --rmw=zenoh
+
+Note: zenoh requires a Zenoh router running on the host first, e.g.
+  docker run --rm --net=host carla-rviz-${DISTRO:-humble}-zenoh ros2 run rmw_zenoh_cpp rmw_zenohd
 EOF
     exit 1
 }
@@ -40,16 +44,16 @@ case "$DISTRO" in
 esac
 
 case "$RMW" in
-    fastdds|cyclonedds) ;;
-    *) echo "Unsupported RMW '${RMW}'. Supported values: fastdds, cyclonedds"; exit 1 ;;
+    fastdds|cyclonedds|zenoh) ;;
+    *) echo "Unsupported RMW '${RMW}'. Supported values: fastdds, cyclonedds, zenoh"; exit 1 ;;
 esac
 
 # Map short names to ROS RMW implementation identifiers
-if [ "$RMW" = "cyclonedds" ]; then
-    RMW_IMPLEMENTATION="rmw_cyclonedds_cpp"
-else
-    RMW_IMPLEMENTATION="rmw_fastrtps_cpp"
-fi
+case "$RMW" in
+    cyclonedds) RMW_IMPLEMENTATION="rmw_cyclonedds_cpp" ;;
+    zenoh)      RMW_IMPLEMENTATION="rmw_zenoh_cpp" ;;
+    *)          RMW_IMPLEMENTATION="rmw_fastrtps_cpp" ;;
+esac
 
 IMAGE_NAME="carla-rviz-${DISTRO}-${RMW}"
 
@@ -74,12 +78,13 @@ touch "$XAUTH"
 xauth nlist "$DISPLAY" | sed -e 's/^..../ffff/' | xauth -f "$XAUTH" nmerge -
 
 # --- RMW-specific environment variables ---
+# zenoh needs no profile file; the rmw_zenoh peer connects to the router
+# (rmw_zenohd) on localhost:7447 using its own built-in defaults.
 EXTRA_ENV=()
-if [ "$RMW" = "cyclonedds" ]; then
-    EXTRA_ENV+=(--env="CYCLONEDDS_URI=/config/cyclonedds.xml")
-else
-    EXTRA_ENV+=(--env="FASTRTPS_DEFAULT_PROFILES_FILE=/config/fastrtps-profile.xml")
-fi
+case "$RMW" in
+    cyclonedds) EXTRA_ENV+=(--env="CYCLONEDDS_URI=/config/cyclonedds.xml") ;;
+    fastdds)    EXTRA_ENV+=(--env="FASTRTPS_DEFAULT_PROFILES_FILE=/config/fastrtps-profile.xml") ;;
+esac
 
 # --- Run ---
 echo "[RViz] Launching RViz2 (distro=${DISTRO}, rmw=${RMW})..."
