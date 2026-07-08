@@ -645,7 +645,7 @@ class MiddlewareFactoryFixture : public ::testing::Test {
 };
 
 // ==========================================================================
-// Group 3: middleware_to_string (2 tests)
+// Group 3: middleware_to_string (3 tests)
 // ==========================================================================
 
 TEST(middleware_to_string, fastdds_returns_correct_string) {
@@ -656,8 +656,12 @@ TEST(middleware_to_string, cyclonedds_returns_correct_string) {
   EXPECT_STREQ(MiddlewareToString(Middleware::CycloneDDS), "CycloneDDS");
 }
 
+TEST(middleware_to_string, zenoh_returns_correct_string) {
+  EXPECT_STREQ(MiddlewareToString(Middleware::Zenoh), "Zenoh");
+}
+
 // ==========================================================================
-// Group 4: middleware_from_string (6 tests)
+// Group 4: middleware_from_string (7 tests)
 // ==========================================================================
 
 TEST(middleware_from_string, fastdds_lowercase_valid) {
@@ -677,6 +681,12 @@ TEST(middleware_from_string, cyclonedds_lowercase_valid) {
   EXPECT_EQ(result.middleware, Middleware::CycloneDDS);
 }
 
+TEST(middleware_from_string, zenoh_lowercase_valid) {
+  auto result = MiddlewareFromString("zenoh");
+  EXPECT_TRUE(result.valid);
+  EXPECT_EQ(result.middleware, Middleware::Zenoh);
+}
+
 TEST(middleware_from_string, empty_string_invalid) {
   auto result = MiddlewareFromString("");
   EXPECT_FALSE(result.valid);
@@ -693,7 +703,7 @@ TEST(middleware_from_string, partial_match_rejected) {
 }
 
 // ==========================================================================
-// Group 5: middleware_available (3 tests)
+// Group 5: middleware_available (4 tests)
 // ==========================================================================
 
 TEST(middleware_available, fastdds_available) {
@@ -709,6 +719,11 @@ TEST(middleware_available, available_string_contains_fastdds) {
 TEST(middleware_available, cyclonedds_not_available_without_macro) {
   EXPECT_FALSE(
       MiddlewareFactory::IsMiddlewareAvailable(Middleware::CycloneDDS));
+}
+
+TEST(middleware_available, zenoh_not_available_without_macro) {
+  EXPECT_FALSE(
+      MiddlewareFactory::IsMiddlewareAvailable(Middleware::Zenoh));
 }
 
 // ==========================================================================
@@ -734,7 +749,7 @@ TEST(middleware_type_name, empty_string) {
 }
 
 // ==========================================================================
-// Group 7: MiddlewareFactoryFixture (8 tests)
+// Group 7: MiddlewareFactoryFixture (12 tests)
 // ==========================================================================
 
 TEST_F(MiddlewareFactoryFixture, set_and_get_middleware) {
@@ -780,6 +795,34 @@ TEST_F(MiddlewareFactoryFixture, create_publisher_cyclonedds_unavailable) {
 
 TEST_F(MiddlewareFactoryFixture, create_subscriber_cyclonedds_unavailable) {
   MiddlewareFactory::SetMiddleware(Middleware::CycloneDDS);
+  ::testing::internal::CaptureStderr();
+  auto sub = MiddlewareFactory::CreateSubscriber<TestSubTraits>();
+  ::testing::internal::GetCapturedStderr();
+  EXPECT_EQ(sub, nullptr);
+}
+
+TEST_F(MiddlewareFactoryFixture, set_and_get_zenoh) {
+  MiddlewareFactory::SetMiddleware(Middleware::Zenoh);
+  EXPECT_EQ(MiddlewareFactory::GetMiddleware(), Middleware::Zenoh);
+}
+
+TEST_F(MiddlewareFactoryFixture, resolve_unavailable_zenoh) {
+  auto resolution =
+      MiddlewareFactory::ResolveMiddleware(Middleware::Zenoh);
+  EXPECT_FALSE(resolution.success);
+  EXPECT_EQ(resolution.middleware, Middleware::Zenoh);
+}
+
+TEST_F(MiddlewareFactoryFixture, create_publisher_zenoh_unavailable) {
+  MiddlewareFactory::SetMiddleware(Middleware::Zenoh);
+  ::testing::internal::CaptureStderr();
+  auto pub = MiddlewareFactory::CreatePublisher<TestPubTraits>();
+  ::testing::internal::GetCapturedStderr();
+  EXPECT_EQ(pub, nullptr);
+}
+
+TEST_F(MiddlewareFactoryFixture, create_subscriber_zenoh_unavailable) {
+  MiddlewareFactory::SetMiddleware(Middleware::Zenoh);
   ::testing::internal::CaptureStderr();
   auto sub = MiddlewareFactory::CreateSubscriber<TestSubTraits>();
   ::testing::internal::GetCapturedStderr();

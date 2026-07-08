@@ -22,6 +22,11 @@
 #  include "carla/ros2/middleware/cyclonedds/CycloneDDSSubscriberMiddleware.h"
 #endif
 
+#if defined(CARLA_ROS2_MIDDLEWARE_ZENOH) && !defined(CARLA_ROS2_MIDDLEWARE_TESTING)
+#  include "carla/ros2/middleware/zenoh/ZenohPublisherMiddleware.h"
+#  include "carla/ros2/middleware/zenoh/ZenohSubscriberMiddleware.h"
+#endif
+
 namespace carla {
 namespace ros2 {
 
@@ -52,6 +57,12 @@ class MiddlewareFactory {
 #endif
       case Middleware::CycloneDDS:
 #if defined(CARLA_ROS2_MIDDLEWARE_CYCLONEDDS)
+        return true;
+#else
+        return false;
+#endif
+      case Middleware::Zenoh:
+#if defined(CARLA_ROS2_MIDDLEWARE_ZENOH)
         return true;
 #else
         return false;
@@ -101,6 +112,13 @@ class MiddlewareFactory {
         log_error("MiddlewareFactory: CycloneDDS not compiled in");
         return nullptr;
 #endif
+      case Middleware::Zenoh:
+#if defined(CARLA_ROS2_MIDDLEWARE_ZENOH) && !defined(CARLA_ROS2_MIDDLEWARE_TESTING)
+        return std::make_unique<ZenohPublisherMiddleware<T>>();
+#else
+        log_error("MiddlewareFactory: Zenoh not compiled in");
+        return nullptr;
+#endif
     }
     return nullptr;
   }
@@ -123,6 +141,13 @@ class MiddlewareFactory {
         return std::make_unique<CycloneDDSSubscriberMiddleware<S>>();
 #else
         log_error("MiddlewareFactory: CycloneDDS not compiled in");
+        return nullptr;
+#endif
+      case Middleware::Zenoh:
+#if defined(CARLA_ROS2_MIDDLEWARE_ZENOH) && !defined(CARLA_ROS2_MIDDLEWARE_TESTING)
+        return std::make_unique<ZenohSubscriberMiddleware<S>>();
+#else
+        log_error("MiddlewareFactory: Zenoh not compiled in");
         return nullptr;
 #endif
     }
