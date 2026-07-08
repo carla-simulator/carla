@@ -14,7 +14,8 @@ namespace ros2 {
 /// Once set, the middleware cannot be changed without restarting.
 enum class Middleware {
   FastDDS,
-  CycloneDDS
+  CycloneDDS,
+  Zenoh
 };
 
 /// Convert a Middleware enum value to a readable string.
@@ -24,6 +25,8 @@ inline const char* MiddlewareToString(Middleware middleware) {
       return "FastDDS";
     case Middleware::CycloneDDS:
       return "CycloneDDS";
+    case Middleware::Zenoh:
+      return "Zenoh";
   }
   return "Unknown";
 }
@@ -43,6 +46,9 @@ inline MiddlewareParseResult MiddlewareFromString(const std::string& name) {
   if (name == "cyclonedds") {
     return {true, Middleware::CycloneDDS};
   }
+  if (name == "zenoh") {
+    return {true, Middleware::Zenoh};
+  }
   return {false, Middleware::FastDDS};
 }
 
@@ -57,6 +63,12 @@ inline std::string GetAvailableMiddlewareString() {
     result += ", ";
   }
   result += "CycloneDDS";
+#endif
+#if defined(CARLA_ROS2_MIDDLEWARE_ZENOH)
+  if (!result.empty()) {
+    result += ", ";
+  }
+  result += "Zenoh";
 #endif
   if (result.empty()) {
     result = "none";

@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Added Zenoh as a third native ROS2 middleware, selectable at server launch via `--rmw=zenoh` and compatible with `rmw_zenoh_cpp` peers.
 * Decoupled the native ROS2 connector from a hard FastDDS dependency into a strategy-pattern middleware abstraction supporting both FastDDS and CycloneDDS, selectable at server launch via the `--rmw=` command-line flag.
 * Fixed `from carla.command import ...` on the Python API by registering the `command` submodule under `carla.command` in `sys.modules` (the ue5 wheel ships `carla` as a bare extension module, so the previous `libcarla.command` namespace was not importable).
 * Modernized the Python navigation agents with type hints and code cleanup ported from `ue4-dev`, added typed obstacle/traffic-light detection-result tuples in `agents/tools/hints.py`, reworked `BasicAgent.set_destination` to accept an optional start location and queue-clean flag, and fixed obstacle detection treating an empty `vehicle_list` as "all vehicles".
