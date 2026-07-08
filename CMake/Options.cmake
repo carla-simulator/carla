@@ -451,6 +451,20 @@ carla_string_option (
   v${CARLA_FASTDDS_VERSION}
 )
 
+# ==== CYCLONEDDS ====
+
+carla_string_option (
+  CARLA_CYCLONEDDS_VERSION
+  "Target CycloneDDS version."
+  0.10.5
+)
+
+carla_string_option (
+  CARLA_CYCLONEDDS_TAG
+  "Target CycloneDDS git tag."
+  ${CARLA_CYCLONEDDS_VERSION}
+)
+
 # ==== FASTCDR ====
 
 carla_string_option (
