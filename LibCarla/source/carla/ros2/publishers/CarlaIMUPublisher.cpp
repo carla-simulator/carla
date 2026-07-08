@@ -9,15 +9,13 @@
 #include "carla/Logging.h"
 #include "carla/ros2/publishers/ImuMath.h"
 #include "carla/ros2/publishers/PublisherImpl.h"
-#include "carla/ros2/types/Imu.h"
-#include "carla/ros2/types/ImuPubSubTypes.h"
+#include "carla/ros2/types/msg/Imu.h"
 
 namespace carla {
 namespace ros2 {
 
 struct CarlaImuMsgTraits {
-  using msg_type = sensor_msgs::msg::Imu;
-  using msg_pubsub_type = sensor_msgs::msg::ImuPubSubType;
+  using msg_type = msg::Imu;
 };
 
 CarlaIMUPublisher::CarlaIMUPublisher(
@@ -42,24 +40,24 @@ bool CarlaIMUPublisher::Write(
     float gyro_x, float gyro_y, float gyro_z,
     float compass) {
   auto *message = _impl->GetMessage();
-  message->header().stamp().sec(seconds);
-  message->header().stamp().nanosec(nanoseconds);
-  message->header().frame_id(GetFrameId());
+  message->header.stamp.sec = seconds;
+  message->header.stamp.nanosec = nanoseconds;
+  message->header.frame_id = GetFrameId();
 
-  message->linear_acceleration().x(accel_x);
-  message->linear_acceleration().y(accel_y);
-  message->linear_acceleration().z(accel_z);
+  message->linear_acceleration.x = accel_x;
+  message->linear_acceleration.y = accel_y;
+  message->linear_acceleration.z = accel_z;
 
-  message->angular_velocity().x(gyro_x);
-  message->angular_velocity().y(gyro_y);
-  message->angular_velocity().z(gyro_z);
+  message->angular_velocity.x = gyro_x;
+  message->angular_velocity.y = gyro_y;
+  message->angular_velocity.z = gyro_z;
 
   // Yaw-only quaternion from compass heading; math lives in ImuMath.h.
   const auto q = OrientationFromCompass(compass);
-  message->orientation().w(q[0]);
-  message->orientation().x(q[1]);
-  message->orientation().y(q[2]);
-  message->orientation().z(q[3]);
+  message->orientation.w = q[0];
+  message->orientation.x = q[1];
+  message->orientation.y = q[2];
+  message->orientation.z = q[3];
 
   return true;
 }
