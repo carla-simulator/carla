@@ -16,6 +16,8 @@
 #include "carla/sensor/s11n/ImageSerializer.h"
 #include "carla/sensor/s11n/SensorHeaderSerializer.h"
 
+#include "carla/ros2/middleware/ActiveMiddleware.h"
+
 #include "publishers/BasePublisher.h"
 #include "publishers/CarlaCameraPublisher.h"
 #include "publishers/CarlaClockPublisher.h"
@@ -90,6 +92,11 @@ enum ESensors {
 void ROS2::Enable(bool enable) {
   _enabled = enable;
   log_info("ROS2 enabled: ", _enabled);
+  // Select the ROS 2 middleware before any publisher or subscriber is created.
+  // FastDDS is the only middleware available today; runtime --rmw= selection
+  // arrives in a later PR. SetActiveMiddleware is the DDS-free bridge that keeps
+  // vendor headers out of carla-server.
+  SetActiveMiddleware(Middleware::FastDDS);
   _clock_publisher = std::make_shared<CarlaClockPublisher>();
 #if defined(WITH_ROS2_DEMO)
   _basic_publisher = std::make_shared<BasicPublisher>();
