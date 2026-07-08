@@ -451,6 +451,34 @@ carla_string_option (
   v${CARLA_FASTDDS_VERSION}
 )
 
+# ==== CYCLONEDDS ====
+
+carla_string_option (
+  CARLA_CYCLONEDDS_VERSION
+  "Target CycloneDDS version."
+  0.10.5
+)
+
+carla_string_option (
+  CARLA_CYCLONEDDS_TAG
+  "Target CycloneDDS git tag."
+  ${CARLA_CYCLONEDDS_VERSION}
+)
+
+# ==== ZENOH-C ====
+
+carla_string_option (
+  CARLA_ZENOH_C_VERSION
+  "Target zenoh-c version."
+  1.8.0
+)
+
+carla_string_option (
+  CARLA_ZENOH_C_TAG
+  "Target zenoh-c release tag."
+  ${CARLA_ZENOH_C_VERSION}
+)
+
 # ==== FASTCDR ====
 
 carla_string_option (
