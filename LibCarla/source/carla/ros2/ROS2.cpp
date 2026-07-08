@@ -89,19 +89,25 @@ enum ESensors {
   HSSLidar
 };
 
-void ROS2::Enable(bool enable) {
+bool ROS2::Enable(bool enable, Middleware middleware) {
+  // Select the ROS 2 middleware before any publisher or subscriber is created.
+  // SetActiveMiddleware is the DDS-free bridge that resolves availability inside
+  // the shared library (the CARLA_ROS2_MIDDLEWARE_* macros are not visible here
+  // in carla-server) and keeps vendor headers out of carla-server.
+  if (enable && !SetActiveMiddleware(middleware)) {
+    log_error("ROS2: requested middleware '", MiddlewareToString(middleware),
+              "' is not available. Compiled in: ", GetAvailableMiddleware(), ".");
+    _enabled = false;
+    return false;
+  }
   _enabled = enable;
   log_info("ROS2 enabled: ", _enabled);
-  // Select the ROS 2 middleware before any publisher or subscriber is created.
-  // FastDDS is the only middleware available today; runtime --rmw= selection
-  // arrives in a later PR. SetActiveMiddleware is the DDS-free bridge that keeps
-  // vendor headers out of carla-server.
-  SetActiveMiddleware(Middleware::FastDDS);
   _clock_publisher = std::make_shared<CarlaClockPublisher>();
 #if defined(WITH_ROS2_DEMO)
   _basic_publisher = std::make_shared<BasicPublisher>();
   _basic_publisher->Init();
 #endif
+  return true;
 }
 
 void ROS2::SetFrame(uint64_t frame) {
