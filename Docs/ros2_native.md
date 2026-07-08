@@ -8,6 +8,18 @@ The CARLA simulator supports ROS2 natively from the server. To use ROS2 with CAR
 ./CarlaUnreal.sh --ros2
 ```
 
+## Middleware (RMW)
+
+The native connector can publish through any of three middlewares. Select one with the `--rmw=` option, which is only valid together with `--ros2`:
+
+```sh
+./CarlaUnreal.sh --ros2 --rmw=cyclonedds
+```
+
+Accepted values are `fastdds` (the default), `cyclonedds`, and `zenoh`. CycloneDDS and Zenoh are only available on Linux; on Windows only `fastdds` is supported. If the value is not recognized, or names a middleware that was not compiled into the binary, ROS2 is disabled for that session and an error is logged listing the available middlewares. The published topics and message formats are identical across all middlewares.
+
+`--rmw=zenoh` is compatible with `rmw_zenoh_cpp` peers and requires a Zenoh router (`ros2 run rmw_zenoh_cpp rmw_zenohd`) running before the simulator starts. The session connects to `tcp/localhost:7447` by default; set `ZENOH_SESSION_CONFIG_URI` to point at a different rmw_zenoh config file, or `ZENOH_CONFIG_OVERRIDE` to patch individual keys.
+
 ## Sensor data
 
 The CARLA server will broadcast sensor data for any spawned sensors for which ROS is enabled. To enable a sensor for ROS use the `enable_for_ros()` method of the sensor class:

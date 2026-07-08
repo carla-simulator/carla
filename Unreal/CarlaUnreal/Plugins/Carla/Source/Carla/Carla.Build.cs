@@ -182,6 +182,13 @@ public class Carla :
       RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so"));
       RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so.2.11"));
       RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libfastrtps.so.2.11.2"));
+      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libddsc.so"));
+      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libddsc.so.0"));
+      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "libddsc.so.0.10.5"));
+      // zenoh-c is statically linked into libcarla-ros2-native.so, so there is
+      // no Zenoh runtime .so to stage. Only the session config is a runtime
+      // dependency; it is resolved next to the shared library via dladdr.
+      RuntimeDependencies.Add(Path.Combine(CarlaPluginBinariesLinuxPath, "zenoh_session_config.json5"));
     }
   }
 }

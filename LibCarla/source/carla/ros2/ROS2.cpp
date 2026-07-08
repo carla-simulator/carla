@@ -16,6 +16,8 @@
 #include "carla/sensor/s11n/ImageSerializer.h"
 #include "carla/sensor/s11n/SensorHeaderSerializer.h"
 
+#include "carla/ros2/middleware/ActiveMiddleware.h"
+
 #include "publishers/BasePublisher.h"
 #include "publishers/CarlaCameraPublisher.h"
 #include "publishers/CarlaClockPublisher.h"
@@ -87,7 +89,17 @@ enum ESensors {
   HSSLidar
 };
 
-void ROS2::Enable(bool enable) {
+bool ROS2::Enable(bool enable, Middleware middleware) {
+  // Select the ROS 2 middleware before any publisher or subscriber is created.
+  // SetActiveMiddleware is the DDS-free bridge that resolves availability inside
+  // the shared library (the CARLA_ROS2_MIDDLEWARE_* macros are not visible here
+  // in carla-server) and keeps vendor headers out of carla-server.
+  if (enable && !SetActiveMiddleware(middleware)) {
+    log_error("ROS2: requested middleware '", MiddlewareToString(middleware),
+              "' is not available. Compiled in: ", GetAvailableMiddleware(), ".");
+    _enabled = false;
+    return false;
+  }
   _enabled = enable;
   log_info("ROS2 enabled: ", _enabled);
   _clock_publisher = std::make_shared<CarlaClockPublisher>();
@@ -95,6 +107,7 @@ void ROS2::Enable(bool enable) {
   _basic_publisher = std::make_shared<BasicPublisher>();
   _basic_publisher->Init();
 #endif
+  return true;
 }
 
 void ROS2::SetFrame(uint64_t frame) {

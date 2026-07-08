@@ -166,6 +166,11 @@ void UCarlaSettings::LoadSettings()
     {
       ROS2 = true;
     }
+    FString RmwValue;
+    if (FParse::Value(FCommandLine::Get(), TEXT("-rmw="), RmwValue))
+    {
+      RmwName = RmwValue.ToLower();
+    }
   }
 }
 
