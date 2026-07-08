@@ -12,6 +12,12 @@ namespace ros2 {
 /// Type-erased abstract interface for a subscriber middleware.
 /// Concrete implementations write received messages directly into the caller-provided
 /// storage (message_ptr / new_message_flag) to avoid an extra copy.
+///
+/// Contract: when an implementation establishes its process-wide transport
+/// context (a DDS DomainParticipant, a Zenoh session, ...) it must honor
+/// carla::ros2::MiddlewareConfig::GetDomainId(), mapping kUnsetDomainId to its
+/// own native default. This keeps the ROS 2 domain id configurable and
+/// middleware-agnostic (see MiddlewareConfig.h).
 class ISubscriberMiddleware {
  public:
   virtual ~ISubscriberMiddleware() = default;

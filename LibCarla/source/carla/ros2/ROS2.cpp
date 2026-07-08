@@ -89,7 +89,7 @@ enum ESensors {
   HSSLidar
 };
 
-bool ROS2::Enable(bool enable, Middleware middleware) {
+bool ROS2::Enable(bool enable, Middleware middleware, int domain_id) {
   // Select the ROS 2 middleware before any publisher or subscriber is created.
   // SetActiveMiddleware is the DDS-free bridge that resolves availability inside
   // the shared library (the CARLA_ROS2_MIDDLEWARE_* macros are not visible here
@@ -99,6 +99,20 @@ bool ROS2::Enable(bool enable, Middleware middleware) {
               "' is not available. Compiled in: ", GetAvailableMiddleware(), ".");
     _enabled = false;
     return false;
+  }
+  if (enable) {
+    // Configure the domain id before any transport context is created (the
+    // shared participants/sessions are created lazily on the first publisher,
+    // i.e. the clock publisher below). SetActiveDomainId is the DDS-free bridge
+    // so the value lands in the shared library's MiddlewareConfig, which the
+    // middlewares read.
+    const ResolvedDomainId resolved = SetActiveDomainId(domain_id);
+    const char* domain_source =
+        (resolved.source == DomainIdSource::CommandLine)  ? "--ros-domain-id"
+        : (resolved.source == DomainIdSource::Environment) ? "ROS_DOMAIN_ID"
+                                                           : "default";
+    log_info("ROS2: using middleware '", MiddlewareToString(middleware),
+        "', domain id: ", resolved.id, " (", domain_source, ")");
   }
   _enabled = enable;
   log_info("ROS2 enabled: ", _enabled);

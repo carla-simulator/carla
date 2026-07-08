@@ -7,6 +7,7 @@
 #ifdef CARLA_ROS2_MIDDLEWARE_CYCLONEDDS
 
 #include "carla/ros2/middleware/cyclonedds/CycloneDDSSertype.h"
+#include "carla/ros2/middleware/MiddlewareConfig.h"
 #include "carla/Logging.h"
 
 #include <cstdlib>
@@ -283,11 +284,14 @@ const struct ddsi_sertype_ops carla_cdr_sertype_ops = {
 dds_entity_t carla_cdr_get_participant() {
   // Function-local static: created once on first call, thread-safe in C++11.
   // The participant lives until process exit; CycloneDDS cleans up internally.
-  // Domain 0 matches FastDDSSharedParticipant so FastDDS and CycloneDDS publish
-  // on the same DDS domain. Configurable domain selection (--ros-domain-id)
-  // arrives with the MiddlewareConfig layer in a later PR of this series.
-  static dds_entity_t participant =
-      dds_create_participant(static_cast<dds_domainid_t>(0), nullptr, nullptr);
+  // Use the effective domain id resolved by the abstraction layer
+  // (--ros-domain-id, else ROS_DOMAIN_ID, else the default domain 0), so the
+  // domain selection matches FastDDS instead of relying on DDS_DOMAIN_DEFAULT.
+  static dds_entity_t participant = []() {
+    const dds_domainid_t domain_id =
+        static_cast<dds_domainid_t>(MiddlewareConfig::GetEffectiveDomainId());
+    return dds_create_participant(domain_id, nullptr, nullptr);
+  }();
   return participant;
 }
 
