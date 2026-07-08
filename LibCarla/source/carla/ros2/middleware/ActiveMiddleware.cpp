@@ -20,5 +20,10 @@ std::string GetAvailableMiddleware() {
   return MiddlewareFactory::GetAvailableMiddlewareString();
 }
 
+ResolvedDomainId SetActiveDomainId(int domain_id) {
+  MiddlewareConfig::SetDomainId(domain_id);
+  return MiddlewareConfig::ResolveEffective();
+}
+
 } // namespace ros2
 } // namespace carla

@@ -20,6 +20,16 @@ Accepted values are `fastdds` (the default), `cyclonedds`, and `zenoh`. CycloneD
 
 `--rmw=zenoh` is compatible with `rmw_zenoh_cpp` peers and requires a Zenoh router (`ros2 run rmw_zenoh_cpp rmw_zenohd`) running before the simulator starts. The session connects to `tcp/localhost:7447` by default; set `ZENOH_SESSION_CONFIG_URI` to point at a different rmw_zenoh config file, or `ZENOH_CONFIG_OVERRIDE` to patch individual keys.
 
+## ROS2 domain id
+
+The ROS2 domain id used by the native connector is configurable with the `--ros-domain-id=<N>` option, which is only valid together with `--ros2`:
+
+```sh
+./CarlaUnreal.sh --ros2 --ros-domain-id=42
+```
+
+`N` must be an integer in the range 0 to 232. The effective domain id is resolved in this order: the `--ros-domain-id` value, then the `ROS_DOMAIN_ID` environment variable, then the default domain 0. Out-of-range values (from either the option or the environment variable) are ignored and the next source is used. Omitting the option keeps the default domain, so existing setups are unchanged. The chosen domain id applies to every middleware (FastDDS, CycloneDDS, and Zenoh), so peers must run on the same domain to discover the topics.
+
 ## Sensor data
 
 The CARLA server will broadcast sensor data for any spawned sensors for which ROS is enabled. To enable a sensor for ROS use the `enable_for_ros()` method of the sensor class:

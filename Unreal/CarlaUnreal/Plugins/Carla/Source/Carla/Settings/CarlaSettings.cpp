@@ -171,6 +171,11 @@ void UCarlaSettings::LoadSettings()
     {
       RmwName = RmwValue.ToLower();
     }
+    int32 DomainIdValue;
+    if (FParse::Value(FCommandLine::Get(), TEXT("-ros-domain-id="), DomainIdValue))
+    {
+      ROS2DomainId = DomainIdValue;
+    }
   }
 }
 

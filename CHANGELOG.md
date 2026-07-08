@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Added a `--ros-domain-id=<N>` server option to set the ROS2 domain id at startup. The value (0 to 232) is stored in the middleware abstraction layer and honored by every middleware (FastDDS, CycloneDDS, and Zenoh), so future middlewares pick it up automatically. When the option is omitted, the server falls back to the `ROS_DOMAIN_ID` environment variable, and then to the default domain 0. The resolution order is: `--ros-domain-id`, then `ROS_DOMAIN_ID`, then 0.
 * Added Zenoh as a third native ROS2 middleware, selectable at server launch via `--rmw=zenoh` and compatible with `rmw_zenoh_cpp` peers.
 * Decoupled the native ROS2 connector from a hard FastDDS dependency into a strategy-pattern middleware abstraction supporting both FastDDS and CycloneDDS, selectable at server launch via the `--rmw=` command-line flag.
 * Fixed `from carla.command import ...` on the Python API by registering the `command` submodule under `carla.command` in `sys.modules` (the ue5 wheel ships `carla` as a bare extension module, so the previous `libcarla.command` namespace was not importable).

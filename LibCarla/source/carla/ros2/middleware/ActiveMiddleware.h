@@ -7,6 +7,7 @@
 #include <string>
 
 #include "carla/ros2/middleware/Middleware.h"
+#include "carla/ros2/middleware/MiddlewareConfig.h"
 
 namespace carla {
 namespace ros2 {
@@ -32,6 +33,15 @@ bool SetActiveMiddleware(Middleware requested);
 /// CARLA_ROS2_MIDDLEWARE_* macros are defined only on the carla-ros2-native
 /// target, not on carla-server.
 std::string GetAvailableMiddleware();
+
+/// Store the domain id in the shared library's MiddlewareConfig and return the
+/// effective domain id resolved there, so carla-server can log the value the
+/// middlewares will actually use. Pass kUnsetDomainId to keep each middleware's
+/// native default. Like the other exports here, this is DDS-free and its
+/// definition is compiled into the shared library, so MiddlewareConfig's
+/// process-wide storage lives on the shared-library side that the middlewares
+/// read.
+ResolvedDomainId SetActiveDomainId(int domain_id);
 
 } // namespace ros2
 } // namespace carla
