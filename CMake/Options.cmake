@@ -442,7 +442,7 @@ carla_string_option (
 carla_string_option (
   CARLA_FASTDDS_VERSION
   "Target Fast-DDS version."
-  2.11.2
+  2.14.6
 )
 
 carla_string_option (
@@ -484,7 +484,7 @@ carla_string_option (
 carla_string_option (
   CARLA_FASTCDR_VERSION
   "Target Fast-CDR version."
-  1.1.x
+  2.2.x
 )
 
 carla_string_option (
