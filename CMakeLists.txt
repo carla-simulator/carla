@@ -2,7 +2,7 @@
 
   Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
   de Barcelona (UAB).
-  
+
   This work is licensed under the terms of the MIT license.
   For a copy, see <https://opensource.org/licenses/MIT>.
 
@@ -39,7 +39,7 @@ set (CARLA_VERSION_MINOR 10)
 set (CARLA_VERSION_PATCH 0)
 
 set (
-  CARLA_VERSION 
+  CARLA_VERSION
   ${CARLA_VERSION_MAJOR}.${CARLA_VERSION_MINOR}.${CARLA_VERSION_PATCH}
 )
 
@@ -125,7 +125,7 @@ carla_get_option_docs (CARLA_OPTION_DOCS)
 carla_get_target_docs (CARLA_TARGET_DOCS)
 set (CARLA_CMAKE_HELP_MESSAGE)
 string (
-  APPEND 
+  APPEND
   CARLA_CMAKE_HELP_MESSAGE
   "# CARLA - CMake Help\n"
   "## CMake Targets\n"

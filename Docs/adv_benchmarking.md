@@ -1,6 +1,6 @@
 # Benchmarking Performance
 
-We provide a benchmarking script to enable users to easily analyze the performance of CARLA in their own environment. The script can be configured to run a number of scenarios that combine different maps, sensors and weather conditions. It reports the average and standard deviation of FPS under the requested scenarios. 
+We provide a benchmarking script to enable users to easily analyze the performance of CARLA in their own environment. The script can be configured to run a number of scenarios that combine different maps, sensors and weather conditions. It reports the average and standard deviation of FPS under the requested scenarios.
 
 In this section we detail the requirements to run the benchmark, where to find the script, the flags available to customize the scenarios that are run and examples on how to run the commands.
 
@@ -42,40 +42,40 @@ python -m pip install -U py-cpuinfo==5.0.0 psutil python-tr gpuinfo GPUtil
 #### Flags
 
 * `--host`: __IP_ADDRESS__
-__Default__: Localhost.  
+__Default__: Localhost.
 Configures the host of the server.
 
-* `--port`: __PORT__  
-__Default__: 2000  
+* `--port`: __PORT__
+__Default__: 2000
 Configures the TCP port to listen to.
 
 * `--file`: __filename.md__
-__Default__: benchmark.md  
+__Default__: benchmark.md
 Writes results in markdown table format to a file.
 
 * `--tm`
 Switch to Traffic Manager benchmark
 
 * `--ticks`
-__Default__: 100  
+__Default__: 100
 Sets the number of ticks to use for each scenario.
 
 * `--sync`
-__Default mode.__  
-Runs benchmark in synchronous mode. 
+__Default mode.__
+Runs benchmark in synchronous mode.
 
 * `--async`
 Runs benchmark in asynchronous mode.
 
 * `--fixed_dt`
-__Default__: 0.05  
+__Default__: 0.05
 For use with synchronous mode if you would like to set the delta timestep.
 
 * `--render_mode`
 Runs benchmark in rendering mode.
 
 * `--no_render_mode`
-__Default mode.__  
+__Default mode.__
 Runs benchmark in non-rendering mode.
 
 * `--show_scenarios`
@@ -96,7 +96,7 @@ When the script is run with only this flag you will see a list of all the scenar
 
 
 * `--maps`: __TownName__
-__Default__: All maps  
+__Default__: All maps
 All [CARLA maps][carla_maps], both layered and sub-layered, are available.
 
 [carla_maps]: https://carla.readthedocs.io/en/latest/core_map/#carla-maps

@@ -5,7 +5,7 @@ edit_uri: 'edit/master/Docs/'
 extra_css: [extra.css]
 extra_javascript: [extra.js]
 theme: readthedocs
-  
+
 
 nav:
 - Home: 'index.md'
@@ -16,8 +16,8 @@ nav:
   - 'Building CARLA' : 'build_carla.md'
 
 - Next steps:
-  #- 'Content authoring - maps': 'tuto_content_authoring_maps.md'  
-  - 'Content authoring - vehicles': 'tuto_content_authoring_vehicles.md'  
+  #- 'Content authoring - maps': 'tuto_content_authoring_maps.md'
+  - 'Content authoring - vehicles': 'tuto_content_authoring_vehicles.md'
 
 - CARLA topics:
   - 'Foundations': 'foundations.md'
@@ -45,13 +45,13 @@ nav:
   - 'InvertedAI': 'inverted_ai.md'
 
 - Contributing:
-  - 'Guidelines': 'cont_contribution_guidelines.md' 
+  - 'Guidelines': 'cont_contribution_guidelines.md'
   - 'Coding standards': 'cont_coding_standard.md'
   - 'Documentation standard': 'cont_doc_standard.md'
   - '': ''
- 
+
 markdown_extensions:
-  - admonition 
+  - admonition
 
 theme:
   name: 'readthedocs'
@@ -62,4 +62,4 @@ theme:
       primary: blue
       accent: blue
       toggle:
- 
+
