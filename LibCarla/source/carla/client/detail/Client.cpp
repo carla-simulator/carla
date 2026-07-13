@@ -723,6 +723,10 @@ namespace detail {
     _pimpl->streaming_client.UnSubscribe(token);
   }
 
+  void Client::Send(rpc::ActorId ActorId, const rpc::CustomV2XBytes &data) {
+    _pimpl->AsyncCall("send", ActorId, data);
+  }
+
   void Client::DrawDebugShape(const rpc::DebugShape &shape) {
     _pimpl->AsyncCall("draw_debug_shape", shape);
   }

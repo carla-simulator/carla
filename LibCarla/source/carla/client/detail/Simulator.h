@@ -28,6 +28,7 @@
 #include "carla/rpc/VehicleWheels.h"
 #include "carla/rpc/Texture.h"
 #include "carla/rpc/MaterialParameter.h"
+#include "carla/rpc/CustomV2XBytes.h"
 
 #include <optional>
 
@@ -729,6 +730,8 @@ namespace detail {
     void UnSubscribeFromGBuffer(
         Actor & sensor,
         uint32_t gbuffer_id);
+
+    void Send(const Sensor &sensor, const rpc::CustomV2XBytes &data);
 
     /// @}
     // =========================================================================
