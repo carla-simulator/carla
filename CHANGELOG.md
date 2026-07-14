@@ -4,6 +4,7 @@
 * Fixed `from carla.command import ...` on the Python API by registering the `command` submodule under `carla.command` in `sys.modules` (the ue5 wheel ships `carla` as a bare extension module, so the previous `libcarla.command` namespace was not importable).
 * Modernized the Python navigation agents with type hints and code cleanup ported from `ue4-dev`, added typed obstacle/traffic-light detection-result tuples in `agents/tools/hints.py`, reworked `BasicAgent.set_destination` to accept an optional start location and queue-clean flag, and fixed obstacle detection treating an empty `vehicle_list` as "all vehicles".
 * Updated the `invertedai_traffic.py` example with InvertedAI quality-of-life improvements for ego-vehicle integration and video generation.
+* Fixed `Sensor.get_current_detection_points` in the LiDAR smoke tests so it remains a valid instance method.
 * Added fisheye camera sensors (`sensor.camera.rgb_fisheye`, `sensor.camera.depth_fisheye`, `sensor.camera.semantic_segmentation_fisheye`, `sensor.camera.instance_segmentation_fisheye`) using the Kannala-Brandt projection model. Each variant captures up to 6 cubemap face render targets (the back face is skipped unless the FOV or equirectangular mode requires it) and composites them through a custom HLSL shader (`Plugins/Carla/Shaders/WideAngleLens.usf`) using configurable distortion coefficients. See `PythonAPI/examples/manual_control_fisheye.py` for an interactive demo. Ported from ue4-dev.
 * Fixed the Windows build: the setup now installs the MSVC 14.38 toolset required by the Unreal Engine 5.5.4 fork, MSVC builds use `/W4` instead of `/Wall`, and two Windows compile/link errors in LibCarla were fixed.
 * Added a Hybrid Solid-State LiDAR sensor (`sensor.lidar.hss_lidar`) modelled on the Hesai AT128, with configurable channels, horizontal/vertical FOV, and horizontal resolution. Reuses the rotating LiDAR's intensity, drop-off, and noise model.
@@ -105,5 +106,3 @@
 * RSS functionality removed from docs
 * Removed Light Manager from API and docs
 * Added Mine01 off-road mining map from Synkrotron
-
-
