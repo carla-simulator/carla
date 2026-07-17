@@ -55,7 +55,9 @@ class CycloneDDSPublisherMiddleware : public IPublisherMiddleware {
     if (_topic  > 0) { dds_delete(_topic);  }
   }
 
-  bool Init(const std::string& topic_name) override {
+  bool Init(
+      const std::string& topic_name,
+      const PublisherQos& publisher_qos) override {
     dds_entity_t participant = carla_cdr_get_participant();
     if (participant < 0) {
       log_error("CycloneDDSPublisherMiddleware: Shared participant unavailable "
@@ -73,9 +75,35 @@ class CycloneDDSPublisherMiddleware : public IPublisherMiddleware {
     }
 
     dds_qos_t* qos = dds_create_qos();
-    dds_qset_reliability(qos, DDS_RELIABILITY_RELIABLE,
-                         DDS_SECS(1));
-    dds_qset_history(qos, DDS_HISTORY_KEEP_LAST, 1);
+    if (publisher_qos.reliability == ReliabilityKind::BestEffort) {
+      // High-rate sensor stream: drop samples instead of blocking the publish
+      // call on retransmissions to slow subscribers. max_blocking_time is
+      // meaningless for best-effort writers, so pass 0.
+      dds_qset_reliability(qos, DDS_RELIABILITY_BEST_EFFORT, 0);
+    } else {
+      dds_qset_reliability(qos, DDS_RELIABILITY_RELIABLE,
+                           DDS_SECS(1));
+    }
+    // Keep-last writer history with the requested depth. The default depth 1
+    // matches the previous hardcoded value, so volatile publishers are
+    // unchanged.
+    const int32_t depth =
+        static_cast<int32_t>(publisher_qos.effective_history_depth());
+    dds_qset_history(qos, DDS_HISTORY_KEEP_LAST, depth);
+    if (publisher_qos.durability == DurabilityKind::TransientLocal) {
+      // Latched topic: keep the last history_depth samples for late joiners.
+      // durability_service governs what the writer's transient-local cache
+      // delivers to a late-joining reader.
+      dds_qset_durability(qos, DDS_DURABILITY_TRANSIENT_LOCAL);
+      dds_qset_durability_service(
+          qos,
+          0,
+          DDS_HISTORY_KEEP_LAST,
+          depth,
+          DDS_LENGTH_UNLIMITED,
+          DDS_LENGTH_UNLIMITED,
+          DDS_LENGTH_UNLIMITED);
+    }
     // Set USER_DATA (PID_USER_DATA = 0x002c per OMG DDSI-RTPS v2.5 §9.6.2.2.2)
     // to the REP-2016 type-hash KV payload "typehash=RIHS01_<hex>;".
     auto ud = build_user_data_for<msg_type>();

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2025 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -12,6 +12,7 @@
 import argparse
 import json
 import logging
+import signal
 
 import carla
 
@@ -127,5 +128,11 @@ if __name__ == '__main__':
     logging.basicConfig(format='%(levelname)s: %(message)s', level=log_level)
 
     logging.info('Listening to server %s:%s', args.host, args.port)
+
+    # Containers stop with SIGTERM; translate it into KeyboardInterrupt so the
+    # cleanup in main() runs (destroy actors, restore world settings).
+    def _on_sigterm(signum, frame):
+        raise KeyboardInterrupt
+    signal.signal(signal.SIGTERM, _on_sigterm)
 
     main(args)

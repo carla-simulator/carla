@@ -18,7 +18,7 @@ namespace ros2 {
   public:
     using msg_type = typename T::msg_type;
 
-    bool Init(std::string topic_name) {
+    bool Init(std::string topic_name, const PublisherQos& publisher_qos = PublisherQos()) {
 #ifdef LIBCARLA_WITH_GTEST
       if (!_middleware) {
 #endif
@@ -30,7 +30,7 @@ namespace ros2 {
 #ifdef LIBCARLA_WITH_GTEST
       }
 #endif
-      return _middleware->Init(topic_name);
+      return _middleware->Init(topic_name, publisher_qos);
     }
 
     std::string GetTopicName() {
