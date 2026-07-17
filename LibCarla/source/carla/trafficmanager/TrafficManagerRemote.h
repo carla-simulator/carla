@@ -72,6 +72,12 @@ public:
   /// Positive values imply a right offset while negative ones mean a left one.
   void SetGlobalLaneOffset(float const offset);
 
+  /// Method to enable/disable adaptive lateral control for a vehicle.
+  void SetLateralAvoidance(const ActorPtr &actor, const bool enable);
+
+  /// Method to enable/disable adaptive lateral control globally.
+  void SetGlobalLateralAvoidance(const bool enable);
+
   /// Method to set the automatic management of the vehicle lights
   void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update);
 

@@ -72,6 +72,15 @@ void Parameters::SetGlobalLaneOffset(const float offset) {
   global_lane_offset = offset;
 }
 
+void Parameters::SetLateralAvoidance(const ActorPtr &actor, const bool enable) {
+  const auto entry = std::make_pair(actor->GetId(), enable);
+  lateral_avoidance.AddEntry(entry);
+}
+
+void Parameters::SetGlobalLateralAvoidance(const bool enable) {
+  global_lateral_avoidance.store(enable);
+}
+
 void Parameters::SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision) {
   const ActorId reference_id = reference_actor->GetId();
   const ActorId other_id = other_actor->GetId();
@@ -272,6 +281,16 @@ float Parameters::GetLaneOffset(const ActorId &actor_id) const {
   }
 
   return offset;
+}
+
+bool Parameters::GetLateralAvoidance(const ActorId &actor_id) const {
+  bool enable = global_lateral_avoidance.load();
+
+  if (lateral_avoidance.Contains(actor_id)) {
+    enable = lateral_avoidance.GetValue(actor_id);
+  }
+
+  return enable;
 }
 
 bool Parameters::GetCollisionDetection(const ActorId &reference_actor_id, const ActorId &other_actor_id) const {

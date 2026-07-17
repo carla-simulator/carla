@@ -37,6 +37,26 @@ static const double INV_HYBRID_DT = 1.0 / HYBRID_MODE_DT;
 static const float PHYSICS_RADIUS = 50.0f;
 } // namespace HybridMode
 
+namespace LateralAvoidance {
+// Longitudinal window (m) ahead of the ego along its path in which side
+// obstacles are considered for in-lane clearance.
+static const float LOOKAHEAD_DISTANCE = 20.0f;
+// Lateral gap (m) to keep between the ego's side and an obstacle's edge.
+static const float CLEARANCE_MARGIN = 0.5f;
+// Maximum change in applied lateral offset per cycle (m), rate-limiting the
+// steering target to avoid chatter.
+static const float MAX_OFFSET_RATE = 0.10f;
+// Offset magnitude (m) needed to enter SIDE_CLEARANCE, and the smaller value
+// to fall back to FOLLOW (asymmetric thresholds give hysteresis).
+static const float ENTER_OFFSET_THRESHOLD = 0.15f;
+static const float EXIT_OFFSET_THRESHOLD = 0.05f;
+// Only obstacles whose bounding box comes within this lateral distance (m) of
+// the lane centerline are treated as intruding the driving corridor.
+static const float LATERAL_CONSIDERATION = 4.0f;
+// Target-velocity multiplier while squeezing past a stopped blocker in-lane.
+static const float BYPASS_SPEED_FACTOR = 0.5f;
+} // namespace LateralAvoidance
+
 namespace SpeedThreshold {
 static const float HIGHWAY_SPEED = 60.0f / 3.6f;
 static const float AFTER_JUNCTION_MIN_SPEED = 5.0f / 3.6f;

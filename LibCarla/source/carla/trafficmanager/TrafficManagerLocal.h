@@ -31,6 +31,7 @@
 #include "carla/trafficmanager/LocalizationStage.h"
 #include "carla/trafficmanager/CollisionStage.h"
 #include "carla/trafficmanager/TrafficLightStage.h"
+#include "carla/trafficmanager/LateralAvoidanceStage.h"
 #include "carla/trafficmanager/MotionPlanStage.h"
 
 namespace carla {
@@ -86,6 +87,8 @@ private:
   CollisionFrame collision_frame;
   /// Array to hold output data of traffic light response.
   TLFrame tl_frame;
+  /// Array to hold output data of the lateral-avoidance stage.
+  AvoidanceFrame avoidance_frame;
   /// Array to hold output data of motion planning.
   ControlFrame control_frame;
   /// Variable to keep track of currently reserved array space for frames.
@@ -93,6 +96,7 @@ private:
   /// Various stages representing core operations of traffic manager.
   LocalizationStage localization_stage;
   CollisionStage collision_stage;
+  LateralAvoidanceStage lateral_avoidance_stage;
   TrafficLightStage traffic_light_stage;
   MotionPlanStage motion_plan_stage;
   VehicleLightStage vehicle_light_stage;
@@ -174,6 +178,12 @@ public:
   /// Method to set a global lane offset displacement from the center line.
   /// Positive values imply a right offset while negative ones mean a left one.
   void SetGlobalLaneOffset(float const offset);
+
+  /// Method to enable/disable adaptive lateral control for a vehicle.
+  void SetLateralAvoidance(const ActorPtr &actor, const bool enable);
+
+  /// Method to enable/disable adaptive lateral control globally.
+  void SetGlobalLateralAvoidance(const bool enable);
 
   /// Method to set the automatic management of the vehicle lights
   void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update);

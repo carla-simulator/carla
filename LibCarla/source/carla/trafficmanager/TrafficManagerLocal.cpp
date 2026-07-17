@@ -53,6 +53,17 @@ TrafficManagerLocal::TrafficManagerLocal(
                                    collision_frame,
                                    random_device)),
 
+    lateral_avoidance_stage(LateralAvoidanceStage(vehicle_id_list,
+                                                  simulation_state,
+                                                  buffer_map,
+                                                  track_traffic,
+                                                  parameters,
+                                                  local_map,
+                                                  world,
+                                                  collision_frame,
+                                                  avoidance_frame,
+                                                  random_device)),
+
     traffic_light_stage(TrafficLightStage(vehicle_id_list,
                                           simulation_state,
                                           buffer_map,
@@ -73,6 +84,7 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       localization_frame,
                                       collision_frame,
                                       tl_frame,
+                                      avoidance_frame,
                                       world,
                                       control_frame,
                                       random_device,
@@ -98,7 +110,8 @@ TrafficManagerLocal::TrafficManagerLocal(
               collision_stage,
               traffic_light_stage,
               motion_plan_stage,
-              vehicle_light_stage)),
+              vehicle_light_stage,
+              lateral_avoidance_stage)),
 
     server(TrafficManagerServer(RPCportTM, static_cast<carla::traffic_manager::TrafficManagerBase *>(this))) {
 
@@ -141,6 +154,7 @@ void TrafficManagerLocal::Start() {
   localization_frame.reserve(INITIAL_SIZE);
   collision_frame.reserve(INITIAL_SIZE);
   tl_frame.reserve(INITIAL_SIZE);
+  avoidance_frame.reserve(INITIAL_SIZE);
   control_frame.reserve(INITIAL_SIZE);
   current_reserved_capacity = INITIAL_SIZE;
   
@@ -193,6 +207,7 @@ void TrafficManagerLocal::Step() {
       localization_frame.reserve(new_frame_capacity);
       collision_frame.reserve(new_frame_capacity);
       tl_frame.reserve(new_frame_capacity);
+      avoidance_frame.reserve(new_frame_capacity);
       control_frame.reserve(new_frame_capacity);
     }
 
@@ -206,6 +221,8 @@ void TrafficManagerLocal::Step() {
   collision_frame.resize(number_of_vehicles);
   tl_frame.clear();
   tl_frame.resize(number_of_vehicles);
+  avoidance_frame.clear();
+  avoidance_frame.resize(number_of_vehicles);
   control_frame.clear();
   // Reserve two frames for each vehicle: one for the ApplyVehicleControl command,
   // and one for the optional SetVehicleLightState command
@@ -225,6 +242,7 @@ void TrafficManagerLocal::Step() {
   vehicle_light_stage.UpdateWorldInfo();
   for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
     traffic_light_stage.Update(index);
+    lateral_avoidance_stage.Update(index);
     motion_plan_stage.Update(index);
     vehicle_light_stage.Update(index);
   }
@@ -277,6 +295,7 @@ void TrafficManagerLocal::Stop() {
   simulation_state.Reset();
   localization_stage.Reset();
   collision_stage.Reset();
+  lateral_avoidance_stage.Reset();
   traffic_light_stage.Reset();
   motion_plan_stage.Reset();
 
@@ -284,6 +303,7 @@ void TrafficManagerLocal::Stop() {
   localization_frame.clear();
   collision_frame.clear();
   tl_frame.clear();
+  avoidance_frame.clear();
   control_frame.clear();
 
   run_traffic_manger.store(true);
@@ -334,6 +354,14 @@ void TrafficManagerLocal::SetLaneOffset(const ActorPtr &actor, const float offse
 
 void TrafficManagerLocal::SetGlobalLaneOffset(const float offset) {
   parameters.SetGlobalLaneOffset(offset);
+}
+
+void TrafficManagerLocal::SetLateralAvoidance(const ActorPtr &actor, const bool enable) {
+  parameters.SetLateralAvoidance(actor, enable);
+}
+
+void TrafficManagerLocal::SetGlobalLateralAvoidance(const bool enable) {
+  parameters.SetGlobalLateralAvoidance(enable);
 }
 
 void TrafficManagerLocal::SetDesiredSpeed(const ActorPtr &actor, const float value) {

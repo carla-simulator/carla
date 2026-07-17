@@ -14,6 +14,7 @@
 #include "carla/trafficmanager/InMemoryMap.h"
 #include "carla/trafficmanager/LocalizationStage.h"
 #include "carla/trafficmanager/MotionPlanStage.h"
+#include "carla/trafficmanager/LateralAvoidanceStage.h"
 #include "carla/trafficmanager/Parameters.h"
 #include "carla/trafficmanager/UniformPRNG.h"
 #include "carla/trafficmanager/SimulationState.h"
@@ -61,6 +62,7 @@ private:
   TrafficLightStage &traffic_light_stage;
   MotionPlanStage &motion_plan_stage;
   VehicleLightStage &vehicle_light_stage;
+  LateralAvoidanceStage &lateral_avoidance_stage;
   // Time elapsed since last vehicle destruction due to being idle for too long.
   double elapsed_last_actor_destruction {0.0};
   cc::Timestamp current_timestamp;
@@ -105,7 +107,8 @@ public:
        CollisionStage &collision_stage,
        TrafficLightStage &traffic_light_stage,
        MotionPlanStage &motion_plan_stage,
-       VehicleLightStage &vehicle_light_stage);
+       VehicleLightStage &vehicle_light_stage,
+       LateralAvoidanceStage &lateral_avoidance_stage);
 
   void Update();
 

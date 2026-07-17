@@ -58,3 +58,6 @@ profiler.csv
 Unreal/CarlaUE4/.ignore
 devcontainer.json
 compile_commands.json
+
+# oh-my-claudecode session state
+.omc/

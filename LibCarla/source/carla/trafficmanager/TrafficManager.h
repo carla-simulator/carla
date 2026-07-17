@@ -212,6 +212,22 @@ public:
     }
   }
 
+  /// Method to enable/disable adaptive lateral control for a vehicle.
+  void SetLateralAvoidance(const ActorPtr &actor, const bool enable){
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetLateralAvoidance(actor, enable);
+    }
+  }
+
+  /// Method to enable/disable adaptive lateral control globally.
+  void SetGlobalLateralAvoidance(const bool enable){
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetGlobalLateralAvoidance(enable);
+    }
+  }
+
   /// Set the automatic management of the vehicle lights
   void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update){
     TrafficManagerBase* tm_ptr = GetTM(_port);

@@ -40,6 +40,7 @@ MotionPlanStage::MotionPlanStage(
   const LocalizationFrame &localization_frame,
   const CollisionFrame&collision_frame,
   const TLFrame &tl_frame,
+  const AvoidanceFrame &avoidance_frame,
   const cc::World &world,
   ControlFrame &output_array,
   UniformPRNG &random_device,
@@ -57,6 +58,7 @@ MotionPlanStage::MotionPlanStage(
     localization_frame(localization_frame),
     collision_frame(collision_frame),
     tl_frame(tl_frame),
+    avoidance_frame(avoidance_frame),
     world(world),
     output_array(output_array),
     random_device(random_device),
@@ -149,11 +151,22 @@ void MotionPlanStage::Update(const unsigned long index) {
     bool collision_emergency_stop = collision_response.first;
     float dynamic_target_velocity = collision_response.second;
 
+    // Adaptive lateral control: slow down while performing a lateral maneuver.
+    // speed_factor is 1.0 when the feature is disabled, leaving the target
+    // velocity (and the hybrid-mode teleport displacement derived from it)
+    // unchanged. Applies to both the physics and teleport paths below.
+    const AvoidanceCommand &avoidance_command = avoidance_frame.at(index);
+    dynamic_target_velocity *= avoidance_command.speed_factor;
+
     // Don't enter junction if there isn't enough free space after the junction.
     bool safe_after_junction = SafeAfterJunction(localization, tl_hazard, collision_emergency_stop);
 
-    // In case of collision or traffic light hazard.
-    bool emergency_stop = tl_hazard || collision_emergency_stop || !safe_after_junction;
+    // In case of collision or traffic light hazard. The lateral-avoidance stage
+    // can release the collision stop for a stopped blocker it has verified
+    // enough lateral room to pass (the collision stage reasons about the lane
+    // centerline and cannot see the applied offset).
+    const bool collision_stop = collision_emergency_stop && !avoidance_command.clear_hazard;
+    bool emergency_stop = tl_hazard || collision_stop || !safe_after_junction;
 
     if (vehicle_physics_enabled && !simulation_state.IsDormant(actor_id)) {
       ActuationSignal actuation_signal{0.0f, 0.0f, 0.0f};
@@ -167,7 +180,10 @@ void MotionPlanStage::Update(const unsigned long index) {
       SimpleWaypointPtr target_waypoint = waypoint_buffer.at(target_index);
 
       float base_offset = CalculateBaseOffset(actor_id, waypoint_buffer, target_waypoint->CheckJunction(), target_index);
-      float offset = parameters.GetLaneOffset(actor_id) + base_offset;
+      // Adaptive lateral control adds a reactive in-lane offset on top of the
+      // static lane offset and the large-vehicle base offset. It is 0.0 when
+      // the feature is disabled, so the steering target is unchanged.
+      float offset = parameters.GetLaneOffset(actor_id) + base_offset + avoidance_command.lateral_offset;
       auto right_vector = target_waypoint->GetTransform().GetRightVector();
       auto offset_location = cg::Location(cg::Vector3D(offset*right_vector.x, offset*right_vector.y, 0.0f));
       target_location = target_location + offset_location;

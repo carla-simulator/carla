@@ -122,6 +122,16 @@ public:
         tm->SetGlobalLaneOffset(offset);
       });
 
+      /// Method to enable/disable adaptive lateral control for a vehicle.
+      server->bind("set_lateral_avoidance", [=](carla::rpc::Actor actor, const bool enable) {
+        tm->SetLateralAvoidance(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), enable);
+      });
+
+      /// Method to enable/disable adaptive lateral control globally.
+      server->bind("set_global_lateral_avoidance", [=](const bool enable) {
+        tm->SetGlobalLateralAvoidance(enable);
+      });
+
 
       /// Method to set collision detection rules between vehicles.
       server->bind("set_collision_detection", [=](const carla::rpc::Actor &reference_actor, const carla::rpc::Actor &other_actor, const bool detect_collision) {

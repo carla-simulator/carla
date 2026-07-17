@@ -108,6 +108,18 @@ public:
     _client->call("set_global_lane_offset", offset);
   }
 
+  /// Method to enable/disable adaptive lateral control for a vehicle.
+  void SetLateralAvoidance(const carla::rpc::Actor &_actor, const bool enable) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_lateral_avoidance", std::move(_actor), enable);
+  }
+
+  /// Method to enable/disable adaptive lateral control globally.
+  void SetGlobalLateralAvoidance(const bool enable) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_global_lateral_avoidance", enable);
+  }
+
   /// Method to set the automatic management of the vehicle lights
   void SetUpdateVehicleLights(const carla::rpc::Actor &_actor, const bool do_update) {
     DEBUG_ASSERT(_client != nullptr);

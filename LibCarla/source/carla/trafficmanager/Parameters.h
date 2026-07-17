@@ -47,6 +47,11 @@ private:
   float global_percentage_difference_from_limit = 0;
   /// Global lane offset
   float global_lane_offset = 0;
+  /// Adaptive lateral control (in-lane offsetting + stopped-vehicle bypass)
+  /// enable map for individual vehicles.
+  AtomicMap<ActorId, bool> lateral_avoidance;
+  /// Global adaptive lateral control enable.
+  std::atomic<bool> global_lateral_avoidance{false};
   /// Map containing a set of actors to be ignored during collision detection.
   AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> ignore_collision;
   /// Map containing distance to leading vehicle command.
@@ -124,6 +129,14 @@ public:
   /// Method to set a global lane offset displacement from the center line.
   /// Positive values imply a right offset while negative ones mean a left one.
   void SetGlobalLaneOffset(float const offset);
+
+  /// Method to enable/disable adaptive lateral control for a vehicle
+  /// (in-lane offsetting to the free part of the lane and bypassing stopped
+  /// vehicles). Disabled by default.
+  void SetLateralAvoidance(const ActorPtr &actor, const bool enable);
+
+  /// Method to enable/disable adaptive lateral control globally.
+  void SetGlobalLateralAvoidance(const bool enable);
 
   /// Method to set collision detection rules between vehicles.
   void SetCollisionDetection(
@@ -221,6 +234,9 @@ public:
 
   /// Method to query lane offset for a vehicle.
   float GetLaneOffset(const ActorId &actor_id) const;
+
+  /// Method to query whether adaptive lateral control is enabled for a vehicle.
+  bool GetLateralAvoidance(const ActorId &actor_id) const;
 
   /// Method to query collision avoidance rule between a pair of vehicles.
   bool GetCollisionDetection(const ActorId &reference_actor_id, const ActorId &other_actor_id) const;

@@ -34,6 +34,7 @@ private:
   const LocalizationFrame &localization_frame;
   const CollisionFrame &collision_frame;
   const TLFrame &tl_frame;
+  const AvoidanceFrame &avoidance_frame;
   const cc::World &world;
   // Structure holding the controller state for registered vehicles.
   std::unordered_map<ActorId, StateEntry> pid_state_map;
@@ -90,6 +91,7 @@ public:
                   const LocalizationFrame &localization_frame,
                   const CollisionFrame &collision_frame,
                   const TLFrame &tl_frame,
+                  const AvoidanceFrame &avoidance_frame,
                   const cc::World &world,
                   ControlFrame &output_array,
                   UniformPRNG &random_device,
