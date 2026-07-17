@@ -52,6 +52,12 @@ private:
   AtomicMap<ActorId, bool> lateral_avoidance;
   /// Global adaptive lateral control enable.
   std::atomic<bool> global_lateral_avoidance{false};
+  /// Opt-in static-obstacle raycast for adaptive lateral control (lets the ego
+  /// sense cones/barriers and other non-actor props). Off by default; casts a
+  /// small fan of rays only for enabled vehicles.
+  AtomicMap<ActorId, bool> lateral_avoidance_raycast;
+  /// Global static-obstacle raycast enable.
+  std::atomic<bool> global_lateral_avoidance_raycast{false};
   /// Map containing a set of actors to be ignored during collision detection.
   AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> ignore_collision;
   /// Map containing distance to leading vehicle command.
@@ -137,6 +143,13 @@ public:
 
   /// Method to enable/disable adaptive lateral control globally.
   void SetGlobalLateralAvoidance(const bool enable);
+
+  /// Method to enable/disable static-obstacle raycast sensing for a vehicle's
+  /// adaptive lateral control (sees cones/barriers/props). Disabled by default.
+  void SetLateralAvoidanceRaycast(const ActorPtr &actor, const bool enable);
+
+  /// Method to enable/disable static-obstacle raycast sensing globally.
+  void SetGlobalLateralAvoidanceRaycast(const bool enable);
 
   /// Method to set collision detection rules between vehicles.
   void SetCollisionDetection(
@@ -237,6 +250,10 @@ public:
 
   /// Method to query whether adaptive lateral control is enabled for a vehicle.
   bool GetLateralAvoidance(const ActorId &actor_id) const;
+
+  /// Method to query whether static-obstacle raycast sensing is enabled for a
+  /// vehicle.
+  bool GetLateralAvoidanceRaycast(const ActorId &actor_id) const;
 
   /// Method to query collision avoidance rule between a pair of vehicles.
   bool GetCollisionDetection(const ActorId &reference_actor_id, const ActorId &other_actor_id) const;

@@ -120,6 +120,18 @@ public:
     _client->call("set_global_lateral_avoidance", enable);
   }
 
+  /// Method to enable/disable static-obstacle raycast sensing for a vehicle.
+  void SetLateralAvoidanceRaycast(const carla::rpc::Actor &_actor, const bool enable) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_lateral_avoidance_raycast", std::move(_actor), enable);
+  }
+
+  /// Method to enable/disable static-obstacle raycast sensing globally.
+  void SetGlobalLateralAvoidanceRaycast(const bool enable) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_global_lateral_avoidance_raycast", enable);
+  }
+
   /// Method to set the automatic management of the vehicle lights
   void SetUpdateVehicleLights(const carla::rpc::Actor &_actor, const bool do_update) {
     DEBUG_ASSERT(_client != nullptr);

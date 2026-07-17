@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include <vector>
+
 #include "carla/geom/Location.h"
 #include "carla/trafficmanager/DataStructures.h"
 
@@ -28,6 +30,18 @@ struct AvoidContext {
   float committed_offset = 0.0f;
   /// Ego location at the last state transition, for distance-based hysteresis.
   cg::Location state_entry_location;
+  /// Latched hazard-release: set once the maneuver verifies a stopped obstacle
+  /// with a feasible lateral plan, held for the rest of the maneuver so a noisy
+  /// per-frame "stopped" reading (parked cars jitter on their suspension) does
+  /// not toggle the collision stop and produce stop-and-go motion.
+  bool hold_clear = false;
+  /// Ticks remaining until the next static-obstacle raycast. The raycast is an
+  /// RPC to the server and static props do not move, so hits are cached between
+  /// casts (see static_hits) and only refreshed every RAYCAST_REFRESH_TICKS to
+  /// keep the server RPC load low.
+  int raycast_countdown = 0;
+  /// Cached world-space locations of static-prop ray hits, reused between casts.
+  std::vector<cg::Location> static_hits;
 };
 
 /// Per-cycle perception feeding the behaviour graph (recomputed every frame,

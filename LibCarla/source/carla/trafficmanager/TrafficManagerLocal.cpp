@@ -364,6 +364,14 @@ void TrafficManagerLocal::SetGlobalLateralAvoidance(const bool enable) {
   parameters.SetGlobalLateralAvoidance(enable);
 }
 
+void TrafficManagerLocal::SetLateralAvoidanceRaycast(const ActorPtr &actor, const bool enable) {
+  parameters.SetLateralAvoidanceRaycast(actor, enable);
+}
+
+void TrafficManagerLocal::SetGlobalLateralAvoidanceRaycast(const bool enable) {
+  parameters.SetGlobalLateralAvoidanceRaycast(enable);
+}
+
 void TrafficManagerLocal::SetDesiredSpeed(const ActorPtr &actor, const float value) {
   parameters.SetDesiredSpeed(actor, value);
 }

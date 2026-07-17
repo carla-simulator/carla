@@ -185,6 +185,12 @@ public:
   /// Method to enable/disable adaptive lateral control globally.
   void SetGlobalLateralAvoidance(const bool enable);
 
+  /// Method to enable/disable static-obstacle raycast sensing for a vehicle.
+  void SetLateralAvoidanceRaycast(const ActorPtr &actor, const bool enable);
+
+  /// Method to enable/disable static-obstacle raycast sensing globally.
+  void SetGlobalLateralAvoidanceRaycast(const bool enable);
+
   /// Method to set the automatic management of the vehicle lights
   void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update);
 

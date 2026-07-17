@@ -93,6 +93,8 @@ void export_trafficmanager() {
     .def("global_lane_offset", &ctm::TrafficManager::SetGlobalLaneOffset, (arg("offset")))
     .def("vehicle_lateral_avoidance", &ctm::TrafficManager::SetLateralAvoidance, (arg("actor"), arg("enable")))
     .def("global_lateral_avoidance", &ctm::TrafficManager::SetGlobalLateralAvoidance, (arg("enable")))
+    .def("vehicle_lateral_avoidance_raycast", &ctm::TrafficManager::SetLateralAvoidanceRaycast, (arg("actor"), arg("enable")))
+    .def("global_lateral_avoidance_raycast", &ctm::TrafficManager::SetGlobalLateralAvoidanceRaycast, (arg("enable")))
     .def("update_vehicle_lights", &ctm::TrafficManager::SetUpdateVehicleLights, (arg("actor"), arg("do_update")))
     .def("collision_detection", &ctm::TrafficManager::SetCollisionDetection, (arg("reference_actor"), arg("other_actor"), arg("detect_collision")))
     .def("force_lane_change", &ctm::TrafficManager::SetForceLaneChange, (arg("actor"), arg("direction")))

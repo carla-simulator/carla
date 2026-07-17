@@ -132,6 +132,16 @@ public:
         tm->SetGlobalLateralAvoidance(enable);
       });
 
+      /// Method to enable/disable static-obstacle raycast sensing for a vehicle.
+      server->bind("set_lateral_avoidance_raycast", [=](carla::rpc::Actor actor, const bool enable) {
+        tm->SetLateralAvoidanceRaycast(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), enable);
+      });
+
+      /// Method to enable/disable static-obstacle raycast sensing globally.
+      server->bind("set_global_lateral_avoidance_raycast", [=](const bool enable) {
+        tm->SetGlobalLateralAvoidanceRaycast(enable);
+      });
+
 
       /// Method to set collision detection rules between vehicles.
       server->bind("set_collision_detection", [=](const carla::rpc::Actor &reference_actor, const carla::rpc::Actor &other_actor, const bool detect_collision) {

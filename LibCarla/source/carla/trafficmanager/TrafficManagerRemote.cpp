@@ -141,6 +141,16 @@ void TrafficManagerRemote::SetGlobalLateralAvoidance(const bool enable) {
   client.SetGlobalLateralAvoidance(enable);
 }
 
+void TrafficManagerRemote::SetLateralAvoidanceRaycast(const ActorPtr &_actor, const bool enable) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetLateralAvoidanceRaycast(actor, enable);
+}
+
+void TrafficManagerRemote::SetGlobalLateralAvoidanceRaycast(const bool enable) {
+  client.SetGlobalLateralAvoidanceRaycast(enable);
+}
+
 void TrafficManagerRemote::SetUpdateVehicleLights(const ActorPtr &_actor, const bool do_update) {
   carla::rpc::Actor actor(_actor->Serialize());
 

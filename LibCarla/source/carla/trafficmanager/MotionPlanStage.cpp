@@ -151,12 +151,20 @@ void MotionPlanStage::Update(const unsigned long index) {
     bool collision_emergency_stop = collision_response.first;
     float dynamic_target_velocity = collision_response.second;
 
-    // Adaptive lateral control: slow down while performing a lateral maneuver.
-    // speed_factor is 1.0 when the feature is disabled, leaving the target
-    // velocity (and the hybrid-mode teleport displacement derived from it)
-    // unchanged. Applies to both the physics and teleport paths below.
+    // Adaptive lateral control speed handling. When the stage is steering
+    // around a stopped obstacle it releases the collision stop (clear_hazard);
+    // car-following has already driven the target velocity to ~0, so use a
+    // capped creep velocity instead. Otherwise just apply the maneuver's speed
+    // factor (1.0 when the feature is disabled, leaving the target velocity and
+    // the hybrid-mode teleport displacement unchanged).
     const AvoidanceCommand &avoidance_command = avoidance_frame.at(index);
-    dynamic_target_velocity *= avoidance_command.speed_factor;
+    if (avoidance_command.clear_hazard) {
+      dynamic_target_velocity =
+          std::min(max_target_velocity * avoidance_command.speed_factor,
+                   constants::LateralAvoidance::LATERAL_CREEP_MAX_SPEED);
+    } else {
+      dynamic_target_velocity *= avoidance_command.speed_factor;
+    }
 
     // Don't enter junction if there isn't enough free space after the junction.
     bool safe_after_junction = SafeAfterJunction(localization, tl_hazard, collision_emergency_stop);
@@ -164,9 +172,14 @@ void MotionPlanStage::Update(const unsigned long index) {
     // In case of collision or traffic light hazard. The lateral-avoidance stage
     // can release the collision stop for a stopped blocker it has verified
     // enough lateral room to pass (the collision stage reasons about the lane
-    // centerline and cannot see the applied offset).
+    // centerline and cannot see the applied offset). It also releases the
+    // "slow vehicle after junction" hold, since that slow vehicle IS the stopped
+    // obstacle being passed -- otherwise the ego brakes for it every few metres,
+    // producing stop-and-go instead of a fluid pass. Traffic-light stops are
+    // never released.
     const bool collision_stop = collision_emergency_stop && !avoidance_command.clear_hazard;
-    bool emergency_stop = tl_hazard || collision_stop || !safe_after_junction;
+    const bool junction_stop = !safe_after_junction && !avoidance_command.clear_hazard;
+    bool emergency_stop = tl_hazard || collision_stop || junction_stop;
 
     if (vehicle_physics_enabled && !simulation_state.IsDormant(actor_id)) {
       ActuationSignal actuation_signal{0.0f, 0.0f, 0.0f};
@@ -226,6 +239,12 @@ void MotionPlanStage::Update(const unsigned long index) {
       if (emergency_stop) {
         actuation_signal.throttle = 0.0f;
         actuation_signal.brake = 1.0f;
+      } else if (avoidance_command.clear_hazard) {
+        // Creeping past an obstacle at a low target velocity. The longitudinal
+        // PID normalizes error by the target, so at low targets it slams the
+        // brake on the slightest overshoot and bang-bangs into stop-and-go.
+        // Let the vehicle coast down instead of hard-braking, for a fluid pass.
+        actuation_signal.brake = std::min(actuation_signal.brake, 0.1f);
       }
 
       // Constructing the actuation signal.

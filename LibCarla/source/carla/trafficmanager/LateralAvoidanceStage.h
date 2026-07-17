@@ -56,8 +56,9 @@ private:
   std::unordered_map<ActorId, AvoidContext> avoidance_context;
 
   /// Gather this cycle's perception for a vehicle: the free lateral space
-  /// around it and any in-lane blocker ahead.
-  AvoidPerception Perceive(const ActorId actor_id) const;
+  /// around it and any in-lane blocker ahead. Takes the vehicle's context to
+  /// read/refresh the cached static-obstacle raycast hits.
+  AvoidPerception Perceive(const ActorId actor_id, AvoidContext &ctx) const;
 
 public:
   LateralAvoidanceStage(const std::vector<ActorId> &vehicle_id_list,

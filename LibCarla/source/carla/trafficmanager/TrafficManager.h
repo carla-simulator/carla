@@ -228,6 +228,22 @@ public:
     }
   }
 
+  /// Method to enable/disable static-obstacle raycast sensing for a vehicle.
+  void SetLateralAvoidanceRaycast(const ActorPtr &actor, const bool enable){
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetLateralAvoidanceRaycast(actor, enable);
+    }
+  }
+
+  /// Method to enable/disable static-obstacle raycast sensing globally.
+  void SetGlobalLateralAvoidanceRaycast(const bool enable){
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetGlobalLateralAvoidanceRaycast(enable);
+    }
+  }
+
   /// Set the automatic management of the vehicle lights
   void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update){
     TrafficManagerBase* tm_ptr = GetTM(_port);

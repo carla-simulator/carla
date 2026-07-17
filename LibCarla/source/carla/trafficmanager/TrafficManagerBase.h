@@ -75,6 +75,12 @@ public:
   /// Method to enable/disable adaptive lateral control globally.
   virtual void SetGlobalLateralAvoidance(const bool enable) = 0;
 
+  /// Method to enable/disable static-obstacle raycast sensing for a vehicle.
+  virtual void SetLateralAvoidanceRaycast(const ActorPtr &actor, const bool enable) = 0;
+
+  /// Method to enable/disable static-obstacle raycast sensing globally.
+  virtual void SetGlobalLateralAvoidanceRaycast(const bool enable) = 0;
+
   /// Method to set the automatic management of the vehicle lights
   virtual void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update) = 0;
 

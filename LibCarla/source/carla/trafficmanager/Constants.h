@@ -53,8 +53,36 @@ static const float EXIT_OFFSET_THRESHOLD = 0.05f;
 // Only obstacles whose bounding box comes within this lateral distance (m) of
 // the lane centerline are treated as intruding the driving corridor.
 static const float LATERAL_CONSIDERATION = 4.0f;
-// Target-velocity multiplier while squeezing past a stopped blocker in-lane.
-static const float BYPASS_SPEED_FACTOR = 0.5f;
+// Longitudinal half-window (m) around a path station within which an obstacle
+// is considered "beside" that station when scanning the future waypoints.
+static const float STATION_TOLERANCE = 3.0f;
+// Target-velocity multiplier while squeezing past a stopped blocker in-lane
+// (a tight maneuver -> a firmer slowdown).
+static const float BYPASS_SPEED_FACTOR = 0.6f;
+// Target-velocity multiplier while edging past a stopped side obstacle. The
+// ego keeps its clearance within the lane, so only a mild slowdown is needed --
+// a hard crawl looks unnatural.
+static const float SIDE_CLEARANCE_SPEED_FACTOR = 0.9f;
+// Hard cap (m/s) on the creep velocity used while steering around a stopped
+// obstacle with the collision stop released.
+static const float LATERAL_CREEP_MAX_SPEED = 8.0f;
+// Opt-in static-obstacle raycast: number of lateral sample rays cast across the
+// lane. Each is a forward ray at a fixed lateral offset; an odd count keeps one
+// ray on the centerline. Kept small -- rays are server RPCs.
+static const int RAYCAST_LATERAL_SAMPLES = 9;
+// Height (m) above the sampled path point at which rays are cast, so they clear
+// the road surface and strike upright props (cones, barriers) rather than the
+// ground plane.
+static const float RAYCAST_HEIGHT = 0.4f;
+// Longitudinal reach (m) of the raycast fan ahead of the ego.
+static const float RAYCAST_RANGE = LOOKAHEAD_DISTANCE;
+// Half-extent (m) of the synthetic point-obstacle a ray hit is turned into, so
+// a thin prop reads as a small footprint the station scan can clear around.
+static const float RAYCAST_OBSTACLE_HALF = 0.25f;
+// Ticks between raycast refreshes. Static props do not move, so hits are cached
+// and only re-cast this often, cutting the server RPC load ~Nx (at ~20 Hz, 10
+// ticks ~= 0.5 s -- well within the look-ahead horizon at road speeds).
+static const int RAYCAST_REFRESH_TICKS = 10;
 } // namespace LateralAvoidance
 
 namespace SpeedThreshold {
