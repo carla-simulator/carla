@@ -1024,16 +1024,18 @@ void UActorBlueprintFunctionLibrary::MakeRayTracedLensCameraDefinition(
   Lut.RecommendedValues = {TEXT("")};
   Lut.bRestrictToRecommended = false;
 
+  // Normalized focal lengths (image half-width = 0.5). 0 = derive from the
+  // fov attribute through the selected camera_model's projection.
   FActorVariation Fx;
   Fx.Id = TEXT("fx");
   Fx.Type = EActorAttributeType::Float;
-  Fx.RecommendedValues = {TEXT("1.0")};
+  Fx.RecommendedValues = {TEXT("0.0")};
   Fx.bRestrictToRecommended = false;
 
   FActorVariation Fy;
   Fy.Id = TEXT("fy");
   Fy.Type = EActorAttributeType::Float;
-  Fy.RecommendedValues = {TEXT("1.0")};
+  Fy.RecommendedValues = {TEXT("0.0")};
   Fy.bRestrictToRecommended = false;
 
   FActorVariation Cx;
@@ -1048,10 +1050,12 @@ void UActorBlueprintFunctionLibrary::MakeRayTracedLensCameraDefinition(
   Cy.RecommendedValues = {TEXT("0.5")};
   Cy.bRestrictToRecommended = false;
 
+  // Maximum half-angle accepted by the lens, in degrees. 0 = automatic:
+  // large enough that every pixel out to the frame corners receives a ray.
   FActorVariation ThetaMaxDeg;
   ThetaMaxDeg.Id = TEXT("theta_max_deg");
   ThetaMaxDeg.Type = EActorAttributeType::Float;
-  ThetaMaxDeg.RecommendedValues = {TEXT("90.0")};
+  ThetaMaxDeg.RecommendedValues = {TEXT("0.0")};
   ThetaMaxDeg.bRestrictToRecommended = false;
 
   // Depth of field. aperture_fstop=0 means pinhole (no DOF).

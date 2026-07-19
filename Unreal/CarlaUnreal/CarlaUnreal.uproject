@@ -76,6 +76,14 @@
 		{
 			"Name": "PerformanceMonitor",
 			"Enabled": true
+		},
+		{
+			"Name": "NFORDenoise",
+			"Enabled": true
+		},
+		{
+			"Name": "NNEDenoiser",
+			"Enabled": false
 		}
 	],
 	"TargetPlatforms": [

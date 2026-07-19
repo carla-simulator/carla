@@ -62,6 +62,35 @@ namespace SceneCaptureCameraRayTracedLens_local_ns
     return ECameraModel::Default;
   }
 
+  // Image-plane radius (normalized units, half-width = 0.5 at fx = 1) that the
+  // given model maps a ray at angle Theta from the optical axis to. Used to
+  // derive fx from a requested horizontal field of view. LUT1D is excluded:
+  // its scale is part of the calibration data itself.
+  static float RadialAtTheta(
+      ECameraModel Model,
+      float Theta,
+      TArrayView<const float> Coeffs)
+  {
+    switch (Model)
+    {
+    case ECameraModel::Perspective:
+    case ECameraModel::BrownConrady: // distortion applies on top of a tan projection
+      return FMath::Tan(FMath::Min(Theta, FMath::DegreesToRadians(89.5f)));
+    case ECameraModel::Stereographic:
+      return 2.0f * FMath::Tan(Theta * 0.5f);
+    case ECameraModel::Equidistant:
+      return Theta;
+    case ECameraModel::Equisolid:
+      return 2.0f * FMath::Sin(Theta * 0.5f);
+    case ECameraModel::Orthographic:
+      return FMath::Sin(FMath::Min(Theta, PI * 0.5f));
+    case ECameraModel::KannalaBrandt:
+      return CameraModelUtil::KannalaBrandt::ComputeCameraPolynomial(Theta, Coeffs);
+    default:
+      return FMath::Tan(FMath::Min(Theta, FMath::DegreesToRadians(89.5f)));
+    }
+  }
+
   static TArray<float> ParseFloatCSV(const FString &CSV)
   {
     TArray<float> Result;
@@ -128,16 +157,56 @@ void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description
       UActorBlueprintFunctionLibrary::RetrieveActorAttributeToString(
           "lut", Variations, TEXT("")));
   LensModel.FocalX = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
-      "fx", Variations, 1.0f);
+      "fx", Variations, 0.0f);
   LensModel.FocalY = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
-      "fy", Variations, 1.0f);
+      "fy", Variations, 0.0f);
   LensModel.CenterX = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
       "cx", Variations, 0.5f);
   LensModel.CenterY = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
       "cy", Variations, 0.5f);
-  LensModel.ThetaMax = FMath::DegreesToRadians(
+
+  // fx/fy <= 0 requests automatic focal length: place the requested horizontal
+  // fov (through the selected model's projection) exactly across the image
+  // width. An explicit calibration (fx > 0) always wins.
+  const float FOVDeg = FMath::Clamp(
       UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
-          "theta_max_deg", Variations, 90.0f));
+          "fov", Variations, 90.0f),
+      1.0f, 359.0f);
+  const float ThetaHalf = FMath::DegreesToRadians(FOVDeg) * 0.5f;
+  if (LensModel.FocalX <= 0.0f)
+  {
+    if (LensModel.Model == ECameraModel::LUT1D)
+    {
+      UE_LOG(LogCarla, Warning,
+          TEXT("ASceneCaptureCamera_RayTracedLens: camera_model=lut needs an explicit fx; using fx=1."));
+      LensModel.FocalX = 1.0f;
+    }
+    else
+    {
+      const float Radius = RadialAtTheta(LensModel.Model, ThetaHalf, LensModel.Coeffs);
+      LensModel.FocalX = 0.5f / FMath::Max(Radius, 1.0e-6f);
+    }
+  }
+  if (LensModel.FocalY <= 0.0f)
+  {
+    LensModel.FocalY = LensModel.FocalX; // square pixels
+  }
+
+  // theta_max_deg <= 0 requests automatic coverage: extend the acceptance
+  // angle to the frame corners so no pixel is left without a ray.
+  const float ThetaMaxDeg = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
+      "theta_max_deg", Variations, 0.0f);
+  if (ThetaMaxDeg > 0.0f)
+  {
+    LensModel.ThetaMax = FMath::DegreesToRadians(ThetaMaxDeg);
+  }
+  else
+  {
+    const float Width = FMath::Max((float)GetImageWidth(), 1.0f);
+    const float Height = FMath::Max((float)GetImageHeight(), 1.0f);
+    const float CornerScale = FMath::Sqrt(1.0f + FMath::Square(Height / Width));
+    LensModel.ThetaMax = FMath::Min(ThetaHalf * CornerScale, (float)PI);
+  }
   LensModel.CAScaleR = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
       "ca_shift_r", Variations, 1.0f);
   LensModel.CAScaleB = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
@@ -182,6 +251,38 @@ void ASceneCaptureCamera_RayTracedLens::OnLastClientDisconnected()
 void ASceneCaptureCamera_RayTracedLens::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureCamera_RayTracedLens::PostPhysTick);
+
+  // The path tracer accumulates ONE sample per rendered frame and resets its
+  // accumulation whenever the view moves, so a moving sensor that captures
+  // once per tick would deliver permanently unconverged 1-spp frames and the
+  // denoiser (which only runs once the sample target is reached) would never
+  // fire. Render SamplesPerPixel-1 warm-up captures with the tick's fixed
+  // camera pose; the final capture inside Super::PostPhysTick is then sample
+  // number SamplesPerPixel, which completes accumulation, triggers the
+  // denoiser, and is the frame that gets read back to clients.
+  if (AreClientsListening() && CaptureComponent2D != nullptr)
+  {
+    // Reassert the lens configuration every tick. Several code paths replace
+    // the capture component's PostProcessSettings wholesale after Set() ran --
+    // most notably ApplyPostProcessVolumeToSensor, which copies the map's
+    // PostProcessVolume settings and restores only the standard camera fields
+    // from its cache. Losing the PathTracingLens* fields silently reverts the
+    // camera to an undistorted pinhole and drops the sample/denoiser targets.
+    RTLensEngineAdapter::ApplyLensModel(CaptureComponent2D->PostProcessSettings, LensModel);
+    CaptureComponent2D->PostProcessSettings.PathTracingSamplesPerPixel = SamplesPerPixel;
+    CaptureComponent2D->PostProcessSettings.PathTracingEnableDenoiser = bEnableDenoiser;
+
+    // Each warm-up is a full blocking render on the game thread; an unbounded
+    // count lets one high-spp camera starve the tick (and with it the RPC
+    // server). Cap the per-tick budget; quality beyond the cap comes from
+    // raising the cap knowingly, not from silently freezing the simulator.
+    constexpr int32 MaxWarmupSamplesPerTick = 31;
+    const int32 WarmupSamples = FMath::Min(SamplesPerPixel - 1, MaxWarmupSamplesPerTick);
+    for (int32 Sample = 0; Sample < WarmupSamples; ++Sample)
+    {
+      CaptureComponent2D->CaptureScene();
+    }
+  }
 
   // Captures the scene. The lens model is already resident in
   // CaptureComponent2D->PostProcessSettings (applied once in Set(), see
