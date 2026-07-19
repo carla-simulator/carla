@@ -137,6 +137,16 @@ namespace CameraModelUtil
         FVector2f ImagePoint,
         ELensColorChannel Channel = ELensColorChannel::Green);
 
+    // Convention adapters between the lens core's camera space (+X right,
+    // +Y down, +Z forward -- matches OpenCV, see FLensModelDescriptor) and
+    // Unreal's native camera space (+X forward, +Y right, +Z up). Pure axis
+    // relabeling: an isometry, and each is the other's exact inverse. Not a
+    // "rotation" in the proper sense -- the lens core's convention is
+    // right-handed and UE's is left-handed, so this necessarily flips
+    // handedness rather than preserving it.
+    FVector LensDirToUE(FVector LensDir);
+    FVector UEDirToLens(FVector UEDir);
+
     namespace BrownConrady
     {
         // Normalized pinhole coords (Xn = X/Z, Yn = Y/Z) -> distorted coords.

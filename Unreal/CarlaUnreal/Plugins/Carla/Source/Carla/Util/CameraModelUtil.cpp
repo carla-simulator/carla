@@ -1096,6 +1096,18 @@ namespace CameraModelUtil
             std::cos(Theta));
     }
 
+    FVector LensDirToUE(FVector LensDir)
+    {
+        // Lens: +X right, +Y down, +Z forward -> UE: +X forward, +Y right, +Z up
+        return FVector(LensDir.Z, LensDir.X, -LensDir.Y);
+    }
+
+    FVector UEDirToLens(FVector UEDir)
+    {
+        // UE: +X forward, +Y right, +Z up -> Lens: +X right, +Y down, +Z forward
+        return FVector(UEDir.Y, -UEDir.Z, UEDir.X);
+    }
+
 } // CameraModelUtil
 
 

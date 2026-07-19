@@ -218,6 +218,63 @@ def compute_ray_direction(desc, image_point):
 
 
 # ---------------------------------------------------------------------------
+# Convention adapters: lens camera space (+X right, +Y down, +Z forward) <->
+# UE camera space (+X forward, +Y right, +Z up). Mirrors
+# CameraModelUtil::LensDirToUE / UEDirToLens and LensModels.ush's
+# LensDirToUE / UEDirToLens.
+# ---------------------------------------------------------------------------
+
+def lens_dir_to_ue(v):
+    x, y, z = v
+    return (z, x, -y)
+
+
+def ue_dir_to_lens(v):
+    x, y, z = v
+    return (y, -z, x)
+
+
+def vec_close(a, b, tol=TOLERANCE):
+    return all(abs(ai - bi) < tol for ai, bi in zip(a, b))
+
+
+def run_adapter_tests():
+    failures = []
+
+    # Basis-vector sanity: physical direction should be preserved (forward ->
+    # forward, right -> right, down -> down/-up) across the convention swap.
+    basis_checks = [
+        ("lens forward -> UE forward", (0.0, 0.0, 1.0), (1.0, 0.0, 0.0)),
+        ("lens right -> UE right", (1.0, 0.0, 0.0), (0.0, 1.0, 0.0)),
+        ("lens down -> UE down (-Z)", (0.0, 1.0, 0.0), (0.0, 0.0, -1.0)),
+    ]
+    for label, lens_dir, expected_ue in basis_checks:
+        ue_dir = lens_dir_to_ue(lens_dir)
+        if not vec_close(ue_dir, expected_ue):
+            failures.append(f"{label}: got {ue_dir}, expected {expected_ue}")
+
+    # Inverse-of-each-other over both directional test sets.
+    max_err_lens = 0.0
+    max_err_ue = 0.0
+    for lens_dir in make_test_directions():
+        round_tripped = ue_dir_to_lens(lens_dir_to_ue(lens_dir))
+        err = math.dist(round_tripped, lens_dir)
+        max_err_lens = max(max_err_lens, err)
+        if err >= TOLERANCE:
+            failures.append(f"LensDirToUE/UEDirToLens not inverse for {lens_dir}: err={err:.3e}")
+
+    # Reuse the same directions reinterpreted as UE-space test vectors.
+    for ue_dir in make_test_directions():
+        round_tripped = lens_dir_to_ue(ue_dir_to_lens(ue_dir))
+        err = math.dist(round_tripped, ue_dir)
+        max_err_ue = max(max_err_ue, err)
+        if err >= TOLERANCE:
+            failures.append(f"UEDirToLens/LensDirToUE not inverse for {ue_dir}: err={err:.3e}")
+
+    return max(max_err_lens, max_err_ue), failures
+
+
+# ---------------------------------------------------------------------------
 # Round-trip tests.
 # ---------------------------------------------------------------------------
 
@@ -287,6 +344,14 @@ def main():
         for direction, image_point, round_tripped_dir, err in failures[:3]:
             print(f"    direction={direction} image_point={image_point} "
                   f"round_tripped_dir={round_tripped_dir} err={err:.3e}")
+
+    adapter_max_err, adapter_failures = run_adapter_tests()
+    adapter_status = "OK" if not adapter_failures else "FAIL"
+    if adapter_failures:
+        overall_ok = False
+    print(f"{'ConventionAdapters':15s} max round-trip error = {adapter_max_err:.3e}  [{adapter_status}]")
+    for failure in adapter_failures[:5]:
+        print(f"    {failure}")
 
     print()
     if overall_ok:
