@@ -168,10 +168,18 @@ void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description
   // fx/fy <= 0 requests automatic focal length: place the requested horizontal
   // fov (through the selected model's projection) exactly across the image
   // width. An explicit calibration (fx > 0) always wins.
-  const float FOVDeg = FMath::Clamp(
-      UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
-          "fov", Variations, 90.0f),
-      1.0f, 359.0f);
+  // Cap at 170 degrees for now: half-angles at/above 90 degrees (rays entering
+  // the backward hemisphere) currently spin the lens ray-generation shader and
+  // hang the GPU. Lift the cap once the shader handles theta >= pi/2 robustly.
+  const float FOVDegRequested = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
+      "fov", Variations, 90.0f);
+  const float FOVDeg = FMath::Clamp(FOVDegRequested, 1.0f, 170.0f);
+  if (FOVDegRequested > 170.0f)
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("ASceneCaptureCamera_RayTracedLens: fov=%.1f clamped to 170 (known shader limitation beyond 170 degrees)."),
+        FOVDegRequested);
+  }
   const float ThetaHalf = FMath::DegreesToRadians(FOVDeg) * 0.5f;
   if (LensModel.FocalX <= 0.0f)
   {
@@ -205,7 +213,7 @@ void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description
     const float Width = FMath::Max((float)GetImageWidth(), 1.0f);
     const float Height = FMath::Max((float)GetImageHeight(), 1.0f);
     const float CornerScale = FMath::Sqrt(1.0f + FMath::Square(Height / Width));
-    LensModel.ThetaMax = FMath::Min(ThetaHalf * CornerScale, (float)PI);
+    LensModel.ThetaMax = FMath::Min(ThetaHalf * CornerScale, FMath::DegreesToRadians(89.0f));
   }
   LensModel.CAScaleR = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
       "ca_shift_r", Variations, 1.0f);
