@@ -814,6 +814,288 @@ namespace CameraModelUtil
         }
     }
 
+
+
+    // -----------------------------------------------------------------------
+    // FLensModelDescriptor forward/inverse core.
+    // -----------------------------------------------------------------------
+
+    namespace BrownConrady
+    {
+        // Evaluates Distort() and its Jacobian in one pass, so Undistort()'s
+        // Newton-Raphson loop only pays for the distortion math once per iteration.
+        static void EvalWithJacobian(
+            float Xn,
+            float Yn,
+            TArrayView<const float> C,
+            float& OutXd,
+            float& OutYd,
+            float OutJ[4]) // row-major [dXd/dXn, dXd/dYn, dYd/dXn, dYd/dYn]
+        {
+            const float K1 = C.Num() > 0 ? C[0] : 0.0F;
+            const float K2 = C.Num() > 1 ? C[1] : 0.0F;
+            const float K3 = C.Num() > 2 ? C[2] : 0.0F;
+            const float P1 = C.Num() > 3 ? C[3] : 0.0F;
+            const float P2 = C.Num() > 4 ? C[4] : 0.0F;
+
+            const float R2 = Xn * Xn + Yn * Yn;
+            const float R4 = R2 * R2;
+            const float Radial = 1.0F + K1 * R2 + K2 * R4 + K3 * R4 * R2;
+            const float DRadialDR2 = K1 + 2.0F * K2 * R2 + 3.0F * K3 * R4;
+
+            OutXd = Xn * Radial + 2.0F * P1 * Xn * Yn + P2 * (R2 + 2.0F * Xn * Xn);
+            OutYd = Yn * Radial + P1 * (R2 + 2.0F * Yn * Yn) + 2.0F * P2 * Xn * Yn;
+
+            const float DRadialDXn = 2.0F * Xn * DRadialDR2;
+            const float DRadialDYn = 2.0F * Yn * DRadialDR2;
+
+            OutJ[0] = Radial + Xn * DRadialDXn + 2.0F * P1 * Yn + 6.0F * P2 * Xn; // dXd/dXn
+            OutJ[1] = Xn * DRadialDYn + 2.0F * P1 * Xn + 2.0F * P2 * Yn;          // dXd/dYn
+            OutJ[2] = Yn * DRadialDXn + 2.0F * P1 * Xn + 2.0F * P2 * Yn;          // dYd/dXn
+            OutJ[3] = Radial + Yn * DRadialDYn + 6.0F * P1 * Yn + 2.0F * P2 * Xn; // dYd/dYn
+        }
+
+        FVector2f Distort(
+            float Xn,
+            float Yn,
+            TArrayView<const float> Coefficients)
+        {
+            float Xd, Yd, J[4];
+            EvalWithJacobian(Xn, Yn, Coefficients, Xd, Yd, J);
+            return FVector2f(Xd, Yd);
+        }
+
+        FVector2f Undistort(
+            float Xd,
+            float Yd,
+            TArrayView<const float> Coefficients,
+            int32 Iterations)
+        {
+            float Xn = Xd, Yn = Yd; // initial guess: undistorted ~ distorted for small distortion
+            for (int32 i = 0; i != Iterations; ++i)
+            {
+                float Fx, Fy, J[4];
+                EvalWithJacobian(Xn, Yn, Coefficients, Fx, Fy, J);
+                Fx -= Xd;
+                Fy -= Yd;
+
+                const float Det = J[0] * J[3] - J[1] * J[2];
+                if (FMath::Abs(Det) < 1e-12F)
+                    break;
+
+                const float InvDet = 1.0F / Det;
+                const float DXn = InvDet * (J[3] * Fx - J[1] * Fy);
+                const float DYn = InvDet * (-J[2] * Fx + J[0] * Fy);
+
+                Xn -= DXn;
+                Yn -= DYn;
+            }
+            return FVector2f(Xn, Yn);
+        }
+    } // BrownConrady
+
+    namespace LUT1D
+    {
+        float SampleForward(
+            float Theta,
+            TArrayView<const float> Samples,
+            float ThetaMax)
+        {
+            const int32 Count = Samples.Num();
+            if (Count == 0)
+                return 0.0F;
+            if (Count == 1)
+                return Samples[0];
+
+            const float Clamped = FMath::Clamp(Theta, 0.0F, ThetaMax);
+            const float T = ThetaMax > 0.0F ? (Clamped / ThetaMax) * static_cast<float>(Count - 1) : 0.0F;
+            const int32 I0 = FMath::Clamp(static_cast<int32>(FMath::FloorToFloat(T)), 0, Count - 1);
+            const int32 I1 = FMath::Min(I0 + 1, Count - 1);
+            const float Frac = T - static_cast<float>(I0);
+            return FMath::Lerp(Samples[I0], Samples[I1], Frac);
+        }
+
+        float SampleInverse(
+            float Distance,
+            TArrayView<const float> Samples,
+            float ThetaMax)
+        {
+            const int32 Count = Samples.Num();
+            if (Count < 2)
+                return 0.0F;
+            if (Distance <= Samples[0])
+                return 0.0F;
+            if (Distance >= Samples[Count - 1])
+                return ThetaMax;
+
+            // Samples is assumed monotonically non-decreasing.
+            int32 Lo = 0;
+            int32 Hi = Count - 1;
+            while (Hi - Lo > 1)
+            {
+                const int32 Mid = (Lo + Hi) / 2;
+                if (Samples[Mid] <= Distance)
+                    Lo = Mid;
+                else
+                    Hi = Mid;
+            }
+
+            const float R0 = Samples[Lo];
+            const float R1 = Samples[Hi];
+            const float Frac = R1 > R0 ? (Distance - R0) / (R1 - R0) : 0.0F;
+            const float IndexF = static_cast<float>(Lo) + Frac;
+            return (IndexF / static_cast<float>(Count - 1)) * ThetaMax;
+        }
+    } // LUT1D
+
+    // R(Theta) for every model except BrownConrady, which is not radially symmetric.
+    static float RadialForward(
+        ECameraModel Model,
+        float Theta,
+        TArrayView<const float> Coeffs,
+        TArrayView<const float> LUT,
+        float ThetaMax)
+    {
+        switch (Model)
+        {
+        case ECameraModel::Perspective:
+            return std::tan(Theta);
+        case ECameraModel::Stereographic:
+            return std::tan(Theta * 0.5F) * 2.0F;
+        case ECameraModel::Equidistant:
+            return Theta;
+        case ECameraModel::Equisolid:
+            return std::sin(Theta * 0.5F) * 2.0F;
+        case ECameraModel::Orthographic:
+            return std::sin(Theta);
+        case ECameraModel::KannalaBrandt:
+            return KannalaBrandt::ComputeCameraPolynomial(Theta, Coeffs);
+        case ECameraModel::LUT1D:
+            return LUT1D::SampleForward(Theta, LUT, ThetaMax);
+        default:
+            check(false);
+            return 0.0F;
+        }
+    }
+
+    // Theta(R) for every model except BrownConrady.
+    static float RadialInverse(
+        ECameraModel Model,
+        float Distance,
+        TArrayView<const float> Coeffs,
+        TArrayView<const float> LUT,
+        float ThetaMax)
+    {
+        switch (Model)
+        {
+        case ECameraModel::Perspective:
+            return std::atan(Distance);
+        case ECameraModel::Stereographic:
+            return std::atan(Distance * 0.5F) * 2.0F;
+        case ECameraModel::Equidistant:
+            return Distance;
+        case ECameraModel::Equisolid:
+            return std::asin(FMath::Clamp(Distance * 0.5F, -1.0F, 1.0F)) * 2.0F;
+        case ECameraModel::Orthographic:
+            return std::asin(FMath::Clamp(Distance, -1.0F, 1.0F));
+        case ECameraModel::KannalaBrandt:
+        {
+            float Theta = Distance;
+            for (uint8 i = 0; i != KannalaBrandtSolverIterations; ++i)
+            {
+                float N = Distance - KannalaBrandt::ComputeCameraPolynomial(Theta, Coeffs);
+                float D = -KannalaBrandt::ComputeCameraPolynomialDerivative(Theta, Coeffs);
+                Theta -= N / D;
+            }
+            return Theta;
+        }
+        case ECameraModel::LUT1D:
+            return LUT1D::SampleInverse(Distance, LUT, ThetaMax);
+        default:
+            check(false);
+            return 0.0F;
+        }
+    }
+
+    static float SelectCAScale(const FLensModelDescriptor& Descriptor, ELensColorChannel Channel)
+    {
+        switch (Channel)
+        {
+        case ELensColorChannel::Red:
+            return Descriptor.CAScaleR;
+        case ELensColorChannel::Blue:
+            return Descriptor.CAScaleB;
+        default:
+            return 1.0F;
+        }
+    }
+
+    FVector2f ComputeLensImagePoint(
+        const FLensModelDescriptor& Descriptor,
+        FVector Direction,
+        ELensColorChannel Channel)
+    {
+        Direction = Direction.GetSafeNormal();
+        if (Direction.IsNearlyZero())
+            Direction = FVector(0, 0, 1);
+
+        const float CAScale = SelectCAScale(Descriptor, Channel);
+
+        float Xn, Yn;
+
+        if (Descriptor.Model == ECameraModel::BrownConrady)
+        {
+            const float Z = FMath::Max(static_cast<float>(Direction.Z), KINDA_SMALL_NUMBER);
+            const float PinholeX = static_cast<float>(Direction.X) / Z;
+            const float PinholeY = static_cast<float>(Direction.Y) / Z;
+            const FVector2f Distorted = BrownConrady::Distort(PinholeX, PinholeY, Descriptor.Coeffs);
+            Xn = Distorted.X;
+            Yn = Distorted.Y;
+        }
+        else
+        {
+            const float Theta = std::acos(FMath::Clamp(static_cast<float>(Direction.Z), -1.0F, 1.0F));
+            const float Phi = std::atan2(static_cast<float>(Direction.Y), static_cast<float>(Direction.X));
+            const float R = RadialForward(Descriptor.Model, Theta, Descriptor.Coeffs, Descriptor.LUT, Descriptor.ThetaMax);
+            Xn = R * std::cos(Phi);
+            Yn = R * std::sin(Phi);
+        }
+
+        Xn *= CAScale;
+        Yn *= CAScale;
+
+        return FVector2f(
+            Descriptor.CenterX + Descriptor.FocalX * Xn,
+            Descriptor.CenterY + Descriptor.FocalY * Yn);
+    }
+
+    FVector ComputeLensRayDirection(
+        const FLensModelDescriptor& Descriptor,
+        FVector2f ImagePoint,
+        ELensColorChannel Channel)
+    {
+        const float CAScale = SelectCAScale(Descriptor, Channel);
+        const float SafeCAScale = FMath::IsNearlyZero(CAScale) ? 1.0F : CAScale;
+
+        const float Xn = (ImagePoint.X - Descriptor.CenterX) / (Descriptor.FocalX * SafeCAScale);
+        const float Yn = (ImagePoint.Y - Descriptor.CenterY) / (Descriptor.FocalY * SafeCAScale);
+
+        if (Descriptor.Model == ECameraModel::BrownConrady)
+        {
+            const FVector2f Pinhole = BrownConrady::Undistort(Xn, Yn, Descriptor.Coeffs);
+            return FVector(Pinhole.X, Pinhole.Y, 1.0F).GetSafeNormal();
+        }
+
+        const float R = std::sqrt(Xn * Xn + Yn * Yn);
+        const float Phi = std::atan2(Yn, Xn);
+        const float Theta = RadialInverse(Descriptor.Model, R, Descriptor.Coeffs, Descriptor.LUT, Descriptor.ThetaMax);
+        const float SinTheta = std::sin(Theta);
+        return FVector(
+            SinTheta * std::cos(Phi),
+            SinTheta * std::sin(Phi),
+            std::cos(Theta));
+    }
+
 } // CameraModelUtil
 
 
