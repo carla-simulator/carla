@@ -942,6 +942,196 @@ void UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition(bool &Success, 
   Success = CheckActorDefinition(Definition);
 }
 
+FActorDefinition UActorBlueprintFunctionLibrary::MakeRayTracedLensCameraDefinition(
+    const FString &Id,
+    const bool bEnableModifyingPostProcessEffects)
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeRayTracedLensCameraDefinition(Id, bEnableModifyingPostProcessEffects, Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeRayTracedLensCameraDefinition(
+    const FString &Id,
+    const bool bEnableModifyingPostProcessEffects,
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), Id);
+  AddRecommendedValuesForSensorRoleNames(Definition);
+  AddVariationsForSensor(Definition);
+
+  // FOV
+  FActorVariation FOV;
+  FOV.Id = TEXT("fov");
+  FOV.Type = EActorAttributeType::Float;
+  FOV.RecommendedValues = {TEXT("90.0")};
+  FOV.bRestrictToRecommended = false;
+
+  // Resolution
+  FActorVariation ResX;
+  ResX.Id = TEXT("image_size_x");
+  ResX.Type = EActorAttributeType::Int;
+  ResX.RecommendedValues = {TEXT("800")};
+  ResX.bRestrictToRecommended = false;
+
+  FActorVariation ResY;
+  ResY.Id = TEXT("image_size_y");
+  ResY.Type = EActorAttributeType::Int;
+  ResY.RecommendedValues = {TEXT("600")};
+  ResY.bRestrictToRecommended = false;
+
+  // Kept for attribute-surface parity with the other cameras, but the
+  // constructor's SetUseRayTracing(true) wins regardless: the path tracer has
+  // no rasterized fallback the way ASceneCaptureCamera does.
+  FActorVariation UseRayTracing;
+  UseRayTracing.Id = TEXT("use_ray_tracing");
+  UseRayTracing.Type = EActorAttributeType::Bool;
+  UseRayTracing.RecommendedValues = {TEXT("true")};
+  UseRayTracing.bRestrictToRecommended = false;
+
+  // Lens model (see Util/CameraModelUtil.h for FLensModelDescriptor).
+  FActorVariation CameraModelVar;
+  CameraModelVar.Id = TEXT("camera_model");
+  CameraModelVar.Type = EActorAttributeType::String;
+  CameraModelVar.RecommendedValues =
+  {
+    TEXT("perspective"),
+    TEXT("stereographic"),
+    TEXT("equidistant"),
+    TEXT("equisolid"),
+    TEXT("orthographic"),
+    TEXT("kannala_brandt"),
+    TEXT("brown_conrady"),
+    TEXT("lut")
+  };
+  CameraModelVar.bRestrictToRecommended = false;
+
+  // Comma-separated distortion coefficients; meaning is camera_model-specific
+  // (KannalaBrandt: k1..k4, BrownConrady: k1,k2,k3,p1,p2).
+  FActorVariation DistortionCoeffs;
+  DistortionCoeffs.Id = TEXT("distortion_coeffs");
+  DistortionCoeffs.Type = EActorAttributeType::String;
+  DistortionCoeffs.RecommendedValues = {TEXT("")};
+  DistortionCoeffs.bRestrictToRecommended = false;
+
+  // Comma-separated theta->r samples for camera_model=lut. Optional.
+  FActorVariation Lut;
+  Lut.Id = TEXT("lut");
+  Lut.Type = EActorAttributeType::String;
+  Lut.RecommendedValues = {TEXT("")};
+  Lut.bRestrictToRecommended = false;
+
+  FActorVariation Fx;
+  Fx.Id = TEXT("fx");
+  Fx.Type = EActorAttributeType::Float;
+  Fx.RecommendedValues = {TEXT("1.0")};
+  Fx.bRestrictToRecommended = false;
+
+  FActorVariation Fy;
+  Fy.Id = TEXT("fy");
+  Fy.Type = EActorAttributeType::Float;
+  Fy.RecommendedValues = {TEXT("1.0")};
+  Fy.bRestrictToRecommended = false;
+
+  FActorVariation Cx;
+  Cx.Id = TEXT("cx");
+  Cx.Type = EActorAttributeType::Float;
+  Cx.RecommendedValues = {TEXT("0.5")};
+  Cx.bRestrictToRecommended = false;
+
+  FActorVariation Cy;
+  Cy.Id = TEXT("cy");
+  Cy.Type = EActorAttributeType::Float;
+  Cy.RecommendedValues = {TEXT("0.5")};
+  Cy.bRestrictToRecommended = false;
+
+  FActorVariation ThetaMaxDeg;
+  ThetaMaxDeg.Id = TEXT("theta_max_deg");
+  ThetaMaxDeg.Type = EActorAttributeType::Float;
+  ThetaMaxDeg.RecommendedValues = {TEXT("90.0")};
+  ThetaMaxDeg.bRestrictToRecommended = false;
+
+  // Depth of field. aperture_fstop=0 means pinhole (no DOF).
+  FActorVariation ApertureFstop;
+  ApertureFstop.Id = TEXT("aperture_fstop");
+  ApertureFstop.Type = EActorAttributeType::Float;
+  ApertureFstop.RecommendedValues = {TEXT("0.0")};
+  ApertureFstop.bRestrictToRecommended = false;
+
+  FActorVariation FocusDistanceM;
+  FocusDistanceM.Id = TEXT("focus_distance_m");
+  FocusDistanceM.Type = EActorAttributeType::Float;
+  FocusDistanceM.RecommendedValues = {TEXT("1000.0")};
+  FocusDistanceM.bRestrictToRecommended = false;
+
+  // Chromatic aberration: per-channel radial scale relative to green (1.0 = none).
+  FActorVariation CAShiftR;
+  CAShiftR.Id = TEXT("ca_shift_r");
+  CAShiftR.Type = EActorAttributeType::Float;
+  CAShiftR.RecommendedValues = {TEXT("1.0")};
+  CAShiftR.bRestrictToRecommended = false;
+
+  FActorVariation CAShiftB;
+  CAShiftB.Id = TEXT("ca_shift_b");
+  CAShiftB.Type = EActorAttributeType::Float;
+  CAShiftB.RecommendedValues = {TEXT("1.0")};
+  CAShiftB.bRestrictToRecommended = false;
+
+  // Path-tracer quality.
+  FActorVariation SamplesPerPixel;
+  SamplesPerPixel.Id = TEXT("samples_per_pixel");
+  SamplesPerPixel.Type = EActorAttributeType::Int;
+  SamplesPerPixel.RecommendedValues = {TEXT("16")};
+  SamplesPerPixel.bRestrictToRecommended = false;
+
+  FActorVariation EnableDenoiser;
+  EnableDenoiser.Id = TEXT("enable_denoiser");
+  EnableDenoiser.Type = EActorAttributeType::Bool;
+  EnableDenoiser.RecommendedValues = {TEXT("true")};
+  EnableDenoiser.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({ResX,
+                                ResY,
+                                FOV,
+                                UseRayTracing,
+                                CameraModelVar,
+                                DistortionCoeffs,
+                                Lut,
+                                Fx,
+                                Fy,
+                                Cx,
+                                Cy,
+                                ThetaMaxDeg,
+                                ApertureFstop,
+                                FocusDistanceM,
+                                CAShiftR,
+                                CAShiftB,
+                                SamplesPerPixel,
+                                EnableDenoiser});
+
+  if (bEnableModifyingPostProcessEffects)
+  {
+    FActorVariation PostProccess;
+    PostProccess.Id = TEXT("enable_postprocess_effects");
+    PostProccess.Type = EActorAttributeType::Bool;
+    PostProccess.RecommendedValues = {TEXT("true")};
+    PostProccess.bRestrictToRecommended = false;
+
+    FActorVariation post_process_profile;
+    post_process_profile.Id = TEXT("post_process_profile");
+    post_process_profile.Type = EActorAttributeType::String;
+    post_process_profile.RecommendedValues = {TEXT("Default")};
+    post_process_profile.bRestrictToRecommended = false;
+
+    Definition.Variations.Append({PostProccess, post_process_profile});
+  }
+
+  Success = CheckActorDefinition(Definition);
+}
+
 FActorDefinition UActorBlueprintFunctionLibrary::MakeIMUDefinition()
 {
   FActorDefinition Definition;

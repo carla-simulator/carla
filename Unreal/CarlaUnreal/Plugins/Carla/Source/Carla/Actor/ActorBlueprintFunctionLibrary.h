@@ -89,6 +89,17 @@ public:
       bool &Success,
       FActorDefinition &Definition);
 
+  static FActorDefinition MakeRayTracedLensCameraDefinition(
+      const FString &Id,
+      bool bEnableModifyingPostProcessEffects = false);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeRayTracedLensCameraDefinition(
+      const FString &Id,
+      bool bEnableModifyingPostProcessEffects,
+      bool &Success,
+      FActorDefinition &Definition);
+
   static FActorDefinition MakeNormalsCameraDefinition();
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
