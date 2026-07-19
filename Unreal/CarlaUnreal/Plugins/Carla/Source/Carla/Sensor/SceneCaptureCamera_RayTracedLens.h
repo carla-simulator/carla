@@ -22,13 +22,13 @@
 ///
 /// Unlike ASceneCaptureCamera_WideAngleLens, the lens distortion here is not
 /// a 2D post-process warp applied to a rasterized cubemap: the lens model is
-/// evaluated per-ray inside the path tracer itself (the engine-side
-/// mechanism is behind RTLensEngineAdapter.h, see that header for the current
-/// CVar-based implementation and its multi-camera caveat). Consequently this
-/// sensor captures through a single USceneCaptureComponent2D, exactly like
-/// ASceneCaptureCamera, and reuses the same standard RGB readback path
-/// instead of the WideAngleLens family's 6-face cubemap + compute-shader
-/// resample pipeline.
+/// evaluated per-ray inside the path tracer itself, via genuine per-view
+/// FPostProcessSettings fields (see RTLensEngineAdapter.h), so multiple
+/// simultaneous rt_lens cameras with different lens models do not interfere
+/// with each other. Consequently this sensor captures through a single
+/// USceneCaptureComponent2D, exactly like ASceneCaptureCamera, and reuses the
+/// same standard RGB readback path instead of the WideAngleLens family's
+/// 6-face cubemap + compute-shader resample pipeline.
 UCLASS()
 class CARLA_API ASceneCaptureCamera_RayTracedLens : public ASceneCaptureSensor
 {
@@ -58,9 +58,10 @@ private:
 
   /// Resolved lens-model parameters, rebuilt in Set() from the
   /// camera_model / distortion_coeffs / lut / fx / fy / cx / cy /
-  /// theta_max_deg / ca_shift_r / ca_shift_b Blueprint attributes. Pushed
-  /// into the path tracer every captured tick via
-  /// RTLensEngineAdapter::ApplyLensModel (see PostPhysTick).
+  /// theta_max_deg / ca_shift_r / ca_shift_b Blueprint attributes and pushed
+  /// into CaptureComponent2D->PostProcessSettings there via
+  /// RTLensEngineAdapter::ApplyLensModel. Kept as a member (rather than a
+  /// Set()-local) purely for inspection/debugging.
   FLensModelDescriptor LensModel;
 
   /// Path-tracer quality knobs. These map directly onto genuine per-view

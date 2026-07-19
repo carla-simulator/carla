@@ -8,28 +8,29 @@
 
 #include "Carla/Util/CameraModelUtil.h"
 
+#include <util/ue-header-guard-begin.h>
+#include "Engine/Scene.h"
+#include <util/ue-header-guard-end.h>
+
 // Adapter seam between ASceneCaptureCamera_RayTracedLens and the engine's
-// path-tracer lens-model mechanism.
+// path-tracer lens-model mechanism: FPostProcessSettings::PathTracingLens*
+// (PathTracingLensModel / PathTracingLensFocal / PathTracingLensCoeffs01 /
+// PathTracingLensCoeffs23 / PathTracingLensThetaMax / PathTracingLensCAScale,
+// see Engine/Classes/Engine/Scene.h) landed by rt-lens-engine. These fields
+// are genuine per-view, non-interpolated state, so multiple simultaneous
+// rt_lens cameras with different lens configurations do not interfere with
+// each other (this replaces an earlier CVar-based mechanism, which was
+// process-global and did not support that).
 //
-// Today (rt-lens-engine, in progress) that mechanism is the r.PathTracing.Lens*
-// CVars in Engine/Source/Runtime/Renderer/Private/PathTracing.cpp
-// (LensModel / LensCoeffs / LensFocal / LensThetaMax / LensCAScale). Those are
-// process-global, ECVF_RenderThreadSafe CVars with no per-view scoping, so
-// running more than one rt_lens camera with different lens models in the same
-// frame will race -- last CVar write before the render thread consumes it
-// wins for every capture that frame. This is a known limitation, not an
-// oversight.
-//
-// If/when a genuinely per-view mechanism lands (e.g. a FLensModelDescriptor
-// surfaced through FPostProcessSettings, the same way
-// PathTracingSamplesPerPixel / PathTracingEnableDenoiser already are -- see
-// Engine/Classes/Engine/Scene.h), only ApplyLensModel's body needs to change.
-// Call sites stay the same.
+// Kept as a seam (rather than writing PostProcessSettings fields directly
+// from the sensor) so a further engine-side change only needs to update this
+// file's body; call sites do not change.
 namespace RTLensEngineAdapter
 {
-  // Pushes Descriptor into the path tracer's ray-generation state for the
-  // *next* CaptureScene() enqueued on any capture component. Call once per
-  // tick, immediately before the owning sensor triggers its capture, so the
-  // values are current by the time the render thread reads them.
-  void ApplyLensModel(const FLensModelDescriptor &Descriptor);
+  // Writes Descriptor into PostProcessSettings' PathTracingLens* fields and
+  // sets their bOverride_ flags. Call whenever the descriptor changes (e.g.
+  // from ASceneCaptureCamera_RayTracedLens::Set()); these are per-view
+  // settings, not a per-tick push -- the renderer only invalidates
+  // path-tracer accumulation when a value actually changes.
+  void ApplyLensModel(FPostProcessSettings &PostProcessSettings, const FLensModelDescriptor &Descriptor);
 }

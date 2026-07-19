@@ -115,6 +115,8 @@ void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description
 
   const auto &Variations = Description.Variations;
 
+  check(CaptureComponent2D != nullptr);
+
   // -- Lens model -------------------------------------------------------------
   LensModel.Model = ParseCameraModelName(
       UActorBlueprintFunctionLibrary::RetrieveActorAttributeToString(
@@ -141,6 +143,8 @@ void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description
   LensModel.CAScaleB = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
       "ca_shift_b", Variations, 1.0f);
 
+  RTLensEngineAdapter::ApplyLensModel(CaptureComponent2D->PostProcessSettings, LensModel);
+
   // -- Depth of field, through the standard scene-capture post-process ------
   // fields inherited from ASceneCaptureSensor (see GPinholeApertureFstop).
   const float ApertureFstop = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToFloat(
@@ -157,7 +161,6 @@ void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description
   bEnableDenoiser = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
       "enable_denoiser", Variations, true);
 
-  check(CaptureComponent2D != nullptr);
   CaptureComponent2D->PostProcessSettings.PathTracingSamplesPerPixel = SamplesPerPixel;
   CaptureComponent2D->PostProcessSettings.PathTracingEnableDenoiser = bEnableDenoiser;
 }
@@ -180,14 +183,10 @@ void ASceneCaptureCamera_RayTracedLens::PostPhysTick(UWorld *World, ELevelTick T
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureCamera_RayTracedLens::PostPhysTick);
 
-  if (ShouldCaptureThisFrame())
-  {
-    // Must run before Super::PostPhysTick below, which is what enqueues this
-    // tick's CaptureScene() render command. See RTLensEngineAdapter.h for why
-    // this is a CVar push today and its multi-camera caveat.
-    RTLensEngineAdapter::ApplyLensModel(LensModel);
-  }
-
+  // Captures the scene. The lens model is already resident in
+  // CaptureComponent2D->PostProcessSettings (applied once in Set(), see
+  // RTLensEngineAdapter::ApplyLensModel) -- these are per-view fields, not a
+  // per-tick push.
   Super::PostPhysTick(World, TickType, DeltaSeconds);
 
   if (!AreClientsListening())
