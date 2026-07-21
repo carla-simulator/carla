@@ -238,6 +238,8 @@ void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description
   bEnableDenoiser = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
       "enable_denoiser", Variations, true);
 
+  CaptureComponent2D->PostProcessSettings.bOverride_PathTracingSamplesPerPixel = true;
+  CaptureComponent2D->PostProcessSettings.bOverride_PathTracingEnableDenoiser = true;
   CaptureComponent2D->PostProcessSettings.PathTracingSamplesPerPixel = SamplesPerPixel;
   CaptureComponent2D->PostProcessSettings.PathTracingEnableDenoiser = bEnableDenoiser;
 }
@@ -278,6 +280,13 @@ void ASceneCaptureCamera_RayTracedLens::PostPhysTick(UWorld *World, ELevelTick T
   if (AreClientsListening() && CaptureComponent2D != nullptr)
   {
     RTLensEngineAdapter::ApplyLensModel(CaptureComponent2D->PostProcessSettings, LensModel);
+    // The bOverride_ flags must be reasserted together with the values: the
+    // wholesale PostProcessSettings replacement clears them, and without the
+    // flags the FinalPostProcessSettings blend ignores these fields entirely
+    // (the map's PostProcessVolume then wins -- e.g. 2048 spp -- and the
+    // denoiser gate Iteration+1 == MaxSPP can never fire on a moving camera).
+    CaptureComponent2D->PostProcessSettings.bOverride_PathTracingSamplesPerPixel = true;
+    CaptureComponent2D->PostProcessSettings.bOverride_PathTracingEnableDenoiser = true;
     CaptureComponent2D->PostProcessSettings.PathTracingSamplesPerPixel = SamplesPerPixel;
     CaptureComponent2D->PostProcessSettings.PathTracingEnableDenoiser = bEnableDenoiser;
   }
