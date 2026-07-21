@@ -1,9 +1,11 @@
 ## LATEST Changes
 
 * Added a `carla-python-api-wheels` CMake target and `CARLA_PYTHON_API_VERSIONS` option to build the Python API wheel for several interpreters at once. By default it builds only the current interpreter (as before); given a version list it locates each `python3.X`, builds the ones present, and repairs them to a portable manylinux tag (best-effort). The `Util/Docker` dev environment now bundles Python 3.8 through 3.14 in both the Ubuntu 24.04 and 22.04 images, and the 22.04 image installs a CMake new enough to build CARLA.
+* Added the `CARLA_MAPS_TO_COOK` CMake configure option to select which maps the `package` targets cook. Set it to a `+`-separated list of package paths (e.g. `/Game/Carla/Maps/Town10HD_Opt`) to produce a smaller package with only those maps; leave it empty (the default) to cook the full map list from `DefaultGame.ini`.
 * Fixed `from carla.command import ...` on the Python API by registering the `command` submodule under `carla.command` in `sys.modules` (the ue5 wheel ships `carla` as a bare extension module, so the previous `libcarla.command` namespace was not importable).
 * Modernized the Python navigation agents with type hints and code cleanup ported from `ue4-dev`, added typed obstacle/traffic-light detection-result tuples in `agents/tools/hints.py`, reworked `BasicAgent.set_destination` to accept an optional start location and queue-clean flag, and fixed obstacle detection treating an empty `vehicle_list` as "all vehicles".
 * Updated the `invertedai_traffic.py` example with InvertedAI quality-of-life improvements for ego-vehicle integration and video generation.
+* Fixed `Sensor.get_current_detection_points` in the LiDAR smoke tests so it remains a valid instance method.
 * Added fisheye camera sensors (`sensor.camera.rgb_fisheye`, `sensor.camera.depth_fisheye`, `sensor.camera.semantic_segmentation_fisheye`, `sensor.camera.instance_segmentation_fisheye`) using the Kannala-Brandt projection model. Each variant captures up to 6 cubemap face render targets (the back face is skipped unless the FOV or equirectangular mode requires it) and composites them through a custom HLSL shader (`Plugins/Carla/Shaders/WideAngleLens.usf`) using configurable distortion coefficients. See `PythonAPI/examples/manual_control_fisheye.py` for an interactive demo. Ported from ue4-dev.
 * Fixed the Windows build: the setup now installs the MSVC 14.38 toolset required by the Unreal Engine 5.5.4 fork, MSVC builds use `/W4` instead of `/Wall`, and two Windows compile/link errors in LibCarla were fixed.
 * Added a Hybrid Solid-State LiDAR sensor (`sensor.lidar.hss_lidar`) modelled on the Hesai AT128, with configurable channels, horizontal/vertical FOV, and horizontal resolution. Reuses the rotating LiDAR's intensity, drop-off, and noise model.
@@ -22,6 +24,12 @@
 * Added `Map.geolocation_to_transform` Python API that maps a `GeoLocation` back to a world-space `Location`, the inverse of `Map.transform_to_geolocation`.
 * Reworked the sensor render pipeline and quality tiers by pooling GPU readbacks, gating GBuffer capture on listeners, adding a per-camera ray-tracing toggle, and introducing four server launch tiers (Low, Medium, High, Epic) selectable via `-quality-level=<Tier>` (case-sensitive, Epic by default). Each tier applies a coherent CVar configuration at engine init that persists across runs without manual `GameUserSettings.ini` cleanup.
 * Added weather recording and replay, simultaneous record-and-replay, `stop_replayer` flag on `start_recorder`, `map_override` and follow-offset arguments on `replay_file`, and traffic-sign follow targets in the replayer (ported from ue4-dev)
+* Reworked the ROS 2 native sensor publishers behind a shared publisher and subscriber template layer, unified the camera and point-cloud publishers, and added an Ackermann control subscriber so vehicles can be driven from ROS 2 Ackermann messages.
+* Added `carla.Velocity`, `carla.AngularVelocity`, `carla.Acceleration`, `carla.Quaternion`, and right-handed vector conversions to the geometry types, and corrected the pitch and roll rotation order. Clients that previously compensated for the incorrect rotation will need to remove that workaround.
+* Added a `ROS2TopicVisibility` startup flag that sets whether sensor topics are exposed by default when the server launches.
+* Added the V2X sensor family: a CAM service sensor (`sensor.other.v2x`), a custom binary-payload sensor (`sensor.other.v2x_custom`) with channel selection and multiple messages per frame, a configurable path-loss propagation model, and owner-less infrastructure (V2I) sensors.
+* Fixed the IMU sensor compass yaw orientation and corrected the order in which sensors are disposed when their parent actor is destroyed.
+* Hardened pedestrian navigation against a null dereference when collecting the traffic lights used for walker routing.
 * Hardened UObject ownership in the Carla plugin by migrating UPROPERTY raw pointers to `TObjectPtr<>`, adding mesh caches, enabling async heightmap streaming, and converting catalog assets to soft references.
 * Corrected the Semantic Segmentation camera class table in `Docs/ref_sensors.md` to match the actual 29-class taxonomy defined in `ObjectLabel.h` and `CityScapesPalette.h`. The previous table reflected the legacy 0.8.x CityScapes taxonomy (22 classes), which caused mismatches between documentation and engine output. This update aligns the documentation with the true engine enum values and RGB palette, preventing ground-truth mapping errors when building perception pipelines.
 * Fixed several legacy UE4-era bugs across LibCarla and the Carla plugin affecting lidar memory reset, DVS validation, camera profiling, image reads, sensor materials, and Python sensor teardown.
@@ -100,5 +108,3 @@
 * RSS functionality removed from docs
 * Removed Light Manager from API and docs
 * Added Mine01 off-road mining map from Synkrotron
-
-

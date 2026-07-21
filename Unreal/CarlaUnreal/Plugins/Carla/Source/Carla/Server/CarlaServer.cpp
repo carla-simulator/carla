@@ -13,6 +13,7 @@
 #include "Carla/Util/NavigationMesh.h"
 #include "Carla/Util/RayTracer.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Sensor/CustomV2XSensor.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
 #include "Carla/Game/Tagger.h"
@@ -38,6 +39,7 @@
 #include <carla/rpc/BoneTransformDataIn.h>
 #include <carla/rpc/Command.h>
 #include <carla/rpc/CommandResponse.h>
+#include <carla/rpc/CustomV2XBytes.h>
 #include <carla/rpc/DebugShape.h>
 #include <carla/rpc/EnvironmentObject.h>
 #include <carla/rpc/EpisodeInfo.h>
@@ -1021,6 +1023,40 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
       // single-gpu
       return StreamingServer.IsEnabledForROS(sensor_id);
     }
+  };
+
+  BIND_SYNC(send) << [this](
+      cr::ActorId ActorId,
+      cr::CustomV2XBytes Data) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "send",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    if (CarlaActor->IsDormant())
+    {
+      return RespondError(
+          "send",
+          ECarlaServerResponse::FunctionNotAvailableWhenDormant,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+    ACustomV2XSensor* Sensor = Cast<ACustomV2XSensor>(CarlaActor->GetActor());
+    if (!Sensor)
+    {
+      return RespondError(
+        "send",
+        ECarlaServerResponse::ActorTypeMismatch,
+        " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    Sensor->Send(Data);
+    return R<void>::Success();
   };
 
   // ~~ Actor physics ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

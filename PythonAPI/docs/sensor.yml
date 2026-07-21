@@ -92,5 +92,14 @@
       doc: >
         Commands the sensor to stop listening for the specified GBuffer texture.
     # --------------------------------------
+    - def_name: send
+      params:
+      - param_name: message
+        type: carla.CustomV2XBytes
+        doc: >
+           The data to send. Note: there is a maximum data size for a single message, see carla.CustomV2XBytes for more information.
+      doc: >
+        Instructs the sensor to send the bytes given by `message` to all other custom V2X sensors on the next tick. Only supported on the custom V2X sensor (`sensor.other.v2x_custom`).
+    # --------------------------------------
     - def_name: __str__
     # --------------------------------------

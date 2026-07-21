@@ -75,7 +75,13 @@ namespace client {
         if (tics_correct >= 2)
           return id;
 
-        Tick(local_timeout);
+        if (settings.synchronous_mode) {
+          // only drive the simulation forward in synchronous mode; in
+          // asynchronous mode wait for the server to advance on its own
+          Tick(local_timeout);
+        } else {
+          WaitForTick(local_timeout);
+        }
       }
 
       log_warning("World::ApplySettings: After", number_of_attemps, " attemps, the settings were not correctly set. Please check that everything is consistent.");
