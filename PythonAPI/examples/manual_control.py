@@ -1140,6 +1140,20 @@ class CameraManager(object):
                 'post_process_profile' : post_process_profile }],
             ['sensor.camera.optical_flow', cc.Raw, 'Optical Flow', {}],
             ['sensor.camera.normals', cc.Raw, 'Camera Normals', {}],
+            ['sensor.camera.rt_lens', cc.Raw, 'RT Lens (pinhole)',
+                {'camera_model': 'perspective', 'fov': '90',
+                 'samples_per_pixel': '4', 'enable_denoiser': 'true',
+                 'post_process_profile': post_process_profile}],
+            ['sensor.camera.rt_lens', cc.Raw, 'RT Lens (Kannala-Brandt fisheye 150)',
+                {'camera_model': 'kannala_brandt', 'fov': '150',
+                 'distortion_coeffs': '0.03,-0.005,0.0,0.0',
+                 'samples_per_pixel': '4', 'enable_denoiser': 'true',
+                 'post_process_profile': post_process_profile}],
+            ['sensor.camera.rt_lens', cc.Raw, 'RT Lens (Brown-Conrady barrel)',
+                {'camera_model': 'brown_conrady', 'fov': '100',
+                 'distortion_coeffs': '-0.25,0.06,0.0,0.0,0.0',
+                 'samples_per_pixel': '4', 'enable_denoiser': 'true',
+                 'post_process_profile': post_process_profile}],
         ]
 
         bp_library = world.get_blueprint_library()
