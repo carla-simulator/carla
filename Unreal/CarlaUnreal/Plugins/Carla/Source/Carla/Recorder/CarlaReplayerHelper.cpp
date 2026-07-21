@@ -113,7 +113,7 @@ FCarlaActor *CarlaReplayerHelper::FindTrafficSignAt(FVector Location)
   // through all actors in registry
   for (auto It = Registry.begin(); It != Registry.end(); ++It)
   {
-    FCarlaActor* CarlaActor = It.Value().Get();
+    FCarlaActor* CarlaActor = It->Value.Get();
     if (CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight ||
         CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficSign)
     {

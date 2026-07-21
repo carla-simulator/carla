@@ -239,7 +239,6 @@ void UMapGenFunctionLibrary::SetThreadToSleep(float seconds)
 void UMapGenFunctionLibrary::FlushRenderingCommandsInBlueprint()
 {
     FlushRenderingCommands();
-    FlushPendingDeleteRHIResources_GameThread();
 }
 
 #if WITH_EDITOR

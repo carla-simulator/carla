@@ -66,15 +66,29 @@ set (
 	${UE_ROOT}/Engine/Source/ThirdParty CACHE PATH ""
 )
 
-set (
-	UE_INCLUDE
-	${UE_THIRD_PARTY}/Unix/LibCxx/include CACHE PATH ""
-)
-
-set (
-	UE_LIBS
-	${UE_THIRD_PARTY}/Unix/LibCxx/lib/Unix/${TARGET_TRIPLE} CACHE PATH ""
-)
+# UE 5.8 no longer bundles libc++ under ThirdParty/Unix/LibCxx; the headers and
+# static libs ship inside the clang sysroot instead. Prefer the legacy LibCxx
+# layout when it actually contains the libraries (UE <= 5.5), otherwise fall
+# back to the sysroot.
+if (EXISTS ${UE_THIRD_PARTY}/Unix/LibCxx/lib/Unix/${TARGET_TRIPLE}/libc++.a)
+	set (
+		UE_INCLUDE
+		${UE_THIRD_PARTY}/Unix/LibCxx/include CACHE PATH ""
+	)
+	set (
+		UE_LIBS
+		${UE_THIRD_PARTY}/Unix/LibCxx/lib/Unix/${TARGET_TRIPLE} CACHE PATH ""
+	)
+else ()
+	set (
+		UE_INCLUDE
+		${UE_SYSROOT}/include CACHE PATH ""
+	)
+	set (
+		UE_LIBS
+		${UE_SYSROOT}/lib64 CACHE PATH ""
+	)
+endif ()
 
 set (
 	UE_OPENSSL_INCLUDE

@@ -750,7 +750,7 @@ namespace CameraModelUtil
         FRHISamplerState* Sampler,
         const FDistortCubemapToImageOptions& Options)
     {
-        FTexture2DRHIRef TextureRHIs[6] = {};
+        FTextureRHIRef TextureRHIs[6] = {};
 
         for (uint8 i = 0; i != 6; ++i)
         {

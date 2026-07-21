@@ -2599,7 +2599,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     auto It = Episode->GetActorRegistry().begin();
     for (; It != Episode->GetActorRegistry().end(); ++It)
     {
-      const FCarlaActor& View = *(It.Value().Get());
+      const FCarlaActor& View = *(It->Value.Get());
       if (View.GetActorType() == FCarlaActor::ActorType::Vehicle)
       {
         if(View.IsDormant())

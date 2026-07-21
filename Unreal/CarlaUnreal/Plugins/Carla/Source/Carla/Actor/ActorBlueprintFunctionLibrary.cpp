@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Engine/Engine.h"
 #include "Carla.h"
 #include "Carla/Actor/ActorDescription.h"
 #include "Carla/Sensor/GnssSensor.h"
@@ -66,7 +67,12 @@ private:
         Message += String;
       }
       Message += TEXT(" ");
-      Message += FString::Printf(Format, std::forward<ARGS>(Args)...);
+      // FString::Printf validates its format string at compile time in UE 5.8,
+      // which rejects a format forwarded through a function parameter.
+      // FCString::Snprintf accepts the forwarded literal reference.
+      TCHAR Formatted[4096];
+      FCString::Snprintf(Formatted, UE_ARRAY_COUNT(Formatted), Format, std::forward<ARGS>(Args)...);
+      Message += Formatted;
 
       UE_LOG(LogCarla, Error, TEXT("%s"), *Message);
 #if WITH_EDITOR
@@ -1934,7 +1940,9 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     TEXT("equidistant"),
     TEXT("equisolid"),
     TEXT("orthographic"),
-    TEXT("kannala-brandt")
+    TEXT("kannala-brandt"),
+    TEXT("brown_conrady"),
+    TEXT("lut")
   };
 
   using I = std::underlying_type_t<ECameraModel>;

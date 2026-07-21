@@ -95,7 +95,7 @@ TArray<USplineComponent *> UGeometryImporter::ImportGeoJsonPolygonsToSplines(UWo
     }
 
     const TArray<TSharedPtr<FJsonValue>> *Features;
-    if (!JsonParsed->TryGetArrayField("features", Features))
+    if (!JsonParsed->TryGetArrayField(TEXT("features"), Features))
     {
         UE_LOG(LogTemp, Error, TEXT("No 'features' array found in GeoJSON."));
         return CreatedSplines;
@@ -105,14 +105,14 @@ TArray<USplineComponent *> UGeometryImporter::ImportGeoJsonPolygonsToSplines(UWo
     for (const TSharedPtr<FJsonValue> &FeatureValue : *Features)
     {
         const TSharedPtr<FJsonObject> FeatureObj = FeatureValue->AsObject();
-        const TSharedPtr<FJsonObject> Geometry = FeatureObj->GetObjectField("geometry");
+        const TSharedPtr<FJsonObject> Geometry = FeatureObj->GetObjectField(TEXT("geometry"));
 
-        FString GeometryType = Geometry->GetStringField("type");
+        FString GeometryType = Geometry->GetStringField(TEXT("type"));
         if (GeometryType != "Polygon")
             continue;
 
         const TArray<TSharedPtr<FJsonValue>> *Rings;
-        if (!Geometry->TryGetArrayField("coordinates", Rings) || Rings->Num() == 0)
+        if (!Geometry->TryGetArrayField(TEXT("coordinates"), Rings) || Rings->Num() == 0)
             continue;
 
         const TArray<TSharedPtr<FJsonValue>> &OuterRing = (*Rings)[0]->AsArray();

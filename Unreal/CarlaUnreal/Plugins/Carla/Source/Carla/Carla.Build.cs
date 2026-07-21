@@ -38,6 +38,9 @@ public class Carla :
     PrivatePCHHeaderFile = "Carla.h";
     bEnableExceptions = true;
     bUseRTTI = true;
+    // UE 5.8 escalates -Wshadow to an error by default; keep it as a warning
+    // until the existing field-shadowing in V2X/PathLossModel et al. is cleaned up.
+    ShadowVariableWarningLevel = WarningLevel.Warning;
     
     void AddDynamicLibrary(string library)
     {
