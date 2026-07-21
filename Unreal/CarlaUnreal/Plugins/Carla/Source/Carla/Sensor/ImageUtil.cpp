@@ -215,11 +215,9 @@ namespace ImageUtil
     ReadImageDataContext& Self,
     UTextureRenderTarget2D& RenderTarget,
     FRHIGPUReadbackPoolPtr Pool,
-    ReadImageDataAsyncCallback&& Callback)
+    ReadImageDataAsyncCallback&& Callback,
+    bool bNonBlocking = false)
   {
-    static thread_local auto RenderQueryPool =
-        RHICreateRenderQueryPool(RQT_AbsoluteTime);
-
     auto& CmdList = FRHICommandListImmediate::Get();
     auto Resource = static_cast<FTextureRenderTarget2DResource*>(
       RenderTarget.GetResource());
@@ -243,6 +241,30 @@ namespace ImageUtil
     auto ResolveRect = FResolveRect();
     Self.Readback->EnqueueCopy(CmdList, Texture, ResolveRect);
 
+    if (bNonBlocking)
+    {
+      // Non-blocking path (path-traced rt_lens sensor). Record the copy and
+      // return immediately -- do NOT flush or wait for GPU completion on the
+      // render thread. Completion is polled off-thread (ReadImageDataEndAsync).
+      // The caller (the rt_lens sensor) enqueues this readback immediately
+      // BEFORE its CaptureScene(), so the recorded copy rides that capture's own
+      // GPU submission and its readback fence signals normally, one frame later.
+      //
+      // Any synchronous wait/flush here re-blocks the render thread and can
+      // deadlock the whole server under load. The blocking variant below waits
+      // for the copy via a discarded-result timestamp query,
+      // RHIGetRenderQueryResult(..., bWait=true); proven with gdb, under a heavy
+      // path-traced capture the render thread blocks there mid-render-command
+      // inside ProcessInterruptQueueUntil (VulkanQuery.cpp) so it can no longer
+      // drive GPU submission -- RHIThread/RHISubmission sit idle, the query never
+      // completes, and the game thread freezes behind it at FFrameEndSync
+      // (FEngineLoop::Tick). Keeping this path free lets the server degrade to
+      // fewer frames under load instead of freezing.
+      return;
+    }
+
+    static thread_local auto RenderQueryPool =
+        RHICreateRenderQueryPool(RQT_AbsoluteTime);
     auto Query = RenderQueryPool->AllocateQuery();
     CmdList.EndRenderQuery(Query.GetQuery());
     CmdList.ImmediateFlush(EImmediateFlushType::FlushRHIThread);
@@ -271,49 +293,75 @@ namespace ImageUtil
   static void ReadImageDataEndAsync(
     ReadImageDataContext&& Self)
   {
+    // Poll on a BACKGROUND worker, never a named thread. ENamedThreads::
+    // HighTaskPriority can be serviced by the RHIThread, and a busy IsReady()
+    // poll there blocks GPU submission -- the copy then never completes (its
+    // fence never signals), occlusion/other RHI fences stall, and the whole
+    // server starves (proven via gdb: RHIThread stuck in this poll loop).
     AsyncTask(
-      ENamedThreads::HighTaskPriority, [
+      ENamedThreads::AnyBackgroundThreadNormalTask, [
       Self = std::move(Self)]() mutable
     {
+      // Poll for GPU copy completion off-thread (never blocks the render thread).
+      // Bounded: if the copy has not completed after a few seconds (e.g. the
+      // capture stopped, so its command buffer was never submitted) drop this
+      // frame and release any pool slot rather than leak a spinning task.
+      uint64 Spins = 0;
       while (!Self.Readback->IsReady())
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
-      ReadImageDataEnd(Self);
+      {
+        std::this_thread::sleep_for(std::chrono::microseconds(200));
+        if (++Spins > 25000u)  // ~5 s
+        {
+          if (Self.Pool && Self.SlotIndex != INDEX_NONE)
+          {
+            Self.Pool->Release(Self.SlotIndex);
+            Self.SlotIndex = INDEX_NONE;
+          }
+          return;
+        }
+      }
+      // The copy is complete, but FRHIGPUTextureReadback::Lock() maps via the
+      // immediate command list and asserts IsInRenderingThread(); it cannot run
+      // on this worker thread. Hand the final Lock/decode/deliver to the render
+      // thread. Because the readback is already ready, this Lock is a cheap
+      // CPU-side map -- it does NOT wait on the GPU, so the render thread is not
+      // stalled and cannot deadlock.
+      ENQUEUE_RENDER_COMMAND(RtlReadbackDeliver)(
+        [Self = MoveTemp(Self)](FRHICommandListImmediate&) mutable
+        {
+          ReadImageDataEnd(Self);
+        });
     });
   }
-
-  static void ReadImageDataAsyncCommand(
-    UTextureRenderTarget2D& RenderTarget,
-    FRHIGPUReadbackPoolPtr Pool,
-    ReadImageDataAsyncCallback&& Callback)
-  {
-    ReadImageDataContext Context = { };
-    ReadImageDataBegin(Context, RenderTarget, std::move(Pool), std::move(Callback));
-    ReadImageDataEndAsync(std::move(Context));
-  }
-
-
 
   bool ReadImageDataAsync(
     UTextureRenderTarget2D& RenderTarget,
     FRHIGPUReadbackPoolPtr Pool,
-    ReadImageDataAsyncCallback&& Callback)
+    ReadImageDataAsyncCallback&& Callback,
+    bool bNonBlocking)
   {
     if (IsInRenderingThread())
     {
-      ReadImageDataAsyncCommand(
-        RenderTarget,
-        std::move(Pool),
-        std::move(Callback));
+      ReadImageDataContext Context = { };
+      ReadImageDataBegin(Context, RenderTarget, std::move(Pool), std::move(Callback), bNonBlocking);
+      ReadImageDataEndAsync(std::move(Context));
     }
     else
     {
       ENQUEUE_RENDER_COMMAND(ReadImageDataAsyncCmd)([
-        &RenderTarget, Pool = std::move(Pool), Callback = std::move(Callback)
+        &RenderTarget, Pool = std::move(Pool), Callback = std::move(Callback), bNonBlocking
       ](auto& CmdList) mutable
       {
         ReadImageDataContext Context = { };
-        ReadImageDataBegin(Context, RenderTarget, std::move(Pool), std::move(Callback));
-        ReadImageDataEnd(Context);
+        ReadImageDataBegin(Context, RenderTarget, std::move(Pool), std::move(Callback), bNonBlocking);
+        // Blocking variant: ReadImageDataBegin already synchronized the copy, so
+        // Lock() returns immediately. Non-blocking variant (rt_lens): nothing
+        // waited, so hand off to the off-thread IsReady() poll instead of
+        // Lock()ing on the render thread (which would re-introduce the stall).
+        if (bNonBlocking)
+          ReadImageDataEndAsync(std::move(Context));
+        else
+          ReadImageDataEnd(Context);
       });
 
     }
@@ -326,7 +374,7 @@ namespace ImageUtil
     UTextureRenderTarget2D& RenderTarget,
     ReadImageDataAsyncCallback&& Callback)
   {
-    return ReadImageDataAsync(RenderTarget, nullptr, std::move(Callback));
+    return ReadImageDataAsync(RenderTarget, nullptr, std::move(Callback), false);
   }
 
 
@@ -348,9 +396,11 @@ namespace ImageUtil
 
   bool ReadImageDataAsyncFColor(
     UTextureRenderTarget2D& RenderTarget,
-    ReadImageDataAsyncCallbackFColor&& Callback)
+    ReadImageDataAsyncCallbackFColor&& Callback,
+    bool bNonBlocking,
+    FRHIGPUReadbackPoolPtr Pool)
   {
-    return ReadImageDataAsync(RenderTarget, [Callback = std::move(Callback)](
+    return ReadImageDataAsync(RenderTarget, std::move(Pool), [Callback = std::move(Callback)](
       const void* Mapping,
       size_t RowPitch,
       size_t BufferHeight,
@@ -363,7 +413,7 @@ namespace ImageUtil
       if (!DecodePixelsByFormat(Mapping, RowPitch, Size, Format, Flags, Pixels))
         return false;
       return Callback(Pixels, Size);
-    });
+    }, bNonBlocking);
   }
 
 

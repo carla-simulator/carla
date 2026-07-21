@@ -260,64 +260,67 @@ void ASceneCaptureCamera_RayTracedLens::PostPhysTick(UWorld *World, ELevelTick T
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASceneCaptureCamera_RayTracedLens::PostPhysTick);
 
-  // The path tracer accumulates ONE sample per rendered frame and resets its
-  // accumulation whenever the view moves, so a moving sensor that captures
-  // once per tick would deliver permanently unconverged 1-spp frames and the
-  // denoiser (which only runs once the sample target is reached) would never
-  // fire. Render SamplesPerPixel-1 warm-up captures with the tick's fixed
-  // camera pose; the final capture inside Super::PostPhysTick is then sample
-  // number SamplesPerPixel, which completes accumulation, triggers the
-  // denoiser, and is the frame that gets read back to clients.
+  // Reassert the lens configuration every tick. Several code paths replace the
+  // capture component's PostProcessSettings wholesale after Set() ran -- most
+  // notably ApplyPostProcessVolumeToSensor, which copies the map's
+  // PostProcessVolume settings and restores only the standard camera fields
+  // from its cache. Losing the PathTracingLens* fields silently reverts the
+  // camera to an undistorted pinhole and drops the sample/denoiser targets.
+  //
+  // The scene is captured EXACTLY ONCE per tick, inside Super::PostPhysTick.
+  // The path tracer accumulates one sample per rendered frame and, with
+  // bAlwaysPersistRenderingState (set on the base capture component), keeps its
+  // accumulation and spatiotemporal-denoiser history across ticks: a static
+  // camera converges over successive ticks, a moving camera relies on the
+  // spatial denoiser. Never issue extra CaptureScene() calls here -- each one
+  // is a full blocking path-trace on the game thread, and looping them starves
+  // the tick and the RPC server (the sensor and the whole server freeze).
   if (AreClientsListening() && CaptureComponent2D != nullptr)
   {
-    // Reassert the lens configuration every tick. Several code paths replace
-    // the capture component's PostProcessSettings wholesale after Set() ran --
-    // most notably ApplyPostProcessVolumeToSensor, which copies the map's
-    // PostProcessVolume settings and restores only the standard camera fields
-    // from its cache. Losing the PathTracingLens* fields silently reverts the
-    // camera to an undistorted pinhole and drops the sample/denoiser targets.
     RTLensEngineAdapter::ApplyLensModel(CaptureComponent2D->PostProcessSettings, LensModel);
     CaptureComponent2D->PostProcessSettings.PathTracingSamplesPerPixel = SamplesPerPixel;
     CaptureComponent2D->PostProcessSettings.PathTracingEnableDenoiser = bEnableDenoiser;
+  }
 
-    // Each warm-up is a full blocking render on the game thread; an unbounded
-    // count lets one high-spp camera starve the tick (and with it the RPC
-    // server). Cap the per-tick budget; quality beyond the cap comes from
-    // raising the cap knowingly, not from silently freezing the simulator.
-    constexpr int32 MaxWarmupSamplesPerTick = 31;
-    const int32 WarmupSamples = FMath::Min(SamplesPerPixel - 1, MaxWarmupSamplesPerTick);
-    for (int32 Sample = 0; Sample < WarmupSamples; ++Sample)
+  // NEVER-FREEZE READBACK + CAPTURE ORDER. The game thread also drives the RPC
+  // server, so it must never block on this sensor's heavy path-traced render.
+  //
+  // 1) Enqueue a NON-BLOCKING readback of the render target produced by the
+  //    PREVIOUS tick's capture. bNonBlocking=true records the GPU copy and
+  //    returns; it does NOT wait for GPU completion on the render thread (the
+  //    default path's RHIGetRenderQueryResult(bWait=true) wait DEADLOCKS the
+  //    whole server under load -- render thread blocked mid-command, GPU
+  //    submission can't advance, game thread freezes behind it at FFrameEndSync;
+  //    proven via gdb). Completion is polled off-thread; frames just drop under
+  //    load instead of freezing.
+  // 2) Then CaptureScene() (inside Super::PostPhysTick). Because the readback was
+  //    enqueued FIRST, the recorded copy rides this capture's GPU submission --
+  //    which is what makes its readback fence actually signal -- and captures the
+  //    previous frame's pixels (they precede this tick's render). Result: one
+  //    frame of latency, never a stall.
+  //
+  // CaptureScene() is synchronous (FlushRenderingCommands), which also paces the
+  // game thread to the render thread so the pipeline never backs up -- a single
+  // capture blocks the game thread only briefly (<15 ms measured); under load the
+  // pace drops, it does not freeze.
+  if (AreClientsListening())
+  {
+    if (auto *RenderTarget = GetCaptureRenderTarget())
     {
-      CaptureComponent2D->CaptureScene();
+      const auto FrameIndex = FCarlaEngine::GetFrameCounter();
+      // Use the per-sensor recycling readback pool (not a fresh per-frame
+      // FRHIGPUTextureReadback): the async path holds each readback until its
+      // off-thread delivery, so per-call staging buffers would accumulate and
+      // exhaust GPU/host memory within seconds under load.
+      ImageUtil::ReadImageDataAsyncFColor(*RenderTarget, [this, FrameIndex](
+        TArrayView<const FColor> Pixels,
+        FIntPoint Size) -> bool
+      {
+        SendDataToClient(*this, Pixels, FrameIndex);
+        return true;
+      }, /*bNonBlocking=*/true, GetReadbackPool());
     }
   }
 
-  // Captures the scene. The lens model is already resident in
-  // CaptureComponent2D->PostProcessSettings (applied once in Set(), see
-  // RTLensEngineAdapter::ApplyLensModel) -- these are per-view fields, not a
-  // per-tick push.
   Super::PostPhysTick(World, TickType, DeltaSeconds);
-
-  if (!AreClientsListening())
-    return;
-
-  // Standard RGB readback path: read the capture render target and hand the
-  // decoded pixels to the normal CARLA image stream, exactly like
-  // ASceneCaptureCamera. Called directly against ImageUtil rather than via
-  // ImageUtil::ReadSensorImageDataAsyncFColor (which takes an
-  // AShaderBasedSensor&) since this sensor derives from ASceneCaptureSensor
-  // directly -- it applies its lens distortion inside the path tracer's ray
-  // generation, not through a 2D post-process material.
-  auto *RenderTarget = GetCaptureRenderTarget();
-  if (RenderTarget == nullptr)
-    return;
-
-  auto FrameIndex = FCarlaEngine::GetFrameCounter();
-  ImageUtil::ReadImageDataAsyncFColor(*RenderTarget, [this, FrameIndex](
-    TArrayView<const FColor> Pixels,
-    FIntPoint Size) -> bool
-  {
-    SendDataToClient(*this, Pixels, FrameIndex);
-    return true;
-  });
 }

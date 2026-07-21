@@ -135,10 +135,17 @@ namespace ImageUtil
 
   // Pool-aware variant: when Pool is non-null, the per-call FRHIGPUTextureReadback
   // alloc is recycled through the per-sensor pool.
+  //
+  // bNonBlocking (default false = original behaviour for every existing caller):
+  // when true the render thread only records the copy and returns; completion is
+  // polled off-thread. Used by the path-traced rt_lens sensor, whose readback
+  // must never wait on the GPU on the render thread -- that wait deadlocks the
+  // server under load (see ImageUtil.cpp).
   bool ReadImageDataAsync(
     UTextureRenderTarget2D& RenderTarget,
     FRHIGPUReadbackPoolPtr Pool,
-    ReadImageDataAsyncCallback&& Callback
+    ReadImageDataAsyncCallback&& Callback,
+    bool bNonBlocking = false
   );
 
 
@@ -157,7 +164,9 @@ namespace ImageUtil
   // This variant converts the raw pixel data to an FColor array before invoking Callback.
   bool ReadImageDataAsyncFColor(
     UTextureRenderTarget2D& RenderTarget,               // Render target to read from.
-    ReadImageDataAsyncCallbackFColor&& Callback         // Callback to invoke when the image is available.
+    ReadImageDataAsyncCallbackFColor&& Callback,        // Callback to invoke when the image is available.
+    bool bNonBlocking = false,                          // true = render thread never waits on GPU (rt_lens; see ImageUtil.cpp).
+    FRHIGPUReadbackPoolPtr Pool = nullptr               // recycling readback pool; avoids a per-frame staging-buffer alloc.
   );
 
 
