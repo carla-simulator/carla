@@ -141,12 +141,25 @@ namespace ImageUtil
   // polled off-thread. Used by the path-traced rt_lens sensor, whose readback
   // must never wait on the GPU on the render thread -- that wait deadlocks the
   // server under load (see ImageUtil.cpp).
+  //
+  // Blocking (default) calls do NOT deliver on their own anymore: they record
+  // the copy and join the current tick's batch, which is synchronized and
+  // delivered by FlushBatchedReadbacks() (called once per tick by
+  // FSensorManager after every sensor has enqueued its capture).
   bool ReadImageDataAsync(
     UTextureRenderTarget2D& RenderTarget,
     FRHIGPUReadbackPoolPtr Pool,
     ReadImageDataAsyncCallback&& Callback,
     bool bNonBlocking = false
   );
+
+
+
+  // Synchronize the GPU once and deliver every blocking readback recorded
+  // since the previous flush. One pipeline drain per tick for all cameras
+  // together, instead of the historical drain-per-camera, while keeping the
+  // per-tick "all sensors delivered" simulation guarantee.
+  void FlushBatchedReadbacks();
 
 
 

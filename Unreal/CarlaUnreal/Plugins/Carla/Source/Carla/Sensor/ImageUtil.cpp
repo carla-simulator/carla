@@ -13,6 +13,7 @@
 #include <ImageWriteQueue.h>
 #include <HighResScreenshot.h>
 #include <RHIGPUReadback.h>
+#include <Async/ParallelFor.h>
 #include <util/ue-header-guard-end.h>
 
 #include <chrono>
@@ -215,8 +216,7 @@ namespace ImageUtil
     ReadImageDataContext& Self,
     UTextureRenderTarget2D& RenderTarget,
     FRHIGPUReadbackPoolPtr Pool,
-    ReadImageDataAsyncCallback&& Callback,
-    bool bNonBlocking = false)
+    ReadImageDataAsyncCallback&& Callback)
   {
     auto& CmdList = FRHICommandListImmediate::Get();
     auto Resource = static_cast<FTextureRenderTarget2DResource*>(
@@ -241,36 +241,23 @@ namespace ImageUtil
     auto ResolveRect = FResolveRect();
     Self.Readback->EnqueueCopy(CmdList, Texture, ResolveRect);
 
-    if (bNonBlocking)
-    {
-      // Non-blocking path (path-traced rt_lens sensor). Record the copy and
-      // return immediately -- do NOT flush or wait for GPU completion on the
-      // render thread. Completion is polled off-thread (ReadImageDataEndAsync).
-      // The caller (the rt_lens sensor) enqueues this readback immediately
-      // BEFORE its CaptureScene(), so the recorded copy rides that capture's own
-      // GPU submission and its readback fence signals normally, one frame later.
-      //
-      // Any synchronous wait/flush here re-blocks the render thread and can
-      // deadlock the whole server under load. The blocking variant below waits
-      // for the copy via a discarded-result timestamp query,
-      // RHIGetRenderQueryResult(..., bWait=true); proven with gdb, under a heavy
-      // path-traced capture the render thread blocks there mid-render-command
-      // inside ProcessInterruptQueueUntil (VulkanQuery.cpp) so it can no longer
-      // drive GPU submission -- RHIThread/RHISubmission sit idle, the query never
-      // completes, and the game thread freezes behind it at FFrameEndSync
-      // (FEngineLoop::Tick). Keeping this path free lets the server degrade to
-      // fewer frames under load instead of freezing.
-      return;
-    }
-
-    static thread_local auto RenderQueryPool =
-        RHICreateRenderQueryPool(RQT_AbsoluteTime);
-    auto Query = RenderQueryPool->AllocateQuery();
-    CmdList.EndRenderQuery(Query.GetQuery());
-    CmdList.ImmediateFlush(EImmediateFlushType::FlushRHIThread);
-    uint64 DeltaTime;
-    RHIGetRenderQueryResult(Query.GetQuery(), DeltaTime, true);
-    Query.ReleaseQuery();
+    // Record the copy and return -- never flush or wait for GPU completion
+    // here, on the render thread, per camera.
+    //
+    // Non-blocking callers (path-traced rt_lens sensor) poll completion
+    // off-thread (ReadImageDataEndAsync); any synchronous wait/flush here can
+    // deadlock the whole server under load (proven with gdb: the render thread
+    // blocks in RHIGetRenderQueryResult(..., bWait=true) mid-render-command
+    // inside ProcessInterruptQueueUntil (VulkanQuery.cpp) so it can no longer
+    // drive GPU submission -- RHIThread/RHISubmission sit idle and the game
+    // thread freezes behind it at FFrameEndSync).
+    //
+    // Blocking callers (all raster cameras) are delivered by
+    // FlushBatchedReadbacks() at the end of the sensor tick: one GPU sync for
+    // the whole camera batch. The historical per-camera flush + query-wait
+    // right here drained the entire GPU pipeline once per camera per frame
+    // (~13 ms each, resolution-independent), serializing the render thread
+    // and starving the GPU (~58% SM utilization at 5 cameras).
   }
 
   static void ReadImageDataEnd(
@@ -334,6 +321,84 @@ namespace ImageUtil
     });
   }
 
+  // Blocking readbacks recorded this tick, waiting for the single per-tick
+  // GPU sync in FlushBatchedReadbacks(). Render-thread access only.
+  static TArray<ReadImageDataContext> GBatchedReadbacks;
+
+  static void ReadImageDataAddToBatch(ReadImageDataContext&& Context)
+  {
+    check(IsInRenderingThread());
+    GBatchedReadbacks.Add(MoveTemp(Context));
+  }
+
+  void FlushBatchedReadbacks()
+  {
+    ENQUEUE_RENDER_COMMAND(FlushBatchedReadbacksCmd)(
+      [](FRHICommandListImmediate& CmdList)
+    {
+      if (GBatchedReadbacks.IsEmpty())
+        return;
+      TArray<ReadImageDataContext> Batch = MoveTemp(GBatchedReadbacks);
+      GBatchedReadbacks.Reset();
+
+      // One GPU sync for the whole batch. Every camera's capture and copy is
+      // already recorded ahead of this point in render-command order, so a
+      // single flush + query-wait guarantees all of them completed -- the same
+      // per-tick "all sensors delivered" guarantee the old per-camera wait
+      // gave, at one pipeline drain per tick instead of one per camera.
+      {
+        TRACE_CPUPROFILER_EVENT_SCOPE_STR("FlushBatchedReadbacks Sync");
+        static thread_local auto RenderQueryPool =
+            RHICreateRenderQueryPool(RQT_AbsoluteTime);
+        auto Query = RenderQueryPool->AllocateQuery();
+        CmdList.EndRenderQuery(Query.GetQuery());
+        CmdList.ImmediateFlush(EImmediateFlushType::FlushRHIThread);
+        uint64 DeltaTime;
+        RHIGetRenderQueryResult(Query.GetQuery(), DeltaTime, true);
+        Query.ReleaseQuery();
+      }
+
+      // Lock() needs the render thread, but after the sync it is a cheap
+      // CPU-side map. Decode + delivery is per-sensor independent (each
+      // callback owns its pixel buffer and data stream), so it runs wide.
+      struct FMappedReadback
+      {
+        void* Data = nullptr;
+        int32 RowPitch = 0;
+        int32 BufferHeight = 0;
+      };
+      TArray<FMappedReadback> Mapped;
+      Mapped.SetNum(Batch.Num());
+      for (int32 Index = 0; Index < Batch.Num(); ++Index)
+      {
+        Mapped[Index].Data = Batch[Index].Readback->Lock(
+          Mapped[Index].RowPitch, &Mapped[Index].BufferHeight);
+      }
+      {
+        TRACE_CPUPROFILER_EVENT_SCOPE_STR("FlushBatchedReadbacks Deliver");
+        ParallelFor(Batch.Num(), [&](int32 Index)
+        {
+          if (Mapped[Index].Data != nullptr)
+          {
+            Batch[Index].Callback(
+              Mapped[Index].Data,
+              Mapped[Index].RowPitch,
+              Mapped[Index].BufferHeight,
+              Batch[Index].Format,
+              Batch[Index].Size);
+          }
+        });
+      }
+      for (int32 Index = 0; Index < Batch.Num(); ++Index)
+      {
+        if (Mapped[Index].Data != nullptr)
+          Batch[Index].Readback->Unlock();
+        if (Batch[Index].Pool && Batch[Index].SlotIndex != INDEX_NONE)
+          Batch[Index].Pool->Release(Batch[Index].SlotIndex);
+      }
+    });
+  }
+
   bool ReadImageDataAsync(
     UTextureRenderTarget2D& RenderTarget,
     FRHIGPUReadbackPoolPtr Pool,
@@ -343,8 +408,15 @@ namespace ImageUtil
     if (IsInRenderingThread())
     {
       ReadImageDataContext Context = { };
-      ReadImageDataBegin(Context, RenderTarget, std::move(Pool), std::move(Callback), bNonBlocking);
-      ReadImageDataEndAsync(std::move(Context));
+      ReadImageDataBegin(Context, RenderTarget, std::move(Pool), std::move(Callback));
+      if (Context.Readback == nullptr)
+        return false;
+      // Non-blocking variant (rt_lens): completion polled off-thread.
+      // Blocking variant (raster cameras): delivered by the per-tick batch.
+      if (bNonBlocking)
+        ReadImageDataEndAsync(std::move(Context));
+      else
+        ReadImageDataAddToBatch(std::move(Context));
     }
     else
     {
@@ -353,15 +425,13 @@ namespace ImageUtil
       ](auto& CmdList) mutable
       {
         ReadImageDataContext Context = { };
-        ReadImageDataBegin(Context, RenderTarget, std::move(Pool), std::move(Callback), bNonBlocking);
-        // Blocking variant: ReadImageDataBegin already synchronized the copy, so
-        // Lock() returns immediately. Non-blocking variant (rt_lens): nothing
-        // waited, so hand off to the off-thread IsReady() poll instead of
-        // Lock()ing on the render thread (which would re-introduce the stall).
+        ReadImageDataBegin(Context, RenderTarget, std::move(Pool), std::move(Callback));
+        if (Context.Readback == nullptr)
+          return;
         if (bNonBlocking)
           ReadImageDataEndAsync(std::move(Context));
         else
-          ReadImageDataEnd(Context);
+          ReadImageDataAddToBatch(std::move(Context));
       });
 
     }
