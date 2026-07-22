@@ -943,6 +943,21 @@ void ASceneCaptureSensor::BeginPlay()
   CaptureComponent2D->Deactivate();
   CaptureComponent2D->TextureTarget = CaptureRenderTarget;
 
+  // Optional DLSS upscaling: render the capture at a fraction of the target
+  // resolution and let the engine's scene-capture temporal upscaler (DLSS
+  // Super Resolution, bilinear fallback on non-NVIDIA hardware) fill the
+  // render target. The render target itself stays at ImageWidth x ImageHeight,
+  // so client-visible output resolution is unchanged.
+  CaptureComponent2D->CaptureScreenPercentage =
+      bEnableDLSSUpscale ? FMath::Clamp(DLSSScreenPercentage, 25.0f, 100.0f) : 100.0f;
+  if (bEnableDLSSUpscale && !bEnablePostProcessingEffects)
+  {
+    UE_LOG(LogCarla, Warning, TEXT(
+        "%s: DLSS upscaling requested but post-processing effects are disabled; "
+        "the capture has no temporal AA method, so the engine will spatially "
+        "upscale instead of DLSS."), *GetName());
+  }
+
   // Call derived classes to set up their things.
   SetUpSceneCaptureComponent(*CaptureComponent2D);
 

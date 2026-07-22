@@ -406,6 +406,26 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   UseRayTracing.RecommendedValues = {TEXT("true")};
   UseRayTracing.bRestrictToRecommended = false;
 
+  // Optional DLSS Super Resolution upscaling: render the capture internally at
+  // dlss_screen_percentage (25-100) of the output resolution and let DLSS fill
+  // the full-size image. Off by default so non-NVIDIA users keep the stock
+  // full-resolution path; without NVIDIA hardware an enabled sensor degrades
+  // to a bilinear upscale (output stays full size and valid). Requires
+  // enable_postprocess_effects=true for DLSS (temporal AA) to engage.
+  FActorVariation EnableDLSS;
+  EnableDLSS.Id = TEXT("enable_dlss");
+  EnableDLSS.Type = EActorAttributeType::Bool;
+  EnableDLSS.RecommendedValues = {TEXT("false")};
+  EnableDLSS.bRestrictToRecommended = false;
+
+  FActorVariation DLSSScreenPercentage;
+  DLSSScreenPercentage.Id = TEXT("dlss_screen_percentage");
+  DLSSScreenPercentage.Type = EActorAttributeType::Float;
+  // 50 renders a quarter of the pixels (DLSS "Performance"); 33 one ninth
+  // ("Ultra Performance").
+  DLSSScreenPercentage.RecommendedValues = {TEXT("50.0")};
+  DLSSScreenPercentage.bRestrictToRecommended = false;
+
   Definition.Variations.Append({ResX,
                                 ResY,
                                 FOV,
@@ -415,7 +435,9 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
                                 LensKcube,
                                 LensXSize,
                                 LensYSize,
-                                UseRayTracing});
+                                UseRayTracing,
+                                EnableDLSS,
+                                DLSSScreenPercentage});
 
   if (bEnableModifyingPostProcessEffects)
   {
@@ -2057,6 +2079,12 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         ActorAttributeToBool(
             Description.Variations["use_ray_tracing"],
             true));
+  }
+  if (Description.Variations.Contains("enable_dlss"))
+  {
+    Camera->SetDLSSUpscale(
+        ActorAttributeToBool(Description.Variations["enable_dlss"], false),
+        RetrieveActorAttributeToFloat("dlss_screen_percentage", Description.Variations, 50.0f));
   }
   if (Description.Variations.Contains("enable_postprocess_effects"))
   {
