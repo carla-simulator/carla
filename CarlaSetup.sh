@@ -93,6 +93,16 @@ else
         Carla
 fi
 
+# -- DLSS SDK (optional, NVIDIA-licensed, never vendored) --
+# Fetches github.com/NVIDIA/DLSS into ~/SDKs/DLSS (unless DLSS_SDK already
+# points at a valid SDK) so the engine's DLSS-RR denoiser / DLSS upscaler
+# plugin builds with NGX support. Failure is non-fatal: without the SDK the
+# plugin compiles to a no-op and CARLA falls back to NFOR / spatial upscale.
+bash Util/SetupUtils/SetupDLSS.sh
+if [ -z "$DLSS_SDK" ] && [ -f "$HOME/SDKs/DLSS/lib/Linux_x86_64/libnvsdk_ngx.a" ]; then
+    export DLSS_SDK=$HOME/SDKs/DLSS
+fi
+
 # -- DOWNLOAD + BUILD UNREAL ENGINE --
 if [ ! -z $CARLA_UNREAL_ENGINE_PATH ] && [ -d $CARLA_UNREAL_ENGINE_PATH ]; then
     echo "Found CARLA Unreal Engine at $CARLA_UNREAL_ENGINE_PATH"
