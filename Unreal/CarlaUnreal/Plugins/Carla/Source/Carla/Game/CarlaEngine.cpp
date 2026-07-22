@@ -29,6 +29,7 @@
 #include <util/ue-header-guard-begin.h>
 #include "Misc/App.h"
 #include "PhysicsEngine/PhysicsSettings.h"
+#include "SceneInterface.h"
 #include <util/ue-header-guard-end.h>
 
 #include <thread>
@@ -343,6 +344,29 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
+  // With -RenderOffScreen nobody can see the main viewport, but its world
+  // render still costs a full scene pass (Lumen, shadows, clouds) every frame
+  // next to the sensors' own captures. Keep it disabled in that mode; sensors
+  // are independent scene captures and are unaffected.
+  static const bool bRenderOffScreen =
+      FParse::Param(FCommandLine::Get(), TEXT("RenderOffScreen"));
+  if (bRenderOffScreen && GEngine && GEngine->GameViewport &&
+      !GEngine->GameViewport->bDisableWorldRendering)
+  {
+    GEngine->GameViewport->bDisableWorldRendering = true;
+  }
+  // FScene::SceneFrameNumber normally advances once per main-viewport world
+  // render (FRendererModule::BeginRenderingViewFamilies). With the viewport's
+  // world render disabled it freezes, every scene capture gets
+  // ViewFamily.FrameNumber == 0, and all frame-keyed renderer caches (global
+  // distance field, virtual shadow maps, Lumen temporal state) treat every
+  // capture as "never rendered" and rebuild from scratch. Advance it manually
+  // so sensors keep the normal per-frame cache behavior.
+  if (World && World->Scene && GEngine && GEngine->GameViewport &&
+      GEngine->GameViewport->bDisableWorldRendering)
+  {
+    World->Scene->IncrementFrameNumber();
+  }
   // tick the recorder/replayer system
   if (GetCurrentEpisode())
   {
@@ -398,7 +422,10 @@ void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
 #if WITH_EDITOR
   if (GEngine && GEngine->GameViewport)
   {
-    GEngine->GameViewport->bDisableWorldRendering = Settings.bNoRenderingMode;
+    // -RenderOffScreen keeps the invisible main viewport's world render off
+    // regardless of the episode's no-rendering setting (see OnPostTick).
+    GEngine->GameViewport->bDisableWorldRendering = Settings.bNoRenderingMode ||
+        FParse::Param(FCommandLine::Get(), TEXT("RenderOffScreen"));
   }
 #endif
   FCarlaEngine_SetFixedDeltaSeconds(Settings.FixedDeltaSeconds);
