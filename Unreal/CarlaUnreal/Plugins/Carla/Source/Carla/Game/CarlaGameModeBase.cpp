@@ -264,6 +264,17 @@ void ACarlaGameModeBase::BeginPlay()
   ATagger::TagActorsInLevel(*World, true);
   TaggerDelegate->SetSemanticSegmentationEnabled();
 
+  // World Partition streams cells in after BeginPlay, and their actors are
+  // loaded, not spawned, so neither the tagging sweep above nor the
+  // TaggerDelegate spawn handler ever sees them. Tag each cell's level as it
+  // is added to the world (the legacy ALargeMapManager did this for
+  // WorldComposition tiles, but it retires itself on World Partition maps).
+  if (World->GetWorldPartition() != nullptr)
+  {
+    FWorldDelegates::LevelAddedToWorld.AddUObject(
+        this, &ACarlaGameModeBase::OnLevelAddedToWorld);
+  }
+
   // HACK: fix transparency see-through issues
   // The problem: transparent objects are visible through walls.
   // This is due to a weird interaction between the SkyAtmosphere component,
@@ -458,8 +469,18 @@ void ACarlaGameModeBase::Tick(float DeltaSeconds)
   }
 }
 
+void ACarlaGameModeBase::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
+{
+  if (InLevel == nullptr || InWorld != GetWorld())
+  {
+    return;
+  }
+  ATagger::TagActorsInLevel(*InLevel, true);
+}
+
 void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+  FWorldDelegates::LevelAddedToWorld.RemoveAll(this);
   FCarlaStaticDelegates::OnEpisodeSettingsChange.Remove(OnEpisodeSettingsChangeHandle);
 
   Episode->EndPlay();

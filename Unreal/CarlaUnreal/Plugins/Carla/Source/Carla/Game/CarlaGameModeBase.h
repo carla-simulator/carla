@@ -139,6 +139,12 @@ protected:
 
 private:
 
+  /// Tags actors of World Partition cells as they stream in. The legacy
+  /// ALargeMapManager used to do this for WorldComposition tiles, but it
+  /// retires itself on World Partition maps, which left streamed-in cells
+  /// untagged (semantic segmentation rendered them unlabeled).
+  void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
+
   void SpawnActorFactories();
 
   void StoreSpawnPoints();
