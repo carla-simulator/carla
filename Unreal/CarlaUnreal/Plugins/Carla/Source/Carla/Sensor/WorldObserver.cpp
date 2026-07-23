@@ -349,8 +349,17 @@ static carla::Buffer FWorldObserver_Serialize(
     }
     else
     {
-      Velocity = TO_METERS * View->GetActor()->GetVelocity();
-      AngularVelocity = FWorldObserver_GetAngularVelocity(*View->GetActor());
+      const AActor* Actor = View->GetActor();
+      if (Actor == nullptr)
+      {
+        // World Partition streamed the actor out without notifying the
+        // registry (the entry is still Active but the weak pointer is now
+        // null). Skip it this frame; converting these to dormant on
+        // stream-out is tracked as follow-up work.
+        continue;
+      }
+      Velocity = TO_METERS * Actor->GetVelocity();
+      AngularVelocity = FWorldObserver_GetAngularVelocity(*Actor);
       Acceleration = FWorldObserver_GetAcceleration(*View, Velocity, DeltaSeconds);
       State = FWorldObserver_GetActorState(*View, Registry);
     }

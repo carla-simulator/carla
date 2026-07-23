@@ -90,12 +90,12 @@ public:
 
   AActor *GetActor()
   {
-    return TheActor;
+    return TheActor.Get();
   }
 
   const AActor *GetActor() const
   {
-    return TheActor;
+    return TheActor.Get();
   }
 
   const FActorInfo *GetActorInfo() const
@@ -450,7 +450,11 @@ private:
 
   friend class FActorRegistry;
 
-  AActor *TheActor = nullptr;
+  /// Weak: World Partition can stream out (destroy) the actor without going
+  /// through the episode, so a raw pointer here dangles and the per-frame
+  /// state serialization crashes on a freed vtable. Weak reads back null and
+  /// the callers' existing null-checks take over.
+  TWeakObjectPtr<AActor> TheActor = nullptr;
 
   TSharedPtr<const FActorInfo> Info = nullptr;
 

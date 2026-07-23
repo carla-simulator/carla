@@ -160,7 +160,10 @@ void FCarlaActor::PutActorToSleep(UCarlaEpisode* CarlaEpisode)
   {
     ActorData->RecordActorData(this, CarlaEpisode);
   }
-  TheActor->Destroy();
+  if (AActor* Actor = TheActor.Get())
+  {
+    Actor->Destroy();
+  }
   TheActor = nullptr;
 }
 
@@ -209,7 +212,15 @@ FTransform FCarlaActor::GetActorGlobalTransform() const
   }
   else
   {
-    FTransform Transform = GetActor()->GetActorTransform();
+    const AActor* Actor = GetActor();
+    if (Actor == nullptr)
+    {
+      // Streamed out by World Partition behind the registry's back; there is
+      // no live transform to read. Identity beats dereferencing null until
+      // stream-out converts these entries to dormant.
+      return FTransform::Identity;
+    }
+    FTransform Transform = Actor->GetActorTransform();
     ALargeMapManager* LargeMap =
         UCarlaStatics::GetLargeMapManager(World);
     if (LargeMap)
