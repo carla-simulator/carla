@@ -10,12 +10,17 @@
 #include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Recorder/CarlaRecorderWeather.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
+#include "Carla/Weather/Sky.h"
 
 #include <util/ue-header-guard-begin.h>
+#include "Components/LightComponent.h"
+#include "Components/PostProcessComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/SkyLightComponent.h"
+#include "Curves/CurveFloat.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
+#include "UObject/UnrealType.h"
 #include <util/ue-header-guard-end.h>
 
 AWeather::AWeather(const FObjectInitializer& ObjectInitializer)
@@ -53,6 +58,140 @@ void AWeather::CheckWeatherPostProcessEffects()
     }
 }
 
+void AWeather::PushWeatherToSky()
+{
+    TArray<AActor*> SkyActors;
+    UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASkyBase::StaticClass(), SkyActors);
+    for (AActor* SkyActor : SkyActors)
+    {
+        // The rig stores the parameters it renders from in a blueprint variable
+        // and refreshes every component from its blueprint Update function.
+        FProperty* Property = SkyActor->GetClass()->FindPropertyByName(TEXT("Sky Parameters"));
+        if (Property == nullptr)
+            Property = SkyActor->GetClass()->FindPropertyByName(TEXT("SkyParameters"));
+        FStructProperty* StructProperty = CastField<FStructProperty>(Property);
+        if (StructProperty != nullptr && StructProperty->Struct == FWeatherParameters::StaticStruct())
+            StructProperty->SetValue_InContainer(SkyActor, &Weather);
+        else
+            UE_LOG(LogCarla, Warning, TEXT("AWeather: no WeatherParameters 'Sky Parameters' property on %s"),
+                *SkyActor->GetName());
+
+        // The rig's blueprint 'Update' only reaches UpdateClouds (the rest of
+        // its exec chain was never wired in the ue5-dev content rework), so
+        // run the individual refresh functions in dependency order instead.
+        static const TCHAR* UpdateFunctionNames[] = {
+            TEXT("SetSunActorReference"),
+            TEXT("SetSkySphere"),
+            TEXT("UpdateSun"),
+            TEXT("UpdateClouds"),
+            TEXT("UpdateFog"),
+            TEXT("UpdateMoon"),
+            TEXT("UpdateAtmosphereAndPrecipitation"),
+            TEXT("UpdateSkySphere"),
+            TEXT("UpdateSkySphereColor"),
+            TEXT("UpdateNight")};
+        for (const TCHAR* FunctionName : UpdateFunctionNames)
+        {
+            UFunction* Function = SkyActor->FindFunction(FunctionName);
+            if (Function != nullptr && Function->ParmsSize == 0)
+                SkyActor->ProcessEvent(Function, nullptr);
+            else
+                UE_LOG(LogCarla, Warning, TEXT("AWeather: skipping '%s' on %s (missing or has parameters)"),
+                    FunctionName, *SkyActor->GetName());
+        }
+
+        // The blueprint's ControlSunIntensity has a severed exec chain (its
+        // entry sets SunTrayectory and dead-ends), so the curve-driven light
+        // intensities never apply. Evaluate the curves bound on this weather
+        // blueprint and drive the rig components directly; the curve assets
+        // remain the content-side tuning source.
+        auto FindCurve = [this](const TCHAR* PropertyName) -> UCurveFloat*
+        {
+            FObjectProperty* CurveProperty =
+                CastField<FObjectProperty>(GetClass()->FindPropertyByName(PropertyName));
+            return CurveProperty != nullptr
+                ? Cast<UCurveFloat>(CurveProperty->GetObjectPropertyValue_InContainer(this))
+                : nullptr;
+        };
+        auto FindComponent = [SkyActor](const TCHAR* PropertyName) -> ULightComponent*
+        {
+            FObjectProperty* ComponentProperty =
+                CastField<FObjectProperty>(SkyActor->GetClass()->FindPropertyByName(PropertyName));
+            return ComponentProperty != nullptr
+                ? Cast<ULightComponent>(ComponentProperty->GetObjectPropertyValue_InContainer(SkyActor))
+                : nullptr;
+        };
+
+        if (UCurveFloat* SunIntensityCurve = FindCurve(TEXT("SunIntensity_Curve")))
+        {
+            if (ULightComponent* SunLightComponent = FindComponent(TEXT("DirectionalLightComponentSun")))
+            {
+                SunLightComponent->SetIntensity(SunIntensityCurve->GetFloatValue(Weather.SunAltitudeAngle));
+                // Rigs saved with a black light color render no sunlight at any
+                // intensity; the physical tint comes from the color temperature.
+                SunLightComponent->SetLightColor(FLinearColor::White);
+            }
+        }
+        if (UCurveFloat* SkyIntensityCurve = FindCurve(TEXT("SkyIntensity_Curve")))
+        {
+            if (ULightComponent* SkyLightComponent = FindComponent(TEXT("SkyLightComponent")))
+                SkyLightComponent->SetIntensity(SkyIntensityCurve->GetFloatValue(Weather.SunAltitudeAngle));
+        }
+
+    }
+
+    // BP_GeneralSceneSettings owns the post-process volume that keeps the
+    // exposure in step with the sun (its Update was another dead call site in
+    // BP_CarlaWeather). Only invoke it when a sky rig exists: its blueprint
+    // retries itself endlessly when it cannot find an ASkyBase.
+    if (SkyActors.Num() > 0)
+    {
+        UClass* SceneSettingsClass = LoadClass<AActor>(nullptr,
+            TEXT("/Game/Carla/Blueprints/BP_GeneralSceneSettings.BP_GeneralSceneSettings_C"));
+        AActor* SceneSettingsActor = SceneSettingsClass != nullptr
+            ? UGameplayStatics::GetActorOfClass(GetWorld(), SceneSettingsClass)
+            : nullptr;
+        UFunction* SettingsUpdateFunction = SceneSettingsActor != nullptr
+            ? SceneSettingsActor->FindFunction(TEXT("Update"))
+            : nullptr;
+        if (SettingsUpdateFunction != nullptr && SettingsUpdateFunction->ParmsSize == 0)
+            SceneSettingsActor->ProcessEvent(SettingsUpdateFunction, nullptr);
+    }
+
+    // Viewport exposure. The project ships with auto exposure disabled by
+    // default (r.DefaultFeature.AutoExposure=False) and the rigs were saved
+    // for the old frozen ~15 lux suns, so a physical 100k lux sun white-outs
+    // the main view. Apply the same histogram exposure the RGB sensor uses by
+    // default (bias 0, EV100 range [10,12], speeds 3/1) to the sky rig's
+    // post-process volume. This must run AFTER BP_GeneralSceneSettings.Update,
+    // which rewrites the whole post-process struct with its own values.
+    for (AActor* SkyActor : SkyActors)
+    {
+        FObjectProperty* PostProcessProperty = CastField<FObjectProperty>(
+            SkyActor->GetClass()->FindPropertyByName(TEXT("PostProcessComponent")));
+        UPostProcessComponent* PostProcessComponent = PostProcessProperty != nullptr
+            ? Cast<UPostProcessComponent>(PostProcessProperty->GetObjectPropertyValue_InContainer(SkyActor))
+            : nullptr;
+        if (PostProcessComponent != nullptr)
+        {
+            FPostProcessSettings& Settings = PostProcessComponent->Settings;
+            Settings.bOverride_AutoExposureMethod = true;
+            Settings.AutoExposureMethod = AEM_Histogram;
+            Settings.bOverride_AutoExposureBias = true;
+            Settings.AutoExposureBias = 0.0f;
+            Settings.bOverride_AutoExposureMinBrightness = true;
+            Settings.AutoExposureMinBrightness = 10.0f;
+            Settings.bOverride_AutoExposureMaxBrightness = true;
+            Settings.AutoExposureMaxBrightness = 12.0f;
+            Settings.bOverride_AutoExposureSpeedUp = true;
+            Settings.AutoExposureSpeedUp = 3.0f;
+            Settings.bOverride_AutoExposureSpeedDown = true;
+            Settings.AutoExposureSpeedDown = 1.0f;
+            PostProcessComponent->bUnbound = true;
+        }
+    }
+}
+
 void AWeather::ApplyWeather(const FWeatherParameters& InWeather)
 {
     SetWeather(InWeather);
@@ -78,6 +217,7 @@ void AWeather::ApplyWeather(const FWeatherParameters& InWeather)
 
     // Call the blueprint that actually changes the weather.
     RefreshWeather(Weather);
+    PushWeatherToSky();
 
     // record the weather event
     ACarlaRecorder *Recorder = UCarlaStatics::GetRecorder(GetWorld());
@@ -108,6 +248,7 @@ void AWeather::NotifyWeather(ASensor* Sensor)
 
     // Call the blueprint that actually changes the weather.
     RefreshWeather(Weather);
+    PushWeatherToSky();
 }
 
 void AWeather::SetWeather(const FWeatherParameters& InWeather)

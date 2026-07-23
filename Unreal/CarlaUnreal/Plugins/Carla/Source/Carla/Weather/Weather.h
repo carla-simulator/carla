@@ -67,6 +67,12 @@ private:
 
   void CheckWeatherPostProcessEffects();
 
+  /// Push the current weather into the ASkyBase rig (BP_Carla_Sky) and run its
+  /// blueprint Update. The UE5 sky rig only refreshes itself from its
+  /// construction script, so without this call the sun/fog/atmosphere stay
+  /// frozen at the state saved in the map regardless of the weather API.
+  void PushWeatherToSky();
+
   UPROPERTY(EditAnywhere, Category="Parameters")
   FWeatherParameters Weather;
 
