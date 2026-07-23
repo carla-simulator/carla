@@ -13,6 +13,7 @@
 #include "Carla/Weather/Sky.h"
 
 #include <util/ue-header-guard-begin.h>
+#include "Components/ExponentialHeightFogComponent.h"
 #include "Components/LightComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
@@ -98,6 +99,28 @@ void AWeather::PushWeatherToSky()
             else
                 UE_LOG(LogCarla, Warning, TEXT("AWeather: skipping '%s' on %s (missing or has parameters)"),
                     FunctionName, *SkyActor->GetName());
+        }
+
+        // The blueprint's UpdateFog runs, but the values it leaves on the
+        // height fog component were saved for the old small towns and break
+        // on large maps: a 1 km FogCutoffDistance erases fog on everything
+        // beyond it (distant buildings render crisp while the mid ground is
+        // fogged), the CARLA FogDistance parameter (meters) is applied raw as
+        // centimeters so fog starts at the camera, and FogDensity/100 is 5x
+        // Unreal's already-hazy default. Re-map the parameters here with the
+        // content left untouched: meters to centimeters for the start
+        // distance, no hard cutoff, and a density scale whose extremes keep
+        // CARLA semantics (0 = clear, 100 = dense fog).
+        FObjectProperty* FogProperty = CastField<FObjectProperty>(
+            SkyActor->GetClass()->FindPropertyByName(TEXT("ExponentialHeightFogComponent")));
+        UExponentialHeightFogComponent* FogComponent = FogProperty != nullptr
+            ? Cast<UExponentialHeightFogComponent>(FogProperty->GetObjectPropertyValue_InContainer(SkyActor))
+            : nullptr;
+        if (FogComponent != nullptr)
+        {
+            FogComponent->SetFogDensity(Weather.FogDensity * 0.001f);
+            FogComponent->SetStartDistance(Weather.FogDistance * 100.0f);
+            FogComponent->SetFogCutoffDistance(0.0f);
         }
 
         // The blueprint's ControlSunIntensity has a severed exec chain (its
