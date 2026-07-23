@@ -15,6 +15,8 @@
 #include "Carla/Game/CarlaStaticDelegates.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Walker/WalkerBase.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
@@ -24,6 +26,7 @@
 #include <util/ue-header-guard-begin.h>
 #include "Components/WorldPartitionStreamingSourceComponent.h"
 #include "WorldPartition/WorldPartition.h"
+#include "WorldPartition/WorldPartitionSubsystem.h"
 #include "Engine/StaticMeshActor.h"
 #include "EngineUtils.h"
 #include "GameFramework/SpectatorPawn.h"
@@ -434,33 +437,46 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
   if (result.Key == EActorSpawnResultStatus::Success &&
       GetWorld()->GetWorldPartition() != nullptr)
   {
-    // World Partition map: hero vehicles must drive cell streaming, mirroring
-    // the tile streaming the legacy LargeMapManager provided on tiled maps.
-    // The engine streams around every registered streaming source; without one
-    // on the hero, the ground under it never loads and it falls through.
-    const FActorAttribute* Attribute =
-        thisActorDescription.Variations.Find("role_name");
-    if (Attribute && (Attribute->Value.Contains("hero") ||
-                      Attribute->Value.Contains("ego_vehicle")))
+    // World Partition map: every physics actor needs the ground under it
+    // resident, mirroring the tile streaming the legacy LargeMapManager
+    // provided on tiled maps. The engine only streams cells around registered
+    // streaming sources; without one, a vehicle spawned away from the
+    // spectator free-falls through the unloaded road.
+    AActor* Actor = result.Value->GetActor();
+    const bool bNeedsGround =
+        Cast<ACarlaWheeledVehicle>(Actor) != nullptr ||
+        Cast<AWalkerBase>(Actor) != nullptr;
+    if (bNeedsGround &&
+        !Actor->FindComponentByClass<UWorldPartitionStreamingSourceComponent>())
     {
-      AActor* Actor = result.Value->GetActor();
-      if (Actor &&
-          !Actor->FindComponentByClass<UWorldPartitionStreamingSourceComponent>())
+      // The hero keeps a wide loading ring like the legacy tiled maps gave
+      // it; background traffic only needs the ground in its vicinity.
+      const FActorAttribute* Attribute =
+          thisActorDescription.Variations.Find("role_name");
+      const bool bIsHero = Attribute && (Attribute->Value.Contains("hero") ||
+                                         Attribute->Value.Contains("ego_vehicle"));
+      auto* Source = NewObject<UWorldPartitionStreamingSourceComponent>(Actor);
+      FStreamingSourceShape Shape;
+      Shape.bUseGridLoadingRange = false;
+      Shape.Radius = bIsHero ? EpisodeSettings.TileStreamingDistance : 20000.0f;
+      Source->Shapes.Add(Shape);
+      Source->RegisterComponent();
+
+      // Physics drops the actor immediately, but cells only stream during the
+      // world partition subsystem update; run one update now and block until
+      // the requested cells are resident so the actor never outruns its
+      // ground.
+      UWorldPartitionSubsystem* WPSubsystem =
+          GetWorld()->GetSubsystem<UWorldPartitionSubsystem>();
+      if (WPSubsystem != nullptr && !WPSubsystem->IsStreamingCompleted(Source))
       {
-        auto* Source = NewObject<UWorldPartitionStreamingSourceComponent>(Actor);
-        FStreamingSourceShape Shape;
-        Shape.bUseGridLoadingRange = false;
-        Shape.Radius = EpisodeSettings.TileStreamingDistance;
-        Source->Shapes.Add(Shape);
-        Source->RegisterComponent();
-        UE_LOG(LogCarla, Log, TEXT(
-            "Attached World Partition streaming source to hero %s (radius %.0f cm)"),
-            *Actor->GetName(), Shape.Radius);
-        // Physics starts dropping the vehicle immediately, but the cells under
-        // it stream in over several frames; without this wait a hero spawned in
-        // an unloaded region falls through the ground.
+        WPSubsystem->OnUpdateStreamingState();
         GetWorld()->BlockTillLevelStreamingCompleted();
       }
+      UE_LOG(LogCarla, Log, TEXT(
+          "WP streaming source on %s (role %s, radius %.0f cm): completed=%d"),
+          *Actor->GetName(), Attribute ? *Attribute->Value : TEXT("none"), Shape.Radius,
+          WPSubsystem ? WPSubsystem->IsStreamingCompleted(Source) : -1);
     }
   }
   if (result.Key == EActorSpawnResultStatus::Success && bIsPrimaryServer)
