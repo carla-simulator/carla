@@ -131,6 +131,29 @@ ASceneCaptureCamera_RayTracedLens::ASceneCaptureCamera_RayTracedLens(const FObje
   PostProcessSettings.bOverride_PathTracingEnableDenoiser = true;
   PostProcessSettings.PathTracingSamplesPerPixel = SamplesPerPixel;
   PostProcessSettings.PathTracingEnableDenoiser = bEnableDenoiser;
+  SetRayTracedLensExposure();
+}
+
+void ASceneCaptureCamera_RayTracedLens::SetRayTracedLensExposure()
+{
+  // Pin the capture to the same daylight histogram exposure the viewport
+  // uses (see AWeather::PushWeatherToSky). Left to the world's volumes, the
+  // path-traced view's eye adaptation can meter the raw sun disk radiance
+  // and adapt to ~EV18 (measured on Town12), crushing the whole frame to
+  // black while the identical view on another map sits at EV10.
+  auto &PostProcessSettings = CaptureComponent2D->PostProcessSettings;
+  PostProcessSettings.bOverride_AutoExposureMethod = true;
+  PostProcessSettings.AutoExposureMethod = AEM_Histogram;
+  PostProcessSettings.bOverride_AutoExposureBias = true;
+  PostProcessSettings.AutoExposureBias = 0.0f;
+  PostProcessSettings.bOverride_AutoExposureMinBrightness = true;
+  PostProcessSettings.AutoExposureMinBrightness = 10.0f;
+  PostProcessSettings.bOverride_AutoExposureMaxBrightness = true;
+  PostProcessSettings.AutoExposureMaxBrightness = 12.0f;
+  PostProcessSettings.bOverride_AutoExposureSpeedUp = true;
+  PostProcessSettings.AutoExposureSpeedUp = 3.0f;
+  PostProcessSettings.bOverride_AutoExposureSpeedDown = true;
+  PostProcessSettings.AutoExposureSpeedDown = 1.0f;
 }
 
 void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description)
@@ -242,6 +265,10 @@ void ASceneCaptureCamera_RayTracedLens::Set(const FActorDescription &Description
   CaptureComponent2D->PostProcessSettings.bOverride_PathTracingEnableDenoiser = true;
   CaptureComponent2D->PostProcessSettings.PathTracingSamplesPerPixel = SamplesPerPixel;
   CaptureComponent2D->PostProcessSettings.PathTracingEnableDenoiser = bEnableDenoiser;
+
+  // SetCamera above may have rewritten the exposure block from generic
+  // attributes; re-pin it (see SetRayTracedLensExposure).
+  SetRayTracedLensExposure();
 }
 
 void ASceneCaptureCamera_RayTracedLens::UpdatePostProcessConfig(FPostProcessConfig &InOutPostProcessConfig)

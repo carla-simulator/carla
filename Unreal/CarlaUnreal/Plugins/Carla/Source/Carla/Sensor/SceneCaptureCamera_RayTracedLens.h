@@ -56,6 +56,12 @@ protected:
 
 private:
 
+  /// Pins the capture's auto exposure to the daylight histogram window
+  /// (EV100 10-12, same as the viewport). Without this the path-traced
+  /// view's eye adaptation can meter the raw sun-disk radiance and adapt
+  /// far past the clamp the world volumes intend, blacking out the image.
+  void SetRayTracedLensExposure();
+
   /// Resolved lens-model parameters, rebuilt in Set() from the
   /// camera_model / distortion_coeffs / lut / fx / fy / cx / cy /
   /// theta_max_deg / ca_shift_r / ca_shift_b Blueprint attributes and pushed
