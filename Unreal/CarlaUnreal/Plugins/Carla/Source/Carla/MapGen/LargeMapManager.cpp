@@ -57,9 +57,20 @@ ALargeMapManager::~ALargeMapManager()
 void ALargeMapManager::BeginPlay()
 {
   Super::BeginPlay();
-  RegisterTilesInWorldComposition();
 
   UWorld* World = GetWorld();
+  if (World->GetWorldPartition() != nullptr || World->WorldComposition == nullptr)
+  {
+    // World Partition world (or no WorldComposition at all): the engine
+    // streams cells natively with absolute double-precision coordinates, and
+    // every code path below assumes a valid WorldComposition. Retire quietly.
+    UE_LOG(LogCarla, Warning, TEXT(
+        "LargeMapManager present in a World Partition world; destroying the "
+        "legacy tile manager (native streaming takes over)."));
+    Destroy();
+    return;
+  }
+  RegisterTilesInWorldComposition();
   /// Setup delegates
   // Origin rebase
   FCoreDelegates::PreWorldOriginOffset.AddUObject(this, &ALargeMapManager::PreWorldOriginOffset);

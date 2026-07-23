@@ -22,6 +22,8 @@
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
+#include "Components/WorldPartitionStreamingSourceComponent.h"
+#include "WorldPartition/WorldPartition.h"
 #include "Engine/StaticMeshActor.h"
 #include "EngineUtils.h"
 #include "GameFramework/SpectatorPawn.h"
@@ -429,6 +431,38 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
 
   // NewTransform.AddToTranslation(-1.0f * FVector(CurrentMapOrigin));
   auto result = ActorDispatcher->SpawnActor(LocalTransform, thisActorDescription, DesiredId);
+  if (result.Key == EActorSpawnResultStatus::Success &&
+      GetWorld()->GetWorldPartition() != nullptr)
+  {
+    // World Partition map: hero vehicles must drive cell streaming, mirroring
+    // the tile streaming the legacy LargeMapManager provided on tiled maps.
+    // The engine streams around every registered streaming source; without one
+    // on the hero, the ground under it never loads and it falls through.
+    const FActorAttribute* Attribute =
+        thisActorDescription.Variations.Find("role_name");
+    if (Attribute && (Attribute->Value.Contains("hero") ||
+                      Attribute->Value.Contains("ego_vehicle")))
+    {
+      AActor* Actor = result.Value->GetActor();
+      if (Actor &&
+          !Actor->FindComponentByClass<UWorldPartitionStreamingSourceComponent>())
+      {
+        auto* Source = NewObject<UWorldPartitionStreamingSourceComponent>(Actor);
+        FStreamingSourceShape Shape;
+        Shape.bUseGridLoadingRange = false;
+        Shape.Radius = EpisodeSettings.TileStreamingDistance;
+        Source->Shapes.Add(Shape);
+        Source->RegisterComponent();
+        UE_LOG(LogCarla, Log, TEXT(
+            "Attached World Partition streaming source to hero %s (radius %.0f cm)"),
+            *Actor->GetName(), Shape.Radius);
+        // Physics starts dropping the vehicle immediately, but the cells under
+        // it stream in over several frames; without this wait a hero spawned in
+        // an unloaded region falls through the ground.
+        GetWorld()->BlockTillLevelStreamingCompleted();
+      }
+    }
+  }
   if (result.Key == EActorSpawnResultStatus::Success && bIsPrimaryServer)
   {
     if (Recorder->IsEnabled())

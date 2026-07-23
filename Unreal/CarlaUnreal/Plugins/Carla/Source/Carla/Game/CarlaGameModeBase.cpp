@@ -13,6 +13,7 @@
 #include "Carla/Lights/CarlaLight.h"
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
+#include "Carla/Weather/Sky.h"
 
 #include <util/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
@@ -23,6 +24,7 @@
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
+#include "Components/DirectionalLightComponent.h"
 #include "Engine/DecalActor.h"
 #include "Engine/LevelStreaming.h"
 #include "Engine/LocalPlayer.h"
@@ -93,6 +95,18 @@ void ACarlaGameModeBase::InitGame(
   AActor* LMManagerActor =
       UGameplayStatics::GetActorOfClass(GetWorld(), ALargeMapManager::StaticClass());
   LMManager = Cast<ALargeMapManager>(LMManagerActor);
+  if (LMManager && World->GetWorldPartition() != nullptr)
+  {
+    // World Partition map (e.g. a legacy tiled map converted with the
+    // WorldPartitionConvert commandlet): the engine streams cells natively and
+    // keeps absolute double-precision coordinates, so the UE4-era large-map
+    // machinery (WorldComposition tiles + origin rebasing) must not run. The
+    // conversion carries the old manager actor over; remove it before it ticks.
+    UE_LOG(LogCarla, Log, TEXT(
+        "World Partition map detected: disabling legacy LargeMapManager"));
+    LMManager->Destroy();
+    LMManager = nullptr;
+  }
   if (LMManager) {
     if (LMManager->GetNumTiles() == 0)
     {
@@ -132,6 +146,54 @@ void ACarlaGameModeBase::InitGame(
     CarlaSettingsDelegate->RegisterSpawnHandler(World);
   } else {
     UE_LOG(LogCarla, Error, TEXT("Missing CarlaSettingsDelegate!"));
+  }
+
+  if (World->GetWorldPartition() != nullptr &&
+      UGameplayStatics::GetActorOfClass(World, ASkyBase::StaticClass()) == nullptr)
+  {
+    // Legacy tiled maps converted to World Partition have no sun/sky rig (the
+    // conversion drops the legacy DirectionalLight/SkyLight, which would
+    // otherwise stream in as static orphan lights stuck at the saved sun
+    // angle). BP_CarlaWeather drives all lighting through the components of a
+    // single ASkyBase-derived actor, so spawn the standard BP_Carla_Sky (the
+    // same rig Town10 places in-level) before the weather actor is created.
+    UClass* SkyClass = LoadClass<ASkyBase>(
+        nullptr,
+        TEXT("/Game/Carla/Blueprints/LevelDesign/BP_Carla_Sky.BP_Carla_Sky_C"));
+    if (SkyClass != nullptr)
+    {
+      ASkyBase* SkyActor = World->SpawnActor<ASkyBase>(SkyClass);
+      if (SkyActor != nullptr)
+      {
+        // The class defaults leave the sun at the horizon (pitch 0), which
+        // renders a black atmosphere and an unlit ground; level-placed rigs
+        // (Town10) carry a proper rotation in their instance data. Point the
+        // sun down as a sane noon default until the weather drives it.
+        TArray<UDirectionalLightComponent*> SunComponents;
+        SkyActor->GetComponents<UDirectionalLightComponent>(SunComponents);
+        for (UDirectionalLightComponent* SunComponent : SunComponents)
+        {
+          if (SunComponent->GetName().Contains(TEXT("Sun")))
+          {
+            SunComponent->SetWorldRotation(FRotator(-45.0f, 45.0f, 0.0f));
+          }
+        }
+      }
+      UE_LOG(LogCarla, Log, TEXT(
+          "World Partition map without a sky rig: spawned BP_Carla_Sky"));
+    }
+    // Town10 also places BP_GeneralSceneSettings alongside the sky; give
+    // converted maps the same baseline actors.
+    UClass* SceneSettingsClass = LoadClass<AActor>(
+        nullptr,
+        TEXT("/Game/Carla/Blueprints/BP_GeneralSceneSettings.BP_GeneralSceneSettings_C"));
+    if (SceneSettingsClass != nullptr &&
+        UGameplayStatics::GetActorOfClass(World, SceneSettingsClass) == nullptr)
+    {
+      World->SpawnActor<AActor>(SceneSettingsClass);
+      UE_LOG(LogCarla, Log, TEXT(
+          "World Partition map without scene settings: spawned BP_GeneralSceneSettings"));
+    }
   }
 
   AActor* WeatherActor =
