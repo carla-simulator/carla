@@ -7,6 +7,7 @@
 #include "Carla/Weather/Weather.h"
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/Lights/CarlaLightSubsystem.h"
 #include "Carla/Recorder/CarlaRecorder.h"
 #include "Carla/Recorder/CarlaRecorderWeather.h"
 #include "Carla/Sensor/SceneCaptureCamera.h"
@@ -215,6 +216,24 @@ void AWeather::PushWeatherToSky()
     }
 }
 
+void AWeather::UpdateStreetLightsForDayNight()
+{
+    if (!DayNightCycle)
+        return;
+
+    UCarlaLightSubsystem* CarlaLightSubsystem = GetWorld()->GetSubsystem<UCarlaLightSubsystem>();
+    if (CarlaLightSubsystem == nullptr)
+        return;
+
+    // Sun above the horizon = day, at or below = night. Broadcasting on every
+    // weather update is harmless: registered lights just re-receive the same
+    // state when nothing changed.
+    const bool bIsDay = Weather.SunAltitudeAngle > 0.0f;
+    UE_LOG(LogCarla, Log, TEXT("AWeather: broadcasting day/night change (bIsDay=%d) to %d registered CarlaLights"),
+        bIsDay ? 1 : 0, CarlaLightSubsystem->NumLights());
+    CarlaLightSubsystem->DayTimeChangeEvent.Broadcast(bIsDay);
+}
+
 void AWeather::ApplyWeather(const FWeatherParameters& InWeather)
 {
     SetWeather(InWeather);
@@ -241,6 +260,7 @@ void AWeather::ApplyWeather(const FWeatherParameters& InWeather)
     // Call the blueprint that actually changes the weather.
     RefreshWeather(Weather);
     PushWeatherToSky();
+    UpdateStreetLightsForDayNight();
 
     // record the weather event
     ACarlaRecorder *Recorder = UCarlaStatics::GetRecorder(GetWorld());
@@ -272,6 +292,7 @@ void AWeather::NotifyWeather(ASensor* Sensor)
     // Call the blueprint that actually changes the weather.
     RefreshWeather(Weather);
     PushWeatherToSky();
+    UpdateStreetLightsForDayNight();
 }
 
 void AWeather::SetWeather(const FWeatherParameters& InWeather)
