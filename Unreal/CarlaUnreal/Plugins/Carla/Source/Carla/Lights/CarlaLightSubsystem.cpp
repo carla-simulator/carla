@@ -42,7 +42,7 @@ void UCarlaLightSubsystem::RegisterLight(UCarlaLight* CarlaLight)
       CarlaLight->SetId(LightId);
     }
     Lights.Add(LightId, CarlaLight);
-    DayTimeChangeEvent.AddDynamic(CarlaLight, &UCarlaLight::DayTimeChanged);
+    DayTimeChangeEvent.AddUniqueDynamic(CarlaLight, &UCarlaLight::DayTimeChanged);
   }
   SetClientStatesdirty("");
 }
@@ -52,8 +52,25 @@ void UCarlaLightSubsystem::UnregisterLight(UCarlaLight* CarlaLight)
   if(CarlaLight)
   {
     Lights.Remove(CarlaLight->GetId());
+    DayTimeChangeEvent.RemoveDynamic(CarlaLight, &UCarlaLight::DayTimeChanged);
   }
   SetClientStatesdirty("");
+}
+
+void UCarlaLightSubsystem::NotifyDayTimeChange(bool bIsDay)
+{
+  DayTimeChangeEvent.Broadcast(bIsDay);
+  // Blueprints bind this event too (BlueprintAssignable) and their handlers
+  // push raw authored UE4-era intensities into the light components; a
+  // per-light conversion inside the broadcast gets overwritten by whichever
+  // handler runs later. Convert once the whole broadcast is done.
+  for (auto& LightPair : Lights)
+  {
+    if (UCarlaLight* CarlaLight = LightPair.Value)
+    {
+      CarlaLight->ApplyLegacyComponentConversion();
+    }
+  }
 }
 
 bool UCarlaLightSubsystem::IsUpdatePending() const

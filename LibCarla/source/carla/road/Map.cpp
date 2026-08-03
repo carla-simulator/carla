@@ -1365,8 +1365,19 @@ namespace road {
                     (outer_corner - inner_corner).MakeUnitVector();
                 geom::Vector3D treeposition =
                     outer_corner + outward_direction * distancefromdrivinglineborder;
-                geom::Transform lanetransform = lane->ComputeTransform(s_current);
-                geom::Transform treeTransform(treeposition, lanetransform.rotation);
+                // Face the anchor toward the road instead of along it: the
+                // street furniture spawned on these transforms (lamps, signage)
+                // extends along its local +X, so the lane heading would leave a
+                // street lamp's arm -- and its light cone -- running parallel
+                // to the road over the shoulder. outward_direction is already
+                // the road->anchor lateral direction in UE frame; its opposite
+                // is the yaw the furniture should face.
+                const geom::Vector3D inward_direction = outward_direction * (-1.0f);
+                const geom::Rotation facing_rotation(
+                    0.0f,
+                    geom::Math::ToDegrees(std::atan2(inward_direction.y, inward_direction.x)),
+                    0.0f);
+                geom::Transform treeTransform(treeposition, facing_rotation);
                 const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
                 // roadinfo is null for roads without an explicit maxspeed OSM tag
                 // (common in urban areas that rely on default speed limits).
