@@ -73,6 +73,13 @@ public:
   UPROPERTY(BlueprintCallable, BlueprintAssignable, Category = "DayTimeChangeEvent")
   FDayTimeChanged DayTimeChangeEvent;
 
+  /// Broadcast a day/night change and then re-apply the UE4->UE5 component
+  /// intensity conversion on every registered light. Use this instead of
+  /// broadcasting DayTimeChangeEvent directly: blueprint-bound handlers push
+  /// raw authored intensities into the light components, undoing any
+  /// conversion applied earlier in the same broadcast.
+  void NotifyDayTimeChange(bool bIsDay);
+
 private:
 
   void SetClientStatesdirty(FString ClientThatUpdate);

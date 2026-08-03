@@ -231,7 +231,7 @@ void AWeather::UpdateStreetLightsForDayNight()
     const bool bIsDay = Weather.SunAltitudeAngle > 0.0f;
     UE_LOG(LogCarla, Log, TEXT("AWeather: broadcasting day/night change (bIsDay=%d) to %d registered CarlaLights"),
         bIsDay ? 1 : 0, CarlaLightSubsystem->NumLights());
-    CarlaLightSubsystem->DayTimeChangeEvent.Broadcast(bIsDay);
+    CarlaLightSubsystem->NotifyDayTimeChange(bIsDay);
 }
 
 void AWeather::ApplyWeather(const FWeatherParameters& InWeather)

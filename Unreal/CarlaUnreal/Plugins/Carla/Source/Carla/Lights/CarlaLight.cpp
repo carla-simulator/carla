@@ -14,31 +14,65 @@
 #include <util/ue-header-guard-end.h>
 
 // The CARLA light content (street lamps, building lights...) was authored for
-// UE4, whose light components used unitless brightness; under UE 5.8's
-// photometric units the same numbers (a street lamp ships with intensity ~150)
-// emit next to no light and night scenes render black. Scale legacy content
-// values once, when the component registers; set to 1 to opt out. 10000 was
-// calibrated empirically on Town10 at night: x100 still reads as pitch black
-// under the scene's auto-exposure, x10000 produces realistic street-lamp
-// pools (a 150-intensity lamp becomes 1.5M units).
+// UE4: a street lamp's CarlaLight ships intensity ~20, and the lamp blueprints
+// feed that same number both to the light component's SetIntensity AND to the
+// mesh material's EmissiveIntensity parameter (the glowing bulb). Under
+// UE 5.8's inverse-square photometric units, 20 lumens emits next to nothing
+// and night scenes render black. Scaling CarlaLight::LightIntensity itself (a
+// previous fix, x10000) cannot work: the blueprint pushes that one value to
+// both sinks, so any factor that makes the light visible also drives the
+// material emissive to hundreds of thousands and turns every pole into a
+// white-hot rod that drags the auto-exposure down and blinds the scene.
+// Instead, keep LightIntensity at its authored value (the emissive path and
+// the client-facing light API stay UE4-compatible) and scale the LIGHT
+// COMPONENT's intensity right after every code path that lets the blueprint
+// push authored values into it (see ApplyLegacyComponentConversion).
 // Same story for attenuation radius: UE4-era lamp content ships spot/point
-// lights with ~10 m attenuation, so even a bright lamp lights almost nothing
-// under UE5 -- night scenes read as black a few meters past each pole.
-// Enforce a minimum radius on every light component of a registered
-// CarlaLight; 3500 cm (35 m) makes 30 m-spaced street lamps overlap.
+// lights with ~10-16 m attenuation, so even a bright lamp lights almost
+// nothing under UE5 -- the pool dies a few meters past each pole. Enforce a
+// minimum radius on every light component of a registered CarlaLight;
+// 7000 cm (70 m) lets 30 m-spaced street lamp pools overlap with inverse-
+// square falloff doing the actual attenuation well before the cutoff.
 static TAutoConsoleVariable<float> CVarCarlaLightMinAttenuationRadius(
     TEXT("carla.Light.MinAttenuationRadius"),
-    3500.0f,
+    7000.0f,
     TEXT("Minimum attenuation radius (cm) enforced on the light components of every ")
     TEXT("registered CarlaLight. Set 0 to leave authored radii untouched."),
+    ECVF_Default);
+
+// Two scales, split by light type. The content itself defines the street
+// factor: the re-authored legacy street lamps (00_LegacyAssets) carry
+// CarlaLight intensities of 6-10 MILLION where the modern blueprints carry
+// 12-20 -- a ratio of ~500k -- and those legacy values are what reads as a
+// proper lamp pool under this project's fixed day-calibrated exposure
+// (auto exposure is disabled project-wide). Building/other/vehicle lights
+// are far denser per map (hundreds on Town10), so the same factor floods the
+// whole town white; they keep the older, milder calibration.
+static TAutoConsoleVariable<float> CVarCarlaLightStreetIntensityScale(
+    TEXT("carla.Light.StreetIntensityScale"),
+    500000.0f,
+    TEXT("Multiplier converting small UE4-era CarlaLight intensities of STREET lights to UE5 ")
+    TEXT("photometric units, applied to the owner's light components after every blueprint ")
+    TEXT("intensity push. Set 1 to leave component intensities untouched."),
     ECVF_Default);
 
 static TAutoConsoleVariable<float> CVarCarlaLightLegacyIntensityScale(
     TEXT("carla.Light.LegacyIntensityScale"),
     10000.0f,
-    TEXT("One-time multiplier applied to every CarlaLight's authored intensity at registration, ")
-    TEXT("converting UE4-era unitless brightness values to UE5 photometric units."),
+    TEXT("Multiplier converting small UE4-era CarlaLight intensities of non-street lights ")
+    TEXT("(building, vehicle, other) to UE5 photometric units, applied to the owner's light ")
+    TEXT("components after every blueprint intensity push. Set 1 to leave component ")
+    TEXT("intensities untouched."),
     ECVF_Default);
+
+// Blueprint pushes write ABSOLUTE authored values (tens to hundreds) into the
+// component; the conversion then multiplies the component intensity by the
+// scale above (giving hundreds of thousands to millions). Values already at
+// converted magnitude must not be scaled again when the conversion re-runs
+// after a state change whose blueprint handler did not push a fresh
+// intensity. Authored UE4 content tops out around a few hundred, so anything
+// at or above this threshold is treated as already converted.
+static constexpr float CarlaLightMaxAuthoredIntensity = 1000.0f;
 
 UCarlaLight::UCarlaLight()
 {
@@ -66,16 +100,6 @@ void UCarlaLight::RegisterLight()
     return;
   }
 
-  // Convert the authored UE4-era intensity exactly once per component
-  // instance; the dedicated flag (rather than Registered) survives
-  // template-copy spawning, so clones of an already-scaled template do not
-  // scale twice and fresh components always scale once.
-  if (!bLegacyIntensityScaled)
-  {
-    LightIntensity *= CVarCarlaLightLegacyIntensityScale.GetValueOnGameThread();
-    bLegacyIntensityScaled = true;
-  }
-
   // Widen undersized authored attenuation radii so the light actually
   // reaches the road (see cvar comment above).
   const float MinRadius = CVarCarlaLightMinAttenuationRadius.GetValueOnGameThread();
@@ -94,8 +118,28 @@ void UCarlaLight::RegisterLight()
       // and the lamp illuminates nothing. Street furniture doesn't need
       // per-lamp shadows.
       LightComponent->SetCastShadows(false);
+      // Some lamp content ships decorative IES gobos (e.g. XArrowDiffuse on
+      // BP_StreetLight01) that mask virtually all of the light's output; a
+      // street light needs its raw cone. Drop the profile.
+      LightComponent->SetIESTexture(nullptr);
+      // Registered lights are driven at runtime (day/night, client API);
+      // Stationary components with no built lighting contribute nothing in
+      // -game. Make them movable so they always render dynamically.
+      LightComponent->SetMobility(EComponentMobility::Movable);
+      // UE4-era lamp content ships light components with bAutoActivate off
+      // (UE4 rendered lights regardless of active state, so nobody noticed);
+      // UE5 culls inactive light components outright, which blacked out
+      // every lamp no matter the intensity. Activate them -- on/off is
+      // driven through intensity/visibility by the blueprints, not through
+      // component activation.
+      if (!LightComponent->IsActive())
+      {
+        LightComponent->SetActive(true);
+      }
     }
   }
+
+  ApplyLegacyComponentConversion();
 
   UWorld *World = GetWorld();
   if (World != nullptr)
@@ -125,10 +169,34 @@ void UCarlaLight::EndPlay(const EEndPlayReason::Type EndPlayReason)
   Super::EndPlay(EndPlayReason);
 }
 
+void UCarlaLight::ApplyLegacyComponentConversion()
+{
+  const float Scale = (LightType == ELightType::Street)
+      ? CVarCarlaLightStreetIntensityScale.GetValueOnGameThread()
+      : CVarCarlaLightLegacyIntensityScale.GetValueOnGameThread();
+  if (Scale == 1.0f || GetOwner() == nullptr)
+  {
+    return;
+  }
+  TArray<UPointLightComponent*> LightComponents;
+  GetOwner()->GetComponents<UPointLightComponent>(LightComponents);
+  for (UPointLightComponent* LightComponent : LightComponents)
+  {
+    const float Current = LightComponent->Intensity;
+    UE_LOG(LogCarla, VeryVerbose, TEXT("CarlaLight %d conversion: component %s intensity %f visible %d"),
+        Id, *LightComponent->GetName(), Current, LightComponent->IsVisible() ? 1 : 0);
+    if (Current > 0.0f && Current < CarlaLightMaxAuthoredIntensity)
+    {
+      LightComponent->SetIntensity(Current * Scale);
+    }
+  }
+}
+
 void UCarlaLight::SetLightIntensity(float Intensity)
 {
   LightIntensity = Intensity;
   UpdateLights();
+  ApplyLegacyComponentConversion();
 }
 
 float UCarlaLight::GetLightIntensity() const
@@ -140,6 +208,7 @@ void UCarlaLight::SetLightColor(FLinearColor Color)
 {
   LightColor = Color;
   UpdateLights();
+  ApplyLegacyComponentConversion();
   RecordLightChange();
 }
 
@@ -152,6 +221,7 @@ void UCarlaLight::SetLightOn(bool bOn)
 {
   flags = bOn ? (flags | ECarlaLightFlags::TurnedOn) : (flags & ~ECarlaLightFlags::TurnedOn);
   UpdateLights();
+  ApplyLegacyComponentConversion();
   RecordLightChange();
 }
 
@@ -192,6 +262,7 @@ void UCarlaLight::SetLightState(carla::rpc::LightState LightState)
   LightType = static_cast<ELightType>(LightState._group);
   flags = LightState._active ? (flags | ECarlaLightFlags::TurnedOn) : (flags & ~ECarlaLightFlags::TurnedOn);
   UpdateLights();
+  ApplyLegacyComponentConversion();
   RecordLightChange();
 }
 

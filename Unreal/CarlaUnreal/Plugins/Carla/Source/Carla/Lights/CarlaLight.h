@@ -129,6 +129,14 @@ public:
   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Carla Light")
   void DayTimeChanged(bool bIsDay);
 
+  /// Scale the owner's light components from UE4-era authored intensities to
+  /// UE5 photometric units (see carla.Light.LegacyIntensityScale). Must run
+  /// after every path that lets blueprints push authored values into the
+  /// components -- including the subsystem's day/night broadcast, whose
+  /// blueprint-bound handlers can fire after any per-light delegate; guarded
+  /// so already-converted intensities are left alone.
+  void ApplyLegacyComponentConversion();
+
   UFUNCTION(BlueprintCallable, Category = "Carla Light")
   void SetLightIntensity(float Intensity);
 
@@ -172,13 +180,6 @@ protected:
 
   UPROPERTY(EditAnywhere, Category = "Carla Light")
   float LightIntensity;
-
-  /// Whether the one-time UE4->UE5 legacy intensity conversion has been
-  /// applied to LightIntensity (see carla.Light.LegacyIntensityScale).
-  /// A UPROPERTY so template-based spawning (e.g. PCG Spawn Actor) copies it
-  /// together with the already-scaled intensity, preventing double scaling.
-  UPROPERTY()
-  bool bLegacyIntensityScaled = false;
 
   UPROPERTY(EditAnywhere, Category = "Carla Light")
   ELightType LightType = ELightType::Street;
