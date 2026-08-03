@@ -64,6 +64,12 @@ constexpr auto operator^(ECarlaLightFlags lhs, ECarlaLightFlags rhs)
 	return static_cast<ECarlaLightFlags>(static_cast<U>(lhs) ^ static_cast<U>(rhs));
 }
 
+constexpr auto operator~(ECarlaLightFlags lhs)
+{
+	using U = std::underlying_type_t<ECarlaLightFlags>;
+	return static_cast<ECarlaLightFlags>(~static_cast<U>(lhs));
+}
+
 constexpr auto operator&=(ECarlaLightFlags& lhs, ECarlaLightFlags rhs)
 {
 	lhs = lhs & rhs;

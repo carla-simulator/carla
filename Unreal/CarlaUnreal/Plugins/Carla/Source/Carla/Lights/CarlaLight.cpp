@@ -8,6 +8,25 @@
 #include "CarlaLightSubsystem.h"
 #include "Carla/Game/CarlaStatics.h"
 
+#include <util/ue-header-guard-begin.h>
+#include "HAL/IConsoleManager.h"
+#include <util/ue-header-guard-end.h>
+
+// The CARLA light content (street lamps, building lights...) was authored for
+// UE4, whose light components used unitless brightness; under UE 5.8's
+// photometric units the same numbers (a street lamp ships with intensity ~150)
+// emit next to no light and night scenes render black. Scale legacy content
+// values once, when the component registers; set to 1 to opt out. 10000 was
+// calibrated empirically on Town10 at night: x100 still reads as pitch black
+// under the scene's auto-exposure, x10000 produces realistic street-lamp
+// pools (a 150-intensity lamp becomes 1.5M units).
+static TAutoConsoleVariable<float> CVarCarlaLightLegacyIntensityScale(
+    TEXT("carla.Light.LegacyIntensityScale"),
+    10000.0f,
+    TEXT("One-time multiplier applied to every CarlaLight's authored intensity at registration, ")
+    TEXT("converting UE4-era unitless brightness values to UE5 photometric units."),
+    ECVF_Default);
+
 UCarlaLight::UCarlaLight()
 {
   PrimaryComponentTick.bCanEverTick = false;
@@ -26,6 +45,10 @@ void UCarlaLight::RegisterLight()
   {
     return;
   }
+
+  // Convert the authored UE4-era intensity exactly once (the Registered flag
+  // above guards re-entry, so streaming in/out cannot compound the scale).
+  LightIntensity *= CVarCarlaLightLegacyIntensityScale.GetValueOnGameThread();
 
   UWorld *World = GetWorld();
   if (World != nullptr)
@@ -77,7 +100,7 @@ FLinearColor UCarlaLight::GetLightColor() const
 
 void UCarlaLight::SetLightOn(bool bOn)
 {
-  flags |= ECarlaLightFlags::TurnedOn;
+  flags = bOn ? (flags | ECarlaLightFlags::TurnedOn) : (flags & ~ECarlaLightFlags::TurnedOn);
   UpdateLights();
   RecordLightChange();
 }
@@ -117,7 +140,7 @@ void UCarlaLight::SetLightState(carla::rpc::LightState LightState)
   LightIntensity = LightState._intensity;
   LightColor = LightState._color;
   LightType = static_cast<ELightType>(LightState._group);
-  flags |= LightState._active ? ECarlaLightFlags::TurnedOn : ECarlaLightFlags();
+  flags = LightState._active ? (flags | ECarlaLightFlags::TurnedOn) : (flags & ~ECarlaLightFlags::TurnedOn);
   UpdateLights();
   RecordLightChange();
 }
