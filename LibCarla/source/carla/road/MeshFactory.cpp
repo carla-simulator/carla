@@ -1142,16 +1142,24 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
 
     geom::Vector3D director;
     if (edges.first != edges.second) {
-      director = edges.second - edges.first;
-      director /= director.Length();
+      // `!=` is an exact floating-point compare, so two corners that are
+      // technically distinct but only a few nanometers apart still take
+      // this branch; the old `director /= director.Length()` then divides
+      // by a near-zero length and blows the vector up to a huge magnitude.
+      // MakeUnitVector() guards that: below its epsilon it returns the
+      // (still tiny) input unchanged instead of exploding, so a degenerate
+      // cross-section just yields a near-zero-length marking segment
+      // instead of a vertex millions of meters away (which was corrupting
+      // the OBJ handed to RecastBuilder and blowing up its voxel-grid
+      // sizing -- see the RecastBuilder-hang investigation).
+      director = (edges.second - edges.first).MakeUnitVector();
     } else {
       const std::map<road::LaneId, road::Lane> & lanes = lane_section.GetLanes();
       for (const auto& lane_pair : lanes) {
         std::pair<geom::Vector3D, geom::Vector3D> another_edge =
           lane_pair.second.GetCornerPositions(s_current, extra_width);
         if (another_edge.first != another_edge.second) {
-          director = another_edge.second - another_edge.first;
-          director /= director.Length();
+          director = (another_edge.second - another_edge.first).MakeUnitVector();
           break;
         }
       }
