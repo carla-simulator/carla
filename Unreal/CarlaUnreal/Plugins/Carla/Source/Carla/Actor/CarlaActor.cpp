@@ -1286,6 +1286,32 @@ ECarlaServerResponse FWalkerActor::SetWalkerState(
   return ECarlaServerResponse::Success;
 }
 
+FVector FWalkerActor::GetActorVelocity() const
+{
+  if (IsDormant())
+  {
+    return GetActorData()->Velocity;
+  }
+
+  // Walkers move via UCharacterMovementComponent (AWalkerController::Tick
+  // drives it through AddMovementInput, a kinematic sweep), not physics
+  // simulation. AActor::GetVelocity() (APawn::GetVelocity()) prefers the
+  // root component's physics-body velocity whenever the root capsule is
+  // simulating physics -- true for walker Blueprints set up for ragdoll
+  // death even while walking normally -- which reports that near-zero
+  // physics-body velocity instead of the character's actual movement
+  // speed. Read the movement component's own tracked velocity directly.
+  auto* Character = Cast<ACharacter>(GetActor());
+  if (Character != nullptr)
+  {
+    if (auto* MovementComponent = Character->GetCharacterMovement())
+    {
+      return MovementComponent->Velocity;
+    }
+  }
+  return GetActor()->GetVelocity();
+}
+
 ECarlaServerResponse FWalkerActor::GetWalkerControl(
     FWalkerControl& Control)
 {

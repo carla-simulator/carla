@@ -358,7 +358,17 @@ static carla::Buffer FWorldObserver_Serialize(
         // stream-out is tracked as follow-up work.
         continue;
       }
-      Velocity = TO_METERS * Actor->GetVelocity();
+      // Go through FCarlaActor::GetActorVelocity() rather than
+      // Actor->GetVelocity() directly: FWalkerActor overrides it to read
+      // UCharacterMovementComponent::Velocity, since AActor::GetVelocity()
+      // (via APawn::GetVelocity()) prefers the root component's
+      // physics-body velocity whenever it's simulating physics -- true for
+      // walker Blueprints set up for ragdoll death even while walking
+      // normally via AddMovementInput -- which reported near-zero here
+      // despite the walker actually moving. All other actor types are
+      // unaffected: the base FCarlaActor::GetActorVelocity() still just
+      // returns GetActor()->GetVelocity(), identical to before.
+      Velocity = TO_METERS * View->GetActorVelocity();
       AngularVelocity = FWorldObserver_GetAngularVelocity(*Actor);
       Acceleration = FWorldObserver_GetAcceleration(*View, Velocity, DeltaSeconds);
       State = FWorldObserver_GetActorState(*View, Registry);
