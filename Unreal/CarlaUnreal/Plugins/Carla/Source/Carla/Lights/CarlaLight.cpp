@@ -9,6 +9,7 @@
 #include "Carla/Game/CarlaStatics.h"
 
 #include <util/ue-header-guard-begin.h>
+#include "Components/PointLightComponent.h"
 #include "HAL/IConsoleManager.h"
 #include <util/ue-header-guard-end.h>
 
@@ -20,6 +21,18 @@
 // calibrated empirically on Town10 at night: x100 still reads as pitch black
 // under the scene's auto-exposure, x10000 produces realistic street-lamp
 // pools (a 150-intensity lamp becomes 1.5M units).
+// Same story for attenuation radius: UE4-era lamp content ships spot/point
+// lights with ~10 m attenuation, so even a bright lamp lights almost nothing
+// under UE5 -- night scenes read as black a few meters past each pole.
+// Enforce a minimum radius on every light component of a registered
+// CarlaLight; 3500 cm (35 m) makes 30 m-spaced street lamps overlap.
+static TAutoConsoleVariable<float> CVarCarlaLightMinAttenuationRadius(
+    TEXT("carla.Light.MinAttenuationRadius"),
+    3500.0f,
+    TEXT("Minimum attenuation radius (cm) enforced on the light components of every ")
+    TEXT("registered CarlaLight. Set 0 to leave authored radii untouched."),
+    ECVF_Default);
+
 static TAutoConsoleVariable<float> CVarCarlaLightLegacyIntensityScale(
     TEXT("carla.Light.LegacyIntensityScale"),
     10000.0f,
@@ -61,6 +74,27 @@ void UCarlaLight::RegisterLight()
   {
     LightIntensity *= CVarCarlaLightLegacyIntensityScale.GetValueOnGameThread();
     bLegacyIntensityScaled = true;
+  }
+
+  // Widen undersized authored attenuation radii so the light actually
+  // reaches the road (see cvar comment above).
+  const float MinRadius = CVarCarlaLightMinAttenuationRadius.GetValueOnGameThread();
+  if (MinRadius > 0.0f && GetOwner() != nullptr)
+  {
+    TArray<UPointLightComponent*> LightComponents;
+    GetOwner()->GetComponents<UPointLightComponent>(LightComponents);
+    for (UPointLightComponent* LightComponent : LightComponents)
+    {
+      if (LightComponent->AttenuationRadius < MinRadius)
+      {
+        LightComponent->SetAttenuationRadius(MinRadius);
+      }
+      // Lamp blueprints commonly embed the light inside the opaque lamp-head
+      // mesh; with shadow casting on, the head fully occludes its own light
+      // and the lamp illuminates nothing. Street furniture doesn't need
+      // per-lamp shadows.
+      LightComponent->SetCastShadows(false);
+    }
   }
 
   UWorld *World = GetWorld();

@@ -116,7 +116,7 @@ protected:
   /// Material applied to driving-lane mesh sections.
   UPROPERTY(Category = "Materials", EditAnywhere)
   TSoftObjectPtr<UMaterialInterface> RoadMaterial = TSoftObjectPtr<UMaterialInterface>(
-      FSoftObjectPath(TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Rural_A.MI_Road_Rural_A")));
+      FSoftObjectPath(TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_RoadAsphalt_Town15.MI_RoadAsphalt_Town15")));
 
   /// Material applied to sidewalk mesh sections.
   UPROPERTY(Category = "Materials", EditAnywhere)
