@@ -22,6 +22,9 @@
 #include "OpenDriveGenerator.generated.h"
 
 class UMaterialInterface;
+class UBoxComponent;
+class UPCGComponent;
+class UPCGGraphInterface;
 
 UCLASS()
 class CARLA_API AProceduralMeshActor : public AActor
@@ -32,6 +35,20 @@ public:
 
   UPROPERTY(Category = "Procedural Mesh Actor", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   TObjectPtr<UProceduralMeshComponent> MeshComponent;
+};
+
+/// Invisible marker placed along a generated road to anchor PCG-scattered
+/// street furniture (lamps, signage, vegetation). Carries no mesh of its
+/// own -- the PCG graph selects these by tag (see
+/// AOpenDriveGenerator::GeneratePoles) via a "Get Actor Data" node and
+/// spawns the actual content at each one. Does nothing on its own, same
+/// spirit as AWalkerAIController's server-side stub.
+UCLASS()
+class CARLA_API AProceduralFurnitureAnchor : public AActor
+{
+  GENERATED_BODY()
+public:
+  AProceduralFurnitureAnchor();
 };
 
 UCLASS()
@@ -63,7 +80,14 @@ public:
   /// OpenDRIVE information.
   void GenerateLaneMarkings();
 
-  /// Generates pole meshes based on the OpenDRIVE information.
+  /// Scatters street furniture (lamp poles, roadside vegetation, signage)
+  /// along the generated road network. Emits tagged AProceduralFurnitureAnchor
+  /// markers via Map::GetTreesTransform (reused as-is: it already walks each
+  /// non-junction road's outermost driving lane at regular s-intervals and
+  /// offsets outward past the sidewalk -- exactly what furniture placement
+  /// needs, no new LibCarla code required), then triggers the runtime PCG
+  /// graph (see PCGComponent/StreetFurnitureGraph) that samples them by tag
+  /// and spawns the actual content.
   void GeneratePoles();
 
   /// Generates spawn points along the road.
@@ -120,5 +144,89 @@ protected:
   /// the road surface, to avoid z-fighting with the road mesh section.
   UPROPERTY(Category = "Materials", EditAnywhere)
   float DecalZOffset = 1.5f;
+
+  /// Drives the runtime PCG scatter (see GeneratePoles). Non-partitioned by
+  /// default (bIsComponentPartitioned = false on UPCGComponent), so this
+  /// works on legacy non-World-Partition levels like OpenDriveMap.umap --
+  /// no PCGWorldActor is required. Generation is triggered explicitly by
+  /// calling PCGComponent->Generate() once GeneratePoles() has spawned all
+  /// the anchor markers; the graph asset's own GenerationTrigger should be
+  /// left at "Generate On Demand" (not "Generate On Load" or "Generate At
+  /// Runtime", which assume a World-Partition streaming source).
+  UPROPERTY(Category = "Street Furniture", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  TObjectPtr<UPCGComponent> PCGComponent;
+
+  /// Provides the PCG component's generation bounds: PCG derives its grid
+  /// bounds from the owner actor's component bounds, and this actor has no
+  /// visible geometry of its own -- without a bounded component the graph
+  /// aborts at Generate() with "Component has invalid bounds, not registered
+  /// nor updated" and never schedules a task. Sized to the generated road
+  /// network (anchor bounding box, padded) right before the scatter runs.
+  UPROPERTY(Category = "Street Furniture", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+  TObjectPtr<UBoxComponent> PCGBoundsComponent;
+
+  /// Accumulated bounding box of every furniture anchor spawned for the
+  /// current generation, in world space; drives PCGBoundsComponent.
+  FBox FurnitureAnchorBounds = FBox(ForceInit);
+
+  /// PCG graph asset that samples the tagged anchors below (via a "Get
+  /// Actor Data" node per category, ActorSelector = {ByTag, AllWorldActors,
+  /// <tag>, bSelectMultiple=true}, Mode = GetSinglePoint) and spawns lamp,
+  /// vegetation, and signage actors/meshes at each point. Left unset by
+  /// default -- author this graph in-editor (see design doc) and assign it
+  /// on the placed AOpenDriveGenerator instance in OpenDriveMap.umap.
+  UPROPERTY(Category = "Street Furniture", EditAnywhere)
+  TSoftObjectPtr<UPCGGraphInterface> StreetFurnitureGraph;
+
+  /// Tag used to mark lamp-pole anchor points for the PCG graph to sample.
+  UPROPERTY(Category = "Street Furniture", EditAnywhere)
+  FName LampAnchorTag = FName("PCG_StreetLampAnchor");
+
+  /// Spacing (m) between lamp anchors along each road.
+  UPROPERTY(Category = "Street Furniture", EditAnywhere)
+  float LampAnchorSpacing = 30.0f;
+
+  /// Lateral offset (m) of lamp anchors from the outer edge of the
+  /// outermost driving lane -- calibrated to clear a typical CARLA
+  /// sidewalk (OpenDriveToMap's tree placement uses 3m for the same
+  /// purpose; lamps use a little more so the pole base sits past the
+  /// sidewalk rather than on it).
+  UPROPERTY(Category = "Street Furniture", EditAnywhere)
+  float LampAnchorOffset = 4.0f;
+
+  /// Tag used to mark roadside-vegetation anchor points.
+  UPROPERTY(Category = "Street Furniture", EditAnywhere)
+  FName VegetationAnchorTag = FName("PCG_VegetationAnchor");
+
+  /// Spacing (m) between vegetation anchors along each road. Denser than
+  /// lamps by default; the PCG graph can layer jitter/density-filter nodes
+  /// on top of these seed points for a less regular look.
+  UPROPERTY(Category = "Street Furniture", EditAnywhere)
+  float VegetationAnchorSpacing = 15.0f;
+
+  /// Lateral offset (m) of vegetation anchors -- set past the lamp row so
+  /// poles and trees don't overlap.
+  UPROPERTY(Category = "Street Furniture", EditAnywhere)
+  float VegetationAnchorOffset = 6.0f;
+
+  /// Tag used to mark decorative-signage anchor points. Traffic-control
+  /// signs (stop/yield/speed limit) already come from OpenDRIVE <signal>
+  /// data via the existing traffic-light/-sign pipeline; this is only for
+  /// ambient roadside signage PCG can scatter for visual density.
+  UPROPERTY(Category = "Street Furniture", EditAnywhere)
+  FName SignageAnchorTag = FName("PCG_SignageAnchor");
+
+  /// Spacing (m) between signage anchors along each road.
+  UPROPERTY(Category = "Street Furniture", EditAnywhere)
+  float SignageAnchorSpacing = 60.0f;
+
+  /// Lateral offset (m) of signage anchors, same row as lamps by default.
+  UPROPERTY(Category = "Street Furniture", EditAnywhere)
+  float SignageAnchorOffset = 4.0f;
+
+  /// Spawns one AProceduralFurnitureAnchor per transform returned by
+  /// Map::GetTreesTransform for the given spacing/offset, tagged for the
+  /// PCG graph to pick up. Returns the number of anchors spawned.
+  int32 GenerateFurnitureAnchors(const FName &Tag, float Spacing, float Offset);
 
 };

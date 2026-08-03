@@ -133,7 +133,10 @@ public class Carla :
       "Renderer",
       "ProceduralMeshComponent",
       "MeshDescription",
-      "Projects"
+      "Projects",
+      // Runtime PCG scattering (street furniture) on AOpenDriveGenerator;
+      // PCG is an engine plugin, EnabledByDefault, no .uproject entry needed.
+      "PCG"
     });
 
     if (EnableCarSim)

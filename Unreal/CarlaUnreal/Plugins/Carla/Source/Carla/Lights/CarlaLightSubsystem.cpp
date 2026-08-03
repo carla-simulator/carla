@@ -30,8 +30,16 @@ void UCarlaLightSubsystem::RegisterLight(UCarlaLight* CarlaLight)
     auto LightId = CarlaLight->GetId();
     if (Lights.Contains(LightId))
     {
-      UE_LOG(LogCarla, Warning, TEXT("Light Id overlapping"));
-      return;
+      // Runtime-spawned lights cloned from a template (PCG Spawn Actor,
+      // duplicated actors...) all arrive carrying the template's id;
+      // dropping them here silently disconnected every clone from the
+      // subsystem (day/night events, client light API). Assign the next
+      // free id instead.
+      while (Lights.Contains(LightId))
+      {
+        ++LightId;
+      }
+      CarlaLight->SetId(LightId);
     }
     Lights.Add(LightId, CarlaLight);
     DayTimeChangeEvent.AddDynamic(CarlaLight, &UCarlaLight::DayTimeChanged);

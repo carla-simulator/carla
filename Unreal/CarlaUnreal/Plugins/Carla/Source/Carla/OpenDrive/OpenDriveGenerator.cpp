@@ -11,6 +11,11 @@
 #include "Traffic/TrafficLightManager.h"
 #include "Util/ProceduralCustomMesh.h"
 #include "Materials/MaterialInterface.h"
+#include "PCGComponent.h"
+#include "Components/BoxComponent.h"
+#include "EngineUtils.h"
+#include "TimerManager.h"
+#include "PCGGraph.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
@@ -155,6 +160,12 @@ AProceduralMeshActor::AProceduralMeshActor()
   RootComponent = MeshComponent;
 }
 
+AProceduralFurnitureAnchor::AProceduralFurnitureAnchor()
+{
+  PrimaryActorTick.bCanEverTick = false;
+  RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+}
+
 AOpenDriveGenerator::AOpenDriveGenerator(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
@@ -162,6 +173,17 @@ AOpenDriveGenerator::AOpenDriveGenerator(const FObjectInitializer &ObjectInitial
   RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("SceneComponent"));
   SetRootComponent(RootComponent);
   RootComponent->Mobility = EComponentMobility::Static;
+
+  // Non-partitioned (default bIsComponentPartitioned = false) so this works
+  // on OpenDriveMap.umap's legacy non-World-Partition level with no
+  // PCGWorldActor required. Generation is triggered explicitly from
+  // GeneratePoles() once all furniture anchors exist, not on load/runtime
+  // streaming -- see StreetFurnitureGraph's doc comment.
+  PCGComponent = CreateDefaultSubobject<UPCGComponent>(TEXT("PCGComponent"));
+  PCGBoundsComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("PCGBoundsComponent"));
+  PCGBoundsComponent->SetupAttachment(RootComponent);
+  PCGBoundsComponent->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+  PCGBoundsComponent->SetGenerateOverlapEvents(false);
 }
 
 bool AOpenDriveGenerator::LoadOpenDrive(const FString &OpenDrive)
@@ -484,6 +506,43 @@ void AOpenDriveGenerator::GenerateLaneMarkings()
   }
 }
 
+int32 AOpenDriveGenerator::GenerateFurnitureAnchors(const FName &Tag, float Spacing, float Offset)
+{
+  auto& CarlaMap = UCarlaStatics::GetGameMode(GetWorld())->GetMap();
+
+  // Map::GetTreesTransform filters roads by a min/max bounding box (same
+  // pattern as GenerateLineMarkings/GenerateLaneMarkings); generate_opendrive_world
+  // builds the whole map in one shot, so pass an effectively unbounded box
+  // instead of a real tile. Map::FilterRoadsByPosition expects
+  // minpos.y > maxpos.y (Unreal's left-handed Y vs. OpenDRIVE), mirrored here.
+  constexpr float BoundsExtentMeters = 1e6f;
+  const carla::geom::Vector3D MinPos(-BoundsExtentMeters, BoundsExtentMeters, -BoundsExtentMeters);
+  const carla::geom::Vector3D MaxPos(BoundsExtentMeters, -BoundsExtentMeters, BoundsExtentMeters);
+
+  // Reused as-is from the editor-only OpenDriveToMap tool's tree placement
+  // (CarlaTools/OpenDriveToMap.cpp:478-506, GenerateMiscActors): it already
+  // walks each non-junction road's outermost driving lane at regular
+  // s-intervals and offsets outward past it -- exactly the "spacing along
+  // road, offset past the sidewalk" placement street furniture needs, with
+  // zero new LibCarla code. The second element of each pair is a road-type
+  // string (from RoadInfoSpeed, e.g. "Town"/"Highway"/"Rural"), unused here
+  // but available on the anchor's tags if the PCG graph wants to vary
+  // furniture density by road type later.
+  const auto Anchors = CarlaMap->GetTreesTransform(MinPos, MaxPos, Spacing, Offset);
+
+  for (const auto &AnchorPair : Anchors)
+  {
+    const FTransform AnchorTransform = AnchorPair.first;
+    AProceduralFurnitureAnchor* Anchor = GetWorld()->SpawnActor<AProceduralFurnitureAnchor>(
+        AnchorTransform.GetLocation(), AnchorTransform.Rotator());
+    Anchor->Tags.Add(Tag);
+    FurnitureAnchorBounds += AnchorTransform.GetLocation();
+    ActorMeshList.Add(Anchor);
+  }
+
+  return static_cast<int32>(Anchors.size());
+}
+
 void AOpenDriveGenerator::GeneratePoles()
 {
   if (!IsOpenDriveValid())
@@ -491,7 +550,46 @@ void AOpenDriveGenerator::GeneratePoles()
     UE_LOG(LogCarla, Error, TEXT("The OpenDrive has not been loaded"));
     return;
   }
-  /// TODO: To implement
+
+  const int32 NumLampAnchors = GenerateFurnitureAnchors(LampAnchorTag, LampAnchorSpacing, LampAnchorOffset);
+  const int32 NumVegetationAnchors = GenerateFurnitureAnchors(VegetationAnchorTag, VegetationAnchorSpacing, VegetationAnchorOffset);
+  const int32 NumSignageAnchors = GenerateFurnitureAnchors(SignageAnchorTag, SignageAnchorSpacing, SignageAnchorOffset);
+  const int32 TotalAnchors = NumLampAnchors + NumVegetationAnchors + NumSignageAnchors;
+  UE_LOG(LogCarla, Log, TEXT("AOpenDriveGenerator: furniture anchors spawned: %d lamp, %d vegetation, %d signage"),
+      NumLampAnchors, NumVegetationAnchors, NumSignageAnchors);
+
+  if (TotalAnchors == 0)
+  {
+    return;
+  }
+
+  // Trigger the runtime PCG scatter now that every anchor exists. The graph
+  // itself does the actual spawning (lamp/vegetation/signage actors),
+  // sampling the tagged anchors above via "Get Actor Data" nodes -- see
+  // StreetFurnitureGraph's doc comment in the header for the expected
+  // graph layout. PCGComponent is non-partitioned, so this call works with
+  // no PCGWorldActor / World Partition involved.
+  if (UPCGGraphInterface* Graph = StreetFurnitureGraph.LoadSynchronous())
+  {
+    // PCG refuses to schedule with invalid owner bounds (this actor has no
+    // visible geometry), so size the bounds box to the anchor cloud first.
+    if (FurnitureAnchorBounds.IsValid)
+    {
+      const FBox Padded = FurnitureAnchorBounds.ExpandBy(2000.0f);
+      PCGBoundsComponent->SetWorldLocation(Padded.GetCenter());
+      PCGBoundsComponent->SetBoxExtent(Padded.GetExtent());
+      PCGBoundsComponent->UpdateBounds();
+    }
+    PCGComponent->SetGraph(Graph);
+    PCGComponent->Generate(true);
+  }
+  else
+  {
+    UE_LOG(LogCarla, Warning, TEXT("AOpenDriveGenerator: StreetFurnitureGraph is not ")
+        TEXT("set, skipping PCG street-furniture scatter (%d lamp/vegetation/signage ")
+        TEXT("anchors were still spawned and are ready to sample once a graph is assigned)."),
+        TotalAnchors);
+  }
 }
 
 void AOpenDriveGenerator::GenerateSpawnPoints()
