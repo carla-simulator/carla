@@ -21,6 +21,8 @@
 
 #include "OpenDriveGenerator.generated.h"
 
+class UMaterialInterface;
+
 UCLASS()
 class CARLA_API AProceduralMeshActor : public AActor
 {
@@ -54,6 +56,13 @@ public:
   /// Generates the road and sidewalk mesh based on the OpenDRIVE information.
   void GenerateRoadMesh();
 
+  /// Generates the crosswalk mesh based on the OpenDRIVE information.
+  void GenerateCrosswalkMesh();
+
+  /// Generates the lane-marking meshes (white/yellow) based on the
+  /// OpenDRIVE information.
+  void GenerateLaneMarkings();
+
   /// Generates pole meshes based on the OpenDRIVE information.
   void GeneratePoles();
 
@@ -79,5 +88,37 @@ protected:
 
   UPROPERTY(EditAnywhere)
   TArray<TObjectPtr<AActor>> ActorMeshList;
+
+  /// Material applied to driving-lane mesh sections.
+  UPROPERTY(Category = "Materials", EditAnywhere)
+  TSoftObjectPtr<UMaterialInterface> RoadMaterial = TSoftObjectPtr<UMaterialInterface>(
+      FSoftObjectPath(TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Rural_A.MI_Road_Rural_A")));
+
+  /// Material applied to sidewalk mesh sections.
+  UPROPERTY(Category = "Materials", EditAnywhere)
+  TSoftObjectPtr<UMaterialInterface> SidewalkMaterial = TSoftObjectPtr<UMaterialInterface>(
+      FSoftObjectPath(TEXT("/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Apartment.MI_Sidewalk_Apartment")));
+
+  /// Material applied to the crosswalk mesh. Content/Carla does not ship a
+  /// dedicated flat "zebra crossing" ground material yet, so this defaults
+  /// to a light lane-marking asphalt material as a visible placeholder.
+  UPROPERTY(Category = "Materials", EditAnywhere)
+  TSoftObjectPtr<UMaterialInterface> CrosswalkMaterial = TSoftObjectPtr<UMaterialInterface>(
+      FSoftObjectPath(TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_B_LaneMarkingWhite.MI_Road_Asphalt_B_LaneMarkingWhite")));
+
+  /// Material applied to white lane-marking meshes.
+  UPROPERTY(Category = "Materials", EditAnywhere)
+  TSoftObjectPtr<UMaterialInterface> LaneMarkingWhiteMaterial = TSoftObjectPtr<UMaterialInterface>(
+      FSoftObjectPath(TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Rural_A_LaneMarkingWhite.MI_Road_Rural_A_LaneMarkingWhite")));
+
+  /// Material applied to yellow lane-marking meshes (centre line).
+  UPROPERTY(Category = "Materials", EditAnywhere)
+  TSoftObjectPtr<UMaterialInterface> LaneMarkingYellowMaterial = TSoftObjectPtr<UMaterialInterface>(
+      FSoftObjectPath(TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Rural_A_LaneMarkingYellow.MI_Road_Rural_A_LaneMarkingYellow")));
+
+  /// Vertical offset (cm) applied to crosswalk and lane-marking meshes above
+  /// the road surface, to avoid z-fighting with the road mesh section.
+  UPROPERTY(Category = "Materials", EditAnywhere)
+  float DecalZOffset = 1.5f;
 
 };

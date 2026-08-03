@@ -1170,11 +1170,37 @@ namespace road {
       }
     }
 
-    auto min_pos = geom::Vector2D(
-        out_mesh_list.front()->GetVertices().front().x,
-        out_mesh_list.front()->GetVertices().front().y);
+    // Guard against a valid-but-geometry-free xodr (e.g. no roads/junctions
+    // at all, or every generated mesh happening to have zero vertices):
+    // out_mesh_list.front() and per-mesh GetVertices().front() below used to
+    // be called unconditionally, which segfaulted the server instead of
+    // returning an error. Bail out with an empty chunk list; the only
+    // caller (AOpenDriveGenerator::GenerateRoadMesh) already skips
+    // zero-vertex meshes and tolerates an empty result.
+    if (out_mesh_list.empty()) {
+      return {};
+    }
+
+    bool found_seed = false;
+    geom::Vector2D min_pos;
+    for (auto & mesh : out_mesh_list) {
+      if (!mesh->GetVertices().empty()) {
+        const auto &seed_vertex = mesh->GetVertices().front();
+        min_pos = geom::Vector2D(seed_vertex.x, seed_vertex.y);
+        found_seed = true;
+        break;
+      }
+    }
+    if (!found_seed) {
+      // Every generated mesh was empty; nothing to bin.
+      return {};
+    }
+
     auto max_pos = min_pos;
     for (auto & mesh : out_mesh_list) {
+      if (mesh->GetVertices().empty()) {
+        continue;
+      }
       auto vertex = mesh->GetVertices().front();
       min_pos.x = std::min(min_pos.x, vertex.x);
       min_pos.y = std::min(min_pos.y, vertex.y);
@@ -1189,6 +1215,9 @@ namespace road {
       result.emplace_back(std::make_unique<geom::Mesh>());
     }
     for (auto & mesh : out_mesh_list) {
+      if (mesh->GetVertices().empty()) {
+        continue;
+      }
       auto vertex = mesh->GetVertices().front();
       size_t x_pos = static_cast<size_t>((vertex.x - min_pos.x) / params.max_road_length);
       size_t y_pos = static_cast<size_t>((vertex.y - min_pos.y) / params.max_road_length);
