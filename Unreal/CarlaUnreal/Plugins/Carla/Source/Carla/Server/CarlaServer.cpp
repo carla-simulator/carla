@@ -31,6 +31,7 @@
 #include <util/disable-ue4-macros.h>
 #include <carla/Functional.h>
 #include <carla/multigpu/router.h>
+#include <carla/Sockets.h>
 #include <carla/Version.h>
 #include <carla/rpc/AckermannControllerSettings.h>
 #include <carla/rpc/Actor.h>
@@ -3165,6 +3166,21 @@ FDataMultiStream FCarlaServer::Start(uint16_t RPCPort, uint16_t StreamingPort, u
   Pimpl = MakeUnique<FPimpl>(RPCPort, StreamingPort, SecondaryPort);
   StreamingPort = Pimpl->StreamingServer.GetLocalEndpoint().port();
   SecondaryPort = Pimpl->SecondaryServer->GetLocalEndpoint().port();
+
+#if PLATFORM_LINUX || PLATFORM_MAC
+  // The vendored rpclib server (Pimpl->Server) hides its listening-socket
+  // acceptor behind a PIMPL with no public accessor, so unlike the
+  // streaming/secondary listeners (which mark themselves close-on-exec at
+  // construction, see carla/streaming/detail/tcp/Server.cpp and
+  // carla/multigpu/listener.cpp) it can't be fixed at the point it's
+  // created. Without this, a forked child (e.g. RecastBuilder, launched by
+  // UCarlaEpisode::LoadNewOpendriveEpisode for pedestrian-nav generation)
+  // inherits the RPC listen socket; if the child outlives the server, it
+  // keeps the port bound and the next server boot aborts in asio's bind().
+  // rpc::server's constructor already binds+listens by the time FPimpl's
+  // constructor above returns, so the socket exists and is found by port.
+  carla::SetCloseOnExecForListeningPort(RPCPort);
+#endif // !_WIN32
 
   UE_LOG(
       LogCarlaServer,
