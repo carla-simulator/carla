@@ -107,13 +107,28 @@ static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRe
         const UTrafficLightController* Controller =  TrafficLightComponent->GetController();
         const ATrafficLightGroup* Group = TrafficLightComponent->GetGroup();
 
+        // This serializer runs every tick for every traffic light; on maps
+        // whose signals fail junction grouping (e.g. HD-map OpenDRIVE with
+        // placeholder junction connections) a per-tick per-light error floods
+        // the log hard enough to stall the whole server. Log each condition
+        // once per session -- the affected lights simply stream zeroed state.
         if (!Controller)
         {
-          UE_LOG(LogCarla, Error, TEXT("TrafficLightComponent doesn't have any Controller assigned"));
+          static bool bLoggedMissingController = false;
+          if (!bLoggedMissingController)
+          {
+            bLoggedMissingController = true;
+            UE_LOG(LogCarla, Warning, TEXT("TrafficLightComponent doesn't have any Controller assigned (logged once; affected lights stream zeroed state)"));
+          }
         }
         else if (!Group)
         {
-          UE_LOG(LogCarla, Error, TEXT("TrafficLightComponent doesn't have any Group assigned"));
+          static bool bLoggedMissingGroup = false;
+          if (!bLoggedMissingGroup)
+          {
+            bLoggedMissingGroup = true;
+            UE_LOG(LogCarla, Warning, TEXT("TrafficLightComponent doesn't have any Group assigned (logged once; affected lights stream zeroed state)"));
+          }
         }
         else
         {
@@ -202,7 +217,13 @@ static auto FWorldObserver_GetDormantActorState(const FCarlaActor &View, const F
       const ATrafficLightGroup* Group = Controller->GetGroup();
       if(!Group)
       {
-        UE_LOG(LogCarla, Error, TEXT("TrafficLight doesn't have any Group assigned"));
+        // Same per-tick flood hazard as above: log once per session.
+        static bool bLoggedMissingGroup = false;
+        if (!bLoggedMissingGroup)
+        {
+          bLoggedMissingGroup = true;
+          UE_LOG(LogCarla, Warning, TEXT("TrafficLight doesn't have any Group assigned (logged once; affected lights stream zeroed state)"));
+        }
       }
       else
       {
