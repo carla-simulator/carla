@@ -235,6 +235,10 @@ void AOpenDriveGenerator::GenerateRoadMesh()
   UMaterialInterface* ResolvedRoadMaterial = RoadMaterial.LoadSynchronous();
   UMaterialInterface* ResolvedSidewalkMaterial = SidewalkMaterial.LoadSynchronous();
 
+  // Reset so re-running GenerateRoadMesh (e.g. regenerating the map) doesn't
+  // leave GenerateGroundPlane sizing the fill quad off stale geometry.
+  RoadMeshBounds = FBox(ForceInit);
+
   for (const auto &Mesh : Meshes) {
     if (!Mesh->GetVertices().size())
     {
@@ -293,6 +297,12 @@ void AOpenDriveGenerator::GenerateRoadMesh()
       const FProceduralCustomMesh &SectionMesh = SectionsByMaterial[MatName];
       const bool bIsSidewalk = (MatName == TEXT("sidewalk"));
 
+      // Feeds GenerateGroundPlane, which must run after this loop.
+      for (const FVector &Vertex : SectionMesh.Vertices)
+      {
+        RoadMeshBounds += Vertex;
+      }
+
       AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
       UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
       TempPMC->bUseAsyncCooking = true;
@@ -347,6 +357,98 @@ void AOpenDriveGenerator::GenerateRoadMesh()
   // {
   //   UE_LOG(LogCarla, Error, TEXT("The road collision mesh could not be generated!"));
   // }
+}
+
+void AOpenDriveGenerator::GenerateGroundPlane()
+{
+  if (!IsOpenDriveValid())
+  {
+    UE_LOG(LogCarla, Error, TEXT("The OpenDrive has not been loaded"));
+    return;
+  }
+
+  if (!RoadMeshBounds.IsValid)
+  {
+    // GenerateRoadMesh produced no geometry to size the fill quad against
+    // (not called yet, or the OpenDRIVE has no road mesh).
+    UE_LOG(LogCarla, Warning, TEXT("AOpenDriveGenerator: RoadMeshBounds is empty, skipping ground plane"));
+    return;
+  }
+
+  carla::rpc::OpendriveGenerationParameters Parameters;
+  UCarlaGameInstance * GameInstance = UCarlaStatics::GetGameInstance(GetWorld());
+  if (GameInstance)
+  {
+    Parameters = GameInstance->GetOpendriveGenerationParameters();
+  }
+
+  // A single flat quad spanning the padded road-network footprint, sat
+  // GroundPlaneZOffset below the lowest road/sidewalk vertex so it never
+  // z-fights with that geometry. Roads can undulate across a map; following
+  // the terrain height per-tile is out of scope for v1 -- a flat plane at
+  // min-z is enough to close the blue-sky holes (roundabout centers, area
+  // beyond the shoulders) that show through the generated network.
+  const FBox PaddedBounds = RoadMeshBounds.ExpandBy(FVector(GroundPlanePadding, GroundPlanePadding, 0.0f));
+  const float MinX = PaddedBounds.Min.X;
+  const float MaxX = PaddedBounds.Max.X;
+  const float MinY = PaddedBounds.Min.Y;
+  const float MaxY = PaddedBounds.Max.Y;
+  const float PlaneZ = RoadMeshBounds.Min.Z - GroundPlaneZOffset;
+
+  // Vertex order/winding mirrors the engine's own top-face (+Z normal) quad
+  // in UKismetProceduralMeshLibrary::GenerateBoxMesh (-X+Y, +X+Y, +X-Y,
+  // -X-Y with triangles {0,1,3},{1,2,3}), so the plane faces up rather than
+  // being backface-culled from above.
+  FProceduralCustomMesh MeshData;
+  MeshData.Vertices = {
+      FVector(MinX, MaxY, PlaneZ),
+      FVector(MaxX, MaxY, PlaneZ),
+      FVector(MaxX, MinY, PlaneZ),
+      FVector(MinX, MinY, PlaneZ),
+  };
+  MeshData.Normals.Init(FVector::UpVector, 4);
+  MeshData.Triangles = { 0, 1, 3, 1, 2, 3 };
+
+  // Tile the material at a fixed world-space scale (GroundUVTileSize cm per
+  // tile) instead of stretching one tile across the whole map.
+  const float U = (MaxX - MinX) / FMath::Max(GroundUVTileSize, 1.0f);
+  const float V = (MaxY - MinY) / FMath::Max(GroundUVTileSize, 1.0f);
+  MeshData.UV0 = {
+      FVector2D(0.0f, 0.0f),
+      FVector2D(U, 0.0f),
+      FVector2D(U, V),
+      FVector2D(0.0f, V),
+  };
+
+  AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+  UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
+  TempPMC->bUseAsyncCooking = true;
+  TempPMC->bUseComplexAsSimpleCollision = true;
+  TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+  TempPMC->CreateMeshSection_LinearColor(
+      0,
+      MeshData.Vertices,
+      MeshData.Triangles,
+      MeshData.Normals,
+      MeshData.UV0,
+      TArray<FLinearColor>(), // VertexColor
+      TArray<FProcMeshTangent>(), // Tangents
+      true); // Create collision
+
+  if (UMaterialInterface* ResolvedGroundMaterial = GroundMaterial.LoadSynchronous())
+  {
+    TempPMC->SetMaterial(0, ResolvedGroundMaterial);
+  }
+
+  TagGeneratedComponent(*TempPMC, TempActor->GetUniqueID(), crp::CityObjectLabel::Terrain);
+
+  if (!Parameters.enable_mesh_visibility)
+  {
+    TempActor->SetActorHiddenInGame(true);
+  }
+
+  ActorMeshList.Add(TempActor);
 }
 
 void AOpenDriveGenerator::GenerateCrosswalkMesh()
@@ -614,6 +716,7 @@ void AOpenDriveGenerator::GenerateSpawnPoints()
 void AOpenDriveGenerator::GenerateAll()
 {
   GenerateRoadMesh();
+  GenerateGroundPlane();
   GenerateCrosswalkMesh();
   GenerateLaneMarkings();
   GenerateSpawnPoints();
