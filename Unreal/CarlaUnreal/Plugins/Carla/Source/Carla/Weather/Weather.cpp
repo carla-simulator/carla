@@ -58,6 +58,55 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherNightSkylightIntensity(
     TEXT("leave the rig's curve-driven skylight intensity untouched."),
     ECVF_Default);
 
+// The night sky is pure black on every map (verified content-side, not a
+// generated-map defect): BP_Carla_Sky's SetSkySphere respawns a child actor
+// of the stock engine /Engine/EngineSky/BP_Sky_Sphere on every weather push
+// and stores it in its own "SkySphere" object variable (see PushWeatherToSky
+// below). That sphere's material, M_Sky_Panning_Clouds2, already ships star
+// rendering -- confirmed by dumping strings from the .uasset directly: a
+// MaterialExpressionScalarParameter named "Stars brightness" and a
+// TextureSample referencing /Engine/EngineSky/T_Sky_Stars. The sphere
+// blueprint exposes it through two of its own variables (also confirmed via
+// strings, including their tooltips baked into the asset): "Colors
+// Determined By Sun Position" (bool -- "If enabled, sky colors will change
+// according to the sun's position"; when off, the sphere's "Sun Height"
+// value -- whose own tooltip is "If no directional light is assigned, this
+// value determines the height of the sun" -- stays frozen at its authored
+// fallback instead of tracking the Directional Light Actor BP_Carla_Sky
+// already assigns every push, which would permanently suppress the
+// sun-height-gated star blend regardless of the actual time of day) and
+// "Stars Brightness" (float -- "Multiplier for the brightness of the stars
+// when the sun is below the horizon"). CARLA's own BP_Carla_Sky/BP_
+// CarlaWeather carry a dead "Stars Intensity Over Sun Altitude" comment/graph
+// fragment (same severed-exec-chain pattern documented throughout this file)
+// but, unlike SunIntensity_Curve/SkyIntensity_Curve, there is no backing
+// UCurveFloat asset anywhere in the content for it -- confirmed by searching
+// the plugin Content tree -- so there is nothing to re-wire; drive the two
+// stock engine variables directly instead, the same way this file already
+// routes around every other severed exec chain in the rig.
+// Both are held gated to SunAltitudeAngle < 0, deliberately not applied
+// during the day even though a fresh sphere actor makes it safe either way
+// (SetSkySphere respawns it every push, so nothing here can leak across
+// pushes): "Colors Determined By Sun Position" may also drive the sphere's
+// OWN internal Horizon/Zenith/Cloud color curves, which would compete with
+// CARLA's curve-driven day colors already pushed by UpdateSkySphereColor
+// earlier in the same push -- unverifiable without an editor, so day is left
+// completely untouched to avoid any color-grading regression risk.
+// StarsBrightness is a material-scalar knob, not a physical unit. The
+// white-texel estimate (~100, from the EV100=10 exposure multiplier above)
+// rendered stars at max pixel ~7: the star texture's lit texels sample far
+// below white. 5000 was calibrated visually on a generated Town03 world at
+// sun -30 -- a dense readable star field (sky-crop max ~145) with no bloom
+// halos or day-side effect (the whole block is gated to SunAltitudeAngle<0).
+static TAutoConsoleVariable<float> CVarCarlaWeatherStarsBrightness(
+    TEXT("carla.Weather.StarsBrightness"),
+    5000.0f,
+    TEXT("Value forced into the night sky sphere's \"Stars Brightness\" variable ")
+    TEXT("(BP_Sky_Sphere, engine content) whenever SunAltitudeAngle < 0, floored the same ")
+    TEXT("way as the moon/skylight intensities above. Set 0 to leave the rig's authored ")
+    TEXT("value untouched."),
+    ECVF_Default);
+
 AWeather::AWeather(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
@@ -248,6 +297,73 @@ void AWeather::PushWeatherToSky()
                     SkyLightComponent->SetActive(true);
                 if (SkylightFloor > 0.0f && SkyLightComponent->Intensity < SkylightFloor)
                     SkyLightComponent->SetIntensity(SkylightFloor);
+            }
+
+            // Stars. SetSkySphere (in the UpdateFunctionNames loop above) has
+            // already respawned this push's sphere actor by the time we get
+            // here, so "SkySphere" always resolves to the fresh instance. See
+            // the cvar comment above for the full reflection path and why
+            // this stays gated to night.
+            // Blueprint member variables get decorated FNames in their
+            // generated class (exact FindPropertyByName misses them), so
+            // match on the authored name instead -- same lesson as the
+            // vehicle "Beam Lights" variable in CarlaWheeledVehicle.cpp.
+            const auto FindPropertyByAuthoredName =
+                [](const UClass* Class, const TCHAR* AuthoredName) -> FProperty*
+            {
+                for (TFieldIterator<FProperty> It(Class); It; ++It)
+                {
+                    if ((*It)->GetAuthoredName() == AuthoredName || (*It)->GetName() == AuthoredName)
+                        return *It;
+                }
+                return nullptr;
+            };
+
+            FObjectProperty* SphereProperty = CastField<FObjectProperty>(
+                FindPropertyByAuthoredName(SkyActor->GetClass(), TEXT("SkySphere")));
+            if (SphereProperty == nullptr)
+                SphereProperty = CastField<FObjectProperty>(
+                    FindPropertyByAuthoredName(SkyActor->GetClass(), TEXT("Sky Sphere")));
+            AActor* SphereActor = SphereProperty != nullptr
+                ? Cast<AActor>(SphereProperty->GetObjectPropertyValue_InContainer(SkyActor))
+                : nullptr;
+            UE_LOG(LogCarla, Verbose, TEXT("AWeather night sky: sphere property %s, actor %s"),
+                SphereProperty ? TEXT("found") : TEXT("MISSING"),
+                SphereActor ? *SphereActor->GetName() : TEXT("null"));
+            if (SphereActor != nullptr)
+            {
+                if (FBoolProperty* ColorsBySunProperty = CastField<FBoolProperty>(
+                        FindPropertyByAuthoredName(SphereActor->GetClass(), TEXT("Colors Determined By Sun Position"))))
+                    ColorsBySunProperty->SetPropertyValue_InContainer(SphereActor, true);
+                else
+                    UE_LOG(LogCarla, Verbose, TEXT("AWeather night sky: 'Colors Determined By Sun Position' MISSING on %s"),
+                        *SphereActor->GetClass()->GetName());
+
+                // UE5 blueprints store float variables as doubles, so match
+                // any numeric property rather than FFloatProperty.
+                const float StarsFloor = CVarCarlaWeatherStarsBrightness.GetValueOnGameThread();
+                if (FNumericProperty* StarsBrightnessProperty = CastField<FNumericProperty>(
+                        FindPropertyByAuthoredName(SphereActor->GetClass(), TEXT("Stars Brightness"))))
+                {
+                    void* ValuePtr = StarsBrightnessProperty->ContainerPtrToValuePtr<void>(SphereActor);
+                    const double CurrentStarsBrightness =
+                        StarsBrightnessProperty->GetFloatingPointPropertyValue(ValuePtr);
+                    if (StarsFloor > 0.0f && CurrentStarsBrightness < StarsFloor)
+                        StarsBrightnessProperty->SetFloatingPointPropertyValue(ValuePtr, StarsFloor);
+                }
+                else
+                    UE_LOG(LogCarla, Verbose, TEXT("AWeather night sky: 'Stars Brightness' MISSING on %s"),
+                        *SphereActor->GetClass()->GetName());
+
+                // Push the variables above into the sphere's dynamic material
+                // instance. UpdateSkySphere/UpdateSkySphereColor may already
+                // do this as part of their own (working, since day renders
+                // correctly) exec chains; calling it again here is a cheap,
+                // idempotent resync so our two variable writes are guaranteed
+                // to reach the material regardless.
+                UFunction* RefreshMaterialFunction = SphereActor->FindFunction(TEXT("RefreshMaterial"));
+                if (RefreshMaterialFunction != nullptr && RefreshMaterialFunction->ParmsSize == 0)
+                    SphereActor->ProcessEvent(RefreshMaterialFunction, nullptr);
             }
         }
     }
