@@ -27,11 +27,11 @@ class UPCGComponent;
 class UPCGGraphInterface;
 
 UCLASS()
-class CARLA_API AProceduralMeshActor : public AActor
+class CARLA_API ACarlaProceduralMeshActor : public AActor
 {
   GENERATED_BODY()
 public:
-  AProceduralMeshActor();
+  ACarlaProceduralMeshActor();
 
   UPROPERTY(Category = "Procedural Mesh Actor", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   TObjectPtr<UProceduralMeshComponent> MeshComponent;
@@ -73,10 +73,15 @@ public:
   /// Generates the road and sidewalk mesh based on the OpenDRIVE information.
   void GenerateRoadMesh();
 
-  /// Generates a single flat quad beneath the generated road network so
-  /// gaps in the road/sidewalk mesh (roundabout centers, area beyond the
-  /// shoulders, etc.) don't show blue sky through the ground. Must run
-  /// after GenerateRoadMesh(), which is what populates RoadMeshBounds.
+  /// Generates a terrain-following heightfield beneath the generated road
+  /// network so gaps in the road/sidewalk mesh (roundabout centers, area
+  /// beyond the shoulders, etc.) don't show blue sky through the ground.
+  /// Each grid vertex takes its height from nearby road geometry (inverse-
+  /// distance interpolation over GroundHeightSampleGrid) minus
+  /// GroundPlaneZOffset, so the ground hugs undulating roads instead of
+  /// sitting at a single min-z plane that real-elevation maps float above.
+  /// Must run after GenerateRoadMesh(), which is what populates
+  /// RoadMeshBounds and GroundHeightSampleGrid.
   void GenerateGroundPlane();
 
   /// Generates the crosswalk mesh based on the OpenDRIVE information.
@@ -124,6 +129,14 @@ protected:
   /// GenerateGroundPlane to size and position the fill quad -- mirrors how
   /// FurnitureAnchorBounds drives PCGBoundsComponent below.
   FBox RoadMeshBounds = FBox(ForceInit);
+
+  /// Lowest road/sidewalk vertex height per XY cell of size
+  /// GroundHeightSampleCellSize, accumulated in GenerateRoadMesh alongside
+  /// RoadMeshBounds and consumed by GenerateGroundPlane to interpolate the
+  /// ground heightfield. Min (not mean) per cell so that where an elevated
+  /// road overlaps a lower one the ground follows the lower surface instead
+  /// of climbing halfway up to the overpass.
+  TMap<FIntPoint, float> GroundHeightSampleGrid;
 
   /// Material applied to driving-lane mesh sections.
   UPROPERTY(Category = "Materials", EditAnywhere)
@@ -177,12 +190,26 @@ protected:
   UPROPERTY(Category = "Materials", EditAnywhere)
   float DecalZOffset = 1.5f;
 
-  /// Vertical offset (cm) applied *below* the lowest road/sidewalk vertex
-  /// to place the ground plane -- keeps it clear of z-fighting on flat
-  /// maps while staying close enough that undulating roads don't visibly
-  /// float above it.
+  /// Vertical offset (cm) applied *below* the interpolated road height at
+  /// each ground grid vertex -- keeps the heightfield clear of z-fighting
+  /// with the road surface while staying close enough that shoulders don't
+  /// visibly float above it.
   UPROPERTY(Category = "Materials", EditAnywhere)
   float GroundPlaneZOffset = 15.0f;
+
+  /// XY cell size (cm) of GroundHeightSampleGrid, the min-z-per-cell road
+  /// height samples the ground heightfield interpolates from. Smaller cells
+  /// track elevation changes tighter but cost memory per road vertex bucket;
+  /// 5m ~= one lane width, plenty for road-scale grades.
+  UPROPERTY(Category = "Materials", EditAnywhere)
+  float GroundHeightSampleCellSize = 500.0f;
+
+  /// XY spacing (cm) between ground heightfield grid vertices. 10m keeps a
+  /// ~1km-square map around 10k vertices while still following highway
+  /// on-ramp grades; raised automatically if the padded map bounds would
+  /// exceed a sane vertex budget.
+  UPROPERTY(Category = "Materials", EditAnywhere)
+  float GroundGridCellSize = 1000.0f;
 
   /// How far (cm) the ground plane extends past the generated road/sidewalk
   /// bounding box on each side, so the fill doesn't end exactly at the

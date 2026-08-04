@@ -153,7 +153,7 @@ namespace {
 
 } // namespace
 
-AProceduralMeshActor::AProceduralMeshActor()
+ACarlaProceduralMeshActor::ACarlaProceduralMeshActor()
 {
   PrimaryActorTick.bCanEverTick = false;
   MeshComponent = CreateDefaultSubobject<UProceduralMeshComponent>(TEXT("RootComponent"));
@@ -236,8 +236,10 @@ void AOpenDriveGenerator::GenerateRoadMesh()
   UMaterialInterface* ResolvedSidewalkMaterial = SidewalkMaterial.LoadSynchronous();
 
   // Reset so re-running GenerateRoadMesh (e.g. regenerating the map) doesn't
-  // leave GenerateGroundPlane sizing the fill quad off stale geometry.
+  // leave GenerateGroundPlane sizing the fill heightfield off stale geometry.
   RoadMeshBounds = FBox(ForceInit);
+  GroundHeightSampleGrid.Reset();
+  const float SampleCellSize = FMath::Max(GroundHeightSampleCellSize, 1.0f);
 
   for (const auto &Mesh : Meshes) {
     if (!Mesh->GetVertices().size())
@@ -301,9 +303,20 @@ void AOpenDriveGenerator::GenerateRoadMesh()
       for (const FVector &Vertex : SectionMesh.Vertices)
       {
         RoadMeshBounds += Vertex;
+        const FIntPoint Cell(
+            FMath::FloorToInt(Vertex.X / SampleCellSize),
+            FMath::FloorToInt(Vertex.Y / SampleCellSize));
+        if (float *ExistingZ = GroundHeightSampleGrid.Find(Cell))
+        {
+          *ExistingZ = FMath::Min(*ExistingZ, static_cast<float>(Vertex.Z));
+        }
+        else
+        {
+          GroundHeightSampleGrid.Add(Cell, Vertex.Z);
+        }
       }
 
-      AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+      ACarlaProceduralMeshActor* TempActor = GetWorld()->SpawnActor<ACarlaProceduralMeshActor>();
       UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
       TempPMC->bUseAsyncCooking = true;
       TempPMC->bUseComplexAsSimpleCollision = true;
@@ -369,7 +382,7 @@ void AOpenDriveGenerator::GenerateGroundPlane()
 
   if (!RoadMeshBounds.IsValid)
   {
-    // GenerateRoadMesh produced no geometry to size the fill quad against
+    // GenerateRoadMesh produced no geometry to size the heightfield against
     // (not called yet, or the OpenDRIVE has no road mesh).
     UE_LOG(LogCarla, Warning, TEXT("AOpenDriveGenerator: RoadMeshBounds is empty, skipping ground plane"));
     return;
@@ -382,45 +395,231 @@ void AOpenDriveGenerator::GenerateGroundPlane()
     Parameters = GameInstance->GetOpendriveGenerationParameters();
   }
 
-  // A single flat quad spanning the padded road-network footprint, sat
-  // GroundPlaneZOffset below the lowest road/sidewalk vertex so it never
-  // z-fights with that geometry. Roads can undulate across a map; following
-  // the terrain height per-tile is out of scope for v1 -- a flat plane at
-  // min-z is enough to close the blue-sky holes (roundabout centers, area
-  // beyond the shoulders) that show through the generated network.
+  // A heightfield grid spanning the padded road-network footprint. Each
+  // grid vertex sits GroundPlaneZOffset below the road height interpolated
+  // from GroundHeightSampleGrid (min road/sidewalk z per sample cell,
+  // accumulated in GenerateRoadMesh), so the ground follows the road
+  // network's real elevation profile. A flat quad at global min-z closed
+  // the blue-sky holes on CARLA's flat towns, but real-elevation OpenDRIVE
+  // (NuRec: Stuttgart z~293m, graded motorways) left every uphill road
+  // flying tens of meters above it.
   const FBox PaddedBounds = RoadMeshBounds.ExpandBy(FVector(GroundPlanePadding, GroundPlanePadding, 0.0f));
   const float MinX = PaddedBounds.Min.X;
   const float MaxX = PaddedBounds.Max.X;
   const float MinY = PaddedBounds.Min.Y;
   const float MaxY = PaddedBounds.Max.Y;
-  const float PlaneZ = RoadMeshBounds.Min.Z - GroundPlaneZOffset;
 
-  // Vertex order/winding mirrors the engine's own top-face (+Z normal) quad
-  // in UKismetProceduralMeshLibrary::GenerateBoxMesh (-X+Y, +X+Y, +X-Y,
-  // -X-Y with triangles {0,1,3},{1,2,3}), so the plane faces up rather than
-  // being backface-culled from above.
+  // Cap the vertex budget: if the padded map is large enough that the
+  // configured spacing would blow past it, widen the spacing instead of
+  // failing or stalling the load with a multi-million-vertex cook.
+  constexpr int32 MaxGridVerticesPerAxis = 512;
+  float GridStep = FMath::Max(GroundGridCellSize, 100.0f);
+  GridStep = FMath::Max3(
+      GridStep,
+      (MaxX - MinX) / static_cast<float>(MaxGridVerticesPerAxis - 1),
+      (MaxY - MinY) / static_cast<float>(MaxGridVerticesPerAxis - 1));
+  const int32 NumX = FMath::Clamp(FMath::CeilToInt((MaxX - MinX) / GridStep), 1, MaxGridVerticesPerAxis - 1) + 1;
+  const int32 NumY = FMath::Clamp(FMath::CeilToInt((MaxY - MinY) / GridStep), 1, MaxGridVerticesPerAxis - 1) + 1;
+  const float StepX = (MaxX - MinX) / static_cast<float>(NumX - 1);
+  const float StepY = (MaxY - MinY) / static_cast<float>(NumY - 1);
+
+  const float SampleCellSize = FMath::Max(GroundHeightSampleCellSize, 1.0f);
+  const float FallbackZ = RoadMeshBounds.Min.Z;
+
+  // Inverse-distance interpolation over the road height samples, searching
+  // outward ring by ring in the sample grid from the vertex's cell. One
+  // extra ring past the first hit keeps the blend smooth where two roads at
+  // different heights face each other; a vertex out in the padding just
+  // inherits the nearest shoulder's height (flat extrapolation), which is
+  // exactly what the fill skirt should do. Ring cap covers the padding plus
+  // slack so the search always terminates even off in a map corner.
+  const int32 MaxRing = FMath::CeilToInt((GroundPlanePadding + 2.0f * GridStep) / SampleCellSize) + 2;
+  const auto SampleGroundHeight = [&](float X, float Y) -> TOptional<float>
+  {
+    const int32 CenterCellX = FMath::FloorToInt(X / SampleCellSize);
+    const int32 CenterCellY = FMath::FloorToInt(Y / SampleCellSize);
+    float WeightSum = 0.0f;
+    float HeightSum = 0.0f;
+    int32 FirstHitRing = -1;
+    for (int32 Ring = 0; Ring <= MaxRing; ++Ring)
+    {
+      if (FirstHitRing >= 0 && Ring > FirstHitRing + 1)
+      {
+        break;
+      }
+      bool bHit = false;
+      const auto VisitCell = [&](int32 CellX, int32 CellY)
+      {
+        const float *SampleZ = GroundHeightSampleGrid.Find(FIntPoint(CellX, CellY));
+        if (!SampleZ)
+        {
+          return;
+        }
+        const float CellCenterX = (static_cast<float>(CellX) + 0.5f) * SampleCellSize;
+        const float CellCenterY = (static_cast<float>(CellY) + 0.5f) * SampleCellSize;
+        const float DistSq = FMath::Square(X - CellCenterX) + FMath::Square(Y - CellCenterY);
+        const float Weight = 1.0f / (DistSq + FMath::Square(SampleCellSize * 0.25f));
+        WeightSum += Weight;
+        HeightSum += Weight * (*SampleZ);
+        bHit = true;
+      };
+      if (Ring == 0)
+      {
+        VisitCell(CenterCellX, CenterCellY);
+      }
+      else
+      {
+        for (int32 DX = -Ring; DX <= Ring; ++DX)
+        {
+          VisitCell(CenterCellX + DX, CenterCellY - Ring);
+          VisitCell(CenterCellX + DX, CenterCellY + Ring);
+        }
+        for (int32 DY = -Ring + 1; DY <= Ring - 1; ++DY)
+        {
+          VisitCell(CenterCellX - Ring, CenterCellY + DY);
+          VisitCell(CenterCellX + Ring, CenterCellY + DY);
+        }
+      }
+      if (bHit && FirstHitRing < 0)
+      {
+        FirstHitRing = Ring;
+      }
+    }
+    return WeightSum > 0.0f ? TOptional<float>(HeightSum / WeightSum) : TOptional<float>();
+  };
+
+  // First pass: direct interpolation where road samples are within ring
+  // reach. Vertices deeper inside road-free voids (a rural map can leave
+  // interior gaps wider than the ring cap) stay unresolved here and get
+  // filled below instead of snapping to a global min-z cliff.
+  TArray<float> Heights;
+  TArray<bool> Resolved;
+  Heights.SetNumUninitialized(NumX * NumY);
+  Resolved.SetNumUninitialized(NumX * NumY);
+  int32 NumUnresolved = 0;
+  for (int32 IY = 0; IY < NumY; ++IY)
+  {
+    const float Y = MinY + static_cast<float>(IY) * StepY;
+    for (int32 IX = 0; IX < NumX; ++IX)
+    {
+      const float X = MinX + static_cast<float>(IX) * StepX;
+      const TOptional<float> Sampled = SampleGroundHeight(X, Y);
+      const int32 Index = IY * NumX + IX;
+      Resolved[Index] = Sampled.IsSet();
+      Heights[Index] = Sampled.Get(FallbackZ);
+      NumUnresolved += Sampled.IsSet() ? 0 : 1;
+    }
+  }
+
+  // Fill pass: dilate resolved heights into unresolved vertices, each
+  // taking the average of its resolved 4-neighbours, until the whole grid
+  // is covered. Bounded by the grid diagonal, so it always terminates.
+  for (int32 Pass = 0; NumUnresolved > 0 && Pass < NumX + NumY; ++Pass)
+  {
+    TArray<TPair<int32, float>> Filled;
+    for (int32 IY = 0; IY < NumY; ++IY)
+    {
+      for (int32 IX = 0; IX < NumX; ++IX)
+      {
+        const int32 Index = IY * NumX + IX;
+        if (Resolved[Index])
+        {
+          continue;
+        }
+        float NeighbourSum = 0.0f;
+        int32 NeighbourCount = 0;
+        const auto VisitNeighbour = [&](int32 NX, int32 NY)
+        {
+          if (NX < 0 || NX >= NumX || NY < 0 || NY >= NumY)
+          {
+            return;
+          }
+          const int32 NeighbourIndex = NY * NumX + NX;
+          if (Resolved[NeighbourIndex])
+          {
+            NeighbourSum += Heights[NeighbourIndex];
+            ++NeighbourCount;
+          }
+        };
+        VisitNeighbour(IX - 1, IY);
+        VisitNeighbour(IX + 1, IY);
+        VisitNeighbour(IX, IY - 1);
+        VisitNeighbour(IX, IY + 1);
+        if (NeighbourCount > 0)
+        {
+          Filled.Emplace(Index, NeighbourSum / static_cast<float>(NeighbourCount));
+        }
+      }
+    }
+    if (Filled.Num() == 0)
+    {
+      break;
+    }
+    for (const TPair<int32, float> &Entry : Filled)
+    {
+      Heights[Entry.Key] = Entry.Value;
+      Resolved[Entry.Key] = true;
+    }
+    NumUnresolved -= Filled.Num();
+  }
+
   FProceduralCustomMesh MeshData;
-  MeshData.Vertices = {
-      FVector(MinX, MaxY, PlaneZ),
-      FVector(MaxX, MaxY, PlaneZ),
-      FVector(MaxX, MinY, PlaneZ),
-      FVector(MinX, MinY, PlaneZ),
-  };
-  MeshData.Normals.Init(FVector::UpVector, 4);
-  MeshData.Triangles = { 0, 1, 3, 1, 2, 3 };
+  MeshData.Vertices.Reserve(NumX * NumY);
+  MeshData.UV0.Reserve(NumX * NumY);
+  const float UVTile = FMath::Max(GroundUVTileSize, 1.0f);
+  for (int32 IY = 0; IY < NumY; ++IY)
+  {
+    const float Y = MinY + static_cast<float>(IY) * StepY;
+    for (int32 IX = 0; IX < NumX; ++IX)
+    {
+      const float X = MinX + static_cast<float>(IX) * StepX;
+      MeshData.Vertices.Add(FVector(X, Y, Heights[IY * NumX + IX] - GroundPlaneZOffset));
+      // World-space UV tiling (GroundUVTileSize cm per texture repeat)
+      // instead of stretching one tile across the whole map.
+      MeshData.UV0.Add(FVector2D((X - MinX) / UVTile, (Y - MinY) / UVTile));
+    }
+  }
 
-  // Tile the material at a fixed world-space scale (GroundUVTileSize cm per
-  // tile) instead of stretching one tile across the whole map.
-  const float U = (MaxX - MinX) / FMath::Max(GroundUVTileSize, 1.0f);
-  const float V = (MaxY - MinY) / FMath::Max(GroundUVTileSize, 1.0f);
-  MeshData.UV0 = {
-      FVector2D(0.0f, 0.0f),
-      FVector2D(U, 0.0f),
-      FVector2D(U, V),
-      FVector2D(0.0f, V),
+  // Per-vertex normals from the heightfield gradient (central differences,
+  // one-sided at the borders) so lighting shades the slopes instead of
+  // treating the whole ground as one flat plane.
+  MeshData.Normals.Reserve(NumX * NumY);
+  const auto VertexZ = [&](int32 IX, int32 IY) -> float
+  {
+    return MeshData.Vertices[IY * NumX + IX].Z;
   };
+  for (int32 IY = 0; IY < NumY; ++IY)
+  {
+    for (int32 IX = 0; IX < NumX; ++IX)
+    {
+      const int32 XPrev = FMath::Max(IX - 1, 0);
+      const int32 XNext = FMath::Min(IX + 1, NumX - 1);
+      const int32 YPrev = FMath::Max(IY - 1, 0);
+      const int32 YNext = FMath::Min(IY + 1, NumY - 1);
+      const float DZDX = (VertexZ(XNext, IY) - VertexZ(XPrev, IY)) / (static_cast<float>(XNext - XPrev) * StepX);
+      const float DZDY = (VertexZ(IX, YNext) - VertexZ(IX, YPrev)) / (static_cast<float>(YNext - YPrev) * StepY);
+      MeshData.Normals.Add(FVector(-DZDX, -DZDY, 1.0f).GetSafeNormal());
+    }
+  }
 
-  AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+  // Winding per cell mirrors the previous single quad (corner order -X+Y,
+  // +X+Y, +X-Y, -X-Y with triangles {0,1,3},{1,2,3}, same as the engine's
+  // top-face quad in UKismetProceduralMeshLibrary::GenerateBoxMesh), so the
+  // surface faces up rather than being backface-culled from above.
+  MeshData.Triangles.Reserve((NumX - 1) * (NumY - 1) * 6);
+  for (int32 IY = 0; IY + 1 < NumY; ++IY)
+  {
+    for (int32 IX = 0; IX + 1 < NumX; ++IX)
+    {
+      const int32 C0 = (IY + 1) * NumX + IX;       // -X +Y
+      const int32 C1 = (IY + 1) * NumX + IX + 1;   // +X +Y
+      const int32 C2 = IY * NumX + IX + 1;         // +X -Y
+      const int32 C3 = IY * NumX + IX;             // -X -Y
+      MeshData.Triangles.Append({ C0, C1, C3, C1, C2, C3 });
+    }
+  }
+
+  ACarlaProceduralMeshActor* TempActor = GetWorld()->SpawnActor<ACarlaProceduralMeshActor>();
   UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
   TempPMC->bUseAsyncCooking = true;
   TempPMC->bUseComplexAsSimpleCollision = true;
@@ -473,7 +672,7 @@ void AOpenDriveGenerator::GenerateCrosswalkMesh()
     return;
   }
 
-  AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+  ACarlaProceduralMeshActor* TempActor = GetWorld()->SpawnActor<ACarlaProceduralMeshActor>();
   UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
   TempPMC->bUseAsyncCooking = true;
   TempPMC->bUseComplexAsSimpleCollision = true;
@@ -570,7 +769,7 @@ void AOpenDriveGenerator::GenerateLaneMarkings()
       continue;
     }
 
-    AProceduralMeshActor* TempActor = GetWorld()->SpawnActor<AProceduralMeshActor>();
+    ACarlaProceduralMeshActor* TempActor = GetWorld()->SpawnActor<ACarlaProceduralMeshActor>();
     UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
     TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
