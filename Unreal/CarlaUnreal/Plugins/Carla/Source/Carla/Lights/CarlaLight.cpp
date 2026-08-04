@@ -100,43 +100,9 @@ void UCarlaLight::RegisterLight()
     return;
   }
 
-  // Widen undersized authored attenuation radii so the light actually
-  // reaches the road (see cvar comment above).
-  const float MinRadius = CVarCarlaLightMinAttenuationRadius.GetValueOnGameThread();
-  if (MinRadius > 0.0f && GetOwner() != nullptr)
+  if (GetOwner() != nullptr)
   {
-    TArray<UPointLightComponent*> LightComponents;
-    GetOwner()->GetComponents<UPointLightComponent>(LightComponents);
-    for (UPointLightComponent* LightComponent : LightComponents)
-    {
-      if (LightComponent->AttenuationRadius < MinRadius)
-      {
-        LightComponent->SetAttenuationRadius(MinRadius);
-      }
-      // Lamp blueprints commonly embed the light inside the opaque lamp-head
-      // mesh; with shadow casting on, the head fully occludes its own light
-      // and the lamp illuminates nothing. Street furniture doesn't need
-      // per-lamp shadows.
-      LightComponent->SetCastShadows(false);
-      // Some lamp content ships decorative IES gobos (e.g. XArrowDiffuse on
-      // BP_StreetLight01) that mask virtually all of the light's output; a
-      // street light needs its raw cone. Drop the profile.
-      LightComponent->SetIESTexture(nullptr);
-      // Registered lights are driven at runtime (day/night, client API);
-      // Stationary components with no built lighting contribute nothing in
-      // -game. Make them movable so they always render dynamically.
-      LightComponent->SetMobility(EComponentMobility::Movable);
-      // UE4-era lamp content ships light components with bAutoActivate off
-      // (UE4 rendered lights regardless of active state, so nobody noticed);
-      // UE5 culls inactive light components outright, which blacked out
-      // every lamp no matter the intensity. Activate them -- on/off is
-      // driven through intensity/visibility by the blueprints, not through
-      // component activation.
-      if (!LightComponent->IsActive())
-      {
-        LightComponent->SetActive(true);
-      }
-    }
+    ActivateAndConfigureLightComponents(GetOwner());
   }
 
   ApplyLegacyComponentConversion();
@@ -171,20 +137,72 @@ void UCarlaLight::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void UCarlaLight::ApplyLegacyComponentConversion()
 {
-  const float Scale = (LightType == ELightType::Street)
-      ? CVarCarlaLightStreetIntensityScale.GetValueOnGameThread()
-      : CVarCarlaLightLegacyIntensityScale.GetValueOnGameThread();
-  if (Scale == 1.0f || GetOwner() == nullptr)
+  if (GetOwner() == nullptr)
+  {
+    return;
+  }
+  ScaleLightComponentIntensities(GetOwner(), LightType);
+}
+
+void UCarlaLight::ActivateAndConfigureLightComponents(AActor* Owner)
+{
+  // Widen undersized authored attenuation radii so the light actually
+  // reaches the road (see cvar comment above).
+  const float MinRadius = CVarCarlaLightMinAttenuationRadius.GetValueOnGameThread();
+  if (MinRadius <= 0.0f || Owner == nullptr)
   {
     return;
   }
   TArray<UPointLightComponent*> LightComponents;
-  GetOwner()->GetComponents<UPointLightComponent>(LightComponents);
+  Owner->GetComponents<UPointLightComponent>(LightComponents);
+  for (UPointLightComponent* LightComponent : LightComponents)
+  {
+    if (LightComponent->AttenuationRadius < MinRadius)
+    {
+      LightComponent->SetAttenuationRadius(MinRadius);
+    }
+    // Lamp blueprints commonly embed the light inside the opaque lamp-head
+    // mesh; with shadow casting on, the head fully occludes its own light
+    // and the lamp illuminates nothing. Street furniture doesn't need
+    // per-lamp shadows.
+    LightComponent->SetCastShadows(false);
+    // Some lamp content ships decorative IES gobos (e.g. XArrowDiffuse on
+    // BP_StreetLight01) that mask virtually all of the light's output; a
+    // street light needs its raw cone. Drop the profile.
+    LightComponent->SetIESTexture(nullptr);
+    // Registered lights are driven at runtime (day/night, client API);
+    // Stationary components with no built lighting contribute nothing in
+    // -game. Make them movable so they always render dynamically.
+    LightComponent->SetMobility(EComponentMobility::Movable);
+    // UE4-era lamp content ships light components with bAutoActivate off
+    // (UE4 rendered lights regardless of active state, so nobody noticed);
+    // UE5 culls inactive light components outright, which blacked out
+    // every lamp no matter the intensity. Activate them -- on/off is
+    // driven through intensity/visibility by the blueprints, not through
+    // component activation.
+    if (!LightComponent->IsActive())
+    {
+      LightComponent->SetActive(true);
+    }
+  }
+}
+
+void UCarlaLight::ScaleLightComponentIntensities(AActor* Owner, ELightType LightType)
+{
+  const float Scale = (LightType == ELightType::Street)
+      ? CVarCarlaLightStreetIntensityScale.GetValueOnGameThread()
+      : CVarCarlaLightLegacyIntensityScale.GetValueOnGameThread();
+  if (Scale == 1.0f || Owner == nullptr)
+  {
+    return;
+  }
+  TArray<UPointLightComponent*> LightComponents;
+  Owner->GetComponents<UPointLightComponent>(LightComponents);
   for (UPointLightComponent* LightComponent : LightComponents)
   {
     const float Current = LightComponent->Intensity;
-    UE_LOG(LogCarla, VeryVerbose, TEXT("CarlaLight %d conversion: component %s intensity %f visible %d"),
-        Id, *LightComponent->GetName(), Current, LightComponent->IsVisible() ? 1 : 0);
+    UE_LOG(LogCarla, VeryVerbose, TEXT("CarlaLight conversion: owner %s component %s intensity %f visible %d"),
+        *Owner->GetName(), *LightComponent->GetName(), Current, LightComponent->IsVisible() ? 1 : 0);
     if (Current > 0.0f && Current < CarlaLightMaxAuthoredIntensity)
     {
       LightComponent->SetIntensity(Current * Scale);

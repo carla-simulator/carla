@@ -20,10 +20,43 @@
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/SkyLightComponent.h"
 #include "Curves/CurveFloat.h"
+#include "HAL/IConsoleManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
 #include "UObject/UnrealType.h"
 #include <util/ue-header-guard-end.h>
+
+// This project runs a FIXED day-calibrated exposure
+// (r.DefaultFeature.AutoExposure=False); CheckWeatherPostProcessEffects below
+// clamps the sky rig's post process to histogram EV100 [10,12] bias 0 for
+// sensor determinism. A near-black night scene always meters to the bright
+// end of that clamp (EV100=10), where the exposure multiplier is
+// 1/(K*2^EV100) with UE's EV100->luminance calibration constant K=1.2, i.e.
+// ~1/(1.2*1024) = 0.000814. UDirectionalLightComponent::Intensity is lux, so
+// asphalt (~7% albedo, surface radiance = illuminance*albedo/pi) needs about
+// this much total ambient illuminance to land at a dim-but-visible sRGB pixel
+// value: target pixel 10-25/255 -> linear ~0.0008-0.006 (undoing ~2.2 gamma)
+// -> scene radiance ~1-7 cd/m^2 (dividing by the 0.000814 exposure multiplier)
+// -> illuminance = radiance*pi/albedo ~= 45-315 lux, midpoint ~130 lux. Split
+// ~100 lux on the moon directional (the dominant single-direction term) and
+// the rest as ambient fill: a uniform sky of luminance L produces horizontal
+// illuminance E = pi*L, so a 30 lux ambient contribution needs L ~= 10, hence
+// the skylight floor below.
+static TAutoConsoleVariable<float> CVarCarlaWeatherMoonIntensity(
+    TEXT("carla.Weather.MoonIntensity"),
+    100.0f,
+    TEXT("Minimum DirectionalLightComponentMoon intensity (lux) enforced on the sky rig ")
+    TEXT("whenever SunAltitudeAngle < 0. Set 0 to leave the rig's authored/curve-driven ")
+    TEXT("moon intensity untouched."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherNightSkylightIntensity(
+    TEXT("carla.Weather.NightSkylightIntensity"),
+    10.0f,
+    TEXT("Minimum SkyLightComponent intensity enforced on the sky rig whenever ")
+    TEXT("SunAltitudeAngle < 0 (same units as the rig's SkyIntensity_Curve). Set 0 to ")
+    TEXT("leave the rig's curve-driven skylight intensity untouched."),
+    ECVF_Default);
 
 AWeather::AWeather(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
@@ -145,6 +178,20 @@ void AWeather::PushWeatherToSky()
                 ? Cast<ULightComponent>(ComponentProperty->GetObjectPropertyValue_InContainer(SkyActor))
                 : nullptr;
         };
+        // USkyLightComponent is a sibling of ULightComponent (both derive from
+        // ULightComponentBase, not from each other), and SetIntensity is
+        // declared separately on each subclass -- it needs its own,
+        // correctly-typed finder. The old FindComponent-based lookup below
+        // always Cast<ULightComponent>'d the sky light to nullptr, so
+        // SkyIntensity_Curve silently never reached the component; fixed here.
+        auto FindSkyLightComponent = [SkyActor](const TCHAR* PropertyName) -> USkyLightComponent*
+        {
+            FObjectProperty* ComponentProperty =
+                CastField<FObjectProperty>(SkyActor->GetClass()->FindPropertyByName(PropertyName));
+            return ComponentProperty != nullptr
+                ? Cast<USkyLightComponent>(ComponentProperty->GetObjectPropertyValue_InContainer(SkyActor))
+                : nullptr;
+        };
 
         if (UCurveFloat* SunIntensityCurve = FindCurve(TEXT("SunIntensity_Curve")))
         {
@@ -158,10 +205,43 @@ void AWeather::PushWeatherToSky()
         }
         if (UCurveFloat* SkyIntensityCurve = FindCurve(TEXT("SkyIntensity_Curve")))
         {
-            if (ULightComponent* SkyLightComponent = FindComponent(TEXT("SkyLightComponent")))
+            if (USkyLightComponent* SkyLightComponent = FindSkyLightComponent(TEXT("SkyLightComponent")))
                 SkyLightComponent->SetIntensity(SkyIntensityCurve->GetFloatValue(Weather.SunAltitudeAngle));
         }
 
+        // Night ambient floor. BP_Carla_Sky's DirectionalLightComponentMoon
+        // contributes nothing visible once the sun sets: either it carries
+        // the same UE4-era authoring defect CarlaLight.cpp documents and
+        // fixes for street lamps (bAutoActivate off on the component
+        // instance, silently culled by UE5.8 instead of just ignored like
+        // UE4), or its authored/curve-driven intensity is a physically-tiny
+        // real-moonlight lux value that is invisible under this project's
+        // fixed daylight-calibrated exposure -- or both. Address both
+        // defensively: force the moon and sky light active, then clamp their
+        // intensity up to a floor (never down, so this can never darken
+        // whatever the curves already produced) whenever the sun is below
+        // the horizon. See the cvar comments above for the exposure math
+        // behind the default floor values.
+        if (Weather.SunAltitudeAngle < 0.0f)
+        {
+            const float MoonFloor = CVarCarlaWeatherMoonIntensity.GetValueOnGameThread();
+            if (ULightComponent* MoonLightComponent = FindComponent(TEXT("DirectionalLightComponentMoon")))
+            {
+                if (!MoonLightComponent->IsActive())
+                    MoonLightComponent->SetActive(true);
+                if (MoonFloor > 0.0f && MoonLightComponent->Intensity < MoonFloor)
+                    MoonLightComponent->SetIntensity(MoonFloor);
+            }
+
+            const float SkylightFloor = CVarCarlaWeatherNightSkylightIntensity.GetValueOnGameThread();
+            if (USkyLightComponent* SkyLightComponent = FindSkyLightComponent(TEXT("SkyLightComponent")))
+            {
+                if (!SkyLightComponent->IsActive())
+                    SkyLightComponent->SetActive(true);
+                if (SkylightFloor > 0.0f && SkyLightComponent->Intensity < SkylightFloor)
+                    SkyLightComponent->SetIntensity(SkylightFloor);
+            }
+        }
     }
 
     // BP_GeneralSceneSettings owns the post-process volume that keeps the

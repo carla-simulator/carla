@@ -173,6 +173,21 @@ public:
   UFUNCTION(BlueprintCallable, Category = "Carla Light")
   void SetId(int InId);
 
+  /// Activates, disables shadow-casting on, strips the IES profile from, and
+  /// widens the attenuation radius of every Point/Spot light component found
+  /// on Owner (see the fix comments in RegisterLight). Exposed statically so
+  /// actors that own real light components without a UCarlaLight wrapper --
+  /// vehicle headlights, notably, which are authored directly on the vehicle
+  /// Blueprint -- can share the same UE5 activation fix instead of silently
+  /// rendering nothing under bAutoActivate=false.
+  static void ActivateAndConfigureLightComponents(AActor* Owner);
+
+  /// Multiplies the Intensity of every Point/Spot light component on Owner
+  /// that still looks like an authored UE4 value (see
+  /// CarlaLightMaxAuthoredIntensity in the .cpp) by the scale registered for
+  /// LightType. Shared with vehicle headlights for the same reason as above.
+  static void ScaleLightComponentIntensities(AActor* Owner, ELightType LightType);
+
 protected:
 	
   UPROPERTY(EditAnywhere, Category = "Carla Light")

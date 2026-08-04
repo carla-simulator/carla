@@ -472,6 +472,14 @@ private:
   void AddReferenceToManager();
   void RemoveReferenceToManager();
 
+  /// Some vehicle Blueprints (Tesla, Mustang, DodgeCharger, ...) author real
+  /// Spot/Point light components for their headlights instead of relying on
+  /// emissive materials alone, but those components are not wrapped in a
+  /// UCarlaLight -- so they never got UE5's bAutoActivate=false activation
+  /// fix or the UE4-to-UE5 photometric intensity conversion (see CarlaLight.h).
+  /// Applies both fixes directly to this actor's light components.
+  void ActivateVehicleLightComponents();
+
 
   FTimerHandle TimerHandler;
 public:
