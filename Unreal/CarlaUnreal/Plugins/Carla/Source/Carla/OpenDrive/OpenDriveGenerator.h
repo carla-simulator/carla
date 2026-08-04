@@ -158,15 +158,19 @@ protected:
   TSoftObjectPtr<UMaterialInterface> CrosswalkMaterial = TSoftObjectPtr<UMaterialInterface>(
       FSoftObjectPath(TEXT("/Game/Carla/Static/Static/Materials/Crosswalk_SpeedBump/MI_Crosswalk_SpeedBump.MI_Crosswalk_SpeedBump")));
 
-  /// Material applied to white lane-marking meshes.
+  /// Material applied to white lane-marking meshes. The Rural_A marking
+  /// variants carry a heavy paint-damage mask keyed to the road atlas UV
+  /// layout; on the generated markings' along-road UVs the mask samples as
+  /// dense black blotches across the line, so use the clean Asphalt_B
+  /// variants instead.
   UPROPERTY(Category = "Materials", EditAnywhere)
   TSoftObjectPtr<UMaterialInterface> LaneMarkingWhiteMaterial = TSoftObjectPtr<UMaterialInterface>(
-      FSoftObjectPath(TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Rural_A_LaneMarkingWhite.MI_Road_Rural_A_LaneMarkingWhite")));
+      FSoftObjectPath(TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_B_LaneMarkingWhite.MI_Road_Asphalt_B_LaneMarkingWhite")));
 
   /// Material applied to yellow lane-marking meshes (centre line).
   UPROPERTY(Category = "Materials", EditAnywhere)
   TSoftObjectPtr<UMaterialInterface> LaneMarkingYellowMaterial = TSoftObjectPtr<UMaterialInterface>(
-      FSoftObjectPath(TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Rural_A_LaneMarkingYellow.MI_Road_Rural_A_LaneMarkingYellow")));
+      FSoftObjectPath(TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_B_LaneMarkingYellow.MI_Road_Asphalt_B_LaneMarkingYellow")));
 
   /// Vertical offset (cm) applied to crosswalk and lane-marking meshes above
   /// the road surface, to avoid z-fighting with the road mesh section.

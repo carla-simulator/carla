@@ -114,6 +114,15 @@ void AWeather::PushWeatherToSky()
         // The rig's blueprint 'Update' only reaches UpdateClouds (the rest of
         // its exec chain was never wired in the ue5-dev content rework), so
         // run the individual refresh functions in dependency order instead.
+        // NOTE: the blueprint also has an UpdateNight function, deliberately
+        // NOT in this list: it multiplies the sky sphere material's current
+        // "Horizon color" by ~0.004 in place, i.e. it was authored to run
+        // exactly once at a day->night transition. Running it on every
+        // weather push collapses the sphere to pure black (no stars, no
+        // horizon glow) after a single call. The sphere is respawned fresh
+        // by SetSkySphere each push, and UpdateSkySphereColor plus the
+        // sphere's own RefreshMaterial already produce the day/night look
+        // from absolute curve values.
         static const TCHAR* UpdateFunctionNames[] = {
             TEXT("SetSunActorReference"),
             TEXT("SetSkySphere"),
@@ -123,8 +132,7 @@ void AWeather::PushWeatherToSky()
             TEXT("UpdateMoon"),
             TEXT("UpdateAtmosphereAndPrecipitation"),
             TEXT("UpdateSkySphere"),
-            TEXT("UpdateSkySphereColor"),
-            TEXT("UpdateNight")};
+            TEXT("UpdateSkySphereColor")};
         for (const TCHAR* FunctionName : UpdateFunctionNames)
         {
             UFunction* Function = SkyActor->FindFunction(FunctionName);
