@@ -10,6 +10,7 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaHUD.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/Lights/CarlaLight.h"
 #include "Carla/Trigger/FrictionTrigger.h"
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Util/EmptyActor.h"
@@ -60,6 +61,8 @@ ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
 void ACarlaWheeledVehicle::BeginPlay()
 {
   Super::BeginPlay();
+
+  ActivateVehicleLightComponents();
 
   UDefaultMovementComponent::CreateDefaultMovementComponent(this);
 
@@ -161,6 +164,12 @@ void ACarlaWheeledVehicle::BeginPlay()
     AckermannController.UpdateVehiclePhysics(this);
   }
   AddReferenceToManager();
+}
+
+void ACarlaWheeledVehicle::ActivateVehicleLightComponents()
+{
+  UCarlaLight::ActivateAndConfigureLightComponents(this);
+  UCarlaLight::ScaleLightComponentIntensities(this, ELightType::Vehicle);
 }
 
 void ACarlaWheeledVehicle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction){
@@ -748,6 +757,11 @@ void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState& LightS
   {
     InputControl.LightState = LightState;
     RefreshLightState(LightState);
+    // RefreshLightState (Blueprint) writes fresh authored UE4-era intensity
+    // values onto any real light components the vehicle owns every time it
+    // runs; rescale to UE5 photometric units after every call, same as
+    // UCarlaLight does after every push (see CarlaLight.cpp).
+    UCarlaLight::ScaleLightComponentIntensities(this, ELightType::Vehicle);
   }
 }
 
