@@ -188,6 +188,11 @@ public:
   /// LightType. Shared with vehicle headlights for the same reason as above.
   static void ScaleLightComponentIntensities(AActor* Owner, ELightType LightType);
 
+  /// The UE4->UE5 intensity conversion factor for a light type (the value of
+  /// carla.Light.StreetIntensityScale or carla.Light.LegacyIntensityScale),
+  /// for callers that scale blueprint-side values instead of components.
+  static float GetLegacyIntensityScale(ELightType LightType);
+
 protected:
 	
   UPROPERTY(EditAnywhere, Category = "Carla Light")

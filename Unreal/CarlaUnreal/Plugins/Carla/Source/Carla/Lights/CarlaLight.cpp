@@ -187,11 +187,16 @@ void UCarlaLight::ActivateAndConfigureLightComponents(AActor* Owner)
   }
 }
 
-void UCarlaLight::ScaleLightComponentIntensities(AActor* Owner, ELightType LightType)
+float UCarlaLight::GetLegacyIntensityScale(ELightType LightType)
 {
-  const float Scale = (LightType == ELightType::Street)
+  return (LightType == ELightType::Street)
       ? CVarCarlaLightStreetIntensityScale.GetValueOnGameThread()
       : CVarCarlaLightLegacyIntensityScale.GetValueOnGameThread();
+}
+
+void UCarlaLight::ScaleLightComponentIntensities(AActor* Owner, ELightType LightType)
+{
+  const float Scale = GetLegacyIntensityScale(LightType);
   if (Scale == 1.0f || Owner == nullptr)
   {
     return;
