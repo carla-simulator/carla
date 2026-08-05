@@ -89,6 +89,17 @@ public:
   /// RoadMeshBounds and GroundHeightSampleGrid.
   void GenerateGroundPlane();
 
+  /// Fills the narrow unmapped strips between parallel carriageway roads
+  /// with road-material surface. Real-world OpenDRIVE exports (NuRec
+  /// DeepMap) model each direction of a dual carriageway as a separate
+  /// road and leave the median/gore strip between them unmapped -- bare
+  /// terrain showed through at road level and read as broken road
+  /// surface. Queries RoadRaster for terrain cells trapped between
+  /// driving surfaces on opposite sides within MedianFillMaxWidth whose
+  /// heights agree (rejects gaps under overpasses). Must run after
+  /// GenerateRoadMesh.
+  void GenerateMedianFill();
+
   /// Generates the crosswalk mesh based on the OpenDRIVE information.
   void GenerateCrosswalkMesh();
 
@@ -237,6 +248,18 @@ protected:
   /// underside, see RunGenerationQA).
   UPROPERTY(Category = "Materials", EditAnywhere)
   float GroundPlaneZOffset = 5.0f;
+
+  /// Widest gap (cm) between opposing driving surfaces that
+  /// GenerateMedianFill closes with road surface; wider separations are
+  /// genuine verges and stay terrain.
+  UPROPERTY(Category = "Materials", EditAnywhere)
+  float MedianFillMaxWidth = 600.0f;
+
+  /// Max height disagreement (cm) between the two flanking driving
+  /// surfaces for a gap cell to be filled -- a gap under an overpass sees
+  /// both decks and must not be bridged at the wrong height.
+  UPROPERTY(Category = "Materials", EditAnywhere)
+  float MedianFillMaxHeightDelta = 100.0f;
 
   /// Width (cm) of the blend band past the road footprint over which the
   /// terrain transitions from exactly hugging the road underside to the

@@ -993,6 +993,187 @@ void AOpenDriveGenerator::GenerateGroundPlane()
   ActorMeshList.Add(TempActor);
 }
 
+void AOpenDriveGenerator::GenerateMedianFill()
+{
+  if (!RoadRaster.IsValid())
+  {
+    return;
+  }
+
+  // Morphological closing of the driving footprint: dilate by K cells,
+  // erode by K. Closes any gap narrower than ~2K cells regardless of
+  // corridor orientation and produces a connected ribbon by construction.
+  // (A previous per-axis flanking scan qualified cells alternately along
+  // diagonal medians, perforating the fill into a checkerboard.)
+  const int32 W = RoadRaster.Width;
+  const int32 H = RoadRaster.Height;
+  const int32 K = FMath::Max(1, FMath::CeilToInt(0.5f * MedianFillMaxWidth / RoadRaster.CellSize));
+  TArray<uint8> Mask;
+  Mask.SetNumZeroed(W * H);
+  for (int32 Idx = 0; Idx < W * H; ++Idx)
+  {
+    Mask[Idx] = RoadRaster.Cells[Idx].bDrive ? 1 : 0;
+  }
+  const auto Morph = [&](uint8 Grow)
+  {
+    TArray<uint8> Out = Mask;
+    for (int32 CY = 0; CY < H; ++CY)
+    {
+      for (int32 CX = 0; CX < W; ++CX)
+      {
+        if (Mask[CY * W + CX] == Grow)
+        {
+          continue;
+        }
+        for (int32 DY = -1; DY <= 1; ++DY)
+        {
+          for (int32 DX = -1; DX <= 1; ++DX)
+          {
+            const int32 NX = CX + DX;
+            const int32 NY = CY + DY;
+            if (NX >= 0 && NX < W && NY >= 0 && NY < H && Mask[NY * W + NX] == Grow)
+            {
+              Out[CY * W + CX] = Grow;
+              DY = 2;
+              break;
+            }
+          }
+        }
+      }
+    }
+    Mask = MoveTemp(Out);
+  };
+  for (int32 I = 0; I < K; ++I) { Morph(1); } // dilate
+  for (int32 I = 0; I < K; ++I) { Morph(0); } // erode
+
+  // Reduce to the cells the closing *added* (the gap ribbon), then grow
+  // that ribbon by one cell. The driving footprint's rasterized edge is
+  // stairstepped on diagonals and the erosion bites back into it,
+  // perforating the ribbon with alternating holes; one dilation of the
+  // ribbon alone patches those notches (the overlap lands under the road
+  // mesh or 1cm below it) without laying an apron around every outer road
+  // edge the way an extra dilation of the whole footprint would.
+  for (int32 Idx = 0; Idx < W * H; ++Idx)
+  {
+    Mask[Idx] = (Mask[Idx] && !RoadRaster.Cells[Idx].bDrive) ? 1 : 0;
+  }
+  Morph(1);
+
+  FProceduralCustomMesh MeshData;
+  const float UVTile = FMath::Max(GroundUVTileSize, 1.0f);
+  int32 FilledCells = 0;
+  for (int32 CY = 0; CY < H; ++CY)
+  {
+    for (int32 CX = 0; CX < W; ++CX)
+    {
+      // Emit for every ribbon cell AND under every driving cell. Ribbon
+      // cells flagged paved by the rasterizer's coverage tolerance can
+      // still be mostly grass in the render (skipping them perforated the
+      // fill with cell-shaped holes), and sub-cell gaps -- tessellation
+      // cracks, slivers narrower than one raster cell -- never register
+      // in the mask at all. The under-road blanket backs every such gap
+      // with asphalt 1cm beneath the road surface: invisible where the
+      // road is whole, road-coloured where it isn't.
+      const auto &Cell = RoadRaster.Cells[CY * W + CX];
+      bool bEmit = Mask[CY * W + CX] != 0;
+      if (!bEmit && Cell.bDrive)
+      {
+        // Interior driving cells only: at the outer road boundary the
+        // blanket would peek past the (smooth) road mesh edge as a
+        // cell-quantized stair silhouette.
+        bEmit = true;
+        for (int32 DY = -1; DY <= 1 && bEmit; ++DY)
+        {
+          for (int32 DX = -1; DX <= 1; ++DX)
+          {
+            const int32 NX = CX + DX;
+            const int32 NY = CY + DY;
+            if (NX < 0 || NX >= W || NY < 0 || NY >= H ||
+                (!RoadRaster.Cells[NY * W + NX].bDrive && !Mask[NY * W + NX]))
+            {
+              bEmit = false;
+              break;
+            }
+          }
+        }
+      }
+      if (!bEmit)
+      {
+        continue;
+      }
+      // Height guard: a gap under an overpass sees both decks -- if the
+      // driving surfaces around this cell disagree in height, don't
+      // bridge it. Otherwise take the nearest pavement's height so the
+      // fill follows the corridor's grade.
+      float MinZ = FLT_MAX, MaxZ = -FLT_MAX;
+      for (int32 DY = -K - 1; DY <= K + 1; ++DY)
+      {
+        for (int32 DX = -K - 1; DX <= K + 1; ++DX)
+        {
+          const int32 NX = CX + DX;
+          const int32 NY = CY + DY;
+          if (NX < 0 || NX >= W || NY < 0 || NY >= H)
+          {
+            continue;
+          }
+          const auto &N = RoadRaster.Cells[NY * W + NX];
+          if (N.bDrive)
+          {
+            MinZ = FMath::Min(MinZ, N.DriveMinZ);
+            MaxZ = FMath::Max(MaxZ, N.DriveMaxZ);
+          }
+        }
+      }
+      if (MinZ > MaxZ || (MaxZ - MinZ) > MedianFillMaxHeightDelta)
+      {
+        continue;
+      }
+      const float FillZ = Cell.NearestPavedMinZ;
+      ++FilledCells;
+      const float X0 = RoadRaster.OriginX + static_cast<float>(CX) * RoadRaster.CellSize;
+      const float Y0 = RoadRaster.OriginY + static_cast<float>(CY) * RoadRaster.CellSize;
+      const float X1 = X0 + RoadRaster.CellSize;
+      const float Y1 = Y0 + RoadRaster.CellSize;
+      // A hair below the neighbouring road surface: fills flush without
+      // z-fighting where the quad butts against the road mesh edge.
+      const float Z = FillZ - 1.0f;
+      const int32 Base = MeshData.Vertices.Num();
+      MeshData.Vertices.Append({
+          FVector(X0, Y1, Z), FVector(X1, Y1, Z),
+          FVector(X1, Y0, Z), FVector(X0, Y0, Z)});
+      for (int32 K = 0; K < 4; ++K)
+      {
+        MeshData.Normals.Add(FVector::UpVector);
+      }
+      MeshData.UV0.Append({
+          FVector2D(X0 / UVTile, Y1 / UVTile), FVector2D(X1 / UVTile, Y1 / UVTile),
+          FVector2D(X1 / UVTile, Y0 / UVTile), FVector2D(X0 / UVTile, Y0 / UVTile)});
+      MeshData.Triangles.Append({Base, Base + 1, Base + 3, Base + 1, Base + 2, Base + 3});
+    }
+  }
+
+  if (MeshData.Vertices.Num() == 0)
+  {
+    return;
+  }
+
+  ACarlaProceduralMeshActor* TempActor = GetWorld()->SpawnActor<ACarlaProceduralMeshActor>();
+  UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
+  TempPMC->bUseAsyncCooking = true;
+  TempPMC->bUseComplexAsSimpleCollision = true;
+  TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+  TempPMC->CreateMeshSection_LinearColor(
+      0, MeshData.Vertices, MeshData.Triangles, MeshData.Normals, MeshData.UV0,
+      TArray<FLinearColor>(), TArray<FProcMeshTangent>(), true);
+  if (UMaterialInterface* ResolvedRoadMaterial = RoadMaterial.LoadSynchronous())
+  {
+    TempPMC->SetMaterial(0, ResolvedRoadMaterial);
+  }
+  TagGeneratedComponent(*TempPMC, TempActor->GetUniqueID(), crp::CityObjectLabel::Roads);
+  ActorMeshList.Add(TempActor);
+  UE_LOG(LogCarla, Log, TEXT("AOpenDriveGenerator: median fill covered %d raster cells"), FilledCells);
+}
+
 void AOpenDriveGenerator::GenerateCrosswalkMesh()
 {
   if (!IsOpenDriveValid())
@@ -1334,6 +1515,7 @@ void AOpenDriveGenerator::GenerateSpawnPoints()
 void AOpenDriveGenerator::GenerateAll()
 {
   GenerateRoadMesh();
+  GenerateMedianFill();
   GenerateGroundPlane();
   GenerateCrosswalkMesh();
   GenerateLaneMarkings();
