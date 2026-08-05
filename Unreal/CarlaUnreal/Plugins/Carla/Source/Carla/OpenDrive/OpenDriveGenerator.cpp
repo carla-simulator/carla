@@ -9,13 +9,18 @@
 #include "Carla/Game/Tagger.h"
 #include "Carla.h"
 #include "Traffic/TrafficLightManager.h"
+#include "Traffic/TrafficSignBase.h"
 #include "Util/ProceduralCustomMesh.h"
 #include "Materials/MaterialInterface.h"
 #include "PCGComponent.h"
 #include "Components/BoxComponent.h"
+#include "Components/InstancedStaticMeshComponent.h"
 #include "EngineUtils.h"
 #include "TimerManager.h"
 #include "PCGGraph.h"
+#include "Misc/FileHelper.h"
+#include "Misc/Paths.h"
+#include "UObject/UObjectIterator.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
@@ -257,6 +262,194 @@ namespace {
 
 } // namespace
 
+void AOpenDriveGenerator::FRoadSurfaceRaster::Initialize(const FBox &Bounds, float InCellSize)
+{
+  CellSize = FMath::Max(InCellSize, 50.0f);
+  OriginX = Bounds.Min.X;
+  OriginY = Bounds.Min.Y;
+  Width = FMath::Max(1, FMath::CeilToInt((Bounds.Max.X - Bounds.Min.X) / CellSize)) + 1;
+  Height = FMath::Max(1, FMath::CeilToInt((Bounds.Max.Y - Bounds.Min.Y) / CellSize)) + 1;
+  Cells.Empty();
+  Cells.SetNum(Width * Height);
+}
+
+void AOpenDriveGenerator::FRoadSurfaceRaster::RasterizeTriangle(
+    const FVector &A, const FVector &B, const FVector &C, bool bIsDrive)
+{
+  const float MinX = FMath::Min3(A.X, B.X, C.X);
+  const float MaxX = FMath::Max3(A.X, B.X, C.X);
+  const float MinY = FMath::Min3(A.Y, B.Y, C.Y);
+  const float MaxY = FMath::Max3(A.Y, B.Y, C.Y);
+  const int32 X0 = FMath::Clamp(FMath::FloorToInt((MinX - OriginX) / CellSize), 0, Width - 1);
+  const int32 X1 = FMath::Clamp(FMath::CeilToInt((MaxX - OriginX) / CellSize), 0, Width - 1);
+  const int32 Y0 = FMath::Clamp(FMath::FloorToInt((MinY - OriginY) / CellSize), 0, Height - 1);
+  const int32 Y1 = FMath::Clamp(FMath::CeilToInt((MaxY - OriginY) / CellSize), 0, Height - 1);
+
+  const float Denom = (B.Y - C.Y) * (A.X - C.X) + (C.X - B.X) * (A.Y - C.Y);
+  if (FMath::Abs(Denom) < KINDA_SMALL_NUMBER)
+  {
+    return; // degenerate in XY (vertical face); carries no surface footprint
+  }
+
+  for (int32 CY = Y0; CY <= Y1; ++CY)
+  {
+    for (int32 CX = X0; CX <= X1; ++CX)
+    {
+      const float PX = OriginX + (static_cast<float>(CX) + 0.5f) * CellSize;
+      const float PY = OriginY + (static_cast<float>(CY) + 0.5f) * CellSize;
+      float W0 = ((B.Y - C.Y) * (PX - C.X) + (C.X - B.X) * (PY - C.Y)) / Denom;
+      float W1 = ((C.Y - A.Y) * (PX - C.X) + (A.X - C.X) * (PY - C.Y)) / Denom;
+      float W2 = 1.0f - W0 - W1;
+      // Tolerance of ~1/8 cell in barycentric space keeps thin triangles
+      // whose interior never covers a cell center from leaving footprint
+      // holes along lane edges.
+      constexpr float Tolerance = -0.05f;
+      if (W0 < Tolerance || W1 < Tolerance || W2 < Tolerance)
+      {
+        continue;
+      }
+      W0 = FMath::Max(W0, 0.0f);
+      W1 = FMath::Max(W1, 0.0f);
+      W2 = FMath::Max(W2, 0.0f);
+      const float WSum = W0 + W1 + W2;
+      const float Z = (W0 * A.Z + W1 * B.Z + W2 * C.Z) / FMath::Max(WSum, KINDA_SMALL_NUMBER);
+
+      FCell &Cell = Cells[CY * Width + CX];
+      if (!Cell.bPaved)
+      {
+        Cell.PavedMinZ = Z;
+        Cell.bPaved = 1;
+      }
+      else
+      {
+        Cell.PavedMinZ = FMath::Min(Cell.PavedMinZ, Z);
+      }
+      if (bIsDrive)
+      {
+        if (!Cell.bDrive)
+        {
+          Cell.DriveMinZ = Z;
+          Cell.DriveMaxZ = Z;
+          Cell.bDrive = 1;
+        }
+        else
+        {
+          Cell.DriveMinZ = FMath::Min(Cell.DriveMinZ, Z);
+          Cell.DriveMaxZ = FMath::Max(Cell.DriveMaxZ, Z);
+        }
+      }
+    }
+  }
+}
+
+void AOpenDriveGenerator::FRoadSurfaceRaster::BuildDistanceFields()
+{
+  // Two-pass chamfer distance transform (3-4 weights scaled to cell size,
+  // ~4% max error -- fine for meter-scale clearances). Runs twice over the
+  // same storage: once seeded by the driving footprint (DistToDrive), once
+  // by any pavement (DistToPaved, also propagating the seed cell's
+  // PavedMinZ as NearestPavedMinZ for the terrain skirt blend).
+  const float Straight = CellSize;
+  const float Diagonal = CellSize * 1.41421356f;
+  const float Infinite = 1e12f;
+
+  const auto Chamfer = [&](auto GetSeed, auto GetDist, auto SetDist, auto GetZ, auto SetZ)
+  {
+    for (int32 Idx = 0; Idx < Cells.Num(); ++Idx)
+    {
+      if (GetSeed(Cells[Idx]))
+      {
+        SetDist(Cells[Idx], 0.0f);
+        SetZ(Cells[Idx], Cells[Idx].PavedMinZ);
+      }
+      else
+      {
+        SetDist(Cells[Idx], Infinite);
+      }
+    }
+    const auto Relax = [&](FCell &Cell, int32 NX, int32 NY, float Cost)
+    {
+      if (NX < 0 || NX >= Width || NY < 0 || NY >= Height)
+      {
+        return;
+      }
+      const FCell &N = Cells[NY * Width + NX];
+      if (GetDist(N) + Cost < GetDist(Cell))
+      {
+        SetDist(Cell, GetDist(N) + Cost);
+        SetZ(Cell, GetZ(N));
+      }
+    };
+    for (int32 CY = 0; CY < Height; ++CY)
+    {
+      for (int32 CX = 0; CX < Width; ++CX)
+      {
+        FCell &Cell = Cells[CY * Width + CX];
+        Relax(Cell, CX - 1, CY, Straight);
+        Relax(Cell, CX, CY - 1, Straight);
+        Relax(Cell, CX - 1, CY - 1, Diagonal);
+        Relax(Cell, CX + 1, CY - 1, Diagonal);
+      }
+    }
+    for (int32 CY = Height - 1; CY >= 0; --CY)
+    {
+      for (int32 CX = Width - 1; CX >= 0; --CX)
+      {
+        FCell &Cell = Cells[CY * Width + CX];
+        Relax(Cell, CX + 1, CY, Straight);
+        Relax(Cell, CX, CY + 1, Straight);
+        Relax(Cell, CX + 1, CY + 1, Diagonal);
+        Relax(Cell, CX - 1, CY + 1, Diagonal);
+      }
+    }
+  };
+
+  float ScratchZ = 0.0f;
+  Chamfer(
+      [](const FCell &C) { return C.bDrive != 0; },
+      [](const FCell &C) { return C.DistToDrive; },
+      [](FCell &C, float V) { C.DistToDrive = V; },
+      [&ScratchZ](const FCell &) { return ScratchZ; },
+      [](FCell &, float) {});
+  Chamfer(
+      [](const FCell &C) { return C.bPaved != 0; },
+      [](const FCell &C) { return C.DistToPaved; },
+      [](FCell &C, float V) { C.DistToPaved = V; },
+      [](const FCell &C) { return C.NearestPavedMinZ; },
+      [](FCell &C, float V) { C.NearestPavedMinZ = V; });
+}
+
+const AOpenDriveGenerator::FRoadSurfaceRaster::FCell *
+AOpenDriveGenerator::FRoadSurfaceRaster::CellAtWorld(float X, float Y) const
+{
+  if (!IsValid())
+  {
+    return nullptr;
+  }
+  const int32 CX = FMath::FloorToInt((X - OriginX) / CellSize);
+  const int32 CY = FMath::FloorToInt((Y - OriginY) / CellSize);
+  if (CX < 0 || CX >= Width || CY < 0 || CY >= Height)
+  {
+    return nullptr;
+  }
+  return &Cells[CY * Width + CX];
+}
+
+/// Re-run the generation QA on the placed generator from the console:
+/// `carla.MapGenQA` (also runs automatically after GenerateAll).
+static FAutoConsoleCommandWithWorld GMapGenQACommand(
+    TEXT("carla.MapGenQA"),
+    TEXT("Run the generated-map QA checks (road support, terrain invasion, objects on roadway)"),
+    FConsoleCommandWithWorldDelegate::CreateStatic([](UWorld *World)
+    {
+      for (TActorIterator<AOpenDriveGenerator> It(World); It; ++It)
+      {
+        It->RunGenerationQA();
+        return;
+      }
+      UE_LOG(LogCarla, Warning, TEXT("carla.MapGenQA: no AOpenDriveGenerator in world"));
+    }));
+
 ACarlaProceduralMeshActor::ACarlaProceduralMeshActor()
 {
   PrimaryActorTick.bCanEverTick = false;
@@ -342,8 +535,11 @@ void AOpenDriveGenerator::GenerateRoadMesh()
   // Reset so re-running GenerateRoadMesh (e.g. regenerating the map) doesn't
   // leave GenerateGroundPlane sizing the fill heightfield off stale geometry.
   RoadMeshBounds = FBox(ForceInit);
-  GroundHeightSampleGrid.Reset();
-  const float SampleCellSize = FMath::Max(GroundHeightSampleCellSize, 1.0f);
+
+  // Two-phase: first gather every material section (accumulating bounds --
+  // the road raster needs the full footprint extent before any triangle
+  // can be splatted), then rasterize + spawn.
+  TArray<TPair<FProceduralCustomMesh, bool>> PendingSections; // mesh, bIsSidewalk
 
   for (const auto &Mesh : Meshes) {
     if (!Mesh->GetVertices().size())
@@ -400,55 +596,75 @@ void AOpenDriveGenerator::GenerateRoadMesh()
 
     for (const FString &MatName : SectionOrder)
     {
-      const FProceduralCustomMesh &SectionMesh = SectionsByMaterial[MatName];
+      FProceduralCustomMesh &SectionMesh = SectionsByMaterial[MatName];
       const bool bIsSidewalk = (MatName == TEXT("sidewalk"));
-
-      // Feeds GenerateGroundPlane, which must run after this loop.
       for (const FVector &Vertex : SectionMesh.Vertices)
       {
         RoadMeshBounds += Vertex;
-        const FIntPoint Cell(
-            FMath::FloorToInt(Vertex.X / SampleCellSize),
-            FMath::FloorToInt(Vertex.Y / SampleCellSize));
-        if (float *ExistingZ = GroundHeightSampleGrid.Find(Cell))
-        {
-          *ExistingZ = FMath::Min(*ExistingZ, static_cast<float>(Vertex.Z));
-        }
-        else
-        {
-          GroundHeightSampleGrid.Add(Cell, Vertex.Z);
-        }
       }
-
-      ACarlaProceduralMeshActor* TempActor = GetWorld()->SpawnActor<ACarlaProceduralMeshActor>();
-      UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
-      TempPMC->bUseAsyncCooking = true;
-      TempPMC->bUseComplexAsSimpleCollision = true;
-      TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-
-      TempPMC->CreateMeshSection_LinearColor(
-          0,
-          SectionMesh.Vertices,
-          SectionMesh.Triangles,
-          SectionMesh.Normals,
-          SectionMesh.UV0,
-          TArray<FLinearColor>(), // VertexColor
-          TArray<FProcMeshTangent>(), // Tangents
-          true); // Create collision
-
-      UMaterialInterface* SectionMaterial = bIsSidewalk ? ResolvedSidewalkMaterial : ResolvedRoadMaterial;
-      if (SectionMaterial)
-      {
-        TempPMC->SetMaterial(0, SectionMaterial);
-      }
-
-      TagGeneratedComponent(
-          *TempPMC,
-          TempActor->GetUniqueID(),
-          bIsSidewalk ? crp::CityObjectLabel::Sidewalks : crp::CityObjectLabel::Roads);
-
-      ActorMeshList.Add(TempActor);
+      PendingSections.Emplace(MoveTemp(SectionMesh), bIsSidewalk);
     }
+  }
+
+  // Build the road-surface raster before spawning anything: every road and
+  // sidewalk triangle splatted with barycentric-interpolated heights, then
+  // the distance fields that terrain generation, furniture placement and
+  // the generation QA all query.
+  if (RoadMeshBounds.IsValid)
+  {
+    const float Pad = GroundPlanePadding + 2.0f * GroundSkirtWidth;
+    RoadRaster.Initialize(
+        RoadMeshBounds.ExpandBy(FVector(Pad, Pad, 0.0f)),
+        GroundHeightSampleCellSize);
+    for (const auto &Section : PendingSections)
+    {
+      const FProceduralCustomMesh &SectionMesh = Section.Key;
+      const bool bIsDrive = !Section.Value;
+      for (int32 T = 0; T + 2 < SectionMesh.Triangles.Num(); T += 3)
+      {
+        RoadRaster.RasterizeTriangle(
+            SectionMesh.Vertices[SectionMesh.Triangles[T]],
+            SectionMesh.Vertices[SectionMesh.Triangles[T + 1]],
+            SectionMesh.Vertices[SectionMesh.Triangles[T + 2]],
+            bIsDrive);
+      }
+    }
+    RoadRaster.BuildDistanceFields();
+  }
+
+  for (const auto &Section : PendingSections)
+  {
+    const FProceduralCustomMesh &SectionMesh = Section.Key;
+    const bool bIsSidewalk = Section.Value;
+
+    ACarlaProceduralMeshActor* TempActor = GetWorld()->SpawnActor<ACarlaProceduralMeshActor>();
+    UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
+    TempPMC->bUseAsyncCooking = true;
+    TempPMC->bUseComplexAsSimpleCollision = true;
+    TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+
+    TempPMC->CreateMeshSection_LinearColor(
+        0,
+        SectionMesh.Vertices,
+        SectionMesh.Triangles,
+        SectionMesh.Normals,
+        SectionMesh.UV0,
+        TArray<FLinearColor>(), // VertexColor
+        TArray<FProcMeshTangent>(), // Tangents
+        true); // Create collision
+
+    UMaterialInterface* SectionMaterial = bIsSidewalk ? ResolvedSidewalkMaterial : ResolvedRoadMaterial;
+    if (SectionMaterial)
+    {
+      TempPMC->SetMaterial(0, SectionMaterial);
+    }
+
+    TagGeneratedComponent(
+        *TempPMC,
+        TempActor->GetUniqueID(),
+        bIsSidewalk ? crp::CityObjectLabel::Sidewalks : crp::CityObjectLabel::Roads);
+
+    ActorMeshList.Add(TempActor);
   }
 
   if(!Parameters.enable_mesh_visibility)
@@ -514,33 +730,51 @@ void AOpenDriveGenerator::GenerateGroundPlane()
   const float MinY = PaddedBounds.Min.Y;
   const float MaxY = PaddedBounds.Max.Y;
 
-  // Cap the vertex budget: if the padded map is large enough that the
-  // configured spacing would blow past it, widen the spacing instead of
-  // failing or stalling the load with a multi-million-vertex cook.
+  // Terrain grid aligned 1:1 with the road raster, vertices at cell
+  // centers, so every paved cell owns exactly one terrain vertex and the
+  // footprint hug below cannot miss narrow strips between vertices (a 5m
+  // grid over a 2.5m raster left boundary cells keyed to a neighbouring
+  // road's blend height -- meters wrong near stacked roads). Decimated by
+  // an integer factor only if a very large map would blow the vertex
+  // budget.
   constexpr int32 MaxGridVerticesPerAxis = 1024;
-  float GridStep = FMath::Max(GroundGridCellSize, 100.0f);
-  GridStep = FMath::Max3(
-      GridStep,
-      (MaxX - MinX) / static_cast<float>(MaxGridVerticesPerAxis - 1),
-      (MaxY - MinY) / static_cast<float>(MaxGridVerticesPerAxis - 1));
-  const int32 NumX = FMath::Clamp(FMath::CeilToInt((MaxX - MinX) / GridStep), 1, MaxGridVerticesPerAxis - 1) + 1;
-  const int32 NumY = FMath::Clamp(FMath::CeilToInt((MaxY - MinY) / GridStep), 1, MaxGridVerticesPerAxis - 1) + 1;
-  const float StepX = (MaxX - MinX) / static_cast<float>(NumX - 1);
-  const float StepY = (MaxY - MinY) / static_cast<float>(NumY - 1);
-
-  const float SampleCellSize = FMath::Max(GroundHeightSampleCellSize, 1.0f);
-
-  // Scattered fit points: one per occupied sample cell, at the cell center,
-  // carrying the min road/sidewalk z recorded there.
-  TArray<FVector> FitPoints;
-  FitPoints.Reserve(GroundHeightSampleGrid.Num());
-  for (const auto &Sample : GroundHeightSampleGrid)
+  int32 Decimate = 1;
+  while (RoadRaster.Width / Decimate > MaxGridVerticesPerAxis ||
+         RoadRaster.Height / Decimate > MaxGridVerticesPerAxis)
   {
-    FitPoints.Add(FVector(
-        (static_cast<float>(Sample.Key.X) + 0.5f) * SampleCellSize,
-        (static_cast<float>(Sample.Key.Y) + 0.5f) * SampleCellSize,
-        Sample.Value));
+    ++Decimate;
   }
+  const int32 NumX = FMath::Max(2, RoadRaster.Width / Decimate);
+  const int32 NumY = FMath::Max(2, RoadRaster.Height / Decimate);
+  const float StepX = RoadRaster.CellSize * static_cast<float>(Decimate);
+  const float StepY = StepX;
+  const float Vertex0X = RoadRaster.OriginX + 0.5f * RoadRaster.CellSize;
+  const float Vertex0Y = RoadRaster.OriginY + 0.5f * RoadRaster.CellSize;
+
+  if (!RoadRaster.IsValid())
+  {
+    UE_LOG(LogCarla, Warning, TEXT("AOpenDriveGenerator: road raster is empty, skipping ground plane"));
+    return;
+  }
+
+  // Scattered fit points for the free-terrain spline: one per paved raster
+  // cell, at the cell center, carrying the lowest surface z recorded there.
+  TArray<FVector> FitPoints;
+  for (int32 CY = 0; CY < RoadRaster.Height; ++CY)
+  {
+    for (int32 CX = 0; CX < RoadRaster.Width; ++CX)
+    {
+      const auto &Cell = RoadRaster.Cells[CY * RoadRaster.Width + CX];
+      if (Cell.bPaved)
+      {
+        FitPoints.Add(FVector(
+            RoadRaster.OriginX + (static_cast<float>(CX) + 0.5f) * RoadRaster.CellSize,
+            RoadRaster.OriginY + (static_cast<float>(CY) + 0.5f) * RoadRaster.CellSize,
+            Cell.PavedMinZ));
+      }
+    }
+  }
+  const float SampleCellSize = RoadRaster.CellSize;
 
   // Multilevel B-spline approximation: start with a control lattice a few
   // cells across the whole padded map (broad rolling shape, also the
@@ -554,7 +788,7 @@ void AOpenDriveGenerator::GenerateGroundPlane()
   const float ExtentX = MaxX - MinX;
   const float ExtentY = MaxY - MinY;
   float ControlSpacing = FMath::Max(ExtentX, ExtentY) / 4.0f;
-  const float FinestControlSpacing = FMath::Max(4.0f * SampleCellSize, GridStep);
+  const float FinestControlSpacing = FMath::Max(4.0f * SampleCellSize, StepX);
   constexpr int32 MaxSplineLevels = 12;
   TArray<FVector> Residuals = FitPoints;
   while (SplineLevels.Num() < MaxSplineLevels)
@@ -588,29 +822,74 @@ void AOpenDriveGenerator::GenerateGroundPlane()
     return Z;
   };
 
-  // Evaluate the terrain surface at each grid vertex, GroundPlaneZOffset
-  // below the fitted road height. Near roads, additionally clamp to the
-  // lowest actual road sample in the 3x3 cell neighbourhood: the spline
-  // approximates rather than interpolates, and even a small overshoot in a
-  // sag curve would poke terrain up through the road surface.
+  // Evaluate the terrain at each grid vertex from the raster's distance
+  // field, by construction rather than by approximation:
+  //   - inside the paved footprint: exactly GroundPlaneZOffset below the
+  //     lowest surface there (the road demonstrably rests on the ground,
+  //     and terrain can never rise through it);
+  //   - within GroundSkirtWidth of pavement: blend from the nearest
+  //     pavement's underside height out to the free spline surface, so
+  //     shoulders stay attached instead of dropping away;
+  //   - beyond the skirt: the free C2 spline surface.
+  const float SkirtWidth = FMath::Max(GroundSkirtWidth, GroundHeightSampleCellSize);
   TArray<float> Heights;
   Heights.SetNumUninitialized(NumX * NumY);
   for (int32 IY = 0; IY < NumY; ++IY)
   {
-    const float Y = MinY + static_cast<float>(IY) * StepY;
+    const float Y = Vertex0Y + static_cast<float>(IY) * StepY;
     for (int32 IX = 0; IX < NumX; ++IX)
     {
-      const float X = MinX + static_cast<float>(IX) * StepX;
-      float GroundZ = EvalSpline(X, Y) - GroundPlaneZOffset;
-      const int32 CellX = FMath::FloorToInt(X / SampleCellSize);
-      const int32 CellY = FMath::FloorToInt(Y / SampleCellSize);
+      const float X = Vertex0X + static_cast<float>(IX) * StepX;
+      float GroundZ;
+      const auto *Cell = RoadRaster.CellAtWorld(X, Y);
+      if (Cell && Cell->bPaved)
+      {
+        GroundZ = Cell->PavedMinZ - GroundPlaneZOffset;
+      }
+      else if (Cell && Cell->DistToPaved >= 0.0f && Cell->DistToPaved < SkirtWidth)
+      {
+        const float Alpha = Cell->DistToPaved / SkirtWidth;
+        GroundZ = FMath::Lerp(
+            Cell->NearestPavedMinZ - GroundPlaneZOffset,
+            EvalSpline(X, Y) - GroundPlaneZOffset,
+            Alpha);
+      }
+      else
+      {
+        GroundZ = EvalSpline(X, Y) - GroundPlaneZOffset;
+      }
+      // Final invasion guard against *discontinuous* neighbours only. A
+      // paved vertex on a continuously sloping road must keep its own
+      // cell's exact hug -- clamping it to a laterally-lower neighbour
+      // (20cm/cell on an 8% grade) would open a same-size gap under its
+      // own cell. Where an adjacent paved cell sits a deck lower
+      // (stacked roads, embankment edges), the vertex must drop below
+      // that lower surface or its triangle would cut up through it.
+      constexpr float ContinuousDropTolerance = 50.0f;
+      const float OwnPavedZ = (Cell && Cell->bPaved) ? Cell->PavedMinZ : FLT_MAX;
+      const int32 CellX = FMath::FloorToInt((X - RoadRaster.OriginX) / RoadRaster.CellSize);
+      const int32 CellY = FMath::FloorToInt((Y - RoadRaster.OriginY) / RoadRaster.CellSize);
       for (int32 DY = -1; DY <= 1; ++DY)
       {
         for (int32 DX = -1; DX <= 1; ++DX)
         {
-          if (const float *SampleZ = GroundHeightSampleGrid.Find(FIntPoint(CellX + DX, CellY + DY)))
+          const int32 NX = CellX + DX;
+          const int32 NY = CellY + DY;
+          if (NX < 0 || NX >= RoadRaster.Width || NY < 0 || NY >= RoadRaster.Height)
           {
-            GroundZ = FMath::Min(GroundZ, *SampleZ - GroundPlaneZOffset);
+            continue;
+          }
+          const auto &Neighbour = RoadRaster.Cells[NY * RoadRaster.Width + NX];
+          if (!Neighbour.bPaved)
+          {
+            continue;
+          }
+          const bool bContinuous =
+              OwnPavedZ != FLT_MAX &&
+              (OwnPavedZ - Neighbour.PavedMinZ) <= ContinuousDropTolerance;
+          if (!bContinuous)
+          {
+            GroundZ = FMath::Min(GroundZ, Neighbour.PavedMinZ - GroundPlaneZOffset);
           }
         }
       }
@@ -623,7 +902,7 @@ void AOpenDriveGenerator::GenerateGroundPlane()
   GroundGridHeights = Heights;
   GroundGridNumX = NumX;
   GroundGridNumY = NumY;
-  GroundGridOrigin = FVector2D(MinX, MinY);
+  GroundGridOrigin = FVector2D(Vertex0X, Vertex0Y);
   GroundGridStepX = StepX;
   GroundGridStepY = StepY;
 
@@ -633,10 +912,10 @@ void AOpenDriveGenerator::GenerateGroundPlane()
   const float UVTile = FMath::Max(GroundUVTileSize, 1.0f);
   for (int32 IY = 0; IY < NumY; ++IY)
   {
-    const float Y = MinY + static_cast<float>(IY) * StepY;
+    const float Y = Vertex0Y + static_cast<float>(IY) * StepY;
     for (int32 IX = 0; IX < NumX; ++IX)
     {
-      const float X = MinX + static_cast<float>(IX) * StepX;
+      const float X = Vertex0X + static_cast<float>(IX) * StepX;
       MeshData.Vertices.Add(FVector(X, Y, Heights[IY * NumX + IX]));
       // World-space UV tiling (GroundUVTileSize cm per texture repeat)
       // instead of stretching one tile across the whole map.
@@ -890,7 +1169,7 @@ float AOpenDriveGenerator::SampleGroundGridHeight(float X, float Y) const
   return FMath::Lerp(FMath::Lerp(Z00, Z10, S), FMath::Lerp(Z01, Z11, S), T);
 }
 
-int32 AOpenDriveGenerator::GenerateFurnitureAnchors(const FName &Tag, float Spacing, float Offset)
+int32 AOpenDriveGenerator::GenerateFurnitureAnchors(const FName &Tag, float Spacing, float Offset, float RoadClearance)
 {
   auto& CarlaMap = UCarlaStatics::GetGameMode(GetWorld())->GetMap();
 
@@ -914,7 +1193,6 @@ int32 AOpenDriveGenerator::GenerateFurnitureAnchors(const FName &Tag, float Spac
   // furniture density by road type later.
   const auto Anchors = CarlaMap->GetTreesTransform(MinPos, MaxPos, Spacing, Offset);
 
-  const float SampleCellSize = FMath::Max(GroundHeightSampleCellSize, 1.0f);
   int32 NumSpawned = 0;
   int32 NumFilteredOnRoad = 0;
 
@@ -927,15 +1205,26 @@ int32 AOpenDriveGenerator::GenerateFurnitureAnchors(const FName &Tag, float Spac
     // lateral distance past its own road's outermost driving lane, which is
     // wrong wherever roads widen, merge, overlap or fan into junctions --
     // the anchor can land on the roadway of *another* lane/road and the
-    // spawned furniture then blocks traffic. Discard any anchor within the
-    // closest driving lane's half-width plus a clearance margin of that
-    // lane's centerline, whichever road it belongs to.
+    // spawned furniture then blocks traffic. The anchor is a point but the
+    // content it spawns is not, so the required clearance is the content's
+    // bounding-box half-extent (per category), measured against the
+    // rasterized driving footprint -- the actual mesh, junction fans and
+    // widenings included, not a centerline heuristic.
+    const auto *Cell = RoadRaster.CellAtWorld(Location.X, Location.Y);
+    if (Cell && Cell->DistToDrive >= 0.0f && Cell->DistToDrive < RoadClearance)
+    {
+      ++NumFilteredOnRoad;
+      continue;
+    }
+    // Belt-and-braces centerline check for lanes whose mesh is missing
+    // from the raster (some imported maps skip generating a driving
+    // lane's geometry; the lane is still drivable).
     const auto ClosestWp = CarlaMap->GetClosestWaypointOnRoad(carla::geom::Location(Location));
     if (ClosestWp)
     {
       const FTransform LaneTransform = CarlaMap->ComputeTransform(*ClosestWp);
       const float LaneHalfWidth = 0.5f * 1e2f * static_cast<float>(CarlaMap->GetLaneWidth(*ClosestWp));
-      if (FVector::Dist2D(Location, LaneTransform.GetLocation()) < LaneHalfWidth + FurnitureRoadClearance)
+      if (FVector::Dist2D(Location, LaneTransform.GetLocation()) < LaneHalfWidth + RoadClearance)
       {
         ++NumFilteredOnRoad;
         continue;
@@ -945,15 +1234,12 @@ int32 AOpenDriveGenerator::GenerateFurnitureAnchors(const FName &Tag, float Spac
     // Re-ground: the anchor inherits the road-edge elevation from
     // GetTreesTransform, but it stands offset onto pavement or terrain
     // that is generally lower (ground offset plus lateral grade), leaving
-    // spawned furniture floating. If the anchor's sample cell saw road/
+    // spawned furniture floating. If the anchor's raster cell saw road/
     // sidewalk geometry, snap to that surface; otherwise drop it onto the
     // ground heightfield generated by GenerateGroundPlane.
-    const FIntPoint Cell(
-        FMath::FloorToInt(Location.X / SampleCellSize),
-        FMath::FloorToInt(Location.Y / SampleCellSize));
-    if (const float *PavementZ = GroundHeightSampleGrid.Find(Cell))
+    if (Cell && Cell->bPaved)
     {
-      Location.Z = *PavementZ;
+      Location.Z = Cell->PavedMinZ;
     }
     else if (GroundGridNumX > 1 && GroundGridNumY > 1)
     {
@@ -985,9 +1271,9 @@ void AOpenDriveGenerator::GeneratePoles()
     return;
   }
 
-  const int32 NumLampAnchors = GenerateFurnitureAnchors(LampAnchorTag, LampAnchorSpacing, LampAnchorOffset);
-  const int32 NumVegetationAnchors = GenerateFurnitureAnchors(VegetationAnchorTag, VegetationAnchorSpacing, VegetationAnchorOffset);
-  const int32 NumSignageAnchors = GenerateFurnitureAnchors(SignageAnchorTag, SignageAnchorSpacing, SignageAnchorOffset);
+  const int32 NumLampAnchors = GenerateFurnitureAnchors(LampAnchorTag, LampAnchorSpacing, LampAnchorOffset, LampRoadClearance);
+  const int32 NumVegetationAnchors = GenerateFurnitureAnchors(VegetationAnchorTag, VegetationAnchorSpacing, VegetationAnchorOffset, VegetationRoadClearance);
+  const int32 NumSignageAnchors = GenerateFurnitureAnchors(SignageAnchorTag, SignageAnchorSpacing, SignageAnchorOffset, SignageRoadClearance);
   const int32 TotalAnchors = NumLampAnchors + NumVegetationAnchors + NumSignageAnchors;
   UE_LOG(LogCarla, Log, TEXT("AOpenDriveGenerator: furniture anchors spawned: %d lamp, %d vegetation, %d signage"),
       NumLampAnchors, NumVegetationAnchors, NumSignageAnchors);
@@ -1053,6 +1339,213 @@ void AOpenDriveGenerator::GenerateAll()
   GenerateLaneMarkings();
   GenerateSpawnPoints();
   GeneratePoles();
+
+  // Deferred so the asynchronous PCG scatter has spawned its content
+  // before the object-placement pass measures it.
+  FTimerHandle QATimerHandle;
+  GetWorldTimerManager().SetTimer(
+      QATimerHandle, this, &AOpenDriveGenerator::RunGenerationQA, 3.0f, false);
+}
+
+void AOpenDriveGenerator::RunGenerationQA()
+{
+  if (!RoadRaster.IsValid() || GroundGridNumX < 2 || GroundGridNumY < 2)
+  {
+    UE_LOG(LogCarla, Warning, TEXT("MapGenQA: no generated map data to check"));
+    return;
+  }
+
+  constexpr int32 MaxReportedLocations = 50;
+  const auto AppendLoc = [](FString &Out, int32 &Count, float X, float Y, float Z, const TCHAR *Extra = nullptr)
+  {
+    if (Count >= MaxReportedLocations)
+    {
+      return;
+    }
+    if (!Out.IsEmpty())
+    {
+      Out += TEXT(",");
+    }
+    // Meters, CARLA client frame, directly usable to move the spectator.
+    Out += FString::Printf(TEXT("{\"x\":%.1f,\"y\":%.1f,\"z\":%.1f%s%s}"),
+        X / 100.0f, Y / 100.0f, Z / 100.0f,
+        Extra ? TEXT(",") : TEXT(""), Extra ? Extra : TEXT(""));
+    ++Count;
+  };
+
+  // --- A) road support / terrain invasion: every paved raster cell ---
+  int32 PavedCells = 0;
+  int32 FloatingCells = 0;
+  int32 InvadedCells = 0;
+  int32 StackedCells = 0;
+  int32 BridgeEdgeCells = 0;
+  float WorstGap = 0.0f;
+  float WorstInvasion = 0.0f;
+  FString FloatingLocs, InvadedLocs;
+  int32 FloatingLocCount = 0, InvadedLocCount = 0;
+  for (int32 CY = 0; CY < RoadRaster.Height; ++CY)
+  {
+    for (int32 CX = 0; CX < RoadRaster.Width; ++CX)
+    {
+      const auto &Cell = RoadRaster.Cells[CY * RoadRaster.Width + CX];
+      if (!Cell.bPaved)
+      {
+        continue;
+      }
+      ++PavedCells;
+      if (Cell.bDrive && (Cell.DriveMaxZ - Cell.DriveMinZ) > QAStackedRoadGap)
+      {
+        ++StackedCells; // upper deck is a bridge; only the lower is checked
+      }
+      // A cell whose 3x3 neighbourhood contains pavement a deck lower is a
+      // bridge/embankment edge: one terrain surface cannot simultaneously
+      // support this deck and stay below the lower one, so a support gap
+      // here is structural (wants bridge skirt geometry), not a terrain
+      // defect -- tally it separately from genuine floating.
+      bool bBridgeEdge = false;
+      for (int32 DY = -1; DY <= 1 && !bBridgeEdge; ++DY)
+      {
+        for (int32 DX = -1; DX <= 1; ++DX)
+        {
+          const int32 NX = CX + DX;
+          const int32 NY = CY + DY;
+          if (NX < 0 || NX >= RoadRaster.Width || NY < 0 || NY >= RoadRaster.Height)
+          {
+            continue;
+          }
+          const auto &Neighbour = RoadRaster.Cells[NY * RoadRaster.Width + NX];
+          if (Neighbour.bPaved && (Cell.PavedMinZ - Neighbour.PavedMinZ) > 50.0f)
+          {
+            bBridgeEdge = true;
+            break;
+          }
+        }
+      }
+      const float X = RoadRaster.OriginX + (static_cast<float>(CX) + 0.5f) * RoadRaster.CellSize;
+      const float Y = RoadRaster.OriginY + (static_cast<float>(CY) + 0.5f) * RoadRaster.CellSize;
+      const float Gap = Cell.PavedMinZ - SampleGroundGridHeight(X, Y);
+      if (Gap > QASupportGapMax)
+      {
+        if (bBridgeEdge)
+        {
+          ++BridgeEdgeCells;
+        }
+        else
+        {
+          ++FloatingCells;
+          WorstGap = FMath::Max(WorstGap, Gap);
+          AppendLoc(FloatingLocs, FloatingLocCount, X, Y, Cell.PavedMinZ);
+        }
+      }
+      else if (Gap < -1.0f)
+      {
+        ++InvadedCells;
+        WorstInvasion = FMath::Max(WorstInvasion, -Gap);
+        AppendLoc(InvadedLocs, InvadedLocCount, X, Y, Cell.PavedMinZ);
+      }
+    }
+  }
+
+  // --- B) objects on the roadway: BB footprints vs driving footprint ---
+  int32 ObjectsChecked = 0;
+  int32 ObjectViolations = 0;
+  FString ObjectLocs;
+  int32 ObjectLocCount = 0;
+  // Pivot-based test: an object stands *in* the roadway when its support
+  // point (tree trunk, lamp pole, shelter structure -- the placed
+  // transform's origin) is on or within a meter of the driving footprint
+  // at road level. Bounding boxes are deliberately not used for the
+  // verdict: a lamp arm or tree canopy legitimately overhangs the lanes
+  // meters above traffic, and its BB reaches the ground via the off-road
+  // pole/trunk, which made every mature roadside tree a false positive.
+  const auto PivotBlocksRoad = [&](const FVector &Pivot) -> bool
+  {
+    const auto *Cell = RoadRaster.CellAtWorld(Pivot.X, Pivot.Y);
+    if (!Cell)
+    {
+      return false;
+    }
+    const bool bOnFootprint =
+        Cell->bDrive || (Cell->DistToDrive >= 0.0f && Cell->DistToDrive < 100.0f);
+    // z gate: only content at road level counts -- furniture on a deck
+    // above or below an overpass shares XY with the lanes legitimately.
+    return bOnFootprint && FMath::Abs(Pivot.Z - Cell->NearestPavedMinZ) < 500.0f;
+  };
+  const auto IsExemptOwner = [](const AActor *Owner) -> bool
+  {
+    // Roads/terrain/markings are this generator's own output (identified
+    // by component tags below); traffic signals legitimately stand at the
+    // roadside per the OpenDRIVE data; spawn points and pawns are not
+    // scenery. The sky sphere's bounds span the whole map -- size-gated.
+    return Owner == nullptr
+        || Owner->IsA<ATrafficSignBase>()
+        || Owner->IsA<AVehicleSpawnPoint>()
+        || Owner->IsA<APawn>();
+  };
+  for (TObjectIterator<UStaticMeshComponent> It; It; ++It)
+  {
+    UStaticMeshComponent *Comp = *It;
+    if (!IsValid(Comp) || Comp->GetWorld() != GetWorld() || !Comp->GetStaticMesh())
+    {
+      continue;
+    }
+    if (IsExemptOwner(Comp->GetOwner()))
+    {
+      continue;
+    }
+    const auto CheckOnePivot = [&](const FVector &Pivot)
+    {
+      ++ObjectsChecked;
+      if (PivotBlocksRoad(Pivot))
+      {
+        ++ObjectViolations;
+        const FString Extra = FString::Printf(TEXT("\"class\":\"%s\""),
+            *Comp->GetOwner()->GetClass()->GetName());
+        AppendLoc(ObjectLocs, ObjectLocCount, Pivot.X, Pivot.Y, Pivot.Z, *Extra);
+      }
+    };
+    if (const UInstancedStaticMeshComponent *ISM = Cast<UInstancedStaticMeshComponent>(Comp))
+    {
+      for (int32 Inst = 0; Inst < ISM->GetInstanceCount(); ++Inst)
+      {
+        FTransform InstTransform;
+        if (ISM->GetInstanceTransform(Inst, InstTransform, /*bWorldSpace=*/true))
+        {
+          CheckOnePivot(InstTransform.GetLocation());
+        }
+      }
+    }
+    else
+    {
+      // Size gate: skip map-spanning geometry (sky sphere & co).
+      if (Comp->Bounds.GetBox().GetExtent().X > 50000.0f ||
+          Comp->Bounds.GetBox().GetExtent().Y > 50000.0f)
+      {
+        continue;
+      }
+      CheckOnePivot(Comp->GetComponentLocation());
+    }
+  }
+
+  UE_LOG(LogCarla, Log,
+      TEXT("MapGenQA: paved cells %d (stacked %d, bridge-edge %d) | floating %d (worst gap %.0fcm) | ")
+      TEXT("terrain invasion %d (worst %.0fcm) | objects checked %d, on roadway %d"),
+      PavedCells, StackedCells, BridgeEdgeCells, FloatingCells, WorstGap,
+      InvadedCells, WorstInvasion, ObjectsChecked, ObjectViolations);
+
+  const FString Report = FString::Printf(
+      TEXT("{\n")
+      TEXT("  \"support\": {\"paved_cells\": %d, \"stacked_cells\": %d, \"bridge_edge_cells\": %d, ")
+      TEXT("\"floating_cells\": %d, \"worst_gap_cm\": %.1f, \"floating_locations\": [%s]},\n")
+      TEXT("  \"invasion\": {\"cells\": %d, \"worst_cm\": %.1f, \"locations\": [%s]},\n")
+      TEXT("  \"objects\": {\"checked\": %d, \"on_roadway\": %d, \"items\": [%s]}\n")
+      TEXT("}\n"),
+      PavedCells, StackedCells, BridgeEdgeCells, FloatingCells, WorstGap, *FloatingLocs,
+      InvadedCells, WorstInvasion, *InvadedLocs,
+      ObjectsChecked, ObjectViolations, *ObjectLocs);
+  const FString ReportPath = FPaths::ProjectSavedDir() / TEXT("mapgen_qa.json");
+  FFileHelper::SaveStringToFile(Report, *ReportPath);
+  UE_LOG(LogCarla, Log, TEXT("MapGenQA: report written to %s"), *ReportPath);
 }
 
 void AOpenDriveGenerator::BeginPlay()

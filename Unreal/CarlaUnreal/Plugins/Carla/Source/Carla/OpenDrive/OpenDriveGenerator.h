@@ -135,13 +135,48 @@ protected:
   /// FurnitureAnchorBounds drives PCGBoundsComponent below.
   FBox RoadMeshBounds = FBox(ForceInit);
 
-  /// Lowest road/sidewalk vertex height per XY cell of size
-  /// GroundHeightSampleCellSize, accumulated in GenerateRoadMesh alongside
-  /// RoadMeshBounds and consumed by GenerateGroundPlane to interpolate the
-  /// ground heightfield. Min (not mean) per cell so that where an elevated
-  /// road overlaps a lower one the ground follows the lower surface instead
-  /// of climbing halfway up to the overpass.
-  TMap<FIntPoint, float> GroundHeightSampleGrid;
+  /// The authoritative "what is road surface, where, at what height"
+  /// tool the rest of generation consumes. GenerateRoadMesh rasterizes
+  /// every road/sidewalk *triangle* (vertices alone leave unconstrained
+  /// holes inside lanes -- the mesh is dense along s but a full lane wide
+  /// laterally) into a regular XY grid with barycentric-interpolated
+  /// surface heights, then a chamfer distance transform gives every cell
+  /// its distance to the driving footprint and to any pavement, plus the
+  /// height of the nearest pavement. Terrain generation, furniture
+  /// placement and the generation QA all query this one structure instead
+  /// of re-deriving geometry their own (subtly different) ways.
+  struct FRoadSurfaceRaster
+  {
+    struct FCell
+    {
+      float DriveMinZ = 0.0f;
+      float DriveMaxZ = 0.0f;
+      float PavedMinZ = 0.0f;      // min over driving + sidewalk surfaces
+      float DistToDrive = -1.0f;   // cm to the driving footprint, 0 inside
+      float DistToPaved = -1.0f;   // cm to any pavement, 0 inside
+      float NearestPavedMinZ = 0.0f;
+      uint8 bDrive = 0;
+      uint8 bPaved = 0;
+    };
+
+    float CellSize = 250.0f;
+    float OriginX = 0.0f;
+    float OriginY = 0.0f;
+    int32 Width = 0;
+    int32 Height = 0;
+    TArray<FCell> Cells;
+
+    bool IsValid() const { return Width > 0 && Height > 0; }
+    void Initialize(const FBox &Bounds, float InCellSize);
+    /// Splats one triangle of road ("drive") or sidewalk surface into the
+    /// grid: conservative 2D rasterization, per-cell-center barycentric z.
+    void RasterizeTriangle(const FVector &A, const FVector &B, const FVector &C, bool bIsDrive);
+    /// Two-pass chamfer distance transform filling DistToDrive/DistToPaved
+    /// and NearestPavedMinZ. Call once after all triangles are in.
+    void BuildDistanceFields();
+    const FCell *CellAtWorld(float X, float Y) const;
+  };
+  FRoadSurfaceRaster RoadRaster;
 
   /// Material applied to driving-lane mesh sections.
   UPROPERTY(Category = "Materials", EditAnywhere)
@@ -195,16 +230,24 @@ protected:
   UPROPERTY(Category = "Materials", EditAnywhere)
   float DecalZOffset = 1.5f;
 
-  /// Vertical offset (cm) applied *below* the interpolated road height at
-  /// each ground grid vertex -- keeps the heightfield clear of z-fighting
-  /// with the road surface while staying close enough that shoulders don't
-  /// visibly float above it.
+  /// Vertical offset (cm) applied *below* the road surface height where
+  /// the terrain runs under road geometry -- large enough to avoid
+  /// z-fighting, small enough that the road visibly rests on the ground
+  /// (the generation QA requires terrain within 10cm of the road
+  /// underside, see RunGenerationQA).
   UPROPERTY(Category = "Materials", EditAnywhere)
-  float GroundPlaneZOffset = 15.0f;
+  float GroundPlaneZOffset = 5.0f;
 
-  /// XY cell size (cm) of GroundHeightSampleGrid, the min-z-per-cell road
-  /// height samples the terrain B-spline is fit to. 2.5m resolves the
-  /// vertical curvature of ramps and crests that a lane-width cell aliases.
+  /// Width (cm) of the blend band past the road footprint over which the
+  /// terrain transitions from exactly hugging the road underside to the
+  /// free B-spline surface. Within the band the surface is also clamped
+  /// below the nearest road sample, so the transition can never rise
+  /// through a road.
+  UPROPERTY(Category = "Materials", EditAnywhere)
+  float GroundSkirtWidth = 1000.0f;
+
+  /// XY cell size (cm) of RoadRaster. 2.5m resolves both the vertical
+  /// curvature of ramps/crests and lane-scale footprint detail.
   UPROPERTY(Category = "Materials", EditAnywhere)
   float GroundHeightSampleCellSize = 250.0f;
 
@@ -214,12 +257,20 @@ protected:
   UPROPERTY(Category = "Materials", EditAnywhere)
   float GroundGridCellSize = 500.0f;
 
-  /// Extra clearance (cm) beyond the lane half-width that street furniture
-  /// must keep from the nearest driving-lane centerline; anchors closer
-  /// than this are discarded so scattered objects (bus stops, trees) can't
-  /// end up standing on the roadway where lanes widen, merge or overlap.
+  /// Per-category clearance (cm) beyond the lane half-width that street
+  /// furniture must keep from the nearest driving-lane centerline; anchors
+  /// closer than this are discarded so scattered objects can't stand on or
+  /// overhang the roadway where lanes widen, merge or overlap. Sized to
+  /// the spawned content's bounding-box half-extent (an anchor is a point;
+  /// the bus shelter it spawns is ~8m long), not a nominal margin.
   UPROPERTY(Category = "Street Furniture", EditAnywhere)
-  float FurnitureRoadClearance = 100.0f;
+  float LampRoadClearance = 150.0f;
+
+  UPROPERTY(Category = "Street Furniture", EditAnywhere)
+  float VegetationRoadClearance = 250.0f;
+
+  UPROPERTY(Category = "Street Furniture", EditAnywhere)
+  float SignageRoadClearance = 450.0f;
 
   /// Evaluated ground heightfield (final terrain surface z per grid vertex,
   /// row-major, GroundGridNumY rows of GroundGridNumX), retained after
@@ -332,7 +383,40 @@ protected:
 
   /// Spawns one AProceduralFurnitureAnchor per transform returned by
   /// Map::GetTreesTransform for the given spacing/offset, tagged for the
-  /// PCG graph to pick up. Returns the number of anchors spawned.
-  int32 GenerateFurnitureAnchors(const FName &Tag, float Spacing, float Offset);
+  /// PCG graph to pick up, re-grounded onto pavement/terrain and filtered
+  /// against driving lanes with the given clearance (cm) past the lane
+  /// half-width. Returns the number of anchors spawned.
+  int32 GenerateFurnitureAnchors(const FName &Tag, float Spacing, float Offset, float RoadClearance);
+
+public:
+
+  /// Systematic post-generation validation, run automatically shortly
+  /// after GenerateAll (delayed so the async PCG scatter has spawned its
+  /// content) and re-runnable on demand via the console command
+  /// "carla.MapGenQA". Checks, exhaustively rather than by spot samples:
+  ///   A) road support -- every road/sidewalk sample cell must have
+  ///      terrain 0..QASupportGapMax below its lowest surface (floating
+  ///      road if the gap is larger, terrain invasion if negative);
+  ///      stacked-road cells (MaxZ - MinZ > QAStackedRoadGap) only check
+  ///      the lower deck, the upper one is a legitimate bridge.
+  ///   B) object placement -- the bounding-box footprint of every static
+  ///      primitive not generated by this actor (street furniture from
+  ///      the PCG scatter, incl. per-instance foliage ISMs) must stay
+  ///      clear of every driving lane's corridor.
+  /// Logs a summary and writes the full violation list with world
+  /// locations to Saved/mapgen_qa.json for external tooling.
+  void RunGenerationQA();
+
+protected:
+
+  /// Max allowed gap (cm) between a road cell's lowest surface and the
+  /// terrain below it before the cell counts as a floating road.
+  UPROPERTY(Category = "Generation QA", EditAnywhere)
+  float QASupportGapMax = 10.0f;
+
+  /// Min z spread (cm) within one sample cell that marks it as stacked
+  /// roads (bridge over road) rather than a single surface.
+  UPROPERTY(Category = "Generation QA", EditAnywhere)
+  float QAStackedRoadGap = 400.0f;
 
 };
