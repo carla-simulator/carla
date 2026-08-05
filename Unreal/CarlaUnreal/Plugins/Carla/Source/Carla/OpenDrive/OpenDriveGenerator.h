@@ -76,10 +76,15 @@ public:
   /// Generates a terrain-following heightfield beneath the generated road
   /// network so gaps in the road/sidewalk mesh (roundabout centers, area
   /// beyond the shoulders, etc.) don't show blue sky through the ground.
-  /// Each grid vertex takes its height from nearby road geometry (inverse-
-  /// distance interpolation over GroundHeightSampleGrid) minus
-  /// GroundPlaneZOffset, so the ground hugs undulating roads instead of
-  /// sitting at a single min-z plane that real-elevation maps float above.
+  /// The terrain surface is a multilevel B-spline approximation (Lee,
+  /// Wolberg & Shin 1997) fit to the road height samples in
+  /// GroundHeightSampleGrid: a coarse-to-fine hierarchy of uniform cubic
+  /// B-spline lattices, each level fit to the residual left by the previous
+  /// one, giving a C2-smooth surface that follows the road network's
+  /// vertical curvature instead of a piecewise-linear patchwork that pokes
+  /// through sag curves and drops away under crests. Near roads the surface
+  /// is additionally clamped to GroundPlaneZOffset below the lowest nearby
+  /// road sample so smoothing can never push terrain up through the road.
   /// Must run after GenerateRoadMesh(), which is what populates
   /// RoadMeshBounds and GroundHeightSampleGrid.
   void GenerateGroundPlane();
@@ -198,18 +203,38 @@ protected:
   float GroundPlaneZOffset = 15.0f;
 
   /// XY cell size (cm) of GroundHeightSampleGrid, the min-z-per-cell road
-  /// height samples the ground heightfield interpolates from. Smaller cells
-  /// track elevation changes tighter but cost memory per road vertex bucket;
-  /// 5m ~= one lane width, plenty for road-scale grades.
+  /// height samples the terrain B-spline is fit to. 2.5m resolves the
+  /// vertical curvature of ramps and crests that a lane-width cell aliases.
   UPROPERTY(Category = "Materials", EditAnywhere)
-  float GroundHeightSampleCellSize = 500.0f;
+  float GroundHeightSampleCellSize = 250.0f;
 
-  /// XY spacing (cm) between ground heightfield grid vertices. 10m keeps a
-  /// ~1km-square map around 10k vertices while still following highway
-  /// on-ramp grades; raised automatically if the padded map bounds would
-  /// exceed a sane vertex budget.
+  /// XY spacing (cm) between ground heightfield grid vertices; the fitted
+  /// B-spline surface is evaluated at this resolution. Raised automatically
+  /// if the padded map bounds would exceed a sane vertex budget.
   UPROPERTY(Category = "Materials", EditAnywhere)
-  float GroundGridCellSize = 1000.0f;
+  float GroundGridCellSize = 500.0f;
+
+  /// Extra clearance (cm) beyond the lane half-width that street furniture
+  /// must keep from the nearest driving-lane centerline; anchors closer
+  /// than this are discarded so scattered objects (bus stops, trees) can't
+  /// end up standing on the roadway where lanes widen, merge or overlap.
+  UPROPERTY(Category = "Street Furniture", EditAnywhere)
+  float FurnitureRoadClearance = 100.0f;
+
+  /// Evaluated ground heightfield (final terrain surface z per grid vertex,
+  /// row-major, GroundGridNumY rows of GroundGridNumX), retained after
+  /// GenerateGroundPlane so GenerateFurnitureAnchors can re-ground
+  /// scattered objects onto the terrain they'll actually stand on.
+  TArray<float> GroundGridHeights;
+  int32 GroundGridNumX = 0;
+  int32 GroundGridNumY = 0;
+  FVector2D GroundGridOrigin = FVector2D::ZeroVector;
+  float GroundGridStepX = 0.0f;
+  float GroundGridStepY = 0.0f;
+
+  /// Bilinear interpolation of GroundGridHeights at a world XY position.
+  /// Only valid once GenerateGroundPlane has run (GroundGridNumX > 0).
+  float SampleGroundGridHeight(float X, float Y) const;
 
   /// How far (cm) the ground plane extends past the generated road/sidewalk
   /// bounding box on each side, so the fill doesn't end exactly at the
@@ -295,9 +320,11 @@ protected:
   UPROPERTY(Category = "Street Furniture", EditAnywhere)
   FName SignageAnchorTag = FName("PCG_SignageAnchor");
 
-  /// Spacing (m) between signage anchors along each road.
+  /// Spacing (m) between signage anchors along each road. Sparse: this row
+  /// spawns full bus-stop shelters, and a shelter every 60m read as a
+  /// repeating wall of street furniture.
   UPROPERTY(Category = "Street Furniture", EditAnywhere)
-  float SignageAnchorSpacing = 60.0f;
+  float SignageAnchorSpacing = 150.0f;
 
   /// Lateral offset (m) of signage anchors, same row as lamps by default.
   UPROPERTY(Category = "Street Furniture", EditAnywhere)

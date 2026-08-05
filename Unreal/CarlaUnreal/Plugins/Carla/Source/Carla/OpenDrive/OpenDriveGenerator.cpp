@@ -151,6 +151,110 @@ namespace {
     return Result;
   }
 
+  /// One level of the multilevel B-spline approximation (Lee, Wolberg &
+  /// Shin, "Scattered Data Interpolation with Multilevel B-Splines", IEEE
+  /// TVCG 1997) used to fit the ground terrain surface to the road height
+  /// samples: a uniform bicubic B-spline over a regular control lattice,
+  /// fit in closed form to scattered points by distributing each point's
+  /// value onto the 4x4 control points whose basis functions cover it,
+  /// weighted so points with overlapping support average by influence.
+  struct FGroundBSplineLattice
+  {
+    float OriginX = 0.0f;
+    float OriginY = 0.0f;
+    float Spacing = 1.0f;
+    int32 CellsX = 1;
+    int32 CellsY = 1;
+    TArray<float> Control; // (CellsX + 3) * (CellsY + 3), row-major in Y
+
+    static void Basis(float T, float B[4])
+    {
+      const float T2 = T * T;
+      const float T3 = T2 * T;
+      B[0] = (1.0f - T) * (1.0f - T) * (1.0f - T) / 6.0f;
+      B[1] = (3.0f * T3 - 6.0f * T2 + 4.0f) / 6.0f;
+      B[2] = (-3.0f * T3 + 3.0f * T2 + 3.0f * T + 1.0f) / 6.0f;
+      B[3] = T3 / 6.0f;
+    }
+
+    void LocalCoords(float X, float Y, int32 &I, int32 &J, float &S, float &T) const
+    {
+      const float FX = FMath::Clamp((X - OriginX) / Spacing, 0.0f, static_cast<float>(CellsX) - KINDA_SMALL_NUMBER);
+      const float FY = FMath::Clamp((Y - OriginY) / Spacing, 0.0f, static_cast<float>(CellsY) - KINDA_SMALL_NUMBER);
+      I = FMath::Clamp(FMath::FloorToInt(FX), 0, CellsX - 1);
+      J = FMath::Clamp(FMath::FloorToInt(FY), 0, CellsY - 1);
+      S = FX - static_cast<float>(I);
+      T = FY - static_cast<float>(J);
+    }
+
+    float Eval(float X, float Y) const
+    {
+      int32 I, J;
+      float S, T, BS[4], BT[4];
+      LocalCoords(X, Y, I, J, S, T);
+      Basis(S, BS);
+      Basis(T, BT);
+      const int32 NumCtrlX = CellsX + 3;
+      float Z = 0.0f;
+      for (int32 L = 0; L < 4; ++L)
+      {
+        for (int32 K = 0; K < 4; ++K)
+        {
+          Z += BS[K] * BT[L] * Control[(J + L) * NumCtrlX + (I + K)];
+        }
+      }
+      return Z;
+    }
+
+    void Fit(const TArray<FVector> &Points)
+    {
+      const int32 NumCtrlX = CellsX + 3;
+      const int32 NumCtrlY = CellsY + 3;
+      TArray<float> Num, Den;
+      Num.Init(0.0f, NumCtrlX * NumCtrlY);
+      Den.Init(0.0f, NumCtrlX * NumCtrlY);
+      for (const FVector &P : Points)
+      {
+        int32 I, J;
+        float S, T, BS[4], BT[4];
+        LocalCoords(P.X, P.Y, I, J, S, T);
+        Basis(S, BS);
+        Basis(T, BT);
+        float SumW2 = 0.0f;
+        for (int32 L = 0; L < 4; ++L)
+        {
+          for (int32 K = 0; K < 4; ++K)
+          {
+            SumW2 += FMath::Square(BS[K] * BT[L]);
+          }
+        }
+        if (SumW2 <= KINDA_SMALL_NUMBER)
+        {
+          continue;
+        }
+        for (int32 L = 0; L < 4; ++L)
+        {
+          for (int32 K = 0; K < 4; ++K)
+          {
+            const float W = BS[K] * BT[L];
+            const float Phi = W * static_cast<float>(P.Z) / SumW2;
+            const int32 Idx = (J + L) * NumCtrlX + (I + K);
+            Num[Idx] += W * W * Phi;
+            Den[Idx] += W * W;
+          }
+        }
+      }
+      Control.Init(0.0f, NumCtrlX * NumCtrlY);
+      for (int32 Idx = 0; Idx < Control.Num(); ++Idx)
+      {
+        if (Den[Idx] > KINDA_SMALL_NUMBER)
+        {
+          Control[Idx] = Num[Idx] / Den[Idx];
+        }
+      }
+    }
+  };
+
 } // namespace
 
 ACarlaProceduralMeshActor::ACarlaProceduralMeshActor()
@@ -395,14 +499,15 @@ void AOpenDriveGenerator::GenerateGroundPlane()
     Parameters = GameInstance->GetOpendriveGenerationParameters();
   }
 
-  // A heightfield grid spanning the padded road-network footprint. Each
-  // grid vertex sits GroundPlaneZOffset below the road height interpolated
-  // from GroundHeightSampleGrid (min road/sidewalk z per sample cell,
-  // accumulated in GenerateRoadMesh), so the ground follows the road
-  // network's real elevation profile. A flat quad at global min-z closed
-  // the blue-sky holes on CARLA's flat towns, but real-elevation OpenDRIVE
-  // (NuRec: Stuttgart z~293m, graded motorways) left every uphill road
-  // flying tens of meters above it.
+  // A heightfield grid spanning the padded road-network footprint, sampled
+  // from a C2-smooth terrain surface fit to the road heights. A flat quad
+  // at global min-z closed the blue-sky holes on CARLA's flat towns but
+  // left real-elevation OpenDRIVE roads (NuRec: Stuttgart z~293m, graded
+  // motorways) flying tens of meters above it; the follow-up piecewise-
+  // linear interpolation tracked elevation on average but couldn't follow
+  // vertical road curvature -- terrain bulged through the road in sag
+  // curves and dropped away under crests, and its weighted averaging
+  // between roads at different heights clipped the lower road.
   const FBox PaddedBounds = RoadMeshBounds.ExpandBy(FVector(GroundPlanePadding, GroundPlanePadding, 0.0f));
   const float MinX = PaddedBounds.Min.X;
   const float MaxX = PaddedBounds.Max.X;
@@ -412,7 +517,7 @@ void AOpenDriveGenerator::GenerateGroundPlane()
   // Cap the vertex budget: if the padded map is large enough that the
   // configured spacing would blow past it, widen the spacing instead of
   // failing or stalling the load with a multi-million-vertex cook.
-  constexpr int32 MaxGridVerticesPerAxis = 512;
+  constexpr int32 MaxGridVerticesPerAxis = 1024;
   float GridStep = FMath::Max(GroundGridCellSize, 100.0f);
   GridStep = FMath::Max3(
       GridStep,
@@ -424,144 +529,103 @@ void AOpenDriveGenerator::GenerateGroundPlane()
   const float StepY = (MaxY - MinY) / static_cast<float>(NumY - 1);
 
   const float SampleCellSize = FMath::Max(GroundHeightSampleCellSize, 1.0f);
-  const float FallbackZ = RoadMeshBounds.Min.Z;
 
-  // Inverse-distance interpolation over the road height samples, searching
-  // outward ring by ring in the sample grid from the vertex's cell. One
-  // extra ring past the first hit keeps the blend smooth where two roads at
-  // different heights face each other; a vertex out in the padding just
-  // inherits the nearest shoulder's height (flat extrapolation), which is
-  // exactly what the fill skirt should do. Ring cap covers the padding plus
-  // slack so the search always terminates even off in a map corner.
-  const int32 MaxRing = FMath::CeilToInt((GroundPlanePadding + 2.0f * GridStep) / SampleCellSize) + 2;
-  const auto SampleGroundHeight = [&](float X, float Y) -> TOptional<float>
+  // Scattered fit points: one per occupied sample cell, at the cell center,
+  // carrying the min road/sidewalk z recorded there.
+  TArray<FVector> FitPoints;
+  FitPoints.Reserve(GroundHeightSampleGrid.Num());
+  for (const auto &Sample : GroundHeightSampleGrid)
   {
-    const int32 CenterCellX = FMath::FloorToInt(X / SampleCellSize);
-    const int32 CenterCellY = FMath::FloorToInt(Y / SampleCellSize);
-    float WeightSum = 0.0f;
-    float HeightSum = 0.0f;
-    int32 FirstHitRing = -1;
-    for (int32 Ring = 0; Ring <= MaxRing; ++Ring)
+    FitPoints.Add(FVector(
+        (static_cast<float>(Sample.Key.X) + 0.5f) * SampleCellSize,
+        (static_cast<float>(Sample.Key.Y) + 0.5f) * SampleCellSize,
+        Sample.Value));
+  }
+
+  // Multilevel B-spline approximation: start with a control lattice a few
+  // cells across the whole padded map (broad rolling shape, also the
+  // smooth extrapolation into the padding and across road-free voids),
+  // then repeatedly halve the control spacing, fitting each finer level to
+  // the residual the coarser ones left behind, until the control cells
+  // approach the road-sample resolution. The summed hierarchy is a
+  // C2-smooth surface that passes through the road elevations where there
+  // is road and rolls smoothly where there isn't.
+  TArray<FGroundBSplineLattice> SplineLevels;
+  const float ExtentX = MaxX - MinX;
+  const float ExtentY = MaxY - MinY;
+  float ControlSpacing = FMath::Max(ExtentX, ExtentY) / 4.0f;
+  const float FinestControlSpacing = FMath::Max(4.0f * SampleCellSize, GridStep);
+  constexpr int32 MaxSplineLevels = 12;
+  TArray<FVector> Residuals = FitPoints;
+  while (SplineLevels.Num() < MaxSplineLevels)
+  {
+    FGroundBSplineLattice Level;
+    Level.OriginX = MinX;
+    Level.OriginY = MinY;
+    Level.Spacing = ControlSpacing;
+    Level.CellsX = FMath::Max(1, FMath::CeilToInt(ExtentX / ControlSpacing));
+    Level.CellsY = FMath::Max(1, FMath::CeilToInt(ExtentY / ControlSpacing));
+    Level.Fit(Residuals);
+    for (FVector &P : Residuals)
     {
-      if (FirstHitRing >= 0 && Ring > FirstHitRing + 1)
-      {
-        break;
-      }
-      bool bHit = false;
-      const auto VisitCell = [&](int32 CellX, int32 CellY)
-      {
-        const float *SampleZ = GroundHeightSampleGrid.Find(FIntPoint(CellX, CellY));
-        if (!SampleZ)
-        {
-          return;
-        }
-        const float CellCenterX = (static_cast<float>(CellX) + 0.5f) * SampleCellSize;
-        const float CellCenterY = (static_cast<float>(CellY) + 0.5f) * SampleCellSize;
-        const float DistSq = FMath::Square(X - CellCenterX) + FMath::Square(Y - CellCenterY);
-        const float Weight = 1.0f / (DistSq + FMath::Square(SampleCellSize * 0.25f));
-        WeightSum += Weight;
-        HeightSum += Weight * (*SampleZ);
-        bHit = true;
-      };
-      if (Ring == 0)
-      {
-        VisitCell(CenterCellX, CenterCellY);
-      }
-      else
-      {
-        for (int32 DX = -Ring; DX <= Ring; ++DX)
-        {
-          VisitCell(CenterCellX + DX, CenterCellY - Ring);
-          VisitCell(CenterCellX + DX, CenterCellY + Ring);
-        }
-        for (int32 DY = -Ring + 1; DY <= Ring - 1; ++DY)
-        {
-          VisitCell(CenterCellX - Ring, CenterCellY + DY);
-          VisitCell(CenterCellX + Ring, CenterCellY + DY);
-        }
-      }
-      if (bHit && FirstHitRing < 0)
-      {
-        FirstHitRing = Ring;
-      }
+      P.Z -= Level.Eval(P.X, P.Y);
     }
-    return WeightSum > 0.0f ? TOptional<float>(HeightSum / WeightSum) : TOptional<float>();
+    SplineLevels.Add(MoveTemp(Level));
+    if (ControlSpacing <= FinestControlSpacing)
+    {
+      break;
+    }
+    ControlSpacing *= 0.5f;
+  }
+
+  const auto EvalSpline = [&SplineLevels](float X, float Y) -> float
+  {
+    float Z = 0.0f;
+    for (const FGroundBSplineLattice &Level : SplineLevels)
+    {
+      Z += Level.Eval(X, Y);
+    }
+    return Z;
   };
 
-  // First pass: direct interpolation where road samples are within ring
-  // reach. Vertices deeper inside road-free voids (a rural map can leave
-  // interior gaps wider than the ring cap) stay unresolved here and get
-  // filled below instead of snapping to a global min-z cliff.
+  // Evaluate the terrain surface at each grid vertex, GroundPlaneZOffset
+  // below the fitted road height. Near roads, additionally clamp to the
+  // lowest actual road sample in the 3x3 cell neighbourhood: the spline
+  // approximates rather than interpolates, and even a small overshoot in a
+  // sag curve would poke terrain up through the road surface.
   TArray<float> Heights;
-  TArray<bool> Resolved;
   Heights.SetNumUninitialized(NumX * NumY);
-  Resolved.SetNumUninitialized(NumX * NumY);
-  int32 NumUnresolved = 0;
   for (int32 IY = 0; IY < NumY; ++IY)
   {
     const float Y = MinY + static_cast<float>(IY) * StepY;
     for (int32 IX = 0; IX < NumX; ++IX)
     {
       const float X = MinX + static_cast<float>(IX) * StepX;
-      const TOptional<float> Sampled = SampleGroundHeight(X, Y);
-      const int32 Index = IY * NumX + IX;
-      Resolved[Index] = Sampled.IsSet();
-      Heights[Index] = Sampled.Get(FallbackZ);
-      NumUnresolved += Sampled.IsSet() ? 0 : 1;
+      float GroundZ = EvalSpline(X, Y) - GroundPlaneZOffset;
+      const int32 CellX = FMath::FloorToInt(X / SampleCellSize);
+      const int32 CellY = FMath::FloorToInt(Y / SampleCellSize);
+      for (int32 DY = -1; DY <= 1; ++DY)
+      {
+        for (int32 DX = -1; DX <= 1; ++DX)
+        {
+          if (const float *SampleZ = GroundHeightSampleGrid.Find(FIntPoint(CellX + DX, CellY + DY)))
+          {
+            GroundZ = FMath::Min(GroundZ, *SampleZ - GroundPlaneZOffset);
+          }
+        }
+      }
+      Heights[IY * NumX + IX] = GroundZ;
     }
   }
 
-  // Fill pass: dilate resolved heights into unresolved vertices, each
-  // taking the average of its resolved 4-neighbours, until the whole grid
-  // is covered. Bounded by the grid diagonal, so it always terminates.
-  for (int32 Pass = 0; NumUnresolved > 0 && Pass < NumX + NumY; ++Pass)
-  {
-    TArray<TPair<int32, float>> Filled;
-    for (int32 IY = 0; IY < NumY; ++IY)
-    {
-      for (int32 IX = 0; IX < NumX; ++IX)
-      {
-        const int32 Index = IY * NumX + IX;
-        if (Resolved[Index])
-        {
-          continue;
-        }
-        float NeighbourSum = 0.0f;
-        int32 NeighbourCount = 0;
-        const auto VisitNeighbour = [&](int32 NX, int32 NY)
-        {
-          if (NX < 0 || NX >= NumX || NY < 0 || NY >= NumY)
-          {
-            return;
-          }
-          const int32 NeighbourIndex = NY * NumX + NX;
-          if (Resolved[NeighbourIndex])
-          {
-            NeighbourSum += Heights[NeighbourIndex];
-            ++NeighbourCount;
-          }
-        };
-        VisitNeighbour(IX - 1, IY);
-        VisitNeighbour(IX + 1, IY);
-        VisitNeighbour(IX, IY - 1);
-        VisitNeighbour(IX, IY + 1);
-        if (NeighbourCount > 0)
-        {
-          Filled.Emplace(Index, NeighbourSum / static_cast<float>(NeighbourCount));
-        }
-      }
-    }
-    if (Filled.Num() == 0)
-    {
-      break;
-    }
-    for (const TPair<int32, float> &Entry : Filled)
-    {
-      Heights[Entry.Key] = Entry.Value;
-      Resolved[Entry.Key] = true;
-    }
-    NumUnresolved -= Filled.Num();
-  }
+  // Retain the evaluated grid so GenerateFurnitureAnchors can re-ground
+  // scattered objects onto the terrain surface they will stand on.
+  GroundGridHeights = Heights;
+  GroundGridNumX = NumX;
+  GroundGridNumY = NumY;
+  GroundGridOrigin = FVector2D(MinX, MinY);
+  GroundGridStepX = StepX;
+  GroundGridStepY = StepY;
 
   FProceduralCustomMesh MeshData;
   MeshData.Vertices.Reserve(NumX * NumY);
@@ -573,7 +637,7 @@ void AOpenDriveGenerator::GenerateGroundPlane()
     for (int32 IX = 0; IX < NumX; ++IX)
     {
       const float X = MinX + static_cast<float>(IX) * StepX;
-      MeshData.Vertices.Add(FVector(X, Y, Heights[IY * NumX + IX] - GroundPlaneZOffset));
+      MeshData.Vertices.Add(FVector(X, Y, Heights[IY * NumX + IX]));
       // World-space UV tiling (GroundUVTileSize cm per texture repeat)
       // instead of stretching one tile across the whole map.
       MeshData.UV0.Add(FVector2D((X - MinX) / UVTile, (Y - MinY) / UVTile));
@@ -807,6 +871,25 @@ void AOpenDriveGenerator::GenerateLaneMarkings()
   }
 }
 
+float AOpenDriveGenerator::SampleGroundGridHeight(float X, float Y) const
+{
+  const float FX = FMath::Clamp(
+      (X - static_cast<float>(GroundGridOrigin.X)) / FMath::Max(GroundGridStepX, 1.0f),
+      0.0f, static_cast<float>(GroundGridNumX - 1) - KINDA_SMALL_NUMBER);
+  const float FY = FMath::Clamp(
+      (Y - static_cast<float>(GroundGridOrigin.Y)) / FMath::Max(GroundGridStepY, 1.0f),
+      0.0f, static_cast<float>(GroundGridNumY - 1) - KINDA_SMALL_NUMBER);
+  const int32 IX = FMath::Min(FMath::FloorToInt(FX), GroundGridNumX - 2);
+  const int32 IY = FMath::Min(FMath::FloorToInt(FY), GroundGridNumY - 2);
+  const float S = FX - static_cast<float>(IX);
+  const float T = FY - static_cast<float>(IY);
+  const float Z00 = GroundGridHeights[IY * GroundGridNumX + IX];
+  const float Z10 = GroundGridHeights[IY * GroundGridNumX + IX + 1];
+  const float Z01 = GroundGridHeights[(IY + 1) * GroundGridNumX + IX];
+  const float Z11 = GroundGridHeights[(IY + 1) * GroundGridNumX + IX + 1];
+  return FMath::Lerp(FMath::Lerp(Z00, Z10, S), FMath::Lerp(Z01, Z11, S), T);
+}
+
 int32 AOpenDriveGenerator::GenerateFurnitureAnchors(const FName &Tag, float Spacing, float Offset)
 {
   auto& CarlaMap = UCarlaStatics::GetGameMode(GetWorld())->GetMap();
@@ -831,17 +914,67 @@ int32 AOpenDriveGenerator::GenerateFurnitureAnchors(const FName &Tag, float Spac
   // furniture density by road type later.
   const auto Anchors = CarlaMap->GetTreesTransform(MinPos, MaxPos, Spacing, Offset);
 
+  const float SampleCellSize = FMath::Max(GroundHeightSampleCellSize, 1.0f);
+  int32 NumSpawned = 0;
+  int32 NumFilteredOnRoad = 0;
+
   for (const auto &AnchorPair : Anchors)
   {
     const FTransform AnchorTransform = AnchorPair.first;
+    FVector Location = AnchorTransform.GetLocation();
+
+    // Road-occupancy filter: GetTreesTransform offsets each anchor a fixed
+    // lateral distance past its own road's outermost driving lane, which is
+    // wrong wherever roads widen, merge, overlap or fan into junctions --
+    // the anchor can land on the roadway of *another* lane/road and the
+    // spawned furniture then blocks traffic. Discard any anchor within the
+    // closest driving lane's half-width plus a clearance margin of that
+    // lane's centerline, whichever road it belongs to.
+    const auto ClosestWp = CarlaMap->GetClosestWaypointOnRoad(carla::geom::Location(Location));
+    if (ClosestWp)
+    {
+      const FTransform LaneTransform = CarlaMap->ComputeTransform(*ClosestWp);
+      const float LaneHalfWidth = 0.5f * 1e2f * static_cast<float>(CarlaMap->GetLaneWidth(*ClosestWp));
+      if (FVector::Dist2D(Location, LaneTransform.GetLocation()) < LaneHalfWidth + FurnitureRoadClearance)
+      {
+        ++NumFilteredOnRoad;
+        continue;
+      }
+    }
+
+    // Re-ground: the anchor inherits the road-edge elevation from
+    // GetTreesTransform, but it stands offset onto pavement or terrain
+    // that is generally lower (ground offset plus lateral grade), leaving
+    // spawned furniture floating. If the anchor's sample cell saw road/
+    // sidewalk geometry, snap to that surface; otherwise drop it onto the
+    // ground heightfield generated by GenerateGroundPlane.
+    const FIntPoint Cell(
+        FMath::FloorToInt(Location.X / SampleCellSize),
+        FMath::FloorToInt(Location.Y / SampleCellSize));
+    if (const float *PavementZ = GroundHeightSampleGrid.Find(Cell))
+    {
+      Location.Z = *PavementZ;
+    }
+    else if (GroundGridNumX > 1 && GroundGridNumY > 1)
+    {
+      Location.Z = SampleGroundGridHeight(Location.X, Location.Y);
+    }
+
     AProceduralFurnitureAnchor* Anchor = GetWorld()->SpawnActor<AProceduralFurnitureAnchor>(
-        AnchorTransform.GetLocation(), AnchorTransform.Rotator());
+        Location, AnchorTransform.Rotator());
     Anchor->Tags.Add(Tag);
-    FurnitureAnchorBounds += AnchorTransform.GetLocation();
+    FurnitureAnchorBounds += Location;
     ActorMeshList.Add(Anchor);
+    ++NumSpawned;
   }
 
-  return static_cast<int32>(Anchors.size());
+  if (NumFilteredOnRoad > 0)
+  {
+    UE_LOG(LogCarla, Log, TEXT("AOpenDriveGenerator: %s: discarded %d/%d anchors too close to a driving lane"),
+        *Tag.ToString(), NumFilteredOnRoad, static_cast<int32>(Anchors.size()));
+  }
+
+  return NumSpawned;
 }
 
 void AOpenDriveGenerator::GeneratePoles()
