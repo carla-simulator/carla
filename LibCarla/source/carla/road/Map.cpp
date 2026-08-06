@@ -1443,10 +1443,32 @@ namespace road {
     std::vector<std::unique_ptr<geom::Mesh>> LineMarks;
     geom::MeshFactory mesh_factory(params);
 
+    // A real junction fans one lane out into several connecting roads, so
+    // sweeping markings per-lane the way ordinary roads do would be wrong
+    // there. Some OpenDRIVE exports (e.g. DeepMap/NuRec real-world
+    // reconstructions) instead wrap a junction record around what is really
+    // just a single road-to-road splice at a curvature break -- one real
+    // incoming->connecting link, occasionally padded with a placeholder
+    // incomingRoad="-1" connection. Unconditionally skipping every junction
+    // road left "clean seam" bald patches wherever a continuously-marked
+    // street happened to run through one of these trivial junctions, even
+    // though the connecting road carries its own real per-lane roadMark data.
+    auto HasSingleConnectingRoad = [this](JuncId junction_id) {
+      const Junction *junction = _data.GetJunction(junction_id);
+      if (junction == nullptr) {
+        return false;
+      }
+      std::unordered_set<RoadId> connecting_roads;
+      for (const auto &connection_pair : junction->GetConnections()) {
+        connecting_roads.insert(connection_pair.second.connecting_road);
+      }
+      return connecting_roads.size() == 1;
+    };
+
     const std::vector<RoadId> RoadsIDToGenerate = FilterRoadsByPosition(minpos, maxpos);
     for ( RoadId id : RoadsIDToGenerate ) {
       const auto& road = _data.GetRoads().at(id);
-      if (!road.IsJunction()) {
+      if (!road.IsJunction() || HasSingleConnectingRoad(road.GetJunctionId())) {
         mesh_factory.GenerateLaneMarkForRoad(road, LineMarks, outinfo);
       }
     }
