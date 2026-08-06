@@ -166,6 +166,11 @@ protected:
       float DistToDrive = -1.0f;   // cm to the driving footprint, 0 inside
       float DistToPaved = -1.0f;   // cm to any pavement, 0 inside
       float NearestPavedMinZ = 0.0f;
+      /// Lowest median-fill / under-road-blanket quad emitted in this cell
+      /// (FLT_MAX if none). Written by GenerateMedianFill, which runs
+      /// before GenerateGroundPlane; the terrain clamps itself below these
+      /// quads so it cannot z-fight up through the fill.
+      float FillMinZ = FLT_MAX;
       uint8 bDrive = 0;
       uint8 bPaved = 0;
     };
@@ -273,12 +278,6 @@ protected:
   /// curvature of ramps/crests and lane-scale footprint detail.
   UPROPERTY(Category = "Materials", EditAnywhere)
   float GroundHeightSampleCellSize = 250.0f;
-
-  /// XY spacing (cm) between ground heightfield grid vertices; the fitted
-  /// B-spline surface is evaluated at this resolution. Raised automatically
-  /// if the padded map bounds would exceed a sane vertex budget.
-  UPROPERTY(Category = "Materials", EditAnywhere)
-  float GroundGridCellSize = 500.0f;
 
   /// Per-category clearance (cm) beyond the lane half-width that street
   /// furniture must keep from the nearest driving-lane centerline; anchors
@@ -433,9 +432,13 @@ public:
 protected:
 
   /// Max allowed gap (cm) between a road cell's lowest surface and the
-  /// terrain below it before the cell counts as a floating road.
+  /// terrain below it before the cell counts as a floating road. Must stay
+  /// above the ground plane's near-pavement clearance (3x GroundPlaneZOffset
+  /// = 15cm) plus the fill-quad clamp's reach (fill sits 1-3cm under the
+  /// lowest neighbouring lane, terrain 10cm under the fill, so a graded
+  /// cell's own surface can be ~grade x 2.5m + 13cm above the terrain).
   UPROPERTY(Category = "Generation QA", EditAnywhere)
-  float QASupportGapMax = 10.0f;
+  float QASupportGapMax = 30.0f;
 
   /// Min z spread (cm) within one sample cell that marks it as stacked
   /// roads (bridge over road) rather than a single surface.

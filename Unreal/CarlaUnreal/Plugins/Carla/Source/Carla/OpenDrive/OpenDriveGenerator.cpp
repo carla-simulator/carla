@@ -842,15 +842,30 @@ void AOpenDriveGenerator::GenerateGroundPlane()
       const float X = Vertex0X + static_cast<float>(IX) * StepX;
       float GroundZ;
       const auto *Cell = RoadRaster.CellAtWorld(X, Y);
+      // The terrain shares space with two other surfaces near roads: the
+      // road mesh itself and the median-fill quads (which sit 1-3cm under
+      // the local driving surface). GroundPlaneZOffset (5cm) proved too
+      // small a margin: the raster's coverage tolerance marks the narrow
+      // gap between dual carriageways as paved, and there the 5cm hug
+      // landed within millimetres of the fill quads -- the 5m terrain
+      // triangles crossed the flat 2.5m fill cells along their diagonals
+      // and z-fought through as alternating grass chevrons. Keep the
+      // terrain a decisive margin below anything paved, and hold that
+      // depth for a band past the pavement edge so the blend toward the
+      // free spline can't lip over the road rim between two vertices.
+      const float NearPavementClearance = 3.0f * GroundPlaneZOffset;
+      const float HoldDist = 300.0f;
       if (Cell && Cell->bPaved)
       {
-        GroundZ = Cell->PavedMinZ - GroundPlaneZOffset;
+        GroundZ = Cell->PavedMinZ - NearPavementClearance;
       }
       else if (Cell && Cell->DistToPaved >= 0.0f && Cell->DistToPaved < SkirtWidth)
       {
-        const float Alpha = Cell->DistToPaved / SkirtWidth;
+        const float Alpha = FMath::Clamp(
+            (Cell->DistToPaved - HoldDist) / FMath::Max(SkirtWidth - HoldDist, 1.0f),
+            0.0f, 1.0f);
         GroundZ = FMath::Lerp(
-            Cell->NearestPavedMinZ - GroundPlaneZOffset,
+            Cell->NearestPavedMinZ - NearPavementClearance,
             EvalSpline(X, Y) - GroundPlaneZOffset,
             Alpha);
       }
@@ -858,14 +873,23 @@ void AOpenDriveGenerator::GenerateGroundPlane()
       {
         GroundZ = EvalSpline(X, Y) - GroundPlaneZOffset;
       }
-      // Final invasion guard against *discontinuous* neighbours only. A
-      // paved vertex on a continuously sloping road must keep its own
-      // cell's exact hug -- clamping it to a laterally-lower neighbour
-      // (20cm/cell on an 8% grade) would open a same-size gap under its
-      // own cell. Where an adjacent paved cell sits a deck lower
-      // (stacked roads, embankment edges), the vertex must drop below
-      // that lower surface or its triangle would cut up through it.
+      // Final invasion guards over the 3x3 raster neighbourhood:
+      //  - discontinuous pavement (a deck sitting >50cm lower: stacked
+      //    roads, embankment edges): drop below the lower surface or the
+      //    terrain triangle would cut up through it. Continuous
+      //    neighbours are exempt -- clamping to a laterally-lower
+      //    neighbour on an 8% grade would open a same-size gap under the
+      //    vertex's own cell, which is exactly what the QA support check
+      //    flags as floating road.
+      //  - median-fill / blanket quads (FillMinZ, recorded by
+      //    GenerateMedianFill which runs first): stay 10cm below every
+      //    nearby quad. The quads sit only 1-3cm under the local driving
+      //    surface, closer than the terrain's own hug accuracy across the
+      //    gap between dual carriageways -- without this exact clamp the
+      //    terrain crossed them mid-gap on cross-sloped corridors and
+      //    z-fought through as grass chevrons.
       constexpr float ContinuousDropTolerance = 50.0f;
+      constexpr float FillClearance = 10.0f;
       const float OwnPavedZ = (Cell && Cell->bPaved) ? Cell->PavedMinZ : FLT_MAX;
       const int32 CellX = FMath::FloorToInt((X - RoadRaster.OriginX) / RoadRaster.CellSize);
       const int32 CellY = FMath::FloorToInt((Y - RoadRaster.OriginY) / RoadRaster.CellSize);
@@ -880,6 +904,10 @@ void AOpenDriveGenerator::GenerateGroundPlane()
             continue;
           }
           const auto &Neighbour = RoadRaster.Cells[NY * RoadRaster.Width + NX];
+          if (Neighbour.FillMinZ != FLT_MAX)
+          {
+            GroundZ = FMath::Min(GroundZ, Neighbour.FillMinZ - FillClearance);
+          }
           if (!Neighbour.bPaved)
           {
             continue;
@@ -1128,7 +1156,43 @@ void AOpenDriveGenerator::GenerateMedianFill()
       {
         continue;
       }
-      const float FillZ = Cell.NearestPavedMinZ;
+      // Height reference must be LOCAL. NearestPavedMinZ is propagated from
+      // the chamfer's seed cell, which on a graded corridor sits up to
+      // several cm above or below the surface actually neighbouring this
+      // cell; quads placed 1cm under the *seed* height ended up above the
+      // *local* road surface, covering lane markings with cell-shaped
+      // road-coloured patches and z-fighting the terrain. Interior blanket
+      // cells know their own surface (DriveMinZ); ribbon cells take the
+      // lowest driving surface among their immediate neighbours and drop a
+      // little further to stay clear of marking quads.
+      float FillZ;
+      if (Cell.bDrive)
+      {
+        FillZ = Cell.DriveMinZ;
+      }
+      else
+      {
+        float LocalMin = FLT_MAX;
+        for (int32 DY = -1; DY <= 1; ++DY)
+        {
+          for (int32 DX = -1; DX <= 1; ++DX)
+          {
+            const int32 NX = CX + DX;
+            const int32 NY = CY + DY;
+            if (NX < 0 || NX >= W || NY < 0 || NY >= H)
+            {
+              continue;
+            }
+            const auto &N = RoadRaster.Cells[NY * W + NX];
+            if (N.bDrive)
+            {
+              LocalMin = FMath::Min(LocalMin, N.DriveMinZ);
+            }
+          }
+        }
+        FillZ = (LocalMin != FLT_MAX) ? (LocalMin - 2.0f)
+                                      : (Cell.NearestPavedMinZ - 3.0f);
+      }
       ++FilledCells;
       const float X0 = RoadRaster.OriginX + static_cast<float>(CX) * RoadRaster.CellSize;
       const float Y0 = RoadRaster.OriginY + static_cast<float>(CY) * RoadRaster.CellSize;
@@ -1137,6 +1201,10 @@ void AOpenDriveGenerator::GenerateMedianFill()
       // A hair below the neighbouring road surface: fills flush without
       // z-fighting where the quad butts against the road mesh edge.
       const float Z = FillZ - 1.0f;
+      // Record the quad height so GenerateGroundPlane (which runs after
+      // this) can hold the terrain below it.
+      FRoadSurfaceRaster::FCell &MutCell = RoadRaster.Cells[CY * W + CX];
+      MutCell.FillMinZ = FMath::Min(MutCell.FillMinZ, Z);
       const int32 Base = MeshData.Vertices.Num();
       MeshData.Vertices.Append({
           FVector(X0, Y1, Z), FVector(X1, Y1, Z),
@@ -1585,7 +1653,8 @@ void AOpenDriveGenerator::RunGenerationQA()
       // here is structural (wants bridge skirt geometry), not a terrain
       // defect -- tally it separately from genuine floating.
       bool bBridgeEdge = false;
-      for (int32 DY = -1; DY <= 1 && !bBridgeEdge; ++DY)
+      bool bBoundary = false;
+      for (int32 DY = -1; DY <= 1; ++DY)
       {
         for (int32 DX = -1; DX <= 1; ++DX)
         {
@@ -1593,13 +1662,17 @@ void AOpenDriveGenerator::RunGenerationQA()
           const int32 NY = CY + DY;
           if (NX < 0 || NX >= RoadRaster.Width || NY < 0 || NY >= RoadRaster.Height)
           {
+            bBoundary = true;
             continue;
           }
           const auto &Neighbour = RoadRaster.Cells[NY * RoadRaster.Width + NX];
-          if (Neighbour.bPaved && (Cell.PavedMinZ - Neighbour.PavedMinZ) > 50.0f)
+          if (!Neighbour.bPaved)
+          {
+            bBoundary = true;
+          }
+          else if ((Cell.PavedMinZ - Neighbour.PavedMinZ) > 50.0f)
           {
             bBridgeEdge = true;
-            break;
           }
         }
       }
@@ -1612,8 +1685,13 @@ void AOpenDriveGenerator::RunGenerationQA()
         {
           ++BridgeEdgeCells;
         }
-        else
+        else if (bBoundary)
         {
+          // Only footprint-boundary cells can show visible daylight under a
+          // road edge. Interior cells are backed by the under-road blanket
+          // and median fill, and the terrain deliberately holds 10cm+ below
+          // those quads (FillMinZ clamp) -- a deep interior gap there is
+          // construction, not a defect.
           ++FloatingCells;
           WorstGap = FMath::Max(WorstGap, Gap);
           AppendLoc(FloatingLocs, FloatingLocCount, X, Y, Cell.PavedMinZ);
