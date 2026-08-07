@@ -165,6 +165,12 @@ namespace road {
     std::vector<std::unique_ptr<geom::Mesh>> GenerateChunkedMesh(
         const rpc::OpendriveGenerationParameters& params) const;
 
+    /// Roads excluded from mesh/marking generation: link-less sub-2m
+    /// slivers and link-less duplicate traces overlapping a connected
+    /// road (DeepMap/NuRec export artifacts that render as floating
+    /// slabs of road stacked on the real carriageway).
+    std::unordered_set<road::RoadId> ComputeSkippedGenerationRoads() const;
+
     std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>>
       GenerateOrderedChunkedMeshInLocations( const rpc::OpendriveGenerationParameters& params,
                                              const geom::Vector3D& minpos,
