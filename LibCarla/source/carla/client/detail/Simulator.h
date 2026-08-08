@@ -793,6 +793,16 @@ namespace detail {
       _client.ClearDebugString();
     }
 
+    /// Spawns a static procedural mesh in the world. Vertices are a flat
+    /// (x, y, z) triple list in metres (client/UE-handed coordinates);
+    /// triangles are vertex-index triples into that list.
+    void SpawnCustomMesh(
+        const std::vector<float> &vertices,
+        const std::vector<uint32_t> &triangles,
+        const std::string &material) {
+      _client.SpawnCustomMesh(vertices, triangles, material);
+    }
+
     /// @}
     // =========================================================================
     /// @name Apply commands in batch

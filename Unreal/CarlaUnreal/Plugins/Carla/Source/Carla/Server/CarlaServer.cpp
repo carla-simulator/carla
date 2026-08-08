@@ -9,6 +9,7 @@
 #include "Carla/Server/CarlaServerResponse.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
 #include "Carla/OpenDrive/OpenDrive.h"
+#include "Carla/OpenDrive/OpenDriveGenerator.h"
 #include "Carla/Util/DebugShapeDrawer.h"
 #include "Carla/Util/NavigationMesh.h"
 #include "Carla/Util/RayTracer.h"
@@ -26,6 +27,7 @@
 #include "Carla/Game/CarlaHUD.h"
 #include "Components/SceneComponent.h"
 #include "Components/SkinnedMeshComponent.h"
+#include "ProceduralMeshComponent.h"
 #include "Engine/Engine.h"
 
 #include <util/disable-ue4-macros.h>
@@ -2916,6 +2918,118 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     check(World != nullptr);
     FDebugShapeDrawer Drawer(*World);
     Drawer.Clear();
+    return R<void>::Success();
+  };
+
+  // ~~ Spawn custom mesh ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(spawn_custom_mesh) << [this](
+      std::vector<float> vertices,
+      std::vector<uint32_t> triangles,
+      std::string material) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    check(World != nullptr);
+    if (vertices.empty() || (vertices.size() % 3u) != 0u)
+    {
+      RESPOND_ERROR("spawn_custom_mesh: vertices must be a non-empty flat (x, y, z) triple list");
+    }
+    if (triangles.empty() || (triangles.size() % 3u) != 0u)
+    {
+      RESPOND_ERROR("spawn_custom_mesh: triangles must be a non-empty index-triple list");
+    }
+    const uint32_t NumVertices = vertices.size() / 3u;
+    for (const uint32_t Index : triangles)
+    {
+      if (Index >= NumVertices)
+      {
+        RESPOND_ERROR("spawn_custom_mesh: triangle index out of range");
+      }
+    }
+
+    // Client sends metres in the client (UE-handed) frame; UE wants cm.
+    TArray<FVector> Verts;
+    Verts.Reserve(NumVertices);
+    for (uint32_t i = 0u; i < NumVertices; ++i)
+    {
+      Verts.Add(FVector(
+          vertices[3u * i + 0u] * 100.0f,
+          vertices[3u * i + 1u] * 100.0f,
+          vertices[3u * i + 2u] * 100.0f));
+    }
+    TArray<int32> Tris;
+    Tris.Reserve(triangles.size());
+    for (const uint32_t Index : triangles)
+    {
+      Tris.Add(static_cast<int32>(Index));
+    }
+
+    // Area-weighted vertex normals. UE's left-handed winding means the
+    // front face is the one from which the vertices wind clockwise, so the
+    // outward normal of triangle (V0, V1, V2) is (V2-V0) x (V1-V0).
+    TArray<FVector> Normals;
+    Normals.Init(FVector::ZeroVector, Verts.Num());
+    for (int32 i = 0; i + 2 < Tris.Num(); i += 3)
+    {
+      const FVector &V0 = Verts[Tris[i]];
+      const FVector &V1 = Verts[Tris[i + 1]];
+      const FVector &V2 = Verts[Tris[i + 2]];
+      const FVector FaceNormal = FVector::CrossProduct(V2 - V0, V1 - V0);
+      Normals[Tris[i]] += FaceNormal;
+      Normals[Tris[i + 1]] += FaceNormal;
+      Normals[Tris[i + 2]] += FaceNormal;
+    }
+    for (FVector &Normal : Normals)
+    {
+      Normal = Normal.GetSafeNormal(1e-8, FVector::UpVector);
+    }
+
+    // Planar world-space UVs so tiled materials repeat sensibly (5 m tile).
+    TArray<FVector2D> UV0;
+    UV0.Reserve(Verts.Num());
+    for (const FVector &V : Verts)
+    {
+      UV0.Add(FVector2D(V.X / 500.0f, V.Y / 500.0f));
+    }
+
+    ACarlaProceduralMeshActor *MeshActor = World->SpawnActor<ACarlaProceduralMeshActor>();
+    if (MeshActor == nullptr)
+    {
+      RESPOND_ERROR("spawn_custom_mesh: failed to spawn mesh actor");
+    }
+    UProceduralMeshComponent *PMC = MeshActor->MeshComponent;
+    PMC->bUseAsyncCooking = true;
+    PMC->bUseComplexAsSimpleCollision = true;
+    PMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    PMC->CreateMeshSection_LinearColor(
+        0,
+        Verts,
+        Tris,
+        Normals,
+        UV0,
+        TArray<FLinearColor>(),
+        TArray<FProcMeshTangent>(),
+        true);
+
+    static const TMap<FString, FString> MaterialHints = {
+        {TEXT("grass"), TEXT("/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Grass.MI_LargeLandscape_Grass")},
+        {TEXT("dirt"), TEXT("/Game/Carla/Static/GenericMaterials/Ground/MI_Dirt.MI_Dirt")},
+        {TEXT("road"), TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_RoadAsphalt_Town15.MI_RoadAsphalt_Town15")},
+        {TEXT("sidewalk"), TEXT("/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Apartment.MI_Sidewalk_Apartment")}};
+    const FString MaterialName = cr::ToFString(material);
+    const FString *MaterialPath = MaterialHints.Find(MaterialName.ToLower());
+    const FString ResolvedPath = (MaterialPath != nullptr) ? *MaterialPath : MaterialName;
+    if (UMaterialInterface *Material = LoadObject<UMaterialInterface>(nullptr, *ResolvedPath))
+    {
+      PMC->SetMaterial(0, Material);
+    }
+
+    // Tag as terrain for semantic segmentation, mirroring the generated
+    // ground plane (OpenDriveGenerator's TagGeneratedComponent).
+    ATagger::SetStencilValue(*PMC, MeshActor->GetUniqueID(), cr::CityObjectLabel::Terrain, true);
+    PMC->ComponentTags.Add(FName(*ATagger::GetTagAsString(cr::CityObjectLabel::Terrain)));
+
     return R<void>::Success();
   };
 

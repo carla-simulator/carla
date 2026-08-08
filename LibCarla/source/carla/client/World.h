@@ -165,6 +165,16 @@ namespace client {
 
     void ResetAllTrafficLights();
 
+    /// Spawns a static procedural mesh with collision. Vertices are a flat
+    /// (x, y, z) triple list in metres, client coordinate frame; triangles
+    /// index vertex triples. Material is a semantic hint ("grass", "road",
+    /// "dirt", "sidewalk") or a full UE object path. The mesh lives until
+    /// the world is reloaded.
+    void SpawnCustomMesh(
+        const std::vector<float> &vertices,
+        const std::vector<uint32_t> &triangles,
+        const std::string &material);
+
     SharedPtr<LightManager> GetLightManager() const;
 
     DebugHelper MakeDebugHelper() const {

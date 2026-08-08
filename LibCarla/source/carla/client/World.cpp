@@ -233,6 +233,13 @@ namespace client {
     _episode.Lock()->ResetAllTrafficLights();
   }
 
+  void World::SpawnCustomMesh(
+      const std::vector<float> &vertices,
+      const std::vector<uint32_t> &triangles,
+      const std::string &material) {
+    _episode.Lock()->SpawnCustomMesh(vertices, triangles, material);
+  }
+
   SharedPtr<LightManager> World::GetLightManager() const {
     return _episode.Lock()->GetLightManager();
   }

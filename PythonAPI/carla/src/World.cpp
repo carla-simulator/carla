@@ -77,6 +77,21 @@ static auto GetActorsById(carla::client::World &self, const boost::python::list 
   return self.GetActors(ids);
 }
 
+static void SpawnCustomMesh(
+    carla::client::World &self,
+    const boost::python::object &vertices,
+    const boost::python::object &triangles,
+    const std::string &material) {
+  std::vector<float> verts{
+      boost::python::stl_input_iterator<float>(vertices),
+      boost::python::stl_input_iterator<float>()};
+  std::vector<uint32_t> tris{
+      boost::python::stl_input_iterator<uint32_t>(triangles),
+      boost::python::stl_input_iterator<uint32_t>()};
+  carla::PythonUtil::ReleaseGIL unlock;
+  self.SpawnCustomMesh(verts, tris, material);
+}
+
 static auto GetVehiclesLightStates(carla::client::World &self) {
   boost::python::dict dict;
   auto list = self.GetVehiclesLightStates();
@@ -334,6 +349,8 @@ void export_world() {
     .def("get_traffic_lights_from_waypoint", CALL_RETURNING_LIST_2(cc::World, GetTrafficLightsFromWaypoint, const cc::Waypoint&, double), (arg("waypoint"), arg("distance")))
     .def("get_traffic_lights_in_junction", CALL_RETURNING_LIST_1(cc::World, GetTrafficLightsInJunction, carla::road::JuncId), (arg("junction_id")))
     .def("reset_all_traffic_lights", &cc::World::ResetAllTrafficLights)
+    .def("spawn_custom_mesh", &SpawnCustomMesh,
+        (arg("vertices"), arg("triangles"), arg("material")="grass"))
     .def("freeze_all_traffic_lights", &cc::World::FreezeAllTrafficLights, (arg("frozen")))
     .def("get_level_bbs", &GetLevelBBs, (arg("bb_type")=cr::CityObjectLabel::Any))
     .def("get_environment_objects", &GetEnvironmentObjects, (arg("object_type")=cr::CityObjectLabel::Any))
