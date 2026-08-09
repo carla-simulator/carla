@@ -34,7 +34,7 @@ void UCarlaLightSubsystem::RegisterLight(UCarlaLight* CarlaLight)
       return;
     }
     Lights.Add(LightId, CarlaLight);
-    DayTimeChangeEvent.AddUniqueDynamic(CarlaLight, &UCarlaLight::DayTimeChanged);
+    DayTimeChangeEvent.AddUniqueDynamic(CarlaLight, &UCarlaLight::HandleDayTimeChanged);
   }
   SetClientStatesdirty("");
 }
@@ -44,7 +44,7 @@ void UCarlaLightSubsystem::UnregisterLight(UCarlaLight* CarlaLight)
   if(CarlaLight)
   {
     Lights.Remove(CarlaLight->GetId());
-    DayTimeChangeEvent.RemoveDynamic(CarlaLight, &UCarlaLight::DayTimeChanged);
+    DayTimeChangeEvent.RemoveDynamic(CarlaLight, &UCarlaLight::HandleDayTimeChanged);
   }
   SetClientStatesdirty("");
 }

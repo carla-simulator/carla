@@ -129,6 +129,14 @@ public:
   UFUNCTION(BlueprintImplementableEvent, BlueprintCallable, Category = "Carla Light")
   void DayTimeChanged(bool bIsDay);
 
+  /// C++ handler bound to UCarlaLightSubsystem::DayTimeChangeEvent. Forwards
+  /// to the blueprint DayTimeChanged event, then syncs the CarlaLight on/off
+  /// state for street lights: ported UE4 lamp blueprints render the change
+  /// but never update the flags, so the client API reported every lamp as
+  /// off while it was visibly lit.
+  UFUNCTION()
+  void HandleDayTimeChanged(bool bIsDay);
+
   /// Scale the owner's light components from UE4-era authored intensities to
   /// UE5 photometric units (see carla.Light.LegacyIntensityScale). Must run
   /// after every path that lets blueprints push authored values into the
@@ -192,6 +200,16 @@ public:
   /// carla.Light.StreetIntensityScale or carla.Light.LegacyIntensityScale),
   /// for callers that scale blueprint-side values instead of components.
   static float GetLegacyIntensityScale(ELightType LightType);
+
+private:
+
+  /// Show or hide every Point/Spot light component on the owner. The
+  /// blueprint UpdateLights event is supposed to react to state changes, but
+  /// several ported lamp blueprints have dead UpdateLights graphs, which left
+  /// the client light API (turn_on/turn_off/set_light_state) without any
+  /// visual effect. Enforce the on/off state from C++ so the API works
+  /// regardless of the content blueprint.
+  void ApplyLightOnToComponents(bool bOn);
 
 protected:
 	
