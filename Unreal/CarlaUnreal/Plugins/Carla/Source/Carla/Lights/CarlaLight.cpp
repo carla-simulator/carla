@@ -244,8 +244,33 @@ void UCarlaLight::SetLightOn(bool bOn)
 {
   flags = bOn ? (flags | ECarlaLightFlags::TurnedOn) : (flags & ~ECarlaLightFlags::TurnedOn);
   UpdateLights();
+  ApplyLightOnToComponents(bOn);
   ApplyLegacyComponentConversion();
   RecordLightChange();
+}
+
+void UCarlaLight::HandleDayTimeChanged(bool bIsDay)
+{
+  DayTimeChanged(bIsDay);
+  if (LightType == ELightType::Street)
+  {
+    SetLightOn(!bIsDay);
+  }
+}
+
+void UCarlaLight::ApplyLightOnToComponents(bool bOn)
+{
+  AActor* Owner = GetOwner();
+  if (Owner == nullptr)
+  {
+    return;
+  }
+  TArray<UPointLightComponent*> LightComponents;
+  Owner->GetComponents<UPointLightComponent>(LightComponents);
+  for (UPointLightComponent* LightComponent : LightComponents)
+  {
+    LightComponent->SetVisibility(bOn);
+  }
 }
 
 bool UCarlaLight::GetLightOn() const
@@ -285,6 +310,7 @@ void UCarlaLight::SetLightState(carla::rpc::LightState LightState)
   LightType = static_cast<ELightType>(LightState._group);
   flags = LightState._active ? (flags | ECarlaLightFlags::TurnedOn) : (flags & ~ECarlaLightFlags::TurnedOn);
   UpdateLights();
+  ApplyLightOnToComponents(LightState._active);
   ApplyLegacyComponentConversion();
   RecordLightChange();
 }

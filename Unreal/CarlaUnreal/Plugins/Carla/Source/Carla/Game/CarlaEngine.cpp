@@ -27,6 +27,8 @@
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
+#include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
 #include "Misc/App.h"
 #include "PhysicsEngine/PhysicsSettings.h"
 #include "SceneInterface.h"

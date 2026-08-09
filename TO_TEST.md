@@ -1,10 +1,14 @@
+# Migration Test Plans
+
+Status legend: `[ ]` pending, `[x]` done, `[~]` partially done.
+
+---
+
 # DVS Sensor Migration — Test Plan
 
 Goal: validate that `sensor.camera.dvs` on the UE5 migration branch
 (`feat/dvs-sensor-migration`, worktree `carla-ue5-dvs`) behaves equivalently to
 the UE4 reference implementation (`carla` repo, UE4.26).
-
-Status legend: `[ ]` pending, `[x]` done, `[~]` partially done.
 
 ---
 
@@ -95,3 +99,94 @@ that the UE5 branch is compared against.
   a running UE4 server — not currently built/running on this machine.
 - Deterministic scene recipe (shared by B1/T2): sync mode, fixed seed for TM,
   scripted ego (no autopilot randomness), fixed weather, same spawn index.
+
+---
+
+# Light & Weather API Migration — Test Plan
+
+Goal: validate `carla.LightManager`, `world.set_weather` /
+`carla.WeatherParameters` on the UE5 migration branch
+(`feat/light-weather-migration`, worktree `carla-ue5-lightweather`) against the
+UE4 reference (`carla` repo, `ue4-dev`).
+
+Branch contents: 9 night/weather commits cherry-picked from
+`ue58-mapgen-features`, re-enabled `World.get_lightmanager` Python binding,
+plus three new fixes (C++ enforcement of light on/off on components, day/night
+flag sync, client cache dirty-marking on day/night changes). Smoke test:
+`PythonAPI/examples/lightweather_test.py`.
+
+## Branch: `feat/light-weather-migration` (UE5 — worktree `carla-ue5-lightweather`)
+
+### Functional — lights
+
+- [x] **L1. `get_lightmanager` exposed + enumeration.** Binding restored;
+  LightManager lists lights per group (Town10: 164 Street, 119 Building;
+  OpenDriveMap: 90 Street). (Passed 2026-08-09, worktree build, port 3010.)
+- [x] **L2. Day/night cycle drives street lights.** `set_weather(ClearNight)`
+  → all street lights on; `ClearNoon` → all off; `is_on` reflects it.
+  (`lightweather_test.py` PASS: day 0/164, night 164/164.)
+- [x] **L3. `turn_on` / `turn_off` from client.** State changes and Point/Spot
+  light components visibly toggle (C++ enforcement; verified via difference
+  heatmap `lw_diff_heat.png`).
+- [x] **L4. Stale-client refresh.** A client connected before a server-side
+  day/night change sees updated `is_on` without reconnecting (dirty-flag fix).
+- [ ] **L5. Emissive lamp heads.** KNOWN LIMITATION: lamp-head emissive
+  materials stay glowing when lights are off and feed Lumen GI (dominant on
+  Town10 plaza). Needs a content/material pass driving `EmissiveIntensity`
+  from the CarlaLight state — decide approach (dynamic material instances vs
+  fixing the blueprint `UpdateLights` graphs).
+- [ ] **L6. `set_intensity` / `set_color` / `set_light_group`.** State
+  round-trips through the API, but visual effect depends on the blueprint
+  `UpdateLights` graphs, which are dead in several lamp blueprints — C++ only
+  enforces on/off. Verify per-map; extend C++ enforcement to intensity/color
+  if needed.
+- [ ] **L7. `set_day_night_cycle(False)`.** Street lights must stop following
+  weather changes; manual control still works.
+- [ ] **L8. Vehicle lights at night.** Headlight beams (cherry-picked
+  fbcb51fa7): spawn vehicle, enable lights via
+  `vehicle.set_light_state`, confirm beams illuminate road at night.
+- [ ] **L9. Recorder/replayer.** Record a session with light changes, replay:
+  light states restored (RecordLightChange path).
+- [ ] **L10. Map change / streaming.** `is_on` and registration survive
+  `load_world` and World Partition streaming (registration-flag fix
+  f85c7fcee); light count stable across re-registration.
+
+### Functional — weather
+
+- [x] **W1. `set_weather` presets day/night.** ClearNoon / ClearNight change
+  sun, sky, stars, ambient on Town10 and OpenDriveMap; weather read-back
+  (`get_weather`) round-trips. (Screenshots `lw_day.png` / `lw_night.png`.)
+- [ ] **W2. Individual parameter sweep.** cloudiness, precipitation +
+  deposits, wind, fog (density/distance/falloff — remapped in 9d01b8583),
+  wetness, scattering params, dust storm: each visibly changes the scene and
+  none regresses the sky rig (UpdateNight sky-sphere fix 0253c7234).
+- [ ] **W3. All presets render sanely.** Iterate every
+  `WeatherParameters` preset (incl. Night variants): no black screen, no
+  collapsed sky sphere, fog behaves.
+- [ ] **W4. Weather + sensors.** RGB camera post-process effects respond
+  (rain drops / dust wind screen materials); auto-exposure recovers after
+  transitions (rt_lens exposure pin deliberately NOT cherry-picked — check
+  interaction).
+- [ ] **W5. Parity vs UE4.** Same preset on UE4 (`ue4-dev`) and UE5 side by
+  side: sun position, fog character, precipitation look. Semantic parity,
+  not pixel parity; document intentional differences (Lumen, volumetric
+  clouds).
+
+### Performance / robustness
+
+- [ ] **PW1. Broadcast cost.** Day/night broadcast touches every registered
+  light (283 on Town10) + dirty-marks all clients; measure `set_weather`
+  RPC latency with many lights and >1 connected client.
+- [ ] **PW2. Rapid weather changes.** 100 alternating ClearNoon/ClearNight
+  calls: no leak, no light-state drift, `is_on` still consistent at the end.
+
+## Build notes
+
+- Wheel + editor built from the worktree
+  (`cmake --preset Release -DPython3_EXECUTABLE=<anaconda python3.13>`, needs
+  `CARLA_UNREAL_ENGINE_PATH` and anaconda python first on PATH for Boost).
+- `StreetMap` plugin needed `EAllowShrinking` fixes for UE 5.8 — plugin is
+  gitignored (vendored clone), fix is local-only in the worktree; re-apply
+  after fresh setup.
+- Latent unity-build include bug fixed on the branch (`CarlaEngine.cpp`,
+  6fcd8abd6) — was masked on other branches by chunk layout.

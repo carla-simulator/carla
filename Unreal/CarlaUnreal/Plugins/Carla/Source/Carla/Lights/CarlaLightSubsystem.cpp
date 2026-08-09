@@ -42,7 +42,7 @@ void UCarlaLightSubsystem::RegisterLight(UCarlaLight* CarlaLight)
       CarlaLight->SetId(LightId);
     }
     Lights.Add(LightId, CarlaLight);
-    DayTimeChangeEvent.AddUniqueDynamic(CarlaLight, &UCarlaLight::DayTimeChanged);
+    DayTimeChangeEvent.AddUniqueDynamic(CarlaLight, &UCarlaLight::HandleDayTimeChanged);
   }
   SetClientStatesdirty("");
 }
@@ -52,7 +52,7 @@ void UCarlaLightSubsystem::UnregisterLight(UCarlaLight* CarlaLight)
   if(CarlaLight)
   {
     Lights.Remove(CarlaLight->GetId());
-    DayTimeChangeEvent.RemoveDynamic(CarlaLight, &UCarlaLight::DayTimeChanged);
+    DayTimeChangeEvent.RemoveDynamic(CarlaLight, &UCarlaLight::HandleDayTimeChanged);
   }
   SetClientStatesdirty("");
 }
@@ -71,6 +71,10 @@ void UCarlaLightSubsystem::NotifyDayTimeChange(bool bIsDay)
       CarlaLight->ApplyLegacyComponentConversion();
     }
   }
+  // A day/night change flips light states server-side; flag every connected
+  // client so their LightManager re-queries instead of serving stale is_on
+  // values from its local cache.
+  SetClientStatesdirty("");
 }
 
 bool UCarlaLightSubsystem::IsUpdatePending() const
