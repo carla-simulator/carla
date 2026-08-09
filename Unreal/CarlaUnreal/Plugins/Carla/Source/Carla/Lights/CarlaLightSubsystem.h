@@ -80,9 +80,14 @@ public:
   /// conversion applied earlier in the same broadcast.
   void NotifyDayTimeChange(bool bIsDay);
 
-private:
-
+  /// Flag every registered client (except ClientThatUpdate) so their
+  /// LightManager re-queries light states. Must be called after any
+  /// server-side state change made outside a client request (day/night
+  /// broadcast, recorder replay), or clients keep serving stale cached
+  /// values.
   void SetClientStatesdirty(FString ClientThatUpdate);
+
+private:
 
   TMap<int, UCarlaLight* > Lights;
 

@@ -484,6 +484,10 @@ void CarlaReplayerHelper::ProcessReplayerLightScene(CarlaRecorderLightScene Ligh
       CarlaLight->SetLightColor(LightScene.Color);
       CarlaLight->SetLightOn(LightScene.bOn);
       CarlaLight->SetLightType(static_cast<ELightType>(LightScene.Type));
+      // The replayer mutates light state server-side, outside any client
+      // request; without dirty-marking, connected clients keep serving stale
+      // is_on/intensity values from their LightManager cache.
+      CarlaLightSubsystem->SetClientStatesdirty("");
     }
   }
 }

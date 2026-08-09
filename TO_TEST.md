@@ -44,22 +44,22 @@ that the UE5 branch is compared against.
 - [x] **F2. Python decode path.** numpy structured dtype
   `(x u2, y u2, t i8, pol ?)` decodes raw buffer; visualization sane.
   (`dvs_test_out.png`.)
-- [ ] **F3. Build from migration branch.** Rebuild LibCarla + CarlaUnreal
+- [x] **F3. Build from migration branch.** Rebuild LibCarla + CarlaUnreal
   plugin from this exact branch; rerun F1 against that build.
-- [ ] **F4. Sync mode.** Sync + `fixed_delta_seconds`: one packet per tick,
+- [x] **F4. Sync mode.** Sync + `fixed_delta_seconds`: one packet per tick,
   event timestamps monotone across packets, `delta_t_ns` consistent with the
   fixed delta.
-- [ ] **F5. Attribute effects.** Each attribute in B3 changes output in the
+- [x] **F5. Attribute effects.** Each attribute in B3 changes output in the
   expected direction (higher threshold → fewer events; refractory period →
   per-pixel event rate capped; `use_log=false` → different event distribution).
 - [ ] **F6. `manual_control.py` interactive.** Launch example, cycle sensors to
   "Dynamic Vision Sensor", confirm live event rendering + no crash on sensor
   switch away/back (restored in `7d2f6c57c`).
-- [ ] **F7. Resolution / FOV variations.** 1920x1080 and fov=120: no OOB
+- [x] **F7. Resolution / FOV variations.** 1920x1080 and fov=120: no OOB
   events, no aspect distortion in event image.
-- [ ] **F8. Lifecycle.** `stop()` → `listen()` again, destroy while streaming,
+- [x] **F8. Lifecycle.** `stop()` → `listen()` again, destroy while streaming,
   respawn loop x10: no server crash, no stale state (prev_image reset).
-- [ ] **F9. DVS + wide-angle/fisheye interplay.** DVS inherits lens distortion
+- [~] **F9. DVS + wide-angle/fisheye interplay.** DVS inherits lens distortion
   post-process material; verify distortion attributes (`lens_k`, etc.) apply
   and don't corrupt event coords.
 - [ ] **F10. ROS2 path** (only if `WITH_ROS2` build available): DVS publisher
@@ -86,7 +86,7 @@ that the UE5 branch is compared against.
   scope exists) at 640x480 and 1920x1080. The per-pixel simulation loop is
   single-threaded on game thread — compare vs UE4 numbers, flag if 1080p
   blocks the frame > ~10 ms.
-- [ ] **P2. Multi-DVS.** 3 concurrent DVS sensors: frame rate, no readback
+- [x] **P2. Multi-DVS.** 3 concurrent DVS sensors: frame rate, no readback
   contention with other camera sensors (shared `FRHIGPUReadbackPool`).
 
 ---
@@ -135,19 +135,19 @@ flag sync, client cache dirty-marking on day/night changes). Smoke test:
   Town10 plaza). Needs a content/material pass driving `EmissiveIntensity`
   from the CarlaLight state — decide approach (dynamic material instances vs
   fixing the blueprint `UpdateLights` graphs).
-- [ ] **L6. `set_intensity` / `set_color` / `set_light_group`.** State
+- [~] **L6. `set_intensity` / `set_color` / `set_light_group`.** State
   round-trips through the API, but visual effect depends on the blueprint
   `UpdateLights` graphs, which are dead in several lamp blueprints — C++ only
   enforces on/off. Verify per-map; extend C++ enforcement to intensity/color
   if needed.
-- [ ] **L7. `set_day_night_cycle(False)`.** Street lights must stop following
+- [x] **L7. `set_day_night_cycle(False)`.** Street lights must stop following
   weather changes; manual control still works.
-- [ ] **L8. Vehicle lights at night.** Headlight beams (cherry-picked
+- [x] **L8. Vehicle lights at night.** Headlight beams (cherry-picked
   fbcb51fa7): spawn vehicle, enable lights via
   `vehicle.set_light_state`, confirm beams illuminate road at night.
-- [ ] **L9. Recorder/replayer.** Record a session with light changes, replay:
+- [x] **L9. Recorder/replayer.** Record a session with light changes, replay:
   light states restored (RecordLightChange path).
-- [ ] **L10. Map change / streaming.** `is_on` and registration survive
+- [x] **L10. Map change / streaming.** `is_on` and registration survive
   `load_world` and World Partition streaming (registration-flag fix
   f85c7fcee); light count stable across re-registration.
 
@@ -156,14 +156,14 @@ flag sync, client cache dirty-marking on day/night changes). Smoke test:
 - [x] **W1. `set_weather` presets day/night.** ClearNoon / ClearNight change
   sun, sky, stars, ambient on Town10 and OpenDriveMap; weather read-back
   (`get_weather`) round-trips. (Screenshots `lw_day.png` / `lw_night.png`.)
-- [ ] **W2. Individual parameter sweep.** cloudiness, precipitation +
+- [x] **W2. Individual parameter sweep.** cloudiness, precipitation +
   deposits, wind, fog (density/distance/falloff — remapped in 9d01b8583),
   wetness, scattering params, dust storm: each visibly changes the scene and
   none regresses the sky rig (UpdateNight sky-sphere fix 0253c7234).
-- [ ] **W3. All presets render sanely.** Iterate every
+- [x] **W3. All presets render sanely.** Iterate every
   `WeatherParameters` preset (incl. Night variants): no black screen, no
   collapsed sky sphere, fog behaves.
-- [ ] **W4. Weather + sensors.** RGB camera post-process effects respond
+- [x] **W4. Weather + sensors.** RGB camera post-process effects respond
   (rain drops / dust wind screen materials); auto-exposure recovers after
   transitions (rt_lens exposure pin deliberately NOT cherry-picked — check
   interaction).
@@ -174,10 +174,10 @@ flag sync, client cache dirty-marking on day/night changes). Smoke test:
 
 ### Performance / robustness
 
-- [ ] **PW1. Broadcast cost.** Day/night broadcast touches every registered
+- [x] **PW1. Broadcast cost.** Day/night broadcast touches every registered
   light (283 on Town10) + dirty-marks all clients; measure `set_weather`
   RPC latency with many lights and >1 connected client.
-- [ ] **PW2. Rapid weather changes.** 100 alternating ClearNoon/ClearNight
+- [x] **PW2. Rapid weather changes.** 100 alternating ClearNoon/ClearNight
   calls: no leak, no light-state drift, `is_on` still consistent at the end.
 
 ## Build notes
@@ -190,3 +190,55 @@ flag sync, client cache dirty-marking on day/night changes). Smoke test:
   after fresh setup.
 - Latent unity-build include bug fixed on the branch (`CarlaEngine.cpp`,
   6fcd8abd6) — was masked on other branches by chunk layout.
+
+---
+
+# Test run 2026-08-09 — branch `ue58-migration-02` (merge of ue58-mapgen-features + feat/dvs-sensor-migration + feat/light-weather-migration)
+
+Server: merged-branch build, Town10HD_Opt, port 3000. Suites:
+`PythonAPI/examples/dvs_test.py`, `dvs_suite.py` (F4/F5/F7/F8),
+`lightweather_test.py` (L1-L4/W1), `lw_suite.py` (L6-L10/W2/W3/PW1/PW2).
+
+- F3: rebuilt LibCarla + plugin from merged branch; smoke rerun PASS
+  (43 packets / 4.17M events, coords/timestamps/polarity sane).
+- F4: 39 packets over 40 sync ticks, timestamp deltas exactly 0.05 s,
+  events monotone across packets.
+- F5: threshold 0.1/0.3/0.7 -> 12.85M/3.90M/1.51M events (monotone);
+  refractory 0 vs 10 ms -> 3.95M vs 2.51M; use_log true/false ->
+  3.9M vs 146.8M (massive, expected direction).
+- F7: 1920x1080 fov=120 -> 28.1M events, span (1919,1079), no OOB.
+- F8: stop/re-listen 69/61 packets, destroy-while-streaming + 10x respawn,
+  server responsive after.
+- F9 [~]: lens_k/lens_kcube/lens_circle_* accepted on DVS bp, 2.16M events all
+  in bounds; visual distortion-profile comparison vs RGB fisheye not done.
+- P2: 3 concurrent DVS + 1 RGB on one vehicle, ~9.7 Hz each, no starvation.
+- L6 [~]: intensity/color/group round-trip through the API PASS (5 lights,
+  12345 cd / (255,40,10) / Street->Building->Street); visual enforcement of
+  intensity/color beyond on/off still depends on per-map blueprint graphs.
+- L7: with cycle off, ClearNight leaves lights unchanged (0 on); manual
+  turn_on still works (164/164); cycle re-enabled cleanly.
+- L8: night + street lights off, LowBeam|HighBeam raises scene mean
+  brightness 0.17 -> 2.16 (12x); lw_l8_beams_on.png.
+- L9: FOUND + FIXED replay bug. Recording captured the turn_on event
+  (164 scene-light changes, verified via show_recorder_file_info), replay
+  applied it server-side (fresh client saw 164 on), but already-connected
+  clients kept stale is_on=False: ProcessReplayerLightScene never marked
+  client light caches dirty. Fix: CarlaReplayerHelper.cpp now calls
+  UCarlaLightSubsystem::SetClientStatesdirty("") after applying a replayed
+  light state (SetClientStatesdirty made public). Rerun: 0 -> 164 PASS.
+- L10: 164 street lights before and after load_world(Town10HD_Opt); ClearNight
+  after reload turns all 164 on.
+- W2: all 11 params (cloudiness, precipitation, deposits, wind, fog x3,
+  wetness, scattering x2, dust_storm) round-trip exactly and change the frame
+  (img diff 1.3-62.5).
+- W3: all 23 presets render (means 13.6-73.8, Night presets >= 13.6, no black
+  frame, no collapsed sky).
+- W4: HardRainNoon shifts exposure (74 -> 106), ClearNoon recovery within
+  2% of baseline after transition through ClearNight (74.0 -> 72.4).
+- PW1: set_weather median latency < 1 ms with 283 lights + 2nd client.
+- PW2: 100 alternating ClearNoon/ClearNight flips: light count stable (164),
+  0 stuck on, states consistent.
+
+Still open: B1-B4/T1-T3/W5 (need a running UE4 server for baselines), F6
+(interactive manual_control pass), F10 (needs WITH_ROS2 build), P1 (needs
+PostPhysTick CPU-trace measurements), L5 (emissive lamp-head content pass).
