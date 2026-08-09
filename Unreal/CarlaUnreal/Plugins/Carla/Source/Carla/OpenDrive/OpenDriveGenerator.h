@@ -171,8 +171,15 @@ protected:
       /// before GenerateGroundPlane; the terrain clamps itself below these
       /// quads so it cannot z-fight up through the fill.
       float FillMinZ = FLT_MAX;
+      /// Stacked-surface weld record for this cell, written by
+      /// WeldStackedSections: lowest weld target (the winning lower
+      /// surface's height at a welded vertex) and whether any weld
+      /// happened here. The later marking pass sinks marking vertices
+      /// riding well above WeldBaseZ in flagged cells.
+      float WeldBaseZ = 0.0f;
       uint8 bDrive = 0;
       uint8 bPaved = 0;
+      uint8 bStacked = 0;
     };
 
     float CellSize = 250.0f;
@@ -192,6 +199,24 @@ protected:
     void BuildDistanceFields();
     const FCell *CellAtWorld(float X, float Y) const;
   };
+
+public:
+  /// Debug: log the raster's weld/height record in a 3x3 cell block around
+  /// (X, Y) in UE cm. Bound to the `carla.DumpRasterAt` console command.
+  void DumpRasterAt(float X, float Y) const;
+
+protected:
+  /// At-grade stacked-crossing weld over the gathered road sections (see
+  /// StackedGapMin/Max). For every driving vertex, the other sections'
+  /// surfaces at that exact XY are evaluated by point-in-triangle
+  /// interpolation (triangles bucketed on the raster grid); a vertex
+  /// hovering an at-grade gap above another surface sinks StackedWeldDrop
+  /// below it, and the surrounding mesh neighbourhood is laplacian-relaxed
+  /// so the sunken patch ramps into the road's own profile. Per-vertex
+  /// targets follow the winning surface's slope, so no flat-quad artifacts.
+  /// Records WeldBaseZ/bStacked into the raster for the marking pass.
+  /// Returns the number of welded vertices.
+  int32 WeldStackedSections(TArray<TPair<FProceduralCustomMesh, bool>> &Sections);
   FRoadSurfaceRaster RoadRaster;
 
   /// Material applied to driving-lane mesh sections.
@@ -444,5 +469,31 @@ protected:
   /// roads (bridge over road) rather than a single surface.
   UPROPERTY(Category = "Generation QA", EditAnywhere)
   float QAStackedRoadGap = 400.0f;
+
+  /// At-grade stacked-surface weld. DeepMap placeholder junctions leave
+  /// crossing roads as plain overlaps whose elevation profiles disagree by
+  /// a few cm to a few dm -- the upper road's lane patches float above the
+  /// lower road and cast shadows. Cells whose driving z-clusters are
+  /// separated by a gap in (StackedGapMin, StackedGapMax) get the upper
+  /// surface welded StackedWeldDrop below the lower one (lower road wins
+  /// the crossing); gaps above StackedGapMax are genuine bridge decks and
+  /// stay. Markings riding the sunken surface drop StackedMarkingDrop so
+  /// they stay hidden under the winning road despite their decal offset.
+  UPROPERTY(Category = "Generation", EditAnywhere)
+  float StackedGapMin = 4.0f;
+
+  UPROPERTY(Category = "Generation", EditAnywhere)
+  float StackedGapMax = 150.0f;
+
+  /// Drop below the winning surface, evaluated at each welded vertex's own
+  /// XY -- the target follows the lower surface's slope, so a small
+  /// clearance suffices. Must stay BELOW StackedGapMin: a sunken surface
+  /// then sits closer to the winner than the detection window's lower
+  /// bound, so it can never re-trigger a weld against it.
+  UPROPERTY(Category = "Generation", EditAnywhere)
+  float StackedWeldDrop = 3.0f;
+
+  UPROPERTY(Category = "Generation", EditAnywhere)
+  float StackedMarkingDrop = 6.0f;
 
 };

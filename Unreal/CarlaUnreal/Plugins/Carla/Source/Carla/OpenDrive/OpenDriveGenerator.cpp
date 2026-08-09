@@ -419,6 +419,269 @@ void AOpenDriveGenerator::FRoadSurfaceRaster::BuildDistanceFields()
       [](FCell &C, float V) { C.NearestPavedMinZ = V; });
 }
 
+int32 AOpenDriveGenerator::WeldStackedSections(TArray<TPair<FProceduralCustomMesh, bool>> &Sections)
+{
+  if (!RoadRaster.IsValid())
+  {
+    return 0;
+  }
+  // ---- Bucket every driving triangle on the raster grid ----
+  struct FTriRef { int32 Section; int32 Tri; };
+  const int32 W = RoadRaster.Width;
+  const int32 H = RoadRaster.Height;
+  const float CellSize = RoadRaster.CellSize;
+  TArray<TArray<FTriRef>> Buckets;
+  Buckets.SetNum(W * H);
+  for (int32 S = 0; S < Sections.Num(); ++S)
+  {
+    if (Sections[S].Value)
+    {
+      continue; // sidewalks neither weld nor act as weld targets
+    }
+    const FProceduralCustomMesh &Mesh = Sections[S].Key;
+    for (int32 T = 0; T + 2 < Mesh.Triangles.Num(); T += 3)
+    {
+      const FVector &A = Mesh.Vertices[Mesh.Triangles[T]];
+      const FVector &B = Mesh.Vertices[Mesh.Triangles[T + 1]];
+      const FVector &C = Mesh.Vertices[Mesh.Triangles[T + 2]];
+      const int32 X0 = FMath::Clamp(FMath::FloorToInt((FMath::Min3(A.X, B.X, C.X) - RoadRaster.OriginX) / CellSize), 0, W - 1);
+      const int32 X1 = FMath::Clamp(FMath::FloorToInt((FMath::Max3(A.X, B.X, C.X) - RoadRaster.OriginX) / CellSize), 0, W - 1);
+      const int32 Y0 = FMath::Clamp(FMath::FloorToInt((FMath::Min3(A.Y, B.Y, C.Y) - RoadRaster.OriginY) / CellSize), 0, H - 1);
+      const int32 Y1 = FMath::Clamp(FMath::FloorToInt((FMath::Max3(A.Y, B.Y, C.Y) - RoadRaster.OriginY) / CellSize), 0, H - 1);
+      for (int32 CY = Y0; CY <= Y1; ++CY)
+      {
+        for (int32 CX = X0; CX <= X1; ++CX)
+        {
+          Buckets[CY * W + CX].Add({S, T});
+        }
+      }
+    }
+  }
+
+  // ---- Vertical query: highest other-section surface an at-grade gap
+  // below (X, Y, Z), by exact point-in-triangle interpolation. Comparing
+  // surfaces at the same point is what makes this immune to slopes and to
+  // laterally adjacent (non-overlapping) roads alike. ----
+  const auto OtherSurfaceBelow = [&](float X, float Y, float Z) -> TOptional<float>
+  {
+    const int32 CX = FMath::FloorToInt((X - RoadRaster.OriginX) / CellSize);
+    const int32 CY = FMath::FloorToInt((Y - RoadRaster.OriginY) / CellSize);
+    if (CX < 0 || CX >= W || CY < 0 || CY >= H)
+    {
+      return TOptional<float>();
+    }
+    TOptional<float> Best;
+    for (const FTriRef &Ref : Buckets[CY * W + CX])
+    {
+      const FProceduralCustomMesh &Mesh = Sections[Ref.Section].Key;
+      const FVector &A = Mesh.Vertices[Mesh.Triangles[Ref.Tri]];
+      const FVector &B = Mesh.Vertices[Mesh.Triangles[Ref.Tri + 1]];
+      const FVector &C = Mesh.Vertices[Mesh.Triangles[Ref.Tri + 2]];
+      const float Denom = (B.Y - C.Y) * (A.X - C.X) + (C.X - B.X) * (A.Y - C.Y);
+      if (FMath::Abs(Denom) < KINDA_SMALL_NUMBER)
+      {
+        continue;
+      }
+      const float W0 = ((B.Y - C.Y) * (X - C.X) + (C.X - B.X) * (Y - C.Y)) / Denom;
+      const float W1 = ((C.Y - A.Y) * (X - C.X) + (A.X - C.X) * (Y - C.Y)) / Denom;
+      const float W2 = 1.0f - W0 - W1;
+      if (W0 < 0.0f || W1 < 0.0f || W2 < 0.0f)
+      {
+        continue;
+      }
+      const float SurfZ = W0 * A.Z + W1 * B.Z + W2 * C.Z;
+      const float Gap = Z - SurfZ;
+      if (Gap > StackedGapMin && Gap < StackedGapMax)
+      {
+        if (!Best.IsSet() || SurfZ > Best.GetValue())
+        {
+          Best = SurfZ;
+        }
+      }
+    }
+    return Best;
+  };
+
+  // ---- Weld, section by section. Vertices alone are too sparse to catch
+  // sub-metre overlap bands (a 2 m triangle can hover with all three
+  // vertices outside the band), so hovering is tested per *triangle* at
+  // its vertices and centroid; a hovering triangle sinks all its
+  // vertices. Vertices without a direct surface below inherit the lowest
+  // target their hovering triangles found. ----
+  int32 TotalWelded = 0;
+  TArray<TArray<bool>> WeldedFlags;
+  WeldedFlags.SetNum(Sections.Num());
+  for (int32 Pass = 0; Pass < 2; ++Pass)
+  {
+  for (int32 S = 0; S < Sections.Num(); ++S)
+  {
+    if (Sections[S].Value)
+    {
+      continue;
+    }
+    FProceduralCustomMesh &Mesh = Sections[S].Key;
+    const int32 NumVerts = Mesh.Vertices.Num();
+    if (WeldedFlags[S].Num() != NumVerts)
+    {
+      WeldedFlags[S].Init(false, NumVerts);
+    }
+    TArray<float> TargetZ;
+    TargetZ.Init(FLT_MAX, NumVerts);
+    for (int32 T = 0; T + 2 < Mesh.Triangles.Num(); T += 3)
+    {
+      const int32 I[3] = {Mesh.Triangles[T], Mesh.Triangles[T + 1], Mesh.Triangles[T + 2]};
+      const FVector &A = Mesh.Vertices[I[0]];
+      const FVector &B = Mesh.Vertices[I[1]];
+      const FVector &C = Mesh.Vertices[I[2]];
+      const FVector Centroid = (A + B + C) / 3.0f;
+      TOptional<float> TriTarget;
+      const auto Consider = [&](const TOptional<float> &Sample)
+      {
+        if (Sample.IsSet() && (!TriTarget.IsSet() || Sample.GetValue() < TriTarget.GetValue()))
+        {
+          TriTarget = Sample;
+        }
+      };
+      Consider(OtherSurfaceBelow(Centroid.X, Centroid.Y, Centroid.Z));
+      Consider(OtherSurfaceBelow(A.X, A.Y, A.Z));
+      Consider(OtherSurfaceBelow(B.X, B.Y, B.Z));
+      Consider(OtherSurfaceBelow(C.X, C.Y, C.Z));
+      if (!TriTarget.IsSet())
+      {
+        continue;
+      }
+      for (int32 K = 0; K < 3; ++K)
+      {
+        // Prefer the surface directly below the vertex itself; fall back
+        // to the lowest target its hovering triangles found.
+        const FVector &V = Mesh.Vertices[I[K]];
+        const TOptional<float> Direct = OtherSurfaceBelow(V.X, V.Y, V.Z);
+        const float Candidate = Direct.IsSet() ? Direct.GetValue() : TriTarget.GetValue();
+        TargetZ[I[K]] = FMath::Min(TargetZ[I[K]], Candidate);
+      }
+    }
+
+    TArray<int32> RingDist;
+    RingDist.Init(-1, NumVerts);
+    TArray<int32> Frontier;
+    for (int32 V = 0; V < NumVerts; ++V)
+    {
+      if (TargetZ[V] == FLT_MAX || WeldedFlags[S][V])
+      {
+        continue;
+      }
+      const float NewZ = TargetZ[V] - StackedWeldDrop;
+      if (NewZ >= Mesh.Vertices[V].Z)
+      {
+        continue; // never raise
+      }
+      Mesh.Vertices[V].Z = NewZ;
+      WeldedFlags[S][V] = true;
+      RingDist[V] = 0;
+      Frontier.Add(V);
+      const int32 CX = FMath::FloorToInt((Mesh.Vertices[V].X - RoadRaster.OriginX) / CellSize);
+      const int32 CY = FMath::FloorToInt((Mesh.Vertices[V].Y - RoadRaster.OriginY) / CellSize);
+      if (CX >= 0 && CX < W && CY >= 0 && CY < H)
+      {
+        auto &Cell = RoadRaster.Cells[CY * W + CX];
+        Cell.WeldBaseZ = Cell.bStacked ? FMath::Min(Cell.WeldBaseZ, TargetZ[V]) : TargetZ[V];
+        Cell.bStacked = 1;
+      }
+    }
+    if (Frontier.Num() == 0)
+    {
+      continue;
+    }
+    TotalWelded += Frontier.Num();
+
+    // Ramp the sunken patch into the road's own profile: BFS rings outward
+    // from the welded set along mesh connectivity, then laplacian-relax the
+    // ring vertices with the welded set and everything past the outermost
+    // ring pinned. Only this road's mesh is connected to its welded
+    // vertices, so the crossing (lower) road keeps its exact profile.
+    TArray<TArray<int32>> Adj;
+    Adj.SetNum(NumVerts);
+    for (int32 T = 0; T + 2 < Mesh.Triangles.Num(); T += 3)
+    {
+      const int32 I0 = Mesh.Triangles[T];
+      const int32 I1 = Mesh.Triangles[T + 1];
+      const int32 I2 = Mesh.Triangles[T + 2];
+      Adj[I0].AddUnique(I1); Adj[I0].AddUnique(I2);
+      Adj[I1].AddUnique(I0); Adj[I1].AddUnique(I2);
+      Adj[I2].AddUnique(I0); Adj[I2].AddUnique(I1);
+    }
+    constexpr int32 MaxRings = 8;
+    TArray<int32> RelaxSet;
+    for (int32 Head = 0; Head < Frontier.Num(); ++Head)
+    {
+      const int32 V = Frontier[Head];
+      if (RingDist[V] >= MaxRings - 1)
+      {
+        continue;
+      }
+      for (const int32 N : Adj[V])
+      {
+        if (RingDist[N] < 0)
+        {
+          RingDist[N] = RingDist[V] + 1;
+          Frontier.Add(N);
+          RelaxSet.Add(N);
+        }
+      }
+    }
+    constexpr int32 Iterations = 30;
+    constexpr float Lambda = 0.7f;
+    for (int32 Iter = 0; Iter < Iterations; ++Iter)
+    {
+      for (const int32 V : RelaxSet)
+      {
+        if (Adj[V].Num() == 0)
+        {
+          continue;
+        }
+        float Sum = 0.0f;
+        for (const int32 N : Adj[V])
+        {
+          Sum += Mesh.Vertices[N].Z;
+        }
+        Mesh.Vertices[V].Z += Lambda * (Sum / static_cast<float>(Adj[V].Num()) - Mesh.Vertices[V].Z);
+      }
+    }
+  }
+  }
+  return TotalWelded;
+}
+
+void AOpenDriveGenerator::DumpRasterAt(float X, float Y) const
+{
+  if (!RoadRaster.IsValid())
+  {
+    UE_LOG(LogCarla, Warning, TEXT("DumpRasterAt: raster not built"));
+    return;
+  }
+  const int32 CX0 = FMath::FloorToInt((X - RoadRaster.OriginX) / RoadRaster.CellSize);
+  const int32 CY0 = FMath::FloorToInt((Y - RoadRaster.OriginY) / RoadRaster.CellSize);
+  for (int32 DY = -1; DY <= 1; ++DY)
+  {
+    for (int32 DX = -1; DX <= 1; ++DX)
+    {
+      const int32 CX = CX0 + DX;
+      const int32 CY = CY0 + DY;
+      if (CX < 0 || CX >= RoadRaster.Width || CY < 0 || CY >= RoadRaster.Height)
+      {
+        continue;
+      }
+      const auto &Cell = RoadRaster.Cells[CY * RoadRaster.Width + CX];
+      UE_LOG(LogCarla, Log,
+          TEXT("cell(%d,%d) ctr(%.1f,%.1f) drive=%d min=%.1f max=%.1f stacked=%d weldbase=%.1f"),
+          CX, CY,
+          RoadRaster.OriginX + (CX + 0.5f) * RoadRaster.CellSize,
+          RoadRaster.OriginY + (CY + 0.5f) * RoadRaster.CellSize,
+          Cell.bDrive, Cell.DriveMinZ, Cell.DriveMaxZ, Cell.bStacked, Cell.WeldBaseZ);
+    }
+  }
+}
+
 const AOpenDriveGenerator::FRoadSurfaceRaster::FCell *
 AOpenDriveGenerator::FRoadSurfaceRaster::CellAtWorld(float X, float Y) const
 {
@@ -434,6 +697,28 @@ AOpenDriveGenerator::FRoadSurfaceRaster::CellAtWorld(float X, float Y) const
   }
   return &Cells[CY * Width + CX];
 }
+
+/// Dump the road-raster chunk table around a point (client metres):
+/// `carla.DumpRasterAt <x> <y>` -- debugging aid for stacked-surface work.
+static FAutoConsoleCommandWithWorldAndArgs GDumpRasterAtCommand(
+    TEXT("carla.DumpRasterAt"),
+    TEXT("Dump road-raster chunk info around x y (metres)"),
+    FConsoleCommandWithWorldAndArgsDelegate::CreateStatic(
+        [](const TArray<FString> &Args, UWorld *World)
+    {
+      if (Args.Num() < 2)
+      {
+        UE_LOG(LogCarla, Warning, TEXT("usage: carla.DumpRasterAt <x> <y>"));
+        return;
+      }
+      const float CX = FCString::Atof(*Args[0]) * 100.0f;
+      const float CY = FCString::Atof(*Args[1]) * 100.0f;
+      for (TActorIterator<AOpenDriveGenerator> It(World); It; ++It)
+      {
+        It->DumpRasterAt(CX, CY);
+        return;
+      }
+    }));
 
 /// Re-run the generation QA on the placed generator from the console:
 /// `carla.MapGenQA` (also runs automatically after GenerateAll).
@@ -616,6 +901,17 @@ void AOpenDriveGenerator::GenerateRoadMesh()
     RoadRaster.Initialize(
         RoadMeshBounds.ExpandBy(FVector(Pad, Pad, 0.0f)),
         GroundHeightSampleCellSize);
+    // Weld at-grade stacked crossings (floating road tiles) before
+    // rasterizing, so the raster and everything downstream see the final
+    // geometry. Sidewalk sections keep their curb height and are not
+    // welded.
+    const int32 WeldedVerts = WeldStackedSections(PendingSections);
+    if (WeldedVerts > 0)
+    {
+      UE_LOG(LogCarla, Log,
+          TEXT("GenerateRoadMesh: welded %d stacked road vertices"), WeldedVerts);
+    }
+
     for (const auto &Section : PendingSections)
     {
       const FProceduralCustomMesh &SectionMesh = Section.Key;
@@ -1366,6 +1662,25 @@ void AOpenDriveGenerator::GenerateLaneMarkings()
     TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
     FProceduralCustomMesh MeshData = *Mark;
+    // Markings that ride a welded (sunken) crossing surface drop below the
+    // winning road so they don't paint phantom lines across it. Runs before
+    // the decal offset so classification sees raw surface heights.
+    if (RoadRaster.IsValid())
+    {
+      for (FVector &Vertex : MeshData.Vertices)
+      {
+        const auto *Cell = RoadRaster.CellAtWorld(Vertex.X, Vertex.Y);
+        // Sink markings that rode a welded (sunken) crossing surface. The
+        // winning road's own markings sit within centimetres of WeldBaseZ
+        // and stay; a 12 cm threshold keeps them safe across the cell's
+        // slope spread (upper markings under smaller gaps are left as a
+        // known residual rather than risking the winner's lines).
+        if (Cell != nullptr && Cell->bStacked && Vertex.Z > Cell->WeldBaseZ + 12.0f)
+        {
+          Vertex.Z = Cell->WeldBaseZ - StackedMarkingDrop;
+        }
+      }
+    }
     for (FVector &Vertex : MeshData.Vertices)
     {
       // Small z-offset above the road surface to avoid z-fighting.
