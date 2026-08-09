@@ -173,6 +173,13 @@ protected:
   UPROPERTY(EditAnywhere, Category = "Carla Light")
   float LightIntensity;
 
+  /// Whether the one-time UE4->UE5 legacy intensity conversion has been
+  /// applied to LightIntensity (see carla.Light.LegacyIntensityScale).
+  /// A UPROPERTY so template-based spawning (e.g. PCG Spawn Actor) copies it
+  /// together with the already-scaled intensity, preventing double scaling.
+  UPROPERTY()
+  bool bLegacyIntensityScaled = false;
+
   UPROPERTY(EditAnywhere, Category = "Carla Light")
   ELightType LightType = ELightType::Street;
 

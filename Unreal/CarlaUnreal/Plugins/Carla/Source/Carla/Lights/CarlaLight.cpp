@@ -49,6 +49,13 @@ void UCarlaLight::BeginPlay()
 {
   Super::BeginPlay();
 
+  // A fresh BeginPlay means this instance is not registered with this
+  // world's subsystem, whatever a copied flag claims: template-based
+  // spawning (PCG Spawn Actor and friends) copies the template component's
+  // flags wholesale, which used to make every cloned street light skip
+  // registration (1 of 133 PCG-spawned lamps registered), and EndPlay never
+  // cleared the flag either.
+  flags &= ~ECarlaLightFlags::Registered;
   RegisterLight();
 }
 
@@ -59,9 +66,15 @@ void UCarlaLight::RegisterLight()
     return;
   }
 
-  // Convert the authored UE4-era intensity exactly once (the Registered flag
-  // above guards re-entry, so streaming in/out cannot compound the scale).
-  LightIntensity *= CVarCarlaLightLegacyIntensityScale.GetValueOnGameThread();
+  // Convert the authored UE4-era intensity exactly once per component
+  // instance; the dedicated flag (rather than Registered) survives
+  // template-copy spawning, so clones of an already-scaled template do not
+  // scale twice and fresh components always scale once.
+  if (!bLegacyIntensityScaled)
+  {
+    LightIntensity *= CVarCarlaLightLegacyIntensityScale.GetValueOnGameThread();
+    bLegacyIntensityScaled = true;
+  }
 
   // Widen undersized authored attenuation radii so the light actually
   // reaches the road (see cvar comment above).
@@ -106,6 +119,9 @@ void UCarlaLight::EndPlay(const EEndPlayReason::Type EndPlayReason)
     UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
     CarlaLightSubsystem->UnregisterLight(this);
   }
+  // Allow re-registration if this component gets a new BeginPlay (level
+  // streaming, actor reuse); the flag used to stay set forever.
+  flags &= ~ECarlaLightFlags::Registered;
   Super::EndPlay(EndPlayReason);
 }
 
