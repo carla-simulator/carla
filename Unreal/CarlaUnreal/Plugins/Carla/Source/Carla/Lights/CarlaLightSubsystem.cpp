@@ -63,6 +63,10 @@ void UCarlaLightSubsystem::NotifyDayTimeChange(bool bIsDay)
       CarlaLight->ApplyLegacyComponentConversion();
     }
   }
+  // A day/night change flips light states server-side; flag every connected
+  // client so their LightManager re-queries instead of serving stale is_on
+  // values from its local cache.
+  SetClientStatesdirty("");
 }
 
 bool UCarlaLightSubsystem::IsUpdatePending() const
