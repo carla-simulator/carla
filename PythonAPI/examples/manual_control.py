@@ -38,6 +38,9 @@ Use ARROWS or WASD keys for control.
     O            : open/close all doors of vehicle
     T            : toggle vehicle's telemetry
 
+    U            : toggle all street lights (LightManager)
+    SHIFT + U    : toggle street light day/night cycle
+
     V            : Select next map layer (Shift+V reverse)
     B            : Load current selected map layer (Shift+B to unload)
 
@@ -108,6 +111,7 @@ try:
     from pygame.locals import K_r
     from pygame.locals import K_s
     from pygame.locals import K_t
+    from pygame.locals import K_u
     from pygame.locals import K_v
     from pygame.locals import K_w
     from pygame.locals import K_x
@@ -396,6 +400,7 @@ class KeyboardControl(object):
             self._lights = carla.VehicleLightState.NONE
             world.player.set_autopilot(self._autopilot_enabled)
             world.player.set_light_state(self._lights)
+            self._day_night_cycle = True
         elif isinstance(world.player, carla.Walker):
             self._control = carla.WalkerControl()
             self._autopilot_enabled = False
@@ -520,6 +525,20 @@ class KeyboardControl(object):
                     else:
                         world.recording_start += 1
                     world.hud.notification("Recording start time is %d" % (world.recording_start))
+                elif event.key == K_u and pygame.key.get_mods() & KMOD_SHIFT:
+                    self._day_night_cycle = not getattr(self, '_day_night_cycle', True)
+                    world.world.get_lightmanager().set_day_night_cycle(self._day_night_cycle)
+                    world.hud.notification('Street light day/night cycle %s' %
+                                           ('On' if self._day_night_cycle else 'Off'))
+                elif event.key == K_u:
+                    light_manager = world.world.get_lightmanager()
+                    street_lights = light_manager.get_all_lights(carla.LightGroup.Street)
+                    if any(light.is_on for light in street_lights):
+                        light_manager.turn_off(street_lights)
+                        world.hud.notification('Street lights Off (%d)' % len(street_lights))
+                    else:
+                        light_manager.turn_on(street_lights)
+                        world.hud.notification('Street lights On (%d)' % len(street_lights))
                 if isinstance(self._control, carla.VehicleControl):
                     if event.key == K_f:
                         # Toggle ackermann controller
