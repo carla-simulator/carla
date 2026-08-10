@@ -906,7 +906,12 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
 
       if (enabled)
       {
+        Movement->SetUpdatedComponent(GetMesh());
         Movement->RecreatePhysicsState();
+        // The recreated body starts asleep and Chaos vehicle input does not
+        // wake it, leaving the drivetrain permanently inert (full throttle,
+        // zero motion) until something else wakes the body. Wake it here.
+        RootPrimitive->WakeAllRigidBodies();
         //VehicleAnim->ResetWheelCustomRotations();
       }
       else

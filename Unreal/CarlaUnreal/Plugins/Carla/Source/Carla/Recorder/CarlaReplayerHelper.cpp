@@ -558,6 +558,13 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgno
         {
             // stop all vehicles
             SetActorSimulatePhysics(CarlaActor, true);
+            // ProcessReplayerEventAdd also disabled collision on replayed
+            // vehicles; restore it or they are left permanently undrivable
+            // (no wheel contact) after the replay ends.
+            if (CarlaActor->GetActor())
+            {
+              CarlaActor->GetActor()->SetActorEnableCollision(true);
+            }
             SetActorVelocity(CarlaActor, FVector(0, 0, 0));
             FVehicleControl Control;
             Control.Throttle = 0.0f;

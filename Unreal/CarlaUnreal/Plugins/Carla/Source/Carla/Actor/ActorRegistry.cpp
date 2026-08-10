@@ -102,6 +102,19 @@ FCarlaActor* FActorRegistry::Register(AActor &Actor, FActorDescription Descripti
         TEXT("This actor's memory address is already registered, "
              "either you forgot to deregister the actor "
              "or the actor was garbage collected."));
+    // Purge the stale entry: leaving it makes the old id alias the new
+    // actor through Actors/ActorDatabase, so operations on either id hit
+    // the same AActor with two conflicting FCarlaActor states.
+    const IdType StaleId = Ids[&Actor];
+    if (StaleId != Id)
+    {
+      if (FCarlaActor* StaleActor = FindCarlaActor(StaleId))
+      {
+        StaleActor->TheActor = nullptr;
+      }
+      ActorDatabase.Remove(StaleId);
+      Actors.Remove(StaleId);
+    }
   }
   Ids.Emplace(&Actor, Id);
 
