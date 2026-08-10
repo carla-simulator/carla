@@ -209,6 +209,50 @@ void MotionPlanStage::Update(const unsigned long index) {
       angular_deviation /= 180.0f;  // Normalised to [-1, 1].
       const float velocity_deviation{(dynamic_target_velocity - vehicle_speed) / dynamic_target_velocity};
 
+      // --- Stuck-vehicle recovery ---------------------------------------
+      // A vehicle commanded to move (no red light, no vehicle ahead) that
+      // stays immobile is wedged against something; forward PID would grind
+      // at full lock forever. Back up briefly, counter-steering so the nose
+      // swings toward the target waypoint, then resume forward control with
+      // a fresh PID state.
+      {
+        using namespace constants::StuckRecovery;
+        const double now = current_timestamp.elapsed_seconds;
+        bool recovering = false;
+        auto rec_it = recovering_until.find(actor_id);
+        if (rec_it != recovering_until.end()) {
+          if (now < rec_it->second) {
+            recovering = true;
+          } else {
+            recovering_until.erase(rec_it);
+            stuck_since.erase(actor_id);
+            pid_state_map[actor_id] = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f};
+          }
+        }
+        if (!recovering) {
+          if (!emergency_stop &&
+              dynamic_target_velocity > STUCK_SPEED &&
+              vehicle_speed < STUCK_SPEED) {
+            auto stuck_it = stuck_since.insert({actor_id, now}).first;
+            if (now - stuck_it->second > STUCK_TIME) {
+              recovering_until[actor_id] = now + REVERSE_DURATION;
+              recovering = true;
+            }
+          } else {
+            stuck_since.erase(actor_id);
+          }
+        }
+        if (recovering) {
+          carla::rpc::VehicleControl recovery_control;
+          recovery_control.throttle = REVERSE_THROTTLE;
+          recovery_control.brake = 0.0f;
+          recovery_control.reverse = true;
+          recovery_control.steer = (angular_deviation > 0.0f ? -1.0f : 1.0f) * REVERSE_STEER;
+          output_array.at(index) = carla::rpc::Command::ApplyVehicleControl(actor_id, recovery_control);
+          return;
+        }
+      }
+
       // If previous state for vehicle not found, initialize state entry.
       if (pid_state_map.find(actor_id) == pid_state_map.end()) {
         const auto initial_state = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f};
@@ -561,11 +605,15 @@ float MotionPlanStage::GetTurnTargetVelocity(const Buffer &waypoint_buffer,
 void MotionPlanStage::RemoveActor(const ActorId actor_id) {
   pid_state_map.erase(actor_id);
   teleportation_instance.erase(actor_id);
+  stuck_since.erase(actor_id);
+  recovering_until.erase(actor_id);
 }
 
 void MotionPlanStage::Reset() {
   pid_state_map.clear();
   teleportation_instance.clear();
+  stuck_since.clear();
+  recovering_until.clear();
 }
 
 } // namespace traffic_manager

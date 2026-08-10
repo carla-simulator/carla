@@ -176,6 +176,17 @@ static const std::vector<float> LATERAL_PARAM = {4.0f, 0.02f, 0.08f};
 static const std::vector<float> LATERAL_HIGHWAY_PARAM = {2.0f, 0.02f, 0.04f};
 } // namespace PID
 
+namespace StuckRecovery {
+// A vehicle commanded to move that stays below STUCK_SPEED for STUCK_TIME
+// while no hazard justifies the stop is considered wedged (curb, wall,
+// fence); the controller has no forward authority to free it.
+static const float STUCK_SPEED = 0.3f;       // m/s
+static const double STUCK_TIME = 3.0;        // s immobile before recovery
+static const double REVERSE_DURATION = 2.5;  // s of reverse maneuver
+static const float REVERSE_THROTTLE = 0.5f;
+static const float REVERSE_STEER = 0.6f;
+} // namespace StuckRecovery
+
 namespace TrackTraffic {
 static const uint64_t BUFFER_STEP_THROUGH = 5;
 static const float INV_BUFFER_STEP_THROUGH = 1.0f / static_cast<float>(BUFFER_STEP_THROUGH);
