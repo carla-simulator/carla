@@ -207,6 +207,14 @@ void MotionPlanStage::Update(const unsigned long index) {
         angular_deviation += 360.0f;
       }
       angular_deviation /= 180.0f;  // Normalised to [-1, 1].
+
+      // Full throttle with saturated steering produces accelerating donuts
+      // when the target sits far off-heading (after a spin, a collision or
+      // a wrong-way resume). Cap the target speed while grossly misaligned
+      // so full-lock turns stay tight; speed resumes as heading converges.
+      if (std::abs(angular_deviation) > 0.25f) {  // > 45 degrees
+        dynamic_target_velocity = std::min(dynamic_target_velocity, 3.0f);
+      }
       const float velocity_deviation{(dynamic_target_velocity - vehicle_speed) / dynamic_target_velocity};
 
       // --- Stuck-vehicle recovery ---------------------------------------
