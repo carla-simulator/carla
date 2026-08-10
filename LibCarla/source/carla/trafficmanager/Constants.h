@@ -168,8 +168,12 @@ static const float DT = 0.05f;
 static const float INV_DT = 1.0f / DT;
 static const std::vector<float> LONGITUDIAL_PARAM = {12.0f, 0.05f, 0.02f};
 static const std::vector<float> LONGITUDIAL_HIGHWAY_PARAM = {20.0f, 0.05f, 0.01f};
-static const std::vector<float> LATERAL_PARAM = {8.0f, 0.04f, 0.16f};
-static const std::vector<float> LATERAL_HIGHWAY_PARAM = {4.0f, 0.04f, 0.08f};
+// 0.9.12-tuned gains. The ue5-dev bump to {8, 0.04, 0.16} doubles the loop
+// gain against the same steering-actuator lag, which turns any significant
+// initial lane error (>=1 m offset or >30 deg heading) into a growing
+// left/right oscillation that ends in a collision.
+static const std::vector<float> LATERAL_PARAM = {4.0f, 0.02f, 0.08f};
+static const std::vector<float> LATERAL_HIGHWAY_PARAM = {2.0f, 0.02f, 0.04f};
 } // namespace PID
 
 namespace TrackTraffic {
