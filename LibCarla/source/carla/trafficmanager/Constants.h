@@ -179,12 +179,20 @@ static const std::vector<float> LATERAL_HIGHWAY_PARAM = {2.0f, 0.02f, 0.04f};
 namespace StuckRecovery {
 // A vehicle commanded to move that stays below STUCK_SPEED for STUCK_TIME
 // while no hazard justifies the stop is considered wedged (curb, wall,
-// fence); the controller has no forward authority to free it.
-static const float STUCK_SPEED = 0.3f;       // m/s
-static const double STUCK_TIME = 3.0;        // s immobile before recovery
-static const double REVERSE_DURATION = 2.5;  // s of reverse maneuver
+// fence); a vehicle whose target sits more than ALIGN_ENTER_DEVIATION
+// off-heading at low speed is facing the wrong way (spun, wrong-way
+// resume). Both run the same K-turn maneuver: alternate reverse and
+// forward phases with full steering toward the target until the heading
+// deviation drops below ALIGN_EXIT_DEVIATION, then resume the PID.
+static const float STUCK_SPEED = 0.3f;         // m/s
+static const double STUCK_TIME = 3.0;          // s immobile before recovery
+static const double PHASE_DURATION = 1.5;      // s per K-turn phase
 static const float REVERSE_THROTTLE = 0.5f;
-static const float REVERSE_STEER = 0.6f;
+static const float FORWARD_THROTTLE = 0.3f;
+static const float RECOVERY_STEER = 0.8f;
+static const float ALIGN_ENTER_DEVIATION = 0.6f;  // normalised angle (~108 deg)
+static const float ALIGN_EXIT_DEVIATION = 0.2f;   // normalised angle (~36 deg)
+static const float MISALIGN_MAX_SPEED = 3.5f;     // m/s
 } // namespace StuckRecovery
 
 namespace TrackTraffic {

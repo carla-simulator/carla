@@ -649,7 +649,9 @@ class KeyboardControl(object):
             if not self._ackermann_enabled:
                 self._control.brake = 0
 
-        steer_increment = 5e-4 * milliseconds
+        # 5e-4 needed ~1.4 s of key-hold to reach full steering, which reads
+        # as input lag; the vehicle itself actuates in ~0.25 s.
+        steer_increment = 1.5e-3 * milliseconds
         if keys[K_LEFT] or keys[K_a]:
             if self._steer_cache > 0:
                 self._steer_cache = 0
@@ -664,10 +666,10 @@ class KeyboardControl(object):
             self._steer_cache = 0.0
         self._steer_cache = min(0.7, max(-0.7, self._steer_cache))
         if not self._ackermann_enabled:
-            self._control.steer = round(self._steer_cache, 1)
+            self._control.steer = round(self._steer_cache, 2)
             self._control.hand_brake = keys[K_SPACE]
         else:
-            self._ackermann_control.steer = round(self._steer_cache, 1)
+            self._ackermann_control.steer = round(self._steer_cache, 2)
 
     def _parse_walker_keys(self, keys, milliseconds, world):
         self._control.speed = 0.0

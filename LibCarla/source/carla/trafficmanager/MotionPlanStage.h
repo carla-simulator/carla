@@ -40,10 +40,15 @@ private:
   // Structure to keep track of duration between teleportation
   // in hybrid physics mode.
   std::unordered_map<ActorId, cc::Timestamp> teleportation_instance;
-  // Stuck-vehicle recovery bookkeeping: when the vehicle first stopped
-  // making commanded progress, and until when its reverse maneuver runs.
+  // Stuck/misaligned-vehicle recovery bookkeeping: when the vehicle first
+  // stopped making commanded progress, and the K-turn maneuver state
+  // (current phase deadline + whether the phase reverses).
+  struct RecoveryState {
+    double phase_until;
+    bool reversing;
+  };
   std::unordered_map<ActorId, double> stuck_since;
-  std::unordered_map<ActorId, double> recovering_until;
+  std::unordered_map<ActorId, RecoveryState> recovery_state;
   ControlFrame &output_array;
   cc::Timestamp current_timestamp;
   RandomGenerator &random_device;
