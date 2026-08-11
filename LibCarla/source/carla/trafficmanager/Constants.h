@@ -51,7 +51,12 @@ static const float HIGH_SPEED_HORIZON_RATE = 4.0f;
 } // namespace PathBufferUpdate
 
 namespace WaypointSelection {
-static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
+// Lookahead time for the steering target. ue5-dev halved this to 0.5 s,
+// which at 30 km/h puts the target ~4 m ahead: any lateral transient (lane
+// change, resume offset) then reads as a huge angular error, saturates the
+// PID and produces an underdamped weave. 1.0 s matches upstream and keeps
+// the pure-pursuit geometry well damped.
+static const float TARGET_WAYPOINT_TIME_HORIZON = 1.0f;
 static const float MIN_TARGET_WAYPOINT_DISTANCE = 3.0f;
 static const float JUNCTION_LOOK_AHEAD = 5.0f;
 static const float SAFE_DISTANCE_AFTER_JUNCTION = 4.0f;
@@ -164,16 +169,29 @@ static const float MAX_THROTTLE = 0.85f;
 static const float MAX_BRAKE = 0.7f;
 static const float MAX_STEERING = 0.8f;
 static const float MAX_STEERING_DIFF = 0.15f;
+// Speed-scaled steering envelope: |steer| <= STEER_LIMIT_GAIN / speed^2
+// (speed in m/s), i.e. a lateral-acceleration cap of roughly 6 m/s^2 for a
+// ~2.9 m wheelbase. UE4's PhysX vehicles shipped a SteeringCurve that
+// reduced the physical steering angle with speed; UE5 Chaos vehicles apply
+// the full angle at any speed, so a saturated PID output at 30 km/h knifes
+// the vehicle across two lanes. Inactive below ~6 m/s (envelope > 0.8).
+static const float STEER_LIMIT_GAIN = 30.0f;
 static const float DT = 0.05f;
 static const float INV_DT = 1.0f / DT;
+// Max change in normalised angular deviation per tick accepted by the
+// lateral derivative term: 0.05 * 180 deg / 0.05 s = 180 deg/s, the upper
+// bound of real vehicle yaw. Larger jumps are target discontinuities.
+static const float MAX_DEVIATION_DELTA = 0.05f;
 static const std::vector<float> LONGITUDIAL_PARAM = {12.0f, 0.05f, 0.02f};
 static const std::vector<float> LONGITUDIAL_HIGHWAY_PARAM = {20.0f, 0.05f, 0.01f};
-// 0.9.12-tuned gains. The ue5-dev bump to {8, 0.04, 0.16} doubles the loop
-// gain against the same steering-actuator lag, which turns any significant
+// Lateral gains sim-tuned for the UE5 Chaos steering response. The ue5-dev
+// values {8, 0.04, 0.16} double the 0.9.12 loop gain and turn any large
 // initial lane error (>=1 m offset or >30 deg heading) into a growing
-// left/right oscillation that ends in a collision.
-static const std::vector<float> LATERAL_PARAM = {4.0f, 0.02f, 0.08f};
-static const std::vector<float> LATERAL_HIGHWAY_PARAM = {2.0f, 0.02f, 0.04f};
+// left/right oscillation; the plain 0.9.12 values {4, 0.02, 0.08} track too
+// softly on Chaos (fleet RMS 0.36 m off lane center). 1.5x is the measured
+// middle ground: tight centering without re-triggering the oscillation.
+static const std::vector<float> LATERAL_PARAM = {6.0f, 0.03f, 0.12f};
+static const std::vector<float> LATERAL_HIGHWAY_PARAM = {3.0f, 0.02f, 0.06f};
 } // namespace PID
 
 namespace StuckRecovery {
@@ -191,7 +209,7 @@ static const float REVERSE_THROTTLE = 0.5f;
 static const float FORWARD_THROTTLE = 0.3f;
 static const float RECOVERY_STEER = 0.8f;
 static const float ALIGN_ENTER_DEVIATION = 0.6f;  // normalised angle (~108 deg)
-static const float ALIGN_EXIT_DEVIATION = 0.2f;   // normalised angle (~36 deg)
+static const float ALIGN_EXIT_DEVIATION = 0.1f;   // normalised angle (~18 deg)
 static const float MISALIGN_MAX_SPEED = 3.5f;     // m/s
 } // namespace StuckRecovery
 

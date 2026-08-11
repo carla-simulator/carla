@@ -236,12 +236,23 @@ void MotionPlanStage::Update(const unsigned long index) {
           if (abs_deviation < ALIGN_EXIT_DEVIATION) {
             recovery_state.erase(rec_it);
             stuck_since.erase(actor_id);
-            pid_state_map[actor_id] = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f};
+            // Seed the fresh PID state with the current deviation: a zeroed
+            // previous deviation would make the first post-recovery tick see
+            // the full residual error as a one-tick change and kick the
+            // derivative term into a saturated steer, restarting the swing
+            // the K-turn just corrected.
+            pid_state_map[actor_id] = StateEntry{current_timestamp, angular_deviation, 0.0f, 0.0f};
           } else {
             recovering = true;
             if (now >= rec_it->second.phase_until) {
               rec_it->second.reversing = !rec_it->second.reversing;
               rec_it->second.phase_until = now + PHASE_DURATION;
+            }
+            // Refresh the latched direction only once the deviation sign is
+            // unambiguous (target no longer near dead-astern).
+            if (abs_deviation < 0.5f) {
+              rec_it->second.steer_direction =
+                  (angular_deviation > 0.0f) ? 1.0f : -1.0f;
             }
           }
         }
@@ -256,19 +267,20 @@ void MotionPlanStage::Update(const unsigned long index) {
           const bool misaligned = abs_deviation > ALIGN_ENTER_DEVIATION &&
                                   vehicle_speed < MISALIGN_MAX_SPEED;
           if (stuck_trigger || misaligned) {
-            recovery_state[actor_id] = RecoveryState{now + PHASE_DURATION, true};
+            recovery_state[actor_id] = RecoveryState{
+                now + PHASE_DURATION, true,
+                (angular_deviation > 0.0f) ? 1.0f : -1.0f};
             recovering = true;
           }
         }
         if (recovering) {
           const RecoveryState &rs = recovery_state.at(actor_id);
-          const float steer_direction = (angular_deviation > 0.0f) ? 1.0f : -1.0f;
           carla::rpc::VehicleControl recovery_control;
           recovery_control.reverse = rs.reversing;
           recovery_control.throttle = rs.reversing ? REVERSE_THROTTLE : FORWARD_THROTTLE;
           recovery_control.brake = 0.0f;
           recovery_control.steer =
-              (rs.reversing ? -steer_direction : steer_direction) * RECOVERY_STEER;
+              (rs.reversing ? -rs.steer_direction : rs.steer_direction) * RECOVERY_STEER;
           output_array.at(index) = carla::rpc::Command::ApplyVehicleControl(actor_id, recovery_control);
           return;
         }
@@ -301,7 +313,8 @@ void MotionPlanStage::Update(const unsigned long index) {
 
       // Controller actuation.
       actuation_signal = PID::RunStep(current_state, previous_state,
-                                      longitudinal_parameters, lateral_parameters);
+                                      longitudinal_parameters, lateral_parameters,
+                                      vehicle_speed);
 
       if (emergency_stop) {
         actuation_signal.throttle = 0.0f;
