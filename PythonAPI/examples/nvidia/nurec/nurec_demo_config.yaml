@@ -1,4 +1,4 @@
-# Settings for example_nurec_replay_save_images.py.
+# Settings for nurec_runner.py.
 # Pass a different file with --config; every key is optional and the values
 # below are the defaults (a missing file reproduces the plain replay demo).
 
@@ -80,9 +80,9 @@ asset_editing:
   insert_offset_m: 4.0
 
 lidar:
-  # Neural lidar rendered by NuRec (NRE >= 26.04), mounted at the ego rig
-  # origin. Sweeps are drawn as a bird's-eye-view panel in the pygame grid
-  # and saved under <output-dir>/lidar_bev/ when --saveimages is given.
+  # Neural lidar rendered by NuRec (NRE >= 26.04), mounted height_m above
+  # the ego rig origin. Sweeps are drawn as a bird's-eye-view panel in the
+  # pygame grid and saved under <output-dir>/lidar_bev/ with --saveimages.
   enabled: true
   type: PANDAR128 # PANDAR128 | AT128
   framerate: 10

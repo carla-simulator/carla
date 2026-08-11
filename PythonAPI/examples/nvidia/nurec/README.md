@@ -49,7 +49,7 @@ Terminal 1 — CARLA UE5 server (source build):
 Terminal 2 — replay with image export:
 
 ```sh
-python example_nurec_replay_save_images.py \
+python nurec_runner.py \
     -u /path/to/scenario.usdz \
     --saveimages --output-dir data
 ```
@@ -100,6 +100,6 @@ changes conventions, these fail instead of silently mirroring the world.
 | `blueprint_library.py` | Live blueprint probing + dimension matching |
 | `utils.py` | Coordinate conversions (see `tests/test_coordinates.py`) |
 | `projection_functions.py` | ECEF/ENU georeference alignment |
-| `example_nurec_replay_save_images.py` | End-to-end replay example |
+| `nurec_runner.py` | End-to-end replay example |
 | `nre/grpc/` | Protocol definitions + vendored generated stubs |
 | `tools/extract_blueprint_sizes.py` | Regenerate fallback blueprint JSONs |

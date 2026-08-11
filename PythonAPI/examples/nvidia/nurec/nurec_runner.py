@@ -21,8 +21,8 @@ editing) is read from a settings file, nurec_demo_config.yaml next to this
 script by default; see that file for all options.
 
 Example usage:
-    python example_nurec_replay_save_images.py -u /path/to/scenario.usdz
-    python example_nurec_replay_save_images.py -u scenario.usdz --config my_settings.yaml
+    python nurec_runner.py -u /path/to/scenario.usdz
+    python nurec_runner.py -u scenario.usdz --config my_settings.yaml
 """
 import copy
 import math
