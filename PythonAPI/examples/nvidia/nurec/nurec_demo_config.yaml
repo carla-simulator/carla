@@ -24,6 +24,28 @@ renderer:
   # Changing any renderer setting invalidates container reuse automatically.
   extra_server_args: []
 
+cameras:
+  # Which cameras to render.
+  #   config: null (default) uses the recording's own calibrated rig cameras:
+  #   intrinsics (f-theta polynomials, principal point, shutter) AND mounting
+  #   extrinsics (T_sensor_rig) come from the scene itself.
+  #   config: <path.yaml> uses hand-written camera definitions instead (see
+  #   carla_example_camera_config.yaml), relative paths resolve next to the
+  #   demo script.
+  config: null
+  # Scene mode only: which rig cameras to render; null = all of them,
+  # ordered front -> sides -> rear. E.g. [camera_front_wide_120fov].
+  scene_ids: null
+  # Render scale. null auto-fits each camera to its pygame cell in scene
+  # mode (and means 0.125 in YAML mode).
+  resolution_ratio: null
+  framerate: 30
+  # Scene mode: add a CARLA-rendered forward view from the ego showing the
+  # UE5 world (OpenDRIVE reconstruction, proxy actors, physics) next to the
+  # neural renders, for debugging. YAML mode ignores this - define CARLA
+  # sensors in the camera file instead.
+  carla_front_view: true
+
 control:
   # Ego vehicle behaviour once handoff_seconds of replay have elapsed:
   #   "replay"     - keep following the recorded ego track rigidly
@@ -63,5 +85,5 @@ lidar:
   framerate: 10
   visualize: true
   # BEV panel extent in meters (points beyond are clipped) and pixel size.
-  bev_range_m: 25.0
+  bev_range_m: 10.0
   bev_size_px: 480

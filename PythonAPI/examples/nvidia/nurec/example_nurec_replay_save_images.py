@@ -25,6 +25,7 @@ Example usage:
     python example_nurec_replay_save_images.py -u scenario.usdz --config my_settings.yaml
 """
 import copy
+import math
 import numpy as np
 
 import carla
@@ -68,6 +69,21 @@ DEFAULT_DEMO_CONFIG: Dict[str, Any] = {
         "handoff_seconds": 1.0,
         "actors": "replay",
     },
+    "cameras": {
+        # Path to a YAML camera config (e.g. carla_example_camera_config.yaml)
+        # with hand-written intrinsics/extrinsics. null uses the recording's
+        # own calibrated rig cameras (intrinsics + mounting from the scene).
+        "config": None,
+        # In scene mode: subset of logical ids to render (null = all).
+        "scene_ids": None,
+        # In scene mode: render scale; null auto-fits the pygame cell.
+        "resolution_ratio": None,
+        "framerate": 30,
+        # Scene mode: add a CARLA-rendered forward view from the ego for
+        # debugging physics / OpenDRIVE reconstruction against the neural
+        # render. (YAML mode defines its own CARLA sensors in the file.)
+        "carla_front_view": True,
+    },
     "asset_editing": {
         "enabled": False,
         "demo_swap": False,
@@ -79,7 +95,7 @@ DEFAULT_DEMO_CONFIG: Dict[str, Any] = {
         "type": "PANDAR128",
         "framerate": 10,
         "visualize": True,
-        "bev_range_m": 25.0,
+        "bev_range_m": 10.0,
         "bev_size_px": 480,
     },
 }
@@ -121,6 +137,9 @@ def load_demo_config(path: Optional[str]) -> Dict[str, Any]:
         raise ValueError(f"control.actors must be replay|carla, got {cfg['control']['actors']!r}")
     if cfg["renderer"]["backend"] not in (None, "nrend", "gsplat"):
         raise ValueError(f"renderer.backend must be null|nrend|gsplat, got {cfg['renderer']['backend']!r}")
+    scene_ids = cfg["cameras"]["scene_ids"]
+    if scene_ids is not None and not isinstance(scene_ids, list):
+        raise ValueError(f"cameras.scene_ids must be a list or null, got {scene_ids!r}")
     logger.info(f"Demo config loaded from {path}")
     return cfg
 
@@ -229,12 +248,33 @@ def save_image(image: Union[carla.Image, np.ndarray], camera_name: str, output_d
         array = image.astype(np.uint8)
         imageio.imwrite(f"{output_dir}/{camera_name}/{next_index:05d}.jpg", array)
 
-def make_camera_callback(display, camera_name, pygame_pos, saveimages: bool, output_dir: str = "data"):
+def make_camera_callback(display, camera_name, grid_size, pygame_pos, saveimages: bool, output_dir: str = "data"):
     def callback(image):
-        display.setImage(image, (3, 2), pygame_pos)
+        display.setImage(image, grid_size, pygame_pos)
         if saveimages:
             save_image(image, camera_name, output_dir)
     return callback
+
+
+# Pygame cell size (must match the PygameDisplay defaults); used to auto-fit
+# scene-camera render resolution to the display grid.
+CELL_WIDTH, CELL_HEIGHT = 481, 271
+
+
+def _compute_grid(n_widgets: int) -> Tuple[int, int]:
+    """Grid (cols, rows) for n widgets: one row up to 3, then two rows."""
+    if n_widgets <= 3:
+        return (max(1, n_widgets), 1)
+    return (math.ceil(n_widgets / 2), 2)
+
+
+def _scene_camera_order(logical_id: str) -> Tuple[int, str]:
+    """Sort scene cameras front -> sides -> rear so the grid reads naturally."""
+    ranks = ["front_wide", "front", "cross_left", "cross_right", "rear_left", "rear_right", "rear"]
+    for rank, key in enumerate(ranks):
+        if key in logical_id:
+            return (rank, logical_id)
+    return (len(ranks), logical_id)
 
 
 def lidar_to_bev_image(
@@ -271,6 +311,7 @@ def lidar_to_bev_image(
 
 def make_lidar_callback(
     display: Optional[PygameDisplay],
+    grid_size: Tuple[int, int],
     pygame_pos: Tuple[int, int],
     saveimages: bool,
     output_dir: str,
@@ -282,7 +323,7 @@ def make_lidar_callback(
     def callback(points: np.ndarray, intensities: np.ndarray) -> None:
         bev = lidar_to_bev_image(points, intensities, size_px, range_m)
         if display is not None:
-            display.setImage(bev, (3, 2), pygame_pos)
+            display.setImage(bev, grid_size, pygame_pos)
         if saveimages:
             save_image(bev, "lidar_bev", output_dir)
 
@@ -397,10 +438,89 @@ def apply_control_modes(scenario: NurecScenario, control_cfg: Dict[str, Any]) ->
         scenario.set_all_actors_carla_controlled()
 
 
+def add_scene_cameras(
+    scenario: NurecScenario,
+    client: carla.Client,
+    output_dir: str,
+    saveimages: bool,
+    cameras_cfg: Dict[str, Any],
+    n_extra_widgets: int,
+) -> Tuple[List[carla.Actor], PygameDisplay, Tuple[int, int], Tuple[int, int]]:
+    """
+    Render the recording's own calibrated rig cameras: intrinsics and mounting
+    (T_sensor_rig) both come from the scene, via add_camera(logical_id).
+    Returns (carla_cameras, display, grid_size, next_free_grid_pos).
+    """
+    pygame_display = PygameDisplay()
+    carla_cameras: List[carla.Actor] = []
+
+    ids = cameras_cfg["scene_ids"]
+    if ids is None:
+        ids = sorted(scenario.get_available_cameras(), key=_scene_camera_order)
+    front_view = 1 if cameras_cfg["carla_front_view"] else 0
+    grid_size = _compute_grid(len(ids) + front_view + n_extra_widgets)
+    grid_pos = (0, 0)
+    for logical_id in ids:
+        spec = scenario.renderer.get_camera_spec(logical_id)
+        ratio = cameras_cfg["resolution_ratio"]
+        if ratio is None:
+            # Render at (about) the pygame cell size.
+            ratio = min(1.0, CELL_WIDTH / spec.resolution_w, CELL_HEIGHT / spec.resolution_h)
+        scenario.add_camera(
+            logical_id,
+            make_camera_callback(pygame_display, logical_id, grid_size, grid_pos, saveimages, output_dir),
+            framerate=cameras_cfg["framerate"],
+            resolution_ratio=ratio,
+        )
+        logger.info(f"Scene camera {logical_id}: {spec.resolution_w}x{spec.resolution_h} @ ratio {ratio:.3f}")
+        grid_pos = (grid_pos[0] + 1, grid_pos[1])
+        if grid_pos[0] >= grid_size[0]:
+            grid_pos = (0, grid_pos[1] + 1)
+
+    if front_view:
+        # CARLA-rendered forward view from the ego: shows the UE5 world
+        # (OpenDRIVE reconstruction, proxy actors, physics) for debugging
+        # against the neural renders above.
+        world = client.get_world()
+        camera_bp = world.get_blueprint_library().find("sensor.camera.rgb")
+        camera_bp.set_attribute("image_size_x", str(CELL_WIDTH))
+        camera_bp.set_attribute("image_size_y", str(CELL_HEIGHT))
+        camera_bp.set_attribute("fov", "90")
+        camera_transform = carla.Transform(
+            carla.Location(x=1.5, z=1.7), carla.Rotation(pitch=-8.0)
+        )
+        camera = world.spawn_actor(
+            camera_bp, camera_transform,
+            attach_to=scenario.actor_mapping[EGO_TRACK_ID].actor_inst,
+        )
+        camera.listen(
+            lambda image, pos=grid_pos: process_carla_image(pygame_display, grid_size, pos, image)
+        )
+        carla_cameras.append(camera)
+        logger.info(f"CARLA front debug view at grid {grid_pos}")
+        grid_pos = (grid_pos[0] + 1, grid_pos[1])
+        if grid_pos[0] >= grid_size[0]:
+            grid_pos = (0, grid_pos[1] + 1)
+
+    return carla_cameras, pygame_display, grid_size, grid_pos
+
+
 def add_cameras(
-    scenario: NurecScenario, client: carla.Client, output_dir: str, saveimages: bool, resolution_ratio: float = 0.125
-) -> Tuple[List[carla.Actor], PygameDisplay]:
-    # Set up pygame display for visualization
+    scenario: NurecScenario,
+    client: carla.Client,
+    output_dir: str,
+    saveimages: bool,
+    cameras_cfg: Dict[str, Any],
+    n_extra_widgets: int,
+) -> Tuple[List[carla.Actor], PygameDisplay, Tuple[int, int], Tuple[int, int]]:
+    """
+    Set up the pygame grid and cameras. cameras.config null uses the scene's
+    calibrated rig cameras; a YAML path uses hand-written camera definitions.
+    Returns (carla_cameras, display, grid_size, next_free_grid_pos).
+    """
+    if cameras_cfg["config"] is None:
+        return add_scene_cameras(scenario, client, output_dir, saveimages, cameras_cfg, n_extra_widgets)
+
     pygame_display = PygameDisplay()
 
     world = client.get_world()
@@ -410,14 +530,13 @@ def add_cameras(
     # Standard CARLA cameras spawned alongside the NuRec ones (may be empty)
     carla_cameras: List[carla.Actor] = []
 
-    # Add cameras using the new flexible add_camera method
-
-    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                               "carla_example_camera_config.yaml")
+    config_path = cameras_cfg["config"]
+    if not os.path.isabs(config_path):
+        config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), config_path)
     with open(config_path, "r") as f:
         camera_configs = yaml.safe_load(f)
 
-    grid_size =  (3, 2)
+    grid_size = _compute_grid(len(camera_configs) + n_extra_widgets)
     grid_pos = (0, 0)
     for cam_cfg in camera_configs:
         # Case 1: Rich camera_params style
@@ -434,10 +553,10 @@ def add_cameras(
             cameraname = camera_params["logical_id"] + str(grid_pos[0]) + str(grid_pos[1])
             scenario.add_camera(
                 camera_params,
-                make_camera_callback(pygame_display, cameraname, grid_pos, saveimages, output_dir),
+                make_camera_callback(pygame_display, cameraname, grid_size, grid_pos, saveimages, output_dir),
                 transform=transform_matrix,
-                framerate=30,
-                resolution_ratio=0.125,
+                framerate=cameras_cfg["framerate"],
+                resolution_ratio=cameras_cfg["resolution_ratio"] or 0.125,
             )
         # Case 2: Simple CARLA sensor style
         elif "sensor" in cam_cfg:
@@ -470,7 +589,7 @@ def add_cameras(
         if grid_pos[0] >= grid_size[0]:
             grid_pos = (0, grid_pos[1] + 1)
 
-    return carla_cameras, pygame_display
+    return carla_cameras, pygame_display, grid_size, grid_pos
 
 
 def main() -> None:
@@ -557,14 +676,19 @@ def main() -> None:
         carla_cameras: List[carla.Actor] = []
         display: Optional[PygameDisplay] = None
         try:
-            # Add cameras; keep references to the CARLA camera actors alive
-            carla_cameras, display = add_cameras(scenario, client, args.output_dir, args.saveimages )
+            # Add cameras; keep references to the CARLA camera actors alive.
+            # The lidar BEV takes the next free grid cell after the cameras.
+            lidar_widget = 1 if lidar_cfg["enabled"] and lidar_cfg["visualize"] else 0
+            carla_cameras, display, grid_size, lidar_pos = add_cameras(
+                scenario, client, args.output_dir, args.saveimages, cfg["cameras"], lidar_widget
+            )
 
             if lidar_cfg["enabled"]:
                 scenario.add_lidar(
                     make_lidar_callback(
                         display if lidar_cfg["visualize"] else None,
-                        (1, 1),  # free cell in the 3x2 pygame grid
+                        grid_size,
+                        lidar_pos,
                         args.saveimages,
                         args.output_dir,
                         lidar_cfg,
