@@ -46,6 +46,8 @@ from nre.grpc.protos.sensorsim_pb2_grpc import SensorsimServiceStub
 from nre.grpc.protos.sensorsim_pb2 import (
     RGBRenderReturn,
     RGBRenderRequest,
+    BatchRGBRenderRequest,
+    BatchRGBRenderRequestItem,
     AvailableCamerasRequest,
     AvailableCamerasReturn,
     CameraSpec,
@@ -56,11 +58,17 @@ from nre.grpc.protos.sensorsim_pb2 import (
     FthetaCameraParam,
     OpenCVFisheyeCameraParam,
     ShutterType,
+    LidarRenderRequest,
+    LidarSpec,
+    LidarDeviceType,
+    LidarRenderFilter,
+    EditAssetsRequest,
+    ReplaceAssetAction,
+    DynamicObjectTrack,
+    AvailableDynamicObjectsRequest,
+    ExternalAssetObjectsRequest,
 )
 from track import Track
-
-import nvidia.nvimgcodec as nvimgcodec
-
 
 from constants import (
     EGO_TRACK_ID,
@@ -68,6 +76,7 @@ from constants import (
     VEHICLE_LABELS,
     MAX_MESSAGE_LENGTH,
     KPH_PER_MPS,
+    DEFAULT_NUREC_PORT,
 )
 from projection_functions import get_t_rig_enu_from_ecef
 from simple_trajectory_follower import SimpleTrajectoryFollower
@@ -81,6 +90,37 @@ from utils import (
 
 
 logger = logging.getLogger(__name__)
+
+
+def collect_dynamic_objects(
+    actors: carla.WorldSnapshot,
+    active_actors: Dict[int, str],
+    controllable_tracks: Set[str],
+    t_carla_nurec: np.ndarray,
+    blueprint_library: Optional[BlueprintLibrary] = None,
+    actor_blueprints: Optional[Dict[int, str]] = None,
+) -> List[DynamicObject]:
+    """Convert the controllable CARLA actors of a snapshot to gRPC DynamicObjects."""
+    dynamic_objects = []
+    # select all actors that have attributes and have track_id attribute
+    for actor in actors:
+        if actor.id in active_actors:
+            track_id = active_actors[actor.id]
+            if not track_id in controllable_tracks:
+                continue
+            pose = actor_to_grpc_pose(
+                actor, t_carla_nurec, blueprint_library, actor_blueprints
+            )
+            dynamic_objects.append(
+                DynamicObject(
+                    track_id=track_id,
+                    pose_pair=PosePair(
+                        start_pose=pose,
+                        end_pose=pose,
+                    ),
+                )
+            )
+    return dynamic_objects
 
 
 def generate_request(
@@ -118,25 +158,10 @@ def generate_request(
         RGBRenderRequest: gRPC request object for rendering
     """
     camera_pose = t_carla_nurec @ camera_pose
-    dynamic_objects = []
-    # select all actors that have attributes and have track_id attribute
-    for actor in actors:
-        if actor.id in active_actors:
-            track_id = active_actors[actor.id]
-            if not track_id in controllable_tracks:
-                continue
-            pose = actor_to_grpc_pose(
-                actor, t_carla_nurec, blueprint_library, actor_blueprints
-            )
-            dynamic_objects.append(
-                DynamicObject(
-                    track_id=track_id,
-                    pose_pair=PosePair(
-                        start_pose=pose,
-                        end_pose=pose,
-                    ),
-                )
-            )
+    dynamic_objects = collect_dynamic_objects(
+        actors, active_actors, controllable_tracks, t_carla_nurec,
+        blueprint_library, actor_blueprints,
+    )
     return RGBRenderRequest(
         scene_id=scene_id,
         resolution_h=int(camera_spec.resolution_h * scale),
@@ -339,22 +364,39 @@ class NurecRenderer:
         self,
         scenario: Scenario,
         host=None,
-        port=2000,
+        port=None,
         active_actors: Dict[int, str] = {},
         t_scenario_carla=np.eye(4),
         blueprint_library: Optional[BlueprintLibrary] = None,
         actor_blueprints: Optional[Dict[int, str]] = None,
+        image_format: str = "planar",
     ):
+        """
+        image_format: 'planar' (default) transfers raw RGB_UINT8_PLANAR frames
+        over localhost — no encode/decode, no CUDA decoder dependency.
+        'jpeg' restores the legacy behavior (requires nvidia-nvimgcodec-cu12).
+        """
         self.scenario = scenario
-        self.host = host
-        self.port = port
+        self.host = host if host is not None else "localhost"
+        self.port = port if port is not None else DEFAULT_NUREC_PORT
         self.available_cameras: Dict[str, CameraSpec] = {}
         self.scene_id = self.scenario.metadata["sequence_id"]
         self.start_timestamp = self.scenario.metadata["pose-range"][
             "start-timestamp_us"
         ]
         self.end_timestamp = self.scenario.metadata["pose-range"]["end-timestamp_us"]
-        self.jpeg_decoder = nvimgcodec.Decoder()
+        if image_format not in ("planar", "jpeg"):
+            raise ValueError(f"Unsupported image_format: {image_format!r}")
+        self.image_format = (
+            ImageFormat.RGB_UINT8_PLANAR if image_format == "planar" else ImageFormat.JPEG
+        )
+        self.jpeg_decoder = None
+        if image_format == "jpeg":
+            import nvidia.nvimgcodec as nvimgcodec
+            self.jpeg_decoder = nvimgcodec.Decoder()
+        # Whether the server implements batch_render_rgb (NRE >= 26.04);
+        # downgraded to False on first UNIMPLEMENTED response.
+        self.batch_supported = True
         self.t_carla_nurec = np.linalg.inv(t_scenario_carla)
         self._init_grpc()
 
@@ -362,13 +404,7 @@ class NurecRenderer:
         self.blueprint_library = blueprint_library
         self.actor_blueprints = actor_blueprints
 
-    def _start_grpc_server(self) -> None:
-        self.host = "localhost"
-        self.port = 2000
-
     def _init_grpc(self) -> None:
-        if self.host is None:
-            self._start_grpc_server()
         self.channel = grpc.insecure_channel(
             f"{self.host}:{self.port}",
             options=[
@@ -387,35 +423,161 @@ class NurecRenderer:
         for available_camera in available_cameras.available_cameras:
             self.available_cameras[available_camera.logical_id] = available_camera
 
-    def render(self, world_snapshot: carla.WorldSnapshot, camera_spec: CameraSpec, pose: np.ndarray, resolution_ratio: float = 0.25) -> np.ndarray:
+    def _decode(self, response: RGBRenderReturn, request: RGBRenderRequest) -> np.ndarray:
+        """Decode a render response to an HxWx3 uint8 RGB array."""
+        if self.image_format == ImageFormat.RGB_UINT8_PLANAR:
+            h, w = request.resolution_h, request.resolution_w
+            image = np.frombuffer(response.image_bytes, dtype=np.uint8)
+            return image.reshape(3, h, w).transpose(1, 2, 0)
+        image = self.jpeg_decoder.decode(response.image_bytes)
+        return np.array(image.cpu()).astype(np.uint8)
+
+    def build_request(
+        self,
+        world_snapshot: carla.WorldSnapshot,
+        camera_spec: CameraSpec,
+        pose: np.ndarray,
+        resolution_ratio: float = 0.25,
+    ) -> RGBRenderRequest:
         timestamp = int(self.scenario.tracks.current_time)
 
         # bound timestamp to the range of the scenario
         timestamp = min(timestamp, self.end_timestamp - 1)
 
-        request = generate_request(
+        return generate_request(
             self.scene_id,
             camera_spec,
             pose,
             timestamp,
             resolution_ratio,
             world_snapshot,
-            ImageFormat.JPEG,
+            self.image_format,
             self.active_actors,
             self.scenario.controllable_tracks,
             self.t_carla_nurec,
             self.blueprint_library,
             self.actor_blueprints,
         )
-        response = self.client_service.render_rgb(request)
 
-        image = self.jpeg_decoder.decode(response.image_bytes)
-        # convert to uint8
-        image = np.array(image.cpu()).astype(np.uint8)
-        return image
+    def render(self, world_snapshot: carla.WorldSnapshot, camera_spec: CameraSpec, pose: np.ndarray, resolution_ratio: float = 0.25) -> np.ndarray:
+        request = self.build_request(world_snapshot, camera_spec, pose, resolution_ratio)
+        response = self.client_service.render_rgb(request)
+        return self._decode(response, request)
+
+    def render_batch(self, requests: List[Tuple[str, RGBRenderRequest]]) -> Dict[str, np.ndarray]:
+        """
+        Render several cameras in one round trip via batch_render_rgb.
+        Transparently falls back to sequential render_rgb against servers
+        that predate the batch API. Returns {name: image}; failed items are
+        logged and omitted.
+        """
+        if not requests:
+            return {}
+        if self.batch_supported:
+            try:
+                batch = BatchRGBRenderRequest(
+                    items=[
+                        BatchRGBRenderRequestItem(camera_name=name, request=req)
+                        for name, req in requests
+                    ]
+                )
+                response = self.client_service.batch_render_rgb(batch)
+                by_name = dict(requests)
+                images = {}
+                for item in response.items:
+                    if not item.success:
+                        logger.error(f"Batch render failed for {item.camera_name}: {item.error_message}")
+                        continue
+                    images[item.camera_name] = self._decode(item.result, by_name[item.camera_name])
+                return images
+            except grpc.RpcError as e:
+                if e.code() == grpc.StatusCode.UNIMPLEMENTED:
+                    logger.warning("Server lacks batch_render_rgb; falling back to per-camera render_rgb")
+                    self.batch_supported = False
+                else:
+                    raise
+        images = {}
+        for name, request in requests:
+            response = self.client_service.render_rgb(request)
+            images[name] = self._decode(response, request)
+        return images
 
     def get_camera_spec(self, camera_logical_id: str) -> CameraSpec:
         return self.available_cameras[camera_logical_id].intrinsics
+
+    def render_lidar(
+        self,
+        world_snapshot: carla.WorldSnapshot,
+        pose: np.ndarray,
+        lidar_type: str = "PANDAR128",
+        render_filter: Optional[LidarRenderFilter] = None,
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """
+        Render a lidar sweep at the given pose (NuRec frame). Returns
+        (points Nx3 float32, intensities N float32). Requires NRE >= 26.04.
+        """
+        timestamp = int(self.scenario.tracks.current_time)
+        timestamp = min(timestamp, self.end_timestamp - 1)
+        nurec_pose = self.t_carla_nurec @ pose
+        request = LidarRenderRequest(
+            scene_id=self.scene_id,
+            lidar_config=LidarSpec(lidar_type=LidarDeviceType.Value(lidar_type)),
+            frame_start_us=timestamp,
+            frame_end_us=timestamp + 1,
+            sensor_pose=PosePair(
+                start_pose=se3_to_grpc_pose(nurec_pose),
+                end_pose=se3_to_grpc_pose(nurec_pose),
+            ),
+            dynamic_objects=collect_dynamic_objects(
+                world_snapshot, self.active_actors,
+                self.scenario.controllable_tracks, self.t_carla_nurec,
+                self.blueprint_library, self.actor_blueprints,
+            ),
+        )
+        if render_filter is not None:
+            request.render_filter.CopyFrom(render_filter)
+        response = self.client_service.render_lidar(request)
+        if response.point_xyzs_buffer:
+            points = np.frombuffer(response.point_xyzs_buffer, dtype=np.float32).reshape(-1, 3)
+            intensities = np.frombuffer(response.point_intensities_buffer, dtype=np.float32)
+        else:
+            points = np.array(response.point_xyzs, dtype=np.float32).reshape(-1, 3)
+            intensities = np.array(response.point_intensities, dtype=np.float32)
+        return points, intensities
+
+    def get_dynamic_objects(self) -> List[DynamicObjectTrack]:
+        """Server-side track data for the scene (id, semantic class, trajectory, size)."""
+        response = self.client_service.get_dynamic_objects(
+            AvailableDynamicObjectsRequest(scene_id=self.scene_id)
+        )
+        return list(response.dynamic_objects)
+
+    def get_external_asset_objects(self) -> List[str]:
+        """Track ids that are backed by external (swappable) assets."""
+        response = self.client_service.get_external_asset_objects(
+            ExternalAssetObjectsRequest(scene_id=self.scene_id)
+        )
+        return list(response.track_ids)
+
+    def edit_assets(
+        self,
+        replace: Optional[List[ReplaceAssetAction]] = None,
+        insert: Optional[List[DynamicObjectTrack]] = None,
+    ) -> None:
+        """
+        Replace or insert rendered assets in the scene (scenario variation).
+        The server must run with --enable-editing-actors
+        (NurecScenario(enable_asset_editing=True)).
+        """
+        response = self.client_service.edit_assets(
+            EditAssetsRequest(
+                scene_id=self.scene_id,
+                replace=replace or [],
+                insert=insert or [],
+            )
+        )
+        if not response.success:
+            raise RuntimeError(f"edit_assets failed: {response.message}")
 
 
 class NurecActor:
@@ -489,32 +651,105 @@ class NurecSensor:
             self.last_timestamp = timestamp
         return True
 
-    def on_world_tick(self, world: carla.World) -> None:
+    def build_tick_request(self, world: carla.WorldSnapshot) -> Optional[RGBRenderRequest]:
+        """
+        Build this camera's render request for the current tick, or None if
+        the camera is not due (framerate) or its parent actor is gone.
+        """
         if not self._should_render():
-            return
+            return None
 
         actor = world.find(self.parent_actor.actor_inst.id)
         if actor is None:
             logger.warning(f"Parent actor {self.parent_actor} not found in world")
-            return
+            return None
 
         actor_transform = actor.get_transform().get_matrix()
         actor_transform = np.array(actor_transform)  # 4x4 matrix
         camera_transform = (
             undo_carla_coordinate_transform(actor_transform) @ self.transform
         )
-        image = self.renderer.render(
+        return self.renderer.build_request(
             world,
             self.camera_spec,
             camera_transform,
             self.resolution_ratio,
         )
 
+    def dispatch(self, image: np.ndarray) -> None:
         try:
             self.callback(image)
         except Exception as e:
             logger.error(f"Error in callback for camera {self.camera_spec.logical_id}: {e}")
             raise e
+
+    def on_world_tick(self, world: carla.WorldSnapshot) -> None:
+        """Single-camera path; NurecScenario.render batches instead."""
+        request = self.build_tick_request(world)
+        if request is None:
+            return
+        response = self.renderer.client_service.render_rgb(request)
+        self.dispatch(self.renderer._decode(response, request))
+
+class NurecLidarSensor:
+    """
+    Virtual lidar rendered by NuRec (render_lidar RPC, NRE >= 26.04). No CARLA
+    actor is spawned; the sweep is generated from the neural reconstruction at
+    the sensor pose. The callback receives (points Nx3, intensities N).
+    """
+
+    def __init__(
+        self,
+        parent_actor: NurecActor,
+        transform: np.ndarray,
+        renderer: NurecRenderer,
+        callback: Callable[[np.ndarray, np.ndarray], None],
+        time_keeper: TimeKeeper,
+        lidar_type: str = "PANDAR128",
+        framerate: int = 10,
+        render_filter: Optional[LidarRenderFilter] = None,
+    ):
+        self.parent_actor = parent_actor
+        self.transform = np.array(transform)
+        self.renderer = renderer
+        self.callback = callback
+        self.time_keeper = time_keeper
+        self.lidar_type = lidar_type
+        self.framerate = framerate
+        self.render_filter = render_filter
+        self.last_timestamp: float = 0.0
+
+    def _should_render(self) -> bool:
+        if not self.time_keeper.is_running():
+            return False
+        timestamp = self.time_keeper.get_sim_time() / 1_000_000
+        if timestamp - self.last_timestamp < 1 / self.framerate:
+            return False
+        self.last_timestamp += 1 / self.framerate
+        if timestamp - self.last_timestamp > 1 / self.framerate:
+            self.last_timestamp = timestamp
+        return True
+
+    def on_world_tick(self, world: carla.WorldSnapshot) -> None:
+        if not self._should_render():
+            return
+        actor = world.find(self.parent_actor.actor_inst.id)
+        if actor is None:
+            logger.warning(f"Parent actor {self.parent_actor} not found in world")
+            return
+        actor_transform = np.array(actor.get_transform().get_matrix())
+        sensor_transform = (
+            undo_carla_coordinate_transform(actor_transform) @ self.transform
+        )
+        points, intensities = self.renderer.render_lidar(
+            world, sensor_transform, self.lidar_type, self.render_filter
+        )
+        try:
+            self.callback(points, intensities)
+        except Exception as e:
+            logger.error(f"Error in lidar callback: {e}")
+            raise e
+
 
 """
 A class to load a nurec reconstruction form a file. Spawns the actors in the carla scene and creates the sensors present in the recording.
@@ -526,18 +761,30 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         self,
         client: carla.Client,
         usdz_path: str,
-        port: int = 2000,
+        port: Optional[int] = None,
         move_spectator: bool = False,
         fps: int = 10,
         image=None,
         reuse_container: bool = True,
+        renderer_backend: Optional[str] = None,
+        image_format: str = "planar",
+        enable_asset_editing: bool = False,
     ):
-        NuRecRenderService.__init__(self, usdz_path, port, image, reuse_container)
+        # port=None lets the render service pick a free one (never CARLA's 2000).
+        extra_args = ["--enable-editing-actors"] if enable_asset_editing else None
+        NuRecRenderService.__init__(self, usdz_path, port, image, reuse_container,
+                                    renderer=renderer_backend,
+                                    extra_server_args=extra_args)
+        self.image_format = image_format
         self.client = client
         self.scenario: Optional[Scenario] = None
         self.renderer: Optional[NurecRenderer] = None
         self.cameras: List[NurecSensor] = []
-        self.blueprint_library = BlueprintLibrary()
+        self.lidars: List[NurecLidarSensor] = []
+        # Built in __enter__ by probing the live server: static blueprint
+        # dimension tables go stale across CARLA versions (UE5 renamed the
+        # whole vehicle catalog).
+        self.blueprint_library: Optional[BlueprintLibrary] = None
         self.last_time = 0
         self.actors_to_disable_physics: List[NurecActor] = []
         self.move_spectator = move_spectator
@@ -709,6 +956,12 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
 
         self.scenario = Scenario(self.usdz_path)
 
+        # Measure blueprint dimensions against the running server (cached per
+        # CARLA version) instead of trusting checked-in JSONs.
+        self.blueprint_library = BlueprintLibrary(
+            world=world, cache_key=self.client.get_server_version()
+        )
+
         t_world_base = self.scenario.t_world_base
         self.t_scenario_carla = get_t_rig_enu_from_ecef(t_world_base, data)
 
@@ -720,11 +973,14 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         self.renderer = NurecRenderer(
             self.scenario,
             "localhost",
-            self.port,
+            # final_port is what the render service actually bound (it may
+            # have been auto-picked); self.port can be None.
+            self.final_port,
             self.active_actors,
             self.t_scenario_carla,
             self.blueprint_library,
             self.actor_blueprints,
+            image_format=self.image_format,
         )
 
         self._warm_cache()
@@ -1047,6 +1303,42 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
             )
         )
 
+    def add_lidar(
+        self,
+        callback: Callable[[np.ndarray, np.ndarray], None],
+        transform: Optional[np.ndarray] = None,
+        lidar_type: str = "PANDAR128",
+        framerate: int = 10,
+        render_filter: Optional[LidarRenderFilter] = None,
+    ) -> None:
+        """
+        Add a neural-rendered lidar attached to the ego vehicle (NRE >= 26.04).
+
+        Args:
+            callback: Receives (points Nx3 float32, intensities N float32) per sweep.
+            transform: 4x4 sensor-to-ego matrix (default: identity, i.e. rig origin).
+            lidar_type: 'PANDAR128' or 'AT128'.
+            framerate: Sweep rate in Hz.
+            render_filter: Optional LidarRenderFilter (raydrop/opacity/distance).
+        """
+        if self.scenario is None or self.renderer is None:
+            raise RuntimeError("Scenario not initialized. Call __enter__ first.")
+        if transform is None:
+            transform = np.eye(4)
+        ego = self.actor_mapping[EGO_TRACK_ID]
+        self.lidars.append(
+            NurecLidarSensor(
+                ego,
+                transform,
+                self.renderer,
+                callback,
+                self,
+                lidar_type,
+                framerate,
+                render_filter,
+            )
+        )
+
     def tick(self) -> None:
         world = self.client.get_world()
         world.tick()
@@ -1054,8 +1346,25 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
     def render(self, snapshot: carla.WorldSnapshot) -> None:
         if self.seconds_since_start() == 0:
             return
-        for camera in self.cameras:
-            camera.on_world_tick(snapshot)
+        if self.renderer is None:
+            return
+        # Gather every camera due this tick and render them in ONE gRPC round
+        # trip (batch_render_rgb); NurecRenderer falls back to sequential
+        # render_rgb on servers without the batch API.
+        due: List[Tuple[str, NurecSensor, RGBRenderRequest]] = []
+        for i, camera in enumerate(self.cameras):
+            request = camera.build_tick_request(snapshot)
+            if request is not None:
+                due.append((f"cam{i}", camera, request))
+        if due:
+            images = self.renderer.render_batch([(name, req) for name, _, req in due])
+            for name, camera, _ in due:
+                if name in images:
+                    camera.dispatch(images[name])
+
+        # Lidar has no batch RPC; render due sweeps sequentially.
+        for lidar in self.lidars:
+            lidar.on_world_tick(snapshot)
 
     def get_sim_time(self) -> int:
         """

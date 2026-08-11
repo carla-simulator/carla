@@ -1,13 +1,18 @@
-[tool.poetry]
-name = "carla"
-version = "0.2"
-description = ""
-authors = ["Your Name <your.email@example.com>"]
+[project]
+name = "carla-nurec"
+version = "0.3"
+description = "NVIDIA NuRec (NRE) integration for CARLA UE5"
+requires-python = ">=3.10"
+dependencies = [
+    "pygame>=2.6",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "grpcio>=1.66",
+    "protobuf>=5.29,<7",
+    "carla>=0.10.0",
+    "pyyaml",
+]
 
-[tool.poetry.dependencies]
-pygame = {version = "2.6.1", python = ">=3.10, <3.11"}
-numpy = {version = "2.2.5", python = ">=3.10, <3.11"}
-scipy = {version = "1.15.3", python = ">=3.10, <3.11"}
-grpcio = {version = "1.74.0", python = ">=3.10, <3.11"}
-protobuf = {version = "4.23.3", python = ">=3.10, <3.11"}
-nvidia-nvimgcodec-cu12 = {version = "^0.5.0.13", python = ">=3.10, <3.11"}
+[project.optional-dependencies]
+# Legacy JPEG transfer path (NurecRenderer(image_format="jpeg")).
+jpeg = ["nvidia-nvimgcodec-cu12>=0.5"]

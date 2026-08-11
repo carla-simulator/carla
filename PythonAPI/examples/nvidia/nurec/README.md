@@ -1,107 +1,105 @@
-# CARLA - NUREC Integration
+# NVIDIA NuRec Integration for CARLA UE5
 
-This module provides integration between CARLA and NVIDIA's NUREC (NVIDIA Neural Reconstruction Engine). It allows you to replay real-world recordings in CARLA by reconstructing traffic scenarios from NUREC data.
+Replays neurally reconstructed real-world scenes (NVIDIA NuRec / NRE) inside
+CARLA. The scene geometry (OpenDRIVE map) and actor tracks come from a `.usdz`
+scenario artifact; photoreal frames are rendered by the NRE container and
+fetched over gRPC, while CARLA hosts the actors, sensors, and simulation loop.
 
-## Overview
+## How it works
 
-NUREC (NVIDIA Neural Reconstruction Engine) is a framework for reconstructing real-world traffic scenarios from sensor data. This integration allows these reconstructions to be replayed in the CARLA simulator, providing a bridge between real-world data and simulation.
-
-Key features:
-- Load and replay NUREC scenarios in CARLA
-- Visualize ego vehicle and other traffic participants
-- Support for camera views including spectator camera
-- Transformation between coordinate systems
+1. `map.xodr` is extracted from the `.usdz` and loaded via
+   `client.generate_opendrive_world(...)` — no named town is used.
+2. Actors are spawned from the scenario's track data. Blueprint dimensions are
+   probed from the **live server** at startup (cached per CARLA version), so
+   the integration survives blueprint catalog changes between CARLA versions.
+3. The NRE container (`serve-grpc`) renders RGB frames — and, new in NRE 26.04,
+   lidar sweeps — at the poses CARLA reports each tick. All cameras due in a
+   tick are rendered in a single `batch_render_rgb` round trip, transferred as
+   raw `RGB_UINT8_PLANAR` (no JPEG encode/decode).
 
 ## Requirements
 
-To use this integration, you'll need:
+- CARLA UE5 (0.10.x) with its Python wheel installed (Python >= 3.10)
+- Docker with the NVIDIA Container Toolkit
+- NRE container: `nvcr.io/nvidia/nre/nre-ga:26.04.01` (public on NGC)
+- A NuRec `.usdz` scenario, e.g. from the HuggingFace dataset
+  `nvidia/PhysicalAI-Autonomous-Vehicles-NuRec` (sample sets are per-scene;
+  the full dataset is ~1.5 TB)
 
-- CARLA 0.9.16 or newer
-- Python 3.10
-- The following Python packages:
-  - pygame
-  - numpy
-  - scipy
-  - grpc
-  - carla
-  - nvidia-nvimgcodec-cu12
+Run `./install_nurec.sh` from this directory to set up Docker, the NVIDIA
+container toolkit, the NRE image, the dataset, and the Python environment.
 
-## Installation
+Scenarios from older dataset releases (e.g. 25.07) may need upgrading:
 
-For detailed installation instructions, please refer to the [NUREC Installation Guide](../../../Docs/nvidia_nurec.md).
-
-## Running CARLA with NUREC
-
-### Step 1: Start CARLA
-
-Start carla with the standard process.
-
-### Step 2: Replay a NUREC Scenario
-
-Make sure to specify the nurec image to use by setting the NUREC_IMAGE env variable. See [the docs](../../../Docs/nvidia_nurec.md) for details.
-
-Once CARLA is running, you can replay a NUREC scenario using the `example_replay_recording.py` script:
-
-```bash
-python example_replay_recording.py --usdz-filename $(pwd)/maps/clipgt-9e849eeb-073f-424c-838c-493b56c806fb.usdz --move-spectator
+```sh
+docker run --rm --gpus all -v $(pwd):$(pwd) $NUREC_IMAGE \
+    upgrade-artifact --help
 ```
 
-## Command Line Parameters for example_replay_recording.py
+## Running
 
-The following table explains the available command-line parameters for the `example_replay_recording.py` script:
+Terminal 1 — CARLA UE5 server (source build):
 
-| Parameter | Long Form | Default | Description |
-|-----------|-----------|---------|-------------|
-| -h | --host | 127.0.0.1 | IP address of the CARLA host server |
-| -p | --port | 2000 | TCP port for the CARLA server |
-| -np | --nurec-port | 46435 | Port for the NUREC server |
-| -u | --usdz-filename | (required) | Path to the USDZ file containing the NUREC scenario |
-| --move-spectator | | False | Move the spectator camera to follow the ego vehicle |
+```sh
+# Standalone binary
+./Unreal/CarlaUnreal/Binaries/Linux/CarlaUnreal -carla-rpc-port=2000 -RenderOffScreen
+# or the editor: cmake --build Build/Release --target launch-only
+```
 
-## Module Structure
+Terminal 2 — replay with image export:
 
-- `nurec_integration.py`: Main integration class that handles NUREC service management and scenario replay
-- `scenario.py`: Core classes for loading and managing NUREC scenarios
-- `track.py`: Track representation and interpolation functions for vehicle trajectories
-- `constants.py`: Constants used throughout the module
-- `projection_functions.py`: Coordinate system transformation functions
-- `pygame_display.py`: Visualization using Pygame for camera feeds
-- `example_*.py`: Example scripts demonstrating different use cases:
-  - `example_replay_recording.py`: Basic scenario replay with multiple cameras
-  - `example_save_images.py`: Save camera images to disk
-  - `example_custom_camera.py`: Configure custom camera parameters
-- `grpc_proto/`: Protocol buffer definitions and generated code for NUREC service communication
-- `tools/`: Additional utility tools for blueprint size extraction and other tasks
+```sh
+python example_nurec_replay_save_images.py \
+    -u /path/to/scenario.usdz \
+    --saveimages --output-dir data
+```
 
-## Additional Information
+The NRE container is started automatically (`NUREC_IMAGE` env var overrides
+the image; the gRPC port is auto-picked unless `-np/--nurec-port` is given).
+Containers are reused between runs by default to skip scene loading; reuse is
+verified over gRPC (server version + scene id) before adoption.
 
-- The blueprint size JSON files are used to match NUREC object dimensions with CARLA blueprints
-- Use the `extract_blueprint_sizes.py` tool to generate size information for custom CARLA blueprints
+## API highlights (`nurec_integration.py`)
 
-## Starting the NUREC Service
-
-The NUREC service is automatically started when you create a `NurecScenario` instance. The service provides the following main functionality:
-- Render RGB images from scenes
-- Get version information
-- List available scenes, cameras, and trajectories
-
-The service runs on port 46435 by default, which can be configured using the `--nurec-port` parameter. The service will automatically shut down when the `NurecScenario` instance is destroyed.
-
-You can control the service container behavior using the `reuse_container` parameter when creating a `NurecScenario` instance:
-- When `reuse_container=True` (default): The service container will be reused if it already exists, preventing multiple instances from running simultaneously
-- When `reuse_container=False`: A new service container will be created each time, which is useful for testing or when you need to ensure a clean state
-
-Example usage:
 ```python
-# Reuse existing container (default)
-scenario = NurecScenario(client, usdz_filename)
-
-# Force new container
-scenario = NurecScenario(client, usdz_filename, reuse_container=False)
+with NurecScenario(client, usdz_path) as scenario:
+    scenario.add_camera("front_wide_120fov", on_image)        # NuRec camera
+    scenario.add_lidar(on_lidar, lidar_type="PANDAR128")      # NuRec lidar (NRE >= 26.04)
+    scenario.start_replay()
+    while not scenario.is_done():
+        scenario.tick()
 ```
 
-## Tools
+- `NurecScenario(..., renderer_backend="nrend")` — fast C++/CUDA renderer
+  backend; `"gsplat"` forces GSplat; default uses the artifact's trained renderer.
+- `NurecScenario(..., image_format="jpeg")` — legacy JPEG transfer
+  (needs `nvidia-nvimgcodec-cu12`); default is raw planar.
+- `NurecScenario(..., enable_asset_editing=True)` +
+  `scenario.renderer.edit_assets(...)` / `get_dynamic_objects()` — scenario
+  variation via server-side asset replacement/insertion.
+- `NuRecRenderService(..., extra_server_args=["--enable-harmonizer"])` — any
+  additional `serve-grpc` flag can be passed through.
 
-### Extract Blueprint Sizes Tool
-See [tools.md](tools.md) for documentation on the blueprint extraction tool.
+## Tests
 
+```sh
+python -m pytest tests/
+```
+
+`tests/test_coordinates.py` pins the CARLA<->NuRec coordinate convention
+against the installed carla wheel's own transform math — if a CARLA release
+changes conventions, these fail instead of silently mirroring the world.
+
+## Files
+
+| File | Purpose |
+|---|---|
+| `nurec_integration.py` | Core: `NurecScenario`, `NurecRenderer`, sensors |
+| `nurec_render_service.py` | NRE container lifecycle + gRPC readiness |
+| `scenario.py`, `track.py` | `.usdz` parsing, pose interpolation |
+| `blueprint_library.py` | Live blueprint probing + dimension matching |
+| `utils.py` | Coordinate conversions (see `tests/test_coordinates.py`) |
+| `projection_functions.py` | ECEF/ENU georeference alignment |
+| `example_nurec_replay_save_images.py` | End-to-end replay example |
+| `nre/grpc/` | Protocol definitions + vendored generated stubs |
+| `tools/extract_blueprint_sizes.py` | Regenerate fallback blueprint JSONs |

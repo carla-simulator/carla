@@ -43,7 +43,7 @@ from nurec_integration import NurecScenario, ShutterType
 from pygame_display import PygameDisplay
 from constants import EGO_TRACK_ID
 from utils import handle_exception
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 
 def make_transform_matrix(rotation=None, translation=None):
@@ -160,7 +160,7 @@ def make_camera_callback(display, camera_name, pygame_pos, saveimages: bool, out
 
 def add_cameras(
     scenario: NurecScenario, client: carla.Client, output_dir: str, saveimages: bool, resolution_ratio: float = 0.125
-) -> Tuple[carla.Actor, PygameDisplay]:
+) -> Tuple[List[carla.Actor], PygameDisplay]:
     # Set up pygame display for visualization
     pygame_display = PygameDisplay()
 
@@ -168,9 +168,14 @@ def add_cameras(
     # Get the blueprint library to spawn cameras
     bp_library = world.get_blueprint_library()
 
+    # Standard CARLA cameras spawned alongside the NuRec ones (may be empty)
+    carla_cameras: List[carla.Actor] = []
+
     # Add cameras using the new flexible add_camera method
 
-    with open("carla_example_camera_config.yaml", "r") as f:
+    config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "carla_example_camera_config.yaml")
+    with open(config_path, "r") as f:
         camera_configs = yaml.safe_load(f)
 
     grid_size =  (3, 2)
@@ -214,19 +219,19 @@ def add_cameras(
 
             camera = world.spawn_actor(camera_bp, camera_transform, attach_to=scenario.actor_mapping[EGO_TRACK_ID].actor_inst)
 
-
             camera.listen(
                 lambda image, pos=grid_pos: process_carla_image(pygame_display, grid_size, pos, image)
             )
+            carla_cameras.append(camera)
 
         else:
             raise ValueError(f"Unknown camera configuration format: {cam_cfg}")
-        
+
         grid_pos = (grid_pos[0] + 1, grid_pos[1])
         if grid_pos[0] >= grid_size[0]:
-            grid_pos = (1, grid_pos[1] + 1)
-        
-    return camera, pygame_display
+            grid_pos = (0, grid_pos[1] + 1)
+
+    return carla_cameras, pygame_display
 
 
 def main() -> None:
@@ -258,9 +263,9 @@ def main() -> None:
         "-np",
         "--nurec-port",
         metavar="Q",
-        default=46435,
+        default=None,
         type=int,
-        help="nurec port (default: 46435)",
+        help="nurec gRPC port (default: auto-pick a free port)",
     )
     argparser.add_argument(
         "-u",
@@ -290,11 +295,11 @@ def main() -> None:
         move_spectator=args.move_spectator,
         fps=30,
     ) as scenario:
-        spectator: Optional[carla.Actor] = None
+        carla_cameras: List[carla.Actor] = []
         display: Optional[PygameDisplay] = None
         try:
-            # Add cameras, we need to refernce spectator to keep it alive
-            spectator, display = add_cameras(scenario, client, args.output_dir, args.saveimages )
+            # Add cameras; keep references to the CARLA camera actors alive
+            carla_cameras, display = add_cameras(scenario, client, args.output_dir, args.saveimages )
 
             logger.info("Starting replay")
             scenario.start_replay()
@@ -317,9 +322,9 @@ def main() -> None:
             handle_exception(e)
 
         finally:
-            if spectator is not None:
-                spectator.stop()
-                spectator.destroy()
+            for camera in carla_cameras:
+                camera.stop()
+                camera.destroy()
             if display is not None:
                 display.destroy()
 

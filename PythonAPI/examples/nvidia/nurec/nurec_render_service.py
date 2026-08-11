@@ -4,26 +4,69 @@
 
 """
 This file contains scripts to start the grpc server to render images. Example command line to start server:
-docker run --env "CUDA_VISIBLE_DEVICES=1" --name="nre_1" \
- --gpus 'all,"capabilities=compute,video,utility"' --rm \
- --net=host -v $(pwd):$(pwd) --gpus=all $NUREC_IMAGE \
- --artifact-glob "$(pwd)/carla/clipgt-7f360cc2-371e-4606-9dc9-b9d0822928a8.usdz" --no-enable-nrend --port=46435 --host=0.0.0.0 --test-scenes-are-valid
+docker run --env "CUDA_VISIBLE_DEVICES=0" --name="nre_1" \
+ --gpus all --rm --net=host -v $(pwd):$(pwd) $NUREC_IMAGE \
+ serve-grpc --artifact-glob "$(pwd)/scene.usdz" --port=46435 --host=localhost --test-scenes-are-valid
+
+Readiness and reuse verification are protocol-based (get_version /
+get_available_scenes over gRPC), not log-scraped: NRE log wording changes
+between releases, the gRPC surface does not.
 """
 
 import os
-import sys
+import socket
 import subprocess
-import re
 import logging
 import uuid
 import threading
 import atexit
 import time
 import select
-from typing import Optional, Dict, Any, Union, TextIO
+from typing import Dict, Any, TextIO
+
+import grpc
+
 from scenario import extract_json_from_usdz
+from constants import DEFAULT_NUREC_IMAGE, DEFAULT_NUREC_PORT, MAX_MESSAGE_LENGTH
+import nre.grpc.protos.common_pb2 as common_pb2
+import nre.grpc.protos.sensorsim_pb2_grpc as sensorsim_pb2_grpc
 
 logger = logging.getLogger(__name__)
+
+# Docker labels used to rediscover reusable containers without parsing logs.
+LABEL_PORT = "com.carla.nurec.port"
+LABEL_SCENE = "com.carla.nurec.scene"
+
+
+def find_free_port() -> int:
+    """Ask the OS for a free TCP port (containers run with --net=host)."""
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("localhost", 0))
+        return s.getsockname()[1]
+
+
+def query_server(host: str, port: int, timeout: float = 2.0):
+    """
+    Single protocol-level probe of a NuRec gRPC server.
+
+    Returns (version_string, scene_ids) or (None, []) if unreachable.
+    """
+    channel = grpc.insecure_channel(
+        f"{host}:{port}",
+        options=[
+            ("grpc.max_send_message_length", MAX_MESSAGE_LENGTH),
+            ("grpc.max_receive_message_length", MAX_MESSAGE_LENGTH),
+        ],
+    )
+    try:
+        stub = sensorsim_pb2_grpc.SensorsimServiceStub(channel)
+        version = stub.get_version(common_pb2.Empty(), timeout=timeout)
+        scenes = stub.get_available_scenes(common_pb2.Empty(), timeout=timeout)
+        return version.version_id, list(scenes.scene_ids)
+    except grpc.RpcError:
+        return None, []
+    finally:
+        channel.close()
 
 def run_nvidia_smi(image: str) -> int:
     """
@@ -186,13 +229,19 @@ def read_output_thread(output_stream: TextIO, monitor: ServerMonitor) -> None:
     logger.debug("Output reading thread exiting")
 
 class NuRecRenderService:
-    def __init__(self, usdz_path, port=None, image=None, reuse_container=False):
+    def __init__(self, usdz_path, port=None, image=None, reuse_container=False,
+                 renderer=None, extra_server_args=None):
         self.usdz_path = usdz_path
         self.port = port
-        self.image = image
+        self.image: str = image or os.getenv("NUREC_IMAGE") or DEFAULT_NUREC_IMAGE
         self.reuse_container = reuse_container
+        # Renderer backend: None (server default), 'gsplat' or 'nrend'.
+        self.renderer = renderer
+        # Escape hatch for any other serve-grpc flag, e.g. ["--enable-harmonizer"].
+        self.extra_server_args = list(extra_server_args or [])
         self.container_name = None
         self.final_port = None
+        self.server_version = None
         self.process = None
         self.monitor = None
         self.stdout_thread = None
@@ -200,11 +249,6 @@ class NuRecRenderService:
         self.container_running = False
         self.container_reused = False
         self._cleanup_registered = False
-
-        if image is None:
-            self.image = os.getenv("NUREC_IMAGE")
-            if self.image is None:
-                raise ValueError("NUREC_IMAGE environment variable is not set, either pass it as an argument or set it in the environment!")
     
     def _register_cleanup(self):
         """Register cleanup handler with atexit"""
@@ -254,38 +298,42 @@ class NuRecRenderService:
             logger.error(f"Error listing containers: {e}")
             return None
     
-    def _verify_container_logs(self, container_name, expected_scene, expected_port):
-        """Verify container is running correctly and has the right scene and port"""
+    def _get_container_labels(self, container_name):
+        """Read the port/scene labels this module stamps on containers it starts."""
         try:
-            # Get container logs
             result = subprocess.run([
-                "docker", "logs", container_name
+                "docker", "inspect", container_name,
+                "--format", f'{{{{index .Config.Labels "{LABEL_PORT}"}}}}\t{{{{index .Config.Labels "{LABEL_SCENE}"}}}}'
             ], capture_output=True, text=True, check=True)
-            
-            logs = result.stdout + result.stderr
-            
-            # Check for server start
-            server_started = "serving on" in logs.lower()
-            
-            # Check for correct scene
-            scene_loaded = check_if_scene_loaded(logs)
-            correct_scene = expected_scene in logs
-            
-            # Check for correct port
-            extracted_port = self._extract_port_from_logs(logs)
-            correct_port = extracted_port == expected_port if extracted_port else False
-            
-            logger.debug(f"Container {container_name} verification:")
-            logger.debug(f"  Server started: {server_started}")
-            logger.debug(f"  Scene loaded: {scene_loaded}")
-            logger.debug(f"  Correct scene ({expected_scene}): {correct_scene}")
-            logger.debug(f"  Expected port: {expected_port}, Found port: {extracted_port}, Correct port: {correct_port}")
-            
-            return server_started and scene_loaded and correct_scene and correct_port
-            
+            port_str, scene = (result.stdout.strip().split("\t") + [""])[:2]
+            return (int(port_str) if port_str.isdigit() else None), scene
         except subprocess.CalledProcessError as e:
-            logger.error(f"Error getting container logs: {e}")
-            return False
+            logger.error(f"Error inspecting container {container_name}: {e}")
+            return None, ""
+
+    def _verify_container_grpc(self, container_name, expected_scene):
+        """
+        Verify a running container over gRPC: server answers get_version and
+        the expected scene is among get_available_scenes. Returns the port on
+        success, None on failure.
+        """
+        port, labeled_scene = self._get_container_labels(container_name)
+        if port is None:
+            logger.warning(f"Container {container_name} has no {LABEL_PORT} label; not reusing")
+            return None
+        if labeled_scene and labeled_scene != expected_scene:
+            logger.warning(f"Container {container_name} serves scene {labeled_scene!r}, wanted {expected_scene!r}")
+            return None
+        version, scene_ids = query_server("localhost", port)
+        if version is None:
+            logger.warning(f"Container {container_name} not answering gRPC on port {port}")
+            return None
+        if not any(expected_scene in scene_id for scene_id in scene_ids):
+            logger.warning(f"Container {container_name} scenes {scene_ids} do not include {expected_scene!r}")
+            return None
+        logger.debug(f"Container {container_name} verified: NRE {version}, port {port}, scenes {scene_ids}")
+        self.server_version = version
+        return port
     
     def _kill_old_nurec_containers(self):
         """Kill any old NuRec containers running the same image"""
@@ -330,15 +378,6 @@ class NuRecRenderService:
         except subprocess.CalledProcessError as e:
             logger.error(f"Error managing containers: {e}")
     
-    def _extract_port_from_logs(self, logs):
-        """Extract port number from container logs"""
-        import re
-        # Look for patterns like "serving on localhost:2000"
-        port_match = re.search(r'serving on (?:localhost|127\.0\.0\.1):(\d+)', logs, re.IGNORECASE)
-        if port_match:
-            return int(port_match.group(1))
-        return None
-    
     def start(self) -> Dict[str, Any]:
         """Start the gRPC server"""
         if self.container_running:
@@ -366,34 +405,18 @@ class NuRecRenderService:
         
         # Handle container reuse logic
         if self.reuse_container:
-            # Determine the expected port first
-            expected_port = self.port if self.port else 2000
-            
             existing_container = self._find_existing_container(uuid_val)
-            
+
             if existing_container:
-                # Verify the existing container
-                if self._verify_container_logs(existing_container, expected_scene, expected_port):
+                verified_port = self._verify_container_grpc(existing_container, expected_scene)
+                if verified_port is not None:
                     logger.debug(f"Reusing existing container: {existing_container}")
                     self.container_name = existing_container
                     self.container_running = True
                     self.container_reused = True
-                    
-                    # Extract port from logs
-                    logs_result = subprocess.run([
-                        "docker", "logs", existing_container
-                    ], capture_output=True, text=True)
-                    
-                    logs = logs_result.stdout + logs_result.stderr
-                    extracted_port = self._extract_port_from_logs(logs)
-                    
-                    if extracted_port:
-                        self.final_port = extracted_port
-                    else:
-                        self.final_port = expected_port
-                    
+                    self.final_port = verified_port
                     logger.debug(f"Container already ready at localhost:{self.final_port}")
-                    
+
                     return {
                         'container_name': self.container_name,
                         'host': 'localhost',
@@ -402,19 +425,16 @@ class NuRecRenderService:
                     }
                 else:
                     logger.warning(f"Existing container {existing_container} verification failed")
-            
+
             # Kill any old NuRec containers with the same image and start fresh
             self._kill_old_nurec_containers()
-        
+
         # Continue with normal container startup
         usdz_folder = os.path.dirname(os.path.realpath(self.usdz_path))
         self.container_name = get_container_name(uuid_val)
-        
-        # Set default port if not provided
-        if not self.port:
-            self.final_port = 2000
-        else:
-            self.final_port = self.port
+
+        # Explicit port, or an OS-assigned free one (never CARLA's 2000).
+        self.final_port = self.port if self.port else find_free_port()
 
         gpu_count = run_nvidia_smi(self.image)
         if gpu_count == 0:
@@ -437,20 +457,34 @@ class NuRecRenderService:
             f"CUDA_VISIBLE_DEVICES={visible_gpu_ids}",
             "--name",
             self.container_name,
+            "--label",
+            f"{LABEL_PORT}={self.final_port}",
+            "--label",
+            f"{LABEL_SCENE}={expected_scene}",
             "--gpus",
-            'all,"capabilities=compute,video,utility"',
+            "all",
             "--rm",
             "--net=host",
             "-v",
             f"{usdz_folder}:{usdz_folder}:ro",
-            "--gpus=all",
             self.image,
+            # NRE >= 26.04 ships a multi-command CLI; the gRPC server is the
+            # serve-grpc subcommand (the old nvidia-nurec-grpc image served
+            # directly from its entrypoint).
+            "serve-grpc",
             "--artifact-glob",
             f"{os.path.realpath(self.usdz_path)}",
             f"--port={self.final_port}",
             "--host=localhost",
             "--test-scenes-are-valid",
+            # NRE >= 26.04 rejects render requests carrying DynamicObject pose
+            # updates unless this is set, and the integration sends them every
+            # tick (the old nvidia-nurec-grpc server accepted them by default).
+            "--enable-editing-actors",
         ]
+        if self.renderer:
+            cmd.append(f"--renderer={self.renderer}")
+        cmd.extend(self.extra_server_args)
 
         # Register cleanup handler
         if not self.reuse_container:
@@ -459,25 +493,27 @@ class NuRecRenderService:
         logger.info(f"Starting container {self.container_name} on localhost:{self.final_port}")
         logger.debug(f"Command: {' '.join(cmd)}")
 
-        # Create monitor for server readiness
+        # Monitor container output for critical errors; readiness itself is
+        # detected over gRPC, not by parsing logs.
         self.monitor = ServerMonitor("localhost", self.final_port)
 
-        # Start process with live output monitoring
         self.process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         self.container_running = True
-        
-        # Start threads to read output
-        self.stdout_thread = threading.Thread(target=read_output_thread, args=(self.process.stdout, self.monitor))
-        self.stderr_thread = threading.Thread(target=read_output_thread, args=(self.process.stderr, self.monitor))
-        
+
+        # Keep draining output for the container's lifetime: it surfaces
+        # runtime errors and stops the pipe from filling up.
+        self.stdout_thread = threading.Thread(
+            target=read_output_thread, args=(self.process.stdout, self.monitor), daemon=True)
+        self.stderr_thread = threading.Thread(
+            target=read_output_thread, args=(self.process.stderr, self.monitor), daemon=True)
+
         self.stdout_thread.start()
         self.stderr_thread.start()
 
-        # Wait for server to be ready
-        logger.info("Waiting for server to start and scene to load...")
-        if self.monitor.wait_for_ready(timeout=120):
-            logger.info("Server is ready! Both server started and scene loaded successfully.")
-            
+        logger.info("Waiting for gRPC server to answer and scene to be available...")
+        if self._wait_ready_grpc(expected_scene, timeout=300):
+            logger.info(f"Server ready: NRE {self.server_version} at localhost:{self.final_port}")
+
             return {
                 'container_name': self.container_name,
                 'host': 'localhost',
@@ -485,19 +521,45 @@ class NuRecRenderService:
                 'status': 'ready'
             }
         else:
-            # Check if process is still running
             if self.process.poll() is None:
                 logger.error("Timeout waiting for server to be ready")
                 self.process.terminate()
             else:
                 logger.error(f"Container exited with code {self.process.returncode}")
-            
-            # Wait for threads to finish
+
+            self.monitor.stop_reading.set()
             self.stdout_thread.join(timeout=5)
             self.stderr_thread.join(timeout=5)
-            
+
             self.container_running = False
-            raise RuntimeError("Server failed to start properly")
+            tail = "\n".join(self.monitor.all_output[-30:])
+            raise RuntimeError(f"NuRec server failed to start. Last container output:\n{tail}")
+
+    def _wait_ready_grpc(self, expected_scene: str, timeout: int = 300) -> bool:
+        """
+        Poll the gRPC endpoint until the server answers get_version and
+        get_available_scenes contains the expected scene. Aborts early if the
+        container process exits or its logs show a critical error.
+        """
+        start_time = time.time()
+        while time.time() - start_time < timeout:
+            if self.monitor.error_occurred.is_set():
+                logger.error("Critical error in container logs while waiting for readiness")
+                return False
+            if self.process.poll() is not None:
+                logger.error("Container process exited while waiting for readiness")
+                return False
+
+            version, scene_ids = query_server("localhost", self.final_port)
+            if version is not None:
+                self.server_version = version
+                if any(expected_scene in scene_id for scene_id in scene_ids):
+                    return True
+                logger.debug(f"Server up (NRE {version}) but scene {expected_scene!r} "
+                             f"not yet in {scene_ids}; still waiting")
+            time.sleep(1.0)
+
+        return False
     
     def stop(self) -> None:
         """Stop the server"""

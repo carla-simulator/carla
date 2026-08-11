@@ -1,0 +1,8 @@
+# Per-CARLA-version blueprint probe caches
+.blueprint_sizes_cache_*.json
+# Example output
+data/
+__pycache__/
+.pytest_cache/
+# Session state from development tooling
+.omc/

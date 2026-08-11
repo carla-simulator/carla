@@ -95,25 +95,26 @@ def se3_to_grpc_pose(se3: np.ndarray) -> grpc_types.Pose:
     )
 
 
+# CARLA is left-handed (Y mirrored) relative to NuRec's right-handed frame.
+# Both directions of the conversion are the SAME operation: conjugation by the
+# Y-mirror, M' = S @ M @ S. This is exact for any pose — no euler-angle
+# order/sign juggling — and is its own inverse. The previous hand-rolled euler
+# implementation swapped pitch and roll (verified against
+# carla.Transform.get_matrix() on the 0.10 wheel; see tests/test_coordinates.py).
+_Y_MIRROR = np.diag([1.0, -1.0, 1.0, 1.0])
+
+
+def mirror_pose(transform: np.ndarray) -> np.ndarray:
+    """Map a 4x4 pose between NuRec (RH) and CARLA (LH) conventions (self-inverse)."""
+    return _Y_MIRROR @ transform @ _Y_MIRROR
+
+
 def undo_carla_coordinate_transform(transform: np.ndarray) -> np.ndarray:
     """
-    Undoes inverse yaw and mirror over y axis.
-    Note carla applies yaw last in euler angles so we don't need to worry about the other rotations.
-    This effectivley mirrors actors over the y axis, assuming they are symmetric on their y axis.
+    Convert a CARLA pose matrix (from Transform.get_matrix()) into the NuRec
+    right-handed frame. Kept under its historic name; it is mirror_pose().
     """
-    result = np.eye(4)
-    rotation = R.from_matrix(transform[:3, :3])
-    yaw, pitch, roll = rotation.as_euler("zyx", degrees=False)
-    # yaw, pitch, roll = roll, -yaw, pitch
-    # yaw, pitch, roll = -pitch, roll, yaw
-    yaw = -yaw
-    roll = roll
-    pitch = -pitch
-    rotation = R.from_euler("zyx", [yaw, pitch, roll], degrees=False)
-    # carla.Rotation(pitch=euler_angles[2] * 180 / np.pi, yaw=-euler_angles[0] * 180 / np.pi, roll=euler_angles[1] * 180 / np.pi)
-    result[:3, :3] = rotation.as_matrix()
-    result[:3, 3] = [transform[0, 3], -transform[1, 3], transform[2, 3]]
-    return result
+    return mirror_pose(transform)
 
 
 def actor_to_grpc_pose(
@@ -159,52 +160,33 @@ def actor_to_grpc_pose(
     return grpc_types.Pose(vec=vec, quat=quat)
 
 def mat_to_carla_transform(mat: np.ndarray) -> carla.Transform:
-    euler_angles = R.from_matrix(mat[:3, :3]).as_euler("zyx", degrees=False)
-    euler_angles[1] = -euler_angles[1]
-    euler_angles[2] = -euler_angles[2]
-    return carla.Transform(
-        carla.Location(x=mat[0, 3], y=-mat[1, 3], z=mat[2, 3]),
-        carla.Rotation(
-            pitch=euler_angles[2] * 180 / np.pi,
-            yaw=-euler_angles[0] * 180 / np.pi,
-            roll=euler_angles[1] * 180 / np.pi,
-        ),
-    )
+    """
+    Convert a NuRec 4x4 pose to a carla.Transform.
 
-
-def mat_to_carla_transform2(mat: np.ndarray) -> carla.Transform:
-    euler_angles = R.from_matrix(mat[:3, :3]).as_euler("xyz", degrees=False)
+    The carla wheel composes rotations as Rx(roll) @ Ry(pitch) @ Rz(yaw)
+    (verified numerically against Transform.get_matrix(); pinned by
+    tests/test_coordinates.py), i.e. scipy's intrinsic 'xyz' order.
+    """
+    mirrored = mirror_pose(mat)
+    roll, pitch, yaw = R.from_matrix(mirrored[:3, :3]).as_euler("xyz", degrees=True)
     return carla.Transform(
-        carla.Location(x=mat[0, 3], y=-mat[1, 3], z=mat[2, 3]),
-        carla.Rotation(
-            pitch=euler_angles[0] * 180 / np.pi,
-            yaw=-euler_angles[1] * 180 / np.pi,
-            roll=euler_angles[2] * 180 / np.pi,
-        ),
+        carla.Location(x=mirrored[0, 3], y=mirrored[1, 3], z=mirrored[2, 3]),
+        carla.Rotation(pitch=pitch, yaw=yaw, roll=roll),
     )
 
 
 def xyzquat_to_carla_transform(xyzquat: np.ndarray) -> carla.Transform:
-    euler_angles = R.from_quat(xyzquat[3:]).as_euler("zyx", degrees=False)
-    euler_angles[1] = -euler_angles[1]
-    euler_angles[2] = -euler_angles[2]
-    return carla.Transform(
-        carla.Location(x=xyzquat[0], y=-xyzquat[1], z=xyzquat[2]),
-        carla.Rotation(
-            pitch=euler_angles[2] * 180 / np.pi,
-            yaw=-euler_angles[0] * 180 / np.pi,
-            roll=euler_angles[1] * 180 / np.pi,
-        ),
-    )
+    """xyzquat: [x, y, z, qx, qy, qz, qw] in the NuRec frame."""
+    mat = np.eye(4)
+    mat[:3, :3] = R.from_quat(xyzquat[3:]).as_matrix()
+    mat[:3, 3] = xyzquat[:3]
+    return mat_to_carla_transform(mat)
 
 
 def xyzeuler_to_carla_transform(xyzeuler: np.ndarray) -> carla.Transform:
-    return carla.Transform(
-        carla.Location(x=xyzeuler[0], y=-xyzeuler[1], z=xyzeuler[2]),
-        carla.Rotation(
-            pitch=xyzeuler[5] * 180 / np.pi,
-            yaw=-xyzeuler[3] * 180 / np.pi,
-            roll=xyzeuler[4] * 180 / np.pi,
-        ),
-    )
+    """xyzeuler: [x, y, z, yaw_z, pitch_y, roll_x] (radians) in the NuRec frame."""
+    mat = np.eye(4)
+    mat[:3, :3] = R.from_euler("zyx", xyzeuler[3:], degrees=False).as_matrix()
+    mat[:3, 3] = xyzeuler[:3]
+    return mat_to_carla_transform(mat)
 

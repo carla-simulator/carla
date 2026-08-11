@@ -4,8 +4,10 @@
 
 # Track identifier for the ego (main) vehicle
 EGO_TRACK_ID = "ego"
-# Default vehicle class for the ego vehicle in CARLA
-EGO_LABEL = "vehicle.mercedes.coupe_2020"
+# Default vehicle class for the ego vehicle in CARLA.
+# CARLA UE5 renamed the vehicle catalog; the UE4-era Mercedes coupe is gone.
+# vehicle.ue4.mercedes.ccc is its closest surviving relative.
+EGO_LABEL = "vehicle.ue4.mercedes.ccc"
 # Dimensions for the ego vehicle (Unused)
 EGO_DIMS = None
 
@@ -27,8 +29,17 @@ SPECTATOR_LABEL = "spectator"
 # Flag identifying the spectator (camera) track
 SPECTATOR_FLAG = "SPECTATOR"
 
-# Maximum gRPC message length in bytes (10MB)
-MAX_MESSAGE_LENGTH = 10_000_000
+# Maximum gRPC message length in bytes (64MB).
+# Sized for uncompressed RGB_UINT8_PLANAR frames: 4K (3840x2160x3) is ~25MB.
+MAX_MESSAGE_LENGTH = 64_000_000
+
+# Default NuRec render container. Overridable via the NUREC_IMAGE env var or
+# the `image` argument of NuRecRenderService / NurecScenario.
+DEFAULT_NUREC_IMAGE = "nvcr.io/nvidia/nre/nre-ga:26.04.01"
+
+# Default port for the NuRec gRPC server. Deliberately NOT 2000: that is
+# CARLA's own RPC port and the container runs with --net=host.
+DEFAULT_NUREC_PORT = 46435
 
 # Conversion factor from m/s to km/h
 KPH_PER_MPS = 3.6

@@ -2,10 +2,11 @@
 
 set -euo pipefail
 
-CARLA_VERSION=0.9.16
+CARLA_VERSION=0.10.0
+NUREC_IMAGE_DEFAULT="nvcr.io/nvidia/nre/nre-ga:26.04.01"
 PYTHON_EXECUTABLE=python
 
-CARLA_ROOT=$(realpath "$BASH_SOURCE[0]")
+CARLA_ROOT=$(realpath "${BASH_SOURCE[0]}")
 CARLA_ROOT=$(dirname "$CARLA_ROOT")
 CARLA_ROOT=$CARLA_ROOT/../../../..
 CARLA_ROOT=$(realpath "$CARLA_ROOT")
@@ -235,16 +236,16 @@ for cmd in pip; do
     fi
 done
 
-# Download NuRec GRPC Container
-echo "Checking NuRec GRPC container..."
-if check_NuRec_container "docker.io/carlasimulator/nvidia-nurec-grpc:0.2.0"; then
-    echo "NuRec GRPC container already exists, skipping download."
+# Download the NVIDIA NRE container (serves the NuRec gRPC API)
+echo "Checking NRE container..."
+if check_NuRec_container "$NUREC_IMAGE_DEFAULT"; then
+    echo "NRE container already exists, skipping download."
 else
-    echo "Initiating NuRec GRPC Container Downloads..."
-    sudo -E docker pull docker.io/carlasimulator/nvidia-nurec-grpc:0.2.0
-    
+    echo "Initiating NRE Container Download..."
+    sudo -E docker pull "$NUREC_IMAGE_DEFAULT"
+
     if [ $? -ne 0 ]; then
-        echo "Error: Failed to download NuRec GRPC Container"
+        echo "Error: Failed to download NRE Container"
         exit 1
     fi
 fi
@@ -284,7 +285,7 @@ if ! check_hf_dataset; then
 fi
 
 # Set the NuRec image path
-NUREC_IMAGE="docker.io/carlasimulator/nvidia-nurec-grpc:0.2.0"
+NUREC_IMAGE="$NUREC_IMAGE_DEFAULT"
 export NUREC_IMAGE
 echo "NUREC_IMAGE: $NUREC_IMAGE"
 
@@ -321,7 +322,7 @@ echo "Installing Python dependencies..."
 
 # Install base dependencies
 echo "Installing base dependencies..."
-$PYTHON_EXECUTABLE -m pip install pygame numpy nvidia-nvjpeg-cu12 imageio|| {
+$PYTHON_EXECUTABLE -m pip install pygame numpy imageio || {
     echo "Error: Failed to install pygame and numpy"
     exit 1
 }
@@ -332,28 +333,27 @@ echo "Installing Carla Wheel..."
 
 WHEEL_NAME_PREFIX=carla-$CARLA_VERSION-cp$PYTHON_MAJOR$PYTHON_MINOR-cp$PYTHON_MAJOR$PYTHON_MINOR
 
-WHEEL=$(ls $CARLA_ROOT/PythonAPI/carla/dist/$WHEEL_NAME_PREFIX-*.whl | head -n 1)
+# CARLA UE5 source builds place the wheel in Build/Release/PythonAPI/dist;
+# packaged releases keep the old PythonAPI/carla/dist layout. Try both.
+WHEEL=$(ls \
+    $CARLA_ROOT/PythonAPI/carla/dist/$WHEEL_NAME_PREFIX-*.whl \
+    $CARLA_ROOT/Build/Release/PythonAPI/dist/$WHEEL_NAME_PREFIX-*.whl \
+    2>/dev/null | head -n 1)
+if [ -z "$WHEEL" ]; then
+    echo "Error: No carla wheel matching $WHEEL_NAME_PREFIX found."
+    echo "Build the PythonAPI first, or install the carla package manually."
+    exit 1
+fi
 $PYTHON_EXECUTABLE -m pip install ${WHEEL} || {
     echo "Error: Failed to install Carla Wheel"
     exit 1
 }
 
-# Install project requirements
+# Install project requirements (includes grpcio/protobuf pins matching the
+# vendored, checked-in gRPC stubs in nre/grpc/protos — no codegen step needed)
 echo "Installing project requirements..."
 $PYTHON_EXECUTABLE -m pip install -r $CARLA_NUREC_ROOT/requirements.txt || {
     echo "Error: Failed to install project requirements"
-    exit 1
-}
-
-# Install and setup GRPC Protos
-echo "Setting up GRPC Protos..."
-$PYTHON_EXECUTABLE -m pip install -r $CARLA_NUREC_ROOT/nre/grpc/requirements.txt || {
-    echo "Error: Failed to install GRPC requirements"
-    exit 1
-}
-
-$PYTHON_EXECUTABLE $CARLA_NUREC_ROOT/nre/grpc/update_generated.py || {
-    echo "Error: Failed to update generated GRPC files"
     exit 1
 }
 
