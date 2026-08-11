@@ -91,6 +91,11 @@ from utils import (
 
 logger = logging.getLogger(__name__)
 
+# Minimum recorded travel distance for a vehicle to be handed to the CARLA
+# Traffic Manager; below this the recording is a parked/creeping vehicle and
+# the TM has no route to follow (it wanders the car into neighbors).
+MIN_TM_ROUTE_M = 5.0
+
 
 def collect_dynamic_objects(
     actors: carla.WorldSnapshot,
@@ -585,6 +590,11 @@ class NurecActor:
         self.actor_inst = actor_inst
         self.track = track
         self.physics = physics
+        # Final waypoint of the TM route (set_follow_path) and whether the
+        # vehicle has been held there; a TM vehicle that consumes its route
+        # early otherwise keeps driving past the scenario's endpoint.
+        self.tm_route_end: Optional[carla.Location] = None
+        self.tm_route_done = False
         self.alive = True
         self.blueprint_id = blueprint_id
 
@@ -597,17 +607,25 @@ class NurecActor:
             return
         self.physics = physics
         self.actor_inst.set_simulate_physics(physics)
+        if not physics:
+            self.tm_route_end = None
+            self.tm_route_done = False
         min_time = self.track.start_time()
         before_time = max(min_time, current_time - 100_000)
         pose_before = self.track.interpolate_pose_matrix(before_time)
         current_pose = self.track.interpolate_pose_matrix(current_time)
-        velocity_vector = (
-            (current_pose[:3, 3] - pose_before[:3, 3])
-            / (current_time - before_time)
-            * 1_000_000
-        )
+        # Guard the velocity seed: at/before track start before_time equals
+        # current_time and the division is 0/0. A NaN target velocity is fatal
+        # server-side - UE5 Chaos asserts inside ProcessSteering's curve
+        # lookup and brings down the whole simulator.
+        dt_us = current_time - before_time
+        if dt_us <= 0 or pose_before is None or current_pose is None:
+            return
+        velocity_vector = (current_pose[:3, 3] - pose_before[:3, 3]) / dt_us * 1_000_000
         velocity_vector[1] = -velocity_vector[1]
-        # self.actor_inst.set_transform(current_pose)
+        if not np.all(np.isfinite(velocity_vector)):
+            logger.warning(f"Skipping non-finite velocity seed for {self.track.track_id}")
+            return
         self.actor_inst.set_target_velocity(
             carla.Vector3D(velocity_vector[0], velocity_vector[1], velocity_vector[2])
         )
@@ -1098,9 +1116,12 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         if self.scenario is None:
             return
         actors_done_idx = 0
-        try:
-            for i, actor in enumerate(self.actors_to_disable_physics):
-                actors_done_idx = i
+        for i, actor in enumerate(self.actors_to_disable_physics):
+            actors_done_idx = i
+            # Guard each actor separately: an actor destroyed between being
+            # queued and processed (replay teardown) throws on every RPC, and
+            # a shared try aborted the remaining queue and re-logged forever.
+            try:
                 if not actor.alive:
                     continue
                 if not actor.physics:
@@ -1115,19 +1136,23 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
                 next_pose = actor.track.interpolate_pose_matrix(
                     self.scenario.tracks.current_time
                 )
+                if next_pose is None:
+                    # Track already ended (e.g. replay teardown); keep the
+                    # actor where it is instead of matmul-ing a None pose.
+                    continue
                 next_pose = self.blueprint_library.apply_offset_to_pose(
                     next_pose, actor.blueprint_id, inverse=True
                 )
                 next_pose = mat_to_carla_transform(next_pose)
 
                 actor.actor_inst.set_transform(next_pose)
-        except Exception as e:
-            logger.error(f"Error disabling physics for actors: {e}")
-            logger.error(e)
-        finally:
-            self.actors_to_disable_physics = self.actors_to_disable_physics[
-                actors_done_idx:
-            ]
+            except Exception as e:
+                logger.error(
+                    f"Error disabling physics for actor {actor.track.track_id}: {e}"
+                )
+        self.actors_to_disable_physics = self.actors_to_disable_physics[
+            actors_done_idx:
+        ]
 
     def _update_actors(self, time_step: float) -> None:
         if self.scenario is None:
@@ -1155,7 +1180,8 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         for actor in new_actors:
             self.actor_mapping[actor.track.track_id] = actor
             self.active_actors[actor.actor_inst.id] = actor.track.track_id
-            if self.carla_controls_new_actors and actor.track.label in VEHICLE_LABELS:
+            if (self.carla_controls_new_actors and actor.track.label in VEHICLE_LABELS
+                    and self._has_usable_tm_route(actor)):
                 try:
                     self.set_follow_path(actor.track.track_id)
                 except Exception as e:
@@ -1170,6 +1196,18 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         next_ego_pose = None
 
         for actor in self.actor_mapping.values():
+            # Hold TM vehicles at the end of their recorded route: once the
+            # final waypoint is consumed the TM would otherwise keep driving
+            # them down the road, diverging from the scenario.
+            if (actor.physics and actor.alive and not actor.tm_route_done
+                    and actor.tm_route_end is not None
+                    and self.traffic_manager is not None):
+                try:
+                    if actor.actor_inst.get_location().distance(actor.tm_route_end) < 4.0:
+                        actor.tm_route_done = True
+                        self.traffic_manager.set_desired_speed(actor.actor_inst, 0.0)
+                except Exception:
+                    logger.exception("Route-end hold failed")
             if not actor.physics and actor.alive and actor.track.dynamic:
 
                 # Apply offset for vehicle actors
@@ -1451,15 +1489,46 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
     def set_ego_follow_path(self, path: Optional[List] = None, spacing: int = 1000000) -> None:
         self.set_follow_path(EGO_TRACK_ID, path, spacing)
 
+    def _has_usable_tm_route(self, actor: "NurecActor") -> bool:
+        """
+        A vehicle is only handed to the Traffic Manager when its recording
+        actually travels somewhere. Parked or creeping vehicles (recorded
+        travel below MIN_TM_ROUTE_M) give the TM a degenerate route and it
+        wanders them into neighboring geometry; they stay replay-driven.
+        """
+        dist_m, _ = self._track_travel_stats(actor.track, self.get_sim_time())
+        if dist_m < MIN_TM_ROUTE_M:
+            logger.info(
+                f"Leaving {actor.track.track_id} replay-driven "
+                f"(recorded travel {dist_m:.1f} m < {MIN_TM_ROUTE_M} m)"
+            )
+            return False
+        return True
+
+    def _track_travel_stats(self, track, from_time_us: float) -> Tuple[float, float]:
+        """
+        (distance_m, duration_s) of the recorded track from from_time_us on.
+        Used to gate TM handoff (parked cars have no route to follow) and to
+        seed the TM desired speed from the recording.
+        """
+        path = track.get_path(1_000_000, start_time=int(from_time_us))
+        if len(path) < 2:
+            return 0.0, 0.0
+        dist = sum(path[i].distance(path[i + 1]) for i in range(len(path) - 1))
+        duration = (track.end_time() - max(from_time_us, track.start_time())) / 1e6
+        return dist, max(duration, 0.0)
+
     def set_follow_path(self, track_id: str, path: Optional[List[carla.Location]] = None, spacing: int = 1000000) -> None:
         """
         Follows a path at a given spacing. If no path is provided, the path is generated from the track.
         Each waypoint should be spacing microseconds apart.
+        The TM desired speed is seeded from the recording's average speed so
+        handed vehicles keep pace with the scenario instead of the TM default.
         """
         self._enable_traffic_manager()
         if self.traffic_manager is None:
             raise RuntimeError("Traffic manager not initialized")
-            
+
         actor = self.actor_mapping[track_id]
         actor.set_physics(True, self.get_sim_time())
 
@@ -1467,6 +1536,13 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
             path = actor.track.get_path(spacing, start_time=int(self.get_sim_time()))
         actor.actor_inst.set_autopilot(True)
         self.traffic_manager.set_path(actor.actor_inst, path)
+        actor.tm_route_end = path[-1] if path else None
+        actor.tm_route_done = False
+        dist_m, duration_s = self._track_travel_stats(actor.track, self.get_sim_time())
+        if duration_s > 0.5 and dist_m > 1.0:
+            # Mean recorded speed, small margin because stops are included.
+            speed_kmh = 3.6 * dist_m / duration_s * 1.05
+            self.traffic_manager.set_desired_speed(actor.actor_inst, speed_kmh)
         self.traffic_manager.update_vehicle_lights(actor.actor_inst, True)
         self.traffic_manager.random_left_lanechange_percentage(actor.actor_inst, 0)
         self.traffic_manager.random_right_lanechange_percentage(actor.actor_inst, 0)
@@ -1502,6 +1578,8 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
             if track_id == EGO_TRACK_ID or not actor.alive or actor.physics:
                 continue
             if actor.track.label not in VEHICLE_LABELS:
+                continue
+            if not self._has_usable_tm_route(actor):
                 continue
             try:
                 self.set_follow_path(track_id)
