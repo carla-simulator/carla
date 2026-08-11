@@ -2,6 +2,13 @@
 # Pass a different file with --config; every key is optional and the values
 # below are the defaults (a missing file reproduces the plain replay demo).
 
+# NOTE on backends: the 26.04 clipgt sample scenes are trained for 3dgut-nrend
+# and the server uses that (via its PyTorch path) when backend is null - the
+# default is already nrend rendering. backend: nrend selects NVIDIA's native
+# CUDA implementation instead, which in NRE 26.04 cannot load these scenes:
+# they use time-varying Fourier appearance features (fourier_features_dim > 1)
+# and NRESHGaussianModel only accepts static [N, 3] albedo, so every render
+# fails with "input albedo data has wrong size". Retest on newer NRE releases.
 renderer:
   # null    = the renderer backend the artifact was trained for (default)
   # "nrend"  = NVIDIA's fast C++/CUDA renderer
