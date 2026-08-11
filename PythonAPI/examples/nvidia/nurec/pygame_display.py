@@ -151,7 +151,14 @@ class PygameDisplay:
                     # Get image dimensions
                     img_width = current_surface.get_width()
                     img_height = current_surface.get_height()
-                    
+
+                    # Scale down to fit the cell so widgets never overlap neighbors
+                    scale = min(cell_width / img_width, cell_height / img_height)
+                    if scale < 1.0:
+                        new_size = (max(1, int(img_width * scale)), max(1, int(img_height * scale)))
+                        current_surface = pygame.transform.smoothscale(current_surface, new_size)
+                        img_width, img_height = new_size
+
                     # Calculate centering offset
                     offset_x = (cell_width - img_width) // 2
                     offset_y = (cell_height - img_height) // 2

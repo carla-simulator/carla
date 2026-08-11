@@ -36,6 +36,10 @@ logger = logging.getLogger(__name__)
 # Docker labels used to rediscover reusable containers without parsing logs.
 LABEL_PORT = "com.carla.nurec.port"
 LABEL_SCENE = "com.carla.nurec.scene"
+# serve-grpc flags that shape rendering (renderer backend, harmonizer, ...).
+# Stamped on the container so reuse is refused when the requested flags differ
+# from the ones the running server was started with.
+LABEL_ARGS = "com.carla.nurec.server-args"
 
 
 def find_free_port() -> int:
@@ -236,7 +240,9 @@ class NuRecRenderService:
         self.image: str = image or os.getenv("NUREC_IMAGE") or DEFAULT_NUREC_IMAGE
         self.reuse_container = reuse_container
         # Renderer backend: None (server default), 'gsplat' or 'nrend'.
-        self.renderer = renderer
+        # Named renderer_backend because NurecScenario (a subclass) uses
+        # self.renderer for its NurecRenderer client object.
+        self.renderer_backend = renderer
         # Escape hatch for any other serve-grpc flag, e.g. ["--enable-harmonizer"].
         self.extra_server_args = list(extra_server_args or [])
         self.container_name = None
@@ -298,18 +304,24 @@ class NuRecRenderService:
             logger.error(f"Error listing containers: {e}")
             return None
     
+    def _server_args_signature(self) -> str:
+        """Canonical string of the serve-grpc flags that affect rendering."""
+        flags = [f"--renderer={self.renderer_backend}"] if self.renderer_backend else []
+        flags.extend(self.extra_server_args)
+        return " ".join(flags)
+
     def _get_container_labels(self, container_name):
-        """Read the port/scene labels this module stamps on containers it starts."""
+        """Read the port/scene/args labels this module stamps on containers it starts."""
         try:
             result = subprocess.run([
                 "docker", "inspect", container_name,
-                "--format", f'{{{{index .Config.Labels "{LABEL_PORT}"}}}}\t{{{{index .Config.Labels "{LABEL_SCENE}"}}}}'
+                "--format", f'{{{{index .Config.Labels "{LABEL_PORT}"}}}}\t{{{{index .Config.Labels "{LABEL_SCENE}"}}}}\t{{{{index .Config.Labels "{LABEL_ARGS}"}}}}'
             ], capture_output=True, text=True, check=True)
-            port_str, scene = (result.stdout.strip().split("\t") + [""])[:2]
-            return (int(port_str) if port_str.isdigit() else None), scene
+            port_str, scene, server_args = (result.stdout.strip("\n").split("\t") + ["", ""])[:3]
+            return (int(port_str) if port_str.isdigit() else None), scene, server_args
         except subprocess.CalledProcessError as e:
             logger.error(f"Error inspecting container {container_name}: {e}")
-            return None, ""
+            return None, "", ""
 
     def _verify_container_grpc(self, container_name, expected_scene):
         """
@@ -317,12 +329,18 @@ class NuRecRenderService:
         the expected scene is among get_available_scenes. Returns the port on
         success, None on failure.
         """
-        port, labeled_scene = self._get_container_labels(container_name)
+        port, labeled_scene, labeled_args = self._get_container_labels(container_name)
         if port is None:
             logger.warning(f"Container {container_name} has no {LABEL_PORT} label; not reusing")
             return None
         if labeled_scene and labeled_scene != expected_scene:
             logger.warning(f"Container {container_name} serves scene {labeled_scene!r}, wanted {expected_scene!r}")
+            return None
+        if labeled_args != self._server_args_signature():
+            logger.warning(
+                f"Container {container_name} was started with server args {labeled_args!r}, "
+                f"wanted {self._server_args_signature()!r}; not reusing"
+            )
             return None
         version, scene_ids = query_server("localhost", port)
         if version is None:
@@ -461,6 +479,8 @@ class NuRecRenderService:
             f"{LABEL_PORT}={self.final_port}",
             "--label",
             f"{LABEL_SCENE}={expected_scene}",
+            "--label",
+            f"{LABEL_ARGS}={self._server_args_signature()}",
             "--gpus",
             "all",
             "--rm",
@@ -482,8 +502,8 @@ class NuRecRenderService:
             # tick (the old nvidia-nurec-grpc server accepted them by default).
             "--enable-editing-actors",
         ]
-        if self.renderer:
-            cmd.append(f"--renderer={self.renderer}")
+        if self.renderer_backend:
+            cmd.append(f"--renderer={self.renderer_backend}")
         cmd.extend(self.extra_server_args)
 
         # Register cleanup handler

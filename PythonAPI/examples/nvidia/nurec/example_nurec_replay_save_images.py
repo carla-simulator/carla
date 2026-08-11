@@ -11,13 +11,20 @@ It showcases how to:
 - Configure different camera positions in a Pygame display grid
 - Attach standard CARLA cameras to the ego vehicle for additional perspectives
 - Coordinate multiple camera feeds with different framerates and resolutions
+- Render a NuRec neural lidar with a live bird's-eye-view panel (NRE >= 26.04)
+- Vary the scenario with the asset-editing API (swap / insert rendered assets)
+- Hand the ego and/or every scene vehicle over to CARLA control (Traffic
+  Manager physics), streaming the resulting poses back into the neural render
 
-The script provides a complete multi-view visualization system, ideal for understanding
-how to integrate various camera types and create comprehensive monitoring setups.
+Runtime behaviour (renderer backend, harmonizer, control modes, lidar, asset
+editing) is read from a settings file, nurec_demo_config.yaml next to this
+script by default; see that file for all options.
 
 Example usage:
-    python example_replay_recording.py --usdz-filename /path/to/scenario.usdz
+    python example_nurec_replay_save_images.py -u /path/to/scenario.usdz
+    python example_nurec_replay_save_images.py -u scenario.usdz --config my_settings.yaml
 """
+import copy
 import numpy as np
 
 import carla
@@ -40,10 +47,82 @@ logger = logging.getLogger("example_replay_recording")
 
 
 from nurec_integration import NurecScenario, ShutterType
+from nre.grpc.protos.sensorsim_pb2 import ReplaceAssetAction, DynamicObjectTrack
 from pygame_display import PygameDisplay
 from constants import EGO_TRACK_ID
 from utils import handle_exception
-from typing import Tuple, Optional, List
+from typing import Any, Dict, Tuple, Optional, List
+
+
+# Defaults for the demo settings file (nurec_demo_config.yaml); any key may be
+# omitted there and falls back to these values.
+DEFAULT_DEMO_CONFIG: Dict[str, Any] = {
+    "renderer": {
+        "backend": None,
+        "harmonizer": False,
+        "image_format": "planar",
+        "extra_server_args": [],
+    },
+    "control": {
+        "ego": "trajectory",
+        "handoff_seconds": 1.0,
+        "actors": "replay",
+    },
+    "asset_editing": {
+        "enabled": False,
+        "demo_swap": False,
+        "demo_insert": False,
+        "insert_offset_m": 4.0,
+    },
+    "lidar": {
+        "enabled": False,
+        "type": "PANDAR128",
+        "framerate": 10,
+        "visualize": True,
+        "bev_range_m": 25.0,
+        "bev_size_px": 480,
+    },
+}
+
+
+def _merge_config(defaults: Dict[str, Any], overrides: Dict[str, Any]) -> Dict[str, Any]:
+    merged = dict(defaults)
+    for key, value in (overrides or {}).items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _merge_config(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def load_demo_config(path: Optional[str]) -> Dict[str, Any]:
+    """
+    Load the demo settings file, merged over DEFAULT_DEMO_CONFIG. A missing
+    default file falls back to the defaults; a missing explicit --config is
+    an error.
+    """
+    default_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "nurec_demo_config.yaml"
+    )
+    explicit = path is not None
+    path = path or default_path
+    if not os.path.exists(path):
+        if explicit:
+            raise FileNotFoundError(f"Config file not found: {path}")
+        logger.info("No demo config file found, using defaults")
+        return copy.deepcopy(DEFAULT_DEMO_CONFIG)
+    with open(path, "r") as f:
+        overrides = yaml.safe_load(f) or {}
+    cfg = _merge_config(copy.deepcopy(DEFAULT_DEMO_CONFIG), overrides)
+
+    if cfg["control"]["ego"] not in ("replay", "trajectory", "autopilot"):
+        raise ValueError(f"control.ego must be replay|trajectory|autopilot, got {cfg['control']['ego']!r}")
+    if cfg["control"]["actors"] not in ("replay", "carla"):
+        raise ValueError(f"control.actors must be replay|carla, got {cfg['control']['actors']!r}")
+    if cfg["renderer"]["backend"] not in (None, "nrend", "gsplat"):
+        raise ValueError(f"renderer.backend must be null|nrend|gsplat, got {cfg['renderer']['backend']!r}")
+    logger.info(f"Demo config loaded from {path}")
+    return cfg
 
 
 def make_transform_matrix(rotation=None, translation=None):
@@ -156,6 +235,166 @@ def make_camera_callback(display, camera_name, pygame_pos, saveimages: bool, out
         if saveimages:
             save_image(image, camera_name, output_dir)
     return callback
+
+
+def lidar_to_bev_image(
+    points: np.ndarray,
+    intensities: np.ndarray,
+    size_px: int = 480,
+    range_m: float = 50.0,
+) -> np.ndarray:
+    """
+    Rasterize a lidar sweep into a bird's-eye-view RGB image: +x (forward) up,
+    +y left; green from intensity, red from height, white ego marker.
+    """
+    img = np.zeros((size_px, size_px, 3), dtype=np.uint8)
+    if points.shape[0] > 0:
+        # The server may return no intensities (observed with NRE 26.04);
+        # fall back to a constant brightness then.
+        if intensities.shape[0] != points.shape[0]:
+            intensities = np.full(points.shape[0], 0.75, dtype=np.float32)
+        x, y, z = points[:, 0], points[:, 1], points[:, 2]
+        mask = (np.abs(x) < range_m) & (np.abs(y) < range_m)
+        x, y, z, inten = x[mask], y[mask], z[mask], intensities[mask]
+        rows = ((1 - (x + range_m) / (2 * range_m)) * (size_px - 1)).astype(np.int32)
+        cols = ((1 - (y + range_m) / (2 * range_m)) * (size_px - 1)).astype(np.int32)
+        if inten.size and inten.max() <= 1.0:
+            inten = inten * 255.0
+        img[rows, cols, 1] = np.clip(inten, 48, 255).astype(np.uint8)
+        img[rows, cols, 0] = np.clip((z + 2.0) / 4.0 * 255.0, 0, 255).astype(np.uint8)
+        img[rows, cols, 2] = 64
+    center = size_px // 2
+    img[center - 4 : center + 5, center - 1 : center + 2] = (255, 255, 255)
+    img[center - 1 : center + 2, center - 4 : center + 5] = (255, 255, 255)
+    return img
+
+
+def make_lidar_callback(
+    display: Optional[PygameDisplay],
+    pygame_pos: Tuple[int, int],
+    saveimages: bool,
+    output_dir: str,
+    lidar_cfg: Dict[str, Any],
+):
+    size_px = int(lidar_cfg["bev_size_px"])
+    range_m = float(lidar_cfg["bev_range_m"])
+
+    def callback(points: np.ndarray, intensities: np.ndarray) -> None:
+        bev = lidar_to_bev_image(points, intensities, size_px, range_m)
+        if display is not None:
+            display.setImage(bev, (3, 2), pygame_pos)
+        if saveimages:
+            save_image(bev, "lidar_bev", output_dir)
+
+    return callback
+
+
+def _shift_trajectory_sideways(track: DynamicObjectTrack, offset_m: float) -> None:
+    """
+    Shift a DynamicObjectTrack's whole trajectory laterally (perpendicular,
+    in the ground plane, to its direction of travel). Parked objects fall
+    back to a +x shift.
+    """
+    poses = track.trajectory.poses
+    lateral = np.array([1.0, 0.0])
+    positions = np.array([[p.pose.vec[0], p.pose.vec[1]] for p in poses])
+    if len(positions) >= 2:
+        deltas = positions[-1] - positions[0]
+        norm = np.linalg.norm(deltas)
+        if norm > 1e-3:
+            direction = deltas / norm
+            lateral = np.array([-direction[1], direction[0]])
+    for pose_at_time in poses:
+        pose_at_time.pose.vec[0] += float(lateral[0] * offset_m)
+        pose_at_time.pose.vec[1] += float(lateral[1] * offset_m)
+
+
+def run_asset_editing_demo(scenario: NurecScenario, edit_cfg: Dict[str, Any]) -> None:
+    """
+    Show the NRE scenario-variation API: list the scene's dynamic objects and
+    optionally swap one rendered asset for another (demo_swap) and/or insert
+    a rendered-only clone of an object on a laterally shifted trajectory
+    (demo_insert). Both demos are self-contained: they only use assets that
+    already exist in the loaded scene.
+    """
+    renderer = scenario.renderer
+    objects = renderer.get_dynamic_objects()
+    swappable_ids = set(renderer.get_external_asset_objects())
+    logger.info(
+        f"Scene has {len(objects)} dynamic object tracks, "
+        f"{len(swappable_ids)} backed by swappable assets"
+    )
+    for obj in objects:
+        marker = "*" if obj.id in swappable_ids else " "
+        logger.info(
+            f" {marker} track {obj.id}: class={obj.semantic_class} asset={obj.asset_id!r} "
+            f"size=({obj.object_size.size_x:.1f}, {obj.object_size.size_y:.1f}, {obj.object_size.size_z:.1f})"
+        )
+
+    swappable = [o for o in objects if o.id in swappable_ids]
+    replace: List[ReplaceAssetAction] = []
+    insert: List[DynamicObjectTrack] = []
+
+    if edit_cfg["demo_swap"]:
+        pair = next(
+            (
+                (a, b)
+                for a in swappable
+                for b in swappable
+                if a.id != b.id and a.asset_id != b.asset_id
+            ),
+            None,
+        )
+        if pair is None:
+            logger.warning("demo_swap: no two swappable objects with distinct assets; skipping")
+        else:
+            original, donor = pair
+            replace.append(
+                ReplaceAssetAction(
+                    original_id=original.id,
+                    replacement_id=donor.asset_id,
+                    object_size=donor.object_size,
+                )
+            )
+            logger.info(
+                f"demo_swap: track {original.id} will be rendered with asset "
+                f"{donor.asset_id!r} (borrowed from track {donor.id})"
+            )
+
+    if edit_cfg["demo_insert"]:
+        if not swappable:
+            logger.warning("demo_insert: no swappable object to clone; skipping")
+        else:
+            source = swappable[0]
+            clone = DynamicObjectTrack()
+            clone.CopyFrom(source)
+            clone.id = f"{source.id}_demo_insert"
+            _shift_trajectory_sideways(clone, float(edit_cfg["insert_offset_m"]))
+            insert.append(clone)
+            logger.info(
+                f"demo_insert: inserting clone {clone.id} of track {source.id} "
+                f"shifted {edit_cfg['insert_offset_m']} m sideways"
+            )
+
+    if replace or insert:
+        renderer.edit_assets(replace=replace or None, insert=insert or None)
+        logger.info("edit_assets applied")
+
+
+def apply_control_modes(scenario: NurecScenario, control_cfg: Dict[str, Any]) -> None:
+    """Hand over ego / scene actors per the control section of the config."""
+    ego_mode = control_cfg["ego"]
+    actors_mode = control_cfg["actors"]
+    logger.info(
+        f"Control handoff at t={scenario.seconds_since_start():.2f}s: "
+        f"ego={ego_mode}, actors={actors_mode}"
+    )
+    if ego_mode == "trajectory":
+        scenario.set_ego_simple_trajectory_following()
+    elif ego_mode == "autopilot":
+        scenario.set_ego_autopilot(True)
+    if actors_mode == "carla":
+        scenario.set_all_actors_carla_controlled()
 
 
 def add_cameras(
@@ -282,7 +521,22 @@ def main() -> None:
     argparser.add_argument(
         "--move-spectator", action="store_true", help="move spectator camera"
     )
+    argparser.add_argument(
+        "-c",
+        "--config",
+        metavar="C",
+        default=None,
+        help="demo settings file (default: nurec_demo_config.yaml next to this script)",
+    )
     args = argparser.parse_args()
+
+    cfg = load_demo_config(args.config)
+    renderer_cfg = cfg["renderer"]
+    edit_cfg = cfg["asset_editing"]
+    lidar_cfg = cfg["lidar"]
+    asset_editing_active = (
+        edit_cfg["enabled"] or edit_cfg["demo_swap"] or edit_cfg["demo_insert"]
+    )
 
     client = carla.Client(args.host, args.port)
     client.set_timeout(60.0)
@@ -294,6 +548,11 @@ def main() -> None:
         port=args.nurec_port,
         move_spectator=args.move_spectator,
         fps=30,
+        renderer_backend=renderer_cfg["backend"],
+        image_format=renderer_cfg["image_format"],
+        harmonizer=renderer_cfg["harmonizer"],
+        extra_server_args=renderer_cfg["extra_server_args"],
+        enable_asset_editing=asset_editing_active,
     ) as scenario:
         carla_cameras: List[carla.Actor] = []
         display: Optional[PygameDisplay] = None
@@ -301,19 +560,38 @@ def main() -> None:
             # Add cameras; keep references to the CARLA camera actors alive
             carla_cameras, display = add_cameras(scenario, client, args.output_dir, args.saveimages )
 
+            if lidar_cfg["enabled"]:
+                scenario.add_lidar(
+                    make_lidar_callback(
+                        display if lidar_cfg["visualize"] else None,
+                        (1, 1),  # free cell in the 3x2 pygame grid
+                        args.saveimages,
+                        args.output_dir,
+                        lidar_cfg,
+                    ),
+                    lidar_type=lidar_cfg["type"],
+                    framerate=lidar_cfg["framerate"],
+                )
+                logger.info(f"NuRec lidar enabled: {lidar_cfg['type']} @ {lidar_cfg['framerate']} Hz")
+
+            if asset_editing_active:
+                run_asset_editing_demo(scenario, edit_cfg)
+
             logger.info("Starting replay")
             scenario.start_replay()
 
-            should_apply_control = True
+            should_apply_control = (
+                cfg["control"]["ego"] != "replay" or cfg["control"]["actors"] != "replay"
+            )
 
             # Keep the script running until the replay is done
             while not scenario.is_done():
                 scenario.tick()
-                if should_apply_control and scenario.seconds_since_start() > 1:
-                    logger.info(
-                        f"Applying control at time {scenario.seconds_since_start()} seconds."
-                    )
-                    scenario.set_ego_simple_trajectory_following()
+                if (
+                    should_apply_control
+                    and scenario.seconds_since_start() > cfg["control"]["handoff_seconds"]
+                ):
+                    apply_control_modes(scenario, cfg["control"])
                     should_apply_control = False
         except KeyboardInterrupt:
             logger.info("Keyboard interrupt detected, exiting gracefully.")

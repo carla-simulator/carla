@@ -746,9 +746,11 @@ class NurecLidarSensor:
         )
         try:
             self.callback(points, intensities)
-        except Exception as e:
-            logger.error(f"Error in lidar callback: {e}")
-            raise e
+        except Exception:
+            # Never let a callback exception escape into libcarla's on_tick
+            # dispatch thread: that silently kills event delivery and the next
+            # world.tick() times out with an opaque std::exception.
+            logger.exception("Error in lidar callback")
 
 
 """
@@ -769,9 +771,15 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         renderer_backend: Optional[str] = None,
         image_format: str = "planar",
         enable_asset_editing: bool = False,
+        harmonizer: bool = False,
+        extra_server_args: Optional[List[str]] = None,
     ):
         # port=None lets the render service pick a free one (never CARLA's 2000).
-        extra_args = ["--enable-editing-actors"] if enable_asset_editing else None
+        # --enable-editing-actors is always passed by the render service (pose
+        # streaming needs it); enable_asset_editing is kept for API clarity.
+        extra_args = list(extra_server_args or [])
+        if harmonizer:
+            extra_args.append("--enable-harmonizer")
         NuRecRenderService.__init__(self, usdz_path, port, image, reuse_container,
                                     renderer=renderer_backend,
                                     extra_server_args=extra_args)
@@ -803,6 +811,9 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         self.ego_following_path = False
         self.ego_trajectory_follower: Optional[SimpleTrajectoryFollower] = None  # Simple trajectory follower for ego
         self.default_follow_path = False
+        # When True, vehicles that enter the scene later are also handed to
+        # the Traffic Manager (see set_all_actors_carla_controlled).
+        self.carla_controls_new_actors = False
 
     def add_ego(self, ego_bp: str = EGO_LABEL, enable_physics: bool = False, move_spectator: bool = True) -> carla.Actor:
         if self.scenario is None:
@@ -992,6 +1003,27 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         self.tick()
         return self
 
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        # Best-effort teardown: a Traffic Manager left registered in
+        # synchronous mode by a dead client wedges the server (every later
+        # apply_settings/tick fails with std::exception), so always
+        # unregister it and restore asynchronous mode before leaving.
+        try:
+            if self.traffic_manager is not None:
+                self.traffic_manager.set_synchronous_mode(False)
+        except Exception:
+            logger.exception("Could not disable traffic manager sync mode")
+        try:
+            world = self.client.get_world()
+            settings = world.get_settings()
+            if settings.synchronous_mode:
+                settings.synchronous_mode = False
+                settings.fixed_delta_seconds = None
+                world.apply_settings(settings)
+        except Exception:
+            logger.exception("Could not restore asynchronous mode")
+        return super().__exit__(exc_type, exc_val, exc_tb)
+
     def _warm_cache(self) -> None:
         """
         Renders an initial image at the ego's starting position before the scenario starts.
@@ -1106,6 +1138,16 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
                 continue
             actor_to_delete = self.actor_mapping[removed_actor_track.track_id]
             del self.active_actors[actor_to_delete.actor_inst.id]
+            if actor_to_delete.physics:
+                # Unregister from the Traffic Manager before destroying:
+                # destroying a TM-registered vehicle in synchronous mode
+                # crashes the tick.
+                try:
+                    actor_to_delete.actor_inst.set_autopilot(False)
+                except Exception:
+                    logger.exception(
+                        f"Could not unregister actor {removed_actor_track.track_id} from autopilot"
+                    )
             actor_to_delete.destroy()
             del self.actor_mapping[removed_actor_track.track_id]
 
@@ -1113,6 +1155,13 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         for actor in new_actors:
             self.actor_mapping[actor.track.track_id] = actor
             self.active_actors[actor.actor_inst.id] = actor.track.track_id
+            if self.carla_controls_new_actors and actor.track.label in VEHICLE_LABELS:
+                try:
+                    self.set_follow_path(actor.track.track_id)
+                except Exception as e:
+                    logger.warning(
+                        f"Could not hand new actor {actor.track.track_id} to the traffic manager: {e}"
+                    )
 
     def _move_dynamic_actors(self) -> None:
         if self.scenario is None:
@@ -1351,20 +1400,29 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         # Gather every camera due this tick and render them in ONE gRPC round
         # trip (batch_render_rgb); NurecRenderer falls back to sequential
         # render_rgb on servers without the batch API.
-        due: List[Tuple[str, NurecSensor, RGBRenderRequest]] = []
-        for i, camera in enumerate(self.cameras):
-            request = camera.build_tick_request(snapshot)
-            if request is not None:
-                due.append((f"cam{i}", camera, request))
-        if due:
-            images = self.renderer.render_batch([(name, req) for name, _, req in due])
-            for name, camera, _ in due:
-                if name in images:
-                    camera.dispatch(images[name])
+        # This method runs inside libcarla's on_tick dispatch thread: an
+        # exception escaping here stops event delivery entirely and the next
+        # world.tick() times out with an opaque std::exception. Log instead.
+        try:
+            due: List[Tuple[str, NurecSensor, RGBRenderRequest]] = []
+            for i, camera in enumerate(self.cameras):
+                request = camera.build_tick_request(snapshot)
+                if request is not None:
+                    due.append((f"cam{i}", camera, request))
+            if due:
+                images = self.renderer.render_batch([(name, req) for name, _, req in due])
+                for name, camera, _ in due:
+                    if name in images:
+                        camera.dispatch(images[name])
+        except Exception:
+            logger.exception("Camera render failed this tick")
 
         # Lidar has no batch RPC; render due sweeps sequentially.
         for lidar in self.lidars:
-            lidar.on_world_tick(snapshot)
+            try:
+                lidar.on_world_tick(snapshot)
+            except Exception:
+                logger.exception("Lidar render failed this tick")
 
     def get_sim_time(self) -> int:
         """
@@ -1416,6 +1474,45 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         self.traffic_manager.distance_to_leading_vehicle(actor.actor_inst, 0)
         self.traffic_manager.ignore_lights_percentage(actor.actor_inst, 100)
         self.traffic_manager.ignore_vehicles_percentage(actor.actor_inst, 100)
+
+    def set_all_actors_carla_controlled(self, include_future_actors: bool = True) -> int:
+        """
+        Hand every currently spawned vehicle (ego excluded) to the CARLA
+        Traffic Manager, seeded with its recorded trajectory as the TM path.
+        From then on CARLA physics drives them and their poses are streamed
+        to the NRE server every tick, so the neural render follows CARLA's
+        simulation instead of the recording. Combined with the regular CARLA
+        API (TM parameters, apply_control, teleports) this is the basis for
+        authoring custom scenarios on top of a NuRec scene.
+
+        Notes:
+        - Only tracks the artifact marks controllable can diverge visually in
+          the neural render (the server ignores pose updates for the rest).
+        - Walkers stay replay-driven; the Traffic Manager controls vehicles.
+
+        Args:
+            include_future_actors: Also hand over vehicles that enter the
+                scene later (default: True).
+
+        Returns:
+            Number of actors handed over now.
+        """
+        handed_over = 0
+        for track_id, actor in list(self.actor_mapping.items()):
+            if track_id == EGO_TRACK_ID or not actor.alive or actor.physics:
+                continue
+            if actor.track.label not in VEHICLE_LABELS:
+                continue
+            try:
+                self.set_follow_path(track_id)
+                handed_over += 1
+            except Exception as e:
+                logger.warning(
+                    f"Could not hand actor {track_id} to the traffic manager: {e}"
+                )
+        self.carla_controls_new_actors = include_future_actors
+        logger.info(f"Handed {handed_over} actors to the CARLA traffic manager")
+        return handed_over
 
     def _update_ego_trajectory_follower(self) -> None:
         """Update the ego trajectory follower if active."""

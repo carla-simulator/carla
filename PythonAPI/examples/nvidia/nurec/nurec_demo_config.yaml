@@ -1,0 +1,60 @@
+# Settings for example_nurec_replay_save_images.py.
+# Pass a different file with --config; every key is optional and the values
+# below are the defaults (a missing file reproduces the plain replay demo).
+
+renderer:
+  # null    = the renderer backend the artifact was trained for (default)
+  # "nrend"  = NVIDIA's fast C++/CUDA renderer
+  # "gsplat" = reference Gaussian-splat renderer
+  backend: null
+  # Server-side post-process that visually blends inserted or CARLA-driven
+  # actors into the neural background (serve-grpc --enable-harmonizer).
+  harmonizer: false
+  # "planar" = raw RGB_UINT8_PLANAR transfer (default); "jpeg" = legacy
+  # encoded transfer (needs nvidia-nvimgcodec-cu12).
+  image_format: planar
+  # Extra serve-grpc flags, passed through verbatim, e.g. ["--enable-fsim2sim"].
+  # Changing any renderer setting invalidates container reuse automatically.
+  extra_server_args: []
+
+control:
+  # Ego vehicle behaviour once handoff_seconds of replay have elapsed:
+  #   "replay"     - keep following the recorded ego track rigidly
+  #   "trajectory" - SimpleTrajectoryFollower re-drives the recorded
+  #                  trajectory with CARLA vehicle physics (default)
+  #   "autopilot"  - CARLA Traffic Manager autopilot (free driving)
+  ego: trajectory
+  handoff_seconds: 1.0
+  # Every other vehicle in the scene:
+  #   "replay" - follow the recorded tracks rigidly (default)
+  #   "carla"  - hand each vehicle to the CARLA Traffic Manager (its recorded
+  #              path becomes the TM route, CARLA physics drives it) and
+  #              stream the resulting poses into the neural render. Walkers
+  #              stay replay-driven. This is the hook for authoring custom
+  #              scenarios with the CARLA API on top of a NuRec scene.
+  actors: replay
+
+asset_editing:
+  # Scenario-variation API (NRE >= 26.04): list the scene's dynamic objects
+  # and rewrite which assets are rendered. enabled: true logs the scene's
+  # object tracks and swappable asset ids at startup.
+  enabled: false
+  # Swap the rendered asset of the first swappable vehicle for the asset of
+  # the second swappable vehicle (self-contained demo, no asset catalog).
+  demo_swap: false
+  # Insert a rendered-only clone of the first swappable vehicle with its
+  # whole trajectory shifted sideways by insert_offset_m meters.
+  demo_insert: false
+  insert_offset_m: 4.0
+
+lidar:
+  # Neural lidar rendered by NuRec (NRE >= 26.04), mounted at the ego rig
+  # origin. Sweeps are drawn as a bird's-eye-view panel in the pygame grid
+  # and saved under <output-dir>/lidar_bev/ when --saveimages is given.
+  enabled: false
+  type: PANDAR128 # PANDAR128 | AT128
+  framerate: 10
+  visualize: true
+  # BEV panel extent in meters (points beyond are clipped) and pixel size.
+  bev_range_m: 25.0
+  bev_size_px: 480
