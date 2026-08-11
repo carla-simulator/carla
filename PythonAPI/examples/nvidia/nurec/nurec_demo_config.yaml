@@ -45,6 +45,9 @@ cameras:
   # neural renders, for debugging. YAML mode ignores this - define CARLA
   # sensors in the camera file instead.
   carla_front_view: true
+  # CARLA weather preset for the debug view (neural render unaffected);
+  # null keeps the map default, which is very dark on reconstructed maps.
+  carla_weather: ClearNoon
 
 control:
   # Ego vehicle behaviour once handoff_seconds of replay have elapsed:
@@ -83,6 +86,8 @@ lidar:
   enabled: false
   type: PANDAR128 # PANDAR128 | AT128
   framerate: 10
+  # Mount height above the ego rig origin, meters (roof lidar ~2 m).
+  height_m: 2.0
   visualize: true
   # BEV panel extent in meters (points beyond are clipped) and pixel size.
   bev_range_m: 10.0

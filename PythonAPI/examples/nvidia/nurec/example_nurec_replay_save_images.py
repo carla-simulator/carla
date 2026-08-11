@@ -83,6 +83,10 @@ DEFAULT_DEMO_CONFIG: Dict[str, Any] = {
         # debugging physics / OpenDRIVE reconstruction against the neural
         # render. (YAML mode defines its own CARLA sensors in the file.)
         "carla_front_view": True,
+        # CARLA weather preset for the debug view (the neural render is
+        # unaffected). Any carla.WeatherParameters preset name; null keeps
+        # the map default (usually very dark on reconstructed maps).
+        "carla_weather": "ClearNoon",
     },
     "asset_editing": {
         "enabled": False,
@@ -94,6 +98,8 @@ DEFAULT_DEMO_CONFIG: Dict[str, Any] = {
         "enabled": False,
         "type": "PANDAR128",
         "framerate": 10,
+        # Mount height above the ego rig origin, meters (roof lidar ~2 m).
+        "height_m": 2.0,
         "visualize": True,
         "bev_range_m": 10.0,
         "bev_size_px": 480,
@@ -482,6 +488,13 @@ def add_scene_cameras(
         # (OpenDRIVE reconstruction, proxy actors, physics) for debugging
         # against the neural renders above.
         world = client.get_world()
+        weather_name = cameras_cfg["carla_weather"]
+        if weather_name:
+            weather = getattr(carla.WeatherParameters, weather_name, None)
+            if weather is None:
+                raise ValueError(f"cameras.carla_weather: unknown preset {weather_name!r}")
+            world.set_weather(weather)
+            logger.info(f"CARLA weather set to {weather_name} for the debug view")
         camera_bp = world.get_blueprint_library().find("sensor.camera.rgb")
         camera_bp.set_attribute("image_size_x", str(CELL_WIDTH))
         camera_bp.set_attribute("image_size_y", str(CELL_HEIGHT))
@@ -684,6 +697,10 @@ def main() -> None:
             )
 
             if lidar_cfg["enabled"]:
+                # Mount the lidar height_m above the rig origin (z-up in the
+                # NuRec rig frame), like a real roof lidar.
+                lidar_mount = np.eye(4)
+                lidar_mount[2, 3] = float(lidar_cfg["height_m"])
                 scenario.add_lidar(
                     make_lidar_callback(
                         display if lidar_cfg["visualize"] else None,
@@ -693,6 +710,7 @@ def main() -> None:
                         args.output_dir,
                         lidar_cfg,
                     ),
+                    transform=lidar_mount,
                     lidar_type=lidar_cfg["type"],
                     framerate=lidar_cfg["framerate"],
                 )
