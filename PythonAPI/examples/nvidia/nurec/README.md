@@ -21,7 +21,7 @@ fetched over gRPC, while CARLA hosts the actors, sensors, and simulation loop.
 
 - CARLA UE5 (0.10.x) with its Python wheel installed (Python >= 3.10)
 - Docker with the NVIDIA Container Toolkit
-- NRE container: `nvcr.io/nvidia/nre/nre-ga:26.04.01` (public on NGC)
+- NRE container: `nvcr.io/nvidia/nre/nre-ga:latest` (public on NGC; 26.04.01 at the time of writing)
 - A NuRec `.usdz` scenario, e.g. from the HuggingFace dataset
   `nvidia/PhysicalAI-Autonomous-Vehicles-NuRec` (sample sets are per-scene;
   the full dataset is ~1.5 TB)

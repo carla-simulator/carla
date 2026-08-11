@@ -3,8 +3,15 @@
 set -euo pipefail
 
 CARLA_VERSION=0.10.0
-NUREC_IMAGE_DEFAULT="nvcr.io/nvidia/nre/nre-ga:26.04.01"
+# The NRE registry is public on NGC; pull whatever is current.
+NUREC_IMAGE_DEFAULT="nvcr.io/nvidia/nre/nre-ga:latest"
 PYTHON_EXECUTABLE=python
+# Default test scene from the public HuggingFace dataset; --full-dataset
+# downloads every scene instead (hundreds of GB).
+DATASET_REPO="nvidia/PhysicalAI-Autonomous-Vehicles-NuRec"
+DATASET_SCENE="00040136-e651-4abd-991d-0655ccda9430"
+DATASET_RELEASE="26.04_release"
+FULL_DATASET=0
 
 CARLA_ROOT=$(realpath "${BASH_SOURCE[0]}")
 CARLA_ROOT=$(dirname "$CARLA_ROOT")
@@ -15,8 +22,8 @@ CARLA_NUREC_ROOT=$PYTHON_API_ROOT/examples/nvidia/nurec
 
 options=$( \
     getopt \
-    -o "i:" \
-    --long "python:" \
+    -o "i:s:" \
+    --long "python:,scene:,full-dataset" \
     -n 'install_nurec.sh' -- "$@")
 
 eval set -- "$options"
@@ -26,6 +33,14 @@ while true; do
         -i|--python)
             PYTHON_EXECUTABLE=$2
             shift 2
+            ;;
+        -s|--scene)
+            DATASET_SCENE=$2
+            shift 2
+            ;;
+        --full-dataset)
+            FULL_DATASET=1
+            shift
             ;;
         --)
             shift
@@ -48,13 +63,17 @@ command_exists() { command -v "$1" >/dev/null 2>&1; }
 TARGET_USER="${SUDO_USER:-$USER}"
 
 
-# Function to check if HuggingFace dataset exists
+# Function to check if the requested test data already exists
 check_hf_dataset() {
     local dataset_path="PhysicalAI-Autonomous-Vehicles-NuRec"
-    local dataset_path_real=$(realpath "$dataset_path")
-    if [ -d "$dataset_path" ]; then
-        echo "HuggingFace dataset already exists, skipping download."
-        echo "If you need to download it again, delete $dataset_path_real."
+    if [ "$FULL_DATASET" -eq 1 ]; then
+        local check_path="$dataset_path"
+    else
+        local check_path="$dataset_path/sample_set/$DATASET_RELEASE/$DATASET_SCENE"
+    fi
+    if [ -d "$check_path" ]; then
+        echo "Test data already exists at $(realpath "$check_path"), skipping download."
+        echo "Delete it to force a re-download."
         return 0
     fi
     return 1
@@ -250,8 +269,9 @@ else
     fi
 fi
 
-# Download the dataset from HuggingFace
-echo "Checking HuggingFace dataset..."
+# Download test data from HuggingFace. The dataset is public, so this works
+# anonymously; a token is only requested as a fallback (e.g. rate limiting).
+echo "Checking HuggingFace test data..."
 if ! check_hf_dataset; then
     echo "Installing HuggingFace CLI..."
     $PYTHON_EXECUTABLE -m pip install --upgrade huggingface_hub || {
@@ -259,28 +279,28 @@ if ! check_hf_dataset; then
         exit 1
     }
 
-    # Get and validate HuggingFace PAT
-    hf_pat=$(get_hf_pat)
-    if [ $? -ne 0 ]; then
-        exit 1
+    if [ "$FULL_DATASET" -eq 1 ]; then
+        echo "Downloading the FULL dataset (this is hundreds of GB)..."
+        include_args=()
+    else
+        echo "Downloading test scene $DATASET_SCENE (use --full-dataset for everything, --scene <uuid> for a different one)..."
+        include_args=(--include "sample_set/$DATASET_RELEASE/$DATASET_SCENE/*")
     fi
 
-    # Strip any newlines or whitespace from the token
-    hf_pat=$(echo "$hf_pat" | tr -d '\n\r' | xargs)
-
-    echo "Downloading the dataset from HuggingFace using CLI..."
-    
-    # Login to HuggingFace using the token
-    echo "$hf_pat" | hf auth login --token "$hf_pat" || {
-        echo "Error: Failed to authenticate with HuggingFace"
-        exit 1
-    }
-    
-    # Download the dataset using HuggingFace CLI
-    echo "Downloading dataset with HuggingFace CLI..."
-    hf download nvidia/PhysicalAI-Autonomous-Vehicles-NuRec --repo-type dataset --local-dir PhysicalAI-Autonomous-Vehicles-NuRec || {
-        echo "Error: Failed to download the NuRec dataset from HuggingFace"
-        exit 1
+    hf download "$DATASET_REPO" --repo-type dataset "${include_args[@]}" \
+        --local-dir PhysicalAI-Autonomous-Vehicles-NuRec || {
+        echo "Anonymous download failed. Retrying with authentication..."
+        hf_pat=$(get_hf_pat) || exit 1
+        hf_pat=$(echo "$hf_pat" | tr -d '\n\r' | xargs)
+        hf auth login --token "$hf_pat" || {
+            echo "Error: Failed to authenticate with HuggingFace"
+            exit 1
+        }
+        hf download "$DATASET_REPO" --repo-type dataset "${include_args[@]}" \
+            --local-dir PhysicalAI-Autonomous-Vehicles-NuRec || {
+            echo "Error: Failed to download the NuRec test data from HuggingFace"
+            exit 1
+        }
     }
 fi
 
