@@ -1,0 +1,13 @@
+# Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# NVIDIA NuRec gRPC Protos - Python Requirements
+# 
+# Install these dependencies to generate Python code from proto files:
+# pip install -r requirements.txt
+#
+# Then run the generation script:
+# python nvidia/grpc/update_generated.py
+
+grpcio==1.64.0
+grpcio-tools==1.56.0
+protobuf==4.23.3
