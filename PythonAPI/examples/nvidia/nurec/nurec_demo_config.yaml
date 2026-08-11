@@ -83,7 +83,7 @@ lidar:
   # Neural lidar rendered by NuRec (NRE >= 26.04), mounted at the ego rig
   # origin. Sweeps are drawn as a bird's-eye-view panel in the pygame grid
   # and saved under <output-dir>/lidar_bev/ when --saveimages is given.
-  enabled: false
+  enabled: true
   type: PANDAR128 # PANDAR128 | AT128
   framerate: 10
   # Mount height above the ego rig origin, meters (roof lidar ~2 m).

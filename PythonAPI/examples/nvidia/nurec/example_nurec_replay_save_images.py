@@ -95,7 +95,7 @@ DEFAULT_DEMO_CONFIG: Dict[str, Any] = {
         "insert_offset_m": 4.0,
     },
     "lidar": {
-        "enabled": False,
+        "enabled": True,
         "type": "PANDAR128",
         "framerate": 10,
         # Mount height above the ego rig origin, meters (roof lidar ~2 m).
