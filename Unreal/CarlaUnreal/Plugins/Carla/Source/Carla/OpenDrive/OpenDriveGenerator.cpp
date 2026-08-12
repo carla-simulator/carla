@@ -125,9 +125,13 @@ namespace {
       Result.Triangles.Add(LocalIdx[1]);
     }
 
-    // Recompute per-vertex normals over the extracted sub-mesh only, using
-    // the same up-biased face-normal averaging as the full-mesh conversion.
-    Result.Normals.Init(FVector::UpVector, Result.Vertices.Num());
+    // Recompute per-vertex normals over the extracted sub-mesh: accumulate
+    // the (area-weighted) up-biased face normal of every incident triangle
+    // and normalize, so shared vertices shade smoothly. Assigning the raw
+    // face normal per triangle (last writer wins) made every 2 m strip
+    // quad a separately-lit facet and the whole road read as shattered.
+    TArray<FVector> Accum;
+    Accum.Init(FVector::ZeroVector, Result.Vertices.Num());
     for (int32 i = 0; i < Result.Triangles.Num(); i += 3)
     {
       const FVector &V0 = Result.Vertices[Result.Triangles[i]];
@@ -135,21 +139,30 @@ namespace {
       const FVector &V2 = Result.Vertices[Result.Triangles[i + 2]];
       const FVector U = V1 - V0;
       const FVector V = V2 - V0;
+      // Unnormalized cross product: magnitude = 2x triangle area, giving
+      // the area weighting for free.
       FVector Normal;
       Normal.X = (U.Y * V.Z) - (U.Z * V.Y);
       Normal.Y = (U.Z * V.X) - (U.X * V.Z);
       Normal.Z = (U.X * V.Y) - (U.Y * V.X);
       Normal = -Normal;
-      Normal = Normal.GetSafeNormal(.0001f);
+      if (Normal.Z < 0.0f)
+      {
+        // Road geometry always faces up; mirrored winding otherwise
+        // cancels neighbouring contributions instead of averaging.
+        Normal = -Normal;
+      }
+      Accum[Result.Triangles[i]] += Normal;
+      Accum[Result.Triangles[i + 1]] += Normal;
+      Accum[Result.Triangles[i + 2]] += Normal;
+    }
+    Result.Normals.Init(FVector::UpVector, Result.Vertices.Num());
+    for (int32 i = 0; i < Accum.Num(); ++i)
+    {
+      const FVector Normal = Accum[i].GetSafeNormal(.0001f);
       if (Normal != FVector::ZeroVector)
       {
-        if (FVector::DotProduct(Normal, FVector(0, 0, 1)) < 0)
-        {
-          Normal = -Normal;
-        }
-        Result.Normals[Result.Triangles[i]] = Normal;
-        Result.Normals[Result.Triangles[i + 1]] = Normal;
-        Result.Normals[Result.Triangles[i + 2]] = Normal;
+        Result.Normals[i] = Normal;
       }
     }
 
@@ -308,6 +321,9 @@ void AOpenDriveGenerator::FRoadSurfaceRaster::RasterizeTriangle(
       {
         continue;
       }
+      // Genuine containment (no tolerance): the cell center is inside this
+      // triangle, so the cell really is covered by driving surface.
+      const bool bInside = (W0 >= 0.0f && W1 >= 0.0f && W2 >= 0.0f);
       W0 = FMath::Max(W0, 0.0f);
       W1 = FMath::Max(W1, 0.0f);
       W2 = FMath::Max(W2, 0.0f);
@@ -336,6 +352,10 @@ void AOpenDriveGenerator::FRoadSurfaceRaster::RasterizeTriangle(
         {
           Cell.DriveMinZ = FMath::Min(Cell.DriveMinZ, Z);
           Cell.DriveMaxZ = FMath::Max(Cell.DriveMaxZ, Z);
+        }
+        if (bInside)
+        {
+          Cell.bDriveCovered = 1;
         }
       }
     }
@@ -1092,7 +1112,10 @@ void AOpenDriveGenerator::GenerateMedianFill()
   Mask.SetNumZeroed(W * H);
   for (int32 Idx = 0; Idx < W * H; ++Idx)
   {
-    Mask[Idx] = RoadRaster.Cells[Idx].bDrive ? 1 : 0;
+    // Strict coverage: cells that only grazing triangles claimed (bDrive
+    // via the rasterizer's tolerance) are mostly bare and must count as
+    // gap, or the ribbon skips them and leaves holes in the median.
+    Mask[Idx] = RoadRaster.Cells[Idx].bDriveCovered ? 1 : 0;
   }
   const auto Morph = [&](uint8 Grow)
   {
@@ -1135,9 +1158,87 @@ void AOpenDriveGenerator::GenerateMedianFill()
   // edge the way an extra dilation of the whole footprint would.
   for (int32 Idx = 0; Idx < W * H; ++Idx)
   {
-    Mask[Idx] = (Mask[Idx] && !RoadRaster.Cells[Idx].bDrive) ? 1 : 0;
+    Mask[Idx] = (Mask[Idx] && !RoadRaster.Cells[Idx].bDriveCovered) ? 1 : 0;
   }
   Morph(1);
+
+  // Per-grid-node fill height, lofted from the surrounding driving
+  // surface samples so the fill follows the corridor's grade and
+  // cross-slope. Nodes are shared between adjacent quads, so the fill is
+  // a continuous surface instead of a staircase of flat plates. (The
+  // previous version also laid a flat "blanket" quad under EVERY interior
+  // driving cell at the cell-center min height; on a graded corridor 91%
+  // of those plates poked up through the real road surface and the car
+  // drove on a staircase of cell-sized plates -- the blanket is gone.)
+  TMap<int32, float> NodeZCache;
+  const auto NodeZ = [&](int32 NX, int32 NY) -> float
+  {
+    const int32 Key = NY * (W + 1) + NX;
+    if (const float *Found = NodeZCache.Find(Key))
+    {
+      return *Found;
+    }
+    // 1) Cells genuinely covered by road that touch this node: hug the
+    //    lowest of their surface samples.
+    float Result = FLT_MAX;
+    float TouchMin = FLT_MAX;
+    for (int32 DY = -1; DY <= 0; ++DY)
+    {
+      for (int32 DX = -1; DX <= 0; ++DX)
+      {
+        const int32 CX = NX + DX;
+        const int32 CY = NY + DY;
+        if (CX < 0 || CX >= W || CY < 0 || CY >= H)
+        {
+          continue;
+        }
+        const auto &N = RoadRaster.Cells[CY * W + CX];
+        if (N.bDriveCovered)
+        {
+          TouchMin = FMath::Min(TouchMin, N.DriveMinZ);
+        }
+      }
+    }
+    if (TouchMin != FLT_MAX)
+    {
+      Result = TouchMin - 2.0f;
+    }
+    else
+    {
+      // 2) Inverse-distance-weighted loft over covered cells nearby: the
+      //    node sits mid-gap, interpolate the two road edges smoothly.
+      float WeightSum = 0.0f;
+      float ZSum = 0.0f;
+      for (int32 DY = -3; DY <= 2; ++DY)
+      {
+        for (int32 DX = -3; DX <= 2; ++DX)
+        {
+          const int32 CX = NX + DX;
+          const int32 CY = NY + DY;
+          if (CX < 0 || CX >= W || CY < 0 || CY >= H)
+          {
+            continue;
+          }
+          const auto &N = RoadRaster.Cells[CY * W + CX];
+          if (!N.bDriveCovered)
+          {
+            continue;
+          }
+          const float DCX = static_cast<float>(DX) + 0.5f;
+          const float DCY = static_cast<float>(DY) + 0.5f;
+          const float Weight = 1.0f / (DCX * DCX + DCY * DCY);
+          WeightSum += Weight;
+          ZSum += Weight * N.DriveMinZ;
+        }
+      }
+      if (WeightSum > 0.0f)
+      {
+        Result = ZSum / WeightSum - 2.0f;
+      }
+    }
+    NodeZCache.Add(Key, Result);
+    return Result;
+  };
 
   FProceduralCustomMesh MeshData;
   const float UVTile = FMath::Max(GroundUVTileSize, 1.0f);
@@ -1146,47 +1247,17 @@ void AOpenDriveGenerator::GenerateMedianFill()
   {
     for (int32 CX = 0; CX < W; ++CX)
     {
-      // Emit for every ribbon cell AND under every driving cell. Ribbon
-      // cells flagged paved by the rasterizer's coverage tolerance can
-      // still be mostly grass in the render (skipping them perforated the
-      // fill with cell-shaped holes), and sub-cell gaps -- tessellation
-      // cracks, slivers narrower than one raster cell -- never register
-      // in the mask at all. The under-road blanket backs every such gap
-      // with asphalt 1cm beneath the road surface: invisible where the
-      // road is whole, road-coloured where it isn't.
-      const auto &Cell = RoadRaster.Cells[CY * W + CX];
-      bool bEmit = Mask[CY * W + CX] != 0;
-      if (!bEmit && Cell.bDrive)
-      {
-        // Interior driving cells only: at the outer road boundary the
-        // blanket would peek past the (smooth) road mesh edge as a
-        // cell-quantized stair silhouette.
-        bEmit = true;
-        for (int32 DY = -1; DY <= 1 && bEmit; ++DY)
-        {
-          for (int32 DX = -1; DX <= 1; ++DX)
-          {
-            const int32 NX = CX + DX;
-            const int32 NY = CY + DY;
-            if (NX < 0 || NX >= W || NY < 0 || NY >= H ||
-                (!RoadRaster.Cells[NY * W + NX].bDrive && !Mask[NY * W + NX]))
-            {
-              bEmit = false;
-              break;
-            }
-          }
-        }
-      }
-      if (!bEmit)
+      if (!Mask[CY * W + CX])
       {
         continue;
       }
-      // Height guard: a gap under an overpass sees both decks -- if the
-      // driving surfaces around this cell disagree in height, don't
-      // bridge it. Otherwise take the nearest pavement's height so the
-      // fill follows the corridor's grade.
-      float MinZ = FLT_MAX, MaxZ = -FLT_MAX;
-      for (int32 DY = -K - 1; DY <= K + 1; ++DY)
+      // Height guard: a gap under an overpass sees both decks. Two decks
+      // land in the SAME cell (its DriveMinZ/DriveMaxZ split apart), so
+      // test per cell -- a window-wide min/max spread also swallows the
+      // corridor's own grade and skipped legitimate median cells on
+      // sloped roads.
+      bool bOverpass = false;
+      for (int32 DY = -K - 1; DY <= K + 1 && !bOverpass; ++DY)
       {
         for (int32 DX = -K - 1; DX <= K + 1; ++DX)
         {
@@ -1197,71 +1268,41 @@ void AOpenDriveGenerator::GenerateMedianFill()
             continue;
           }
           const auto &N = RoadRaster.Cells[NY * W + NX];
-          if (N.bDrive)
+          if (N.bDrive && (N.DriveMaxZ - N.DriveMinZ) > MedianFillMaxHeightDelta)
           {
-            MinZ = FMath::Min(MinZ, N.DriveMinZ);
-            MaxZ = FMath::Max(MaxZ, N.DriveMaxZ);
+            bOverpass = true;
+            break;
           }
         }
       }
-      if (MinZ > MaxZ || (MaxZ - MinZ) > MedianFillMaxHeightDelta)
+      if (bOverpass)
       {
         continue;
       }
-      // Height reference must be LOCAL. NearestPavedMinZ is propagated from
-      // the chamfer's seed cell, which on a graded corridor sits up to
-      // several cm above or below the surface actually neighbouring this
-      // cell; quads placed 1cm under the *seed* height ended up above the
-      // *local* road surface, covering lane markings with cell-shaped
-      // road-coloured patches and z-fighting the terrain. Interior blanket
-      // cells know their own surface (DriveMinZ); ribbon cells take the
-      // lowest driving surface among their immediate neighbours and drop a
-      // little further to stay clear of marking quads.
-      float FillZ;
-      if (Cell.bDrive)
+      // Lofted corner heights (shared nodes -> continuous fill surface).
+      const float Z00 = NodeZ(CX, CY);
+      const float Z10 = NodeZ(CX + 1, CY);
+      const float Z11 = NodeZ(CX + 1, CY + 1);
+      const float Z01 = NodeZ(CX, CY + 1);
+      if (Z00 == FLT_MAX || Z10 == FLT_MAX || Z11 == FLT_MAX || Z01 == FLT_MAX)
       {
-        FillZ = Cell.DriveMinZ;
-      }
-      else
-      {
-        float LocalMin = FLT_MAX;
-        for (int32 DY = -1; DY <= 1; ++DY)
-        {
-          for (int32 DX = -1; DX <= 1; ++DX)
-          {
-            const int32 NX = CX + DX;
-            const int32 NY = CY + DY;
-            if (NX < 0 || NX >= W || NY < 0 || NY >= H)
-            {
-              continue;
-            }
-            const auto &N = RoadRaster.Cells[NY * W + NX];
-            if (N.bDrive)
-            {
-              LocalMin = FMath::Min(LocalMin, N.DriveMinZ);
-            }
-          }
-        }
-        FillZ = (LocalMin != FLT_MAX) ? (LocalMin - 2.0f)
-                                      : (Cell.NearestPavedMinZ - 3.0f);
+        continue; // no driving surface anywhere near -- nothing to loft from
       }
       ++FilledCells;
       const float X0 = RoadRaster.OriginX + static_cast<float>(CX) * RoadRaster.CellSize;
       const float Y0 = RoadRaster.OriginY + static_cast<float>(CY) * RoadRaster.CellSize;
       const float X1 = X0 + RoadRaster.CellSize;
       const float Y1 = Y0 + RoadRaster.CellSize;
-      // A hair below the neighbouring road surface: fills flush without
-      // z-fighting where the quad butts against the road mesh edge.
-      const float Z = FillZ - 1.0f;
       // Record the quad height so GenerateGroundPlane (which runs after
       // this) can hold the terrain below it.
       FRoadSurfaceRaster::FCell &MutCell = RoadRaster.Cells[CY * W + CX];
-      MutCell.FillMinZ = FMath::Min(MutCell.FillMinZ, Z);
+      MutCell.FillMinZ = FMath::Min(
+          MutCell.FillMinZ, FMath::Min(FMath::Min(Z00, Z10), FMath::Min(Z11, Z01)));
       const int32 Base = MeshData.Vertices.Num();
       MeshData.Vertices.Append({
-          FVector(X0, Y1, Z), FVector(X1, Y1, Z),
-          FVector(X1, Y0, Z), FVector(X0, Y0, Z)});
-      for (int32 K = 0; K < 4; ++K)
+          FVector(X0, Y1, Z01), FVector(X1, Y1, Z11),
+          FVector(X1, Y0, Z10), FVector(X0, Y0, Z00)});
+      for (int32 V = 0; V < 4; ++V)
       {
         MeshData.Normals.Add(FVector::UpVector);
       }
@@ -1740,10 +1781,10 @@ void AOpenDriveGenerator::RunGenerationQA()
         else if (bBoundary)
         {
           // Only footprint-boundary cells can show visible daylight under a
-          // road edge. Interior cells are backed by the under-road blanket
-          // and median fill, and the terrain deliberately holds 10cm+ below
-          // those quads (FillMinZ clamp) -- a deep interior gap there is
-          // construction, not a defect.
+          // road edge. Interior cells sit under an intact road mesh and the
+          // terrain deliberately holds below the pavement/fill (FillMinZ
+          // clamp) -- a deep interior gap there is construction, not a
+          // defect.
           ++FloatingCells;
           WorstGap = FMath::Max(WorstGap, Gap);
           AppendLoc(FloatingLocs, FloatingLocCount, X, Y, Cell.PavedMinZ);

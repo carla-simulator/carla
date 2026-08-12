@@ -173,6 +173,12 @@ protected:
       float FillMinZ = FLT_MAX;
       uint8 bDrive = 0;
       uint8 bPaved = 0;
+      /// Like bDrive but WITHOUT the rasterizer's negative barycentric
+      /// tolerance: set only when the cell center is genuinely inside a
+      /// driving triangle. bDrive's tolerance lets grazing triangles claim
+      /// cells whose surface is mostly uncovered; gap-filling must use the
+      /// strict flag or those cells read as "road" and never get filled.
+      uint8 bDriveCovered = 0;
     };
 
     float CellSize = 250.0f;
@@ -267,8 +273,9 @@ protected:
   UPROPERTY(Category = "Materials", EditAnywhere)
   float MedianFillMaxWidth = 600.0f;
 
-  /// Max height disagreement (cm) between the two flanking driving
-  /// surfaces for a gap cell to be filled -- a gap under an overpass sees
+  /// Max height split (cm) of the driving surface samples WITHIN a single
+  /// raster cell near a gap cell for it to be filled -- a gap under an
+  /// overpass sees
   /// both decks and must not be bridged at the wrong height.
   UPROPERTY(Category = "Materials", EditAnywhere)
   float MedianFillMaxHeightDelta = 100.0f;
