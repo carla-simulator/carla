@@ -81,6 +81,13 @@ namespace road {
 
     const geom::CubicPolynomial &GetElevationOn(const double s) const;
 
+    /// Surface height offset from the <lateralProfile><shape> records at
+    /// (s, t). Returns 0 when the road has no shape records. Interpolates
+    /// linearly between the two bracketing s-stations; within a station the
+    /// record with the greatest t <= query t applies (clamped to the first
+    /// record below its t range).
+    double GetLateralShapeZ(const double s, const double t) const;
+
     /// Returns a directed point on the center of the road (lane 0),
     /// with the corresponding laneOffset and elevation records applied,
     /// on distance "s".
