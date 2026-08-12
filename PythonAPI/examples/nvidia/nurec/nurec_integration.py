@@ -977,7 +977,11 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
                 vertex_distance=2.0,
                 max_road_length=500.0,
                 wall_height=0.0,
-                additional_width=7.6,
+                # additional_width widens every junction driving lane by this
+                # much PER SIDE. The imported example shipped 7.6, which turns
+                # 3.5 m lanes into ~19 m ribbons that stack over neighbouring
+                # roads ("roads on top of roads"). CARLA's default is 0.6.
+                additional_width=0.6,
                 smooth_junctions=True,
                 enable_mesh_visibility=True,
             ),
