@@ -4,6 +4,7 @@
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
+#include <algorithm>
 #include <limits>
 
 #include "carla/client/TrafficSign.h"
@@ -160,9 +161,10 @@ void MotionPlanStage::Update(const unsigned long index) {
 
       // Resolve the target waypoint by interpolating along the buffer at
       // target_point_distance ahead of the vehicle.
-      const float target_point_distance{std::max(
+      const float target_point_distance{std::clamp(
           vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
-          MIN_TARGET_WAYPOINT_DISTANCE)};
+          MIN_TARGET_WAYPOINT_DISTANCE,
+          MAX_TARGET_WAYPOINT_DISTANCE)};
       const auto [interp_target_location, target_index] = GetTargetData(
           waypoint_buffer,
           target_point_distance,

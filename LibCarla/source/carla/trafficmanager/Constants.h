@@ -58,6 +58,12 @@ namespace WaypointSelection {
 // the pure-pursuit geometry well damped.
 static const float TARGET_WAYPOINT_TIME_HORIZON = 1.0f;
 static const float MIN_TARGET_WAYPOINT_DISTANCE = 3.0f;
+// Cap on the pursuit-target distance. Chasing a point d ahead cuts a curve
+// of radius R by the chord sagitta ~d^2/(8R): uncapped at 60 km/h (16.7 m)
+// on Town10's R~25 m corners that is a ~1.4 m apex cut, which lands the
+// vehicle in the oncoming lane on left curves. 10 m keeps the cut under
+// ~0.6 m on the tightest urban corners.
+static const float MAX_TARGET_WAYPOINT_DISTANCE = 10.0f;
 static const float JUNCTION_LOOK_AHEAD = 5.0f;
 static const float SAFE_DISTANCE_AFTER_JUNCTION = 4.0f;
 static const float MIN_JUNCTION_LENGTH = 8.0f;
@@ -170,11 +176,13 @@ static const float MAX_BRAKE = 0.7f;
 static const float MAX_STEERING = 0.8f;
 static const float MAX_STEERING_DIFF = 0.15f;
 // Speed-scaled steering envelope: |steer| <= STEER_LIMIT_GAIN / speed^2
-// (speed in m/s), i.e. a lateral-acceleration cap of roughly 6 m/s^2 for a
-// ~2.9 m wheelbase. UE4's PhysX vehicles shipped a SteeringCurve that
-// reduced the physical steering angle with speed; UE5 Chaos vehicles apply
-// the full angle at any speed, so a saturated PID output at 30 km/h knifes
-// the vehicle across two lanes. Inactive below ~6 m/s (envelope > 0.8).
+// (speed in m/s). Guards against a saturated PID output knifing the vehicle
+// across lanes at speed. Inactive below ~6 m/s (envelope > 0.8).
+// A/B note (Town10 matrix): raising the gain to 45 to let vehicles steer
+// through corners taken at 60 km/h regressed badly (saturated transients
+// became hard swerves into obstacles); the correct fix for running wide in
+// curves is slowing down before them (GetTurnTargetVelocity), not granting
+// more steering authority at speed.
 static const float STEER_LIMIT_GAIN = 30.0f;
 static const float DT = 0.05f;
 static const float INV_DT = 1.0f / DT;
@@ -184,14 +192,17 @@ static const float INV_DT = 1.0f / DT;
 static const float MAX_DEVIATION_DELTA = 0.05f;
 static const std::vector<float> LONGITUDIAL_PARAM = {12.0f, 0.05f, 0.02f};
 static const std::vector<float> LONGITUDIAL_HIGHWAY_PARAM = {20.0f, 0.05f, 0.01f};
-// Lateral gains sim-tuned for the UE5 Chaos steering response. The ue5-dev
-// values {8, 0.04, 0.16} double the 0.9.12 loop gain and turn any large
-// initial lane error (>=1 m offset or >30 deg heading) into a growing
-// left/right oscillation; the plain 0.9.12 values {4, 0.02, 0.08} track too
-// softly on Chaos (fleet RMS 0.36 m off lane center). 1.5x is the measured
-// middle ground: tight centering without re-triggering the oscillation.
-static const std::vector<float> LATERAL_PARAM = {6.0f, 0.03f, 0.12f};
-static const std::vector<float> LATERAL_HIGHWAY_PARAM = {3.0f, 0.02f, 0.06f};
+// Lateral gains, step-response tuned against the LINEAR Chaos steering
+// mapping (the previous values were tuned while the engine still applied a
+// squared input curve, which hid a ~2-5x effective gain increase at small
+// commands). Key constraint: at cruise speeds the P term must stay inside
+// the STEER_LIMIT_GAIN/v^2 envelope for typical errors (~1.5 m offset ->
+// deviation ~0.05); P=2 keeps the loop linear at 60 km/h where P>=3
+// saturates the envelope and hunts around the lane center without settling
+// (measured: settle 1.1 s vs >6 s). D=0.24 damps the recovery to <=0.25 m
+// overshoot at 30-60 km/h.
+static const std::vector<float> LATERAL_PARAM = {2.0f, 0.03f, 0.24f};
+static const std::vector<float> LATERAL_HIGHWAY_PARAM = {2.0f, 0.02f, 0.24f};
 } // namespace PID
 
 namespace StuckRecovery {
