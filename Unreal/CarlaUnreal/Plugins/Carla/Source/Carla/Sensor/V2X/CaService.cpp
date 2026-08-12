@@ -594,9 +594,9 @@ const carla::geom::Vector3D CaService::ComputeAccelerometerNoise(
     // determined by the client
     constexpr float Mean = 0.0f;
     return carla::geom::Vector3D{
-        Accelerometer.X + mRandomEngine->GetNormalDistribution(Mean, StdDevAccel.X),
-        Accelerometer.Y + mRandomEngine->GetNormalDistribution(Mean, StdDevAccel.Y),
-        Accelerometer.Z + mRandomEngine->GetNormalDistribution(Mean, StdDevAccel.Z)};
+        (float) Accelerometer.X + mRandomEngine->GetNormalDistribution(Mean, StdDevAccel.X),
+        (float) Accelerometer.Y + mRandomEngine->GetNormalDistribution(Mean, StdDevAccel.Y),
+        (float) Accelerometer.Z + mRandomEngine->GetNormalDistribution(Mean, StdDevAccel.Z)};
 }
 
 carla::geom::Vector3D CaService::ComputeAccelerometer(

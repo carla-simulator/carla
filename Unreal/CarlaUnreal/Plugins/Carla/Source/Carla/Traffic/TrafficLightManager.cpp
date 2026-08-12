@@ -31,6 +31,7 @@ ATrafficLightManager::ATrafficLightManager()
   SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
   RootComponent = SceneComponent;
 
+  
   // Hard coded default traffic light blueprint
   static ConstructorHelpers::FClassFinder<AActor> TrafficLightRHTFinder(
       TEXT( "/Game/Carla/Blueprints/TrafficLight/BP_TLOpenDrive_RHT" ) );
