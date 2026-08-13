@@ -88,17 +88,18 @@ else
     git \
         -C $workspace_path/Unreal/CarlaUnreal/Content \
         clone \
-        -b ue5-dev \
+        -b ue58-dev-carla \
         https://bitbucket.org/carla-simulator/carla-content.git \
         Carla
 fi
 
-# -- DLSS SDK (optional, NVIDIA-licensed, never vendored) --
+# -- DLSS SDK (required, NVIDIA-licensed, never vendored) --
 # Fetches github.com/NVIDIA/DLSS into ~/SDKs/DLSS (unless DLSS_SDK already
 # points at a valid SDK) so the engine's DLSS-RR denoiser / DLSS upscaler
-# plugin builds with NGX support. Failure is non-fatal: without the SDK the
-# plugin compiles to a no-op and CARLA falls back to NFOR / spatial upscale.
-bash Util/SetupUtils/SetupDLSS.sh
+# plugin builds with NGX support. The engine build requires the SDK;
+# building without DLSS (no-op plugin, NFOR / spatial upscale fallbacks)
+# is an explicit opt-in via DLSS_SDK=disabled.
+bash Util/SetupUtils/SetupDLSS.sh || exit 1
 if [ -z "$DLSS_SDK" ] && [ -f "$HOME/SDKs/DLSS/lib/Linux_x86_64/libnvsdk_ngx.a" ]; then
     export DLSS_SDK=$HOME/SDKs/DLSS
 fi
@@ -120,7 +121,7 @@ else
         GIT_LOCAL_TOKEN=${GIT_CREDENTIALS_INFO[1]}
         UE5_URL=https://$GIT_LOCAL_USER:$GIT_LOCAL_TOKEN@github.com/CarlaUnreal/UnrealEngine.git
     fi
-    git clone -b ue5-dev-carla $UE5_URL UnrealEngine5_carla
+    git clone -b ue58-dev-carla $UE5_URL UnrealEngine5_carla
     pushd UnrealEngine5_carla
     echo -e '\n#CARLA UnrealEngine5\nexport CARLA_UNREAL_ENGINE_PATH='$PWD >> ~/.bashrc
     export CARLA_UNREAL_ENGINE_PATH=$PWD

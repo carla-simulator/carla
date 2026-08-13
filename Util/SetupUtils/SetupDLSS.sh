@@ -9,10 +9,11 @@
 # or CarlaUnreal/UnrealEngine repositories, so it is never vendored: each user
 # obtains it directly from NVIDIA's public GitHub repository under NVIDIA's
 # own license terms, and the build locates it exclusively through the
-# DLSS_SDK environment variable. Without the SDK everything still builds and
-# runs - the plugin compiles to a no-op, the path tracer falls back to the
-# NFOR denoiser, and DLSS-upscaled captures fall back to a spatial upscale -
-# so failure here is a warning, not an error.
+# DLSS_SDK environment variable. The engine build requires the SDK: without
+# it the DLSS-RR denoiser and DLSS upscaling would silently degrade to the
+# NFOR denoiser / spatial upscale, so a missing SDK stops the setup here
+# instead of surfacing later as an engine build error. Building without DLSS
+# on purpose is an explicit opt-in via DLSS_SDK=disabled.
 #
 # The same DLSS_SDK variable also serves at runtime: the plugin points NGX at
 # $DLSS_SDK/lib/Linux_x86_64/rel to load the model snippets
@@ -20,6 +21,13 @@
 # for Super Resolution).
 
 set -e
+
+if [ "$(echo "$DLSS_SDK" | tr '[:upper:]' '[:lower:]')" = "disabled" ]; then
+    echo "DLSS_SDK=disabled: skipping the DLSS SDK setup. The DLSS-RR denoiser"
+    echo "and DLSS upscaling will be unavailable (NFOR denoiser and spatial"
+    echo "upscale remain functional)."
+    exit 0
+fi
 
 DLSS_SDK_URL=${DLSS_SDK_URL:-https://github.com/NVIDIA/DLSS.git}
 DLSS_SDK_DEFAULT_PATH=${DLSS_SDK_DEFAULT_PATH:-$HOME/SDKs/DLSS}
@@ -41,16 +49,17 @@ else
     echo "DLSS SDK not found. Cloning from $DLSS_SDK_URL into $DLSS_SDK_DEFAULT_PATH..."
     mkdir -p "$(dirname "$DLSS_SDK_DEFAULT_PATH")"
     if ! git clone --depth 1 "$DLSS_SDK_URL" "$DLSS_SDK_DEFAULT_PATH"; then
-        echo "Warning: could not clone the DLSS SDK. Continuing without it:"
-        echo "the DLSS-RR denoiser and DLSS upscaling will be unavailable"
-        echo "(NFOR denoiser and spatial upscale remain functional)."
-        exit 0
+        echo "Error: could not clone the DLSS SDK from $DLSS_SDK_URL."
+        echo "The engine build requires it; to deliberately build without DLSS"
+        echo "support, set DLSS_SDK=disabled."
+        exit 1
     fi
     if ! sdk_is_valid "$DLSS_SDK_DEFAULT_PATH"; then
-        echo "Warning: $DLSS_SDK_DEFAULT_PATH does not look like a Linux DLSS SDK"
+        echo "Error: $DLSS_SDK_DEFAULT_PATH does not look like a Linux DLSS SDK"
         echo "(missing include/, lib/Linux_x86_64/libnvsdk_ngx.a or the dlssd snippet)."
-        echo "Continuing without DLSS support."
-        exit 0
+        echo "The engine build requires it; to deliberately build without DLSS"
+        echo "support, set DLSS_SDK=disabled."
+        exit 1
     fi
 fi
 
