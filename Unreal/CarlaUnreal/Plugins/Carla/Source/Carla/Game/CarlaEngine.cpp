@@ -30,6 +30,8 @@
 #include "Misc/App.h"
 #include "PhysicsEngine/PhysicsSettings.h"
 #include "SceneInterface.h"
+#include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
 #include <util/ue-header-guard-end.h>
 
 #include <thread>
