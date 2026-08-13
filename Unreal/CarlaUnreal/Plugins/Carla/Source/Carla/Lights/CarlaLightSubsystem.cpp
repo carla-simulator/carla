@@ -98,7 +98,13 @@ std::vector<carla::rpc::LightState> UCarlaLightSubsystem::GetLights(FString Clie
   for(auto& Light : Lights)
   {
     UCarlaLight* CarlaLight = Light.Value;
-
+    // World Partition can stream out a lamp's owner between the light's GC
+    // death and its EndPlay unregistration; this RPC runs on the server
+    // thread and must not touch such carcasses.
+    if (!IsValid(CarlaLight) || !IsValid(CarlaLight->GetOwner()))
+    {
+      continue;
+    }
     result.push_back(CarlaLight->GetLightState());
   }
   return result;

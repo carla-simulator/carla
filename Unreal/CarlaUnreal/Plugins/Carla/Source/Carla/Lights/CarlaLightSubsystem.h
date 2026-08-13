@@ -89,6 +89,9 @@ public:
 
 private:
 
+  // UPROPERTY so the GC can see these references: a bare map dangles when
+  // World Partition streams out a lamp before its EndPlay unregisters it.
+  UPROPERTY()
   TMap<int, UCarlaLight* > Lights;
 
   // Flag for each client to tell if an update needs to be done

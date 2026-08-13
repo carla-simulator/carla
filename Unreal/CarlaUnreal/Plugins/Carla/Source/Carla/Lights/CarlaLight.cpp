@@ -317,9 +317,13 @@ void UCarlaLight::SetLightState(carla::rpc::LightState LightState)
 
 FVector UCarlaLight::GetLocation() const
 {
-  auto Location = GetOwner()->GetActorLocation();
+  // Reached from the RPC thread (get_lights); during a map transition or a
+  // World Partition stream-out the owner and the game mode can be gone
+  // while this component is still registered.
+  const AActor* Owner = GetOwner();
+  auto Location = Owner ? Owner->GetActorLocation() : FVector::ZeroVector;
   ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(GetWorld());
-  ALargeMapManager* LargeMap = GameMode->GetLMManager();
+  ALargeMapManager* LargeMap = GameMode ? GameMode->GetLMManager() : nullptr;
   if (LargeMap)
   {
     Location = LargeMap->LocalToGlobalLocation(Location);
