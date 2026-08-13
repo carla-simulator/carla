@@ -1114,15 +1114,122 @@ namespace road {
   }
 
 
+  // Some real-world OpenDRIVE exports (DeepMap/NuRec) contain sub-2m road
+  // stubs with an empty <link> element: not connected to anything, not part
+  // of any junction, and geometrically sitting ON TOP of the real road they
+  // were traced from -- often centimetres above it. Rendering them produces
+  // a slab of road floating over the actual carriageway, with their torn
+  // marking fragments poking through the surface. They carry no routable
+  // topology (nothing can drive onto a link-less road), so skipping their
+  // meshes loses nothing. Longer link-less roads are genuine dead-end
+  // streets and are kept.
+  static bool IsOrphanSliverRoad(const road::Road &road) {
+    constexpr double kMaxSliverLength = 2.0; // meters
+    return !road.IsJunction() &&
+           road.GetLength() < kMaxSliverLength &&
+           road.GetNexts().empty() &&
+           road.GetPrevs().empty();
+  }
+
+  // The same exports also carry LONGER link-less roads (tens of meters).
+  // Some are genuine dead-end streets; others are duplicate traces laid
+  // over a road that already exists, floating centimetres above it (a
+  // 30m slab of road on top of the real carriageway). Topology cannot
+  // tell them apart -- both are unconnected -- so decide geometrically:
+  // a link-less road most of whose driving-lane samples lie within a
+  // lane-width of another (connected) road's lane centers at road level
+  // is a duplicate trace. Support from fellow link-less candidates is
+  // deliberately ignored so two orphans overlapping only each other are
+  // both conservatively kept.
+  static std::unordered_set<RoadId> ComputeDuplicateTraceRoads(
+      const Map &map, const std::unordered_set<RoadId> &candidate_ids) {
+    std::unordered_set<RoadId> duplicates;
+    if (candidate_ids.empty()) {
+      return duplicates;
+    }
+    constexpr double kSampleStep = 4.0;  // m along lanes
+    constexpr double kMaxXY = 2.0;       // m to a supporting lane center
+    constexpr double kMaxZ = 1.0;        // m height difference
+    constexpr double kMinOverlapFraction = 0.4;
+    const auto waypoints = map.GenerateWaypoints(kSampleStep);
+    const auto CellKey = [](double x, double y) {
+      const auto ix = static_cast<int64_t>(std::floor(x / kMaxXY));
+      const auto iy = static_cast<int64_t>(std::floor(y / kMaxXY));
+      return (ix << 32) ^ (iy & 0xffffffff);
+    };
+    std::unordered_map<int64_t, std::vector<geom::Location>> support_grid;
+    std::unordered_map<RoadId, std::vector<geom::Location>> candidate_points;
+    for (const auto &wp : waypoints) {
+      const geom::Location loc = map.ComputeTransform(wp).location;
+      if (candidate_ids.count(wp.road_id) != 0u) {
+        candidate_points[wp.road_id].push_back(loc);
+      } else {
+        support_grid[CellKey(loc.x, loc.y)].push_back(loc);
+      }
+    }
+    for (const auto &entry : candidate_points) {
+      size_t supported = 0u;
+      for (const geom::Location &loc : entry.second) {
+        bool found = false;
+        for (int dx = -1; dx <= 1 && !found; ++dx) {
+          for (int dy = -1; dy <= 1 && !found; ++dy) {
+            const auto it = support_grid.find(
+                CellKey(loc.x + dx * kMaxXY, loc.y + dy * kMaxXY));
+            if (it == support_grid.end()) {
+              continue;
+            }
+            for (const geom::Location &other : it->second) {
+              const double dxy = std::hypot(loc.x - other.x, loc.y - other.y);
+              if (dxy < kMaxXY && std::abs(loc.z - other.z) < kMaxZ) {
+                found = true;
+                break;
+              }
+            }
+          }
+        }
+        if (found) {
+          ++supported;
+        }
+      }
+      if (!entry.second.empty() &&
+          static_cast<double>(supported) / static_cast<double>(entry.second.size()) >=
+              kMinOverlapFraction) {
+        duplicates.insert(entry.first);
+      }
+    }
+    return duplicates;
+  }
+
+  std::unordered_set<RoadId> Map::ComputeSkippedGenerationRoads() const {
+    std::unordered_set<RoadId> candidate_ids;
+    std::unordered_set<RoadId> skipped;
+    for (const auto &pair : _data.GetRoads()) {
+      const auto &road = pair.second;
+      if (road.IsJunction() || !road.GetNexts().empty() || !road.GetPrevs().empty()) {
+        continue;
+      }
+      if (IsOrphanSliverRoad(road)) {
+        skipped.insert(pair.first);
+      } else {
+        candidate_ids.insert(pair.first);
+      }
+    }
+    for (RoadId id : ComputeDuplicateTraceRoads(*this, candidate_ids)) {
+      skipped.insert(id);
+    }
+    return skipped;
+  }
+
   std::vector<std::unique_ptr<geom::Mesh>> Map::GenerateChunkedMesh(
       const rpc::OpendriveGenerationParameters& params) const {
     geom::MeshFactory mesh_factory(params);
     std::vector<std::unique_ptr<geom::Mesh>> out_mesh_list;
 
     std::unordered_map<JuncId, geom::Mesh> junction_map;
+    const auto skipped_roads = ComputeSkippedGenerationRoads();
     for (auto &&pair : _data.GetRoads()) {
       const auto &road = pair.second;
-      if (!road.IsJunction()) {
+      if (!road.IsJunction() && skipped_roads.count(pair.first) == 0u) {
         std::vector<std::unique_ptr<geom::Mesh>> road_mesh_list =
             mesh_factory.GenerateAllWithMaxLen(road);
 
@@ -1170,11 +1277,37 @@ namespace road {
       }
     }
 
-    auto min_pos = geom::Vector2D(
-        out_mesh_list.front()->GetVertices().front().x,
-        out_mesh_list.front()->GetVertices().front().y);
+    // Guard against a valid-but-geometry-free xodr (e.g. no roads/junctions
+    // at all, or every generated mesh happening to have zero vertices):
+    // out_mesh_list.front() and per-mesh GetVertices().front() below used to
+    // be called unconditionally, which segfaulted the server instead of
+    // returning an error. Bail out with an empty chunk list; the only
+    // caller (AOpenDriveGenerator::GenerateRoadMesh) already skips
+    // zero-vertex meshes and tolerates an empty result.
+    if (out_mesh_list.empty()) {
+      return {};
+    }
+
+    bool found_seed = false;
+    geom::Vector2D min_pos;
+    for (auto & mesh : out_mesh_list) {
+      if (!mesh->GetVertices().empty()) {
+        const auto &seed_vertex = mesh->GetVertices().front();
+        min_pos = geom::Vector2D(seed_vertex.x, seed_vertex.y);
+        found_seed = true;
+        break;
+      }
+    }
+    if (!found_seed) {
+      // Every generated mesh was empty; nothing to bin.
+      return {};
+    }
+
     auto max_pos = min_pos;
     for (auto & mesh : out_mesh_list) {
+      if (mesh->GetVertices().empty()) {
+        continue;
+      }
       auto vertex = mesh->GetVertices().front();
       min_pos.x = std::min(min_pos.x, vertex.x);
       min_pos.y = std::min(min_pos.y, vertex.y);
@@ -1189,6 +1322,9 @@ namespace road {
       result.emplace_back(std::make_unique<geom::Mesh>());
     }
     for (auto & mesh : out_mesh_list) {
+      if (mesh->GetVertices().empty()) {
+        continue;
+      }
       auto vertex = mesh->GetVertices().front();
       size_t x_pos = static_cast<size_t>((vertex.x - min_pos.x) / params.max_road_length);
       size_t y_pos = static_cast<size_t>((vertex.y - min_pos.y) / params.max_road_length);
@@ -1211,7 +1347,14 @@ namespace road {
     std::thread juntction_thread( &Map::GenerateJunctions, this, mesh_factory, params,
       minpos, maxpos, &junction_out_mesh_list);
 
-    const std::vector<RoadId> RoadsIDToGenerate = FilterRoadsByPosition(minpos, maxpos);
+    std::vector<RoadId> RoadsIDToGenerate = FilterRoadsByPosition(minpos, maxpos);
+    // Drop link-less sliver/duplicate-trace roads (floating slabs stacked
+    // on the real carriageway in DeepMap/NuRec exports).
+    const auto skipped_roads = ComputeSkippedGenerationRoads();
+    RoadsIDToGenerate.erase(
+        std::remove_if(RoadsIDToGenerate.begin(), RoadsIDToGenerate.end(),
+            [&skipped_roads](RoadId id) { return skipped_roads.count(id) != 0u; }),
+        RoadsIDToGenerate.end());
 
     size_t num_roads = RoadsIDToGenerate.size();
     size_t num_roads_per_thread = 30;
@@ -1336,8 +1479,19 @@ namespace road {
                     (outer_corner - inner_corner).MakeUnitVector();
                 geom::Vector3D treeposition =
                     outer_corner + outward_direction * distancefromdrivinglineborder;
-                geom::Transform lanetransform = lane->ComputeTransform(s_current);
-                geom::Transform treeTransform(treeposition, lanetransform.rotation);
+                // Face the anchor toward the road instead of along it: the
+                // street furniture spawned on these transforms (lamps, signage)
+                // extends along its local +X, so the lane heading would leave a
+                // street lamp's arm -- and its light cone -- running parallel
+                // to the road over the shoulder. outward_direction is already
+                // the road->anchor lateral direction in UE frame; its opposite
+                // is the yaw the furniture should face.
+                const geom::Vector3D inward_direction = outward_direction * (-1.0f);
+                const geom::Rotation facing_rotation(
+                    0.0f,
+                    geom::Math::ToDegrees(std::atan2(inward_direction.y, inward_direction.x)),
+                    0.0f);
+                geom::Transform treeTransform(treeposition, facing_rotation);
                 const carla::road::element::RoadInfoSpeed* roadinfo = lane->GetInfo<carla::road::element::RoadInfoSpeed>(s_current);
                 // roadinfo is null for roads without an explicit maxspeed OSM tag
                 // (common in urban areas that rely on default speed limits).
@@ -1403,10 +1557,36 @@ namespace road {
     std::vector<std::unique_ptr<geom::Mesh>> LineMarks;
     geom::MeshFactory mesh_factory(params);
 
+    // A real junction fans one lane out into several connecting roads, so
+    // sweeping markings per-lane the way ordinary roads do would be wrong
+    // there. Some OpenDRIVE exports (e.g. DeepMap/NuRec real-world
+    // reconstructions) instead wrap a junction record around what is really
+    // just a single road-to-road splice at a curvature break -- one real
+    // incoming->connecting link, occasionally padded with a placeholder
+    // incomingRoad="-1" connection. Unconditionally skipping every junction
+    // road left "clean seam" bald patches wherever a continuously-marked
+    // street happened to run through one of these trivial junctions, even
+    // though the connecting road carries its own real per-lane roadMark data.
+    auto HasSingleConnectingRoad = [this](JuncId junction_id) {
+      const Junction *junction = _data.GetJunction(junction_id);
+      if (junction == nullptr) {
+        return false;
+      }
+      std::unordered_set<RoadId> connecting_roads;
+      for (const auto &connection_pair : junction->GetConnections()) {
+        connecting_roads.insert(connection_pair.second.connecting_road);
+      }
+      return connecting_roads.size() == 1;
+    };
+
+    const auto skipped_roads = ComputeSkippedGenerationRoads();
     const std::vector<RoadId> RoadsIDToGenerate = FilterRoadsByPosition(minpos, maxpos);
     for ( RoadId id : RoadsIDToGenerate ) {
       const auto& road = _data.GetRoads().at(id);
-      if (!road.IsJunction()) {
+      if (skipped_roads.count(id) != 0u) {
+        continue; // road mesh is skipped too -- see GenerateChunkedMesh
+      }
+      if (!road.IsJunction() || HasSingleConnectingRoad(road.GetJunctionId())) {
         mesh_factory.GenerateLaneMarkForRoad(road, LineMarks, outinfo);
       }
     }

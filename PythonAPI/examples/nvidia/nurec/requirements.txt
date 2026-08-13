@@ -1,0 +1,11 @@
+pygame>=2.6
+numpy>=1.26
+scipy>=1.11
+grpcio>=1.66
+# Generated stubs in nre/grpc/protos are protobuf 5.29 gencode.
+protobuf>=5.29,<7
+carla>=0.10.0
+pyyaml
+# Optional: only needed for the legacy JPEG transfer path
+# (NurecRenderer(image_format="jpeg")). The default planar path needs no decoder.
+# nvidia-nvimgcodec-cu12

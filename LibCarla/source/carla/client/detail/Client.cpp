@@ -739,6 +739,13 @@ namespace detail {
     _pimpl->AsyncCall("clear_debug_string");
   }
 
+  void Client::SpawnCustomMesh(
+      const std::vector<float> &vertices,
+      const std::vector<uint32_t> &triangles,
+      const std::string &material) {
+    _pimpl->CallAndWait<void>("spawn_custom_mesh", vertices, triangles, material);
+  }
+
   void Client::ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {
     _pimpl->AsyncCall("apply_batch", std::move(commands), do_tick_cue);
   }

@@ -90,12 +90,12 @@ public:
 
   AActor *GetActor()
   {
-    return TheActor;
+    return TheActor.Get();
   }
 
   const AActor *GetActor() const
   {
-    return TheActor;
+    return TheActor.Get();
   }
 
   const FActorInfo *GetActorInfo() const
@@ -204,7 +204,7 @@ public:
       const FTransform& Transform,
       ETeleportType Teleport = ETeleportType::TeleportPhysics);
 
-  FVector GetActorVelocity() const;
+  virtual FVector GetActorVelocity() const;
 
   FVector GetActorAngularVelocity() const;
 
@@ -450,7 +450,11 @@ private:
 
   friend class FActorRegistry;
 
-  AActor *TheActor = nullptr;
+  /// Weak: World Partition can stream out (destroy) the actor without going
+  /// through the episode, so a raw pointer here dangles and the per-frame
+  /// state serialization crashes on a freed vtable. Weak reads back null and
+  /// the callers' existing null-checks take over.
+  TWeakObjectPtr<AActor> TheActor = nullptr;
 
   TSharedPtr<const FActorInfo> Info = nullptr;
 
@@ -610,6 +614,16 @@ public:
   virtual ECarlaServerResponse SetActorSimulatePhysics(bool bSimulatePhysics) final;
 
   virtual ECarlaServerResponse SetActorEnableGravity(bool bEnabled) final;
+
+  /// Walkers move via UCharacterMovementComponent (kinematic sweeps driven
+  /// by AddMovementInput), not physics simulation. AActor::GetVelocity()
+  /// (via APawn::GetVelocity()) prefers the root component's physics-body
+  /// velocity whenever the root is simulating physics, which for walker
+  /// Blueprints configured for ragdoll death is often true even while
+  /// idle -- so the base FCarlaActor::GetActorVelocity() path can report
+  /// near-zero while the walker is actually moving briskly. Read the
+  /// movement component's own tracked velocity directly instead.
+  virtual FVector GetActorVelocity() const final;
 
   virtual ECarlaServerResponse ApplyControlToWalker(const FWalkerControl&) final;
 

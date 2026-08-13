@@ -67,6 +67,21 @@ private:
 
   void CheckWeatherPostProcessEffects();
 
+  /// Push the current weather into the ASkyBase rig (BP_Carla_Sky) and run its
+  /// blueprint Update. The UE5 sky rig only refreshes itself from its
+  /// construction script, so without this call the sun/fog/atmosphere stay
+  /// frozen at the state saved in the map regardless of the weather API.
+  void PushWeatherToSky();
+
+  /// Broadcast the current day/night state (derived from SunAltitudeAngle) to
+  /// UCarlaLightSubsystem so registered CarlaLight components (street lamps)
+  /// react. BP_CarlaWeather's graph does reference the subsystem and
+  /// DayTimeChangeEvent, but measured behavior is that lights never receive
+  /// it (same blueprint has other confirmed-dead exec chains that
+  /// PushWeatherToSky already routes around) -- drive it from C++ instead so
+  /// it does not depend on that graph being reachable.
+  void UpdateStreetLightsForDayNight();
+
   UPROPERTY(EditAnywhere, Category="Parameters")
   FWeatherParameters Weather;
 

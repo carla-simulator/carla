@@ -63,21 +63,14 @@ void ALargeMapManager::BeginPlay()
   {
     // World Partition world (or no WorldComposition at all): the engine
     // streams cells natively with absolute double-precision coordinates, and
-    // every code path below assumes a valid WorldComposition. Stay inert with
-    // an empty tile list (all Global/Local conversions are identity then).
-    // Do NOT Destroy() here: CarlaGameModeBase and VegetationManager cache
-    // raw pointers to this actor, so destroying it mid-session leaves them
-    // dangling after the next GC pass. The World Partition migration branch
-    // removes the manager earlier (before anything caches it) and retires
-    // this path entirely.
+    // every code path below assumes a valid WorldComposition. Retire quietly.
     UE_LOG(LogCarla, Warning, TEXT(
-        "LargeMapManager present in a World Partition world; legacy tile "
-        "streaming disabled (native streaming takes over)."));
-    SetActorTickEnabled(false);
+        "LargeMapManager present in a World Partition world; destroying the "
+        "legacy tile manager (native streaming takes over)."));
+    Destroy();
     return;
   }
   RegisterTilesInWorldComposition();
-
   /// Setup delegates
   // Origin rebase
   FCoreDelegates::PreWorldOriginOffset.AddUObject(this, &ALargeMapManager::PreWorldOriginOffset);

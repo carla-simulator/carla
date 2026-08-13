@@ -27,6 +27,8 @@
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
+#include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
 #include "Misc/App.h"
 #include "PhysicsEngine/PhysicsSettings.h"
 #include "SceneInterface.h"
@@ -88,10 +90,38 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     const auto PrimaryIP     = Settings.PrimaryIP;
     const auto PrimaryPort   = Settings.PrimaryPort;
 
-    auto BroadcastStream     = Server.Start(Settings.RPCPort, StreamingPort, SecondaryPort);
-    Server.AsyncRun(FCarlaEngine_GetNumberOfThreadsForRPCServer());
-
-    WorldObserver.SetStream(BroadcastStream);
+    // rpclib's asio acceptor throws (std::system_error, "address already
+    // in use") when the RPC port is taken -- typically another CARLA
+    // instance still running. Unhandled it aborts the whole editor with
+    // SIGABRT and a core dump; fail with a readable message instead.
+    try
+    {
+      auto BroadcastStream = Server.Start(Settings.RPCPort, StreamingPort, SecondaryPort);
+      Server.AsyncRun(FCarlaEngine_GetNumberOfThreadsForRPCServer());
+      WorldObserver.SetStream(BroadcastStream);
+    }
+    catch (const std::exception &e)
+    {
+      UE_LOG(LogCarla, Error,
+          TEXT("CARLA server failed to start on RPC port %d: %s. "
+               "Another CARLA server is probably running on this port -- "
+               "close it or launch with a different -carla-rpc-port. "
+               "Shutting down."),
+          Settings.RPCPort, UTF8_TO_TCHAR(e.what()));
+      // Immediate exit: a deferred RequestExit lets the engine keep
+      // initializing this half-built game instance and it segfaults in
+      // teardown before ever reaching the main loop. The UE log mirror
+      // may not flush before _exit, so also print straight to stderr.
+      fprintf(stderr,
+          "ERROR: CARLA server failed to start on RPC port %d: %s. "
+          "Another CARLA server is probably running on this port -- "
+          "close it or launch with a different -carla-rpc-port.\n",
+          static_cast<int>(Settings.RPCPort), e.what());
+      fflush(stderr);
+      GLog->Flush();
+      FPlatformMisc::RequestExit(true);
+      return;
+    }
 
     OnPreTickHandle = FWorldDelegates::OnWorldTickStart.AddRaw(
         this,

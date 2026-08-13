@@ -168,9 +168,32 @@ static const float DT = 0.05f;
 static const float INV_DT = 1.0f / DT;
 static const std::vector<float> LONGITUDIAL_PARAM = {12.0f, 0.05f, 0.02f};
 static const std::vector<float> LONGITUDIAL_HIGHWAY_PARAM = {20.0f, 0.05f, 0.01f};
-static const std::vector<float> LATERAL_PARAM = {8.0f, 0.04f, 0.16f};
-static const std::vector<float> LATERAL_HIGHWAY_PARAM = {4.0f, 0.04f, 0.08f};
+// 0.9.12-tuned gains. The ue5-dev bump to {8, 0.04, 0.16} doubles the loop
+// gain against the same steering-actuator lag, which turns any significant
+// initial lane error (>=1 m offset or >30 deg heading) into a growing
+// left/right oscillation that ends in a collision.
+static const std::vector<float> LATERAL_PARAM = {4.0f, 0.02f, 0.08f};
+static const std::vector<float> LATERAL_HIGHWAY_PARAM = {2.0f, 0.02f, 0.04f};
 } // namespace PID
+
+namespace StuckRecovery {
+// A vehicle commanded to move that stays below STUCK_SPEED for STUCK_TIME
+// while no hazard justifies the stop is considered wedged (curb, wall,
+// fence); a vehicle whose target sits more than ALIGN_ENTER_DEVIATION
+// off-heading at low speed is facing the wrong way (spun, wrong-way
+// resume). Both run the same K-turn maneuver: alternate reverse and
+// forward phases with full steering toward the target until the heading
+// deviation drops below ALIGN_EXIT_DEVIATION, then resume the PID.
+static const float STUCK_SPEED = 0.3f;         // m/s
+static const double STUCK_TIME = 3.0;          // s immobile before recovery
+static const double PHASE_DURATION = 1.5;      // s per K-turn phase
+static const float REVERSE_THROTTLE = 0.5f;
+static const float FORWARD_THROTTLE = 0.3f;
+static const float RECOVERY_STEER = 0.8f;
+static const float ALIGN_ENTER_DEVIATION = 0.6f;  // normalised angle (~108 deg)
+static const float ALIGN_EXIT_DEVIATION = 0.2f;   // normalised angle (~36 deg)
+static const float MISALIGN_MAX_SPEED = 3.5f;     // m/s
+} // namespace StuckRecovery
 
 namespace TrackTraffic {
 static const uint64_t BUFFER_STEP_THROUGH = 5;

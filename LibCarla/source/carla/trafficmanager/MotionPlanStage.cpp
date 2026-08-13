@@ -207,7 +207,72 @@ void MotionPlanStage::Update(const unsigned long index) {
         angular_deviation += 360.0f;
       }
       angular_deviation /= 180.0f;  // Normalised to [-1, 1].
+
+      // Full throttle with saturated steering produces accelerating donuts
+      // when the target sits far off-heading (after a spin, a collision or
+      // a wrong-way resume). Cap the target speed while grossly misaligned
+      // so full-lock turns stay tight; speed resumes as heading converges.
+      if (std::abs(angular_deviation) > 0.25f) {  // > 45 degrees
+        dynamic_target_velocity = std::min(dynamic_target_velocity, 3.0f);
+      }
       const float velocity_deviation{(dynamic_target_velocity - vehicle_speed) / dynamic_target_velocity};
+
+      // --- Stuck / misaligned vehicle recovery (K-turn) -----------------
+      // Two situations the forward PID cannot solve: a vehicle commanded to
+      // move (no red light, no vehicle ahead) that stays immobile is wedged
+      // against something and would grind at full lock forever; a vehicle
+      // whose target sits far off-heading (spun by a collision, player
+      // driving, wrong-way resume) would chase a target behind itself in
+      // full-lock circles. Both run a K-turn: alternate reverse and forward
+      // phases with full steering toward the target until roughly aligned,
+      // then resume the PID with a fresh state.
+      {
+        using namespace constants::StuckRecovery;
+        const double now = current_timestamp.elapsed_seconds;
+        const float abs_deviation = std::abs(angular_deviation);
+        bool recovering = false;
+        auto rec_it = recovery_state.find(actor_id);
+        if (rec_it != recovery_state.end()) {
+          if (abs_deviation < ALIGN_EXIT_DEVIATION) {
+            recovery_state.erase(rec_it);
+            stuck_since.erase(actor_id);
+            pid_state_map[actor_id] = StateEntry{current_timestamp, 0.0f, 0.0f, 0.0f};
+          } else {
+            recovering = true;
+            if (now >= rec_it->second.phase_until) {
+              rec_it->second.reversing = !rec_it->second.reversing;
+              rec_it->second.phase_until = now + PHASE_DURATION;
+            }
+          }
+        }
+        if (!recovering && !emergency_stop) {
+          bool stuck_trigger = false;
+          if (dynamic_target_velocity > STUCK_SPEED && vehicle_speed < STUCK_SPEED) {
+            auto stuck_it = stuck_since.insert({actor_id, now}).first;
+            stuck_trigger = (now - stuck_it->second > STUCK_TIME);
+          } else {
+            stuck_since.erase(actor_id);
+          }
+          const bool misaligned = abs_deviation > ALIGN_ENTER_DEVIATION &&
+                                  vehicle_speed < MISALIGN_MAX_SPEED;
+          if (stuck_trigger || misaligned) {
+            recovery_state[actor_id] = RecoveryState{now + PHASE_DURATION, true};
+            recovering = true;
+          }
+        }
+        if (recovering) {
+          const RecoveryState &rs = recovery_state.at(actor_id);
+          const float steer_direction = (angular_deviation > 0.0f) ? 1.0f : -1.0f;
+          carla::rpc::VehicleControl recovery_control;
+          recovery_control.reverse = rs.reversing;
+          recovery_control.throttle = rs.reversing ? REVERSE_THROTTLE : FORWARD_THROTTLE;
+          recovery_control.brake = 0.0f;
+          recovery_control.steer =
+              (rs.reversing ? -steer_direction : steer_direction) * RECOVERY_STEER;
+          output_array.at(index) = carla::rpc::Command::ApplyVehicleControl(actor_id, recovery_control);
+          return;
+        }
+      }
 
       // If previous state for vehicle not found, initialize state entry.
       if (pid_state_map.find(actor_id) == pid_state_map.end()) {
@@ -561,11 +626,15 @@ float MotionPlanStage::GetTurnTargetVelocity(const Buffer &waypoint_buffer,
 void MotionPlanStage::RemoveActor(const ActorId actor_id) {
   pid_state_map.erase(actor_id);
   teleportation_instance.erase(actor_id);
+  stuck_since.erase(actor_id);
+  recovery_state.erase(actor_id);
 }
 
 void MotionPlanStage::Reset() {
   pid_state_map.clear();
   teleportation_instance.clear();
+  stuck_since.clear();
+  recovery_state.clear();
 }
 
 } // namespace traffic_manager

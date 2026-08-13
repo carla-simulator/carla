@@ -10,6 +10,7 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaHUD.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/Lights/CarlaLight.h"
 #include "Carla/Trigger/FrictionTrigger.h"
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Util/EmptyActor.h"
@@ -18,7 +19,9 @@
 
 #include <util/ue-header-guard-begin.h>
 #include "Components/BoxComponent.h"
+#include "Components/LightComponent.h"
 #include "Engine/CollisionProfile.h"
+#include "UObject/UnrealType.h"
 #include "MovementComponents/DefaultMovementComponent.h"
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "VehicleAnimationInstance.h"
@@ -60,6 +63,8 @@ ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
 void ACarlaWheeledVehicle::BeginPlay()
 {
   Super::BeginPlay();
+
+  ActivateVehicleLightComponents();
 
   UDefaultMovementComponent::CreateDefaultMovementComponent(this);
 
@@ -161,6 +166,76 @@ void ACarlaWheeledVehicle::BeginPlay()
     AckermannController.UpdateVehiclePhysics(this);
   }
   AddReferenceToManager();
+}
+
+// Head beams need far more light than the other vehicle groups: under this
+// project's fixed day-calibrated exposure, a visible pool on the road at
+// 10-20 m takes millions of lumens (street lamps run tens of millions), and
+// the beams' authored group intensity is ~30. Blinkers/brakes/fog/plate are
+// close-range signal lights whose authored values read fine and must NOT get
+// this factor (a multi-million-lumen blinker would strobe the whole street).
+static TAutoConsoleVariable<float> CVarCarlaVehicleBeamIntensityScale(
+    TEXT("carla.Light.VehicleBeamIntensityScale"),
+    100000.0f,
+    TEXT("Multiplier converting the authored UE4-era intensity of vehicle low/high beam ")
+    TEXT("light components (and the blueprint's 'Beam Lights' group variable) to UE5 ")
+    TEXT("photometric units. Set 1 to leave them untouched."),
+    ECVF_Default);
+
+void ACarlaWheeledVehicle::ActivateVehicleLightComponents()
+{
+  // Vehicle light components ship bAutoActivate=false; UE4 rendered inactive
+  // lights anyway, UE 5.8 culls them outright, so every beam was invisible
+  // regardless of intensity. Activate only -- unlike street lamps, the
+  // authored automotive IES profiles (Vee/DefinedSpot beam shapes), shadow
+  // flags and attenuation radii are correct as-is and must not go through
+  // UCarlaLight::ActivateAndConfigureLightComponents (a 70 m radius floor on
+  // a blinker or license-plate light would be absurd).
+  //
+  // The base vehicle blueprint assigns each light component's intensity from
+  // per-group variables in its CONSTRUCTION script (so that has already
+  // happened by BeginPlay) and afterwards only toggles component VISIBILITY
+  // per light-state flag -- so converting the beam components right here
+  // sticks. The blueprint's "Beam Lights" group variable is scaled by the
+  // same factor so any later blueprint re-push writes the same converted
+  // value instead of reverting the beams to authored UE4 units.
+  const float BeamScale = CVarCarlaVehicleBeamIntensityScale.GetValueOnGameThread();
+  TArray<ULightComponent*> LightComponents;
+  GetComponents<ULightComponent>(LightComponents);
+  for (ULightComponent* LightComponent : LightComponents)
+  {
+    if (!LightComponent->IsActive())
+    {
+      LightComponent->SetActive(true);
+    }
+    const FString Name = LightComponent->GetName();
+    if (BeamScale != 1.0f &&
+        (Name.Contains(TEXT("low_beam")) || Name.Contains(TEXT("high_beam"))) &&
+        LightComponent->Intensity > 0.0f && LightComponent->Intensity < 1000.0f)
+    {
+      LightComponent->SetIntensity(LightComponent->Intensity * BeamScale);
+    }
+  }
+
+  if (BeamScale != 1.0f)
+  {
+    for (TFieldIterator<FFloatProperty> PropIt(GetClass()); PropIt; ++PropIt)
+    {
+      FFloatProperty* Property = *PropIt;
+      if (Property->GetAuthoredName() != TEXT("Beam Lights"))
+      {
+        continue;
+      }
+      float* ValuePtr = Property->ContainerPtrToValuePtr<float>(this);
+      if (ValuePtr != nullptr && *ValuePtr > 0.0f && *ValuePtr < 1000.0f)
+      {
+        *ValuePtr *= BeamScale;
+        UE_LOG(LogCarla, Verbose, TEXT("%s: scaled blueprint 'Beam Lights' to %f"),
+            *GetName(), *ValuePtr);
+      }
+      break;
+    }
+  }
 }
 
 void ACarlaWheeledVehicle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction){
@@ -747,6 +822,10 @@ void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState& LightS
     LightState.Special2 != InputControl.LightState.Special2)
   {
     InputControl.LightState = LightState;
+    // The blueprint reads its per-group intensity variables (already scaled
+    // once at spawn in ActivateVehicleLightComponents) and re-pushes them
+    // from a looping timer, so no per-call component rescale is needed here
+    // -- it would race that timer anyway.
     RefreshLightState(LightState);
   }
 }
@@ -827,7 +906,12 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
 
       if (enabled)
       {
+        Movement->SetUpdatedComponent(GetMesh());
         Movement->RecreatePhysicsState();
+        // The recreated body starts asleep and Chaos vehicle input does not
+        // wake it, leaving the drivetrain permanently inert (full throttle,
+        // zero motion) until something else wakes the body. Wake it here.
+        RootPrimitive->WakeAllRigidBodies();
         //VehicleAnim->ResetWheelCustomRotations();
       }
       else

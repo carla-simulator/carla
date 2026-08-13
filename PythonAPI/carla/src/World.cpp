@@ -77,6 +77,21 @@ static auto GetActorsById(carla::client::World &self, const boost::python::list 
   return self.GetActors(ids);
 }
 
+static void SpawnCustomMesh(
+    carla::client::World &self,
+    const boost::python::object &vertices,
+    const boost::python::object &triangles,
+    const std::string &material) {
+  std::vector<float> verts{
+      boost::python::stl_input_iterator<float>(vertices),
+      boost::python::stl_input_iterator<float>()};
+  std::vector<uint32_t> tris{
+      boost::python::stl_input_iterator<uint32_t>(triangles),
+      boost::python::stl_input_iterator<uint32_t>()};
+  carla::PythonUtil::ReleaseGIL unlock;
+  self.SpawnCustomMesh(verts, tris, material);
+}
+
 static auto GetVehiclesLightStates(carla::client::World &self) {
   boost::python::dict dict;
   auto list = self.GetVehiclesLightStates();
@@ -334,6 +349,8 @@ void export_world() {
     .def("get_traffic_lights_from_waypoint", CALL_RETURNING_LIST_2(cc::World, GetTrafficLightsFromWaypoint, const cc::Waypoint&, double), (arg("waypoint"), arg("distance")))
     .def("get_traffic_lights_in_junction", CALL_RETURNING_LIST_1(cc::World, GetTrafficLightsInJunction, carla::road::JuncId), (arg("junction_id")))
     .def("reset_all_traffic_lights", &cc::World::ResetAllTrafficLights)
+    .def("spawn_custom_mesh", &SpawnCustomMesh,
+        (arg("vertices"), arg("triangles"), arg("material")="grass"))
     .def("freeze_all_traffic_lights", &cc::World::FreezeAllTrafficLights, (arg("frozen")))
     .def("get_level_bbs", &GetLevelBBs, (arg("bb_type")=cr::CityObjectLabel::Any))
     .def("get_environment_objects", &GetEnvironmentObjects, (arg("object_type")=cr::CityObjectLabel::Any))
@@ -342,7 +359,7 @@ void export_world() {
     .def("project_point", CALL_RETURNING_OPTIONAL_3(cc::World, ProjectPoint, cg::Location, cg::Vector3D, float), (arg("location"), arg("direction"), arg("search_distance")=10000.f))
     .def("ground_projection", CALL_RETURNING_OPTIONAL_2(cc::World, GroundProjection, cg::Location, float), (arg("location"), arg("search_distance")=10000.f))
     .def("get_names_of_all_objects", CALL_RETURNING_LIST(cc::World, GetNamesOfAllObjects))
-    //.def("get_lightmanager", CONST_CALL_WITHOUT_GIL(cc::World, GetLightManager)) Disabling the light manager as it is not supported in 0.10.0 due to lack of night mode
+    .def("get_lightmanager", CONST_CALL_WITHOUT_GIL(cc::World, GetLightManager))
     
     // All of this is deprecated:
     .def("apply_color_texture_to_object", &cc::World::ApplyColorTextureToObject, (arg("object_name"), arg("material_parameter"), arg("texture")))

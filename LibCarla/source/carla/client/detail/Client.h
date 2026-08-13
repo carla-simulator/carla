@@ -455,6 +455,11 @@ namespace detail {
 
     void ClearDebugString();
 
+    void SpawnCustomMesh(
+        const std::vector<float> &vertices,
+        const std::vector<uint32_t> &triangles,
+        const std::string &material);
+
     void ApplyBatch(
         std::vector<rpc::Command> commands,
         bool do_tick_cue);
