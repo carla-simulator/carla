@@ -89,15 +89,19 @@ public:
   /// RoadMeshBounds and GroundHeightSampleGrid.
   void GenerateGroundPlane();
 
-  /// Fills the narrow unmapped strips between parallel carriageway roads
-  /// with road-material surface. Real-world OpenDRIVE exports (NuRec
-  /// DeepMap) model each direction of a dual carriageway as a separate
-  /// road and leave the median/gore strip between them unmapped -- bare
-  /// terrain showed through at road level and read as broken road
-  /// surface. Queries RoadRaster for terrain cells trapped between
-  /// driving surfaces on opposite sides within MedianFillMaxWidth whose
-  /// heights agree (rejects gaps under overpasses). Must run after
-  /// GenerateRoadMesh.
+  /// Annotates the narrow unmapped strips between parallel carriageway
+  /// roads so the terrain lofts flush across them. Real-world OpenDRIVE
+  /// exports (NuRec DeepMap) model each direction of a dual carriageway
+  /// as a separate road and leave the median/gore strip between them
+  /// unmapped -- the sunken terrain showed through as a pit below road
+  /// level and read as broken road surface (and paving the strip with
+  /// asphalt quads instead left floating plates wherever the gap widened
+  /// and the free terrain fell away underneath). Finds gap cells via a
+  /// morphological closing of the genuinely-covered driving footprint
+  /// (within MedianFillMaxWidth, rejecting overpass gaps) and writes a
+  /// lofted road-surface height per cell (FCell::GapSurfaceZ);
+  /// GenerateGroundPlane raises the grass flush to it. Must run after
+  /// GenerateRoadMesh and before GenerateGroundPlane.
   void GenerateMedianFill();
 
   /// Generates the crosswalk mesh based on the OpenDRIVE information.
@@ -166,11 +170,11 @@ protected:
       float DistToDrive = -1.0f;   // cm to the driving footprint, 0 inside
       float DistToPaved = -1.0f;   // cm to any pavement, 0 inside
       float NearestPavedMinZ = 0.0f;
-      /// Lowest median-fill / under-road-blanket quad emitted in this cell
-      /// (FLT_MAX if none). Written by GenerateMedianFill, which runs
-      /// before GenerateGroundPlane; the terrain clamps itself below these
-      /// quads so it cannot z-fight up through the fill.
-      float FillMinZ = FLT_MAX;
+      /// Lofted road-surface height over a median/junction gap cell
+      /// (FLT_MAX elsewhere). Written by GenerateMedianFill, which runs
+      /// before GenerateGroundPlane; the terrain raises itself flush to
+      /// this so the gap reads as level grass, not a sunken pit.
+      float GapSurfaceZ = FLT_MAX;
       uint8 bDrive = 0;
       uint8 bPaved = 0;
       /// Like bDrive but WITHOUT the rasterizer's negative barycentric
@@ -447,10 +451,10 @@ protected:
 
   /// Max allowed gap (cm) between a road cell's lowest surface and the
   /// terrain below it before the cell counts as a floating road. Must stay
-  /// above the ground plane's near-pavement clearance (3x GroundPlaneZOffset
-  /// = 15cm) plus the fill-quad clamp's reach (fill sits 1-3cm under the
-  /// lowest neighbouring lane, terrain 10cm under the fill, so a graded
-  /// cell's own surface can be ~grade x 2.5m + 13cm above the terrain).
+  /// above the ground plane's near-pavement clearance (GroundPlaneZOffset)
+  /// plus the fill-quad clamp's reach (fill sits ~2cm under the lowest
+  /// neighbouring lane, terrain 10cm under the fill, so a graded cell's
+  /// own surface can be ~grade x 2.5m + 12cm above the terrain).
   UPROPERTY(Category = "Generation QA", EditAnywhere)
   float QASupportGapMax = 30.0f;
 
