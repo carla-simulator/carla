@@ -57,9 +57,27 @@ ALargeMapManager::~ALargeMapManager()
 void ALargeMapManager::BeginPlay()
 {
   Super::BeginPlay();
-  RegisterTilesInWorldComposition();
 
   UWorld* World = GetWorld();
+  if (World->GetWorldPartition() != nullptr || World->WorldComposition == nullptr)
+  {
+    // World Partition world (or no WorldComposition at all): the engine
+    // streams cells natively with absolute double-precision coordinates, and
+    // every code path below assumes a valid WorldComposition. Stay inert with
+    // an empty tile list (all Global/Local conversions are identity then).
+    // Do NOT Destroy() here: CarlaGameModeBase and VegetationManager cache
+    // raw pointers to this actor, so destroying it mid-session leaves them
+    // dangling after the next GC pass. The World Partition migration branch
+    // removes the manager earlier (before anything caches it) and retires
+    // this path entirely.
+    UE_LOG(LogCarla, Warning, TEXT(
+        "LargeMapManager present in a World Partition world; legacy tile "
+        "streaming disabled (native streaming takes over)."));
+    SetActorTickEnabled(false);
+    return;
+  }
+  RegisterTilesInWorldComposition();
+
   /// Setup delegates
   // Origin rebase
   FCoreDelegates::PreWorldOriginOffset.AddUObject(this, &ALargeMapManager::PreWorldOriginOffset);
@@ -473,6 +491,10 @@ void ALargeMapManager::RegisterTilesInWorldComposition()
 {
   UWorld* World = GetWorld();
   UWorldComposition* WorldComposition = World->WorldComposition;
+  if (WorldComposition == nullptr)
+  {
+    return;
+  }
   World->ClearStreamingLevels();
   WorldComposition->TilesStreaming.Empty();
   WorldComposition->GetTilesList().Empty();
@@ -1084,7 +1106,8 @@ void ALargeMapManager::PrintMapInfo()
   ULevel* CurrentLevel = World->GetCurrentLevel();
 
   FString Output = "";
-  Output += FString::Printf(TEXT("Num levels in world composition: %d\n"), World->WorldComposition->TilesStreaming.Num());
+  Output += FString::Printf(TEXT("Num levels in world composition: %d\n"),
+      World->WorldComposition ? World->WorldComposition->TilesStreaming.Num() : 0);
   Output += FString::Printf(TEXT("Num levels loaded: %d\n"), Levels.Num() );
   Output += FString::Printf(TEXT("Num tiles loaded: %d\n"), CurrentTilesLoaded.Num() );
   Output += FString::Printf(TEXT("Tiles loaded: [ "));
