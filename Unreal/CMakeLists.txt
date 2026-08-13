@@ -440,6 +440,10 @@ function (
       -nop4
       -cook
       -stage
+      # UE 5.8 cooks into the local Zen store; without -pak -iostore staging
+      # finds no loose cooked files and silently ships a binaries-only package.
+      -pak
+      -iostore
       -archive
       -package
       -iterate
