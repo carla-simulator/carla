@@ -130,6 +130,14 @@ void ACarlaWheeledVehicle::BeginPlay()
   {
     check(MovementComponent != nullptr);
 
+    // UE5 Chaos defaults the steering input to SquaredFunction, an
+    // analog-gamepad feel curve that maps a steer command s to ~s^2 of full
+    // lock. CARLA clients (Traffic Manager, agents, manual control) expect
+    // the classic linear mapping from command to wheel angle; under the
+    // squared curve a 0.1 command yields ~1% of full lock and controllers
+    // tuned for a linear response cannot corner.
+    MovementComponent->SteeringInputRate.InputCurveFunction = EInputFunctionType::LinearFunction;
+
     // Setup Tire Configs with default value. This is needed to avoid getting
     // friction values of previously created TireConfigs for the same vehicle
     // blueprint.
@@ -862,23 +870,22 @@ void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLoc
 
 float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocation) {
 
-#if 0 // @CARLAUE5     // ToDo We need to investigate about this
-  check((uint8)WheelLocation >= 0)
-    UVehicleAnimationInstance* VehicleAnim = Cast<UVehicleAnimationInstance>(GetMesh()->GetAnimInstance());
-  check(VehicleAnim != nullptr)
-    check(VehicleAnim->GetWheeledVehicleMovementComponent() != nullptr)
-
-    if (bPhysicsEnabled == true)
-    {
-      return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetSteerAngle();
-    }
-    else
-    {
-      return VehicleAnim->GetWheelRotAngle((uint8)WheelLocation);
-    }
-#else
+  UChaosWheeledVehicleMovementComponent* MovementComponent =
+      GetChaosWheeledVehicleMovementComponent();
+  const int32 WheelIndex = (int32)WheelLocation;
+  // UChaosVehicleWheel::GetSteerAngle() check()s on PhysicsVehicleOutput, so
+  // guard it here: the physics output only exists while the Chaos vehicle
+  // simulation is running for this actor.
+  if (bPhysicsEnabled && MovementComponent != nullptr &&
+      MovementComponent->PhysicsVehicleOutput() != nullptr &&
+      WheelIndex >= 0 && WheelIndex < MovementComponent->Wheels.Num())
+  {
+    return MovementComponent->Wheels[WheelIndex]->GetSteerAngle();
+  }
+  UE_LOG(LogTemp, Warning,
+      TEXT("GetWheelSteerAngle: no physics simulation available for wheel %d."),
+      WheelIndex);
   return 0.0F;
-#endif
 }
 
 void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {

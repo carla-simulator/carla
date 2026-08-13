@@ -51,8 +51,19 @@ static const float HIGH_SPEED_HORIZON_RATE = 4.0f;
 } // namespace PathBufferUpdate
 
 namespace WaypointSelection {
-static const float TARGET_WAYPOINT_TIME_HORIZON = 0.5f;
+// Lookahead time for the steering target. ue5-dev halved this to 0.5 s,
+// which at 30 km/h puts the target ~4 m ahead: any lateral transient (lane
+// change, resume offset) then reads as a huge angular error, saturates the
+// PID and produces an underdamped weave. 1.0 s matches upstream and keeps
+// the pure-pursuit geometry well damped.
+static const float TARGET_WAYPOINT_TIME_HORIZON = 1.0f;
 static const float MIN_TARGET_WAYPOINT_DISTANCE = 3.0f;
+// Cap on the pursuit-target distance. Chasing a point d ahead cuts a curve
+// of radius R by the chord sagitta ~d^2/(8R): uncapped at 60 km/h (16.7 m)
+// on Town10's R~25 m corners that is a ~1.4 m apex cut, which lands the
+// vehicle in the oncoming lane on left curves. 10 m keeps the cut under
+// ~0.6 m on the tightest urban corners.
+static const float MAX_TARGET_WAYPOINT_DISTANCE = 10.0f;
 static const float JUNCTION_LOOK_AHEAD = 5.0f;
 static const float SAFE_DISTANCE_AFTER_JUNCTION = 4.0f;
 static const float MIN_JUNCTION_LENGTH = 8.0f;
@@ -164,16 +175,34 @@ static const float MAX_THROTTLE = 0.85f;
 static const float MAX_BRAKE = 0.7f;
 static const float MAX_STEERING = 0.8f;
 static const float MAX_STEERING_DIFF = 0.15f;
+// Speed-scaled steering envelope: |steer| <= STEER_LIMIT_GAIN / speed^2
+// (speed in m/s). Guards against a saturated PID output knifing the vehicle
+// across lanes at speed. Inactive below ~6 m/s (envelope > 0.8).
+// A/B note (Town10 matrix): raising the gain to 45 to let vehicles steer
+// through corners taken at 60 km/h regressed badly (saturated transients
+// became hard swerves into obstacles); the correct fix for running wide in
+// curves is slowing down before them (GetTurnTargetVelocity), not granting
+// more steering authority at speed.
+static const float STEER_LIMIT_GAIN = 30.0f;
 static const float DT = 0.05f;
 static const float INV_DT = 1.0f / DT;
+// Max change in normalised angular deviation per tick accepted by the
+// lateral derivative term: 0.05 * 180 deg / 0.05 s = 180 deg/s, the upper
+// bound of real vehicle yaw. Larger jumps are target discontinuities.
+static const float MAX_DEVIATION_DELTA = 0.05f;
 static const std::vector<float> LONGITUDIAL_PARAM = {12.0f, 0.05f, 0.02f};
 static const std::vector<float> LONGITUDIAL_HIGHWAY_PARAM = {20.0f, 0.05f, 0.01f};
-// 0.9.12-tuned gains. The ue5-dev bump to {8, 0.04, 0.16} doubles the loop
-// gain against the same steering-actuator lag, which turns any significant
-// initial lane error (>=1 m offset or >30 deg heading) into a growing
-// left/right oscillation that ends in a collision.
-static const std::vector<float> LATERAL_PARAM = {4.0f, 0.02f, 0.08f};
-static const std::vector<float> LATERAL_HIGHWAY_PARAM = {2.0f, 0.02f, 0.04f};
+// Lateral gains, step-response tuned against the LINEAR Chaos steering
+// mapping (the previous values were tuned while the engine still applied a
+// squared input curve, which hid a ~2-5x effective gain increase at small
+// commands). Key constraint: at cruise speeds the P term must stay inside
+// the STEER_LIMIT_GAIN/v^2 envelope for typical errors (~1.5 m offset ->
+// deviation ~0.05); P=2 keeps the loop linear at 60 km/h where P>=3
+// saturates the envelope and hunts around the lane center without settling
+// (measured: settle 1.1 s vs >6 s). D=0.24 damps the recovery to <=0.25 m
+// overshoot at 30-60 km/h.
+static const std::vector<float> LATERAL_PARAM = {2.0f, 0.03f, 0.24f};
+static const std::vector<float> LATERAL_HIGHWAY_PARAM = {2.0f, 0.02f, 0.24f};
 } // namespace PID
 
 namespace StuckRecovery {
@@ -191,7 +220,7 @@ static const float REVERSE_THROTTLE = 0.5f;
 static const float FORWARD_THROTTLE = 0.3f;
 static const float RECOVERY_STEER = 0.8f;
 static const float ALIGN_ENTER_DEVIATION = 0.6f;  // normalised angle (~108 deg)
-static const float ALIGN_EXIT_DEVIATION = 0.2f;   // normalised angle (~36 deg)
+static const float ALIGN_EXIT_DEVIATION = 0.1f;   // normalised angle (~18 deg)
 static const float MISALIGN_MAX_SPEED = 3.5f;     // m/s
 } // namespace StuckRecovery
 
