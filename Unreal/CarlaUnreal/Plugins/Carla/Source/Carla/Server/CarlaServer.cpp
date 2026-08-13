@@ -564,10 +564,17 @@ void FCarlaServer::FPimpl::BindActions()
     IFileManager::Get().FindFilesRecursive(Files, *folderDir, *(fileName + ".xodr"), true, false, false);
     IFileManager::Get().FindFilesRecursive(Files, *folderDir, *(fileName + ".bin"), true, false, false);
 
-    // Remove the start of the path until the content folder and put each file in the result
+    // Remove the start of the path until the content folder and put each file
+    // in the result. In a packaged build the file manager hands back
+    // pak-relative paths ("../../../<Project>/Content/..."), so normalize each
+    // file to an absolute path before stripping the absolute content dir;
+    // otherwise the raw relative path leaks to the client, which would try to
+    // resolve it against its cache folder and escape it.
+    const FString ContentDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir());
     std::vector<std::string> result;
     for (auto File : Files) {
-      File.RemoveFromStart(FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()));
+      File = FPaths::ConvertRelativePathToFull(File);
+      File.RemoveFromStart(ContentDir);
       result.emplace_back(TCHAR_TO_UTF8(*File));
     }
 
@@ -577,9 +584,17 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
 
-    // Get the absolute path of the file
-    FString path(FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()));
+    // Get the absolute path of the file, refusing names that escape the
+    // content folder: the name comes from the client, and ".." segments would
+    // otherwise let it read arbitrary files on the server host.
+    const FString ContentDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir());
+    FString path = ContentDir;
     path.Append(name.c_str());
+    path = FPaths::ConvertRelativePathToFull(path);
+    if (!path.StartsWith(ContentDir))
+    {
+      RESPOND_ERROR("file requested outside the content folder");
+    }
 
     // Copy the binary data of the file into the result and return it
     TArray<uint8_t> Content;
