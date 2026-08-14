@@ -260,10 +260,66 @@ void AWeather::PushWeatherToSky()
                 SunLightComponent->SetLightColor(FLinearColor::White);
             }
         }
-        if (UCurveFloat* SkyIntensityCurve = FindCurve(TEXT("SkyIntensity_Curve")))
+        // The rig ships EVERY component with bAutoActivate false on the
+        // instance (the same UE4-era authoring defect documented for the moon
+        // below and for street lamps in CarlaLight.cpp), and until now only
+        // the night branch below ever re-activated the skylight -- so by day
+        // the skylight was simply off and shadows received zero ambient light
+        // against the physical 100k lux sun from SunIntensity_Curve: every
+        // shaded surface rendered pitch black.
+        //
+        // Activating the skylight alone is not enough. Its authored source is
+        // black (SLS_SpecifiedCubemap with a null cubemap) and the
+        // bRealTimeCapture flag that overrides that source renders ONLY sky
+        // components -- SkyAtmosphere, VolumetricCloud, IsSky-flagged meshes
+        // -- into the capture. The sky CARLA actually displays is the stock
+        // engine BP_Sky_Sphere mesh (not IsSky-flagged, invisible to the
+        // capture), and the rig's own SkyAtmosphereComponent is inactive like
+        // everything else, so the real-time capture rendered an empty scene:
+        // a black cubemap, zero ambient at any intensity (verified: black
+        // shadows with GI disabled entirely, with the skylight active).
+        //
+        // So: activate the SkyAtmosphere for the capture to see. In the main
+        // view it stays hidden behind the opaque legacy sphere, so the
+        // rendered sky look does not change; the capture ignores the sphere
+        // and sees the atmosphere, yielding a physically-scaled ambient in
+        // the same photometric units as the sun that tracks sun altitude for
+        // free. The VolumetricCloudComponent is deliberately left inactive:
+        // the sphere already paints clouds, and volumetric ones would
+        // composite in front of it as a second cloud layer.
         {
-            if (USkyLightComponent* SkyLightComponent = FindSkyLightComponent(TEXT("SkyLightComponent")))
+            FObjectProperty* AtmosphereProperty = CastField<FObjectProperty>(
+                SkyActor->GetClass()->FindPropertyByName(TEXT("SkyAtmosphereComponent")));
+            UActorComponent* AtmosphereComponent = AtmosphereProperty != nullptr
+                ? Cast<UActorComponent>(AtmosphereProperty->GetObjectPropertyValue_InContainer(SkyActor))
+                : nullptr;
+            if (AtmosphereComponent != nullptr && !AtmosphereComponent->IsActive())
+                AtmosphereComponent->SetActive(true);
+        }
+        // Skylight: force active + real-time capture (the latter is already
+        // set on the asset; enforced defensively in case a rig resave clears
+        // it -- supported on Stationary mobility and on by default via
+        // r.SkyLight.RealTimeReflectionCapture). SkyIntensity_Curve (1.0 by
+        // day, 0 at night) remains the multiplier on the capture.
+        if (USkyLightComponent* SkyLightComponent = FindSkyLightComponent(TEXT("SkyLightComponent")))
+        {
+            if (!SkyLightComponent->bRealTimeCapture)
+                SkyLightComponent->SetRealTimeCaptureEnabled(true);
+            if (!SkyLightComponent->IsActive())
+                SkyLightComponent->SetActive(true);
+            if (UCurveFloat* SkyIntensityCurve = FindCurve(TEXT("SkyIntensity_Curve")))
                 SkyLightComponent->SetIntensity(SkyIntensityCurve->GetFloatValue(Weather.SunAltitudeAngle));
+            UE_LOG(LogCarla, Verbose, TEXT(
+                "AWeather sky light: active=%d intensity=%.3f realtimecapture=%d mobility=%d visible=%d"),
+                SkyLightComponent->IsActive() ? 1 : 0,
+                SkyLightComponent->Intensity,
+                SkyLightComponent->IsRealTimeCaptureEnabled() ? 1 : 0,
+                int(SkyLightComponent->Mobility.GetValue()),
+                SkyLightComponent->IsVisible() ? 1 : 0);
+        }
+        else
+        {
+            UE_LOG(LogCarla, Warning, TEXT("AWeather: no SkyLightComponent found on %s"), *SkyActor->GetName());
         }
 
         // Night ambient floor. BP_Carla_Sky's DirectionalLightComponentMoon
