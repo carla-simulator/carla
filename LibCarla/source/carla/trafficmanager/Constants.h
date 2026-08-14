@@ -184,12 +184,30 @@ static const float MAX_STEERING_DIFF = 0.15f;
 // curves is slowing down before them (GetTurnTargetVelocity), not granting
 // more steering authority at speed.
 static const float STEER_LIMIT_GAIN = 30.0f;
+// Nominal controller period: the sync-mode fixed_delta_seconds the gains were
+// tuned at. In asynchronous mode the real period is one server frame, which
+// under render load (e.g. a path-traced rt_lens sensor halving the frame
+// rate) can be 2-4x this. RunStep therefore takes the measured period and
+// compensates; DT is only the design point and the fallback when no valid
+// measurement exists (first tick after registration or a state reseed).
 static const float DT = 0.05f;
 static const float INV_DT = 1.0f / DT;
+// Valid range for the measured controller period. Below MIN the derivative
+// division gets noisy; above MAX the sim is hitching so badly that reacting
+// to the full elapsed time would command huge one-tick corrections.
+static const float MIN_CONTROL_DT = 0.01f;
+static const float MAX_CONTROL_DT = 0.2f;
+// Steering slew budget, per second of simulation time (0.15 per 0.05 s tick
+// at the design rate). Applying it per second instead of per tick keeps the
+// physical steering rate constant when the tick rate changes.
+static const float MAX_STEERING_RATE = MAX_STEERING_DIFF / DT;
 // Max change in normalised angular deviation per tick accepted by the
 // lateral derivative term: 0.05 * 180 deg / 0.05 s = 180 deg/s, the upper
 // bound of real vehicle yaw. Larger jumps are target discontinuities.
 static const float MAX_DEVIATION_DELTA = 0.05f;
+// The same bound expressed as a rate, so it scales with the measured tick
+// period: 1.0 normalised units/s = 180 deg/s.
+static const float MAX_DEVIATION_RATE = MAX_DEVIATION_DELTA / DT;
 static const std::vector<float> LONGITUDIAL_PARAM = {12.0f, 0.05f, 0.02f};
 static const std::vector<float> LONGITUDIAL_HIGHWAY_PARAM = {20.0f, 0.05f, 0.01f};
 // Lateral gains, step-response tuned against the LINEAR Chaos steering

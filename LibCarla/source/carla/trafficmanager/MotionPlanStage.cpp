@@ -26,6 +26,7 @@ using namespace constants::SpeedThreshold;
 
 using constants::HybridMode::HYBRID_MODE_DT;
 using constants::HybridMode::HYBRID_MODE_DT_FL;
+using constants::PID::DT;
 using constants::Collision::EPSILON;
 
 MotionPlanStage::MotionPlanStage(
@@ -313,10 +314,22 @@ void MotionPlanStage::Update(const unsigned long index) {
       // State update for vehicle.
       current_state = {current_timestamp, angular_deviation, velocity_deviation, 0.0f};
 
+      // Measured controller period in simulation time. In synchronous mode
+      // this is fixed_delta_seconds; in asynchronous mode it is one server
+      // frame, which under render load can stretch well past the nominal DT
+      // the gains were tuned at -- RunStep compensates. Non-positive values
+      // (first tick after registration or a recovery reseed, where previous
+      // and current share a timestamp) fall back to the nominal period.
+      float control_dt = static_cast<float>(
+          current_timestamp.elapsed_seconds - previous_state.time_instance.elapsed_seconds);
+      if (control_dt <= 0.0f) {
+        control_dt = DT;
+      }
+
       // Controller actuation.
       actuation_signal = PID::RunStep(current_state, previous_state,
                                       longitudinal_parameters, lateral_parameters,
-                                      vehicle_speed);
+                                      vehicle_speed, control_dt);
 
       if (emergency_stop) {
         actuation_signal.throttle = 0.0f;
