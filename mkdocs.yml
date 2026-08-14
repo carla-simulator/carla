@@ -38,6 +38,7 @@ nav:
 
 - CARLA Ecosystem:
   - 'MathWorks': 'large_map_roadrunner.md'
+  - 'NVIDIA': 'nvidia.md'
   # - 'ASAM OpenDRIVE': 'adv_opendrive.md'
   - 'ROS2': 'ros2_native.md'
   - 'Scenic': 'tuto_G_scenic.md'
