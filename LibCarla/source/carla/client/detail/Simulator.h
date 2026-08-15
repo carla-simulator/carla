@@ -323,11 +323,32 @@ namespace detail {
 
     void NavigationTick();
 
+    /// True when the current episode's navigation is hosted by the server
+    /// (World-Partitioned navmesh); walker AI then goes through the
+    /// walker_* RPCs instead of the client-side Detour crowd.
+    bool IsNavigationServerSide();
+
     void RegisterAIController(const WalkerAIController &controller);
 
     void UnregisterAIController(const WalkerAIController &controller);
 
     std::optional<geom::Location> GetRandomLocationFromNavigation();
+
+    bool WalkerStartNavigation(ActorId walker_id) {
+      return _client.WalkerStartNavigation(walker_id);
+    }
+
+    bool WalkerGoToLocation(ActorId walker_id, const geom::Location &destination) {
+      return _client.WalkerGoToLocation(walker_id, destination);
+    }
+
+    bool WalkerSetMaxSpeed(ActorId walker_id, float max_speed) {
+      return _client.WalkerSetMaxSpeed(walker_id, max_speed);
+    }
+
+    bool WalkerStopNavigation(ActorId walker_id) {
+      return _client.WalkerStopNavigation(walker_id);
+    }
 
     void SetPedestriansCrossFactor(float percentage);
 

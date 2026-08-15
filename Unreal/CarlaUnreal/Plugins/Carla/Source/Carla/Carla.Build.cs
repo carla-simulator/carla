@@ -106,7 +106,6 @@ public class Carla :
 
     PrivateDependencyModuleNames.AddRange(new string[]
     {
-      "AIModule",
       "AssetRegistry",
       "CoreUObject",
       "Engine",
@@ -117,6 +116,7 @@ public class Carla :
       "Json",
       "JsonUtilities",
       "Landscape",
+      "NavigationSystem",
       "Slate",
       "SlateCore",
       "PhysicsCore",
@@ -127,6 +127,10 @@ public class Carla :
 
     PublicDependencyModuleNames.AddRange(new string[]
     {
+      // AWalkerController (a public header, included via CarlaActor.h by
+      // dependent modules like CarlaTools) is an AAIController now, so the
+      // AIModule include paths must propagate to consumers.
+      "AIModule",
       "Core",
       "RenderCore",
       "RHI",

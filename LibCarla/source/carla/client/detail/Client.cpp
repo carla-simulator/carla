@@ -214,6 +214,37 @@ namespace detail {
     return _pimpl->CallAndWait<std::vector<uint8_t>>("get_navigation_mesh");
   }
 
+  bool Client::IsNavigationServerSide() const {
+    try {
+      return _pimpl->CallAndWait<bool>("is_navigation_server_side");
+    } catch (const ::rpc::rpc_error &) {
+      // Servers that predate server-side navigation don't bind this function;
+      // that means legacy client-side navigation. Timeouts are NOT caught:
+      // a dead server must not masquerade as a legacy one.
+      return false;
+    }
+  }
+
+  geom::Location Client::GetRandomLocationFromNavigation() const {
+    return _pimpl->CallAndWait<geom::Location>("get_random_location_from_navigation");
+  }
+
+  bool Client::WalkerStartNavigation(rpc::ActorId walker) const {
+    return _pimpl->CallAndWait<bool>("walker_start_navigation", walker);
+  }
+
+  bool Client::WalkerGoToLocation(rpc::ActorId walker, const geom::Location &destination) const {
+    return _pimpl->CallAndWait<bool>("walker_go_to_location", walker, destination);
+  }
+
+  bool Client::WalkerSetMaxSpeed(rpc::ActorId walker, float max_speed) const {
+    return _pimpl->CallAndWait<bool>("walker_set_max_speed", walker, max_speed);
+  }
+
+  bool Client::WalkerStopNavigation(rpc::ActorId walker) const {
+    return _pimpl->CallAndWait<bool>("walker_stop_navigation", walker);
+  }
+
   bool Client::SetFilesBaseFolder(const std::string &path) {
     return FileTransfer::SetFilesBaseFolder(path);
   }

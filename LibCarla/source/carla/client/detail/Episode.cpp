@@ -156,7 +156,10 @@ using namespace std::chrono_literals;
     do {
       nav = _walker_navigation.load();
       if (nav == nullptr) {
-        auto new_nav = std::make_shared<WalkerNavigation>(_simulator);
+        // Queried once per episode: _walker_navigation is reset on episode
+        // start, so a load_world onto/off a server-side-nav map re-detects.
+        auto new_nav = std::make_shared<WalkerNavigation>(
+            _simulator, _client.IsNavigationServerSide());
         _walker_navigation.compare_exchange(&nav, new_nav);
       }
     } while (nav == nullptr);

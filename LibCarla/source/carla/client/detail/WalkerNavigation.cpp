@@ -21,8 +21,16 @@ namespace carla {
 namespace client {
 namespace detail {
 
-  WalkerNavigation::WalkerNavigation(std::weak_ptr<Simulator> simulator) : _simulator(simulator), _next_check_index(0) {
+  WalkerNavigation::WalkerNavigation(std::weak_ptr<Simulator> simulator, bool server_side)
+    : _simulator(simulator),
+      _next_check_index(0),
+      _server_side(server_side) {
     _nav.SetSimulator(simulator);
+    if (_server_side) {
+      // The server hosts the navigation (World-Partitioned navmesh): no .bin
+      // navmesh is downloaded and the client-side Detour crowd stays empty.
+      return;
+    }
     // Here call the server to retrieve the navmesh data.
     auto files = _simulator.lock()->GetRequiredFiles("Nav");
     if (!files.empty()) {
@@ -31,6 +39,11 @@ namespace detail {
   }
 
   void WalkerNavigation::Tick(std::shared_ptr<Episode> episode) {
+    if (_server_side) {
+      // Walkers are driven by the server's crowd; pushing client-side
+      // WalkerControl states here would fight the server controller.
+      return;
+    }
     auto walkers = _walkers.Load();
     if (walkers->empty()) {
       return;

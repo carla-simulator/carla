@@ -17,6 +17,8 @@
 #include "Carla/Sensor/CustomV2XSensor.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
+#include "Carla/AI/WalkerAIController.h"
+#include "Carla/Navigation/CarlaNavigationSubsystem.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
@@ -97,6 +99,43 @@ template <typename T, typename Other>
 static std::vector<T> MakeVectorFromTArray(const TArray<Other> &Array)
 {
   return {Array.GetData(), Array.GetData() + Array.Num()};
+}
+
+/// Resolve the AWalkerController behind a walker-navigation RPC actor id.
+/// Accepts either the walker pawn itself or the controller.ai.walker handle
+/// actor (which clients spawn attached to the walker). Returns nullptr for
+/// unknown, dormant or dead actors -- the navigation RPCs answer false in
+/// that case instead of raising, per the phase-1 contract.
+static AWalkerController *ResolveWalkerNavController(FCarlaActor *CarlaActor)
+{
+  if (CarlaActor == nullptr || CarlaActor->IsDormant())
+  {
+    return nullptr;
+  }
+  AActor *Actor = CarlaActor->GetActor();
+  if (Actor == nullptr)
+  {
+    return nullptr;
+  }
+  if (Cast<AWalkerAIController>(Actor) != nullptr)
+  {
+    Actor = Actor->GetAttachParentActor();
+    if (Actor == nullptr)
+    {
+      return nullptr;
+    }
+  }
+  auto *Walker = Cast<AWalkerBase>(Actor);
+  if (Walker != nullptr && !Walker->bAlive)
+  {
+    return nullptr;
+  }
+  auto *Pawn = Cast<APawn>(Actor);
+  if (Pawn == nullptr)
+  {
+    return nullptr;
+  }
+  return Cast<AWalkerController>(Pawn->GetController());
 }
 
 // =============================================================================
@@ -2245,6 +2284,85 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     }
 
     return R<void>::Success();
+  };
+
+  // ~~ Walker navigation (server-side, engine navmesh) ~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(is_navigation_server_side) << [this]() -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *NavSubsystem = UCarlaNavigationSubsystem::Get(Episode->GetWorld());
+    return (NavSubsystem != nullptr) && NavSubsystem->HasServerSideNavigation();
+  };
+
+  BIND_SYNC(get_random_location_from_navigation) << [this]() -> R<cr::Location>
+  {
+    REQUIRE_CARLA_EPISODE();
+    // Failure sentinel per the phase-1 contract: the client retries or falls
+    // back to the legacy client-side navigation.
+    const cr::Location Sentinel{0.0f, 0.0f, -1e6f};
+    auto *NavSubsystem = UCarlaNavigationSubsystem::Get(Episode->GetWorld());
+    if (NavSubsystem == nullptr)
+    {
+      return Sentinel;
+    }
+    FVector Location;
+    if (!NavSubsystem->GetRandomNavLocation(Location))
+    {
+      return Sentinel;
+    }
+    ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    ALargeMapManager *LargeMap = GameMode ? GameMode->GetLMManager() : nullptr;
+    if (LargeMap)
+    {
+      Location = LargeMap->LocalToGlobalLocation(Location);
+    }
+    return cr::Location(Location);
+  };
+
+  BIND_SYNC(walker_start_navigation) << [this](cr::ActorId ActorId) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *Controller = ResolveWalkerNavController(Episode->FindCarlaActor(ActorId));
+    return (Controller != nullptr) && Controller->StartNavigation();
+  };
+
+  BIND_SYNC(walker_go_to_location) << [this](
+      cr::ActorId ActorId,
+      cr::Location Location) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *Controller = ResolveWalkerNavController(Episode->FindCarlaActor(ActorId));
+    if (Controller == nullptr)
+    {
+      return false;
+    }
+    FVector UELocation = Location;
+    ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    ALargeMapManager *LargeMap = GameMode ? GameMode->GetLMManager() : nullptr;
+    if (LargeMap)
+    {
+      UELocation = LargeMap->GlobalToLocalLocation(UELocation);
+    }
+    return Controller->GoToNavLocation(UELocation);
+  };
+
+  BIND_SYNC(walker_set_max_speed) << [this](
+      cr::ActorId ActorId,
+      float SpeedMPerSec) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *Controller = ResolveWalkerNavController(Episode->FindCarlaActor(ActorId));
+    constexpr float MeterToCentimeter = 100.0f;
+    return (Controller != nullptr) &&
+        Controller->SetNavMaxSpeed(MeterToCentimeter * SpeedMPerSec);
+  };
+
+  BIND_SYNC(walker_stop_navigation) << [this](cr::ActorId ActorId) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *Controller = ResolveWalkerNavController(Episode->FindCarlaActor(ActorId));
+    return (Controller != nullptr) && Controller->StopNavigation();
   };
 
   BIND_SYNC(blend_pose) << [this](

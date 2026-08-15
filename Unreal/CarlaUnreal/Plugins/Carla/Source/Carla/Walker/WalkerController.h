@@ -16,13 +16,20 @@
 
 #include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
-#include "GameFramework/Controller.h"
+#include "AIController.h"
 #include <util/ue-header-guard-end.h>
 
 #include "WalkerController.generated.h"
 
+/// Possesses every walker pawn. Historically a plain AController that only
+/// relayed the client-computed FWalkerControl into the character movement;
+/// it is now an AAIController with a UCrowdFollowingComponent so the server
+/// can also path-follow on the engine navmesh (server-side pedestrian
+/// navigation on World Partition maps). Manual FWalkerControl input and
+/// navmesh following are mutually exclusive: applying a manual control
+/// aborts any active navigation request.
 UCLASS()
-class CARLA_API AWalkerController : public AController
+class CARLA_API AWalkerController : public AAIController
 {
   GENERATED_BODY()
 
@@ -62,7 +69,39 @@ public:
   UFUNCTION(BlueprintCallable)
   void GetPoseFromAnimation();
 
+  /// -- Server-side navmesh navigation ---------------------------------------
+
+  /// Enter navigation mode (idempotent). Returns false if no walker pawn is
+  /// possessed. The manual control input is suppressed while navigating.
+  bool StartNavigation();
+
+  /// Path-follow to @a WorldLocation (world-local centimeters) on the navmesh
+  /// through the crowd following component. Implies StartNavigation().
+  bool GoToNavLocation(const FVector &WorldLocation);
+
+  /// Walking speed used while navigating, in cm/s. The manual control path
+  /// scales its input against GetMaximumWalkSpeed(), so the character's
+  /// MaxWalkSpeed is only lowered to this value while navigation is active
+  /// and restored when it stops.
+  bool SetNavMaxSpeed(float SpeedCmPerSec);
+
+  /// Abort any navigation request and return to manual control.
+  bool StopNavigation();
+
+  bool IsNavigationActive() const
+  {
+    return bNavigationActive;
+  }
+
 private:
 
+  void SetNavigationActive(bool bActive);
+
   FWalkerControl Control;
+
+  /// Walking speed applied while navigating, cm/s (defaults to the usual
+  /// pedestrian speed the Python clients use, 1.39 m/s).
+  float NavMaxSpeed = 139.0f;
+
+  bool bNavigationActive = false;
 };

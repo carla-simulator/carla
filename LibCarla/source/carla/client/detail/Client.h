@@ -137,6 +137,23 @@ namespace detail {
 
     std::vector<uint8_t> GetNavigationMesh() const;
 
+    /// True when the server hosts the pedestrian navigation (a
+    /// World-Partitioned navmesh exists in the current world). Returns false
+    /// on legacy .bin towns and on servers that predate the RPC.
+    bool IsNavigationServerSide() const;
+
+    /// Server-side random point on the loaded navmesh. Returns the failure
+    /// sentinel Location(0, 0, -1e6) when no point could be found.
+    geom::Location GetRandomLocationFromNavigation() const;
+
+    bool WalkerStartNavigation(rpc::ActorId walker) const;
+
+    bool WalkerGoToLocation(rpc::ActorId walker, const geom::Location &destination) const;
+
+    bool WalkerSetMaxSpeed(rpc::ActorId walker, float max_speed) const;
+
+    bool WalkerStopNavigation(rpc::ActorId walker) const;
+
     bool SetFilesBaseFolder(const std::string &path);
 
     std::vector<std::string> GetRequiredFiles(const std::string &folder = "", const bool download = true) const;
