@@ -2320,20 +2320,38 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     return cr::Location(Location);
   };
 
-  BIND_SYNC(walker_start_navigation) << [this](cr::ActorId ActorId) -> R<bool>
+  // Starts navigation, drawing the walker's crosser flag from the episode
+  // RNG exactly once (repeated starts keep the first draw, preserving the
+  // set_pedestrians_seed determinism guarantee).
+  const auto EnsureWalkerNavigationStarted =
+      [](UCarlaEpisode *Episode, AWalkerController *Controller) -> bool
+  {
+    if (Controller == nullptr)
+    {
+      return false;
+    }
+    if (Controller->IsNavigationActive())
+    {
+      return Controller->StartNavigation();
+    }
+    return Controller->StartNavigation(Episode->DrawWalkerIsCrosser());
+  };
+
+  BIND_SYNC(walker_start_navigation) << [this, EnsureWalkerNavigationStarted](
+      cr::ActorId ActorId) -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();
     auto *Controller = ResolveWalkerNavController(Episode->FindCarlaActor(ActorId));
-    return (Controller != nullptr) && Controller->StartNavigation();
+    return EnsureWalkerNavigationStarted(Episode, Controller);
   };
 
-  BIND_SYNC(walker_go_to_location) << [this](
+  BIND_SYNC(walker_go_to_location) << [this, EnsureWalkerNavigationStarted](
       cr::ActorId ActorId,
       cr::Location Location) -> R<bool>
   {
     REQUIRE_CARLA_EPISODE();
     auto *Controller = ResolveWalkerNavController(Episode->FindCarlaActor(ActorId));
-    if (Controller == nullptr)
+    if (!EnsureWalkerNavigationStarted(Episode, Controller))
     {
       return false;
     }
@@ -2363,6 +2381,22 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     REQUIRE_CARLA_EPISODE();
     auto *Controller = ResolveWalkerNavController(Episode->FindCarlaActor(ActorId));
     return (Controller != nullptr) && Controller->StopNavigation();
+  };
+
+  BIND_SYNC(set_pedestrians_cross_factor) << [this](float CrossFactor) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    // Applies to walkers whose navigation starts after this call (legacy
+    // semantics); a no-op success when no navmesh exists.
+    Episode->SetPedestriansCrossFactor(CrossFactor);
+    return true;
+  };
+
+  BIND_SYNC(set_pedestrians_seed) << [this](uint32_t Seed) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->SetPedestriansSeed(Seed);
+    return true;
   };
 
   BIND_SYNC(blend_pose) << [this](

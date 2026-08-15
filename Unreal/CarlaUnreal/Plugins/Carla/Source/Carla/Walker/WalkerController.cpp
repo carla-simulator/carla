@@ -6,6 +6,7 @@
 
 #include "Carla/Walker/WalkerController.h"
 #include "Carla.h"
+#include "Carla/Navigation/CarlaWalkerNavFilters.h"
 #include "Carla/Walker/WalkerAnim.h"
 
 #include <util/ue-header-guard-begin.h>
@@ -62,11 +63,16 @@ void AWalkerController::ApplyWalkerControl(const FWalkerControl &InControl)
   Control = InControl;
 }
 
-bool AWalkerController::StartNavigation()
+bool AWalkerController::StartNavigation(const bool bIsCrosser)
 {
   if (GetCharacter() == nullptr)
   {
     return false;
+  }
+  if (!bNavigationActive)
+  {
+    // The crosser draw is per-walker; repeated Start calls keep the first.
+    bNavCrosser = bIsCrosser;
   }
   SetNavigationActive(true);
   return true;
@@ -74,7 +80,7 @@ bool AWalkerController::StartNavigation()
 
 bool AWalkerController::GoToNavLocation(const FVector &WorldLocation)
 {
-  if (!StartNavigation())
+  if (!StartNavigation(bNavCrosser))
   {
     return false;
   }
@@ -83,7 +89,13 @@ bool AWalkerController::GoToNavLocation(const FVector &WorldLocation)
       /*AcceptanceRadius=*/50.0f,
       /*bStopOnOverlap=*/true,
       /*bUsePathfinding=*/true,
-      /*bProjectDestinationToNavigation=*/true);
+      /*bProjectDestinationToNavigation=*/true,
+      /*bCanStrafe=*/true,
+      // Non-crossers plan on a filter that excludes road/crosswalk areas;
+      // crossers use the areas' own costs (crosswalk cheap, road expensive).
+      /*FilterClass=*/bNavCrosser
+          ? TSubclassOf<UNavigationQueryFilter>(UCarlaWalkerCrosserNavFilter::StaticClass())
+          : TSubclassOf<UNavigationQueryFilter>(UCarlaWalkerNavFilter::StaticClass()));
   if (Result == EPathFollowingRequestResult::Failed)
   {
     UE_LOG(LogCarla, Warning,

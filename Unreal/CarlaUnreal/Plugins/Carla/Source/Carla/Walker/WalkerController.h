@@ -73,7 +73,11 @@ public:
 
   /// Enter navigation mode (idempotent). Returns false if no walker pawn is
   /// possessed. The manual control input is suppressed while navigating.
-  bool StartNavigation();
+  /// @a bIsCrosser selects the query filter: crossers may traverse
+  /// road/crosswalk nav areas (drawn once per walker by the episode with
+  /// probability pedestrians_cross_factor); the flag is ignored when
+  /// navigation is already active, so repeated Start calls cannot re-draw.
+  bool StartNavigation(bool bIsCrosser = false);
 
   /// Path-follow to @a WorldLocation (world-local centimeters) on the navmesh
   /// through the crowd following component. Implies StartNavigation().
@@ -104,4 +108,8 @@ private:
   float NavMaxSpeed = 139.0f;
 
   bool bNavigationActive = false;
+
+  /// Whether this walker may traverse road/crosswalk nav areas. Drawn once
+  /// per walker when its navigation starts.
+  bool bNavCrosser = false;
 };

@@ -6,6 +6,7 @@
 
 #include "Carla/Navigation/CarlaNavigationSubsystem.h"
 #include "Carla.h"
+#include "Carla/Navigation/CarlaWalkerNavFilters.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "NavigationSystem.h"
@@ -33,8 +34,18 @@ bool UCarlaNavigationSubsystem::GetRandomNavLocation(FVector &OutLocation) const
   {
     return false;
   }
+  // Sample with the non-crossing walker filter so random locations land on
+  // sidewalk/terrain polys, never on the roadway -- matching the legacy
+  // get_random_location_from_navigation semantics. On navmeshes built before
+  // the road/crosswalk areas existed the filter simply has no effect.
+  FSharedConstNavQueryFilter QueryFilter;
+  if (ANavigationData *NavData = NavSys->GetDefaultNavDataInstance())
+  {
+    QueryFilter = UNavigationQueryFilter::GetQueryFilter(
+        *NavData, UCarlaWalkerNavFilter::StaticClass());
+  }
   FNavLocation Result;
-  if (!NavSys->GetRandomPoint(Result))
+  if (!NavSys->GetRandomPoint(Result, nullptr, QueryFilter))
   {
     return false;
   }

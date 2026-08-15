@@ -154,6 +154,14 @@ namespace detail {
 
     bool WalkerStopNavigation(rpc::ActorId walker) const;
 
+    /// Probability that a walker whose navigation starts after this call may
+    /// cross roads (server-side navigation only).
+    bool SetPedestriansCrossFactor(float percentage) const;
+
+    /// Seed for the server-side navigation RNG (crosser draw); applies to
+    /// walkers whose navigation starts after this call.
+    bool SetPedestriansSeed(uint32_t seed) const;
+
     bool SetFilesBaseFolder(const std::string &path);
 
     std::vector<std::string> GetRequiredFiles(const std::string &folder = "", const bool download = true) const;

@@ -120,7 +120,9 @@ public class CarlaTools :
       "MeshDescription",
       "MeshUtilitiesCommon",
       "Projects",
-      "PCG"
+      "PCG",
+      // CarlaCrosswalkNavBuilder: package save/delete helpers.
+      "SourceControl"
     });
 
     if (EnableNVIDIAOmniverse)

@@ -245,6 +245,14 @@ namespace detail {
     return _pimpl->CallAndWait<bool>("walker_stop_navigation", walker);
   }
 
+  bool Client::SetPedestriansCrossFactor(float percentage) const {
+    return _pimpl->CallAndWait<bool>("set_pedestrians_cross_factor", percentage);
+  }
+
+  bool Client::SetPedestriansSeed(uint32_t seed) const {
+    return _pimpl->CallAndWait<bool>("set_pedestrians_seed", seed);
+  }
+
   bool Client::SetFilesBaseFolder(const std::string &path) {
     return FileTransfer::SetFilesBaseFolder(path);
   }

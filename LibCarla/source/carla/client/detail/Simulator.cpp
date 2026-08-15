@@ -349,12 +349,20 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   void Simulator::SetPedestriansCrossFactor(float percentage) {
     DEBUG_ASSERT(_episode != nullptr);
     auto nav = _episode->CreateNavigationIfMissing();
+    if (nav->IsServerSide()) {
+      _client.SetPedestriansCrossFactor(percentage);
+      return;
+    }
     nav->SetPedestriansCrossFactor(percentage);
   }
 
   void Simulator::SetPedestriansSeed(unsigned int seed) {
     DEBUG_ASSERT(_episode != nullptr);
     auto nav = _episode->CreateNavigationIfMissing();
+    if (nav->IsServerSide()) {
+      _client.SetPedestriansSeed(seed);
+      return;
+    }
     nav->SetPedestriansSeed(seed);
   }
 

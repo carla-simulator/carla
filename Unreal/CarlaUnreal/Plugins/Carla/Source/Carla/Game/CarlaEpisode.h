@@ -331,6 +331,31 @@ public:
 
   FSensorManager& GetSensorManager() { return SensorManager; }
 
+  // ===========================================================================
+  // -- Pedestrian navigation state (server-side walker navigation) -------------
+  // ===========================================================================
+
+  /// Probability that a walker whose navigation starts after this call is a
+  /// "crosser" (may traverse crosswalk/road nav areas). Legacy semantics of
+  /// carla.World.set_pedestrians_cross_factor.
+  void SetPedestriansCrossFactor(float InCrossFactor)
+  {
+    PedestriansCrossFactor = FMath::Clamp(InCrossFactor, 0.0f, 1.0f);
+  }
+
+  /// Seed the RNG behind the crosser draw (and any future navigation
+  /// randomness). Deterministic given the same seed and start order.
+  void SetPedestriansSeed(uint32 InSeed)
+  {
+    PedestriansNavRNG.Initialize(static_cast<int32>(InSeed));
+  }
+
+  /// Draw once per walker at navigation start: crosser or not.
+  bool DrawWalkerIsCrosser()
+  {
+    return PedestriansNavRNG.FRand() < PedestriansCrossFactor;
+  }
+
   bool bIsPrimaryServer = true;
 
 private:
@@ -402,6 +427,10 @@ private:
   carla::geom::GeoProjection MapGeoProjection;
 
   FIntVector CurrentMapOrigin;
+
+  float PedestriansCrossFactor = 0.0f;
+
+  FRandomStream PedestriansNavRNG = FRandomStream(0);
 
   FFrameData FrameData;
 
