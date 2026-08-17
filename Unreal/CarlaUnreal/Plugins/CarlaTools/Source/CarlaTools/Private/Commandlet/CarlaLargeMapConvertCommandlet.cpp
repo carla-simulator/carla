@@ -6,6 +6,8 @@
 
 #include "Commandlet/CarlaLargeMapConvertCommandlet.h"
 
+#include "Carla/MapGen/LargeMapManager.h"
+
 #include <util/ue-header-guard-begin.h>
 #include "Engine/DirectionalLight.h"
 #include "Engine/ExponentialHeightFog.h"
@@ -42,6 +44,18 @@ void UCarlaLargeMapConvertCommandlet::OnWorldLoaded(UWorld* World)
       UE_LOG(LogCarlaLargeMapConvert, Display, TEXT(
           "Dropping legacy lighting actor %s (%s); the runtime sky rig replaces it."),
           *Actor->GetName(), *Actor->GetClass()->GetName());
+      World->DestroyActor(Actor);
+    }
+    // The legacy tile manager destroys itself at BeginPlay on World Partition
+    // worlds, but its saved MapTiles property still holds object references
+    // to the ULevelStreamingDynamic tiles this conversion deletes -- leaving
+    // it in the map produces a failed-import load error per tile on every
+    // subsequent load (and forces commandlets into exit code 1).
+    else if (Actor->IsA<ALargeMapManager>())
+    {
+      UE_LOG(LogCarlaLargeMapConvert, Display, TEXT(
+          "Dropping legacy ALargeMapManager %s; World Partition streams natively."),
+          *Actor->GetName());
       World->DestroyActor(Actor);
     }
   }
