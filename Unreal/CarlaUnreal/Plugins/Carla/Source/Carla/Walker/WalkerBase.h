@@ -56,6 +56,19 @@ public:
   UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
   float VehicleSensorPeriod = 0.02f;
 
+  /// Lateral clearance (cm) added on top of the capsule radius and
+  /// sensor margin when testing a fast vehicle's predicted path. Stands
+  /// in for the vehicle body's half width, since the prediction sweeps
+  /// the actor center, not the collision geometry.
+  UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
+  float VehicleBodyAllowance = 90.0f;
+
+  /// Fastest closing speed (cm/s) the proximity query is sized for
+  /// (default 300 km/h). Only affects the overlap query radius; the
+  /// per-vehicle path prediction uses the vehicle's actual velocity.
+  UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
+  float VehicleSensorSpeedBound = 8333.0f;
+
   UFUNCTION(BlueprintCallable)
   void StartDeathLifeSpan()
   {

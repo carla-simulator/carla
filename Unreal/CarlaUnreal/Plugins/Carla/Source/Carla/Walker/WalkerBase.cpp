@@ -88,8 +88,21 @@ void AWalkerBase::CheckVehicleImpact()
   {
     return;
   }
-  const float Radius = Capsule->GetScaledCapsuleRadius() + VehicleSensorMargin;
+  const float ContactRadius = Capsule->GetScaledCapsuleRadius() + VehicleSensorMargin;
   const float HalfHeight = Capsule->GetScaledCapsuleHalfHeight();
+
+  // The effective poll interval can't be shorter than a frame (timers
+  // fire at most once per tick), and a fast vehicle crosses the whole
+  // contact shell between polls: at 107 km/h and 25 fps that is ~120 cm
+  // per frame against an 85 cm shell, so a pure proximity test tunnels
+  // straight through (observed: no kill, and the suspension raycasts
+  // launched the car off the corpse-to-be). The query is therefore sized
+  // for the fastest supported closing speed, and each found vehicle is
+  // tested against its predicted path over the next interval instead of
+  // its current position only.
+  const float Dt = FMath::Max(VehicleSensorPeriod, GetWorld()->GetDeltaSeconds());
+  const float QueryRadius =
+      ContactRadius + VehicleBodyAllowance + VehicleSensorSpeedBound * Dt * 1.25f;
 
   TArray<FOverlapResult> Overlaps;
   FCollisionObjectQueryParams ObjectParams;
@@ -100,17 +113,48 @@ void AWalkerBase::CheckVehicleImpact()
       GetActorLocation(),
       FQuat::Identity,
       ObjectParams,
-      FCollisionShape::MakeCapsule(Radius, HalfHeight),
+      FCollisionShape::MakeCapsule(QueryRadius, HalfHeight),
       Params))
   {
     return;
   }
 
+  const FVector WalkerLoc = GetActorLocation();
   for (const FOverlapResult &Overlap : Overlaps)
   {
-    TryKillFromVehicle(Overlap.GetActor());
-    if (!bAlive)
+    ACarlaWheeledVehicle *Vehicle = Cast<ACarlaWheeledVehicle>(Overlap.GetActor());
+    UPrimitiveComponent *VehicleBody = Overlap.GetComponent();
+    if (Vehicle == nullptr || VehicleBody == nullptr)
     {
+      continue;
+    }
+    const FVector Velocity = Vehicle->GetVelocity();
+    const float Speed = Velocity.Size();
+    if (Speed < VehicleKillSpeed)
+    {
+      continue;
+    }
+    // Direct contact: distance to the vehicle's actual collision
+    // geometry, same semantics the low-speed validation locked in.
+    FVector OnBody;
+    const float DistToBody =
+        VehicleBody->GetDistanceToCollision(WalkerLoc, OnBody);
+    bool bKill = DistToBody >= 0.0f && DistToBody <= ContactRadius;
+    if (!bKill)
+    {
+      // Tunneling guard: closest approach of the vehicle center's
+      // predicted path over the next poll interval. Direction matters -
+      // a fast car in the next lane passes wide and must not kill.
+      const FVector PathEnd = FVector(Vehicle->GetActorLocation()) + Velocity * Dt * 1.25f;
+      const FVector Closest = FMath::ClosestPointOnSegment(
+          WalkerLoc, Vehicle->GetActorLocation(), PathEnd);
+      bKill = FVector::Dist2D(Closest, WalkerLoc) <=
+                  ContactRadius + VehicleBodyAllowance &&
+              FMath::Abs(Closest.Z - WalkerLoc.Z) <= HalfHeight + 200.0f;
+    }
+    if (bKill)
+    {
+      Kill(Velocity, Vehicle);
       return;
     }
   }
