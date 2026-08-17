@@ -30,6 +30,40 @@ AWalkerBase::AWalkerBase(const FObjectInitializer &ObjectInitializer)
 void AWalkerBase::BeginPlay()
 {
   Super::BeginPlay();
+  // A walker is a kinematic character: every interaction it needs is
+  // query-based (movement sweeps, sensor traces, the vehicle proximity
+  // poll below). Rigid-body collision on any of its primitives makes it
+  // an infinite-mass wall to simulating vehicles - one chassis contact
+  // in the frame before the kill fires is enough to bounce or launch the
+  // car, and several migrated walker blueprints kept QueryAndPhysics
+  // primitives. Clamp them all to query-only; Kill() re-enables physics
+  // explicitly when it ragdolls the mesh.
+  {
+    TArray<UPrimitiveComponent *> Primitives;
+    GetComponents<UPrimitiveComponent>(Primitives, false);
+    for (UPrimitiveComponent *Primitive : Primitives)
+    {
+      const ECollisionEnabled::Type Enabled = Primitive->GetCollisionEnabled();
+      if (Enabled == ECollisionEnabled::QueryAndPhysics)
+      {
+        Primitive->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+      }
+      else if (Enabled == ECollisionEnabled::PhysicsOnly)
+      {
+        Primitive->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+      }
+      // Several migrated walker meshes carry a WorldDynamic object type
+      // instead of Pawn. Vehicle suspension traces skip Pawn objects but
+      // must ride dynamic world geometry, so a WorldDynamic body part is
+      // an invisible ramp under a wheel (observed: the sphere-cast wheel
+      // climbing CharacterMesh0 and yawing the car through a hit). Every
+      // walker primitive is a body part: normalize to Pawn.
+      if (Primitive->GetCollisionObjectType() == ECC_WorldDynamic)
+      {
+        Primitive->SetCollisionObjectType(ECC_Pawn);
+      }
+    }
+  }
   // Primary detection: the physical hit itself. The same contact also
   // feeds the collision sensor, so clients keep receiving the collision
   // event exactly like they always have; the capsule is un-walled right

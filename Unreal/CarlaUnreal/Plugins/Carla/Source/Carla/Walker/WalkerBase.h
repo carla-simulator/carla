@@ -30,11 +30,15 @@ public:
   UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
   float LifeSpanAfterDeath = 10.0f;
 
-  /// A vehicle touching the walker with at least this relative speed
-  /// (cm/s) kills it. Below the threshold the contact is treated as a
-  /// harmless brush (parking-speed nudges must not kill).
+  /// A vehicle touching the walker while moving at least this fast
+  /// (cm/s) kills it - ue4-dev parity, where any moving-vehicle contact
+  /// was lethal. The threshold only exempts effectively stationary
+  /// vehicles (a walker bumping into a parked or stopped car survives).
+  /// It must stay low: an alive walker's capsule is query-only, so a
+  /// sub-threshold *moving* contact has no physical response at all and
+  /// the car visibly interpenetrates the standing pedestrian.
   UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
-  float VehicleKillSpeed = 210.0f;
+  float VehicleKillSpeed = 50.0f;
 
   /// How far beyond the capsule radius the vehicle proximity check
   /// reaches (cm). The margin makes the kill trigger before the first
