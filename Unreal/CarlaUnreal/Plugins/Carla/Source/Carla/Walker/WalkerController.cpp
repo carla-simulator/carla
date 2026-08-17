@@ -145,9 +145,14 @@ void AWalkerController::SetNavigationActive(bool bActive)
   if (auto *Movement = CurrentCharacter->GetCharacterMovement())
   {
     // While navigating, MaxWalkSpeed IS the walking speed (path following
-    // moves at full input scale). The manual path instead scales its input
-    // against GetMaximumWalkSpeed(), so it needs the historical ceiling back.
+    // moves at full input scale). The manual path drives MaxWalkSpeed from
+    // the commanded speed each tick, so on leaving navigation the ceiling
+    // is just a safe starting point until the next manual control arrives.
     Movement->MaxWalkSpeed = bActive ? NavMaxSpeed : GetMaximumWalkSpeed();
+    // A previously applied manual control (or the interim acceleration
+    // compensation) must not leak into navigation mode.
+    Movement->MaxAcceleration = Movement->GetClass()
+        ->GetDefaultObject<UCharacterMovementComponent>()->MaxAcceleration;
   }
   if (bActive)
   {
@@ -285,8 +290,20 @@ void AWalkerController::Tick(float DeltaSeconds)
   // the character.
   if (bNavigationActive) return;
 
-  CurrentCharacter->AddMovementInput(Control.Direction,
-        Control.Speed / GetMaximumWalkSpeed());
+  // Commanded speed becomes MaxWalkSpeed and the input is direction-only
+  // at full magnitude: encoding the speed in the input magnitude (the
+  // historical Control.Speed / 4096 scheme) also scaled the acceleration
+  // (UCharacterMovementComponent::ScaleInputAcceleration), so a 1.5 m/s
+  // walker accelerated at ~4% of MaxAcceleration and crawled for seconds
+  // after every spawn or retarget.
+  if (auto *Movement = CurrentCharacter->GetCharacterMovement())
+  {
+    Movement->MaxWalkSpeed = FMath::Clamp(Control.Speed, 0.0f, GetMaximumWalkSpeed());
+  }
+  if (Control.Speed >= 1.0f)
+  {
+    CurrentCharacter->AddMovementInput(Control.Direction, 1.0f);
+  }
 
   if (Control.Jump)
   {
