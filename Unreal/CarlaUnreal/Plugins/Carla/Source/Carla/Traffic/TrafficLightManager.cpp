@@ -27,7 +27,8 @@
 
 ATrafficLightManager::ATrafficLightManager()
 {
-  PrimaryActorTick.bCanEverTick = false;
+  PrimaryActorTick.bCanEverTick = true;
+  PrimaryActorTick.bStartWithTickEnabled = false;
   SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
   RootComponent = SceneComponent;
 
@@ -405,6 +406,50 @@ void ATrafficLightManager::InitializeTrafficLights()
   if (!XODRPath.IsEmpty() && bHasMapLogic)
   {
     UMapLogicParser::ApplyLaneIdsFromMapLogic(XODRPath, this);
+  }
+
+  if (GetWorld()->GetWorldPartition() != nullptr)
+  {
+    SetActorTickEnabled(true);
+  }
+}
+
+void ATrafficLightManager::Tick(float DeltaSeconds)
+{
+  Super::Tick(DeltaSeconds);
+  UpdateSignalGroundDormancy();
+}
+
+void ATrafficLightManager::UpdateSignalGroundDormancy()
+{
+  const int32 Num = TrafficSigns.Num();
+  if (Num == 0)
+  {
+    return;
+  }
+  UWorld *World = GetWorld();
+  const int32 Checks = FMath::Min(DormancyChecksPerTick, Num);
+  for (int32 i = 0; i < Checks; ++i)
+  {
+    DormancySweepIndex = (DormancySweepIndex + 1) % Num;
+    ATrafficSignBase *Sign = TrafficSigns[DormancySweepIndex];
+    if (!IsValid(Sign))
+    {
+      continue;
+    }
+    const FVector Origin = Sign->GetActorLocation();
+    FCollisionQueryParams Params(SCENE_QUERY_STAT(SignalGroundDormancy), false, Sign);
+    FHitResult Hit;
+    const bool bGroundResident = World->LineTraceSingleByChannel(
+        Hit,
+        Origin + FVector(0.0f, 0.0f, 50.0f),
+        Origin - FVector(0.0f, 0.0f, DormancyTraceDepth),
+        ECC_Visibility,
+        Params);
+    if (Sign->IsHidden() == bGroundResident)
+    {
+      Sign->SetActorHiddenInGame(!bGroundResident);
+    }
   }
 }
 
