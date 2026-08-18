@@ -161,8 +161,24 @@ void MotionPlanStage::Update(const unsigned long index) {
     if (vehicle_physics_enabled && !simulation_state.IsDormant(actor_id)) {
       ActuationSignal actuation_signal{0.0f, 0.0f, 0.0f};
 
+      // Vehicle steering geometry. See constants::PID: the pursuit law and
+      // the steering-authority normalization below are computed from the
+      // vehicle's own wheelbase (approximated from the bounding-box length)
+      // and physical wheel lock instead of the car-class anchor.
+      const float vehicle_length{2.0f * simulation_state.GetDimensions(actor_id).x};
+      const float wheel_lock{std::max(simulation_state.GetMaxSteerAngle(actor_id), 1.0f)};
+      const float wheelbase{constants::PID::WHEELBASE_FRACTION * vehicle_length};
+
+      // The pursuit reference is the actor origin (bounding-box centre).
+      // Kinematically pure pursuit is exact at the rear axle, but for lane
+      // containment of a rigid body the centre is the optimal reference (the
+      // body then splits its wheelbase chord evenly across the lane), and a
+      // rear-axle reference was measured to add enough loop delay on long
+      // vehicles to weave through tight junction turns.
+      const cg::Location &pursuit_reference{vehicle_location};
+
       // Resolve the target waypoint by interpolating along the buffer at
-      // target_point_distance ahead of the vehicle.
+      // target_point_distance ahead of the reference.
       float target_point_distance{std::clamp(
           vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
           MIN_TARGET_WAYPOINT_DISTANCE,
@@ -170,7 +186,7 @@ void MotionPlanStage::Update(const unsigned long index) {
       auto target_data = GetTargetData(
           waypoint_buffer,
           target_point_distance,
-          vehicle_location);
+          pursuit_reference);
 
       // Curvature-aware pursuit-distance cap. Pursuing a point d ahead tracks
       // the chord of the path, which cuts a curve of radius R by the sagitta
@@ -181,7 +197,7 @@ void MotionPlanStage::Update(const unsigned long index) {
       const auto mid_data = GetTargetData(
           waypoint_buffer,
           0.5f * target_point_distance,
-          vehicle_location);
+          pursuit_reference);
       const float local_radius = GetThreePointCircleRadius(
           waypoint_buffer.front()->GetLocation(),
           mid_data.first,
@@ -194,7 +210,7 @@ void MotionPlanStage::Update(const unsigned long index) {
         target_data = GetTargetData(
             waypoint_buffer,
             target_point_distance,
-            vehicle_location);
+            pursuit_reference);
       }
       const uint64_t target_index = target_data.second;
       cg::Location target_location{target_data.first};
@@ -209,6 +225,17 @@ void MotionPlanStage::Update(const unsigned long index) {
       // path curvature and runs wide through junction turns.
       const float lateral_gain_scale =
           MAX_TARGET_WAYPOINT_DISTANCE / std::max(target_point_distance, 1.0f);
+
+      // Steering-authority normalization: normalized steer maps to curvature
+      // as kappa = tan(steer * max_steer_angle) / wheelbase, so long vehicles
+      // produce proportionally less curvature per command than the car-class
+      // fleet the gains and the STEER_LIMIT_GAIN envelope are anchored on.
+      // The STEER_LIMIT_GAIN envelope is a physical curvature guard, so it
+      // scales with the vehicle's authority. See constants::PID.
+      const float steer_authority_correction{std::clamp(
+          (vehicle_length / constants::PID::REF_VEHICLE_LENGTH) *
+              (constants::PID::REF_MAX_STEER_ANGLE / wheel_lock),
+          1.0f, constants::PID::MAX_STEER_AUTHORITY_CORRECTION)};
 
       float base_offset{CalculateBaseOffset(
           actor_id,
@@ -235,10 +262,10 @@ void MotionPlanStage::Update(const unsigned long index) {
       target_location = target_location + offset_location;
 
       // Compute the angular deviation directly as the angle between the
-      // vehicle heading and the target direction. atan2(0, 0) is well-defined
-      // and returns 0 when the vehicle and target locations coincide on the
-      // very first tick before any displacement.
-      const cg::Vector3D target_vector{target_location - vehicle_location};
+      // vehicle heading and the target direction. atan2(0, 0) is
+      // well-defined and returns 0 when the reference and target locations
+      // coincide on the very first tick before any displacement.
+      const cg::Vector3D target_vector{target_location - pursuit_reference};
       const float target_yaw{std::atan2(target_vector.y, target_vector.x) * 180.0f / PI};
       float angular_deviation{target_yaw - vehicle_rotation.yaw};
       if (angular_deviation > 180.0f) {
@@ -363,11 +390,37 @@ void MotionPlanStage::Update(const unsigned long index) {
         control_dt = DT;
       }
 
+      // Geometric pure-pursuit lateral command. The previous linearized
+      // proportional term (P * deviation) was tuned at car-scale commands
+      // (|steer| ~ 0.1) and over-curves long vehicles, which need
+      // |steer| ~ 0.4-0.5 through junction turns where tan(steer * lock) is
+      // well past its linear range (measured: trucks settling ~1 m inside
+      // their reference). Commanding the pure-pursuit curvature
+      // kappa = margin * 2 sin(alpha) / d and inverting the vehicle's own
+      // steering map atan(wheelbase * kappa) / lock is exact for every
+      // geometry, and reduces to the validated P = 2 linear gain for the
+      // anchor car at the cruise pursuit distance (see Constants.h).
+      const float wheel_lock_rad{wheel_lock * PI / 180.0f};
+      const float alpha_rad{angular_deviation * PI};
+      const float pursuit_curvature{constants::PID::PURSUIT_CURVATURE_MARGIN *
+                                    2.0f * std::sin(alpha_rad) /
+                                    std::max(target_point_distance, 1.0f)};
+      const float pursuit_steer{std::atan(wheelbase * pursuit_curvature) /
+                                wheel_lock_rad};
+
+      // Damping (derivative) scale: pursuit-distance schedule x authority,
+      // capped at the ceiling the schedule alone reaches on the tuned fleet.
+      const float lateral_damping_scale{std::min(
+          lateral_gain_scale * steer_authority_correction,
+          constants::PID::MAX_LATERAL_GAIN_SCALE)};
+
       // Controller actuation.
       actuation_signal = PID::RunStep(current_state, previous_state,
                                       longitudinal_parameters, lateral_parameters,
                                       vehicle_speed, control_dt,
-                                      lateral_gain_scale);
+                                      pursuit_steer,
+                                      lateral_damping_scale,
+                                      steer_authority_correction);
 
       if (emergency_stop) {
         actuation_signal.throttle = 0.0f;

@@ -193,6 +193,50 @@ static const float MAX_STEERING_DIFF = 0.15f;
 // curves is slowing down before them (GetTurnTargetVelocity), not granting
 // more steering authority at speed.
 static const float STEER_LIMIT_GAIN = 30.0f;
+// Vehicle steering-authority normalization. A normalized steer command maps
+// to path curvature as kappa = tan(steer * max_steer_angle) / wheelbase, so
+// for the same command a long vehicle yields proportionally less curvature
+// than the car-class fleet the lateral gains and the STEER_LIMIT_GAIN
+// envelope were tuned on (measured: 8.5 m trucks pinned at the envelope on
+// 45% of junction ticks, ran R~13 m on R~11 m connecting roads and invaded
+// the adjacent lane on every junction turn while cars tracked cleanly).
+// Both the lateral P/D terms and the envelope are therefore scaled by
+//   (bbox_length / REF_VEHICLE_LENGTH) * (REF_MAX_STEER_ANGLE / max_steer)
+// which equalizes commanded CURVATURE across the fleet; wheelbase tracks
+// bounding-box length closely, so the unknown wheelbase fraction cancels
+// against the car-anchored reference length. Clamped to
+// [1, MAX_STEER_AUTHORITY_CORRECTION] so car-class vehicles and the
+// physical lateral-acceleration guard stay exactly as tuned.
+static const float REF_VEHICLE_LENGTH = 4.9f;    // m, tuning-fleet car bbox length
+static const float REF_MAX_STEER_ANGLE = 70.0f;  // deg, tuning-fleet wheel lock
+static const float MAX_STEER_AUTHORITY_CORRECTION = 2.5f;
+// Ceiling for the COMBINED lateral P/D scale (pursuit-distance schedule x
+// steering-authority correction). Both factors approximate the pure-pursuit
+// equivalent gain, but their product on a long vehicle at a short pursuit
+// distance overshoots it (measured: 8.5 m trucks settled ~1.0 m INSIDE their
+// reference through junction turns at a composed scale of ~4.6). The ceiling
+// is the largest scale the schedule alone produces on the tuned car fleet
+// (MAX/MIN pursuit distance = 10/3), which validated cleanly; the authority
+// correction fills toward that ceiling for long vehicles instead of
+// exceeding it. The steering ENVELOPE keeps the full authority correction:
+// it is a physical curvature cap, not a loop gain.
+static const float MAX_LATERAL_GAIN_SCALE =
+    WaypointSelection::MAX_TARGET_WAYPOINT_DISTANCE /
+    WaypointSelection::MIN_TARGET_WAYPOINT_DISTANCE;
+// Bounding-box length to wheelbase ratio, stable across the CARLA fleet
+// (0.55-0.62 on the shipped vehicles); used with the physical wheel lock to
+// invert the steering-to-curvature map tan(steer * lock) / wheelbase exactly
+// instead of linearizing it. The linearized P law was tuned at car-scale
+// commands (|steer| ~ 0.1, where tan is linear); long vehicles need
+// |steer| ~ 0.4-0.5 through junctions, where the uncompensated tan() makes
+// the linear law over-curve and settle ~1 m inside its reference.
+static const float WHEELBASE_FRACTION = 0.6f;
+// Margin over the exact pure-pursuit curvature (kappa = 2 sin(alpha) / d).
+// Chosen so the anchor car at the cruise pursuit distance reproduces the
+// validated linear gain P = 2: P_pp = 2 * L_wb * pi / (d * lock_rad) = 1.49
+// at d = 10 m, and 1.32 * 1.49 * dev matches 2 * dev in the small-command
+// regime the cruise tuning was measured in.
+static const float PURSUIT_CURVATURE_MARGIN = 1.32f;
 // Nominal controller period: the sync-mode fixed_delta_seconds the gains were
 // tuned at. In asynchronous mode the real period is one server frame, which
 // under render load (e.g. a path-traced rt_lens sensor halving the frame

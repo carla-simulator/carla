@@ -33,20 +33,26 @@ namespace PID {
 /// to divergent weaving (measured on Town12: steer_std 0.11 at 19 fps ->
 /// 0.71 with full-lock swings at 11 fps), which then trips the stuck/K-turn
 /// recovery into alternating full-lock "jerking".
-/// lateral_gain_scale rescales the lateral P and D terms for the pursuit
-/// geometry: the PID linearizes the pure-pursuit law, whose equivalent gain
-/// is proportional to 1 / pursuit-distance. The gains are tuned at the
-/// cruise-anchor pursuit distance (MAX_TARGET_WAYPOINT_DISTANCE); the caller
-/// passes d_ref / d (>= 1) when the target sits closer, so the loop keeps the
-/// tuned bandwidth at low speed and through curvature-capped junction turns.
-/// The integral term is left unscaled to keep its windup behavior unchanged.
+/// lateral_pursuit_steer replaces the linearized proportional term of the
+/// lateral loop: the caller computes the geometric pure-pursuit command
+/// atan(wheelbase * margin * 2 sin(alpha) / d) / wheel_lock from the
+/// vehicle's own steering geometry, which is exact for every wheelbase and
+/// lock where a fixed linear gain is only correct for the car-class fleet it
+/// was tuned on. The integral term keeps its original form and units.
+/// lateral_damping_scale rescales the derivative term with the loop
+/// bandwidth (pursuit-distance schedule x steering-authority correction).
+/// steer_authority_correction (>= 1) scales the STEER_LIMIT_GAIN envelope:
+/// the envelope is a physical curvature/lateral-acceleration guard, so it
+/// must cap curvature, not raw normalized command.
 inline ActuationSignal RunStep(StateEntry present_state,
                         StateEntry previous_state,
                         const std::vector<float> &longitudinal_parameters,
                         const std::vector<float> &lateral_parameters,
                         const float vehicle_speed,
                         const float control_dt = DT,
-                        const float lateral_gain_scale = 1.0f) {
+                        const float lateral_pursuit_steer = 0.0f,
+                        const float lateral_damping_scale = 1.0f,
+                        const float steer_authority_correction = 1.0f) {
 
   const float dt = std::max(MIN_CONTROL_DT, std::min(control_dt, MAX_CONTROL_DT));
   const float inv_dt = 1.0f / dt;
@@ -86,9 +92,9 @@ inline ActuationSignal RunStep(StateEntry present_state,
   float deviation_delta = present_state.angular_deviation - previous_state.angular_deviation;
   deviation_delta = std::max(-max_deviation_delta, std::min(deviation_delta, max_deviation_delta));
   float steer = gain_scale * (
-      lateral_gain_scale * lateral_parameters[0] * present_state.angular_deviation +
+      lateral_pursuit_steer +
       lateral_parameters[1] * (present_state.angular_deviation + previous_state.angular_deviation) * dt +
-      lateral_gain_scale * lateral_parameters[2] * deviation_delta * inv_dt);
+      lateral_damping_scale * lateral_parameters[2] * deviation_delta * inv_dt);
 
   // Steering slew limit, applied as a rate so the physical steering speed is
   // independent of the tick rate (a fixed per-tick step would triple the
@@ -98,9 +104,14 @@ inline ActuationSignal RunStep(StateEntry present_state,
   steer = std::max(-MAX_STEERING, std::min(steer, MAX_STEERING));
 
   // Speed-scaled steering envelope (lateral-acceleration cap). See
-  // STEER_LIMIT_GAIN in Constants.h.
+  // STEER_LIMIT_GAIN in Constants.h. The cap is a physical curvature bound,
+  // so it scales with the vehicle's steering-authority correction: without
+  // it, long vehicles saturate below the curvature a junction turn needs
+  // (measured: 45% of truck junction ticks pinned at the car-anchored limit)
+  // and sweep into the adjacent lane.
   const float speed_sq = std::max(vehicle_speed * vehicle_speed, 1.0f);
-  const float steer_limit = std::min(MAX_STEERING, STEER_LIMIT_GAIN / speed_sq);
+  const float steer_limit = std::min(
+      MAX_STEERING, steer_authority_correction * STEER_LIMIT_GAIN / speed_sq);
   steer = std::max(-steer_limit, std::min(steer, steer_limit));
 
   return ActuationSignal{throttle, brake, steer};
