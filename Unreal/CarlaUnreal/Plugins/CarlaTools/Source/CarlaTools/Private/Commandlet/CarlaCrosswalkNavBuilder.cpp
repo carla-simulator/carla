@@ -34,10 +34,14 @@ DEFINE_LOG_CATEGORY_STATIC(LogCarlaCrosswalkNavBuilder, Log, All);
 
 namespace {
 
-/// Split the flattened GetAllCrosswalkZones() output into polygons: each
-/// polygon closes by repeating its first corner (CARLA convention, see
-/// carla.Map.get_crosswalks). A safety cap flushes unclosed runs so one
-/// malformed outline cannot swallow the rest of the map.
+/// Split the flattened GetAllCrosswalkZones() output into polygons. The
+/// nominal CARLA convention (see carla.Map.get_crosswalks) closes each
+/// outline by repeating its first corner, but some OpenDRIVE exports close
+/// onto an interior corner instead (all 34 Town15 outlines do), so a
+/// polygon closes when the incoming point matches ANY earlier corner of
+/// the current run; corners before the matched one are a leading fragment
+/// of the previous outline and are dropped. A safety cap flushes unclosed
+/// runs so one malformed outline cannot swallow the rest of the map.
 TArray<TArray<FVector>> SplitCrosswalkPolygons(
     const std::vector<carla::geom::Location> &Points)
 {
@@ -48,9 +52,23 @@ TArray<TArray<FVector>> SplitCrosswalkPolygons(
   for (const auto &Point : Points)
   {
     const FVector UEPoint(Point);   // meters -> centimeters
-    if (Current.Num() > 0 && FVector::Dist2D(UEPoint, Current[0]) < CloseEpsilon)
+    int32 MatchIndex = INDEX_NONE;
+    for (int32 i = 0; i < Current.Num(); ++i)
     {
-      Polygons.Add(MoveTemp(Current));
+      if (FVector::Dist2D(UEPoint, Current[i]) < CloseEpsilon)
+      {
+        MatchIndex = i;
+        break;
+      }
+    }
+    if (MatchIndex != INDEX_NONE)
+    {
+      TArray<FVector> Polygon(Current.GetData() + MatchIndex,
+                              Current.Num() - MatchIndex);
+      if (Polygon.Num() >= 3)
+      {
+        Polygons.Add(MoveTemp(Polygon));
+      }
       Current.Reset();
       continue;
     }
