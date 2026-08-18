@@ -33,12 +33,20 @@ namespace PID {
 /// to divergent weaving (measured on Town12: steer_std 0.11 at 19 fps ->
 /// 0.71 with full-lock swings at 11 fps), which then trips the stuck/K-turn
 /// recovery into alternating full-lock "jerking".
+/// lateral_gain_scale rescales the lateral P and D terms for the pursuit
+/// geometry: the PID linearizes the pure-pursuit law, whose equivalent gain
+/// is proportional to 1 / pursuit-distance. The gains are tuned at the
+/// cruise-anchor pursuit distance (MAX_TARGET_WAYPOINT_DISTANCE); the caller
+/// passes d_ref / d (>= 1) when the target sits closer, so the loop keeps the
+/// tuned bandwidth at low speed and through curvature-capped junction turns.
+/// The integral term is left unscaled to keep its windup behavior unchanged.
 inline ActuationSignal RunStep(StateEntry present_state,
                         StateEntry previous_state,
                         const std::vector<float> &longitudinal_parameters,
                         const std::vector<float> &lateral_parameters,
                         const float vehicle_speed,
-                        const float control_dt = DT) {
+                        const float control_dt = DT,
+                        const float lateral_gain_scale = 1.0f) {
 
   const float dt = std::max(MIN_CONTROL_DT, std::min(control_dt, MAX_CONTROL_DT));
   const float inv_dt = 1.0f / dt;
@@ -78,9 +86,9 @@ inline ActuationSignal RunStep(StateEntry present_state,
   float deviation_delta = present_state.angular_deviation - previous_state.angular_deviation;
   deviation_delta = std::max(-max_deviation_delta, std::min(deviation_delta, max_deviation_delta));
   float steer = gain_scale * (
-      lateral_parameters[0] * present_state.angular_deviation +
+      lateral_gain_scale * lateral_parameters[0] * present_state.angular_deviation +
       lateral_parameters[1] * (present_state.angular_deviation + previous_state.angular_deviation) * dt +
-      lateral_parameters[2] * deviation_delta * inv_dt);
+      lateral_gain_scale * lateral_parameters[2] * deviation_delta * inv_dt);
 
   // Steering slew limit, applied as a rate so the physical steering speed is
   // independent of the tick rate (a fixed per-tick step would triple the

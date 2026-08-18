@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 
 #include "carla/client/TrafficSign.h"
@@ -162,16 +163,52 @@ void MotionPlanStage::Update(const unsigned long index) {
 
       // Resolve the target waypoint by interpolating along the buffer at
       // target_point_distance ahead of the vehicle.
-      const float target_point_distance{std::clamp(
+      float target_point_distance{std::clamp(
           vehicle_speed * TARGET_WAYPOINT_TIME_HORIZON,
           MIN_TARGET_WAYPOINT_DISTANCE,
           MAX_TARGET_WAYPOINT_DISTANCE)};
-      const auto [interp_target_location, target_index] = GetTargetData(
+      auto target_data = GetTargetData(
           waypoint_buffer,
           target_point_distance,
           vehicle_location);
-      cg::Location target_location{interp_target_location};
+
+      // Curvature-aware pursuit-distance cap. Pursuing a point d ahead tracks
+      // the chord of the path, which cuts a curve of radius R by the sagitta
+      // ~d^2/(8R): through junction turns (R ~ 11 m on Town10) the vehicle
+      // turns in before the lane does and sweeps ~1.4 m into the adjacent
+      // lane. Bound d so the geometric cut stays below
+      // MAX_PURSUIT_CHORD_SAGITTA; straight paths (R -> inf) are unaffected.
+      const auto mid_data = GetTargetData(
+          waypoint_buffer,
+          0.5f * target_point_distance,
+          vehicle_location);
+      const float local_radius = GetThreePointCircleRadius(
+          waypoint_buffer.front()->GetLocation(),
+          mid_data.first,
+          target_data.first);
+      const float sagitta_distance_cap =
+          std::sqrt(8.0f * local_radius * MAX_PURSUIT_CHORD_SAGITTA);
+      if (sagitta_distance_cap < target_point_distance) {
+        target_point_distance = std::max(sagitta_distance_cap,
+                                         MIN_TARGET_WAYPOINT_DISTANCE);
+        target_data = GetTargetData(
+            waypoint_buffer,
+            target_point_distance,
+            vehicle_location);
+      }
+      const uint64_t target_index = target_data.second;
+      cg::Location target_location{target_data.first};
       const SimpleWaypointPtr target_waypoint = waypoint_buffer.at(target_index);
+
+      // The lateral PID linearizes the pure-pursuit law, whose equivalent
+      // proportional gain is inversely proportional to the pursuit distance
+      // (kappa = 2 * sin(alpha) / d). The gains are tuned at the cruise
+      // anchor d = MAX_TARGET_WAYPOINT_DISTANCE; when the target sits closer
+      // (low speed, or the curvature cap above) the loop gain must scale by
+      // d_ref / d or the controller winds on steering too slowly for the
+      // path curvature and runs wide through junction turns.
+      const float lateral_gain_scale =
+          MAX_TARGET_WAYPOINT_DISTANCE / std::max(target_point_distance, 1.0f);
 
       float base_offset{CalculateBaseOffset(
           actor_id,
@@ -329,7 +366,8 @@ void MotionPlanStage::Update(const unsigned long index) {
       // Controller actuation.
       actuation_signal = PID::RunStep(current_state, previous_state,
                                       longitudinal_parameters, lateral_parameters,
-                                      vehicle_speed, control_dt);
+                                      vehicle_speed, control_dt,
+                                      lateral_gain_scale);
 
       if (emergency_stop) {
         actuation_signal.throttle = 0.0f;

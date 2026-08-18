@@ -64,6 +64,15 @@ static const float MIN_TARGET_WAYPOINT_DISTANCE = 3.0f;
 // vehicle in the oncoming lane on left curves. 10 m keeps the cut under
 // ~0.6 m on the tightest urban corners.
 static const float MAX_TARGET_WAYPOINT_DISTANCE = 10.0f;
+// Curvature-aware bound on the same chord cut. The fixed 10 m cap encodes the
+// R~25 m / 60 km/h case, but junction connecting roads on Town10 are R~11 m
+// taken at ~8 m/s where the surviving d = speed * 1 s chord still cuts
+// d^2/(8R) ~ 0.8 m (measured ~1.4 m at the apex with vehicle dynamics): the
+// vehicle turns in before the lane does and sweeps the adjacent lane. Capping
+// d = sqrt(8 * R_local * MAX_PURSUIT_CHORD_SAGITTA) keeps the geometric cut
+// below ~0.2 m at any local path radius; straight paths (R -> inf) are
+// unaffected. R_local is measured over the buffer up to the pursuit target.
+static const float MAX_PURSUIT_CHORD_SAGITTA = 0.2f;
 static const float JUNCTION_LOOK_AHEAD = 5.0f;
 static const float SAFE_DISTANCE_AFTER_JUNCTION = 4.0f;
 static const float MIN_JUNCTION_LENGTH = 8.0f;
