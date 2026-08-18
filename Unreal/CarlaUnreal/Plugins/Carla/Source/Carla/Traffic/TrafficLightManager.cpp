@@ -414,6 +414,15 @@ void ATrafficLightManager::InitializeTrafficLights()
   }
 }
 
+void ATrafficLightManager::AdoptModelConfigurationFrom(const ATrafficLightManager& Other)
+{
+  TrafficLightModel_RHT = Other.TrafficLightModel_RHT;
+  TrafficLightModel_LHT = Other.TrafficLightModel_LHT;
+  TrafficSignsModels = Other.TrafficSignsModels;
+  SignComponentModels = Other.SignComponentModels;
+  SpeedLimitModels = Other.SpeedLimitModels;
+}
+
 void ATrafficLightManager::Tick(float DeltaSeconds)
 {
   Super::Tick(DeltaSeconds);

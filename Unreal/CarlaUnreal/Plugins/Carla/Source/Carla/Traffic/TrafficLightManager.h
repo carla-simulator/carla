@@ -61,6 +61,11 @@ public:
   // Called when the game starts by the gamemode
   void InitializeTrafficLights();
 
+  /// Copy the authored model configuration (traffic light / sign / speed
+  /// limit blueprints) from another manager, e.g. a baked manager that is
+  /// being replaced by a persistent-level one on World Partition maps.
+  void AdoptModelConfigurationFrom(const ATrafficLightManager& Other);
+
 private:
 
   void SpawnTrafficLights();

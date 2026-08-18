@@ -476,6 +476,25 @@ void ACarlaGameModeBase::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
     return;
   }
   ATagger::TagActorsInLevel(*InLevel, true);
+
+  // A converted map's baked TrafficLightManager can stream in later as a
+  // duplicate of the persistent-level manager installed at BeginPlay (see
+  // GetTrafficLightManager); cull it before anything can find it.
+  TArray<AActor*> DuplicateManagers;
+  for (AActor* Actor : InLevel->Actors)
+  {
+    if (Actor != nullptr && Actor != TrafficLightManager &&
+        Actor->IsA<ATrafficLightManager>())
+    {
+      DuplicateManagers.Add(Actor);
+    }
+  }
+  for (AActor* Actor : DuplicateManagers)
+  {
+    UE_LOG(LogCarla, Log, TEXT("Destroying streamed-in duplicate TrafficLightManager %s"),
+        *Actor->GetName());
+    Actor->Destroy();
+  }
 }
 
 void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -565,11 +584,28 @@ ATrafficLightManager* ACarlaGameModeBase::GetTrafficLightManager()
   {
     UWorld* World = GetWorld();
     AActor* TrafficLightManagerActor = UGameplayStatics::GetActorOfClass(World, ATrafficLightManager::StaticClass());
+    ATrafficLightManager* BakedInStreamedCell = nullptr;
+    if (TrafficLightManagerActor != nullptr &&
+        World->GetWorldPartition() != nullptr &&
+        TrafficLightManagerActor->GetLevel() != World->PersistentLevel)
+    {
+      // Converted World Partition maps carry the manager over as a
+      // spatially-loaded external actor inside a streamed cell; anything it
+      // owns dies with the cell. Replace it with a persistent-level manager
+      // that inherits the baked manager's model configuration.
+      BakedInStreamedCell = Cast<ATrafficLightManager>(TrafficLightManagerActor);
+      TrafficLightManagerActor = nullptr;
+    }
     if(TrafficLightManagerActor == nullptr)
     {
       FActorSpawnParameters SpawnParams;
       SpawnParams.OverrideLevel = GetULevelFromName("TrafficLights");
       TrafficLightManager = World->SpawnActor<ATrafficLightManager>(SpawnParams);
+      if (BakedInStreamedCell != nullptr && TrafficLightManager != nullptr)
+      {
+        TrafficLightManager->AdoptModelConfigurationFrom(*BakedInStreamedCell);
+        BakedInStreamedCell->Destroy();
+      }
     }
     else
     {
@@ -858,6 +894,18 @@ ULevel* ACarlaGameModeBase::GetULevelFromName(FString LevelName)
       }
       break;
     }
+  }
+
+  // With no matching sublevel the callers used to pass OverrideLevel=nullptr,
+  // and UWorld::SpawnActor then falls back to the OWNER's level. On converted
+  // World Partition maps the owner (the baked TrafficLightManager) lives in a
+  // streamed cell, so every runtime signal landed in that one cell and was
+  // silently torn down (no AActor::Destroy, no OnDestroyed) whenever the cell
+  // streamed out. Fall back to the persistent level instead so runtime-spawned
+  // managers, groups and signals always survive streaming.
+  if (OutLevel == nullptr)
+  {
+    OutLevel = World->PersistentLevel;
   }
 
   return OutLevel;
