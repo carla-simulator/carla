@@ -1,0 +1,285 @@
+# Autoware on CARLA (Native ROS2)
+
+Reference integration of [Autoware](https://autoware.org/) against CARLA's
+built-in ROS2 interface. The CARLA server publishes sensors and vehicle status
+and subscribes to Autoware's control commands **directly over DDS** — there is
+no bridge process. Two driving modes are provided:
+
+- **`classical`** — the full Autoware stack: NDT localization against a
+  point-cloud map, lidar/camera perception, behavior/motion planning, and the
+  classic trajectory-follower controller.
+- **`e2e`** — the camera-only **VAD** end-to-end model
+  (`autoware_tensorrt_vad` from Autoware Universe): six surround cameras in,
+  a planned trajectory out, executed by the same classic trajectory follower.
+  Localization comes from simulator ground truth instead of NDT.
+
+If you have never used CARLA: CARLA is a UE5-based driving simulator. You run
+one **server** process (the simulator) and any number of **clients** that
+connect over RPC (default port 2000). In *synchronous mode* — required here —
+the simulation only advances when exactly **one** designated client calls
+"tick"; our spawner script owns that role. The native ROS2 layer means that,
+once a client has enabled it, ROS2 topics appear on your DDS network just as
+if a robot were publishing them.
+
+---
+
+## Prerequisites
+
+**Hardware / OS**
+
+- Ubuntu 22.04 (ROS2 Humble) or Ubuntu 24.04 (ROS2 Jazzy). Both are supported
+  by current Autoware (release 1.9.0 / universe 0.52.0); Jazzy is Autoware's
+  Docker default. The TIER IV validation of this integration was done against
+  Autoware release 0.45.1 on Humble (source build).
+- NVIDIA GPU strongly recommended; **required** for `--mode e2e` (TensorRT).
+  CUDA + cuDNN + TensorRT must already be installed system-wide — the installer
+  deliberately does **not** install them; `install_autoware.sh --check` reports
+  on what is present (see `install/README.md`).
+- Disk: budget ~100 GB free for an Autoware source build (sources + build +
+  install + dependencies); the VAD model and its cached TensorRT engines add a
+  few GB under `~/autoware_data/`.
+
+**CARLA**
+
+- A packaged CARLA build from this UE5.8 branch with native ROS2 enabled.
+  Verify your package starts with ROS2 support:
+
+  ```bash
+  ./CarlaUnreal.sh --ros2
+  ```
+
+  (Canonical single-dash flags also work and are what our scripts use:
+  `-ros2 -rmw=fastdds|cyclonedds|zenoh -ros-domain-id=N -carla-rpc-port=N`.)
+
+- **Migration branch prerequisite (`autoware-port`).** The Autoware vehicle
+  interface inside the simulator — publication of
+  `/vehicle/status/{velocity_status,steering_status,gear_status,control_mode,turn_indicators_status,hazard_lights_status}`,
+  subscription of
+  `/control/command/{control_cmd,gear_cmd,turn_indicators_cmd,hazard_lights_cmd,emergency_cmd}`
+  and `/vehicle/engage`, and the `PythonAPI/examples/autoware_demo.py`
+  ego/sensor spawner — lands with the concurrent `autoware-port` migration
+  work. Until your build includes it, `run_carla_autoware.sh` will detect the
+  missing pieces and exit with a clear message rather than half-start. Nothing
+  in `install/` or `map_tools/` depends on it, so you can prepare Autoware and
+  maps ahead of time.
+
+**ROS2 middleware (RMW)**
+
+- Any of Fast DDS, CycloneDDS, or Zenoh. **CycloneDDS is Autoware's
+  recommended RMW.** See the [compatibility matrix](#compatibility-matrix).
+
+---
+
+## Three-step flow
+
+### 1. Install Autoware
+
+```bash
+./install/install_autoware.sh --check       # read-only prerequisite report
+./install/install_autoware.sh               # source build (classical mode)
+./install/install_autoware.sh --with-vad    # source build + VAD extras (e2e mode)
+```
+
+This performs a pinned source install of Autoware **outside** the CARLA tree
+(no CARLA rebuild is involved). It pins the TIER IV-validated baseline
+(`0.45.1` on Humble; current `1.9.0` on Jazzy). With `--with-vad` it
+additionally checks out the `autoware_launch` branch from the (unmerged) PR
+[autowarefoundation/autoware_launch#1685](https://github.com/autowarefoundation/autoware_launch/pull/1685)
+that adds the `use_e2e_planning` / `e2e_planning_type:=vad` glue — see
+[Known limitations](#known-limitations) — and downloads the VAD model
+(HuggingFace `AutowareFoundation/tensorrt_vad`, tag `v0.1`) into
+`~/autoware_data/ml_models/vad/v0.1/`. A `--docker` mode (prebuilt GHCR image)
+is also available; see `install/README.md`.
+
+### 2. Get map artifacts
+
+Autoware needs, per town, a directory containing:
+
+```
+map_tools/maps/<Town>/
+├── pointcloud_map.pcd        # for NDT localization (>= 0.2 m resolution)
+├── lanelet2_map.osm          # HD vector map (lanes, rules)
+└── map_projector_info.yaml   # must contain: projector_type: Local
+```
+
+(`map_tools/maps/<Town>` is where `run_carla_autoware.sh` looks by default;
+any directory works via its `--map-path` option.)
+
+**Option A — prebuilt (fast):**
+
+```bash
+./map_tools/fetch_prebuilt_maps.sh Town10HD
+```
+
+Downloads the community-maintained artifacts from
+`bitbucket.org/carla-simulator/autoware-contents` (available for Town01–Town07
+and Town10HD) into `map_tools/maps/Town10HD/`. These are UE4-era maps, but
+TIER IV verified the Town10 pair works against UE5 Town10. Known warts: the
+lanelet2 files are y-axis-inverted relative to raw CARLA coordinates (this is
+the convention Autoware expects here, not a bug), they carry **no
+traffic-light regulatory elements**, and there are small origin offsets
+between the pcd and osm.
+
+**Option B — generate from a running simulator (any town, adds traffic lights):**
+
+```bash
+python3 ./map_tools/generate_map_artifacts.py \
+    --town Town10HD_Opt --out ./map_tools/maps/Town10HD --tick
+```
+
+Connects to a running CARLA server (it never launches one), exports the road
+network from OpenDRIVE, builds the lanelet2 map and point-cloud map, and
+injects traffic-light regulatory elements from the simulator's actual
+traffic-light actors — fixing the main gap in the prebuilt maps. `--tick`
+makes the tool the **single** ticking client of a synchronous world; omit it
+only if another client is already ticking. The lanelet2 converter needs the
+pinned deps from `map_tools/requirements.txt` in a venv — see
+`map_tools/README.md`, which also covers fully offline conversion
+(`generate_lanelet2_map.py --xodr <file>`) and resolution options (`--help`).
+
+### 3. Run
+
+```bash
+# Full classical stack:
+./run/run_carla_autoware.sh --mode classical
+
+# End-to-end VAD:
+./run/run_carla_autoware.sh --mode e2e
+```
+
+The default town is `Town10HD_Opt` (the UE5 packaged name; its map dir is
+`map_tools/maps/Town10HD`, matching step 2). Pick another town with
+`--town <Name>`.
+
+Useful common options (forwarded to the server / demo client):
+`--rmw fastdds|cyclonedds|zenoh`, `--domain-id N` (alias `--ros-domain-id`),
+`--carla-rpc-port N`, `--map-path <dir>` to point at a custom map directory,
+`--dry-run` to print every command without executing anything. Run `--help`
+for the full list. Stop a running session from another terminal with
+`./run/stop_all.sh` (kills only the exact process groups it started, via the
+pidfile in the log dir).
+
+Under the hood the script sequences, in order:
+
+1. **CARLA server** with native ROS2:
+   `./CarlaUnreal.sh -ros2 -rmw=<rmw> -ros-domain-id=<N> -carla-rpc-port=<N>`
+   (for `-rmw=zenoh` it first starts the required Zenoh router:
+   `ros2 run rmw_zenoh_cpp rmw_zenohd`).
+2. A **one-shot town loader** (non-ticking client) that switches the server to
+   `--town` if needed.
+3. **`PythonAPI/examples/autoware_demo.py`** — spawns the ego vehicle and the
+   sensor rig, switches the world to synchronous mode, and becomes the **only
+   ticking client**. Do not run other ticking clients (e.g. a second demo or a
+   Traffic Manager script in sync mode) against the same server.
+4. *(e2e only)* **`run/spawn_vad_rig.py`** (attaches the six VAD cameras to
+   the ego; never ticks) and **`run/e2e_state_publishers.launch.py`**
+   (ground-truth localization + image republish nodes).
+5. **Autoware**, per mode (below).
+
+### What each mode runs
+
+**`classical`** launches the TIER IV-validated entry point:
+
+```bash
+ros2 launch autoware_launch e2e_simulator.launch.xml \
+  vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit \
+  map_path:=$(pwd)/map_tools/maps/Town10HD
+```
+
+Autoware localizes with **NDT matching against `pointcloud_map.pcd`** and
+therefore needs lidar, IMU and GNSS — all provided by `autoware_demo.py`:
+an XYZIRCAEDT lidar on `/sensing/lidar/top/pointcloud_raw_ex` (frame
+`velodyne_top`), IMU on `/sensing/imu/tamagawa/imu_raw`, GNSS pose on
+`/sensing/gnss`, plus a traffic-light camera. After launch, set the initial
+pose in RViz if NDT does not converge on its own, then engage
+(`/vehicle/engage`) or use the RViz AutowareStatePanel.
+
+**`e2e`** runs camera-only driving with VAD:
+
+- `run/spawn_vad_rig.py` (started by the run script) attaches **six 1600×900
+  cameras** to the ego and publishes them natively on
+  `/sensing/camera/CAM_*/image_raw` (+ `/camera_info`): `CAM_FRONT` (FOV 70),
+  `CAM_BACK` (FOV 110), `CAM_FRONT_LEFT`, `CAM_FRONT_RIGHT`, `CAM_BACK_LEFT`,
+  `CAM_BACK_RIGHT` (FOV 70). The input **order is load-bearing** for the
+  model: image0=FRONT, 1=BACK, 2=FRONT_LEFT, 3=BACK_LEFT, 4=FRONT_RIGHT,
+  5=BACK_RIGHT. VAD consumes them compressed via `image_transport` republish
+  nodes, which the run script starts.
+- Localization is **ground truth**, not NDT: three plain ROS nodes from
+  `autoware_carla_interface` (`carla_state_publisher`,
+  `autoware_vehicle_velocity_converter`, `autoware_twist2accel`) turn
+  `/sensing/gnss/pose_with_covariance` and `/vehicle/status/velocity_status`
+  into `/localization/kinematic_state` and `/localization/acceleration`.
+- VAD publishes `/planning/trajectory`, which the **classic trajectory
+  follower** executes — so the control path is identical to classical mode.
+- If the pinned PR #1685 branch is unavailable, the run script falls back to
+  launching `e2e/autoware_tensorrt_vad/launch/vad_carla_tiny.launch.xml`
+  directly with sensing/localization/perception disabled.
+- The **first** e2e run builds TensorRT engines from the ONNX model. This is
+  slow (tens of minutes on some GPUs) and looks like a hang — it isn't. The
+  engines are cached; subsequent runs start fast.
+
+---
+
+## Compatibility matrix
+
+| | Fast DDS (`-rmw=fastdds`, default) | CycloneDDS (`-rmw=cyclonedds`) | Zenoh (`-rmw=zenoh`) |
+|---|---|---|---|
+| **Humble / 22.04** | Works. Our server default is **UDPv4-only** transport, so containerized Autoware discovers the simulator out of the box (no shared-memory pitfalls). Export `FASTDDS_BUILTIN_TRANSPORTS=DEFAULT` before starting the server to restore SHM for same-host, bare-metal setups. | Works. **Recommended by Autoware.** Apply Autoware's usual CycloneDDS config (`cyclonedds.xml`, raised `rmem_max`). | Works. Start the router **before** server and stack: `ros2 run rmw_zenoh_cpp rmw_zenohd`. |
+| **Jazzy / 24.04** | Same as above. | Same as above; Jazzy is the Autoware Docker default OS. | Same as above. |
+
+The RMW is chosen **per process**: `-rmw=` on the CARLA server,
+`RMW_IMPLEMENTATION=rmw_cyclonedds_cpp` (etc.) for the Autoware side.
+All processes must agree on the RMW and on `ROS_DOMAIN_ID` (server flag
+`-ros-domain-id=N`). Mixed-RMW setups are not supported.
+
+---
+
+## Known limitations
+
+Read this before filing bugs — most of it is inherited and known.
+
+- **`autoware_launch` PR #1685 is unmerged.** The launch-level glue for e2e
+  planning (`use_e2e_planning` / `e2e_planning_type:=vad`) exists only as an
+  open PR against `autowarefoundation/autoware_launch`. The installer pins
+  that PR branch; if the pin ever breaks, e2e mode falls back to launching
+  `vad_carla_tiny.launch.xml` manually. Expect this section to simplify once
+  the PR merges.
+- **Prebuilt maps lack traffic-light regulatory elements**, so classical-mode
+  Autoware will not stop for red lights on them. Regenerate against a running
+  simulator with `generate_map_artifacts.py` (step 2, option B) to inject
+  traffic lights from ground truth. The prebuilt lanelet2 files are also
+  y-axis-inverted by convention and have small pcd/osm origin offsets.
+- **VAD domain gap.** The published VAD weights were trained on
+  Bench2Drive / CARLA 0.9.15-era imagery. Behavior on UE5.8 visuals is
+  **unvalidated** — expect degraded performance in some scenes; treat e2e mode
+  as a pipeline reference, not a driving-quality benchmark.
+- **Control calibration.** Autoware's `sample_vehicle` gains and the original
+  interface calibration were tuned for a Prius-class vehicle. Other ego
+  blueprints will track more loosely until you re-tune the vehicle model /
+  controller parameters.
+- **`fixed_delta_seconds` coupling.** Sensor rates, the sync-mode tick, and
+  Autoware's expectations are coupled through the simulator step
+  (`autoware_demo.py` sets it). Changing it changes effective sensor
+  frequencies; don't tune it independently of the sensor configuration.
+- **First e2e run builds TensorRT engines** — slow but one-time (cached under
+  `~/autoware_data/`).
+- **Single ticking client.** In sync mode CARLA publishes only when its one
+  designated client ticks. Extra ticking clients cause double-stepping or
+  stalls; run everything through `run_carla_autoware.sh`.
+
+---
+
+## How this differs from `autoware_carla_interface`
+
+The upstream `autoware_carla_interface` (Autoware Universe) is a Python ROS
+node that connects to CARLA via the Python RPC API and re-publishes everything
+into ROS2 — a bridge in the hot path, tied to `rclpy` and effectively to one
+middleware configuration. In this integration the **simulator itself is the
+DDS participant**: sensor data (including the XYZIRCAEDT lidar layout and the
+six-camera rig) and vehicle status originate natively from the CARLA server,
+and control commands flow straight back into it, with per-process RMW choice
+across **Fast DDS, CycloneDDS, and Zenoh**. No serialization detour, lower and
+more uniform latency, no Python GIL in the sensor path. We still reuse three
+small stateless nodes *from* `autoware_carla_interface` in e2e mode (the
+ground-truth localization converters), but nothing bridge-like sits between
+sensors and the stack.
