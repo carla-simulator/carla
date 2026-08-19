@@ -352,6 +352,18 @@ namespace client {
     return _episode.Lock()->GetNamesOfAllObjects();
   }
 
+  void World::SetPublishTF(bool publish_tf) {
+    _episode.Lock()->SetPublishTF(publish_tf);
+  }
+
+  bool World::GetPublishTF() const {
+    return _episode.Lock()->GetPublishTF();
+  }
+
+  std::vector<geom::Transform> World::GetEgoSpawnPoints() const {
+    return _episode.Lock()->GetEgoSpawnPoints();
+  }
+
   void World::ApplyTexturesToObject(
       const std::string &object_name,
       const rpc::TextureColor& diffuse_texture,

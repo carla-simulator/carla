@@ -192,6 +192,12 @@ namespace detail {
 
     bool IsWeatherEnabled();
 
+    void SetPublishTF(bool publish_tf);
+
+    bool GetPublishTF() const;
+
+    std::vector<geom::Transform> GetEgoSpawnPoints() const;
+
     std::vector<rpc::Actor> GetActorsById(const std::vector<ActorId> &ids);
 
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(rpc::ActorId vehicle) const;
@@ -251,6 +257,13 @@ namespace detail {
         const geom::Vector3D &vector);
 
     void DisableActorConstantVelocity(
+        rpc::ActorId actor);
+
+    void EnableActorConstantAcceleration(
+        rpc::ActorId actor,
+        const geom::Vector3D &vector);
+
+    void DisableActorConstantAcceleration(
         rpc::ActorId actor);
 
     void AddActorImpulse(
