@@ -32,6 +32,24 @@ Fast-DDS does not fall back to UDP when the shared-memory path is unreachable, s
 
 Same-host power users who want shared-memory (or `LARGE_DATA`) performance back can set the standard [`FASTDDS_BUILTIN_TRANSPORTS`](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html) environment variable (e.g. `FASTDDS_BUILTIN_TRANSPORTS=DEFAULT`) when launching the simulator; the simulator then leaves the transport selection entirely to Fast-DDS and logs the active choice at startup. For shared memory to actually deliver, the subscriber must share the IPC namespace, run as the same uid, and use a compatible Fast-DDS version. The other middlewares are unaffected: CycloneDDS and Zenoh never use shared memory in this build.
 
+#### Which subscriber setups receive data (`--rmw=fastdds`)
+
+Every combination below was verified against a live simulator (Fast-DDS 2.14.6). "ROS 2 Jazzy" stands for any peer on a Fast-DDS 2.14-generation stack, "ROS 2 Humble" for the 2.6 generation. A ✗ always looks the same: topics are listed, `ros2 topic echo` receives nothing, and neither side logs a warning.
+
+| Subscriber setup | Simulator default (UDPv4 only) | Simulator with `FASTDDS_BUILTIN_TRANSPORTS=DEFAULT` (UDPv4 + SHM) |
+|---|---|---|
+| Another machine on the network | ✓ UDP | ✓ UDP (SHM is never selected across hosts) |
+| Same host, same user, Jazzy | ✓ UDP | ✓ SHM |
+| Same host, different user (any distro) | ✓ UDP | ✗ no data — cross-user SHM writes fail |
+| Same host, same user, Humble | ✓ UDP | ✗ no data — incompatible SHM generation |
+| Container, `--net=host` only | ✓ UDP | ✗ no data — separate `/dev/shm` |
+| Container, `--net=host --ipc=host` (default root user) | ✓ UDP | ✗ no data — uid mismatch |
+| Container, `--net=host --ipc=host --user <simulator uid>`, Jazzy | ✓ UDP | ✓ SHM |
+| Container, `--net=host --ipc=host --user <simulator uid>`, Humble | ✓ UDP | ✗ no data — incompatible SHM generation |
+| Any container, subscriber forced to UDP via `FASTRTPS_DEFAULT_PROFILES_FILE` (profile shipped in `PythonAPI/examples/ros2/config/fastrtps-profile.xml`) | ✓ UDP | ✓ UDP |
+
+`--rmw=cyclonedds` behaves like the first column in every row (UDP only, no shared-memory support compiled in). `--rmw=zenoh` is independent of this table entirely; it requires the Zenoh router and `rmw_zenoh_cpp` peers as described above.
+
 ## ROS2 domain id
 
 The ROS2 domain id used by the native connector is configurable with the `--ros-domain-id=<N>` option, which is only valid together with `--ros2`:
