@@ -10,6 +10,9 @@
 
 #include <fastdds/dds/domain/DomainParticipantFactory.hpp>
 #include <fastdds/dds/domain/qos/DomainParticipantQos.hpp>
+#include <fastdds/rtps/attributes/BuiltinTransports.hpp>
+
+#include <cstdlib>
 
 namespace carla {
 namespace ros2 {
@@ -26,6 +29,18 @@ efd::DomainParticipant* FastDDSSharedParticipant::acquire() {
   std::lock_guard<std::mutex> lock(_mutex);
   if (_refcount == 0u) {
     efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
+    // Fast-DDS's builtin default is UDPv4 + shared memory, and SHM is
+    // preferred for any peer that looks same-host. SHM delivery silently
+    // drops every sample across a container, uid, or Fast-DDS-version
+    // boundary (discovery is UDP multicast, so topics stay visible while no
+    // data arrives), and Fast-DDS never falls back to the reader's UDP
+    // locator when the SHM path is unreachable. Default to UDPv4-only so any
+    // subscriber works out of the box; setting the standard
+    // FASTDDS_BUILTIN_TRANSPORTS environment variable (e.g. to DEFAULT)
+    // skips this override and restores SHM for same-host, same-uid setups.
+    if (std::getenv("FASTDDS_BUILTIN_TRANSPORTS") == nullptr) {
+      pqos.setup_transports(eprosima::fastdds::rtps::BuiltinTransports::UDPv4);
+    }
     // Use the effective domain id resolved by the abstraction layer
     // (--ros-domain-id, else ROS_DOMAIN_ID, else the default domain 0).
     const uint32_t domain_id =

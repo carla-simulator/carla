@@ -20,6 +20,18 @@ Accepted values are `fastdds` (the default), `cyclonedds`, and `zenoh`. CycloneD
 
 `--rmw=zenoh` is compatible with `rmw_zenoh_cpp` peers and requires a Zenoh router (`ros2 run rmw_zenoh_cpp rmw_zenohd`) running before the simulator starts. The session connects to `tcp/localhost:7447` by default; set `ZENOH_SESSION_CONFIG_URI` to point at a different rmw_zenoh config file, or `ZENOH_CONFIG_OVERRIDE` to patch individual keys.
 
+### Fast-DDS transport and shared memory
+
+With `--rmw=fastdds` the simulator restricts the Fast-DDS participant to the **UDPv4 transport only**. Fast-DDS's own builtin default (UDPv4 + shared memory, preferring shared memory for peers on the same host) silently delivers no data whenever the shared-memory path cannot actually be shared, while discovery keeps working — topics appear in `ros2 topic list` but `ros2 topic echo` never receives a sample, with no warning on either side. This happens in three independent, common situations:
+
+- the subscriber runs in a container without `--ipc=host` (separate `/dev/shm` namespace);
+- the subscriber runs as a different user than the simulator (Fast-DDS segment files are created `0644`, so cross-user writes into the reader's port fail) — this includes containers running as root against a simulator running as a regular user;
+- the subscriber uses an incompatible Fast-DDS generation (for example ROS 2 Humble ships Fast-DDS 2.6, which cannot exchange shared memory with the simulator's 2.14).
+
+Fast-DDS does not fall back to UDP when the shared-memory path is unreachable, so with the stock default any of the above results in silent data loss. The UDPv4-only default makes every subscriber — containerized or not, any user, any ROS 2 distribution — work without configuration.
+
+Same-host power users who want shared-memory (or `LARGE_DATA`) performance back can set the standard [`FASTDDS_BUILTIN_TRANSPORTS`](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html) environment variable (e.g. `FASTDDS_BUILTIN_TRANSPORTS=DEFAULT`) when launching the simulator; the simulator then leaves the transport selection entirely to Fast-DDS and logs the active choice at startup. For shared memory to actually deliver, the subscriber must share the IPC namespace, run as the same uid, and use a compatible Fast-DDS version. The other middlewares are unaffected: CycloneDDS and Zenoh never use shared memory in this build.
+
 ## ROS2 domain id
 
 The ROS2 domain id used by the native connector is configurable with the `--ros-domain-id=<N>` option, which is only valid together with `--ros2`:

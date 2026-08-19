@@ -39,6 +39,7 @@
 #include "Engine/GameViewportClient.h"
 #include <util/ue-header-guard-end.h>
 
+#include <cstdlib>
 #include <thread>
 
 // =============================================================================
@@ -288,6 +289,25 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       else
       {
         UE_LOG(LogCarla, Log, TEXT("ROS2: enabled with middleware '%s'."), *Settings.RmwName);
+        if (Settings.RmwName == TEXT("fastdds"))
+        {
+          // Mirrors the transport default applied in FastDDSSharedParticipant:
+          // UDPv4-only unless FASTDDS_BUILTIN_TRANSPORTS is set (Fast-DDS
+          // shared memory silently drops data across container/uid/version
+          // boundaries, so it is opt-in).
+          const char *TransportsEnv = std::getenv("FASTDDS_BUILTIN_TRANSPORTS");
+          if (TransportsEnv != nullptr)
+          {
+            UE_LOG(LogCarla, Log,
+                TEXT("ROS2: Fast-DDS builtin transports set from FASTDDS_BUILTIN_TRANSPORTS='%s'."),
+                UTF8_TO_TCHAR(TransportsEnv));
+          }
+          else
+          {
+            UE_LOG(LogCarla, Log,
+                TEXT("ROS2: Fast-DDS transport: UDPv4 only (default; set FASTDDS_BUILTIN_TRANSPORTS=DEFAULT to re-enable shared memory)."));
+          }
+        }
         // Apply the configured default topic visibility before any sensor stream is
         // created. Gated on Settings.ROS2 so non-ROS2 runs never force every stream
         // active (which would make every sensor produce data each tick).
