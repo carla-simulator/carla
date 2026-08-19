@@ -657,6 +657,40 @@ ECarlaServerResponse FVehicleActor::DisableActorConstantVelocity()
   return ECarlaServerResponse::Success;
 }
 
+ECarlaServerResponse FVehicleActor::EnableActorConstantAcceleration(const FVector& Acceleration)
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto CarlaVehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (CarlaVehicle == nullptr)
+    {
+      return ECarlaServerResponse::NullActor;
+    }
+    CarlaVehicle->ActivateAccelerationControl(Acceleration);
+  }
+  return ECarlaServerResponse::Success;
+}
+
+ECarlaServerResponse FVehicleActor::DisableActorConstantAcceleration()
+{
+  if (IsDormant())
+  {
+  }
+  else
+  {
+    auto CarlaVehicle = Cast<ACarlaWheeledVehicle>(GetActor());
+    if (CarlaVehicle == nullptr)
+    {
+      return ECarlaServerResponse::NullActor;
+    }
+    CarlaVehicle->DeactivateAccelerationControl();
+  }
+  return ECarlaServerResponse::Success;
+}
+
 ECarlaServerResponse FVehicleActor::GetPhysicsControl(FVehiclePhysicsControl& PhysicsControl)
 {
   if (IsDormant())

@@ -15,6 +15,7 @@
 #include "Carla/Vehicle/CustomTerrainPhysicsComponent.h"
 
 #include <util/ue-header-guard-begin.h>
+#include "Engine/Engine.h"
 #include "Engine/WorldComposition.h"
 #include "Engine/ObjectLibrary.h"
 #include "Misc/FileHelper.h"

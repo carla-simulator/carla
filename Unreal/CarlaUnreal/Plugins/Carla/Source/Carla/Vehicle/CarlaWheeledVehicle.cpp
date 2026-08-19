@@ -53,6 +53,9 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VelocityControl = CreateDefaultSubobject<UVehicleVelocityControl>(TEXT("VelocityControl"));
   VelocityControl->Deactivate();
 
+  AccelerationControl = CreateDefaultSubobject<UVehicleAccelerationControl>(TEXT("AccelerationControl"));
+  AccelerationControl->Deactivate();
+
   GetChaosWheeledVehicleMovementComponent()->bReverseAsBrake = false;
   BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
 
@@ -248,6 +251,12 @@ void ACarlaWheeledVehicle::ActivateVehicleLightComponents()
 
 void ACarlaWheeledVehicle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction){
   Super::TickActor(DeltaTime, TickType, ThisTickFunction);
+
+  // When velocity/acceleration control is active, flush control every frame even without AI controller
+  if (VelocityControl->IsActive() || AccelerationControl->IsActive())
+  {
+    FlushVehicleControl();
+  }
 
   FPoseSnapshot pose;
   GetMesh()->SnapshotPose(pose);
@@ -737,6 +746,33 @@ void ACarlaWheeledVehicle::ActivateVelocityControl(const FVector& Velocity)
 void ACarlaWheeledVehicle::DeactivateVelocityControl()
 {
   VelocityControl->Deactivate();
+}
+
+void ACarlaWheeledVehicle::ActivateAccelerationControl(const FVector& Acceleration)
+{
+  AccelerationControl->Activate(Acceleration);
+}
+
+void ACarlaWheeledVehicle::DeactivateAccelerationControl()
+{
+  AccelerationControl->Deactivate();
+}
+
+void ACarlaWheeledVehicle::ApplyVehicleAccelerationControl(float LongitudinalAccelerationMps2, float Steer, float SteerSpeed)
+{
+  if (bAckermannControlActive)
+  {
+    AckermannController.Reset();
+  }
+  bAckermannControlActive = false;
+  VelocityControl->Deactivate();
+
+  // Longitudinal: acceleration from control_cmd [m/s^2] -> Unreal uses cm/s^2
+  const FVector AccelerationCmps2(LongitudinalAccelerationMps2 * 100.0f, 0.0f, 0.0f);
+  AccelerationControl->Activate(AccelerationCmps2);
+
+  InputControl.Control.Steer = Steer;
+  InputControl.Priority = EVehicleInputPriority::User;
 }
 
 FVehicleTelemetryData ACarlaWheeledVehicle::GetVehicleTelemetryData() const

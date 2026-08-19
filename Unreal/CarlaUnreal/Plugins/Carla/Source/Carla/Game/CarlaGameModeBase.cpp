@@ -233,6 +233,11 @@ void ACarlaGameModeBase::InitGame(
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
 
+  LoadGeoReference();
+}
+
+void ACarlaGameModeBase::LoadGeoReference()
+{
   ParseOpenDrive();
 
   if(Map.has_value())

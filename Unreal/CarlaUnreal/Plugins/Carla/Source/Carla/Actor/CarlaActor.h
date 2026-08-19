@@ -241,6 +241,16 @@ public:
     return ECarlaServerResponse::ActorTypeMismatch;
   }
 
+  virtual ECarlaServerResponse EnableActorConstantAcceleration(const FVector&)
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
+  virtual ECarlaServerResponse DisableActorConstantAcceleration()
+  {
+    return ECarlaServerResponse::ActorTypeMismatch;
+  }
+
   virtual ECarlaServerResponse GetPhysicsControl(FVehiclePhysicsControl&)
   {
     return ECarlaServerResponse::ActorTypeMismatch;
@@ -491,6 +501,10 @@ public:
   virtual ECarlaServerResponse EnableActorConstantVelocity(const FVector& Velocity) final;
 
   virtual ECarlaServerResponse DisableActorConstantVelocity() final;
+
+  virtual ECarlaServerResponse EnableActorConstantAcceleration(const FVector& Acceleration) final;
+
+  virtual ECarlaServerResponse DisableActorConstantAcceleration() final;
 
   virtual ECarlaServerResponse GetPhysicsControl(FVehiclePhysicsControl& PhysicsControl) final;
 

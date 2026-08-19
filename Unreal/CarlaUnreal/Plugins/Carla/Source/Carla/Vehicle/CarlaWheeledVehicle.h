@@ -16,6 +16,7 @@
 #include "Carla/Vehicle/VehiclePhysicsControl.h"
 #include "Carla/Vehicle/VehicleTelemetryData.h"
 #include "Carla/Vehicle/VehicleVelocityControl.h"
+#include "Carla/Vehicle/VehicleAccelerationControl.h"
 #include "Carla/Vehicle/WheeledVehicleMovementComponentNW.h"
 #include "Carla/Vehicle/MovementComponents/BaseCarlaMovementComponent.h"
 
@@ -246,6 +247,15 @@ public:
   void DeactivateVelocityControl();
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void ActivateAccelerationControl(const FVector &Acceleration);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void DeactivateAccelerationControl();
+
+  /// Apply control from Autoware /control/command/control_cmd (acceleration [m/s^2] + steering)
+  void ApplyVehicleAccelerationControl(float LongitudinalAccelerationMps2, float Steer, float SteerSpeed);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void ShowDebugTelemetry(bool Enabled);
 
   /// @todo This function should be private to AWheeledVehicleAIController.
@@ -347,6 +357,9 @@ private:
 
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
   TObjectPtr<UVehicleVelocityControl> VelocityControl;
+
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
+  TObjectPtr<UVehicleAccelerationControl> AccelerationControl;
 
 
   FVehicleControl LastAppliedControl;
