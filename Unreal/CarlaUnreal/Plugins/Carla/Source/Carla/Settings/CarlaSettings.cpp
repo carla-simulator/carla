@@ -162,7 +162,10 @@ void UCarlaSettings::LoadSettings()
     {
       bDisableRendering = true;
     }
-    if (FParse::Param(FCommandLine::Get(), TEXT("-ros2")))
+    // FParse::Param only matches single-dash switches; also accept the
+    // historically documented "--ros2" spelling so it does not silently no-op.
+    if (FParse::Param(FCommandLine::Get(), TEXT("-ros2")) ||
+        FCString::Strifind(FCommandLine::Get(), TEXT("--ros2")) != nullptr)
     {
       ROS2 = true;
     }

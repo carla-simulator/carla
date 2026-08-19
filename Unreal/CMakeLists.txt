@@ -543,12 +543,14 @@ add_carla_ue_package_target(Test Test)
 
 set (LAUNCH_ARGS ${CARLA_LAUNCH_ARGS})
 
+# UE5's FParse::Param only recognizes single-dash switches ("--ros2" is
+# silently ignored because the character before the dash must be whitespace).
 if (ENABLE_ROS2)
-  list (APPEND LAUNCH_ARGS --ros2)
+  list (APPEND LAUNCH_ARGS -ros2)
 endif()
 
 if (ENABLE_ROS2_DEMO)
-  list (APPEND LAUNCH_ARGS --ros2-demo)
+  list (APPEND LAUNCH_ARGS -ros2-demo)
 endif()
 
 set (
