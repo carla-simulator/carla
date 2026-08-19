@@ -30,19 +30,18 @@ public:
   using msg_type = typename Traits::msg_type;
 
   bool Init(std::string topic_name) {
-#ifdef LIBCARLA_WITH_GTEST
-    // A test may inject a fake middleware before Init(); do not overwrite it.
-    if (!_middleware) {
-#endif
-      _middleware = MiddlewareFactory::CreatePublisher<Traits>();
-      if (!_middleware) {
-        log_error("PublisherImpl::Init failed to create middleware publisher");
-        return false;
-      }
-#ifdef LIBCARLA_WITH_GTEST
+    if (!EnsureMiddleware()) {
+      return false;
     }
-#endif
     return _middleware->Init(topic_name);
+  }
+
+  /// Init with an explicit per-topic QoS profile (see QosProfile.h).
+  bool Init(std::string topic_name, const QosProfile& qos) {
+    if (!EnsureMiddleware()) {
+      return false;
+    }
+    return _middleware->Init(topic_name, qos);
   }
 
   std::string GetTopicName() {
@@ -76,6 +75,22 @@ public:
 #endif
 
 private:
+  bool EnsureMiddleware() {
+#ifdef LIBCARLA_WITH_GTEST
+    // A test may inject a fake middleware before Init(); do not overwrite it.
+    if (!_middleware) {
+#endif
+      _middleware = MiddlewareFactory::CreatePublisher<Traits>();
+      if (!_middleware) {
+        log_error("PublisherImpl::Init failed to create middleware publisher");
+        return false;
+      }
+#ifdef LIBCARLA_WITH_GTEST
+    }
+#endif
+    return true;
+  }
+
   std::unique_ptr<IPublisherMiddleware> _middleware;
   msg_type _message{};
 };

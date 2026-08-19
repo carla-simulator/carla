@@ -56,6 +56,18 @@ class CycloneDDSPublisherMiddleware : public IPublisherMiddleware {
   }
 
   bool Init(const std::string& topic_name) override {
+    return InitImpl(topic_name, nullptr);
+  }
+
+  bool Init(const std::string& topic_name, const QosProfile& qos) override {
+    return InitImpl(topic_name, &qos);
+  }
+
+ private:
+  /// Shared Init body. When @a qos is non-null the profile overrides the
+  /// RELIABLE / KEEP_LAST-1 writer defaults below; when null the defaults are
+  /// kept, preserving the pre-QoS behavior for every existing publisher.
+  bool InitImpl(const std::string& topic_name, const QosProfile* qos_profile) {
     dds_entity_t participant = carla_cdr_get_participant();
     if (participant < 0) {
       log_error("CycloneDDSPublisherMiddleware: Shared participant unavailable "
@@ -74,11 +86,27 @@ class CycloneDDSPublisherMiddleware : public IPublisherMiddleware {
 
     dds_qos_t* qos = dds_create_qos();
     // Reliable delivery with keep-last history depth 1, matching the FastDDS
-    // publisher defaults so both middlewares behave identically. Per-topic QoS
-    // tuning (best-effort sensor streams, latched topics) arrives with the
-    // PublisherQos layer in a later PR of this series.
-    dds_qset_reliability(qos, DDS_RELIABILITY_RELIABLE, DDS_SECS(1));
-    dds_qset_history(qos, DDS_HISTORY_KEEP_LAST, 1);
+    // publisher defaults so both middlewares behave identically. A caller may
+    // override this per topic through the QosProfile Init overload.
+    if (qos_profile != nullptr) {
+      dds_qset_reliability(qos,
+          qos_profile->reliability == QosProfile::Reliability::Reliable
+              ? DDS_RELIABILITY_RELIABLE
+              : DDS_RELIABILITY_BEST_EFFORT,
+          DDS_SECS(1));
+      dds_qset_durability(qos,
+          qos_profile->durability == QosProfile::Durability::TransientLocal
+              ? DDS_DURABILITY_TRANSIENT_LOCAL
+              : DDS_DURABILITY_VOLATILE);
+      dds_qset_history(qos,
+          qos_profile->history == QosProfile::History::KeepLast
+              ? DDS_HISTORY_KEEP_LAST
+              : DDS_HISTORY_KEEP_ALL,
+          qos_profile->history_depth);
+    } else {
+      dds_qset_reliability(qos, DDS_RELIABILITY_RELIABLE, DDS_SECS(1));
+      dds_qset_history(qos, DDS_HISTORY_KEEP_LAST, 1);
+    }
     // Set USER_DATA (PID_USER_DATA = 0x002c per OMG DDSI-RTPS v2.5 §9.6.2.2.2)
     // to the REP-2016 type-hash KV payload "typehash=RIHS01_<hex>;".
     auto ud = build_user_data_for<msg_type>();
@@ -101,6 +129,7 @@ class CycloneDDSPublisherMiddleware : public IPublisherMiddleware {
     return true;
   }
 
+ public:
   bool Publish(void* message_data) override {
     const msg_type* msg = static_cast<const msg_type*>(message_data);
     std::vector<uint8_t> cdr = serialize_to_cdr(*msg);

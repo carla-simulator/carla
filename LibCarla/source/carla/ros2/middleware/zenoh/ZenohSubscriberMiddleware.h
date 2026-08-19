@@ -59,6 +59,30 @@ class ZenohSubscriberMiddleware : public ISubscriberMiddleware {
       void* message_ptr,
       bool* new_message_flag) override
   {
+    return InitImpl(topic_name, message_ptr, new_message_flag, kZenohDefaultQos);
+  }
+
+  bool Init(
+      const std::string& topic_name,
+      void* message_ptr,
+      bool* new_message_flag,
+      const QosProfile& qos) override
+  {
+    // The profile is advertised in the liveliness token so rmw_zenoh peers see
+    // a compatible endpoint; zenoh delivery semantics are not differentiated
+    // (no querying-subscriber, so TRANSIENT_LOCAL late-join latching is not
+    // provided — see zenoh_qos_keyexpr).
+    return InitImpl(topic_name, message_ptr, new_message_flag,
+                    zenoh_qos_keyexpr(qos));
+  }
+
+ private:
+  bool InitImpl(
+      const std::string& topic_name,
+      void* message_ptr,
+      bool* new_message_flag,
+      const std::string& qos_str)
+  {
     _message_ptr     = static_cast<msg_type*>(message_ptr);
     _new_message_ptr = new_message_flag;
 
@@ -97,7 +121,7 @@ class ZenohSubscriberMiddleware : public ISubscriberMiddleware {
     const std::string lv_ke_str = zenoh_make_topic_liveliness_keyexpr(
         zenoh_ros_domain_id(), zenoh_session_zid(), zenoh_next_entity_id(),
         kZenohEntityKindSub, topic_no_rt, type_name, type_hash,
-        kZenohDefaultQos);
+        qos_str.c_str());
     z_view_keyexpr_t lv_ke;
     if (z_view_keyexpr_from_str(&lv_ke, lv_ke_str.c_str()) != Z_OK) {
       log_error("ZenohSubscriberMiddleware (", topic_name,
@@ -119,6 +143,7 @@ class ZenohSubscriberMiddleware : public ISubscriberMiddleware {
     return true;
   }
 
+ public:
   bool IsAlive() const override {
     return _alive.load(std::memory_order_relaxed);
   }

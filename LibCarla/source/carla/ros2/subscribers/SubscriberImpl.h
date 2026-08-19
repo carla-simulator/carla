@@ -29,19 +29,18 @@ public:
   using msg_type = typename Traits::msg_type;
 
   bool Init(std::string topic_name) {
-#ifdef LIBCARLA_WITH_GTEST
-    // A test may inject a fake middleware before Init(); do not overwrite it.
-    if (!_middleware) {
-#endif
-      _middleware = MiddlewareFactory::CreateSubscriber<Traits>();
-      if (!_middleware) {
-        log_error("SubscriberImpl::Init failed to create middleware subscriber");
-        return false;
-      }
-#ifdef LIBCARLA_WITH_GTEST
+    if (!EnsureMiddleware()) {
+      return false;
     }
-#endif
     return _middleware->Init(topic_name, &_message, &_new_message);
+  }
+
+  /// Init with an explicit per-topic QoS profile (see QosProfile.h).
+  bool Init(std::string topic_name, const QosProfile& qos) {
+    if (!EnsureMiddleware()) {
+      return false;
+    }
+    return _middleware->Init(topic_name, &_message, &_new_message, qos);
   }
 
   std::string GetTopicName() {
@@ -77,6 +76,22 @@ public:
 #endif
 
 private:
+  bool EnsureMiddleware() {
+#ifdef LIBCARLA_WITH_GTEST
+    // A test may inject a fake middleware before Init(); do not overwrite it.
+    if (!_middleware) {
+#endif
+      _middleware = MiddlewareFactory::CreateSubscriber<Traits>();
+      if (!_middleware) {
+        log_error("SubscriberImpl::Init failed to create middleware subscriber");
+        return false;
+      }
+#ifdef LIBCARLA_WITH_GTEST
+    }
+#endif
+    return true;
+  }
+
   std::unique_ptr<ISubscriberMiddleware> _middleware;
   msg_type _message{};
   bool _new_message{false};

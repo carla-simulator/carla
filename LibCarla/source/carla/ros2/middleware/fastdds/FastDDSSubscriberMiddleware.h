@@ -95,6 +95,27 @@ class FastDDSSubscriberMiddleware
       const std::string& topic_name,
       void* message_ptr,
       bool* new_message_flag) override {
+    return InitImpl(topic_name, message_ptr, new_message_flag, nullptr);
+  }
+
+  bool Init(
+      const std::string& topic_name,
+      void* message_ptr,
+      bool* new_message_flag,
+      const QosProfile& qos) override {
+    return InitImpl(topic_name, message_ptr, new_message_flag, &qos);
+  }
+
+ private:
+  /// Shared Init body. When @a qos is non-null the profile overrides the
+  /// FastDDS DataReader defaults (BEST_EFFORT / VOLATILE); when null the
+  /// defaults are kept, preserving the pre-QoS behavior for every existing
+  /// subscriber.
+  bool InitImpl(
+      const std::string& topic_name,
+      void* message_ptr,
+      bool* new_message_flag,
+      const QosProfile* qos) {
     _message_ptr     = static_cast<msg_type*>(message_ptr);
     _new_message_ptr = new_message_flag;
 
@@ -135,6 +156,22 @@ class FastDDSSubscriberMiddleware
 
     efd::DataReaderQos rqos = efd::DATAREADER_QOS_DEFAULT;
 
+    if (qos != nullptr) {
+      rqos.reliability().kind =
+          qos->reliability == QosProfile::Reliability::Reliable
+              ? efd::RELIABLE_RELIABILITY_QOS
+              : efd::BEST_EFFORT_RELIABILITY_QOS;
+      rqos.durability().kind =
+          qos->durability == QosProfile::Durability::TransientLocal
+              ? efd::TRANSIENT_LOCAL_DURABILITY_QOS
+              : efd::VOLATILE_DURABILITY_QOS;
+      rqos.history().kind =
+          qos->history == QosProfile::History::KeepLast
+              ? efd::KEEP_LAST_HISTORY_QOS
+              : efd::KEEP_ALL_HISTORY_QOS;
+      rqos.history().depth = qos->history_depth;
+    }
+
     // Set USER_DATA (PID_USER_DATA = 0x002c per OMG DDSI-RTPS v2.5 §9.6.2.2.2)
     // to the REP-2016 type-hash KV payload "typehash=RIHS01_<hex>;".
     auto ud = build_user_data_for<msg_type>();
@@ -154,6 +191,7 @@ class FastDDSSubscriberMiddleware
     return true;
   }
 
+ public:
   bool IsAlive() const override {
     return _alive.load(std::memory_order_relaxed);
   }

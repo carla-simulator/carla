@@ -59,6 +59,18 @@ class ZenohPublisherMiddleware : public IPublisherMiddleware {
   }
 
   bool Init(const std::string& topic_name) override {
+    return InitImpl(topic_name, kZenohDefaultQos);
+  }
+
+  bool Init(const std::string& topic_name, const QosProfile& qos) override {
+    // The profile is advertised in the liveliness token so rmw_zenoh peers see
+    // a compatible endpoint; zenoh delivery semantics are not differentiated
+    // (see zenoh_qos_keyexpr).
+    return InitImpl(topic_name, zenoh_qos_keyexpr(qos));
+  }
+
+ private:
+  bool InitImpl(const std::string& topic_name, const std::string& qos_str) {
     const z_loaned_session_t* session = zenoh_get_shared_session();
 
     const std::string topic_no_rt = zenoh_strip_rt_prefix(topic_name);
@@ -91,7 +103,7 @@ class ZenohPublisherMiddleware : public IPublisherMiddleware {
     const std::string lv_ke_str = zenoh_make_topic_liveliness_keyexpr(
         zenoh_ros_domain_id(), zenoh_session_zid(), zenoh_next_entity_id(),
         kZenohEntityKindPub, topic_no_rt, type_name, type_hash,
-        kZenohDefaultQos);
+        qos_str.c_str());
     z_view_keyexpr_t lv_ke;
     if (z_view_keyexpr_from_str(&lv_ke, lv_ke_str.c_str()) != Z_OK) {
       log_error("ZenohPublisherMiddleware (", topic_name,
@@ -119,6 +131,7 @@ class ZenohPublisherMiddleware : public IPublisherMiddleware {
     return true;
   }
 
+ public:
   bool Publish(void* message_data) override {
     std::lock_guard<std::mutex> lock(_publish_mutex);
     if (!z_internal_check(_publisher)) {

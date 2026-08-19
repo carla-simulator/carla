@@ -56,13 +56,24 @@ TEST(AckermannConversion, nan_propagation) {
   EXPECT_FALSE(std::isnan(control.steer_speed));
 }
 
+namespace {
+
+// Exhaustive over ROS2CallbackData: std::visit requires a handler per
+// alternative, so growing the variant (VehicleAccelerationControl, Autoware
+// port) extends this visitor too.
+struct CountingVisitor {
+  int visited_vehicle{0};
+  int visited_ackermann{0};
+  int visited_acceleration{0};
+  void operator()(const carla::ros2::VehicleControl &) { ++visited_vehicle; }
+  void operator()(const carla::ros2::AckermannControl &) { ++visited_ackermann; }
+  void operator()(const carla::ros2::VehicleAccelerationControl &) { ++visited_acceleration; }
+};
+
+}  // namespace
+
 TEST(ROS2CallbackData, visit_routes_ackermann_to_correct_overload) {
-  struct Visitor {
-    int visited_vehicle{0};
-    int visited_ackermann{0};
-    void operator()(const carla::ros2::VehicleControl &) { ++visited_vehicle; }
-    void operator()(const carla::ros2::AckermannControl &) { ++visited_ackermann; }
-  } visitor;
+  CountingVisitor visitor;
 
   carla::ros2::ROS2CallbackData data =
       carla::ros2::FromAckermannDrive(0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
@@ -70,15 +81,11 @@ TEST(ROS2CallbackData, visit_routes_ackermann_to_correct_overload) {
 
   EXPECT_EQ(visitor.visited_ackermann, 1);
   EXPECT_EQ(visitor.visited_vehicle, 0);
+  EXPECT_EQ(visitor.visited_acceleration, 0);
 }
 
 TEST(ROS2CallbackData, visit_routes_vehicle_to_correct_overload) {
-  struct Visitor {
-    int visited_vehicle{0};
-    int visited_ackermann{0};
-    void operator()(const carla::ros2::VehicleControl &) { ++visited_vehicle; }
-    void operator()(const carla::ros2::AckermannControl &) { ++visited_ackermann; }
-  } visitor;
+  CountingVisitor visitor;
 
   carla::ros2::VehicleControl payload{};
   payload.throttle = 1.0f;
@@ -86,5 +93,19 @@ TEST(ROS2CallbackData, visit_routes_vehicle_to_correct_overload) {
   std::visit(visitor, data);
 
   EXPECT_EQ(visitor.visited_vehicle, 1);
+  EXPECT_EQ(visitor.visited_ackermann, 0);
+  EXPECT_EQ(visitor.visited_acceleration, 0);
+}
+
+TEST(ROS2CallbackData, visit_routes_acceleration_to_correct_overload) {
+  CountingVisitor visitor;
+
+  carla::ros2::VehicleAccelerationControl payload{};
+  payload.acceleration = 1.5f;
+  carla::ros2::ROS2CallbackData data = payload;
+  std::visit(visitor, data);
+
+  EXPECT_EQ(visitor.visited_acceleration, 1);
+  EXPECT_EQ(visitor.visited_vehicle, 0);
   EXPECT_EQ(visitor.visited_ackermann, 0);
 }
