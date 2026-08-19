@@ -442,7 +442,15 @@ def spawn_ego_with_sensors(world, spawn_point, args):
     except Exception:
         ego_blueprint = blueprint_library.filter("vehicle.lincoln.mkz*")[0]
     ego_blueprint.set_attribute("role_name", "ego")
-    # Ego uses acceleration control from Autoware /control/command/control_cmd (not ackermann)
+    # Ego uses acceleration control from Autoware /control/command/control_cmd (not ackermann).
+    # The opt-in attribute registers the vehicle for the Autoware interface
+    # (/vehicle/status/* publishers + /control/command/* subscribers).
+    if ego_blueprint.has_attribute("ros2_autoware_control"):
+        ego_blueprint.set_attribute("ros2_autoware_control", "true")
+    else:
+        log_warning(
+            "Blueprint has no 'ros2_autoware_control' attribute; the ego will not be "
+            "registered for the Autoware vehicle interface (server predates the port?)")
     try_set_ros_topic_name(ego_blueprint, "/carla/input")  # Fallback; Autoware control_cmd has priority
 
     ego = world.spawn_actor(ego_blueprint, spawn_point)

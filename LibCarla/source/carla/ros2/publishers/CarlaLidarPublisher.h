@@ -16,8 +16,8 @@ namespace ros2 {
 
 class CarlaLidarPublisher : public CarlaPointCloudPublisher {
 public:
-  CarlaLidarPublisher(std::string base_topic_name, std::string frame_id)
-    : CarlaPointCloudPublisher(std::move(base_topic_name), std::move(frame_id)) {}
+  CarlaLidarPublisher(std::string base_topic_name, std::string frame_id, bool exact_topic = false)
+    : CarlaPointCloudPublisher(std::move(base_topic_name), std::move(frame_id), exact_topic) {}
 
   // Plain XYZI path (4 float32 per point). Shadows the base method so a call
   // through a CarlaLidarPublisher pointer always resets the extended mode

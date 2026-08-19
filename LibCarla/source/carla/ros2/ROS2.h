@@ -247,6 +247,10 @@ private:
   // Resolves an actor's `rt/carla/[parent/]ros_name` base topic by walking the
   // parent chain. Returns empty if the actor is not registered.
   std::string BuildBaseTopicName(void *actor) const;
+  // True when the actor carries a non-empty ros_topic_name override, i.e.
+  // BuildBaseTopicName returns an exact user-chosen topic. Single-topic
+  // publishers then skip their conventional suffix (tier4 semantics).
+  bool HasTopicOverride(void *actor) const;
   std::string LookupRosName(void *actor) const;
   std::string LookupFrameId(void *actor) const;
   std::string BuildParentChain(void *actor) const;

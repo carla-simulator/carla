@@ -255,6 +255,11 @@ std::string ROS2::GetActorRosTopicName(void *actor) const {
   return it != _actor_ros_topic_names.end() ? it->second : std::string{};
 }
 
+bool ROS2::HasTopicOverride(void *actor) const {
+  auto it = _actor_ros_topic_names.find(actor);
+  return it != _actor_ros_topic_names.end() && !it->second.empty();
+}
+
 void ROS2::AddActorParentRosName(void *actor, void *parent) {
   auto it = _actor_parents.find(actor);
   if (it != _actor_parents.end()) {
@@ -436,13 +441,13 @@ std::shared_ptr<BasePublisher> ROS2::GetOrCreateSensor(
     case ESensors::Radar: {
       resolve("radar");
       publisher = std::make_shared<CarlaRadarPublisher>(
-          BuildBaseTopicName(actor), LookupFrameId(actor));
+          BuildBaseTopicName(actor), LookupFrameId(actor), HasTopicOverride(actor));
       break;
     }
     case ESensors::RayCastSemanticLidar: {
       resolve("ray_cast_semantic");
       publisher = std::make_shared<CarlaSemanticLidarPublisher>(
-          BuildBaseTopicName(actor), LookupFrameId(actor));
+          BuildBaseTopicName(actor), LookupFrameId(actor), HasTopicOverride(actor));
       break;
     }
     case ESensors::RayCastLidar: {
@@ -450,7 +455,7 @@ std::shared_ptr<BasePublisher> ROS2::GetOrCreateSensor(
       resolve("ray_cast");
       resolve("hss_lidar");
       publisher = std::make_shared<CarlaLidarPublisher>(
-          BuildBaseTopicName(actor), LookupFrameId(actor));
+          BuildBaseTopicName(actor), LookupFrameId(actor), HasTopicOverride(actor));
       break;
     }
     case ESensors::AutowareGnssSensor: {

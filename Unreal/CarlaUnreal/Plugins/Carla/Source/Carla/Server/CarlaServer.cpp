@@ -929,14 +929,15 @@ void FCarlaServer::FPimpl::BindActions()
         {
           if (Attr.Key == "ros_name")
           {
-            const std::string value = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
             ROS2->AddActorParentRosName(static_cast<void*>(CarlaActor->GetActor()), static_cast<void*>(CurrentActor->GetActor()));
           }
-          if (Attr.Key == "ros_topic_name")
-          {
-            const std::string value = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
-            ROS2->AddActorRosTopicName(static_cast<void*>(CarlaActor->GetActor()), value);
-          }
+          // NOTE: tier4 also propagated each ancestor's ros_topic_name onto the
+          // child here, but their AddActorRosTopicName used map::insert, so the
+          // dispatcher's earlier per-actor registration (own override or "")
+          // always won and the call was a no-op. Our AddActorRosTopicName is
+          // insert_or_assign (re-registration idempotency), which made the
+          // propagation live and clobbered every attached sensor's own
+          // ros_topic_name with its ancestor's — so it is dropped entirely.
         }
         CurrentActor = Episode->FindCarlaActor(CurrentActor->GetParent());
       }
