@@ -66,6 +66,29 @@ TEST(ImuMath, west_is_pi) {
   ASSERT_NEAR(std::abs(YawFrom(q)), static_cast<float>(M_PI), kEps);
 }
 
+TEST(ImuMath, accel_mirrors_y_only) {
+  // Ordinary vector: left-handed -> right-handed is a plain y negation.
+  const auto a = carla::ros2::AccelToRos(1.0f, 2.0f, 3.0f);
+  ASSERT_NEAR(a[0], 1.0f, kEps);
+  ASSERT_NEAR(a[1], -2.0f, kEps);
+  ASSERT_NEAR(a[2], 3.0f, kEps);
+}
+
+TEST(ImuMath, gyro_negates_x_and_z_keeps_y) {
+  // Pseudovector: mirroring y flips the in-plane components (x and z).
+  const auto g = carla::ros2::GyroToRos(1.0f, 2.0f, 3.0f);
+  ASSERT_NEAR(g[0], -1.0f, kEps);
+  ASSERT_NEAR(g[1], 2.0f, kEps);
+  ASSERT_NEAR(g[2], -3.0f, kEps);
+}
+
+TEST(ImuMath, gyro_left_turn_yields_positive_ros_yaw_rate) {
+  // A vehicle turning left reports a negative wz in CARLA/UE's left-handed
+  // frame; REP-103 wants a positive yaw rate (CCW from above).
+  const auto g = carla::ros2::GyroToRos(0.0f, 0.0f, -0.5f);
+  ASSERT_GT(g[2], 0.0f);
+}
+
 TEST(ImuMath, is_not_the_regressed_pi_over_four) {
   // Regression guard: the spelling shipped on ue5-dev before this fix
   // returned pi/4 - compass instead of pi/2 - compass. With compass = 0 the

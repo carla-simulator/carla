@@ -45,6 +45,24 @@ inline constexpr std::array<PointFieldDescriptor, 4> kLidarFields = {{
     {"intensity", 12u, PointFieldDataType::Float32, 1u},
 }};
 
+// Extended lidar (Autoware PointXYZIRCAEDT, tier4 SetDataEx port): x/y/z
+// FLOAT32, intensity + return_type UINT8, channel UINT16, azimuth/elevation/
+// distance FLOAT32, time_stamp UINT32. Point stride = 32 B, matching both the
+// tightly packed field layout and the naturally aligned LidarPointEx POD in
+// CarlaLidarPublisher.cpp (the uint16 lands on offset 14, so no padding).
+inline constexpr std::array<PointFieldDescriptor, 10> kLidarFieldsEx = {{
+    {"x",           0u,  PointFieldDataType::Float32, 1u},
+    {"y",           4u,  PointFieldDataType::Float32, 1u},
+    {"z",           8u,  PointFieldDataType::Float32, 1u},
+    {"intensity",   12u, PointFieldDataType::UInt8,   1u},
+    {"return_type", 13u, PointFieldDataType::UInt8,   1u},
+    {"channel",     14u, PointFieldDataType::UInt16,  1u},
+    {"azimuth",     16u, PointFieldDataType::Float32, 1u},
+    {"elevation",   20u, PointFieldDataType::Float32, 1u},
+    {"distance",    24u, PointFieldDataType::Float32, 1u},
+    {"time_stamp",  28u, PointFieldDataType::UInt32,  1u},
+}};
+
 // Semantic lidar: 6 fields. 4 FLOAT32 + 2 UINT32. Point stride = 24 B =
 // sizeof(sensor::data::SemanticLidarDetection).
 inline constexpr std::array<PointFieldDescriptor, 6> kSemanticLidarFields = {{
