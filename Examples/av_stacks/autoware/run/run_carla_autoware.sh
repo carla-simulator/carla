@@ -5,26 +5,52 @@
 # Modes:
 #   classical : TIER IV-validated classic stack
 #               ros2 launch autoware_launch e2e_simulator.launch.xml
-#                    vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit map_path:=<dir>
+#                    vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit
+#                    perception_mode:=lidar rviz:=false map_path:=<dir>
+#               Runs either from a source workspace (--stack source) or from the
+#               official Autoware docker image (--stack docker).
 #   e2e       : VAD end-to-end planner (autoware_universe e2e/autoware_tensorrt_vad).
-#               Primary form uses the OPEN PR autowarefoundation/autoware_launch#1685 glue
-#               (use_e2e_planning:=true e2e_planning_type:=vad). If that glue is not present
-#               in the installed workspace, falls back to launching
+#               Source workspace only. Primary form uses the OPEN PR
+#               autowarefoundation/autoware_launch#1685 glue
+#               (use_e2e_planning:=true e2e_planning_type:=vad). If that glue is not
+#               present in the installed workspace, falls back to launching
 #               autoware_tensorrt_vad vad_carla_tiny.launch.xml directly with
 #               sensing/localization/perception disabled.
 #
+# DDS topology (validated 2026-08 on Town10, full classical stack):
+#   - The SIMULATOR runs Fast DDS (-rmw=fastdds) with a generated profile that
+#     whitelists ONLY the docker bridge IP (useBuiltinTransports=false).
+#     Do NOT use -rmw=cyclonedds on the simulator for now: our CycloneDDS
+#     receive path has a known fragmented-receive bug (being fixed separately).
+#   - The AUTOWARE side runs CycloneDDS pinned to the docker bridge interface
+#     via a generated cyclonedds.xml (MaxAutoParticipantIndex=300, 65500B max
+#     message size, 1-4MB socket buffers -- the official docker image's own
+#     cyclonedds.xml demands 10MB buffers and pins 'lo'; it MUST be overridden).
+#   - Mixed-RMW is fine: DDS vendors interoperate over UDPv4.
+#   - NEVER bind DDS to a WiFi/DHCP interface -- rotating IPs poison DDS
+#     locators. The docker bridge has a stable IP; both configs pin it.
+#   Both XML files are generated at runtime into <log-dir>/dds/ from the
+#   auto-detected bridge (override with --bridge-if / --docker-network).
+#
 # Start order (each process logged separately, PIDs recorded for teardown):
 #   0. (zenoh only) zenoh router: ros2 run rmw_zenoh_cpp rmw_zenohd
-#   1. CARLA server:  -ros2 -rmw=<rmw> [-ros-domain-id=N] [-RenderOffScreen]
+#   1. CARLA server:  -ros2 -rmw=<rmw> -ros-domain-id=N [-RenderOffScreen]
 #   2. town loader (one-shot, non-ticking PythonAPI client)
 #   3. PythonAPI/examples/autoware_demo.py  <-- the SINGLE ticking client
 #   4. (e2e only) spawn_vad_rig.py (six VAD cameras, never ticks)
 #   5. (e2e only) ros2 launch e2e_state_publishers.launch.py (ground-truth localization glue)
-#   6. Autoware launch (classical or e2e form)
+#   6. Autoware launch (classical: source ws or docker container; e2e: source ws)
+#      -- classical mode first applies the CARLA-specific config overrides
+#         (NDT convergence threshold 2.3 -> 1.0, stop_check_enabled -> false)
+#   7. (classical, unless --no-auto) post-launch automation: wait for the stack,
+#      auto-initialize localization from GNSS, and with --goal also publish the
+#      goal pose and engage autonomous mode.
 #
 # Teardown (INT/TERM/EXIT): kills ONLY the exact process groups it started
-# (each child is a setsid group leader; PIDs stored in <log-dir>/carla_autoware.pids).
-# Never pkills by name. stop_all.sh reads the same pidfile.
+# (each child is a setsid group leader; PIDs stored in <log-dir>/carla_autoware.pids)
+# and `docker rm -f`s ONLY the containers it created (names stored in
+# <log-dir>/carla_autoware.containers). Never pkills by name -- see stop_all.sh
+# for why that is load-bearing. stop_all.sh reads the same two files.
 #
 set -euo pipefail
 
@@ -34,16 +60,26 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
 # ---------------------------------------------------------------- defaults --
 MODE=""
 TOWN="Town10HD_Opt"
-RMW="cyclonedds"
+RMW="fastdds"                 # SIMULATOR-side RMW. cyclonedds has a known
+                              # fragmented-receive bug on the sim side -- keep fastdds.
+STACK="auto"                  # auto|source|docker : how to run Autoware (classical)
 MAP_PATH=""
 CARLA_ROOT_ARG="${CARLA_ROOT:-}"
 AUTOWARE_WS="${AUTOWARE_WS:-$HOME/autoware}"
-DOMAIN_ID=""
+DOMAIN_ID=42
 DRY_RUN=false
 WITH_DISPLAY=false
+WITH_RVIZ=false
+NO_AUTO=false
+GOAL=""
 LOG_DIR="$SCRIPT_DIR/logs"
 RPC_PORT=2000
 CARLA_HOST=127.0.0.1
+IMAGE=""                      # docker stack image (default: auto-detect local ghcr image)
+CONTAINER_NAME="carla-autoware"
+BRIDGE_IF=""                  # docker bridge interface for DDS (default: auto-detect)
+BRIDGE_IP=""
+DOCKER_NETWORK=""             # detect the bridge from this docker network instead
 
 usage() {
     cat <<EOF
@@ -51,17 +87,38 @@ Usage: $(basename "$0") --mode classical|e2e [options]
 
   --mode classical|e2e   (required) which Autoware stack to launch
   --town NAME            CARLA town to load (default: Town10HD_Opt)
-  --rmw NAME             cyclonedds|fastdds|zenoh (default: cyclonedds; CycloneDDS is
-                         Autoware's recommended RMW. zenoh additionally starts a router.)
+  --stack auto|source|docker
+                         classical only: run Autoware from the source workspace or
+                         the official docker image (default: auto -- source ws if
+                         present, else local docker image). e2e is always source.
+  --image IMG            docker stack: image to use (default: newest local
+                         ghcr.io/autowarefoundation/autoware:universe* image)
+  --container-name NAME  docker stack: container name (default: carla-autoware).
+                         Must not collide with an existing container; this script
+                         never touches containers it did not create.
+  --rmw NAME             SIMULATOR RMW: fastdds|cyclonedds|zenoh (default: fastdds).
+                         cyclonedds is NOT recommended on the sim side for now
+                         (known fragmented-receive bug). The Autoware side always
+                         runs cyclonedds (zenoh: zenoh) with a generated config.
   --map-path DIR         dir containing pointcloud_map.pcd, lanelet2_map.osm,
                          map_projector_info.yaml
                          (default: ../map_tools/maps/<town-without-_Opt>)
   --carla-root DIR       packaged CARLA root containing CarlaUnreal.sh
                          (default: \$CARLA_ROOT env; falls back to editor -game via \$UE_ROOT)
   --autoware-ws DIR      Autoware colcon workspace (default: \$AUTOWARE_WS or ~/autoware)
-  --domain-id N          ROS domain id (passed as -ros-domain-id=N and ROS_DOMAIN_ID)
-                         (--ros-domain-id is accepted as an alias)
+  --domain-id N          ROS domain id (default: 42; passed as -ros-domain-id=N and
+                         ROS_DOMAIN_ID; --ros-domain-id is accepted as an alias)
   --carla-rpc-port N     CARLA RPC port (passed as -carla-rpc-port=N; default: 2000)
+  --bridge-if NAME       docker bridge interface to pin DDS to (default: auto-detect
+                         an UP br-*/docker0 interface with an IPv4 address)
+  --docker-network NAME  auto-detect the bridge from this docker network instead
+  --goal "X,Y,YAW"       classical: drive to this goal after startup. CARLA
+                         coordinates (m, m, deg); converted to Autoware map frame
+                         (x_map = x, y_map = -y, yaw_map = -yaw) automatically.
+  --no-auto              classical: skip post-launch automation (localization
+                         init / goal / engage) entirely
+  --with-rviz            also start RViz (docker stack: separate container with
+                         DISPLAY passthrough; source stack: local rviz2)
   --log-dir DIR          per-process logs + pidfile (default: <this dir>/logs)
   --with-display         do NOT pass -RenderOffScreen to the CARLA server
   --dry-run              print every command that would run; execute nothing;
@@ -75,12 +132,20 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --mode)         MODE="$2"; shift 2 ;;
         --town)         TOWN="$2"; shift 2 ;;
+        --stack)        STACK="$2"; shift 2 ;;
+        --image)        IMAGE="$2"; shift 2 ;;
+        --container-name) CONTAINER_NAME="$2"; shift 2 ;;
         --rmw)          RMW="$2"; shift 2 ;;
         --map-path)     MAP_PATH="$2"; shift 2 ;;
         --carla-root)   CARLA_ROOT_ARG="$2"; shift 2 ;;
         --autoware-ws)  AUTOWARE_WS="$2"; shift 2 ;;
         --domain-id|--ros-domain-id) DOMAIN_ID="$2"; shift 2 ;;
         --carla-rpc-port) RPC_PORT="$2"; shift 2 ;;
+        --bridge-if)    BRIDGE_IF="$2"; shift 2 ;;
+        --docker-network) DOCKER_NETWORK="$2"; shift 2 ;;
+        --goal)         GOAL="$2"; shift 2 ;;
+        --no-auto)      NO_AUTO=true; shift ;;
+        --with-rviz)    WITH_RVIZ=true; shift ;;
         --log-dir)      LOG_DIR="$2"; shift 2 ;;
         --with-display) WITH_DISPLAY=true; shift ;;
         --dry-run)      DRY_RUN=true; shift ;;
@@ -99,21 +164,33 @@ case "$RMW" in
     *) echo "ERROR: --rmw must be cyclonedds|fastdds|zenoh (got: '$RMW')" >&2; exit 2 ;;
 esac
 
+case "$STACK" in auto|source|docker) ;; *)
+    echo "ERROR: --stack must be auto|source|docker (got: '$STACK')" >&2; exit 2 ;;
+esac
+
 [[ "$RPC_PORT" =~ ^[0-9]+$ ]] \
     || { echo "ERROR: --carla-rpc-port must be a number (got: '$RPC_PORT')" >&2; exit 2; }
-[[ -z "$DOMAIN_ID" || "$DOMAIN_ID" =~ ^[0-9]+$ ]] \
+[[ "$DOMAIN_ID" =~ ^[0-9]+$ ]] \
     || { echo "ERROR: --domain-id must be a number (got: '$DOMAIN_ID')" >&2; exit 2; }
+[[ -z "$GOAL" || "$GOAL" =~ ^-?[0-9.]+,-?[0-9.]+,-?[0-9.]+$ ]] \
+    || { echo "ERROR: --goal must be \"X,Y,YAW\" (CARLA meters,meters,degrees; got: '$GOAL')" >&2; exit 2; }
 
 # Prebuilt autoware-contents maps are named Town01..Town10HD (no _Opt suffix).
 TOWN_BASE="${TOWN%_Opt}"
 [[ -n "$MAP_PATH" ]] || MAP_PATH="$SCRIPT_DIR/../map_tools/maps/$TOWN_BASE"
 
 PIDFILE="$LOG_DIR/carla_autoware.pids"
+CONTAINERFILE="$LOG_DIR/carla_autoware.containers"
+DDS_DIR="$LOG_DIR/dds"
+FASTDDS_PROFILE="$DDS_DIR/fastdds_profile.xml"
+CYCLONE_XML="$DDS_DIR/cyclonedds.xml"
 
 # ---------------------------------------------------------------- helpers --
 log()  { echo "[run_carla_autoware] $*"; }
 warn() { echo "[run_carla_autoware] WARNING: $*" >&2; }
 die()  { echo "[run_carla_autoware] ERROR: $*" >&2; exit 1; }
+
+have() { command -v "$1" >/dev/null 2>&1; }
 
 # Preflight failure: fatal normally, warning under --dry-run.
 preflight_fail() {
@@ -135,6 +212,20 @@ start_proc() {
     pid=$!
     echo "$name $pid" >>"$PIDFILE"
     log "started '$name' (pid/pgid $pid), log: $logfile"
+}
+
+# Start one managed docker container (recorded for teardown; this script only
+# ever removes containers it created itself).
+#   start_container <name> <docker run args...>
+start_container() {
+    local name="$1"; shift
+    if $DRY_RUN; then
+        echo "[dry-run] docker run -d --name '$name' $*"
+        return 0
+    fi
+    docker run -d --name "$name" "$@" >/dev/null
+    echo "$name" >>"$CONTAINERFILE"
+    log "started container '$name'"
 }
 
 # Run a one-shot foreground command (still printed under --dry-run).
@@ -208,16 +299,231 @@ teardown() {
         done
         rm -f "$PIDFILE"
     fi
+    # Containers WE created (killing the docker-exec client above does not stop
+    # the in-container launch; docker rm -f does, cleanly, without pkill).
+    if [[ -f "$CONTAINERFILE" ]]; then
+        local c
+        while IFS= read -r c; do
+            [[ -n "$c" ]] || continue
+            log "  docker rm -f -> '$c'"
+            docker rm -f "$c" >/dev/null 2>&1 || true
+        done <"$CONTAINERFILE"
+        rm -f "$CONTAINERFILE"
+    fi
     log "logs are under: $LOG_DIR"
     exit "$status"
 }
 trap teardown INT TERM EXIT
 
+# ------------------------------------------------- DDS bridge auto-detect --
+# DDS must be pinned to a STABLE interface. WiFi/DHCP interfaces rotate IPs,
+# which poisons DDS locators mid-session. The docker bridge is stable, so both
+# sides pin it: fastdds (sim) whitelists its IP, cyclonedds (Autoware) binds
+# its interface name.
+detect_docker_bridge() {
+    # 1. explicit interface
+    if [[ -n "$BRIDGE_IF" && -z "$BRIDGE_IP" ]]; then
+        BRIDGE_IP="$(ip -o -4 addr show dev "$BRIDGE_IF" 2>/dev/null | awk '{print $4}' | cut -d/ -f1 | head -1)"
+        [[ -n "$BRIDGE_IP" ]] || preflight_fail "--bridge-if '$BRIDGE_IF' has no IPv4 address"
+        return 0
+    fi
+    [[ -n "$BRIDGE_IF" ]] && return 0
+    # 2. explicit docker network -> gateway IP + bridge interface name
+    if [[ -n "$DOCKER_NETWORK" ]] && have docker; then
+        local net_id
+        if net_id="$(docker network inspect -f '{{.Id}}' "$DOCKER_NETWORK" 2>/dev/null)"; then
+            BRIDGE_IP="$(docker network inspect -f '{{(index .IPAM.Config 0).Gateway}}' "$DOCKER_NETWORK" 2>/dev/null || true)"
+            BRIDGE_IF="$(docker network inspect -f '{{index .Options "com.docker.network.bridge.name"}}' "$DOCKER_NETWORK" 2>/dev/null || true)"
+            if [[ -z "$BRIDGE_IF" || "$BRIDGE_IF" == "<no value>" ]]; then
+                if [[ "$DOCKER_NETWORK" == "bridge" ]]; then BRIDGE_IF="docker0"; else BRIDGE_IF="br-${net_id:0:12}"; fi
+            fi
+            [[ -n "$BRIDGE_IP" && -n "$BRIDGE_IF" ]] && return 0
+        fi
+        preflight_fail "could not resolve docker network '$DOCKER_NETWORK' to a bridge interface"
+    fi
+    # 3. fallback: scan for a docker bridge; prefer UP br-*, then UP docker0,
+    #    then any bridge with an IPv4 (warn: a DOWN bridge cannot carry traffic).
+    local line ifname state addr best_down_if="" best_down_ip=""
+    while IFS= read -r line; do
+        ifname="$(awk '{print $1}' <<<"$line")"
+        state="$(awk '{print $2}' <<<"$line")"
+        addr="$(awk '{for(i=3;i<=NF;i++) if ($i ~ /^[0-9]+\./) {print $i; exit}}' <<<"$line" | cut -d/ -f1)"
+        [[ -n "$addr" ]] || continue
+        case "$ifname" in br-*|docker0) ;; *) continue ;; esac
+        if [[ "$state" == "UP" || "$state" == "UNKNOWN" ]]; then
+            BRIDGE_IF="$ifname"; BRIDGE_IP="$addr"
+            [[ "$ifname" == br-* ]] && return 0   # keep scanning only to prefer br-* over docker0
+        elif [[ -z "$best_down_if" ]]; then
+            best_down_if="$ifname"; best_down_ip="$addr"
+        fi
+    done < <(ip -br addr 2>/dev/null)
+    [[ -n "$BRIDGE_IF" ]] && return 0
+    if [[ -n "$best_down_if" ]]; then
+        BRIDGE_IF="$best_down_if"; BRIDGE_IP="$best_down_ip"
+        warn "only DOWN docker bridge '$BRIDGE_IF' found -- DDS cannot flow over a DOWN interface. Bring it up first: sudo ip link set $BRIDGE_IF up"
+        return 0
+    fi
+    preflight_fail "no docker bridge interface found (need an UP br-*/docker0 with an IPv4; is the docker daemon running?). Override with --bridge-if / --docker-network."
+    BRIDGE_IF="<bridge-if>"; BRIDGE_IP="<bridge-ip>"   # dry-run placeholders
+}
+
+# ------------------------------------------------- DDS config generation --
+generate_dds_configs() {
+    if $DRY_RUN; then
+        echo "[dry-run] generate $FASTDDS_PROFILE  (UDPv4 whitelist: $BRIDGE_IP, useBuiltinTransports=false)"
+        echo "[dry-run] generate $CYCLONE_XML  (NetworkInterface: $BRIDGE_IF, MaxAutoParticipantIndex=300, MaxMessageSize=65500B, rx buffers 1-4MB)"
+        return 0
+    fi
+    mkdir -p "$DDS_DIR"
+    # Sim side (Fast DDS): UDPv4 only, whitelisted to the docker bridge IP.
+    cat >"$FASTDDS_PROFILE" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated by run_carla_autoware.sh (do not edit; regenerated each run).
+     Pins the CARLA server's Fast DDS to the docker bridge ($BRIDGE_IF), the
+     only stable interface. Never whitelist a WiFi/DHCP address here. -->
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+    <transport_descriptors>
+        <transport_descriptor>
+            <transport_id>udp_bridge_only</transport_id>
+            <type>UDPv4</type>
+            <interfaceWhiteList>
+                <address>$BRIDGE_IP</address>
+            </interfaceWhiteList>
+        </transport_descriptor>
+    </transport_descriptors>
+    <participant profile_name="carla_bridge_only" is_default_profile="true">
+        <rtps>
+            <useBuiltinTransports>false</useBuiltinTransports>
+            <userTransports>
+                <transport_id>udp_bridge_only</transport_id>
+            </userTransports>
+        </rtps>
+    </participant>
+</profiles>
+EOF
+    # Autoware side (CycloneDDS): pinned to the bridge interface. Replaces the
+    # config shipped in the official docker image (which demands 10MB socket
+    # buffers -- hosts commonly cap rmem_max at 4MB -- and pins 'lo').
+    # MaxAutoParticipantIndex must cover the full stack (63+ nodes).
+    cat >"$CYCLONE_XML" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated by run_carla_autoware.sh (do not edit; regenerated each run). -->
+<CycloneDDS xmlns="https://cdds.io/config">
+    <Domain Id="any">
+        <General>
+            <Interfaces>
+                <NetworkInterface name="$BRIDGE_IF" priority="default" multicast="default"/>
+            </Interfaces>
+            <AllowMulticast>default</AllowMulticast>
+            <MaxMessageSize>65500B</MaxMessageSize>
+        </General>
+        <Discovery>
+            <MaxAutoParticipantIndex>300</MaxAutoParticipantIndex>
+        </Discovery>
+        <Internal>
+            <SocketReceiveBufferSize min="1MB" max="4MB"/>
+            <Watermarks>
+                <WhcHigh>500kB</WhcHigh>
+            </Watermarks>
+        </Internal>
+    </Domain>
+</CycloneDDS>
+EOF
+    log "generated DDS configs in $DDS_DIR (bridge: $BRIDGE_IF / $BRIDGE_IP)"
+}
+
+# ------------------------------------- CARLA-specific Autoware overrides --
+# Two container/workspace config changes the validated Town10 run needed:
+#   1. ndt_scan_matcher.param.yaml:
+#      converged_param_nearest_voxel_transformation_likelihood 2.3 -> 1.0
+#      (UE4-era prebuilt pcd maps score low against UE5.8 geometry; regenerating
+#      the pcd with map_tools removes the need for this).
+#   2. tier4_localization_launch pose_twist_estimator.launch.xml:
+#      stop_check_enabled -> false (the sim runs below real time; the
+#      stopped-vehicle check never passes and initialization hangs).
+OVERRIDE_SCRIPT="$LOG_DIR/apply_carla_overrides.sh"
+
+write_override_script() {
+    if $DRY_RUN; then
+        echo "[dry-run] write $OVERRIDE_SCRIPT (sed: NDT convergence likelihood -> 1.0; stop_check_enabled -> false; idempotent)"
+        return 0
+    fi
+    # A generated file (fed to bash via stdin / docker exec -i) sidesteps the
+    # quoting of nested bash -c strings entirely.
+    cat >"$OVERRIDE_SCRIPT" <<'EOF'
+#!/usr/bin/env bash
+# Generated by run_carla_autoware.sh -- CARLA-specific Autoware overrides.
+# Idempotent: re-running after the values are already patched is a no-op.
+set -e
+root="${OVERRIDE_ROOT:-/opt/autoware}"
+ndt="$(find -L "$root" -name ndt_scan_matcher.param.yaml 2>/dev/null | head -1)"
+if [ -n "$ndt" ]; then
+    sed -E -i --follow-symlinks 's/(converged_param_nearest_voxel_transformation_likelihood:)[[:space:]]*[0-9.]+/\1 1.0/' "$ndt"
+    echo "patched: $ndt (NDT convergence likelihood -> 1.0)"
+else
+    echo "WARNING: ndt_scan_matcher.param.yaml not found under $root" >&2
+fi
+ptw="$(find -L "$root" -path '*tier4_localization_launch*' -name pose_twist_estimator.launch.xml 2>/dev/null | head -1)"
+if [ -n "$ptw" ]; then
+    sed -E -i --follow-symlinks 's/(stop_check_enabled"[[:space:]]*(default|value)=")[^"]*(")/\1false\3/g' "$ptw"
+    echo "patched: $ptw (stop_check_enabled -> false)"
+else
+    echo "WARNING: pose_twist_estimator.launch.xml not found under $root" >&2
+fi
+EOF
+}
+
+apply_carla_overrides() {
+    local ctx="$1" root="$2"
+    write_override_script
+    if [[ "$ctx" == "docker" ]]; then
+        run_fg apply_overrides "docker exec -i -e OVERRIDE_ROOT='$root' '$CONTAINER_NAME' bash <'$OVERRIDE_SCRIPT'"
+    else
+        run_fg apply_overrides "OVERRIDE_ROOT='$root' bash '$OVERRIDE_SCRIPT'"
+    fi
+}
+
+# ------------------------------------------- Autoware-side ros2 CLI shim --
+# Runs a ros2 CLI command in the same context (env + DDS config) as the stack.
+AW_SETUP_SNIPPET='for s in /opt/autoware/setup.bash /opt/ros/*/setup.bash; do [ -f "$s" ] && source "$s" && break; done'
+aw_ros2() {
+    local cmd="$1"
+    if [[ "$STACK" == "docker" && "$MODE" == "classical" ]]; then
+        bash -c "docker exec '$CONTAINER_NAME' bash -c '$AW_SETUP_SNIPPET; $cmd'"
+    else
+        bash -c "${STACK_PRELUDE}$cmd"
+    fi
+}
+
 # ---------------------------------------------------------------- preflight --
 $DRY_RUN && log "DRY RUN -- nothing will be executed; preflight failures become warnings"
-log "mode=$MODE town=$TOWN rmw=$RMW ($RMW_IMPL) domain-id=${DOMAIN_ID:-<default>} log-dir=$LOG_DIR"
 
-# ros2 CLI
+# Simulator RMW sanity
+if [[ "$RMW" == "cyclonedds" ]]; then
+    warn "-rmw=cyclonedds on the SIMULATOR has a known fragmented-receive bug (large messages, e.g. pointclouds, can be dropped). Use the default fastdds until it is fixed."
+fi
+
+# Resolve --stack auto (classical only; e2e always needs the source ws for VAD)
+if [[ "$MODE" == "e2e" ]]; then
+    [[ "$STACK" == "docker" ]] && die "--mode e2e requires --stack source (VAD lives in the source workspace)"
+    STACK="source"
+elif [[ "$STACK" == "auto" ]]; then
+    if [[ -f "$AUTOWARE_WS/install/setup.bash" ]]; then
+        STACK="source"
+    elif have docker && docker image ls --format '{{.Repository}}:{{.Tag}}' 2>/dev/null | grep -q '^ghcr.io/autowarefoundation/autoware:universe'; then
+        STACK="docker"
+    else
+        preflight_fail "no Autoware found: neither a source workspace ('$AUTOWARE_WS/install/setup.bash') nor a local ghcr.io/autowarefoundation/autoware:universe* docker image. Run $SCRIPT_DIR/../install/install_autoware.sh (--source or --docker) first, or pass --stack/--autoware-ws/--image."
+        STACK="docker"   # dry-run: show the docker-flavored commands
+    fi
+fi
+if [[ "$RMW" == "zenoh" && "$STACK" == "docker" ]]; then
+    die "--rmw zenoh is only supported with --stack source"
+fi
+
+log "mode=$MODE town=$TOWN sim-rmw=$RMW ($RMW_IMPL) stack=$STACK domain-id=$DOMAIN_ID log-dir=$LOG_DIR"
+
+# ros2 CLI (host side; needed for zenoh router and e2e glue nodes)
 ROS_SETUP=""
 if [[ -f "$AUTOWARE_WS/install/setup.bash" ]]; then
     ROS_SETUP="source '$AUTOWARE_WS/install/setup.bash'; "
@@ -226,13 +532,26 @@ elif [[ -f /opt/ros/jazzy/setup.bash ]]; then
 elif [[ -f /opt/ros/humble/setup.bash ]]; then
     ROS_SETUP="source /opt/ros/humble/setup.bash; "
 fi
-if ! command -v ros2 >/dev/null 2>&1 && [[ -z "$ROS_SETUP" ]]; then
+if ! command -v ros2 >/dev/null 2>&1 && [[ -z "$ROS_SETUP" ]] && [[ "$STACK" != "docker" ]]; then
     preflight_fail "ros2 not on PATH and no ROS underlay found (/opt/ros/{jazzy,humble}) -- source your ROS 2 environment first"
 fi
 
-# Autoware workspace
-if [[ ! -f "$AUTOWARE_WS/install/setup.bash" ]]; then
-    preflight_fail "Autoware workspace not found at '$AUTOWARE_WS' (no install/setup.bash). Build one with: $SCRIPT_DIR/../install/install_autoware.sh  (or pass --autoware-ws)"
+# Autoware workspace / docker image
+if [[ "$STACK" == "source" ]]; then
+    if [[ ! -f "$AUTOWARE_WS/install/setup.bash" ]]; then
+        preflight_fail "Autoware workspace not found at '$AUTOWARE_WS' (no install/setup.bash). Build one with: $SCRIPT_DIR/../install/install_autoware.sh  (or pass --autoware-ws / --stack docker)"
+    fi
+else
+    have docker || preflight_fail "docker is required for --stack docker"
+    if [[ -z "$IMAGE" ]]; then
+        IMAGE="$(docker image ls --format '{{.Repository}}:{{.Tag}}' 2>/dev/null | grep '^ghcr.io/autowarefoundation/autoware:universe' | head -1 || true)"
+        [[ -n "$IMAGE" ]] || { preflight_fail "no local ghcr.io/autowarefoundation/autoware:universe* image. Pull one with: $SCRIPT_DIR/../install/install_autoware.sh --docker  (or pass --image)"; IMAGE="ghcr.io/autowarefoundation/autoware:universe-cuda-jazzy"; }
+    fi
+    # Refuse to reuse an existing container: this script never touches
+    # containers it did not create (a live demo may be running in one).
+    if have docker && docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qx "$CONTAINER_NAME"; then
+        preflight_fail "a container named '$CONTAINER_NAME' already exists -- refusing to touch it. Pass a different --container-name (or remove it yourself if it is stale)."
+    fi
 fi
 
 # Map triplet
@@ -242,6 +561,25 @@ for f in pointcloud_map.pcd lanelet2_map.osm map_projector_info.yaml; do
         break   # one message is enough in dry-run
     fi
 done
+
+# The lanelet2 map MUST carry <MetaInfo format_version="1.0.0" map_version="1"/>;
+# without it Autoware's route_handler rejects the map, planning silently never
+# starts and mission_planner can segfault. Fix it in place (idempotent).
+if [[ -f "$MAP_PATH/lanelet2_map.osm" ]] && ! grep -q "<MetaInfo" "$MAP_PATH/lanelet2_map.osm"; then
+    if $DRY_RUN; then
+        warn "'$MAP_PATH/lanelet2_map.osm' lacks the required MetaInfo element; would inject it via fetch_prebuilt_maps.sh --metainfo-only"
+    else
+        log "injecting missing MetaInfo element into $MAP_PATH/lanelet2_map.osm"
+        "$SCRIPT_DIR/../map_tools/fetch_prebuilt_maps.sh" --metainfo-only "$MAP_PATH/lanelet2_map.osm"
+    fi
+fi
+
+# CycloneDDS wants >=1MB socket receive buffers (we cap the request at 4MB on
+# purpose -- do NOT require the 10MB the stock container config asks for).
+RMEM_MAX="$(cat /proc/sys/net/core/rmem_max 2>/dev/null || echo 0)"
+if [[ "$RMEM_MAX" -lt 1048576 ]]; then
+    warn "net.core.rmem_max is $RMEM_MAX (<1MB); CycloneDDS may drop large samples. Raise it: sudo sysctl -w net.core.rmem_max=4194304"
+fi
 
 # CARLA server binary: packaged CarlaUnreal.sh preferred, editor -game fallback.
 # Packaged layout on this branch: Build/<cfg>/Package/Carla-*-Linux-*/Linux/CarlaUnreal.sh
@@ -298,32 +636,48 @@ if [[ "$MODE" == "e2e" ]]; then
     fi
 fi
 
-# ----------------------------------------------------------- env preludes --
-ENV_EXPORTS="export RMW_IMPLEMENTATION=$RMW_IMPL; "
-[[ -n "$DOMAIN_ID" ]] && ENV_EXPORTS+="export ROS_DOMAIN_ID=$DOMAIN_ID; "
-ROS_PRELUDE="$ROS_SETUP$ENV_EXPORTS"
-
 if ! $DRY_RUN; then
     mkdir -p "$LOG_DIR"
     : >"$PIDFILE"
+    : >"$CONTAINERFILE"
 fi
+
+# ----------------------------------------------------- DDS configuration --
+detect_docker_bridge
+log "DDS bridge: $BRIDGE_IF ($BRIDGE_IP) -- fastdds whitelists the IP, cyclonedds pins the interface"
+generate_dds_configs
+
+# ----------------------------------------------------------- env preludes --
+# Autoware/helper side. Validated topology: the stack runs CycloneDDS with the
+# generated config regardless of the simulator RMW (mixed-RMW interop over
+# UDPv4 is fine). Exception: zenoh runs zenoh end to end.
+if [[ "$RMW" == "zenoh" ]]; then
+    STACK_ENV="export RMW_IMPLEMENTATION=rmw_zenoh_cpp; export ROS_DOMAIN_ID=$DOMAIN_ID; "
+else
+    STACK_ENV="export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp; export CYCLONEDDS_URI='file://$CYCLONE_XML'; export ROS_DOMAIN_ID=$DOMAIN_ID; "
+fi
+STACK_PRELUDE="$ROS_SETUP$STACK_ENV"
+
+# Simulator side env (exported inside the server start command).
+SIM_ENV=""
+[[ "$RMW" == "fastdds" ]] && SIM_ENV="export FASTRTPS_DEFAULT_PROFILES_FILE='$FASTDDS_PROFILE'; "
+[[ "$RMW" == "cyclonedds" ]] && SIM_ENV="export CYCLONEDDS_URI='file://$CYCLONE_XML'; "
 
 # ------------------------------------------------------------ 0. zenoh rtr --
 if [[ "$RMW" == "zenoh" ]]; then
     # rmw_zenoh needs its router up BEFORE any zenoh peer (CARLA server included).
-    start_proc zenoh_router "${ROS_PRELUDE}exec ros2 run rmw_zenoh_cpp rmw_zenohd"
+    start_proc zenoh_router "${STACK_PRELUDE}exec ros2 run rmw_zenoh_cpp rmw_zenohd"
     pause 3 "let the zenoh router come up before starting peers"
 fi
 
 # ---------------------------------------------------------- 1. CARLA server --
-SERVER_FLAGS="-ros2 -rmw=$RMW -carla-rpc-port=$RPC_PORT"
-[[ -n "$DOMAIN_ID" ]] && SERVER_FLAGS+=" -ros-domain-id=$DOMAIN_ID"
+SERVER_FLAGS="-ros2 -rmw=$RMW -carla-rpc-port=$RPC_PORT -ros-domain-id=$DOMAIN_ID"
 $WITH_DISPLAY || SERVER_FLAGS+=" -RenderOffScreen"
 
 if [[ "$SERVER_KIND" == "packaged" ]]; then
-    start_proc carla_server "exec '$SERVER_LAUNCHER' $SERVER_FLAGS"
+    start_proc carla_server "${SIM_ENV}exec '$SERVER_LAUNCHER' $SERVER_FLAGS"
 else
-    start_proc carla_server "exec '${UE_ROOT:-\$UE_ROOT}/Engine/Binaries/Linux/UnrealEditor' '$UPROJECT' -game $SERVER_FLAGS"
+    start_proc carla_server "${SIM_ENV}exec '${UE_ROOT:-\$UE_ROOT}/Engine/Binaries/Linux/UnrealEditor' '$UPROJECT' -game $SERVER_FLAGS"
 fi
 wait_for_carla_rpc
 
@@ -354,16 +708,53 @@ if [[ "$MODE" == "e2e" ]]; then
     # carla_state_publisher + autoware_vehicle_velocity_converter + autoware_twist2accel
     # (ground-truth /localization/kinematic_state + /localization/acceleration)
     # + image_transport republish (raw -> compressed) for the six cameras.
-    start_proc e2e_state_publishers "${ROS_PRELUDE}exec ros2 launch '$SCRIPT_DIR/e2e_state_publishers.launch.py'"
+    start_proc e2e_state_publishers "${STACK_PRELUDE}exec ros2 launch '$SCRIPT_DIR/e2e_state_publishers.launch.py'"
 fi
 
 # ------------------------------------------------------- 6. Autoware launch --
-CLASSICAL_CMD="${ROS_PRELUDE}exec ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit map_path:='$MAP_PATH'"
-E2E_PR_CMD="${ROS_PRELUDE}exec ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit map_path:='$MAP_PATH' use_e2e_planning:=true e2e_planning_type:=vad"
-E2E_FALLBACK_CMD="${ROS_PRELUDE}exec ros2 launch autoware_tensorrt_vad vad_carla_tiny.launch.xml sensing:=false localization:=false perception:=false"
+LAUNCH_ARGS="vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit perception_mode:=lidar rviz:=false"
+CLASSICAL_SRC_CMD="${STACK_PRELUDE}exec ros2 launch autoware_launch e2e_simulator.launch.xml $LAUNCH_ARGS map_path:='$MAP_PATH'"
+E2E_PR_CMD="${STACK_PRELUDE}exec ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit map_path:='$MAP_PATH' use_e2e_planning:=true e2e_planning_type:=vad"
+E2E_FALLBACK_CMD="${STACK_PRELUDE}exec ros2 launch autoware_tensorrt_vad vad_carla_tiny.launch.xml sensing:=false localization:=false perception:=false"
 
 if [[ "$MODE" == "classical" ]]; then
-    start_proc autoware "$CLASSICAL_CMD"
+    if [[ "$STACK" == "docker" ]]; then
+        GPU_ARGS=()
+        have nvidia-smi && GPU_ARGS=(--gpus all)
+        # Idle container first (host networking; DDS pinned to the bridge IF on
+        # the host). The launch is a separate docker exec so the container is a
+        # stable target for overrides / automation / rviz.
+        start_container "$CONTAINER_NAME" \
+            --network host "${GPU_ARGS[@]}" \
+            -e RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
+            -e CYCLONEDDS_URI=file:///dds/cyclonedds.xml \
+            -e ROS_DOMAIN_ID="$DOMAIN_ID" \
+            -v "$DDS_DIR":/dds:ro \
+            -v "$MAP_PATH":"/maps/$TOWN_BASE":ro \
+            -v "$HOME/autoware_data":/root/autoware_data \
+            --entrypoint bash "$IMAGE" -c 'sleep infinity'
+        apply_carla_overrides docker /opt/autoware
+        start_proc autoware "exec docker exec '$CONTAINER_NAME' bash -c '$AW_SETUP_SNIPPET; exec ros2 launch autoware_launch e2e_simulator.launch.xml $LAUNCH_ARGS map_path:=/maps/$TOWN_BASE'"
+        if $WITH_RVIZ; then
+            start_container "$CONTAINER_NAME-rviz" \
+                --network host "${GPU_ARGS[@]}" \
+                -e RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
+                -e CYCLONEDDS_URI=file:///dds/cyclonedds.xml \
+                -e ROS_DOMAIN_ID="$DOMAIN_ID" \
+                -e DISPLAY="${DISPLAY:-:0}" \
+                -v /tmp/.X11-unix:/tmp/.X11-unix \
+                -v "$DDS_DIR":/dds:ro \
+                --entrypoint bash "$IMAGE" \
+                -c "$AW_SETUP_SNIPPET; exec rviz2 -d /opt/autoware/autoware_launch/share/autoware_launch/rviz/autoware.rviz"
+            log "rviz container started (if the window does not appear, run: xhost +local:docker)"
+        fi
+    else
+        apply_carla_overrides source "$AUTOWARE_WS/install"
+        start_proc autoware "$CLASSICAL_SRC_CMD"
+        if $WITH_RVIZ; then
+            start_proc rviz "${STACK_PRELUDE}RVIZ_CFG=\$(find '$AUTOWARE_WS/install' -path '*autoware_launch*' -name autoware.rviz 2>/dev/null | head -1); exec rviz2 \${RVIZ_CFG:+-d \"\$RVIZ_CFG\"}"
+        fi
+    fi
 else
     if [[ "$E2E_GLUE" == "pr1685" ]]; then
         start_proc autoware "$E2E_PR_CMD"
@@ -382,11 +773,87 @@ else
     fi
 fi
 
+# --------------------------------------- 7. classical post-launch driving --
+# Sequence validated on Town10: empty InitializeLocalization auto-inits from
+# GNSS; goal goes to /planning/mission_planning/goal in the MAP frame
+# (map frame = CARLA x, NEGATED y, negated yaw); then change_to_autonomous.
+# The resulting trajectory appears on /planning/trajectory (current Autoware;
+# NOT the old /planning/scenario_planning/trajectory).
+wait_for_autoware_api() {
+    if $DRY_RUN; then
+        echo "[dry-run] wait (up to 300 s) until 'ros2 service list' on the stack side shows /api/operation_mode/change_to_autonomous"
+        return 0
+    fi
+    log "waiting for the Autoware ADAPI to come up (up to 300 s) ..."
+    local i
+    for i in $(seq 1 60); do
+        if aw_ros2 "ros2 service list 2>/dev/null" | grep -q "/api/operation_mode/change_to_autonomous"; then
+            log "Autoware ADAPI is up (after ~$((i * 5))s)"
+            return 0
+        fi
+        sleep 5
+    done
+    warn "Autoware ADAPI did not appear within 300 s -- skipping automation (see $LOG_DIR/autoware.log)"
+    return 1
+}
+
+auto_step() {   # run one automation ros2 command on the stack side
+    local desc="$1" cmd="$2"
+    if $DRY_RUN; then
+        echo "[dry-run] $desc:"
+        echo "[dry-run]   (stack-side) $cmd"
+        return 0
+    fi
+    log "$desc"
+    aw_ros2 "$cmd" 2>&1 | tee -a "$LOG_DIR/automation.log"
+}
+
+if [[ "$MODE" == "classical" ]] && ! $NO_AUTO; then
+    if wait_for_autoware_api; then
+        auto_step "initializing localization (empty request = auto-init from GNSS)" \
+            "ros2 service call /api/localization/initialize autoware_adapi_v1_msgs/srv/InitializeLocalization {}"
+        if [[ -n "$GOAL" ]]; then
+            # CARLA -> Autoware map frame: x_map = x, y_map = -y, yaw_map = -yaw.
+            read -r GX GY GQZ GQW <<<"$(python3 -c "
+import math
+x, y, yaw = (float(v) for v in '$GOAL'.split(','))
+r = math.radians(-yaw)
+print(f'{x:.3f} {-y:.3f} {math.sin(r / 2.0):.6f} {math.cos(r / 2.0):.6f}')
+")"
+            pause 20 "let NDT localization converge before sending the goal"
+            # NB: double quotes around the YAML -- the docker path of aw_ros2
+            # wraps the command in single quotes.
+            auto_step "publishing goal (CARLA '$GOAL' -> map x=$GX y=$GY qz=$GQZ qw=$GQW)" \
+                "ros2 topic pub --once /planning/mission_planning/goal geometry_msgs/msg/PoseStamped \"{header: {frame_id: map}, pose: {position: {x: $GX, y: $GY, z: 0.0}, orientation: {z: $GQZ, w: $GQW}}}\""
+            if $DRY_RUN; then
+                echo "[dry-run] then: retry 'ros2 service call /api/operation_mode/change_to_autonomous autoware_adapi_v1_msgs/srv/ChangeOperationMode {}' (stack-side, up to 12x every 10 s until success=True)"
+            else
+                ENGAGED=false
+                for _ in $(seq 1 12); do
+                    if aw_ros2 "ros2 service call /api/operation_mode/change_to_autonomous autoware_adapi_v1_msgs/srv/ChangeOperationMode {}" 2>&1 \
+                            | tee -a "$LOG_DIR/automation.log" | grep -q "success=True"; then
+                        ENGAGED=true
+                        log "autonomous mode engaged -- trajectory on /planning/trajectory"
+                        break
+                    fi
+                    log "change_to_autonomous not accepted yet (route/planning not ready?), retrying in 10 s ..."
+                    sleep 10
+                done
+                $ENGAGED || warn "could not engage autonomous mode after 12 attempts -- check /planning/mission_planning/route_state and $LOG_DIR/autoware.log"
+            fi
+        else
+            log "no --goal given. To drive: set a goal in RViz, or re-run with --goal \"x,y,yaw\" (CARLA coords),"
+            log "then engage via: ros2 service call /api/operation_mode/change_to_autonomous autoware_adapi_v1_msgs/srv/ChangeOperationMode {}"
+        fi
+    fi
+fi
+
 # --------------------------------------------------------------- foreground --
 if $DRY_RUN; then
     echo "[dry-run] would then: wait on the 'autoware' PID; Ctrl-C / exit triggers teardown"
-    echo "[dry-run] pidfile:  $PIDFILE   (stop later with: $SCRIPT_DIR/stop_all.sh --log-dir '$LOG_DIR')"
-    echo "[dry-run] logs dir: $LOG_DIR"
+    echo "[dry-run] pidfile:    $PIDFILE   (stop later with: $SCRIPT_DIR/stop_all.sh --log-dir '$LOG_DIR')"
+    echo "[dry-run] containers: $CONTAINERFILE"
+    echo "[dry-run] logs dir:   $LOG_DIR"
     exit 0
 fi
 

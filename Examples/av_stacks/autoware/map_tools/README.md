@@ -22,7 +22,22 @@ used as `ros2 launch autoware_launch e2e_simulator.launch.xml map_path:=<map_pat
 
 Downloads the UE4-era pair from `carla-simulator/autoware-contents`
 (TIER IV verified the Town10 pair against UE5 Town10HD_Opt). Known warts:
-no traffic-light regulatory elements, small pcd/osm origin offsets.
+no traffic-light regulatory elements, small pcd/osm origin offsets, and the
+pcd scores low against UE5.8 lidar returns (the run script relaxes the NDT
+convergence threshold to compensate; regenerating the pcd — option 2 —
+removes the need).
+
+**MetaInfo requirement**: Autoware's route_handler only accepts a lanelet2
+map whose `<osm>` root carries a
+`<MetaInfo format_version="1.0.0" map_version="1"/>` child; without it,
+planning silently never starts and mission_planner can segfault. The upstream
+files lack it, so `fetch_prebuilt_maps.sh` injects it (idempotently) into
+every fetched `.osm`, and `generate_lanelet2_map.py` emits it on conversion.
+Fix an existing file with:
+
+```bash
+./fetch_prebuilt_maps.sh --metainfo-only path/to/lanelet2_map.osm
+```
 
 ### 2. Generated from a running server — any town
 

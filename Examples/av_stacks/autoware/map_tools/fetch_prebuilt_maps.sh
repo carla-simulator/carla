@@ -12,9 +12,18 @@
 # regulatory elements; use generate_lanelet2_map.py against a live server
 # if you need those injected.
 #
+# The upstream .osm files LACK the <MetaInfo format_version="1.0.0"
+# map_version="1"/> element that Autoware's route_handler requires; without
+# it the map is considered invalid, planning silently never starts and
+# mission_planner can even segfault. This script injects it (idempotently)
+# into every fetched .osm.
+#
 # Usage: fetch_prebuilt_maps.sh <Town> [out_dir]
 #   <Town>   Town01..Town07 | Town10HD (aliases: Town10, Town10HD_Opt)
 #   out_dir  default: <this dir>/maps/<Town>  (where run_carla_autoware.sh looks)
+#
+#        fetch_prebuilt_maps.sh --metainfo-only <file.osm>
+#   Only run the (idempotent) MetaInfo injection on an existing .osm.
 
 set -euo pipefail
 
@@ -22,9 +31,33 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_URL="https://bitbucket.org/carla-simulator/autoware-contents/raw/master/maps"
 
 usage() {
-  sed -n '2,17p' "$0" | sed 's/^# \{0,1\}//'
+  sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'
   exit 1
 }
+
+# Ensure <MetaInfo format_version="1.0.0" map_version="1"/> is the first child
+# of <osm ...>. Idempotent: a file that already has a MetaInfo element is left
+# byte-for-byte unchanged.
+inject_metainfo() {
+  local osm="$1"
+  [[ -f "$osm" ]] || { echo "ERROR: no such file: $osm" >&2; return 1; }
+  if grep -q "<MetaInfo" "$osm"; then
+    echo "MetaInfo element already present in $osm (leaving file unchanged)"
+    return 0
+  fi
+  # Insert right after the first <osm ...> opening tag.
+  sed -i '0,/<osm[^>]*>/s||&\n  <MetaInfo format_version="1.0.0" map_version="1"/>|' "$osm"
+  grep -q "<MetaInfo" "$osm" \
+    || { echo "ERROR: failed to inject MetaInfo into $osm (no <osm> tag?)" >&2; return 1; }
+  echo "Injected <MetaInfo format_version=\"1.0.0\" map_version=\"1\"/> into $osm"
+}
+
+# Standalone mode: fix up an existing .osm (used by run_carla_autoware.sh preflight).
+if [[ "${1:-}" == "--metainfo-only" ]]; then
+  [[ -n "${2:-}" ]] || usage
+  inject_metainfo "$2"
+  exit 0
+fi
 
 TOWN="${1:-}"
 [[ -n "$TOWN" ]] || usage
@@ -61,6 +94,9 @@ head -c 200 "$OUT_DIR/pointcloud_map.pcd" | grep -q "PCD" \
   || { echo "ERROR: downloaded pointcloud_map.pcd does not look like a PCD file" >&2; exit 1; }
 grep -q "<osm" "$OUT_DIR/lanelet2_map.osm" \
   || { echo "ERROR: downloaded lanelet2_map.osm does not look like an OSM file" >&2; exit 1; }
+
+# Required by Autoware's route_handler -- see header.
+inject_metainfo "$OUT_DIR/lanelet2_map.osm"
 
 cat > "$OUT_DIR/map_projector_info.yaml" <<'EOF'
 # Autoware map projector definition (consumed by map_projection_loader).

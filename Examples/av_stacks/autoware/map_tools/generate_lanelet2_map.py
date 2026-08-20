@@ -63,6 +63,25 @@ def parse_args(argv=None):
     return p.parse_args(argv)
 
 
+def ensure_metainfo(osm_path):
+    """Guarantee ``<MetaInfo format_version="1.0.0" map_version="1"/>`` under ``<osm>``.
+
+    Autoware's route_handler treats a lanelet2 map without this element as
+    invalid: planning silently never starts and mission_planner can even
+    segfault. The crdesigner converter does not emit it, so it is injected here
+    as the first child of the root. Idempotent.
+    """
+    tree = ET.parse(osm_path)
+    root = tree.getroot()
+    if root.find("MetaInfo") is not None:
+        return
+    root.insert(0, ET.Element("MetaInfo", {"format_version": "1.0.0", "map_version": "1"}))
+    ET.indent(tree, space="  ")
+    tree.write(osm_path, encoding="UTF-8", xml_declaration=True)
+    print(f"Injected <MetaInfo format_version=\"1.0.0\" map_version=\"1\"/> into {osm_path}",
+          flush=True)
+
+
 def convert_xodr_to_lanelet2(xodr_path, out_osm):
     """Run the crdesigner OpenDRIVE -> lanelet2 conversion (no y flip, see module doc)."""
     try:
@@ -77,6 +96,7 @@ def convert_xodr_to_lanelet2(xodr_path, out_osm):
     opendrive_to_lanelet(xodr_path, out_osm, lanelet2_config=lanelet2_config)
     if not os.path.isfile(out_osm) or os.path.getsize(out_osm) == 0:
         raise RuntimeError("conversion produced no output -- check the OpenDRIVE input")
+    ensure_metainfo(out_osm)  # required by Autoware's route_handler
     print("Conversion done.", flush=True)
 
 

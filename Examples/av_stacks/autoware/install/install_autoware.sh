@@ -65,6 +65,17 @@ VAD_FILES=(
 )
 VAD_DATA_DIR="${HOME}/autoware_data/ml_models/vad/v0.1"
 
+# lidar_centerpoint perception models. The HuggingFace bundle lands under
+# ~/autoware_data/ml_models/lidar_centerpoint/ in SUBDIRS (e.g. tiny/), but the
+# launch files expect these FLAT files directly in the lidar_centerpoint dir:
+CENTERPOINT_DATA_DIR="${HOME}/autoware_data/ml_models/lidar_centerpoint"
+CENTERPOINT_FLAT_FILES=(
+    "centerpoint_tiny_ml_package.param.yaml"
+    "detection_class_remapper.param.yaml"
+    "pts_voxel_encoder.onnx"
+    "pts_backbone_neck_head.onnx"
+)
+
 # GHCR images (tags verified against the GHCR manifest API, all 200):
 #   ghcr.io/autowarefoundation/autoware:universe-cuda-jazzy      (GPU, upstream default)
 #   ghcr.io/autowarefoundation/autoware:universe-jazzy           (CPU-only)
@@ -267,6 +278,15 @@ do_check() {
     else
         echo "VAD model dir  : ${VAD_DATA_DIR} not present"
     fi
+    if [ -d "${CENTERPOINT_DATA_DIR}" ]; then
+        local cp_flat=0
+        for f in "${CENTERPOINT_FLAT_FILES[@]}"; do
+            [ -e "${CENTERPOINT_DATA_DIR}/${f}" ] && cp_flat=$((cp_flat + 1))
+        done
+        echo "centerpoint dir: ${CENTERPOINT_DATA_DIR} (${cp_flat}/${#CENTERPOINT_FLAT_FILES[@]} FLAT files; launch needs all 4 flat -- source/docker modes fix this up)"
+    else
+        echo "centerpoint dir: ${CENTERPOINT_DATA_DIR} not present (needed for classical perception_mode:=lidar)"
+    fi
     if have docker; then
         local imgs
         imgs="$(docker image ls --format '{{.Repository}}:{{.Tag}}' 2>/dev/null | grep -c "^${DOCKER_IMAGE_BASE}:" || true)"
@@ -298,6 +318,51 @@ fetch_vad_model() {
     done
     echo "VAD model files in place. TensorRT engines are built automatically on the"
     echo "first VAD run (slow; cached next to the ONNX files afterwards)."
+}
+
+# ---------------------------------------------------------------------------
+# lidar_centerpoint flat-layout fixup
+#
+# The perception model bundle lands under ml_models/lidar_centerpoint/<subdir>/
+# (e.g. tiny/) but lidar_centerpoint's launch expects the four files FLAT in
+# ml_models/lidar_centerpoint/. Without them classical-mode perception dies at
+# startup. Create flat symlinks from whatever subdir carries a matching file.
+# Idempotent; no-op if the model dir does not exist yet.
+# ---------------------------------------------------------------------------
+fixup_centerpoint_layout() {
+    [ -d "${CENTERPOINT_DATA_DIR}" ] || return 0
+    log "Checking lidar_centerpoint flat layout in ${CENTERPOINT_DATA_DIR}"
+    local f src missing=0
+    for f in "${CENTERPOINT_FLAT_FILES[@]}"; do
+        if [ -e "${CENTERPOINT_DATA_DIR}/${f}" ]; then
+            echo "  ${f}: present"
+            continue
+        fi
+        # exact-name match anywhere below (tiny/, base/, ...) wins
+        src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name "${f}" 2>/dev/null | sort | head -1)"
+        if [ -z "${src}" ]; then
+            # fuzzy fallback: subdir files often carry variant-suffixed names
+            case "${f}" in
+                pts_voxel_encoder.onnx)      src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name 'pts_voxel_encoder*.onnx' 2>/dev/null | sort | head -1)" ;;
+                pts_backbone_neck_head.onnx) src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name 'pts_backbone_neck_head*.onnx' 2>/dev/null | sort | head -1)" ;;
+                centerpoint_tiny_ml_package.param.yaml) src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name '*tiny*ml_package*.param.yaml' 2>/dev/null | sort | head -1)" ;;
+            esac
+        fi
+        if [ -n "${src}" ]; then
+            # RELATIVE link: the dir is bind-mounted into containers at a
+            # different absolute path, where an absolute target would dangle.
+            ln -s "${src#"${CENTERPOINT_DATA_DIR}"/}" "${CENTERPOINT_DATA_DIR}/${f}"
+            echo "  ${f}: symlinked -> ${src#"${CENTERPOINT_DATA_DIR}"/}"
+        else
+            echo "  ${f}: MISSING (no candidate found in subdirs)"
+            missing=1
+        fi
+    done
+    if [ "${missing}" -eq 1 ]; then
+        warn "lidar_centerpoint flat layout incomplete -- classical-mode lidar perception
+(perception_mode:=lidar) will fail to start until the files above exist in
+${CENTERPOINT_DATA_DIR}/ (flat, not in a subdir)."
+    fi
 }
 
 checkout_vad_launch_branch() {
@@ -392,6 +457,9 @@ do_source() {
         --parallel-workers "${JOBS}" \
         --cmake-args -DCMAKE_BUILD_TYPE=Release
 
+    # Perception model layout fix (see function header).
+    fixup_centerpoint_layout
+
     log "Done"
     cat <<EOF
 Source build complete.
@@ -437,33 +505,54 @@ do_docker() {
     echo "(official prebuilt image from GHCR; nothing is built locally)"
     docker pull "${image}"
 
+    # Perception model layout fix (host dir is bind-mounted into the container).
+    fixup_centerpoint_layout
+
     log "Run pattern"
     local gpu_flag=""
     [ -n "${cuda_part}" ] && gpu_flag="--gpus all "
     cat <<EOF
 Image pulled: ${image}
 
-Typical run against CARLA native ROS2 (adjust paths):
+The recommended way to run against CARLA is the orchestrator, which generates
+the DDS configs, applies the CARLA-specific Autoware overrides and drives the
+whole session:
+
+  ../run/run_carla_autoware.sh --mode classical --stack docker --image ${image}
+
+Manual run pattern (adjust paths):
 
   docker run --rm -it --net=host ${gpu_flag}\\
       -e RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \\
-      -e ROS_DOMAIN_ID=\${ROS_DOMAIN_ID:-0} \\
+      -e CYCLONEDDS_URI=file:///dds/cyclonedds.xml \\
+      -e ROS_DOMAIN_ID=\${ROS_DOMAIN_ID:-42} \\
+      -v /path/to/generated/dds:/dds:ro \\
       -v \$HOME/autoware_map:/autoware_map \\
       -v \$HOME/autoware_data:/root/autoware_data \\
       ${image} \\
       ros2 launch autoware_launch e2e_simulator.launch.xml \\
           vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit \\
+          perception_mode:=lidar rviz:=false \\
           map_path:=/autoware_map/<TownXX_dir>
 
 Notes:
-  - CARLA's Fast-DDS default here is UDPv4-only, so containers interoperate
-    without shared-memory tricks; --net=host keeps DDS discovery simple.
-    Match -ros-domain-id on the CARLA side (server flag) with ROS_DOMAIN_ID.
-  - CycloneDDS is Autoware's recommended RMW; CARLA can serve it with -rmw=cyclonedds.
-  - GUI (rviz2) needs X forwarding: add
+  - CYCLONEDDS_URI is MANDATORY: the official image ships a cyclonedds.xml that
+    demands 10 MB socket buffers (most hosts cap rmem_max at 4 MB) and pins the
+    'lo' interface, which breaks discovery with the simulator. Override it with
+    a config pinned to the docker bridge interface (stable IP; NEVER a WiFi/DHCP
+    interface) with MaxAutoParticipantIndex >= 300 -- run_carla_autoware.sh
+    generates a validated one into its log dir (dds/cyclonedds.xml).
+  - The validated topology is MIXED-RMW: the CARLA server runs Fast DDS
+    (-rmw=fastdds, UDPv4 whitelisted to the bridge IP) while the Autoware
+    container runs CycloneDDS. DDS vendors interoperate over UDPv4.
+    Match -ros-domain-id on the CARLA side with ROS_DOMAIN_ID (default 42).
+  - GUI (rviz2) runs as a separate container with the same DDS env: add
       -e DISPLAY -v /tmp/.X11-unix:/tmp/.X11-unix   (after: xhost +local:docker)
-  - map_path must contain pointcloud_map.pcd, lanelet2_map.osm and
-    map_projector_info.yaml (projector_type: Local).
+    and run: rviz2 -d /opt/autoware/autoware_launch/share/autoware_launch/rviz/autoware.rviz
+  - map_path must contain pointcloud_map.pcd, lanelet2_map.osm (WITH the
+    <MetaInfo format_version="1.0.0" map_version="1"/> element -- see
+    map_tools/fetch_prebuilt_maps.sh) and map_projector_info.yaml
+    (projector_type: Local).
   - Pin a release with --version (e.g. --version ${CURRENT_RELEASE_TAG} ->
     ${DOCKER_IMAGE_BASE}:universe${cuda_part}-${DOCKER_DISTRO}-${CURRENT_RELEASE_TAG}).
 EOF

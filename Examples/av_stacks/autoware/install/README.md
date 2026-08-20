@@ -51,8 +51,28 @@ Pulls from GHCR (no local image build):
   `--version 1.9.0` (→ `...-jazzy-1.9.0`)
 
 The script prints the full `docker run` pattern (host networking, CycloneDDS,
-map/data volume mounts). CARLA's Fast-DDS default here is UDPv4-only, so
-containers interoperate with the simulator without SHM configuration.
+map/data volume mounts). The validated topology is mixed-RMW: the simulator
+runs Fast DDS (UDPv4 whitelisted to the docker bridge IP) while the container
+runs CycloneDDS pinned to the bridge interface.
+
+**`CYCLONEDDS_URI` must be overridden** when running the official image: it
+ships a `cyclonedds.xml` that demands 10 MB socket buffers (hosts commonly cap
+`net.core.rmem_max` at 4 MB) and pins the `lo` interface, which breaks
+discovery with the simulator. `run/run_carla_autoware.sh --stack docker`
+generates a validated replacement (bridge-pinned, `MaxAutoParticipantIndex=300`,
+1–4 MB buffers) and wires it in automatically — prefer it over manual runs.
+
+## lidar_centerpoint model layout
+
+Classical mode's lidar perception (`perception_mode:=lidar`) loads the
+centerpoint models from `~/autoware_data/ml_models/lidar_centerpoint/` and
+expects four files **flat** in that directory:
+`centerpoint_tiny_ml_package.param.yaml`, `detection_class_remapper.param.yaml`,
+`pts_voxel_encoder.onnx`, `pts_backbone_neck_head.onnx`. The HuggingFace
+bundle lands in **subdirectories** (e.g. `tiny/`) instead. Both `--source` and
+`--docker` runs of this script create *relative* symlinks for any missing flat
+file (relative so they survive the bind mount into the container at
+`/root/autoware_data`); `--check` reports the current state.
 
 ## `--with-vad`
 
@@ -81,6 +101,8 @@ runtime tooling for that side.
 
 Autoware needs per-town `pointcloud_map.pcd`, `lanelet2_map.osm`, and
 `map_projector_info.yaml` (`projector_type: Local`) passed as `map_path:=<dir>`.
+The `.osm` must contain `<MetaInfo format_version="1.0.0" map_version="1"/>`
+or Autoware's route_handler rejects it silently (see `map_tools/README.md`).
 Prebuilt Town01–07 + Town10HD maps live in the
 `carla-simulator/autoware-contents` Bitbucket repo; map tooling is handled by
 the sibling map scripts in this Examples tree, not by this installer.

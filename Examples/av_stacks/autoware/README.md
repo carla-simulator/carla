@@ -65,8 +65,11 @@ if a robot were publishing them.
 
 **ROS2 middleware (RMW)**
 
-- Any of Fast DDS, CycloneDDS, or Zenoh. **CycloneDDS is Autoware's
-  recommended RMW.** See the [compatibility matrix](#compatibility-matrix).
+- Nothing to configure by hand: the run script generates the DDS configs and
+  picks the validated topology (simulator on **Fast DDS**, Autoware on
+  **CycloneDDS**, both pinned to the docker bridge). See the
+  [compatibility matrix / DDS topology](#compatibility-matrix--dds-topology)
+  before changing `--rmw`.
 
 ---
 
@@ -89,7 +92,17 @@ that adds the `use_e2e_planning` / `e2e_planning_type:=vad` glue — see
 [Known limitations](#known-limitations) — and downloads the VAD model
 (HuggingFace `AutowareFoundation/tensorrt_vad`, tag `v0.1`) into
 `~/autoware_data/ml_models/vad/v0.1/`. A `--docker` mode (prebuilt GHCR image)
-is also available; see `install/README.md`.
+is also available and is what the validated classical run used; see
+`install/README.md`.
+
+Both source and docker modes also fix up the **lidar_centerpoint model
+layout**: the perception bundle lands under
+`~/autoware_data/ml_models/lidar_centerpoint/<subdir>/` (e.g. `tiny/`), but the
+launch expects four files *flat* in `lidar_centerpoint/`
+(`centerpoint_tiny_ml_package.param.yaml`, `detection_class_remapper.param.yaml`,
+`pts_voxel_encoder.onnx`, `pts_backbone_neck_head.onnx`); the installer creates
+relative symlinks if they are missing. Without them classical-mode lidar
+perception dies at startup.
 
 ### 2. Get map artifacts
 
@@ -120,6 +133,14 @@ the convention Autoware expects here, not a bug), they carry **no
 traffic-light regulatory elements**, and there are small origin offsets
 between the pcd and osm.
 
+The upstream `.osm` files also lack the
+`<MetaInfo format_version="1.0.0" map_version="1"/>` element that Autoware's
+`route_handler` requires — without it the map is silently rejected, planning
+never starts, and `mission_planner` can even segfault. The fetch script
+injects it automatically (idempotently); for an `.osm` you obtained some other
+way, run `./map_tools/fetch_prebuilt_maps.sh --metainfo-only <file.osm>`
+(the run script also checks and fixes this at preflight).
+
 **Option B — generate from a running simulator (any town, adds traffic lights):**
 
 ```bash
@@ -140,8 +161,8 @@ pinned deps from `map_tools/requirements.txt` in a venv — see
 ### 3. Run
 
 ```bash
-# Full classical stack:
-./run/run_carla_autoware.sh --mode classical
+# Full classical stack, drive to a goal (CARLA coordinates: x,y,yaw°):
+./run/run_carla_autoware.sh --mode classical --goal "80.0,-16.5,90"
 
 # End-to-end VAD:
 ./run/run_carla_autoware.sh --mode e2e
@@ -151,48 +172,90 @@ The default town is `Town10HD_Opt` (the UE5 packaged name; its map dir is
 `map_tools/maps/Town10HD`, matching step 2). Pick another town with
 `--town <Name>`.
 
-Useful common options (forwarded to the server / demo client):
-`--rmw fastdds|cyclonedds|zenoh`, `--domain-id N` (alias `--ros-domain-id`),
-`--carla-rpc-port N`, `--map-path <dir>` to point at a custom map directory,
+Classical mode runs Autoware either from your **source workspace**
+(`--stack source`) or from the **official docker image** (`--stack docker`,
+the validated path); the default `--stack auto` picks whichever is installed.
+Useful common options: `--goal "x,y,yaw"` (drive there automatically; CARLA
+coordinates, converted for you), `--no-auto` (skip all post-launch
+automation), `--with-rviz` (RViz in a sibling container / local `rviz2`),
+`--rmw fastdds|cyclonedds|zenoh` (simulator side; default **fastdds** — see
+the matrix below), `--domain-id N` (default **42**; alias `--ros-domain-id`),
+`--carla-rpc-port N`, `--map-path <dir>`, `--bridge-if <name>` /
+`--docker-network <name>` to override the auto-detected DDS bridge, and
 `--dry-run` to print every command without executing anything. Run `--help`
 for the full list. Stop a running session from another terminal with
-`./run/stop_all.sh` (kills only the exact process groups it started, via the
-pidfile in the log dir).
+`./run/stop_all.sh` (kills only the exact process groups it started via the
+pidfile in the log dir, and `docker rm -f`s only containers it created —
+read its header before "improving" it with `pkill`).
 
 Under the hood the script sequences, in order:
 
-1. **CARLA server** with native ROS2:
+1. **DDS config generation**: auto-detects the docker bridge interface and
+   writes `<log-dir>/dds/fastdds_profile.xml` (simulator side) and
+   `<log-dir>/dds/cyclonedds.xml` (Autoware side). See
+   [DDS topology](#compatibility-matrix--dds-topology).
+2. **CARLA server** with native ROS2:
    `./CarlaUnreal.sh -ros2 -rmw=<rmw> -ros-domain-id=<N> -carla-rpc-port=<N>`
+   with `FASTRTPS_DEFAULT_PROFILES_FILE` pointing at the generated profile
    (for `-rmw=zenoh` it first starts the required Zenoh router:
    `ros2 run rmw_zenoh_cpp rmw_zenohd`).
-2. A **one-shot town loader** (non-ticking client) that switches the server to
+3. A **one-shot town loader** (non-ticking client) that switches the server to
    `--town` if needed.
-3. **`PythonAPI/examples/autoware_demo.py`** — spawns the ego vehicle and the
+4. **`PythonAPI/examples/autoware_demo.py`** — spawns the ego vehicle and the
    sensor rig, switches the world to synchronous mode, and becomes the **only
    ticking client**. Do not run other ticking clients (e.g. a second demo or a
    Traffic Manager script in sync mode) against the same server.
-4. *(e2e only)* **`run/spawn_vad_rig.py`** (attaches the six VAD cameras to
+5. *(e2e only)* **`run/spawn_vad_rig.py`** (attaches the six VAD cameras to
    the ego; never ticks) and **`run/e2e_state_publishers.launch.py`**
    (ground-truth localization + image republish nodes).
-5. **Autoware**, per mode (below).
+6. *(classical only)* **CARLA-specific Autoware overrides** (applied via
+   `docker exec`/`sed` in the container, or in the workspace install tree):
+   - `ndt_scan_matcher.param.yaml`:
+     `converged_param_nearest_voxel_transformation_likelihood: 2.3 → 1.0`.
+     The UE4-era prebuilt pcd maps score low against UE5.8 geometry; without
+     this NDT never reports convergence. Regenerating the pcd with
+     `map_tools` (step 2, option B) removes the need for this override.
+   - `tier4_localization_launch` `pose_twist_estimator.launch.xml`:
+     `stop_check_enabled → false`. The sim runs below real time, so the
+     stopped-vehicle check never passes and initialization hangs.
+7. **Autoware**, per mode (below).
+8. *(classical, unless `--no-auto`)* **post-launch automation**: wait for the
+   ADAPI, `ros2 service call /api/localization/initialize` (an empty request
+   auto-initializes from GNSS), and — with `--goal` — publish the goal pose on
+   `/planning/mission_planning/goal` and call
+   `/api/operation_mode/change_to_autonomous` (retried until planning accepts
+   it). Goal conversion CARLA → map frame: `x_map = x`, `y_map = -y`,
+   `yaw_map = -yaw` (the quaternion is computed for you). The executed
+   trajectory appears on **`/planning/trajectory`** (current Autoware moved it
+   from the old `/planning/scenario_planning/trajectory`).
 
 ### What each mode runs
 
-**`classical`** launches the TIER IV-validated entry point:
+**`classical`** launches the validated entry point (in the container or the
+source workspace):
 
 ```bash
 ros2 launch autoware_launch e2e_simulator.launch.xml \
   vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit \
-  map_path:=$(pwd)/map_tools/maps/Town10HD
+  perception_mode:=lidar rviz:=false \
+  map_path:=/maps/Town10HD        # docker; source ws uses the host map dir
 ```
+
+RViz deliberately runs **outside** the stack launch (`rviz:=false`): with
+`--with-rviz` the script starts it as a separate container (same DDS env,
+`DISPLAY` passthrough, config
+`/opt/autoware/autoware_launch/share/autoware_launch/rviz/autoware.rviz`) or
+a local `rviz2` in source mode.
 
 Autoware localizes with **NDT matching against `pointcloud_map.pcd`** and
 therefore needs lidar, IMU and GNSS — all provided by `autoware_demo.py`:
 an XYZIRCAEDT lidar on `/sensing/lidar/top/pointcloud_raw_ex` (frame
 `velodyne_top`), IMU on `/sensing/imu/tamagawa/imu_raw`, GNSS pose on
-`/sensing/gnss`, plus a traffic-light camera. After launch, set the initial
-pose in RViz if NDT does not converge on its own, then engage
-(`/vehicle/engage`) or use the RViz AutowareStatePanel.
+`/sensing/gnss`, plus a traffic-light camera. The automation initializes
+localization from GNSS for you; without `--goal`, set a goal in RViz and
+engage via
+`ros2 service call /api/operation_mode/change_to_autonomous autoware_adapi_v1_msgs/srv/ChangeOperationMode {}`
+(or the RViz AutowareStatePanel).
 
 **`e2e`** runs camera-only driving with VAD:
 
@@ -220,17 +283,48 @@ pose in RViz if NDT does not converge on its own, then engage
 
 ---
 
-## Compatibility matrix
+## Compatibility matrix / DDS topology
 
-| | Fast DDS (`-rmw=fastdds`, default) | CycloneDDS (`-rmw=cyclonedds`) | Zenoh (`-rmw=zenoh`) |
-|---|---|---|---|
-| **Humble / 22.04** | Works. Our server default is **UDPv4-only** transport, so containerized Autoware discovers the simulator out of the box (no shared-memory pitfalls). Export `FASTDDS_BUILTIN_TRANSPORTS=DEFAULT` before starting the server to restore SHM for same-host, bare-metal setups. | Works. **Recommended by Autoware.** Apply Autoware's usual CycloneDDS config (`cyclonedds.xml`, raised `rmem_max`). | Works. Start the router **before** server and stack: `ros2 run rmw_zenoh_cpp rmw_zenohd`. |
-| **Jazzy / 24.04** | Same as above. | Same as above; Jazzy is the Autoware Docker default OS. | Same as above. |
+The **validated topology** (Town10, full classical stack, 2026-08) is
+deliberately **mixed-RMW** — DDS vendors interoperate over UDPv4:
 
-The RMW is chosen **per process**: `-rmw=` on the CARLA server,
-`RMW_IMPLEMENTATION=rmw_cyclonedds_cpp` (etc.) for the Autoware side.
-All processes must agree on the RMW and on `ROS_DOMAIN_ID` (server flag
-`-ros-domain-id=N`). Mixed-RMW setups are not supported.
+- **Simulator: Fast DDS** (`-rmw=fastdds`, the script default) with a
+  generated profile whose UDPv4 transport **whitelists only the docker bridge
+  IP** (`interfaceWhiteList` + `useBuiltinTransports=false`).
+- **Autoware (container or source ws): CycloneDDS** with a generated
+  `cyclonedds.xml` **pinned to the docker bridge interface**
+  (`NetworkInterface name="br-…"`), `MaxAutoParticipantIndex=300` (the stack
+  is 63+ nodes; the CycloneDDS default index range is far too small),
+  `MaxMessageSize=65500B`, and socket receive buffers of 1–4 MB.
+
+Why the bridge: DDS locators embed concrete IPs. A WiFi/DHCP interface whose
+IP rotates **poisons the locators mid-session** — never bind DDS to one. The
+docker bridge has a stable IP on both ends. `run_carla_autoware.sh`
+auto-detects it (`docker network inspect`, falling back to `ip -br addr`) and
+generates both XML files into `<log-dir>/dds/` each run; override with
+`--bridge-if`/`--docker-network`.
+
+Two hard-won warnings:
+
+- The **official Autoware docker image ships its own `cyclonedds.xml`** that
+  demands 10 MB socket buffers (hosts commonly cap `net.core.rmem_max` at
+  4 MB — do not raise requirements to 10 MB) and pins the `lo` interface,
+  which breaks discovery with the simulator. It **must** be overridden via
+  `CYCLONEDDS_URI`; the run script does this.
+- **Do not run the simulator with `-rmw=cyclonedds` for now**: the CARLA
+  CycloneDDS receive path has a known fragmented-receive bug (large samples
+  can be dropped; a fix is in progress separately). The script defaults to
+  `fastdds` on the sim side and warns if you override it.
+
+| Simulator RMW | Status |
+|---|---|
+| **Fast DDS** (`-rmw=fastdds`, default) | **Validated.** UDPv4-only with the generated bridge-whitelist profile; containerized Autoware (CycloneDDS) discovers the simulator out of the box. |
+| CycloneDDS (`-rmw=cyclonedds`) | **Not recommended (sim side)** until the fragmented-receive fix lands. |
+| Zenoh (`-rmw=zenoh`) | Works with `--stack source`; the script starts the required router first (`ros2 run rmw_zenoh_cpp rmw_zenohd`) and runs zenoh end-to-end. |
+
+Both Humble/22.04 and Jazzy/24.04 hosts work; Jazzy is the Autoware Docker
+default OS. All processes must agree on `ROS_DOMAIN_ID` (server flag
+`-ros-domain-id=N`; script default **42**, override with `--domain-id`).
 
 ---
 
@@ -249,6 +343,17 @@ Read this before filing bugs — most of it is inherited and known.
   simulator with `generate_map_artifacts.py` (step 2, option B) to inject
   traffic lights from ground truth. The prebuilt lanelet2 files are also
   y-axis-inverted by convention and have small pcd/osm origin offsets.
+- **Prebuilt (UE4-era) pcd maps score low against UE5.8 lidar returns**, which
+  is why the run script relaxes the NDT convergence threshold
+  (`converged_param_nearest_voxel_transformation_likelihood` 2.3 → 1.0).
+  Regenerating `pointcloud_map.pcd` with `map_tools` against the UE5.8 server
+  removes the need for that override.
+- **Cleanup discipline.** Never `pkill -f <pattern>` when the pattern also
+  appears in a wrapping `docker exec bash -c` command line — it kills its own
+  wrapper shell (exit 143) and leaves the container processes running. Use
+  `stop_all.sh` (exact PIDs + `docker rm -f` of script-created containers);
+  for ad-hoc host-side cleanup use bracketed patterns like
+  `pgrep -f 'carla-rpc-port=200[0]'`.
 - **VAD domain gap.** The published VAD weights were trained on
   Bench2Drive / CARLA 0.9.15-era imagery. Behavior on UE5.8 visuals is
   **unvalidated** — expect degraded performance in some scenes; treat e2e mode
