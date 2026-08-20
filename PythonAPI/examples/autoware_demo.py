@@ -297,6 +297,25 @@ def generate_traffic_light_camera_blueprint(blueprint_library):
     return blueprint
 
 
+def generate_front_camera_blueprint(blueprint_library):
+    """Generates a forward-facing camera for visualization (e.g. RViz)"""
+
+    blueprint = blueprint_library.find("sensor.camera.rgb")
+
+    blueprint.set_attribute("fov", "90.0")
+    blueprint.set_attribute("image_size_x", "1280")
+    blueprint.set_attribute("image_size_y", "720")
+    blueprint.set_attribute("sensor_tick", "0.1")
+    if blueprint.has_attribute("post_process_profile"):
+        blueprint.set_attribute("post_process_profile", "autoware_demo")
+
+    # ROS settings
+    blueprint.set_attribute("ros_name", "front_camera/camera_optical_link")  # frame_id
+    try_set_ros_topic_name(blueprint, "/sensing/camera/front")
+
+    return blueprint
+
+
 def generate_imu_blueprint(blueprint_library):
     """Generates a blueprint for IMU"""
 
@@ -383,6 +402,15 @@ def spawn_sensors(world, base_link, ego, args):
         sensor_kit_to_traffic_light_left_camera_transform.to_carla(),
         attach_to=sensor_kit)
     traffic_light_left_camera.enable_for_ros()
+
+    # Spawn front camera (visualization; not part of the AWSIM sensor kit)
+    front_camera_blueprint = generate_front_camera_blueprint(blueprint_library)
+    sensor_kit_to_front_camera_transform = ROS2.Transform(x=0.3, z=-0.3)
+    front_camera = world.spawn_actor(
+        front_camera_blueprint,
+        sensor_kit_to_front_camera_transform.to_carla(),
+        attach_to=sensor_kit)
+    front_camera.enable_for_ros()
 
     # Spawn IMU
     # NOTE: IMU is mounted to Ego directly, because this is required for angular velocity to work
