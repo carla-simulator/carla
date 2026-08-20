@@ -17,11 +17,13 @@
 #include <carla/ros2/middleware/ISubscriberMiddleware.h>
 #include <carla/ros2/publishers/PublisherImpl.h>
 #include <carla/ros2/subscribers/SubscriberImpl.h>
+#include <carla/ros2/middleware/cyclonedds/CycloneDDSSertype.h>
 #include <carla/ros2/middleware/fastdds/GenericCdrPubSubType.h>
 #include <carla/ros2/middleware/zenoh/ZenohWireFormat.h>
 #include <carla/ros2/types/CdrSerialization.h>
 #include <carla/ros2/types/CdrTopicInfo.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstdlib>
 #include <memory>
@@ -1535,3 +1537,163 @@ TEST_F(ZenohDomainIdFixture, invalid_environment_falls_back_to_default) {
   EXPECT_EQ(zenoh_ros_domain_id(), "0");
 }
 #endif  // _WIN32
+
+// ==========================================================================
+// Group 17: cyclonedds_fragment_gather (6 tests)
+// carla_cdr_gather_fragments() reassembles the fragchain CycloneDDS hands to
+// from_ser into the contiguous CDR buffer stored in carla_cdr_serdata. Peers
+// such as an Autoware stack on rmw_cyclonedds deliver samples larger than one
+// fragment through this path, so the walk must handle multi-fragment chains,
+// overlapping retransmits, and truncated chains — all pure logic, no
+// participant needed.
+// ==========================================================================
+
+namespace {
+
+struct FakeFrag {
+  const FakeFrag* nextfrag{nullptr};
+  uint32_t        min{0u};
+  uint32_t        maxp1{0u};
+  const uint8_t*  payload{nullptr};  ///< bytes for [min, maxp1)
+};
+
+const uint8_t* FakeFragPayload(const FakeFrag* f) { return f->payload; }
+
+std::vector<uint8_t> MakePatternBytes(size_t size) {
+  std::vector<uint8_t> bytes(size);
+  for (size_t i = 0u; i < size; ++i) {
+    bytes[i] = static_cast<uint8_t>((i * 31u + 7u) & 0xFFu);
+  }
+  return bytes;
+}
+
+/// Split [0, bytes.size()) into a nextfrag-linked chain of fragments of at
+/// most frag_size bytes each, all viewing the same backing buffer.
+std::vector<FakeFrag> MakeFragChain(
+    const std::vector<uint8_t>& bytes,
+    size_t frag_size)
+{
+  std::vector<FakeFrag> frags;
+  for (size_t off = 0u; off < bytes.size(); off += frag_size) {
+    const size_t end = std::min(bytes.size(), off + frag_size);
+    FakeFrag f;
+    f.min     = static_cast<uint32_t>(off);
+    f.maxp1   = static_cast<uint32_t>(end);
+    f.payload = bytes.data() + off;
+    frags.push_back(f);
+  }
+  for (size_t i = 1u; i < frags.size(); ++i) {
+    frags[i - 1u].nextfrag = &frags[i];
+  }
+  return frags;
+}
+
+} // namespace
+
+TEST(cyclonedds_fragment_gather, single_fragment_copies_all) {
+  const auto bytes = MakePatternBytes(256u);
+  const auto frags = MakeFragChain(bytes, bytes.size());
+  ASSERT_EQ(frags.size(), 1u);
+
+  std::vector<uint8_t> dest(bytes.size(), 0u);
+  const size_t gathered = carla_cdr_gather_fragments(
+      dest.data(), dest.size(), frags.data(), FakeFragPayload);
+
+  EXPECT_EQ(gathered, bytes.size());
+  EXPECT_EQ(dest, bytes);
+}
+
+TEST(cyclonedds_fragment_gather, multi_fragment_reassembles_in_order) {
+  const auto bytes = MakePatternBytes(5000u);
+  const auto frags = MakeFragChain(bytes, 1400u);
+  ASSERT_GT(frags.size(), 3u);
+
+  std::vector<uint8_t> dest(bytes.size(), 0u);
+  const size_t gathered = carla_cdr_gather_fragments(
+      dest.data(), dest.size(), frags.data(), FakeFragPayload);
+
+  EXPECT_EQ(gathered, bytes.size());
+  EXPECT_EQ(dest, bytes);
+}
+
+TEST(cyclonedds_fragment_gather, overlapping_fragments_gather_once) {
+  const auto bytes = MakePatternBytes(1200u);
+
+  // Retransmit-style overlap: consecutive fragments re-cover earlier bytes.
+  FakeFrag f2{nullptr,  800u, 1200u, bytes.data() + 800u};
+  FakeFrag f1{&f2,      400u, 1000u, bytes.data() + 400u};
+  FakeFrag f0{&f1,        0u,  600u, bytes.data()};
+
+  std::vector<uint8_t> dest(bytes.size(), 0u);
+  const size_t gathered = carla_cdr_gather_fragments(
+      dest.data(), dest.size(), &f0, FakeFragPayload);
+
+  EXPECT_EQ(gathered, bytes.size());
+  EXPECT_EQ(dest, bytes);
+}
+
+TEST(cyclonedds_fragment_gather, truncated_chain_reports_short_count) {
+  const auto bytes = MakePatternBytes(1200u);
+
+  // Gap between the fragments: [0, 500) then [900, 1200).
+  FakeFrag f1{nullptr, 900u, 1200u, bytes.data() + 900u};
+  FakeFrag f0{&f1,       0u,  500u, bytes.data()};
+
+  std::vector<uint8_t> dest(bytes.size(), 0u);
+  const size_t gathered = carla_cdr_gather_fragments(
+      dest.data(), dest.size(), &f0, FakeFragPayload);
+
+  EXPECT_EQ(gathered, 500u);
+}
+
+TEST(cyclonedds_fragment_gather, oversized_fragment_is_clamped_to_size) {
+  const auto bytes = MakePatternBytes(128u);
+
+  FakeFrag f0{nullptr, 0u, 128u, bytes.data()};
+
+  std::vector<uint8_t> dest(100u, 0u);
+  const size_t gathered = carla_cdr_gather_fragments(
+      dest.data(), dest.size(), &f0, FakeFragPayload);
+
+  EXPECT_EQ(gathered, 100u);
+  EXPECT_TRUE(std::equal(dest.begin(), dest.end(), bytes.begin()));
+}
+
+TEST(cyclonedds_fragment_gather, large_pointcloud_round_trips_through_fragments) {
+  // >64KB sample: 5,000 points x 16 bytes/point = 80,000 bytes of point data,
+  // fragmented at a UDP-like 1,400 bytes — the shape of the Autoware-on-
+  // CycloneDDS traffic that hits from_ser instead of from_ser_iov.
+  constexpr uint32_t num_points = 5000u;
+  constexpr uint32_t point_step = 16u;
+  const uint32_t data_bytes = num_points * point_step;
+
+  msg::PointCloud2 original{};
+  original.header.frame_id = "velodyne";
+  original.height = 1u;
+  original.width  = num_points;
+  original.point_step = point_step;
+  original.row_step   = num_points * point_step;
+  original.is_dense   = true;
+  original.data.assign(data_bytes, 0u);
+  for (uint32_t i = 0u; i < data_bytes; ++i) {
+    original.data[i] = static_cast<uint8_t>((i * 13u + 5u) & 0xFFu);
+  }
+
+  const std::vector<uint8_t> wire = serialize_to_cdr(original);
+  ASSERT_GT(wire.size(), 65536u) << "sample must exceed one 64KB fragment unit";
+
+  const auto frags = MakeFragChain(wire, 1400u);
+  ASSERT_GT(frags.size(), 40u);
+
+  std::vector<uint8_t> dest(wire.size(), 0u);
+  const size_t gathered = carla_cdr_gather_fragments(
+      dest.data(), dest.size(), frags.data(), FakeFragPayload);
+  ASSERT_EQ(gathered, wire.size());
+
+  msg::PointCloud2 recovered{};
+  ASSERT_TRUE(deserialize_from_cdr(dest.data(), dest.size(), recovered));
+  EXPECT_EQ(recovered.header.frame_id, "velodyne");
+  EXPECT_EQ(recovered.width, num_points);
+  ASSERT_EQ(recovered.data.size(), data_bytes);
+  EXPECT_EQ(recovered.data, original.data);
+}

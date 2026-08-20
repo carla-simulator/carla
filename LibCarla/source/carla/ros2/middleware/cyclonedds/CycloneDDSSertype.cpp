@@ -10,6 +10,8 @@
 #include "carla/ros2/middleware/MiddlewareConfig.h"
 #include "carla/Logging.h"
 
+#include <dds/ddsi/q_radmin.h>
+
 #include <cstdlib>
 #include <cstring>
 #include <cstdio>
@@ -52,19 +54,25 @@ static uint32_t carla_cdr_serdata_get_size(const struct ddsi_serdata* d) {
 static struct ddsi_serdata* carla_cdr_from_ser(
     const struct ddsi_sertype* type,
     enum ddsi_serdata_kind kind,
-    const struct nn_rdata* /*fragchain*/,
+    const struct nn_rdata* fragchain,
     size_t size)
 {
-  // Fragment-based receive path. CARLA uses local IPC so this should never
-  // be triggered in practice. Log an error so the caller knows the data is
-  // invalid rather than silently returning zero-filled bytes.
-  log_error(
-      "carla_cdr_from_ser: fragmented receive is not supported; "
-      "data will be invalid");
   struct ddsi_serdata* sd =
       carla_cdr_alloc_serdata(type, kind, static_cast<uint32_t>(size));
-  if (sd) {
-    memset(reinterpret_cast<struct carla_cdr_serdata*>(sd) + 1, 0, size);
+  if (!sd) { return nullptr; }
+  uint8_t* dest = reinterpret_cast<uint8_t*>(
+      reinterpret_cast<struct carla_cdr_serdata*>(sd) + 1);
+  const size_t gathered = carla_cdr_gather_fragments(
+      dest, size, fragchain,
+      [](const struct nn_rdata* f) -> const uint8_t* {
+        return NN_RMSG_PAYLOADOFF(f->rmsg, NN_RDATA_PAYLOAD_OFF(f));
+      });
+  if (gathered != size) {
+    log_error(
+        "carla_cdr_from_ser: incomplete fragment chain (",
+        gathered, " of ", size, " bytes); dropping sample");
+    ddsi_serdata_unref(sd);
+    return nullptr;
   }
   return sd;
 }
