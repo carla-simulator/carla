@@ -42,7 +42,7 @@ bool UCarlaNavigationSubsystem::GetRandomNavLocation(FVector &OutLocation) const
   if (ANavigationData *NavData = NavSys->GetDefaultNavDataInstance())
   {
     QueryFilter = UNavigationQueryFilter::GetQueryFilter(
-        *NavData, UCarlaWalkerNavFilter::StaticClass());
+        *NavData, TSubclassOf<UNavigationQueryFilter>(UCarlaWalkerNavFilter::StaticClass()));
   }
   FNavLocation Result;
   if (!NavSys->GetRandomPoint(Result, nullptr, QueryFilter))
