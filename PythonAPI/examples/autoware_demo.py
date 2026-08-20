@@ -710,6 +710,9 @@ def main():
     argparser.add_argument(
         '--list_maps', action='store_true',
         help='Lists only available maps and exit. Omit applying world setting and ego spawn.')
+    argparser.add_argument(
+        '--spawn_index', type=int, default=None,
+        help='Index into the ego spawn point list; random choice if omitted.')
     args = argparser.parse_args()
 
     # Deploy PostProcess profiles before connecting to the server
@@ -756,7 +759,10 @@ def main():
         spawn_points = world.get_map().get_spawn_points()
     if not spawn_points:
         raise RuntimeError("No spawn points available. Load a map that provides spawn points.")
-    spawn_point = random.choice(spawn_points)
+    if args.spawn_index is not None:
+        spawn_point = spawn_points[args.spawn_index % len(spawn_points)]
+    else:
+        spawn_point = random.choice(spawn_points)
     ego = spawn_ego_with_sensors(world, spawn_point, args)
 
     world.tick()  # tick to process the changes (settings, ego + sensors spawn)
