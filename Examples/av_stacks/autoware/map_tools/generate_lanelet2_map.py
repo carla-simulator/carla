@@ -97,7 +97,30 @@ def convert_xodr_to_lanelet2(xodr_path, out_osm):
     if not os.path.isfile(out_osm) or os.path.getsize(out_osm) == 0:
         raise RuntimeError("conversion produced no output -- check the OpenDRIVE input")
     ensure_metainfo(out_osm)  # required by Autoware's route_handler
+    prune_untyped_lanelets(out_osm)
     print("Conversion done.", flush=True)
+
+
+def prune_untyped_lanelets(osm_path):
+    """Remove lanelet relations that carry no subtype.
+
+    crdesigner emits border/median lanes of the OpenDRIVE road as bare
+    ``type=lanelet`` relations without a subtype. lanelet2's vehicle traffic
+    rules treat them as routable, but their centerlines sit meters off any
+    real driving lane, so a route through one steers the vehicle off the
+    road. Every driving lane gets ``subtype=road`` from the converter, so
+    dropping untyped lanelets never breaks lane connectivity."""
+    tree = ET.parse(osm_path)
+    root = tree.getroot()
+    pruned = 0
+    for rel in list(root.findall("relation")):
+        tags = {t.get("k"): t.get("v") for t in rel.findall("tag")}
+        if tags.get("type") == "lanelet" and "subtype" not in tags:
+            root.remove(rel)
+            pruned += 1
+    if pruned:
+        tree.write(osm_path, encoding="UTF-8", xml_declaration=True)
+    print(f"Pruned {pruned} untyped (non-driving) lanelet relations.", flush=True)
 
 
 # --------------------------------------------------------------------------

@@ -257143,16 +257143,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="1179" action="modify" visible="true" version="1">
-    <member type="way" ref="1178" role="right" />
-    <member type="way" ref="883" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="1474" action="modify" visible="true" version="1">
-    <member type="way" ref="1473" role="right" />
-    <member type="way" ref="1178" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="1769" action="modify" visible="true" version="1">
     <member type="way" ref="1768" role="right" />
     <member type="way" ref="1473" role="left" />
@@ -257173,16 +257163,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="2736" action="modify" visible="true" version="1">
-    <member type="way" ref="2735" role="right" />
-    <member type="way" ref="2493" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="2978" action="modify" visible="true" version="1">
-    <member type="way" ref="2977" role="right" />
-    <member type="way" ref="2735" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="3220" action="modify" visible="true" version="1">
     <member type="way" ref="3219" role="right" />
@@ -257206,16 +257186,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="3948" action="modify" visible="true" version="1">
-    <member type="way" ref="3947" role="right" />
-    <member type="way" ref="3704" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="4190" action="modify" visible="true" version="1">
-    <member type="way" ref="4189" role="right" />
-    <member type="way" ref="3947" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="4432" action="modify" visible="true" version="1">
     <member type="way" ref="4431" role="right" />
@@ -257242,16 +257212,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="4533" action="modify" visible="true" version="1">
-    <member type="way" ref="4532" role="right" />
-    <member type="way" ref="4506" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="4558" action="modify" visible="true" version="1">
-    <member type="way" ref="4557" role="right" />
-    <member type="way" ref="4532" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="4583" action="modify" visible="true" version="1">
     <member type="way" ref="4582" role="right" />
     <member type="way" ref="4557" role="left" />
@@ -257274,16 +257234,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="4660" action="modify" visible="true" version="1">
-    <member type="way" ref="4659" role="right" />
-    <member type="way" ref="4633" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="4685" action="modify" visible="true" version="1">
-    <member type="way" ref="4684" role="right" />
-    <member type="way" ref="4659" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="4710" action="modify" visible="true" version="1">
     <member type="way" ref="4709" role="right" />
@@ -257308,16 +257258,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="4755" action="modify" visible="true" version="1">
-    <member type="way" ref="4754" role="right" />
-    <member type="way" ref="4742" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="4766" action="modify" visible="true" version="1">
-    <member type="way" ref="4765" role="right" />
-    <member type="way" ref="4754" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="4777" action="modify" visible="true" version="1">
     <member type="way" ref="4776" role="right" />
     <member type="way" ref="4765" role="left" />
@@ -257340,16 +257280,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="4813" action="modify" visible="true" version="1">
-    <member type="way" ref="4812" role="right" />
-    <member type="way" ref="4800" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="4825" action="modify" visible="true" version="1">
-    <member type="way" ref="4824" role="right" />
-    <member type="way" ref="4812" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="4837" action="modify" visible="true" version="1">
     <member type="way" ref="4836" role="right" />
@@ -257374,16 +257304,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="5072" action="modify" visible="true" version="1">
-    <member type="way" ref="5071" role="right" />
-    <member type="way" ref="5012" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="5131" action="modify" visible="true" version="1">
-    <member type="way" ref="5130" role="right" />
-    <member type="way" ref="5071" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="5190" action="modify" visible="true" version="1">
     <member type="way" ref="5189" role="right" />
     <member type="way" ref="5130" role="left" />
@@ -257406,16 +257326,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="5369" action="modify" visible="true" version="1">
-    <member type="way" ref="5368" role="right" />
-    <member type="way" ref="5308" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="5428" action="modify" visible="true" version="1">
-    <member type="way" ref="5427" role="right" />
-    <member type="way" ref="5368" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="5487" action="modify" visible="true" version="1">
     <member type="way" ref="5486" role="right" />
@@ -257442,16 +257352,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="6352" action="modify" visible="true" version="1">
-    <member type="way" ref="6351" role="right" />
-    <member type="way" ref="6134" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="6568" action="modify" visible="true" version="1">
-    <member type="way" ref="6567" role="right" />
-    <member type="way" ref="6351" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="6784" action="modify" visible="true" version="1">
     <member type="way" ref="6783" role="right" />
     <member type="way" ref="6567" role="left" />
@@ -257476,16 +257376,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="7434" action="modify" visible="true" version="1">
-    <member type="way" ref="7433" role="right" />
-    <member type="way" ref="7216" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="7650" action="modify" visible="true" version="1">
-    <member type="way" ref="7649" role="right" />
-    <member type="way" ref="7433" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="7866" action="modify" visible="true" version="1">
     <member type="way" ref="7865" role="right" />
@@ -257512,16 +257402,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="8559" action="modify" visible="true" version="1">
-    <member type="way" ref="8558" role="right" />
-    <member type="way" ref="8384" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="8732" action="modify" visible="true" version="1">
-    <member type="way" ref="8731" role="right" />
-    <member type="way" ref="8558" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="8905" action="modify" visible="true" version="1">
     <member type="way" ref="8904" role="right" />
     <member type="way" ref="8731" role="left" />
@@ -257547,16 +257427,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="9426" action="modify" visible="true" version="1">
-    <member type="way" ref="9425" role="right" />
-    <member type="way" ref="9251" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="9599" action="modify" visible="true" version="1">
-    <member type="way" ref="9598" role="right" />
-    <member type="way" ref="9425" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="9772" action="modify" visible="true" version="1">
     <member type="way" ref="9771" role="right" />
     <member type="way" ref="9598" role="left" />
@@ -257581,16 +257451,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="9961" action="modify" visible="true" version="1">
-    <member type="way" ref="9960" role="right" />
-    <member type="way" ref="9912" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="10008" action="modify" visible="true" version="1">
-    <member type="way" ref="10007" role="right" />
-    <member type="way" ref="9960" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="10055" action="modify" visible="true" version="1">
     <member type="way" ref="10054" role="right" />
     <member type="way" ref="10007" role="left" />
@@ -257614,16 +257474,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="10193" action="modify" visible="true" version="1">
-    <member type="way" ref="10192" role="right" />
-    <member type="way" ref="10146" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="10239" action="modify" visible="true" version="1">
-    <member type="way" ref="10238" role="right" />
-    <member type="way" ref="10192" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="10285" action="modify" visible="true" version="1">
     <member type="way" ref="10284" role="right" />
     <member type="way" ref="10238" role="left" />
@@ -257644,16 +257494,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="10444" action="modify" visible="true" version="1">
-    <member type="way" ref="10443" role="right" />
-    <member type="way" ref="10403" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="10484" action="modify" visible="true" version="1">
-    <member type="way" ref="10483" role="right" />
-    <member type="way" ref="10443" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="10524" action="modify" visible="true" version="1">
     <member type="way" ref="10523" role="right" />
@@ -257676,16 +257516,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="10644" action="modify" visible="true" version="1">
-    <member type="way" ref="10643" role="right" />
-    <member type="way" ref="10603" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="10684" action="modify" visible="true" version="1">
-    <member type="way" ref="10683" role="right" />
-    <member type="way" ref="10643" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="10724" action="modify" visible="true" version="1">
     <member type="way" ref="10723" role="right" />
     <member type="way" ref="10683" role="left" />
@@ -257700,16 +257530,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="10796" action="modify" visible="true" version="1">
-    <member type="way" ref="10795" role="right" />
-    <member type="way" ref="10770" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="10820" action="modify" visible="true" version="1">
-    <member type="way" ref="10819" role="right" />
-    <member type="way" ref="10795" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="10844" action="modify" visible="true" version="1">
     <member type="way" ref="10843" role="right" />
@@ -257727,16 +257547,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="10893" action="modify" visible="true" version="1">
-    <member type="way" ref="10892" role="right" />
-    <member type="way" ref="10867" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="10917" action="modify" visible="true" version="1">
-    <member type="way" ref="10916" role="right" />
-    <member type="way" ref="10892" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="10941" action="modify" visible="true" version="1">
     <member type="way" ref="10940" role="right" />
     <member type="way" ref="10916" role="left" />
@@ -257753,16 +257563,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="11115" action="modify" visible="true" version="1">
-    <member type="way" ref="11114" role="right" />
-    <member type="way" ref="11055" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="11173" action="modify" visible="true" version="1">
-    <member type="way" ref="11172" role="right" />
-    <member type="way" ref="11114" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="11231" action="modify" visible="true" version="1">
     <member type="way" ref="11230" role="right" />
     <member type="way" ref="11172" role="left" />
@@ -257777,16 +257577,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="11348" action="modify" visible="true" version="1">
-    <member type="way" ref="11347" role="right" />
-    <member type="way" ref="11288" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="11406" action="modify" visible="true" version="1">
-    <member type="way" ref="11405" role="right" />
-    <member type="way" ref="11347" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="11464" action="modify" visible="true" version="1">
     <member type="way" ref="11463" role="right" />
@@ -257803,16 +257593,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="11905" action="modify" visible="true" version="1">
-    <member type="way" ref="11904" role="right" />
-    <member type="way" ref="11903" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="12015" action="modify" visible="true" version="1">
-    <member type="way" ref="12014" role="right" />
-    <member type="way" ref="11904" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="12125" action="modify" visible="true" version="1">
     <member type="way" ref="12124" role="right" />
     <member type="way" ref="12014" role="left" />
@@ -257828,16 +257608,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="12348" action="modify" visible="true" version="1">
-    <member type="way" ref="12347" role="right" />
-    <member type="way" ref="12235" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="12459" action="modify" visible="true" version="1">
-    <member type="way" ref="12458" role="right" />
-    <member type="way" ref="12347" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="12570" action="modify" visible="true" version="1">
     <member type="way" ref="12569" role="right" />
@@ -257862,16 +257632,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="12839" action="modify" visible="true" version="1">
-    <member type="way" ref="12838" role="right" />
-    <member type="way" ref="12770" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="12906" action="modify" visible="true" version="1">
-    <member type="way" ref="12905" role="right" />
-    <member type="way" ref="12838" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="12973" action="modify" visible="true" version="1">
     <member type="way" ref="12972" role="right" />
@@ -257899,16 +257659,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="13176" action="modify" visible="true" version="1">
-    <member type="way" ref="13175" role="right" />
-    <member type="way" ref="13107" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="13243" action="modify" visible="true" version="1">
-    <member type="way" ref="13242" role="right" />
-    <member type="way" ref="13175" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="13310" action="modify" visible="true" version="1">
     <member type="way" ref="13309" role="right" />
     <member type="way" ref="13242" role="left" />
@@ -257934,16 +257684,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="13395" action="modify" visible="true" version="1">
-    <member type="way" ref="13394" role="right" />
-    <member type="way" ref="13372" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="13416" action="modify" visible="true" version="1">
-    <member type="way" ref="13415" role="right" />
-    <member type="way" ref="13394" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="13437" action="modify" visible="true" version="1">
     <member type="way" ref="13436" role="right" />
     <member type="way" ref="13415" role="left" />
@@ -257966,16 +257706,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="13502" action="modify" visible="true" version="1">
-    <member type="way" ref="13501" role="right" />
-    <member type="way" ref="13479" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="13523" action="modify" visible="true" version="1">
-    <member type="way" ref="13522" role="right" />
-    <member type="way" ref="13501" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="13544" action="modify" visible="true" version="1">
     <member type="way" ref="13543" role="right" />
@@ -258000,16 +257730,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="13581" action="modify" visible="true" version="1">
-    <member type="way" ref="13580" role="right" />
-    <member type="way" ref="13570" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="13590" action="modify" visible="true" version="1">
-    <member type="way" ref="13589" role="right" />
-    <member type="way" ref="13580" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="13599" action="modify" visible="true" version="1">
     <member type="way" ref="13598" role="right" />
     <member type="way" ref="13589" role="left" />
@@ -258033,16 +257753,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="13626" action="modify" visible="true" version="1">
-    <member type="way" ref="13625" role="right" />
-    <member type="way" ref="13616" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="13635" action="modify" visible="true" version="1">
-    <member type="way" ref="13634" role="right" />
-    <member type="way" ref="13625" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="13644" action="modify" visible="true" version="1">
     <member type="way" ref="13643" role="right" />
     <member type="way" ref="13634" role="left" />
@@ -258063,16 +257773,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="13747" action="modify" visible="true" version="1">
-    <member type="way" ref="13746" role="right" />
-    <member type="way" ref="13720" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="13773" action="modify" visible="true" version="1">
-    <member type="way" ref="13772" role="right" />
-    <member type="way" ref="13746" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="13799" action="modify" visible="true" version="1">
     <member type="way" ref="13798" role="right" />
@@ -258095,16 +257795,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="13877" action="modify" visible="true" version="1">
-    <member type="way" ref="13876" role="right" />
-    <member type="way" ref="13850" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="13903" action="modify" visible="true" version="1">
-    <member type="way" ref="13902" role="right" />
-    <member type="way" ref="13876" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="13929" action="modify" visible="true" version="1">
     <member type="way" ref="13928" role="right" />
     <member type="way" ref="13902" role="left" />
@@ -258125,16 +257815,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="14808" action="modify" visible="true" version="1">
-    <member type="way" ref="14807" role="right" />
-    <member type="way" ref="14514" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="15101" action="modify" visible="true" version="1">
-    <member type="way" ref="15100" role="right" />
-    <member type="way" ref="14807" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="15394" action="modify" visible="true" version="1">
     <member type="way" ref="15393" role="right" />
@@ -258159,37 +257839,12 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="15491" action="modify" visible="true" version="1">
-    <member type="way" ref="15490" role="right" />
-    <member type="way" ref="15465" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="15515" action="modify" visible="true" version="1">
-    <member type="way" ref="15514" role="right" />
-    <member type="way" ref="15490" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="15539" action="modify" visible="true" version="1">
     <member type="way" ref="15538" role="right" />
     <member type="way" ref="15514" role="left" />
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
-  </relation>
-  <relation id="15563" action="modify" visible="true" version="1">
-    <member type="way" ref="15562" role="right" />
-    <member type="way" ref="15439" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="15587" action="modify" visible="true" version="1">
-    <member type="way" ref="15586" role="right" />
-    <member type="way" ref="15562" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="15611" action="modify" visible="true" version="1">
-    <member type="way" ref="15610" role="right" />
-    <member type="way" ref="15586" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="15635" action="modify" visible="true" version="1">
     <member type="way" ref="15634" role="right" />
@@ -258207,16 +257862,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
     <member type="relation" ref="37441" role="regulatory_element" />
-  </relation>
-  <relation id="15683" action="modify" visible="true" version="1">
-    <member type="way" ref="15682" role="right" />
-    <member type="way" ref="15658" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="15707" action="modify" visible="true" version="1">
-    <member type="way" ref="15706" role="right" />
-    <member type="way" ref="15682" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="15731" action="modify" visible="true" version="1">
     <member type="way" ref="15730" role="right" />
@@ -258241,32 +257886,12 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="15826" action="modify" visible="true" version="1">
-    <member type="way" ref="15825" role="right" />
-    <member type="way" ref="15801" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="15850" action="modify" visible="true" version="1">
-    <member type="way" ref="15849" role="right" />
-    <member type="way" ref="15825" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="15874" action="modify" visible="true" version="1">
     <member type="way" ref="15873" role="right" />
     <member type="way" ref="15849" role="left" />
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
-  </relation>
-  <relation id="15898" action="modify" visible="true" version="1">
-    <member type="way" ref="15897" role="right" />
-    <member type="way" ref="15776" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="15945" action="modify" visible="true" version="1">
-    <member type="way" ref="15944" role="right" />
-    <member type="way" ref="15943" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="15969" action="modify" visible="true" version="1">
     <member type="way" ref="15968" role="right" />
@@ -258283,16 +257908,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="16019" action="modify" visible="true" version="1">
-    <member type="way" ref="16018" role="right" />
-    <member type="way" ref="15993" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="16043" action="modify" visible="true" version="1">
-    <member type="way" ref="16042" role="right" />
-    <member type="way" ref="16018" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="16067" action="modify" visible="true" version="1">
     <member type="way" ref="16066" role="right" />
@@ -258317,32 +257932,12 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="16520" action="modify" visible="true" version="1">
-    <member type="way" ref="16519" role="right" />
-    <member type="way" ref="16405" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="16633" action="modify" visible="true" version="1">
-    <member type="way" ref="16632" role="right" />
-    <member type="way" ref="16519" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="16746" action="modify" visible="true" version="1">
     <member type="way" ref="16745" role="right" />
     <member type="way" ref="16632" role="left" />
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
-  </relation>
-  <relation id="16859" action="modify" visible="true" version="1">
-    <member type="way" ref="16858" role="right" />
-    <member type="way" ref="16290" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="17084" action="modify" visible="true" version="1">
-    <member type="way" ref="17083" role="right" />
-    <member type="way" ref="17082" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="17197" action="modify" visible="true" version="1">
     <member type="way" ref="17196" role="right" />
@@ -258361,16 +257956,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="17425" action="modify" visible="true" version="1">
-    <member type="way" ref="17424" role="right" />
-    <member type="way" ref="17310" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="17538" action="modify" visible="true" version="1">
-    <member type="way" ref="17537" role="right" />
-    <member type="way" ref="17424" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="17651" action="modify" visible="true" version="1">
     <member type="way" ref="17650" role="right" />
@@ -258398,32 +257983,12 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="17868" action="modify" visible="true" version="1">
-    <member type="way" ref="17867" role="right" />
-    <member type="way" ref="17812" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="17922" action="modify" visible="true" version="1">
-    <member type="way" ref="17921" role="right" />
-    <member type="way" ref="17867" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="17976" action="modify" visible="true" version="1">
     <member type="way" ref="17975" role="right" />
     <member type="way" ref="17921" role="left" />
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
-  </relation>
-  <relation id="18030" action="modify" visible="true" version="1">
-    <member type="way" ref="18029" role="right" />
-    <member type="way" ref="17756" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="18137" action="modify" visible="true" version="1">
-    <member type="way" ref="18136" role="right" />
-    <member type="way" ref="18135" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="18191" action="modify" visible="true" version="1">
     <member type="way" ref="18190" role="right" />
@@ -258440,16 +258005,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="18301" action="modify" visible="true" version="1">
-    <member type="way" ref="18300" role="right" />
-    <member type="way" ref="18245" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="18355" action="modify" visible="true" version="1">
-    <member type="way" ref="18354" role="right" />
-    <member type="way" ref="18300" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="18409" action="modify" visible="true" version="1">
     <member type="way" ref="18408" role="right" />
@@ -258473,16 +258028,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="18626" action="modify" visible="true" version="1">
-    <member type="way" ref="18625" role="right" />
-    <member type="way" ref="18570" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="18680" action="modify" visible="true" version="1">
-    <member type="way" ref="18679" role="right" />
-    <member type="way" ref="18625" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="18734" action="modify" visible="true" version="1">
     <member type="way" ref="18733" role="right" />
@@ -258508,16 +258053,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
     <member type="relation" ref="37639" role="regulatory_element" />
-  </relation>
-  <relation id="18896" action="modify" visible="true" version="1">
-    <member type="way" ref="18895" role="right" />
-    <member type="way" ref="18841" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="18950" action="modify" visible="true" version="1">
-    <member type="way" ref="18949" role="right" />
-    <member type="way" ref="18895" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="19004" action="modify" visible="true" version="1">
     <member type="way" ref="19003" role="right" />
@@ -258556,11 +258091,6 @@
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
   </relation>
-  <relation id="19574" action="modify" visible="true" version="1">
-    <member type="way" ref="19573" role="right" />
-    <member type="way" ref="19523" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="19769" action="modify" visible="true" version="1">
     <member type="way" ref="19768" role="right" />
     <member type="way" ref="19767" role="left" />
@@ -258577,11 +258107,6 @@
     <tag k="location" v="urban" />
     <member type="relation" ref="37527" role="regulatory_element" />
   </relation>
-  <relation id="19965" action="modify" visible="true" version="1">
-    <member type="way" ref="19964" role="right" />
-    <member type="way" ref="19866" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="20160" action="modify" visible="true" version="1">
     <member type="way" ref="20159" role="right" />
     <member type="way" ref="20158" role="left" />
@@ -258596,16 +258121,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="20356" action="modify" visible="true" version="1">
-    <member type="way" ref="20355" role="right" />
-    <member type="way" ref="20257" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="20454" action="modify" visible="true" version="1">
-    <member type="way" ref="20453" role="right" />
-    <member type="way" ref="20355" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="20552" action="modify" visible="true" version="1">
     <member type="way" ref="20551" role="right" />
@@ -258635,11 +258150,6 @@
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
   </relation>
-  <relation id="21016" action="modify" visible="true" version="1">
-    <member type="way" ref="21015" role="right" />
-    <member type="way" ref="20962" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="21145" action="modify" visible="true" version="1">
     <member type="way" ref="21144" role="right" />
     <member type="way" ref="21143" role="left" />
@@ -258653,16 +258163,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="21357" action="modify" visible="true" version="1">
-    <member type="way" ref="21356" role="right" />
-    <member type="way" ref="21285" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="21428" action="modify" visible="true" version="1">
-    <member type="way" ref="21427" role="right" />
-    <member type="way" ref="21356" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="21499" action="modify" visible="true" version="1">
     <member type="way" ref="21498" role="right" />
@@ -258678,11 +258178,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="21711" action="modify" visible="true" version="1">
-    <member type="way" ref="21710" role="right" />
-    <member type="way" ref="21639" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="21828" action="modify" visible="true" version="1">
     <member type="way" ref="21827" role="right" />
     <member type="way" ref="21826" role="left" />
@@ -258696,11 +258191,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
-  </relation>
-  <relation id="21935" action="modify" visible="true" version="1">
-    <member type="way" ref="21934" role="right" />
-    <member type="way" ref="21898" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="22054" action="modify" visible="true" version="1">
     <member type="way" ref="22053" role="right" />
@@ -258716,11 +258206,6 @@
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
   </relation>
-  <relation id="22167" action="modify" visible="true" version="1">
-    <member type="way" ref="22166" role="right" />
-    <member type="way" ref="22128" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="22286" action="modify" visible="true" version="1">
     <member type="way" ref="22285" role="right" />
     <member type="way" ref="22284" role="left" />
@@ -258734,17 +258219,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="22616" action="modify" visible="true" version="1">
-    <member type="way" ref="22615" role="right" />
-    <member type="way" ref="22614" role="left" />
-    <tag k="type" v="lanelet" />
-    <member type="relation" ref="37457" role="regulatory_element" />
-  </relation>
-  <relation id="22821" action="modify" visible="true" version="1">
-    <member type="way" ref="22820" role="right" />
-    <member type="way" ref="22819" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="22924" action="modify" visible="true" version="1">
     <member type="way" ref="22923" role="right" />
@@ -258761,11 +258235,6 @@
     <tag k="location" v="urban" />
     <member type="relation" ref="37575" role="regulatory_element" />
   </relation>
-  <relation id="23130" action="modify" visible="true" version="1">
-    <member type="way" ref="23129" role="right" />
-    <member type="way" ref="23026" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="23335" action="modify" visible="true" version="1">
     <member type="way" ref="23334" role="right" />
     <member type="way" ref="23333" role="left" />
@@ -258781,11 +258250,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="23541" action="modify" visible="true" version="1">
-    <member type="way" ref="23540" role="right" />
-    <member type="way" ref="23437" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="23690" action="modify" visible="true" version="1">
     <member type="way" ref="23689" role="right" />
     <member type="way" ref="23688" role="left" />
@@ -258800,11 +258264,6 @@
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
   </relation>
-  <relation id="23830" action="modify" visible="true" version="1">
-    <member type="way" ref="23829" role="right" />
-    <member type="way" ref="23782" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="23981" action="modify" visible="true" version="1">
     <member type="way" ref="23980" role="right" />
     <member type="way" ref="23979" role="left" />
@@ -258818,11 +258277,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
-  </relation>
-  <relation id="24088" action="modify" visible="true" version="1">
-    <member type="way" ref="24087" role="right" />
-    <member type="way" ref="24051" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="24225" action="modify" visible="true" version="1">
     <member type="way" ref="24224" role="right" />
@@ -258853,11 +258307,6 @@
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
   </relation>
-  <relation id="24746" action="modify" visible="true" version="1">
-    <member type="way" ref="24745" role="right" />
-    <member type="way" ref="24703" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="24905" action="modify" visible="true" version="1">
     <member type="way" ref="24904" role="right" />
     <member type="way" ref="24903" role="left" />
@@ -258880,11 +258329,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
-  </relation>
-  <relation id="25222" action="modify" visible="true" version="1">
-    <member type="way" ref="25221" role="right" />
-    <member type="way" ref="25166" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="25381" action="modify" visible="true" version="1">
     <member type="way" ref="25380" role="right" />
@@ -258925,11 +258369,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="26180" action="modify" visible="true" version="1">
-    <member type="way" ref="26179" role="right" />
-    <member type="way" ref="26064" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="26409" action="modify" visible="true" version="1">
     <member type="way" ref="26408" role="right" />
     <member type="way" ref="26407" role="left" />
@@ -258944,11 +258383,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
     <member type="relation" ref="37591" role="regulatory_element" />
-  </relation>
-  <relation id="26639" action="modify" visible="true" version="1">
-    <member type="way" ref="26638" role="right" />
-    <member type="way" ref="26523" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="26788" action="modify" visible="true" version="1">
     <member type="way" ref="26787" role="right" />
@@ -258971,11 +258405,6 @@
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
   </relation>
-  <relation id="27039" action="modify" visible="true" version="1">
-    <member type="way" ref="27038" role="right" />
-    <member type="way" ref="26995" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="27144" action="modify" visible="true" version="1">
     <member type="way" ref="27143" role="right" />
     <member type="way" ref="27142" role="left" />
@@ -258990,11 +258419,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
-  </relation>
-  <relation id="27260" action="modify" visible="true" version="1">
-    <member type="way" ref="27259" role="right" />
-    <member type="way" ref="27220" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="27385" action="modify" visible="true" version="1">
     <member type="way" ref="27384" role="right" />
@@ -259018,11 +258442,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="27760" action="modify" visible="true" version="1">
-    <member type="way" ref="27759" role="right" />
-    <member type="way" ref="27665" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="27947" action="modify" visible="true" version="1">
     <member type="way" ref="27946" role="right" />
     <member type="way" ref="27945" role="left" />
@@ -259036,16 +258455,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="28135" action="modify" visible="true" version="1">
-    <member type="way" ref="28134" role="right" />
-    <member type="way" ref="28040" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="28229" action="modify" visible="true" version="1">
-    <member type="way" ref="28228" role="right" />
-    <member type="way" ref="28134" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="28323" action="modify" visible="true" version="1">
     <member type="way" ref="28322" role="right" />
@@ -259069,11 +258478,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="28766" action="modify" visible="true" version="1">
-    <member type="way" ref="28765" role="right" />
-    <member type="way" ref="28654" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="28987" action="modify" visible="true" version="1">
     <member type="way" ref="28986" role="right" />
     <member type="way" ref="28985" role="left" />
@@ -259088,16 +258492,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="29209" action="modify" visible="true" version="1">
-    <member type="way" ref="29208" role="right" />
-    <member type="way" ref="29097" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="29320" action="modify" visible="true" version="1">
-    <member type="way" ref="29319" role="right" />
-    <member type="way" ref="29208" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="29431" action="modify" visible="true" version="1">
     <member type="way" ref="29430" role="right" />
@@ -259144,11 +258538,6 @@
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
   </relation>
-  <relation id="30245" action="modify" visible="true" version="1">
-    <member type="way" ref="30244" role="right" />
-    <member type="way" ref="30191" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="30438" action="modify" visible="true" version="1">
     <member type="way" ref="30437" role="right" />
     <member type="way" ref="30436" role="left" />
@@ -259172,11 +258561,6 @@
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
   </relation>
-  <relation id="30795" action="modify" visible="true" version="1">
-    <member type="way" ref="30794" role="right" />
-    <member type="way" ref="30737" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="30942" action="modify" visible="true" version="1">
     <member type="way" ref="30941" role="right" />
     <member type="way" ref="30940" role="left" />
@@ -259197,16 +258581,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="31221" action="modify" visible="true" version="1">
-    <member type="way" ref="31220" role="right" />
-    <member type="way" ref="31150" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="31291" action="modify" visible="true" version="1">
-    <member type="way" ref="31290" role="right" />
-    <member type="way" ref="31220" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="31361" action="modify" visible="true" version="1">
     <member type="way" ref="31360" role="right" />
@@ -259229,11 +258603,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="31640" action="modify" visible="true" version="1">
-    <member type="way" ref="31639" role="right" />
-    <member type="way" ref="31569" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="31745" action="modify" visible="true" version="1">
     <member type="way" ref="31744" role="right" />
     <member type="way" ref="31743" role="left" />
@@ -259248,11 +258617,6 @@
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
   </relation>
-  <relation id="31855" action="modify" visible="true" version="1">
-    <member type="way" ref="31854" role="right" />
-    <member type="way" ref="31817" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="31970" action="modify" visible="true" version="1">
     <member type="way" ref="31969" role="right" />
     <member type="way" ref="31968" role="left" />
@@ -259266,11 +258630,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
-  </relation>
-  <relation id="32056" action="modify" visible="true" version="1">
-    <member type="way" ref="32055" role="right" />
-    <member type="way" ref="32026" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="32265" action="modify" visible="true" version="1">
     <member type="way" ref="32264" role="right" />
@@ -259288,16 +258647,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="32475" action="modify" visible="true" version="1">
-    <member type="way" ref="32474" role="right" />
-    <member type="way" ref="32369" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="32580" action="modify" visible="true" version="1">
-    <member type="way" ref="32579" role="right" />
-    <member type="way" ref="32474" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="32685" action="modify" visible="true" version="1">
     <member type="way" ref="32684" role="right" />
     <member type="way" ref="32579" role="left" />
@@ -259312,11 +258661,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="33103" action="modify" visible="true" version="1">
-    <member type="way" ref="33102" role="right" />
-    <member type="way" ref="33101" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="33226" action="modify" visible="true" version="1">
     <member type="way" ref="33225" role="right" />
     <member type="way" ref="33224" role="left" />
@@ -259330,11 +258674,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
-  </relation>
-  <relation id="33378" action="modify" visible="true" version="1">
-    <member type="way" ref="33377" role="right" />
-    <member type="way" ref="33326" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="33561" action="modify" visible="true" version="1">
     <member type="way" ref="33560" role="right" />
@@ -259397,22 +258736,12 @@
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
   </relation>
-  <relation id="34641" action="modify" visible="true" version="1">
-    <member type="way" ref="34640" role="right" />
-    <member type="way" ref="34601" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="34700" action="modify" visible="true" version="1">
     <member type="way" ref="34699" role="right" />
     <member type="way" ref="34698" role="left" />
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
-  </relation>
-  <relation id="34730" action="modify" visible="true" version="1">
-    <member type="way" ref="34729" role="right" />
-    <member type="way" ref="34699" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="34831" action="modify" visible="true" version="1">
     <member type="way" ref="34830" role="right" />
@@ -259435,11 +258764,6 @@
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
   </relation>
-  <relation id="35030" action="modify" visible="true" version="1">
-    <member type="way" ref="35029" role="right" />
-    <member type="way" ref="34996" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="35161" action="modify" visible="true" version="1">
     <member type="way" ref="35160" role="right" />
     <member type="way" ref="35159" role="left" />
@@ -259453,21 +258777,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
-  </relation>
-  <relation id="35293" action="modify" visible="true" version="1">
-    <member type="way" ref="35292" role="right" />
-    <member type="way" ref="35226" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="35424" action="modify" visible="true" version="1">
-    <member type="way" ref="35423" role="right" />
-    <member type="way" ref="35422" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="35555" action="modify" visible="true" version="1">
-    <member type="way" ref="35554" role="right" />
-    <member type="way" ref="35553" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="35621" action="modify" visible="true" version="1">
     <member type="way" ref="35620" role="right" />
@@ -259483,16 +258792,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="35753" action="modify" visible="true" version="1">
-    <member type="way" ref="35752" role="right" />
-    <member type="way" ref="35686" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="35819" action="modify" visible="true" version="1">
-    <member type="way" ref="35818" role="right" />
-    <member type="way" ref="35752" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="35885" action="modify" visible="true" version="1">
     <member type="way" ref="35884" role="right" />
     <member type="way" ref="35818" role="left" />
@@ -259506,11 +258805,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
-  </relation>
-  <relation id="35989" action="modify" visible="true" version="1">
-    <member type="way" ref="35988" role="right" />
-    <member type="way" ref="35953" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="36102" action="modify" visible="true" version="1">
     <member type="way" ref="36101" role="right" />
@@ -259533,16 +258827,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="36357" action="modify" visible="true" version="1">
-    <member type="way" ref="36356" role="right" />
-    <member type="way" ref="36292" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
-  <relation id="36421" action="modify" visible="true" version="1">
-    <member type="way" ref="36420" role="right" />
-    <member type="way" ref="36356" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="36485" action="modify" visible="true" version="1">
     <member type="way" ref="36484" role="right" />
     <member type="way" ref="36420" role="left" />
@@ -259564,11 +258848,6 @@
     <tag k="subtype" v="road" />
     <tag k="location" v="urban" />
   </relation>
-  <relation id="36740" action="modify" visible="true" version="1">
-    <member type="way" ref="36739" role="right" />
-    <member type="way" ref="36675" role="left" />
-    <tag k="type" v="lanelet" />
-  </relation>
   <relation id="36849" action="modify" visible="true" version="1">
     <member type="way" ref="36848" role="right" />
     <member type="way" ref="36847" role="left" />
@@ -259582,11 +258861,6 @@
     <tag k="type" v="lanelet" />
     <tag k="subtype" v="walkway" />
     <tag k="location" v="nonurban" />
-  </relation>
-  <relation id="36953" action="modify" visible="true" version="1">
-    <member type="way" ref="36952" role="right" />
-    <member type="way" ref="36917" role="left" />
-    <tag k="type" v="lanelet" />
   </relation>
   <relation id="36960" action="modify" visible="true" version="1">
     <member type="way" ref="36959" role="right" />
