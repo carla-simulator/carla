@@ -1,0 +1,3 @@
+numpy>=1.24
+pygame>=2.1
+imageio-ffmpeg>=0.5

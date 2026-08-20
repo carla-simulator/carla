@@ -3,8 +3,9 @@
 set -euo pipefail
 
 CARLA_VERSION=0.10.0
-# The NRE registry is public on NGC; pull whatever is current.
-NUREC_IMAGE_DEFAULT="nvcr.io/nvidia/nre/nre-ga:latest"
+# Pin the renderer version used by this integration. A floating latest tag can
+# change its gRPC surface underneath the checked-in stubs.
+NUREC_IMAGE_DEFAULT="nvcr.io/nvidia/nre/nre-ga:26.04.01"
 PYTHON_EXECUTABLE=python
 # Default test scene from the public HuggingFace dataset; --full-dataset
 # downloads every scene instead (hundreds of GB).
@@ -52,7 +53,16 @@ while true; do
     esac
 done
 
-echo Using python interpreter $PYTHON_EXECUTABLE.
+# Default to an isolated environment beside the example. --python remains an
+# escape hatch for callers that already created a compatible environment.
+if [ "$PYTHON_EXECUTABLE" = python ]; then
+    if [ ! -x "$CARLA_NUREC_ROOT/.venv/bin/python" ]; then
+        python3 -m venv "$CARLA_NUREC_ROOT/.venv"
+    fi
+    PYTHON_EXECUTABLE="$CARLA_NUREC_ROOT/.venv/bin/python"
+fi
+
+echo "Using python interpreter $PYTHON_EXECUTABLE."
 
 PYTHON_VERSION=$($PYTHON_EXECUTABLE -V)
 IFS=. read PYTHON_MAJOR PYTHON_MINOR PYTHON_PATCH <<< "$($PYTHON_EXECUTABLE -c 'import sys; print(".".join(map(str, sys.version_info[:3])))')"
@@ -65,7 +75,7 @@ TARGET_USER="${SUDO_USER:-$USER}"
 
 # Function to check if the requested test data already exists
 check_hf_dataset() {
-    local dataset_path="PhysicalAI-Autonomous-Vehicles-NuRec"
+    local dataset_path="$CARLA_NUREC_ROOT/PhysicalAI-Autonomous-Vehicles-NuRec"
     if [ "$FULL_DATASET" -eq 1 ]; then
         local check_path="$dataset_path"
     else
@@ -82,7 +92,7 @@ check_hf_dataset() {
 # Function to check if NuRec container exists
 check_NuRec_container() {
     local container_name=$1
-    if docker images | grep -q "$container_name"; then
+    if docker image inspect "$container_name" >/dev/null 2>&1; then
         return 0
     fi
     return 1
@@ -247,21 +257,13 @@ else
     nvidia-ctk --version
 fi
 
-# Check for other required commands
-for cmd in pip; do
-    if ! command_exists $cmd; then
-        echo "Error: $cmd is not installed. Please install it first."
-        exit 1
-    fi
-done
-
 # Download the NVIDIA NRE container (serves the NuRec gRPC API)
 echo "Checking NRE container..."
 if check_NuRec_container "$NUREC_IMAGE_DEFAULT"; then
     echo "NRE container already exists, skipping download."
 else
     echo "Initiating NRE Container Download..."
-    sudo -E docker pull "$NUREC_IMAGE_DEFAULT"
+    docker pull "$NUREC_IMAGE_DEFAULT"
 
     if [ $? -ne 0 ]; then
         echo "Error: Failed to download NRE Container"
@@ -269,8 +271,8 @@ else
     fi
 fi
 
-# Download test data from HuggingFace. The dataset is public, so this works
-# anonymously; a token is only requested as a fallback (e.g. rate limiting).
+# Download test data from HuggingFace. The dataset is gated: accept its terms
+# first, then use an existing `hf auth login` session or set HF_TOKEN.
 echo "Checking HuggingFace test data..."
 if ! check_hf_dataset; then
     echo "Installing HuggingFace CLI..."
@@ -280,24 +282,25 @@ if ! check_hf_dataset; then
     }
 
     if [ "$FULL_DATASET" -eq 1 ]; then
-        echo "Downloading the FULL dataset (this is hundreds of GB)..."
+        echo "Downloading the FULL dataset (approximately 1.5 TB)..."
         include_args=()
     else
         echo "Downloading test scene $DATASET_SCENE (use --full-dataset for everything, --scene <uuid> for a different one)..."
         include_args=(--include "sample_set/$DATASET_RELEASE/$DATASET_SCENE/*")
     fi
 
-    hf download "$DATASET_REPO" --repo-type dataset "${include_args[@]}" \
-        --local-dir PhysicalAI-Autonomous-Vehicles-NuRec || {
-        echo "Anonymous download failed. Retrying with authentication..."
+    HF_CLI=$(dirname "$PYTHON_EXECUTABLE")/hf
+    "$HF_CLI" download "$DATASET_REPO" --repo-type dataset "${include_args[@]}" \
+        --local-dir "$CARLA_NUREC_ROOT/PhysicalAI-Autonomous-Vehicles-NuRec" || {
+        echo "Gated download failed. Retrying with interactive authentication..."
         hf_pat=$(get_hf_pat) || exit 1
         hf_pat=$(echo "$hf_pat" | tr -d '\n\r' | xargs)
-        hf auth login --token "$hf_pat" || {
+        "$HF_CLI" auth login --token "$hf_pat" || {
             echo "Error: Failed to authenticate with HuggingFace"
             exit 1
         }
-        hf download "$DATASET_REPO" --repo-type dataset "${include_args[@]}" \
-            --local-dir PhysicalAI-Autonomous-Vehicles-NuRec || {
+        "$HF_CLI" download "$DATASET_REPO" --repo-type dataset "${include_args[@]}" \
+            --local-dir "$CARLA_NUREC_ROOT/PhysicalAI-Autonomous-Vehicles-NuRec" || {
             echo "Error: Failed to download the NuRec test data from HuggingFace"
             exit 1
         }
@@ -309,40 +312,12 @@ NUREC_IMAGE="$NUREC_IMAGE_DEFAULT"
 export NUREC_IMAGE
 echo "NUREC_IMAGE: $NUREC_IMAGE"
 
-# Function to make NUREC_IMAGE export persistent
-make_nurec_export_persistent() {
-    local export_line="export NUREC_IMAGE=\"$NUREC_IMAGE\""
-    local profile_file="$HOME/.bashrc"
-
-    # Check if the export already exists and matches the current value
-    if grep -q "export NUREC_IMAGE=" "$profile_file"; then
-        # If the value is different, update it
-        if ! grep -qF "$export_line" "$profile_file"; then
-            echo "Updating NUREC_IMAGE export in $profile_file..."
-            # Use sed to replace the line
-            sed -i '/export NUREC_IMAGE=/c\'"$export_line" "$profile_file"
-            echo "Updated NUREC_IMAGE export in $profile_file"
-        else
-            echo "NUREC_IMAGE export already exists and is up to date in $profile_file"
-        fi
-    else
-        echo "Making NUREC_IMAGE export persistent..."
-        echo "" >> "$profile_file"
-        echo "# NuRec environment variable" >> "$profile_file"
-        echo "$export_line" >> "$profile_file"
-        echo "Added NUREC_IMAGE export to $profile_file"
-    fi
-}
-
-# Call the function to persist the export
-make_nurec_export_persistent
-
 # Install Python dependencies
 echo "Installing Python dependencies..."
 
 # Install base dependencies
 echo "Installing base dependencies..."
-$PYTHON_EXECUTABLE -m pip install pygame numpy imageio || {
+"$PYTHON_EXECUTABLE" -m pip install pygame numpy imageio || {
     echo "Error: Failed to install pygame and numpy"
     exit 1
 }
@@ -353,18 +328,22 @@ echo "Installing Carla Wheel..."
 
 WHEEL_NAME_PREFIX=carla-$CARLA_VERSION-cp$PYTHON_MAJOR$PYTHON_MINOR-cp$PYTHON_MAJOR$PYTHON_MINOR
 
-# CARLA UE5 source builds place the wheel in Build/Release/PythonAPI/dist;
-# packaged releases keep the old PythonAPI/carla/dist layout. Try both.
-WHEEL=$(ls \
-    $CARLA_ROOT/PythonAPI/carla/dist/$WHEEL_NAME_PREFIX-*.whl \
-    $CARLA_ROOT/Build/Release/PythonAPI/dist/$WHEEL_NAME_PREFIX-*.whl \
-    2>/dev/null | head -n 1)
+# CARLA UE5 source builds may place the wheel directly in Build/PythonAPI/dist
+# or under a configuration directory; packaged releases keep the old layout.
+shopt -s nullglob
+WHEEL_CANDIDATES=(
+    "$CARLA_ROOT"/PythonAPI/carla/dist/$WHEEL_NAME_PREFIX-*.whl
+    "$CARLA_ROOT"/Build/PythonAPI/dist/$WHEEL_NAME_PREFIX-*.whl
+    "$CARLA_ROOT"/Build/Release/PythonAPI/dist/$WHEEL_NAME_PREFIX-*.whl
+)
+shopt -u nullglob
+WHEEL="${WHEEL_CANDIDATES[0]:-}"
 if [ -z "$WHEEL" ]; then
     echo "Error: No carla wheel matching $WHEEL_NAME_PREFIX found."
     echo "Build the PythonAPI first, or install the carla package manually."
     exit 1
 fi
-$PYTHON_EXECUTABLE -m pip install ${WHEEL} || {
+"$PYTHON_EXECUTABLE" -m pip install "$WHEEL" || {
     echo "Error: Failed to install Carla Wheel"
     exit 1
 }
@@ -372,7 +351,7 @@ $PYTHON_EXECUTABLE -m pip install ${WHEEL} || {
 # Install project requirements (includes grpcio/protobuf pins matching the
 # vendored, checked-in gRPC stubs in nre/grpc/protos — no codegen step needed)
 echo "Installing project requirements..."
-$PYTHON_EXECUTABLE -m pip install -r $CARLA_NUREC_ROOT/requirements.txt || {
+"$PYTHON_EXECUTABLE" -m pip install -r "$CARLA_NUREC_ROOT/requirements.txt" || {
     echo "Error: Failed to install project requirements"
     exit 1
 }
@@ -382,20 +361,5 @@ chmod +x "$0"
 
 echo "Setup completed successfully!"
 echo ""
-echo "🔔 IMPORTANT: Environment Variable Notice"
-echo "=============================================="
-echo "The NUREC_IMAGE environment variable has been added to your ~/.bashrc file"
-echo "and will be available in new terminal sessions."
-echo ""
-echo "To use it in your CURRENT terminal session, run one of these commands:"
-echo ""
-echo "  Option 1 (Reload bashrc):"
-echo "    source ~/.bashrc"
-echo ""
-echo "  Option 2 (Export manually for this session):"
-echo "    export NUREC_IMAGE=\"$NUREC_IMAGE\""
-echo ""
-echo "  Option 3 (Start a new terminal session)"
-echo ""
-echo "You can verify the variable is set by running:"
-echo "    echo \$NUREC_IMAGE"
+echo "Python environment: $CARLA_NUREC_ROOT/.venv"
+echo "Pinned NRE image: $NUREC_IMAGE"

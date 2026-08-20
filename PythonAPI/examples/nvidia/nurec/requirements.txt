@@ -6,6 +6,7 @@ grpcio>=1.66
 protobuf>=5.29,<7
 carla>=0.10.0
 pyyaml
+pillow>=10
 # Optional: only needed for the legacy JPEG transfer path
 # (NurecRenderer(image_format="jpeg")). The default planar path needs no decoder.
 # nvidia-nvimgcodec-cu12

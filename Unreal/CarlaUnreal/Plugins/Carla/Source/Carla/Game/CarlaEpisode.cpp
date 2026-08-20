@@ -10,6 +10,7 @@
 #include "Carla/Sensor/Sensor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Util/RandomEngine.h"
+
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
@@ -35,6 +36,7 @@
 #include "Materials/MaterialParameterCollection.h"
 #include "Materials/MaterialParameterCollectionInstance.h"
 #include "Misc/FileHelper.h"
+#include "Misc/PackageName.h"
 #include "Misc/Paths.h"
 #include <util/ue-header-guard-end.h>
 
@@ -101,10 +103,13 @@ bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
 
   FString FinalPath = UCarlaStatics::FindMapPath(MapString);
 
-  if(FPaths::FileExists(FinalPath))
+  if(FPaths::FileExists(FinalPath) || FPackageName::DoesPackageExist(FinalPath))
   {
     bIsFileFound = true;
-    FinalPath = MapString;
+    if (FPaths::FileExists(FinalPath))
+    {
+      FinalPath = MapString;
+    }
   }
 
   if (bIsFileFound)

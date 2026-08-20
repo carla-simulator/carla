@@ -10,6 +10,7 @@
 #include <util/ue-header-guard-begin.h>
 #include "Interfaces/IPluginManager.h"
 #include "Misc/Paths.h"
+#include "Misc/PackageName.h"
 #include "Modules/ModuleManager.h"
 #include "HAL/FileManagerGeneric.h"
 #include <util/ue-header-guard-end.h>
@@ -83,6 +84,16 @@ FString UCarlaStatics::FindMapPath(const FString &MapName)
               return FilePath; // Return the full path of the first matching map. Only one map is expected.
           }
       }
+  }
+
+  // Cooked packages can live exclusively in Pak/IoStore containers, where
+  // IFileManager cannot discover their .umap files.  CARLA's generated
+  // OpenDRIVE world is a project map at this canonical package path.
+  const FString ProjectMapPackage = FString::Printf(
+      TEXT("/Game/Carla/Maps/%s"), *MapName);
+  if (FPackageName::DoesPackageExist(ProjectMapPackage))
+  {
+      return ProjectMapPackage;
   }
 
   return FString();

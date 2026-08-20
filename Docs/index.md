@@ -46,7 +46,7 @@ CARLA forum</a>
 ## CARLA ecosystem
 
 [__MathWorks__](large_map_roadrunner.md) — Overview of creating a map in RoadRunner.      
-[__NVIDIA__](nvidia.md) — NVIDIA technologies integrated into CARLA: neural reconstruction (NuRec) and DLSS.  
+[__NVIDIA__](nvidia.md) — NVIDIA technologies integrated into CARLA: Alpamayo 2 Super, neural reconstruction (NuRec), and DLSS.
 [__ASM OpenDrive__](adv_opendrive.md) — Details of the OpenDrive support in CARLA.   
 [__ROS2__](ros2_native.md) — Details of how to use the native ROS2 interface.  
 [__Scenic__](tuto_G_scenic.md) — How to use Scenic with CARLA to generate scenarios.  

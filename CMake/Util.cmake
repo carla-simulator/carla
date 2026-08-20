@@ -49,7 +49,7 @@ endmacro ()
 
 
 macro (carla_string_option NAME DESCRIPTION VALUE)
-  set (${NAME} "${VALUE}")
+  set (${NAME} "${VALUE}" CACHE STRING "${DESCRIPTION}")
   carla_message_verbose ("(option) ${NAME} : \"${${NAME}}\"")
   get_property (DOCS GLOBAL PROPERTY CARLA_OPTION_DOCS)
   string (

@@ -95,6 +95,8 @@ logger = logging.getLogger(__name__)
 # Traffic Manager; below this the recording is a parked/creeping vehicle and
 # the TM has no route to follow (it wanders the car into neighbors).
 MIN_TM_ROUTE_M = 5.0
+MIN_TM_FOLLOW_DISTANCE_M = 10.0
+TM_TIME_HEADWAY_S = 2.0
 
 
 def collect_dynamic_objects(
@@ -595,14 +597,22 @@ class NurecActor:
         # early otherwise keeps driving past the scenario's endpoint.
         self.tm_route_end: Optional[carla.Location] = None
         self.tm_route_done = False
+        self.tm_follow_distance = 0.0
+        self.tm_controlled = False
         self.alive = True
         self.blueprint_id = blueprint_id
 
     def destroy(self) -> None:
         self.alive = False
-        self.actor_inst.destroy()
+        if self.actor_inst.is_alive:
+            self.actor_inst.destroy()
 
-    def set_physics(self, physics: bool, current_time: int) -> None:
+    def set_physics(
+        self,
+        physics: bool,
+        current_time: int,
+        seed_recorded_velocity: bool = True,
+    ) -> None:
         if self.physics == physics:
             return
         self.physics = physics
@@ -610,18 +620,32 @@ class NurecActor:
         if not physics:
             self.tm_route_end = None
             self.tm_route_done = False
+        if physics and not seed_recorded_velocity:
+            self.actor_inst.set_target_velocity(carla.Vector3D())
+            self.actor_inst.set_target_angular_velocity(carla.Vector3D())
+            return
         min_time = self.track.start_time()
         before_time = max(min_time, current_time - 100_000)
         pose_before = self.track.interpolate_pose_matrix(before_time)
         current_pose = self.track.interpolate_pose_matrix(current_time)
-        # Guard the velocity seed: at/before track start before_time equals
-        # current_time and the division is 0/0. A NaN target velocity is fatal
-        # server-side - UE5 Chaos asserts inside ProcessSteering's curve
-        # lookup and brings down the whole simulator.
         dt_us = current_time - before_time
-        if dt_us <= 0 or pose_before is None or current_pose is None:
+        if current_pose is None:
             return
-        velocity_vector = (current_pose[:3, 3] - pose_before[:3, 3]) / dt_us * 1_000_000
+        if dt_us > 0 and pose_before is not None:
+            position_delta = current_pose[:3, 3] - pose_before[:3, 3]
+        else:
+            # At the first scenario timestamp there is no earlier pose. Use a
+            # one-sided forward difference so a physics-controlled ego starts
+            # at the dataset's recorded speed instead of zero. Starting at
+            # zero puts Alpamayo outside its moving-history distribution and
+            # creates a receding-horizon stop/hold deadlock.
+            after_time = min(self.track.end_time(), current_time + 100_000)
+            pose_after = self.track.interpolate_pose_matrix(after_time)
+            dt_us = after_time - current_time
+            if dt_us <= 0 or pose_after is None:
+                return
+            position_delta = pose_after[:3, 3] - current_pose[:3, 3]
+        velocity_vector = position_delta / dt_us * 1_000_000
         velocity_vector[1] = -velocity_vector[1]
         if not np.all(np.isfinite(velocity_vector)):
             logger.warning(f"Skipping non-finite velocity seed for {self.track.track_id}")
@@ -791,6 +815,8 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         enable_asset_editing: bool = False,
         harmonizer: bool = False,
         extra_server_args: Optional[List[str]] = None,
+        cuda_visible_devices: Optional[str] = None,
+        traffic_manager_port: int = 8000,
     ):
         # port=None lets the render service pick a free one (never CARLA's 2000).
         # --enable-editing-actors is always passed by the render service (pose
@@ -800,7 +826,8 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
             extra_args.append("--enable-harmonizer")
         NuRecRenderService.__init__(self, usdz_path, port, image, reuse_container,
                                     renderer=renderer_backend,
-                                    extra_server_args=extra_args)
+                                    extra_server_args=extra_args,
+                                    cuda_visible_devices=cuda_visible_devices)
         self.image_format = image_format
         self.client = client
         self.scenario: Optional[Scenario] = None
@@ -824,6 +851,7 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         self.synchronous_mode = False
         self.path_spacing = 1
         self.traffic_manager: Optional[carla.TrafficManager] = None
+        self.traffic_manager_port = traffic_manager_port
         self.ego_speeds: List[float] = []
         self.ego_path_start_time = -1
         self.ego_following_path = False
@@ -832,6 +860,23 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         # When True, vehicles that enter the scene later are also handed to
         # the Traffic Manager (see set_all_actors_carla_controlled).
         self.carla_controls_new_actors = False
+        self.freeze_new_actors = False
+        # Alpamayo needs background traffic to react to its physics-driven
+        # ego instead of blindly preserving the recording.  Keep this opt-in
+        # so the standalone NuRec replay can still reproduce the source take.
+        self.carla_traffic_collision_aware = False
+        # Track ids held collision-free until the ego has opened a safe rear
+        # gap. They remain visible at their CARLA pose in NRE when the artifact
+        # exposes them as controllable assets.
+        self.pending_tm_handoffs: Set[str] = set()
+        # Traffic Manager registration calls into native CARLA code and must
+        # not run from a world.on_tick callback. New replay actors are found
+        # by _update_actors in that callback, then handed over immediately
+        # after world.tick() returns on the owning thread.
+        self.deferred_carla_handoffs: Set[str] = set()
+        self.last_render_frame = -1
+        self.last_render_timestamp_us = 0
+        self._on_tick_ids: List[int] = []
 
     def add_ego(self, ego_bp: str = EGO_LABEL, enable_physics: bool = False, move_spectator: bool = True) -> carla.Actor:
         if self.scenario is None:
@@ -1019,8 +1064,10 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         self._warm_cache()
 
         world = self.client.get_world()
-        world.on_tick(lambda snapshot: self.render(snapshot))
-        world.on_tick(lambda snapshot: self.update(snapshot))
+        self._on_tick_ids = [
+            world.on_tick(lambda snapshot: self.render(snapshot)),
+            world.on_tick(lambda snapshot: self.update(snapshot)),
+        ]
 
         self.tick()
         return self
@@ -1030,6 +1077,14 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         # synchronous mode by a dead client wedges the server (every later
         # apply_settings/tick fails with std::exception), so always
         # unregister it and restore asynchronous mode before leaving.
+        self.running = False
+        try:
+            world = self.client.get_world()
+            for callback_id in self._on_tick_ids:
+                world.remove_on_tick(callback_id)
+            self._on_tick_ids.clear()
+        except Exception:
+            logger.exception("Could not unregister NuRec world callbacks")
         try:
             if self.traffic_manager is not None:
                 self.traffic_manager.set_synchronous_mode(False)
@@ -1073,8 +1128,7 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         Starts the scenario replay.
         """
 
-        self.running = True
-        self.last_time = 0
+        self.running = False
         self.synchronous_mode = synchronous_mode
         if synchronous_mode:
             world = self.client.get_world()
@@ -1083,6 +1137,10 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
                     synchronous_mode=True, fixed_delta_seconds=1 / (self.fps * 2)
                 )
             )
+            self.last_time = world.get_snapshot().timestamp.elapsed_seconds
+        else:
+            self.last_time = 0
+        self.running = True
 
     def is_done(self) -> bool:
         return not self.running
@@ -1119,9 +1177,9 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
     def _set_physics_on_actors(self) -> None:
         if self.scenario is None:
             return
-        actors_done_idx = 0
+        actors_done_count = 0
         for i, actor in enumerate(self.actors_to_disable_physics):
-            actors_done_idx = i
+            actors_done_count = i + 1
             # Guard each actor separately: an actor destroyed between being
             # queued and processed (replay teardown) throws on every RPC, and
             # a shared try aborted the remaining queue and re-logged forever.
@@ -1155,7 +1213,7 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
                     f"Error disabling physics for actor {actor.track.track_id}: {e}"
                 )
         self.actors_to_disable_physics = self.actors_to_disable_physics[
-            actors_done_idx:
+            actors_done_count:
         ]
 
     def _update_actors(self, time_step: float) -> None:
@@ -1165,14 +1223,18 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         for removed_actor_track in removed_actor_tracks:
             if not removed_actor_track.track_id in self.actor_mapping:
                 continue
+            self.pending_tm_handoffs.discard(removed_actor_track.track_id)
+            self.deferred_carla_handoffs.discard(removed_actor_track.track_id)
             actor_to_delete = self.actor_mapping[removed_actor_track.track_id]
             del self.active_actors[actor_to_delete.actor_inst.id]
-            if actor_to_delete.physics:
+            if actor_to_delete.tm_controlled:
                 # Unregister from the Traffic Manager before destroying:
                 # destroying a TM-registered vehicle in synchronous mode
                 # crashes the tick.
                 try:
-                    actor_to_delete.actor_inst.set_autopilot(False)
+                    actor_to_delete.actor_inst.set_autopilot(
+                        False, self.traffic_manager_port
+                    )
                 except Exception:
                     logger.exception(
                         f"Could not unregister actor {removed_actor_track.track_id} from autopilot"
@@ -1184,14 +1246,9 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         for actor in new_actors:
             self.actor_mapping[actor.track.track_id] = actor
             self.active_actors[actor.actor_inst.id] = actor.track.track_id
-            if (self.carla_controls_new_actors and actor.track.label in VEHICLE_LABELS
-                    and self._has_usable_tm_route(actor)):
-                try:
-                    self.set_follow_path(actor.track.track_id)
-                except Exception as e:
-                    logger.warning(
-                        f"Could not hand new actor {actor.track.track_id} to the traffic manager: {e}"
-                    )
+            if (self.carla_controls_new_actors
+                    and actor.track.label in VEHICLE_LABELS):
+                self.deferred_carla_handoffs.add(actor.track.track_id)
 
     def _move_dynamic_actors(self) -> None:
         if self.scenario is None:
@@ -1207,11 +1264,22 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
                     and actor.tm_route_end is not None
                     and self.traffic_manager is not None):
                 try:
+                    if not actor.actor_inst.is_alive:
+                        actor.alive = False
+                        actor.tm_route_done = True
+                        continue
                     if actor.actor_inst.get_location().distance(actor.tm_route_end) < 4.0:
                         actor.tm_route_done = True
                         self.traffic_manager.set_desired_speed(actor.actor_inst, 0.0)
-                except Exception:
-                    logger.exception("Route-end hold failed")
+                except Exception as exc:
+                    # A track can disappear between the client snapshot and
+                    # this query. Disable this optional hold after one failure
+                    # instead of retrying a stale actor on every tick.
+                    actor.tm_route_done = True
+                    logger.warning(
+                        f"Disabling route-end hold for actor "
+                        f"{actor.track.track_id}: {exc}"
+                    )
             if not actor.physics and actor.alive and actor.track.dynamic:
 
                 # Apply offset for vehicle actors
@@ -1430,11 +1498,15 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
             )
         )
 
-    def tick(self) -> None:
+    def tick(self) -> int:
         world = self.client.get_world()
-        world.tick()
+        frame = int(world.tick())
+        self._process_deferred_traffic_handoffs()
+        return frame
 
     def render(self, snapshot: carla.WorldSnapshot) -> None:
+        self.last_render_frame = int(snapshot.frame)
+        self.last_render_timestamp_us = self.get_sim_time()
         if self.seconds_since_start() == 0:
             return
         if self.renderer is None:
@@ -1488,7 +1560,9 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
 
     def set_ego_autopilot(self, autopilot: bool) -> None:
         self.actor_mapping[EGO_TRACK_ID].set_physics(autopilot, self.get_sim_time())
-        self.actor_mapping[EGO_TRACK_ID].actor_inst.set_autopilot(autopilot)
+        self.actor_mapping[EGO_TRACK_ID].actor_inst.set_autopilot(
+            autopilot, self.traffic_manager_port
+        )
 
     def set_ego_follow_path(self, path: Optional[List] = None, spacing: int = 1000000) -> None:
         self.set_follow_path(EGO_TRACK_ID, path, spacing)
@@ -1498,12 +1572,13 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         A vehicle is only handed to the Traffic Manager when its recording
         actually travels somewhere. Parked or creeping vehicles (recorded
         travel below MIN_TM_ROUTE_M) give the TM a degenerate route and it
-        wanders them into neighboring geometry; they stay replay-driven.
+        wanders them into neighboring geometry; CARLA-control mode holds them
+        under physics instead.
         """
         dist_m, _ = self._track_travel_stats(actor.track, self.get_sim_time())
         if dist_m < MIN_TM_ROUTE_M:
             logger.info(
-                f"Leaving {actor.track.track_id} replay-driven "
+                f"Actor {actor.track.track_id} has no usable TM route "
                 f"(recorded travel {dist_m:.1f} m < {MIN_TM_ROUTE_M} m)"
             )
             return False
@@ -1522,7 +1597,13 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         duration = (track.end_time() - max(from_time_us, track.start_time())) / 1e6
         return dist, max(duration, 0.0)
 
-    def set_follow_path(self, track_id: str, path: Optional[List[carla.Location]] = None, spacing: int = 1000000) -> None:
+    def set_follow_path(
+        self,
+        track_id: str,
+        path: Optional[List[carla.Location]] = None,
+        spacing: int = 1000000,
+        collision_aware: bool = False,
+    ) -> None:
         """
         Follows a path at a given spacing. If no path is provided, the path is generated from the track.
         Each waypoint should be spacing microseconds apart.
@@ -1534,15 +1615,33 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
             raise RuntimeError("Traffic manager not initialized")
 
         actor = self.actor_mapping[track_id]
-        actor.set_physics(True, self.get_sim_time())
+        dist_m, duration_s = self._track_travel_stats(actor.track, self.get_sim_time())
+        speed_mps = dist_m / duration_s if duration_s > 0.5 else 0.0
+        follow_distance = max(
+            MIN_TM_FOLLOW_DISTANCE_M, speed_mps * TM_TIME_HEADWAY_S
+        )
+
+        if collision_aware:
+            # A newly materialized recorded actor may be immediately behind a
+            # diverged/slower ego. Never inject its recorded velocity before
+            # TM has had a chance to calculate a collision response.
+            actor.actor_inst.set_collisions(False)
+            actor.set_physics(
+                True, self.get_sim_time(), seed_recorded_velocity=False
+            )
+            actor.actor_inst.apply_control(
+                carla.VehicleControl(throttle=0.0, brake=1.0, hand_brake=True)
+            )
+        else:
+            actor.set_physics(True, self.get_sim_time())
 
         if path is None:
             path = actor.track.get_path(spacing, start_time=int(self.get_sim_time()))
-        actor.actor_inst.set_autopilot(True)
+        actor.actor_inst.set_autopilot(True, self.traffic_manager_port)
+        actor.tm_controlled = True
         self.traffic_manager.set_path(actor.actor_inst, path)
         actor.tm_route_end = path[-1] if path else None
         actor.tm_route_done = False
-        dist_m, duration_s = self._track_travel_stats(actor.track, self.get_sim_time())
         if duration_s > 0.5 and dist_m > 1.0:
             # Mean recorded speed, small margin because stops are included.
             speed_kmh = 3.6 * dist_m / duration_s * 1.05
@@ -1551,49 +1650,231 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
         self.traffic_manager.random_left_lanechange_percentage(actor.actor_inst, 0)
         self.traffic_manager.random_right_lanechange_percentage(actor.actor_inst, 0)
         self.traffic_manager.auto_lane_change(actor.actor_inst, False)
-        self.traffic_manager.distance_to_leading_vehicle(actor.actor_inst, 0)
+        # Dataset-faithful replay historically ignored traffic so actors kept
+        # their timing.  That is unsafe around a separately controlled ego:
+        # a background vehicle will simply drive through the Alpamayo car.
+        # Collision-aware mode preserves the route but lets TM brake/yield.
+        self.traffic_manager.distance_to_leading_vehicle(
+            actor.actor_inst, follow_distance if collision_aware else 0.0
+        )
+        actor.tm_follow_distance = follow_distance if collision_aware else 0.0
         self.traffic_manager.ignore_lights_percentage(actor.actor_inst, 100)
-        self.traffic_manager.ignore_vehicles_percentage(actor.actor_inst, 100)
+        self.traffic_manager.ignore_vehicles_percentage(
+            actor.actor_inst, 0 if collision_aware else 100
+        )
+        if collision_aware:
+            actor.actor_inst.set_collisions(True)
 
-    def set_all_actors_carla_controlled(self, include_future_actors: bool = True) -> int:
+    def _rear_handoff_status(
+        self, actor: "NurecActor"
+    ) -> Tuple[bool, float, float]:
+        """Return (safe, bumper gap, required gap) for a same-lane rear actor."""
+        ego = self.get_ego_actor()
+        if ego is None:
+            return True, float("inf"), MIN_TM_FOLLOW_DISTANCE_M
+
+        ego_inst = ego.actor_inst
+        ego_tf = ego_inst.get_transform()
+        ego_location = ego_tf.location
+        actor_location = actor.actor_inst.get_location()
+        delta = actor_location - ego_location
+        forward = ego_tf.get_forward_vector()
+        right = ego_tf.get_right_vector()
+        longitudinal = delta.x * forward.x + delta.y * forward.y + delta.z * forward.z
+        lateral = abs(delta.x * right.x + delta.y * right.y + delta.z * right.z)
+        lane_envelope = (
+            float(ego_inst.bounding_box.extent.y)
+            + float(actor.actor_inst.bounding_box.extent.y)
+            + 1.0
+        )
+
+        dist_m, duration_s = self._track_travel_stats(actor.track, self.get_sim_time())
+        recorded_speed_mps = dist_m / duration_s if duration_s > 0.5 else 0.0
+        required_gap = max(
+            MIN_TM_FOLLOW_DISTANCE_M,
+            recorded_speed_mps * TM_TIME_HEADWAY_S,
+        )
+        # Actors ahead of the ego or outside its lane do not present the
+        # immediate rear-end activation hazard addressed by this guard.
+        if longitudinal >= 0.0 or lateral > lane_envelope:
+            return True, float("inf"), required_gap
+
+        bumper_gap = (
+            -longitudinal
+            - float(ego_inst.bounding_box.extent.x)
+            - float(actor.actor_inst.bounding_box.extent.x)
+        )
+        return bumper_gap >= required_gap, bumper_gap, required_gap
+
+    def _hold_actor_with_physics(
+        self, actor: "NurecActor", collisions: bool = True
+    ) -> None:
+        """Stop a route-less vehicle without returning it to rigid replay."""
+        actor.set_physics(
+            True, self.get_sim_time(), seed_recorded_velocity=False
+        )
+        # Chaos can recreate the physics body when simulation is enabled,
+        # restoring its default collision state. Apply the requested state to
+        # the final body, not the pre-physics actor shell.
+        actor.actor_inst.set_collisions(collisions)
+        actor.tm_route_end = None
+        actor.tm_route_done = True
+        actor.tm_controlled = False
+        actor.actor_inst.apply_control(
+            carla.VehicleControl(throttle=0.0, brake=1.0, hand_brake=True)
+        )
+
+    def _handoff_background_vehicle(self, actor: "NurecActor") -> None:
+        """Put one non-ego vehicle under CARLA physics, never rigid replay."""
+        track_id = actor.track.track_id
+        if (self.scenario is not None
+                and track_id not in self.scenario.controllable_tracks):
+            # NRE ignores pose overrides for these tracks. Keep the visual
+            # recording, but make its CARLA proxy non-colliding so an invisible
+            # or spatially divergent proxy cannot affect the ego.
+            actor.actor_inst.set_collisions(False)
+            logger.info(
+                f"Actor {track_id} is neural-replay-only; disabled CARLA collisions"
+            )
+            return
+        if self._has_usable_tm_route(actor):
+            if self.carla_traffic_collision_aware:
+                safe, gap_m, required_m = self._rear_handoff_status(actor)
+                if not safe:
+                    self._hold_actor_with_physics(actor, collisions=False)
+                    self.pending_tm_handoffs.add(track_id)
+                    logger.info(
+                        f"Delayed TM actor {track_id}: rear gap {gap_m:.1f} m "
+                        f"< required {required_m:.1f} m"
+                    )
+                    return
+            try:
+                self.set_follow_path(
+                    track_id,
+                    collision_aware=self.carla_traffic_collision_aware,
+                )
+                logger.info(
+                    f"Handed actor {track_id} to collision-aware CARLA TM"
+                )
+                return
+            except Exception as exc:
+                logger.warning(
+                    f"TM handoff failed for actor {track_id}; holding it with "
+                    f"CARLA physics instead: {exc}"
+                )
+        self._hold_actor_with_physics(actor)
+        logger.info(f"Holding route-less actor {track_id} with CARLA physics")
+
+    def _activate_safe_pending_vehicles(self) -> None:
+        """Activate delayed rear traffic only after the ego opens a safe gap."""
+        for track_id in list(self.pending_tm_handoffs):
+            actor = self.actor_mapping.get(track_id)
+            if actor is None or not actor.alive:
+                self.pending_tm_handoffs.discard(track_id)
+                continue
+            safe, gap_m, required_m = self._rear_handoff_status(actor)
+            if not safe:
+                continue
+            try:
+                self.set_follow_path(track_id, collision_aware=True)
+                self.pending_tm_handoffs.discard(track_id)
+                logger.info(
+                    f"Activated delayed TM actor {track_id}: rear gap "
+                    f"{gap_m:.1f} m >= required {required_m:.1f} m"
+                )
+            except Exception as exc:
+                logger.warning(
+                    f"Could not activate delayed TM actor {track_id}: {exc}"
+                )
+
+    def _process_deferred_traffic_handoffs(self) -> None:
+        """Perform native TM operations outside the world-tick callback."""
+        for track_id in list(self.deferred_carla_handoffs):
+            self.deferred_carla_handoffs.discard(track_id)
+            actor = self.actor_mapping.get(track_id)
+            if actor is None or not actor.alive:
+                continue
+            try:
+                if self.freeze_new_actors:
+                    self._hold_actor_with_physics(actor, collisions=False)
+                    logger.info(
+                        f"Held actor {track_id} collision-free; traffic disabled"
+                    )
+                else:
+                    self._handoff_background_vehicle(actor)
+            except Exception as exc:
+                logger.warning(
+                    f"Could not hand new actor {track_id} to CARLA control: {exc}"
+                )
+        self._activate_safe_pending_vehicles()
+
+    def disable_all_traffic(self, include_future_actors: bool = True) -> int:
+        """Stop non-ego vehicles without replay, collisions, or Traffic Manager."""
+        self.carla_controls_new_actors = include_future_actors
+        self.freeze_new_actors = include_future_actors
+        disabled = 0
+        for track_id, actor in list(self.actor_mapping.items()):
+            if track_id == EGO_TRACK_ID or not actor.alive or actor.physics:
+                continue
+            if actor.track.label not in VEHICLE_LABELS:
+                continue
+            self._hold_actor_with_physics(actor, collisions=False)
+            disabled += 1
+        logger.info(f"Held {disabled} actors collision-free; traffic disabled")
+        return disabled
+
+    def set_all_actors_carla_controlled(
+        self,
+        include_future_actors: bool = True,
+        collision_aware: bool = False,
+    ) -> int:
         """
-        Hand every currently spawned vehicle (ego excluded) to the CARLA
-        Traffic Manager, seeded with its recorded trajectory as the TM path.
-        From then on CARLA physics drives them and their poses are streamed
-        to the NRE server every tick, so the neural render follows CARLA's
-        simulation instead of the recording. Combined with the regular CARLA
-        API (TM parameters, apply_control, teleports) this is the basis for
-        authoring custom scenarios on top of a NuRec scene.
+        Hand every currently spawned vehicle (ego excluded) to CARLA physics.
+        Moving vehicles with usable routes go to Traffic Manager, seeded with
+        their recorded route; route-less vehicles are held stationary. Their
+        poses are streamed to NRE every tick, so supported neural assets follow
+        CARLA's simulation instead of the recording. Combined with the regular
+        CARLA API this is the basis for authoring custom NuRec scenarios.
 
         Notes:
         - Only tracks the artifact marks controllable can diverge visually in
           the neural render (the server ignores pose updates for the rest).
-        - Walkers stay replay-driven; the Traffic Manager controls vehicles.
+        - Walkers stay replay-driven; no non-ego vehicle does.
 
         Args:
             include_future_actors: Also hand over vehicles that enter the
                 scene later (default: True).
+            collision_aware: Make Traffic Manager respect other vehicles and
+                keep a four-metre following distance. Use this when another
+                controller, such as Alpamayo, drives the ego.
 
         Returns:
             Number of actors handed over now.
         """
+        # Initialize TM outside the world-tick callback even when no traffic
+        # is active yet. Some NuRec takes introduce every non-ego actor later;
+        # lazily creating synchronous TM from that callback is re-entrant and
+        # CARLA rejects it with std::exception.
+        if include_future_actors:
+            self._enable_traffic_manager()
+
+        self.carla_controls_new_actors = include_future_actors
+        self.freeze_new_actors = False
+        self.carla_traffic_collision_aware = collision_aware
         handed_over = 0
         for track_id, actor in list(self.actor_mapping.items()):
             if track_id == EGO_TRACK_ID or not actor.alive or actor.physics:
                 continue
             if actor.track.label not in VEHICLE_LABELS:
                 continue
-            if not self._has_usable_tm_route(actor):
-                continue
             try:
-                self.set_follow_path(track_id)
+                self._handoff_background_vehicle(actor)
                 handed_over += 1
             except Exception as e:
                 logger.warning(
-                    f"Could not hand actor {track_id} to the traffic manager: {e}"
+                    f"Could not hand actor {track_id} to CARLA control: {e}"
                 )
-        self.carla_controls_new_actors = include_future_actors
-        logger.info(f"Handed {handed_over} actors to the CARLA traffic manager")
+        logger.info(f"Handed {handed_over} actors to CARLA physics control")
         return handed_over
 
     def _update_ego_trajectory_follower(self) -> None:
@@ -1612,8 +1893,12 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
 
     def _enable_traffic_manager(self) -> None:
         if self.traffic_manager is None:
-            logger.info("Enabling traffic manager")
-            self.traffic_manager = self.client.get_trafficmanager()
+            logger.info(
+                f"Enabling traffic manager on port {self.traffic_manager_port}"
+            )
+            self.traffic_manager = self.client.get_trafficmanager(
+                self.traffic_manager_port
+            )
             self.traffic_manager.set_synchronous_mode(True)
 
     def get_world(self) -> carla.World:

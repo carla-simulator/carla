@@ -54,7 +54,7 @@ from constants import (
     DYNAMIC_FLAG,
 )
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 

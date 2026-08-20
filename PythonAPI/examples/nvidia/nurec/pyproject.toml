@@ -11,6 +11,7 @@ dependencies = [
     "protobuf>=5.29,<7",
     "carla>=0.10.0",
     "pyyaml",
+    "pillow>=10",
 ]
 
 [project.optional-dependencies]
