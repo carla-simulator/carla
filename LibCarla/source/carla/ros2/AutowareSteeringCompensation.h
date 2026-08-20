@@ -31,40 +31,30 @@ constexpr std::tuple<float, float> MakeDataPoint(const float desired, const floa
 /**
  * @note Steering compensation lookup table.
  * Tuples of (desired_steering_angle, actual_steering_angle).
- * The values were obtained in experiments with no compensation mechanism in
- * place. The Lincoln MKZ vehicle was used in the experiments.
- * Desired steering angle is what was set as an input.
- * Actual steering angle is what was observed based on the input (average of
- * two steering wheels).
+ * Desired steering angle is the normalized steer input applied to the vehicle;
+ * actual steering angle is the steady-state tire angle in radians derived from
+ * the measured yaw rate via the bicycle model (delta = atan(L * w / v)).
+ * Measured on the UE5.8 Chaos Lincoln MKZ (2026-08-20 sweep at ~3 m/s); the
+ * response is near-linear, unlike the strongly degressive UE5.5 vehicle the
+ * original tier4 table was calibrated against.
  * Only positive values stored; absolute value used for lookup.
  */
 constexpr std::array DATA{
-  MakeDataPoint(0.01,  6.7395889065761E-05 ),
-  MakeDataPoint(0.025, 0.000423556502873984),
-  MakeDataPoint(0.05,  0.00169376349924416 ),
-  MakeDataPoint(0.1,   0.0067762146409292  ),
-  MakeDataPoint(0.15,  0.0152460793347012  ),
-  MakeDataPoint(0.2,   0.0271043087850024  ),
-  MakeDataPoint(0.25,  0.0423533289994932  ),
-  MakeDataPoint(0.3,   0.0609965171902762  ),
-  MakeDataPoint(0.35,  0.0830410990204546  ),
-  MakeDataPoint(0.4,   0.108495495703669   ),
-  MakeDataPoint(0.45,  0.137377527051583   ),
-  MakeDataPoint(0.5,   0.16971091208873    ),
-  MakeDataPoint(0.55,  0.205528463005049   ),
-  MakeDataPoint(0.6,   0.244878167628323   ),
-  MakeDataPoint(0.65,  0.287820327084208   ),
-  MakeDataPoint(0.7,   0.334437486719677   ),
-  MakeDataPoint(0.75,  0.384837333349578   ),
-  MakeDataPoint(0.8,   0.439157791618051   ),
-  MakeDataPoint(0.85,  0.497580960452602   ),
-  MakeDataPoint(0.9,   0.560342476755542   ),
-  MakeDataPoint(0.95,  0.627753061493605   ),
-  MakeDataPoint(1.0,   0.700223224833506   ),
-  MakeDataPoint(1.05,  0.778318235286733   ),
-  MakeDataPoint(1.1,   0.862832016950082   ),
-  MakeDataPoint(1.15,  0.954930519577053   ),
-  MakeDataPoint(1.2,   1.05646350419544    )
+  MakeDataPoint(0.025, 0.0246614),
+  MakeDataPoint(0.05,  0.0495395),
+  MakeDataPoint(0.1,   0.0949895),
+  MakeDataPoint(0.15,  0.142492 ),
+  MakeDataPoint(0.2,   0.188953 ),
+  MakeDataPoint(0.25,  0.239746 ),
+  MakeDataPoint(0.3,   0.287899 ),
+  MakeDataPoint(0.35,  0.333537 ),
+  MakeDataPoint(0.4,   0.381975 ),
+  MakeDataPoint(0.45,  0.416428 ),
+  MakeDataPoint(0.5,   0.466122 ),
+  MakeDataPoint(0.55,  0.516003 ),
+  MakeDataPoint(0.6,   0.559125 ),
+  MakeDataPoint(0.65,  0.592443 ),
+  MakeDataPoint(0.7,   0.628645 )
 };
 
 // Linear interpolation function
