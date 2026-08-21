@@ -153,14 +153,14 @@ die()  { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
 # Environment detection
 # ---------------------------------------------------------------------------
 detect_ubuntu() {
-    UBUNTU_VERSION=""
-    if [ -r /etc/os-release ]; then
+    # Query os-release in a subshell: sourcing it in this shell would clobber
+    # our VERSION variable (os-release defines its own VERSION field), which
+    # silently breaks the release-tag default and clones a nonsense tag.
+    UBUNTU_VERSION="$(
         # shellcheck disable=SC1091
-        . /etc/os-release
-        if [ "${ID:-}" = "ubuntu" ]; then
-            UBUNTU_VERSION="${VERSION_ID:-}"
-        fi
-    fi
+        [ -r /etc/os-release ] && . /etc/os-release && \
+            [ "${ID:-}" = "ubuntu" ] && printf '%s' "${VERSION_ID:-}"
+    )" || UBUNTU_VERSION=""
 }
 
 detect_ros_distro() {
