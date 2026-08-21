@@ -16,7 +16,7 @@ The example supports two sensor backends:
   physics and the simulation clock.
 
 The user-facing launchers are in
-[`PythonAPI/examples/av_stacks/alpamayo`](../PythonAPI/examples/av_stacks/alpamayo/):
+[`Examples/av_stacks/alpamayo`](../Examples/av_stacks/alpamayo/):
 
 | Command | Purpose |
 |---|---|
@@ -74,7 +74,7 @@ hf auth login
 After accepting the model license, run:
 
 ```sh
-cd ${CARLA_ROOT}/PythonAPI/examples/av_stacks/alpamayo
+cd ${CARLA_ROOT}/Examples/av_stacks/alpamayo
 ./install_alpamayo.sh
 ```
 
@@ -148,7 +148,7 @@ python3 ${CARLA_ROOT}/PythonAPI/util/config.py \
 Then launch Alpamayo:
 
 ```sh
-cd ${CARLA_ROOT}/PythonAPI/examples/av_stacks/alpamayo
+cd ${CARLA_ROOT}/Examples/av_stacks/alpamayo
 ./run_alpamayo.sh \
     --expected-map Town10HD_Opt \
     --ego-mode auto \
@@ -175,7 +175,7 @@ Loading the model for every client run is expensive. Start a persistent model
 service in one terminal:
 
 ```sh
-cd ${CARLA_ROOT}/PythonAPI/examples/av_stacks/alpamayo
+cd ${CARLA_ROOT}/Examples/av_stacks/alpamayo
 ALPAMAYO2_CUDA_DEVICES=1,2,3 ./run_alpamayo_model_server.sh
 ```
 
@@ -225,7 +225,7 @@ embedded in the selected `.usdz`. Do not load Town10 or start the standalone
 With CARLA and the optional persistent model server running:
 
 ```sh
-cd ${CARLA_ROOT}/PythonAPI/examples/av_stacks/alpamayo
+cd ${CARLA_ROOT}/Examples/av_stacks/alpamayo
 export NUREC_USDZ=/absolute/path/to/scene.usdz
 
 ./run_alpamayo_nurec.sh \

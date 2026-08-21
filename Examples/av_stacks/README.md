@@ -1,12 +1,13 @@
 # av_stacks — Reference AV-Stack Integrations for CARLA
 
 This directory hosts **reference integrations of complete autonomous-driving
-stacks against CARLA's native ROS2 interface**. Unlike the historical
-bridge-based setups, everything here talks to the simulator over DDS directly:
-the CARLA server itself publishes sensor data and vehicle status and subscribes
-to control commands — no Python or C++ bridge process sits in the hot path.
+stacks with CARLA**. ROS2-based stacks talk to the simulator over CARLA's
+native ROS2 interface — the CARLA server itself publishes sensor data and
+vehicle status and subscribes to control commands over DDS, with no Python or
+C++ bridge process in the hot path. Non-ROS stacks integrate through the
+Python API.
 
-Each subdirectory is one stack, packaged the same way:
+Each subdirectory is one stack. ROS2 stacks are packaged the same way:
 
 | Subdir | Contents |
 |---|---|
@@ -20,7 +21,14 @@ Each subdirectory is one stack, packaged the same way:
 - **[`autoware/`](autoware/README.md)** — [Autoware](https://autoware.org/)
   (Core/Universe), the first reference integration. Supports the classical
   full-stack pipeline (NDT localization, perception, planning, control) and an
-  end-to-end camera-only mode using the TensorRT VAD model.
+  end-to-end camera-only mode using the TensorRT VAD model. Native ROS2.
+- **[`alpamayo/`](alpamayo/README.md)** — NVIDIA
+  [Alpamayo 2 Super](https://github.com/NVlabs/alpamayo2), closed-loop
+  vision-language-action driving: seven-camera model input, predicted
+  trajectory + Chain-of-Causation display, and trajectory tracking through
+  CARLA vehicle controls. Python API based; composes with the NuRec neural
+  renderer (`PythonAPI/examples/nvidia/nurec/`). See the
+  [user guide](../../Docs/nvidia_alpamayo.md).
 
 ## Quickstart
 

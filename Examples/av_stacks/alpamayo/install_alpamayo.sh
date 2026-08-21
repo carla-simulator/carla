@@ -3,7 +3,7 @@
 set -euo pipefail
 
 ALPAMAYO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CARLA_ROOT="$(realpath "${ALPAMAYO_ROOT}/../../../..")"
+CARLA_ROOT="$(realpath "${ALPAMAYO_ROOT}/../../..")"
 SOURCE_DIR="${ALPAMAYO_ROOT}/.cache/src/alpamayo2"
 MODEL_ENV="${ALPAMAYO_ROOT}/.venv-model"
 UV_CACHE_DIR="${ALPAMAYO_ROOT}/.cache/uv"

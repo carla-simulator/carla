@@ -13,7 +13,7 @@ Before loading model weights, validate the CARLA connection, ego, cameras,
 synchronization, dashboard, and controller:
 
 ```sh
-cd ${CARLA_ROOT}/PythonAPI/examples/av_stacks/alpamayo
+cd ${CARLA_ROOT}/Examples/av_stacks/alpamayo
 ./run_alpamayo.sh --mock-model --max-cycles 2
 ```
 
@@ -39,7 +39,7 @@ Python API and rerun the installer:
 cd ${CARLA_ROOT}
 cmake --build Build --target carla-python-api-install
 
-cd PythonAPI/examples/av_stacks/alpamayo
+cd Examples/av_stacks/alpamayo
 ./install_alpamayo.sh
 ```
 
