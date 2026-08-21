@@ -24,8 +24,15 @@
 #     receive path has a known fragmented-receive bug (being fixed separately).
 #   - The AUTOWARE side runs CycloneDDS pinned to the docker bridge interface
 #     via a generated cyclonedds.xml (MaxAutoParticipantIndex=300, 65500B max
-#     message size, 1-4MB socket buffers -- the official docker image's own
-#     cyclonedds.xml demands 10MB buffers and pins 'lo'; it MUST be overridden).
+#     message size, 10-64MB socket buffers -- the official docker image's own
+#     cyclonedds.xml pins 'lo', which breaks discovery; it MUST be overridden).
+#   - The kernel MUST allow those buffers: net.core.rmem_max/wmem_max = 64MB,
+#     persisted (see /etc/sysctl.d note below). At the stock 4MB cap the lidar
+#     PointCloud2 stream over reliable writers overruns the sockets (hundreds
+#     of thousands of RcvbufErrors), reliable-writer retransmits stall every
+#     participant for seconds at a time, and the stack MRM-stops the vehicle.
+#     Buffer size is fixed at socket creation: after raising the sysctl, every
+#     DDS process (INCLUDING the simulator) must be restarted to benefit.
 #   - Mixed-RMW is fine: DDS vendors interoperate over UDPv4.
 #   - NEVER bind DDS to a WiFi/DHCP interface -- rotating IPs poison DDS
 #     locators. The docker bridge has a stable IP; both configs pin it.
@@ -71,7 +78,9 @@ DRY_RUN=false
 WITH_DISPLAY=false
 WITH_RVIZ=false
 NO_AUTO=false
+NO_GATES=false
 GOAL=""
+SPAWN_INDEX=""                # classical: autoware_demo.py --spawn_index passthrough
 LOG_DIR="$SCRIPT_DIR/logs"
 RPC_PORT=2000
 CARLA_HOST=127.0.0.1
@@ -115,8 +124,15 @@ Usage: $(basename "$0") --mode classical|e2e [options]
   --goal "X,Y,YAW"       classical: drive to this goal after startup. CARLA
                          coordinates (m, m, deg); converted to Autoware map frame
                          (x_map = x, y_map = -y, yaw_map = -yaw) automatically.
+  --spawn-index N        classical: spawn the ego at this spawn point index
+                         (passed to autoware_demo.py as --spawn_index; default:
+                         the demo's own default)
   --no-auto              classical: skip post-launch automation (localization
                          init / goal / engage) entirely
+  --no-gates             classical: skip the pre-engage safety gates (ground-truth
+                         localization check + distortion-corrector health). The
+                         gates exist because engaging on a diverged pose drives
+                         the car into things -- only skip them knowingly.
   --with-rviz            also start RViz (docker stack: separate container with
                          DISPLAY passthrough; source stack: local rviz2)
   --log-dir DIR          per-process logs + pidfile (default: <this dir>/logs)
@@ -144,7 +160,9 @@ while [[ $# -gt 0 ]]; do
         --bridge-if)    BRIDGE_IF="$2"; shift 2 ;;
         --docker-network) DOCKER_NETWORK="$2"; shift 2 ;;
         --goal)         GOAL="$2"; shift 2 ;;
+        --spawn-index)  SPAWN_INDEX="$2"; shift 2 ;;
         --no-auto)      NO_AUTO=true; shift ;;
+        --no-gates)     NO_GATES=true; shift ;;
         --with-rviz)    WITH_RVIZ=true; shift ;;
         --log-dir)      LOG_DIR="$2"; shift 2 ;;
         --with-display) WITH_DISPLAY=true; shift ;;
@@ -174,6 +192,8 @@ esac
     || { echo "ERROR: --domain-id must be a number (got: '$DOMAIN_ID')" >&2; exit 2; }
 [[ -z "$GOAL" || "$GOAL" =~ ^-?[0-9.]+,-?[0-9.]+,-?[0-9.]+$ ]] \
     || { echo "ERROR: --goal must be \"X,Y,YAW\" (CARLA meters,meters,degrees; got: '$GOAL')" >&2; exit 2; }
+[[ -z "$SPAWN_INDEX" || "$SPAWN_INDEX" =~ ^[0-9]+$ ]] \
+    || { echo "ERROR: --spawn-index must be a number (got: '$SPAWN_INDEX')" >&2; exit 2; }
 
 # Prebuilt autoware-contents maps are named Town01..Town10HD (no _Opt suffix).
 TOWN_BASE="${TOWN%_Opt}"
@@ -371,7 +391,7 @@ detect_docker_bridge() {
 generate_dds_configs() {
     if $DRY_RUN; then
         echo "[dry-run] generate $FASTDDS_PROFILE  (UDPv4 whitelist: $BRIDGE_IP, useBuiltinTransports=false)"
-        echo "[dry-run] generate $CYCLONE_XML  (NetworkInterface: $BRIDGE_IF, MaxAutoParticipantIndex=300, MaxMessageSize=65500B, rx buffers 1-4MB)"
+        echo "[dry-run] generate $CYCLONE_XML  (NetworkInterface: $BRIDGE_IF, MaxAutoParticipantIndex=300, MaxMessageSize=65500B, rx buffers 10-64MB)"
         return 0
     fi
     mkdir -p "$DDS_DIR"
@@ -402,9 +422,13 @@ generate_dds_configs() {
 </profiles>
 EOF
     # Autoware side (CycloneDDS): pinned to the bridge interface. Replaces the
-    # config shipped in the official docker image (which demands 10MB socket
-    # buffers -- hosts commonly cap rmem_max at 4MB -- and pins 'lo').
+    # config shipped in the official docker image (which pins 'lo' and breaks
+    # discovery with the simulator).
     # MaxAutoParticipantIndex must cover the full stack (63+ nodes).
+    # 10-64MB socket buffers are REQUIRED (validated 2026-08): at 4MB the
+    # 20Hz lidar PointCloud2 stream overruns the receive sockets and
+    # reliable-writer retransmit stalls freeze the whole stack. The kernel
+    # rmem_max/wmem_max must be raised to match (checked below).
     cat >"$CYCLONE_XML" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Generated by run_carla_autoware.sh (do not edit; regenerated each run). -->
@@ -421,7 +445,7 @@ EOF
             <MaxAutoParticipantIndex>300</MaxAutoParticipantIndex>
         </Discovery>
         <Internal>
-            <SocketReceiveBufferSize min="1MB" max="4MB"/>
+            <SocketReceiveBufferSize min="10MB" max="64MB"/>
             <Watermarks>
                 <WhcHigh>500kB</WhcHigh>
             </Watermarks>
@@ -433,7 +457,7 @@ EOF
 }
 
 # ------------------------------------- CARLA-specific Autoware overrides --
-# Two container/workspace config changes the validated Town10 run needed:
+# Container/workspace config changes the validated Town10 run needed:
 #   1. ndt_scan_matcher.param.yaml:
 #      converged_param_nearest_voxel_transformation_likelihood 2.3 -> 1.0
 #      (UE4-era prebuilt pcd maps score low against UE5.8 geometry; regenerating
@@ -441,11 +465,20 @@ EOF
 #   2. tier4_localization_launch pose_twist_estimator.launch.xml:
 #      stop_check_enabled -> false (the sim runs below real time; the
 #      stopped-vehicle check never passes and initialization hangs).
+#   3. diagnostics/autoware-carla.yaml: the /autoware/localization/state and
+#      /adapi/mrm_request/delegate diag units get timeout 30.0 (validated
+#      2026-08). These ADAPI topics publish at a low rate; at sub-realtime sim
+#      speed the stock 3.0 s staleness window flaps ERROR and the MRM pulses
+#      EMERGENCY_STOP, freezing the car mid-drive for no real reason.
+#   4. planning/preset/default_preset.yaml: launch_traffic_light_module ->
+#      false. The generated lanelet2 maps do not yet carry usable traffic
+#      light regulatory elements + camera ROI projection is unverified; with
+#      the module on, the car can wait forever at a light it cannot see.
 OVERRIDE_SCRIPT="$LOG_DIR/apply_carla_overrides.sh"
 
 write_override_script() {
     if $DRY_RUN; then
-        echo "[dry-run] write $OVERRIDE_SCRIPT (sed: NDT convergence likelihood -> 1.0; stop_check_enabled -> false; idempotent)"
+        echo "[dry-run] write $OVERRIDE_SCRIPT (NDT convergence likelihood -> 1.0; stop_check_enabled -> false; ADAPI diag timeouts -> 30.0; launch_traffic_light_module -> false; idempotent)"
         return 0
     fi
     # A generated file (fed to bash via stdin / docker exec -i) sidesteps the
@@ -469,6 +502,52 @@ if [ -n "$ptw" ]; then
     echo "patched: $ptw (stop_check_enabled -> false)"
 else
     echo "WARNING: pose_twist_estimator.launch.xml not found under $root" >&2
+fi
+# ADAPI diag units publish at a low rate; at sub-realtime sim speed the stock
+# 3.0 s staleness window flaps ERROR -> MRM EMERGENCY_STOP pulses. Bump ONLY
+# the two ADAPI units to 30.0 (the sensor-rate units keep their 3.0).
+diag="$(find -L "$root" -path '*autoware_launch*' -name autoware-carla.yaml 2>/dev/null | head -1)"
+if [ -n "$diag" ]; then
+    python3 - "$diag" <<'PYEOF'
+import re, sys
+path = sys.argv[1]
+lines = open(path).read().splitlines(keepends=True)
+targets = {"/autoware/localization/state", "/adapi/mrm_request/delegate"}
+current = None
+for i, ln in enumerate(lines):
+    m = re.match(r"\s*- path: (\S+)", ln)
+    if m:
+        current = m.group(1)
+    elif current in targets and re.match(r"\s*timeout:", ln):
+        lines[i] = re.sub(r"timeout:\s*[0-9.]+", "timeout: 30.0", ln)
+        current = None
+open(path, "w").write("".join(lines))
+print(f"patched: {path} (ADAPI diag timeouts -> 30.0)")
+PYEOF
+else
+    echo "WARNING: diagnostics/autoware-carla.yaml not found under $root (older autoware_launch? MRM may flap at sub-realtime speed)" >&2
+fi
+# Generated lanelet2 maps have no usable traffic-light regulatory elements yet
+# (and camera ROI projection is unverified) -- with the module on, the car can
+# wait forever at a light it cannot see.
+preset="$(find -L "$root" -path '*autoware_launch*' -name default_preset.yaml 2>/dev/null | head -1)"
+if [ -n "$preset" ]; then
+    python3 - "$preset" <<'PYEOF'
+import re, sys
+path = sys.argv[1]
+lines = open(path).read().splitlines(keepends=True)
+armed = False
+for i, ln in enumerate(lines):
+    if "launch_traffic_light_module" in ln:
+        armed = True
+    elif armed and re.match(r"\s*default:", ln):
+        lines[i] = re.sub(r'default:\s*"?\w+"?', 'default: "false"', ln)
+        break
+open(path, "w").write("".join(lines))
+print(f"patched: {path} (launch_traffic_light_module -> false)")
+PYEOF
+else
+    echo "WARNING: planning preset default_preset.yaml not found under $root" >&2
 fi
 EOF
 }
@@ -574,11 +653,18 @@ if [[ -f "$MAP_PATH/lanelet2_map.osm" ]] && ! grep -q "<MetaInfo" "$MAP_PATH/lan
     fi
 fi
 
-# CycloneDDS wants >=1MB socket receive buffers (we cap the request at 4MB on
-# purpose -- do NOT require the 10MB the stock container config asks for).
+# DDS socket buffers: the 20Hz lidar PointCloud2 stream over reliable writers
+# needs 10-64MB receive buffers (validated 2026-08). At the stock 4MB kernel
+# cap the sockets overrun (RcvbufErrors), reliable-writer retransmits stall
+# every DDS participant for seconds, and the stack MRM-stops the vehicle.
+# Buffer size is fixed at socket creation, so raise the sysctl BEFORE starting
+# anything, persist it, and restart every DDS process after changing it.
 RMEM_MAX="$(cat /proc/sys/net/core/rmem_max 2>/dev/null || echo 0)"
-if [[ "$RMEM_MAX" -lt 1048576 ]]; then
-    warn "net.core.rmem_max is $RMEM_MAX (<1MB); CycloneDDS may drop large samples. Raise it: sudo sysctl -w net.core.rmem_max=4194304"
+WMEM_MAX="$(cat /proc/sys/net/core/wmem_max 2>/dev/null || echo 0)"
+if [[ "$RMEM_MAX" -lt 67108864 || "$WMEM_MAX" -lt 67108864 ]]; then
+    warn "net.core.rmem_max/wmem_max are $RMEM_MAX/$WMEM_MAX (<64MB): DDS sockets will overrun under lidar load and the stack will stall/MRM-stop."
+    warn "Fix (and persist across reboots), then rerun:"
+    warn "  sudo sh -c 'sysctl -w net.core.rmem_max=67108864 net.core.wmem_max=67108864 && printf \"net.core.rmem_max=67108864\\nnet.core.wmem_max=67108864\\n\" > /etc/sysctl.d/99-carla-dds.conf'"
 fi
 
 # CARLA server binary: packaged CarlaUnreal.sh preferred, editor -game fallback.
@@ -695,7 +781,9 @@ else:
 # ------------------------------------- 3. autoware_demo.py (ticking client) --
 # Spawns ego + native Autoware sensors (lidar XYZIRCAEDT, IMU, GNSS, TL camera)
 # and ticks. It must remain the ONLY ticking client (sync mode).
-start_proc autoware_demo "exec python3 '$AUTOWARE_DEMO' --host $CARLA_HOST --port $RPC_PORT"
+# --hz_rate 20 --resync is the validated configuration (20 Hz fixed step,
+# sim clock resynced on startup).
+start_proc autoware_demo "exec python3 '$AUTOWARE_DEMO' --host $CARLA_HOST --port $RPC_PORT --hz_rate 20 --resync${SPAWN_INDEX:+ --spawn_index $SPAWN_INDEX}"
 pause 5 "let autoware_demo.py spawn the ego before attaching more sensors"
 
 # ------------------------------------------------- 4+5. e2e-only glue procs --
@@ -712,7 +800,14 @@ if [[ "$MODE" == "e2e" ]]; then
 fi
 
 # ------------------------------------------------------- 6. Autoware launch --
-LAUNCH_ARGS="vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit perception_mode:=lidar rviz:=false"
+# simulator_type:=carla is REQUIRED (validated 2026-08): it selects the
+# autoware-carla.yaml diagnostic profile, which drops the routing/state
+# staleness check. The default awsim profile flaps ERROR on low-rate ADAPI
+# topics whenever the sim runs below real time, and the MRM then pulses
+# EMERGENCY_STOP -- the car freezes mid-drive with nothing actually wrong.
+# launch_simulator_interface:=false because this branch's simulator publishes
+# the vehicle/sensor topics natively (no external interface node needed).
+LAUNCH_ARGS="vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit perception_mode:=lidar rviz:=false simulator_type:=carla launch_simulator_interface:=false"
 CLASSICAL_SRC_CMD="${STACK_PRELUDE}exec ros2 launch autoware_launch e2e_simulator.launch.xml $LAUNCH_ARGS map_path:='$MAP_PATH'"
 E2E_PR_CMD="${STACK_PRELUDE}exec ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit map_path:='$MAP_PATH' use_e2e_planning:=true e2e_planning_type:=vad"
 E2E_FALLBACK_CMD="${STACK_PRELUDE}exec ros2 launch autoware_tensorrt_vad vad_carla_tiny.launch.xml sensing:=false localization:=false perception:=false"
@@ -736,8 +831,19 @@ if [[ "$MODE" == "classical" ]]; then
         apply_carla_overrides docker /opt/autoware
         start_proc autoware "exec docker exec '$CONTAINER_NAME' bash -c '$AW_SETUP_SNIPPET; exec ros2 launch autoware_launch e2e_simulator.launch.xml $LAUNCH_ARGS map_path:=/maps/$TOWN_BASE'"
         if $WITH_RVIZ; then
+            # rviz MUST render on the GPU. On llvmpipe (software GL) it burns
+            # 4+ cores rendering the pointcloud, starves the sim and DDS, and
+            # the whole stack destabilizes (validated failure mode 2026-08).
+            RVIZ_GPU_ENV=()
+            have nvidia-smi && RVIZ_GPU_ENV=(-e __GLX_VENDOR_LIBRARY_NAME=nvidia -e __NV_PRIME_RENDER_OFFLOAD=1)
+            # X auth: a fresh X session (e.g. after a reboot) does not authorize
+            # container clients -- rviz then dies with "could not connect to
+            # display". Harmless no-op if already authorized.
+            if have xhost && [[ -n "${DISPLAY:-}" ]] && ! $DRY_RUN; then
+                xhost +local: >/dev/null 2>&1 || warn "xhost +local: failed -- rviz may not reach the X display"
+            fi
             start_container "$CONTAINER_NAME-rviz" \
-                --network host "${GPU_ARGS[@]}" \
+                --network host "${GPU_ARGS[@]}" "${RVIZ_GPU_ENV[@]}" \
                 -e RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
                 -e CYCLONEDDS_URI=file:///dds/cyclonedds.xml \
                 -e ROS_DOMAIN_ID="$DOMAIN_ID" \
@@ -746,13 +852,23 @@ if [[ "$MODE" == "classical" ]]; then
                 -v "$DDS_DIR":/dds:ro \
                 --entrypoint bash "$IMAGE" \
                 -c "$AW_SETUP_SNIPPET; exec rviz2 -d /opt/autoware/autoware_launch/share/autoware_launch/rviz/autoware.rviz"
-            log "rviz container started (if the window does not appear, run: xhost +local:docker)"
+            log "rviz container started (if the window does not appear, run: xhost +local:)"
+            if ! $DRY_RUN; then
+                ( sleep 20
+                  if docker logs "$CONTAINER_NAME-rviz" 2>&1 | grep -qi llvmpipe; then
+                      warn "rviz is SOFTWARE-RENDERING (llvmpipe): it will starve the machine and destabilize the stack. Fix NVIDIA GL in containers (nvidia-container-toolkit) before relying on this session."
+                  fi ) &
+            fi
         fi
     else
         apply_carla_overrides source "$AUTOWARE_WS/install"
         start_proc autoware "$CLASSICAL_SRC_CMD"
         if $WITH_RVIZ; then
-            start_proc rviz "${STACK_PRELUDE}RVIZ_CFG=\$(find '$AUTOWARE_WS/install' -path '*autoware_launch*' -name autoware.rviz 2>/dev/null | head -1); exec rviz2 \${RVIZ_CFG:+-d \"\$RVIZ_CFG\"}"
+            # PRIME render offload: on hybrid-GPU hosts rviz otherwise lands on
+            # llvmpipe/iGPU and starves the machine (see the docker path above).
+            RVIZ_ENV=""
+            have nvidia-smi && RVIZ_ENV="__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia "
+            start_proc rviz "${STACK_PRELUDE}RVIZ_CFG=\$(find '$AUTOWARE_WS/install' -path '*autoware_launch*' -name autoware.rviz 2>/dev/null | head -1); exec env ${RVIZ_ENV}rviz2 \${RVIZ_CFG:+-d \"\$RVIZ_CFG\"}"
         fi
     fi
 else
@@ -808,11 +924,179 @@ auto_step() {   # run one automation ros2 command on the stack side
     aw_ros2 "$cmd" 2>&1 | tee -a "$LOG_DIR/automation.log"
 }
 
+# ----------------------------------------------------- pre-engage gates --
+# Validated 2026-08: NEVER engage on a diverged pose. NDT can report converged
+# while the believed pose sits meters from the vehicle (the car then drives
+# into whatever the divergence points it at). Gate 1 compares Autoware's
+# /localization/kinematic_state against CARLA ground truth (base_link is the
+# REAR AXLE: CARLA's center transform is shifted back half the sample_vehicle
+# wheelbase, 1.425 m). Gate 2 listens to /diagnostics for distortion-corrector
+# errors (a mismatched per-point time_stamp silently disables the corrector
+# and NDT then degrades at speed).
+GATE1_PY="$LOG_DIR/engage_gate1.py"
+GATE2_PY="$LOG_DIR/engage_gate2.py"
+
+write_gate_scripts() {
+    cat >"$GATE1_PY" <<'EOF'
+#!/usr/bin/env python3
+# Generated by run_carla_autoware.sh -- engage gate 1: localization truth check.
+# argv: <carla-host> <carla-rpc-port>; stdin: one `ros2 topic echo --once
+# /localization/kinematic_state` dump. Exit 0 pass, 1 diverged, 2 no data yet.
+import math
+import sys
+
+import carla
+
+HALF_WHEELBASE = 1.425  # sample_vehicle: Autoware base_link is the REAR AXLE
+
+client = carla.Client(sys.argv[1], int(sys.argv[2]))
+client.set_timeout(20.0)
+world = client.get_world()
+# A fresh client's actor registry stays empty in sync mode until it has seen
+# a tick (fork issue); one wait_for_tick populates it deterministically.
+try:
+    world.wait_for_tick(10.0)
+except RuntimeError:
+    pass
+vehicles = [a for a in world.get_actors() if a.type_id.startswith("vehicle.")]
+if not vehicles:
+    print("GATE1: no vehicle in the actor registry (yet)")
+    sys.exit(2)
+tf = vehicles[0].get_transform()
+gt_x, gt_y, gt_yaw = tf.location.x, -tf.location.y, -math.radians(tf.rotation.yaw)
+gt_x -= HALF_WHEELBASE * math.cos(gt_yaw)
+gt_y -= HALF_WHEELBASE * math.sin(gt_yaw)
+
+vals, section = {}, None
+for line in sys.stdin.read().splitlines():
+    s = line.strip()
+    if s.startswith("position:"):
+        section = "p"
+    elif s.startswith("orientation:"):
+        section = "o"
+    elif section and ":" in s:
+        k, _, v = s.partition(":")
+        if k in ("x", "y", "z", "w"):
+            try:
+                vals[section + k] = float(v)
+            except ValueError:
+                pass
+            if section == "o" and k == "w":
+                section = None
+if "px" not in vals or "ow" not in vals:
+    print("GATE1: no kinematic_state sample")
+    sys.exit(2)
+aw_x, aw_y = vals["px"], vals["py"]
+aw_yaw = math.atan2(2 * vals["ow"] * vals["oz"], 1 - 2 * vals["oz"] ** 2)
+dp = math.hypot(aw_x - gt_x, aw_y - gt_y)
+dyaw = abs((aw_yaw - gt_yaw + math.pi) % (2 * math.pi) - math.pi)
+print(f"GATE1: truth ({gt_x:.2f}, {gt_y:.2f}) yaw {math.degrees(gt_yaw):.1f} deg"
+      f" | belief ({aw_x:.2f}, {aw_y:.2f}) yaw {math.degrees(aw_yaw):.1f} deg"
+      f" | delta {dp:.2f} m, {math.degrees(dyaw):.1f} deg")
+sys.exit(0 if dp <= 0.5 and dyaw <= math.radians(5) else 1)
+EOF
+    cat >"$GATE2_PY" <<'EOF'
+#!/usr/bin/env python3
+# Generated by run_carla_autoware.sh -- engage gate 2: distortion corrector
+# health. Listens to /diagnostics for 12 s; any ERROR-level status mentioning
+# "distortion" fails the gate. Exit 0 clean, 1 errors seen.
+import time
+
+import rclpy
+from diagnostic_msgs.msg import DiagnosticArray
+from rclpy.node import Node
+
+rclpy.init()
+node = Node("carla_engage_gate2")
+hits = []
+
+def cb(msg):
+    for status in msg.status:
+        level = status.level if isinstance(status.level, int) else ord(status.level)
+        if level >= 2 and "distortion" in status.name:
+            hits.append(f"{status.name}: {status.message}")
+
+node.create_subscription(DiagnosticArray, "/diagnostics", cb, 10)
+deadline = time.time() + 12.0
+while time.time() < deadline:
+    rclpy.spin_once(node, timeout_sec=0.5)
+if hits:
+    print("GATE2: distortion corrector reporting errors: " + hits[0][:120])
+    raise SystemExit(1)
+print("GATE2: distortion corrector clean")
+EOF
+}
+
+run_stack_py() {   # feed a python script (stdin) to an interpreter in the stack's env
+    local file="$1"
+    if [[ "$STACK" == "docker" && "$MODE" == "classical" ]]; then
+        docker exec -i "$CONTAINER_NAME" bash -c "$AW_SETUP_SNIPPET; exec timeout 40 python3 -" <"$file"
+    else
+        bash -c "${STACK_PRELUDE}exec timeout 40 python3 -" <"$file"
+    fi
+}
+
+run_engage_gates() {
+    if $DRY_RUN; then
+        echo "[dry-run] engage gates: compare /localization/kinematic_state vs CARLA ground truth (<=0.5 m, <=5 deg, rear-axle offset), then 12 s /diagnostics watch for distortion-corrector errors"
+        return 0
+    fi
+    write_gate_scripts
+    local attempt belief rc gate1_ok=false
+    for attempt in $(seq 1 6); do
+        belief="$(aw_ros2 "timeout 15 ros2 topic echo --once /localization/kinematic_state 2>/dev/null" || true)"
+        rc=0
+        printf '%s\n' "$belief" | python3 "$GATE1_PY" "$CARLA_HOST" "$RPC_PORT" | tee -a "$LOG_DIR/automation.log" || rc=$?
+        if [[ $rc -eq 0 ]]; then
+            gate1_ok=true
+            break
+        fi
+        log "gate 1 not passing yet (attempt $attempt/6), retrying in 8 s ..."
+        sleep 8
+    done
+    if ! $gate1_ok; then
+        warn "GATE 1 FAILED: Autoware's believed pose does not match CARLA ground truth. Engaging now would drive the car into things."
+        return 1
+    fi
+    local g2rc=0
+    run_stack_py "$GATE2_PY" | tee -a "$LOG_DIR/automation.log" || g2rc=$?
+    if [[ $g2rc -ne 0 ]]; then
+        warn "GATE 2 FAILED: pointcloud distortion corrector is reporting errors -- NDT will degrade once the car moves."
+        return 1
+    fi
+    log "engage gates PASSED"
+    return 0
+}
+
 if [[ "$MODE" == "classical" ]] && ! $NO_AUTO; then
     if wait_for_autoware_api; then
-        auto_step "initializing localization (empty request = auto-init from GNSS)" \
-            "ros2 service call /api/localization/initialize autoware_adapi_v1_msgs/srv/InitializeLocalization {}"
-        if [[ -n "$GOAL" ]]; then
+        # GNSS pose race: right after startup the initializer may not have a
+        # GNSS fix yet and returns success=False -- retry, don't give up.
+        if $DRY_RUN; then
+            auto_step "initializing localization (empty request = auto-init from GNSS; retried up to 6x every 8 s until success=True)" \
+                "ros2 service call /api/localization/initialize autoware_adapi_v1_msgs/srv/InitializeLocalization {}"
+        else
+            INIT_OK=false
+            for _ in $(seq 1 6); do
+                if aw_ros2 "ros2 service call /api/localization/initialize autoware_adapi_v1_msgs/srv/InitializeLocalization {}" 2>&1 \
+                        | tee -a "$LOG_DIR/automation.log" | grep -q "success=True"; then
+                    INIT_OK=true
+                    log "localization initialized"
+                    break
+                fi
+                log "localization initialize not accepted yet (GNSS pose race?), retrying in 8 s ..."
+                sleep 8
+            done
+            $INIT_OK || warn "localization initialize never returned success=True -- continuing, but the engage gates will likely fail"
+        fi
+        pause 20 "let NDT localization converge"
+        GATES_OK=true
+        if ! $NO_GATES; then
+            run_engage_gates || GATES_OK=false
+        fi
+        if ! $GATES_OK; then
+            warn "pre-engage gates failed -- NOT sending goal / engaging. Inspect $LOG_DIR/automation.log and $LOG_DIR/autoware.log, then drive manually or re-run (--no-gates overrides, at your own risk)."
+        elif [[ -n "$GOAL" ]]; then
             # CARLA -> Autoware map frame: x_map = x, y_map = -y, yaw_map = -yaw.
             read -r GX GY GQZ GQW <<<"$(python3 -c "
 import math
@@ -820,7 +1104,6 @@ x, y, yaw = (float(v) for v in '$GOAL'.split(','))
 r = math.radians(-yaw)
 print(f'{x:.3f} {-y:.3f} {math.sin(r / 2.0):.6f} {math.cos(r / 2.0):.6f}')
 ")"
-            pause 20 "let NDT localization converge before sending the goal"
             # NB: double quotes around the YAML -- the docker path of aw_ros2
             # wraps the command in single quotes.
             auto_step "publishing goal (CARLA '$GOAL' -> map x=$GX y=$GY qz=$GQZ qw=$GQW)" \

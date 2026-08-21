@@ -63,6 +63,26 @@ if a robot were publishing them.
   in `install/` or `map_tools/` depends on it, so you can prepare Autoware and
   maps ahead of time.
 
+**Kernel UDP buffers (required — the stack is unusable without this)**
+
+- Raise the socket-buffer limits to 64 MB **and persist them** before starting
+  anything:
+
+  ```bash
+  sudo sh -c 'sysctl -w net.core.rmem_max=67108864 net.core.wmem_max=67108864 \
+    && printf "net.core.rmem_max=67108864\nnet.core.wmem_max=67108864\n" \
+       > /etc/sysctl.d/99-carla-dds.conf'
+  ```
+
+  At the stock 4 MB cap, the 20 Hz lidar `PointCloud2` stream over reliable
+  DDS writers overruns the receive sockets (`netstat -su` shows
+  `RcvbufErrors` climbing by the hundreds of thousands), reliable-writer
+  retransmits stall every DDS participant for seconds at a time, and Autoware
+  MRM-stops the vehicle. Buffer size is fixed at socket creation, so if you
+  change the sysctl you must **restart every DDS process — including the
+  simulator** — for it to take effect. The run script checks this and prints
+  the fix if the limits are too low.
+
 **ROS2 middleware (RMW)**
 
 - Nothing to configure by hand: the run script generates the DDS configs and
@@ -176,8 +196,10 @@ Classical mode runs Autoware either from your **source workspace**
 (`--stack source`) or from the **official docker image** (`--stack docker`,
 the validated path); the default `--stack auto` picks whichever is installed.
 Useful common options: `--goal "x,y,yaw"` (drive there automatically; CARLA
-coordinates, converted for you), `--no-auto` (skip all post-launch
-automation), `--with-rviz` (RViz in a sibling container / local `rviz2`),
+coordinates, converted for you), `--spawn-index N` (which spawn point the ego
+starts at), `--no-auto` (skip all post-launch automation), `--no-gates` (skip
+the pre-engage safety gates — see below), `--with-rviz` (RViz in a sibling
+container / local `rviz2`),
 `--rmw fastdds|cyclonedds|zenoh` (simulator side; default **fastdds** — see
 the matrix below), `--domain-id N` (default **42**; alias `--ros-domain-id`),
 `--carla-rpc-port N`, `--map-path <dir>`, `--bridge-if <name>` /
@@ -218,16 +240,60 @@ Under the hood the script sequences, in order:
    - `tier4_localization_launch` `pose_twist_estimator.launch.xml`:
      `stop_check_enabled → false`. The sim runs below real time, so the
      stopped-vehicle check never passes and initialization hangs.
+   - `diagnostics/autoware-carla.yaml`: the `/autoware/localization/state`
+     and `/adapi/mrm_request/delegate` diag units get `timeout: 30.0`. These
+     ADAPI topics publish at a low rate; at sub-realtime sim speed the stock
+     3 s staleness window flaps ERROR and the MRM pulses EMERGENCY_STOP —
+     the car freezes mid-drive with nothing actually wrong.
+   - `planning/preset/default_preset.yaml`:
+     `launch_traffic_light_module → false`. The generated lanelet2 maps do
+     not yet carry usable traffic-light regulatory elements; with the module
+     on, the car can wait forever at a light it cannot see.
 7. **Autoware**, per mode (below).
 8. *(classical, unless `--no-auto`)* **post-launch automation**: wait for the
-   ADAPI, `ros2 service call /api/localization/initialize` (an empty request
-   auto-initializes from GNSS), and — with `--goal` — publish the goal pose on
+   ADAPI, then `ros2 service call /api/localization/initialize` (an empty
+   request auto-initializes from GNSS; retried — right after startup the
+   initializer may not have a GNSS fix yet). Then, unless `--no-gates`, the
+   **pre-engage safety gates** run:
+   - **Gate 1 (localization truth)**: compares
+     `/localization/kinematic_state` against CARLA ground truth (accounting
+     for `base_link` being the **rear axle**, half a wheelbase behind CARLA's
+     center transform). Must agree within 0.5 m / 5°. NDT can report
+     convergence with the believed pose meters from the vehicle; engaging on
+     a diverged pose drives the car into things — the gate refuses.
+   - **Gate 2 (distortion corrector health)**: watches `/diagnostics` for
+     12 s; any ERROR from the pointcloud distortion corrector fails the gate
+     (a broken corrector silently degrades NDT once the car is moving).
+   If the gates pass and `--goal` was given: publish the goal pose on
    `/planning/mission_planning/goal` and call
    `/api/operation_mode/change_to_autonomous` (retried until planning accepts
    it). Goal conversion CARLA → map frame: `x_map = x`, `y_map = -y`,
    `yaw_map = -yaw` (the quaternion is computed for you). The executed
    trajectory appears on **`/planning/trajectory`** (current Autoware moved it
    from the old `/planning/scenario_planning/trajectory`).
+
+### Driving from RViz
+
+With `--with-rviz` (and no `--goal`), drive interactively: **2D Goal Pose**,
+then click on a lane and **drag along the driving direction** before
+releasing — the arrow's heading matters. Mission planner accepts a goal only
+if it lands inside a lanelet **and** points within ~45° of that lane's travel
+direction; a click against traffic, in a junction interior, or on the
+curb/median is rejected with `Goal is not valid! Please check position and
+angle of goal_pose` in the Autoware log. A click that produces *no* log line
+at all never reached mission planner (DDS hiccup) — just click again. Engage
+via the OperationMode panel or:
+
+```bash
+ros2 service call /api/operation_mode/change_to_autonomous \
+  autoware_adapi_v1_msgs/srv/ChangeOperationMode {}
+```
+
+RViz **must** render on the GPU: on llvmpipe (software GL) it burns 4+ cores
+rendering the lidar cloud and destabilizes the whole pipeline. The script
+passes the NVIDIA offload environment and runs `xhost +local:` for you, and
+warns if it detects llvmpipe in the rviz log; if you see that warning, fix
+`nvidia-container-toolkit` before trusting the session.
 
 ### What each mode runs
 
@@ -238,8 +304,19 @@ source workspace):
 ros2 launch autoware_launch e2e_simulator.launch.xml \
   vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit \
   perception_mode:=lidar rviz:=false \
+  simulator_type:=carla launch_simulator_interface:=false \
   map_path:=/maps/Town10HD        # docker; source ws uses the host map dir
 ```
+
+`simulator_type:=carla` is **required**: it selects the CARLA diagnostic
+profile (`autoware-carla.yaml`), which drops the `routing/state` staleness
+check that the default awsim profile flaps on whenever the sim runs below
+real time (each flap pulses an MRM `EMERGENCY_STOP`).
+`launch_simulator_interface:=false` because this branch's simulator publishes
+the vehicle and sensor topics natively — there is no external bridge node.
+(Both arguments need a current `autoware_launch`; an older workspace that
+predates `simulator_type` should drop them and expect MRM flapping below
+real time.)
 
 RViz deliberately runs **outside** the stack launch (`rviz:=false`): with
 `--with-rviz` the script starts it as a separate container (same DDS env,
@@ -295,7 +372,10 @@ deliberately **mixed-RMW** — DDS vendors interoperate over UDPv4:
   `cyclonedds.xml` **pinned to the docker bridge interface**
   (`NetworkInterface name="br-…"`), `MaxAutoParticipantIndex=300` (the stack
   is 63+ nodes; the CycloneDDS default index range is far too small),
-  `MaxMessageSize=65500B`, and socket receive buffers of 1–4 MB.
+  `MaxMessageSize=65500B`, and socket receive buffers of **10–64 MB** (the
+  kernel `rmem_max`/`wmem_max` must be raised to 64 MB to allow this — see
+  Prerequisites; at 4 MB the lidar stream overruns the sockets and
+  reliable-writer retransmit stalls freeze the whole stack).
 
 Why the bridge: DDS locators embed concrete IPs. A WiFi/DHCP interface whose
 IP rotates **poisons the locators mid-session** — never bind DDS to one. The
@@ -307,10 +387,10 @@ generates both XML files into `<log-dir>/dds/` each run; override with
 Two hard-won warnings:
 
 - The **official Autoware docker image ships its own `cyclonedds.xml`** that
-  demands 10 MB socket buffers (hosts commonly cap `net.core.rmem_max` at
-  4 MB — do not raise requirements to 10 MB) and pins the `lo` interface,
-  which breaks discovery with the simulator. It **must** be overridden via
-  `CYCLONEDDS_URI`; the run script does this.
+  pins the `lo` interface, which breaks discovery with the simulator. It
+  **must** be overridden via `CYCLONEDDS_URI`; the run script does this. (Its
+  10 MB buffer demand, on the other hand, was right all along — see the kernel
+  UDP buffer prerequisite.)
 - **Do not run the simulator with `-rmw=cyclonedds` for now**: the CARLA
   CycloneDDS receive path has a known fragmented-receive bug (large samples
   can be dropped; a fix is in progress separately). The script defaults to
