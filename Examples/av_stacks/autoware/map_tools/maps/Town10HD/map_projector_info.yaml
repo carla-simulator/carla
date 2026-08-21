@@ -1,0 +1,2 @@
+# Autoware map projector definition (consumed by map_projection_loader).
+projector_type: Local
