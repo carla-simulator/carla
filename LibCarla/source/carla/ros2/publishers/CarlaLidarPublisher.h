@@ -61,7 +61,6 @@ private:
   bool _extended = false;
   std::vector<std::uint32_t> _channel_point_counts;
   std::vector<float> _vertical_angles;
-  std::uint32_t _packet_stamp = 0u;
 };
 
 }  // namespace ros2

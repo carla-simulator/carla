@@ -80,12 +80,6 @@ bool CarlaLidarPublisher::WriteExtendedPointCloud(
   _channel_point_counts.assign(
       channel_point_counts, channel_point_counts + channel_count);
   _vertical_angles = vertical_angles;
-  // tier4 stamps every point with seconds * 1e9 + nanoseconds squeezed into
-  // a uint32 (it wraps; Autoware only consumes it as a relative per-scan
-  // value). Replicated as-is for wire parity.
-  _packet_stamp =
-      static_cast<std::uint32_t>(seconds) * static_cast<std::uint32_t>(1e+9) +
-      nanoseconds;
   return CarlaPointCloudPublisher::WritePointCloud(
       seconds, nanoseconds, height, width, data);
 }
@@ -132,7 +126,10 @@ std::vector<std::uint8_t> CarlaLidarPublisher::ComputePointCloud(
     // coordinates, matching tier4's post-conversion computation.
     point.distance = std::hypot(point.x, point.y, point.z);
     point.azimuth = std::atan2(point.y, point.x);
-    point.time_stamp = _packet_stamp;
+    // Autoware's distortion corrector reads time_stamp as a nanosecond offset
+    // from header.stamp. CARLA casts every ray of a scan at the same sim
+    // instant, so the offset is zero for all points.
+    point.time_stamp = 0u;
   }
 
   // Channel index and per-channel elevation from the LidarData header's
