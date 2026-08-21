@@ -126,6 +126,12 @@ perception dies at startup.
 
 ### 2. Get map artifacts
 
+> **Town10HD ships in-tree — skip this step for the default town.** The
+> repository already commits the complete, validated artifact set in
+> `map_tools/maps/Town10HD/` (UE5.8-regenerated point cloud, pruned lanelet2
+> map, projector info); `run_carla_autoware.sh` finds it there by default.
+> You only need this step for other towns or to regenerate.
+
 Autoware needs, per town, a directory containing:
 
 ```
@@ -171,7 +177,11 @@ python3 ./map_tools/generate_map_artifacts.py \
 Connects to a running CARLA server (it never launches one), exports the road
 network from OpenDRIVE, builds the lanelet2 map and point-cloud map, and
 injects traffic-light regulatory elements from the simulator's actual
-traffic-light actors — fixing the main gap in the prebuilt maps. `--tick`
+traffic-light actors. Caveat: the injected elements are not yet consumable by
+Autoware's traffic-light pipeline (stop-line anchoring and camera ROI
+projection are unverified), which is why the run script disables the
+traffic-light module by default — treat generated maps as
+traffic-light-free for now. `--tick`
 makes the tool the **single** ticking client of a synchronous world; omit it
 only if another client is already ticking. The lanelet2 converter needs the
 pinned deps from `map_tools/requirements.txt` in a venv — see

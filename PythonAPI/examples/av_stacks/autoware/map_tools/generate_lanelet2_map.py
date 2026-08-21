@@ -44,7 +44,7 @@ CONVERTER_HELP = (
     "ERROR: commonroad-scenario-designer is not importable.\n"
     "Install the pinned tooling deps into a virtualenv, e.g.:\n"
     "  python3 -m venv ~/.venvs/carla-map-tools\n"
-    "  ~/.venvs/carla-map-tools/bin/pip install -r Examples/av_stacks/autoware/map_tools/requirements.txt\n"
+    "  ~/.venvs/carla-map-tools/bin/pip install -r PythonAPI/examples/av_stacks/autoware/map_tools/requirements.txt\n"
     "and run this script with that interpreter.\n"
 )
 

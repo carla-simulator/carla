@@ -12,9 +12,9 @@ traffic before the demo starts. The optional NuRec backend is the exception:
 it deliberately loads the OpenDRIVE world embedded in a recording artifact.
 
 Published CARLA documentation is available in the
-[Alpamayo user guide](../../../Docs/nvidia_alpamayo.md),
-[architecture and control reference](../../../Docs/nvidia_alpamayo_architecture.md),
-and [troubleshooting guide](../../../Docs/nvidia_alpamayo_troubleshooting.md).
+[Alpamayo user guide](../../../../Docs/nvidia_alpamayo.md),
+[architecture and control reference](../../../../Docs/nvidia_alpamayo_architecture.md),
+and [troubleshooting guide](../../../../Docs/nvidia_alpamayo_troubleshooting.md).
 
 ## Requirements
 
@@ -242,7 +242,7 @@ history from NVIDIA NRE instead of CARLA camera actors. Install the NuRec
 example first:
 
 ```sh
-cd ../../../PythonAPI/examples/nvidia/nurec
+cd ../../nvidia/nurec
 ./install_nurec.sh
 ```
 

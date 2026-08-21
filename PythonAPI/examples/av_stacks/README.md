@@ -28,7 +28,7 @@ Each subdirectory is one stack. ROS2 stacks are packaged the same way:
   trajectory + Chain-of-Causation display, and trajectory tracking through
   CARLA vehicle controls. Python API based; composes with the NuRec neural
   renderer (`PythonAPI/examples/nvidia/nurec/`). See the
-  [user guide](../../Docs/nvidia_alpamayo.md).
+  [user guide](../../../Docs/nvidia_alpamayo.md).
 
 ## Quickstart
 

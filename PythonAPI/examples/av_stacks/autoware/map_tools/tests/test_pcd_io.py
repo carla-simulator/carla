@@ -2,7 +2,7 @@
 """Unit tests for pcd_io: write a binary PCD, read it back with the tiny
 parser, and check voxel downsampling. Runs with plain python (numpy only):
 
-    python3 Examples/av_stacks/autoware/map_tools/tests/test_pcd_io.py
+    python3 PythonAPI/examples/av_stacks/autoware/map_tools/tests/test_pcd_io.py
 """
 
 import os

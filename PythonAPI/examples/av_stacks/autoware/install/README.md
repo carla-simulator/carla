@@ -94,7 +94,7 @@ file (relative so they survive the bind mount into the container at
 
 VAD also needs `/localization/kinematic_state` + `/localization/acceleration`
 from ground truth (three plain ROS nodes from `autoware_carla_interface`) and
-the six-camera CARLA rig — see the sibling `Examples/av_stacks/autoware`
+the six-camera CARLA rig — see the sibling `PythonAPI/examples/av_stacks/autoware`
 runtime tooling for that side.
 
 ## Maps

@@ -62,7 +62,7 @@ before adoption.
 
 Do not run this standalone runner beside Alpamayo's NuRec backend. Both would
 own synchronous ticks. Use
-`../../../../Examples/av_stacks/alpamayo/run_alpamayo_nurec.sh`, which composes the scenario
+`../../av_stacks/alpamayo/run_alpamayo_nurec.sh`, which composes the scenario
 and policy under one tick owner.
 
 ## API highlights (`nurec_integration.py`)
