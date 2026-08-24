@@ -64,6 +64,17 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../../../../.." && pwd)"
 
+# Hostile-environment scrub: an activated conda/virtualenv breaks the stack in
+# two ways -- '#!/usr/bin/env python3' nodes resolve to the env's python (wrong
+# minor version for rclpy's C extension: "No module named rclpy._rclpy_pybind11"),
+# and CMake/colcon prefer the env python outright. Strip the env markers and
+# any conda dirs from PATH so every child starts clean.
+unset CONDA_PREFIX CONDA_DEFAULT_ENV CONDA_EXE CONDA_PYTHON_EXE CONDA_SHLVL \
+      VIRTUAL_ENV PYTHONPATH PYTHONHOME 2>/dev/null || true
+ORIG_PATH="$PATH"   # kept only to locate a python that can 'import carla'
+PATH="$(printf '%s' "$PATH" | tr ':' '\n' | grep -vi -e 'conda' -e 'miniforge' | paste -sd: || true)"
+export PATH
+
 # ---------------------------------------------------------------- defaults --
 MODE=""
 TOWN="Town10HD_Opt"
@@ -86,6 +97,7 @@ RPC_PORT=2000
 CARLA_HOST=127.0.0.1
 IMAGE=""                      # docker stack image (default: auto-detect local ghcr image)
 CONTAINER_NAME="carla-autoware"
+SERVER_PREF="auto"            # auto: packaged if found, editor fallback; editor: force editor -game
 BRIDGE_IF=""                  # docker bridge interface for DDS (default: auto-detect)
 BRIDGE_IP=""
 DOCKER_NETWORK=""             # detect the bridge from this docker network instead
@@ -114,6 +126,9 @@ Usage: $(basename "$0") --mode classical|e2e [options]
                          (default: ../map_tools/maps/<town-without-_Opt>)
   --carla-root DIR       packaged CARLA root containing CarlaUnreal.sh
                          (default: \$CARLA_ROOT env; falls back to editor -game via \$UE_ROOT)
+  --server auto|editor   auto (default): use a packaged build if found;
+                         editor: force the editor -game path (\$UE_ROOT) — use
+                         when the package is stale vs. recent simulator fixes
   --autoware-ws DIR      Autoware colcon workspace (default: \$AUTOWARE_WS or ~/autoware)
   --domain-id N          ROS domain id (default: 42; passed as -ros-domain-id=N and
                          ROS_DOMAIN_ID; --ros-domain-id is accepted as an alias)
@@ -154,6 +169,7 @@ while [[ $# -gt 0 ]]; do
         --rmw)          RMW="$2"; shift 2 ;;
         --map-path)     MAP_PATH="$2"; shift 2 ;;
         --carla-root)   CARLA_ROOT_ARG="$2"; shift 2 ;;
+        --server)       SERVER_PREF="$2"; shift 2 ;;
         --autoware-ws)  AUTOWARE_WS="$2"; shift 2 ;;
         --domain-id|--ros-domain-id) DOMAIN_ID="$2"; shift 2 ;;
         --carla-rpc-port) RPC_PORT="$2"; shift 2 ;;
@@ -184,6 +200,10 @@ esac
 
 case "$STACK" in auto|source|docker) ;; *)
     echo "ERROR: --stack must be auto|source|docker (got: '$STACK')" >&2; exit 2 ;;
+esac
+
+case "$SERVER_PREF" in auto|editor) ;; *)
+    echo "ERROR: --server must be auto|editor (got: '$SERVER_PREF')" >&2; exit 2 ;;
 esac
 
 [[ "$RPC_PORT" =~ ^[0-9]+$ ]] \
@@ -669,15 +689,20 @@ fi
 
 # CARLA server binary: packaged CarlaUnreal.sh preferred, editor -game fallback.
 # Packaged layout on this branch: Build/<cfg>/Package/Carla-*-Linux-*/Linux/CarlaUnreal.sh
+# --server editor skips package discovery: a stale package silently misses
+# recent simulator-side fixes (the editor -game path always runs the current
+# plugin binaries built into the repo tree).
 SERVER_LAUNCHER=""
 SERVER_KIND=""
 CANDIDATES=()
-if [[ -n "$CARLA_ROOT_ARG" ]]; then
-    CANDIDATES+=("$CARLA_ROOT_ARG/CarlaUnreal.sh" "$CARLA_ROOT_ARG/Linux/CarlaUnreal.sh")
+if [[ "$SERVER_PREF" != "editor" ]]; then
+    if [[ -n "$CARLA_ROOT_ARG" ]]; then
+        CANDIDATES+=("$CARLA_ROOT_ARG/CarlaUnreal.sh" "$CARLA_ROOT_ARG/Linux/CarlaUnreal.sh")
+    fi
+    for cand in "$REPO_ROOT"/Build/*/Package/Carla-*/Linux/CarlaUnreal.sh; do
+        CANDIDATES+=("$cand")   # unmatched globs stay literal and fail -x below
+    done
 fi
-for cand in "$REPO_ROOT"/Build/*/Package/Carla-*/Linux/CarlaUnreal.sh; do
-    CANDIDATES+=("$cand")   # unmatched globs stay literal and fail -x below
-done
 for cand in "${CANDIDATES[@]}"; do
     if [[ -x "$cand" ]]; then
         SERVER_LAUNCHER="$cand"; SERVER_KIND="packaged"; break
@@ -700,8 +725,26 @@ if [[ ! -f "$AUTOWARE_DEMO" ]]; then
 fi
 
 # carla python package for the helper clients
-if ! python3 -c 'import carla' >/dev/null 2>&1; then
-    preflight_fail "python3 cannot 'import carla' -- install the CARLA wheel (PythonAPI/carla/dist) into this environment"
+# Interpreter for the CARLA-client processes (town loader, ego spawner, VAD
+# rig). The ROS side must run the scrubbed system python, but the CARLA wheel
+# is often installed in a conda/venv python (matching whatever built it) --
+# fall back to any python3 on the ORIGINAL path that can import carla.
+CARLA_PY=""
+if python3 -c 'import carla' >/dev/null 2>&1; then
+    CARLA_PY="$(command -v python3)"
+else
+    while IFS= read -r dir; do
+        [[ -x "$dir/python3" ]] || continue
+        if "$dir/python3" -c 'import carla' >/dev/null 2>&1; then
+            CARLA_PY="$dir/python3"
+            warn "system python3 lacks the carla module; using '$CARLA_PY' for CARLA-client processes only (the Autoware stack still runs the clean system python). Install the CARLA wheel into system python to silence this."
+            break
+        fi
+    done < <(printf '%s' "$ORIG_PATH" | tr ':' '\n')
+fi
+if [[ -z "$CARLA_PY" ]]; then
+    preflight_fail "no python3 (scrubbed PATH or original PATH) can 'import carla' -- install the CARLA wheel (Build/*/PythonAPI/dist/*.whl) into a python environment"
+    CARLA_PY="python3"   # dry-run placeholder
 fi
 
 # e2e-only preflight: VAD model + launch glue
@@ -774,7 +817,7 @@ wait_for_carla_rpc
 
 # --------------------------------------------------------- 2. load the town --
 # One-shot, non-ticking client; runs BEFORE the sync-mode ticking client exists.
-run_fg load_town "python3 -c \"
+run_fg load_town "'$CARLA_PY' -c \"
 import carla
 c = carla.Client('$CARLA_HOST', $RPC_PORT); c.set_timeout(120.0)
 if not c.get_world().get_map().name.endswith('$TOWN'):
@@ -788,14 +831,14 @@ else:
 # and ticks. It must remain the ONLY ticking client (sync mode).
 # --hz_rate 20 --resync is the validated configuration (20 Hz fixed step,
 # sim clock resynced on startup).
-start_proc autoware_demo "exec python3 '$AUTOWARE_DEMO' --host $CARLA_HOST --port $RPC_PORT --hz_rate 20 --resync${SPAWN_INDEX:+ --spawn_index $SPAWN_INDEX}"
+start_proc autoware_demo "exec '$CARLA_PY' '$AUTOWARE_DEMO' --host $CARLA_HOST --port $RPC_PORT --hz_rate 20 --resync${SPAWN_INDEX:+ --spawn_index $SPAWN_INDEX}"
 pause 5 "let autoware_demo.py spawn the ego before attaching more sensors"
 
 # ------------------------------------------------- 4+5. e2e-only glue procs --
 if [[ "$MODE" == "e2e" ]]; then
     # Six VAD cameras (1600x900, nuScenes-style rig) on /sensing/camera/CAM_*/image_raw.
     # spawn_vad_rig.py never ticks; it attaches to the ego spawned by autoware_demo.py.
-    start_proc vad_rig "exec python3 '$SCRIPT_DIR/spawn_vad_rig.py' --host $CARLA_HOST --port $RPC_PORT"
+    start_proc vad_rig "exec '$CARLA_PY' '$SCRIPT_DIR/spawn_vad_rig.py' --host $CARLA_HOST --port $RPC_PORT"
     pause 3 "let the camera rig attach and enable ROS publishing"
 
     # carla_state_publisher + autoware_vehicle_velocity_converter + autoware_twist2accel
@@ -814,7 +857,10 @@ fi
 # the vehicle/sensor topics natively (no external interface node needed).
 LAUNCH_ARGS="vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit perception_mode:=lidar rviz:=false simulator_type:=carla launch_simulator_interface:=false"
 CLASSICAL_SRC_CMD="${STACK_PRELUDE}exec ros2 launch autoware_launch e2e_simulator.launch.xml $LAUNCH_ARGS map_path:='$MAP_PATH'"
-E2E_PR_CMD="${STACK_PRELUDE}exec ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit map_path:='$MAP_PATH' use_e2e_planning:=true e2e_planning_type:=vad"
+# simulator_type:=carla + launch_simulator_interface:=false for the same
+# reasons as classical (CARLA diag profile; native topics need no interface
+# node); the launch maps sensor_model to carla_sensor_kit for carla itself.
+E2E_PR_CMD="${STACK_PRELUDE}exec ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit simulator_type:=carla launch_simulator_interface:=false map_path:='$MAP_PATH' use_e2e_planning:=true e2e_planning_type:=vad"
 E2E_FALLBACK_CMD="${STACK_PRELUDE}exec ros2 launch autoware_tensorrt_vad vad_carla_tiny.launch.xml sensing:=false localization:=false perception:=false"
 
 if [[ "$MODE" == "classical" ]]; then
@@ -1051,7 +1097,7 @@ run_engage_gates() {
     for attempt in $(seq 1 6); do
         belief="$(aw_ros2 "timeout 15 ros2 topic echo --once /localization/kinematic_state 2>/dev/null" || true)"
         rc=0
-        printf '%s\n' "$belief" | python3 "$GATE1_PY" "$CARLA_HOST" "$RPC_PORT" | tee -a "$LOG_DIR/automation.log" || rc=$?
+        printf '%s\n' "$belief" | "$CARLA_PY" "$GATE1_PY" "$CARLA_HOST" "$RPC_PORT" | tee -a "$LOG_DIR/automation.log" || rc=$?
         if [[ $rc -eq 0 ]]; then
             gate1_ok=true
             break

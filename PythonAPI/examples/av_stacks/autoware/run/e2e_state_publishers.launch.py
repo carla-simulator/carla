@@ -52,10 +52,12 @@ def generate_launch_description():
             executable="carla_state_publisher",
             name="carla_state_publisher",
             output="screen",
+            # The node's ports are PRIVATE names (~/input/..., ~/output/odometry);
+            # remap keys must carry the ~/ prefix or they silently miss.
             remappings=[
-                ("input/pose_with_covariance", "/sensing/gnss/pose_with_covariance"),
-                ("input/twist_with_covariance", TWIST_TOPIC),
-                ("output/kinematic_state", "/localization/kinematic_state"),
+                ("~/input/pose_with_covariance", "/sensing/gnss/pose_with_covariance"),
+                ("~/input/twist_with_covariance", TWIST_TOPIC),
+                ("~/output/odometry", "/localization/kinematic_state"),
             ],
         )
     )
@@ -86,7 +88,8 @@ def generate_launch_description():
     nodes.append(
         Node(
             package="autoware_twist2accel",
-            executable="twist2accel",
+            # universe >= 0.52 renamed the executable (was 'twist2accel')
+            executable="autoware_twist2accel_node",
             name="autoware_twist2accel",
             output="screen",
             parameters=[
@@ -104,6 +107,12 @@ def generate_launch_description():
     )
 
     # 4. raw -> compressed republishers for the six VAD cameras.
+    # The simulator's per-sensor 'ros_topic_name' override acts as the
+    # sensor's topic NAMESPACE: the camera publisher appends '/image' (and
+    # '/camera_info') under it. So the actual raw stream for a rig camera
+    # configured with ros_topic_name=<base>/image_raw is <base>/image_raw/image;
+    # republish it as <base>/image_raw/compressed, which is what VAD's
+    # compressed image_transport subscribers read.
     for cam in CAMERAS:
         base = "/sensing/camera/%s/image_raw" % cam
         nodes.append(
@@ -114,7 +123,7 @@ def generate_launch_description():
                 output="screen",
                 arguments=["raw", "compressed"],
                 remappings=[
-                    ("in", base),
+                    ("in", base + "/image"),
                     ("out/compressed", base + "/compressed"),
                 ],
             )
