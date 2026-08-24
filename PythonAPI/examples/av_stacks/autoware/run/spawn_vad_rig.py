@@ -39,13 +39,18 @@ except ImportError:
 # name, fov_deg, (x, y, z, yaw_deg) relative to the ego vehicle.
 # CARLA left-handed frame: +x forward, +y right, positive yaw turns right.
 # Order matters (VAD image index) -- do not reorder.
+# Positions MUST match carla_sensor_kit_description's sensor_kit_calibration
+# (PR #1685): that yaml stores base_link(rear-axle)-relative poses with the
+# +1.425 m half-wheelbase baked in; CARLA attaches relative to the vehicle
+# CENTER, so the values here are kit_x - 1.425. A mismatch warps VAD's BEV
+# projection (TF says the camera is somewhere it is not).
 CAMERAS = [
-    ("CAM_FRONT",       70.0, ( 0.70,  0.00, 1.60,    0.0)),
-    ("CAM_BACK",       110.0, (-1.60,  0.00, 1.55,  180.0)),
-    ("CAM_FRONT_LEFT",  70.0, ( 0.50, -0.50, 1.60,  -55.0)),
-    ("CAM_BACK_LEFT",   70.0, (-0.70, -0.50, 1.55, -110.0)),
-    ("CAM_FRONT_RIGHT", 70.0, ( 0.50,  0.50, 1.60,   55.0)),
-    ("CAM_BACK_RIGHT",  70.0, (-0.70,  0.50, 1.55,  110.0)),
+    ("CAM_FRONT",       70.0, ( 0.80,  0.00, 1.60,    0.0)),
+    ("CAM_BACK",       110.0, (-2.00,  0.00, 1.60,  180.0)),
+    ("CAM_FRONT_LEFT",  70.0, ( 0.27, -0.55, 1.60,  -55.0)),
+    ("CAM_BACK_LEFT",   70.0, (-0.32, -0.55, 1.60, -110.0)),
+    ("CAM_FRONT_RIGHT", 70.0, ( 0.27,  0.55, 1.60,   55.0)),
+    ("CAM_BACK_RIGHT",  70.0, (-0.32,  0.55, 1.60,  110.0)),
 ]
 
 # 800x450 keeps the nuScenes 16:9 aspect (so the stack's resize to the
