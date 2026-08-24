@@ -438,7 +438,10 @@ the pinned autoware_launch tag, e.g.
   git -C ${dir} checkout -B vad-on-pinned <pinned-tag>
   git -C ${dir} cherry-pick 90d1465d   # resolve: keep the tag's include args,
                                        # take the PR's e2e wiring and gating
-and skip the follow-up pre-commit style commit."
+and skip the follow-up pre-commit style commit. Then apply the required
+workspace patches from $(dirname "$0")/patches/ (gating string fix, STOPPED
+departure fix, vad_node TF-miss segfault fix, 800x450 rig input) -- see
+patches/README.md for the full validated sequence."
     else
         warn "could not fetch branch '${VAD_LAUNCH_BRANCH}' from ${VAD_LAUNCH_REPO_URL}.
 If PR #1685 has since been MERGED, the branch was likely deleted and the VAD glue
@@ -518,6 +521,11 @@ do_source() {
     rosdep update
     rosdep install -y --from-paths src --ignore-src --rosdistro "${ROS_DISTRO_DETECTED}" \
         --skip-keys nebula_sensor_driver
+    # Autoware runs on CycloneDDS (rmw_cyclonedds_cpp), but ros-*-desktop only
+    # ships the FastDDS default and no package declares the RMW as a dep --
+    # without this, every node dies at startup with "failed to load shared
+    # library 'librmw_cyclonedds_cpp.so'".
+    sudo apt-get install -y "ros-${ROS_DISTRO_DETECTED}-rmw-cyclonedds-cpp"
 
     # 4b. acados for autoware_path_optimizer's build-time MPC codegen.
     install_acados

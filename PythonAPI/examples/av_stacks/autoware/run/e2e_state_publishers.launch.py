@@ -129,4 +129,44 @@ def generate_launch_description():
             )
         )
 
+    # 5. camera_info relays. VAD's launch subscribes calibration at
+    # /sensing/camera/CAM_*/camera_info, but the simulator publishes it under
+    # the sensor's topic namespace (/sensing/camera/CAM_*/image_raw/camera_info).
+    # Without these relays the VAD frame is never complete: fill_dropped_data()
+    # backfills missing *images* only, so a missing camera_info silently drops
+    # every frame (no log line -- trigger_inference returns nullopt).
+    for cam in CAMERAS:
+        nodes.append(
+            Node(
+                package="topic_tools",
+                executable="relay",
+                name="relay_caminfo_%s" % cam.lower(),
+                output="screen",
+                arguments=[
+                    "/sensing/camera/%s/image_raw/camera_info" % cam,
+                    "/sensing/camera/%s/camera_info" % cam,
+                ],
+            )
+        )
+
+    # 6. camera frame aliases. The simulator stamps image/camera_info headers
+    # with the sensor's ros name (frame_id "CAM_FRONT", ...), but the sensor-kit
+    # URDF only defines CAM_*/camera_link -> CAM_*/camera_optical_link. VAD looks
+    # up base_link -> <camera_info frame_id>; without an alias the lookup throws
+    # (and, until universe fixes the throttle-clock in lookup_base2cam's catch
+    # block, the vad_node segfaults). Identity TF: optical link == CARLA frame.
+    for cam in CAMERAS:
+        nodes.append(
+            Node(
+                package="tf2_ros",
+                executable="static_transform_publisher",
+                name="tf_alias_%s" % cam.lower(),
+                output="screen",
+                arguments=[
+                    "--frame-id", "%s/camera_optical_link" % cam,
+                    "--child-frame-id", cam,
+                ],
+            )
+        )
+
     return LaunchDescription(nodes)

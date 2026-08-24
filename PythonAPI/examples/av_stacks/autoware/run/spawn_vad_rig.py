@@ -48,8 +48,12 @@ CAMERAS = [
     ("CAM_BACK_RIGHT",  70.0, (-0.70,  0.50, 1.55,  110.0)),
 ]
 
-IMAGE_WIDTH = 1600
-IMAGE_HEIGHT = 900
+# 800x450 keeps the nuScenes 16:9 aspect (so the stack's resize to the
+# model's 640x384 applies the same stretch as training) at 4x less DDS
+# bandwidth than 1600x900 -- six raw surround streams at full res saturate
+# UDP transport and starve the whole pipeline.
+IMAGE_WIDTH = 800
+IMAGE_HEIGHT = 450
 TOPIC_TEMPLATE = "/sensing/camera/{name}/image_raw"
 EGO_ROLE_NAMES = ("hero", "ego")
 

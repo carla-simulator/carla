@@ -347,7 +347,14 @@ def generate_gnss_blueprint(blueprint_library, is_mgrs_enabled):
             log_error("Cannot spawn Carla GNSS sensor!")
         return None
 
-    blueprint.set_attribute("sensor_tick", "1.0")
+    # Capture EVERY sim tick (sensor_tick 0.0). Classical only needs GNSS to
+    # seed localization init (1 Hz was fine), but the e2e path derives
+    # ground-truth kinematic_state from GNSS pose + twist and
+    # carla_state_publisher gates on pose/twist stamp freshness (0.2 s):
+    # - a slow tick leaves the pose a full period stale (gate rejects all);
+    # - sensor_tick == dt drifts: float accumulation skips a capture every
+    #   few hundred ticks and the stamp falls cumulatively behind.
+    blueprint.set_attribute("sensor_tick", "0.0")
 
     # ROS settings
     blueprint.set_attribute("ros_name", "map")  # frame_id

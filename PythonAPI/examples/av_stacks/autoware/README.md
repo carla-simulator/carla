@@ -346,14 +346,24 @@ engage via
 
 **`e2e`** runs camera-only driving with VAD:
 
-- `run/spawn_vad_rig.py` (started by the run script) attaches **six 1600×900
+- `run/spawn_vad_rig.py` (started by the run script) attaches **six 800×450
   cameras** to the ego and publishes them natively on
   `/sensing/camera/CAM_*/image_raw` (+ `/camera_info`): `CAM_FRONT` (FOV 70),
   `CAM_BACK` (FOV 110), `CAM_FRONT_LEFT`, `CAM_FRONT_RIGHT`, `CAM_BACK_LEFT`,
-  `CAM_BACK_RIGHT` (FOV 70). The input **order is load-bearing** for the
-  model: image0=FRONT, 1=BACK, 2=FRONT_LEFT, 3=BACK_LEFT, 4=FRONT_RIGHT,
-  5=BACK_RIGHT. VAD consumes them compressed via `image_transport` republish
-  nodes, which the run script starts.
+  `CAM_BACK_RIGHT` (FOV 70). (nuScenes-native would be 1600×900, but six raw
+  RGBA streams at that size saturate DDS on one host; 800×450 keeps the 16:9
+  aspect so the model-input resize stretch matches training.) The input
+  **order is load-bearing** for the model: image0=FRONT, 1=BACK,
+  2=FRONT_LEFT, 3=BACK_LEFT, 4=FRONT_RIGHT, 5=BACK_RIGHT. VAD consumes them
+  compressed via `image_transport` republish nodes, which the run script
+  starts — together with `camera_info` relays and `CAM_*` TF aliases (see
+  `run/e2e_state_publishers.launch.py`; without them VAD silently never
+  assembles a complete input frame, or segfaults on the first TF lookup with
+  an unpatched `autoware_tensorrt_vad`).
+- The e2e mode needs four small **workspace patches** on top of the PR #1685
+  cherry-pick (launch gating, STOPPED-state departure, a vad_node segfault
+  fix, and the 800×450 input size) — shipped in `install/patches/` with a
+  README describing the validated sequence.
 - Localization is **ground truth**, not NDT: three plain ROS nodes from
   `autoware_carla_interface` (`carla_state_publisher`,
   `autoware_vehicle_velocity_converter`, `autoware_twist2accel`) turn
