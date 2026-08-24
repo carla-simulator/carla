@@ -37,6 +37,24 @@ CUDA/cuDNN/TensorRT must already be installed system-wide if you want GPU
 perception or VAD; `--check` reports on this. The script header shows the
 ansible commands if you prefer the upstream flow.
 
+Installing TensorRT from the NVIDIA CUDA apt repo: pin the whole family to
+your CUDA generation first, or apt's version sort silently resolves the
+dependencies to the newest `+cudaNN` variants and the metapackage install
+fails with "unmet dependencies" (validated 2026-08 with host CUDA 12.9):
+
+```bash
+sudo tee /etc/apt/preferences.d/tensorrt-cuda12 <<'EOF'
+Package: tensorrt* libnvinfer* libnvonnxparsers* python3-libnvinfer*
+Pin: version 10.16.1.11-1+cuda12.9
+Pin-Priority: 995
+EOF
+sudo apt update && sudo apt install -y cudnn9-cuda-12 tensorrt
+```
+
+The `--source` path also builds **acados** (pinned in the script) for
+`autoware_path_optimizer`'s build-time MPC solver code generation — no
+action needed, but budget a few extra minutes and ~1 GB under `~/acados*`.
+
 Build parallelism is **bounded** to `nproc/2` (both `MAKEFLAGS=-jN` and
 `colcon --parallel-workers N`) because unbounded Autoware builds OOM on
 this class of machine. Override with `--jobs N`.

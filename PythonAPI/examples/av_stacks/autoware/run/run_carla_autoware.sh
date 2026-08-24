@@ -743,6 +743,11 @@ else
     STACK_ENV="export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp; export CYCLONEDDS_URI='file://$CYCLONE_XML'; export ROS_DOMAIN_ID=$DOMAIN_ID; "
 fi
 STACK_PRELUDE="$ROS_SETUP$STACK_ENV"
+# Source-stack runtime extras: autoware_path_optimizer links libacados.so
+# from the acados prefix the installer set up (not on the default loader path).
+if [[ "$STACK" == "source" && -d "$HOME/acados/lib" ]]; then
+    STACK_PRELUDE+="export LD_LIBRARY_PATH=\"$HOME/acados/lib\${LD_LIBRARY_PATH:+:\$LD_LIBRARY_PATH}\"; "
+fi
 
 # Simulator side env (exported inside the server start command).
 SIM_ENV=""

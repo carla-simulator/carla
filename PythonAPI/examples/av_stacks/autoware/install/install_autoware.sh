@@ -44,6 +44,19 @@ AUTOWARE_REPO_URL="https://github.com/autowarefoundation/autoware.git"
 TIERIV_BASELINE_TAG="0.45.1"          # TIER IV-validated against CARLA native ROS2 (Humble)
 CURRENT_RELEASE_TAG="1.9.0"           # latest 1.x release
 
+# acados (OCP solver): required by autoware_path_optimizer (universe >= 0.52),
+# which vendors an MPC whose solver code is generated at build time. Not in
+# apt/rosdep -- upstream installs it via their ansible playbook, we build it
+# here. v0.5.5 is the newest release whose acados_template Python API still
+# matches the generator in autoware_path_optimizer (master dropped the
+# json_file kwarg from AcadosOcpSolver.generate() and the codegen breaks).
+ACADOS_REPO_URL="https://github.com/acados/acados.git"
+ACADOS_VERSION="v0.5.5"
+ACADOS_SRC_DIR="${ACADOS_SRC_DIR:-$HOME/acados-src}"
+ACADOS_PREFIX="${ACADOS_PREFIX:-$HOME/acados}"
+# Tera renderer binary for acados codegen (>= TERA_DEFAULT_VERSION of v0.5.5).
+TERA_RENDERER_URL="https://github.com/acados/tera_renderer/releases/download/v0.2.1/t_renderer-v0.2.1-linux-amd64"
+
 # PR autowarefoundation/autoware_launch#1685 "feat: e2e vad carla simulator".
 # Verified via the GitHub API: state=open, head repo = autowarefoundation/autoware_launch
 # (same repo, NOT a fork), head branch = feat/e2e-vad-carla-simulator, base = main.
@@ -316,8 +329,51 @@ fetch_vad_model() {
             || die "download failed: ${url}"
         [ -s "${VAD_DATA_DIR}/${f}" ] || die "downloaded file is empty: ${VAD_DATA_DIR}/${f}"
     done
-    echo "VAD model files in place. TensorRT engines are built automatically on the"
-    echo "first VAD run (slow; cached next to the ONNX files afterwards)."
+    # vad_carla_tiny.launch.xml expects the ONNX files FLAT in ml_models/vad/
+    # (model_path = data_path/vad); the versioned download dir keeps upgrades
+    # clean, flat symlinks bridge the two. Idempotent.
+    local parent
+    parent="$(dirname "${VAD_DATA_DIR}")"
+    for f in "${VAD_FILES[@]}"; do
+        [ -e "${VAD_DATA_DIR}/${f}" ] && ln -sf "$(basename "${VAD_DATA_DIR}")/${f}" "${parent}/${f}"
+    done
+    echo "VAD model files in place (flat symlinks in ${parent}). TensorRT engines are"
+    echo "built automatically on the first VAD run (slow; cached next to the ONNX files)."
+}
+
+# ---------------------------------------------------------------------------
+# acados: build the pinned release, set up the codegen environment
+# (acados_template venv + t_renderer) that autoware_path_optimizer's
+# build-time MPC solver generation needs. Idempotent.
+# ---------------------------------------------------------------------------
+install_acados() {
+    if [ -x "${ACADOS_SRC_DIR}/bin/t_renderer" ] && [ -e "${ACADOS_PREFIX}/lib/libacados.so" ] \
+        && [ "$(git -C "${ACADOS_SRC_DIR}" describe --tags 2>/dev/null)" = "${ACADOS_VERSION}" ]; then
+        log "acados ${ACADOS_VERSION} already installed at ${ACADOS_PREFIX}"
+        return 0
+    fi
+    log "Building acados ${ACADOS_VERSION} into ${ACADOS_PREFIX}"
+    if [ ! -d "${ACADOS_SRC_DIR}/.git" ]; then
+        git clone --depth 1 --branch "${ACADOS_VERSION}" "${ACADOS_REPO_URL}" "${ACADOS_SRC_DIR}"
+    else
+        git -C "${ACADOS_SRC_DIR}" fetch --depth 1 origin tag "${ACADOS_VERSION}"
+        git -C "${ACADOS_SRC_DIR}" checkout "${ACADOS_VERSION}"
+    fi
+    git -C "${ACADOS_SRC_DIR}" submodule update --init --recursive --depth 1
+    cmake -S "${ACADOS_SRC_DIR}" -B "${ACADOS_SRC_DIR}/build" \
+        -DCMAKE_BUILD_TYPE=Release -DACADOS_WITH_QPOASES=ON \
+        -DCMAKE_INSTALL_PREFIX="${ACADOS_PREFIX}"
+    make -C "${ACADOS_SRC_DIR}/build" -j"${JOBS}" install
+    # Codegen expects the SOURCE tree layout: .venv with acados_template,
+    # bin/t_renderer, and lib/include reachable under ACADOS_SOURCE_DIR.
+    python3 -m venv "${ACADOS_SRC_DIR}/.venv"
+    "${ACADOS_SRC_DIR}/.venv/bin/pip" install -q "${ACADOS_SRC_DIR}/interfaces/acados_template"
+    mkdir -p "${ACADOS_SRC_DIR}/bin"
+    curl -fL --retry 3 -o "${ACADOS_SRC_DIR}/bin/t_renderer" "${TERA_RENDERER_URL}"
+    chmod +x "${ACADOS_SRC_DIR}/bin/t_renderer"
+    ln -sfn "${ACADOS_PREFIX}/lib" "${ACADOS_SRC_DIR}/lib" 2>/dev/null || true
+    ln -sfn "${ACADOS_PREFIX}/include" "${ACADOS_SRC_DIR}/include" 2>/dev/null || true
+    log "acados ready (prefix ${ACADOS_PREFIX}, codegen tree ${ACADOS_SRC_DIR})"
 }
 
 # ---------------------------------------------------------------------------
@@ -374,6 +430,15 @@ checkout_vad_launch_branch() {
     if git -C "${dir}" fetch "${VAD_LAUNCH_REPO_URL}" "${VAD_LAUNCH_BRANCH}" 2>/dev/null; then
         git -C "${dir}" checkout -B "${VAD_LAUNCH_BRANCH}" FETCH_HEAD
         echo "autoware_launch now on ${VAD_LAUNCH_BRANCH} (PR #1685, verified open as of 2026-08-19)."
+        warn "the PR branch predates the autoware_launch restructure that vendored the
+tier4_*_launch packages (present from tag 0.52.0) -- as-is it CANNOT launch
+against universe >= 0.52 (missing tier4_vehicle_launch etc. also breaks
+rosdep). Validated fix (2026-08-24): cherry-pick the PR's feature commit onto
+the pinned autoware_launch tag, e.g.
+  git -C ${dir} checkout -B vad-on-pinned <pinned-tag>
+  git -C ${dir} cherry-pick 90d1465d   # resolve: keep the tag's include args,
+                                       # take the PR's e2e wiring and gating
+and skip the follow-up pre-commit style commit."
     else
         warn "could not fetch branch '${VAD_LAUNCH_BRANCH}' from ${VAD_LAUNCH_REPO_URL}.
 If PR #1685 has since been MERGED, the branch was likely deleted and the VAD glue
@@ -437,18 +502,37 @@ do_source() {
     fi
 
     # 4. rosdep (non-interactive; see header for why we skip the ansible playbook).
+    #    --skip-keys nebula_sensor_driver: exec_depend of the vendored sensor-kit
+    #    launch packages, resolvable neither via apt nor src at current pins.
+    #    It is a real-lidar hardware driver -- irrelevant against a simulator.
     log "Installing ROS dependencies via rosdep (needs sudo for apt)"
+    # ROS environment scripts are not nounset-clean (e.g. they read
+    # AMENT_TRACE_SETUP_FILES unguarded); relax -u around the source.
+    set +u
     # shellcheck disable=SC1090
     source "/opt/ros/${ROS_DISTRO_DETECTED}/setup.bash"
+    set -u
     if [ ! -e /etc/ros/rosdep/sources.list.d/20-default.list ]; then
         sudo rosdep init
     fi
     rosdep update
-    rosdep install -y --from-paths src --ignore-src --rosdistro "${ROS_DISTRO_DETECTED}"
+    rosdep install -y --from-paths src --ignore-src --rosdistro "${ROS_DISTRO_DETECTED}" \
+        --skip-keys nebula_sensor_driver
+
+    # 4b. acados for autoware_path_optimizer's build-time MPC codegen.
+    install_acados
+    export ACADOS_SOURCE_DIR="${ACADOS_SRC_DIR}"
+    export CMAKE_PREFIX_PATH="${ACADOS_PREFIX}${CMAKE_PREFIX_PATH:+:${CMAKE_PREFIX_PATH}}"
 
     # 5. Bounded-parallelism build. Unbounded colcon+make on this class of
     #    machine triggers the OOM killer; cap both the package-level and the
     #    per-package make/ninja parallelism.
+    #    An activated conda/virtualenv poisons the build: CMake's FindPython3
+    #    prefers the active env (Python3_FIND_VIRTUALENV=FIRST) regardless of
+    #    PATH order, and e.g. anaconda's python lacks catkin_pkg -- every
+    #    ament package then fails at configure. Scrub the markers.
+    unset CONDA_PREFIX CONDA_DEFAULT_ENV CONDA_EXE CONDA_PYTHON_EXE CONDA_SHLVL \
+          VIRTUAL_ENV PYTHONPATH PYTHONHOME 2>/dev/null || true
     log "Building with colcon (bounded: ${JOBS} workers)"
     export MAKEFLAGS="-j${JOBS}"
     export CMAKE_BUILD_PARALLEL_LEVEL="${JOBS}"
@@ -467,6 +551,7 @@ Source build complete.
 Next steps:
   source ${WORKSPACE}/install/setup.bash
   export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp   # Autoware's recommended RMW
+  export LD_LIBRARY_PATH=${ACADOS_PREFIX}/lib:\$LD_LIBRARY_PATH   # path_optimizer links libacados at runtime
   # start CARLA with native ROS2 (one ticking client, sync mode), then:
   ros2 launch autoware_launch e2e_simulator.launch.xml \\
       vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit \\
