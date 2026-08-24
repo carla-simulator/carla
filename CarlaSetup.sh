@@ -75,6 +75,21 @@ if [ $skip_prerequisites -eq 0 ]; then
     fi
     echo "Installing prerequisites..."
     bash -x Util/SetupUtils/InstallPrerequisites.sh --python-path=$python_path
+
+    # Environment changes made by the prerequisite child process do not
+    # propagate here.
+    cmake_minimum_version=3.28.0
+    cmake_bin_path=/opt/cmake-3.28.3-linux-x86_64/bin
+    cmake_version=$(
+        cmake --version 2>/dev/null |
+            grep -Eo '[0-9]+\.[0-9]+\.[0-9]+' |
+            head -n 1
+    )
+    if [ -x "$cmake_bin_path/cmake" ] && \
+        { [ -z "$cmake_version" ] ||
+            ! dpkg --compare-versions "$cmake_version" ge "$cmake_minimum_version"; }; then
+        export PATH="$cmake_bin_path:$PATH"
+    fi
 else
     echo "Skipping prerequisites install step."
 fi
