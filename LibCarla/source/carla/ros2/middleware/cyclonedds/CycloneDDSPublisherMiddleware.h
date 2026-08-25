@@ -130,6 +130,17 @@ class CycloneDDSPublisherMiddleware : public IPublisherMiddleware {
   }
 
  public:
+  // NOTE on send-path threading: dds_writecdr() performs the RTPS/UDP sends
+  // inline on the calling (engine) thread. CycloneDDS's asynchronous send
+  // queue only engages for writers with latency_budget > 0, and that QoS is
+  // RxO-enforced (q_qosmatch.c: reader budget must be >= writer budget), so
+  // enabling it would refuse to match every default ROS 2 reader (which
+  // requests 0). Unlike FastDDS there is no free-standing async publish
+  // mode. The operative protection against slow sends is transport
+  // confinement: CYCLONEDDS_URI interface pinning (honored natively at
+  // domain creation) keeps samples off slow physical NICs, where inline
+  // sends are ~50us. See FastDDSPublisherMiddleware.h for the failure mode
+  // this guards against.
   bool Publish(void* message_data) override {
     const msg_type* msg = static_cast<const msg_type*>(message_data);
     std::vector<uint8_t> cdr = serialize_to_cdr(*msg);
