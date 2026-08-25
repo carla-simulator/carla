@@ -4,8 +4,60 @@
 
 #pragma once
 
-// Only meaningful when building the CycloneDDS middleware target.
-// CARLA_ROS2_MIDDLEWARE_TESTING suppresses DDS includes for unit tests.
+// Pure fragment-gather logic with no CycloneDDS dependency; also compiled
+// under CARLA_ROS2_MIDDLEWARE_TESTING so unit tests cover it.
+#if defined(CARLA_ROS2_MIDDLEWARE_CYCLONEDDS) || defined(CARLA_ROS2_MIDDLEWARE_TESTING)
+
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
+
+namespace carla {
+namespace ros2 {
+
+/// Gather a fragmented receive chain into a contiguous CDR buffer.
+///
+/// Each chain node covers the byte range [min, maxp1) of the serialized
+/// sample (including the 4-byte encapsulation header). The defragmenter
+/// guarantees the chain covers [0, size) in order, but consecutive fragments
+/// may overlap; bytes already gathered are skipped and ranges are clamped to
+/// @p size. Mirrors the fragchain walk of ddsi_serdata_default.
+///
+/// @param dest        Destination buffer of at least @p size bytes
+/// @param size        Total serialized sample size
+/// @param fragchain   Head of the fragment chain (nextfrag-linked)
+/// @param payload_of  Callable mapping a chain node to its payload bytes
+///                    (the bytes for [min, maxp1))
+/// @return bytes written — equal to @p size for a complete chain
+template <typename Frag, typename PayloadOf>
+inline size_t carla_cdr_gather_fragments(
+    uint8_t* dest,
+    size_t size,
+    const Frag* fragchain,
+    PayloadOf payload_of)
+{
+  size_t off = 0u;
+  for (const Frag* f = fragchain; f != nullptr; f = f->nextfrag) {
+    const size_t min   = static_cast<size_t>(f->min);
+    const size_t maxp1 = (static_cast<size_t>(f->maxp1) > size)
+        ? size
+        : static_cast<size_t>(f->maxp1);
+    if (maxp1 <= off || min > off) { continue; }
+    const uint8_t* payload = payload_of(f);
+    memcpy(dest + off, payload + (off - min), maxp1 - off);
+    off = maxp1;
+  }
+  return off;
+}
+
+} // namespace ros2
+} // namespace carla
+
+#endif // CARLA_ROS2_MIDDLEWARE_CYCLONEDDS || CARLA_ROS2_MIDDLEWARE_TESTING
+
+// Everything below is only meaningful when building the CycloneDDS
+// middleware target. CARLA_ROS2_MIDDLEWARE_TESTING suppresses DDS includes
+// for unit tests.
 #ifndef CARLA_ROS2_MIDDLEWARE_TESTING
 #ifdef CARLA_ROS2_MIDDLEWARE_CYCLONEDDS
 

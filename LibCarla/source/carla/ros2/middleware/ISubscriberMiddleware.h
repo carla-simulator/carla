@@ -6,6 +6,8 @@
 
 #include <string>
 
+#include "carla/ros2/middleware/QosProfile.h"
+
 namespace carla {
 namespace ros2 {
 
@@ -32,6 +34,19 @@ class ISubscriberMiddleware {
       const std::string& topic_name,
       void* message_ptr,
       bool* new_message_flag) = 0;
+
+  /// Initialize with an explicit per-topic QoS profile (see QosProfile.h).
+  /// The default implementation ignores the profile and falls back to the
+  /// QoS-less Init so test fakes and QoS-agnostic middlewares keep working;
+  /// concrete backends override this to honor the profile.
+  virtual bool Init(
+      const std::string& topic_name,
+      void* message_ptr,
+      bool* new_message_flag,
+      const QosProfile& qos) {
+    (void)qos;
+    return Init(topic_name, message_ptr, new_message_flag);
+  }
 
   /// @return true if at least one publisher is matched.
   virtual bool IsAlive() const = 0;

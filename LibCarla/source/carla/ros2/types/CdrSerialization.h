@@ -19,10 +19,19 @@
 #include "carla/ros2/types/msg/CarlaEgoVehicleControl.h"
 #include "carla/ros2/types/msg/CarlaLineInvasion.h"
 #include "carla/ros2/types/msg/Clock.h"
+#include "carla/ros2/types/msg/Control.h"
+#include "carla/ros2/types/msg/ControlModeReport.h"
+#include "carla/ros2/types/msg/Engage.h"
 #include "carla/ros2/types/msg/Float32.h"
+#include "carla/ros2/types/msg/GearCommand.h"
+#include "carla/ros2/types/msg/GearReport.h"
+#include "carla/ros2/types/msg/HazardLightsCommand.h"
+#include "carla/ros2/types/msg/HazardLightsReport.h"
 #include "carla/ros2/types/msg/Header.h"
 #include "carla/ros2/types/msg/Image.h"
 #include "carla/ros2/types/msg/Imu.h"
+#include "carla/ros2/types/msg/Lateral.h"
+#include "carla/ros2/types/msg/Longitudinal.h"
 #include "carla/ros2/types/msg/NavSatFix.h"
 #include "carla/ros2/types/msg/NavSatStatus.h"
 #include "carla/ros2/types/msg/Odometry.h"
@@ -31,18 +40,25 @@
 #include "carla/ros2/types/msg/PointCloud2.h"
 #include "carla/ros2/types/msg/PointField.h"
 #include "carla/ros2/types/msg/Pose.h"
+#include "carla/ros2/types/msg/PoseStamped.h"
 #include "carla/ros2/types/msg/PoseWithCovariance.h"
+#include "carla/ros2/types/msg/PoseWithCovarianceStamped.h"
 #include "carla/ros2/types/msg/Quaternion.h"
 #include "carla/ros2/types/msg/RegionOfInterest.h"
+#include "carla/ros2/types/msg/SteeringReport.h"
 #include "carla/ros2/types/msg/String.h"
 #include "carla/ros2/types/msg/TF2Error.h"
 #include "carla/ros2/types/msg/TFMessage.h"
 #include "carla/ros2/types/msg/Time.h"
 #include "carla/ros2/types/msg/Transform.h"
 #include "carla/ros2/types/msg/TransformStamped.h"
+#include "carla/ros2/types/msg/TurnIndicatorsCommand.h"
+#include "carla/ros2/types/msg/TurnIndicatorsReport.h"
 #include "carla/ros2/types/msg/Twist.h"
 #include "carla/ros2/types/msg/TwistWithCovariance.h"
 #include "carla/ros2/types/msg/Vector3.h"
+#include "carla/ros2/types/msg/VehicleEmergencyStamped.h"
+#include "carla/ros2/types/msg/VelocityReport.h"
 
 namespace carla {
 namespace ros2 {
@@ -266,6 +282,68 @@ inline void deserialize_cdr(
 // --
 
 inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::Lateral& m) {
+  serialize_cdr(cdr, m.stamp);
+  serialize_cdr(cdr, m.control_time);
+  cdr << m.steering_tire_angle;
+  cdr << m.steering_tire_rotation_rate;
+  cdr << m.is_defined_steering_tire_rotation_rate;
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::Lateral& m) {
+  deserialize_cdr(cdr, m.stamp);
+  deserialize_cdr(cdr, m.control_time);
+  cdr >> m.steering_tire_angle;
+  cdr >> m.steering_tire_rotation_rate;
+  cdr >> m.is_defined_steering_tire_rotation_rate;
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::Longitudinal& m) {
+  serialize_cdr(cdr, m.stamp);
+  serialize_cdr(cdr, m.control_time);
+  cdr << m.velocity;
+  cdr << m.acceleration;
+  cdr << m.jerk;
+  cdr << m.is_defined_acceleration;
+  cdr << m.is_defined_jerk;
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::Longitudinal& m) {
+  deserialize_cdr(cdr, m.stamp);
+  deserialize_cdr(cdr, m.control_time);
+  cdr >> m.velocity;
+  cdr >> m.acceleration;
+  cdr >> m.jerk;
+  cdr >> m.is_defined_acceleration;
+  cdr >> m.is_defined_jerk;
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::Control& m) {
+  serialize_cdr(cdr, m.stamp);
+  serialize_cdr(cdr, m.control_time);
+  serialize_cdr(cdr, m.lateral);
+  serialize_cdr(cdr, m.longitudinal);
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::Control& m) {
+  deserialize_cdr(cdr, m.stamp);
+  deserialize_cdr(cdr, m.control_time);
+  deserialize_cdr(cdr, m.lateral);
+  deserialize_cdr(cdr, m.longitudinal);
+}
+
+// --
+
+inline void serialize_cdr(
     eprosima::fastcdr::Cdr& cdr, const msg::Twist& m) {
   serialize_cdr(cdr, m.linear);
   serialize_cdr(cdr, m.angular);
@@ -376,6 +454,34 @@ inline void deserialize_cdr(
 // --
 
 inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::PoseStamped& m) {
+  serialize_cdr(cdr, m.header);
+  serialize_cdr(cdr, m.pose);
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::PoseStamped& m) {
+  deserialize_cdr(cdr, m.header);
+  deserialize_cdr(cdr, m.pose);
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::PoseWithCovarianceStamped& m) {
+  serialize_cdr(cdr, m.header);
+  serialize_cdr(cdr, m.pose);
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::PoseWithCovarianceStamped& m) {
+  deserialize_cdr(cdr, m.header);
+  deserialize_cdr(cdr, m.pose);
+}
+
+// --
+
+inline void serialize_cdr(
     eprosima::fastcdr::Cdr& cdr, const msg::AckermannDriveStamped& m) {
   serialize_cdr(cdr, m.header);
   serialize_cdr(cdr, m.drive);
@@ -385,6 +491,164 @@ inline void deserialize_cdr(
     eprosima::fastcdr::Cdr& cdr, msg::AckermannDriveStamped& m) {
   deserialize_cdr(cdr, m.header);
   deserialize_cdr(cdr, m.drive);
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::GearCommand& m) {
+  serialize_cdr(cdr, m.stamp);
+  cdr << m.command;
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::GearCommand& m) {
+  deserialize_cdr(cdr, m.stamp);
+  cdr >> m.command;
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::TurnIndicatorsCommand& m) {
+  serialize_cdr(cdr, m.stamp);
+  cdr << m.command;
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::TurnIndicatorsCommand& m) {
+  deserialize_cdr(cdr, m.stamp);
+  cdr >> m.command;
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::HazardLightsCommand& m) {
+  serialize_cdr(cdr, m.stamp);
+  cdr << m.command;
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::HazardLightsCommand& m) {
+  deserialize_cdr(cdr, m.stamp);
+  cdr >> m.command;
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::Engage& m) {
+  serialize_cdr(cdr, m.stamp);
+  cdr << m.engage;
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::Engage& m) {
+  deserialize_cdr(cdr, m.stamp);
+  cdr >> m.engage;
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::VehicleEmergencyStamped& m) {
+  serialize_cdr(cdr, m.stamp);
+  cdr << m.emergency;
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::VehicleEmergencyStamped& m) {
+  deserialize_cdr(cdr, m.stamp);
+  cdr >> m.emergency;
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::SteeringReport& m) {
+  serialize_cdr(cdr, m.stamp);
+  cdr << m.steering_tire_angle;
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::SteeringReport& m) {
+  deserialize_cdr(cdr, m.stamp);
+  cdr >> m.steering_tire_angle;
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::GearReport& m) {
+  serialize_cdr(cdr, m.stamp);
+  cdr << m.report;
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::GearReport& m) {
+  deserialize_cdr(cdr, m.stamp);
+  cdr >> m.report;
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::ControlModeReport& m) {
+  serialize_cdr(cdr, m.stamp);
+  cdr << m.mode;
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::ControlModeReport& m) {
+  deserialize_cdr(cdr, m.stamp);
+  cdr >> m.mode;
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::TurnIndicatorsReport& m) {
+  serialize_cdr(cdr, m.stamp);
+  cdr << m.report;
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::TurnIndicatorsReport& m) {
+  deserialize_cdr(cdr, m.stamp);
+  cdr >> m.report;
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::HazardLightsReport& m) {
+  serialize_cdr(cdr, m.stamp);
+  cdr << m.report;
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::HazardLightsReport& m) {
+  deserialize_cdr(cdr, m.stamp);
+  cdr >> m.report;
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::VelocityReport& m) {
+  serialize_cdr(cdr, m.header);
+  cdr << m.longitudinal_velocity;
+  cdr << m.lateral_velocity;
+  cdr << m.heading_rate;
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::VelocityReport& m) {
+  deserialize_cdr(cdr, m.header);
+  cdr >> m.longitudinal_velocity;
+  cdr >> m.lateral_velocity;
+  cdr >> m.heading_rate;
 }
 
 // --

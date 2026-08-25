@@ -61,6 +61,28 @@ class CycloneDDSSubscriberMiddleware : public ISubscriberMiddleware {
       void* message_ptr,
       bool* new_message_flag) override
   {
+    return InitImpl(topic_name, message_ptr, new_message_flag, nullptr);
+  }
+
+  bool Init(
+      const std::string& topic_name,
+      void* message_ptr,
+      bool* new_message_flag,
+      const QosProfile& qos) override
+  {
+    return InitImpl(topic_name, message_ptr, new_message_flag, &qos);
+  }
+
+ private:
+  /// Shared Init body. When @a qos_profile is non-null the profile overrides
+  /// the RELIABLE / KEEP_LAST-1 reader defaults below; when null the defaults
+  /// are kept, preserving the pre-QoS behavior for every existing subscriber.
+  bool InitImpl(
+      const std::string& topic_name,
+      void* message_ptr,
+      bool* new_message_flag,
+      const QosProfile* qos_profile)
+  {
     _message_ptr     = static_cast<msg_type*>(message_ptr);
     _new_message_ptr = new_message_flag;
 
@@ -81,8 +103,25 @@ class CycloneDDSSubscriberMiddleware : public ISubscriberMiddleware {
     }
 
     dds_qos_t* qos = dds_create_qos();
-    dds_qset_reliability(qos, DDS_RELIABILITY_RELIABLE, DDS_SECS(1));
-    dds_qset_history(qos, DDS_HISTORY_KEEP_LAST, 1);
+    if (qos_profile != nullptr) {
+      dds_qset_reliability(qos,
+          qos_profile->reliability == QosProfile::Reliability::Reliable
+              ? DDS_RELIABILITY_RELIABLE
+              : DDS_RELIABILITY_BEST_EFFORT,
+          DDS_SECS(1));
+      dds_qset_durability(qos,
+          qos_profile->durability == QosProfile::Durability::TransientLocal
+              ? DDS_DURABILITY_TRANSIENT_LOCAL
+              : DDS_DURABILITY_VOLATILE);
+      dds_qset_history(qos,
+          qos_profile->history == QosProfile::History::KeepLast
+              ? DDS_HISTORY_KEEP_LAST
+              : DDS_HISTORY_KEEP_ALL,
+          qos_profile->history_depth);
+    } else {
+      dds_qset_reliability(qos, DDS_RELIABILITY_RELIABLE, DDS_SECS(1));
+      dds_qset_history(qos, DDS_HISTORY_KEEP_LAST, 1);
+    }
     // Set USER_DATA (PID_USER_DATA = 0x002c per OMG DDSI-RTPS v2.5 §9.6.2.2.2)
     // to the REP-2016 type-hash KV payload "typehash=RIHS01_<hex>;".
     auto ud = build_user_data_for<msg_type>();
@@ -106,6 +145,7 @@ class CycloneDDSSubscriberMiddleware : public ISubscriberMiddleware {
     return true;
   }
 
+ public:
   bool IsAlive() const override {
     return _alive.load(std::memory_order_relaxed);
   }

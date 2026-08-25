@@ -249,6 +249,15 @@ namespace client {
 
     std::vector<std::string> GetNamesOfAllObjects() const;
 
+    /// Set whether to publish ROS2 TF information
+    void SetPublishTF(bool publish_tf);
+
+    /// Get whether ROS2 TF information is being published
+    bool GetPublishTF() const;
+
+    /// Get all ego spawn points available in the level.
+    std::vector<geom::Transform> GetEgoSpawnPoints() const;
+
   private:
 
     detail::EpisodeProxy _episode;

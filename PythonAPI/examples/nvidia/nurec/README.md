@@ -21,7 +21,7 @@ fetched over gRPC, while CARLA hosts the actors, sensors, and simulation loop.
 
 - CARLA UE5 (0.10.x) with its Python wheel installed (Python >= 3.10)
 - Docker with the NVIDIA Container Toolkit
-- NRE container: `nvcr.io/nvidia/nre/nre-ga:latest` (public on NGC; 26.04.01 at the time of writing)
+- NRE container: `nvcr.io/nvidia/nre/nre-ga:26.04.01` (public on NGC)
 - A NuRec `.usdz` scenario, e.g. from the HuggingFace dataset
   `nvidia/PhysicalAI-Autonomous-Vehicles-NuRec` (sample sets are per-scene;
   the full dataset is ~1.5 TB)
@@ -57,7 +57,13 @@ python nurec_runner.py \
 The NRE container is started automatically (`NUREC_IMAGE` env var overrides
 the image; the gRPC port is auto-picked unless `-np/--nurec-port` is given).
 Containers are reused between runs by default to skip scene loading; reuse is
-verified over gRPC (server version + scene id) before adoption.
+verified over gRPC (server version + scene id), render flags, and GPU selection
+before adoption.
+
+Do not run this standalone runner beside Alpamayo's NuRec backend. Both would
+own synchronous ticks. Use
+`../../av_stacks/alpamayo/run_alpamayo_nurec.sh`, which composes the scenario
+and policy under one tick owner.
 
 ## API highlights (`nurec_integration.py`)
 

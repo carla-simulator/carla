@@ -234,7 +234,8 @@ def read_output_thread(output_stream: TextIO, monitor: ServerMonitor) -> None:
 
 class NuRecRenderService:
     def __init__(self, usdz_path, port=None, image=None, reuse_container=False,
-                 renderer=None, extra_server_args=None):
+                 renderer=None, extra_server_args=None,
+                 cuda_visible_devices=None):
         self.usdz_path = usdz_path
         self.port = port
         self.image: str = image or os.getenv("NUREC_IMAGE") or DEFAULT_NUREC_IMAGE
@@ -245,6 +246,10 @@ class NuRecRenderService:
         self.renderer_backend = renderer
         # Escape hatch for any other serve-grpc flag, e.g. ["--enable-harmonizer"].
         self.extra_server_args = list(extra_server_args or [])
+        # Keep GPU selection local to the NRE container.  In combined
+        # applications, mutating the parent process environment can
+        # accidentally expose CARLA's rendering GPU to the model service.
+        self.cuda_visible_devices = cuda_visible_devices
         self.container_name = None
         self.final_port = None
         self.server_version = None
@@ -306,7 +311,9 @@ class NuRecRenderService:
     
     def _server_args_signature(self) -> str:
         """Canonical string of the serve-grpc flags that affect rendering."""
-        flags = [f"--renderer={self.renderer_backend}"] if self.renderer_backend else []
+        flags = [f"cuda={self.cuda_visible_devices or 'all'}"]
+        if self.renderer_backend:
+            flags.append(f"--renderer={self.renderer_backend}")
         flags.extend(self.extra_server_args)
         return " ".join(flags)
 
@@ -458,8 +465,12 @@ class NuRecRenderService:
         if gpu_count == 0:
             raise RuntimeError("No GPUs found")
         
-        # Use GPU 0 unless CUDA_VISIBLE_DEVICES is set
-        if 'CUDA_VISIBLE_DEVICES' in os.environ:
+        # An explicit selection wins; retain environment compatibility for
+        # standalone users of the original NuRec example.
+        if self.cuda_visible_devices is not None:
+            visible_gpu_ids = str(self.cuda_visible_devices)
+            logger.debug(f"Using explicitly selected GPU(s): {visible_gpu_ids}")
+        elif 'CUDA_VISIBLE_DEVICES' in os.environ:
             visible_gpu_ids = os.environ['CUDA_VISIBLE_DEVICES']
             logger.debug(f"Using CUDA_VISIBLE_DEVICES from environment: {visible_gpu_ids}")
         else:

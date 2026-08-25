@@ -40,10 +40,11 @@ Before you get started, make sure you have satisfied the following prerequisites
 
 ### Hugging Face account
 
-The installer downloads a sample scene from the [NVIDIA PhysicalAI-Autonomous-Vehicles-NuRec dataset](https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec) on Hugging Face. The dataset is public, so the download normally works anonymously — a Hugging Face token is only requested as a fallback (for example when anonymous downloads are rate-limited). If you want to have one at hand:
+The installer downloads a sample scene from the gated [NVIDIA PhysicalAI-Autonomous-Vehicles-NuRec dataset](https://huggingface.co/datasets/nvidia/PhysicalAI-Autonomous-Vehicles-NuRec) on Hugging Face. Accept the dataset terms before installation and authenticate the CLI with the same account:
 
 * If you don't already have a Hugging Face account, [create one](https://huggingface.co/join) and log in.
 * [Create a token](https://huggingface.co/settings/tokens) with *Read* permissions and save it in a safe place.
+* Run `hf auth login`, or set `HF_TOKEN` for non-interactive installation.
 
 ---
 
@@ -73,12 +74,9 @@ sudo usermod -aG docker $USER
 
 **NVIDIA Container Toolkit**: required so the container can access the GPU. Follow [these instructions](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) to install it.
 
-**Virtual environment (optional but recommended)**: to avoid conflicts between Python library versions, create a virtual environment and pass its interpreter to the installer:
-
-```sh
-python3 -m venv vecarla
-source vecarla/bin/activate # Activate the venv in every new terminal session
-```
+**Virtual environment**: the installer creates and uses `.venv` inside the
+NuRec example directory by default. Pass `--python /path/to/python` only when
+you intentionally want to use another compatible environment.
 
 ### Run the installer script
 
@@ -92,16 +90,16 @@ cd ${CARLA_ROOT}/PythonAPI/examples/nvidia/nurec/
 The script:
 
 *   Installs Docker and the NVIDIA Container Toolkit if missing.
-*   Pulls the NRE container image (`nvcr.io/nvidia/nre/nre-ga:latest`, public on the NVIDIA NGC registry; version 26.04.01 at the time of writing).
-*   Downloads a sample scene from the Hugging Face dataset.
-*   Exports `NUREC_IMAGE` and makes it persistent in your `~/.bashrc`.
-*   Installs the Python dependencies and the CARLA wheel. The wheel is located automatically in `PythonAPI/carla/dist` (packaged release) or `Build/Release/PythonAPI/dist` (source build); build the Python API first if neither exists.
+*   Pulls the pinned NRE container image (`nvcr.io/nvidia/nre/nre-ga:26.04.01`) from NVIDIA NGC.
+*   Downloads a sample scene through the authenticated Hugging Face session.
+*   Creates an isolated `.venv` without modifying `~/.bashrc`.
+*   Installs the Python dependencies and CARLA wheel. The wheel is located automatically in `PythonAPI/carla/dist`, `Build/PythonAPI/dist`, or `Build/Release/PythonAPI/dist`; build the Python API first if none exists.
 
 Optional installer arguments:
 
 | Argument | Description |
 |---|---|
-| `-i`, `--python <exe>` | Python interpreter to install packages into (default: `python`). Point this at your venv interpreter. |
+| `-i`, `--python <exe>` | Use an existing Python interpreter instead of the default local `.venv`. |
 | `-s`, `--scene <uuid>` | Download a specific scene from the dataset instead of the default sample scene. |
 | `--full-dataset` | Download the entire dataset instead of a single sample scene. __The full dataset is about 1.5 terabytes__, so ensure you have adequate drive space. |
 
@@ -120,12 +118,12 @@ docker run --rm --gpus all -v $(pwd):$(pwd) $NUREC_IMAGE upgrade-artifact --help
 
 ### Set up your environment variables
 
-The replay uses two environment variables:
+The replay recognizes two environment variables:
 
-*   `NUREC_IMAGE` selects the NRE container image. The installer sets and persists it; to set it manually:
+*   `NUREC_IMAGE` overrides the pinned NRE container image for the current shell:
 
     ```sh
-    export NUREC_IMAGE="nvcr.io/nvidia/nre/nre-ga:latest"
+    export NUREC_IMAGE="nvcr.io/nvidia/nre/nre-ga:26.04.01"
     ```
 
 *   [`CUDA_VISIBLE_DEVICES`](https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#env-vars) is optional and designates the GPU that runs the neural rendering. If unset, GPU 0 is used.
@@ -146,15 +144,14 @@ From a source build, launch the standalone binary (add `-RenderOffScreen` for he
 ```sh
 ./Unreal/CarlaUnreal/Binaries/Linux/CarlaUnreal -carla-rpc-port=2000 -RenderOffScreen
 # or the editor:
-cmake --build Build/Release --target launch-only
+cmake --build Build --target launch-only
 ```
 
 __2. Replay a NuRec scenario.__ In a second terminal, run the replay script with the path to a `.usdz` scenario:
 
 ```sh
-source vecarla/bin/activate # Omit if you are not using a venv
 cd ${CARLA_ROOT}/PythonAPI/examples/nvidia/nurec/
-python3 nurec_runner.py -u PhysicalAI-Autonomous-Vehicles-NuRec/sample_set/26.04_release/<scene_uuid>/<scenario>.usdz
+.venv/bin/python nurec_runner.py -u PhysicalAI-Autonomous-Vehicles-NuRec/sample_set/26.04_release/<scene_uuid>/<scenario>.usdz
 ```
 
 The NRE container is started automatically; the gRPC port is auto-picked unless `-np/--nurec-port` is given. Containers are reused between runs to skip the scene-loading time (reuse is verified over gRPC — server version and scene id — before adoption).

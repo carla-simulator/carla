@@ -84,6 +84,18 @@ class FastDDSPublisherMiddleware
   }
 
   bool Init(const std::string& topic_name) override {
+    return InitImpl(topic_name, nullptr);
+  }
+
+  bool Init(const std::string& topic_name, const QosProfile& qos) override {
+    return InitImpl(topic_name, &qos);
+  }
+
+ private:
+  /// Shared Init body. When @a qos is non-null the profile overrides the
+  /// FastDDS DataWriter defaults; when null the defaults are kept, preserving
+  /// the pre-QoS behavior for every existing publisher.
+  bool InitImpl(const std::string& topic_name, const QosProfile* qos) {
     if (_type == nullptr) {
       log_error("FastDDSPublisherMiddleware: Invalid TypeSupport");
       return false;
@@ -125,6 +137,35 @@ class FastDDSPublisherMiddleware
     wqos.endpoint().history_memory_policy =
         eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
+    // ASYNCHRONOUS_PUBLISH_MODE: write() must never do network I/O on the
+    // calling thread. The FastDDS default (synchronous) runs the whole
+    // RTPS/UDP send inline in write(); with the simulator publishing multi-MB
+    // camera frames from engine threads, UE's task scheduler sees those
+    // threads blocked in sendto(), spins up standby workers and reaps them
+    // again, and the destabilized worker pool stalls every render-thread
+    // ParallelFor (SceneCapture InitViews) -- the tick rate collapses to a
+    // few Hz with CPU and GPU idle. In asynchronous mode write() only
+    // enqueues; the FastDDS flow-controller thread does the sends. The
+    // default (unthrottled) flow controller is intentional: we want the
+    // I/O off-thread, not rate-limited.
+    wqos.publish_mode().kind = efd::ASYNCHRONOUS_PUBLISH_MODE;
+
+    if (qos != nullptr) {
+      wqos.reliability().kind =
+          qos->reliability == QosProfile::Reliability::Reliable
+              ? efd::RELIABLE_RELIABILITY_QOS
+              : efd::BEST_EFFORT_RELIABILITY_QOS;
+      wqos.durability().kind =
+          qos->durability == QosProfile::Durability::TransientLocal
+              ? efd::TRANSIENT_LOCAL_DURABILITY_QOS
+              : efd::VOLATILE_DURABILITY_QOS;
+      wqos.history().kind =
+          qos->history == QosProfile::History::KeepLast
+              ? efd::KEEP_LAST_HISTORY_QOS
+              : efd::KEEP_ALL_HISTORY_QOS;
+      wqos.history().depth = qos->history_depth;
+    }
+
     // Set USER_DATA (PID_USER_DATA = 0x002c per OMG DDSI-RTPS v2.5 §9.6.2.2.2)
     // to the REP-2011/REP-2016 type-hash KV payload "typehash=RIHS01_<hex>;".
     // Jazzy rmw_cyclonedds_cpp / rmw_fastrtps_cpp parse this during SEDP
@@ -146,6 +187,7 @@ class FastDDSPublisherMiddleware
     return true;
   }
 
+ public:
   bool Publish(void* message_data) override {
     eprosima::fastrtps::rtps::InstanceHandle_t instance_handle;
     erc rcode = _datawriter->write(message_data, instance_handle);

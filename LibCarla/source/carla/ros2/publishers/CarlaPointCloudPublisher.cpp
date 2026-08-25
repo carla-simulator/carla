@@ -60,10 +60,10 @@ std::vector<msg::PointField> BuildPointFields(
 }  // namespace
 
 CarlaPointCloudPublisher::CarlaPointCloudPublisher(
-    std::string base_topic_name, std::string frame_id)
+    std::string base_topic_name, std::string frame_id, bool exact_topic)
   : BasePublisher(std::move(base_topic_name), std::move(frame_id)),
     _impl(std::make_shared<PublisherImpl<CarlaPointCloudMsgTraits>>()) {
-  if (!_impl->Init(GetBaseTopicName() + "/point_cloud")) {
+  if (!_impl->Init(exact_topic ? GetBaseTopicName() : GetBaseTopicName() + "/point_cloud")) {
     log_error("CarlaPointCloudPublisher: failed to initialise writer for", GetBaseTopicName());
   }
 }

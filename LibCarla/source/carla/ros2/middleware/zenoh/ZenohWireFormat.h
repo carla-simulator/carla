@@ -9,6 +9,7 @@
 #if defined(CARLA_ROS2_MIDDLEWARE_ZENOH) || defined(CARLA_ROS2_MIDDLEWARE_TESTING)
 
 #include "carla/ros2/middleware/MiddlewareConfig.h"
+#include "carla/ros2/middleware/QosProfile.h"
 
 #include <atomic>
 #include <cstdint>
@@ -27,6 +28,32 @@ constexpr const char* kZenohEntityKindPub  = "MP";
 constexpr const char* kZenohEntityKindSub  = "MS";
 constexpr const char* kZenohEntityKindNode = "NN";
 constexpr const char* kZenohDefaultQos     = "::,1:,:,:,,";
+
+/// Encode a QosProfile into the rmw_zenoh liveliness-token QoS segment.
+/// Format (rmw_zenoh liveliness_utils qos_to_keyexpr):
+///   "<reliability>:<durability>:<history_kind>,<history_depth>:
+///    <deadline_s>,<deadline_ns>:<lifespan_s>,<lifespan_ns>:
+///    <liveliness_kind>,<liveliness_s>,<liveliness_ns>"
+/// with RMW enum integer values (RELIABLE=1 / BEST_EFFORT=2,
+/// TRANSIENT_LOCAL=1 / VOLATILE=2, KEEP_LAST=1 / KEEP_ALL=2) and empty
+/// fields meaning "system default" (compare kZenohDefaultQos).
+///
+/// NOTE: this only *advertises* the QoS in the graph cache so rmw_zenoh
+/// peers report compatible endpoints. Zenoh delivery semantics are not
+/// differentiated per profile by this backend (in particular there is no
+/// querying-subscriber support, so TRANSIENT_LOCAL late-join latching is
+/// not provided). Needs validation against rmw_zenoh during the smoke
+/// phase.
+inline std::string zenoh_qos_keyexpr(const QosProfile& qos) {
+  const char* rel =
+      qos.reliability == QosProfile::Reliability::Reliable ? "1" : "2";
+  const char* dur =
+      qos.durability == QosProfile::Durability::TransientLocal ? "1" : "2";
+  const char* hist =
+      qos.history == QosProfile::History::KeepLast ? "1" : "2";
+  return std::string(rel) + ":" + dur + ":" + hist + "," +
+         std::to_string(qos.history_depth) + ":,:,:,,";
+}
 
 /// Monotonic per-process counter used to assign a unique entity id (eid) to
 /// each publisher and subscriber declared on the shared Session.

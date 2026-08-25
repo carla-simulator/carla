@@ -9,6 +9,7 @@
 #include "Carla.h"
 #include "Carla/Actor/ActorDescription.h"
 #include "Carla/Sensor/GnssSensor.h"
+#include "Carla/Autoware/Sensors/AutowareGnssSensor.h"
 #include "Carla/Sensor/Radar.h"
 #include "Carla/Sensor/InertialMeasurementUnit.h"
 #include "Carla/Sensor/V2XSensor.h"
@@ -232,12 +233,25 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs &&...Strings)
   Def.Variations.Emplace(ActorRole);
 
   // ROS2
-  FActorVariation Var;
-  Var.Id = TEXT("ros_name");
-  Var.Type = EActorAttributeType::String;
-  Var.RecommendedValues = {Def.Id};
-  Var.bRestrictToRecommended = false;
-  Def.Variations.Emplace(Var);
+  {
+    FActorVariation Var;
+    Var.Id = TEXT("ros_name");
+    Var.Type = EActorAttributeType::String;
+    Var.RecommendedValues = {Def.Id};
+    Var.bRestrictToRecommended = false;
+    Def.Variations.Emplace(Var);
+  }
+
+  // Exact ROS2 topic-name override (tier4 Autoware port); when left at the
+  // default (== blueprint id) the runtime generates the conventional topic.
+  {
+    FActorVariation Var;
+    Var.Id = TEXT("ros_topic_name");
+    Var.Type = EActorAttributeType::String;
+    Var.RecommendedValues = {Def.Id};
+    Var.bRestrictToRecommended = false;
+    Def.Variations.Emplace(Var);
+  }
 }
 
 static void AddRecommendedValuesForActorRoleName(
@@ -1463,16 +1477,43 @@ FActorDefinition UActorBlueprintFunctionLibrary::MakeGnssDefinition()
 {
   FActorDefinition Definition;
   bool Success;
-  MakeGnssDefinition(Success, Definition);
+  MakeGnssDefinition(Success, Definition, TEXT("gnss"));
+  check(Success);
+  return Definition;
+}
+
+FActorDefinition UActorBlueprintFunctionLibrary::MakeAutowareGnssDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeGnssDefinition(Success, Definition, TEXT("autoware_gnss"));
+  check(Success);
+  return Definition;
+}
+
+FActorDefinition UActorBlueprintFunctionLibrary::MakeVehicleStatusDefinition()
+{
+  FActorDefinition Definition;
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("vehicle_status"));
+  AddVariationsForSensor(Definition);
+
+  // Optional attribute exposed in the Python API (tier4 port).
+  Definition.Attributes.Emplace(FActorAttribute{
+      TEXT("speed_units"),
+      EActorAttributeType::String,
+      TEXT("mps")});
+
+  bool Success = CheckActorDefinition(Definition);
   check(Success);
   return Definition;
 }
 
 void UActorBlueprintFunctionLibrary::MakeGnssDefinition(
     bool &Success,
-    FActorDefinition &Definition)
+    FActorDefinition &Definition,
+    FString Name)
 {
-  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("gnss"));
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), Name);
   AddVariationsForSensor(Definition);
 
   // - Noise seed --------------------------------
@@ -1592,6 +1633,15 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
   ROS2AckermannControl.bRestrictToRecommended = false;
   ROS2AckermannControl.RecommendedValues.Emplace(TEXT("false"));
   Definition.Variations.Emplace(ROS2AckermannControl);
+
+  // ROS2: opt-in flag wiring the Autoware /control/command/* + /vehicle/engage
+  // subscribers instead of the direct or Ackermann control topic (tier4 port).
+  FActorVariation ROS2AutowareControl;
+  ROS2AutowareControl.Id = TEXT("ros2_autoware_control");
+  ROS2AutowareControl.Type = EActorAttributeType::Bool;
+  ROS2AutowareControl.bRestrictToRecommended = false;
+  ROS2AutowareControl.RecommendedValues.Emplace(TEXT("false"));
+  Definition.Variations.Emplace(ROS2AutowareControl);
 
   Definition.Attributes.Emplace(FActorAttribute{
       TEXT("object_type"),
@@ -2292,6 +2342,35 @@ void UActorBlueprintFunctionLibrary::SetLidar(
 void UActorBlueprintFunctionLibrary::SetGnss(
     const FActorDescription &Description,
     AGnssSensor *Gnss)
+{
+  CARLA_ABFL_CHECK_ACTOR(Gnss);
+  if (Description.Variations.Contains("noise_seed"))
+  {
+    Gnss->SetSeed(
+        RetrieveActorAttributeToInt("noise_seed", Description.Variations, 0));
+  }
+  else
+  {
+    Gnss->SetSeed(Gnss->GetRandomEngine()->GenerateRandomSeed());
+  }
+
+  Gnss->SetLatitudeDeviation(
+      RetrieveActorAttributeToFloat("noise_lat_stddev", Description.Variations, 0.0f));
+  Gnss->SetLongitudeDeviation(
+      RetrieveActorAttributeToFloat("noise_lon_stddev", Description.Variations, 0.0f));
+  Gnss->SetAltitudeDeviation(
+      RetrieveActorAttributeToFloat("noise_alt_stddev", Description.Variations, 0.0f));
+  Gnss->SetLatitudeBias(
+      RetrieveActorAttributeToFloat("noise_lat_bias", Description.Variations, 0.0f));
+  Gnss->SetLongitudeBias(
+      RetrieveActorAttributeToFloat("noise_lon_bias", Description.Variations, 0.0f));
+  Gnss->SetAltitudeBias(
+      RetrieveActorAttributeToFloat("noise_alt_bias", Description.Variations, 0.0f));
+}
+
+void UActorBlueprintFunctionLibrary::SetAutowareGnss(
+    const FActorDescription &Description,
+    AAutowareGnssSensor *Gnss)
 {
   CARLA_ABFL_CHECK_ACTOR(Gnss);
   if (Description.Variations.Contains("noise_seed"))

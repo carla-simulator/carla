@@ -192,11 +192,16 @@ FCarlaActor* UActorDispatcher::RegisterActor(
     {
       // actor ros_name
       std::string RosName;
+      std::string RosTopicName;
       for (auto &&Attr : Description.Variations)
       {
         if (Attr.Key == "ros_name")
         {
           RosName = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
+        }
+        if (Attr.Key == "ros_topic_name")
+        {
+          RosTopicName = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
         }
       }
       const std::string id = std::string(TCHAR_TO_UTF8(*Description.Id));
@@ -220,12 +225,16 @@ FCarlaActor* UActorDispatcher::RegisterActor(
       {
         ROS2->RegisterSensor(static_cast<void*>(&Actor), ResolvedRosName, ResolvedRosName, true);
       }
+      // exact-topic override (empty when the attribute is unset or equals the
+      // blueprint id: signal to generate the default topic name)
+      ROS2->AddActorRosTopicName(static_cast<void*>(&Actor), RosTopicName == id ? "" : RosTopicName);
 
       // vehicle controller for hero. Scan the variations once for the hero role and the
-      // opt-in Ackermann control flag; the two control topics are mutually exclusive on
-      // the ROS 2 side, so only request Ackermann when the attribute asks for it.
+      // opt-in Ackermann/Autoware control flags; the control topics are mutually
+      // exclusive on the ROS 2 side, so only request them when an attribute asks for it.
       bool bIsHero = false;
       bool bEnableAckermannControl = false;
+      bool bEnableAutowareControl = false;
       for (auto &&Attr : Description.Variations)
       {
         if (Attr.Key == "role_name" && (Attr.Value.Value == "hero" || Attr.Value.Value == "ego"))
@@ -236,15 +245,25 @@ FCarlaActor* UActorDispatcher::RegisterActor(
         {
           bEnableAckermannControl = Attr.Value.Value.ToBool();
         }
+        else if (Attr.Key == "ros2_autoware_control")
+        {
+          bEnableAutowareControl = Attr.Value.Value.ToBool();
+        }
       }
       if (bIsHero)
       {
+        if (bEnableAutowareControl)
+        {
+          // Autoware maps steering 1:1 to wheel angle; a speed-dependent
+          // steering curve would silently rescale the command (tier4 port).
+          ActorROS2Handler::FlattenSteeringCurve(&Actor);
+        }
         ROS2->RegisterVehicle(static_cast<void*>(&Actor), ResolvedRosName, ResolvedRosName, [ResolvedRosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
         {
           AActor *UEActor = reinterpret_cast<AActor *>(Actor);
           ActorROS2Handler Handler(UEActor, ResolvedRosName);
           std::visit(Handler, Data);
-        }, bEnableAckermannControl);
+        }, bEnableAckermannControl, bEnableAutowareControl);
         #if defined(WITH_ROS2_DEMO)
         ROS2->AddBasicSubscriberCallback(static_cast<void*>(&Actor), ResolvedRosName, [ResolvedRosName](void *Actor, carla::ros2::ROS2MessageCallbackData Data) -> void
         {
@@ -284,6 +303,7 @@ void UActorDispatcher::OnActorDestroyed(AActor *Actor)
     // a missing key, so it works for both vehicles and sensors that never
     // registered a callback.
     ROS2->UnregisterVehicle(ActorKey);
+    ROS2->RemoveActorRosTopicName(ActorKey);
     #if defined(WITH_ROS2_DEMO)
     ROS2->RemoveBasicSubscriberCallback(ActorKey);
     #endif

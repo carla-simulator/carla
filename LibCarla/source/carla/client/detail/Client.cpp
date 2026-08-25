@@ -334,6 +334,18 @@ namespace detail {
     return _pimpl->CallAndWait<bool>("is_weather_enabled");
   }
 
+  void Client::SetPublishTF(bool publish_tf) {
+    _pimpl->AsyncCall("set_publish_tf", publish_tf);
+  }
+
+  bool Client::GetPublishTF() const {
+    return _pimpl->CallAndWait<bool>("get_publish_tf");
+  }
+
+  std::vector<geom::Transform> Client::GetEgoSpawnPoints() const {
+    return _pimpl->CallAndWait<std::vector<carla::geom::Transform>>("get_ego_spawn_points");
+  }
+
   std::vector<rpc::Actor> Client::GetActorsById(
       const std::vector<ActorId> &ids) {
     using return_t = std::vector<rpc::Actor>;
@@ -454,6 +466,14 @@ namespace detail {
 
   void Client::DisableActorConstantVelocity(rpc::ActorId actor) {
     _pimpl->AsyncCall("disable_actor_constant_velocity", actor);
+  }
+
+  void Client::EnableActorConstantAcceleration(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("enable_actor_constant_acceleration", actor, vector);
+  }
+
+  void Client::DisableActorConstantAcceleration(rpc::ActorId actor) {
+    _pimpl->AsyncCall("disable_actor_constant_acceleration", actor);
   }
 
   void Client::AddActorImpulse(rpc::ActorId actor, const geom::Vector3D &impulse) {

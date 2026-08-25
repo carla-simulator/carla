@@ -806,6 +806,45 @@ void FCarlaServer::FPimpl::BindActions()
     return true;
   };
 
+  // ~~ ROS2 TF ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(set_publish_tf) << [this](bool publish_tf) -> R<void>
+  {
+    #if defined(WITH_ROS2)
+    REQUIRE_CARLA_EPISODE();
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2 && ROS2->IsEnabled()) {
+      ROS2->SetPublishTF(publish_tf);
+      return R<void>::Success();
+    }
+    RESPOND_ERROR("set_publish_tf: ROS2 is not enabled");
+    #else
+    RESPOND_ERROR("set_publish_tf: Server was compiled without ROS2 support");
+    #endif
+  };
+
+  BIND_SYNC(get_publish_tf) << [this]() -> R<bool>
+  {
+    #if defined(WITH_ROS2)
+    REQUIRE_CARLA_EPISODE();
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2 && ROS2->IsEnabled()) {
+      return ROS2->GetPublishTF();
+    }
+    return false;
+    #else
+    return false;
+    #endif
+  };
+
+  BIND_SYNC(get_ego_spawn_points) << [this]() -> R<std::vector<carla::geom::Transform>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    const auto &SpawnPoints = Episode->GetRecommendedSpawnPoints();
+    auto result = MakeVectorFromTArray<cg::Transform>(SpawnPoints);
+    return result;
+  };
+
   // ~~ Actor operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(get_actors_by_id) << [this](
@@ -890,9 +929,15 @@ void FCarlaServer::FPimpl::BindActions()
         {
           if (Attr.Key == "ros_name")
           {
-            const std::string value = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
             ROS2->AddActorParentRosName(static_cast<void*>(CarlaActor->GetActor()), static_cast<void*>(CurrentActor->GetActor()));
           }
+          // NOTE: tier4 also propagated each ancestor's ros_topic_name onto the
+          // child here, but their AddActorRosTopicName used map::insert, so the
+          // dispatcher's earlier per-actor registration (own override or "")
+          // always won and the call was a no-op. Our AddActorRosTopicName is
+          // insert_or_assign (re-registration idempotency), which made the
+          // propagation live and clobbered every attached sensor's own
+          // ros_topic_name with its ancestor's — so it is dropped entirely.
         }
         CurrentActor = Episode->FindCarlaActor(CurrentActor->GetParent());
       }
@@ -1283,6 +1328,59 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     {
       return RespondError(
           "disable_actor_constant_velocity",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(enable_actor_constant_acceleration) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "enable_actor_constant_acceleration",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    ECarlaServerResponse Response =
+        CarlaActor->EnableActorConstantAcceleration(vector.ToCentimeters().ToFVector());
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "enable_actor_constant_acceleration",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(disable_actor_constant_acceleration) << [this](
+      cr::ActorId ActorId) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "disable_actor_constant_acceleration",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    ECarlaServerResponse Response =
+        CarlaActor->DisableActorConstantAcceleration();
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "disable_actor_constant_acceleration",
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }

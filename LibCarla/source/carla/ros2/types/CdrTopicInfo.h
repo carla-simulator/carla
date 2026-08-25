@@ -13,10 +13,19 @@
 #include "carla/ros2/types/msg/CarlaEgoVehicleControl.h"
 #include "carla/ros2/types/msg/CarlaLineInvasion.h"
 #include "carla/ros2/types/msg/Clock.h"
+#include "carla/ros2/types/msg/Control.h"
+#include "carla/ros2/types/msg/ControlModeReport.h"
+#include "carla/ros2/types/msg/Engage.h"
 #include "carla/ros2/types/msg/Float32.h"
+#include "carla/ros2/types/msg/GearCommand.h"
+#include "carla/ros2/types/msg/GearReport.h"
+#include "carla/ros2/types/msg/HazardLightsCommand.h"
+#include "carla/ros2/types/msg/HazardLightsReport.h"
 #include "carla/ros2/types/msg/Header.h"
 #include "carla/ros2/types/msg/Image.h"
 #include "carla/ros2/types/msg/Imu.h"
+#include "carla/ros2/types/msg/Lateral.h"
+#include "carla/ros2/types/msg/Longitudinal.h"
 #include "carla/ros2/types/msg/NavSatFix.h"
 #include "carla/ros2/types/msg/NavSatStatus.h"
 #include "carla/ros2/types/msg/Odometry.h"
@@ -25,18 +34,25 @@
 #include "carla/ros2/types/msg/PointCloud2.h"
 #include "carla/ros2/types/msg/PointField.h"
 #include "carla/ros2/types/msg/Pose.h"
+#include "carla/ros2/types/msg/PoseStamped.h"
 #include "carla/ros2/types/msg/PoseWithCovariance.h"
+#include "carla/ros2/types/msg/PoseWithCovarianceStamped.h"
 #include "carla/ros2/types/msg/Quaternion.h"
 #include "carla/ros2/types/msg/RegionOfInterest.h"
+#include "carla/ros2/types/msg/SteeringReport.h"
 #include "carla/ros2/types/msg/String.h"
 #include "carla/ros2/types/msg/TF2Error.h"
 #include "carla/ros2/types/msg/TFMessage.h"
 #include "carla/ros2/types/msg/Time.h"
 #include "carla/ros2/types/msg/Transform.h"
 #include "carla/ros2/types/msg/TransformStamped.h"
+#include "carla/ros2/types/msg/TurnIndicatorsCommand.h"
+#include "carla/ros2/types/msg/TurnIndicatorsReport.h"
 #include "carla/ros2/types/msg/Twist.h"
 #include "carla/ros2/types/msg/TwistWithCovariance.h"
 #include "carla/ros2/types/msg/Vector3.h"
+#include "carla/ros2/types/msg/VehicleEmergencyStamped.h"
+#include "carla/ros2/types/msg/VelocityReport.h"
 
 namespace carla {
 namespace ros2 {
@@ -149,6 +165,36 @@ template<> struct CdrTopicInfo<msg::Clock> {
   static size_t max_serialized_size() { return 8u; }
 };
 
+template<> struct CdrTopicInfo<msg::Control> {
+  static const char* type_name() {
+    return "autoware_control_msgs::msg::dds_::Control_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_7818be59aa790ebb777db06e55a2c15e3756de4cc35c80b1e8271afc5bab2e9d";
+  }
+  static size_t max_serialized_size() { return 74u; }
+};
+
+template<> struct CdrTopicInfo<msg::ControlModeReport> {
+  static const char* type_name() {
+    return "autoware_vehicle_msgs::msg::dds_::ControlModeReport_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_968feaa6441be3c3b161f2eb65972a4b15394d0a7ddc4664318551280d1ff222";
+  }
+  static size_t max_serialized_size() { return 9u; }
+};
+
+template<> struct CdrTopicInfo<msg::Engage> {
+  static const char* type_name() {
+    return "autoware_vehicle_msgs::msg::dds_::Engage_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_a865a0a669052a5bb45be203266058660ae8b3be8d080c4567f78d8174f4849e";
+  }
+  static size_t max_serialized_size() { return 9u; }
+};
+
 template<> struct CdrTopicInfo<msg::Float32> {
   static const char* type_name() {
     return "std_msgs::msg::dds_::Float32_";
@@ -157,6 +203,46 @@ template<> struct CdrTopicInfo<msg::Float32> {
     return "RIHS01_7170d3d8f841f7be3172ce5f4f59f3a4d7f63b0447e8b33327601ad64d83d6e2";
   }
   static size_t max_serialized_size() { return 4u; }
+};
+
+template<> struct CdrTopicInfo<msg::GearCommand> {
+  static const char* type_name() {
+    return "autoware_vehicle_msgs::msg::dds_::GearCommand_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_4aa982c6505fafa9bdca2d243d0a71e46ff9a1e7013767f13a533d0a5d30a1a6";
+  }
+  static size_t max_serialized_size() { return 9u; }
+};
+
+template<> struct CdrTopicInfo<msg::GearReport> {
+  static const char* type_name() {
+    return "autoware_vehicle_msgs::msg::dds_::GearReport_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_4d14bc3f186c1a6af6a732bb5ebd540cdd742a56770012f4c3cb9e762de8f391";
+  }
+  static size_t max_serialized_size() { return 9u; }
+};
+
+template<> struct CdrTopicInfo<msg::HazardLightsCommand> {
+  static const char* type_name() {
+    return "autoware_vehicle_msgs::msg::dds_::HazardLightsCommand_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_ad2386a78a210625f1fb35f8043ef4e78da58cf01f33c340fa9468e5e8cdd0bc";
+  }
+  static size_t max_serialized_size() { return 9u; }
+};
+
+template<> struct CdrTopicInfo<msg::HazardLightsReport> {
+  static const char* type_name() {
+    return "autoware_vehicle_msgs::msg::dds_::HazardLightsReport_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_01ce3b4293a5c2799fd7483b2d62a790e26fe8f2b5d60e48149163475685f28a";
+  }
+  static size_t max_serialized_size() { return 9u; }
 };
 
 template<> struct CdrTopicInfo<msg::Header> {
@@ -187,6 +273,26 @@ template<> struct CdrTopicInfo<msg::Imu> {
     return "RIHS01_7d9a00ff131080897a5ec7e26e315954b8eae3353c3f995c55faf71574000b5b";
   }
   static size_t max_serialized_size() { return 568u; }
+};
+
+template<> struct CdrTopicInfo<msg::Lateral> {
+  static const char* type_name() {
+    return "autoware_control_msgs::msg::dds_::Lateral_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_94d39634041a92db4e460dae93def564fbeb89142e9c64f9c2ed540a182935a1";
+  }
+  static size_t max_serialized_size() { return 25u; }
+};
+
+template<> struct CdrTopicInfo<msg::Longitudinal> {
+  static const char* type_name() {
+    return "autoware_control_msgs::msg::dds_::Longitudinal_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_4ac4a6b5085ee6bb12067b763568abbf68ec3f2baf64b49e1da360aa6413edc1";
+  }
+  static size_t max_serialized_size() { return 30u; }
 };
 
 template<> struct CdrTopicInfo<msg::NavSatFix> {
@@ -269,6 +375,17 @@ template<> struct CdrTopicInfo<msg::Pose> {
   static size_t max_serialized_size() { return 56u; }
 };
 
+template<> struct CdrTopicInfo<msg::PoseStamped> {
+  static const char* type_name() {
+    return "geometry_msgs::msg::dds_::PoseStamped_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_10f3786d7d40fd2b54367835614bff85d4ad3b5dab62bf8bca0cc232d73b4cd8";
+  }
+  // Header(268) + Pose(56).
+  static size_t max_serialized_size() { return 324u; }
+};
+
 template<> struct CdrTopicInfo<msg::PoseWithCovariance> {
   static const char* type_name() {
     return "geometry_msgs::msg::dds_::PoseWithCovariance_";
@@ -277,6 +394,17 @@ template<> struct CdrTopicInfo<msg::PoseWithCovariance> {
     return "RIHS01_9a7c0fd234b7f45c6098745ecccd773ca1085670e64107135397aee31c02e1bb";
   }
   static size_t max_serialized_size() { return 344u; }
+};
+
+template<> struct CdrTopicInfo<msg::PoseWithCovarianceStamped> {
+  static const char* type_name() {
+    return "geometry_msgs::msg::dds_::PoseWithCovarianceStamped_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_26432f9803e43727d3c8f668d1fdb3c630f548af631e2f4e31382371bfea3b6e";
+  }
+  // Header(268) + PoseWithCovariance(344).
+  static size_t max_serialized_size() { return 612u; }
 };
 
 template<> struct CdrTopicInfo<msg::Quaternion> {
@@ -297,6 +425,16 @@ template<> struct CdrTopicInfo<msg::RegionOfInterest> {
     return "RIHS01_ad16bcba5f9131dcdba6fbded19f726f5440e3c513b4fb586dd3027eeed8abb1";
   }
   static size_t max_serialized_size() { return 17u; }
+};
+
+template<> struct CdrTopicInfo<msg::SteeringReport> {
+  static const char* type_name() {
+    return "autoware_vehicle_msgs::msg::dds_::SteeringReport_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_aa3acc9ca95ebc4daf9dec0ecf87911ad9c196392857c3026bfead589db65a94";
+  }
+  static size_t max_serialized_size() { return 12u; }
 };
 
 template<> struct CdrTopicInfo<msg::String> {
@@ -359,6 +497,26 @@ template<> struct CdrTopicInfo<msg::TransformStamped> {
   static size_t max_serialized_size() { return 584u; }
 };
 
+template<> struct CdrTopicInfo<msg::TurnIndicatorsCommand> {
+  static const char* type_name() {
+    return "autoware_vehicle_msgs::msg::dds_::TurnIndicatorsCommand_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_657d7f761a9b02c543e4bf3e0000405906b6169dc0bbfd6637c64fe00d98cec7";
+  }
+  static size_t max_serialized_size() { return 9u; }
+};
+
+template<> struct CdrTopicInfo<msg::TurnIndicatorsReport> {
+  static const char* type_name() {
+    return "autoware_vehicle_msgs::msg::dds_::TurnIndicatorsReport_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_c05a54cd244f1c9d683613b11c87a5b3ef816eed7a5f207368301221731a0964";
+  }
+  static size_t max_serialized_size() { return 9u; }
+};
+
 template<> struct CdrTopicInfo<msg::Twist> {
   static const char* type_name() {
     return "geometry_msgs::msg::dds_::Twist_";
@@ -387,6 +545,27 @@ template<> struct CdrTopicInfo<msg::Vector3> {
     return "RIHS01_cc12fe83e4c02719f1ce8070bfd14aecd40f75a96696a67a2a1f37f7dbb0765d";
   }
   static size_t max_serialized_size() { return 24u; }
+};
+
+template<> struct CdrTopicInfo<msg::VehicleEmergencyStamped> {
+  static const char* type_name() {
+    return "tier4_vehicle_msgs::msg::dds_::VehicleEmergencyStamped_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_017801df5493a599ad735d55f3e93ea132c46f8f630bce94a5f3eb2dc4a4bb3c";
+  }
+  static size_t max_serialized_size() { return 9u; }
+};
+
+template<> struct CdrTopicInfo<msg::VelocityReport> {
+  static const char* type_name() {
+    return "autoware_vehicle_msgs::msg::dds_::VelocityReport_";
+  }
+  static const char* type_hash() {
+    return "RIHS01_9052adda949c32f4a98500abc1fb5bd23f2560e321eebdfbb25318d6108d4ce4";
+  }
+  // Header(268) + 3 x float32.
+  static size_t max_serialized_size() { return 280u; }
 };
 
 } // namespace ros2

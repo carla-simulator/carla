@@ -38,7 +38,12 @@ nav:
 
 - CARLA Ecosystem:
   - 'MathWorks': 'large_map_roadrunner.md'
-  - 'NVIDIA': 'nvidia.md'
+  - NVIDIA:
+    - 'Overview': 'nvidia.md'
+    - 'Alpamayo 2 Super user guide': 'nvidia_alpamayo.md'
+    - 'Alpamayo architecture and control': 'nvidia_alpamayo_architecture.md'
+    - 'Alpamayo troubleshooting': 'nvidia_alpamayo_troubleshooting.md'
+    - 'Neural reconstruction': 'nvidia_nurec.md'
   # - 'ASAM OpenDRIVE': 'adv_opendrive.md'
   - 'ROS2': 'ros2_native.md'
   - 'Scenic': 'tuto_G_scenic.md'

@@ -19,6 +19,7 @@
 #include "ActorBlueprintFunctionLibrary.generated.h"
 
 class AGnssSensor;
+class AAutowareGnssSensor;
 class AInertialMeasurementUnit;
 class ARadar;
 class ASceneCaptureSensor;
@@ -117,11 +118,15 @@ public:
       FActorDefinition &Definition);
 
   static FActorDefinition MakeGnssDefinition();
+  static FActorDefinition MakeAutowareGnssDefinition();
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakeGnssDefinition(
       bool &Success,
-      FActorDefinition &Definition);
+      FActorDefinition &Definition,
+      FString Name);
+
+  static FActorDefinition MakeVehicleStatusDefinition();
 
   static FActorDefinition MakeIMUDefinition();
 
@@ -288,6 +293,7 @@ public:
   static void SetLidar(const FActorDescription &Description, FLidarDescription &Lidar);
 
   static void SetGnss(const FActorDescription &Description, AGnssSensor *Gnss);
+  static void SetAutowareGnss(const FActorDescription &Description, AAutowareGnssSensor *Gnss);
 
   static void SetIMU(const FActorDescription &Description, AInertialMeasurementUnit *IMU);
 
