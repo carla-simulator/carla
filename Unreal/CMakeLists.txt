@@ -58,6 +58,10 @@ set (
   ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
 )
 
+# Resolve the NVIDIA DLSS SDK (defines CARLA_UE_DLSS_ENV_COMMAND, which every
+# Unreal build/package/launch command below is prefixed with).
+include (${CARLA_WORKSPACE_PATH}/CMake/DLSS.cmake)
+
 set (CARLA_UE_CONTENT_CHECK_PATH ${CARLA_UE_PATH}/Content/Carla/Blueprints)
 if (IS_DIRECTORY ${CARLA_UE_CONTENT_CHECK_PATH})
   carla_message_verbose ("CARLA Unreal Content - FOUND")
@@ -200,22 +204,29 @@ endif()
 
 
 
+# Both prefixes run through CARLA_UE_DLSS_ENV_COMMAND so UnrealBuildTool sees
+# DLSS_SDK (the engine's DLSSRRDenoiser plugin fails its build without it)
+# regardless of the environment `cmake --build` was invoked from.
 if (WIN32)
   set (
     CARLA_UE_BUILD_COMMAND_PREFIX
+      ${CARLA_UE_DLSS_ENV_COMMAND}
       ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat
   )
   set (
     CARLA_UE_UAT_COMMAND_PREFIX
+      ${CARLA_UE_DLSS_ENV_COMMAND}
       ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/RunUAT.bat
   )
 else ()
   set (
     CARLA_UE_BUILD_COMMAND_PREFIX
+      ${CARLA_UE_DLSS_ENV_COMMAND}
       ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/${UE_SYSTEM_NAME}/Build.sh
   )
   set (
     CARLA_UE_UAT_COMMAND_PREFIX
+      ${CARLA_UE_DLSS_ENV_COMMAND}
       ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/RunUAT.sh
   )
 endif ()
@@ -553,11 +564,15 @@ if (ENABLE_ROS2_DEMO)
   list (APPEND LAUNCH_ARGS -ros2-demo)
 endif()
 
+# The editor also needs DLSS_SDK at runtime: NGX loads the DLSS model
+# snippets from $DLSS_SDK/lib/<platform>/rel when the first DLSS-enabled
+# sensor is created.
 set (
   CARLA_LAUNCH_TARGET_OPTIONS
   COMMENT
     "Launching Carla Unreal..."
   COMMAND
+    ${CARLA_UE_DLSS_ENV_COMMAND}
     ${UNREAL_EDITOR_PATH}
       ${CARLA_UE_PROJECT_PATH}
       -${CARLA_UNREAL_RHI}
