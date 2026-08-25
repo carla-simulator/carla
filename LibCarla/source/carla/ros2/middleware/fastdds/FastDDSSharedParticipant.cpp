@@ -28,7 +28,15 @@ std::unordered_map<std::string, uint32_t>       FastDDSSharedParticipant::_type_
 efd::DomainParticipant* FastDDSSharedParticipant::acquire() {
   std::lock_guard<std::mutex> lock(_mutex);
   if (_refcount == 0u) {
-    efd::DomainParticipantQos pqos = efd::PARTICIPANT_QOS_DEFAULT;
+    // Load XML profiles (FASTRTPS_DEFAULT_PROFILES_FILE) before reading the
+    // factory default QoS, so a profile marked is_default_profile is already
+    // folded in. load_profiles() is idempotent. The default MUST be read via
+    // get_default_participant_qos(): PARTICIPANT_QOS_DEFAULT is a static
+    // constant that XML profiles never modify -- copying it silently discards
+    // any user-provided profile (transports included).
+    auto* factory = efd::DomainParticipantFactory::get_instance();
+    factory->load_profiles();
+    efd::DomainParticipantQos pqos = factory->get_default_participant_qos();
     // Fast-DDS's builtin default is UDPv4 + shared memory, and SHM is
     // preferred for any peer that looks same-host. SHM delivery silently
     // drops every sample across a container, uid, or Fast-DDS-version
@@ -38,7 +46,18 @@ efd::DomainParticipant* FastDDSSharedParticipant::acquire() {
     // subscriber works out of the box; setting the standard
     // FASTDDS_BUILTIN_TRANSPORTS environment variable (e.g. to DEFAULT)
     // skips this override and restores SHM for same-host, same-uid setups.
-    if (std::getenv("FASTDDS_BUILTIN_TRANSPORTS") == nullptr) {
+    //
+    // The override must also yield to an XML default profile that configured
+    // its own transports (user transports, or builtin transports disabled):
+    // setup_transports() would silently REPLACE a whitelisted transport with
+    // an unrestricted UDPv4 one bound to every interface, so e.g. camera
+    // multicast then leaks out physical NICs -- a saturated WiFi multicast
+    // queue backpressures the writers and collapses the tick rate.
+    const bool xml_configured_transports =
+        !pqos.transport().user_transports.empty() ||
+        !pqos.transport().use_builtin_transports;
+    if (std::getenv("FASTDDS_BUILTIN_TRANSPORTS") == nullptr &&
+        !xml_configured_transports) {
       pqos.setup_transports(eprosima::fastdds::rtps::BuiltinTransports::UDPv4);
     }
     // Use the effective domain id resolved by the abstraction layer

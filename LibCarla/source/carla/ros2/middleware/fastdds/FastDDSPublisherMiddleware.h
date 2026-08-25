@@ -137,6 +137,19 @@ class FastDDSPublisherMiddleware
     wqos.endpoint().history_memory_policy =
         eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
+    // ASYNCHRONOUS_PUBLISH_MODE: write() must never do network I/O on the
+    // calling thread. The FastDDS default (synchronous) runs the whole
+    // RTPS/UDP send inline in write(); with the simulator publishing multi-MB
+    // camera frames from engine threads, UE's task scheduler sees those
+    // threads blocked in sendto(), spins up standby workers and reaps them
+    // again, and the destabilized worker pool stalls every render-thread
+    // ParallelFor (SceneCapture InitViews) -- the tick rate collapses to a
+    // few Hz with CPU and GPU idle. In asynchronous mode write() only
+    // enqueues; the FastDDS flow-controller thread does the sends. The
+    // default (unthrottled) flow controller is intentional: we want the
+    // I/O off-thread, not rate-limited.
+    wqos.publish_mode().kind = efd::ASYNCHRONOUS_PUBLISH_MODE;
+
     if (qos != nullptr) {
       wqos.reliability().kind =
           qos->reliability == QosProfile::Reliability::Reliable
