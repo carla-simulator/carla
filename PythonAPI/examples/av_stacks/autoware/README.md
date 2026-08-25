@@ -364,6 +364,23 @@ engage via
   cherry-pick (launch gating, STOPPED-state departure, a vad_node segfault
   fix, and the 800×450 input size) — shipped in `install/patches/` with a
   README describing the validated sequence.
+- **The e2e demo is hands-free**: the ego spawns on the Town10 outer ring
+  (spawn 52 by default — VAD's navigation command is a *fixed* LANE_FOLLOW,
+  there is no route input, so only looping roads sustain a demo; dead-end
+  roads wedge the car at the road end), and the run script auto-engages
+  autonomous mode once VAD reports initialized (`--no-auto` to disable).
+- `run/e2e_drive_keeper.py` (started by the run script) attaches a
+  **collision sensor** to the ego and logs every contact, a per-minute
+  heartbeat (position, speed, odometer, collision count), wedge detection
+  (<0.5 m displacement over 20 s), and — unless `--no-recover` — teleports
+  the ego to a nearby aligned lane spawn so the loop continues. Watch
+  `run/logs/drive_keeper.log`: it is the ground truth for driving quality;
+  position/velocity alone cannot see contacts (the wheel-speed VelocityReport
+  keeps reading 4–7 m/s while the car is pinned against an obstacle).
+- The stack's RViz normally points its image panel at a traffic-light debug
+  topic that does not exist in e2e mode (black panel); the run script
+  generates `logs/vad_e2e.rviz` with the panel repointed to the front VAD
+  camera and passes it via `rviz_config:=`.
 - Localization is **ground truth**, not NDT: three plain ROS nodes from
   `autoware_carla_interface` (`carla_state_publisher`,
   `autoware_vehicle_velocity_converter`, `autoware_twist2accel`) turn

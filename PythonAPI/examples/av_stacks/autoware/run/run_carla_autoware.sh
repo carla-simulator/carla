@@ -90,8 +90,9 @@ WITH_DISPLAY=false
 WITH_RVIZ=false
 NO_AUTO=false
 NO_GATES=false
+NO_RECOVER=false
 GOAL=""
-SPAWN_INDEX=""                # classical: autoware_demo.py --spawn_index passthrough
+SPAWN_INDEX=""                # autoware_demo.py --spawn_index passthrough (e2e default: 52)
 LOG_DIR="$SCRIPT_DIR/logs"
 RPC_PORT=2000
 CARLA_HOST=127.0.0.1
@@ -139,11 +140,16 @@ Usage: $(basename "$0") --mode classical|e2e [options]
   --goal "X,Y,YAW"       classical: drive to this goal after startup. CARLA
                          coordinates (m, m, deg); converted to Autoware map frame
                          (x_map = x, y_map = -y, yaw_map = -yaw) automatically.
-  --spawn-index N        classical: spawn the ego at this spawn point index
-                         (passed to autoware_demo.py as --spawn_index; default:
-                         the demo's own default)
-  --no-auto              classical: skip post-launch automation (localization
-                         init / goal / engage) entirely
+  --spawn-index N        spawn the ego at this spawn point index (passed to
+                         autoware_demo.py as --spawn_index). classical default:
+                         the demo's own default. e2e default: 52 -- a spawn on
+                         the Town10 outer ring, which loops; VAD has NO route
+                         input (fixed LANE_FOLLOW command), so a road that ends
+                         in a T-junction wedges the car at the dead end.
+  --no-auto              skip post-launch automation entirely (classical:
+                         localization init / goal / engage; e2e: auto-engage)
+  --no-recover           e2e: the drive keeper only logs collisions/wedges,
+                         never teleport-recovers the ego
   --no-gates             classical: skip the pre-engage safety gates (ground-truth
                          localization check + distortion-corrector health). The
                          gates exist because engaging on a diverged pose drives
@@ -179,6 +185,7 @@ while [[ $# -gt 0 ]]; do
         --spawn-index)  SPAWN_INDEX="$2"; shift 2 ;;
         --no-auto)      NO_AUTO=true; shift ;;
         --no-gates)     NO_GATES=true; shift ;;
+        --no-recover)   NO_RECOVER=true; shift ;;
         --with-rviz)    WITH_RVIZ=true; shift ;;
         --log-dir)      LOG_DIR="$2"; shift 2 ;;
         --with-display) WITH_DISPLAY=true; shift ;;
@@ -831,6 +838,14 @@ else:
 # and ticks. It must remain the ONLY ticking client (sync mode).
 # --hz_rate 20 --resync is the validated configuration (20 Hz fixed step,
 # sim clock resynced on startup).
+# e2e default spawn: VAD's navigation command is a fixed LANE_FOLLOW (no route
+# input exists in the integration), so only looping roads sustain a demo --
+# spawn 52 sits on the Town10 outer ring. A dead-end spawn (e.g. 41's road,
+# which T-terminates) wedges the car at the road end.
+if [[ "$MODE" == "e2e" && -z "$SPAWN_INDEX" ]]; then
+    SPAWN_INDEX=52
+    log "e2e: defaulting to ring spawn --spawn-index 52 (LANE_FOLLOW needs a looping road)"
+fi
 start_proc autoware_demo "exec '$CARLA_PY' '$AUTOWARE_DEMO' --host $CARLA_HOST --port $RPC_PORT --hz_rate 20 --resync${SPAWN_INDEX:+ --spawn_index $SPAWN_INDEX}"
 pause 5 "let autoware_demo.py spawn the ego before attaching more sensors"
 
@@ -845,6 +860,15 @@ if [[ "$MODE" == "e2e" ]]; then
     # (ground-truth /localization/kinematic_state + /localization/acceleration)
     # + image_transport republish (raw -> compressed) for the six cameras.
     start_proc e2e_state_publishers "${STACK_PRELUDE}exec ros2 launch '$SCRIPT_DIR/e2e_state_publishers.launch.py'"
+
+    # Drive keeper: collision sensor on the ego (the ONLY ground truth for
+    # driving quality -- position/velocity alone cannot see contacts: the
+    # wheel-speed VelocityReport keeps reading 4-7 m/s while the car is
+    # pinned) + wedge detection + (unless --no-recover) teleport recovery so
+    # the LANE_FOLLOW demo keeps looping. Never ticks.
+    KEEPER_ARGS=""
+    $NO_RECOVER && KEEPER_ARGS=" --no-recover"
+    start_proc drive_keeper "exec '$CARLA_PY' '$SCRIPT_DIR/e2e_drive_keeper.py' --host $CARLA_HOST --port $RPC_PORT$KEEPER_ARGS"
 fi
 
 # ------------------------------------------------------- 6. Autoware launch --
@@ -860,7 +884,26 @@ CLASSICAL_SRC_CMD="${STACK_PRELUDE}exec ros2 launch autoware_launch e2e_simulato
 # simulator_type:=carla + launch_simulator_interface:=false for the same
 # reasons as classical (CARLA diag profile; native topics need no interface
 # node); the launch maps sensor_model to carla_sensor_kit for carla itself.
-E2E_PR_CMD="${STACK_PRELUDE}exec ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit simulator_type:=carla launch_simulator_interface:=false map_path:='$MAP_PATH' use_e2e_planning:=true e2e_planning_type:=vad"
+#
+# rviz image panel: the stock autoware.rviz points its visible image panel at
+# /perception/traffic_light_recognition/.../debug/rois, which does not exist
+# in e2e mode (no perception stack) -- the panel stays black. Generate a copy
+# repointed at the raw front VAD camera. Best-effort: if the ws config or the
+# expected topic line is missing, fall back to the stock config.
+E2E_RVIZ_ARG=""
+if [[ "$MODE" == "e2e" ]] && ! $DRY_RUN; then
+    STOCK_RVIZ="$(find "$AUTOWARE_WS/install" -path '*autoware_launch*' -name autoware.rviz 2>/dev/null | head -1)"
+    if [[ -n "$STOCK_RVIZ" ]] && grep -q 'Value: /perception/traffic_light_recognition/traffic_light/debug/rois' "$STOCK_RVIZ"; then
+        sed -e 's|Value: /perception/traffic_light_recognition/traffic_light/debug/rois|Value: /sensing/camera/CAM_FRONT/image_raw/image|' \
+            -e 's|Name: RecognitionResultOnImage|Name: FrontCamera|' \
+            "$STOCK_RVIZ" > "$LOG_DIR/vad_e2e.rviz"
+        E2E_RVIZ_ARG=" rviz_config:='$LOG_DIR/vad_e2e.rviz'"
+        log "e2e rviz: image panel repointed to /sensing/camera/CAM_FRONT/image_raw/image ($LOG_DIR/vad_e2e.rviz)"
+    else
+        warn "could not generate the e2e rviz config (stock autoware.rviz or its traffic-light image panel not found) -- rviz image panel will be black"
+    fi
+fi
+E2E_PR_CMD="${STACK_PRELUDE}exec ros2 launch autoware_launch e2e_simulator.launch.xml vehicle_model:=sample_vehicle sensor_model:=awsim_sensor_kit simulator_type:=carla launch_simulator_interface:=false map_path:='$MAP_PATH' use_e2e_planning:=true e2e_planning_type:=vad$E2E_RVIZ_ARG"
 E2E_FALLBACK_CMD="${STACK_PRELUDE}exec ros2 launch autoware_tensorrt_vad vad_carla_tiny.launch.xml sensing:=false localization:=false perception:=false"
 
 if [[ "$MODE" == "classical" ]]; then
@@ -954,7 +997,11 @@ wait_for_autoware_api() {
     log "waiting for the Autoware ADAPI to come up (up to 300 s) ..."
     local i
     for i in $(seq 1 60); do
-        if aw_ros2 "ros2 service list 2>/dev/null" | grep -q "/api/operation_mode/change_to_autonomous"; then
+        # grep runs INSIDE aw_ros2: this script sets pipefail, and an outer
+        # `| grep -q` exits at the (alphabetically early) match, SIGPIPEs the
+        # still-writing `ros2 service list` (exit 141), and fails the pipeline
+        # -- the loop then never succeeds even though the service is up.
+        if aw_ros2 "ros2 service list 2>/dev/null | grep -q '/api/operation_mode/change_to_autonomous'"; then
             log "Autoware ADAPI is up (after ~$((i * 5))s)"
             return 0
         fi
@@ -1178,6 +1225,43 @@ print(f'{x:.3f} {-y:.3f} {math.sin(r / 2.0):.6f} {math.cos(r / 2.0):.6f}')
         else
             log "no --goal given. To drive: set a goal in RViz, or re-run with --goal \"x,y,yaw\" (CARLA coords),"
             log "then engage via: ros2 service call /api/operation_mode/change_to_autonomous autoware_adapi_v1_msgs/srv/ChangeOperationMode {}"
+        fi
+    fi
+fi
+
+# ------------------------------------------------ 7b. e2e post-launch engage --
+# e2e needs no goal (VAD's command input is a fixed LANE_FOLLOW); the only
+# post-launch step is change_to_autonomous once VAD is up. The engage would
+# be accepted even before VAD publishes (the vehicle_cmd_gate holds stop until
+# control is valid), but waiting for the init line keeps the logs honest.
+if [[ "$MODE" == "e2e" ]] && ! $NO_AUTO; then
+    if wait_for_autoware_api; then
+        if $DRY_RUN; then
+            echo "[dry-run] wait for 'VAD model and interface initialized successfully' in $LOG_DIR/autoware.log (cached engines: ~1 min; a FIRST run builds TensorRT engines -- tens of minutes)"
+            echo "[dry-run] then: retry 'ros2 service call /api/operation_mode/change_to_autonomous autoware_adapi_v1_msgs/srv/ChangeOperationMode {}' (stack-side, up to 12x every 10 s until success=True)"
+        else
+            log "waiting for VAD init (cached engines: ~1 min; a FIRST run builds TensorRT engines and can take tens of minutes) ..."
+            VAD_OK=false
+            for _ in $(seq 1 360); do
+                if grep -aq "VAD model and interface initialized successfully" "$LOG_DIR/autoware.log" 2>/dev/null; then
+                    VAD_OK=true
+                    break
+                fi
+                sleep 5
+            done
+            $VAD_OK || warn "VAD init line not seen within 30 min -- attempting engage anyway"
+            ENGAGED=false
+            for _ in $(seq 1 12); do
+                if aw_ros2 "ros2 service call /api/operation_mode/change_to_autonomous autoware_adapi_v1_msgs/srv/ChangeOperationMode {}" 2>&1 \
+                        | tee -a "$LOG_DIR/automation.log" | grep -q "success=True"; then
+                    ENGAGED=true
+                    log "autonomous mode engaged -- VAD is driving (collisions/wedges/recoveries in $LOG_DIR/drive_keeper.log)"
+                    break
+                fi
+                log "change_to_autonomous not accepted yet, retrying in 10 s ..."
+                sleep 10
+            done
+            $ENGAGED || warn "could not engage autonomous mode after 12 attempts -- check $LOG_DIR/autoware.log, then engage manually"
         fi
     fi
 fi
