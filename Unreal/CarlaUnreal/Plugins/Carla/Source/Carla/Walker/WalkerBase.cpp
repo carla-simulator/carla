@@ -80,11 +80,13 @@ void AWalkerBase::AttachWheelchair()
   WheelchairComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
   WheelchairComponent->SetCollisionObjectType(ECC_Pawn);
   WheelchairComponent->RegisterComponent();
-  // The chair and pedestrian meshes were authored in the same reference
-  // frame (ue4-dev attached with an identity relative transform), so
-  // snapping the chair onto the mesh component aligns both.
   WheelchairComponent->AttachToComponent(
       WalkerMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+  // ue4-dev attached the chair with an identity relative transform, but the
+  // UE5 G2 walker meshes are authored with a different mesh-space yaw than
+  // the UE4 pedestrians the chair was aligned to, leaving the chair 90 deg
+  // off the rider's facing. Compensate on the chair component.
+  WheelchairComponent->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 
   // Wheelchair animation: the migrated UE4 AnimBlueprint if it loads and
   // compiled (it blends idle/rolling by speed), else a looping rolling
