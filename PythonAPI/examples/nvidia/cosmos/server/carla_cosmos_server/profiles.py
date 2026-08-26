@@ -39,8 +39,8 @@ class WorkerType:
 
 WORKER_TYPES: dict[str, WorkerType] = {
     "mock": WorkerType("cosmos_workers.mock", "api"),
-    "cosmos3": WorkerType("cosmos_workers.cosmos3", "cosmos3", implemented=False),          # Phase 3
-    "transfer25": WorkerType("cosmos_workers.transfer25", "transfer25", implemented=False),  # Phase 4
+    "cosmos3": WorkerType("cosmos_workers.cosmos3", "cosmos3"),
+    "transfer25": WorkerType("cosmos_workers.transfer25", "transfer25"),
     "wsm_renderer": WorkerType("cosmos_workers.wsm_renderer", "transfer25", implemented=False),  # Phase 5
     "transfer25_av": WorkerType("cosmos_workers.transfer25_av", "transfer25", implemented=False),  # Phase 6
 }

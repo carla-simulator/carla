@@ -193,8 +193,8 @@ class CosmosClient:
     def submit_clip(self, clip: Clip, backend: str, prompt: str, controls: dict[str, str | ControlInput],
                     views: list[str] | None = None, rgb: bool | None = None, negative_prompt: str | None = None,
                     seed: int = 0, guidance: float | None = None, num_steps: int | None = None,
-                    priority: Priority = "interactive", extra: dict[str, Any] | None = None,
-                    contract: BackendContract | None = None) -> "Job":
+                    resolution: str | None = None, priority: Priority = "interactive",
+                    extra: dict[str, Any] | None = None, contract: BackendContract | None = None) -> "Job":
         """Validate, upload what is needed from ``clip`` and submit.
 
         ``controls`` maps control name to ``"clip"`` (upload the clip's control
@@ -208,8 +208,8 @@ class CosmosClient:
         if not views and contract.max_views > 1:
             views = [v for v in contract.views if v in manifest.camera_names] or manifest.camera_names
         req = JobRequest(backend=backend, prompt=prompt, negative_prompt=negative_prompt, seed=seed,
-                         guidance=guidance, num_steps=num_steps, priority=priority, views=views,
-                         extra=extra or {})
+                         guidance=guidance, num_steps=num_steps, resolution=resolution, priority=priority,
+                         views=views, extra=extra or {})
         # (kind, source, setter): kind "scene" -> source is a directory; kind "video" -> (video kind, view)
         plan: list[tuple[str, Any, Callable[[str], None]]] = []
 

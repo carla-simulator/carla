@@ -89,8 +89,8 @@ def cmd_submit(args) -> int:
             extra[k] = v
     job = c.submit_clip(clip, args.backend, args.prompt, controls, views=args.view or None,
                         rgb=None if args.rgb == "auto" else args.rgb == "yes", negative_prompt=args.negative_prompt,
-                        seed=args.seed, guidance=args.guidance, num_steps=args.steps, priority=args.priority,
-                        extra=extra)
+                        seed=args.seed, guidance=args.guidance, num_steps=args.steps, resolution=args.resolution,
+                        priority=args.priority, extra=extra)
     print(f"submitted {job.id} ({job.info.backend}, {job.info.priority}); queue position {job.info.queue_position}")
     if args.wait or args.out:
         return _wait_and_fetch(job, args.out)
@@ -203,6 +203,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--seed", type=int, default=0)
     s.add_argument("--guidance", type=float, default=None)
     s.add_argument("--steps", type=int, default=None)
+    s.add_argument("--resolution", default=None, help="resolution bucket, e.g. 480 or 720")
     s.add_argument("--priority", choices=["interactive", "batch"], default="interactive")
     s.add_argument("--extra", action="append", default=[], metavar="KEY=JSON", help="backend pass-through")
     s.add_argument("--wait", action="store_true")

@@ -313,7 +313,10 @@ class JobRequest(BaseModel):
     negative_prompt: str | None = None
     seed: int = 0
     guidance: float | None = None
+    """Text CFG scale (backend default when ``None``)."""
     num_steps: int | None = None
+    resolution: str | None = None
+    """Resolution bucket from the contract (``"480"``, ``"720"``...); backend default when ``None``."""
     priority: Priority = "interactive"
     controls: dict[str, ControlInput] = Field(default_factory=dict)
     views: list[str] = Field(default_factory=list)
@@ -343,6 +346,9 @@ def validate_request(contract: BackendContract, request: JobRequest,
     if request.backend != contract.id:
         errors.append(f"request targets backend '{request.backend}' but contract is '{contract.id}'")
 
+    if request.resolution is not None and request.resolution not in contract.resolutions:
+        errors.append(f"resolution '{request.resolution}' not offered by '{contract.id}' "
+                      f"(accepted: {contract.resolutions})")
     errors += _validate_controls(contract, request)
     views = _validate_views(contract, request, manifest, errors)
     errors += _validate_control_views(request, views)

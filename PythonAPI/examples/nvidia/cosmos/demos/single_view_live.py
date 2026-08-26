@@ -3,8 +3,10 @@
 
 Spawns a hero plus background traffic, captures ``--frames`` frames with the
 selected rig (RGB, depth, segmentation controls and the ClipGT scene package)
-and writes a Clip to disk.  With ``--capture-only`` it stops there; job
-submission arrives with the Phase 2/3 server work.
+and writes a Clip to disk.  With ``--capture-only`` it stops there; otherwise
+the clip is submitted to a carla-cosmos server (``--endpoint``/``--token`` or
+``COSMOS_URL``/``COSMOS_TOKEN``), the result is downloaded next to the clip and
+shown side by side with the input in the viewer (``--no-view`` to skip).
 
 Example (CARLA server on :2100)::
 
@@ -45,8 +47,19 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--clip-id", default=None)
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--capture-only", action="store_true", help="capture the clip and exit (no submission)")
-    ap.add_argument("--endpoint", default=None, help="Cosmos server URL (Phase 2+)")
-    ap.add_argument("--token", default=None)
+    ap.add_argument("--endpoint", default=None, help="Cosmos server URL (default: COSMOS_URL)")
+    ap.add_argument("--token", default=None, help="bearer token (default: COSMOS_TOKEN)")
+    ap.add_argument("--prompt", default="The same street on a rainy evening, wet asphalt reflecting the street lights, "
+                                        "photorealistic dashcam footage")
+    ap.add_argument("--negative-prompt", default=None)
+    ap.add_argument("--control", action="append", default=None, metavar="NAME=SOURCE[:WEIGHT]",
+                    help="controls to send (default: depth=clip seg=clip, plus edge=clip with --edge); "
+                         "e.g. --control edge=derive --control depth=clip:0.7")
+    ap.add_argument("--resolution", default=None, help="resolution bucket (480/720)")
+    ap.add_argument("--steps", type=int, default=None)
+    ap.add_argument("--guidance", type=float, default=None)
+    ap.add_argument("--results", default="./results", help="where results are downloaded")
+    ap.add_argument("--no-view", action="store_true", help="do not open the viewer")
     ap.add_argument("-v", "--verbose", action="store_true")
     return ap.parse_args()
 
@@ -168,10 +181,6 @@ def main() -> int:
 
         if args.capture_only:
             return 0
-        raise NotImplementedError(
-            "Job submission needs the carla-cosmos server (Phase 2/3). "
-            "The clip on disk is complete; once the server ships, run: "
-            f"single_view_live.py --endpoint <url> --token <token> --backend {args.backend}")
     finally:
         tm.set_synchronous_mode(False)
         world.apply_settings(settings)
@@ -182,6 +191,69 @@ def main() -> int:
             except RuntimeError:
                 pass
         client.apply_batch([carla.command.DestroyActor(a) for a in actors])
+
+    # -- submission (CARLA actors are gone; only the clip on disk is needed from here) -------------
+    return submit_and_view(clip, args)
+
+
+def submit_and_view(clip, args) -> int:
+    from carla_cosmos import CosmosClient
+    from carla_cosmos.client import CosmosError, JobFailed
+
+    controls = parse_controls(args.control, edge=args.edge)
+    try:
+        cosmos = CosmosClient(args.endpoint, token=args.token)
+        log.info("submitting %s to %s on %s (controls %s)", clip.manifest.clip_id, args.backend, cosmos.url, controls)
+        job = cosmos.submit_clip(clip, args.backend, args.prompt, controls, negative_prompt=args.negative_prompt,
+                                 seed=args.seed, guidance=args.guidance, num_steps=args.steps,
+                                 resolution=args.resolution)
+        log.info("job %s queued (position %s)", job.id, job.info.queue_position)
+        last = [""]
+
+        def progress(info):
+            msg = f"{info.status} {info.progress * 100:5.1f}% {info.message}"
+            if msg != last[0]:
+                log.info("  %s", msg)
+                last[0] = msg
+
+        info = job.wait(on_progress=progress)
+        res = job.result()
+        out_dir = Path(args.results) / clip.manifest.clip_id / job.id
+        paths = res.download(out_dir)
+        log.info("job %s done in %.0fs (timings %s); %d file(s) in %s", job.id,
+                 sum(res.manifest.timings.values()), {k: round(v, 1) for k, v in res.manifest.timings.items()},
+                 len(paths), out_dir)
+    except JobFailed as exc:
+        log.error("%s", exc)
+        return 2
+    except CosmosError as exc:
+        log.error("%s", exc)
+        return 2
+
+    if args.no_view:
+        return 0
+    from viewer import view_result
+
+    view_result(clip, out_dir)
+    return 0
+
+
+def parse_controls(specs, edge: bool) -> dict:
+    if not specs:
+        controls = {"depth": "clip", "seg": "clip"}
+        if edge:
+            controls["edge"] = "clip"
+        return controls
+    controls = {}
+    for spec in specs:
+        name, _, how = spec.partition("=")
+        how = how or "clip"
+        if ":" in how:
+            how, w = how.split(":", 1)
+            controls[name] = (how, float(w))
+        else:
+            controls[name] = how
+    return controls
 
 
 if __name__ == "__main__":
