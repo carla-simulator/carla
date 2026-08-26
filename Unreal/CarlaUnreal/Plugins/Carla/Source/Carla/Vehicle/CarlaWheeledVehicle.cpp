@@ -374,12 +374,21 @@ FVector ACarlaWheeledVehicle::GetVehicleBoundingBoxExtent() const
 float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 {
   UChaosWheeledVehicleMovementComponent* MovementComponent = GetChaosWheeledVehicleMovementComponent();
-  const auto& Wheels = MovementComponent->WheelSetups;
-  check(Wheels.Num() > 0);
-  const UChaosVehicleWheel* FrontWheel =
-    Cast<UChaosVehicleWheel>(Wheels[0].WheelClass->GetDefaultObject());
-  check(FrontWheel != nullptr);
-  return FrontWheel->MaxSteerAngle;
+  if (MovementComponent != nullptr && MovementComponent->WheelSetups.Num() > 0 &&
+      MovementComponent->WheelSetups[0].WheelClass != nullptr)
+  {
+    const UChaosVehicleWheel* FrontWheel =
+        Cast<UChaosVehicleWheel>(MovementComponent->WheelSetups[0].WheelClass->GetDefaultObject());
+    if (FrontWheel != nullptr)
+    {
+      return FrontWheel->MaxSteerAngle;
+    }
+  }
+  // A vehicle whose movement component has no wheel setups (e.g. a rig whose
+  // configuration did not survive the UE5 migration) must not assert the
+  // whole server down from BeginPlay; report a sensible steering default.
+  UE_LOG(LogCarla, Warning, TEXT("%s: no wheel setups, returning default max steer angle"), *GetName());
+  return 35.0f;
 }
 
 // =============================================================================
