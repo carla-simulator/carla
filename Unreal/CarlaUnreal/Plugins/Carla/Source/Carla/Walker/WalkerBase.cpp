@@ -14,6 +14,7 @@
 #include <util/ue-header-guard-begin.h>
 #include "Animation/AnimSequence.h"
 #include "Components/CapsuleComponent.h"
+#include "Engine/SkeletalMesh.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 #include "Engine/OverlapResult.h"
@@ -34,11 +35,89 @@ void AWalkerBase::TagWheelchair()
   // the blueprint after spawn gets its semantic-segmentation stencil (a
   // freshly attached component has none). Unlike ue4-dev this needs no
   // episode lookup: the UE5 tagger derives the instance id from the actor
-  // itself.
-  // TODO(wheelchair content): the wheelchair mesh assets are not migrated
-  // yet; once they are, their asset paths must resolve to a labeled folder
-  // (see ATagger::GetLabelByPath) for this tag to be meaningful.
+  // itself. The wheelchair mesh lives under Carla/Static/Pedestrian, which
+  // ATagger::GetLabelByPath resolves to the Pedestrian label.
   ATagger::TagActor(*this, true);
+}
+
+void AWalkerBase::AttachWheelchair()
+{
+  if (WheelchairComponent != nullptr)
+  {
+    return;
+  }
+  USkeletalMeshComponent *WalkerMesh = GetMesh();
+  if (WalkerMesh == nullptr)
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("Wheelchair: walker %s has no mesh, spawning as normal pedestrian"),
+        *GetName());
+    return;
+  }
+
+  // Soft references throughout: a build without the wheelchair content must
+  // still run, degrading to a normal pedestrian.
+  auto *ChairMesh = Cast<USkeletalMesh>(FSoftObjectPath(
+      TEXT("/Game/Carla/Static/Pedestrian/Prop_Wheelchair/Meshes_/SM_Wheelchair.SM_Wheelchair"))
+          .TryLoad());
+  auto *SittingAnim = Cast<UAnimSequence>(FSoftObjectPath(
+      TEXT("/Game/Carla/Static/Pedestrian/Animations/WheelchairUser/WheelchairSitting_Moving2.WheelchairSitting_Moving2"))
+          .TryLoad());
+  if (ChairMesh == nullptr || SittingAnim == nullptr)
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("Wheelchair: content not available (mesh=%d anim=%d), walker %s stays a normal pedestrian"),
+        ChairMesh != nullptr, SittingAnim != nullptr, *GetName());
+    return;
+  }
+
+  WheelchairComponent = NewObject<USkeletalMeshComponent>(this, TEXT("WheelchairMesh"));
+  WheelchairComponent->SetSkeletalMesh(ChairMesh);
+  // Same collision convention as the walker body: query-only Pawn geometry.
+  // Sensors (lidar, semantic raycasts) see the chair, but it can never
+  // physically push the character or catch on the ground.
+  WheelchairComponent->SetCollisionProfileName(TEXT("CharacterMesh"));
+  WheelchairComponent->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+  WheelchairComponent->SetCollisionObjectType(ECC_Pawn);
+  WheelchairComponent->RegisterComponent();
+  // The chair and pedestrian meshes were authored in the same reference
+  // frame (ue4-dev attached with an identity relative transform), so
+  // snapping the chair onto the mesh component aligns both.
+  WheelchairComponent->AttachToComponent(
+      WalkerMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+
+  // Wheelchair animation: the migrated UE4 AnimBlueprint if it loads and
+  // compiled (it blends idle/rolling by speed), else a looping rolling
+  // animation.
+  const TCHAR *ChairAnimMode = TEXT("none");
+  auto *ChairAnimClass = Cast<UClass>(FSoftObjectPath(
+      TEXT("/Game/Carla/Static/Pedestrian/Animations/Wheelchair/ABP_WheelChair_MK.ABP_WheelChair_MK_C"))
+          .TryLoad());
+  if (ChairAnimClass != nullptr && !ChairAnimClass->HasAnyClassFlags(CLASS_NewerVersionExists))
+  {
+    WheelchairComponent->SetAnimInstanceClass(ChairAnimClass);
+    ChairAnimMode = TEXT("ABP_WheelChair_MK");
+  }
+  else if (auto *RollingAnim = Cast<UAnimSequence>(FSoftObjectPath(
+      TEXT("/Game/Carla/Static/Pedestrian/Animations/Wheelchair/Wheelchair_Rolling.Wheelchair_Rolling"))
+          .TryLoad()))
+  {
+    WheelchairComponent->PlayAnimation(RollingAnim, /*bLooping=*/true);
+    ChairAnimMode = TEXT("Wheelchair_Rolling loop");
+  }
+
+  // The rider: the UE4 wheelchair-user AnimBlueprints do not compile in UE5
+  // (they reference GEN2 animations that were not migrated), so play the
+  // sitting animation directly. The anim targets the old GEN2 skeleton
+  // (SK_Pedestrian_Generan), registered as compatible with the UE5 walker
+  // skeleton (Skel_Pedestrian_G2) during content migration.
+  WalkerMesh->PlayAnimation(SittingAnim, /*bLooping=*/true);
+
+  TagWheelchair();
+
+  UE_LOG(LogCarla, Display,
+      TEXT("Wheelchair attached to walker %s (chair anim: %s, rider anim: WheelchairSitting_Moving2 loop)"),
+      *GetName(), ChairAnimMode);
 }
 
 void AWalkerBase::BeginPlay()

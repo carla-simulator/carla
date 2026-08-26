@@ -99,6 +99,20 @@ public:
   UFUNCTION(BlueprintCallable)
   void TagWheelchair();
 
+  /// Attach the wheelchair prop to the walker and switch the walker to the
+  /// sitting animation. Called by the walker factory right after spawn when
+  /// the "use_wheelchair" attribute is set (ue4-dev did this from the
+  /// factory blueprint's AddWheelchairToWalker). All content is soft-loaded:
+  /// if the wheelchair assets are missing the walker stays a normal
+  /// pedestrian and a warning is logged. Idempotent.
+  UFUNCTION(BlueprintCallable)
+  void AttachWheelchair();
+
+  /// The wheelchair mesh attached by AttachWheelchair(), null for walkers
+  /// spawned without one.
+  UPROPERTY(Category="Walker Base", BlueprintReadOnly, VisibleAnywhere)
+  TObjectPtr<USkeletalMeshComponent> WheelchairComponent = nullptr;
+
   virtual void BeginPlay() override;
 
 private:

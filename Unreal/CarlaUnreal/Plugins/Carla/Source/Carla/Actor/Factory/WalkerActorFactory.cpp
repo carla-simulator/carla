@@ -49,7 +49,8 @@ FActorSpawnResult AWalkerActorFactory::SpawnActor(
 
   // Wire the "use_wheelchair" user attribute through to the walker before
   // PostProcessWalker runs, so the blueprint attach logic can read it.
-  if(AWalkerBase* Walker = Cast<AWalkerBase>(SpawnedActor))
+  AWalkerBase* Walker = Cast<AWalkerBase>(SpawnedActor);
+  if(Walker)
   {
     Walker->bUsesWheelChair = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
         TEXT("use_wheelchair"), ActorDescription.Variations, false);
@@ -57,6 +58,12 @@ FActorSpawnResult AWalkerActorFactory::SpawnActor(
 
   if(PostProcessWalker(SpawnedActor, ActorDescription))
   {
+    // After PostProcessWalker so the blueprint's material/mesh post-
+    // processing cannot stomp the wheelchair animation override.
+    if(Walker && Walker->bUsesWheelChair)
+    {
+      Walker->AttachWheelchair();
+    }
     SpawnResult.Status = EActorSpawnResultStatus::Success;
     return SpawnResult;
   }
