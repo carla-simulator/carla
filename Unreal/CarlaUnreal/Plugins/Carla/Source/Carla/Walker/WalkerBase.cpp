@@ -88,6 +88,16 @@ void AWalkerBase::AttachWheelchair()
   // empirically with a 0/90/180/270 sweep and side-view captures.
   WheelchairComponent->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
 
+  // The sitting pose's pelvis height was authored against the UE4 walker
+  // root convention, leaving the rider hovering above the seat on the UE5
+  // G2 meshes. Lower the rider's mesh into the chair and compensate the
+  // chair (attached to that same mesh) so its wheels stay on the ground.
+  // 25cm calibrated empirically (0-30cm sweep with side-view captures):
+  // pelvis on the cushion, feet on the footplates, no clipping.
+  constexpr float RiderDrop = 25.0f;
+  WalkerMesh->AddLocalOffset(FVector(0.0f, 0.0f, -RiderDrop));
+  WheelchairComponent->AddLocalOffset(FVector(0.0f, 0.0f, RiderDrop));
+
   // Wheelchair animation: the migrated UE4 AnimBlueprint if it loads and
   // compiled (it blends idle/rolling by speed), else a looping rolling
   // animation.
