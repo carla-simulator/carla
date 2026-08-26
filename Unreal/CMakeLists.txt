@@ -432,6 +432,14 @@ function (
     carla_message ("package(${PACKAGE_CONFIGURATION}): cooking only ${CARLA_MAPS_TO_COOK}")
   endif ()
 
+  # On Windows, keep one externally managed Zen instance alive across cook,
+  # stage, pak, and archive. Run `zenserver.exe --port 8558` before packaging.
+  # Linux packages successfully with UAT's auto-launched Zen instance, so this
+  # argument must remain Windows-only.
+  if (WIN32)
+    list (APPEND CARLA_PACKAGE_EXTRA_UAT_ARGS -NoZenAutoLaunch=127.0.0.1)
+  endif ()
+
   carla_add_custom_target (
     ${TARGET_NAME}
     "Create a CARLA package in ${PACKAGE_CONFIGURATION} mode."
@@ -463,6 +471,9 @@ function (
       -Platform=${UE_SYSTEM_NAME}
       -prereqs
       -build
+      # DefaultGame.ini's CulturesToStage setting is not consumed by
+      # BuildCookRun staging; pass it explicitly so packaged builds include ICU.
+      -culturesToStage=en
       -stagingdirectory=${CARLA_PACKAGE_STAGING_PATH}
       -archivedirectory=${CARLA_PACKAGE_ARCHIVE_PATH}
       ${CARLA_PACKAGE_EXTRA_UAT_ARGS}
