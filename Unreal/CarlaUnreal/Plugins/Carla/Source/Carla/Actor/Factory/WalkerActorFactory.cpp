@@ -47,6 +47,14 @@ FActorSpawnResult AWalkerActorFactory::SpawnActor(
     return SpawnResult;
   }
 
+  // Wire the "use_wheelchair" user attribute through to the walker before
+  // PostProcessWalker runs, so the blueprint attach logic can read it.
+  if(AWalkerBase* Walker = Cast<AWalkerBase>(SpawnedActor))
+  {
+    Walker->bUsesWheelChair = UActorBlueprintFunctionLibrary::RetrieveActorAttributeToBool(
+        TEXT("use_wheelchair"), ActorDescription.Variations, false);
+  }
+
   if(PostProcessWalker(SpawnedActor, ActorDescription))
   {
     SpawnResult.Status = EActorSpawnResultStatus::Success;
@@ -113,6 +121,8 @@ TSharedPtr<FJsonObject> AWalkerActorFactory::FWalkerParametersToJsonObject(const
   JsonObject->SetArrayField(TEXT("Speeds"), SpeedArray);
 
   JsonObject->SetNumberField(TEXT("Generation"), WalkerParams.Generation);
+
+  JsonObject->SetBoolField(TEXT("CanUseWheelChair"), WalkerParams.bCanUseWheelChair);
 
   return JsonObject;
 }
@@ -230,6 +240,14 @@ bool AWalkerActorFactory::JsonToFWalkerParameters(const TSharedPtr<FJsonObject> 
     }
 
     JsonObject->TryGetNumberField(TEXT("Generation"), OutWalkerParams.Generation);
+
+    // Optional field: the pre-wheelchair catalogs do not carry it, keep the
+    // struct default (false) when absent.
+    bool bCanUseWheelChair = false;
+    if (JsonObject->TryGetBoolField(TEXT("CanUseWheelChair"), bCanUseWheelChair))
+    {
+        OutWalkerParams.bCanUseWheelChair = bCanUseWheelChair;
+    }
 
     return true;
 }

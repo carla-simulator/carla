@@ -1764,6 +1764,11 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
       EActorAttributeType::String,
       GetAge(Parameters.Age)});
 
+  Definition.Attributes.Emplace(FActorAttribute{
+      TEXT("can_use_wheelchair"),
+      EActorAttributeType::Bool,
+      Parameters.bCanUseWheelChair ? TEXT("true") : TEXT("false")});
+
   if (Parameters.Speed.Num() > 0)
   {
     FActorVariation Speed;
@@ -1783,6 +1788,20 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
   IsInvincible.RecommendedValues = {TEXT("true")};
   IsInvincible.bRestrictToRecommended = false;
   Definition.Variations.Emplace(IsInvincible);
+
+  FActorVariation WheelChairVariation;
+  WheelChairVariation.Id = TEXT("use_wheelchair");
+  WheelChairVariation.Type = EActorAttributeType::Bool;
+  if (Parameters.bCanUseWheelChair)
+  {
+    WheelChairVariation.RecommendedValues = {TEXT("false"), TEXT("true")};
+  }
+  else
+  {
+    WheelChairVariation.RecommendedValues = {TEXT("false")};
+  }
+  WheelChairVariation.bRestrictToRecommended = true;
+  Definition.Variations.Emplace(WheelChairVariation);
 
   Success = CheckActorDefinition(Definition);
 }

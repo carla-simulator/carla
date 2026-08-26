@@ -30,6 +30,13 @@ public:
   UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
   float LifeSpanAfterDeath = 10.0f;
 
+  /// Whether this walker was spawned riding a wheelchair (the
+  /// "use_wheelchair" user attribute). The walker blueprint reads it to
+  /// attach the wheelchair mesh; the bounding-box calculator enlarges the
+  /// walker bounds accordingly.
+  UPROPERTY(Category="Walker Base", BlueprintReadWrite, EditAnywhere)
+  bool bUsesWheelChair = false;
+
   /// A vehicle touching the walker while moving at least this fast
   /// (cm/s) kills it - ue4-dev parity, where any moving-vehicle contact
   /// was lethal. The threshold only exempts effectively stationary
@@ -85,6 +92,12 @@ public:
   /// after-death life span. Idempotent.
   UFUNCTION(BlueprintCallable)
   void Kill(FVector ImpactVelocity, AActor *Killer = nullptr);
+
+  /// Re-tag this walker's components. Called by the walker blueprint after
+  /// attaching a wheelchair mesh, as freshly attached components carry no
+  /// semantic-segmentation tag.
+  UFUNCTION(BlueprintCallable)
+  void TagWheelchair();
 
   virtual void BeginPlay() override;
 

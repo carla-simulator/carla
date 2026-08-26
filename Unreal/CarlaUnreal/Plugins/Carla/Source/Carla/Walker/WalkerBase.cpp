@@ -7,6 +7,7 @@
 #include "WalkerBase.h"
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/Game/Tagger.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Walker/WalkerController.h"
 
@@ -25,6 +26,19 @@ AWalkerBase::AWalkerBase(const FObjectInitializer &ObjectInitializer)
   : Super(ObjectInitializer)
 {
   PrimaryActorTick.bCanEverTick = true;
+}
+
+void AWalkerBase::TagWheelchair()
+{
+  // Re-tag every component of the walker so a wheelchair mesh attached by
+  // the blueprint after spawn gets its semantic-segmentation stencil (a
+  // freshly attached component has none). Unlike ue4-dev this needs no
+  // episode lookup: the UE5 tagger derives the instance id from the actor
+  // itself.
+  // TODO(wheelchair content): the wheelchair mesh assets are not migrated
+  // yet; once they are, their asset paths must resolve to a labeled folder
+  // (see ATagger::GetLabelByPath) for this tag to be meaningful.
+  ATagger::TagActor(*this, true);
 }
 
 void AWalkerBase::BeginPlay()
