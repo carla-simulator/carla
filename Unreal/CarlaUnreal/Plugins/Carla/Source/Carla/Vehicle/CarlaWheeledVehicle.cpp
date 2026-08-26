@@ -455,10 +455,10 @@ void ACarlaWheeledVehicle::SetWheelsFrictionScale(TArray<float>& WheelsFrictionS
   UChaosWheeledVehicleMovementComponent* Movement = GetChaosWheeledVehicleMovementComponent();
   if (Movement)
   {
-    check(Movement != nullptr);
-    check(Movement->Wheels.Num() == WheelsFrictionScale.Num());
-
-    for (int32 i = 0; i < Movement->Wheels.Num(); ++i)
+    // The runtime wheel array is empty until the Chaos vehicle finishes its
+    // physics initialization: don't crash on early or mismatched requests.
+    const int32 Count = FMath::Min(Movement->Wheels.Num(), WheelsFrictionScale.Num());
+    for (int32 i = 0; i < Count; ++i)
     {
       Movement->Wheels[i]->FrictionForceMultiplier = WheelsFrictionScale[i];
     }
@@ -507,11 +507,28 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
   check(RCurve != nullptr);
   PhysicsControl.SteeringCurve = *RCurve;
   PhysicsControl.UseSweepWheelCollision = false;
-  // Wheels Setup
+  // Wheels Setup. The runtime wheel instances (Wheels) are only created once
+  // the Chaos vehicle finishes its physics initialization, which happens after
+  // the spawn frame: a client asking for the physics control right after
+  // spawning would index an empty array (and crash the server). Fall back to
+  // each wheel class' defaults until the runtime instances exist.
   PhysicsControl.Wheels.SetNum(VehicleMovComponent.WheelSetups.Num());
   for (int32 i = 0; i < PhysicsControl.Wheels.Num(); ++i)
   {
-    auto& In = *VehicleMovComponent.Wheels[i];
+    const UChaosVehicleWheel* InPtr = nullptr;
+    if (VehicleMovComponent.Wheels.IsValidIndex(i))
+    {
+      InPtr = VehicleMovComponent.Wheels[i];
+    }
+    else if (auto WheelClass = VehicleMovComponent.WheelSetups[i].WheelClass)
+    {
+      InPtr = WheelClass->GetDefaultObject<UChaosVehicleWheel>();
+    }
+    if (InPtr == nullptr)
+    {
+      continue;
+    }
+    auto& In = *InPtr;
     auto& Out = PhysicsControl.Wheels[i];
     Out.AxleType = In.AxleType;
     Out.Offset = In.Offset;
@@ -532,9 +549,9 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
     Out.bTractionControlEnabled = In.bTractionControlEnabled;
     Out.MaxWheelspinRotation = In.MaxWheelspinRotation;
     Out.ExternalTorqueCombineMethod = In.ExternalTorqueCombineMethod;
-    RCurve = In.LateralSlipGraph.GetRichCurve();
-    check(RCurve != nullptr);
-    Out.LateralSlipGraph = *RCurve;
+    auto SlipCurve = In.LateralSlipGraph.GetRichCurveConst();
+    check(SlipCurve != nullptr);
+    Out.LateralSlipGraph = *SlipCurve;
     Out.SuspensionAxis = In.SuspensionAxis;
     Out.SuspensionForceOffset = In.SuspensionForceOffset;
     Out.SuspensionMaxRaise = In.SuspensionMaxRaise;
@@ -637,6 +654,17 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
 
   for (auto& WheelSetup : VehicleMovComponent.WheelSetups)
     check(WheelSetup.WheelClass != nullptr);
+
+  // The runtime wheel instances only exist once the Chaos vehicle finishes its
+  // physics initialization (after the spawn frame): applying wheel physics
+  // before that would index an empty array and crash the server.
+  if (VehicleMovComponent.Wheels.Num() < WheelCount)
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("ApplyVehiclePhysicsControl: wheels not initialized yet on %s, skipping wheel setup"),
+        *GetName());
+    return;
+  }
 
   for (int32 i = 0; i < WheelCount; ++i)
   {
