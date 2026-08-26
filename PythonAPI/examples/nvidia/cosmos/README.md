@@ -136,6 +136,15 @@ cd server && ../client/.venv/bin/python -m pytest tests  # API, scheduler, proto
 CARLA_COSMOS_TEST_PORT=2000 .venv/bin/python -m pytest tests -m integration   # needs a CARLA server
 ```
 
+## Demos
+
+| script | what it does |
+|---|---|
+| `demos/single_view_live.py` | TM-driven hero, single 720p camera, capture → submit (`--backend`, `--control`) → download → viewer |
+| `demos/single_view_replay.py` | deterministic clip from a recorder log, then `batch.yaml` prompts × seeds as `batch` jobs |
+| `demos/av7_world_scenario.py` | NVIDIA 7-camera rig, ClipGT scene export, Transfer 2.5 AV (`hdmap_bbox` rendered server-side); `--also-cosmos3` adds a Cosmos 3 `wsm` job |
+| `demos/viewer.py` | input \| control \| result side by side, per camera, scrubbing |
+
 ## Server
 
 One Docker image (Phase 7) with every model artifact baked in; until then the

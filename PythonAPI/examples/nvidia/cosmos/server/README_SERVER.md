@@ -185,3 +185,25 @@ passed.
 cd server && python -m pytest tests      # auth, blobs, jobs, scheduler ordering, gc, profiles, protocol (mock worker subprocess)
 ../scripts/smoke_test.sh                 # black-box: mock server, one job per backend, auth rejection
 ```
+
+## Validating on the GPU node (first run)
+
+1. `./build_image.sh --nano --hf-token-file ~/.hf_token` (or `--hf-cache` with a mirror), or pull the pushed image.
+2. `../scripts/run_server.sh` → note the token; `docker logs -f carla-cosmos` shows the workers loading
+   (`/state/logs/worker-*.log` inside the volume has each worker's own log, incl. the `vllm serve` output).
+3. `carla-cosmos health` until every worker is `ready` with `smoke=True` — each worker generates a tiny sample
+   (5 frames / 2 steps for Cosmos 3, 93 frames / 1 step for Transfer 2.5, 2 views / 1 step for AV) before the
+   server reports ready, so a broken model stack shows up here, not on the first real job.
+4. `COSMOS_URL=… COSMOS_TOKEN=… ../scripts/smoke_test.sh --external` — one synthetic job per available backend.
+5. Real clips: `demos/single_view_live.py` (Cosmos 3 / Transfer 2.5) and `demos/av7_world_scenario.py`
+   (AV + rendering) against a CARLA server.
+
+Things this machine could not verify (no GPU inference here) and where they would surface:
+
+| unverified | expected symptom if wrong | knob |
+|---|---|---|
+| vLLM-Omni flags (`--vae-use-tiling`, TP) on the target GPUs | worker `error` at start; `worker-cosmos3-*.log` | profile `args`, `--vllm-arg` |
+| Transfer 2.5 offline checkpoint resolution through the `uvx` shim | `transfer25` worker `error: cannot resolve …` | `uvx_shim.py`, `artifacts.lock` revisions |
+| `torchrun` rank loop for AV (`broadcast_object_list`, barriers) | `transfer25-av` never `ready` / hangs | `ranks.py`; run with 1 view first |
+| EGL in the container (`libegl1` + `NVIDIA_DRIVER_CAPABILITIES=graphics`) | renderer smoke fails `moderngl` | host driver, `--gpus` capabilities |
+| Latency / VRAM per backend | slow or OOM | `resolution`, `num_steps`, profile GPU split |
