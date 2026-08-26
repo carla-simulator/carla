@@ -172,7 +172,9 @@ class MockServer:
             "name: mock\ndescription: mock worker\npriority: 1\nmatch: {min_gpus: 0}\n"
             "workers:\n  - name: mock\n    type: mock\n"
             "    backends: [cosmos3-nano, cosmos3-super, transfer2.5, transfer2.5-av]\n"
-            f"    args: ['--delay', '{self.delay}', '--steps', '4']\n")
+            f"    args: ['--delay', '{self.delay}', '--steps', '4']\n"
+            "  - name: wsm-renderer\n    type: wsm_renderer\n    backends: [wsm-renderer]\n"
+            "    args: ['--engine', 'fake', '--fake-delay', '0.2']\n")
         env = {**os.environ, "COSMOS_TOKEN": self.token, "COSMOS_GC_INTERVAL_S": "5"}
         out = self.log_file.open("ab") if self.log_file else None
         self.proc = subprocess.Popen(

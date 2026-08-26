@@ -46,6 +46,7 @@ class Scheduler:
         self.workers = workers
         self.contracts = contracts
         self._wake = asyncio.Event()
+        self._renderer_lock = asyncio.Lock()
         self._task: asyncio.Task | None = None
         self._running: dict[str, tuple[WorkerHandle, asyncio.Task]] = {}
         self._stopping = False
@@ -79,11 +80,21 @@ class Scheduler:
         for w in self.workers:
             if w.state in ("ready", "busy") and w.smoke_ok:
                 for b in w.backends:
-                    out.setdefault(b, []).append(w.name)
+                    if b != self.RENDERER_BACKEND:
+                        out.setdefault(b, []).append(w.name)
         return out
 
     def is_ready(self) -> bool:
         return bool(self.workers) and all(w.state in ("ready", "busy") and w.smoke_ok for w in self.workers)
+
+    RENDERER_BACKEND = "wsm-renderer"
+
+    def renderers(self) -> list[WorkerHandle]:
+        return [w for w in self.workers if self.RENDERER_BACKEND in w.backends and w.state in ("ready", "busy")
+                and w.smoke_ok]
+
+    def scene_rendering_available(self) -> bool:
+        return bool(self.renderers())
 
     # -- cancel -------------------------------------------------------------------------------
     async def cancel(self, job_id: str) -> bool:
@@ -131,6 +142,18 @@ class Scheduler:
             fresh = self.store.get_job(job.id)
             if fresh is None or fresh.status == "cancelled":
                 return
+            scene_controls = {n: c for n, c in payload["inputs"]["controls"].items() if "scene_dir" in c}
+            if scene_controls:
+                t_render = time.time()
+                try:
+                    await self._render_scenes(job, payload, scene_controls)
+                except PrepareError as exc:
+                    self.store.set_status(job.id, "failed", error=f"render: {exc}", timings=timings)
+                    return
+                timings["rendering"] = time.time() - t_render
+                fresh = self.store.get_job(job.id)
+                if fresh is None or fresh.status == "cancelled":
+                    return
             timings["preparing"] = time.time() - t_claim
             self.store.set_status(job.id, "running", message="dispatched")
             t_run = time.time()
@@ -160,6 +183,43 @@ class Scheduler:
             worker.current_job = None
             self._running.pop(job.id, None)
             self.wake()
+
+    # -- server-side world-scenario rendering ---------------------------------------------------------
+    async def _render_scenes(self, job: JobRecord, payload: dict[str, Any],
+                             scene_controls: dict[str, dict[str, Any]]) -> None:
+        """Turn ``scene_dir`` controls into per-view control videos with a renderer worker."""
+        renderers = self.renderers()
+        if not renderers:
+            raise PrepareError("this server has no world-scenario renderer; upload pre-rendered control videos")
+        views = payload["views"]
+        inputs_dir = self.store.job_dir(job.id) / "inputs"
+        async with self._renderer_lock:  # renderers are shared by all model workers; one render at a time
+            renderer = renderers[0]
+            for name, spec in scene_controls.items():
+                self.store.set_progress(job.id, 0.0, f"rendering '{name}' control for {len(views)} view(s)")
+                render_job = {
+                    "job_id": f"{job.id}:{name}", "scene_dir": spec["scene_dir"], "cameras": views,
+                    "fps": payload["manifest"]["fps"], "frames": payload["manifest"]["frames"],
+                    "out_dir": str(inputs_dir / f"rendered_{name}"),
+                }
+
+                def progress(fraction: float, message: str) -> None:
+                    self.store.set_progress(job.id, 0.0, f"render '{name}': {message}")
+
+                outcome = await renderer.run(render_job, progress)
+                if not outcome.ok:
+                    raise PrepareError(f"'{name}' control: {outcome.error}")
+                by_view = {f["view"]: str(Path(render_job["out_dir"]) / f["name"]) for f in outcome.files if f.get("view")}
+                missing = [v for v in views if v not in by_view]
+                if missing:
+                    raise PrepareError(f"renderer returned no '{name}' video for view(s) {missing}")
+                spec.pop("scene_dir")
+                if len(views) == 1:
+                    spec["path"] = by_view[views[0]]
+                else:
+                    spec["paths"] = by_view
+                spec["rendered"] = outcome.manifest
+                log.info("job %s: rendered '%s' for %d view(s) on %s", job.id, name, len(views), renderer.name)
 
     # -- prepare ----------------------------------------------------------------------------------
     def prepare(self, job: JobRecord) -> dict[str, Any]:

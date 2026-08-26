@@ -52,7 +52,8 @@ class Ctx:
         raise TimeoutError(info)
 
 
-def make_server(tmp_path: Path, worker_args: list[str], with_worker: bool = True) -> Ctx:
+def make_server(tmp_path: Path, worker_args: list[str], with_worker: bool = True,
+                with_renderer: bool = False) -> Ctx:
     settings = Settings(state_dir=tmp_path / "state", run_dir=default_run_dir(tmp_path / "state"),
                         gc_interval_s=3600)
     settings.ensure_dirs()
@@ -65,6 +66,11 @@ def make_server(tmp_path: Path, worker_args: list[str], with_worker: bool = True
             name="mock", type_="mock", backends=["cosmos3-nano", "cosmos3-super", "transfer2.5", "transfer2.5-av"],
             gpus=[], python=sys.executable, module="cosmos_workers.mock", socket=settings.run_dir / "mock.sock",
             extra_args=worker_args, env={}, log_dir=settings.state_dir / "logs"))
+    if with_renderer:
+        workers.append(spawn_worker(
+            name="wsm-renderer", type_="wsm_renderer", backends=["wsm-renderer"], gpus=[], python=sys.executable,
+            module="cosmos_workers.wsm_renderer", socket=settings.run_dir / "wsm.sock",
+            extra_args=["--engine", "fake", "--fake-delay", "0.1"], env={}, log_dir=settings.state_dir / "logs"))
     app = create_app(settings, tokens, workers, profile_name="test")
     return Ctx(client=TestClient(app), token=token, token_id=token_id, settings=settings, tokens=tokens, app=app)
 
@@ -112,3 +118,12 @@ def submission(clip, backend: str, controls: dict, rgb: dict | None = None, **kw
 
     req = JobRequest(backend=backend, prompt=kw.pop("prompt", "test prompt"), controls=controls, rgb=rgb or {}, **kw)
     return JobSubmission(request=req, manifest=clip.manifest).model_dump(mode="json")
+
+
+@pytest.fixture
+def render_server(tmp_path):
+    ctx = make_server(tmp_path, ["--delay", "0.2", "--steps", "2"], with_renderer=True)
+    with ctx.client:
+        ctx.client.headers.update({"Authorization": f"Bearer {ctx.token}"})
+        ctx.wait_ready()
+        yield ctx

@@ -78,7 +78,8 @@ def test_validation_errors(server, clip16, clip93):
     assert server.store.status_counts() == {}
 
 
-def test_scene_control_and_multiview(server, tmp_path):
+def test_scene_control_and_multiview(render_server, tmp_path):
+    server = render_server
     from carla_cosmos.client import sha256_file, zip_dir
     from carla_cosmos.synthetic import av7_clip
 
@@ -97,9 +98,11 @@ def test_scene_control_and_multiview(server, tmp_path):
     assert sorted(f["view"] for f in m["files"] if f["kind"] == "video") == sorted(clip.manifest.camera_names[:3])
     scene_dir = server.store.job_dir(info["id"]) / "inputs" / "scene_hdmap_bbox"
     assert any(scene_dir.glob("*.obstacle.parquet"))
+    assert len(list((server.store.job_dir(info["id"]) / "inputs" / "rendered_hdmap_bbox").glob("*.mp4"))) == 3
 
 
-def test_bad_scene_zip_fails_in_prepare(server, clip16):
+def test_bad_scene_zip_fails_in_prepare(render_server, clip16):
+    server = render_server
     import hashlib
 
     data = b"definitely not a zip"

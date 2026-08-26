@@ -542,3 +542,5 @@ class ModelInfo(BaseModel):
     """A worker serving this backend is loaded and ready."""
     workers: list[str] = Field(default_factory=list)
     queued: int = 0
+    scene_rendering: bool = False
+    """The server can render ``accepts_scene`` controls from an uploaded scene package."""

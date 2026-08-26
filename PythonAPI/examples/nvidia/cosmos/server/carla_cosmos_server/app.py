@@ -186,7 +186,8 @@ def _routes(app: FastAPI, st: AppState) -> None:
     def _model_info(c: BackendContract) -> ModelInfo:
         avail = sched.backends_available()
         return ModelInfo(contract=c, available=c.id in avail, workers=avail.get(c.id, []),
-                         queued=store.queued_counts().get(c.id, 0))
+                         queued=store.queued_counts().get(c.id, 0),
+                         scene_rendering=sched.scene_rendering_available() and any(x.accepts_scene for x in c.controls))
 
     @app.get("/v1/models")
     async def models() -> dict[str, ModelInfo]:
@@ -260,6 +261,10 @@ def _routes(app: FastAPI, st: AppState) -> None:
         if sub.request.backend not in sched.backends_available():
             raise HTTPException(409, {"errors": [f"backend '{sub.request.backend}' has no loaded worker on this "
                                                  f"server (profile '{st.profile_name}')"]})
+        if any(inp.scene for inp in sub.request.controls.values()) and not sched.scene_rendering_available():
+            raise HTTPException(409, {"errors": ["this server has no world-scenario renderer (profile "
+                                                 f"'{st.profile_name}'); upload pre-rendered control videos instead "
+                                                 "of a scene package"]})
         blobs = _referenced_blobs(sub)
         missing = store.missing_blobs(blobs)
         if missing:
