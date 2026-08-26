@@ -82,10 +82,10 @@ void AWalkerBase::AttachWheelchair()
   WheelchairComponent->RegisterComponent();
   WheelchairComponent->AttachToComponent(
       WalkerMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-  // ue4-dev attached the chair with an identity relative transform, but the
-  // UE5 G2 walker meshes are authored with a different mesh-space yaw than
-  // the UE4 pedestrians the chair was aligned to, leaving the chair 90 deg
-  // off the rider's facing. Compensate on the chair component.
+  // The UE5 G2 walker meshes are authored with a different mesh-space yaw
+  // than the UE4 pedestrians the chair asset was aligned to; +90 puts the
+  // chair's front (casters, footplates) under the rider's feet. Calibrated
+  // empirically with a 0/90/180/270 sweep and side-view captures.
   WheelchairComponent->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
 
   // Wheelchair animation: the migrated UE4 AnimBlueprint if it loads and
