@@ -86,7 +86,7 @@ void AWalkerBase::AttachWheelchair()
   // UE5 G2 walker meshes are authored with a different mesh-space yaw than
   // the UE4 pedestrians the chair was aligned to, leaving the chair 90 deg
   // off the rider's facing. Compensate on the chair component.
-  WheelchairComponent->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+  WheelchairComponent->SetRelativeRotation(FRotator(0.0f, 90.0f, 0.0f));
 
   // Wheelchair animation: the migrated UE4 AnimBlueprint if it loads and
   // compiled (it blends idle/rolling by speed), else a looping rolling
