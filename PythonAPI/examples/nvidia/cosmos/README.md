@@ -18,8 +18,8 @@ requests against per-backend contracts before anything is uploaded.
 | Client capture core (`client/`) | **Available** |
 | HTTP client, `carla-cosmos` CLI, mock server (`client/`, `server/`) | **Available** (Phase 2) |
 | Server API: auth, blobs, job queue, scheduler, worker protocol | **Available** — runs today with the CPU `mock` worker |
-| Cosmos 3 / Transfer 2.5 / AV workers, server-side wsm rendering | Phases 3–6 |
-| Docker image with baked weights (`server/Dockerfile`) | Phase 7 |
+| Cosmos 3 (vLLM-Omni), Transfer 2.5, Transfer 2.5 AV workers, server-side world-scenario rendering | **Code complete**, validated against fake engines on CPU; GPU validation pending on the target node |
+| Docker image with baked weights (`server/Dockerfile`, `build_image.sh`, `artifacts.lock`) | **Available**; `:nano` ≈ 96 GB weights, `:full` ≈ 230 GB |
 
 ## Layout
 
@@ -143,9 +143,19 @@ same server runs from source with the mock worker (above).  Full reference:
 [`server/README_SERVER.md`](server/README_SERVER.md).
 
 ```sh
+server/build_image.sh --nano --hf-token-file ~/.hf_token   # once, on a host with ~300 GB free
 ./scripts/run_server.sh                 # docker run with defaults, prints the token
 carla-cosmos serve                      # same from Python (adopts a running container by label)
 ```
+
+Backends and where they run (profiles auto-select from the GPUs seen):
+
+| backend | worker | stack | GPUs |
+|---|---|---|---|
+| `cosmos3-nano` / `cosmos3-super` | `cosmos_workers.cosmos3` → `vllm serve --omni` | vLLM-Omni | 1 / TP 2–8 |
+| `transfer2.5` | `cosmos_workers.transfer25` (in-process `Control2WorldInference`, 4 branches) | cosmos-transfer2.5 v1.5.4 | 1 |
+| `transfer2.5-av` | `cosmos_workers.transfer25_av` (persistent `torchrun` rank loop) | cosmos-transfer2.5 v1.5.4 | ≥ active views (7 → 8) |
+| scene packages → `hdmap_bbox` / `wsm` | `cosmos_workers.wsm_renderer` (NVIDIA renderer, EGL) | transfer25 venv | shares one |
 
 * **Auth**: `Authorization: Bearer <token>`.  The first boot mints a token, prints
   it once and stores it in `<state>/initial_token.txt`.  Tokens are hashed at

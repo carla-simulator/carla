@@ -16,6 +16,45 @@ launcher ── profile (nvidia-smi → profiles/*.yaml) ── spawns workers i
              gc          TTL for blobs (72 h unused) and finished jobs (168 h)
 ```
 
+## The image
+
+One Dockerfile, two variants, every model artifact inside — nothing is
+downloaded at run time (``HF_HUB_OFFLINE=1``).
+
+| tag | contents | size |
+|---|---|---|
+| `carla-cosmos:nano` | Cosmos 3 Nano, Transfer 2.5 general (4 branches), Transfer 2.5 AV multiview, renderer, guardrails | ≈ 96 GB weights + ≈ 35 GB stacks |
+| `carla-cosmos:full` | `:nano` + Cosmos 3 Super (133 GB) | ≈ 230 GB weights + stacks |
+| `…-nomodels` | same code and venvs, empty `/models` (CI, API work) | ≈ 35 GB |
+
+Layout inside: `vllm/vllm-openai` base (CUDA 13, Python 3.12) → vLLM-Omni pinned
+(`VLLM_OMNI_REF`) in the base Python (= `/opt/venvs/cosmos3`); NVIDIA's
+cosmos-transfer2.5 `v1.5.4` checked out to `/opt/cosmos-transfer2.5` with its own
+`uv sync --extra=cu130` venv (= `/opt/venvs/transfer25`, also hosts the renderer);
+a small `/opt/venvs/api` for the server; `/models/hf` is a normal Hugging Face
+cache populated by `prefetch.py` from `artifacts.lock`; `/usr/local/bin/uvx` is
+`tools/uvx_shim.py`, which answers cosmos-transfer2.5's `uvx hf download
+… --revision <sha>` checkpoint lookups from the baked cache.
+
+```sh
+# on a build host with ≥ 300 GB free (nano) — weights from a local HF cache if you have one
+./build_image.sh --nano --hf-cache ~/.cache/huggingface --hf-token-file ~/.hf_token
+./build_image.sh --full --hf-token-file ~/.hf_token --tag registry.example.com/carla-cosmos:full --push
+./build_image.sh --nano --no-models            # code-only image for CI
+
+python tools/lock_artifacts.py --check          # is artifacts.lock still what HF serves?
+```
+
+`artifacts.lock` pins every repo to a commit and lists the files with sizes and
+sha256; Transfer 2.5 checkpoints use the revisions hard-coded in NVIDIA's
+checkpoint registry so the pipeline's offline resolution hits the baked
+snapshot.  Gated repos (`nvidia/Cosmos-Transfer2.5-2B`, `-Predict2.5-2B`,
+`-Guardrail1`, `-1.0-Guardrail`) need a Hugging Face token whose account
+accepted the licences.
+
+Run: `../scripts/run_server.sh` (docker run with the right flags and the token
+printed), or `compose/docker-compose.yaml` (`compose.caddy.yaml` adds TLS).
+
 ## Run from source (mock)
 
 ```sh
