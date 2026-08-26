@@ -99,18 +99,8 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
 
 bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
 {
-  bool bIsFileFound = false;
-
   FString FinalPath = UCarlaStatics::FindMapPath(MapString);
-
-  if(FPaths::FileExists(FinalPath) || FPackageName::DoesPackageExist(FinalPath))
-  {
-    bIsFileFound = true;
-    if (FPaths::FileExists(FinalPath))
-    {
-      FinalPath = MapString;
-    }
-  }
+  const bool bIsFileFound = !FinalPath.IsEmpty();
 
   if (bIsFileFound)
   {
