@@ -1,6 +1,7 @@
 """Local ground-truth preview: draw the exported ClipGT scene back onto the captured RGB.
 
     carla-cosmos preview --clip clips/<id> [--cameras ...] [--frames a:b] [--out DIR] [--grid]
+                         [--show-occluded] [--png-every N]
 
 This is the check you can run on a laptop, with no GPU node and no model in the loop: if the
 overlay sits on the image for every camera, the scene package we upload (and NVIDIA's renderer
@@ -28,7 +29,11 @@ The maths is NVIDIA's ClipGT loader, verbatim (it was validated against their re
   visible part of every edge instead of losing the whole edge, which used to leave only the far
   face drawn and made near obstacles look as if they had been exported too close to the horizon;
 * parked obstacles — tracks the exporter writes with exactly two rows (first and last timestamp)
-  — are held constant across every frame.
+  — are held constant between those two timestamps (the whole clip, unless the occlusion filter
+  cut the track into visible segments);
+* ``--show-occluded`` reads the exporter's visibility sidecar and draws everything the occlusion
+  filter dropped as dashed grey boxes, which is how that filter is inspected: a grey box over a
+  building is the filter working, a grey box over a plainly visible car is not.
 
 Everything above lives in small pure functions (:class:`FThetaCamera`, :func:`densify`,
 :func:`polyline_segments`, :func:`box_corners`, …) that need neither CARLA nor a clip on disk, so
@@ -80,6 +85,9 @@ DEFAULT_LAYERS: tuple[str, ...] = tuple(LAYERS)
 
 PERSON_COLOR = (0, 200, 255)
 """Obstacles with category ``person`` are drawn in their own colour."""
+
+OCCLUDED_COLOR = (140, 140, 140)
+"""``--show-occluded``: obstacles the occlusion filter dropped, drawn dashed and grey."""
 
 BOX_EDGES = ((0, 1), (0, 2), (1, 3), (2, 3), (4, 5), (4, 6), (5, 7), (6, 7),
              (0, 4), (1, 5), (2, 6), (3, 7))
@@ -270,21 +278,52 @@ class Box:
         return box_corners(self.center, self.size, self.quat_xyzw)
 
 
-def split_tracks(rows: Sequence[dict], table: str = "obstacle") -> tuple[list[Box], dict[int, list[Box]]]:
+def split_tracks(rows: Sequence[dict], table: str = "obstacle") -> tuple[list[tuple[Box, int, int]],
+                                                                        dict[int, list[Box]]]:
     """Split a per-timestamp box table into parked and moving obstacles.
 
-    The exporter writes a parked vehicle once at the first and once at the last timestamp of the
-    clip (two rows), and a moving one at every timestamp.  Two-row tracks are therefore constant
-    and are drawn on every frame; everything else is keyed by its own timestamp."""
+    The exporter writes a parked vehicle once at the first and once at the last timestamp it is
+    visible for (two rows), and a moving one at every timestamp.  Two-row tracks are therefore
+    constant, and are returned as ``(box, first timestamp, last timestamp)``: a parked car the
+    occlusion filter hides for part of the clip is exported as one two-row track per visible
+    segment, so the timestamps say when to draw it (for an unfiltered export they span the whole
+    clip, which is every frame, as before).  Everything else is keyed by its own timestamp."""
     by_track: dict[str, list[dict]] = {}
     for r in rows:
         by_track.setdefault(str(r[table]["trackline_id"]), []).append(r)
-    static = [Box.from_payload(rs[0][table]) for rs in by_track.values() if len(rs) == 2]
+    static = []
+    for rs in by_track.values():
+        if len(rs) == 2:
+            ts = sorted(int(r["key"]["timestamp_micros"]) for r in rs)
+            static.append((Box.from_payload(rs[0][table]), ts[0], ts[1]))
     dynamic: dict[int, list[Box]] = {}
     for r in rows:
         if len(by_track[str(r[table]["trackline_id"])]) != 2:
             dynamic.setdefault(int(r["key"]["timestamp_micros"]), []).append(Box.from_payload(r[table]))
     return static, dynamic
+
+
+def load_visibility(scene_dir: str | Path, clip_id: str) -> dict[int, list[Box]] | None:
+    """``<clip>.visibility.json`` -> ``{timestamp_micros: [dropped Box, ...]}``.
+
+    The sidecar the exporter writes next to the tables when the occlusion filter is on: it holds
+    the per-tick decisions and, because those rows are by construction missing from
+    ``obstacle.parquet``, the geometry of everything the filter dropped.  ``None`` when the clip
+    was exported without the filter."""
+    path = Path(scene_dir) / f"{clip_id}.visibility.json"
+    if not path.is_file():
+        return None
+    data = json.loads(path.read_text())
+    stamps = data["timestamps_micros"]
+    out: dict[int, list[Box]] = {}
+    for entry in data.get("occluded", []):
+        a, b = entry["ticks"]
+        box = Box.from_payload(entry["obstacle"])
+        for t in range(max(0, a), min(b, len(stamps))):
+            out.setdefault(int(stamps[t]), []).append(box)
+    log.info("preview: %s: %d frame(s) carry occluded obstacles (params %s)",
+             path.name, len(out), data.get("params"))
+    return out
 
 
 def _points_of(payload: dict) -> list[dict]:
@@ -304,20 +343,25 @@ class SceneGT:
     timestamps: list[int]
     ego_poses: list[np.ndarray]
     polylines: dict[str, list[np.ndarray]] = field(default_factory=dict)
-    static_boxes: dict[str, list[Box]] = field(default_factory=dict)
+    static_boxes: dict[str, list[tuple[Box, int | None, int | None]]] = field(default_factory=dict)
+    """``table -> [(box, first timestamp, last timestamp)]``; ``None`` bounds mean "every frame"."""
     dynamic_boxes: dict[str, dict[int, list[Box]]] = field(default_factory=dict)
+    occluded_boxes: dict[int, list[Box]] = field(default_factory=dict)
+    """Obstacles the occlusion filter dropped, from the visibility sidecar (``--show-occluded``)."""
 
     @property
     def frames(self) -> int:
         return len(self.ego_poses)
 
     def boxes_at(self, table: str, timestamp: int) -> list[Box]:
-        """Parked boxes plus whatever the table has at ``timestamp``."""
-        return self.static_boxes.get(table, []) + self.dynamic_boxes.get(table, {}).get(timestamp, [])
+        """Parked boxes alive at ``timestamp`` plus whatever the table has at it."""
+        static = [b for b, t0, t1 in self.static_boxes.get(table, [])
+                  if t0 is None or t0 <= timestamp <= t1]
+        return static + self.dynamic_boxes.get(table, {}).get(timestamp, [])
 
     @classmethod
     def load(cls, scene_dir: str | Path, clip_id: str | None = None,
-             layers: Iterable[str] = DEFAULT_LAYERS) -> "SceneGT":
+             layers: Iterable[str] = DEFAULT_LAYERS, show_occluded: bool = False) -> "SceneGT":
         """Read ``<scene_dir>/<clip_id>.<table>.parquet`` for the requested layers."""
         import pyarrow.parquet as pq
 
@@ -359,25 +403,55 @@ class SceneGT:
                 static, dynamic = split_tracks(rows, layer.table)
                 scene.static_boxes[layer.table], scene.dynamic_boxes[layer.table] = static, dynamic
             else:
-                scene.static_boxes[layer.table] = [Box.from_payload(r[layer.table]) for r in rows]
+                scene.static_boxes[layer.table] = [(Box.from_payload(r[layer.table]), None, None)
+                                                   for r in rows]
+        if show_occluded:
+            scene.occluded_boxes = load_visibility(d, clip_id) or {}
         return scene
 
 
 # ----------------------------------------------------------------------------- drawing
 
-def draw_scene(frame: np.ndarray, camera: PreviewCamera, world_to_camera: np.ndarray, scene: SceneGT,
-               timestamp: int, layers: Iterable[str] = DEFAULT_LAYERS, thickness: int = 2,
-               dim: float = 0.6, step: float = 0.5) -> np.ndarray:
-    """Draw the scene onto one BGR frame (in place) and return it.
+def draw_box(frame: np.ndarray, camera: PreviewCamera, world_to_camera: np.ndarray, box: Box,
+             color: tuple[int, int, int], thickness: int = 2, step: float = 0.5,
+             dashed: bool = False) -> bool:
+    """Draw one oriented box; ``dashed`` keeps every other densified sub-segment.
 
-    ``dim`` darkens the RGB first so the overlay reads on bright frames; pass 1.0 for no dimming."""
+    Returns whether anything was drawn (a box entirely outside the lens range draws nothing)."""
     import cv2
 
+    edges = box_edge_points(box.corners(), step)
+    uv = camera.project_world(edges.reshape(-1, 3), world_to_camera).reshape(edges.shape[0], -1, 2)
+    if np.isnan(uv).all():
+        return False
+    drawn = False
+    for edge in uv:
+        for i, (a, b) in enumerate(polyline_segments(edge)):
+            if dashed and i % 2:
+                continue
+            cv2.line(frame, tuple(a.astype(int)), tuple(b.astype(int)), color, thickness)
+            drawn = True
+    return drawn
+
+
+def draw_scene(frame: np.ndarray, camera: PreviewCamera, world_to_camera: np.ndarray, scene: SceneGT,
+               timestamp: int, layers: Iterable[str] = DEFAULT_LAYERS, thickness: int = 2,
+               dim: float = 0.6, step: float = 0.5, show_occluded: bool = False) -> np.ndarray:
+    """Draw the scene onto one BGR frame (in place) and return it.
+
+    ``dim`` darkens the RGB first so the overlay reads on bright frames; pass 1.0 for no dimming.
+    ``show_occluded`` additionally draws whatever the occlusion filter dropped at this timestamp
+    as dashed grey boxes, so the filter can be inspected against the pixels it was derived from."""
     if dim != 1.0:
         frame[:] = (frame * dim).astype(np.uint8)
+    if show_occluded:
+        for box in scene.occluded_boxes.get(timestamp, []):
+            draw_box(frame, camera, world_to_camera, box, OCCLUDED_COLOR, thickness, step, dashed=True)
     for name in layers:
         layer = LAYERS[name]
         if layer.kind == "polyline":
+            import cv2
+
             for points in scene.polylines.get(layer.table, []):
                 P = densify(points, step)
                 if layer.closed and len(P) > 2:
@@ -387,14 +461,8 @@ def draw_scene(frame: np.ndarray, camera: PreviewCamera, world_to_camera: np.nda
                     cv2.line(frame, tuple(a.astype(int)), tuple(b.astype(int)), layer.color, thickness)
         else:
             for box in scene.boxes_at(layer.table, timestamp):
-                edges = box_edge_points(box.corners(), step)
-                uv = camera.project_world(edges.reshape(-1, 3), world_to_camera).reshape(edges.shape[0], -1, 2)
-                if np.isnan(uv).all():
-                    continue
                 color = PERSON_COLOR if box.category == "person" else layer.color
-                for edge in uv:
-                    for a, b in polyline_segments(edge):
-                        cv2.line(frame, tuple(a.astype(int)), tuple(b.astype(int)), color, thickness)
+                draw_box(frame, camera, world_to_camera, box, color, thickness, step)
     return frame
 
 
@@ -466,7 +534,8 @@ def _open(path: Path):
 def preview_clip(clip_dir: str | Path, cameras: Sequence[str] | None = None, frames: str | None = None,
                  out_dir: str | Path | None = None, grid: bool = False,
                  layers: Sequence[str] = DEFAULT_LAYERS, dim: float = 0.6, thickness: int = 2,
-                 grid_scale: float = 0.5, progress=None) -> dict[str, Path]:
+                 grid_scale: float = 0.5, progress=None, show_occluded: bool = False,
+                 png_every: int = 0) -> dict[str, Path]:
     """Write ``<out>/<camera>.mp4`` (and ``<out>/grid.mp4``) with the scene drawn on the RGB.
 
     Returns ``{camera name (or "grid"): path}``.  ``progress`` is called with
@@ -480,7 +549,7 @@ def preview_clip(clip_dir: str | Path, cameras: Sequence[str] | None = None, fra
     scene_dir = clip.scene_dir
     if scene_dir is None or not Path(scene_dir).is_dir():
         raise FileNotFoundError(f"clip {clip.manifest.clip_id} has no scene package to preview")
-    scene = SceneGT.load(scene_dir, clip.manifest.clip_id, layers)
+    scene = SceneGT.load(scene_dir, clip.manifest.clip_id, layers, show_occluded=show_occluded)
     names = list(cameras) if cameras else list(clip.manifest.camera_names)
     unknown = [c for c in names if c not in scene.cameras]
     if unknown:
@@ -494,7 +563,8 @@ def preview_clip(clip_dir: str | Path, cameras: Sequence[str] | None = None, fra
     def render(name: str, index: int, frame: np.ndarray) -> np.ndarray:
         cam = scene.cameras[name]
         return draw_scene(frame, cam, cam.world_to_camera(scene.ego_poses[index]), scene,
-                          scene.timestamps[index], layers, thickness, dim)
+                          scene.timestamps[index], layers, thickness, dim,
+                          show_occluded=show_occluded)
 
     for name in names:
         src = clip.video("rgb", name)
@@ -508,7 +578,10 @@ def preview_clip(clip_dir: str | Path, cameras: Sequence[str] | None = None, fra
             ok, frame = cap.read()
             if not ok:
                 break
-            writer.write(render(name, i, frame))
+            drawn = render(name, i, frame)
+            writer.write(drawn)
+            if png_every and (i - start) % png_every == 0:
+                cv2.imwrite(str(out / f"{canonical_camera_name(name)}_{i:04d}.png"), drawn)
             if progress:
                 progress(name, i - start + 1, stop - start)
         cap.release()
@@ -519,6 +592,7 @@ def preview_clip(clip_dir: str | Path, cameras: Sequence[str] | None = None, fra
     if grid and names:
         written["grid"] = _write_grid(clip, scene, names, out, start, stop, render, grid_scale, progress)
     index = {"clip_id": clip.manifest.clip_id, "frames": [start, stop], "layers": list(layers),
+             "show_occluded": bool(show_occluded),
              "videos": {n: p.name for n, p in written.items() if n != "grid"},
              "grid": written["grid"].name if "grid" in written else None}
     (out / "preview.json").write_text(json.dumps(index, indent=2))

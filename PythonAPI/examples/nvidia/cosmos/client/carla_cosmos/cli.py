@@ -10,6 +10,7 @@
     carla-cosmos classes
     carla-cosmos synthetic-clip --out DIR [--frames 93 --fps 16 | --av7]
     carla-cosmos preview --clip DIR [--cameras camera:front:wide:120fov] [--frames 0:60] [--out DIR] [--grid]
+                         [--show-occluded] [--png-every N]
 
 Connection: ``--url``/``--token`` or ``COSMOS_URL`` / ``COSMOS_TOKEN`` / ``COSMOS_TOKEN_FILE``.
 
@@ -286,7 +287,8 @@ def cmd_preview(args) -> int:
     try:
         written = preview_clip(args.clip, cameras=cameras or None, frames=args.frames, out_dir=args.out,
                                grid=args.grid, layers=layers, dim=args.dim, thickness=args.thickness,
-                               progress=None if args.quiet else progress)
+                               progress=None if args.quiet else progress,
+                               show_occluded=args.show_occluded, png_every=args.png_every)
     except (FileNotFoundError, ValueError) as exc:
         print(f"\nerror: {exc}", file=sys.stderr)
         return 1
@@ -396,6 +398,11 @@ def build_parser() -> argparse.ArgumentParser:
     pv.add_argument("--grid", action="store_true", help="also write one labelled grid video (4 cameras per row)")
     pv.add_argument("--layers", action="append", default=[], metavar="NAME[,NAME...]",
                     help="tables to draw: " + ", ".join(DEFAULT_PREVIEW_LAYERS))
+    pv.add_argument("--show-occluded", action="store_true",
+                    help="also draw, dashed and grey, the obstacles the capture's occlusion filter "
+                         "dropped (needs the exporter's <clip>.visibility.json sidecar)")
+    pv.add_argument("--png-every", type=int, default=0, metavar="N",
+                    help="also write every Nth drawn frame as a PNG next to the videos")
     pv.add_argument("--dim", type=float, default=0.6, help="darken the RGB by this factor (1.0 = off)")
     pv.add_argument("--thickness", type=int, default=2)
     pv.add_argument("--quiet", action="store_true")

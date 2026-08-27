@@ -175,14 +175,29 @@ def test_two_row_tracks_are_parked_and_held_across_frames():
     rows = ([_obstacle_row("parked", 10), _obstacle_row("parked", 90)]
             + [_obstacle_row("moving", ts) for ts in (10, 50, 90)])
     static, dynamic = split_tracks(rows)
-    assert [b.track_id for b in static] == ["parked"]
+    assert [b.track_id for b, _t0, _t1 in static] == ["parked"]
+    assert [(t0, t1) for _b, t0, t1 in static] == [(10, 90)]
     assert sorted(dynamic) == [10, 50, 90]
     assert all(len(v) == 1 and v[0].track_id == "moving" for v in dynamic.values())
 
 
+def test_a_parked_track_is_only_held_between_its_own_two_rows():
+    """The occlusion filter cuts a hidden parked car into one two-row track per visible
+    segment; each is constant only over its own span, not over the whole clip."""
+    rows = [_obstacle_row("parked#0", 10), _obstacle_row("parked#0", 30),
+            _obstacle_row("parked#1", 70), _obstacle_row("parked#1", 90)]
+    static, _dynamic = split_tracks(rows)
+    scene = SceneGT(clip_id="c", cameras={}, timestamps=[10], ego_poses=[np.eye(4)],
+                    static_boxes={"obstacle": static})
+    assert len(scene.boxes_at("obstacle", 20)) == 1
+    assert len(scene.boxes_at("obstacle", 50)) == 0  # hidden in between
+    assert len(scene.boxes_at("obstacle", 80)) == 1
+
+
 def test_boxes_at_merges_parked_and_moving():
     scene = SceneGT(clip_id="c", cameras={}, timestamps=[10], ego_poses=[np.eye(4)],
-                    static_boxes={"obstacle": [Box(np.zeros(3), np.ones(3), np.array([0, 0, 0, 1.0]))]},
+                    static_boxes={"obstacle": [(Box(np.zeros(3), np.ones(3),
+                                                    np.array([0, 0, 0, 1.0])), None, None)]},
                     dynamic_boxes={"obstacle": {10: [Box(np.ones(3), np.ones(3), np.array([0, 0, 0, 1.0]))]}})
     assert len(scene.boxes_at("obstacle", 10)) == 2
     assert len(scene.boxes_at("obstacle", 99)) == 1  # the parked one is always there
@@ -195,8 +210,9 @@ def test_draw_scene_paints_the_layer_colours():
     lane = np.array([[5.0, 1.0, 0.0], [30.0, 1.0, 0.0]])
     scene = SceneGT(clip_id="c", cameras={cam.name: cam}, timestamps=[0], ego_poses=[np.eye(4)],
                     polylines={"lane_line": [lane]},
-                    static_boxes={"obstacle": [Box(np.array([10.0, 0.0, 0.0]), np.array([4.0, 2.0, 1.5]),
-                                                   np.array([0.0, 0.0, 0.0, 1.0]), category="car")]})
+                    static_boxes={"obstacle": [(Box(np.array([10.0, 0.0, 0.0]), np.array([4.0, 2.0, 1.5]),
+                                                    np.array([0.0, 0.0, 0.0, 1.0]), category="car"),
+                                                None, None)]})
     frame = np.zeros((720, 1280, 3), np.uint8)
     out = draw_scene(frame, cam, cam.world_to_camera(np.eye(4)), scene, 0,
                      layers=("lane_line", "obstacle"))
