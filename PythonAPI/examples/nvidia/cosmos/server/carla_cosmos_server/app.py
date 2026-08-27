@@ -5,7 +5,7 @@ Routes (all under ``/v1`` need ``Authorization: Bearer <token>`` except health):
 =====================================  ==========================================================
 ``GET  /v1/health/live``               process is up
 ``GET  /v1/health/ready``              200 when every worker is loaded and smoke-tested, else 503
-``GET  /v1/status``                    profile, workers, queues, uptime
+``GET  /v1/status``                    profile, workers, queues, uptime, retention (TTLs)
 ``GET  /v1/models``                    backend contracts + availability
 ``GET  /v1/models/{id}``
 ``PUT  /v1/blobs/{sha256}``            raw body upload, content-addressed (201 new / 200 existed)
@@ -181,6 +181,10 @@ def _routes(app: FastAPI, st: AppState) -> None:
             "queued": store.queued_counts(), "jobs": store.status_counts(),
             "blobs": dict(zip(("count", "bytes"), store.blob_stats())),
             "guardrails": st.settings.guardrails,
+            # clients store results locally and warn before the server's copy is collected (gc.py)
+            "retention": {"job_ttl_hours": st.settings.job_ttl_hours,
+                          "blob_ttl_hours": st.settings.blob_ttl_hours,
+                          "gc_interval_s": st.settings.gc_interval_s},
         }
 
     @app.get("/v1/metrics", response_class=PlainTextResponse)

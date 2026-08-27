@@ -37,3 +37,11 @@ def test_live_job_keeps_blobs(tmp_path):
         st._conn.execute("UPDATE blobs SET last_used=0")
     settings = Settings(state_dir=tmp_path, blob_ttl_hours=1)
     assert collect(st, settings) == (0, 0)  # referenced by a queued job
+
+
+def test_status_publishes_the_retention_the_collector_applies(server):
+    """Clients store results locally and warn before this TTL runs out (client results.py)."""
+    retention = server.client.get("/v1/status").json()["retention"]
+    assert retention["job_ttl_hours"] == server.settings.job_ttl_hours == 168.0
+    assert retention["blob_ttl_hours"] == server.settings.blob_ttl_hours == 72.0
+    assert retention["gc_interval_s"] == server.settings.gc_interval_s
