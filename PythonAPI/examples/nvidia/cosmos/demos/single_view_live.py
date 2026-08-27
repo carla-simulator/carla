@@ -46,6 +46,9 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--walkers", type=int, default=0)
     ap.add_argument("--rig", default="single", help="single | nvidia_av7 | path to a rig YAML")
     ap.add_argument("--edge", action="store_true", help="also write the masked-Canny edge control")
+    ap.add_argument("--visibility", choices=["depth", "none"], default="depth",
+                    help="occlusion filter for the exported obstacles (see carla_cosmos.visibility): "
+                         "'depth' exports only what the cameras can see, 'none' exports every actor")
     ap.add_argument("--backend", default="cosmos3-nano", choices=sorted(BUILTIN_CONTRACTS))
     ap.add_argument("--out", default="./clips")
     ap.add_argument("--clip-id", default=None)
@@ -168,7 +171,8 @@ def main() -> int:
         for _ in range(2 * args.fps):  # let traffic get moving
             world.tick()
 
-        cap = Capture(world, hero, rig, contract, frames=args.frames, fps=args.fps, edge=args.edge)
+        cap = Capture(world, hero, rig, contract, frames=args.frames, fps=args.fps, edge=args.edge,
+                      visibility=args.visibility)
         t0 = time.time()
         clip = cap.run(args.out, clip_id, seed=args.seed,
                        carla_version=client.get_server_version(),

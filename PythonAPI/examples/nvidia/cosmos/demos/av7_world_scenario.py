@@ -4,7 +4,7 @@ package, submit it to Transfer 2.5 auto/multiview (``hdmap_bbox``) and, optional
 front camera to Cosmos 3 as a ``wsm`` control.
 
     python av7_world_scenario.py --port 2000 --seconds 3 --out ./clips --results ./results \\
-        [--also-cosmos3] [--capture-only]
+        [--also-cosmos3] [--capture-only] [--visibility depth|none]
 
 Frame budget: Transfer 2.5 AV consumes 10 fps and needs 29 + 28*(k-1) frames per view,
 so the 30 fps capture is 3*(29 + 28*(k-1)) frames (k = ``--seconds``); Cosmos 3 ``wsm``
@@ -57,7 +57,9 @@ def capture_clip(args, backend: str, frames: int, fps: int, suffix: str) -> Clip
         # "instance" gives the instance-coloured seg control, "semantic" the CityScapes
         # class AOV (semantic_<camera>.mp4) that --mask-classes builds its masks from.
         cap = Capture(world, hero, Rig.nvidia_av7(), BUILTIN_CONTRACTS[backend], frames=frames, fps=fps,
-                      aovs=("rgb", "depth", "semantic", "instance"))
+                      aovs=("rgb", "depth", "semantic", "instance"),
+                      visibility=args.visibility, min_visible_fraction=args.min_visible_fraction,
+                      range_m=args.range_m, hysteresis_frames=args.hysteresis_frames)
         t0 = time.time()
         clip = cap.run(args.out, clip_id, seed=args.seed, carla_version=client.get_server_version(),
                        progress=lambda i, n: log.info("frame %d/%d", i, n) if i % fps == 0 or i == n else None)
@@ -127,6 +129,15 @@ def main() -> int:
     ap.add_argument("--cosmos3-backend", default="cosmos3-nano")
     ap.add_argument("--endpoint", default=None)
     ap.add_argument("--token", default=None)
+    ap.add_argument("--visibility", choices=["depth", "none"], default="depth",
+                    help="occlusion filter for the exported obstacles: 'depth' z-buffer-tests every "
+                         "obstacle against the captured depth AOVs and exports only what a camera can "
+                         "see (what NVIDIA's lidar-labelled GT looks like); 'none' exports everything")
+    ap.add_argument("--min-visible-fraction", type=float, default=0.05,
+                    help="smallest visible fraction of an obstacle's sample points that still counts")
+    ap.add_argument("--range-m", type=float, default=150.0, help="obstacles beyond this are not exported")
+    ap.add_argument("--hysteresis-frames", type=int, default=3,
+                    help="occlusions shorter than this do not split a track")
     ap.add_argument("--capture-only", action="store_true")
     ap.add_argument("--no-view", action="store_true")
     ap.add_argument("-v", "--verbose", action="store_true")
