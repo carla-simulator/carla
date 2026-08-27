@@ -6,7 +6,7 @@ CARLA / Unreal: left-handed, x forward, y right, z up, metres, degrees
 (``carla.Rotation(pitch, yaw, roll)``).  NVIDIA world scenario: right-handed
 FLU, x forward, y **left**, z up, metres, quaternions ``(x, y, z, w)``.
 
-With ``M`` the 4x4 matrix from ``carla.Transform.get_matrix()`` and
+With ``M`` the 4x4 matrix of a ``carla.Transform`` (:func:`ue_matrix`; not ``get_matrix()``, see there) and
 ``S = diag(1, -1, 1, 1)`` the conversion is ``M_flu = S @ M @ S``.  This maps
 points ``(x, y, z) -> (x, -y, z)`` and turns the left-handed rotation into a
 proper right-handed one.  The recipe was verified geometrically in the Phase 0
@@ -30,9 +30,43 @@ S_FLIP_Y = np.diag([1.0, -1.0, 1.0, 1.0])
 
 # ----------------------------------------------------------------------------- UE <-> FLU
 
+def ue_rotation_matrix(rot: carla.Rotation) -> np.ndarray:
+    """3x3 rotation of a ``carla.Rotation`` as the engine applies it (left-handed UE frame).
+
+    ``R = Rz(yaw) * Ry(pitch) * Rx(roll)`` with UE signs: ``+pitch`` tilts the forward axis **up**
+    (``R[2,0] = +sin(pitch)``), ``+roll`` tilts the right axis **down** (``R[2,1] = -cos(pitch)*sin(roll)``).
+    This is CARLA 0.9.x's ``Transform::GetMatrix`` and matches what the engine does with the same
+    ``Rotation`` — verified against real camera images (a camera at ``pitch=+20`` fills the frame with
+    sky, at ``roll=+25`` the right side sees more ground).
+
+    Not ``tf.get_matrix()``: on the ue58 branch LibCarla commit 4d853ed98 (PR #9751, "pitch/roll fix")
+    flipped the pitch and roll signs in ``Rotation::RotateVector`` / ``Transform::GetMatrix`` /
+    ``GetInverseMatrix`` / ``get_forward/right/up_vector``, so those describe a camera pitched and
+    rolled the other way than the engine mounts it.  Building the matrix here keeps this module correct
+    with either wheel; see the hand-off notes ("CARLA geom regression").
+    """
+    cy, sy = math.cos(math.radians(rot.yaw)), math.sin(math.radians(rot.yaw))
+    cp, sp = math.cos(math.radians(rot.pitch)), math.sin(math.radians(rot.pitch))
+    cr, sr = math.cos(math.radians(rot.roll)), math.sin(math.radians(rot.roll))
+    return np.array([
+        [cp * cy, cy * sp * sr - sy * cr, -cy * sp * cr - sy * sr],
+        [cp * sy, sy * sp * sr + cy * cr, -sy * sp * cr + cy * sr],
+        [sp, -cp * sr, cp * cr],
+    ], dtype=np.float64)
+
+
 def ue_matrix(tf: carla.Transform) -> np.ndarray:
-    """4x4 float64 matrix of a ``carla.Transform`` (metres)."""
-    return np.array(tf.get_matrix(), dtype=np.float64)
+    """4x4 float64 pose of a ``carla.Transform`` (metres), engine convention (see :func:`ue_rotation_matrix`)."""
+    m = np.eye(4)
+    m[:3, :3] = ue_rotation_matrix(tf.rotation)
+    m[:3, 3] = [tf.location.x, tf.location.y, tf.location.z]
+    return m
+
+
+def ue_forward_right_up(rot: carla.Rotation) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Forward / right / up axes of a ``carla.Rotation`` in the engine convention (replaces ``get_*_vector``)."""
+    r = ue_rotation_matrix(rot)
+    return r[:, 0].copy(), r[:, 1].copy(), r[:, 2].copy()
 
 
 def ue_to_flu(m_ue: np.ndarray) -> np.ndarray:
@@ -51,24 +85,18 @@ def ue_point_to_flu(p: Sequence[float]) -> np.ndarray:
 
 
 def ue_transform_from_matrix(m: np.ndarray, tol: float = 1e-3) -> carla.Transform:
-    """Inverse of ``carla.Transform.get_matrix()``.
+    """Inverse of :func:`ue_matrix` (engine convention).
 
-    LibCarla ``geom/Transform.h`` builds ``R = Rz(yaw) * Ry(pitch) * Rx(roll)``
-    with UE sign conventions::
-
-        [[cp*cy, cy*sp*sr - sy*cr, cy*sp*cr + sy*sr],
-         [cp*sy, sy*sp*sr + cy*cr, sy*sp*cr - cy*sr],
-         [-sp,   cp*sr,            cp*cr]]
-
-    so ``pitch = asin(-m[2,0])``, ``yaw = atan2(m[1,0], m[0,0])``,
-    ``roll = atan2(m[2,1], m[2,2])``.  The result is verified by round trip;
-    a mismatch larger than ``tol`` (non-rigid input) raises ``ValueError``.
+    With ``R = Rz(yaw) * Ry(pitch) * Rx(roll)`` as in :func:`ue_rotation_matrix`:
+    ``pitch = asin(m[2,0])``, ``yaw = atan2(m[1,0], m[0,0])``, ``roll = atan2(-m[2,1], m[2,2])``.
+    The result is verified by round trip; a mismatch larger than ``tol`` (non-rigid input) raises
+    ``ValueError``.
     """
     r = m[:3, :3]
-    sp = float(np.clip(-r[2, 0], -1.0, 1.0))
+    sp = float(np.clip(r[2, 0], -1.0, 1.0))
     pitch = math.degrees(math.asin(sp))
     yaw = math.degrees(math.atan2(r[1, 0], r[0, 0]))
-    roll = math.degrees(math.atan2(r[2, 1], r[2, 2]))
+    roll = math.degrees(math.atan2(-r[2, 1], r[2, 2]))
     tf = carla.Transform(
         carla.Location(x=float(m[0, 3]), y=float(m[1, 3]), z=float(m[2, 3])),
         carla.Rotation(pitch=pitch, yaw=yaw, roll=roll),

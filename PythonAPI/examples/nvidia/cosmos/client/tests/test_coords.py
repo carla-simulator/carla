@@ -79,3 +79,21 @@ def test_ftheta_fit_residual(hfov):
     r = math.hypot(width / 2, height / 2) / 2
     theta_poly = sum(k * r ** i for i, k in enumerate(poly))
     assert theta_poly == pytest.approx(math.atan(r / f), abs=2e-3)
+
+
+def test_ue_matrix_matches_engine_not_get_matrix():
+    """Engine convention (verified with real camera images): +pitch looks up, +roll drops the right side.
+    LibCarla 4d853ed98 (ue58 branch) flipped both signs in get_matrix(); we must not follow it."""
+    import carla
+    from carla_cosmos import coords
+
+    fwd, right, up = coords.ue_forward_right_up(carla.Rotation(pitch=20.0))
+    assert fwd[2] > 0.3 and abs(up[0] + fwd[2]) < 1e-9
+    fwd, right, up = coords.ue_forward_right_up(carla.Rotation(roll=25.0))
+    assert right[2] < -0.4 and up[1] > 0.4
+    m = coords.ue_matrix(carla.Transform(carla.Location(1, 2, 3), carla.Rotation(pitch=3.26, yaw=-151.4, roll=-0.63)))
+    tf = coords.ue_transform_from_matrix(m)
+    assert abs(tf.rotation.pitch - 3.26) < 1e-4 and abs(tf.rotation.yaw + 151.4) < 1e-4 and abs(tf.rotation.roll + 0.63) < 1e-4  # float32 fields
+    # the wheel's get_matrix() disagrees on pitch/roll signs (the regression); yaw-only transforms agree
+    g = np.array(carla.Transform(carla.Location(), carla.Rotation(yaw=37.0)).get_matrix())
+    assert np.allclose(g, coords.ue_matrix(carla.Transform(carla.Location(), carla.Rotation(yaw=37.0))), atol=1e-6)

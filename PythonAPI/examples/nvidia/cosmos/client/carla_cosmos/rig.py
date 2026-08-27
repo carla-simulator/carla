@@ -216,7 +216,7 @@ def rear_axle_local_ue(vehicle: carla.Vehicle) -> np.ndarray:
     would put the axle at world coordinates.  That inconsistency is detected
     and raised.
     """
-    inv = np.array(vehicle.get_transform().get_inverse_matrix(), dtype=np.float64)
+    inv = np.linalg.inv(coords.ue_matrix(vehicle.get_transform()))  # not get_inverse_matrix(): see coords.ue_rotation_matrix
     names = list(vehicle.get_bone_names())
     world = list(vehicle.get_vehicle_bone_world_transforms())
     rear = []

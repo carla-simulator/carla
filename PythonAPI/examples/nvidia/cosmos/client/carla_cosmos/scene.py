@@ -177,9 +177,9 @@ def _mapkey(clip_id: str, label: str) -> dict:
 
 def _side_point(wp: carla.Waypoint, sign: int) -> carla.Location:
     loc = wp.transform.location
-    rv = wp.transform.get_right_vector()
+    _, rv, _ = coords.ue_forward_right_up(wp.transform.rotation)  # not get_right_vector(): see coords.ue_rotation_matrix
     w = wp.lane_width / 2.0
-    return carla.Location(loc.x + sign * rv.x * w, loc.y + sign * rv.y * w, loc.z + sign * rv.z * w)
+    return carla.Location(loc.x + sign * rv[0] * w, loc.y + sign * rv[1] * w, loc.z + sign * rv[2] * w)
 
 
 class SceneExporter:
@@ -345,11 +345,11 @@ class SceneExporter:
 
     def _pole_polyline(self, bb: carla.BoundingBox) -> list[dict]:
         assert self.frame is not None
-        up = bb.rotation.get_up_vector()
-        base = carla.Location(bb.location.x - up.x * bb.extent.z, bb.location.y - up.y * bb.extent.z,
-                              bb.location.z - up.z * bb.extent.z)
-        top = carla.Location(bb.location.x + up.x * bb.extent.z, bb.location.y + up.y * bb.extent.z,
-                             bb.location.z + up.z * bb.extent.z)
+        _, _, up = coords.ue_forward_right_up(bb.rotation)  # not get_up_vector(): see coords.ue_rotation_matrix
+        base = carla.Location(bb.location.x - up[0] * bb.extent.z, bb.location.y - up[1] * bb.extent.z,
+                              bb.location.z - up[2] * bb.extent.z)
+        top = carla.Location(bb.location.x + up[0] * bb.extent.z, bb.location.y + up[1] * bb.extent.z,
+                             bb.location.z + up[2] * bb.extent.z)
         return [self.frame.point(top), self.frame.point(base)]
 
     def _export_level_statics(self) -> tuple[list[dict], list[dict], list[dict]]:
