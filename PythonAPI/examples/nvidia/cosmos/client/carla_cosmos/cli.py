@@ -7,10 +7,17 @@
     carla-cosmos result JOB [--out DIR]
     carla-cosmos cancel JOB
     carla-cosmos serve [--image IMG] [--port 8000] [--state DIR] [--gpus all] [--profile P] | --stop | --mock
+    carla-cosmos classes
     carla-cosmos synthetic-clip --out DIR [--frames 93 --fps 16 | --av7]
     carla-cosmos preview --clip DIR [--cameras camera:front:wide:120fov] [--frames 0:60] [--out DIR] [--grid]
 
 Connection: ``--url``/``--token`` or ``COSMOS_URL`` / ``COSMOS_TOKEN`` / ``COSMOS_TOKEN_FILE``.
+
+Control weight is part of ``--control`` (``--control depth=clip:0.7``); there is
+deliberately no second ``--weight`` flag.  ``submit --mask-classes vehicle,pedestrian``
+blanks those CARLA semantic classes in every input derived from the captured
+pixels (``carla-cosmos classes`` lists the names); it never touches the
+world-scenario controls ``wsm`` / ``hdmap_bbox``.
 
 Results are kept: whenever the CLI waits for a job it downloads every returned
 file into ``<results root>/<clip_id>/<job_id>/`` next to a ``job.json`` (see
@@ -100,7 +107,8 @@ def cmd_submit(args) -> int:
     job = c.submit_clip(clip, args.backend, args.prompt, controls, views=args.view or None,
                         rgb=None if args.rgb == "auto" else args.rgb == "yes", negative_prompt=args.negative_prompt,
                         seed=args.seed, guidance=args.guidance, num_steps=args.steps, resolution=args.resolution,
-                        priority=args.priority, extra=extra)
+                        priority=args.priority, extra=extra,
+                        mask_classes=args.mask_classes or None, mask_dilate=args.mask_dilate)
     print(f"submitted {job.id} ({job.info.backend}, {job.info.priority}); queue position {job.info.queue_position}")
     ResultStore(args.out).note_submitted(job, clip_id=clip.manifest.clip_id)
     if args.wait or args.out:
@@ -238,6 +246,20 @@ def cmd_serve(args) -> int:
     return 0
 
 
+def cmd_classes(args) -> int:
+    from .mask import GROUPS, TAG_NAMES, class_table
+
+    if args.json:
+        print(json.dumps({"tags": {n: i for i, n in enumerate(TAG_NAMES)},
+                          "groups": {g: list(t) for g, t in GROUPS.items()}}, indent=2))
+        return 0
+    print(f"{'name':<16} {'id':>4}  also accepted")
+    for name, tag, aliases in class_table():
+        print(f"{name:<16} {tag if tag >= 0 else '':>4}  {', '.join(aliases)}")
+    print("\nUse with: carla-cosmos submit ... --mask-classes vehicle,pedestrian")
+    return 0
+
+
 def cmd_synthetic(args) -> int:
     from .synthetic import av7_clip, make_clip
 
@@ -304,6 +326,12 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--resolution", default=None, help="resolution bucket, e.g. 480 or 720")
     s.add_argument("--priority", choices=["interactive", "batch"], default="interactive")
     s.add_argument("--extra", action="append", default=[], metavar="KEY=JSON", help="backend pass-through")
+    s.add_argument("--mask-classes", action="append", default=[], metavar="NAME[,NAME...]",
+                   help="CARLA semantic classes to remove from the pixel-derived inputs "
+                        "(depth/seg/edge/vis and the uploaded RGB), e.g. vehicle,pedestrian; "
+                        "'carla-cosmos classes' lists them")
+    s.add_argument("--mask-dilate", type=int, default=None, metavar="PX",
+                   help="grow the mask by this many pixels so object outlines do not leak (default 3)")
     s.add_argument("--wait", action="store_true")
     s.add_argument("--out", default=None,
                    help="results root (default $COSMOS_RESULTS or ./cosmos-results); implies --wait. "
@@ -345,6 +373,10 @@ def build_parser() -> argparse.ArgumentParser:
     sv.add_argument("--stop", action="store_true", help="stop the container(s) we started")
     sv.add_argument("--rm", action="store_true", help="with --stop: also remove the container")
     sv.set_defaults(fn=cmd_serve)
+
+    cls = sub.add_parser("classes", help="semantic class names accepted by --mask-classes")
+    cls.add_argument("--json", action="store_true")
+    cls.set_defaults(fn=cmd_classes)
 
     sy = sub.add_parser("synthetic-clip", help="write an ffmpeg test-pattern clip (smoke tests)")
     sy.add_argument("--out", required=True)

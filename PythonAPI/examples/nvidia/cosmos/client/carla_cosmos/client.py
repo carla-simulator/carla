@@ -17,6 +17,7 @@ Requests are validated against the backend contract *before* any upload.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import logging
 import os
@@ -24,7 +25,7 @@ import tempfile
 import time
 import zipfile
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Iterable
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Sequence
 
 import httpx
 
@@ -212,22 +213,44 @@ class CosmosClient:
                     views: list[str] | None = None, rgb: bool | None = None, negative_prompt: str | None = None,
                     seed: int = 0, guidance: float | None = None, num_steps: int | None = None,
                     resolution: str | None = None, priority: Priority = "interactive",
-                    extra: dict[str, Any] | None = None, contract: BackendContract | None = None) -> "Job":
+                    extra: dict[str, Any] | None = None, contract: BackendContract | None = None,
+                    weights: dict[str, float] | None = None,
+                    mask_classes: Sequence[str | int] | None = None,
+                    mask_dilate: int | None = None) -> "Job":
         """Validate, upload what is needed from ``clip`` and submit.
 
         ``controls`` maps control name to ``"clip"`` (upload the clip's control
         video(s)), ``"derive"`` (server derives it from RGB), ``"scene"``
         (upload the clip's ClipGT scene package) or a :class:`ControlInput`.
         ``rgb=None`` uploads RGB when the backend or a derived control needs it.
+
+        ``weights`` sets the per-control weight (``{"depth": 1.0, "seg": 0.5}``),
+        the same knob as the ``("clip", 0.5)`` tuple form of ``controls`` and
+        winning over it.
+
+        ``mask_classes`` names CARLA semantic classes (``["vehicle"]``,
+        ``["car", 12]``) to remove from every input derived from the captured
+        pixels: the control videos and the RGB video are blanked there before
+        they are uploaded, and the mask itself is uploaded for backends whose
+        controls accept one (see :mod:`carla_cosmos.mask`).  ``mask_dilate``
+        overrides the default dilation in pixels.
         """
         contract = contract or self.contract(backend)
         manifest = clip.manifest
         views = views or (manifest.camera_names if len(manifest.camera_names) == 1 else [])
         if not views and contract.max_views > 1:
             views = [v for v in contract.views if v in manifest.camera_names] or manifest.camera_names
+        mask_tags = _resolve_mask_classes(mask_classes)
+        dilate = _default_dilate() if mask_dilate is None else int(mask_dilate)
+        unknown_weights = sorted(set(weights or {}) - set(controls))
+        if unknown_weights:
+            raise CosmosError(0, f"weight given for control(s) {unknown_weights} that are not in the request "
+                                 f"(controls: {sorted(controls)})")
         req = JobRequest(backend=backend, prompt=prompt, negative_prompt=negative_prompt, seed=seed,
                          guidance=guidance, num_steps=num_steps, resolution=resolution, priority=priority,
-                         views=views, extra=extra or {})
+                         views=views, extra=extra or {},
+                         mask_classes=_mask_class_names(mask_tags),
+                         mask_dilate=dilate if mask_tags else 0)
         # (kind, source, setter): kind "scene" -> source is a directory; kind "video" -> (video kind, view)
         plan: list[tuple[str, Any, Callable[[str], None]]] = []
 
@@ -239,6 +262,8 @@ class CosmosClient:
             weight = None
             if isinstance(how, tuple):
                 how, weight = how
+            if weights and name in weights:
+                weight = float(weights[name])
             if how == "derive":
                 req.controls[name] = ControlInput(derive=True, weight=weight)
             elif how == "scene":
@@ -269,25 +294,80 @@ class CosmosClient:
                 req.rgb[v] = "pending"
                 plan.append(("video", ("rgb", v), lambda bid, v=v: req.rgb.__setitem__(v, bid)))
 
-        errors = validate_request(contract, req, manifest)
-        # resolve clip files only after the contract check, so the error list is about the request
-        resolved: list[tuple[str, Path, Callable[[str], None]]] = []
-        for kind, source, setter in plan:
-            if kind == "scene":
-                resolved.append((kind, source, setter))
-                continue
-            vkind, view = source
-            try:
-                resolved.append((kind, clip.video(vkind, view), setter))
-            except FileNotFoundError:
-                errors.append(f"clip {manifest.clip_id} has no '{vkind}' video for view '{view}' "
-                              f"(available: {sorted(manifest.videos)})")
-        if errors:
-            raise CosmosError(0, f"request for '{backend}' is invalid", errors)
+        # masking: the clip videos we are about to upload get blanked, and the mask itself
+        # is uploaded for backends whose controls take one (Transfer 2.5 mask_path)
+        with contextlib.ExitStack() as stack:
+            if mask_tags:
+                wanted = {src for kind, src, _ in plan if kind == "video"}
+                if not wanted:
+                    raise CosmosError(0, f"mask_classes={_mask_class_names(mask_tags)} has no effect on this "
+                                         f"request: it uploads no clip video to mask (controls "
+                                         f"{sorted(req.controls)} are server-rendered or derived and no RGB "
+                                         f"is uploaded)")
+                send_mask = bool([n for n in contract.maskable_controls if n in req.controls])
+                masked = self._mask_clip_videos(clip, wanted, mask_tags, dilate, send_mask, stack)
+                if send_mask:
+                    for v in views:
+                        req.masks[v] = "pending"
+                        plan.append(("mask", ("mask", v), lambda bid, v=v: req.masks.__setitem__(v, bid)))
+            else:
+                masked = {}
 
-        for kind, path, setter in resolved:
-            setter(self.upload_dir(path) if kind == "scene" else self.upload(path))
+            errors = validate_request(contract, req, manifest)
+            # resolve clip files only after the contract check, so the error list is about the request
+            resolved: list[tuple[str, Path, Callable[[str], None]]] = []
+            for kind, source, setter in plan:
+                if kind == "scene":
+                    resolved.append((kind, source, setter))
+                    continue
+                vkind, view = source
+                if (vkind, view) in masked:
+                    resolved.append((kind, masked[(vkind, view)], setter))
+                    continue
+                try:
+                    resolved.append((kind, clip.video(vkind, view), setter))
+                except FileNotFoundError:
+                    errors.append(f"clip {manifest.clip_id} has no '{vkind}' video for view '{view}' "
+                                  f"(available: {sorted(manifest.videos)})")
+            if errors:
+                raise CosmosError(0, f"request for '{backend}' is invalid", errors)
+
+            for kind, path, setter in resolved:
+                setter(self.upload_dir(path) if kind == "scene" else self.upload(path))
         return self.submit(req, manifest)
+
+    def _mask_clip_videos(self, clip: Clip, wanted: set[tuple[str, str]], classes: tuple[int, ...],
+                          dilate: int, mask_video: bool,
+                          stack: "contextlib.ExitStack") -> dict[tuple[str, str], Path]:
+        """Write masked copies of the clip videos this request uploads (into a temp dir).
+
+        ``wanted`` is the set of ``(video kind, view)`` the upload plan needs.
+        Returns ``{(kind, view): path}``, including ``("mask", view)`` when the
+        mask video itself is uploaded.  Raises when a requested control cannot
+        be masked, rather than uploading unmasked pixels.
+        """
+        from . import mask as maskmod  # cv2 + numpy: capture extra, only needed when masking
+
+        tmp = Path(stack.enter_context(tempfile.TemporaryDirectory(prefix="carla_cosmos_mask_")))
+        unmaskable = sorted({k for k, _ in wanted} - set(maskmod.MASKABLE_KINDS))
+        if unmaskable:
+            raise CosmosError(0, f"cannot mask clip video kind(s) {unmaskable}; "
+                                 f"maskable: {list(maskmod.MASKABLE_KINDS)}")
+        out: dict[tuple[str, str], Path] = {}
+        for view in sorted({v for _, v in wanted}):
+            kinds = sorted({k for k, v in wanted if v == view})
+            try:
+                written = maskmod.masked_clip_videos(clip, view, classes, kinds, tmp / _slug(view),
+                                                     dilate=dilate, mask_video=mask_video)
+            except maskmod.MaskError as exc:
+                raise CosmosError(0, str(exc)) from exc
+            missing = [k for k in kinds if k not in written]
+            if missing:
+                raise CosmosError(0, f"clip {clip.manifest.clip_id} has no {missing} video for view '{view}' "
+                                     f"to mask")
+            for kind, path in written.items():
+                out[(kind, view)] = path
+        return out
 
     def jobs(self, status: str | None = None, backend: str | None = None, mine: bool = False,
              limit: int = 100) -> list[JobInfo]:
@@ -407,6 +487,45 @@ class Result:
 
 
 # -- helpers --------------------------------------------------------------------------------------
+
+def _resolve_mask_classes(specs: "Sequence[str | int] | None") -> tuple[int, ...]:
+    """Class names/ids -> tag ids, as a :class:`CosmosError` on a bad name.
+
+    ``carla_cosmos.mask`` is imported lazily: it needs the capture extras
+    (numpy/OpenCV), which the plain client does not.
+    """
+    if not specs:
+        return ()
+    from . import mask as maskmod
+
+    try:
+        tags = maskmod.resolve_classes(specs)
+    except maskmod.MaskError as exc:
+        raise CosmosError(0, str(exc)) from exc
+    if not tags:
+        raise CosmosError(0, "mask_classes resolved to no class")
+    return tags
+
+
+def _mask_class_names(tags: tuple[int, ...]) -> list[str]:
+    """Canonical names of resolved tag ids (recorded in the job request)."""
+    if not tags:
+        return []
+    from . import mask as maskmod
+
+    return maskmod.class_names(tags)
+
+
+def _default_dilate() -> int:
+    from . import mask as maskmod
+
+    return maskmod.DEFAULT_DILATE
+
+
+def _slug(view: str) -> str:
+    """File-system-safe form of a camera name."""
+    return view.replace(":", "_")
+
 
 def sha256_file(path: str | Path) -> str:
     h = hashlib.sha256()

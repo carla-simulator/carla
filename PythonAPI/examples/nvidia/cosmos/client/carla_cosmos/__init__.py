@@ -40,6 +40,7 @@ from .contracts import (
 
 if TYPE_CHECKING:  # pragma: no cover
     from .capture import Capture, FrameDesyncError, LiveTicks, ReplayTicks
+    from .mask import MaskError, masked_clip_videos, resolve_classes
     from .preview import SceneGT, preview_clip
     from .rig import Camera, MountedCamera, Rig
 
@@ -55,6 +56,9 @@ _LAZY = {
     "Rig": "rig",
     "SceneGT": "preview",
     "preview_clip": "preview",
+    "MaskError": "mask",
+    "masked_clip_videos": "mask",
+    "resolve_classes": "mask",
 }
 
 
@@ -91,6 +95,7 @@ __all__ = [
     "JobRequest",
     "JobSubmission",
     "LiveTicks",
+    "MaskError",
     "MountedCamera",
     "ReplayTicks",
     "Result",
@@ -103,6 +108,8 @@ __all__ = [
     "TRANSFER25",
     "TRANSFER25_AV",
     "default_results_root",
+    "masked_clip_videos",
     "preview_clip",
+    "resolve_classes",
     "validate_request",
 ]
