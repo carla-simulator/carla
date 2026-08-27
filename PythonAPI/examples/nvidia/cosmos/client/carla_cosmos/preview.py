@@ -23,7 +23,10 @@ The maths is NVIDIA's ClipGT loader, verbatim (it was validated against their re
 * polylines are densified to 0.5 m so the clipping is per sub-segment: a line that leaves the
   frustum in the middle is cut there instead of being folded across the image (that fold was the
   visible bug on the cross cameras before densification);
-* boxes are drawn edge by edge, each edge dropped if either end is NaN;
+* boxes are drawn edge by edge, and their edges are densified and clipped exactly like the
+  polylines: a box that straddles the camera plane (any parked car the ego drives past) keeps the
+  visible part of every edge instead of losing the whole edge, which used to leave only the far
+  face drawn and made near obstacles look as if they had been exported too close to the horizon;
 * parked obstacles — tracks the exporter writes with exactly two rows (first and last timestamp)
   — are held constant across every frame.
 
@@ -133,6 +136,22 @@ def densify(points: np.ndarray, step: float = 0.5) -> np.ndarray:
 def box_corners(center: Sequence[float], size: Sequence[float], quat_xyzw: Sequence[float]) -> np.ndarray:
     """The 8 world corners of an oriented box, ordered for :data:`BOX_EDGES`."""
     return (_UNIT_CORNERS * np.asarray(size, float)) @ quat_to_matrix(quat_xyzw).T + np.asarray(center, float)
+
+
+def box_edge_points(corners: np.ndarray, step: float = 0.5) -> np.ndarray:
+    """The 12 edges of :func:`box_corners`, densified to ``step`` metres: ``(12, n + 1, 3)``.
+
+    Boxes need the same treatment as polylines.  A box drawn straight from its 8 projected corners
+    loses every edge with an endpoint behind the camera or outside the lens range, and for a parked
+    car the ego is level with that is *most* of them: what survives is the far face alone, floating
+    near the image centre, which reads as a metre-scale export error and is not one.  Densifying
+    first means the clip happens where the edge actually leaves the frustum."""
+    C = np.asarray(corners, float).reshape(-1, 3)
+    a = C[[i for i, _ in BOX_EDGES]]
+    b = C[[j for _, j in BOX_EDGES]]
+    n = max(1, int(np.ceil(float(np.linalg.norm(b - a, axis=1).max()) / max(step, 1e-6))))
+    t = np.linspace(0.0, 1.0, n + 1)[None, :, None]
+    return a[:, None, :] + (b - a)[:, None, :] * t
 
 
 def polyline_segments(uv: np.ndarray) -> Iterator[tuple[np.ndarray, np.ndarray]]:
@@ -368,13 +387,14 @@ def draw_scene(frame: np.ndarray, camera: PreviewCamera, world_to_camera: np.nda
                     cv2.line(frame, tuple(a.astype(int)), tuple(b.astype(int)), layer.color, thickness)
         else:
             for box in scene.boxes_at(layer.table, timestamp):
-                uv = camera.project_world(box.corners(), world_to_camera)
+                edges = box_edge_points(box.corners(), step)
+                uv = camera.project_world(edges.reshape(-1, 3), world_to_camera).reshape(edges.shape[0], -1, 2)
                 if np.isnan(uv).all():
                     continue
                 color = PERSON_COLOR if box.category == "person" else layer.color
-                for i, j in BOX_EDGES:
-                    if not (np.isnan(uv[i]).any() or np.isnan(uv[j]).any()):
-                        cv2.line(frame, tuple(uv[i].astype(int)), tuple(uv[j].astype(int)), color, thickness)
+                for edge in uv:
+                    for a, b in polyline_segments(edge):
+                        cv2.line(frame, tuple(a.astype(int)), tuple(b.astype(int)), color, thickness)
     return frame
 
 

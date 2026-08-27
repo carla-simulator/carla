@@ -11,6 +11,7 @@ from carla_cosmos.preview import (
     PreviewCamera,
     SceneGT,
     box_corners,
+    box_edge_points,
     cameras_from_rig_json,
     densify,
     draw_scene,
@@ -130,6 +131,37 @@ def test_box_corners_span_the_size():
     assert corners.min(axis=0) == pytest.approx([0.0, 0.0, 0.0])
     assert corners.max(axis=0) == pytest.approx([2.0, 4.0, 6.0])
     assert len(BOX_EDGES) == 12
+
+
+def test_box_edge_points_densifies_every_edge():
+    corners = box_corners([0.0, 0.0, 0.0], [4.0, 2.0, 1.5], [0.0, 0.0, 0.0, 1.0])
+    edges = box_edge_points(corners, step=0.5)
+    assert edges.shape[0] == len(BOX_EDGES)
+    assert edges.shape[1] >= 4 / 0.5  # the longest edge drives the sampling
+    for (i, j), pts in zip(BOX_EDGES, edges):
+        assert pts[0] == pytest.approx(corners[i])
+        assert pts[-1] == pytest.approx(corners[j])
+        assert np.linalg.norm(np.diff(pts, axis=0), axis=1).max() <= 0.5 + 1e-9
+
+
+def test_box_straddling_the_camera_keeps_its_visible_edges(lens):
+    """A parked car the ego is level with: half its corners are behind the camera.
+
+    Projecting the 8 corners and dropping every edge with a NaN end leaves only the far face -
+    the box then reads as a distant object near the image centre, which is what made the exported
+    parked cars look misplaced.  Densified edges keep the part that is actually in frame."""
+    corners = box_corners([1.3, -3.2, -0.8], [5.4, 1.9, 1.6], [0.0, 0.0, 0.0, 1.0])
+    behind = (corners[:, 0] <= 0.05).sum()
+    assert behind == 4, "fixture must straddle the camera plane"
+    corner_uv = lens.project(corners)
+    naive = sum(1 for i, j in BOX_EDGES if not (np.isnan(corner_uv[i]).any() or np.isnan(corner_uv[j]).any()))
+    assert naive == 4, "corner-only drawing keeps the far face alone"
+    edges = box_edge_points(corners, step=0.25)
+    uv = lens.project(edges.reshape(-1, 3)).reshape(edges.shape[0], -1, 2)
+    drawn = sum(1 for edge in uv for _ in polyline_segments(edge))
+    assert drawn > 4 * (edges.shape[1] - 1), "the clipped edges must add segments the naive box loses"
+    # the far face is not the rightmost thing on screen any more
+    assert np.nanmax(uv[..., 0]) > np.nanmax(corner_uv[:, 0])
 
 
 def _obstacle_row(track: str, ts: int):
