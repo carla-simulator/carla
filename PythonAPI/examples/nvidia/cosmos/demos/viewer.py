@@ -6,7 +6,7 @@ Multi-camera results (Transfer 2.5 AV) open as a grid: per camera the control th
 RGB) over the result, GRID_COLUMNS cameras per row.  Single-camera results open as input | control | result.
 
 Keys: space play/pause · ←/→ step · home/end · g grid/single · tab next camera (single) · c cycle
-control/input · s save frame · q quit.  The window is resizable; tiles re-fit keeping their aspect ratio.
+control/input · o control over input RGB on/off · s save frame · q quit.  The window is resizable; tiles re-fit keeping their aspect ratio.
 Needs the ``viewer`` extra (pygame) and OpenCV (``capture`` extra).
 """
 
@@ -90,6 +90,14 @@ class CameraPanels:
         return row
 
 
+def screen_blend(base: np.ndarray, over: np.ndarray) -> np.ndarray:
+    """``over`` (a control render) screen-blended onto ``base`` (the input RGB), resized to ``base``."""
+    if over.shape[:2] != base.shape[:2]:
+        over = cv2.resize(over, (base.shape[1], base.shape[0]))
+    a, b = base.astype(np.uint16), over.astype(np.uint16)
+    return (255 - ((255 - a) * (255 - b)) // 255).astype(np.uint8)
+
+
 GAP = 4
 """Pixels between panels."""
 LINE_H = 18
@@ -146,7 +154,7 @@ def view_result(clip: Clip, result_dir: Path, height: int = 360, grid: bool | No
     cameras = [c for c in clip.manifest.camera_names if c in result_views] or clip.manifest.camera_names[:1]
     panels = {c: CameraPanels(clip, result_dir, manifest, c) for c in cameras}
     grid = len(cameras) > 1 if grid is None else grid
-    cam_i, ctrl_i, frame, playing = 0, 0, 0, True
+    cam_i, ctrl_i, frame, playing, overlay = 0, 0, 0, True, False
     pygame.init()
     font = pygame.font.SysFont("dejavusansmono,monospace", 14)
     screen = None
@@ -165,13 +173,24 @@ def view_result(clip: Clip, result_dir: Path, height: int = 360, grid: bool | No
                 for c in chunk:
                     t = panels[c].top(ctrl_i)
                     if t:
-                        tops.append((f"{short_name(c)} · {t[0]}", t[1]))
+                        tops.append((f"{short_name(c)} · {t[0]}", t[1], c))
                     if panels[c].result:
-                        bottoms.append((f"{short_name(c)} · result", panels[c].result))
+                        bottoms.append((f"{short_name(c)} · result", panels[c].result, c))
                 rows += [r for r in (tops, bottoms) if r]
         else:
-            rows = [panels[cameras[cam_i]].strip(ctrl_i)]
-        frame_rows = [[(title, f) for title, vid in row if (f := vid.frame(frame)) is not None] for row in rows]
+            rows = [[(t, v, cameras[cam_i]) for t, v in panels[cameras[cam_i]].strip(ctrl_i)]]
+        def tile(title: str, vid: Video, cam: str) -> tuple[str, np.ndarray] | None:
+            f = vid.frame(frame)
+            if f is None:
+                return None
+            # 'o': draw a control over the input RGB (alignment check); only for control tiles with an input
+            if overlay and title.split(" · ")[-1] not in ("input rgb", "result") and panels[cam].input:
+                rgb = panels[cam].input.frame(frame)
+                if rgb is not None:
+                    return f"{title} over rgb", screen_blend(rgb, f)
+            return title, f
+
+        frame_rows = [[t for title, vid, cam in row if (t := tile(title, vid, cam))] for row in rows]
         frame_rows = [r for r in frame_rows if r]
         if not frame_rows:
             break
@@ -201,9 +220,10 @@ def view_result(clip: Clip, result_dir: Path, height: int = 360, grid: bool | No
                 screen.blit(s, (x, y))
                 x += s.get_width() + GAP
             y += tile_h + GAP
-        n = max(vid.n for r in rows for _, vid in r)
+        n = max(vid.n for r in rows for _, vid, _ in r)
         mode = f"grid {len(cameras)} cameras (g: single view)" if grid else f"{cameras[cam_i]} (tab: next camera, g: grid)"
-        status = f"{mode}  frame {frame + 1}/{n}  {'▶' if playing else '❚❚'}  c: cycle control/input"
+        status = (f"{mode}  frame {frame + 1}/{n}  {'▶' if playing else '❚❚'}  c: cycle control/input  "
+                  f"o: overlay {'on' if overlay else 'off'}")
         screen.blit(font.render(status, True, (220, 220, 220)), (6, y))
         for i, line in enumerate(prompt_lines):  # the full prompt, word-wrapped to the window width
             screen.blit(font.render(line, True, (180, 180, 180)), (6, y + LINE_H * (i + 1)))
@@ -236,6 +256,8 @@ def view_result(clip: Clip, result_dir: Path, height: int = 360, grid: bool | No
                     grid, win_size = not grid, None  # re-layout at the natural size of the new mode
                 elif ev.key == pygame.K_c:
                     ctrl_i += 1
+                elif ev.key == pygame.K_o:
+                    overlay = not overlay
                 elif ev.key == pygame.K_s:
                     tag = "grid" if grid else canonical_camera_name(cameras[cam_i])
                     out = result_dir / f"viewer_{tag}_{frame:04d}.png"
