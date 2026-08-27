@@ -12,6 +12,10 @@ context parallelism splits one clip's latent sequence over the N GPUs.
 Job -> ``InferenceArguments`` mapping (``cosmos_transfer2/config.py``):
 
 * RGB video (required by the contract) -> ``video_path``; ``max_frames`` = clip frames
+* a mask video for the view (``inputs["masks"][view]``, from ``--mask-classes``)
+  -> ``<hint>: {mask_path}`` on every control: white keeps the control, black
+  switches it off, which the pipeline turns into a spatio-temporal control-weight
+  map (``ControlConfig.mask_path``), so the model is unconstrained there
 * control with an uploaded video -> ``<hint>: {control_path, control_weight}``;
   ``derive`` -> ``<hint>: {control_weight}`` (the pipeline computes edge/vis from
   the RGB, depth via Video-Depth-Anything, seg via GroundingDINO + SAM2 using
@@ -195,6 +199,7 @@ class Transfer25Worker(Worker):
             if key in extra:
                 sample[key] = extra.pop(key)
         seg_prompt = extra.pop("seg_control_prompt", None)
+        mask_path = (inputs.get("masks") or {}).get(view)
         controls = inputs.get("controls", {})
         if not controls:
             raise ValueError("no control given")
@@ -204,6 +209,8 @@ class Transfer25Worker(Worker):
             if hint not in self.hints:
                 raise ValueError(f"control '{hint}' is not loaded on this worker (loaded: {self.hints})")
             cfg: dict[str, Any] = {"control_weight": float(spec["weight"]) if spec.get("weight") is not None else 1.0}
+            if mask_path:
+                cfg["mask_path"] = str(mask_path)
             path = spec.get("path") or (spec.get("paths") or {}).get(view)
             if path:
                 cfg["control_path"] = str(path)

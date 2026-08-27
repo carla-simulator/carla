@@ -344,7 +344,7 @@ def _routes(app: FastAPI, st: AppState) -> None:
 
 
 def _referenced_blobs(sub: JobSubmission) -> list[str]:
-    ids = list(sub.request.rgb.values())
+    ids = list(sub.request.rgb.values()) + list(sub.request.masks.values())
     for inp in sub.request.controls.values():
         if inp.blob:
             ids.append(inp.blob)

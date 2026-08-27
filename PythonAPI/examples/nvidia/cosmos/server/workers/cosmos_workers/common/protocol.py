@@ -34,7 +34,8 @@ The job handed to ``run`` (all paths are local to the worker's filesystem):
           "depth": {"path": "/state/jobs/.../inputs/depth_....mp4", "weight": 1.0},
           "wsm":   {"scene_dir": "/state/jobs/.../inputs/scene", "weight": null},
           "edge":  {"derive": true, "weight": 0.5}
-        }
+        },
+        "masks": {"camera:front:wide:120fov": "/state/jobs/.../inputs/mask_camera_front_wide_120fov.mp4"}
       },
       "out_dir": "/state/jobs/j_.../result"
     }

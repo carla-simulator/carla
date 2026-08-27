@@ -297,6 +297,12 @@ class Scheduler:
         rgb: dict[str, str] = {}
         for view, blob_id in request.rgb.items():
             rgb[view] = str(self._link_blob(blob_id, inputs / f"rgb_{canonical_camera_name(view)}.mp4"))
+        # mask-out classes: one binary mask video per view (white = the control applies here).
+        # The uploaded controls are already blanked; this lets a backend that supports it
+        # (Transfer 2.5 mask_path) additionally zero the control weight inside the mask.
+        masks: dict[str, str] = {}
+        for view, blob_id in request.masks.items():
+            masks[view] = str(self._link_blob(blob_id, inputs / f"mask_{canonical_camera_name(view)}.mp4"))
         controls: dict[str, dict[str, Any]] = {}
         for name, inp in request.controls.items():
             entry: dict[str, Any] = {"weight": inp.weight}
@@ -317,7 +323,7 @@ class Scheduler:
             "request": request.model_dump(),
             "manifest": manifest.model_dump(),
             "views": views,
-            "inputs": {"rgb": rgb, "controls": controls},
+            "inputs": {"rgb": rgb, "controls": controls, "masks": masks},
             "out_dir": str(out),
         }
 
