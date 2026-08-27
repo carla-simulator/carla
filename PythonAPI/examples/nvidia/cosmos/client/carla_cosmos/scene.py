@@ -13,7 +13,9 @@ pose.  Ego origin: rear axle on ground.  Hardened over the spike:
 * junction lane segments are skipped (CARLA marks some connectors ``Solid``,
   which renders as a phantom line through the intersection);
 * static parked vehicles (level bounding boxes tagged Car/Truck/Bus/
-  Motorcycle/Bicycle, not actors) are exported as constant-pose obstacles;
+  Motorcycle/Bicycle, not actors) are exported as constant-pose obstacles,
+  de-duplicated against the live actors (the hero included) and against the
+  second, smaller box every parked vehicle mesh carries for its interior;
 * per-frame traffic-light states go to a sidecar JSON (the stock ClipGT loader
   ignores states and renders grey; the sidecar feeds the loader extension).
 """
@@ -394,37 +396,61 @@ class SceneExporter:
                              "version": VERSION})
         return rows
 
-    def _export_static_obstacles(self, min_extent_z: float = 0.2, dedup_m: float = 2.0) -> None:
+    def _actor_centres_ue(self) -> np.ndarray:
+        """World centres of every live vehicle/walker, **including the hero**.
+
+        The hero is deliberately absent from :attr:`_actors` (it is the rig, not an obstacle), but
+        its mesh *is* in ``get_level_bbs``: without it here the ego's own body was exported as a
+        parked car frozen at the start pose, sitting on top of the camera for the whole clip.
+        """
+        actors = [self.world.get_actor(aid) for aid, _cat, _bb in self._actors] + [self.hero]
+        centres = [(a.get_transform().location.x, a.get_transform().location.y, a.get_transform().location.z)
+                   for a in actors if a is not None]
+        return np.array(centres, dtype=np.float64) if centres else np.zeros((0, 3))
+
+    def _export_static_obstacles(self, min_extent_z: float = 0.2, dedup_m: float = 2.0,
+                                 same_centre_m: float = 0.3) -> None:
         """Parked vehicles that are not actors, from the level bounding boxes.
 
-        Level bbs whose centre is within ``dedup_m`` of a live vehicle actor are
-        assumed to be that actor and skipped.  Emitted later as constant-pose
-        obstacles at the first and last clip timestamps (the loader needs >= 2
-        observations per track).
+        Emitted later as constant-pose obstacles at the first and last clip timestamps (the loader
+        needs >= 2 observations per track).  Two things have to be de-duplicated first:
+
+        * **live actors.**  A level bb whose centre is within ``dedup_m`` of a live vehicle or
+          walker is that actor's mesh; the actor is already exported per tick.  The hero counts:
+          see :meth:`_actor_centres_ue`.
+        * **multi-mesh props.**  Every parked vehicle in the UE5 towns is built from two meshes -
+          the body (``..._SM_0``) and the interior/glass shell (``..._SM_1``, ~15 % smaller) - and
+          ``get_level_bbs`` returns a box for each, at the same centre.  Of the boxes sharing a
+          centre within ``same_centre_m`` only the largest by volume survives.
         """
         assert self.frame is not None
-        actor_centres = []
-        for aid, _cat, _bb in self._actors:
-            actor = self.world.get_actor(aid)
-            if actor is not None:
-                loc = actor.get_transform().location
-                actor_centres.append((loc.x, loc.y, loc.z))
-        actor_centres_np = np.array(actor_centres) if actor_centres else np.zeros((0, 3))
-        n_skipped = 0
+        actor_centres = self._actor_centres_ue()
+        n_actor = n_dup = 0
         for label, category in STATIC_OBSTACLE_LABELS.items():
+            kept: list[tuple[int, carla.BoundingBox, np.ndarray, float]] = []
             for i, bb in enumerate(self.world.get_level_bbs(label)):
                 if bb.extent.z < min_extent_z:
                     continue
                 centre = np.array([bb.location.x, bb.location.y, bb.location.z])
-                if len(actor_centres_np) and np.min(np.linalg.norm(actor_centres_np - centre, axis=1)) < dedup_m:
-                    n_skipped += 1
+                if len(actor_centres) and np.min(np.linalg.norm(actor_centres - centre, axis=1)) < dedup_m:
+                    n_actor += 1
                     continue
+                volume = float(bb.extent.x * bb.extent.y * bb.extent.z)
+                twin = next((k for k, (_j, _b, c, _v) in enumerate(kept)
+                             if np.linalg.norm(c - centre) < same_centre_m), None)
+                if twin is None:
+                    kept.append((i, bb, centre, volume))
+                    continue
+                n_dup += 1
+                if volume > kept[twin][3]:
+                    kept[twin] = (i, bb, centre, volume)
+            for i, bb, _centre, _volume in kept:
                 c, d, q = self.frame.bbox(bb)
                 self._static_obstacles.append(
                     {"trackline_id": f"static:{label.name.lower()}:{i}",
                      "center": c, "size": d, "orientation": q, "category": category})
-        log.info("scene: %d static parked obstacles (%d level bbs matched live actors)",
-                 len(self._static_obstacles), n_skipped)
+        log.info("scene: %d static parked obstacles (%d level bbs matched live actors, "
+                 "%d duplicate meshes dropped)", len(self._static_obstacles), n_actor, n_dup)
 
     # ------------------------------------------------------------------ per tick
     def record_tick(self, snapshot: carla.WorldSnapshot) -> None:
