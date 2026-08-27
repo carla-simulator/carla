@@ -90,12 +90,16 @@ class CameraPanels:
         return row
 
 
-def screen_blend(base: np.ndarray, over: np.ndarray) -> np.ndarray:
-    """``over`` (a control render) screen-blended onto ``base`` (the input RGB), resized to ``base``."""
+def control_overlay(base: np.ndarray, over: np.ndarray, alpha: float = 0.85, dim: float = 0.6) -> np.ndarray:
+    """Draw a control render onto the input RGB: where the control drew something (non-black) its own colours
+    show at ``alpha``; elsewhere the RGB is kept, dimmed by ``dim`` so the drawing stands out.  (A plain
+    screen/additive blend tints the whole frame — the control's black background is not 'nothing' to it.)"""
     if over.shape[:2] != base.shape[:2]:
-        over = cv2.resize(over, (base.shape[1], base.shape[0]))
-    a, b = base.astype(np.uint16), over.astype(np.uint16)
-    return (255 - ((255 - a) * (255 - b)) // 255).astype(np.uint8)
+        over = cv2.resize(over, (base.shape[1], base.shape[0]), interpolation=cv2.INTER_NEAREST)
+    drawn = (over.max(axis=2) > 24)[..., None]
+    out = (base.astype(np.float32) * dim)
+    out = np.where(drawn, out * (1 - alpha) + over.astype(np.float32) * alpha, out)
+    return out.clip(0, 255).astype(np.uint8)
 
 
 GAP = 4
@@ -187,7 +191,7 @@ def view_result(clip: Clip, result_dir: Path, height: int = 360, grid: bool | No
             if overlay and title.split(" · ")[-1] not in ("input rgb", "result") and panels[cam].input:
                 rgb = panels[cam].input.frame(frame)
                 if rgb is not None:
-                    return f"{title} over rgb", screen_blend(rgb, f)
+                    return f"{title} over rgb", control_overlay(rgb, f)
             return title, f
 
         frame_rows = [[t for title, vid, cam in row if (t := tile(title, vid, cam))] for row in rows]
