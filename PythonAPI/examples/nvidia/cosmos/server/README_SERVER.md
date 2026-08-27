@@ -49,17 +49,32 @@ cache populated by `prefetch.py` from `artifacts.lock`; `/usr/local/bin/uvx` is
 ./build_image.sh --nano --no-models
 tools/bake_weights.sh --variant nano --base carla-cosmos:nano-nomodels --tag carla-cosmos:nano \
                       --hf-cache ~/.cache/huggingface
-tools/bake_weights.sh --variant full --base carla-cosmos:nano --tag carla-cosmos:full \
-                      --hf-cache ~/.cache/huggingface --hf-cache /mnt/other-hf-cache   # :full = :nano + Super layers
+
+# registry build — the recommended way to publish: weights become independent layer images that
+# are pushed and dropped locally one at a time (local peak ≈ 2× one layer), then the final images
+# are assembled inside the registry (only a config + 1 KB marker layer is uploaded)
+docker push  registry.example.com/carla-cosmos:nano-nomodels
+tools/bake_weights.sh --variant nano --layers-to registry.example.com/carla-cosmos --hf-cache ~/.cache/huggingface
+tools/bake_weights.sh --variant full --skip-variant nano --layers-to registry.example.com/carla-cosmos --hf-cache ...
+python tools/compose_image.py --registry registry.example.com --repo carla-cosmos --code nano-nomodels \
+       --layers nano-layer1,nano-layer2,nano-layer3 --variant nano
+python tools/compose_image.py --registry registry.example.com --repo carla-cosmos --code nano-nomodels \
+       --layers nano-layer1,nano-layer2,nano-layer3,full-layer1,full-layer2,full-layer3,full-layer4 --variant full
 
 python tools/lock_artifacts.py --check          # is artifacts.lock still what HF serves?
 ```
 
-Both routes give the same `/models/hf` layout; the baked variant is recorded in
-`/models/hf/ARTIFACTS_IMAGE` and the `com.carla.cosmos.variant` label. Because
-the weights layers sit on top of the code layers, a code change means rebuilding
-`-nomodels` and re-baking (a local copy, no downloads — ~20 min for `:nano`).
-Small layers also make `docker push`/`pull` of a 300 GB image resumable.
+With the containerd image store (`docker info` → `driver-type: io.containerd.snapshotter.v1`)
+layers live under `/var/lib/containerd`, not the Docker data-root — check free space there.
+All routes give the same `/models/hf` layout; the baked variant is recorded in
+`/models/hf/ARTIFACTS_IMAGE` and the `com.carla.cosmos.variant` label. Layer
+blobs are content-addressed and independent of what sits below them, so with the
+registry route a code change is: rebuild `-nomodels`, push it, re-run
+`compose_image.py` — the weight layers are reused untouched. Every file is
+sha256-checked against `artifacts.lock` while it is baked (this caught a cached
+xet download that had the right size but zero-filled gaps). ≤ 40 GB layers keep
+`docker pull` of a 300 GB image resumable. `compose_image.py` speaks the plain
+registry v2 API (basic or bearer auth via `--user`/`$REGISTRY_AUTH`).
 
 `artifacts.lock` pins every repo to a commit and lists the files with sizes and
 sha256; Transfer 2.5 checkpoints use the revisions hard-coded in NVIDIA's

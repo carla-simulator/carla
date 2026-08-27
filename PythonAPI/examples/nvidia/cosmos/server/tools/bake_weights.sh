@@ -12,11 +12,19 @@
 #   tools/bake_weights.sh --variant full --base carla-cosmos:nano --tag carla-cosmos:full \
 #                         --hf-cache ~/.cache/huggingface --hf-cache /var/tmp/cosmos-hf-cache
 #
+#   # registry mode: independent weights-only layer images, pushed and removed one at a time
+#   # (local peak ≈ 2× one shard), then assembled with tools/compose_image.py
+#   tools/bake_weights.sh --variant nano --layers-to localhost:5000/carla-cosmos --hf-cache ~/.cache/huggingface
+#   tools/bake_weights.sh --variant full --skip-variant nano --layers-to localhost:5000/carla-cosmos --hf-cache ...
+#
 # --base may already carry weights (e.g. :nano when baking :full): artifacts recorded in its
 # /models/hf/ARTIFACTS_IMAGE are skipped, so :full = :nano + Cosmos3-Super layers.
+# Every file is sha256-checked against artifacts.lock while it is placed; a bad cache copy aborts
+# the layer (it caught a size-correct but partly zero-filled xet download once).  Fix the cache
+# entry, then resume from the last committed layer:  --base carla-cosmos:nano-bakeN --only <ids>.
 set -euo pipefail
 
-VARIANT= BASE= TAG= MAX_GB=40 NO_HASH= ONLY= CACHES=()
+VARIANT= BASE= TAG= MAX_GB=40 NO_HASH= ONLY= CACHES=() LAYERS_TO= SKIP_VARIANT= LAYER_PREFIX=
 while [ $# -gt 0 ]; do
     case "$1" in
         --variant) VARIANT=$2; shift 2 ;;
@@ -26,26 +34,34 @@ while [ $# -gt 0 ]; do
         --max-layer-gb) MAX_GB=$2; shift 2 ;;
         --no-hash) NO_HASH=--no-hash; shift ;;
         --only) ONLY=$2; shift 2 ;;
+        --layers-to) LAYERS_TO=$2; shift 2 ;;
+        --skip-variant) SKIP_VARIANT=$2; shift 2 ;;
+        --layer-prefix) LAYER_PREFIX=$2; shift 2 ;;
         -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
         *) echo "unknown argument: $1" >&2; exit 2 ;;
     esac
 done
 USER_ONLY=$ONLY
-[ -n "$VARIANT" ] && [ -n "$BASE" ] && [ ${#CACHES[@]} -gt 0 ] || { echo "need --variant, --base and at least one --hf-cache" >&2; exit 2; }
+[ -n "$LAYERS_TO" ] && BASE=${BASE:-python:3.12-slim}
+[ -n "$VARIANT" ] && [ -n "$BASE" ] && [ ${#CACHES[@]} -gt 0 ] || { echo "need --variant, --base (or --layers-to) and at least one --hf-cache" >&2; exit 2; }
 TAG=${TAG:-carla-cosmos:$VARIANT}
+LAYER_PREFIX=${LAYER_PREFIX:-$VARIANT}
 for c in "${CACHES[@]}"; do [ -d "$c/hub" ] || { echo "$c has no hub/ directory (expected an HF_HOME)" >&2; exit 1; }; done
 
 SERVER_DIR=$(cd "$(dirname "$0")/.." && pwd)
+docker image inspect "$BASE" >/dev/null 2>&1 || docker pull "$BASE"
 PY=/opt/venvs/transfer25/bin/python
+docker run --rm --entrypoint test "$BASE" -x "$PY" 2>/dev/null || PY=python3
 WORK=$(mktemp -d "${TMPDIR:-/tmp}/cosmos-bake.XXXXXX")
 trap 'rm -rf "$WORK"' EXIT
 cp "$SERVER_DIR/prefetch.py" "$SERVER_DIR/artifacts.lock" "$WORK/"
 
 # the image's own lock must match ours, otherwise the runtime would look for other revisions
-if ! docker run --rm --entrypoint cat "$BASE" /opt/carla-cosmos/server/artifacts.lock | cmp -s - "$WORK/artifacts.lock"; then
+if [ -z "$LAYERS_TO" ] && ! docker run --rm --entrypoint cat "$BASE" /opt/carla-cosmos/server/artifacts.lock | cmp -s - "$WORK/artifacts.lock"; then
     echo "artifacts.lock in $BASE differs from $SERVER_DIR/artifacts.lock; rebuild the -nomodels image first" >&2; exit 1
 fi
 BASE_IMAGE_VARIANT=$(docker run --rm --entrypoint cat "$BASE" /models/hf/ARTIFACTS_IMAGE 2>/dev/null | tr -d '[:space:]' || echo none)
+[ -n "$SKIP_VARIANT" ] && BASE_IMAGE_VARIANT=$SKIP_VARIANT
 
 # artifacts to add = image's artifacts minus those already in the base
 ONLY=$(python3 - "$WORK/artifacts.lock" "$VARIANT" "$BASE_IMAGE_VARIANT" "$ONLY" <<'PY'
@@ -57,7 +73,11 @@ if only: want = [a for a in want if a in only.split(",")]
 print(",".join(a for a in want if a not in have))
 PY
 )
-[ -n "$ONLY" ] || { echo "$BASE already contains every artifact of $VARIANT; nothing to bake"; exit 0; }
+[ -n "$ONLY" ] || { echo "nothing to bake for $VARIANT (base/skip-variant already covers it)"; exit 0; }
+
+# where layers really land: /var/lib/containerd with the containerd snapshotter, else the Docker data-root
+STORE=$(docker info -f '{{.DockerRootDir}}' 2>/dev/null || echo /var/lib/docker)
+docker info -f '{{json .DriverStatus}}' 2>/dev/null | grep -q 'io.containerd.snapshotter' && STORE=/var/lib/containerd
 
 MOUNTS=(-v "$WORK:/mnt/bake:ro"); CACHE_ARGS=(); i=0
 for c in "${CACHES[@]}"; do MOUNTS+=(-v "$c:/mnt/hfcache$i:ro"); CACHE_ARGS+=(--from-cache "/mnt/hfcache$i"); i=$((i + 1)); done
@@ -66,7 +86,35 @@ python3 "$WORK/prefetch.py" --image "$VARIANT" --lock "$WORK/artifacts.lock" --o
 N=$(python3 -c "import json,sys; print(len(json.load(open(sys.argv[1]))))" "$WORK/plan.json")
 echo "baking $VARIANT onto $BASE -> $TAG: artifacts [$ONLY] in $N layer(s) of <= $MAX_GB GB from ${CACHES[*]}"
 
-CUR=$BASE; CNAME=cosmos-bake-$$
+CNAME=cosmos-bake-$$
+if [ -n "$LAYERS_TO" ]; then
+    # ---- registry mode: one independent image per shard = BASE + 1 layer; pushed, then removed locally
+    BASE_LAYERS=$(docker image inspect -f '{{len .RootFS.Layers}}' "$BASE")
+    echo "mode: weights-only layers on $BASE ($BASE_LAYERS layers) -> $LAYERS_TO:$LAYER_PREFIX-layer<N>"
+    TAGS=()
+    for ((s = 0; s < N; s++)); do
+        python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1]))[int(sys.argv[2])], open(sys.argv[3], 'w'))" "$WORK/plan.json" "$s" "$WORK/shard.json"
+        LTAG="$LAYERS_TO:$LAYER_PREFIX-layer$((s + 1))"
+        echo "== layer $((s + 1))/$N -> $LTAG"
+        docker rm -f "$CNAME" >/dev/null 2>&1 || true
+        docker run --name "$CNAME" "${MOUNTS[@]}" -e HF_HUB_OFFLINE=1 --entrypoint "$PY" "$BASE" \
+            /mnt/bake/prefetch.py --image "$VARIANT" --lock /mnt/bake/artifacts.lock --dest /models/hf \
+            "${CACHE_ARGS[@]}" --select /mnt/bake/shard.json --no-download $NO_HASH | grep -vE '^   reused'
+        docker commit -c "LABEL com.carla.cosmos.base_layers=$BASE_LAYERS" -c "LABEL com.carla.cosmos.shard=$LAYER_PREFIX-layer$((s + 1))" \
+            -c "LABEL com.carla.cosmos.lock=$(sha256sum "$WORK/artifacts.lock" | cut -c1-16)" "$CNAME" "$LTAG" >/dev/null
+        docker rm "$CNAME" >/dev/null
+        docker push -q "$LTAG"
+        docker rmi "$LTAG" >/dev/null
+        TAGS+=("$LAYER_PREFIX-layer$((s + 1))")
+        df -h "$STORE" | awk 'NR==2 {print "   pushed; image store ('"$STORE"') free: " $4}'
+    done
+    echo "pushed ${#TAGS[@]} weight layer image(s) to $LAYERS_TO: ${TAGS[*]}"
+    echo "assemble with: python $SERVER_DIR/tools/compose_image.py --registry ${LAYERS_TO%%/*} --repo ${LAYERS_TO#*/} \\"
+    echo "    --code <code-tag> --layers $(IFS=,; echo "${TAGS[*]}") --variant $VARIANT"
+    exit 0
+fi
+
+CUR=$BASE
 for ((s = 0; s < N; s++)); do
     python3 -c "import json,sys; json.dump(json.load(open(sys.argv[1]))[int(sys.argv[2])], open(sys.argv[3], 'w'))" "$WORK/plan.json" "$s" "$WORK/shard.json"
     FINAL=(); [ $((s + 1)) -eq "$N" ] && FINAL=(--finalize)
@@ -81,7 +129,7 @@ for ((s = 0; s < N; s++)); do
     docker rm "$CNAME" >/dev/null
     [ "$CUR" != "$BASE" ] && docker rmi "$CUR" >/dev/null
     CUR=$NEXT
-    df -h "$(docker info -f '{{.DockerRootDir}}' 2>/dev/null || echo /var/lib/docker)" | awk 'NR==2 {print "   docker root free: " $4}'
+    df -h "$STORE" | awk 'NR==2 {print "   image store ('"$STORE"') free: " $4}'
 done
 docker tag "$CUR" "$TAG" && docker rmi "$CUR" >/dev/null
 
