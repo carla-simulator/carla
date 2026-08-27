@@ -24,9 +24,11 @@ def hero(carla_client):
     spawn = world.get_map().get_spawn_points()[0]
     actor = world.try_spawn_actor(bp, spawn)
     assert actor is not None, "could not spawn the hero"
-    # let the world observer publish a snapshot containing the new actor,
-    # otherwise get_transform() is still the identity (see rear_axle_local_ue)
-    world.wait_for_tick()
+    # Let the world observer publish snapshots containing the new actor: the actor
+    # transform is identity until the first one, and the skeleton the server reports
+    # lags it by a tick (see rear_axle_local_ue), so one wait is a race under load.
+    for _ in range(5):
+        world.wait_for_tick()
     yield actor
     actor.destroy()
 
@@ -62,3 +64,46 @@ def test_capture_small_clip(carla_client, hero, tmp_path):
 
     # world settings restored
     assert world.get_settings().synchronous_mode is False
+
+
+def test_semantic_aov_survives_the_codec_and_drives_masking(carla_client, hero, tmp_path):
+    """The real thing: a live capture's semantic AOV must decode back to exact
+    class ids (nearest palette, inside ``mask.MAX_CODEC_L1``) and mask a class out."""
+    from carla_cosmos import COSMOS3_NANO, Capture, Rig, controls, mask
+
+    camera = "camera:front:wide:120fov"
+    world = carla_client.get_world()
+    cap = Capture(world, hero, Rig.single(), COSMOS3_NANO, frames=8, fps=30)
+    clip = cap.run(tmp_path, "itest_semantic")
+
+    assert clip.manifest.video("semantic", camera) == "semantic_camera_front_wide_120fov.mp4"
+    assert clip.manifest.video("seg", camera) == "seg_camera_front_wide_120fov.mp4"
+    assert clip.validate() == [] and clip.validate(for_masking=True) == []
+    counts = {k: controls.probe_video(clip.path / n)["frames"] for k, n in clip.manifest.videos.items()}
+    assert set(counts.values()) == {8}, counts
+
+    semantic = mask.semantic_video(clip, camera)
+    assert semantic.name == "semantic_camera_front_wide_120fov.mp4"
+    assert not mask.is_palette_video(clip.video("seg", camera)), "seg must keep the instance colouring"
+
+    worst = 0
+    with controls.VideoReader(semantic) as reader:
+        for frame in reader:
+            worst = max(worst, int(mask._palette_distance(frame).max()))
+            mask.tags_from_frame(frame)  # raises if a pixel is beyond the guard
+    assert worst <= mask.MAX_CODEC_L1, f"semantic codec round trip L1 {worst}"
+
+    # the ego's own body is tagged 'car', so 'vehicle' always has something to remove
+    classes = mask.resolve_classes(["vehicle"])
+    masks = list(mask.iter_frame_masks(semantic, classes))
+    assert len(masks) == 8 and masks[0].any()
+    written = mask.masked_clip_videos(clip, camera, classes, ["depth"], tmp_path / "masked")
+
+    def first_frame(path):
+        with controls.VideoReader(path) as r:
+            return next(iter(r))
+
+    masked, plain = first_frame(written["depth"]), first_frame(clip.video("depth", camera))
+    m = masks[0]
+    assert masked[m].max() == 0, "masked region must be black"
+    assert (masked[~m] == plain[~m]).all(), "everything else must be untouched"
