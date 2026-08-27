@@ -22,8 +22,9 @@ Job -> ``MultiviewInferenceArguments``:
   ``num_chunks=k`` when k > 1 (``chunk_overlap`` 1);
 * ``save_combined_views=false`` -> one mp4 per view plus a 3x3 grid.
 
-Any view count up to the contract's maximum runs on any rank count; what limits
-views per rank is GPU memory (an out-of-memory rank fails the job with a message
+Any view count up to the contract's maximum runs on any rank count (NVIDIA's tokenizer
+would otherwise require one rank per view — see server/tools/patches/cosmos-transfer2.5-
+multiview-tokenizer-cp.patch); what limits views per rank is GPU memory (an out-of-memory rank fails the job with a message
 that says so).  Cancellation cannot interrupt a running multiview generation.
 """
 
