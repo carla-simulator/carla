@@ -8,7 +8,7 @@
                              prompt="golden hour, wet asphalt",
                              controls={"depth": "clip", "seg": "clip", "edge": "derive"})
     info = job.wait(on_progress=lambda i: print(i.progress, i.message))
-    paths = job.result().download("results/abc")
+    stored = job.download()          # <results root>/<clip_id>/<job_id>/ + job.json (results.py)
 
 Uploads are content-addressed: files are hashed locally, the server is asked
 which blobs it lacks (``POST /v1/blobs/check``) and only those are streamed.
@@ -24,7 +24,7 @@ import tempfile
 import time
 import zipfile
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import TYPE_CHECKING, Any, Callable, Iterable
 
 import httpx
 
@@ -41,6 +41,9 @@ from .contracts import (
     ResultManifest,
     validate_request,
 )
+
+if TYPE_CHECKING:  # pragma: no cover
+    from .results import StoredJob
 
 log = logging.getLogger(__name__)
 
@@ -139,6 +142,21 @@ class CosmosClient:
 
     def status(self) -> dict[str, Any]:
         return self._request("GET", "/v1/status").json()
+
+    def retention(self, refresh: bool = False) -> dict[str, float] | None:
+        """How long the server keeps outputs (``{"job_ttl_hours": .., "blob_ttl_hours": ..}``).
+
+        ``None`` when the server publishes no retention policy (older servers).
+        Cached: this is a server setting, it does not change while it runs.
+        """
+        cached = getattr(self, "_retention_cache", None)
+        if cached is None or refresh:
+            try:
+                cached = dict(self.status().get("retention") or {})
+            except CosmosError:
+                cached = {}
+            self._retention_cache = cached
+        return cached or None
 
     # -- models ---------------------------------------------------------------------------------
     def models(self) -> dict[str, ModelInfo]:
@@ -342,6 +360,21 @@ class Job:
 
     def result(self) -> "Result":
         return Result(self.client, self.id, self.client.result_manifest(self.id))
+
+    def download(self, out_dir: str | Path | None = None, *, names: Iterable[str] | None = None,
+                 verify: bool = True, progress: Callable[[str, int, int], None] | None = None) -> "StoredJob":
+        """Store every returned file under ``<out_dir>/<clip_id>/<job_id>/`` and record it.
+
+        ``out_dir`` is the *results root* — ``$COSMOS_RESULTS`` or
+        ``./cosmos-results`` when omitted.  Writes ``manifest.json`` (the
+        server's listing) and ``job.json`` (request as submitted, timings,
+        files with sizes and sha256, server status and expiry) next to the
+        videos, verifies both against the server's listing and skips files
+        that are already complete, so calling it twice is cheap and safe.
+        """
+        from .results import ResultStore
+
+        return ResultStore(out_dir).save(self, names=names, verify=verify, progress=progress)
 
 
 class Result:

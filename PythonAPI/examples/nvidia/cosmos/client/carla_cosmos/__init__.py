@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 
 from .clip import Clip
 from .client import CosmosClient, Job, Result
+from .results import IndexEntry, ResultStore, StoredFile, StoredJob, default_results_root
 from .contracts import (
     AV_CAMERAS,
     BUILTIN_CONTRACTS,
@@ -84,6 +85,7 @@ __all__ = [
     "ControlInput",
     "CosmosClient",
     "FrameDesyncError",
+    "IndexEntry",
     "Job",
     "JobInfo",
     "JobRequest",
@@ -93,10 +95,14 @@ __all__ = [
     "ReplayTicks",
     "Result",
     "ResultManifest",
+    "ResultStore",
     "Rig",
     "SceneGT",
+    "StoredFile",
+    "StoredJob",
     "TRANSFER25",
     "TRANSFER25_AV",
+    "default_results_root",
     "preview_clip",
     "validate_request",
 ]

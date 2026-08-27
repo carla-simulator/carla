@@ -1,16 +1,23 @@
 """``carla-cosmos`` command line.
 
     carla-cosmos health|status|models
-    carla-cosmos submit --clip DIR --backend cosmos3-nano --prompt "..." --control depth=clip --control edge=derive [--wait --out DIR]
-    carla-cosmos jobs [--status running] [--mine]
+    carla-cosmos submit --clip DIR --backend cosmos3-nano --prompt "..." --control depth=clip --control edge=derive [--wait [--out DIR] | --no-download]
+    carla-cosmos jobs [--status running] [--mine] [--out DIR]
     carla-cosmos watch JOB [--out DIR]
-    carla-cosmos result JOB --out DIR
+    carla-cosmos result JOB [--out DIR]
     carla-cosmos cancel JOB
     carla-cosmos serve [--image IMG] [--port 8000] [--state DIR] [--gpus all] [--profile P] | --stop | --mock
     carla-cosmos synthetic-clip --out DIR [--frames 93 --fps 16 | --av7]
     carla-cosmos preview --clip DIR [--cameras camera:front:wide:120fov] [--frames 0:60] [--out DIR] [--grid]
 
 Connection: ``--url``/``--token`` or ``COSMOS_URL`` / ``COSMOS_TOKEN`` / ``COSMOS_TOKEN_FILE``.
+
+Results are kept: whenever the CLI waits for a job it downloads every returned
+file into ``<results root>/<clip_id>/<job_id>/`` next to a ``job.json`` (see
+``results.py``).  The results root is ``--out``, else ``$COSMOS_RESULTS``, else
+``./cosmos-results``; ``submit --wait --no-download`` opts out.  ``jobs`` says
+which results are on this machine and where, and warns before the server
+garbage-collects the ones that are not.
 """
 
 from __future__ import annotations
@@ -24,6 +31,7 @@ from pathlib import Path
 from .client import CosmosClient, CosmosError, JobFailed
 from .clip import Clip
 from .contracts import JobInfo
+from .results import EXPIRY_WARN_HOURS, ResultStore, default_results_root
 from .preview import DEFAULT_LAYERS as DEFAULT_PREVIEW_LAYERS  # numpy only, no cv2/carla at import
 
 
@@ -94,45 +102,105 @@ def cmd_submit(args) -> int:
                         seed=args.seed, guidance=args.guidance, num_steps=args.steps, resolution=args.resolution,
                         priority=args.priority, extra=extra)
     print(f"submitted {job.id} ({job.info.backend}, {job.info.priority}); queue position {job.info.queue_position}")
+    ResultStore(args.out).note_submitted(job, clip_id=clip.manifest.clip_id)
     if args.wait or args.out:
-        return _wait_and_fetch(job, args.out)
+        return _wait_and_fetch(job, args.out, download=not args.no_download)
+    print(f"follow it with: carla-cosmos watch {job.id}"
+          f"{'' if args.out is None else ' --out ' + args.out}")
     return 0
 
 
-def _wait_and_fetch(job, out: str | None) -> int:
+def _store_result(job, out: str | None) -> int:
+    """Download every file of a finished job into the results root."""
+    stored = job.download(out)
+    print(f"stored {len(stored.files)} file(s) ({stored.bytes / 1e6:.1f} MB) in {stored.directory}")
+    for f in stored.files:
+        print(f"  {f.name}")
+    _warn_expiry(stored.expires_in_hours(), job.id, stored=True)
+    return 0
+
+
+def _warn_expiry(hours: float | None, job_id: str, stored: bool) -> None:
+    if hours is None or hours >= EXPIRY_WARN_HOURS:
+        return
+    where = "the local copy is the only one left after that" if stored else "download it before then"
+    if hours <= 0:
+        print(f"warning: the server copy of {job_id} is past its retention window; {where}", file=sys.stderr)
+    else:
+        print(f"warning: the server deletes {job_id} in {hours:.1f} h; {where}", file=sys.stderr)
+
+
+def _wait_and_fetch(job, out: str | None, download: bool = True) -> int:
     try:
         job.wait(on_progress=_print_progress)
     except JobFailed as exc:
         print(f"\n{exc}", file=sys.stderr)
         return 1
-    if out:
-        paths = job.result().download(Path(out) / job.id)
-        print(f"downloaded {len(paths)} file(s) to {Path(out) / job.id}")
-    return 0
+    if not download:
+        root = default_results_root(out)
+        print(f"not downloaded (--no-download); fetch it later with: "
+              f"carla-cosmos result {job.id} --out {root}")
+        ttl = (job.client.retention() or {}).get("job_ttl_hours")
+        if ttl:
+            print(f"the server keeps it for {ttl:g} h", file=sys.stderr)
+        return 0
+    return _store_result(job, out)
 
 
 def cmd_jobs(args) -> int:
-    jobs = _client(args).jobs(status=args.status, backend=args.backend, mine=args.mine, limit=args.limit)
+    client = _client(args)
+    jobs = client.jobs(status=args.status, backend=args.backend, mine=args.mine, limit=args.limit)
+    store = ResultStore(args.out)
+    local = {e.job_id: e for e in store.index()}
     if args.json:
-        print(json.dumps([j.model_dump() for j in jobs], indent=2))
+        rows = []
+        for j in jobs:
+            e = local.get(j.id)
+            rows.append({**j.model_dump(), "stored": bool(e and e.stored),
+                         "directory": e.directory if e else None})
+        rows += [{**e.model_dump(), "on_server": False} for e in local.values() if e.job_id not in {j.id for j in jobs}]
+        print(json.dumps(rows, indent=2))
         return 0
+    print(f"results root: {store.root}")
     print(f"{'id':<20} {'backend':<16} {'prio':<12} {'status':<10} {'prog':>5}  {'created':<20} message")
     for j in jobs:
         print(f"{j.id:<20} {j.backend:<16} {j.priority:<12} {j.status:<10} {j.progress * 100:4.0f}%  "
               f"{j.created[:19]:<20} {j.error or j.message}")
+        e = local.get(j.id)
+        if e is not None and e.stored:
+            print(f"    stored: {e.directory} ({e.files} file(s), {e.bytes / 1e6:.1f} MB)")
+        elif j.status == "done":
+            print("    not stored locally — carla-cosmos result "
+                  f"{j.id}{'' if args.out is None else ' --out ' + args.out}")
+            _warn_expiry(_expiry_hours(j, client), j.id, stored=False)
+    orphans = [e for e in local.values() if e.job_id not in {j.id for j in jobs}]
+    if orphans:
+        print(f"\nknown locally but not listed by the server ({len(orphans)}):")
+        for e in sorted(orphans, key=lambda e: e.downloaded or ""):
+            where = e.directory if e.stored else "not downloaded"
+            print(f"{e.job_id:<20} {e.backend:<16} {e.status:<10} {where}")
     return 0
+
+
+def _expiry_hours(info: JobInfo, client) -> float | None:
+    """Hours until the server garbage-collects this job's output."""
+    from .results import parse_time
+
+    ttl = (client.retention() or {}).get("job_ttl_hours")
+    finished = parse_time(info.finished)
+    if not ttl or finished is None:
+        return None
+    import datetime as _dt
+
+    return ttl - (_dt.datetime.now(_dt.timezone.utc) - finished).total_seconds() / 3600.0
 
 
 def cmd_watch(args) -> int:
-    return _wait_and_fetch(_client(args).job(args.job), args.out)
+    return _wait_and_fetch(_client(args).job(args.job), args.out, download=not args.no_download)
 
 
 def cmd_result(args) -> int:
-    job = _client(args).job(args.job)
-    paths = job.result().download(Path(args.out) / job.id)
-    for name, p in paths.items():
-        print(f"{name}  ->  {p}")
-    return 0
+    return _store_result(_client(args).job(args.job), args.out)
 
 
 def cmd_cancel(args) -> int:
@@ -237,7 +305,10 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--priority", choices=["interactive", "batch"], default="interactive")
     s.add_argument("--extra", action="append", default=[], metavar="KEY=JSON", help="backend pass-through")
     s.add_argument("--wait", action="store_true")
-    s.add_argument("--out", default=None, help="download the result here (implies --wait)")
+    s.add_argument("--out", default=None,
+                   help="results root (default $COSMOS_RESULTS or ./cosmos-results); implies --wait. "
+                        "Files land in <root>/<clip_id>/<job_id>/")
+    s.add_argument("--no-download", action="store_true", help="with --wait: do not store the result")
     s.set_defaults(fn=cmd_submit)
 
     j = sub.add_parser("jobs", help="list jobs")
@@ -245,17 +316,19 @@ def build_parser() -> argparse.ArgumentParser:
     j.add_argument("--backend", default=None)
     j.add_argument("--mine", action="store_true", help="only jobs submitted with this token")
     j.add_argument("--limit", type=int, default=50)
+    j.add_argument("--out", default=None, help="results root to look for stored results in")
     j.add_argument("--json", action="store_true")
     j.set_defaults(fn=cmd_jobs)
 
-    w = sub.add_parser("watch", help="follow a job until it finishes")
+    w = sub.add_parser("watch", help="follow a job until it finishes (and store its result)")
     w.add_argument("job")
-    w.add_argument("--out", default=None)
+    w.add_argument("--out", default=None, help="results root (default $COSMOS_RESULTS or ./cosmos-results)")
+    w.add_argument("--no-download", action="store_true", help="do not store the result")
     w.set_defaults(fn=cmd_watch)
 
     r = sub.add_parser("result", help="download the result files of a finished job")
     r.add_argument("job")
-    r.add_argument("--out", required=True)
+    r.add_argument("--out", default=None, help="results root (default $COSMOS_RESULTS or ./cosmos-results)")
     r.set_defaults(fn=cmd_result)
 
     cnl = sub.add_parser("cancel", help="cancel (or delete a finished) job")
