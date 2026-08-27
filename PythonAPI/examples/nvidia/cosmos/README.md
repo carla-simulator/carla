@@ -165,12 +165,38 @@ CARLA_COSMOS_TEST_PORT=2000 .venv/bin/python -m pytest tests -m integration   # 
 
 ## Demos
 
+Python-API demos (import `carla_cosmos`, no CLI subprocess, each under ~80 lines)
+and the full workflow demos; details and runtimes in
+[`demos/README.md`](demos/README.md).
+
 | script | what it does |
 |---|---|
+| `demos/api_transfer25_basic.py` | Transfer 2.5 on a clip from disk: `depth`+`seg` from the clip, `edge` derived server-side, result stored |
+| `demos/api_cosmos3_wsm.py` | Cosmos 3 single view with the world-scenario (`wsm`) control rendered from the clip's scene package |
+| `demos/api_av_multiview.py` | Transfer 2.5 AV over 7 cameras with `hdmap_bbox`, keeps the rendered controls + `grid.mp4`, opens the viewer grid |
+| `demos/api_capture_to_job.py` | capture a fresh clip from a running CARLA server, then submit and store |
 | `demos/single_view_live.py` | TM-driven hero, single 720p camera, capture → submit (`--backend`, `--control`) → download → viewer |
 | `demos/single_view_replay.py` | deterministic clip from a recorder log, then `batch.yaml` prompts × seeds as `batch` jobs |
 | `demos/av7_world_scenario.py` | NVIDIA 7-camera rig, ClipGT scene export, Transfer 2.5 AV (`hdmap_bbox` rendered server-side); `--also-cosmos3` adds a Cosmos 3 `wsm` job |
 | `demos/viewer.py` | input \| control \| result side by side, per camera, scrubbing; `--clip` alone shows the local GT preview instead of a result |
+
+### Results are stored
+
+Every wait path — `job.download()`, the `api_*` demos, `carla-cosmos submit --wait`,
+`watch`, `result` — keeps what comes back:
+
+```
+<results root>/index.json                       every job this machine knows about
+<results root>/<clip_id>/<job_id>/*.mp4         videos + control_<hint>.mp4 + grid.mp4
+<results root>/<clip_id>/<job_id>/manifest.json the server's listing, verbatim
+<results root>/<clip_id>/<job_id>/job.json      request as submitted, timings, sizes + sha256, expiry
+```
+
+Root: `--out` / `--results`, else `$COSMOS_RESULTS`, else `./cosmos-results`.
+Downloads are verified against the server's listing and idempotent.
+`carla-cosmos jobs` says which results are on this machine and where, and warns
+before the server garbage-collects the ones that are not (server default
+`COSMOS_JOB_TTL_HOURS=168`).  `carla-cosmos submit --wait --no-download` opts out.
 
 ## Server
 
