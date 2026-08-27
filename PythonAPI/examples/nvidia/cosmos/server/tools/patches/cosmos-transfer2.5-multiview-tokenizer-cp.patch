@@ -1,0 +1,33 @@
+--- a/cosmos_transfer2/_src/transfer2_multiview/models/multiview_vid2vid_model_control_vace_rectified_flow.py
++++ b/cosmos_transfer2/_src/transfer2_multiview/models/multiview_vid2vid_model_control_vace_rectified_flow.py
+@@ -85,10 +85,20 @@
+         if self.config.text_encoder_config is not None and self.config.text_encoder_config.compute_online:
+             compute_empty_and_negative_text_embeddings(self)
+ 
++    def _tokenizer_cp_size(self) -> int:
++        """Ranks available to spread the per-view tokenizer work over (1 without context parallelism)."""
++        # carla-cosmos patch: encode_cp/decode_cp hand one view to each context-parallel rank and raise when
++        # there are more views than ranks (7 views need 8 GPUs).  predict2_multiview already falls back to the
++        # batched single-rank tokenizer path in that case; mirror it here so 7 views run on 1-4 GPUs.
++        try:
++            return len(get_process_group_ranks(parallel_state.get_context_parallel_group()))
++        except (AssertionError, RuntimeError, ValueError):
++            return 1
++
+     @torch.no_grad()
+     def encode(self, state: torch.Tensor) -> torch.Tensor:
+         n_views = state.shape[2] // self.tokenizer.get_pixel_num_frames(self.state_t)
+-        if n_views > 1:
++        if 1 < n_views <= self._tokenizer_cp_size():
+             return self.encode_cp(state)
+         state = rearrange(state, "B C (V T) H W -> (B V) C T H W", V=n_views)
+         encoded_state = super().encode(state)
+@@ -98,7 +108,7 @@
+     @torch.no_grad()
+     def decode(self, latent: torch.Tensor) -> torch.Tensor:
+         n_views = latent.shape[2] // self.state_t
+-        if n_views > 1:
++        if 1 < n_views <= self._tokenizer_cp_size():
+             return self.decode_cp(latent)
+         latent = rearrange(latent, "B C (V T) H W -> (B V) C T H W", V=n_views)
+         decoded_state = super().decode(latent)

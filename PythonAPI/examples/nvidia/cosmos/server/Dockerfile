@@ -68,8 +68,11 @@ RUN git clone --filter=blob:none https://github.com/vllm-project/vllm-omni.git /
 
 # -- Transfer 2.5 stack: NVIDIA's own uv project (torch cu130, moderngl/EGL renderer). Python 3.13: NVIDIA's lock
 #    only has natten/flash-attn wheels for cp310 (v1.2.0 index) and cp313 (v1.5.0 index); the repo pins 3.13.
+#    tools/patches/*.patch are applied on top of the pinned ref (each patch says why it exists).
+COPY server/tools/patches /opt/carla-cosmos-patches
 RUN git clone --depth 1 --branch "${TRANSFER25_REF}" https://github.com/nvidia-cosmos/cosmos-transfer2.5.git /opt/cosmos-transfer2.5 \
-    && cd /opt/cosmos-transfer2.5 && UV_PYTHON=3.13 uv sync --extra=cu130 --no-dev \
+    && cd /opt/cosmos-transfer2.5 && for p in /opt/carla-cosmos-patches/cosmos-transfer2.5-*.patch; do git apply --verbose "$p"; done \
+    && UV_PYTHON=3.13 uv sync --extra=cu130 --no-dev \
     && ln -s /opt/cosmos-transfer2.5/.venv /opt/venvs/transfer25
 
 # -- carla-cosmos: API venv + worker protocol into every venv ---------------------------------------------
