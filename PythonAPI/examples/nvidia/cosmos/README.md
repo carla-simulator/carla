@@ -128,6 +128,31 @@ and produce actionable errors before upload:
 | `transfer2.5` | edge, vis, depth, seg | 1 | 16 → 16 | 93·k | 480/720 |
 | `transfer2.5-av` | hdmap_bbox (required) | 1–7 fixed | 30 → 10 | 29 + 28·(k−1) | 720 |
 
+### Local ground-truth preview
+
+Check the exported ClipGT scene without a GPU, a server or a model: reproject
+it onto the RGB we captured and look at it.
+
+```sh
+carla-cosmos preview --clip clips/av7_xxx --grid            # -> clips/av7_xxx/preview/*.mp4
+carla-cosmos preview --clip clips/av7_xxx --cameras camera:front:wide:120fov --frames 0:60
+python demos/viewer.py --clip clips/av7_xxx                 # same keys as a result, GT as the control
+```
+
+One MP4 per camera with obstacles, lane lines, road boundaries, crosswalks,
+wait lines, poles, traffic lights and signs drawn over a dimmed RGB, plus (with
+`--grid`) one labelled grid video, four cameras per row.  `--layers` picks the
+tables, `--dim 1.0` keeps the RGB bright, `--out` moves the output.
+
+The projection is NVIDIA's ClipGT loader maths (`client/carla_cosmos/preview.py`):
+`from_euler("xyz", roll-pitch-yaw)` calibration, ego pose from
+`egomotion_estimate`, and the f-theta `pixeldistance-to-angle` polynomial
+inverted over its monotonic range only.  Polylines are densified to 0.5 m so a
+line leaving the frustum is cut there instead of folding across the frame, and
+parked obstacles (tracks exported at the first and last timestamp only) are
+held on every frame.  If the overlay sits on the road markings and the cars in
+every camera, the scene package we upload describes the drive we captured.
+
 ### Tests
 
 ```sh
@@ -143,7 +168,7 @@ CARLA_COSMOS_TEST_PORT=2000 .venv/bin/python -m pytest tests -m integration   # 
 | `demos/single_view_live.py` | TM-driven hero, single 720p camera, capture → submit (`--backend`, `--control`) → download → viewer |
 | `demos/single_view_replay.py` | deterministic clip from a recorder log, then `batch.yaml` prompts × seeds as `batch` jobs |
 | `demos/av7_world_scenario.py` | NVIDIA 7-camera rig, ClipGT scene export, Transfer 2.5 AV (`hdmap_bbox` rendered server-side); `--also-cosmos3` adds a Cosmos 3 `wsm` job |
-| `demos/viewer.py` | input \| control \| result side by side, per camera, scrubbing |
+| `demos/viewer.py` | input \| control \| result side by side, per camera, scrubbing; `--clip` alone shows the local GT preview instead of a result |
 
 ## Server
 

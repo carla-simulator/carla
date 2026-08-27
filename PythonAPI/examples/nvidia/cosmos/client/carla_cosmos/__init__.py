@@ -5,8 +5,9 @@ The package has two halves:
 * the **core** (``contracts``, ``clip``, ``client``, ``cli``, ``serve``) has no
   CARLA or OpenCV dependency and is what the server image and the CLI import;
 * the **capture** half (``capture``, ``rig``, ``controls``, ``scene``,
-  ``coords``) needs the ``carla`` wheel, OpenCV, pyarrow and scipy
-  (``pip install carla-cosmos[capture]``).
+  ``coords``, ``preview``) needs the ``carla`` wheel, OpenCV, pyarrow and scipy
+  (``pip install carla-cosmos[capture]``); ``preview`` needs no CARLA server —
+  it reads a captured clip back from disk.
 
 Capture symbols are imported lazily so ``import carla_cosmos`` works in both
 environments.
@@ -38,6 +39,7 @@ from .contracts import (
 
 if TYPE_CHECKING:  # pragma: no cover
     from .capture import Capture, FrameDesyncError, LiveTicks, ReplayTicks
+    from .preview import SceneGT, preview_clip
     from .rig import Camera, MountedCamera, Rig
 
 __version__ = "0.2.0"
@@ -50,6 +52,8 @@ _LAZY = {
     "Camera": "rig",
     "MountedCamera": "rig",
     "Rig": "rig",
+    "SceneGT": "preview",
+    "preview_clip": "preview",
 }
 
 
@@ -90,7 +94,9 @@ __all__ = [
     "Result",
     "ResultManifest",
     "Rig",
+    "SceneGT",
     "TRANSFER25",
     "TRANSFER25_AV",
+    "preview_clip",
     "validate_request",
 ]

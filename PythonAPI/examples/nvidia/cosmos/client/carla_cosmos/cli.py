@@ -8,6 +8,7 @@
     carla-cosmos cancel JOB
     carla-cosmos serve [--image IMG] [--port 8000] [--state DIR] [--gpus all] [--profile P] | --stop | --mock
     carla-cosmos synthetic-clip --out DIR [--frames 93 --fps 16 | --av7]
+    carla-cosmos preview --clip DIR [--cameras camera:front:wide:120fov] [--frames 0:60] [--out DIR] [--grid]
 
 Connection: ``--url``/``--token`` or ``COSMOS_URL`` / ``COSMOS_TOKEN`` / ``COSMOS_TOKEN_FILE``.
 """
@@ -23,6 +24,7 @@ from pathlib import Path
 from .client import CosmosClient, CosmosError, JobFailed
 from .clip import Clip
 from .contracts import JobInfo
+from .preview import DEFAULT_LAYERS as DEFAULT_PREVIEW_LAYERS  # numpy only, no cv2/carla at import
 
 
 def _client(args) -> CosmosClient:
@@ -177,6 +179,30 @@ def cmd_synthetic(args) -> int:
     return 0
 
 
+def cmd_preview(args) -> int:
+    from .preview import DEFAULT_LAYERS, preview_clip
+
+    cameras = [c for spec in args.cameras for c in spec.split(",") if c]
+    layers = [l for spec in args.layers for l in spec.split(",") if l] or list(DEFAULT_LAYERS)
+    state = {"camera": None}
+
+    def progress(camera: str, done: int, total: int) -> None:
+        if state["camera"] != camera:
+            if state["camera"] is not None:
+                print()
+            state["camera"] = camera
+        print(f"\r  {camera:<28} {done:>5}/{total}", end="", flush=True)
+
+    written = preview_clip(args.clip, cameras=cameras or None, frames=args.frames, out_dir=args.out,
+                           grid=args.grid, layers=layers, dim=args.dim, thickness=args.thickness,
+                           progress=None if args.quiet else progress)
+    if not args.quiet and state["camera"] is not None:
+        print()
+    for name, path in written.items():
+        print(f"{name}  ->  {path}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(prog="carla-cosmos", description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -251,6 +277,20 @@ def build_parser() -> argparse.ArgumentParser:
     sy.add_argument("--av7", action="store_true", help="7-camera 30 fps clip with a scene package")
     sy.add_argument("--seconds", type=int, default=3)
     sy.set_defaults(fn=cmd_synthetic)
+
+    pv = sub.add_parser("preview", help="draw the exported ClipGT scene on the clip's RGB (local GT check)")
+    pv.add_argument("--clip", required=True, help="clip directory (manifest.json + scene/)")
+    pv.add_argument("--cameras", action="append", default=[], metavar="NAME[,NAME...]",
+                    help="cameras to draw (default: all in the clip)")
+    pv.add_argument("--frames", default=None, metavar="A:B", help="frame range, e.g. 0:60 or 100:")
+    pv.add_argument("--out", default=None, help="output directory (default: <clip>/preview)")
+    pv.add_argument("--grid", action="store_true", help="also write one labelled grid video (4 cameras per row)")
+    pv.add_argument("--layers", action="append", default=[], metavar="NAME[,NAME...]",
+                    help="tables to draw: " + ", ".join(DEFAULT_PREVIEW_LAYERS))
+    pv.add_argument("--dim", type=float, default=0.6, help="darken the RGB by this factor (1.0 = off)")
+    pv.add_argument("--thickness", type=int, default=2)
+    pv.add_argument("--quiet", action="store_true")
+    pv.set_defaults(fn=cmd_preview)
     return p
 
 
