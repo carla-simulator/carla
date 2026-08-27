@@ -54,9 +54,10 @@ RUN git clone --filter=blob:none https://github.com/vllm-project/vllm-omni.git /
     && uv pip install --python "$(python3 -c 'import sys; print(sys.executable)')" --no-cache-dir /opt/vllm-omni \
     && mkdir -p /opt/venvs/cosmos3/bin && ln -s "$(python3 -c 'import sys; print(sys.executable)')" /opt/venvs/cosmos3/bin/python
 
-# -- Transfer 2.5 stack: NVIDIA's own uv project (torch cu130, moderngl/EGL renderer) ---------------------
+# -- Transfer 2.5 stack: NVIDIA's own uv project (torch cu130, moderngl/EGL renderer). Python 3.13: NVIDIA's lock
+#    only has natten/flash-attn wheels for cp310 (v1.2.0 index) and cp313 (v1.5.0 index); the repo pins 3.13.
 RUN git clone --depth 1 --branch "${TRANSFER25_REF}" https://github.com/nvidia-cosmos/cosmos-transfer2.5.git /opt/cosmos-transfer2.5 \
-    && cd /opt/cosmos-transfer2.5 && UV_PYTHON=3.12 uv sync --extra=cu130 --no-dev \
+    && cd /opt/cosmos-transfer2.5 && UV_PYTHON=3.13 uv sync --extra=cu130 --no-dev \
     && ln -s /opt/cosmos-transfer2.5/.venv /opt/venvs/transfer25
 
 # -- carla-cosmos: API venv + worker protocol into every venv ---------------------------------------------
@@ -67,7 +68,9 @@ RUN uv venv --python 3.12 /opt/venvs/api \
          /opt/carla-cosmos/client /opt/carla-cosmos/server/workers /opt/carla-cosmos/server \
     && uv pip install --python /opt/venvs/cosmos3/bin/python --no-cache-dir /opt/carla-cosmos/server/workers \
     && uv pip install --python /opt/venvs/transfer25/bin/python --no-cache-dir /opt/carla-cosmos/server/workers \
-    && install -m 0755 /opt/carla-cosmos/server/tools/uvx_shim.py /usr/local/bin/uvx \
+    && sed '1s|^#!.*|#!/opt/venvs/transfer25/bin/python|' /opt/carla-cosmos/server/tools/uvx_shim.py > /usr/local/bin/uvx \
+    && chmod 0755 /usr/local/bin/uvx \
+    && ( /usr/local/bin/uvx 'hf>=1.3.5' download nvidia/none --revision x --quiet 2>&1 || true ) | grep -q 'cannot resolve' \
     && /opt/venvs/transfer25/bin/python -c "import huggingface_hub, moderngl, cosmos_transfer2" \
     && /opt/venvs/cosmos3/bin/python -c "import vllm_omni, cosmos_guardrail" \
     && /opt/venvs/api/bin/python -c "import carla_cosmos_server, cosmos_workers"

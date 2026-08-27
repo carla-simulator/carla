@@ -23,9 +23,9 @@ downloaded at run time (``HF_HUB_OFFLINE=1``).
 
 | tag | contents | size |
 |---|---|---|
-| `carla-cosmos:nano` | Cosmos 3 Nano, Transfer 2.5 general (4 branches), Transfer 2.5 AV multiview, renderer, guardrails | ≈ 96 GB weights + ≈ 35 GB stacks |
-| `carla-cosmos:full` | `:nano` + Cosmos 3 Super (133 GB) | ≈ 230 GB weights + stacks |
-| `…-nomodels` | same code and venvs, empty `/models` (CI, API work) | ≈ 35 GB |
+| `carla-cosmos:nano` | Cosmos 3 Nano, Transfer 2.5 general (4 branches), Transfer 2.5 AV multiview, renderer, guardrails | 96 GB weights + 66 GB stacks ≈ 162 GB |
+| `carla-cosmos:full` | `:nano` + Cosmos 3 Super (133 GB) | ≈ 295 GB |
+| `…-nomodels` | same code and venvs, empty `/models` (CI, API work) | 66 GB |
 
 Layout inside: `vllm/vllm-openai` base (CUDA 13, Python 3.12) → vLLM-Omni pinned
 (`VLLM_OMNI_REF`) in the base Python (= `/opt/venvs/cosmos3`); NVIDIA's
@@ -37,13 +37,29 @@ cache populated by `prefetch.py` from `artifacts.lock`; `/usr/local/bin/uvx` is
 … --revision <sha>` checkpoint lookups from the baked cache.
 
 ```sh
-# on a build host with ≥ 300 GB free (nano) — weights from a local HF cache if you have one
+# one-shot BuildKit build — needs roughly 3× the weights free in the Docker root while it runs
+# (≈ 350 GB for :nano, ≈ 750 GB for :full): build context + models stage + runtime layer
 ./build_image.sh --nano --hf-cache ~/.cache/huggingface --hf-token-file ~/.hf_token
 ./build_image.sh --full --hf-token-file ~/.hf_token --tag registry.example.com/carla-cosmos:full --push
-./build_image.sh --nano --no-models            # code-only image for CI
+./build_image.sh --nano --no-models            # code-only image (66 GB) for CI
+
+# two-step build for hosts with less room: code image, then weights committed layer by layer
+# (≤ 40 GB per layer, needs ≈ 2× one layer of headroom; nothing is downloaded — the caches must
+# hold every file of artifacts.lock, see `python prefetch.py --image full --plan`)
+./build_image.sh --nano --no-models
+tools/bake_weights.sh --variant nano --base carla-cosmos:nano-nomodels --tag carla-cosmos:nano \
+                      --hf-cache ~/.cache/huggingface
+tools/bake_weights.sh --variant full --base carla-cosmos:nano --tag carla-cosmos:full \
+                      --hf-cache ~/.cache/huggingface --hf-cache /mnt/other-hf-cache   # :full = :nano + Super layers
 
 python tools/lock_artifacts.py --check          # is artifacts.lock still what HF serves?
 ```
+
+Both routes give the same `/models/hf` layout; the baked variant is recorded in
+`/models/hf/ARTIFACTS_IMAGE` and the `com.carla.cosmos.variant` label. Because
+the weights layers sit on top of the code layers, a code change means rebuilding
+`-nomodels` and re-baking (a local copy, no downloads — ~20 min for `:nano`).
+Small layers also make `docker push`/`pull` of a 300 GB image resumable.
 
 `artifacts.lock` pins every repo to a commit and lists the files with sizes and
 sha256; Transfer 2.5 checkpoints use the revisions hard-coded in NVIDIA's

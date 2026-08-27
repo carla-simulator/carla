@@ -1,6 +1,7 @@
 """Populate the image's Hugging Face cache from ``artifacts.lock`` (build stage).
 
-    python prefetch.py --image nano --dest /models/hf [--from-cache /mnt/hf-cache] [--no-hash]
+    python prefetch.py --image nano --dest /models/hf [--from-cache /mnt/hf-cache]... [--no-hash]
+    python prefetch.py --image nano --plan --max-layer-gb 40      # shard plan for tools/bake_weights.sh
 
 For every file of every artifact in the requested image: reuse it from a local
 HF cache mirror when given (same snapshot layout; matched by sha256/blob id,
@@ -10,6 +11,11 @@ default.  The result is a normal HF cache (``hub/models--*/snapshots/<rev>/…``
 that every runtime resolves offline: vLLM-Omni via ``HF_HUB_OFFLINE``,
 cosmos-transfer2.5 via its ``hf download --revision <sha>`` calls (see
 ``tools/uvx_shim.py``).
+
+``--plan`` prints a JSON list of shards (``[[artifact_id, [paths...]], ...]``) that
+partitions the image's files into groups of at most ``--max-layer-gb``; ``--select``
+places only the files of one such shard.  ``tools/bake_weights.sh`` commits one
+image layer per shard on hosts without room for the BuildKit path.
 """
 
 from __future__ import annotations
@@ -74,22 +80,78 @@ def place(dest: Path, repo: str, revision: str, path: str, src: Path, sha256: st
     return target
 
 
+def plan_shards(lock: dict, wanted: set[str], max_bytes: int) -> list[list]:
+    """Greedy partition of (artifact, file) pairs into shards of at most ``max_bytes``.
+
+    Artifacts stay in lock order and are never split across shards unless one
+    artifact alone exceeds ``max_bytes``; a single file larger than the limit gets
+    its own shard.
+    """
+    shards: list[list] = []
+    cur: list[list] = []
+    cur_bytes = 0
+
+    def flush() -> None:
+        nonlocal cur, cur_bytes
+        if cur:
+            shards.append(cur)
+        cur, cur_bytes = [], 0
+
+    for art in lock["artifacts"]:
+        if art["id"] not in wanted:
+            continue
+        if cur_bytes and cur_bytes + art["bytes"] > max_bytes:
+            flush()
+        if art["bytes"] <= max_bytes:
+            cur.append([art["id"], [f["path"] for f in art["files"]]])
+            cur_bytes += art["bytes"]
+            continue
+        paths: list[str] = []
+        for f in sorted(art["files"], key=lambda f: f["size"], reverse=True):
+            if cur_bytes and cur_bytes + f["size"] > max_bytes:
+                if paths:
+                    cur.append([art["id"], paths])
+                    paths = []
+                flush()
+            paths.append(f["path"])
+            cur_bytes += f["size"]
+        if paths:
+            cur.append([art["id"], paths])
+    flush()
+    return shards
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--image", choices=["nano", "full"], required=True)
     p.add_argument("--dest", default=os.environ.get("HF_HOME", "/models/hf"))
-    p.add_argument("--from-cache", default=None, help="local HF cache (HF_HOME) to reuse files from")
+    p.add_argument("--from-cache", action="append", default=[], metavar="HF_HOME",
+                   help="local HF cache to reuse files from (repeatable; searched in order)")
     p.add_argument("--lock", default=str(LOCK))
     p.add_argument("--no-hash", action="store_true", help="verify sizes only")
     p.add_argument("--only", default=None, help="comma-separated artifact ids (debugging)")
+    p.add_argument("--plan", action="store_true", help="print the shard plan as JSON and exit")
+    p.add_argument("--max-layer-gb", type=float, default=40.0, help="shard size for --plan")
+    p.add_argument("--select", default=None, metavar="SHARD_JSON",
+                   help="place only this shard ([[artifact_id, [paths]], ...]); no ARTIFACTS_IMAGE marker")
+    p.add_argument("--finalize", action="store_true", help="with --select: also write the ARTIFACTS_IMAGE marker")
+    p.add_argument("--no-download", action="store_true", help="fail on files missing from --dest and the caches")
     args = p.parse_args()
 
     lock = json.loads(Path(args.lock).read_text())
     dest = Path(args.dest)
-    src_cache = Path(args.from_cache) if args.from_cache else None
+    src_caches = [Path(c) for c in args.from_cache]
     wanted = set(lock["images"][args.image]["artifacts"])
     if args.only:
         wanted &= set(args.only.split(","))
+    if args.plan:
+        print(json.dumps(plan_shards(lock, wanted, int(args.max_layer_gb * 1e9))))
+        return 0
+    selected: dict[str, set[str]] | None = None
+    if args.select:
+        shard = json.loads(Path(args.select).read_text()) if os.path.exists(args.select) else json.loads(args.select)
+        selected = {aid: set(paths) for aid, paths in shard}
+        wanted &= set(selected)
     token = os.environ.get("HF_TOKEN")
     total = downloaded = reused = 0
     t0 = time.time()
@@ -100,13 +162,15 @@ def main() -> int:
         print(f"== {art['id']} ({repo} @ {rev[:10]}, {art['bytes'] / 1e9:.2f} GB, {len(art['files'])} files)", flush=True)
         for f in art["files"]:
             path, size, sha = f["path"], f["size"], f["sha256"]
+            if selected is not None and path not in selected[art["id"]]:
+                continue
             total += size
             existing = repo_dir(dest, repo) / "snapshots" / rev / path
             if existing.exists() and existing.stat().st_size == size:
                 if args.no_hash or sha is None or sha256_of(existing) == sha:
                     reused += size
                     continue
-            src = find_in_cache(src_cache, repo, rev, path, sha, size) if src_cache else None
+            src = next((c for c in (find_in_cache(sc, repo, rev, path, sha, size) for sc in src_caches) if c), None)
             if src is not None:
                 if sha and not args.no_hash and src.name != sha and sha256_of(src) != sha:
                     print(f"   cache copy of {path} has a different sha256; downloading", flush=True)
@@ -116,6 +180,8 @@ def main() -> int:
                 reused += size
                 print(f"   reused     {path} ({size / 1e6:.1f} MB)", flush=True)
                 continue
+            if args.no_download:
+                raise SystemExit(f"{repo}/{path} @ {rev[:10]} missing from {dest} and the given caches")
             from huggingface_hub import hf_hub_download
 
             got = Path(hf_hub_download(repo, path, revision=rev, cache_dir=dest / "hub", token=token))
@@ -132,7 +198,8 @@ def main() -> int:
             (refs / "main").write_text(rev)
     print(f"done: {total / 1e9:.1f} GB total, {reused / 1e9:.1f} GB reused, {downloaded / 1e9:.1f} GB downloaded "
           f"in {time.time() - t0:.0f}s -> {dest}")
-    (dest / "ARTIFACTS_IMAGE").write_text(args.image + "\n")
+    if selected is None or args.finalize:
+        (dest / "ARTIFACTS_IMAGE").write_text(args.image + "\n")
     return 0
 
 
