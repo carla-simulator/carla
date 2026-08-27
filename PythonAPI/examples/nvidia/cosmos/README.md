@@ -142,7 +142,9 @@ python demos/viewer.py --clip clips/av7_xxx                 # same keys as a res
 One MP4 per camera with obstacles, lane lines, road boundaries, crosswalks,
 wait lines, poles, traffic lights and signs drawn over a dimmed RGB, plus (with
 `--grid`) one labelled grid video, four cameras per row.  `--layers` picks the
-tables, `--dim 1.0` keeps the RGB bright, `--out` moves the output.
+tables, `--dim 1.0` keeps the RGB bright, `--out` moves the output.  It needs
+a real exported scene package, so a captured clip — `synthetic-clip` writes
+placeholder tables.
 
 The projection is NVIDIA's ClipGT loader maths (`client/carla_cosmos/preview.py`):
 `from_euler("xyz", roll-pitch-yaw)` calibration, ego pose from

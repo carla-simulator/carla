@@ -193,9 +193,13 @@ def cmd_preview(args) -> int:
             state["camera"] = camera
         print(f"\r  {camera:<28} {done:>5}/{total}", end="", flush=True)
 
-    written = preview_clip(args.clip, cameras=cameras or None, frames=args.frames, out_dir=args.out,
-                           grid=args.grid, layers=layers, dim=args.dim, thickness=args.thickness,
-                           progress=None if args.quiet else progress)
+    try:
+        written = preview_clip(args.clip, cameras=cameras or None, frames=args.frames, out_dir=args.out,
+                               grid=args.grid, layers=layers, dim=args.dim, thickness=args.thickness,
+                               progress=None if args.quiet else progress)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"\nerror: {exc}", file=sys.stderr)
+        return 1
     if not args.quiet and state["camera"] is not None:
         print()
     for name, path in written.items():
