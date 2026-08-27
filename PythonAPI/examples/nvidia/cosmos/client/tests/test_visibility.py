@@ -243,3 +243,30 @@ def test_a_finer_lattice_is_still_a_lattice():
     p = VisibilityParams(grid=4)
     assert p.lattice().shape == (64, 3)
     assert VisibilityParams(grid=3).lattice() is BOX_GRID
+
+
+# ----------------------------------------------------------------------------- capture wiring
+
+def test_a_capture_filters_by_default():
+    from carla_cosmos import Capture, Rig
+
+    cap = Capture(None, None, Rig.single(), frames=4, fps=30)
+    assert cap.visibility.mode == "depth"
+    assert cap.visibility.as_dict()["min_visible_fraction"] == 0.05
+
+
+def test_a_capture_without_the_depth_aov_turns_the_filter_off():
+    """The test has nothing to test against, so it says so instead of silently passing everything."""
+    from carla_cosmos import Capture, Rig
+
+    cap = Capture(None, None, Rig.single(), frames=4, fps=30, aovs=("rgb", "semantic"))
+    assert cap.visibility.mode == "none"
+
+
+def test_capture_parameters_reach_the_filter():
+    from carla_cosmos import Capture, Rig
+
+    cap = Capture(None, None, Rig.single(), frames=4, fps=30, visibility="depth",
+                  min_visible_fraction=0.2, range_m=60.0, hysteresis_frames=5)
+    assert (cap.visibility.min_visible_fraction, cap.visibility.range_m,
+            cap.visibility.hysteresis_frames) == (0.2, 60.0, 5)
