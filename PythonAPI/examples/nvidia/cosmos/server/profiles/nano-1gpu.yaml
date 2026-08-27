@@ -1,7 +1,5 @@
 name: nano-1gpu
-description: Cosmos 3 Nano transfer on a single >=40 GB GPU (H100/B200-class); no Transfer 2.5
-priority: 30
-match: {min_gpus: 1, max_gpus: 1, min_memory_gib: 40}
+description: Manual layout — Cosmos 3 Nano alone on GPU 0 (auto plans this and more from the detected GPUs)
 workers:
   - name: cosmos3-nano
     type: cosmos3

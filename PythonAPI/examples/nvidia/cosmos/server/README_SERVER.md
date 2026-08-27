@@ -5,7 +5,7 @@ CPU `mock` worker; the model workers (Phases 3–6) and the all-in-one image
 (Phase 7) plug into the same protocol and profiles.
 
 ```
-launcher ── profile (nvidia-smi → profiles/*.yaml) ── spawns workers in their venvs
+launcher ── layout (nvidia-smi × image weights → planner, or profiles/*.yaml by name) ── spawns workers in their venvs
    │
  uvicorn ── FastAPI app
              auth middleware (bearer, before body read)
@@ -101,7 +101,7 @@ In the container the entry point is the same `carla-cosmos-server`, with
 
 All settings are `COSMOS_*` environment variables (CLI flags override):
 `STATE` (`/state`), `HOST`/`PORT` (`0.0.0.0`/`8000`), `PROFILE` (`auto`),
-`PROFILES_DIR`, `MODELS_DIR` (`/models`), `GUARDRAILS` (`1`), `TOKEN`
+`PROFILES_DIR`, `MODELS_DIR` (`/models`), `IMAGE_VARIANT` (read from `/models/hf/ARTIFACTS_IMAGE`), `GUARDRAILS` (`1`), `TOKEN`
 (bootstrap token), `BLOB_TTL_HOURS` (`72`), `JOB_TTL_HOURS` (`168`),
 `GC_INTERVAL_S` (`600`), `LOG_LEVEL`, `RUN_DIR` (sockets), `VENV_<NAME>`
 (`/opt/venvs/<name>`; falls back to the running interpreter when missing).
@@ -165,13 +165,39 @@ contract reasons.
 
 ## Profiles
 
-`profiles/<name>.yaml`:
+`COSMOS_PROFILE=auto` (default) **plans the layout** from the detected GPUs
+(count and memory, `nvidia-smi`) and the weights baked into the image
+(`/models/hf/ARTIFACTS_IMAGE`: `nano` | `full` | `none`), so one big GPU, eight
+H100s or four RTX 6000 Pros each use every GPU and a `:nano` image never tries
+to start Cosmos 3 Super.  `carla-cosmos-server --list-profiles` prints the
+plan.  Allocation order, largest GPUs first (`carla_cosmos_server/profiles.py`,
+budgets at the top of the file):
+
+1. `:full` only — Cosmos 3 Super first, on the smallest TP whose weight shard
+   fits one GPU: TP=1 on B200, TP=2 on 96 GB RTX 6000 Pro, TP=4 on 80 GB H100.
+2. Transfer 2.5 general + wsm renderer — 1 GPU ≥ 30 GiB (`--default-resolution 480`
+   below 40 GiB).  On `:nano` images Cosmos 3 Nano (1 GPU ≥ 40 GiB) comes before it.
+3. Cosmos 3 Nano — 1 GPU ≥ 40 GiB (`:full`: after Super and Transfer 2.5).
+4. Leftover GPUs — Transfer 2.5 AV multiview, one rank per GPU (≥ 2, ≤ 8, ≥ 40 GiB
+   each); single leftovers become extra Transfer 2.5 workers.  With no GPU left
+   for Transfer 2.5 the renderer sits beside the first Cosmos 3 worker.
+
+| GPUs | image | planned layout |
+|---|---|---|
+| 1 × 96 GB | nano | Nano + renderer |
+| 2 × 96 GB | nano | Nano · Transfer 2.5 + renderer |
+| 2 × 96 GB | full | Super TP=2 + renderer |
+| 4 × 96 GB | full | Super TP=2 · Transfer 2.5 · Nano |
+| 4 × 96 GB | nano | Nano · Transfer 2.5 · AV ×2 |
+| 8 × 80 GB | full | Super TP=4 · Transfer 2.5 · Nano · AV ×2 |
+| 8 × 96 GB | nano | Nano · Transfer 2.5 · AV ×6 |
+| 1 × 32 GB | nano | Transfer 2.5 @480p + renderer |
+
+A YAML in `profiles/` is a manual layout picked by name (`--profile <name>`):
 
 ```yaml
-name: nano-2gpu
+name: my-node
 description: ...
-priority: 20                       # auto-selection order (lower first)
-match: {min_gpus: 2, max_gpus: 7, min_memory_gib: 40}   # omit for manual-only
 workers:
   - name: cosmos3-nano
     type: cosmos3                  # mock | cosmos3 | transfer25 | transfer25_av | wsm_renderer
@@ -180,10 +206,12 @@ workers:
     args: ["--tp", "1"]            # extra worker CLI args
 ```
 
-Shipped: `mock` (0 GPUs), `nano-1gpu` (1×≥40 GB), `nano-2gpu` (2–7 GPUs),
-`full-8gpu` (≥8×≥70 GiB, provisional layout), `av-8gpu` (manual; Transfer 2.5
-AV owns all 8 GPUs).  Worker types not yet implemented report state `error`
-and keep the server `not ready` rather than silently serving fewer backends.
+Add `priority` + `match: {min_gpus, max_gpus, min_memory_gib}` to have a YAML
+claim hosts before the planner runs (that is how `mock` takes 0-GPU hosts).
+Shipped: `mock` (0 GPUs, auto), `nano-1gpu`, `nano-2gpu`, `full-8gpu` (manual
+templates), `av-8gpu` (manual; Transfer 2.5 AV owns all 8 GPUs).  Worker types
+not yet implemented report state `error` and keep the server `not ready` rather
+than silently serving fewer backends.
 
 ## Worker protocol
 

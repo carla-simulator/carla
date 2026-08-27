@@ -8,6 +8,9 @@ COSMOS_HOST / COSMOS_PORT    0.0.0.0 / 8000         API bind address
 COSMOS_PROFILE               auto                   runtime profile name or ``auto`` (GPU detection)
 COSMOS_PROFILES_DIR          <package>/../profiles  where ``*.yaml`` profiles live
 COSMOS_MODELS_DIR            /models                baked model artifacts (workers read this)
+COSMOS_IMAGE_VARIANT         <detected>             which weights are baked in: ``nano`` | ``full`` |
+                                                    ``none``; default reads ``<models>/hf/ARTIFACTS_IMAGE``,
+                                                    then ``CARLA_COSMOS_IMAGE_VARIANT`` (set by the image)
 COSMOS_GUARDRAILS            1                      pass ``0`` to disable model guardrails
 COSMOS_TOKEN                 -                      bootstrap token accepted at start (scripts, CI)
 COSMOS_BLOB_TTL_HOURS        72                     unreferenced blobs older than this are deleted
@@ -56,6 +59,21 @@ def _env(name: str, default: str) -> str:
     return os.environ.get(f"COSMOS_{name}", default)
 
 
+def detect_image_variant(models_dir: Path) -> str:
+    """Which weights this image carries: ``nano``, ``full`` or ``none``.
+
+    The marker written by ``prefetch.py`` / ``compose_image.py`` is the truth (a ``-nomodels``
+    image says ``none`` even though its ``CARLA_COSMOS_IMAGE_VARIANT`` env says ``nano``); outside
+    the image the env var, then ``none``.
+    """
+    marker = models_dir / "hf" / "ARTIFACTS_IMAGE"
+    try:
+        value = marker.read_text().strip()
+    except OSError:
+        value = os.environ.get("CARLA_COSMOS_IMAGE_VARIANT", "").strip()
+    return value if value in ("nano", "full") else "none"
+
+
 def _env_bool(name: str, default: bool) -> bool:
     v = os.environ.get(f"COSMOS_{name}")
     if v is None:
@@ -71,6 +89,7 @@ class Settings:
     profile: str = field(default_factory=lambda: _env("PROFILE", "auto"))
     profiles_dir: Path = field(default_factory=lambda: Path(_env("PROFILES_DIR", str(DEFAULT_PROFILES_DIR))))
     models_dir: Path = field(default_factory=lambda: Path(_env("MODELS_DIR", "/models")))
+    image_variant: str = field(default_factory=lambda: _env("IMAGE_VARIANT", ""))
     guardrails: bool = field(default_factory=lambda: _env_bool("GUARDRAILS", True))
     bootstrap_token: str | None = field(default_factory=lambda: os.environ.get("COSMOS_TOKEN") or None)
     blob_ttl_hours: float = field(default_factory=lambda: float(_env("BLOB_TTL_HOURS", "72")))
@@ -82,6 +101,8 @@ class Settings:
     def __post_init__(self) -> None:
         if self.run_dir is None:
             self.run_dir = default_run_dir(self.state_dir)
+        if not self.image_variant:
+            self.image_variant = detect_image_variant(self.models_dir)
 
     # derived paths --------------------------------------------------------------
     @property

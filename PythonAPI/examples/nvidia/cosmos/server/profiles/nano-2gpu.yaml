@@ -1,7 +1,5 @@
 name: nano-2gpu
-description: Cosmos 3 Nano (GPU 0) + Transfer 2.5 general with server-side wsm rendering (GPU 1); 2-7 GPUs
-priority: 20
-match: {min_gpus: 2, max_gpus: 7, min_memory_gib: 40}
+description: Manual layout — Cosmos 3 Nano (GPU 0) + Transfer 2.5 general with server-side wsm rendering (GPU 1)
 workers:
   - name: cosmos3-nano
     type: cosmos3

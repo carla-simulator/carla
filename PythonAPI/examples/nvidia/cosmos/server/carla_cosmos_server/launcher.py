@@ -85,10 +85,17 @@ def main(argv: list[str] | None = None) -> int:
     profiles = load_profiles(settings.profiles_dir)
     gpus = detect_gpus()
     if args.list_profiles:
-        print(f"GPUs: {[(g.index, g.name, g.memory_mib) for g in gpus] or 'none'}")
+        print(f"GPUs: {[(g.index, g.name, g.memory_mib) for g in gpus] or 'none'}   image weights: {settings.image_variant}")
         for prof in sorted(profiles.values(), key=lambda x: x.priority):
             tag = "auto-match" if prof.accepts(gpus) else ("manual" if prof.match is None else "no match")
             print(f"  {prof.name:<12} [{tag}] {prof.description.strip()}")
+        try:
+            planned = select_profile(profiles, gpus, "auto", settings.image_variant)
+            print(f"auto -> {planned.name}: {planned.description}")
+            for w in planned.workers:
+                print(f"  {w.name:<16} {w.type:<14} gpus={w.gpus} {' '.join(w.args)}")
+        except ValueError as exc:
+            print(f"auto -> none ({exc})")
         return 0
 
     settings.ensure_dirs()
@@ -96,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
     bootstrap(tokens, settings.initial_token_file, settings.bootstrap_token)
 
     try:
-        profile = select_profile(profiles, gpus, settings.profile)
+        profile = select_profile(profiles, gpus, settings.profile, settings.image_variant)
     except ValueError as exc:
         log.error("%s", exc)
         return 2
@@ -104,8 +111,9 @@ def main(argv: list[str] | None = None) -> int:
     if errors:
         log.error("profile '%s' is invalid: %s", profile.name, "; ".join(errors))
         return 2
-    log.info("carla-cosmos-server %s — profile '%s' (%s), %d GPU(s) detected, state %s, sockets in %s",
-             __version__, profile.name, profile.description.strip(), len(gpus), settings.state_dir, settings.run_dir)
+    log.info("carla-cosmos-server %s — profile '%s' (%s), %d GPU(s) detected, image weights '%s', state %s, sockets in %s",
+             __version__, profile.name, profile.description.strip(), len(gpus), settings.image_variant,
+             settings.state_dir, settings.run_dir)
 
     workers = build_workers(settings, profile)
     app = create_app(settings, tokens, workers, profile_name=profile.name)
