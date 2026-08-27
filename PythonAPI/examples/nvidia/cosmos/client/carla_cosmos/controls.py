@@ -162,6 +162,48 @@ ENCODER_ARGS: dict[str, list[str]] = {
 }
 
 
+class VideoReader:
+    """Stream a video back as ``(H, W, 3)`` uint8 RGB frames through ffmpeg.
+
+    The mirror image of :class:`VideoWriter` (same ``rawvideo``/``rgb24`` pipe),
+    so a frame written and read back differs only by the codec.  Use as a
+    context manager or iterate it; ``close`` reaps ffmpeg.
+    """
+
+    def __init__(self, path: str | Path, ffmpeg: str = "ffmpeg") -> None:
+        self.path = Path(path)
+        info = probe_video(self.path)
+        self.width, self.height, self.frames = info["width"], info["height"], info["frames"]
+        self.fps = info["fps"]
+        cmd = [ffmpeg, "-hide_banner", "-loglevel", "error", "-i", str(self.path),
+               "-f", "rawvideo", "-pix_fmt", "rgb24", "pipe:1"]
+        self._proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self._size = self.width * self.height * 3
+
+    def __iter__(self) -> "Iterable[np.ndarray]":
+        assert self._proc.stdout is not None
+        while True:
+            buf = self._proc.stdout.read(self._size)
+            if len(buf) < self._size:
+                return
+            yield np.frombuffer(buf, dtype=np.uint8).reshape(self.height, self.width, 3)
+
+    def close(self) -> None:
+        """Stop ffmpeg (a partially consumed stream is fine)."""
+        if self._proc.poll() is None:
+            self._proc.kill()
+        for stream in (self._proc.stdout, self._proc.stderr):
+            if stream is not None:
+                stream.close()
+        self._proc.wait()
+
+    def __enter__(self) -> "VideoReader":
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self.close()
+
+
 class VideoWriter:
     """Stream RGB uint8 frames into an ffmpeg H.264 encoder.
 

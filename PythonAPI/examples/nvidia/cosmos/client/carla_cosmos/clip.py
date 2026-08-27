@@ -7,6 +7,10 @@
       rgb_<camera>.mp4                       H.264 crf 14
       depth_<camera>.mp4  seg_<camera>.mp4   H.264 4:4:4 lossless-mode controls
       edge_<camera>.mp4                      optional
+      semantic_<camera>.mp4                  optional CityScapes-palette class AOV
+                                             (source of --mask-classes, see mask.py;
+                                             a seg video captured with
+                                             seg_mode="semantic" serves as well)
       scene/                                 ClipGT Parquet package (scene.py)
         <clip_id>.<table>.parquet
         <clip_id>.camera_front_wide_120fov.json
@@ -28,7 +32,7 @@ log = logging.getLogger(__name__)
 
 MANIFEST_NAME = "manifest.json"
 SCENE_DIR = "scene"
-VIDEO_KINDS = ("rgb", "depth", "seg", "edge")
+VIDEO_KINDS = ("rgb", "depth", "seg", "edge", "semantic")
 
 
 def video_file_name(kind: str, camera: str) -> str:
