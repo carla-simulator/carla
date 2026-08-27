@@ -20,6 +20,35 @@ transfer2.5-av     hdmap_bbox (required)                   1..7     30 -> 10    
 Controls rendered server-side from a scene package (``wsm``, ``hdmap_bbox``)
 additionally need a clip fps of 10, 15 or 30: the world-scenario renderer
 produces 30 fps and decimates (``ControlSpec.scene_fps``).
+
+Masking
+-------
+``JobRequest.mask_classes`` names CARLA semantic classes to remove from every
+input **derived from the captured pixels**: the client blanks them (black, see
+``carla_cosmos.mask``) in the depth/seg/edge/vis control videos and in the RGB
+video it uploads, so a server-side derivation (``ControlInput.derive``: the
+Cosmos pipelines compute edge/vis/blur from the RGB) sees the hole as well.
+
+``ControlSpec.accepts_mask`` says a backend takes the mask itself as a separate
+per-camera video (``JobRequest.masks``, white = control applies, black = ignore).
+Cosmos Transfer 2.5 general does: it turns the mask into a spatio-temporal
+control-weight map (``ControlConfig.mask_path``), so the control has *zero
+weight* in the region instead of merely carrying blank pixels there.  Cosmos 3
+(vLLM-Omni) exposes no equivalent, so masking is pixels-only there.
+
+Masking is deliberately **not** applied to the world-scenario controls ``wsm``
+and ``hdmap_bbox``: the server renders those from the ClipGT scene package, and
+they are geometric ground truth (lanes, boxes, poses), not captured pixels.
+Remove an object from the scene package if it must leave the world model.
+
+Control weights
+---------------
+``ControlSpec.weight_range`` bounds ``ControlInput.weight`` and
+``BackendContract.control_weights`` says how a backend applies them:
+``per_control`` (Transfer 2.5 general and Cosmos 3 both take one weight per
+control and normalise them across the active controls), ``shared`` (Transfer 2.5
+AV takes a single ``control_weight`` for its one control across all views) or
+``none``.
 """
 
 from __future__ import annotations
@@ -69,6 +98,13 @@ class ControlSpec(BaseModel):
     """
     server_derivable: bool = False
     """The server can derive the control from the RGB video (edge, blur/vis)."""
+    accepts_mask: bool = False
+    """The backend takes a per-camera binary mask video for this control.
+
+    White keeps the control, black switches it off there (Cosmos Transfer 2.5
+    ``ControlConfig.mask_path`` -> a spatio-temporal control-weight map).  When
+    false the mask can only be baked into the control pixels.
+    """
     weight_range: tuple[float, float] | None = (0.0, 1.0)
 
 
@@ -162,7 +198,19 @@ class BackendContract(BaseModel):
     resolutions: list[str]
     rgb_required: bool = True
     """Whether the backend needs the RGB video (Transfer 2.5 general does)."""
+    control_weights: Literal["per_control", "shared", "none"] = "per_control"
+    """How ``ControlInput.weight`` reaches the model.
+
+    ``per_control`` one weight per control (normalised across the active ones);
+    ``shared`` a single weight for every control (differing weights are
+    rejected); ``none`` the backend has no weight knob.
+    """
     description: str = ""
+
+    @property
+    def maskable_controls(self) -> list[str]:
+        """Controls that take a separate mask video (see ``accepts_mask``)."""
+        return [c.name for c in self.controls if c.accepts_mask]
 
     def control(self, name: str) -> ControlSpec | None:
         """Look up a control by name."""
@@ -212,10 +260,10 @@ TRANSFER25 = BackendContract(
     family="transfer2.5",
     description="Cosmos Transfer 2.5-2B general (4-branch multicontrol)",
     controls=[
-        ControlSpec(name="edge", server_derivable=True),
-        ControlSpec(name="vis", server_derivable=True),
-        ControlSpec(name="depth", server_derivable=True),
-        ControlSpec(name="seg", server_derivable=True),
+        ControlSpec(name="edge", server_derivable=True, accepts_mask=True),
+        ControlSpec(name="vis", server_derivable=True, accepts_mask=True),
+        ControlSpec(name="depth", server_derivable=True, accepts_mask=True),
+        ControlSpec(name="seg", server_derivable=True, accepts_mask=True),
     ],
     fps=FpsRule(source=[16], model=16),
     frames=[FrameRule(min=93, base=0, step=93)],
@@ -237,6 +285,7 @@ TRANSFER25_AV = BackendContract(
     frames=[FrameRule(min=29, base=29, step=28)],
     resolutions=["720"],
     rgb_required=False,
+    control_weights="shared",
 )
 
 BUILTIN_CONTRACTS: dict[str, BackendContract] = {
@@ -355,6 +404,22 @@ class JobRequest(BaseModel):
     """Camera names (colon form).  Empty means the clip's single camera."""
     rgb: dict[str, str] = Field(default_factory=dict)
     """``camera name -> blob id`` of RGB videos."""
+    mask_classes: list[str] = Field(default_factory=list)
+    """CARLA semantic classes removed from the pixel-derived inputs (see ``mask.py``).
+
+    Canonical names (``car``, ``pedestrian``, ``vegetation``...) as resolved by
+    the client, recorded so a job is reproducible from the result manifest.
+    The videos in ``controls``/``rgb`` are *already* masked; this field is the
+    provenance, not an instruction to the server.
+    """
+    mask_dilate: int = 0
+    """Pixels the recorded mask was dilated by (provenance)."""
+    masks: dict[str, str] = Field(default_factory=dict)
+    """``camera name -> blob id`` of the binary mask video (white = keep).
+
+    Only for backends whose controls set ``ControlSpec.accepts_mask``; the
+    worker passes it to the model as a per-control mask.
+    """
     extra: dict[str, Any] = Field(default_factory=dict)
     """Backend pass-through (e.g. ``control_guidance`` for Cosmos 3)."""
 
@@ -385,7 +450,29 @@ def validate_request(contract: BackendContract, request: JobRequest,
     views = _validate_views(contract, request, manifest, errors)
     errors += _validate_control_views(request, views)
     errors += _validate_rgb(contract, request, views, manifest)
+    errors += _validate_masks(contract, request, views)
     errors += _validate_timing(contract, request, manifest)
+    return errors
+
+
+def _validate_masks(contract: BackendContract, request: JobRequest, views: list[str]) -> list[str]:
+    """Mask videos: only where a control accepts one, and one per requested view."""
+    errors: list[str] = []
+    if not request.masks:
+        return errors
+    maskable = [n for n in contract.maskable_controls if n in request.controls]
+    if not maskable:
+        offered = contract.maskable_controls
+        errors.append(f"mask video(s) given but no active control of '{contract.id}' accepts one"
+                      + (f" (maskable controls: {offered}; none is in this request)" if offered
+                         else f"; '{contract.id}' takes no mask video, the mask can only be baked "
+                              f"into the control pixels"))
+    missing = [v for v in views if v not in request.masks]
+    if missing:
+        errors.append(f"mask video missing for view(s) {missing}")
+    extra = [v for v in request.masks if v not in views]
+    if extra:
+        errors.append(f"mask video(s) for view(s) {extra} that are not requested")
     return errors
 
 
@@ -408,12 +495,18 @@ def _validate_controls(contract: BackendContract, request: JobRequest) -> list[s
         if inp.derive and not spec.server_derivable:
             errors.append(f"control '{name}' cannot be derived from RGB on '{contract.id}'; upload it")
         if inp.weight is not None:
-            if spec.weight_range is None:
-                errors.append(f"control '{name}' has no adjustable weight on '{contract.id}'")
+            if spec.weight_range is None or contract.control_weights == "none":
+                errors.append(f"control '{name}' has no adjustable weight on '{contract.id}'; "
+                              f"drop the ':<weight>' suffix")
             else:
                 lo, hi = spec.weight_range
                 if not lo <= inp.weight <= hi:
                     errors.append(f"control '{name}' weight {inp.weight} outside [{lo}, {hi}]")
+    if contract.control_weights == "shared":
+        given = {inp.weight for inp in request.controls.values() if inp.weight is not None}
+        if len(given) > 1:
+            errors.append(f"'{contract.id}' applies one control weight to every control "
+                          f"(got {sorted(given)}); use the same weight everywhere")
     for spec in contract.controls:
         if spec.required and spec.name not in request.controls:
             errors.append(f"control '{spec.name}' is required by '{contract.id}'")
