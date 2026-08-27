@@ -128,7 +128,7 @@ def test_semantic_source_prefers_semantic_video_and_explains_when_absent(tmp_pat
     other = _write_clip(tmp_path / "b", kinds=("rgb", "seg"), semantic=None)
     with pytest.raises(mask.MaskError) as exc:
         mask.semantic_video(other, CAMERA)
-    assert "instance-coloured" in str(exc.value) and "seg_mode='semantic'" in str(exc.value)
+    assert "instance-coloured" in str(exc.value) and "'semantic' AOV" in str(exc.value)
 
 
 # ----------------------------------------------------------------------------- mask geometry

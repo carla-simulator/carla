@@ -12,10 +12,12 @@ the prompt asks for.  It never touches the world-scenario controls (``wsm``,
 ``weights`` says how hard each control branch pulls.
 
 The clip must carry class information: a ``semantic_<camera>.mp4`` AOV, or a
-``seg`` video captured with ``seg_mode="semantic"`` (``api_capture_to_job.py
---semantic``, or ``Capture(seg_mode="semantic")``).  An instance-coloured
-``seg`` video holds instance ids only and is refused with an actionable
-message.  ``carla-cosmos classes`` lists the class names.
+``seg`` video captured with ``seg_mode="semantic"``.  Every capture with
+``"semantic"`` among its ``aovs`` writes that AOV — the default
+``Capture(aovs=("rgb", "depth", "semantic", "instance"))``, so any clip from
+``api_capture_to_job.py`` or ``single_view_live.py`` qualifies.  A clip that has
+only an instance-coloured ``seg`` video (instance ids, no class) is refused with
+an actionable message.  ``carla-cosmos classes`` lists the class names.
 
 Connection: ``--endpoint``/``--token`` or ``COSMOS_URL`` / ``COSMOS_TOKEN``.
 """

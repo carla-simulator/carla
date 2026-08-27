@@ -36,8 +36,10 @@ model, drop it from the scene package instead.
 Recovering the class ids
 ------------------------
 The mask is built from a **CityScapes-palette** video: ``semantic_<camera>.mp4``
-when the clip has one, otherwise ``seg_<camera>.mp4`` when the clip was captured
-with ``seg_mode="semantic"`` (auto-detected, see :func:`semantic_video`).
+when the clip has one — :class:`~carla_cosmos.capture.Capture` writes it for
+every camera whenever the ``semantic`` AOV is captured, which is the default —
+otherwise ``seg_<camera>.mp4`` when the clip was captured with
+``seg_mode="semantic"`` (auto-detected, see :func:`semantic_video`).
 
 That video is H.264 4:4:4 ``-qp 0``: the *coding* is lossless and there is no
 chroma subsampling, but the RGB -> YUV444 -> RGB round trip still rounds, so the
@@ -202,8 +204,9 @@ def semantic_video(clip: Clip, camera: str) -> Path:
         f"clip {clip.manifest.clip_id} has no semantic class information for camera '{camera}': "
         f"expected {video_file_name('semantic', camera)}, or a CityScapes-coloured "
         f"{video_file_name('seg', camera)}. Its seg video is instance-coloured (random palette over "
-        f"instance ids), which carries no class. Recapture with Capture(seg_mode='semantic') "
-        f"(or a 'semantic' AOV video) to use --mask-classes.")
+        f"instance ids), which carries no class. Recapture with the 'semantic' AOV — "
+        f"Capture(..., aovs=('rgb', 'depth', 'semantic', 'instance')), the default — to use "
+        f"--mask-classes.")
 
 
 def is_palette_video(path: str | Path, sample_frames: int = 1, tolerance: float = 0.999) -> bool:

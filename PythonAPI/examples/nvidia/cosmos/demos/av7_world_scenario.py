@@ -54,6 +54,8 @@ def capture_clip(args, backend: str, frames: int, fps: int, suffix: str) -> Clip
         for _ in range(2 * fps):
             world.tick()
         clip_id = f"{args.clip_id or 'av7_' + world.get_map().name.split('/')[-1].lower()}_{suffix}"
+        # "instance" gives the instance-coloured seg control, "semantic" the CityScapes
+        # class AOV (semantic_<camera>.mp4) that --mask-classes builds its masks from.
         cap = Capture(world, hero, Rig.nvidia_av7(), BUILTIN_CONTRACTS[backend], frames=frames, fps=fps,
                       aovs=("rgb", "depth", "semantic", "instance"))
         t0 = time.time()

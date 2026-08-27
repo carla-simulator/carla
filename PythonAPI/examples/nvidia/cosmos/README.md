@@ -75,6 +75,8 @@ clips/<clip_id>/
   rgb_camera_front_wide_120fov.mp4   H.264 crf 14
   depth_camera_front_wide_120fov.mp4 8-bit inverse depth, near = bright, H.264 4:4:4 lossless
   seg_camera_front_wide_120fov.mp4   instance-coloured segmentation (deterministic palette)
+  semantic_camera_front_wide_120fov.mp4  CityScapes-palette class ids, H.264 4:4:4
+                                     lossless (the source of --mask-classes)
   edge_camera_front_wide_120fov.mp4  optional: semantic-masked Canny (--edge)
   scene/                             ClipGT Parquet package (ego, obstacles, calibration,
                                      lane lines, boundaries, crosswalks, poles, lights,
@@ -161,10 +163,15 @@ ClipGT scene package and are geometric ground truth, not pixels — drop an obje
 from the scene package if it must leave the world model.
 
 The clip must carry class information: a `semantic_<camera>.mp4` AOV, or a `seg`
-video captured with `seg_mode="semantic"`.  The default instance colouring is a
-random palette over instance ids and carries no class, so masking such a clip is
-refused with what to recapture.  `mask_classes` and the dilation are recorded in
-the job request and the result manifest.
+video captured with `seg_mode="semantic"`.  `Capture` writes the semantic AOV
+whenever `"semantic"` is in its `aovs` — which the default
+`("rgb", "depth", "semantic", "instance")` is — so a clip captured with the
+defaults can be masked while its `seg` control keeps the instance colouring.
+Clips captured before the AOV existed carry only an instance-coloured `seg`
+(a random palette over instance ids, no class at all); masking one is refused
+with what to recapture, and `clip.validate(for_masking=True)` reports the same
+per camera.  `mask_classes` and the dilation are recorded in the job request and
+the result manifest.
 
 ### Local ground-truth preview
 

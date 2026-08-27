@@ -7,7 +7,8 @@
       rgb_<camera>.mp4                       H.264 crf 14
       depth_<camera>.mp4  seg_<camera>.mp4   H.264 4:4:4 lossless-mode controls
       edge_<camera>.mp4                      optional
-      semantic_<camera>.mp4                  optional CityScapes-palette class AOV
+      semantic_<camera>.mp4                  CityScapes-palette class AOV, written
+                                             whenever the "semantic" AOV is captured
                                              (source of --mask-classes, see mask.py;
                                              a seg video captured with
                                              seg_mode="semantic" serves as well)
@@ -75,8 +76,14 @@ class Clip:
         """Directory of the ClipGT scene package, if exported."""
         return self.path / self.manifest.scene_dir if self.manifest.scene_dir else None
 
-    def validate(self, check_frames: bool = True) -> list[str]:
-        """Check that every referenced file exists (and has the right frame count)."""
+    def validate(self, check_frames: bool = True, *, for_masking: bool = False) -> list[str]:
+        """Check that every referenced file exists (and has the right frame count).
+
+        ``for_masking`` additionally requires the class information
+        ``--mask-classes`` needs — a ``semantic_<camera>.mp4`` AOV, or a
+        CityScapes-coloured ``seg`` video — for every camera, and says what to
+        recapture when it is missing (see :mod:`carla_cosmos.mask`).
+        """
         errors: list[str] = []
         for key, name in self.manifest.videos.items():
             f = self.path / name
@@ -94,4 +101,18 @@ class Clip:
             for table in ("egomotion_estimate", "obstacle", "calibration_estimate"):
                 if not (sd / f"{self.manifest.clip_id}.{table}.parquet").is_file():
                     errors.append(f"scene package lacks {table}.parquet")
+        if for_masking:
+            errors.extend(self._masking_errors())
+        return errors
+
+    def _masking_errors(self) -> list[str]:
+        """One error per camera without a CityScapes-palette video to build masks from."""
+        from .mask import MaskError, semantic_video  # cv2/numpy: capture extras
+
+        errors: list[str] = []
+        for camera in self.manifest.camera_names:
+            try:
+                semantic_video(self, camera)
+            except MaskError as exc:
+                errors.append(str(exc))
         return errors

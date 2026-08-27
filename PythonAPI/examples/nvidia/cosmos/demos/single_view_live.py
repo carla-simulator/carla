@@ -2,8 +2,9 @@
 """Capture a single-camera Cosmos clip from a TM-driven ego vehicle.
 
 Spawns a hero plus background traffic, captures ``--frames`` frames with the
-selected rig (RGB, depth, segmentation controls and the ClipGT scene package)
-and writes a Clip to disk.  With ``--capture-only`` it stops there; otherwise
+selected rig (RGB, depth, the instance-coloured seg control, the CityScapes
+semantic AOV that ``--mask-classes`` needs, and the ClipGT scene package) and
+writes a Clip to disk.  With ``--capture-only`` it stops there; otherwise
 the clip is submitted to a carla-cosmos server (``--endpoint``/``--token`` or
 ``COSMOS_URL``/``COSMOS_TOKEN``), the result is downloaded next to the clip and
 shown side by side with the input in the viewer (``--no-view`` to skip).

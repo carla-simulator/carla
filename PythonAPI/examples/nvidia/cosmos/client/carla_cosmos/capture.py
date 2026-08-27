@@ -135,14 +135,27 @@ class Capture:
     frames, fps
         Clip length in frames and the fixed simulation rate.
     aovs
-        Subset of ``{"rgb", "depth", "semantic", "instance"}``.  ``rgb`` writes
-        the RGB video, ``depth`` the depth control, ``instance``/``semantic``
-        the segmentation control (instance colouring preferred when both are
-        captured).
+        Subset of ``{"rgb", "depth", "semantic", "instance"}``, honoured
+        literally — one sensor and one video per requested AOV:
+
+        * ``rgb`` -> ``rgb_<camera>.mp4``,
+        * ``depth`` -> ``depth_<camera>.mp4`` (the depth control),
+        * ``instance`` -> ``seg_<camera>.mp4``, instance-coloured (the seg
+          control; see ``seg_mode``),
+        * ``semantic`` -> ``semantic_<camera>.mp4``, CityScapes-palette class
+          ids.  This is the AOV ``--mask-classes`` needs
+          (:mod:`carla_cosmos.mask`), and it is written whether or not the seg
+          control is instance-coloured, so the two coexist.
+
+        With ``seg_mode="semantic"`` the seg control is coloured from the same
+        semantic AOV, i.e. ``seg_*.mp4`` and ``semantic_*.mp4`` hold the same
+        pixels (one sensor, two encodes).
     edge
         Also write a semantic-masked Canny edge control (needs ``rgb``).
     seg_mode
-        ``"instance"`` (default) or ``"semantic"`` colouring for ``seg_*.mp4``.
+        Colouring of the seg control ``seg_*.mp4``: ``"instance"`` (default,
+        needs the ``instance`` AOV) or ``"semantic"`` (needs the ``semantic``
+        AOV).  It does not affect ``semantic_*.mp4``.
     depth_mode
         ``"inverse"`` (Depth-Anything-like, default) or ``"linear"``.
     ticks
@@ -166,7 +179,7 @@ class Capture:
             raise ValueError(f"unknown AOVs {sorted(unknown)}; supported: {sorted(AOV_BLUEPRINTS)}")
         if seg_mode not in ("instance", "semantic"):
             raise ValueError(f"seg_mode must be instance|semantic, not '{seg_mode}'")
-        if seg_mode == "semantic" and "semantic" not in aovs and "instance" in aovs:
+        if seg_mode == "semantic" and "semantic" not in aovs:
             raise ValueError("seg_mode='semantic' needs the 'semantic' AOV")
         if edge and "rgb" not in aovs:
             raise ValueError("edge control needs the 'rgb' AOV")
@@ -286,11 +299,12 @@ class Capture:
                  1.0 / self.fps, previous.synchronous_mode)
 
     def _needed_aovs(self) -> list[str]:
+        """Sensors to spawn: exactly the requested AOVs (``instance`` only when it is
+        what colours the seg control)."""
         need = [a for a in ("rgb", "depth") if a in self.aovs]
         if "instance" in self.aovs and self.seg_mode == "instance":
             need.append("instance")
-        if "semantic" in self.aovs and (self.seg_mode == "semantic" or self.edge
-                                        or "instance" not in self.aovs):
+        if "semantic" in self.aovs:
             need.append("semantic")
         return need
 
@@ -314,6 +328,11 @@ class Capture:
         if self._seg_source() is not None:
             s.writers["seg"] = controls.VideoWriter(clip_dir / video_file_name("seg", cam.name),
                                                     self.fps, cam.width, cam.height, "control")
+        if "semantic" in self.aovs:
+            # same lossless-mode 4:4:4 profile as the controls: mask.py recovers class ids
+            # from these pixels by nearest palette colour and rejects anything blurrier.
+            s.writers["semantic"] = controls.VideoWriter(clip_dir / video_file_name("semantic", cam.name),
+                                                         self.fps, cam.width, cam.height, "control")
         if self.edge:
             s.writers["edge"] = controls.VideoWriter(clip_dir / video_file_name("edge", cam.name),
                                                      self.fps, cam.width, cam.height, "control")
@@ -378,19 +397,25 @@ class Capture:
         if "semantic" in s.sensors:
             tags = np.copy(controls.semantic_tags(controls.bgra_view(
                 self._get_image(s, "semantic", fid, first))))
+        semantic_rgb = None
+        if tags is not None and ("semantic" in s.writers or self._seg_source() == "semantic"):
+            semantic_rgb = controls.colourise_semantic(tags)
         if "rgb" in s.writers:
             assert rgb is not None
             s.writers["rgb"].write(rgb)
         if s.depth_store is not None:
             img = self._get_image(s, "depth", fid, first)
             s.depth_store[index] = controls.depth_to_metres(controls.bgra_view(img))
+        if "semantic" in s.writers:
+            assert semantic_rgb is not None, f"{cam}: semantic AOV required for the semantic video"
+            s.writers["semantic"].write(semantic_rgb)
         if "seg" in s.writers:
             if self._seg_source() == "instance":
                 ids = controls.instance_ids(controls.bgra_view(self._get_image(s, "instance", fid, first)))
                 s.writers["seg"].write(controls.colourise_instances(ids))
             else:
-                assert tags is not None, f"{cam}: semantic AOV required for seg"
-                s.writers["seg"].write(controls.colourise_semantic(tags))
+                assert semantic_rgb is not None, f"{cam}: semantic AOV required for seg"
+                s.writers["seg"].write(semantic_rgb)
         if "edge" in s.writers:
             assert rgb is not None
             s.writers["edge"].write(controls.masked_canny(rgb, tags))
@@ -422,6 +447,8 @@ class Capture:
                 videos[f"depth/{m.camera.canonical}"] = video_file_name("depth", m.camera.name)
             if self._seg_source() is not None:
                 videos[f"seg/{m.camera.canonical}"] = video_file_name("seg", m.camera.name)
+            if "semantic" in self.aovs:
+                videos[f"semantic/{m.camera.canonical}"] = video_file_name("semantic", m.camera.name)
             if self.edge:
                 videos[f"edge/{m.camera.canonical}"] = video_file_name("edge", m.camera.name)
         return ClipManifest(
