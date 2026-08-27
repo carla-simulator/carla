@@ -128,6 +128,44 @@ and produce actionable errors before upload:
 | `transfer2.5` | edge, vis, depth, seg | 1 | 16 → 16 | 93·k | 480/720 |
 | `transfer2.5-av` | hdmap_bbox (required) | 1–7 fixed | 30 → 10 | 29 + 28·(k−1) | 720 |
 
+### Mask out semantic classes
+
+Let the model invent what is behind the traffic: name CARLA semantic classes and
+they are removed from every input derived from the captured pixels.
+
+```sh
+carla-cosmos classes                       # tag names, aliases and groups
+carla-cosmos submit --clip clips/xxx --backend transfer2.5 --prompt "empty street at dusk" \
+    --control depth=clip:0.8 --control seg=clip:0.4 --control edge=derive \
+    --mask-classes vehicle,pedestrian [--mask-dilate 3]
+```
+
+```python
+cosmos.submit_clip(clip, "transfer2.5", prompt,
+                   {"depth": "clip", "seg": "clip", "edge": "derive"},
+                   weights={"depth": 1.0, "seg": 0.5, "edge": 0.3},
+                   mask_classes=["vehicle"])          # names or tag ids
+```
+
+The masked region is written **black** in the depth, seg and edge controls and in
+the uploaded RGB — the value each branch already reads as "nothing here" in a
+CARLA clip (inverse depth 0 = infinitely far, seg id 0 = unlabeled, edge 0 = no
+edge).  Masking the RGB is what also empties the controls the *server* derives
+from it (`edge`/`vis`/`blur` with `derive`).  Transfer 2.5 additionally receives
+the mask as a per-camera video and applies it as a control-weight map, so the
+control has weight 0 there rather than merely blank pixels.  The mask is dilated
+a few pixels so object outlines do not leak.
+
+It never touches `wsm` / `hdmap_bbox`: those are rendered server-side from the
+ClipGT scene package and are geometric ground truth, not pixels — drop an object
+from the scene package if it must leave the world model.
+
+The clip must carry class information: a `semantic_<camera>.mp4` AOV, or a `seg`
+video captured with `seg_mode="semantic"`.  The default instance colouring is a
+random palette over instance ids and carries no class, so masking such a clip is
+refused with what to recapture.  `mask_classes` and the dilation are recorded in
+the job request and the result manifest.
+
 ### Local ground-truth preview
 
 Check the exported ClipGT scene without a GPU, a server or a model: reproject
