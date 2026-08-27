@@ -2,8 +2,11 @@
 
     python viewer.py --clip clips/<id> --result results/<id>/<job>      # or: viewer.py --result DIR (clip from manifest)
 
-Keys: space play/pause · ←/→ step · home/end · tab next camera · c cycle control · s save frame · q quit.
-The window is resizable; the panels re-fit side by side keeping their aspect ratio.
+Multi-camera results (Transfer 2.5 AV) open as a grid: per camera the control the model saw (or the input
+RGB) over the result, GRID_COLUMNS cameras per row.  Single-camera results open as input | control | result.
+
+Keys: space play/pause · ←/→ step · home/end · g grid/single · tab next camera (single) · c cycle
+control/input · s save frame · q quit.  The window is resizable; tiles re-fit keeping their aspect ratio.
 Needs the ``viewer`` extra (pygame) and OpenCV (``capture`` extra).
 """
 
@@ -44,22 +47,47 @@ class Video:
         return self._frame
 
 
-def load_panels(clip: Clip, result_dir: Path, camera: str) -> list[tuple[str, Video]]:
-    panels: list[tuple[str, Video]] = []
-    rgb = clip.manifest.video("rgb", camera)
-    if rgb:
-        panels.append(("input rgb", Video(clip.path / rgb)))
-    for kind in ("depth", "seg", "edge"):
-        name = clip.manifest.video(kind, camera)
-        if name:
-            panels.append((f"control {kind}", Video(clip.path / name)))
-    manifest = ResultManifest.model_validate_json((result_dir / "manifest.json").read_text())
-    for f in manifest.files:
-        if f.kind == "video" and (f.view == camera or f.view is None):
-            panels.append((f"{manifest.backend} result", Video(result_dir / f.name)))
-        elif f.kind == "control" and f.view == camera:
-            panels.append((f"server {f.name}", Video(result_dir / f.name)))
-    return panels
+def short_name(camera: str) -> str:
+    """``camera:front:wide:120fov`` -> ``front_wide_120fov`` (tile label)."""
+    return canonical_camera_name(camera).removeprefix("camera_")
+
+
+class CameraPanels:
+    """The videos available for one camera: input RGB, controls (clip-side and server-rendered), result."""
+
+    def __init__(self, clip: Clip, result_dir: Path, manifest: ResultManifest, camera: str) -> None:
+        self.camera = camera
+        self.input: Video | None = None
+        self.controls: list[tuple[str, Video]] = []
+        self.result: Video | None = None
+        rgb = clip.manifest.video("rgb", camera)
+        if rgb:
+            self.input = Video(clip.path / rgb)
+        for f in manifest.files:  # server-rendered/derived controls first: they are what the model saw
+            if f.kind == "control" and f.view == camera:
+                self.controls.append((f.name.removesuffix(".mp4").removesuffix("_" + canonical_camera_name(camera)),
+                                      Video(result_dir / f.name)))
+        for kind in ("depth", "seg", "edge"):
+            name = clip.manifest.video(kind, camera)
+            if name:
+                self.controls.append((f"clip {kind}", Video(clip.path / name)))
+        for f in manifest.files:
+            if f.kind == "video" and f.view == camera:
+                self.result = Video(result_dir / f.name)
+
+    def top(self, ctrl_i: int) -> tuple[str, Video] | None:
+        """What the grid shows above the result: controls cycled with ``c``, then the input RGB."""
+        choices = self.controls + ([("input rgb", self.input)] if self.input else [])
+        return choices[ctrl_i % len(choices)] if choices else None
+
+    def strip(self, ctrl_i: int) -> list[tuple[str, Video]]:
+        """Single-camera row: input | one control | result."""
+        row = [("input rgb", self.input)] if self.input else []
+        if self.controls:
+            row.append(self.controls[ctrl_i % len(self.controls)])
+        if self.result:
+            row.append(("result", self.result))
+        return row
 
 
 GAP = 4
@@ -68,6 +96,8 @@ LINE_H = 18
 """Height of one text line in the footer (status line + wrapped prompt)."""
 PROMPT_MAX_LINES = 4
 """The prompt gets up to this many wrapped lines under the panels; longer prompts end with an ellipsis."""
+GRID_COLUMNS = 4
+"""Cameras per row in grid mode (each camera is a column of two tiles: control/input over result)."""
 
 
 def wrap_text(font, text: str, width: int, max_lines: int) -> list[str]:
@@ -96,63 +126,87 @@ def footer_height(prompt_lines: int) -> int:
     return LINE_H * (1 + prompt_lines) + 8
 
 
+def fit_rows(rows: list[list[np.ndarray]], win_w: int, win_h: int, footer_h: int = LINE_H + 8) -> int:
+    """Largest tile height at which every row fits the width and all rows fit above the footer (aspect kept)."""
+    by_h = (win_h - footer_h - GAP * (len(rows) - 1)) / max(1, len(rows))
+    by_w = [(win_w - GAP * (len(r) - 1)) / sum(f.shape[1] / f.shape[0] for f in r) for r in rows if r]
+    return max(16, int(min([by_h] + by_w)))
+
+
 def fit_panels(frames: list[np.ndarray], win_w: int, win_h: int, footer_h: int = LINE_H + 8) -> int:
-    """Largest panel height at which all ``frames`` fit side by side (aspect kept) above the footer."""
-    aspects = sum(f.shape[1] / f.shape[0] for f in frames)
-    by_width = (win_w - GAP * (len(frames) - 1)) / aspects if aspects else win_h
-    return max(16, int(min(win_h - footer_h, by_width)))
+    """Single-row form of :func:`fit_rows` (kept for callers/tests)."""
+    return fit_rows([frames], win_w, win_h, footer_h)
 
 
-def view_result(clip: Clip, result_dir: Path, height: int = 360) -> None:
+def view_result(clip: Clip, result_dir: Path, height: int = 360, grid: bool | None = None) -> None:
     import pygame
 
-    cameras = clip.manifest.camera_names
-    cam_i, ctrl_i, frame, playing = 0, 0, 0, True
-    panels = load_panels(clip, result_dir, cameras[cam_i])
     manifest = ResultManifest.model_validate_json((result_dir / "manifest.json").read_text())
+    result_views = [f.view for f in manifest.files if f.kind == "video" and f.view]
+    cameras = [c for c in clip.manifest.camera_names if c in result_views] or clip.manifest.camera_names[:1]
+    panels = {c: CameraPanels(clip, result_dir, manifest, c) for c in cameras}
+    grid = len(cameras) > 1 if grid is None else grid
+    cam_i, ctrl_i, frame, playing = 0, 0, 0, True
     pygame.init()
     font = pygame.font.SysFont("dejavusansmono,monospace", 14)
     screen = None
     win_size: tuple[int, int] | None = None  # None until the first layout / user resize
     clock = pygame.time.Clock()
-    fps = panels[0][1].fps if panels else 10
+    any_video = next((v for cp in panels.values() for v in [cp.result, cp.input] if v), None)
+    fps = any_video.fps if any_video else 10
     while True:
-        # visible panels: input, one control (cycled), result(s)
-        inputs = [p for p in panels if p[0].startswith("input")]
-        controls = [p for p in panels if p[0].startswith("control")]
-        results = [p for p in panels if not p[0].startswith(("input", "control"))]
-        shown = inputs + ([controls[ctrl_i % len(controls)]] if controls else []) + results
-        frames = [(title, f) for title, vid in shown if (f := vid.frame(frame)) is not None]
-        if not frames:
+        # rows of (title, Video): grid = per camera a control/input tile over the result tile, GRID_COLUMNS
+        # cameras per row; single = input | control | result for the current camera
+        if grid:
+            rows: list[list[tuple[str, Video]]] = []
+            for start in range(0, len(cameras), GRID_COLUMNS):
+                chunk = cameras[start:start + GRID_COLUMNS]
+                tops, bottoms = [], []
+                for c in chunk:
+                    t = panels[c].top(ctrl_i)
+                    if t:
+                        tops.append((f"{short_name(c)} · {t[0]}", t[1]))
+                    if panels[c].result:
+                        bottoms.append((f"{short_name(c)} · result", panels[c].result))
+                rows += [r for r in (tops, bottoms) if r]
+        else:
+            rows = [panels[cameras[cam_i]].strip(ctrl_i)]
+        frame_rows = [[(title, f) for title, vid in row if (f := vid.frame(frame)) is not None] for row in rows]
+        frame_rows = [r for r in frame_rows if r]
+        if not frame_rows:
             break
         if win_size is None:
-            # natural size: --height tall, panels side by side
-            total_w = sum(int(f.shape[1] * height / f.shape[0]) for _, f in frames) + GAP * (len(frames) - 1)
+            tile_h = height if len(frame_rows) == 1 else max(160, min(height, 900 // len(frame_rows)))
+            total_w = max(sum(int(f.shape[1] * tile_h / f.shape[0]) for _, f in r) + GAP * (len(r) - 1) for r in frame_rows)
             prompt_lines = wrap_text(font, "prompt: " + manifest.request.prompt, total_w - 12, PROMPT_MAX_LINES)
-            win_size = (total_w, height + footer_height(len(prompt_lines)))
+            win_size = (total_w, tile_h * len(frame_rows) + GAP * (len(frame_rows) - 1) + footer_height(len(prompt_lines)))
         if screen is None:
             screen = pygame.display.set_mode(win_size, pygame.RESIZABLE)
             pygame.display.set_caption(f"carla-cosmos — {clip.manifest.clip_id} — {manifest.backend}")
         prompt_lines = wrap_text(font, "prompt: " + manifest.request.prompt, win_size[0] - 12, PROMPT_MAX_LINES)
-        panel_h = fit_panels([f for _, f in frames], *win_size, footer_height(len(prompt_lines)))
-        surfaces = []
-        for title, f in frames:
-            h, w = f.shape[:2]
-            f = cv2.resize(f, (max(1, int(w * panel_h / h)), panel_h))
-            surf = pygame.surfarray.make_surface(np.transpose(f, (1, 0, 2)))
-            surf.blit(font.render(title, True, (255, 255, 255), (0, 0, 0)), (6, 6))
-            surfaces.append(surf)
+        tile_h = fit_rows([[f for _, f in r] for r in frame_rows], *win_size, footer_height(len(prompt_lines)))
         screen.fill((20, 20, 20))
-        total_w = sum(s.get_width() for s in surfaces) + GAP * (len(surfaces) - 1)
-        x = max(0, (win_size[0] - total_w) // 2)  # centre the strip in a wider window
-        for s in surfaces:
-            screen.blit(s, (x, 0))
-            x += s.get_width() + GAP
-        n = max(v.n for _, v in shown)
-        status = f"{cameras[cam_i]}  frame {frame + 1}/{n}  {'▶' if playing else '❚❚'}"
-        screen.blit(font.render(status, True, (220, 220, 220)), (6, panel_h + 4))
+        y = 0
+        for r in frame_rows:
+            surfaces = []
+            for title, f in r:
+                h, w = f.shape[:2]
+                f = cv2.resize(f, (max(1, int(w * tile_h / h)), tile_h))
+                surf = pygame.surfarray.make_surface(np.transpose(f, (1, 0, 2)))
+                surf.blit(font.render(title, True, (255, 255, 80), (0, 0, 0)), (6, 6))
+                surfaces.append(surf)
+            total_w = sum(s.get_width() for s in surfaces) + GAP * (len(surfaces) - 1)
+            x = max(0, (win_size[0] - total_w) // 2)  # centre each row in a wider window
+            for s in surfaces:
+                screen.blit(s, (x, y))
+                x += s.get_width() + GAP
+            y += tile_h + GAP
+        n = max(vid.n for r in rows for _, vid in r)
+        mode = f"grid {len(cameras)} cameras (g: single view)" if grid else f"{cameras[cam_i]} (tab: next camera, g: grid)"
+        status = f"{mode}  frame {frame + 1}/{n}  {'▶' if playing else '❚❚'}  c: cycle control/input"
+        screen.blit(font.render(status, True, (220, 220, 220)), (6, y))
         for i, line in enumerate(prompt_lines):  # the full prompt, word-wrapped to the window width
-            screen.blit(font.render(line, True, (180, 180, 180)), (6, panel_h + 4 + LINE_H * (i + 1)))
+            screen.blit(font.render(line, True, (180, 180, 180)), (6, y + LINE_H * (i + 1)))
         pygame.display.flip()
 
         for ev in pygame.event.get():
@@ -178,11 +232,13 @@ def view_result(clip: Clip, result_dir: Path, height: int = 360) -> None:
                     frame = n - 1
                 elif ev.key == pygame.K_TAB:
                     cam_i = (cam_i + 1) % len(cameras)
-                    panels = load_panels(clip, result_dir, cameras[cam_i])
+                elif ev.key == pygame.K_g:
+                    grid, win_size = not grid, None  # re-layout at the natural size of the new mode
                 elif ev.key == pygame.K_c:
                     ctrl_i += 1
                 elif ev.key == pygame.K_s:
-                    out = result_dir / f"viewer_{canonical_camera_name(cameras[cam_i])}_{frame:04d}.png"
+                    tag = "grid" if grid else canonical_camera_name(cameras[cam_i])
+                    out = result_dir / f"viewer_{tag}_{frame:04d}.png"
                     pygame.image.save(screen, str(out))
                     print(f"saved {out}")
         if playing:
@@ -194,7 +250,9 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--result", required=True, help="downloaded result directory (with manifest.json)")
     ap.add_argument("--clip", default=None, help="clip directory (default: <result>/../../<clip_id> or manifest)")
-    ap.add_argument("--height", type=int, default=360)
+    ap.add_argument("--height", type=int, default=360, help="tile height (single view) / max tile height (grid)")
+    ap.add_argument("--grid", dest="grid", action="store_true", default=None, help="force the per-camera grid")
+    ap.add_argument("--single", dest="grid", action="store_false", help="force the single-camera strip")
     args = ap.parse_args()
     result_dir = Path(args.result)
     if args.clip:
@@ -207,7 +265,7 @@ def main() -> int:
             print("pass --clip: could not locate the clip directory", file=sys.stderr)
             return 1
         clip = Clip.load(found)
-    view_result(clip, result_dir, args.height)
+    view_result(clip, result_dir, args.height, args.grid)
     return 0
 
 
