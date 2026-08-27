@@ -106,3 +106,77 @@ def test_cancel_and_job_failed(mock, clip):
         b.wait(poll=0.05)
     assert b.wait(poll=0.05, raise_on_failure=False).status == "cancelled"
     assert a.wait(poll=0.1).status == "done"
+
+
+# ----------------------------------------------------------------------------- mask-out classes
+
+def _semantic_clip(tmp_path_factory, frames, name):
+    """A synthetic clip whose seg video is a real CityScapes-palette semantic AOV."""
+    import numpy as np
+
+    from carla_cosmos import controls
+
+    clip = make_clip(tmp_path_factory.mktemp(name), frames=frames, fps=16, width=96, height=64)
+    tags = np.full((64, 96), 1, np.uint8)     # road
+    tags[20:44, 30:66] = 14                   # a car
+    controls.encode_frames(clip.video("seg", clip.manifest.camera_names[0]),
+                           [controls.colourise_semantic(tags)] * frames, 16, "control")
+    return clip
+
+
+def test_submit_masks_the_uploaded_videos(mock, tmp_path_factory):
+    """The blobs the server receives are the masked ones, not the clip's own files."""
+    from carla_cosmos.client import sha256_file
+
+    srv, client = mock
+    clip = _semantic_clip(tmp_path_factory, 16, "maskclip")
+    cam = clip.manifest.camera_names[0]
+    job = client.submit_clip(clip, "cosmos3-nano", "empty street",
+                             {"depth": "clip", "seg": "clip", "edge": "derive"},
+                             mask_classes=["vehicle"])
+    req = job.result().manifest.request if job.wait(poll=0.1).status == "done" else None
+    assert req is not None
+    assert req.mask_classes == ["car", "truck", "bus", "train", "motorcycle", "bicycle"]
+    assert req.mask_dilate == 3
+    assert req.controls["depth"].blob != sha256_file(clip.video("depth", cam)), "depth must be re-encoded masked"
+    assert req.rgb[cam] != sha256_file(clip.video("rgb", cam)), "RGB is masked too (edge is derived from it)"
+    assert req.masks == {}, "cosmos3 has no per-control mask input; the pixels carry the mask"
+
+
+def test_submit_uploads_the_mask_video_for_transfer25(mock, tmp_path_factory):
+    srv, client = mock
+    clip = _semantic_clip(tmp_path_factory, 93, "maskclip93")
+    cam = clip.manifest.camera_names[0]
+    job = client.submit_clip(clip, "transfer2.5", "empty street", {"depth": "clip", "seg": "clip"},
+                             weights={"depth": 1.0, "seg": 0.5}, mask_classes=["car"], mask_dilate=1)
+    assert job.wait(poll=0.1).status == "done"
+    req = job.result().manifest.request
+    assert set(req.masks) == {cam} and len(req.masks[cam]) == 64
+    assert req.mask_classes == ["car"] and req.mask_dilate == 1
+    assert (req.controls["depth"].weight, req.controls["seg"].weight) == (1.0, 0.5)
+
+
+def test_mask_needs_a_semantic_source(mock, clip):
+    srv, client = mock
+    with pytest.raises(CosmosError, match="no semantic class information"):
+        client.submit_clip(clip, "cosmos3-nano", "x", {"depth": "clip"}, mask_classes=["car"])
+
+
+def test_mask_rejects_unknown_class_before_any_upload(mock, clip):
+    srv, client = mock
+    with pytest.raises(CosmosError, match="unknown semantic class"):
+        client.submit_clip(clip, "cosmos3-nano", "x", {"depth": "clip"}, mask_classes=["kangaroo"])
+
+
+def test_mask_without_any_pixel_input_is_an_error(mock, tmp_path_factory):
+    """AV with only a scene-rendered control uploads no pixels; masking would silently do nothing."""
+    srv, client = mock
+    av = av7_clip(tmp_path_factory.mktemp("av"), seconds=1)
+    with pytest.raises(CosmosError, match="has no effect on this request"):
+        client.submit_clip(av, "transfer2.5-av", "x", {"hdmap_bbox": "scene"}, mask_classes=["car"])
+
+
+def test_weight_for_an_absent_control_is_rejected(mock, clip):
+    srv, client = mock
+    with pytest.raises(CosmosError, match="weight given for control"):
+        client.submit_clip(clip, "cosmos3-nano", "x", {"depth": "clip"}, weights={"seg": 0.5})

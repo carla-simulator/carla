@@ -202,3 +202,42 @@ def test_backend_without_worker_is_409(tmp_path, clip16):
         body = submission(clip16, "cosmos3-nano", {"depth": {"blob": "a" * 64}})
         r = ctx.client.post("/v1/jobs", json=body)
         assert r.status_code == 409 and "no loaded worker" in r.text
+
+
+def test_mask_video_is_materialised_for_the_worker(server, clip93):
+    """--mask-classes uploads one mask video per view; prepare links it into inputs/ so a
+    backend that supports it (Transfer 2.5 mask_path) can hand it to the model."""
+    cam = clip93.manifest.camera_names[0]
+    rgb = upload(server, clip93.video("rgb", cam))
+    body = submission(clip93, "transfer2.5", {"depth": {"blob": upload(server, clip93.video("depth", cam))}},
+                      rgb={cam: rgb}, masks={cam: upload(server, clip93.video("seg", cam))},
+                      mask_classes=["car", "truck"], mask_dilate=3)
+    r = server.client.post("/v1/jobs", json=body)
+    assert r.status_code == 202, r.text
+    final = server.wait_job(r.json()["id"])
+    assert final["status"] == "done", final
+    inputs = server.store.job_dir(final["id"]) / "inputs"
+    assert (inputs / "mask_camera_front_wide_120fov.mp4").exists()
+    request = json.loads((server.store.job_dir(final["id"]) / "request.json").read_text())
+    assert request["mask_classes"] == ["car", "truck"] and request["mask_dilate"] == 3
+    # ... and the result manifest carries it, so the job is reproducible from the download
+    m = server.client.get(f"/v1/jobs/{final['id']}/result").json()
+    assert m["request"]["mask_classes"] == ["car", "truck"]
+
+
+def test_mask_blob_must_be_uploaded(server, clip93):
+    cam = clip93.manifest.camera_names[0]
+    body = submission(clip93, "transfer2.5", {"depth": {"blob": upload(server, clip93.video("depth", cam))}},
+                      rgb={cam: upload(server, clip93.video("rgb", cam))}, masks={cam: "d" * 64})
+    r = server.client.post("/v1/jobs", json=body)
+    assert r.status_code == 400 and "not uploaded" in str(r.json()["detail"]["errors"])
+
+
+def test_mask_video_rejected_for_a_backend_without_maskable_controls(server, clip16):
+    cam = clip16.manifest.camera_names[0]
+    body = submission(clip16, "cosmos3-nano", {"depth": {"blob": upload(server, clip16.video("depth", cam))}},
+                      rgb={cam: upload(server, clip16.video("rgb", cam))},
+                      masks={cam: upload(server, clip16.video("seg", cam))})
+    r = server.client.post("/v1/jobs", json=body)
+    assert r.status_code == 400
+    assert any("takes no mask video" in e for e in r.json()["detail"]["errors"])

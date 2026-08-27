@@ -158,3 +158,67 @@ def test_sample_validates_as_real_inference_arguments(tmp_path, clip93):
                                           "edge": {"derive": True, "weight": None}}}, cam)
     args = InferenceArguments.model_validate(sample)
     assert args.hint_keys == ["edge", "depth"] and args.control_weight_dict == {"edge": "1.0", "depth": "0.5"}
+
+
+# ----------------------------------------------------------------------------- mask-out classes
+
+def _worker():
+    p = build_parser()
+    add_common_args(p)
+    return Transfer25Worker(p.parse_args(["--socket", "x", "--engine", "fake"]))
+
+
+def test_mask_video_becomes_mask_path_on_every_control(clip93, tmp_path):
+    """--mask-classes ships one mask video per view; every control gets it as mask_path,
+    which the pipeline turns into a spatio-temporal control-weight map (weight 0 inside)."""
+    w = _worker()
+    cam = clip93.manifest.camera_names[0]
+    maskv = tmp_path / "mask_camera_front_wide_120fov.mp4"
+    maskv.write_bytes(b"")
+    sample = w.build_sample(
+        "j", {"prompt": "p", "controls": {"depth": {}, "edge": {}}, "mask_classes": ["car"], "extra": {}},
+        clip93.manifest.model_dump(),
+        {"rgb": {cam: str(clip93.video("rgb", cam))},
+         "controls": {"depth": {"path": str(clip93.video("depth", cam)), "weight": 0.7},
+                      "edge": {"derive": True, "weight": None}},
+         "masks": {cam: str(maskv)}},
+        cam)
+    assert sample["depth"] == {"control_weight": 0.7, "control_path": str(clip93.video("depth", cam)),
+                               "mask_path": str(maskv)}
+    assert sample["edge"] == {"control_weight": 1.0, "mask_path": str(maskv)}
+
+
+def test_no_mask_video_means_no_mask_path(clip93):
+    w = _worker()
+    cam = clip93.manifest.camera_names[0]
+    sample = w.build_sample("j", {"prompt": "p", "controls": {"depth": {}}, "extra": {}},
+                            clip93.manifest.model_dump(),
+                            {"rgb": {cam: str(clip93.video("rgb", cam))},
+                             "controls": {"depth": {"path": str(clip93.video("depth", cam)), "weight": None}}},
+                            cam)
+    assert sample["depth"] == {"control_weight": 1.0, "control_path": str(clip93.video("depth", cam))}
+
+
+def test_mask_for_another_view_is_not_applied(clip93, tmp_path):
+    w = _worker()
+    cam = clip93.manifest.camera_names[0]
+    sample = w.build_sample("j", {"prompt": "p", "controls": {"depth": {}}, "extra": {}},
+                            clip93.manifest.model_dump(),
+                            {"rgb": {cam: str(clip93.video("rgb", cam))},
+                             "controls": {"depth": {"path": str(clip93.video("depth", cam)), "weight": None}},
+                             "masks": {"camera:rear:tele:30fov": str(tmp_path / "other.mp4")}},
+                            cam)
+    assert "mask_path" not in sample["depth"]
+
+
+def test_per_control_weights_reach_the_sample(clip93):
+    w = _worker()
+    cam = clip93.manifest.camera_names[0]
+    sample = w.build_sample("j", {"prompt": "p", "controls": {"depth": {}, "seg": {}, "edge": {}}, "extra": {}},
+                            clip93.manifest.model_dump(),
+                            {"rgb": {cam: str(clip93.video("rgb", cam))},
+                             "controls": {"depth": {"path": str(clip93.video("depth", cam)), "weight": 1.0},
+                                          "seg": {"path": str(clip93.video("seg", cam)), "weight": 0.5},
+                                          "edge": {"derive": True, "weight": 0.3}}},
+                            cam)
+    assert [sample[h]["control_weight"] for h in ("depth", "seg", "edge")] == [1.0, 0.5, 0.3]
