@@ -13,6 +13,7 @@
 #include "Actor/ActorBlueprintFunctionLibrary.h"
 #include "ContentStreaming.h"
 #include "Engine/PostProcessVolume.h"
+#include "EngineUtils.h"
 #include "GameFramework/SpectatorPawn.h"
 #include <util/ue-header-guard-end.h>
 
@@ -960,6 +961,36 @@ void ASceneCaptureSensor::BeginPlay()
 
   // Call derived classes to set up their things.
   SetUpSceneCaptureComponent(*CaptureComponent2D);
+
+  // The capture component's own settings assert bOverride_ on every camera
+  // field (SetCameraDefaultOverrides), so map post-process volumes never blend
+  // into sensor renders and sensors don't match the main viewport. Absorb the
+  // map's enabled unbound PostProcessVolume here; the cache logic inside
+  // ApplyPostProcessVolumeToSensor keeps the camera attributes configured
+  // through the sensor API (exposure, film curve, DoF, ...) authoritative.
+  {
+    int32 VolumeCount = 0;
+    bool bApplied = false;
+    for (TActorIterator<APostProcessVolume> It(GetWorld()); It; ++It)
+    {
+      APostProcessVolume *Volume = *It;
+      ++VolumeCount;
+      if (!bApplied && bEnablePostProcessingEffects &&
+          IsValid(Volume) && Volume->bEnabled && Volume->bUnbound)
+      {
+        ApplyPostProcessVolumeToSensor(Volume, this, false);
+        UE_LOG(LogCarla, Log, TEXT("%s: absorbed map post-process volume %s"),
+            *GetName(), *Volume->GetName());
+        bApplied = true;
+      }
+    }
+    if (!bApplied && VolumeCount > 0)
+    {
+      UE_LOG(LogCarla, Verbose, TEXT(
+          "%s: no map post-process volume absorbed (bEnablePP=%d, volumes in world=%d)"),
+          *GetName(), bEnablePostProcessingEffects ? 1 : 0, VolumeCount);
+    }
+  }
 
   CaptureComponent2D->CaptureSource = ESceneCaptureSource::SCS_FinalToneCurveHDR;
 
