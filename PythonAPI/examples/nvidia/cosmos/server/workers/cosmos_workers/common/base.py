@@ -202,7 +202,9 @@ class _Server:
                     await send({"id": rid, "event": "failed", "error": "cancelled", "cancelled": True})
                 except Exception as exc:  # noqa: BLE001
                     log.error("job %s failed:\n%s", job_id, traceback.format_exc())
-                    await send({"id": rid, "event": "failed", "error": f"{type(exc).__name__}: {exc}"})
+                    # the server folds the first line into the job message and keeps the tail in JobInfo.error
+                    await send({"id": rid, "event": "failed", "error": f"{type(exc).__name__}: {exc}",
+                                "traceback": traceback.format_exc()[-4096:]})
                 else:
                     await send({"id": rid, "event": "done", "files": result.files, "manifest": result.manifest})
                 return

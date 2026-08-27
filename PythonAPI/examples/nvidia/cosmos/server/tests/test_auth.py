@@ -33,6 +33,22 @@ def test_bootstrap_env_token_and_initial(tmp_path):
     assert oct((tmp_path / "initial2.txt").stat().st_mode)[-3:] == "600"
 
 
+def test_initial_token_logged_once_when_minted(tmp_path, caplog):
+    import logging
+
+    path = tmp_path / "initial.txt"
+    with caplog.at_level(logging.INFO, logger="carla_cosmos_server.auth"):
+        store = TokenStore(tmp_path / "tokens.json")
+        bootstrap(store, path, None)
+        tok = path.read_text().strip()
+        minted = [r for r in caplog.records if r.levelno == logging.INFO and "first-boot API token" in r.getMessage()]
+        assert len(minted) == 1
+        assert minted[0].getMessage() == f"first-boot API token (also in {path}): {tok}"
+        caplog.clear()
+        bootstrap(TokenStore(tmp_path / "tokens.json"), path, None)  # restart: token exists, nothing minted
+        assert not any("first-boot API token" in r.getMessage() for r in caplog.records)
+
+
 def test_public_and_protected_routes(server):
     anon = server.client
     saved = dict(anon.headers)

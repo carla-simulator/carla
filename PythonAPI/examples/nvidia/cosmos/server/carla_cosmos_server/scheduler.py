@@ -1,4 +1,4 @@
-"""Job scheduler: per-backend FIFO with priority, one job per worker.
+"""Job scheduler: per-backend FIFO with priority, one job per worker, one job per GPU.
 
 The loop wakes on every submission/cancellation/worker-state change (or once a
 second), and for every idle worker claims the best queued job among the
@@ -6,6 +6,15 @@ backends that worker serves: ``interactive`` before ``batch``, then oldest
 first.  Dispatch is ``prepare`` (resolve blobs into the job's ``inputs``
 directory, unpack scene packages) -> ``run`` on the worker with progress
 updates -> result manifest.
+
+GPU sharing (latency mode): model workers whose GPU sets overlap never denoise
+at the same time — a worker only claims a job while no job is on a worker that
+shares a GPU with it (:meth:`Scheduler.gpu_free`).  In throughput mode the
+planner gives workers disjoint GPUs, so nothing changes there; the wsm renderer
+(EGL, small) is exempt: it renders scene controls while its host GPU's model
+worker may be busy.  ``priority="batch"`` keeps its ordering semantics only;
+running batch jobs concurrently on narrow workers in throughput mode is future
+work.
 """
 
 from __future__ import annotations
@@ -17,6 +26,7 @@ import logging
 import os
 import shutil
 import time
+import traceback
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -36,8 +46,40 @@ from .workers_rpc import WorkerHandle
 log = logging.getLogger(__name__)
 
 
+ERROR_TEXT_LIMIT = 4096
+"""Longest error text stored on a job (first line plus the tail of the traceback)."""
+
+
 class PrepareError(Exception):
-    """Inputs could not be materialised (missing blob, corrupt scene package)."""
+    """Inputs could not be materialised (missing blob, corrupt scene package, failed render).
+
+    ``phase`` names the step for the job message (``prepare``, ``render 'wsm'``);
+    ``detail`` is the worker's traceback tail, when it sent one.
+    """
+
+    def __init__(self, message: str, phase: str = "prepare", detail: str | None = None) -> None:
+        super().__init__(message)
+        self.phase = phase
+        self.detail = detail
+
+
+def failure_text(phase: str, error: str | None, detail: str | None = None) -> tuple[str, str]:
+    """``(message, error)`` for a failed job.
+
+    The message is the phase plus the first line of the worker's error
+    (``render 'wsm' failed: ValueError: clip fps 16 must divide ...``); the
+    error text is that line followed by ``detail`` (traceback tail), capped at
+    :data:`ERROR_TEXT_LIMIT` characters keeping the first line and the tail.
+    """
+    lines = [ln for ln in (error or "").strip().splitlines() if ln.strip()]
+    message = f"{phase} failed: {lines[0].strip() if lines else 'unknown error'}"
+    rest = "\n".join(lines[1:])
+    if detail and detail.strip():
+        rest = (rest + "\n" if rest else "") + detail.strip()
+    text = message if not rest else f"{message}\n{rest}"
+    if len(text) > ERROR_TEXT_LIMIT:
+        text = message + "\n...\n" + text[-(ERROR_TEXT_LIMIT - len(message) - 5):]
+    return message, text
 
 
 class Scheduler:
@@ -96,6 +138,12 @@ class Scheduler:
     def scene_rendering_available(self) -> bool:
         return bool(self.renderers())
 
+    def gpu_free(self, worker: WorkerHandle) -> bool:
+        """No job is running on a *model* worker that shares a GPU with ``worker`` (renderers exempt)."""
+        return not any(other.current_job is not None and other.shares_gpu_with(worker)
+                       and self.RENDERER_BACKEND not in other.backends and self.RENDERER_BACKEND not in worker.backends
+                       for other in self.workers)
+
     # -- cancel -------------------------------------------------------------------------------
     async def cancel(self, job_id: str) -> bool:
         if self.store.cancel_if_queued(job_id):
@@ -116,7 +164,7 @@ class Scheduler:
     async def _loop(self) -> None:
         while not self._stopping:
             for w in self.workers:
-                if not w.serving:
+                if not w.serving or not self.gpu_free(w):
                     continue
                 job = self.store.claim_next(w.backends, w.name)
                 if job is None:
@@ -137,7 +185,7 @@ class Scheduler:
             try:
                 payload = await asyncio.to_thread(self.prepare, job)
             except PrepareError as exc:
-                self.store.set_status(job.id, "failed", error=f"prepare: {exc}", timings=timings)
+                self._fail(job, exc.phase, str(exc), timings, exc.detail)
                 return
             fresh = self.store.get_job(job.id)
             if fresh is None or fresh.status == "cancelled":
@@ -148,7 +196,7 @@ class Scheduler:
                 try:
                     await self._render_scenes(job, payload, scene_controls)
                 except PrepareError as exc:
-                    self.store.set_status(job.id, "failed", error=f"render: {exc}", timings=timings)
+                    self._fail(job, exc.phase, str(exc), timings, exc.detail)
                     return
                 timings["rendering"] = time.time() - t_render
                 fresh = self.store.get_job(job.id)
@@ -171,18 +219,25 @@ class Scheduler:
             elif outcome.cancelled:
                 self.store.set_status(job.id, "cancelled", error="cancelled", timings=timings)
             else:
-                self.store.set_status(job.id, "failed", error=outcome.error, timings=timings)
-                log.warning("job %s failed on %s: %s", job.id, worker.name, outcome.error)
+                self._fail(job, f"run on {worker.name}", outcome.error, timings, outcome.traceback)
         except asyncio.CancelledError:
-            self.store.set_status(job.id, "failed", error="server shutting down", timings=timings)
+            self.store.set_status(job.id, "failed", error="server shutting down", timings=timings,
+                                  message="failed: server shutting down")
             raise
         except Exception as exc:  # noqa: BLE001 - never let a job kill the loop
             log.exception("job %s crashed the dispatcher", job.id)
-            self.store.set_status(job.id, "failed", error=f"internal: {type(exc).__name__}: {exc}", timings=timings)
+            self._fail(job, "internal", f"{type(exc).__name__}: {exc}", timings, traceback.format_exc())
         finally:
             worker.current_job = None
             self._running.pop(job.id, None)
             self.wake()
+
+    def _fail(self, job: JobRecord, phase: str, error: str | None, timings: dict[str, float],
+              detail: str | None = None) -> None:
+        """Mark ``job`` failed with the worker's error in ``message`` and the full text in ``error``."""
+        message, text = failure_text(phase, error, detail)
+        self.store.set_status(job.id, "failed", error=text, timings=timings, message=message)
+        log.warning("job %s %s", job.id, message)
 
     # -- server-side world-scenario rendering ---------------------------------------------------------
     async def _render_scenes(self, job: JobRecord, payload: dict[str, Any],
@@ -207,12 +262,14 @@ class Scheduler:
                     self.store.set_progress(job.id, 0.0, f"render '{name}': {message}")
 
                 outcome = await renderer.run(render_job, progress)
+                phase = f"render '{name}'"
                 if not outcome.ok:
-                    raise PrepareError(f"'{name}' control: {outcome.error}")
+                    raise PrepareError(outcome.error or f"{renderer.name} failed", phase=phase,
+                                       detail=outcome.traceback)
                 by_view = {f["view"]: str(Path(render_job["out_dir"]) / f["name"]) for f in outcome.files if f.get("view")}
                 missing = [v for v in views if v not in by_view]
                 if missing:
-                    raise PrepareError(f"renderer returned no '{name}' video for view(s) {missing}")
+                    raise PrepareError(f"{renderer.name} returned no video for view(s) {missing}", phase=phase)
                 spec.pop("scene_dir")
                 if len(views) == 1:
                     spec["path"] = by_view[views[0]]
@@ -347,4 +404,4 @@ def job_payload_debug(store: Store, job_id: str) -> dict[str, Any]:
             if d.exists() else []}
 
 
-__all__ = ["Scheduler", "PrepareError", "load_result_manifest", "result_file", "json"]
+__all__ = ["Scheduler", "PrepareError", "failure_text", "load_result_manifest", "result_file", "json"]

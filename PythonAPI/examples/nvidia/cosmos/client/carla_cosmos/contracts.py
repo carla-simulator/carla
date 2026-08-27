@@ -16,6 +16,10 @@ cosmos3-nano/super edge, blur, depth, seg, wsm             1        10/16/24/30 
 transfer2.5        edge, vis, depth, seg                   1        16 -> 16      93*k                  480/720
 transfer2.5-av     hdmap_bbox (required)                   1..7     30 -> 10      29 + 28*(k-1)         720
 =================  =====================================  =======  ============  ===================  ===========
+
+Controls rendered server-side from a scene package (``wsm``, ``hdmap_bbox``)
+additionally need a clip fps of 10, 15 or 30: the world-scenario renderer
+produces 30 fps and decimates (``ControlSpec.scene_fps``).
 """
 
 from __future__ import annotations
@@ -56,6 +60,13 @@ class ControlSpec(BaseModel):
     """The client may upload a pre-rendered control video."""
     accepts_scene: bool = False
     """The server can render the control from a ClipGT scene package."""
+    scene_fps: list[int] | None = None
+    """Clip frame rates a scene package can be rendered at.
+
+    The world-scenario renderer produces 30 fps and decimates to the clip's
+    rate, so the clip fps must divide 30.  ``None`` means any accepted fps.
+    Only checked when the control is supplied as a ``scene``.
+    """
     server_derivable: bool = False
     """The server can derive the control from the RGB video (edge, blur/vis)."""
     weight_range: tuple[float, float] | None = (0.0, 1.0)
@@ -120,6 +131,22 @@ class FrameRule(BaseModel):
             hi += 1
         return sorted(found)
 
+    def choices(self, n: int, limit: int = 6) -> tuple[list[int], bool]:
+        """Valid counts to suggest for a clip of ``n`` frames.
+
+        Returns ``(counts, open_ended)``: every valid count when the rule has
+        at most ``limit`` of them (e.g. ``101, 202, 303``), otherwise the
+        ``limit`` closest to ``n`` with ``open_ended`` set.
+        """
+        if self.step is not None and self.max is not None:
+            base = self.base if self.base is not None else 0
+            all_valid = [k for k in range(base, self.max + 1, self.step) if self.allows(k)]
+            if len(all_valid) <= limit:
+                return all_valid, False
+        if self.step is None:
+            return [], False
+        return self.nearest(n, limit), True
+
 
 class BackendContract(BaseModel):
     """What a backend accepts.  Served by ``GET /v1/models``."""
@@ -151,6 +178,10 @@ class BackendContract(BaseModel):
 
 # ----------------------------------------------------------------------------- built-in contracts
 
+SCENE_FPS: list[int] = [10, 15, 30]
+"""Clip rates the world-scenario renderer (30 fps, decimated) can serve a scene package at."""
+
+
 def _cosmos3(id_: str, description: str) -> BackendContract:
     return BackendContract(
         id=id_,
@@ -161,7 +192,7 @@ def _cosmos3(id_: str, description: str) -> BackendContract:
             ControlSpec(name="blur", server_derivable=True),
             ControlSpec(name="depth"),
             ControlSpec(name="seg"),
-            ControlSpec(name="wsm", accepts_scene=True),
+            ControlSpec(name="wsm", accepts_scene=True, scene_fps=SCENE_FPS),
         ],
         fps=FpsRule(source=[10, 16, 24, 30]),
         frames=[
@@ -197,7 +228,8 @@ TRANSFER25_AV = BackendContract(
     family="transfer2.5-av",
     description="Cosmos Transfer 2.5-2B auto/multiview (7-camera world scenario)",
     controls=[
-        ControlSpec(name="hdmap_bbox", required=True, accepts_scene=True, weight_range=(0.0, 1.0)),
+        ControlSpec(name="hdmap_bbox", required=True, accepts_scene=True, scene_fps=SCENE_FPS,
+                    weight_range=(0.0, 1.0)),
     ],
     views=list(AV_CAMERAS),
     max_views=7,
@@ -441,8 +473,10 @@ def _validate_rgb(contract: BackendContract, request: JobRequest, views: list[st
 def _validate_timing(contract: BackendContract, request: JobRequest, manifest: ClipManifest) -> list[str]:
     errors: list[str] = []
     if manifest.fps not in contract.fps.source:
-        errors.append(f"clip fps {manifest.fps} not accepted by '{contract.id}' (accepted: {contract.fps.source})")
+        errors.append(f"clip fps {manifest.fps} not accepted by '{contract.id}' (accepted: {contract.fps.source}): "
+                      f"recapture with --fps {_closest(contract.fps.source, manifest.fps)}")
         return errors
+    errors += _validate_scene_fps(contract, request, manifest)
     model_fps = contract.fps.model_fps(manifest.fps)
     factor = manifest.fps // model_fps
     if manifest.fps % model_fps:
@@ -451,15 +485,41 @@ def _validate_timing(contract: BackendContract, request: JobRequest, manifest: C
     n_model = manifest.frames // factor
     rule = contract.frame_rule(set(request.controls))
     if not rule.allows(n_model):
-        near = [n * factor for n in rule.nearest(n_model)]
-        at = f" ({n_model} at {model_fps} fps)" if factor != 1 else ""
-        errors.append(
-            f"clip has {manifest.frames} frames{at}; '{contract.id}' needs {rule.describe()} "
-            f"frames at {model_fps} fps"
-            + (f" when '{rule.when_control}' is used" if rule.when_control else "")
-            + (f"; nearest valid clip lengths: {near}" if near else "")
-        )
+        errors.append(_frames_error(contract, rule, manifest, model_fps, factor, n_model))
     return errors
+
+
+def _validate_scene_fps(contract: BackendContract, request: JobRequest, manifest: ClipManifest) -> list[str]:
+    """Scene-rendered controls: the renderer's 30 fps must decimate to the clip fps."""
+    errors: list[str] = []
+    for name, inp in request.controls.items():
+        spec = contract.control(name)
+        if inp.scene is None or spec is None or spec.scene_fps is None:
+            continue
+        allowed = [f for f in contract.fps.source if f in spec.scene_fps]
+        if manifest.fps not in allowed:
+            errors.append(f"{name} with a scene package needs fps in {allowed} (clip is {manifest.fps} fps): "
+                          f"recapture with --fps {_closest(allowed, manifest.fps)}")
+    return errors
+
+
+def _frames_error(contract: BackendContract, rule: FrameRule, manifest: ClipManifest,
+                  model_fps: int, factor: int, n_model: int) -> str:
+    """``cosmos3-nano with wsm needs 101, 202 or 303 frames (clip has 93)``."""
+    who = f"{contract.id} with {rule.when_control}" if rule.when_control else contract.id
+    counts, open_ended = rule.choices(n_model)
+    if counts:
+        listed = ", ".join(str(n * factor) for n in counts)
+        listed = listed + ", ..." if open_ended else " or ".join(listed.rsplit(", ", 1))
+    else:
+        listed = f"{rule.min * factor}..{rule.max * factor}" if rule.max is not None else f">= {rule.min * factor}"
+    at = f" at {manifest.fps} fps ({rule.describe()} at {model_fps} fps)" if factor != 1 else ""
+    return f"{who} needs {listed} frames{at} (clip has {manifest.frames})"
+
+
+def _closest(values: list[int], target: int) -> int:
+    """Element of ``values`` nearest to ``target`` (lower on ties)."""
+    return min(values, key=lambda v: (abs(v - target), v))
 
 
 # ----------------------------------------------------------------------------- jobs (server <-> client)
@@ -544,3 +604,8 @@ class ModelInfo(BaseModel):
     queued: int = 0
     scene_rendering: bool = False
     """The server can render ``accepts_scene`` controls from an uploaded scene package."""
+    placement: dict[str, Any] | None = None
+    """Where the backend runs (read-only): ``{"mode": "latency"|"throughput"|"manual", "gpus": [0, 1, 2, 3],
+    "parallel": {"cfg": 2, "ulysses": 2} | {"context": 4} | {"nproc": 4} | {}}``; ``None`` while no worker
+    for it is loaded.  ``parallel`` says how one query is spread over ``gpus`` (Cosmos 3: CFG-parallel x
+    Ulysses (x TP for Super); Transfer 2.5: context parallel; AV: torchrun ranks = context parallel)."""

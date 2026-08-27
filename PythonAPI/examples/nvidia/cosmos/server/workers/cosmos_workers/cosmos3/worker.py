@@ -47,8 +47,13 @@ from typing import Any
 
 from ..common import http
 from ..common.base import CancelledJob, RunContext, RunResult, Worker
+from ..common.hfcache import materialize_snapshot
+from ..common.ranks import visible_gpus
 
 log = logging.getLogger("cosmos_worker.cosmos3")
+
+# repos cosmos-guardrail opens through NLTK's hardened (O_NOFOLLOW) loader — see load()
+GUARDRAIL_REPOS = ("nvidia/Cosmos-1.0-Guardrail",)
 
 HINTS = ("edge", "blur", "depth", "seg", "wsm")
 DERIVABLE = ("edge", "blur")
@@ -62,7 +67,11 @@ def _canonical(name: str) -> str:
 
 
 class Cosmos3Worker(Worker):
-    """One vLLM-Omni server per worker; Nano (TP=1) or Super (TP from ``--tp``)."""
+    """One vLLM-Omni server per worker; Nano (TP=1) or Super (TP from ``--tp``).
+
+    Latency mode adds ``--cfg-parallel 2`` / ``--ulysses N`` so one query spans every GPU the
+    worker was given (``tp x cfg x ulysses == len(CUDA_VISIBLE_DEVICES)``).
+    """
 
     name = "cosmos3"
     backends = ("cosmos3-nano",)
@@ -77,11 +86,19 @@ class Cosmos3Worker(Worker):
         self.served_name = args.served_model_name or (args.model if not Path(args.model).exists() else "cosmos3")
         self.guardrails = args.guardrails
         self.vllm_version: dict[str, Any] = {}
+        self.parallel = {k: v for k, v in (("tp", args.tp), ("cfg", args.cfg_parallel), ("ulysses", args.ulysses))
+                         if v > 1}
         self._rate_samples: list[float] = []  # seconds per (frame * step)
 
     # -- lifecycle ---------------------------------------------------------------------------
     def load(self) -> None:
         self.storage.mkdir(parents=True, exist_ok=True)
+        if self.guardrails:
+            # cosmos-guardrail reads the blocklist's nltk_data through NLTK's hardened opener
+            # (O_NOFOLLOW): the HF-cache symlinks must be real files or vLLM-Omni dies at start-up
+            # with "Security Violation [pathsec.open]: refusing to follow a symlink".
+            for repo in GUARDRAIL_REPOS:
+                materialize_snapshot(self.args.hf_home, repo)
         cmd = self._vllm_command()
         env = dict(os.environ)
         env.setdefault("HF_HOME", self.args.hf_home)
@@ -125,12 +142,19 @@ class Cosmos3Worker(Worker):
     def _vllm_command(self) -> list[str]:
         if self.args.vllm_cmd:
             tmpl = self.args.vllm_cmd.format(port=self.port, model=self.model_path, python=sys.executable,
-                                             storage=self.storage, tp=self.args.tp)
+                                             storage=self.storage, tp=self.args.tp, cfg=self.args.cfg_parallel,
+                                             ulysses=self.args.ulysses)
             return shlex.split(tmpl)
         cmd = ["vllm", "serve", self.model_path, "--omni", "--host", "127.0.0.1", "--port", str(self.port),
                "--served-model-name", self.served_name, "--init-timeout", str(int(self.args.startup_timeout))]
         if self.args.tp > 1:
             cmd += ["--tensor-parallel-size", str(self.args.tp)]
+        # latency mode: one query over several GPUs — CFG branches on separate ranks, Ulysses splits the
+        # sequence (flags per vllm-omni entrypoints/cli/serve.py @ d3c990d; Cosmos3 supports both)
+        if self.args.cfg_parallel > 1:
+            cmd += ["--cfg-parallel-size", str(self.args.cfg_parallel)]
+        if self.args.ulysses > 1:
+            cmd += ["--ulysses-degree", str(self.args.ulysses)]
         if not self.guardrails:
             cmd.append("--no-guardrails")
         if self.args.vae_tiling:
@@ -239,6 +263,8 @@ class Cosmos3Worker(Worker):
                 "model_sha": self.model_sha,
                 "vllm_version": self.vllm_version,
                 "guardrails": bool(self.guardrails) and extra.get("guardrails", True) is not False,
+                "gpus": visible_gpus(),
+                "parallel": self.parallel,
                 "form": {k: v for k, v in fields.items() if k not in ("prompt", "negative_prompt")},
                 "extra_params": extra,
                 "input_reference": bool(files),
@@ -363,6 +389,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--served-model-name", default=None,
                    help="model name used in requests (default: the repo id; required when --model is a path)")
     p.add_argument("--tp", type=int, default=1, help="tensor parallel size (Super: 2..8)")
+    p.add_argument("--cfg-parallel", type=int, default=1,
+                   help="CFG-parallel size (2: positive/negative branches on separate GPUs; latency mode)")
+    p.add_argument("--ulysses", type=int, default=1,
+                   help="Ulysses sequence-parallel degree; tp x cfg x ulysses = GPUs given (latency mode)")
     p.add_argument("--port", type=int, default=0, help="vLLM-Omni port (0 = free port)")
     p.add_argument("--hf-home", default=os.environ.get("HF_HOME") or str(Path(os.environ.get("COSMOS_MODELS_DIR", "/models")) / "hf"))
     p.add_argument("--storage-dir", default=None, help="where vLLM-Omni writes outputs (default: temp dir)")

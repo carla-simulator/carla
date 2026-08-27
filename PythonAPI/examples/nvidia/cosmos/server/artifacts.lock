@@ -1,6 +1,6 @@
 {
  "version": 1,
- "generated": "2026-08-26T22:36:47Z",
+ "generated": "2026-08-27T20:04:27Z",
  "cosmos_transfer25_version": "v1.5.4",
  "images": {
   "nano": {
@@ -13,15 +13,17 @@
     "transfer25-blur",
     "transfer25-seg",
     "transfer25-av-multiview",
+    "predict25-av-multiview",
     "reason1-7b",
     "predict25-tokenizer",
     "guardrail1",
     "siglip2",
+    "siglip-so400m",
     "sam2-hiera-large",
     "grounding-dino-base",
     "video-depth-anything-small"
    ],
-   "bytes": 96093870712
+   "bytes": 103727732425
   },
   "full": {
    "artifacts": [
@@ -34,15 +36,17 @@
     "transfer25-blur",
     "transfer25-seg",
     "transfer25-av-multiview",
+    "predict25-av-multiview",
     "reason1-7b",
     "predict25-tokenizer",
     "guardrail1",
     "siglip2",
+    "siglip-so400m",
     "sam2-hiera-large",
     "grounding-dino-base",
     "video-depth-anything-small"
    ],
-   "bytes": 228746426843
+   "bytes": 236380288556
   }
  },
  "artifacts": [
@@ -1469,6 +1473,34 @@
    ]
   },
   {
+   "id": "predict25-av-multiview",
+   "repo": "nvidia/Cosmos-Predict2.5-2B",
+   "revision": "865baf084d4c9e850eac59a021277d5a9b9e8b63",
+   "include": [
+    "auto/multiview/524af350-2e43-496c-8590-3646ae1325da_ema_bf16.pt"
+   ],
+   "exclude": [],
+   "used_by": [
+    "transfer25_av"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": true,
+   "note": "Predict 2.5 multiview base the Transfer 2.5 multiview control model is loaded on top of (cosmos_oss/checkpoints_predict2.py; found on the first GPU run)",
+   "requested_revision": "865baf084d4c9e850eac59a021277d5a9b9e8b63",
+   "bytes": 4118707017,
+   "files": [
+    {
+     "path": "auto/multiview/524af350-2e43-496c-8590-3646ae1325da_ema_bf16.pt",
+     "size": 4118707017,
+     "sha256": "9a90bcc00d20ad562bf2fa7a1590730e767f431a383f3ee0c0d09df2420a88a3",
+     "blob_id": "3e5b94784bbd3b480032a9262c5f3c300d6697b9"
+    }
+   ]
+  },
+  {
    "id": "reason1-7b",
    "repo": "nvidia/Cosmos-Reason1-7B",
    "revision": "3210bec0495fdc7a8d3dbb8d58da5711eab4b423",
@@ -2306,6 +2338,85 @@
      "size": 40160,
      "sha256": null,
      "blob_id": "3555266818f1cba8595ca97e26cd117ef1714bfb"
+    }
+   ]
+  },
+  {
+   "id": "siglip-so400m",
+   "repo": "google/siglip-so400m-patch14-384",
+   "revision": "9fdffc58afc957d1a03a25b10dba0329ab15c2a3",
+   "include": [
+    "*"
+   ],
+   "exclude": [
+    "*.onnx",
+    "*.msgpack",
+    "*.h5",
+    "*.ot",
+    "*.tflite",
+    "*.gguf",
+    ".gitattributes"
+   ],
+   "used_by": [
+    "transfer25",
+    "transfer25_av"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": false,
+   "note": "vision encoder of the Transfer 2.5 guardrail video content-safety filter (guardrail/video_content_safety_filter/vision_encoder.py hard-codes it; found on the first GPU run)",
+   "requested_revision": "main",
+   "bytes": 3515154696,
+   "files": [
+    {
+     "path": "README.md",
+     "size": 4321,
+     "sha256": null,
+     "blob_id": "a5fd5771ea9bec56bf88604979b486b309614463"
+    },
+    {
+     "path": "config.json",
+     "size": 576,
+     "sha256": null,
+     "blob_id": "a513b447f6b05f640f9980d25f4d8a5cff6cd25d"
+    },
+    {
+     "path": "model.safetensors",
+     "size": 3511950624,
+     "sha256": "ea2abad2b7f8a9c1aa5e49a244d5d57ffa71c56f720c94bc5d240ef4d6e1d94a",
+     "blob_id": "ab15d89bf13a2daeee9f8ed3345b191344d03565"
+    },
+    {
+     "path": "preprocessor_config.json",
+     "size": 368,
+     "sha256": null,
+     "blob_id": "051261b5a784a2e7e5f93de1f86d170d69a9efd9"
+    },
+    {
+     "path": "special_tokens_map.json",
+     "size": 409,
+     "sha256": null,
+     "blob_id": "6555f2261d409dea394d6b6973129a53b8725803"
+    },
+    {
+     "path": "spiece.model",
+     "size": 798330,
+     "sha256": "1e5036bed065526c3c212dfbe288752391797c4bb1a284aa18c9a0b23fcaf8ec",
+     "blob_id": "a81d858d2426e864b349f0d9830edf5b453256d7"
+    },
+    {
+     "path": "tokenizer.json",
+     "size": 2399357,
+     "sha256": null,
+     "blob_id": "6d6fd0bd6cc263099dc98e4fa383f90c9baa3521"
+    },
+    {
+     "path": "tokenizer_config.json",
+     "size": 711,
+     "sha256": null,
+     "blob_id": "70741c5c1f6d21423ebf51ee77ef2fce868c33f2"
     }
    ]
   },

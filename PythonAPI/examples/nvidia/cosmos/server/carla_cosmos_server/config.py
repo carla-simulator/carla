@@ -6,6 +6,10 @@ variable                     default                meaning
 COSMOS_STATE                 /state                 tokens, SQLite, blobs, job inputs/results
 COSMOS_HOST / COSMOS_PORT    0.0.0.0 / 8000         API bind address
 COSMOS_PROFILE               auto                   runtime profile name or ``auto`` (GPU detection)
+COSMOS_MODE                  auto                   planned layout: ``latency`` (one query uses every
+                                                    GPU, workers time-share them) | ``throughput``
+                                                    (one worker per model on disjoint GPUs) | ``auto``
+                                                    (latency on <= 4 GPUs); ignored by YAML profiles
 COSMOS_PROFILES_DIR          <package>/../profiles  where ``*.yaml`` profiles live
 COSMOS_MODELS_DIR            /models                baked model artifacts (workers read this)
 COSMOS_IMAGE_VARIANT         <detected>             which weights are baked in: ``nano`` | ``full`` |
@@ -87,6 +91,7 @@ class Settings:
     host: str = field(default_factory=lambda: _env("HOST", "0.0.0.0"))
     port: int = field(default_factory=lambda: int(_env("PORT", "8000")))
     profile: str = field(default_factory=lambda: _env("PROFILE", "auto"))
+    mode: str = field(default_factory=lambda: _env("MODE", "auto"))
     profiles_dir: Path = field(default_factory=lambda: Path(_env("PROFILES_DIR", str(DEFAULT_PROFILES_DIR))))
     models_dir: Path = field(default_factory=lambda: Path(_env("MODELS_DIR", "/models")))
     image_variant: str = field(default_factory=lambda: _env("IMAGE_VARIANT", ""))

@@ -145,6 +145,9 @@ def bootstrap(store: TokenStore, initial_token_file: Path, env_token: str | None
         token = store.create(label="initial")
         initial_token_file.write_text(token + "\n")
         os.chmod(initial_token_file, 0o600)
+        # One greppable line for ``docker logs``: the file is root-owned inside the container,
+        # so a plain ``docker run`` user cannot read it from the host.  Only on the boot that mints.
+        log.info("first-boot API token (also in %s): %s", initial_token_file, token)
         banner = "\n".join([
             "=" * 78,
             "  carla-cosmos: no tokens found, generated the initial API token:",

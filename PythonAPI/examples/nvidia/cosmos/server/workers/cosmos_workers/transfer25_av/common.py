@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..common.ranks import READY_FILE, SHUTDOWN_FILE  # noqa: F401 - re-exported for callers
+
 CAMERA_KEYS: dict[str, str] = {
     "camera:front:wide:120fov": "front_wide",
     "camera:cross:left:120fov": "cross_left",
@@ -14,5 +16,3 @@ CAMERA_KEYS: dict[str, str] = {
 KEY_TO_CAMERA = {v: k for k, v in CAMERA_KEYS.items()}
 CHUNK_FRAMES = 29   # frames per view per chunk at model fps (state_t 8 -> 29 pixel frames)
 CHUNK_OVERLAP = 1
-READY_FILE = "READY"
-SHUTDOWN_FILE = "__shutdown__.json"

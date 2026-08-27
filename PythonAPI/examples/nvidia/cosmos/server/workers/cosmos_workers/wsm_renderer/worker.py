@@ -80,11 +80,14 @@ class NvidiaRenderer(Renderer):
         ctx.release()
 
     def render(self, scene_dir: Path, cameras: list[str], out_dir: Path) -> dict[str, Path]:
-        scene = self._load_scene(scene_dir, camera_names=cameras, max_frames=-1,
+        # NVIDIA's clipgt loader keys camera models by the underscore canonical name
+        # (clipgt_loader._load_camera_calibrations); the rig speaks colon form -> KeyError otherwise
+        canon = [_canonical(c) for c in cameras]
+        scene = self._load_scene(scene_dir, camera_names=canon, max_frames=-1,
                                  input_pose_fps=self._settings["INPUT_POSE_FPS"],
                                  resize_resolution_hw=self._settings["RESIZE_RESOLUTION"], clip_id=None)
-        models, poses = self._convert(scene, cameras, self._settings["RESIZE_RESOLUTION"])
-        self._render(models, poses, scene, cameras, str(out_dir), scene.scene_id, max_frames=-1, chunk_output=False,
+        models, poses = self._convert(scene, canon, self._settings["RESIZE_RESOLUTION"])
+        self._render(models, poses, scene, canon, str(out_dir), scene.scene_id, max_frames=-1, chunk_output=False,
                      overlay_camera=False, alpha=0.5, clipgt_path=scene_dir, use_persistent_vbos=True,
                      multi_sample=4, simplified_output=True)
         return _collect(out_dir, cameras)
@@ -111,9 +114,9 @@ def _collect(out_dir: Path, cameras: list[str]) -> dict[str, Path]:
     found: dict[str, Path] = {}
     for cam in cameras:
         c = _canonical(cam)
-        hits = sorted(out_dir.glob(f"*.{c}.mp4")) or sorted(out_dir.glob(f"*{c}*.mp4"))
+        hits = sorted(out_dir.rglob(f"*.{c}.mp4")) or sorted(out_dir.rglob(f"*{c}*.mp4"))
         if not hits:
-            raise RuntimeError(f"renderer produced no video for {cam} in {out_dir} (have: {sorted(p.name for p in out_dir.glob('*.mp4'))})")
+            raise RuntimeError(f"renderer produced no video for {cam} in {out_dir} (have: {sorted(p.name for p in out_dir.rglob('*.mp4'))})")
         found[cam] = hits[0]
     return found
 
@@ -169,8 +172,6 @@ class WsmRendererWorker(Worker):
         if unknown:
             raise ValueError(f"cameras {unknown} are not renderer slots; use one of {KNOWN_CAMERAS}")
         fps, frames = int(job["fps"]), int(job["frames"])
-        if RENDER_FPS % fps:
-            raise ValueError(f"clip fps {fps} must divide the renderer's {RENDER_FPS} fps")
         out_dir = Path(job["out_dir"])
         out_dir.mkdir(parents=True, exist_ok=True)
         ctx.check_cancelled()
@@ -187,7 +188,14 @@ class WsmRendererWorker(Worker):
                 info = video.probe(src)
                 if abs(info["fps"] - fps) < 1e-3 and info["frames"] == frames:
                     shutil.copyfile(src, dest)
+                elif info["frames"] == frames:
+                    # NVIDIA's renderer emits one frame per camera timestamp of the scene package (the clip's
+                    # own frames) but labels the file RENDER_FPS: keep every frame, rewrite the rate
+                    video.resample(src, dest, fps=fps, frames=frames, src_fps=info["fps"], relabel=True)
                 else:
+                    if info["fps"] % fps:
+                        raise ValueError(f"rendered {cam} is {info['fps']:.0f} fps with {info['frames']} frames; "
+                                         f"clip fps {fps} must divide it (or match its frame count {frames})")
                     if info["frames"] * fps / info["fps"] + 1e-6 < frames:
                         raise RuntimeError(f"rendered {cam} has {info['frames']} frames at {info['fps']:.0f} fps "
                                            f"(= {int(info['frames'] * fps / info['fps'])} at {fps} fps) but the clip "

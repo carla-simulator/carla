@@ -9,7 +9,8 @@ offline resolution (``hf download <repo> <file> --revision <sha>``) finds
 exactly the snapshot we baked.  ``main`` revisions are resolved to a commit
 at generation time.
 
-    HF_TOKEN=... python tools/lock_artifacts.py            # rewrites artifacts.lock
+    HF_TOKEN=... python tools/lock_artifacts.py            # rewrites artifacts.lock, keeping baked revisions
+    HF_TOKEN=... python tools/lock_artifacts.py --refresh  # ... and moves 'main' specs to their current commit
     python tools/lock_artifacts.py --check                  # exits 1 if the lock is stale
 """
 
@@ -66,6 +67,10 @@ SPECS: list[Spec] = [
          include=["general/seg/5136ef49-6d8d-42e8-8abf-7dac722a304a_ema_bf16.pt"], used_by=["transfer25"], gated=True),
     Spec("transfer25-av-multiview", TRANSFER25, "00c591edab119e8a6ca06e6e091351a04ce0ecc9",
          include=["auto/multiview/4ecc66e9-df19-4aed-9802-0d11e057287a_ema_bf16.pt"], used_by=["transfer25_av"], gated=True),
+    Spec("predict25-av-multiview", "nvidia/Cosmos-Predict2.5-2B", "865baf084d4c9e850eac59a021277d5a9b9e8b63",
+         include=["auto/multiview/524af350-2e43-496c-8590-3646ae1325da_ema_bf16.pt"], used_by=["transfer25_av"], gated=True,
+         note="Predict 2.5 multiview base the Transfer 2.5 multiview control model is loaded on top of "
+              "(cosmos_oss/checkpoints_predict2.py; found on the first GPU run)"),
     Spec("reason1-7b", "nvidia/Cosmos-Reason1-7B", "3210bec0495fdc7a8d3dbb8d58da5711eab4b423", exclude=COMMON_EXCLUDES,
          used_by=["transfer25", "transfer25_av"], gated=True, note="Transfer 2.5 text encoder"),
     Spec("predict25-tokenizer", "nvidia/Cosmos-Predict2.5-2B", "f176dc95b4a70f53ce01c4b302851595e7322b00",
@@ -75,6 +80,10 @@ SPECS: list[Spec] = [
          note="Transfer 2.5 guardrails: blocklist, RetinaFace face blur, video content safety filter"),
     Spec("siglip2", "google/siglip2-so400m-patch16-naflex", exclude=COMMON_EXCLUDES, used_by=["transfer25"],
          note="image-context encoder instantiated unconditionally by the Transfer 2.5 conditioner"),
+    Spec("siglip-so400m", "google/siglip-so400m-patch14-384", exclude=COMMON_EXCLUDES,
+         used_by=["transfer25", "transfer25_av"],
+         note="vision encoder of the Transfer 2.5 guardrail video content-safety filter "
+              "(guardrail/video_content_safety_filter/vision_encoder.py hard-codes it; found on the first GPU run)"),
     Spec("sam2-hiera-large", "facebook/sam2-hiera-large", exclude=COMMON_EXCLUDES, used_by=["transfer25"],
          note="server-side seg derivation"),
     Spec("grounding-dino-base", "IDEA-Research/grounding-dino-base", exclude=COMMON_EXCLUDES, used_by=["transfer25"],
@@ -92,10 +101,14 @@ def _match(path: str, patterns: list[str]) -> bool:
     return False
 
 
-def build(api: HfApi) -> dict:
+def build(api: HfApi, pins: dict[str, str] | None = None) -> dict:
+    """``pins`` (artifact id -> commit) keeps already-baked revisions for specs that only say ``main``."""
     artifacts = []
     for spec in SPECS:
-        info = api.model_info(spec.repo, revision=spec.revision, files_metadata=True)
+        revision = spec.revision
+        if revision == "main" and pins and spec.id in pins:
+            revision = pins[spec.id]
+        info = api.model_info(spec.repo, revision=revision, files_metadata=True)
         files = []
         for s in info.siblings or []:
             if not _match(s.rfilename, spec.include) or _match(s.rfilename, spec.exclude):
@@ -118,11 +131,17 @@ def build(api: HfApi) -> dict:
 
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("--check", action="store_true")
+    p.add_argument("--check", action="store_true", help="compare against Hugging Face's current revisions; exit 1 on drift")
+    p.add_argument("--refresh", action="store_true",
+                   help="re-resolve 'main' specs to their current commit (default: keep the revisions already in the lock, "
+                        "so adding an artifact never silently moves the ones that are baked)")
     p.add_argument("--out", default=str(LOCK_PATH))
     args = p.parse_args()
     api = HfApi(token=os.environ.get("HF_TOKEN"))
-    lock = build(api)
+    pins = None
+    if not args.check and not args.refresh and Path(args.out).exists():
+        pins = {a["id"]: a["revision"] for a in json.loads(Path(args.out).read_text()).get("artifacts", [])}
+    lock = build(api, pins)
     text = json.dumps(lock, indent=1) + "\n"
     if args.check:
         old = json.loads(Path(args.out).read_text())

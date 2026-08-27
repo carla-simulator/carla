@@ -24,6 +24,9 @@ class RunOutcome:
     files: list[dict[str, Any]] = field(default_factory=list)
     manifest: dict[str, Any] = field(default_factory=dict)
     error: str | None = None
+    """One line: ``ExcType: message`` as reported by the worker."""
+    traceback: str | None = None
+    """Traceback tail when the worker sends one (``failed.traceback``, optional)."""
     cancelled: bool = False
 
 
@@ -36,6 +39,9 @@ class WorkerHandle:
     socket: Path
     type: str = "external"
     gpus: list[int] = field(default_factory=list)
+    """GPU indices the worker runs on; workers whose sets overlap are never run concurrently (scheduler)."""
+    parallel: dict[str, int] = field(default_factory=dict)
+    """How one query spans those GPUs: ``{"cfg": 2, "ulysses": 2}`` | ``{"context": 4}`` | ``{"nproc": 4}``."""
     process: subprocess.Popen | None = None
     state: str = "starting"
     """starting -> loading -> ready <-> busy; error / dead are terminal."""
@@ -58,9 +64,13 @@ class WorkerHandle:
         """Ready for jobs: loaded, smoke passed, idle."""
         return self.state == "ready" and self.smoke_ok is True and self.current_job is None
 
+    def shares_gpu_with(self, other: "WorkerHandle") -> bool:
+        return other is not self and bool(set(self.gpus) & set(other.gpus))
+
     def snapshot(self) -> dict[str, Any]:
         return {
             "name": self.name, "type": self.type, "backends": self.backends, "gpus": self.gpus,
+            "parallel": self.parallel,
             "state": self.state, "error": self.error, "smoke_ok": self.smoke_ok,
             "smoke_seconds": self.smoke_seconds, "current_job": self.current_job,
             "pid": self.process.pid if self.process else None,
@@ -129,6 +139,7 @@ class WorkerHandle:
                     return RunOutcome(ok=True, files=msg.get("files", []), manifest=msg.get("manifest", {}))
                 elif ev == "failed":
                     return RunOutcome(ok=False, error=msg.get("error", "worker failed"),
+                                      traceback=msg.get("traceback") or None,
                                       cancelled=bool(msg.get("cancelled")))
             return RunOutcome(ok=False, error="worker ended the run without a terminal event")
         except (OSError, protocol.ProtocolError) as exc:
@@ -166,7 +177,8 @@ class WorkerHandle:
 
 
 def spawn_worker(name: str, type_: str, backends: list[str], gpus: list[int], python: str, module: str,
-                 socket: Path, extra_args: list[str], env: dict[str, str], log_dir: Path | None = None) -> WorkerHandle:
+                 socket: Path, extra_args: list[str], env: dict[str, str], log_dir: Path | None = None,
+                 parallel: dict[str, int] | None = None) -> WorkerHandle:
     """Start a worker subprocess in its venv."""
     if socket.exists():
         socket.unlink()
@@ -179,4 +191,5 @@ def spawn_worker(name: str, type_: str, backends: list[str], gpus: list[int], py
         stdout = open(log_dir / f"worker-{name}.log", "ab")  # noqa: SIM115 - lives with the process
     log.info("starting worker %s: %s (GPUs %s)", name, " ".join(cmd), gpus or "-")
     proc = subprocess.Popen(cmd, env=penv, stdout=stdout, stderr=subprocess.STDOUT if stdout else None)
-    return WorkerHandle(name=name, backends=backends, socket=socket, type=type_, gpus=gpus, process=proc)
+    return WorkerHandle(name=name, backends=backends, socket=socket, type=type_, gpus=gpus, process=proc,
+                        parallel=dict(parallel or {}))

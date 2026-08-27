@@ -87,6 +87,7 @@ def test_mapping_and_outputs(worker, clip93, tmp_path):
     assert (tmp_path / "out" / "camera_front_wide_120fov.mp4").stat().st_size == clip93.video("rgb", cam).stat().st_size
     m = events[-1]["manifest"]
     assert m["multicontrol"] is True and m["hints_loaded"] == ["edge", "vis", "depth", "seg"]
+    assert m["parallel"] == {"context": 1} and m["gpus"] == [] and m["world_size"] == 1
     s = m["sample"]
     assert "prompt" not in s and s["guidance"] == 5 and s["num_steps"] == 12 and s["resolution"] == "480"
     assert s["max_frames"] == 93 and s["num_video_frames_per_chunk"] == 93 and s["sigma_max"] == "80"
@@ -125,7 +126,13 @@ def test_parser_and_hint_subset():
     add_common_args(p)
     args = p.parse_args(["--socket", "x", "--hints", "depth", "--engine", "fake"])
     w = Transfer25Worker(args)
-    assert w.hints == ["depth"]
+    assert w.hints == ["depth"] and w.nproc == 1
+    assert "--hints" in w.ranks.command and w.ranks.command[w.ranks.command.index("--hints") + 1] == "depth"
+    # context parallel = ranks under torchrun, sized by the GPUs given (--context-parallel-size overrides)
+    w4 = Transfer25Worker(p.parse_args(["--socket", "x", "--context-parallel-size", "4", "--master-port", "12399"]))
+    cmd = w4.ranks.command
+    assert w4.nproc == 4 and cmd[cmd.index("--nproc_per_node") + 1] == "4" and "12399" in cmd
+    assert cmd[cmd.index("--context-parallel-size") + 1] == "4" and "--offload-guardrails" in cmd
     with pytest.raises(SystemExit):
         Transfer25Worker(p.parse_args(["--socket", "x", "--hints", "depth,nope", "--engine", "fake"]))
     # a control not loaded on this worker is rejected at build time

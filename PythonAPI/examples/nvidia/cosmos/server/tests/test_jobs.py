@@ -110,10 +110,46 @@ def test_bad_scene_zip_fails_in_prepare(render_server, clip16):
     server.client.put(f"/v1/blobs/{bid}", content=data)
     body = submission(clip16, "cosmos3-nano", {"wsm": {"scene": bid}})
     body["manifest"]["frames"] = 101  # wsm needs 101*k (manifest is client-declared)
+    body["manifest"]["fps"] = 10  # and a scene package needs a renderer-compatible rate (10/15/30, not 16)
     r = server.client.post("/v1/jobs", json=body)
     assert r.status_code == 202, r.text
     info = server.wait_job(r.json()["id"])
     assert info["status"] == "failed" and "not a zip" in info["error"]
+
+
+def test_failed_render_reports_worker_error(render_server, tmp_path):
+    """A renderer failure lands in the job message (phase + worker error) and in ``error``."""
+    server = render_server
+    from carla_cosmos.client import sha256_file, zip_dir
+    from carla_cosmos.synthetic import av7_clip
+
+    clip = av7_clip(tmp_path / "clips", seconds=1)
+    z = zip_dir(clip.scene_dir, tmp_path / "scene.zip")
+    bid = sha256_file(z)
+    server.client.put(f"/v1/blobs/{bid}", content=z.read_bytes(), headers={"Content-Type": "application/zip"})
+    body = submission(clip, "transfer2.5-av", {"hdmap_bbox": {"scene": bid}}, views=list(clip.manifest.camera_names[:1]))
+    body["manifest"]["frames"] = 3 * (29 + 28 * 19)  # valid for the contract, far longer than the scene package
+    r = server.client.post("/v1/jobs", json=body)
+    assert r.status_code == 202, r.text
+    info = server.wait_job(r.json()["id"])
+    assert info["status"] == "failed", info
+    assert info["message"].startswith("render 'hdmap_bbox' failed: RuntimeError: rendered camera:front:wide:120fov")
+    assert "too short" in info["message"] and "\n" not in info["message"]
+    assert info["error"].startswith(info["message"])
+
+
+def test_failed_run_reports_worker_error(tmp_path, clip16):
+    from conftest import make_server
+
+    ctx = make_server(tmp_path, ["--delay", "0.1", "--fail"])
+    with ctx.client:
+        ctx.client.headers.update({"Authorization": f"Bearer {ctx.token}"})
+        ctx.wait_ready()
+        info = ctx.wait_job(_submit_ok(ctx, clip16)["id"])
+        assert info["status"] == "failed"
+        assert info["message"] == "run on mock failed: RuntimeError: mock worker configured with --fail"
+        assert info["error"].startswith(info["message"])
+        assert ctx.client.get("/v1/jobs?status=failed").json()[0]["message"] == info["message"]
 
 
 def test_cancel_queued_and_running(slow_server, clip16):

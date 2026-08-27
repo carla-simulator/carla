@@ -37,7 +37,10 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--tm-port", type=int, default=8000)
     ap.add_argument("--town", default=None, help="load this town first (default: keep the current one)")
     ap.add_argument("--frames", type=int, default=60)
-    ap.add_argument("--fps", type=int, default=30)
+    ap.add_argument("--fps", type=int, default=30,
+                    help="simulation and clip rate (default 30). Cosmos 3 accepts 10/16/24/30, Transfer 2.5 "
+                         "needs 16; a wsm/hdmap_bbox scene package rendered on the server needs 10, 15 or 30 "
+                         "(the renderer produces 30 fps and decimates), so 16 fps clips cannot use wsm=scene")
     ap.add_argument("--vehicles", type=int, default=10)
     ap.add_argument("--walkers", type=int, default=0)
     ap.add_argument("--rig", default="single", help="single | nvidia_av7 | path to a rig YAML")

@@ -18,11 +18,18 @@ def probe(path: Path) -> dict:
             "height": s["height"]}
 
 
-def resample(src: Path, dest: Path, fps: int, frames: int, src_fps: float | None = None) -> None:
-    """Re-time ``src`` to ``fps`` (frame decimation, no interpolation) and cut to ``frames`` frames, lossless 4:4:4."""
+def resample(src: Path, dest: Path, fps: int, frames: int, src_fps: float | None = None,
+             relabel: bool = False) -> None:
+    """Re-time ``src`` to ``fps`` (frame decimation, no interpolation) and cut to ``frames`` frames, lossless 4:4:4.
+
+    ``relabel=True`` keeps every frame and only rewrites the timestamps to ``fps`` (for a source whose
+    frame count is already right but whose container says another rate).
+    """
     src_fps = src_fps or probe(src)["fps"]
     vf = []
-    if abs(src_fps - fps) > 1e-3:
+    if relabel:
+        vf.append(f"setpts=N/({fps}*TB)")
+    elif abs(src_fps - fps) > 1e-3:
         if src_fps < fps or (src_fps / fps) % 1 > 1e-6:
             raise ValueError(f"cannot decimate {src_fps:.3f} fps to {fps} fps (needs an integer factor)")
         step = int(round(src_fps / fps))

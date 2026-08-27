@@ -60,6 +60,7 @@ def job(tmp_path, clip, views, rgb=True, extra=None, prompt="dusk, light rain", 
 
 
 def test_seven_views_autoregressive(worker, tmp_path):
+    """7 views on a worker with --nproc 8 (NVIDIA's own layout); the fake engine runs as one rank."""
     sock, spool = worker
     clip = av7_clip(tmp_path / "clips", seconds=3)  # 3*(29+28*2)=255 frames @30 -> 85 @10 -> k=3
     views = clip.manifest.camera_names
@@ -80,6 +81,7 @@ def test_seven_views_autoregressive(worker, tmp_path):
     m = ev[-1]["manifest"]
     s = m["sample"]
     assert m["nproc"] == 8 and m["frames_at_model_fps"] == 85 and m["engine"] == "fake-multiview"
+    assert m["parallel"] == {"nproc": 8, "context": 8} and m["gpus"] == [] and m["world_size"] == 1
     assert s["enable_autoregressive"] is True and s["num_chunks"] == 3 and s["chunk_overlap"] == 1
     assert s["num_conditional_frames"] == 0 and s["control_weight"] == 0.8 and s["guidance"] == 2
     assert s["fps"] == 10 and s["save_combined_views"] is False and s["num_steps"] == 20
@@ -120,11 +122,14 @@ def test_build_sample_limits(tmp_path):
     add_common_args(p)
     w = Transfer25AVWorker(p.parse_args(["--socket", "x", "--engine", "fake", "--nproc", "2"]))
     clip = av7_clip(tmp_path / "clips", seconds=1)
-    views = clip.manifest.camera_names[:3]
+    views = clip.manifest.camera_names
     paths = {v: "/c.mp4" for v in views}
-    with pytest.raises(ValueError, match="GPUs"):
-        w.build_sample("j", {"prompt": "p", "controls": {"hdmap_bbox": {}}}, clip.manifest.model_dump(),
-                       {"rgb": {}, "controls": {"hdmap_bbox": {"paths": paths}}}, views)
+    # views are independent of the rank count (NVIDIA: context_parallel_size = ranks, 7 views on 8 or on 1 GPU)
+    sample, n = w.build_sample("j", {"prompt": "p", "controls": {"hdmap_bbox": {}}}, clip.manifest.model_dump(),
+                               {"rgb": {}, "controls": {"hdmap_bbox": {"paths": paths}}}, views)
+    assert len([k for k in sample if k in CAMERA_KEYS.values()]) == 7 and n == 29 and w.nproc == 2
+    assert w.ranks.command[:2] == [sys.executable, "-m"]  # fake engine without --fake-torchrun: one plain rank
+    views = views[:3]
     man = clip.manifest.model_dump()
     man["frames"] = 60  # 20 @10 fps < 29
     with pytest.raises(ValueError, match="one chunk"):

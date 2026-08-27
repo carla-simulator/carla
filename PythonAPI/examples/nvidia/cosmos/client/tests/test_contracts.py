@@ -102,7 +102,66 @@ def test_wrong_frame_count_gives_nearest_valid():
                 rgb={"camera:front:wide:120fov": "b0"})
     errors = validate_request(TRANSFER25, r, m)
     assert len(errors) == 1
-    assert "100 frames" in errors[0] and "93" in errors[0] and "186" in errors[0]
+    assert errors[0].startswith("transfer2.5 needs 93, 186, 279, ") and errors[0].endswith("(clip has 100)")
+
+
+def test_wsm_frame_count_message_lists_all_valid_counts():
+    m = make_manifest(fps=10, frames=93, kinds=("rgb", "depth", "seg"))
+    r = request("cosmos3-nano", {"wsm": ControlInput(scene="s")})
+    errors = validate_request(COSMOS3_NANO, r, m)
+    assert errors == ["cosmos3-nano with wsm needs 101, 202 or 303 frames (clip has 93)"]
+
+
+def test_av_frame_count_message_in_clip_fps():
+    cams = AV_CAMERAS[:2]
+    m = make_manifest(cameras=cams, fps=30, frames=90)  # 30 at 10 fps: needs 29 + 28k
+    r = request("transfer2.5-av", {"hdmap_bbox": ControlInput(scene="s")}, views=list(cams))
+    errors = validate_request(TRANSFER25_AV, r, m)
+    assert len(errors) == 1
+    assert errors[0].startswith("transfer2.5-av needs 87, 171, 255, ")
+    assert "at 30 fps (29 + 28*k within >=29 at 10 fps)" in errors[0] and errors[0].endswith("(clip has 90)")
+
+
+def test_out_of_range_without_step_message():
+    m = make_manifest(fps=30, frames=400, kinds=("rgb", "depth"))
+    r = request("cosmos3-nano", {"depth": ControlInput(blob="b")})
+    errors = validate_request(COSMOS3_NANO, r, m)
+    assert errors == ["cosmos3-nano needs 5..300 frames (clip has 400)"]
+
+
+# --------------------------------------------------------------------------- scene fps
+
+def test_wsm_scene_needs_renderer_compatible_fps():
+    # 16 fps is fine for Cosmos 3 in general, but the renderer's 30 fps cannot be decimated to it
+    m = make_manifest(fps=16, frames=101, kinds=("rgb", "depth", "seg"))
+    r = request("cosmos3-nano", {"wsm": ControlInput(scene="s1")})
+    errors = validate_request(COSMOS3_NANO, r, m)
+    assert errors == ["wsm with a scene package needs fps in [10, 30] (clip is 16 fps): recapture with --fps 10"]
+    # an uploaded wsm video at 16 fps is not subject to the renderer rule
+    ok = request("cosmos3-nano", {"wsm": ControlInput(blob="b")})
+    assert validate_request(COSMOS3_NANO, ok, m) == []
+    # 10 and 30 fps scene packages pass
+    for fps in (10, 30):
+        m = make_manifest(fps=fps, frames=101, kinds=("rgb", "depth", "seg"))
+        assert validate_request(COSMOS3_NANO, r, m) == []
+
+
+def test_scene_fps_rule_on_builtin_contracts():
+    for contract in BUILTIN_CONTRACTS.values():
+        for spec in contract.controls:
+            if spec.accepts_scene:
+                assert spec.scene_fps == [10, 15, 30], (contract.id, spec.name)
+                assert all(30 % f == 0 for f in spec.scene_fps)
+            else:
+                assert spec.scene_fps is None
+
+
+def test_fps_mismatch_suggests_recapture():
+    m = make_manifest(fps=24, frames=93)
+    r = request("transfer2.5", {"depth": ControlInput(blob="b")},
+                rgb={"camera:front:wide:120fov": "b0"})
+    errors = validate_request(TRANSFER25, r, m)
+    assert errors == ["clip fps 24 not accepted by 'transfer2.5' (accepted: [16]): recapture with --fps 16"]
 
 
 def test_wsm_frame_rule_applies_only_with_wsm():

@@ -62,10 +62,13 @@ log = logging.getLogger(__name__)
 
 class AppState:
     def __init__(self, settings: Settings, tokens: TokenStore, workers: list[WorkerHandle],
-                 profile_name: str, contracts: dict[str, BackendContract] | None = None) -> None:
+                 profile_name: str, contracts: dict[str, BackendContract] | None = None,
+                 mode: str = "manual") -> None:
         self.settings = settings
         self.tokens = tokens
         self.profile_name = profile_name
+        self.mode = mode
+        """``latency`` | ``throughput`` (planned layouts) | ``manual`` (YAML / tests)."""
         self.contracts = contracts or dict(BUILTIN_CONTRACTS)
         self.store = Store(settings.db_file, settings.blobs_dir, settings.jobs_dir)
         self.scheduler = Scheduler(self.store, workers, self.contracts)
@@ -104,9 +107,10 @@ class AppState:
 
 
 def create_app(settings: Settings, tokens: TokenStore, workers: list[WorkerHandle],
-               profile_name: str = "custom", contracts: dict[str, BackendContract] | None = None) -> FastAPI:
+               profile_name: str = "custom", contracts: dict[str, BackendContract] | None = None,
+               mode: str = "manual") -> FastAPI:
     settings.ensure_dirs()
-    state = AppState(settings, tokens, workers, profile_name, contracts)
+    state = AppState(settings, tokens, workers, profile_name, contracts, mode)
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -163,7 +167,7 @@ def _routes(app: FastAPI, st: AppState) -> None:
 
     @app.get("/v1/health/ready")
     async def ready():
-        body = {"ready": sched.is_ready(), "profile": st.profile_name,
+        body = {"ready": sched.is_ready(), "profile": st.profile_name, "mode": st.mode,
                 "backends": sorted(sched.backends_available()),
                 "workers": [w.snapshot() for w in st.workers]}
         return JSONResponse(body, status_code=200 if body["ready"] else 503)
@@ -171,7 +175,8 @@ def _routes(app: FastAPI, st: AppState) -> None:
     @app.get("/v1/status")
     async def status():
         return {
-            "version": __version__, "profile": st.profile_name, "uptime_s": round(time.time() - st.started, 1),
+            "version": __version__, "profile": st.profile_name, "mode": st.mode,
+            "uptime_s": round(time.time() - st.started, 1),
             "ready": sched.is_ready(), "workers": [w.snapshot() for w in st.workers],
             "queued": store.queued_counts(), "jobs": store.status_counts(),
             "blobs": dict(zip(("count", "bytes"), store.blob_stats())),
@@ -183,11 +188,19 @@ def _routes(app: FastAPI, st: AppState) -> None:
         return metrics.render(store, sched)
 
     # -- models --------------------------------------------------------------------------------
+    def _placement(backend: str) -> dict[str, Any] | None:
+        """Where the first loaded worker of ``backend`` runs and how a query spans its GPUs."""
+        for w in st.workers:
+            if backend in w.backends and w.state in ("ready", "busy") and w.smoke_ok:
+                return {"mode": st.mode, "gpus": list(w.gpus), "parallel": dict(w.parallel)}
+        return None
+
     def _model_info(c: BackendContract) -> ModelInfo:
         avail = sched.backends_available()
         return ModelInfo(contract=c, available=c.id in avail, workers=avail.get(c.id, []),
                          queued=store.queued_counts().get(c.id, 0),
-                         scene_rendering=sched.scene_rendering_available() and any(x.accepts_scene for x in c.controls))
+                         scene_rendering=sched.scene_rendering_available() and any(x.accepts_scene for x in c.controls),
+                         placement=_placement(c.id))
 
     @app.get("/v1/models")
     async def models() -> dict[str, ModelInfo]:

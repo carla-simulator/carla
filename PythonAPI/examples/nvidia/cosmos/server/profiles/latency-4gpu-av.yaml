@@ -1,0 +1,22 @@
+name: latency-4gpu-av
+description: >-
+  Manual latency layout for a 4 x 96 GB node — Cosmos 3 Nano (CFG-parallel 2 x Ulysses 2) and
+  Transfer 2.5 AV multiview (4 context-parallel ranks, 7 views) time-share all four GPUs, renderer on
+  GPU 3.  `auto` in latency mode plans Nano + Transfer 2.5 general instead (the three do not fit
+  together in 96 GB); start with COSMOS_PROFILE=latency-4gpu-av when the 7-camera world scenario is
+  what the node is for.  The scheduler never runs jobs on GPU-sharing workers at the same time.
+workers:
+  - name: cosmos3-nano
+    type: cosmos3
+    backends: [cosmos3-nano]
+    gpus: [0, 1, 2, 3]
+    args: ["--tp", "1", "--cfg-parallel", "2", "--ulysses", "2"]
+  - name: transfer25-av
+    type: transfer25_av
+    backends: [transfer2.5-av]
+    gpus: [0, 1, 2, 3]
+    args: ["--nproc", "4", "--master-port", "12341"]
+  - name: wsm-renderer
+    type: wsm_renderer
+    backends: [wsm-renderer]
+    gpus: [3]

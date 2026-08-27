@@ -9,7 +9,8 @@ front camera to Cosmos 3 as a ``wsm`` control.
 Frame budget: Transfer 2.5 AV consumes 10 fps and needs 29 + 28*(k-1) frames per view,
 so the 30 fps capture is 3*(29 + 28*(k-1)) frames (k = ``--seconds``); Cosmos 3 ``wsm``
 needs 101*k frames at its fps, so ``--also-cosmos3`` captures a second, 10 fps clip.
-Both scene packages are rendered on the server with NVIDIA's renderer.
+Both scene packages are rendered on the server with NVIDIA's renderer, which produces
+30 fps and decimates: a scene-rendered control needs a 10, 15 or 30 fps clip (never 16).
 """
 
 from __future__ import annotations

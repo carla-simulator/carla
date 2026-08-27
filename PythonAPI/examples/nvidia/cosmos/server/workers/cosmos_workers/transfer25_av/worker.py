@@ -1,9 +1,11 @@
 """Cosmos Transfer 2.5 ``auto/multiview`` worker (7-camera world scenario -> video).
 
-The model runs context-parallel over N GPUs (N >= number of active views; NVIDIA
-ships 7 views on 8 GPUs).  This worker starts ``torchrun --nproc_per_node N
--m cosmos_workers.transfer25_av.ranks`` once, waits for the ranks to load the
-checkpoint, and hands jobs over through a spool directory (see ``ranks.py``).
+The model runs context-parallel over the GPUs given to the worker (NVIDIA ships 7 views
+on 8 GPUs; ``context_parallel_size`` is the number of ranks and independent of the number
+of views — 1 GPU is just single-GPU inference).  This worker starts the rank group once
+(``torchrun --nproc_per_node N -m cosmos_workers.transfer25_av.ranks``, see
+``common.ranks``), waits for the ranks to load the checkpoint, and hands jobs over
+through a spool directory.
 
 Job -> ``MultiviewInferenceArguments``:
 
@@ -20,29 +22,30 @@ Job -> ``MultiviewInferenceArguments``:
   ``num_chunks=k`` when k > 1 (``chunk_overlap`` 1);
 * ``save_combined_views=false`` -> one mp4 per view plus a 3x3 grid.
 
-Cancellation cannot interrupt a running multiview generation.
+Any view count up to the contract's maximum runs on any rank count; what limits
+views per rank is GPU memory (an out-of-memory rank fails the job with a message
+that says so).  Cancellation cannot interrupt a running multiview generation.
 """
 
 from __future__ import annotations
 
 import argparse
-import json
 import logging
 import os
 import shutil
 import statistics
-import subprocess
-import sys
 import tempfile
-import time
 from pathlib import Path
 from typing import Any
 
 from ..common import http, video
 from ..common.base import RunContext, RunResult, Worker
-from .common import CAMERA_KEYS, CHUNK_FRAMES, CHUNK_OVERLAP, READY_FILE, SHUTDOWN_FILE
+from ..common.ranks import RankSupervisor, visible_gpus
+from .common import CAMERA_KEYS, CHUNK_FRAMES, CHUNK_OVERLAP
 
 log = logging.getLogger("cosmos_worker.transfer25_av")
+
+RANKS_MODULE = "cosmos_workers.transfer25_av.ranks"
 
 
 def _canonical(name: str) -> str:
@@ -55,63 +58,38 @@ class Transfer25AVWorker(Worker):
 
     def __init__(self, args: argparse.Namespace) -> None:
         super().__init__(args)
-        visible = os.environ.get("CUDA_VISIBLE_DEVICES", "")
-        self.nproc = args.nproc or (len([g for g in visible.split(",") if g.strip()]) if visible else 1)
+        self.gpus = visible_gpus()
+        self.nproc = args.nproc or len(self.gpus) or 1
         self.spool = Path(args.spool_dir or tempfile.mkdtemp(prefix="t25av-"))
-        self.proc: subprocess.Popen | None = None
-        self.engine_info: dict[str, Any] = {}
+        rank_args = ["--engine", args.engine, "--guardrails" if args.guardrails else "--no-guardrails",
+                     "--context-parallel-size", str(self.nproc)]
+        if args.engine == "fake":
+            rank_args += ["--fake-delay", str(args.fake_delay)]
+        elif args.offload_guardrails:
+            rank_args.append("--offload-guardrails")
+        launched = self.nproc if (args.engine == "real" or args.fake_torchrun) else 1
+        self.ranks = RankSupervisor(RANKS_MODULE, self.spool, launched, args.master_port, rank_args,
+                                    startup_timeout=args.startup_timeout, request_timeout=args.request_timeout,
+                                    poll=args.poll, env={"HF_HOME": os.environ.get("HF_HOME") or args.hf_home})
         self._rate_samples: list[float] = []
+
+    @property
+    def engine_info(self) -> dict[str, Any]:
+        return self.ranks.info
 
     # -- lifecycle -------------------------------------------------------------------------------
     def load(self) -> None:
-        for d in ("requests", "results"):
-            (self.spool / d).mkdir(parents=True, exist_ok=True)
-        ready = self.spool / READY_FILE
-        if ready.exists():
-            ready.unlink()
-        common = ["--spool", str(self.spool), "--engine", self.args.engine,
-                  "--guardrails" if self.args.guardrails else "--no-guardrails"]
-        if self.args.engine == "fake":
-            cmd = [sys.executable, "-m", "cosmos_workers.transfer25_av.ranks", *common, "--fake-delay",
-                   str(self.args.fake_delay)]
-        else:
-            cmd = ["torchrun", "--nproc_per_node", str(self.nproc), "--master_port", str(self.args.master_port),
-                   "-m", "cosmos_workers.transfer25_av.ranks", *common, "--context-parallel-size", str(self.nproc)]
-            if self.args.offload_guardrails:
-                cmd.append("--offload-guardrails")
-        env = dict(os.environ)
-        env.setdefault("HF_HOME", self.args.hf_home)
-        log.info("starting multiview ranks: %s", " ".join(cmd))
-        self.proc = subprocess.Popen(cmd, env=env, stdout=sys.stderr, stderr=subprocess.STDOUT)
-        t0 = time.monotonic()
-        while not ready.exists():
-            if self.proc.poll() is not None:
-                raise RuntimeError(f"multiview ranks exited with code {self.proc.returncode} during start-up")
-            if time.monotonic() - t0 > self.args.startup_timeout:
-                self.proc.terminate()
-                raise RuntimeError(f"multiview ranks not ready after {self.args.startup_timeout:.0f}s")
-            time.sleep(1.0)
-        self.engine_info = json.loads(ready.read_text())
-        log.info("multiview ranks ready after %.0fs: %s", time.monotonic() - t0, self.engine_info)
+        self.ranks.start()
 
     def shutdown(self) -> None:
-        if self.proc and self.proc.poll() is None:
-            try:
-                (self.spool / "requests" / SHUTDOWN_FILE).write_text("{}")
-                self.proc.wait(30)
-            except (OSError, subprocess.TimeoutExpired):
-                self.proc.terminate()
-                try:
-                    self.proc.wait(30)
-                except subprocess.TimeoutExpired:
-                    self.proc.kill()
+        self.ranks.stop()
 
     # -- smoke -----------------------------------------------------------------------------------------
     def smoke(self) -> None:
         if self.args.skip_smoke:
             return
         with tempfile.TemporaryDirectory(dir=self.spool, prefix="smoke-") as tmp:
-            cams = list(CAMERA_KEYS)[: min(self.nproc, len(CAMERA_KEYS)) if self.args.engine == "real" else 2]
+            cams = list(CAMERA_KEYS)[:2]
             paths = {}
             for i, cam in enumerate(cams):
                 p = Path(tmp) / f"ctrl_{_canonical(cam)}.mp4"
@@ -138,28 +116,18 @@ class Transfer25AVWorker(Worker):
         work = self.spool / "work" / job["job_id"]
         work.mkdir(parents=True, exist_ok=True)
 
-        req = self.spool / "requests" / f"{job['job_id']}.json"
-        res = self.spool / "results" / f"{job['job_id']}.json"
-        tmp = req.with_suffix(".tmp")
-        tmp.write_text(json.dumps({"sample": sample, "out_dir": str(work)}))
-        os.replace(tmp, req)
         est = self._estimate(len(views), n_model, int(sample["num_steps"]))
-        t0 = time.monotonic()
-        ctx.progress(0.02, f"generating {len(views)} view(s) x {n_model} frames with Transfer 2.5 AV")
-        while not res.exists():
-            if self.proc is not None and self.proc.poll() is not None:
-                raise RuntimeError(f"multiview ranks died (exit {self.proc.returncode}) during the job")
-            elapsed = time.monotonic() - t0
-            if elapsed > self.args.request_timeout:
-                raise TimeoutError(f"multiview generation still running after {elapsed:.0f}s")
+        ctx.progress(0.02, f"generating {len(views)} view(s) x {n_model} frames with Transfer 2.5 AV "
+                           f"(context parallel x{self.nproc})")
+
+        def on_wait(elapsed: float) -> None:
             frac = 0.05 + 0.90 * min(1.0, elapsed / est) if est else 0.05
             rem = f", ~{max(0.0, est - elapsed):.0f}s left (estimate)" if est else ""
             ctx.progress(min(frac, 0.95), f"denoising, {elapsed:.0f}s{rem}"
                          + (" — cancel requested, will stop after this job" if ctx.cancelled else ""))
-            time.sleep(self.args.poll)
-        wall = time.monotonic() - t0
-        result = json.loads(res.read_text())
-        res.unlink()
+
+        result = self.ranks.submit(job["job_id"], {"sample": sample, "out_dir": str(work)}, on_wait)
+        wall = float(result["wall_s"])
         if not result.get("ok"):
             raise RuntimeError(result.get("error") or "multiview generation failed")
         if calibrate:
@@ -182,17 +150,15 @@ class Transfer25AVWorker(Worker):
         shutil.rmtree(work, ignore_errors=True)
         ctx.progress(1.0, "done")
         public = {k: v for k, v in sample.items() if k not in ("prompt", "negative_prompt")}
-        return RunResult(files=files, manifest={**self.engine_info, "nproc": self.nproc, "sample": public,
-                                                "frames_at_model_fps": n_model, "wall_s": wall})
+        return RunResult(files=files, manifest={**self.engine_info, "nproc": self.nproc, "gpus": self.gpus,
+                                                "parallel": {"nproc": self.nproc, "context": self.nproc},
+                                                "sample": public, "frames_at_model_fps": n_model, "wall_s": wall})
 
     def build_sample(self, job_id: str, request: dict[str, Any], manifest: dict[str, Any],
                      inputs: dict[str, Any], views: list[str]) -> tuple[dict[str, Any], int]:
         bad = [v for v in views if v not in CAMERA_KEYS]
         if bad:
             raise ValueError(f"views {bad} are not auto/multiview cameras {list(CAMERA_KEYS)}")
-        if len(views) > self.nproc:
-            raise ValueError(f"{len(views)} active views need >= {len(views)} GPUs (context parallel), "
-                             f"this worker has {self.nproc}")
         ctrl = inputs.get("controls", {}).get("hdmap_bbox")
         if not ctrl:
             raise ValueError("transfer2.5-av needs the 'hdmap_bbox' control")
@@ -248,8 +214,9 @@ class Transfer25AVWorker(Worker):
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--nproc", type=int, default=0, help="GPUs / ranks (default: count of CUDA_VISIBLE_DEVICES)")
-    p.add_argument("--master-port", type=int, default=12341)
+    p.add_argument("--nproc", type=int, default=0,
+                   help="ranks = context-parallel size (default: count of CUDA_VISIBLE_DEVICES)")
+    p.add_argument("--master-port", type=int, default=12341, help="torchrun rendezvous port (unique per worker)")
     p.add_argument("--spool-dir", default=None)
     p.add_argument("--hf-home", default=os.environ.get("HF_HOME") or str(Path(os.environ.get("COSMOS_MODELS_DIR", "/models")) / "hf"))
     p.add_argument("--default-steps", type=int, default=35)
@@ -259,6 +226,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--offload-guardrails", action="store_true", default=True)
     p.add_argument("--engine", choices=["real", "fake"], default=os.environ.get("TRANSFER25_AV_ENGINE", "real"))
     p.add_argument("--fake-delay", type=float, default=0.3)
+    p.add_argument("--fake-torchrun", action="store_true",
+                   help="with --engine fake also launch --nproc ranks through torchrun (needs torch; tests)")
     p.add_argument("--startup-timeout", type=float, default=3600.0)
     p.add_argument("--request-timeout", type=float, default=7200.0)
     p.add_argument("--poll", type=float, default=1.0)

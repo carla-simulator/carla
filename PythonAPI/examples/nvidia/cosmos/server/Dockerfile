@@ -45,6 +45,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         git git-lfs jq curl ffmpeg \
         libegl1 libgles2 libgl1 libglvnd0 libglvnd-dev libx11-6 libxext6 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
+# FFmpeg 6 shared libraries for decord: cosmos-transfer2.5's cp313 decord wheel dlopens libavformat.so.60 /
+# libavcodec.so.60 / libavutil.so.58 / libavfilter.so.9 / libswresample.so.4, and Ubuntu 22.04 ships FFmpeg 4.4
+# (.so.58).  Pinned BtbN LGPL build; the sonames do not collide with the system's, PyAV/OpenCV bundle their own.
+# Found on the first GPU run (Transfer 2.5 general and AV workers died at `import decord`).
+ARG FFMPEG6_URL=https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2025-08-31-13-00/ffmpeg-n6.1.3-linux64-lgpl-shared-6.1.tar.xz
+ARG FFMPEG6_SHA256=43adb2b286dce7138432554fc772aa265914db35c70be0fc57b6715029cd10c1
+RUN mkdir -p /opt/ffmpeg6 && curl -fsSL -o /tmp/ffmpeg6.tar.xz "${FFMPEG6_URL}" \
+    && echo "${FFMPEG6_SHA256}  /tmp/ffmpeg6.tar.xz" | sha256sum -c - \
+    && tar -xJf /tmp/ffmpeg6.tar.xz -C /opt/ffmpeg6 --strip-components=1 --wildcards '*/lib/*' '*/LICENSE.txt' \
+    && rm /tmp/ffmpeg6.tar.xz \
+    && echo /opt/ffmpeg6/lib > /etc/ld.so.conf.d/ffmpeg6.conf && ldconfig \
+    && ldconfig -p | grep -q 'libavformat.so.60'
 COPY --from=ghcr.io/astral-sh/uv:0.11.14 /uv /usr/local/bin/uv
 ENV UV_LINK_MODE=copy UV_HTTP_TIMEOUT=900 UV_PYTHON_PREFERENCE=only-managed UV_PYTHON_INSTALL_DIR=/opt/uv-python
 
@@ -71,7 +83,7 @@ RUN uv venv --python 3.12 /opt/venvs/api \
     && sed '1s|^#!.*|#!/opt/venvs/transfer25/bin/python|' /opt/carla-cosmos/server/tools/uvx_shim.py > /usr/local/bin/uvx \
     && chmod 0755 /usr/local/bin/uvx \
     && ( /usr/local/bin/uvx 'hf>=1.3.5' download nvidia/none --revision x --quiet 2>&1 || true ) | grep -q 'cannot resolve' \
-    && /opt/venvs/transfer25/bin/python -c "import huggingface_hub, moderngl, cosmos_transfer2" \
+    && /opt/venvs/transfer25/bin/python -c "import huggingface_hub, moderngl, cosmos_transfer2, decord" \
     && /opt/venvs/cosmos3/bin/python -c "import vllm_omni, cosmos_guardrail" \
     && /opt/venvs/api/bin/python -c "import carla_cosmos_server, cosmos_workers"
 

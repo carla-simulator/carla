@@ -3,8 +3,10 @@
 The world runs in synchronous mode at ``fixed_delta_seconds = 1/fps`` (previous
 settings are restored on exit).  Every sensor image is matched to the frame id
 returned by ``world.tick()``; a missing or skipped frame raises
-:class:`FrameDesyncError` — frames are never dropped silently (stale images
-produced by settle ticks before the loop are drained once, before frame 0).
+:class:`FrameDesyncError` — frames are never dropped silently.  Before frame 0
+the sensors run for a settle tick plus ``warmup`` ticks whose images are
+consumed and discarded frame by frame, so the renderer's temporal history
+(TAA, Lumen) has converged when the first recorded frame is rendered.
 """
 
 from __future__ import annotations
@@ -145,13 +147,20 @@ class Capture:
         ``"inverse"`` (Depth-Anything-like, default) or ``"linear"``.
     ticks
         Tick source; defaults to :class:`LiveTicks` on ``world``.
+    warmup
+        Ticks run with the sensors listening, and their images discarded,
+        between the settle tick and frame 0 (default 5).  Freshly spawned
+        cameras have no temporal history, so their first frames are smeared
+        RGB (TAA/Lumen accumulation) and noisy depth/segmentation; the warm-up
+        lets them converge.  The world (or replay) advances by these ticks
+        before the clip starts.  ``0`` disables it.
     """
 
     def __init__(self, world: carla.World, ego: carla.Vehicle, rig: Rig,
                  contract: BackendContract | None = None, *, frames: int, fps: int = 30,
                  aovs: tuple[str, ...] = ("rgb", "depth", "semantic", "instance"),
                  edge: bool = False, seg_mode: str = "instance", depth_mode: str = "inverse",
-                 ticks: TickSource | None = None, sensor_timeout: float = 30.0) -> None:
+                 ticks: TickSource | None = None, sensor_timeout: float = 30.0, warmup: int = 5) -> None:
         unknown = set(aovs) - set(AOV_BLUEPRINTS)
         if unknown:
             raise ValueError(f"unknown AOVs {sorted(unknown)}; supported: {sorted(AOV_BLUEPRINTS)}")
@@ -174,6 +183,9 @@ class Capture:
         self.depth_mode = depth_mode
         self.ticks: TickSource = ticks if ticks is not None else LiveTicks(world)
         self.sensor_timeout = sensor_timeout
+        if warmup < 0:
+            raise ValueError("warmup must be >= 0")
+        self.warmup = warmup
 
     @staticmethod
     def _check_contract(contract: BackendContract, frames: int, fps: int) -> None:
@@ -215,8 +227,14 @@ class Capture:
             # Second settle tick: flush sensor spawns.
             settle_fid = self.ticks.tick()
             self._drain_stale(streams, settle_fid)
-            log.info("capturing %d frames at %d fps (%d cameras, aovs=%s)",
-                     self.frames, self.fps, len(streams), ",".join(self.aovs))
+            # Warm-up: keep ticking with the sensors live and throw their frames away
+            # until the temporal history has converged.  Every tick is drained
+            # frame-exactly, so the queues hold nothing older than the last warm-up
+            # tick when frame 0 is ticked.
+            for _ in range(self.warmup):
+                self._drain_stale(streams, self.ticks.tick())
+            log.info("capturing %d frames at %d fps (%d cameras, aovs=%s) after %d warm-up tick(s)",
+                     self.frames, self.fps, len(streams), ",".join(self.aovs), self.warmup)
             for i in range(self.frames):
                 fid = self.ticks.tick()
                 snap = self.world.get_snapshot()
@@ -308,18 +326,29 @@ class Capture:
             return "semantic"
         return None
 
-    def _drain_stale(self, streams: list[_CameraStreams], settle_fid: int) -> None:
-        """Consume the images produced by the settle tick (frames <= settle_fid)."""
+    def _drain_stale(self, streams: list[_CameraStreams], fid: int) -> None:
+        """Consume and discard every sensor's images up to and including tick ``fid``.
+
+        Used for the settle tick and each warm-up tick: blocks until the image
+        for ``fid`` has arrived (older leftovers are dropped on the way), so the
+        queues never accumulate warm-up frames and frame 0 sees only its own
+        image (or, at worst, stale ones that :meth:`_get_image` drains as
+        ``first``).  An image newer than ``fid`` is put back.
+        """
         for s in streams:
             for aov, q in s.queues.items():
-                try:
-                    img = q.get(timeout=self.sensor_timeout)
-                except queue.Empty as exc:
-                    raise FrameDesyncError(
-                        f"{s.mounted.camera.name}/{aov}: no image within {self.sensor_timeout}s "
-                        f"after the settle tick") from exc
-                if img.frame > settle_fid:
-                    q.put(img)  # produced early for the next tick; keep it
+                while True:
+                    try:
+                        img = q.get(timeout=self.sensor_timeout)
+                    except queue.Empty as exc:
+                        raise FrameDesyncError(
+                            f"{s.mounted.camera.name}/{aov}: no image within {self.sensor_timeout}s "
+                            f"after tick {fid} (settle/warm-up)") from exc
+                    if img.frame > fid:
+                        q.put(img)  # produced early for the next tick; keep it
+                        break
+                    if img.frame == fid:
+                        break
 
     def _get_image(self, s: _CameraStreams, aov: str, fid: int, first: bool) -> carla.Image:
         q = s.queues[aov]

@@ -3,6 +3,7 @@
     python viewer.py --clip clips/<id> --result results/<id>/<job>      # or: viewer.py --result DIR (clip from manifest)
 
 Keys: space play/pause · ←/→ step · home/end · tab next camera · c cycle control · s save frame · q quit.
+The window is resizable; the panels re-fit side by side keeping their aspect ratio.
 Needs the ``viewer`` extra (pygame) and OpenCV (``capture`` extra).
 """
 
@@ -61,6 +62,19 @@ def load_panels(clip: Clip, result_dir: Path, camera: str) -> list[tuple[str, Vi
     return panels
 
 
+GAP = 4
+"""Pixels between panels."""
+STATUS_H = 24
+"""Height of the status line under the panels."""
+
+
+def fit_panels(frames: list[np.ndarray], win_w: int, win_h: int) -> int:
+    """Largest panel height at which all ``frames`` fit side by side (aspect kept) in the window."""
+    aspects = sum(f.shape[1] / f.shape[0] for f in frames)
+    by_width = (win_w - GAP * (len(frames) - 1)) / aspects if aspects else win_h
+    return max(16, int(min(win_h - STATUS_H, by_width)))
+
+
 def view_result(clip: Clip, result_dir: Path, height: int = 360) -> None:
     import pygame
 
@@ -71,6 +85,7 @@ def view_result(clip: Clip, result_dir: Path, height: int = 360) -> None:
     pygame.init()
     font = pygame.font.SysFont("dejavusansmono,monospace", 14)
     screen = None
+    win_size: tuple[int, int] | None = None  # None until the first layout / user resize
     clock = pygame.time.Clock()
     fps = panels[0][1].fps if panels else 10
     while True:
@@ -79,38 +94,43 @@ def view_result(clip: Clip, result_dir: Path, height: int = 360) -> None:
         controls = [p for p in panels if p[0].startswith("control")]
         results = [p for p in panels if not p[0].startswith(("input", "control"))]
         shown = inputs + ([controls[ctrl_i % len(controls)]] if controls else []) + results
+        frames = [(title, f) for title, vid in shown if (f := vid.frame(frame)) is not None]
+        if not frames:
+            break
+        if win_size is None:
+            # natural size: --height tall, panels side by side
+            total_w = sum(int(f.shape[1] * height / f.shape[0]) for _, f in frames) + GAP * (len(frames) - 1)
+            win_size = (total_w, height + STATUS_H)
+        if screen is None:
+            screen = pygame.display.set_mode(win_size, pygame.RESIZABLE)
+            pygame.display.set_caption(f"carla-cosmos — {clip.manifest.clip_id} — {manifest.backend}")
+        panel_h = fit_panels([f for _, f in frames], *win_size)
         surfaces = []
-        for title, vid in shown:
-            f = vid.frame(frame)
-            if f is None:
-                continue
+        for title, f in frames:
             h, w = f.shape[:2]
-            scale = height / h
-            f = cv2.resize(f, (int(w * scale), height))
+            f = cv2.resize(f, (max(1, int(w * panel_h / h)), panel_h))
             surf = pygame.surfarray.make_surface(np.transpose(f, (1, 0, 2)))
             surf.blit(font.render(title, True, (255, 255, 255), (0, 0, 0)), (6, 6))
             surfaces.append(surf)
-        if not surfaces:
-            break
-        total_w = sum(s.get_width() for s in surfaces) + 4 * (len(surfaces) - 1)
-        if screen is None or screen.get_size() != (total_w, height + 24):
-            screen = pygame.display.set_mode((total_w, height + 24))
-            pygame.display.set_caption(f"carla-cosmos — {clip.manifest.clip_id} — {manifest.backend}")
         screen.fill((20, 20, 20))
-        x = 0
+        total_w = sum(s.get_width() for s in surfaces) + GAP * (len(surfaces) - 1)
+        x = max(0, (win_size[0] - total_w) // 2)  # centre the strip in a wider window
         for s in surfaces:
             screen.blit(s, (x, 0))
-            x += s.get_width() + 4
+            x += s.get_width() + GAP
         n = max(v.n for _, v in shown)
         status = (f"{cameras[cam_i]}  frame {frame + 1}/{n}  {'▶' if playing else '❚❚'}  "
                   f"prompt: {manifest.request.prompt[:90]}")
-        screen.blit(font.render(status, True, (220, 220, 220)), (6, height + 4))
+        screen.blit(font.render(status, True, (220, 220, 220)), (6, panel_h + 4))
         pygame.display.flip()
 
         for ev in pygame.event.get():
             if ev.type == pygame.QUIT:
                 pygame.quit()
                 return
+            if ev.type == pygame.VIDEORESIZE:
+                win_size = (max(64, ev.w), max(STATUS_H + 16, ev.h))
+                screen = pygame.display.set_mode(win_size, pygame.RESIZABLE)
             if ev.type == pygame.KEYDOWN:
                 if ev.key in (pygame.K_q, pygame.K_ESCAPE):
                     pygame.quit()
