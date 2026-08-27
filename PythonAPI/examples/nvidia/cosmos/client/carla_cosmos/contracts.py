@@ -348,6 +348,8 @@ class ClipManifest(BaseModel):
     videos: dict[str, str]
     """``"<kind>/<camera_canonical>" -> file name`` (kind in rgb, depth, seg, edge)."""
     scene_dir: str | None = None
+    visibility: dict | None = None
+    """Occlusion-filter parameters the obstacles were exported with (``carla_cosmos.visibility``)."""
     recorder: RecorderInfo | None = None
     seed: int | None = None
     created: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())

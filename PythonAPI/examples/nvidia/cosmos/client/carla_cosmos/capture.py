@@ -27,6 +27,7 @@ from . import controls, scene
 from .clip import SCENE_DIR, Clip, video_file_name
 from .contracts import BackendContract, ClipManifest, RecorderInfo
 from .rig import MountedCamera, Rig, measure_rear_axle
+from .visibility import VisibilityParams
 
 log = logging.getLogger(__name__)
 
@@ -160,6 +161,17 @@ class Capture:
         ``"inverse"`` (Depth-Anything-like, default) or ``"linear"``.
     ticks
         Tick source; defaults to :class:`LiveTicks` on ``world``.
+    visibility, min_visible_fraction, range_m, hysteresis_frames
+        Occlusion filter for the exported obstacles
+        (:mod:`carla_cosmos.visibility`).  ``visibility="depth"`` (default)
+        z-buffer-tests every obstacle against this capture's own depth AOVs and
+        exports only the ones a camera can actually see, which is what NVIDIA's
+        lidar-auto-labelled ground truth looks like; ``"none"`` exports every
+        actor in the world, boxes over buildings included.  Needs the ``depth``
+        AOV — without it the filter switches itself off with a warning.
+        ``visibility`` also accepts a ready-made
+        :class:`~carla_cosmos.visibility.VisibilityParams`, in which case the
+        three scalar arguments are ignored.
     warmup
         Ticks run with the sensors listening, and their images discarded,
         between the settle tick and frame 0 (default 5).  Freshly spawned
@@ -173,7 +185,9 @@ class Capture:
                  contract: BackendContract | None = None, *, frames: int, fps: int = 30,
                  aovs: tuple[str, ...] = ("rgb", "depth", "semantic", "instance"),
                  edge: bool = False, seg_mode: str = "instance", depth_mode: str = "inverse",
-                 ticks: TickSource | None = None, sensor_timeout: float = 30.0, warmup: int = 5) -> None:
+                 ticks: TickSource | None = None, sensor_timeout: float = 30.0, warmup: int = 5,
+                 visibility: VisibilityParams | str = "depth", min_visible_fraction: float = 0.05,
+                 range_m: float = 150.0, hysteresis_frames: int = 3) -> None:
         unknown = set(aovs) - set(AOV_BLUEPRINTS)
         if unknown:
             raise ValueError(f"unknown AOVs {sorted(unknown)}; supported: {sorted(AOV_BLUEPRINTS)}")
@@ -199,6 +213,12 @@ class Capture:
         if warmup < 0:
             raise ValueError("warmup must be >= 0")
         self.warmup = warmup
+        self.visibility = (visibility if isinstance(visibility, VisibilityParams) else
+                           VisibilityParams(mode=visibility, min_visible_fraction=min_visible_fraction,
+                                            range_m=range_m, hysteresis_frames=hysteresis_frames))
+        if self.visibility.enabled and "depth" not in self.aovs:
+            log.warning("visibility='depth' needs the depth AOV; exporting every obstacle instead")
+            self.visibility = self.visibility.with_mode("none")
 
     @staticmethod
     def _check_contract(contract: BackendContract, frames: int, fps: int) -> None:
@@ -238,7 +258,9 @@ class Capture:
             # axle instead of 0.27 m behind it at 8 m/s.  See rig.measure_rear_axle.
             axle = measure_rear_axle(self.ego, self.world, self.ticks.tick)
             mounted = self.rig.mount_on(self.ego, axle)
-            exporter = scene.SceneExporter(self.world, clip_id, self.ego, axle)
+            exporter = scene.SceneExporter(self.world, clip_id, self.ego, axle,
+                                           cameras=[m.manifest() for m in mounted],
+                                           visibility=self.visibility)
             streams = [self._open_streams(m, clip_dir, tmp_dir) for m in mounted]
             # Second settle tick: flush sensor spawns.
             settle_fid = self.ticks.tick()
@@ -259,9 +281,11 @@ class Capture:
                 if i == 0:
                     # anchor the FLU world frame at the first captured ego pose
                     exporter.begin()
-                exporter.record_tick(snap)
                 for s in streams:
                     self._process_frame(s, i, fid, first=(i == 0))
+                # after _process_frame: the occlusion filter tests the obstacles against this
+                # tick's raw metric depth, which only exists once the depth AOV has been decoded
+                exporter.record_tick(snap, depth=self._depth_frames(streams, i))
                 if progress is not None:
                     progress(i + 1, self.frames)
             for s in streams:
@@ -290,6 +314,16 @@ class Capture:
             self.world.apply_settings(settings)
 
     # ------------------------------------------------------------------ internals
+    @staticmethod
+    def _depth_frames(streams: list[_CameraStreams], index: int) -> dict[str, np.ndarray]:
+        """This tick's raw metric depth per camera, for the exporter's occlusion filter.
+
+        ``depth_store`` is the memmap :meth:`_process_frame` has just written frame ``index``
+        of; reading it back costs nothing (it is still the page cache) and keeps the depth
+        plumbing in one place instead of threading a second buffer through the frame loop."""
+        return {s.mounted.camera.name: s.depth_store[index]
+                for s in streams if s.depth_store is not None}
+
     def _enter_sync_mode(self, previous: carla.WorldSettings) -> None:
         s = self.world.get_settings()
         s.synchronous_mode = True
@@ -465,6 +499,7 @@ class Capture:
             aovs=list(self.aovs) + (["edge"] if self.edge else []),
             videos=videos,
             scene_dir=SCENE_DIR,
+            visibility=self.visibility.as_dict(),
             recorder=recorder,
             seed=seed,
         )
