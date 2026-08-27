@@ -83,7 +83,9 @@ RUN uv venv --python 3.12 /opt/venvs/api \
     && sed '1s|^#!.*|#!/opt/venvs/transfer25/bin/python|' /opt/carla-cosmos/server/tools/uvx_shim.py > /usr/local/bin/uvx \
     && chmod 0755 /usr/local/bin/uvx \
     && ( /usr/local/bin/uvx 'hf>=1.3.5' download nvidia/none --revision x --quiet 2>&1 || true ) | grep -q 'cannot resolve' \
-    && /opt/venvs/transfer25/bin/python -c "import huggingface_hub, moderngl, cosmos_transfer2, decord" \
+    && /opt/venvs/transfer25/bin/python -c "import huggingface_hub, moderngl, cosmos_transfer2" \
+    `# decord is not importable at build time: NVIDIA's wheel dlopens libcuda.so.1 (present only under --gpus);` \
+    `# the FFmpeg 6 sonames it also needs are checked above with ldconfig` \
     && /opt/venvs/cosmos3/bin/python -c "import vllm_omni, cosmos_guardrail" \
     && /opt/venvs/api/bin/python -c "import carla_cosmos_server, cosmos_workers"
 
