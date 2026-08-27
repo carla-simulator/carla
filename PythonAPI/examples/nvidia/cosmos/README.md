@@ -173,6 +173,48 @@ with what to recapture, and `clip.validate(for_masking=True)` reports the same
 per camera.  `mask_classes` and the dilation are recorded in the job request and
 the result manifest.
 
+### Occlusion-aware obstacles
+
+The simulator knows every actor; a camera does not.  NVIDIA's RDS-HQ obstacle
+tracks come from lidar auto-labelling, so a car behind a building has no label
+while one half-behind another car usually does.  Exporting every actor
+therefore feeds the AV renderer boxes floating over buildings — out of
+distribution, and it hallucinates vehicles there.
+
+Every capture z-buffer-tests its obstacles against its own depth AOVs
+(`client/carla_cosmos/visibility.py`) and exports only what a camera can see:
+
+```sh
+python demos/av7_world_scenario.py --seconds 1 --capture-only    # filter on by default
+python demos/av7_world_scenario.py --seconds 1 --visibility none # every actor, as before
+```
+
+| parameter | default | meaning |
+|---|---|---|
+| `visibility` | `depth` | `depth` (z-buffer test) or `none` (export everything) |
+| `min_visible_fraction` | `0.05` | smallest fraction of an obstacle's 27 sample points that must be visible |
+| `range_m` | `150` | sample points farther than this do not count as seen |
+| `hysteresis_frames` | `3` | occlusions shorter than this do not split a track |
+
+27 lattice points per box (the 8 corners, the centre and the rest of a 3x3x3
+grid) are projected with the clip's **own** f-theta calibration — the one the
+renderer reads back — and compared with the raw metric depth image: a point is
+occluded when the depth image is more than `0.5 m + 2 %` nearer than the point.
+One decision per object per tick, unioned over the cameras, because ClipGT
+tracks are global.  Points on the far side of a car are covered by the car
+itself, so a fully visible vehicle scores about a third of its points; the
+fraction separates "some of it is on screen" from "none of it is".
+
+NVIDIA's loader interpolates a track across **any** hole between its first and
+last observation, so a track that disappears is split into `<id>#<k>` per
+visible segment, segments shorter than two observations are dropped (the loader
+skips those anyway), and a parked obstacle that is hidden for part of the clip
+becomes one two-row track per segment instead of one clip-wide pair.  The
+parameters land in `manifest.json`, and the per-tick decisions plus the geometry
+of everything dropped go to `scene/<clip>.visibility.json` for
+`preview --show-occluded`.  Cost on a 7-camera 1280x720 capture with ~170
+obstacles: **4 ms per tick**, against ~550 ms of capture — under 1 %.
+
 ### Local ground-truth preview
 
 Check the exported ClipGT scene without a GPU, a server or a model: reproject
@@ -181,6 +223,7 @@ it onto the RGB we captured and look at it.
 ```sh
 carla-cosmos preview --clip clips/av7_xxx --grid            # -> clips/av7_xxx/preview/*.mp4
 carla-cosmos preview --clip clips/av7_xxx --cameras camera:front:wide:120fov --frames 0:60
+carla-cosmos preview --clip clips/av7_xxx --show-occluded --png-every 30   # inspect the occlusion filter
 python demos/viewer.py --clip clips/av7_xxx                 # same keys as a result, GT as the control
 ```
 
@@ -197,8 +240,14 @@ The projection is NVIDIA's ClipGT loader maths (`client/carla_cosmos/preview.py`
 inverted over its monotonic range only.  Polylines are densified to 0.5 m so a
 line leaving the frustum is cut there instead of folding across the frame, and
 parked obstacles (tracks exported at the first and last timestamp only) are
-held on every frame.  If the overlay sits on the road markings and the cars in
-every camera, the scene package we upload describes the drive we captured.
+held between those two timestamps.  If the overlay sits on the road markings
+and the cars in every camera, the scene package we upload describes the drive
+we captured.
+
+`--show-occluded` adds, dashed and grey, everything the occlusion filter
+dropped, read from `scene/<clip>.visibility.json`; `--png-every N` writes every
+Nth drawn frame as a PNG.  That is how the filter is checked: a grey box over a
+building is it working, a grey box over a plainly visible car is not.
 
 ### Tests
 
