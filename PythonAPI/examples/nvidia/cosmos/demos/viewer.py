@@ -1,9 +1,15 @@
 """Side-by-side viewer: input RGB | control(s) | Cosmos result, per camera, with scrubbing.
 
     python viewer.py --clip clips/<id> --result results/<id>/<job>      # or: viewer.py --result DIR (clip from manifest)
+    python viewer.py --clip clips/<id>                                  # no result yet: the local GT preview
 
 Multi-camera results (Transfer 2.5 AV) open as a grid: per camera the control the model saw (or the input
 RGB) over the result, GRID_COLUMNS cameras per row.  Single-camera results open as input | control | result.
+
+Without a result directory the viewer opens the clip's local ground-truth preview instead (written by
+``carla-cosmos preview --clip ...`` into ``<clip>/preview``, or ``--preview DIR``): the exported ClipGT
+scene drawn on the captured RGB stands in as the "control" stream, so the same grid/scrub/save keys work
+before anything has been generated.
 
 Keys: space play/pause · ←/→ step · home/end · g grid/single · tab next camera (single) · c cycle
 control/input · o control over input RGB on/off · s save frame · q quit.  The window is resizable; tiles re-fit keeping their aspect ratio.
@@ -47,6 +53,12 @@ class Video:
         return self._frame
 
 
+def preview_video(preview_dir: Path, camera: str) -> Path | None:
+    """The local GT preview of one camera (``carla-cosmos preview``), if it was written."""
+    p = preview_dir / f"{canonical_camera_name(camera)}.mp4"
+    return p if p.is_file() else None
+
+
 def short_name(camera: str) -> str:
     """``camera:front:wide:120fov`` -> ``front_wide_120fov`` (tile label)."""
     return canonical_camera_name(camera).removeprefix("camera_")
@@ -55,7 +67,8 @@ def short_name(camera: str) -> str:
 class CameraPanels:
     """The videos available for one camera: input RGB, controls (clip-side and server-rendered), result."""
 
-    def __init__(self, clip: Clip, result_dir: Path, manifest: ResultManifest, camera: str) -> None:
+    def __init__(self, clip: Clip, result_dir: Path | None, manifest: ResultManifest | None, camera: str,
+                 preview_dir: Path | None = None) -> None:
         self.camera = camera
         self.input: Video | None = None
         self.controls: list[tuple[str, Video]] = []
@@ -63,7 +76,10 @@ class CameraPanels:
         rgb = clip.manifest.video("rgb", camera)
         if rgb:
             self.input = Video(clip.path / rgb)
-        for f in manifest.files:  # server-rendered/derived controls first: they are what the model saw
+        gt = preview_video(preview_dir, camera) if preview_dir else None
+        if gt and manifest is None:  # no result: the GT preview is what there is to look at
+            self.controls.append((PREVIEW_TITLE, Video(gt)))
+        for f in (manifest.files if manifest else ()):  # server-rendered/derived controls first: what the model saw
             if f.kind == "control" and f.view == camera:
                 self.controls.append((f.name.removesuffix(".mp4").removesuffix("_" + canonical_camera_name(camera)),
                                       Video(result_dir / f.name)))
@@ -71,7 +87,9 @@ class CameraPanels:
             name = clip.manifest.video(kind, camera)
             if name:
                 self.controls.append((f"clip {kind}", Video(clip.path / name)))
-        for f in manifest.files:
+        if gt and manifest is not None:
+            self.controls.append((PREVIEW_TITLE, Video(gt)))
+        for f in (manifest.files if manifest else ()):
             if f.kind == "video" and f.view == camera:
                 self.result = Video(result_dir / f.name)
 
@@ -110,6 +128,8 @@ PROMPT_MAX_LINES = 4
 """The prompt gets up to this many wrapped lines under the panels; longer prompts end with an ellipsis."""
 GRID_COLUMNS = 4
 """Cameras per row in grid mode (each camera is a column of two tiles: control/input over result)."""
+PREVIEW_TITLE = "scene GT"
+"""Tile title of the local ground-truth preview (already drawn over the RGB — never re-overlaid)."""
 
 
 def wrap_text(font, text: str, width: int, max_lines: int) -> list[str]:
@@ -150,13 +170,24 @@ def fit_panels(frames: list[np.ndarray], win_w: int, win_h: int, footer_h: int =
     return fit_rows([frames], win_w, win_h, footer_h)
 
 
-def view_result(clip: Clip, result_dir: Path, height: int = 360, grid: bool | None = None) -> None:
+def view_result(clip: Clip, result_dir: Path | None = None, height: int = 360, grid: bool | None = None,
+                preview_dir: Path | None = None) -> None:
+    """Show a Cosmos result, or — with ``result_dir=None`` — the clip's local GT preview."""
     import pygame
 
-    manifest = ResultManifest.model_validate_json((result_dir / "manifest.json").read_text())
-    result_views = [f.view for f in manifest.files if f.kind == "video" and f.view]
-    cameras = [c for c in clip.manifest.camera_names if c in result_views] or clip.manifest.camera_names[:1]
-    panels = {c: CameraPanels(clip, result_dir, manifest, c) for c in cameras}
+    manifest = (ResultManifest.model_validate_json((result_dir / "manifest.json").read_text())
+                if result_dir else None)
+    if manifest is not None:
+        result_views = [f.view for f in manifest.files if f.kind == "video" and f.view]
+        cameras = [c for c in clip.manifest.camera_names if c in result_views] or clip.manifest.camera_names[:1]
+    else:  # preview mode: every camera the preview covers
+        cameras = ([c for c in clip.manifest.camera_names if preview_dir and preview_video(preview_dir, c)]
+                   or clip.manifest.camera_names)
+    panels = {c: CameraPanels(clip, result_dir, manifest, c, preview_dir) for c in cameras}
+    caption = f"{clip.manifest.clip_id} — {manifest.backend if manifest else 'scene GT preview'}"
+    subtitle = ("prompt: " + manifest.request.prompt if manifest
+                else f"scene GT preview (no result) — {preview_dir}")
+    save_dir = result_dir or preview_dir or clip.path
     grid = len(cameras) > 1 if grid is None else grid
     cam_i, ctrl_i, frame, playing, overlay = 0, 0, 0, True, False
     pygame.init()
@@ -188,7 +219,8 @@ def view_result(clip: Clip, result_dir: Path, height: int = 360, grid: bool | No
             if f is None:
                 return None
             # 'o': draw a control over the input RGB (alignment check); only for control tiles with an input
-            if overlay and title.split(" · ")[-1] not in ("input rgb", "result") and panels[cam].input:
+            if (overlay and title.split(" · ")[-1] not in ("input rgb", "result", PREVIEW_TITLE)
+                    and panels[cam].input):
                 rgb = panels[cam].input.frame(frame)
                 if rgb is not None:
                     return f"{title} over rgb", control_overlay(rgb, f)
@@ -201,12 +233,12 @@ def view_result(clip: Clip, result_dir: Path, height: int = 360, grid: bool | No
         if win_size is None:
             tile_h = height if len(frame_rows) == 1 else max(160, min(height, 900 // len(frame_rows)))
             total_w = max(sum(int(f.shape[1] * tile_h / f.shape[0]) for _, f in r) + GAP * (len(r) - 1) for r in frame_rows)
-            prompt_lines = wrap_text(font, "prompt: " + manifest.request.prompt, total_w - 12, PROMPT_MAX_LINES)
+            prompt_lines = wrap_text(font, subtitle, total_w - 12, PROMPT_MAX_LINES)
             win_size = (total_w, tile_h * len(frame_rows) + GAP * (len(frame_rows) - 1) + footer_height(len(prompt_lines)))
         if screen is None:
             screen = pygame.display.set_mode(win_size, pygame.RESIZABLE)
-            pygame.display.set_caption(f"carla-cosmos — {clip.manifest.clip_id} — {manifest.backend}")
-        prompt_lines = wrap_text(font, "prompt: " + manifest.request.prompt, win_size[0] - 12, PROMPT_MAX_LINES)
+            pygame.display.set_caption(f"carla-cosmos — {caption}")
+        prompt_lines = wrap_text(font, subtitle, win_size[0] - 12, PROMPT_MAX_LINES)
         tile_h = fit_rows([[f for _, f in r] for r in frame_rows], *win_size, footer_height(len(prompt_lines)))
         screen.fill((20, 20, 20))
         y = 0
@@ -264,7 +296,7 @@ def view_result(clip: Clip, result_dir: Path, height: int = 360, grid: bool | No
                     overlay = not overlay
                 elif ev.key == pygame.K_s:
                     tag = "grid" if grid else canonical_camera_name(cameras[cam_i])
-                    out = result_dir / f"viewer_{tag}_{frame:04d}.png"
+                    out = save_dir / f"viewer_{tag}_{frame:04d}.png"
                     pygame.image.save(screen, str(out))
                     print(f"saved {out}")
         if playing:
@@ -274,13 +306,18 @@ def view_result(clip: Clip, result_dir: Path, height: int = 360, grid: bool | No
 
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--result", required=True, help="downloaded result directory (with manifest.json)")
+    ap.add_argument("--result", default=None, help="downloaded result directory (with manifest.json)")
     ap.add_argument("--clip", default=None, help="clip directory (default: <result>/../../<clip_id> or manifest)")
+    ap.add_argument("--preview", default=None,
+                    help="local GT preview directory (default <clip>/preview); shown when there is no result")
     ap.add_argument("--height", type=int, default=360, help="tile height (single view) / max tile height (grid)")
     ap.add_argument("--grid", dest="grid", action="store_true", default=None, help="force the per-camera grid")
     ap.add_argument("--single", dest="grid", action="store_false", help="force the single-camera strip")
     args = ap.parse_args()
-    result_dir = Path(args.result)
+    if not args.result and not args.clip:
+        print("pass --result (a downloaded result) or --clip (its local GT preview)", file=sys.stderr)
+        return 1
+    result_dir = Path(args.result) if args.result else None
     if args.clip:
         clip = Clip.load(args.clip)
     else:
@@ -291,7 +328,14 @@ def main() -> int:
             print("pass --clip: could not locate the clip directory", file=sys.stderr)
             return 1
         clip = Clip.load(found)
-    view_result(clip, result_dir, args.height, args.grid)
+    preview_dir = Path(args.preview) if args.preview else clip.path / "preview"
+    if not preview_dir.is_dir():
+        if result_dir is None:
+            print(f"no preview in {preview_dir}: run  carla-cosmos preview --clip {clip.path} --grid",
+                  file=sys.stderr)
+            return 1
+        preview_dir = None
+    view_result(clip, result_dir, args.height, args.grid, preview_dir)
     return 0
 
 
