@@ -203,32 +203,50 @@ def _apply_mount_rule(rule: str, pos: np.ndarray, centre: np.ndarray, extent: np
 
 # ----------------------------------------------------------------------------- ego geometry
 
-def rear_axle_local_ue(vehicle: carla.Vehicle) -> np.ndarray:
-    """Rear-axle-on-ground point in the vehicle actor frame (UE metres).
-
-    ``WheelPhysicsControl.location`` is ``(0, 0, 0)`` for every wheel on
-    ue58-dev (Phase 0), so x/y come from the skeleton's rear wheel bones and
-    z from the bounding-box bottom.  Raises if no rear wheel bone is found.
-
-    The world must have ticked at least once since the vehicle was spawned:
-    until the first snapshot containing the actor, ``get_transform()`` returns
-    the identity while the bone transforms are already in world space, which
-    would put the axle at world coordinates.  That inconsistency is detected
-    and raised.
-    """
-    inv = np.linalg.inv(coords.ue_matrix(vehicle.get_transform()))  # not get_inverse_matrix(): see coords.ue_rotation_matrix
-    names = list(vehicle.get_bone_names())
-    world = list(vehicle.get_vehicle_bone_world_transforms())
+def rear_axle_xy_from_bones(bone_names: Iterable[str], bone_world: Iterable[carla.Transform],
+                            m_ref: np.ndarray) -> np.ndarray:
+    """Mean rear-wheel-bone position (x, y) expressed in the frame ``m_ref`` (a 4x4 UE pose)."""
+    inv = np.linalg.inv(m_ref)
     rear = []
-    for name, tf in zip(names, world):
+    for name, tf in zip(bone_names, bone_world):
         low = name.lower()
         if "wheel" in low and ("rear" in low or "back" in low):
-            p = inv @ np.array([tf.location.x, tf.location.y, tf.location.z, 1.0])
-            rear.append(p[:2])
+            rear.append((inv @ np.array([tf.location.x, tf.location.y, tf.location.z, 1.0]))[:2])
     if not rear:
-        raise RuntimeError(f"{vehicle.type_id}: no rear wheel bones among {names}")
+        raise RuntimeError(f"no rear wheel bones among {list(bone_names)}")
+    return np.mean(rear, axis=0)
+
+
+def rear_axle_local_ue(vehicle: carla.Vehicle, reference: carla.Transform | None = None) -> np.ndarray:
+    """Rear-axle-on-ground point in the vehicle actor frame (UE metres).
+
+    ``WheelPhysicsControl`` carries no wheel position on ue58-dev (Phase 0), so x/y come from the
+    skeleton's rear wheel bones and z from the bounding-box bottom.  Raises if no rear wheel bone
+    is found.
+
+    ``get_vehicle_bone_world_transforms()`` does not report the skeleton of the tick that just
+    finished: except for the very first query on a vehicle (which returns the current tick), every
+    later one returns the tick *before* the current one, and it stays that way - the value is
+    stable within a tick, extra reads and waiting do not change it.  Expressed in the current pose
+    those stale bones drag the axle backwards by exactly one tick of travel: 0.27 m at 8 m/s and
+    30 fps, measured live as -1.669 m while driving against -1.397 m parked (wheelbase
+    1.470 - (-1.397) = 2.87 m, the Lincoln MKZ's).  That is how the exported rig origin ended up
+    near the rear bumper instead of the rear axle.
+
+    ``reference`` is the pose the bones belong to; the default (the current pose) is only right
+    for a vehicle standing still or for the first query on that vehicle.  Use
+    :func:`measure_rear_axle`, which pins the query down whichever state it starts in.
+
+    The world must have ticked at least once since the vehicle was spawned: until the first
+    snapshot containing the actor, ``get_transform()`` returns the identity while the bone
+    transforms are already in world space, which would put the axle at world coordinates.  That
+    inconsistency is detected and raised.
+    """
+    tf = vehicle.get_transform() if reference is None else reference
+    # not get_inverse_matrix(): see coords.ue_rotation_matrix
+    xy = rear_axle_xy_from_bones(vehicle.get_bone_names(), vehicle.get_vehicle_bone_world_transforms(),
+                                 coords.ue_matrix(tf))
     bb = vehicle.bounding_box
-    xy = np.mean(rear, axis=0)
     span = max(abs(bb.extent.x), abs(bb.extent.y)) + 1.0
     if abs(xy[0]) > span or abs(xy[1]) > span:
         raise RuntimeError(
@@ -236,3 +254,24 @@ def rear_axle_local_ue(vehicle: carla.Vehicle) -> np.ndarray:
             f"(axle would be at {xy.round(2).tolist()} in the actor frame); tick the world "
             f"once after spawning before measuring the rear axle")
     return np.array([xy[0], xy[1], bb.location.z - bb.extent.z], dtype=np.float64)
+
+
+def measure_rear_axle(vehicle: carla.Vehicle, world: carla.World, tick) -> np.ndarray:
+    """Rear-axle-on-ground point, measured so the skeleton lag cannot bias it.
+
+    Call right after a tick.  One throw-away bone query moves the server's skeleton query into its
+    steady one-tick-late state whatever state it was in before, so after one more tick the bones
+    are exactly the ones of the pose read here - the reference and the bones then agree at any
+    speed.  Poses come from the world snapshot, not from ``actor.get_transform()``: the actor cache
+    is not guaranteed to have caught up with the tick that just returned.
+
+    ``tick`` is the zero-argument callable that advances the world one frame.
+    """
+    snapshot = world.get_snapshot()
+    ego = snapshot.find(vehicle.id)
+    if ego is None:
+        raise RuntimeError(f"vehicle {vehicle.id} is missing from snapshot frame {snapshot.frame}")
+    reference = ego.get_transform()
+    vehicle.get_vehicle_bone_world_transforms()  # prime; see rear_axle_local_ue
+    tick()
+    return rear_axle_local_ue(vehicle, reference=reference)

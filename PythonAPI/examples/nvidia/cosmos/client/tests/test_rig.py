@@ -3,8 +3,11 @@
 import numpy as np
 import pytest
 
+import carla
+
+from carla_cosmos import coords
 from carla_cosmos.contracts import AV_CAMERAS
-from carla_cosmos.rig import Camera, Rig, _apply_mount_rule
+from carla_cosmos.rig import Camera, Rig, _apply_mount_rule, rear_axle_xy_from_bones
 
 
 def test_presets():
@@ -57,3 +60,44 @@ def test_mount_rule_exact_never_moves():
     extent = np.ones(3)
     pos, shifted = _apply_mount_rule("exact", np.array([0.0, 0.0, 0.0]), centre, extent, 0.05)
     assert not shifted and (pos == 0).all()
+
+
+# ----------------------------------------------------------------------------- rear axle
+
+_WHEELS = {"Wheel_Front_Left": (1.47, -0.80), "Wheel_Front_Right": (1.47, 0.80),
+           "Wheel_Rear_Left": (-1.40, -0.80), "Wheel_Rear_Right": (-1.40, 0.80)}
+
+
+def _bones_at(x_world: float):
+    """The wheel bones of a vehicle whose actor origin is at ``(x_world, 0)``, yaw 0."""
+    names = list(_WHEELS)
+    tfs = [carla.Transform(carla.Location(x=x_world + x, y=y, z=0.34)) for x, y in _WHEELS.values()]
+    return names, tfs
+
+
+def _pose_at(x_world: float):
+    return coords.ue_matrix(carla.Transform(carla.Location(x=x_world)))
+
+
+def test_rear_axle_from_bones_is_the_mean_rear_wheel():
+    xy = rear_axle_xy_from_bones(*_bones_at(0.0), _pose_at(0.0))
+    assert xy == pytest.approx([-1.40, 0.0])
+
+
+def test_stale_bones_bias_the_axle_by_one_tick_of_travel():
+    """``get_vehicle_bone_world_transforms()`` lags ``get_transform()`` by one tick.
+
+    Referencing the bones against the *current* pose drags the axle backwards by the distance the
+    car covered in that tick (0.27 m at 8 m/s, 30 fps) - which is how the exported rig origin ended
+    up near the rear bumper.  The pose of the previous tick cancels it exactly."""
+    travel = 8.0 / 30.0
+    stale_bones = _bones_at(0.0)          # skeleton as of the previous tick
+    biased = rear_axle_xy_from_bones(*stale_bones, _pose_at(travel))
+    assert biased[0] == pytest.approx(-1.40 - travel)
+    fixed = rear_axle_xy_from_bones(*stale_bones, _pose_at(0.0))
+    assert fixed[0] == pytest.approx(-1.40)
+
+
+def test_rear_axle_needs_rear_wheel_bones():
+    with pytest.raises(RuntimeError, match="no rear wheel bones"):
+        rear_axle_xy_from_bones(["Wheel_Front_Left"], [carla.Transform()], np.eye(4))

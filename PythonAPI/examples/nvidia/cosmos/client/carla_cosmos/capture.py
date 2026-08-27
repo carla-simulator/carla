@@ -26,7 +26,7 @@ import carla
 from . import controls, scene
 from .clip import SCENE_DIR, Clip, video_file_name
 from .contracts import BackendContract, ClipManifest, RecorderInfo
-from .rig import MountedCamera, Rig, rear_axle_local_ue
+from .rig import MountedCamera, Rig, measure_rear_axle
 
 log = logging.getLogger(__name__)
 
@@ -220,7 +220,10 @@ class Capture:
             # (freshly spawned actors report an identity transform until the first
             # snapshot that contains them).
             self.ticks.tick()
-            axle = rear_axle_local_ue(self.ego)
+            # Costs one more tick and spends it well: the vehicle skeleton the server reports lags
+            # the actor pose, and measuring across a tick is what keeps the rig origin on the rear
+            # axle instead of 0.27 m behind it at 8 m/s.  See rig.measure_rear_axle.
+            axle = measure_rear_axle(self.ego, self.world, self.ticks.tick)
             mounted = self.rig.mount_on(self.ego, axle)
             exporter = scene.SceneExporter(self.world, clip_id, self.ego, axle)
             streams = [self._open_streams(m, clip_dir, tmp_dir) for m in mounted]
@@ -252,7 +255,7 @@ class Capture:
                 for w in s.writers.values():
                     w.close()
             self._encode_depth(streams, clip_dir)
-            manifest = self._build_manifest(clip_id, mounted, seed, recorder, carla_version)
+            manifest = self._build_manifest(clip_id, mounted, axle, seed, recorder, carla_version)
             exporter.write(clip_dir / SCENE_DIR, [m.manifest() for m in mounted])
             clip = Clip(path=clip_dir, manifest=manifest)
             clip.save_manifest()
@@ -405,8 +408,11 @@ class Capture:
                 self.fps, "control")
             log.info("depth %s: range=%s frames=%d", cam.name, np.round(rng, 4).tolist(), n)
 
-    def _build_manifest(self, clip_id: str, mounted: list[MountedCamera], seed: int | None,
-                        recorder: RecorderInfo | None, carla_version: str) -> ClipManifest:
+    def _build_manifest(self, clip_id: str, mounted: list[MountedCamera], axle: np.ndarray,
+                        seed: int | None, recorder: RecorderInfo | None,
+                        carla_version: str) -> ClipManifest:
+        """Manifest of the clip.  ``axle`` is the value the rig was actually mounted with - it must
+        not be re-measured here, the ego is moving by now and the bone lag would bias it."""
         weather = self.world.get_weather()
         videos: dict[str, str] = {}
         for m in mounted:
@@ -418,7 +424,6 @@ class Capture:
                 videos[f"seg/{m.camera.canonical}"] = video_file_name("seg", m.camera.name)
             if self.edge:
                 videos[f"edge/{m.camera.canonical}"] = video_file_name("edge", m.camera.name)
-        axle = rear_axle_local_ue(self.ego)
         return ClipManifest(
             clip_id=clip_id,
             carla_version=carla_version,
