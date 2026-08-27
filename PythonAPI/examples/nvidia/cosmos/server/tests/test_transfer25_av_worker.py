@@ -139,3 +139,24 @@ def test_build_sample_limits(tmp_path):
         w.build_sample("j", {"prompt": "p", "controls": {"hdmap_bbox": {}}, "extra": {"num_conditional_frames": 1}},
                        clip.manifest.model_dump(), {"rgb": {}, "controls": {"hdmap_bbox": {"paths": {v: "/c" for v in views[:2]}}}},
                        views[:2])
+
+
+def test_rendered_controls_come_back(worker, tmp_path):
+    """Controls the API server rendered from a scene package are returned as control_<hint>_<view>.mp4."""
+    sock, spool = worker
+    clip = av7_clip(tmp_path / "clips", seconds=1)
+    views = clip.manifest.camera_names[:2]
+    j = job(tmp_path, clip, views, rgb=False, job_id="j_av_ctrl")
+    j["inputs"]["controls"]["hdmap_bbox"]["rendered"] = {"renderer": "fake"}
+
+    async def go():
+        await wait_ready(sock)
+        return [m async for m in protocol.call(sock, "run", job=j)]
+
+    ev = run(go())
+    assert ev[-1]["event"] == "done", ev[-1]
+    ctrls = [f for f in ev[-1]["files"] if f["kind"] == "control"]
+    assert [(f["name"], f["view"]) for f in ctrls] == [
+        (f"control_hdmap_bbox_{v.replace(':', '_')}.mp4", v) for v in views]
+    for f in ctrls:
+        assert (tmp_path / "out" / "j_av_ctrl" / f["name"]).stat().st_size > 0

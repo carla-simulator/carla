@@ -39,6 +39,7 @@ from pathlib import Path
 from typing import Any
 
 from ..common import http, video
+from ..common.controls import rendered_control_files
 from ..common.base import RunContext, RunResult, Worker
 from ..common.ranks import RankSupervisor, visible_gpus
 from .common import CAMERA_KEYS, CHUNK_FRAMES, CHUNK_OVERLAP
@@ -147,6 +148,7 @@ class Transfer25AVWorker(Worker):
         if grid.exists():
             shutil.move(grid, out_dir / "grid.mp4")
             files.append({"name": "grid.mp4", "view": None, "kind": "video"})
+        files += rendered_control_files(job.get("inputs", {}), views, out_dir)  # the world scenario the model saw
         shutil.rmtree(work, ignore_errors=True)
         ctx.progress(1.0, "done")
         public = {k: v for k, v in sample.items() if k not in ("prompt", "negative_prompt")}

@@ -170,3 +170,20 @@ def test_resolve_model_and_command(tmp_path):
     assert "--no-guardrails" in cmd and "--vae-use-tiling" in cmd and "--quantization" in cmd
     assert cmd[cmd.index("--served-model-name") + 1] == "nvidia/Cosmos3-Super"
     assert w.offline is False
+
+
+def test_rendered_control_comes_back(worker, clip16, tmp_path):
+    """A control the API server rendered (e.g. wsm from a scene package) is returned as control_<hint>.mp4."""
+    sock, _ = worker
+    j = job(tmp_path, clip16, {"depth": None})
+    j["inputs"]["controls"]["depth"]["rendered"] = {"renderer": "fake"}  # stands in for a rendered wsm video
+
+    async def go():
+        await wait_ready(sock)
+        return [m async for m in protocol.call(sock, "run", job=j)]
+
+    done = run(go())[-1]
+    assert done["event"] == "done", done
+    assert [(f["name"], f["kind"]) for f in done["files"]] == [
+        ("camera_front_wide_120fov.mp4", "video"), ("control_depth.mp4", "control")]
+    assert (tmp_path / "out" / "control_depth.mp4").stat().st_size == clip16.video("depth", clip16.manifest.camera_names[0]).stat().st_size

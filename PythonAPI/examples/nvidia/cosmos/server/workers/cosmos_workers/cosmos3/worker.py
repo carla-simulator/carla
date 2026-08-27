@@ -47,6 +47,7 @@ from typing import Any
 
 from ..common import http
 from ..common.base import CancelledJob, RunContext, RunResult, Worker
+from ..common.controls import rendered_control_files
 from ..common.hfcache import materialize_snapshot
 from ..common.ranks import visible_gpus
 
@@ -255,7 +256,8 @@ class Cosmos3Worker(Worker):
             self._delete(vid)
         ctx.progress(1.0, "done")
         return RunResult(
-            files=[{"name": name, "view": view, "kind": "video"}],
+            files=[{"name": name, "view": view, "kind": "video"}]
+            + rendered_control_files(job.get("inputs", {}), [view], out_dir),  # e.g. the rendered wsm video
             manifest={
                 "backend_impl": "vllm-omni",
                 "model": self.served_name,
