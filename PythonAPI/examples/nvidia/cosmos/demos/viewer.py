@@ -64,15 +64,43 @@ def load_panels(clip: Clip, result_dir: Path, camera: str) -> list[tuple[str, Vi
 
 GAP = 4
 """Pixels between panels."""
-STATUS_H = 24
-"""Height of the status line under the panels."""
+LINE_H = 18
+"""Height of one text line in the footer (status line + wrapped prompt)."""
+PROMPT_MAX_LINES = 4
+"""The prompt gets up to this many wrapped lines under the panels; longer prompts end with an ellipsis."""
 
 
-def fit_panels(frames: list[np.ndarray], win_w: int, win_h: int) -> int:
-    """Largest panel height at which all ``frames`` fit side by side (aspect kept) in the window."""
+def wrap_text(font, text: str, width: int, max_lines: int) -> list[str]:
+    """Word-wrap ``text`` to ``width`` pixels with ``font``; at most ``max_lines`` (last one ellipsised)."""
+    lines: list[str] = []
+    line = ""
+    for word in text.split():
+        cand = f"{line} {word}".strip()
+        if font.size(cand)[0] <= width or not line:
+            line = cand
+        else:
+            lines.append(line)
+            line = word
+    if line:
+        lines.append(line)
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
+        while lines[-1] and font.size(lines[-1] + " …")[0] > width:
+            lines[-1] = lines[-1].rsplit(" ", 1)[0] if " " in lines[-1] else lines[-1][:-1]
+        lines[-1] += " …"
+    return lines
+
+
+def footer_height(prompt_lines: int) -> int:
+    """Footer = one status line + the wrapped prompt lines, with padding."""
+    return LINE_H * (1 + prompt_lines) + 8
+
+
+def fit_panels(frames: list[np.ndarray], win_w: int, win_h: int, footer_h: int = LINE_H + 8) -> int:
+    """Largest panel height at which all ``frames`` fit side by side (aspect kept) above the footer."""
     aspects = sum(f.shape[1] / f.shape[0] for f in frames)
     by_width = (win_w - GAP * (len(frames) - 1)) / aspects if aspects else win_h
-    return max(16, int(min(win_h - STATUS_H, by_width)))
+    return max(16, int(min(win_h - footer_h, by_width)))
 
 
 def view_result(clip: Clip, result_dir: Path, height: int = 360) -> None:
@@ -100,11 +128,13 @@ def view_result(clip: Clip, result_dir: Path, height: int = 360) -> None:
         if win_size is None:
             # natural size: --height tall, panels side by side
             total_w = sum(int(f.shape[1] * height / f.shape[0]) for _, f in frames) + GAP * (len(frames) - 1)
-            win_size = (total_w, height + STATUS_H)
+            prompt_lines = wrap_text(font, "prompt: " + manifest.request.prompt, total_w - 12, PROMPT_MAX_LINES)
+            win_size = (total_w, height + footer_height(len(prompt_lines)))
         if screen is None:
             screen = pygame.display.set_mode(win_size, pygame.RESIZABLE)
             pygame.display.set_caption(f"carla-cosmos — {clip.manifest.clip_id} — {manifest.backend}")
-        panel_h = fit_panels([f for _, f in frames], *win_size)
+        prompt_lines = wrap_text(font, "prompt: " + manifest.request.prompt, win_size[0] - 12, PROMPT_MAX_LINES)
+        panel_h = fit_panels([f for _, f in frames], *win_size, footer_height(len(prompt_lines)))
         surfaces = []
         for title, f in frames:
             h, w = f.shape[:2]
@@ -119,9 +149,10 @@ def view_result(clip: Clip, result_dir: Path, height: int = 360) -> None:
             screen.blit(s, (x, 0))
             x += s.get_width() + GAP
         n = max(v.n for _, v in shown)
-        status = (f"{cameras[cam_i]}  frame {frame + 1}/{n}  {'▶' if playing else '❚❚'}  "
-                  f"prompt: {manifest.request.prompt[:90]}")
+        status = f"{cameras[cam_i]}  frame {frame + 1}/{n}  {'▶' if playing else '❚❚'}"
         screen.blit(font.render(status, True, (220, 220, 220)), (6, panel_h + 4))
+        for i, line in enumerate(prompt_lines):  # the full prompt, word-wrapped to the window width
+            screen.blit(font.render(line, True, (180, 180, 180)), (6, panel_h + 4 + LINE_H * (i + 1)))
         pygame.display.flip()
 
         for ev in pygame.event.get():
@@ -129,7 +160,7 @@ def view_result(clip: Clip, result_dir: Path, height: int = 360) -> None:
                 pygame.quit()
                 return
             if ev.type == pygame.VIDEORESIZE:
-                win_size = (max(64, ev.w), max(STATUS_H + 16, ev.h))
+                win_size = (max(64, ev.w), max(footer_height(len(prompt_lines)) + 16, ev.h))
                 screen = pygame.display.set_mode(win_size, pygame.RESIZABLE)
             if ev.type == pygame.KEYDOWN:
                 if ev.key in (pygame.K_q, pygame.K_ESCAPE):
