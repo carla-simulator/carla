@@ -230,6 +230,17 @@ MATRIX: list[Row] = [
         guidance=2.0, extra=dict(PRESET_REGIME),
         shows="RGB (as the blur hint) complemented by captured depth and seg, multi-hint preset "
               "regime, night+rain prompt"),
+    # c3-edge-night restyled freely (new facade colours, lit brake lights) but stayed at dusk, so
+    # the lighting change is what the edge preset's guidance 3.0 could not buy.  One variable:
+    # guidance 6.0, and a prompt that spells the night out instead of alluding to it.
+    Row("c3-edge-night-g6", "cosmos3-nano", "wsm",
+        "nighttime, pitch-black sky, street lamps and shop signs lit, car headlights and tail lights "
+        "on, heavy rain, wet reflective asphalt, photorealistic dashcam footage at night",
+        {"edge": "derive"}, weights={"edge": 0.5}, resolution="720", seed=7, guidance=6.0,
+        negative_prompt="daytime, daylight, sunny, bright sky, dry road",
+        extra={"control_guidance": 1.5, "flow_shift": 10.0},
+        shows="c3-edge-night at guidance 6.0 with an explicit night prompt and a daylight negative "
+              "prompt: how much lighting change the Nano edge path will accept"),
     # ---- Cosmos 3 Nano tuning: undo the multi-hint guidance fallback -----------------------
     # Same clip and seed (7) as c3-wsm-depth-seg throughout; one variable added per row.
     Row("c3-tune-presets", "cosmos3-nano", "wsm", CITY_DAY,
@@ -396,7 +407,8 @@ def run_row(cosmos, row: Row, clip, results: str | None, log, viewer_video: bool
                            "clip_dir": str(clip.path), "prompt": row.prompt, "controls": row.controls,
                            "weights": row.weights, "mask_classes": row.mask_classes, "shows": row.shows,
                            "resolution": row.resolution, "seed": row.seed,
-                           "negative_prompt": row.negative_prompt, "guidance": row.guidance}
+                           "negative_prompt": row.negative_prompt, "guidance": row.guidance,
+                           "extra": dict(row.extra)}
     t0 = time.time()
     try:
         job = cosmos.submit_clip(clip, row.backend, row.prompt, dict(row.controls), views=views,
