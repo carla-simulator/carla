@@ -113,25 +113,45 @@ def resolve_sample(spec: str) -> Path:
     raise SystemExit(f"no NuRec artifact for '{spec}' (looked at {path} and under {root})")
 
 
+def resolve_rig(spec: str | None, mode: Mode) -> tuple[list[str] | None, bool]:
+    """``(cameras, complete_av7)`` for ``--cameras``.
+
+    ``av7`` is the seven-view AV rig (the sample's six calibrated cameras plus the nominal
+    ``camera:rear:tele:30fov``); ``sample`` is every camera the artifact calibrates; ``front``
+    is the front wide alone; anything else is a comma-separated list of underscore names.
+    The default is the rig the mode's own backend needs.
+    """
+    if spec is None:
+        spec = "av7" if mode.views == 7 else "front"
+    if spec == "av7":
+        return None, True
+    if spec == "sample":
+        return None, False
+    if spec == "front":
+        return ["camera_front_wide_120fov"], False
+    return [c.strip() for c in spec.split(",") if c.strip()], False
+
+
 def capture(args, mode: Mode) -> tuple[Clip, nurec.Alignment]:
     """Capture the clip this mode's backend needs."""
     sample = nurec.NurecSample.load(resolve_sample(args.sample))
     lens = "pinhole" if args.fake_nurec else mode.lens
+    fps = args.fps or mode.fps
     frames = args.frames or mode.frames_for(args.k)
-    clip_id = args.clip_id or f"nurec_{sample.scene_id[-8:]}_{mode.name}_{mode.fps}fps"
+    clip_id = args.clip_id or f"nurec_{sample.scene_id[-8:]}_{mode.name}_{fps}fps"
     contract = BUILTIN_CONTRACTS[args.backend or mode.backend]
+    cameras, complete_av7 = resolve_rig(args.cameras, mode)
 
     log.info("%s: %d frames at %d fps (%s), %d view(s), lens=%s, rgb=%s", mode.name, frames,
-             mode.fps, contract.id, mode.views, lens,
+             fps, contract.id, mode.views, lens,
              "CARLA (fake-nurec)" if args.fake_nurec else f"NRE @ {args.nre_endpoint}")
 
     client = carla.Client(args.host, args.port)
     client.set_timeout(args.timeout)
-    cameras = None if mode.views > 1 else ["camera_front_wide_120fov"]
     return nurec.capture(
         client, sample, args.out, clip_id,
-        frames=frames, fps=mode.fps, lens=lens, cameras=cameras,
-        complete_av7=(mode.views == 7), nre_endpoint=args.nre_endpoint,
+        frames=frames, fps=fps, lens=lens, cameras=cameras,
+        complete_av7=complete_av7, nre_endpoint=args.nre_endpoint,
         fake_nurec=args.fake_nurec, start_s=args.start, vehicles=args.vehicles,
         seed=args.seed, contract=contract, visibility=args.visibility,
         weather=args.weather,
@@ -177,6 +197,10 @@ def main(argv=None) -> int:
     p.add_argument("--port", type=int, default=2000)
     p.add_argument("--timeout", type=float, default=120.0)
     p.add_argument("--k", type=int, default=1, help="clip-length multiple for the frame rule")
+    p.add_argument("--fps", type=int, help="override the clip rate (must suit the backend)")
+    p.add_argument("--cameras", help="rig to capture: av7 | sample | front | a comma-separated "
+                                     "list of underscore camera names (default: what the mode's "
+                                     "backend needs)")
     p.add_argument("--frames", type=int, help="override the frame count (must suit the backend)")
     p.add_argument("--start", type=float, default=0.0, help="seconds into the recording")
     p.add_argument("--vehicles", type=int, default=0,

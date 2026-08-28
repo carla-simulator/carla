@@ -543,3 +543,72 @@ def test_real_mode_needs_an_endpoint():
     with pytest.raises(ValueError, match="no NuRec render engine"):
         nurec.capture(client=None, sample=None, out_dir="/tmp", clip_id="x", frames=1,
                       lens="ftheta", fake_nurec=False)
+
+
+# ----------------------------------------------------------------------------- the render pose
+
+@needs_sample
+def test_optical_pose_rebuilds_the_calibrations_own_sensor_pose(sample):
+    """``optical_pose(T_world_rig @ flu_pose)`` must equal ``T_world_rig @ T_sensor_rig``.
+
+    The engine's ``sensor_pose`` is ``T_world_from_optical``: the NuRec integration sends
+    ``carla_transform_to_nurec(ego) @ T_sensor_rig``, and a ``T_sensor_rig`` rotation carries
+    the OpenCV RDF basis.  What :class:`NreRenderer` holds instead is a CARLA sensor transform,
+    which is a *body* pose.  This is the identity that closes the gap, checked against the
+    artifact's own calibration for every camera at a real trajectory pose — so it cannot be
+    satisfied by a self-consistent but wrong basis.
+    """
+    pose_rig = sample.poses_at(np.array([float(sample.timestamps_us[7])]))[0]
+    for cam in sample.cameras.values():
+        got = nurec.optical_pose(pose_rig @ cam.flu_pose())
+        want = pose_rig @ cam.t_sensor_rig
+        assert np.allclose(got, want, atol=1e-9), cam.name
+
+
+def test_optical_pose_points_x_right_y_down_z_forward():
+    """From the identity body pose: the optical frame's axes in FLU, spelled out."""
+    m = nurec.optical_pose(np.eye(4))
+    assert np.allclose(m[:3, 0], [0.0, -1.0, 0.0])   # optical x (right)   = FLU -y
+    assert np.allclose(m[:3, 1], [0.0, 0.0, -1.0])   # optical y (down)    = FLU -z
+    assert np.allclose(m[:3, 2], [1.0, 0.0, 0.0])    # optical z (forward) = FLU +x
+
+
+def test_optical_pose_leaves_the_translation_alone():
+    body = coords.flu_pose_matrix((1.5, -0.25, 1.3), (0.0, -8.0, 30.0))
+    assert np.allclose(nurec.optical_pose(body)[:3, 3], body[:3, 3])
+
+
+# ----------------------------------------------------------------------------- nominal cameras
+
+@needs_sample
+def test_a_nominal_slot_is_rendered_as_its_pinhole_under_the_nearest_donor(sample):
+    """The AV-7 slot the sample does not calibrate still gets a renderable camera spec.
+
+    It cannot be an f-theta (there is no measured polynomial) and its ``logical_id`` cannot be
+    its own name (the engine answers NOT_FOUND for a camera the reconstruction has never heard
+    of), so it is the nominal FOV as a pinhole under the closest calibrated camera's id.
+    """
+    rig = sample.rig(1280, 720, lens="ftheta", complete_av7=True)
+    slot = next(c for c in rig.cameras if c.name == "camera:rear:tele:30fov")
+    params = nurec._nominal_camera_params(slot, sample)
+
+    assert params["camera_type"] == "opencv_pinhole"
+    assert params["logical_id"] in sample.cameras, "the donor must be a camera the scene knows"
+    # 30 deg nominal -> the 30 deg measured camera, not one of the 70/120 deg ones.
+    assert params["logical_id"] == "camera_front_tele_30fov"
+    assert params["resolution_w"] == 1280 and params["resolution_h"] == 720
+    assert params["focal_length_x"] == pytest.approx(
+        640.0 / math.tan(math.radians(slot.hfov) / 2.0))
+    assert params["principal_point_x"] == 640.0 and params["principal_point_y"] == 360.0
+
+
+@needs_sample
+def test_a_calibrated_camera_is_never_given_a_donor(sample):
+    """Only nominal slots borrow an id; a measured camera renders as itself."""
+    rig = sample.rig(1280, 720, lens="ftheta", complete_av7=True)
+    for cam in rig.cameras:
+        if cam.name == "camera:rear:tele:30fov":
+            continue
+        key = cam.name.replace(":", "_")
+        assert key in sample.cameras
+        assert sample.cameras[key].scaled(1280, 720).nre_camera_params("ftheta")["logical_id"] == key

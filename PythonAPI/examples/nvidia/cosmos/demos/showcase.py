@@ -70,6 +70,14 @@ TUNE_PROMPT = ("dark red sedan directly ahead, white ambulance on the right, cyc
                "buildings, crisp sharp midday light, high contrast, photorealistic dashcam footage")
 TUNE_NEGATIVE = "hazy, foggy, washed out, low contrast, blurry, overexposed, dull colors"
 
+# The NuRec rows all run this one prompt: the reconstruction is a suburban retail strip outside
+# Stockholm recorded after dark, and every row asks for the same place in daylight.  Holding the
+# prompt fixed is what makes the trio a comparison of the *conditioning* and nothing else.
+NUREC_DAY = ("A photorealistic dashcam drive along a wide suburban retail street outside "
+             "Stockholm on a clear day, bright midday sun, blue sky, low-rise shops with "
+             "signage set back behind their parking, bare trees along the roadside, painted "
+             "lane markings on grey asphalt, a steel guardrail on the right")
+
 # vLLM-Omni's Cosmos 3 transfer path (pinned ref d3c990dc,
 # ``vllm_omni/diffusion/models/cosmos3/{transfer,pipeline_cosmos3}.py``) applies its per-hint
 # preset (``TRANSFER_DEFAULTS``: wsm 1.0/3.0/10, depth+edge+blur 3.0/1.5/10, seg 3.0/2.0/10 for
@@ -271,29 +279,40 @@ MATRIX: list[Row] = [
         {"hdmap_bbox": "scene"}, views=7, resolution="720",
         shows="same 7-camera scene, weather variation"),
     # ---- NuRec: a real place, conditioned three ways ---------------------------------------
-    # Captured by ``demos/nurec_to_cosmos.py`` from an NVIDIA NuRec artifact: the map, the ego
-    # trajectory and the camera extrinsics are a real twenty-second drive's.  Each row needs its
-    # own clip because the three backends disagree about rate and length (87 @ 30, 93 @ 16,
-    # 101 @ 10).  ``nurec-rgb`` and ``nurec-both`` are only worth running on a clip whose RGB is
-    # an actual neural render -- on a ``--fake-nurec`` clip their controls come from CARLA
-    # pixels and they degenerate into the plain t25/c3 rows.
-    Row("nurec-wm", "transfer2.5-av", "nurec-wm",
-        "A photorealistic seven-camera dashcam drive through a northern European suburb on an "
-        "overcast afternoon, wet asphalt, bare trees along the roadside, consistent lighting "
-        "across all cameras",
-        {"hdmap_bbox": "scene"}, views=7, resolution="720",
-        shows="the world model of a REAL drive: map, lanes and trajectory from a NuRec clip"),
-    Row("nurec-rgb", "transfer2.5", "nurec-rgb",
-        "A photorealistic dashcam drive through a northern European suburb at golden hour, "
-        "low sun flaring through bare trees, long shadows across wet asphalt",
-        {"vis": "derive", "edge": "derive", "depth": "clip", "seg": "clip"}, resolution="720",
-        shows="controls derived from the NEURAL RGB of a real place, plus CARLA depth and seg"),
-    Row("nurec-both", "cosmos3-nano", "nurec-both",
-        "A photorealistic dashcam drive through a northern European suburb at night, street "
-        "lights reflected in wet asphalt, headlights of oncoming traffic",
-        {"wsm": "scene", "edge": "derive", "blur": "derive"}, resolution="720",
-        shows="both halves at once: the real drive's world map AND its neural RGB (Cosmos 3 is "
-              "the only backend that takes a world-scenario control together with derived ones)"),
+    # One clip, captured by ``demos/nurec_to_cosmos.py`` from an NVIDIA NuRec artifact: the map,
+    # the ego trajectory, the camera extrinsics and the RGB are a real drive's.  The three rows
+    # differ only in what Cosmos is conditioned on -- its world model, its pixels, or both --
+    # which is the comparison worth making, and it is only a fair one on one clip.
+    #
+    # All three are Cosmos 3 Nano.  ``nurec-wm`` was a Transfer 2.5 AV seven-view row on paper,
+    # but that backend is not in the node's ``auto`` layout (Nano + Transfer 2.5 general), and
+    # Cosmos 3 is in any case the only backend that takes a world-scenario control *together*
+    # with an RGB-derived one, which ``nurec-both`` needs.  So the clip is captured once to the
+    # Cosmos 3 ``wsm`` rule -- 202 frames at 30 fps, 101*k, 6.7 s -- with all seven views, and
+    # each row submits view 0.
+    #
+    # ``edge``, not ``blur``, is the RGB-derived control here: the blur hint pins the palette
+    # (even the strongest preset is 22.7/255 from the RGB, measured 2026-08-28 on c3-blur-night),
+    # and the whole point of this trio is a real *night* street answering a daylight prompt.
+    # Edge carries the structure and no colour at all, so the prompt owns the appearance.
+    #
+    # The prompts describe the place the reconstruction shows -- a suburban retail strip outside
+    # Stockholm, recorded after dark -- as it would look in daylight.
+    Row("nurec-wm", "cosmos3-nano", "nurec", NUREC_DAY,
+        {"wsm": "scene"}, views=1, resolution="720", seed=7,
+        guidance=1.0, extra={"control_guidance": 3.0, "flow_shift": 10.0},
+        shows="the world model of a REAL drive: real road network, real lane geometry and a "
+              "real vehicle's trajectory, at the single-hint wsm preset (1.0 / 3.0 / 10)"),
+    Row("nurec-rgb", "cosmos3-nano", "nurec", NUREC_DAY,
+        {"edge": "derive"}, views=1, resolution="720", seed=7,
+        guidance=3.0, extra={"control_guidance": 1.5, "flow_shift": 10.0},
+        shows="edge derived from the NEURAL RGB of a real place -- real photometry's structure, "
+              "no colour -- at the single-hint edge preset (3.0 / 1.5 / 10)"),
+    Row("nurec-both", "cosmos3-nano", "nurec", NUREC_DAY,
+        {"wsm": "scene", "edge": "derive"}, views=1, resolution="720", seed=7,
+        guidance=2.0, extra=dict(PRESET_REGIME),
+        shows="both halves at once: the real drive's world map AND the structure of its neural "
+              "RGB, at the multi-hint regime (2.0 / 2.0 / 10)"),
 ]
 
 
@@ -305,11 +324,10 @@ def check_matrix(rows: list[Row]) -> None:
                          f"inherit the worker's default and its timing would not be comparable")
 
 
-CLIP_ROLES = ("t25", "wsm", "av7", "nurec-wm", "nurec-rgb", "nurec-both")
+CLIP_ROLES = ("t25", "wsm", "av7", "nurec")
 DEFAULT_CLIP_NAMES = {"t25": "showcase_t25", "wsm": "showcase_wsm", "av7": "showcase_av7",
-                      # written by demos/nurec_to_cosmos.py --mode <wm|rgb|both>
-                      "nurec-wm": "nurec_wm_30fps", "nurec-rgb": "nurec_rgb_16fps",
-                      "nurec-both": "nurec_both_10fps"}
+                      # written by demos/nurec_to_cosmos.py; all three nurec rows share it
+                      "nurec": "nurec_av7_30fps"}
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

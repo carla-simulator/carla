@@ -517,13 +517,24 @@ class NreRenderer:
         self.t_carla_nurec = np.linalg.inv(sample.t_scenario_carla())
         self.stub, self._channel = render_stub(endpoint)
         self.specs = {}
+        self.nominal: list[str] = []
         for cam in rig.cameras:
             key = canonical_camera_name(cam.name)
             nurec_cam = sample.cameras.get(key)
             if nurec_cam is None:
-                raise KeyError(
-                    f"camera '{cam.name}' is not calibrated in {sample.path.name}; a nominal "
-                    f"AV-7 slot cannot be neurally rendered — drop it or use --fake-nurec")
+                # A nominal AV-7 slot has no measured lens, but the scene is a splat: it can be
+                # rasterised from any pose through any camera model.  So the slot is rendered as
+                # the pinhole its nominal FOV describes — which is exactly the lens the clip's
+                # calibration table fits for it (``Camera.ftheta`` is None for nominal cameras),
+                # so the pixels and the calibration still agree.
+                params = _nominal_camera_params(cam, sample)
+                log.warning("%s is not calibrated in %s; rendering it as the nominal %.1f deg "
+                            "pinhole under the appearance of %s (its calibration row is fitted "
+                            "the same way)", cam.name, sample.path.name, cam.hfov,
+                            params["logical_id"])
+                self.nominal.append(cam.name)
+                self.specs[cam.name] = camera_spec_from_dict(params)
+                continue
             scaled = nurec_cam.scaled(cam.width, cam.height)
             self.specs[cam.name] = camera_spec_from_dict(scaled.nre_camera_params(lens))
 
@@ -536,18 +547,67 @@ class NreRenderer:
 
         ``world_pose_ue`` is the camera's pose in the CARLA world as a 4x4 UE matrix — taken
         from the sensor CARLA actually spawned, so the neural render and the AOVs cannot drift
-        apart no matter how the mounting resolved.
+        apart no matter how the mounting resolved.  It is a *body* pose (the sensor looks along
+        its own +x, y right, z up), which :func:`optical_pose` turns into the optical pose the
+        engine's ``sensor_pose`` field means.
         """
         from ._nurec_vendor import build_render_request, planar_format
 
         spec = self.specs[camera]
-        pose_nurec = self.t_carla_nurec @ coords.ue_to_flu(np.asarray(world_pose_ue))
+        pose_nurec = optical_pose(self.t_carla_nurec @ coords.ue_to_flu(np.asarray(world_pose_ue)))
         request = build_render_request(
             scene_id=self.sample.scene_id, camera_spec=spec, camera_pose=pose_nurec,
             timestamp=int(timestamp_us), image_format=planar_format())
         response = self.stub.render_rgb(request, timeout=self.timeout)
         h, w = request.resolution_h, request.resolution_w
         return np.frombuffer(response.image_bytes, dtype=np.uint8).reshape(3, h, w).transpose(1, 2, 0).copy()
+
+
+OPTICAL_BASIS: np.ndarray = np.eye(4)
+OPTICAL_BASIS[:3, :3] = OPTICAL_TO_FLU
+"""``OPTICAL_TO_FLU`` as a 4x4, the right factor of :func:`optical_pose`."""
+
+
+def optical_pose(pose_body_flu: np.ndarray) -> np.ndarray:
+    """A camera's FLU **body** pose as the RDF **optical** pose the NRE's ``sensor_pose`` means.
+
+    The engine is given ``T_world_from_optical``: the NuRec integration sends
+    ``carla_transform_to_nurec(ego) @ T_sensor_rig``, and a ``T_sensor_rig`` rotation block is
+    ``R_body @ OPTICAL_TO_FLU`` — it carries the OpenCV RDF basis (x right, y down, z forward).
+    A CARLA sensor's transform is a body pose instead: it looks along its own **+x**.  Sending
+    one where the other is expected rotates the camera 90 degrees down and 90 degrees left,
+    which renders the inside of the road surface.
+
+    Measured on ``00040136`` against the four real frames in the artifact (each rendered at the
+    pose of the instant that frame was taken): **21.8 / 24.7 / 26.4 / 22.5 dB** with this basis
+    applied, **16.7 / 18.9 / 17.3 / 14.3 dB** without it, and the un-basised renders are
+    visibly of nothing (``checks/*_recorded_vs_render.png``).
+    """
+    return np.asarray(pose_body_flu, dtype=np.float64) @ OPTICAL_BASIS
+
+
+def _nominal_camera_params(cam: Camera, sample: "NurecSample") -> dict:
+    """NRE camera parameters for a rig camera the sample does not calibrate.
+
+    An ``opencv_pinhole`` at the slot's nominal FOV, centred — the same lens
+    :func:`carla_cosmos.clipgt.calibration_row` fits for a camera without an ``ftheta``
+    model, so the render and the calibration describe one camera.
+
+    ``logical_id`` must nevertheless name a camera the **scene** knows: the engine looks the id
+    up in the reconstruction's camera bank (per-camera appearance) and answers ``NOT_FOUND``
+    for anything else, whatever intrinsics the request carries.  So the nominal slot borrows
+    the closest calibrated camera by field of view as its appearance donor — the pose and the
+    lens are still this slot's own, only the colour response is another camera's.  The pixels
+    behind the vehicle are also the thinnest part of the reconstruction: no camera on the real
+    rig looked there through a tele lens, so this view is blurrier than the six measured ones.
+    """
+    f = cam.width / 2.0 / math.tan(math.radians(cam.hfov) / 2.0)
+    donor = min(sample.cameras.values(), key=lambda c: abs(c.hfov() - cam.hfov))
+    return {"logical_id": donor.name, "resolution_w": cam.width,
+            "resolution_h": cam.height, "shutter_type": "ROLLING_TOP_TO_BOTTOM",
+            "camera_type": "opencv_pinhole", "focal_length_x": f, "focal_length_y": f,
+            "principal_point_x": cam.width / 2.0, "principal_point_y": cam.height / 2.0,
+            "radial_coeffs": []}
 
 
 RenderFn = Callable[[str, int, np.ndarray, int], np.ndarray]
