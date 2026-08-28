@@ -27,7 +27,7 @@ when it is unreachable, not ready, or does not serve the backend.
 | `single_view_live.py` | TM-driven hero, single 720p camera, capture → submit (`--backend`, `--control`) → download → viewer | any | capture + backend |
 | `single_view_replay.py` | deterministic clip from a recorder log, then `batch.yaml` prompts x seeds as `batch` jobs | any | one backend run per (prompt, seed) |
 | `av7_world_scenario.py` | NVIDIA 7-camera rig, ClipGT scene export, Transfer 2.5 AV; `--also-cosmos3` adds a Cosmos 3 `wsm` job | `transfer2.5-av` (+ `cosmos3-*`) | capture + backend |
-| `viewer.py` | input \| control \| result side by side, per camera, scrubbing; `--clip` alone shows the local GT preview | — | interactive |
+| `viewer.py` | input \| control \| result side by side, per camera, scrubbing; `--export FILE` serialises the same layout to mp4 with no display; `--clip` alone shows the local GT preview | — | interactive; ~2 s (single) / ~45 s (7-camera grid) to export |
 | `showcase.py` | the whole mode matrix (11 rows: weather x controls x weights x mask-out classes x world scenario x 7-camera AV) against one node, resumable, timings per row | all | 183-244 s per Transfer 2.5 row, 543-999 s per Cosmos 3 row, 1390 s per 7-camera AV row (720p, measured 2026-08-28 on 4 x RTX PRO 6000) |
 | `showcase_sheets.py` | `input \| control(s) \| output` sheets, the 7-camera grid and a `modes_reel.mp4` from a showcase run | — | ~1 min per row |
 
@@ -62,6 +62,8 @@ Nothing has to be downloaded by hand.  `job.download(out_dir)` (and every
     <camera>.mp4                   generated video(s)
     control_<hint>[_<camera>].mp4  the control the model actually saw
     grid.mp4                       multi-view contact sheet (AV)
+    viewer_grid.mp4                the viewer, as a video (multi-camera results)
+    viewer_single.mp4              the viewer, as a video (single-camera results)
     manifest.json                  the server's result listing, verbatim
     job.json                       request as submitted (prompt, seed, backend,
                                    controls incl. weights, views, resolution),
@@ -73,6 +75,44 @@ The results root is `--results` (`--out` for the CLI), else `$COSMOS_RESULTS`,
 else `./cosmos-results`.  Files are verified against the server's listing (size,
 then sha256) and downloads are idempotent — re-running a demo re-checks what is
 on disk and fetches only what is missing or damaged.
+
+### The viewer video (on by default)
+
+Every stored job also gets `viewer_<layout>.mp4`: the side-by-side viewer
+(`input | control | result`, or the per-camera grid with the control the model
+saw over each result) rendered to a file, recorded in `job.json` with
+`"kind": "viewer"`.  It is the *same compositor* the interactive window uses —
+the same tiles, labels, aspect fitting and footer with the prompt — so the file
+is exactly what `viewer.py` draws, only serialised.
+
+It needs no display: rendering only uses `pygame`'s offscreen surfaces and the
+font module, never SDL's video subsystem, so it works over ssh, in a container
+and under `systemd-run` with no `DISPLAY`.  Encoding is ffmpeg (`libx264`,
+`crf 18`, `yuv420p`, even dimensions, no audio track), so the mp4 plays in a
+browser.  Roughly 2 s for a 93-frame single-camera row, 45 s for a 171-frame
+7-camera grid.
+
+Turn it off with `--no-viewer-video` (`showcase.py`, every `api_*` demo,
+`carla-cosmos submit`/`watch`/`result`), `viewer_video=False`
+(`job.download(...)`, `wait_and_store(...)`), or `COSMOS_VIEWER_VIDEO=0` for a
+whole session.  The viewer needs the clip the job was generated from — the demos
+pass it, and otherwise the store looks for it in `clips/` and `_clips/` beside
+the results root (`$COSMOS_CLIPS` or `--clip` says where else to look).  When it
+cannot be found the download still succeeds, with a note and no viewer video.
+
+Export one by hand, or re-export with different options:
+
+```bash
+python demos/viewer.py --result $COSMOS_RESULTS/showcase_av7/j_xxxx --export av7.mp4
+python demos/viewer.py --result <dir> --export out.mp4 --export-layout both \
+    --export-fps 30 --export-overlay on --height 480
+```
+
+`--export` implies headless.  `--export-layout` is `auto` (grid for a
+multi-camera result, the strip otherwise), `grid`, `single` or `both` (which
+writes `out_grid.mp4` and `out_single.mp4`).  `--export-overlay on` bakes in the
+`o` key: the control drawn over the input RGB.  In the interactive window, `v`
+exports the layout on screen to `<result>/viewer_<layout>.mp4`.
 
 `carla-cosmos jobs` prints, for every job the server lists, whether its result
 is stored here and where, warns before the server garbage-collects results that

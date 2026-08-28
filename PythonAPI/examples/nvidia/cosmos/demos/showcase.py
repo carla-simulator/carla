@@ -20,6 +20,11 @@ Per-row timings (queue, scene rendering, generation, upload, download) are
 written to ``<results>/showcase.json``, which is also what
 ``tools/showcase_sheets.py`` reads to build the comparison sheets.
 
+Every stored row also gets ``viewer_<layout>.mp4`` — the side-by-side viewer of
+that row (input | control | result, or the per-camera grid) rendered to a video
+without a display, so a matrix run leaves something watchable behind and not
+only raw per-camera clips.  ``--no-viewer-video`` turns it off.
+
 Clips (capture them with ``demos/single_view_live.py --capture-only`` /
 ``demos/av7_world_scenario.py --capture-only``, or point ``--clip`` at your own):
 
@@ -158,6 +163,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     ap.add_argument("--only", default=None, help="comma-separated row ids (or backends) to run")
     ap.add_argument("--skip", default=None, help="comma-separated row ids to leave out")
     ap.add_argument("--force", action="store_true", help="rerun rows that are already stored")
+    ap.add_argument("--no-viewer-video", action="store_true",
+                    help="do not render each result's side-by-side viewer to viewer_<layout>.mp4")
     ap.add_argument("--list", action="store_true", help="print the matrix and exit")
     ap.add_argument("--dry-run", action="store_true", help="resolve clips and validate, submit nothing")
     ap.add_argument("--mock", action="store_true", help="run against an in-process mock server (no GPU)")
@@ -230,7 +237,7 @@ def stored_result(store: ResultStore, ledger: dict[str, Any], row: Row) -> Path 
     return d if d.is_dir() and any(d.glob("*.mp4")) else None
 
 
-def run_row(cosmos, row: Row, clip, results: str | None, log) -> dict[str, Any]:
+def run_row(cosmos, row: Row, clip, results: str | None, log, viewer_video: bool | None = None) -> dict[str, Any]:
     """Submit one row, wait, store; returns the ledger entry (never raises for a job failure)."""
     views = None
     if row.views:
@@ -268,12 +275,13 @@ def run_row(cosmos, row: Row, clip, results: str | None, log) -> dict[str, Any]:
         log.error("[%s] %s", row.id, exc)
         return rec
     t_dl = time.time()
-    stored = job.download(results)
+    stored = job.download(results, clip=clip, viewer_video=viewer_video)
     rec.update(status=info.status, worker=info.worker, directory=stored.directory,
                timings={k: round(v, 1) for k, v in stored.timings.items()},
                download_s=round(time.time() - t_dl, 1), wall_s=round(time.time() - t0, 1),
                files=len(stored.files), bytes=stored.bytes,
-               videos=stored.videos)
+               videos=stored.videos,
+               viewer_video=stored.viewer_video)
     return rec
 
 
@@ -352,7 +360,8 @@ def main(argv: list[str] | None = None) -> int:
                     if args.stop_on_error:
                         break
                     continue
-            rec = run_row(cosmos, row, loaded[row.clip], args.results, log)
+            rec = run_row(cosmos, row, loaded[row.clip], args.results, log,
+                          viewer_video=False if args.no_viewer_video else None)
             records.append(rec)
             ledger[row.id] = rec
             ledger_path.write_text(json.dumps(ledger, indent=2))

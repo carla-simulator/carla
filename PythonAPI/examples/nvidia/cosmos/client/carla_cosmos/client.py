@@ -442,7 +442,8 @@ class Job:
         return Result(self.client, self.id, self.client.result_manifest(self.id))
 
     def download(self, out_dir: str | Path | None = None, *, names: Iterable[str] | None = None,
-                 verify: bool = True, progress: Callable[[str, int, int], None] | None = None) -> "StoredJob":
+                 verify: bool = True, progress: Callable[[str, int, int], None] | None = None,
+                 clip: "Clip | str | Path | None" = None, viewer_video: bool | None = None) -> "StoredJob":
         """Store every returned file under ``<out_dir>/<clip_id>/<job_id>/`` and record it.
 
         ``out_dir`` is the *results root* — ``$COSMOS_RESULTS`` or
@@ -451,10 +452,15 @@ class Job:
         files with sizes and sha256, server status and expiry) next to the
         videos, verifies both against the server's listing and skips files
         that are already complete, so calling it twice is cheap and safe.
+
+        The side-by-side viewer of the result is rendered to ``viewer_<layout>.mp4`` next to the
+        videos unless ``viewer_video=False``; pass ``clip`` (the :class:`~carla_cosmos.Clip` this job
+        was submitted from) when it does not sit next to the results root.
         """
         from .results import ResultStore
 
-        return ResultStore(out_dir).save(self, names=names, verify=verify, progress=progress)
+        return ResultStore(out_dir).save(self, names=names, verify=verify, progress=progress,
+                                         clip=clip, viewer_video=viewer_video)
 
 
 class Result:

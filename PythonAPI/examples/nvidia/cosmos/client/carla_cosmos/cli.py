@@ -23,7 +23,9 @@ world-scenario controls ``wsm`` / ``hdmap_bbox``.
 Results are kept: whenever the CLI waits for a job it downloads every returned
 file into ``<results root>/<clip_id>/<job_id>/`` next to a ``job.json`` (see
 ``results.py``).  The results root is ``--out``, else ``$COSMOS_RESULTS``, else
-``./cosmos-results``; ``submit --wait --no-download`` opts out.  ``jobs`` says
+``./cosmos-results``; ``submit --wait --no-download`` opts out.  Every stored
+result also gets ``viewer_<layout>.mp4`` — the side-by-side viewer as a video,
+rendered without a display (``--no-viewer-video`` opts out).  ``jobs`` says
 which results are on this machine and where, and warns before the server
 garbage-collects the ones that are not.
 """
@@ -113,15 +115,16 @@ def cmd_submit(args) -> int:
     print(f"submitted {job.id} ({job.info.backend}, {job.info.priority}); queue position {job.info.queue_position}")
     ResultStore(args.out).note_submitted(job, clip_id=clip.manifest.clip_id)
     if args.wait or args.out:
-        return _wait_and_fetch(job, args.out, download=not args.no_download)
+        return _wait_and_fetch(job, args.out, download=not args.no_download, clip=clip,
+                               viewer_video=False if args.no_viewer_video else None)
     print(f"follow it with: carla-cosmos watch {job.id}"
           f"{'' if args.out is None else ' --out ' + args.out}")
     return 0
 
 
-def _store_result(job, out: str | None) -> int:
-    """Download every file of a finished job into the results root."""
-    stored = job.download(out)
+def _store_result(job, out: str | None, clip=None, viewer_video: bool | None = None) -> int:
+    """Download every file of a finished job into the results root (with its viewer video)."""
+    stored = job.download(out, clip=clip, viewer_video=viewer_video)
     print(f"stored {len(stored.files)} file(s) ({stored.bytes / 1e6:.1f} MB) in {stored.directory}")
     for f in stored.files:
         print(f"  {f.name}")
@@ -139,7 +142,8 @@ def _warn_expiry(hours: float | None, job_id: str, stored: bool) -> None:
         print(f"warning: the server deletes {job_id} in {hours:.1f} h; {where}", file=sys.stderr)
 
 
-def _wait_and_fetch(job, out: str | None, download: bool = True) -> int:
+def _wait_and_fetch(job, out: str | None, download: bool = True, clip=None,
+                    viewer_video: bool | None = None) -> int:
     try:
         job.wait(on_progress=_print_progress)
     except JobFailed as exc:
@@ -153,7 +157,7 @@ def _wait_and_fetch(job, out: str | None, download: bool = True) -> int:
         if ttl:
             print(f"the server keeps it for {ttl:g} h", file=sys.stderr)
         return 0
-    return _store_result(job, out)
+    return _store_result(job, out, clip=clip, viewer_video=viewer_video)
 
 
 def cmd_jobs(args) -> int:
@@ -205,11 +209,13 @@ def _expiry_hours(info: JobInfo, client) -> float | None:
 
 
 def cmd_watch(args) -> int:
-    return _wait_and_fetch(_client(args).job(args.job), args.out, download=not args.no_download)
+    return _wait_and_fetch(_client(args).job(args.job), args.out, download=not args.no_download,
+                           clip=args.clip, viewer_video=False if args.no_viewer_video else None)
 
 
 def cmd_result(args) -> int:
-    return _store_result(_client(args).job(args.job), args.out)
+    return _store_result(_client(args).job(args.job), args.out, clip=args.clip,
+                         viewer_video=False if args.no_viewer_video else None)
 
 
 def cmd_cancel(args) -> int:
@@ -339,6 +345,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="results root (default $COSMOS_RESULTS or ./cosmos-results); implies --wait. "
                         "Files land in <root>/<clip_id>/<job_id>/")
     s.add_argument("--no-download", action="store_true", help="with --wait: do not store the result")
+    s.add_argument("--no-viewer-video", action="store_true",
+                    help="do not render the side-by-side viewer of the result to viewer_<layout>.mp4")
     s.set_defaults(fn=cmd_submit)
 
     j = sub.add_parser("jobs", help="list jobs")
@@ -354,11 +362,19 @@ def build_parser() -> argparse.ArgumentParser:
     w.add_argument("job")
     w.add_argument("--out", default=None, help="results root (default $COSMOS_RESULTS or ./cosmos-results)")
     w.add_argument("--no-download", action="store_true", help="do not store the result")
+    w.add_argument("--clip", default=None,
+                    help="clip directory the job was submitted from (for the viewer video, when it is not next to the results root)")
+    w.add_argument("--no-viewer-video", action="store_true",
+                    help="do not render the side-by-side viewer of the result to viewer_<layout>.mp4")
     w.set_defaults(fn=cmd_watch)
 
     r = sub.add_parser("result", help="download the result files of a finished job")
     r.add_argument("job")
     r.add_argument("--out", default=None, help="results root (default $COSMOS_RESULTS or ./cosmos-results)")
+    r.add_argument("--clip", default=None,
+                    help="clip directory the job was submitted from (for the viewer video, when it is not next to the results root)")
+    r.add_argument("--no-viewer-video", action="store_true",
+                    help="do not render the side-by-side viewer of the result to viewer_<layout>.mp4")
     r.set_defaults(fn=cmd_result)
 
     cnl = sub.add_parser("cancel", help="cancel (or delete a finished) job")

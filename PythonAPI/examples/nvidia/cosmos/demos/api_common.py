@@ -72,10 +72,17 @@ def progress_logger(log: logging.Logger, tag: str = ""):
     return on_progress
 
 
-def wait_and_store(job, results: str | None, log: logging.Logger, tag: str = "") -> StoredJob:
-    """Wait for the job and keep every returned file under ``<results>/<clip_id>/<job_id>/``."""
+def wait_and_store(job, results: str | None, log: logging.Logger, tag: str = "", clip=None,
+                   viewer_video: bool | None = None) -> StoredJob:
+    """Wait for the job and keep every returned file under ``<results>/<clip_id>/<job_id>/``.
+
+    The side-by-side viewer of the result is rendered to ``viewer_<layout>.mp4`` next to the videos
+    (no display needed); pass ``viewer_video=False`` — or ``--no-viewer-video`` on the demos that
+    expose it — to skip it.  ``clip`` is what the job was submitted from: the viewer needs its input
+    RGB and clip-side controls, and passing it saves the store from having to guess where it is.
+    """
     job.wait(poll=3.0, on_progress=progress_logger(log, tag))
-    stored = job.download(results)
+    stored = job.download(results, clip=clip, viewer_video=viewer_video)
     log.info("stored %d file(s), %.1f MB in %s", len(stored.files), stored.bytes / 1e6, stored.directory)
     for f in stored.files:
         log.info("  %-42s %8.1f kB  %s", f.name, f.size / 1e3, f.kind)
