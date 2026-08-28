@@ -1,7 +1,7 @@
 """Local ground-truth preview: draw the exported ClipGT scene back onto the captured RGB.
 
     carla-cosmos preview --clip clips/<id> [--cameras ...] [--frames a:b] [--out DIR] [--grid]
-                         [--show-occluded] [--png-every N]
+                         [--show-occluded] [--png-every N] [--no-horizon]
 
 This is the check you can run on a laptop, with no GPU node and no model in the loop: if the
 overlay sits on the image for every camera, the scene package we upload (and NVIDIA's renderer
@@ -33,7 +33,14 @@ The maths is NVIDIA's ClipGT loader, verbatim (it was validated against their re
   cut the track into visible segments);
 * ``--show-occluded`` reads the exporter's visibility sidecar and draws everything the occlusion
   filter dropped as dashed grey boxes, which is how that filter is inspected: a grey box over a
-  building is the filter working, a grey box over a plainly visible car is not.
+  building is the filter working, a grey box over a plainly visible car is not;
+* map polylines are hidden behind the map's own terrain (:class:`Horizon`).  There is no depth
+  buffer for them, and on flat ground that never mattered — distant boundaries pile up at the
+  horizon row and read as the horizon.  With relief it is glaring: on the San Francisco NuRec
+  clip the road boundaries a hundred metres ahead sit thirty metres down the far side of a
+  crest, so they used to be painted straight across the road in front of the car (they are
+  *correct* there — the same rows of NVIDIA's own ClipGT project to the same pixels — they are
+  simply not visible from the car).  ``--no-horizon`` turns the test off.
 
 Everything above lives in small pure functions (:class:`FThetaCamera`, :func:`densify`,
 :func:`polyline_segments`, :func:`box_corners`, …) that need neither CARLA nor a clip on disk, so
@@ -44,6 +51,7 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Iterator, Sequence
@@ -170,6 +178,78 @@ def polyline_segments(uv: np.ndarray) -> Iterator[tuple[np.ndarray, np.ndarray]]
     for a, b in zip(uv[:-1], uv[1:]):
         if not (np.isnan(a).any() or np.isnan(b).any()):
             yield a, b
+
+
+# ----------------------------------------------------------------------------- terrain horizon (pure)
+
+GROUND_TABLES: tuple[str, ...] = ("road_boundary", "lane_line", "crosswalk", "wait_line", "road_marking")
+"""Polyline tables that lie *on* the road surface, and so are the occluders of :class:`Horizon`.
+
+``pole`` is a polyline table too but stands up off the ground, so it is drawn (and horizon-tested)
+without ever occluding: one pole would otherwise blank a whole azimuth bin behind it."""
+
+HORIZON_BINS = 360
+"""Azimuth bins of the horizon profile (1 degree each)."""
+
+HORIZON_SLACK_M = 2.0
+"""Only surface nearer than ``range - this`` may hide a point: a polyline never occludes itself."""
+
+HORIZON_MARGIN_DEG = 0.25
+"""Elevation tolerance, so a point exactly *on* the skyline is kept rather than flickering."""
+
+_HORIZON_KEY_SCALE = 1e6
+"""``bin * this + range`` sorts by (bin, range) in one float64 key; ranges are metres, so safe."""
+
+
+def _polar(points: np.ndarray, eye: np.ndarray, bins: int) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """``(azimuth bin, horizontal range, elevation angle)`` of world points seen from ``eye``."""
+    P = np.asarray(points, float).reshape(-1, 3)
+    d = P[:, :2] - np.asarray(eye, float)[:2]
+    rng = np.hypot(d[:, 0], d[:, 1])
+    az = (np.arctan2(d[:, 1], d[:, 0]) * (bins / (2.0 * np.pi))).astype(np.int64) % bins
+    return az, rng, np.arctan2(P[:, 2] - float(eye[2]), np.maximum(rng, 1e-6))
+
+
+class Horizon:
+    """The skyline the map's own road surface builds up around one eye point.
+
+    The classic terrain horizon test, on the only surface a scene package carries: walking outward
+    along a bearing, the running maximum of the elevation angle of every surface sample already
+    passed *is* the skyline, and a point below it is behind a crest and cannot be seen.  The
+    occluders are the map's own points, which is what makes this safe to leave on by default —
+    on a flat clip the running maximum never gets ahead of anything, so nothing is culled at all.
+    It fails open in both directions that matter: an azimuth the map has no sample on hides
+    nothing, and a point nearer than the closest sample on its bearing is always drawn.
+    """
+
+    def __init__(self, occluders: np.ndarray, eye: Sequence[float], bins: int = HORIZON_BINS,
+                 slack_m: float = HORIZON_SLACK_M, margin_deg: float = HORIZON_MARGIN_DEG) -> None:
+        self.eye = np.asarray(eye, float)
+        self.bins, self.slack_m = int(bins), float(slack_m)
+        self.margin = math.radians(margin_deg)
+        az, rng, elev = _polar(occluders, self.eye, self.bins)
+        keep = rng > 1e-3
+        order = np.lexsort((rng[keep], az[keep]))
+        self._az, self._rng, sky = az[keep][order], rng[keep][order], elev[keep][order]
+        # running max of the elevation angle within each azimuth bin, outward
+        edges = np.flatnonzero(np.diff(self._az)) + 1
+        for a, b in zip(np.r_[0, edges], np.r_[edges, len(sky)]):
+            if b - a > 1:
+                sky[a:b] = np.maximum.accumulate(sky[a:b])
+        self._sky = sky
+        self._key = self._az * _HORIZON_KEY_SCALE + self._rng
+
+    def visible(self, points: np.ndarray) -> np.ndarray:
+        """Boolean mask of the world points that are not hidden below this skyline."""
+        P = np.asarray(points, float).reshape(-1, 3)
+        if len(self._sky) == 0:
+            return np.ones(len(P), bool)
+        az, rng, elev = _polar(P, self.eye, self.bins)
+        query = az * _HORIZON_KEY_SCALE + np.maximum(rng - self.slack_m, 0.0)
+        i = np.searchsorted(self._key, query, "right") - 1
+        hit = (i >= 0) & (self._az[np.clip(i, 0, len(self._az) - 1)] == az)
+        sky = np.where(hit, self._sky[np.clip(i, 0, len(self._sky) - 1)], -np.inf)
+        return elev >= sky - self.margin
 
 
 # ----------------------------------------------------------------------------- camera model (pure)
@@ -348,10 +428,24 @@ class SceneGT:
     dynamic_boxes: dict[str, dict[int, list[Box]]] = field(default_factory=dict)
     occluded_boxes: dict[int, list[Box]] = field(default_factory=dict)
     """Obstacles the occlusion filter dropped, from the visibility sidecar (``--show-occluded``)."""
+    _ground: np.ndarray | None = field(default=None, repr=False)
+    _horizon: tuple[tuple[float, ...], "Horizon"] | None = field(default=None, repr=False)
 
     @property
     def frames(self) -> int:
         return len(self.ego_poses)
+
+    def horizon(self, eye: Sequence[float]) -> Horizon | None:
+        """The skyline the loaded road-surface layers build around ``eye`` (``None`` if there is none)."""
+        if self._ground is None:
+            ground = [p for table in GROUND_TABLES for p in self.polylines.get(table, [])]
+            self._ground = np.vstack(ground) if ground else np.zeros((0, 3))
+        if not len(self._ground):
+            return None
+        key = tuple(np.round(np.asarray(eye, float), 3))
+        if self._horizon is None or self._horizon[0] != key:
+            self._horizon = (key, Horizon(self._ground, eye))
+        return self._horizon[1]
 
     def boxes_at(self, table: str, timestamp: int) -> list[Box]:
         """Parked boxes alive at ``timestamp`` plus whatever the table has at it."""
@@ -436,17 +530,21 @@ def draw_box(frame: np.ndarray, camera: PreviewCamera, world_to_camera: np.ndarr
 
 def draw_scene(frame: np.ndarray, camera: PreviewCamera, world_to_camera: np.ndarray, scene: SceneGT,
                timestamp: int, layers: Iterable[str] = DEFAULT_LAYERS, thickness: int = 2,
-               dim: float = 0.6, step: float = 0.5, show_occluded: bool = False) -> np.ndarray:
+               dim: float = 0.6, step: float = 0.5, show_occluded: bool = False,
+               horizon: bool = True) -> np.ndarray:
     """Draw the scene onto one BGR frame (in place) and return it.
 
     ``dim`` darkens the RGB first so the overlay reads on bright frames; pass 1.0 for no dimming.
     ``show_occluded`` additionally draws whatever the occlusion filter dropped at this timestamp
-    as dashed grey boxes, so the filter can be inspected against the pixels it was derived from."""
+    as dashed grey boxes, so the filter can be inspected against the pixels it was derived from.
+    ``horizon`` hides map polylines that the map's own road surface occludes (:class:`Horizon`);
+    it is a no-op on flat ground and only bites where the clip has real relief."""
     if dim != 1.0:
         frame[:] = (frame * dim).astype(np.uint8)
     if show_occluded:
         for box in scene.occluded_boxes.get(timestamp, []):
             draw_box(frame, camera, world_to_camera, box, OCCLUDED_COLOR, thickness, step, dashed=True)
+    skyline = scene.horizon(np.linalg.inv(world_to_camera)[:3, 3]) if horizon else None
     for name in layers:
         layer = LAYERS[name]
         if layer.kind == "polyline":
@@ -457,6 +555,8 @@ def draw_scene(frame: np.ndarray, camera: PreviewCamera, world_to_camera: np.nda
                 if layer.closed and len(P) > 2:
                     P = np.vstack([P, densify(np.vstack([points[-1], points[0]]), step)])
                 uv = camera.project_world(P, world_to_camera)
+                if skyline is not None:
+                    uv[~skyline.visible(P)] = np.nan
                 for a, b in polyline_segments(uv):
                     cv2.line(frame, tuple(a.astype(int)), tuple(b.astype(int)), layer.color, thickness)
         else:
@@ -535,7 +635,7 @@ def preview_clip(clip_dir: str | Path, cameras: Sequence[str] | None = None, fra
                  out_dir: str | Path | None = None, grid: bool = False,
                  layers: Sequence[str] = DEFAULT_LAYERS, dim: float = 0.6, thickness: int = 2,
                  grid_scale: float = 0.5, progress=None, show_occluded: bool = False,
-                 png_every: int = 0) -> dict[str, Path]:
+                 png_every: int = 0, horizon: bool = True) -> dict[str, Path]:
     """Write ``<out>/<camera>.mp4`` (and ``<out>/grid.mp4``) with the scene drawn on the RGB.
 
     Returns ``{camera name (or "grid"): path}``.  ``progress`` is called with
@@ -564,7 +664,7 @@ def preview_clip(clip_dir: str | Path, cameras: Sequence[str] | None = None, fra
         cam = scene.cameras[name]
         return draw_scene(frame, cam, cam.world_to_camera(scene.ego_poses[index]), scene,
                           scene.timestamps[index], layers, thickness, dim,
-                          show_occluded=show_occluded)
+                          show_occluded=show_occluded, horizon=horizon)
 
     for name in names:
         src = clip.video("rgb", name)
@@ -592,7 +692,7 @@ def preview_clip(clip_dir: str | Path, cameras: Sequence[str] | None = None, fra
     if grid and names:
         written["grid"] = _write_grid(clip, scene, names, out, start, stop, render, grid_scale, progress)
     index = {"clip_id": clip.manifest.clip_id, "frames": [start, stop], "layers": list(layers),
-             "show_occluded": bool(show_occluded),
+             "show_occluded": bool(show_occluded), "horizon": bool(horizon),
              "videos": {n: p.name for n, p in written.items() if n != "grid"},
              "grid": written["grid"].name if "grid" in written else None}
     (out / "preview.json").write_text(json.dumps(index, indent=2))

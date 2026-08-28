@@ -9,7 +9,7 @@
     carla-cosmos serve [--image IMG] [--port 8000] [--state DIR] [--gpus all] [--profile P] | --stop | --mock
     carla-cosmos classes
     carla-cosmos synthetic-clip --out DIR [--frames 93 --fps 16 | --av7]
-    carla-cosmos preview --clip DIR [--cameras camera:front:wide:120fov] [--frames 0:60] [--out DIR] [--grid]
+    carla-cosmos preview --clip DIR [--cameras camera:front:wide:120fov] [--frames 0:60] [--out DIR] [--grid] [--no-horizon]
                          [--show-occluded] [--png-every N]
 
 Connection: ``--url``/``--token`` or ``COSMOS_URL`` / ``COSMOS_TOKEN`` / ``COSMOS_TOKEN_FILE``.
@@ -294,7 +294,8 @@ def cmd_preview(args) -> int:
         written = preview_clip(args.clip, cameras=cameras or None, frames=args.frames, out_dir=args.out,
                                grid=args.grid, layers=layers, dim=args.dim, thickness=args.thickness,
                                progress=None if args.quiet else progress,
-                               show_occluded=args.show_occluded, png_every=args.png_every)
+                               show_occluded=args.show_occluded, png_every=args.png_every,
+                               horizon=not args.no_horizon)
     except (FileNotFoundError, ValueError) as exc:
         print(f"\nerror: {exc}", file=sys.stderr)
         return 1
@@ -419,6 +420,9 @@ def build_parser() -> argparse.ArgumentParser:
                          "dropped (needs the exporter's <clip>.visibility.json sidecar)")
     pv.add_argument("--png-every", type=int, default=0, metavar="N",
                     help="also write every Nth drawn frame as a PNG next to the videos")
+    pv.add_argument("--no-horizon", action="store_true",
+                    help="draw map polylines the map's own terrain hides (off by default: on a hilly "
+                         "clip the roads beyond a crest would be painted across the road ahead)")
     pv.add_argument("--dim", type=float, default=0.6, help="darken the RGB by this factor (1.0 = off)")
     pv.add_argument("--thickness", type=int, default=2)
     pv.add_argument("--quiet", action="store_true")

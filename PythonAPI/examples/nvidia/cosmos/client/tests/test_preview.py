@@ -8,6 +8,7 @@ from carla_cosmos.preview import (
     LAYERS,
     Box,
     FThetaCamera,
+    Horizon,
     PreviewCamera,
     SceneGT,
     box_corners,
@@ -226,6 +227,81 @@ def test_draw_scene_dims_the_rgb():
     scene = SceneGT(clip_id="c", cameras={cam.name: cam}, timestamps=[0], ego_poses=[np.eye(4)])
     frame = np.full((32, 32, 3), 100, np.uint8)
     assert draw_scene(frame, cam, np.eye(4), scene, 0, layers=(), dim=0.5).max() == 50
+
+
+# ----------------------------------------------------------------------------- terrain horizon
+
+def _crest_road(grades=((0.0, 40.0), (-0.18, 300.0)), step=1.0, bearing=0.0):
+    """One rail out of the origin: ``(grade, length)`` segments sampled every metre.
+
+    The default is the San Francisco NuRec clip in miniature — forty flat metres to a crest, then
+    the 18% drop measured on that clip, which puts the road a hundred metres out some fifteen
+    metres below the line of sight and (without a horizon test) straight across the road ahead."""
+    c, s = np.cos(np.radians(bearing)), np.sin(np.radians(bearing))
+    d, z, pts = 0.0, 0.0, [np.array([0.0, 0.0, 0.0])]
+    for grade, length in grades:
+        for _ in range(int(length / step)):
+            d, z = d + step, z + grade * step
+            pts.append(np.array([d * c, d * s, z]))
+    return np.array(pts)
+
+
+def _crest_hillside(**kw):
+    """The same profile fanned around the origin: a hillside, not a single rail.
+
+    Half a degree apart, so every one-degree azimuth bin of the horizon profile has a sample —
+    a bin the map never sampled occludes nothing, by design."""
+    return [_crest_road(bearing=b, **kw) for b in np.arange(-40.0, 40.1, 0.5)]
+
+
+def test_horizon_keeps_everything_on_flat_ground():
+    """The no-op property that makes this safe to leave on: a flat clip loses no overlay at all."""
+    road = _crest_road(grades=((0.0, 400.0),))
+    assert Horizon(road, eye=(0.0, 0.0, 1.5)).visible(road).all()
+
+
+def test_horizon_keeps_a_constant_grade():
+    """A steady 30% descent is fully in view from the top — only a *steepening* profile hides itself."""
+    road = _crest_road(grades=((-0.18, 300.0),))
+    assert Horizon(road, eye=(0.0, 0.0, 1.5)).visible(road).all()
+
+
+def test_horizon_hides_the_road_beyond_a_crest():
+    """The bug this exists for: past the crest the road is behind it, not across the road ahead."""
+    road = _crest_road()
+    visible = Horizon(road, eye=(0.0, 0.0, 1.5)).visible(road)
+    near, far = road[:, 0] <= 40.0, road[:, 0] > 100.0
+    assert visible[near].all()      # nothing up to the crest is ever culled
+    assert not visible[far].any()   # and nothing well past it survives
+
+
+def test_horizon_only_hides_what_is_actually_behind_the_crest():
+    """A pole tall enough to stick up over the crest keeps the part that does."""
+    road = _crest_road()
+    skyline = Horizon(road, eye=(0.0, 0.0, 1.5))
+    pole = np.array([[100.0, 0.0, -10.8 + h] for h in (0.0, 4.0, 12.0, 20.0)])
+    visible = skyline.visible(pole)
+    assert not visible[0] and visible[-1]
+
+
+def test_draw_scene_hides_a_boundary_beyond_the_crest():
+    """End to end, and this is the regression: a cross street 200 m out and 29 m down the far side
+    of the crest used to be painted straight across the road ahead — the same rows of NVIDIA's own
+    ClipGT project to the same pixels, so the overlay was right and the drawing was wrong."""
+    cam = PreviewCamera.from_rig_sensor(make_sensor(t=(0.0, 0.0, 1.5)))
+    behind_the_crest = np.array([[200.0, y, -28.8] for y in np.linspace(-20.0, 20.0, 41)])
+    scene = SceneGT(clip_id="c", cameras={cam.name: cam}, timestamps=[0], ego_poses=[np.eye(4)],
+                    polylines={"lane_line": _crest_hillside(),
+                               "road_boundary": [behind_the_crest]})
+    w2c = cam.world_to_camera(np.eye(4))
+    ink = []
+    for horizon in (False, True):
+        frame = np.zeros((720, 1280, 3), np.uint8)
+        out = draw_scene(frame, cam, w2c, scene, 0, layers=("road_boundary",), horizon=horizon)
+        ink.append(int((out.reshape(-1, 3) == LAYERS["road_boundary"].color).all(axis=1).sum()))
+        scene._horizon = None  # the profile is cached per eye point
+    assert ink[0] > 100  # it is in frame, and low in it: v is well below the horizon row
+    assert ink[1] == 0   # and the hillside in front of it hides every metre
 
 
 def test_label_patch_draws_text():
