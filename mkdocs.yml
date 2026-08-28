@@ -24,6 +24,7 @@ nav:
   - 'Actors': 'core_actors.md'
   - 'Maps': 'core_map.md'
   - 'Sensors and data': 'core_sensors.md'
+  - 'Coordinate conventions': 'coordinate_conventions.md'
   - 'Traffic' : 'ts_traffic_simulation_overview.md'
 
 - Resources:

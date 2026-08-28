@@ -90,7 +90,7 @@ Sets a vehicle's velocity vector to a constant value over time. The resulting ve
         - `velocity` (_[carla.Vector3D](#carla.Vector3D)<small> - m/s</small>_) - Velocity vector in local space.  
     - **Note:** <font color="#8E8E8E">_Only [carla.Vehicle](#carla.Vehicle) actors can use this method.  
 _</font>  
-    - **Warning:** <font color="#ED2F2F">_Enabling a constant velocity for a vehicle managed by the [Traffic Manager](adv_traffic_manager.md) may cause conflicts. This method overrides any changes in velocity by the TM.  
+    - **Warning:** <font color="#ED2F2F">_Enabling a constant velocity for a vehicle managed by the [Traffic Manager](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_traffic_manager/) may cause conflicts. This method overrides any changes in velocity by the TM.  
 _</font>  
 
 ##### Getters
@@ -974,6 +974,25 @@ The texture "CustomStencil" contains the Unreal Engine custom stencil data.
 
 ---
 
+## carla.GeoEllipsoid<a name="carla.GeoEllipsoid"></a>
+Geoellipsoid for map projection.  
+
+### Instance Variables
+- <a name="carla.GeoEllipsoid.a"></a>**<font color="#f8805a">a</font>** (_float_)  
+Semi-major axis in meters.  
+- <a name="carla.GeoEllipsoid.f_inv"></a>**<font color="#f8805a">f_inv</font>** (_float_)  
+Inverse flattening.  
+
+### Methods
+- <a name="carla.GeoEllipsoid.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**a**=6378137.0</font>, <font color="#00a6ed">**f_inv**=298.257223563</font>)  
+Constructor for this class.  
+    - **Parameters:**
+        - `a` (_float_) - Semi-major axis in meters.  
+        - `f_inv` (_float_) - Inverse flattening.  
+    - **Return:** _[carla.GeoEllipsoid](#carla.GeoEllipsoid)_  
+
+---
+
 ## carla.GeoLocation<a name="carla.GeoLocation"></a>
 Class that contains geographical coordinates simulated data. The [carla.Map](#carla.Map) can convert simulation locations by using the <b><georeference></b> tag in the OpenDRIVE file.  
 
@@ -999,25 +1018,6 @@ Height regarding ground level.
 
 ---
 
-## carla.GeoEllipsoid<a name="carla.GeoEllipsoid"></a>
-Geoellipsoid for map projection.  
-
-### Instance Variables
-- <a name="carla.GeoEllipsoid.a"></a>**<font color="#f8805a">a</font>** (_float_)  
-Semi-major axis in meters.  
-- <a name="carla.GeoEllipsoid.f_inv"></a>**<font color="#f8805a">f_inv</font>** (_float_)  
-Inverse flattening.  
-
-### Methods
-- <a name="carla.GeoEllipsoid.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**a**=6378137.0</font>, <font color="#00a6ed">**f_inv**=298.257223563</font>)  
-Constructor for this class.  
-    - **Parameters:**
-        - `a` (_float_) - Semi-major axis in meters.  
-        - `f_inv` (_float_) - Inverse flattening.  
-    - **Return:** _[carla.GeoEllipsoid](#carla.GeoEllipsoid)_  
-
----
-
 ## carla.GeoOffsetTransform<a name="carla.GeoOffsetTransform"></a>
 Class defining an optional offset transformation applied before UTM projection.  
 
@@ -1034,6 +1034,11 @@ Cosine of the heading offset rotation.
 Sine of the heading offset rotation.  
 
 ### Methods
+- <a name="carla.GeoOffsetTransform.ApplyTransformation"></a>**<font color="#7fb800">ApplyTransformation</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
+Applies the offset transformation to a location.  
+    - **Parameters:**
+        - `location` (_[carla.Location](#carla.Location)_) - Input location.  
+    - **Return:** _[carla.Location](#carla.Location)_  
 - <a name="carla.GeoOffsetTransform.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**offset_x**=0.0</font>, <font color="#00a6ed">**offset_y**=0.0</font>, <font color="#00a6ed">**offset_z**=0.0</font>, <font color="#00a6ed">**offset_hdg**=0.0</font>)  
 Constructor for this class.  
     - **Parameters:**
@@ -1042,14 +1047,6 @@ Constructor for this class.
         - `offset_z` (_float_) - Z offset in meters.  
         - `offset_hdg` (_float_) - Heading offset in radians.  
     - **Return:** _[carla.GeoOffsetTransform](#carla.GeoOffsetTransform)_  
-- <a name="carla.GeoOffsetTransform.ApplyTransformation"></a>**<font color="#7fb800">ApplyTransformation</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**=[carla.Location](#carla.Location)</font>)  
-Applies the offset transformation to a location.  
-    - **Parameters:**
-        - `location` (_[carla.Location](#carla.Location)_) - Input location.  
-    - **Return:** _[carla.Location](#carla.Location)_  
-
-##### Dunder methods
-- <a name="carla.GeoOffsetTransform.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.GeoOffsetTransform](#carla.GeoOffsetTransform)</font>)  
 
 ---
 
@@ -1306,9 +1303,9 @@ Additional text in the signal.
 - <a name="carla.Landmark.h_offset"></a>**<font color="#f8805a">h_offset</font>** (_float<small> - meters</small>_)  
 Orientation offset of the signal relative to the the definition of `road_id` at `s` in OpenDRIVE.  
 - <a name="carla.Landmark.pitch"></a>**<font color="#f8805a">pitch</font>** (_float<small> - meters</small>_)  
-Pitch rotation of the signal (Y-axis in [UE coordinates system](python_api.md#carlarotation)).  
+Pitch rotation of the signal (Y-axis in [UE coordinates system](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/python_api/#carlarotation)).  
 - <a name="carla.Landmark.roll"></a>**<font color="#f8805a">roll</font>** (_float_)  
-Roll rotation of the signal (X-axis in [UE coordinates system](python_api.md#carlarotation)).  
+Roll rotation of the signal (X-axis in [UE coordinates system](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/python_api/#carlarotation)).  
 - <a name="carla.Landmark.waypoint"></a>**<font color="#f8805a">waypoint</font>** (_[carla.Waypoint](#carla.Waypoint)_)  
 A waypoint placed in the lane of the one that made the query and at the `s` of the landmark. It is the first waypoint for which the landmark will be effective.  
 - <a name="carla.Landmark.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
@@ -1800,6 +1797,14 @@ Returns Euclidean distance from this location to another one.
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_) - The other point to compute the distance with.  
     - **Return:** _float<small> - meters</small>_  
+- <a name="carla.Location.from_right_handed"></a>**<font color="#7fb800">from_right_handed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
+Reads a right-handed (FLU) location back into CARLA's left-handed frame. Inverse of `to_right_handed()`; the mapping is its own inverse. This method is static.  
+    - **Parameters:**
+        - `location` (_[carla.RightHandedVector3D](#carla.RightHandedVector3D)_) - Location in the right-handed (FLU) frame.  
+    - **Return:** _[carla.Location](#carla.Location)_  
+- <a name="carla.Location.to_right_handed"></a>**<font color="#7fb800">to_right_handed</font>**(<font color="#00a6ed">**self**</font>)  
+Converts this location to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU") by mirroring the Y axis: `(x, y, z)` becomes `(x, -y, z)`. See [Coordinate conventions](/coordinate_conventions).  
+    - **Return:** _[carla.RightHandedVector3D](#carla.RightHandedVector3D)_  
 
 ##### Dunder methods
 - <a name="carla.Location.__abs__"></a>**<font color="#7fb800">\__abs__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -2125,6 +2130,111 @@ Iterate over the [carla.RadarDetection](#carla.RadarDetection) retrieved as data
 
 ---
 
+## carla.RightHandedRotation<a name="carla.RightHandedRotation"></a>
+Euler angles of a rotation in a **right-handed** frame: x forward, y **left**, z up (ROS [REP-103](https://www.ros.org/reps/rep-0103.html) "FLU"), every axis turned by the right-hand rule.  <br>
+<br>The three angles compose as the intrinsic Z-Y-X sequence `Rz(yaw) * Ry(pitch) * Rx(roll)` with the standard right-handed elementary matrices — the same thing `scipy.spatial.transform.Rotation.from_euler("xyz", ...)` and `tf2::Quaternion::setRPY` mean by "roll pitch yaw".  <br>
+<br>This is **not** `[carla.Rotation](#carla.Rotation)`. Get one from `[carla.Rotation.to_right_handed](#carla.Rotation.to_right_handed)()`; see [Coordinate conventions](/coordinate_conventions).  
+
+### Instance Variables
+- <a name="carla.RightHandedRotation.roll"></a>**<font color="#f8805a">roll</font>** (_float<small> - degrees</small>_)  
+Rotation about the forward (+X) axis, right-hand rule. Same sign as `[carla.Rotation.roll](#carla.Rotation.roll)`.  
+- <a name="carla.RightHandedRotation.pitch"></a>**<font color="#f8805a">pitch</font>** (_float<small> - degrees</small>_)  
+Rotation about the left (+Y) axis, right-hand rule. **Opposite** sign to `[carla.Rotation.pitch](#carla.Rotation.pitch)`.  
+- <a name="carla.RightHandedRotation.yaw"></a>**<font color="#f8805a">yaw</font>** (_float<small> - degrees</small>_)  
+Rotation about the up (+Z) axis, right-hand rule. **Opposite** sign to `[carla.Rotation.yaw](#carla.Rotation.yaw)`.  
+
+### Methods
+- <a name="carla.RightHandedRotation.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**roll**=0.0</font>, <font color="#00a6ed">**pitch**=0.0</font>, <font color="#00a6ed">**yaw**=0.0</font>)  
+    - **Parameters:**
+        - `roll` (_float<small> - degrees</small>_)  
+        - `pitch` (_float<small> - degrees</small>_)  
+        - `yaw` (_float<small> - degrees</small>_)  
+
+##### Getters
+- <a name="carla.RightHandedRotation.get_quaternion"></a>**<font color="#7fb800">get_quaternion</font>**(<font color="#00a6ed">**self**</font>)  
+This rotation as a right-handed `(x, y, z, w)` quaternion.  
+    - **Return:** _[carla.Quaternion](#carla.Quaternion)_  
+
+##### Dunder methods
+- <a name="carla.RightHandedRotation.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.RightHandedRotation](#carla.RightHandedRotation)</font>)  
+Returns __True__ if all three angles are equal.  
+    - **Return:** _bool_  
+- <a name="carla.RightHandedRotation.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.RightHandedRotation](#carla.RightHandedRotation)</font>)  
+Returns __True__ if any of the three angles differ.  
+    - **Return:** _bool_  
+- <a name="carla.RightHandedRotation.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Parses the angles to string.  
+    - **Return:** _str_  
+
+---
+
+## carla.RightHandedTransform<a name="carla.RightHandedTransform"></a>
+A location and a rotation in a **right-handed** frame: x forward, y **left**, z up (ROS [REP-103](https://www.ros.org/reps/rep-0103.html) "FLU").  <br>
+<br>This is the explicit boundary type between CARLA's left-handed world and every right-handed consumer (ROS 2 / tf2, NVIDIA ClipGT rigs, scipy, Open3D). Build one with `[carla.Transform.to_right_handed](#carla.Transform.to_right_handed)()` and go back with `[carla.Transform.from_right_handed](#carla.Transform.from_right_handed)()`; the handedness change then happens exactly once, here, instead of at every call site.  <br>
+<br>See [Coordinate conventions](/coordinate_conventions).  
+
+### Instance Variables
+- <a name="carla.RightHandedTransform.location"></a>**<font color="#f8805a">location</font>** (_[carla.RightHandedVector3D](#carla.RightHandedVector3D)<small> - meters</small>_)  
+Translation in the right-handed frame.  
+- <a name="carla.RightHandedTransform.rotation"></a>**<font color="#f8805a">rotation</font>** (_[carla.RightHandedRotation](#carla.RightHandedRotation)<small> - degrees (roll, pitch, yaw)</small>_)  
+Orientation in the right-handed frame, applied as intrinsic Z-Y-X.  
+
+### Methods
+- <a name="carla.RightHandedTransform.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**rotation**</font>)  
+    - **Parameters:**
+        - `location` (_[carla.RightHandedVector3D](#carla.RightHandedVector3D)_)  
+        - `rotation` (_[carla.RightHandedRotation](#carla.RightHandedRotation)<small> - degrees (roll, pitch, yaw)</small>_)  
+
+##### Getters
+- <a name="carla.RightHandedTransform.get_matrix"></a>**<font color="#7fb800">get_matrix</font>**(<font color="#00a6ed">**self**</font>)  
+The 4-matrix representation of this pose in the right-handed frame. Equal, element for element, to `S * [carla.Transform.get_matrix](#carla.Transform.get_matrix)() * S` with `S = diag(1, -1, 1, 1)`.  
+    - **Return:** _list(list(float))_  
+- <a name="carla.RightHandedTransform.get_quaternion"></a>**<font color="#7fb800">get_quaternion</font>**(<font color="#00a6ed">**self**</font>)  
+The orientation as a right-handed `(x, y, z, w)` quaternion. This is the value the ROS 2 bridge publishes for the equivalent `[carla.Transform](#carla.Transform)`.  
+    - **Return:** _[carla.Quaternion](#carla.Quaternion)_  
+
+##### Dunder methods
+- <a name="carla.RightHandedTransform.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.RightHandedTransform](#carla.RightHandedTransform)</font>)  
+Returns __True__ if both location and rotation are equal for this and `other`.  
+    - **Return:** _bool_  
+- <a name="carla.RightHandedTransform.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.RightHandedTransform](#carla.RightHandedTransform)</font>)  
+Returns __True__ if any of location and rotation are not equal for this and `other`.  
+    - **Return:** _bool_  
+- <a name="carla.RightHandedTransform.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Parses both location and rotation to string.  
+    - **Return:** _str_  
+
+---
+
+## carla.RightHandedVector3D<a name="carla.RightHandedVector3D"></a>
+A 3D vector in a **right-handed** frame: x forward, y **left**, z up (ROS [REP-103](https://www.ros.org/reps/rep-0103.html) "FLU").  <br>
+<br>This is a boundary type. The simulator never returns one; you get it from `[carla.Location.to_right_handed](#carla.Location.to_right_handed)()` and hand it back with `[carla.Location.from_right_handed](#carla.Location.from_right_handed)()`. See [Coordinate conventions](/coordinate_conventions).  
+
+### Instance Variables
+- <a name="carla.RightHandedVector3D.x"></a>**<font color="#f8805a">x</font>** (_float<small> - meters</small>_)  
+Forward component.  
+- <a name="carla.RightHandedVector3D.y"></a>**<font color="#f8805a">y</font>** (_float<small> - meters</small>_)  
+**Left** component. This is the one whose sign differs from `[carla.Vector3D](#carla.Vector3D)`.  
+- <a name="carla.RightHandedVector3D.z"></a>**<font color="#f8805a">z</font>** (_float<small> - meters</small>_)  
+Up component.  
+
+### Methods
+- <a name="carla.RightHandedVector3D.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**x**=0.0</font>, <font color="#00a6ed">**y**=0.0</font>, <font color="#00a6ed">**z**=0.0</font>)  
+    - **Parameters:**
+        - `x` (_float_)  
+        - `y` (_float_)  
+        - `z` (_float_)  
+- <a name="carla.RightHandedVector3D.to_left_handed"></a>**<font color="#7fb800">to_left_handed</font>**(<font color="#00a6ed">**self**</font>)  
+This vector back in CARLA's left-handed frame: `(x, -y, z)`.  
+    - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
+
+##### Dunder methods
+- <a name="carla.RightHandedVector3D.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Parses the components to string.  
+    - **Return:** _str_  
+
+---
+
 ## carla.Rotation<a name="carla.Rotation"></a>
 Class that represents a 3D rotation and therefore, an orientation in space. CARLA uses the Unreal Engine coordinates system. This is a Z-up left-handed system.  <br>
 <br>The constructor method follows a specific order of declaration: `(pitch, yaw, roll)`, which corresponds to `(Y-rotation,Z-rotation,X-rotation)`.  <br> <br>![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg) *Unreal Engine's coordinates system*.  
@@ -2144,6 +2254,14 @@ X-axis rotation angle.
         - `yaw` (_float<small> - degrees</small>_) - Z-axis rotation angle.  
         - `roll` (_float<small> - degrees</small>_) - X-axis rotation angle.  
     - **Warning:** <font color="#ED2F2F">_The declaration order is different in CARLA <code>(pitch,yaw,roll)</code>, and in the Unreal Engine Editor <code>(roll,pitch,yaw)</code>. When working in a build from source, don't mix up the axes' rotations._</font>  
+- <a name="carla.Rotation.from_right_handed"></a>**<font color="#7fb800">from_right_handed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**rotation**</font>)  
+Reads a right-handed (FLU) rotation back into CARLA's left-handed frame. Inverse of `to_right_handed()`; the mapping is its own inverse. This method is static.  
+    - **Parameters:**
+        - `rotation` (_[carla.RightHandedRotation](#carla.RightHandedRotation)_) - Rotation in the right-handed (FLU) frame.  
+    - **Return:** _[carla.Rotation](#carla.Rotation)_  
+- <a name="carla.Rotation.to_right_handed"></a>**<font color="#7fb800">to_right_handed</font>**(<font color="#00a6ed">**self**</font>)  
+Converts this rotation to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU"). Mirroring the Y axis negates **pitch and yaw** and leaves roll alone, so `(roll, pitch, yaw) = (10, 20, 30)` becomes `(10, -20, -30)`. See [Coordinate conventions](/coordinate_conventions).  
+    - **Return:** _[carla.RightHandedRotation](#carla.RightHandedRotation)_  
 
 ##### Getters
 - <a name="carla.Rotation.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
@@ -2179,7 +2297,7 @@ Cosine of the incident angle between the ray, and the normal of the hit object.
 - <a name="carla.SemanticLidarDetection.object_idx"></a>**<font color="#f8805a">object_idx</font>** (_uint_)  
 ID of the actor hit by the ray.  
 - <a name="carla.SemanticLidarDetection.object_tag"></a>**<font color="#f8805a">object_tag</font>** (_uint_)  
-[Semantic tag](ref_sensors.md#semantic-segmentation-camera) of the component hit by the ray.  
+[Semantic tag](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/ref_sensors/#semantic-segmentation-camera) of the component hit by the ray.  
 
 ### Methods
 
@@ -2293,7 +2411,9 @@ Base class for all the objects containing data generated by a [carla.Sensor](#ca
   - LIDAR sensor: [carla.LidarMeasurement](#carla.LidarMeasurement).<br>
   - Obstacle detector: [carla.ObstacleDetectionEvent](#carla.ObstacleDetectionEvent).<br>
   - Radar sensor: [carla.RadarMeasurement](#carla.RadarMeasurement).<br>
-  - Semantic LIDAR sensor: [carla.SemanticLidarMeasurement](#carla.SemanticLidarMeasurement).  
+  - Semantic LIDAR sensor: [carla.SemanticLidarMeasurement](#carla.SemanticLidarMeasurement).<br>
+  - Cooperative awareness messages V2X sensor: [carla.CAMEvent](#carla.CAMEvent).<br>
+  - Custom V2X messages V2X sensor: [carla.CustomV2XEvent](#carla.CustomV2XEvent).  
 
 ### Instance Variables
 - <a name="carla.SensorData.frame"></a>**<font color="#f8805a">frame</font>** (_int_)  
@@ -2565,11 +2685,11 @@ During the collision detection stage, which runs every frame, this method sets a
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) - The vehicle that is going to ignore walkers on scene.  
         - `perc` (_float_) - Between 0 and 100. Amount of times collisions will be ignored.  
-- <a name="carla.TrafficManager.keep_right_rule_percentage"></a>**<font color="#7fb800">keep_right_rule_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
-During the localization stage, this method sets a percent chance that vehicle will follow the *keep right* rule, and stay in the right lane.  
+- <a name="carla.TrafficManager.keep_slow_lane_rule_percentage"></a>**<font color="#7fb800">keep_slow_lane_rule_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
+During the localization stage, this method sets a percent chance that vehicle will follow the *keep slow lane* rule, and stay in the slowest lane. For right-handed traffic, vehicles will move to the righmost lane while left-handed traffic will make vehicles move to the left.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) - Vehicle whose behaviour is being changed.  
-        - `perc` (_float_) - Between 0 and 100. Amount of times the vehicle will follow the keep right rule.  
+        - `perc` (_float_) - Between 0 and 100. Amount of times the vehicle will follow the keep slow lane rule.  
 - <a name="carla.TrafficManager.random_left_lanechange_percentage"></a>**<font color="#7fb800">random_left_lanechange_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**percentage**</font>)  
 Adjust probability that in each timestep the actor will perform a left lane change, dependent on lane change availability.  
     - **Parameters:**
@@ -2700,6 +2820,14 @@ Describes a rotation for an object according to Unreal Engine's axis system.
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_)  
         - `rotation` (_[carla.Rotation](#carla.Rotation)<small> - degrees (pitch, yaw, roll)</small>_)  
+- <a name="carla.Transform.from_right_handed"></a>**<font color="#7fb800">from_right_handed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**transform**</font>)  
+Reads a right-handed (FLU) transform back into CARLA's left-handed frame. Inverse of `to_right_handed()`; the mapping is its own inverse. This method is static.  
+    - **Parameters:**
+        - `transform` (_[carla.RightHandedTransform](#carla.RightHandedTransform)_) - Transform in the right-handed (FLU) frame.  
+    - **Return:** _[carla.Transform](#carla.Transform)_  
+- <a name="carla.Transform.to_right_handed"></a>**<font color="#7fb800">to_right_handed</font>**(<font color="#00a6ed">**self**</font>)  
+Converts this transform to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU"). The location becomes `(x, -y, z)` and the rotation `(roll, -pitch, -yaw)`; equivalently the pose matrix becomes `S * get_matrix() * S` with `S = diag(1, -1, 1, 1)`. See [Coordinate conventions](/coordinate_conventions).  
+    - **Return:** _[carla.RightHandedTransform](#carla.RightHandedTransform)_  
 - <a name="carla.Transform.transform"></a>**<font color="#7fb800">transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**in_point**</font>)  
 Translates a 3D point from local to global coordinates using the current transformation as frame of reference.  
     - **Parameters:**
@@ -3046,7 +3174,7 @@ States which gear is the vehicle running on.
 - <a name="carla.VehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**throttle**=0.0</font>, <font color="#00a6ed">**steer**=0.0</font>, <font color="#00a6ed">**brake**=0.0</font>, <font color="#00a6ed">**hand_brake**=False</font>, <font color="#00a6ed">**reverse**=False</font>, <font color="#00a6ed">**manual_gear_shift**=False</font>, <font color="#00a6ed">**gear**=0</font>)  
     - **Parameters:**
         - `throttle` (_float_) - Scalar value between [0.0,1.0].  
-        - `steer` (_float_) - Scalar value between [-1.0,1.0].  
+        - `steer` (_float_) - Scalar value between [0.0,1.0].  
         - `brake` (_float_) - Scalar value between [0.0,1.0].  
         - `hand_brake` (_bool_)  
         - `reverse` (_bool_)  
@@ -3407,6 +3535,8 @@ The lane type of the current Waypoint, based on OpenDRIVE 1.4 standard.
 The right lane marking information based on the direction of the Waypoint.  
 - <a name="carla.Waypoint.left_lane_marking"></a>**<font color="#f8805a">left_lane_marking</font>** (_[carla.LaneMarking](#carla.LaneMarking)_)  
 The left lane marking information based on the direction of the Waypoint.  
+- <a name="carla.Waypoint.is_rht"></a>**<font color="#f8805a">is_rht</font>** (_bool_)  
+Flag indicating whether the waypoint is part of a right-handed traffic road.  
 
 ### Methods
 - <a name="carla.Waypoint.next"></a>**<font color="#7fb800">next</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
@@ -3718,7 +3848,7 @@ Loads the selected layers to the level. If the layer is already loaded the call 
         - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Mask of level layers to be loaded.  
     - **Warning:** <font color="#ED2F2F">_This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs._</font>  
 - <a name="carla.World.on_tick"></a>**<font color="#7fb800">on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
-This method is used in [__asynchronous__ mode](adv_synchrony_timestep.md). It starts callbacks from the client for the function defined as `callback`, and returns the ID of the callback. The function will be called everytime the server ticks. It requires a [carla.WorldSnapshot](#carla.WorldSnapshot) as argument, which can be retrieved from __<font color="#7fb800">wait_for_tick()</font>__. Use __<font color="#7fb800">remove_on_tick()</font>__ to stop the callbacks.  
+This method is used in [__asynchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/). It starts callbacks from the client for the function defined as `callback`, and returns the ID of the callback. The function will be called everytime the server ticks. It requires a [carla.WorldSnapshot](#carla.WorldSnapshot) as argument, which can be retrieved from __<font color="#7fb800">wait_for_tick()</font>__. Use __<font color="#7fb800">remove_on_tick()</font>__ to stop the callbacks.  
     - **Parameters:**
         - `callback` (_[carla.WorldSnapshot](#carla.WorldSnapshot)_) - Function with a snapshot as compulsory parameter that will be called when the client receives a tick.  
     - **Return:** _int_  
@@ -3750,11 +3880,11 @@ Spawns a static procedural mesh with collision in the world. The mesh lives unti
         - `triangles` (_list(int)_) - Triangle indices into the vertex list, three per triangle.  
         - `material` (_str_) - Semantic material hint ("grass", "road", "dirt", "sidewalk") or a full Unreal Engine material object path.  
 - <a name="carla.World.tick"></a>**<font color="#7fb800">tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  
-This method is used in [__synchronous__ mode](adv_synchrony_timestep.md), when the server waits for a client tick before computing the next frame. This method will send the tick, and give way to the server. It returns the ID of the new frame computed by the server.  
+This method is used in [__synchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/), when the server waits for a client tick before computing the next frame. This method will send the tick, and give way to the server. It returns the ID of the new frame computed by the server.  
     - **Parameters:**
         - `seconds` (_float<small> - seconds</small>_) - Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.  
     - **Return:** _int_  
-    - **Note:** <font color="#8E8E8E">_If no tick is received in synchronous mode, the simulation will freeze. Also, if many ticks are received from different clients, there may be synchronization issues. Please read the docs about [synchronous mode](adv_synchrony_timestep.md) to learn more.  
+    - **Note:** <font color="#8E8E8E">_If no tick is received in synchronous mode, the simulation will freeze. Also, if many ticks are received from different clients, there may be synchronization issues. Please read the docs about [synchronous mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/) to learn more.  
 _</font>  
 - <a name="carla.World.try_spawn_actor"></a>**<font color="#7fb800">try_spawn_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**attach_to**=None</font>, <font color="#00a6ed">**attachment**=Rigid</font>)  
 Same as __<font color="#7fb800">spawn_actor()</font>__ but returns <b>None</b> on failure instead of throwing an exception.  
@@ -3770,7 +3900,7 @@ Unloads the selected layers to the level. If the layer is already unloaded the c
         - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Mask of level layers to be unloaded.  
     - **Warning:** <font color="#ED2F2F">_This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs._</font>  
 - <a name="carla.World.wait_for_tick"></a>**<font color="#7fb800">wait_for_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  
-This method is used in [__asynchronous__ mode](adv_synchrony_timestep.md). It makes the client wait for a server tick. When the next frame is computed, the server will tick and return a snapshot describing the new state of the world.  
+This method is used in [__asynchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/). It makes the client wait for a server tick. When the next frame is computed, the server will tick and return a snapshot describing the new state of the world.  
     - **Parameters:**
         - `seconds` (_float<small> - seconds</small>_) - Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.  
     - **Return:** _[carla.WorldSnapshot](#carla.WorldSnapshot)_  
@@ -4346,117 +4476,60 @@ document.getElementById("snipets-container").innerHTML = null;
 }
 </script>
   
-<div id ="carla.DebugHelper.draw_string-snipet" style="display: none;">
+<div id ="carla.Map.get_waypoint-snipet" style="display: none;">
 <p class="SnipetFont">
-Snippet for carla.DebugHelper.draw_string
+Snippet for carla.Map.get_waypoint
 </p>
-<div id="carla.DebugHelper.draw_string-code" class="SnipetContent">
+<div id="carla.Map.get_waypoint-code" class="SnipetContent">
 
 ```py
   
 
-# This recipe is a modification of lane_explorer.py example.
-# It draws the path of an actor through the world, printing information at each waypoint.
+# This recipe shows the current traffic rules affecting the vehicle. 
+# Shows the current lane type and if a lane change can be done in the actual lane or the surrounding ones.
 
 # ...
-current_w = map.get_waypoint(vehicle.get_location())
-while True:
-
-    next_w = map.get_waypoint(vehicle.get_location(), lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk )
-    # Check if the vehicle is moving
-    if next_w.id != current_w.id:
-        vector = vehicle.get_velocity()
-        # Check if the vehicle is on a sidewalk
-        if current_w.lane_type == carla.LaneType.Sidewalk:
-            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else red, 60)
-        else:
-            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, 60)
-        debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (3.6 * math.sqrt(vector.x**2 + vector.y**2 + vector.z**2))), False, orange, 60)
-        draw_transform(debug, current_w.transform, white, 60)
-
-    # Update the current waypoint and sleep for some time
-    current_w = next_w
-    time.sleep(args.tick_time)
+waypoint = world.get_map().get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk))
+print("Current lane type: " + str(waypoint.lane_type))
+# Check current lane change allowed
+print("Current Lane change:  " + str(waypoint.lane_change))
+# Left and Right lane markings
+print("L lane marking type: " + str(waypoint.left_lane_marking.type))
+print("L lane marking change: " + str(waypoint.left_lane_marking.lane_change))
+print("R lane marking type: " + str(waypoint.right_lane_marking.type))
+print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
 # ...
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_string-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Map.get_waypoint-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.Map.get_waypoint.jpg">
   
 </div>
   
-<div id ="carla.Vehicle.set_wheel_steer_direction-snipet" style="display: none;">
+<div id ="carla.WalkerAIController.stop-snipet" style="display: none;">
 <p class="SnipetFont">
-Snippet for carla.Vehicle.set_wheel_steer_direction
+Snippet for carla.WalkerAIController.stop
 </p>
-<div id="carla.Vehicle.set_wheel_steer_direction-code" class="SnipetContent">
-
-```py
-  
-# Sets the appearance of the vehicles front wheels to 40°. Vehicle physics will not be affected.
-
-vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FR_Wheel, 40.0)
-vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FL_Wheel, 40.0)
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Vehicle.set_wheel_steer_direction-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.Sensor.listen-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.Sensor.listen
-</p>
-<div id="carla.Sensor.listen-code" class="SnipetContent">
+<div id="carla.WalkerAIController.stop-code" class="SnipetContent">
 
 ```py
   
 
-# This recipe applies a color conversion to the image taken by a camera sensor,
-# so it is converted to a semantic segmentation image.
+#To destroy the pedestrians, stop them from the navigation, and then destroy the objects (actor and controller).
 
-# ...
-camera_bp = world.get_blueprint_library().filter('sensor.camera.semantic_segmentation')
-# ...
-cc = carla.ColorConverter.CityScapesPalette
-camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, cc))
-# ...
+# stop pedestrians (list is [controller, actor, controller, actor ...])
+for i in range(0, len(all_id), 2):
+    all_actors[i].stop()
+
+# destroy pedestrian (actor and controller)
+client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Sensor.listen-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.DebugHelper.draw_box-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.DebugHelper.draw_box
-</p>
-<div id="carla.DebugHelper.draw_box-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe shows how to draw traffic light actor bounding boxes from a world snapshot.
-
-# ....
-debug = world.debug
-world_snapshot = world.get_snapshot()
-
-for actor_snapshot in world_snapshot:
-    actual_actor = world.get_actor(actor_snapshot.id)
-    if actual_actor.type_id == 'traffic.traffic_light':
-        debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
-# ...
-
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.DebugHelper.draw_box.jpg">
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 </div>
   
@@ -4586,6 +4659,87 @@ if vehicle_actor.is_at_traffic_light():
   
 </div>
   
+<div id ="carla.Sensor.listen-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.Sensor.listen
+</p>
+<div id="carla.Sensor.listen-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe applies a color conversion to the image taken by a camera sensor,
+# so it is converted to a semantic segmentation image.
+
+# ...
+camera_bp = world.get_blueprint_library().filter('sensor.camera.semantic_segmentation')
+# ...
+cc = carla.ColorConverter.CityScapesPalette
+camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, cc))
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Sensor.listen-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.World.spawn_actor-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.World.spawn_actor
+</p>
+<div id="carla.World.spawn_actor-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe attaches different camera / sensors to a vehicle with different attachments.
+
+# ...
+camera = world.spawn_actor(rgb_camera_bp, transform, attach_to=vehicle, attachment_type=Attachment.Rigid)
+# Default attachment:  Attachment.Rigid
+gnss_sensor = world.spawn_actor(sensor_gnss_bp, transform, attach_to=vehicle)
+collision_sensor = world.spawn_actor(sensor_collision_bp, transform, attach_to=vehicle)
+lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, attach_to=vehicle)
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.spawn_actor-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.DebugHelper.draw_box-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.DebugHelper.draw_box
+</p>
+<div id="carla.DebugHelper.draw_box-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe shows how to draw traffic light actor bounding boxes from a world snapshot.
+
+# ....
+debug = world.debug
+world_snapshot = world.get_snapshot()
+
+for actor_snapshot in world_snapshot:
+    actual_actor = world.get_actor(actor_snapshot.id)
+    if actual_actor.type_id == 'traffic.traffic_light':
+        debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
+# ...
+
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.DebugHelper.draw_box.jpg">
+  
+</div>
+  
 <div id ="carla.World.enable_environment_objects-snipet" style="display: none;">
 <p class="SnipetFont">
 Snippet for carla.World.enable_environment_objects
@@ -4616,36 +4770,31 @@ world.enable_environment_objects(objects_to_toggle, True)
   
 </div>
   
-<div id ="carla.Map.get_waypoint-snipet" style="display: none;">
+<div id ="carla.World.load_map_layer-snipet" style="display: none;">
 <p class="SnipetFont">
-Snippet for carla.Map.get_waypoint
+Snippet for carla.World.load_map_layer
 </p>
-<div id="carla.Map.get_waypoint-code" class="SnipetContent">
+<div id="carla.World.load_map_layer-code" class="SnipetContent">
 
 ```py
   
+# This recipe toggles on several layers in our "_Opt" maps
 
-# This recipe shows the current traffic rules affecting the vehicle. 
-# Shows the current lane type and if a lane change can be done in the actual lane or the surrounding ones.
+# Load town one with only minimum layout (roads, sidewalks, traffic lights and traffic signs)
+world = client.load_world('Town01_Opt', carla.MapLayer.None)
 
-# ...
-waypoint = world.get_map().get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk))
-print("Current lane type: " + str(waypoint.lane_type))
-# Check current lane change allowed
-print("Current Lane change:  " + str(waypoint.lane_change))
-# Left and Right lane markings
-print("L lane marking type: " + str(waypoint.left_lane_marking.type))
-print("L lane marking change: " + str(waypoint.left_lane_marking.lane_change))
-print("R lane marking type: " + str(waypoint.right_lane_marking.type))
-print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
-# ...
+# Toggle all buildings on
+world.load_map_layer(carla.MapLayer.Buildings)
+
+# Toggle all foliage on
+world.load_map_layer(carla.MapLayer.Foliage)
+
+# Toggle all parked vehicles on
+world.load_map_layer(carla.MapLayer.ParkedVehicles)
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Map.get_waypoint-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.Map.get_waypoint.jpg">
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.load_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 </div>
   
@@ -4722,109 +4871,6 @@ for i in range(0, len(all_actors), 2):
   
 </div>
   
-<div id ="carla.World.unload_map_layer-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.World.unload_map_layer
-</p>
-<div id="carla.World.unload_map_layer-code" class="SnipetContent">
-
-```py
-  
-# This recipe toggles off several layers in our "_Opt" maps
-
-# Load town one with minimum layout (roads, sidewalks, traffic lights and traffic signs)
-# as well as buildings and parked vehicles
-world = client.load_world('Town01_Opt', carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles) 
-
-# Toggle all buildings off
-world.unload_map_layer(carla.MapLayer.Buildings)
-
-# Toggle all parked vehicles off
-world.unload_map_layer(carla.MapLayer.ParkedVehicles)
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.unload_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.World.spawn_actor-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.World.spawn_actor
-</p>
-<div id="carla.World.spawn_actor-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe attaches different camera / sensors to a vehicle with different attachments.
-
-# ...
-camera = world.spawn_actor(rgb_camera_bp, transform, attach_to=vehicle, attachment_type=Attachment.Rigid)
-# Default attachment:  Attachment.Rigid
-gnss_sensor = world.spawn_actor(sensor_gnss_bp, transform, attach_to=vehicle)
-collision_sensor = world.spawn_actor(sensor_collision_bp, transform, attach_to=vehicle)
-lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, attach_to=vehicle)
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.spawn_actor-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.World.load_map_layer-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.World.load_map_layer
-</p>
-<div id="carla.World.load_map_layer-code" class="SnipetContent">
-
-```py
-  
-# This recipe toggles on several layers in our "_Opt" maps
-
-# Load town one with only minimum layout (roads, sidewalks, traffic lights and traffic signs)
-world = client.load_world('Town01_Opt', carla.MapLayer.None)
-
-# Toggle all buildings on
-world.load_map_layer(carla.MapLayer.Buildings)
-
-# Toggle all foliage on
-world.load_map_layer(carla.MapLayer.Foliage)
-
-# Toggle all parked vehicles on
-world.load_map_layer(carla.MapLayer.ParkedVehicles)
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.load_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.WalkerAIController.stop-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.WalkerAIController.stop
-</p>
-<div id="carla.WalkerAIController.stop-code" class="SnipetContent">
-
-```py
-  
-
-#To destroy the pedestrians, stop them from the navigation, and then destroy the objects (actor and controller).
-
-# stop pedestrians (list is [controller, actor, controller, actor ...])
-for i in range(0, len(all_id), 2):
-    all_actors[i].stop()
-
-# destroy pedestrian (actor and controller)
-client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
 <div id ="carla.ActorBlueprint.set_attribute-snipet" style="display: none;">
 <p class="SnipetFont">
 Snippet for carla.ActorBlueprint.set_attribute
@@ -4856,6 +4902,90 @@ camera_bp.set_attribute('image_size_y', 600)
 
 ```
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.ActorBlueprint.set_attribute-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.Vehicle.set_wheel_steer_direction-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.Vehicle.set_wheel_steer_direction
+</p>
+<div id="carla.Vehicle.set_wheel_steer_direction-code" class="SnipetContent">
+
+```py
+  
+# Sets the appearance of the vehicles front wheels to 40°. Vehicle physics will not be affected.
+
+vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FR_Wheel, 40.0)
+vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FL_Wheel, 40.0)
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Vehicle.set_wheel_steer_direction-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.DebugHelper.draw_string-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.DebugHelper.draw_string
+</p>
+<div id="carla.DebugHelper.draw_string-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe is a modification of lane_explorer.py example.
+# It draws the path of an actor through the world, printing information at each waypoint.
+
+# ...
+current_w = map.get_waypoint(vehicle.get_location())
+while True:
+
+    next_w = map.get_waypoint(vehicle.get_location(), lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk )
+    # Check if the vehicle is moving
+    if next_w.id != current_w.id:
+        vector = vehicle.get_velocity()
+        # Check if the vehicle is on a sidewalk
+        if current_w.lane_type == carla.LaneType.Sidewalk:
+            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else red, 60)
+        else:
+            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, 60)
+        debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (3.6 * math.sqrt(vector.x**2 + vector.y**2 + vector.z**2))), False, orange, 60)
+        draw_transform(debug, current_w.transform, white, 60)
+
+    # Update the current waypoint and sleep for some time
+    current_w = next_w
+    time.sleep(args.tick_time)
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_string-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.World.unload_map_layer-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.World.unload_map_layer
+</p>
+<div id="carla.World.unload_map_layer-code" class="SnipetContent">
+
+```py
+  
+# This recipe toggles off several layers in our "_Opt" maps
+
+# Load town one with minimum layout (roads, sidewalks, traffic lights and traffic signs)
+# as well as buildings and parked vehicles
+world = client.load_world('Town01_Opt', carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles) 
+
+# Toggle all buildings off
+world.unload_map_layer(carla.MapLayer.Buildings)
+
+# Toggle all parked vehicles off
+world.unload_map_layer(carla.MapLayer.ParkedVehicles)
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.unload_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 </div>
   
