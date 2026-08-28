@@ -31,74 +31,17 @@ from pathlib import Path
 from typing import Iterable, Sequence
 
 import numpy as np
-import pyarrow as pa
-import pyarrow.parquet as pq
 
 import carla
 
-from . import coords, visibility as vis
+from . import clipgt, coords, visibility as vis
+from .clipgt import SCHEMAS, VERSION  # the ClipGT format, CARLA-free (re-exported: tests import them here)
 from .contracts import CameraManifest
 
 log = logging.getLogger(__name__)
 
 VERSION = 1725328440
 """Constant ``version`` column value (same convention as NVIDIA's example)."""
-
-_XYZ = pa.struct([("x", pa.float32()), ("y", pa.float32()), ("z", pa.float32())])
-_QUAT = pa.struct([("x", pa.float32()), ("y", pa.float32()), ("z", pa.float32()), ("w", pa.float32())])
-_MAPKEY = pa.struct([("clip_id", pa.string()), ("label_class_id", pa.string()),
-                     ("map_id", pa.string()), ("map_id_version", pa.string())])
-_TSKEY = pa.struct([("clip_id", pa.string()), ("timestamp_micros", pa.int64())])
-
-
-def _poly_schema(name: str) -> pa.Schema:
-    return pa.schema([("key", _MAPKEY),
-                      (name, pa.struct([("category", pa.string()), ("location", pa.list_(_XYZ))])),
-                      ("version", pa.uint64())])
-
-
-SCHEMAS: dict[str, pa.Schema] = {
-    "obstacle": pa.schema([
-        ("key", pa.struct([("clip_id", pa.string()), ("timestamp_micros", pa.int64()),
-                           ("label_class_id", pa.string())])),
-        ("obstacle", pa.struct([("trackline_id", pa.string()), ("center", _XYZ), ("size", _XYZ),
-                                ("orientation", _QUAT), ("category", pa.string())])),
-        ("version", pa.uint64())]),
-    "egomotion_estimate": pa.schema([
-        ("key", _TSKEY),
-        ("egomotion_estimate", pa.struct([("name", pa.string()), ("location", _XYZ), ("orientation", _QUAT)])),
-        ("version", pa.uint64())]),
-    "calibration_estimate": pa.schema([
-        ("key", _TSKEY),
-        ("calibration_estimate", pa.struct([("name", pa.string()), ("rig_json", pa.string())])),
-        ("version", pa.uint64())]),
-    "lane_line": pa.schema([
-        ("key", _MAPKEY),
-        ("lane_line", pa.struct([("line_rail", pa.list_(_XYZ)), ("styles", pa.list_(pa.string())),
-                                 ("colors", pa.list_(pa.string())),
-                                 ("left_driving_direction", pa.list_(pa.string())),
-                                 ("right_driving_direction", pa.list_(pa.string()))])),
-        ("version", pa.uint64())]),
-    "road_boundary": _poly_schema("road_boundary"),
-    "crosswalk": _poly_schema("crosswalk"),
-    "pole": _poly_schema("pole"),
-    "road_marking": _poly_schema("road_marking"),
-    "wait_line": pa.schema([
-        ("key", _MAPKEY),
-        ("wait_line", pa.struct([("category", pa.string()), ("location", pa.list_(_XYZ)),
-                                 ("is_implicit", pa.bool_()), ("intersection_subtype", pa.string())])),
-        ("version", pa.uint64())]),
-    "traffic_light": pa.schema([
-        ("key", _MAPKEY),
-        ("traffic_light", pa.struct([("center", _XYZ), ("dimensions", _XYZ), ("orientation", _QUAT),
-                                     ("category", pa.string())])),
-        ("version", pa.uint64())]),
-    "traffic_sign": pa.schema([
-        ("key", _MAPKEY),
-        ("traffic_sign", pa.struct([("center", _XYZ), ("dimensions", _XYZ), ("orientation", _QUAT),
-                                    ("category", pa.string())])),
-        ("version", pa.uint64())]),
-}
 
 # Lane marking enums -> NVIDIA lane-line styles/colours (audit section 5.4).
 _STYLE = {
@@ -175,9 +118,7 @@ class WorldFrame:
                 coords.quat_xyzw(mf))
 
 
-def _mapkey(clip_id: str, label: str) -> dict:
-    return {"clip_id": clip_id, "label_class_id": f"minimap:{label}:carla:v0",
-            "map_id": "carla", "map_id_version": "1"}
+_mapkey = clipgt.mapkey
 
 
 def _runs(ticks: Iterable[int]) -> list[tuple[int, int]]:
@@ -591,8 +532,7 @@ class SceneExporter:
         self._write_table(out, "calibration_estimate", [self._calibration_row(cameras)])
         for name, rows in self._static.items():
             self._write_table(out, name, rows)
-        ts_file = out / f"{self.clip_id}.camera_front_wide_120fov.json"
-        ts_file.write_text(json.dumps([{"timestamp": ts} for ts in self.timestamps]))
+        clipgt.write_timestamps(out, self.clip_id, self.timestamps)
         tl_file = out / f"{self.clip_id}.traffic_light_states.json"
         tl_file.write_text(json.dumps(
             {"timestamps_micros": self.timestamps, "states": self.tl_states}, indent=1))
@@ -732,25 +672,8 @@ class SceneExporter:
                  "visibility", len(decisions), len(occluded))
 
     def _write_table(self, out: Path, name: str, rows: list[dict]) -> None:
-        path = out / f"{self.clip_id}.{name}.parquet"
-        pq.write_table(pa.Table.from_pylist(rows, schema=SCHEMAS[name]), path)
+        clipgt.write_table(out, self.clip_id, name, rows)
         log.info("scene: wrote %-22s rows=%6d", name, len(rows))
 
     def _calibration_row(self, cameras: Iterable[CameraManifest]) -> dict:
-        sensors = []
-        for cam in cameras:
-            poly, resid = coords.pinhole_ftheta_poly(cam.width, cam.height, cam.hfov)
-            log.debug("scene: %s f-theta fit residual %.2e rad", cam.name, resid)
-            sensors.append({
-                "name": cam.name,
-                "properties": {"Model": "ftheta", "cx": cam.width / 2.0, "cy": cam.height / 2.0,
-                               "width": cam.width, "height": cam.height,
-                               "polynomial": " ".join(f"{k:.10g}" for k in poly),
-                               "polynomial-type": "pixeldistance-to-angle",
-                               "linear-c": 1.0, "linear-d": 0.0, "linear-e": 0.0},
-                "nominalSensor2Rig_FLU": {"t": list(cam.t_flu), "roll-pitch-yaw": list(cam.rpy_flu)},
-            })
-        return {"key": {"clip_id": self.clip_id, "timestamp_micros": self.timestamps[0]},
-                "calibration_estimate": {"name": "carla_rig",
-                                         "rig_json": json.dumps({"rig": {"sensors": sensors}})},
-                "version": VERSION}
+        return clipgt.calibration_row(self.clip_id, self.timestamps[0], cameras)
