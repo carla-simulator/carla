@@ -179,6 +179,18 @@ MATRIX: list[Row] = [
         CITY_DAY,
         {"wsm": "scene", "depth": "clip", "seg": "clip"}, resolution="720",
         shows="world-scenario map + depth and seg: layout and the captured appearance"),
+    # ---- Cosmos 3 Super: the same two rows on the 64 B model (the Nano/Super A/B) -----------
+    # Identical clip, prompt, controls, seed, guidance and resolution as ``c3-wsm`` /
+    # ``c3-wsm-depth-seg`` on purpose: the only variable is the checkpoint, so the pair is a direct
+    # comparison.  Needs the ``:full`` image -- Super's bf16 DiT is 119.25 GiB and only fits split
+    # across GPUs (TP >= 2).  On a node that serves Nano alone ``/v1/models`` reports these two rows
+    # as unavailable and the driver skips them.
+    Row("super-wsm", "cosmos3-super", "wsm", CITY_DAY,
+        {"wsm": "scene"}, resolution="720", seed=7,
+        shows="Cosmos 3 Super on the world-scenario map alone -- same prompt and clip as c3-wsm"),
+    Row("super-wsm-depth-seg", "cosmos3-super", "wsm", CITY_DAY,
+        {"wsm": "scene", "depth": "clip", "seg": "clip"}, resolution="720", seed=7,
+        shows="Cosmos 3 Super with wsm + depth + seg -- same conditioning as c3-wsm-depth-seg"),
     # ---- Cosmos 3 Nano: the "just RGB" restyle mode, the A/B against the wsm rows -----------
     # Same clip, prompt, seed and resolution as ``c3-wsm``; the only difference is what the model is
     # conditioned on -- ``blur`` derived from the RGB instead of the world-scenario map.  Cosmos 3
