@@ -132,3 +132,102 @@ def test_get_matrix_agrees_with_ue_matrix_on_fixed_wheels():
                           (tf.get_right_vector(), right),
                           (tf.get_up_vector(), up)):
             assert np.allclose([got.x, got.y, got.z], want, atol=1e-5)
+
+
+# --------------------------------------------------------------------------- carla.Transform.to_right_handed()
+
+_HAS_TO_RIGHT_HANDED = hasattr(carla.Transform, "to_right_handed")
+
+_needs_boundary_api = pytest.mark.skipif(
+    not _HAS_TO_RIGHT_HANDED,
+    reason="wheel predates carla.Transform.to_right_handed(); this module's own "
+           "UE->FLU helpers are the conversion path there",
+)
+
+_BOUNDARY_CASES = [
+    # (location, (pitch, yaw, roll)) in CARLA's frame
+    ((0.0, 0.0, 0.0), (0.0, 0.0, 0.0)),
+    ((1.0, 2.0, 3.0), (20.0, 30.0, 10.0)),
+    ((-4.5, 6.25, 0.5), (-15.0, 120.0, 40.0)),
+    ((100.0, -50.0, 2.0), (0.0, -90.0, 0.0)),
+    ((0.0, 7.0, -1.0), (35.0, 0.0, 0.0)),
+    ((3.0, 3.0, 3.0), (0.0, 0.0, -25.0)),
+    ((-9.0, 0.25, 11.0), (13.0, 47.0, -31.0)),
+    ((-62.0, 8.0, 1.5), (-62.0, -155.0, 88.0)),
+]
+
+
+def _boundary_transforms():
+    for (x, y, z), (pitch, yaw, roll) in _BOUNDARY_CASES:
+        yield carla.Transform(
+            carla.Location(x=x, y=y, z=z),
+            carla.Rotation(pitch=pitch, yaw=yaw, roll=roll))
+
+
+@_needs_boundary_api
+def test_to_right_handed_matrix_agrees_with_ue_to_flu():
+    """``carla.Transform.to_right_handed().get_matrix()`` IS ``ue_to_flu(ue_matrix(tf))``.
+
+    LibCarla now carries the UE -> FLU mapping itself (``RightHandedTransform``,
+    ``Docs/coordinate_conventions.md``).  This pins the C++ adapter against this
+    package's independent numpy implementation, which was written first and was
+    validated geometrically in the Phase 0 spike.
+    """
+    for tf in _boundary_transforms():
+        got = np.array(tf.to_right_handed().get_matrix(), dtype=np.float64)
+        want = coords.ue_to_flu(coords.ue_matrix(tf))
+        np.testing.assert_allclose(got, want, atol=1e-5, err_msg=str(tf))
+
+
+@_needs_boundary_api
+def test_to_right_handed_rpy_agrees_with_flu_rpy_deg():
+    """``.rotation`` (roll, pitch, yaw) is what ``coords.flu_rpy_deg`` reports."""
+    for tf in _boundary_transforms():
+        rh = tf.to_right_handed().rotation
+        want = coords.flu_rpy_deg(coords.ue_to_flu(coords.ue_matrix(tf)))
+        # Euler angles are not unique; compare through the rotation matrix to
+        # stay robust, then check the direct triple where it is unambiguous.
+        np.testing.assert_allclose(
+            coords.flu_pose_matrix([0, 0, 0], [rh.roll, rh.pitch, rh.yaw])[:3, :3],
+            coords.flu_pose_matrix([0, 0, 0], want)[:3, :3],
+            atol=1e-5, err_msg=str(tf))
+        if abs(rh.pitch) < 89.0:
+            np.testing.assert_allclose(
+                [rh.roll, rh.pitch, rh.yaw], want, atol=1e-3, err_msg=str(tf))
+
+
+@_needs_boundary_api
+def test_to_right_handed_quaternion_agrees_with_quat_xyzw():
+    """``get_quaternion()`` is ``coords.quat_xyzw`` of the same FLU pose (up to sign)."""
+    for tf in _boundary_transforms():
+        q = tf.to_right_handed().get_quaternion()
+        want = coords.quat_xyzw(coords.ue_to_flu(coords.ue_matrix(tf)))
+        got = np.array([q.x, q.y, q.z, q.w])
+        ref = np.array([want["x"], want["y"], want["z"], want["w"]])
+        # q and -q are the same rotation.
+        assert abs(float(got @ ref)) == pytest.approx(1.0, abs=1e-5), str(tf)
+
+
+@_needs_boundary_api
+def test_to_right_handed_location_agrees_with_ue_point_to_flu():
+    for tf in _boundary_transforms():
+        rh = tf.to_right_handed().location
+        np.testing.assert_allclose(
+            [rh.x, rh.y, rh.z],
+            coords.ue_point_to_flu([tf.location.x, tf.location.y, tf.location.z]),
+            atol=1e-6, err_msg=str(tf))
+
+
+@_needs_boundary_api
+def test_from_right_handed_round_trips():
+    for tf in _boundary_transforms():
+        back = carla.Transform.from_right_handed(tf.to_right_handed())
+        np.testing.assert_allclose(
+            coords.ue_matrix(back), coords.ue_matrix(tf), atol=1e-5, err_msg=str(tf))
+
+
+@_needs_boundary_api
+def test_reference_case_10_20_30():
+    """CARLA (roll, pitch, yaw) = (10, 20, 30) is FLU (10, -20, -30)."""
+    rh = carla.Rotation(pitch=20.0, yaw=30.0, roll=10.0).to_right_handed()
+    assert (rh.roll, rh.pitch, rh.yaw) == pytest.approx((10.0, -20.0, -30.0), abs=1e-4)
