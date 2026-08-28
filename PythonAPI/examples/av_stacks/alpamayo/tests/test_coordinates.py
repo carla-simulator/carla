@@ -1,7 +1,13 @@
+import math
 import unittest
 from types import SimpleNamespace
 
 import numpy as np
+
+try:
+    import carla
+except ImportError:  # the wheel is optional for the pure-python tests
+    carla = None
 
 from alpamayo_coordinates import (
     alpamayo_points_to_carla_local,
@@ -24,6 +30,50 @@ class CoordinateTest(unittest.TestCase):
             rotation,
             np.array([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 1.0]]),
             atol=1e-7,
+        )
+
+    def test_rotation_matches_engine_closed_form(self):
+        """R = Rz(+yaw) . Ry(-pitch) . Rx(-roll), CARLA's engine convention."""
+        pitch_deg, yaw_deg, roll_deg = 17.0, -43.0, 11.0
+        p, y, r = (math.radians(a) for a in (-pitch_deg, yaw_deg, -roll_deg))
+        rz = np.array([
+            [math.cos(y), -math.sin(y), 0.0],
+            [math.sin(y), math.cos(y), 0.0],
+            [0.0, 0.0, 1.0],
+        ])
+        ry = np.array([
+            [math.cos(p), 0.0, math.sin(p)],
+            [0.0, 1.0, 0.0],
+            [-math.sin(p), 0.0, math.cos(p)],
+        ])
+        rx = np.array([
+            [1.0, 0.0, 0.0],
+            [0.0, math.cos(r), -math.sin(r)],
+            [0.0, math.sin(r), math.cos(r)],
+        ])
+        np.testing.assert_allclose(
+            carla_rotation_matrix(pitch_deg, yaw_deg, roll_deg),
+            rz @ ry @ rx,
+            atol=1e-12,
+        )
+
+    def test_rotation_is_not_the_pre_2026_08_28_mirrored_matrix(self):
+        """Guard against re-introducing the PR #9751 pitch/roll mirroring."""
+        rotation = carla_rotation_matrix(20.0, 0.0, 0.0)
+        self.assertAlmostEqual(rotation[2, 0], math.sin(math.radians(20.0)), places=12)
+
+    @unittest.skipIf(carla is None, "the carla wheel is not installed")
+    def test_rotation_matches_carla_get_matrix(self):
+        pitch_deg, yaw_deg, roll_deg = 17.0, -43.0, 11.0
+        transform = carla.Transform(
+            carla.Location(),
+            carla.Rotation(pitch=pitch_deg, yaw=yaw_deg, roll=roll_deg),
+        )
+        expected = np.array(transform.get_matrix(), dtype=np.float64)[:3, :3]
+        np.testing.assert_allclose(
+            carla_rotation_matrix(pitch_deg, yaw_deg, roll_deg),
+            expected,
+            atol=1e-6,
         )
 
     def test_history_is_relative_to_latest_and_reflects_y(self):

@@ -12,10 +12,19 @@ Y_REFLECTION = np.diag([1.0, -1.0, 1.0])
 
 
 def carla_rotation_matrix(pitch_deg: float, yaw_deg: float, roll_deg: float) -> np.ndarray:
-    """Match the rotation block returned by ``carla.Transform.get_matrix``."""
-    pitch = -math.radians(pitch_deg)
+    """Match the rotation block returned by ``carla.Transform.get_matrix``.
+
+    CARLA's engine convention is ``R = Rz(+yaw) . Ry(-pitch) . Rx(-roll)`` in a
+    left-handed x-forward / y-right / z-up frame, which expands to the closed
+    form below with the angles taken as-is. Between PR #9751 and the fix in
+    ``LibCarla/source/carla/geom`` (2026-08-28) ``get_matrix`` returned the
+    mirror image of that, and this helper negated pitch and roll to reproduce
+    it; both are back on the engine convention now. See
+    ``Docs/coordinate_conventions.md``.
+    """
+    pitch = math.radians(pitch_deg)
     yaw = math.radians(yaw_deg)
-    roll = -math.radians(roll_deg)
+    roll = math.radians(roll_deg)
     cp, sp = math.cos(pitch), math.sin(pitch)
     cy, sy = math.cos(yaw), math.sin(yaw)
     cr, sr = math.cos(roll), math.sin(roll)
