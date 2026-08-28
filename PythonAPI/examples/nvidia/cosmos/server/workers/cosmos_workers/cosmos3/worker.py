@@ -56,6 +56,13 @@ log = logging.getLogger("cosmos_worker.cosmos3")
 # repos cosmos-guardrail opens through NLTK's hardened (O_NOFOLLOW) loader — see load()
 GUARDRAIL_REPOS = ("nvidia/Cosmos-1.0-Guardrail",)
 
+# Which checkpoint a worker serves is decided by the backend id the server gave it: profiles and
+# the planner only ever say ``backends: [cosmos3-super]`` (server/profiles/full-8gpu.yaml,
+# profiles.add_super) and never pass ``--model``.  Without this mapping a ``cosmos3-super`` worker
+# started the *Nano* weights and served them under the Super name — silently, since both load.
+BACKEND_MODELS = {"cosmos3-nano": "nvidia/Cosmos3-Nano", "cosmos3-super": "nvidia/Cosmos3-Super"}
+DEFAULT_MODEL = "nvidia/Cosmos3-Nano"
+
 HINTS = ("edge", "blur", "depth", "seg", "wsm")
 # vLLM-Omni's own per-hint sampling presets (``TRANSFER_DEFAULTS`` in
 # ``vllm_omni/diffusion/models/cosmos3/transfer.py``, pinned ref d3c990dc), reproduced here
@@ -101,8 +108,9 @@ class Cosmos3Worker(Worker):
         self.base = f"http://127.0.0.1:{self.port}"
         self.proc: subprocess.Popen | None = None
         self.storage = Path(args.storage_dir or tempfile.mkdtemp(prefix="cosmos3-out-"))
-        self.model_path, self.model_sha, self.offline = _resolve_model(args.model, args.hf_home)
-        self.served_name = args.served_model_name or (args.model if not Path(args.model).exists() else "cosmos3")
+        self.model = model_for(args)
+        self.model_path, self.model_sha, self.offline = _resolve_model(self.model, args.hf_home)
+        self.served_name = args.served_model_name or (self.model if not Path(self.model).exists() else "cosmos3")
         self.guardrails = args.guardrails
         self.vllm_version: dict[str, Any] = {}
         self.parallel = {k: v for k, v in (("tp", args.tp), ("cfg", args.cfg_parallel), ("ulysses", args.ulysses))
@@ -396,6 +404,23 @@ def effective_sampling(fields: dict[str, str], extra: dict[str, Any]) -> dict[st
     return out
 
 
+def model_for(args: argparse.Namespace) -> str:
+    """The checkpoint this worker should serve.
+
+    ``--model`` wins; then the backend id assigned by the server picks it out of
+    :data:`BACKEND_MODELS` — that is the only thing distinguishing a Super worker from a Nano one
+    on the command line the launcher builds.  ``COSMOS3_MODEL`` stays a fallback for an unknown
+    backend id (a custom checkpoint) rather than an override, so setting it on a node serving both
+    sizes cannot hand the Super worker the Nano weights.
+    """
+    if getattr(args, "model", None):
+        return args.model
+    for backend in (b.strip() for b in (getattr(args, "backends", None) or "").split(",")):
+        if backend in BACKEND_MODELS:
+            return BACKEND_MODELS[backend]
+    return os.environ.get("COSMOS3_MODEL") or DEFAULT_MODEL
+
+
 def _resolve_model(model: str, hf_home: str) -> tuple[str, str | None, bool]:
     """Repo id -> cached snapshot path (offline) when present, else the repo id (online)."""
     p = Path(model)
@@ -433,8 +458,9 @@ def _write_gradient_png(path: Path, w: int, h: int) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--model", default=os.environ.get("COSMOS3_MODEL", "nvidia/Cosmos3-Nano"),
-                   help="HF repo id or local snapshot path")
+    p.add_argument("--model", default=None,
+                   help="HF repo id or local snapshot path (default: the checkpoint matching the "
+                        "backend id in --backends, else COSMOS3_MODEL, else Nano)")
     p.add_argument("--served-model-name", default=None,
                    help="model name used in requests (default: the repo id; required when --model is a path)")
     p.add_argument("--tp", type=int, default=1, help="tensor parallel size (Super: 2..8)")

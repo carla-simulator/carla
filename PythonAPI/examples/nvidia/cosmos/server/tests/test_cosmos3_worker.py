@@ -13,7 +13,7 @@ from carla_cosmos_server.config import default_run_dir
 from cosmos_workers.common import protocol
 from cosmos_workers.common.base import add_common_args
 from cosmos_workers.cosmos3.worker import (MULTI_HINT_DEFAULTS, Cosmos3Worker, _resolve_model,
-                                          build_parser, effective_sampling)
+                                          build_parser, effective_sampling, model_for)
 
 FAKE = Path(__file__).with_name("fake_vllm_omni.py")
 
@@ -171,6 +171,32 @@ def test_resolve_model_and_command(tmp_path):
     assert "--no-guardrails" in cmd and "--vae-use-tiling" in cmd and "--quantization" in cmd
     assert cmd[cmd.index("--served-model-name") + 1] == "nvidia/Cosmos3-Super"
     assert w.offline is False
+
+
+def test_model_follows_the_backend_id(tmp_path, monkeypatch):
+    """The launcher passes ``--backends``, never ``--model``: the backend id must pick the weights.
+
+    Before this, a ``cosmos3-super`` worker started ``vllm serve nvidia/Cosmos3-Nano`` and served
+    the Nano weights under the Super name.
+    """
+    def parse(*argv):
+        parser = build_parser()
+        add_common_args(parser)
+        return parser.parse_args(["--socket", "x", "--hf-home", str(tmp_path), *argv])
+
+    monkeypatch.delenv("COSMOS3_MODEL", raising=False)
+    assert model_for(parse("--backends", "cosmos3-super")) == "nvidia/Cosmos3-Super"
+    assert model_for(parse("--backends", "cosmos3-nano")) == "nvidia/Cosmos3-Nano"
+    assert model_for(parse()) == "nvidia/Cosmos3-Nano"
+    # explicit wins over the backend id, and the env var over the default
+    assert model_for(parse("--backends", "cosmos3-super", "--model", "x/y")) == "x/y"
+    monkeypatch.setenv("COSMOS3_MODEL", "env/model")
+    assert model_for(parse()) == "env/model"
+    assert model_for(parse("--backends", "cosmos3-super")) == "nvidia/Cosmos3-Super"
+
+    monkeypatch.delenv("COSMOS3_MODEL", raising=False)
+    w = Cosmos3Worker(parse("--backends", "cosmos3-super", "--tp", "4"))
+    assert w._vllm_command()[:3] == ["vllm", "serve", "nvidia/Cosmos3-Super"]
 
 
 def test_rendered_control_comes_back(worker, clip16, tmp_path):
