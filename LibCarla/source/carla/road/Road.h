@@ -110,7 +110,7 @@ namespace road {
 
     /// Returns a pointer to the nearest lane, given s relative to Road and
     /// a location
-    ///   @param dist distance from the begining of the road to the point you
+    ///   @param s distance from the begining of the road to the point you
     ///          want to calculate the distance
     ///   @param loc point to calculate the distance
     const std::pair<const Lane *, double> GetNearestLane(
