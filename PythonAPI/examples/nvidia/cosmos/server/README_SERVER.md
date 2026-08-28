@@ -23,8 +23,8 @@ downloaded at run time (``HF_HUB_OFFLINE=1``).
 
 | tag | contents | size |
 |---|---|---|
-| `carla-cosmos:nano` | Cosmos 3 Nano, Transfer 2.5 general (4 branches), Transfer 2.5 AV multiview, renderer, guardrails | 96 GB weights + 66 GB stacks ≈ 162 GB |
-| `carla-cosmos:full` | `:nano` + Cosmos 3 Super (133 GB) | ≈ 295 GB |
+| `carla-cosmos:nano` | Cosmos 3 Nano, Transfer 2.5 general (4 branches), Transfer 2.5 AV multiview, renderer, guardrails | 104 GB weights + 66 GB stacks ≈ 170 GB |
+| `carla-cosmos:full` | `:nano` + Cosmos 3 Super (133 GB) | ≈ 303 GB |
 | `…-nomodels` | same code and venvs, empty `/models` (CI, API work) | 66 GB |
 
 Layout inside: `vllm/vllm-openai` base (CUDA 13, Python 3.12) → vLLM-Omni pinned
@@ -81,7 +81,15 @@ sha256; Transfer 2.5 checkpoints use the revisions hard-coded in NVIDIA's
 checkpoint registry so the pipeline's offline resolution hits the baked
 snapshot.  Gated repos (`nvidia/Cosmos-Transfer2.5-2B`, `-Predict2.5-2B`,
 `-Guardrail1`, `-1.0-Guardrail`) need a Hugging Face token whose account
-accepted the licences.
+accepted the licences.  Two entries exist only because the Transfer 2.5 code
+asks for them at load time and nothing else pulls them in:
+`google/siglip-so400m-patch14-384` (hard-coded vision encoder of the guardrail
+video content-safety filter) and the `nvidia/Cosmos-Predict2.5-2B`
+`auto/multiview/524af350-…` checkpoint (the base the AV multiview control model
+is loaded on top of).  `prefetch.py` also drops a plain copy of the
+Video-Depth-Anything weights at `$HF_HOME/cosmos_depth_models/…`, the only place
+cosmos-transfer2.5's depth auxiliary looks (it never reads the hub cache, and it
+swallows the resulting error, silently dropping a `derive`d depth control).
 
 Run: `../scripts/run_server.sh` (docker run with the right flags and the token
 printed), or `compose/docker-compose.yaml` (`compose.caddy.yaml` adds TLS).

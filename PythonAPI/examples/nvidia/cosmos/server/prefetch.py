@@ -191,6 +191,23 @@ def main() -> int:
                 raise SystemExit(f"{repo}/{path}: sha256 mismatch against artifacts.lock")
             downloaded += size
             print(f"   downloaded {path} ({size / 1e6:.1f} MB)", flush=True)
+        # cosmos-transfer2.5's Video-Depth-Anything loader never looks at the hub cache: it reads
+        # $HF_HOME/cosmos_depth_models/video_depth_anything_<enc>/<weights>.pth and otherwise calls
+        # hf_hub_download(..., cache_dir=<that same dir>), which cannot resolve under HF_HUB_OFFLINE=1
+        # (_src/transfer2/auxiliary/depth_anything/{model_utils.py:31-33,video_depth_model.py:109-125}).
+        # The exception is swallowed in _src/transfer2/inference/utils.py, so a `derive`d depth control
+        # would be dropped silently.  Place a real copy (the snapshot entry is a symlink into blobs/).
+        if art["id"].startswith("video-depth-anything"):
+            for f in art["files"]:
+                if not f["path"].endswith(".pth"):
+                    continue
+                src = repo_dir(dest, repo) / "snapshots" / rev / f["path"]
+                tgt = dest / "cosmos_depth_models" / Path(f["path"]).stem / Path(f["path"]).name
+                if src.exists() and not (tgt.exists() and tgt.stat().st_size == f["size"]):
+                    tgt.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copyfile(src, tgt)
+                    print(f"   placed     {tgt.relative_to(dest)} (cosmos-transfer2.5 depth cache)", flush=True)
+
         # `main` ref so plain repo ids resolve offline too
         refs = repo_dir(dest, repo) / "refs"
         refs.mkdir(parents=True, exist_ok=True)

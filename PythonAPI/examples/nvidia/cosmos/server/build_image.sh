@@ -8,9 +8,9 @@
 #   --hf-token-file token for gated NVIDIA repos when downloading (or set HF_TOKEN)
 #   --no-models     code-only image (~35 GB, for CI / API development); workers will fail to load models
 #
-# Needs Docker BuildKit (docker buildx). Final size: :nano ≈ 162 GB, :full ≈ 295 GB, -nomodels 66 GB; while
+# Needs Docker BuildKit (docker buildx). Final size: :nano ≈ 170 GB, :full ≈ 303 GB, -nomodels 66 GB; while
 # building, BuildKit holds the weights up to three times (context, models stage, runtime layer), so plan for
-# ≈ 350 GB (:nano) / ≈ 750 GB (:full) free in the Docker root — or build --no-models here and add the weights
+# ≈ 360 GB (:nano) / ≈ 770 GB (:full) free in the Docker root — or build --no-models here and add the weights
 # with tools/bake_weights.sh (≈ 2× one 40 GB layer of headroom).
 set -euo pipefail
 
