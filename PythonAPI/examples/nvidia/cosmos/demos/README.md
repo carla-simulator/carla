@@ -164,3 +164,56 @@ interrupted run resumes (`--force` reruns).  Every row is appended to
 `<results>/showcase.json` with its prompt, controls, weights, mask classes and
 timings (`queued` / `rendering` / `running` from the server, upload, download
 and wall clock from the client); `showcase_sheets.py` reads that file.
+
+A row may also carry `skip="reason"`: it stays in the matrix as the record of an
+experiment that was run once, or reasoned about, and is not worth GPU time again.
+The driver writes it to the ledger as `status: "skipped"` with the reason and
+does not submit it (`--force` runs it anyway).
+
+### The "just the RGB" rows, and what they showed (2026-08-28)
+
+| row | backend | conditioning | what it shows |
+| --- | --- | --- | --- |
+| `t25-vis-golden` | transfer2.5 | `vis=derive` (RGB is the only upload) | 208 s. Photoreal pass over the capture — the layout, colours and lighting all survive |
+| `t25-vis-night` | transfer2.5 | `vis=derive`, night prompt | 207 s. **The prompt is ignored**: the output is still broad daylight |
+| `c3-blur` | cosmos3-nano | `blur=derive` | 516 s. Same story on the Nano |
+| `c3-blur-mask-vehicles` | cosmos3-nano | `blur=derive` + `--mask-classes vehicle` | 513 s. The masked vehicles come back as **black holes** — see the mask note below |
+| `c3-edge-night` | cosmos3-nano | `edge=derive`, night+rain prompt | the same question asked of a control that carries no colour |
+| `c3-rgb-depth-seg-night` | cosmos3-nano | `blur=derive` + depth + seg | the RGB complemented by geometry rather than replaced by it |
+
+`vis` (Transfer 2.5) and `blur` (Cosmos 3) are the same idea: a bilateral-filtered,
+down-up-sampled copy of the capture.  It keeps every colour and every luminance, so a
+job whose only control is one of them can re-texture the input but never restyle it.
+`carla_cosmos.controls.blur_control` is the vendor kernel ported, so the control can be
+looked at without a GPU; on `showcase_wsm` frame 50 it is 20.5/255 away from the RGB at
+the vendor's default preset `medium` and 22.7/255 at the strongest, `very_high`.  The
+client therefore asks for **`very_high`** whenever it leaves `blur`/`vis` to the server
+(`carla_cosmos.client.DEFAULT_BLUR_PRESET`); pass
+`extra={"preset_blur_strength": "medium"}` for the vendor default.  To actually restyle,
+condition on something that throws the colours away — `edge`, `depth`, `seg`, `wsm`.
+
+### Sampling keys that reach vLLM-Omni through `extra`
+
+`control_guidance`, `control_guidance_interval`, `flow_shift`, `num_conditional_frames`,
+`num_video_frames_per_chunk`, `sigma_max`, `preset_edge_threshold`, `preset_blur_strength`,
+`show_control_condition`, `guardrails` — all passed verbatim by the cosmos3 worker
+(`guidance` and `num_steps` are their own fields of `JobRequest`).
+
+**Cosmos 3 multi-hint guidance.** vLLM-Omni's per-hint sampling preset
+(`TRANSFER_DEFAULTS`: `wsm` 1.0/3.0/10, `depth`/`edge`/`blur` 3.0/1.5/10, `seg` 3.0/2.0/10
+for guidance / control_guidance / flow_shift) is applied **only when the request carries
+exactly one hint**.  With two or more it falls back to guidance 6.0 and control_guidance
+1.0 — which is what made `c3-wsm-depth-seg` hazy and low-contrast next to the sharp
+single-hint `c3-wsm`.  Our cosmos3 worker now fills a documented regime for multi-hint
+requests instead (guidance 2.0, control_guidance 2.0, flow_shift 10;
+`cosmos_workers.cosmos3.worker.MULTI_HINT_DEFAULTS`), anything the caller names still
+wins, and the effective numbers with their provenance land in the result manifest under
+`sampling`.
+
+**Masking is refused where the backend has no mask input.**  `--mask-classes` /
+`mask_classes=` on `cosmos3-nano` / `cosmos3-super` is now a validation error
+(`carla_cosmos.contracts.mask_support_errors`), raised before anything is re-encoded.
+Cosmos 3 exposes no equivalent of Transfer 2.5's `ControlConfig.mask_path`, so the mask
+could only be baked into the pixels — and `c3-blur-mask-vehicles` showed the model then
+reproduces the black hole frame for frame instead of re-imagining it.  Remove the objects
+from the ClipGT scene package (the `wsm` control is rendered from it) instead.

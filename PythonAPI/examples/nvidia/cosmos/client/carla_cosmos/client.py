@@ -40,6 +40,7 @@ from .contracts import (
     ModelInfo,
     Priority,
     ResultManifest,
+    mask_support_errors,
     validate_request,
 )
 
@@ -50,6 +51,20 @@ log = logging.getLogger(__name__)
 
 DEFAULT_URL = "http://localhost:8000"
 CHUNK = 4 << 20
+
+BLUR_HINTS = ("blur", "vis")
+"""Controls that are a blurred copy of the RGB (Cosmos 3 ``blur``, Transfer 2.5 ``vis``)."""
+
+DEFAULT_BLUR_PRESET = "very_high"
+"""``preset_blur_strength`` used when one of :data:`BLUR_HINTS` is derived server-side.
+
+Both vendor pipelines default the preset to ``"medium"``, which leaves the control so close to
+the capture that the prompt cannot change the appearance: measured on ``showcase_wsm`` frame 50
+(``carla_cosmos.controls.blur_control``, the vendor kernel ported), mean |diff| to the RGB is
+20.5/255 at ``medium`` and 22.7/255 at ``very_high`` -- the strongest preset either pipeline
+accepts, and the one that gives a prompt the most room.  A run that wants the vendor default
+passes ``extra={"preset_blur_strength": "medium"}``, which wins.
+"""
 
 
 class CosmosError(Exception):
@@ -234,6 +249,10 @@ class CosmosClient:
         they are uploaded, and the mask itself is uploaded for backends whose
         controls accept one (see :mod:`carla_cosmos.mask`).  ``mask_dilate``
         overrides the default dilation in pixels.
+
+        A ``blur``/``vis`` control left to the server (``"derive"``) is asked for
+        at :data:`DEFAULT_BLUR_PRESET` rather than the vendor's ``"medium"``;
+        ``extra={"preset_blur_strength": ...}`` overrides it.
         """
         contract = contract or self.contract(backend)
         manifest = clip.manifest
@@ -285,6 +304,11 @@ class CosmosClient:
             else:
                 raise CosmosError(0, f"control '{name}': unknown source '{how}' (clip | derive | scene | ControlInput)")
 
+        # a server-derived blur/vis control gets our stronger preset unless the caller named one
+        if (any(n in req.controls and req.controls[n].derive for n in BLUR_HINTS)
+                and "preset_blur_strength" not in req.extra):
+            req.extra["preset_blur_strength"] = DEFAULT_BLUR_PRESET
+
         # rgb
         needs_rgb = contract.rgb_required or any(c.derive for c in req.controls.values())
         if rgb is None:
@@ -304,6 +328,10 @@ class CosmosClient:
                                          f"request: it uploads no clip video to mask (controls "
                                          f"{sorted(req.controls)} are server-rendered or derived and no RGB "
                                          f"is uploaded)")
+                # ... and refuse a mask the backend has no input for, before the re-encode
+                unsupported = mask_support_errors(contract, _mask_class_names(mask_tags))
+                if unsupported:
+                    raise CosmosError(0, f"request for '{backend}' is invalid", unsupported)
                 send_mask = bool([n for n in contract.maskable_controls if n in req.controls])
                 masked = self._mask_clip_videos(clip, wanted, mask_tags, dilate, send_mask, stack)
                 if send_mask:

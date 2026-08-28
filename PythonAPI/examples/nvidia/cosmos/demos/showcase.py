@@ -58,6 +58,30 @@ from carla_cosmos.results import ResultStore  # noqa: E402
 GOLDEN = ("A city street at golden hour, low warm sunlight raking across the asphalt, long shadows "
           "from the buildings, photorealistic dashcam footage, cinematic colour grading")
 
+NIGHT = ("The same street at night, street lamps and lit shop windows on the sidewalks, headlights and red "
+         "tail lights on the road, deep blue sky above the rooftops, photorealistic dashcam footage")
+
+CITY_DAY = ("A photorealistic city street in the early afternoon, clear sky, parked cars along the curb, "
+            "pedestrians on the sidewalk, footage from a car-mounted camera")
+
+# The Cosmos 3 tuning rows: name what is actually in the frame instead of describing a generic
+# street, and say in the negative prompt what the untuned c3-wsm-depth-seg render looked like.
+TUNE_PROMPT = ("dark red sedan directly ahead, white ambulance on the right, cyclists, tall downtown "
+               "buildings, crisp sharp midday light, high contrast, photorealistic dashcam footage")
+TUNE_NEGATIVE = "hazy, foggy, washed out, low contrast, blurry, overexposed, dull colors"
+
+# vLLM-Omni's Cosmos 3 transfer path (pinned ref d3c990dc,
+# ``vllm_omni/diffusion/models/cosmos3/{transfer,pipeline_cosmos3}.py``) applies its per-hint
+# preset (``TRANSFER_DEFAULTS``: wsm 1.0/3.0/10, depth+edge+blur 3.0/1.5/10, seg 3.0/2.0/10 for
+# guidance / control_guidance / flow_shift) **only when the request carries exactly one hint**.
+# A multi-hint request such as ``c3-wsm-depth-seg`` silently falls back to
+# ``COSMOS3_T2V_DEFAULT_GUIDANCE_SCALE = 6.0`` with ``control_guidance`` 1.0 and the engine's flow
+# shift -- measured on 2026-08-28 that is what makes it hazy and low-contrast next to the sharp
+# single-hint ``c3-wsm``.  The tuning rows put the single-hint regime back on by hand;
+# ``control_guidance`` and ``flow_shift`` travel in ``JobRequest.extra``, which the cosmos3 worker
+# passes to vLLM-Omni verbatim.
+PRESET_REGIME: dict[str, Any] = {"control_guidance": 2.0, "flow_shift": 10.0}
+
 
 @dataclass
 class Row:
@@ -75,6 +99,12 @@ class Row:
     resolution: str | None = None
     views: int | None = None
     seed: int = 7
+    negative_prompt: str | None = None
+    guidance: float | None = None
+    """Text CFG scale.  ``None`` leaves the backend default (see the tuning rows)."""
+    skip: str | None = None
+    """Why this row is defined but not submitted.  Kept in the matrix as a record of the
+    experiment and the reason it is not worth GPU time; ``--force`` runs it anyway."""
     extra: dict[str, Any] = field(default_factory=dict)
 
 
@@ -94,9 +124,7 @@ MATRIX: list[Row] = [
         "photorealistic dashcam footage",
         {"depth": "clip", "seg": "clip", "edge": "derive"}, resolution="720",
         shows="same controls, heavy rain and a wet road"),
-    Row("t25-night", "transfer2.5", "t25",
-        "The same street at night, street lamps and lit shop windows on the sidewalks, headlights and red "
-        "tail lights on the road, deep blue sky above the rooftops, photorealistic dashcam footage",
+    Row("t25-night", "transfer2.5", "t25", NIGHT,
         {"depth": "clip", "seg": "clip", "edge": "derive"}, resolution="720",
         shows="same controls, night"),
     # ---- control weights: what each branch contributes --------------------------------------
@@ -114,17 +142,112 @@ MATRIX: list[Row] = [
         {"depth": "clip", "seg": "clip", "edge": "derive"}, mask_classes=["vru"], resolution="720",
         shows="vulnerable road users removed (pedestrians, riders, bicycles, motorcycles), "
               "same prompt and controls as t25-golden"),
+    # ---- vis: the "just RGB" restyle mode ---------------------------------------------------
+    # No control video is uploaded at all: the only input is the RGB, and Transfer 2.5 derives the
+    # `vis` (blurred-colour) control from it server-side.  Compared with the depth+seg+edge rows
+    # this keeps the *appearance* of the capture (colours, layout, lighting direction) and lets the
+    # prompt do the restyling, instead of handing the model an explicit geometry branch.
+    Row("t25-vis-golden", "transfer2.5", "t25", GOLDEN,
+        {"vis": "derive"}, resolution="720",
+        shows="vis derived from the RGB alone, golden hour (same prompt as t25-golden)"),
+    Row("t25-vis-night", "transfer2.5", "t25", NIGHT,
+        {"vis": "derive"}, resolution="720",
+        shows="vis derived from the RGB alone, night (same prompt as t25-night)"),
+    # The mask reaches a derived control twice over: the uploaded RGB is blanked, so the server-side
+    # derivation sees the hole, *and* Transfer 2.5 takes the mask video itself as ControlConfig
+    # mask_path -- the vis branch has zero weight inside the hole (contracts.py, "Masking").
+    Row("t25-vis-mask-vehicles", "transfer2.5", "t25", GOLDEN,
+        {"vis": "derive"}, mask_classes=["vehicle"], resolution="720",
+        shows="vis from a masked RGB + the mask as a control-weight map: no evidence of the traffic"),
+    Row("t25-vis-mask-vru", "transfer2.5", "t25", GOLDEN,
+        {"vis": "derive"}, mask_classes=["vru"], resolution="720",
+        shows="same as t25-vis-mask-vehicles for the vulnerable road users"),
     # ---- Cosmos 3 Nano: the world-scenario map ----------------------------------------------
     Row("c3-wsm", "cosmos3-nano", "wsm",
-        "A photorealistic city street in the early afternoon, clear sky, parked cars along the curb, "
-        "pedestrians on the sidewalk, footage from a car-mounted camera",
+        CITY_DAY,
         {"wsm": "scene"}, resolution="720",
         shows="world-scenario map alone: layout from the scene package, appearance from the prompt"),
     Row("c3-wsm-depth-seg", "cosmos3-nano", "wsm",
-        "A photorealistic city street in the early afternoon, clear sky, parked cars along the curb, "
-        "pedestrians on the sidewalk, footage from a car-mounted camera",
+        CITY_DAY,
         {"wsm": "scene", "depth": "clip", "seg": "clip"}, resolution="720",
         shows="world-scenario map + depth and seg: layout and the captured appearance"),
+    # ---- Cosmos 3 Nano: the "just RGB" restyle mode, the A/B against the wsm rows -----------
+    # Same clip, prompt, seed and resolution as ``c3-wsm``; the only difference is what the model is
+    # conditioned on -- ``blur`` derived from the RGB instead of the world-scenario map.  Cosmos 3
+    # takes no mask video (``accepts_mask`` is false for every cosmos3 control), so on the masked row
+    # the hole exists only in the pixels the derivation reads.
+    Row("c3-blur", "cosmos3-nano", "wsm", CITY_DAY,
+        {"blur": "derive"}, resolution="720", seed=7,
+        shows="blur derived from the RGB alone -- the Nano restyle, no world-scenario map"),
+    # Ran once on 2026-08-28 and answered the question for good: Cosmos 3 has no mask input, so the
+    # hole exists only in the pixels the blur hint is derived from - and the model reproduced the
+    # black silhouettes frame for frame instead of re-imagining them.  The client now refuses
+    # mask_classes for a backend with no maskable control (contracts.mask_support_errors), so this
+    # row is kept as the record of the measurement and not resubmitted.
+    Row("c3-blur-mask-vehicles", "cosmos3-nano", "wsm", CITY_DAY,
+        {"blur": "derive"}, mask_classes=["vehicle"], resolution="720", seed=7,
+        skip="Cosmos 3 has no mask input: the stored run came back with the masked vehicles as "
+             "black holes, and the client now refuses the request (2026-08-28)",
+        shows="blur from a masked RGB: pixels-only masking, and the black hole survives into the "
+              "output - the reason cosmos3 + mask_classes is now a validation error"),
+    # Can the Nano restyle through a hint derived from the RGB?  Not through ``blur``: the control
+    # is a bilateral-filtered, down-up-sampled copy of the capture (``make_blur_control``), so it
+    # carries every colour and every luminance and the palette of the output is the palette of the
+    # input whatever the prompt says.  Measured on frame 50 of showcase_wsm with the vendor kernel
+    # ported to ``carla_cosmos.controls.blur_control``: mean |diff| to the RGB is 20.5/255 at the
+    # default preset "medium" and only 22.7/255 at the strongest, "very_high"
+    # (``_clips/showcase_wsm/checks/blur_presets.png``).  The row stays here as the record.
+    Row("c3-blur-night", "cosmos3-nano", "wsm",
+        "the same street at night in heavy rain, wet asphalt reflecting neon signs and headlights, "
+        "photorealistic dashcam footage",
+        {"blur": "derive"}, weights={"blur": 0.5}, resolution="720", seed=7, guidance=4.0,
+        extra={"preset_blur_strength": "very_high", **PRESET_REGIME},
+        skip="the blur hint pins the palette by construction: even the strongest preset is 22.7/255 "
+             "from the RGB, so a night prompt cannot win against it (measured 2026-08-28)",
+        shows="strongest blur preset + guidance 4.0 against a contradicting prompt - not run"),
+    # ``edge`` is the same question asked of a control that carries no colour at all: Canny lines
+    # from the RGB fix the geometry and leave the entire appearance to the prompt.  Run at the
+    # vendor's own single-hint edge preset (TRANSFER_DEFAULTS["edge"]: guidance 3.0,
+    # control_guidance 1.5, flow_shift 10) written out explicitly, so the record says what ran.
+    Row("c3-edge-night", "cosmos3-nano", "wsm",
+        "the same street at night in heavy rain, wet asphalt reflecting neon signs and headlights, "
+        "photorealistic dashcam footage",
+        {"edge": "derive"}, weights={"edge": 0.5}, resolution="720", seed=7, guidance=3.0,
+        extra={"control_guidance": 1.5, "flow_shift": 10.0},
+        shows="edge derived from the RGB (structure only, no colours) against a night+rain prompt: "
+              "the restyle test the blur branch cannot pass"),
+    # The RGB *complemented* by geometry rather than replaced by it: the blur hint carries the
+    # captured appearance, depth and seg carry the structure, and the weights lean on the geometry
+    # (normalised to 0.16 / 0.53 / 0.32).  The night prompt is deliberate -- it is the only way to
+    # see how much of the palette the blur branch is still pinning once other hints pull.
+    # ``preset_blur_strength`` is not named here: the client defaults a derived blur/vis hint to
+    # ``carla_cosmos.client.DEFAULT_BLUR_PRESET`` ("very_high").
+    Row("c3-rgb-depth-seg-night", "cosmos3-nano", "wsm",
+        "the same street at night in heavy rain, wet asphalt reflecting neon signs and headlights, "
+        "photorealistic dashcam footage",
+        {"blur": "derive", "depth": "clip", "seg": "clip"},
+        weights={"blur": 0.3, "depth": 1.0, "seg": 0.6}, resolution="720", seed=7,
+        guidance=2.0, extra=dict(PRESET_REGIME),
+        shows="RGB (as the blur hint) complemented by captured depth and seg, multi-hint preset "
+              "regime, night+rain prompt"),
+    # ---- Cosmos 3 Nano tuning: undo the multi-hint guidance fallback -----------------------
+    # Same clip and seed (7) as c3-wsm-depth-seg throughout; one variable added per row.
+    Row("c3-tune-presets", "cosmos3-nano", "wsm", CITY_DAY,
+        {"wsm": "scene", "depth": "clip", "seg": "clip"}, resolution="720", seed=7,
+        guidance=2.0, extra=dict(PRESET_REGIME),
+        shows="c3-wsm-depth-seg with the single-hint preset regime put back by hand "
+              "(guidance 2.0 / control_guidance 2.0 / flow_shift 10) and nothing else changed"),
+    Row("c3-tune-weights", "cosmos3-nano", "wsm", TUNE_PROMPT,
+        {"wsm": "scene", "depth": "clip", "seg": "clip"},
+        weights={"wsm": 0.4, "depth": 1.0, "seg": 0.6}, resolution="720", seed=7,
+        guidance=2.0, extra=dict(PRESET_REGIME), negative_prompt=TUNE_NEGATIVE,
+        shows="the preset regime plus depth-led control weights, a prompt naming what is in the "
+              "frame and a negative prompt naming the haze"),
+    Row("c3-tune-depthseg", "cosmos3-nano", "wsm", TUNE_PROMPT,
+        {"depth": "clip", "seg": "clip"}, resolution="720", seed=7,
+        guidance=3.0, extra=dict(PRESET_REGIME), negative_prompt=TUNE_NEGATIVE,
+        shows="captured geometry only, no world-scenario map, at the depth/seg preset "
+              "(guidance 3.0): is the haze coming from wsm?"),
     # ---- Transfer 2.5 AV multiview: seven cameras, one joint generation ---------------------
     Row("av7-day", "transfer2.5-av", "av7",
         "An urban street in the late afternoon, clear sky, dry asphalt, photorealistic footage from a "
@@ -245,12 +368,14 @@ def run_row(cosmos, row: Row, clip, results: str | None, log, viewer_video: bool
     rec: dict[str, Any] = {"id": row.id, "backend": row.backend, "clip_id": clip.manifest.clip_id,
                            "clip_dir": str(clip.path), "prompt": row.prompt, "controls": row.controls,
                            "weights": row.weights, "mask_classes": row.mask_classes, "shows": row.shows,
-                           "resolution": row.resolution, "seed": row.seed}
+                           "resolution": row.resolution, "seed": row.seed,
+                           "negative_prompt": row.negative_prompt, "guidance": row.guidance}
     t0 = time.time()
     try:
         job = cosmos.submit_clip(clip, row.backend, row.prompt, dict(row.controls), views=views,
                                  weights=row.weights, mask_classes=row.mask_classes,
-                                 resolution=row.resolution, seed=row.seed, extra=row.extra or None)
+                                 resolution=row.resolution, seed=row.seed, extra=row.extra or None,
+                                 negative_prompt=row.negative_prompt, guidance=row.guidance)
     except CosmosError as exc:
         rec.update(status="rejected", error=str(exc), errors=list(getattr(exc, "errors", []) or []))
         log.error("[%s] rejected: %s %s", row.id, exc, rec["errors"])
@@ -347,6 +472,14 @@ def main(argv: list[str] | None = None) -> int:
             if done_dir is not None:
                 log.info("[%s] already stored in %s — skipping (--force to rerun)", row.id, done_dir)
                 records.append(ledger[row.id])
+                continue
+            if row.skip and not args.force:
+                rec = {"id": row.id, "backend": row.backend, "status": "skipped",
+                       "error": row.skip, "shows": row.shows}
+                records.append(rec)
+                ledger[row.id] = rec
+                ledger_path.write_text(json.dumps(ledger, indent=2))
+                log.info("[%s] not submitted: %s (--force to run it anyway)", row.id, row.skip)
                 continue
             if not args.mock:
                 info = cosmos.models().get(row.backend)

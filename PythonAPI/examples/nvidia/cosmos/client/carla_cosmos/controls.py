@@ -154,6 +154,57 @@ def masked_canny(rgb: np.ndarray, tags: np.ndarray | None = None, exclude_tags: 
     return np.repeat(edges[:, :, None], 3, axis=2)
 
 
+# ----------------------------------------------------------------------------- blur
+
+BLUR_DOWNUP_PRESETS: dict[str, int] = {"none": 1, "very_low": 4, "low": 4, "medium": 10,
+                                       "high": 16, "very_high": 16}
+BLUR_PRE_BLUR_DOWNSCALE_PRESETS: dict[str, int] = {"none": 1, "very_low": 1, "low": 4, "medium": 2,
+                                                   "high": 1, "very_high": 4}
+_BILATERAL_REFERENCE_RESOLUTION = 720
+_BILATERAL_D = 30
+_BILATERAL_SIGMA_COLOR = 150.0
+_BILATERAL_SIGMA_SPACE = 100.0
+
+
+def blur_control(rgb: np.ndarray, preset: str = "medium") -> np.ndarray:
+    """Cosmos 3's ``blur`` hint as the server derives it, computed here instead.
+
+    A port of vLLM-Omni ``make_blur_control``
+    (``vllm_omni/diffusion/models/cosmos3/transfer.py``, pinned ref ``d3c990dc``): optional
+    pre-blur downscale, one bilateral filter whose diameter and sigmas are scaled to the frame's
+    longest side, then a down-up resample by the preset's factor.
+
+    It exists to *see* what the model is given, because the server does not return a hint it
+    derived itself.  The answer that motivated it: the blur control keeps every colour and every
+    luminance of the capture, so a job whose only hint is ``blur`` can only re-texture the input,
+    never restyle it -- measured on ``showcase_wsm`` frame 50, mean |diff| to the RGB is 20.5/255
+    at the default ``medium`` and 22.7/255 at the strongest ``very_high``.
+    """
+    if preset not in BLUR_DOWNUP_PRESETS:
+        raise ValueError(f"unknown blur preset {preset!r}; known: {sorted(BLUR_DOWNUP_PRESETS)}")
+    if preset == "none":
+        return rgb.copy()
+    h, w = rgb.shape[:2]
+    pre = max(1, BLUR_PRE_BLUR_DOWNSCALE_PRESETS[preset])
+    downup = max(1, BLUR_DOWNUP_PRESETS[preset])
+    out = rgb
+    if pre > 1:
+        out = cv2.resize(out, (max(1, w // pre), max(1, h // pre)), interpolation=cv2.INTER_AREA)
+    longest = max(out.shape[:2])
+    scale = longest / _BILATERAL_REFERENCE_RESOLUTION
+    diameter = max(1, int(round(_BILATERAL_D * scale)))
+    if diameter % 2 == 0:
+        diameter += 1
+    out = cv2.bilateralFilter(out, diameter, max(1.0, _BILATERAL_SIGMA_COLOR * scale),
+                              max(1.0, _BILATERAL_SIGMA_SPACE * scale))
+    if pre > 1:
+        out = cv2.resize(out, (w, h), interpolation=cv2.INTER_LINEAR)
+    if downup > 1:
+        out = cv2.resize(out, (max(1, w // downup), max(1, h // downup)), interpolation=cv2.INTER_CUBIC)
+        out = cv2.resize(out, (w, h), interpolation=cv2.INTER_CUBIC)
+    return out
+
+
 # ----------------------------------------------------------------------------- ffmpeg
 
 ENCODER_ARGS: dict[str, list[str]] = {

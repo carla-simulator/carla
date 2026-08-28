@@ -303,6 +303,22 @@ class RecorderInfo(BaseModel):
     duration: float
 
 
+class FThetaModel(BaseModel):
+    """A measured f-theta lens, as NVIDIA's rigs carry it.
+
+    ``poly`` is the ``pixeldistance-to-angle`` polynomial (lowest order first), the same
+    convention :func:`carla_cosmos.clipgt.pinhole_ftheta_poly` *fits* for a pinhole camera.
+    When a camera manifest carries one of these the calibration table writes it verbatim
+    instead of fitting, so a clip whose pixels came from a real lens describes that lens.
+    """
+
+    cx: float
+    cy: float
+    poly: list[float]
+    max_angle: float | None = None
+    linear_cde: list[float] = [1.0, 0.0, 0.0]
+
+
 class CameraManifest(BaseModel):
     """A camera as actually mounted on the ego (after the mounting rule)."""
 
@@ -311,6 +327,8 @@ class CameraManifest(BaseModel):
     width: int
     height: int
     lens: str = "pinhole"
+    ftheta: FThetaModel | None = None
+    """Measured lens.  ``None`` (the default) means the calibration is fitted from ``hfov``."""
     t_flu: list[float]
     """Actual position, FLU metres, relative to the rear-axle-on-ground origin."""
     rpy_flu: list[float]
@@ -457,9 +475,31 @@ def validate_request(contract: BackendContract, request: JobRequest,
     return errors
 
 
+def mask_support_errors(contract: BackendContract, mask_classes: list[str]) -> list[str]:
+    """Refuse ``mask_classes`` on a backend that has no mask input at all.
+
+    Checked before anything is re-encoded (``CosmosClient.submit_clip``) as well as inside
+    :func:`validate_request`, because the masking pass is a full re-encode of every uploaded video.
+    """
+    if not mask_classes or contract.maskable_controls:
+        return []
+    return [f"'{contract.id}' has no mask input: no control of this backend accepts a mask video, so "
+            f"mask_classes={mask_classes} could only blank the pixels — and the model reproduces the "
+            f"black hole instead of re-imagining it (measured 2026-08-28, c3-blur-mask-vehicles: the "
+            f"masked vehicles came back as black silhouettes). Take the objects out of the ClipGT "
+            f"scene package instead (the wsm control is rendered from it), or use a backend whose "
+            f"controls accept a mask — Cosmos Transfer 2.5 general turns it into a control-weight map."]
+
+
 def _validate_masks(contract: BackendContract, request: JobRequest, views: list[str]) -> list[str]:
-    """Mask videos: only where a control accepts one, and one per requested view."""
-    errors: list[str] = []
+    """Mask videos: only where a control accepts one, and one per requested view.
+
+    A backend with no maskable control at all also refuses ``mask_classes``: the mask could then
+    only be baked into the pixels, and a pixels-only mask does not remove anything — measured on
+    the node 2026-08-28, ``c3-blur-mask-vehicles`` (Cosmos 3 Nano, blur derived from a masked RGB)
+    reproduced the black silhouettes in the output frame for frame.
+    """
+    errors = mask_support_errors(contract, request.mask_classes)
     if not request.masks:
         return errors
     maskable = [n for n in contract.maskable_controls if n in request.controls]

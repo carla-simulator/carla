@@ -264,3 +264,37 @@ def test_the_filter_switches_itself_off_without_a_calibration():
     exp.frame = WorldFrame(np.eye(4))
     exp._begin_visibility()
     assert exp.visibility.mode == "none"
+
+
+class FakeVehicle(FakeActor):
+    """A live actor as ``_scan_actors`` reads it."""
+
+    def __init__(self, actor_id, x, y, type_id="vehicle.audi.tt", attributes=None):
+        super().__init__(actor_id, x, y)
+        self.type_id = type_id
+        self.attributes = attributes or {"base_type": "car", "number_of_wheels": "4"}
+        self.bounding_box = bbox(0.0, 0.0)
+
+
+class ActorList(list):
+    def filter(self, _pattern):
+        return []
+
+
+def test_the_hero_is_not_a_dynamic_obstacle():
+    """The ego is the rig, not an obstacle.
+
+    NVIDIA's ClipGT keeps the ego in ``egomotion_estimate`` only - their reference package
+    (``multiview_example1``) has no obstacle track that follows the ego pose - and the
+    world-scenario renderer draws every row of the obstacle table, so an ego row would put a
+    box around the camera in every frame.  ``_scan_actors`` skips it by actor id.
+    """
+    hero = FakeVehicle(7, 0.0, 0.0)
+    other = FakeVehicle(9, 20.0, 4.0)
+    walker = FakeVehicle(11, 5.0, 1.0, type_id="walker.pedestrian.0001")
+    world = FakeWorld({})
+    world.get_actors = lambda: ActorList([hero, other, walker])
+    exp = SceneExporter(world, "clip", hero, np.zeros(3))
+    exp.frame = WorldFrame(np.eye(4))
+    exp._scan_actors()
+    assert [aid for aid, _cat, _bb in exp._actors] == [9, 11]

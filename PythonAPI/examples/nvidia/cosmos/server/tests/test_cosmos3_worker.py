@@ -12,7 +12,8 @@ import pytest
 from carla_cosmos_server.config import default_run_dir
 from cosmos_workers.common import protocol
 from cosmos_workers.common.base import add_common_args
-from cosmos_workers.cosmos3.worker import Cosmos3Worker, _resolve_model, build_parser
+from cosmos_workers.cosmos3.worker import (MULTI_HINT_DEFAULTS, Cosmos3Worker, _resolve_model,
+                                          build_parser, effective_sampling)
 
 FAKE = Path(__file__).with_name("fake_vllm_omni.py")
 
@@ -187,3 +188,50 @@ def test_rendered_control_comes_back(worker, clip16, tmp_path):
     assert [(f["name"], f["kind"]) for f in done["files"]] == [
         ("camera_front_wide_120fov.mp4", "video"), ("control_depth.mp4", "control")]
     assert (tmp_path / "out" / "control_depth.mp4").stat().st_size == clip16.video("depth", clip16.manifest.camera_names[0]).stat().st_size
+
+
+def _worker(tmp_path):
+    parser = build_parser()
+    add_common_args(parser)
+    args = parser.parse_args(["--socket", "x", "--hf-home", str(tmp_path / "nohf"),
+                              "--model", "nvidia/Cosmos3-Nano", "--no-guardrails"])
+    return Cosmos3Worker(args)
+
+
+def _req(controls, **kw):
+    return {"backend": "cosmos3-nano", "prompt": "p", "seed": 7, "resolution": "720",
+            "controls": controls, **kw}
+
+
+def test_a_multi_hint_request_gets_our_guidance_regime(tmp_path):
+    """vLLM-Omni applies its per-hint preset only when ``len(hints) == 1``.
+
+    With more hints it silently falls back to guidance 6.0 / control_guidance 1.0, which is what
+    made ``c3-wsm-depth-seg`` hazy on 2026-08-28 next to the sharp single-hint ``c3-wsm``.
+    """
+    w = _worker(tmp_path)
+    manifest = {"frames": 101, "fps": 10, "rig": {"cameras": [{"name": "cam"}]}}
+    inputs = {"controls": {"wsm": {"path": "/w.mp4"}, "depth": {"path": "/d.mp4"},
+                           "seg": {"path": "/s.mp4"}}}
+
+    fields, _files, extra = w._build_request(_req({"wsm": {}, "depth": {}, "seg": {}}), manifest, inputs, "cam")
+    assert fields["guidance_scale"] == str(MULTI_HINT_DEFAULTS["guidance_scale"])
+    assert extra["control_guidance"] == MULTI_HINT_DEFAULTS["control_guidance"]
+    assert extra["flow_shift"] == MULTI_HINT_DEFAULTS["flow_shift"]
+    sampling = effective_sampling(fields, extra)
+    assert sampling["hints"] == ["depth", "seg", "wsm"]
+    assert sampling["guidance_scale"] == {"value": 2.0, "source": "multi_hint_default"}
+
+    # the caller still wins, on both the form field and the extra keys
+    fields, _files, extra = w._build_request(
+        _req({"wsm": {}, "depth": {}, "seg": {}}, guidance=6.5,
+             extra={"control_guidance": 1.0, "flow_shift": 3.0}), manifest, inputs, "cam")
+    assert fields["guidance_scale"] == "6.5" and extra["control_guidance"] == 1.0
+    assert effective_sampling(fields, extra)["flow_shift"] == {"value": 3.0, "source": "request"}
+
+    # a single-hint request is left to vLLM-Omni's own preset, and the manifest says so
+    fields, _files, extra = w._build_request(_req({"wsm": {}}), manifest,
+                                             {"controls": {"wsm": {"path": "/w.mp4"}}}, "cam")
+    assert "guidance_scale" not in fields and "control_guidance" not in extra
+    assert effective_sampling(fields, extra)["guidance_scale"] == {"value": 1.0,
+                                                                   "source": "vllm_preset:wsm"}
