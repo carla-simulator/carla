@@ -10,6 +10,7 @@
 
 #include "carla/MsgPack.h"
 #include "carla/geom/Math.h"
+#include "carla/geom/RightHandedRotation.h"
 #include "carla/geom/Vector3D.h"
 
 #ifdef LIBCARLA_INCLUDED_FROM_UE4
@@ -21,6 +22,26 @@
 namespace carla {
 namespace geom {
 
+  /// Euler angles of a rotation in **CARLA's / Unreal's left-handed frame**:
+  /// x forward, y right, z up, degrees.
+  ///
+  /// The three angles compose as
+  /// `R = Rz(+yaw) * Ry(-pitch) * Rx(-roll)` with the standard
+  /// (right-handed) elementary matrices, which is the same thing as saying:
+  ///
+  ///   * `+yaw`   turns the nose to the **right**;
+  ///   * `+pitch` tilts the nose **up**    -> `forward.z = +sin(pitch)`;
+  ///   * `+roll`  drops the **right** side -> `right.z = -cos(pitch)*sin(roll)`.
+  ///
+  /// This is CARLA 0.9.x's documented convention and it is what the engine
+  /// builds from the same `FRotator`, verified against rendered camera frames
+  /// on UE5.8. `RotateVector`, `Transform::GetMatrix` and
+  /// `Math::Get{Forward,Right,Up}Vector` all live in this frame and must not
+  /// be "corrected" towards a right-handed convention.
+  ///
+  /// For ROS / REP-103 consumers convert explicitly at the boundary with
+  /// `ToRightHanded()` / `FromRightHanded()`; see `RightHandedRotation` and
+  /// `Docs/coordinate_conventions.md`.
   class Rotation {
   public:
 
@@ -42,7 +63,7 @@ namespace geom {
 
     Rotation() = default;
 
-    Rotation(float p, float y, float r)
+    constexpr Rotation(float p, float y, float r)
       : pitch(p),
         yaw(y),
         roll(r) {}
@@ -168,6 +189,28 @@ namespace geom {
       }
       
       return V0;
+    }
+
+    // =========================================================================
+    // -- Right-handed (ROS / FLU) boundary ------------------------------------
+    // =========================================================================
+
+    /// This rotation expressed in a right-handed, x-forward / y-**left** /
+    /// z-up frame (ROS REP-103 "FLU"), as intrinsic Z-Y-X Euler angles under
+    /// the right-hand rule.
+    ///
+    /// Mirroring the Y axis maps `Rz(+yaw) * Ry(-pitch) * Rx(-roll)` onto
+    /// `Rz(-yaw) * Ry(+(-pitch)) * Rx(+roll)`, so pitch and yaw flip sign and
+    /// roll does not. Example: `Rotation(pitch=20, yaw=30, roll=10)` becomes
+    /// `RightHandedRotation(roll=10, pitch=-20, yaw=-30)`.
+    constexpr RightHandedRotation ToRightHanded() const {
+      return RightHandedRotation(roll, -pitch, -yaw);
+    }
+
+    /// Inverse of `ToRightHanded()`. The mapping is an involution, so the same
+    /// three sign flips apply in both directions.
+    static constexpr Rotation FromRightHanded(const RightHandedRotation &rhs) {
+      return Rotation(-rhs.pitch, -rhs.yaw, rhs.roll);
     }
 
     // =========================================================================
