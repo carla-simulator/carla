@@ -56,6 +56,13 @@ killed the AV multiview ranks on the 2026-08-28 node run while two Cosmos 3 jobs
 So the idle wait is a *loop of short broadcasts* instead of one long one: every ``HEARTBEAT_S`` rank
 0 broadcasts either the next job or ``None``, and no collective is ever outstanding for more than a
 few seconds.  An idle worker costs one 1-element broadcast every 5 s.
+
+Those idle broadcasts must NOT run on NCCL.  A rank waiting inside a NCCL collective keeps a kernel
+resident that busy-polls the GPU: on cosmos-dev4 (2026-08-28) the three parked Transfer 2.5 ranks
+showed 99.9 % CPU and 37-62 % SM on GPUs 1-3 while a Cosmos 3 Nano job ran on the same GPUs, and the
+Nano job slowed from ~14 s to ~51 s per diffusion step.  The idle loop therefore broadcasts over a
+separate ``gloo`` group (:func:`idle_group`) -- a socket wait on the CPU, nothing on the GPU -- and the
+NCCL group is only ever used inside ``generate``.
 """
 
 
@@ -219,6 +226,18 @@ def distributed_state(engine: str) -> tuple[int, int, Any]:
     return dist.get_rank(), dist.get_world_size(), dist
 
 
+def idle_group(dist: Any):
+    """The process group the idle heartbeat broadcasts on: ``gloo`` when the main group is NCCL.
+
+    Every rank must call this once, before the loop (``new_group`` is itself collective).  Returns
+    ``None`` (= the default group) when there is no distributed state or the main group already is
+    gloo (the fake engine in tests), so single-rank and CPU runs are unchanged.
+    """
+    if dist is None or dist.get_backend() != "nccl":
+        return None
+    return dist.new_group(backend="gloo")
+
+
 def _normalise(paths: list[str] | str | None) -> list[str]:
     if not paths:
         return []
@@ -230,6 +249,7 @@ def run_rank_loop(args: argparse.Namespace, engine: RankEngine, extra_info: dict
     spool = Path(args.spool)
     req_dir, res_dir = spool / "requests", spool / "results"
     rank, world, dist = distributed_state(args.engine)
+    idle = idle_group(dist)
     if rank == 0:
         req_dir.mkdir(parents=True, exist_ok=True)
         res_dir.mkdir(parents=True, exist_ok=True)
@@ -247,7 +267,9 @@ def run_rank_loop(args: argparse.Namespace, engine: RankEngine, extra_info: dict
             if dist is None:
                 continue
             box = [payload]
-            dist.broadcast_object_list(box, src=0)   # completes within HEARTBEAT_S, idle or not
+            # completes within HEARTBEAT_S, idle or not -- and on gloo, so no GPU kernel is
+            # left spinning while the worker waits (see HEARTBEAT_S)
+            dist.broadcast_object_list(box, src=0, group=idle)
             payload = box[0]
         if payload["__file"] == SHUTDOWN_FILE:
             log.info("shutdown requested")

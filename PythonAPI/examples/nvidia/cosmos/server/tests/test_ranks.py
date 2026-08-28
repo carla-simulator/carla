@@ -166,3 +166,27 @@ def test_supervisor_restarts_ranks_that_died_while_idle(tmp_path, clip93):
         assert res["ok"] and sup.alive and sup.proc is not first
     finally:
         sup.stop()
+
+
+def test_idle_group_leaves_nccl_alone_and_is_gloo():
+    """The idle heartbeat must wait on gloo (CPU): a rank parked in a NCCL broadcast keeps a kernel
+    busy-polling the GPU and steals SMs from whatever else runs there (cosmos-dev4, 2026-08-28)."""
+    from cosmos_workers.common import ranks as r
+
+    class FakeDist:
+        def __init__(self, backend):
+            self._backend = backend
+            self.new_groups = []
+
+        def get_backend(self):
+            return self._backend
+
+        def new_group(self, backend=None):
+            self.new_groups.append(backend)
+            return ("group", backend)
+
+    assert r.idle_group(None) is None
+    gloo = FakeDist("gloo")
+    assert r.idle_group(gloo) is None and gloo.new_groups == []
+    nccl = FakeDist("nccl")
+    assert r.idle_group(nccl) == ("group", "gloo") and nccl.new_groups == ["gloo"]
