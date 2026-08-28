@@ -16,25 +16,50 @@ class CameraSpec:
     yaw_left_deg: float
     pitch_up_deg: float
     fov_deg: float
-    roll_carla_deg: float = 0.0
+    roll_right_up_deg: float = 0.0
     focal_length_px: float | None = None
     kannala_brandt: tuple[float, float, float, float] | None = None
     principal_point_px: tuple[float, float] | None = None
 
     def carla_pose(self, rear_axle_x: float) -> tuple[float, float, float, float, float, float]:
-        """Return x/y/z and pitch/yaw/roll in CARLA's left-handed local frame."""
+        """Return x/y/z and pitch/yaw/roll in CARLA's left-handed local frame.
+
+        The stored angles follow the NVIDIA rig convention -- DriveWorks
+        ``nominalSensor2Rig_FLU``, an FLU frame (x forward, y left, z up) with
+        right-hand-rule roll/pitch/yaw -- but each field is named for the
+        direction in which it is positive rather than for the raw FLU sign:
+
+        ==========================  =========================  ==================
+        field                       positive means             CARLA equivalent
+        ==========================  =========================  ==================
+        ``y_left``                  camera sits to the left    ``y = -y_left``
+        ``pitch_up_deg``            camera aims up             ``pitch = +pitch_up_deg``
+        ``yaw_left_deg``            camera aims left           ``yaw = -yaw_left_deg``
+        ``roll_right_up_deg``       right side rises           ``roll = -roll_right_up_deg``
+        ==========================  =========================  ==================
+
+        In FLU terms ``pitch_up_deg = -pitch_flu``, ``yaw_left_deg = +yaw_flu``
+        and ``roll_right_up_deg = -roll_flu``.  CARLA is left-handed with pitch
+        positive up, yaw positive clockwise seen from above and roll positive
+        with the right side down, so only yaw and roll flip sign here; pitch
+        already agrees with ``pitch_up_deg``.  See
+        ``Docs/coordinate_conventions.md`` and ``tests/test_rig.py`` for the
+        measurements that pinned these signs down.
+        """
         return (
             rear_axle_x + self.x,
             -self.y_left,
             self.z,
-            -self.pitch_up_deg,
+            self.pitch_up_deg,
             -self.yaw_left_deg,
-            self.roll_carla_deg,
+            -self.roll_right_up_deg,
         )
 
 
-# Pose and lens values come from the public Alpamayo 2 validation calibration.
-# The fitted Kannala-Brandt coefficients reproduce each source F-theta curve.
+# Pose and lens values come from the public Alpamayo 2 validation calibration
+# of NVIDIA's seven-camera RDS-HQ rig, in the FLU sensor-to-rig frame (see
+# CameraSpec.carla_pose for the per-field sign convention).  The fitted
+# Kannala-Brandt coefficients reproduce each source F-theta curve.
 CAMERA_RING: tuple[CameraSpec, ...] = (
     CameraSpec(
         0, "camera_cross_left_120fov", "Front left",
@@ -98,7 +123,7 @@ CARLA_THIRD_PERSON_CAMERA = CameraSpec(
     0.0,
     5.0,
     0.0,
-    32.0,
+    -32.0,  # aims 32 deg DOWN at the hero; pitch_up_deg is positive-up
     90.0,
 )
 DISPLAY_CAMERA_RING = CAMERA_RING + (CARLA_THIRD_PERSON_CAMERA,)

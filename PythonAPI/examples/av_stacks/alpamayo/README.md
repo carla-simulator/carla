@@ -195,7 +195,13 @@ closely match the PhysicalAI-AV source vehicle. Camera translations are the
 public calibration coordinates in the source rear-axle frame, converted to the
 MKZ actor frame with the calibrated 1.3535 m rear-axle-to-box-center offset.
 Full roll, pitch, and yaw are retained when converting the source optical frame
-to CARLA's vehicle frame.
+to CARLA's vehicle frame. The stored angles are NVIDIA's FLU sensor-to-rig
+values (DriveWorks `nominalSensor2Rig_FLU`) named for the direction in which
+they are positive: `pitch_up_deg` is positive up, `yaw_left_deg` positive left,
+`roll_right_up_deg` positive with the right side rising. `CameraSpec.carla_pose`
+turns them into CARLA's left-handed frame as `(pitch_up_deg, -yaw_left_deg,
+-roll_right_up_deg)`; the pitch and roll signs were verified against the live
+server on 2026-08-28 (see `tests/test_rig.py`).
 
 The MKZ roof intersects the two calibrated forward-center camera locations.
 Those cameras retain their calibrated horizontal position and orientation, but
