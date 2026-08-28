@@ -186,10 +186,10 @@ class TestTransform(unittest.TestCase):
         point = carla.Location(x=0.0, y=0.0, z=2.0)
         t.transform(point)
 
-        # The point {0, 0, 2} rotated by pitch=90 lands at {2, 0, 0} under the
-        # corrected sign convention (pre-fix this returned {-2, 0, 0}); the
-        # translation by {0, 0, -1} then brings it to {2, 0, -1}.
-        self.assertTrue(abs(point.x - 2.0) <= error)
+        # Engine convention: +pitch is nose up, so pitch=90 sends the up axis
+        # {0, 0, 2} onto {-2, 0, 0}; the translation by {0, 0, -1} then brings
+        # it to {-2, 0, -1}. (#9751 briefly mirrored this to {2, 0, -1}.)
+        self.assertTrue(abs(point.x - (-2.0)) <= error)
         self.assertTrue(abs(point.y - 0.0) <= error)
         self.assertTrue(abs(point.z - (-1.0)) <= error)
 
@@ -205,12 +205,11 @@ class TestTransform(unittest.TestCase):
                       ]
         t.transform(point_list)
 
-        # pitch=90 maps (x, y, z) -> (z, y, -x) under the corrected sign
-        # convention (pre-fix the x column was negated); the translation by
-        # {0, 0, -1} is then added.
-        solution_list = [carla.Location(2.0, 0.0, -1.0),
-                         carla.Location(1.0, 10.0, -1.0),
-                         carla.Location(2.0, 18.0, -1.0)
+        # Engine convention: pitch=90 maps (x, y, z) -> (-z, y, x); the
+        # translation by {0, 0, -1} is then added.
+        solution_list = [carla.Location(-2.0, 0.0, -1.0),
+                         carla.Location(-1.0, 10.0, -1.0),
+                         carla.Location(-2.0, 18.0, -1.0)
                          ]
 
         for i in range(len(point_list)):
@@ -230,12 +229,11 @@ class TestTransform(unittest.TestCase):
                       ]
         t.transform(point_list)
 
-        # pitch=90 maps (x, y, z) -> (z, y, -x) under the corrected sign
-        # convention (pre-fix the x column was negated); the translation by
-        # {0, 0, -1} is then added.
-        solution_list = [carla.Vector3D(2.0, 0.0, -1.0),
-                         carla.Vector3D(1.0, 10.0, -1.0),
-                         carla.Vector3D(2.0, 18.0, -1.0)
+        # Engine convention: pitch=90 maps (x, y, z) -> (-z, y, x); the
+        # translation by {0, 0, -1} is then added.
+        solution_list = [carla.Vector3D(-2.0, 0.0, -1.0),
+                         carla.Vector3D(-1.0, 10.0, -1.0),
+                         carla.Vector3D(-2.0, 18.0, -1.0)
                          ]
 
         for i in range(len(point_list)):

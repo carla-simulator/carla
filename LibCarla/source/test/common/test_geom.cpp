@@ -15,6 +15,7 @@
 #include <carla/geom/Transform.h>
 #include <carla/geom/Vector3D.h>
 #include <carla/geom/Velocity.h>
+#include <array>
 #include <cmath>
 #include <limits>
 
@@ -129,17 +130,19 @@ TEST(geom, single_point_rotation) {
 TEST(geom, single_point_translation_and_rotation) {
   constexpr double error = 0.001;
 
-  // The point {0, 0, 2} rotated by pitch=90 lands at {2, 0, 0} under the
-  // corrected sign convention (pre-fix this returned {-2, 0, 0}). The
-  // subsequent translation by {0, 0, -1} brings the final point to
-  // {2, 0, -1}.
+  // Engine convention: `+pitch` tilts the forward axis up, so pitch=90
+  // sends the up axis {0, 0, 1} onto the backward axis {-1, 0, 0}. The
+  // point {0, 0, 2} therefore lands at {-2, 0, 0}, and the translation by
+  // {0, 0, -1} brings the final point to {-2, 0, -1}.
+  // #9751 mirrored this to {2, 0, -1}; the engine disagrees (a camera at
+  // pitch=+20 looks at the sky, verified on UE5.8 2026-08-27).
   Location translation (0.0,0.0,-1.0); // x y z
   Rotation rotation (90.0,0.0,0.0); // y z x
   Transform transform (translation, rotation);
 
   Location point (0.0, 0.0, 2.0);
   transform.TransformPoint(point);
-  Location result_point(2.0, 0.0, -1.0);
+  Location result_point(-2.0, 0.0, -1.0);
   ASSERT_NEAR(point.x, result_point.x, error);
   ASSERT_NEAR(point.y, result_point.y, error);
   ASSERT_NEAR(point.z, result_point.z, error);
@@ -223,9 +226,11 @@ TEST(geom, forward_vector) {
   compare({360.0f, 360.0f,   0.0f}, {1.0f, 0.0f, 0.0f});
   compare({  0.0f,  90.0f,   0.0f}, {0.0f, 1.0f, 0.0f});
   compare({  0.0f, -90.0f,   0.0f}, {0.0f,-1.0f, 0.0f});
-  // Regression guard for the pitch/roll fix: pitch=90 now produces
-  // {0, 0, -1}, not {0, 0, 1} as on the pre-fix matrix.
-  compare({ 90.0f,   0.0f,   0.0f}, {0.0f, 0.0f,-1.0f});
+  // Engine convention: `+pitch` is nose up, so pitch=90 points forward
+  // straight up, {0, 0, +1}. Empirically confirmed on the running UE5.8
+  // server (2026-08-27): a camera at Rotation(pitch=+20) fills the frame
+  // with sky. #9751 briefly asserted {0, 0, -1} here.
+  compare({ 90.0f,   0.0f,   0.0f}, {0.0f, 0.0f, 1.0f});
   compare({180.0f, -90.0f,   0.0f}, {0.0f, 1.0f, 0.0f});
 }
 
@@ -327,15 +332,131 @@ TEST(geom, quaternion_inverse_is_left_inverse) {
   }
 }
 
-TEST(geom, quaternion_pitch_90_forward_is_negative_z) {
-  // Regression guard for the pitch/roll fix from the ROS 2 port.
-  // Pre-fix the forward vector of pitch=90 was {0, 0, +1}; the corrected
-  // sign convention now yields {0, 0, -1}.
+TEST(geom, quaternion_pitch_90_forward_is_positive_z) {
+  // Engine convention guard: `+pitch` is nose up, so the forward vector of
+  // pitch=90 is {0, 0, +1}, the same answer `Rotation::GetForwardVector`
+  // gives. #9751 asserted {0, 0, -1} here, which mirrored the engine.
   const Quaternion q{Rotation{90.0f, 0.0f, 0.0f}};
   const Vector3D forward = q.GetForwardVector();
   EXPECT_NEAR(forward.x, 0.0f, 1e-5f);
   EXPECT_NEAR(forward.y, 0.0f, 1e-5f);
-  EXPECT_NEAR(forward.z, -1.0f, 1e-5f);
+  EXPECT_NEAR(forward.z, 1.0f, 1e-5f);
+}
+
+TEST(geom, engine_convention_pitch_up_roll_right_side_down) {
+  // The two empirical facts this whole sign convention rests on, measured
+  // on the running UE5.8 server on 2026-08-27 with a camera sensor and
+  // rendered frames (scratchpad pose_check.py, pitch_+-20.png /
+  // roll_+-25.png):
+  //   * a camera at Rotation(pitch=+20) is tilted UP  -> forward.z > 0
+  //   * a camera at Rotation(roll=+25) has its right side DOWN -> right.z < 0
+  // These match CARLA 0.9.x and the documented API semantics. #9751
+  // mirrored both.
+  constexpr float eps = 1e-5f;
+
+  const Rotation pitched{20.0f, 0.0f, 0.0f};
+  const Vector3D forward = pitched.GetForwardVector();
+  EXPECT_GT(forward.z, 0.0f);
+  EXPECT_NEAR(forward.z, std::sin(Math::ToRadians(20.0f)), eps);
+
+  const Rotation rolled{0.0f, 0.0f, 25.0f};
+  const Vector3D right = rolled.GetRightVector();
+  EXPECT_LT(right.z, 0.0f);
+  EXPECT_NEAR(right.z, -std::sin(Math::ToRadians(25.0f)), eps);
+
+  // Up completes a right-handed... (left-handed, in CARLA) orthonormal
+  // basis: for pure roll the up axis leans toward +Y.
+  const Vector3D up = rolled.GetUpVector();
+  EXPECT_GT(up.y, 0.0f);
+  EXPECT_NEAR(up.y, std::sin(Math::ToRadians(25.0f)), eps);
+}
+
+TEST(geom, get_matrix_agrees_with_rotate_vector_and_basis_vectors) {
+  // All four public math paths (Transform::GetMatrix, Rotation::RotateVector,
+  // Math::Get{Forward,Right,Up}Vector and Quaternion(Rotation)) must produce
+  // the same rotation for arbitrary pitch/yaw/roll. This is the guard that
+  // keeps a future sign edit from touching one path only.
+  constexpr float eps = 1e-4f;
+  const Rotation samples[] = {
+    {0.0f, 0.0f, 0.0f},
+    {20.0f, 0.0f, 0.0f},
+    {-20.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 25.0f},
+    {0.0f, 0.0f, -25.0f},
+    {13.0f, 47.0f, -31.0f},
+    {-62.0f, -155.0f, 88.0f},
+  };
+  const Vector3D axes[] = {
+    {1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}};
+
+  for (const auto &r : samples) {
+    const Transform t{Location{}, r};
+    const std::array<float, 16> m = t.GetMatrix();
+    const Vector3D basis[] = {
+      r.GetForwardVector(), r.GetRightVector(), r.GetUpVector()};
+    const Vector3D q_basis[] = {
+      Quaternion(r).GetForwardVector(),
+      Quaternion(r).GetRightVector(),
+      Quaternion(r).GetUpVector()};
+
+    for (int col = 0; col < 3; ++col) {
+      const Vector3D rotated = r.RotateVector(axes[col]);
+      // Column `col` of the 4x4 row-major matrix.
+      const float mx = m[static_cast<size_t>(col)];
+      const float my = m[static_cast<size_t>(4 + col)];
+      const float mz = m[static_cast<size_t>(8 + col)];
+      EXPECT_NEAR(mx, rotated.x, eps) << "col=" << col;
+      EXPECT_NEAR(my, rotated.y, eps) << "col=" << col;
+      EXPECT_NEAR(mz, rotated.z, eps) << "col=" << col;
+      EXPECT_NEAR(basis[col].x, rotated.x, eps) << "col=" << col;
+      EXPECT_NEAR(basis[col].y, rotated.y, eps) << "col=" << col;
+      EXPECT_NEAR(basis[col].z, rotated.z, eps) << "col=" << col;
+      EXPECT_NEAR(q_basis[col].x, rotated.x, eps) << "col=" << col;
+      EXPECT_NEAR(q_basis[col].y, rotated.y, eps) << "col=" << col;
+      EXPECT_NEAR(q_basis[col].z, rotated.z, eps) << "col=" << col;
+    }
+  }
+}
+
+TEST(geom, get_inverse_matrix_is_inverse_of_get_matrix) {
+  // GetInverseMatrix must actually invert GetMatrix, translation included,
+  // for non-zero pitch and roll.
+  constexpr float eps = 1e-3f;
+  const Transform samples[] = {
+    Transform{Location{1.0f, -2.0f, 3.0f}, Rotation{20.0f, 0.0f, 0.0f}},
+    Transform{Location{-5.0f, 4.0f, 0.5f}, Rotation{0.0f, 0.0f, 25.0f}},
+    Transform{Location{10.0f, 20.0f, 30.0f}, Rotation{13.0f, 47.0f, -31.0f}},
+  };
+  for (const auto &t : samples) {
+    const std::array<float, 16> m = t.GetMatrix();
+    const std::array<float, 16> mi = t.GetInverseMatrix();
+    for (int row = 0; row < 4; ++row) {
+      for (int col = 0; col < 4; ++col) {
+        float acc = 0.0f;
+        for (int k = 0; k < 4; ++k) {
+          acc += mi[static_cast<size_t>(row * 4 + k)] *
+                 m[static_cast<size_t>(k * 4 + col)];
+        }
+        EXPECT_NEAR(acc, (row == col) ? 1.0f : 0.0f, eps)
+            << "row=" << row << " col=" << col;
+      }
+    }
+  }
+}
+
+TEST(geom, inverse_rotate_vector_undoes_rotate_vector) {
+  constexpr float eps = 1e-4f;
+  const Rotation samples[] = {
+    {20.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 25.0f}, {13.0f, 47.0f, -31.0f}};
+  for (const auto &r : samples) {
+    const Vector3D v{1.0f, -2.0f, 3.0f};
+    Vector3D round_trip = v;
+    r.RotateVector(round_trip);
+    r.InverseRotateVector(round_trip);
+    EXPECT_NEAR(round_trip.x, v.x, eps);
+    EXPECT_NEAR(round_trip.y, v.y, eps);
+    EXPECT_NEAR(round_trip.z, v.z, eps);
+  }
 }
 
 TEST(geom, velocity_inherits_vector3d_storage) {
