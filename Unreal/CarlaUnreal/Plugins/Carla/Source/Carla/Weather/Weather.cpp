@@ -19,9 +19,13 @@
 #include "Components/PostProcessComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
 #include "Components/SkyLightComponent.h"
+#include "Components/VolumetricCloudComponent.h"
 #include "Curves/CurveFloat.h"
 #include "HAL/IConsoleManager.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMaterialLibrary.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Materials/MaterialParameterCollection.h"
 #include "UObject/ConstructorHelpers.h"
 #include "UObject/UnrealType.h"
 #include <util/ue-header-guard-end.h>
@@ -100,11 +104,41 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherNightSkylightIntensity(
 // halos or day-side effect (the whole block is gated to SunAltitudeAngle<0).
 static TAutoConsoleVariable<float> CVarCarlaWeatherStarsBrightness(
     TEXT("carla.Weather.StarsBrightness"),
-    5000.0f,
+    0.0f,
     TEXT("Value forced into the night sky sphere's \"Stars Brightness\" variable ")
     TEXT("(BP_Sky_Sphere, engine content) whenever SunAltitudeAngle < 0, floored the same ")
-    TEXT("way as the moon/skylight intensities above. Set 0 to leave the rig's authored ")
-    TEXT("value untouched."),
+    TEXT("way as the moon/skylight intensities above. Set 0 (the default) to leave the rig's ")
+    TEXT("authored/artist-edited value untouched -- this used to default to 5000, which stomped ")
+    TEXT("any hand-tuned \"Stars brightness\" value on the sky sphere BP back up to 5000 on ")
+    TEXT("every push, making it look uneditable."),
+    ECVF_Default);
+
+// Reverse-engineered from BP_GeneralSceneSettings.UpdateClouds (before it was
+// ported here natively): below this Cloudiness value the rig's
+// VolumetricCloudComponent gets a fresh MID off the plain MI_Clouds master
+// (no density override -- the sphere's 2D texture is doing the actual cloud
+// look at low cloudiness); at or above it, a fresh MID off the "Billowy"
+// overcast master (M_VolumetricCloud_03_Profiles_Billowy_Inst) with its
+// "Cloud Density" scalar driven by C_BillowyDensity.GetFloatValue(Cloudiness)
+// -- confirmed by probing the live material param through the same threshold
+// BP_GeneralSceneSettings used (90): 90->10, 95->38, 100->247.
+static TAutoConsoleVariable<float> CVarCarlaWeatherOvercastThreshold(
+    TEXT("carla.Weather.OvercastThreshold"),
+    90.0f,
+    TEXT("Cloudiness value at/above which the sky rig's VolumetricCloudComponent switches ")
+    TEXT("from the plain cloud master material to the Billowy overcast one."),
+    ECVF_Default);
+
+// Under evaluation: the hard swap to the Billowy material right at the
+// threshold reads as a visible break (two completely different rendering
+// techniques). Set to 0 to always use the plain MI_Clouds master and extend
+// the BaseNoiseExp formula up through Cloudiness=100, to compare against the
+// swapped look.
+static TAutoConsoleVariable<bool> CVarCarlaWeatherEnableOvercastClouds(
+    TEXT("carla.Weather.EnableOvercastClouds"),
+    true,
+    TEXT("Whether Cloudiness at/above OvercastThreshold switches the cloud material to the ")
+    TEXT("Billowy overcast one. Set false to always use the plain master instead."),
     ECVF_Default);
 
 AWeather::AWeather(const FObjectInitializer& ObjectInitializer)
@@ -147,17 +181,48 @@ void AWeather::PushWeatherToSky()
     TArray<AActor*> SkyActors;
     UGameplayStatics::GetAllActorsOfClass(GetWorld(), ASkyBase::StaticClass(), SkyActors);
     for (AActor* SkyActor : SkyActors)
+        ApplyWeatherToSkyActor(SkyActor, Weather);
+}
+
+void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters& Weather)
+{
+    if (SkyActor == nullptr)
+        return;
+
     {
+        // Blueprint member variables get decorated FNames in their generated
+        // class (exact FindPropertyByName misses them), so match on the
+        // authored name instead -- same lesson as the vehicle "Beam Lights"
+        // variable in CarlaWheeledVehicle.cpp. Shared by every reflection
+        // lookup in this function.
+        const auto FindPropertyByAuthoredName =
+            [](const UClass* Class, const TCHAR* AuthoredName) -> FProperty*
+        {
+            for (TFieldIterator<FProperty> It(Class); It; ++It)
+            {
+                if ((*It)->GetAuthoredName() == AuthoredName || (*It)->GetName() == AuthoredName)
+                    return *It;
+            }
+            return nullptr;
+        };
+
         // The rig stores the parameters it renders from in a blueprint variable
         // and refreshes every component from its blueprint Update function.
-        FProperty* Property = SkyActor->GetClass()->FindPropertyByName(TEXT("Sky Parameters"));
-        if (Property == nullptr)
-            Property = SkyActor->GetClass()->FindPropertyByName(TEXT("SkyParameters"));
-        FStructProperty* StructProperty = CastField<FStructProperty>(Property);
-        if (StructProperty != nullptr && StructProperty->Struct == FWeatherParameters::StaticStruct())
-            StructProperty->SetValue_InContainer(SkyActor, &Weather);
+        // Matched by type via ASkyBase::FindWeatherParameters, not by name --
+        // a name-based lookup here silently broke (no warning triggered,
+        // because "SkyParameters"/"Sky Parameters" both still resolved to
+        // *something* is wrong; it just returned null and this whole write
+        // no-opped) the moment that Blueprint variable got renamed to
+        // "WeatherParameters". Precipitation/Wetness visuals -- driven by the
+        // legacy UpdateAtmosphereAndPrecipitation Blueprint call below, which
+        // reads this struct rather than taking Weather as a parameter -- are
+        // what silently went stale; native pushes further down (sun, clouds,
+        // fog, exposure) read straight from the Weather parameter and were
+        // never affected.
+        if (FWeatherParameters* SkyParameters = ASkyBase::FindWeatherParameters(SkyActor))
+            *SkyParameters = Weather;
         else
-            UE_LOG(LogCarla, Warning, TEXT("AWeather: no WeatherParameters 'Sky Parameters' property on %s"),
+            UE_LOG(LogCarla, Warning, TEXT("AWeather: no WeatherParameters property on %s"),
                 *SkyActor->GetName());
 
         // The rig's blueprint 'Update' only reaches UpdateClouds (the rest of
@@ -192,6 +257,78 @@ void AWeather::PushWeatherToSky()
                     FunctionName, *SkyActor->GetName());
         }
 
+        // SetSkySphere (just called above) spawns a fresh stock-engine
+        // BP_Sky_Sphere and tries to attach it to this rig's root
+        // (PostProcessComponent), but that root's Mobility is Movable while
+        // the stock sphere's root is Static -- UE refuses to attach a Static
+        // child to a non-Static parent ("AttachTo: ... is not static ...
+        // Aborting", logged every push). The spawn itself still succeeds and
+        // "SkySphere" still gets assigned, so this is silent rather than
+        // fatal: the sphere just renders unattached at wherever it spawned
+        // instead of following the rig. Finish the attach here natively,
+        // forcing the spawned instance's root to Movable first (a fresh
+        // stock actor with no other purpose -- safe to change).
+        {
+            FObjectProperty* SphereProperty = CastField<FObjectProperty>(
+                FindPropertyByAuthoredName(SkyActor->GetClass(), TEXT("SkySphere")));
+            if (SphereProperty == nullptr)
+                SphereProperty = CastField<FObjectProperty>(
+                    FindPropertyByAuthoredName(SkyActor->GetClass(), TEXT("Sky Sphere")));
+            AActor* SphereActor = SphereProperty != nullptr
+                ? Cast<AActor>(SphereProperty->GetObjectPropertyValue_InContainer(SkyActor))
+                : nullptr;
+            USceneComponent* SphereRoot = SphereActor != nullptr ? SphereActor->GetRootComponent() : nullptr;
+            if (SphereRoot != nullptr && SphereRoot->GetAttachParent() == nullptr)
+            {
+                if (SphereRoot->Mobility == EComponentMobility::Static)
+                    SphereRoot->SetMobility(EComponentMobility::Movable);
+                SphereActor->AttachToActor(SkyActor, FAttachmentTransformRules::KeepWorldTransform);
+            }
+
+            // PIE start reliably left duplicate attached actors -- not just
+            // the sphere (SetSkySphere's respawn: destroy-old, spawn-new,
+            // doesn't reliably find/destroy the previous one across
+            // PIE's construction timing), but independently a duplicate
+            // DirectionalLight too (SetSunActorReference, called earlier in
+            // the UpdateFunctionNames loop above, manages its own actor
+            // reference the same lossy way) -- tripping the "multiple
+            // directional lights competing" render warning. Rather than
+            // chase the exact PIE timing for each function separately, make
+            // this self-healing and general: whatever ends up attached to
+            // this rig, keep at most one instance per class.
+            {
+                TMap<UClass*, TArray<AActor*>> AttachedByClass;
+                TArray<AActor*> AttachedToSky;
+                SkyActor->GetAttachedActors(AttachedToSky);
+                for (AActor* AttachedActor : AttachedToSky)
+                    if (AttachedActor != nullptr)
+                        AttachedByClass.FindOrAdd(AttachedActor->GetClass()).Add(AttachedActor);
+
+                for (const TPair<UClass*, TArray<AActor*>>& Pair : AttachedByClass)
+                {
+                    const TArray<AActor*>& Instances = Pair.Value;
+                    if (Instances.Num() <= 1)
+                        continue;
+                    // Keep the one "SkySphere" actually points to when this
+                    // is its class; otherwise keep whichever is last (order
+                    // is not meaningful here, just needs to be consistent).
+                    AActor* ToKeep = (SphereActor != nullptr && Instances.Contains(SphereActor))
+                        ? SphereActor : Instances.Last();
+                    for (AActor* Instance : Instances)
+                    {
+                        if (Instance == ToKeep)
+                            continue;
+                        TArray<AActor*> OrphanChildren;
+                        Instance->GetAttachedActors(OrphanChildren);
+                        for (AActor* OrphanChild : OrphanChildren)
+                            if (OrphanChild != nullptr)
+                                OrphanChild->Destroy();
+                        Instance->Destroy();
+                    }
+                }
+            }
+        }
+
         // The blueprint's UpdateFog runs, but the values it leaves on the
         // height fog component were saved for the old small towns and break
         // on large maps: a 1 km FogCutoffDistance erases fog on everything
@@ -216,16 +353,23 @@ void AWeather::PushWeatherToSky()
 
         // The blueprint's ControlSunIntensity has a severed exec chain (its
         // entry sets SunTrayectory and dead-ends), so the curve-driven light
-        // intensities never apply. Evaluate the curves bound on this weather
-        // blueprint and drive the rig components directly; the curve assets
-        // remain the content-side tuning source.
-        auto FindCurve = [this](const TCHAR* PropertyName) -> UCurveFloat*
+        // intensities never apply. Evaluate the curves directly and drive the
+        // rig components; the curve assets remain the content-side tuning
+        // source. Loaded by fixed path (BP_CarlaWeather's own default values
+        // for these two variables) rather than read off an AWeather instance,
+        // so this function works with no AWeather actor placed in the level
+        // at all -- see ASkyBase::RefreshWeather/LoadPreset.
+        auto FindCurve = [](const TCHAR* PropertyName) -> UCurveFloat*
         {
-            FObjectProperty* CurveProperty =
-                CastField<FObjectProperty>(GetClass()->FindPropertyByName(PropertyName));
-            return CurveProperty != nullptr
-                ? Cast<UCurveFloat>(CurveProperty->GetObjectPropertyValue_InContainer(this))
-                : nullptr;
+            static UCurveFloat* const SunIntensityCurve = LoadObject<UCurveFloat>(nullptr,
+                TEXT("/Game/Carla/Blueprints/Weather/Weather2_Curves/SunIntensity_2.SunIntensity_2"));
+            static UCurveFloat* const SkyIntensityCurve = LoadObject<UCurveFloat>(nullptr,
+                TEXT("/Game/Carla/Blueprints/Weather/Weather2_Curves/SkylightIntensity_2.SkylightIntensity_2"));
+            if (FCString::Strcmp(PropertyName, TEXT("SunIntensity_Curve")) == 0)
+                return SunIntensityCurve;
+            if (FCString::Strcmp(PropertyName, TEXT("SkyIntensity_Curve")) == 0)
+                return SkyIntensityCurve;
+            return nullptr;
         };
         auto FindComponent = [SkyActor](const TCHAR* PropertyName) -> ULightComponent*
         {
@@ -258,6 +402,21 @@ void AWeather::PushWeatherToSky()
                 // Rigs saved with a black light color render no sunlight at any
                 // intensity; the physical tint comes from the color temperature.
                 SunLightComponent->SetLightColor(FLinearColor::White);
+            }
+        }
+        // The rig's Moon light ships with AffectsWorld off -- a disabled
+        // light contributes nothing to the scene no matter what its
+        // Intensity is set to below, which is why night always rendered
+        // pitch black regardless of the moon/skylight floor cvars. Always
+        // on, not just at night: harmless during the day (Intensity there is
+        // whatever the curve/floor logic below leaves it at), and this way
+        // there's nothing left to toggle when the sun crosses the horizon.
+        if (ULightComponent* MoonLightComponentAffects = FindComponent(TEXT("DirectionalLightComponentMoon")))
+        {
+            if (!MoonLightComponentAffects->bAffectsWorld)
+            {
+                MoonLightComponentAffects->bAffectsWorld = true;
+                MoonLightComponentAffects->MarkRenderStateDirty();
             }
         }
         // The rig ships EVERY component with bAutoActivate false on the
@@ -359,22 +518,8 @@ void AWeather::PushWeatherToSky()
             // already respawned this push's sphere actor by the time we get
             // here, so "SkySphere" always resolves to the fresh instance. See
             // the cvar comment above for the full reflection path and why
-            // this stays gated to night.
-            // Blueprint member variables get decorated FNames in their
-            // generated class (exact FindPropertyByName misses them), so
-            // match on the authored name instead -- same lesson as the
-            // vehicle "Beam Lights" variable in CarlaWheeledVehicle.cpp.
-            const auto FindPropertyByAuthoredName =
-                [](const UClass* Class, const TCHAR* AuthoredName) -> FProperty*
-            {
-                for (TFieldIterator<FProperty> It(Class); It; ++It)
-                {
-                    if ((*It)->GetAuthoredName() == AuthoredName || (*It)->GetName() == AuthoredName)
-                        return *It;
-                }
-                return nullptr;
-            };
-
+            // this stays gated to night. FindPropertyByAuthoredName is
+            // shared, defined at the top of this function's SkyActor loop.
             FObjectProperty* SphereProperty = CastField<FObjectProperty>(
                 FindPropertyByAuthoredName(SkyActor->GetClass(), TEXT("SkySphere")));
             if (SphereProperty == nullptr)
@@ -424,32 +569,147 @@ void AWeather::PushWeatherToSky()
         }
     }
 
-    // BP_GeneralSceneSettings owns the post-process volume that keeps the
-    // exposure in step with the sun (its Update was another dead call site in
-    // BP_CarlaWeather). Only invoke it when a sky rig exists: its blueprint
-    // retries itself endlessly when it cannot find an ASkyBase.
-    if (SkyActors.Num() > 0)
+    // Cloud density. Ported from BP_GeneralSceneSettings.UpdateClouds (that
+    // actor is gone -- this used to depend on it being placed in the level,
+    // which routinely wasn't the case in the editor, silently leaving clouds
+    // disconnected from Weather.Cloudiness). See CVarCarlaWeatherOvercastThreshold
+    // above for how this was reverse-engineered.
     {
-        UClass* SceneSettingsClass = LoadClass<AActor>(nullptr,
-            TEXT("/Game/Carla/Blueprints/BP_GeneralSceneSettings.BP_GeneralSceneSettings_C"));
-        AActor* SceneSettingsActor = SceneSettingsClass != nullptr
-            ? UGameplayStatics::GetActorOfClass(GetWorld(), SceneSettingsClass)
+        FObjectProperty* CloudComponentProperty = CastField<FObjectProperty>(
+            SkyActor->GetClass()->FindPropertyByName(TEXT("VolumetricCloudComponent")));
+        UVolumetricCloudComponent* CloudComponent = CloudComponentProperty != nullptr
+            ? Cast<UVolumetricCloudComponent>(CloudComponentProperty->GetObjectPropertyValue_InContainer(SkyActor))
             : nullptr;
-        UFunction* SettingsUpdateFunction = SceneSettingsActor != nullptr
-            ? SceneSettingsActor->FindFunction(TEXT("Update"))
-            : nullptr;
-        if (SettingsUpdateFunction != nullptr && SettingsUpdateFunction->ParmsSize == 0)
-            SceneSettingsActor->ProcessEvent(SettingsUpdateFunction, nullptr);
+        if (CloudComponent != nullptr)
+        {
+            static UCurveFloat* const DensityCurve = LoadObject<UCurveFloat>(nullptr,
+                TEXT("/Game/Carla/Blueprints/Weather/CloudsBillowy/C_BillowyDensity.C_BillowyDensity"));
+            static UMaterialInterface* const NormalCloudMaterial = LoadObject<UMaterialInterface>(nullptr,
+                TEXT("/Game/Carla/Static/FX/VolumetricClouds/MI_Clouds.MI_Clouds"));
+            static UMaterialInterface* const BillowyCloudMaterial = LoadObject<UMaterialInterface>(nullptr,
+                TEXT("/Game/Carla/Static/GenericMaterials/VolumetricClouds/Masters/M_VolumetricCloud_03_Profiles_Billowy_Inst.M_VolumetricCloud_03_Profiles_Billowy_Inst"));
+
+            const float OvercastThreshold = CVarCarlaWeatherOvercastThreshold.GetValueOnGameThread();
+            const bool bOvercast = CVarCarlaWeatherEnableOvercastClouds.GetValueOnGameThread()
+                && Weather.Cloudiness >= OvercastThreshold;
+            UMaterialInterface* BaseMaterial = bOvercast ? BillowyCloudMaterial : NormalCloudMaterial;
+            if (BaseMaterial != nullptr)
+            {
+                // A brand new MID every push (this runs on every weather
+                // update, not just when Cloudiness crosses the threshold)
+                // resets VolumetricCloudComponent's temporal accumulation
+                // each time -- a visible pop/flash even when the parameters
+                // end up identical. Reuse the existing MID when the base
+                // material (Normal vs Billowy) hasn't actually changed; only
+                // create a fresh one on the first push or an actual
+                // threshold cross. Cached by component here rather than read
+                // back via CloudComponent->GetMaterial(): that getter didn't
+                // reliably report the MID just assigned by SetMaterial below
+                // (still returned the previous push's, so the read-back
+                // approach always saw a "different" parent and recreated
+                // every time -- this side-steps whatever that mismatch was).
+                static TMap<TWeakObjectPtr<UVolumetricCloudComponent>, TWeakObjectPtr<UMaterialInstanceDynamic>> CloudMIDCache;
+                TWeakObjectPtr<UMaterialInstanceDynamic>* CachedMID = CloudMIDCache.Find(CloudComponent);
+                UMaterialInstanceDynamic* CloudMID = (CachedMID != nullptr && CachedMID->IsValid()
+                        && CachedMID->Get()->Parent == BaseMaterial)
+                    ? CachedMID->Get()
+                    : nullptr;
+                if (CloudMID == nullptr)
+                {
+                    CloudMID = UMaterialInstanceDynamic::Create(BaseMaterial, CloudComponent);
+                    CloudMIDCache.Add(CloudComponent, CloudMID);
+                }
+                if (bOvercast)
+                {
+                    // Below MI_Clouds's own "BaseNoiseExp" scalar is what
+                    // actually thins/thickens the cloud layer under the
+                    // overcast threshold (probed live against
+                    // BP_GeneralSceneSettings.UpdateClouds before removing
+                    // it: exactly linear -- 100 - 0.8*Cloudiness -- for
+                    // Cloudiness in [1, 89], collapsing to a huge exponent
+                    // (~invisible clouds) only right at 0. Leaving this
+                    // param at the material's own unrelated default is what
+                    // produced the single ugly cloud mass instead of a
+                    // normal layer.
+                    if (DensityCurve != nullptr)
+                        CloudMID->SetScalarParameterValue(TEXT("Cloud Density"), DensityCurve->GetFloatValue(Weather.Cloudiness));
+                }
+                else
+                {
+                    const float BaseNoiseExp = Weather.Cloudiness <= 0.0f
+                        ? 6000.0f
+                        : FMath::Clamp(100.0f - 0.8f * Weather.Cloudiness, 0.0f, 6000.0f);
+                    CloudMID->SetScalarParameterValue(TEXT("BaseNoiseExp"), BaseNoiseExp);
+                }
+                CloudComponent->SetMaterial(CloudMID);
+            }
+            else
+            {
+                UE_LOG(LogCarla, Warning, TEXT("AWeather: cloud master material missing for %s"), *SkyActor->GetName());
+            }
+        }
     }
 
-    // Viewport exposure. The project ships with auto exposure disabled by
-    // default (r.DefaultFeature.AutoExposure=False) and the rigs were saved
-    // for the old frozen ~15 lux suns, so a physical 100k lux sun white-outs
-    // the main view. Apply the same histogram exposure the RGB sensor uses by
-    // default (bias 0, EV100 range [10,12], speeds 3/1) to the sky rig's
-    // post-process volume. This must run AFTER BP_GeneralSceneSettings.Update,
-    // which rewrites the whole post-process struct with its own values.
-    for (AActor* SkyActor : SkyActors)
+    // Day/night light broadcast. AWeather::ApplyWeather already does this
+    // (respecting the artist-facing DayNightCycle toggle) when an AWeather
+    // actor exists, but street lamps otherwise only ever turned on when
+    // actually playing: ASkyBase::RefreshWeather/LoadPreset fall back to
+    // calling this function directly with no AWeather placed, and that path
+    // never reached UpdateStreetLightsForDayNight. Broadcasting again here is
+    // harmless when an AWeather is present too -- registered lights just
+    // re-receive the same state.
+    if (UWorld* World = SkyActor->GetWorld())
+    {
+        if (UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>())
+            CarlaLightSubsystem->NotifyDayTimeChange(Weather.SunAltitudeAngle > 0.0f);
+    }
+
+    // Wind + Wetness, both on the same global collection. WindIntensity: no
+    // one was pushing it at all (UpdateAtmosphereAndPrecipitation's exec
+    // chain for it is severed, same pattern as everything else natively
+    // re-driven in this function) -- M_VegetationMaster divides it by 10
+    // before feeding its wind shader function, so this pushes the raw 0-100
+    // CARLA value, not normalized.
+    //
+    // Wetness: UpdateAtmosphereAndPrecipitation DOES push it (and Puddles/
+    // Ripples/Precipitation alongside it) -- but normalized to 0-1 first
+    // (confirmed live: Weather.Wetness=90 -> collection value 0.9). Puddles
+    // reads fine at that scale. Wetness does not: MF_WetSurfaceFx's own
+    // "Wetness" section divides the collection value by 100 *again* before
+    // using it (confirmed in the material graph, and by hardcoding 100
+    // straight into that Divide node -- wets correctly; the collection read
+    // is the only broken link). A pre-normalized 0-1 input run through
+    // another /100 lands at ~0.009 -- functionally zero, which is exactly
+    // "wetness does nothing". Puddles/Ripples/Precipitation are left alone
+    // (already correct at 0-1); only Wetness gets overridden here, raw, right
+    // after the BP call above wrote the wrong value.
+    {
+        static UMaterialParameterCollection* const WeatherMPC = LoadObject<UMaterialParameterCollection>(nullptr,
+            TEXT("/Game/Carla/Blueprints/Weather/Materials/WeatherMaterialParameters.WeatherMaterialParameters"));
+        if (WeatherMPC != nullptr && SkyActor->GetWorld() != nullptr)
+        {
+            UKismetMaterialLibrary::SetScalarParameterValue(
+                SkyActor->GetWorld(), WeatherMPC, TEXT("WindIntensity"), Weather.WindIntensity);
+            UKismetMaterialLibrary::SetScalarParameterValue(
+                SkyActor->GetWorld(), WeatherMPC, TEXT("Wetness"), Weather.Wetness);
+        }
+    }
+
+    // Viewport exposure fallback. The project ships with auto exposure
+    // disabled by default (r.DefaultFeature.AutoExposure=False) and the rigs
+    // were saved for the old frozen ~15 lux suns, so a physical 100k lux sun
+    // white-outs the main view with no exposure settings at all. This fills
+    // in the same histogram exposure the RGB sensor uses by default (bias 0,
+    // EV100 range [10,12], speeds 3/1) -- but ONLY for fields the currently
+    // loaded PostProcess profile (Content/Carla/Config/PostProcess/*.json)
+    // doesn't already claim via bOverride_*. Profiles set their own Method
+    // and Bias (e.g. GoPro.json: AEM_Manual/0) and rely on this to supply
+    // Min/Max/SpeedUp/SpeedDown, which they intentionally leave unset. This
+    // runs on every editor property edit (via OnConstruction), so forcing
+    // these unconditionally used to stomp the profile's Method/Bias back to
+    // Histogram/0 the instant you touched anything on the Sky actor,
+    // including just switching ProfileName -- e.g. GoPro's Manual exposure
+    // never stuck, and switching profiles never visibly changed exposure.
     {
         FObjectProperty* PostProcessProperty = CastField<FObjectProperty>(
             SkyActor->GetClass()->FindPropertyByName(TEXT("PostProcessComponent")));
@@ -459,18 +719,36 @@ void AWeather::PushWeatherToSky()
         if (PostProcessComponent != nullptr)
         {
             FPostProcessSettings& Settings = PostProcessComponent->Settings;
-            Settings.bOverride_AutoExposureMethod = true;
-            Settings.AutoExposureMethod = AEM_Histogram;
-            Settings.bOverride_AutoExposureBias = true;
-            Settings.AutoExposureBias = 0.0f;
-            Settings.bOverride_AutoExposureMinBrightness = true;
-            Settings.AutoExposureMinBrightness = 10.0f;
-            Settings.bOverride_AutoExposureMaxBrightness = true;
-            Settings.AutoExposureMaxBrightness = 12.0f;
-            Settings.bOverride_AutoExposureSpeedUp = true;
-            Settings.AutoExposureSpeedUp = 3.0f;
-            Settings.bOverride_AutoExposureSpeedDown = true;
-            Settings.AutoExposureSpeedDown = 1.0f;
+            if (!Settings.bOverride_AutoExposureMethod)
+            {
+                Settings.bOverride_AutoExposureMethod = true;
+                Settings.AutoExposureMethod = AEM_Histogram;
+            }
+            if (!Settings.bOverride_AutoExposureBias)
+            {
+                Settings.bOverride_AutoExposureBias = true;
+                Settings.AutoExposureBias = 0.0f;
+            }
+            if (!Settings.bOverride_AutoExposureMinBrightness)
+            {
+                Settings.bOverride_AutoExposureMinBrightness = true;
+                Settings.AutoExposureMinBrightness = 10.0f;
+            }
+            if (!Settings.bOverride_AutoExposureMaxBrightness)
+            {
+                Settings.bOverride_AutoExposureMaxBrightness = true;
+                Settings.AutoExposureMaxBrightness = 12.0f;
+            }
+            if (!Settings.bOverride_AutoExposureSpeedUp)
+            {
+                Settings.bOverride_AutoExposureSpeedUp = true;
+                Settings.AutoExposureSpeedUp = 3.0f;
+            }
+            if (!Settings.bOverride_AutoExposureSpeedDown)
+            {
+                Settings.bOverride_AutoExposureSpeedDown = true;
+                Settings.AutoExposureSpeedDown = 1.0f;
+            }
             PostProcessComponent->bUnbound = true;
         }
     }
@@ -547,12 +825,13 @@ void AWeather::ApplyWeather(const FWeatherParameters& InWeather)
 
 void AWeather::NotifyWeather(ASensor* Sensor)
 {
+    // Only re-sync this new sensor's own postprocess blendables (rain/dust)
+    // with the already-active weather. A full PushWeatherToSky() here
+    // respawns BP_Sky_Sphere and reapplies the exposure clamp on every
+    // camera sensor spawn, which is redundant (global weather state hasn't
+    // changed) and visibly jitters clouds/postprocess each time a client
+    // spawns a camera.
     CheckWeatherPostProcessEffects();
-
-    // Call the blueprint that actually changes the weather.
-    RefreshWeather(Weather);
-    PushWeatherToSky();
-    UpdateStreetLightsForDayNight();
 }
 
 void AWeather::SetWeather(const FWeatherParameters& InWeather)

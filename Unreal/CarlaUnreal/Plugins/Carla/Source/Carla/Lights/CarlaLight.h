@@ -114,6 +114,14 @@ public:
 
   UCarlaLight();
 
+  // Registers with UCarlaLightSubsystem so it can preview day/night toggling
+  // in the editor too, not just once actually playing -- BeginPlay (the only
+  // other place that calls RegisterLight) never fires outside Play/PIE, so
+  // in a pure editor world nothing was ever registered and the day/night
+  // broadcast had zero listeners. RegisterLight() is idempotent (checks its
+  // own Registered flag), so this is harmless alongside BeginPlay's call.
+  void OnRegister() override;
+
   void BeginPlay() override;
 
   void EndPlay(const EEndPlayReason::Type EndPlayReason) override;

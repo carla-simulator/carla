@@ -2167,25 +2167,15 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         Description.Variations,
         TEXT(""));
 
-    // Empty or the legacy lowercase "default" sentinel means "no preference":
-    // load the profile named after the active map. Case-sensitive so an
-    // explicit "Default" still force-loads Default.json.
+    // Post-process profiles are camera-lens presets (Default, GoPro, ...),
+    // not per-map looks: the same BP_Carla_Sky + PostProcessVolume already
+    // gives every map the same base grading. Empty or the legacy lowercase
+    // "default" sentinel means "no preference", so just load Default.json.
+    // Callers that want a specific look (e.g. GoPro.json) set
+    // post_process_profile explicitly via the API/scripts.
     if (PostProcessProfileName.IsEmpty() || PostProcessProfileName == TEXT("default"))
     {
-      const UWorld *World = Camera->GetWorld();
-      FString MapName{};
-      if (World != nullptr)
-      {
-        MapName = World->GetMapName();
-        MapName.RemoveFromStart(World->StreamingLevelsPrefix);
-      }
-      else
-      {
-        UE_LOG(LogCarla, Warning,
-            TEXT("SetCamera: camera has no UWorld; falling back to Default post-process profile."));
-      }
-      const FString MapJsonPath = UPostProcessJsonUtils::GetPostProcessConfigPath(MapName);
-      PostProcessProfileName = FPaths::FileExists(MapJsonPath) ? MapName : TEXT("Default");
+      PostProcessProfileName = TEXT("Default");
     }
 
     UPostProcessJsonUtils::LoadAllPostProcessFromJsonToSceneCapture(

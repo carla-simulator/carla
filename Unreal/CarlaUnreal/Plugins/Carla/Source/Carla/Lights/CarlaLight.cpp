@@ -79,6 +79,12 @@ UCarlaLight::UCarlaLight()
   PrimaryComponentTick.bCanEverTick = false;
 }
 
+void UCarlaLight::OnRegister()
+{
+  Super::OnRegister();
+  RegisterLight();
+}
+
 void UCarlaLight::BeginPlay()
 {
   Super::BeginPlay();
@@ -118,6 +124,21 @@ void UCarlaLight::RegisterLight()
 
 void UCarlaLight::OnComponentDestroyed(bool bDestroyingHierarchy)
 {
+  // OnRegister above now registers in the editor too, not just BeginPlay --
+  // so a component actually destroyed (level edit, not just a construction-
+  // script re-register, which doesn't hit this at all) needs to unregister
+  // here too, or deleting a light in the editor leaves a dangling pointer in
+  // the subsystem until the next EndPlay/Deinitialize. Safe to call
+  // alongside EndPlay's own unregister: both go through UnregisterLight,
+  // which no-ops if already absent.
+  UWorld* World = GetWorld();
+  if (World != nullptr)
+  {
+    if (UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>())
+      CarlaLightSubsystem->UnregisterLight(this);
+  }
+  flags &= ~ECarlaLightFlags::Registered;
+
   Super::OnComponentDestroyed(bDestroyingHierarchy);
 }
 
@@ -252,7 +273,12 @@ void UCarlaLight::SetLightOn(bool bOn)
 void UCarlaLight::HandleDayTimeChanged(bool bIsDay)
 {
   DayTimeChanged(bIsDay);
-  if (LightType == ELightType::Street)
+  // Street already auto-toggled; Building and Vehicle (parked-car decoration,
+  // not the ego vehicle's driver-controlled lights) should too -- "Other" is
+  // left alone, its members are too varied to assume night-on is always right.
+  if (LightType == ELightType::Street
+      || LightType == ELightType::Building
+      || LightType == ELightType::Vehicle)
   {
     SetLightOn(!bIsDay);
   }

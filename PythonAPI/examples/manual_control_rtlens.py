@@ -226,6 +226,7 @@ class World(object):
         self._actor_filter = args.filter
         self._actor_generation = args.generation
         self._gamma = args.gamma
+        self._post_process_profile = args.post_process_profile
         self.restart()
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
@@ -300,7 +301,7 @@ class World(object):
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
         self.gnss_sensor = GnssSensor(self.player)
         self.imu_sensor = IMUSensor(self.player)
-        self.camera_manager = CameraManager(self.player, self.hud, self._gamma)
+        self.camera_manager = CameraManager(self.player, self.hud, self._gamma, self._post_process_profile)
         self.camera_manager.transform_index = cam_pos_index
         self.camera_manager.set_sensor(cam_index, notify=False)
         actor_type = get_actor_display_name(self.player)
@@ -1095,7 +1096,7 @@ class RadarSensor(object):
 
 
 class CameraManager(object):
-    def __init__(self, parent_actor, hud, gamma_correction):
+    def __init__(self, parent_actor, hud, gamma_correction, post_process_profile='Default'):
         self.sensor = None
         self.surface = None
         self._parent = parent_actor
@@ -1121,8 +1122,6 @@ class CameraManager(object):
                 (carla.Transform(carla.Location(x=-4.0, z=2.0), carla.Rotation(pitch=6.0)), Attachment.SpringArmGhost),
                 (carla.Transform(carla.Location(x=0, y=-2.5, z=-0.0), carla.Rotation(yaw=90.0)), Attachment.Rigid)]
         world = self._parent.get_world()
-        map_name = world.get_map().name
-        post_process_profile = self.get_post_process_profile(map_name)
         self.transform_index = 1
         self.sensors = [
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB', {'post_process_profile' : post_process_profile }],
@@ -1219,13 +1218,6 @@ class CameraManager(object):
         if self.surface is not None:
             display.blit(self.surface, (0, 0))
     
-    def get_post_process_profile(self, map_name: str) -> str:
-        if "Town10HD_Opt" in map_name:
-            return "Town10HD_Opt"
-        if "Town_C" in map_name:
-            return "Town_C"
-        return "Default"
-
     @staticmethod
     def _parse_image(weak_self, image):
         self = weak_self()
@@ -1382,6 +1374,11 @@ def main():
     argparser.add_argument(
         '--gamma', default=1.0, type=float,
         help='Gamma correction of the camera (default: 1.0)')
+    argparser.add_argument(
+        '--post-process-profile', metavar='NAME', default='Default',
+        help='camera post-process profile to load, i.e. a file name (without '
+             '.json) under Unreal/CarlaUnreal/Content/Carla/Config/PostProcess/ '
+             '-- e.g. "Default" or "GoPro" (default: "Default")')
     argparser.add_argument(
         '--sync', action='store_true',
         help='Activate synchronous mode execution')
