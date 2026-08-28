@@ -1,7 +1,10 @@
 # carla-cosmos demos
 
-Two families:
+Three families:
 
+* `showcase.py` + `showcase_sheets.py` — the **mode matrix**: one job per
+  conditioning setup, stored and turned into comparison videos (see *Showcase*
+  below).
 * `api_*.py` — **Python API** demos.  They import `carla_cosmos` directly (no
   subprocess to the CLI), are short enough to read in one go and each stores its
   results through `ResultStore` (see *Results storage* below).
@@ -25,6 +28,8 @@ when it is unreachable, not ready, or does not serve the backend.
 | `single_view_replay.py` | deterministic clip from a recorder log, then `batch.yaml` prompts x seeds as `batch` jobs | any | one backend run per (prompt, seed) |
 | `av7_world_scenario.py` | NVIDIA 7-camera rig, ClipGT scene export, Transfer 2.5 AV; `--also-cosmos3` adds a Cosmos 3 `wsm` job | `transfer2.5-av` (+ `cosmos3-*`) | capture + backend |
 | `viewer.py` | input \| control \| result side by side, per camera, scrubbing; `--clip` alone shows the local GT preview | — | interactive |
+| `showcase.py` | the whole mode matrix (11 rows: weather x controls x weights x mask-out classes x world scenario x 7-camera AV) against one node, resumable, timings per row | all | one backend run per row |
+| `showcase_sheets.py` | `input \| control(s) \| output` sheets, the 7-camera grid and a `modes_reel.mp4` from a showcase run | — | ~1 min per row |
 
 Runtimes marked *measured* come from the first GPU run on the 4x RTX PRO 6000
 node (see `.omc/plans/cosmos-handoff.md`); they exclude queueing and upload.
@@ -73,3 +78,44 @@ on disk and fetches only what is missing or damaged.
 is stored here and where, warns before the server garbage-collects results that
 are not stored (server default: 168 h after the job finishes,
 `COSMOS_JOB_TTL_HOURS`), and lists results that are only on this machine.
+
+## Showcase
+
+`showcase.py` runs one job per conditioning setup and keeps everything:
+
+```bash
+export COSMOS_URL=http://<node>:8000
+export COSMOS_TOKEN=cc_...
+export COSMOS_RESULTS=/home/german/Projects/CARLA_SOURCE/cosmos-results
+
+python demos/showcase.py --list                       # the matrix, nothing else
+python demos/showcase.py --clips ./clips               # all 11 rows
+python demos/showcase.py --only av7-day,c3-wsm         # a subset (row id, backend or clip role)
+python demos/showcase.py --mock --clips ./clips        # the whole matrix against the mock server
+python demos/showcase_sheets.py                        # -> $COSMOS_RESULTS/_showcase
+```
+
+| row | backend | conditioning | what it shows |
+| --- | --- | --- | --- |
+| `t25-golden` | transfer2.5 | depth + seg + edge | golden hour — the reference row |
+| `t25-rain` | transfer2.5 | depth + seg + edge | heavy rain, wet road, same controls |
+| `t25-night` | transfer2.5 | depth + seg + edge | night, same controls |
+| `t25-w-depthseg` | transfer2.5 | depth 0.7 / seg 0.3 | geometry-led weights, no edge branch |
+| `t25-w-edge` | transfer2.5 | edge only, w = 1.0 | the edge branch alone, same prompt as `t25-golden` |
+| `t25-mask-vehicles` | transfer2.5 | + `--mask-classes vehicle` | the traffic removed from every pixel-derived input; the model re-imagines it |
+| `t25-mask-vru` | transfer2.5 | + `--mask-classes vru` | pedestrians, riders and bicycles removed |
+| `c3-wsm` | cosmos3-nano | `wsm=scene` | the world-scenario map alone: layout from the scene package |
+| `c3-wsm-depth-seg` | cosmos3-nano | `wsm` + depth + seg | layout **and** the captured appearance |
+| `av7-day` | transfer2.5-av | `hdmap_bbox=scene`, 7 views | the seven-camera rig, occlusion-filtered obstacles |
+| `av7-rain` | transfer2.5-av | `hdmap_bbox=scene`, 7 views | the same scene, weather variation |
+
+Three clips feed it (roles `t25`, `wsm`, `av7`): 93 frames @ 16 fps, 101 @ 10 and
+171 @ 30 with the `nvidia_av7` rig — the frame-count rules of the three
+backends.  `--clip t25=<dir>` overrides one, `--clips <dir>` looks for
+`showcase_t25` / `showcase_wsm` / `showcase_av7` inside it.
+
+A row whose stored directory already holds a video is skipped, so an
+interrupted run resumes (`--force` reruns).  Every row is appended to
+`<results>/showcase.json` with its prompt, controls, weights, mask classes and
+timings (`queued` / `rendering` / `running` from the server, upload, download
+and wall clock from the client); `showcase_sheets.py` reads that file.

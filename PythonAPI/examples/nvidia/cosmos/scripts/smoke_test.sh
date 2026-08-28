@@ -7,6 +7,11 @@
 # For every backend the server reports as available it submits a 1-clip job
 # with a synthetic clip that satisfies that backend's contract, waits for it,
 # downloads the result and checks the manifest.
+#
+# Against an external server every result is kept: the videos go through the
+# results store ($COSMOS_RESULTS, else ./cosmos-results) as <clip>/<job>/ with
+# job.json, and the synthetic clips that produced them are written next to it
+# under _smoke/clips/ instead of the temporary directory.
 set -euo pipefail
 
 COSMOS_ROOT=$(realpath "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/..")
@@ -27,13 +32,17 @@ from pathlib import Path
 root, work, external = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3] == "1"
 sys.path.insert(0, str(root / "client"))
 from carla_cosmos import Clip, CosmosClient
+from carla_cosmos.results import default_results_root
 from carla_cosmos.serve import MockServer
 from carla_cosmos.synthetic import av7_clip, make_clip
 
 srv = None
+results_root = default_results_root() if external else None
+clip_root = (results_root / "_smoke" / "clips") if external else (work / "clips")
 if external:
     client = CosmosClient()
     print(f"using external server {client.url}")
+    print(f"results are kept in {results_root} (clips in {clip_root})")
 else:
     srv = MockServer(work / "state", delay=1.0, log_file=work / "server.log")
     client = srv.start()
@@ -53,11 +62,11 @@ try:
         key = c.family
         if key not in clips:
             if key == "transfer2.5-av":
-                clips[key] = av7_clip(work / "clips", seconds=1)
+                clips[key] = av7_clip(clip_root, seconds=1)
             elif key == "transfer2.5":
-                clips[key] = make_clip(work / "clips", frames=93, fps=16)
+                clips[key] = make_clip(clip_root, frames=93, fps=16)
             else:
-                clips[key] = make_clip(work / "clips", frames=16, fps=16, scene=True)
+                clips[key] = make_clip(clip_root, frames=16, fps=16, scene=True)
         return clips[key]
 
     for m in avail:
@@ -73,14 +82,22 @@ try:
         job = client.submit_clip(clip, c.id, prompt="smoke test: same scene, overcast", controls=controls)
         info = job.wait(poll=0.5, timeout=1800)
         res = job.result()
-        out = res.download(work / "results" / job.id)
+        if external:  # keep every video, with its request and timings, in the results store
+            stored = job.download()
+            out = stored.paths()
+            where = stored.directory
+        else:
+            out = res.download(work / "results" / job.id)
+            where = str(work / "results" / job.id)
         ok = info.status == "done" and res.manifest.backend == c.id and all(p.exists() for p in out.values())
         expected_views = job.info.views or clip.manifest.camera_names
         video_views = {f.view for f in res.manifest.files if f.kind == "video"}
         ok = ok and set(expected_views) <= video_views
         failures += 0 if ok else 1
         print(f"{'ok  ' if ok else 'FAIL'} {c.id:<16} job {job.id} {time.time() - t0:5.1f}s  "
-              f"files={len(out)} views={sorted(video_views)} timings={ {k: round(v, 2) for k, v in res.manifest.timings.items()} }")
+              f"files={len(out)} views={sorted(video_views)} "
+              f"timings={ {k: round(v, 2) for k, v in res.manifest.timings.items()} }\n"
+              f"     stored in {where}")
 
     # auth must reject without a token, before reading any body
     import httpx
