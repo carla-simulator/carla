@@ -28,7 +28,7 @@ when it is unreachable, not ready, or does not serve the backend.
 | `single_view_replay.py` | deterministic clip from a recorder log, then `batch.yaml` prompts x seeds as `batch` jobs | any | one backend run per (prompt, seed) |
 | `av7_world_scenario.py` | NVIDIA 7-camera rig, ClipGT scene export, Transfer 2.5 AV; `--also-cosmos3` adds a Cosmos 3 `wsm` job | `transfer2.5-av` (+ `cosmos3-*`) | capture + backend |
 | `viewer.py` | input \| control \| result side by side, per camera, scrubbing; `--clip` alone shows the local GT preview | — | interactive |
-| `showcase.py` | the whole mode matrix (11 rows: weather x controls x weights x mask-out classes x world scenario x 7-camera AV) against one node, resumable, timings per row | all | one backend run per row |
+| `showcase.py` | the whole mode matrix (11 rows: weather x controls x weights x mask-out classes x world scenario x 7-camera AV) against one node, resumable, timings per row | all | 183-244 s per Transfer 2.5 row, 543-999 s per Cosmos 3 row, 1390 s per 7-camera AV row (720p, measured 2026-08-28 on 4 x RTX PRO 6000) |
 | `showcase_sheets.py` | `input \| control(s) \| output` sheets, the 7-camera grid and a `modes_reel.mp4` from a showcase run | — | ~1 min per row |
 
 Runtimes marked *measured* come from the first GPU run on the 4x RTX PRO 6000
@@ -104,6 +104,11 @@ python demos/showcase_sheets.py                        # -> $COSMOS_RESULTS/_sho
 | `t25-w-edge` | transfer2.5 | edge only, w = 1.0 | the edge branch alone, same prompt as `t25-golden` |
 | `t25-mask-vehicles` | transfer2.5 | + `--mask-classes vehicle` | the traffic removed from every pixel-derived input; the model re-imagines it |
 | `t25-mask-vru` | transfer2.5 | + `--mask-classes vru` | pedestrians, riders and bicycles removed |
+
+Measured on the node (720p, 2026-08-28): the Transfer 2.5 rows cost 235-244 s of generation with three
+control branches, 210 s with two and 183 s with one — the branch count, not the prompt, sets the price.
+Masking adds ~56 s of client-side re-encode and nothing on the GPU. The AV rows are fixed by shape
+(7 views x 57 frames = 2 chunks x 35 steps): 1390 s, plus 83 s to render `hdmap_bbox` for seven cameras.
 | `c3-wsm` | cosmos3-nano | `wsm=scene` | the world-scenario map alone: layout from the scene package |
 | `c3-wsm-depth-seg` | cosmos3-nano | `wsm` + depth + seg | layout **and** the captured appearance |
 | `av7-day` | transfer2.5-av | `hdmap_bbox=scene`, 7 views | the seven-camera rig, occlusion-filtered obstacles |

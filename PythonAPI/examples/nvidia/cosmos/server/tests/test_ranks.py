@@ -20,7 +20,8 @@ import pytest
 from carla_cosmos.synthetic import av7_clip
 from carla_cosmos_server.config import default_run_dir
 from cosmos_workers.common import protocol
-from cosmos_workers.common.ranks import RankSupervisor, _describe_failure, torchrun_command, visible_gpus
+from cosmos_workers.common.ranks import (RankSupervisor, _describe_failure, _poll_request,
+                                         torchrun_command, visible_gpus)
 from cosmos_workers.transfer25_av.common import CAMERA_KEYS
 
 HAS_TORCH = importlib.util.find_spec("torch") is not None
@@ -131,3 +132,37 @@ def test_av_worker_seven_views_on_two_torchrun_ranks(tmp_path):
     finally:
         proc.terminate()
         proc.wait(30)
+
+
+def test_poll_request_returns_none_after_its_budget(tmp_path):
+    """The idle wait is bounded, so the ranks keep completing collectives (see ``HEARTBEAT_S``)."""
+    req = tmp_path / "requests"
+    req.mkdir()
+    t0 = time.monotonic()
+    assert _poll_request(req, poll=0.02, budget=0.15) is None
+    assert 0.1 <= time.monotonic() - t0 < 2.0
+    (req / "j1.json").write_text(json.dumps({"sample": {}, "out_dir": str(tmp_path)}))
+    got = _poll_request(req, poll=0.02, budget=5.0)
+    assert got is not None and got["__file"] == "j1.json"
+    assert not (req / "j1.json").exists()          # claimed, so a second rank loop cannot take it
+
+
+def test_supervisor_restarts_ranks_that_died_while_idle(tmp_path, clip93):
+    """A job must not fail because the ranks died before it was submitted (NCCL watchdog, 2026-08-28)."""
+    spool = tmp_path / "spool"
+    sup = RankSupervisor("cosmos_workers.transfer25.ranks", spool, nproc=1, master_port=29519,
+                         rank_args=["--engine", "fake", "--fake-delay", "0.05", "--hints", "depth"],
+                         startup_timeout=120, request_timeout=60, poll=0.1)
+    try:
+        sup.start()
+        first = sup.proc
+        sup.proc.kill()
+        sup.proc.wait(30)
+        assert not sup.alive
+        cam = clip93.manifest.camera_names[0]
+        sample = {"name": "j1", "prompt": "p", "video_path": str(clip93.video("rgb", cam)), "num_steps": 1,
+                  "depth": {"control_weight": 1.0, "control_path": str(clip93.video("depth", cam))}}
+        res = sup.submit("j1", {"sample": sample, "out_dir": str(spool / "work" / "j1")})
+        assert res["ok"] and sup.alive and sup.proc is not first
+    finally:
+        sup.stop()

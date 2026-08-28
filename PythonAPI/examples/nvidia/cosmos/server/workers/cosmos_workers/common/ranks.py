@@ -41,6 +41,23 @@ log = logging.getLogger("cosmos_worker.ranks")
 READY_FILE = "READY"
 SHUTDOWN_FILE = "__shutdown__.json"
 
+HEARTBEAT_S = 5.0
+"""Longest a rank may sit inside one collective while the worker is idle.
+
+Rank 0 polls the spool and the other ranks wait for it in ``broadcast_object_list``.  On NCCL that
+is an *outstanding collective*, and the ProcessGroupNCCL watchdog tears the whole process group down
+when one is outstanding longer than ``TORCH_NCCL_TIMEOUT`` (30 min by default) — which is what
+killed the AV multiview ranks on the 2026-08-28 node run while two Cosmos 3 jobs ran ahead of them:
+
+    [Rank 3] Watchdog caught collective operation timeout:
+    WorkNCCL(SeqNum=850, OpType=BROADCAST, NumelIn=1, Timeout(ms)=1800000)
+    ... we are taking the entire process down                       -> SIGABRT, exit 1
+
+So the idle wait is a *loop of short broadcasts* instead of one long one: every ``HEARTBEAT_S`` rank
+0 broadcasts either the next job or ``None``, and no collective is ever outstanding for more than a
+few seconds.  An idle worker costs one 1-element broadcast every 5 s.
+"""
+
 
 def visible_gpus() -> list[int]:
     """GPU indices this worker was given (``CUDA_VISIBLE_DEVICES`` as set by the launcher)."""
@@ -118,6 +135,12 @@ class RankSupervisor:
     def submit(self, job_id: str, payload: dict[str, Any],
                on_wait: Callable[[float], None] | None = None) -> dict[str, Any]:
         """Queue ``payload`` for the ranks and block for the result (``on_wait(elapsed)`` every poll)."""
+        if self.proc is not None and self.proc.poll() is not None:
+            # The ranks died while nothing was running (see HEARTBEAT_S).  Bring them back rather
+            # than failing a job that has nothing to do with whatever killed them.
+            log.warning("ranks (%s) were dead (exit %s) before job %s; restarting them",
+                        self.module, self.proc.returncode, job_id)
+            self.start()
         req = self.spool / "requests" / f"{job_id}.json"
         res = self.spool / "results" / f"{job_id}.json"
         if res.exists():
@@ -128,7 +151,8 @@ class RankSupervisor:
         t0 = time.monotonic()
         while not res.exists():
             if self.proc is not None and self.proc.poll() is not None:
-                raise RuntimeError(f"ranks died (exit {self.proc.returncode}) during job {job_id}")
+                raise RuntimeError(f"ranks died (exit {self.proc.returncode}) during job {job_id}; "
+                                   f"the rank traceback is in this worker's log")
             elapsed = time.monotonic() - t0
             if elapsed > self.request_timeout:
                 raise TimeoutError(f"generation still running after {elapsed:.0f}s")
@@ -217,25 +241,14 @@ def run_rank_loop(args: argparse.Namespace, engine: RankEngine, extra_info: dict
 
     while True:
         payload: dict[str, Any] | None = None
-        if rank == 0:
-            while payload is None:
-                files = sorted(req_dir.glob("*.json"), key=lambda f: f.stat().st_mtime)
-                if files:
-                    f = files[0]
-                    try:
-                        payload = json.loads(f.read_text())
-                    except json.JSONDecodeError:
-                        time.sleep(0.1)  # half-written; retry
-                        continue
-                    payload["__file"] = f.name
-                    f.unlink()
-                else:
-                    time.sleep(args.poll)
-        if dist is not None:
+        while payload is None:
+            if rank == 0:
+                payload = _poll_request(req_dir, args.poll, HEARTBEAT_S)
+            if dist is None:
+                continue
             box = [payload]
-            dist.broadcast_object_list(box, src=0)
+            dist.broadcast_object_list(box, src=0)   # completes within HEARTBEAT_S, idle or not
             payload = box[0]
-        assert payload is not None
         if payload["__file"] == SHUTDOWN_FILE:
             log.info("shutdown requested")
             if dist is not None:
@@ -255,6 +268,26 @@ def run_rank_loop(args: argparse.Namespace, engine: RankEngine, extra_info: dict
             os.replace(tmp, res_dir / payload["__file"])
         if dist is not None:
             dist.barrier()
+
+
+def _poll_request(req_dir: Path, poll: float, budget: float) -> dict[str, Any] | None:
+    """The oldest queued request, or ``None`` after ``budget`` seconds of nothing."""
+    deadline = time.monotonic() + budget
+    while True:
+        files = sorted(req_dir.glob("*.json"), key=lambda f: f.stat().st_mtime)
+        if files:
+            f = files[0]
+            try:
+                payload = json.loads(f.read_text())
+            except json.JSONDecodeError:
+                time.sleep(0.1)  # half-written; retry
+                continue
+            payload["__file"] = f.name
+            f.unlink()
+            return payload
+        if time.monotonic() >= deadline:
+            return None
+        time.sleep(min(poll, max(0.0, deadline - time.monotonic())))
 
 
 def _describe_failure(exc: BaseException, rank: int, world: int, sample: dict[str, Any]) -> str:
