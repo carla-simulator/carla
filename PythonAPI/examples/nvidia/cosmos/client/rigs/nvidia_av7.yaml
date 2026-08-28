@@ -1,0 +1,95 @@
+name: nvidia_av7
+mount: roofline
+margin: 0.05
+cameras:
+- name: camera:front:wide:120fov
+  hfov: 120.0
+  t:
+  - 1.697
+  - -0.01
+  - 1.443
+  rpy:
+  - 0.13
+  - 0.47
+  - -0.71
+  width: 1280
+  height: 720
+  lens: pinhole
+- name: camera:cross:left:120fov
+  hfov: 120.0
+  t:
+  - 2.473
+  - 0.938
+  - 0.918
+  rpy:
+  - -0.17
+  - 0.44
+  - 66.41
+  width: 1280
+  height: 720
+  lens: pinhole
+- name: camera:cross:right:120fov
+  hfov: 120.0
+  t:
+  - 2.478
+  - -0.955
+  - 0.929
+  rpy:
+  - -0.19
+  - -1.38
+  - -66.81
+  width: 1280
+  height: 720
+  lens: pinhole
+- name: camera:rear:left:70fov
+  hfov: 70.0
+  t:
+  - 2.029
+  - 1.039
+  - 0.885
+  rpy:
+  - 0.63
+  - 3.26
+  - 151.4
+  width: 1280
+  height: 720
+  lens: pinhole
+- name: camera:rear:right:70fov
+  hfov: 70.0
+  t:
+  - 2.008
+  - -1.005
+  - 0.896
+  rpy:
+  - -0.28
+  - 0.87
+  - -154.69
+  width: 1280
+  height: 720
+  lens: pinhole
+- name: camera:rear:tele:30fov
+  hfov: 30.0
+  t:
+  - 0.383
+  - 0.3
+  - 1.434
+  rpy:
+  - -0.25
+  - 0.58
+  - 179.19
+  width: 1280
+  height: 720
+  lens: pinhole
+- name: camera:front:tele:30fov
+  hfov: 30.0
+  t:
+  - 1.646
+  - -0.141
+  - 1.449
+  rpy:
+  - -0.33
+  - -0.72
+  - -0.73
+  width: 1280
+  height: 720
+  lens: pinhole
