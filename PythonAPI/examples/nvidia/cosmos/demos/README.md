@@ -131,8 +131,10 @@ An NVIDIA NuRec artifact is twenty seconds of real driving reconstructed as a Ga
 | `both` | `cosmos3-nano` | `wsm` (scene) + `edge` + `blur` | 1 | 101 @ 10 fps | both |
 
 `both` is Cosmos 3 because Transfer 2.5 AV accepts `hdmap_bbox` and **nothing else** — no backend
-takes the AV world-scenario control together with RGB-derived ones.  Each mode gets its own clip:
-the three contracts disagree about rate and length.
+takes the AV world-scenario control together with RGB-derived ones.  Each mode's *contract*
+differs in rate and length, so each mode captures its own clip — unless you pin the rig and the
+rate yourself with `--cameras` and `--fps`, which is what the showcase's NuRec rows do (one
+seven-camera Cosmos 3 clip, three conditionings; see below).
 
 ```sh
 export NUREC_SAMPLES=/path/to/nurec_samples
@@ -145,7 +147,16 @@ carla-cosmos preview --clip cosmos-results/_clips/nurec_..._wm_30fps --grid
 # The real thing (needs a NuRec Render Engine; see ../../nurec/README.md):
 export COSMOS_URL=http://<node>:8000
 python nurec_to_cosmos.py --sample <uuid> --mode both --nre-endpoint <node>:46435 --wait
+
+# The clip the three showcase rows share: seven views, Cosmos 3's wsm rule (101*k), 6.7 s.
+python nurec_to_cosmos.py --sample 00040136-e651-4abd-991d-0655ccda9430 --mode both \
+    --backend cosmos3-nano --cameras av7 --fps 30 --frames 202 \
+    --nre-endpoint localhost:46435 --capture-only --clip-id nurec_00040136_av7_30fps
 ```
+
+`--cameras` picks the rig — `av7` (the sample's calibrated cameras plus the nominal AV-7 slots),
+`sample` (only what it calibrates), `front`, or a comma-separated list — and `--fps` the clip
+rate; both default to what the mode's backend needs.
 
 `--fake-nurec` substitutes CARLA's own RGB for the neural render and keeps everything else — the
 real map, trajectory, extrinsics and ClipGT export.  For `--mode wm` that is not a compromise at
@@ -155,8 +166,13 @@ because CARLA's pixels are pinhole and a calibration claiming otherwise would mo
 Things worth knowing before running it:
 
 * The shipped 26.04 samples carry **six** of the seven RDS-HQ cameras (no `camera:rear:tele:30fov`).
-  `--mode wm` fills the seventh from NVIDIA's nominal table, logs a warning, and records it under
-  `nominal_cameras` in `scene/<clip_id>.nurec.json`.
+  `--cameras av7` fills the seventh from NVIDIA's nominal table, logs a warning, and records it
+  under `nominal_cameras` in `scene/<clip_id>.nurec.json`.  It is rendered as the pinhole its
+  nominal FOV describes — a splat can be rasterised through any lens — under the nearest
+  calibrated camera's `logical_id`, because the engine looks that id up in the reconstruction's
+  camera bank and answers `NOT_FOUND` for a camera it has never heard of.  Expect it to be
+  blurrier than the six measured views: no camera on the real rig looked there through a tele
+  lens, so that part of the reconstruction is thin.
 * `--vehicles N` traffic appears in the scene package and in CARLA's AOVs but **not** in the
   neural RGB: the engine only re-poses tracks the artifact marks controllable.
 * The clip carries `scene/<clip_id>.nurec.json` — artifact, lens, RGB source, which cameras are
@@ -164,7 +180,39 @@ Things worth knowing before running it:
   trajectory (tolerance 2 cm / 0.05°; the capture raises if it is exceeded).
 * The map and world settings are always restored, and every spawned actor destroyed.
 
-Showcase rows: `nurec-wm`, `nurec-rgb`, `nurec-both` (720p, clip roles of the same names).
+### Proving the render is the real place (2026-08-28)
+
+Every artifact ships a handful of genuine frames under `frames/<camera>/<ts>.jpeg`.  Rendering a
+camera at the pose of the instant its frame was taken and comparing is the one check that
+exercises the poses *and* the intrinsics against ground truth, and it needs nothing but the
+engine.  `<clip>/checks/` in a real capture keeps the script (`check_alignment.py`), the
+side-by-side PNGs and `psnr.json`.
+
+On `00040136` at full resolution through the f-theta calibration:
+
+| camera | PSNR |
+|---|---|
+| `camera:cross:right:120fov` | **26.44 dB** |
+| `camera:cross:left:120fov` | **24.65 dB** |
+| `camera:front:tele:30fov` | **22.48 dB** |
+| `camera:front:wide:120fov` | **21.79 dB** |
+
+Two things fall out of that run and are worth keeping:
+
+* The engine's `sensor_pose` is `T_world_from_**optical**` (OpenCV RDF: x right, y down, z
+  forward), not the body pose a CARLA sensor transform is.  `nurec.optical_pose()` is the
+  factor between them; without it the same four cameras score 16.7 / 18.9 / 17.3 / 14.3 dB on
+  images of nothing.
+* The four shipped frames are **one synchronised capture** near the start of the drive — all
+  four peak at the same rig instant (`t0 + 30–40 ms`) — so their file-name timestamps are
+  per-camera trigger stamps on another clock and are not trajectory times.  Search for the
+  instant; do not trust the file name.
+
+Showcase rows: `nurec-wm`, `nurec-rgb`, `nurec-both` — all **Cosmos 3 Nano**, all 720p, all on
+the **one** clip role `nurec`, all with the same prompt.  They differ only in the conditioning
+(`wsm` / `edge` / both), which is what makes them a comparison.  `edge` is the RGB-derived
+control rather than `blur`, because blur pins the palette and the point of the trio is a real
+night street answering a daylight prompt.
 
 ## Showcase
 
