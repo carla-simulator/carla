@@ -86,6 +86,27 @@ with NurecScenario(client, usdz_path) as scenario:
 - `NuRecRenderService(..., extra_server_args=["--enable-harmonizer"])` — any
   additional `serve-grpc` flag can be passed through.
 
+
+## Feeding a NuRec scene to Cosmos
+
+`carla_cosmos.nurec` (in `../cosmos/client/`) turns an artifact into a Cosmos clip package: it
+reads the rig calibration, the ego trajectory and the OpenDRIVE map straight out of the `.usdz`,
+replays the drive in CARLA, and writes the neural RGB alongside CARLA's depth/segmentation AOVs
+and a ClipGT scene package.  See `../cosmos/demos/nurec_to_cosmos.py`.
+
+It talks to the render engine over plain gRPC at a configurable `host:port`, so the engine may
+run on another machine — unlike `NurecScenario`, which hardcodes `localhost` and launches Docker
+itself.  Start a standalone engine with:
+
+```sh
+docker run --rm --gpus all --net=host -v $(dirname <artifact>):$(dirname <artifact>):ro \
+    $NUREC_IMAGE serve-grpc --artifact-glob <artifact>.usdz \
+    --port=46435 --host=0.0.0.0 --test-scenes-are-valid --enable-editing-actors
+```
+
+then `--nre-endpoint <host>:46435`.  `--fake-nurec` needs none of this: it substitutes CARLA's
+own RGB and exercises the rest of the pipeline on a machine with no NuRec install at all.
+
 ## Tests
 
 ```sh

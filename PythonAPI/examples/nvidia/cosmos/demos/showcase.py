@@ -259,6 +259,30 @@ MATRIX: list[Row] = [
         "reflected in the puddles, photorealistic footage from a seven-camera vehicle rig",
         {"hdmap_bbox": "scene"}, views=7, resolution="720",
         shows="same 7-camera scene, weather variation"),
+    # ---- NuRec: a real place, conditioned three ways ---------------------------------------
+    # Captured by ``demos/nurec_to_cosmos.py`` from an NVIDIA NuRec artifact: the map, the ego
+    # trajectory and the camera extrinsics are a real twenty-second drive's.  Each row needs its
+    # own clip because the three backends disagree about rate and length (87 @ 30, 93 @ 16,
+    # 101 @ 10).  ``nurec-rgb`` and ``nurec-both`` are only worth running on a clip whose RGB is
+    # an actual neural render -- on a ``--fake-nurec`` clip their controls come from CARLA
+    # pixels and they degenerate into the plain t25/c3 rows.
+    Row("nurec-wm", "transfer2.5-av", "nurec-wm",
+        "A photorealistic seven-camera dashcam drive through a northern European suburb on an "
+        "overcast afternoon, wet asphalt, bare trees along the roadside, consistent lighting "
+        "across all cameras",
+        {"hdmap_bbox": "scene"}, views=7, resolution="720",
+        shows="the world model of a REAL drive: map, lanes and trajectory from a NuRec clip"),
+    Row("nurec-rgb", "transfer2.5", "nurec-rgb",
+        "A photorealistic dashcam drive through a northern European suburb at golden hour, "
+        "low sun flaring through bare trees, long shadows across wet asphalt",
+        {"vis": "derive", "edge": "derive", "depth": "clip", "seg": "clip"}, resolution="720",
+        shows="controls derived from the NEURAL RGB of a real place, plus CARLA depth and seg"),
+    Row("nurec-both", "cosmos3-nano", "nurec-both",
+        "A photorealistic dashcam drive through a northern European suburb at night, street "
+        "lights reflected in wet asphalt, headlights of oncoming traffic",
+        {"wsm": "scene", "edge": "derive", "blur": "derive"}, resolution="720",
+        shows="both halves at once: the real drive's world map AND its neural RGB (Cosmos 3 is "
+              "the only backend that takes a world-scenario control together with derived ones)"),
 ]
 
 
@@ -270,8 +294,11 @@ def check_matrix(rows: list[Row]) -> None:
                          f"inherit the worker's default and its timing would not be comparable")
 
 
-CLIP_ROLES = ("t25", "wsm", "av7")
-DEFAULT_CLIP_NAMES = {"t25": "showcase_t25", "wsm": "showcase_wsm", "av7": "showcase_av7"}
+CLIP_ROLES = ("t25", "wsm", "av7", "nurec-wm", "nurec-rgb", "nurec-both")
+DEFAULT_CLIP_NAMES = {"t25": "showcase_t25", "wsm": "showcase_wsm", "av7": "showcase_av7",
+                      # written by demos/nurec_to_cosmos.py --mode <wm|rgb|both>
+                      "nurec-wm": "nurec_wm_30fps", "nurec-rgb": "nurec_rgb_16fps",
+                      "nurec-both": "nurec_both_10fps"}
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:

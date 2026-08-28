@@ -119,6 +119,53 @@ is stored here and where, warns before the server garbage-collects results that
 are not stored (server default: 168 h after the job finishes,
 `COSMOS_JOB_TTL_HOURS`), and lists results that are only on this machine.
 
+## NuRec: conditioning on a real place (`nurec_to_cosmos.py`)
+
+An NVIDIA NuRec artifact is twenty seconds of real driving reconstructed as a Gaussian splat.
+`nurec_to_cosmos.py` turns one into a clip package and conditions Cosmos on it three ways:
+
+| `--mode` | backend | controls | views | clip | what it uses from the sample |
+|---|---|---|---|---|---|
+| `wm` | `transfer2.5-av` | `hdmap_bbox` (scene) | 7 | 87 @ 30 fps | the real map, lanes and ego trajectory |
+| `rgb` | `transfer2.5` | `vis`+`edge` derived, `depth`+`seg` from CARLA | 1 | 93 @ 16 fps | the neural render's photometry |
+| `both` | `cosmos3-nano` | `wsm` (scene) + `edge` + `blur` | 1 | 101 @ 10 fps | both |
+
+`both` is Cosmos 3 because Transfer 2.5 AV accepts `hdmap_bbox` and **nothing else** — no backend
+takes the AV world-scenario control together with RGB-derived ones.  Each mode gets its own clip:
+the three contracts disagree about rate and length.
+
+```sh
+export NUREC_SAMPLES=/path/to/nurec_samples
+
+# Everything except the model, with no render engine and no GPU node:
+python nurec_to_cosmos.py --sample 00040136-e651-4abd-991d-0655ccda9430 \
+    --mode wm --fake-nurec --capture-only --vehicles 30
+carla-cosmos preview --clip cosmos-results/_clips/nurec_..._wm_30fps --grid
+
+# The real thing (needs a NuRec Render Engine; see ../../nurec/README.md):
+export COSMOS_URL=http://<node>:8000
+python nurec_to_cosmos.py --sample <uuid> --mode both --nre-endpoint <node>:46435 --wait
+```
+
+`--fake-nurec` substitutes CARLA's own RGB for the neural render and keeps everything else — the
+real map, trajectory, extrinsics and ClipGT export.  For `--mode wm` that is not a compromise at
+all: that mode never wanted neural pixels.  It forces `lens=pinhole` and **refuses** `ftheta`,
+because CARLA's pixels are pinhole and a calibration claiming otherwise would move every box.
+
+Things worth knowing before running it:
+
+* The shipped 26.04 samples carry **six** of the seven RDS-HQ cameras (no `camera:rear:tele:30fov`).
+  `--mode wm` fills the seventh from NVIDIA's nominal table, logs a warning, and records it under
+  `nominal_cameras` in `scene/<clip_id>.nurec.json`.
+* `--vehicles N` traffic appears in the scene package and in CARLA's AOVs but **not** in the
+  neural RGB: the engine only re-poses tracks the artifact marks controllable.
+* The clip carries `scene/<clip_id>.nurec.json` — artifact, lens, RGB source, which cameras are
+  calibrated, and the frame-by-frame alignment between the exported ego track and the replayed
+  trajectory (tolerance 2 cm / 0.05°; the capture raises if it is exceeded).
+* The map and world settings are always restored, and every spawned actor destroyed.
+
+Showcase rows: `nurec-wm`, `nurec-rgb`, `nurec-both` (720p, clip roles of the same names).
+
 ## Showcase
 
 `showcase.py` runs one job per conditioning setup and keeps everything:

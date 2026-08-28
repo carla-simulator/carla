@@ -150,14 +150,24 @@ def calibration_row(clip_id: str, timestamp_micros: int, cameras: Iterable[Camer
     """The single ``calibration_estimate`` row: the rig, as NVIDIA's loader wants it."""
     sensors = []
     for cam in cameras:
-        poly, _ = pinhole_ftheta_poly(cam.width, cam.height, cam.hfov)
+        measured = getattr(cam, "ftheta", None)
+        if measured is None:
+            # No measured lens: fit the polynomial that reproduces this camera's pinhole FOV.
+            poly, _ = pinhole_ftheta_poly(cam.width, cam.height, cam.hfov)
+            cx, cy = cam.width / 2.0, cam.height / 2.0
+            linear_c, linear_d, linear_e = 1.0, 0.0, 0.0
+        else:
+            # A real lens (a NuRec clip's own calibration): write it verbatim, never re-fit.
+            poly = list(measured.poly)
+            cx, cy = float(measured.cx), float(measured.cy)
+            linear_c, linear_d, linear_e = (float(v) for v in measured.linear_cde)
         sensors.append({
             "name": cam.name,
-            "properties": {"Model": "ftheta", "cx": cam.width / 2.0, "cy": cam.height / 2.0,
+            "properties": {"Model": "ftheta", "cx": cx, "cy": cy,
                            "width": cam.width, "height": cam.height,
                            "polynomial": " ".join(f"{k:.10g}" for k in poly),
                            "polynomial-type": "pixeldistance-to-angle",
-                           "linear-c": 1.0, "linear-d": 0.0, "linear-e": 0.0},
+                           "linear-c": linear_c, "linear-d": linear_d, "linear-e": linear_e},
             "nominalSensor2Rig_FLU": {"t": list(cam.t_flu), "roll-pitch-yaw": list(cam.rpy_flu)},
         })
     return {"key": {"clip_id": clip_id, "timestamp_micros": int(timestamp_micros)},
