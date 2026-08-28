@@ -152,10 +152,22 @@ def load_demo_config(path: Optional[str]) -> Dict[str, Any]:
 
 def make_transform_matrix(rotation=None, translation=None):
     """
-    Create a 4x4 compatible with your consumer:
-    - Unreal/CARLA rotation: yaw(Z), pitch(Y), roll(X), in degrees.
-    - Translation [x, y, z].
-    - Adjust the axes so that the consumer's forward (Z column) points to +X of the world.
+    Build a 4x4 camera mounting matrix (T_sensor_rig) in the NuRec rig frame.
+
+    The rig frame is right-handed FLU: x forward, y LEFT, z up -- it is NOT
+    CARLA's left-handed frame, so the angles here are NOT carla.Rotation
+    angles. ``rotation`` is ``[pitch, yaw, roll]`` in DEGREES, composed
+    right-handed as ``Rz(yaw) @ Ry(pitch) @ Rx(roll)``; relative to a
+    carla.Rotation describing the same physical mount, pitch and yaw have the
+    opposite sign and roll has the same sign (see
+    ``Docs/coordinate_conventions.md`` and ``utils.mat_to_carla_transform``).
+    So +pitch here tilts the camera DOWN.
+
+    ``A`` then maps the optical axes (x right, y down, z forward -- OpenCV
+    "RDF") into that rig frame, reproducing NVIDIA's own calibrations: for a
+    zero rotation this yields exactly the rotation block of
+    ``camera_front_wide_120fov``'s ``T_sensor_rig`` in the shipped
+    ``rig_trajectories.json``.
     """
     mat = np.eye(4, dtype=float)
 

@@ -83,8 +83,8 @@ from simple_trajectory_follower import SimpleTrajectoryFollower
 from utils import (
     se3_to_grpc_pose,
     actor_to_grpc_pose,
+    carla_transform_to_nurec,
     mat_to_carla_transform,
-    undo_carla_coordinate_transform,
     xyzeuler_to_carla_transform,
 )
 
@@ -328,6 +328,10 @@ def dict_to_camera_spec(params: dict) -> CameraSpec:
 def carla_transform_to_matrix(transform: carla.Transform) -> np.ndarray:
     """
     Converts a CARLA Transform to a 4x4 transformation matrix.
+
+    The result is in CARLA's own left-handed frame (x forward, y right, z up),
+    NOT in the NuRec rig frame -- use ``utils.carla_transform_to_nurec`` for
+    that.
 
     Args:
         transform: CARLA Transform object
@@ -706,10 +710,11 @@ class NurecSensor:
             logger.warning(f"Parent actor {self.parent_actor} not found in world")
             return None
 
-        actor_transform = actor.get_transform().get_matrix()
-        actor_transform = np.array(actor_transform)  # 4x4 matrix
+        # CARLA (left-handed, y right) -> NuRec rig frame (right-handed FLU)
+        # through LibCarla's explicit handedness boundary, then the camera's
+        # own T_sensor_rig, which is already in the rig frame.
         camera_transform = (
-            undo_carla_coordinate_transform(actor_transform) @ self.transform
+            carla_transform_to_nurec(actor.get_transform()) @ self.transform
         )
         return self.renderer.build_request(
             world,
@@ -779,9 +784,8 @@ class NurecLidarSensor:
         if actor is None:
             logger.warning(f"Parent actor {self.parent_actor} not found in world")
             return
-        actor_transform = np.array(actor.get_transform().get_matrix())
         sensor_transform = (
-            undo_carla_coordinate_transform(actor_transform) @ self.transform
+            carla_transform_to_nurec(actor.get_transform()) @ self.transform
         )
         points, intensities = self.renderer.render_lidar(
             world, sensor_transform, self.lidar_type, self.render_filter
@@ -1320,10 +1324,7 @@ class NurecScenario(TimeKeeper, NuRecRenderService):
             if next_ego_pose is not None:
                 ego_transform = next_ego_pose
             else:
-                ego_transform = ego.get_transform().get_matrix()
-                ego_transform = undo_carla_coordinate_transform(
-                    np.array(ego_transform).reshape(4, 4)
-                )
+                ego_transform = carla_transform_to_nurec(ego.get_transform())
             spectator_transform = np.eye(4)
             spectator_transform[:3, 3] = [-5, 0, 3]
             ego_transform = ego_transform @ spectator_transform
