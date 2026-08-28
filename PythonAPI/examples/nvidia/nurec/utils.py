@@ -95,26 +95,103 @@ def se3_to_grpc_pose(se3: np.ndarray) -> grpc_types.Pose:
     )
 
 
-# CARLA is left-handed (Y mirrored) relative to NuRec's right-handed frame.
-# Both directions of the conversion are the SAME operation: conjugation by the
-# Y-mirror, M' = S @ M @ S. This is exact for any pose — no euler-angle
-# order/sign juggling — and is its own inverse. The previous hand-rolled euler
-# implementation swapped pitch and roll (verified against
-# carla.Transform.get_matrix() on the 0.10 wheel; see tests/test_coordinates.py).
+# ---------------------------------------------------------------------------
+# CARLA <-> NuRec frame conventions
+# ---------------------------------------------------------------------------
+#
+# CARLA / Unreal world frame: left-handed, x forward, y RIGHT, z up. Its euler
+# angles compose as ``R = Rz(+yaw) * Ry(-pitch) * Rx(-roll)`` with the standard
+# (right-handed) elementary matrices: +pitch tilts the nose UP, +roll drops the
+# RIGHT side, +yaw turns the nose right. That is what the engine builds from a
+# ``carla.Rotation`` and what ``carla.Transform.get_matrix()`` returns; see
+# ``Docs/coordinate_conventions.md``.
+#
+# NuRec / ClipGT rig frame: right-handed FLU, x forward, y LEFT, z up (verified
+# against the shipped ``rig_trajectories.json`` calibrations: the ego advances
+# along +x, ``camera_cross_left_120fov`` sits at y = +0.95 and
+# ``camera_cross_right_120fov`` at y = -0.98, both ~+1 m in z). Rig poses
+# compose as ``R = Rz(yaw) * Ry(pitch) * Rx(roll)``, i.e. scipy's *extrinsic*
+# ``"xyz"`` euler order. This is exactly CARLA's ``RightHandedTransform``.
+#
+# Mapping between them (with S = diag(1, -1, 1)): location ``(x, -y, z)``,
+# rotation ``(roll, -pitch, -yaw)``, matrix ``M' = S @ M @ S``. PITCH AND YAW
+# FLIP SIGN, ROLL DOES NOT. The matrix form is exact for any pose and is its
+# own inverse; the euler form is what ``carla.Transform.to_right_handed()`` /
+# ``carla.Transform.from_right_handed()`` implement in LibCarla.
+#
+# HISTORY — do not re-fit this to the wheel: CARLA PR #9751 mirrored the pitch
+# and roll signs of ``carla::geom`` while leaving the engine alone, so on wheels
+# built between 4d853ed98 and the fix ``get_matrix()`` returns the mirror image
+# of the pose Unreal actually builds. ``mat_to_carla_transform`` below had been
+# fitted to that mirrored ``get_matrix()`` and therefore placed every pitched or
+# rolled camera/actor at MINUS the intended angle (2x the angle wrong); the old
+# round-trip tests could not see it because they measured the wheel against
+# itself. Never derive the euler signs from ``get_matrix()`` — derive them from
+# the engine convention above, and check with
+# ``carla.Transform(carla.Location(), carla.Rotation(pitch=20)).get_matrix()[2][0]``
+# which must be **+0.342**.
 _Y_MIRROR = np.diag([1.0, -1.0, 1.0, 1.0])
+
+# ``carla.Transform.to_right_handed`` / ``from_right_handed`` and the
+# ``RightHanded*`` types landed with the geom fix. When they are present we use
+# them, so the handedness change lives in exactly one place (LibCarla).
+_HAS_RH_BOUNDARY = hasattr(carla.Transform, "from_right_handed")
+
+
+def _require_fixed_wheel() -> None:
+    """
+    Refuse to build CARLA poses on a wheel whose geom math is still mirrored.
+
+    Failing loudly beats mounting every pitched sensor at minus the intended
+    angle for two months, which is what happened the last time this went
+    unnoticed.
+    """
+    if _HAS_RH_BOUNDARY:
+        return
+    probe = np.array(
+        carla.Transform(carla.Location(), carla.Rotation(pitch=20.0)).get_matrix()
+    ).reshape(4, 4)[2][0]
+    raise RuntimeError(
+        "This carla wheel predates the geom pitch/roll fix "
+        "(carla.Transform.from_right_handed is missing; "
+        f"Rotation(pitch=20).get_matrix()[2][0] = {probe:+.3f}, expected +0.342). "
+        "NuRec camera and actor poses would be mirrored in pitch and roll. "
+        "Rebuild the PythonAPI wheel from a branch that carries "
+        "'fix(geom): restore the engine pitch/roll sign convention in LibCarla'."
+    )
 
 
 def mirror_pose(transform: np.ndarray) -> np.ndarray:
-    """Map a 4x4 pose between NuRec (RH) and CARLA (LH) conventions (self-inverse)."""
+    """
+    Map a 4x4 pose matrix between the NuRec (RH, y-left) and CARLA (LH, y-right)
+    frames: ``S @ M @ S`` with ``S = diag(1, -1, 1, 1)``. Self-inverse.
+
+    Identical, element for element, to
+    ``carla.Transform.to_right_handed().get_matrix()`` on a fixed wheel (pinned
+    by ``tests/test_coordinates.py::test_mirror_pose_matches_libcarla_boundary``).
+    """
     return _Y_MIRROR @ transform @ _Y_MIRROR
 
 
 def undo_carla_coordinate_transform(transform: np.ndarray) -> np.ndarray:
     """
-    Convert a CARLA pose matrix (from Transform.get_matrix()) into the NuRec
+    Convert a CARLA pose matrix (from ``Transform.get_matrix()``) into the NuRec
     right-handed frame. Kept under its historic name; it is mirror_pose().
     """
     return mirror_pose(transform)
+
+
+def carla_transform_to_nurec(transform: carla.Transform) -> np.ndarray:
+    """
+    CARLA pose -> 4x4 NuRec (right-handed FLU) pose matrix, through LibCarla's
+    explicit handedness boundary. Preferred over
+    ``undo_carla_coordinate_transform(t.get_matrix())`` whenever the
+    ``carla.Transform`` itself is in hand.
+    """
+    if _HAS_RH_BOUNDARY:
+        return np.array(transform.to_right_handed().get_matrix()).reshape(4, 4)
+    _require_fixed_wheel()  # raises
+    raise AssertionError("unreachable")
 
 
 def actor_to_grpc_pose(
@@ -161,17 +238,35 @@ def actor_to_grpc_pose(
 
 def mat_to_carla_transform(mat: np.ndarray) -> carla.Transform:
     """
-    Convert a NuRec 4x4 pose to a carla.Transform.
+    Convert a NuRec 4x4 pose (right-handed FLU) to a ``carla.Transform``.
 
-    The carla wheel composes rotations as Rx(roll) @ Ry(pitch) @ Rz(yaw)
-    (verified numerically against Transform.get_matrix(); pinned by
-    tests/test_coordinates.py), i.e. scipy's intrinsic 'xyz' order.
+    The NuRec rig frame composes as ``Rz(yaw) @ Ry(pitch) @ Rx(roll)`` with the
+    standard right-handed elementary matrices -- scipy's *extrinsic* ``"xyz"``
+    order -- which is precisely ``carla.RightHandedTransform``. Handing that to
+    ``carla.Transform.from_right_handed()`` performs the (x, -y, z) /
+    (roll, -pitch, -yaw) mapping inside LibCarla, so the handedness change is
+    not duplicated here.
+
+    Note the sign flip on pitch and yaw: a rig pose that is nose-down by 8 deg
+    (right-handed pitch = +8, y pointing left) becomes ``carla.Rotation`` with
+    pitch = -8. The pre-2026-08-28 implementation decomposed the *mirrored*
+    matrix and passed the angles straight through, which cancelled against the
+    then-mirrored ``get_matrix()`` in the tests but placed the real actor or
+    sensor at +8 -- twice the intended angle away from the truth.
     """
-    mirrored = mirror_pose(mat)
-    roll, pitch, yaw = R.from_matrix(mirrored[:3, :3]).as_euler("xyz", degrees=True)
-    return carla.Transform(
-        carla.Location(x=mirrored[0, 3], y=mirrored[1, 3], z=mirrored[2, 3]),
-        carla.Rotation(pitch=pitch, yaw=yaw, roll=roll),
+    _require_fixed_wheel()
+    roll, pitch, yaw = R.from_matrix(np.asarray(mat)[:3, :3]).as_euler(
+        "xyz", degrees=True
+    )
+    return carla.Transform.from_right_handed(
+        carla.RightHandedTransform(
+            carla.RightHandedVector3D(
+                x=float(mat[0, 3]), y=float(mat[1, 3]), z=float(mat[2, 3])
+            ),
+            carla.RightHandedRotation(
+                roll=float(roll), pitch=float(pitch), yaw=float(yaw)
+            ),
+        )
     )
 
 
