@@ -116,8 +116,14 @@ void UCarlaLight::RegisterLight()
   UWorld *World = GetWorld();
   if (World != nullptr)
   {
-    UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>();
-    CarlaLightSubsystem->RegisterLight(this);
+    // OnRegister now runs for every world, including inactive worlds
+    // (e.g. double-clicking a map asset in the Content Browser opens an
+    // EWorldType::Inactive preview world). UCarlaLightSubsystem doesn't
+    // support that world type, so GetSubsystem returns nullptr there.
+    if (UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>())
+    {
+      CarlaLightSubsystem->RegisterLight(this);
+    }
   }
   flags |= ECarlaLightFlags::Registered;
 }
