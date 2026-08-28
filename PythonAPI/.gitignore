@@ -6,3 +6,8 @@ pyproject.toml
 *.pyd
 *.so
 *.egg-info
+
+# cosmos client/server/workers are real packages, not the wheel build dir
+!examples/nvidia/cosmos/client/pyproject.toml
+!examples/nvidia/cosmos/server/pyproject.toml
+!examples/nvidia/cosmos/server/workers/pyproject.toml
