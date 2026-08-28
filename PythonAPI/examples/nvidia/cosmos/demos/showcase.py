@@ -327,6 +327,27 @@ MATRIX: list[Row] = [
         guidance=2.0, extra=dict(PRESET_REGIME),
         shows="both halves at once: the real drive's world map AND the structure of its neural "
               "RGB, at the multi-hint regime (2.0 / 2.0 / 10)"),
+    # ---- NuRec with the recorded traffic in the world model --------------------------------
+    # Identical to nurec-wm / nurec-both in every parameter; the only difference is the clip.
+    # The rows above are conditioned on a clip captured with ``--actors carla`` on a proxy world
+    # with nothing in it, so their ``wsm`` control is lanes and boundaries over a neural RGB full
+    # of cars.  These two take the clip captured with ``--actors artifact``, whose obstacle layer
+    # is the drive's own recorded traffic out of the artifact's ``clipgt/obstacle.parquet``, so
+    # the world model finally describes the same traffic the pixels show.  Point the ``nurec``
+    # role at that clip:
+    #   --only nurec-wm-traffic,nurec-both-traffic --clip nurec=<...>_av7_30fps_traffic
+    Row("nurec-wm-traffic", "cosmos3-nano", "nurec", NUREC_DAY,
+        {"wsm": "scene"}, views=1, resolution="720", seed=7,
+        guidance=1.0, extra={"control_guidance": 3.0, "flow_shift": 10.0},
+        shows="nurec-wm with the drive's RECORDED TRAFFIC in the world model: the obstacle layer "
+              "is the artifact's own labels of the cars the reconstruction shows, not an empty "
+              "proxy world, at the single-hint wsm preset (1.0 / 3.0 / 10)"),
+    Row("nurec-both-traffic", "cosmos3-nano", "nurec", NUREC_DAY,
+        {"wsm": "scene", "edge": "derive"}, views=1, resolution="720", seed=7,
+        guidance=2.0, extra=dict(PRESET_REGIME),
+        shows="nurec-both with the drive's RECORDED TRAFFIC in the world model: real map, real "
+              "trajectory, real cars as boxes, plus the neural RGB's edges, at the multi-hint "
+              "regime (2.0 / 2.0 / 10)"),
 ]
 
 

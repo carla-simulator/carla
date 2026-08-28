@@ -12,7 +12,8 @@ import pytest
 import carla
 
 from carla_cosmos.contracts import CameraManifest
-from carla_cosmos.scene import STATIC_OBSTACLE_LABELS, SceneExporter, WorldFrame
+from carla_cosmos.scene import (OBSTACLE_LABEL_CLASS, STATIC_OBSTACLE_LABELS, ExternalObstacle,
+                               SceneExporter, WorldFrame)
 from carla_cosmos.visibility import VisibilityParams
 
 CAR = carla.CityObjectLabel.Car
@@ -138,7 +139,7 @@ def depth(value=FAR):
     return {"camera:front:wide:120fov": np.full((H, W), float(value), np.float32)}
 
 
-def occlusion_exporter(actors=(), statics=(), **params):
+def occlusion_exporter(actors=(), statics=(), external=None, **params):
     """An exporter with the world frame at the origin, the filter on and nothing else set up.
 
     The hero sits at the UE origin looking down +x, one camera at the rig origin, so an actor at
@@ -146,7 +147,8 @@ def occlusion_exporter(actors=(), statics=(), **params):
     pure tests in ``test_visibility.py`` use."""
     hero = FakeActor(1, 0.0, 0.0)
     exp = SceneExporter(FakeWorld({}), "clip", hero, np.zeros(3),
-                        cameras=[camera_manifest()], visibility=VisibilityParams(**params))
+                        cameras=[camera_manifest()], visibility=VisibilityParams(**params),
+                        external=external)
     exp.frame = WorldFrame(np.eye(4))
     exp._actors = list(actors)
     exp._static_obstacles = list(statics)
@@ -298,3 +300,62 @@ def test_the_hero_is_not_a_dynamic_obstacle():
     exp.frame = WorldFrame(np.eye(4))
     exp._scan_actors()
     assert [aid for aid, _cat, _bb in exp._actors] == [9, 11]
+
+
+# ----------------------------------------------------------------------------- external obstacles
+
+def external(x=20.0, y=0.0, z=0.8, track="nurec:9", category="automobile",
+             label=None) -> ExternalObstacle:
+    """One injected obstacle, given the way :class:`carla_cosmos.nurec.ArtifactObstacles` gives them."""
+    return ExternalObstacle(trackline_id=track, category=category,
+                            transform=carla.Transform(carla.Location(x=x, y=y, z=z)),
+                            size=(4.0, 1.8, 1.5),
+                            label_class_id=label or "scene:obstacles:nurec:v0")
+
+
+def test_an_external_obstacle_is_exported_in_the_clip_frame():
+    """A UE world transform in, a ClipGT FLU row out - the same conversion the actors take.
+
+    ``y`` is deliberately non-zero: UE is left-handed and ClipGT is not, so a row that skipped
+    the flip would put the car on the other side of the road and still look like a car.
+    """
+    exp = occlusion_exporter(external=lambda _t: [external(y=4.0)], mode="none")
+    for i in range(4):
+        tick(exp, i / 30, None)
+    rows, _occ, _dec = exp._obstacle_rows()
+    assert emitted(exp) == {"nurec:9": 4}
+    o = rows[0]["obstacle"]
+    assert (o["center"]["x"], o["center"]["y"], o["center"]["z"]) == pytest.approx((20.0, -4.0, 0.8))
+    assert (o["size"]["x"], o["size"]["y"], o["size"]["z"]) == pytest.approx((4.0, 1.8, 1.5))
+    assert o["category"] == "automobile"
+    assert rows[0]["key"]["label_class_id"] == "scene:obstacles:nurec:v0"
+
+
+def test_an_external_obstacle_is_occlusion_filtered_like_an_actor():
+    exp = occlusion_exporter(external=lambda _t: [external()])
+    for i in range(6):
+        tick(exp, i / 30, depth(8.0))       # a wall 8 m ahead, the imported car 20 m behind it
+    assert emitted(exp) == {}
+    exp = occlusion_exporter(external=lambda _t: [external()])
+    for i in range(6):
+        tick(exp, i / 30, depth())
+    assert emitted(exp) == {"nurec:9": 6}
+
+
+def test_an_external_track_that_disappears_is_split_like_an_actor():
+    exp = occlusion_exporter(external=lambda t: [external()] if t != 4 else [], hysteresis_frames=0)
+    for i in range(9):
+        tick(exp, i / 30, depth())
+    assert emitted(exp) == {"nurec:9#0": 4, "nurec:9#1": 4}
+
+
+def test_external_obstacles_coexist_with_carla_actors_and_keep_their_label_class():
+    """Both sources in one table: CARLA actor ids are bare integers, imports are prefixed."""
+    exp = occlusion_exporter(actors=[moving_actor(actor_id=9)],
+                             external=lambda _t: [external(x=30.0)], mode="none")
+    for i in range(3):
+        tick(exp, i / 30, None, actor_id=9)
+    rows, _occ, _dec = exp._obstacle_rows()
+    assert emitted(exp) == {"9": 3, "nurec:9": 3}
+    labels = {str(r["obstacle"]["trackline_id"]): r["key"]["label_class_id"] for r in rows}
+    assert labels == {"9": OBSTACLE_LABEL_CLASS, "nurec:9": "scene:obstacles:nurec:v0"}

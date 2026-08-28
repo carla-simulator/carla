@@ -8,8 +8,9 @@ real driving.  Everything this module needs is *inside* that zip:
                               intrinsics) and the ego trajectory (``T_rig_worlds``)
 ``map.xodr``                  the OpenDRIVE map of the same streets
 ``data_info.json``            the sequence id the render service keys scenes by
-``clipgt/*.parquet``          NVIDIA's own ground truth for the drive (not used here; it is
-                              the format this package writes, and a useful cross-check)
+``clipgt/*.parquet``          NVIDIA's own ground truth for the drive, in the format this
+                              package writes.  ``clipgt/obstacle.parquet`` is the recorded
+                              traffic (``actors="artifact"``); the rest is a cross-check.
 ``frames/<camera>/<ts>.jpeg`` one real frame per camera
 ============================  ==========================================================
 
@@ -72,6 +73,12 @@ The NRE *does* composite dynamic actors, but only tracks the artifact marks ``CO
 has no track and is invisible to it.  So with ``actors="carla"`` the traffic appears in the
 ClipGT obstacles and in CARLA's AOVs but **not** in the neural RGB; :func:`capture` warns
 about exactly that when it is rendering for real.
+
+The traffic that *is* in the neural RGB is the drive's own, and the artifact carries its
+labels: ``actors="artifact"`` (the default) reads ``clipgt/obstacle.parquet`` out of the same
+zip and exports those tracks as the clip's obstacle layer, so the world-scenario control
+describes the cars the reconstruction actually shows.  See :class:`ArtifactObstacles`.  The
+depth and segmentation AOVs still come from the CARLA proxy and contain none of them.
 """
 
 from __future__ import annotations
@@ -79,6 +86,7 @@ from __future__ import annotations
 import json
 import logging
 import math
+import time
 import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -102,8 +110,11 @@ USDZ_RIG = "rig_trajectories.json"
 USDZ_INFO = "data_info.json"
 USDZ_MAP = "map.xodr"
 USDZ_FRAMES = "frames"
+USDZ_OBSTACLE = "clipgt/obstacle.parquet"
+USDZ_TRACKS = "sequence_tracks.json"
 
 LENSES = ("ftheta", "pinhole")
+ACTOR_SOURCES = ("artifact", "carla")
 
 #: RDF optical axes (x right, y down, z forward) expressed in the FLU body frame.  A
 #: ``T_sensor_rig`` rotation block is ``R_body @ OPTICAL_TO_FLU``; this is the ``A`` matrix of
@@ -432,6 +443,229 @@ class NurecSample:
         return [c.name for c in rig.cameras if canonical_camera_name(c.name) not in self.cameras]
 
 
+# ----------------------------------------------------------------------------- recorded traffic
+
+ARTIFACT_CATEGORIES: dict[str, str] = {
+    "automobile": "automobile",
+    "heavy_truck": "heavy_truck",
+    "bus": "bus",
+    "person": "person",
+    "rider": "rider",
+    "trailer": "other_vehicle",
+    "other_vehicle": "other_vehicle",
+}
+"""NVIDIA autolabel categories -> the vocabulary :func:`carla_cosmos.scene.actor_category` writes.
+
+Most of it is the identity: this package's categories *are* NVIDIA's, because the exporter was
+written against their schema.  ``trailer`` is the one that has no CARLA counterpart and becomes
+``other_vehicle`` (a van in the CARLA export), which is the closest thing the renderer's
+vocabulary has to a towed box on wheels."""
+
+ARTIFACT_LABEL_CLASS = "scene:obstacles:nurec:v0"
+"""``key.label_class_id`` of an obstacle row that came out of the artifact.
+
+Deliberately not the CARLA one: these boxes are NVIDIA's lidar autolabels of a real drive, not
+the simulator's own ground truth, and the two should still be told apart three files later.
+The ClipGT loader keys tracks by ``trackline_id`` and never reads this field."""
+
+EGO_TRACK_RADIUS_M = 1.5
+"""A track whose median distance to the rig origin is under this *is* the ego, and is dropped."""
+
+
+@dataclass(frozen=True)
+class ArtifactTrack:
+    """One obstacle track of the artifact's own ClipGT, in the reconstruction's world frame.
+
+    Poses are right-handed FLU, in exactly the frame ``T_rig_worlds`` is expressed in — the
+    artifact's ``clipgt/egomotion_estimate.parquet`` reproduces the rig trajectory to 0.0 mm,
+    which is the measurement that says so — so a track needs no handedness change at all to
+    join a clip captured from the same artifact, only the clip's own anchor.
+    """
+
+    trackline_id: str
+    category: str
+    timestamps_us: np.ndarray
+    """``(n,)`` float64, ascending; the instants this track was labelled at."""
+    poses: np.ndarray
+    """``(n, 4, 4)`` box-centre poses, FLU, artifact world frame."""
+    sizes: np.ndarray
+    """``(n, 3)`` full box extents (length, width, height), metres."""
+    flags: str = ""
+    """``tracks_flags`` of ``sequence_tracks.json``: ``DYNAMIC|CONTROLLABLE`` or ``NONE``."""
+
+    @property
+    def span_us(self) -> tuple[float, float]:
+        return float(self.timestamps_us[0]), float(self.timestamps_us[-1])
+
+    def at(self, t_us: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        """``(alive, poses, sizes)`` at each of ``t_us``.
+
+        Linear in position and size, SLERP in rotation — the same interpolation
+        :meth:`NurecSample.poses_at` uses on the ego, because the label rate is not the clip
+        rate (this sample's tracks are labelled at a jittery ~10 Hz and the clip runs at 30).
+        ``alive`` is False outside the track's own span: NVIDIA's loader extrapolates a track
+        for half a second past its last observation, and inventing poses here on top of that
+        would be inventing them twice.
+        """
+        t = np.asarray(t_us, dtype=np.float64)
+        t0, t1 = self.span_us
+        alive = (t >= t0 - 1e-6) & (t <= t1 + 1e-6)
+        clamped = np.clip(t, t0, t1)
+        out = np.tile(np.eye(4), (len(t), 1, 1))
+        for axis in range(3):
+            out[:, axis, 3] = np.interp(clamped, self.timestamps_us, self.poses[:, axis, 3])
+        if len(self.timestamps_us) == 1:
+            out[:, :3, :3] = self.poses[0, :3, :3]
+            sizes = np.tile(self.sizes[0], (len(t), 1))
+        else:
+            out[:, :3, :3] = Slerp(self.timestamps_us,
+                                   Rotation.from_matrix(self.poses[:, :3, :3]))(clamped).as_matrix()
+            sizes = np.stack([np.interp(clamped, self.timestamps_us, self.sizes[:, k])
+                              for k in range(3)], axis=1)
+        return alive, out, sizes
+
+
+def read_artifact_tracks(sample: "NurecSample") -> list[ArtifactTrack]:
+    """Every obstacle track in ``clipgt/obstacle.parquet``, ego excluded.
+
+    The artifact's obstacle table is one row per *observation*, each with its own timestamp;
+    this groups it into tracks and attaches the ``sequence_tracks.json`` flag, which says
+    whether the render engine re-poses that object (``CONTROLLABLE``) or the reconstruction
+    baked it in where it stood.  Both kinds are real objects in the neural RGB, so both are
+    exported; the flag is only recorded.
+
+    The rig itself is not in this table on the shipped samples (the nearest track on
+    ``00040136`` is 4.4 m away), but a clip that exported the ego as an obstacle would draw a
+    box over the camera for its whole length, so the check is made rather than assumed.
+    """
+    import io
+
+    import pyarrow.parquet as pq
+
+    with zipfile.ZipFile(sample.path) as z:
+        names = set(z.namelist())
+        if USDZ_OBSTACLE not in names:
+            raise ValueError(f"{sample.path.name} carries no {USDZ_OBSTACLE}: it has no recorded "
+                             f"traffic to import (actors='carla' is the only mode it supports)")
+        rows = pq.read_table(io.BytesIO(z.read(USDZ_OBSTACLE))).to_pylist()
+        flags = _track_flags(z.read(USDZ_TRACKS)) if USDZ_TRACKS in names else {}
+
+    grouped: dict[str, list[dict]] = {}
+    for row in rows:
+        grouped.setdefault(str(row["obstacle"]["trackline_id"]), []).append(row)
+
+    tracks: list[ArtifactTrack] = []
+    unknown: set[str] = set()
+    ego_tracks: list[str] = []
+    for tid, group in grouped.items():
+        group.sort(key=lambda r: r["key"]["timestamp_micros"])
+        ts = np.asarray([float(r["key"]["timestamp_micros"]) for r in group])
+        poses = np.tile(np.eye(4), (len(group), 1, 1))
+        sizes = np.zeros((len(group), 3))
+        for i, r in enumerate(group):
+            o = r["obstacle"]
+            poses[i, :3, :3] = Rotation.from_quat([o["orientation"][k] for k in "xyzw"]).as_matrix()
+            poses[i, :3, 3] = [o["center"][k] for k in "xyz"]
+            sizes[i] = [o["size"][k] for k in "xyz"]
+        raw = str(group[-1]["obstacle"]["category"])
+        if raw not in ARTIFACT_CATEGORIES:
+            unknown.add(raw)
+        if _is_ego_track(sample, ts, poses):
+            ego_tracks.append(tid)
+            continue
+        tracks.append(ArtifactTrack(trackline_id=tid,
+                                    category=ARTIFACT_CATEGORIES.get(raw, "other_vehicle"),
+                                    timestamps_us=ts, poses=poses, sizes=sizes,
+                                    flags=flags.get(tid, "")))
+    if unknown:
+        log.warning("%s: obstacle categories %s are not in ARTIFACT_CATEGORIES; exported as "
+                    "'other_vehicle'", sample.path.name, sorted(unknown))
+    if ego_tracks:
+        log.info("%s: dropped track(s) %s — they follow the rig and are the ego",
+                 sample.path.name, ego_tracks)
+    tracks.sort(key=lambda t: t.trackline_id)
+    return tracks
+
+
+def _is_ego_track(sample: "NurecSample", ts: np.ndarray, poses: np.ndarray) -> bool:
+    """Whether a track just follows the rig (and so is the ego, not an obstacle)."""
+    ego = sample.poses_at(ts)[:, :3, 3]
+    return bool(np.median(np.linalg.norm(poses[:, :3, 3] - ego, axis=1)) < EGO_TRACK_RADIUS_M)
+
+
+def _track_flags(payload: bytes) -> dict[str, str]:
+    """``sequence_tracks.json`` -> ``{track id: flags}`` (``DYNAMIC|CONTROLLABLE`` or ``NONE``)."""
+    data = json.loads(payload)
+    out: dict[str, str] = {}
+    for chunk in data.values():
+        tracks = chunk.get("tracks_data", {})
+        for tid, flag in zip(tracks.get("tracks_id", []), tracks.get("tracks_flags", [])):
+            out[str(tid)] = flag if isinstance(flag, str) else str(flag[0] if flag else "")
+    return out
+
+
+class ArtifactObstacles:
+    """The traffic the reconstruction recorded, as one obstacle list per clip frame.
+
+    ``actors="carla"`` builds the ClipGT obstacle layer from the CARLA proxy world, which for a
+    NuRec capture is empty unless ``--vehicles`` spawned something — and anything it does spawn
+    is invisible to the render engine, so the world-scenario control ends up describing lanes
+    and boundaries over a neural RGB full of cars the model is never told about.  This class is
+    the other half: the artifact's own lidar autolabels of the real drive, resampled to the
+    clip's frames, handed to :class:`carla_cosmos.scene.SceneExporter` as
+    :class:`~carla_cosmos.scene.ExternalObstacle` and converted by the exporter's own adapters.
+
+    Every box is precomputed at construction: it is a few thousand poses, it costs a second,
+    and it means :meth:`stats` can say what the capture is about to contain *before* the world
+    is loaded.
+    """
+
+    def __init__(self, sample: "NurecSample", timestamps_us: Sequence[float],
+                 tracks: Sequence[ArtifactTrack] | None = None) -> None:
+        self.sample = sample
+        self.timestamps_us = np.asarray(timestamps_us, dtype=np.float64)
+        self.tracks = list(tracks) if tracks is not None else read_artifact_tracks(sample)
+        t_enu = sample.t_scenario_carla()
+        self.frames: list[list[scene_mod.ExternalObstacle]] = [[] for _ in self.timestamps_us]
+        for track in self.tracks:
+            alive, poses, sizes = track.at(self.timestamps_us)
+            for i in np.flatnonzero(alive):
+                # Into the OpenDRIVE world's frame first (the ego takes the same step in
+                # NurecSample.ego_transforms), then to UE through the pinned right-handed
+                # boundary.  The exporter re-anchors it on the clip's own first rig pose.
+                self.frames[int(i)].append(scene_mod.ExternalObstacle(
+                    trackline_id=f"nurec:{track.trackline_id}",
+                    category=track.category,
+                    transform=flu_matrix_to_carla(t_enu @ poses[i]),
+                    size=(float(sizes[i, 0]), float(sizes[i, 1]), float(sizes[i, 2])),
+                    label_class_id=ARTIFACT_LABEL_CLASS))
+
+    def __call__(self, index: int) -> list["scene_mod.ExternalObstacle"]:
+        """The recorded obstacles of clip frame ``index``."""
+        return self.frames[index] if 0 <= index < len(self.frames) else []
+
+    def stats(self) -> dict:
+        """What this import contains, for the log and the clip's NuRec sidecar."""
+        alive = {o.trackline_id for frame in self.frames for o in frame}
+        counts = [len(frame) for frame in self.frames]
+        categories: dict[str, int] = {}
+        for track in self.tracks:
+            if f"nurec:{track.trackline_id}" in alive:
+                categories[track.category] = categories.get(track.category, 0) + 1
+        return {
+            "source": USDZ_OBSTACLE,
+            "tracks_in_artifact": len(self.tracks),
+            "tracks_in_clip": len(alive),
+            "observations": int(sum(counts)),
+            "per_frame_min": int(min(counts)) if counts else 0,
+            "per_frame_max": int(max(counts)) if counts else 0,
+            "per_frame_mean": round(float(np.mean(counts)), 2) if counts else 0.0,
+            "categories": dict(sorted(categories.items())),
+            "controllable_tracks": sum(1 for t in self.tracks if "CONTROLLABLE" in t.flags
+                                       and f"nurec:{t.trackline_id}" in alive),
+        }
+
+
 # ----------------------------------------------------------------------------- tick source
 
 class TrajectoryTicks:
@@ -542,6 +776,33 @@ class NreRenderer:
         """Close the gRPC channel."""
         self._channel.close()
 
+    def warm_up(self, rig: Rig, rig_pose_ue: np.ndarray, timestamp_us: int,
+                timeout: float = 600.0) -> tuple[float, list[float]]:
+        """Render one throw-away frame per camera, before the CARLA sensors are listening.
+
+        Every fresh NRE process JIT-compiles its CUDA kernels on the **first** ``render_rgb``
+        (``JIT: compiled preProcessParticles`` / ``CudaKernelResources created on device 0`` in
+        the engine log).  Measured 2026-08-28 on ``00040136``: 82 s for that first frame, ~225 ms
+        for every one after it.  It is not about ``--enable-harmonizer`` — that only adds the
+        Difix load on top — so the warm-up is unconditional.
+
+        Inside the capture loop those 82 s are 82 s in which the client reads no images, and
+        CARLA's sensor streams drop what nobody collects; the capture then dies on
+        ``FrameDesyncError: ... not delivered within 30.0s`` at frame 0, naming a frame id rather
+        than the kernel compile that caused it (``.omc/logs/nurec-capture-harm.log``, 2026-08-28).
+
+        So the cost is paid here, before :meth:`Capture.run` spawns a single sensor, with a
+        deadline sized for a cold model rather than for a warm one.  Raising ``sensor_timeout``
+        instead would only move the same stall inside the loop and make every real desync take a
+        minute and a half to report.
+        """
+        saved, self.timeout = self.timeout, max(self.timeout, timeout)
+        try:
+            return warm_up_rig(lambda name, pose: self.render(name, pose, int(timestamp_us)),
+                               rig, rig_pose_ue)
+        finally:
+            self.timeout = saved
+
     def render(self, camera: str, world_pose_ue: np.ndarray, timestamp_us: int) -> np.ndarray:
         """One neural frame: ``(H, W, 3)`` uint8 RGB.
 
@@ -584,6 +845,23 @@ def optical_pose(pose_body_flu: np.ndarray) -> np.ndarray:
     visibly of nothing (``checks/*_recorded_vs_render.png``).
     """
     return np.asarray(pose_body_flu, dtype=np.float64) @ OPTICAL_BASIS
+
+
+def warm_up_rig(render: Callable[[str, np.ndarray], object], rig: Rig,
+                rig_pose_ue: np.ndarray) -> tuple[float, list[float]]:
+    """One render per camera of ``rig`` mounted on a rig sitting at ``rig_pose_ue``.
+
+    Pure plumbing, so it can be exercised with a fake renderer: composes each camera's world
+    pose the way :meth:`carla_cosmos.rig.Rig.mount_on` would (``world_rig @ rig_camera``, both
+    in UE), calls ``render`` once per camera and returns ``(total seconds, per-camera seconds)``.
+    """
+    total: list[float] = []
+    t0 = time.perf_counter()
+    for cam in rig.cameras:
+        t1 = time.perf_counter()
+        render(cam.name, rig_pose_ue @ coords.flu_to_ue(coords.flu_pose_matrix(cam.t, cam.rpy)))
+        total.append(time.perf_counter() - t1)
+    return time.perf_counter() - t0, total
 
 
 def _nominal_camera_params(cam: Camera, sample: "NurecSample") -> dict:
@@ -630,17 +908,20 @@ class NurecCapture(Capture):
     """
 
     def __init__(self, *args, render: RenderFn | None = None,
-                 timestamps_us: Sequence[int] | None = None, **kwargs) -> None:
+                 timestamps_us: Sequence[int] | None = None,
+                 external: "scene_mod.ExternalSource | None" = None, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.render = render
         self.timestamps_us = list(timestamps_us) if timestamps_us is not None else []
+        self.external = external
         self.rendered = 0
 
     def _exporter(self, clip_id: str, axle: np.ndarray,
                   mounted: list[MountedCamera]) -> scene_mod.SceneExporter:
         return scene_mod.SceneExporter(
             self.world, clip_id, self.ego, axle,
-            cameras=[_pinhole_manifest(m) for m in mounted], visibility=self.visibility)
+            cameras=[_pinhole_manifest(m) for m in mounted], visibility=self.visibility,
+            external=self.external)
 
     def _rgb_frame(self, s: _CameraStreams, index: int, fid: int, first: bool) -> np.ndarray:
         # Always drain CARLA's image: the queues are matched frame by frame and skipping one
@@ -779,9 +1060,19 @@ class WorldGuard:
         log.info("world settings restored (sync=%s)", settings.synchronous_mode)
 
 
-def load_map(client: carla.Client, sample: NurecSample,
-             weather: str = "ClearNoon") -> tuple[carla.World, WorldGuard]:
+def load_map(client: carla.Client, sample: NurecSample, weather: str = "ClearNoon",
+             force_shared_server: bool = False) -> tuple[carla.World, WorldGuard]:
     """Generate the sample's OpenDRIVE world, remembering what to put back.
+
+    **Refuses to run while another client is ticking the server.**  The local CARLA server is
+    shared between lanes, and ``generate_opendrive_world`` reloads the world for everybody: it
+    destroys the other capture's ego and its twenty-eight sensors, and that capture then sits in
+    ``_get_image`` until its sensor timeout and dies with a ``FrameDesyncError`` a minute later,
+    naming a frame instead of the thing that took its cameras away.  This happened on
+    2026-08-28 (a NuRec traffic capture launched 17 s after a NuRec harmoniser capture; the
+    second one killed the first).  Synchronous mode is the marker: only a capture turns it on,
+    and every capture and :class:`WorldGuard` turns it back off, so a world in sync mode has an
+    owner.  ``force_shared_server`` is the escape for a stale flag left by a crashed run.
 
     An OpenDRIVE world is the road network plus CARLA's procedural roadside dressing (verges,
     trees, street lights); there are no buildings and nothing of the real scene's own geometry.
@@ -793,8 +1084,17 @@ def load_map(client: carla.Client, sample: NurecSample,
     matter for anything derived from CARLA's pixels, so ``weather`` is applied explicitly.
     """
     world = client.get_world()
+    settings = world.get_settings()
+    if settings.synchronous_mode and not force_shared_server:
+        raise RuntimeError(
+            "the CARLA server on this port is in synchronous mode, which means another client is "
+            "ticking it (map " + world.get_map().name + ").  Loading this sample's OpenDRIVE "
+            "world would destroy that client's ego and sensors and its capture would fail a "
+            "minute later with a frame desync.  Wait for it to finish, or pass "
+            "force_shared_server=True / --force-shared-server if the flag is stale (a crashed "
+            "run leaves it on).")
     guard = WorldGuard(client=client, original_map=world.get_map().name.split("/")[-1],
-                       original_settings=world.get_settings())
+                       original_settings=settings)
     log.info("generating the OpenDRIVE world of %s (leaving %s)", sample.scene_id, guard.original_map)
     world = client.generate_opendrive_world(
         sample.xodr, carla.OpendriveGenerationParameters(**OPENDRIVE_PARAMS))
@@ -861,7 +1161,8 @@ def capture(client: carla.Client, sample: NurecSample, out_dir: str | Path, clip
             vehicles: int = 0, seed: int = 7, z_offset: float = 0.0, edge: bool = True,
             aovs: tuple[str, ...] = ("rgb", "depth", "semantic", "instance"),
             visibility: str = "depth", warmup: int = 5, tm_port: int = 8000,
-            weather: str = "ClearNoon",
+            weather: str = "ClearNoon", actors: str = "artifact",
+            force_shared_server: bool = False,
             contract: "BackendContract | None" = None,
             progress: Callable[[int, int], None] | None = None,
             restore_map: bool = True) -> tuple[Clip, Alignment]:
@@ -886,12 +1187,30 @@ def capture(client: carla.Client, sample: NurecSample, out_dir: str | Path, clip
     if not fake_nurec and not nre_endpoint:
         raise ValueError("no NuRec render engine: pass nre_endpoint='host:port', or "
                          "fake_nurec=True to substitute CARLA RGB and exercise everything else")
+    if actors not in ACTOR_SOURCES:
+        raise ValueError(f"actors must be one of {ACTOR_SOURCES}, not '{actors}'")
     rig = sample.rig(width=width, height=height, cameras=cameras, lens=lens,
                      complete_av7=complete_av7)
     timestamps = sample.clip_timestamps(frames, fps, start_s)
     ego_poses = sample.ego_transforms(timestamps)
 
-    world, guard = load_map(client, sample, weather=weather)
+    # Built before the world is touched: a missing or unreadable obstacle table should fail
+    # here, not after seven minutes of rendering.
+    obstacles: ArtifactObstacles | None = None
+    if actors == "artifact":
+        obstacles = ArtifactObstacles(sample, timestamps)
+        stats = obstacles.stats()
+        log.info("recorded traffic: %d of %d artifact tracks are in this clip "
+                 "(%d observations, %.1f boxes per frame, %s)", stats["tracks_in_clip"],
+                 stats["tracks_in_artifact"], stats["observations"], stats["per_frame_mean"],
+                 ", ".join(f"{n} {c}" for c, n in stats["categories"].items()))
+        if vehicles:
+            log.warning("actors='artifact' with --vehicles %d: the obstacle layer will hold the "
+                        "recorded traffic AND the spawned CARLA traffic, and only the first of "
+                        "the two is in the neural RGB", vehicles)
+
+    world, guard = load_map(client, sample, weather=weather,
+                            force_shared_server=force_shared_server)
     renderer: NreRenderer | None = None
     try:
         ego = spawn_ego(world, ego_poses[0])
@@ -913,8 +1232,16 @@ def capture(client: carla.Client, sample: NurecSample, out_dir: str | Path, clip
             world.tick()
 
         render: RenderFn | None = None
+        warmup_s = 0.0
         if not fake_nurec:
             renderer = NreRenderer(sample, str(nre_endpoint), rig, lens=lens)
+            # Before any sensor exists: a cold engine's first frame is minutes, not milliseconds.
+            warmup_s, per_camera = renderer.warm_up(rig, coords.ue_matrix(ego_poses[0]),
+                                                    int(timestamps[0]))
+            log.info("NRE warm-up: %d camera(s) in %.1f s (first frame %.1f s, rest %.2f s each) "
+                     "— paid before the sensors are listening", len(per_camera), warmup_s,
+                     per_camera[0], float(np.mean(per_camera[1:])) if len(per_camera) > 1 else 0.0)
+
             def render(camera: str, index: int, pose_ue: np.ndarray, ts: int) -> np.ndarray:
                 return renderer.render(camera, pose_ue, ts)
 
@@ -922,13 +1249,15 @@ def capture(client: carla.Client, sample: NurecSample, out_dir: str | Path, clip
         cap = NurecCapture(world, ego, rig, contract,
                            frames=frames, fps=fps, aovs=aovs, edge=edge,
                            ticks=ticks, visibility=visibility, warmup=warmup,
-                           render=render, timestamps_us=[int(t) for t in timestamps])
+                           render=render, timestamps_us=[int(t) for t in timestamps],
+                           external=obstacles)
         clip = cap.run(out_dir, clip_id, seed=seed,
                        carla_version=client.get_server_version(), progress=progress)
 
         alignment = check_alignment(clip, ticks.commanded, [int(t) for t in timestamps])
         write_sidecar(clip, sample, rig, alignment, lens=lens, fake_nurec=fake_nurec,
-                      nre_endpoint=nre_endpoint, frames_rendered=cap.rendered)
+                      nre_endpoint=nre_endpoint, frames_rendered=cap.rendered,
+                      actors=actors, obstacles=obstacles, nre_warmup_s=warmup_s)
         if not alignment.ok:
             raise AssertionError(
                 f"the exported ego track drifts from the replayed trajectory by "
@@ -952,7 +1281,9 @@ def capture(client: carla.Client, sample: NurecSample, out_dir: str | Path, clip
 
 def write_sidecar(clip: Clip, sample: NurecSample, rig: Rig, alignment: Alignment, *,
                   lens: str, fake_nurec: bool, nre_endpoint: str | None,
-                  frames_rendered: int) -> Path:
+                  frames_rendered: int, actors: str = "carla",
+                  obstacles: "ArtifactObstacles | None" = None,
+                  nre_warmup_s: float = 0.0) -> Path:
     """``scene/<clip_id>.nurec.json``: where these pixels came from and how well they line up.
 
     Kept out of ``manifest.json`` on purpose — that file is the clip contract every backend
@@ -968,6 +1299,7 @@ def write_sidecar(clip: Clip, sample: NurecSample, rig: Rig, alignment: Alignmen
         "lens": lens,
         "rgb_source": "carla (fake-nurec)" if fake_nurec else f"nurec-render-engine @ {nre_endpoint}",
         "frames_rendered": frames_rendered,
+        "nre_warmup_s": round(float(nre_warmup_s), 2),
         "cameras": [{"name": c.name,
                      "calibrated": canonical_camera_name(c.name) in sample.cameras,
                      "hfov": c.hfov, "t_flu": list(c.t), "rpy_flu": list(c.rpy)}
@@ -976,6 +1308,8 @@ def write_sidecar(clip: Clip, sample: NurecSample, rig: Rig, alignment: Alignmen
         "trajectory": {"timestamps_us": alignment.timestamps_us,
                        "duration_s": sample.duration_s},
         "alignment": alignment.as_dict(),
+        "actors": actors,
+        "artifact_obstacles": obstacles.stats() if obstacles is not None else None,
     }
     path.write_text(json.dumps(payload, indent=2))
     return path

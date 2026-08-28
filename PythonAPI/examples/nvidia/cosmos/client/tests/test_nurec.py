@@ -13,6 +13,7 @@ import json
 import math
 import os
 import sys
+import types
 from pathlib import Path
 
 import numpy as np
@@ -612,3 +613,261 @@ def test_a_calibrated_camera_is_never_given_a_donor(sample):
         key = cam.name.replace(":", "_")
         assert key in sample.cameras
         assert sample.cameras[key].scaled(1280, 720).nre_camera_params("ftheta")["logical_id"] == key
+
+
+# ----------------------------------------------------------------------------- recorded traffic
+
+def _track(track_id="7", category="automobile", centre=(20.0, 3.0, 0.8), yaw=30.0,
+           size=(4.2, 1.9, 1.5), t0=0.0, t1=1e12, yaw1=None) -> nurec.ArtifactTrack:
+    """A two-observation artifact track, in the artifact's own FLU world frame.
+
+    The default span covers any clock the sample could be on, so a test that is not about
+    the track's lifetime never has to know the artifact's epoch."""
+    poses = np.stack([coords.flu_pose_matrix(centre, (0.0, 0.0, yaw)),
+                      coords.flu_pose_matrix(centre, (0.0, 0.0, yaw if yaw1 is None else yaw1))])
+    return nurec.ArtifactTrack(trackline_id=track_id, category=category,
+                               timestamps_us=np.array([t0, t1]), poses=poses,
+                               sizes=np.tile(np.asarray(size, float), (2, 1)))
+
+
+def _clip_frame(sample: nurec.NurecSample, timestamps: np.ndarray):
+    """The :class:`~carla_cosmos.scene.WorldFrame` a capture of ``timestamps`` would anchor."""
+    from carla_cosmos import scene as scene_mod
+
+    m0 = coords.ue_matrix(nurec.flu_matrix_to_carla(
+        sample.t_scenario_carla() @ sample.poses_at(timestamps[:1])[0]))
+    return scene_mod.WorldFrame(coords.ue_to_flu(m0))
+
+
+@needs_sample
+@needs_fixed_wheel
+def test_an_artifact_box_lands_where_the_artifact_put_it(sample):
+    """The whole import, end to end: artifact world -> ENU -> UE -> the clip's ClipGT frame.
+
+    The clip's world frame is anchored on the rig pose of its first frame, and the artifact's
+    own frame is anchored on rig pose 0, so a clip that starts at t=0 must reproduce the
+    artifact's numbers *exactly*.  A mirrored y, a transposed rotation or a forgotten
+    ``t_scenario_carla`` would all move this box and nothing else in the pipeline would object.
+    """
+    timestamps = sample.clip_timestamps(4, 30, 0.0)
+    centre, yaw = (20.0, 3.0, 0.8), 30.0
+    obstacles = nurec.ArtifactObstacles(sample, timestamps, [_track(centre=centre, yaw=yaw)])
+    frame = _clip_frame(sample, timestamps)
+    box = obstacles(0)[0]
+    assert box.trackline_id == "nurec:7"
+    assert box.label_class_id == nurec.ARTIFACT_LABEL_CLASS
+    mf = frame.pose(coords.ue_matrix(box.transform))
+    assert mf[:3, 3] == pytest.approx(centre, abs=1e-3)
+    assert coords.flu_rpy_deg(mf) == pytest.approx([0.0, 0.0, yaw], abs=1e-3)
+    assert box.size == pytest.approx((4.2, 1.9, 1.5), abs=1e-6)
+
+
+@needs_sample
+@needs_fixed_wheel
+def test_an_artifact_box_on_the_optical_axis_projects_to_the_principal_point(sample):
+    """A box put dead ahead of the front wide camera must land on its principal point.
+
+    This is the check with pixels in it: it goes through the exported calibration the same way
+    :mod:`carla_cosmos.preview` and NVIDIA's renderer do, so a handedness slip anywhere between
+    the artifact's frame and the lens shows up as tens of pixels rather than as a plausible
+    number in a Parquet file.
+    """
+    timestamps = sample.clip_timestamps(2, 30, 0.0)
+    cam = sample.cameras["camera_front_wide_120fov"].scaled(1280, 720)
+    ahead = cam.flu_pose() @ np.array([25.0, 0.0, 0.0, 1.0])
+    obstacles = nurec.ArtifactObstacles(sample, timestamps,
+                                        [_track(centre=tuple(ahead[:3]), yaw=0.0)])
+    frame = _clip_frame(sample, timestamps)
+    mf = frame.pose(coords.ue_matrix(obstacles(0)[0].transform))
+    lens = preview.FThetaCamera(name=cam.cosmos_name, width=cam.width, height=cam.height,
+                                cx=cam.cx, cy=cam.cy, coefficients=tuple(cam.poly))
+    view = preview.PreviewCamera(name=cam.cosmos_name, lens=lens,
+                                 sensor_to_rig=preview.pose_matrix(
+                                     preview.euler_to_matrix(cam.rpy_flu), cam.t_flu))
+    uv = view.project_world(mf[:3, 3].reshape(1, 3), view.world_to_camera(np.eye(4)))[0]
+    assert uv == pytest.approx([cam.cx, cam.cy], abs=0.5)
+
+
+@needs_sample
+@needs_fixed_wheel
+def test_a_flipped_y_would_be_caught(sample):
+    """The previous two tests are only worth having if the wrong answer fails them."""
+    timestamps = sample.clip_timestamps(2, 30, 0.0)
+    frame = _clip_frame(sample, timestamps)
+    right = nurec.ArtifactObstacles(sample, timestamps, [_track(centre=(20.0, 3.0, 0.8))])
+    mirrored = nurec.ArtifactObstacles(sample, timestamps, [_track(centre=(20.0, -3.0, 0.8))])
+    a = frame.pose(coords.ue_matrix(right(0)[0].transform))[:3, 3]
+    b = frame.pose(coords.ue_matrix(mirrored(0)[0].transform))[:3, 3]
+    assert np.linalg.norm(a - b) == pytest.approx(6.0, abs=1e-3)
+
+
+def test_a_track_is_interpolated_between_its_label_samples():
+    """The label rate is not the clip rate: this sample is labelled at a jittery ~10 Hz."""
+    track = _track(t0=0.0, t1=1e6, yaw=0.0, yaw1=90.0)
+    track = nurec.ArtifactTrack(track.trackline_id, track.category, track.timestamps_us,
+                                np.stack([coords.flu_pose_matrix((0.0, 0.0, 0.0), (0, 0, 0)),
+                                          coords.flu_pose_matrix((10.0, 0.0, 0.0), (0, 0, 90.0))]),
+                                track.sizes)
+    alive, poses, _ = track.at(np.array([0.0, 5e5, 1e6]))
+    assert alive.all()
+    assert poses[1, :3, 3] == pytest.approx([5.0, 0.0, 0.0], abs=1e-9)
+    assert coords.flu_rpy_deg(poses[1])[2] == pytest.approx(45.0, abs=1e-9)
+
+
+def test_a_track_is_absent_outside_its_own_span():
+    """No extrapolation here: NVIDIA's loader already does half a second of it."""
+    alive, _poses, _sizes = _track(t0=1e6, t1=2e6).at(np.array([0.5e6, 1.5e6, 2.5e6]))
+    assert list(alive) == [False, True, False]
+
+
+@needs_sample
+def test_the_ego_is_never_exported_as_an_obstacle(sample):
+    """A track that follows the rig is the rig; exporting it paints a box over the camera."""
+    ts = sample.timestamps_us.astype(float)
+    ego = sample.poses_at(ts)
+    assert nurec._is_ego_track(sample, ts, ego)
+    aside = ego.copy()
+    aside[:, 1, 3] += 4.0
+    assert not nurec._is_ego_track(sample, ts, aside)
+
+
+@needs_sample
+def test_the_artifact_tracks_are_the_recorded_traffic(sample):
+    """The numbers of ``00040136``: 78 labelled tracks, no ego among them, 48 in a 6.7 s clip."""
+    tracks = nurec.read_artifact_tracks(sample)
+    assert len(tracks) == 78
+    assert set(t.category for t in tracks) <= set(nurec.ARTIFACT_CATEGORIES.values())
+    assert any("CONTROLLABLE" in t.flags for t in tracks)  # the engine re-poses these
+    assert any(t.flags == "NONE" for t in tracks)          # ... and bakes these in where they stood
+
+    stats = nurec.ArtifactObstacles(sample, sample.clip_timestamps(202, 30, 0.0), tracks).stats()
+    assert stats["tracks_in_artifact"] == 78
+    assert stats["tracks_in_clip"] == 48
+    assert stats["observations"] > 3000
+    assert 10 < stats["per_frame_mean"] < 25
+    assert stats["categories"]["automobile"] >= 40
+
+
+def test_an_unknown_category_becomes_other_vehicle():
+    """The vocabulary is NVIDIA's own, so this only bites on a schema change - loudly, not silently."""
+    assert nurec.ARTIFACT_CATEGORIES["trailer"] == "other_vehicle"
+    assert nurec.ARTIFACT_CATEGORIES["automobile"] == "automobile"
+    assert set(nurec.ARTIFACT_CATEGORIES.values()) <= {
+        "automobile", "heavy_truck", "bus", "person", "rider", "other_vehicle"}
+
+
+# ----------------------------------------------------------------------------- the shared server
+
+class _BusyWorld:
+    """A world another client is already ticking."""
+
+    def __init__(self, sync: bool) -> None:
+        self._settings = types.SimpleNamespace(synchronous_mode=sync, fixed_delta_seconds=1 / 30)
+
+    def get_settings(self):
+        return self._settings
+
+    def get_map(self):
+        return types.SimpleNamespace(name="Carla/Maps/OpenDriveMap")
+
+
+class _BusyClient:
+    def __init__(self, sync: bool) -> None:
+        self.world = _BusyWorld(sync)
+        self.generated = False
+
+    def get_world(self):
+        return self.world
+
+    def generate_opendrive_world(self, *_a, **_k):
+        self.generated = True
+        return self.world
+
+
+@needs_sample
+def test_load_map_refuses_to_reload_a_world_another_client_is_ticking(sample):
+    """``generate_opendrive_world`` reloads the world for *everybody* on this server.
+
+    The local server is shared between lanes, and a reload takes the other capture's ego and
+    its sensors away; that capture then dies a minute later on a sensor timeout that names a
+    frame id and not the reload.  Synchronous mode is the marker that the world has an owner.
+    """
+    client = _BusyClient(sync=True)
+    with pytest.raises(RuntimeError, match="another client is ticking it"):
+        nurec.load_map(client, sample)
+    assert not client.generated
+
+
+# ----------------------------------------------------------------------------- render-engine warm-up
+
+class _FakeRenderer:
+    """A render engine whose first frame is slow, like Difix's."""
+
+    def __init__(self, first_delay: float = 0.05) -> None:
+        self.calls: list[tuple[str, np.ndarray]] = []
+        self.first_delay = first_delay
+        self.timeout = 120.0
+        self.seen_timeouts: list[float] = []
+
+    def __call__(self, name: str, pose_ue: np.ndarray):
+        import time as _t
+
+        self.seen_timeouts.append(self.timeout)
+        if not self.calls:
+            _t.sleep(self.first_delay)
+        self.calls.append((name, np.array(pose_ue)))
+        return np.zeros((2, 2, 3), np.uint8)
+
+
+@needs_sample
+def test_the_warm_up_renders_every_camera_once_at_the_first_rig_pose(sample):
+    """One throw-away frame per camera, at the pose the clip starts from.
+
+    The point of the warm-up is that it happens *before* :class:`carla_cosmos.capture.Capture`
+    spawns a sensor, so this checks what it asks the engine for, not when: one call per camera,
+    in rig order, each at that camera's own mount on the first rig pose.
+    """
+    rig = sample.rig(1280, 720, lens="pinhole")
+    rig_pose = coords.ue_matrix(carla.Transform(carla.Location(x=10.0, y=-4.0, z=0.5),
+                                                carla.Rotation(yaw=35.0)))
+    fake = _FakeRenderer()
+    total, per_camera = nurec.warm_up_rig(fake, rig, rig_pose)
+    assert [name for name, _pose in fake.calls] == [c.name for c in rig.cameras]
+    assert len(per_camera) == len(rig.cameras)
+    assert total >= per_camera[0] >= fake.first_delay
+    for cam, (_name, pose) in zip(rig.cameras, fake.calls):
+        want = rig_pose @ coords.flu_to_ue(coords.flu_pose_matrix(cam.t, cam.rpy))
+        assert pose == pytest.approx(want, abs=1e-9)
+
+
+@needs_sample
+def test_the_warm_up_uses_a_cold_model_deadline_and_puts_the_old_one_back(sample):
+    """A cold Difix takes ~82 s; the capture loop's 120 s must not be the warm-up's budget either."""
+    rig = sample.rig(1280, 720, cameras=["camera_front_wide_120fov"], lens="pinhole")
+    renderer = object.__new__(nurec.NreRenderer)
+    renderer.timeout = 120.0
+    used: list[float] = []
+
+    def render(_name, _pose, _ts):
+        used.append(renderer.timeout)          # the deadline this render ran under
+        return np.zeros((2, 2, 3), np.uint8)
+
+    renderer.render = render
+    nurec.NreRenderer.warm_up(renderer, rig, np.eye(4), 1234, timeout=600.0)
+    assert used == [600.0]
+    assert renderer.timeout == 120.0           # ... and the capture loop's is back
+
+
+@needs_sample
+def test_the_warm_up_puts_the_deadline_back_even_when_the_engine_fails(sample):
+    rig = sample.rig(1280, 720, cameras=["camera_front_wide_120fov"], lens="pinhole")
+    renderer = object.__new__(nurec.NreRenderer)
+    renderer.timeout = 120.0
+
+    def render(*_a):
+        raise RuntimeError("engine is not up")
+
+    renderer.render = render
+    with pytest.raises(RuntimeError):
+        nurec.NreRenderer.warm_up(renderer, rig, np.eye(4), 1234)
+    assert renderer.timeout == 120.0

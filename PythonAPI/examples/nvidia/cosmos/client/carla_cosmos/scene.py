@@ -19,7 +19,12 @@ pose.  Ego origin: rear axle on ground.  Hardened over the spike:
 * per-frame traffic-light states go to a sidecar JSON (the stock ClipGT loader
   ignores states and renders grey; the sidecar feeds the loader extension);
 * obstacles no camera can see are dropped, and tracks are split per visible
-  segment (:mod:`carla_cosmos.visibility`, ``visibility="depth"``).
+  segment (:mod:`carla_cosmos.visibility`, ``visibility="depth"``);
+* obstacles that are not CARLA actors at all can be injected per tick
+  (:class:`ExternalObstacle`, the ``external`` argument).  That is how a NuRec
+  clip gets the traffic the *reconstruction* recorded: those cars are baked into
+  the neural RGB and have no actor in the proxy world, so nothing else would put
+  them in the obstacle layer (:class:`carla_cosmos.nurec.ArtifactObstacles`).
 """
 
 from __future__ import annotations
@@ -28,7 +33,8 @@ import json
 import logging
 import time
 from pathlib import Path
-from typing import Iterable, Sequence
+from dataclasses import dataclass
+from typing import Callable, Iterable, Sequence
 
 import numpy as np
 
@@ -73,6 +79,35 @@ STATIC_OBSTACLE_LABELS = {
     carla.CityObjectLabel.Motorcycle: "rider",
     carla.CityObjectLabel.Bicycle: "rider",
 }
+
+
+OBSTACLE_LABEL_CLASS = "scene:obstacles:carla:v0"
+"""``key.label_class_id`` of an obstacle row exported from the CARLA world."""
+
+
+@dataclass(frozen=True)
+class ExternalObstacle:
+    """One obstacle for one tick that is *not* a CARLA actor.
+
+    The pose is a **UE world transform** of the box centre and the size is the box's full
+    extents in the same order (length, width, height), so the exporter converts it through
+    exactly the adapters it uses for its own actors -- :func:`carla_cosmos.coords.ue_matrix`
+    and :meth:`WorldFrame.pose` -- and no sign is ever flipped by hand on the way in.
+
+    ``trackline_id`` shares a namespace with the CARLA actor ids (which are plain integers),
+    so an external source must prefix its own: :class:`carla_cosmos.nurec.ArtifactObstacles`
+    writes ``nurec:<track>``.
+    """
+
+    trackline_id: str
+    category: str
+    transform: carla.Transform
+    size: tuple[float, float, float]
+    label_class_id: str = OBSTACLE_LABEL_CLASS
+
+
+ExternalSource = Callable[[int], Sequence[ExternalObstacle]]
+"""``tick index -> the external obstacles of that tick``."""
 
 
 def actor_category(actor: carla.Actor) -> str:
@@ -150,11 +185,15 @@ class SceneExporter:
     def __init__(self, world: carla.World, clip_id: str, hero: carla.Vehicle,
                  axle_local_ue: np.ndarray, lane_step: float = 1.0, *,
                  cameras: Sequence[CameraManifest] | None = None,
-                 visibility: vis.VisibilityParams | str = "none") -> None:
+                 visibility: vis.VisibilityParams | str = "none",
+                 external: ExternalSource | None = None) -> None:
         self.world = world
         self.clip_id = clip_id
         self.hero = hero
         self.lane_step = lane_step
+        self.external = external
+        self._external_cats: dict[str, str] = {}
+        """trackline id -> category, for every external obstacle seen so far."""
         self.t_axle = np.eye(4)
         self.t_axle[:3, 3] = axle_local_ue
         self.frame: WorldFrame | None = None
@@ -474,20 +513,31 @@ class SceneExporter:
                 carla.Transform(bb.location, bb.rotation))
             mf = self.frame.pose(m_world)
             dims = (2 * bb.extent.x, 2 * bb.extent.y, 2 * bb.extent.z)
-            self._obs_index.setdefault(str(aid), []).append((tick, len(self.obstacle_rows)))
-            self.obstacle_rows.append(
-                {"key": {"clip_id": self.clip_id, "timestamp_micros": ts,
-                         "label_class_id": "scene:obstacles:carla:v0"},
-                 "obstacle": {"trackline_id": str(aid), "center": coords.xyz(mf[:3, 3]),
-                              "size": coords.xyz(dims),
-                              "orientation": coords.quat_xyzw(mf), "category": category},
-                 "version": VERSION})
-            present.append(str(aid))
-            rot.append(mf[:3, :3])
-            centre.append(mf[:3, 3])
-            size.append(dims)
+            self._observe(tick, ts, str(aid), category, mf, dims, OBSTACLE_LABEL_CLASS,
+                          present, rot, centre, size)
+        for ext in (self.external(tick) if self.external is not None else ()):
+            # Injected obstacles take exactly the path the actors above take: their UE world
+            # transform through ue_matrix and WorldFrame.pose, so a frame mistake cannot hide
+            # in a second, parallel conversion.
+            mf = self.frame.pose(coords.ue_matrix(ext.transform))
+            self._external_cats[ext.trackline_id] = ext.category
+            self._observe(tick, ts, ext.trackline_id, ext.category, mf, tuple(ext.size),
+                          ext.label_class_id, present, rot, centre, size)
         self._record_visibility(tick, m_ego, present, rot, centre, size, depth)
         self.tl_states.append({str(tl.id): str(tl.get_state()) for tl in self._lights})
+
+    def _observe(self, tick: int, ts: int, tid: str, category: str, mf: np.ndarray,
+                 dims: tuple[float, float, float], label_class_id: str, present: list[str],
+                 rot: list, centre: list, size: list) -> None:
+        """Record one obstacle observation and queue it for this tick's visibility test."""
+        self._obs_index.setdefault(tid, []).append((tick, len(self.obstacle_rows)))
+        self.obstacle_rows.append(self._obstacle_row(
+            ts, {"trackline_id": tid, "center": coords.xyz(mf[:3, 3]), "size": coords.xyz(dims),
+                 "orientation": coords.quat_xyzw(mf), "category": category}, label_class_id))
+        present.append(tid)
+        rot.append(mf[:3, :3])
+        centre.append(mf[:3, 3])
+        size.append(dims)
 
     def _record_visibility(self, tick: int, m_ego: np.ndarray, present: list[str], rot: list[np.ndarray],
                            centre: list[np.ndarray], size: list[tuple[float, float, float]],
@@ -539,9 +589,10 @@ class SceneExporter:
         return out
 
     # ------------------------------------------------------------------ obstacle table
-    def _obstacle_row(self, ts: int, payload: dict) -> dict:
+    def _obstacle_row(self, ts: int, payload: dict,
+                      label_class_id: str = OBSTACLE_LABEL_CLASS) -> dict:
         return {"key": {"clip_id": self.clip_id, "timestamp_micros": ts,
-                        "label_class_id": "scene:obstacles:carla:v0"},
+                        "label_class_id": label_class_id},
                 "obstacle": payload, "version": VERSION}
 
     def _obstacle_rows(self) -> tuple[list[dict], list[dict], dict[str, dict]]:
@@ -591,11 +642,14 @@ class SceneExporter:
     def _tracks(self) -> list[tuple[str, bool]]:
         """``(track id, is a parked level-bb obstacle)`` for every track the clip knows."""
         return ([(str(aid), False) for aid, _c, _bb in self._actors]
+                + [(tid, False) for tid in self._external_cats]
                 + [(o["trackline_id"], True) for o in self._static_obstacles])
 
     def _category(self, tid: str, static: bool) -> str:
         if static:
             return next(o["category"] for o in self._static_obstacles if o["trackline_id"] == tid)
+        if tid in self._external_cats:
+            return self._external_cats[tid]
         return next((c for aid, c, _bb in self._actors if str(aid) == tid), "")
 
     def _static_proto(self, tid: str) -> dict:
@@ -642,7 +696,8 @@ class SceneExporter:
         for tick, i in self._obs_index.get(tid, []):
             if a <= tick < b:
                 payload = dict(self.obstacle_rows[i]["obstacle"], trackline_id=sid)
-                rows.append(self._obstacle_row(self.timestamps[tick], payload))
+                rows.append(self._obstacle_row(self.timestamps[tick], payload,
+                                               self.obstacle_rows[i]["key"]["label_class_id"]))
         return rows
 
     @staticmethod

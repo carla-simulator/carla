@@ -23,6 +23,15 @@ demo turns one into a Cosmos clip package and submits it three different ways:
 Each mode needs its own clip: the three backends disagree about frame rate and clip length
 (87 frames at 30 fps, 93 at 16, 101 at 10), and a clip is captured for exactly one contract.
 
+The traffic
+-----------
+``--actors artifact`` (the default) imports the drive's own recorded traffic out of the
+sample's ``clipgt/obstacle.parquet`` into the clip's ClipGT obstacle layer, so the ``wsm`` /
+``hdmap_bbox`` control carries the cars the neural RGB actually shows.  ``--actors carla``
+exports the proxy world's own actors instead - which is nothing unless ``--vehicles`` spawned
+some, and anything it spawns is invisible to the render engine.  CARLA's depth and
+segmentation AOVs describe the proxy world either way and contain none of the recorded cars.
+
 Without a render engine
 -----------------------
 ``--fake-nurec`` substitutes CARLA's own RGB for the neural render and captures everything else
@@ -142,9 +151,9 @@ def capture(args, mode: Mode) -> tuple[Clip, nurec.Alignment]:
     contract = BUILTIN_CONTRACTS[args.backend or mode.backend]
     cameras, complete_av7 = resolve_rig(args.cameras, mode)
 
-    log.info("%s: %d frames at %d fps (%s), %d view(s), lens=%s, rgb=%s", mode.name, frames,
-             fps, contract.id, mode.views, lens,
-             "CARLA (fake-nurec)" if args.fake_nurec else f"NRE @ {args.nre_endpoint}")
+    log.info("%s: %d frames at %d fps (%s), %d view(s), lens=%s, rgb=%s, actors=%s", mode.name,
+             frames, fps, contract.id, mode.views, lens,
+             "CARLA (fake-nurec)" if args.fake_nurec else f"NRE @ {args.nre_endpoint}", args.actors)
 
     client = carla.Client(args.host, args.port)
     client.set_timeout(args.timeout)
@@ -154,7 +163,8 @@ def capture(args, mode: Mode) -> tuple[Clip, nurec.Alignment]:
         complete_av7=complete_av7, nre_endpoint=args.nre_endpoint,
         fake_nurec=args.fake_nurec, start_s=args.start, vehicles=args.vehicles,
         seed=args.seed, contract=contract, visibility=args.visibility,
-        weather=args.weather,
+        weather=args.weather, actors=args.actors,
+        force_shared_server=args.force_shared_server,
         restore_map=not args.keep_map,
         progress=lambda i, n: (print(f"\r  {i}/{n} frames", end="", flush=True),
                                print() if i == n else None))
@@ -206,6 +216,12 @@ def main(argv=None) -> int:
     p.add_argument("--vehicles", type=int, default=0,
                    help="CARLA traffic to add; visible in the scene package and the AOVs but "
                         "NOT in the neural RGB (the engine only re-poses its own tracks)")
+    p.add_argument("--actors", default="artifact", choices=sorted(nurec.ACTOR_SOURCES),
+                   help="where the ClipGT obstacle layer comes from: 'artifact' (default) imports "
+                        "the traffic the reconstruction recorded, from the sample's own "
+                        "clipgt/obstacle.parquet, so the world-scenario control describes the "
+                        "cars the neural RGB actually shows; 'carla' exports only the proxy "
+                        "world's own actors, which is empty unless --vehicles spawned some")
     p.add_argument("--visibility", default="depth", choices=("depth", "none"))
     p.add_argument("--weather", default="ClearNoon",
                    help="carla.WeatherParameters preset; the generated OpenDRIVE world "
@@ -215,6 +231,10 @@ def main(argv=None) -> int:
     p.add_argument("--resolution", default="720", help="720 only, for anything Cosmos will see")
     p.add_argument("--prompt", default=DEFAULT_PROMPT)
     p.add_argument("--seed", type=int, default=7)
+    p.add_argument("--force-shared-server", action="store_true",
+                   help="capture even though the server is in synchronous mode; only for a stale "
+                        "flag left by a crashed run — while a real capture holds it, loading this "
+                        "sample's map destroys that capture's ego and sensors")
     p.add_argument("--keep-map", action="store_true",
                    help="leave the NuRec map loaded instead of restoring the previous one")
     p.add_argument("--capture-only", action="store_true")
