@@ -248,8 +248,10 @@ MATRIX: list[Row] = [
         {"blur": "derive", "depth": "clip", "seg": "clip"},
         weights={"blur": 0.3, "depth": 1.0, "seg": 0.6}, resolution="720", seed=7,
         guidance=2.0, extra=dict(PRESET_REGIME),
+        skip="quarantined 2026-08-28: the stored run (j_656bd8c40ce17daf, dev4) came back with visual "
+             "artifacts and the user pulled the row from the sweep; kept as the record, not resubmitted",
         shows="RGB (as the blur hint) complemented by captured depth and seg, multi-hint preset "
-              "regime, night+rain prompt"),
+              "regime, night+rain prompt - QUARANTINED, see skip"),
     # c3-edge-night restyled freely (new facade colours, lit brake lights) but stayed at dusk, so
     # the lighting change is what the edge preset's guidance 3.0 could not buy.  One variable:
     # guidance 6.0, and a prompt that spells the night out instead of alluding to it.
