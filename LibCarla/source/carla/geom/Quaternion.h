@@ -19,8 +19,11 @@ namespace geom {
 
   /// Quaternion representing a 3D rotation. Internally stored in right-handed
   /// math convention as `(x, y, z, w)`. Conversion to and from CARLA's
-  /// left-handed `Rotation` negates yaw and roll while leaving pitch
-  /// unchanged, matching the hybrid handedness of Unreal Engine rotators.
+  /// left-handed `Rotation` negates yaw and pitch and leaves roll unchanged,
+  /// matching the hybrid handedness of Unreal Engine rotators. With those
+  /// signs the basis vectors of `Quaternion(r)` reproduce, column for
+  /// column, the matrix of `Rotation::RotateVector` / `Transform::GetMatrix`
+  /// and the quaternion produced by `ros2::TransformFromCarlaRotation`.
   class Quaternion {
   public:
 
@@ -49,15 +52,19 @@ namespace geom {
     }
 
     /// Convert a CARLA Euler rotation (degrees, hybrid handedness) into a
-    /// quaternion. Yaw and roll are negated on the way in so the internal
-    /// quaternion math operates in a consistent right-handed frame.
+    /// quaternion. Yaw and pitch are negated on the way in so the internal
+    /// quaternion math operates in a consistent right-handed frame; roll
+    /// keeps its sign because CARLA's `+roll` (right side down) is already
+    /// a positive right-handed rotation about the forward axis once Y has
+    /// been mirrored by `RightHandedVector3D`. These are the same per-axis
+    /// signs the ROS 2 bridge uses in `TransformQuaternion.h`.
     explicit Quaternion(const Rotation &rotation) {
       const float half_yaw_rad =
           static_cast<float>(Math::ToRadians<double>(-rotation.yaw)) * 0.5f;
       const float half_pitch_rad =
-          static_cast<float>(Math::ToRadians<double>(rotation.pitch)) * 0.5f;
+          static_cast<float>(Math::ToRadians<double>(-rotation.pitch)) * 0.5f;
       const float half_roll_rad =
-          static_cast<float>(Math::ToRadians<double>(-rotation.roll)) * 0.5f;
+          static_cast<float>(Math::ToRadians<double>(rotation.roll)) * 0.5f;
 
       const float cy = std::cos(half_yaw_rad);
       const float sy = std::sin(half_yaw_rad);
@@ -77,7 +84,7 @@ namespace geom {
     // =========================================================================
 
     /// Convert this quaternion back to a CARLA Euler rotation. Inverse of the
-    /// `Quaternion(Rotation)` constructor; yaw and roll are negated on the
+    /// `Quaternion(Rotation)` constructor; yaw and pitch are negated on the
     /// way out to undo the handedness flip applied at construction.
     Rotation Rotator() const {
       const float sin_pitch = 2.0f * (w * y - z * x);
@@ -93,9 +100,9 @@ namespace geom {
           1.0f - 2.0f * (y * y + z * z));
 
       return Rotation(
-          static_cast<float>(Math::ToDegrees<double>(pitch_rad)),
+          static_cast<float>(Math::ToDegrees<double>(-pitch_rad)),
           static_cast<float>(Math::ToDegrees<double>(-yaw_rad)),
-          static_cast<float>(Math::ToDegrees<double>(-roll_rad)));
+          static_cast<float>(Math::ToDegrees<double>(roll_rad)));
     }
 
     /// Rotate a right-handed vector by this quaternion. Computes

@@ -87,7 +87,10 @@ namespace geom {
     }
 
     /// Computes the 4-matrix form of the transformation. Sign convention
-    /// matches the corrected `Rotation::RotateVector`.
+    /// matches `Rotation::RotateVector` and the engine: `+pitch` puts
+    /// `+sin(pitch)` on row 2 column 0 (forward axis tilts up), `+roll`
+    /// puts `-cos(pitch) * sin(roll)` on row 2 column 1 (right axis tilts
+    /// down). Verified against rendered camera frames on UE5.8 (2026-08-27).
     std::array<float, 16> GetMatrix() const {
       const float yaw = rotation.yaw;
       const float cy = std::cos(Math::ToRadians(yaw));
@@ -102,9 +105,9 @@ namespace geom {
       const float sp = std::sin(Math::ToRadians(pitch));
 
       std::array<float, 16> transform = {
-          cp * cy, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr, location.x,
-          cp * sy, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr, location.y,
-          -sp, cp * sr, cp * cr, location.z,
+          cp * cy, cy * sp * sr - sy * cr, -cy * sp * cr - sy * sr, location.x,
+          cp * sy, sy * sp * sr + cy * cr, -sy * sp * cr + cy * sr, location.y,
+          sp, -cp * sr, cp * cr, location.z,
           0.0, 0.0, 0.0, 1.0};
 
       return transform;
@@ -130,9 +133,9 @@ namespace geom {
       InverseTransformPoint(a);
 
       std::array<float, 16> transform = {
-          cp * cy, cp * sy, -sp, a.x,
-          cy * sp * sr - sy * cr, sy * sp * sr + cy * cr, cp * sr, a.y,
-          cy * sp * cr + sy * sr, sy * sp * cr - cy * sr, cp * cr, a.z,
+          cp * cy, cp * sy, sp, a.x,
+          cy * sp * sr - sy * cr, sy * sp * sr + cy * cr, -cp * sr, a.y,
+          -cy * sp * cr - sy * sr, -sy * sp * cr + cy * sr, cp * cr, a.z,
           0.0f, 0.0f, 0.0f, 1.0};
 
       return transform;
