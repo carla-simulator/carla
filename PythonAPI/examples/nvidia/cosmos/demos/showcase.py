@@ -73,60 +73,74 @@ class Row:
     extra: dict[str, Any] = field(default_factory=dict)
 
 
+# Every row names its resolution, and every row is 720 — the videos are meant to be watched, and a
+# 480p run is money spent on something nobody will show.  Naming it is not decoration: a row that
+# leaves it out silently inherits the *worker's* default (720 for Cosmos 3, from
+# `--default-resolution`), so the timing it produces cannot be compared with anything.
+# `check_matrix()` refuses a row without one.
 MATRIX: list[Row] = [
     # ---- Transfer 2.5 general: same clip, same controls, three weathers ---------------------
     Row("t25-golden", "transfer2.5", "t25", GOLDEN,
-        {"depth": "clip", "seg": "clip", "edge": "derive"}, resolution="480",
+        {"depth": "clip", "seg": "clip", "edge": "derive"}, resolution="720",
         shows="depth + seg + edge, golden hour (the reference row)"),
     Row("t25-rain", "transfer2.5", "t25",
         "The same street in heavy rain, wet asphalt mirroring the traffic lights and the headlights, "
         "spray thrown up behind the cars, raindrops on the windshield, low overcast sky, "
         "photorealistic dashcam footage",
-        {"depth": "clip", "seg": "clip", "edge": "derive"}, resolution="480",
+        {"depth": "clip", "seg": "clip", "edge": "derive"}, resolution="720",
         shows="same controls, heavy rain and a wet road"),
     Row("t25-night", "transfer2.5", "t25",
         "The same street at night, street lamps and lit shop windows on the sidewalks, headlights and red "
         "tail lights on the road, deep blue sky above the rooftops, photorealistic dashcam footage",
-        {"depth": "clip", "seg": "clip", "edge": "derive"}, resolution="480",
+        {"depth": "clip", "seg": "clip", "edge": "derive"}, resolution="720",
         shows="same controls, night"),
     # ---- control weights: what each branch contributes --------------------------------------
     Row("t25-w-depthseg", "transfer2.5", "t25", GOLDEN,
-        {"depth": "clip", "seg": "clip"}, weights={"depth": 0.7, "seg": 0.3}, resolution="480",
+        {"depth": "clip", "seg": "clip"}, weights={"depth": 0.7, "seg": 0.3}, resolution="720",
         shows="geometry-led: depth 0.7 / seg 0.3, no edge branch"),
     Row("t25-w-edge", "transfer2.5", "t25", GOLDEN,
-        {"edge": "derive"}, weights={"edge": 1.0}, resolution="480",
+        {"edge": "derive"}, weights={"edge": 1.0}, resolution="720",
         shows="edge branch alone at weight 1.0 (same prompt as t25-golden)"),
     # ---- mask-out classes: the model may re-imagine what was removed ------------------------
     Row("t25-mask-vehicles", "transfer2.5", "t25", GOLDEN,
-        {"depth": "clip", "seg": "clip", "edge": "derive"}, mask_classes=["vehicle"], resolution="480",
+        {"depth": "clip", "seg": "clip", "edge": "derive"}, mask_classes=["vehicle"], resolution="720",
         shows="vehicles removed from every pixel-derived input (and the ego bonnet with them)"),
     Row("t25-mask-vru", "transfer2.5", "t25", GOLDEN,
-        {"depth": "clip", "seg": "clip", "edge": "derive"}, mask_classes=["vru"], resolution="480",
+        {"depth": "clip", "seg": "clip", "edge": "derive"}, mask_classes=["vru"], resolution="720",
         shows="vulnerable road users removed (pedestrians, riders, bicycles, motorcycles), "
               "same prompt and controls as t25-golden"),
     # ---- Cosmos 3 Nano: the world-scenario map ----------------------------------------------
     Row("c3-wsm", "cosmos3-nano", "wsm",
         "A photorealistic city street in the early afternoon, clear sky, parked cars along the curb, "
         "pedestrians on the sidewalk, footage from a car-mounted camera",
-        {"wsm": "scene"},
+        {"wsm": "scene"}, resolution="720",
         shows="world-scenario map alone: layout from the scene package, appearance from the prompt"),
     Row("c3-wsm-depth-seg", "cosmos3-nano", "wsm",
         "A photorealistic city street in the early afternoon, clear sky, parked cars along the curb, "
         "pedestrians on the sidewalk, footage from a car-mounted camera",
-        {"wsm": "scene", "depth": "clip", "seg": "clip"},
+        {"wsm": "scene", "depth": "clip", "seg": "clip"}, resolution="720",
         shows="world-scenario map + depth and seg: layout and the captured appearance"),
     # ---- Transfer 2.5 AV multiview: seven cameras, one joint generation ---------------------
     Row("av7-day", "transfer2.5-av", "av7",
         "An urban street in the late afternoon, clear sky, dry asphalt, photorealistic footage from a "
         "seven-camera vehicle rig, consistent lighting across all cameras",
-        {"hdmap_bbox": "scene"}, views=7,
+        {"hdmap_bbox": "scene"}, views=7, resolution="720",
         shows="7 cameras, hdmap+bbox rendered from the occlusion-filtered scene package"),
     Row("av7-rain", "transfer2.5-av", "av7",
         "The same urban street on a rainy evening, wet reflective asphalt, headlights and street lights "
         "reflected in the puddles, photorealistic footage from a seven-camera vehicle rig",
-        {"hdmap_bbox": "scene"}, views=7,
+        {"hdmap_bbox": "scene"}, views=7, resolution="720",
         shows="same 7-camera scene, weather variation"),
 ]
+
+
+def check_matrix(rows: list[Row]) -> None:
+    """Refuse a row without an explicit resolution (see the note above ``MATRIX``)."""
+    missing = [r.id for r in rows if not r.resolution]
+    if missing:
+        raise SystemExit(f"rows without an explicit resolution: {missing} — a job would silently "
+                         f"inherit the worker's default and its timing would not be comparable")
+
 
 CLIP_ROLES = ("t25", "wsm", "av7")
 DEFAULT_CLIP_NAMES = {"t25": "showcase_t25", "wsm": "showcase_wsm", "av7": "showcase_av7"}
@@ -278,6 +292,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     log = setup_logging("showcase", args.verbose)
     rows = select(args.only, args.skip)
+    check_matrix(rows)
     if args.list:
         print_matrix(rows)
         return 0

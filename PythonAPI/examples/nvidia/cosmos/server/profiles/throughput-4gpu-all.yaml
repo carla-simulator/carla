@@ -1,0 +1,28 @@
+name: throughput-4gpu-all
+description: >-
+  Manual layout for a 4 x 96 GB node that serves all three model backends with **disjoint** GPUs —
+  Cosmos 3 Nano alone on GPU 0, Transfer 2.5 general alone on GPU 1, Transfer 2.5 AV multiview on
+  GPUs 2-3 (2 context-parallel ranks, 7 views) and the world-scenario renderer on GPU 3.  No worker
+  shares a GPU with another, so the scheduler can run three jobs at once and no query waits for
+  another backend, which is what a matrix of independent experiments wants.  Per-GPU resident +
+  working set: 37+8 on GPU 0, 28+12 on GPU 1, 22+12 on GPUs 2-3, against 86 GiB usable (0.9 x 96).
+  `latency-4gpu-av` is still the right profile when one 7-camera AV query should own the whole node.
+workers:
+  - name: cosmos3-nano
+    type: cosmos3
+    backends: [cosmos3-nano]
+    gpus: [0]
+    args: ["--tp", "1"]
+  - name: transfer25
+    type: transfer25
+    backends: [transfer2.5]
+    gpus: [1]
+  - name: transfer25-av
+    type: transfer25_av
+    backends: [transfer2.5-av]
+    gpus: [2, 3]
+    args: ["--nproc", "2", "--master-port", "12341"]
+  - name: wsm-renderer
+    type: wsm_renderer
+    backends: [wsm-renderer]
+    gpus: [3]
