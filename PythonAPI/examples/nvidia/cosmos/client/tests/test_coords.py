@@ -94,6 +94,41 @@ def test_ue_matrix_matches_engine_not_get_matrix():
     m = coords.ue_matrix(carla.Transform(carla.Location(1, 2, 3), carla.Rotation(pitch=3.26, yaw=-151.4, roll=-0.63)))
     tf = coords.ue_transform_from_matrix(m)
     assert abs(tf.rotation.pitch - 3.26) < 1e-4 and abs(tf.rotation.yaw + 151.4) < 1e-4 and abs(tf.rotation.roll + 0.63) < 1e-4  # float32 fields
-    # the wheel's get_matrix() disagrees on pitch/roll signs (the regression); yaw-only transforms agree
+    # yaw-only transforms always agreed, even on the regressed wheels
     g = np.array(carla.Transform(carla.Location(), carla.Rotation(yaw=37.0)).get_matrix())
     assert np.allclose(g, coords.ue_matrix(carla.Transform(carla.Location(), carla.Rotation(yaw=37.0))), atol=1e-6)
+
+
+def test_get_matrix_agrees_with_ue_matrix_on_fixed_wheels():
+    """On a wheel built after the LibCarla geom fix, ``get_matrix()`` IS ``ue_matrix()``.
+
+    ``fix/geom-engine-convention`` restores the 0.9.x / engine pitch and roll signs that
+    LibCarla ``4d853ed98`` (PR #9751) had mirrored, so the :mod:`carla_cosmos.coords`
+    bypass becomes redundant -- it is kept only so this package still works against
+    wheels that predate the fix.  Skipped, not failed, on such an older wheel: the
+    bypass is what makes that case safe.
+    """
+    import carla
+    from carla_cosmos import coords
+
+    probe = carla.Transform(carla.Location(), carla.Rotation(pitch=20.0))
+    if np.array(probe.get_matrix())[2][0] < 0.0:
+        pytest.skip("wheel predates the LibCarla geom fix; coords.ue_matrix bypass is in use")
+
+    cases = [
+        (0.0, 0.0, 0.0), (20.0, 0.0, 0.0), (-20.0, 0.0, 0.0),
+        (0.0, 0.0, 25.0), (0.0, 0.0, -25.0), (0.0, 37.0, 0.0),
+        (13.0, 47.0, -31.0), (-62.0, -155.0, 88.0),
+    ]
+    for pitch, yaw, roll in cases:
+        tf = carla.Transform(
+            carla.Location(1.0, -2.0, 3.0), carla.Rotation(pitch=pitch, yaw=yaw, roll=roll))
+        assert np.allclose(np.array(tf.get_matrix()), coords.ue_matrix(tf), atol=1e-5), (
+            f"get_matrix() != ue_matrix() at pitch={pitch} yaw={yaw} roll={roll}")
+        assert np.allclose(
+            np.array(tf.get_inverse_matrix()) @ np.array(tf.get_matrix()), np.eye(4), atol=1e-4)
+        fwd, right, up = coords.ue_forward_right_up(tf.rotation)
+        for got, want in ((tf.get_forward_vector(), fwd),
+                          (tf.get_right_vector(), right),
+                          (tf.get_up_vector(), up)):
+            assert np.allclose([got.x, got.y, got.z], want, atol=1e-5)

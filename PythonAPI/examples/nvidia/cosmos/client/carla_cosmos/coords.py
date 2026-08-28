@@ -39,11 +39,14 @@ def ue_rotation_matrix(rot: carla.Rotation) -> np.ndarray:
     ``Rotation`` — verified against real camera images (a camera at ``pitch=+20`` fills the frame with
     sky, at ``roll=+25`` the right side sees more ground).
 
-    Not ``tf.get_matrix()``: on the ue58 branch LibCarla commit 4d853ed98 (PR #9751, "pitch/roll fix")
-    flipped the pitch and roll signs in ``Rotation::RotateVector`` / ``Transform::GetMatrix`` /
-    ``GetInverseMatrix`` / ``get_forward/right/up_vector``, so those describe a camera pitched and
-    rolled the other way than the engine mounts it.  Building the matrix here keeps this module correct
-    with either wheel; see the hand-off notes ("CARLA geom regression").
+    Historically not ``tf.get_matrix()``: LibCarla commit 4d853ed98 (PR #9751, "pitch/roll fix")
+    mirrored the pitch and roll signs in ``Rotation::RotateVector`` / ``Transform::GetMatrix`` /
+    ``GetInverseMatrix`` / ``get_forward/right/up_vector``, so those described a camera pitched and
+    rolled the other way than the engine mounts it.  **That regression is fixed** in LibCarla by
+    ``fix/geom-engine-convention``, and on a wheel built from it ``get_matrix()`` is bit-for-bit this
+    function (asserted by ``tests/test_coords.py::test_get_matrix_agrees_with_ue_matrix_on_fixed_wheels``).
+    This helper is kept anyway so the package still produces correct poses against wheels that predate
+    the fix; see the hand-off notes ("CARLA geom regression").
     """
     cy, sy = math.cos(math.radians(rot.yaw)), math.sin(math.radians(rot.yaw))
     cp, sp = math.cos(math.radians(rot.pitch)), math.sin(math.radians(rot.pitch))
