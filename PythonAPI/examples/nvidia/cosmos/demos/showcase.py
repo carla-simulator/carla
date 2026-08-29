@@ -90,6 +90,13 @@ NUREC_DAY = ("A photorealistic dashcam drive along a wide suburban retail street
 # passes to vLLM-Omni verbatim.
 PRESET_REGIME: dict[str, Any] = {"control_guidance": 2.0, "flow_shift": 10.0}
 
+# The 00040136 drive as it actually is: a night recording.  Used when the question is "a good video
+# back", not "a different time of day".
+NUREC_NIGHT = ("A photorealistic dashcam drive at night along a wide suburban retail street outside "
+               "Stockholm, overcast dark sky, street lamps lit, low-rise retail buildings with "
+               "illuminated signage set back behind their parking lots, bare trees along the roadside, "
+               "painted lane markings on wet grey asphalt, cars driving in both directions")
+
 
 @dataclass
 class Row:
@@ -191,6 +198,19 @@ MATRIX: list[Row] = [
     Row("super-wsm-depth-seg", "cosmos3-super", "wsm", CITY_DAY,
         {"wsm": "scene", "depth": "clip", "seg": "clip"}, resolution="720", seed=7,
         shows="Cosmos 3 Super with wsm + depth + seg -- same conditioning as c3-wsm-depth-seg"),
+    # The user's first Super query (2026-08-28): the CARLA RGB itself (as the blur hint) plus the
+    # captured semantics, nothing else, at the server's multi-hint preset -- "can we get a good
+    # video back" from what CARLA already renders, without the world-scenario map.
+    Row("super-rgb-seg", "cosmos3-super", "wsm", CITY_DAY,
+        {"blur": "derive", "seg": "clip"}, resolution="720", seed=7,
+        shows="Cosmos 3 Super on the CARLA RGB (blur hint) + captured seg, preset guidance"),
+    # The same question on the NuRec path (2026-08-28): the harmonized NEURAL RGB as the blur hint
+    # plus the real drive's world map -- with the recorded traffic imported into it -- on Super, at
+    # the server's multi-hint preset.  Clip: nurec=<...>_harm (harmonizer on, --actors artifact).
+    Row("super-nurec-rgb-wsm", "cosmos3-super", "nurec", NUREC_NIGHT,
+        {"wsm": "scene", "blur": "derive"}, views=1, resolution="720", seed=7,
+        shows="Cosmos 3 Super on the harmonized neural RGB (blur hint) + the real drive's world map "
+              "with its recorded traffic, preset guidance"),
     # ---- Cosmos 3 Nano: the "just RGB" restyle mode, the A/B against the wsm rows -----------
     # Same clip, prompt, seed and resolution as ``c3-wsm``; the only difference is what the model is
     # conditioned on -- ``blur`` derived from the RGB instead of the world-scenario map.  Cosmos 3
@@ -261,8 +281,23 @@ MATRIX: list[Row] = [
         {"edge": "derive"}, weights={"edge": 0.5}, resolution="720", seed=7, guidance=6.0,
         negative_prompt="daytime, daylight, sunny, bright sky, dry road",
         extra={"control_guidance": 1.5, "flow_shift": 10.0},
+        skip="quarantined 2026-08-28: guidance 6.0 posterized the output (crushed contrast, "
+             "saturated blotches); replaced by c3-edge-night-explicit",
         shows="c3-edge-night at guidance 6.0 with an explicit night prompt and a daylight negative "
               "prompt: how much lighting change the Nano edge path will accept"),
+    # The same question asked without leaving the vendor preset.  c3-edge-night-g6 reached night but
+    # paid for it with posterisation, and c3-rgb-depth-seg-night blew out the same way: on this Nano
+    # path guidance above the preset destroys the image.  So this row keeps the single-hint edge
+    # preset exactly (TRANSFER_DEFAULTS["edge"]: 3.0 / 1.5 / 10, as c3-edge-night ran it) and changes
+    # only the text -- g6's explicit night prompt and its daylight negative prompt.
+    Row("c3-edge-night-explicit", "cosmos3-nano", "wsm",
+        "nighttime, pitch-black sky, street lamps and shop signs lit, car headlights and tail lights "
+        "on, heavy rain, wet reflective asphalt, photorealistic dashcam footage at night",
+        {"edge": "derive"}, weights={"edge": 0.5}, resolution="720", seed=7, guidance=3.0,
+        negative_prompt="daytime, daylight, sunny, bright sky, dry road",
+        extra={"control_guidance": 1.5, "flow_shift": 10.0},
+        shows="the explicit night prompt + daylight negative at the vendor edge preset: does the "
+              "prompt alone buy the lighting change that guidance 6.0 destroyed"),
     # ---- Cosmos 3 Nano tuning: undo the multi-hint guidance fallback -----------------------
     # Same clip and seed (7) as c3-wsm-depth-seg throughout; one variable added per row.
     Row("c3-tune-presets", "cosmos3-nano", "wsm", CITY_DAY,
@@ -502,6 +537,29 @@ def run_row(cosmos, row: Row, clip, results: str | None, log, viewer_video: bool
     return rec
 
 
+def save_ledger(path: Path, ledger: dict[str, Any], row_id: str) -> None:
+    """Write one row's entry into the ledger, merging with whatever is on disk.
+
+    Another lane may be running its own rows against the same results root, and the ledger is a
+    single file: rewriting the whole dict from this process's copy — loaded once at startup —
+    silently drops every row the other lane finished in the meantime.  Measured 2026-08-28: a
+    concurrent ``--only nurec-*`` run reverted a finished ``c3-rgb-depth-seg-night`` to its
+    previous entry and dropped the new one.  So re-read, update only the row that just finished,
+    and replace atomically.
+    """
+    on_disk: dict[str, Any] = {}
+    if path.exists():
+        try:
+            on_disk = json.loads(path.read_text())
+        except json.JSONDecodeError:      # a torn write from the other lane; ours still lands
+            on_disk = {}
+    on_disk[row_id] = ledger[row_id]
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(on_disk, indent=2))
+    tmp.replace(path)
+    ledger.update(on_disk)
+
+
 def line_for(rec: dict[str, Any]) -> str:
     t = rec.get("timings") or {}
     if rec.get("status") != "done":
@@ -570,7 +628,7 @@ def main(argv: list[str] | None = None) -> int:
                        "error": row.skip, "shows": row.shows}
                 records.append(rec)
                 ledger[row.id] = rec
-                ledger_path.write_text(json.dumps(ledger, indent=2))
+                save_ledger(ledger_path, ledger, row.id)
                 log.info("[%s] not submitted: %s (--force to run it anyway)", row.id, row.skip)
                 continue
             if not args.mock:
@@ -580,7 +638,7 @@ def main(argv: list[str] | None = None) -> int:
                            "error": f"{row.backend} is not loaded on {cosmos.url}", "shows": row.shows}
                     records.append(rec)
                     ledger[row.id] = rec
-                    ledger_path.write_text(json.dumps(ledger, indent=2))
+                    save_ledger(ledger_path, ledger, row.id)
                     log.error("[%s] %s", row.id, rec["error"])
                     if args.stop_on_error:
                         break
@@ -589,7 +647,7 @@ def main(argv: list[str] | None = None) -> int:
                           viewer_video=False if args.no_viewer_video else None)
             records.append(rec)
             ledger[row.id] = rec
-            ledger_path.write_text(json.dumps(ledger, indent=2))
+            save_ledger(ledger_path, ledger, row.id)
             print(line_for(rec), flush=True)
             if rec.get("status") != "done" and args.stop_on_error:
                 log.error("stopping after %s (--stop-on-error)", row.id)
