@@ -58,10 +58,50 @@ enum class ManeuverState : uint8_t {
   LANE_BORROW_SAME,       ///< Borrow a same-direction neighbour lane, then return.
   LANE_BORROW_ONCOMING,   ///< Borrow the oncoming lane (gated), then return.
   WAIT_BLOCKED,           ///< No lateral option; hold (emergency stop).
+  JUNCTION_APPROACH,      ///< Approaching a crossing junction; creep to the hold line.
+  JUNCTION_YIELD,         ///< At the hold line; oncoming gap too small; hold.
+  JUNCTION_CROSS,         ///< Gap accepted (TTC clear); commit through the junction.
 };
 
 /// Side selector for a lateral maneuver.
 enum class ManeuverSide : uint8_t { NONE = 0, LEFT, RIGHT };
+
+/// Coarse driving-situation estimate for a vehicle, inferred each cycle purely
+/// from world state the traffic manager already holds (actor kinematics, lane
+/// graph, junction geometry, traffic-light state) -- never from sensors or
+/// scenario/route metadata. The estimate is deliberately coarse: many distinct
+/// leaderboard scenarios collapse to the same *action*, so the label answers
+/// "how should I behave here", not "which scripted scenario is this". It is an
+/// estimate (with a confidence), expected to be imperfect.
+enum class SituationLabel : uint8_t {
+  CLEAR = 0,             ///< Nothing actionable ahead in the lane.
+  STATIC_BLOCKER,        ///< Stopped obstacle intruding the lane -> pass it
+                         ///< (covers parked / accident / construction / open
+                         ///< door; the estimator does not distinguish which).
+  ONCOMING_BLOCK,        ///< Lane fully blocked, pass requires borrowing the
+                         ///< oncoming lane (verified clear over the horizon).
+  PEDESTRIAN_CROSSING,   ///< A walker is in / entering the path -> hold, never
+                         ///< steer around.
+  JUNCTION_YIELD,        ///< Junction ahead with conflicting traffic -> creep
+                         ///< and yield until the gap is acceptable.
+  ONCOMING_INTRUSION,    ///< An opposing vehicle occupies / invades the ego
+                         ///< lane -> hold / edge away, never borrow oncoming.
+  LEAD_BRAKING,          ///< A moving lead in-lane is decelerating -> follow.
+};
+
+/// Human-readable name of a situation label (diagnostics only).
+inline const char *ToString(const SituationLabel s) {
+  switch (s) {
+    case SituationLabel::CLEAR:               return "CLEAR";
+    case SituationLabel::STATIC_BLOCKER:      return "STATIC_BLOCKER";
+    case SituationLabel::ONCOMING_BLOCK:      return "ONCOMING_BLOCK";
+    case SituationLabel::PEDESTRIAN_CROSSING: return "PEDESTRIAN_CROSSING";
+    case SituationLabel::JUNCTION_YIELD:      return "JUNCTION_YIELD";
+    case SituationLabel::ONCOMING_INTRUSION:  return "ONCOMING_INTRUSION";
+    case SituationLabel::LEAD_BRAKING:        return "LEAD_BRAKING";
+  }
+  return "?";
+}
 
 /// Per-vehicle output of the lateral-avoidance stage. Consumed by the
 /// motion-planning stage (lateral_offset + speed_factor) and, for lane
@@ -75,6 +115,12 @@ struct AvoidanceCommand {
   /// centerline and cannot see the lateral offset, so it would otherwise brake
   /// the whole way past.
   bool clear_hazard = false;
+  /// When true, clear_hazard may release the stop even for a *moving* hazard.
+  /// Set only by the junction-crossing commit (which has already accepted the
+  /// conflicting-traffic gap via TTC). Lateral maneuvers leave this false, so
+  /// clear_hazard then only releases the stop for a stopped obstacle -- a moving
+  /// crosser/turner keeps the collision stop authoritative.
+  bool allow_moving_hazard = false;
   bool borrow_request = false;   ///< Request a lane borrow from localization.
   ManeuverSide borrow_side = ManeuverSide::NONE;
   SimpleWaypointPtr return_waypoint = nullptr; ///< Where to rejoin the origin lane.

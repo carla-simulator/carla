@@ -60,6 +60,22 @@ private:
   /// read/refresh the cached static-obstacle raycast hits.
   AvoidPerception Perceive(const ActorId actor_id, AvoidContext &ctx) const;
 
+  /// Augment perception with junction gap-acceptance fields: whether a crossing
+  /// junction is ahead, the distance to it, and whether the conflicting-traffic
+  /// gap is large enough to commit (time-to-junction based).
+  void PerceiveJunction(const ActorId actor_id, AvoidPerception &perception) const;
+
+  /// Estimate the coarse driving situation for this vehicle from world state
+  /// alone (actor kinematics, lane geometry, junction/blocker perception already
+  /// gathered) and write it, with a confidence, onto `perception`. Runs the
+  /// pedestrian / oncoming-intrusion / lead-braking scans that the situation
+  /// taxonomy needs beyond the blocker+junction perception. No sensors, no route
+  /// metadata -- a deliberately imperfect estimate of "how should I behave here".
+  /// Debounces the raw per-frame classification through `ctx` so the published
+  /// label is stable rather than flickering frame to frame.
+  void ClassifySituation(const ActorId actor_id, AvoidContext &ctx,
+                         AvoidPerception &perception) const;
+
 public:
   LateralAvoidanceStage(const std::vector<ActorId> &vehicle_id_list,
                         const SimulationState &simulation_state,
@@ -73,6 +89,11 @@ public:
                         UniformPRNG &random_device);
 
   void Update(const unsigned long index) override;
+
+  /// Last published (debounced) situation estimate for a vehicle, or CLEAR if
+  /// the vehicle has no context yet. Read by the traffic manager to expose the
+  /// estimate through the public API (get_vehicle_situation).
+  SituationLabel GetSituation(const ActorId actor_id) const;
 
   void RemoveActor(const ActorId actor_id) override;
 

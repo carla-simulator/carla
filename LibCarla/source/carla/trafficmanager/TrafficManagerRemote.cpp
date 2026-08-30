@@ -151,6 +151,16 @@ void TrafficManagerRemote::SetGlobalLateralAvoidanceRaycast(const bool enable) {
   client.SetGlobalLateralAvoidanceRaycast(enable);
 }
 
+void TrafficManagerRemote::SetJunctionGapAcceptance(const ActorPtr &_actor, const bool enable) {
+  carla::rpc::Actor actor(_actor->Serialize());
+
+  client.SetJunctionGapAcceptance(actor, enable);
+}
+
+void TrafficManagerRemote::SetGlobalJunctionGapAcceptance(const bool enable) {
+  client.SetGlobalJunctionGapAcceptance(enable);
+}
+
 void TrafficManagerRemote::SetUpdateVehicleLights(const ActorPtr &_actor, const bool do_update) {
   carla::rpc::Actor actor(_actor->Serialize());
 
@@ -291,6 +301,12 @@ void TrafficManagerRemote::SetSynchronousMode(bool mode) {
 
 void TrafficManagerRemote::SetSynchronousModeTimeOutInMiliSecond(double time) {
   client.SetSynchronousModeTimeOutInMiliSecond(time);
+}
+
+int TrafficManagerRemote::GetVehicleSituation(const ActorId &) {
+  // The situation estimate is a local-stage feature; a remote client does not
+  // run the estimator, so report CLEAR (0).
+  return 0;
 }
 
 Action TrafficManagerRemote::GetNextAction(const ActorId &actor_id) {

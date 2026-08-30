@@ -372,6 +372,14 @@ void TrafficManagerLocal::SetGlobalLateralAvoidanceRaycast(const bool enable) {
   parameters.SetGlobalLateralAvoidanceRaycast(enable);
 }
 
+void TrafficManagerLocal::SetJunctionGapAcceptance(const ActorPtr &actor, const bool enable) {
+  parameters.SetJunctionGapAcceptance(actor, enable);
+}
+
+void TrafficManagerLocal::SetGlobalJunctionGapAcceptance(const bool enable) {
+  parameters.SetGlobalJunctionGapAcceptance(enable);
+}
+
 void TrafficManagerLocal::SetDesiredSpeed(const ActorPtr &actor, const float value) {
   parameters.SetDesiredSpeed(actor, value);
 }
@@ -484,6 +492,10 @@ Action TrafficManagerLocal::GetNextAction(const ActorId &actor_id) {
 
 ActionBuffer TrafficManagerLocal::GetActionBuffer(const ActorId &actor_id) {
   return localization_stage.ComputeActionBuffer(actor_id);
+}
+
+int TrafficManagerLocal::GetVehicleSituation(const ActorId &actor_id) {
+  return static_cast<int>(lateral_avoidance_stage.GetSituation(actor_id));
 }
 
 bool TrafficManagerLocal::CheckAllFrozen(TLGroup tl_to_freeze) {

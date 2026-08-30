@@ -177,7 +177,22 @@ void MotionPlanStage::Update(const unsigned long index) {
     // obstacle being passed -- otherwise the ego brakes for it every few metres,
     // producing stop-and-go instead of a fluid pass. Traffic-light stops are
     // never released.
-    const bool collision_stop = collision_emergency_stop && !avoidance_command.clear_hazard;
+    // A lateral maneuver releases the collision stop only for a (near-)stopped
+    // obstacle -- the static blocker / parked car it is steering around. A moving
+    // hazard (a crossing, turning, or oncoming vehicle) keeps the stop
+    // authoritative, so a maneuver never plows through cross traffic. The
+    // junction-crossing commit is exempt (allow_moving_hazard): it has already
+    // accepted the conflicting-traffic gap via TTC and must clear moving traffic.
+    bool hazard_actor_stopped = false;
+    if (collision_hazard.hazard &&
+        simulation_state.ContainsActor(collision_hazard.hazard_actor_id)) {
+      hazard_actor_stopped =
+          simulation_state.GetVelocity(collision_hazard.hazard_actor_id).SquaredLength() <
+          SQUARE(constants::VehicleRemoval::STOPPED_VELOCITY_THRESHOLD);
+    }
+    const bool release_collision = avoidance_command.clear_hazard &&
+                                   (avoidance_command.allow_moving_hazard || hazard_actor_stopped);
+    const bool collision_stop = collision_emergency_stop && !release_collision;
     const bool junction_stop = !safe_after_junction && !avoidance_command.clear_hazard;
     bool emergency_stop = tl_hazard || collision_stop || junction_stop;
 

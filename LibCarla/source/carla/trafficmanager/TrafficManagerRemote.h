@@ -84,6 +84,12 @@ public:
   /// Method to enable/disable static-obstacle raycast sensing globally.
   void SetGlobalLateralAvoidanceRaycast(const bool enable);
 
+  /// Method to enable/disable junction gap-acceptance for a vehicle.
+  void SetJunctionGapAcceptance(const ActorPtr &actor, const bool enable);
+
+  /// Method to enable/disable junction gap-acceptance globally.
+  void SetGlobalJunctionGapAcceptance(const bool enable);
+
   /// Method to set the automatic management of the vehicle lights
   void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update);
 
@@ -170,6 +176,8 @@ public:
   virtual void ShutDown();
 
   /// Method to get the vehicle's next action.
+  int GetVehicleSituation(const ActorId &actor_id);
+
   Action GetNextAction(const ActorId &actor_id);
 
   /// Method to get the vehicle's action buffer.

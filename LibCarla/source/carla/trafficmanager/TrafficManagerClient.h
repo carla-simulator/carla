@@ -132,6 +132,18 @@ public:
     _client->call("set_global_lateral_avoidance_raycast", enable);
   }
 
+  /// Method to enable/disable junction gap-acceptance for a vehicle.
+  void SetJunctionGapAcceptance(const carla::rpc::Actor &_actor, const bool enable) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_junction_gap_acceptance", std::move(_actor), enable);
+  }
+
+  /// Method to enable/disable junction gap-acceptance globally.
+  void SetGlobalJunctionGapAcceptance(const bool enable) {
+    DEBUG_ASSERT(_client != nullptr);
+    _client->call("set_global_junction_gap_acceptance", enable);
+  }
+
   /// Method to set the automatic management of the vehicle lights
   void SetUpdateVehicleLights(const carla::rpc::Actor &_actor, const bool do_update) {
     DEBUG_ASSERT(_client != nullptr);

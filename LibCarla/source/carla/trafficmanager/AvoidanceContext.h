@@ -42,6 +42,22 @@ struct AvoidContext {
   int raycast_countdown = 0;
   /// Cached world-space locations of static-prop ray hits, reused between casts.
   std::vector<cg::Location> static_hits;
+  /// Debounced ("stable") situation label -- what the estimator publishes and
+  /// the behaviour graph / API sees. The raw per-frame classification is noisy
+  /// (a blocker flag or a borrow test can toggle frame to frame), so the raw
+  /// label must persist before it is adopted here.
+  SituationLabel stable_situation = SituationLabel::CLEAR;
+  /// The raw label currently accumulating confirmation frames, and how many
+  /// consecutive frames it has held. When it reaches the confirm threshold it
+  /// is promoted to stable_situation.
+  SituationLabel sit_candidate = SituationLabel::CLEAR;
+  int sit_confirm = 0;
+  /// Frames the stable label is force-held after being set, so a briefly-seen
+  /// pass situation (STATIC_BLOCKER / ONCOMING_BLOCK) does not evaporate the
+  /// moment the noisy blocker flag drops -- it stays long enough to gate action.
+  int sit_hold = 0;
+  /// Confidence carried with stable_situation.
+  float stable_confidence = 0.0f;
 };
 
 /// Per-cycle perception feeding the behaviour graph (recomputed every frame,
@@ -66,6 +82,42 @@ struct AvoidPerception {
   /// Signed lateral offset (metres, + = right) that hugs the free side to pass
   /// the blocker within the lane.
   float bypass_offset = 0.0f;
+  /// The lane is fully blocked (no in-lane bypass), an adjacent oncoming Driving
+  /// lane exists, and it is clear of opposing traffic over the commit horizon:
+  /// the ego may borrow the oncoming lane to pass, then return.
+  bool borrow_oncoming = false;
+  /// Signed lateral offset (metres, + = right; negative here) that places the
+  /// ego in the oncoming lane to pass the blockage.
+  float borrow_offset = 0.0f;
+
+  // --- Junction gap-acceptance (unprotected-turn creep-and-commit) ----------
+  /// The ego is approaching a junction whose maneuver crosses conflicting
+  /// traffic (a turn), within the scan horizon.
+  bool at_junction = false;
+  /// Longitudinal distance (metres) along the path to the junction entrance.
+  float dist_to_junction = 0.0f;
+  /// The ego is at/inside the hold line: close enough to the junction that it
+  /// should stop and wait rather than keep creeping.
+  bool at_hold_line = false;
+  /// No conflicting vehicle arrives at the junction within the commit horizon:
+  /// the gap is large enough to accept and cross.
+  bool junction_gap_clear = false;
+  /// Smallest time-to-junction (seconds) over conflicting vehicles; +inf when
+  /// none (bring-up diagnostic).
+  float conflict_ttc = 0.0f;
+
+  // --- Situation estimate ---------------------------------------------------
+  /// A walker is in / entering the ego path ahead (from the pedestrian scan).
+  bool pedestrian_in_path = false;
+  /// An opposing-heading vehicle occupies / invades the ego lane ahead.
+  bool oncoming_intrusion = false;
+  /// A moving in-lane lead is decelerating (approximated from relative speed).
+  bool lead_braking = false;
+  /// Coarse driving-situation estimate for this cycle (see SituationLabel).
+  SituationLabel situation = SituationLabel::CLEAR;
+  /// Confidence in [0,1] of the situation estimate (margin of the deciding
+  /// test); low values mean "acted defensively on a weak signal".
+  float situation_confidence = 0.0f;
 };
 
 } // namespace traffic_manager

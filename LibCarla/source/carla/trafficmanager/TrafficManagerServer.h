@@ -142,6 +142,16 @@ public:
         tm->SetGlobalLateralAvoidanceRaycast(enable);
       });
 
+      /// Method to enable/disable junction gap-acceptance for a vehicle.
+      server->bind("set_junction_gap_acceptance", [=](carla::rpc::Actor actor, const bool enable) {
+        tm->SetJunctionGapAcceptance(carla::client::detail::ActorVariant(actor).Get(tm->GetEpisodeProxy()), enable);
+      });
+
+      /// Method to enable/disable junction gap-acceptance globally.
+      server->bind("set_global_junction_gap_acceptance", [=](const bool enable) {
+        tm->SetGlobalJunctionGapAcceptance(enable);
+      });
+
 
       /// Method to set collision detection rules between vehicles.
       server->bind("set_collision_detection", [=](const carla::rpc::Actor &reference_actor, const carla::rpc::Actor &other_actor, const bool detect_collision) {

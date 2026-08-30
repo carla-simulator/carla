@@ -1,4 +1,7 @@
 
+#include <cstdlib>
+#include <iostream>
+
 #include "carla/trafficmanager/Constants.h"
 
 #include "carla/trafficmanager/LocalizationStage.h"
@@ -12,6 +15,118 @@ using namespace constants::WaypointSelection;
 using namespace constants::SpeedThreshold;
 using namespace constants::Collision;
 using namespace constants::MotionPlan;
+
+namespace {
+
+  // Choose which candidate successor (typically the branches leaving a junction)
+  // best leads onto a prescribed route point. Each candidate is traced greedily
+  // through the junction -- at every step stepping to the successor closest to
+  // the target, never a blind .front() that can wander onto the wrong internal
+  // lane -- and scored by the closest approach its traced path makes to the
+  // target. Returns the index of the best candidate. Used by both the imported
+  // path buffer build and the junction-safe-space extension so they agree on the
+  // exit that follows the route.
+  uint64_t SelectBranchTowardTarget(const std::vector<SimpleWaypointPtr> &candidates,
+                                    const cg::Location &target) {
+    uint64_t best_idx = 0u;
+    float best_score = std::numeric_limits<float>::infinity();
+    for (uint64_t k = 0u; k < candidates.size(); ++k) {
+      SimpleWaypointPtr trace = candidates.at(k);
+      float branch_score = trace->Distance(target);
+      bool entered_junction = trace->CheckJunction();
+      for (uint64_t step = 0u; step < 120u; ++step) {
+        const std::vector<SimpleWaypointPtr> succ = trace->GetNextWaypoint();
+        if (succ.empty()) {
+          break;
+        }
+        SimpleWaypointPtr best_succ = succ.front();
+        float best_d = best_succ->Distance(target);
+        for (uint64_t s = 1u; s < succ.size(); ++s) {
+          const float d = succ.at(s)->Distance(target);
+          if (d < best_d) {
+            best_d = d;
+            best_succ = succ.at(s);
+          }
+        }
+        trace = best_succ;
+        if (best_d < branch_score) {
+          branch_score = best_d;
+        }
+        const bool in_junction = trace->CheckJunction();
+        if (in_junction) {
+          entered_junction = true;
+        } else if (entered_junction) {
+          break;  // traced through and back out of the junction
+        }
+        if (branch_score < 2.0f) {
+          break;  // reached the target
+        }
+      }
+      if (branch_score < best_score) {
+        best_score = branch_score;
+        best_idx = k;
+      }
+    }
+    return best_idx;
+  }
+
+  // Closest distance the traced branch (greedy toward target) gets to the target.
+  // Large value == this branch never reaches the route point, i.e. TM's graph is
+  // missing the link the route needs.
+  float BranchClosestApproach(const SimpleWaypointPtr &start, const cg::Location &target) {
+    SimpleWaypointPtr trace = start;
+    float best = trace->Distance(target);
+    bool entered_junction = trace->CheckJunction();
+    for (uint64_t step = 0u; step < 120u; ++step) {
+      const std::vector<SimpleWaypointPtr> succ = trace->GetNextWaypoint();
+      if (succ.empty()) {
+        break;
+      }
+      SimpleWaypointPtr best_succ = succ.front();
+      float best_d = best_succ->Distance(target);
+      for (uint64_t s = 1u; s < succ.size(); ++s) {
+        const float d = succ.at(s)->Distance(target);
+        if (d < best_d) {
+          best_d = d;
+          best_succ = succ.at(s);
+        }
+      }
+      trace = best_succ;
+      if (best_d < best) {
+        best = best_d;
+      }
+      const bool in_junction = trace->CheckJunction();
+      if (in_junction) {
+        entered_junction = true;
+      } else if (entered_junction) {
+        break;
+      }
+      if (best < 2.0f) {
+        break;
+      }
+    }
+    return best;
+  }
+
+  // Pick a route point that lies beyond the junction the vehicle is entering, so
+  // the candidate exits separate geometrically. The nearest imported point can
+  // still sit at the junction mouth (all exits look equidistant); skip forward to
+  // the first point clearly past the entrance.
+  cg::Location JunctionExitTarget(const std::vector<cg::Location> &imported_path,
+                                  const cg::Location &entrance) {
+    cg::Location target = imported_path.front();
+    for (const cg::Location &p : imported_path) {
+      const float dx = p.x - entrance.x;
+      const float dy = p.y - entrance.y;
+      if ((dx * dx + dy * dy) > 36.0f) {  // > 6 m past the junction entrance
+        target = p;
+        break;
+      }
+    }
+    return target;
+  }
+
+}  // namespace
 
 LocalizationStage::LocalizationStage(
   const std::vector<ActorId> &vehicle_id_list,
@@ -180,8 +295,17 @@ void LocalizationStage::Update(const unsigned long index) {
 
   Path imported_path = parameters.GetCustomPath(actor_id);
   Route imported_actions = parameters.GetImportedRoute(actor_id);
+  static const bool TM_LOG_PATH = std::getenv("TM_LOG_PATH") != nullptr;
   // We are effectively importing a path.
   if (!imported_path.empty()) {
+
+    if (TM_LOG_PATH) {
+      std::cerr << "[TMPATH] actor=" << actor_id
+                << " loc=(" << vehicle_location.x << "," << vehicle_location.y << ")"
+                << " remaining_path=" << imported_path.size()
+                << " front=(" << imported_path.front().x << "," << imported_path.front().y << ")"
+                << std::endl;
+    }
 
     ImportPath(imported_path, waypoint_buffer, actor_id, horizon_square);
 
@@ -273,10 +397,32 @@ void LocalizationStage::ExtendAndFindSafeSpace(const ActorId actor_id,
     if (!safe_point_found) {
       bool abort = false;
 
+      // If this vehicle is following an imported route, cross the junction toward
+      // the route target instead of a blind .front(). This extension runs before
+      // ImportPath gets to evaluate the junction fork, so without this it would
+      // push the wrong exit into the buffer and the ego would deviate.
+      const Path imported_path = parameters.GetCustomPath(actor_id);
+      const bool has_route = !imported_path.empty();
+      const cg::Location junction_entrance = current_waypoint->GetLocation();
+
       while (!past_junction && !abort) {
         NodeList next_waypoints = current_waypoint->GetNextWaypoint();
         if (!next_waypoints.empty()) {
-          current_waypoint = next_waypoints.front();
+          uint64_t idx = 0u;
+          if (has_route && next_waypoints.size() > 1) {
+            const cg::Location tgt = JunctionExitTarget(imported_path, junction_entrance);
+            idx = SelectBranchTowardTarget(next_waypoints, tgt);
+            if (std::getenv("TM_LOG_PATH") != nullptr) {
+              SimpleWaypointPtr ch = next_waypoints.at(idx);
+              std::cerr << "[TMEXT] candidates=" << next_waypoints.size()
+                        << " target=(" << tgt.x << "," << tgt.y << ")"
+                        << " chosen_idx=" << idx
+                        << " chosen_road=" << ch->GetWaypoint()->GetRoadId()
+                        << " chosen_loc=(" << ch->GetLocation().x << "," << ch->GetLocation().y << ")"
+                        << std::endl;
+            }
+          }
+          current_waypoint = next_waypoints.at(idx);
           PushWaypoint(actor_id, track_traffic, waypoint_buffer, current_waypoint);
           if (!current_waypoint->CheckJunction()) {
             past_junction = true;
@@ -611,29 +757,21 @@ void LocalizationStage::ImportPath(Path &imported_path, Buffer &waypoint_buffer,
 
       // Choose correct path.
       if (next_waypoints.size() > 1) {
-        road::RoadId imported_road_id = imported->GetWaypoint()->GetRoadId();
-        float min_distance = std::numeric_limits<float>::infinity();
-        for (uint64_t k = 0u; k < next_waypoints.size(); ++k) {
-          SimpleWaypointPtr junction_end_point = next_waypoints.at(k);
-          while (!junction_end_point->CheckJunction()) {
-            junction_end_point = junction_end_point->GetNextWaypoint().front();
-          }
-          while (junction_end_point->CheckJunction()) {
-            junction_end_point = junction_end_point->GetNextWaypoint().front();
-          }
-          while (next_waypoints.at(k)->DistanceSquared(junction_end_point) < 50.0f) {
-            junction_end_point = junction_end_point->GetNextWaypoint().front();
-          }
-          road::RoadId jep_road_id = junction_end_point->GetWaypoint()->GetRoadId();
-          if (jep_road_id == imported_road_id) {
-            selection_index = k;
-            break;
-          }
-          float distance = junction_end_point->DistanceSquared(imported);
-          if (distance < min_distance) {
-            min_distance = distance;
-            selection_index = k;
-          }
+        // Pick the exit that actually leads onto the prescribed route, tracing
+        // each candidate through the junction toward the route target (see
+        // SelectBranchTowardTarget). The previous heuristic walked each branch
+        // with a blind .front() and matched road ids, which mis-picks on complex
+        // multi-lane junctions -> route deviation.
+        const cg::Location exit_target = JunctionExitTarget(imported_path, latest_waypoint->GetLocation());
+        selection_index = SelectBranchTowardTarget(next_waypoints, exit_target);
+        if (std::getenv("TM_LOG_PATH") != nullptr) {
+          SimpleWaypointPtr chosen = next_waypoints.at(selection_index);
+          std::cerr << "[TMJCT] candidates=" << next_waypoints.size()
+                    << " exit_target=(" << exit_target.x << "," << exit_target.y << ")"
+                    << " chosen_idx=" << selection_index
+                    << " chosen_road=" << chosen->GetWaypoint()->GetRoadId()
+                    << " chosen_loc=(" << chosen->GetLocation().x << "," << chosen->GetLocation().y << ")"
+                    << std::endl;
         }
       } else if (next_waypoints.size() == 0) {
         if (!parameters.GetOSMMode()) {
@@ -643,6 +781,52 @@ void LocalizationStage::ImportPath(Path &imported_path, Buffer &waypoint_buffer,
         break;
       }
       SimpleWaypointPtr next_wp_selection = next_waypoints.at(selection_index);
+
+      // Bridge over missing junction links. TM's InMemoryMap can drop a junction
+      // branch that exists in the underlying map (observed on Town12 LargeMap
+      // junctions): from the approach lane it then offers only an exit that leads
+      // away from the route, and the vehicle deviates. When the best available
+      // successor enters a junction yet moves away from the next route point that
+      // is still within bridging range, snap the buffer straight onto the route
+      // waypoint instead of following the diverging graph edge.
+      {
+        // TM demotes non-signalized junctions to non-junction waypoints
+        // (InMemoryMap SetIsJunction(false) when there is no landmark), so we
+        // cannot gate on CheckJunction here. Trigger purely on the graph being
+        // unable to reach the next route point: a route point 5.5-16 m ahead that
+        // the best graph branch never gets within 6 m of means the link the route
+        // needs is missing from TM's graph -> bridge straight onto the route.
+        const cg::Location bridge_target = JunctionExitTarget(imported_path, latest_waypoint->GetLocation());
+        const float d_cur = latest_waypoint->Distance(bridge_target);
+        if (d_cur > 5.5f && d_cur < 16.0f
+            && BranchClosestApproach(next_wp_selection, bridge_target) > 6.0f) {
+          if (std::getenv("TM_LOG_PATH") != nullptr || std::getenv("TM_LOG_STEP") != nullptr) {
+            std::cerr << "[TMBRIDGE] graph link missing at junction; bridging from ("
+                      << latest_waypoint->GetLocation().x << "," << latest_waypoint->GetLocation().y
+                      << ") straight to route wp (" << imported->GetLocation().x << ","
+                      << imported->GetLocation().y << ") d_cur=" << d_cur << std::endl;
+          }
+          PushWaypoint(actor_id, track_traffic, waypoint_buffer, imported);
+          imported_path.erase(imported_path.begin());
+          if (imported_path.empty()) {
+            break;
+          }
+          latest_imported = imported_path.front();
+          imported = local_map->GetWaypoint(latest_imported);
+          continue;
+        }
+      }
+
+      if (std::getenv("TM_LOG_STEP") != nullptr) {
+        std::cerr << "[TMSTEP] from road=" << latest_waypoint->GetWaypoint()->GetRoadId()
+                  << " lane=" << latest_waypoint->GetWaypoint()->GetLaneId()
+                  << " loc=(" << latest_waypoint->GetLocation().x << "," << latest_waypoint->GetLocation().y << ")"
+                  << " nsucc=" << next_waypoints.size()
+                  << " -> road=" << next_wp_selection->GetWaypoint()->GetRoadId()
+                  << " lane=" << next_wp_selection->GetWaypoint()->GetLaneId()
+                  << " loc=(" << next_wp_selection->GetLocation().x << "," << next_wp_selection->GetLocation().y << ")"
+                  << std::endl;
+      }
 
       // Remove the imported waypoint from the path if it's close to the last one.
       if (next_wp_selection->DistanceSquared(imported) < 30.0f) {

@@ -66,6 +66,10 @@ boost::python::list InterGetNextAction(carla::traffic_manager::TrafficManager& s
   return l;
 }
 
+int InterGetVehicleSituation(carla::traffic_manager::TrafficManager& self, const ActorPtr &actor_ptr) {
+  return self.GetVehicleSituation(actor_ptr->GetId());
+}
+
 boost::python::list InterGetActionBuffer(carla::traffic_manager::TrafficManager& self, const ActorPtr &actor_ptr) {
   boost::python::list l;
   auto action_buffer = self.GetActionBuffer(actor_ptr->GetId());
@@ -95,6 +99,8 @@ void export_trafficmanager() {
     .def("global_lateral_avoidance", &ctm::TrafficManager::SetGlobalLateralAvoidance, (arg("enable")))
     .def("vehicle_lateral_avoidance_raycast", &ctm::TrafficManager::SetLateralAvoidanceRaycast, (arg("actor"), arg("enable")))
     .def("global_lateral_avoidance_raycast", &ctm::TrafficManager::SetGlobalLateralAvoidanceRaycast, (arg("enable")))
+    .def("vehicle_junction_gap_acceptance", &ctm::TrafficManager::SetJunctionGapAcceptance, (arg("actor"), arg("enable")))
+    .def("global_junction_gap_acceptance", &ctm::TrafficManager::SetGlobalJunctionGapAcceptance, (arg("enable")))
     .def("update_vehicle_lights", &ctm::TrafficManager::SetUpdateVehicleLights, (arg("actor"), arg("do_update")))
     .def("collision_detection", &ctm::TrafficManager::SetCollisionDetection, (arg("reference_actor"), arg("other_actor"), arg("detect_collision")))
     .def("force_lane_change", &ctm::TrafficManager::SetForceLaneChange, (arg("actor"), arg("direction")))
@@ -119,5 +125,6 @@ void export_trafficmanager() {
     .def("set_boundaries_respawn_dormant_vehicles", &carla::traffic_manager::TrafficManager::SetBoundariesRespawnDormantVehicles, (arg("lower_bound"), arg("upper_bound")))
     .def("get_next_action", &InterGetNextAction, (arg("actor")))
     .def("get_all_actions", &InterGetActionBuffer, (arg("actor")))
+    .def("get_vehicle_situation", &InterGetVehicleSituation, (arg("actor")))
     .def("shut_down", &ctm::TrafficManager::ShutDown);
 }

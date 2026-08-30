@@ -244,6 +244,22 @@ public:
     }
   }
 
+  /// Method to enable/disable junction gap-acceptance for a vehicle.
+  void SetJunctionGapAcceptance(const ActorPtr &actor, const bool enable){
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetJunctionGapAcceptance(actor, enable);
+    }
+  }
+
+  /// Method to enable/disable junction gap-acceptance globally.
+  void SetGlobalJunctionGapAcceptance(const bool enable){
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if(tm_ptr != nullptr){
+      tm_ptr->SetGlobalJunctionGapAcceptance(enable);
+    }
+  }
+
   /// Set the automatic management of the vehicle lights
   void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update){
     TrafficManagerBase* tm_ptr = GetTM(_port);
@@ -394,6 +410,16 @@ public:
       return next_action;
     }
     return next_action;
+  }
+
+  /// Get the vehicle's estimated driving situation (SituationLabel as int; see
+  /// DataStructures.h). Returns CLEAR (0) when the traffic manager is absent.
+  int GetVehicleSituation(const ActorId &actor_id) {
+    TrafficManagerBase* tm_ptr = GetTM(_port);
+    if (tm_ptr != nullptr) {
+      return tm_ptr->GetVehicleSituation(actor_id);
+    }
+    return 0;
   }
 
   /// Method to get the action buffer.

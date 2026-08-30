@@ -6,6 +6,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
+#include <iostream>
 #include <limits>
 #include <unordered_set>
 
@@ -53,6 +55,8 @@ bool IsBlockingStaticLabel(const rpc::CityObjectLabel label) {
 // The signed lateral offset (metres, + = right) a node steers the ego towards.
 float NodeTargetOffset(const ManeuverState state, const AvoidPerception &p) {
   switch (state) {
+    case ManeuverState::LANE_BORROW_ONCOMING:
+      return p.borrow_offset;
     case ManeuverState::IN_LANE_BYPASS:
       return p.bypass_offset;
     case ManeuverState::SIDE_CLEARANCE:
@@ -70,6 +74,11 @@ float NodeTargetOffset(const ManeuverState state, const AvoidPerception &p) {
 // feasible lateral plan existing; a moving lead still causes a normal stop.
 bool NodeClearsHazard(const ManeuverState state, const AvoidPerception &p) {
   switch (state) {
+    case ManeuverState::LANE_BORROW_ONCOMING:
+      // Only release the stop while the borrow is actually feasible (oncoming
+      // still clear). If an opposing vehicle appears mid-maneuver this drops to
+      // false, restoring the collision stop until the gap reopens.
+      return p.borrow_oncoming;
     case ManeuverState::IN_LANE_BYPASS:
       return p.bypass_feasible;
     case ManeuverState::SIDE_CLEARANCE:
@@ -81,12 +90,22 @@ bool NodeClearsHazard(const ManeuverState state, const AvoidPerception &p) {
 
 // --- Transition guards (pure functions of context + perception) ------------
 
+// A situation in which steering around is unsafe: a walker in the path or an
+// opposing vehicle occupying the lane. The ego must hold (the collision stage
+// keeps braking for the actor), never edge or borrow around it.
+bool SituationBlocksLateral(const AvoidPerception &p) {
+  return p.situation == SituationLabel::PEDESTRIAN_CROSSING ||
+         p.situation == SituationLabel::ONCOMING_INTRUSION;
+}
+
 bool GuardEnterSideClearance(const AvoidContext &, const AvoidPerception &p) {
-  return p.side_obstacle && std::fabs(p.target_offset) >= ENTER_OFFSET_THRESHOLD;
+  return !SituationBlocksLateral(p) && p.side_obstacle &&
+         std::fabs(p.target_offset) >= ENTER_OFFSET_THRESHOLD;
 }
 
 bool GuardEnterBypass(const AvoidContext &, const AvoidPerception &p) {
-  return p.blocker_ahead && p.blocker_stopped && p.bypass_feasible;
+  return !SituationBlocksLateral(p) && p.blocker_ahead && p.blocker_stopped &&
+         p.bypass_feasible;
 }
 
 bool GuardExitBypass(const AvoidContext &, const AvoidPerception &p) {
@@ -100,6 +119,50 @@ bool GuardExitToFollow(const AvoidContext &ctx, const AvoidPerception &p) {
   return !p.side_obstacle && std::fabs(ctx.committed_offset) <= EXIT_OFFSET_THRESHOLD;
 }
 
+// --- Oncoming lane-borrow guards -------------------------------------------
+
+bool GuardEnterBorrowOncoming(const AvoidContext &, const AvoidPerception &p) {
+  // The lane is fully blocked (no in-lane bypass), and an oncoming Driving lane
+  // is present and clear over the commit horizon. Never borrow when a walker or
+  // an opposing vehicle is the situation -- that lane is exactly where the
+  // danger is.
+  return !SituationBlocksLateral(p) && p.blocker_ahead && !p.bypass_feasible &&
+         p.borrow_oncoming;
+}
+
+bool GuardExitBorrowOncoming(const AvoidContext &, const AvoidPerception &p) {
+  // Return to the lane once the blockage is no longer ahead (passed or gone).
+  return !p.blocker_ahead;
+}
+
+// --- Junction gap-acceptance guards ----------------------------------------
+
+bool GuardEnterJunction(const AvoidContext &, const AvoidPerception &p) {
+  return p.at_junction;
+}
+
+bool GuardJunctionCommit(const AvoidContext &, const AvoidPerception &p) {
+  // Accept the gap and cross only once near the junction (at/inside the commit
+  // distance, i.e. at the yield point) AND the conflicting-traffic gap is large
+  // enough. Requiring proximity prevents committing while still far out, where
+  // the gap looks clear only because the oncoming has not yet arrived.
+  return p.at_junction && p.junction_gap_clear &&
+         p.dist_to_junction <= JUNCTION_COMMIT_DISTANCE;
+}
+
+bool GuardJunctionExit(const AvoidContext &, const AvoidPerception &p) {
+  // The junction scenario is over (crossed it, or the route no longer crosses).
+  return !p.at_junction;
+}
+
+// True for the junction gap-acceptance nodes, whose hazard release is derived
+// per-frame from the node (not latched like the lateral maneuvers).
+bool IsJunctionState(const ManeuverState s) {
+  return s == ManeuverState::JUNCTION_APPROACH ||
+         s == ManeuverState::JUNCTION_YIELD ||
+         s == ManeuverState::JUNCTION_CROSS;
+}
+
 struct Transition {
   ManeuverState from;
   ManeuverState to;
@@ -107,14 +170,30 @@ struct Transition {
 };
 
 // Priority-ordered: the first row whose `from` matches the current state and
-// whose guard passes wins. A stopped blocker (bypass) takes priority over
-// side-clearance.
+// whose guard passes wins. Junction crossing takes priority over the lateral
+// maneuvers (you negotiate the junction, not a parked car); within the lateral
+// group a stopped blocker (bypass) takes priority over side-clearance.
 const Transition kTransitions[] = {
-  {ManeuverState::IN_LANE_BYPASS, ManeuverState::FOLLOW,         &GuardExitBypass},
-  {ManeuverState::SIDE_CLEARANCE, ManeuverState::IN_LANE_BYPASS, &GuardEnterBypass},
-  {ManeuverState::SIDE_CLEARANCE, ManeuverState::FOLLOW,         &GuardExitToFollow},
-  {ManeuverState::FOLLOW,         ManeuverState::IN_LANE_BYPASS, &GuardEnterBypass},
-  {ManeuverState::FOLLOW,         ManeuverState::SIDE_CLEARANCE, &GuardEnterSideClearance},
+  // Junction gap-acceptance. APPROACH holds at the yield point (baseline
+  // collision-stage behaviour); it commits to CROSS only once near the junction
+  // with an accepted gap, and CROSS latches until the junction is passed.
+  {ManeuverState::JUNCTION_CROSS,    ManeuverState::FOLLOW,            &GuardJunctionExit},
+  {ManeuverState::JUNCTION_APPROACH, ManeuverState::JUNCTION_CROSS,    &GuardJunctionCommit},
+  {ManeuverState::JUNCTION_APPROACH, ManeuverState::FOLLOW,            &GuardJunctionExit},
+  {ManeuverState::FOLLOW,            ManeuverState::JUNCTION_APPROACH, &GuardEnterJunction},
+  // Lateral avoidance. Oncoming lane-borrow is the fallback when the lane is
+  // fully blocked and no in-lane option exists; it is reachable from any lateral
+  // node (a side-clearance or in-lane bypass that turns out infeasible escalates
+  // to a borrow) and latches until the blockage is passed.
+  {ManeuverState::LANE_BORROW_ONCOMING, ManeuverState::FOLLOW,               &GuardExitBorrowOncoming},
+  {ManeuverState::IN_LANE_BYPASS, ManeuverState::LANE_BORROW_ONCOMING, &GuardEnterBorrowOncoming},
+  {ManeuverState::IN_LANE_BYPASS, ManeuverState::FOLLOW,               &GuardExitBypass},
+  {ManeuverState::SIDE_CLEARANCE, ManeuverState::LANE_BORROW_ONCOMING, &GuardEnterBorrowOncoming},
+  {ManeuverState::SIDE_CLEARANCE, ManeuverState::IN_LANE_BYPASS,       &GuardEnterBypass},
+  {ManeuverState::SIDE_CLEARANCE, ManeuverState::FOLLOW,               &GuardExitToFollow},
+  {ManeuverState::FOLLOW,         ManeuverState::LANE_BORROW_ONCOMING, &GuardEnterBorrowOncoming},
+  {ManeuverState::FOLLOW,         ManeuverState::IN_LANE_BYPASS,       &GuardEnterBypass},
+  {ManeuverState::FOLLOW,         ManeuverState::SIDE_CLEARANCE,       &GuardEnterSideClearance},
 };
 
 } // namespace
@@ -228,7 +307,10 @@ AvoidPerception LateralAvoidanceStage::Perceive(const ActorId actor_id, AvoidCon
         const float frac = (RAYCAST_LATERAL_SAMPLES <= 1) ? 0.5f
             : static_cast<float>(s) /
               static_cast<float>(RAYCAST_LATERAL_SAMPLES - 1);
-        const float lat = (frac * 2.0f - 1.0f) * lane_half;  // [-half, +half]
+        // Span the lane plus a borrow-probe margin beyond each edge, so a barrier
+        // sitting in an adjacent lane is seen before the ego borrows into it.
+        const float half_span = lane_half + BORROW_PROBE_WIDTH;
+        const float lat = (frac * 2.0f - 1.0f) * half_span;  // [-span, +span]
         const cg::Location start(origin.x + right.x * lat,
                                  origin.y + right.y * lat,
                                  origin.z + RAYCAST_HEIGHT);
@@ -321,14 +403,18 @@ AvoidPerception LateralAvoidanceStage::Perceive(const ActorId actor_id, AvoidCon
         continue;
       }
 
+      // A stopped obstacle is treated as reaching STOPPED_INTRUSION_MARGIN
+      // further into the lane (open door / mirror / load past its bbox), so one
+      // hugging the lane boundary registers stably instead of flickering.
+      const float intrusion = obs.stopped ? STOPPED_INTRUSION_MARGIN : 0.0f;
       if (min_lat > 0.0f) {
-        const float allowed = min_lat - CLEARANCE_MARGIN - ego_half_width;
+        const float allowed = min_lat - intrusion - CLEARANCE_MARGIN - ego_half_width;
         if (allowed < 0.0f) {
           req_left = std::min(req_left, allowed);
           side_stopped = side_stopped || obs.stopped;
         }
       } else if (max_lat < 0.0f) {
-        const float allowed = max_lat + CLEARANCE_MARGIN + ego_half_width;
+        const float allowed = max_lat + intrusion + CLEARANCE_MARGIN + ego_half_width;
         if (allowed > 0.0f) {
           req_right = std::max(req_right, allowed);
           side_stopped = side_stopped || obs.stopped;
@@ -374,9 +460,9 @@ AvoidPerception LateralAvoidanceStage::Perceive(const ActorId actor_id, AvoidCon
     if (blocked) {
       perception.blocker_ahead = true;
       perception.lane_half_width = lane_half_width;
+      perception.blocker_stopped = has_blocker ? blocker_stopped : side_stopped;
       if (has_blocker) {
         // Straddling blocker: try an in-lane bypass on the wider free side.
-        perception.blocker_stopped = blocker_stopped;
         const float right_gap = lane_half_width - blocker_max_lat;
         const float left_gap = lane_half_width + blocker_min_lat;
         const float needed = 2.0f * ego_half_width + CLEARANCE_MARGIN;
@@ -387,10 +473,82 @@ AvoidPerception LateralAvoidanceStage::Perceive(const ActorId actor_id, AvoidCon
           perception.bypass_feasible = true;
           perception.bypass_offset = -drivable_half;
         }
-      } else {
-        // Side obstacle too far in to clear within the lane -> a lane borrow is
-        // needed (added in a later iteration); for now the ego holds.
-        perception.blocker_stopped = side_stopped;
+      }
+
+      // No in-lane option for a stopped/static full blockage: consider borrowing
+      // an adjacent Driving lane (the TwoWays obstacle-passing / lane-closure
+      // case). Safety: a borrow is only offered when the target corridor is
+      // *positively verified clear* -- of static barriers (seen via the widened
+      // raycast fan) and of traffic. If no side verifies clear the ego holds and
+      // the collision stop stays authoritative, rather than driving blind into
+      // the closed side.
+      if (!perception.bypass_feasible && perception.blocker_stopped) {
+        // Is a candidate corridor (centred at lateral offset `off`, half-width
+        // `nhalf`) free enough to borrow? Static obstacles block over the path
+        // window; traffic blocks over the direction-appropriate horizon.
+        auto corridor_clear = [&](float off, float nhalf, bool oncoming) -> bool {
+          const float band = nhalf + ego_half_width;
+          const float dyn_horizon = oncoming ? BORROW_ONCOMING_CLEAR_DISTANCE
+                                             : BORROW_SAME_DIR_CLEAR_DISTANCE;
+          for (const Obs &o : obstacles) {
+            const cg::Vector3D to_o = o.location - station;
+            const float lon = to_o.x * forward.x + to_o.y * forward.y;
+            const float lat = to_o.x * right.x + to_o.y * right.y;
+            if (std::fabs(lat - off) > band) {
+              continue;  // not in this corridor
+            }
+            if (o.stopped) {
+              // A static barrier / parked car in the borrow lane blocks the path.
+              if (lon > -ego_half_width && lon < BORROW_PATH_CLEAR_DISTANCE) {
+                return false;
+              }
+            } else {
+              const bool opposing =
+                  (o.heading.x * forward.x + o.heading.y * forward.y) < 0.0f;
+              // Oncoming: only opposing traffic matters. Same-direction: any
+              // vehicle ahead in the corridor we would merge into.
+              if ((!oncoming || opposing) && lon > -ego_half_width &&
+                  lon < dyn_horizon) {
+                return false;
+              }
+            }
+          }
+          return true;
+        };
+
+        const auto cwp = wp->GetWaypoint();
+        bool have_same = false, have_onc = false;
+        float off_same = 0.0f, off_onc = 0.0f;
+        auto consider = [&](const decltype(cwp) &lane, float sign) {
+          if (lane == nullptr ||
+              lane->GetType() != carla::road::Lane::LaneType::Driving) {
+            return;
+          }
+          const float nhalf = static_cast<float>(lane->GetLaneWidth()) * 0.5f;
+          const float off = sign * (lane_half_width + nhalf);
+          const cg::Vector3D nf = lane->GetTransform().GetForwardVector();
+          const bool oncoming = (nf.x * forward.x + nf.y * forward.y) < 0.0f;
+          if (!corridor_clear(off, nhalf, oncoming)) {
+            return;
+          }
+          if (oncoming) {
+            if (!have_onc) { have_onc = true; off_onc = off; }
+          } else {
+            if (!have_same) { have_same = true; off_same = off; }
+          }
+        };
+        if (cwp != nullptr) {
+          consider(cwp->GetRight(), 1.0f);  // right first: prefer a same-dir lane
+          consider(cwp->GetLeft(), -1.0f);
+        }
+        // Prefer a same-direction lane; fall back to the oncoming lane.
+        if (have_same) {
+          perception.borrow_oncoming = true;
+          perception.borrow_offset = off_same;
+        } else if (have_onc) {
+          perception.borrow_oncoming = true;
+          perception.borrow_offset = off_onc;
+        }
       }
       return perception;
     }
@@ -406,24 +564,335 @@ AvoidPerception LateralAvoidanceStage::Perceive(const ActorId actor_id, AvoidCon
   return perception;
 }
 
+void LateralAvoidanceStage::PerceiveJunction(const ActorId actor_id,
+                                             AvoidPerception &perception) const {
+  const auto buffer_it = buffer_map.find(actor_id);
+  if (buffer_it == buffer_map.end() || buffer_it->second.empty()) {
+    return;
+  }
+  const Buffer &buffer = buffer_it->second;
+
+  // Find the first junction waypoint within the scan horizon and the along-path
+  // distance to it.
+  float accum = 0.0f;
+  size_t j_index = 0;
+  bool found = false;
+  for (size_t i = 0; i < buffer.size(); ++i) {
+    if (buffer.at(i)->CheckJunction()) {
+      j_index = i;
+      found = true;
+      break;
+    }
+    if (i + 1 < buffer.size()) {
+      accum += buffer.at(i)->Distance(buffer.at(i + 1));
+    }
+    if (accum > JUNCTION_SCAN_DISTANCE) {
+      break;
+    }
+  }
+  if (!found) {
+    return;  // no junction ahead within the horizon
+  }
+  const float dist_to_junction = accum;
+
+  // Require a turn (crossing) maneuver: compare the approach heading with the
+  // heading where the path leaves the junction. A straight pass-through does not
+  // cross oncoming traffic and is left to the normal collision logic.
+  const cg::Vector3D approach_fwd = buffer.front()->GetForwardVector();
+  cg::Vector3D exit_fwd = approach_fwd;
+  bool was_in_junction = false;
+  bool exit_found = false;
+  for (size_t i = j_index; i < buffer.size(); ++i) {
+    const bool jn = buffer.at(i)->CheckJunction();
+    if (jn) {
+      was_in_junction = true;
+    } else if (was_in_junction) {
+      exit_fwd = buffer.at(i)->GetForwardVector();
+      exit_found = true;
+      break;
+    }
+  }
+  // Reject only a *confirmed* straight-through pass (priority road) -- it does
+  // not cross oncoming traffic. When the buffer is too short to see the exit
+  // lane (a stopped ego has only a ~15 m horizon), fail open and treat it as a
+  // crossing so the gap-acceptance still engages; a genuine no-conflict case
+  // just commits immediately anyway.
+  const float turn_cos = approach_fwd.x * exit_fwd.x + approach_fwd.y * exit_fwd.y;
+  if (exit_found && turn_cos > JUNCTION_TURN_COS) {
+    return;  // confirmed straight through, not a crossing turn
+  }
+
+  perception.at_junction = true;
+  perception.dist_to_junction = dist_to_junction;
+  perception.at_hold_line = dist_to_junction <= JUNCTION_HOLD_LINE;
+
+  // Conflict reference point ~ the junction entrance.
+  const cg::Location jx = buffer.at(j_index)->GetLocation();
+
+  // Gather candidate conflicting vehicles: those overlapping the ego and those
+  // passing the junction-region waypoints and their lane neighbours (to sweep
+  // the crossing lanes).
+  std::unordered_set<ActorId> candidate_ids;
+  {
+    const ActorIdSet overlapping = track_traffic.GetOverlappingVehicles(actor_id);
+    candidate_ids.insert(overlapping.begin(), overlapping.end());
+    const size_t lo = (j_index > 2) ? j_index - 2 : 0;
+    const size_t hi = std::min(buffer.size(), j_index + 6);
+    for (size_t i = lo; i < hi; ++i) {
+      const SimpleWaypointPtr &wp = buffer.at(i);
+      const SimpleWaypointPtr neighbours[3] = {wp, wp->GetRightWaypoint(),
+                                               wp->GetLeftWaypoint()};
+      for (const SimpleWaypointPtr &n : neighbours) {
+        if (n != nullptr) {
+          const ActorIdSet passing = track_traffic.GetPassingVehicles(n->GetId());
+          candidate_ids.insert(passing.begin(), passing.end());
+        }
+      }
+    }
+  }
+
+  // Time-to-junction of the nearest conflicting vehicle.
+  float min_ttc = std::numeric_limits<float>::max();
+  for (const ActorId other_id : candidate_ids) {
+    if (other_id == actor_id || !simulation_state.ContainsActor(other_id)) {
+      continue;
+    }
+    const cg::Vector3D vel = simulation_state.GetVelocity(other_id);
+    const float speed = std::sqrt(vel.x * vel.x + vel.y * vel.y);
+    if (speed < JUNCTION_MOVING_THRESHOLD) {
+      continue;  // stopped/slow -> normal collision negotiation handles it
+    }
+    const cg::Vector3D heading = simulation_state.GetHeading(other_id);
+    // Same-direction traffic (a leader/follower) is not crossing conflict.
+    const float head_align =
+        approach_fwd.x * heading.x + approach_fwd.y * heading.y;
+    if (head_align > JUNCTION_SAME_DIR_COS) {
+      continue;
+    }
+    const cg::Location opos = simulation_state.GetLocation(other_id);
+    const float to_jx_x = jx.x - opos.x;
+    const float to_jx_y = jx.y - opos.y;
+    // Must be approaching the junction, not leaving it.
+    if (vel.x * to_jx_x + vel.y * to_jx_y <= 0.0f) {
+      continue;
+    }
+    const float d = std::sqrt(to_jx_x * to_jx_x + to_jx_y * to_jx_y);
+    if (d > JUNCTION_CONFLICT_RANGE) {
+      continue;
+    }
+    min_ttc = std::min(min_ttc, d / speed);
+  }
+
+  perception.conflict_ttc = min_ttc;
+  // No conflict (min_ttc stays +inf) or all conflicts far enough away -> accept.
+  perception.junction_gap_clear = (min_ttc >= JUNCTION_COMMIT_TTC);
+}
+
+namespace {
+// Situation-estimator scan windows (metres / dimensionless). Local to this
+// translation unit -- these are estimator tuning, not shared behaviour limits.
+constexpr float SIT_PED_LOOKAHEAD = 14.0f;     ///< how far ahead a walker matters
+constexpr float SIT_PED_SIDE_MARGIN = 1.5f;    ///< extra half-corridor for walkers
+constexpr float SIT_PED_LATERAL_SPEED = 0.3f;  ///< m/s to count as "crossing"
+constexpr float SIT_ONC_LOOKAHEAD = 30.0f;     ///< how far ahead an oncoming car matters
+constexpr float SIT_ONC_SIDE_MARGIN = 0.5f;    ///< tolerance inside the ego corridor
+constexpr float SIT_ONC_OPPOSING_COS = -0.5f;  ///< heading dot < this => opposing
+constexpr float SIT_LEAD_SLOWER_FRAC = 0.85f;  ///< lead slower than this * ego speed
+constexpr float SIT_MOVING_SPEED = 0.5f;       ///< m/s above which an actor "moves"
+constexpr int SIT_CONFIRM_FRAMES = 3;          ///< frames a new raw label must hold
+constexpr int SIT_PASS_HOLD = 12;              ///< frames a pass label is force-held
+}  // namespace
+
+void LateralAvoidanceStage::ClassifySituation(const ActorId actor_id,
+                                              AvoidContext &ctx,
+                                              AvoidPerception &perception) const {
+  const cg::Location ego_loc = simulation_state.GetLocation(actor_id);
+  const cg::Vector3D fwd = simulation_state.GetHeading(actor_id);
+  const cg::Vector3D right(-fwd.y, fwd.x, 0.0f);  // right of heading (CollisionStage convention)
+  const cg::Vector3D ego_vel = simulation_state.GetVelocity(actor_id);
+  const float ego_speed = std::sqrt(ego_vel.x * ego_vel.x + ego_vel.y * ego_vel.y);
+  const float half_corridor =
+      (perception.lane_half_width > 0.0f ? perception.lane_half_width : 1.75f) +
+      perception.ego_half_width;
+
+  // Confidence accumulators for the two actor-scan situations.
+  float ped_conf = 0.0f;
+  float onc_conf = 0.0f;
+
+  const ActorIdSet overlapping = track_traffic.GetOverlappingVehicles(actor_id);
+  for (const ActorId other_id : overlapping) {
+    if (other_id == actor_id || !simulation_state.ContainsActor(other_id)) {
+      continue;
+    }
+    const cg::Location oloc = simulation_state.GetLocation(other_id);
+    const cg::Vector3D to = oloc - ego_loc;
+    const float lon = to.x * fwd.x + to.y * fwd.y;      // ahead > 0
+    const float lat = to.x * right.x + to.y * right.y;  // right > 0
+    if (lon <= 0.0f) {
+      continue;  // beside or behind -> not an obstacle we are driving into
+    }
+    const ActorType type = simulation_state.GetType(other_id);
+    const cg::Vector3D ovel = simulation_state.GetVelocity(other_id);
+
+    if (type == ActorType::Pedestrian) {
+      // A walker in or entering the path ahead. Presence in the corridor is
+      // enough to flag; lateral motion across the path raises confidence.
+      if (lon < SIT_PED_LOOKAHEAD &&
+          std::fabs(lat) < half_corridor + SIT_PED_SIDE_MARGIN) {
+        perception.pedestrian_in_path = true;
+        const float lat_speed = std::fabs(ovel.x * right.x + ovel.y * right.y);
+        const float proximity = 1.0f - lon / SIT_PED_LOOKAHEAD;  // closer => higher
+        const float crossing = lat_speed >= SIT_PED_LATERAL_SPEED ? 0.3f : 0.0f;
+        ped_conf = std::max(ped_conf, std::min(1.0f, 0.5f + 0.2f * proximity + crossing));
+      }
+      continue;
+    }
+
+    if (type == ActorType::Vehicle) {
+      // An opposing-heading vehicle sitting in / invading the ego lane ahead.
+      const cg::Vector3D ohead = simulation_state.GetHeading(other_id);
+      const float head_dot = ohead.x * fwd.x + ohead.y * fwd.y;
+      const bool opposing = head_dot < SIT_ONC_OPPOSING_COS;
+      if (opposing && lon < SIT_ONC_LOOKAHEAD &&
+          std::fabs(lat) < half_corridor + SIT_ONC_SIDE_MARGIN) {
+        perception.oncoming_intrusion = true;
+        const float centred = 1.0f - std::min(1.0f, std::fabs(lat) / half_corridor);
+        const float proximity = 1.0f - lon / SIT_ONC_LOOKAHEAD;
+        onc_conf = std::max(onc_conf, std::min(1.0f, 0.4f + 0.3f * centred + 0.3f * proximity));
+      }
+    }
+  }
+
+  // Lead-braking: a moving in-lane lead we are closing on (the collision stage
+  // flags the blocker; here we require it moving and slower than the ego). No
+  // acceleration history is kept, so this approximates "decelerating lead" with
+  // "slower moving lead ahead" -- the action (ease off / follow) is the same.
+  if (perception.blocker_ahead && !perception.blocker_stopped &&
+      ego_speed > SIT_MOVING_SPEED) {
+    perception.lead_braking = true;
+  }
+
+  // Priority resolution, safety first: a walker or an opposing car in the lane
+  // outranks any pass; junction negotiation outranks a static pass; a pass that
+  // needs the oncoming lane outranks an in-lane one; a moving lead is lowest.
+  SituationLabel label = SituationLabel::CLEAR;
+  float conf = 0.0f;
+  if (perception.pedestrian_in_path) {
+    label = SituationLabel::PEDESTRIAN_CROSSING;
+    conf = ped_conf;
+  } else if (perception.oncoming_intrusion) {
+    label = SituationLabel::ONCOMING_INTRUSION;
+    conf = onc_conf;
+  } else if (perception.at_junction) {
+    label = SituationLabel::JUNCTION_YIELD;
+    conf = perception.junction_gap_clear ? 0.6f : 0.9f;  // more sure when it must yield
+  } else if (perception.borrow_oncoming) {
+    label = SituationLabel::ONCOMING_BLOCK;
+    conf = 0.8f;
+  } else if ((perception.blocker_ahead && perception.blocker_stopped) ||
+             perception.side_obstacle) {
+    label = SituationLabel::STATIC_BLOCKER;
+    conf = perception.bypass_feasible ? 0.85f : 0.7f;
+  } else if (perception.lead_braking) {
+    label = SituationLabel::LEAD_BRAKING;
+    conf = 0.6f;
+  }
+  // Debounce: the raw label is noisy (blocker/borrow flags toggle frame to
+  // frame). A new label must persist SIT_CONFIRM_FRAMES before it is adopted --
+  // except the two safety-urgent labels, adopted at once. A pass label
+  // (STATIC_BLOCKER / ONCOMING_BLOCK), once stable, is force-held for
+  // SIT_PASS_HOLD frames so it does not evaporate on a single dropped blocker
+  // frame before it has gated action.
+  const SituationLabel raw = label;
+  const bool urgent = (raw == SituationLabel::PEDESTRIAN_CROSSING ||
+                       raw == SituationLabel::ONCOMING_INTRUSION);
+  const int confirm_needed = urgent ? 1 : SIT_CONFIRM_FRAMES;
+  const bool stable_is_pass =
+      (ctx.stable_situation == SituationLabel::STATIC_BLOCKER ||
+       ctx.stable_situation == SituationLabel::ONCOMING_BLOCK);
+  if (raw == ctx.stable_situation) {
+    ctx.sit_candidate = raw;
+    ctx.sit_confirm = 0;
+    ctx.stable_confidence = conf;
+  } else {
+    if (raw == ctx.sit_candidate) {
+      ++ctx.sit_confirm;
+    } else {
+      ctx.sit_candidate = raw;
+      ctx.sit_confirm = 1;
+    }
+    const bool hold_protects_pass =
+        stable_is_pass && ctx.sit_hold > 0 && !urgent &&
+        raw == SituationLabel::CLEAR;
+    if (ctx.sit_confirm >= confirm_needed && !hold_protects_pass) {
+      ctx.stable_situation = raw;
+      ctx.stable_confidence = conf;
+      ctx.sit_confirm = 0;
+    }
+  }
+  // Maintain the pass-label hold counter (refresh while the raw label agrees).
+  if (ctx.stable_situation == SituationLabel::STATIC_BLOCKER ||
+      ctx.stable_situation == SituationLabel::ONCOMING_BLOCK) {
+    if (raw == ctx.stable_situation) {
+      ctx.sit_hold = SIT_PASS_HOLD;
+    } else if (ctx.sit_hold > 0) {
+      --ctx.sit_hold;
+    }
+  } else {
+    ctx.sit_hold = 0;
+  }
+
+  perception.situation = ctx.stable_situation;
+  perception.situation_confidence = ctx.stable_confidence;
+}
+
+SituationLabel LateralAvoidanceStage::GetSituation(const ActorId actor_id) const {
+  const auto it = avoidance_context.find(actor_id);
+  return it == avoidance_context.end() ? SituationLabel::CLEAR
+                                       : it->second.stable_situation;
+}
+
 void LateralAvoidanceStage::Update(const unsigned long index) {
   const ActorId actor_id = vehicle_id_list.at(index);
 
-  // Default-OFF short-circuit. Never-enabled vehicles never touch the context
-  // map, keeping this path byte-identical to a build without the stage.
-  if (!parameters.GetLateralAvoidance(actor_id)) {
+  const bool lateral_enabled = parameters.GetLateralAvoidance(actor_id);
+  const bool junction_enabled = parameters.GetJunctionGapAcceptance(actor_id);
+
+  // Default-OFF short-circuit. Vehicles with neither feature never touch the
+  // context map, keeping this path byte-identical to a build without the stage.
+  if (!lateral_enabled && !junction_enabled) {
     output_array.at(index) = AvoidanceCommand{};
     return;
   }
 
   AvoidContext &ctx = avoidance_context[actor_id];
 
-  AvoidPerception perception = Perceive(actor_id, ctx);
-  // Fold in the collision stage's own hazard flag (authoritative for whether
-  // motion planning is currently stopping). Perception keeps the stopped/side
-  // determination from its window scan.
-  const CollisionHazardData &hazard = collision_frame.at(index);
-  perception.blocker_ahead = perception.blocker_ahead || hazard.hazard;
+  AvoidPerception perception;
+  if (lateral_enabled) {
+    perception = Perceive(actor_id, ctx);
+    // Fold in the collision stage's own hazard flag (authoritative for whether
+    // motion planning is currently stopping). Perception keeps the stopped/side
+    // determination from its window scan.
+    const CollisionHazardData &hazard = collision_frame.at(index);
+    perception.blocker_ahead = perception.blocker_ahead || hazard.hazard;
+  }
+  if (junction_enabled) {
+    PerceiveJunction(actor_id, perception);
+  }
+
+  // Estimate the coarse driving situation from the perception gathered above
+  // plus the pedestrian / oncoming / lead scans. The label gates unsafe lateral
+  // maneuvers (see the enter-guards) and is exposed for diagnostics + the API.
+  const SituationLabel prev_situation = ctx.stable_situation;
+  ClassifySituation(actor_id, ctx, perception);
+  if (perception.situation != prev_situation &&
+      std::getenv("TM_LOG_SIT") != nullptr) {
+    const cg::Location el = simulation_state.GetLocation(actor_id);
+    std::cerr << "[TMSIT] actor=" << actor_id << " loc=(" << el.x << "," << el.y
+              << ") est=" << ToString(perception.situation)
+              << " conf=" << perception.situation_confidence
+              << " (was " << ToString(prev_situation) << ")" << std::endl;
+  }
 
   // Advance the behaviour graph: first matching transition wins.
   for (const Transition &t : kTransitions) {
@@ -434,40 +903,62 @@ void LateralAvoidanceStage::Update(const unsigned long index) {
     }
   }
 
-  // Rate-limit the emitted offset towards the active node's target.
+  // Rate-limit the emitted offset towards the active node's target (junction
+  // nodes target zero offset, so any residual lateral shift decays out).
   const float target_offset = NodeTargetOffset(ctx.state, perception);
   const float delta = std::max(-MAX_OFFSET_RATE,
                                std::min(MAX_OFFSET_RATE, target_offset - ctx.committed_offset));
   ctx.committed_offset += delta;
 
-  // Latch the hazard release across the maneuver. It engages once a stopped
-  // obstacle with a feasible plan is verified, and stays engaged while a
-  // feasible lateral plan exists (side clearance or bypass), so the noisy
-  // per-frame stopped flag cannot toggle the collision stop. It disengages when
-  // no feasible plan remains or the ego returns to lane following.
-  if (NodeClearsHazard(ctx.state, perception)) {
-    ctx.hold_clear = true;
-  }
-  // Hold the release for the whole maneuver: it only disengages when the ego
-  // has returned to lane following. The maneuver state itself persists across
-  // gaps between obstacles (its offset stays applied until the path is clear),
-  // so this bridges those gaps without the collision stop pulsing back on.
-  if (ctx.state == ManeuverState::FOLLOW) {
-    ctx.hold_clear = false;
-  }
-
   AvoidanceCommand command;
   command.lateral_offset = ctx.committed_offset;
-  command.clear_hazard = ctx.hold_clear;
-  // While releasing the collision stop, creep at the maneuver's speed factor;
-  // otherwise run at full speed. Derived from the latched state so it does not
-  // flicker frame-to-frame.
-  if (command.clear_hazard) {
-    command.speed_factor = (ctx.state == ManeuverState::IN_LANE_BYPASS)
-                               ? BYPASS_SPEED_FACTOR
-                               : SIDE_CLEARANCE_SPEED_FACTOR;
+
+  if (IsJunctionState(ctx.state)) {
+    // Junction gap-acceptance: the hazard release is derived directly from the
+    // node each frame (no latch). APPROACH holds at the yield point by leaving
+    // the collision stop in force (baseline behaviour); CROSS commits by
+    // releasing it. The commit is latched by the state machine (CROSS only
+    // exits once the junction is passed), so it does not flip back mid-crossing.
+    ctx.hold_clear = false;  // keep the lateral latch clear across junctions
+    if (ctx.state == ManeuverState::JUNCTION_CROSS) {
+      command.clear_hazard = true;
+      command.allow_moving_hazard = true;  // gap already accepted via TTC
+      command.speed_factor = 1.0f;
+    } else {
+      // JUNCTION_APPROACH / JUNCTION_YIELD: defer to the collision stage.
+      command.clear_hazard = false;
+      command.speed_factor = 1.0f;
+    }
   } else {
-    command.speed_factor = 1.0f;
+    // Lateral maneuvers: latch the hazard release across the maneuver. It engages
+    // once a stopped obstacle with a feasible plan is verified and stays engaged
+    // while a feasible lateral plan exists, so the noisy per-frame stopped flag
+    // cannot toggle the collision stop. It disengages on return to lane
+    // following.
+    if (NodeClearsHazard(ctx.state, perception)) {
+      ctx.hold_clear = true;
+    }
+    if (ctx.state == ManeuverState::FOLLOW) {
+      ctx.hold_clear = false;
+    }
+    command.clear_hazard = ctx.hold_clear;
+    if (ctx.state == ManeuverState::LANE_BORROW_ONCOMING &&
+        std::getenv("TM_LOG_PATH") != nullptr) {
+      const cg::Location el = simulation_state.GetLocation(actor_id);
+      std::cerr << "[TMBORROW] actor=" << actor_id << " loc=(" << el.x << "," << el.y
+                << ") offset=" << ctx.committed_offset << " target=" << perception.borrow_offset
+                << " clear=" << perception.borrow_oncoming
+                << " hazard_released=" << command.clear_hazard << std::endl;
+    }
+    if (command.clear_hazard) {
+      command.speed_factor = (ctx.state == ManeuverState::LANE_BORROW_ONCOMING)
+                                 ? BORROW_SPEED_FACTOR
+                                 : (ctx.state == ManeuverState::IN_LANE_BYPASS)
+                                       ? BYPASS_SPEED_FACTOR
+                                       : SIDE_CLEARANCE_SPEED_FACTOR;
+    } else {
+      command.speed_factor = 1.0f;
+    }
   }
   output_array.at(index) = command;
 }

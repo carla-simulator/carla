@@ -90,6 +90,15 @@ void Parameters::SetGlobalLateralAvoidanceRaycast(const bool enable) {
   global_lateral_avoidance_raycast.store(enable);
 }
 
+void Parameters::SetJunctionGapAcceptance(const ActorPtr &actor, const bool enable) {
+  const auto entry = std::make_pair(actor->GetId(), enable);
+  junction_gap_acceptance.AddEntry(entry);
+}
+
+void Parameters::SetGlobalJunctionGapAcceptance(const bool enable) {
+  global_junction_gap_acceptance.store(enable);
+}
+
 void Parameters::SetCollisionDetection(const ActorPtr &reference_actor, const ActorPtr &other_actor, const bool detect_collision) {
   const ActorId reference_id = reference_actor->GetId();
   const ActorId other_id = other_actor->GetId();
@@ -307,6 +316,16 @@ bool Parameters::GetLateralAvoidanceRaycast(const ActorId &actor_id) const {
 
   if (lateral_avoidance_raycast.Contains(actor_id)) {
     enable = lateral_avoidance_raycast.GetValue(actor_id);
+  }
+
+  return enable;
+}
+
+bool Parameters::GetJunctionGapAcceptance(const ActorId &actor_id) const {
+  bool enable = global_junction_gap_acceptance.load();
+
+  if (junction_gap_acceptance.Contains(actor_id)) {
+    enable = junction_gap_acceptance.GetValue(actor_id);
   }
 
   return enable;

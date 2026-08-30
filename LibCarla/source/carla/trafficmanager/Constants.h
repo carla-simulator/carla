@@ -43,6 +43,13 @@ namespace LateralAvoidance {
 static const float LOOKAHEAD_DISTANCE = 20.0f;
 // Lateral gap (m) to keep between the ego's side and an obstacle's edge.
 static const float CLEARANCE_MARGIN = 0.5f;
+// Extra lateral intrusion (m) attributed to a *stopped* obstacle when deciding
+// whether it blocks the corridor. A parked/stopped vehicle often has an open
+// door, mirror or protruding load that reaches past its bounding box into the
+// lane; treating its near edge as this much closer makes a car hugging the lane
+// boundary register as a blocker every frame (stable) instead of flickering at
+// the exact threshold. Moving traffic gets no such bonus.
+static const float STOPPED_INTRUSION_MARGIN = 0.4f;
 // Maximum change in applied lateral offset per cycle (m), rate-limiting the
 // steering target to avoid chatter.
 static const float MAX_OFFSET_RATE = 0.10f;
@@ -63,13 +70,30 @@ static const float BYPASS_SPEED_FACTOR = 0.6f;
 // ego keeps its clearance within the lane, so only a mild slowdown is needed --
 // a hard crawl looks unnatural.
 static const float SIDE_CLEARANCE_SPEED_FACTOR = 0.9f;
+// Target-velocity multiplier while borrowing the oncoming lane to pass a full
+// blockage (crossing into opposing traffic -> a firm, cautious crawl).
+static const float BORROW_SPEED_FACTOR = 0.4f;
+// Horizon (m) ahead over which the oncoming lane must be free of opposing
+// traffic before the ego commits to borrowing it.
+static const float BORROW_ONCOMING_CLEAR_DISTANCE = 40.0f;
+// Horizon (m) ahead over which a same-direction borrow lane must be free before
+// committing (shorter than the oncoming horizon -- no closing-speed doubling).
+static const float BORROW_SAME_DIR_CLEAR_DISTANCE = 20.0f;
+// Extra width (m) beyond each lane edge the static-prop raycast fan reaches, so
+// a barrier sitting in an adjacent borrow lane is seen before the ego commits to
+// borrowing into it (otherwise the borrow is blind to its own path).
+static const float BORROW_PROBE_WIDTH = 3.5f;
+// Longitudinal window (m) ahead over which a candidate borrow lane must be free
+// of static obstacles for the borrow path itself to count as clear.
+static const float BORROW_PATH_CLEAR_DISTANCE = 18.0f;
 // Hard cap (m/s) on the creep velocity used while steering around a stopped
 // obstacle with the collision stop released.
 static const float LATERAL_CREEP_MAX_SPEED = 8.0f;
 // Opt-in static-obstacle raycast: number of lateral sample rays cast across the
-// lane. Each is a forward ray at a fixed lateral offset; an odd count keeps one
-// ray on the centerline. Kept small -- rays are server RPCs.
-static const int RAYCAST_LATERAL_SAMPLES = 9;
+// lane plus the adjacent borrow corridors (BORROW_PROBE_WIDTH beyond each edge).
+// Each is a forward ray at a fixed lateral offset; an odd count keeps one ray on
+// the centerline. Kept modest -- rays are server RPCs, and the cast is throttled.
+static const int RAYCAST_LATERAL_SAMPLES = 15;
 // Height (m) above the sampled path point at which rays are cast, so they clear
 // the road surface and strike upright props (cones, barriers) rather than the
 // ground plane.
@@ -83,6 +107,37 @@ static const float RAYCAST_OBSTACLE_HALF = 0.25f;
 // and only re-cast this often, cutting the server RPC load ~Nx (at ~20 Hz, 10
 // ticks ~= 0.5 s -- well within the look-ahead horizon at road speeds).
 static const int RAYCAST_REFRESH_TICKS = 10;
+
+// --- Junction gap-acceptance (unprotected-turn creep-and-commit) -----------
+// Distance (m) ahead along the path within which an upcoming junction is
+// considered for the creep-and-commit maneuver.
+static const float JUNCTION_SCAN_DISTANCE = 20.0f;
+// Heading change (dot of approach vs exit forward, below this cosine) that marks
+// the junction maneuver as a turn crossing conflicting traffic (~25 deg).
+static const float JUNCTION_TURN_COS = 0.9f;
+// Distance (m) to the junction entrance at or inside which the ego holds and
+// waits rather than continuing to creep.
+static const float JUNCTION_HOLD_LINE = 6.0f;
+// Distance (m) to the junction within which -- once stopped/slowed at its yield
+// point -- the ego may accept a gap and commit. Covers the collision stage's
+// natural stop point so the commit can actually fire there.
+static const float JUNCTION_COMMIT_DISTANCE = 12.0f;
+// Radius (m) around the junction within which an approaching vehicle is treated
+// as potential conflicting traffic.
+static const float JUNCTION_CONFLICT_RANGE = 45.0f;
+// A conflicting vehicle must be moving faster than this (m/s) to matter; slower
+// ones are treated as stopped and negotiated by the normal collision logic.
+static const float JUNCTION_MOVING_THRESHOLD = 0.8f;
+// Minimum time-to-junction (s) of the nearest conflicting vehicle for the gap
+// to be accepted and the crossing committed. Sized with margin for the ego to
+// accelerate from a stop and clear the conflict zone.
+static const float JUNCTION_COMMIT_TTC = 5.0f;
+// Target-velocity multiplier while creeping up to the hold line (a slow roll
+// that signals intent without entering the conflict zone).
+static const float JUNCTION_CREEP_SPEED_FACTOR = 0.35f;
+// Same-direction rejection: a candidate whose heading aligns with the ego's
+// approach above this cosine is a leader/follower, not crossing traffic.
+static const float JUNCTION_SAME_DIR_COS = 0.3f;
 } // namespace LateralAvoidance
 
 namespace SpeedThreshold {

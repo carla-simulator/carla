@@ -58,6 +58,11 @@ private:
   AtomicMap<ActorId, bool> lateral_avoidance_raycast;
   /// Global static-obstacle raycast enable.
   std::atomic<bool> global_lateral_avoidance_raycast{false};
+  /// Junction gap-acceptance (creep-and-commit at unprotected turns) enable map
+  /// for individual vehicles. Off by default.
+  AtomicMap<ActorId, bool> junction_gap_acceptance;
+  /// Global junction gap-acceptance enable.
+  std::atomic<bool> global_junction_gap_acceptance{false};
   /// Map containing a set of actors to be ignored during collision detection.
   AtomicMap<ActorId, std::shared_ptr<AtomicActorSet>> ignore_collision;
   /// Map containing distance to leading vehicle command.
@@ -150,6 +155,13 @@ public:
 
   /// Method to enable/disable static-obstacle raycast sensing globally.
   void SetGlobalLateralAvoidanceRaycast(const bool enable);
+
+  /// Method to enable/disable junction gap-acceptance (creep-and-commit at
+  /// unprotected turns) for a vehicle. Disabled by default.
+  void SetJunctionGapAcceptance(const ActorPtr &actor, const bool enable);
+
+  /// Method to enable/disable junction gap-acceptance globally.
+  void SetGlobalJunctionGapAcceptance(const bool enable);
 
   /// Method to set collision detection rules between vehicles.
   void SetCollisionDetection(
@@ -254,6 +266,9 @@ public:
   /// Method to query whether static-obstacle raycast sensing is enabled for a
   /// vehicle.
   bool GetLateralAvoidanceRaycast(const ActorId &actor_id) const;
+
+  /// Method to query whether junction gap-acceptance is enabled for a vehicle.
+  bool GetJunctionGapAcceptance(const ActorId &actor_id) const;
 
   /// Method to query collision avoidance rule between a pair of vehicles.
   bool GetCollisionDetection(const ActorId &reference_actor_id, const ActorId &other_actor_id) const;

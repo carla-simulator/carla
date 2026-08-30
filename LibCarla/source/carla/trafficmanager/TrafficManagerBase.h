@@ -81,6 +81,12 @@ public:
   /// Method to enable/disable static-obstacle raycast sensing globally.
   virtual void SetGlobalLateralAvoidanceRaycast(const bool enable) = 0;
 
+  /// Method to enable/disable junction gap-acceptance for a vehicle.
+  virtual void SetJunctionGapAcceptance(const ActorPtr &actor, const bool enable) = 0;
+
+  /// Method to enable/disable junction gap-acceptance globally.
+  virtual void SetGlobalJunctionGapAcceptance(const bool enable) = 0;
+
   /// Method to set the automatic management of the vehicle lights
   virtual void SetUpdateVehicleLights(const ActorPtr &actor, const bool do_update) = 0;
 
@@ -172,6 +178,10 @@ public:
 
   /// Method to set limits for boundaries when respawning vehicles.
   virtual void SetMaxBoundaries(const float lower, const float upper) = 0;
+
+  /// Method to get the vehicle's estimated driving situation (SituationLabel as
+  /// int; see DataStructures.h). CLEAR (0) when unsupported/unknown.
+  virtual int GetVehicleSituation(const ActorId &actor_id) = 0;
 
   /// Method to get the vehicle's next action.
   virtual Action GetNextAction(const ActorId &actor_id) = 0;
