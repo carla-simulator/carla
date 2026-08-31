@@ -140,6 +140,24 @@ namespace detail {
 
     /// @}
     // =========================================================================
+    /// @name Content packs
+    // =========================================================================
+    /// @{
+
+    std::vector<rpc::ContentPackInfo> GetContentPacks() {
+      return _client.GetContentPacks();
+    }
+
+    rpc::ContentPackInfo MountContentPack(const std::string &path) {
+      return _client.MountContentPack(path);
+    }
+
+    bool UnmountContentPack(const std::string &name) {
+      return _client.UnmountContentPack(name);
+    }
+
+    /// @}
+    // =========================================================================
     /// @name Required files related methods
     // =========================================================================
     /// @{

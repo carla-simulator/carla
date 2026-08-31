@@ -35,6 +35,7 @@
 #include "DynamicRHI.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Misc/PackageName.h"
 #include <util/ue-header-guard-end.h>
 
 namespace cr = carla::road;
@@ -72,6 +73,17 @@ const FString ACarlaGameModeBase::GetRelativeMapPath() const
 
 const FString ACarlaGameModeBase::GetFullMapPath() const
 {
+  // Maps of mounted content packs live under their own mount point
+  // (/<Pack>/Maps/...), so resolve through the package name table instead of
+  // assuming everything hangs off the project content dir.
+  UWorld* World = GetWorld();
+  const FString PackagePath = FPaths::GetPath(World->GetPackage()->GetName());
+  FString Filename;
+  if (!PackagePath.StartsWith(TEXT("/Game/")) &&
+      FPackageName::TryConvertLongPackageNameToFilename(PackagePath, Filename))
+  {
+    return FPaths::ConvertRelativePathToFull(Filename);
+  }
   FString Path = GetRelativeMapPath();
   return FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()) + Path;
 }

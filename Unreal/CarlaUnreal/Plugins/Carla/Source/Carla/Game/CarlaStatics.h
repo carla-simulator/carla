@@ -50,6 +50,9 @@ public:
   UFUNCTION(BlueprintPure, Category="CARLA")
   static FString FindMapPath(const FString &MapName);
 
+  /// Drop the cached .umap walk (content pack mounted/unmounted).
+  static void InvalidateMapCache();
+
   UFUNCTION(BlueprintPure, Category="CARLA", meta=(WorldContext="WorldContextObject"))
   static ACarlaRecorder* GetRecorder(const UObject *WorldContextObject);
 

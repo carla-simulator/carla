@@ -47,4 +47,37 @@ public:
     unimplemented();
     return {};
   }
+
+  /// Drop every cached definition, parameter and loaded asset that refers to
+  /// content under @a MountPoint ("/<Pack>/"), so a content pack can be
+  /// unmounted; the dropped blueprints are gone until the next episode.
+  virtual void ReleaseContentPack(const FString &MountPoint) {}
+
+  /// True when the definition's class or any attribute/variation value
+  /// points at content under @a MountPoint.
+  static bool DefinitionReferencesPath(const FActorDefinition &Definition, const FString &MountPoint)
+  {
+    if (Definition.Class.Get() != nullptr && Definition.Class.Get()->GetPathName().StartsWith(MountPoint))
+    {
+      return true;
+    }
+    for (const FActorAttribute &Attribute : Definition.Attributes)
+    {
+      if (Attribute.Value.StartsWith(MountPoint))
+      {
+        return true;
+      }
+    }
+    for (const FActorVariation &Variation : Definition.Variations)
+    {
+      for (const FString &Value : Variation.RecommendedValues)
+      {
+        if (Value.StartsWith(MountPoint))
+        {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 };

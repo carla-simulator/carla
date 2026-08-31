@@ -298,6 +298,18 @@ namespace detail {
     return _pimpl->CallAndWait<std::vector<std::string>>("get_available_maps");
   }
 
+  std::vector<rpc::ContentPackInfo> Client::GetContentPacks() {
+    return _pimpl->CallAndWait<std::vector<rpc::ContentPackInfo>>("get_content_packs");
+  }
+
+  rpc::ContentPackInfo Client::MountContentPack(const std::string &path) {
+    return _pimpl->CallAndWait<rpc::ContentPackInfo>("mount_content_pack", path);
+  }
+
+  bool Client::UnmountContentPack(const std::string &name) {
+    return _pimpl->CallAndWait<bool>("unmount_content_pack", name);
+  }
+
   std::vector<rpc::ActorDefinition> Client::GetActorDefinitions() {
     return _pimpl->CallAndWait<std::vector<rpc::ActorDefinition>>("get_actor_definitions");
   }

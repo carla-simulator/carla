@@ -7,6 +7,7 @@
 
 #include "Carla/Actor/Factory/WalkerActorFactory.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/ContentPacks/ContentPackManager.h"
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Walker/WalkerBase.h"
@@ -20,8 +21,20 @@
 
 TArray<FActorDefinition> AWalkerActorFactory::GetDefinitions()
 {
+  // Rebuilt from scratch every episode, otherwise entries accumulate.
+  Definitions.Reset();
+  WalkersParams.Reset();
   LoadWalkerParametersArrayFromFile("WalkerParameters.json", WalkersParams);
-  
+  // Content packs: <Pack>/Content/Config/WalkerParameters.json, later packs
+  // override earlier entries with the same Id.
+  for (const FString &PackFile : UCarlaContentPackManager::FindPackCatalogFiles("WalkerParameters.json"))
+  {
+    TArray<FPedestrianParameters> PackWalkersParams;
+    LoadWalkerParametersArrayFromFile(PackFile, PackWalkersParams);
+    UCarlaContentPackManager::MergeCatalog(WalkersParams, PackWalkersParams,
+        [](const FPedestrianParameters &W) { return W.Id; });
+  }
+
   UActorBlueprintFunctionLibrary::MakePedestrianDefinitions(WalkersParams, Definitions);
   return Definitions;
 }
@@ -70,6 +83,14 @@ FActorSpawnResult AWalkerActorFactory::SpawnActor(
 
   SpawnResult.Status = EActorSpawnResultStatus::UnknownError;
   return SpawnResult;
+}
+
+void AWalkerActorFactory::ReleaseContentPack(const FString &MountPoint)
+{
+  Definitions.RemoveAll([&](const FActorDefinition &D) { return DefinitionReferencesPath(D, MountPoint); });
+  WalkersParams.RemoveAll([&](const FPedestrianParameters &W) {
+    return W.Class.ToSoftObjectPath().ToString().StartsWith(MountPoint);
+  });
 }
 
 TSharedPtr<FJsonObject> AWalkerActorFactory::FWalkerParametersToJsonObject(const FPedestrianParameters& WalkerParams)
@@ -295,7 +316,11 @@ bool AWalkerActorFactory::JsonToFWalkerParametersArray(const FString& JsonString
 void AWalkerActorFactory::LoadWalkerParametersArrayFromFile(const FString& FileName, TArray<FPedestrianParameters>& OutWalkerParamsArray)
 {
   FString JsonString;
-  FString FilePath = FPaths::ProjectContentDir() + TEXT("Carla/Config/") + FileName;
+  // A relative name is resolved against the project catalog dir; an absolute
+  // path (content pack catalogs) is used as is.
+  FString FilePath = FPaths::IsRelative(FileName)
+      ? FPaths::ProjectContentDir() + TEXT("Carla/Config/") + FileName
+      : FileName;
   FString JsonContent;
 
   // Load the JSON file content into an FString

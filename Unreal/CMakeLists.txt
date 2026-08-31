@@ -432,6 +432,35 @@ function (
     carla_message ("package(${PACKAGE_CONFIGURATION}): cooking only ${CARLA_MAPS_TO_COOK}")
   endif ()
 
+  # Content packs (Plugins/Packs/*) are cooked as DLC "based on" this release:
+  # the cook writes Unreal/CarlaUnreal/Releases/<release>/<Platform>/
+  # (AssetRegistry.bin + pak/container lists) which a pack cook needs as its
+  # base. The release name is stamped into the package (CarlaUnreal/BaseRelease)
+  # and the Releases/<release> dir is archived next to the package tarball.
+  if ("${CARLA_BASE_RELEASE}" STREQUAL "")
+    set (CARLA_BASE_RELEASE_NAME carla-${CARLA_VERSION}-${UE_SYSTEM_NAME})
+  else ()
+    set (CARLA_BASE_RELEASE_NAME ${CARLA_BASE_RELEASE})
+  endif ()
+  list (APPEND CARLA_PACKAGE_EXTRA_UAT_ARGS "-createreleaseversion=${CARLA_BASE_RELEASE_NAME}")
+
+  if (CARLA_IGNORE_COOK_ERRORS)
+    list (APPEND CARLA_PACKAGE_EXTRA_UAT_ARGS "-IgnoreCookErrors")
+    carla_warning ("package(${PACKAGE_CONFIGURATION}): CARLA_IGNORE_COOK_ERRORS is ON, cook errors will not fail the package target")
+  endif ()
+  set (CARLA_RELEASES_PATH ${CARLA_UE_PROJECT_PATH}/../Releases)
+  cmake_path (NORMAL_PATH CARLA_RELEASES_PATH)
+  set (CARLA_PACKS_ROOT ${CARLA_UE_PROJECT_PATH}/../Plugins/Packs)
+  cmake_path (NORMAL_PATH CARLA_PACKS_ROOT)
+  set (
+    CARLA_PACK_LEAK_IGNORE
+    ""
+    CACHE STRING
+    "Content pack names (semicolon-separated) the post-cook leak check \
+(Package/CheckNoPackLeak.cmake) skips; only for a pack whose name equals a \
+base content folder."
+  )
+
   carla_add_custom_target (
     ${TARGET_NAME}
     "Create a CARLA package in ${PACKAGE_CONFIGURATION} mode."
@@ -491,8 +520,35 @@ function (
       -DCARLA_BUILD_PATH=${CARLA_BUILD_PATH}
       -DCARLA_WORKSPACE_PATH=${CARLA_WORKSPACE_PATH}
       -DCARLA_PACKAGE_ARCHIVE_PATH=${CARLA_PACKAGE_ARCHIVE_PATH}
+      -DCARLA_UE_PROJECT_PATH=${CARLA_UE_PROJECT_PATH}
       -P${CMAKE_CURRENT_SOURCE_DIR}/Package/CopyCarlaAdditionalFiles.cmake
     COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE COPYING CARLA ADDITIONAL FILES COMPLETED **********"
+
+    # Fails the package if a content pack (Plugins/Packs/*) was cooked into the
+    # base: /<Pack>/ in the cooked registries or Plugins/Packs/<Pack>/ staged.
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE CONTENT PACK LEAK CHECK STARTED **********"
+    COMMAND ${CMAKE_COMMAND}
+      -DCARLA_PACKS_ROOT=${CARLA_PACKS_ROOT}
+      -DCARLA_BASE_RELEASE_NAME=${CARLA_BASE_RELEASE_NAME}
+      -DCARLA_RELEASES_PATH=${CARLA_RELEASES_PATH}
+      -DCARLA_PACKAGE_STAGING_PATH=${CARLA_PACKAGE_STAGING_PATH}
+      -DCARLA_PACKAGE_ARCHIVE_PATH=${CARLA_PACKAGE_ARCHIVE_PATH}
+      -DUE_SYSTEM_NAME=${UE_SYSTEM_NAME}
+      -DCARLA_PACK_LEAK_IGNORE=${CARLA_PACK_LEAK_IGNORE}
+      -DCARLA_CONTENT_PACKS_TOOL=${CARLA_WORKSPACE_PATH}/Util/ContentPacks/carla_pack.py
+      -DCARLA_CONTENT_PACKS_PYTHON=${CARLA_CONTENT_PACKS_PYTHON}
+      -P${CMAKE_CURRENT_SOURCE_DIR}/Package/CheckNoPackLeak.cmake
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE CONTENT PACK LEAK CHECK COMPLETED **********"
+
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE BASE RELEASE METADATA STARTED **********"
+    COMMAND ${CMAKE_COMMAND}
+      -DCARLA_BASE_RELEASE_NAME=${CARLA_BASE_RELEASE_NAME}
+      -DCARLA_RELEASES_PATH=${CARLA_RELEASES_PATH}
+      -DCARLA_PACKAGE_PATH=${CARLA_PACKAGE_PATH}
+      -DCARLA_PACKAGE_ARCHIVE_PATH=${CARLA_PACKAGE_ARCHIVE_PATH}
+      -DUE_SYSTEM_NAME=${UE_SYSTEM_NAME}
+      -P${CMAKE_CURRENT_SOURCE_DIR}/Package/CreateBaseReleaseMetadata.cmake
+    COMMAND ${CMAKE_COMMAND} -E echo "********** PACKAGE BASE RELEASE METADATA COMPLETED **********"
   )
 
   if (NOT ${CARLA_UNREAL_PACKAGE_NO_COMPRESSION})

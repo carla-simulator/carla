@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla/Game/CarlaEpisode.h"
+#include "Carla/OpenDrive/OpenDrive.h"
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Sensor/Sensor.h"
@@ -25,6 +26,8 @@
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
+#include "Async/Async.h"
+#include "HAL/PlatformProcess.h"
 #include "Components/WorldPartitionStreamingSourceComponent.h"
 #include "WorldPartition/WorldPartition.h"
 #include "WorldPartition/WorldPartitionSubsystem.h"
@@ -56,6 +59,59 @@ static FString BuildRecastBuilderFile()
         return Path;
     else
         return DefaultRecastBuilderPath;
+}
+
+// State of the background RecastBuilder run of the last generated OpenDRIVE
+// world (there is at most one). Readers of the navmesh wait on it.
+static FCriticalSection GNavBuildLock;
+static bool GNavBuildPending = false;
+static bool GNavBuildSucceeded = false;
+
+bool UCarlaEpisode::WaitForPendingNavigationBuild(double TimeoutSeconds)
+{
+  const double Start = FPlatformTime::Seconds();
+  bool bLogged = false;
+  for (;;)
+  {
+    {
+      FScopeLock Lock(&GNavBuildLock);
+      if (!GNavBuildPending)
+      {
+        return GNavBuildSucceeded;
+      }
+    }
+    if (!bLogged)
+    {
+      UE_LOG(LogCarla, Log, TEXT("Waiting for RecastBuilder to finish the pedestrian navigation (up to %.0f s)"),
+          TimeoutSeconds);
+      bLogged = true;
+    }
+    if (FPlatformTime::Seconds() - Start > TimeoutSeconds)
+    {
+      UE_LOG(LogCarla, Error, TEXT("RecastBuilder did not finish within %.0f s; "
+          "the pedestrian navigation of this OpenDRIVE world is not available yet"), TimeoutSeconds);
+      return false;
+    }
+    FPlatformProcess::Sleep(0.05f);
+  }
+}
+
+void UCarlaEpisode::ClearGeneratedWorldFiles()
+{
+  // Saved/ copies of the generated world outlive the process; a stale pair
+  // (or a .bin from another .xodr) must never shadow the cooked stub.
+  const FString SavedDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir());
+  for (const FString &File : {
+      SavedDir / TEXT("OpenDrive/OpenDriveMap.xodr"),
+      SavedDir / TEXT("Nav/OpenDriveMap.obj"),
+      SavedDir / TEXT("Nav/OpenDriveMap.bin")})
+  {
+    if (IFileManager::Get().FileExists(*File))
+    {
+      IFileManager::Get().Delete(*File, false, true, true);
+      UE_LOG(LogCarla, Log, TEXT("Removed stale generated-world file '%s'"), *File);
+    }
+  }
 }
 
 static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
@@ -165,8 +221,15 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
   const auto CrosswalksMesh = CarlaMap->GetAllCrosswalkMesh();
   const auto RecastOBJ = (RoadMesh + CrosswalksMesh).GenerateOBJForRecast();
 
+  // Both files go to Saved/: in a packaged build the content dir is backed
+  // by the pak and not writable. The readers (UOpenDrive::FindPathToXODRFile,
+  // FNavigationMesh::Load) look in Saved/ first. RecastBuilder writes the
+  // .bin next to the .obj. Start from a clean slate so a .bin can never
+  // belong to a different .xodr.
+  WaitForPendingNavigationBuild(60.0);
+  ClearGeneratedWorldFiles();
   const FString AbsoluteOBJPath = FPaths::ConvertRelativePathToFull(
-      FPaths::ProjectContentDir() + "Carla/Maps/Nav/OpenDriveMap.obj");
+      FPaths::ProjectSavedDir() / TEXT("Nav/OpenDriveMap.obj"));
 
   // Store the OBJ string to a file in order to that RecastBuilder can load it
   FFileHelper::SaveStringToFile(
@@ -175,8 +238,7 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
       FFileHelper::EEncodingOptions::ForceUTF8,
       &IFileManager::Get());
 
-  const FString AbsoluteXODRPath = FPaths::ConvertRelativePathToFull(
-      FPaths::ProjectContentDir() + "Carla/Maps/OpenDrive/OpenDriveMap.xodr");
+  const FString AbsoluteXODRPath = UOpenDrive::GetSavedXODRPath(TEXT("OpenDriveMap"));
 
   // Copy the OpenDrive as a file in the serverside
   FFileHelper::SaveStringToFile(
@@ -205,11 +267,71 @@ bool UCarlaEpisode::LoadNewOpendriveEpisode(
   if (FPaths::FileExists(AbsoluteRecastBuilderPath) &&
       Params.enable_pedestrian_navigation)
   {
+    // RecastBuilder writes <obj stem>.bin next to the .obj and always exits
+    // 0, so the .bin is the only success signal: drop the previous one first
+    // so a failed build can never hand out last session's navmesh, then watch
+    // the process off the game thread and log the outcome loudly.
+    const FString AbsoluteBinPath = FPaths::ChangeExtension(AbsoluteOBJPath, TEXT("bin"));
+    IFileManager::Get().Delete(*AbsoluteBinPath, false, true, true);
+
+    void *PipeRead = nullptr;
+    void *PipeWrite = nullptr;
+    FPlatformProcess::CreatePipe(PipeRead, PipeWrite);
+
     /// @todo this can take too long to finish, clients need a method
     /// to know if the navigation is available or not.
-    FPlatformProcess::CreateProc(
+    FProcHandle RecastHandle = FPlatformProcess::CreateProc(
         *AbsoluteRecastBuilderPath, *AbsoluteOBJPath,
-        true, true, true, nullptr, 0, nullptr, nullptr);
+        true, true, true, nullptr, 0, nullptr, PipeWrite, nullptr, PipeWrite);
+    if (!RecastHandle.IsValid())
+    {
+      FPlatformProcess::ClosePipe(PipeRead, PipeWrite);
+      UE_LOG(LogCarla, Error, TEXT("RecastBuilder could not be launched ('%s' '%s'); "
+          "no pedestrian navigation for this OpenDRIVE world."),
+          *AbsoluteRecastBuilderPath, *AbsoluteOBJPath);
+    }
+    else
+    {
+      UE_LOG(LogCarla, Log, TEXT("RecastBuilder started: '%s' '%s' -> '%s'"),
+          *AbsoluteRecastBuilderPath, *AbsoluteOBJPath, *AbsoluteBinPath);
+      {
+        FScopeLock Lock(&GNavBuildLock);
+        GNavBuildPending = true;
+        GNavBuildSucceeded = false;
+      }
+      Async(EAsyncExecution::Thread,
+          [RecastHandle, PipeRead, PipeWrite, AbsoluteBinPath, AbsoluteRecastBuilderPath]() mutable
+      {
+        FString Output;
+        while (FPlatformProcess::IsProcRunning(RecastHandle))
+        {
+          Output += FPlatformProcess::ReadPipe(PipeRead);
+          FPlatformProcess::Sleep(0.1f);
+        }
+        Output += FPlatformProcess::ReadPipe(PipeRead);
+        int32 ReturnCode = -1;
+        FPlatformProcess::GetProcReturnCode(RecastHandle, &ReturnCode);
+        FPlatformProcess::CloseProc(RecastHandle);
+        FPlatformProcess::ClosePipe(PipeRead, PipeWrite);
+        Output.TrimEndInline();
+        const bool bSucceeded = ReturnCode == 0 && FPaths::FileExists(AbsoluteBinPath);
+        if (!bSucceeded)
+        {
+          UE_LOG(LogCarla, Error, TEXT("RecastBuilder failed (exit code %d, '%s' %s): no pedestrian "
+              "navigation for this OpenDRIVE world. Output:\n%s"),
+              ReturnCode, *AbsoluteBinPath,
+              FPaths::FileExists(AbsoluteBinPath) ? TEXT("written") : TEXT("missing"), *Output);
+        }
+        else
+        {
+          UE_LOG(LogCarla, Log, TEXT("RecastBuilder finished: navmesh '%s' ready. Output:\n%s"),
+              *AbsoluteBinPath, *Output);
+        }
+        FScopeLock Lock(&GNavBuildLock);
+        GNavBuildPending = false;
+        GNavBuildSucceeded = bSucceeded;
+      });
+    }
   }
   else
   {

@@ -46,6 +46,8 @@ private:
   static bool JsonToFVehicleParameters(const TSharedPtr<FJsonObject> JsonObject, FVehicleParameters& OutVehicleParams);
   static bool JsonToFVehicleParametersArray(const FString& JsonString, TArray<FVehicleParameters>& OutVehicleParamsArray);
 
+  virtual void ReleaseContentPack(const FString &MountPoint) override;
+
 protected:
 
   UPROPERTY(EditAnywhere)

@@ -21,6 +21,7 @@ DEFINE_LOG_CATEGORY(LogCarlaServer);
 void FCarlaModule::StartupModule()
 {
     MountExternalPackageRoots();
+    MountEditorContentPacks();
 	AddShaderSearchPaths();
 	RegisterSettings();
 	LoadChronoDll();
@@ -84,6 +85,67 @@ void FCarlaModule::MountExternalPackageRoots()
             }
         }
     }
+}
+
+void FCarlaModule::MountEditorContentPacks()
+{
+#if WITH_EDITOR
+    // Content packs are authored under Plugins/Packs/<Pack>/ with
+    // "ExplicitlyLoaded": true, which the stock plugin manager leaves
+    // unmounted. The interactive editor needs the pack content visible for
+    // authoring, so mount them here. Commandlets (the cooker) are left alone:
+    // the DLC cook enables the pack explicitly through the packer, and a base
+    // cook must not see pack content at all. Game processes use
+    // UCarlaContentPackManager instead.
+    if (!GIsEditor || IsRunningCommandlet())
+    {
+        return;
+    }
+    const FString PacksDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectPluginsDir() / TEXT("Packs"));
+    TArray<FString> PackDirs;
+    IFileManager::Get().FindFiles(PackDirs, *(PacksDir / TEXT("*")), false, true);
+    PackDirs.Sort();
+    IPluginManager& PluginManager = IPluginManager::Get();
+    for (const FString& PackName : PackDirs)
+    {
+        const FString PluginFile = PacksDir / PackName / (PackName + TEXT(".uplugin"));
+        if (!FPaths::FileExists(PluginFile))
+        {
+            continue;
+        }
+        TSharedPtr<IPlugin> Plugin = PluginManager.FindPlugin(PackName);
+        if (!Plugin.IsValid())
+        {
+            FText FailReason;
+            if (!PluginManager.AddToPluginsList(PluginFile, &FailReason))
+            {
+                UE_LOG(LogCarla, Warning, TEXT("Content pack plugin '%s' not registered: %s"),
+                    *PluginFile, *FailReason.ToString());
+                continue;
+            }
+            Plugin = PluginManager.FindPlugin(PackName);
+        }
+        if (!Plugin.IsValid() || Plugin->IsMounted())
+        {
+            continue;
+        }
+        if (!Plugin->GetDescriptor().bExplicitlyLoaded)
+        {
+            // Regular plugin: the plugin manager enables it by its own rules.
+            continue;
+        }
+        if (PluginManager.MountExplicitlyLoadedPlugin(PackName))
+        {
+            UE_LOG(LogCarla, Log, TEXT("Content pack plugin '%s' mounted for the editor/cooker (%s)"),
+                *PackName, *PluginFile);
+        }
+        else
+        {
+            UE_LOG(LogCarla, Warning, TEXT("Content pack plugin '%s' could not be mounted (%s)"),
+                *PackName, *PluginFile);
+        }
+    }
+#endif // WITH_EDITOR
 }
 
 void FCarlaModule::AddShaderSearchPaths()

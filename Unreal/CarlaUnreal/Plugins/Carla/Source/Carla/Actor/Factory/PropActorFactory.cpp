@@ -7,6 +7,8 @@
 
 #include "Carla/Actor/Factory/PropActorFactory.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/Actor/CarlaBlueprintRegistry.h"
+#include "Carla/ContentPacks/ContentPackManager.h"
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Game/CarlaEpisode.h"
 
@@ -21,7 +23,28 @@
 
 TArray<FActorDefinition> APropActorFactory::GetDefinitions()
 {
+  // Rebuilt from scratch every episode, otherwise entries accumulate.
+  Definitions.Reset();
+  PropsParams.Reset();
   LoadPropParametersArrayFromFile("PropParameters.json", PropsParams);
+  // Content packs: <Pack>/Content/Config/PropParameters.json, later packs
+  // override earlier entries with the same Name.
+  for (const FString &PackFile : UCarlaContentPackManager::FindPackCatalogFiles("PropParameters.json"))
+  {
+    TArray<FPropParameters> PackPropsParams;
+    LoadPropParametersArrayFromFile(PackFile, PackPropsParams);
+    UCarlaContentPackManager::MergeCatalog(PropsParams, PackPropsParams,
+        [](const FPropParameters &P) { return P.Name; });
+  }
+  // Content packs may also ship the registry format
+  // (<Pack>/Content/Config/<Pack>.Package.json: {"props": [{name, path, size}]}).
+  {
+    TArray<FPropParameters> PackRegistryProps;
+    UCarlaBlueprintRegistry::LoadPropDefinitionsFromFiles(
+        UCarlaBlueprintRegistry::FindContentPackPropFiles(), PackRegistryProps);
+    UCarlaContentPackManager::MergeCatalog(PropsParams, PackRegistryProps,
+        [](const FPropParameters &P) { return P.Name; });
+  }
 
   MeshCacheByPath.Reset();
   for (const FPropParameters& Params : PropsParams)
@@ -142,6 +165,21 @@ FActorSpawnResult APropActorFactory::SpawnActor(
   PostProcessProp(StaticMeshActor, ActorDescription);
   SpawnResult.Status = EActorSpawnResultStatus::Success;
   return SpawnResult;
+}
+
+void APropActorFactory::ReleaseContentPack(const FString &MountPoint)
+{
+  Definitions.RemoveAll([&](const FActorDefinition &D) { return DefinitionReferencesPath(D, MountPoint); });
+  PropsParams.RemoveAll([&](const FPropParameters &P) {
+    return P.Mesh.ToSoftObjectPath().ToString().StartsWith(MountPoint);
+  });
+  for (auto It = MeshCacheByPath.CreateIterator(); It; ++It)
+  {
+    if (It.Key().StartsWith(MountPoint))
+    {
+      It.RemoveCurrent();
+    }
+  }
 }
 
 TSharedPtr<FJsonObject> APropActorFactory::FPropParametersToJsonObject(const FPropParameters& PropParams)
@@ -296,7 +334,11 @@ bool APropActorFactory::JsonToFPropParametersArray(const FString& JsonString, TA
 void APropActorFactory::LoadPropParametersArrayFromFile(const FString& FileName, TArray<FPropParameters>& OutPropParamsArray)
 {
   FString JsonString;
-  FString FilePath = FPaths::ProjectContentDir() + TEXT("Carla/Config/") + FileName;
+  // A relative name is resolved against the project catalog dir; an absolute
+  // path (content pack catalogs) is used as is.
+  FString FilePath = FPaths::IsRelative(FileName)
+      ? FPaths::ProjectContentDir() + TEXT("Carla/Config/") + FileName
+      : FileName;
   FString JsonContent;
 
   // Load the JSON file content into an FString

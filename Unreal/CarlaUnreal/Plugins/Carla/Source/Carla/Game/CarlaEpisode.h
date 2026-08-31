@@ -94,6 +94,15 @@ public:
 
   /// Return the name of the map loaded in this episode.
   UFUNCTION(BlueprintCallable)
+  /// Block (game thread, bounded) until the RecastBuilder run started by the
+  /// last generate_opendrive_world has finished. Returns whether the navmesh
+  /// was built (true when no build is pending).
+  static bool WaitForPendingNavigationBuild(double TimeoutSeconds);
+
+  /// Delete Saved/OpenDrive|Nav/OpenDriveMap.* left by a previous generated
+  /// world (server startup and before each generation).
+  static void ClearGeneratedWorldFiles();
+
   const FString &GetMapName() const
   {
     return MapName;

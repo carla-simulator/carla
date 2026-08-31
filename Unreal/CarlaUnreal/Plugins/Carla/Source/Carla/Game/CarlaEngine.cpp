@@ -6,6 +6,7 @@
 
 #include "Carla/Game/CarlaEngine.h"
 #include "Carla.h"
+#include "Carla/ContentPacks/ContentPackManager.h"
 #include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
 #include "Carla/Game/CarlaStatics.h"
@@ -89,6 +90,17 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
   if (!bIsRunning)
   {
+    // Content packs are discovered when the engine subsystem initializes;
+    // this is the no-op safety net that guarantees they are mounted before
+    // the RPC server answers its first get_available_maps.
+    if (UCarlaContentPackManager *ContentPacks = UCarlaContentPackManager::Get())
+    {
+      ContentPacks->Discover();
+    }
+    // A previous run's generated OpenDRIVE files must not shadow the cooked
+    // OpenDriveMap stub in this one.
+    UCarlaEpisode::ClearGeneratedWorldFiles();
+
     const auto StreamingPort = Settings.StreamingPort;
     const auto SecondaryPort = Settings.SecondaryPort;
     const auto PrimaryIP     = Settings.PrimaryIP;
