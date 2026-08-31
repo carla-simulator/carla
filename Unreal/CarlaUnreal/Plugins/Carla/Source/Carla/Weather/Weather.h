@@ -54,6 +54,16 @@ public:
   /// Update the day night cycle
   void SetDayNightCycle(const bool &active);
 
+  /// Pushes Weather into a single ASkyBase rig (sun/fog/clouds/atmosphere/
+  /// exposure) and runs its blueprint refresh functions -- everything
+  /// PushWeatherToSky does per-actor, factored out so it works on any sky
+  /// actor directly, without requiring an AWeather instance to exist in the
+  /// world. Used by ASkyBase::RefreshWeather/LoadPreset for editor-time
+  /// preview when no BP_CarlaWeather is placed in the level, and by
+  /// PushWeatherToSky itself for the full runtime path.
+  UFUNCTION(BlueprintCallable, Category = "Weather")
+  static void ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters& Weather);
+
 protected:
 
 #if WITH_EDITOR

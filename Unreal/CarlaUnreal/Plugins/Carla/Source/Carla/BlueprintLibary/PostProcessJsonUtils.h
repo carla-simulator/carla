@@ -47,6 +47,13 @@ public:
     UFUNCTION(BlueprintCallable, Category = "PostProcess|JSON")
     static bool LoadAllPostProcessFromJsonToSceneCapture(USceneCaptureComponent2D* SensorCamera, const FString& FileName);
 
+    // Names (without ".json") of every profile currently saved under
+    // Content/Carla/Config/PostProcess/. Backs the "Get Options" dropdown on
+    // APostProcessProfileVolume::ProfileName so artists can pick an existing
+    // profile or type a new one to create it on the next SaveProfile.
+    UFUNCTION(BlueprintCallable, BlueprintPure, Category = "PostProcess|JSON")
+    static TArray<FString> GetAvailablePostProcessProfileNames();
+
     static FString GetPostProcessConfigPath(const FString& FileName)
     {
         return FPaths::ProjectContentDir() / TEXT("Carla/Config/PostProcess/") + FileName + TEXT(".json");
