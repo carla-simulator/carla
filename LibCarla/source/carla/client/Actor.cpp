@@ -169,16 +169,13 @@ namespace client {
   }
 
   bool Actor::Destroy() {
-    rpc::ActorState actor_state = GetActorState();
-    bool result = false;
-    if (actor_state != rpc::ActorState::Invalid) {
-      result = GetEpisode().Lock()->DestroyActor(*this);
-    } else {
-      log_warning(
-          "attempting to destroy an actor that is already dead:",
-          GetDisplayId());
-    }
-    return result;
+    // The actor state known to the client comes from the last world snapshot
+    // received, which cannot list an actor spawned after it was taken (until
+    // the next frame in asynchronous mode, until the next tick in synchronous
+    // mode). A missing entry is therefore indistinguishable from a dead actor
+    // here, so the server decides: it rejects unknown ids with "unable to
+    // destroy actor: not found" and this returns false.
+    return GetEpisode().Lock()->DestroyActor(*this);
   }
 
 } // namespace client

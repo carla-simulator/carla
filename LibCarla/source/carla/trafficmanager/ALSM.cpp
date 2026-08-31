@@ -332,7 +332,9 @@ void ALSM::UpdateUnregisteredActorsData() {
                                            actor_location + cg::Location(-extent.x * heading_vector)};
       for (cg::Location &vertex: corners) {
         SimpleWaypointPtr nearest_waypoint = local_map->GetWaypoint(vertex);
-        nearest_waypoints.push_back(nearest_waypoint);
+        if (nearest_waypoint != nullptr) {
+          nearest_waypoints.push_back(nearest_waypoint);
+        }
       }
     }
     else if (type_id.front() == 'w') {
@@ -350,7 +352,9 @@ void ALSM::UpdateUnregisteredActorsData() {
 
       // Identify occupied waypoints.
       SimpleWaypointPtr nearest_waypoint = local_map->GetWaypoint(actor_location);
-      nearest_waypoints.push_back(nearest_waypoint);
+      if (nearest_waypoint != nullptr) {
+        nearest_waypoints.push_back(nearest_waypoint);
+      }
     }
 
     track_traffic.UpdateUnregisteredGridPosition(actor_id, nearest_waypoints);

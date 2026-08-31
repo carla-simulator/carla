@@ -12,6 +12,8 @@
 #include "carla/client/detail/EpisodeProxy.h"
 #include "carla/rpc/Actor.h"
 
+#include <optional>
+
 namespace carla {
 namespace client {
 namespace detail {
@@ -53,6 +55,21 @@ namespace detail {
       return _attributes;
     }
 
+    /// Whether this handle was returned by a spawn call of this client, as
+    /// opposed to being looked up (get_actor, get_actors, parent, spectator).
+    /// Only a spawn handle knows that the actor exists without having seen it
+    /// in a snapshot; see Simulator::GetActorState.
+    bool WasSpawnedByThisClient() const {
+      return _spawn_frame.has_value();
+    }
+
+    /// Frame of the last world snapshot this client had received when the
+    /// spawn of this actor was acknowledged by the server; unset for looked-up
+    /// handles. No snapshot up to this frame can contain the actor yet.
+    uint64_t GetSpawnFrame() const {
+      return _spawn_frame.value_or(0u);
+    }
+
   protected:
 
     explicit ActorState(rpc::Actor description, EpisodeProxy episode);
@@ -84,6 +101,8 @@ namespace detail {
     std::string _display_id;
 
     std::vector<ActorAttributeValue> _attributes;
+
+    std::optional<uint64_t> _spawn_frame;
   };
 
 } // namespace detail

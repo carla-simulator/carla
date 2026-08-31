@@ -481,6 +481,13 @@ namespace traffic_manager {
 
     rtree.query(bgi::nearest(query_point, 1), std::back_inserter(result_1));
 
+    // A map without a single drivable waypoint (EmptyMap, or an OpenDRIVE file
+    // with no road) leaves the tree empty and the query without a result.
+    // Callers must handle "there is nowhere to drive here".
+    if (result_1.empty()) {
+      return nullptr;
+    }
+
     SpatialTreeEntry &closest_entry = result_1.front();
     SimpleWaypointPtr &closest_point = closest_entry.second;
 

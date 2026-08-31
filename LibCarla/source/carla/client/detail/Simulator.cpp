@@ -392,6 +392,9 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     _episode->RegisterActor(actor);
     const auto gca = (gc == GarbageCollectionPolicy::Inherit ? _gc_policy : gc);
     auto result = ActorFactory::MakeActor(GetCurrentEpisode(), actor, gca);
+    // Snapshots up to (and including) this frame predate the spawn; see
+    // Simulator::GetActorState.
+    static_cast<ActorState &>(*result)._spawn_frame = _episode->GetState()->GetFrame();
     log_debug(
         result->GetDisplayId(),
         "created",

@@ -447,8 +447,28 @@ namespace detail {
       return GetActorSnapshot(actor.GetId());
     }
 
+    /// State of @a actor according to the latest world snapshot.
+    ///
+    /// An actor spawned by this client is not part of any snapshot produced
+    /// before the spawn was processed (asynchronous mode: until the next frame
+    /// arrives; synchronous mode: until the next tick). Reporting such an actor
+    /// as Invalid made is_alive/is_active False right after spawn_actor(), so
+    /// while the latest snapshot is not newer than the frame recorded at spawn
+    /// time the actor is reported Active. Any snapshot newer than that frame
+    /// is authoritative: an actor missing from it is gone (Invalid). A handle
+    /// that did not come from a spawn call gets no such grace: it is only ever
+    /// as good as the snapshots, including before the first one arrives.
     rpc::ActorState GetActorState(const Actor &actor) const {
-      return GetActorSnapshot(actor).actor_state;
+      DEBUG_ASSERT(_episode != nullptr);
+      const auto state = _episode->GetState();
+      const auto snapshot = state->GetActorSnapshotIfPresent(actor.GetId());
+      if (snapshot.has_value()) {
+        return snapshot->actor_state;
+      }
+      if (actor.WasSpawnedByThisClient() && state->GetFrame() <= actor.GetSpawnFrame()) {
+        return rpc::ActorState::Active;
+      }
+      return rpc::ActorState::Invalid;
     }
 
     geom::Location GetActorLocation(const Actor &actor) const {
