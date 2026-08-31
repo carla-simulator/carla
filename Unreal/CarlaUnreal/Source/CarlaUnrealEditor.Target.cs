@@ -22,6 +22,9 @@ public class CarlaUnrealEditorTarget : TargetRules
         IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
         Type = TargetType.Editor;
 
+        bOverrideBuildEnvironment = true;
+        bWithLiveCoding = false;
+
         ExtraModuleNames.Add("CarlaUnreal");
 
         LogFlagStatus("Unity build", EnableUnityBuild);
