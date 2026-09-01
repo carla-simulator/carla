@@ -355,7 +355,9 @@ void FCarlaServer::FPimpl::BindActions()
 
   // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  BIND_ASYNC(get_available_maps) << [this]() -> R<std::vector<std::string>>
+  // BIND_SYNC: GetAllMapNames enumerates the AssetRegistry, which UE 5.8 asserts must
+  // happen on the game thread (AssetRegistry.cpp:2518) - async here crashed the server.
+  BIND_SYNC(get_available_maps) << [this]() -> R<std::vector<std::string>>
   {
     const auto MapNames = UCarlaStatics::GetAllMapNames();
     std::vector<std::string> result;
