@@ -138,7 +138,6 @@ FActorSpawnResult APropActorFactory::SpawnActor(
     return SpawnResult;
   }
 
-  StaticMeshComponent->SetMobility(EComponentMobility::Static);
   PostProcessProp(StaticMeshActor, ActorDescription);
   SpawnResult.Status = EActorSpawnResultStatus::Success;
   return SpawnResult;
