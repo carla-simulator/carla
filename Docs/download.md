@@ -12,10 +12,10 @@ This is an automated build with the latest changes pushed to our `ue4-dev`
 branch. It contains the very latest fixes and features that will be part of the
 next release, but also some experimental changes. Use at your own risk!
 
-- [CARLA Nightly Build (Linux)](https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/Dev/CARLA_Latest.tar.gz)
-- [AdditionalMaps Nightly Build (Linux)](https://carla-releases.s3.us-east-005.backblazeb2.com/Linux/Dev/AdditionalMaps_Latest.tar.gz)
-- [CARLA Nightly Build (Windows)](https://carla-releases.s3.us-east-005.backblazeb2.com/Windows/Dev/CARLA_Latest.zip)
-- [AdditionalMaps Nightly Build (Windows)](https://carla-releases.s3.us-east-005.backblazeb2.com/Windows/Dev/AdditionalMaps_Latest.zip)
+- [CARLA Nightly Build (Linux)](https://downloads.carlasim.com/Linux/Dev/CARLA_Latest.tar.gz)
+- [AdditionalMaps Nightly Build (Linux)](https://downloads.carlasim.com/Linux/Dev/AdditionalMaps_Latest.tar.gz)
+- [CARLA Nightly Build (Windows)](https://downloads.carlasim.com/Windows/Dev/CARLA_Latest.zip)
+- [AdditionalMaps Nightly Build (Windows)](https://downloads.carlasim.com/Windows/Dev/AdditionalMaps_Latest.zip)
 
 <p><a id="last-run-link" href='https://github.com/carla-simulator/carla/actions'>Last successful build</a>: <span id="last-run-time" class="loading">Loading...</span></p>
 
