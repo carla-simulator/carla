@@ -184,7 +184,9 @@ namespace road {
       const geom::Vector3D& maxpos,
       float distancebetweentrees,
       float distancefromdrivinglineborder,
-      float s_offset = 0) const;
+      float s_offset = 0,
+      bool measure_from_curb = false,
+      bool keep_on_sidewalk = false) const;
 
     geom::Mesh GenerateWalls(const double distance, const float wall_height) const;
 

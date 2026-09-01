@@ -1775,7 +1775,9 @@ float AOpenDriveGenerator::SampleGroundGridHeight(float X, float Y) const
   return FMath::Lerp(FMath::Lerp(Z00, Z10, S), FMath::Lerp(Z01, Z11, S), T);
 }
 
-int32 AOpenDriveGenerator::GenerateFurnitureAnchors(const FName &Tag, float Spacing, float Offset, float RoadClearance)
+int32 AOpenDriveGenerator::GenerateFurnitureAnchors(
+    const FName &Tag, float Spacing, float Offset, float RoadClearance,
+    bool bMeasureFromCurb, bool bKeepOnSidewalk, float SOffset)
 {
   auto& CarlaMap = UCarlaStatics::GetGameMode(GetWorld())->GetMap();
 
@@ -1797,7 +1799,14 @@ int32 AOpenDriveGenerator::GenerateFurnitureAnchors(const FName &Tag, float Spac
   // string (from RoadInfoSpeed, e.g. "Town"/"Highway"/"Rural"), unused here
   // but available on the anchor's tags if the PCG graph wants to vary
   // furniture density by road type later.
-  const auto Anchors = CarlaMap->GetTreesTransform(MinPos, MaxPos, Spacing, Offset);
+  // bMeasureFromCurb: Offset is taken from the outer edge of the last
+  // roadway lane (past parking/bike/border lanes) instead of the driving
+  // lane, and bKeepOnSidewalk clamps it to the middle of the sidewalk lane
+  // that follows, so the anchor stands on the pavement rather than in the
+  // roadway (parking lane in between) or in the buildings (no lane in
+  // between and a narrow sidewalk).
+  const auto Anchors = CarlaMap->GetTreesTransform(
+      MinPos, MaxPos, Spacing, Offset, SOffset, bMeasureFromCurb, bKeepOnSidewalk);
 
   int32 NumSpawned = 0;
   int32 NumFilteredOnRoad = 0;
@@ -1816,8 +1825,13 @@ int32 AOpenDriveGenerator::GenerateFurnitureAnchors(const FName &Tag, float Spac
     // bounding-box half-extent (per category), measured against the
     // rasterized driving footprint -- the actual mesh, junction fans and
     // widenings included, not a centerline heuristic.
+    // The raster is 2.5 m-celled and marks a cell as roadway as soon as
+    // its centre is: an anchor that sits 0.5-1 m onto the pavement is in a
+    // "road" cell about half the time, so curb-measured anchors (which are
+    // placed on exact lane geometry) rely on the exact centreline test
+    // below instead of this coarse gate.
     const auto *Cell = RoadRaster.CellAtWorld(Location.X, Location.Y);
-    if (Cell && Cell->DistToDrive >= 0.0f && Cell->DistToDrive < RoadClearance)
+    if (!bMeasureFromCurb && Cell && Cell->DistToDrive >= 0.0f && Cell->DistToDrive < RoadClearance)
     {
       ++NumFilteredOnRoad;
       continue;
@@ -1877,9 +1891,16 @@ void AOpenDriveGenerator::GeneratePoles()
     return;
   }
 
-  const int32 NumLampAnchors = GenerateFurnitureAnchors(LampAnchorTag, LampAnchorSpacing, LampAnchorOffset, LampRoadClearance);
-  const int32 NumVegetationAnchors = GenerateFurnitureAnchors(VegetationAnchorTag, VegetationAnchorSpacing, VegetationAnchorOffset, VegetationRoadClearance);
-  const int32 NumSignageAnchors = GenerateFurnitureAnchors(SignageAnchorTag, SignageAnchorSpacing, SignageAnchorOffset, SignageRoadClearance);
+  // Lamps and signage stand on the pavement (measured from the curb,
+  // clamped onto the sidewalk); vegetation keeps the legacy driving-edge
+  // offset so trees stay in the verge/yard past the sidewalk. Signage is
+  // phased half a lamp spacing along s so a sign never lands on a lamp.
+  const int32 NumLampAnchors = GenerateFurnitureAnchors(
+      LampAnchorTag, LampAnchorSpacing, LampAnchorOffset, LampRoadClearance, true, true, 0.0f);
+  const int32 NumVegetationAnchors = GenerateFurnitureAnchors(
+      VegetationAnchorTag, VegetationAnchorSpacing, VegetationAnchorOffset, VegetationRoadClearance, false, false, 0.0f);
+  const int32 NumSignageAnchors = GenerateFurnitureAnchors(
+      SignageAnchorTag, SignageAnchorSpacing, SignageAnchorOffset, SignageRoadClearance, true, true, 0.5f * LampAnchorSpacing);
   const int32 TotalAnchors = NumLampAnchors + NumVegetationAnchors + NumSignageAnchors;
   UE_LOG(LogCarla, Log, TEXT("AOpenDriveGenerator: furniture anchors spawned: %d lamp, %d vegetation, %d signage"),
       NumLampAnchors, NumVegetationAnchors, NumSignageAnchors);

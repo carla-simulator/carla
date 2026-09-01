@@ -1452,9 +1452,44 @@ namespace road {
     const geom::Vector3D& maxpos,
     float distancebetweentrees,
     float distancefromdrivinglineborder,
-    float s_offset) const {
+    float s_offset,
+    bool measure_from_curb,
+    bool keep_on_sidewalk) const {
 
     std::vector<std::pair<geom::Transform, std::string>> transforms;
+
+    // Walks outward from the outermost driving lane over every lane that is
+    // still roadway (parking, biking, border, shoulder, ...) and returns the
+    // last one -- the lane whose outer edge is the curb line -- plus the
+    // sidewalk right past it, if any. Only the driving lane's own edge is
+    // considered when measure_from_curb is off (legacy tree placement).
+    auto FindCurbLane = [measure_from_curb](
+        const road::LaneSection &section, const road::Lane *driving_lane,
+        const road::Lane *&sidewalk_lane) -> const road::Lane * {
+      sidewalk_lane = nullptr;
+      const road::Lane *curb_lane = driving_lane;
+      if (!measure_from_curb) {
+        return curb_lane;
+      }
+      const auto &lanes = section.GetLanes();
+      const LaneId step = driving_lane->GetId() < 0 ? -1 : 1;
+      for (LaneId id = driving_lane->GetId() + step;; id += step) {
+        const auto it = lanes.find(id);
+        if (it == lanes.end()) {
+          break;
+        }
+        const auto type = it->second.GetType();
+        if (type == Lane::LaneType::Sidewalk) {
+          sidewalk_lane = &it->second;
+          break;
+        }
+        if (type == Lane::LaneType::None) {
+          break;
+        }
+        curb_lane = &it->second;
+      }
+      return curb_lane;
+    };
 
     const std::vector<RoadId> RoadsIDToGenerate = FilterRoadsByPosition(minpos, maxpos);
     for ( RoadId id : RoadsIDToGenerate ) {
@@ -1507,14 +1542,40 @@ namespace road {
                 const bool is_positive_lane = (lane->GetId() > 0);
                 const geom::Vector3D first_corner = edges.first;
                 const geom::Vector3D second_corner = edges.second;
-                const geom::Vector3D outer_corner =
+                geom::Vector3D outer_corner =
                   is_positive_lane ? second_corner : first_corner;
                 const geom::Vector3D inner_corner =
                   is_positive_lane ? first_corner : second_corner;
                 const geom::Vector3D outward_direction =
                     (outer_corner - inner_corner).MakeUnitVector();
+                // Street furniture is measured from the curb, not from the
+                // driving lane: a parking or bike lane in between would
+                // otherwise put a fixed 4 m offset in the middle of the
+                // roadway, and where there is nothing in between the same
+                // offset overshoots a 1.5 m sidewalk into the buildings.
+                // With keep_on_sidewalk the anchor never goes past the
+                // middle of the sidewalk lane that follows the curb.
+                float offset = distancefromdrivinglineborder;
+                const road::Lane *sidewalk_lane = nullptr;
+                const road::Lane *curb_lane = FindCurbLane(lane_section, lane, sidewalk_lane);
+                if (curb_lane != lane) {
+                  const auto curb_edges = curb_lane->GetCornerPositions(s_current, 0);
+                  // Pick the curb lane's corner farthest along the outward
+                  // direction: robust to the corner ordering convention.
+                  const float d_first = (curb_edges.first - inner_corner).x * outward_direction.x +
+                                        (curb_edges.first - inner_corner).y * outward_direction.y;
+                  const float d_second = (curb_edges.second - inner_corner).x * outward_direction.x +
+                                         (curb_edges.second - inner_corner).y * outward_direction.y;
+                  outer_corner = d_first > d_second ? curb_edges.first : curb_edges.second;
+                }
+                if (keep_on_sidewalk && sidewalk_lane != nullptr) {
+                  const float sidewalk_width = static_cast<float>(sidewalk_lane->GetWidth(s_current));
+                  if (sidewalk_width > 0.0f) {
+                    offset = std::min(offset, 0.5f * sidewalk_width);
+                  }
+                }
                 geom::Vector3D treeposition =
-                    outer_corner + outward_direction * distancefromdrivinglineborder;
+                    outer_corner + outward_direction * offset;
                 // Face the anchor toward the road instead of along it: the
                 // street furniture spawned on these transforms (lamps, signage)
                 // extends along its local +X, so the lane heading would leave a

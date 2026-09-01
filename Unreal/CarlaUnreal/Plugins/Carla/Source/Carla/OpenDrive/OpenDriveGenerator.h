@@ -298,16 +298,19 @@ protected:
   /// furniture must keep from the nearest driving-lane centerline; anchors
   /// closer than this are discarded so scattered objects can't stand on or
   /// overhang the roadway where lanes widen, merge or overlap. Sized to
-  /// the spawned content's bounding-box half-extent (an anchor is a point;
-  /// the bus shelter it spawns is ~8m long), not a nominal margin.
+  /// the spawned content's *lateral* half-extent (the clearance is
+  /// measured across the road, so a shelter's 8 m length along the curb
+  /// doesn't count -- its ~1 m depth does). It must stay below the
+  /// category's anchor offset: the old 450 cm signage clearance against a
+  /// 4 m offset discarded 100 % of the signage anchors on every map.
   UPROPERTY(Category = "Street Furniture", EditAnywhere)
-  float LampRoadClearance = 150.0f;
+  float LampRoadClearance = 50.0f;
 
   UPROPERTY(Category = "Street Furniture", EditAnywhere)
   float VegetationRoadClearance = 250.0f;
 
   UPROPERTY(Category = "Street Furniture", EditAnywhere)
-  float SignageRoadClearance = 450.0f;
+  float SignageRoadClearance = 50.0f;
 
   /// Evaluated ground heightfield (final terrain surface z per grid vertex,
   /// row-major, GroundGridNumY rows of GroundGridNumX), retained after
@@ -378,13 +381,15 @@ protected:
   UPROPERTY(Category = "Street Furniture", EditAnywhere)
   float LampAnchorSpacing = 30.0f;
 
-  /// Lateral offset (m) of lamp anchors from the outer edge of the
-  /// outermost driving lane -- calibrated to clear a typical CARLA
-  /// sidewalk (OpenDriveToMap's tree placement uses 3m for the same
-  /// purpose; lamps use a little more so the pole base sits past the
-  /// sidewalk rather than on it).
+  /// Lateral offset (m) of lamp anchors past the curb line (the outer
+  /// edge of the last roadway lane: parking/bike/border lanes included),
+  /// clamped to the middle of the sidewalk lane that follows when there is
+  /// one -- the pole base stands on the pavement next to the curb. The old
+  /// 4 m from the *driving* lane put poles mid-parking-lane on streets
+  /// with kerbside parking and 2 m into the buildings on streets with a
+  /// bare 1.5 m sidewalk.
   UPROPERTY(Category = "Street Furniture", EditAnywhere)
-  float LampAnchorOffset = 4.0f;
+  float LampAnchorOffset = 1.0f;
 
   /// Tag used to mark roadside-vegetation anchor points.
   UPROPERTY(Category = "Street Furniture", EditAnywhere)
@@ -414,16 +419,22 @@ protected:
   UPROPERTY(Category = "Street Furniture", EditAnywhere)
   float SignageAnchorSpacing = 150.0f;
 
-  /// Lateral offset (m) of signage anchors, same row as lamps by default.
+  /// Lateral offset (m) of signage anchors past the curb line, clamped
+  /// onto the sidewalk like the lamps (same row, phased half a lamp
+  /// spacing along the road so the two never coincide).
   UPROPERTY(Category = "Street Furniture", EditAnywhere)
-  float SignageAnchorOffset = 4.0f;
+  float SignageAnchorOffset = 1.0f;
 
   /// Spawns one AProceduralFurnitureAnchor per transform returned by
   /// Map::GetTreesTransform for the given spacing/offset, tagged for the
   /// PCG graph to pick up, re-grounded onto pavement/terrain and filtered
   /// against driving lanes with the given clearance (cm) past the lane
-  /// half-width. Returns the number of anchors spawned.
-  int32 GenerateFurnitureAnchors(const FName &Tag, float Spacing, float Offset, float RoadClearance);
+  /// half-width. bMeasureFromCurb/bKeepOnSidewalk select the curb-based
+  /// placement (see LampAnchorOffset); SOffset (m) phases the row along
+  /// each road. Returns the number of anchors spawned.
+  int32 GenerateFurnitureAnchors(
+      const FName &Tag, float Spacing, float Offset, float RoadClearance,
+      bool bMeasureFromCurb, bool bKeepOnSidewalk, float SOffset);
 
 public:
 
