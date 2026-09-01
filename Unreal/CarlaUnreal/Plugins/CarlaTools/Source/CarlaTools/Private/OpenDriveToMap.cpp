@@ -50,6 +50,7 @@
 #include "AssetRegistryModule.h"
 #endif
 #include "EditorLevelLibrary.h"
+#include "LevelEditorSubsystem.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/StaticMeshActor.h"
 #include "Materials/MaterialInstanceDynamic.h"
@@ -515,7 +516,7 @@ void UOpenDriveToMap::GenerateTileStandalone()
 	GenerateTile();
 #endif
 	UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
-	UEditorLevelLibrary::SaveCurrentLevel();
+	GEditor->GetEditorSubsystem<ULevelEditorSubsystem>()->SaveCurrentLevel();
 }
 
 void UOpenDriveToMap::GenerateTile()
@@ -544,7 +545,7 @@ void UOpenDriveToMap::GenerateTile()
 		UE_LOG(LogCarlaTools, Warning, TEXT("MapName %s"), *MapName);
 
 #if ENGINE_MAJOR_VERSION < 5
-		UEditorLevelLibrary::LoadLevel(*BaseLevelName);
+		GEditor->GetEditorSubsystem<ULevelEditorSubsystem>()->LoadLevel(*BaseLevelName);
 		AActor* QueryActor = UGameplayStatics::GetActorOfClass(GetEditorWorld(), ALargeMapManager::StaticClass());
 		if (QueryActor != nullptr)
 		{
@@ -553,7 +554,7 @@ void UOpenDriveToMap::GenerateTile()
 			NumTilesInXY = LmManager->GetNumTilesInXY();
 			TileSize = LmManager->GetTileSize();
 			Tile0Offset = LmManager->GetTile0Offset();
-			UEditorLevelLibrary::SaveCurrentLevel();
+			GEditor->GetEditorSubsystem<ULevelEditorSubsystem>()->SaveCurrentLevel();
 			LmManager->GetCarlaMapTile(CurrentTilesInXY);
 			FCarlaMapTile& CarlaTile = LmManager->GetCarlaMapTile(CurrentTilesInXY);
 
@@ -563,7 +564,7 @@ void UOpenDriveToMap::GenerateTile()
 			UE_LOG(LogCarlaTools, Warning, TEXT("Tile0Offset is %s"), *(Tile0Offset.ToString()));
 			UE_LOG(LogCarlaTools, Warning, TEXT("Tile Name is %s"), *(CarlaTile.Name));
 
-			UEditorLevelLibrary::LoadLevel(CarlaTile.Name);
+			GEditor->GetEditorSubsystem<ULevelEditorSubsystem>()->LoadLevel(CarlaTile.Name);
 #endif
 			MinPosition = FVector(CurrentTilesInXY.X * TileSize, CurrentTilesInXY.Y * -TileSize, 0.0f);
 			MaxPosition = FVector((CurrentTilesInXY.X + 1.0f) * TileSize, (CurrentTilesInXY.Y + 1.0f) * -TileSize, 0.0f);
@@ -587,7 +588,7 @@ void UOpenDriveToMap::GenerateTile()
 		}
 #endif
 		UEditorLoadingAndSavingUtils::SaveDirtyPackages(true, true);
-		UEditorLevelLibrary::SaveCurrentLevel();
+		GEditor->GetEditorSubsystem<ULevelEditorSubsystem>()->SaveCurrentLevel();
 
 #if ENGINE_MAJOR_VERSION < 5
 #if PLATFORM_LINUX
@@ -615,7 +616,7 @@ bool UOpenDriveToMap::GoNextTile()
 void UOpenDriveToMap::ReturnToMainLevel()
 {
 	FEditorFileUtils::SaveDirtyPackages(false, true, true, false, false, false, nullptr);
-	UEditorLevelLibrary::LoadLevel(*BaseLevelName);
+	GEditor->GetEditorSubsystem<ULevelEditorSubsystem>()->LoadLevel(*BaseLevelName);
 }
 
 void UOpenDriveToMap::CorrectPositionForAllActorsInCurrentTile()
@@ -1608,7 +1609,7 @@ void UOpenDriveToMap::MoveActorsToSubLevels(TArray<AActor*> ActorsToMove)
 		ALargeMapManager* LmManager = Cast<ALargeMapManager>(QueryActor);
 		if (LmManager)
 		{
-			UEditorLevelLibrary::SaveCurrentLevel();
+			GEditor->GetEditorSubsystem<ULevelEditorSubsystem>()->SaveCurrentLevel();
 			UOpenDriveToMap::MoveActorsToSubLevelWithLargeMap(ActorsToMove, LmManager);
 		}
 	}
@@ -2123,7 +2124,7 @@ void UOpenDriveToMap::MergeRoads()
 
 	FMeshMergingSettings MergeSettings;
 	MergeSettings.bMergeMaterials = true;
-	MergeSettings.bPivotPointAtZero = true;
+	MergeSettings.PivotType = EMeshMergePivotType::WorldOrigin; // UE5.8: replaces bPivotPointAtZero
 
 	FString OutPath = UGenerationPathsHelper::GetPythonIntermediatePath(MapName);
 	FString AssetName = TEXT("MergedRoad");
@@ -2276,10 +2277,10 @@ FVector UOpenDriveToMap::DisplaceLocationOutsideNeighboringRoads(const UObject* 
 
 	if (closest_waypoint)
 	{
-		carla::geom::Transform road_transform = current_carla_map->ComputeTransform(closest_waypoint.get());
+		carla::geom::Transform road_transform = current_carla_map->ComputeTransform(closest_waypoint.value());
 
 		float distance_to_road = FVector(road_transform.location.ToFVector() * 100.0f - out_location).Length();
-		float lane_width = current_carla_map->GetLaneWidth(closest_waypoint.get());
+		float lane_width = current_carla_map->GetLaneWidth(closest_waypoint.value());
 
 		float displacement_direction = 1.0f;
 		int max_displacement_iterations = 10;
@@ -2289,14 +2290,14 @@ FVector UOpenDriveToMap::DisplaceLocationOutsideNeighboringRoads(const UObject* 
 			if (displacement_direction == 0.0f) break;
 			if (distance_to_road > (lane_width * 100.0f + RoadLimitPadding)) break;
 
-			std::optional<carla::road::element::Waypoint> right_waypoint = current_carla_map->GetRight(closest_waypoint.get());
+			std::optional<carla::road::element::Waypoint> right_waypoint = current_carla_map->GetRight(closest_waypoint.value());
 			carla::road::Lane::LaneType right_lane_type = (right_waypoint) ?
-				current_carla_map->GetLaneType(right_waypoint.get()) :
+				current_carla_map->GetLaneType(right_waypoint.value()) :
 				carla::road::Lane::LaneType::None;
 
-			std::optional<carla::road::element::Waypoint> left_waypoint = current_carla_map->GetLeft(closest_waypoint.get());
+			std::optional<carla::road::element::Waypoint> left_waypoint = current_carla_map->GetLeft(closest_waypoint.value());
 			carla::road::Lane::LaneType left_lane_type = (left_waypoint) ?
-				current_carla_map->GetLaneType(left_waypoint.get()) :
+				current_carla_map->GetLaneType(left_waypoint.value()) :
 				carla::road::Lane::LaneType::None;
 
 			if (right_lane_type != carla::road::Lane::LaneType::Driving)
@@ -2315,9 +2316,9 @@ FVector UOpenDriveToMap::DisplaceLocationOutsideNeighboringRoads(const UObject* 
 			out_location += displacement_diff * displacement_direction;
 
 			closest_waypoint = current_carla_map->GetClosestWaypointOnRoad(out_location, check_shoulder_or_driving);
-			road_transform = current_carla_map->ComputeTransform(closest_waypoint.get());
+			road_transform = current_carla_map->ComputeTransform(closest_waypoint.value());
 			distance_to_road = FVector(road_transform.location.ToFVector() * 100.0f - out_location).Length();
-			lane_width = current_carla_map->GetLaneWidth(closest_waypoint.get());
+			lane_width = current_carla_map->GetLaneWidth(closest_waypoint.value());
 		}
 
 	}

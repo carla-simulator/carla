@@ -73,12 +73,12 @@ void UCustomFileDownloader::ConvertOSMInOpenDrive(
   {
     UE_LOG(LogCarlaTools, Error, TEXT("FileManipulation: Failed to write FString to file."));
   }
-}
 #else
   UE_LOG(LogCarlaTools, Error, TEXT(
       "ConvertOSMInOpenDrive: CARLA was built without OSM2ODR support; cannot convert \"%s\"."),
       *FilePath);
 #endif
+}
 
 void UCustomFileDownloader::StartDownload()
 {

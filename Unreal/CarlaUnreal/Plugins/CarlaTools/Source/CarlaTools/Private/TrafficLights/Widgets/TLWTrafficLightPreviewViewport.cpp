@@ -132,9 +132,10 @@ void STrafficLightPreviewViewport::Construct(const FArguments& InArgs)
 
 	SAssignNew(ViewportWidget, SViewport).EnableGammaCorrection(false).EnableBlending(true);
 
-	SceneViewport = MakeShareable(new FSceneViewport(ViewportClient.Get(), ViewportWidget));
+	// UE5.8: FSceneViewport(FViewportClient*, ...) is deprecated; Create also
+	// wires the widget's viewport interface.
+	SceneViewport = FSceneViewport::Create(ViewportClient, ViewportWidget);
 	ViewportClient->Viewport = SceneViewport.Get();
-	ViewportWidget->SetViewportInterface(SceneViewport.ToSharedRef());
 
 	ChildSlot[ViewportWidget.ToSharedRef()];
 }

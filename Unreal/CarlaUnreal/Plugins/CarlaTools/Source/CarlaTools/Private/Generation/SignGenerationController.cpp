@@ -243,13 +243,13 @@ void ASignGenerationController::SignGenerationByPath(FName sign_package_path, FN
 			if (closest_waypoint.has_value()) 
 			{
 				std::vector<carla::road::element::Waypoint> succesor_waypoints = 
-					current_carla_map->GetSuccessors(closest_waypoint.get());
+					current_carla_map->GetSuccessors(closest_waypoint.value());
 
 				if (succesor_waypoints.size() > 0) 
 				{
 					carla::road::element::Waypoint next_waypoint = succesor_waypoints[0];
 
-					carla::geom::Transform road_transform = current_carla_map->ComputeTransform(closest_waypoint.get());
+					carla::geom::Transform road_transform = current_carla_map->ComputeTransform(closest_waypoint.value());
 					carla::geom::Transform road_transform_next = current_carla_map->ComputeTransform(next_waypoint);
 
 					FRotator rot = UKismetMathLibrary::MakeRotFromX(FVector(road_transform.location - road_transform_next.location).GetSafeNormal());
