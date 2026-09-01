@@ -359,16 +359,23 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         // for these two variables) rather than read off an AWeather instance,
         // so this function works with no AWeather actor placed in the level
         // at all -- see ASkyBase::RefreshWeather/LoadPreset.
+        // Loaded per call, never cached in function-local statics: a raw
+        // static UObject pointer is invisible to the garbage collector, and
+        // these assets are otherwise unreferenced once the world that first
+        // loaded them is purged. With the old static cache, the second
+        // episode of a session (e.g. any generate_opendrive_world load)
+        // evaluated a freed UCurveFloat and crashed inside FRichCurve::Eval
+        // (SIGSEGV in ApplyWeatherToSkyActor <- GameMode BeginPlay). While
+        // the asset is alive LoadObject is a FindObject hit, so per-call
+        // loading costs nothing measurable at weather-push frequency.
         auto FindCurve = [](const TCHAR* PropertyName) -> UCurveFloat*
         {
-            static UCurveFloat* const SunIntensityCurve = LoadObject<UCurveFloat>(nullptr,
-                TEXT("/Game/Carla/Blueprints/Weather/Weather2_Curves/SunIntensity_2.SunIntensity_2"));
-            static UCurveFloat* const SkyIntensityCurve = LoadObject<UCurveFloat>(nullptr,
-                TEXT("/Game/Carla/Blueprints/Weather/Weather2_Curves/SkylightIntensity_2.SkylightIntensity_2"));
             if (FCString::Strcmp(PropertyName, TEXT("SunIntensity_Curve")) == 0)
-                return SunIntensityCurve;
+                return LoadObject<UCurveFloat>(nullptr,
+                    TEXT("/Game/Carla/Blueprints/Weather/Weather2_Curves/SunIntensity_2.SunIntensity_2"));
             if (FCString::Strcmp(PropertyName, TEXT("SkyIntensity_Curve")) == 0)
-                return SkyIntensityCurve;
+                return LoadObject<UCurveFloat>(nullptr,
+                    TEXT("/Game/Carla/Blueprints/Weather/Weather2_Curves/SkylightIntensity_2.SkylightIntensity_2"));
             return nullptr;
         };
         auto FindComponent = [SkyActor](const TCHAR* PropertyName) -> ULightComponent*
@@ -582,11 +589,12 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             : nullptr;
         if (CloudComponent != nullptr)
         {
-            static UCurveFloat* const DensityCurve = LoadObject<UCurveFloat>(nullptr,
+            // Per-call loads, not GC-invisible static caches -- see FindCurve.
+            UCurveFloat* const DensityCurve = LoadObject<UCurveFloat>(nullptr,
                 TEXT("/Game/Carla/Blueprints/Weather/CloudsBillowy/C_BillowyDensity.C_BillowyDensity"));
-            static UMaterialInterface* const NormalCloudMaterial = LoadObject<UMaterialInterface>(nullptr,
+            UMaterialInterface* const NormalCloudMaterial = LoadObject<UMaterialInterface>(nullptr,
                 TEXT("/Game/Carla/Static/FX/VolumetricClouds/MI_Clouds.MI_Clouds"));
-            static UMaterialInterface* const BillowyCloudMaterial = LoadObject<UMaterialInterface>(nullptr,
+            UMaterialInterface* const BillowyCloudMaterial = LoadObject<UMaterialInterface>(nullptr,
                 TEXT("/Game/Carla/Static/GenericMaterials/VolumetricClouds/Masters/M_VolumetricCloud_03_Profiles_Billowy_Inst.M_VolumetricCloud_03_Profiles_Billowy_Inst"));
 
             const float OvercastThreshold = CVarCarlaWeatherOvercastThreshold.GetValueOnGameThread();
@@ -684,7 +692,8 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
     // (already correct at 0-1); only Wetness gets overridden here, raw, right
     // after the BP call above wrote the wrong value.
     {
-        static UMaterialParameterCollection* const WeatherMPC = LoadObject<UMaterialParameterCollection>(nullptr,
+        // Per-call load, not a GC-invisible static cache -- see FindCurve.
+        UMaterialParameterCollection* const WeatherMPC = LoadObject<UMaterialParameterCollection>(nullptr,
             TEXT("/Game/Carla/Blueprints/Weather/Materials/WeatherMaterialParameters.WeatherMaterialParameters"));
         if (WeatherMPC != nullptr && SkyActor->GetWorld() != nullptr)
         {
