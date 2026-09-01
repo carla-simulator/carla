@@ -106,7 +106,7 @@ namespace geom {
 
     /**
      * Returns the positions of the 8 vertices of this BoundingBox in world space.
-     * @param in_bbox_to_world_transform The Transform from this BoundingBox space to world space.
+     * @param in_bbox_to_world_tr The Transform from this BoundingBox space to world space.
      */
     std::array<Location, 8> GetWorldVertices(const Transform &in_bbox_to_world_tr) const {
         auto world_vertices = GetLocalVertices();
