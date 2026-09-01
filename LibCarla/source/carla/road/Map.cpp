@@ -482,16 +482,34 @@ namespace road {
             }
           }
 
-          // move perpendicular ('t')
+          // The outline corners are given at height 0 above the road surface.
+          // Placing them with the full centre-line transform at the crosswalk's
+          // s applies that one point's pitch and roll to the whole outline, which
+          // on a graded road tilts the slab about the pivot: the corners ahead of
+          // it stand 10-60 cm proud of the asphalt and the ones behind it sink.
+          // Rotate the outline in the horizontal plane only and give every corner
+          // the road's own elevation at that corner's s.
           geom::Transform pivot = base;
-          pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
+          pivot.rotation.pitch = 0.0f;
+          pivot.rotation.roll = 0.0f;
+          const float heading_deg =
+              geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
+
+          // move perpendicular ('t')
+          pivot.rotation.yaw -= heading_deg;
           pivot.rotation.yaw -= 90;   // move perpendicular to 's' for the lateral offset
           geom::Vector3D v(static_cast<float>(crosswalk->GetT()), 0.0f, 0.0f);
           pivot.TransformPoint(v);
-          // restore pivot position and orientation
-          pivot = base;
+          // restore pivot position and orientation (yaw only)
           pivot.location = v;
-          pivot.rotation.yaw -= geom::Math::ToDegrees<float>(static_cast<float>(crosswalk->GetHeading()));
+          pivot.rotation.yaw += 90;
+
+          // s direction of the road at the crosswalk, in the horizontal plane
+          const geom::Vector3D forward =
+              geom::Rotation(0.0f, base.rotation.yaw, 0.0f).GetForwardVector();
+          const double s0 = crosswalk->GetS();
+          const double road_length = road.GetLength();
+          const double z0 = road.GetElevationOn(s0).Evaluate(s0);
 
           // calculate all the corners
           for (auto corner : crosswalk->GetPoints()) {
@@ -506,6 +524,14 @@ namespace road {
               v2.x += 1.0f;
             }
             pivot.TransformPoint(v2);
+            // elevation of the road at this corner's own s (not the pivot's)
+            const double ds =
+                static_cast<double>((v2.x - base.location.x) * forward.x +
+                                    (v2.y - base.location.y) * forward.y);
+            const double s_corner = geom::Math::Clamp(s0 + ds, 0.0, road_length);
+            const double z_corner = road.GetElevationOn(s_corner).Evaluate(s_corner);
+            v2.z = base.location.z + static_cast<float>(z_corner - z0) +
+                   static_cast<float>(corner.z);
             result.push_back(v2);
           }
         }
