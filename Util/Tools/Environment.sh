@@ -4,6 +4,12 @@
 
 set -e
 
+# Directory containing these tool scripts. Import.sh and Prettify.sh interpolate
+# ${CARLA_BUILD_TOOLS_FOLDER} to locate their Python entry points; while it was
+# unset it expanded to empty and they invoked /Import.py. BASH_SOURCE, not $0,
+# because this file is sourced: $0 is the caller.
+CARLA_BUILD_TOOLS_FOLDER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 function log {
   echo "[`basename "$0"`]: $1"
 }

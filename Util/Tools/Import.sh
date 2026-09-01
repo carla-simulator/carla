@@ -11,7 +11,7 @@ Usage: $0 [-h|--help] [--python-version=VERSION]
 END
 )
 
-OPTS=`getopt -o h --long batch:,package:,no-carla-materials,json-only,python-version:, -n 'parse-options' -- "$@"`
+OPTS=`getopt -o h --long help,batch:,package:,no-carla-materials,json-only,python-version:, -n 'parse-options' -- "$@"`
 
 ARGS=""
 
