@@ -625,8 +625,16 @@ protected:
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<USceneCaptureComponent2D_CARLA> CaptureComponent2D = nullptr;
 
+  // Standard RGB/depth/segmentation cameras (MakeCameraDefinition) never
+  // register a "gamma" blueprint attribute -- only Wide Angle Lens and
+  // RayTraced Lens cameras do, defaulting it to 2.2 (sRGB). Client code that
+  // guards on bp.has_attribute('gamma') before setting it (e.g.
+  // manual_control.py's --gamma) silently no-ops for the standard camera, so
+  // this default is the only gamma that ever actually applies to it. 2.4
+  // reads visibly brighter/blown-out next to the editor/server's own ~2.2
+  // display gamma; match it instead.
   UPROPERTY(EditAnywhere)
-  float TargetGamma = 2.4f;
+  float TargetGamma = 2.2f;
 
   /// Image width in pixels.
   UPROPERTY(EditAnywhere)

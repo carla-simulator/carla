@@ -14,6 +14,7 @@
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Weather/Sky.h"
+#include "BlueprintLibary/WeatherJsonUtils.h"
 
 #include <util/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
@@ -182,18 +183,10 @@ void ACarlaGameModeBase::InitGame(
       UE_LOG(LogCarla, Log, TEXT(
           "World Partition map without a sky rig: spawned BP_Carla_Sky"));
     }
-    // Town10 also places BP_GeneralSceneSettings alongside the sky; give
-    // converted maps the same baseline actors.
-    UClass* SceneSettingsClass = LoadClass<AActor>(
-        nullptr,
-        TEXT("/Game/Carla/Blueprints/BP_GeneralSceneSettings.BP_GeneralSceneSettings_C"));
-    if (SceneSettingsClass != nullptr &&
-        UGameplayStatics::GetActorOfClass(World, SceneSettingsClass) == nullptr)
-    {
-      World->SpawnActor<AActor>(SceneSettingsClass);
-      UE_LOG(LogCarla, Log, TEXT(
-          "World Partition map without scene settings: spawned BP_GeneralSceneSettings"));
-    }
+    // BP_GeneralSceneSettings used to be spawned alongside the sky here too,
+    // but everything it did (post-process delta-baseline, cloud density) is
+    // now handled natively in AWeather::ApplyWeatherToSkyActor -- no actor
+    // needed.
   }
 
   AActor* WeatherActor =
@@ -299,7 +292,25 @@ void ACarlaGameModeBase::BeginPlay()
 
   if (Episode->Weather != nullptr)
   {
-    Episode->Weather->ApplyWeather(carla::rpc::WeatherParameters::Default);
+    // Per-map defaults now come from MapDefaults.json (either a named
+    // {time, condition} preset pair via ASkyBase::SetAsMapDefault, or a full
+    // inline snapshot via ASkyBase::SaveCurrentWeatherAsMapDefault --
+    // GetMapDefaultWeather resolves whichever shape the entry is), not the
+    // flat carla::rpc::WeatherParameters::Default sentinel (which forces e.g.
+    // SunAltitudeAngle to -1 regardless of what the map's sky rig was
+    // authored with). Fall back to the old sentinel only for maps with no
+    // MapDefaults.json entry yet.
+    FString MapName = World->GetMapName();
+    MapName.RemoveFromStart(World->StreamingLevelsPrefix);
+    FWeatherParameters DefaultWeather;
+    if (UWeatherJsonUtils::GetMapDefaultWeather(MapName, Episode->Weather->GetCurrentWeather(), DefaultWeather))
+    {
+      Episode->Weather->ApplyWeather(DefaultWeather);
+    }
+    else
+    {
+      Episode->Weather->ApplyWeather(carla::rpc::WeatherParameters::Default);
+    }
   }
 
   /// @todo Recorder should not tick here, FCarlaEngine should do it.
