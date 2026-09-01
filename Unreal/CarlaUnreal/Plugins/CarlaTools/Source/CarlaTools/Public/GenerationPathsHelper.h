@@ -11,6 +11,7 @@
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "Interfaces/IPluginManager.h"
 #include "Misc/Paths.h"
+#include "HAL/PlatformFileManager.h"
 #include <util/ue-header-guard-end.h>
 
 #include "GenerationPathsHelper.generated.h"
@@ -40,5 +41,25 @@ public:
   static FString GetDigitalTwinsPluginPath() {
     TSharedPtr<IPlugin> Plugin = IPluginManager::Get().FindPlugin("CarlaDigitalTwinsTool");
     return Plugin.IsValid() ? FPaths::ConvertRelativePathToFull(Plugin->GetBaseDir()) : FString();
+  }
+
+  UFUNCTION(BlueprintCallable)
+  static void CreateDirectory(const FString& DirectoryPath)
+  {
+    IPlatformFile& PlatformFile = FPlatformFileManager::Get().GetPlatformFile();
+    if (!PlatformFile.DirectoryExists(*DirectoryPath))
+    {
+      PlatformFile.CreateDirectoryTree(*DirectoryPath);
+      UE_LOG(LogTemp, Log, TEXT("Created disk folder: %s"), *DirectoryPath);
+    }
+  }
+
+  UFUNCTION(BlueprintCallable)
+  static FString GetPythonIntermediatePath(const FString& MapName)
+  {
+    FString MapPath = FPaths::ConvertRelativePathToFull(UGenerationPathsHelper::GetRawMapDirectoryPath(MapName));
+    FString OutPath = MapPath / TEXT("PythonIntermediate");
+    UGenerationPathsHelper::CreateDirectory(OutPath);
+    return OutPath;
   }
 };

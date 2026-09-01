@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2021 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -8,13 +8,12 @@
 
 #include <iostream>
 #include <fstream>
+#include "OpenDriveToMap.h"
 
-#include <util/ue-header-guard-begin.h>
 #if WITH_EDITOR
 #include "FileHelpers.h"
 #endif
 #include "UObject/ConstructorHelpers.h"
-#include <util/ue-header-guard-end.h>
 
 DEFINE_LOG_CATEGORY(LogCarlaToolsMapGenerateTileCommandlet);
 
@@ -22,7 +21,7 @@ DEFINE_LOG_CATEGORY(LogCarlaToolsMapGenerateTileCommandlet);
 UGenerateTileCommandlet::UGenerateTileCommandlet()
 {
 #if WITH_EDITOR
-  ConstructorHelpers::FClassFinder<UOpenDriveToMap> OpenDrivelassFinder(TEXT("/CarlaTools/OnroadMapGenerator/BP_OpenDriveToMap"));
+  ConstructorHelpers::FClassFinder<UOpenDriveToMap> OpenDrivelassFinder(TEXT("/CarlaDigitalTwinsTool/digitalTwins/BP_OpenDriveToMap"));
   OpenDriveClass = OpenDrivelassFinder.Class;
 #endif
 }
@@ -31,7 +30,7 @@ UGenerateTileCommandlet::UGenerateTileCommandlet(const FObjectInitializer& Initi
   : Super(Initializer)
 {
 #if WITH_EDITOR
-  ConstructorHelpers::FClassFinder<UOpenDriveToMap> OpenDrivelassFinder(TEXT("/CarlaTools/OnroadMapGenerator/BP_OpenDriveToMap"));
+  ConstructorHelpers::FClassFinder<UOpenDriveToMap> OpenDrivelassFinder(TEXT("/CarlaDigitalTwinsTool/digitalTwins/BP_OpenDriveToMap"));
   OpenDriveClass = OpenDrivelassFinder.Class;
 #endif
 }
@@ -72,14 +71,24 @@ int32 UGenerateTileCommandlet::Main(const FString &Params)
   }
 
 
-
+  if(OpenDriveClass == nullptr )
+  {
+    UE_LOG(LogCarlaToolsMapGenerateTileCommandlet, Error, TEXT("OpenDrive class is not properly set"));
+    return -1;
+  }
   OpenDriveMap = NewObject<UOpenDriveToMap>(this, OpenDriveClass);
+  if(OpenDriveMap == nullptr )
+  {
+    UE_LOG(LogCarlaToolsMapGenerateTileCommandlet, Error, TEXT("OpenDrive object is not properly spawned"));
+    return -1;
+  }
   OpenDriveMap->FilePath = ParamsMap["FilePath"];
   OpenDriveMap->BaseLevelName = ParamsMap["BaseLevelName"];
   OpenDriveMap->OriginGeoCoordinates = FVector2D(FCString::Atof(*ParamsMap["GeoCoordsX"]),FCString::Atof(*ParamsMap["GeoCoordsY"]));
   OpenDriveMap->CurrentTilesInXY = FIntVector(FCString::Atof(*ParamsMap["CTileX"]),FCString::Atof(*ParamsMap["CTileY"]), 0);
   // Parse Params
   OpenDriveMap->GenerateTile();
+
   return 0;
 }
 

@@ -1,17 +1,17 @@
-// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB).
-// This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
+// de Barcelona (UAB).
 //
-// Compatibility shim for carla-digitaltwins' UBlueprintUtilFunctions (redirected here via
-// CoreRedirects) so its building-generator blueprints load against stock CARLA.
+// This work is licensed under the terms of the MIT license.
+// For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
 
-#include <util/ue-header-guard-begin.h>
+// Engine headers
 #include "CoreMinimal.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
-#include <util/ue-header-guard-end.h>
-
 #include "BlueprintUtilFunctions.generated.h"
+
+DECLARE_LOG_CATEGORY_EXTERN(LogDigitalTwinsToolBlueprintUtil, Log, All);
 
 UCLASS(BlueprintType)
 class CARLATOOLS_API UBlueprintUtilFunctions : public UBlueprintFunctionLibrary
@@ -25,4 +25,11 @@ public:
 
   UFUNCTION(BlueprintCallable)
   static FString GetProjectName();
+
+  UFUNCTION(BlueprintCallable)
+  static void UnloadRegionWorldPartition(
+      UWorld* World,
+      const FBox& RegionBounds,
+      const FString& RegionName);
+
 };

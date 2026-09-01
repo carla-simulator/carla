@@ -122,7 +122,19 @@ public class CarlaTools :
       "Projects",
       "PCG",
       // CarlaCrosswalkNavBuilder: package save/delete helpers.
-      "SourceControl"
+      "SourceControl",
+      // carla-digitaltwins port: terrain heightmap sampling, road render
+      // export, street-view fetch, TL tool widget, OSM street map access.
+      "StreetMapRuntime",
+      "StreetMapImporting",
+      "ImageWriteQueue",
+      "ImageWrapper",
+      "ImageCore",
+      "EngineSettings",
+      "InputCore",
+      "AppFramework",
+      "DesktopPlatform",
+      "LevelEditor"
     });
 
     if (EnableNVIDIAOmniverse)

@@ -1,12 +1,10 @@
-// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
+// Copyright (c) 2017 Computer Vision Center (CVC) at the Universitat Autonoma de Barcelona (UAB). This work is licensed under the terms of the MIT license. For a copy, see <https://opensource.org/licenses/MIT>.
 
 #pragma once
 
-#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "Interfaces/IHttpRequest.h"
-#include <util/ue-header-guard-end.h>
-
+#include "Generation/OpenDriveFileGenerationParameters.h"
 #include "CustomFileDownloader.generated.h"
 /**
  *
@@ -54,7 +52,10 @@ public:
   UFUNCTION(BlueprintCallable)
   void StartDownload();
   UFUNCTION(BlueprintCallable)
-  void ConvertOSMInOpenDrive(FString FilePath, float Lat_0 = 0, float Lon_0 = 0);
+  void ConvertOSMInOpenDrive(
+	  FString FilePath,
+	  float Lat_0, float Lon_0,
+	  const FOpenDriveFileGenerationParameters& OpenDriveGenParams);
 
   FString ResultFileName;
 
@@ -66,5 +67,3 @@ private:
 
   FString Payload;
 };
-
-
