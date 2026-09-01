@@ -111,6 +111,12 @@ private:
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
   TMap<FString, TSubclassOf<AActor>> SpeedLimitModels;
 
+  // US (MUTCD) speed plates keyed by mph. Used instead of SpeedLimitModels when the
+  // xodr signal carries country="US" (see Signal::GetCountry(); twin builds with a US
+  // profile stamp it, stock CARLA maps carry "OpenDRIVE" and keep the EU plates).
+  UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
+  TMap<FString, TSubclassOf<AActor>> SpeedLimitModels_US;
+
   UPROPERTY(Category = "Traffic Light Manager", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   TObjectPtr<USceneComponent> SceneComponent;
 
