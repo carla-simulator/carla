@@ -266,6 +266,13 @@ public:
       const geom::Vector3D& maxpos ) const;
 
     std::unique_ptr<geom::Mesh> SDFToMesh(const road::Junction& jinput, const std::vector<geom::Vector3D>& sdfinput, int grid_cells_per_dim) const;
+
+    /// Paves the regions a junction's lane corridors enclose but don't
+    /// cover (see GenerateChunkedMesh). Returns nullptr when there is
+    /// nothing to fill.
+    std::unique_ptr<geom::Mesh> GenerateJunctionFill(
+        const road::Junction &junction,
+        const geom::Mesh &corridor_mesh) const;
   };
 
 } // namespace road

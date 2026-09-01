@@ -22,9 +22,11 @@
 
 #include <third-party/marchingcube/MeshReconstruction.h>
 
+#include <algorithm>
 #include <limits>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <stdexcept>
 #include <chrono>
 #include <thread>
@@ -1287,6 +1289,11 @@ namespace road {
       }
       if(params.smooth_junctions) {
         auto merged_mesh = mesh_factory.MergeAndSmooth(lane_meshes);
+        // Pave the wedges left between the (smoothed) lane corridors before
+        // the sidewalks are appended, so the fill follows the final z.
+        if (auto fill = GenerateJunctionFill(junction, *merged_mesh)) {
+          *merged_mesh += *fill;
+        }
         for(auto& lane : sidewalk_lane_meshes) {
           *merged_mesh += *lane;
         }
@@ -1295,6 +1302,9 @@ namespace road {
         std::unique_ptr<geom::Mesh> junction_mesh = std::make_unique<geom::Mesh>();
         for(auto& lane : lane_meshes) {
           *junction_mesh += *lane;
+        }
+        if (auto fill = GenerateJunctionFill(junction, *junction_mesh)) {
+          *junction_mesh += *fill;
         }
         for(auto& lane : sidewalk_lane_meshes) {
           *junction_mesh += *lane;
@@ -1829,6 +1839,421 @@ namespace road {
     }
     std::cout << "To " + std::to_string(ToReturn.size() ) + " roads " << std::endl;
     return ToReturn;
+  }
+
+  std::unique_ptr<geom::Mesh> Map::GenerateJunctionFill(
+      const road::Junction &junction,
+      const geom::Mesh &corridor_mesh) const {
+    // The runtime junction mesh is the union of the connecting roads' lane
+    // corridors. On anything bigger than a simple crossing that leaves the
+    // ground showing through every region the corridors enclose but don't
+    // cover (the wedges between diverging turns, the middle of wide
+    // 4-arm/dual-carriageway crossings). This rasterizes the corridors plus
+    // a short "cap" of every arm road at its contact end, floods the grid
+    // from the outside, and paves every uncovered cell the flood can't
+    // reach -- i.e. exactly the holes enclosed by junction roadway, and
+    // nothing outside it (curb returns between adjacent arms, or the open
+    // bays of an irregular junction, stay ground: they are not enclosed).
+    // The fill follows the corridor surface (barycentric z where it
+    // overlaps a corridor, inverse-distance blend of the corridor vertices
+    // in the holes) and sits a hair below it so the corridor always wins
+    // the depth test where the two coincide.
+    using Vec3 = geom::Vector3D;
+    struct Tri { Vec3 a, b, c; };
+
+    constexpr float kCell = 0.5f;          // fill grid resolution (m)
+    constexpr float kBin = 4.0f;           // triangle/vertex spatial hash (m)
+    constexpr float kCapLength = 5.0f;     // arm cap extruded past the contact line (m)
+    constexpr float kArmSnap = 3.0f;       // arm end must lie this close to a corridor end (m)
+    constexpr float kZBelow = 0.015f;      // fill sits this far below the corridors (m)
+    constexpr int kMargin = 2;             // grid cells of padding around the footprint
+    constexpr size_t kMaxVertices = 4000000; // sanity cap on the grid size
+
+    const auto &verts = corridor_mesh.GetVertices();
+    const auto &idx = corridor_mesh.GetIndexes();
+    if (verts.size() < 3 || idx.size() < 3) {
+      return nullptr;
+    }
+
+    std::vector<Tri> corridor_tris;
+    corridor_tris.reserve(idx.size() / 3);
+    for (size_t i = 0; i + 2 < idx.size(); i += 3) {
+      // geom::Mesh indices are 1-based
+      corridor_tris.push_back({verts[idx[i] - 1], verts[idx[i + 1] - 1], verts[idx[i + 2] - 1]});
+    }
+
+    // -- arm caps -----------------------------------------------------------
+    // Every road that touches the junction (incoming roads and the
+    // predecessor/successor of each connecting road) contributes a quad
+    // spanning its full roadway width at the contact end, extruded a few
+    // metres away from the junction. They close the wedges between
+    // corridors that diverge from / converge on the same arm, which are
+    // otherwise open toward the arm and would read as "outside".
+    std::vector<Vec3> corridor_ends;
+    std::unordered_set<RoadId> arm_candidates;
+    const auto &roads = _data.GetRoads();
+    for (const auto &connection_pair : junction.GetConnections()) {
+      const auto &connection = connection_pair.second;
+      const auto it = roads.find(connection.connecting_road);
+      if (it == roads.end()) {
+        continue;
+      }
+      const auto &cr = it->second;
+      corridor_ends.push_back(cr.GetDirectedPointIn(0.0).location);
+      corridor_ends.push_back(cr.GetDirectedPointIn(cr.GetLength()).location);
+      arm_candidates.insert(connection.incoming_road);
+      arm_candidates.insert(cr.GetPredecessor());
+      arm_candidates.insert(cr.GetSuccessor());
+    }
+
+    auto NearestCorridorEnd = [&corridor_ends](const Vec3 &p) {
+      float best = std::numeric_limits<float>::max();
+      for (const auto &e : corridor_ends) {
+        best = std::min(best, (e - p).Length2D());
+      }
+      return best;
+    };
+
+    std::vector<Tri> cap_tris;
+    for (RoadId arm_id : arm_candidates) {
+      const auto it = roads.find(arm_id);
+      if (it == roads.end() || it->second.IsJunction()) {
+        continue;
+      }
+      const auto &arm = it->second;
+      const double length = arm.GetLength();
+      if (length < 1e-3) {
+        continue;
+      }
+      const Vec3 p_start = arm.GetDirectedPointIn(0.0).location;
+      const Vec3 p_end = arm.GetDirectedPointIn(length).location;
+      const float d_start = NearestCorridorEnd(p_start);
+      const float d_end = NearestCorridorEnd(p_end);
+      if (std::min(d_start, d_end) > kArmSnap) {
+        continue; // link id that isn't actually this junction's arm
+      }
+      const bool at_end = d_end < d_start;
+      const double s_c = at_end ? length : 0.0;
+      const double s_in = at_end ? std::max(0.0, length - 1.0) : std::min(length, 1.0);
+      const Vec3 p_in = arm.GetDirectedPointIn(s_in).location;
+      Vec3 outward = at_end ? Vec3(p_end.x - p_in.x, p_end.y - p_in.y, 0.0f)
+                            : Vec3(p_start.x - p_in.x, p_start.y - p_in.y, 0.0f);
+      outward.z = 0.0f;
+      if (outward.Length2D() < 1e-4f) {
+        continue;
+      }
+      outward = outward.MakeUnitVector();
+      const Vec3 normal(-outward.y, outward.x, 0.0f);
+
+      bool have_corner = false;
+      float t_min = 0.0f, t_max = 0.0f;
+      Vec3 c_min, c_max;
+      for (const road::Lane *lane : arm.GetLanesByDistance(s_c)) {
+        if (lane == nullptr || lane->GetId() == 0 ||
+            lane->GetType() == road::Lane::LaneType::Sidewalk ||
+            lane->GetType() == road::Lane::LaneType::None) {
+          continue;
+        }
+        const auto corners = lane->GetCornerPositions(s_c, 0.0f);
+        for (const Vec3 &c : {corners.first, corners.second}) {
+          const float t = (c.x - p_start.x) * normal.x + (c.y - p_start.y) * normal.y;
+          if (!have_corner || t < t_min) { t_min = t; c_min = c; }
+          if (!have_corner || t > t_max) { t_max = t; c_max = c; }
+          have_corner = true;
+        }
+      }
+      if (!have_corner || (t_max - t_min) < 0.5f) {
+        continue;
+      }
+      const Vec3 o = outward * kCapLength;
+      cap_tris.push_back({c_min, c_max, c_max + o});
+      cap_tris.push_back({c_min, c_max + o, c_min + o});
+    }
+
+    // -- grid ---------------------------------------------------------------
+    float min_x = std::numeric_limits<float>::max(), min_y = min_x;
+    float max_x = std::numeric_limits<float>::lowest(), max_y = max_x;
+    auto Extend = [&](const Vec3 &v) {
+      min_x = std::min(min_x, v.x); max_x = std::max(max_x, v.x);
+      min_y = std::min(min_y, v.y); max_y = std::max(max_y, v.y);
+    };
+    for (const auto &v : verts) { Extend(v); }
+    for (const auto &t : cap_tris) { Extend(t.a); Extend(t.b); Extend(t.c); }
+
+    const float origin_x = min_x - kMargin * kCell;
+    const float origin_y = min_y - kMargin * kCell;
+    const int nvx = static_cast<int>(std::ceil((max_x - min_x) / kCell)) + 2 * kMargin + 1;
+    const int nvy = static_cast<int>(std::ceil((max_y - min_y) / kCell)) + 2 * kMargin + 1;
+    if (nvx < 3 || nvy < 3 || static_cast<size_t>(nvx) * static_cast<size_t>(nvy) > kMaxVertices) {
+#ifdef LIBCARLA_JFILL_DEBUG
+      std::cout << "[jfill] junction " << junction.GetId() << " BAIL grid " << nvx << "x" << nvy << std::endl;
+#endif
+      return nullptr;
+    }
+    const int ncx = nvx - 1, ncy = nvy - 1;
+
+    // spatial hash of triangles and corridor vertices
+    const int nbx = static_cast<int>((nvx * kCell) / kBin) + 1;
+    const int nby = static_cast<int>((nvy * kCell) / kBin) + 1;
+    auto BinX = [&](float x) { return std::clamp(static_cast<int>((x - origin_x) / kBin), 0, nbx - 1); };
+    auto BinY = [&](float y) { return std::clamp(static_cast<int>((y - origin_y) / kBin), 0, nby - 1); };
+    std::vector<std::vector<int>> corridor_bins(static_cast<size_t>(nbx) * nby);
+    std::vector<std::vector<int>> cap_bins(static_cast<size_t>(nbx) * nby);
+    std::vector<std::vector<int>> vertex_bins(static_cast<size_t>(nbx) * nby);
+    auto BinTris = [&](const std::vector<Tri> &tris, std::vector<std::vector<int>> &bins) {
+      for (size_t i = 0; i < tris.size(); ++i) {
+        const Tri &t = tris[i];
+        const int bx0 = BinX(std::min({t.a.x, t.b.x, t.c.x}));
+        const int bx1 = BinX(std::max({t.a.x, t.b.x, t.c.x}));
+        const int by0 = BinY(std::min({t.a.y, t.b.y, t.c.y}));
+        const int by1 = BinY(std::max({t.a.y, t.b.y, t.c.y}));
+        for (int by = by0; by <= by1; ++by) {
+          for (int bx = bx0; bx <= bx1; ++bx) {
+            bins[static_cast<size_t>(by) * nbx + bx].push_back(static_cast<int>(i));
+          }
+        }
+      }
+    };
+    BinTris(corridor_tris, corridor_bins);
+    BinTris(cap_tris, cap_bins);
+    for (size_t i = 0; i < verts.size(); ++i) {
+      vertex_bins[static_cast<size_t>(BinY(verts[i].y)) * nbx + BinX(verts[i].x)].push_back(static_cast<int>(i));
+    }
+
+    // Barycentric point-in-triangle (2D); returns the surface z on a hit.
+    auto HitTriangle = [](const Tri &t, float px, float py, float &z_out) {
+      const float denom = (t.b.y - t.c.y) * (t.a.x - t.c.x) + (t.c.x - t.b.x) * (t.a.y - t.c.y);
+      if (std::abs(denom) < 1e-9f) {
+        return false;
+      }
+      const float w0 = ((t.b.y - t.c.y) * (px - t.c.x) + (t.c.x - t.b.x) * (py - t.c.y)) / denom;
+      const float w1 = ((t.c.y - t.a.y) * (px - t.c.x) + (t.a.x - t.c.x) * (py - t.c.y)) / denom;
+      const float w2 = 1.0f - w0 - w1;
+      constexpr float eps = -1e-3f;
+      if (w0 < eps || w1 < eps || w2 < eps) {
+        return false;
+      }
+      z_out = w0 * t.a.z + w1 * t.b.z + w2 * t.c.z;
+      return true;
+    };
+
+    // per grid vertex: covered by a corridor (with z) / by an arm cap
+    std::vector<uint8_t> v_corridor(static_cast<size_t>(nvx) * nvy, 0);
+    std::vector<uint8_t> v_cap(static_cast<size_t>(nvx) * nvy, 0);
+    std::vector<float> v_z(static_cast<size_t>(nvx) * nvy, 0.0f);
+    for (int vy = 0; vy < nvy; ++vy) {
+      for (int vx = 0; vx < nvx; ++vx) {
+        const float px = origin_x + vx * kCell;
+        const float py = origin_y + vy * kCell;
+        const size_t vid = static_cast<size_t>(vy) * nvx + vx;
+        const size_t bin = static_cast<size_t>(BinY(py)) * nbx + BinX(px);
+        float z = 0.0f;
+        for (int ti : corridor_bins[bin]) {
+          if (HitTriangle(corridor_tris[ti], px, py, z)) {
+            v_corridor[vid] = 1;
+            v_z[vid] = z;
+            break;
+          }
+        }
+        for (int ti : cap_bins[bin]) {
+          if (HitTriangle(cap_tris[ti], px, py, z)) {
+            v_cap[vid] = 1;
+            break;
+          }
+        }
+      }
+    }
+
+    // per cell: blocked (fully paved, or an arm cap) vs. open
+    auto CellId = [&](int cx, int cy) { return static_cast<size_t>(cy) * ncx + cx; };
+    std::vector<uint8_t> blocked(static_cast<size_t>(ncx) * ncy, 0);
+    std::vector<uint8_t> full(static_cast<size_t>(ncx) * ncy, 0);
+    for (int cy = 0; cy < ncy; ++cy) {
+      for (int cx = 0; cx < ncx; ++cx) {
+        const size_t v00 = static_cast<size_t>(cy) * nvx + cx;
+        const size_t v10 = v00 + 1, v01 = v00 + nvx, v11 = v01 + 1;
+        const int n_corr = v_corridor[v00] + v_corridor[v10] + v_corridor[v01] + v_corridor[v11];
+        const bool any_cap = v_cap[v00] || v_cap[v10] || v_cap[v01] || v_cap[v11];
+        full[CellId(cx, cy)] = (n_corr == 4);
+        blocked[CellId(cx, cy)] = (n_corr == 4 || any_cap);
+      }
+    }
+
+    // Morphological closing of the corridor coverage: concave pockets
+    // narrower than ~2*kCloseRadius get paved even when they are open to
+    // the outside -- the wedges between corridors of *different* arms and
+    // the curb-return mouths between adjacent arms, which a pure
+    // enclosed-hole fill leaves green on big irregular junctions (Sunnyvale
+    // j59: most wedges connect to the perimeter somewhere). Chamfer
+    // distance out from the coverage (dilation), then chamfer back in from
+    // the dilation's complement (erosion): closing = cells deeper than the
+    // radius inside the dilated set. A straight corridor edge is invariant
+    // under closing, so this never pads the junction's convex outline.
+    // Radius scaled to the junction: a residential crossing needs only a
+    // small curb-return fillet, while a sprawling multi-arm junction
+    // (Sunnyvale j59 spans ~150 m) has paved voids tens of metres wide
+    // between its corridors that a fixed small radius can never span.
+    // Genuinely open bays wider than ~2R stay ground either way.
+    const float bbox_extent = std::max(max_x - min_x, max_y - min_y);
+    const float close_radius = std::clamp(0.12f * bbox_extent, 8.0f, 20.0f); // m
+    {
+      const float r_cells = close_radius / kCell;
+      const float kInf = 1e9f;
+      std::vector<float> dist(static_cast<size_t>(ncx) * ncy, kInf);
+      auto Chamfer = [&](std::vector<float> &d) {
+        for (int cy = 0; cy < ncy; ++cy) {
+          for (int cx = 0; cx < ncx; ++cx) {
+            float v = d[CellId(cx, cy)];
+            if (cx > 0) v = std::min(v, d[CellId(cx - 1, cy)] + 1.0f);
+            if (cy > 0) v = std::min(v, d[CellId(cx, cy - 1)] + 1.0f);
+            if (cx > 0 && cy > 0) v = std::min(v, d[CellId(cx - 1, cy - 1)] + 1.4142f);
+            if (cx + 1 < ncx && cy > 0) v = std::min(v, d[CellId(cx + 1, cy - 1)] + 1.4142f);
+            d[CellId(cx, cy)] = v;
+          }
+        }
+        for (int cy = ncy - 1; cy >= 0; --cy) {
+          for (int cx = ncx - 1; cx >= 0; --cx) {
+            float v = d[CellId(cx, cy)];
+            if (cx + 1 < ncx) v = std::min(v, d[CellId(cx + 1, cy)] + 1.0f);
+            if (cy + 1 < ncy) v = std::min(v, d[CellId(cx, cy + 1)] + 1.0f);
+            if (cx + 1 < ncx && cy + 1 < ncy) v = std::min(v, d[CellId(cx + 1, cy + 1)] + 1.4142f);
+            if (cx > 0 && cy + 1 < ncy) v = std::min(v, d[CellId(cx - 1, cy + 1)] + 1.4142f);
+            d[CellId(cx, cy)] = v;
+          }
+        }
+      };
+      for (size_t i = 0; i < full.size(); ++i) {
+        if (full[i]) dist[i] = 0.0f;
+      }
+      Chamfer(dist);
+      std::vector<float> dist2(static_cast<size_t>(ncx) * ncy, kInf);
+      for (size_t i = 0; i < dist.size(); ++i) {
+        if (dist[i] > r_cells) dist2[i] = 0.0f; // complement of the dilation
+      }
+      Chamfer(dist2);
+      for (size_t i = 0; i < dist2.size(); ++i) {
+        // Inside the closing and not already coverage or an arm cap: pave.
+        // Marking it blocked keeps the outside flood from running through
+        // it, so enclosed-hole detection composes with the closing.
+        if (dist2[i] > r_cells && !blocked[i]) {
+          blocked[i] = 2; // 2 = closing fill (any non-zero blocks the flood)
+        }
+      }
+    }
+
+    // flood the open cells from the grid border
+    std::vector<uint8_t> outside(static_cast<size_t>(ncx) * ncy, 0);
+    std::vector<std::pair<int, int>> stack;
+    auto Seed = [&](int cx, int cy) {
+      const size_t id = CellId(cx, cy);
+      if (!blocked[id] && !outside[id]) {
+        outside[id] = 1;
+        stack.emplace_back(cx, cy);
+      }
+    };
+    for (int cx = 0; cx < ncx; ++cx) { Seed(cx, 0); Seed(cx, ncy - 1); }
+    for (int cy = 0; cy < ncy; ++cy) { Seed(0, cy); Seed(ncx - 1, cy); }
+    while (!stack.empty()) {
+      const auto [cx, cy] = stack.back();
+      stack.pop_back();
+      if (cx > 0) Seed(cx - 1, cy);
+      if (cx + 1 < ncx) Seed(cx + 1, cy);
+      if (cy > 0) Seed(cx, cy - 1);
+      if (cy + 1 < ncy) Seed(cx, cy + 1);
+    }
+
+    // z of a hole vertex: inverse-distance blend of the nearest corridor
+    // vertices (ring search over the spatial hash)
+    auto BlendZ = [&](float px, float py, bool &ok) {
+      const int bx = BinX(px), by = BinY(py);
+      double sum_w = 0.0, sum_z = 0.0;
+      int found = 0;
+      for (int r = 0; r <= 12 && (found < 4 || r == 0); ++r) {
+        for (int y = by - r; y <= by + r; ++y) {
+          if (y < 0 || y >= nby) continue;
+          for (int x = bx - r; x <= bx + r; ++x) {
+            if (x < 0 || x >= nbx) continue;
+            if (std::abs(x - bx) != r && std::abs(y - by) != r) continue; // ring only
+            for (int vi : vertex_bins[static_cast<size_t>(y) * nbx + x]) {
+              const Vec3 &v = verts[vi];
+              const double dx = v.x - px, dy = v.y - py;
+              const double w = 1.0 / (dx * dx + dy * dy + 1e-2);
+              sum_w += w;
+              sum_z += w * v.z;
+              ++found;
+            }
+          }
+        }
+      }
+      ok = found > 0;
+      return ok ? static_cast<float>(sum_z / sum_w) : 0.0f;
+    };
+
+    // -- emit ---------------------------------------------------------------
+    geom::Mesh out_mesh;
+    std::vector<size_t> mesh_index(static_cast<size_t>(nvx) * nvy, 0); // 1-based, 0 = unset
+    auto VertexIndex = [&](int vx, int vy, bool &ok) -> size_t {
+      const size_t vid = static_cast<size_t>(vy) * nvx + vx;
+      if (mesh_index[vid] != 0) {
+        ok = true;
+        return mesh_index[vid];
+      }
+      const float px = origin_x + vx * kCell;
+      const float py = origin_y + vy * kCell;
+      float z;
+      if (v_corridor[vid]) {
+        z = v_z[vid];
+        ok = true;
+      } else {
+        z = BlendZ(px, py, ok);
+      }
+      if (!ok) {
+        return 0;
+      }
+      out_mesh.AddVertex(Vec3(px, py, z - kZBelow));
+      mesh_index[vid] = out_mesh.GetVerticesNum();
+      return mesh_index[vid];
+    };
+
+    size_t filled_cells = 0;
+    out_mesh.AddMaterial("road");
+    for (int cy = 0; cy < ncy; ++cy) {
+      for (int cx = 0; cx < ncx; ++cx) {
+        const size_t id = CellId(cx, cy);
+        // Fill: closing cells (blocked == 2) and enclosed holes (open cells
+        // the outside flood never reached). Never corridor-covered cells or
+        // arm caps.
+        const bool is_closing_fill = (blocked[id] == 2);
+        const bool is_hole = (!blocked[id] && !outside[id]);
+        if (!is_closing_fill && !is_hole) {
+          continue;
+        }
+        bool ok0, ok1, ok2, ok3;
+        const size_t i00 = VertexIndex(cx, cy, ok0);
+        const size_t i10 = VertexIndex(cx + 1, cy, ok1);
+        const size_t i11 = VertexIndex(cx + 1, cy + 1, ok2);
+        const size_t i01 = VertexIndex(cx, cy + 1, ok3);
+        if (!(ok0 && ok1 && ok2 && ok3)) {
+          continue;
+        }
+        // Same winding as MeshFactory's lane strips (clockwise in the
+        // stored x/y frame) so the UE side culls consistently.
+        out_mesh.AddIndex(i00); out_mesh.AddIndex(i01); out_mesh.AddIndex(i11);
+        out_mesh.AddIndex(i00); out_mesh.AddIndex(i11); out_mesh.AddIndex(i10);
+        ++filled_cells;
+      }
+    }
+    out_mesh.EndMaterial();
+
+#ifdef LIBCARLA_JFILL_DEBUG
+    std::cout << "[jfill] junction " << junction.GetId() << " grid " << nvx << "x" << nvy
+              << " corridors " << corridor_tris.size() << " caps " << cap_tris.size()
+              << " filled " << filled_cells << std::endl;
+#endif
+    if (filled_cells == 0) {
+      return nullptr;
+    }
+    return std::make_unique<geom::Mesh>(std::move(out_mesh));
   }
 
   std::unique_ptr<geom::Mesh> Map::SDFToMesh(const road::Junction& jinput,
