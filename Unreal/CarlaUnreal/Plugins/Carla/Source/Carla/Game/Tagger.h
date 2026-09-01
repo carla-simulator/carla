@@ -80,14 +80,18 @@ public:
     const FString Path = Object->GetPathName();
     TArray<FString> StringArray;
     Path.ParseIntoArray(StringArray, TEXT("/"), false);
-    if(Path.Contains("UE5UseOnly"))
+    const int32 Primary = Path.Contains("UE5UseOnly") ? 5 : 4;
+    crp::CityObjectLabel Label =
+        (StringArray.Num() > Primary ? GetLabelByFolderName(StringArray[Primary]) : crp::CityObjectLabel::None);
+    // Fallback for content mounted outside /Game/Carla/Static/<Label>/... (e.g. plugin
+    // content such as /CarlaDigitalTwinsTool/Static/Building/...): the labelled folder
+    // nearest the asset wins. Runs only when the fixed-index lookup found nothing, so
+    // classic content keeps its exact previous labels.
+    for (int32 i = StringArray.Num() - 2; i >= 0 && Label == crp::CityObjectLabel::None; --i)
     {
-      return (StringArray.Num() > 5 ? GetLabelByFolderName(StringArray[5]) : crp::CityObjectLabel::None);
+      Label = GetLabelByFolderName(StringArray[i]);
     }
-    else
-    {
-      return (StringArray.Num() > 4 ? GetLabelByFolderName(StringArray[4]) : crp::CityObjectLabel::None);
-    }
+    return Label;
   }
 
   /// Method that computes the label corresponding to an specific object

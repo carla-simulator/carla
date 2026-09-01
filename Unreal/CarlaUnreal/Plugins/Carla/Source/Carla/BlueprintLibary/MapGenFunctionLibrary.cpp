@@ -328,3 +328,54 @@ TArray<AStaticMeshActor*> UMapGenFunctionLibrary::RevertStaticMeshesInTheLevelFo
 
   return Result;
 }
+
+// Ported from carla-digitaltwins' CarlaMeshGeneration (MIT) for the building generator.
+UInstancedStaticMeshComponent* UMapGenFunctionLibrary::AddInstancedStaticMeshComponentToActor(AActor* TargetActor)
+{
+  if (!TargetActor)
+  {
+    UE_LOG(LogCarlaMapGenFunctionLibrary, Warning, TEXT("Invalid TargetActor in AddInstancedStaticMeshComponentToActor"));
+    return nullptr;
+  }
+  if (!TargetActor->GetRootComponent())
+  {
+    USceneComponent* NewRoot = NewObject<USceneComponent>(TargetActor, TEXT("GeneratedRootComponent"));
+    TargetActor->SetRootComponent(NewRoot);
+    NewRoot->RegisterComponent();
+  }
+  UInstancedStaticMeshComponent* ISMComponent = NewObject<UInstancedStaticMeshComponent>(TargetActor);
+  if (!ISMComponent)
+  {
+    UE_LOG(LogCarlaMapGenFunctionLibrary, Error, TEXT("Could not create UInstancedStaticMeshComponent"));
+    return nullptr;
+  }
+  ISMComponent->SetupAttachment(TargetActor->GetRootComponent());
+  ISMComponent->RegisterComponent();
+  TargetActor->AddInstanceComponent(ISMComponent);
+  return ISMComponent;
+}
+
+UStaticMeshComponent* UMapGenFunctionLibrary::AddStaticMeshComponentToActor(AActor* TargetActor)
+{
+  if (!TargetActor)
+  {
+    UE_LOG(LogCarlaMapGenFunctionLibrary, Warning, TEXT("Invalid TargetActor in AddStaticMeshComponentToActor"));
+    return nullptr;
+  }
+  if (!TargetActor->GetRootComponent())
+  {
+    USceneComponent* NewRoot = NewObject<USceneComponent>(TargetActor, TEXT("GeneratedRootComponent"));
+    TargetActor->SetRootComponent(NewRoot);
+    NewRoot->RegisterComponent();
+  }
+  UStaticMeshComponent* SMComponent = NewObject<UStaticMeshComponent>(TargetActor);
+  if (!SMComponent)
+  {
+    UE_LOG(LogCarlaMapGenFunctionLibrary, Error, TEXT("Could not create UStaticMeshComponent"));
+    return nullptr;
+  }
+  SMComponent->SetupAttachment(TargetActor->GetRootComponent());
+  SMComponent->RegisterComponent();
+  TargetActor->AddInstanceComponent(SMComponent);
+  return SMComponent;
+}

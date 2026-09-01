@@ -59,4 +59,12 @@ public:
   // This function will removed instanced static meshes in the level and place static mesh actors instead
   UFUNCTION(BlueprintCallable)
   static TArray<AStaticMeshActor*> RevertStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter);
+
+  // Ported from carla-digitaltwins' CarlaMeshGeneration module so its building-generator
+  // blueprints (redirected here via CoreRedirects) can run against stock CARLA.
+  UFUNCTION(BlueprintCallable)
+  static UInstancedStaticMeshComponent* AddInstancedStaticMeshComponentToActor(AActor* TargetActor);
+
+  UFUNCTION(BlueprintCallable)
+  static UStaticMeshComponent* AddStaticMeshComponentToActor(AActor* TargetActor);
 };
