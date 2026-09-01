@@ -1239,11 +1239,6 @@ class CameraManager(object):
     def render(self, display):
         if self.surface is not None:
             display.blit(self.surface, (0, 0))
-    
-    def get_post_process_profile(self, map_name: str) -> str:
-        if "Town_C" in map_name:
-            return "Town_C"
-        return "Default"
 
     @staticmethod
     def _parse_image(weak_self, image):

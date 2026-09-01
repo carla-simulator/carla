@@ -15,9 +15,6 @@
 #include "Misc/Paths.h"
 #include "Modules/ModuleManager.h"
 #include "HAL/FileManagerGeneric.h"
-#include "AssetRegistry/AssetRegistryModule.h"
-#include "AssetRegistry/IAssetRegistry.h"
-#include "Engine/World.h"
 #include <util/ue-header-guard-end.h>
 
 
