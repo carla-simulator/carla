@@ -379,3 +379,162 @@ UStaticMeshComponent* UMapGenFunctionLibrary::AddStaticMeshComponentToActor(AAct
   TargetActor->AddInstanceComponent(SMComponent);
   return SMComponent;
 }
+
+FVector2D UMapGenFunctionLibrary::InverseTransverseMercatorProjection(float x, float y, float lat0, float lon0)
+{
+  const float R = 6373000.0f;
+
+  x /= OSMToCentimetersScaleFactor;
+  y = -y / OSMToCentimetersScaleFactor;
+
+  float latt0 = FMath::DegreesToRadians(lat0);
+  float eps0 = latt0; // atan(tan(latt0)/cos(0));
+  float y0 = R * eps0;
+
+  float eps = (y + y0) / R;
+  float nab = x / R;
+
+  float lat = FMath::RadiansToDegrees(atan(sin(eps)/sqrt(tan(nab)*tan(nab)+cos(eps)*cos(eps))));
+  float lon = lon0 + FMath::RadiansToDegrees(atan(sinh(nab) / cos(eps)));
+
+  return FVector2D(lat, lon);
+}
+
+USceneComponent* UMapGenFunctionLibrary::AddSceneComponentToActor(AActor* TargetActor)
+{
+  if (!TargetActor)
+  {
+    UE_LOG(LogCarlaMapGenFunctionLibrary, Warning, TEXT("Invalid TargetActor in AddSceneComponentToActor"));
+    return nullptr;
+  }
+
+  if (!TargetActor->GetRootComponent())
+  {
+    USceneComponent* NewRoot = NewObject<USceneComponent>(TargetActor, TEXT("GeneratedRoot"));
+    TargetActor->SetRootComponent(NewRoot);
+    NewRoot->RegisterComponent();
+  }
+
+  USceneComponent* SceneComp = NewObject<USceneComponent>(TargetActor);
+  if (!SceneComp)
+  {
+    UE_LOG(LogCarlaMapGenFunctionLibrary, Error, TEXT("Could not create USceneComponent"));
+    return nullptr;
+  }
+
+  SceneComp->SetupAttachment(TargetActor->GetRootComponent());
+  SceneComp->RegisterComponent();
+
+  TargetActor->AddInstanceComponent(SceneComp);
+
+  return SceneComp;
+}
+
+void UMapGenFunctionLibrary::SmoothVerticesDeep(
+  TArray<FVector>& Vertices,
+  const TArray<int32>& Indices,
+  int Depth,                 // Number of neighbor levels
+  int NumIterations,
+  float SmoothingFactor   // Blend between original and averaged
+)
+{
+  const int32 NumVertices = Vertices.Num();
+
+  // Step 1: Build adjacency map
+  TMap<int32, TSet<int32>> VertexNeighbors;
+  const int32 NumTriangles = Indices.Num() / 3;
+
+  for (int32 i = 0; i < NumTriangles; ++i)
+  {
+      int32 I0 = Indices[i * 3 + 0];
+      int32 I1 = Indices[i * 3 + 1];
+      int32 I2 = Indices[i * 3 + 2];
+
+      VertexNeighbors.FindOrAdd(I0).Add(I1);
+      VertexNeighbors.FindOrAdd(I0).Add(I2);
+
+      VertexNeighbors.FindOrAdd(I1).Add(I0);
+      VertexNeighbors.FindOrAdd(I1).Add(I2);
+
+      VertexNeighbors.FindOrAdd(I2).Add(I0);
+      VertexNeighbors.FindOrAdd(I2).Add(I1);
+  }
+
+  // Step 2: Iterative smoothing
+  for (int32 Iter = 0; Iter < NumIterations; ++Iter)
+  {
+    TArray<FVector> NewVertices = Vertices;
+    for (int32 i = 0; i < NumVertices; ++i)
+    {
+        TSet<int32> Visited;
+        TQueue<TPair<int32, int32>> Queue; // Pair of (vertex index, current depth)
+        Visited.Add(i);
+        Queue.Enqueue(TPair<int32, int32>(i, 0));
+        TArray<int32> CollectedNeighbors;
+
+        while (!Queue.IsEmpty())
+        {
+          TPair<int32, int32> Current;
+          Queue.Dequeue(Current);
+          int32 CurrentIndex = Current.Key;
+          int32 CurrentDepth = Current.Value;
+
+          if (CurrentDepth >= Depth)
+              continue;
+          const TSet<int32>* Neighbors = VertexNeighbors.Find(CurrentIndex);
+          if (!Neighbors) continue;
+
+          for (int32 NeighborIndex : *Neighbors)
+          {
+            if (!Visited.Contains(NeighborIndex))
+            {
+              Visited.Add(NeighborIndex);
+              CollectedNeighbors.Add(NeighborIndex);
+              Queue.Enqueue(TPair<int32, int32>(NeighborIndex, CurrentDepth + 1));
+            }
+          }
+        }
+
+        if (CollectedNeighbors.Num() > 0)
+        {
+          FVector Average = FVector::ZeroVector;
+          for (int32 NeighborIdx : CollectedNeighbors)
+          {
+            Average += Vertices[NeighborIdx];
+          }
+          Average /= CollectedNeighbors.Num();
+          NewVertices[i] = FMath::Lerp(Vertices[i], Average, SmoothingFactor);
+        }
+    }
+    Vertices = NewVertices;
+  }
+}
+
+float UMapGenFunctionLibrary::BicubicSampleG16(const TArrayView64<const uint16>& Pixels, int Width, int Height, float X, float Y)
+{
+  int ix = FMath::FloorToInt(X);
+  int iy = FMath::FloorToInt(Y);
+  float fx = X - ix;
+  float fy = Y - iy;
+
+  float patch[4][4];
+
+  // Fetch surrounding 4x4 pixel values
+  for (int m = -1; m <= 2; ++m)
+  {
+      for (int n = -1; n <= 2; ++n)
+      {
+          uint16 val = GetPixelG16(Pixels, Width, Height, ix + n, iy + m);
+          patch[m + 1][n + 1] = val / 65535.0f;  // Normalize to [0,1]
+      }
+  }
+
+  float col[4];
+  for (int i = 0; i < 4; ++i)
+  {
+      col[i] = CubicHermite(patch[i][0], patch[i][1], patch[i][2], patch[i][3], fx);
+  }
+
+  float result = CubicHermite(col[0], col[1], col[2], col[3], fy);
+  return FMath::Clamp(result, 0.0f, 1.0f); // Final result in [0,1]
+}

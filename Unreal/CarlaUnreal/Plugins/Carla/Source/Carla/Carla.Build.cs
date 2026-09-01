@@ -153,7 +153,11 @@ public class Carla :
       PublicDependencyModuleNames.Add("CarSim");
 
     if (Target.Type == TargetType.Editor)
+    {
       PublicDependencyModuleNames.Add("UnrealEd");
+      // GeometryImporter::ImportObj (carla-digitaltwins port) uses IAssetTools.
+      PublicDependencyModuleNames.Add("AssetTools");
+    }
       
     PublicIncludePaths.Add(ModuleDirectory);
 
