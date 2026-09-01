@@ -1546,6 +1546,63 @@ namespace road {
       return out_mesh;
     }
 
+    // One triangle fan per crosswalk polygon, with planar UVs laid out in
+    // the polygon's own frame: U runs along its longest edge (across the
+    // road, the direction the stripes repeat in), V spans the short side
+    // (the crosswalk's depth along the road) exactly once, and U tiles
+    // with the same metre-to-texel scale so the texture isn't stretched.
+    // Without UVs every vertex sampled texel (0,0) and the slabs rendered
+    // as one flat colour.
+    auto AddCrosswalkPolygon = [&out_mesh](const std::vector<geom::Vector3D> &poly) {
+      if (poly.size() < 3) {
+        return;
+      }
+      size_t longest = 0;
+      float longest_len2 = -1.0f;
+      for (size_t k = 0; k < poly.size(); ++k) {
+        const auto &p = poly[k];
+        const auto &q = poly[(k + 1) % poly.size()];
+        const float dx = q.x - p.x, dy = q.y - p.y;
+        const float len2 = dx * dx + dy * dy;
+        if (len2 > longest_len2) {
+          longest_len2 = len2;
+          longest = k;
+        }
+      }
+      geom::Vector2D u_dir(1.0f, 0.0f);
+      if (longest_len2 > 1e-6f) {
+        const auto &p = poly[longest];
+        const auto &q = poly[(longest + 1) % poly.size()];
+        const float inv = 1.0f / std::sqrt(longest_len2);
+        u_dir = geom::Vector2D((q.x - p.x) * inv, (q.y - p.y) * inv);
+      }
+      const geom::Vector2D v_dir(-u_dir.y, u_dir.x);
+      float a_min = std::numeric_limits<float>::max(), b_min = a_min;
+      float a_max = std::numeric_limits<float>::lowest(), b_max = a_max;
+      std::vector<std::pair<float, float>> local;
+      local.reserve(poly.size());
+      for (const auto &p : poly) {
+        const float a = p.x * u_dir.x + p.y * u_dir.y;
+        const float b = p.x * v_dir.x + p.y * v_dir.y;
+        local.emplace_back(a, b);
+        a_min = std::min(a_min, a); a_max = std::max(a_max, a);
+        b_min = std::min(b_min, b); b_max = std::max(b_max, b);
+      }
+      const float depth = std::max(b_max - b_min, 0.5f);
+      const size_t first = out_mesh.GetVerticesNum() + 1; // 1-based
+      for (size_t k = 0; k < poly.size(); ++k) {
+        out_mesh.AddVertex(poly[k]);
+        out_mesh.AddUV(geom::Vector2D(
+            (local[k].first - a_min) / depth,
+            (local[k].second - b_min) / depth));
+      }
+      for (size_t k = 1; k + 1 < poly.size(); ++k) {
+        out_mesh.AddIndex(first);
+        out_mesh.AddIndex(first + k);
+        out_mesh.AddIndex(first + k + 1);
+      }
+    };
+
     // Create a a list of triangle fans with material "crosswalk"
     out_mesh.AddMaterial("crosswalk");
     size_t start_vertex_index = 0;
@@ -1557,7 +1614,7 @@ namespace road {
       // Except for the first iteration && triangle fan done
       if (i != 0 && crosswalk_vertex[start_vertex_index] == crosswalk_vertex[i]) {
         // Create the actual fan
-        out_mesh.AddTriangleFan(vertices);
+        AddCrosswalkPolygon(vertices);
         vertices.clear();
         // End the loop if i reached the end of the vertex list
         if (i >= crosswalk_vertex.size() - 1) {

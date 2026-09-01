@@ -1432,9 +1432,200 @@ void AOpenDriveGenerator::GenerateCrosswalkMesh()
     Parameters = GameInstance->GetOpendriveGenerationParameters();
   }
 
+  // Zebra bars built from the crosswalk outline polygons instead of one
+  // texture-mapped cover slab. The only crosswalk-ish texture in the
+  // content is the speed-bump set (red field + stripe band), which rendered
+  // the slabs as pink; real bar geometry with the same clean white
+  // marking material the lane markings use needs no texture at all and
+  // scales to any crosswalk size. The road surface below stays visible
+  // between the bars, exactly like the painted original.
   auto& CarlaMap = UCarlaStatics::GetGameMode(GetWorld())->GetMap();
-  const carla::geom::Mesh CrosswalkMesh = CarlaMap->GetAllCrosswalkMesh();
-  if (!CrosswalkMesh.GetVertices().size())
+  const std::vector<carla::geom::Location> Zones = CarlaMap->GetAllCrosswalkZones();
+  if (Zones.empty())
+  {
+    return;
+  }
+
+  constexpr float BarWidth = 0.4f;   // m, along the crossing direction
+  constexpr float BarGap = 0.4f;     // m, between bars
+  constexpr float EdgeMargin = 0.1f; // m, kept clear along the bar ends
+
+  FProceduralCustomMesh MeshData;
+
+  auto AddZebraPolygon = [&MeshData](const std::vector<carla::geom::Location> &Poly, float ZOffsetCm)
+  {
+    if (Poly.size() < 3)
+    {
+      return;
+    }
+    // Local frame: U along the longest edge (the crossing direction), V
+    // across it (the crosswalk's depth along the road).
+    size_t Longest = 0;
+    float LongestLen2 = -1.0f;
+    for (size_t k = 0; k < Poly.size(); ++k)
+    {
+      const auto &P = Poly[k];
+      const auto &Q = Poly[(k + 1) % Poly.size()];
+      const float DX = Q.x - P.x, DY = Q.y - P.y;
+      const float Len2 = DX * DX + DY * DY;
+      if (Len2 > LongestLen2)
+      {
+        LongestLen2 = Len2;
+        Longest = k;
+      }
+    }
+    if (LongestLen2 < 1e-4f)
+    {
+      return;
+    }
+    const float InvLen = 1.0f / FMath::Sqrt(LongestLen2);
+    const FVector2D U((Poly[(Longest + 1) % Poly.size()].x - Poly[Longest].x) * InvLen,
+                      (Poly[(Longest + 1) % Poly.size()].y - Poly[Longest].y) * InvLen);
+    const FVector2D V(-U.Y, U.X);
+
+    struct FLocalPt { float A, B, Z; };
+    TArray<FLocalPt> Ring;
+    float AMin = FLT_MAX, AMax = -FLT_MAX, BMin = FLT_MAX, BMax = -FLT_MAX;
+    for (const auto &P : Poly)
+    {
+      const float A = P.x * U.X + P.y * U.Y;
+      const float B = P.x * V.X + P.y * V.Y;
+      Ring.Add({A, B, P.z});
+      AMin = FMath::Min(AMin, A); AMax = FMath::Max(AMax, A);
+      BMin = FMath::Min(BMin, B); BMax = FMath::Max(BMax, B);
+    }
+
+    // Surface height at a local point: barycentric over the outline's
+    // triangle fan (the corners already carry the road elevation at their
+    // own s -- see Map::GetAllCrosswalkZones); nearest corner as fallback.
+    auto SurfaceZ = [&Ring](float A, float B) -> float
+    {
+      for (int32 K = 1; K + 1 < Ring.Num(); ++K)
+      {
+        const FLocalPt &P0 = Ring[0], &P1 = Ring[K], &P2 = Ring[K + 1];
+        const float Denom = (P1.B - P2.B) * (P0.A - P2.A) + (P2.A - P1.A) * (P0.B - P2.B);
+        if (FMath::Abs(Denom) < 1e-9f)
+        {
+          continue;
+        }
+        const float W0 = ((P1.B - P2.B) * (A - P2.A) + (P2.A - P1.A) * (B - P2.B)) / Denom;
+        const float W1 = ((P2.B - P0.B) * (A - P2.A) + (P0.A - P2.A) * (B - P2.B)) / Denom;
+        const float W2 = 1.0f - W0 - W1;
+        if (W0 >= -1e-3f && W1 >= -1e-3f && W2 >= -1e-3f)
+        {
+          return W0 * P0.Z + W1 * P1.Z + W2 * P2.Z;
+        }
+      }
+      float Best = FLT_MAX, Z = Ring[0].Z;
+      for (const FLocalPt &P : Ring)
+      {
+        const float D = FMath::Square(P.A - A) + FMath::Square(P.B - B);
+        if (D < Best) { Best = D; Z = P.Z; }
+      }
+      return Z;
+    };
+
+    // Sutherland-Hodgman clip of one bar rectangle against the outline
+    // (crosswalk outlines are rectangles, so convex clipping is exact).
+    auto ClipBar = [&Ring](TArray<FVector2D> Subject) -> TArray<FVector2D>
+    {
+      for (int32 K = 0; K < Ring.Num(); ++K)
+      {
+        const FVector2D E0(Ring[K].A, Ring[K].B);
+        const FVector2D E1(Ring[(K + 1) % Ring.Num()].A, Ring[(K + 1) % Ring.Num()].B);
+        const FVector2D Edge = E1 - E0;
+        // Ring orientation is unknown; use the ring centroid to pick the
+        // inward side of each edge.
+        FVector2D Centroid(0.0f, 0.0f);
+        for (const FLocalPt &P : Ring) { Centroid += FVector2D(P.A, P.B); }
+        Centroid /= static_cast<float>(Ring.Num());
+        const float CentroidSide = Edge.X * (Centroid.Y - E0.Y) - Edge.Y * (Centroid.X - E0.X);
+        const float Sign = CentroidSide >= 0.0f ? 1.0f : -1.0f;
+        TArray<FVector2D> Out;
+        for (int32 I = 0; I < Subject.Num(); ++I)
+        {
+          const FVector2D &P = Subject[I];
+          const FVector2D &Q = Subject[(I + 1) % Subject.Num()];
+          const float SideP = Sign * (Edge.X * (P.Y - E0.Y) - Edge.Y * (P.X - E0.X));
+          const float SideQ = Sign * (Edge.X * (Q.Y - E0.Y) - Edge.Y * (Q.X - E0.X));
+          if (SideP >= 0.0f)
+          {
+            Out.Add(P);
+          }
+          if ((SideP >= 0.0f) != (SideQ >= 0.0f))
+          {
+            const float T = SideP / (SideP - SideQ);
+            Out.Add(P + T * (Q - P));
+          }
+        }
+        Subject = MoveTemp(Out);
+        if (Subject.Num() < 3)
+        {
+          return {};
+        }
+      }
+      return Subject;
+    };
+
+    const float Extent = AMax - AMin;
+    const int32 NumBars = FMath::Max(1, FMath::FloorToInt((Extent - BarWidth) / (BarWidth + BarGap)) + 1);
+    const float Start = AMin + 0.5f * (Extent - (NumBars * (BarWidth + BarGap) - BarGap));
+    for (int32 Bar = 0; Bar < NumBars; ++Bar)
+    {
+      const float A0 = Start + Bar * (BarWidth + BarGap);
+      const float A1 = A0 + BarWidth;
+      TArray<FVector2D> Quad;
+      Quad.Add(FVector2D(A0, BMin + EdgeMargin));
+      Quad.Add(FVector2D(A1, BMin + EdgeMargin));
+      Quad.Add(FVector2D(A1, BMax - EdgeMargin));
+      Quad.Add(FVector2D(A0, BMax - EdgeMargin));
+      TArray<FVector2D> Clipped = ClipBar(MoveTemp(Quad));
+      if (Clipped.Num() < 3)
+      {
+        continue;
+      }
+      const int32 First = MeshData.Vertices.Num();
+      for (const FVector2D &L : Clipped)
+      {
+        const float X = L.X * U.X + L.Y * V.X;
+        const float Y = L.X * U.Y + L.Y * V.Y;
+        const float Z = SurfaceZ(L.X, L.Y);
+        MeshData.Vertices.Add(FVector(1e2f * X, 1e2f * Y, 1e2f * Z + ZOffsetCm));
+        MeshData.Normals.Add(FVector::UpVector);
+        MeshData.UV0.Add(FVector2D((L.X - A0) / BarWidth, (L.Y - BMin) / FMath::Max(BMax - BMin, 0.1f)));
+      }
+      for (int32 K = 1; K + 1 < Clipped.Num(); ++K)
+      {
+        // Same winding convention as the converted LibCarla meshes
+        // (flip the last two indices for Unreal's left-handed frame).
+        MeshData.Triangles.Add(First);
+        MeshData.Triangles.Add(First + K + 1);
+        MeshData.Triangles.Add(First + K);
+      }
+    }
+  };
+
+  // Split the flat vertex list into outline polygons: each polygon ends
+  // when its first vertex repeats (same convention as GetAllCrosswalkMesh).
+  std::vector<carla::geom::Location> Current;
+  size_t StartIdx = 0;
+  for (size_t i = 0; i < Zones.size(); ++i)
+  {
+    if (i != StartIdx && Zones[StartIdx] == Zones[i])
+    {
+      AddZebraPolygon(Current, DecalZOffset);
+      Current.clear();
+      if (i >= Zones.size() - 1)
+      {
+        break;
+      }
+      StartIdx = i + 1;
+      continue;
+    }
+    Current.push_back(Zones[i]);
+  }
+
+  if (MeshData.Vertices.Num() == 0)
   {
     return;
   }
@@ -1443,18 +1634,9 @@ void AOpenDriveGenerator::GenerateCrosswalkMesh()
   UProceduralMeshComponent *TempPMC = TempActor->MeshComponent;
   TempPMC->bUseAsyncCooking = true;
   TempPMC->bUseComplexAsSimpleCollision = true;
-  TempPMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
-
-  // Previously GetAllCrosswalkMesh() was only consumed for the pedestrian
-  // nav OBJ export (CarlaEpisode.cpp) and never rendered. The whole mesh
-  // carries a single "crosswalk" material tag (Map::GetAllCrosswalkMesh),
-  // so the plain whole-mesh conversion is enough here.
-  FProceduralCustomMesh MeshData = CrosswalkMesh;
-  for (FVector &Vertex : MeshData.Vertices)
-  {
-    // Small z-offset above the road surface to avoid z-fighting.
-    Vertex.Z += DecalZOffset;
-  }
+  // Markings are paint: the road mesh below carries the physics. Thin bar
+  // meshes with collision would only add pointless micro-ledges.
+  TempPMC->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
   TempPMC->CreateMeshSection_LinearColor(
       0,
@@ -1464,7 +1646,7 @@ void AOpenDriveGenerator::GenerateCrosswalkMesh()
       MeshData.UV0,
       TArray<FLinearColor>(), // VertexColor
       TArray<FProcMeshTangent>(), // Tangents
-      true); // Create collision
+      false); // no collision
 
   if (UMaterialInterface* ResolvedCrosswalkMaterial = CrosswalkMaterial.LoadSynchronous())
   {

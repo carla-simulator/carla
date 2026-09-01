@@ -232,17 +232,14 @@ protected:
   TSoftObjectPtr<UMaterialInterface> GroundMaterial = TSoftObjectPtr<UMaterialInterface>(
       FSoftObjectPath(TEXT("/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Grass.MI_LargeLandscape_Grass")));
 
-  /// Material applied to the crosswalk mesh. Uses the zebra-stripe texture
-  /// set authored for the speed-bump crosswalk mesh (SM_Crosswalk_Bump) --
-  /// it's a real painted-crosswalk diffuse/normal/ORM set on a standard
-  /// (non-decal) material instance, so it applies cleanly here even though
-  /// the diffuse was baked with the speed bump's raised shading in mind.
-  /// Alternate: RoadLine/DissappearingRoadlines/DisRoadlinesCrosswalk is a
-  /// decal-domain material (drives a scrolling/dissolve effect via a
-  /// MaterialParameterCollection) and is not a drop-in base-color swap.
+  /// Material applied to the zebra-bar crosswalk meshes. The bars are real
+  /// geometry (GenerateCrosswalkMesh), so this is just the same clean white
+  /// paint the lane markings use -- no dedicated crosswalk texture needed.
+  /// (MI_Crosswalk_SpeedBump was tried first as a whole-slab texture: its
+  /// diffuse is the speed bump's red field, which read as a flat pink slab.)
   UPROPERTY(Category = "Materials", EditAnywhere)
   TSoftObjectPtr<UMaterialInterface> CrosswalkMaterial = TSoftObjectPtr<UMaterialInterface>(
-      FSoftObjectPath(TEXT("/Game/Carla/Static/Static/Materials/Crosswalk_SpeedBump/MI_Crosswalk_SpeedBump.MI_Crosswalk_SpeedBump")));
+      FSoftObjectPath(TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_Road_Asphalt_B_LaneMarkingWhite.MI_Road_Asphalt_B_LaneMarkingWhite")));
 
   /// Material applied to white lane-marking meshes. The Rural_A marking
   /// variants carry a heavy paint-damage mask keyed to the road atlas UV
