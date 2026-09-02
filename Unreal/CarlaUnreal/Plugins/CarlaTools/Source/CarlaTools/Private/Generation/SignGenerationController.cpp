@@ -153,7 +153,15 @@ void ASignGenerationController::SignGenerationByPath(FName sign_package_path, FN
 		for (USignDataAsset* sign_asset : sign_data)
 		{
 			if (has_spawned_sign) break;
-			if (UKismetSystemLibrary::GetDisplayName(sign_asset).Contains(signValue))
+			// Exact match on the catalog's OSM tags (key=value); the legacy substring match on the
+			// asset name ("DA_max_speed_20" matched "20", "DA_stop" matched "bus_stop") is kept only
+			// for assets that carry no tags at all, and then requires the whole name to match.
+			const bool bMatches = sign_asset->OsmTags.Num() > 0
+				? sign_asset->MatchesOsmTag(keyname, signValue)
+				: (sign_asset->SignName.IsEmpty()
+					? UKismetSystemLibrary::GetDisplayName(sign_asset).Equals(TEXT("DA_") + signValue, ESearchCase::IgnoreCase)
+					: sign_asset->SignName.Equals(signValue, ESearchCase::IgnoreCase));
+			if (bMatches)
 			{
 				int& counter = spawn_name_counters.FindOrAdd(signValue);
 				counter++;
@@ -177,41 +185,66 @@ void ASignGenerationController::SignGenerationByPath(FName sign_package_path, FN
 
 				temp_actor->SetActorLabel(actor_name);
 
-				if (sign_asset->SignMesh != nullptr && pole_data[0]->PoleMesh != nullptr)
+				UPoleDataAsset* pole_asset = nullptr;
+				for (UPoleDataAsset* candidate : pole_data)
+				{
+					if (candidate != nullptr && candidate->PoleMesh != nullptr) { pole_asset = candidate; break; }
+				}
+				if (sign_asset->SignMesh != nullptr && pole_asset != nullptr)
 				{
 					UStaticMeshComponent* pole_mesh_comp = UMapGenFunctionLibrary::AddStaticMeshComponentToActor(temp_actor);
-					pole_mesh_comp->SetStaticMesh(pole_data[0]->PoleMesh);
+					pole_mesh_comp->SetStaticMesh(pole_asset->PoleMesh);
 					pole_mesh_comp->ComponentTags.Add(FName("pole"));
 
 					UStaticMeshComponent* sign_mesh_comp = UMapGenFunctionLibrary::AddStaticMeshComponentToActor(temp_actor);
 					sign_mesh_comp->SetStaticMesh(sign_asset->SignMesh);
 
-					UMaterialInterface* BaseMaterial = Cast<UMaterialInterface>(
-						StaticLoadObject(UMaterialInterface::StaticClass(), nullptr,
-							TEXT("/CarlaDigitalTwinsTool/Carla/Static/Signs/Materials/Atlas/MI_SignTextureAtlasSelector"))
-					);
-					UMaterialInstanceDynamic* DynamicMaterial = nullptr;
-
-					if (BaseMaterial)
+					// The catalog ships a constant material instance per sign (cell baked in); fall
+					// back to a dynamic instance of the atlas selector for hand-made assets.
+					if (sign_asset->Material != nullptr)
 					{
-						DynamicMaterial = UMaterialInstanceDynamic::Create(BaseMaterial, this);
+						sign_mesh_comp->SetMaterial(0, sign_asset->Material);
 					}
-					if (DynamicMaterial)
+					else
 					{
-						//Set diffuse texture from the data asset, Normal map gets created using diffuse.
-						DynamicMaterial->SetTextureParameterValue("Diffuse", sign_asset->Diffuse);
-
-						// Set index of the atlas texture
-						DynamicMaterial->SetScalarParameterValue("Index_X", sign_asset->Id_X);
-						DynamicMaterial->SetScalarParameterValue("Index_Y", sign_asset->Id_Y);
+						UMaterialInterface* BaseMaterial = Cast<UMaterialInterface>(
+							StaticLoadObject(UMaterialInterface::StaticClass(), nullptr,
+								TEXT("/CarlaDigitalTwinsTool/Carla/Static/Signs/Materials/Atlas/MI_SignTextureAtlasSelector"))
+						);
+						UMaterialInstanceDynamic* DynamicMaterial = nullptr;
+						if (BaseMaterial)
+						{
+							DynamicMaterial = UMaterialInstanceDynamic::Create(BaseMaterial, this);
+						}
+						if (DynamicMaterial)
+						{
+							//Set diffuse texture from the data asset, Normal map gets created using diffuse.
+							DynamicMaterial->SetTextureParameterValue("Diffuse", sign_asset->Diffuse);
+							// 1-based atlas cell (column, row), see USignDataAsset
+							DynamicMaterial->SetScalarParameterValue("Index_X", sign_asset->Id_X);
+							DynamicMaterial->SetScalarParameterValue("Index_Y", sign_asset->Id_Y);
+						}
+						sign_mesh_comp->SetMaterial(0, DynamicMaterial);
 					}
-					sign_mesh_comp->SetMaterial(0, DynamicMaterial);
-					sign_mesh_comp->SetWorldTransform(pole_mesh_comp->GetSocketTransform(FName(TEXT("Sign1"))));
+					// Mount at the pole's Sign1 socket; poles without one hang the plate just below
+					// the pole top (GetSocketTransform would otherwise return the pole base).
+					if (pole_mesh_comp->DoesSocketExist(FName(TEXT("Sign1"))))
+					{
+						sign_mesh_comp->SetWorldTransform(pole_mesh_comp->GetSocketTransform(FName(TEXT("Sign1"))));
+					}
+					else
+					{
+						const FBoxSphereBounds PoleBounds = pole_asset->PoleMesh->GetBounds();
+						const FBoxSphereBounds PlateBounds = sign_asset->SignMesh->GetBounds();
+						const float PoleTop = PoleBounds.Origin.Z + PoleBounds.BoxExtent.Z;
+						sign_mesh_comp->SetRelativeLocation(FVector(0.0f, 0.0f, PoleTop - PlateBounds.BoxExtent.Z - 5.0f));
+					}
 					sign_mesh_comp->ComponentTags.Add(FName("sign"));
 				}
 				else
 				{
-					//Throw error or warning + default mesh used
+					UE_LOG(LogTemp, Warning, TEXT("Sign %s: missing plate mesh or no pole DataAsset with a mesh under %s"),
+						*UKismetSystemLibrary::GetDisplayName(sign_asset), *PolePackagePath.ToString());
 				}
 
 				//GeneratedSigns.Add(sign.OSM_ID, temp_actor);
