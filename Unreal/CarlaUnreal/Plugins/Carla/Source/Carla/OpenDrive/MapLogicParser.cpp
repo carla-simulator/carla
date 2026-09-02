@@ -180,6 +180,38 @@ FTrafficLightLogicData UMapLogicParser::ParseTrafficLightFromJSON(TSharedPtr<FJs
     }
   }
 
+  const TArray<TSharedPtr<FJsonValue>>* HeadsArray;
+  if (TrafficLightJson->TryGetArrayField(TEXT("Heads"), HeadsArray))
+  {
+    for (const auto& HeadValue : *HeadsArray)
+    {
+      TSharedPtr<FJsonObject> HeadObject = HeadValue->AsObject();
+      if (!HeadObject.IsValid())
+      {
+        continue;
+      }
+      FTrafficLightHead Head;
+      HeadObject->TryGetStringField(TEXT("ComponentPrefix"), Head.ComponentPrefix);
+      HeadObject->TryGetStringField(TEXT("SignalID"), Head.SignalID);
+      const TArray<TSharedPtr<FJsonValue>>* LaneIdsArray;
+      if (HeadObject->TryGetArrayField(TEXT("LaneIds"), LaneIdsArray))
+      {
+        for (const auto& LaneIdValue : *LaneIdsArray)
+        {
+          int32 LaneId;
+          if (LaneIdValue->TryGetNumber(LaneId))
+          {
+            Head.LaneIds.Add(LaneId);
+          }
+        }
+      }
+      if (!Head.ComponentPrefix.IsEmpty())
+      {
+        Result.Heads.Add(Head);
+      }
+    }
+  }
+
   return Result;
 }
 
@@ -224,6 +256,167 @@ FString UMapLogicParser::GetDirectoryPath(const FString& FilePath)
   return Directory;
 }
 
+namespace
+{
+  /// The baked rig of a map_logic entry.
+  ///
+  /// By name first: the placer stamps the entry's ActorName on the baked actor as a tag (and
+  /// as its editor label), so the binding is explicit. The nearest-actor search is only a
+  /// fallback for a level baked before that, and it is a guess: two rigs of one junction sit
+  /// within the 50 cm radius by construction, and a gantry that serves two approaches has two
+  /// signals at one location.
+  AActor* FindBakedActor(UWorld* World, const FString& ActorName, const FVector& SignalLocation,
+                         const FString& SignalId, bool& bOutFoundByName)
+  {
+    bOutFoundByName = false;
+    TArray<AActor*> AllActors;
+    UGameplayStatics::GetAllActorsOfClass(World, AActor::StaticClass(), AllActors);
+
+    if (!ActorName.IsEmpty())
+    {
+      const FName Wanted(*ActorName);
+      for (AActor* Actor : AllActors)
+      {
+        if (Actor && Actor->ActorHasTag(Wanted))
+        {
+          bOutFoundByName = true;
+          return Actor;
+        }
+      }
+#if WITH_EDITOR
+      for (AActor* Actor : AllActors)
+      {
+        if (Actor && Actor->GetActorLabel() == ActorName)
+        {
+          bOutFoundByName = true;
+          return Actor;
+        }
+      }
+#endif
+    }
+
+    constexpr float MaxDistanceMatchSqr = 2500.0f;
+    AActor* ClosestActor = nullptr;
+    float MinDistance = MaxDistanceMatchSqr;
+    for (AActor* Actor : AllActors)
+    {
+      if (!Actor) continue;
+
+      // Never match a light that another signal already claimed. Two rigs on one junction sit
+      // within the 50 cm match radius, and adopting a claimed one would overwrite its SignId
+      // -- the second signal would silently steal the first one's identity.
+      if (ATrafficLightBase* Existing = Cast<ATrafficLightBase>(Actor))
+      {
+        UTrafficLightComponent* ExistingComp = Existing->GetTrafficLightComponent();
+        if (ExistingComp && !ExistingComp->GetSignId().IsEmpty()
+            && ExistingComp->GetSignId() != SignalId)
+        {
+          continue;
+        }
+      }
+
+      const float Dist = FVector::DistSquared(Actor->GetActorLocation(), SignalLocation);
+      if (Dist < MinDistance)
+      {
+        MinDistance = Dist;
+        ClosestActor = Actor;
+      }
+    }
+    return ClosestActor;
+  }
+
+  /// One ADigitalTwinsTrafficLight carrying copies of ``Meshes``, spawned deferred so that
+  /// BeginPlay -- and with it the lamp scan -- runs after the meshes are in place.
+  ADigitalTwinsTrafficLight* SpawnDigitalTwinsLight(UWorld* World, const FTransform& SpawnTransform,
+                                                    const TArray<UStaticMeshComponent*>& Meshes,
+                                                    const FString& SignalId)
+  {
+    ADigitalTwinsTrafficLight* NewTrafficLight = World->SpawnActorDeferred<ADigitalTwinsTrafficLight>(
+        ADigitalTwinsTrafficLight::StaticClass(), SpawnTransform, nullptr, nullptr,
+        ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+    if (!NewTrafficLight)
+    {
+      UE_LOG(LogCarla, Error, TEXT("Failed to spawn ADigitalTwinsTrafficLight for '%s'"), *SignalId);
+      return nullptr;
+    }
+
+    for (UStaticMeshComponent* SourceMesh : Meshes)
+    {
+      if (!SourceMesh) continue;
+
+      UStaticMeshComponent* NewMesh = NewObject<UStaticMeshComponent>(NewTrafficLight);
+      NewMesh->SetStaticMesh(SourceMesh->GetStaticMesh());
+      NewMesh->SetRelativeTransform(SourceMesh->GetRelativeTransform());
+      for (int32 i = 0; i < SourceMesh->GetNumMaterials(); i++)
+      {
+        NewMesh->SetMaterial(i, SourceMesh->GetMaterial(i));
+      }
+      NewMesh->RegisterComponent();
+      NewMesh->AttachToComponent(NewTrafficLight->GetRootComponent(),
+                                 FAttachmentTransformRules::KeepRelativeTransform);
+    }
+
+    UTrafficLightComponent* Comp = NewTrafficLight->GetTrafficLightComponent();
+    if (!Comp)
+    {
+      UE_LOG(LogCarla, Error, TEXT("ADigitalTwinsTrafficLight has no TrafficLightComponent"));
+      NewTrafficLight->Destroy();
+      return nullptr;
+    }
+    // SignId before FinishSpawning so BeginPlay's lamp census can name the signal.
+    Comp->SetSignId(SignalId);
+    NewTrafficLight->FinishSpawning(SpawnTransform);
+    return NewTrafficLight;
+  }
+
+  /// The mesh components of one baked rig, grouped by the OpenDRIVE signal their head names.
+  /// Anything that matches no head (Pole_%02d_Base / _Extensible / _Cap, and every backplate
+  /// or mesh a future rig adds) is structure and goes with the anchor signal.
+  void GroupMeshesBySignal(const TArray<UStaticMeshComponent*>& MeshComponents,
+                           const FTrafficLightLogicData& Data,
+                           TMap<FString, TArray<UStaticMeshComponent*>>& OutBySignal,
+                           TArray<FString>& OutOrder)
+  {
+    TArray<UStaticMeshComponent*> Structural;
+    for (UStaticMeshComponent* Mesh : MeshComponents)
+    {
+      if (!Mesh) continue;
+      const FString Name = Mesh->GetName();
+      const FTrafficLightHead* Best = nullptr;
+      for (const FTrafficLightHead& Head : Data.Heads)
+      {
+        if (Name.StartsWith(Head.ComponentPrefix)
+            && (!Best || Head.ComponentPrefix.Len() > Best->ComponentPrefix.Len()))
+        {
+          Best = &Head;
+        }
+      }
+      if (!Best)
+      {
+        Structural.Add(Mesh);
+        continue;
+      }
+      const FString SignalId = Best->SignalID.IsEmpty() ? Data.SignalID : Best->SignalID;
+      if (!OutBySignal.Contains(SignalId))
+      {
+        OutOrder.Add(SignalId);
+      }
+      OutBySignal.FindOrAdd(SignalId).Add(Mesh);
+    }
+    if (Structural.Num() == 0)
+    {
+      return;
+    }
+    const FString Anchor = OutBySignal.Contains(Data.SignalID) ? Data.SignalID
+                         : (OutOrder.Num() > 0 ? OutOrder[0] : Data.SignalID);
+    if (!OutBySignal.Contains(Anchor))
+    {
+      OutOrder.Add(Anchor);
+    }
+    OutBySignal.FindOrAdd(Anchor).Append(Structural);
+  }
+}
+
 void UMapLogicParser::ApplyLaneIdsFromMapLogic(const FString& XODRFilePath, ATrafficLightManager* TrafficLightManager)
 {
   if (!TrafficLightManager)
@@ -249,6 +442,8 @@ void UMapLogicParser::ApplyLaneIdsFromMapLogic(const FString& XODRFilePath, ATra
   const auto& Signals = Map->GetSignals();
 
   int32 SuccessCount = 0;
+  int32 SplitRigs = 0;
+  int32 ByProximity = 0;
 
   for (const FTrafficLightLogicData& Data : LogicData)
   {
@@ -271,50 +466,51 @@ void UMapLogicParser::ApplyLaneIdsFromMapLogic(const FString& XODRFilePath, ATra
     FTransform UETransform(CarlaTransform);
     FVector SignalLocation = UETransform.GetLocation();
 
-    constexpr float MaxDistanceMatchSqr = 2500.0f;
-    AActor* ClosestActor = nullptr;
-    float MinDistance = MaxDistanceMatchSqr;
-
-    TArray<AActor*> AllActors;
-    UGameplayStatics::GetAllActorsOfClass(TrafficLightManager->GetWorld(), AActor::StaticClass(), AllActors);
-
-    for (AActor* Actor : AllActors)
-    {
-      if (!Actor) continue;
-
-      // Never match a light that another signal already claimed. Two rigs on one junction sit
-      // within the 50 cm match radius, and adopting a claimed one would overwrite its SignId
-      // -- the second signal would silently steal the first one's identity.
-      if (ATrafficLightBase* Existing = Cast<ATrafficLightBase>(Actor))
-      {
-        UTrafficLightComponent* ExistingComp = Existing->GetTrafficLightComponent();
-        if (ExistingComp && !ExistingComp->GetSignId().IsEmpty()
-            && ExistingComp->GetSignId() != Data.SignalID)
-        {
-          continue;
-        }
-      }
-
-      float Dist = FVector::DistSquared(Actor->GetActorLocation(), SignalLocation);
-      if (Dist < MinDistance)
-      {
-        MinDistance = Dist;
-        ClosestActor = Actor;
-      }
-    }
-
+    bool bFoundByName = false;
+    AActor* ClosestActor = FindBakedActor(TrafficLightManager->GetWorld(), Data.ActorName,
+                                          SignalLocation, Data.SignalID, bFoundByName);
     if (!ClosestActor)
     {
-      UE_LOG(LogCarla, Error, TEXT("No actor found within 50cm of signal '%s'"), *Data.SignalID);
+      UE_LOG(LogCarla, Error, TEXT("No baked actor named '%s' and none within 50cm of signal '%s'"),
+             *Data.ActorName, *Data.SignalID);
       continue;
     }
+    if (!bFoundByName)
+    {
+      ++ByProximity;
+      UE_LOG(LogCarla, Warning,
+             TEXT("Signal '%s': no actor tagged/labelled '%s'; fell back to the nearest actor. "
+                  "Re-place the lights so the binding is by name, not by position."),
+             *Data.SignalID, *Data.ActorName);
+    }
+
+    // Timing of a light's own stage: prefer the controller the component actually joined
+    // (RegisterLightComponentFromOpenDRIVE derives it from the signal), so a rig split across
+    // two signals times both of their stages, not just the one TrafficLightGroupID names.
+    auto ApplyTiming = [&](UTrafficLightComponent* Comp)
+    {
+      UTrafficLightController* Controller = Comp ? Comp->GetController() : nullptr;
+      if (!Controller)
+      {
+        Controller = TrafficLightManager->GetController(Data.TrafficLightGroupID);
+      }
+      if (Controller)
+      {
+        Controller->SetRedTime(Data.Timing.RedDuration);
+        Controller->SetGreenTime(Data.Timing.GreenDuration);
+        Controller->SetYellowTime(Data.Timing.AmberDuration);
+      }
+      else
+      {
+        UE_LOG(LogCarla, Error, TEXT("Failed to get controller '%s'"), *Data.TrafficLightGroupID);
+      }
+    };
 
     ATrafficLightBase* TrafficLightActor = Cast<ATrafficLightBase>(ClosestActor);
-    UTrafficLightComponent* TrafficLightComp = nullptr;
 
     if (TrafficLightActor)
     {
-      TrafficLightComp = TrafficLightActor->GetTrafficLightComponent();
+      UTrafficLightComponent* TrafficLightComp = TrafficLightActor->GetTrafficLightComponent();
 
       if (TrafficLightComp->GetSignId() != Data.SignalID)
       {
@@ -330,83 +526,78 @@ void UMapLogicParser::ApplyLaneIdsFromMapLogic(const FString& XODRFilePath, ATra
       {
         TrafficLightManager->RegisterLightComponentFromOpenDRIVE(TrafficLightComp);
       }
+      ApplyTiming(TrafficLightComp);
+      TrafficLightComp->InitializeSign(Map.value());
+      ++SuccessCount;
+      continue;
     }
-    else
-    {
-      TArray<UStaticMeshComponent*> MeshComponents;
-      ClosestActor->GetComponents<UStaticMeshComponent>(MeshComponents);
 
-      if (MeshComponents.Num() == 0)
+    TArray<UStaticMeshComponent*> MeshComponents;
+    ClosestActor->GetComponents<UStaticMeshComponent>(MeshComponents);
+
+    if (MeshComponents.Num() == 0)
+    {
+      UE_LOG(LogCarla, Error, TEXT("DigitalTwins actor has no StaticMeshComponents"));
+      continue;
+    }
+
+    // One ADigitalTwinsTrafficLight per distinct signal the rig's heads name. With no "Heads"
+    // array (or with every head on the same signal) that is exactly one, i.e. the old
+    // behaviour; with an arrow head beside a through head it is two, each with its own
+    // ETrafficLightState, its own trigger boxes and its own stage.
+    TMap<FString, TArray<UStaticMeshComponent*>> BySignal;
+    TArray<FString> Order;
+    if (Data.Heads.Num() > 0)
+    {
+      GroupMeshesBySignal(MeshComponents, Data, BySignal, Order);
+    }
+    if (BySignal.Num() == 0)
+    {
+      Order.Add(Data.SignalID);
+      BySignal.Add(Data.SignalID, MeshComponents);
+    }
+    if (BySignal.Num() > 1)
+    {
+      ++SplitRigs;
+      UE_LOG(LogCarla, Log, TEXT("Rig '%s' carries %d signals: %s"), *Data.ActorName,
+             BySignal.Num(), *FString::Join(Order, TEXT(", ")));
+    }
+
+    const FTransform SpawnTransform(ClosestActor->GetActorRotation(), ClosestActor->GetActorLocation());
+    int32 SpawnedHere = 0;
+    for (const FString& HeadSignalId : Order)
+    {
+      const std::string HeadSignalIdStr(TCHAR_TO_UTF8(*HeadSignalId));
+      if (Signals.find(HeadSignalIdStr) == Signals.end())
       {
-        UE_LOG(LogCarla, Error, TEXT("DigitalTwins actor has no StaticMeshComponents"));
+        UE_LOG(LogCarla, Error, TEXT("Head signal '%s' of rig '%s' is not in the OpenDRIVE"),
+               *HeadSignalId, *Data.ActorName);
         continue;
       }
-      // Deferred: the world has already begun play here, so a plain SpawnActor would run
-      // ADigitalTwinsTrafficLight::BeginPlay -- and with it the lamp scan -- before a single
-      // mesh has been re-parented onto the actor. FinishSpawning below runs BeginPlay once
-      // the rig's meshes are in place.
-      const FTransform SpawnTransform(ClosestActor->GetActorRotation(), ClosestActor->GetActorLocation());
-      ADigitalTwinsTrafficLight* NewTrafficLight = TrafficLightManager->GetWorld()->SpawnActorDeferred<ADigitalTwinsTrafficLight>(
-          ADigitalTwinsTrafficLight::StaticClass(),
-          SpawnTransform,
-          nullptr,
-          nullptr,
-          ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-
+      ADigitalTwinsTrafficLight* NewTrafficLight = SpawnDigitalTwinsLight(
+          TrafficLightManager->GetWorld(), SpawnTransform, BySignal[HeadSignalId], HeadSignalId);
       if (!NewTrafficLight)
       {
-        UE_LOG(LogCarla, Error, TEXT("Failed to spawn ADigitalTwinsTrafficLight"));
         continue;
       }
-
-      for (UStaticMeshComponent* SourceMesh : MeshComponents)
-      {
-        if (!SourceMesh) continue;
-
-        UStaticMeshComponent* NewMesh = NewObject<UStaticMeshComponent>(NewTrafficLight);
-        NewMesh->SetStaticMesh(SourceMesh->GetStaticMesh());
-        NewMesh->SetRelativeTransform(SourceMesh->GetRelativeTransform());
-
-        for (int32 i = 0; i < SourceMesh->GetNumMaterials(); i++)
-        {
-          NewMesh->SetMaterial(i, SourceMesh->GetMaterial(i));
-        }
-
-        NewMesh->RegisterComponent();
-        NewMesh->AttachToComponent(NewTrafficLight->GetRootComponent(),
-                                   FAttachmentTransformRules::KeepRelativeTransform);
-      }
-
-      TrafficLightComp = NewTrafficLight->GetTrafficLightComponent();
-      if (!TrafficLightComp)
-      {
-        UE_LOG(LogCarla, Error, TEXT("ADigitalTwinsTrafficLight has no TrafficLightComponent"));
-        NewTrafficLight->Destroy();
-        continue;
-      }
-
-      // SignId before FinishSpawning so BeginPlay's lamp census can name the signal.
-      TrafficLightComp->SetSignId(Data.SignalID);
-      NewTrafficLight->FinishSpawning(SpawnTransform);
+      UTrafficLightComponent* TrafficLightComp = NewTrafficLight->GetTrafficLightComponent();
       TrafficLightManager->RegisterLightComponentFromOpenDRIVE(TrafficLightComp);
+      ApplyTiming(TrafficLightComp);
+      TrafficLightComp->InitializeSign(Map.value());
+      ++SpawnedHere;
+      ++SuccessCount;
+    }
+    if (SpawnedHere > 0)
+    {
       ClosestActor->Destroy();
     }
-
-    UTrafficLightController* Controller = TrafficLightManager->GetController(Data.TrafficLightGroupID);
-    if (Controller)
-    {
-      Controller->SetRedTime(Data.Timing.RedDuration);
-      Controller->SetGreenTime(Data.Timing.GreenDuration);
-      Controller->SetYellowTime(Data.Timing.AmberDuration);
-    }
-    else
-    {
-      UE_LOG(LogCarla, Error, TEXT("Failed to get controller '%s'"), *Data.TrafficLightGroupID);
-    }
-
-    TrafficLightComp->InitializeSign(Map.value());
-    SuccessCount++;
   }
 
+  if (SplitRigs > 0 || ByProximity > 0)
+  {
+    UE_LOG(LogCarla, Log,
+           TEXT("Map logic: %d rig(s) split across several signals, %d matched by position "
+                "instead of by name"), SplitRigs, ByProximity);
+  }
   UE_LOG(LogCarla, Log, TEXT("Applied lane IDs to %d traffic lights"), SuccessCount);
 }
