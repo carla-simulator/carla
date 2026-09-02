@@ -82,6 +82,18 @@ using namespace std::chrono_literals;
         else {
           bool episode_changed = (next->GetEpisodeId() != prev->GetEpisodeId());
 
+          if (episode_changed) {
+            // Drop the previous episode's WalkerNavigation BEFORE the new
+            // episode id becomes visible (the compare_exchange below is what
+            // unblocks load_world): it caches that map's navmesh (.bin) and
+            // its server-side-navigation probe, so any query through it --
+            // e.g. get_random_location_from_navigation -- would keep
+            // answering with the previous map's data after a load_world.
+            // OnEpisodeStarted() used to do this but is no longer called on
+            // episode change (see OnEpisodeChanged below).
+            self->_walker_navigation.reset();
+          }
+
           do {
             if (prev->GetFrame() >= next->GetFrame() && !episode_changed) {
               self->_on_tick_callbacks.Call(next);
@@ -156,7 +168,11 @@ using namespace std::chrono_literals;
     do {
       nav = _walker_navigation.load();
       if (nav == nullptr) {
-        auto new_nav = std::make_shared<WalkerNavigation>(_simulator);
+        // Queried once per episode: _walker_navigation is reset on episode
+        // change (see Listen), so a load_world onto/off a server-side-nav
+        // map re-detects.
+        auto new_nav = std::make_shared<WalkerNavigation>(
+            _simulator, _client.IsNavigationServerSide());
         _walker_navigation.compare_exchange(&nav, new_nav);
       }
     } while (nav == nullptr);

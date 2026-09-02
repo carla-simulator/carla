@@ -10,6 +10,8 @@
 #include "Carla.h"
 #include "Carla/Game/CarlaHUD.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/Lights/CarlaLight.h"
+#include "BlueprintLibary/LightDefaultsJsonUtils.h"
 #include "Carla/Trigger/FrictionTrigger.h"
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Util/EmptyActor.h"
@@ -18,7 +20,9 @@
 
 #include <util/ue-header-guard-begin.h>
 #include "Components/BoxComponent.h"
+#include "Components/LightComponent.h"
 #include "Engine/CollisionProfile.h"
+#include "UObject/UnrealType.h"
 #include "MovementComponents/DefaultMovementComponent.h"
 #include "Rendering/SkeletalMeshRenderData.h"
 #include "VehicleAnimationInstance.h"
@@ -50,6 +54,9 @@ ACarlaWheeledVehicle::ACarlaWheeledVehicle(const FObjectInitializer& ObjectIniti
   VelocityControl = CreateDefaultSubobject<UVehicleVelocityControl>(TEXT("VelocityControl"));
   VelocityControl->Deactivate();
 
+  AccelerationControl = CreateDefaultSubobject<UVehicleAccelerationControl>(TEXT("AccelerationControl"));
+  AccelerationControl->Deactivate();
+
   GetChaosWheeledVehicleMovementComponent()->bReverseAsBrake = false;
   BaseMovementComponent = CreateDefaultSubobject<UBaseCarlaMovementComponent>(TEXT("BaseMovementComponent"));
 
@@ -60,6 +67,8 @@ ACarlaWheeledVehicle::~ACarlaWheeledVehicle() {}
 void ACarlaWheeledVehicle::BeginPlay()
 {
   Super::BeginPlay();
+
+  ActivateVehicleLightComponents();
 
   UDefaultMovementComponent::CreateDefaultMovementComponent(this);
 
@@ -125,6 +134,14 @@ void ACarlaWheeledVehicle::BeginPlay()
   {
     check(MovementComponent != nullptr);
 
+    // UE5 Chaos defaults the steering input to SquaredFunction, an
+    // analog-gamepad feel curve that maps a steer command s to ~s^2 of full
+    // lock. CARLA clients (Traffic Manager, agents, manual control) expect
+    // the classic linear mapping from command to wheel angle; under the
+    // squared curve a 0.1 command yields ~1% of full lock and controllers
+    // tuned for a linear response cannot corner.
+    MovementComponent->SteeringInputRate.InputCurveFunction = EInputFunctionType::LinearFunction;
+
     // Setup Tire Configs with default value. This is needed to avoid getting
     // friction values of previously created TireConfigs for the same vehicle
     // blueprint.
@@ -163,8 +180,134 @@ void ACarlaWheeledVehicle::BeginPlay()
   AddReferenceToManager();
 }
 
+// Head beams need far more light than the other vehicle groups: under this
+// project's fixed day-calibrated exposure, a visible pool on the road at
+// 10-20 m takes millions of lumens (street lamps run tens of millions), and
+// the beams' authored group intensity is ~30. Blinkers/brakes/fog/plate are
+// close-range signal lights whose authored values read fine and must NOT get
+// this factor (a multi-million-lumen blinker would strobe the whole street).
+static TAutoConsoleVariable<float> CVarCarlaVehicleBeamIntensityScale(
+    TEXT("carla.Light.VehicleBeamIntensityScale"),
+    100000.0f,
+    TEXT("Multiplier converting the authored UE4-era intensity of vehicle low/high beam ")
+    TEXT("light components (and the blueprint's 'Beam Lights' group variable) to UE5 ")
+    TEXT("photometric units. Set 1 to leave them untouched."),
+    ECVF_Default);
+
+void ACarlaWheeledVehicle::ActivateVehicleLightComponents()
+{
+  // Vehicle light components ship bAutoActivate=false; UE4 rendered inactive
+  // lights anyway, UE 5.8 culls them outright, so every beam was invisible
+  // regardless of intensity. Activate only -- unlike street lamps, the
+  // authored automotive IES profiles (Vee/DefinedSpot beam shapes), shadow
+  // flags and attenuation radii are correct as-is and must not go through
+  // UCarlaLight::ActivateAndConfigureLightComponents (a 70 m radius floor on
+  // a blinker or license-plate light would be absurd).
+  //
+  // The base vehicle blueprint assigns each light component's intensity from
+  // per-group variables in its CONSTRUCTION script (so that has already
+  // happened by BeginPlay) and afterwards only toggles component VISIBILITY
+  // per light-state flag -- so converting the beam components right here
+  // sticks. The blueprint's "Beam Lights" group variable is scaled by the
+  // same factor so any later blueprint re-push writes the same converted
+  // value instead of reverting the beams to authored UE4 units.
+  const float BeamScale = CVarCarlaVehicleBeamIntensityScale.GetValueOnGameThread();
+  TArray<ULightComponent*> LightComponents;
+  GetComponents<ULightComponent>(LightComponents);
+  for (ULightComponent* LightComponent : LightComponents)
+  {
+    if (!LightComponent->IsActive())
+    {
+      LightComponent->SetActive(true);
+    }
+    const FString Name = LightComponent->GetName();
+    if (BeamScale != 1.0f &&
+        (Name.Contains(TEXT("low_beam")) || Name.Contains(TEXT("high_beam"))) &&
+        LightComponent->Intensity > 0.0f && LightComponent->Intensity < 1000.0f)
+    {
+      LightComponent->SetIntensity(LightComponent->Intensity * BeamScale);
+    }
+  }
+
+  if (BeamScale != 1.0f)
+  {
+    for (TFieldIterator<FFloatProperty> PropIt(GetClass()); PropIt; ++PropIt)
+    {
+      FFloatProperty* Property = *PropIt;
+      if (Property->GetAuthoredName() != TEXT("Beam Lights"))
+      {
+        continue;
+      }
+      float* ValuePtr = Property->ContainerPtrToValuePtr<float>(this);
+      if (ValuePtr != nullptr && *ValuePtr > 0.0f && *ValuePtr < 1000.0f)
+      {
+        *ValuePtr *= BeamScale;
+        UE_LOG(LogCarla, Verbose, TEXT("%s: scaled blueprint 'Beam Lights' to %f"),
+            *GetName(), *ValuePtr);
+      }
+      break;
+    }
+  }
+
+  // Light Defaults tool integration: everything above is this project's
+  // pre-existing native pipeline (per-vehicle authored intensities from the
+  // Blueprint's own Construction Script, scaled once here) -- it never
+  // touched Config/Lights/Defaults.json, so nothing edited/saved in the
+  // Vehicles tab ever reached an actual running simulation (manual_control.py
+  // et al), only the editor-only Preview spawn.
+  //
+  // Load the saved default once here (cheap, cached for the vehicle's
+  // lifetime) and apply it for the CURRENT light state -- at this point that
+  // is InputControl.LightState's default (everything off), so this must
+  // zero every group's material emissive, not light everything up. Do NOT
+  // use ApplyVehicleLightsToSingleActor/ApplyVehicleLightsLive here: those
+  // push Intensity uniformly to every exposed group at once, which is
+  // correct for the editor Preview (meant to show everything lit for
+  // editing) but wrong for gameplay, where a group must only glow when it is
+  // actually ON.
+  {
+    const FString ClassName = GetClass()->GetName();
+    bHasSavedVehicleLightDefault = ULightDefaultsJsonUtils::LoadVehicleLightDefault(
+        ClassName, SavedVehicleLightIntensity, SavedVehicleLightGroupIntensity);
+  }
+  ApplyVehicleLightDefaultsForCurrentState();
+}
+
+void ACarlaWheeledVehicle::ApplyVehicleLightDefaultsForCurrentState()
+{
+  if (!bHasSavedVehicleLightDefault)
+    return;
+
+  const FVehicleLightState& LightState = InputControl.LightState;
+  TMap<FString, bool> GroupOn;
+  GroupOn.Add(TEXT("Position"), LightState.Position);
+  GroupOn.Add(TEXT("Low Beam"), LightState.LowBeam);
+  GroupOn.Add(TEXT("High Beam"), LightState.HighBeam);
+  GroupOn.Add(TEXT("Fog"), LightState.Fog);
+  GroupOn.Add(TEXT("Brake"), LightState.Brake);
+  GroupOn.Add(TEXT("Reverse"), LightState.Reverse);
+  GroupOn.Add(TEXT("Left Blinker"), LightState.LeftBlinker);
+  GroupOn.Add(TEXT("Right Blinker"), LightState.RightBlinker);
+  GroupOn.Add(TEXT("Special1"), LightState.Special1);
+
+  TMap<FString, float> MaterialGroupValue;
+  for (const TPair<FString, bool>& Pair : GroupOn)
+  {
+    MaterialGroupValue.Add(Pair.Key, Pair.Value ? SavedVehicleLightIntensity : 0.0f);
+  }
+
+  ULightDefaultsJsonUtils::ApplyVehicleLightsRuntimeState(
+      this, MaterialGroupValue, SavedVehicleLightGroupIntensity);
+}
+
 void ACarlaWheeledVehicle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction){
   Super::TickActor(DeltaTime, TickType, ThisTickFunction);
+
+  // When velocity/acceleration control is active, flush control every frame even without AI controller
+  if (VelocityControl->IsActive() || AccelerationControl->IsActive())
+  {
+    FlushVehicleControl();
+  }
 
   FPoseSnapshot pose;
   GetMesh()->SnapshotPose(pose);
@@ -282,12 +425,21 @@ FVector ACarlaWheeledVehicle::GetVehicleBoundingBoxExtent() const
 float ACarlaWheeledVehicle::GetMaximumSteerAngle() const
 {
   UChaosWheeledVehicleMovementComponent* MovementComponent = GetChaosWheeledVehicleMovementComponent();
-  const auto& Wheels = MovementComponent->WheelSetups;
-  check(Wheels.Num() > 0);
-  const UChaosVehicleWheel* FrontWheel =
-    Cast<UChaosVehicleWheel>(Wheels[0].WheelClass->GetDefaultObject());
-  check(FrontWheel != nullptr);
-  return FrontWheel->MaxSteerAngle;
+  if (MovementComponent != nullptr && MovementComponent->WheelSetups.Num() > 0 &&
+      MovementComponent->WheelSetups[0].WheelClass != nullptr)
+  {
+    const UChaosVehicleWheel* FrontWheel =
+        Cast<UChaosVehicleWheel>(MovementComponent->WheelSetups[0].WheelClass->GetDefaultObject());
+    if (FrontWheel != nullptr)
+    {
+      return FrontWheel->MaxSteerAngle;
+    }
+  }
+  // A vehicle whose movement component has no wheel setups (e.g. a rig whose
+  // configuration did not survive the UE5 migration) must not assert the
+  // whole server down from BeginPlay; report a sensible steering default.
+  UE_LOG(LogCarla, Warning, TEXT("%s: no wheel setups, returning default max steer angle"), *GetName());
+  return 35.0f;
 }
 
 // =============================================================================
@@ -363,10 +515,10 @@ void ACarlaWheeledVehicle::SetWheelsFrictionScale(TArray<float>& WheelsFrictionS
   UChaosWheeledVehicleMovementComponent* Movement = GetChaosWheeledVehicleMovementComponent();
   if (Movement)
   {
-    check(Movement != nullptr);
-    check(Movement->Wheels.Num() == WheelsFrictionScale.Num());
-
-    for (int32 i = 0; i < Movement->Wheels.Num(); ++i)
+    // The runtime wheel array is empty until the Chaos vehicle finishes its
+    // physics initialization: don't crash on early or mismatched requests.
+    const int32 Count = FMath::Min(Movement->Wheels.Num(), WheelsFrictionScale.Num());
+    for (int32 i = 0; i < Count; ++i)
     {
       Movement->Wheels[i]->FrictionForceMultiplier = WheelsFrictionScale[i];
     }
@@ -415,11 +567,28 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
   check(RCurve != nullptr);
   PhysicsControl.SteeringCurve = *RCurve;
   PhysicsControl.UseSweepWheelCollision = false;
-  // Wheels Setup
+  // Wheels Setup. The runtime wheel instances (Wheels) are only created once
+  // the Chaos vehicle finishes its physics initialization, which happens after
+  // the spawn frame: a client asking for the physics control right after
+  // spawning would index an empty array (and crash the server). Fall back to
+  // each wheel class' defaults until the runtime instances exist.
   PhysicsControl.Wheels.SetNum(VehicleMovComponent.WheelSetups.Num());
   for (int32 i = 0; i < PhysicsControl.Wheels.Num(); ++i)
   {
-    auto& In = *VehicleMovComponent.Wheels[i];
+    const UChaosVehicleWheel* InPtr = nullptr;
+    if (VehicleMovComponent.Wheels.IsValidIndex(i))
+    {
+      InPtr = VehicleMovComponent.Wheels[i];
+    }
+    else if (auto WheelClass = VehicleMovComponent.WheelSetups[i].WheelClass)
+    {
+      InPtr = WheelClass->GetDefaultObject<UChaosVehicleWheel>();
+    }
+    if (InPtr == nullptr)
+    {
+      continue;
+    }
+    auto& In = *InPtr;
     auto& Out = PhysicsControl.Wheels[i];
     Out.AxleType = In.AxleType;
     Out.Offset = In.Offset;
@@ -440,9 +609,9 @@ FVehiclePhysicsControl ACarlaWheeledVehicle::GetVehiclePhysicsControl() const
     Out.bTractionControlEnabled = In.bTractionControlEnabled;
     Out.MaxWheelspinRotation = In.MaxWheelspinRotation;
     Out.ExternalTorqueCombineMethod = In.ExternalTorqueCombineMethod;
-    RCurve = In.LateralSlipGraph.GetRichCurve();
-    check(RCurve != nullptr);
-    Out.LateralSlipGraph = *RCurve;
+    auto SlipCurve = In.LateralSlipGraph.GetRichCurveConst();
+    check(SlipCurve != nullptr);
+    Out.LateralSlipGraph = *SlipCurve;
     Out.SuspensionAxis = In.SuspensionAxis;
     Out.SuspensionForceOffset = In.SuspensionForceOffset;
     Out.SuspensionMaxRaise = In.SuspensionMaxRaise;
@@ -545,6 +714,17 @@ void ACarlaWheeledVehicle::ApplyVehiclePhysicsControl(
 
   for (auto& WheelSetup : VehicleMovComponent.WheelSetups)
     check(WheelSetup.WheelClass != nullptr);
+
+  // The runtime wheel instances only exist once the Chaos vehicle finishes its
+  // physics initialization (after the spawn frame): applying wheel physics
+  // before that would index an empty array and crash the server.
+  if (VehicleMovComponent.Wheels.Num() < WheelCount)
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("ApplyVehiclePhysicsControl: wheels not initialized yet on %s, skipping wheel setup"),
+        *GetName());
+    return;
+  }
 
   for (int32 i = 0; i < WheelCount; ++i)
   {
@@ -656,6 +836,33 @@ void ACarlaWheeledVehicle::DeactivateVelocityControl()
   VelocityControl->Deactivate();
 }
 
+void ACarlaWheeledVehicle::ActivateAccelerationControl(const FVector& Acceleration)
+{
+  AccelerationControl->Activate(Acceleration);
+}
+
+void ACarlaWheeledVehicle::DeactivateAccelerationControl()
+{
+  AccelerationControl->Deactivate();
+}
+
+void ACarlaWheeledVehicle::ApplyVehicleAccelerationControl(float LongitudinalAccelerationMps2, float Steer, float SteerSpeed)
+{
+  if (bAckermannControlActive)
+  {
+    AckermannController.Reset();
+  }
+  bAckermannControlActive = false;
+  VelocityControl->Deactivate();
+
+  // Longitudinal: acceleration from control_cmd [m/s^2] -> Unreal uses cm/s^2
+  const FVector AccelerationCmps2(LongitudinalAccelerationMps2 * 100.0f, 0.0f, 0.0f);
+  AccelerationControl->Activate(AccelerationCmps2);
+
+  InputControl.Control.Steer = Steer;
+  InputControl.Priority = EVehicleInputPriority::User;
+}
+
 FVehicleTelemetryData ACarlaWheeledVehicle::GetVehicleTelemetryData() const
 {
   FVehicleTelemetryData TelemetryData{};
@@ -747,7 +954,15 @@ void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState& LightS
     LightState.Special2 != InputControl.LightState.Special2)
   {
     InputControl.LightState = LightState;
+    // The blueprint reads its per-group intensity variables (already scaled
+    // once at spawn in ActivateVehicleLightComponents) and re-pushes them
+    // from a looping timer, so no per-call component rescale is needed here
+    // -- it would race that timer anyway.
     RefreshLightState(LightState);
+    // RefreshLightState's own graph is opaque to C++ and may repush its own
+    // (weak, authored) emissive values for whichever groups just toggled --
+    // reapply the Light Defaults saved values after it so ours win.
+    ApplyVehicleLightDefaultsForCurrentState();
   }
 }
 
@@ -783,23 +998,22 @@ void ACarlaWheeledVehicle::SetWheelSteerDirection(EVehicleWheelLocation WheelLoc
 
 float ACarlaWheeledVehicle::GetWheelSteerAngle(EVehicleWheelLocation WheelLocation) {
 
-#if 0 // @CARLAUE5     // ToDo We need to investigate about this
-  check((uint8)WheelLocation >= 0)
-    UVehicleAnimationInstance* VehicleAnim = Cast<UVehicleAnimationInstance>(GetMesh()->GetAnimInstance());
-  check(VehicleAnim != nullptr)
-    check(VehicleAnim->GetWheeledVehicleMovementComponent() != nullptr)
-
-    if (bPhysicsEnabled == true)
-    {
-      return VehicleAnim->GetWheeledVehicleMovementComponent()->Wheels[(uint8)WheelLocation]->GetSteerAngle();
-    }
-    else
-    {
-      return VehicleAnim->GetWheelRotAngle((uint8)WheelLocation);
-    }
-#else
+  UChaosWheeledVehicleMovementComponent* MovementComponent =
+      GetChaosWheeledVehicleMovementComponent();
+  const int32 WheelIndex = (int32)WheelLocation;
+  // UChaosVehicleWheel::GetSteerAngle() check()s on PhysicsVehicleOutput, so
+  // guard it here: the physics output only exists while the Chaos vehicle
+  // simulation is running for this actor.
+  if (bPhysicsEnabled && MovementComponent != nullptr &&
+      MovementComponent->PhysicsVehicleOutput() != nullptr &&
+      WheelIndex >= 0 && WheelIndex < MovementComponent->Wheels.Num())
+  {
+    return MovementComponent->Wheels[WheelIndex]->GetSteerAngle();
+  }
+  UE_LOG(LogTemp, Warning,
+      TEXT("GetWheelSteerAngle: no physics simulation available for wheel %d."),
+      WheelIndex);
   return 0.0F;
-#endif
 }
 
 void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
@@ -827,7 +1041,12 @@ void ACarlaWheeledVehicle::SetSimulatePhysics(bool enabled) {
 
       if (enabled)
       {
+        Movement->SetUpdatedComponent(GetMesh());
         Movement->RecreatePhysicsState();
+        // The recreated body starts asleep and Chaos vehicle input does not
+        // wake it, leaving the drivetrain permanently inert (full throttle,
+        // zero motion) until something else wakes the body. Wake it here.
+        RootPrimitive->WakeAllRigidBodies();
         //VehicleAnim->ResetWheelCustomRotations();
       }
       else

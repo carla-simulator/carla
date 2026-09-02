@@ -10,6 +10,8 @@
 #include "carla/BufferView.h"
 #include "carla/geom/Transform.h"
 #include "carla/ros2/ROS2CallbackData.h"
+#include "carla/ros2/middleware/Middleware.h"
+#include "carla/ros2/middleware/MiddlewareConfig.h"
 #include "carla/streaming/detail/Types.h"
 
 #include <memory>
@@ -32,6 +34,9 @@ namespace carla {
       class SemanticLidarData;
       class RadarData;
     }
+    namespace s11n {
+      struct VehicleStatusData;
+    }
   }
 }
 
@@ -40,6 +45,7 @@ namespace ros2 {
 
 class BasePublisher;
 class BaseSubscriber;
+class AutowareVehicleStatusPublisher;
 class CarlaCameraPublisher;
 class CarlaClockPublisher;
 class CarlaTransformPublisher;
@@ -57,11 +63,25 @@ public:
   }
 
   // general
-  void Enable(bool enable);
+  /// Enable or disable ROS 2 publishing. When enabling, @a middleware selects the
+  /// DDS middleware; it must have been compiled into the shared library.
+  /// @a domain_id selects the ROS 2 domain id for the chosen middleware;
+  /// kUnsetDomainId (the default) keeps each middleware's native default.
+  /// @return true on success, false if the requested middleware is unavailable
+  /// (ROS 2 is then left disabled).
+  bool Enable(bool enable, Middleware middleware = Middleware::FastDDS,
+      int domain_id = kUnsetDomainId);
   void Shutdown();
   bool IsEnabled() { return _enabled; }
   void SetFrame(uint64_t frame);
   void SetTimestamp(double timestamp);
+
+  // Global TF gate (tier4 port): when false, no sensor broadcasts its
+  // transform on /tf. Complements the per-sensor publish_tf flag set at
+  // RegisterSensor time; both must be true for a transform to go out.
+  // Exposed to the client through World.set_publish_tf (later phase).
+  void SetPublishTF(bool publish_tf) { _publish_tf = publish_tf; }
+  bool GetPublishTF() const { return _publish_tf; }
 
   // actor registration API: replaces the legacy AddActorRosName /
   // GetActorRosName / GetActorParentRosName surface that PR-2 stubbed and
@@ -75,10 +95,28 @@ public:
   void RegisterSensor(
       void *actor, std::string ros_name, std::string frame_id, bool publish_tf);
   void UnregisterSensor(void *actor);
+  // The vehicle gets exactly one control subscriber. enable_autoware_control
+  // wins over enable_ackermann_control (tier4 gave the Autoware command path
+  // priority); it wires the six /control/command/* + /vehicle/engage
+  // subscribers and marks the vehicle as the Autoware ego so
+  // ProcessDataFromStatusSensor accepts its status stream. Default behavior
+  // (both flags false) is unchanged for non-Autoware users.
   void RegisterVehicle(
       void *actor, std::string ros_name, std::string frame_id, ActorCallback callback,
-      bool enable_ackermann_control = false);
+      bool enable_ackermann_control = false,
+      bool enable_autoware_control = false);
   void UnregisterVehicle(void *actor);
+
+  // Exact-topic-name override (tier4 port of the ros_topic_name attribute
+  // flow). When set (non-empty), the actor's publishers/subscribers bind to
+  // "rt[/]<ros_topic_name>" instead of the "rt/carla/[parent/]ros_name"
+  // convention; multi-topic sensors still append their per-topic suffixes.
+  // The UE side reads the blueprint's "ros_topic_name" attribute and calls
+  // AddActorRosTopicName before the first data tick (next phase); Remove also
+  // drops the actor's cached publishers so a re-registration rebinds cleanly.
+  void AddActorRosTopicName(void *actor, std::string ros_topic_name);
+  void RemoveActorRosTopicName(void *actor);
+  std::string GetActorRosTopicName(void *actor) const;
 
   // Topic-hierarchy seam used by the plugin's attach_actor path: tells ROS2
   // that `actor` should publish under `parent`'s ros_name prefix. Walking
@@ -128,10 +166,26 @@ public:
       const carla::SharedBufferView buffer,
       int W, int H, float Fov,
       void *actor = nullptr);
+  // Legacy overload: publishes the plain XYZI PointCloud2 layout. Kept so
+  // call sites without a sensor description still compile/work.
   void ProcessDataFromLidar(
       uint64_t sensor_type,
       carla::streaming::detail::stream_id_type stream_id,
       const carla::geom::Transform sensor_transform,
+      carla::sensor::data::LidarData &data,
+      void *actor = nullptr);
+  // tier4 autoware-support overload: when the caller provides the sensor's
+  // channel count and vertical FOV limits (degrees), the publisher emits the
+  // extended Autoware XYZIRCAEDT layout instead of plain XYZI (requires
+  // channel_count >= 2 to derive per-channel elevations; falls back to XYZI
+  // otherwise).
+  void ProcessDataFromLidar(
+      uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
+      const carla::geom::Transform sensor_transform,
+      uint32_t channel_count,
+      float upper_fov_limit,
+      float lower_fov_limit,
       carla::sensor::data::LidarData &data,
       void *actor = nullptr);
   void ProcessDataFromSemanticLidar(
@@ -161,6 +215,27 @@ public:
       uint32_t other_actor,
       carla::geom::Vector3D impulse,
       void *actor);
+  // Vehicle-status stream (Autoware): decodes the packed status sample into
+  // the six /vehicle/status/* report publishers. `vehicle_actor` is the
+  // parent vehicle the status sensor is attached to (must be registered with
+  // enable_autoware_control); `actor` is the sensor actor itself.
+  void ProcessDataFromStatusSensor(
+      uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
+      const carla::geom::Transform sensor_transform,
+      const carla::sensor::s11n::VehicleStatusData &data,
+      void *vehicle_actor,
+      void *actor);
+  // Autoware GNSS: publishes the sensor world transform (+ MGRS map offset)
+  // as <base>/pose and <base>/pose_with_covariance instead of NavSatFix.
+  void ProcessDataFromAutowareGNSS(
+      uint64_t sensor_type,
+      carla::streaming::detail::stream_id_type stream_id,
+      const carla::geom::Transform sensor_transform,
+      const carla::geom::GeoLocation &data,
+      const carla::geom::Transform &sensor_world_transform,
+      const double mgrs_offset_position[3],
+      void *actor = nullptr);
 
 private:
   struct ActorRegistration {
@@ -172,6 +247,10 @@ private:
   // Resolves an actor's `rt/carla/[parent/]ros_name` base topic by walking the
   // parent chain. Returns empty if the actor is not registered.
   std::string BuildBaseTopicName(void *actor) const;
+  // True when the actor carries a non-empty ros_topic_name override, i.e.
+  // BuildBaseTopicName returns an exact user-chosen topic. Single-topic
+  // publishers then skip their conventional suffix (tier4 semantics).
+  bool HasTopicOverride(void *actor) const;
   std::string LookupRosName(void *actor) const;
   std::string LookupFrameId(void *actor) const;
   std::string BuildParentChain(void *actor) const;
@@ -207,11 +286,22 @@ private:
   static std::shared_ptr<ROS2> _instance;
 
   bool _enabled{false};
+  bool _publish_tf{true};
   uint64_t _frame{0};
   int32_t _seconds{0};
   uint32_t _nanoseconds{0};
 
   std::unordered_map<void *, ActorRegistration> _registrations;
+  // Exact-topic overrides; empty string means "no override".
+  std::unordered_map<void *, std::string> _actor_ros_topic_names;
+  // Vehicles registered with enable_autoware_control — the only ones whose
+  // vehicle-status stream is accepted and published.
+  std::unordered_set<void *> _autoware_vehicles;
+  // Lazily-created six-report publisher per Autoware vehicle. NOTE: report
+  // topics are fixed absolute names, so only one Autoware ego per simulation
+  // is supported (tier4 semantics).
+  std::unordered_map<void *, std::shared_ptr<AutowareVehicleStatusPublisher>>
+      _autoware_status_publishers;
   std::unordered_map<void *, std::vector<void *>> _actor_parents;
   std::shared_ptr<CarlaClockPublisher> _clock_publisher;
   std::unordered_map<void *, std::shared_ptr<BasePublisher>> _publishers;

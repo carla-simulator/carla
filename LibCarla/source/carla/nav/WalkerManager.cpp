@@ -146,7 +146,16 @@ namespace nav {
         info.state = WALKER_IDLE;
 
         // get a route from navigation
-        _nav->GetAgentRoute(id, info.from, to, path, area);
+        // if pathfinding fails (e.g. no polygon found near 'from'/'to' within
+        // tolerance) 'path'/'area' are left empty; previously this return
+        // value was ignored, so the route below silently ended up empty too.
+        // SetWalkerNextPoint() then found current index >= route size and
+        // paused the agent instead of ever requesting a crowd move target,
+        // with no error surfaced anywhere (info.state stays WALKER_IDLE here
+        // on failure, so callers see a stopped walker rather than a wrong one).
+        if (!_nav->GetAgentRoute(id, info.from, to, path, area)) {
+            return false;
+        }
 
         // create each point of the route
         info.route.clear();

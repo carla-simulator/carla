@@ -10,10 +10,10 @@
 #include "Carla/Game/CarlaStatics.h"
 
 #include <util/ue-header-guard-begin.h>
+#include "Engine/Engine.h"
 #include "GenericPlatform/GenericPlatformProcess.h"
 #include "Misc/FileHelper.h"
 #include "HAL/FileManagerGeneric.h"
-#include "Misc/FileHelper.h"
 #include <util/ue-header-guard-end.h>
 
 FString UOpenDrive::FindPathToXODRFile(const FString &InMapName){

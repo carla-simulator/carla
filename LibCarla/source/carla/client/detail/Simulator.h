@@ -272,6 +272,18 @@ namespace detail {
       return _client.IsWeatherEnabled();
     }
 
+    void SetPublishTF(bool publish_tf) {
+      _client.SetPublishTF(publish_tf);
+    }
+
+    bool GetPublishTF() const {
+      return _client.GetPublishTF();
+    }
+
+    std::vector<geom::Transform> GetEgoSpawnPoints() const {
+      return _client.GetEgoSpawnPoints();
+    }
+
     rpc::VehiclePhysicsControl GetVehiclePhysicsControl(const Vehicle &vehicle) const {
       return _client.GetVehiclePhysicsControl(vehicle.GetId());
     }
@@ -323,11 +335,32 @@ namespace detail {
 
     void NavigationTick();
 
+    /// True when the current episode's navigation is hosted by the server
+    /// (World-Partitioned navmesh); walker AI then goes through the
+    /// walker_* RPCs instead of the client-side Detour crowd.
+    bool IsNavigationServerSide();
+
     void RegisterAIController(const WalkerAIController &controller);
 
     void UnregisterAIController(const WalkerAIController &controller);
 
     std::optional<geom::Location> GetRandomLocationFromNavigation();
+
+    bool WalkerStartNavigation(ActorId walker_id) {
+      return _client.WalkerStartNavigation(walker_id);
+    }
+
+    bool WalkerGoToLocation(ActorId walker_id, const geom::Location &destination) {
+      return _client.WalkerGoToLocation(walker_id, destination);
+    }
+
+    bool WalkerSetMaxSpeed(ActorId walker_id, float max_speed) {
+      return _client.WalkerSetMaxSpeed(walker_id, max_speed);
+    }
+
+    bool WalkerStopNavigation(ActorId walker_id) {
+      return _client.WalkerStopNavigation(walker_id);
+    }
 
     void SetPedestriansCrossFactor(float percentage);
 
@@ -429,6 +462,14 @@ namespace detail {
 
     void DisableActorConstantVelocity(const Actor &actor) {
       _client.DisableActorConstantVelocity(actor.GetId());
+    }
+
+    void EnableActorConstantAcceleration(const Actor &actor, const geom::Vector3D &vector) {
+      _client.EnableActorConstantAcceleration(actor.GetId(), vector);
+    }
+
+    void DisableActorConstantAcceleration(const Actor &actor) {
+      _client.DisableActorConstantAcceleration(actor.GetId());
     }
 
     void AddActorImpulse(const Actor &actor, const geom::Vector3D &impulse) {
@@ -791,6 +832,16 @@ namespace detail {
 
     void ClearDebugString() {
       _client.ClearDebugString();
+    }
+
+    /// Spawns a static procedural mesh in the world. Vertices are a flat
+    /// (x, y, z) triple list in metres (client/UE-handed coordinates);
+    /// triangles are vertex-index triples into that list.
+    void SpawnCustomMesh(
+        const std::vector<float> &vertices,
+        const std::vector<uint32_t> &triangles,
+        const std::string &material) {
+      _client.SpawnCustomMesh(vertices, triangles, material);
     }
 
     /// @}

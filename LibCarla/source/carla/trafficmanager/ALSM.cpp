@@ -268,6 +268,20 @@ void ALSM::UpdateData(const bool hybrid_physics_mode, const Actor &vehicle,
     cg::Vector3D dimensions = vehicle_ptr->GetBoundingBox().extent;
     StaticAttributes attributes{ActorType::Vehicle, dimensions.x, dimensions.y, dimensions.z};
 
+    // One-time query of the physical steering lock: the motion-plan stage
+    // normalizes steering authority (gains and envelope) by it. Guarded so a
+    // failed RPC (e.g. the actor died this frame) falls back to the default.
+    try {
+      const auto physics_control = vehicle_ptr->GetPhysicsControl();
+      float max_steer_angle = 0.0f;
+      for (const auto &wheel : physics_control.wheels) {
+        max_steer_angle = std::max(max_steer_angle, wheel.max_steer_angle);
+      }
+      if (max_steer_angle > 1.0f) {
+        attributes.max_steer_angle = max_steer_angle;
+      }
+    } catch (const std::exception &) {}
+
     simulation_state.AddActor(actor_id, kinematic_state, attributes, tl_state);
   }
 }

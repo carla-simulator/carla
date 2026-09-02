@@ -9,6 +9,7 @@
 #include "Carla/Server/CarlaServerResponse.h"
 #include "Carla/Traffic/TrafficLightGroup.h"
 #include "Carla/OpenDrive/OpenDrive.h"
+#include "Carla/OpenDrive/OpenDriveGenerator.h"
 #include "Carla/Util/DebugShapeDrawer.h"
 #include "Carla/Util/NavigationMesh.h"
 #include "Carla/Util/RayTracer.h"
@@ -16,6 +17,8 @@
 #include "Carla/Sensor/CustomV2XSensor.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
+#include "Carla/AI/WalkerAIController.h"
+#include "Carla/Navigation/CarlaNavigationSubsystem.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
@@ -26,11 +29,13 @@
 #include "Carla/Game/CarlaHUD.h"
 #include "Components/SceneComponent.h"
 #include "Components/SkinnedMeshComponent.h"
+#include "ProceduralMeshComponent.h"
 #include "Engine/Engine.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/Functional.h>
 #include <carla/multigpu/router.h>
+#include <carla/Sockets.h>
 #include <carla/Version.h>
 #include <carla/rpc/AckermannControllerSettings.h>
 #include <carla/rpc/Actor.h>
@@ -94,6 +99,43 @@ template <typename T, typename Other>
 static std::vector<T> MakeVectorFromTArray(const TArray<Other> &Array)
 {
   return {Array.GetData(), Array.GetData() + Array.Num()};
+}
+
+/// Resolve the AWalkerController behind a walker-navigation RPC actor id.
+/// Accepts either the walker pawn itself or the controller.ai.walker handle
+/// actor (which clients spawn attached to the walker). Returns nullptr for
+/// unknown, dormant or dead actors -- the navigation RPCs answer false in
+/// that case instead of raising, per the phase-1 contract.
+static AWalkerController *ResolveWalkerNavController(FCarlaActor *CarlaActor)
+{
+  if (CarlaActor == nullptr || CarlaActor->IsDormant())
+  {
+    return nullptr;
+  }
+  AActor *Actor = CarlaActor->GetActor();
+  if (Actor == nullptr)
+  {
+    return nullptr;
+  }
+  if (Cast<AWalkerAIController>(Actor) != nullptr)
+  {
+    Actor = Actor->GetAttachParentActor();
+    if (Actor == nullptr)
+    {
+      return nullptr;
+    }
+  }
+  auto *Walker = Cast<AWalkerBase>(Actor);
+  if (Walker != nullptr && !Walker->bAlive)
+  {
+    return nullptr;
+  }
+  auto *Pawn = Cast<APawn>(Actor);
+  if (Pawn == nullptr)
+  {
+    return nullptr;
+  }
+  return Cast<AWalkerController>(Pawn->GetController());
 }
 
 // =============================================================================
@@ -313,7 +355,9 @@ void FCarlaServer::FPimpl::BindActions()
 
   // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  BIND_ASYNC(get_available_maps) << [this]() -> R<std::vector<std::string>>
+  // BIND_SYNC: GetAllMapNames enumerates the AssetRegistry, which UE 5.8 asserts must
+  // happen on the game thread (AssetRegistry.cpp:2518) - async here crashed the server.
+  BIND_SYNC(get_available_maps) << [this]() -> R<std::vector<std::string>>
   {
     const auto MapNames = UCarlaStatics::GetAllMapNames();
     std::vector<std::string> result;
@@ -564,10 +608,17 @@ void FCarlaServer::FPimpl::BindActions()
     IFileManager::Get().FindFilesRecursive(Files, *folderDir, *(fileName + ".xodr"), true, false, false);
     IFileManager::Get().FindFilesRecursive(Files, *folderDir, *(fileName + ".bin"), true, false, false);
 
-    // Remove the start of the path until the content folder and put each file in the result
+    // Remove the start of the path until the content folder and put each file
+    // in the result. In a packaged build the file manager hands back
+    // pak-relative paths ("../../../<Project>/Content/..."), so normalize each
+    // file to an absolute path before stripping the absolute content dir;
+    // otherwise the raw relative path leaks to the client, which would try to
+    // resolve it against its cache folder and escape it.
+    const FString ContentDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir());
     std::vector<std::string> result;
     for (auto File : Files) {
-      File.RemoveFromStart(FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()));
+      File = FPaths::ConvertRelativePathToFull(File);
+      File.RemoveFromStart(ContentDir);
       result.emplace_back(TCHAR_TO_UTF8(*File));
     }
 
@@ -577,9 +628,17 @@ void FCarlaServer::FPimpl::BindActions()
   {
     REQUIRE_CARLA_EPISODE();
 
-    // Get the absolute path of the file
-    FString path(FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()));
+    // Get the absolute path of the file, refusing names that escape the
+    // content folder: the name comes from the client, and ".." segments would
+    // otherwise let it read arbitrary files on the server host.
+    const FString ContentDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir());
+    FString path = ContentDir;
     path.Append(name.c_str());
+    path = FPaths::ConvertRelativePathToFull(path);
+    if (!path.StartsWith(ContentDir))
+    {
+      RESPOND_ERROR("file requested outside the content folder");
+    }
 
     // Copy the binary data of the file into the result and return it
     TArray<uint8_t> Content;
@@ -749,6 +808,45 @@ void FCarlaServer::FPimpl::BindActions()
     return true;
   };
 
+  // ~~ ROS2 TF ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(set_publish_tf) << [this](bool publish_tf) -> R<void>
+  {
+    #if defined(WITH_ROS2)
+    REQUIRE_CARLA_EPISODE();
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2 && ROS2->IsEnabled()) {
+      ROS2->SetPublishTF(publish_tf);
+      return R<void>::Success();
+    }
+    RESPOND_ERROR("set_publish_tf: ROS2 is not enabled");
+    #else
+    RESPOND_ERROR("set_publish_tf: Server was compiled without ROS2 support");
+    #endif
+  };
+
+  BIND_SYNC(get_publish_tf) << [this]() -> R<bool>
+  {
+    #if defined(WITH_ROS2)
+    REQUIRE_CARLA_EPISODE();
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2 && ROS2->IsEnabled()) {
+      return ROS2->GetPublishTF();
+    }
+    return false;
+    #else
+    return false;
+    #endif
+  };
+
+  BIND_SYNC(get_ego_spawn_points) << [this]() -> R<std::vector<carla::geom::Transform>>
+  {
+    REQUIRE_CARLA_EPISODE();
+    const auto &SpawnPoints = Episode->GetRecommendedSpawnPoints();
+    auto result = MakeVectorFromTArray<cg::Transform>(SpawnPoints);
+    return result;
+  };
+
   // ~~ Actor operations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(get_actors_by_id) << [this](
@@ -833,9 +931,15 @@ void FCarlaServer::FPimpl::BindActions()
         {
           if (Attr.Key == "ros_name")
           {
-            const std::string value = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
             ROS2->AddActorParentRosName(static_cast<void*>(CarlaActor->GetActor()), static_cast<void*>(CurrentActor->GetActor()));
           }
+          // NOTE: tier4 also propagated each ancestor's ros_topic_name onto the
+          // child here, but their AddActorRosTopicName used map::insert, so the
+          // dispatcher's earlier per-actor registration (own override or "")
+          // always won and the call was a no-op. Our AddActorRosTopicName is
+          // insert_or_assign (re-registration idempotency), which made the
+          // propagation live and clobbered every attached sensor's own
+          // ros_topic_name with its ancestor's — so it is dropped entirely.
         }
         CurrentActor = Episode->FindCarlaActor(CurrentActor->GetParent());
       }
@@ -1226,6 +1330,59 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     {
       return RespondError(
           "disable_actor_constant_velocity",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(enable_actor_constant_acceleration) << [this](
+      cr::ActorId ActorId,
+      cr::Vector3D vector) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "enable_actor_constant_acceleration",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    ECarlaServerResponse Response =
+        CarlaActor->EnableActorConstantAcceleration(vector.ToCentimeters().ToFVector());
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "enable_actor_constant_acceleration",
+          Response,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(disable_actor_constant_acceleration) << [this](
+      cr::ActorId ActorId) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    FCarlaActor* CarlaActor = Episode->FindCarlaActor(ActorId);
+    if (!CarlaActor)
+    {
+      return RespondError(
+          "disable_actor_constant_acceleration",
+          ECarlaServerResponse::ActorNotFound,
+          " Actor Id: " + FString::FromInt(ActorId));
+    }
+
+    ECarlaServerResponse Response =
+        CarlaActor->DisableActorConstantAcceleration();
+    if (Response != ECarlaServerResponse::Success)
+    {
+      return RespondError(
+          "disable_actor_constant_acceleration",
           Response,
           " Actor Id: " + FString::FromInt(ActorId));
     }
@@ -2229,6 +2386,119 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     return R<void>::Success();
   };
 
+  // ~~ Walker navigation (server-side, engine navmesh) ~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(is_navigation_server_side) << [this]() -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *NavSubsystem = UCarlaNavigationSubsystem::Get(Episode->GetWorld());
+    return (NavSubsystem != nullptr) && NavSubsystem->HasServerSideNavigation();
+  };
+
+  BIND_SYNC(get_random_location_from_navigation) << [this]() -> R<cr::Location>
+  {
+    REQUIRE_CARLA_EPISODE();
+    // Failure sentinel per the phase-1 contract: the client retries or falls
+    // back to the legacy client-side navigation.
+    const cr::Location Sentinel{0.0f, 0.0f, -1e6f};
+    auto *NavSubsystem = UCarlaNavigationSubsystem::Get(Episode->GetWorld());
+    if (NavSubsystem == nullptr)
+    {
+      return Sentinel;
+    }
+    FVector Location;
+    if (!NavSubsystem->GetRandomNavLocation(Location))
+    {
+      return Sentinel;
+    }
+    ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    ALargeMapManager *LargeMap = GameMode ? GameMode->GetLMManager() : nullptr;
+    if (LargeMap)
+    {
+      Location = LargeMap->LocalToGlobalLocation(Location);
+    }
+    return cr::Location(Location);
+  };
+
+  // Starts navigation, drawing the walker's crosser flag from the episode
+  // RNG exactly once (repeated starts keep the first draw, preserving the
+  // set_pedestrians_seed determinism guarantee).
+  const auto EnsureWalkerNavigationStarted =
+      [](UCarlaEpisode *Episode, AWalkerController *Controller) -> bool
+  {
+    if (Controller == nullptr)
+    {
+      return false;
+    }
+    if (Controller->IsNavigationActive())
+    {
+      return Controller->StartNavigation();
+    }
+    return Controller->StartNavigation(Episode->DrawWalkerIsCrosser());
+  };
+
+  BIND_SYNC(walker_start_navigation) << [this, EnsureWalkerNavigationStarted](
+      cr::ActorId ActorId) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *Controller = ResolveWalkerNavController(Episode->FindCarlaActor(ActorId));
+    return EnsureWalkerNavigationStarted(Episode, Controller);
+  };
+
+  BIND_SYNC(walker_go_to_location) << [this, EnsureWalkerNavigationStarted](
+      cr::ActorId ActorId,
+      cr::Location Location) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *Controller = ResolveWalkerNavController(Episode->FindCarlaActor(ActorId));
+    if (!EnsureWalkerNavigationStarted(Episode, Controller))
+    {
+      return false;
+    }
+    FVector UELocation = Location;
+    ACarlaGameModeBase *GameMode = UCarlaStatics::GetGameMode(Episode->GetWorld());
+    ALargeMapManager *LargeMap = GameMode ? GameMode->GetLMManager() : nullptr;
+    if (LargeMap)
+    {
+      UELocation = LargeMap->GlobalToLocalLocation(UELocation);
+    }
+    return Controller->GoToNavLocation(UELocation);
+  };
+
+  BIND_SYNC(walker_set_max_speed) << [this](
+      cr::ActorId ActorId,
+      float SpeedMPerSec) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *Controller = ResolveWalkerNavController(Episode->FindCarlaActor(ActorId));
+    constexpr float MeterToCentimeter = 100.0f;
+    return (Controller != nullptr) &&
+        Controller->SetNavMaxSpeed(MeterToCentimeter * SpeedMPerSec);
+  };
+
+  BIND_SYNC(walker_stop_navigation) << [this](cr::ActorId ActorId) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *Controller = ResolveWalkerNavController(Episode->FindCarlaActor(ActorId));
+    return (Controller != nullptr) && Controller->StopNavigation();
+  };
+
+  BIND_SYNC(set_pedestrians_cross_factor) << [this](float CrossFactor) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    // Applies to walkers whose navigation starts after this call (legacy
+    // semantics); a no-op success when no navmesh exists.
+    Episode->SetPedestriansCrossFactor(CrossFactor);
+    return true;
+  };
+
+  BIND_SYNC(set_pedestrians_seed) << [this](uint32_t Seed) -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    Episode->SetPedestriansSeed(Seed);
+    return true;
+  };
+
   BIND_SYNC(blend_pose) << [this](
       cr::ActorId ActorId,
       float Blend) -> R<void>
@@ -2599,7 +2869,7 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     auto It = Episode->GetActorRegistry().begin();
     for (; It != Episode->GetActorRegistry().end(); ++It)
     {
-      const FCarlaActor& View = *(It.Value().Get());
+      const FCarlaActor& View = *(It->Value.Get());
       if (View.GetActorType() == FCarlaActor::ActorType::Vehicle)
       {
         if(View.IsDormant())
@@ -2918,6 +3188,118 @@ BIND_SYNC(is_sensor_enabled_for_ros) << [this](carla::streaming::detail::stream_
     return R<void>::Success();
   };
 
+  // ~~ Spawn custom mesh ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(spawn_custom_mesh) << [this](
+      std::vector<float> vertices,
+      std::vector<uint32_t> triangles,
+      std::string material) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    auto *World = Episode->GetWorld();
+    check(World != nullptr);
+    if (vertices.empty() || (vertices.size() % 3u) != 0u)
+    {
+      RESPOND_ERROR("spawn_custom_mesh: vertices must be a non-empty flat (x, y, z) triple list");
+    }
+    if (triangles.empty() || (triangles.size() % 3u) != 0u)
+    {
+      RESPOND_ERROR("spawn_custom_mesh: triangles must be a non-empty index-triple list");
+    }
+    const uint32_t NumVertices = vertices.size() / 3u;
+    for (const uint32_t Index : triangles)
+    {
+      if (Index >= NumVertices)
+      {
+        RESPOND_ERROR("spawn_custom_mesh: triangle index out of range");
+      }
+    }
+
+    // Client sends metres in the client (UE-handed) frame; UE wants cm.
+    TArray<FVector> Verts;
+    Verts.Reserve(NumVertices);
+    for (uint32_t i = 0u; i < NumVertices; ++i)
+    {
+      Verts.Add(FVector(
+          vertices[3u * i + 0u] * 100.0f,
+          vertices[3u * i + 1u] * 100.0f,
+          vertices[3u * i + 2u] * 100.0f));
+    }
+    TArray<int32> Tris;
+    Tris.Reserve(triangles.size());
+    for (const uint32_t Index : triangles)
+    {
+      Tris.Add(static_cast<int32>(Index));
+    }
+
+    // Area-weighted vertex normals. UE's left-handed winding means the
+    // front face is the one from which the vertices wind clockwise, so the
+    // outward normal of triangle (V0, V1, V2) is (V2-V0) x (V1-V0).
+    TArray<FVector> Normals;
+    Normals.Init(FVector::ZeroVector, Verts.Num());
+    for (int32 i = 0; i + 2 < Tris.Num(); i += 3)
+    {
+      const FVector &V0 = Verts[Tris[i]];
+      const FVector &V1 = Verts[Tris[i + 1]];
+      const FVector &V2 = Verts[Tris[i + 2]];
+      const FVector FaceNormal = FVector::CrossProduct(V2 - V0, V1 - V0);
+      Normals[Tris[i]] += FaceNormal;
+      Normals[Tris[i + 1]] += FaceNormal;
+      Normals[Tris[i + 2]] += FaceNormal;
+    }
+    for (FVector &Normal : Normals)
+    {
+      Normal = Normal.GetSafeNormal(1e-8, FVector::UpVector);
+    }
+
+    // Planar world-space UVs so tiled materials repeat sensibly (5 m tile).
+    TArray<FVector2D> UV0;
+    UV0.Reserve(Verts.Num());
+    for (const FVector &V : Verts)
+    {
+      UV0.Add(FVector2D(V.X / 500.0f, V.Y / 500.0f));
+    }
+
+    ACarlaProceduralMeshActor *MeshActor = World->SpawnActor<ACarlaProceduralMeshActor>();
+    if (MeshActor == nullptr)
+    {
+      RESPOND_ERROR("spawn_custom_mesh: failed to spawn mesh actor");
+    }
+    UProceduralMeshComponent *PMC = MeshActor->MeshComponent;
+    PMC->bUseAsyncCooking = true;
+    PMC->bUseComplexAsSimpleCollision = true;
+    PMC->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    PMC->CreateMeshSection_LinearColor(
+        0,
+        Verts,
+        Tris,
+        Normals,
+        UV0,
+        TArray<FLinearColor>(),
+        TArray<FProcMeshTangent>(),
+        true);
+
+    static const TMap<FString, FString> MaterialHints = {
+        {TEXT("grass"), TEXT("/Game/Carla/Static/GenericMaterials/Ground/MI_LargeLandscape_Grass.MI_LargeLandscape_Grass")},
+        {TEXT("dirt"), TEXT("/Game/Carla/Static/GenericMaterials/Ground/MI_Dirt.MI_Dirt")},
+        {TEXT("road"), TEXT("/Game/Carla/Static/GenericMaterials/Roads/MI_RoadAsphalt_Town15.MI_RoadAsphalt_Town15")},
+        {TEXT("sidewalk"), TEXT("/Game/Carla/Static/GenericMaterials/Sidewalk/MI_Sidewalk_Apartment.MI_Sidewalk_Apartment")}};
+    const FString MaterialName = cr::ToFString(material);
+    const FString *MaterialPath = MaterialHints.Find(MaterialName.ToLower());
+    const FString ResolvedPath = (MaterialPath != nullptr) ? *MaterialPath : MaterialName;
+    if (UMaterialInterface *Material = LoadObject<UMaterialInterface>(nullptr, *ResolvedPath))
+    {
+      PMC->SetMaterial(0, Material);
+    }
+
+    // Tag as terrain for semantic segmentation, mirroring the generated
+    // ground plane (OpenDriveGenerator's TagGeneratedComponent).
+    ATagger::SetStencilValue(*PMC, MeshActor->GetUniqueID(), cr::CityObjectLabel::Terrain, true);
+    PMC->ComponentTags.Add(FName(*ATagger::GetTagAsString(cr::CityObjectLabel::Terrain)));
+
+    return R<void>::Success();
+  };
+
   // ~~ Clear debug strings ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   BIND_SYNC(clear_debug_string) << [this]() -> R<void>
@@ -3165,6 +3547,21 @@ FDataMultiStream FCarlaServer::Start(uint16_t RPCPort, uint16_t StreamingPort, u
   Pimpl = MakeUnique<FPimpl>(RPCPort, StreamingPort, SecondaryPort);
   StreamingPort = Pimpl->StreamingServer.GetLocalEndpoint().port();
   SecondaryPort = Pimpl->SecondaryServer->GetLocalEndpoint().port();
+
+#if PLATFORM_LINUX || PLATFORM_MAC
+  // The vendored rpclib server (Pimpl->Server) hides its listening-socket
+  // acceptor behind a PIMPL with no public accessor, so unlike the
+  // streaming/secondary listeners (which mark themselves close-on-exec at
+  // construction, see carla/streaming/detail/tcp/Server.cpp and
+  // carla/multigpu/listener.cpp) it can't be fixed at the point it's
+  // created. Without this, a forked child (e.g. RecastBuilder, launched by
+  // UCarlaEpisode::LoadNewOpendriveEpisode for pedestrian-nav generation)
+  // inherits the RPC listen socket; if the child outlives the server, it
+  // keeps the port bound and the next server boot aborts in asio's bind().
+  // rpc::server's constructor already binds+listens by the time FPimpl's
+  // constructor above returns, so the socket exists and is found by port.
+  carla::SetCloseOnExecForListeningPort(RPCPort);
+#endif // !_WIN32
 
   UE_LOG(
       LogCarlaServer,

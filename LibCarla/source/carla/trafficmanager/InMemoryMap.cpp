@@ -434,6 +434,17 @@ namespace traffic_manager {
               junction_end_waypoint = temp.front();
             }
 
+            if (traversed_waypoints.empty()) {
+              // This branch's waypoint is not itself flagged as a junction, even though
+              // its predecessor has multiple successors (or a landmark marked it as an
+              // entry point). This happens with malformed/placeholder OpenDRIVE junction
+              // connections (e.g. incomingRoad="-1" placeholders seen on some imported
+              // maps), which starve is_real_junction of enough distinct paths to flag the
+              // road as a real junction. Skip angle computation for this branch instead of
+              // dereferencing the empty traversed_waypoints container.
+              continue;
+            }
+
             // Calculate the angle between the first and the last point of the junction.
             int16_t current_angle = static_cast<int16_t>(traversed_waypoints.front()->GetTransform().rotation.yaw);
             int16_t junction_end_angle = static_cast<int16_t>(traversed_waypoints.back()->GetTransform().rotation.yaw);

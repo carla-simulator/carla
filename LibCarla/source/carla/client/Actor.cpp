@@ -102,6 +102,14 @@ namespace client {
     GetEpisode().Lock()->DisableActorConstantVelocity(*this);
   }
 
+  void Actor::EnableConstantAcceleration(const geom::Vector3D &vector) {
+    GetEpisode().Lock()->EnableActorConstantAcceleration(*this, vector);
+  }
+
+  void Actor::DisableConstantAcceleration() {
+    GetEpisode().Lock()->DisableActorConstantAcceleration(*this);
+  }
+
   void Actor::AddImpulse(const geom::Vector3D &impulse) {
     GetEpisode().Lock()->AddActorImpulse(*this, impulse);
   }

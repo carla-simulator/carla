@@ -15,7 +15,12 @@
 #include "carla/sensor/data/Image.h"
 #include "carla/sensor/s11n/ImageSerializer.h"
 #include "carla/sensor/s11n/SensorHeaderSerializer.h"
+#include "carla/sensor/s11n/VehicleStatusSerializer.h"
 
+#include "carla/ros2/middleware/ActiveMiddleware.h"
+
+#include "publishers/AutowareGNSSPublisher.h"
+#include "publishers/AutowareVehicleStatusPublisher.h"
 #include "publishers/BasePublisher.h"
 #include "publishers/CarlaCameraPublisher.h"
 #include "publishers/CarlaClockPublisher.h"
@@ -36,6 +41,7 @@
 #include "publishers/BasicPublisher.h"
 
 #include "subscribers/AckermannControlSubscriber.h"
+#include "subscribers/AutowareControlSubscriber.h"
 #include "subscribers/BaseSubscriber.h"
 #include "subscribers/CarlaEgoVehicleControlSubscriber.h"
 #include "subscribers/CarlaSubscriber.h"
@@ -84,10 +90,39 @@ enum ESensors {
   SemanticSegmentationCamera_WideAngleLens,
   CameraGBufferUint8,
   CameraGBufferFloat,
-  HSSLidar
+  HSSLidar,
+  // Autoware vehicle interface (appended at the END, matching the
+  // SensorRegistry append; V2X sensors have no ROS2 dispatch and therefore
+  // no enum entry, mirroring the pre-existing convention).
+  VehicleStatusSensor,
+  AutowareGnssSensor
 };
 
-void ROS2::Enable(bool enable) {
+bool ROS2::Enable(bool enable, Middleware middleware, int domain_id) {
+  // Select the ROS 2 middleware before any publisher or subscriber is created.
+  // SetActiveMiddleware is the DDS-free bridge that resolves availability inside
+  // the shared library (the CARLA_ROS2_MIDDLEWARE_* macros are not visible here
+  // in carla-server) and keeps vendor headers out of carla-server.
+  if (enable && !SetActiveMiddleware(middleware)) {
+    log_error("ROS2: requested middleware '", MiddlewareToString(middleware),
+              "' is not available. Compiled in: ", GetAvailableMiddleware(), ".");
+    _enabled = false;
+    return false;
+  }
+  if (enable) {
+    // Configure the domain id before any transport context is created (the
+    // shared participants/sessions are created lazily on the first publisher,
+    // i.e. the clock publisher below). SetActiveDomainId is the DDS-free bridge
+    // so the value lands in the shared library's MiddlewareConfig, which the
+    // middlewares read.
+    const ResolvedDomainId resolved = SetActiveDomainId(domain_id);
+    const char* domain_source =
+        (resolved.source == DomainIdSource::CommandLine)  ? "--ros-domain-id"
+        : (resolved.source == DomainIdSource::Environment) ? "ROS_DOMAIN_ID"
+                                                           : "default";
+    log_info("ROS2: using middleware '", MiddlewareToString(middleware),
+        "', domain id: ", resolved.id, " (", domain_source, ")");
+  }
   _enabled = enable;
   log_info("ROS2 enabled: ", _enabled);
   _clock_publisher = std::make_shared<CarlaClockPublisher>();
@@ -95,6 +130,7 @@ void ROS2::Enable(bool enable) {
   _basic_publisher = std::make_shared<BasicPublisher>();
   _basic_publisher->Init();
 #endif
+  return true;
 }
 
 void ROS2::SetFrame(uint64_t frame) {
@@ -160,7 +196,8 @@ void ROS2::UnregisterSensor(void *actor) {
 
 void ROS2::RegisterVehicle(
     void *actor, std::string ros_name, std::string frame_id, ActorCallback callback,
-    bool enable_ackermann_control) {
+    bool enable_ackermann_control,
+    bool enable_autoware_control) {
   _registrations.insert_or_assign(
       actor, ActorRegistration{ros_name, frame_id, true});
 
@@ -168,19 +205,24 @@ void ROS2::RegisterVehicle(
   // so a re-registration does not accumulate duplicate DataReaders nor leave
   // the previous callback wired.
   _subscribers.erase(actor);
+  _autoware_vehicles.erase(actor);
   _actor_callbacks.insert_or_assign(actor, std::move(callback));
 
   // The legacy CarlaEgoVehicleControlSubscriber::Init built its topic as
   // "rt/carla/" + [parent + "/"] + name + "/vehicle_control_cmd". With the
   // new template constructors the suffix is appended inside each subscriber,
-  // so we hand them the base path only.
-  const std::string base_topic_name = "rt/carla/" + ros_name;
+  // so we hand them the base path only. BuildBaseTopicName also honors an
+  // exact-topic override registered via AddActorRosTopicName.
+  const std::string base_topic_name = BuildBaseTopicName(actor);
 
-  // The two control modes are mutually exclusive: a vehicle listens on either the
-  // Ackermann topic or the direct VehicleControl topic, never both, so an Ackermann
-  // message can never latch ApplyVehicleAckermannControl while plain VehicleControl
-  // messages keep arriving on the other topic. Ackermann is opt-in per youtalk's review.
-  if (enable_ackermann_control) {
+  // The control modes are mutually exclusive: a vehicle listens on exactly one
+  // command surface, so two topics can never contend frame to frame. The
+  // Autoware command set wins over Ackermann (tier4 gave it priority over the
+  // ego control subscriber); Ackermann stays opt-in per youtalk's review.
+  if (enable_autoware_control) {
+    _autoware_vehicles.insert(actor);
+    _subscribers.insert({actor, std::make_shared<AutowareControlSubscriber>(actor, std::move(frame_id))});
+  } else if (enable_ackermann_control) {
     _subscribers.insert({actor, std::make_shared<AckermannControlSubscriber>(actor, base_topic_name, std::move(frame_id))});
   } else {
     _subscribers.insert({actor, std::make_shared<CarlaEgoVehicleControlSubscriber>(actor, base_topic_name, std::move(frame_id))});
@@ -190,7 +232,32 @@ void ROS2::RegisterVehicle(
 void ROS2::UnregisterVehicle(void *actor) {
   _subscribers.erase(actor);
   _actor_callbacks.erase(actor);
+  _autoware_vehicles.erase(actor);
+  _autoware_status_publishers.erase(actor);
   UnregisterSensor(actor);
+}
+
+void ROS2::AddActorRosTopicName(void *actor, std::string ros_topic_name) {
+  _actor_ros_topic_names.insert_or_assign(actor, std::move(ros_topic_name));
+}
+
+void ROS2::RemoveActorRosTopicName(void *actor) {
+  _actor_ros_topic_names.erase(actor);
+  // Drop the cached publishers bound to the overridden topic so the next data
+  // tick re-creates them under the default naming (tier4 semantics).
+  _publishers.erase(actor);
+  _camera_publishers.erase(actor);
+  _transforms.erase(actor);
+}
+
+std::string ROS2::GetActorRosTopicName(void *actor) const {
+  auto it = _actor_ros_topic_names.find(actor);
+  return it != _actor_ros_topic_names.end() ? it->second : std::string{};
+}
+
+bool ROS2::HasTopicOverride(void *actor) const {
+  auto it = _actor_ros_topic_names.find(actor);
+  return it != _actor_ros_topic_names.end() && !it->second.empty();
 }
 
 void ROS2::AddActorParentRosName(void *actor, void *parent) {
@@ -252,6 +319,20 @@ std::string ROS2::BuildParentChain(void *actor) const {
 }
 
 std::string ROS2::BuildBaseTopicName(void *actor) const {
+  // Exact-topic override (ros_topic_name attribute flow): a non-empty custom
+  // name replaces the whole "rt/carla/[parent/]ros_name" convention. Suffixes
+  // for multi-topic sensors are appended by the publishers on top of this.
+  auto override_it = _actor_ros_topic_names.find(actor);
+  if (override_it != _actor_ros_topic_names.end() && !override_it->second.empty()) {
+    const std::string &custom = override_it->second;
+    std::string base_topic_name = "rt";
+    if (custom.front() != '/') {
+      base_topic_name += '/';
+    }
+    base_topic_name += custom;
+    return base_topic_name;
+  }
+
   const std::string ros_name = LookupRosName(actor);
   if (ros_name.empty()) {
     return std::string{};
@@ -360,13 +441,13 @@ std::shared_ptr<BasePublisher> ROS2::GetOrCreateSensor(
     case ESensors::Radar: {
       resolve("radar");
       publisher = std::make_shared<CarlaRadarPublisher>(
-          BuildBaseTopicName(actor), LookupFrameId(actor));
+          BuildBaseTopicName(actor), LookupFrameId(actor), HasTopicOverride(actor));
       break;
     }
     case ESensors::RayCastSemanticLidar: {
       resolve("ray_cast_semantic");
       publisher = std::make_shared<CarlaSemanticLidarPublisher>(
-          BuildBaseTopicName(actor), LookupFrameId(actor));
+          BuildBaseTopicName(actor), LookupFrameId(actor), HasTopicOverride(actor));
       break;
     }
     case ESensors::RayCastLidar: {
@@ -374,7 +455,17 @@ std::shared_ptr<BasePublisher> ROS2::GetOrCreateSensor(
       resolve("ray_cast");
       resolve("hss_lidar");
       publisher = std::make_shared<CarlaLidarPublisher>(
-          BuildBaseTopicName(actor), LookupFrameId(actor));
+          BuildBaseTopicName(actor), LookupFrameId(actor), HasTopicOverride(actor));
+      break;
+    }
+    case ESensors::AutowareGnssSensor: {
+      resolve("autoware_gnss");
+      // frame_id "map" (not the sensor's own frame): the published poses are
+      // world/map-frame quantities including the MGRS offset. Architecture
+      // decision — tier4's AutowarePublisherBase used the sensor ros_name as
+      // frame_id, which was accidental; triage confirmed "map" is the intent.
+      publisher = std::make_shared<AutowareGNSSPublisher>(
+          BuildBaseTopicName(actor), "map");
       break;
     }
     case ESensors::LaneInvasionSensor:
@@ -398,6 +489,11 @@ std::shared_ptr<BasePublisher> ROS2::GetOrCreateSensor(
 }
 
 std::shared_ptr<CarlaTransformPublisher> ROS2::GetOrCreateTransformPublisher(void *actor) {
+  // Global TF gate (tier4's _publish_tf): checked before the cache so
+  // toggling at runtime silences every sensor immediately.
+  if (!_publish_tf) {
+    return nullptr;
+  }
   auto it = _transforms.find(actor);
   if (it != _transforms.end()) {
     return it->second;
@@ -596,9 +692,25 @@ void ROS2::ProcessDataFromDVS(
 }
 
 void ROS2::ProcessDataFromLidar(
+    uint64_t sensor_type,
+    carla::streaming::detail::stream_id_type stream_id,
+    const carla::geom::Transform sensor_transform,
+    carla::sensor::data::LidarData &data,
+    void *actor) {
+  // No sensor description available: plain XYZI layout (channel_count = 0
+  // routes the extended path off).
+  ProcessDataFromLidar(
+      sensor_type, stream_id, sensor_transform,
+      0u, 0.0f, 0.0f, data, actor);
+}
+
+void ROS2::ProcessDataFromLidar(
     uint64_t /*sensor_type*/,
     carla::streaming::detail::stream_id_type stream_id,
     const carla::geom::Transform sensor_transform,
+    uint32_t channel_count,
+    float upper_fov_limit,
+    float lower_fov_limit,
     carla::sensor::data::LidarData &data,
     void *actor) {
   if (auto base = GetOrCreateSensor(ESensors::RayCastLidar, stream_id, actor)) {
@@ -607,9 +719,31 @@ void ROS2::ProcessDataFromLidar(
     // points. Each detection is 4 floats: x, y, z, intensity. Divide the total
     // float count by 4 to recover the number of detections.
     const auto width = static_cast<std::uint32_t>(data._points.size() / 4u);
-    publisher->WritePointCloud(
-        _seconds, _nanoseconds, 1u, width,
-        reinterpret_cast<const std::uint8_t *>(data._points.data()));
+    if (channel_count >= 2u) {
+      // tier4 routing: every raycast lidar whose description is known goes
+      // through the extended Autoware XYZIRCAEDT layout. Per-channel
+      // elevations span [upper_fov, lower_fov] (degrees in, radians out),
+      // uniformly spaced, top channel first — same as tier4's ROS2.cpp.
+      const float upper_rad = upper_fov_limit * static_cast<float>(M_PI) / 180.0f;
+      const float lower_rad = lower_fov_limit * static_cast<float>(M_PI) / 180.0f;
+      std::vector<float> vertical_angles;
+      vertical_angles.reserve(channel_count);
+      const float vertical_step =
+          (upper_rad - lower_rad) / static_cast<float>(channel_count - 1u);
+      for (uint32_t i = 0u; i < channel_count; ++i) {
+        vertical_angles.push_back(upper_rad - static_cast<float>(i) * vertical_step);
+      }
+      publisher->WriteExtendedPointCloud(
+          _seconds, _nanoseconds, 1u, width,
+          reinterpret_cast<const std::uint8_t *>(data._points.data()),
+          data._header.data() + carla::sensor::data::LidarData::Index::SIZE,
+          data._header.size() - carla::sensor::data::LidarData::Index::SIZE,
+          vertical_angles);
+    } else {
+      publisher->WritePointCloud(
+          _seconds, _nanoseconds, 1u, width,
+          reinterpret_cast<const std::uint8_t *>(data._points.data()));
+    }
     publisher->Publish();
   }
   if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
@@ -709,6 +843,147 @@ void ROS2::ProcessDataFromCollisionSensor(
   }
 }
 
+void ROS2::ProcessDataFromStatusSensor(
+    uint64_t /*sensor_type*/,
+    carla::streaming::detail::stream_id_type /*stream_id*/,
+    const carla::geom::Transform /*sensor_transform*/,
+    const carla::sensor::s11n::VehicleStatusData &data,
+    void *vehicle_actor,
+    void * /*actor*/) {
+  // Only vehicles registered with enable_autoware_control publish reports:
+  // the report topics are fixed absolute names shared by the whole vehicle
+  // interface (tier4 restricted this to the ego for the same reason).
+  if (_autoware_vehicles.count(vehicle_actor) == 0) {
+    log_warning(
+        "ROS2::ProcessDataFromStatusSensor: the Vehicle Status Sensor is attached to a "
+        "vehicle that is not registered for Autoware control - not publishing the data.");
+    return;
+  }
+
+  std::shared_ptr<AutowareVehicleStatusPublisher> publisher;
+  auto it = _autoware_status_publishers.find(vehicle_actor);
+  if (it != _autoware_status_publishers.end()) {
+    publisher = it->second;
+  } else {
+    publisher = std::make_shared<AutowareVehicleStatusPublisher>();
+    _autoware_status_publishers.insert({vehicle_actor, publisher});
+  }
+
+  constexpr uint8_t reverse_mask     = 0b00000001;
+  constexpr uint8_t manual_gear_mask = 0b00000010;
+
+  constexpr uint8_t left_blinker_mask  = 0b00000001;
+  constexpr uint8_t right_blinker_mask = 0b00000010;
+  constexpr uint8_t hazard_lights_mask = 0b00000100;
+
+  // Decode data (control_flags b0=reverse b1=manual; turn_mask b0=L b1=R b2=hazard).
+  const bool is_reverse = (data.control_flags & reverse_mask) != 0;
+  const bool is_manual_gear = (data.control_flags & manual_gear_mask) != 0;
+  (void)is_reverse;      // reserved: tier4 TODO — gear/reverse interplay
+  (void)is_manual_gear;  // reserved: tier4 TODO
+
+  const bool is_left_blinker_on = (data.turn_mask & left_blinker_mask) != 0;
+  const bool is_right_blinker_on = (data.turn_mask & right_blinker_mask) != 0;
+  const bool is_hazard_lights_on = (data.turn_mask & hazard_lights_mask) != 0;
+
+  // Positive values mean forward and left (when going forward), so the local
+  // Y velocity and Z angular velocity flip sign from CARLA's convention.
+  publisher->SetVelocity(data.vel_x_mps, -data.vel_y_mps, -data.angVel_z_mps);
+
+  // Steering is reported negated, matching the negation applied when the
+  // Autoware steering command is translated to CARLA (tier4 parity).
+  publisher->SetSteering(-data.steer);
+
+  // Control mode command is a ROS service in Autoware, so there is no easy
+  // way to reflect it yet; AUTONOMOUS is reported unconditionally (tier4).
+  publisher->SetControlMode(ControlMode::AUTONOMOUS);
+
+  publisher->SetGear(Gear::NONE);
+  switch (data.gear) {
+#define CASE(GEAR_VALUE, GEAR_ENUM)   \
+  case GEAR_VALUE:                    \
+    publisher->SetGear(GEAR_ENUM);    \
+    break;                            \
+    static_assert(true, "")
+
+    CASE(-2,  Gear::REVERSE_2);
+    CASE(-1,  Gear::REVERSE  );
+    CASE( 0,  Gear::NEUTRAL  );
+    CASE( 1,  Gear::DRIVE    );
+    CASE( 2,  Gear::DRIVE_2  );
+    CASE( 3,  Gear::DRIVE_3  );
+    CASE( 4,  Gear::DRIVE_4  );
+    CASE( 5,  Gear::DRIVE_5  );
+    CASE( 6,  Gear::DRIVE_6  );
+    CASE( 7,  Gear::DRIVE_7  );
+    CASE( 8,  Gear::DRIVE_8  );
+    CASE( 9,  Gear::DRIVE_9  );
+    CASE( 10, Gear::DRIVE_10 );
+    CASE( 11, Gear::DRIVE_11 );
+    CASE( 12, Gear::DRIVE_12 );
+    CASE( 13, Gear::DRIVE_13 );
+    CASE( 14, Gear::DRIVE_14 );
+    CASE( 15, Gear::DRIVE_15 );
+    CASE( 16, Gear::DRIVE_16 );
+    CASE( 17, Gear::DRIVE_17 );
+    CASE( 18, Gear::DRIVE_18 );
+
+#undef CASE
+  }
+
+  // Turn indicators.
+  if (!is_left_blinker_on && !is_right_blinker_on) {
+    publisher->SetTurnIndicators(TurnIndicatorsStatus::OFF);
+  } else if (is_left_blinker_on && !is_right_blinker_on) {
+    publisher->SetTurnIndicators(TurnIndicatorsStatus::LEFT);
+  } else if (is_right_blinker_on && !is_left_blinker_on) {
+    publisher->SetTurnIndicators(TurnIndicatorsStatus::RIGHT);
+  } else {
+    log_error("ROS2::ProcessDataFromStatusSensor: both blinkers are on; this should not happen.");
+  }
+
+  publisher->SetHazardLights(is_hazard_lights_on);
+
+  publisher->Publish(_seconds, _nanoseconds);
+}
+
+void ROS2::ProcessDataFromAutowareGNSS(
+    uint64_t /*sensor_type*/,
+    carla::streaming::detail::stream_id_type stream_id,
+    const carla::geom::Transform sensor_transform,
+    const carla::geom::GeoLocation & /*data*/,
+    const carla::geom::Transform &sensor_world_transform,
+    const double mgrs_offset_position[3],
+    void *actor) {
+  if (auto base = GetOrCreateSensor(ESensors::AutowareGnssSensor, stream_id, actor)) {
+    if (auto publisher = std::dynamic_pointer_cast<AutowareGNSSPublisher>(base)) {
+      publisher->Write(
+          _seconds, _nanoseconds,
+          sensor_world_transform.location.x,
+          sensor_world_transform.location.y,
+          sensor_world_transform.location.z,
+          sensor_world_transform.rotation.pitch,
+          sensor_world_transform.rotation.yaw,
+          sensor_world_transform.rotation.roll,
+          mgrs_offset_position[0], mgrs_offset_position[1], mgrs_offset_position[2]);
+      publisher->Publish();
+    } else {
+      log_error(
+          "ROS2::ProcessDataFromAutowareGNSS: publisher type mismatch for actor", actor,
+          "- the actor was dispatched as both regular and Autoware GNSS; ignoring this sample.");
+    }
+  }
+  if (auto transform_publisher = GetOrCreateTransformPublisher(actor)) {
+    transform_publisher->Write(
+        _seconds, _nanoseconds,
+        ParentFrameOrMap(BuildParentChain(actor)),
+        LookupFrameId(actor),
+        sensor_transform.location.x, sensor_transform.location.y, sensor_transform.location.z,
+        sensor_transform.rotation.pitch, sensor_transform.rotation.yaw, sensor_transform.rotation.roll);
+    transform_publisher->Publish();
+  }
+}
+
 void ROS2::Shutdown() {
   for (auto &element : _publishers) {
     element.second.reset();
@@ -726,6 +1001,9 @@ void ROS2::Shutdown() {
   _actor_callbacks.clear();
   _registrations.clear();
   _actor_parents.clear();
+  _actor_ros_topic_names.clear();
+  _autoware_vehicles.clear();
+  _autoware_status_publishers.clear();
   _clock_publisher.reset();
   _enabled = false;
 #if defined(WITH_ROS2_DEMO)

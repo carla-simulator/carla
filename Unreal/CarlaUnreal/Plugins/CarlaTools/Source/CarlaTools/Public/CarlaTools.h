@@ -18,4 +18,9 @@ public:
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
+
+private:
+	/** carla-digitaltwins traffic-light authoring tool (LevelEditor menu + nomad tab) */
+	void AddMenuEntry(class FMenuBuilder& Builder);
+	void OpenTrafficLightToolTab();
 };

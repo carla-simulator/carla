@@ -38,6 +38,9 @@ Use ARROWS or WASD keys for control.
     O            : open/close all doors of vehicle
     T            : toggle vehicle's telemetry
 
+    U            : toggle all street lights (LightManager)
+    SHIFT + U    : toggle street light day/night cycle
+
     V            : Select next map layer (Shift+V reverse)
     B            : Load current selected map layer (Shift+B to unload)
 
@@ -108,6 +111,7 @@ try:
     from pygame.locals import K_r
     from pygame.locals import K_s
     from pygame.locals import K_t
+    from pygame.locals import K_u
     from pygame.locals import K_v
     from pygame.locals import K_w
     from pygame.locals import K_x
@@ -226,6 +230,7 @@ class World(object):
         self._actor_filter = args.filter
         self._actor_generation = args.generation
         self._gamma = args.gamma
+        self._post_process_profile = args.post_process_profile
         self.restart()
         self.world.on_tick(hud.on_world_tick)
         self.recording_enabled = False
@@ -300,7 +305,7 @@ class World(object):
         self.lane_invasion_sensor = LaneInvasionSensor(self.player, self.hud)
         self.gnss_sensor = GnssSensor(self.player)
         self.imu_sensor = IMUSensor(self.player)
-        self.camera_manager = CameraManager(self.player, self.hud, self._gamma)
+        self.camera_manager = CameraManager(self.player, self.hud, self._gamma, self._post_process_profile)
         self.camera_manager.transform_index = cam_pos_index
         self.camera_manager.set_sensor(cam_index, notify=False)
         actor_type = get_actor_display_name(self.player)
@@ -396,6 +401,7 @@ class KeyboardControl(object):
             self._lights = carla.VehicleLightState.NONE
             world.player.set_autopilot(self._autopilot_enabled)
             world.player.set_light_state(self._lights)
+            self._day_night_cycle = True
         elif isinstance(world.player, carla.Walker):
             self._control = carla.WalkerControl()
             self._autopilot_enabled = False
@@ -520,6 +526,20 @@ class KeyboardControl(object):
                     else:
                         world.recording_start += 1
                     world.hud.notification("Recording start time is %d" % (world.recording_start))
+                elif event.key == K_u and pygame.key.get_mods() & KMOD_SHIFT:
+                    self._day_night_cycle = not getattr(self, '_day_night_cycle', True)
+                    world.world.get_lightmanager().set_day_night_cycle(self._day_night_cycle)
+                    world.hud.notification('Street light day/night cycle %s' %
+                                           ('On' if self._day_night_cycle else 'Off'))
+                elif event.key == K_u:
+                    light_manager = world.world.get_lightmanager()
+                    street_lights = light_manager.get_all_lights(carla.LightGroup.Street)
+                    if any(light.is_on for light in street_lights):
+                        light_manager.turn_off(street_lights)
+                        world.hud.notification('Street lights Off (%d)' % len(street_lights))
+                    else:
+                        light_manager.turn_on(street_lights)
+                        world.hud.notification('Street lights On (%d)' % len(street_lights))
                 if isinstance(self._control, carla.VehicleControl):
                     if event.key == K_f:
                         # Toggle ackermann controller
@@ -630,7 +650,9 @@ class KeyboardControl(object):
             if not self._ackermann_enabled:
                 self._control.brake = 0
 
-        steer_increment = 5e-4 * milliseconds
+        # 5e-4 needed ~1.4 s of key-hold to reach full steering, which reads
+        # as input lag; the vehicle itself actuates in ~0.25 s.
+        steer_increment = 1.5e-3 * milliseconds
         if keys[K_LEFT] or keys[K_a]:
             if self._steer_cache > 0:
                 self._steer_cache = 0
@@ -645,10 +667,10 @@ class KeyboardControl(object):
             self._steer_cache = 0.0
         self._steer_cache = min(0.7, max(-0.7, self._steer_cache))
         if not self._ackermann_enabled:
-            self._control.steer = round(self._steer_cache, 1)
+            self._control.steer = round(self._steer_cache, 2)
             self._control.hand_brake = keys[K_SPACE]
         else:
-            self._ackermann_control.steer = round(self._steer_cache, 1)
+            self._ackermann_control.steer = round(self._steer_cache, 2)
 
     def _parse_walker_keys(self, keys, milliseconds, world):
         self._control.speed = 0.0
@@ -1095,7 +1117,7 @@ class RadarSensor(object):
 
 
 class CameraManager(object):
-    def __init__(self, parent_actor, hud, gamma_correction):
+    def __init__(self, parent_actor, hud, gamma_correction, post_process_profile='Default'):
         self.sensor = None
         self.surface = None
         self._parent = parent_actor
@@ -1121,8 +1143,6 @@ class CameraManager(object):
                 (carla.Transform(carla.Location(x=-4.0, z=2.0), carla.Rotation(pitch=6.0)), Attachment.SpringArmGhost),
                 (carla.Transform(carla.Location(x=0, y=-2.5, z=-0.0), carla.Rotation(yaw=90.0)), Attachment.Rigid)]
         world = self._parent.get_world()
-        map_name = world.get_map().name
-        post_process_profile = self.get_post_process_profile(map_name)
         self.transform_index = 1
         self.sensors = [
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB', {'post_process_profile' : post_process_profile }],
@@ -1132,6 +1152,7 @@ class CameraManager(object):
             ['sensor.camera.semantic_segmentation', cc.Raw, 'Camera Semantic Segmentation (Raw)', {}],
             ['sensor.camera.semantic_segmentation', cc.CityScapesPalette, 'Camera Semantic Segmentation (CityScapes Palette)', {}],
             ['sensor.camera.instance_segmentation', cc.Raw, 'Camera Instance Segmentation (Raw)', {}],
+            ['sensor.camera.dvs', cc.Raw, 'Dynamic Vision Sensor', {}],
             ['sensor.lidar.ray_cast', None, 'Lidar (Ray-Cast)', {'range': '50'}],
             ['sensor.lidar.ray_cast_semantic', None, 'Semantic Lidar (Ray-Cast)', {'range': '50'}],
             ['sensor.camera.rgb', cc.Raw, 'Camera RGB Distorted',
@@ -1140,6 +1161,20 @@ class CameraManager(object):
                 'post_process_profile' : post_process_profile }],
             ['sensor.camera.optical_flow', cc.Raw, 'Optical Flow', {}],
             ['sensor.camera.normals', cc.Raw, 'Camera Normals', {}],
+            ['sensor.camera.rt_lens', cc.Raw, 'RT Lens (pinhole)',
+                {'camera_model': 'perspective', 'fov': '90',
+                 'samples_per_pixel': '4', 'enable_denoiser': 'true',
+                 'post_process_profile': post_process_profile}],
+            ['sensor.camera.rt_lens', cc.Raw, 'RT Lens (Kannala-Brandt fisheye 150)',
+                {'camera_model': 'kannala_brandt', 'fov': '150',
+                 'distortion_coeffs': '0.03,-0.005,0.0,0.0',
+                 'samples_per_pixel': '4', 'enable_denoiser': 'true',
+                 'post_process_profile': post_process_profile}],
+            ['sensor.camera.rt_lens', cc.Raw, 'RT Lens (Brown-Conrady barrel)',
+                {'camera_model': 'brown_conrady', 'fov': '100',
+                 'distortion_coeffs': '-0.25,0.06,0.0,0.0,0.0',
+                 'samples_per_pixel': '4', 'enable_denoiser': 'true',
+                 'post_process_profile': post_process_profile}],
         ]
 
         bp_library = world.get_blueprint_library()
@@ -1204,13 +1239,6 @@ class CameraManager(object):
     def render(self, display):
         if self.surface is not None:
             display.blit(self.surface, (0, 0))
-    
-    def get_post_process_profile(self, map_name: str) -> str:
-        if "Town10HD_Opt" in map_name:
-            return "Town10HD_Opt"
-        if "Town_C" in map_name:
-            return "Town_C"
-        return "Default"
 
     @staticmethod
     def _parse_image(weak_self, image):
@@ -1245,6 +1273,15 @@ class CameraManager(object):
                 lidar_tag = image[i].object_tag
                 lidar_img[tuple(point.T)] = OBJECT_TO_COLOR[int(lidar_tag)]
             self.surface = pygame.surfarray.make_surface(lidar_img)
+        elif self.sensors[self.index][0].startswith('sensor.camera.dvs'):
+            # Example of converting the raw_data from a carla.DVSEventArray
+            # sensor into a NumPy array and using it as an image
+            dvs_events = np.frombuffer(image.raw_data, dtype=np.dtype([
+                ('x', np.uint16), ('y', np.uint16), ('t', np.int64), ('pol', np.bool_)]))
+            dvs_img = np.zeros((image.height, image.width, 3), dtype=np.uint8)
+            # Blue is positive, red is negative
+            dvs_img[dvs_events[:]['y'], dvs_events[:]['x'], dvs_events[:]['pol'] * 2] = 255
+            self.surface = pygame.surfarray.make_surface(dvs_img.swapaxes(0, 1))
         elif self.sensors[self.index][0].startswith('sensor.camera.optical_flow'):
             image = image.get_color_coded_flow()
             array = np.frombuffer(image.raw_data, dtype=np.dtype("uint8"))
@@ -1368,6 +1405,11 @@ def main():
     argparser.add_argument(
         '--gamma', default=1.0, type=float,
         help='Gamma correction of the camera (default: 1.0)')
+    argparser.add_argument(
+        '--post-process-profile', metavar='NAME', default='Default',
+        help='camera post-process profile to load, i.e. a file name (without '
+             '.json) under Unreal/CarlaUnreal/Content/Carla/Config/PostProcess/ '
+             '-- e.g. "Default" or "GoPro" (default: "Default")')
     argparser.add_argument(
         '--sync', action='store_true',
         help='Activate synchronous mode execution')

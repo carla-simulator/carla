@@ -27,7 +27,8 @@
 
 ATrafficLightManager::ATrafficLightManager()
 {
-  PrimaryActorTick.bCanEverTick = false;
+  PrimaryActorTick.bCanEverTick = true;
+  PrimaryActorTick.bStartWithTickEnabled = false;
   SceneComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
   RootComponent = SceneComponent;
 
@@ -135,6 +136,26 @@ ATrafficLightManager::ATrafficLightManager()
     TSubclassOf<AActor> SpeedLimitModel = SpeedLimit120Finder.Class;
     SpeedLimitModels.Add("120", SpeedLimitModel);
   }
+  // US (MUTCD) mph plates for maps whose signals carry country="US". The assets are the
+  // legacy US-style blueprints (mph value on a rectangular plate).
+  struct FUSPlate { const TCHAR *Key; const TCHAR *Path; };
+  const FUSPlate USPlates[] = {
+      {TEXT("20"), TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit20_15")},
+      {TEXT("25"), TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit25_15")},
+      {TEXT("30"), TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit30_15")},
+      {TEXT("50"), TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit50_40")},
+      {TEXT("55"), TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit55_40")},
+      {TEXT("75"), TEXT("/Game/Carla/Static/TrafficSign/BP_SpeedLimit75_45")},
+  };
+  for (const FUSPlate &Plate : USPlates)
+  {
+    ConstructorHelpers::FClassFinder<AActor> Finder(Plate.Path);
+    if (Finder.Succeeded())
+    {
+      SpeedLimitModels_US.Add(Plate.Key, Finder.Class);
+    }
+  }
+
   TrafficLightGroupMissingId = -2;
 }
 
@@ -406,6 +427,59 @@ void ATrafficLightManager::InitializeTrafficLights()
   {
     UMapLogicParser::ApplyLaneIdsFromMapLogic(XODRPath, this);
   }
+
+  if (GetWorld()->GetWorldPartition() != nullptr)
+  {
+    SetActorTickEnabled(true);
+  }
+}
+
+void ATrafficLightManager::AdoptModelConfigurationFrom(const ATrafficLightManager& Other)
+{
+  TrafficLightModel_RHT = Other.TrafficLightModel_RHT;
+  TrafficLightModel_LHT = Other.TrafficLightModel_LHT;
+  TrafficSignsModels = Other.TrafficSignsModels;
+  SignComponentModels = Other.SignComponentModels;
+  SpeedLimitModels = Other.SpeedLimitModels;
+}
+
+void ATrafficLightManager::Tick(float DeltaSeconds)
+{
+  Super::Tick(DeltaSeconds);
+  UpdateSignalGroundDormancy();
+}
+
+void ATrafficLightManager::UpdateSignalGroundDormancy()
+{
+  const int32 Num = TrafficSigns.Num();
+  if (Num == 0)
+  {
+    return;
+  }
+  UWorld *World = GetWorld();
+  const int32 Checks = FMath::Min(DormancyChecksPerTick, Num);
+  for (int32 i = 0; i < Checks; ++i)
+  {
+    DormancySweepIndex = (DormancySweepIndex + 1) % Num;
+    ATrafficSignBase *Sign = TrafficSigns[DormancySweepIndex];
+    if (!IsValid(Sign))
+    {
+      continue;
+    }
+    const FVector Origin = Sign->GetActorLocation();
+    FCollisionQueryParams Params(SCENE_QUERY_STAT(SignalGroundDormancy), false, Sign);
+    FHitResult Hit;
+    const bool bGroundResident = World->LineTraceSingleByChannel(
+        Hit,
+        Origin + FVector(0.0f, 0.0f, 50.0f),
+        Origin - FVector(0.0f, 0.0f, DormancyTraceDepth),
+        ECC_Visibility,
+        Params);
+    if (Sign->IsHidden() == bGroundResident)
+    {
+      Sign->SetActorHiddenInGame(!bGroundResident);
+    }
+  }
 }
 
 bool MatchSignalAndActor(const carla::road::Signal &Signal, ATrafficSignBase* ClosestTrafficSign)
@@ -432,56 +506,10 @@ bool MatchSignalAndActor(const carla::road::Signal &Signal, ATrafficSignBase* Cl
     }
     else if (Signal.GetType() == cr::SignalType::MaximumSpeed())
     {
-      if (Signal.GetSubtype() == "30" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_30)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "40" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_40)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "50" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_50)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "60" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_60)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "70" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_60)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "80" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_90)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "90" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_90)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "100" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_100)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "120" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_120)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "130" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_130)
-      {
-        return true;
-      }
+      // The subtype is the limit in km/h; the actor answers in km/h for every speed-limit
+      // state (dedicated or custom), so any value the map carries can be matched.
+      const int32 SignalKmh = FCString::Atoi(*FString(Signal.GetSubtype().c_str()));
+      return SignalKmh > 0 && ClosestTrafficSign->GetSpeedLimitKmh() == SignalKmh;
     }
   }
   return false;
@@ -491,6 +519,10 @@ template<typename T = ATrafficSignBase>
 T * GetClosestTrafficSignActor(const carla::road::Signal &Signal, UWorld* World)
 {
   auto CarlaTransform = Signal.GetTransform();
+  // The signal transform carries the OpenDRIVE zOffset (mounting height of
+  // the plate above the road); baked sign actors have their pivot at road
+  // level, so match against the road-level position.
+  CarlaTransform.location.z -= static_cast<float>(Signal.GetZOffset());
   FTransform UETransform(CarlaTransform);
   FVector Location = UETransform.GetLocation();
   // max distance to match 500cm
@@ -579,6 +611,10 @@ void ATrafficLightManager::SpawnTrafficLights()
     }
     const auto& Signal = Signals.at(SignalId);
     auto CarlaTransform = Signal->GetTransform();
+    // The signal transform carries the OpenDRIVE zOffset (mounting height of
+    // the reference point above the road). The spawned blueprint models the
+    // whole signal with its pivot at the pole base, so spawn at road level.
+    CarlaTransform.location.z -= static_cast<float>(Signal->GetZOffset());
     auto ClosestWaypointToSignal =
         GetMap()->GetClosestWaypointOnRoad(CarlaTransform.location);
 
@@ -681,6 +717,11 @@ void ATrafficLightManager::SpawnSignals()
         continue;
       }
       auto CarlaTransform = Signal->GetTransform();
+      // The signal transform carries the OpenDRIVE zOffset (mounting height
+      // of the plate above the road, e.g. ~2.3 m for Town12 stop signs). The
+      // spawned blueprint models the whole sign with its pivot at the pole
+      // base, so spawn at road level or the sign floats by exactly zOffset.
+      CarlaTransform.location.z -= static_cast<float>(Signal->GetZOffset());
       FTransform SpawnTransform(CarlaTransform);
       FVector SpawnLocation = SpawnTransform.GetLocation();
       FRotator SpawnRotation(SpawnTransform.GetRotation());
@@ -737,7 +778,35 @@ void ATrafficLightManager::SpawnSignals()
     else if (Signal->GetType() == carla::road::SignalType::MaximumSpeed() &&
             SpeedLimitModels.Contains(Signal->GetSubtype().c_str()))
     {
+      // Geo-style switch: the OpenDRIVE subtype is always km/h (SignalType.h StVO
+      // vocabulary), but a map whose signals carry country="US" should show MUTCD mph
+      // plates. Convert and snap to the nearest available plate; fall back to the EU
+      // model when no US plate resolves.
+      TSubclassOf<AActor> SpeedModel = SpeedLimitModels[Signal->GetSubtype().c_str()];
+      if (Signal->GetCountry() == "US" && SpeedLimitModels_US.Num() > 0)
+      {
+        const float Kmh = FCString::Atof(*FString(Signal->GetSubtype().c_str()));
+        const float Mph = Kmh / 1.60934f;
+        FString BestKey;
+        float BestDiff = TNumericLimits<float>::Max();
+        for (const auto &Pair : SpeedLimitModels_US)
+        {
+          const float Diff = FMath::Abs(FCString::Atof(*Pair.Key) - Mph);
+          if (Diff < BestDiff)
+          {
+            BestDiff = Diff;
+            BestKey = Pair.Key;
+          }
+        }
+        if (!BestKey.IsEmpty())
+        {
+          SpeedModel = SpeedLimitModels_US[BestKey];
+        }
+      }
       auto CarlaTransform = Signal->GetTransform();
+      // Spawn at road level: the blueprint pivot is at the pole base (see
+      // the zOffset note on the traffic-sign branch above).
+      CarlaTransform.location.z -= static_cast<float>(Signal->GetZOffset());
       FTransform SpawnTransform(CarlaTransform);
       FVector SpawnLocation = SpawnTransform.GetLocation();
       FRotator SpawnRotation(SpawnTransform.GetRotation());
@@ -752,7 +821,7 @@ void ATrafficLightManager::SpawnSignals()
           ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
       SpawnParams.OverrideLevel = GM->GetULevelFromName("TrafficSigns");
       ATrafficSignBase * TrafficSign = GetWorld()->SpawnActor<ATrafficSignBase>(
-          SpeedLimitModels[Signal->GetSubtype().c_str()],
+          SpeedModel,
           SpawnLocation,
           SpawnRotation,
           SpawnParams);

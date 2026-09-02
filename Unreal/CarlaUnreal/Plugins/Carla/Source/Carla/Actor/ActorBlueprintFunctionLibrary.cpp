@@ -5,9 +5,11 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Engine/Engine.h"
 #include "Carla.h"
 #include "Carla/Actor/ActorDescription.h"
 #include "Carla/Sensor/GnssSensor.h"
+#include "Carla/Autoware/Sensors/AutowareGnssSensor.h"
 #include "Carla/Sensor/Radar.h"
 #include "Carla/Sensor/InertialMeasurementUnit.h"
 #include "Carla/Sensor/V2XSensor.h"
@@ -66,7 +68,12 @@ private:
         Message += String;
       }
       Message += TEXT(" ");
-      Message += FString::Printf(Format, std::forward<ARGS>(Args)...);
+      // FString::Printf validates its format string at compile time in UE 5.8,
+      // which rejects a format forwarded through a function parameter.
+      // FCString::Snprintf accepts the forwarded literal reference.
+      TCHAR Formatted[4096];
+      FCString::Snprintf(Formatted, UE_ARRAY_COUNT(Formatted), Format, std::forward<ARGS>(Args)...);
+      Message += Formatted;
 
       UE_LOG(LogCarla, Error, TEXT("%s"), *Message);
 #if WITH_EDITOR
@@ -226,12 +233,25 @@ static void FillIdAndTags(FActorDefinition &Def, TStrs &&...Strings)
   Def.Variations.Emplace(ActorRole);
 
   // ROS2
-  FActorVariation Var;
-  Var.Id = TEXT("ros_name");
-  Var.Type = EActorAttributeType::String;
-  Var.RecommendedValues = {Def.Id};
-  Var.bRestrictToRecommended = false;
-  Def.Variations.Emplace(Var);
+  {
+    FActorVariation Var;
+    Var.Id = TEXT("ros_name");
+    Var.Type = EActorAttributeType::String;
+    Var.RecommendedValues = {Def.Id};
+    Var.bRestrictToRecommended = false;
+    Def.Variations.Emplace(Var);
+  }
+
+  // Exact ROS2 topic-name override (tier4 Autoware port); when left at the
+  // default (== blueprint id) the runtime generates the conventional topic.
+  {
+    FActorVariation Var;
+    Var.Id = TEXT("ros_topic_name");
+    Var.Type = EActorAttributeType::String;
+    Var.RecommendedValues = {Def.Id};
+    Var.bRestrictToRecommended = false;
+    Def.Variations.Emplace(Var);
+  }
 }
 
 static void AddRecommendedValuesForActorRoleName(
@@ -400,6 +420,26 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
   UseRayTracing.RecommendedValues = {TEXT("true")};
   UseRayTracing.bRestrictToRecommended = false;
 
+  // Optional DLSS Super Resolution upscaling: render the capture internally at
+  // dlss_screen_percentage (25-100) of the output resolution and let DLSS fill
+  // the full-size image. Off by default so non-NVIDIA users keep the stock
+  // full-resolution path; without NVIDIA hardware an enabled sensor degrades
+  // to a bilinear upscale (output stays full size and valid). Requires
+  // enable_postprocess_effects=true for DLSS (temporal AA) to engage.
+  FActorVariation EnableDLSS;
+  EnableDLSS.Id = TEXT("enable_dlss");
+  EnableDLSS.Type = EActorAttributeType::Bool;
+  EnableDLSS.RecommendedValues = {TEXT("false")};
+  EnableDLSS.bRestrictToRecommended = false;
+
+  FActorVariation DLSSScreenPercentage;
+  DLSSScreenPercentage.Id = TEXT("dlss_screen_percentage");
+  DLSSScreenPercentage.Type = EActorAttributeType::Float;
+  // 50 renders a quarter of the pixels (DLSS "Performance"); 33 one ninth
+  // ("Ultra Performance").
+  DLSSScreenPercentage.RecommendedValues = {TEXT("50.0")};
+  DLSSScreenPercentage.bRestrictToRecommended = false;
+
   Definition.Variations.Append({ResX,
                                 ResY,
                                 FOV,
@@ -409,7 +449,9 @@ void UActorBlueprintFunctionLibrary::MakeCameraDefinition(
                                 LensKcube,
                                 LensXSize,
                                 LensYSize,
-                                UseRayTracing});
+                                UseRayTracing,
+                                EnableDLSS,
+                                DLSSScreenPercentage});
 
   if (bEnableModifyingPostProcessEffects)
   {
@@ -936,6 +978,200 @@ void UActorBlueprintFunctionLibrary::MakeNormalsCameraDefinition(bool &Success, 
   Success = CheckActorDefinition(Definition);
 }
 
+FActorDefinition UActorBlueprintFunctionLibrary::MakeRayTracedLensCameraDefinition(
+    const FString &Id,
+    const bool bEnableModifyingPostProcessEffects)
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeRayTracedLensCameraDefinition(Id, bEnableModifyingPostProcessEffects, Success, Definition);
+  check(Success);
+  return Definition;
+}
+
+void UActorBlueprintFunctionLibrary::MakeRayTracedLensCameraDefinition(
+    const FString &Id,
+    const bool bEnableModifyingPostProcessEffects,
+    bool &Success,
+    FActorDefinition &Definition)
+{
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("camera"), Id);
+  AddRecommendedValuesForSensorRoleNames(Definition);
+  AddVariationsForSensor(Definition);
+
+  // FOV
+  FActorVariation FOV;
+  FOV.Id = TEXT("fov");
+  FOV.Type = EActorAttributeType::Float;
+  FOV.RecommendedValues = {TEXT("90.0")};
+  FOV.bRestrictToRecommended = false;
+
+  // Resolution
+  FActorVariation ResX;
+  ResX.Id = TEXT("image_size_x");
+  ResX.Type = EActorAttributeType::Int;
+  ResX.RecommendedValues = {TEXT("800")};
+  ResX.bRestrictToRecommended = false;
+
+  FActorVariation ResY;
+  ResY.Id = TEXT("image_size_y");
+  ResY.Type = EActorAttributeType::Int;
+  ResY.RecommendedValues = {TEXT("600")};
+  ResY.bRestrictToRecommended = false;
+
+  // Kept for attribute-surface parity with the other cameras, but the
+  // constructor's SetUseRayTracing(true) wins regardless: the path tracer has
+  // no rasterized fallback the way ASceneCaptureCamera does.
+  FActorVariation UseRayTracing;
+  UseRayTracing.Id = TEXT("use_ray_tracing");
+  UseRayTracing.Type = EActorAttributeType::Bool;
+  UseRayTracing.RecommendedValues = {TEXT("true")};
+  UseRayTracing.bRestrictToRecommended = false;
+
+  // Lens model (see Util/CameraModelUtil.h for FLensModelDescriptor).
+  FActorVariation CameraModelVar;
+  CameraModelVar.Id = TEXT("camera_model");
+  CameraModelVar.Type = EActorAttributeType::String;
+  CameraModelVar.RecommendedValues =
+  {
+    TEXT("perspective"),
+    TEXT("stereographic"),
+    TEXT("equidistant"),
+    TEXT("equisolid"),
+    TEXT("orthographic"),
+    TEXT("kannala_brandt"),
+    TEXT("brown_conrady"),
+    TEXT("lut")
+  };
+  CameraModelVar.bRestrictToRecommended = false;
+
+  // Comma-separated distortion coefficients; meaning is camera_model-specific
+  // (KannalaBrandt: k1..k4, BrownConrady: k1,k2,k3,p1,p2).
+  FActorVariation DistortionCoeffs;
+  DistortionCoeffs.Id = TEXT("distortion_coeffs");
+  DistortionCoeffs.Type = EActorAttributeType::String;
+  DistortionCoeffs.RecommendedValues = {TEXT("")};
+  DistortionCoeffs.bRestrictToRecommended = false;
+
+  // Comma-separated theta->r samples for camera_model=lut. Optional.
+  FActorVariation Lut;
+  Lut.Id = TEXT("lut");
+  Lut.Type = EActorAttributeType::String;
+  Lut.RecommendedValues = {TEXT("")};
+  Lut.bRestrictToRecommended = false;
+
+  // Normalized focal lengths (image half-width = 0.5). 0 = derive from the
+  // fov attribute through the selected camera_model's projection.
+  FActorVariation Fx;
+  Fx.Id = TEXT("fx");
+  Fx.Type = EActorAttributeType::Float;
+  Fx.RecommendedValues = {TEXT("0.0")};
+  Fx.bRestrictToRecommended = false;
+
+  FActorVariation Fy;
+  Fy.Id = TEXT("fy");
+  Fy.Type = EActorAttributeType::Float;
+  Fy.RecommendedValues = {TEXT("0.0")};
+  Fy.bRestrictToRecommended = false;
+
+  FActorVariation Cx;
+  Cx.Id = TEXT("cx");
+  Cx.Type = EActorAttributeType::Float;
+  Cx.RecommendedValues = {TEXT("0.5")};
+  Cx.bRestrictToRecommended = false;
+
+  FActorVariation Cy;
+  Cy.Id = TEXT("cy");
+  Cy.Type = EActorAttributeType::Float;
+  Cy.RecommendedValues = {TEXT("0.5")};
+  Cy.bRestrictToRecommended = false;
+
+  // Maximum half-angle accepted by the lens, in degrees. 0 = automatic:
+  // large enough that every pixel out to the frame corners receives a ray.
+  FActorVariation ThetaMaxDeg;
+  ThetaMaxDeg.Id = TEXT("theta_max_deg");
+  ThetaMaxDeg.Type = EActorAttributeType::Float;
+  ThetaMaxDeg.RecommendedValues = {TEXT("0.0")};
+  ThetaMaxDeg.bRestrictToRecommended = false;
+
+  // Depth of field. aperture_fstop=0 means pinhole (no DOF).
+  FActorVariation ApertureFstop;
+  ApertureFstop.Id = TEXT("aperture_fstop");
+  ApertureFstop.Type = EActorAttributeType::Float;
+  ApertureFstop.RecommendedValues = {TEXT("0.0")};
+  ApertureFstop.bRestrictToRecommended = false;
+
+  FActorVariation FocusDistanceM;
+  FocusDistanceM.Id = TEXT("focus_distance_m");
+  FocusDistanceM.Type = EActorAttributeType::Float;
+  FocusDistanceM.RecommendedValues = {TEXT("1000.0")};
+  FocusDistanceM.bRestrictToRecommended = false;
+
+  // Chromatic aberration: per-channel radial scale relative to green (1.0 = none).
+  FActorVariation CAShiftR;
+  CAShiftR.Id = TEXT("ca_shift_r");
+  CAShiftR.Type = EActorAttributeType::Float;
+  CAShiftR.RecommendedValues = {TEXT("1.0")};
+  CAShiftR.bRestrictToRecommended = false;
+
+  FActorVariation CAShiftB;
+  CAShiftB.Id = TEXT("ca_shift_b");
+  CAShiftB.Type = EActorAttributeType::Float;
+  CAShiftB.RecommendedValues = {TEXT("1.0")};
+  CAShiftB.bRestrictToRecommended = false;
+
+  // Path-tracer quality.
+  FActorVariation SamplesPerPixel;
+  SamplesPerPixel.Id = TEXT("samples_per_pixel");
+  SamplesPerPixel.Type = EActorAttributeType::Int;
+  SamplesPerPixel.RecommendedValues = {TEXT("16")};
+  SamplesPerPixel.bRestrictToRecommended = false;
+
+  FActorVariation EnableDenoiser;
+  EnableDenoiser.Id = TEXT("enable_denoiser");
+  EnableDenoiser.Type = EActorAttributeType::Bool;
+  EnableDenoiser.RecommendedValues = {TEXT("true")};
+  EnableDenoiser.bRestrictToRecommended = false;
+
+  Definition.Variations.Append({ResX,
+                                ResY,
+                                FOV,
+                                UseRayTracing,
+                                CameraModelVar,
+                                DistortionCoeffs,
+                                Lut,
+                                Fx,
+                                Fy,
+                                Cx,
+                                Cy,
+                                ThetaMaxDeg,
+                                ApertureFstop,
+                                FocusDistanceM,
+                                CAShiftR,
+                                CAShiftB,
+                                SamplesPerPixel,
+                                EnableDenoiser});
+
+  if (bEnableModifyingPostProcessEffects)
+  {
+    FActorVariation PostProccess;
+    PostProccess.Id = TEXT("enable_postprocess_effects");
+    PostProccess.Type = EActorAttributeType::Bool;
+    PostProccess.RecommendedValues = {TEXT("true")};
+    PostProccess.bRestrictToRecommended = false;
+
+    FActorVariation post_process_profile;
+    post_process_profile.Id = TEXT("post_process_profile");
+    post_process_profile.Type = EActorAttributeType::String;
+    post_process_profile.RecommendedValues = {TEXT("Default")};
+    post_process_profile.bRestrictToRecommended = false;
+
+    Definition.Variations.Append({PostProccess, post_process_profile});
+  }
+
+  Success = CheckActorDefinition(Definition);
+}
+
 FActorDefinition UActorBlueprintFunctionLibrary::MakeIMUDefinition()
 {
   FActorDefinition Definition;
@@ -1241,16 +1477,43 @@ FActorDefinition UActorBlueprintFunctionLibrary::MakeGnssDefinition()
 {
   FActorDefinition Definition;
   bool Success;
-  MakeGnssDefinition(Success, Definition);
+  MakeGnssDefinition(Success, Definition, TEXT("gnss"));
+  check(Success);
+  return Definition;
+}
+
+FActorDefinition UActorBlueprintFunctionLibrary::MakeAutowareGnssDefinition()
+{
+  FActorDefinition Definition;
+  bool Success;
+  MakeGnssDefinition(Success, Definition, TEXT("autoware_gnss"));
+  check(Success);
+  return Definition;
+}
+
+FActorDefinition UActorBlueprintFunctionLibrary::MakeVehicleStatusDefinition()
+{
+  FActorDefinition Definition;
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("vehicle_status"));
+  AddVariationsForSensor(Definition);
+
+  // Optional attribute exposed in the Python API (tier4 port).
+  Definition.Attributes.Emplace(FActorAttribute{
+      TEXT("speed_units"),
+      EActorAttributeType::String,
+      TEXT("mps")});
+
+  bool Success = CheckActorDefinition(Definition);
   check(Success);
   return Definition;
 }
 
 void UActorBlueprintFunctionLibrary::MakeGnssDefinition(
     bool &Success,
-    FActorDefinition &Definition)
+    FActorDefinition &Definition,
+    FString Name)
 {
-  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), TEXT("gnss"));
+  FillIdAndTags(Definition, TEXT("sensor"), TEXT("other"), Name);
   AddVariationsForSensor(Definition);
 
   // - Noise seed --------------------------------
@@ -1370,6 +1633,15 @@ void UActorBlueprintFunctionLibrary::MakeVehicleDefinition(
   ROS2AckermannControl.bRestrictToRecommended = false;
   ROS2AckermannControl.RecommendedValues.Emplace(TEXT("false"));
   Definition.Variations.Emplace(ROS2AckermannControl);
+
+  // ROS2: opt-in flag wiring the Autoware /control/command/* + /vehicle/engage
+  // subscribers instead of the direct or Ackermann control topic (tier4 port).
+  FActorVariation ROS2AutowareControl;
+  ROS2AutowareControl.Id = TEXT("ros2_autoware_control");
+  ROS2AutowareControl.Type = EActorAttributeType::Bool;
+  ROS2AutowareControl.bRestrictToRecommended = false;
+  ROS2AutowareControl.RecommendedValues.Emplace(TEXT("false"));
+  Definition.Variations.Emplace(ROS2AutowareControl);
 
   Definition.Attributes.Emplace(FActorAttribute{
       TEXT("object_type"),
@@ -1492,6 +1764,11 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
       EActorAttributeType::String,
       GetAge(Parameters.Age)});
 
+  Definition.Attributes.Emplace(FActorAttribute{
+      TEXT("can_use_wheelchair"),
+      EActorAttributeType::Bool,
+      Parameters.bCanUseWheelChair ? TEXT("true") : TEXT("false")});
+
   if (Parameters.Speed.Num() > 0)
   {
     FActorVariation Speed;
@@ -1511,6 +1788,20 @@ void UActorBlueprintFunctionLibrary::MakePedestrianDefinition(
   IsInvincible.RecommendedValues = {TEXT("true")};
   IsInvincible.bRestrictToRecommended = false;
   Definition.Variations.Emplace(IsInvincible);
+
+  FActorVariation WheelChairVariation;
+  WheelChairVariation.Id = TEXT("use_wheelchair");
+  WheelChairVariation.Type = EActorAttributeType::Bool;
+  if (Parameters.bCanUseWheelChair)
+  {
+    WheelChairVariation.RecommendedValues = {TEXT("false"), TEXT("true")};
+  }
+  else
+  {
+    WheelChairVariation.RecommendedValues = {TEXT("false")};
+  }
+  WheelChairVariation.bRestrictToRecommended = true;
+  Definition.Variations.Emplace(WheelChairVariation);
 
   Success = CheckActorDefinition(Definition);
 }
@@ -1858,6 +2149,12 @@ void UActorBlueprintFunctionLibrary::SetCamera(
             Description.Variations["use_ray_tracing"],
             true));
   }
+  if (Description.Variations.Contains("enable_dlss"))
+  {
+    Camera->SetDLSSUpscale(
+        ActorAttributeToBool(Description.Variations["enable_dlss"], false),
+        RetrieveActorAttributeToFloat("dlss_screen_percentage", Description.Variations, 50.0f));
+  }
   if (Description.Variations.Contains("enable_postprocess_effects"))
   {
     Camera->EnablePostProcessingEffects(
@@ -1870,25 +2167,15 @@ void UActorBlueprintFunctionLibrary::SetCamera(
         Description.Variations,
         TEXT(""));
 
-    // Empty or the legacy lowercase "default" sentinel means "no preference":
-    // load the profile named after the active map. Case-sensitive so an
-    // explicit "Default" still force-loads Default.json.
+    // Post-process profiles are camera-lens presets (Default, GoPro, ...),
+    // not per-map looks: the same BP_Carla_Sky + PostProcessVolume already
+    // gives every map the same base grading. Empty or the legacy lowercase
+    // "default" sentinel means "no preference", so just load Default.json.
+    // Callers that want a specific look (e.g. GoPro.json) set
+    // post_process_profile explicitly via the API/scripts.
     if (PostProcessProfileName.IsEmpty() || PostProcessProfileName == TEXT("default"))
     {
-      const UWorld *World = Camera->GetWorld();
-      FString MapName{};
-      if (World != nullptr)
-      {
-        MapName = World->GetMapName();
-        MapName.RemoveFromStart(World->StreamingLevelsPrefix);
-      }
-      else
-      {
-        UE_LOG(LogCarla, Warning,
-            TEXT("SetCamera: camera has no UWorld; falling back to Default post-process profile."));
-      }
-      const FString MapJsonPath = UPostProcessJsonUtils::GetPostProcessConfigPath(MapName);
-      PostProcessProfileName = FPaths::FileExists(MapJsonPath) ? MapName : TEXT("Default");
+      PostProcessProfileName = TEXT("Default");
     }
 
     UPostProcessJsonUtils::LoadAllPostProcessFromJsonToSceneCapture(
@@ -1934,7 +2221,9 @@ void UActorBlueprintFunctionLibrary::SetCamera(
     TEXT("equidistant"),
     TEXT("equisolid"),
     TEXT("orthographic"),
-    TEXT("kannala-brandt")
+    TEXT("kannala-brandt"),
+    TEXT("brown_conrady"),
+    TEXT("lut")
   };
 
   using I = std::underlying_type_t<ECameraModel>;
@@ -2062,6 +2351,35 @@ void UActorBlueprintFunctionLibrary::SetLidar(
 void UActorBlueprintFunctionLibrary::SetGnss(
     const FActorDescription &Description,
     AGnssSensor *Gnss)
+{
+  CARLA_ABFL_CHECK_ACTOR(Gnss);
+  if (Description.Variations.Contains("noise_seed"))
+  {
+    Gnss->SetSeed(
+        RetrieveActorAttributeToInt("noise_seed", Description.Variations, 0));
+  }
+  else
+  {
+    Gnss->SetSeed(Gnss->GetRandomEngine()->GenerateRandomSeed());
+  }
+
+  Gnss->SetLatitudeDeviation(
+      RetrieveActorAttributeToFloat("noise_lat_stddev", Description.Variations, 0.0f));
+  Gnss->SetLongitudeDeviation(
+      RetrieveActorAttributeToFloat("noise_lon_stddev", Description.Variations, 0.0f));
+  Gnss->SetAltitudeDeviation(
+      RetrieveActorAttributeToFloat("noise_alt_stddev", Description.Variations, 0.0f));
+  Gnss->SetLatitudeBias(
+      RetrieveActorAttributeToFloat("noise_lat_bias", Description.Variations, 0.0f));
+  Gnss->SetLongitudeBias(
+      RetrieveActorAttributeToFloat("noise_lon_bias", Description.Variations, 0.0f));
+  Gnss->SetAltitudeBias(
+      RetrieveActorAttributeToFloat("noise_alt_bias", Description.Variations, 0.0f));
+}
+
+void UActorBlueprintFunctionLibrary::SetAutowareGnss(
+    const FActorDescription &Description,
+    AAutowareGnssSensor *Gnss)
 {
   CARLA_ABFL_CHECK_ACTOR(Gnss);
   if (Description.Variations.Contains("noise_seed"))

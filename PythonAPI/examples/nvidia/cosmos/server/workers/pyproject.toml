@@ -1,0 +1,15 @@
+[project]
+name = "carla-cosmos-workers"
+version = "0.2.0"
+description = "Worker protocol and worker adapters for the carla-cosmos server (installed into every model venv)"
+requires-python = ">=3.10"
+# Deliberately dependency-free: the protocol must import inside the Transfer 2.5
+# and Cosmos 3 venvs without touching their pinned torch/transformers stacks.
+dependencies = []
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["cosmos_workers*"]

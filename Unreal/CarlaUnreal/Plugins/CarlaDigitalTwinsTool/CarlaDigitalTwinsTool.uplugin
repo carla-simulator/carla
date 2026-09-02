@@ -1,0 +1,12 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "1.0",
+  "FriendlyName": "CarlaDigitalTwinsTool (content only)",
+  "Description": "Content mount for the carla-digitaltwins assets (procedural building generator atoms, sign/vegetation tools). Native classes are provided by Carla/CarlaTools via CoreRedirects in DefaultEngine.ini.",
+  "Category": "CARLA",
+  "CreatedBy": "CVC",
+  "CanContainContent": true,
+  "EnabledByDefault": true,
+  "Installed": true
+}

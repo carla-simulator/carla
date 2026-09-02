@@ -128,18 +128,13 @@ namespace parser {
     for (auto const pro : elevation_profile) {
       map_builder.AddRoadElevationProfile(pro.road, pro.s, pro.a, pro.b, pro.c, pro.d);
     }
-    /// @todo: RoadInfo classes must be created to fit this information
-    // for (auto const pro : lateral_profile) {
-    //   if (pro.type == "superelevation")
-    //     map_builder.AddRoadLateralSuperElevation(pro.road, pro.s, pro.a,
-    // pro.b, pro.c, pro.d);
-    //   else if (pro.type == "crossfall")
-    //     map_builder.AddRoadLateralCrossfall(pro.road, pro.s, pro.a, pro.b,
-    // pro.c, pro.d, pro.cross.side);
-    //   else if (pro.type == "shape")
-    //     map_builder.AddRoadLateralShape(pro.road, pro.s, pro.a, pro.b, pro.c,
-    // pro.d, pro.shape.t);
-    // }
+    /// @todo superelevation and crossfall still need RoadInfo classes.
+    for (auto const pro : lateral_profile) {
+      if (pro.type == "shape") {
+        map_builder.AddRoadLateralShape(pro.road, pro.s, pro.a, pro.b, pro.c,
+            pro.d, pro.shape.t);
+      }
+    }
   }
 
 } // namespace parser

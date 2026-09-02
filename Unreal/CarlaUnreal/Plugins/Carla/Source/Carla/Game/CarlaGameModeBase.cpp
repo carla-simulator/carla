@@ -13,6 +13,8 @@
 #include "Carla/Lights/CarlaLight.h"
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
+#include "Carla/Weather/Sky.h"
+#include "BlueprintLibary/WeatherJsonUtils.h"
 
 #include <util/disable-ue4-macros.h>
 #include "carla/opendrive/OpenDriveParser.h"
@@ -23,6 +25,7 @@
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
+#include "Components/DirectionalLightComponent.h"
 #include "Engine/DecalActor.h"
 #include "Engine/LevelStreaming.h"
 #include "Engine/LocalPlayer.h"
@@ -93,6 +96,18 @@ void ACarlaGameModeBase::InitGame(
   AActor* LMManagerActor =
       UGameplayStatics::GetActorOfClass(GetWorld(), ALargeMapManager::StaticClass());
   LMManager = Cast<ALargeMapManager>(LMManagerActor);
+  if (LMManager && World->GetWorldPartition() != nullptr)
+  {
+    // World Partition map (e.g. a legacy tiled map converted with the
+    // WorldPartitionConvert commandlet): the engine streams cells natively and
+    // keeps absolute double-precision coordinates, so the UE4-era large-map
+    // machinery (WorldComposition tiles + origin rebasing) must not run. The
+    // conversion carries the old manager actor over; remove it before it ticks.
+    UE_LOG(LogCarla, Log, TEXT(
+        "World Partition map detected: disabling legacy LargeMapManager"));
+    LMManager->Destroy();
+    LMManager = nullptr;
+  }
   if (LMManager) {
     if (LMManager->GetNumTiles() == 0)
     {
@@ -134,6 +149,46 @@ void ACarlaGameModeBase::InitGame(
     UE_LOG(LogCarla, Error, TEXT("Missing CarlaSettingsDelegate!"));
   }
 
+  if (World->GetWorldPartition() != nullptr &&
+      UGameplayStatics::GetActorOfClass(World, ASkyBase::StaticClass()) == nullptr)
+  {
+    // Legacy tiled maps converted to World Partition have no sun/sky rig (the
+    // conversion drops the legacy DirectionalLight/SkyLight, which would
+    // otherwise stream in as static orphan lights stuck at the saved sun
+    // angle). BP_CarlaWeather drives all lighting through the components of a
+    // single ASkyBase-derived actor, so spawn the standard BP_Carla_Sky (the
+    // same rig Town10 places in-level) before the weather actor is created.
+    UClass* SkyClass = LoadClass<ASkyBase>(
+        nullptr,
+        TEXT("/Game/Carla/Blueprints/LevelDesign/BP_Carla_Sky.BP_Carla_Sky_C"));
+    if (SkyClass != nullptr)
+    {
+      ASkyBase* SkyActor = World->SpawnActor<ASkyBase>(SkyClass);
+      if (SkyActor != nullptr)
+      {
+        // The class defaults leave the sun at the horizon (pitch 0), which
+        // renders a black atmosphere and an unlit ground; level-placed rigs
+        // (Town10) carry a proper rotation in their instance data. Point the
+        // sun down as a sane noon default until the weather drives it.
+        TArray<UDirectionalLightComponent*> SunComponents;
+        SkyActor->GetComponents<UDirectionalLightComponent>(SunComponents);
+        for (UDirectionalLightComponent* SunComponent : SunComponents)
+        {
+          if (SunComponent->GetName().Contains(TEXT("Sun")))
+          {
+            SunComponent->SetWorldRotation(FRotator(-45.0f, 45.0f, 0.0f));
+          }
+        }
+      }
+      UE_LOG(LogCarla, Log, TEXT(
+          "World Partition map without a sky rig: spawned BP_Carla_Sky"));
+    }
+    // BP_GeneralSceneSettings used to be spawned alongside the sky here too,
+    // but everything it did (post-process delta-baseline, cloud density) is
+    // now handled natively in AWeather::ApplyWeatherToSkyActor -- no actor
+    // needed.
+  }
+
   AActor* WeatherActor =
       UGameplayStatics::GetActorOfClass(GetWorld(), AWeather::StaticClass());
   if (WeatherActor != nullptr) {
@@ -171,6 +226,11 @@ void ACarlaGameModeBase::InitGame(
   Recorder->SetEpisode(Episode);
   Episode->SetRecorder(Recorder);
 
+  LoadGeoReference();
+}
+
+void ACarlaGameModeBase::LoadGeoReference()
+{
   ParseOpenDrive();
 
   if(Map.has_value())
@@ -189,6 +249,45 @@ void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
   Super::RestartPlayer(NewPlayer);
 }
 
+// Whether BP_CarlaWeather's per-town "DefaultWeathers" table (a blueprint
+// TMap<FString, FWeatherParameters> variable) has an entry for MapName. Looked
+// up by authored name through reflection, like the other blueprint variables
+// the C++ side reads (see AWeather::ApplyWeatherToSkyActor).
+static bool IsMapInBlueprintWeatherTable(const AWeather* Weather, const FString& MapName)
+{
+  if (Weather == nullptr)
+  {
+    return false;
+  }
+  for (TFieldIterator<FProperty> It(Weather->GetClass()); It; ++It)
+  {
+    if ((*It)->GetAuthoredName() != TEXT("DefaultWeathers") && (*It)->GetName() != TEXT("DefaultWeathers"))
+    {
+      continue;
+    }
+    const FMapProperty* MapProp = CastField<FMapProperty>(*It);
+    if (MapProp == nullptr)
+    {
+      return false;
+    }
+    const FStrProperty* KeyProp = CastField<FStrProperty>(MapProp->KeyProp);
+    if (KeyProp == nullptr)
+    {
+      return false;
+    }
+    FScriptMapHelper Helper(MapProp, MapProp->ContainerPtrToValuePtr<void>(Weather));
+    for (FScriptMapHelper::FIterator MapIt(Helper); MapIt; ++MapIt)
+    {
+      if (KeyProp->GetPropertyValue(Helper.GetKeyPtr(MapIt.GetInternalIndex())) == MapName)
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+  return false;
+}
+
 void ACarlaGameModeBase::BeginPlay()
 {
   Super::BeginPlay();
@@ -201,6 +300,17 @@ void ACarlaGameModeBase::BeginPlay()
 
   ATagger::TagActorsInLevel(*World, true);
   TaggerDelegate->SetSemanticSegmentationEnabled();
+
+  // World Partition streams cells in after BeginPlay, and their actors are
+  // loaded, not spawned, so neither the tagging sweep above nor the
+  // TaggerDelegate spawn handler ever sees them. Tag each cell's level as it
+  // is added to the world (the legacy ALargeMapManager did this for
+  // WorldComposition tiles, but it retires itself on World Partition maps).
+  if (World->GetWorldPartition() != nullptr)
+  {
+    FWorldDelegates::LevelAddedToWorld.AddUObject(
+        this, &ACarlaGameModeBase::OnLevelAddedToWorld);
+  }
 
   // HACK: fix transparency see-through issues
   // The problem: transparent objects are visible through walls.
@@ -221,7 +331,47 @@ void ACarlaGameModeBase::BeginPlay()
 
   if (Episode->Weather != nullptr)
   {
-    Episode->Weather->ApplyWeather(carla::rpc::WeatherParameters::Default);
+    // Per-map defaults now come from MapDefaults.json (either a named
+    // {time, condition} preset pair via ASkyBase::SetAsMapDefault, or a full
+    // inline snapshot via ASkyBase::SaveCurrentWeatherAsMapDefault --
+    // GetMapDefaultWeather resolves whichever shape the entry is), not the
+    // flat carla::rpc::WeatherParameters::Default sentinel (which forces e.g.
+    // SunAltitudeAngle to -1 regardless of what the map's sky rig was
+    // authored with). Fall back to the old sentinel only for maps with no
+    // MapDefaults.json entry yet.
+    FString MapName = World->GetMapName();
+    MapName.RemoveFromStart(World->StreamingLevelsPrefix);
+    FWeatherParameters DefaultWeather;
+    if (UWeatherJsonUtils::GetMapDefaultWeather(MapName, Episode->Weather->GetCurrentWeather(), DefaultWeather))
+    {
+      Episode->Weather->ApplyWeather(DefaultWeather);
+      // The weather actor was spawned during this BeginPlay, so its own
+      // BeginPlay (BP_CarlaWeather: per-town "DefaultWeathers" table, or a
+      // hard-coded fallback + "<map> default weather not found") is deferred
+      // until the world has begun play -- i.e. it runs AFTER the ApplyWeather
+      // above and silently replaces the MapDefaults.json entry (observed on
+      // every baked twin: sun 45/220 + fog 2.0 instead of the authored
+      // defaults). For maps the blueprint table does not know, re-apply the
+      // JSON entry on the next tick so the file wins over the fallback. Maps
+      // in the table (the stock towns) are left to the table on purpose: it
+      // is what they have always rendered with, and several JSON entries
+      // (e.g. Town10HD_Opt) disagree with it.
+      if (!IsMapInBlueprintWeatherTable(Episode->Weather, MapName))
+      {
+        TWeakObjectPtr<AWeather> WeakWeather = Episode->Weather;
+        World->GetTimerManager().SetTimerForNextTick([WeakWeather, DefaultWeather]()
+        {
+          if (WeakWeather.IsValid())
+          {
+            WeakWeather->ApplyWeather(DefaultWeather);
+          }
+        });
+      }
+    }
+    else
+    {
+      Episode->Weather->ApplyWeather(carla::rpc::WeatherParameters::Default);
+    }
   }
 
   /// @todo Recorder should not tick here, FCarlaEngine should do it.
@@ -396,8 +546,37 @@ void ACarlaGameModeBase::Tick(float DeltaSeconds)
   }
 }
 
+void ACarlaGameModeBase::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
+{
+  if (InLevel == nullptr || InWorld != GetWorld())
+  {
+    return;
+  }
+  ATagger::TagActorsInLevel(*InLevel, true);
+
+  // A converted map's baked TrafficLightManager can stream in later as a
+  // duplicate of the persistent-level manager installed at BeginPlay (see
+  // GetTrafficLightManager); cull it before anything can find it.
+  TArray<AActor*> DuplicateManagers;
+  for (AActor* Actor : InLevel->Actors)
+  {
+    if (Actor != nullptr && Actor != TrafficLightManager &&
+        Actor->IsA<ATrafficLightManager>())
+    {
+      DuplicateManagers.Add(Actor);
+    }
+  }
+  for (AActor* Actor : DuplicateManagers)
+  {
+    UE_LOG(LogCarla, Log, TEXT("Destroying streamed-in duplicate TrafficLightManager %s"),
+        *Actor->GetName());
+    Actor->Destroy();
+  }
+}
+
 void ACarlaGameModeBase::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
+  FWorldDelegates::LevelAddedToWorld.RemoveAll(this);
   FCarlaStaticDelegates::OnEpisodeSettingsChange.Remove(OnEpisodeSettingsChangeHandle);
 
   Episode->EndPlay();
@@ -482,11 +661,28 @@ ATrafficLightManager* ACarlaGameModeBase::GetTrafficLightManager()
   {
     UWorld* World = GetWorld();
     AActor* TrafficLightManagerActor = UGameplayStatics::GetActorOfClass(World, ATrafficLightManager::StaticClass());
+    ATrafficLightManager* BakedInStreamedCell = nullptr;
+    if (TrafficLightManagerActor != nullptr &&
+        World->GetWorldPartition() != nullptr &&
+        TrafficLightManagerActor->GetLevel() != World->PersistentLevel)
+    {
+      // Converted World Partition maps carry the manager over as a
+      // spatially-loaded external actor inside a streamed cell; anything it
+      // owns dies with the cell. Replace it with a persistent-level manager
+      // that inherits the baked manager's model configuration.
+      BakedInStreamedCell = Cast<ATrafficLightManager>(TrafficLightManagerActor);
+      TrafficLightManagerActor = nullptr;
+    }
     if(TrafficLightManagerActor == nullptr)
     {
       FActorSpawnParameters SpawnParams;
       SpawnParams.OverrideLevel = GetULevelFromName("TrafficLights");
       TrafficLightManager = World->SpawnActor<ATrafficLightManager>(SpawnParams);
+      if (BakedInStreamedCell != nullptr && TrafficLightManager != nullptr)
+      {
+        TrafficLightManager->AdoptModelConfigurationFrom(*BakedInStreamedCell);
+        BakedInStreamedCell->Destroy();
+      }
     }
     else
     {
@@ -775,6 +971,18 @@ ULevel* ACarlaGameModeBase::GetULevelFromName(FString LevelName)
       }
       break;
     }
+  }
+
+  // With no matching sublevel the callers used to pass OverrideLevel=nullptr,
+  // and UWorld::SpawnActor then falls back to the OWNER's level. On converted
+  // World Partition maps the owner (the baked TrafficLightManager) lives in a
+  // streamed cell, so every runtime signal landed in that one cell and was
+  // silently torn down (no AActor::Destroy, no OnDestroyed) whenever the cell
+  // streamed out. Fall back to the persistent level instead so runtime-spawned
+  // managers, groups and signals always survive streaming.
+  if (OutLevel == nullptr)
+  {
+    OutLevel = World->PersistentLevel;
   }
 
   return OutLevel;

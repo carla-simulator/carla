@@ -106,6 +106,10 @@ void UTrafficLightComponent::SetLightState(ETrafficLightState NewState)
 {
   LightState = NewState;
   LightChangeDispatcher.Broadcast();
+  if (GetOwner() == nullptr)
+  {
+    return;
+  }
   if (GetOwner()->Implements<UTrafficLightInterface>())
   {
     ITrafficLightInterface::Execute_LightChanged(GetOwner(), LightState);
@@ -123,6 +127,16 @@ void UTrafficLightComponent::SetLightState(ETrafficLightState NewState)
       Controller->SetTrafficLightState(LightState);
     }
   }
+}
+
+void UTrafficLightComponent::OnComponentDestroyed(bool bDestroyingHierarchy)
+{
+  if (TrafficLightController != nullptr)
+  {
+    TrafficLightController->RemoveTrafficLight(this);
+    TrafficLightController = nullptr;
+  }
+  Super::OnComponentDestroyed(bDestroyingHierarchy);
 }
 
 ETrafficLightState UTrafficLightComponent::GetLightState() const

@@ -300,6 +300,11 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
     nav->Tick(_episode);
   }
 
+  bool Simulator::IsNavigationServerSide() {
+    DEBUG_ASSERT(_episode != nullptr);
+    return _episode->CreateNavigationIfMissing()->IsServerSide();
+  }
+
   void Simulator::RegisterAIController(const WalkerAIController &controller) {
     auto walker = controller.GetParent();
     if (walker == nullptr) {
@@ -325,18 +330,39 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
   std::optional<geom::Location> Simulator::GetRandomLocationFromNavigation() {
     DEBUG_ASSERT(_episode != nullptr);
     auto nav = _episode->CreateNavigationIfMissing();
+    if (nav->IsServerSide()) {
+      // The server samples the loaded navmesh; the sentinel z = -1e6 means it
+      // found no point (e.g. tiles still streaming in), so try a few times
+      // before giving up like the legacy path does (empty optional).
+      constexpr int attempts = 3;
+      for (int i = 0; i < attempts; ++i) {
+        auto location = _client.GetRandomLocationFromNavigation();
+        if (location.z > -9.0e5f) {
+          return location;
+        }
+      }
+      return {};
+    }
     return nav->GetRandomLocation();
   }
 
   void Simulator::SetPedestriansCrossFactor(float percentage) {
     DEBUG_ASSERT(_episode != nullptr);
     auto nav = _episode->CreateNavigationIfMissing();
+    if (nav->IsServerSide()) {
+      _client.SetPedestriansCrossFactor(percentage);
+      return;
+    }
     nav->SetPedestriansCrossFactor(percentage);
   }
 
   void Simulator::SetPedestriansSeed(unsigned int seed) {
     DEBUG_ASSERT(_episode != nullptr);
     auto nav = _episode->CreateNavigationIfMissing();
+    if (nav->IsServerSide()) {
+      _client.SetPedestriansSeed(seed);
+      return;
+    }
     nav->SetPedestriansSeed(seed);
   }
 

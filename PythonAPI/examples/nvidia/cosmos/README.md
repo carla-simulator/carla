@@ -1,0 +1,354 @@
+# NVIDIA Cosmos Integration for CARLA UE5
+
+Turns CARLA drives into inputs for NVIDIA's Cosmos video world models
+(Cosmos 3 Nano/Super transfer, Cosmos Transfer 2.5 general and the 7-camera
+Transfer 2.5 `auto/multiview` path) and, once the server component ships,
+submits generation jobs and collects the results.
+
+The client captures **frame-exact multi-camera clips** (RGB plus depth,
+segmentation and edge control videos), exports the ground truth as an NVIDIA
+**ClipGT Parquet scene package** (consumed unmodified by NVIDIA's
+world-scenario renderer for `wsm` / `hdmap_bbox` controls), and validates job
+requests against per-backend contracts before anything is uploaded.
+
+## Status
+
+| Component | Status |
+|---|---|
+| Client capture core (`client/`) | **Available** |
+| HTTP client, `carla-cosmos` CLI, mock server (`client/`, `server/`) | **Available** (Phase 2) |
+| Server API: auth, blobs, job queue, scheduler, worker protocol | **Available** — runs today with the CPU `mock` worker |
+| Cosmos 3 (vLLM-Omni), Transfer 2.5, Transfer 2.5 AV workers, server-side world-scenario rendering | **Code complete**, validated against fake engines on CPU; GPU validation pending on the target node |
+| Docker image with baked weights (`server/Dockerfile`, `build_image.sh`, `artifacts.lock`) | **Available**; `:nano` ≈ 96 GB weights, `:full` ≈ 230 GB |
+
+## Layout
+
+```
+client/     pip package `carla-cosmos`: contracts, clip format, capture (extra), HTTP client, CLI
+server/     pip package `carla-cosmos-server` (API) + `carla-cosmos-workers` (worker protocol, adapters)
+            profiles/*.yaml decide which workers start on which GPUs
+scripts/    install_client.sh · run_server.sh (docker one-liner) · smoke_test.sh
+demos/      single_view_live.py (capture; submit lands with the real workers)
+```
+
+## Try the whole pipeline without a GPU (mock worker)
+
+```sh
+./scripts/install_client.sh                       # venv + carla wheel + carla-cosmos[capture]
+client/.venv/bin/pip install -e server/workers -e server   # API + mock worker into the same venv
+./scripts/smoke_test.sh                           # starts a mock server, submits one job per backend
+```
+
+Or interactively:
+
+```sh
+client/.venv/bin/carla-cosmos serve --mock --port 8000    # prints COSMOS_URL / COSMOS_TOKEN exports
+export COSMOS_URL=http://127.0.0.1:8000 COSMOS_TOKEN=...
+carla-cosmos models
+carla-cosmos synthetic-clip --out ./clips --frames 16 --scene
+carla-cosmos submit --clip clips/synthetic_xxxx --backend cosmos3-nano \
+    --prompt "overcast, wet road" --control depth=clip --control seg=clip --control edge=derive --out ./results
+```
+
+The mock worker echoes the input RGB after a short delay with progress events;
+everything else — token auth, content-addressed uploads with dedup, contract
+validation, queueing with priorities, cancellation, result manifests — is the
+production code path.
+
+## Client quickstart (capture)
+
+```sh
+# one-time setup: venv beside the example + carla wheel + carla-cosmos
+./scripts/install_client.sh
+
+# CARLA server running on :2000, then:
+client/.venv/bin/python demos/single_view_live.py \
+    --port 2000 --frames 60 --vehicles 10 --out ./clips --capture-only
+```
+
+This spawns a Traffic-Manager-driven hero, captures 60 frames at 30 fps with
+the `single_720p` rig and writes a clip:
+
+```
+clips/<clip_id>/
+  manifest.json                      CARLA version, map, weather, rig, fps, seed, ...
+  rgb_camera_front_wide_120fov.mp4   H.264 crf 14
+  depth_camera_front_wide_120fov.mp4 8-bit inverse depth, near = bright, H.264 4:4:4 lossless
+  seg_camera_front_wide_120fov.mp4   instance-coloured segmentation (deterministic palette)
+  semantic_camera_front_wide_120fov.mp4  CityScapes-palette class ids, H.264 4:4:4
+                                     lossless (the source of --mask-classes)
+  edge_camera_front_wide_120fov.mp4  optional: semantic-masked Canny (--edge)
+  scene/                             ClipGT Parquet package (ego, obstacles, calibration,
+                                     lane lines, boundaries, crosswalks, poles, lights,
+                                     signs, wait lines) + per-frame traffic-light states
+```
+
+The scene package renders directly with NVIDIA's
+`scripts/generate_control_videos.py` (cosmos-transfer2.5 repo):
+
+```sh
+python generate_control_videos.py -i clips/<clip_id>/scene -o out \
+    --cameras camera_front_wide_120fov      # or "all" for the nvidia_av7 rig
+```
+
+### Rigs
+
+* `Rig.single()` / `client/rigs/single_720p.yaml` — one forward 90° camera in
+  the `camera:front:wide:120fov` renderer slot.
+* `Rig.nvidia_av7()` / `client/rigs/nvidia_av7.yaml` — the seven NVIDIA RDS-HQ
+  cameras (120/120/120/70/70/30/30°) with NVIDIA's extrinsics.
+
+Cameras are specified as FLU poses relative to the rear-axle-on-ground point
+(NVIDIA's convention).  By default the **roofline mounting rule** applies:
+any camera that would sit inside the ego body is lifted to the roof line and
+clamped to the bounding-box footprint (NVIDIA's SUV positions land inside a
+CARLA sedan's cabin); the *actual* extrinsics are written to the calibration.
+Use `mount: exact` in the rig YAML to disable.
+
+### Python API
+
+```python
+from carla_cosmos import Capture, Rig, COSMOS3_NANO, ReplayTicks
+
+cap = Capture(world, hero, Rig.single(), COSMOS3_NANO, frames=60, fps=30, edge=True)
+clip = cap.run("./clips", "my_clip", seed=7)          # frame-exact, restores settings
+assert clip.validate() == []
+
+# deterministic capture from a recorder log:
+with ReplayTicks(client, "/abs/path/drive.log", start=5.0, duration=3.0) as ticks:
+    hero = ticks.find_ego()
+    clip = Capture(world, hero, Rig.single(), frames=60, fps=30, ticks=ticks) \
+        .run("./clips", "replay_clip")
+```
+
+Backend contracts (`carla_cosmos.contracts`) encode what each backend accepts
+and produce actionable errors before upload:
+
+| backend | controls | views | fps (clip → model) | frames (at model fps) | resolutions |
+|---|---|---|---|---|---|
+| `cosmos3-nano` / `-super` | edge, blur, depth, seg, wsm | 1 | 10/16/24/30 → same | 5–300 (wsm: 101·k) | 256/480/720 |
+| `transfer2.5` | edge, vis, depth, seg | 1 | 16 → 16 | 93·k | 480/720 |
+| `transfer2.5-av` | hdmap_bbox (required) | 1–7 fixed | 30 → 10 | 29 + 28·(k−1) | 720 |
+
+### Mask out semantic classes
+
+Let the model invent what is behind the traffic: name CARLA semantic classes and
+they are removed from every input derived from the captured pixels.
+
+```sh
+carla-cosmos classes                       # tag names, aliases and groups
+carla-cosmos submit --clip clips/xxx --backend transfer2.5 --prompt "empty street at dusk" \
+    --control depth=clip:0.8 --control seg=clip:0.4 --control edge=derive \
+    --mask-classes vehicle,pedestrian [--mask-dilate 3]
+```
+
+```python
+cosmos.submit_clip(clip, "transfer2.5", prompt,
+                   {"depth": "clip", "seg": "clip", "edge": "derive"},
+                   weights={"depth": 1.0, "seg": 0.5, "edge": 0.3},
+                   mask_classes=["vehicle"])          # names or tag ids
+```
+
+The masked region is written **black** in the depth, seg and edge controls and in
+the uploaded RGB — the value each branch already reads as "nothing here" in a
+CARLA clip (inverse depth 0 = infinitely far, seg id 0 = unlabeled, edge 0 = no
+edge).  Masking the RGB is what also empties the controls the *server* derives
+from it (`edge`/`vis`/`blur` with `derive`).  Transfer 2.5 additionally receives
+the mask as a per-camera video and applies it as a control-weight map, so the
+control has weight 0 there rather than merely blank pixels.  The mask is dilated
+a few pixels so object outlines do not leak.
+
+It never touches `wsm` / `hdmap_bbox`: those are rendered server-side from the
+ClipGT scene package and are geometric ground truth, not pixels — drop an object
+from the scene package if it must leave the world model.
+
+The clip must carry class information: a `semantic_<camera>.mp4` AOV, or a `seg`
+video captured with `seg_mode="semantic"`.  `Capture` writes the semantic AOV
+whenever `"semantic"` is in its `aovs` — which the default
+`("rgb", "depth", "semantic", "instance")` is — so a clip captured with the
+defaults can be masked while its `seg` control keeps the instance colouring.
+Clips captured before the AOV existed carry only an instance-coloured `seg`
+(a random palette over instance ids, no class at all); masking one is refused
+with what to recapture, and `clip.validate(for_masking=True)` reports the same
+per camera.  `mask_classes` and the dilation are recorded in the job request and
+the result manifest.
+
+### Occlusion-aware obstacles
+
+The simulator knows every actor; a camera does not.  NVIDIA's RDS-HQ obstacle
+tracks come from lidar auto-labelling, so a car behind a building has no label
+while one half-behind another car usually does.  Exporting every actor
+therefore feeds the AV renderer boxes floating over buildings — out of
+distribution, and it hallucinates vehicles there.
+
+Every capture z-buffer-tests its obstacles against its own depth AOVs
+(`client/carla_cosmos/visibility.py`) and exports only what a camera can see:
+
+```sh
+python demos/av7_world_scenario.py --seconds 1 --capture-only    # filter on by default
+python demos/av7_world_scenario.py --seconds 1 --visibility none # every actor, as before
+```
+
+| parameter | default | meaning |
+|---|---|---|
+| `visibility` | `depth` | `depth` (z-buffer test) or `none` (export everything) |
+| `min_visible_fraction` | `0.05` | smallest fraction of an obstacle's 27 sample points that must be visible |
+| `range_m` | `150` | sample points farther than this do not count as seen |
+| `hysteresis_frames` | `3` | occlusions shorter than this do not split a track |
+
+27 lattice points per box (the 8 corners, the centre and the rest of a 3x3x3
+grid) are projected with the clip's **own** f-theta calibration — the one the
+renderer reads back — and compared with the raw metric depth image: a point is
+occluded when the depth image is more than `0.5 m + 2 %` nearer than the point.
+One decision per object per tick, unioned over the cameras, because ClipGT
+tracks are global.  Points on the far side of a car are covered by the car
+itself, so a fully visible vehicle scores about a third of its points; the
+fraction separates "some of it is on screen" from "none of it is".
+
+NVIDIA's loader interpolates a track across **any** hole between its first and
+last observation, so a track that disappears is split into `<id>#<k>` per
+visible segment, segments shorter than two observations are dropped (the loader
+skips those anyway), and a parked obstacle that is hidden for part of the clip
+becomes one two-row track per segment instead of one clip-wide pair.  The
+parameters land in `manifest.json`, and the per-tick decisions plus the geometry
+of everything dropped go to `scene/<clip>.visibility.json` for
+`preview --show-occluded`.  Cost on a 7-camera 1280x720 capture with ~170
+obstacles: **4 ms per tick**, against ~550 ms of capture — under 1 %.
+
+### Local ground-truth preview
+
+Check the exported ClipGT scene without a GPU, a server or a model: reproject
+it onto the RGB we captured and look at it.
+
+```sh
+carla-cosmos preview --clip clips/av7_xxx --grid            # -> clips/av7_xxx/preview/*.mp4
+carla-cosmos preview --clip clips/av7_xxx --cameras camera:front:wide:120fov --frames 0:60
+carla-cosmos preview --clip clips/av7_xxx --show-occluded --png-every 30   # inspect the occlusion filter
+python demos/viewer.py --clip clips/av7_xxx                 # same keys as a result, GT as the control
+```
+
+One MP4 per camera with obstacles, lane lines, road boundaries, crosswalks,
+wait lines, poles, traffic lights and signs drawn over a dimmed RGB, plus (with
+`--grid`) one labelled grid video, four cameras per row.  `--layers` picks the
+tables, `--dim 1.0` keeps the RGB bright, `--out` moves the output.  It needs
+a real exported scene package, so a captured clip — `synthetic-clip` writes
+placeholder tables.
+
+The projection is NVIDIA's ClipGT loader maths (`client/carla_cosmos/preview.py`):
+`from_euler("xyz", roll-pitch-yaw)` calibration, ego pose from
+`egomotion_estimate`, and the f-theta `pixeldistance-to-angle` polynomial
+inverted over its monotonic range only.  Polylines are densified to 0.5 m so a
+line leaving the frustum is cut there instead of folding across the frame, and
+parked obstacles (tracks exported at the first and last timestamp only) are
+held between those two timestamps.  If the overlay sits on the road markings
+and the cars in every camera, the scene package we upload describes the drive
+we captured.
+
+`--show-occluded` adds, dashed and grey, everything the occlusion filter
+dropped, read from `scene/<clip>.visibility.json`; `--png-every N` writes every
+Nth drawn frame as a PNG.  That is how the filter is checked: a grey box over a
+building is it working, a grey box over a plainly visible car is not.
+
+### Tests
+
+```sh
+cd client && .venv/bin/python -m pytest tests            # client unit + mock-server e2e, no CARLA needed
+cd server && ../client/.venv/bin/python -m pytest tests  # API, scheduler, protocol against the mock worker
+CARLA_COSMOS_TEST_PORT=2000 .venv/bin/python -m pytest tests -m integration   # needs a CARLA server
+```
+
+## Demos
+
+Python-API demos (import `carla_cosmos`, no CLI subprocess, each under ~80 lines)
+and the full workflow demos; details and runtimes in
+[`demos/README.md`](demos/README.md).
+
+| script | what it does |
+|---|---|
+| `demos/api_transfer25_basic.py` | Transfer 2.5 on a clip from disk: `depth`+`seg` from the clip, `edge` derived server-side, result stored |
+| `demos/api_cosmos3_wsm.py` | Cosmos 3 single view with the world-scenario (`wsm`) control rendered from the clip's scene package |
+| `demos/api_av_multiview.py` | Transfer 2.5 AV over 7 cameras with `hdmap_bbox`, keeps the rendered controls + `grid.mp4`, opens the viewer grid |
+| `demos/api_capture_to_job.py` | capture a fresh clip from a running CARLA server, then submit and store |
+| `demos/single_view_live.py` | TM-driven hero, single 720p camera, capture → submit (`--backend`, `--control`) → download → viewer |
+| `demos/single_view_replay.py` | deterministic clip from a recorder log, then `batch.yaml` prompts × seeds as `batch` jobs |
+| `demos/av7_world_scenario.py` | NVIDIA 7-camera rig, ClipGT scene export, Transfer 2.5 AV (`hdmap_bbox` rendered server-side); `--also-cosmos3` adds a Cosmos 3 `wsm` job |
+| `demos/viewer.py` | input \| control \| result side by side, per camera, scrubbing; `--clip` alone shows the local GT preview instead of a result |
+
+### Results are stored
+
+Every wait path — `job.download()`, the `api_*` demos, `carla-cosmos submit --wait`,
+`watch`, `result` — keeps what comes back:
+
+```
+<results root>/index.json                       every job this machine knows about
+<results root>/<clip_id>/<job_id>/*.mp4         videos + control_<hint>.mp4 + grid.mp4
+<results root>/<clip_id>/<job_id>/manifest.json the server's listing, verbatim
+<results root>/<clip_id>/<job_id>/job.json      request as submitted, timings, sizes + sha256, expiry
+```
+
+Root: `--out` / `--results`, else `$COSMOS_RESULTS`, else `./cosmos-results`.
+Downloads are verified against the server's listing and idempotent.
+`carla-cosmos jobs` says which results are on this machine and where, and warns
+before the server garbage-collects the ones that are not (server default
+`COSMOS_JOB_TTL_HOURS=168`).  `carla-cosmos submit --wait --no-download` opts out.
+
+## Server
+
+One Docker image (Phase 7) with every model artifact baked in; until then the
+same server runs from source with the mock worker (above).  Full reference:
+[`server/README_SERVER.md`](server/README_SERVER.md).
+
+```sh
+server/build_image.sh --nano --hf-token-file ~/.hf_token   # once, on a host with ~300 GB free
+./scripts/run_server.sh                 # docker run with defaults, prints the token
+carla-cosmos serve                      # same from Python (adopts a running container by label)
+```
+
+Backends and where they run (profiles auto-select from the GPUs seen):
+
+| backend | worker | stack | GPUs |
+|---|---|---|---|
+| `cosmos3-nano` / `cosmos3-super` | `cosmos_workers.cosmos3` → `vllm serve --omni` | vLLM-Omni | 1 / TP 2–8 |
+| `transfer2.5` | `cosmos_workers.transfer25` (in-process `Control2WorldInference`, 4 branches) | cosmos-transfer2.5 v1.5.4 | 1 |
+| `transfer2.5-av` | `cosmos_workers.transfer25_av` (persistent `torchrun` rank loop) | cosmos-transfer2.5 v1.5.4 | ≥ active views (7 → 8) |
+| scene packages → `hdmap_bbox` / `wsm` | `cosmos_workers.wsm_renderer` (NVIDIA renderer, EGL) | transfer25 venv | shares one |
+
+* **Auth**: `Authorization: Bearer <token>`.  The first boot mints a token, prints
+  it once and stores it in `<state>/initial_token.txt`.  Tokens are hashed at
+  rest; manage them on the host with `carla-cosmos-tokens {list,add,revoke}`.
+  There are no rate limits or quotas — a valid token is the only gate.
+* **API** (`/v1`): `models`, `blobs/{sha256}` (PUT raw body, `blobs/check`),
+  `jobs` (POST → 202, GET, DELETE = cancel/delete), `jobs/{id}/result[/{file}]`,
+  `health/{live,ready}`, `status`, `metrics` (Prometheus), `/ui` status page,
+  `/v1/docs` (OpenAPI).
+* **Jobs**: `queued → preparing → running → done | failed | cancelled`,
+  `interactive` before `batch`, one job per worker, every job writes a
+  `manifest.json` (request, clip manifest, worker facts, timings, file hashes).
+* **Profiles** (`server/profiles/*.yaml`): auto-selected from `nvidia-smi`
+  (`mock` on CPU, `nano-1gpu`, `nano-2gpu`, `full-8gpu`; `av-8gpu` manual) or
+  forced with `COSMOS_PROFILE`.
+
+### Python API (client side)
+
+```python
+from carla_cosmos import Clip, CosmosClient
+
+client = CosmosClient("http://node:8000", token="cc_...")   # or COSMOS_URL / COSMOS_TOKEN
+client.wait_ready()
+job = client.submit_clip(Clip.load("clips/abc"), "cosmos3-nano", prompt="golden hour",
+                         controls={"depth": "clip", "seg": "clip", "edge": "derive"})
+info = job.wait(on_progress=lambda i: print(i.progress, i.message))
+paths = job.result().download("results/abc")
+```
+
+`controls` values: `"clip"` (upload the clip's control video), `"derive"`
+(server derives from RGB), `"scene"` (upload the ClipGT scene package, rendered
+server-side), `("scene", 0.8)` for a weight, or a `ControlInput`.  The request
+is validated against the backend contract before any byte is uploaded, and
+uploads are skipped for blobs the server already has.
+
+## Latency expectations (placeholder)
+
+Filled in with measured numbers per backend/GPU once the workers land
+(Phase 0 reference points: Transfer 2.5, 93 frames @ 720p on one H100 PCIe
+≈ 264 s; world-scenario rendering of 300 frames ≈ 72 s on an RTX 5090).

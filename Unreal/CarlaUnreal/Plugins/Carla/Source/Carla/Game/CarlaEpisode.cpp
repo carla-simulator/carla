@@ -10,11 +10,14 @@
 #include "Carla/Sensor/Sensor.h"
 #include "Carla/Util/BoundingBoxCalculator.h"
 #include "Carla/Util/RandomEngine.h"
+
 #include "Carla/Vehicle/VehicleSpawnPoint.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Game/CarlaStaticDelegates.h"
 #include "Carla/MapGen/LargeMapManager.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Vehicle/CarlaWheeledVehicle.h"
+#include "Carla/Walker/WalkerBase.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
@@ -22,6 +25,9 @@
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
+#include "Components/WorldPartitionStreamingSourceComponent.h"
+#include "WorldPartition/WorldPartition.h"
+#include "WorldPartition/WorldPartitionSubsystem.h"
 #include "Engine/StaticMeshActor.h"
 #include "EngineUtils.h"
 #include "GameFramework/SpectatorPawn.h"
@@ -30,6 +36,7 @@
 #include "Materials/MaterialParameterCollection.h"
 #include "Materials/MaterialParameterCollectionInstance.h"
 #include "Misc/FileHelper.h"
+#include "Misc/PackageName.h"
 #include "Misc/Paths.h"
 #include <util/ue-header-guard-end.h>
 
@@ -51,22 +58,20 @@ static FString BuildRecastBuilderFile()
         return DefaultRecastBuilderPath;
 }
 
-static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
+static FString UCarlaEpisode_GetTrafficSignId(const ATrafficSignBase &Sign)
 {
   using TSS = ETrafficSignState;
-  switch (State)
+  const int32 Kmh = Sign.GetSpeedLimitKmh();
+  if (Kmh > 0)
+  {
+    // km/h always (the OpenDRIVE subtype vocabulary); mph plates are a look, not a unit.
+    return FString::Printf(TEXT("traffic.speed_limit.%d"), Kmh);
+  }
+  switch (Sign.GetTrafficSignState())
   {
     case TSS::TrafficLightRed:
     case TSS::TrafficLightYellow:
     case TSS::TrafficLightGreen:  return TEXT("traffic.traffic_light");
-    case TSS::SpeedLimit_30:      return TEXT("traffic.speed_limit.30");
-    case TSS::SpeedLimit_40:      return TEXT("traffic.speed_limit.40");
-    case TSS::SpeedLimit_50:      return TEXT("traffic.speed_limit.50");
-    case TSS::SpeedLimit_60:      return TEXT("traffic.speed_limit.60");
-    case TSS::SpeedLimit_90:      return TEXT("traffic.speed_limit.90");
-    case TSS::SpeedLimit_100:     return TEXT("traffic.speed_limit.100");
-    case TSS::SpeedLimit_120:     return TEXT("traffic.speed_limit.120");
-    case TSS::SpeedLimit_130:     return TEXT("traffic.speed_limit.130");
     case TSS::StopSign:           return TEXT("traffic.stop");
     case TSS::YieldSign:          return TEXT("traffic.yield");
     default:                      return TEXT("traffic.unknown");
@@ -92,15 +97,8 @@ UCarlaEpisode::UCarlaEpisode(const FObjectInitializer &ObjectInitializer)
 
 bool UCarlaEpisode::LoadNewEpisode(const FString &MapString, bool ResetSettings)
 {
-  bool bIsFileFound = false;
-
   FString FinalPath = UCarlaStatics::FindMapPath(MapString);
-
-  if(FPaths::FileExists(FinalPath))
-  {
-    bIsFileFound = true;
-    FinalPath = MapString;
-  }
+  const bool bIsFileFound = !FinalPath.IsEmpty();
 
   if (bIsFileFound)
   {
@@ -346,7 +344,7 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     ATrafficSignBase *Actor = *It;
     check(Actor != nullptr);
     FActorDescription Description;
-    Description.Id = UCarlaEpisode_GetTrafficSignId(Actor->GetTrafficSignState());
+    Description.Id = UCarlaEpisode_GetTrafficSignId(*Actor);
     Description.Class = Actor->GetClass();
     ActorDispatcher->RegisterActor(*Actor, Description);
   }
@@ -429,6 +427,51 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UCarlaEpisode::SpawnActorWithInfo(
 
   // NewTransform.AddToTranslation(-1.0f * FVector(CurrentMapOrigin));
   auto result = ActorDispatcher->SpawnActor(LocalTransform, thisActorDescription, DesiredId);
+  if (result.Key == EActorSpawnResultStatus::Success &&
+      GetWorld()->GetWorldPartition() != nullptr)
+  {
+    // World Partition map: every physics actor needs the ground under it
+    // resident, mirroring the tile streaming the legacy LargeMapManager
+    // provided on tiled maps. The engine only streams cells around registered
+    // streaming sources; without one, a vehicle spawned away from the
+    // spectator free-falls through the unloaded road.
+    AActor* Actor = result.Value->GetActor();
+    const bool bNeedsGround =
+        Cast<ACarlaWheeledVehicle>(Actor) != nullptr ||
+        Cast<AWalkerBase>(Actor) != nullptr;
+    if (bNeedsGround &&
+        !Actor->FindComponentByClass<UWorldPartitionStreamingSourceComponent>())
+    {
+      // The hero keeps a wide loading ring like the legacy tiled maps gave
+      // it; background traffic only needs the ground in its vicinity.
+      const FActorAttribute* Attribute =
+          thisActorDescription.Variations.Find("role_name");
+      const bool bIsHero = Attribute && (Attribute->Value.Contains("hero") ||
+                                         Attribute->Value.Contains("ego_vehicle"));
+      auto* Source = NewObject<UWorldPartitionStreamingSourceComponent>(Actor);
+      FStreamingSourceShape Shape;
+      Shape.bUseGridLoadingRange = false;
+      Shape.Radius = bIsHero ? EpisodeSettings.TileStreamingDistance : 20000.0f;
+      Source->Shapes.Add(Shape);
+      Source->RegisterComponent();
+
+      // Physics drops the actor immediately, but cells only stream during the
+      // world partition subsystem update; run one update now and block until
+      // the requested cells are resident so the actor never outruns its
+      // ground.
+      UWorldPartitionSubsystem* WPSubsystem =
+          GetWorld()->GetSubsystem<UWorldPartitionSubsystem>();
+      if (WPSubsystem != nullptr && !WPSubsystem->IsStreamingCompleted(Source))
+      {
+        WPSubsystem->OnUpdateStreamingState();
+        GetWorld()->BlockTillLevelStreamingCompleted();
+      }
+      UE_LOG(LogCarla, Log, TEXT(
+          "WP streaming source on %s (role %s, radius %.0f cm): completed=%d"),
+          *Actor->GetName(), Attribute ? *Attribute->Value : TEXT("none"), Shape.Radius,
+          WPSubsystem ? WPSubsystem->IsStreamingCompleted(Source) : -1);
+    }
+  }
   if (result.Key == EActorSpawnResultStatus::Success && bIsPrimaryServer)
   {
     if (Recorder->IsEnabled())

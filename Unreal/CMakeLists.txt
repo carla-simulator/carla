@@ -58,6 +58,10 @@ set (
   ${CARLA_UNREAL_ENGINE_PATH}/Engine/Binaries/${UE_SYSTEM_NAME}/UnrealEditor${EXE_EXT}
 )
 
+# Resolve the NVIDIA DLSS SDK (defines CARLA_UE_DLSS_ENV_COMMAND, which every
+# Unreal build/package/launch command below is prefixed with).
+include (${CARLA_WORKSPACE_PATH}/CMake/DLSS.cmake)
+
 set (CARLA_UE_CONTENT_CHECK_PATH ${CARLA_UE_PATH}/Content/Carla/Blueprints)
 if (IS_DIRECTORY ${CARLA_UE_CONTENT_CHECK_PATH})
   carla_message_verbose ("CARLA Unreal Content - FOUND")
@@ -200,22 +204,29 @@ endif()
 
 
 
+# Both prefixes run through CARLA_UE_DLSS_ENV_COMMAND so UnrealBuildTool sees
+# DLSS_SDK (the engine's DLSSRRDenoiser plugin fails its build without it)
+# regardless of the environment `cmake --build` was invoked from.
 if (WIN32)
   set (
     CARLA_UE_BUILD_COMMAND_PREFIX
+      ${CARLA_UE_DLSS_ENV_COMMAND}
       ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/Build.bat
   )
   set (
     CARLA_UE_UAT_COMMAND_PREFIX
+      ${CARLA_UE_DLSS_ENV_COMMAND}
       ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/RunUAT.bat
   )
 else ()
   set (
     CARLA_UE_BUILD_COMMAND_PREFIX
+      ${CARLA_UE_DLSS_ENV_COMMAND}
       ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/${UE_SYSTEM_NAME}/Build.sh
   )
   set (
     CARLA_UE_UAT_COMMAND_PREFIX
+      ${CARLA_UE_DLSS_ENV_COMMAND}
       ${CARLA_UNREAL_ENGINE_PATH}/Engine/Build/BatchFiles/RunUAT.sh
   )
 endif ()
@@ -421,6 +432,14 @@ function (
     carla_message ("package(${PACKAGE_CONFIGURATION}): cooking only ${CARLA_MAPS_TO_COOK}")
   endif ()
 
+  # On Windows, keep one externally managed Zen instance alive across cook,
+  # stage, pak, and archive. Run `zenserver.exe --port 8558` before packaging.
+  # Linux packages successfully with UAT's auto-launched Zen instance, so this
+  # argument must remain Windows-only.
+  if (WIN32)
+    list (APPEND CARLA_PACKAGE_EXTRA_UAT_ARGS -NoZenAutoLaunch=127.0.0.1)
+  endif ()
+
   carla_add_custom_target (
     ${TARGET_NAME}
     "Create a CARLA package in ${PACKAGE_CONFIGURATION} mode."
@@ -440,6 +459,10 @@ function (
       -nop4
       -cook
       -stage
+      # UE 5.8 cooks into the local Zen store; without -pak -iostore staging
+      # finds no loose cooked files and silently ships a binaries-only package.
+      -pak
+      -iostore
       -archive
       -package
       -iterate
@@ -448,6 +471,9 @@ function (
       -Platform=${UE_SYSTEM_NAME}
       -prereqs
       -build
+      # DefaultGame.ini's CulturesToStage setting is not consumed by
+      # BuildCookRun staging; pass it explicitly so packaged builds include ICU.
+      -culturesToStage=en
       -stagingdirectory=${CARLA_PACKAGE_STAGING_PATH}
       -archivedirectory=${CARLA_PACKAGE_ARCHIVE_PATH}
       ${CARLA_PACKAGE_EXTRA_UAT_ARGS}
@@ -539,19 +565,25 @@ add_carla_ue_package_target(Test Test)
 
 set (LAUNCH_ARGS ${CARLA_LAUNCH_ARGS})
 
+# UE5's FParse::Param only recognizes single-dash switches ("--ros2" is
+# silently ignored because the character before the dash must be whitespace).
 if (ENABLE_ROS2)
-  list (APPEND LAUNCH_ARGS --ros2)
+  list (APPEND LAUNCH_ARGS -ros2)
 endif()
 
 if (ENABLE_ROS2_DEMO)
-  list (APPEND LAUNCH_ARGS --ros2-demo)
+  list (APPEND LAUNCH_ARGS -ros2-demo)
 endif()
 
+# The editor also needs DLSS_SDK at runtime: NGX loads the DLSS model
+# snippets from $DLSS_SDK/lib/<platform>/rel when the first DLSS-enabled
+# sensor is created.
 set (
   CARLA_LAUNCH_TARGET_OPTIONS
   COMMENT
     "Launching Carla Unreal..."
   COMMAND
+    ${CARLA_UE_DLSS_ENV_COMMAND}
     ${UNREAL_EDITOR_PATH}
       ${CARLA_UE_PROJECT_PATH}
       -${CARLA_UNREAL_RHI}

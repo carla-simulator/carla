@@ -43,13 +43,31 @@ file (
 	FOLLOW_SYMLINKS
 )
 
+# An engine upgraded in place keeps older SDKs next to the current one (e.g.
+# v23_clang-18.1.0 beside v26_clang-20.1.8), and the glob returns them in
+# alphabetical order. Prefer the newest sysroot that ships libc++ (UE >= 5.8);
+# if none does (UE <= 5.5 keeps libc++ under ThirdParty/Unix/LibCxx instead),
+# fall back to the newest sysroot overall. This must stay deterministic: CMake
+# re-runs this file in a fresh sub-cache for every try_compile, so a cached
+# override cannot fix a wrong pick here.
+list (SORT UE_SYSROOT_CANDIDATES COMPARE NATURAL ORDER DESCENDING)
+
 set (UE_SYSROOT_CANDIDATE)
 foreach (CANDIDATE ${UE_SYSROOT_CANDIDATES})
-	if (IS_DIRECTORY ${CANDIDATE})
+	if (IS_DIRECTORY ${CANDIDATE} AND EXISTS ${CANDIDATE}/lib64/libc++.a)
 		set (UE_SYSROOT_CANDIDATE ${CANDIDATE})
 		break ()
 	endif ()
 endforeach ()
+
+if (NOT UE_SYSROOT_CANDIDATE)
+	foreach (CANDIDATE ${UE_SYSROOT_CANDIDATES})
+		if (IS_DIRECTORY ${CANDIDATE})
+			set (UE_SYSROOT_CANDIDATE ${CANDIDATE})
+			break ()
+		endif ()
+	endforeach ()
+endif ()
 
 if (NOT UE_SYSROOT_CANDIDATE)
 	message (FATAL_ERROR "Could not find Unreal Engine clang sysroot.")
@@ -66,15 +84,29 @@ set (
 	${UE_ROOT}/Engine/Source/ThirdParty CACHE PATH ""
 )
 
-set (
-	UE_INCLUDE
-	${UE_THIRD_PARTY}/Unix/LibCxx/include CACHE PATH ""
-)
-
-set (
-	UE_LIBS
-	${UE_THIRD_PARTY}/Unix/LibCxx/lib/Unix/${TARGET_TRIPLE} CACHE PATH ""
-)
+# UE 5.8 no longer bundles libc++ under ThirdParty/Unix/LibCxx; the headers and
+# static libs ship inside the clang sysroot instead. Prefer the legacy LibCxx
+# layout when it actually contains the libraries (UE <= 5.5), otherwise fall
+# back to the sysroot.
+if (EXISTS ${UE_THIRD_PARTY}/Unix/LibCxx/lib/Unix/${TARGET_TRIPLE}/libc++.a)
+	set (
+		UE_INCLUDE
+		${UE_THIRD_PARTY}/Unix/LibCxx/include CACHE PATH ""
+	)
+	set (
+		UE_LIBS
+		${UE_THIRD_PARTY}/Unix/LibCxx/lib/Unix/${TARGET_TRIPLE} CACHE PATH ""
+	)
+else ()
+	set (
+		UE_INCLUDE
+		${UE_SYSROOT}/include CACHE PATH ""
+	)
+	set (
+		UE_LIBS
+		${UE_SYSROOT}/lib64 CACHE PATH ""
+	)
+endif ()
 
 set (
 	UE_OPENSSL_INCLUDE

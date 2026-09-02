@@ -162,6 +162,22 @@ public:
     return bEnablePostProcessingEffects;
   }
 
+  /// Render the capture at ScreenPercentage (25-100) of the target resolution
+  /// and upscale it back with DLSS Super Resolution when available (bilinear
+  /// otherwise). 100 or Enable=false keeps the stock full-resolution path.
+  UFUNCTION(BlueprintCallable)
+  void SetDLSSUpscale(bool Enable, float ScreenPercentage)
+  {
+    bEnableDLSSUpscale = Enable;
+    DLSSScreenPercentage = FMath::Clamp(ScreenPercentage, 25.0f, 100.0f);
+  }
+
+  UFUNCTION(BlueprintCallable)
+  bool IsDLSSUpscaleEnabled() const
+  {
+    return bEnableDLSSUpscale;
+  }
+
   UFUNCTION(BlueprintCallable)
   void SetUseRayTracing(bool Enable);
 
@@ -609,8 +625,16 @@ protected:
   UPROPERTY(VisibleAnywhere)
   TObjectPtr<USceneCaptureComponent2D_CARLA> CaptureComponent2D = nullptr;
 
+  // Standard RGB/depth/segmentation cameras (MakeCameraDefinition) never
+  // register a "gamma" blueprint attribute -- only Wide Angle Lens and
+  // RayTraced Lens cameras do, defaulting it to 2.2 (sRGB). Client code that
+  // guards on bp.has_attribute('gamma') before setting it (e.g.
+  // manual_control.py's --gamma) silently no-ops for the standard camera, so
+  // this default is the only gamma that ever actually applies to it. 2.4
+  // reads visibly brighter/blown-out next to the editor/server's own ~2.2
+  // display gamma; match it instead.
   UPROPERTY(EditAnywhere)
-  float TargetGamma = 2.4f;
+  float TargetGamma = 2.2f;
 
   /// Image width in pixels.
   UPROPERTY(EditAnywhere)
@@ -636,6 +660,20 @@ protected:
   /// Whether to change render target format to PF_A16B16G16R16, offering 16bit / channel
   UPROPERTY(EditAnywhere)
   bool bEnable16BitFormat = false;
+
+  /// Render the capture at DLSSScreenPercentage of the target resolution and
+  /// upscale back with DLSS Super Resolution (engine scene-capture temporal
+  /// upscaler; bilinear fallback without NVIDIA hardware). Off by default:
+  /// non-NVIDIA users keep the stock full-resolution path. Requires
+  /// bEnablePostProcessingEffects (the capture needs a temporal AA method for
+  /// DLSS to engage; without one the engine spatially upscales instead).
+  UPROPERTY(EditAnywhere)
+  bool bEnableDLSSUpscale = false;
+
+  /// Internal render resolution as a percentage of the target resolution when
+  /// bEnableDLSSUpscale is set. 50 = quarter of the pixels, 33 = one ninth.
+  UPROPERTY(EditAnywhere)
+  float DLSSScreenPercentage = 50.0f;
 
   /// Per-sensor pool of recyclable RHI readback objects. Created in BeginPlay,
   /// dropped in EndPlay; outstanding AsyncTasks keep it alive via shared

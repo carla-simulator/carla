@@ -214,6 +214,45 @@ namespace detail {
     return _pimpl->CallAndWait<std::vector<uint8_t>>("get_navigation_mesh");
   }
 
+  bool Client::IsNavigationServerSide() const {
+    try {
+      return _pimpl->CallAndWait<bool>("is_navigation_server_side");
+    } catch (const ::rpc::rpc_error &) {
+      // Servers that predate server-side navigation don't bind this function;
+      // that means legacy client-side navigation. Timeouts are NOT caught:
+      // a dead server must not masquerade as a legacy one.
+      return false;
+    }
+  }
+
+  geom::Location Client::GetRandomLocationFromNavigation() const {
+    return _pimpl->CallAndWait<geom::Location>("get_random_location_from_navigation");
+  }
+
+  bool Client::WalkerStartNavigation(rpc::ActorId walker) const {
+    return _pimpl->CallAndWait<bool>("walker_start_navigation", walker);
+  }
+
+  bool Client::WalkerGoToLocation(rpc::ActorId walker, const geom::Location &destination) const {
+    return _pimpl->CallAndWait<bool>("walker_go_to_location", walker, destination);
+  }
+
+  bool Client::WalkerSetMaxSpeed(rpc::ActorId walker, float max_speed) const {
+    return _pimpl->CallAndWait<bool>("walker_set_max_speed", walker, max_speed);
+  }
+
+  bool Client::WalkerStopNavigation(rpc::ActorId walker) const {
+    return _pimpl->CallAndWait<bool>("walker_stop_navigation", walker);
+  }
+
+  bool Client::SetPedestriansCrossFactor(float percentage) const {
+    return _pimpl->CallAndWait<bool>("set_pedestrians_cross_factor", percentage);
+  }
+
+  bool Client::SetPedestriansSeed(uint32_t seed) const {
+    return _pimpl->CallAndWait<bool>("set_pedestrians_seed", seed);
+  }
+
   bool Client::SetFilesBaseFolder(const std::string &path) {
     return FileTransfer::SetFilesBaseFolder(path);
   }
@@ -293,6 +332,18 @@ namespace detail {
 
   bool Client::IsWeatherEnabled() {
     return _pimpl->CallAndWait<bool>("is_weather_enabled");
+  }
+
+  void Client::SetPublishTF(bool publish_tf) {
+    _pimpl->AsyncCall("set_publish_tf", publish_tf);
+  }
+
+  bool Client::GetPublishTF() const {
+    return _pimpl->CallAndWait<bool>("get_publish_tf");
+  }
+
+  std::vector<geom::Transform> Client::GetEgoSpawnPoints() const {
+    return _pimpl->CallAndWait<std::vector<carla::geom::Transform>>("get_ego_spawn_points");
   }
 
   std::vector<rpc::Actor> Client::GetActorsById(
@@ -415,6 +466,14 @@ namespace detail {
 
   void Client::DisableActorConstantVelocity(rpc::ActorId actor) {
     _pimpl->AsyncCall("disable_actor_constant_velocity", actor);
+  }
+
+  void Client::EnableActorConstantAcceleration(rpc::ActorId actor, const geom::Vector3D &vector) {
+    _pimpl->AsyncCall("enable_actor_constant_acceleration", actor, vector);
+  }
+
+  void Client::DisableActorConstantAcceleration(rpc::ActorId actor) {
+    _pimpl->AsyncCall("disable_actor_constant_acceleration", actor);
   }
 
   void Client::AddActorImpulse(rpc::ActorId actor, const geom::Vector3D &impulse) {
@@ -737,6 +796,13 @@ namespace detail {
 
   void Client::ClearDebugString() {
     _pimpl->AsyncCall("clear_debug_string");
+  }
+
+  void Client::SpawnCustomMesh(
+      const std::vector<float> &vertices,
+      const std::vector<uint32_t> &triangles,
+      const std::string &material) {
+    _pimpl->CallAndWait<void>("spawn_custom_mesh", vertices, triangles, material);
   }
 
   void Client::ApplyBatch(std::vector<rpc::Command> commands, bool do_tick_cue) {

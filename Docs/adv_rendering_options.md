@@ -88,19 +88,30 @@ Values quoted verbatim from the per-tier CVar set in the CARLA selector module. 
 
 Rows marked *(bucket)* take their value from the `[GroupName@N]` section in `DefaultScalability.ini` selected by the corresponding `sg.*Quality` row.
 
-### Render features disabled across every tier
+### Ray tracing defaults
 
-The following render-pipeline features are disabled at the project level for every tier, because their combined activation has not been validated stable on all target GPUs. Each tier renders with Software Lumen for GI plus reflections, and Virtual Shadow Maps for shadows.
+The hardware ray tracing subsystem is initialized at the project level (`r.RayTracing=True`) and the path tracer is available (`r.PathTracing=True`) — this is what powers the [ray-traced lens camera](ref_sensors.md#ray-traced-lens-camera). Per-effect switches are configured as follows:
 
 | CVar | Project default | Effect when enabled |
 |---|---|---|
-| `r.Lumen.HardwareRayTracing` | False | Switches Lumen GI + reflections from compute-only paths to hardware RT cores. Sharper glossy reflections, accurate secondary bounces. |
-| `r.RayTracing.Shadows` | False | Ray-traced shadows with physically accurate soft penumbras. Replaces Virtual Shadow Maps for the run. |
-| `r.RayTracing.ForceAllRayTracingEffects` | 0 | Force-enables every RT-capable effect in the project. High BVH cost; only enable with HW-RT-capable GPUs. |
-| `r.MegaLights.EnableForProject` | 0 | UE 5.5 MegaLights; many-light renderer for stylized / dense-light scenes. |
-| `r.PathTracing` | False | Offline-quality unbiased path-traced rendering. Not real-time. |
+| `r.RayTracing` | True | Initializes the hardware ray tracing subsystem (RTX-class GPU required). Read-only after engine init. |
+| `r.PathTracing` | True | Makes the path tracer available for `sensor.camera.rt_lens`. |
+| `r.Lumen.HardwareRayTracing` | False | Switches the main view's Lumen GI + reflections from software SDF tracing to hardware RT cores. Kept off by default: the engine keeps a single per-scene ray-tracing command cache, and mixing hardware-RT viewport effects with streaming path-traced sensors re-caches the whole scene every frame (a large flat per-frame cost on big towns). |
+| `r.RayTracing.Shadows` | False | Ray-traced direct shadows instead of Virtual Shadow Maps. Kept off by default for the same cache reason. |
+| `r.RayTracing.ForceAllRayTracingEffects` | 0 | Force-enables every RT-capable effect in the project. High BVH cost. |
 
-Enabling any of these requires editing `Config/DefaultEngine.ini` (or the corresponding tier code in `CarlaDeviceProfileSelectorModule.cpp`) and rebuilding the simulator. The packaged Shipping binary strips the engine's `-execcmds=` command-line parser, so runtime overrides via that flag are not available in distributed CARLA releases; only project-side configuration takes effect.
+Sensor captures opt into hardware ray tracing individually through the `use_ray_tracing` camera attribute (default `True`), and the console variable `carla.Camera.UseRayTracing` can force it on (`1`) or off (`0`) for every camera at once (`-1` respects the per-sensor attribute).
+
+Changing project defaults requires editing `Config/DefaultEngine.ini` and rebuilding the simulator. The packaged Shipping binary strips the engine's `-execcmds=` command-line parser, so runtime overrides via that flag are not available in distributed CARLA releases; only project-side configuration takes effect.
+
+### NVIDIA DLSS
+
+CARLA integrates two DLSS features (the DLSS SDK is fetched during setup, so both are present in standard builds; an NVIDIA RTX-class GPU is required at runtime):
+
+*   __DLSS Ray Reconstruction (DLSS-RR)__ denoises the path-traced frames of `sensor.camera.rt_lens`. It is the default denoiser (`r.PathTracing.Denoiser.Name=DLSSRR` in `DefaultEngine.ini`) and is controlled per sensor with the `enable_denoiser` attribute.
+*   __DLSS Super Resolution (DLSS-SR)__ upscales individual camera sensors: with `enable_dlss=true` a camera renders internally at `dlss_screen_percentage` of its output resolution and DLSS reconstructs the full-size image. It is opt-in per camera (see the [RGB camera attributes](ref_sensors.md#rgb-camera)); on non-NVIDIA hardware an enabled sensor degrades gracefully to a bilinear upscale.
+
+The example `PythonAPI/examples/manual_control_5cam.py` spawns a five-camera 1080p rig on an autopilot vehicle and toggles DLSS-SR live (press `D`) so the frame-rate and quality impact can be compared directly.
 
 The persisted `GameUserSettings.ini` does not need to be deleted when switching between tiers. The selector module re-applies the active tier's scalability after `UGameUserSettings::ApplyNonResolutionSettings` runs, so cross-run scalability state cannot shadow the current tier.
 

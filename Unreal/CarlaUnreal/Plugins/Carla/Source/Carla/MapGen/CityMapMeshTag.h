@@ -6,6 +6,10 @@
 
 #pragma once
 
+#include "CoreMinimal.h"
+
+#include "CityMapMeshTag.generated.h"
+
 /// Tag to identify the meshes used by the ProceduralMapGenerator.
 ///
 /// It will work as long as we have less than 255 meshes, currently blueprint

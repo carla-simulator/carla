@@ -16,6 +16,7 @@
 #include "Carla/Vehicle/VehiclePhysicsControl.h"
 #include "Carla/Vehicle/VehicleTelemetryData.h"
 #include "Carla/Vehicle/VehicleVelocityControl.h"
+#include "Carla/Vehicle/VehicleAccelerationControl.h"
 #include "Carla/Vehicle/WheeledVehicleMovementComponentNW.h"
 #include "Carla/Vehicle/MovementComponents/BaseCarlaMovementComponent.h"
 
@@ -246,6 +247,15 @@ public:
   void DeactivateVelocityControl();
 
   UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void ActivateAccelerationControl(const FVector &Acceleration);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
+  void DeactivateAccelerationControl();
+
+  /// Apply control from Autoware /control/command/control_cmd (acceleration [m/s^2] + steering)
+  void ApplyVehicleAccelerationControl(float LongitudinalAccelerationMps2, float Steer, float SteerSpeed);
+
+  UFUNCTION(Category = "CARLA Wheeled Vehicle", BlueprintCallable)
   void ShowDebugTelemetry(bool Enabled);
 
   /// @todo This function should be private to AWheeledVehicleAIController.
@@ -348,6 +358,9 @@ private:
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
   TObjectPtr<UVehicleVelocityControl> VelocityControl;
 
+  UPROPERTY(Category = "CARLA Wheeled Vehicle", EditAnywhere)
+  TObjectPtr<UVehicleAccelerationControl> AccelerationControl;
+
 
   FVehicleControl LastAppliedControl;
   FVehicleAckermannControl LastAppliedAckermannControl;
@@ -361,6 +374,15 @@ private:
   float RolloverFlagTime = 5.0f;
 
   carla::rpc::VehicleFailureState FailureState = carla::rpc::VehicleFailureState::None;
+
+  // Light Defaults tool integration: loaded once in
+  // ActivateVehicleLightComponents (BeginPlay), then reapplied by
+  // SetVehicleLightState on every light-state change -- see
+  // ULightDefaultsJsonUtils::ApplyVehicleLightsRuntimeState.
+  bool bHasSavedVehicleLightDefault = false;
+  float SavedVehicleLightIntensity = 1.0f;
+  TMap<FString, float> SavedVehicleLightGroupIntensity;
+  void ApplyVehicleLightDefaultsForCurrentState();
 
 public:
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditDefaultsOnly)
@@ -471,6 +493,14 @@ private:
 
   void AddReferenceToManager();
   void RemoveReferenceToManager();
+
+  /// Some vehicle Blueprints (Tesla, Mustang, DodgeCharger, ...) author real
+  /// Spot/Point light components for their headlights instead of relying on
+  /// emissive materials alone, but those components are not wrapped in a
+  /// UCarlaLight -- so they never got UE5's bAutoActivate=false activation
+  /// fix or the UE4-to-UE5 photometric intensity conversion (see CarlaLight.h).
+  /// Applies both fixes directly to this actor's light components.
+  void ActivateVehicleLightComponents();
 
 
   FTimerHandle TimerHandler;

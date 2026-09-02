@@ -22,15 +22,24 @@
 #include <carla/multigpu/secondary.h>
 #include <carla/multigpu/secondaryCommands.h>
 #include <carla/ros2/ROS2.h>
+#include <carla/ros2/middleware/Middleware.h>
+#include <carla/ros2/middleware/MiddlewareConfig.h>
+#include <carla/ros2/middleware/ActiveMiddleware.h>
 #include <carla/streaming/EndPoint.h>
 #include <carla/streaming/Server.h>
 #include <util/enable-ue4-macros.h>
 
 #include <util/ue-header-guard-begin.h>
+#include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
 #include "Misc/App.h"
 #include "PhysicsEngine/PhysicsSettings.h"
+#include "SceneInterface.h"
+#include "Engine/Engine.h"
+#include "Engine/GameViewportClient.h"
 #include <util/ue-header-guard-end.h>
 
+#include <cstdlib>
 #include <thread>
 
 // =============================================================================
@@ -85,10 +94,38 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
     const auto PrimaryIP     = Settings.PrimaryIP;
     const auto PrimaryPort   = Settings.PrimaryPort;
 
-    auto BroadcastStream     = Server.Start(Settings.RPCPort, StreamingPort, SecondaryPort);
-    Server.AsyncRun(FCarlaEngine_GetNumberOfThreadsForRPCServer());
-
-    WorldObserver.SetStream(BroadcastStream);
+    // rpclib's asio acceptor throws (std::system_error, "address already
+    // in use") when the RPC port is taken -- typically another CARLA
+    // instance still running. Unhandled it aborts the whole editor with
+    // SIGABRT and a core dump; fail with a readable message instead.
+    try
+    {
+      auto BroadcastStream = Server.Start(Settings.RPCPort, StreamingPort, SecondaryPort);
+      Server.AsyncRun(FCarlaEngine_GetNumberOfThreadsForRPCServer());
+      WorldObserver.SetStream(BroadcastStream);
+    }
+    catch (const std::exception &e)
+    {
+      UE_LOG(LogCarla, Error,
+          TEXT("CARLA server failed to start on RPC port %d: %s. "
+               "Another CARLA server is probably running on this port -- "
+               "close it or launch with a different -carla-rpc-port. "
+               "Shutting down."),
+          Settings.RPCPort, UTF8_TO_TCHAR(e.what()));
+      // Immediate exit: a deferred RequestExit lets the engine keep
+      // initializing this half-built game instance and it segfaults in
+      // teardown before ever reaching the main loop. The UE log mirror
+      // may not flush before _exit, so also print straight to stderr.
+      fprintf(stderr,
+          "ERROR: CARLA server failed to start on RPC port %d: %s. "
+          "Another CARLA server is probably running on this port -- "
+          "close it or launch with a different -carla-rpc-port.\n",
+          static_cast<int>(Settings.RPCPort), e.what());
+      fflush(stderr);
+      GLog->Flush();
+      FPlatformMisc::RequestExit(true);
+      return;
+    }
 
     OnPreTickHandle = FWorldDelegates::OnWorldTickStart.AddRaw(
         this,
@@ -223,13 +260,60 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
   {
     UE_LOG(LogCarla, Log, TEXT("ROS2: Creating ROS2 Instance..."));
     auto ROS2 = carla::ros2::ROS2::GetInstance();
-    UE_LOG(LogCarla, Log, TEXT("ROS2: Enabling ROS2..."));
-    ROS2->Enable(true);
-    UE_LOG(LogCarla, Log, TEXT("ROS2: ROS2 enabled..."));
-    // Apply the configured default topic visibility before any sensor stream is
-    // created. Gated on Settings.ROS2 so non-ROS2 runs never force every stream
-    // active (which would make every sensor produce data each tick).
-    Server.GetStreamingServer().SetROS2TopicVisibilityDefaultEnabled(Settings.ROS2TopicVisibility);
+    const std::string Rmw = TCHAR_TO_UTF8(*Settings.RmwName);
+    const auto Parsed = carla::ros2::MiddlewareFromString(Rmw);
+    if (!Parsed.valid)
+    {
+      UE_LOG(LogCarla, Error,
+          TEXT("ROS2: unrecognized --rmw value '%s'. Available: %s. ROS2 is DISABLED for this session."),
+          *Settings.RmwName,
+          UTF8_TO_TCHAR(carla::ros2::GetAvailableMiddleware().c_str()));
+    }
+    else
+    {
+      int32 DomainId = Settings.ROS2DomainId;
+      if (DomainId != carla::ros2::kUnsetDomainId && !carla::ros2::IsValidDomainId(DomainId))
+      {
+        UE_LOG(LogCarla, Error,
+            TEXT("ROS2: --ros-domain-id=%d is out of range [%d, %d]; using the default domain."),
+            DomainId, carla::ros2::kMinDomainId, carla::ros2::kMaxDomainId);
+        DomainId = carla::ros2::kUnsetDomainId;
+      }
+      if (!ROS2->Enable(true, Parsed.middleware, DomainId))
+      {
+        UE_LOG(LogCarla, Error,
+            TEXT("ROS2: --rmw='%s' is not compiled into this binary. Available: %s. ROS2 is DISABLED for this session."),
+            *Settings.RmwName,
+            UTF8_TO_TCHAR(carla::ros2::GetAvailableMiddleware().c_str()));
+      }
+      else
+      {
+        UE_LOG(LogCarla, Log, TEXT("ROS2: enabled with middleware '%s'."), *Settings.RmwName);
+        if (Settings.RmwName == TEXT("fastdds"))
+        {
+          // Mirrors the transport default applied in FastDDSSharedParticipant:
+          // UDPv4-only unless FASTDDS_BUILTIN_TRANSPORTS is set (Fast-DDS
+          // shared memory silently drops data across container/uid/version
+          // boundaries, so it is opt-in).
+          const char *TransportsEnv = std::getenv("FASTDDS_BUILTIN_TRANSPORTS");
+          if (TransportsEnv != nullptr)
+          {
+            UE_LOG(LogCarla, Log,
+                TEXT("ROS2: Fast-DDS builtin transports set from FASTDDS_BUILTIN_TRANSPORTS='%s'."),
+                UTF8_TO_TCHAR(TransportsEnv));
+          }
+          else
+          {
+            UE_LOG(LogCarla, Log,
+                TEXT("ROS2: Fast-DDS transport: UDPv4 only (default; set FASTDDS_BUILTIN_TRANSPORTS=DEFAULT to re-enable shared memory)."));
+          }
+        }
+        // Apply the configured default topic visibility before any sensor stream is
+        // created. Gated on Settings.ROS2 so non-ROS2 runs never force every stream
+        // active (which would make every sensor produce data each tick).
+        Server.GetStreamingServer().SetROS2TopicVisibilityDefaultEnabled(Settings.ROS2TopicVisibility);
+      }
+    }
   } else {
     UE_LOG(LogCarla, Log, TEXT("ROS2: ROS2 enabled..."));
   }
@@ -343,6 +427,29 @@ void FCarlaEngine::OnPreTick(UWorld *, ELevelTick TickType, float DeltaSeconds)
 void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
+  // With -RenderOffScreen nobody can see the main viewport, but its world
+  // render still costs a full scene pass (Lumen, shadows, clouds) every frame
+  // next to the sensors' own captures. Keep it disabled in that mode; sensors
+  // are independent scene captures and are unaffected.
+  static const bool bRenderOffScreen =
+      FParse::Param(FCommandLine::Get(), TEXT("RenderOffScreen"));
+  if (bRenderOffScreen && GEngine && GEngine->GameViewport &&
+      !GEngine->GameViewport->bDisableWorldRendering)
+  {
+    GEngine->GameViewport->bDisableWorldRendering = true;
+  }
+  // FScene::SceneFrameNumber normally advances once per main-viewport world
+  // render (FRendererModule::BeginRenderingViewFamilies). With the viewport's
+  // world render disabled it freezes, every scene capture gets
+  // ViewFamily.FrameNumber == 0, and all frame-keyed renderer caches (global
+  // distance field, virtual shadow maps, Lumen temporal state) treat every
+  // capture as "never rendered" and rebuild from scratch. Advance it manually
+  // so sensors keep the normal per-frame cache behavior.
+  if (World && World->Scene && GEngine && GEngine->GameViewport &&
+      GEngine->GameViewport->bDisableWorldRendering)
+  {
+    World->Scene->IncrementFrameNumber();
+  }
   // tick the recorder/replayer system
   if (GetCurrentEpisode())
   {
@@ -398,7 +505,10 @@ void FCarlaEngine::OnEpisodeSettingsChanged(const FEpisodeSettings &Settings)
 #if WITH_EDITOR
   if (GEngine && GEngine->GameViewport)
   {
-    GEngine->GameViewport->bDisableWorldRendering = Settings.bNoRenderingMode;
+    // -RenderOffScreen keeps the invisible main viewport's world render off
+    // regardless of the episode's no-rendering setting (see OnPostTick).
+    GEngine->GameViewport->bDisableWorldRendering = Settings.bNoRenderingMode ||
+        FParse::Param(FCommandLine::Get(), TEXT("RenderOffScreen"));
   }
 #endif
   FCarlaEngine_SetFixedDeltaSeconds(Settings.FixedDeltaSeconds);

@@ -9,6 +9,7 @@
 - [__Obstacle detector__](#obstacle-detector)
 - [__Radar sensor__](#radar-sensor)
 - [__RGB camera__](#rgb-camera)
+- [__Ray-traced lens camera__](#ray-traced-lens-camera)
 - [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
 - [__Semantic segmentation camera__](#semantic-segmentation-camera)
 - [__Instance segmentation camera__](#instance-segmentation-camera)
@@ -544,10 +545,86 @@ Since these effects are provided by UE, please make sure to check their document
 | `chromatic_aberration_intensity`   | float          | 0\.0           | Scaling factor to control color shifting, more noticeable on the screen borders.      |
 | `chromatic_aberration_offset`      | float          | 0\.0           | Normalized distance to the center of the image where the effect takes place.          |
 | `enable_postprocess_effects`       | bool           | True           | Post-process effects activation.   |
+| `use_ray_tracing`   | bool           | True           | Render this camera with hardware ray tracing (Lumen HW ray tracing, ray-traced shadows). Set to `False` to save the per-camera VRAM cost of a ray-tracing view on sensors that do not need it. The console variable `carla.Camera.UseRayTracing` forces this on or off globally, overriding the attribute. |
+| `enable_dlss`       | bool           | False          | Enable NVIDIA DLSS Super Resolution for this camera: the image is rendered internally at `dlss_screen_percentage` of the output resolution and reconstructed to full size. The output image keeps its full `image_size_x`&times;`image_size_y` resolution and format. Requires `enable_postprocess_effects=True`. On non-NVIDIA hardware the sensor falls back to a bilinear upscale. Not recommended for ground-truth cameras (depth, segmentation): reconstructed pixels are fine for RGB imagery but corrupt label and depth maps. |
+| `dlss_screen_percentage` | float     | 50\.0          | Internal rendering resolution as a percentage of the output resolution when `enable_dlss` is on. Clamped to [25.0, 100.0]. `50.0` renders a quarter of the pixels (DLSS "Performance"); `33.0` about one ninth ("Ultra Performance"). |
 
 <br>
 
+!!! Note
+    `use_ray_tracing`, `enable_dlss` and `dlss_screen_percentage` are available on every scene-capture camera (`sensor.camera.rgb`, `sensor.camera.depth`, `sensor.camera.semantic_segmentation`, `sensor.camera.instance_segmentation`, `sensor.camera.optical_flow`, `sensor.camera.dvs`), not only on the RGB camera.
+
 [AutomaticExposure.gamesetting]: https://docs.unrealengine.com/en-US/Engine/Rendering/PostProcessEffects/AutomaticExposure/index.html#gamesetting
+
+#### Output attributes
+
+| Sensor data attribute            | Type  | Description        |
+| ----------------------- | ----------------------- | ----------------------- |
+| `frame`            | int   | Frame number when the measurement took place.      |
+| `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
+| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `width`            | int   | Image width in pixels.           |
+| `height`           | int   | Image height in pixels.          |
+| `fov` | float | Horizontal field of view in degrees.         |
+| `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
+
+---
+## Ray-traced lens camera
+
+* __Blueprint:__ sensor.camera.rt_lens
+* __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
+
+The ray-traced lens camera renders the scene with Unreal Engine's __path tracer__ and generates its primary rays directly through a configurable physical lens model. Where the RGB camera approximates lens distortion as a post-process on a pinhole render, `sensor.camera.rt_lens` distorts the rays themselves, so wide-angle and fisheye projections are geometrically exact, with no resolution loss towards the image borders and no missing field of view.
+
+The sensor requires hardware ray tracing (an NVIDIA RTX-class GPU under Vulkan); unlike the other cameras it has no rasterized fallback, so `use_ray_tracing` cannot be disabled for it.
+
+__Lens models.__ The `camera_model` attribute selects the radial projection:
+
+| `camera_model` | Projection | `distortion_coeffs` |
+| -------------- | ---------- | ------------------- |
+| `perspective` (default) | Rectilinear (pinhole), r = f·tan(θ) | — |
+| `stereographic` | r = 2f·tan(θ/2) | — |
+| `equidistant` | r = f·θ (classic fisheye) | — |
+| `equisolid` | r = 2f·sin(θ/2) | — |
+| `orthographic` | r = f·sin(θ) | — |
+| `kannala_brandt` | Kannala-Brandt polynomial fisheye | `k1,k2,k3,k4` |
+| `brown_conrady` | Rectilinear + Brown-Conrady distortion | `k1,k2,k3,p1,p2` |
+| `lut` | Calibrated θ→r lookup table | — (use the `lut` attribute; needs an explicit `fx`) |
+
+If `fx` is left at `0.0`, the focal length is derived automatically so that the requested `fov` spans the image width through the selected projection. An explicit calibration (`fx` > 0, in normalized units where the image half-width is 0.5) always wins over `fov`.
+
+__Denoising and convergence.__ The path tracer accumulates one batch of `samples_per_pixel` samples per simulation tick and denoises with NVIDIA DLSS Ray Reconstruction (the engine default, `r.PathTracing.Denoiser.Name=DLSSRR`). A static camera converges over successive ticks; a moving camera relies on the denoiser every frame. Low sample counts (`samples_per_pixel` of 4&ndash;16) with the denoiser enabled are the intended real-time operating point; high sample counts approach ground-truth path tracing at a heavy cost per frame.
+
+__Exposure.__ The capture's auto exposure is pinned to the daylight histogram window used by the CARLA sky rig, so path-traced frames match the photometric exposure of the RGB camera instead of adapting to raw sun radiance.
+
+__Readback latency.__ To keep the heavy path-traced render off the critical path, image readback is asynchronous: the image delivered on tick *N* was captured on tick *N-1* (one frame of latency, never a server stall).
+
+`manual_control.py` includes ready-made presets in its camera cycle (pinhole, Kannala-Brandt fisheye 150°, Brown-Conrady barrel), and `manual_control_rtlens.py` boots directly into the fisheye configuration.
+
+#### Ray-traced lens camera attributes
+
+<br>
+
+| Blueprint attribute  | Type     | Default  | Description          |
+| ----------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- | ----------------------------------------------------- |
+| `image_size_x`       | int      | 800      | Image width in pixels.           |
+| `image_size_y`       | int      | 600      | Image height in pixels.          |
+| `fov`    | float    | 90\.0    | Horizontal field of view in degrees, applied through the selected `camera_model` projection when `fx` is `0.0`. Clamped to 170.0 (half-angles at or beyond 90° are a known shader limitation). |
+| `camera_model` | str | `perspective` | Lens projection model. One of `perspective`, `stereographic`, `equidistant`, `equisolid`, `orthographic`, `kannala_brandt`, `brown_conrady`, `lut`. |
+| `distortion_coeffs` | str | (empty) | Comma-separated distortion coefficients; meaning is `camera_model`-specific (Kannala-Brandt: `k1,k2,k3,k4`; Brown-Conrady: `k1,k2,k3,p1,p2`). |
+| `lut` | str | (empty) | Comma-separated θ→r samples for `camera_model=lut`. |
+| `fx`, `fy` | float | 0\.0 | Normalized focal lengths (image half-width = 0.5). `0.0` derives them from `fov`; `fy` defaults to `fx` (square pixels). |
+| `cx`, `cy` | float | 0\.5 | Normalized principal point. |
+| `theta_max_deg` | float | 0\.0 | Maximum half-angle accepted by the lens, in degrees. `0.0` extends coverage automatically to the frame corners. |
+| `aperture_fstop` | float | 0\.0 | Physical depth of field. `0.0` means pinhole (no depth of field). |
+| `focus_distance_m` | float | 1000\.0 | Focus distance in meters when `aperture_fstop` > 0. |
+| `ca_shift_r`, `ca_shift_b` | float | 1\.0 | Chromatic aberration: per-channel radial scale of the red/blue channels relative to green (`1.0` = none). |
+| `samples_per_pixel` | int | 16 | Path-tracer samples accumulated per tick. Lower is faster; 4&ndash;16 with the denoiser is the real-time range. |
+| `enable_denoiser` | bool | True | Denoise each frame with DLSS Ray Reconstruction. Disable only for converged ground-truth renders from a static camera. |
+| `use_ray_tracing` | bool | True | Present for parity with the other cameras, but always effectively `True`: the path tracer has no rasterized fallback. |
+| `enable_postprocess_effects` | bool | True | Post-process effects activation. |
+| `post_process_profile` | str | `Default` | Named post-process profile applied to the capture. |
+| `sensor_tick` | float | 0\.0 | Simulation seconds between sensor captures (ticks). |
 
 #### Output attributes
 
