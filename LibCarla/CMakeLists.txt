@@ -463,6 +463,14 @@ if (BUILD_LIBCARLA_TESTS)
       ${LIBCARLA_SOURCE_PATH}/test/server/*.cpp
     )
 
+    if (NOT ENABLE_ROS2)
+      list (
+        REMOVE_ITEM
+        LIBCARLA_TEST_SERVER_SOURCES
+        ${LIBCARLA_SOURCE_PATH}/test/server/test_ros2_serialization.cpp
+      )
+    endif ()
+
     carla_add_executable (
       libcarla_test_server
       "Build the LibCarla server-side gtest suite."
@@ -490,6 +498,22 @@ if (BUILD_LIBCARLA_TESTS)
       LIBCARLA_WITH_GTEST
       LIBCARLA_TEST_CONTENT_FOLDER="${CARLA_WORKSPACE_PATH}/Build/test-content"
     )
+
+    if (ENABLE_ROS2)
+      # The CDR serialization tests need the Fast-CDR headers and shared lib
+      # that the Ros2Native ExternalProject chain installs at build time. The
+      # path mirrors PROJECT_INSTALL_PATH in Ros2Native/CMakeLists.txt.
+      set (CARLA_ROS2_NATIVE_INSTALL_PATH ${CMAKE_BINARY_DIR}/Ros2Native/install)
+      target_include_directories (
+        libcarla_test_server SYSTEM PRIVATE
+        ${CARLA_ROS2_NATIVE_INSTALL_PATH}/include
+      )
+      target_link_libraries (
+        libcarla_test_server PRIVATE
+        ${CARLA_ROS2_NATIVE_INSTALL_PATH}/lib/libfastcdr.so
+      )
+      add_dependencies (libcarla_test_server fastdds)
+    endif ()
 
   endif ()
 
