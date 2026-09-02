@@ -52,6 +52,9 @@ public:
 	UFUNCTION(CallInEditor, BlueprintCallable, Category = "TrafficLight|Demo")
 	void StopDemoSequence();
 
+	/// Build from JSON text rather than from JSONFile. Exposed so a placer script can
+	/// substitute the per-head SignalID of a preset before building it.
+	UFUNCTION(BlueprintCallable, CallInEditor, Category = "TrafficLight|JSON")
 	void BuildFromJSONString(const FString& JSONConfig);
 
 	UPROPERTY(EditAnywhere, Category = "TrafficLight|JSON")

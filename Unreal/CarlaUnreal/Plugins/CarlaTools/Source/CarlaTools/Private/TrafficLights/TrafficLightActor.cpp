@@ -667,6 +667,12 @@ void ATrafficLightActor::BuildFromJSONString(const FString& JSONConfig)
 					{
 						Head.bHasBackplate = HeadObj->GetBoolField(TEXT("bHasBackplate"));
 					}
+					// A head may name its own OpenDRIVE signal (an arrow head beside a through
+					// head on one mast arm). Omitted -> it inherits the actor's SignalID.
+					if (HeadObj->HasTypedField<EJson::String>(TEXT("SignalID")))
+					{
+						Head.SignalID = HeadObj->GetStringField(TEXT("SignalID"));
+					}
 
 					const TArray<TSharedPtr<FJsonValue>>* JsonModules;
 					if (HeadObj->TryGetArrayField(TEXT("Modules"), JsonModules))
@@ -914,6 +920,10 @@ FString ATrafficLightActor::ExportToJSON(bool bUseTransform) const
 			JH->SetStringField(TEXT("Attachment"), EnumToString<ETLHeadAttachment>(Head.Attachment));
 			JH->SetStringField(TEXT("Orientation"), EnumToString<ETLOrientation>(Head.Orientation));
 			JH->SetBoolField(TEXT("bHasBackplate"), Head.bHasBackplate);
+			if (!Head.SignalID.IsEmpty())
+			{
+				JH->SetStringField(TEXT("SignalID"), Head.SignalID);
+			}
 
 			TArray<TSharedPtr<FJsonValue>> JsonModules;
 			for (const FTLModule& Module : Head.Modules)
@@ -1030,6 +1040,52 @@ FString ATrafficLightActor::ExportLogicToJSON(const FString& ActorName) const
 		ModulesArray.Add(MakeShareable(new FJsonValueObject(ModuleObj)));
 	}
 	Root->SetArrayField(TEXT("Modules"), ModulesArray);
+
+	// Per-head detail, so a rig whose heads name different OpenDRIVE signals can be split into
+	// one ADigitalTwinsTrafficLight per signal at load time. "ComponentPrefix" is the name
+	// Build() gives this head's components through UniqueRename ("Pole_%02d_Head_%02d..."),
+	// which Bake() preserves (BakedMeshComponent->Rename(*Source->GetName(), ...)) -- so the
+	// binding survives into the level as an explicit name, never as a guess from a position.
+	// Written unconditionally: UMapLogicParser only *acts* on it when two heads disagree, and
+	// a reader that ignores it sees exactly what it saw before.
+	TArray<TSharedPtr<FJsonValue>> HeadsArray;
+	for (int32 PoleIndex = 0; PoleIndex < Poles.Num(); ++PoleIndex)
+	{
+		const FTLPole& Pole = Poles[PoleIndex];
+		for (int32 HeadIndex = 0; HeadIndex < Pole.Heads.Num(); ++HeadIndex)
+		{
+			const FTLHead& Head = Pole.Heads[HeadIndex];
+			TSharedPtr<FJsonObject> HeadObj = MakeShareable(new FJsonObject);
+			HeadObj->SetStringField(TEXT("ComponentPrefix"),
+				FString::Printf(TEXT("Pole_%02d_Head_%02d"), PoleIndex, HeadIndex));
+			HeadObj->SetStringField(TEXT("SignalID"),
+				Head.SignalID.IsEmpty() ? SignalID : Head.SignalID);
+
+			TSet<int32> HeadLaneIds;
+			TArray<TSharedPtr<FJsonValue>> LightTypes;
+			for (const FTLModule& Module : Head.Modules)
+			{
+				for (int32 LaneId : Module.LaneIds)
+				{
+					HeadLaneIds.Add(LaneId);
+				}
+				for (const FTLModuleLight& L : Module.Lights)
+				{
+					LightTypes.Add(MakeShareable(
+						new FJsonValueString(EnumToString<ETLLightType>(L.LightType))));
+				}
+			}
+			TArray<TSharedPtr<FJsonValue>> HeadLanes;
+			for (int32 LaneId : HeadLaneIds)
+			{
+				HeadLanes.Add(MakeShareable(new FJsonValueNumber(LaneId)));
+			}
+			HeadObj->SetArrayField(TEXT("LaneIds"), HeadLanes);
+			HeadObj->SetArrayField(TEXT("LightTypes"), LightTypes);
+			HeadsArray.Add(MakeShareable(new FJsonValueObject(HeadObj)));
+		}
+	}
+	Root->SetArrayField(TEXT("Heads"), HeadsArray);
 
 	FString Output;
 	TSharedRef<TJsonWriter<>> Writer{TJsonWriterFactory<>::Create(&Output)};

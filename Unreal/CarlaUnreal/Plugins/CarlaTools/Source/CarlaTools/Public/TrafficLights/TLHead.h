@@ -47,4 +47,19 @@ struct FTLHead
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Traffic Light|Head")
 	TArray<FTLModule> Modules{};
 
+	/**
+	 * OpenDRIVE signal this head shows the state of. Empty = the actor's own SignalID.
+	 *
+	 * One head of a mast arm can be a protected-turn arrow while the head beside it is the
+	 * through movement, and the two are red and green at the same instant. A CARLA traffic
+	 * light cannot express that: ATrafficLightBase holds exactly one UTrafficLightComponent
+	 * and one ETrafficLightState, and every client and Traffic Manager call is per actor. So
+	 * a rig whose heads name different signals is split into one ADigitalTwinsTrafficLight
+	 * per distinct SignalID at load time (UMapLogicParser::ApplyLaneIdsFromMapLogic), by the
+	 * "Heads" array ExportLogicToJSON writes into map_logic.json -- explicitly, not by
+	 * guessing from positions.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Traffic Light|Head")
+	FString SignalID{};
+
 };
