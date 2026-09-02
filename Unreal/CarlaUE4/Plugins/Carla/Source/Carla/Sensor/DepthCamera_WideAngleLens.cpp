@@ -22,7 +22,7 @@ ADepthCamera_WideAngleLens::ADepthCamera_WideAngleLens(const FObjectInitializer 
 {
   // Depth is a measurement, not a colour: blending two cube faces across a
   // silhouette averages the near and far hit and emits a surface that exists
-  // nowhere, so the cubemap has to be point sampled like the label cameras.
+  // nowhere, so the cubemap has to be point sampled like the label cameras. 
   Super::SetCubemapSampler(CameraModelUtil::GetSampler(ESamplerFilter::SF_Point));
 
   AddPostProcessingMaterial(
