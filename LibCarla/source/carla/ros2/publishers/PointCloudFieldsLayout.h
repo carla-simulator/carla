@@ -13,14 +13,12 @@
 namespace carla {
 namespace ros2 {
 
-// PointField datatype constants mirror the IDL-generated constants in
-// carla/ros2/types/PointField.h (sensor_msgs::msg::PointField__*). They are
-// kept here as an enum class so this header does not pull the FastDDS-generated
-// PointField types into the Build-Tests/ compile unit (where FastDDS is not
-// on the include path). Producers in publishers/Carla*Publisher.cpp pass the
-// values into sensor_msgs::msg::PointField directly; this enum mirrors the
-// same numeric values so layout tests can verify field offsets / sizes
-// without instantiating FastDDS.
+// PointField datatype constants mirror the numeric constants in
+// carla/ros2/types/msg/PointField.h (carla::ros2::msg::PointField::*). They are
+// kept here as an enum class so this header does not pull the message types into
+// the Build-Tests/ compile unit. Producers in publishers/Carla*Publisher.cpp map
+// these values onto carla::ros2::msg::PointField; this enum mirrors the same
+// numeric values so layout tests can verify field offsets / sizes.
 enum class PointFieldDataType : std::uint8_t {
   Int8    = 1,
   UInt8   = 2,
