@@ -149,6 +149,10 @@ namespace client {
         std::string TireJSON = "",
         std::string BaseJSONPath = "");
 
+    /// Returns the vehicle to the default Chaos physics, undoing
+    /// EnableChronoPhysics or EnableCarSim.
+    void RestorePhysXPhysics();
+
     /// Returns the failure state of the vehicle
     rpc::VehicleFailureState GetFailureState() const;
 

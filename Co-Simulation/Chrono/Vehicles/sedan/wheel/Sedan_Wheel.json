@@ -1,0 +1,14 @@
+{
+  "Name":                       "Sedan Wheel",
+  "Type":                       "Wheel",
+  "Template":                   "Wheel",
+
+  "Mass":                       11.0,
+  "Inertia":                    [0.100, 0.100, 0.100],
+
+    "Visualization": {
+        "Mesh Filename": "sedan/sedan_rim.obj",
+        "Radius": 0.3365,
+        "Width": 0.205
+    }
+}

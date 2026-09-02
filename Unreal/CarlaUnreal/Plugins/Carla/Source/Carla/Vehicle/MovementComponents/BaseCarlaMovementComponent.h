@@ -39,6 +39,10 @@ public:
 
   virtual float GetVehicleForwardSpeed() const;
 
+  // Hands the vehicle back to the default Chaos physics. Only the components
+  // that take physics over (Chrono, CarSim) need to do anything here.
+  virtual void DisableSpecialPhysics() {};
+
 protected:
 
   void DisableUE4VehiclePhysics();

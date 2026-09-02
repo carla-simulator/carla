@@ -1,0 +1,8 @@
+{
+  "Name":                       "Sedan Brake",
+  "Type":                       "Brake",
+  "Template":                   "BrakeShafts",
+
+  "Maximum Torque":             2000,
+  "Shaft Inertia":              0.4
+}

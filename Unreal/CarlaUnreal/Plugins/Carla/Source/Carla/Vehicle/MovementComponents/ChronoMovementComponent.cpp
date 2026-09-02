@@ -348,6 +348,11 @@ void UChronoMovementComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 }
 #endif
 
+void UChronoMovementComponent::DisableSpecialPhysics()
+{
+  DisableChronoPhysics();
+}
+
 void UChronoMovementComponent::DisableChronoPhysics()
 {
   this->SetComponentTickEnabled(false);
