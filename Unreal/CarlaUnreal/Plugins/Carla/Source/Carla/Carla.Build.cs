@@ -119,6 +119,7 @@ public class Carla :
       "NavigationSystem",
       "Slate",
       "SlateCore",
+      "InputCore",
       "PhysicsCore",
       "MeshConversion",
       "Chaos",
@@ -153,7 +154,11 @@ public class Carla :
       PublicDependencyModuleNames.Add("CarSim");
 
     if (Target.Type == TargetType.Editor)
+    {
       PublicDependencyModuleNames.Add("UnrealEd");
+      // SColorPicker (LightDefaultsEditorPanel, #if WITH_EDITOR only).
+      PrivateDependencyModuleNames.Add("AppFramework");
+    }
       
     PublicIncludePaths.Add(ModuleDirectory);
 

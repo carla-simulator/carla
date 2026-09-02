@@ -375,6 +375,15 @@ private:
 
   carla::rpc::VehicleFailureState FailureState = carla::rpc::VehicleFailureState::None;
 
+  // Light Defaults tool integration: loaded once in
+  // ActivateVehicleLightComponents (BeginPlay), then reapplied by
+  // SetVehicleLightState on every light-state change -- see
+  // ULightDefaultsJsonUtils::ApplyVehicleLightsRuntimeState.
+  bool bHasSavedVehicleLightDefault = false;
+  float SavedVehicleLightIntensity = 1.0f;
+  TMap<FString, float> SavedVehicleLightGroupIntensity;
+  void ApplyVehicleLightDefaultsForCurrentState();
+
 public:
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditDefaultsOnly)
   float DetectionSize { 750.0f };

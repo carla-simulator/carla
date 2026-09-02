@@ -15,6 +15,7 @@
 
 #include <util/ue-header-guard-begin.h>
 #include "Components/ExponentialHeightFogComponent.h"
+#include "Components/DirectionalLightComponent.h"
 #include "Components/LightComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
@@ -48,7 +49,7 @@
 // the skylight floor below.
 static TAutoConsoleVariable<float> CVarCarlaWeatherMoonIntensity(
     TEXT("carla.Weather.MoonIntensity"),
-    100.0f,
+    500.0f,
     TEXT("Minimum DirectionalLightComponentMoon intensity (lux) enforced on the sky rig ")
     TEXT("whenever SunAltitudeAngle < 0. Set 0 to leave the rig's authored/curve-driven ")
     TEXT("moon intensity untouched."),
@@ -307,8 +308,6 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                 for (const TPair<UClass*, TArray<AActor*>>& Pair : AttachedByClass)
                 {
                     const TArray<AActor*>& Instances = Pair.Value;
-                    if (Instances.Num() <= 1)
-                        continue;
                     // Keep the one "SkySphere" actually points to when this
                     // is its class; otherwise keep whichever is last (order
                     // is not meaningful here, just needs to be consistent).
@@ -316,14 +315,40 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                         ? SphereActor : Instances.Last();
                     for (AActor* Instance : Instances)
                     {
-                        if (Instance == ToKeep)
-                            continue;
-                        TArray<AActor*> OrphanChildren;
-                        Instance->GetAttachedActors(OrphanChildren);
-                        for (AActor* OrphanChild : OrphanChildren)
-                            if (OrphanChild != nullptr)
-                                OrphanChild->Destroy();
-                        Instance->Destroy();
+                        if (Instance != ToKeep)
+                        {
+                            TArray<AActor*> OrphanChildren;
+                            Instance->GetAttachedActors(OrphanChildren);
+                            for (AActor* OrphanChild : OrphanChildren)
+                                if (OrphanChild != nullptr)
+                                    OrphanChild->Destroy();
+                            Instance->Destroy();
+                        }
+                    }
+
+                    // SetSunActorReference (called earlier in the
+                    // UpdateFunctionNames loop) links a stock-engine
+                    // ADirectionalLight onto this rig, on top of our own
+                    // Sun/Moon components -- a THIRD directional light,
+                    // confirmed in the outliner ("DirectionalLight0") and over
+                    // the render warning ("Multiple directional lights are
+                    // competing..."). Neutralize the survivor the same way
+                    // Sky.cpp's constructor already does for the Moon: below
+                    // the Sun's ForwardShadingPriority, and out of the running
+                    // for SkyAtmosphere's single sun-light slot (every
+                    // DirectionalLightComponent defaults bAtmosphereSunLight
+                    // true -- left alone, this stray light could win that slot
+                    // over our real Sun, which is what actually broke
+                    // SkyAtmosphere/rendered a black sky once the sun rose,
+                    // independent of the render warning). Cheap and
+                    // idempotent, run every push like the dedup above.
+                    if (UDirectionalLightComponent* StrayLight =
+                            ToKeep != nullptr ? ToKeep->FindComponentByClass<UDirectionalLightComponent>() : nullptr)
+                    {
+                        if (StrayLight->ForwardShadingPriority != -1)
+                            StrayLight->SetForwardShadingPriority(-1);
+                        if (StrayLight->IsUsedAsAtmosphereSunLight())
+                            StrayLight->SetAtmosphereSunLight(false);
                     }
                 }
             }
@@ -565,6 +590,28 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                 UFunction* RefreshMaterialFunction = SphereActor->FindFunction(TEXT("RefreshMaterial"));
                 if (RefreshMaterialFunction != nullptr && RefreshMaterialFunction->ParmsSize == 0)
                     SphereActor->ProcessEvent(RefreshMaterialFunction, nullptr);
+            }
+        }
+        else
+        {
+            // Day: bring the moon back down from whatever night floor last
+            // set it to. Unlike the sun/skylight above (pushed unconditionally
+            // from their curves every single call, so they self-correct both
+            // ways), the moon has no such day-side reset anywhere -- only the
+            // night-only floor clamp above, which only ever raises it. Without
+            // this, one night floor-clamp leaves the moon lit at that
+            // intensity forever, becoming a second active directional light
+            // competing with the sun by day ("Multiple directional lights are
+            // competing to be the single one used for forward shading..." --
+            // confirmed via headless test: moon intensity clamped to a night
+            // floor stayed there across a follow-up day update) and polluting
+            // the SkyAtmosphere/SkyLight capture. bAffectsWorld/Active are
+            // deliberately left alone (see the comment above where they're
+            // forced on) -- zero intensity alone makes it contribute nothing.
+            if (ULightComponent* MoonLightComponent = FindComponent(TEXT("DirectionalLightComponentMoon")))
+            {
+                if (MoonLightComponent->Intensity != 0.0f)
+                    MoonLightComponent->SetIntensity(0.0f);
             }
         }
     }
