@@ -249,6 +249,45 @@ void ACarlaGameModeBase::RestartPlayer(AController *NewPlayer)
   Super::RestartPlayer(NewPlayer);
 }
 
+// Whether BP_CarlaWeather's per-town "DefaultWeathers" table (a blueprint
+// TMap<FString, FWeatherParameters> variable) has an entry for MapName. Looked
+// up by authored name through reflection, like the other blueprint variables
+// the C++ side reads (see AWeather::ApplyWeatherToSkyActor).
+static bool IsMapInBlueprintWeatherTable(const AWeather* Weather, const FString& MapName)
+{
+  if (Weather == nullptr)
+  {
+    return false;
+  }
+  for (TFieldIterator<FProperty> It(Weather->GetClass()); It; ++It)
+  {
+    if ((*It)->GetAuthoredName() != TEXT("DefaultWeathers") && (*It)->GetName() != TEXT("DefaultWeathers"))
+    {
+      continue;
+    }
+    const FMapProperty* MapProp = CastField<FMapProperty>(*It);
+    if (MapProp == nullptr)
+    {
+      return false;
+    }
+    const FStrProperty* KeyProp = CastField<FStrProperty>(MapProp->KeyProp);
+    if (KeyProp == nullptr)
+    {
+      return false;
+    }
+    FScriptMapHelper Helper(MapProp, MapProp->ContainerPtrToValuePtr<void>(Weather));
+    for (FScriptMapHelper::FIterator MapIt(Helper); MapIt; ++MapIt)
+    {
+      if (KeyProp->GetPropertyValue(Helper.GetKeyPtr(MapIt.GetInternalIndex())) == MapName)
+      {
+        return true;
+      }
+    }
+    return false;
+  }
+  return false;
+}
+
 void ACarlaGameModeBase::BeginPlay()
 {
   Super::BeginPlay();
@@ -306,6 +345,28 @@ void ACarlaGameModeBase::BeginPlay()
     if (UWeatherJsonUtils::GetMapDefaultWeather(MapName, Episode->Weather->GetCurrentWeather(), DefaultWeather))
     {
       Episode->Weather->ApplyWeather(DefaultWeather);
+      // The weather actor was spawned during this BeginPlay, so its own
+      // BeginPlay (BP_CarlaWeather: per-town "DefaultWeathers" table, or a
+      // hard-coded fallback + "<map> default weather not found") is deferred
+      // until the world has begun play -- i.e. it runs AFTER the ApplyWeather
+      // above and silently replaces the MapDefaults.json entry (observed on
+      // every baked twin: sun 45/220 + fog 2.0 instead of the authored
+      // defaults). For maps the blueprint table does not know, re-apply the
+      // JSON entry on the next tick so the file wins over the fallback. Maps
+      // in the table (the stock towns) are left to the table on purpose: it
+      // is what they have always rendered with, and several JSON entries
+      // (e.g. Town10HD_Opt) disagree with it.
+      if (!IsMapInBlueprintWeatherTable(Episode->Weather, MapName))
+      {
+        TWeakObjectPtr<AWeather> WeakWeather = Episode->Weather;
+        World->GetTimerManager().SetTimerForNextTick([WeakWeather, DefaultWeather]()
+        {
+          if (WeakWeather.IsValid())
+          {
+            WeakWeather->ApplyWeather(DefaultWeather);
+          }
+        });
+      }
     }
     else
     {
