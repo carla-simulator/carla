@@ -62,7 +62,7 @@ set PACKAGE_PATH=%CARLA_DIST_FOLDER%\%PACKAGE%
 set PACKAGE2=AdditionalMaps_%REPOSITORY_TAG%.zip
 set PACKAGE_PATH2=%CARLA_DIST_FOLDER%\%PACKAGE2%
 
-set ENDPOINT=https://s3.us-east-005.backblazeb2.com
+set ENDPOINT=https://1b808339cbe94fecce530dfada93713b.r2.cloudflarestorage.com
 
 set S3_PREFIX=s3://carla-releases/Windows
 set URL_PREFIX=%ENDPOINT%/carla-releases/Windows

@@ -10,7 +10,7 @@ AWS_COPY="aws s3 cp"
 DOCKER="docker"
 UNTAR="tar -xvzf"
 UPLOAD_MAPS=true
-ENDPOINT="https://s3.us-east-005.backblazeb2.com"
+ENDPOINT="https://1b808339cbe94fecce530dfada93713b.r2.cloudflarestorage.com"
 SUMMARY_OUTPUT_PATH=
 
 # ==============================================================================
