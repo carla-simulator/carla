@@ -119,6 +119,7 @@ public class Carla :
       "NavigationSystem",
       "Slate",
       "SlateCore",
+      "InputCore",
       "PhysicsCore",
       "MeshConversion",
       "Chaos",
@@ -157,6 +158,8 @@ public class Carla :
       PublicDependencyModuleNames.Add("UnrealEd");
       // GeometryImporter::ImportObj (carla-digitaltwins port) uses IAssetTools.
       PublicDependencyModuleNames.Add("AssetTools");
+      // SColorPicker (LightDefaultsEditorPanel, #if WITH_EDITOR only).
+      PrivateDependencyModuleNames.Add("AppFramework");
     }
       
     PublicIncludePaths.Add(ModuleDirectory);

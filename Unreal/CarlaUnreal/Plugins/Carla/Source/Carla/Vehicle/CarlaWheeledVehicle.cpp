@@ -11,6 +11,7 @@
 #include "Carla/Game/CarlaHUD.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Lights/CarlaLight.h"
+#include "BlueprintLibary/LightDefaultsJsonUtils.h"
 #include "Carla/Trigger/FrictionTrigger.h"
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Util/EmptyActor.h"
@@ -247,6 +248,56 @@ void ACarlaWheeledVehicle::ActivateVehicleLightComponents()
       break;
     }
   }
+
+  // Light Defaults tool integration: everything above is this project's
+  // pre-existing native pipeline (per-vehicle authored intensities from the
+  // Blueprint's own Construction Script, scaled once here) -- it never
+  // touched Config/Lights/Defaults.json, so nothing edited/saved in the
+  // Vehicles tab ever reached an actual running simulation (manual_control.py
+  // et al), only the editor-only Preview spawn.
+  //
+  // Load the saved default once here (cheap, cached for the vehicle's
+  // lifetime) and apply it for the CURRENT light state -- at this point that
+  // is InputControl.LightState's default (everything off), so this must
+  // zero every group's material emissive, not light everything up. Do NOT
+  // use ApplyVehicleLightsToSingleActor/ApplyVehicleLightsLive here: those
+  // push Intensity uniformly to every exposed group at once, which is
+  // correct for the editor Preview (meant to show everything lit for
+  // editing) but wrong for gameplay, where a group must only glow when it is
+  // actually ON.
+  {
+    const FString ClassName = GetClass()->GetName();
+    bHasSavedVehicleLightDefault = ULightDefaultsJsonUtils::LoadVehicleLightDefault(
+        ClassName, SavedVehicleLightIntensity, SavedVehicleLightGroupIntensity);
+  }
+  ApplyVehicleLightDefaultsForCurrentState();
+}
+
+void ACarlaWheeledVehicle::ApplyVehicleLightDefaultsForCurrentState()
+{
+  if (!bHasSavedVehicleLightDefault)
+    return;
+
+  const FVehicleLightState& LightState = InputControl.LightState;
+  TMap<FString, bool> GroupOn;
+  GroupOn.Add(TEXT("Position"), LightState.Position);
+  GroupOn.Add(TEXT("Low Beam"), LightState.LowBeam);
+  GroupOn.Add(TEXT("High Beam"), LightState.HighBeam);
+  GroupOn.Add(TEXT("Fog"), LightState.Fog);
+  GroupOn.Add(TEXT("Brake"), LightState.Brake);
+  GroupOn.Add(TEXT("Reverse"), LightState.Reverse);
+  GroupOn.Add(TEXT("Left Blinker"), LightState.LeftBlinker);
+  GroupOn.Add(TEXT("Right Blinker"), LightState.RightBlinker);
+  GroupOn.Add(TEXT("Special1"), LightState.Special1);
+
+  TMap<FString, float> MaterialGroupValue;
+  for (const TPair<FString, bool>& Pair : GroupOn)
+  {
+    MaterialGroupValue.Add(Pair.Key, Pair.Value ? SavedVehicleLightIntensity : 0.0f);
+  }
+
+  ULightDefaultsJsonUtils::ApplyVehicleLightsRuntimeState(
+      this, MaterialGroupValue, SavedVehicleLightGroupIntensity);
 }
 
 void ACarlaWheeledVehicle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction){
@@ -908,6 +959,10 @@ void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState& LightS
     // from a looping timer, so no per-call component rescale is needed here
     // -- it would race that timer anyway.
     RefreshLightState(LightState);
+    // RefreshLightState's own graph is opaque to C++ and may repush its own
+    // (weak, authored) emissive values for whichever groups just toggled --
+    // reapply the Light Defaults saved values after it so ours win.
+    ApplyVehicleLightDefaultsForCurrentState();
   }
 }
 
