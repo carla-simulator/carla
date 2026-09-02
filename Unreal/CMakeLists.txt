@@ -90,6 +90,10 @@ if (BUILD_CARLA_CLIENT)
   list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-client)
 endif ()
 
+if (ENABLE_CHRONO)
+  list (APPEND UE_DEPENDENCIES_ORDER_ONLY carla-chrono)
+endif ()
+
 list (
   APPEND
   UE_DEPENDENCIES_ORDER_ONLY
@@ -143,6 +147,17 @@ set (
   ${sqlite3_SOURCE_DIR}
 )
 
+if (ENABLE_CHRONO)
+  # chrono_thirdparty is a sibling of chrono/ in the install tree; Chrono's own
+  # headers reach into it unqualified, so both have to be on the search path.
+  list (
+    APPEND
+    CARLA_UNREAL_INCLUDE_PATHS
+    ${CARLA_CHRONO_INSTALL_PATH}/include
+    ${CARLA_CHRONO_INSTALL_PATH}/include/chrono_thirdparty
+  )
+endif ()
+
 foreach (UE_DEP ${UE_DEPENDENCIES})
   list (
     APPEND
@@ -195,6 +210,14 @@ if (ENABLE_OSM2ODR)
     APPEND
     CARLA_UNREAL_OPTIONS
     "OSM2ODR"
+  )
+endif()
+
+if (ENABLE_CHRONO)
+  list (
+    APPEND
+    CARLA_UNREAL_OPTIONS
+    "CHRONO"
   )
 endif()
 

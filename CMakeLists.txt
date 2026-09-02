@@ -102,6 +102,10 @@ if (ENABLE_ROS2)
   add_subdirectory (Ros2Native)
 endif()
 
+if (ENABLE_CHRONO)
+  add_subdirectory (Chrono)
+endif ()
+
 if (BUILD_PYTHON_API)
   add_subdirectory (PythonAPI)
 endif ()

@@ -377,13 +377,17 @@
         - param_name: base_json_path
           type: str
           doc: >
-            Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/chrono-install/share/chrono/data/vehicle/` (the final `/` character is required).
+            Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/Release/Chrono/install/share/chrono/data/vehicle/` (the final `/` character is required).
       doc: >
         Enables Chrono physics on a spawned vehicle.
       note: >
-        Ensure that you have started the CARLA server with the `ARGS="--chrono"` flag. You will not be able to use Chrono physics without this flag set.
+        Ensure that the CARLA server was built with `-DENABLE_CHRONO=ON`. You will not be able to use Chrono physics without it.
       warning: >
         Collisions are not supported. When a collision is detected, physics will revert to the default CARLA physics.
+     # -------------------------------------- 
+    - def_name: restore_physx_physics
+      doc: >
+        Restores the default CARLA physics on a vehicle that had a special physics engine enabled, undoing `enable_chrono_physics`.
      # -------------------------------------- 
     - def_name: set_autopilot
       params:
