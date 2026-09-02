@@ -21,7 +21,7 @@ DEFINE_LOG_CATEGORY(LogCarlaToolsMapGenerateTileCommandlet);
 UGenerateTileCommandlet::UGenerateTileCommandlet()
 {
 #if WITH_EDITOR
-  ConstructorHelpers::FClassFinder<UOpenDriveToMap> OpenDrivelassFinder(TEXT("/CarlaDigitalTwinsTool/digitalTwins/BP_OpenDriveToMap"));
+  ConstructorHelpers::FClassFinder<UOpenDriveToMap> OpenDrivelassFinder(TEXT("/CarlaDigitalTwinsTool/BP_OpenDriveToMap"));
   OpenDriveClass = OpenDrivelassFinder.Class;
 #endif
 }
@@ -30,7 +30,7 @@ UGenerateTileCommandlet::UGenerateTileCommandlet(const FObjectInitializer& Initi
   : Super(Initializer)
 {
 #if WITH_EDITOR
-  ConstructorHelpers::FClassFinder<UOpenDriveToMap> OpenDrivelassFinder(TEXT("/CarlaDigitalTwinsTool/digitalTwins/BP_OpenDriveToMap"));
+  ConstructorHelpers::FClassFinder<UOpenDriveToMap> OpenDrivelassFinder(TEXT("/CarlaDigitalTwinsTool/BP_OpenDriveToMap"));
   OpenDriveClass = OpenDrivelassFinder.Class;
 #endif
 }
