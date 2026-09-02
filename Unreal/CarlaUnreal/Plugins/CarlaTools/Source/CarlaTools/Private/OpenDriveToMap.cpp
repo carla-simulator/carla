@@ -2254,17 +2254,52 @@ bool UOpenDriveToMap::TryResolveContentFileAnywhere(const FString& RelativePathU
 }
 #endif
 
+FString UOpenDriveToMap::ResolveLevelXodrPath(const FString& LevelName)
+{
+	const FString Content = FPaths::ProjectContentDir();
+	const TArray<FString> Candidates = {
+		Content / TEXT("Carla/Maps/Twins") / LevelName / TEXT("OpenDrive") / LevelName + TEXT(".xodr"),
+		Content / TEXT("Carla/Maps/OpenDrive") / LevelName + TEXT(".xodr"),
+		UGenerationPathsHelper::GetRawMapDirectoryPath(LevelName) + TEXT("OpenDrive/") + LevelName + TEXT(".xodr"),
+	};
+	for (const FString& Path : Candidates)
+	{
+		if (FPaths::FileExists(Path))
+		{
+			return Path;
+		}
+	}
+	return FString();
+}
+
 FVector UOpenDriveToMap::DisplaceLocationOutsideNeighboringRoads(const UObject* WorldContextObject, FVector InLocation, float SteppingPercentage, float RoadLimitPadding)
 {
-	FString FileContent;
 	UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull);
-	FString LevelName = FPackageName::GetShortName(World->GetMapName());
-	FString file_path = UGenerationPathsHelper::GetRawMapDirectoryPath(LevelName) + "OpenDrive/" + LevelName + ".xodr";
-	FFileHelper::LoadFileToString(FileContent, *file_path);
+	if (World == nullptr)
+	{
+		return InLocation;
+	}
+	const FString LevelName = FPackageName::GetShortName(World->GetMapName());
+	const FString file_path = ResolveLevelXodrPath(LevelName);
+	FString FileContent;
+	if (file_path.IsEmpty() || !FFileHelper::LoadFileToString(FileContent, *file_path))
+	{
+		UE_LOG(LogCarlaTools, Warning, TEXT("DisplaceLocationOutsideNeighboringRoads: no OpenDRIVE file for level %s"), *LevelName);
+		return InLocation;
+	}
 	std::string opendrive_xml = carla::rpc::FromLongFString(FileContent);
+	std::optional<carla::road::Map> current_carla_map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
+	if (!current_carla_map.has_value())
+	{
+		UE_LOG(LogCarlaTools, Warning, TEXT("DisplaceLocationOutsideNeighboringRoads: %s did not parse"), *file_path);
+		return InLocation;
+	}
+	return DisplaceLocationOutsideNeighboringRoads(current_carla_map.value(), InLocation, SteppingPercentage, RoadLimitPadding);
+}
 
-	std::optional<carla::road::Map> current_carla_map;
-	current_carla_map = carla::opendrive::OpenDriveParser::Load(opendrive_xml);
+FVector UOpenDriveToMap::DisplaceLocationOutsideNeighboringRoads(const carla::road::Map& Map, FVector InLocation, float SteppingPercentage, float RoadLimitPadding)
+{
+	const carla::road::Map* current_carla_map = &Map;
 
 	int32 check_shoulder_or_driving =
 		static_cast<int32_t>(carla::road::Lane::LaneType::Shoulder) |

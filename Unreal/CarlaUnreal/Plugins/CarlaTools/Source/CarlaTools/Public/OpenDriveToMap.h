@@ -130,8 +130,19 @@ public:
   static void UpdateInstancedMeshCoordinates(
       UHierarchicalInstancedStaticMeshComponent* Component, FVector TileOrigin);
 
+  /// Push InLocation (cm) sideways out of the driving lanes of the level's OpenDRIVE (looked
+  /// up next to the level, see ResolveLevelXodrPath). Returns InLocation unchanged when the
+  /// level has no OpenDRIVE file.
   UFUNCTION(BlueprintCallable, Category = "Assets Placement")
   static FVector DisplaceLocationOutsideNeighboringRoads(const UObject* WorldContextObject, FVector InLocation, float SteppingPercentage = 0.66f, float RoadLimitPadding = 10.0f);
+
+  /// Same on an already parsed map (no file access per call).
+  static FVector DisplaceLocationOutsideNeighboringRoads(const carla::road::Map& Map, FVector InLocation, float SteppingPercentage = 0.66f, float RoadLimitPadding = 10.0f);
+
+  /// Absolute path of the .xodr of the named level: Content/Carla/Maps/Twins/<Level>/OpenDrive,
+  /// Content/Carla/Maps/OpenDrive, then the legacy Plugins/<Level>/Content/Maps/OpenDrive. Empty when none exists.
+  UFUNCTION(BlueprintCallable, Category = "Assets Placement")
+  static FString ResolveLevelXodrPath(const FString& LevelName);
 
 
   UFUNCTION(BlueprintCallable)
