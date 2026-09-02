@@ -111,6 +111,29 @@ carla_option (
   ON
 )
 
+# The carla-python-api-wheels controls are cache variables (not carla_string_option)
+# so they can be overridden on the command line with -D. The carla_string_option
+# helper uses a plain set(), which would shadow a -D value.
+set (
+  CARLA_PYTHON_API_VERSIONS
+  ""
+  CACHE STRING
+  "Python MAJOR.MINOR versions (';'- or ','-separated) the carla-python-api-wheels target builds. Empty means only the current configured interpreter."
+)
+
+carla_option (
+  CARLA_PYTHON_API_WHEEL_MANYLINUX
+  "Repair carla-python-api-wheels output to a portable manylinux tag via auditwheel, best-effort, keeping the plain wheel if auditwheel is unavailable."
+  ON
+)
+
+set (
+  CARLA_PYTHON_API_WHEEL_PLATFORM
+  ""
+  CACHE STRING
+  "Force a specific auditwheel platform tag for carla-python-api-wheels (e.g. manylinux_2_35_x86_64). Empty auto-detects the most portable compatible tag."
+)
+
 carla_option (
   ENABLE_ALL_WARNINGS
   "Whether to emit extra build warnings."

@@ -191,3 +191,40 @@ add_dependencies (
   carla-python-api-install
   carla-python-api
 )
+
+# Build the CARLA Python API wheel for one or more interpreters. With
+# CARLA_PYTHON_API_VERSIONS empty (default) this builds only the current
+# interpreter by reusing this build tree (identical to carla-python-api). When a
+# version list is given, each non-current version is built in its own nested
+# configure (the wheel links a version-specific Boost.Python target, so a
+# separate outer configure per interpreter is required). The per-version loop,
+# interpreter discovery and optional auditwheel repair live in the CMake
+# script-mode module below; missing/out-of-range versions are reported but do
+# not stop the run, which fails only if no wheel could be built.
+#
+# Pass the version list with ',' separators: a ';'-separated CMake list would be
+# split into separate arguments inside the custom-command COMMAND. The script
+# normalizes ',' back to ';'.
+string (REPLACE ";" "," CARLA_PYTHON_API_VERSIONS_ARG "${CARLA_PYTHON_API_VERSIONS}")
+
+carla_add_custom_target (
+  carla-python-api-wheels
+  "Build the CARLA Python API wheel for the interpreters in CARLA_PYTHON_API_VERSIONS (default: the current one)."
+  COMMAND
+    ${CMAKE_COMMAND}
+      -D CARLA_WHEEL_VERSIONS=${CARLA_PYTHON_API_VERSIONS_ARG}
+      -D CARLA_WHEEL_CURRENT_VERSION=${Python3_VERSION_MAJOR}.${Python3_VERSION_MINOR}
+      -D CARLA_WHEEL_CURRENT_PYTHON=${Python3_EXECUTABLE}
+      -D CARLA_WHEEL_SOURCE_DIR=${CARLA_WORKSPACE_PATH}
+      -D CARLA_WHEEL_MAIN_BUILD_DIR=${CMAKE_BINARY_DIR}
+      -D CARLA_WHEEL_BINARY_ROOT=${CMAKE_BINARY_DIR}/python-wheels
+      -D CARLA_WHEEL_OUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/dist
+      -D CARLA_WHEEL_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+      -D CARLA_WHEEL_GENERATOR=${CMAKE_GENERATOR}
+      -D CARLA_WHEEL_TOOLCHAIN=${CMAKE_TOOLCHAIN_FILE}
+      -D CARLA_WHEEL_MANYLINUX=${CARLA_PYTHON_API_WHEEL_MANYLINUX}
+      -D CARLA_WHEEL_PLATFORM=${CARLA_PYTHON_API_WHEEL_PLATFORM}
+      -P ${CARLA_WORKSPACE_PATH}/CMake/BuildPythonApiWheels.cmake
+  USES_TERMINAL
+  VERBATIM
+)

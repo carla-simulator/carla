@@ -1,10 +1,10 @@
 # Building CARLA in Linux with Unreal Engine 5.5
 
 !!! note
-    The Unreal Engine 5 version of CARLA supports Ubuntu 22.04 and 24.04. It has not been configured to build on older Ubuntu versions.
+    The Unreal Engine 5 version of CARLA supports Ubuntu 22.04 and Ubuntu 24.04. Older Ubuntu versions are not configured to build.
 
 !!! note
-    If you are using an Ubuntu version other than 22.04 or 24.04, or experiencing compilation issues, you can use the Docker-based development environment to build CARLA inside an Ubuntu 22.04 container. See [CARLA Docker Dev Environment (UE5)](build_devcontainer.md) for instructions.
+    If your host OS does not match either supported Ubuntu version (or you want to validate against a specific one without changing your host), use the Docker-based development environment. The `Util/Docker/build.sh` script defaults to Ubuntu 24.04 and accepts `--ubuntu-distro 22.04` to build the older variant. See [CARLA Docker Dev Environment (UE5)](build_devcontainer.md) for instructions.
 
 * __[Set up the environment](#set-up-the-environment)__  
 * __[Build and run CARLA UE5](#build-and-run-carla-ue5)__  
@@ -103,6 +103,48 @@ cmake --build Build --target carla-python-api-install
 ```sh
 cmake --build Build --target launch
 ```
+
+### Build the Python API for specific Python versions
+
+`carla-python-api` (and `carla-python-api-install`) build a wheel for a single interpreter: the one CMake resolved at configure time. To build wheels for several Python versions in one step, set `CARLA_PYTHON_API_VERSIONS` (a `;`- or `,`-separated list) at configure time and build the `carla-python-api-wheels` target:
+
+```sh
+# Reconfigure with the desired versions, then build the wheels target.
+cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release \
+  --toolchain="$PWD/CMake/Toolchain.cmake" \
+  -DCARLA_PYTHON_API_VERSIONS="3.10;3.11;3.12"
+cmake --build Build --target carla-python-api-wheels
+
+# Finished wheels are collected here:
+ls Build/PythonAPI/dist/
+#   carla-0.10.0-cp310-cp310-manylinux_2_35_x86_64.whl
+#   carla-0.10.0-cp311-cp311-manylinux_2_35_x86_64.whl
+#   carla-0.10.0-cp312-cp312-manylinux_2_35_x86_64.whl
+```
+
+The build looks up each version as `python3.X` on `PATH` and builds the ones it finds. A requested interpreter that is missing fails only that version (with an error in the log) while the rest still build; the target stops only if no wheel could be built at all (none present, or the only one available is outside the supported 3.8–3.14 range). With `CARLA_PYTHON_API_VERSIONS` empty (default), only the current interpreter is built, identical to `carla-python-api`.
+
+The wheels are written to `Build/PythonAPI/dist/`, the same directory `carla-python-api` already uses for the single-interpreter wheel. The `manylinux` tag in each file name follows the glibc of the machine that builds the wheel (`manylinux_2_38` on Ubuntu 24.04, `manylinux_2_35` on 22.04); a lower tag installs on a wider range of systems.
+
+The Python API is client side, so the wheel build needs neither the Unreal Engine editor nor the CARLA content. If you only want wheels, add `-DBUILD_CARLA_UNREAL=OFF` to the configure to skip the Unreal plugin and its content requirement (the UE5 path is still needed for the compiler toolchain):
+
+```sh
+cmake -G Ninja -S . -B Build -DCMAKE_BUILD_TYPE=Release \
+  --toolchain="$PWD/CMake/Toolchain.cmake" \
+  -DBUILD_CARLA_UNREAL=OFF \
+  -DCARLA_PYTHON_API_VERSIONS="3.10;3.11;3.12"
+cmake --build Build --target carla-python-api-wheels
+```
+
+!!! note
+    Each version you list must be installed locally **as a usable build interpreter**, not just present. For every `python3.X` you need: the interpreter on `PATH`; its development package (`Python.h` headers and shared library, e.g. `python3.X-dev` on Debian/Ubuntu, or a source build via `make altinstall`) that the Boost.Python extension compiles against; and `build` plus `numpy` installed into it. The PEP 517 build runs in an isolated environment, so it pulls its own backend (`scikit-build-core`, `wheel`, `setuptools`) automatically; you only need `auditwheel` if you want the manylinux repair (without it you still get a plain `linux_x86_64` wheel). For example, to add Python 3.11 as a target on Ubuntu:
+
+    ```sh
+    sudo add-apt-repository ppa:deadsnakes/ppa
+    sudo apt-get update
+    sudo apt-get install -y python3.11 python3.11-dev python3.11-venv
+    python3.11 -m pip install build numpy auditwheel   # auditwheel optional, for manylinux
+    ```
 
 ## Build a package with CARLA UE5
 

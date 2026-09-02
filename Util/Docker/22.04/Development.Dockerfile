@@ -1,8 +1,4 @@
-ARG UBUNTU_DISTRO="22.04"
-
-FROM carla-base:ue5-${UBUNTU_DISTRO}
-
-ARG UBUNTU_DISTRO
+FROM carla-base:ue5-22.04
 
 ARG UID="1000"
 ARG GID="1000"
@@ -31,18 +27,21 @@ RUN packages="vulkan-tools fontconfig xdg-user-dirs" && \
 ENV XDG_RUNTIME_DIR=/run/user/${UID}
 
 # Install runtime python libraries (to run examples and utils)
-COPY .tmp/examples_requirements.txt /tmp/examples_requirements.txt
-COPY .tmp/util_requirements.txt /tmp/util_requirements.txt
+COPY --from=carla-root PythonAPI/examples/requirements.txt /tmp/examples_requirements.txt
+COPY --from=carla-root PythonAPI/util/requirements.txt /tmp/util_requirements.txt
 
-RUN python3 -m pip install -r /tmp/examples_requirements.txt \
-    && python3 -m pip install -r /tmp/util_requirements.txt \
-    && rm /tmp/examples_requirements.txt /tmp/util_requirements.txt
-
-# Starting with Ubuntu 23.04, official Docker images include a default `ubuntu` user with UID 1000.
-# This can cause conflicts when remapping the container's UID/GID to match the host user.
-RUN id -u ${UID} &>/dev/null \
-    && userdel -r $(getent passwd ${UID} | cut -d: -f1) \
-    || echo ""
+# Best-effort across every bundled interpreter: some example dependencies
+# (e.g. open3d is gated to <=3.11, invertedai-from-git) have no wheels for the
+# newest/oldest interpreters, so a failure for one version must not fail the
+# image build. The wheel itself never depends on these packages.
+ARG EXAMPLE_PYTHON_VERSIONS="3.8 3.9 3.10 3.11 3.12 3.13 3.14"
+RUN for minor in ${EXAMPLE_PYTHON_VERSIONS}; do \
+        echo "Installing example/util requirements for Python ${minor} (best-effort)"; \
+        bsp="$(python${minor} -m pip install --help | grep -q -- '--break-system-packages' && echo '--break-system-packages' || true)"; \
+        python${minor} -m pip install ${bsp} -r /tmp/examples_requirements.txt || true; \
+        python${minor} -m pip install ${bsp} -r /tmp/util_requirements.txt || true; \
+    done; \
+    rm -f /tmp/examples_requirements.txt /tmp/util_requirements.txt
 
 # Create a dedicated non-root user and group to limit root access.
 # Add the user to the sudoers group and configure it password-less.
@@ -51,7 +50,8 @@ RUN groupadd --gid ${GID} ${USERNAME} \
     && passwd -d ${USERNAME} \
     && usermod -a -G sudo ${USERNAME}
 
-# Add the carla user to the docker group to allow running Docker commands without sudo when bind-mounting the Docker socket.
+# Add the carla user to the docker group to allow running Docker commands without sudo
+# when bind-mounting the Docker socket.
 RUN groupadd -g ${DOCKER_GID} docker \
     && usermod -a -G docker ${USERNAME}
 
