@@ -1,0 +1,28 @@
+{
+  "Name":                       "Sedan Rigid Tire",
+  "Type":                       "Tire",
+  "Template":                   "RigidTire",
+
+  "Radius":                     0.336423,
+  "Width":                      0.204978,
+  "Mass":                       12.0,
+  "Inertia":                    [0.156, 0.679, 0.156],
+
+  "Contact Material":
+  {
+      "Coefficient of Friction":    0.9,
+      "Coefficient of Restitution": 0.1,
+
+      "Properties": {
+          "Young Modulus":          2e7,
+          "Poisson Ratio":          0.3
+      },
+
+      "Coefficients": {
+          "Normal Stiffness":       2e5,
+          "Normal Damping":         40.0,
+          "Tangential Stiffness":   2e5,
+          "Tangential Damping":     20.0
+      }
+  }
+}
