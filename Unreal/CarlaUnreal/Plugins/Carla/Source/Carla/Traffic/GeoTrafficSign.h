@@ -59,7 +59,18 @@ public:
              FVector PlateOffset, float PlateYaw, float PlateScale);
 
   /// The ETrafficSignState the traffic-light manager matches against for an OpenDRIVE
-  /// signal type/subtype (UNKNOWN when the runtime has no equivalent, e.g. 10 km/h).
+  /// signal type/subtype: stop, yield, or the speed-limit state for the subtype (km/h;
+  /// ETrafficSignState::SpeedLimit for values without a dedicated state — then also call
+  /// SetSpeedLimitKmh, or use ConfigureForSignal). UNKNOWN for anything else.
   UFUNCTION(BlueprintCallable, Category = "Geo Sign")
   static ETrafficSignState StateForSignal(const FString& Type, const FString& Subtype);
+
+  /// Set XodrType / XodrSubtype and the matching runtime state (speed limit in km/h from
+  /// the subtype) so ATrafficLightManager adopts this actor for the signal.
+  UFUNCTION(BlueprintCallable, Category = "Geo Sign")
+  void ConfigureForSignal(const FString& Type, const FString& Subtype);
+
+  /// Levels baked before every km/h value had a state carry UNKNOWN for e.g. 10 km/h signs;
+  /// derive the state from XodrType / XodrSubtype so they are adopted without a rebake.
+  virtual void PostInitializeComponents() override;
 };

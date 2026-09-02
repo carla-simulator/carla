@@ -58,22 +58,20 @@ static FString BuildRecastBuilderFile()
         return DefaultRecastBuilderPath;
 }
 
-static FString UCarlaEpisode_GetTrafficSignId(ETrafficSignState State)
+static FString UCarlaEpisode_GetTrafficSignId(const ATrafficSignBase &Sign)
 {
   using TSS = ETrafficSignState;
-  switch (State)
+  const int32 Kmh = Sign.GetSpeedLimitKmh();
+  if (Kmh > 0)
+  {
+    // km/h always (the OpenDRIVE subtype vocabulary); mph plates are a look, not a unit.
+    return FString::Printf(TEXT("traffic.speed_limit.%d"), Kmh);
+  }
+  switch (Sign.GetTrafficSignState())
   {
     case TSS::TrafficLightRed:
     case TSS::TrafficLightYellow:
     case TSS::TrafficLightGreen:  return TEXT("traffic.traffic_light");
-    case TSS::SpeedLimit_30:      return TEXT("traffic.speed_limit.30");
-    case TSS::SpeedLimit_40:      return TEXT("traffic.speed_limit.40");
-    case TSS::SpeedLimit_50:      return TEXT("traffic.speed_limit.50");
-    case TSS::SpeedLimit_60:      return TEXT("traffic.speed_limit.60");
-    case TSS::SpeedLimit_90:      return TEXT("traffic.speed_limit.90");
-    case TSS::SpeedLimit_100:     return TEXT("traffic.speed_limit.100");
-    case TSS::SpeedLimit_120:     return TEXT("traffic.speed_limit.120");
-    case TSS::SpeedLimit_130:     return TEXT("traffic.speed_limit.130");
     case TSS::StopSign:           return TEXT("traffic.stop");
     case TSS::YieldSign:          return TEXT("traffic.yield");
     default:                      return TEXT("traffic.unknown");
@@ -346,7 +344,7 @@ void UCarlaEpisode::InitializeAtBeginPlay()
     ATrafficSignBase *Actor = *It;
     check(Actor != nullptr);
     FActorDescription Description;
-    Description.Id = UCarlaEpisode_GetTrafficSignId(Actor->GetTrafficSignState());
+    Description.Id = UCarlaEpisode_GetTrafficSignId(*Actor);
     Description.Class = Actor->GetClass();
     ActorDispatcher->RegisterActor(*Actor, Description);
   }

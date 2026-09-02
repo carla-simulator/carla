@@ -506,56 +506,10 @@ bool MatchSignalAndActor(const carla::road::Signal &Signal, ATrafficSignBase* Cl
     }
     else if (Signal.GetType() == cr::SignalType::MaximumSpeed())
     {
-      if (Signal.GetSubtype() == "30" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_30)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "40" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_40)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "50" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_50)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "60" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_60)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "70" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_60) // no SpeedLimit_70 state exists
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "80" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_90)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "90" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_90)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "100" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_100)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "120" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_120)
-      {
-        return true;
-      }
-      else if (Signal.GetSubtype() == "130" &&
-        ClosestTrafficSign->GetTrafficSignState() == ETrafficSignState::SpeedLimit_130)
-      {
-        return true;
-      }
+      // The subtype is the limit in km/h; the actor answers in km/h for every speed-limit
+      // state (dedicated or custom), so any value the map carries can be matched.
+      const int32 SignalKmh = FCString::Atoi(*FString(Signal.GetSubtype().c_str()));
+      return SignalKmh > 0 && ClosestTrafficSign->GetSpeedLimitKmh() == SignalKmh;
     }
   }
   return false;

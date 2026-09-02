@@ -47,14 +47,30 @@ ETrafficSignState AGeoTrafficSign::StateForSignal(const FString& Type, const FSt
   }
   if (Type == TEXT("274"))
   {
-    if (Subtype == TEXT("30")) return ETrafficSignState::SpeedLimit_30;
-    if (Subtype == TEXT("40")) return ETrafficSignState::SpeedLimit_40;
-    if (Subtype == TEXT("50")) return ETrafficSignState::SpeedLimit_50;
-    if (Subtype == TEXT("60")) return ETrafficSignState::SpeedLimit_60;
-    if (Subtype == TEXT("90")) return ETrafficSignState::SpeedLimit_90;
-    if (Subtype == TEXT("100")) return ETrafficSignState::SpeedLimit_100;
-    if (Subtype == TEXT("120")) return ETrafficSignState::SpeedLimit_120;
-    if (Subtype == TEXT("130")) return ETrafficSignState::SpeedLimit_130;
+    return SpeedLimitStateForKmh(FCString::Atoi(*Subtype));
   }
   return ETrafficSignState::UNKNOWN;
+}
+
+void AGeoTrafficSign::PostInitializeComponents()
+{
+  Super::PostInitializeComponents();
+  if (GetTrafficSignState() == ETrafficSignState::UNKNOWN && !XodrType.IsEmpty())
+  {
+    ConfigureForSignal(XodrType, XodrSubtype);
+  }
+}
+
+void AGeoTrafficSign::ConfigureForSignal(const FString& Type, const FString& Subtype)
+{
+  XodrType = Type;
+  XodrSubtype = Subtype;
+  if (Type == TEXT("274"))
+  {
+    SetSpeedLimitKmh(FCString::Atoi(*Subtype));
+  }
+  else
+  {
+    SetTrafficSignState(StateForSignal(Type, Subtype));
+  }
 }
