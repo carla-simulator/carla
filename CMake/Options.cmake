@@ -135,12 +135,6 @@ carla_option (
   OFF
 )
 
-carla_option (
-  ENABLE_STREETMAP
-  "Whether to download the Streetmap UE plugin."
-  ON
-)
-
 
 
 # ================================
@@ -445,20 +439,6 @@ carla_string_option (
   CARLA_LIBOSMSCOUT_TAG
   "Target libosmscout git tag."
   ${CARLA_LIBOSMSCOUT_VERSION}
-)
-
-# ==== STREETMAP ====
-
-carla_string_option (
-  CARLA_STREETMAP_VERSION
-  "Target StreetMap version."
-  ue58-digitaltwins
-)
-
-carla_string_option (
-  CARLA_STREETMAP_TAG
-  "Target StreetMap git tag."
-  ${CARLA_STREETMAP_VERSION}
 )
 
 # ==== FASTDDS ====
