@@ -1,5 +1,6 @@
 ## LATEST Changes
 
+* Fixed walker navigation repeatedly rebuilding failed, empty, or single-point routes on the same call stack, which could overflow the client stack when route generation remained unable to find a traversable path.
 * Added the `CARLA_MAPS_TO_COOK` CMake configure option to select which maps the `package` targets cook. Set it to a `+`-separated list of package paths (e.g. `/Game/Carla/Maps/Town10HD_Opt`) to produce a smaller package with only those maps; leave it empty (the default) to cook the full map list from `DefaultGame.ini`.
 * Fixed `from carla.command import ...` on the Python API by registering the `command` submodule under `carla.command` in `sys.modules` (the ue5 wheel ships `carla` as a bare extension module, so the previous `libcarla.command` namespace was not importable).
 * Modernized the Python navigation agents with type hints and code cleanup ported from `ue4-dev`, added typed obstacle/traffic-light detection-result tuples in `agents/tools/hints.py`, reworked `BasicAgent.set_destination` to accept an optional start location and queue-clean flag, and fixed obstacle detection treating an empty `vehicle_list` as "all vehicles".
