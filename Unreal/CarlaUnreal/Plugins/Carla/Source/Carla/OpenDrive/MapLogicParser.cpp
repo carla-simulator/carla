@@ -282,6 +282,19 @@ void UMapLogicParser::ApplyLaneIdsFromMapLogic(const FString& XODRFilePath, ATra
     {
       if (!Actor) continue;
 
+      // Never match a light that another signal already claimed. Two rigs on one junction sit
+      // within the 50 cm match radius, and adopting a claimed one would overwrite its SignId
+      // -- the second signal would silently steal the first one's identity.
+      if (ATrafficLightBase* Existing = Cast<ATrafficLightBase>(Actor))
+      {
+        UTrafficLightComponent* ExistingComp = Existing->GetTrafficLightComponent();
+        if (ExistingComp && !ExistingComp->GetSignId().IsEmpty()
+            && ExistingComp->GetSignId() != Data.SignalID)
+        {
+          continue;
+        }
+      }
+
       float Dist = FVector::DistSquared(Actor->GetActorLocation(), SignalLocation);
       if (Dist < MinDistance)
       {
@@ -307,6 +320,16 @@ void UMapLogicParser::ApplyLaneIdsFromMapLogic(const FString& XODRFilePath, ATra
       {
         TrafficLightComp->SetSignId(Data.SignalID);
       }
+
+      // An adopted light used to be given a SignId and nothing else, so it joined no
+      // ATrafficLightGroup and no controller ever ticked it. Register it like a spawned one.
+      // GetController() is set by UTrafficLightController::AddTrafficLight, so it doubles as
+      // the "already registered" guard -- registering twice would put the component into the
+      // controller's list twice.
+      if (!TrafficLightComp->GetController())
+      {
+        TrafficLightManager->RegisterLightComponentFromOpenDRIVE(TrafficLightComp);
+      }
     }
     else
     {
@@ -318,14 +341,17 @@ void UMapLogicParser::ApplyLaneIdsFromMapLogic(const FString& XODRFilePath, ATra
         UE_LOG(LogCarla, Error, TEXT("DigitalTwins actor has no StaticMeshComponents"));
         continue;
       }
-      FActorSpawnParameters SpawnParams;
-      SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
-      ADigitalTwinsTrafficLight* NewTrafficLight = TrafficLightManager->GetWorld()->SpawnActor<ADigitalTwinsTrafficLight>(
+      // Deferred: the world has already begun play here, so a plain SpawnActor would run
+      // ADigitalTwinsTrafficLight::BeginPlay -- and with it the lamp scan -- before a single
+      // mesh has been re-parented onto the actor. FinishSpawning below runs BeginPlay once
+      // the rig's meshes are in place.
+      const FTransform SpawnTransform(ClosestActor->GetActorRotation(), ClosestActor->GetActorLocation());
+      ADigitalTwinsTrafficLight* NewTrafficLight = TrafficLightManager->GetWorld()->SpawnActorDeferred<ADigitalTwinsTrafficLight>(
           ADigitalTwinsTrafficLight::StaticClass(),
-          ClosestActor->GetActorLocation(),
-          ClosestActor->GetActorRotation(),
-          SpawnParams);
+          SpawnTransform,
+          nullptr,
+          nullptr,
+          ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
       if (!NewTrafficLight)
       {
@@ -359,7 +385,9 @@ void UMapLogicParser::ApplyLaneIdsFromMapLogic(const FString& XODRFilePath, ATra
         continue;
       }
 
+      // SignId before FinishSpawning so BeginPlay's lamp census can name the signal.
       TrafficLightComp->SetSignId(Data.SignalID);
+      NewTrafficLight->FinishSpawning(SpawnTransform);
       TrafficLightManager->RegisterLightComponentFromOpenDRIVE(TrafficLightComp);
       ClosestActor->Destroy();
     }
