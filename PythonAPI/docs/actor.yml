@@ -388,6 +388,8 @@
     - def_name: restore_physx_physics
       doc: >
         Restores the default CARLA physics on a vehicle that had a special physics engine enabled, undoing `enable_chrono_physics`.
+      note: >
+        The `physx` in the name is historical: it comes from ue4-dev, where the default vehicle physics was PhysX. On UE5 the default is Chaos, and that is what this restores. The name is kept for compatibility with existing scripts and with ue4-dev.
      # -------------------------------------- 
     - def_name: set_autopilot
       params:
