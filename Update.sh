@@ -41,16 +41,14 @@ done
 # -- Set up environment --------------------------------------------------------
 # ==============================================================================
 
-MAX_PARALLELL_DOWNLOADS=16
-MAX_CONNECTIONS_PER_SERVER=16
-
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 pushd "$SCRIPT_DIR" >/dev/null
 
 CONTENT_FOLDER="${SCRIPT_DIR}/Unreal/CarlaUE4/Content/Carla"
 
+CONTENT_REPO=https://bitbucket.org/carla-simulator/carla-content.git
 CONTENT_ID=$(tac $SCRIPT_DIR/Util/ContentVersions.txt | egrep -m 1 . | rev | cut -d' ' -f1 | rev)
-CONTENT_LINK=https://carla-assets.s3.us-east-005.backblazeb2.com/${CONTENT_ID}.tar.gz
+CONTENT_COMMIT=${CONTENT_ID##*_}
 
 VERSION_FILE="${CONTENT_FOLDER}/.version"
 
@@ -59,19 +57,12 @@ function download_content {
     echo "Backing up existing Content..."
     mv -v "$CONTENT_FOLDER" "${CONTENT_FOLDER}_$(date +%Y%m%d%H%M%S)"
   fi
-  mkdir -p "$CONTENT_FOLDER"
-  mkdir -p Content
-  if hash aria2c 2>/dev/null; then
-    echo -e "${CONTENT_LINK}\n\tout=Content.tar.gz" > .aria2c.input
-    aria2c -j${MAX_PARALLELL_DOWNLOADS} -x${MAX_CONNECTIONS_PER_SERVER} --input-file=.aria2c.input
-    rm -f .aria2c.input
-  else
-    wget -c ${CONTENT_LINK} -O Content.tar.gz
-  fi
-  tar -xvzf Content.tar.gz -C Content
-  rm Content.tar.gz
-  mv Content/* "$CONTENT_FOLDER"
-  rm -rf Content
+  # Skip the LFS smudge until the pinned commit is checked out, otherwise the
+  # blobs of the default branch get downloaded too.
+  GIT_LFS_SKIP_SMUDGE=1 git clone "$CONTENT_REPO" "$CONTENT_FOLDER"
+  GIT_LFS_SKIP_SMUDGE=1 git -C "$CONTENT_FOLDER" checkout ${CONTENT_COMMIT}
+  git -C "$CONTENT_FOLDER" lfs pull
+  echo ".version" >> "${CONTENT_FOLDER}/.git/info/exclude"
   echo "$CONTENT_ID" > "$VERSION_FILE"
   echo "Content updated successfully."
 }
@@ -81,22 +72,23 @@ function download_content {
 # ==============================================================================
 
 if $SKIP_DOWNLOAD ; then
-  echo "Skipping 'Content' update. Please manually download the package from"
+  echo "Skipping 'Content' update. Please manually clone the content repository"
   echo
-  echo "  ${CONTENT_LINK}"
+  echo "  git clone ${CONTENT_REPO} Unreal/CarlaUE4/Content/Carla"
+  echo "  git -C Unreal/CarlaUE4/Content/Carla checkout ${CONTENT_COMMIT}"
   echo
-  echo "and extract it under Unreal/CarlaUE4/Content/Carla."
+  echo "into Unreal/CarlaUE4/Content/Carla."
   exit 0
 fi
 
-if [[ -d "$CONTENT_FOLDER/.git" ]]; then
-  echo "Using git version of 'Content', skipping update."
-elif [[ -f "$CONTENT_FOLDER/.version" ]]; then
+if [[ -f "$CONTENT_FOLDER/.version" ]]; then
   if [ "$CONTENT_ID" == `cat $VERSION_FILE` ]; then
     echo "Content is up-to-date."
   else
     download_content
   fi
+elif [[ -d "$CONTENT_FOLDER/.git" ]]; then
+  echo "Using git version of 'Content', skipping update."
 else
   download_content
 fi

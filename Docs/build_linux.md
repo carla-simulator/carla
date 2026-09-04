@@ -134,9 +134,11 @@ If you choose not to use an environment variable, replace `${CARLA_UE4_ROOT}` in
 
 CARLA comes with a large repository of 3D assets including maps, vehicles and pedestrians. To work on a build-from source version of CARLA you need to download a version of the content corresponding to your current update of the CARLA code.
 
+The content lives in a separate [Git LFS repository](https://bitbucket.org/carla-simulator/carla-content/src/master/), so make sure [git-lfs](https://github.com/git-lfs/git-lfs/wiki/Installation) is installed before continuing.
+
 If you are working on the latest updates of the `ue4-dev` branch you will need to download the latest version of the content. There are two ways to achieve this:
 
-__1. Using the content update script__: This script downloads the latest package of the CARLA content as a `tar.gz` archive and decompresses the archive into the `${CARLA_UE4_ROOT}/Unreal/CarlaUE4/Content/Carla` directory:
+__1. Using the content update script__: This script clones the content repository into the `${CARLA_UE4_ROOT}/Unreal/CarlaUE4/Content/Carla` directory and checks out the content commit pinned in `${CARLA_UE4_ROOT}/Util/ContentVersions.txt`:
 
 ```sh
 ./Update.sh
@@ -148,17 +150,22 @@ __2. Using Git__: Using Git, you will establish a git repository for the content
 git clone -b master https://bitbucket.org/carla-simulator/carla-content ${CARLA_UE4_ROOT}/Unreal/CarlaUE4/Content/Carla
 ```
 
-#### Downloading the assets in an archive for a specific CARLA version
+#### Getting the assets for a specific CARLA version
 
-You may want to download the assets for a specific CARLA version for some purposes:
+You may want to check out the assets for a specific CARLA version for some purposes:
 
-1. From the root CARLA directory, navigate to `${CARLA_UE4_ROOT}/Util/ContentVersions.txt`. This document contains the links to the assets for all CARLA releases. 
-2. Extract the assets in `${CARLA_UE4_ROOT}/Unreal/CarlaUE4/Content/Carla`. If the path doesn't exist, create it.  
-3. Extract the file with a command similar to the following:
+1. From the root CARLA directory, navigate to `${CARLA_UE4_ROOT}/Util/ContentVersions.txt`. This document contains the content commit for all CARLA releases, in the form `<date>_<commit>`.
+2. Clone the content repository in `${CARLA_UE4_ROOT}/Unreal/CarlaUE4/Content/Carla` and check out the `<commit>` part of the version you need:
 
 ```sh
-tar -xvzf <assets_archive>.tar.gz.tar -C ${CARLA_UE4_ROOT}$/Unreal/CarlaUE4/Content/Carla
+export CONTENT=${CARLA_UE4_ROOT}/Unreal/CarlaUE4/Content/Carla
+GIT_LFS_SKIP_SMUDGE=1 git clone https://bitbucket.org/carla-simulator/carla-content $CONTENT
+GIT_LFS_SKIP_SMUDGE=1 git -C $CONTENT checkout <commit>
+git -C $CONTENT lfs pull
 ```
+
+!!! Note
+    `GIT_LFS_SKIP_SMUDGE=1` defers the download of the content files until the wanted commit is checked out. Without it, the files of the `master` branch are downloaded first and then downloaded again for the wanted commit.
 
 ---
 

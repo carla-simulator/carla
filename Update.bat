@@ -13,46 +13,46 @@ rem ============================================================================
 rem -- Get the last version to download ----------------------------------------
 rem ============================================================================
 
-if not exist "%CONTENT_FOLDER%" mkdir "%CONTENT_FOLDER%"
+if exist "%CONTENT_FOLDER%" rd /s /q "%CONTENT_FOLDER%"
 
 for /F "delims=" %%a in (%CONTENT_VERSIONS%) do (
    set "lastLine=%%a"
 )
 set CONTENT_ID=%lastLine:~-16,16%
-set CONTENT_LINK=https://carla-assets.s3.us-east-005.backblazeb2.com/%CONTENT_ID%.tar.gz
+set CONTENT_REPO=https://bitbucket.org/carla-simulator/carla-content.git
 if "%CONTENT_ID:~0,2%"=="20" (
-  set CONTENT_FILE=%CONTENT_FOLDER%/%CONTENT_ID%.tar.gz
-  set CONTENT_FILE_TAR=%CONTENT_FOLDER%/%CONTENT_ID%.tar
+  for /F "tokens=2 delims=_" %%a in ("%CONTENT_ID%") do set CONTENT_COMMIT=%%a
   echo %CONTENT_ID%
-  echo %CONTENT_LINK%
+  echo %CONTENT_REPO%
 ) else (
   echo Error reading the latest version from ContentVersions.txt, check last line of file %CONTENT_VERSIONS%'
   goto error_download
 )
 
 rem ============================================================================
-rem -- Download the content ----------------------------------------------------
+rem -- Clone the content -------------------------------------------------------
 rem ============================================================================
 
-echo Downloading "%CONTENT_LINK%"...
-powershell -Command "(New-Object System.Net.WebClient).DownloadFile('%CONTENT_LINK%', '%CONTENT_FILE%')"
+rem Skip the LFS smudge until the pinned commit is checked out, otherwise the
+rem blobs of the default branch get downloaded too.
+set GIT_LFS_SKIP_SMUDGE=1
+
+echo Cloning "%CONTENT_REPO%" into "%CONTENT_FOLDER%", this can take a while...
+git clone "%CONTENT_REPO%" "%CONTENT_FOLDER%"
 if %errorlevel% neq 0 goto error_download
 
-echo %FILE_N% Extracting content from "%CONTENT_FILE%", this can take a while...
-if exist "%ProgramW6432%/7-Zip/7z.exe" (
-    "%ProgramW6432%/7-Zip/7z.exe" x "%CONTENT_FILE%" -o"%CONTENT_FOLDER%" -y
-    if %errorlevel% neq 0 goto error_download
-    echo Deleting %CONTENT_FILE:/=\%
-    del %CONTENT_FILE:/=\%
-    "%ProgramW6432%/7-Zip/7z.exe" x "%CONTENT_FILE_TAR%" -o"%CONTENT_FOLDER%" -y
-    if %errorlevel% neq 0 goto error_download
-    echo Deleting %CONTENT_FILE_TAR:/=\%
-    del %CONTENT_FILE_TAR:/=\%
-) else (
-    powershell -Command "Expand-Archive '%CONTENT_FILE%' -DestinationPath '%CONTENT_FOLDER%'"
-    if %errorlevel% neq 0 goto error_download
-    del %CONTENT_FILE%
-)
+echo %FILE_N% Checking out content version %CONTENT_COMMIT%...
+git -C "%CONTENT_FOLDER%" checkout %CONTENT_COMMIT%
+if %errorlevel% neq 0 goto error_download
+
+set GIT_LFS_SKIP_SMUDGE=
+
+echo %FILE_N% Downloading content files, this can take a while...
+git -C "%CONTENT_FOLDER%" lfs pull
+if %errorlevel% neq 0 goto error_download
+
+echo .version>> "%CONTENT_FOLDER%/.git/info/exclude"
+echo %CONTENT_ID%> "%VERSION_FILE%"
 
 goto success
 
@@ -70,7 +70,7 @@ goto success
     exit /b 0
 
 :bad_exit
-    if exist "%CONTENT_FILE%" rd /s /q "%CONTENT_FOLDER%"
+    if exist "%CONTENT_FOLDER%" rd /s /q "%CONTENT_FOLDER%"
     echo %FILE_N% Exiting with error...
     endlocal
     exit /b %errorlevel%

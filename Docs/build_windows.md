@@ -208,23 +208,32 @@ The button above will take you to the official repository of the project. Either
 
 ### Get assets
 
+The assets live in a separate [Git LFS repository](https://bitbucket.org/carla-simulator/carla-content/src/master/), so make sure [git-lfs](https://github.com/git-lfs/git-lfs/wiki/Installation) is installed before continuing.
+
 Download the __latest__ assets to work with the current version of CARLA by running the following command in the CARLA root folder:
 
 ```sh
 Update.bat
 ```
 
-The assets will be downloaded and extracted to the appropriate location if have 7zip installed. If you do not have this software installed, you will need to manually extract the file contents to `Unreal\CarlaUE4\Content\Carla`.
+The content repository will be cloned into `Unreal\CarlaUE4\Content\Carla` and set to the content commit pinned in `\Util\ContentVersions.txt`.
 
-To download the assets for a __specific version__ of CARLA:
+To get the assets for a __specific version__ of CARLA:
 
-1. From the root CARLA directory, navigate to `\Util\ContentVersions.txt`. This document contains the links to the assets for all CARLA releases. 
-2. Extract the assets in `Unreal\CarlaUE4\Content\Carla`. If the path doesn't exist, create it.  
-3. Extract the file with a command similar to the following:
+1. From the root CARLA directory, navigate to `\Util\ContentVersions.txt`. This document contains the content commit for all CARLA releases, in the form `<date>_<commit>`.
+2. Clone the content repository in `Unreal\CarlaUE4\Content\Carla` and check out the `<commit>` part of the version you need:
 
 ```sh
-tar -xvzf <assets_file_name>.tar.gz -C C:\path\to\carla\Unreal\CarlaUE4\Content\Carla
+set CONTENT=C:\path\to\carla\Unreal\CarlaUE4\Content\Carla
+set GIT_LFS_SKIP_SMUDGE=1
+git clone https://bitbucket.org/carla-simulator/carla-content %CONTENT%
+git -C %CONTENT% checkout <commit>
+set GIT_LFS_SKIP_SMUDGE=
+git -C %CONTENT% lfs pull
 ```
+
+!!! Note
+    `GIT_LFS_SKIP_SMUDGE` defers the download of the content files until the wanted commit is checked out. Without it, the files of the `master` branch are downloaded first and then downloaded again for the wanted commit.
 
 ### Set Unreal Engine environment variable
 

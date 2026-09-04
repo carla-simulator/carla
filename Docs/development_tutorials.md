@@ -16,7 +16,7 @@ If you want to develop your own fork of CARLA and publish releases of your code,
 
 ## Upgrading content
 
-Our content resides on a separate Git LFS repository. As part of our build system, we generate and upload a package containing the latest version of this content tagged with the current date and commit. Regularly, we upgrade the CARLA repository with a link to the latest version of the content package. Please follow [__these instructions__](tuto_D_contribute_assets.md) to upgrade content.
+Our content resides on a separate Git LFS repository, which users clone directly. Regularly, we upgrade the CARLA repository to pin the latest commit of the content repository. Please follow [__these instructions__](tuto_D_contribute_assets.md) to upgrade content.
 
 ## Create semantic tags
 
