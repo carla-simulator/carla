@@ -55,7 +55,12 @@ namespace TrafficSignHeightUtils
       const TArray<AActor*>& IgnoredActors,
       const TArray<UPrimitiveComponent*>& IgnoredComponents)
   {
-    if (!World || !IsValid(Sign) || Sign->bPositioned)
+    // bGeneratedFromOpenDRIVE is the guarantee that only signals spawned from
+    // the OpenDRIVE map are moved. ATrafficLightManager::TrafficSigns also
+    // holds hand-placed level actors that were matched to a signal, so the
+    // check belongs here, at the single choke point every caller goes through.
+    if (!World || !IsValid(Sign) || Sign->bPositioned ||
+        !Sign->bGeneratedFromOpenDRIVE)
     {
       return false;
     }

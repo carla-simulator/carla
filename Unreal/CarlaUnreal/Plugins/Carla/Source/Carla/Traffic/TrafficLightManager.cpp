@@ -299,17 +299,6 @@ void ATrafficLightManager::GenerateSignalsAndTrafficLights()
 
     SpawnSignals();
 
-    // Tag every generated sign/light so height adjustment (here and in the
-    // large-map manager) only ever moves OpenDRIVE-generated actors, never
-    // signs placed by hand in the level.
-    for (ATrafficSignBase* Sign : TrafficSigns)
-    {
-      if (IsValid(Sign))
-      {
-        Sign->bGeneratedFromOpenDRIVE = true;
-      }
-    }
-
     if (bAdjustSignsHeightToGround)
     {
       AdjustSpawnedSignsHeight();
@@ -345,8 +334,9 @@ bool ATrafficLightManager::AdjustSpawnedSignsHeight()
     {
       bAnyAdjusted = true;
     }
-    else if (IsValid(Sign) && !Sign->bPositioned)
+    else if (IsValid(Sign) && !Sign->bPositioned && Sign->bGeneratedFromOpenDRIVE)
     {
+      // Hand-placed signs are skipped by design, so they are not failures.
       ++GroundNotFoundCount;
     }
   }
@@ -718,6 +708,10 @@ void ATrafficLightManager::SpawnTrafficLights()
         SpawnRotation,
         SpawnParams);
 
+    // Tagged here, at the only site that spawns a light, so height adjustment
+    // never moves a light placed by hand in the level (the matched-actor path
+    // above also adds pre-existing actors to TrafficSigns).
+    TrafficLight->bGeneratedFromOpenDRIVE = true;
     TrafficSigns.Add(TrafficLight);
 
     UTrafficLightComponent *TrafficLightComponent = TrafficLight->GetTrafficLightComponent();
@@ -848,6 +842,9 @@ void ATrafficLightManager::SpawnSignals()
         }
       }
       TrafficSignComponents.Add(SignComponent->GetSignId(), SignComponent);
+      // Only spawned signs are tagged: the matched-actor branch above adds
+      // hand-placed level actors to TrafficSigns and must not be moved.
+      TrafficSign->bGeneratedFromOpenDRIVE = true;
       TrafficSigns.Add(TrafficSign);
     }
     else if (Signal->GetType() == carla::road::SignalType::MaximumSpeed() &&
@@ -934,6 +931,9 @@ void ATrafficLightManager::SpawnSignals()
         }
       }
       TrafficSignComponents.Add(SignComponent->GetSignId(), SignComponent);
+      // Only spawned signs are tagged: the matched-actor branch above adds
+      // hand-placed level actors to TrafficSigns and must not be moved.
+      TrafficSign->bGeneratedFromOpenDRIVE = true;
       TrafficSigns.Add(TrafficSign);
     }
   }

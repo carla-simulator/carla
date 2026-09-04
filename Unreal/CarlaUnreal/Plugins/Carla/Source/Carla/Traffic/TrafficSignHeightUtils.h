@@ -27,9 +27,10 @@ namespace TrafficSignHeightUtils
       const TArray<UPrimitiveComponent*>& IgnoredComponents);
 
   /// Snap a single traffic sign to the ground and shift its trigger
-  /// UBoxComponents by the same delta so they stay aligned. Skips invalid or
-  /// already-positioned signs. Sets Sign->bPositioned and returns true on
-  /// success.
+  /// UBoxComponents by the same delta so they stay aligned. Skips invalid
+  /// signs, signs already positioned, and signs that were not generated from
+  /// OpenDRIVE (hand-placed level actors are never moved). Sets
+  /// Sign->bPositioned and returns true on success.
   bool AdjustSignToGround(
       UWorld* World,
       ATrafficSignBase* Sign,
