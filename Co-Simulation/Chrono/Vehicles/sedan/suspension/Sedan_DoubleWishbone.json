@@ -1,0 +1,75 @@
+{
+  "Name":                       "Sedan DoubleWishbone",
+  "Type":                       "Suspension",
+  "Template":                   "DoubleWishbone",
+
+  "Spindle" :
+  {
+    "Mass":                     1.103,
+    "COM":                      [0, 0.7979, -0.1199],
+    "Inertia":                  [0.000478, 0.000496, 0.000478],
+    "Radius":                   0.1,
+    "Width":                    0.02
+  },
+
+  "Upright":
+  {
+    "Mass":                     1.397,
+    "COM":                      [-0.0224, 0.7470, -0.1118],
+    "Moments of Inertia":       [0.0138, 0.0146, 0.00283],
+    "Products of Inertia":      [0, 0, 0],
+    "Radius":                   0.025
+  },
+
+  "Upper Control Arm":
+  {
+    "Mass":                     1.032,
+    "COM":                      [-0.1083, 0.5972, 0.1063],
+    "Moments of Inertia":       [0.00591, 0.00190, 0.00769],
+    "Products of Inertia":      [0, 0, 0],
+    "Radius":                   0.02,
+    "Location Chassis Front":   [-0.100, 0.4700, 0.1050],
+    "Location Chassis Back":    [-0.250, 0.5100, 0.1100],
+    "Location Upright":         [-0.040, 0.6950, 0.1050]
+  },
+
+  "Lower Control Arm":
+  {
+    "Mass":                     1.611,
+    "COM":                      [0.0048, 0.6112, -0.2932],
+    "Moments of Inertia":       [0.0151, 0.0207, 0.0355],
+    "Products of Inertia":      [0, 0, 0],
+    "Radius":                   0.03,
+    "Location Chassis Front":   [0.2, 0.4200, -0.2700],
+    "Location Chassis Back":    [-0.2, 0.4700, -0.2650],
+    "Location Upright":         [0.0, 0.7700, -0.3200]
+  },
+
+  "Tierod":
+  {
+    "Location Chassis":         [-0.2, 0.4200, -0.1200],
+    "Location Upright":         [-0.15, 0.7700, -0.1200]
+  },
+
+  "Spring":
+  {
+    "Location Chassis":         [-0.04, 0.5200, 0.2300],
+    "Location Arm":             [0.0, 0.6200, -0.2700],
+    "Free Length":              0.51,
+    "Spring Coefficient":       500000.0,
+    "Damping Coefficient":      10000.0
+  },
+
+  "Shock":
+  {
+    "Location Chassis":         [-0.04, 0.5200, 0.2300],
+    "Location Arm":             [0.0, 0.6200, -0.2700],
+    "Spring Coefficient":       500000.0,
+    "Damping Coefficient":      10000.0
+  },
+
+  "Axle":
+  {
+    "Inertia":                  0.4
+  }
+}

@@ -2709,8 +2709,8 @@ Enables Chrono physics on a spawned vehicle.
         - `vehicle_json` (_str_) - Path to vehicle json file relative to `base_json_path`.  
         - `powertrain_json` (_str_) - Path to powertrain json file relative to `base_json_path`.  
         - `tire_json` (_str_) - Path to tire json file relative to `base_json_path`.  
-        - `base_json_path` (_str_) - Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/chrono-install/share/chrono/data/vehicle/` (the final `/` character is required).  
-    - **Note:** <font color="#8E8E8E">_Ensure that you have started the CARLA server with the `ARGS="--chrono"` flag. You will not be able to use Chrono physics without this flag set.
+        - `base_json_path` (_str_) - Path to `chrono/data/vehicle` folder. E.g., `/home/user/carla/Build/Release/Chrono/install/share/chrono/data/vehicle/` (the final `/` character is required).  
+    - **Note:** <font color="#8E8E8E">_Ensure that the CARLA server was built with `-DENABLE_CHRONO=ON`. You will not be able to use Chrono physics without it.
 _</font>  
     - **Warning:** <font color="#ED2F2F">_Collisions are not supported. When a collision is detected, physics will revert to the default CARLA physics.
 _</font>  
@@ -2721,6 +2721,10 @@ Vehicles will be affected by a traffic light when the light is red and the vehic
 Open the door `door_idx` if the vehicle has it. Use [carla.VehicleDoor.All](#carla.VehicleDoor.All) to open all available doors.  
     - **Parameters:**
         - `door_idx` (_[carla.VehicleDoor](#carla.VehicleDoor)_) - door index.  
+- <a name="carla.Vehicle.restore_physx_physics"></a>**<font color="#7fb800">restore_physx_physics</font>**(<font color="#00a6ed">**self**</font>)  
+Restores the default CARLA physics on a vehicle that had a special physics engine enabled, undoing `enable_chrono_physics`.  
+    - **Note:** <font color="#8E8E8E">_The `physx` in the name is historical: it comes from ue4-dev, where the default vehicle physics was PhysX. On UE5 the default is Chaos, and that is what this restores. The name is kept for compatibility with existing scripts and with ue4-dev.
+_</font>  
 - <a name="carla.Vehicle.show_debug_telemetry"></a>**<font color="#7fb800">show_debug_telemetry</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>)  
 Enables or disables the telemetry on this vehicle. This shows information about the vehicles current state and forces applied to it in the spectator window. Only information for one vehicle can be shown so that, if you enable a second one, the previous will be automatically disabled.  
     - **Parameters:**

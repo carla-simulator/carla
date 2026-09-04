@@ -1,0 +1,90 @@
+{
+  "Name": "Sedan TMeasy Tire",
+  "Type": "Tire",
+  "Template": "TMeasyTire",
+
+  // ------------------------------------------------
+  // Tire design (REQUIRED)
+
+  "Design": {
+    "Unloaded Radius [m]": 0.336423,
+    "Mass [kg]": 12.0,
+    "Inertia [kg.m2]": [ 0.156, 0.679, 0.156 ],
+    "Width [m]": 0.204978,
+    "Rim Radius [m]": 0.2032,
+    "Roundness of Cross Section": 0.1
+  },
+
+  "Coefficient of Friction": 0.8,
+
+  "Rolling Resistance Coefficients": [ 0.015, 0.015 ],
+
+  // ------------------------------------------------
+  // Vehicle type.
+  // Required only if tire specified with "load index" or "bearing capacity".
+  // Must be one of "Truck" or "Passenger"
+
+  "Vehicle Type": "Passenger",
+
+  // ------------------------------------------------
+  // Load index specification.
+  // Takes priority over "bearing capacity" (used only if a full parameterization not provided)
+
+  "Load Index": 108,
+
+  // ------------------------------------------------
+  // Bearing capacity specification.
+  // Lowest priority (used only if no other specification provided)
+
+  "Maximum Bearing Capacity [N]": 10000,
+
+  // ------------------------------------------------
+  // Full parameter specification.
+  // Takes priority over both "Load Index" and "bearing capacity".
+
+  "Parameters": {
+    "Tire Load": {
+      "Nominal Vertical Force [N]": 8562.8266,
+      "Maximum Vertical Force [N]": 29969.893
+    },
+    "Tire Stiffness": {
+      "Longitudinal [N/m]": 185004.42,
+      "Lateral [N/m]": 164448.37,
+      "Vertical [N/m]": [ 411121.0, 411121.00 ]
+    },
+    "Tire Damping": {
+      "Longitudinal [Ns/m]": 3700,
+      "Lateral [Ns/m]": 3488,
+      "Vertical [Ns/m]": 3900
+    },
+    "Dynamic Radius Weighting Coefficients": [ 0.375, 0.75 ],
+    "Longitudinal": {
+      "Initial Slopes dFx/dsx [N]": [ 151447.29, 236412.79 ],
+      "Maximum Fx Load [N]": [ 7575.3614, 12808.276 ],
+      "Sliding Fx Load [N]": [ 4657.9208, 8625.3352 ],
+      "Slip sx at Maximum Fx": [ 0.12, 0.15 ],
+      "Slip sx where sliding begins": [ 0.9, 0.95 ]
+    },
+    "Lateral": {
+      "Initial Slopes dFy/dsy [N]": [ 50931.693, 94293.847 ],
+      "Maximum Fy Load [N]": [ 6615.0404, 12509.947 ],
+      "Sliding Fy Load [N]": [ 6091.5092, 11443.875 ],
+      "Slip sy at Maximum Fy": [ 0.38786, 0.38786 ],
+      "Slip sy where sliding begins": [ 0.82534, 0.91309 ]
+    },
+    "Aligning": {
+      "Normalized Trail at Zero Slip sy": [ 0.178, 0.19 ],
+      "Slip sy where Trail Changes Sign": [ 0.40726, 0.40726 ],
+      "Slip sy where Trail Tends to Zero": [ 0.82534, 0.91309 ]
+    }
+  },
+
+  // ------------------------------------------------
+  // Visualization mesh (OPTIONAL)
+
+    "Visualization": {
+        "Mesh Filename Left": "sedan/sedan_tire.obj",
+        "Mesh Filename Right": "sedan/sedan_tire.obj"
+    }
+
+}

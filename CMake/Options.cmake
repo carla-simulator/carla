@@ -70,6 +70,12 @@ carla_option (
 )
 
 carla_option (
+  ENABLE_CHRONO
+  "Enable Project Chrono vehicle dynamics (https://projectchrono.org/)."
+  OFF
+)
+
+carla_option (
   ENABLE_RSS
   "Enable RSS components (ad-rss-lib)"
   OFF
@@ -299,6 +305,26 @@ carla_string_option (
   CARLA_EIGEN_TAG
   "Target Eigen git tag."
   ${CARLA_EIGEN_VERSION}
+)
+
+# ==== PROJECT CHRONO ====
+
+carla_string_option (
+  CARLA_CHRONO_VERSION
+  "Target Project Chrono version."
+  6.0.0
+)
+
+carla_string_option (
+  CARLA_CHRONO_TAG
+  "Target Project Chrono git tag."
+  ${CARLA_CHRONO_VERSION}
+)
+
+carla_string_option (
+  CARLA_CHRONO_SOURCE_PATH
+  "Path to a local Project Chrono checkout. When empty, CARLA_CHRONO_TAG is fetched instead."
+  ""
 )
 
 # ==== GOOGLE TEST ====
