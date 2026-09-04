@@ -807,6 +807,21 @@ Iterate over the [CustomV2XData](#carlacustomv2xdata) retrieved as data.
 
 ---
 
+
+## carla.ContactPoint<a name="carla.ContactPoint"></a>
+Class that represents a contact point with a surface. It exposes the normal vector and the friction coefficient of the surface.
+
+### Instance Variables
+- <a name="carla.ContactPoint.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)_)
+Position in 3D space.
+- <a name="carla.ContactPoint.normal"></a>**<font color="#f8805a">normal</font>** (_[carla.Vector3D](#carla.Vector3D)_)
+Normal vector of the surface on which the contact point lies.
+- <a name="carla.ContactPoint.friction"></a>**<font color="#f8805a">friction</font>** (_float_)
+Surface friction coefficient. If the surface material is not defined in the map, the friction coefficient is set to -1.0.
+
+---
+
+
 ## carla.DVSEvent<a name="carla.DVSEvent"></a>
 Class that defines a DVS event. An event is a quadruple, so a tuple of 4 elements, with `x`, `y` pixel coordinate location, timestamp `t` and polarity `pol` of the event. Learn more about them [here](ref_sensors.md).  
 
@@ -3257,6 +3272,16 @@ Returns the physics angle in degrees of a vehicle's wheel.
     - **Return:** _float_  
     - **Note:** <font color="#8E8E8E">_Returns the angle based on the physics of the wheel, not the visual angle.
 _</font>  
+- <a name="carla.Vehicle.get_wheel_pitch_angle"></a>**<font color="#7fb800">get_wheel_pitch_angle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>)
+Returns the pitch angle in degrees of a vehicle's wheel.
+    - **Parameters:**
+        - `wheel_location` (_[carla.VehicleWheelLocation](#carla.VehicleWheelLocation)_)
+    - **Return:** _float_
+- <a name="carla.Vehicle.get_wheel_height"></a>**<font color="#7fb800">get_wheel_height</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>)
+Returns the height of a vehicle's wheel.
+    - **Parameters:**
+        - `wheel_location` (_[carla.VehicleWheelLocation](#carla.VehicleWheelLocation)_)
+    - **Return:** _float_
 
 ##### Setters
 - <a name="carla.Vehicle.set_autopilot"></a>**<font color="#7fb800">set_autopilot</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**enabled**=True</font>, <font color="#00a6ed">**port**=8000</font>)  
@@ -3275,7 +3300,17 @@ Sets the angle of a vehicle's wheel visually.
         - `wheel_location` (_[carla.VehicleWheelLocation](#carla.VehicleWheelLocation)_)  
         - `angle_in_deg` (_float_)  
     - **Warning:** <font color="#ED2F2F">_Does not affect the physics of the vehicle.
-_</font>  
+_</font>
+- <a name="carla.Vehicle.set_wheel_pitch_angle"></a>**<font color="#7fb800">set_wheel_pitch_angle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>, <font color="#00a6ed">**angle_in_deg**</font>)
+Sets the pitch angle of a vehicle's wheel visually.
+    - **Parameters:**
+        - `wheel_location` (_[carla.VehicleWheelLocation](#carla.VehicleWheelLocation)_)
+        - `angle_in_deg` (_float_)
+- <a name="carla.Vehicle.set_wheel_height"></a>**<font color="#7fb800">set_wheel_height</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**wheel_location**</font>, <font color="#00a6ed">**height**</font>)
+Sets the height of a vehicle's wheel visually.
+    - **Parameters:**
+        - `wheel_location` (_[carla.VehicleWheelLocation](#carla.VehicleWheelLocation)_)
+        - `height` (_float_)
 
 ##### Dunder methods
 - <a name="carla.Vehicle.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -3911,6 +3946,14 @@ Projects the specified point downwards in the scene. The functions casts a ray f
         - `location` (_[carla.Location](#carla.Location)_) - The point to be projected.  
         - `search_distance` (_float_) - The maximum distance to perform the projection.  
     - **Return:** _[carla.LabelledPoint](#carla.LabelledPoint)_  
+- <a name="carla.World.get_contact_points"></a>**<font color="#7fb800">get_contact_points</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**locations**</font>, <font color="#00a6ed">**directions**</font>, <font color="#00a6ed">**ignored_actor_ids**</font>, <font color="#00a6ed">**search_distance**</font>)
+Casts rays from the specified locations in the given directions, in order to find the first intersection of each ray with a surface. Intersections with actors defined via the given ids are ignored. For each intersection a [carla.ContactPoint](#carla.ContactPoint) is returned. If no intersection was found in the search_distance range, `None` is returned instead of a [carla.ContactPoint](#carla.ContactPoint).
+    - **Parameters:**
+        - `locations` (_list([carla.Location](#carla.Location))_) - Points to be projected.
+        - `directions` (_list([carla.Vector3D](#carla.Vector3D))_) - A direction in which a ray should be casted for each point in `locations`. If the length of `directions` is smaller than the lenght of `locations`, the last direction vector will be used for all points from `locations` that don't have a corresponding direction vector defined.
+        - `ignored_actor_ids` (_list(int)_) - Actors ignored during ray casting. In most use cases this would be the actor for which the contact point is checked.
+        - `search_distance` (_float_) - The maximum distance to perform the projection.
+    - **Return:** _list([carla.ContactPoint](#carla.ContactPoint) | None)_
 - <a name="carla.World.load_map_layer"></a>**<font color="#7fb800">load_map_layer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_layers**</font>)<button class="SnipetButton" id="carla.World.load_map_layer-snipet_button">snippet &rarr;</button>  
 Loads the selected layers to the level. If the layer is already loaded the call has no effect.  
     - **Parameters:**

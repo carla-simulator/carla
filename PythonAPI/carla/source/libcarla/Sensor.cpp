@@ -3,6 +3,8 @@
 //
 // This work is licensed under the terms of the MIT license.
 // For a copy, see <https://opensource.org/licenses/MIT>.
+//
+// Additional functionality added by AVL List GmbH under the terms of the MIT license.
 
 #include <carla/PythonUtil.h>
 #include <carla/client/ClientSideSensor.h>
@@ -15,7 +17,7 @@ static void SubscribeToStream(carla::client::Sensor &self, boost::python::object
 }
 
 static void SetIgnoredVehiclesList(carla::client::ServerSideSensor &self, boost::python::list vehicle_ids) {
-  self.SetIgnoredVehicles(PythonLitstToVector<carla::rpc::ActorId>(vehicle_ids));
+  self.SetIgnoredVehicles(PythonListToVector<carla::rpc::ActorId>(vehicle_ids));
 }
 
 static void SubscribeToGBuffer(
