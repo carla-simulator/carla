@@ -442,15 +442,18 @@ Two hard-won warnings:
   **must** be overridden via `CYCLONEDDS_URI`; the run script does this. (Its
   10 MB buffer demand, on the other hand, was right all along — see the kernel
   UDP buffer prerequisite.)
-- **Do not run the simulator with `-rmw=cyclonedds` for now**: the CARLA
-  CycloneDDS receive path has a known fragmented-receive bug (large samples
-  can be dropped; a fix is in progress separately). The script defaults to
-  `fastdds` on the sim side and warns if you override it.
+- **The simulator may run either Fast DDS or CycloneDDS.** The CycloneDDS
+  fragmented-receive bug that earlier versions of this note warned about was
+  fixed in `b9c33737a` (fragment reassembly in `from_ser`, with unit tests);
+  a full classical run with `--rmw cyclonedds` on the simulator reaches
+  `ARRIVED`; rates measured once in that Phase 1 run were comparable to Fast
+  DDS. Fast DDS stays the default because its generated bridge-whitelist
+  profile has the longer validation history.
 
 | Simulator RMW | Status |
 |---|---|
 | **Fast DDS** (`-rmw=fastdds`, default) | **Validated.** UDPv4-only with the generated bridge-whitelist profile; containerized Autoware (CycloneDDS) discovers the simulator out of the box. |
-| CycloneDDS (`-rmw=cyclonedds`) | **Not recommended (sim side)** until the fragmented-receive fix lands. |
+| CycloneDDS (`-rmw=cyclonedds`) | **Validated** (Town10HD classical to ARRIVED in one measured Phase 1 run; control_cmd ~20 Hz, LiDAR ~10 Hz — not yet repeated). Uses the generated `dds/cyclonedds.xml`. |
 | Zenoh (`-rmw=zenoh`) | Works with `--stack source`; the script starts the required router first (`ros2 run rmw_zenoh_cpp rmw_zenohd`) and runs zenoh end-to-end. |
 
 Both Humble/22.04 and Jazzy/24.04 hosts work; Jazzy is the Autoware Docker

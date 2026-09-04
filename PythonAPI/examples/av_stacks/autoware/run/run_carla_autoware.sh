@@ -20,8 +20,8 @@
 # DDS topology (validated 2026-08 on Town10, full classical stack):
 #   - The SIMULATOR runs Fast DDS (-rmw=fastdds) with a generated profile that
 #     whitelists ONLY the docker bridge IP (useBuiltinTransports=false).
-#     Do NOT use -rmw=cyclonedds on the simulator for now: our CycloneDDS
-#     receive path has a known fragmented-receive bug (being fixed separately).
+#     -rmw=cyclonedds is also validated (fragmented-receive fix b9c33737a);
+#     fastdds remains the default for its longer validation history.
 #   - The AUTOWARE side runs CycloneDDS pinned to the docker bridge interface
 #     via a generated cyclonedds.xml (MaxAutoParticipantIndex=300, 65500B max
 #     message size, 10-64MB socket buffers -- the official docker image's own
@@ -78,8 +78,7 @@ export PATH
 # ---------------------------------------------------------------- defaults --
 MODE=""
 TOWN="Town10HD_Opt"
-RMW="fastdds"                 # SIMULATOR-side RMW. cyclonedds has a known
-                              # fragmented-receive bug on the sim side -- keep fastdds.
+RMW="fastdds"                 # SIMULATOR-side RMW: fastdds (default) or cyclonedds, both validated.
 STACK="auto"                  # auto|source|docker : how to run Autoware (classical)
 MAP_PATH=""
 CARLA_ROOT_ARG="${CARLA_ROOT:-}"
@@ -119,9 +118,9 @@ Usage: $(basename "$0") --mode classical|e2e [options]
                          Must not collide with an existing container; this script
                          never touches containers it did not create.
   --rmw NAME             SIMULATOR RMW: fastdds|cyclonedds|zenoh (default: fastdds).
-                         cyclonedds is NOT recommended on the sim side for now
-                         (known fragmented-receive bug). The Autoware side always
-                         runs cyclonedds (zenoh: zenoh) with a generated config.
+                         fastdds and cyclonedds are both validated on the sim
+                         side; the Autoware side always runs cyclonedds
+                         (zenoh: zenoh) with a generated config.
   --map-path DIR         dir containing pointcloud_map.pcd, lanelet2_map.osm,
                          map_projector_info.yaml
                          (default: ../map_tools/maps/<town-without-_Opt>)
@@ -606,7 +605,7 @@ $DRY_RUN && log "DRY RUN -- nothing will be executed; preflight failures become 
 
 # Simulator RMW sanity
 if [[ "$RMW" == "cyclonedds" ]]; then
-    warn "-rmw=cyclonedds on the SIMULATOR has a known fragmented-receive bug (large messages, e.g. pointclouds, can be dropped). Use the default fastdds until it is fixed."
+    log "simulator RMW: cyclonedds (validated; fastdds is the default only by history)"
 fi
 
 # Resolve --stack auto (classical only; e2e always needs the source ws for VAD)
