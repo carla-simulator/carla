@@ -275,6 +275,24 @@ do_check() {
     have colcon || echo "  -> colcon: apt install python3-colcon-common-extensions"
 
     echo
+    echo "--- Kernel / container runtime (README prerequisites) ---"
+    local rmem wmem
+    rmem="$(sysctl -n net.core.rmem_max 2>/dev/null || echo 0)"
+    wmem="$(sysctl -n net.core.wmem_max 2>/dev/null || echo 0)"
+    if [ "${rmem}" -ge 67108864 ] && [ "${wmem}" -ge 67108864 ]; then
+        echo "UDP buffers    : OK (rmem_max=${rmem} wmem_max=${wmem})"
+    else
+        echo "UDP buffers    : TOO SMALL (rmem_max=${rmem} wmem_max=${wmem}; need 67108864). Fix: sudo sysctl -w net.core.rmem_max=67108864 net.core.wmem_max=67108864 and persist in /etc/sysctl.d/"
+    fi
+    if have docker && docker info 2>/dev/null | grep -qiE 'nvidia|cdi'; then
+        echo "NVIDIA runtime : OK (docker reports an nvidia runtime or CDI spec)"
+    elif have nvidia-ctk || [ -f /etc/cdi/nvidia.yaml ]; then
+        echo "NVIDIA runtime : nvidia-ctk/CDI present but docker does not report it -- run 'sudo nvidia-ctk runtime configure --runtime=docker' and restart docker"
+    else
+        echo "NVIDIA runtime : MISSING (nvidia-container-toolkit not found; GPU perception in --docker mode will fail)"
+    fi
+
+    echo
     echo "--- Existing installs ---"
     if [ -d "${WORKSPACE}" ]; then
         echo "Workspace      : ${WORKSPACE} EXISTS"
