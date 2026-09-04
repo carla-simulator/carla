@@ -21,11 +21,15 @@
 0.9.3: 1jJlStNHpey62CrMkWVfmtQcJGO7PaD0R
 0.9.4: 10Tc0DMXpfH7W28zwagXsVTjpkhGx3Klz
 
-# Newer asset Content is stored in AWS.
+# Newer asset Content lives in the carla-content Git LFS repository. Each entry
+# below is <date>_<commit>, where <commit> is the pinned content repository
+# commit. The Update.sh/Update.bat scripts pick up the last entry.
 #
-# You can download it directly from
+# You can get it directly with
 #
-#     http://carla-assets.s3.us-east-005.backblazeb2.com/PUT_FILE_ID_HERE.tar.gz
+#     GIT_LFS_SKIP_SMUDGE=1 git clone https://bitbucket.org/carla-simulator/carla-content Unreal/CarlaUE4/Content/Carla
+#     GIT_LFS_SKIP_SMUDGE=1 git -C Unreal/CarlaUE4/Content/Carla checkout PUT_COMMIT_HERE
+#     git -C Unreal/CarlaUE4/Content/Carla lfs pull
 
 0.9.5: 20190404_c7b464a
 0.9.6: 20190710_0097e66

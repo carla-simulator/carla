@@ -379,14 +379,15 @@ IF "%USE_ROS2%"=="true" (
 )
 
 rem ============================================================================
-rem -- Assets download URL -----------------------------------------------------
+rem -- Assets content repository -----------------------------------------------
 rem ============================================================================
 
 FOR /F "usebackq tokens=1,2" %%i in ("%VERSION_FILE%") do (
     set ASSETS_VERSION=%%i
     set HASH=%%j
 )
-set URL=https://carla-assets.s3.us-east-005.backblazeb2.com/%HASH%.tar.gz
+FOR /F "tokens=2 delims=_" %%i in ("%HASH%") do set ASSETS_COMMIT=%%i
+set CONTENT_REPO=https://bitbucket.org/carla-simulator/carla-content.git
 
 rem ============================================================================
 rem -- Generate CMake ----------------------------------------------------------
@@ -478,11 +479,14 @@ rem ============================================================================
     echo    You only need the ASSET PACK with all the meshes and textures.
     echo.
     echo    This script provides the assets for CARLA %ASSETS_VERSION%
-    echo    You can download the assets from here:
+    echo    You can clone the assets from here:
     echo.
-    echo        %URL%
+    echo        set GIT_LFS_SKIP_SMUDGE=1
+    echo        git clone %CONTENT_REPO% "%CONTENT_DIR%"
+    echo        git -C "%CONTENT_DIR%" checkout %ASSETS_COMMIT%
+    echo        set GIT_LFS_SKIP_SMUDGE=
+    echo        git -C "%CONTENT_DIR%" lfs pull
     echo.
-    echo    Unzip it in the "%CONTENT_DIR%" folder.
     echo    If you want another version, search it in %VERSION_FILE%.
     echo.
     goto good_exit

@@ -41,10 +41,7 @@ git pull origin master
 git checkout master
 make clean
 git pull origin master
-#   Erase the content in `Unreal\CarlaUE4\Content\Carla`.
-#   Go to `\Util\ContentVersions.txt`.
-#   Download the latest content.
-#   Extract the new content in `Unreal\CarlaUE4\Content\Carla`.
+Update.bat
 
 
 # Get development assets.
@@ -121,11 +118,11 @@ __Linux.__
 ```
 
 __Windows.__
+```sh
+Update.bat
+```
 
-__1.__ Erase the previous content in `Unreal\CarlaUE4\Content\Carla`.
-__2.__ Go to `\Util\ContentVersions.txt`.
-__3.__ Download the content for `latest`.
-__4.__ Extract the new content in `Unreal\CarlaUE4\Content\Carla`.
+Both scripts clone the content [repository][contentrepolink] into `Unreal/CarlaUE4/Content/Carla` and check out the content commit pinned for `Latest` in `Util/ContentVersions.txt`. As the content is stored with Git LFS, [git-lfs][gitlfslink] must be installed.
 
 !!! Note
     In order to work with that the CARLA team is devleoping, go to __get development assets__ below.
