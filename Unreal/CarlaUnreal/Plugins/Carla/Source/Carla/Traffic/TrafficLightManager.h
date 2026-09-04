@@ -66,7 +66,22 @@ public:
   /// being replaced by a persistent-level one on World Partition maps.
   void AdoptModelConfigurationFrom(const ATrafficLightManager& Other);
 
+  // Whether OpenDRIVE-generated signs/lights are snapped to the ground after
+  // spawning. Read by ALargeMapManager so both paths share the same flag.
+  bool GetAdjustSignsHeightToGround() const { return bAdjustSignsHeightToGround; }
+
+  // Toggle ground snapping at runtime (driven by the carla.WorldSettings
+  // episode setting). Enabling it after the signals have already been
+  // generated re-snaps the spawned signs, so the feature works on maps whose
+  // manager is spawned with defaults and never configured in the editor.
+  void SetAdjustSignsHeightToGround(bool bEnabled);
+
 private:
+
+  // Snap every generated sign to the ground, ignoring the generated set during
+  // the trace so the ray reaches the terrain. Idempotent via bPositioned;
+  // returns true if at least one sign moved.
+  bool AdjustSpawnedSignsHeight();
 
   void SpawnTrafficLights();
 
@@ -93,6 +108,11 @@ private:
   // Mapped references to TrafficSigns
   UPROPERTY()
   TArray<TObjectPtr<ATrafficSignBase>> TrafficSigns;
+
+  // When true, snap generated signs/lights to the ground after spawning.
+  // Opt-in: off by default so maps that need it enable it explicitly.
+  UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
+  bool bAdjustSignsHeightToGround = false;
 
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
   TSubclassOf<AActor> TrafficLightModel_RHT;

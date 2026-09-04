@@ -39,4 +39,9 @@ struct CARLA_API FEpisodeSettings
 
   bool SpectatorAsEgo = true;
 
+  // When true, OpenDRIVE-generated signs/lights are snapped to the ground.
+  // Drives ATrafficLightManager's flag at runtime via carla.WorldSettings so
+  // the feature can be toggled on maps whose manager is spawned with defaults.
+  bool bAdjustSignsHeightToGround = false;
+
 };
