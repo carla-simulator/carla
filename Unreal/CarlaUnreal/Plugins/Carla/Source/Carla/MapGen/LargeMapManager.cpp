@@ -11,11 +11,17 @@
 #include "UncenteredPivotPointMesh.h"
 
 #include "Walker/WalkerBase.h"
+#include "Carla.h"
 #include "Carla/Game/Tagger.h"
+#include "Carla/Game/CarlaGameModeBase.h"
+#include "Carla/Traffic/TrafficLightManager.h"
+#include "Carla/Traffic/TrafficSignBase.h"
+#include "Carla/Traffic/TrafficSignHeightUtils.h"
 #include "Carla/Vehicle/CustomTerrainPhysicsComponent.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Engine/Engine.h"
+#include "Engine/Level.h"
 #include "Engine/WorldComposition.h"
 #include "Engine/ObjectLibrary.h"
 #include "Misc/FileHelper.h"
@@ -153,6 +159,21 @@ void ALargeMapManager::OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld)
   LM_LOG(Warning, "OnLevelAddedToWorld");
   ATagger::TagActorsInLevel(*InLevel, true);
 
+  // Only the actors of the level that just streamed in need adjusting, so
+  // scope the scan to InLevel instead of querying the whole world.
+  if (InLevel)
+  {
+    TArray<AActor*> LevelActors;
+    LevelActors.Reserve(InLevel->Actors.Num());
+    for (AActor* Actor : InLevel->Actors)
+    {
+      if (Actor)
+      {
+        LevelActors.Add(Actor);
+      }
+    }
+    AdjustSignsHeightToGround(LevelActors);
+  }
 
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
 }
@@ -163,6 +184,72 @@ void ALargeMapManager::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
   //FDebug::DumpStackTraceToLog(ELogVerbosity::Log);
   FCarlaMapTile& Tile = GetCarlaMapTile(InLevel);
   Tile.TilesSpawned = false;
+}
+
+void ALargeMapManager::AdjustSignsHeightToGround(const TArray<AActor*>& Candidates)
+{
+  UWorld* World = GetWorld();
+  if (!World)
+  {
+    return;
+  }
+
+  // Opt-in: honour the same flag as the traffic-light manager. Look the manager
+  // up read-only (do not spawn one) so this streaming callback stays free of
+  // side effects when the feature is disabled or there is no manager.
+  AActor* ManagerActor = UGameplayStatics::GetActorOfClass(
+      World, ATrafficLightManager::StaticClass());
+  ATrafficLightManager* Manager = Cast<ATrafficLightManager>(ManagerActor);
+  if (!Manager || !Manager->GetAdjustSignsHeightToGround())
+  {
+    return;
+  }
+
+  // Only OpenDRIVE-generated signs are adjusted; hand-placed ones are left as
+  // authored. Ignore the whole generated set during the trace so the ray
+  // reaches the terrain instead of the signs' own collision (see PR #9773).
+  TArray<AActor*> GeneratedSigns;
+  GeneratedSigns.Reserve(Candidates.Num());
+  for (AActor* Actor : Candidates)
+  {
+    ATrafficSignBase* Sign = Cast<ATrafficSignBase>(Actor);
+    if (Sign && Sign->bGeneratedFromOpenDRIVE)
+    {
+      GeneratedSigns.Add(Sign);
+    }
+  }
+
+  const TArray<UPrimitiveComponent*> NoIgnoredComponents;
+  bool bAnyAdjusted = false;
+  int32 GroundNotFoundCount = 0;
+  for (AActor* Actor : GeneratedSigns)
+  {
+    ATrafficSignBase* Sign = CastChecked<ATrafficSignBase>(Actor);
+    if (TrafficSignHeightUtils::AdjustSignToGround(
+            World, Sign, GeneratedSigns, NoIgnoredComponents))
+    {
+      bAnyAdjusted = true;
+    }
+    else if (!Sign->bPositioned)
+    {
+      ++GroundNotFoundCount;
+    }
+  }
+
+  if (GroundNotFoundCount > 0)
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("Could not find ground for %d traffic sign(s)"),
+        GroundNotFoundCount);
+  }
+
+  if (bAnyAdjusted)
+  {
+    if (ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World))
+    {
+      GameMode->RegisterEnvironmentObjects();
+    }
+  }
 }
 
 void ALargeMapManager::RegisterInitialObjects()
@@ -217,6 +304,13 @@ void ALargeMapManager::OnActorSpawned(
       // Wait until the pending levels changes are finished to avoid spawning
       // the car without ground underneath
       World->FlushLevelStreaming();
+
+      // Multiple tiles may have streamed in for the hero, so scan all signs;
+      // the bPositioned flag keeps already-adjusted ones from re-tracing.
+      TArray<AActor*> SignActors;
+      UGameplayStatics::GetAllActorsOfClass(
+          World, ATrafficSignBase::StaticClass(), SignActors);
+      AdjustSignsHeightToGround(SignActors);
 
       IsHeroVehicle = true;
     }
