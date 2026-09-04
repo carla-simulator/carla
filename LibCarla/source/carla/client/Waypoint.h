@@ -104,6 +104,10 @@ namespace client {
 
     bool IsRHT() const;
 
+    road::RoadId GetRoadSuccessor() const;
+
+    road::RoadId GetRoadPredecessor() const;
+
   private:
 
     friend class Map;

@@ -266,5 +266,13 @@ namespace client {
     return _parent->GetMap().GetLane(_waypoint).GetRoad()->IsRHT();
   }
 
+  road::RoadId Waypoint::GetRoadSuccessor() const {
+    return _parent->GetMap().GetLane(_waypoint).GetRoad()->GetSuccessor();
+  }
+
+  road::RoadId Waypoint::GetRoadPredecessor() const {
+    return _parent->GetMap().GetLane(_waypoint).GetRoad()->GetPredecessor();
+  }
+
 } // namespace client
 } // namespace carla
