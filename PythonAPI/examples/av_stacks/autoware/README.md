@@ -191,11 +191,25 @@ pinned deps from `map_tools/requirements.txt` in a venv — see
 ### 3. Run
 
 ```bash
-# Full classical stack, drive to a goal (CARLA coordinates: x,y,yaw°):
-./run/run_carla_autoware.sh --mode classical --goal "80.0,-16.5,90"
+# Full classical stack, drive to a goal (CARLA coordinates: x,y,yaw°).
+# Pin the spawn so the run is reproducible; this pair is a 7-lanelet,
+# ~200 m route with two junction turns that reaches ARRIVED:
+./run/run_carla_autoware.sh --mode classical --spawn-index 24 --goal "-1.16,28.37,0.16"
 
 # End-to-end VAD:
 ./run/run_carla_autoware.sh --mode e2e
+```
+
+A goal must sit on a driving lane, centred and heading-aligned, or
+`mission_planner` rejects it (`Goal's footprint exceeds lane!`) and the stack
+comes up healthy but never drives. To derive your own goal from a running
+simulator, take a waypoint's transform rather than typing coordinates:
+
+```python
+import carla
+m = carla.Client("127.0.0.1", 2000).get_world().get_map()
+wp = m.get_waypoint(carla.Location(x=-1.0, y=28.0), project_to_road=True, lane_type=carla.LaneType.Driving)
+t = wp.transform; print(f'--goal "{t.location.x:.2f},{t.location.y:.2f},{t.rotation.yaw:.2f}"')
 ```
 
 The default town is `Town10HD_Opt` (the UE5 packaged name; its map dir is
@@ -465,6 +479,12 @@ Read this before filing bugs — most of it is inherited and known.
   (`converged_param_nearest_voxel_transformation_likelihood` 2.3 → 1.0).
   Regenerating `pointcloud_map.pcd` with `map_tools` against the UE5.8 server
   removes the need for that override.
+- **A goal must land on a driving lane.** `mission_planner` only accepts a
+  goal that's centred on a lane and roughly heading-aligned; an off-lane goal
+  passes both pre-engage gates and is rejected only afterward, with `Goal's
+  footprint exceeds lane!`, so it looks like a hang rather than a bad
+  argument. See [Run](#3-run) for a spawn/goal pair that reaches ARRIVED and
+  a snippet to derive your own goal from a waypoint transform.
 - **Cleanup discipline.** Never `pkill -f <pattern>` when the pattern also
   appears in a wrapping `docker exec bash -c` command line — it kills its own
   wrapper shell (exit 143) and leaves the container processes running. Use
