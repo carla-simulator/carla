@@ -401,10 +401,13 @@ install_acados() {
 # (e.g. tiny/) but lidar_centerpoint's launch expects the four files FLAT in
 # ml_models/lidar_centerpoint/. Without them classical-mode perception dies at
 # startup. Create flat symlinks from whatever subdir carries a matching file.
-# Idempotent; no-op if the model dir does not exist yet.
+# Idempotent; warns and no-ops if the model dir does not exist yet.
 # ---------------------------------------------------------------------------
 fixup_centerpoint_layout() {
-    [ -d "${CENTERPOINT_DATA_DIR}" ] || return 0
+    if [ ! -d "${CENTERPOINT_DATA_DIR}" ]; then
+        warn "lidar_centerpoint model dir ${CENTERPOINT_DATA_DIR} not present -- classical perception_mode:=lidar will fail at ONNX load. Hosts with the older layout: ln -s ../lidar_centerpoint ~/autoware_data/ml_models/lidar_centerpoint (see README)."
+        return 0
+    fi
     log "Checking lidar_centerpoint flat layout in ${CENTERPOINT_DATA_DIR}"
     local f src missing=0
     for f in "${CENTERPOINT_FLAT_FILES[@]}"; do
