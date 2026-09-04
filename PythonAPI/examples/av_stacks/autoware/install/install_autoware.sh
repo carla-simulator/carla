@@ -79,14 +79,21 @@ VAD_FILES=(
 VAD_DATA_DIR="${HOME}/autoware_data/ml_models/vad/v0.1"
 
 # lidar_centerpoint perception models. The HuggingFace bundle lands under
-# ~/autoware_data/ml_models/lidar_centerpoint/ in SUBDIRS (e.g. tiny/), but the
-# launch files expect these FLAT files directly in the lidar_centerpoint dir:
+# ~/autoware_data/ml_models/lidar_centerpoint/ in SUBDIRS (e.g. tiny/), FLAT
+# in the lidar_centerpoint dir. The ONNX and ml_package names are NOT bare:
+# lidar_centerpoint.launch.xml interpolates them as
+# pts_voxel_encoder_$(var model_name).onnx, pts_backbone_neck_head_$(var
+# model_name).onnx and $(var model_name)_ml_package.param.yaml, and
+# defaults model_name to "centerpoint_tiny" (verified against the shipped
+# Autoware image). detection_class_remapper.param.yaml is the one file the
+# launch hardcodes, not model-name-dependent.
 CENTERPOINT_DATA_DIR="${HOME}/autoware_data/ml_models/lidar_centerpoint"
+CENTERPOINT_MODEL_NAME="${CENTERPOINT_MODEL_NAME:-centerpoint_tiny}"
 CENTERPOINT_FLAT_FILES=(
-    "centerpoint_tiny_ml_package.param.yaml"
+    "${CENTERPOINT_MODEL_NAME}_ml_package.param.yaml"
     "detection_class_remapper.param.yaml"
-    "pts_voxel_encoder.onnx"
-    "pts_backbone_neck_head.onnx"
+    "pts_voxel_encoder_${CENTERPOINT_MODEL_NAME}.onnx"
+    "pts_backbone_neck_head_${CENTERPOINT_MODEL_NAME}.onnx"
 )
 
 # GHCR images (tags verified against the GHCR manifest API, all 200):
@@ -420,9 +427,9 @@ fixup_centerpoint_layout() {
         if [ -z "${src}" ]; then
             # fuzzy fallback: subdir files often carry variant-suffixed names
             case "${f}" in
-                pts_voxel_encoder.onnx)      src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name 'pts_voxel_encoder*.onnx' 2>/dev/null | sort | head -1)" ;;
-                pts_backbone_neck_head.onnx) src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name 'pts_backbone_neck_head*.onnx' 2>/dev/null | sort | head -1)" ;;
-                centerpoint_tiny_ml_package.param.yaml) src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name '*tiny*ml_package*.param.yaml' 2>/dev/null | sort | head -1)" ;;
+                "pts_voxel_encoder_${CENTERPOINT_MODEL_NAME}.onnx")      src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name 'pts_voxel_encoder*.onnx' 2>/dev/null | sort | head -1)" ;;
+                "pts_backbone_neck_head_${CENTERPOINT_MODEL_NAME}.onnx") src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name 'pts_backbone_neck_head*.onnx' 2>/dev/null | sort | head -1)" ;;
+                "${CENTERPOINT_MODEL_NAME}_ml_package.param.yaml") src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name "*${CENTERPOINT_MODEL_NAME}*ml_package*.param.yaml" 2>/dev/null | sort | head -1)" ;;
             esac
         fi
         if [ -n "${src}" ]; then
