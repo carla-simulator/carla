@@ -160,10 +160,14 @@ Usage: $(basename "$0") --mode classical|e2e [options]
   --with-display         do NOT pass -RenderOffScreen to the CARLA server
   --server-args "FLAGS"  extra flags appended verbatim to the simulator's own
                          command line, after every flag this script sets
-                         itself. E.g. "-log -carla-streaming-port=2001".
-                         Whitespace-split with shell-style quoting (quote a
-                         value to keep a space in it); never evaluated --
-                         \$, ;, \` etc. reach the simulator's argv literally.
+                         itself -- including the default -nosound (headless
+                         -game has no need for audio). Pass "-enablesound"
+                         here to restore it: Unreal's own flag for canceling
+                         a -nosound also present, regardless of order. E.g.
+                         "-log -carla-streaming-port=2001". Whitespace-split
+                         with shell-style quoting (quote a value to keep a
+                         space in it); never evaluated -- \$, ;, \` etc.
+                         reach the simulator's argv literally.
   --dry-run              print every command that would run; execute nothing;
                          preflight failures downgrade to warnings
   -h | --help            this text
@@ -819,7 +823,7 @@ if [[ "$RMW" == "zenoh" ]]; then
 fi
 
 # ---------------------------------------------------------- 1. CARLA server --
-SERVER_FLAGS="-ros2 -rmw=$RMW -carla-rpc-port=$RPC_PORT -ros-domain-id=$DOMAIN_ID"
+SERVER_FLAGS="-ros2 -rmw=$RMW -carla-rpc-port=$RPC_PORT -ros-domain-id=$DOMAIN_ID -nosound"
 $WITH_DISPLAY || SERVER_FLAGS+=" -RenderOffScreen"
 if [[ -n "$SERVER_ARGS" ]]; then
     # Reject a whitespace-only value the same way an unbalanced quote is
