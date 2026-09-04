@@ -91,6 +91,7 @@ WITH_RVIZ=false
 NO_AUTO=false
 NO_GATES=false
 NO_RECOVER=false
+NO_WHEEL_CHECK=false   # skip the installed-vs-this-tree carla wheel provenance check
 GOAL=""
 SPAWN_INDEX=""                # autoware_demo.py --spawn_index passthrough (e2e default: 52)
 LOG_DIR="$SCRIPT_DIR/logs"
@@ -154,6 +155,9 @@ Usage: $(basename "$0") --mode classical|e2e [options]
                          localization check + distortion-corrector health). The
                          gates exist because engaging on a diverged pose drives
                          the car into things -- only skip them knowingly.
+  --no-wheel-check       skip the carla module provenance check (installed
+                         .so vs any of this tree's built wheels) -- use
+                         only when you knowingly run a wheel from elsewhere
   --with-rviz            also start RViz (docker stack: separate container with
                          DISPLAY passthrough; source stack: local rviz2)
   --log-dir DIR          per-process logs + pidfile (default: <this dir>/logs)
@@ -196,6 +200,7 @@ while [[ $# -gt 0 ]]; do
         --no-auto)      NO_AUTO=true; shift ;;
         --no-gates)     NO_GATES=true; shift ;;
         --no-recover)   NO_RECOVER=true; shift ;;
+        --no-wheel-check) NO_WHEEL_CHECK=true; shift ;;
         --with-rviz)    WITH_RVIZ=true; shift ;;
         --log-dir)      LOG_DIR="$2"; shift 2 ;;
         --with-display) WITH_DISPLAY=true; shift ;;
@@ -763,6 +768,73 @@ fi
 if [[ -z "$CARLA_PY" ]]; then
     preflight_fail "no python3 (scrubbed PATH or original PATH) can 'import carla' -- install the CARLA wheel (Build/*/PythonAPI/dist/*.whl) into a python environment"
     CARLA_PY="python3"   # dry-run placeholder
+fi
+
+# Wheel provenance: 'import carla' above only proves *some* wheel is
+# installed, not that it is THIS tree's build. A wheel from another
+# worktree imported fine and then aborted load_town with
+# std::bad_array_new_length after a 15-minute setup (client/server RPC
+# layout mismatch) -- and the version string can't tell them apart, both
+# report 0.10.0. Compare the installed extension's sha256 against every
+# wheel this tree has built (any preset, any match -- the question is
+# "did this come from a build of this tree", not "the newest one").
+# Read wheel entries via $CARLA_PY's own zipfile module, not `unzip`: a
+# lookup miss (e.g. a differing Python ABI tag) is then just a skipped
+# candidate under Python's own try/except, never a set -e/pipefail exit
+# that this script would never see.
+if $NO_WHEEL_CHECK; then
+    log "carla module provenance check skipped (--no-wheel-check)"
+else
+    mapfile -t WHEEL_HITS < <(find "$REPO_ROOT/Build" -maxdepth 4 \
+        -path '*/PythonAPI/dist/carla-*.whl' -printf '%T@ %p\n' 2>/dev/null \
+        | sort -rn)
+    WHEELS=()
+    for hit in "${WHEEL_HITS[@]}"; do
+        WHEELS+=("${hit#* }")
+    done
+    INSTALLED_SO="$("$CARLA_PY" -c 'import carla; print(carla.__file__)' 2>/dev/null || true)"
+    if [[ ${#WHEELS[@]} -eq 0 || "$INSTALLED_SO" != *.so ]]; then
+        warn "carla module provenance NOT verified (no built wheel under $REPO_ROOT/Build/*/PythonAPI/dist, or module is not a single .so) -- if this module was NOT built from this tree, load_town can abort ~15 minutes into the run with std::bad_array_new_length. Build one here: cmake --build Build/<preset> --target carla-python-api (or pass --no-wheel-check to silence this warning)"
+    else
+        # Two lines out: installed sha256 (empty if unreadable), then the
+        # first wheel whose same-named entry hashes the same (empty if
+        # none do). A missing zip entry is caught per-wheel and skipped,
+        # not raised -- see the comment above.
+        PROV_OUT="$("$CARLA_PY" -c '
+import sys, hashlib, zipfile
+installed_so = sys.argv[1]
+wheels = sys.argv[2:]
+try:
+    with open(installed_so, "rb") as f:
+        installed_hash = hashlib.sha256(f.read()).hexdigest()
+except OSError:
+    print("")
+    print("")
+    sys.exit(0)
+name = installed_so.rsplit("/", 1)[-1]
+matched = ""
+for wheel in wheels:
+    try:
+        with zipfile.ZipFile(wheel) as zf:
+            entry = zf.read(name)
+    except Exception:
+        continue
+    if hashlib.sha256(entry).hexdigest() == installed_hash:
+        matched = wheel
+        break
+print(installed_hash)
+print(matched)
+' "$INSTALLED_SO" "${WHEELS[@]}" 2>/dev/null || true)"
+        INSTALLED_SHA="$(sed -n '1p' <<<"$PROV_OUT")"
+        MATCHED_WHEEL="$(sed -n '2p' <<<"$PROV_OUT")"
+        if [[ -z "$INSTALLED_SHA" ]]; then
+            warn "carla module provenance not checked (could not hash $INSTALLED_SO)"
+        elif [[ -z "$MATCHED_WHEEL" ]]; then
+            preflight_fail "installed carla module ($INSTALLED_SO, sha256 ${INSTALLED_SHA:0:12}...) matches none of this tree's ${#WHEELS[@]} built wheel(s) under $REPO_ROOT/Build/*/PythonAPI/dist -- a client built elsewhere can import fine and still abort load_town with std::bad_array_new_length. Reinstall from this tree: $CARLA_PY -m pip install --force-reinstall '${WHEELS[0]}' (or pass --no-wheel-check to proceed anyway)"
+        else
+            log "carla module provenance OK: matches $(basename "$MATCHED_WHEEL") (sha256 ${INSTALLED_SHA:0:12}...)"
+        fi
+    fi
 fi
 
 # e2e-only preflight: VAD model + launch glue
