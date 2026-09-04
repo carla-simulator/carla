@@ -4036,9 +4036,11 @@ Used for large maps only. Configures the maximum distance from the hero vehicle 
 Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant. Actors within this range will be active, and actors outside will become dormant.  
 - <a name="carla.WorldSettings.spectator_as_ego"></a>**<font color="#f8805a">spectator_as_ego</font>** (_bool_)  
 Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. By default, the spectator will provoke loading of neighboring tiles in the absence of an ego actor. This might be inconvenient for applications that immediately spawn an ego actor.  
+- <a name="carla.WorldSettings.adjust_signs_height_to_ground"></a>**<font color="#f8805a">adjust_signs_height_to_ground</font>** (_bool_)  
+When enabled, OpenDRIVE-generated traffic signs and traffic lights are snapped down to the ground after spawning, keeping their trigger volumes aligned. Only generated actors are moved, never signs placed by hand in the level. It is false by default. Toggling it also re-adjusts already-spawned signs, so it can be enabled at any time.  
 
 ### Methods
-- <a name="carla.WorldSettings.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**synchronous_mode**=False</font>, <font color="#00a6ed">**no_rendering_mode**=False</font>, <font color="#00a6ed">**fixed_delta_seconds**=0.0</font>, <font color="#00a6ed">**max_culling_distance**=0.0</font>, <font color="#00a6ed">**deterministic_ragdolls**=False</font>, <font color="#00a6ed">**tile_stream_distance**=3000</font>, <font color="#00a6ed">**actor_active_distance**=2000</font>, <font color="#00a6ed">**spectator_as_ego**=True</font>)  
+- <a name="carla.WorldSettings.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**synchronous_mode**=False</font>, <font color="#00a6ed">**no_rendering_mode**=False</font>, <font color="#00a6ed">**fixed_delta_seconds**=0.0</font>, <font color="#00a6ed">**max_culling_distance**=0.0</font>, <font color="#00a6ed">**deterministic_ragdolls**=False</font>, <font color="#00a6ed">**tile_stream_distance**=3000</font>, <font color="#00a6ed">**actor_active_distance**=2000</font>, <font color="#00a6ed">**spectator_as_ego**=True</font>, <font color="#00a6ed">**adjust_signs_height_to_ground**=False</font>)  
 Creates an object containing desired settings that could later be applied through [carla.World](#carla.World) and its method __<font color="#7fb800">apply_settings()</font>__.  
     - **Parameters:**
         - `synchronous_mode` (_bool_) - Set this to true to enable client-server synchrony.  
@@ -4049,6 +4051,7 @@ Creates an object containing desired settings that could later be applied throug
         - `tile_stream_distance` (_float<small> - meters</small>_) - Used for large maps only. Configures the maximum distance from the hero vehicle to stream tiled maps.  
         - `actor_active_distance` (_float<small> - meters</small>_) - Used for large maps only. Configures the distance from the hero vehicle to convert actors to dormant.  
         - `spectator_as_ego` (_bool_) - Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps.  
+        - `adjust_signs_height_to_ground` (_bool_) - Set this to true to snap OpenDRIVE-generated traffic signs and traffic lights down to the ground after spawning.  
 
 ##### Dunder methods
 - <a name="carla.WorldSettings.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.WorldSettings](#carla.WorldSettings)</font>)  
