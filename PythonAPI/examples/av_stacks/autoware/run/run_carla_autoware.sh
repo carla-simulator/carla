@@ -81,6 +81,7 @@ TOWN="Town10HD_Opt"
 RMW="fastdds"                 # SIMULATOR-side RMW: fastdds (default) or cyclonedds, both validated.
 STACK="auto"                  # auto|source|docker : how to run Autoware (classical)
 MAP_PATH=""
+SERVER_ARGS=""                # extra simulator flags, appended last (see --server-args)
 CARLA_ROOT_ARG="${CARLA_ROOT:-}"
 AUTOWARE_WS="${AUTOWARE_WS:-$HOME/autoware}"
 DOMAIN_ID=42
@@ -157,6 +158,12 @@ Usage: $(basename "$0") --mode classical|e2e [options]
                          DISPLAY passthrough; source stack: local rviz2)
   --log-dir DIR          per-process logs + pidfile (default: <this dir>/logs)
   --with-display         do NOT pass -RenderOffScreen to the CARLA server
+  --server-args "FLAGS"  extra flags appended verbatim to the simulator's own
+                         command line, after every flag this script sets
+                         itself. E.g. "-log -carla-streaming-port=2001".
+                         Whitespace-split with shell-style quoting (quote a
+                         value to keep a space in it); never evaluated --
+                         \$, ;, \` etc. reach the simulator's argv literally.
   --dry-run              print every command that would run; execute nothing;
                          preflight failures downgrade to warnings
   -h | --help            this text
@@ -188,6 +195,7 @@ while [[ $# -gt 0 ]]; do
         --with-rviz)    WITH_RVIZ=true; shift ;;
         --log-dir)      LOG_DIR="$2"; shift 2 ;;
         --with-display) WITH_DISPLAY=true; shift ;;
+        --server-args)  SERVER_ARGS="$2"; shift 2 ;;
         --dry-run)      DRY_RUN=true; shift ;;
         -h|--help)      usage; exit 0 ;;
         *) echo "ERROR: unknown option: $1" >&2; usage >&2; exit 2 ;;
@@ -813,6 +821,25 @@ fi
 # ---------------------------------------------------------- 1. CARLA server --
 SERVER_FLAGS="-ros2 -rmw=$RMW -carla-rpc-port=$RPC_PORT -ros-domain-id=$DOMAIN_ID"
 $WITH_DISPLAY || SERVER_FLAGS+=" -RenderOffScreen"
+if [[ -n "$SERVER_ARGS" ]]; then
+    # Reject a whitespace-only value the same way an unbalanced quote is
+    # rejected below, rather than letting it through to xargs/mapfile,
+    # which would turn it into one spurious empty argv token.
+    [[ "$SERVER_ARGS" =~ [^[:space:]] ]] \
+        || die "--server-args: value is empty or whitespace-only"
+    # Tokenize --server-args with xargs: it honors shell-style quoting
+    # (so a value containing a space can be kept as one token) but, unlike
+    # eval or an unquoted expansion, never performs variable/command
+    # substitution -- a metacharacter in the input stays inert text.
+    SERVER_ARGS_LINES="$(xargs -n1 printf '%s\n' <<<"$SERVER_ARGS")" \
+        || die "--server-args: unbalanced quoting in '$SERVER_ARGS'"
+    SERVER_ARGS_ARR=()
+    mapfile -t SERVER_ARGS_ARR <<<"$SERVER_ARGS_LINES"
+    # Re-quote each token with %q: start_proc() below re-parses the whole
+    # command string through `bash -c`, so each token must round-trip
+    # through that second parse as the single literal argument it is.
+    SERVER_FLAGS+="$(printf ' %q' "${SERVER_ARGS_ARR[@]}")"
+fi
 
 if [[ "$SERVER_KIND" == "packaged" ]]; then
     start_proc carla_server "${SIM_ENV}exec '$SERVER_LAUNCHER' $SERVER_FLAGS"
