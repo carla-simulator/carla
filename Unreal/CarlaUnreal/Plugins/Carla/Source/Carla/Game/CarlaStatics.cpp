@@ -41,15 +41,33 @@ static TArray<FAssetData> UCarlaStatics_GetRegistryWorlds()
   FARFilter Filter;
   Filter.ClassPaths.Add(UWorld::StaticClass()->GetClassPathName());
   AssetRegistry->GetAssets(Filter, Worlds);
-  // Engine maps are never CARLA maps. A cooked World Partition town also has
-  // every generated streaming cell (<Town>/_Generated_/<Cell>) registered as
-  // a UWorld named after the town; those are not loadable maps.
-  Worlds.RemoveAll([](const FAssetData &World)
+  // Only project content and project plugins (incl. mounted content packs) hold
+  // CARLA maps; engine content and engine plugins (PCG/Water/Volumetrics sample
+  // levels, ...) never do.
+  TSet<FString> Roots;
+  Roots.Add(TEXT("/Game/"));
+  for (const TSharedRef<IPlugin> &Plugin : IPluginManager::Get().GetEnabledPluginsWithContent())
+  {
+    if (Plugin->GetLoadedFrom() != EPluginLoadedFrom::Engine)
+    {
+      Roots.Add(FString::Printf(TEXT("/%s/"), *Plugin->GetName()));
+    }
+  }
+  // A cooked World Partition town also has every generated streaming cell
+  // (<Town>/_Generated_/<Cell>) registered as a UWorld named after the town;
+  // those are not loadable maps. Registry rows whose package no longer exists
+  // (stale cache entries, unmounted packs) are dropped too.
+  Worlds.RemoveAll([&Roots](const FAssetData &World)
   {
     const FString PackageName = World.PackageName.ToString();
-    return PackageName.StartsWith(TEXT("/Engine/")) ||
+    int32 SecondSlash = INDEX_NONE;
+    const bool bHasRoot = PackageName.FindChar(TEXT('/'), SecondSlash) &&
+        PackageName.Len() > 1 && PackageName.RightChop(1).FindChar(TEXT('/'), SecondSlash);
+    const FString Root = bHasRoot ? PackageName.Left(SecondSlash + 2) : FString();
+    return !Roots.Contains(Root) ||
         (World.PackageFlags & PKG_CookGenerated) != 0 ||
-        PackageName.Contains(TEXT("/_Generated_/"));
+        PackageName.Contains(TEXT("/_Generated_/")) ||
+        !FPackageName::DoesPackageExist(PackageName);
   });
   return Worlds;
 }
