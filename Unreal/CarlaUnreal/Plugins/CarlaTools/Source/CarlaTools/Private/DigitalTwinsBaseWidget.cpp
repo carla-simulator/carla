@@ -13,27 +13,34 @@
 #include "CarlaTools.h"
 #include "HAL/PlatformFileManager.h"
 
-static UOpenDriveToMap* OpenDriveToMapObject = nullptr;
+#include "UObject/StrongObjectPtr.h"
+
+// TStrongObjectPtr, not a raw static pointer: a bare `static UObject*` isn't
+// a GC root, so once OpenDriveToMap's own RemoveFromRoot() fires (right
+// after map generation finishes, see OpenDriveToMap.cpp), this pointer could
+// be left dangling by the next garbage collection pass -- same use-after-free
+// pattern found and fixed in Weather.cpp (confirmed there via gdb backtrace).
+static TStrongObjectPtr<UOpenDriveToMap> OpenDriveToMapObject;
 
 UOpenDriveToMap* UDigitalTwinsBaseWidget::InitializeOpenDriveToMap(TSubclassOf<UOpenDriveToMap> BaseClass){
-  if( OpenDriveToMapObject == nullptr && BaseClass != nullptr ){
+  if( !OpenDriveToMapObject && BaseClass != nullptr ){
     UE_LOG(LogCarlaTools, Error, TEXT("Creating New Object") );
-    OpenDriveToMapObject = NewObject<UOpenDriveToMap>(this, BaseClass);
+    OpenDriveToMapObject.Reset(NewObject<UOpenDriveToMap>(this, BaseClass));
   }
-  return OpenDriveToMapObject;
+  return OpenDriveToMapObject.Get();
 }
 
 UOpenDriveToMap* UDigitalTwinsBaseWidget::GetOpenDriveToMap(){
-  return OpenDriveToMapObject;
+  return OpenDriveToMapObject.Get();
 }
 
 void UDigitalTwinsBaseWidget::SetOpenDriveToMap(UOpenDriveToMap* ToSet){
-  OpenDriveToMapObject = ToSet;
+  OpenDriveToMapObject.Reset(ToSet);
 }
 
 void UDigitalTwinsBaseWidget::DestroyOpenDriveToMap(){
   OpenDriveToMapObject->ConditionalBeginDestroy();
-  OpenDriveToMapObject = nullptr;
+  OpenDriveToMapObject.Reset();
 }
 
 void UDigitalTwinsBaseWidget::CreatePlugin(FString PluginName){
