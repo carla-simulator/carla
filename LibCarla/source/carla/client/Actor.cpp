@@ -175,7 +175,16 @@ namespace client {
     // mode). A missing entry is therefore indistinguishable from a dead actor
     // here, so the server decides: it rejects unknown ids with "unable to
     // destroy actor: not found" and this returns false.
-    return GetEpisode().Lock()->DestroyActor(*this);
+    //
+    // A handle whose own Destroy() already succeeded has had its episode
+    // cleared (Simulator::DestroyActor); asking the server again is pointless
+    // and Lock() would throw, so a repeated Destroy() is simply false.
+    auto episode = GetEpisode().TryLock();
+    if (episode == nullptr) {
+      log_debug(GetDisplayId(), "already destroyed through this handle.");
+      return false;
+    }
+    return episode->DestroyActor(*this);
   }
 
 } // namespace client
