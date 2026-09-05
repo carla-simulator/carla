@@ -70,7 +70,18 @@ FActorSpawnResult AStaticMeshFactory::SpawnActor(
   if (ActorDescription.Variations.Contains("mesh_path"))
   {
     MeshPath = ABFL::ActorAttributeToString(ActorDescription.Variations["mesh_path"], "");
-    if (!MeshPath.IsEmpty())
+    if (MeshPath.IsEmpty())
+    {
+      // Same outcome as an unloadable path: nothing to render, no semantic tag,
+      // infinite bounds. Refuse instead of spawning a mesh-less actor.
+      UE_LOG(LogCarla, Error,
+          TEXT("AStaticMeshFactory: empty mesh_path for actor %s; spawn refused."),
+          *ActorDescription.Id);
+      FActorSpawnResult Failed;
+      Failed.Status = EActorSpawnResultStatus::InvalidDescription;
+      return Failed;
+    }
+    else
     {
       if (TObjectPtr<UStaticMesh>* Cached = MeshCacheByPath.Find(MeshPath))
       {
@@ -109,14 +120,6 @@ FActorSpawnResult AStaticMeshFactory::SpawnActor(
   {
     if (ActorDescription.Variations.Contains("mesh_path"))
     {
-      if (MeshPath.IsEmpty())
-      {
-        UE_LOG(LogCarla, Warning,
-            TEXT("AStaticMeshFactory: empty mesh_path for actor %s; mesh not assigned."),
-            *ActorDescription.Id);
-        return FActorSpawnResult(StaticMeshActor);
-      }
-
       StaticMeshComponent->SetMobility(EComponentMobility::Movable);
       if (!StaticMeshComponent->SetStaticMesh(Mesh))
       {
