@@ -77,9 +77,29 @@ public:
   template <typename T>
   static crp::CityObjectLabel GetLabelByPath(const T* Object)
   {
+    if (Object == nullptr)
+    {
+      // A component whose mesh is not assigned yet (props get their mesh
+      // after SpawnActor, i.e. after the OnActorSpawned tagger delegate).
+      return crp::CityObjectLabel::None;
+    }
     const FString Path = Object->GetPathName();
     TArray<FString> StringArray;
     Path.ParseIntoArray(StringArray, TEXT("/"), false);
+    if (!Path.StartsWith(TEXT("/Game/")))
+    {
+      // Content pack (or any other mount root): same folder rule as the base
+      // content, /<Pack>/Static/<Tag>/..., i.e. the folder right after the
+      // first "Static" folder names the label. Plugin content without a
+      // "Static" folder falls through to the nearest-folder fallback below.
+      for (int32 i = 1; i + 1 < StringArray.Num(); ++i)
+      {
+        if (StringArray[i] == TEXT("Static"))
+        {
+          return GetLabelByFolderName(StringArray[i + 1]);
+        }
+      }
+    }
     const int32 Primary = Path.Contains("UE5UseOnly") ? 5 : 4;
     crp::CityObjectLabel Label =
         (StringArray.Num() > Primary ? GetLabelByFolderName(StringArray[Primary]) : crp::CityObjectLabel::None);

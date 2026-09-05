@@ -8,6 +8,7 @@ Layout (``results root`` = explicit path, ``$COSMOS_RESULTS`` or ``./cosmos-resu
         <view>.mp4 ...                    generated videos
         control_<hint>[_<view>].mp4       the control the model actually saw
         grid.mp4                          multi-view contact sheet (AV backend)
+        viewer_grid.mp4 | viewer_single.mp4   the side-by-side viewer, as a video
         manifest.json                     the server's ResultManifest, verbatim
         job.json                          request as submitted, timings, files
                                           (size + sha256), server status, expiry
@@ -18,6 +19,15 @@ Usage::
     job.wait()
     stored = job.download()                 # or job.download("/data/cosmos-results")
     print(stored.directory, stored.videos)
+
+Every download also gets a **viewer video**: the side-by-side layout of
+``demos/viewer.py`` (input | control | result, or the per-camera grid) rendered
+to ``viewer_<layout>.mp4`` next to the videos and recorded in ``job.json`` with
+kind ``viewer``.  It is written by :mod:`carla_cosmos.viewer` through the same
+compositor the interactive window uses and needs no display.  Turn it off with
+``viewer_video=False`` (``--no-viewer-video`` on the CLI, ``COSMOS_VIEWER_VIDEO=0``
+in the environment); it is skipped with a note when the clip the result was
+generated from cannot be found, since the viewer needs its input RGB.
 
 Downloads are verified against the server's own listing (size, then sha256) and
 are idempotent: a second call re-checks the files already on disk and fetches
@@ -122,7 +132,13 @@ class StoredJob(BaseModel):
 
     @property
     def videos(self) -> list[str]:
-        return [f.name for f in self.files if f.name.endswith(".mp4")]
+        """The videos the server returned — not the locally rendered viewer video."""
+        return [f.name for f in self.files if f.name.endswith(".mp4") and f.kind != "viewer"]
+
+    @property
+    def viewer_video(self) -> str | None:
+        """``viewer_grid.mp4`` / ``viewer_single.mp4``: the side-by-side viewer, rendered here."""
+        return next((f.name for f in self.files if f.kind == "viewer"), None)
 
     @property
     def bytes(self) -> int:
@@ -185,7 +201,8 @@ class ResultStore:
     # -- writing ---------------------------------------------------------------------------
     def save(self, job: "Job", *, names: Iterable[str] | None = None, verify: bool = True,
              progress: Callable[[str, int, int], None] | None = None,
-             warn_hours: float = EXPIRY_WARN_HOURS) -> StoredJob:
+             warn_hours: float = EXPIRY_WARN_HOURS, clip=None,
+             viewer_video: bool | None = None) -> StoredJob:
         """Download every file of a finished job (skipping files already complete).
 
         Raises :class:`~carla_cosmos.client.JobFailed` when the job did not
@@ -199,11 +216,13 @@ class ResultStore:
         result = job.result()
         manifest = result.manifest
         return self.save_manifest(job.client, manifest, info=info, names=names, verify=verify,
-                                  progress=progress, warn_hours=warn_hours)
+                                  progress=progress, warn_hours=warn_hours, clip=clip,
+                                  viewer_video=viewer_video)
 
     def save_manifest(self, client, manifest: ResultManifest, info=None, *, names: Iterable[str] | None = None,
                       verify: bool = True, progress: Callable[[str, int, int], None] | None = None,
-                      warn_hours: float = EXPIRY_WARN_HOURS) -> StoredJob:
+                      warn_hours: float = EXPIRY_WARN_HOURS, clip=None,
+                      viewer_video: bool | None = None) -> StoredJob:
         """The download half of :meth:`save`, for a manifest already in hand."""
         from .client import CosmosError, sha256_file
 
@@ -235,6 +254,9 @@ class ResultStore:
             if progress:
                 progress(f.name, i, len(selected))
         (dest / MANIFEST_JSON).write_text(manifest.model_dump_json(indent=2))
+        viewer = self.write_viewer_video(dest, manifest, clip=clip, enabled=viewer_video)
+        if viewer is not None:
+            stored.append(viewer)
 
         retention = _retention_hours(client)
         finished = getattr(info, "finished", None) or manifest.created
@@ -263,6 +285,32 @@ class ResultStore:
             log.warning("the server copy of job %s expires in %.1f h — the local copy in %s is the only one after that",
                         job_record.job_id, left, dest)
         return job_record
+
+    def write_viewer_video(self, dest: Path, manifest: ResultManifest, clip=None,
+                           enabled: bool | None = None, force: bool = False) -> StoredFile | None:
+        """Render the side-by-side viewer of this result to ``<dest>/viewer_<layout>.mp4``.
+
+        Returns the :class:`StoredFile` to record in ``job.json`` (kind ``viewer``), or ``None`` when
+        the export is turned off, the clip cannot be found, or pygame/OpenCV/ffmpeg are not available.
+        A missing viewer video never fails a download — the generated videos are the result.
+        """
+        from .client import sha256_file
+
+        try:
+            from .viewer import VIEWER_KIND, viewer_video_enabled, write_viewer_video
+        except ImportError as exc:  # no pygame / no OpenCV: the videos are stored either way
+            log.info("no viewer video: %s (install the 'viewer' and 'capture' extras)", exc)
+            return None
+        if not viewer_video_enabled(enabled):
+            return None
+        try:
+            path = write_viewer_video(dest, clip=clip, manifest=manifest, results_root=self.root, force=force)
+        except Exception as exc:  # noqa: BLE001 - a rendering problem must not lose the download
+            log.warning("viewer video for job %s not written: %s", manifest.job_id, exc)
+            return None
+        if path is None:
+            return None
+        return StoredFile(name=path.name, size=path.stat().st_size, sha256=sha256_file(path), kind=VIEWER_KIND)
 
     def note_submitted(self, job: "Job", clip_id: str | None = None) -> IndexEntry:
         """Record a job we have submitted but not downloaded yet."""

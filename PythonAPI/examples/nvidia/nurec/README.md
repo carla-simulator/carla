@@ -86,6 +86,61 @@ with NurecScenario(client, usdz_path) as scenario:
 - `NuRecRenderService(..., extra_server_args=["--enable-harmonizer"])` — any
   additional `serve-grpc` flag can be passed through.
 
+
+## Feeding a NuRec scene to Cosmos
+
+`carla_cosmos.nurec` (in `../cosmos/client/`) turns an artifact into a Cosmos clip package: it
+reads the rig calibration, the ego trajectory and the OpenDRIVE map straight out of the `.usdz`,
+replays the drive in CARLA, and writes the neural RGB alongside CARLA's depth/segmentation AOVs
+and a ClipGT scene package.  See `../cosmos/demos/nurec_to_cosmos.py`.
+
+It talks to the render engine over plain gRPC at a configurable `host:port`, so the engine may
+run on another machine — unlike `NurecScenario`, which hardcodes `localhost` and launches Docker
+itself.  Start a standalone engine with:
+
+```sh
+docker run --rm --gpus all --net=host -v $(dirname <artifact>):$(dirname <artifact>):ro \
+    $NUREC_IMAGE serve-grpc --artifact-glob <artifact>.usdz \
+    --port=46435 --host=0.0.0.0 --test-scenes-are-valid --enable-editing-actors
+```
+
+then `--nre-endpoint <host>:46435`.  `--fake-nurec` needs none of this: it substitutes CARLA's
+own RGB and exercises the rest of the pipeline on a machine with no NuRec install at all.
+
+### What the engine costs, measured
+
+One RTX 5090 (32 GB) serving `00040136` (a 1.9 GB artifact) beside a running CARLA server, NRE
+`26.04.01`, PyTorch path (`backend: null` — `--renderer=nrend` cannot load these scenes):
+
+| | |
+|---|---|
+| GPU memory, engine alone | **1.96 GB** idle after load, **4.4 GB** while rendering |
+| GPU memory, engine + a 7-camera CARLA capture | **21.6 GB** of 32.6 (CARLA 17.2 + NRE 4.4) |
+| startup | ~90 s to `Serving on localhost:46435` |
+| render rate, 1280x720 | **19–34 frames/s** per camera |
+| render rate, 1920x1080 | **16–21 frames/s** per camera |
+
+A 202-frame seven-camera capture is 1414 renders — about a minute of engine time inside a
+~7-minute capture, so CARLA's own 28 sensors, not the neural render, are the bottleneck.
+
+### Pose and lens conventions the engine enforces
+
+Learned the hard way; all three used to produce opaque failures.
+
+* **`sensor_pose` is `T_world_from_optical`**, in the OpenCV RDF basis (x right, y down, z
+  forward) — not the body pose a CARLA sensor transform is.  `NurecScenario` gets this right by
+  construction (it sends `carla_transform_to_nurec(ego) @ T_sensor_rig`, and `T_sensor_rig`
+  carries the basis); anything composing a pose by hand must apply it too
+  (`carla_cosmos.nurec.optical_pose`).  Getting it wrong renders the inside of the road surface
+  and looks like a broken scene rather than a broken pose.
+* **`logical_id` must name a camera the scene knows.**  The engine looks it up in the
+  reconstruction's camera bank whatever intrinsics the request carries, and answers `NOT_FOUND`
+  otherwise.  To render a camera the scene does not calibrate, borrow the nearest calibrated
+  camera's id — the pose and the lens are still yours, only the appearance model is borrowed.
+* **Distortion vectors have fixed lengths.**  `ncore` asserts `radial_coeffs.shape == (6,)`,
+  `tangential_coeffs.shape == (2,)`, `thin_prism_coeffs.shape == (4,)`, so an undistorted lens is
+  a vector of zeros and not an empty list.  `dict_to_camera_spec` pads them.
+
 ## Tests
 
 ```sh
@@ -95,6 +150,9 @@ python -m pytest tests/
 `tests/test_coordinates.py` pins the CARLA<->NuRec coordinate convention
 against the installed carla wheel's own transform math — if a CARLA release
 changes conventions, these fail instead of silently mirroring the world.
+
+`tests/test_camera_spec.py` pins `dict_to_camera_spec` to all three lens models the gRPC
+`CameraSpec` oneof carries and to the distortion-vector lengths the server asserts on.
 
 ## Files
 

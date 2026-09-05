@@ -66,6 +66,8 @@ def main() -> int:
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--resolution", default=None, help="720 or 480 (backend default when omitted)")
     ap.add_argument("--results", default=None, help="results root (default $COSMOS_RESULTS or ./cosmos-results)")
+    ap.add_argument("--no-viewer-video", action="store_true",
+                    help="do not render the result's side-by-side viewer to viewer_<layout>.mp4")
     ap.add_argument("--endpoint", default=None)
     ap.add_argument("--token", default=None)
     ap.add_argument("-v", "--verbose", action="store_true")
@@ -90,7 +92,8 @@ def main() -> int:
                                  mask_classes=mask_classes, mask_dilate=args.mask_dilate,
                                  seed=args.seed, resolution=args.resolution)
         log.info("job %s queued (position %s)", job.id, job.info.queue_position)
-        stored = wait_and_store(job, args.results, log)
+        stored = wait_and_store(job, args.results, log, clip=clip,
+                                viewer_video=False if args.no_viewer_video else None)
     except JobFailed as exc:
         log.error("the job did not finish: %s", exc)
         return 2

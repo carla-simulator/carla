@@ -219,14 +219,40 @@ void TrafficManagerLocal::Step() {
     localization_stage.Update(index);
   }
   for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
+    if (!localization_frame[index].localized) {
+      continue;
+    }
     collision_stage.Update(index);
   }
   collision_stage.ClearCycleCache();
   vehicle_light_stage.UpdateWorldInfo();
   for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
+    if (!localization_frame[index].localized) {
+      continue;
+    }
     traffic_light_stage.Update(index);
     motion_plan_stage.Update(index);
     vehicle_light_stage.Update(index);
+  }
+
+  // A vehicle skipped above never had its control command written, and the
+  // default-constructed command would reach the server as an empty spawn
+  // request ("Invalid ActorDescription '' (UId=0)"). Drop those slots; the
+  // commands appended past the per-vehicle range (vehicle lights) are kept.
+  const bool any_skipped = std::any_of(
+      localization_frame.begin(),
+      localization_frame.begin() + static_cast<long>(vehicle_id_list.size()),
+      [](const LocalizationData &data) { return !data.localized; });
+  if (any_skipped) {
+    ControlFrame filtered_frame;
+    filtered_frame.reserve(control_frame.size());
+    for (unsigned long index = 0u; index < control_frame.size(); ++index) {
+      if (index < vehicle_id_list.size() && !localization_frame[index].localized) {
+        continue;
+      }
+      filtered_frame.push_back(std::move(control_frame[index]));
+    }
+    control_frame = std::move(filtered_frame);
   }
 
   registration_lock.unlock();
