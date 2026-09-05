@@ -46,7 +46,7 @@ Identifier for this actor. Unique during a given episode.
 - <a name="carla.Actor.type_id"></a>**<font color="#f8805a">type_id</font>** (_str_)  
 The identifier of the blueprint this actor was based on, e.g. `vehicle.ford.mustang`.  
 - <a name="carla.Actor.is_alive"></a>**<font color="#f8805a">is_alive</font>** (_bool_)  
-Returns whether this object was destroyed using this actor handle.  
+Returns whether the actor still exists according to the latest world snapshot received by the client (False after it was destroyed, through this handle or any other). A handle returned by spawn_actor() is reported alive (and is_active True) until a snapshot newer than the spawn arrives, so it can be used right away in both synchronous and asynchronous mode; handles obtained from world.get_actor()/get_actors() only reflect the snapshots. Because the value is snapshot-based, an actor removed with `client.apply_batch_sync([[carla.command.DestroyActor](#carla.command.DestroyActor)(...)])` still reads True until the next snapshot arrives (`world.tick()` in synchronous mode, `world.wait_for_tick()` otherwise); `actor.destroy()` on the same handle clears it immediately.  
 - <a name="carla.Actor.is_active"></a>**<font color="#f8805a">is_active</font>** (_bool_)  
 Returns whether this actor is active (True) or not (False).  
 - <a name="carla.Actor.is_dormant"></a>**<font color="#f8805a">is_dormant</font>** (_bool_)  
@@ -523,6 +523,11 @@ Creates a new world with default settings using `map_name` map. All actors in th
         - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Layers of the map that will be loaded. By default all layers are loaded. This parameter works like a flag mask.  
     - **Warning:** <font color="#ED2F2F">_`map_layers` are only available for "Opt" maps
 _</font>  
+- <a name="carla.Client.mount_content_pack"></a>**<font color="#7fb800">mount_content_pack</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
+Mounts a content pack (a content-only Unreal plugin cooked against this CARLA release, with a `carla-pack.json` manifest) into the running server without a restart. Its maps are listed by [carla.Client.get_available_maps](#carla.Client.get_available_maps) and loadable with [carla.Client.load_world](#carla.Client.load_world), and its catalogs (`Config/*.json`) are added to the blueprint library on the next episode. Raises a RuntimeError naming the reason when the path is not a pack, the pack was built for another base release or platform, or a pack of that name is already mounted.  
+    - **Parameters:**
+        - `path` (_str_) - Path on the server host of the pack directory (or its `carla-pack.json`).  
+    - **Return:** _[carla.ContentPackInfo](#carla.ContentPackInfo)_  
 - <a name="carla.Client.reload_world"></a>**<font color="#7fb800">reload_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**reset_settings**=True</font>)  
 Reload the current world, note that a new world is created with default settings using the same map. All actors present in the world will be destroyed, __but__ traffic manager instances will stay alive.  
     - **Parameters:**
@@ -578,6 +583,11 @@ Stops the recording in progress. If you specified a path in `filename`, the reco
 Stop current replayer.  
     - **Parameters:**
         - `keep_actors` (_bool_) - True if you want autoremove all actors from the replayer, or False to keep them.  
+- <a name="carla.Client.unmount_content_pack"></a>**<font color="#7fb800">unmount_content_pack</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>)  
+Unmounts a content pack. Refused (RuntimeError) while a map of the pack is the current world or objects loaded from it are still alive; load another map first. Returns True on success.  
+    - **Parameters:**
+        - `name` (_str_) - Name of the pack, as reported by [carla.Client.get_content_packs](#carla.Client.get_content_packs).  
+    - **Return:** _bool_  
 
 ##### Getters
 - <a name="carla.Client.get_available_maps"></a>**<font color="#7fb800">get_available_maps</font>**(<font color="#00a6ed">**self**</font>)  
@@ -593,6 +603,9 @@ Returns a list of strings containing the paths of the maps available on server. 
 - <a name="carla.Client.get_client_version"></a>**<font color="#7fb800">get_client_version</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server can use different libcarla versions but some issues may arise regarding unexpected incompatibilities.  
     - **Return:** _str_  
+- <a name="carla.Client.get_content_packs"></a>**<font color="#7fb800">get_content_packs</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the content packs known to the server: the ones found at startup in `CarlaUnreal/Packs/`, in the directories given with `-carla-packs=<dir>[;<dir>]` or `$CARLA_PACKS`, and the ones mounted with [carla.Client.mount_content_pack](#carla.Client.mount_content_pack). Unmounted packs are listed with `mounted=False`.  
+    - **Return:** _list([carla.ContentPackInfo](#carla.ContentPackInfo))_  
 - <a name="carla.Client.get_required_files"></a>**<font color="#7fb800">get_required_files</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**folder**</font>, <font color="#00a6ed">**download**=True</font>)  
 Asks the server which files are required by the client to use the current map. Option to download files automatically if they are not already in the cache.  
     - **Parameters:**
@@ -686,6 +699,30 @@ Converts the image to a linear depth map. Used by the [depth camera](ref_sensors
 Converts the image to a depth map using a logarithmic scale, leading to better precision for small distances at the expense of losing it when further away.  
 - <a name="carla.ColorConverter.Raw"></a>**<font color="#f8805a">Raw</font>**  
 No changes applied to the image. Used by the [RGB camera](ref_sensors.md#rgb-camera).  
+
+---
+
+## carla.ContentPackInfo<a name="carla.ContentPackInfo"></a>
+Description of a content pack known to the server, as returned by [carla.Client.get_content_packs](#carla.Client.get_content_packs) and [carla.Client.mount_content_pack](#carla.Client.mount_content_pack).  
+
+### Instance Variables
+- <a name="carla.ContentPackInfo.name"></a>**<font color="#f8805a">name</font>** (_str_)  
+Pack name; also the plugin name and the `/<name>/` package mount point.  
+- <a name="carla.ContentPackInfo.version"></a>**<font color="#f8805a">version</font>** (_str_)  
+Pack version from the manifest.  
+- <a name="carla.ContentPackInfo.base_release"></a>**<font color="#f8805a">base_release</font>** (_str_)  
+CARLA base release the pack was cooked against, e.g. `carla-0.10.2-Linux`.  
+- <a name="carla.ContentPackInfo.path"></a>**<font color="#f8805a">path</font>** (_str_)  
+Absolute directory of the pack on the server host.  
+- <a name="carla.ContentPackInfo.mounted"></a>**<font color="#f8805a">mounted</font>** (_bool_)  
+True while the pack is mounted in the server.  
+- <a name="carla.ContentPackInfo.maps"></a>**<font color="#f8805a">maps</font>** (_list(str)_)  
+Map names declared by the pack manifest.  
+
+### Methods
+
+##### Dunder methods
+- <a name="carla.ContentPackInfo.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
