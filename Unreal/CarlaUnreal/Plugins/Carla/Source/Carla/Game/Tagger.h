@@ -96,7 +96,12 @@ public:
       {
         if (StringArray[i] == TEXT("Static"))
         {
-          return GetLabelByFolderName(StringArray[i + 1]);
+          const crp::CityObjectLabel PackLabel = GetLabelByFolderName(StringArray[i + 1]);
+          if (PackLabel != crp::CityObjectLabel::None)
+          {
+            return PackLabel;
+          }
+          break;
         }
       }
     }

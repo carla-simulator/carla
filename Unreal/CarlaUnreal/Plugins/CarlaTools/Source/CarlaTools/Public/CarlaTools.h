@@ -24,6 +24,7 @@ private:
 	/** carla-digitaltwins traffic-light authoring tool (LevelEditor menu + nomad tab) */
 	void AddMenuEntry(class FMenuBuilder& Builder);
 	void OpenTrafficLightToolTab();
+	TSharedPtr<class FExtender> MenuExtender;
 
 	/// Editor save guard: a component about to be saved must not reference a
 	/// MaterialInstanceDynamic that lives in another package. Such a MID is

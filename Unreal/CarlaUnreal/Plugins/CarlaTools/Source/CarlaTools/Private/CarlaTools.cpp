@@ -26,7 +26,7 @@ void FCarlaToolsModule::StartupModule()
 	// carla-digitaltwins traffic-light authoring tool: LevelEditor menu entry + nomad tab.
 	FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
 
-	TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
+	MenuExtender = MakeShareable(new FExtender());
 	MenuExtender->AddMenuExtension("WindowLayout", EExtensionHook::After, nullptr,
 		FMenuExtensionDelegate::CreateRaw(this, &FCarlaToolsModule::AddMenuEntry));
 	LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
@@ -49,6 +49,12 @@ void FCarlaToolsModule::StartupModule()
 void FCarlaToolsModule::ShutdownModule()
 {
 	FGlobalTabmanager::Get()->UnregisterNomadTabSpawner("TrafficLightToolTab");
+	if (MenuExtender.IsValid() && FModuleManager::Get().IsModuleLoaded("LevelEditor"))
+	{
+		FLevelEditorModule& LevelEditorModule = FModuleManager::GetModuleChecked<FLevelEditorModule>("LevelEditor");
+		LevelEditorModule.GetMenuExtensibilityManager()->RemoveExtender(MenuExtender);
+	}
+	MenuExtender.Reset();
 	UPackage::PreSavePackageWithContextEvent.Remove(PreSavePackageHandle);
 	PreSavePackageHandle.Reset();
 }

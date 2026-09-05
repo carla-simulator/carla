@@ -21,11 +21,11 @@
 #include <util/ue-header-guard-end.h>
 
 
-/// UWorld assets the asset registry knows under /Game/Carla/Maps. Cooked base
-/// maps live inside Pak/IoStore containers where the .umap walk finds
-/// nothing; the premade AssetRegistry.bin of a packaged build still lists
-/// them. The registry asserts on non-game threads, so off-thread callers get
-/// an empty list.
+/// UWorld assets the asset registry knows outside /Engine (project content,
+/// mounted plugins, content packs). Cooked base maps live inside Pak/IoStore
+/// containers where the .umap walk finds nothing; the premade
+/// AssetRegistry.bin of a packaged build still lists them. The registry
+/// asserts on non-game threads, so off-thread callers get an empty list.
 static TArray<FAssetData> UCarlaStatics_GetRegistryWorlds()
 {
   TArray<FAssetData> Worlds;
@@ -40,16 +40,16 @@ static TArray<FAssetData> UCarlaStatics_GetRegistryWorlds()
   }
   FARFilter Filter;
   Filter.ClassPaths.Add(UWorld::StaticClass()->GetClassPathName());
-  Filter.PackagePaths.Add(TEXT("/Game/Carla/Maps"));
-  Filter.bRecursivePaths = true;
   AssetRegistry->GetAssets(Filter, Worlds);
-  // A cooked World Partition town also has every generated streaming cell
-  // (/Game/Carla/Maps/Town15/Town15/_Generated_/<Cell>) registered as a
-  // UWorld named after the town; those are not loadable maps.
+  // Engine maps are never CARLA maps. A cooked World Partition town also has
+  // every generated streaming cell (<Town>/_Generated_/<Cell>) registered as
+  // a UWorld named after the town; those are not loadable maps.
   Worlds.RemoveAll([](const FAssetData &World)
   {
-    return (World.PackageFlags & PKG_CookGenerated) != 0 ||
-        World.PackageName.ToString().Contains(TEXT("/_Generated_/"));
+    const FString PackageName = World.PackageName.ToString();
+    return PackageName.StartsWith(TEXT("/Engine/")) ||
+        (World.PackageFlags & PKG_CookGenerated) != 0 ||
+        PackageName.Contains(TEXT("/_Generated_/"));
   });
   return Worlds;
 }
