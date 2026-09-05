@@ -54,6 +54,14 @@ Repositories associated with the CARLA simulation platform:
 * [**RoadRunner**](https://www.mathworks.com/products/roadrunner.html): MATLAB GUI based application to create road networks in OpenDrive format 
 * [**Map Editor**](https://github.com/carla-simulator/carla-map-editor): Standalone GUI application to enhance RoadRunner maps with traffic lights and traffic signs information
 
+## Bhutan mobility-data and AV-evaluation pilot
+
+This fork adds a synthetic-first mobility-intelligence layer for emerging-market roads, using Bhutan as the reference environment:
+
+* [`PythonAPI/bhutan`](PythonAPI/bhutan): 24 Bhutan scenario families expanded into 127 parameterized templates, a CARLA runner with route-archetype selection and sensor degradation, a unified telemetry schema for simulated and passive real-world capture, safety rules, data-quality gates and a perception benchmark with failure clustering.
+* [`Dashboard`](Dashboard): the "Atlas" operations dashboard and evaluation API on Cloudflare Workers (D1 catalog, R2 raw storage, deck.gl route playback, KPI dashboard, safety review, clip governance, HMAC-signed evidence packs).
+* Docs: [pilot overview](Docs/bhutan_pilot.md), [dashboard deployment](Docs/bhutan_dashboard.md), [driverless-fleet tooling outline](Docs/bhutan_fleet_tools.md).
+
 
 **Like what you see? Star us on GitHub to support the project!**
 

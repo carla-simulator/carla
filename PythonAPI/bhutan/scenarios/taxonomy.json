@@ -1,0 +1,497 @@
+{
+  "version": "0.1.0",
+  "region": "BT",
+  "description": "Seed scenario taxonomy for the Bhutan mobility data and AV evaluation pilot. Each family is a parameterized archetype, not a photorealistic digital twin. Ranges are sampled deterministically by bhutan_sim.library.generate_library().",
+  "groups": {
+    "sight_distance": "Blind curves, crests and limited sight distance on mountain roads",
+    "lane_geometry": "Narrow, unmarked or faded-marking lanes",
+    "weather_light": "Rain, fog, night glare, low sun and surface contamination",
+    "vru": "Vulnerable road users and roadside activity",
+    "obstruction": "Landslide debris, roadworks, stalled vehicles and oncoming encroachment",
+    "freight": "Freight-specific grade, braking, load-shift, turning-radius and stopping-distance events"
+  },
+  "families": [
+    {
+      "id": "blind_mountain_curve",
+      "group": "sight_distance",
+      "name": "Blind mountain curve with oncoming vehicle",
+      "description": "Tight radius curve on a two-lane mountain road; an oncoming vehicle appears with limited sight distance.",
+      "tags": ["curve", "sight_distance", "oncoming"],
+      "ranges": {
+        "road_curvature": [0.02, 0.08],
+        "grade_pct": [-8, 8],
+        "traffic_density": [0.0, 0.4],
+        "lane_quality": [0.2, 0.8],
+        "speed_limit_kph": [30, 50]
+      },
+      "weather_presets": ["clear_day", "overcast", "light_rain", "valley_fog"],
+      "times_of_day": ["dawn", "day", "dusk"],
+      "actors": [{"role": "oncoming_vehicle", "lane": "opposite", "distance_m": [40, 90]}],
+      "expected_events": ["oncoming_encounter", "sight_distance_limited"],
+      "variants": 6
+    },
+    {
+      "id": "crest_limited_sight",
+      "group": "sight_distance",
+      "name": "Road crest hiding a stopped vehicle",
+      "description": "Ego approaches a crest; a stopped vehicle is just beyond the crest and hidden until late.",
+      "tags": ["crest", "sight_distance", "stopped_vehicle"],
+      "ranges": {
+        "road_curvature": [0.0, 0.02],
+        "grade_pct": [4, 12],
+        "traffic_density": [0.0, 0.3],
+        "lane_quality": [0.3, 0.9],
+        "speed_limit_kph": [40, 60]
+      },
+      "weather_presets": ["clear_day", "overcast", "low_sun"],
+      "times_of_day": ["day", "dusk"],
+      "actors": [{"role": "stalled_vehicle", "lane": "ego", "distance_m": [50, 110]}],
+      "expected_events": ["hard_brake", "stopped_vehicle_ahead"],
+      "variants": 5
+    },
+    {
+      "id": "narrow_lane",
+      "group": "lane_geometry",
+      "name": "Narrow single-carriageway lane",
+      "description": "Lane narrower than the freight vehicle envelope with a retaining wall on one side and a drop on the other.",
+      "tags": ["narrow", "lane_geometry", "wall"],
+      "ranges": {
+        "road_curvature": [0.0, 0.05],
+        "grade_pct": [-6, 6],
+        "traffic_density": [0.0, 0.5],
+        "lane_quality": [0.0, 0.5],
+        "speed_limit_kph": [20, 40],
+        "lane_width_m": [2.6, 3.2]
+      },
+      "weather_presets": ["clear_day", "overcast", "light_rain"],
+      "times_of_day": ["day", "night"],
+      "actors": [{"role": "oncoming_vehicle", "lane": "opposite", "distance_m": [30, 80]}],
+      "expected_events": ["lane_departure", "oncoming_encounter"],
+      "variants": 5
+    },
+    {
+      "id": "unmarked_lane",
+      "group": "lane_geometry",
+      "name": "Unmarked road with ambiguous lane assignment",
+      "description": "No lane markings; vehicles negotiate position informally.",
+      "tags": ["unmarked", "lane_geometry"],
+      "ranges": {
+        "road_curvature": [0.0, 0.04],
+        "grade_pct": [-5, 5],
+        "traffic_density": [0.1, 0.7],
+        "lane_quality": [0.0, 0.1],
+        "speed_limit_kph": [30, 50]
+      },
+      "weather_presets": ["clear_day", "overcast", "light_rain", "heavy_rain"],
+      "times_of_day": ["day", "dusk", "night"],
+      "actors": [],
+      "expected_events": ["lane_departure"],
+      "variants": 5
+    },
+    {
+      "id": "faded_markings",
+      "group": "lane_geometry",
+      "name": "Faded or partially visible markings",
+      "description": "Markings present but worn; visibility depends on wetness and sun angle.",
+      "tags": ["faded_markings", "lane_geometry"],
+      "ranges": {
+        "road_curvature": [0.0, 0.05],
+        "grade_pct": [-4, 4],
+        "traffic_density": [0.0, 0.5],
+        "lane_quality": [0.1, 0.4],
+        "speed_limit_kph": [40, 60]
+      },
+      "weather_presets": ["clear_day", "low_sun", "wet_road", "light_rain"],
+      "times_of_day": ["dawn", "day", "dusk"],
+      "actors": [],
+      "expected_events": ["lane_departure"],
+      "variants": 5
+    },
+    {
+      "id": "monsoon_rain",
+      "group": "weather_light",
+      "name": "Monsoon rain with standing water",
+      "description": "Heavy precipitation, deposits on the road, reduced camera visibility and longer stopping distance.",
+      "tags": ["rain", "wet", "visibility"],
+      "ranges": {
+        "road_curvature": [0.0, 0.05],
+        "grade_pct": [-8, 8],
+        "traffic_density": [0.1, 0.6],
+        "lane_quality": [0.2, 0.8],
+        "speed_limit_kph": [30, 60]
+      },
+      "weather_presets": ["heavy_rain", "monsoon_storm"],
+      "times_of_day": ["day", "dusk", "night"],
+      "actors": [{"role": "lead_vehicle", "lane": "ego", "distance_m": [25, 60]}],
+      "expected_events": ["hard_brake", "lead_vehicle_close"],
+      "variants": 6
+    },
+    {
+      "id": "valley_fog",
+      "group": "weather_light",
+      "name": "Valley fog with short visibility",
+      "description": "Dense morning fog in a valley; visibility below 50 m with slow traffic ahead.",
+      "tags": ["fog", "visibility"],
+      "ranges": {
+        "road_curvature": [0.0, 0.06],
+        "grade_pct": [-6, 6],
+        "traffic_density": [0.0, 0.5],
+        "lane_quality": [0.2, 0.9],
+        "speed_limit_kph": [30, 50]
+      },
+      "weather_presets": ["valley_fog", "dense_fog"],
+      "times_of_day": ["dawn", "day"],
+      "actors": [{"role": "lead_vehicle", "lane": "ego", "distance_m": [20, 45]}],
+      "expected_events": ["lead_vehicle_close", "hard_brake"],
+      "variants": 6
+    },
+    {
+      "id": "night_glare",
+      "group": "weather_light",
+      "name": "Night driving with oncoming headlight glare",
+      "description": "Unlit road at night; oncoming high beams and a pedestrian at the road edge.",
+      "tags": ["night", "glare", "pedestrian"],
+      "ranges": {
+        "road_curvature": [0.0, 0.05],
+        "grade_pct": [-6, 6],
+        "traffic_density": [0.1, 0.5],
+        "lane_quality": [0.1, 0.8],
+        "speed_limit_kph": [30, 50]
+      },
+      "weather_presets": ["clear_night", "wet_night"],
+      "times_of_day": ["night"],
+      "actors": [
+        {"role": "oncoming_vehicle", "lane": "opposite", "distance_m": [40, 100]},
+        {"role": "pedestrian", "lane": "shoulder", "distance_m": [25, 60]}
+      ],
+      "expected_events": ["oncoming_encounter", "vru_close_pass"],
+      "variants": 5
+    },
+    {
+      "id": "low_sun",
+      "group": "weather_light",
+      "name": "Low sun on the horizon",
+      "description": "Sun near the horizon in the direction of travel; camera saturation and washed-out markings.",
+      "tags": ["low_sun", "glare"],
+      "ranges": {
+        "road_curvature": [0.0, 0.04],
+        "grade_pct": [-6, 6],
+        "traffic_density": [0.0, 0.5],
+        "lane_quality": [0.2, 0.8],
+        "speed_limit_kph": [40, 60]
+      },
+      "weather_presets": ["low_sun", "low_sun_haze"],
+      "times_of_day": ["dawn", "dusk"],
+      "actors": [{"role": "lead_vehicle", "lane": "ego", "distance_m": [30, 70]}],
+      "expected_events": ["lead_vehicle_close"],
+      "variants": 5
+    },
+    {
+      "id": "mud_debris_surface",
+      "group": "weather_light",
+      "name": "Mud and debris on the surface after rain",
+      "description": "Contaminated surface with loose debris reducing traction on a curve.",
+      "tags": ["mud", "debris", "traction"],
+      "ranges": {
+        "road_curvature": [0.02, 0.07],
+        "grade_pct": [-8, 4],
+        "traffic_density": [0.0, 0.3],
+        "lane_quality": [0.0, 0.5],
+        "speed_limit_kph": [20, 40]
+      },
+      "weather_presets": ["wet_road", "light_rain"],
+      "times_of_day": ["day", "dusk"],
+      "actors": [{"role": "debris", "lane": "ego", "distance_m": [30, 70]}],
+      "expected_events": ["obstacle_ahead", "lateral_accel_high"],
+      "variants": 5
+    },
+    {
+      "id": "pedestrian_roadside",
+      "group": "vru",
+      "name": "Pedestrians walking along the carriageway",
+      "description": "No footpath; pedestrians walk in the lane edge in both directions.",
+      "tags": ["pedestrian", "vru", "no_footpath"],
+      "ranges": {
+        "road_curvature": [0.0, 0.05],
+        "grade_pct": [-6, 6],
+        "traffic_density": [0.1, 0.6],
+        "lane_quality": [0.0, 0.8],
+        "speed_limit_kph": [20, 40]
+      },
+      "weather_presets": ["clear_day", "overcast", "light_rain", "clear_night"],
+      "times_of_day": ["day", "dusk", "night"],
+      "actors": [
+        {"role": "pedestrian", "lane": "shoulder", "distance_m": [20, 50]},
+        {"role": "pedestrian", "lane": "shoulder", "distance_m": [50, 90]}
+      ],
+      "expected_events": ["vru_close_pass"],
+      "variants": 6
+    },
+    {
+      "id": "school_zone",
+      "group": "vru",
+      "name": "School zone with crossing children",
+      "description": "Dense pedestrian activity at school start and end times with an unexpected crossing.",
+      "tags": ["pedestrian", "vru", "school", "crossing"],
+      "ranges": {
+        "road_curvature": [0.0, 0.02],
+        "grade_pct": [-3, 3],
+        "traffic_density": [0.3, 0.8],
+        "lane_quality": [0.3, 0.9],
+        "speed_limit_kph": [15, 30]
+      },
+      "weather_presets": ["clear_day", "overcast", "light_rain"],
+      "times_of_day": ["day"],
+      "actors": [
+        {"role": "pedestrian_crossing", "lane": "crossing", "distance_m": [20, 45]},
+        {"role": "pedestrian", "lane": "shoulder", "distance_m": [10, 40]}
+      ],
+      "expected_events": ["vru_crossing", "hard_brake"],
+      "variants": 5
+    },
+    {
+      "id": "motorcycle_oncoming",
+      "group": "vru",
+      "name": "Motorcycle overtaking into ego lane",
+      "description": "An oncoming motorcycle overtakes a slow vehicle and briefly occupies the ego lane.",
+      "tags": ["motorcycle", "vru", "oncoming", "overtake"],
+      "ranges": {
+        "road_curvature": [0.0, 0.05],
+        "grade_pct": [-6, 6],
+        "traffic_density": [0.2, 0.7],
+        "lane_quality": [0.2, 0.8],
+        "speed_limit_kph": [30, 60]
+      },
+      "weather_presets": ["clear_day", "overcast", "low_sun", "light_rain"],
+      "times_of_day": ["day", "dusk"],
+      "actors": [
+        {"role": "motorcycle", "lane": "opposite_encroaching", "distance_m": [40, 90]},
+        {"role": "lead_vehicle", "lane": "opposite", "distance_m": [60, 120]}
+      ],
+      "expected_events": ["oncoming_encroachment", "hard_brake"],
+      "variants": 6
+    },
+    {
+      "id": "livestock_on_road",
+      "group": "vru",
+      "name": "Livestock on the carriageway",
+      "description": "Cattle or dogs standing or moving slowly on the road around a curve. Asset gap: CARLA has no livestock mesh, so a slow walker stands in until a custom asset is imported.",
+      "tags": ["livestock", "animal", "curve"],
+      "ranges": {
+        "road_curvature": [0.01, 0.06],
+        "grade_pct": [-6, 6],
+        "traffic_density": [0.0, 0.3],
+        "lane_quality": [0.0, 0.6],
+        "speed_limit_kph": [20, 50]
+      },
+      "weather_presets": ["clear_day", "overcast", "valley_fog", "clear_night"],
+      "times_of_day": ["dawn", "day", "dusk", "night"],
+      "actors": [{"role": "livestock", "lane": "ego", "distance_m": [30, 70]}],
+      "expected_events": ["obstacle_ahead", "hard_brake"],
+      "variants": 5
+    },
+    {
+      "id": "roadside_market_activity",
+      "group": "vru",
+      "name": "Roadside market with parked vehicles and pedestrians",
+      "description": "Vehicles parked half on the road and pedestrians stepping out between them.",
+      "tags": ["pedestrian", "parked", "market"],
+      "ranges": {
+        "road_curvature": [0.0, 0.02],
+        "grade_pct": [-3, 3],
+        "traffic_density": [0.3, 0.9],
+        "lane_quality": [0.1, 0.7],
+        "speed_limit_kph": [15, 30]
+      },
+      "weather_presets": ["clear_day", "overcast"],
+      "times_of_day": ["day", "dusk"],
+      "actors": [
+        {"role": "parked_vehicle", "lane": "shoulder", "distance_m": [15, 40]},
+        {"role": "pedestrian_crossing", "lane": "crossing", "distance_m": [20, 45]}
+      ],
+      "expected_events": ["vru_crossing", "hard_brake"],
+      "variants": 4
+    },
+    {
+      "id": "landslide_debris",
+      "group": "obstruction",
+      "name": "Landslide debris blocking part of the lane",
+      "description": "Rock and soil debris occupies part or all of the ego lane after a curve.",
+      "tags": ["landslide", "debris", "obstruction"],
+      "ranges": {
+        "road_curvature": [0.01, 0.07],
+        "grade_pct": [-8, 8],
+        "traffic_density": [0.0, 0.4],
+        "lane_quality": [0.0, 0.6],
+        "speed_limit_kph": [20, 50]
+      },
+      "weather_presets": ["heavy_rain", "wet_road", "overcast", "valley_fog"],
+      "times_of_day": ["dawn", "day", "dusk", "night"],
+      "actors": [{"role": "debris", "lane": "ego", "distance_m": [30, 80], "lateral_m": [-1.0, 1.0]}],
+      "expected_events": ["obstacle_ahead", "hard_brake", "lane_departure"],
+      "variants": 6
+    },
+    {
+      "id": "roadworks",
+      "group": "obstruction",
+      "name": "Roadworks with cones and a flagger",
+      "description": "Single-lane alternating traffic with cones, barriers and a worker in the road.",
+      "tags": ["roadworks", "cones", "worker"],
+      "ranges": {
+        "road_curvature": [0.0, 0.04],
+        "grade_pct": [-5, 5],
+        "traffic_density": [0.2, 0.7],
+        "lane_quality": [0.0, 0.7],
+        "speed_limit_kph": [15, 30]
+      },
+      "weather_presets": ["clear_day", "overcast", "light_rain", "clear_night"],
+      "times_of_day": ["day", "dusk", "night"],
+      "actors": [
+        {"role": "cones", "lane": "ego", "distance_m": [25, 60]},
+        {"role": "worker", "lane": "shoulder", "distance_m": [30, 65]}
+      ],
+      "expected_events": ["obstacle_ahead", "vru_close_pass"],
+      "variants": 5
+    },
+    {
+      "id": "stalled_vehicle",
+      "group": "obstruction",
+      "name": "Stalled vehicle in the lane",
+      "description": "A broken-down vehicle in the ego lane, sometimes with people around it.",
+      "tags": ["stalled", "obstruction"],
+      "ranges": {
+        "road_curvature": [0.0, 0.05],
+        "grade_pct": [-8, 8],
+        "traffic_density": [0.0, 0.5],
+        "lane_quality": [0.1, 0.8],
+        "speed_limit_kph": [30, 60]
+      },
+      "weather_presets": ["clear_day", "overcast", "heavy_rain", "clear_night", "valley_fog"],
+      "times_of_day": ["day", "dusk", "night"],
+      "actors": [
+        {"role": "stalled_vehicle", "lane": "ego", "distance_m": [40, 100]},
+        {"role": "pedestrian", "lane": "shoulder", "distance_m": [45, 105]}
+      ],
+      "expected_events": ["stopped_vehicle_ahead", "hard_brake"],
+      "variants": 5
+    },
+    {
+      "id": "oncoming_encroachment",
+      "group": "obstruction",
+      "name": "Oncoming vehicle cutting the curve",
+      "description": "A truck or bus takes the inside of a curve and crosses into the ego lane.",
+      "tags": ["oncoming", "encroachment", "curve"],
+      "ranges": {
+        "road_curvature": [0.02, 0.08],
+        "grade_pct": [-8, 8],
+        "traffic_density": [0.0, 0.4],
+        "lane_quality": [0.0, 0.7],
+        "speed_limit_kph": [20, 50]
+      },
+      "weather_presets": ["clear_day", "overcast", "light_rain", "valley_fog", "clear_night"],
+      "times_of_day": ["dawn", "day", "dusk", "night"],
+      "actors": [{"role": "oncoming_truck", "lane": "opposite_encroaching", "distance_m": [40, 90]}],
+      "expected_events": ["oncoming_encroachment", "hard_brake"],
+      "variants": 6
+    },
+    {
+      "id": "steep_descent_braking",
+      "group": "freight",
+      "name": "Sustained steep descent with braking demand",
+      "description": "Long descent where a loaded truck must manage speed; tests downhill overspeed and brake use.",
+      "tags": ["freight", "grade", "braking", "descent"],
+      "ranges": {
+        "road_curvature": [0.0, 0.05],
+        "grade_pct": [-14, -6],
+        "traffic_density": [0.0, 0.4],
+        "lane_quality": [0.2, 0.8],
+        "speed_limit_kph": [30, 50],
+        "payload_kg": [4000, 12000]
+      },
+      "weather_presets": ["clear_day", "overcast", "wet_road", "heavy_rain"],
+      "times_of_day": ["day", "dusk"],
+      "actors": [{"role": "lead_vehicle", "lane": "ego", "distance_m": [40, 80]}],
+      "expected_events": ["downhill_overspeed", "hard_brake"],
+      "variants": 6
+    },
+    {
+      "id": "grade_climb",
+      "group": "freight",
+      "name": "Slow climb with faster traffic behind",
+      "description": "Loaded truck climbs a steep grade at low speed while faster vehicles queue and overtake.",
+      "tags": ["freight", "grade", "climb", "overtake"],
+      "ranges": {
+        "road_curvature": [0.0, 0.05],
+        "grade_pct": [6, 14],
+        "traffic_density": [0.2, 0.7],
+        "lane_quality": [0.2, 0.8],
+        "speed_limit_kph": [30, 50],
+        "payload_kg": [4000, 12000]
+      },
+      "weather_presets": ["clear_day", "overcast", "light_rain"],
+      "times_of_day": ["day"],
+      "actors": [{"role": "following_vehicle", "lane": "ego_behind", "distance_m": [15, 40]}],
+      "expected_events": ["overtaken_close"],
+      "variants": 4
+    },
+    {
+      "id": "load_shift_curve",
+      "group": "freight",
+      "name": "Curve taken with lateral acceleration near load-shift limit",
+      "description": "Tight curve at a speed producing high lateral acceleration for a laden truck.",
+      "tags": ["freight", "curve", "load_shift", "lateral"],
+      "ranges": {
+        "road_curvature": [0.04, 0.1],
+        "grade_pct": [-6, 6],
+        "traffic_density": [0.0, 0.3],
+        "lane_quality": [0.1, 0.8],
+        "speed_limit_kph": [20, 40],
+        "payload_kg": [6000, 14000]
+      },
+      "weather_presets": ["clear_day", "wet_road", "light_rain"],
+      "times_of_day": ["day", "dusk"],
+      "actors": [],
+      "expected_events": ["lateral_accel_high"],
+      "variants": 5
+    },
+    {
+      "id": "tight_turning_radius",
+      "group": "freight",
+      "name": "Hairpin turn near vehicle turning radius",
+      "description": "Hairpin switchback where the truck must use the full width and may cross the centreline.",
+      "tags": ["freight", "hairpin", "turning_radius"],
+      "ranges": {
+        "road_curvature": [0.08, 0.15],
+        "grade_pct": [-10, 10],
+        "traffic_density": [0.0, 0.3],
+        "lane_quality": [0.0, 0.6],
+        "speed_limit_kph": [10, 25]
+      },
+      "weather_presets": ["clear_day", "overcast", "valley_fog", "clear_night"],
+      "times_of_day": ["day", "dusk", "night"],
+      "actors": [{"role": "oncoming_vehicle", "lane": "opposite", "distance_m": [20, 50]}],
+      "expected_events": ["lane_departure", "oncoming_encounter"],
+      "variants": 5
+    },
+    {
+      "id": "stopping_distance_wet",
+      "group": "freight",
+      "name": "Emergency stop on wet descent",
+      "description": "Lead vehicle stops suddenly on a wet descent; measures achieved stopping distance against payload.",
+      "tags": ["freight", "wet", "stopping_distance", "descent"],
+      "ranges": {
+        "road_curvature": [0.0, 0.03],
+        "grade_pct": [-10, -2],
+        "traffic_density": [0.1, 0.5],
+        "lane_quality": [0.2, 0.8],
+        "speed_limit_kph": [30, 50],
+        "payload_kg": [4000, 12000]
+      },
+      "weather_presets": ["wet_road", "heavy_rain", "monsoon_storm"],
+      "times_of_day": ["day", "dusk", "night"],
+      "actors": [{"role": "lead_vehicle_stopping", "lane": "ego", "distance_m": [30, 60]}],
+      "expected_events": ["hard_brake", "ttc_low"],
+      "variants": 6
+    }
+  ]
+}
