@@ -407,3 +407,64 @@ TEST(road, get_waypoint) {
     carla::logging::log(file, "done in", seconds, "seconds.");
   }
 }
+
+// Minimal OpenDRIVE with a single road (id=1) carrying one stencil <object>.
+// The stencil object is named "Stencil_Arrow" so the parser keys on the
+// "Stencil_" prefix while the existing "Stencil_STOP" stop-line branch is
+// left untouched.
+static constexpr const char* kStencilXodr = R"(<?xml version="1.0" encoding="UTF-8"?>
+<OpenDRIVE>
+    <header revMajor="1" revMinor="4" name="" version="1" date="2026-01-01T00:00:00" north="0.0" south="0.0" east="0.0" west="0.0" vendor="CARLA"/>
+    <road name="Road 1" length="2.1500000000000000e+1" id="1" junction="-1">
+        <type s="0.0000000000000000e+0" type="town">
+            <speed max="35" unit="mph"/>
+        </type>
+        <planView>
+            <geometry s="0.0000000000000000e+0" x="0.0000000000000000e+0" y="0.0000000000000000e+0" hdg="0.0000000000000000e+0" length="2.1500000000000000e+1">
+                <line/>
+            </geometry>
+        </planView>
+        <elevationProfile>
+            <elevation s="0.0000000000000000e+0" a="0.0000000000000000e+0" b="0.0000000000000000e+0" c="0.0000000000000000e+0" d="0.0000000000000000e+0"/>
+        </elevationProfile>
+        <lanes>
+            <laneOffset s="0.0000000000000000e+0" a="0.0000000000000000e+0" b="0.0000000000000000e+0" c="0.0000000000000000e+0" d="0.0000000000000000e+0"/>
+            <laneSection s="0.0000000000000000e+0" singleSide="false">
+                <center>
+                    <lane id="0" type="none" level="false">
+                        <roadMark sOffset="0.0000000000000000e+0" type="none" material="standard" color="white" laneChange="none"/>
+                    </lane>
+                </center>
+                <right>
+                    <lane id="-1" type="driving" level="false">
+                        <width sOffset="0.0000000000000000e+0" a="3.5000000000000000e+0" b="0.0000000000000000e+0" c="0.0000000000000000e+0" d="0.0000000000000000e+0"/>
+                        <roadMark sOffset="0.0000000000000000e+0" type="none" material="standard" color="white" laneChange="none"/>
+                        <speed sOffset="0.0000000000000000e+0" max="3.5000000000000000e+1" unit="mph"/>
+                    </lane>
+                </right>
+            </laneSection>
+        </lanes>
+        <objects>
+            <object id="100" name="Stencil_Arrow" s="5.0000000000000000e+0" t="0.0000000000000000e+0" zOffset="0.0000000000000000e+0" hdg="0.0000000000000000e+0" roll="0.0000000000000000e+0" pitch="0.0000000000000000e+0" orientation="none" type="stencil" length="2.0000000000000000e+0" width="1.0000000000000000e+0"/>
+        </objects>
+    </road>
+</OpenDRIVE>
+)";
+
+TEST(road, stencil_parsing) {
+  std::string xodr = kStencilXodr;
+  auto map = OpenDriveParser::Load(xodr);
+  ASSERT_TRUE(map.has_value());
+  auto stencils = map->GetAllStencilReferences();
+  ASSERT_EQ(stencils.size(), 1u);
+  EXPECT_EQ(stencils[0]->GetRoadId(), 1u);
+
+  // The build finalization must populate the map-level stencil container and
+  // link each RoadInfoStencil to the corresponding Stencil.
+  const auto &map_stencils = map->GetStencils();
+  ASSERT_EQ(map_stencils.size(), 1u);
+  const auto stencil_id = stencils[0]->GetStencilId();
+  auto it = map_stencils.find(stencil_id);
+  ASSERT_NE(it, map_stencils.end());
+  EXPECT_EQ(stencils[0]->GetStencil(), it->second.get());
+}
