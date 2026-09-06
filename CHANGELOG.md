@@ -44,6 +44,7 @@
 * Added Docker-based development environment for CARLA UE5
 * Fixed potential segfault in LaneCrossingCalculator by adding a nullptr guard for missing lane marking records
 * Fixed traffic sign bounding box returned through the Python API to use the first valid trigger volume and preserve its rotation, with a guard against null trigger volumes
+* Improved sensor GPU readback performance by moving asynchronous readback completion off the render thread, removing the blocking GPU query and RHI-thread flush, and adding a bounded in-flight readback limit to prevent unbounded staging-buffer accumulation.
 
 ## CARLA 0.10.0
 
