@@ -57,7 +57,8 @@ public:
   /// points at content under @a MountPoint.
   static bool DefinitionReferencesPath(const FActorDefinition &Definition, const FString &MountPoint)
   {
-    if (Definition.Class.Get() != nullptr && Definition.Class.Get()->GetPathName().StartsWith(MountPoint))
+    const UClass *Class = Definition.Class.Get();
+    if (IsValid(Class) && Class->GetPathName().StartsWith(MountPoint))
     {
       return true;
     }

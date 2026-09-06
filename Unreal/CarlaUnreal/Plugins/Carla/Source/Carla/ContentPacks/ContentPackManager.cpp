@@ -800,16 +800,25 @@ bool UCarlaContentPackManager::Unmount(const FString &Name, FString &OutError)
   // them first, otherwise the garbage collection below keeps them alive.
   {
     const FString MountPoint = FString::Printf(TEXT("/%s/"), *Pack.GetName());
+    // Objects of an episode torn down by load_world stay reachable to
+    // TObjectIterator until the next garbage collection; their definitions
+    // may point at classes that are already gone. Only touch the ones that
+    // still belong to a live world.
+    const auto BelongsToLiveWorld = [](const UObject *Object)
+    {
+      const UWorld *World = Object->GetWorld();
+      return IsValid(World) && !World->bIsTearingDown;
+    };
     for (TObjectIterator<ACarlaActorFactory> It; It; ++It)
     {
-      if (IsValid(*It))
+      if (IsValid(*It) && BelongsToLiveWorld(*It))
       {
         It->ReleaseContentPack(MountPoint);
       }
     }
     for (TObjectIterator<UActorDispatcher> It; It; ++It)
     {
-      if (IsValid(*It))
+      if (IsValid(*It) && BelongsToLiveWorld(*It))
       {
         It->ReleaseContentPack(MountPoint);
       }

@@ -113,10 +113,15 @@ private:
   UFUNCTION()
   void OnActorDestroyed(AActor *Actor);
 
+  /// UPROPERTY so the garbage collector clears the class references when a
+  /// content pack's classes are destroyed; a plain array kept dangling
+  /// TSubclassOf pointers that ReleaseContentPack then dereferenced.
+  UPROPERTY()
   TArray<FActorDefinition> Definitions;
 
   TArray<SpawnFunctionType> SpawnFunctions;
 
+  UPROPERTY()
   TMap<FString, TSubclassOf<AActor>> Classes;
 
   FActorRegistry Registry;
