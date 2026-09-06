@@ -855,11 +855,14 @@ def find_sidecars(src):
     map_dir = src.parent
     maps = maps_folder_of(src)
     found = {}
+    # <Map dir>/TM holds one town's cache only when the map has a folder of its own
+    # (Maps/Town12/TM/); for a flat map Maps/TM/ is the shared folder of every town.
+    own_tm = (map_dir / "TM",) if map_dir != maps else ()
     for key, candidates in (
             ("xodr", (map_dir / "OpenDrive" / (name + ".xodr"), maps / "OpenDrive" / (name + ".xodr"),
                       map_dir / (name + ".xodr"))),
             ("nav", (maps / "Nav" / (name + ".bin"), map_dir / "Nav" / (name + ".bin"))),
-            ("tm", (map_dir / "TM", maps / "TM" / name, maps / "TM" / (name + ".bin")))):
+            ("tm", (maps / "TM" / (name + ".bin"), maps / "TM" / name) + own_tm)):
         for c in candidates:
             if c.is_file() or (c.is_dir() and any(c.iterdir())):
                 found[key] = c
@@ -1162,12 +1165,16 @@ def validate_add_inputs(args):
 def cmd_add(args):
     pack_dir = resolve_pack_dir(args.pack, args)
     validate_add_inputs(args)
-    if args.map:
-        resolve_map_source(args.map, args, pack_dir)  # fail before anything is copied
+    for spec in args.map or []:
+        resolve_map_source(spec, args, pack_dir)  # fail before anything is copied
     manifest = load_manifest(pack_dir)
     did = False
     if args.map:
-        add_map(pack_dir, manifest, args)
+        if len(args.map) > 1 and (args.xodr or args.nav or args.tm):
+            raise PackError("--xodr/--nav/--tm go with a single --map; with several maps the sidecar "
+                            "files are picked up from next to each map")
+        for spec in args.map:
+            add_map(pack_dir, manifest, argparse.Namespace(**dict(vars(args), map=spec)))
         did = True
     elif args.xodr or args.nav or args.tm or args.world_partition or args.import_map or args.copy:
         raise PackError("--xodr/--nav/--tm/--world-partition/--import/--copy need --map")
@@ -1554,6 +1561,55 @@ def check_maps_not_in_base(packages, registry):
                         "package contains, remove it from the manifest".format(", ".join(shipped)))
 
 
+def find_default_base(args):
+    """The release metadata of this checkout when --base is omitted: a single
+    *-release-metadata.tar.gz under <repo>/Build, else a single Releases/<release> dir."""
+    project_dir = project_file(args).parent
+    roots = []
+    if len(project_dir.parents) >= 2:
+        roots.append(project_dir.parents[1] / "Build")      # <repo>/Unreal/CarlaUnreal -> <repo>/Build
+    tarballs = sorted({t.resolve() for r in roots if r.is_dir() for t in r.rglob("*-release-metadata.tar.gz")})
+    if len(tarballs) == 1:
+        return tarballs[0]
+    releases = sorted(d for d in (project_dir / "Releases").glob("*") if d.is_dir()) \
+        if (project_dir / "Releases").is_dir() else []
+    if not tarballs and len(releases) == 1:
+        return releases[0]
+    found = [str(t) for t in tarballs] + [str(r) for r in releases]
+    if not found:
+        raise PackError("no base release found: pass --base <release-metadata.tar.gz> (published with the "
+                        "CARLA package) or build the package first (cmake --build Build --target package)")
+    raise PackError("several base releases found, pass --base to pick one:\n  " + "\n  ".join(found))
+
+
+def cmd_create(args):
+    """init (if needed) + add every map + build, in one go."""
+    base = Path(args.base).expanduser() if args.base else find_default_base(args)
+    if not args.base:
+        info("base release: {}".format(base))
+    pack_dir = resolve_pack_dir(args.pack, args, must_exist=False)
+    if not (pack_dir / MANIFEST_NAME).is_file():
+        cmd_init(argparse.Namespace(pack=args.pack, version=args.version, carla_version=args.carla_version,
+                                    description=args.description, platform=args.platform,
+                                    root=args.root, project=args.project))
+        pack_dir = resolve_pack_dir(args.pack, args)
+    else:
+        info("adding to the existing pack {}".format(pack_dir))
+    for spec in args.maps:
+        resolve_map_source(spec, args, pack_dir)
+    manifest = load_manifest(pack_dir)
+    for spec in args.maps:
+        add_map(pack_dir, manifest, argparse.Namespace(
+            map=spec, xodr=None, nav=None, tm=None, world_partition=False, copy=False,
+            import_map=args.import_map, engine=args.engine, root=args.root, project=args.project))
+    save_json(pack_dir / MANIFEST_NAME, manifest)
+    return cmd_build(argparse.Namespace(
+        pack=str(pack_dir), base=str(base), maps=None, config=args.config, platform=args.platform,
+        engine=args.engine, out=args.out, work=None, staged=None, asset_registry=None, uat_arg=[],
+        no_base_content=False, rename=False, skip_cook=False, dry_run=args.dry_run,
+        root=args.root, project=args.project))
+
+
 def cmd_build(args):
     pack_dir = resolve_pack_dir(args.pack, args)
     manifest = load_manifest(pack_dir)
@@ -1570,7 +1626,10 @@ def cmd_build(args):
     work.mkdir(parents=True, exist_ok=True)
     out_dir = Path(args.out or work / "out").expanduser().resolve()
     guard_out_dir(out_dir, name, pack_dir, packs_root(args), work)
-    release, releases_root = resolve_base(args.base, platform, work)
+    base = Path(args.base).expanduser() if args.base else find_default_base(args)
+    if not args.base:
+        info("base release: {}".format(base))
+    release, releases_root = resolve_base(base, platform, work)
 
     engine = None
     eng = {"version": "", "commit": ""}
@@ -2037,8 +2096,8 @@ def build_parser():
                                "--props refuses a mesh under any other folder unless --allow-untagged is given.")
     sp.add_argument("pack", metavar="<Pack>")
     project_opts(sp)
-    sp.add_argument("--map", metavar="<Map|/Game/.../Map|file.umap>",
-                    help="map to add: a map name (Town12), a package path or a .umap file. A project "
+    sp.add_argument("--map", metavar="<Map|/Game/.../Map|file.umap>", action="append",
+                    help="map to add (repeatable): a map name (Town12), a package path or a .umap file. A project "
                          "map (/Game/...) the CARLA package does not ship is registered in place and "
                          "cooked into the pack by 'build'; a map of another plugin is imported with the "
                          "editor. OpenDRIVE, navigation and Traffic Manager files are picked up from "
@@ -2070,11 +2129,34 @@ def build_parser():
     sp.add_argument("--dest", help="destination of --asset, relative to the pack's Content folder")
     sp.set_defaults(func=cmd_add)
 
+    sp = sub.add_parser("create", help="make a pack from existing maps in one go: init + add + build",
+                        description="carla-pack create Towns5 Town01_Opt Town03_Opt Town12 Town13 -> "
+                                    "Plugins/Packs/Towns5/Saved/CarlaPack/out/Towns5-1.0.0-<release>.tar.gz")
+    sp.add_argument("pack", metavar="<Pack>")
+    sp.add_argument("maps", metavar="<Map>", nargs="+",
+                    help="map names (Town12), package paths or .umap files, as for 'add --map'")
+    project_opts(sp)
+    sp.add_argument("--base", default=None, help="<release>-release-metadata.tar.gz or Releases/<release> dir "
+                    "(default: the one under this checkout's Build/)")
+    sp.add_argument("--carla-version", default=None)
+    sp.add_argument("--pack-version", dest="version", default="1.0.0")
+    sp.add_argument("--description", default=None)
+    sp.add_argument("--platform", default=DEFAULT_PLATFORM)
+    sp.add_argument("--config", default=DEFAULT_CONFIG, choices=["Development", "Shipping", "Test",
+                                                                  "DebugGame", "Debug"])
+    sp.add_argument("--engine", default=None, help="Unreal Engine root (default: ${})".format(ENGINE_ENV))
+    sp.add_argument("--out", default=None, help="output dir (default: <pack>/Saved/CarlaPack/out)")
+    sp.add_argument("--import", dest="import_map", action="store_true",
+                    help="copy the maps under /<Pack>/ with the editor instead of shipping them in place")
+    sp.add_argument("--dry-run", action="store_true", help="init and add, then only print the cook command")
+    sp.set_defaults(func=cmd_create)
+
     sp = sub.add_parser("build", help="cook the pack as DLC against a base release and tar it")
     sp.add_argument("pack", metavar="<Pack>")
     project_opts(sp)
-    sp.add_argument("--base", required=True,
-                    help="<release>-release-metadata.tar.gz or an extracted Releases/<release> dir")
+    sp.add_argument("--base", default=None,
+                    help="<release>-release-metadata.tar.gz or an extracted Releases/<release> dir "
+                         "(default: the one *-release-metadata.tar.gz under this checkout's Build/)")
     sp.add_argument("--maps", default=None, help="comma-separated map names/packages to pass as "
                     "-MapsToCook (default: none, the DLC cook takes everything under /<Pack>/)")
     sp.add_argument("--config", default=DEFAULT_CONFIG, choices=["Development", "Shipping", "Test",

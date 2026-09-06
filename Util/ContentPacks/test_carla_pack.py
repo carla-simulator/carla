@@ -272,7 +272,7 @@ echo '{"ok": true, "load": true, "save": true, "seconds": 1.0, "error": ""}' > "
         actors under Content/Carla/__ExternalActors__/Carla/Maps/<T>/, xodr and TM inside the map
         folder, navigation under Maps/Nav."""
         carla = self.project_dir / "Content" / "Carla"
-        umap = write(carla / "Maps" / name / (name + ".umap"), b"town")
+        umap = write(carla / "Maps" / name / (name + ".umap"), b"town")   # nested, like Town12/Town13
         write(carla / "Maps" / name / "Asphalt_Diff.uasset", b"tex")
         write(carla / "__ExternalActors__" / "Carla" / "Maps" / name / "A" / "B.uasset", b"ea")
         write(carla / "Maps" / name / "OpenDrive" / (name + ".xodr"), "<OpenDRIVE/>")
@@ -431,6 +431,79 @@ echo '{"ok": true, "load": true, "save": true, "seconds": 1.0, "error": ""}' > "
                            "--engine", self.engine, "--dry-run")
         self.assertEqual(rc, 1)
         self.assertIn("already ships /Game/Carla/Maps/Town13/Town13", err)
+
+    def test_create_is_init_add_build_in_one_command(self):
+        for t in ("Town01_Opt", "Town12"):
+            self.existing_town(t)
+        # the base release is found under <repo>/Build when --base is omitted
+        build_dir = self.tmp / "Build" / "Release" / "Package"
+        shutil.copy(str(self.base_tar), str(write(build_dir / self.base_tar.name, b"")))
+        rc, out, err = run("create", "Towns2", "Town01_Opt", "/Game/Carla/Maps/Town12/Town12",
+                           "--project", self.project, "--engine", self.engine, "--dry-run",
+                           "--carla-version", "0.10.0")
+        self.assertEqual(rc, 0, err)
+        self.assertIn("base release: " + str(build_dir / self.base_tar.name), out)
+        pack_dir = self.root / "Towns2"
+        m = json.loads((pack_dir / "carla-pack.json").read_text())
+        self.assertEqual([x["package"] for x in m["maps"]],
+                         ["/Game/Carla/Maps/Town01_Opt/Town01_Opt", "/Game/Carla/Maps/Town12/Town12"])
+        self.assertTrue((pack_dir / "Content" / "Maps" / "OpenDrive" / "Town12.xodr").is_file())
+        cmd = out.strip().splitlines()[-1]
+        self.assertIn("-dlcname=" + str(pack_dir / "Towns2.uplugin"), cmd)
+        self.assertIn("-MapsToCook=/Game/Carla/Maps/Town01_Opt/Town01_Opt+/Game/Carla/Maps/Town12/Town12", cmd)
+        # running it again adds to the existing pack instead of failing on init
+        self.existing_town("Town13")
+        rc, out, err = run("create", "Towns2", "Town13", "--project", self.project, "--engine", self.engine,
+                           "--dry-run")
+        self.assertEqual(rc, 0, err)
+        self.assertIn("adding to the existing pack", out)
+        self.assertEqual(len(json.loads((pack_dir / "carla-pack.json").read_text())["maps"]), 3)
+        # no base anywhere: a clear error, nothing else
+        shutil.rmtree(str(self.tmp / "Build"))
+        rc, out, err = run("create", "Towns3", "Town13", "--project", self.project, "--engine", self.engine,
+                           "--dry-run")
+        self.assertEqual(rc, 1)
+        self.assertIn("no base release found", err)
+        # two candidates: refuse to guess
+        write(build_dir / "carla-0.10.1-Linux-release-metadata.tar.gz", b"x")
+        write(build_dir / "carla-0.10.2-Linux-release-metadata.tar.gz", b"x")
+        rc, out, err = run("build", "Towns2", "--project", self.project, "--engine", self.engine, "--dry-run")
+        self.assertEqual(rc, 1)
+        self.assertIn("several base releases found", err)
+
+    def test_flat_town_takes_only_its_own_sidecars(self):
+        """Town01_Opt lives flat in Maps/ next to the shared Maps/TM, Maps/Nav, Maps/OpenDrive folders:
+        only its own files may come along (the whole TM folder once did, and the client's Traffic
+        Manager loaded another town's cache)."""
+        run("init", PACK, "--project", self.project)
+        carla = self.project_dir / "Content" / "Carla"
+        write(carla / "Maps" / "Town01_Opt.umap", b"flat")
+        write(carla / "Maps" / "OpenDrive" / "Town01_Opt.xodr", "<OpenDRIVE/>")
+        write(carla / "Maps" / "OpenDrive" / "Town01.xodr", "<OpenDRIVE/>")
+        write(carla / "Maps" / "TM" / "Town01_Opt.bin", b"tm1")
+        write(carla / "Maps" / "TM" / "Town05_Opt.bin", b"tm5")
+        write(carla / "Maps" / "Nav" / "Town01_Opt.bin", b"nav1")
+        write(carla / "Maps" / "Nav" / "Town05_Opt.bin", b"nav5")
+        rc, out, err = run("add", PACK, "--project", self.project, "--map", "Town01_Opt")
+        self.assertEqual(rc, 0, err)
+        c = self.pack_dir / "Content"
+        m = json.loads((self.pack_dir / "carla-pack.json").read_text())
+        self.assertEqual(m["maps"][0]["package"], "/Game/Carla/Maps/Town01_Opt")
+        self.assertEqual(m["maps"][0]["tm"], "Maps/TM/Town01_Opt")
+        self.assertEqual(sorted(p.name for p in (c / "Maps" / "TM" / "Town01_Opt").iterdir()), ["Town01_Opt.bin"])
+        self.assertEqual(sorted(p.name for p in (c / "Maps" / "Nav").iterdir()), ["Town01_Opt.bin"])
+        self.assertEqual(sorted(p.name for p in (c / "Maps" / "OpenDrive").iterdir()), ["Town01_Opt.xodr"])
+
+    def test_add_takes_several_maps(self):
+        run("init", PACK, "--project", self.project)
+        self.existing_town("Town12"); self.existing_town("Town13")
+        rc, out, err = run("add", PACK, "--project", self.project, "--map", "Town12", "--map", "Town13",
+                           "--xodr", self.xodr)
+        self.assertEqual(rc, 1)
+        self.assertIn("single --map", err)
+        rc, out, err = run("add", PACK, "--project", self.project, "--map", "Town12", "--map", "Town13")
+        self.assertEqual(rc, 0, err)
+        self.assertEqual(len(json.loads((self.pack_dir / "carla-pack.json").read_text())["maps"]), 2)
 
     def test_add_map_copy_is_opt_in(self):
         run("init", PACK, "--project", self.project)

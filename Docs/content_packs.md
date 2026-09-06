@@ -77,10 +77,13 @@ The tool is `Util/ContentPacks/carla-pack` (a shim around `carla_pack.py`, Pytho
 ## Authoring flow
 
 ```sh
+# CARLA towns the package does not ship, as one pack, in one command (init + add + build):
+carla-pack create Towns5 Town01_Opt Town03_Opt Town05_Opt Town12 Town13
+# -> Unreal/CarlaUnreal/Plugins/Packs/Towns5/Saved/CarlaPack/out/Towns5-1.0.0-carla-0.10.0-Linux.tar.gz
+
+# step by step, for a pack with your own content:
 carla-pack init NewPack
-# existing CARLA towns: registered in place, OpenDRIVE / navigation / Traffic Manager files picked up
-carla-pack add NewPack --map Town12
-carla-pack add NewPack --map Town13
+carla-pack add NewPack --map Town12 --map Town13     # existing towns, registered in place
 # your own content: author NewTown, props and vehicles in the CARLA editor, saved under the NewPack content root
 carla-pack add NewPack --map Unreal/CarlaUnreal/Plugins/Packs/NewPack/Content/Maps/NewTown.umap --xodr NewTown.xodr --nav NewTown.bin
 carla-pack add NewPack --props props.json --vehicles vehicles.json
@@ -89,7 +92,7 @@ carla-pack build NewPack --base Build/Package/carla-0.10.0-Linux-release-metadat
 carla-pack inspect NewPack-1.0.0-carla-0.10.0-Linux.tar.gz --server /path/to/carla-package/Linux
 ```
 
-The shortest useful pack is a set of CARLA's own towns that the package does not ship (`Town12`, `Town13`, …): `init`, one `add --map <Town>` per town (seconds), `build` (the cook, minutes). No editor session, nothing opened by hand.
+`create <Pack> <Map>...` is `init` + `add --map` for each map + `build` in one go; it finds the base release under this checkout's `Build/` (`--base` when there are several or it lives elsewhere) and takes the `build` options (`--config`, `--engine`, `--out`, `--dry-run`). Run it again with more maps to add them to the same pack. It is all a pack of existing towns needs: seconds to register the maps, then the cook (minutes). No editor session, nothing opened by hand.
 
 ### 1. Create the pack
 
@@ -221,7 +224,7 @@ carla-pack build NewPack --base <release-metadata.tar.gz | Releases/<release>> \
     [--engine <UE root>] [--project <CarlaUnreal.uproject>] [--out <dir>] [--dry-run]
 ```
 
-`--base` is the `<release>-release-metadata.tar.gz` published with the CARLA package (about 1 MB: the base asset registry) or the `Unreal/CarlaUnreal/Releases/<release>` directory of a source tree that built that package. The build extracts it and runs the Unreal cooker as a DLC cook based on it:
+`--base` is the `<release>-release-metadata.tar.gz` published with the CARLA package (about 1 MB: the base asset registry) or the `Unreal/CarlaUnreal/Releases/<release>` directory of a source tree that built that package. Omitted, it is the single `*-release-metadata.tar.gz` under this checkout's `Build/` (what the `package` target leaves in `Build/Release/Package/`), else the single `Releases/<release>` directory. The build extracts it and runs the Unreal cooker as a DLC cook based on it:
 
 ```
 RunUAT.sh BuildCookRun -project=<uproject> -nocompileeditor -nop4 -skipbuild -cook -stage -pak -iostore \
@@ -322,13 +325,10 @@ Unreal cannot reload a package that is already in memory. If any map, mesh or bl
 __How do I ship Town12 and Town13, which the package does not include?__
 
 ```sh
-carla-pack init TownPack
-carla-pack add TownPack --map Town12
-carla-pack add TownPack --map Town13
-carla-pack build TownPack --base carla-0.10.0-Linux-release-metadata.tar.gz
+carla-pack create TownPack Town12 Town13 [--base carla-0.10.0-Linux-release-metadata.tar.gz]
 ```
 
-`add --map <Town>` registers the town in place (seconds) and picks up its OpenDRIVE and Traffic Manager files; the towns' walker navigation is part of the map itself. `build` cooks the two towns and what they reference that the base did not cook, about 2.5 GB. On the consumer side `carla-pack install` and a server restart, then `client.load_world('Town12')` as for any map.
+That is `init`, `add --map` per town and `build`. `add --map <Town>` registers the town in place (seconds) and picks up its OpenDRIVE and Traffic Manager files; the towns' walker navigation is part of the map itself. `build` cooks the two towns and what they reference that the base did not cook, about 2.5 GB. On the consumer side `carla-pack install` and a server restart, then `client.load_world('Town12')` as for any map.
 
 __How big is a pack?__
 

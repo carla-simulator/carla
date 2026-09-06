@@ -113,19 +113,41 @@ namespace traffic_manager {
     std::vector<CachedSimpleWaypoint> cached_waypoints;
     std::unordered_map<uint64_t, uint32_t> id2index;
 
+    // A cache that does not belong to the current map (another town's file, or
+    // one written for an older OpenDRIVE) must not be trusted: every lookup
+    // below is checked and a mismatch leaves the map empty for SetUp() to
+    // rebuild it, instead of dereferencing a null waypoint.
+    const auto fail = [this](const char *what) {
+      log_warning("InMemoryMap cache rejected:", what, "- rebuilding the local map from the OpenDRIVE");
+      dense_topology.clear();
+      return false;
+    };
+
     // read total records
     uint32_t total;
+    if (content.size() < sizeof(total)) {
+      return fail("truncated header");
+    }
     memcpy(&total, &content[pos], sizeof(total));
     pos += sizeof(total);
 
     // read simple waypoints
     for (uint32_t i=0; i < total; i++) {
+      if (pos + CachedSimpleWaypoint::MinimumSize() > content.size()) {
+        return fail("truncated waypoint records");
+      }
       CachedSimpleWaypoint cached_wp;
       cached_wp.Read(content, pos);
+      if (pos > content.size()) {
+        return fail("truncated waypoint records");
+      }
       cached_waypoints.push_back(cached_wp);
       id2index.insert({cached_wp.waypoint_id, i});
 
       WaypointPtr waypoint_ptr = _world_map->GetWaypointXODR(cached_wp.road_id, cached_wp.lane_id, cached_wp.s);
+      if (waypoint_ptr == nullptr) {
+        return fail("it references a road/lane the current map does not have");
+      }
       SimpleWaypointPtr wp = std::make_shared<SimpleWaypoint>(waypoint_ptr);
       wp->SetGeodesicGridId(cached_wp.geodesic_grid_id);
       wp->SetIsJunction(cached_wp.is_junction);
@@ -134,25 +156,45 @@ namespace traffic_manager {
     }
 
     // connect waypoints
+    const auto lookup = [&](uint64_t id) -> SimpleWaypointPtr {
+      const auto it = id2index.find(id);
+      return it == id2index.end() ? nullptr : dense_topology.at(it->second);
+    };
     for (uint32_t i=0; i < dense_topology.size(); i++) {
       auto wp = dense_topology.at(i);
       auto cached_wp = cached_waypoints.at(i);
 
       std::vector<SimpleWaypointPtr> next_waypoints;
       for (auto id : cached_wp.next_waypoints) {
-        next_waypoints.push_back(dense_topology.at(id2index.at(id)));
+        const auto next = lookup(id);
+        if (next == nullptr) {
+          return fail("it links waypoints that are not in the cache");
+        }
+        next_waypoints.push_back(next);
       }
       std::vector<SimpleWaypointPtr> previous_waypoints;
       for (auto id : cached_wp.previous_waypoints) {
-        previous_waypoints.push_back(dense_topology.at(id2index.at(id)));
+        const auto previous = lookup(id);
+        if (previous == nullptr) {
+          return fail("it links waypoints that are not in the cache");
+        }
+        previous_waypoints.push_back(previous);
       }
       wp->SetNextWaypoint(next_waypoints);
       wp->SetPreviousWaypoint(previous_waypoints);
       if (cached_wp.next_left_waypoint > 0) {
-        wp->SetLeftWaypoint(dense_topology.at(id2index.at(cached_wp.next_left_waypoint)));
+        auto left = lookup(cached_wp.next_left_waypoint);
+        if (left == nullptr) {
+          return fail("it links waypoints that are not in the cache");
+        }
+        wp->SetLeftWaypoint(left);
       }
       if (cached_wp.next_right_waypoint > 0) {
-        wp->SetRightWaypoint(dense_topology.at(id2index.at(cached_wp.next_right_waypoint)));
+        auto right = lookup(cached_wp.next_right_waypoint);
+        if (right == nullptr) {
+          return fail("it links waypoints that are not in the cache");
+        }
+        wp->SetRightWaypoint(right);
       }
     }
 
