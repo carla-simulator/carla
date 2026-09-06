@@ -27,6 +27,9 @@ Beyond the run/scenario/evaluation/clip API, the Worker also exposes:
   OsmAnd phone protocol, shown on the Fleet tab.
 * `GET /api/metrics` — Prometheus exposition for Grafana.
 * `GET /api/openapi.json` — OpenAPI 3.1 description of the whole API.
+* `GET /api/budget/estimate` — synthetic-data program planner: dataset tier,
+  storage, GPU-hours and low/mid/high marketplace cost for N scenes, plus a
+  coverage checklist of the scenario library (Planning tab).
 * A [CARLA Leaderboard](https://github.com/carla-simulator/leaderboard)-style
   driving score computed on `POST /api/runs/:id/finish`.
 

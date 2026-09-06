@@ -34,7 +34,7 @@ component together.
 
 | Directory | What it is |
 |---|---|
-| [`dashboard/`](dashboard) | **The main app.** "Atlas" operations dashboard and evaluation API on Cloudflare Workers: D1 metadata catalog, R2 raw storage, route playback, KPI dashboard, fleet map, safety review, clip governance, signed evidence exports, Prometheus metrics, OpenAPI. |
+| [`dashboard/`](dashboard) | **The main app.** "Atlas" operations dashboard and evaluation API on Cloudflare Workers: D1 metadata catalog, R2 raw storage, route playback, KPI dashboard, fleet map, safety review, clip governance, signed evidence exports, Prometheus metrics, OpenAPI, synthetic-data budget planner. |
 | [`toolkit/`](toolkit) | Python package `bhutan_sim`: scenario taxonomy and 100+ parameterized templates, CARLA scenario runner, unified telemetry schema, safety rules, quality gates, perception benchmark, driving score, OpenSCENARIO export, GPX/MCAP/Traccar adapters, upload/seed scripts. |
 | [`carla/`](carla) | The [CARLA](http://carla.org) open-source driving simulator (Unreal Engine 5.5, `ue5-dev`), vendored as the synthetic-world engine. Build and use it exactly as upstream — see [`carla/README.md`](carla/README.md). |
 | [`docs/`](docs) | Platform documentation: [pilot overview](docs/bhutan_pilot.md), [dashboard guide](docs/bhutan_dashboard.md), [fleet tooling survey](docs/bhutan_fleet_tools.md), [detailed roadmap](docs/bhutan_roadmap.md). |
@@ -138,6 +138,7 @@ The fine-grained, actionable list (with target files and upstream tools) is main
 - [x] Signed (HMAC) evidence-pack exports; GeoJSON/CSV/MCAP export; "Open in Foxglove"
 - [x] Prometheus `/api/metrics` for Grafana alerting; OpenAPI spec for partner clients
 - [x] Multi-tenant token auth with roles; nightly KPI snapshots via cron
+- [x] Planning tab: synthetic-data program budget planner (dataset tier, storage, GPU-hours, low/mid/high marketplace cost, coverage checklist)
 - [ ] deck.gl route playback with synchronized video/telemetry/event timeline
 - [ ] Clip player with event markers
 - [ ] Partner report page: printable Month-3 evidence summary for fleets, insurers, regulators

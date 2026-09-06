@@ -11,9 +11,11 @@ Legend: `[x]` shipped, `[ ]` open. Items are ordered by value to the pilot.
 
 - [Integrations with GitHub AV tools](#integrations-with-github-av-tools)
 - [Dashboard features](#dashboard-features)
+- [Research: similar packages and platforms](#research-similar-packages-and-platforms)
 - [Toolkit and pipeline features](#toolkit-and-pipeline-features)
 - [Platform and engineering](#platform-and-engineering)
 - [Shipped in this iteration](#shipped-in-this-iteration)
+- [Scheduled research runs](#scheduled-research-runs)
 
 ---
 
@@ -50,6 +52,7 @@ Legend: `[x]` shipped, `[ ]` open. Items are ordered by value to the pilot.
 - [x] Fleet tab: live device positions, last-seen table and per-device track playback.
 - [x] Scenario library: download any template as OpenSCENARIO.
 - [x] Deep links: `#runs/<run_id>`, `#scenarios/<family>`, `#evaluations/<id>` restore the view.
+- [x] Planning tab: synthetic-data program budget planner (`GET /api/budget/estimate`, `dashboard/src/budget.ts`). Dataset tier (1k–10k PoC, 10k–100k adaptation, 100k+ robust), storage from clip length × fps × resolution × cameras, A100-equivalent GPU-hours by workload (fine-tune, medium, from scratch), low/mid/high marketplace cost with a live-quote override and interruptible discount, wall-clock days by parallel GPUs, and a coverage checklist (lighting, visibility, geometry, grade) of the library and runs. Downloadable as JSON.
 - [ ] Run comparison: overlay two runs' timelines and event markers.
 - [ ] Map overlays: event heatmap by class, per-segment quality colouring on the route.
 - [ ] Pagination and free-text search on runs, scenarios and evaluations.
@@ -58,8 +61,33 @@ Legend: `[x]` shipped, `[ ]` open. Items are ordered by value to the pilot.
 - [ ] Notifications: webhook (Slack, e-mail via Workers) when a critical event is uploaded unreviewed.
 - [ ] Clip player with event markers for released clips.
 - [ ] Route archetype view from `route_profile.py` output (curvature, grade histograms).
-- [ ] Coverage matrix: scenarios and runs by weather × lighting × route class with gaps highlighted.
+- [ ] Coverage matrix: scenarios and runs by weather × lighting × route class with gaps highlighted (the Planning tab's checklist covers one axis at a time; the matrix shows the cross product).
 - [ ] Per-tenant branding and read-only share links with expiring tokens.
+- [ ] Planner: shareable plan links (`#planning/<base64 params>`) and a "plan vs. actual" panel once training jobs report real GPU-hours and spend back to the API.
+- [ ] Planner: generation-cost line, i.e. CARLA render hours per scene on the chosen GPU (from `run_scenario.py` timings) so the plan covers producing the scenes, not only training on them.
+- [ ] Planner: labeling-cost line (frames × seconds per frame at CVAT/Label Studio throughput × local hourly rate) and a storage-tiering line (instance disk vs. R2/S3 for the retention window).
+- [ ] Planner: reference-dataset presets that pre-fill scenes, clip length, fps and cameras from published corpora (see research below) so partners can say "a BDD100K-sized program".
+- [ ] Planner: live price quotes from a GPU-marketplace API instead of the static catalog, cached in KV with a timestamp shown in the UI.
+
+## Research: similar packages and platforms
+
+Packages and platforms that overlap with Atlas, what they do better, and the
+concrete feature each suggests. Each row is a to-do: research it, decide, and
+either integrate or record why not.
+
+| Done | Package / platform | What it does | Feature it suggests for Atlas |
+|---|---|---|---|
+| [ ] | **SkyPilot** ([skypilot-org/skypilot](https://github.com/skypilot-org/skypilot)) | Launches jobs on the cheapest available cloud or spot GPU with automatic failover and checkpoint-aware recovery | Export a plan from the Planning tab as a SkyPilot task YAML (GPU type, disk size, spot flag) so the estimate becomes a launchable job |
+| [ ] | **dstack** ([dstackai/dstack](https://github.com/dstackai/dstack)) | Open-source orchestrator for dev environments and training runs across clouds and marketplaces (Vast.ai, RunPod, Lambda included) | Same as SkyPilot; compare which one has the better Vast.ai backend and pick one |
+| [ ] | **Vast.ai CLI** ([vast-ai/vast-python](https://github.com/vast-ai/vast-python)) | Search offers by GPU, price, disk, reliability and interruptible flag | Live quotes for the planner's price bands (p10/median/p90 of matching offers) instead of the static catalog |
+| [ ] | **Cloud GPU price trackers** (cloud-gpus.com, getdeploying.com, Shadeform) | Cross-provider H100/A100 price tables refreshed daily | Nightly cron that stores a price snapshot per GPU model next to the KPI snapshot; trend line in the Planning tab |
+| [ ] | **Reference AV datasets** (nuScenes, Waymo Open, BDD100K, nuPlan, Argoverse 2, ONCE, Zenseact ZOD, comma2k19) | Published corpus sizes: e.g. nuScenes 1k scenes × 20 s, BDD100K 100k videos × 40 s, nuPlan 1,300 h, ONCE 1M frames | Presets in the planner and a "your library vs. corpus" bar so the 100k-scene target is grounded in known datasets |
+| [ ] | **NVIDIA Cosmos / Omniverse Replicator** ([NVIDIA/Cosmos](https://github.com/NVIDIA/Cosmos)) | World-model and synthetic-data generation with domain randomisation and physically based sensors | Second synthetic engine next to CARLA; scene-count and GPU-hour coefficients for generative augmentation of existing captures |
+| [ ] | **Rerun** ([rerun-io/rerun](https://github.com/rerun-io/rerun)) | Time-series and 3D visualiser with a Python SDK and `.rrd` files; lighter than Foxglove for quick field checks | `GET /api/runs/:id/export/rrd` alongside MCAP |
+| [ ] | **FiftyOne Brain** ([voxel51/fiftyone](https://github.com/voxel51/fiftyone)) | Uniqueness, near-duplicate and embedding-based coverage analysis | Diversity score per scenario family so the planner can say "generate fewer clear-day straights, more fog hairpins" |
+| [ ] | **MLflow / Weights & Biases** | Experiment tracking with GPU-hours and cost per run | Link evaluation ids to training runs; feed actual GPU-hours back into the planner's "plan vs. actual" panel |
+| [ ] | **Grafana Cloud / Cloudflare Workers Analytics Engine** | Time-series dashboards and alerting | Move KPI snapshots and price snapshots into Analytics Engine for retention beyond D1 row limits |
+| [ ] | **OpenCost / Kubecost** ([opencost/opencost](https://github.com/opencost/opencost)) | Kubernetes cost allocation by workload | Once containerised model runners exist, attribute GPU cost per evaluation and per tenant |
 
 ## Toolkit and pipeline features
 
@@ -74,7 +102,7 @@ Legend: `[x]` shipped, `[ ]` open. Items are ordered by value to the pilot.
 
 ## Platform and engineering
 
-- [x] Worker unit tests (`npm test`) for router, auth, exports, OpenSCENARIO, driving score and metrics.
+- [x] Worker unit tests (`npm test`) for router, auth, exports, OpenSCENARIO, driving score, metrics and the budget planner.
 - [x] D1 migration `0002_fleet_and_scores.sql`.
 - [ ] Vitest with `@cloudflare/vitest-pool-workers` for end-to-end route tests against Miniflare.
 - [ ] Cloudflare Access / SSO in front of the dashboard; keep bearer tokens for machine clients.
@@ -92,3 +120,14 @@ Legend: `[x]` shipped, `[ ]` open. Items are ordered by value to the pilot.
 6. Front end: KPI trends, export menu, XOSC download, hash routing.
 7. Python adapters (GPX, MCAP, Traccar) and `convert_run.py`.
 8. Worker unit-test suite and CI updates.
+9. Planning tab and `GET /api/budget/estimate`: synthetic-data budget planner with coverage checklist.
+
+## Scheduled research runs
+
+A scheduled task runs this list on a cadence. Each run researches similar
+packages, adds to-dos above, and ships one feature. Log every run here so the
+next one knows where to pick up.
+
+| Date | Shipped | To-dos added | Next candidate |
+|---|---|---|---|
+| 2026-09-06 | Planning tab: synthetic-data program budget planner (`dashboard/src/budget.ts`, `src/routes/budget.ts`, `test/budget.test.ts`, Planning tab in `public/`) | Research table (SkyPilot, dstack, Vast.ai CLI, price trackers, reference datasets, Cosmos, Rerun, FiftyOne Brain, MLflow/W&B, Analytics Engine, OpenCost); five planner follow-ups under Dashboard features | Coverage matrix (weather × lighting × route class) on the Planning tab, reusing `coverageChecklist` counts; or reference-dataset presets |

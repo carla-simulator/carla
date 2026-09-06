@@ -24,6 +24,7 @@
       <button class="tab" data-view="evaluations" role="tab">Evaluations</button>
       <button class="tab" data-view="governance" role="tab">Safety &amp; governance</button>
       <button class="tab" data-view="fleet" role="tab">Fleet</button>
+      <button class="tab" data-view="planning" role="tab">Planning</button>
     </nav>
     <form class="auth" id="auth-form" autocomplete="off">
       <input id="auth-token" type="password" placeholder="API token" aria-label="API token">
@@ -191,6 +192,42 @@
           <div id="fleet-map" class="map" role="img" aria-label="Fleet map"></div>
           <div class="legend" id="fleet-legend"></div>
         </div>
+      </div>
+    </section>
+
+    <section id="view-planning" class="view" aria-label="Planning">
+      <div class="section-head">
+        <h1>Synthetic-data program planner</h1>
+        <p class="muted">Size a synthetic driving dataset and its training run: dataset tier, storage, GPU-hours and marketplace cost (Vast.ai-style spot pricing), with low, mid and high bands. The coverage checklist compares the plan against what the scenario library and runs already cover.</p>
+      </div>
+      <form id="budget-form" class="card budget-form" autocomplete="off">
+        <label>Scenes <input id="b-scenes" type="number" min="1" step="1000" value="100000"></label>
+        <label>Clip length (s, 0 = images) <input id="b-clip" type="number" min="0" step="1" value="10"></label>
+        <label>fps <input id="b-fps" type="number" min="1" max="120" value="20"></label>
+        <label>Cameras <input id="b-cameras" type="number" min="1" max="16" value="1"></label>
+        <label>Resolution <select id="b-res"><option value="1280x720" selected>1280×720</option><option value="1920x1080">1920×1080</option><option value="2560x1440">2560×1440</option><option value="3840x2160">3840×2160</option></select></label>
+        <label>Workload <select id="b-workload"><option value="finetune" selected>Fine-tune / adaptation</option><option value="medium">Medium training job</option><option value="scratch">From scratch / heavy iteration</option></select></label>
+        <label>GPU <select id="b-gpu"><option value="a100_80gb" selected>A100 80 GB</option><option value="h100_80gb">H100 80 GB</option><option value="l40s_48gb">L40S 48 GB</option><option value="rtx4090_24gb">RTX 4090 24 GB</option></select></label>
+        <label>Quote $/GPU-h <input id="b-price" type="number" min="0.01" step="0.01" placeholder="catalog"></label>
+        <label>Parallel GPUs <input id="b-parallel" type="number" min="1" max="1024" value="8"></label>
+        <label class="check"><input id="b-interruptible" type="checkbox"> interruptible instances</label>
+        <button type="submit" class="primary">Estimate</button>
+        <button type="button" id="b-download">Download plan (JSON)</button>
+      </form>
+      <div id="budget-grid" class="kpi-grid" aria-live="polite"></div>
+      <div class="two-col">
+        <div class="card">
+          <h2>Cost by workload <span class="muted">same dataset and GPU, USD</span></h2>
+          <div id="budget-chart" class="chart"></div>
+        </div>
+        <div class="card table-card">
+          <h2>Coverage checklist <span class="muted">what a robust dataset needs vs. the library and runs</span></h2>
+          <table id="coverage-table" class="data-table"><thead><tr><th>Axis</th><th>Required</th><th>Scenario templates</th><th>Runs</th><th>Gap</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="card"><h2>Assumptions</h2><ul id="budget-assumptions" class="notes"></ul></div>
+        <div class="card"><h2>Recommendations</h2><ul id="budget-recommendations" class="notes"></ul></div>
       </div>
     </section>
   </main>

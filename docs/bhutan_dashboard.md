@@ -94,6 +94,7 @@ need a writer token, just not necessarily in an `Authorization` header).
 | `GET /api/kpis` | reader | Live KPI report, edge-case rates and perception benchmark |
 | `GET /api/kpis/history` | reader | Nightly KPI snapshots |
 | `POST /api/kpis/snapshot` | writer | Force a snapshot |
+| `GET /api/budget/estimate` | reader | Synthetic-data program budget: low/mid/high storage, GPU-hours and marketplace cost for `scenes`, `clip_seconds`, `fps`, `cameras`, `width`, `height`, `workload`, `gpu`, `price_per_hour`, `interruptible`, `parallel_gpus`; plus a coverage checklist of the tenant's scenario library and runs |
 | `GET /api/runs`, `GET /api/runs/:id` | reader | Run catalog and detail (segments, chunks, event summary, evaluations, driving score) |
 | `POST /api/runs` | writer | Upsert a run manifest |
 | `POST /api/runs/:id/telemetry?seq=N` | writer | Upload a chunk of samples (stored in R2, indexed in D1) |
@@ -166,6 +167,22 @@ events, using the Leaderboard 2.0 coefficients for collisions and
 documented Atlas-specific coefficients for the safety rules that have no
 Leaderboard equivalent (see `dashboard/src/driving_score.ts` and
 `toolkit/bhutan_sim/driving_score.py`, which are kept identical).
+
+### Budget planner
+
+The Planning tab and `GET /api/budget/estimate` turn a target scene count into
+a low / mid / high plan. All coefficients live in `dashboard/src/budget.ts`:
+
+| Quantity | How it is computed |
+|---|---|
+| Dataset tier | `< 1k` toy, `1k–10k` proof of concept, `10k–100k` useful domain adaptation, `100k+` robust across weather, lighting and road types |
+| Storage | frames per scene (`clip_seconds × fps`, or 1 for images) × pixels × bits per pixel (0.08 / 0.15 / 0.3 for compressed video, 1 / 2 / 4 for stills) × cameras, plus 10 % for labels and telemetry |
+| GPU-hours | A100-equivalent hours per 100k scenes by workload: fine-tune 100 / 400 / 1,000, medium 1,000 / 2,500 / 5,000, from scratch 5,000 / 10,000 / 20,000; scaled linearly with a 5 % floor and +15 % for preprocessing; divided by the chosen GPU's relative throughput (H100 2.2×, L40S 0.8×, RTX 4090 0.55×) |
+| Cost | GPU-hours × reference marketplace price per band (A100 80 GB $0.90 / $1.15 / $1.40, H100 80 GB $0.90 / $1.80 / $2.50), or the `price_per_hour` quote; ×0.7 on interruptible instances; plus instance-disk rental for the wall-clock duration |
+| Coverage checklist | Scenario templates and runs grouped by `lighting_class`, `visibility_class` and the geometry / grade halves of `route_class`; each axis lists the values a robust dataset needs, what is present, and the missing ones |
+
+Reference prices are spot-market snapshots and change constantly; pass a live
+quote as `price_per_hour` for a budget you will commit to.
 
 ## KPI definitions
 

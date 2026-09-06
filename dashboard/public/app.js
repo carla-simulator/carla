@@ -182,8 +182,9 @@
   }
 
   /** Horizontal grouped bar chart. rows: [{label, values:[..]}], series: [{name,color}] */
-  function barChart(container, { rows, series, unit, max }) {
+  function barChart(container, { rows, series, unit, max, format }) {
     container.innerHTML = "";
+    const label = format || ((v) => fmt.num(v, unit === "%" ? 0 : 1) + (unit || ""));
     if (!rows.length) { container.innerHTML = '<div class="empty">no data</div>'; return; }
     const width = Math.max(320, container.clientWidth || 600);
     const barH = 12, gap = 2, groupGap = 10, labelW = 130;
@@ -202,7 +203,7 @@
         const y = y0 + si * (barH + gap);
         const bar = svgEl("rect", { class: "bar", x: labelW, y, width: Math.max(0, sx(v) - labelW), height: barH, fill: s.color || SERIES[si] });
         bar.addEventListener("mousemove", (ev) => {
-          tip.innerHTML = `<b>${esc(row.label)}</b><div class="row"><span>${esc(s.name)}</span><b>${fmt.num(v, 2)}${unit || ""}</b></div>`;
+          tip.innerHTML = `<b>${esc(row.label)}</b><div class="row"><span>${esc(s.name)}</span><b>${esc(label(v))}</b></div>`;
           tip.hidden = false;
           const rect = container.getBoundingClientRect();
           tip.style.left = Math.min(rect.width - 140, ev.clientX - rect.left + 12) + "px";
@@ -210,7 +211,7 @@
         });
         bar.addEventListener("mouseleave", () => (tip.hidden = true));
         svg.appendChild(bar);
-        svg.appendChild(svgEl("text", { x: sx(v) + 4, y: y + barH - 2, class: "bar-label" })).textContent = fmt.num(v, unit === "%" ? 0 : 1) + (unit || "");
+        svg.appendChild(svgEl("text", { x: sx(v) + 4, y: y + barH - 2, class: "bar-label" })).textContent = label(v);
       });
     });
     container.appendChild(svg);
@@ -661,8 +662,61 @@
     } catch (err) { toast(err.message); }
   }
 
+  // ---------------------------------------------------------------- planning
+  const WORKLOAD_LABEL = { finetune: "fine-tune", medium: "medium job", scratch: "from scratch" };
+  const usd = (v) => (v >= 1e6 ? "$" + (v / 1e6).toFixed(2) + "M" : v >= 1e4 ? "$" + (v / 1e3).toFixed(1) + "k" : "$" + Math.round(v).toLocaleString());
+  const gb = (v) => (v >= 1000 ? (v / 1000).toFixed(2) + " TB" : v.toFixed(v < 10 ? 2 : 0) + " GB");
+
+  function budgetParams(workload) {
+    const [width, height] = $("#b-res").value.split("x");
+    const p = new URLSearchParams({
+      scenes: $("#b-scenes").value, clip_seconds: $("#b-clip").value, fps: $("#b-fps").value, cameras: $("#b-cameras").value, width, height,
+      workload: workload || $("#b-workload").value, gpu: $("#b-gpu").value, parallel_gpus: $("#b-parallel").value, interruptible: String($("#b-interruptible").checked),
+    });
+    if ($("#b-price").value) p.set("price_per_hour", $("#b-price").value);
+    return p.toString();
+  }
+
+  async function loadPlanning() {
+    const [plan, ...others] = await Promise.all([api("/api/budget/estimate?" + budgetParams()), ...["finetune", "medium", "scratch"].map((w) => api("/api/budget/estimate?" + budgetParams(w)))]);
+    state.budget = plan;
+    const range = (t, f) => `<div class="kpi-range">${f(t.low)} – ${f(t.high)}</div>`;
+    const tile = (label, value, sub, why) => `<div class="kpi"><div class="kpi-label">${label}</div><div class="kpi-value">${value}</div>${sub || ""}<div class="kpi-why">${esc(why)}</div></div>`;
+    $("#budget-grid").innerHTML =
+      tile("Dataset tier", esc(plan.tier.range) + "<small>scenes</small>", `<div class="kpi-range">${esc(plan.tier.label)} · library has ${plan.coverage.library_scenarios} templates</div>`, plan.tier.note) +
+      tile("Dataset size", esc(gb(plan.storage.dataset_gb.mid)), range(plan.storage.dataset_gb, gb), `${plan.storage.frames_per_scene} frame(s) per scene · ${plan.storage.mb_per_scene.mid.toFixed(2)} MB each` + (plan.storage.exceeds_default_disk ? " · exceeds the default 10 GB instance disk" : "")) +
+      tile("GPU-hours", esc(fmt.num(plan.compute.gpu_hours.mid, 0)) + `<small>${esc(plan.cost.gpu.label)}</small>`, range(plan.compute.gpu_hours, (v) => fmt.num(v, 0) + " h"), `${plan.compute.workload.label} · ${fmt.num(plan.compute.a100_gpu_hours.mid, 0)} A100-equivalent hours`) +
+      tile("Wall clock", esc(fmt.num(plan.compute.wall_clock_days.mid, 1)) + "<small>days</small>", range(plan.compute.wall_clock_days, (v) => fmt.num(v, 1) + " d"), `${plan.input.parallel_gpus} GPU(s) in parallel`) +
+      tile("Total cost", esc(usd(plan.cost.total_usd.mid)), range(plan.cost.total_usd, usd), `GPU at $${plan.cost.price_per_hour.low}–$${plan.cost.price_per_hour.high}/h${plan.input.interruptible ? " (interruptible)" : ""} + disk rental ${usd(plan.storage.rental_usd.mid)}`) +
+      tile("Cost per scene", esc("$" + plan.cost.usd_per_scene.mid.toFixed(3)), range(plan.cost.usd_per_scene, (v) => "$" + v.toFixed(3)), "Training and disk only; capture, labeling and long-term storage are extra");
+    barChart($("#budget-chart"), {
+      rows: others.map((o) => ({ label: WORKLOAD_LABEL[o.compute.workload.id], values: [o.cost.total_usd.low, o.cost.total_usd.mid, o.cost.total_usd.high] })),
+      series: [{ name: "low" }, { name: "mid" }, { name: "high" }], format: usd,
+    });
+    const byAxis = (c) => Object.fromEntries(c.axes.map((a) => [a.axis, a]));
+    const scen = byAxis(plan.coverage.scenarios), runs = byAxis(plan.coverage.runs);
+    const counts = (a) => a.required.map((v) => `${esc(v.replace(/_/g, " "))} <b>${a.counts[v] || 0}</b>`).join(" · ");
+    $("#coverage-table tbody").innerHTML = plan.coverage.scenarios.axes.map((a) => {
+      const missing = [...new Set([...a.missing.map((m) => "no template: " + m), ...runs[a.axis].missing.map((m) => "no run: " + m)])];
+      return `<tr><td>${esc(a.label)}</td><td class="muted">${a.required.map((v) => esc(v.replace(/_/g, " "))).join(", ")}</td><td>${counts(scen[a.axis])}</td><td>${counts(runs[a.axis])}</td>
+        <td>${missing.length ? `<span class="gap">${missing.map(esc).join("; ")}</span>` : pill("on_track")}</td></tr>`;
+    }).join("");
+    $("#budget-assumptions").innerHTML = plan.assumptions.map((a) => `<li>${esc(a)}</li>`).join("");
+    $("#budget-recommendations").innerHTML = plan.recommendations.map((r) => `<li>${esc(r)}</li>`).join("") || "<li class=\"muted\">none</li>";
+  }
+
+  function downloadPlan() {
+    if (!state.budget) return;
+    const blob = new Blob([JSON.stringify(state.budget, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `synthetic-data-plan-${state.budget.input.scenes}-${state.budget.input.workload}.json`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  }
+
   // ------------------------------------------------------------------ wiring
-  const loaders = { overview: loadOverview, runs: loadRuns, scenarios: loadScenarios, evaluations: loadEvaluations, governance: loadGovernance, fleet: loadFleet };
+  const loaders = { overview: loadOverview, runs: loadRuns, scenarios: loadScenarios, evaluations: loadEvaluations, governance: loadGovernance, fleet: loadFleet, planning: loadPlanning };
 
   function setHash(view, id) {
     const next = "#" + view + (id ? "/" + encodeURIComponent(id) : "");
@@ -729,6 +783,8 @@
     $("#fleet-auto").addEventListener("change", scheduleFleetRefresh);
     $("#fleet-window").addEventListener("change", () => { if (state.fleet.device) selectDevice(state.fleet.device).catch((err) => toast(err.message)); });
     $("#fleet-materialize").addEventListener("click", materializeTrack);
+    $("#budget-form").addEventListener("submit", (ev) => { ev.preventDefault(); loadPlanning().catch((err) => toast(err.message)); });
+    $("#b-download").addEventListener("click", downloadPlan);
     $("#fleet-table").addEventListener("click", (ev) => { const b = ev.target.closest("button[data-track]"); if (b) { ev.stopPropagation(); selectDevice(b.dataset.track).catch((err) => toast(err.message)); } });
     window.addEventListener("hashchange", () => { const target = parseHash(); if (target && state.token && (target.view !== state.view)) showView(target.view, target.id); });
     window.addEventListener("resize", () => { if (state.view === "runs" && state.samples.length) renderTimeline(); if (state.view === "overview") renderTrend(); });
