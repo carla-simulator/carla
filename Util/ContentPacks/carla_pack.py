@@ -39,14 +39,16 @@ import json
 import os
 import re
 import shutil
+import signal
 import struct
 import subprocess
 import sys
 import tarfile
 import tempfile
+import time
 from pathlib import Path
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 MANIFEST_NAME = "carla-pack.json"
 BASE_RELEASE_FILE = "BaseRelease"
@@ -695,82 +697,402 @@ def cmd_init(args):
 # add
 # --------------------------------------------------------------------------
 
-def add_map(pack_dir, manifest, args):
-    src = Path(args.map).expanduser().resolve()
-    if not src.is_file() or src.suffix.lower() != ".umap":
-        raise PackError("--map must point to an existing .umap file: {}".format(src))
-    name = manifest["name"]
-    map_name = src.stem
+# Folders never searched for a map given by name.
+MAP_SEARCH_PRUNE = ("__ExternalActors__", "__ExternalObjects__", "Saved", "Intermediate",
+                    "DerivedDataCache", "Binaries", "Build", ".git")
+
+# Editor Python run by `add --map` to re-home a map into the pack: a real Save As
+# (UEditorLoadingAndSavingUtils::SaveMap), which is the only operation that carries a
+# World Partition map's external actors along. EditorAssetLibrary.duplicate_asset copies
+# the .umap alone and the copy opens empty. Inputs/outputs travel in CARLA_PACK_IMPORT_*
+# environment variables; print() is swallowed by the commandlet, so the outcome goes to
+# a JSON file.
+IMPORT_MAP_SCRIPT = r'''"""Written by carla-pack: re-home a map into a content pack (runs inside UnrealEditor-Cmd)."""
+import json
+import os
+import time
+import unreal
+
+src = os.environ["CARLA_PACK_IMPORT_SRC"]
+dst = os.environ["CARLA_PACK_IMPORT_DST"]
+pack = os.environ["CARLA_PACK_IMPORT_PACK"]
+result = os.environ["CARLA_PACK_IMPORT_RESULT"]
+out = {"ok": False, "load": None, "save": None, "seconds": 0.0, "error": ""}
+t0 = time.time()
+try:
+    # the commandlet starts before the registry has scanned the pack mount point
+    unreal.AssetRegistryHelpers.get_asset_registry().scan_paths_synchronous(["/" + pack], force_rescan=True)
+    level_editor = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
+    out["load"] = bool(level_editor.load_level(src))
+    if not out["load"]:
+        raise RuntimeError("load_level(%s) failed" % src)
+    world = unreal.EditorLevelLibrary.get_editor_world()
+    out["save"] = bool(unreal.EditorLoadingAndSavingUtils.save_map(world, dst))
+    out["ok"] = bool(out["save"] and unreal.EditorAssetLibrary.does_asset_exist(dst))
+    if not out["ok"]:
+        raise RuntimeError("save_map(%s) returned %s" % (dst, out["save"]))
+    unreal.log_warning("[carla-pack] saved %s -> %s" % (src, dst))
+except Exception as e:  # noqa: BLE001 - reported through the result file
+    out["error"] = str(e)
+    unreal.log_error("[carla-pack] import failed: %s" % e)
+out["seconds"] = time.time() - t0
+with open(result, "w") as f:
+    json.dump(out, f)
+'''
+
+
+def editor_cmd(engine):
+    """The headless editor binary (UnrealEditor-Cmd) of an engine tree."""
+    if os.name == "nt":
+        return Path(engine) / "Engine" / "Binaries" / "Win64" / "UnrealEditor-Cmd.exe"
+    if sys.platform == "darwin":
+        return Path(engine) / "Engine" / "Binaries" / "Mac" / "UnrealEditor-Cmd"
+    return Path(engine) / "Engine" / "Binaries" / "Linux" / "UnrealEditor-Cmd"
+
+
+def content_roots(args, pack_dir):
+    """[(content dir, mount point)] for the project (/Game) and every plugin with content
+    under the project, the pack itself first."""
+    project_dir = project_file(args).parent
+    roots = [(pack_dir / "Content", "/" + pack_dir.name)]
+    for up in sorted(project_dir.glob("Plugins/**/*.uplugin")) if (project_dir / "Plugins").is_dir() else []:
+        if up.parent != pack_dir and (up.parent / "Content").is_dir():
+            roots.append((up.parent / "Content", "/" + up.stem))
+    roots.append((project_dir / "Content", "/Game"))
+    return roots
+
+
+def package_of_file(path, args, pack_dir):
+    """<project>/Content/Carla/Maps/T/T.umap -> /Game/Carla/Maps/T/T (or /<Plugin>/... under a plugin)."""
+    path = Path(path).resolve()
+    for content, mount in content_roots(args, pack_dir):
+        content = content.resolve()
+        if content in path.parents:
+            return mount + "/" + posix(path.relative_to(content).with_suffix(""))
+    raise PackError("cannot work out the package name of {}: it is not under the project's Content "
+                    "folder or a plugin's Content folder".format(path))
+
+
+def resolve_map_source(spec, args, pack_dir):
+    """--map accepts a .umap path, a package path (/Game/Carla/Maps/Town12/Town12) or a bare
+    map name (Town12), looked up under the project's and the pack's content roots."""
+    spec = str(spec).strip()
+    p = Path(spec).expanduser()
+    if p.is_file():
+        if p.suffix.lower() != ".umap":
+            raise PackError("--map must be a .umap file, a package path or a map name: {}".format(spec))
+        return p.resolve()
+    if spec.startswith("/") and not spec.lower().endswith(".umap"):
+        mount, _, rest = spec[1:].partition("/")
+        for content, root in content_roots(args, pack_dir):
+            if root.lower() == "/" + mount.lower():
+                if not rest:
+                    break
+                candidate = content / (rest + ".umap")
+                if candidate.is_file():
+                    return candidate.resolve()
+                raise PackError("map package {} not found: no {}".format(spec, candidate))
+        raise PackError("map package {} not found: {!r} is not the project's /Game or a plugin mounted "
+                        "under {}".format(spec, "/" + mount, project_file(args).parent / "Plugins"))
+    if PACK_NAME_RE.match(spec):
+        found = []
+        for content, _ in content_roots(args, pack_dir):
+            if not content.is_dir():
+                continue
+            for dirpath, dirnames, filenames in os.walk(str(content)):
+                dirnames[:] = [d for d in dirnames if d not in MAP_SEARCH_PRUNE]
+                if spec + ".umap" in filenames:
+                    found.append(Path(dirpath) / (spec + ".umap"))
+        # the pack's own copy wins when it is registered (re-running add is then a no-op
+        # registration); an unregistered copy inside the pack is a leftover and the outside
+        # source is meant, unless it is the only match (a map authored in the pack, not yet added)
+        pack_content = (pack_dir / "Content").resolve()
+        in_pack = [f for f in found if pack_content in f.resolve().parents]
+        if in_pack:
+            registered = {m.get("package") for m in load_manifest(pack_dir).get("maps", [])}
+            for f in in_pack:
+                if "/{}/{}".format(pack_dir.name, posix(f.resolve().relative_to(pack_content).with_suffix(""))) in registered:
+                    return f.resolve()
+            if len(in_pack) < len(found):
+                found = [f for f in found if f not in in_pack]
+        if len(found) == 1:
+            return found[0].resolve()
+        if not found:
+            raise PackError("no map called {} under {} (pass the .umap path or its /Game/... package)"
+                            .format(spec, ", ".join(str(c) for c, _ in content_roots(args, pack_dir)
+                                                    if c.is_dir())))
+        raise PackError("{} maps are called {}; pass the one you mean:\n  {}"
+                        .format(len(found), spec, "\n  ".join(str(f) for f in found)))
+    raise PackError("--map not found or not a file: {}".format(spec))
+
+
+def maps_folder_of(src):
+    """The nearest 'Maps' folder above a map file, or its own folder when there is none."""
+    parts = src.parent.parts
+    if "Maps" in parts:
+        return Path(*parts[:len(parts) - parts[::-1].index("Maps")])
+    return src.parent
+
+
+def map_pack_relpath(src, pack_content):
+    """Where a map lives inside the pack (relative to Content): its own path for a map already
+    in the pack, else Maps/<...>/<Map>.umap mirroring the source's layout below its 'Maps'
+    folder (CARLA towns: Maps/Town12/Town12.umap), else Maps/<Map>.umap."""
+    src = Path(src)
+    if pack_content in src.parents:
+        return src.relative_to(pack_content)
+    maps = maps_folder_of(src)
+    if maps.name == "Maps":
+        return Path("Maps") / src.relative_to(maps)
+    return Path("Maps") / src.name
+
+
+def find_sidecars(src):
+    """Locate the OpenDRIVE, pedestrian navigation and Traffic Manager files that CARLA keeps
+    next to a map: <Maps>/OpenDrive/<Map>.xodr or <Map dir>/OpenDrive/<Map>.xodr (large maps),
+    <Maps>/Nav/<Map>.bin, <Maps>/TM/<Map>.bin or <Map dir>/TM/."""
+    name = src.stem
+    map_dir = src.parent
+    maps = maps_folder_of(src)
+    found = {}
+    for key, candidates in (
+            ("xodr", (map_dir / "OpenDrive" / (name + ".xodr"), maps / "OpenDrive" / (name + ".xodr"),
+                      map_dir / (name + ".xodr"))),
+            ("nav", (maps / "Nav" / (name + ".bin"), map_dir / "Nav" / (name + ".bin"))),
+            ("tm", (map_dir / "TM", maps / "TM" / name, maps / "TM" / (name + ".bin")))):
+        for c in candidates:
+            if c.is_file() or (c.is_dir() and any(c.iterdir())):
+                found[key] = c
+                break
+    return found
+
+
+def snapshot_files(*roots):
+    """{path: (size, mtime_ns)} of every file below the given files/directories."""
+    snap = {}
+    for root in roots:
+        root = Path(root)
+        if root.is_file():
+            st = root.stat()
+            snap[root] = (st.st_size, st.st_mtime_ns)
+            continue
+        for dirpath, _, filenames in os.walk(str(root)):
+            for f in filenames:
+                p = Path(dirpath) / f
+                try:
+                    st = p.stat()
+                except OSError:
+                    continue
+                snap[p] = (st.st_size, st.st_mtime_ns)
+    return snap
+
+
+def remove_pack_map_files(pack_dir, rel):
+    """Delete a map's files from the pack: Content/<rel>, its _BuiltData and its
+    __ExternalActors__/__ExternalObjects__ folders. Returns the number of files removed."""
     content = pack_dir / "Content"
-    maps_dir = content / "Maps"
-    dst = maps_dir / (map_name + ".umap")
-    inside = content.resolve() in src.parents
-    if not inside:
-        # A .umap copied from another content root keeps its internal package name
-        # (/Game/...) and its World Partition actors reference that path: it will not
-        # load as /<Pack>/Maps/<Map>.  Maps must be saved/duplicated into the pack root
-        # from the editor; `add --map` then registers them and attaches the sidecars.
-        if not args.allow_cross_root:
-            raise PackError("{} is not inside {}: a map must be saved or duplicated into the pack's "
-                            "Content/Maps from the CARLA editor (its package name and World Partition "
-                            "actor references stay /Game/... when the file is copied). Use "
-                            "--allow-cross-root to copy it anyway.".format(src, content))
-        warn("copying {} from another content root: its package name and World Partition actor "
-             "references stay /Game/... and the map will most likely not load as /{}/Maps/{}; "
-             "duplicate it into the pack from the editor instead".format(src, name, map_name))
-    if src != dst:
+    rel = Path(rel)
+    targets = [content / rel, content / rel.with_name(rel.stem + "_BuiltData.uasset")]
+    targets += [content / kind / rel.parent / rel.stem for kind in ("__ExternalActors__", "__ExternalObjects__")]
+    removed = 0
+    for t in targets:
+        if t.is_file():
+            t.unlink()
+            removed += 1
+        elif t.is_dir():
+            removed += sum(len(files) for _, _, files in os.walk(str(t)))
+            rmtree_force(t)
+    return removed
+
+
+def import_map_into_pack(pack_dir, manifest, src, rel, args):
+    """Save As with the headless editor: load <src> and save it as /<Pack>/<rel>, external
+    actors included. Save As also re-saves the source map; its bytes are put back and any
+    other file the editor touched next to it is reported."""
+    name = manifest["name"]
+    engine = engine_root(args)
+    editor = editor_cmd(engine)
+    if not editor.is_file():
+        raise PackError("Unreal editor not found: {} (importing a map from another content root needs "
+                        "the editor build; or copy the map into the pack from the editor yourself and "
+                        "pass that file)".format(editor))
+    project = project_file(args)
+    if not project.is_file():
+        raise PackError("Unreal project not found: {} (pass --project)".format(project))
+    uplugin = pack_dir / (name + ".uplugin")
+    if not uplugin.is_file():
+        raise PackError("missing {}".format(uplugin))
+    src_pkg = package_of_file(src, args, pack_dir)
+    dst_pkg = "/{}/{}".format(name, posix(Path(rel).with_suffix("")))
+    dst = pack_dir / "Content" / rel
+    if dst.exists():
+        if any(m.get("package") == dst_pkg for m in manifest.get("maps", [])):
+            raise PackError("{} is already in the pack as {}; to re-register it run add with that file, "
+                            "to import {} afresh remove it (and its __ExternalActors__/__ExternalObjects__ "
+                            "folders) first".format(dst, dst_pkg, src_pkg))
+        # not in the manifest: what an interrupted or failed import left behind
+        removed = remove_pack_map_files(pack_dir, rel)
+        info("removed {} file(s) of an unregistered earlier copy of {}".format(removed, dst_pkg))
+    work = pack_dir / "Saved" / "CarlaPack"
+    work.mkdir(parents=True, exist_ok=True)
+    script = work / "import_map.py"
+    script.write_text(IMPORT_MAP_SCRIPT, encoding="utf-8")
+    result = work / "import-{}.json".format(src.stem)
+    log = work / "import-{}.log".format(src.stem)
+    if result.exists():
+        result.unlink()
+    external = find_external_folders(src)
+    watched = [src.parent] + list(external.values())
+    before = snapshot_files(*watched)
+    with open(str(src), "rb") as f:
+        original = f.read()
+    env = dict(os.environ)
+    env.update({
+        "CARLA_PACK_IMPORT_SRC": src_pkg, "CARLA_PACK_IMPORT_DST": dst_pkg,
+        "CARLA_PACK_IMPORT_PACK": name, "CARLA_PACK_IMPORT_RESULT": str(result),
+        "CARLA_PACK_IMPORT_SRC_FILE": str(src), "CARLA_PACK_IMPORT_DST_FILE": str(dst),
+        "CARLA_PACK_IMPORT_CONTENT": str(pack_dir / "Content"),
+    })
+    cmd = [str(editor), str(project), "-run=pythonscript", "-script={}".format(script),
+           "-EnablePlugins={}".format(name), "-NullRHI", "-unattended", "-nosplash", "-nopause",
+           "-stdout", "-FullStdOutLogOutput"]
+    info("importing {} as {} with the editor{} - this takes minutes for a World Partition town "
+         "(log: {})".format(src_pkg, dst_pkg, " (World Partition)" if external else "", log))
+    t0 = time.time()
+    rc = None
+    try:
+        # the editor only mounts a plugin that is not ExplicitlyLoaded (same as the cook)
+        with cook_time_descriptor(uplugin), open(str(log), "wb") as lf:
+            try:
+                rc = subprocess.run(cmd, cwd=str(engine), env=env, stdout=lf,
+                                    stderr=subprocess.STDOUT).returncode
+            except OSError as e:
+                raise PackError("cannot run the editor: {}".format(e))
+    finally:
+        with open(str(src), "rb") as f:
+            resaved = f.read() != original
+        if resaved:
+            write_bytes_atomic(src, original)
+            info("restored {} (Save As re-saved the source map; its original bytes are back)".format(src))
+        changed = [p for p, v in snapshot_files(*watched).items()
+                   if before.get(p) != v and p != src and (pack_dir / "Content") not in p.parents]
+        if changed:
+            warn("the editor changed {} file(s) next to the source map while importing; check them "
+                 "with your VCS:\n  {}{}".format(len(changed), "\n  ".join(str(p) for p in changed[:10]),
+                                                   "\n  ..." if len(changed) > 10 else ""))
+    # The outcome is the result file plus the written map, not the process exit code: a
+    # commandlet exits 1 whenever anything logged an error during the session, and loading
+    # a large town logs a few (navmesh tile limits, stale references) that are not ours.
+    res = load_json(result) if result.is_file() else {}
+    if not res.get("ok"):
+        raise PackError("importing {} failed (editor exit code {}{}); see {}".format(
+            src_pkg, rc, "; " + res["error"] if res.get("error") else "", log))
+    if not dst.is_file():
+        raise PackError("the editor reported success but {} was not written; see {}".format(dst, log))
+    if rc != 0:
+        warn("the editor exited with code {} after saving {} (errors logged while loading the map; "
+             "see {})".format(rc, dst_pkg, log))
+    info("imported {} -> {} ({:.0f}s)".format(src_pkg, dst, time.time() - t0))
+    return dst
+
+
+def add_map(pack_dir, manifest, args):
+    name = manifest["name"]
+    content = (pack_dir / "Content").resolve()
+    src = resolve_map_source(args.map, args, pack_dir)
+    map_name = src.stem
+    rel = map_pack_relpath(src, content)
+    dst = content / rel
+    package = "/{}/{}".format(name, posix(rel.with_suffix("")))
+    project_content = (project_file(args).parent / "Content").resolve()
+    in_place = (content not in src.parents and project_content in src.parents
+                and not (args.import_map or args.copy))
+    if in_place:
+        # A project map (/Game/...) the base release did not cook is shipped in place: the
+        # manifest names its /Game package, `build` cooks it into the pack (-MapsToCook) and
+        # the server loads it from the pack's containers at that same path. No editor, no
+        # copy of a World Partition town's hundreds of thousands of actor files.
+        package = package_of_file(src, args, pack_dir)
+        dst = src
+        info("map {} is a project map: registering it in place as {} (--import makes a copy under "
+             "/{}/ with the editor instead)".format(src, package, name))
+    elif content in src.parents:
+        info("map {} is already in the pack; registering it".format(dst))
+    elif args.copy:
+        # Raw copy: the file keeps its internal package name (/Game/...) and, for a World
+        # Partition map, its actors reference that path, so the copy will most likely not
+        # load as /<Pack>/...; kept for content whose package name was already rewritten.
+        try:
+            original_pkg = package_of_file(src, args, pack_dir)
+        except PackError:
+            original_pkg = "/Game/..."
+        warn("copying {} from another content root as-is: its package name and World Partition "
+             "actor references stay {}; without --copy the map is imported (Save As) with the editor "
+             "instead".format(src, original_pkg))
         copy_any(src, dst)
         info("map {} -> {}".format(src, dst))
+        built = src.with_name(map_name + "_BuiltData.uasset")
+        if built.is_file():
+            copy_any(built, dst.with_name(built.name))
+        for kind, folder in find_external_folders(src).items():
+            target = content / kind / rel.parent / map_name
+            if folder.resolve() != target.resolve():
+                copy_any(folder, target)
+                info("{} -> {}".format(folder, target))
     else:
-        info("map {} is already in the pack; registering it".format(dst))
-    built = src.with_name(map_name + "_BuiltData.uasset")
-    if built.is_file() and built != maps_dir / built.name:
-        copy_any(built, maps_dir / built.name)
+        import_map_into_pack(pack_dir, manifest, src, rel, args)
 
-    external = find_external_folders(src)
+    external = find_external_folders(dst)
     world_partition = bool(args.world_partition or external)
-    if world_partition and not external and src != dst:
-        warn("--world-partition given but no __ExternalActors__/{} folder found next to {}"
-             .format(map_name, src))
-    for kind, folder in external.items():
-        target = content / kind / "Maps" / map_name
-        if folder.resolve() != target.resolve():
-            copy_any(folder, target)
-            info("{} -> {}".format(folder, target))
+    if args.world_partition and not external:
+        warn("--world-partition given but no __ExternalActors__ folder found for {}".format(dst))
 
     entry = {
         "name": map_name,
-        "package": "/{}/Maps/{}".format(name, map_name),
+        "package": package,
         "xodr": "",
         "world_partition": world_partition,
     }
-    if args.xodr:
-        xodr = Path(args.xodr).expanduser()
+    found = find_sidecars(src) if content not in src.parents else {}
+    xodr = args.xodr or found.get("xodr")
+    if xodr:
+        xodr = Path(xodr).expanduser()
         if not xodr.is_file():
             raise PackError("--xodr file not found: {}".format(xodr))
         dst_xodr = content / "Maps" / "OpenDrive" / (map_name + ".xodr")
         if xodr.resolve() != dst_xodr.resolve():
             copy_any(xodr, dst_xodr)
         entry["xodr"] = "Maps/OpenDrive/{}.xodr".format(map_name)
+        if not args.xodr:
+            info("OpenDRIVE {} -> {}".format(xodr, entry["xodr"]))
     else:
-        warn("map {} has no --xodr: the CARLA map API (waypoints, traffic manager) will not work "
-             "for it".format(map_name))
-    if args.nav:
-        nav = Path(args.nav).expanduser()
+        warn("map {} has no OpenDRIVE file (--xodr): the CARLA map API (waypoints, traffic manager) "
+             "will not work for it".format(map_name))
+    nav = args.nav or found.get("nav")
+    if nav:
+        nav = Path(nav).expanduser()
         if not nav.is_file():
             raise PackError("--nav file not found: {}".format(nav))
         dst_nav = content / "Maps" / "Nav" / (map_name + ".bin")
         if nav.resolve() != dst_nav.resolve():
             copy_any(nav, dst_nav)
         entry["nav"] = "Maps/Nav/{}.bin".format(map_name)
-    if args.tm:
-        tm = Path(args.tm).expanduser()
-        if not tm.is_dir():
-            raise PackError("--tm must be a directory: {}".format(tm))
+        if not args.nav:
+            info("navigation {} -> {}".format(nav, entry["nav"]))
+    tm = args.tm or found.get("tm")
+    if tm:
+        tm = Path(tm).expanduser()
+        if not tm.exists():
+            raise PackError("--tm not found: {}".format(tm))
         dst_tm = content / "Maps" / "TM" / map_name
-        if tm.resolve() != dst_tm.resolve():
-            copy_any(tm, dst_tm)
+        if tm.is_dir():
+            if tm.resolve() != dst_tm.resolve():
+                copy_any(tm, dst_tm)
+        elif tm.resolve().parent != dst_tm.resolve():
+            copy_any(tm, dst_tm / tm.name)
         entry["tm"] = "Maps/TM/{}".format(map_name)
+        if not args.tm:
+            info("Traffic Manager data {} -> {}/".format(tm, entry["tm"]))
 
     manifest["maps"] = [m for m in manifest["maps"] if m.get("name") != map_name] + [entry]
     info("registered map {} as {}{}".format(map_name, entry["package"],
@@ -815,12 +1137,11 @@ def validate_add_inputs(args):
     cmd_add copies files and edits the manifest as it goes and saves once at the
     end, so a bad argument used to leave copied files behind with no manifest
     entry for them."""
-    for flag, value in (("--map", args.map), ("--xodr", args.xodr),
-                        ("--nav", args.nav)):
+    for flag, value in (("--xodr", args.xodr), ("--nav", args.nav)):
         if value and not Path(value).expanduser().is_file():
             raise PackError("{} not found or not a file: {}".format(flag, value))
-    if args.tm and not Path(args.tm).expanduser().is_dir():
-        raise PackError("--tm must be a directory: {}".format(args.tm))
+    if args.tm and not Path(args.tm).expanduser().exists():
+        raise PackError("--tm not found: {}".format(args.tm))
     for flag, value in (("--props", args.props), ("--vehicles", args.vehicles),
                         ("--walkers", args.walkers), ("--blueprints", args.blueprints)):
         if not value:
@@ -841,13 +1162,15 @@ def validate_add_inputs(args):
 def cmd_add(args):
     pack_dir = resolve_pack_dir(args.pack, args)
     validate_add_inputs(args)
+    if args.map:
+        resolve_map_source(args.map, args, pack_dir)  # fail before anything is copied
     manifest = load_manifest(pack_dir)
     did = False
     if args.map:
         add_map(pack_dir, manifest, args)
         did = True
-    elif args.xodr or args.nav or args.tm or args.world_partition:
-        raise PackError("--xodr/--nav/--tm/--world-partition need --map")
+    elif args.xodr or args.nav or args.tm or args.world_partition or args.import_map or args.copy:
+        raise PackError("--xodr/--nav/--tm/--world-partition/--import/--copy need --map")
     for kind, src in (("props", args.props), ("vehicles", args.vehicles),
                       ("walkers", args.walkers), ("blueprints", args.blueprints)):
         if src:
@@ -987,7 +1310,7 @@ def resolve_base(base, platform, work):
 
 
 def uat_command(engine, project, uplugin, release, releases_root, platform, config, maps,
-                staging_dir, extra):
+                staging_dir, extra, include_base_content=True):
     """The DLC cook + stage line, exactly as verified by the phase-0 spike (REPORT.md, Task 3).
 
     - -dlcname takes the absolute .uplugin path so UAT does not fall back to
@@ -997,8 +1320,10 @@ def uat_command(engine, project, uplugin, release, releases_root, platform, conf
     - -EnablePlugins=<Pack> is forwarded to the cooker, which only mounts /<Pack>/ for an
       enabled, non-ExplicitlyLoaded plugin;
     - never -iterate (refused together with -basedonreleaseversion);
-    - -DLCIncludeEngineContent only when the cook fails with -errorOnEngineContentUse
-      (the pack references engine content the base did not cook): --uat-arg=-DLCIncludeEngineContent.
+    - -DLCIncludeEngineContent by default: without it the cook stops with "Uncooked Engine or
+      Game content ... referenced by DLC" as soon as the pack references a /Game or /Engine asset
+      the base release did not cook, which every existing CARLA town does (Town12's vegetation,
+      ...). With it those assets are cooked into the pack. --no-base-content drops the flag.
     """
     runuat = Path(engine) / "Engine" / "Build" / "BatchFiles" / (
         "RunUAT.bat" if os.name == "nt" else "RunUAT.sh")
@@ -1024,6 +1349,8 @@ def uat_command(engine, project, uplugin, release, releases_root, platform, conf
     ]
     if maps:
         cmd.append("-MapsToCook={}".format("+".join(maps)))
+    if include_base_content and "-DLCIncludeEngineContent" not in (extra or []):
+        cmd.append("-DLCIncludeEngineContent")
     cmd.extend(extra or [])
     return cmd
 
@@ -1212,6 +1539,21 @@ def sidecar_files(pack_dir, manifest):
     return rels
 
 
+def check_maps_not_in_base(packages, registry):
+    """A project map the base release already cooked cannot be shipped by a pack: the base
+    containers win and the pack's copy is never loaded."""
+    try:
+        names = set(registry_names(registry))
+    except (PackError, OSError) as e:
+        warn("cannot read {} ({}); skipping the check that the pack's project maps are not in the "
+             "base release".format(registry, e))
+        return
+    shipped = [m for m in packages if m in names]
+    if shipped:
+        raise PackError("the base release already ships {}: a pack cannot replace a map the CARLA "
+                        "package contains, remove it from the manifest".format(", ".join(shipped)))
+
+
 def cmd_build(args):
     pack_dir = resolve_pack_dir(args.pack, args)
     manifest = load_manifest(pack_dir)
@@ -1243,7 +1585,9 @@ def cmd_build(args):
     if not project.is_file() and not (args.dry_run or args.skip_cook):
         raise PackError("Unreal project not found: {} (pass --project)".format(project))
 
-    # A DLC cook cooks everything under /<Pack>/ (verified); -MapsToCook is only added on request.
+    # A DLC cook cooks everything under /<Pack>/ (verified). Project maps the pack ships in
+    # place (/Game/...) are outside that root and go on -MapsToCook, as does anything given
+    # with --maps.
     maps = [m.strip() for m in args.maps.split(",")] if args.maps else []
     known = {m["name"]: m["package"] for m in manifest["maps"]}
     maps = [known.get(m, m) for m in maps if m]
@@ -1251,10 +1595,17 @@ def cmd_build(args):
         if not m.startswith("/"):
             raise PackError("--maps entries must be map names from the manifest or package paths "
                             "(/{}/Maps/<Map>): {!r}".format(name, m))
+    in_place = [m["package"] for m in manifest["maps"] if str(m.get("package", "")).startswith("/Game/")]
+    for m in in_place:
+        if m not in maps:
+            maps.append(m)
+    if in_place:
+        check_maps_not_in_base(in_place, releases_root / release / platform / ASSET_REGISTRY)
 
     staging_dir = Path(args.staged).expanduser().resolve() if args.staged else work / "Staged"
     cmd = uat_command(engine or "$" + ENGINE_ENV, project, uplugin, release, releases_root,
-                      platform, args.config, maps, staging_dir, args.uat_arg)
+                      platform, args.config, maps, staging_dir, args.uat_arg,
+                      include_base_content=not args.no_base_content)
     if args.dry_run:
         print(" ".join(shell_quote(c) for c in cmd))
         return 0
@@ -1677,7 +2028,8 @@ def build_parser():
     sp.add_argument("--platform", default=DEFAULT_PLATFORM)
     sp.set_defaults(func=cmd_init)
 
-    sp = sub.add_parser("add", help="copy maps, sidecar files, catalogs and assets into a pack",
+    sp = sub.add_parser("add", help="add maps (existing CARLA towns included), sidecar files, catalogs "
+                                    "and assets to a pack",
                         formatter_class=argparse.RawDescriptionHelpFormatter,
                         epilog="semantic segmentation: a pack mesh is labelled by the folder after 'Static' in "
                                "its path,\n  /<Pack>/Static/<Label>/..., with <Label> one of:\n  "
@@ -1685,16 +2037,29 @@ def build_parser():
                                "--props refuses a mesh under any other folder unless --allow-untagged is given.")
     sp.add_argument("pack", metavar="<Pack>")
     project_opts(sp)
-    sp.add_argument("--map", help=".umap to add (World Partition external folders are copied too)")
-    sp.add_argument("--xodr", help="OpenDRIVE file for --map")
-    sp.add_argument("--nav", help="pedestrian navigation .bin for --map")
-    sp.add_argument("--tm", help="Traffic Manager data directory for --map")
+    sp.add_argument("--map", metavar="<Map|/Game/.../Map|file.umap>",
+                    help="map to add: a map name (Town12), a package path or a .umap file. A project "
+                         "map (/Game/...) the CARLA package does not ship is registered in place and "
+                         "cooked into the pack by 'build'; a map of another plugin is imported with the "
+                         "editor. OpenDRIVE, navigation and Traffic Manager files are picked up from "
+                         "CARLA's usual locations")
+    sp.add_argument("--xodr", help="OpenDRIVE file for --map (default: found next to the map)")
+    sp.add_argument("--nav", help="pedestrian navigation .bin for --map (default: found next to the map)")
+    sp.add_argument("--tm", help="Traffic Manager data file or directory for --map (default: found "
+                                 "next to the map)")
+    sp.add_argument("--engine", default=None,
+                    help="Unreal Engine root, for importing a map (default: ${})".format(ENGINE_ENV))
     sp.add_argument("--world-partition", action="store_true",
                     help="mark --map as a World Partition map (auto-detected when the "
                          "__ExternalActors__ folder is found)")
-    sp.add_argument("--allow-cross-root", action="store_true",
-                    help="copy a .umap that lives outside the pack's Content folder anyway "
-                         "(it keeps its /Game/... package name and will most likely not load)")
+    sp.add_argument("--import", dest="import_map", action="store_true",
+                    help="copy a project map into the pack with the editor (Save As, minutes and a lot "
+                         "of memory for a World Partition town) instead of shipping it in place at its "
+                         "/Game path; the copy can then be edited without touching the CARLA content")
+    sp.add_argument("--copy", action="store_true",
+                    help="copy a .umap from another content root as-is (no editor; it keeps its /Game/... "
+                         "package name and will most likely not load)")
+    sp.add_argument("--allow-cross-root", dest="copy", action="store_true", help=argparse.SUPPRESS)
     sp.add_argument("--props", help="props catalog (<Pack>.Package.json or PropParameters.json shape)")
     sp.add_argument("--allow-untagged", action="store_true",
                     help="accept prop meshes outside /<Pack>/Static/<Label>/ (they get no semantic label)")
@@ -1723,6 +2088,10 @@ def build_parser():
                     "of the one found in the cook output")
     sp.add_argument("--uat-arg", action="append", default=[], metavar="FLAG",
                     help="extra BuildCookRun flag, written as --uat-arg=-Flag (repeatable)")
+    sp.add_argument("--no-base-content", action="store_true",
+                    help="do not pass -DLCIncludeEngineContent: fail instead of cooking into the pack "
+                         "the /Game and /Engine assets it references that the base release did not "
+                         "cook (existing CARLA towns need them; on by default)")
     sp.add_argument("--rename", action="store_true",
                     help="name the containers <Pack>-<Platform>.pak/.utoc/.ucas instead of keeping "
                          "UAT's <Pack>CarlaUnreal-<Platform>.* (the server mounts either; off by default)")
@@ -1768,6 +2137,12 @@ def build_parser():
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
+    def terminated(signum, frame):
+        raise KeyboardInterrupt()   # so a stopped tool still restores what it changed
+    try:
+        signal.signal(signal.SIGTERM, terminated)
+    except (ValueError, OSError):
+        pass  # not the main thread / unsupported
     try:
         return int(args.func(args) or 0)
     except PackError as e:

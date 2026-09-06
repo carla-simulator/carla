@@ -677,9 +677,46 @@ bool UCarlaContentPackManager::Mount(
 // -- Unmount ------------------------------------------------------------------
 // =============================================================================
 
+/// Package name prefixes that belong to a pack: its mount point plus, for every
+/// project map it ships in place (/Game/Carla/Maps/Town12/Town12), the map
+/// package itself and its folder when that folder is the map's own
+/// (/Game/Carla/Maps/Town12/, where the cooked World Partition cells live).
+static TArray<FString> UCarlaContentPackManager_PackagePrefixes(const FCarlaContentPack &Pack)
+{
+  TArray<FString> Prefixes;
+  Prefixes.Add(FString::Printf(TEXT("/%s/"), *Pack.GetName()));
+  for (const FCarlaContentPackMap &Map : Pack.Manifest.Maps)
+  {
+    if (!Map.Package.StartsWith(TEXT("/Game/")))
+    {
+      continue;
+    }
+    Prefixes.Add(Map.Package);
+    Prefixes.Add(Map.Package + TEXT("/"));
+    const FString Folder = FPackageName::GetLongPackagePath(Map.Package);
+    if (FPackageName::GetShortName(Folder).Equals(Map.Name, ESearchCase::IgnoreCase))
+    {
+      Prefixes.Add(Folder + TEXT("/"));
+    }
+  }
+  return Prefixes;
+}
+
+static bool UCarlaContentPackManager_IsPackPackage(const TArray<FString> &Prefixes, const FString &PackageName)
+{
+  for (const FString &Prefix : Prefixes)
+  {
+    if (Prefix.EndsWith(TEXT("/")) ? PackageName.StartsWith(Prefix) : PackageName.Equals(Prefix))
+    {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool UCarlaContentPackManager::IsPackInUse(const FCarlaContentPack &Pack, FString &OutReason) const
 {
-  const FString MountPoint = FString::Printf(TEXT("/%s/"), *Pack.GetName());
+  const TArray<FString> Prefixes = UCarlaContentPackManager_PackagePrefixes(Pack);
 
   if (GEngine != nullptr)
   {
@@ -691,7 +728,7 @@ bool UCarlaContentPackManager::IsPackInUse(const FCarlaContentPack &Pack, FStrin
         continue;
       }
       const FString WorldPackage = World->GetOutermost()->GetName();
-      if (WorldPackage.StartsWith(MountPoint))
+      if (UCarlaContentPackManager_IsPackPackage(Prefixes, WorldPackage))
       {
         OutReason = FString::Printf(TEXT("its map '%s' is the current world"), *WorldPackage);
         return true;
@@ -699,7 +736,7 @@ bool UCarlaContentPackManager::IsPackInUse(const FCarlaContentPack &Pack, FStrin
       for (const ULevelStreaming *Streaming : World->GetStreamingLevels())
       {
         if (Streaming != nullptr &&
-            Streaming->GetWorldAssetPackageName().StartsWith(MountPoint))
+            UCarlaContentPackManager_IsPackPackage(Prefixes, Streaming->GetWorldAssetPackageName()))
         {
           OutReason = FString::Printf(TEXT("its level '%s' is streamed into the current world"),
               *Streaming->GetWorldAssetPackageName());
@@ -712,13 +749,13 @@ bool UCarlaContentPackManager::IsPackInUse(const FCarlaContentPack &Pack, FStrin
   return false;
 }
 
-static TArray<FString> UCarlaContentPackManager_LoadedPackages(const FString &MountPoint)
+static TArray<FString> UCarlaContentPackManager_LoadedPackages(const TArray<FString> &Prefixes)
 {
   TArray<FString> Alive;
   for (TObjectIterator<UPackage> It; It; ++It)
   {
     const FString PackageName = It->GetName();
-    if (PackageName.StartsWith(MountPoint))
+    if (UCarlaContentPackManager_IsPackPackage(Prefixes, PackageName))
     {
       Alive.Add(PackageName);
       if (Alive.Num() >= 5)
@@ -732,10 +769,10 @@ static TArray<FString> UCarlaContentPackManager_LoadedPackages(const FString &Mo
 
 bool UCarlaContentPackManager::ArePackObjectsAlive(const FCarlaContentPack &Pack, FString &OutReason)
 {
-  const FString MountPoint = FString::Printf(TEXT("/%s/"), *Pack.GetName());
+  const TArray<FString> Prefixes = UCarlaContentPackManager_PackagePrefixes(Pack);
 
   // Nothing from the pack was ever loaded: no need for a full GC.
-  if (UCarlaContentPackManager_LoadedPackages(MountPoint).Num() == 0)
+  if (UCarlaContentPackManager_LoadedPackages(Prefixes).Num() == 0)
   {
     return false;
   }
@@ -744,7 +781,7 @@ bool UCarlaContentPackManager::ArePackObjectsAlive(const FCarlaContentPack &Pack
   // under the mount point once unreferenced objects are gone.
   CollectGarbage(GARBAGE_COLLECTION_KEEPFLAGS, true);
 
-  const TArray<FString> Alive = UCarlaContentPackManager_LoadedPackages(MountPoint);
+  const TArray<FString> Alive = UCarlaContentPackManager_LoadedPackages(Prefixes);
   if (Alive.Num() > 0)
   {
     OutReason = FString::Printf(TEXT("objects from the pack are still loaded (%s%s)"),

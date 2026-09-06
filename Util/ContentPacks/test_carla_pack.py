@@ -245,15 +245,203 @@ class TestInitAdd(PackTestBase):
         m = json.loads((self.pack_dir / "carla-pack.json").read_text())
         self.assertEqual(len(m["maps"]), 1)
 
-    def test_add_map_refuses_cross_root_copy_unless_allowed(self):
+    FAKE_EDITOR = """#!/bin/sh
+# stand-in for UnrealEditor-Cmd: 'Save As' the map into the pack (external actors too),
+# re-save the source like the real editor does, record the command line and report ok
+set -e
+env | grep ^CARLA_PACK_IMPORT_ > "$CARLA_PACK_IMPORT_CONTENT/../Saved/fake-editor.env"
+echo "$@" >> "$CARLA_PACK_IMPORT_CONTENT/../Saved/fake-editor.env"
+mkdir -p "$(dirname "$CARLA_PACK_IMPORT_DST_FILE")"
+cp "$CARLA_PACK_IMPORT_SRC_FILE" "$CARLA_PACK_IMPORT_DST_FILE"
+rel=$(dirname "${CARLA_PACK_IMPORT_DST_FILE#$CARLA_PACK_IMPORT_CONTENT/}")
+name=$(basename "$CARLA_PACK_IMPORT_DST_FILE" .umap)
+mkdir -p "$CARLA_PACK_IMPORT_CONTENT/__ExternalActors__/$rel/$name/0"
+echo ea > "$CARLA_PACK_IMPORT_CONTENT/__ExternalActors__/$rel/$name/0/1.uasset"
+echo resaved >> "$CARLA_PACK_IMPORT_SRC_FILE"
+echo '{"ok": true, "load": true, "save": true, "seconds": 1.0, "error": ""}' > "$CARLA_PACK_IMPORT_RESULT"
+"""
+
+    def fake_editor(self, script=None):
+        editor = self.engine / "Engine" / "Binaries" / "Linux" / "UnrealEditor-Cmd"
+        write(editor, script or self.FAKE_EDITOR)
+        editor.chmod(0o755)
+        return editor
+
+    def existing_town(self, name="Town12"):
+        """A CARLA town as the content repo lays it out: Content/Carla/Maps/<T>/<T>.umap, external
+        actors under Content/Carla/__ExternalActors__/Carla/Maps/<T>/, xodr and TM inside the map
+        folder, navigation under Maps/Nav."""
+        carla = self.project_dir / "Content" / "Carla"
+        umap = write(carla / "Maps" / name / (name + ".umap"), b"town")
+        write(carla / "Maps" / name / "Asphalt_Diff.uasset", b"tex")
+        write(carla / "__ExternalActors__" / "Carla" / "Maps" / name / "A" / "B.uasset", b"ea")
+        write(carla / "Maps" / name / "OpenDrive" / (name + ".xodr"), "<OpenDRIVE/>")
+        write(carla / "Maps" / name / "TM" / (name + ".bin"), b"tm")
+        write(carla / "Maps" / "Nav" / (name + ".bin"), b"nav")
+        return umap
+
+    def test_add_map_imports_an_existing_town_with_the_editor(self):
         run("init", PACK, "--project", self.project)
-        rc, out, err = run("add", PACK, "--project", self.project, "--map", self.umap, "--xodr", self.xodr)
+        town = self.existing_town()
+        self.fake_editor()
+        rc, out, err = run("add", PACK, "--project", self.project, "--engine", self.engine, "--map", "Town12",
+                           "--import")
+        self.assertEqual(rc, 0, err)
+        c = self.pack_dir / "Content"
+        # the editor was asked for a Save As of the /Game package into the pack, with the plugin enabled
+        env = (self.pack_dir / "Saved" / "fake-editor.env").read_text()
+        self.assertIn("CARLA_PACK_IMPORT_SRC=/Game/Carla/Maps/Town12/Town12\n", env)
+        self.assertIn("CARLA_PACK_IMPORT_DST=/TestPack/Maps/Town12/Town12\n", env)
+        self.assertIn("-run=pythonscript", env)
+        self.assertIn("-EnablePlugins=TestPack", env)
+        self.assertIn(str(self.project), env)
+        # nested CARLA layout kept, external actors found, sidecars picked up without flags
+        self.assertEqual((c / "Maps" / "Town12" / "Town12.umap").read_bytes(), b"town")
+        self.assertTrue((c / "__ExternalActors__" / "Maps" / "Town12" / "Town12" / "0" / "1.uasset").is_file())
+        self.assertTrue((c / "Maps" / "OpenDrive" / "Town12.xodr").is_file())
+        self.assertTrue((c / "Maps" / "TM" / "Town12" / "Town12.bin").is_file())
+        self.assertTrue((c / "Maps" / "Nav" / "Town12.bin").is_file())
+        m = json.loads((self.pack_dir / "carla-pack.json").read_text())
+        self.assertEqual(m["maps"], [{"name": "Town12", "package": "/TestPack/Maps/Town12/Town12",
+                                      "xodr": "Maps/OpenDrive/Town12.xodr", "world_partition": True,
+                                      "nav": "Maps/Nav/Town12.bin", "tm": "Maps/TM/Town12"}])
+        # the source map the editor re-saved is byte-for-byte back, the descriptor too
+        self.assertEqual(town.read_bytes(), b"town")
+        self.assertIn("restored", out)
+        self.assertTrue(json.loads((self.pack_dir / "TestPack.uplugin").read_text())["ExplicitlyLoaded"])
+        self.assertTrue((self.pack_dir / "Saved" / "CarlaPack" / "import-Town12.log").is_file())
+        # importing a registered map again is refused rather than silently overwriting the pack's copy
+        rc, out, err = run("add", PACK, "--project", self.project, "--engine", self.engine,
+                           "--map", "/Game/Carla/Maps/Town12/Town12", "--import")
         self.assertEqual(rc, 1)
-        self.assertIn("duplicated into the pack", err)
+        self.assertIn("already in the pack as /TestPack/Maps/Town12/Town12", err)
+        # the pack's own copy registers without the editor
+        rc, out, err = run("add", PACK, "--project", self.project, "--map", c / "Maps" / "Town12" / "Town12.umap",
+                           "--xodr", c / "Maps" / "OpenDrive" / "Town12.xodr")
+        self.assertEqual(rc, 0, err)
+        self.assertEqual(len(json.loads((self.pack_dir / "carla-pack.json").read_text())["maps"]), 1)
+
+    def test_add_map_import_trusts_the_result_file_not_the_exit_code(self):
+        """A commandlet exits 1 whenever the session logged an error (Town12's navmesh tile limit
+        does); the import counts as done when the result says ok and the map was written."""
+        run("init", PACK, "--project", self.project)
+        self.existing_town()
+        self.fake_editor(self.FAKE_EDITOR.replace('> "$CARLA_PACK_IMPORT_RESULT"\n',
+                                                  '> "$CARLA_PACK_IMPORT_RESULT"\nexit 1\n'))
+        rc, out, err = run("add", PACK, "--project", self.project, "--engine", self.engine, "--map", "Town12",
+                           "--import")
+        self.assertEqual(rc, 0, err)
+        self.assertIn("exited with code 1", err)
+        self.assertEqual(len(json.loads((self.pack_dir / "carla-pack.json").read_text())["maps"]), 1)
+
+    def test_add_map_replaces_an_unregistered_leftover_copy(self):
+        run("init", PACK, "--project", self.project)
+        self.existing_town()
+        self.fake_editor()
+        c = self.pack_dir / "Content"
+        write(c / "Maps" / "Town12" / "Town12.umap", b"half-written")
+        write(c / "__ExternalActors__" / "Maps" / "Town12" / "Town12" / "9" / "stale.uasset", b"stale")
+        rc, out, err = run("add", PACK, "--project", self.project, "--engine", self.engine, "--map", "Town12",
+                           "--import")
+        self.assertEqual(rc, 0, err)
+        self.assertIn("unregistered earlier copy", out)
+        self.assertEqual((c / "Maps" / "Town12" / "Town12.umap").read_bytes(), b"town")
+        self.assertFalse((c / "__ExternalActors__" / "Maps" / "Town12" / "Town12" / "9").exists())
+        self.assertTrue((c / "__ExternalActors__" / "Maps" / "Town12" / "Town12" / "0" / "1.uasset").is_file())
+
+    def test_add_map_import_failure_restores_the_source_and_leaves_no_entry(self):
+        run("init", PACK, "--project", self.project)
+        town = self.existing_town("Town13")
+        self.fake_editor("#!/bin/sh\necho broken >> \"$CARLA_PACK_IMPORT_SRC_FILE\"\n"
+                         "echo '{\"ok\": false, \"error\": \"load_level(x) failed\"}' > \"$CARLA_PACK_IMPORT_RESULT\"\n"
+                         "exit 0\n")
+        rc, out, err = run("add", PACK, "--project", self.project, "--engine", self.engine, "--map", "Town13",
+                           "--import")
+        self.assertEqual(rc, 1)
+        self.assertIn("load_level(x) failed", err)
+        self.assertEqual(town.read_bytes(), b"town")
+        self.assertEqual(json.loads((self.pack_dir / "carla-pack.json").read_text())["maps"], [])
+        self.assertFalse((self.pack_dir / "Content" / "Maps" / "Town13").exists())
+        self.assertTrue(json.loads((self.pack_dir / "TestPack.uplugin").read_text())["ExplicitlyLoaded"])
+
+    def test_add_map_resolves_names_and_packages(self):
+        run("init", PACK, "--project", self.project)
+        self.existing_town("Town12")
+        write(self.project_dir / "Content" / "Carla" / "Maps" / "TestMaps" / "Town12.umap", b"other")
+        rc, _, err = run("add", PACK, "--project", self.project, "--engine", self.engine, "--map", "Town12")
+        self.assertEqual(rc, 1)
+        self.assertIn("2 maps are called Town12", err)
+        rc, _, err = run("add", PACK, "--project", self.project, "--engine", self.engine, "--map", "Nowhere")
+        self.assertEqual(rc, 1)
+        self.assertIn("no map called Nowhere", err)
+        rc, _, err = run("add", PACK, "--project", self.project, "--engine", self.engine,
+                         "--map", "/Game/Carla/Maps/Town99/Town99")
+        self.assertEqual(rc, 1)
+        self.assertIn("not found", err)
+        rc, _, err = run("add", PACK, "--project", self.project, "--engine", self.engine,
+                         "--map", "/Elsewhere/Maps/Town12")
+        self.assertEqual(rc, 1)
+        self.assertIn("not the project's /Game", err)
+        # without an editor build an --import stops before anything is copied
+        rc, _, err = run("add", PACK, "--project", self.project, "--engine", self.engine,
+                         "--map", "/Game/Carla/Maps/Town12/Town12", "--import")
+        self.assertEqual(rc, 1)
+        self.assertIn("UnrealEditor-Cmd", err)
+        self.assertFalse((self.pack_dir / "Content" / "Maps" / "Town12").exists())
+        self.assertEqual(json.loads((self.pack_dir / "carla-pack.json").read_text())["maps"], [])
+
+    def test_add_map_registers_project_maps_in_place_and_build_cooks_them(self):
+        """The default for a CARLA town: no editor, no copy; the manifest names the /Game package,
+        the sidecars come along and the DLC cook gets the map on -MapsToCook."""
+        run("init", PACK, "--project", self.project, "--carla-version", "0.10.0")
+        town = self.existing_town("Town12")
+        rc, out, err = run("add", PACK, "--project", self.project, "--map", "Town12")
+        self.assertEqual(rc, 0, err)
+        self.assertIn("registering it in place as /Game/Carla/Maps/Town12/Town12", out)
+        c = self.pack_dir / "Content"
+        m = json.loads((self.pack_dir / "carla-pack.json").read_text())
+        self.assertEqual(m["maps"], [{"name": "Town12", "package": "/Game/Carla/Maps/Town12/Town12",
+                                      "xodr": "Maps/OpenDrive/Town12.xodr", "world_partition": True,
+                                      "nav": "Maps/Nav/Town12.bin", "tm": "Maps/TM/Town12"}])
+        self.assertTrue((c / "Maps" / "OpenDrive" / "Town12.xodr").is_file())
+        self.assertTrue((c / "Maps" / "TM" / "Town12" / "Town12.bin").is_file())
+        self.assertFalse((c / "Maps" / "Town12").exists())
+        self.assertFalse((c / "__ExternalActors__").exists() and any((c / "__ExternalActors__").iterdir()))
+        self.assertEqual(town.read_bytes(), b"town")
+        # a second town, then the cook line carries both and the base-content flag
+        self.existing_town("Town13")
+        rc, out, err = run("add", PACK, "--project", self.project, "--map", "/Game/Carla/Maps/Town13/Town13")
+        self.assertEqual(rc, 0, err)
+        rc, out, err = run("build", PACK, "--project", self.project, "--base", self.base_tar,
+                           "--engine", self.engine, "--dry-run")
+        self.assertEqual(rc, 0, err)
+        cmd = out.strip().splitlines()[-1]
+        self.assertIn("-MapsToCook=/Game/Carla/Maps/Town12/Town12+/Game/Carla/Maps/Town13/Town13", cmd)
+        self.assertIn(" -DLCIncludeEngineContent", cmd)
+        self.assertIn("skipping the check", err)      # the fixture registry is not a real one
+        # --maps entries are merged, not duplicated
+        rc, out, err = run("build", PACK, "--project", self.project, "--base", self.base_tar,
+                           "--engine", self.engine, "--dry-run", "--maps", "Town12")
+        self.assertEqual(rc, 0, err)
+        self.assertEqual(out.strip().splitlines()[-1].count("/Game/Carla/Maps/Town12/Town12"), 1)
+        # a map the base release already cooked is refused
+        reg = self.releases / RELEASE / "Linux" / "AssetRegistry.bin"
+        fake_registry(reg, ["/Game/Carla/Maps/Town10HD_Opt", "/Game/Carla/Maps/Town13/Town13"])
+        rc, out, err = run("build", PACK, "--project", self.project, "--base", self.releases / RELEASE,
+                           "--engine", self.engine, "--dry-run")
+        self.assertEqual(rc, 1)
+        self.assertIn("already ships /Game/Carla/Maps/Town13/Town13", err)
+
+    def test_add_map_copy_is_opt_in(self):
+        run("init", PACK, "--project", self.project)
+        rc, out, err = run("add", PACK, "--project", self.project, "--engine", self.engine,
+                           "--map", self.umap, "--xodr", self.xodr)
+        self.assertEqual(rc, 1)
+        self.assertIn("Unreal editor not found", err)
         self.assertFalse((self.pack_dir / "Content" / "Maps" / "TestTown.umap").exists())
         self.assertEqual(json.loads((self.pack_dir / "carla-pack.json").read_text())["maps"], [])
         rc, out, err = run("add", PACK, "--project", self.project, "--map", self.umap, "--xodr", self.xodr,
-                           "--allow-cross-root")
+                           "--copy")
         self.assertEqual(rc, 0, err)
         self.assertIn("another content root", err)
         self.assertTrue((self.pack_dir / "Content" / "Maps" / "TestTown.umap").is_file())
@@ -413,7 +601,11 @@ class TestBuild(PackTestBase):
             self.assertIn(flag, cmd + " ")
         self.assertNotIn("-MapsToCook", cmd)       # a DLC cook takes everything under /<Pack>/
         self.assertNotIn("-iterate", cmd)          # refused together with -basedonreleaseversion
-        self.assertNotIn("-DLCIncludeEngineContent", cmd)
+        self.assertIn(" -DLCIncludeEngineContent", cmd)   # existing towns reference uncooked /Game assets
+        rc, out, err = run("build", PACK, "--project", self.project, "--base", self.base_tar,
+                           "--engine", self.engine, "--dry-run", "--no-base-content")
+        self.assertEqual(rc, 0, err)
+        self.assertNotIn("-DLCIncludeEngineContent", out.strip().splitlines()[-1])
         # the tarball was extracted and the root passed is the Releases dir itself
         root = [c for c in cmd.split() if c.startswith("-basedonreleaseversionroot=")][0].split("=", 1)[1]
         self.assertTrue((Path(root) / RELEASE / "Linux" / "AssetRegistry.bin").is_file(), root)
@@ -430,6 +622,7 @@ class TestBuild(PackTestBase):
         self.assertIn("-MapsToCook=/TestPack/Maps/TestTown+/TestPack/Maps/Other", cmd)
         self.assertIn("-basedonreleaseversionroot=" + str(self.releases), cmd)
         self.assertTrue(cmd.endswith("-DLCIncludeEngineContent"))
+        self.assertEqual(cmd.count("-DLCIncludeEngineContent"), 1)   # not added twice
 
     def test_build_needs_engine_and_valid_base(self):
         self.init_and_add()

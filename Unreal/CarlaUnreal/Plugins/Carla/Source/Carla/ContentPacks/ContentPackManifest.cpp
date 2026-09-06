@@ -96,11 +96,14 @@ bool FCarlaContentPackManifest::Parse(
         // Default to the canonical layout.
         Map.Package = FString::Printf(TEXT("/%s/Maps/%s"), *Out.Name, *Map.Name);
       }
+      // A pack map lives under the pack's own mount point, or it is a project map
+      // (/Game/...) the base release did not cook and the pack ships in place,
+      // e.g. /Game/Carla/Maps/Town12/Town12 (carla-pack add --map Town12).
       const FString ExpectedRoot = FString::Printf(TEXT("/%s/"), *Out.Name);
-      if (!Map.Package.StartsWith(ExpectedRoot))
+      if (!Map.Package.StartsWith(ExpectedRoot) && !Map.Package.StartsWith(TEXT("/Game/")))
       {
         OutError = FString::Printf(
-            TEXT("map '%s' package '%s' is not under the pack mount point '%s'"),
+            TEXT("map '%s' package '%s' is neither under the pack mount point '%s' nor a project map (/Game/...)"),
             *Map.Name, *Map.Package, *ExpectedRoot);
         return false;
       }
