@@ -398,7 +398,7 @@ Unreal cannot reload a package that is already in memory. If any map, mesh or bl
 
 __The client prints `InMemoryMap cache rejected ... rebuilding the local map from the OpenDRIVE`__
 
-The Traffic Manager was handed a cached map (`Maps/TM/<Map>.bin`) that does not match the town's OpenDRIVE — the cache was generated for an older version of the road network. It is discarded and rebuilt from the OpenDRIVE, which takes a few seconds on the first `set_autopilot` in that town; nothing else changes. Regenerating the cache file for that town makes the warning go away.
+The Traffic Manager was handed a cached map (`Maps/TM/<Map>.bin`) that does not match the town's OpenDRIVE. The client keeps every file it downloads from a server under `~/carlaCache/<version>/` and reuses it, so this is usually a copy from an older server or pack; the client fetches the server's current file once and, if that one does not match either, rebuilds the map from the OpenDRIVE (a few seconds on the first `set_autopilot` in that town). Nothing else changes. A cache file is generated from a town's OpenDRIVE with `carla.Map(name, xodr_text).cook_in_memory_map(path)`, no server needed.
 
 __How big is a pack?__
 

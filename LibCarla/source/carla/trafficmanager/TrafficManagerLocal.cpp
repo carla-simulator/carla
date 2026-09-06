@@ -125,9 +125,18 @@ void TrafficManagerLocal::SetupLocalMap() {
     auto content = episode_proxy.Lock()->GetCacheFile(files[0], true);
     if (content.size() != 0) {
       if (!local_map->Load(content)) {
-        // the cache belongs to another map or an older OpenDRIVE: start over from scratch
+        // The copy in the client's file cache (~/carlaCache) is kept for ever once
+        // downloaded, so a rejected cache is most likely a stale local copy: fetch
+        // the server's current file once and try again before rebuilding from the
+        // OpenDRIVE.
+        log_warning("fetching the Traffic Manager cache", files[0], "from the server again");
+        episode_proxy.Lock()->RequestFile(files[0]);
+        content = episode_proxy.Lock()->GetCacheFile(files[0], false);
         local_map = std::make_shared<InMemoryMap>(world_map);
-        local_map->SetUp();
+        if (content.size() == 0 || !local_map->Load(content)) {
+          local_map = std::make_shared<InMemoryMap>(world_map);
+          local_map->SetUp();
+        }
       }
     } else {
       log_warning("No InMemoryMap cache found. Setting up local map. This may take a while...");
