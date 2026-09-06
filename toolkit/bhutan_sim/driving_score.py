@@ -13,7 +13,7 @@ Leaderboard 2.0 coefficients where an Atlas event class maps onto a Leaderboard
 infraction and documents Atlas-specific coefficients for the safety rules that
 have no Leaderboard equivalent.
 
-The dashboard computes the same numbers in ``Dashboard/src/driving_score.ts``
+The dashboard computes the same numbers in ``dashboard/src/driving_score.ts``
 when a run is finished; keep the two tables identical.
 """
 

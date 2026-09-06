@@ -5,6 +5,10 @@ on:
     branches:
       - ue5-dev
     types: [opened, synchronize, reopened]
+    paths:
+      - "carla/**"
+      - ".github/workflows/ue5_pr.yml"
+      - ".github/workflows/_ci-ubuntu.yml"
 
 concurrency:
   group: pr-${{ github.event.pull_request.number }}

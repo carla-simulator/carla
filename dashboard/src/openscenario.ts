@@ -7,7 +7,7 @@
  * and the road, lane and start offset are parameters the player can override
  * (`--openscenarioparams` in ScenarioRunner, `--param` in esmini).
  *
- * PythonAPI/bhutan/bhutan_sim/openscenario.py produces the same document.
+ * toolkit/bhutan_sim/openscenario.py produces the same document.
  */
 
 export interface XoscScenario {

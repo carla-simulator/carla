@@ -22,11 +22,11 @@ to be portable to other regions with underrepresented road conditions.
 
 | Layer (proposal name) | Repository location | What it does |
 |---|---|---|
-| Meridian01 · Field Data | `PythonAPI/bhutan/bhutan_sim/telemetry.py`, `route.py` | Unified timeline schema for simulated and passive real-world capture, JSONL logger, upload client, GNSS route profiling |
+| Meridian01 · Field Data | `toolkit/bhutan_sim/telemetry.py`, `route.py` | Unified timeline schema for simulated and passive real-world capture, JSONL logger, upload client, GNSS route profiling |
 | Compass02 · Evaluation | `bhutan_sim/evaluation.py`, `safety_rules.py`, `quality.py` | Perception benchmark by class, weather, lighting and route class; explainable safety rules; segment-level quality gates |
 | Tidewater03 · Synthetic World | `bhutan_sim/taxonomy.py`, `scenario.py`, `library.py`, `weather.py`, `runner.py` | 24 Bhutan scenario families, 127 parameterized templates, weather presets, CARLA runner with route-archetype selection and sensor degradation |
 | Horizon Sense04 · Perception QA | `scripts/baseline_detector.py`, `evaluate_model.py` | Ground-truth export, model-adapter contract, baseline detector for validating the measurement pipeline, failure clustering |
-| Atlas05 · Operations | `Dashboard/` | Cloudflare Workers application: D1 catalog, R2 raw storage, deck.gl route playback, KPI dashboard, review workflows, signed evidence exports, audit log |
+| Atlas05 · Operations | `dashboard/` | Cloudflare Workers application: D1 catalog, R2 raw storage, deck.gl route playback, KPI dashboard, review workflows, signed evidence exports, audit log |
 
 The CARLA engine itself is unchanged. The additions are a Python package that
 uses the public CARLA client API and a separate Cloudflare Workers project, so
@@ -55,7 +55,7 @@ rather than a promise.
 
 ## Scenario taxonomy and library
 
-`PythonAPI/bhutan/scenarios/taxonomy.json` defines six groups and 24 families
+`toolkit/scenarios/taxonomy.json` defines six groups and 24 families
 that match the seed taxonomy in the proposal:
 
 | Group | Families |
@@ -89,7 +89,7 @@ and the UE5 catalogue has no motorcycle, so a small car is used with the
 ## Running a scenario in CARLA
 
 ```sh
-cd PythonAPI/bhutan
+cd toolkit
 python scripts/generate_library.py                      # writes scenarios/library.json
 python scripts/run_scenario.py --scenario bt-valley-fog-01 --map Town10HD_Opt
 python scripts/run_scenario.py --family landslide_debris --save-camera --upload \
@@ -159,7 +159,7 @@ deployment, the API and the KPI definitions.
 
 | Weeks | Proposal deliverable | Where it lives now |
 |---|---|---|
-| 1–4 | Data schema for video, CAN/J1939, GNSS, IMU, weather, events | `telemetry.py` record types, `Dashboard/migrations/0001_init.sql` |
+| 1–4 | Data schema for video, CAN/J1939, GNSS, IMU, weather, events | `telemetry.py` record types, `dashboard/migrations/0001_init.sql` |
 | 1–4 | Consent, redaction, access-control and retention policy | Clip governance endpoints, role-scoped tokens, audit log, `privacy_status` on every run |
 | 1–4 | Initial route model and scenario taxonomy | `scenarios/taxonomy.json`, `route.py` |
 | 5–8 | 100+ parameterized scenario templates | `scenarios/library.json` (127) |
@@ -167,7 +167,7 @@ deployment, the API and the KPI definitions.
 | 5–8 | deck.gl route playback and unified timeline | Dashboard runs view |
 | 5–8 | Model adapters and evaluation API | `evaluate_model.py`, `POST /api/evaluations` |
 | 5–8 | Data-quality checks | `quality.py`, `check_quality.py` |
-| 9–12 | Partner-facing web application | `Dashboard/` |
+| 9–12 | Partner-facing web application | `dashboard/` |
 | 9–12 | Versioned dataset catalog and evidence export | D1 catalog, `GET /api/runs/:id/evidence` (HMAC-signed) |
 | 9–12 | Model benchmark report | KPI perception table, evaluation detail view |
 

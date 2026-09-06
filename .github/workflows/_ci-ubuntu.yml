@@ -40,6 +40,7 @@ jobs:
     defaults:
       run:
         shell: bash -leo pipefail {0}
+        working-directory: carla
     runs-on: self-hosted:ubuntu-gpu
     container:
       image: carlasim/carla-builder:ue5-22.04

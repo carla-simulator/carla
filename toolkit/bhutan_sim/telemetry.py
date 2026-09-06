@@ -9,7 +9,7 @@
 The same record shapes are used for simulated runs (CARLA) and passive
 real-world capture (camera, GNSS/IMU, read-only CAN/J1939). The dashboard's
 D1 schema and the deck.gl playback consume exactly these fields, so keep the
-two in sync when adding columns (see Dashboard/schema.sql).
+two in sync when adding columns (see dashboard/schema.sql).
 """
 
 from __future__ import annotations

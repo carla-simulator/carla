@@ -3,15 +3,15 @@
 Operations dashboard and evaluation API for the Bhutan mobility-data pilot.
 One Worker serves the JSON API (`/api/*`) and the static dashboard; D1 holds
 the metadata catalog, R2 holds raw telemetry and clips, a cron trigger writes
-nightly KPI snapshots. See `Docs/bhutan_dashboard.md` for the full guide and
-`Docs/bhutan_roadmap.md` for the feature/integration to-do list.
+nightly KPI snapshots. See `../docs/bhutan_dashboard.md` for the full guide and
+`../docs/bhutan_roadmap.md` for the feature/integration to-do list.
 
 ```sh
 npm install
 cp .dev.vars.example .dev.vars
 npm run db:migrate:local
 npm run dev                                  # http://127.0.0.1:8787
-(cd ../PythonAPI/bhutan && python scripts/seed_demo.py)   # demo data
+(cd ../toolkit && python scripts/seed_demo.py)   # demo data
 npm run typecheck
 npm test                                     # node:test unit tests
 ```

@@ -3,7 +3,7 @@
 Python package and scripts implementing the real-to-synthetic-to-evaluation
 loop for the Bhutan pilot on top of the CARLA client API. Everything except
 `bhutan_sim/runner.py` runs without a CARLA server. Full documentation lives in
-`Docs/bhutan_pilot.md`; the dashboard is documented in `Docs/bhutan_dashboard.md`.
+`docs/bhutan_pilot.md`; the dashboard is documented in `docs/bhutan_dashboard.md`.
 
 ```
 bhutan_sim/
@@ -37,7 +37,7 @@ tests/                  unit tests (python -m unittest discover -s tests)
 Quick start:
 
 ```sh
-cd PythonAPI/bhutan
+cd toolkit
 python -m unittest discover -s tests
 python scripts/generate_library.py
 python scripts/run_scenario.py --scenario bt-landslide-debris-01 --map Town10HD_Opt   # with a CARLA server running

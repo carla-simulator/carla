@@ -1,222 +1,193 @@
-CARLA Simulator
-===============
+# OA Driverless Vision
 
-[![Documentation](https://readthedocs.org/projects/carla/badge/?version=latest)](https://carla-ue5.readthedocs.io)
+**A synthetic-first mobility-intelligence platform for roads the AV industry has never seen.**
 
-[![carla.org](Docs/img/btn/web.png)](http://carla.org)
-[![download](Docs/img/btn/download.png)](https://github.com/carla-simulator/carla/releases)
-[![documentation](Docs/img/btn/docs.png)](https://carla-ue5.readthedocs.io)
-[![forum](Docs/img/btn/forum.png)](https://github.com/carla-simulator/carla/discussions)
-[![discord](Docs/img/btn/chat.png)](https://discord.gg/8kqACuC)
+OA Driverless Vision is a data dashboard and evaluation platform for collecting real-world road
+data, generating locally relevant synthetic driving scenarios, evaluating autonomous-driving and
+ADAS models against them, and producing auditable safety evidence. Bhutan is the reference
+environment; the platform is designed to be portable to Nepal, India, Southeast Asia, Africa,
+Latin America and any region with complex, underrepresented road conditions.
 
-CARLA is an open-source simulator for autonomous driving research. CARLA has been developed from the ground up to support development, training, and
-validation of autonomous driving systems. In addition to open-source code and protocols, CARLA provides open digital assets (urban layouts, buildings,
-vehicles) that were created for this purpose and can be used freely. The simulation platform supports flexible specification of sensor suites and
-environmental conditions.
-
-[![CARLA Video](Docs/img/carla_ue5_readme_img.webp)](https://www.youtube.com/watch?v=q4V9GYjA1pE)
-
->[!NOTE]
-> This is the development branch `ue5-dev` for the **Unreal Engine 5.5 version of CARLA**. This branch exists in parallel with the Unreal Engine 4.26 version of CARLA, in the `ue4-dev` branch. Please be sure that this version of CARLA is suitable for your needs as there are significant differences between the UE 5.5 and UE 4.26 versions of CARLA. 
-
-### Recommended system
-
-* Intel i7 gen 9th - 11th / Intel i9 gen 9th - 11th / AMD Ryzen 7 / AMD Ryzen 9
-* +32 Gb RAM memory 
-* NVIDIA RTX 3070/3080/3090 / NVIDIA RTX 4090 / NVIDIA RTX 5090 or better
-* 16 Gb or more VRAM
-* Ubuntu 22.04 or 24.04, or Windows 11
-
- >[!NOTE]
-> You must use either Ubuntu 22.04 or 24.04, or Windows 11. The Unreal Engine 5.5 version of CARLA will not work on Ubuntu 20.04 or Windows 10 or lower.
-
-## Documentation
-
-The [CARLA documentation](https://carla-ue5.readthedocs.io/en/latest/) is hosted on ReadTheDocs. Please see the following key links:
-
-- [Building on Linux](https://carla-ue5.readthedocs.io/en/latest/build_linux_ue5/)
-- [Building on Windows](https://carla-ue5.readthedocs.io/en/latest/build_windows_ue5/)
-- [First steps](https://carla-ue5.readthedocs.io/en/latest/tuto_first_steps/)
-- [CARLA asset catalogue](https://carla-ue5.readthedocs.io/en/latest/catalogue/)
-- [Python API reference](https://carla-ue5.readthedocs.io/en/latest/python_api/)
-- [Blueprint library](https://carla-ue5.readthedocs.io/en/latest/bp_library/)
-
-## CARLA Ecosystem
-Repositories associated with the CARLA simulation platform:
-
-* [**CARLA Autonomous Driving leaderboard**](https://leaderboard.carla.org/): Automatic platform to validate Autonomous Driving stacks
-* [**Scenario_Runner**](https://github.com/carla-simulator/scenario_runner): Engine to execute traffic scenarios in CARLA 0.9.X
-* [**ROS-bridge**](https://github.com/carla-simulator/ros-bridge): Interface to connect CARLA 0.9.X to ROS
-* [**Driving-benchmarks**](https://github.com/carla-simulator/driving-benchmarks): Benchmark tools for Autonomous Driving tasks
-* [**Conditional Imitation-Learning**](https://github.com/felipecode/coiltraine): Training and testing Conditional Imitation Learning models in CARLA
-* [**AutoWare AV stack**](https://github.com/carla-simulator/carla-autoware): Bridge to connect AutoWare AV stack to CARLA
-* [**Reinforcement-Learning**](https://github.com/carla-simulator/reinforcement-learning): Code for running Conditional Reinforcement Learning models in CARLA
-* [**RoadRunner**](https://www.mathworks.com/products/roadrunner.html): MATLAB GUI based application to create road networks in OpenDrive format 
-* [**Map Editor**](https://github.com/carla-simulator/carla-map-editor): Standalone GUI application to enhance RoadRunner maps with traffic lights and traffic signs information
-
-## Bhutan mobility-data and AV-evaluation pilot
-
-This fork adds a synthetic-first mobility-intelligence layer for emerging-market roads, using Bhutan as the reference environment:
-
-* [`PythonAPI/bhutan`](PythonAPI/bhutan): 24 Bhutan scenario families expanded into 127 parameterized templates, a CARLA runner with route-archetype selection and sensor degradation, a unified telemetry schema for simulated and passive real-world capture, safety rules, data-quality gates and a perception benchmark with failure clustering.
-* [`Dashboard`](Dashboard): the "Atlas" operations dashboard and evaluation API on Cloudflare Workers (D1 catalog, R2 raw storage, deck.gl route playback, KPI dashboard, safety review, clip governance, HMAC-signed evidence packs).
-* Docs: [pilot overview](Docs/bhutan_pilot.md), [dashboard deployment](Docs/bhutan_dashboard.md), [driverless-fleet tooling outline](Docs/bhutan_fleet_tools.md).
-
-
-**Like what you see? Star us on GitHub to support the project!**
-
-Paper
------
-
-If you use CARLA, please cite our CoRL’17 paper.
-
-_CARLA: An Open Urban Driving Simulator_<br>Alexey Dosovitskiy, German Ros,
-Felipe Codevilla, Antonio Lopez, Vladlen Koltun; PMLR 78:1-16
-[[PDF](http://proceedings.mlr.press/v78/dosovitskiy17a/dosovitskiy17a.pdf)]
-[[talk](https://www.youtube.com/watch?v=xfyK03MEZ9Q&feature=youtu.be&t=2h44m30s)]
-
+This is **not** a public-road autonomous-driving service. It is the validation and
+operational-data layer — a "Waymo-grade evidence stack" — for countries and fleets that lack the
+local maps, driving datasets, simulation coverage and safety-evaluation tooling needed to
+responsibly deploy ADAS, shuttles, freight automation or robotics.
 
 ```
-@inproceedings{Dosovitskiy17,
-  title = {{CARLA}: {An} Open Urban Driving Simulator},
-  author = {Alexey Dosovitskiy and German Ros and Felipe Codevilla and Antonio Lopez and Vladlen Koltun},
-  booktitle = {Proceedings of the 1st Annual Conference on Robot Learning},
-  pages = {1--16},
-  year = {2017}
-}
+Local real-world routes and fleet logs
+                ↓
+Privacy processing, labeling, and quality controls
+                ↓
+Digital routes + synthetic scenario variations
+                ↓
+Replay and evaluation against ADAS/AV models
+                ↓
+Risk metrics, failure clusters, safety evidence
+                ↓
+Improved data collection and targeted synthetic generation
 ```
 
-## Building CARLA with Unreal Engine 5.5
---------------
+## Repository map
 
-Clone this repository locally from GitHub, specifying the *ue5-dev* branch:
+The main app is the **data dashboard** at the root of this monorepo; it links every other
+component together.
+
+| Directory | What it is |
+|---|---|
+| [`dashboard/`](dashboard) | **The main app.** "Atlas" operations dashboard and evaluation API on Cloudflare Workers: D1 metadata catalog, R2 raw storage, route playback, KPI dashboard, fleet map, safety review, clip governance, signed evidence exports, Prometheus metrics, OpenAPI. |
+| [`toolkit/`](toolkit) | Python package `bhutan_sim`: scenario taxonomy and 100+ parameterized templates, CARLA scenario runner, unified telemetry schema, safety rules, quality gates, perception benchmark, driving score, OpenSCENARIO export, GPX/MCAP/Traccar adapters, upload/seed scripts. |
+| [`carla/`](carla) | The [CARLA](http://carla.org) open-source driving simulator (Unreal Engine 5.5, `ue5-dev`), vendored as the synthetic-world engine. Build and use it exactly as upstream — see [`carla/README.md`](carla/README.md). |
+| [`docs/`](docs) | Platform documentation: [pilot overview](docs/bhutan_pilot.md), [dashboard guide](docs/bhutan_dashboard.md), [fleet tooling survey](docs/bhutan_fleet_tools.md), [detailed roadmap](docs/bhutan_roadmap.md). |
+| [`.github/`](.github) | CI: dashboard/toolkit tests and Cloudflare deploy; CARLA UE5 build pipelines (scoped to `carla/**`). |
+
+## Platform layers
+
+| Layer | Phase-1 function | Where it lives today | Long-term product |
+|---|---|---|---|
+| **Meridian01 · Field Data** | Camera, GNSS/IMU, read-only CAN/J1939, route and event capture | `toolkit/bhutan_sim/telemetry.py`, `route.py`, adapters | Managed data-collection kit and fleet telemetry product |
+| **Compass02 · Evaluation** | Scenario scoring, perception metrics, intervention/event analysis, risk rules | `toolkit/bhutan_sim/evaluation.py`, `safety_rules.py`, `driving_score.py` | Model-evaluation and safety-evidence SaaS/API |
+| **Tidewater03 · Synthetic World** | CARLA scenarios, route reconstruction, weather and traffic variation, counterfactual replay | `carla/`, `toolkit/bhutan_sim/scenario.py`, `library.py`, `runner.py`, `openscenario.py` | Synthetic-data generation and simulation platform |
+| **Horizon Sense04 · Perception QA** | Annotation, sensor-fusion benchmark, coverage analysis, edge-case review | `toolkit/bhutan_sim/quality.py`, `evaluation.py`, clip review in the dashboard | Dataset QA, labeling, perception-validation service |
+| **Atlas05 · Operations** | Route dashboard, playback, approvals, safety workflows, evidence exports | `dashboard/` | Fleet, city, insurer and regulator portal |
+
+## Quick start
+
+**Dashboard (the main app):**
 
 ```sh
-git clone -b ue5-dev https://github.com/carla-simulator/carla.git CarlaUE5
+cd dashboard
+npm install
+cp .dev.vars.example .dev.vars
+npm run db:migrate:local
+npm run dev                                   # http://127.0.0.1:8787
+(cd ../toolkit && python scripts/seed_demo.py)  # seed demo data, no CARLA needed
+npm run check                                 # typecheck + unit tests
 ```
 
-In order to build CARLA, you need access to the CARLA fork of Unreal Engine 5.5. In order to access this repository, you must first link your GitHub account to Epic Games by following [this guide](https://www.unrealengine.com/en-US/ue-on-github). You then also need to use your git credentials to authorise the download of the Unreal Engine 5.5 repository. 
-
-__Building in Linux__:
-
-Run the setup script from a terminal open in the CARLA root directory:
+**Toolkit (scenarios, evaluation, ingestion — no CARLA server required except `run_scenario.py`):**
 
 ```sh
-cd CarlaUE5
-./CarlaSetup.sh --interactive
+cd toolkit
+python -m unittest discover -s tests
+python scripts/generate_library.py            # build the 100+ scenario templates
+python scripts/export_scenario.py --scenario bt-landslide-debris-01 --out-dir _out/xosc
 ```
 
-The setup script will prompt you for your sudo password, in order to install the prerequisites. It will then prompt you for your GitHub credentials in order to authorise the download of the Unreal Engine repository. 
+**Simulator (optional, needs a GPU workstation):** build CARLA from [`carla/`](carla/README.md),
+start a server, then `python toolkit/scripts/run_scenario.py --scenario bt-landslide-debris-01`.
 
-The setup script will install by default Python 3 using apt. If you want to target an existing Python installation, you should use the `--python-root=PATH_TO_PYTHON` argument with the relevant Python installation path. You can use whereis python3 in your chosen environment and strip the `/python3` suffix from the path.
+## Feature map
 
-__Building in Linux unattended__:
+The development map for the 12-week pilot and beyond, by layer. `[x]` shipped, `[ ]` to develop.
+The fine-grained, actionable list (with target files and upstream tools) is maintained in
+[`docs/bhutan_roadmap.md`](docs/bhutan_roadmap.md).
 
-If you want to run the setup script unattended, your git credentials need to be stored in an environment variable. Add your github credentials to your `.bashrc` file:
+### Meridian01 · Field Data — collect
 
-```sh
-export GIT_LOCAL_CREDENTIALS=username@github_token
-```
+- [x] Unified timeline schema for simulated and real capture (video refs, GNSS, IMU, CAN-derived speed/brake, weather, events)
+- [x] Passive-capture run directories with JSONL telemetry, manifests and store-and-forward upload (`upload_run.py`)
+- [x] Ingestion adapters: GPX dashcam/phone tracks, MCAP (Foxglove/ROS 2), Traccar position forwarding
+- [ ] Read-only openpilot/comma rlog ingestion (GPS, IMU, CAN speed/brake) — research component only, own storage, no vehicle control
+- [ ] J1939/DBC decoding of truck candump logs (cantools) into throttle/brake/speed signals
+- [ ] Android/embedded edge-logger app: encrypted local storage, consent capture, offline-first upload
+- [ ] Automated redaction pipeline (faces, plates, depot locations) that flips `redaction_status` before release
+- [ ] Consent registry and retention controls wired into the catalog (governance pack exists as policy)
+- [ ] Multi-vehicle fleet rollout: per-device provisioning, health monitoring, collection-window scheduling
 
-Then run the setup script using the following command:
+### Compass02 · Evaluation — measure
 
-```sh
-cd CarlaUE5
-sudo -E ./CarlaSetup.sh
-```
+- [x] Perception benchmark: precision/recall by object class, weather, lighting and route class, with failure clustering
+- [x] Explainable safety rules SR-01..SR-08 per vehicle class; 100% of critical violations logged and reviewable
+- [x] CARLA-Leaderboard-style driving score, route completion and infraction penalty per run
+- [x] Model adapters: submit detections/trajectories as JSONL against ground truth (`evaluate_model.py`, baseline detector)
+- [ ] Containerized model runners: submit a whole model for server-side evaluation
+- [ ] Counterfactual replay: same route, same model, varied weather/light/actors — side-by-side deltas
+- [ ] Run comparison view: overlay two runs' timelines and event markers
+- [ ] nuScenes-format export of ground truth and detections so model teams reuse their tooling
+- [ ] Intervention/disengagement analytics once fleet capture includes driver events
 
-This will download and install Unreal Engine 5.5, install the prerequisites and build CARLA. It may take some time to complete and use a significant amount of disk space.
+### Tidewater03 · Synthetic World — generate
 
-If you prefer to add the git credentials in the terminal, use the following command:
+- [x] Bhutan scenario taxonomy: 6 groups, 24 families (blind curves, narrow lanes, monsoon fog, livestock, landslide debris, freight grade/brake-fade events)
+- [x] 100+ deterministic, versioned, content-hashed scenario templates (`library.json`)
+- [x] CARLA runner with route-archetype selection, weather presets and sensor degradation
+- [x] ASAM OpenSCENARIO 1.2 export — templates run in ScenarioRunner, esmini and partner simulators
+- [x] Real GNSS trace → route archetypes → recommended scenario families (`route.py`, `route_profile.py`)
+- [ ] Scenic program generation per family for probabilistic coverage sampling
+- [ ] Route-to-scenario generator: sample new templates directly from a real trace's archetypes
+- [ ] Batch runner: execute a whole family in CARLA and upload results with one command
+- [ ] Bhutan-specific CARLA assets: road furniture, signage, vehicle liveries, terrain materials
+- [ ] Digital-route reconstruction of the pilot corridor (OpenDRIVE from survey + Lanelet2/OSM lane maps)
+- [ ] Synthetic-to-real alignment reviews: 20+ expert-reviewed scenario families scored for local fidelity
 
-```sh
-cd CarlaUE5
-sudo -E env GIT_LOCAL_CREDENTIALS=github_username@github_token ./CarlaSetup.sh 
-```
+### Horizon Sense04 · Perception QA — trust the data
 
-__Building in Windows__:
+- [x] Quality gates Q1–Q5: missing data, timestamp drift, sensor dropouts, route coverage, privacy-processing status
+- [x] Replay-completeness metric (target: ≥95% of runs fully synchronized)
+- [x] Clip governance: review, release and audit workflow in the dashboard
+- [ ] CVAT / Label Studio round-trip: push released clips as labeling tasks, import labels as ground truth
+- [ ] FiftyOne dataset export for coverage and duplicate analysis
+- [ ] Coverage matrix: scenarios and runs by weather × lighting × route class with gaps highlighted
+- [ ] Edge-case discovery dashboard: events per 100 km by class, trending
+- [ ] Declarative quality suites (Great Expectations / pandera) exported from the Q-gates
+- [ ] Local labeling-workforce workflow (Phase 2)
 
-To build in Windows, run the batch script:
+### Atlas05 · Operations — show and prove
 
-```sh
-cd CarlaUE5
-CarlaSetup.bat
-```
+- [x] Cloudflare Workers app: runs, scenarios, evaluations, clips, KPI trends, fleet map, audit log
+- [x] Signed (HMAC) evidence-pack exports; GeoJSON/CSV/MCAP export; "Open in Foxglove"
+- [x] Prometheus `/api/metrics` for Grafana alerting; OpenAPI spec for partner clients
+- [x] Multi-tenant token auth with roles; nightly KPI snapshots via cron
+- [ ] deck.gl route playback with synchronized video/telemetry/event timeline
+- [ ] Clip player with event markers
+- [ ] Partner report page: printable Month-3 evidence summary for fleets, insurers, regulators
+- [ ] Notifications: Slack/e-mail webhook when a critical event is uploaded unreviewed
+- [ ] Cloudflare Access / SSO in front of the dashboard; expiring read-only share links
+- [ ] Per-tenant branding; approvals workflow for dataset releases
+- [ ] Streaming ingestion (Queues + Durable Objects) and live vehicle sessions as the fleet grows
+- [ ] Versioned dataset catalog snapshots (DVC) tied to signed manifests
 
-Unattended mode is currently unavailable in Windows, you will need to enter GitHub credentials or administrator privileges when prompted.
+## 12-week program
 
-## Rebuilding CARLA
+| Weeks | Focus | Key deliverables |
+|---|---|---|
+| **1–4** | Data foundation and safety boundary | Operational **Data** Domain definition; data schema + governance pack; one vehicle instrumented for **passive capture only**; initial route model and scenario taxonomy |
+| **5–8** | Synthetic world and evaluation engine | 100+ parameterized scenario templates; simulation/replay environment; annotation and event-review workflow; evaluation API and KPI dashboard |
+| **9–12** | Evidence pack and commercial demo | Controlled, geo-fenced simulation-backed demo (trained safety driver, no autonomous public-road operation); partner-facing web app; benchmark report and safety-evidence export; Phase-2 go/no-go |
 
-Once the setup is complete, you can execute subsequent builds with the following commands in a terminal open in the CARLA root directory. In Linux, run these commands in a standard terminal. In Windows, open the x64 Native Tools Command Prompt for Visual Studio 2022.
+### Month-3 KPIs
 
-__Configure__:
+| KPI | Target |
+|---|---|
+| Real-world route coverage | 50–100 h of quality-controlled passive capture |
+| Replay completeness | ≥95% of runs fully synchronized (video, location, telemetry, events) |
+| Scenario-library coverage | 100+ parameterized Bhutan-relevant scenarios |
+| Synthetic-to-real alignment | 20+ expert-reviewed scenario families |
+| Data-quality acceptance | ≥90% of segments pass quality gates |
+| Evaluation reproducibility | 100% of published benchmarks replay from versioned inputs |
+| Critical safety-rule violations | 100% logged, classified, reviewed |
+| Data-governance compliance | 100% of released clips redacted and consent-traceable |
 
-Linux:
+## Commercial products (long-term)
 
-```sh
-cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_ROS2=ON
-```
+| Product | Buyer | Model |
+|---|---|---|
+| Data-collection kit + dashboard | Fleets, cities, research partners | Setup fee + subscription |
+| Curated regional datasets | Model developers, OEMs, universities | License / annual access |
+| Synthetic scenario packs | ADAS/AV/robotics companies | Per-region / per-ODD license |
+| Model-evaluation API | AI and autonomy teams | Usage-based / enterprise |
+| Safety-evidence reporting | Fleets, insurers, regulators | Service + recurring reporting |
+| Custom digital-route deployment | Cities, industrial parks, freight corridors | Implementation + hosting |
 
-Windows:
+## Safety and data-governance boundaries
 
-```sh
-cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUILD_TYPE=Release
-```
+- Phase 1 is **read-only**: no steering, acceleration, braking or vehicle-control messages. Ever.
+- No autonomous public-road operation; demos are simulation-backed and geo-fenced with a trained safety driver.
+- Proprietary data stays in our own encrypted storage with consent workflow, redaction pipeline, signed manifests, role-based access and audit logs — third-party services (e.g. comma Connect) are never the primary dataset store.
+- Every released clip is redacted and consent-traceable before it leaves the platform.
 
->[!NOTE]
-> If you intend to target a specific Python installation, you should add both these arguments to the above cmake command: `-DPython_ROOT_DIR=PATH` and `-DPython3_ROOT_DIR=PATH`.
+## License
 
-__Build__:
-
-Linux and Windows:
-
-```sh
-cmake --build Build
-```
-
-__Build and install the Python API__:
-
-
-Linux and Windows:
-
-```sh
-cmake --build Build --target carla-python-api-install
-```
-
-__Launch the editor__:
-
-```sh
-cmake --build Build --target launch
-```
-
-For more instructions on building CARLA UE5, please consult the build documentation for [Linux](https://carla-ue5.readthedocs.io/en/latest/build_linux_ue5/) or [Windows](https://carla-ue5.readthedocs.io/en/latest/build_windows_ue5/).
-
-Contributing
-------------
-
-Please take a look at our [Contribution guidelines][contriblink].
-
-[contriblink]: https://carla-ue5.readthedocs.io/en/latest/cont_contribution_guidelines/
-
-Licenses
--------
-
-## CARLA licenses
-
-CARLA specific code is distributed under the MIT License.
-
-CARLA specific assets are distributed under the CC-BY License.
-
-## CARLA Dependency and Integration licenses
-
-Unreal Engine 5 follows its [own license terms](https://www.unrealengine.com/en-US/faq).
-
-CARLA uses some dependencies related to 3rd party integrations:
-- [PROJ](https://proj.org/), a generic coordinate transformation software which uses the [X/MIT open source license](https://proj.org/about.html#license).
-- [SQLite](https://www.sqlite.org), part of the PROJ dependencies, which is [in the public domain](https://www.sqlite.org/purchase/license).
-- [Xerces-C](https://xerces.apache.org/xerces-c/), a validating XML parser, which is made available under the [Apache Software License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
-- [Eigen](https://eigen.tuxfamily.org/index.php?title=Main_Page), a C++ template library for linear algebra which uses the [MPL2 license](https://www.mozilla.org/en-US/MPL/2.0/).
-
-CARLA uses the Autodesk FBX SDK for converting FBX to OBJ in the import process of maps. This step is optional, and the SDK is located [here](https://www.autodesk.com/developer-network/platform-technologies/fbx-sdk-2020-0)
-
-This software contains Autodesk® FBX® code developed by Autodesk, Inc. Copyright 2020 Autodesk, Inc. All rights, reserved. Such code is provided "as is" and Autodesk, Inc. disclaims any and all warranties, whether express or implied, including without limitation the implied warranties of merchantability, fitness for a particular purpose or non-infringement of third party rights. In no event shall Autodesk, Inc. be liable for any direct, indirect, incidental, special, exemplary, or consequential damages (including, but not limited to, procurement of substitute goods or services; loss of use, data, or profits; or business interruption) however caused and on any theory of liability, whether in contract, strict liability, or tort (including negligence or otherwise) arising in any way out of such code."
+CARLA (in [`carla/`](carla)) is MIT-licensed by the CARLA team (see [LICENSE](LICENSE) and its
+[Docs](carla/Docs)); CARLA assets are CC-BY. Platform code in `dashboard/`, `toolkit/` and `docs/`
+is part of the OA Driverless Vision pilot.

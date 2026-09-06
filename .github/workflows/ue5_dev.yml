@@ -4,6 +4,10 @@ on:
   push:
      branches:
        - ue5-dev
+     paths:
+       - "carla/**"
+       - ".github/workflows/ue5_dev.yml"
+       - ".github/workflows/_ci-ubuntu.yml"
   workflow_dispatch:  # Allow manual trigger
 
 concurrency:
