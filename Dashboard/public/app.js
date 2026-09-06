@@ -16,6 +16,8 @@
     evaluations: [],
     playback: { t: 0, playing: false, raf: null, t0: 0, t1: 0 },
     deck: null,
+    history: [],
+    fleet: { devices: [], device: null, track: [], deck: null, timer: null },
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -50,7 +52,26 @@
       try { detail = (await response.json()).error || detail; } catch (_) { /* ignore */ }
       throw new Error(`${response.status}: ${detail}`);
     }
+    if (options.raw) return response;
     return response.json();
+  }
+
+  /** Fetch an authenticated export and hand it to the browser as a download. */
+  async function download(path, filename) {
+    const response = await api(path, { raw: true });
+    const blob = await response.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    return blob;
+  }
+
+  function tokenisedUrl(path) {
+    const url = new URL(path, location.origin);
+    url.searchParams.set("token", state.token);
+    return url.toString();
   }
 
   // ------------------------------------------------------------------ charts
@@ -203,8 +224,29 @@
   }
 
   // ---------------------------------------------------------------- overview
+  function renderTrend() {
+    const sel = $("#trend-kpi");
+    const id = sel.value;
+    const points = [];
+    for (const snap of state.history) {
+      const kpi = (snap.kpis || []).find((k) => k.id === id);
+      if (kpi && kpi.value !== null && kpi.value !== undefined) points.push([Date.parse(snap.computed_at) / 86400000, kpi.value]);
+    }
+    const container = $("#trend-chart");
+    if (points.length < 2) { container.innerHTML = '<div class="empty">need at least two nightly snapshots — POST /api/kpis/snapshot forces one</div>'; return; }
+    const label = sel.options[sel.selectedIndex].textContent;
+    const day0 = Math.floor(points[0][0]);
+    lineChart(container, { title: label, xLabel: " d", series: [{ name: label, values: points.map((p) => [p[0] - day0, p[1]]) }] });
+  }
+
   async function loadOverview() {
-    const report = await api("/api/kpis");
+    const [report, history] = await Promise.all([api("/api/kpis"), api("/api/kpis/history?limit=120")]);
+    state.history = history.snapshots || [];
+    const sel = $("#trend-kpi");
+    const keep = sel.value;
+    sel.innerHTML = report.kpis.map((k) => `<option value="${esc(k.id)}" ${k.id === keep ? "selected" : ""}>${esc(k.label)}</option>`).join("");
+    $("#metrics-link").href = tokenisedUrl("/api/metrics");
+    renderTrend();
     $("#kpi-grid").innerHTML = report.kpis.map((k) => `
       <div class="kpi">
         <div class="kpi-label">${esc(k.label)}</div>
@@ -242,17 +284,33 @@
     const data = await api("/api/runs?" + params.toString());
     state.runs = data.runs;
     const body = $("#runs-table tbody");
-    if (!state.runs.length) { body.innerHTML = '<tr><td colspan="9" class="empty">no runs yet — upload one with PythonAPI/bhutan/scripts/upload_run.py</td></tr>'; return; }
+    if (!state.runs.length) { body.innerHTML = '<tr><td colspan="10" class="empty">no runs yet — upload one with PythonAPI/bhutan/scripts/upload_run.py</td></tr>'; return; }
     body.innerHTML = state.runs.map((r) => `
       <tr class="is-clickable" data-run="${esc(r.run_id)}">
         <td class="mono">${esc(r.run_id)}</td><td>${esc(r.source)}</td><td class="mono">${esc(r.scenario_id || "–")}</td>
         <td>${esc(fmt.time(r.started_at))}</td><td class="num">${esc(fmt.dur(r.duration_s))}</td><td class="num">${fmt.num(r.distance_km, 2)} km</td>
-        <td class="num">${r.event_count}</td><td>${pill(r.quality_status)}</td><td>${pill(r.replay_complete ? "yes" : "no")}</td>
+        <td class="num">${r.event_count}</td><td class="num">${r.driving_score === null || r.driving_score === undefined ? "–" : fmt.num(r.driving_score, 1)}</td>
+        <td>${pill(r.quality_status)}</td><td>${pill(r.replay_complete ? "yes" : "no")}</td>
       </tr>`).join("");
     body.querySelectorAll("tr[data-run]").forEach((tr) => tr.addEventListener("click", () => selectRun(tr.dataset.run)));
+    const wanted = state.pendingRun;
+    state.pendingRun = null;
+    if (wanted && state.runs.some((r) => r.run_id === wanted)) selectRun(wanted);
+  }
+
+  function renderScore(run) {
+    const strip = $("#score-strip");
+    if (run.driving_score === null || run.driving_score === undefined) { strip.hidden = true; return; }
+    const infractions = (run.infractions && run.infractions.infractions) || [];
+    strip.hidden = false;
+    strip.innerHTML = `<span>Driving score <b>${fmt.num(run.driving_score, 1)}</b></span>` +
+      `<span>Route completion <b>${fmt.num(run.route_completion, 0)}%</b> <span class="muted">${esc((run.infractions && run.infractions.basis || "").replace(/_/g, " "))}</span></span>` +
+      `<span>Infraction penalty <b>×${fmt.num(run.infraction_penalty, 3)}</b></span>` +
+      (infractions.length ? `<span class="infraction">${infractions.map((i) => `${esc(i.kind.replace(/_/g, " "))} ×${i.count} (${i.penalty})`).join(" · ")}</span>` : '<span class="infraction">no infractions</span>');
   }
 
   async function selectRun(runId) {
+    setHash("runs", runId);
     document.querySelectorAll("#runs-table tr").forEach((tr) => tr.classList.toggle("is-selected", tr.dataset.run === runId));
     const [detail, telemetry, events] = await Promise.all([
       api(`/api/runs/${encodeURIComponent(runId)}`),
@@ -264,6 +322,7 @@
     state.events = events.events;
     $("#run-detail").hidden = false;
     $("#detail-title").textContent = `${detail.run.run_id} · ${detail.run.scenario_id || detail.run.route_id || detail.run.source}`;
+    renderScore(detail.run);
     renderTimeline();
     renderMap();
     renderEvents();
@@ -400,6 +459,25 @@
     } catch (err) { toast(err.message); }
   }
 
+  async function exportRun(format) {
+    if (!state.run) return;
+    const id = state.run.run_id;
+    try {
+      toast(`preparing ${format} export…`, 8000);
+      const blob = await download(`/api/runs/${encodeURIComponent(id)}/export/${format}`, `${id}.${format}`);
+      toast(`${format} export downloaded (${fmt.bytes(blob.size)})`);
+    } catch (err) { toast(err.message); }
+  }
+
+  function openInFoxglove() {
+    if (!state.run) return;
+    // Foxglove Studio opens remote MCAP files by URL; the reader token travels in the URL, so share with care.
+    const mcap = tokenisedUrl(`/api/runs/${encodeURIComponent(state.run.run_id)}/export/mcap`);
+    const url = "https://app.foxglove.dev/~/view?ds=remote-file&ds.url=" + encodeURIComponent(mcap);
+    window.open(url, "_blank", "noopener");
+    toast("opened Foxglove Studio with a tokenised MCAP URL");
+  }
+
   // --------------------------------------------------------------- scenarios
   async function loadScenarios() {
     const params = new URLSearchParams();
@@ -422,7 +500,8 @@
       </div>`).join("");
     $("#family-grid").querySelectorAll(".family").forEach((el) => el.addEventListener("click", () => { famSel.value = famSel.value === el.dataset.family ? "" : el.dataset.family; loadScenarios(); }));
     const body = $("#scenarios-table tbody");
-    if (!state.scenarios.length) { body.innerHTML = '<tr><td colspan="9" class="empty">no scenarios — import with PythonAPI/bhutan/scripts/generate_library.py --dashboard</td></tr>'; return; }
+    setHash("scenarios", famSel.value || "");
+    if (!state.scenarios.length) { body.innerHTML = '<tr><td colspan="10" class="empty">no scenarios — import with PythonAPI/bhutan/scripts/generate_library.py --dashboard</td></tr>'; return; }
     body.innerHTML = state.scenarios.map((s) => {
       const p = s.params || {}, d = p.sensor_degradation || {};
       const deg = [d.camera_blur ? "blur " + d.camera_blur : "", d.gnss_noise_m ? "gnss ±" + d.gnss_noise_m + " m" : "", d.dropout_probability ? "dropout " + Math.round(d.dropout_probability * 100) + "%" : ""].filter(Boolean).join(", ") || "none";
@@ -430,8 +509,12 @@
         <td class="mono" title="${esc(s.content_hash)}">${esc(s.scenario_id)}</td><td>${esc(s.family)}</td><td>${esc(p.weather_preset)}</td><td>${esc(p.time_of_day)}</td>
         <td>${esc(s.route_class || "")}</td><td class="num">${fmt.num(p.traffic_density, 2)}</td><td class="num">${fmt.num(p.lane_quality, 2)}</td><td>${esc(deg)}</td>
         <td>${pill(s.review_status)} ${s.review_status !== "reviewed" ? `<button class="small" data-approve="${esc(s.scenario_id)}">Mark reviewed</button>` : ""}</td>
+        <td><button class="small" data-xosc="${esc(s.scenario_id)}" title="ASAM OpenSCENARIO 1.2">.xosc</button></td>
       </tr>`;
     }).join("");
+    body.querySelectorAll("button[data-xosc]").forEach((b) => b.addEventListener("click", async () => {
+      try { await download(`/api/scenarios/${encodeURIComponent(b.dataset.xosc)}/export/xosc`, `${b.dataset.xosc}.xosc`); toast("OpenSCENARIO downloaded — run with scenario_runner.py --openscenario or esmini"); } catch (err) { toast(err.message); }
+    }));
     body.querySelectorAll("button[data-approve]").forEach((b) => b.addEventListener("click", async () => {
       try {
         await api(`/api/scenarios/${encodeURIComponent(b.dataset.approve)}/review`, { method: "POST", body: { review_status: "reviewed" } });
@@ -460,6 +543,7 @@
   function selectEvaluation(id) {
     const e = state.evaluations.find((x) => x.evaluation_id === id);
     if (!e) return;
+    setHash("evaluations", id);
     document.querySelectorAll("#evaluations-table tr").forEach((tr) => tr.classList.toggle("is-selected", tr.dataset.eval === id));
     $("#evaluation-detail").hidden = false;
     $("#evaluation-title").textContent = `${e.model_id} v${e.model_version || "?"} on ${e.run_id || "?"} · ${e.frames_evaluated} frames`;
@@ -493,15 +577,117 @@
       <tr><td class="mono">${esc(a.created_at)}</td><td class="mono">${esc(a.actor)}</td><td>${esc(a.action)}</td><td class="mono">${esc(a.target || "")}</td><td class="mono">${esc(a.detail ? JSON.stringify(a.detail) : "")}</td></tr>`).join("") || '<tr><td colspan="5" class="empty">empty</td></tr>';
   }
 
-  // ------------------------------------------------------------------ wiring
-  const loaders = { overview: loadOverview, runs: loadRuns, scenarios: loadScenarios, evaluations: loadEvaluations, governance: loadGovernance };
+  // ------------------------------------------------------------------- fleet
+  const FLEET_RGB = { online: [27, 175, 122], stale: [250, 178, 25], offline: [122, 121, 115] };
+  const deviceStatus = (d) => (d.age_s === null ? "offline" : d.age_s < 300 ? "online" : d.age_s < 3600 ? "stale" : "offline");
 
-  async function showView(view) {
+  async function loadFleet() {
+    const data = await api("/api/fleet/live");
+    state.fleet.devices = data.devices;
+    const body = $("#fleet-table tbody");
+    if (!data.devices.length) {
+      body.innerHTML = '<tr><td colspan="8" class="empty">no devices yet — point Traccar forwarding at /api/ingest/traccar, a phone at /api/ingest/osmand, or post to /api/fleet/positions</td></tr>';
+    } else {
+      body.innerHTML = data.devices.map((d) => `
+        <tr class="is-clickable ${d.device_id === state.fleet.device ? "is-selected" : ""}" data-device="${esc(d.device_id)}">
+          <td class="mono">${esc(d.name || d.device_id)}${d.name ? `<div class="muted">${esc(d.device_id)}</div>` : ""}</td><td>${esc(d.vehicle_class)}</td><td>${esc(d.source)}</td>
+          <td>${d.age_s === null ? "–" : d.age_s < 60 ? Math.round(d.age_s) + " s ago" : d.age_s < 3600 ? Math.round(d.age_s / 60) + " min ago" : fmt.time(d.last_t)}</td>
+          <td class="num">${d.last_speed_mps === null ? "–" : fmt.num(d.last_speed_mps * 3.6, 0) + " km/h"}</td><td class="num">${d.position_count}</td>
+          <td>${pill(deviceStatus(d))}</td><td><button class="small" data-track="${esc(d.device_id)}">Track</button></td>
+        </tr>`).join("");
+      body.querySelectorAll("tr[data-device]").forEach((tr) => tr.addEventListener("click", () => selectDevice(tr.dataset.device)));
+    }
+    if (state.fleet.device) await selectDevice(state.fleet.device, true);
+    else renderFleetMap();
+    scheduleFleetRefresh();
+  }
+
+  function scheduleFleetRefresh() {
+    clearTimeout(state.fleet.timer);
+    if (state.view === "fleet" && $("#fleet-auto").checked) state.fleet.timer = setTimeout(() => loadFleet().catch((err) => toast(err.message)), 15000);
+  }
+
+  async function selectDevice(deviceId, silent) {
+    state.fleet.device = deviceId;
+    setHash("fleet", deviceId);
+    document.querySelectorAll("#fleet-table tr").forEach((tr) => tr.classList.toggle("is-selected", tr.dataset.device === deviceId));
+    const since = Date.now() / 1000 - Number($("#fleet-window").value);
+    const data = await api(`/api/fleet/devices/${encodeURIComponent(deviceId)}/track?since=${since}&limit=5000`);
+    state.fleet.track = data.positions;
+    $("#fleet-title").textContent = `${deviceId} · ${data.positions.length} positions`;
+    $("#fleet-materialize").hidden = data.positions.length < 2;
+    renderFleetMap();
+    if (!silent && !data.positions.length) toast("no positions in the selected window");
+  }
+
+  function renderFleetMap() {
+    const container = $("#fleet-map");
+    if (!window.deck) { container.innerHTML = '<div class="empty">deck.gl failed to load (offline?)</div>'; return; }
+    const devices = state.fleet.devices.filter((d) => d.last_lat !== null && d.last_lon !== null);
+    const track = state.fleet.track;
+    const pts = track.length ? track.map((p) => [p.lon, p.lat]) : devices.map((d) => [d.last_lon, d.last_lat]);
+    if (!pts.length) { container.innerHTML = '<div class="empty">no positions</div>'; state.fleet.deck = null; return; }
+    const lons = pts.map((p) => p[0]), lats = pts.map((p) => p[1]);
+    const center = [(Math.min(...lons) + Math.max(...lons)) / 2, (Math.min(...lats) + Math.max(...lats)) / 2];
+    const span = Math.max(Math.max(...lats) - Math.min(...lats), (Math.max(...lons) - Math.min(...lons)) * Math.cos(center[1] * Math.PI / 180), 1e-3);
+    const zoom = Math.min(17, Math.max(6, Math.log2(360 / span) - 1.2));
+    const tileUrl = window.BHUTAN_TILE_URL || "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
+    const layers = [
+      new deck.TileLayer({ id: "fleet-basemap", data: tileUrl, minZoom: 0, maxZoom: 19, tileSize: 256,
+        renderSubLayers: (props) => { const { boundingBox } = props.tile; return new deck.BitmapLayer(props, { data: null, image: props.data, bounds: [boundingBox[0][0], boundingBox[0][1], boundingBox[1][0], boundingBox[1][1]] }); } }),
+      new deck.PathLayer({ id: "fleet-track", data: track.length ? [{ path: track.map((p) => [p.lon, p.lat]) }] : [], getPath: (d) => d.path, getColor: [42, 120, 214, 200], widthMinPixels: 3 }),
+      new deck.ScatterplotLayer({ id: "fleet-devices", data: devices, getPosition: (d) => [d.last_lon, d.last_lat], getFillColor: (d) => FLEET_RGB[deviceStatus(d)],
+        getLineColor: [252, 252, 251], lineWidthMinPixels: 2, stroked: true, radiusMinPixels: 8, radiusMaxPixels: 10, pickable: true }),
+    ];
+    if (!state.fleet.deck) {
+      container.innerHTML = "";
+      state.fleet.deck = new deck.DeckGL({ container, initialViewState: { longitude: center[0], latitude: center[1], zoom, pitch: 0 }, controller: true, layers,
+        getTooltip: ({ object }) => object && object.device_id ? { text: `${object.name || object.device_id}\n${object.last_speed_mps === null ? "" : Math.round(object.last_speed_mps * 3.6) + " km/h · "}${deviceStatus(object)}` } : null,
+        onClick: ({ object }) => { if (object && object.device_id) selectDevice(object.device_id); } });
+    } else {
+      state.fleet.deck.setProps({ layers, initialViewState: track.length ? { longitude: center[0], latitude: center[1], zoom, pitch: 0, transitionDuration: 400 } : undefined });
+    }
+    $("#fleet-legend").innerHTML = Object.entries(FLEET_RGB).map(([k, c]) => `<span style="--c:rgb(${c.join(",")})">${k}</span>`).join("") + `<span class="line" style="--c:var(--series-1)">selected track</span>`;
+  }
+
+  async function materializeTrack() {
+    const id = state.fleet.device;
+    if (!id || !state.fleet.track.length) return;
+    const since = state.fleet.track[0].t, until = state.fleet.track[state.fleet.track.length - 1].t;
+    const consent = window.prompt("Consent reference for this real-world run (leave empty if not yet recorded):", "") || "";
+    try {
+      const result = await api(`/api/fleet/devices/${encodeURIComponent(id)}/materialize`, { method: "POST", body: { since, until, consent_ref: consent || undefined } });
+      toast(`run ${result.run_id} created with ${result.samples} samples — finish it with a quality report to count toward coverage`, 6000);
+    } catch (err) { toast(err.message); }
+  }
+
+  // ------------------------------------------------------------------ wiring
+  const loaders = { overview: loadOverview, runs: loadRuns, scenarios: loadScenarios, evaluations: loadEvaluations, governance: loadGovernance, fleet: loadFleet };
+
+  function setHash(view, id) {
+    const next = "#" + view + (id ? "/" + encodeURIComponent(id) : "");
+    if (location.hash !== next) history.replaceState(null, "", next);
+  }
+
+  function parseHash() {
+    const m = /^#([a-z]+)(?:\/(.+))?$/.exec(location.hash || "");
+    return m && loaders[m[1]] ? { view: m[1], id: m[2] ? decodeURIComponent(m[2]) : null } : null;
+  }
+
+  async function showView(view, id) {
     state.view = view;
+    setHash(view, id);
     document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("is-active", t.dataset.view === view));
     document.querySelectorAll(".view").forEach((v) => v.classList.toggle("is-active", v.id === "view-" + view));
+    if (view !== "fleet") clearTimeout(state.fleet.timer);
     if (!state.token) return;
-    try { await loaders[view](); } catch (err) { toast(err.message, 5000); }
+    if (id && view === "runs") state.pendingRun = id;
+    if (id && view === "scenarios") { const sel = $("#scenario-family"); if (![...sel.options].some((o) => o.value === id)) sel.add(new Option(id, id)); sel.value = id; }
+    if (id && view === "fleet") state.fleet.device = id;
+    try {
+      await loaders[view]();
+      if (id && view === "evaluations") selectEvaluation(id);
+    } catch (err) { toast(err.message, 5000); }
   }
 
   async function connect() {
@@ -513,7 +699,8 @@
       await api("/api/kpis");
       $("#auth-status").textContent = "connected" + (state.tenant ? " · " + state.tenant : "");
       $("#auth-status").classList.add("ok");
-      showView(state.view);
+      const target = parseHash();
+      showView(target ? target.view : state.view, target ? target.id : null);
     } catch (err) {
       $("#auth-status").textContent = err.message;
       $("#auth-status").classList.remove("ok");
@@ -532,7 +719,21 @@
     $("#play-btn").addEventListener("click", togglePlayback);
     $("#time-slider").addEventListener("input", (ev) => { stopPlayback(); const pb = state.playback; updatePlayback(pb.t0 + (Number(ev.target.value) / 1000) * (pb.t1 - pb.t0)); });
     $("#evidence-btn").addEventListener("click", exportEvidence);
-    window.addEventListener("resize", () => { if (state.view === "runs" && state.samples.length) renderTimeline(); });
-    if (state.token) connect();
+    const menu = $("#export-menu"), menuBtn = $("#export-btn");
+    menuBtn.addEventListener("click", (ev) => { ev.stopPropagation(); menu.hidden = !menu.hidden; menuBtn.setAttribute("aria-expanded", String(!menu.hidden)); });
+    document.addEventListener("click", () => { menu.hidden = true; menuBtn.setAttribute("aria-expanded", "false"); });
+    menu.querySelectorAll("button[data-export]").forEach((b) => b.addEventListener("click", () => exportRun(b.dataset.export)));
+    menu.querySelector("button[data-foxglove]").addEventListener("click", openInFoxglove);
+    $("#trend-kpi").addEventListener("change", renderTrend);
+    $("#fleet-refresh").addEventListener("click", () => loadFleet().catch((err) => toast(err.message)));
+    $("#fleet-auto").addEventListener("change", scheduleFleetRefresh);
+    $("#fleet-window").addEventListener("change", () => { if (state.fleet.device) selectDevice(state.fleet.device).catch((err) => toast(err.message)); });
+    $("#fleet-materialize").addEventListener("click", materializeTrack);
+    $("#fleet-table").addEventListener("click", (ev) => { const b = ev.target.closest("button[data-track]"); if (b) { ev.stopPropagation(); selectDevice(b.dataset.track).catch((err) => toast(err.message)); } });
+    window.addEventListener("hashchange", () => { const target = parseHash(); if (target && state.token && (target.view !== state.view)) showView(target.view, target.id); });
+    window.addEventListener("resize", () => { if (state.view === "runs" && state.samples.length) renderTimeline(); if (state.view === "overview") renderTrend(); });
+    const initial = parseHash();
+    if (initial) state.view = initial.view;
+    if (state.token) connect(); else showView(state.view, initial ? initial.id : null);
   });
 })();

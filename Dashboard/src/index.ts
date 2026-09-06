@@ -7,11 +7,15 @@ import { createRun, finishRun, getRun, getTelemetry, listCriticalEvents, listEve
 import { getScenario, importScenarios, listScenarios, reviewScenario } from "./routes/scenarios";
 import { createEvaluation, getEvaluation, listEvaluations, markReplayVerified } from "./routes/evaluations";
 import { getClipObject, listClips, putClipObject, registerClip, updateClipGovernance } from "./routes/clips";
-import { getKpiHistory, getKpis, listAudit, postKpiSnapshot } from "./routes/kpis";
+import { getKpiHistory, getKpis, getMetrics, getOpenApi, listAudit, postKpiSnapshot } from "./routes/kpis";
 import { runEvidence } from "./routes/evidence";
+import { exportRun, exportScenarioXosc } from "./routes/exports";
+import { deviceTrack, ingestOsmAnd, ingestTraccar, listFleet, materializeTrack, postPositions } from "./routes/fleet";
 
 const router = new Router()
   .get("/api/health", (c) => json({ ok: true, app: c.env.APP_NAME, time: new Date().toISOString() }))
+  .get("/api/openapi.json", getOpenApi)
+  .get("/api/metrics", getMetrics)
   .get("/api/kpis", getKpis)
   .get("/api/kpis/history", getKpiHistory)
   .post("/api/kpis/snapshot", postKpiSnapshot)
@@ -24,12 +28,21 @@ const router = new Router()
   .get("/api/runs/:id/events", listEvents)
   .post("/api/runs/:id/finish", finishRun)
   .get("/api/runs/:id/evidence", runEvidence)
+  .get("/api/runs/:id/export/:format", exportRun)
   .get("/api/events/critical", listCriticalEvents)
   .post("/api/events/:id/review", reviewEvent)
   .get("/api/scenarios", listScenarios)
   .post("/api/scenarios/import", importScenarios)
   .get("/api/scenarios/:id", getScenario)
   .post("/api/scenarios/:id/review", reviewScenario)
+  .get("/api/scenarios/:id/export/:format", exportScenarioXosc)
+  .get("/api/fleet/live", listFleet)
+  .post("/api/fleet/positions", postPositions)
+  .get("/api/fleet/devices/:id/track", deviceTrack)
+  .post("/api/fleet/devices/:id/materialize", materializeTrack)
+  .post("/api/ingest/traccar", ingestTraccar)
+  .get("/api/ingest/osmand", ingestOsmAnd)
+  .post("/api/ingest/osmand", ingestOsmAnd)
   .get("/api/evaluations", listEvaluations)
   .post("/api/evaluations", createEvaluation)
   .get("/api/evaluations/:id", getEvaluation)

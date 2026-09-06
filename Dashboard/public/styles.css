@@ -152,3 +152,15 @@ h3 { font-size: 13px; margin: 14px 0 6px; color: var(--text-secondary); }
 .family .bar i { display: block; height: 100%; background: var(--status-good); }
 
 .toast { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: var(--text-primary); color: var(--surface-1); padding: 8px 14px; border-radius: 8px; font-size: 13px; z-index: 10; }
+
+.menu { position: relative; }
+.menu-list { position: absolute; right: 0; top: calc(100% + 4px); background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 4px; display: flex; flex-direction: column; min-width: 240px; z-index: 6; box-shadow: 0 6px 18px rgba(0,0,0,.14); }
+.menu-list button { text-align: left; border-color: transparent; background: transparent; }
+.menu-list button:hover { background: var(--surface-2); }
+.score-strip { display: flex; gap: 18px; flex-wrap: wrap; align-items: center; padding: 8px 10px; margin-bottom: 8px; background: var(--surface-2); border-radius: 8px; font-size: 13px; }
+.score-strip b { font-size: 18px; font-weight: 600; }
+.score-strip .infraction { color: var(--text-secondary); font-size: 12px; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.92em; background: var(--surface-2); padding: 1px 4px; border-radius: 4px; }
+.pill.online::before { background: var(--status-good); }
+.pill.stale::before { background: var(--status-warning); }
+.pill.offline::before { background: var(--text-muted); }

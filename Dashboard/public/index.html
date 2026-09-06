@@ -23,6 +23,7 @@
       <button class="tab" data-view="scenarios" role="tab">Scenario library</button>
       <button class="tab" data-view="evaluations" role="tab">Evaluations</button>
       <button class="tab" data-view="governance" role="tab">Safety &amp; governance</button>
+      <button class="tab" data-view="fleet" role="tab">Fleet</button>
     </nav>
     <form class="auth" id="auth-form" autocomplete="off">
       <input id="auth-token" type="password" placeholder="API token" aria-label="API token">
@@ -39,6 +40,17 @@
         <p class="muted">Data, coverage and evaluation-quality metrics replace "autonomy pass rate" as the central claim. Status is computed live from the catalog.</p>
       </div>
       <div id="kpi-grid" class="kpi-grid" aria-live="polite"></div>
+      <div class="card">
+        <div class="detail-head">
+          <h2>KPI trend <span class="muted">nightly snapshots</span></h2>
+          <div class="detail-actions">
+            <label class="muted">KPI <select id="trend-kpi"></select></label>
+            <a class="muted" id="metrics-link" href="/api/metrics" target="_blank" rel="noopener">Prometheus metrics</a>
+            <a class="muted" href="/api/openapi.json" target="_blank" rel="noopener">OpenAPI</a>
+          </div>
+        </div>
+        <div id="trend-chart" class="chart"></div>
+      </div>
       <div class="two-col">
         <div class="card">
           <h2>Edge-case discovery rate <span class="muted">events per 100 km, by class</span></h2>
@@ -62,7 +74,7 @@
       </div>
       <div class="runs-layout">
         <div class="card table-card"><table id="runs-table" class="data-table"><thead><tr>
-          <th>Run</th><th>Source</th><th>Scenario</th><th>Started</th><th>Duration</th><th>Distance</th><th>Events</th><th>Quality</th><th>Replay</th>
+          <th>Run</th><th>Source</th><th>Scenario</th><th>Started</th><th>Duration</th><th>Distance</th><th>Events</th><th title="Leaderboard-style driving score">Score</th><th>Quality</th><th>Replay</th>
         </tr></thead><tbody></tbody></table></div>
         <div id="run-detail" class="run-detail" hidden>
           <div class="card">
@@ -72,9 +84,20 @@
                 <button id="play-btn">Play</button>
                 <input id="time-slider" type="range" min="0" max="1000" value="0" aria-label="playback position">
                 <span id="time-label" class="mono">0.0 s</span>
-                <button id="evidence-btn">Export evidence pack</button>
+                <button id="evidence-btn">Evidence pack</button>
+                <div class="menu">
+                  <button id="export-btn" aria-haspopup="true" aria-expanded="false">Export ▾</button>
+                  <div class="menu-list" id="export-menu" hidden>
+                    <button data-export="mcap">MCAP (Foxglove, ROS 2)</button>
+                    <button data-export="geojson">GeoJSON (kepler.gl, QGIS)</button>
+                    <button data-export="csv">CSV (pandas, PlotJuggler)</button>
+                    <button data-export="json">JSON (samples + events)</button>
+                    <button data-foxglove="1">Open in Foxglove Studio ↗</button>
+                  </div>
+                </div>
               </div>
             </div>
+            <div id="score-strip" class="score-strip" hidden></div>
             <div id="map" class="map" role="img" aria-label="Route map with events"></div>
             <div class="legend" id="map-legend"></div>
           </div>
@@ -103,7 +126,7 @@
       </div>
       <div id="family-grid" class="family-grid"></div>
       <div class="card table-card"><table id="scenarios-table" class="data-table"><thead><tr>
-        <th>Scenario</th><th>Family</th><th>Weather</th><th>Time</th><th>Route class</th><th>Traffic</th><th>Lane quality</th><th>Sensor degradation</th><th>Review</th>
+        <th>Scenario</th><th>Family</th><th>Weather</th><th>Time</th><th>Route class</th><th>Traffic</th><th>Lane quality</th><th>Sensor degradation</th><th>Review</th><th title="ASAM OpenSCENARIO for ScenarioRunner / esmini">Export</th>
       </tr></thead><tbody></tbody></table></div>
     </section>
 
@@ -141,6 +164,33 @@
       <div class="card table-card">
         <h2>Audit log</h2>
         <table id="audit-table" class="data-table"><thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+
+    <section id="view-fleet" class="view" aria-label="Fleet">
+      <div class="section-head">
+        <h1>Live fleet</h1>
+        <p class="muted">Positions from Traccar forwarding, the OsmAnd protocol (Traccar Client, GPSLogger) or edge loggers posting to <code>/api/fleet/positions</code>. A device track can be materialised into a run so it counts toward route coverage.</p>
+        <div class="filters">
+          <label><input type="checkbox" id="fleet-auto" checked> auto-refresh</label>
+          <button id="fleet-refresh">Refresh</button>
+        </div>
+      </div>
+      <div class="runs-layout">
+        <div class="card table-card">
+          <table id="fleet-table" class="data-table"><thead><tr><th>Device</th><th>Class</th><th>Source</th><th>Last seen</th><th>Speed</th><th>Positions</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="card">
+          <div class="detail-head">
+            <h2 id="fleet-title">Map</h2>
+            <div class="detail-actions">
+              <label class="muted">Track window <select id="fleet-window"><option value="3600">1 h</option><option value="21600">6 h</option><option value="86400" selected>24 h</option><option value="604800">7 d</option></select></label>
+              <button id="fleet-materialize" hidden>Create run from track</button>
+            </div>
+          </div>
+          <div id="fleet-map" class="map" role="img" aria-label="Fleet map"></div>
+          <div class="legend" id="fleet-legend"></div>
+        </div>
       </div>
     </section>
   </main>

@@ -116,6 +116,10 @@ export interface RunRow {
   bbox_min_lon: number | null;
   bbox_max_lat: number | null;
   bbox_max_lon: number | null;
+  driving_score: number | null;
+  route_completion: number | null;
+  infraction_penalty: number | null;
+  infractions: string | null;
   created_at: string;
   updated_at: string | null;
 }
