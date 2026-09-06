@@ -1,7 +1,8 @@
 import type { RouteContext } from "../router";
-import type { ChunkRow, EventIn, QualityIn, RunIn, RunRow, Sample } from "../types";
+import type { ChunkRow, Env, EventIn, QualityIn, RunIn, RunRow, Sample } from "../types";
 import { authenticate } from "../auth";
 import { audit } from "../audit";
+import { computeDrivingScore } from "../driving_score";
 import { HttpError, haversineKm, json, nowIso, optionalNumber, optionalString, parseJsonColumn, readJson, requireId, requireString, sha256 } from "../util";
 
 const ALLOWED_SEVERITY = new Set(["info", "warning", "critical"]);
@@ -74,7 +75,7 @@ export async function getRun(c: RouteContext): Promise<Response> {
     c.env.DB.prepare("SELECT evaluation_id, model_id, model_version, overall, reproducible, replay_verified, created_at FROM evaluations WHERE run_id = ?1 ORDER BY created_at DESC").bind(runId).all(),
   ]);
   return json({
-    run,
+    run: { ...run, infractions: parseJsonColumn(run.infractions, null) },
     segments: segments.results.map((s) => ({ ...s, gates: parseJsonColumn(s.gates, []) })),
     chunks: chunks.results,
     event_summary: eventSummary.results,
@@ -104,6 +105,38 @@ function chunkStats(samples: Sample[]): { t_start: number | null; t_end: number 
   return { t_start: tStart, t_end: tEnd, distance_km: distance, bbox };
 }
 
+/** Store one immutable telemetry chunk in R2 and index it in D1 (shared by uploads and fleet materialisation). */
+export async function storeTelemetryChunk(env: Env, tenant: string, runId: string, seq: number, samples: Sample[]): Promise<Record<string, unknown>> {
+  const jsonl = samples.map((s) => JSON.stringify(s)).join("\n") + "\n";
+  const digest = await sha256(jsonl);
+  const key = `${tenant}/runs/${runId}/telemetry/${String(seq).padStart(5, "0")}.jsonl`;
+  await env.STORAGE.put(key, jsonl, { httpMetadata: { contentType: "application/x-ndjson" }, customMetadata: { sha256: digest, run_id: runId } });
+  const stats = chunkStats(samples);
+  const chunkId = `${runId}:${seq}`;
+  const statements = [
+    env.DB.prepare(
+      `INSERT INTO telemetry_chunks (chunk_id, run_id, tenant_id, seq, r2_key, sample_count, t_start, t_end, distance_km, sha256)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)
+       ON CONFLICT(chunk_id) DO UPDATE SET r2_key = excluded.r2_key, sample_count = excluded.sample_count, t_start = excluded.t_start,
+         t_end = excluded.t_end, distance_km = excluded.distance_km, sha256 = excluded.sha256`,
+    ).bind(chunkId, runId, tenant, seq, key, samples.length, stats.t_start, stats.t_end, stats.distance_km, digest),
+    env.DB.prepare(
+      `UPDATE runs SET
+         sample_count = (SELECT COALESCE(SUM(sample_count), 0) FROM telemetry_chunks WHERE run_id = ?1),
+         distance_km = (SELECT COALESCE(SUM(distance_km), 0) FROM telemetry_chunks WHERE run_id = ?1),
+         has_gnss = 1,
+         bbox_min_lat = CASE WHEN ?2 IS NULL THEN bbox_min_lat ELSE MIN(COALESCE(bbox_min_lat, ?2), ?2) END,
+         bbox_min_lon = CASE WHEN ?3 IS NULL THEN bbox_min_lon ELSE MIN(COALESCE(bbox_min_lon, ?3), ?3) END,
+         bbox_max_lat = CASE WHEN ?4 IS NULL THEN bbox_max_lat ELSE MAX(COALESCE(bbox_max_lat, ?4), ?4) END,
+         bbox_max_lon = CASE WHEN ?5 IS NULL THEN bbox_max_lon ELSE MAX(COALESCE(bbox_max_lon, ?5), ?5) END,
+         updated_at = ?6
+       WHERE run_id = ?1`,
+    ).bind(runId, stats.bbox?.[0] ?? null, stats.bbox?.[1] ?? null, stats.bbox?.[2] ?? null, stats.bbox?.[3] ?? null, nowIso()),
+  ];
+  await env.DB.batch(statements);
+  return { chunk_id: chunkId, r2_key: key, sample_count: samples.length, sha256: digest, ...stats };
+}
+
 export async function uploadTelemetry(c: RouteContext): Promise<Response> {
   const who = await authenticate(c.request, c.env, "writer");
   const runId = requireId(c.params.id, "run_id");
@@ -119,48 +152,18 @@ export async function uploadTelemetry(c: RouteContext): Promise<Response> {
       throw new HttpError(400, "every sample needs numeric t, lat and lon");
     }
   }
-  const jsonl = samples.map((s) => JSON.stringify(s)).join("\n") + "\n";
-  const digest = await sha256(jsonl);
-  const key = `${who.tenant}/runs/${runId}/telemetry/${String(seq).padStart(5, "0")}.jsonl`;
-  await c.env.STORAGE.put(key, jsonl, { httpMetadata: { contentType: "application/x-ndjson" }, customMetadata: { sha256: digest, run_id: runId } });
-  const stats = chunkStats(samples);
-  const chunkId = `${runId}:${seq}`;
-  const statements = [
-    c.env.DB.prepare(
-      `INSERT INTO telemetry_chunks (chunk_id, run_id, tenant_id, seq, r2_key, sample_count, t_start, t_end, distance_km, sha256)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)
-       ON CONFLICT(chunk_id) DO UPDATE SET r2_key = excluded.r2_key, sample_count = excluded.sample_count, t_start = excluded.t_start,
-         t_end = excluded.t_end, distance_km = excluded.distance_km, sha256 = excluded.sha256`,
-    ).bind(chunkId, runId, who.tenant, seq, key, samples.length, stats.t_start, stats.t_end, stats.distance_km, digest),
-    c.env.DB.prepare(
-      `UPDATE runs SET
-         sample_count = (SELECT COALESCE(SUM(sample_count), 0) FROM telemetry_chunks WHERE run_id = ?1),
-         distance_km = (SELECT COALESCE(SUM(distance_km), 0) FROM telemetry_chunks WHERE run_id = ?1),
-         has_gnss = 1,
-         bbox_min_lat = CASE WHEN ?2 IS NULL THEN bbox_min_lat ELSE MIN(COALESCE(bbox_min_lat, ?2), ?2) END,
-         bbox_min_lon = CASE WHEN ?3 IS NULL THEN bbox_min_lon ELSE MIN(COALESCE(bbox_min_lon, ?3), ?3) END,
-         bbox_max_lat = CASE WHEN ?4 IS NULL THEN bbox_max_lat ELSE MAX(COALESCE(bbox_max_lat, ?4), ?4) END,
-         bbox_max_lon = CASE WHEN ?5 IS NULL THEN bbox_max_lon ELSE MAX(COALESCE(bbox_max_lon, ?5), ?5) END,
-         updated_at = ?6
-       WHERE run_id = ?1`,
-    ).bind(runId, stats.bbox?.[0] ?? null, stats.bbox?.[1] ?? null, stats.bbox?.[2] ?? null, stats.bbox?.[3] ?? null, nowIso()),
-  ];
-  await c.env.DB.batch(statements);
-  return json({ chunk_id: chunkId, r2_key: key, sample_count: samples.length, sha256: digest, ...stats }, 201);
+  return json(await storeTelemetryChunk(c.env, who.tenant, runId, seq, samples), 201);
 }
 
-export async function getTelemetry(c: RouteContext): Promise<Response> {
-  const who = await authenticate(c.request, c.env, "reader");
-  const runId = requireId(c.params.id, "run_id");
-  await getRunRow(c, who.tenant, runId);
-  const maxPoints = Math.min(20000, Math.max(100, Number(c.url.searchParams.get("max") || 4000)));
-  const chunks = await c.env.DB.prepare("SELECT * FROM telemetry_chunks WHERE run_id = ?1 AND tenant_id = ?2 ORDER BY seq").bind(runId, who.tenant).all<ChunkRow>();
+/** Merge every chunk of a run and downsample to at most maxPoints samples. */
+export async function loadRunSamples(env: Env, tenant: string, runId: string, maxPoints: number): Promise<Sample[] & { total?: number; stride?: number }> {
+  const chunks = await env.DB.prepare("SELECT * FROM telemetry_chunks WHERE run_id = ?1 AND tenant_id = ?2 ORDER BY seq").bind(runId, tenant).all<ChunkRow>();
   const total = chunks.results.reduce((n, ch) => n + ch.sample_count, 0);
   const stride = Math.max(1, Math.ceil(total / maxPoints));
-  const samples: Sample[] = [];
+  const samples: Sample[] & { total?: number; stride?: number } = [];
   let index = 0;
   for (const chunk of chunks.results) {
-    const object = await c.env.STORAGE.get(chunk.r2_key);
+    const object = await env.STORAGE.get(chunk.r2_key);
     if (!object) continue;
     const text = await object.text();
     for (const line of text.split("\n")) {
@@ -168,7 +171,18 @@ export async function getTelemetry(c: RouteContext): Promise<Response> {
       if (index++ % stride === 0) samples.push(JSON.parse(line) as Sample);
     }
   }
-  return json({ run_id: runId, total, stride, samples }, 200, { "cache-control": "private, max-age=60" });
+  samples.total = total;
+  samples.stride = stride;
+  return samples;
+}
+
+export async function getTelemetry(c: RouteContext): Promise<Response> {
+  const who = await authenticate(c.request, c.env, "reader");
+  const runId = requireId(c.params.id, "run_id");
+  await getRunRow(c, who.tenant, runId);
+  const maxPoints = Math.min(20000, Math.max(100, Number(c.url.searchParams.get("max") || 4000)));
+  const samples = await loadRunSamples(c.env, who.tenant, runId, maxPoints);
+  return json({ run_id: runId, total: samples.total, stride: samples.stride, samples: [...samples] }, 200, { "cache-control": "private, max-age=60" });
 }
 
 export async function uploadEvents(c: RouteContext): Promise<Response> {
@@ -225,14 +239,24 @@ export async function finishRun(c: RouteContext): Promise<Response> {
   const qualityStatus = passed === null ? "pending" : passed ? "accepted" : "rejected";
   const privacy = q.privacy_status && ALLOWED_PRIVACY.has(q.privacy_status) ? q.privacy_status : run.privacy_status;
   const streams = q.streams || {};
+  // Leaderboard-style driving score from every event stored for the run; the planned
+  // duration comes from the scenario template when the run executed one.
+  const [eventRows, scenario] = await Promise.all([
+    c.env.DB.prepare("SELECT event_class, severity, description, data FROM events WHERE run_id = ?1 AND tenant_id = ?2").bind(runId, who.tenant).all<{ event_class: string; severity: string; description: string | null; data: string | null }>(),
+    run.scenario_id ? c.env.DB.prepare("SELECT params FROM scenarios WHERE scenario_id = ?1 AND tenant_id = ?2").bind(run.scenario_id, who.tenant).first<{ params: string }>() : Promise.resolve(null),
+  ]);
+  const planned = scenario ? optionalNumber(parseJsonColumn<Record<string, unknown>>(scenario.params, {}).duration_s) : null;
+  const score = computeDrivingScore(eventRows.results.map((e) => ({ ...e, data: parseJsonColumn(e.data, null) })), duration, planned);
   const statements: D1PreparedStatement[] = [
     c.env.DB.prepare(
       `UPDATE runs SET ended_at = ?2, duration_s = ?3, distance_km = CASE WHEN ?4 IS NULL THEN distance_km ELSE ?4 END,
          quality_status = ?5, acceptance_rate = ?6, replay_complete = ?7, privacy_status = ?8,
-         has_video = MAX(has_video, ?9), has_imu = MAX(has_imu, ?10), has_can = MAX(has_can, ?11), updated_at = ?12
+         has_video = MAX(has_video, ?9), has_imu = MAX(has_imu, ?10), has_can = MAX(has_can, ?11), updated_at = ?12,
+         driving_score = ?13, route_completion = ?14, infraction_penalty = ?15, infractions = ?16
        WHERE run_id = ?1`,
     ).bind(runId, endedAt, duration, optionalNumber(q.distance_km), qualityStatus, acceptance, q.replay_complete ? 1 : 0, privacy,
-      streams.video ? 1 : 0, streams.imu ? 1 : 0, streams.can ? 1 : 0, nowIso()),
+      streams.video ? 1 : 0, streams.imu ? 1 : 0, streams.can ? 1 : 0, nowIso(),
+      score.driving_score, score.route_completion, score.infraction_penalty, JSON.stringify({ basis: score.route_completion_basis, infractions: score.infractions })),
     c.env.DB.prepare("DELETE FROM segments WHERE run_id = ?1").bind(runId),
   ];
   for (const seg of q.segments || []) {
@@ -242,8 +266,8 @@ export async function finishRun(c: RouteContext): Promise<Response> {
     );
   }
   await c.env.DB.batch(statements);
-  await audit(c.env, who, "run.finish", runId, { quality_status: qualityStatus, acceptance_rate: acceptance, segments: (q.segments || []).length });
-  return json({ run: await getRunRow(c, who.tenant, runId) });
+  await audit(c.env, who, "run.finish", runId, { quality_status: qualityStatus, acceptance_rate: acceptance, segments: (q.segments || []).length, driving_score: score.driving_score });
+  return json({ run: await getRunRow(c, who.tenant, runId), driving_score: score });
 }
 
 export async function reviewEvent(c: RouteContext): Promise<Response> {

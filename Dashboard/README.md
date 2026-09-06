@@ -3,7 +3,8 @@
 Operations dashboard and evaluation API for the Bhutan mobility-data pilot.
 One Worker serves the JSON API (`/api/*`) and the static dashboard; D1 holds
 the metadata catalog, R2 holds raw telemetry and clips, a cron trigger writes
-nightly KPI snapshots. See `Docs/bhutan_dashboard.md` for the full guide.
+nightly KPI snapshots. See `Docs/bhutan_dashboard.md` for the full guide and
+`Docs/bhutan_roadmap.md` for the feature/integration to-do list.
 
 ```sh
 npm install
@@ -12,7 +13,22 @@ npm run db:migrate:local
 npm run dev                                  # http://127.0.0.1:8787
 (cd ../PythonAPI/bhutan && python scripts/seed_demo.py)   # demo data
 npm run typecheck
+npm test                                     # node:test unit tests
 ```
+
+Beyond the run/scenario/evaluation/clip API, the Worker also exposes:
+
+* `GET /api/runs/:id/export/{geojson,csv,mcap}` and `GET /api/scenarios/:id/export/xosc`
+  — export to [kepler.gl](https://github.com/keplergl/kepler.gl)/QGIS,
+  pandas, [Foxglove Studio](https://github.com/foxglove/studio) and
+  [CARLA ScenarioRunner](https://github.com/carla-simulator/scenario_runner)/[esmini](https://github.com/esmini/esmini).
+* `GET /api/fleet/live`, `/api/ingest/traccar`, `/api/ingest/osmand` — live
+  fleet positions from [Traccar](https://github.com/traccar/traccar) or the
+  OsmAnd phone protocol, shown on the Fleet tab.
+* `GET /api/metrics` — Prometheus exposition for Grafana.
+* `GET /api/openapi.json` — OpenAPI 3.1 description of the whole API.
+* A [CARLA Leaderboard](https://github.com/carla-simulator/leaderboard)-style
+  driving score computed on `POST /api/runs/:id/finish`.
 
 Deploy:
 

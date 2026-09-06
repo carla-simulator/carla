@@ -1,0 +1,3 @@
+# bhutan_sim runs on the standard library. Optional extras:
+mcap>=1.0            # bhutan_sim.adapters.mcap_io (Foxglove / rosbag2 MCAP import and export)
+# carla               # bhutan_sim.runner only; install the wheel built from this repository

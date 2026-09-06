@@ -17,6 +17,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - name: Install optional extras (mcap)
+        run: pip install -r PythonAPI/bhutan/requirements.txt
       - name: Unit tests
         working-directory: PythonAPI/bhutan
         run: python -m unittest discover -s tests -v
@@ -30,6 +32,9 @@ jobs:
           b = json.load(open("/tmp/library.json"))
           assert [s["content_hash"] for s in a["scenarios"]] == [s["content_hash"] for s in b["scenarios"]], "regenerate scenarios/library.json"
           PY
+      - name: OpenSCENARIO export smoke test
+        working-directory: PythonAPI/bhutan
+        run: python scripts/export_scenario.py --scenario bt-landslide-debris-01 --out-dir /tmp/xosc
 
   worker:
     name: Worker typecheck
@@ -46,6 +51,7 @@ jobs:
           cache-dependency-path: Dashboard/package-lock.json
       - run: npm ci
       - run: npm run typecheck
+      - run: npm test
 
   deploy:
     name: Deploy to Cloudflare

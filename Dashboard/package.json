@@ -1,19 +1,25 @@
 {
   "name": "carla-bhutan-atlas",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Operations dashboard and evaluation API for the Bhutan mobility-data pilot, hosted on Cloudflare Workers",
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "typecheck": "tsc --noEmit",
-    "test": "node --test test/",
+    "test": "node --import tsx --test test/*.test.ts",
     "db:migrate:local": "wrangler d1 migrations apply carla-bhutan-atlas --local",
-    "db:migrate:remote": "wrangler d1 migrations apply carla-bhutan-atlas --remote"
+    "db:migrate:remote": "wrangler d1 migrations apply carla-bhutan-atlas --remote",
+    "check": "npm run typecheck && npm test"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260903.1",
+    "tsx": "^4.23.13",
     "typescript": "^5.6.0",
     "wrangler": "^4.0.0"
+  },
+  "dependencies": {
+    "@foxglove/schemas": "^2.1.0",
+    "@mcap/core": "^2.2.1"
   }
 }
