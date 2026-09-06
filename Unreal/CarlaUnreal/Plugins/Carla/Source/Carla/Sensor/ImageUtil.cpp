@@ -15,6 +15,7 @@
 #include <RHIGPUReadback.h>
 #include <util/ue-header-guard-end.h>
 
+#include <atomic>
 #include <chrono>
 #include <thread>
 
@@ -198,6 +199,17 @@ namespace ImageUtil
 
 
 
+  // Backpressure for async GPU readbacks. With the per-frame RHI flush removed,
+  // the game/render threads can enqueue readbacks faster than they complete,
+  // growing memory without bound (this previously OOM-killed the editor at
+  // ~57 GB RSS). Cap the number of concurrent in-flight readbacks; when the
+  // consumer falls behind we skip a frame's capture instead of accumulating
+  // staging buffers. This is a soft cap (check-then-increment is not atomic as a
+  // pair, so it may transiently exceed by the number of concurrent producers);
+  // that is fine for bounding memory. Tunable / could be promoted to a CVar.
+  static std::atomic<int32> GReadbackInFlight{ 0 };
+  static constexpr int32 GMaxReadbackInFlight = 8;
+
   struct ReadImageDataContext
   {
     EPixelFormat Format;
@@ -217,9 +229,6 @@ namespace ImageUtil
     FRHIGPUReadbackPoolPtr Pool,
     ReadImageDataAsyncCallback&& Callback)
   {
-    static thread_local auto RenderQueryPool =
-        RHICreateRenderQueryPool(RQT_AbsoluteTime);
-
     auto& CmdList = FRHICommandListImmediate::Get();
     auto Resource = static_cast<FTextureRenderTarget2DResource*>(
       RenderTarget.GetResource());
@@ -241,14 +250,11 @@ namespace ImageUtil
     Self.Size = Texture->GetSizeXY();
     Self.Format = Texture->GetFormat();
     auto ResolveRect = FResolveRect();
+    // Just enqueue the async copy. The readback completion is polled off-thread
+    // in ReadImageDataEndAsync via IsReady(); we intentionally do NOT flush the
+    // RHI thread or block on a GPU query here (doing so serialized the whole
+    // pipeline and caused the per-frame render-thread stall).
     Self.Readback->EnqueueCopy(CmdList, Texture, ResolveRect);
-
-    auto Query = RenderQueryPool->AllocateQuery();
-    CmdList.EndRenderQuery(Query.GetQuery());
-    CmdList.ImmediateFlush(EImmediateFlushType::FlushRHIThread);
-    uint64 DeltaTime;
-    RHIGetRenderQueryResult(Query.GetQuery(), DeltaTime, true);
-    Query.ReleaseQuery();
   }
 
   static void ReadImageDataEnd(
@@ -271,13 +277,22 @@ namespace ImageUtil
   static void ReadImageDataEndAsync(
     ReadImageDataContext&& Self)
   {
+    // ReadImageDataBegin bailed (e.g. null render target) without enqueuing a
+    // copy: release the reserved backpressure slot so the counter stays balanced.
+    if (Self.Readback == nullptr)
+    {
+      GReadbackInFlight.fetch_sub(1, std::memory_order_relaxed);
+      return;
+    }
     AsyncTask(
-      ENamedThreads::HighTaskPriority, [
+      ENamedThreads::AnyHiPriThreadHiPriTask, [
       Self = std::move(Self)]() mutable
     {
       while (!Self.Readback->IsReady())
         std::this_thread::sleep_for(std::chrono::microseconds(100));
       ReadImageDataEnd(Self);
+      // Release the in-flight slot once the readback is fully consumed.
+      GReadbackInFlight.fetch_sub(1, std::memory_order_relaxed);
     });
   }
 
@@ -298,6 +313,14 @@ namespace ImageUtil
     FRHIGPUReadbackPoolPtr Pool,
     ReadImageDataAsyncCallback&& Callback)
   {
+    // Backpressure: reserve an in-flight slot before enqueuing any GPU work. If
+    // the consumer is behind (at the cap), drop this frame's capture rather than
+    // let readback buffers accumulate without bound. The matching release is in
+    // ReadImageDataEndAsync (both the null-bail and the completion paths).
+    if (GReadbackInFlight.load(std::memory_order_relaxed) >= GMaxReadbackInFlight)
+      return false;
+    GReadbackInFlight.fetch_add(1, std::memory_order_relaxed);
+
     if (IsInRenderingThread())
     {
       ReadImageDataAsyncCommand(
@@ -313,7 +336,7 @@ namespace ImageUtil
       {
         ReadImageDataContext Context = { };
         ReadImageDataBegin(Context, RenderTarget, std::move(Pool), std::move(Callback));
-        ReadImageDataEnd(Context);
+        ReadImageDataEndAsync(std::move(Context));
       });
 
     }
