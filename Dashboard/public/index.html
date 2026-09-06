@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bhutan Mobility Atlas</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="https://unpkg.com/deck.gl@9.0.35/dist.min.js" defer></script>
+  <script src="/app.js" defer></script>
+</head>
+<body data-palette="#2a78d6,#eb6834,#1baf7a">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <div>
+        <div class="brand-name">Bhutan Mobility Atlas</div>
+        <div class="brand-sub">Field data · synthetic scenarios · AV evaluation evidence</div>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab is-active" data-view="overview" role="tab">Overview</button>
+      <button class="tab" data-view="runs" role="tab">Runs &amp; playback</button>
+      <button class="tab" data-view="scenarios" role="tab">Scenario library</button>
+      <button class="tab" data-view="evaluations" role="tab">Evaluations</button>
+      <button class="tab" data-view="governance" role="tab">Safety &amp; governance</button>
+    </nav>
+    <form class="auth" id="auth-form" autocomplete="off">
+      <input id="auth-token" type="password" placeholder="API token" aria-label="API token">
+      <input id="auth-tenant" type="text" placeholder="tenant (admin only)" aria-label="tenant">
+      <button type="submit">Connect</button>
+      <span id="auth-status" class="auth-status" aria-live="polite">not connected</span>
+    </form>
+  </header>
+
+  <main>
+    <section id="view-overview" class="view is-active" aria-label="Overview">
+      <div class="section-head">
+        <h1>Month-3 KPIs</h1>
+        <p class="muted">Data, coverage and evaluation-quality metrics replace "autonomy pass rate" as the central claim. Status is computed live from the catalog.</p>
+      </div>
+      <div id="kpi-grid" class="kpi-grid" aria-live="polite"></div>
+      <div class="two-col">
+        <div class="card">
+          <h2>Edge-case discovery rate <span class="muted">events per 100 km, by class</span></h2>
+          <div id="edge-chart" class="chart"></div>
+        </div>
+        <div class="card">
+          <h2>Perception benchmark <span class="muted">latest models, recall by condition</span></h2>
+          <div id="perception-table"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-runs" class="view" aria-label="Runs">
+      <div class="section-head">
+        <h1>Collection runs</h1>
+        <div class="filters">
+          <label>Source <select id="run-source"><option value="">all</option><option value="vehicle">vehicle</option><option value="sim">simulation</option></select></label>
+          <label>Quality <select id="run-quality"><option value="">all</option><option value="accepted">accepted</option><option value="rejected">rejected</option><option value="pending">pending</option></select></label>
+          <button id="run-refresh">Refresh</button>
+        </div>
+      </div>
+      <div class="runs-layout">
+        <div class="card table-card"><table id="runs-table" class="data-table"><thead><tr>
+          <th>Run</th><th>Source</th><th>Scenario</th><th>Started</th><th>Duration</th><th>Distance</th><th>Events</th><th>Quality</th><th>Replay</th>
+        </tr></thead><tbody></tbody></table></div>
+        <div id="run-detail" class="run-detail" hidden>
+          <div class="card">
+            <div class="detail-head">
+              <h2 id="detail-title">Run</h2>
+              <div class="detail-actions">
+                <button id="play-btn">Play</button>
+                <input id="time-slider" type="range" min="0" max="1000" value="0" aria-label="playback position">
+                <span id="time-label" class="mono">0.0 s</span>
+                <button id="evidence-btn">Export evidence pack</button>
+              </div>
+            </div>
+            <div id="map" class="map" role="img" aria-label="Route map with events"></div>
+            <div class="legend" id="map-legend"></div>
+          </div>
+          <div class="card">
+            <h2>Unified timeline</h2>
+            <div id="chart-speed" class="chart"></div>
+            <div id="chart-accel" class="chart"></div>
+            <div id="chart-grade" class="chart"></div>
+          </div>
+          <div class="card">
+            <h2>Events</h2>
+            <table id="events-table" class="data-table"><thead><tr><th>t</th><th>Class</th><th>Severity</th><th>Rule</th><th>Description</th><th>Review</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-scenarios" class="view" aria-label="Scenario library">
+      <div class="section-head">
+        <h1>Scenario library</h1>
+        <div class="filters">
+          <label>Group <select id="scenario-group"><option value="">all</option></select></label>
+          <label>Family <select id="scenario-family"><option value="">all</option></select></label>
+          <label>Review <select id="scenario-review"><option value="">all</option><option value="unreviewed">unreviewed</option><option value="reviewed">reviewed</option><option value="rejected">rejected</option></select></label>
+        </div>
+      </div>
+      <div id="family-grid" class="family-grid"></div>
+      <div class="card table-card"><table id="scenarios-table" class="data-table"><thead><tr>
+        <th>Scenario</th><th>Family</th><th>Weather</th><th>Time</th><th>Route class</th><th>Traffic</th><th>Lane quality</th><th>Sensor degradation</th><th>Review</th>
+      </tr></thead><tbody></tbody></table></div>
+    </section>
+
+    <section id="view-evaluations" class="view" aria-label="Evaluations">
+      <div class="section-head">
+        <h1>Model evaluations</h1>
+        <p class="muted">Every benchmark row is keyed by the SHA-256 of its inputs; a replay that reproduces the same counts marks it verified.</p>
+      </div>
+      <div class="two-col">
+        <div class="card table-card"><table id="evaluations-table" class="data-table"><thead><tr>
+          <th>Evaluation</th><th>Model</th><th>Run</th><th>Weather</th><th>Lighting</th><th>Precision</th><th>Recall</th><th>F1</th><th>Reproducible</th><th>Replay</th>
+        </tr></thead><tbody></tbody></table></div>
+        <div id="evaluation-detail" class="card" hidden>
+          <h2 id="evaluation-title">Evaluation</h2>
+          <h3>Precision and recall by class</h3>
+          <div id="eval-class-chart" class="chart"></div>
+          <h3>Failure clusters</h3>
+          <table id="eval-clusters" class="data-table"><thead><tr><th>Class</th><th>Weather</th><th>Lighting</th><th>Range</th><th>Missed</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-governance" class="view" aria-label="Safety and governance">
+      <div class="section-head"><h1>Safety review and data governance</h1></div>
+      <div class="two-col">
+        <div class="card table-card">
+          <h2>Critical safety-rule violations</h2>
+          <table id="critical-table" class="data-table"><thead><tr><th>Run</th><th>t</th><th>Rule</th><th>Class</th><th>Value</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="card table-card">
+          <h2>Clips and consent</h2>
+          <table id="clips-table" class="data-table"><thead><tr><th>Clip</th><th>Run</th><th>Size</th><th>Redaction</th><th>Consent</th><th>Released</th><th></th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="card table-card">
+        <h2>Audit log</h2>
+        <table id="audit-table" class="data-table"><thead><tr><th>When</th><th>Actor</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead><tbody></tbody></table>
+      </div>
+    </section>
+  </main>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

@@ -1,0 +1,50 @@
+# Cloudflare Workers configuration for the Bhutan pilot dashboard ("Atlas").
+#
+# One Worker serves both the JSON API (/api/*) and the static single-page
+# dashboard (everything else) from the same origin. State lives in:
+#   * D1  - metadata catalog: runs, events, segments, scenarios, evaluations, clips, audit log
+#   * R2  - immutable raw data: telemetry chunks (JSONL) and clips
+#   * Cron - daily KPI snapshots for trend lines and partner reports
+#
+# Before the first deploy:
+#   wrangler d1 create carla-bhutan-atlas            # paste the database_id below
+#   wrangler r2 bucket create carla-bhutan-atlas-data
+#   wrangler d1 migrations apply carla-bhutan-atlas --remote
+#   wrangler secret put API_TOKENS                   # "token=tenant:role;token2=tenant2:reader"
+#   wrangler secret put MANIFEST_SIGNING_KEY         # random 32+ byte string
+#   wrangler deploy
+
+name = "carla-bhutan-atlas"
+main = "src/index.ts"
+compatibility_date = "2025-09-01"
+compatibility_flags = ["nodejs_compat"]
+workers_dev = true
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "carla-bhutan-atlas"
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "carla-bhutan-atlas-data"
+
+[triggers]
+crons = ["15 2 * * *"]
+
+[vars]
+APP_NAME = "Bhutan Mobility Atlas"
+DEFAULT_TENANT = "default"
+MAX_TELEMETRY_SAMPLES_PER_CHUNK = "5000"
+MAX_CLIP_BYTES = "524288000"
+MANIFEST_KEY_ID = "atlas-v1"
+
+[observability]
+enabled = true

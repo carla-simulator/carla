@@ -1,0 +1,3 @@
+# Copy to .dev.vars for `wrangler dev`. Never commit real tokens.
+API_TOKENS=dev-writer-token=default:writer;dev-reader-token=default:reader;partner-token=fleet-a:reader
+MANIFEST_SIGNING_KEY=change-me-to-a-long-random-string

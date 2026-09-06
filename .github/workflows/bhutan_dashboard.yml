@@ -1,0 +1,80 @@
+name: Bhutan dashboard
+
+on:
+  push:
+    branches: [ue5-dev, ue4-dev]
+    paths: ["Dashboard/**", "PythonAPI/bhutan/**", ".github/workflows/bhutan_dashboard.yml"]
+  pull_request:
+    paths: ["Dashboard/**", "PythonAPI/bhutan/**", ".github/workflows/bhutan_dashboard.yml"]
+  workflow_dispatch:
+
+jobs:
+  python:
+    name: bhutan_sim tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Unit tests
+        working-directory: PythonAPI/bhutan
+        run: python -m unittest discover -s tests -v
+      - name: Library is up to date
+        working-directory: PythonAPI/bhutan
+        run: |
+          python scripts/generate_library.py --out /tmp/library.json
+          python - <<'PY'
+          import json
+          a = json.load(open("scenarios/library.json"))
+          b = json.load(open("/tmp/library.json"))
+          assert [s["content_hash"] for s in a["scenarios"]] == [s["content_hash"] for s in b["scenarios"]], "regenerate scenarios/library.json"
+          PY
+
+  worker:
+    name: Worker typecheck
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: Dashboard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Dashboard/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+
+  deploy:
+    name: Deploy to Cloudflare
+    needs: [python, worker]
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment: bhutan-dashboard
+    env:
+      CF_CONFIGURED: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+    defaults:
+      run:
+        working-directory: Dashboard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: Dashboard/package-lock.json
+      - run: npm ci
+      - name: Apply D1 migrations
+        if: env.CF_CONFIGURED == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npm run db:migrate:remote
+      - name: Deploy Worker
+        if: env.CF_CONFIGURED == 'true'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npm run deploy
