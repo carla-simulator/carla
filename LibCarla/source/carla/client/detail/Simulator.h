@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <mutex>
+
 #include "carla/Debug.h"
 #include "carla/Logging.h"
 #include "carla/Memory.h"
@@ -965,6 +967,10 @@ namespace detail {
     const GarbageCollectionPolicy _gc_policy;
 
     SharedPtr<Map> _cached_map;
+
+    uint64_t _cached_map_episode_id = 0u;
+
+    std::mutex _cached_map_mutex;
 
     std::string _open_drive_file;
   };

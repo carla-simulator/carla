@@ -157,7 +157,15 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
 
   SharedPtr<Map> Simulator::GetCurrentMap() {
     DEBUG_ASSERT(_episode != nullptr);
-    if (!_cached_map || _episode->HasMapChangedSinceLastCall()) {
+    // Check-and-refetch must be atomic: the Traffic Manager refreshes the map
+    // from its own thread on an episode change, and a caller that ran while
+    // that refresh was still downloading the OpenDRIVE found the change flag
+    // already consumed and the cache still holding the previous map. The
+    // cache is also keyed on the episode id, so a missed change flag cannot
+    // leave a stale map behind either.
+    std::lock_guard<std::mutex> lock(_cached_map_mutex);
+    const auto episode_id = _episode->GetId();
+    if (!_cached_map || _cached_map_episode_id != episode_id || _episode->HasMapChangedSinceLastCall()) {
       rpc::MapInfo map_info = _client.GetMapInfo();
       std::string map_name;
       std::string map_base_path;
@@ -177,6 +185,7 @@ EpisodeProxy Simulator::GetCurrentEpisode() {
       if (FileTransfer::FileExists(XODRFolder) == false) _client.GetRequiredFiles();
       _open_drive_file = _client.GetMapData();
       _cached_map = MakeShared<Map>(map_info, _open_drive_file);
+      _cached_map_episode_id = episode_id;
     }
 
     return _cached_map;
