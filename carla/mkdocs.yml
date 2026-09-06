@@ -44,12 +44,6 @@ nav:
   - 'SYNKROTRON': 'ecosys_synkrotron.md'
   - 'InvertedAI': 'inverted_ai.md'
 
-- Bhutan pilot:
-  - 'Mobility-data and AV-evaluation pilot': 'bhutan_pilot.md'
-  - 'Dashboard on Cloudflare Workers': 'bhutan_dashboard.md'
-  - 'Driverless-fleet tooling outline': 'bhutan_fleet_tools.md'
-  - 'Roadmap and GitHub tool integrations': 'bhutan_roadmap.md'
-
 - Contributing:
   - 'Guidelines': 'cont_contribution_guidelines.md' 
   - 'Coding standards': 'cont_coding_standard.md'

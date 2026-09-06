@@ -9,7 +9,7 @@
  * documented Atlas-specific coefficients for the safety rules that have no
  * Leaderboard equivalent (near misses, downhill overspeed, hard braking).
  *
- * Keep this table identical to PythonAPI/bhutan/bhutan_sim/driving_score.py.
+ * Keep this table identical to toolkit/bhutan_sim/driving_score.py.
  */
 
 export interface ScoreEvent {

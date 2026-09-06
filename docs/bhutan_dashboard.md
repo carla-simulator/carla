@@ -1,6 +1,6 @@
 # Bhutan dashboard on Cloudflare Workers
 
-The `Dashboard/` directory contains "Atlas", the operations and evidence
+The `dashboard/` directory contains "Atlas", the operations and evidence
 application for the Bhutan pilot. One Worker serves both the JSON API under
 `/api/*` and a static single-page dashboard (deck.gl route playback, unified
 timeline, scenario library, evaluations, safety review and governance).
@@ -33,7 +33,7 @@ from a CDN; there is no build step.
 ## Deploy
 
 ```sh
-cd Dashboard
+cd dashboard
 npm install
 npx wrangler d1 create carla-bhutan-atlas            # copy database_id into wrangler.toml
 npx wrangler r2 bucket create carla-bhutan-atlas-data
@@ -44,28 +44,28 @@ npm run deploy
 ```
 
 The GitHub Actions workflow `.github/workflows/bhutan_dashboard.yml`
-typechecks on every pull request touching `Dashboard/` and deploys on pushes
+typechecks on every pull request touching `dashboard/` and deploys on pushes
 to the main branches when the `CLOUDFLARE_API_TOKEN` and
 `CLOUDFLARE_ACCOUNT_ID` secrets are present.
 
 To seed a fresh deployment with the scenario library:
 
 ```sh
-cd PythonAPI/bhutan
+cd toolkit
 python scripts/generate_library.py --dashboard https://carla-bhutan-atlas.<account>.workers.dev --token <writer token>
 ```
 
 ## Local development
 
 ```sh
-cd Dashboard
+cd dashboard
 npm install
 cp .dev.vars.example .dev.vars           # local tokens and signing key
 npm run db:migrate:local
 npm run dev                              # http://127.0.0.1:8787
 ```
 
-Then, from `PythonAPI/bhutan`, `python scripts/seed_demo.py` fills the local
+Then, from `toolkit`, `python scripts/seed_demo.py` fills the local
 instance with the scenario library, three synthetic switchback runs (clearly
 labelled as synthetic), a baseline evaluation and two clips. Open the
 dashboard, paste `dev-writer-token` into the token box and connect.
@@ -164,8 +164,8 @@ turn Atlas data into formats other open-source AV tools already read:
 `driving_score = route_completion * infraction_penalty` from the run's
 events, using the Leaderboard 2.0 coefficients for collisions and
 documented Atlas-specific coefficients for the safety rules that have no
-Leaderboard equivalent (see `Dashboard/src/driving_score.ts` and
-`PythonAPI/bhutan/bhutan_sim/driving_score.py`, which are kept identical).
+Leaderboard equivalent (see `dashboard/src/driving_score.ts` and
+`toolkit/bhutan_sim/driving_score.py`, which are kept identical).
 
 ## KPI definitions
 

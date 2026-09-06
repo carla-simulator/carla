@@ -14,7 +14,7 @@ no road geometry, so the ego is placed on a parameterised lane
 the ego; override the parameters per map with ``--openscenarioparams`` in
 ScenarioRunner or ``--param`` in esmini.
 
-``Dashboard/src/openscenario.ts`` produces the same document; keep the
+``dashboard/src/openscenario.ts`` produces the same document; keep the
 entity and weather tables in sync.
 """
 

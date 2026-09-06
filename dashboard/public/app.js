@@ -284,7 +284,7 @@
     const data = await api("/api/runs?" + params.toString());
     state.runs = data.runs;
     const body = $("#runs-table tbody");
-    if (!state.runs.length) { body.innerHTML = '<tr><td colspan="10" class="empty">no runs yet — upload one with PythonAPI/bhutan/scripts/upload_run.py</td></tr>'; return; }
+    if (!state.runs.length) { body.innerHTML = '<tr><td colspan="10" class="empty">no runs yet — upload one with toolkit/scripts/upload_run.py</td></tr>'; return; }
     body.innerHTML = state.runs.map((r) => `
       <tr class="is-clickable" data-run="${esc(r.run_id)}">
         <td class="mono">${esc(r.run_id)}</td><td>${esc(r.source)}</td><td class="mono">${esc(r.scenario_id || "–")}</td>
@@ -501,7 +501,7 @@
     $("#family-grid").querySelectorAll(".family").forEach((el) => el.addEventListener("click", () => { famSel.value = famSel.value === el.dataset.family ? "" : el.dataset.family; loadScenarios(); }));
     const body = $("#scenarios-table tbody");
     setHash("scenarios", famSel.value || "");
-    if (!state.scenarios.length) { body.innerHTML = '<tr><td colspan="10" class="empty">no scenarios — import with PythonAPI/bhutan/scripts/generate_library.py --dashboard</td></tr>'; return; }
+    if (!state.scenarios.length) { body.innerHTML = '<tr><td colspan="10" class="empty">no scenarios — import with toolkit/scripts/generate_library.py --dashboard</td></tr>'; return; }
     body.innerHTML = state.scenarios.map((s) => {
       const p = s.params || {}, d = p.sensor_degradation || {};
       const deg = [d.camera_blur ? "blur " + d.camera_blur : "", d.gnss_noise_m ? "gnss ±" + d.gnss_noise_m + " m" : "", d.dropout_probability ? "dropout " + Math.round(d.dropout_probability * 100) + "%" : ""].filter(Boolean).join(", ") || "none";

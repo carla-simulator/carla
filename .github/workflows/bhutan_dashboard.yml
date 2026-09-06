@@ -3,9 +3,9 @@ name: Bhutan dashboard
 on:
   push:
     branches: [ue5-dev, ue4-dev]
-    paths: ["Dashboard/**", "PythonAPI/bhutan/**", ".github/workflows/bhutan_dashboard.yml"]
+    paths: ["dashboard/**", "toolkit/**", ".github/workflows/bhutan_dashboard.yml"]
   pull_request:
-    paths: ["Dashboard/**", "PythonAPI/bhutan/**", ".github/workflows/bhutan_dashboard.yml"]
+    paths: ["dashboard/**", "toolkit/**", ".github/workflows/bhutan_dashboard.yml"]
   workflow_dispatch:
 
 jobs:
@@ -18,12 +18,12 @@ jobs:
         with:
           python-version: "3.11"
       - name: Install optional extras (mcap)
-        run: pip install -r PythonAPI/bhutan/requirements.txt
+        run: pip install -r toolkit/requirements.txt
       - name: Unit tests
-        working-directory: PythonAPI/bhutan
+        working-directory: toolkit
         run: python -m unittest discover -s tests -v
       - name: Library is up to date
-        working-directory: PythonAPI/bhutan
+        working-directory: toolkit
         run: |
           python scripts/generate_library.py --out /tmp/library.json
           python - <<'PY'
@@ -33,7 +33,7 @@ jobs:
           assert [s["content_hash"] for s in a["scenarios"]] == [s["content_hash"] for s in b["scenarios"]], "regenerate scenarios/library.json"
           PY
       - name: OpenSCENARIO export smoke test
-        working-directory: PythonAPI/bhutan
+        working-directory: toolkit
         run: python scripts/export_scenario.py --scenario bt-landslide-debris-01 --out-dir /tmp/xosc
 
   worker:
@@ -41,14 +41,14 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Dashboard
+        working-directory: dashboard
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: Dashboard/package-lock.json
+          cache-dependency-path: dashboard/package-lock.json
       - run: npm ci
       - run: npm run typecheck
       - run: npm test
@@ -63,14 +63,14 @@ jobs:
       CF_CONFIGURED: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
     defaults:
       run:
-        working-directory: Dashboard
+        working-directory: dashboard
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: Dashboard/package-lock.json
+          cache-dependency-path: dashboard/package-lock.json
       - run: npm ci
       - name: Apply D1 migrations
         if: env.CF_CONFIGURED == 'true'

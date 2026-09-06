@@ -83,7 +83,7 @@ function csvCell(value: unknown): string {
 const ATLAS_SAMPLE_SCHEMA = {
   title: "atlas.TelemetrySample",
   type: "object",
-  description: "One row of the Bhutan Atlas unified timeline (see PythonAPI/bhutan/bhutan_sim/telemetry.py).",
+  description: "One row of the Bhutan Atlas unified timeline (see toolkit/bhutan_sim/telemetry.py).",
   properties: Object.fromEntries(SAMPLE_COLUMNS.map((c) => [c, { type: c === "source" ? "string" : "number" }])),
 };
 
