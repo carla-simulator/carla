@@ -20,8 +20,8 @@
 # DDS topology (validated 2026-08 on Town10, full classical stack):
 #   - The SIMULATOR runs Fast DDS (-rmw=fastdds) with a generated profile that
 #     whitelists ONLY the docker bridge IP (useBuiltinTransports=false).
-#     Do NOT use -rmw=cyclonedds on the simulator for now: our CycloneDDS
-#     receive path has a known fragmented-receive bug (being fixed separately).
+#     -rmw=cyclonedds is also validated (fragmented-receive fix b9c33737a);
+#     fastdds remains the default for its longer validation history.
 #   - The AUTOWARE side runs CycloneDDS pinned to the docker bridge interface
 #     via a generated cyclonedds.xml (MaxAutoParticipantIndex=300, 65500B max
 #     message size, 10-64MB socket buffers -- the official docker image's own
@@ -78,10 +78,10 @@ export PATH
 # ---------------------------------------------------------------- defaults --
 MODE=""
 TOWN="Town10HD_Opt"
-RMW="fastdds"                 # SIMULATOR-side RMW. cyclonedds has a known
-                              # fragmented-receive bug on the sim side -- keep fastdds.
+RMW="fastdds"                 # SIMULATOR-side RMW: fastdds (default) or cyclonedds, both validated.
 STACK="auto"                  # auto|source|docker : how to run Autoware (classical)
 MAP_PATH=""
+SERVER_ARGS=""                # extra simulator flags, appended last (see --server-args)
 CARLA_ROOT_ARG="${CARLA_ROOT:-}"
 AUTOWARE_WS="${AUTOWARE_WS:-$HOME/autoware}"
 DOMAIN_ID=42
@@ -91,6 +91,7 @@ WITH_RVIZ=false
 NO_AUTO=false
 NO_GATES=false
 NO_RECOVER=false
+NO_WHEEL_CHECK=false   # skip the installed-vs-this-tree carla wheel provenance check
 GOAL=""
 SPAWN_INDEX=""                # autoware_demo.py --spawn_index passthrough (e2e default: 52)
 LOG_DIR="$SCRIPT_DIR/logs"
@@ -119,9 +120,9 @@ Usage: $(basename "$0") --mode classical|e2e [options]
                          Must not collide with an existing container; this script
                          never touches containers it did not create.
   --rmw NAME             SIMULATOR RMW: fastdds|cyclonedds|zenoh (default: fastdds).
-                         cyclonedds is NOT recommended on the sim side for now
-                         (known fragmented-receive bug). The Autoware side always
-                         runs cyclonedds (zenoh: zenoh) with a generated config.
+                         fastdds and cyclonedds are both validated on the sim
+                         side; the Autoware side always runs cyclonedds
+                         (zenoh: zenoh) with a generated config.
   --map-path DIR         dir containing pointcloud_map.pcd, lanelet2_map.osm,
                          map_projector_info.yaml
                          (default: ../map_tools/maps/<town-without-_Opt>)
@@ -154,10 +155,23 @@ Usage: $(basename "$0") --mode classical|e2e [options]
                          localization check + distortion-corrector health). The
                          gates exist because engaging on a diverged pose drives
                          the car into things -- only skip them knowingly.
+  --no-wheel-check       skip the carla module provenance check (installed
+                         .so vs any of this tree's built wheels) -- use
+                         only when you knowingly run a wheel from elsewhere
   --with-rviz            also start RViz (docker stack: separate container with
                          DISPLAY passthrough; source stack: local rviz2)
   --log-dir DIR          per-process logs + pidfile (default: <this dir>/logs)
   --with-display         do NOT pass -RenderOffScreen to the CARLA server
+  --server-args "FLAGS"  extra flags appended verbatim to the simulator's own
+                         command line, after every flag this script sets
+                         itself -- including the default -nosound (headless
+                         -game has no need for audio). Pass "-enablesound"
+                         here to restore it: Unreal's own flag for canceling
+                         a -nosound also present, regardless of order. E.g.
+                         "-log -carla-streaming-port=2001". Whitespace-split
+                         with shell-style quoting (quote a value to keep a
+                         space in it); never evaluated -- \$, ;, \` etc.
+                         reach the simulator's argv literally.
   --dry-run              print every command that would run; execute nothing;
                          preflight failures downgrade to warnings
   -h | --help            this text
@@ -186,9 +200,11 @@ while [[ $# -gt 0 ]]; do
         --no-auto)      NO_AUTO=true; shift ;;
         --no-gates)     NO_GATES=true; shift ;;
         --no-recover)   NO_RECOVER=true; shift ;;
+        --no-wheel-check) NO_WHEEL_CHECK=true; shift ;;
         --with-rviz)    WITH_RVIZ=true; shift ;;
         --log-dir)      LOG_DIR="$2"; shift 2 ;;
         --with-display) WITH_DISPLAY=true; shift ;;
+        --server-args)  SERVER_ARGS="$2"; shift 2 ;;
         --dry-run)      DRY_RUN=true; shift ;;
         -h|--help)      usage; exit 0 ;;
         *) echo "ERROR: unknown option: $1" >&2; usage >&2; exit 2 ;;
@@ -606,7 +622,7 @@ $DRY_RUN && log "DRY RUN -- nothing will be executed; preflight failures become 
 
 # Simulator RMW sanity
 if [[ "$RMW" == "cyclonedds" ]]; then
-    warn "-rmw=cyclonedds on the SIMULATOR has a known fragmented-receive bug (large messages, e.g. pointclouds, can be dropped). Use the default fastdds until it is fixed."
+    log "simulator RMW: cyclonedds (validated; fastdds is the default only by history)"
 fi
 
 # Resolve --stack auto (classical only; e2e always needs the source ws for VAD)
@@ -754,6 +770,73 @@ if [[ -z "$CARLA_PY" ]]; then
     CARLA_PY="python3"   # dry-run placeholder
 fi
 
+# Wheel provenance: 'import carla' above only proves *some* wheel is
+# installed, not that it is THIS tree's build. A wheel from another
+# worktree imported fine and then aborted load_town with
+# std::bad_array_new_length after a 15-minute setup (client/server RPC
+# layout mismatch) -- and the version string can't tell them apart, both
+# report 0.10.0. Compare the installed extension's sha256 against every
+# wheel this tree has built (any preset, any match -- the question is
+# "did this come from a build of this tree", not "the newest one").
+# Read wheel entries via $CARLA_PY's own zipfile module, not `unzip`: a
+# lookup miss (e.g. a differing Python ABI tag) is then just a skipped
+# candidate under Python's own try/except, never a set -e/pipefail exit
+# that this script would never see.
+if $NO_WHEEL_CHECK; then
+    log "carla module provenance check skipped (--no-wheel-check)"
+else
+    mapfile -t WHEEL_HITS < <(find "$REPO_ROOT/Build" -maxdepth 4 \
+        -path '*/PythonAPI/dist/carla-*.whl' -printf '%T@ %p\n' 2>/dev/null \
+        | sort -rn)
+    WHEELS=()
+    for hit in "${WHEEL_HITS[@]}"; do
+        WHEELS+=("${hit#* }")
+    done
+    INSTALLED_SO="$("$CARLA_PY" -c 'import carla; print(carla.__file__)' 2>/dev/null || true)"
+    if [[ ${#WHEELS[@]} -eq 0 || "$INSTALLED_SO" != *.so ]]; then
+        warn "carla module provenance NOT verified (no built wheel under $REPO_ROOT/Build/*/PythonAPI/dist, or module is not a single .so) -- if this module was NOT built from this tree, load_town can abort ~15 minutes into the run with std::bad_array_new_length. Build one here: cmake --build Build/<preset> --target carla-python-api (or pass --no-wheel-check to silence this warning)"
+    else
+        # Two lines out: installed sha256 (empty if unreadable), then the
+        # first wheel whose same-named entry hashes the same (empty if
+        # none do). A missing zip entry is caught per-wheel and skipped,
+        # not raised -- see the comment above.
+        PROV_OUT="$("$CARLA_PY" -c '
+import sys, hashlib, zipfile
+installed_so = sys.argv[1]
+wheels = sys.argv[2:]
+try:
+    with open(installed_so, "rb") as f:
+        installed_hash = hashlib.sha256(f.read()).hexdigest()
+except OSError:
+    print("")
+    print("")
+    sys.exit(0)
+name = installed_so.rsplit("/", 1)[-1]
+matched = ""
+for wheel in wheels:
+    try:
+        with zipfile.ZipFile(wheel) as zf:
+            entry = zf.read(name)
+    except Exception:
+        continue
+    if hashlib.sha256(entry).hexdigest() == installed_hash:
+        matched = wheel
+        break
+print(installed_hash)
+print(matched)
+' "$INSTALLED_SO" "${WHEELS[@]}" 2>/dev/null || true)"
+        INSTALLED_SHA="$(sed -n '1p' <<<"$PROV_OUT")"
+        MATCHED_WHEEL="$(sed -n '2p' <<<"$PROV_OUT")"
+        if [[ -z "$INSTALLED_SHA" ]]; then
+            warn "carla module provenance not checked (could not hash $INSTALLED_SO)"
+        elif [[ -z "$MATCHED_WHEEL" ]]; then
+            preflight_fail "installed carla module ($INSTALLED_SO, sha256 ${INSTALLED_SHA:0:12}...) matches none of this tree's ${#WHEELS[@]} built wheel(s) under $REPO_ROOT/Build/*/PythonAPI/dist -- a client built elsewhere can import fine and still abort load_town with std::bad_array_new_length. Reinstall from this tree: $CARLA_PY -m pip install --force-reinstall '${WHEELS[0]}' (or pass --no-wheel-check to proceed anyway)"
+        else
+            log "carla module provenance OK: matches $(basename "$MATCHED_WHEEL") (sha256 ${INSTALLED_SHA:0:12}...)"
+        fi
+    fi
+fi
+
 # e2e-only preflight: VAD model + launch glue
 E2E_GLUE="pr1685"
 if [[ "$MODE" == "e2e" ]]; then
@@ -812,8 +895,27 @@ if [[ "$RMW" == "zenoh" ]]; then
 fi
 
 # ---------------------------------------------------------- 1. CARLA server --
-SERVER_FLAGS="-ros2 -rmw=$RMW -carla-rpc-port=$RPC_PORT -ros-domain-id=$DOMAIN_ID"
+SERVER_FLAGS="-ros2 -rmw=$RMW -carla-rpc-port=$RPC_PORT -ros-domain-id=$DOMAIN_ID -nosound"
 $WITH_DISPLAY || SERVER_FLAGS+=" -RenderOffScreen"
+if [[ -n "$SERVER_ARGS" ]]; then
+    # Reject a whitespace-only value the same way an unbalanced quote is
+    # rejected below, rather than letting it through to xargs/mapfile,
+    # which would turn it into one spurious empty argv token.
+    [[ "$SERVER_ARGS" =~ [^[:space:]] ]] \
+        || die "--server-args: value is empty or whitespace-only"
+    # Tokenize --server-args with xargs: it honors shell-style quoting
+    # (so a value containing a space can be kept as one token) but, unlike
+    # eval or an unquoted expansion, never performs variable/command
+    # substitution -- a metacharacter in the input stays inert text.
+    SERVER_ARGS_LINES="$(xargs -n1 printf '%s\n' <<<"$SERVER_ARGS")" \
+        || die "--server-args: unbalanced quoting in '$SERVER_ARGS'"
+    SERVER_ARGS_ARR=()
+    mapfile -t SERVER_ARGS_ARR <<<"$SERVER_ARGS_LINES"
+    # Re-quote each token with %q: start_proc() below re-parses the whole
+    # command string through `bash -c`, so each token must round-trip
+    # through that second parse as the single literal argument it is.
+    SERVER_FLAGS+="$(printf ' %q' "${SERVER_ARGS_ARR[@]}")"
+fi
 
 if [[ "$SERVER_KIND" == "packaged" ]]; then
     start_proc carla_server "${SIM_ENV}exec '$SERVER_LAUNCHER' $SERVER_FLAGS"

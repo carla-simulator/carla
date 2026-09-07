@@ -79,14 +79,21 @@ VAD_FILES=(
 VAD_DATA_DIR="${HOME}/autoware_data/ml_models/vad/v0.1"
 
 # lidar_centerpoint perception models. The HuggingFace bundle lands under
-# ~/autoware_data/ml_models/lidar_centerpoint/ in SUBDIRS (e.g. tiny/), but the
-# launch files expect these FLAT files directly in the lidar_centerpoint dir:
+# ~/autoware_data/ml_models/lidar_centerpoint/ in SUBDIRS (e.g. tiny/), FLAT
+# in the lidar_centerpoint dir. The ONNX and ml_package names are NOT bare:
+# lidar_centerpoint.launch.xml interpolates them as
+# pts_voxel_encoder_$(var model_name).onnx, pts_backbone_neck_head_$(var
+# model_name).onnx and $(var model_name)_ml_package.param.yaml, and
+# defaults model_name to "centerpoint_tiny" (verified against the shipped
+# Autoware image). detection_class_remapper.param.yaml is the one file the
+# launch hardcodes, not model-name-dependent.
 CENTERPOINT_DATA_DIR="${HOME}/autoware_data/ml_models/lidar_centerpoint"
+CENTERPOINT_MODEL_NAME="${CENTERPOINT_MODEL_NAME:-centerpoint_tiny}"
 CENTERPOINT_FLAT_FILES=(
-    "centerpoint_tiny_ml_package.param.yaml"
+    "${CENTERPOINT_MODEL_NAME}_ml_package.param.yaml"
     "detection_class_remapper.param.yaml"
-    "pts_voxel_encoder.onnx"
-    "pts_backbone_neck_head.onnx"
+    "pts_voxel_encoder_${CENTERPOINT_MODEL_NAME}.onnx"
+    "pts_backbone_neck_head_${CENTERPOINT_MODEL_NAME}.onnx"
 )
 
 # GHCR images (tags verified against the GHCR manifest API, all 200):
@@ -275,6 +282,24 @@ do_check() {
     have colcon || echo "  -> colcon: apt install python3-colcon-common-extensions"
 
     echo
+    echo "--- Kernel / container runtime (README prerequisites) ---"
+    local rmem wmem
+    rmem="$(sysctl -n net.core.rmem_max 2>/dev/null || echo 0)"
+    wmem="$(sysctl -n net.core.wmem_max 2>/dev/null || echo 0)"
+    if [ "${rmem}" -ge 67108864 ] && [ "${wmem}" -ge 67108864 ]; then
+        echo "UDP buffers    : OK (rmem_max=${rmem} wmem_max=${wmem})"
+    else
+        echo "UDP buffers    : TOO SMALL (rmem_max=${rmem} wmem_max=${wmem}; need 67108864). Fix: sudo sysctl -w net.core.rmem_max=67108864 net.core.wmem_max=67108864 and persist in /etc/sysctl.d/"
+    fi
+    if have docker && docker info 2>/dev/null | grep -qiE 'nvidia|cdi'; then
+        echo "NVIDIA runtime : OK (docker reports an nvidia runtime or CDI spec)"
+    elif have nvidia-ctk || [ -f /etc/cdi/nvidia.yaml ]; then
+        echo "NVIDIA runtime : nvidia-ctk/CDI present but docker does not report it -- run 'sudo nvidia-ctk runtime configure --runtime=docker' and restart docker"
+    else
+        echo "NVIDIA runtime : MISSING (nvidia-container-toolkit not found; GPU perception in --docker mode will fail)"
+    fi
+
+    echo
     echo "--- Existing installs ---"
     if [ -d "${WORKSPACE}" ]; then
         echo "Workspace      : ${WORKSPACE} EXISTS"
@@ -383,10 +408,13 @@ install_acados() {
 # (e.g. tiny/) but lidar_centerpoint's launch expects the four files FLAT in
 # ml_models/lidar_centerpoint/. Without them classical-mode perception dies at
 # startup. Create flat symlinks from whatever subdir carries a matching file.
-# Idempotent; no-op if the model dir does not exist yet.
+# Idempotent; warns and no-ops if the model dir does not exist yet.
 # ---------------------------------------------------------------------------
 fixup_centerpoint_layout() {
-    [ -d "${CENTERPOINT_DATA_DIR}" ] || return 0
+    if [ ! -d "${CENTERPOINT_DATA_DIR}" ]; then
+        warn "lidar_centerpoint model dir ${CENTERPOINT_DATA_DIR} not present -- classical perception_mode:=lidar will fail at ONNX load. Hosts with the older layout: ln -s ../lidar_centerpoint ~/autoware_data/ml_models/lidar_centerpoint (see README)."
+        return 0
+    fi
     log "Checking lidar_centerpoint flat layout in ${CENTERPOINT_DATA_DIR}"
     local f src missing=0
     for f in "${CENTERPOINT_FLAT_FILES[@]}"; do
@@ -399,9 +427,9 @@ fixup_centerpoint_layout() {
         if [ -z "${src}" ]; then
             # fuzzy fallback: subdir files often carry variant-suffixed names
             case "${f}" in
-                pts_voxel_encoder.onnx)      src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name 'pts_voxel_encoder*.onnx' 2>/dev/null | sort | head -1)" ;;
-                pts_backbone_neck_head.onnx) src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name 'pts_backbone_neck_head*.onnx' 2>/dev/null | sort | head -1)" ;;
-                centerpoint_tiny_ml_package.param.yaml) src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name '*tiny*ml_package*.param.yaml' 2>/dev/null | sort | head -1)" ;;
+                "pts_voxel_encoder_${CENTERPOINT_MODEL_NAME}.onnx")      src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name 'pts_voxel_encoder*.onnx' 2>/dev/null | sort | head -1)" ;;
+                "pts_backbone_neck_head_${CENTERPOINT_MODEL_NAME}.onnx") src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name 'pts_backbone_neck_head*.onnx' 2>/dev/null | sort | head -1)" ;;
+                "${CENTERPOINT_MODEL_NAME}_ml_package.param.yaml") src="$(find "${CENTERPOINT_DATA_DIR}" -mindepth 2 -type f -name "*${CENTERPOINT_MODEL_NAME}*ml_package*.param.yaml" 2>/dev/null | sort | head -1)" ;;
             esac
         fi
         if [ -n "${src}" ]; then
