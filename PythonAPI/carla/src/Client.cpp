@@ -13,6 +13,26 @@
 namespace ctm = carla::traffic_manager;
 namespace cg = carla::geom;
 
+namespace carla {
+namespace rpc {
+
+  std::ostream &operator<<(std::ostream &out, const ContentPackInfo &pack) {
+    out << "ContentPackInfo(name=" << pack.name
+        << ", version=" << pack.version
+        << ", base_release=" << pack.base_release
+        << ", path=" << pack.path
+        << ", mounted=" << (pack.mounted ? "True" : "False")
+        << ", maps=[";
+    for (size_t i = 0u; i < pack.maps.size(); ++i) {
+      out << (i == 0u ? "" : ", ") << pack.maps[i];
+    }
+    out << "])";
+    return out;
+  }
+
+} // namespace rpc
+} // namespace carla
+
 static void SetTimeout(carla::client::Client &client, double seconds) {
   client.SetTimeout(TimeDurationFromSeconds(seconds));
 }
@@ -26,6 +46,27 @@ static auto GetAvailableMaps(const carla::client::Client &self) {
   }
   for (const auto &str : maps) {
     result.append(str);
+  }
+  return result;
+}
+
+static auto GetContentPacks(const carla::client::Client &self) {
+  boost::python::list result;
+  std::vector<carla::rpc::ContentPackInfo> packs;
+  {
+    carla::PythonUtil::ReleaseGIL unlock;
+    packs = self.GetContentPacks();
+  }
+  for (const auto &pack : packs) {
+    result.append(pack);
+  }
+  return result;
+}
+
+static auto ContentPackInfoMaps(const carla::rpc::ContentPackInfo &self) {
+  boost::python::list result;
+  for (const auto &map : self.maps) {
+    result.append(map);
   }
   return result;
 }
@@ -175,6 +216,16 @@ void export_client() {
   namespace cc = carla::client;
   namespace rpc = carla::rpc;
 
+  class_<rpc::ContentPackInfo>("ContentPackInfo", no_init)
+    .def_readonly("name", &rpc::ContentPackInfo::name)
+    .def_readonly("version", &rpc::ContentPackInfo::version)
+    .def_readonly("base_release", &rpc::ContentPackInfo::base_release)
+    .def_readonly("path", &rpc::ContentPackInfo::path)
+    .def_readonly("mounted", &rpc::ContentPackInfo::mounted)
+    .add_property("maps", &ContentPackInfoMaps)
+    .def(self_ns::str(self_ns::self))
+  ;
+
   class_<rpc::OpendriveGenerationParameters>("OpendriveGenerationParameters",
       init<double, double, double, double, bool, bool, bool>((arg("vertex_distance")=2.0, arg("max_road_length")=50.0, arg("wall_height")=1.0, arg("additional_width")=0.6, arg("smooth_junctions")=true, arg("enable_mesh_visibility")=true, arg("enable_pedestrian_navigation")=true)))
     .def_readwrite("vertex_distance", &rpc::OpendriveGenerationParameters::vertex_distance)
@@ -216,6 +267,9 @@ void export_client() {
     .def("get_server_version", CONST_CALL_WITHOUT_GIL(cc::Client, GetServerVersion))
     .def("get_world", &cc::Client::GetWorld)
     .def("get_available_maps", &GetAvailableMaps)
+    .def("get_content_packs", &GetContentPacks)
+    .def("mount_content_pack", CONST_CALL_WITHOUT_GIL_1(cc::Client, MountContentPack, std::string), (arg("path")))
+    .def("unmount_content_pack", CONST_CALL_WITHOUT_GIL_1(cc::Client, UnmountContentPack, std::string), (arg("name")))
     .def("set_files_base_folder", &cc::Client::SetFilesBaseFolder, (arg("path")))
     .def("get_required_files", &GetRequiredFiles, (arg("folder")="", arg("download")=true))
     .def("request_file", &cc::Client::RequestFile, (arg("name")))
