@@ -13,6 +13,7 @@
 #include <util/ue-header-guard-begin.h>
 #include "Engine/CollisionProfile.h"
 #include "DrawDebugHelpers.h"
+#include "EngineUtils.h"
 #include <util/ue-header-guard-end.h>
 
 static bool IsSplineValid(const USplineComponent *SplineComponent)
@@ -146,6 +147,50 @@ void ARoutePlanner::AssignRandomRoute(AWheeledVehicleAIController &Controller) c
     }
   }
 
+}
+
+bool ARoutePlanner::FindRoadFlowRotationAtLocation(
+    const UObject *WorldContextObject,
+    const FVector &Location,
+    float SearchRadius,
+    FRotator &OutRotation)
+{
+  const UWorld *World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::ReturnNull);
+  if (World == nullptr)
+  {
+    return false;
+  }
+
+  bool bFound = false;
+  float ClosestDistanceSq = FMath::Square(SearchRadius);
+  FVector ClosestDirection = FVector::ForwardVector;
+
+  for (TActorIterator<ARoutePlanner> It(World); It; ++It)
+  {
+    for (const USplineComponent *Route : It->Routes)
+    {
+      if (!IsSplineValid(Route))
+      {
+        continue;
+      }
+      const FVector ClosestPoint =
+          Route->FindLocationClosestToWorldLocation(Location, ESplineCoordinateSpace::World);
+      const float DistanceSq = FVector::DistSquared(Location, ClosestPoint);
+      if (DistanceSq <= ClosestDistanceSq)
+      {
+        bFound = true;
+        ClosestDistanceSq = DistanceSq;
+        ClosestDirection =
+            Route->FindDirectionClosestToWorldLocation(Location, ESplineCoordinateSpace::World);
+      }
+    }
+  }
+
+  if (bFound)
+  {
+    OutRotation = ClosestDirection.Rotation();
+  }
+  return bFound;
 }
 
 void ARoutePlanner::Init()
