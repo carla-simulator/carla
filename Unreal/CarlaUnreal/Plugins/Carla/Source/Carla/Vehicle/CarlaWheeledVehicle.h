@@ -220,6 +220,32 @@ public:
     return false;
   }
 
+  /// Two-wheeled vehicles (bikes/motorcycles) embed their rider as a
+  /// SkeletalMeshComponent (named RiderMeshComponentName) meant to sit on
+  /// VehicleMeshSeatSocketName. That positioning is still driven by
+  /// Blueprint graph logic left over from the UE4-to-UE5 port, and it
+  /// drifts the rider backward off the seat while the vehicle is moving.
+  /// Rather than rewrite that graph, OnRiderBoneTransformsFinalized (see
+  /// below) snaps the rider back onto the seat socket every frame, after
+  /// this component's animation has finished evaluating for that frame --
+  /// nothing runs afterwards that could undo it before render, regardless
+  /// of what the Blueprint graph or its animation does. Only takes effect
+  /// when IsTwoWheeledVehicle() is true and both component names resolve
+  /// to real components on this actor.
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CARLA Wheeled Vehicle|Rider")
+  FName RiderMeshComponentName = TEXT("SkeletalMesh");
+
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CARLA Wheeled Vehicle|Rider")
+  FName VehicleMeshSeatSocketName = TEXT("Seat");
+
+  /// The rider mesh's rest pose isn't authored to sit flush with the
+  /// socket's own local axes -- its component template ships with this
+  /// exact relative rotation baked in (no translation), so the seat-lock
+  /// composes it on top of the socket's world transform instead of using
+  /// the bare socket transform, which twisted the pose.
+  UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CARLA Wheeled Vehicle|Rider")
+  FRotator RiderSeatRelativeRotationOffset = FRotator(0.0f, -90.0f, 15.0f);
+
   void PrintROS2Message(const char* Message);
 
   /// @}
@@ -383,6 +409,27 @@ private:
   float SavedVehicleLightIntensity = 1.0f;
   TMap<FString, float> SavedVehicleLightGroupIntensity;
   void ApplyVehicleLightDefaultsForCurrentState();
+
+  // Resolved once (BeginPlay) rather than looked up by name every tick.
+  // bRiderComponentsResolved distinguishes "looked up, none found" (a
+  // non-two-wheeled vehicle, or bad names) from "not looked up yet", so
+  // TickActor doesn't retry the lookup every frame for vehicles that
+  // simply don't have a rider.
+  UPROPERTY(Transient)
+  TObjectPtr<USkeletalMeshComponent> RiderMeshComponent = nullptr;
+
+  UPROPERTY(Transient)
+  TObjectPtr<USkeletalMeshComponent> VehicleMeshForRiderSeat = nullptr;
+
+  bool bRiderComponentsResolved = false;
+
+  void ResolveRiderComponentsIfNeeded();
+
+  // Bound (once, from ResolveRiderComponentsIfNeeded) to
+  // RiderMeshComponent's OnBoneTransformsFinalized -- see the comment on
+  // RiderMeshComponentName above for why this runs there and not from
+  // TickActor.
+  void OnRiderBoneTransformsFinalized();
 
 public:
   UPROPERTY(Category = "CARLA Wheeled Vehicle", EditDefaultsOnly)

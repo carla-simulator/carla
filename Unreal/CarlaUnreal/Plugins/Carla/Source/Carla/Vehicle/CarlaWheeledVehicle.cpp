@@ -300,8 +300,63 @@ void ACarlaWheeledVehicle::ApplyVehicleLightDefaultsForCurrentState()
       this, MaterialGroupValue, SavedVehicleLightGroupIntensity);
 }
 
+void ACarlaWheeledVehicle::ResolveRiderComponentsIfNeeded()
+{
+  if (bRiderComponentsResolved)
+  {
+    return;
+  }
+  bRiderComponentsResolved = true;
+
+  if (!IsTwoWheeledVehicle())
+  {
+    return;
+  }
+
+  RiderMeshComponent = Cast<USkeletalMeshComponent>(GetDefaultSubobjectByName(RiderMeshComponentName));
+  VehicleMeshForRiderSeat = GetMesh();
+
+  if ((RiderMeshComponent == nullptr) || (VehicleMeshForRiderSeat == nullptr) ||
+      !VehicleMeshForRiderSeat->DoesSocketExist(VehicleMeshSeatSocketName))
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("%s: IsTwoWheeledVehicle is true but rider component '%s' or seat socket '%s' could not be resolved -- rider seat-lock disabled."),
+        *GetName(), *RiderMeshComponentName.ToString(), *VehicleMeshSeatSocketName.ToString());
+    RiderMeshComponent = nullptr;
+    return;
+  }
+
+  // Doing the seat-lock from TickActor (tried first) still drifted while
+  // moving: the rider's own animation gets evaluated in a later phase of
+  // the frame than Actor tick, so whatever the Blueprint's per-tick logic
+  // (or the animation itself) does to the rider after TickActor returns
+  // still lands after our correction. OnBoneTransformsFinalized fires
+  // once this component's animation/bone evaluation is fully done for
+  // the frame -- there's nothing left afterwards to undo it before render.
+  RiderMeshComponent->RegisterOnBoneTransformsFinalizedDelegate(
+      FOnBoneTransformsFinalizedMultiCast::FDelegate::CreateUObject(
+          this, &ACarlaWheeledVehicle::OnRiderBoneTransformsFinalized));
+}
+
+void ACarlaWheeledVehicle::OnRiderBoneTransformsFinalized()
+{
+  if ((RiderMeshComponent == nullptr) || (VehicleMeshForRiderSeat == nullptr))
+  {
+    return;
+  }
+  const FTransform SeatWorldTransform = VehicleMeshForRiderSeat->GetSocketTransform(VehicleMeshSeatSocketName);
+  const FTransform TargetTransform = FTransform(RiderSeatRelativeRotationOffset) * SeatWorldTransform;
+  RiderMeshComponent->SetWorldTransform(TargetTransform);
+}
+
 void ACarlaWheeledVehicle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction){
   Super::TickActor(DeltaTime, TickType, ThisTickFunction);
+
+  // Two-wheeled vehicles: resolves (once) the rider components and binds
+  // OnRiderBoneTransformsFinalized above -- see its comment and the one
+  // on RiderMeshComponentName in the header for why the actual seat-lock
+  // doesn't happen here.
+  ResolveRiderComponentsIfNeeded();
 
   // When velocity/acceleration control is active, flush control every frame even without AI controller
   if (VelocityControl->IsActive() || AccelerationControl->IsActive())
