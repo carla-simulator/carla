@@ -35,6 +35,7 @@ export function openApiDocument(baseUrl: string, appName: string): Record<string
         Scenario: { type: "object", required: ["id", "family", "content_hash", "params"], properties: { id: { type: "string" }, family: { type: "string" }, group: { type: "string" }, name: { type: "string" }, description: { type: "string" }, tags: { type: "array", items: { type: "string" } }, params: { type: "object" }, actors: { type: "array", items: { type: "object" } }, expected_events: { type: "array", items: { type: "string" } }, seed: { type: "integer" }, version: { type: "string" }, content_hash: { type: "string" } } },
         Evaluation: { type: "object", required: ["evaluation_id", "model_id", "overall"], properties: { evaluation_id: { type: "string" }, model_id: { type: "string" }, model_version: { type: "string" }, run_id: { type: "string" }, scenario_id: { type: "string" }, conditions: { type: "object" }, overall: { $ref: "#/components/schemas/Counts" }, by_class: { type: "object" }, by_condition: { type: "object" }, failure_clusters: { type: "array", items: { type: "object" } }, frames_evaluated: { type: "integer" }, inputs: { type: "object" }, reproducible: { type: "boolean" } } },
         Counts: { type: "object", properties: { tp: { type: "integer" }, fp: { type: "integer" }, fn: { type: "integer" }, precision: { type: "number" }, recall: { type: "number" }, f1: { type: "number" } } },
+        PlannerInput: { type: "object", properties: { scenes: { type: "integer" }, clip_seconds: { type: "number" }, fps: { type: "number" }, cameras: { type: "integer" }, resolution: { type: "string", enum: ["720p", "1080p", "1440p", "4k"] }, program: { type: "string", enum: ["fine_tune", "medium_train", "from_scratch"] }, gpu: { type: "string", enum: ["a100_80gb", "h100_80gb", "l40s", "rtx4090"] }, gpus: { type: "integer" }, interruptible: { type: "boolean" }, usd_per_gpu_hour: { type: ["number", "null"] }, usd_per_gb_month: { type: "number" }, retention_months: { type: ["integer", "null"] } } },
       },
     },
     paths: {
@@ -44,6 +45,13 @@ export function openApiDocument(baseUrl: string, appName: string): Record<string
       "/api/kpis": { get: op("Live KPI report", "reader") },
       "/api/kpis/history": { get: op("Nightly KPI snapshots", "reader", { parameters: [q("limit", { type: "integer" })] }) },
       "/api/kpis/snapshot": { post: op("Force a KPI snapshot", "writer") },
+      "/api/planner/options": { get: op("Reference tables behind the planner: dataset tiers, training programs, GPU rates and video bitrates", "none") },
+      "/api/planner": {
+        get: op("Dataset size, storage and GPU-cost plan for a target corpus, with the catalog's current coverage against it", "reader", {
+          parameters: [q("scenes", { type: "integer" }), q("clip_seconds", { type: "number" }), q("fps", { type: "number" }), q("cameras", { type: "integer" }), q("resolution", { type: "string", enum: ["720p", "1080p", "1440p", "4k"] }), q("program", { type: "string", enum: ["fine_tune", "medium_train", "from_scratch"] }), q("gpu", { type: "string", enum: ["a100_80gb", "h100_80gb", "l40s", "rtx4090"] }), q("gpus", { type: "integer" }), q("interruptible", { type: "boolean" }), q("usd_per_gpu_hour", { type: "number" }), q("usd_per_gb_month", { type: "number" }), q("retention_months", { type: "integer" })],
+        }),
+        post: op("Same plan from a JSON body", "reader", { requestBody: jsonBody({ $ref: "#/components/schemas/PlannerInput" }) }),
+      },
       "/api/runs": { get: op("List runs", "reader", { parameters: [q("source"), q("scenario_id"), q("quality_status"), q("limit", { type: "integer" })] }), post: op("Upsert a run manifest", "writer", { requestBody: jsonBody({ $ref: "#/components/schemas/Run" }) }) },
       "/api/runs/{id}": { get: op("Run detail with segments, chunks, event summary, evaluations and driving score", "reader", { parameters: [idParam("id")] }) },
       "/api/runs/{id}/telemetry": { post: op("Upload a telemetry chunk", "writer", { parameters: [idParam("id"), q("seq", { type: "integer" })], requestBody: jsonBody({ type: "object", properties: { samples: { type: "array", items: { $ref: "#/components/schemas/Sample" } } } }) }), get: op("Downsampled samples for playback", "reader", { parameters: [idParam("id"), q("max", { type: "integer" })] }) },

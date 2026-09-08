@@ -18,6 +18,7 @@
     deck: null,
     history: [],
     fleet: { devices: [], device: null, track: [], deck: null, timer: null },
+    planner: { options: null, plan: null },
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -181,8 +182,10 @@
     return values[lo];
   }
 
-  /** Horizontal grouped bar chart. rows: [{label, values:[..]}], series: [{name,color}] */
-  function barChart(container, { rows, series, unit, max }) {
+  /** Horizontal grouped bar chart. rows: [{label, values:[..]}], series: [{name,color}].
+      `format` overrides how a value is written on the bar and in the tooltip. */
+  function barChart(container, { rows, series, unit, max, format }) {
+    const label = format || ((v) => fmt.num(v, unit === "%" ? 0 : 1) + (unit || ""));
     container.innerHTML = "";
     if (!rows.length) { container.innerHTML = '<div class="empty">no data</div>'; return; }
     const width = Math.max(320, container.clientWidth || 600);
@@ -202,7 +205,7 @@
         const y = y0 + si * (barH + gap);
         const bar = svgEl("rect", { class: "bar", x: labelW, y, width: Math.max(0, sx(v) - labelW), height: barH, fill: s.color || SERIES[si] });
         bar.addEventListener("mousemove", (ev) => {
-          tip.innerHTML = `<b>${esc(row.label)}</b><div class="row"><span>${esc(s.name)}</span><b>${fmt.num(v, 2)}${unit || ""}</b></div>`;
+          tip.innerHTML = `<b>${esc(row.label)}</b><div class="row"><span>${esc(s.name)}</span><b>${esc(label(v))}</b></div>`;
           tip.hidden = false;
           const rect = container.getBoundingClientRect();
           tip.style.left = Math.min(rect.width - 140, ev.clientX - rect.left + 12) + "px";
@@ -210,7 +213,7 @@
         });
         bar.addEventListener("mouseleave", () => (tip.hidden = true));
         svg.appendChild(bar);
-        svg.appendChild(svgEl("text", { x: sx(v) + 4, y: y + barH - 2, class: "bar-label" })).textContent = fmt.num(v, unit === "%" ? 0 : 1) + (unit || "");
+        svg.appendChild(svgEl("text", { x: sx(v) + 4, y: y + barH - 2, class: "bar-label" })).textContent = label(v);
       });
     });
     container.appendChild(svg);
@@ -661,8 +664,106 @@
     } catch (err) { toast(err.message); }
   }
 
+  // ----------------------------------------------------------------- planner
+  const PLAN_FIELDS = {
+    scenes: "#plan-scenes", clip_seconds: "#plan-clip", fps: "#plan-fps", cameras: "#plan-cameras", resolution: "#plan-resolution",
+    program: "#plan-program", gpu: "#plan-gpu", gpus: "#plan-gpus", usd_per_gpu_hour: "#plan-price", usd_per_gb_month: "#plan-storage-price", retention_months: "#plan-retention",
+  };
+  const usd = (n) => "$" + Math.round(n).toLocaleString("en-US");
+
+  /** Fill the selects from /api/planner/options so the form can never drift from the API. */
+  async function loadPlannerOptions() {
+    if (state.planner.options) return state.planner.options;
+    const options = await api("/api/planner/options");
+    state.planner.options = options;
+    const fill = (sel, items, label) => {
+      const el = $(sel);
+      el.innerHTML = items.map((i) => `<option value="${esc(i.id)}">${esc(label(i))}</option>`).join("");
+    };
+    fill("#plan-resolution", options.resolutions, (r) => `${r.id} · ${r.mbps} Mbit/s`);
+    fill("#plan-program", options.programs, (p) => p.label);
+    fill("#plan-gpu", options.gpus, (g) => `${g.label} · $${g.usd_per_hour.toFixed(2)}/h`);
+    for (const [key, sel] of Object.entries(PLAN_FIELDS)) {
+      const value = options.defaults[key];
+      if (value !== null && value !== undefined && $(sel).value === "") $(sel).value = value;
+      else if (value !== null && value !== undefined && $(sel).tagName === "SELECT") $(sel).value = value;
+    }
+    $("#plan-interruptible").checked = !!options.defaults.interruptible;
+    return options;
+  }
+
+  function plannerQuery() {
+    const params = new URLSearchParams();
+    for (const [key, sel] of Object.entries(PLAN_FIELDS)) {
+      const value = $(sel).value.trim();
+      if (value !== "") params.set(key, value);
+    }
+    if ($("#plan-interruptible").checked) params.set("interruptible", "true");
+    return params;
+  }
+
+  async function loadPlanner() {
+    await loadPlannerOptions();
+    const params = plannerQuery();
+    const plan = await api("/api/planner?" + params.toString());
+    state.planner.plan = plan;
+    setHash("planner", String(plan.input.scenes));
+    renderPlan(plan);
+  }
+
+  function renderPlan(plan) {
+    const d = plan.dataset, c = plan.compute;
+    const band = (b, f) => `${f(b.low)} – ${f(b.high)}`;
+    $("#plan-summary").innerHTML = `
+      <div class="tier-banner">
+        <b>${esc(plan.tier.label)}</b><span class="muted">${esc(plan.tier.range)}</span>
+        <span>${esc(plan.tier.note)}</span>
+        ${plan.tier.next_tier_at ? `<span class="muted">next tier at ${plan.tier.next_tier_at.toLocaleString("en-US")} scenes</span>` : ""}
+      </div>
+      <div class="plan-tiles">
+        <div class="plan-tile"><div class="k">Frames</div><div class="v">${(d.frames / 1e6).toFixed(1)}<small>M</small></div><div class="r">${d.video_hours.toLocaleString("en-US")} h of video</div></div>
+        <div class="plan-tile"><div class="k">Storage</div><div class="v">${d.total_gb >= 1000 ? (d.total_gb / 1000).toFixed(2) + "<small>TB</small>" : d.total_gb + "<small>GB</small>"}</div><div class="r">${d.raw_gb} GB raw · ${d.per_scene_mb} MB/scene</div></div>
+        <div class="plan-tile"><div class="k">GPU-hours</div><div class="v">${Math.round(c.gpu_hours.expected).toLocaleString("en-US")}</div><div class="r">${band(c.gpu_hours, (n) => Math.round(n).toLocaleString("en-US"))}</div></div>
+        <div class="plan-tile"><div class="k">Wall clock</div><div class="v">${fmt.num(c.wall_clock_days.expected, 1)}<small>d</small></div><div class="r">${c.gpus} × ${esc(c.gpu)} · ${Math.round(c.parallel_efficiency * 100)} % scaling</div></div>
+        <div class="plan-tile"><div class="k">Compute cost</div><div class="v">${usd(c.cost_usd.expected)}</div><div class="r">${band(c.cost_usd, usd)} at $${c.usd_per_gpu_hour}/h${c.interruptible ? " interruptible" : ""}</div></div>
+        <div class="plan-tile"><div class="k">Storage cost</div><div class="v">${usd(plan.storage.cost_usd)}</div><div class="r">${plan.storage.months} month(s) at $${plan.storage.usd_per_gb_month}/GB</div></div>
+        <div class="plan-tile"><div class="k">Total</div><div class="v">${usd(plan.total_usd.expected)}</div><div class="r">${band(plan.total_usd, usd)}</div></div>
+      </div>`;
+    barChart($("#plan-gpu-chart"), {
+      rows: plan.compare.by_gpu.map((g) => ({ label: `${g.label} · ${Math.round(g.gpu_hours).toLocaleString("en-US")} h`, values: [g.cost_usd] })),
+      series: [{ name: "expected cost" }], format: usd,
+    });
+    barChart($("#plan-program-chart"), {
+      rows: plan.compare.by_program.map((p) => ({ label: p.label, values: [p.cost_usd] })),
+      series: [{ name: "expected cost" }], format: usd,
+    });
+    const cov = plan.coverage;
+    $("#plan-coverage").innerHTML = `
+      <div class="coverage-bar"><i style="width:${Math.min(100, cov.progress_pct)}%"></i></div>
+      <div class="muted">${cov.equivalent_scenes.toLocaleString("en-US")} of ${cov.target_scenes.toLocaleString("en-US")} scenes (${fmt.num(cov.progress_pct, 1)} %) — accepted collection time cut into ${fmt.num(plan.input.clip_seconds, 0)} s clips.</div>
+      <table class="data-table"><tbody>
+        <tr><td>Runs in the catalog</td><td class="num">${cov.runs}</td><td>${cov.vehicle_hours} h vehicle · ${cov.sim_hours} h sim</td></tr>
+        <tr><td>Accepted collection time</td><td class="num">${cov.accepted_hours} h</td><td>counts toward the target</td></tr>
+        <tr><td>Scenario library</td><td class="num">${cov.scenario_variants}</td><td>${cov.scenario_families} families available for synthetic generation</td></tr>
+        <tr><td>Registered clips</td><td class="num">${cov.clips}</td><td>${cov.clip_gb} GB stored</td></tr>
+        <tr><td>Still to collect or generate</td><td class="num">${cov.scenes_remaining.toLocaleString("en-US")}</td><td>${cov.collection_hours_remaining.toLocaleString("en-US")} h of driving at this clip length</td></tr>
+      </tbody></table>`;
+    $("#plan-assumptions").innerHTML = plan.assumptions.map((a) => `<li>${esc(a)}</li>`).join("");
+  }
+
+  async function copyPlan() {
+    if (!state.planner.plan) return toast("run a plan first");
+    const text = JSON.stringify(state.planner.plan, null, 2);
+    try {
+      await navigator.clipboard.writeText(text);
+      toast("plan JSON copied to the clipboard");
+    } catch (_) {
+      toast("clipboard blocked — the same JSON is at /api/planner?" + plannerQuery().toString(), 6000);
+    }
+  }
+
   // ------------------------------------------------------------------ wiring
-  const loaders = { overview: loadOverview, runs: loadRuns, scenarios: loadScenarios, evaluations: loadEvaluations, governance: loadGovernance, fleet: loadFleet };
+  const loaders = { overview: loadOverview, runs: loadRuns, scenarios: loadScenarios, evaluations: loadEvaluations, governance: loadGovernance, fleet: loadFleet, planner: loadPlanner };
 
   function setHash(view, id) {
     const next = "#" + view + (id ? "/" + encodeURIComponent(id) : "");
@@ -684,6 +785,7 @@
     if (id && view === "runs") state.pendingRun = id;
     if (id && view === "scenarios") { const sel = $("#scenario-family"); if (![...sel.options].some((o) => o.value === id)) sel.add(new Option(id, id)); sel.value = id; }
     if (id && view === "fleet") state.fleet.device = id;
+    if (id && view === "planner" && Number(id) > 0) $("#plan-scenes").value = Number(id);
     try {
       await loaders[view]();
       if (id && view === "evaluations") selectEvaluation(id);
@@ -729,9 +831,14 @@
     $("#fleet-auto").addEventListener("change", scheduleFleetRefresh);
     $("#fleet-window").addEventListener("change", () => { if (state.fleet.device) selectDevice(state.fleet.device).catch((err) => toast(err.message)); });
     $("#fleet-materialize").addEventListener("click", materializeTrack);
+    $("#planner-form").addEventListener("submit", (ev) => { ev.preventDefault(); loadPlanner().catch((err) => toast(err.message)); });
+    $("#plan-copy").addEventListener("click", copyPlan);
+    $("#plan-program").addEventListener("change", () => loadPlanner().catch((err) => toast(err.message)));
+    $("#plan-gpu").addEventListener("change", () => loadPlanner().catch((err) => toast(err.message)));
+    $("#plan-interruptible").addEventListener("change", () => loadPlanner().catch((err) => toast(err.message)));
     $("#fleet-table").addEventListener("click", (ev) => { const b = ev.target.closest("button[data-track]"); if (b) { ev.stopPropagation(); selectDevice(b.dataset.track).catch((err) => toast(err.message)); } });
     window.addEventListener("hashchange", () => { const target = parseHash(); if (target && state.token && (target.view !== state.view)) showView(target.view, target.id); });
-    window.addEventListener("resize", () => { if (state.view === "runs" && state.samples.length) renderTimeline(); if (state.view === "overview") renderTrend(); });
+    window.addEventListener("resize", () => { if (state.view === "runs" && state.samples.length) renderTimeline(); if (state.view === "overview") renderTrend(); if (state.view === "planner" && state.planner.plan) renderPlan(state.planner.plan); });
     const initial = parseHash();
     if (initial) state.view = initial.view;
     if (state.token) connect(); else showView(state.view, initial ? initial.id : null);

@@ -24,6 +24,7 @@
       <button class="tab" data-view="evaluations" role="tab">Evaluations</button>
       <button class="tab" data-view="governance" role="tab">Safety &amp; governance</button>
       <button class="tab" data-view="fleet" role="tab">Fleet</button>
+      <button class="tab" data-view="planner" role="tab">Planner</button>
     </nav>
     <form class="auth" id="auth-form" autocomplete="off">
       <input id="auth-token" type="password" placeholder="API token" aria-label="API token">
@@ -190,6 +191,52 @@
           </div>
           <div id="fleet-map" class="map" role="img" aria-label="Fleet map"></div>
           <div class="legend" id="fleet-legend"></div>
+        </div>
+      </div>
+    </section>
+    <section id="view-planner" class="view" aria-label="Dataset and compute planner">
+      <div class="section-head">
+        <h1>Dataset &amp; compute planner</h1>
+        <p class="muted">Sizes a target corpus and prices the training program on marketplace GPUs, then measures the catalog against it. Every number comes from <code>/api/planner</code>; the reference points behind them are listed under the results.</p>
+      </div>
+      <div class="planner-layout">
+        <form class="card planner-form" id="planner-form">
+          <h2>Target corpus</h2>
+          <label>Scenes <input id="plan-scenes" type="number" min="1" step="1000" value="100000"></label>
+          <label>Seconds per scene <input id="plan-clip" type="number" min="0.1" step="1" value="10"></label>
+          <label>Frames per second <input id="plan-fps" type="number" min="1" step="1" value="10"></label>
+          <label>Cameras <input id="plan-cameras" type="number" min="1" max="32" step="1" value="1"></label>
+          <label>Resolution <select id="plan-resolution"></select></label>
+          <h2>Training program</h2>
+          <label>Program <select id="plan-program"></select></label>
+          <label>GPU <select id="plan-gpu"></select></label>
+          <label>GPUs in parallel <input id="plan-gpus" type="number" min="1" max="512" step="1" value="1"></label>
+          <label class="check"><input id="plan-interruptible" type="checkbox"> interruptible instance</label>
+          <label>$/GPU-hour <input id="plan-price" type="number" min="0.01" step="0.05" placeholder="list rate"></label>
+          <label>$/GB-month <input id="plan-storage-price" type="number" min="0" step="0.01" value="0.15"></label>
+          <label>Keep data for (months) <input id="plan-retention" type="number" min="1" max="120" step="1" placeholder="run length"></label>
+          <div class="planner-actions"><button type="submit">Plan</button><button type="button" id="plan-copy">Copy JSON</button></div>
+        </form>
+        <div class="planner-results">
+          <div class="card" id="plan-summary"><div class="empty">connect and press Plan</div></div>
+          <div class="two-col">
+            <div class="card">
+              <h2>Cost by GPU <span class="muted">expected run, same corpus</span></h2>
+              <div id="plan-gpu-chart" class="chart"></div>
+            </div>
+            <div class="card">
+              <h2>Cost by program <span class="muted">expected run on the selected GPU</span></h2>
+              <div id="plan-program-chart" class="chart"></div>
+            </div>
+          </div>
+          <div class="card">
+            <h2>Catalog coverage against this target</h2>
+            <div id="plan-coverage"></div>
+          </div>
+          <div class="card">
+            <h2>Assumptions</h2>
+            <ul id="plan-assumptions" class="assumptions"></ul>
+          </div>
         </div>
       </div>
     </section>
