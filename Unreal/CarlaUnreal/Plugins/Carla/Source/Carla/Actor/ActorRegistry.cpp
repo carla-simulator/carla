@@ -127,6 +127,12 @@ FCarlaActor* FActorRegistry::Register(AActor &Actor, FActorDescription Descripti
 
       // Optional: You can use only the value, or a key-value combination as the tag
       FString TagString = Key + TEXT(":") + Attribute.Value; // or just Attribute.Value
+      // FName asserts above NAME_SIZE (1024) characters; a lens lookup table
+      // ("lut" on the fisheye / rt_lens cameras) can be several thousand.
+      // The tag is informational, so keep a truncated prefix instead.
+      constexpr int32 MaxTagLength = 1000;
+      if (TagString.Len() > MaxTagLength)
+        TagString = TagString.Left(MaxTagLength) + TEXT("...");
       Actor.Tags.Add(FName(*TagString));
   }
 

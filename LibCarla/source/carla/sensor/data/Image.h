@@ -25,6 +25,9 @@ namespace data {
   /// An image of 32-bit BGRA colors (8-bit channels, 4 bytes)
   using NormalsImage = ImageTmpl<Color>;
 
+  /// An image of single-channel float32 distances, in metres
+  using DistanceImage = ImageTmpl<DistancePixel>;
+
 } // namespace data
 } // namespace sensor
 } // namespace carla

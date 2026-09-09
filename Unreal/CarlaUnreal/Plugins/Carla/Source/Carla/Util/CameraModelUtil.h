@@ -34,6 +34,7 @@ enum class ECameraModel : uint8
     KannalaBrandt,
     BrownConrady,
     LUT1D,
+    FTheta,   // Theta = sum c_i R^i (NVIDIA rig f-theta polynomial, R in pixels with fx = 1/width)
     MaxEnum UMETA(Hidden),
     Default = Perspective UMETA(Hidden)
 };
@@ -73,14 +74,25 @@ namespace CameraModelUtil
     struct FDistortCubemapToImageOptions
     {
         TArrayView<const float> KannalaBrandtCoefficients;
+        // LUT1D: R(Theta) samples, uniform over [0, ThetaMax], in the same
+        // normalized units as the focal lengths (pixel = Center + Focal * R).
+        TArrayView<const float> LUT;
+        float ThetaMax = PI / 2;
         float YFOVAngle;
         float YFocalLength;
+        // Explicit intrinsics in pixels (fx, fy, cx, cy), used when
+        // bExplicitIntrinsics is set; otherwise the projection uses
+        // (YFocalLength, YFocalLength, W/2, H/2).
+        FVector4f Intrinsics = FVector4f(1.f, 1.f, 0.f, 0.f);
+        // Written to pixels the lens maps no ray to (LUT1D beyond its range).
+        FVector4f InvalidColor = FVector4f(0.f, 0.f, 0.f, 1.f);
         float LongitudeOffset;
         float FOVFadeSize;
         ECameraModel CameraModel;
         bool bRenderEquirectangular : 1;
         bool bFOVMaskEnable : 1;
         bool bRenderPerspective : 1;
+        bool bExplicitIntrinsics : 1;
     };
 
 
@@ -164,6 +176,13 @@ namespace CameraModelUtil
             int32 Iterations = 10);
     }
 
+    namespace FTheta
+    {
+        // R -> Theta: sum_{i} Coefficients[i] * R^i (up to 8 terms).
+        float Polynomial(float Distance, TArrayView<const float> Coefficients);
+        // Theta -> R by Newton-Raphson on Polynomial().
+        float SolveRadius(float Theta, TArrayView<const float> Coefficients, int32 Iterations = 32);
+    }
     namespace LUT1D
     {
         // Theta -> R, linear interpolation over uniformly spaced samples.

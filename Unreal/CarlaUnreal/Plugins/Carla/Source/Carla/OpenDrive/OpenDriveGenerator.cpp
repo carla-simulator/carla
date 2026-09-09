@@ -21,6 +21,16 @@
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "UObject/UObjectIterator.h"
+#include "HAL/IConsoleManager.h"
+
+// carla.OpenDrive.StreetFurniture 0 skips the PCG lamp/vegetation/signage
+// scatter of generate_opendrive_world. Hybrid rendering over a neural scene
+// needs a bare proxy world: furniture that only exists in the proxy casts
+// shadows on the synthetic actors and shows up in their reflections.
+static TAutoConsoleVariable<int32> CVarOpenDriveStreetFurniture(
+    TEXT("carla.OpenDrive.StreetFurniture"), 1,
+    TEXT("1 (default): scatter street furniture (lamps, vegetation, signage) on generated OpenDRIVE worlds. 0: bare road only."),
+    ECVF_Default);
 
 #include <util/disable-ue4-macros.h>
 #include <carla/opendrive/OpenDriveParser.h>
@@ -1888,6 +1898,12 @@ void AOpenDriveGenerator::GeneratePoles()
   if (!IsOpenDriveValid())
   {
     UE_LOG(LogCarla, Error, TEXT("The OpenDrive has not been loaded"));
+    return;
+  }
+
+  if (CVarOpenDriveStreetFurniture.GetValueOnGameThread() == 0)
+  {
+    UE_LOG(LogCarla, Log, TEXT("AOpenDriveGenerator: carla.OpenDrive.StreetFurniture=0, skipping street furniture"));
     return;
   }
 

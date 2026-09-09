@@ -695,6 +695,13 @@ def parse_hz_rate(value):
         raise argparse.ArgumentTypeError("hz_rate must be an integer or 'None'.")
 
 
+def parse_timeout(value):
+    seconds = float(value)
+    if seconds <= 0:
+        raise argparse.ArgumentTypeError("--timeout must be a positive number of seconds.")
+    return seconds
+
+
 def main():
     argparser = argparse.ArgumentParser(
         description='CARLA Autoware sensor-kit demo')
@@ -748,6 +755,11 @@ def main():
     argparser.add_argument(
         '--spawn_index', type=int, default=None,
         help='Index into the ego spawn point list; random choice if omitted.')
+    argparser.add_argument(
+        '--timeout', type=parse_timeout, default=60.0,
+        help='RPC timeout in seconds (default: 60). A cold simulator start on UE 5.8 can '
+             'take longer than a minute to answer get_world(); raise this when the map is '
+             'still loading.')
     args = argparser.parse_args()
 
     # Deploy PostProcess profiles before connecting to the server
@@ -755,7 +767,7 @@ def main():
 
     # Get Client info
     client = carla.Client(args.host, args.port)
-    client.set_timeout(60.0)
+    client.set_timeout(args.timeout)
 
     if args.list_maps:
         print("Available maps")

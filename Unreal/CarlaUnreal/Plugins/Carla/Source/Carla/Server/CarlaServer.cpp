@@ -17,10 +17,13 @@
 #include "Carla/Sensor/CustomV2XSensor.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
+#include "Carla/Weather/SkyLightMap.h"
+#include "Carla/Weather/Weather.h"
 #include "Carla/AI/WalkerAIController.h"
 #include "Carla/Navigation/CarlaNavigationSubsystem.h"
 #include "Carla/Game/Tagger.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "Carla/ContentPacks/ContentPackManager.h"
 #include "Carla/Vehicle/MovementComponents/CarSimManagerComponent.h"
 #include "Carla/Vehicle/MovementComponents/ChronoMovementComponent.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
@@ -44,6 +47,7 @@
 #include <carla/rpc/BoneTransformDataIn.h>
 #include <carla/rpc/Command.h>
 #include <carla/rpc/CommandResponse.h>
+#include <carla/rpc/ContentPackInfo.h>
 #include <carla/rpc/CustomV2XBytes.h>
 #include <carla/rpc/DebugShape.h>
 #include <carla/rpc/EnvironmentObject.h>
@@ -99,6 +103,21 @@ template <typename T, typename Other>
 static std::vector<T> MakeVectorFromTArray(const TArray<Other> &Array)
 {
   return {Array.GetData(), Array.GetData() + Array.Num()};
+}
+
+static carla::rpc::ContentPackInfo MakeContentPackInfo(const FCarlaContentPack &Pack)
+{
+  carla::rpc::ContentPackInfo Info;
+  Info.name = carla::rpc::FromFString(Pack.GetName());
+  Info.version = carla::rpc::FromFString(Pack.Manifest.Version);
+  Info.base_release = carla::rpc::FromFString(Pack.Manifest.BaseRelease);
+  Info.path = carla::rpc::FromFString(Pack.PackDir);
+  Info.mounted = Pack.bMounted;
+  for (const FCarlaContentPackMap &Map : Pack.Manifest.Maps)
+  {
+    Info.maps.emplace_back(carla::rpc::FromFString(Map.Name));
+  }
+  return Info;
 }
 
 /// Resolve the AWalkerController behind a walker-navigation RPC actor id.
@@ -355,10 +374,11 @@ void FCarlaServer::FPimpl::BindActions()
 
   // ~~ Load new episode ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-  // BIND_SYNC: GetAllMapNames enumerates the AssetRegistry, which UE 5.8 asserts must
-  // happen on the game thread (AssetRegistry.cpp:2518) - async here crashed the server.
+  // Sync (game thread): the asset registry query behind GetAllMapNames
+  // asserts IsInGameThread, and the content pack list is mutated there.
   BIND_SYNC(get_available_maps) << [this]() -> R<std::vector<std::string>>
   {
+    CARLA_ENSURE_GAME_THREAD();
     const auto MapNames = UCarlaStatics::GetAllMapNames();
     std::vector<std::string> result;
     result.reserve(MapNames.Num());
@@ -389,7 +409,11 @@ void FCarlaServer::FPimpl::BindActions()
     }
     GameInstance->SetMapLayer(static_cast<int32>(MapLayers));
 
-    if(!Episode->LoadNewEpisode(cr::ToFString(map_name), reset_settings))
+    // reload_world sends an empty name: reload the current map.
+    const FString MapToLoad = map_name.empty()
+        ? Episode->GetMapName()
+        : cr::ToFString(map_name);
+    if(!Episode->LoadNewEpisode(MapToLoad, reset_settings))
     {
       FString Str(TEXT("Map '"));
       Str += cr::ToFString(map_name);
@@ -398,6 +422,61 @@ void FCarlaServer::FPimpl::BindActions()
     }
 
     return R<void>::Success();
+  };
+
+  // ~~ Content packs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  BIND_SYNC(get_content_packs) << [this]() -> R<std::vector<cr::ContentPackInfo>>
+  {
+    CARLA_ENSURE_GAME_THREAD();
+    UCarlaContentPackManager *ContentPacks = UCarlaContentPackManager::Get();
+    if (ContentPacks == nullptr)
+    {
+      RESPOND_ERROR("content pack manager not available");
+    }
+    std::vector<cr::ContentPackInfo> result;
+    for (const FCarlaContentPack &Pack : ContentPacks->GetPacks())
+    {
+      result.emplace_back(MakeContentPackInfo(Pack));
+    }
+    return result;
+  };
+
+  BIND_SYNC(mount_content_pack) << [this](const std::string &path) -> R<cr::ContentPackInfo>
+  {
+    CARLA_ENSURE_GAME_THREAD();
+    UCarlaContentPackManager *ContentPacks = UCarlaContentPackManager::Get();
+    if (ContentPacks == nullptr)
+    {
+      RESPOND_ERROR("content pack manager not available");
+    }
+    FString Error;
+    const FCarlaContentPack *Pack = nullptr;
+    if (!ContentPacks->Mount(cr::ToFString(path), Error, &Pack))
+    {
+      FString Str(TEXT("mount_content_pack: "));
+      Str += Error;
+      RESPOND_ERROR_FSTRING(Str);
+    }
+    return MakeContentPackInfo(*Pack);
+  };
+
+  BIND_SYNC(unmount_content_pack) << [this](const std::string &name) -> R<bool>
+  {
+    CARLA_ENSURE_GAME_THREAD();
+    UCarlaContentPackManager *ContentPacks = UCarlaContentPackManager::Get();
+    if (ContentPacks == nullptr)
+    {
+      RESPOND_ERROR("content pack manager not available");
+    }
+    FString Error;
+    if (!ContentPacks->Unmount(cr::ToFString(name), Error))
+    {
+      FString Str(TEXT("unmount_content_pack: "));
+      Str += Error;
+      RESPOND_ERROR_FSTRING(Str);
+    }
+    return true;
   };
 
   BIND_SYNC(load_map_layer) << [this](cr::MapLayer MapLayers) -> R<void>
@@ -581,6 +660,8 @@ void FCarlaServer::FPimpl::BindActions()
   BIND_SYNC(get_navigation_mesh) << [this]() -> R<std::vector<uint8_t>>
   {
     REQUIRE_CARLA_EPISODE();
+    // A generated OpenDRIVE world builds its navmesh in the background.
+    UCarlaEpisode::WaitForPendingNavigationBuild(60.0);
     auto FileContents = FNavigationMesh::Load(Episode->GetMapName());
     // make a mem copy (from TArray to std::vector)
     std::vector<uint8_t> Result(FileContents.Num());
@@ -603,22 +684,76 @@ void FCarlaServer::FPimpl::BindActions()
     const auto folderDir = mapDir + "/" + folder.c_str();
     const auto fileName = mapDir.EndsWith(Episode->GetMapName()) ? "*" : Episode->GetMapName();
 
-    // Find all the xodr and bin files from the map
+    // Find all the xodr and bin files from the map. A generated OpenDRIVE
+    // world only ever has current files in Saved/ (see
+    // UCarlaEpisode::LoadNewOpendriveEpisode); copies of OpenDriveMap.* in
+    // the content dir (cooked into the base pak) are stale by construction
+    // and must never be served.
+    const bool bGeneratedWorld = Episode->GetMapName().Equals(TEXT("OpenDriveMap"), ESearchCase::IgnoreCase);
     TArray<FString> Files;
-    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *(fileName + ".xodr"), true, false, false);
-    IFileManager::Get().FindFilesRecursive(Files, *folderDir, *(fileName + ".bin"), true, false, false);
+    if (!bGeneratedWorld)
+    {
+      IFileManager::Get().FindFilesRecursive(Files, *folderDir, *(fileName + ".xodr"), true, false, false);
+      IFileManager::Get().FindFilesRecursive(Files, *folderDir, *(fileName + ".bin"), true, false, false);
+    }
+
+    // Generated OpenDRIVE worlds keep their xodr/nav in Saved/; they are
+    // served under the conventional Carla/Maps/{OpenDrive,Nav}/ names and
+    // filtered by the requested sub-folder like the content walk above.
+    const FString SavedDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()) / TEXT("");
+    if (bGeneratedWorld)
+    {
+      const FString Folder = UTF8_TO_TCHAR(folder.c_str());
+      const bool bWantXODR = Folder.IsEmpty() || Folder.StartsWith(TEXT("OpenDrive"), ESearchCase::IgnoreCase);
+      const bool bWantNav = Folder.IsEmpty() || Folder.StartsWith(TEXT("Nav"), ESearchCase::IgnoreCase);
+      if (bWantNav)
+      {
+        // The client asks for the navmesh right after load_world; RecastBuilder
+        // may still be running (bounded wait, logs on failure).
+        UCarlaEpisode::WaitForPendingNavigationBuild(60.0);
+      }
+      const FString SavedXODR = SavedDir / TEXT("OpenDrive") / (Episode->GetMapName() + TEXT(".xodr"));
+      const FString SavedNav = SavedDir / TEXT("Nav") / (Episode->GetMapName() + TEXT(".bin"));
+      if (bWantXODR && IFileManager::Get().FileExists(*SavedXODR)) Files.Add(SavedXODR);
+      if (bWantNav && IFileManager::Get().FileExists(*SavedNav)) Files.Add(SavedNav);
+    }
 
     // Remove the start of the path until the content folder and put each file
     // in the result. In a packaged build the file manager hands back
     // pak-relative paths ("../../../<Project>/Content/..."), so normalize each
     // file to an absolute path before stripping the absolute content dir;
     // otherwise the raw relative path leaks to the client, which would try to
-    // resolve it against its cache folder and escape it.
-    const FString ContentDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir());
+    // resolve it against its cache folder and escape it. Files of a content
+    // pack are named Packs/<Pack>/<path under its Content dir>.
+    // Every prefix carries a trailing '/', so a sibling dir such as
+    // "ContentBackup" can never match.
+    const FString ContentDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectContentDir()) / TEXT("");
+    const UCarlaContentPackManager *ContentPacks = UCarlaContentPackManager::Get();
     std::vector<std::string> result;
     for (auto File : Files) {
       File = FPaths::ConvertRelativePathToFull(File);
-      File.RemoveFromStart(ContentDir);
+      if (File.StartsWith(SavedDir))
+      {
+        File.RemoveFromStart(SavedDir);
+        File = TEXT("Carla/Maps") / File;
+      }
+      else if (File.StartsWith(ContentDir))
+      {
+        File.RemoveFromStart(ContentDir);
+      }
+      else if (ContentPacks != nullptr)
+      {
+        for (const FCarlaContentPack &Pack : ContentPacks->GetPacks())
+        {
+          const FString PackContentDir = Pack.ContentDir / TEXT("");
+          if (Pack.bMounted && File.StartsWith(PackContentDir))
+          {
+            File.RemoveFromStart(PackContentDir);
+            File = FString::Printf(TEXT("Packs/%s"), *Pack.GetName()) / File;
+            break;
+          }
+        }
+      }
       result.emplace_back(TCHAR_TO_UTF8(*File));
     }
 
@@ -638,6 +773,43 @@ void FCarlaServer::FPimpl::BindActions()
     if (!path.StartsWith(ContentDir))
     {
       RESPOND_ERROR("file requested outside the content folder");
+    }
+
+    // Names produced by get_required_files for a content pack
+    // (Packs/<Pack>/...) resolve inside that pack's Content dir. The
+    // generated OpenDRIVE world's files (Carla/Maps/{OpenDrive,Nav}/...) are
+    // served from Saved/ whenever a copy exists there: the content-dir copy
+    // cooked into the base pak is stale by construction.
+    {
+      FString Rest = path;
+      Rest.RemoveFromStart(ContentDir);
+      FString PackName, PackRelative;
+      FString SavedRelative = Rest;
+      if (Rest.RemoveFromStart(TEXT("Packs/")) && Rest.Split(TEXT("/"), &PackName, &PackRelative))
+      {
+        const UCarlaContentPackManager *ContentPacks = UCarlaContentPackManager::Get();
+        const FCarlaContentPack *Pack = ContentPacks ? ContentPacks->FindPack(PackName) : nullptr;
+        if (Pack != nullptr && Pack->bMounted)
+        {
+          const FString PackContentDir = Pack->ContentDir / TEXT("");
+          const FString PackPath = FPaths::ConvertRelativePathToFull(PackContentDir / PackRelative);
+          if (!PackPath.StartsWith(PackContentDir))
+          {
+            RESPOND_ERROR("file requested outside the content pack folder");
+          }
+          path = PackPath;
+        }
+      }
+      else if (SavedRelative.RemoveFromStart(TEXT("Carla/Maps/")) &&
+               (SavedRelative.StartsWith(TEXT("OpenDrive/")) || SavedRelative.StartsWith(TEXT("Nav/"))))
+      {
+        const FString SavedDir = FPaths::ConvertRelativePathToFull(FPaths::ProjectSavedDir()) / TEXT("");
+        const FString SavedPath = FPaths::ConvertRelativePathToFull(SavedDir / SavedRelative);
+        if (SavedPath.StartsWith(SavedDir) && IFileManager::Get().FileExists(*SavedPath))
+        {
+          path = SavedPath;
+        }
+      }
     }
 
     // Copy the binary data of the file into the result and return it
@@ -778,6 +950,47 @@ void FCarlaServer::FPimpl::BindActions()
     }
     Weather->ApplyWeather(weather);
     return R<void>::Success();
+  };
+
+  // Environment map for the sky light: an equirectangular linear RGB(A) float
+  // panorama in the CARLA world frame (see Weather/SkyLightMap.h for the
+  // column/row convention) becomes a transient HDR cubemap on the rig's sky
+  // light, replacing the real-time atmosphere capture until cleared.
+  BIND_SYNC(set_sky_light_map) << [this](
+      const cr::TextureFloatColor &panorama, float intensity, int32_t face_size) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    if (panorama.GetWidth() < 2 || panorama.GetHeight() < 2)
+    {
+      RESPOND_ERROR("set_sky_light_map: panorama must be at least 2x2");
+    }
+    static_assert(sizeof(cr::FloatColor) == 4 * sizeof(float), "FloatColor must be 4 packed floats");
+    UTextureCube* Cubemap = CarlaSkyLightMap::CreateCubemapFromEquirect(
+        reinterpret_cast<const float*>(panorama.GetDataPtr()),
+        int32(panorama.GetWidth()), int32(panorama.GetHeight()),
+        face_size > 0 ? face_size : 512);
+    if (Cubemap == nullptr)
+    {
+      RESPOND_ERROR("set_sky_light_map: could not build the cubemap");
+    }
+    if (!AWeather::SetSkyLightMap(Episode->GetWorld(), Cubemap, intensity))
+    {
+      RESPOND_ERROR("set_sky_light_map: no sky rig (ASkyBase) in the level");
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(clear_sky_light_map) << [this]() -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    AWeather::ClearSkyLightMap(Episode->GetWorld());
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(has_sky_light_map) << [this]() -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return AWeather::HasSkyLightMap();
   };
 
   // ~~ IMU gravity ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

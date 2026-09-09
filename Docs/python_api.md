@@ -46,7 +46,7 @@ Identifier for this actor. Unique during a given episode.
 - <a name="carla.Actor.type_id"></a>**<font color="#f8805a">type_id</font>** (_str_)  
 The identifier of the blueprint this actor was based on, e.g. `vehicle.ford.mustang`.  
 - <a name="carla.Actor.is_alive"></a>**<font color="#f8805a">is_alive</font>** (_bool_)  
-Returns whether this object was destroyed using this actor handle.  
+Returns whether the actor still exists according to the latest world snapshot received by the client (False after it was destroyed, through this handle or any other). A handle returned by spawn_actor() is reported alive (and is_active True) until a snapshot newer than the spawn arrives, so it can be used right away in both synchronous and asynchronous mode; handles obtained from world.get_actor()/get_actors() only reflect the snapshots. Because the value is snapshot-based, an actor removed with `client.apply_batch_sync([[carla.command.DestroyActor](#carla.command.DestroyActor)(...)])` still reads True until the next snapshot arrives (`world.tick()` in synchronous mode, `world.wait_for_tick()` otherwise); `actor.destroy()` on the same handle clears it immediately.  
 - <a name="carla.Actor.is_active"></a>**<font color="#f8805a">is_active</font>** (_bool_)  
 Returns whether this actor is active (True) or not (False).  
 - <a name="carla.Actor.is_dormant"></a>**<font color="#f8805a">is_dormant</font>** (_bool_)  
@@ -523,6 +523,11 @@ Creates a new world with default settings using `map_name` map. All actors in th
         - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Layers of the map that will be loaded. By default all layers are loaded. This parameter works like a flag mask.  
     - **Warning:** <font color="#ED2F2F">_`map_layers` are only available for "Opt" maps
 _</font>  
+- <a name="carla.Client.mount_content_pack"></a>**<font color="#7fb800">mount_content_pack</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
+Mounts a content pack (a content-only Unreal plugin cooked against this CARLA release, with a `carla-pack.json` manifest) into the running server without a restart. Its maps are listed by [carla.Client.get_available_maps](#carla.Client.get_available_maps) and loadable with [carla.Client.load_world](#carla.Client.load_world), and its catalogs (`Config/*.json`) are added to the blueprint library on the next episode. Raises a RuntimeError naming the reason when the path is not a pack, the pack was built for another base release or platform, or a pack of that name is already mounted.  
+    - **Parameters:**
+        - `path` (_str_) - Path on the server host of the pack directory (or its `carla-pack.json`).  
+    - **Return:** _[carla.ContentPackInfo](#carla.ContentPackInfo)_  
 - <a name="carla.Client.reload_world"></a>**<font color="#7fb800">reload_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**reset_settings**=True</font>)  
 Reload the current world, note that a new world is created with default settings using the same map. All actors present in the world will be destroyed, __but__ traffic manager instances will stay alive.  
     - **Parameters:**
@@ -578,6 +583,11 @@ Stops the recording in progress. If you specified a path in `filename`, the reco
 Stop current replayer.  
     - **Parameters:**
         - `keep_actors` (_bool_) - True if you want autoremove all actors from the replayer, or False to keep them.  
+- <a name="carla.Client.unmount_content_pack"></a>**<font color="#7fb800">unmount_content_pack</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>)  
+Unmounts a content pack. Refused (RuntimeError) while a map of the pack is the current world or objects loaded from it are still alive; load another map first. Returns True on success.  
+    - **Parameters:**
+        - `name` (_str_) - Name of the pack, as reported by [carla.Client.get_content_packs](#carla.Client.get_content_packs).  
+    - **Return:** _bool_  
 
 ##### Getters
 - <a name="carla.Client.get_available_maps"></a>**<font color="#7fb800">get_available_maps</font>**(<font color="#00a6ed">**self**</font>)  
@@ -593,6 +603,9 @@ Returns a list of strings containing the paths of the maps available on server. 
 - <a name="carla.Client.get_client_version"></a>**<font color="#7fb800">get_client_version</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server can use different libcarla versions but some issues may arise regarding unexpected incompatibilities.  
     - **Return:** _str_  
+- <a name="carla.Client.get_content_packs"></a>**<font color="#7fb800">get_content_packs</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the content packs known to the server: the ones found at startup in `CarlaUnreal/Packs/`, in the directories given with `-carla-packs=<dir>[;<dir>]` or `$CARLA_PACKS`, and the ones mounted with [carla.Client.mount_content_pack](#carla.Client.mount_content_pack). Unmounted packs are listed with `mounted=False`.  
+    - **Return:** _list([carla.ContentPackInfo](#carla.ContentPackInfo))_  
 - <a name="carla.Client.get_required_files"></a>**<font color="#7fb800">get_required_files</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**folder**</font>, <font color="#00a6ed">**download**=True</font>)  
 Asks the server which files are required by the client to use the current map. Option to download files automatically if they are not already in the cache.  
     - **Parameters:**
@@ -686,6 +699,30 @@ Converts the image to a linear depth map. Used by the [depth camera](ref_sensors
 Converts the image to a depth map using a logarithmic scale, leading to better precision for small distances at the expense of losing it when further away.  
 - <a name="carla.ColorConverter.Raw"></a>**<font color="#f8805a">Raw</font>**  
 No changes applied to the image. Used by the [RGB camera](ref_sensors.md#rgb-camera).  
+
+---
+
+## carla.ContentPackInfo<a name="carla.ContentPackInfo"></a>
+Description of a content pack known to the server, as returned by [carla.Client.get_content_packs](#carla.Client.get_content_packs) and [carla.Client.mount_content_pack](#carla.Client.mount_content_pack).  
+
+### Instance Variables
+- <a name="carla.ContentPackInfo.name"></a>**<font color="#f8805a">name</font>** (_str_)  
+Pack name; also the plugin name and the `/<name>/` package mount point.  
+- <a name="carla.ContentPackInfo.version"></a>**<font color="#f8805a">version</font>** (_str_)  
+Pack version from the manifest.  
+- <a name="carla.ContentPackInfo.base_release"></a>**<font color="#f8805a">base_release</font>** (_str_)  
+CARLA base release the pack was cooked against, e.g. `carla-0.10.2-Linux`.  
+- <a name="carla.ContentPackInfo.path"></a>**<font color="#f8805a">path</font>** (_str_)  
+Absolute directory of the pack on the server host.  
+- <a name="carla.ContentPackInfo.mounted"></a>**<font color="#f8805a">mounted</font>** (_bool_)  
+True while the pack is mounted in the server.  
+- <a name="carla.ContentPackInfo.maps"></a>**<font color="#f8805a">maps</font>** (_list(str)_)  
+Map names declared by the pack manifest.  
+
+### Methods
+
+##### Dunder methods
+- <a name="carla.ContentPackInfo.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -868,6 +905,33 @@ Draws a string in a given location of the simulation which can only be seen serv
         - `draw_shadow` (_bool_) - Casts a shadow for the string that could help in visualization. It is disabled by default.  
         - `color` (_[carla.Color](#carla.Color)_) - RGB code to color the string. Red by default.  
         - `life_time` (_float<small> - seconds</small>_) - Shape's lifespan. By default it only lasts one frame. Set this to <code>0</code> for permanent shapes.  
+
+---
+
+## carla.DistanceImage<a name="carla.DistanceImage"></a>
+<small style="display:block;margin-top:-20px;">Inherited from _[carla.SensorData](#carla.SensorData)_</small></br>
+Class that defines a single-channel float32 image of Euclidean distances (in meters) retrieved by <b>sensor.camera.rt_lens_distance</b>. Each value is the distance from the camera origin to the primary hit along that pixel's lens ray (not a planar depth, unlike [carla.Image](#carla.Image) from <b>sensor.camera.depth</b>), so it stays exact for wide-angle and fisheye lens models. A ray that hits nothing (sky) reports a large value, `1.0e5` (100 km), instead of `0.0`. Learn more about this [here](ref_sensors.md#ray-traced-lens-distance-camera).  
+
+### Instance Variables
+- <a name="carla.DistanceImage.fov"></a>**<font color="#f8805a">fov</font>** (_float<small> - degrees</small>_)  
+Horizontal field of view of the image.  
+- <a name="carla.DistanceImage.height"></a>**<font color="#f8805a">height</font>** (_int_)  
+Image height in pixels.  
+- <a name="carla.DistanceImage.width"></a>**<font color="#f8805a">width</font>** (_int_)  
+Image width in pixels.  
+- <a name="carla.DistanceImage.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
+Flattened array of `width * height` float32 distances in meters, row major. Copy it before reuse, e.g. `np.copy(np.frombuffer(image.raw_data, dtype=np.float32)).reshape(image.height, image.width)`.  
+
+### Methods
+
+##### Dunder methods
+- <a name="carla.DistanceImage.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
+Returns the distance in meters at flattened pixel index `pos`.  
+- <a name="carla.DistanceImage.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+Iterate over the per-pixel distances (float, meters) that form the image.  
+- <a name="carla.DistanceImage.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.DistanceImage.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**distance**=float</font>)  
+- <a name="carla.DistanceImage.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -3827,6 +3891,8 @@ Casts a ray from the specified initial_location to final_location. The function 
         - `initial_location` (_[carla.Location](#carla.Location)_) - The initial position of the ray.  
         - `final_location` (_[carla.Location](#carla.Location)_) - The final position of the ray.  
     - **Return:** _list([carla.LabelledPoint](#carla.LabelledPoint))_  
+- <a name="carla.World.clear_sky_light_map"></a>**<font color="#7fb800">clear_sky_light_map</font>**(<font color="#00a6ed">**self**</font>)  
+Removes a sky light map set with `set_sky_light_map()` and restores the real-time atmosphere capture on every sky rig in the level.  
 - <a name="carla.World.enable_environment_objects"></a>**<font color="#7fb800">enable_environment_objects</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**env_objects_ids**</font>, <font color="#00a6ed">**enable**</font>)<button class="SnipetButton" id="carla.World.enable_environment_objects-snipet_button">snippet &rarr;</button>  
 Enable or disable a set of EnvironmentObject identified by their id. These objects will appear or disappear from the level.  
     - **Parameters:**
@@ -3842,6 +3908,9 @@ Projects the specified point downwards in the scene. The functions casts a ray f
         - `location` (_[carla.Location](#carla.Location)_) - The point to be projected.  
         - `search_distance` (_float_) - The maximum distance to perform the projection.  
     - **Return:** _[carla.LabelledPoint](#carla.LabelledPoint)_  
+- <a name="carla.World.has_sky_light_map"></a>**<font color="#7fb800">has_sky_light_map</font>**(<font color="#00a6ed">**self**</font>)  
+Returns whether a sky light map is currently active (set with `set_sky_light_map()` and not yet cleared).  
+    - **Return:** _bool_  
 - <a name="carla.World.load_map_layer"></a>**<font color="#7fb800">load_map_layer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_layers**</font>)<button class="SnipetButton" id="carla.World.load_map_layer-snipet_button">snippet &rarr;</button>  
 Loads the selected layers to the level. If the layer is already loaded the call has no effect.  
     - **Parameters:**
@@ -3997,6 +4066,14 @@ _</font>
         - `seed` (_int_) - Sets the seed to use for any random number generated in relation to pedestrians.  
     - **Note:** <font color="#8E8E8E">_Should be set before pedestrians are spawned. If you want to repeat the same exact bodies (blueprint) for each pedestrian, then use the same seed in the Python code (where the blueprint is choosen randomly) and here, otherwise the pedestrians will repeat the same paths but the bodies will be different.
 _</font>  
+- <a name="carla.World.set_sky_light_map"></a>**<font color="#7fb800">set_sky_light_map</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**width**</font>, <font color="#00a6ed">**height**</font>, <font color="#00a6ed">**pixels**</font>, <font color="#00a6ed">**intensity**=1.0</font>, <font color="#00a6ed">**face_size**=512</font>)  
+Lights the scene with an environment map instead of the real-time atmosphere capture: the equirectangular linear RGB(A) float `pixels` panorama is resampled into a cubemap and becomes the sky light's ambient and reflection source at `intensity`, on every sky rig in the level, until `clear_sky_light_map()` is called. Persists across weather changes but not across level loads: `load_world()` and `reload_world()` drop it, so set it again on the new world. Panorama convention (the CARLA world frame, i.e. Unreal's left-handed X-forward/Y-right/Z-up): column `u` is azimuth `phi = 2*pi * (u + 0.5) / width`, measured from +X toward +Y (the same sense as a CARLA yaw, so azimuth 90° is to the right of a yaw-0 vehicle); row `v` is elevation `theta = pi/2 - pi * (v + 0.5) / height`, with row 0 the zenith and the last row the nadir; direction `d = (cos(theta)*cos(phi), cos(theta)*sin(phi), sin(theta))`. Values are scene radiance in the project's photometric units (a clear noon sky is on the order of thousands of cd/m²), so a panorama normalized to `[0, 1]` typically needs `intensity` in the thousands to read correctly against CARLA's fixed daylight exposure — measure against a reference frame from the real-time atmosphere rather than assuming a default. An overload also accepts a pre-built [carla.TextureFloatColor](#carla.TextureFloatColor) panorama instead of `width`/`height`/`pixels`.  
+    - **Parameters:**
+        - `width` (_int_) - Panorama width in pixels.  
+        - `height` (_int_) - Panorama height in pixels.  
+        - `pixels` (_bytes_) - Contiguous buffer of `width * height * 3` (RGB) or `width * height * 4` (RGBA) float32 values, row major, top row first. Any object exposing the Python buffer protocol works, including a numpy array.  
+        - `intensity` (_float_) - Multiplier applied on top of the panorama's linear radiance values.  
+        - `face_size` (_int_) - Resolution (pixels per edge) of the cubemap the panorama is resampled into before lighting the sky.  
 - <a name="carla.World.set_weather"></a>**<font color="#7fb800">set_weather</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**weather**</font>)  
 Changes the weather parameteres ruling the simulation to another ones defined in an object.  
     - **Parameters:**

@@ -27,6 +27,14 @@ namespace data {
     return out;
   }
 
+  std::ostream &operator<<(std::ostream &out, const DistanceImage &image) {
+    out << "DistanceImage(frame=" << std::to_string(image.GetFrame())
+        << ", timestamp=" << std::to_string(image.GetTimestamp())
+        << ", size=" << std::to_string(image.GetWidth()) << 'x' << std::to_string(image.GetHeight())
+        << ')';
+    return out;
+  }
+
   std::ostream &operator<<(std::ostream &out, const LidarMeasurement &meas) {
     out << "LidarMeasurement(frame=" << std::to_string(meas.GetFrame())
         << ", timestamp=" << std::to_string(meas.GetTimestamp())
@@ -417,6 +425,28 @@ void export_sensor_data() {
     })
     .def("__setitem__", +[](csd::OpticalFlowImage &self, size_t pos, csd::OpticalFlowPixel color) {
       self.at(pos) = color;
+    })
+    .def(self_ns::str(self_ns::self))
+  ;
+
+  // Single-channel float32 distances in metres, produced by the path-traced
+  // distance camera (sensor.camera.rt_lens_distance). raw_data is width*height
+  // float32 values, row major: np.frombuffer(img.raw_data, np.float32).reshape(h, w).
+  class_<csd::DistanceImage, bases<cs::SensorData>, boost::noncopyable, std::shared_ptr<csd::DistanceImage>>("DistanceImage", no_init)
+    .add_property("width", &csd::DistanceImage::GetWidth)
+    .add_property("height", &csd::DistanceImage::GetHeight)
+    .add_property("fov", &csd::DistanceImage::GetFOVAngle)
+    .add_property("raw_data", &GetRawDataAsBuffer<csd::DistanceImage>)
+    .def("__len__", &csd::DistanceImage::size)
+    // No __iter__ on purpose: DistancePixel has no Python converter, so a
+    // boost::python iterator over it would raise on the first element.
+    // Iteration goes through __getitem__ (floats, IndexError at the end),
+    // which also keeps `for d in image` consistent with image[i].
+    .def("__getitem__", +[](const csd::DistanceImage &self, size_t pos) -> float {
+      return self.at(pos).distance;
+    })
+    .def("__setitem__", +[](csd::DistanceImage &self, size_t pos, float distance) {
+      self.at(pos).distance = distance;
     })
     .def(self_ns::str(self_ns::self))
   ;
