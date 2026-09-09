@@ -238,7 +238,8 @@ namespace client {
     /// +X, azimuth grows toward +Y; row 0 = zenith) becomes the sky light's
     /// cubemap (ambient + reflections) at the given intensity, replacing the
     /// real-time atmosphere capture until ClearSkyLightMap. Persists across
-    /// weather changes and level loads. face_size is the cubemap resolution.
+    /// weather changes; dropped by a level load (LoadWorld / ReloadWorld), so
+    /// set it again after loading. face_size is the cubemap resolution.
     void SetSkyLightMap(
         const rpc::TextureFloatColor& panorama,
         float intensity = 1.0f,

@@ -24,6 +24,7 @@
 #include "Components/VolumetricCloudComponent.h"
 #include "Curves/CurveFloat.h"
 #include "Engine/TextureCube.h"
+#include "Engine/World.h"
 #include "HAL/IConsoleManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
@@ -179,18 +180,29 @@ void AWeather::CheckWeatherPostProcessEffects()
     }
 }
 
-// Environment-map override for the sky light (set_sky_light_map RPC). Process
-// wide, not per world: the cubemap lives in the transient package and is
-// rooted, so it survives load_world and is re-applied to the new level's sky
-// rig by ApplyWeatherToSkyActor on its first weather push.
+// Environment-map override for the sky light (set_sky_light_map RPC). The
+// cubemap lives in the transient package and is rooted while set, but the
+// override is scoped to the world it was set on: it is re-applied to that
+// world's sky rig on every weather push, and dropped when that world is
+// cleaned up (load_world / reload_world), so a freshly loaded level always
+// starts on its own real-time atmosphere capture -- a client that loaded a
+// new map never asked for the previous map's lighting.
 namespace
 {
     struct FSkyLightMapOverride
     {
         UTextureCube* Cubemap = nullptr;
         float Intensity = 1.0f;
+        TWeakObjectPtr<UWorld> World;
     };
     FSkyLightMapOverride GSkyLightMapOverride;
+    FDelegateHandle GSkyLightMapWorldCleanupHandle;
+
+    bool SkyLightMapAppliesTo(const UWorld* World)
+    {
+        return GSkyLightMapOverride.Cubemap != nullptr && World != nullptr &&
+            GSkyLightMapOverride.World.Get() == World;
+    }
 
     // What the override rewrites on a sky light, saved the first time it is
     // applied to that component and put back by ClearSkyLightMap. The
@@ -240,17 +252,54 @@ namespace
         if (!SkyLightComponent->IsActive())
             SkyLightComponent->SetActive(true);
     }
+
+    // Forget the override: unroot the cubemap (the transient object is then
+    // collected with the next GC pass) and drop the saved component states,
+    // whose weak keys are dead once the owning world has gone anyway.
+    void DropSkyLightMapOverride()
+    {
+        if (GSkyLightMapOverride.Cubemap != nullptr)
+            GSkyLightMapOverride.Cubemap->RemoveFromRoot();
+        GSkyLightMapOverride = FSkyLightMapOverride{};
+        GSkyLightSavedStates.Empty();
+        if (GSkyLightMapWorldCleanupHandle.IsValid())
+        {
+            FWorldDelegates::OnWorldCleanup.Remove(GSkyLightMapWorldCleanupHandle);
+            GSkyLightMapWorldCleanupHandle.Reset();
+        }
+    }
+
+    // load_world / reload_world tear the current world down through
+    // UWorld::CleanupWorld before the next level is brought up; that is the
+    // end of the override's scope. Other worlds (the editor world, a level
+    // instance) are not ours and are left alone.
+    void OnSkyLightMapWorldCleanup(UWorld* World, bool /*bSessionEnded*/, bool /*bCleanupResources*/)
+    {
+        if (World == nullptr || GSkyLightMapOverride.World.Get() != World)
+            return;
+        DropSkyLightMapOverride();
+        UE_LOG(LogCarla, Log, TEXT("AWeather: sky light map dropped with world %s"), *World->GetName());
+    }
 }
 
 bool AWeather::SetSkyLightMap(UWorld* World, UTextureCube* Cubemap, float Intensity)
 {
-    if (Cubemap == nullptr)
+    if (Cubemap == nullptr || World == nullptr)
         return false;
     if (GSkyLightMapOverride.Cubemap != nullptr && GSkyLightMapOverride.Cubemap != Cubemap)
         GSkyLightMapOverride.Cubemap->RemoveFromRoot();
     Cubemap->AddToRoot();
+    if (GSkyLightMapOverride.World.Get() != World)
+    {
+        // Setting on a different world than the previous override: whatever
+        // that world's rigs remembered is gone with it.
+        GSkyLightSavedStates.Empty();
+    }
     GSkyLightMapOverride.Cubemap = Cubemap;
     GSkyLightMapOverride.Intensity = Intensity;
+    GSkyLightMapOverride.World = World;
+    if (!GSkyLightMapWorldCleanupHandle.IsValid())
+        GSkyLightMapWorldCleanupHandle = FWorldDelegates::OnWorldCleanup.AddStatic(&OnSkyLightMapWorldCleanup);
 
     int32 Applied = 0;
     TArray<AActor*> SkyActors;
@@ -270,10 +319,7 @@ bool AWeather::SetSkyLightMap(UWorld* World, UTextureCube* Cubemap, float Intens
 
 void AWeather::ClearSkyLightMap(UWorld* World)
 {
-    if (GSkyLightMapOverride.Cubemap != nullptr)
-        GSkyLightMapOverride.Cubemap->RemoveFromRoot();
-    GSkyLightMapOverride.Cubemap = nullptr;
-
+    // Restore the rigs first (the saved states go away with the override).
     TArray<AActor*> SkyActors;
     UGameplayStatics::GetAllActorsOfClass(World, ASkyBase::StaticClass(), SkyActors);
     for (AActor* SkyActor : SkyActors)
@@ -292,7 +338,7 @@ void AWeather::ClearSkyLightMap(UWorld* World)
             SkyLightComponent->SetRealTimeCaptureEnabled(true);
         }
     }
-    GSkyLightSavedStates.Empty();
+    DropSkyLightMapOverride();
     // Restores the curve intensity and the real-time capture through the
     // normal weather push.
     if (UCarlaEpisode* Episode = UCarlaStatics::GetCurrentEpisode(World))
@@ -623,14 +669,15 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         // day, 0 at night) remains the multiplier on the capture.
         if (USkyLightComponent* SkyLightComponent = FindSkyLightComponent(TEXT("SkyLightComponent")))
         {
-            if (GSkyLightMapOverride.Cubemap != nullptr)
+            if (SkyLightMapAppliesTo(SkyActor->GetWorld()))
             {
-                // Environment map set through set_sky_light_map: the measured
-                // panorama replaces the atmosphere capture as the ambient and
-                // reflection source, and its intensity is the caller's, not
-                // the curve's. Reapplied on every weather push so that a
-                // set_weather call (or a new level's first push) cannot
-                // silently revert to the real-time capture.
+                // Environment map set through set_sky_light_map on this
+                // world: the measured panorama replaces the atmosphere
+                // capture as the ambient and reflection source, and its
+                // intensity is the caller's, not the curve's. Reapplied on
+                // every weather push so that a set_weather call cannot
+                // silently revert to the real-time capture. A rig in any
+                // other world (a newly loaded level) takes the else branch.
                 ApplySkyLightMapToComponent(SkyLightComponent);
             }
             else

@@ -67,9 +67,11 @@ public:
   /// Environment-map override for the sky light (set_sky_light_map RPC):
   /// every ASkyBase rig in World switches its sky light to the given cubemap
   /// (SLS_SpecifiedCubemap, real-time capture off) at the given intensity,
-  /// and ApplyWeatherToSkyActor keeps it that way across weather pushes and
-  /// level loads until ClearSkyLightMap. The cubemap is rooted for as long
-  /// as it is set. Returns false if no sky rig was found.
+  /// and ApplyWeatherToSkyActor keeps it that way across weather pushes
+  /// until ClearSkyLightMap. Scoped to World: it is dropped when that world
+  /// is cleaned up (load_world / reload_world), so the next level starts on
+  /// its own real-time capture. The cubemap is rooted for as long as it is
+  /// set. Returns false if no sky rig was found.
   static bool SetSkyLightMap(UWorld* World, class UTextureCube* Cubemap, float Intensity);
 
   /// Drops the override and restores the real-time atmosphere capture with
