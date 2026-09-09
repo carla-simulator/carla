@@ -88,6 +88,7 @@ DOMAIN_ID=42
 DRY_RUN=false
 WITH_DISPLAY=false
 WITH_RVIZ=false
+RVIZ_IMAGE_TOPIC=""            # image panel topic for the generated rviz config (default per mode)
 NO_AUTO=false
 NO_GATES=false
 NO_RECOVER=false
@@ -158,6 +159,9 @@ Usage: $(basename "$0") --mode classical|e2e [options]
   --no-wheel-check       skip the carla module provenance check (installed
                          .so vs any of this tree's built wheels) -- use
                          only when you knowingly run a wheel from elsewhere
+  --rviz-image-topic T   image topic for RViz's image panel (default: classical
+                         /sensing/camera/front/image from autoware_demo.py's front
+                         camera, e2e /sensing/camera/CAM_FRONT/image_raw/image)
   --with-rviz            also start RViz (docker stack: separate container with
                          DISPLAY passthrough; source stack: local rviz2)
   --log-dir DIR          per-process logs + pidfile (default: <this dir>/logs)
@@ -202,6 +206,7 @@ while [[ $# -gt 0 ]]; do
         --no-recover)   NO_RECOVER=true; shift ;;
         --no-wheel-check) NO_WHEEL_CHECK=true; shift ;;
         --with-rviz)    WITH_RVIZ=true; shift ;;
+        --rviz-image-topic) RVIZ_IMAGE_TOPIC="$2"; shift 2 ;;
         --log-dir)      LOG_DIR="$2"; shift 2 ;;
         --with-display) WITH_DISPLAY=true; shift ;;
         --server-args)  SERVER_ARGS="$2"; shift 2 ;;
@@ -992,15 +997,48 @@ CLASSICAL_SRC_CMD="${STACK_PRELUDE}exec ros2 launch autoware_launch e2e_simulato
 # in e2e mode (no perception stack) -- the panel stays black. Generate a copy
 # repointed at the raw front VAD camera. Best-effort: if the ws config or the
 # expected topic line is missing, fall back to the stock config.
+# The same applies to classical mode on CARLA: the traffic-light module is
+# switched off by the CARLA overrides, so the panel is repointed at the
+# front camera autoware_demo.py spawns for exactly this purpose
+# (/sensing/camera/front/image). Override with --rviz-image-topic.
+if [[ -z "$RVIZ_IMAGE_TOPIC" ]]; then
+    if [[ "$MODE" == "e2e" ]]; then RVIZ_IMAGE_TOPIC="/sensing/camera/CAM_FRONT/image_raw/image"
+    else RVIZ_IMAGE_TOPIC="/sensing/camera/front/image"; fi
+fi
+# make_carla_rviz <stock autoware.rviz> <output>: 0 on success, 1 if the stock
+# config lacks the expected image panel (caller falls back to the stock file).
+make_carla_rviz() {
+    local stock="$1" out="$2"
+    [[ -f "$stock" ]] || return 1
+    grep -q 'Value: /perception/traffic_light_recognition/traffic_light/debug/rois' "$stock" || return 1
+    sed -e "s|Value: /perception/traffic_light_recognition/traffic_light/debug/rois|Value: $RVIZ_IMAGE_TOPIC|" \
+        -e 's|Name: RecognitionResultOnImage|Name: FrontCamera|' \
+        "$stock" > "$out"
+    # The stock current view is a TopDownOrtho on the 'viewer' frame, which
+    # map_tf_generator pins to the point-cloud map's centroid -- it never
+    # follows the ego, so a drive leaves the screen. Start on the saved
+    # ThirdPersonFollower (base_link) instead; the top-down view stays in the
+    # Views panel. Best-effort: a config without the expected block is kept.
+    python3 - "$out" <<'PY' || true
+import sys, re
+p = sys.argv[1]; s = open(p).read()
+m = re.search(r"  Views:\n    Current:\n(?:      .*\n)+?(?=    Saved:\n)", s)
+if m:
+    cur = ("  Views:\n    Current:\n      Class: rviz_default_plugins/ThirdPersonFollower\n      Distance: 32\n"
+           "      Enable Stereo Rendering:\n        Stereo Eye Separation: 0.05999999865889549\n        Stereo Focal Distance: 1\n"
+           "        Swap Stereo Eyes: false\n        Value: false\n      Focal Point:\n        X: 0\n        Y: 0\n        Z: 0\n"
+           "      Focal Shape Fixed Size: true\n      Focal Shape Size: 0.05000000074505806\n      Invert Z Axis: false\n"
+           "      Name: Current View\n      Near Clip Distance: 0.009999999776482582\n      Pitch: 0.45\n      Target Frame: base_link\n"
+           "      Value: ThirdPersonFollower (rviz)\n      Yaw: 3.141592025756836\n")
+    open(p, "w").write(s[:m.start()] + cur + s[m.end():])
+PY
+}
 E2E_RVIZ_ARG=""
 if [[ "$MODE" == "e2e" ]] && ! $DRY_RUN; then
     STOCK_RVIZ="$(find "$AUTOWARE_WS/install" -path '*autoware_launch*' -name autoware.rviz 2>/dev/null | head -1)"
-    if [[ -n "$STOCK_RVIZ" ]] && grep -q 'Value: /perception/traffic_light_recognition/traffic_light/debug/rois' "$STOCK_RVIZ"; then
-        sed -e 's|Value: /perception/traffic_light_recognition/traffic_light/debug/rois|Value: /sensing/camera/CAM_FRONT/image_raw/image|' \
-            -e 's|Name: RecognitionResultOnImage|Name: FrontCamera|' \
-            "$STOCK_RVIZ" > "$LOG_DIR/vad_e2e.rviz"
+    if make_carla_rviz "$STOCK_RVIZ" "$LOG_DIR/vad_e2e.rviz"; then
         E2E_RVIZ_ARG=" rviz_config:='$LOG_DIR/vad_e2e.rviz'"
-        log "e2e rviz: image panel repointed to /sensing/camera/CAM_FRONT/image_raw/image ($LOG_DIR/vad_e2e.rviz)"
+        log "e2e rviz: image panel repointed to $RVIZ_IMAGE_TOPIC ($LOG_DIR/vad_e2e.rviz)"
     else
         warn "could not generate the e2e rviz config (stock autoware.rviz or its traffic-light image panel not found) -- rviz image panel will be black"
     fi
@@ -1038,6 +1076,16 @@ if [[ "$MODE" == "classical" ]]; then
             if have xhost && [[ -n "${DISPLAY:-}" ]] && ! $DRY_RUN; then
                 xhost +local: >/dev/null 2>&1 || warn "xhost +local: failed -- rviz may not reach the X display"
             fi
+            # Image panel -> front camera: the stock config lives in the image,
+            # so copy it out of the stack container into the /dds mount.
+            RVIZ_DOCKER_CFG="/opt/autoware/autoware_launch/share/autoware_launch/rviz/autoware.rviz"
+            if ! $DRY_RUN && docker cp "$CONTAINER_NAME:$RVIZ_DOCKER_CFG" "$DDS_DIR/autoware_stock.rviz" 2>/dev/null \
+                    && make_carla_rviz "$DDS_DIR/autoware_stock.rviz" "$DDS_DIR/autoware_carla.rviz"; then
+                RVIZ_DOCKER_CFG="/dds/autoware_carla.rviz"
+                log "rviz: image panel repointed to $RVIZ_IMAGE_TOPIC ($DDS_DIR/autoware_carla.rviz)"
+            else
+                warn "could not generate the rviz config with the front camera panel -- using the stock autoware.rviz (image panel will be black)"
+            fi
             start_container "$CONTAINER_NAME-rviz" \
                 --network host "${GPU_ARGS[@]}" "${RVIZ_GPU_ENV[@]}" \
                 -e RMW_IMPLEMENTATION=rmw_cyclonedds_cpp \
@@ -1047,7 +1095,7 @@ if [[ "$MODE" == "classical" ]]; then
                 -v /tmp/.X11-unix:/tmp/.X11-unix \
                 -v "$DDS_DIR":/dds:ro \
                 --entrypoint bash "$IMAGE" \
-                -c "$AW_SETUP_SNIPPET; exec rviz2 -d /opt/autoware/autoware_launch/share/autoware_launch/rviz/autoware.rviz"
+                -c "$AW_SETUP_SNIPPET; exec rviz2 -d $RVIZ_DOCKER_CFG"
             log "rviz container started (if the window does not appear, run: xhost +local:)"
             if ! $DRY_RUN; then
                 ( sleep 20
@@ -1064,7 +1112,12 @@ if [[ "$MODE" == "classical" ]]; then
             # llvmpipe/iGPU and starves the machine (see the docker path above).
             RVIZ_ENV=""
             have nvidia-smi && RVIZ_ENV="__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia "
-            start_proc rviz "${STACK_PRELUDE}RVIZ_CFG=\$(find '$AUTOWARE_WS/install' -path '*autoware_launch*' -name autoware.rviz 2>/dev/null | head -1); exec env ${RVIZ_ENV}rviz2 \${RVIZ_CFG:+-d \"\$RVIZ_CFG\"}"
+            RVIZ_CFG="$(find "$AUTOWARE_WS/install" -path '*autoware_launch*' -name autoware.rviz 2>/dev/null | head -1)"
+            if make_carla_rviz "$RVIZ_CFG" "$LOG_DIR/autoware_carla.rviz"; then
+                RVIZ_CFG="$LOG_DIR/autoware_carla.rviz"
+                log "rviz: image panel repointed to $RVIZ_IMAGE_TOPIC ($RVIZ_CFG)"
+            fi
+            start_proc rviz "${STACK_PRELUDE}exec env ${RVIZ_ENV}rviz2 ${RVIZ_CFG:+-d '$RVIZ_CFG'}"
         fi
     fi
 else
