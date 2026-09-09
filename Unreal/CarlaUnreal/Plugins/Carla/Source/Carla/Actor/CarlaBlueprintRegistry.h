@@ -23,4 +23,13 @@ public:
   UFUNCTION(Category = "Carla Blueprint Registry", BlueprintCallable)
   static void LoadPropDefinitions(TArray<FPropParameters> &PropParametersArray);
 
+  /// Parse the given *.Package.json files in order (later files override
+  /// earlier entries with the same name) into @a PropParametersArray.
+  static void LoadPropDefinitionsFromFiles(
+      const TArray<FString> &PropFileNames,
+      TArray<FPropParameters> &PropParametersArray);
+
+  /// Every <Content>/Config/**/*.Package.json of every mounted content pack.
+  static TArray<FString> FindContentPackPropFiles();
+
 };

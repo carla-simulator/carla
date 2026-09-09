@@ -42,7 +42,10 @@ async def wait_ready(sock):
 
 
 def test_render_and_retime(worker, tmp_path):
-    clip = av7_clip(tmp_path / "clips", seconds=2)  # 87*... frames at 30 fps with a placeholder scene dir
+    # 303 frames at 30 fps = 10.1 s of ego poses: enough for the 10 fps / 101-frame case below.
+    # The synthetic scene package is a real ClipGT package, so the renderer's output length
+    # follows its egomotion table (see synthetic.write_scene) - a short scene now fails, as it should.
+    clip = av7_clip(tmp_path / "clips", frames=303)
     cams = clip.manifest.camera_names[:3]
 
     async def go():

@@ -108,3 +108,25 @@ def test_video_writer_rejects_bad_frames(tmp_path):
         with pytest.raises(ValueError):
             w.write(np.zeros((4, 4, 3), np.uint8))
         w.write(np.zeros((8, 8, 3), np.uint8))
+
+
+def test_blur_control_reproduces_the_vendor_presets():
+    """``blur_control`` is the port of vLLM-Omni's ``make_blur_control`` (ref d3c990dc).
+
+    What matters for the matrix: every preset keeps the picture, it only softens it — which is
+    why a job whose only hint is ``blur``/``vis`` cannot restyle (see ``DEFAULT_BLUR_PRESET``).
+    """
+    rng = np.random.default_rng(7)
+    rgb = rng.integers(0, 255, (180, 320, 3), dtype=np.uint8)
+    assert np.array_equal(controls.blur_control(rgb, "none"), rgb)
+    with pytest.raises(ValueError, match="unknown blur preset"):
+        controls.blur_control(rgb, "gentle")
+    out = {p: controls.blur_control(rgb, p) for p in ("medium", "very_high")}
+    for preset, img in out.items():
+        assert img.shape == rgb.shape and img.dtype == np.uint8, preset
+        assert not np.array_equal(img, rgb), preset
+    assert not np.array_equal(out["medium"], out["very_high"])
+    # a smooth picture survives every preset: the blur keeps the content, it does not erase it
+    ramp = np.repeat(np.linspace(0, 255, 320, dtype=np.uint8)[None, :, None], 180, 0).repeat(3, 2)
+    for preset in ("medium", "very_high"):
+        assert np.abs(controls.blur_control(ramp, preset).astype(int) - ramp.astype(int)).mean() < 12

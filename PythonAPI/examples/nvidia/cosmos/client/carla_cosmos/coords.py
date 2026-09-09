@@ -24,6 +24,8 @@ from scipy.spatial.transform import Rotation
 
 import carla
 
+from . import clipgt
+
 S_FLIP_Y = np.diag([1.0, -1.0, 1.0, 1.0])
 """Similarity transform between the UE and FLU frames (its own inverse)."""
 
@@ -149,27 +151,7 @@ def bbox_matrix_ue(bb: carla.BoundingBox) -> np.ndarray:
 
 # ----------------------------------------------------------------------------- camera model
 
-def pinhole_focal_px(width: int, hfov_deg: float) -> float:
-    """Pinhole focal length in pixels for a horizontal FOV."""
-    return (width / 2.0) / math.tan(math.radians(hfov_deg) / 2.0)
-
-
-def pinhole_ftheta_poly(width: int, height: int, hfov_deg: float, order: int = 5,
-                        samples: int = 400) -> tuple[list[float], float]:
-    """Fit NVIDIA's ``pixeldistance-to-angle`` polynomial to a pinhole camera.
-
-    theta(r) = sum_{i=1..order} k_i r^i (k_0 = 0) is least-squares fitted to
-    ``atan(r / f)`` on ``r in [0, r_corner]``.  Returns ``(poly[6], max_resid_rad)``.
-    A pinhole is not a polynomial, so the residual grows with FOV; for the 120
-    degree views it stays below 1e-3 rad at 1280x720 (checked in tests).
-    """
-    f = pinhole_focal_px(width, hfov_deg)
-    r_max = math.hypot(width / 2.0, height / 2.0)
-    r = np.linspace(0.0, r_max, samples)
-    theta = np.arctan(r / f)
-    design = np.stack([r ** i for i in range(1, order + 1)], axis=1)
-    k, *_ = np.linalg.lstsq(design, theta, rcond=None)
-    poly = [0.0] + [float(v) for v in k]
-    poly += [0.0] * (6 - len(poly))
-    resid = float(np.abs(design @ k - theta).max())
-    return poly, resid
+# The pinhole -> f-theta fit lives in the CARLA-free clipgt module; re-exported here
+# because it is part of the camera-model API and callers import it from coords.
+pinhole_focal_px = clipgt.pinhole_focal_px
+pinhole_ftheta_poly = clipgt.pinhole_ftheta_poly

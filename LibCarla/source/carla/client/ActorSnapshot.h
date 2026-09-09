@@ -17,7 +17,8 @@ namespace client {
 
   struct ActorSnapshot {
     ActorId id = 0u;
-    rpc::ActorState actor_state;
+    // Invalid until a world snapshot listing the actor has been received.
+    rpc::ActorState actor_state = rpc::ActorState::Invalid;
     geom::Transform transform;
     geom::Vector3D velocity;
     geom::Vector3D angular_velocity;
