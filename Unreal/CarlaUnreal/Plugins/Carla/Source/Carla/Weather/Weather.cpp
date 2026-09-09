@@ -6,6 +6,7 @@
 
 #include "Carla/Weather/Weather.h"
 #include "Carla.h"
+#include "Carla/Game/CarlaEpisode.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Lights/CarlaLightSubsystem.h"
 #include "Carla/Recorder/CarlaRecorder.h"
@@ -22,6 +23,7 @@
 #include "Components/SkyLightComponent.h"
 #include "Components/VolumetricCloudComponent.h"
 #include "Curves/CurveFloat.h"
+#include "Engine/TextureCube.h"
 #include "HAL/IConsoleManager.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMaterialLibrary.h"
@@ -175,6 +177,133 @@ void AWeather::CheckWeatherPostProcessEffects()
         for (auto& ActiveBlendable : ActiveBlendables)
             Sensor->GetCaptureComponent2D()->PostProcessSettings.AddBlendable(ActiveBlendable.Key, ActiveBlendable.Value);
     }
+}
+
+// Environment-map override for the sky light (set_sky_light_map RPC). Process
+// wide, not per world: the cubemap lives in the transient package and is
+// rooted, so it survives load_world and is re-applied to the new level's sky
+// rig by ApplyWeatherToSkyActor on its first weather push.
+namespace
+{
+    struct FSkyLightMapOverride
+    {
+        UTextureCube* Cubemap = nullptr;
+        float Intensity = 1.0f;
+    };
+    FSkyLightMapOverride GSkyLightMapOverride;
+
+    // What the override rewrites on a sky light, saved the first time it is
+    // applied to that component and put back by ClearSkyLightMap. The
+    // real-time capture honours bLowerHemisphereIsBlack too, so leaving it
+    // cleared would change the rig's ambient after the map is removed.
+    struct FSkyLightSavedState
+    {
+        TEnumAsByte<ESkyLightSourceType> SourceType;
+        bool bLowerHemisphereIsBlack;
+    };
+    TMap<TWeakObjectPtr<USkyLightComponent>, FSkyLightSavedState> GSkyLightSavedStates;
+
+    void ApplySkyLightMapToComponent(USkyLightComponent* SkyLightComponent)
+    {
+        if (!GSkyLightSavedStates.Contains(SkyLightComponent))
+        {
+            GSkyLightSavedStates.Add(SkyLightComponent,
+                {SkyLightComponent->SourceType, SkyLightComponent->bLowerHemisphereIsBlack});
+        }
+        if (SkyLightComponent->bRealTimeCapture)
+            SkyLightComponent->SetRealTimeCaptureEnabled(false);
+        if (SkyLightComponent->SourceType != SLS_SpecifiedCubemap)
+        {
+            SkyLightComponent->SourceType = SLS_SpecifiedCubemap;
+            SkyLightComponent->MarkRenderStateDirty();
+            SkyLightComponent->SetCaptureIsDirty();
+        }
+        if (SkyLightComponent->bLowerHemisphereIsBlack)
+        {
+            SkyLightComponent->bLowerHemisphereIsBlack = false;
+            SkyLightComponent->MarkRenderStateDirty();
+        }
+        SkyLightComponent->SetSourceCubemapAngle(0.0f);
+        SkyLightComponent->SetCubemap(GSkyLightMapOverride.Cubemap);
+        if (SkyLightComponent->Cubemap != GSkyLightMapOverride.Cubemap)
+        {
+            // SetCubemap is a no-op on a Static-mobility light; the rig's
+            // skylight is meant to be Stationary, but do not depend on it.
+            SkyLightComponent->Cubemap = GSkyLightMapOverride.Cubemap;
+        }
+        // Always re-process: the cubemap contents may be new even when the
+        // pointer is not (see SkyLightMap.cpp on object naming).
+        SkyLightComponent->MarkRenderStateDirty();
+        SkyLightComponent->SetCaptureIsDirty();
+        SkyLightComponent->SetLightColor(FLinearColor::White);
+        SkyLightComponent->SetIntensity(GSkyLightMapOverride.Intensity);
+        if (!SkyLightComponent->IsActive())
+            SkyLightComponent->SetActive(true);
+    }
+}
+
+bool AWeather::SetSkyLightMap(UWorld* World, UTextureCube* Cubemap, float Intensity)
+{
+    if (Cubemap == nullptr)
+        return false;
+    if (GSkyLightMapOverride.Cubemap != nullptr && GSkyLightMapOverride.Cubemap != Cubemap)
+        GSkyLightMapOverride.Cubemap->RemoveFromRoot();
+    Cubemap->AddToRoot();
+    GSkyLightMapOverride.Cubemap = Cubemap;
+    GSkyLightMapOverride.Intensity = Intensity;
+
+    int32 Applied = 0;
+    TArray<AActor*> SkyActors;
+    UGameplayStatics::GetAllActorsOfClass(World, ASkyBase::StaticClass(), SkyActors);
+    for (AActor* SkyActor : SkyActors)
+    {
+        ASkyBase* Sky = Cast<ASkyBase>(SkyActor);
+        if (USkyLightComponent* SkyLightComponent = Sky != nullptr ? Sky->GetSkyLightComponent() : nullptr)
+        {
+            ApplySkyLightMapToComponent(SkyLightComponent);
+            ++Applied;
+        }
+    }
+    UE_LOG(LogCarla, Log, TEXT("AWeather: sky light map set (intensity %.3f) on %d sky rig(s)"), Intensity, Applied);
+    return Applied > 0;
+}
+
+void AWeather::ClearSkyLightMap(UWorld* World)
+{
+    if (GSkyLightMapOverride.Cubemap != nullptr)
+        GSkyLightMapOverride.Cubemap->RemoveFromRoot();
+    GSkyLightMapOverride.Cubemap = nullptr;
+
+    TArray<AActor*> SkyActors;
+    UGameplayStatics::GetAllActorsOfClass(World, ASkyBase::StaticClass(), SkyActors);
+    for (AActor* SkyActor : SkyActors)
+    {
+        ASkyBase* Sky = Cast<ASkyBase>(SkyActor);
+        if (USkyLightComponent* SkyLightComponent = Sky != nullptr ? Sky->GetSkyLightComponent() : nullptr)
+        {
+            SkyLightComponent->SetCubemap(nullptr);
+            if (const FSkyLightSavedState* Saved = GSkyLightSavedStates.Find(SkyLightComponent))
+            {
+                SkyLightComponent->SourceType = Saved->SourceType;
+                SkyLightComponent->bLowerHemisphereIsBlack = Saved->bLowerHemisphereIsBlack;
+                SkyLightComponent->MarkRenderStateDirty();
+                SkyLightComponent->SetCaptureIsDirty();
+            }
+            SkyLightComponent->SetRealTimeCaptureEnabled(true);
+        }
+    }
+    GSkyLightSavedStates.Empty();
+    // Restores the curve intensity and the real-time capture through the
+    // normal weather push.
+    if (UCarlaEpisode* Episode = UCarlaStatics::GetCurrentEpisode(World))
+        if (AWeather* Weather = Episode->GetWeather())
+            Weather->PushWeatherToSky();
+    UE_LOG(LogCarla, Log, TEXT("AWeather: sky light map cleared"));
+}
+
+bool AWeather::HasSkyLightMap()
+{
+    return GSkyLightMapOverride.Cubemap != nullptr;
 }
 
 void AWeather::PushWeatherToSky()
@@ -494,12 +623,25 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         // day, 0 at night) remains the multiplier on the capture.
         if (USkyLightComponent* SkyLightComponent = FindSkyLightComponent(TEXT("SkyLightComponent")))
         {
+            if (GSkyLightMapOverride.Cubemap != nullptr)
+            {
+                // Environment map set through set_sky_light_map: the measured
+                // panorama replaces the atmosphere capture as the ambient and
+                // reflection source, and its intensity is the caller's, not
+                // the curve's. Reapplied on every weather push so that a
+                // set_weather call (or a new level's first push) cannot
+                // silently revert to the real-time capture.
+                ApplySkyLightMapToComponent(SkyLightComponent);
+            }
+            else
+            {
             if (!SkyLightComponent->bRealTimeCapture)
                 SkyLightComponent->SetRealTimeCaptureEnabled(true);
             if (!SkyLightComponent->IsActive())
                 SkyLightComponent->SetActive(true);
             if (UCurveFloat* SkyIntensityCurve = FindCurve(TEXT("SkyIntensity_Curve")))
                 SkyLightComponent->SetIntensity(SkyIntensityCurve->GetFloatValue(Weather.SunAltitudeAngle));
+            }
             UE_LOG(LogCarla, Verbose, TEXT(
                 "AWeather sky light: active=%d intensity=%.3f realtimecapture=%d mobility=%d visible=%d"),
                 SkyLightComponent->IsActive() ? 1 : 0,
@@ -538,7 +680,10 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             }
 
             const float SkylightFloor = CVarCarlaWeatherNightSkylightIntensity.GetValueOnGameThread();
-            if (USkyLightComponent* SkyLightComponent = FindSkyLightComponent(TEXT("SkyLightComponent")))
+            // Not while an environment map is set: its intensity is the
+            // caller's measurement, the night floor would override it.
+            if (USkyLightComponent* SkyLightComponent = GSkyLightMapOverride.Cubemap == nullptr
+                ? FindSkyLightComponent(TEXT("SkyLightComponent")) : nullptr)
             {
                 if (!SkyLightComponent->IsActive())
                     SkyLightComponent->SetActive(true);

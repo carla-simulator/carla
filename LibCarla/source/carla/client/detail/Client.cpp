@@ -194,6 +194,18 @@ namespace detail {
     _pimpl->CallAndWait<void>("apply_float_color_texture_to_objects", objects_name, parameter, Texture);
   }
 
+  void Client::SetSkyLightMap(const rpc::TextureFloatColor& panorama, float intensity, int32_t face_size) {
+    _pimpl->CallAndWait<void>("set_sky_light_map", panorama, intensity, face_size);
+  }
+
+  void Client::ClearSkyLightMap() {
+    _pimpl->CallAndWait<void>("clear_sky_light_map");
+  }
+
+  bool Client::HasSkyLightMap() const {
+    return _pimpl->CallAndWait<bool>("has_sky_light_map");
+  }
+
   std::vector<std::string> Client::GetNamesOfAllObjects() const {
     return _pimpl->CallAndWait<std::vector<std::string>>("get_names_of_all_objects");
   }

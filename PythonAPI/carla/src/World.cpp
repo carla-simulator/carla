@@ -92,6 +92,54 @@ static void SpawnCustomMesh(
   self.SpawnCustomMesh(verts, tris, material);
 }
 
+// set_sky_light_map(width, height, pixels, intensity, face_size): `pixels` is
+// any contiguous buffer (bytes, bytearray, numpy array) of float32 linear RGB
+// or RGBA, row-major, top row first, width*height*(3|4) values. See
+// carla::client::World::SetSkyLightMap for the panorama convention.
+static void SetSkyLightMap(
+    carla::client::World &self,
+    uint32_t width,
+    uint32_t height,
+    const boost::python::object &pixels,
+    float intensity,
+    int32_t face_size) {
+  Py_buffer view;
+  if (PyObject_GetBuffer(pixels.ptr(), &view, PyBUF_CONTIG_RO) != 0) {
+    boost::python::throw_error_already_set();
+  }
+  const size_t n = size_t(width) * size_t(height);
+  const size_t nfloats = size_t(view.len) / sizeof(float);
+  size_t channels = 0;
+  if (nfloats == 3u * n) channels = 3;
+  else if (nfloats == 4u * n) channels = 4;
+  if (channels == 0 || n == 0) {
+    PyBuffer_Release(&view);
+    PyErr_SetString(PyExc_ValueError,
+        "set_sky_light_map: pixels must hold width*height*3 or width*height*4 float32 values");
+    boost::python::throw_error_already_set();
+  }
+  carla::rpc::TextureFloatColor panorama(width, height);
+  const float *src = static_cast<const float *>(view.buf);
+  for (uint32_t y = 0u; y < height; ++y) {
+    for (uint32_t x = 0u; x < width; ++x) {
+      const float *p = src + channels * (size_t(y) * width + x);
+      panorama.At(x, y) = carla::rpc::FloatColor(p[0], p[1], p[2], channels == 4 ? p[3] : 1.0f);
+    }
+  }
+  PyBuffer_Release(&view);
+  carla::PythonUtil::ReleaseGIL unlock;
+  self.SetSkyLightMap(panorama, intensity, face_size);
+}
+
+static void SetSkyLightMapTexture(
+    carla::client::World &self,
+    const carla::rpc::TextureFloatColor &panorama,
+    float intensity,
+    int32_t face_size) {
+  carla::PythonUtil::ReleaseGIL unlock;
+  self.SetSkyLightMap(panorama, intensity, face_size);
+}
+
 static auto GetVehiclesLightStates(carla::client::World &self) {
   boost::python::dict dict;
   auto list = self.GetVehiclesLightStates();
@@ -328,6 +376,12 @@ void export_world() {
     .def("apply_settings", &ApplySettings, (arg("settings"), arg("seconds")=0.0))
     .def("get_weather", CONST_CALL_WITHOUT_GIL(cc::World, GetWeather))
     .def("set_weather", &cc::World::SetWeather)
+    .def("set_sky_light_map", &SetSkyLightMap,
+        (arg("width"), arg("height"), arg("pixels"), arg("intensity")=1.0f, arg("face_size")=512))
+    .def("set_sky_light_map", &SetSkyLightMapTexture,
+        (arg("panorama"), arg("intensity")=1.0f, arg("face_size")=512))
+    .def("clear_sky_light_map", CALL_WITHOUT_GIL(cc::World, ClearSkyLightMap))
+    .def("has_sky_light_map", CONST_CALL_WITHOUT_GIL(cc::World, HasSkyLightMap))
     .def("get_imu_sensor_gravity", CONST_CALL_WITHOUT_GIL(cc::World, GetIMUSensorGravity))
     .def("set_imu_sensor_gravity", &cc::World::SetIMUSensorGravity, (arg("gravity")))
     .def("is_weather_enabled", CONST_CALL_WITHOUT_GIL(cc::World, IsWeatherEnabled))

@@ -756,13 +756,49 @@
         Retrieves an object containing weather parameters currently active in the simulation, mainly cloudiness, precipitation, wind and sun position.
     # --------------------------------------
     - def_name: set_weather
-      params: 
+      params:
       - param_name: weather
         type: carla.WeatherParameters
-        doc: > 
-          New conditions to be applied. 
+        doc: >
+          New conditions to be applied.
       doc: >
-        Changes the weather parameteres ruling the simulation to another ones defined in an object. 
+        Changes the weather parameteres ruling the simulation to another ones defined in an object.
+    # --------------------------------------
+    - def_name: set_sky_light_map
+      params:
+      - param_name: width
+        type: int
+        doc: >
+          Panorama width in pixels.
+      - param_name: height
+        type: int
+        doc: >
+          Panorama height in pixels.
+      - param_name: pixels
+        type: bytes
+        doc: >
+          Contiguous buffer of `width * height * 3` (RGB) or `width * height * 4` (RGBA) float32 values, row major, top row first. Any object exposing the Python buffer protocol works, including a numpy array.
+      - param_name: intensity
+        type: float
+        default: 1.0
+        doc: >
+          Multiplier applied on top of the panorama's linear radiance values.
+      - param_name: face_size
+        type: int
+        default: 512
+        doc: >
+          Resolution (pixels per edge) of the cubemap the panorama is resampled into before lighting the sky.
+      doc: >
+        Lights the scene with an environment map instead of the real-time atmosphere capture: the equirectangular linear RGB(A) float `pixels` panorama is resampled into a cubemap and becomes the sky light's ambient and reflection source at `intensity`, on every sky rig in the level, until `clear_sky_light_map()` is called. Persists across weather changes and level (re)loads. Panorama convention (the CARLA world frame, i.e. Unreal's left-handed X-forward/Y-right/Z-up): column `u` is azimuth `phi = 2*pi * (u + 0.5) / width`, measured from +X toward +Y (the same sense as a CARLA yaw, so azimuth 90° is to the right of a yaw-0 vehicle); row `v` is elevation `theta = pi/2 - pi * (v + 0.5) / height`, with row 0 the zenith and the last row the nadir; direction `d = (cos(theta)*cos(phi), cos(theta)*sin(phi), sin(theta))`. Values are scene radiance in the project's photometric units (a clear noon sky is on the order of thousands of cd/m²), so a panorama normalized to `[0, 1]` typically needs `intensity` in the thousands to read correctly against CARLA's fixed daylight exposure — measure against a reference frame from the real-time atmosphere rather than assuming a default. An overload also accepts a pre-built carla.TextureFloatColor panorama instead of `width`/`height`/`pixels`.
+    # --------------------------------------
+    - def_name: clear_sky_light_map
+      doc: >
+        Removes a sky light map set with `set_sky_light_map()` and restores the real-time atmosphere capture on every sky rig in the level.
+    # --------------------------------------
+    - def_name: has_sky_light_map
+      return: bool
+      doc: >
+        Returns whether a sky light map is currently active (set with `set_sky_light_map()` and not yet cleared).
     # --------------------------------------
     - def_name: cast_ray
       return: list(carla.LabelledPoint)
