@@ -31,6 +31,13 @@ void AInstanceSegmentationCamera_WideAngleLens::SetUpSceneCaptureComponents(
     TArrayView<USceneCaptureComponent2D_CARLA*> SceneCaptures)
 {
   Super::SetUpSceneCaptureComponents(SceneCaptures);
+  // The post-process material samples the segmentation ID buffer; the
+  // renderer only produces it for captures that opt in (same as the pinhole
+  // AInstanceSegmentationCamera). Without this the six faces read an
+  // unwritten buffer and the projected image is noise.
+  for (auto SceneCapture : SceneCaptures)
+    if (SceneCapture != nullptr)
+      SceneCapture->bRequiresSegmentationPass = true;
 }
 
 void AInstanceSegmentationCamera_WideAngleLens::PostPhysTick(
@@ -41,5 +48,5 @@ void AInstanceSegmentationCamera_WideAngleLens::PostPhysTick(
   // client is subscribed.
   if (!AreClientsListening())
     return;
-  FPixelReader::SendPixelsInRenderThread<AInstanceSegmentationCamera_WideAngleLens, FColor>(*this);
+  CaptureAndSendToClient(*this);
 }

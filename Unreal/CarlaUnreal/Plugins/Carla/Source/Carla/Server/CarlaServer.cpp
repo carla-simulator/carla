@@ -17,6 +17,8 @@
 #include "Carla/Sensor/CustomV2XSensor.h"
 #include "Carla/Walker/WalkerController.h"
 #include "Carla/Walker/WalkerBase.h"
+#include "Carla/Weather/SkyLightMap.h"
+#include "Carla/Weather/Weather.h"
 #include "Carla/AI/WalkerAIController.h"
 #include "Carla/Navigation/CarlaNavigationSubsystem.h"
 #include "Carla/Game/Tagger.h"
@@ -948,6 +950,47 @@ void FCarlaServer::FPimpl::BindActions()
     }
     Weather->ApplyWeather(weather);
     return R<void>::Success();
+  };
+
+  // Environment map for the sky light: an equirectangular linear RGB(A) float
+  // panorama in the CARLA world frame (see Weather/SkyLightMap.h for the
+  // column/row convention) becomes a transient HDR cubemap on the rig's sky
+  // light, replacing the real-time atmosphere capture until cleared.
+  BIND_SYNC(set_sky_light_map) << [this](
+      const cr::TextureFloatColor &panorama, float intensity, int32_t face_size) -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    if (panorama.GetWidth() < 2 || panorama.GetHeight() < 2)
+    {
+      RESPOND_ERROR("set_sky_light_map: panorama must be at least 2x2");
+    }
+    static_assert(sizeof(cr::FloatColor) == 4 * sizeof(float), "FloatColor must be 4 packed floats");
+    UTextureCube* Cubemap = CarlaSkyLightMap::CreateCubemapFromEquirect(
+        reinterpret_cast<const float*>(panorama.GetDataPtr()),
+        int32(panorama.GetWidth()), int32(panorama.GetHeight()),
+        face_size > 0 ? face_size : 512);
+    if (Cubemap == nullptr)
+    {
+      RESPOND_ERROR("set_sky_light_map: could not build the cubemap");
+    }
+    if (!AWeather::SetSkyLightMap(Episode->GetWorld(), Cubemap, intensity))
+    {
+      RESPOND_ERROR("set_sky_light_map: no sky rig (ASkyBase) in the level");
+    }
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(clear_sky_light_map) << [this]() -> R<void>
+  {
+    REQUIRE_CARLA_EPISODE();
+    AWeather::ClearSkyLightMap(Episode->GetWorld());
+    return R<void>::Success();
+  };
+
+  BIND_SYNC(has_sky_light_map) << [this]() -> R<bool>
+  {
+    REQUIRE_CARLA_EPISODE();
+    return AWeather::HasSkyLightMap();
   };
 
   // ~~ IMU gravity ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

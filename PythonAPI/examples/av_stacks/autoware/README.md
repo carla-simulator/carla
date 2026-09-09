@@ -344,9 +344,16 @@ real time.)
 
 RViz deliberately runs **outside** the stack launch (`rviz:=false`): with
 `--with-rviz` the script starts it as a separate container (same DDS env,
-`DISPLAY` passthrough, config
-`/opt/autoware/autoware_launch/share/autoware_launch/rviz/autoware.rviz`) or
-a local `rviz2` in source mode.
+`DISPLAY` passthrough) or a local `rviz2` in source mode, on a copy of the
+stock `autoware.rviz` adapted for CARLA (`<log-dir>/dds/autoware_carla.rviz`
+in docker mode, `<log-dir>/autoware_carla.rviz` in source mode): the image
+panel shows the front camera `autoware_demo.py` spawns
+(`/sensing/camera/front/image`; the stock panel points at the traffic-light
+debug overlay, whose module the CARLA overrides switch off), and the initial
+view is the saved `ThirdPersonFollower` on `base_link` rather than the stock
+top-down view on the `viewer` frame, which `map_tf_generator` pins to the
+point-cloud map's centroid and which therefore never follows the ego.
+`--rviz-image-topic T` changes the panel's topic.
 
 Autoware localizes with **NDT matching against `pointcloud_map.pcd`** and
 therefore needs lidar, IMU and GNSS — all provided by `autoware_demo.py`:

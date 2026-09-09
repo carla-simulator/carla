@@ -950,6 +950,18 @@ namespace detail {
         const rpc::MaterialParameter& parameter,
         const rpc::TextureFloatColor& Texture);
 
+    void SetSkyLightMap(const rpc::TextureFloatColor& panorama, float intensity, int32_t face_size) {
+      _client.SetSkyLightMap(panorama, intensity, face_size);
+    }
+
+    void ClearSkyLightMap() {
+      _client.ClearSkyLightMap();
+    }
+
+    bool HasSkyLightMap() const {
+      return _client.HasSkyLightMap();
+    }
+
     std::vector<std::string> GetNamesOfAllObjects() const;
 
     /// @}
