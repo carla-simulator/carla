@@ -11,6 +11,7 @@ import { getKpiHistory, getKpis, getMetrics, getOpenApi, listAudit, postKpiSnaps
 import { runEvidence } from "./routes/evidence";
 import { exportRun, exportScenarioXosc } from "./routes/exports";
 import { deviceTrack, ingestOsmAnd, ingestTraccar, listFleet, materializeTrack, postPositions } from "./routes/fleet";
+import { getPlanner, getPlannerOptions, postPlanner } from "./routes/planner";
 
 const router = new Router()
   .get("/api/health", (c) => json({ ok: true, app: c.env.APP_NAME, time: new Date().toISOString() }))
@@ -19,6 +20,9 @@ const router = new Router()
   .get("/api/kpis", getKpis)
   .get("/api/kpis/history", getKpiHistory)
   .post("/api/kpis/snapshot", postKpiSnapshot)
+  .get("/api/planner/options", getPlannerOptions)
+  .get("/api/planner", getPlanner)
+  .post("/api/planner", postPlanner)
   .get("/api/runs", listRuns)
   .post("/api/runs", createRun)
   .get("/api/runs/:id", getRun)

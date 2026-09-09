@@ -10,10 +10,11 @@ the actionable subset.
 Legend: `[x]` shipped, `[ ]` open. Items are ordered by value to the pilot.
 
 - [Integrations with GitHub AV tools](#integrations-with-github-av-tools)
+- [Packages to research next](#packages-to-research-next)
 - [Dashboard features](#dashboard-features)
 - [Toolkit and pipeline features](#toolkit-and-pipeline-features)
 - [Platform and engineering](#platform-and-engineering)
-- [Shipped in this iteration](#shipped-in-this-iteration)
+- [Iteration log](#iteration-log)
 
 ---
 
@@ -42,6 +43,39 @@ Legend: `[x]` shipped, `[ ]` open. Items are ordered by value to the pilot.
 | [ ] | **OpenTelemetry** ([open-telemetry/opentelemetry-js](https://github.com/open-telemetry/opentelemetry-js)) | Traces for API calls and cron jobs | `dashboard/src/index.ts` |
 | [ ] | **Cloudflare Queues + Durable Objects** | Streaming ingestion and live vehicle sessions once the fleet grows beyond batch uploads | `dashboard/wrangler.toml` |
 
+## Packages to research next
+
+Candidates that are not yet integrations — each needs a read of the project and a
+short note on whether it earns a place in the pilot. Grouped by the question they
+answer. `[x]` means the survey is written up and the verdict is recorded here.
+
+**Synthetic scene generation at volume** (the 10k–100k+ scene bands the planner prices)
+
+- [ ] [nvidia-cosmos/cosmos-predict](https://github.com/nvidia-cosmos/cosmos-predict) — world foundation models for AV synthetic data. Question: cost per generated clip versus CARLA rendering at the same diversity.
+- [ ] [georghess/neurad-studio](https://github.com/georghess/neurad-studio) and [nerfstudio-project/nerfstudio](https://github.com/nerfstudio-project/nerfstudio) — neural reconstruction of real drives, then re-render under new weather/lighting. The cheapest route from 50 h of Bhutan footage to a 100k-scene corpus.
+- [ ] [metadriverse/metadrive](https://github.com/metadriverse/metadrive) — lightweight procedural scenarios; useful for behaviour-cloning volume where photorealism is not the point.
+- [ ] [Farama-Foundation/HighwayEnv](https://github.com/Farama-Foundation/HighwayEnv) — fast behaviour scenarios for planner-side evaluation.
+- [ ] [tier4/AWSIM](https://github.com/tier4/AWSIM) — Unity simulator paired with Autoware; the alternative to CARLA if partners standardise on Autoware.
+
+**Scenario authoring and benchmarks**
+
+- [ ] [pyoscx/scenariogeneration](https://github.com/pyoscx/scenariogeneration) — generates OpenSCENARIO/OpenDRIVE from Python. Would replace the hand-rolled XML writer in `openscenario.py`/`openscenario.ts` if the schema coverage is worth the dependency.
+- [ ] [motional/nuplan-devkit](https://github.com/motional/nuplan-devkit) — closed-loop planning metrics; a second scoring opinion next to the Leaderboard driving score.
+- [ ] [Thinklab-SJTU/Bench2Drive](https://github.com/Thinklab-SJTU/Bench2Drive) and [autonomousvision/carla_garage](https://github.com/autonomousvision/carla_garage) — closed-loop CARLA benchmarks and baselines to compare a Bhutan-tuned model against.
+
+**Dataset packaging and training pipeline**
+
+- [ ] [webdataset/webdataset](https://github.com/webdataset/webdataset) and [mosaicml/streaming](https://github.com/mosaicml/streaming) — shard formats that stream from R2 to a rented GPU without a full local copy; directly cuts the disk line in the planner's budget.
+- [ ] [skypilot-org/skypilot](https://github.com/skypilot-org/skypilot) — launches checkpointed jobs on the cheapest available (including interruptible) GPUs across clouds and marketplaces. The natural executor for a plan the dashboard produces.
+- [ ] [vast-ai/vast-python](https://github.com/vast-ai/vast-python) — the marketplace's own CLI/API; the source for live $/hour instead of the planner's static reference rates.
+- [ ] [ray-project/ray](https://github.com/ray-project/ray), [mlflow/mlflow](https://github.com/mlflow/mlflow), [aimhubio/aim](https://github.com/aimhubio/aim) — job orchestration and run tracking, so planned GPU-hours can be compared against actual ones.
+
+**Data and visualisation**
+
+- [ ] [rerun-io/rerun](https://github.com/rerun-io/rerun) — an embeddable viewer next to the Foxglove deep link; worth it if `.rrd` export is cheap from the same sample stream.
+- [ ] [argoverse/av2-api](https://github.com/argoverse/av2-api), [waymo-research/waymo-open-dataset](https://github.com/waymo-research/waymo-open-dataset), [zenseact/zod](https://github.com/zenseact/zod) — public corpora to pretrain on before Bhutan fine-tuning, and label schemas worth matching.
+- [ ] [facebookresearch/EgoBlur](https://github.com/facebookresearch/EgoBlur) — face/plate redaction; the concrete candidate for the pipeline's redaction step.
+
 ## Dashboard features
 
 - [x] KPI trend chart from nightly snapshots on the Overview tab.
@@ -50,7 +84,14 @@ Legend: `[x]` shipped, `[ ]` open. Items are ordered by value to the pilot.
 - [x] Fleet tab: live device positions, last-seen table and per-device track playback.
 - [x] Scenario library: download any template as OpenSCENARIO.
 - [x] Deep links: `#runs/<run_id>`, `#scenarios/<family>`, `#evaluations/<id>` restore the view.
+- [x] Planner tab: dataset size, storage and GPU-cost bands for a target corpus, measured against what the catalog already holds (`/api/planner`).
 - [ ] Run comparison: overlay two runs' timelines and event markers.
+- [ ] Live GPU prices in the planner: poll the Vast.ai (and RunPod) listing API on the cron trigger, cache in D1, and replace the static reference rates with a real quote plus a price sparkline.
+- [ ] Saved plans: name a plan, store it, and diff two plans (target size, GPU, cost) so a budget change is reviewable.
+- [ ] Budget export: the planner's numbers as CSV and as a printable Markdown/PDF section of the partner report.
+- [ ] Training-run registry: register an actual training job (dataset snapshot hash, GPU, hours, spend) and show planned versus actual next to the model's evaluation rows.
+- [ ] Cost KPIs: dollars per accepted hour, per released clip and per discovered edge case, on the Overview tab.
+- [ ] Collection plan from the coverage gap: turn "still to collect" into a per-cell (weather × lighting × route class) target and a scenario-generation batch.
 - [ ] Map overlays: event heatmap by class, per-segment quality colouring on the route.
 - [ ] Pagination and free-text search on runs, scenarios and evaluations.
 - [ ] Reviewer notes on scenario and event review dialogs (the API already stores them).
@@ -71,6 +112,9 @@ Legend: `[x]` shipped, `[ ]` open. Items are ordered by value to the pilot.
 - [ ] Route-to-scenario generator: sample templates from a real GNSS trace's archetypes.
 - [ ] Scenario diff tool: what changed between two library versions and which reviews it invalidated.
 - [ ] ROS 2 native bridge recipe: record CARLA UE5 ROS 2 topics into MCAP and ingest.
+- [ ] `scripts/plan_budget.py`: the planner's arithmetic in Python so a proposal can be costed without the Worker, sharing the reference tables.
+- [ ] WebDataset/MosaicML shard export from R2 so a rented GPU streams the corpus instead of downloading it.
+- [ ] SkyPilot job template that launches a checkpointed run on an interruptible instance sized by a saved plan.
 
 ## Platform and engineering
 
@@ -82,7 +126,36 @@ Legend: `[x]` shipped, `[ ]` open. Items are ordered by value to the pilot.
 - [ ] Rate limiting per token on write endpoints.
 - [ ] Retention policy job: expire raw chunks of rejected runs after N days.
 
-## Shipped in this iteration
+## Iteration log
+
+This roadmap is worked one feature per iteration: each pass picks the highest-value
+open item above, ships it with tests, ticks the box and adds a line here. Newest first.
+
+### Iteration 2 — dataset and compute planner
+
+Ships the **Planner** tab and `/api/planner`. It answers the question a pilot budget
+starts from: how big does the corpus need to be, what does it cost to store, and
+what does training on it cost on marketplace GPUs.
+
+* `dashboard/src/planner.ts` — pure model: dataset tiers (1k–10k proof of concept,
+  10k–100k domain adaptation, 100k+ robust), storage from resolution × clip length ×
+  cameras, aggregate GPU-hour bands per training program scaled by
+  `(frames/baseline)^0.85`, A100/H100/L40S/RTX 4090 throughput and list rates, an
+  interruptible discount, and disk rent beyond the default 10 GB instance disk.
+* `dashboard/src/routes/planner.ts` — `GET`/`POST /api/planner` add the catalog's
+  own coverage (accepted collection time cut into clips of the planned length) and a
+  side-by-side comparison across GPUs and programs; `GET /api/planner/options` serves
+  the reference tables so the form cannot drift from the API.
+* Front end: form, tier banner, cost tiles, two cost charts, a coverage table and the
+  assumption list behind every number; `barChart` gained a `format` hook for currency.
+* `dashboard/test/planner.test.ts` — 8 tests covering tiers, the baseline hour band,
+  storage arithmetic, GPU trade-offs, spot pricing, sub-linear scaling, storage rent
+  and query clamping.
+
+Open follow-ups it creates: live marketplace prices, saved plans, budget export and
+a training-run registry for planned-versus-actual (all listed above).
+
+### Iteration 1 — exports, scoring and live fleet
 
 1. MCAP, GeoJSON and CSV export endpoints plus the Foxglove deep link.
 2. OpenSCENARIO export in both the Worker and the Python toolkit.

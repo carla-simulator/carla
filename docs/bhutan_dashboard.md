@@ -94,6 +94,8 @@ need a writer token, just not necessarily in an `Authorization` header).
 | `GET /api/kpis` | reader | Live KPI report, edge-case rates and perception benchmark |
 | `GET /api/kpis/history` | reader | Nightly KPI snapshots |
 | `POST /api/kpis/snapshot` | writer | Force a snapshot |
+| `GET /api/planner/options` | none | Reference tables behind the planner: dataset tiers, training programs, GPU rates, video bitrates |
+| `GET`/`POST /api/planner` | reader | Dataset size, storage and GPU-cost plan for a target corpus, plus the catalog's coverage against it |
 | `GET /api/runs`, `GET /api/runs/:id` | reader | Run catalog and detail (segments, chunks, event summary, evaluations, driving score) |
 | `POST /api/runs` | writer | Upsert a run manifest |
 | `POST /api/runs/:id/telemetry?seq=N` | writer | Upload a chunk of samples (stored in R2, indexed in D1) |
@@ -166,6 +168,47 @@ events, using the Leaderboard 2.0 coefficients for collisions and
 documented Atlas-specific coefficients for the safety rules that have no
 Leaderboard equivalent (see `dashboard/src/driving_score.ts` and
 `toolkit/bhutan_sim/driving_score.py`, which are kept identical).
+
+### Dataset and compute planner
+
+The Planner tab and `/api/planner` size a target corpus and price the training
+program behind it, so a proposal can quote storage and GPU spend instead of
+guessing. Everything is computed in `dashboard/src/planner.ts`; the reference
+points are returned with every response in `assumptions`, and can be overridden
+per request.
+
+```sh
+curl -H "authorization: Bearer $TOKEN" \
+  "$BASE/api/planner?scenes=100000&clip_seconds=10&fps=10&cameras=3&resolution=1080p&program=medium_train&gpu=h100_80gb&gpus=4&interruptible=true"
+```
+
+What the model assumes, and why:
+
+* **Dataset tiers** — 1k–10k scenes is a proof of concept, 10k–100k is useful
+  domain adaptation, 100k+ is where day/night, rain/fog and urban/highway/rural
+  can all be covered. Coverage across those conditions matters more than the raw
+  count, and for behaviour cloning so does clip length, which is why the planner
+  takes seconds-per-scene and frames-per-second rather than a frame total.
+* **Storage** — encoded video per camera (4/8/14/28 Mbit/s for 720p/1080p/1440p/4k),
+  plus 8 % for labels and manifests, plus one working copy for decoded shards and
+  checkpoints. A toy demo lands in the single-GB range, a serious fine-tune in the
+  tens of GB, and a broad synthetic programme in the TB range. Instances default to
+  a 10 GB disk, so the extra is billed per GB-month.
+* **Compute** — each training program carries an aggregate A100-class GPU-hour band
+  at a 10M-frame baseline (fine-tune 150–1000, medium 1000–5000, from scratch
+  5000–20000), scaled by `(frames/baseline)^0.85` because preprocessing, validation
+  and evaluation do not shrink linearly. Other GPUs divide those hours by a
+  throughput factor (H100 ≈ 2.2× an A100). Aggregate hours do not change with the
+  number of GPUs; wall-clock time does, at a conservative 0.92 per doubling.
+* **Price** — list rates are a starting point (A100 80GB ≈ $1.15/h, H100 ≈ $1.80/h
+  on marketplaces, with H100s advertised as low as $0.90/h); marketplace pricing
+  moves constantly with supply, so pass `usd_per_gpu_hour` for a real quote.
+  Interruptible instances are priced at 60 % of on-demand and are only safe with
+  checkpointed training.
+
+The response also carries `coverage`: how much accepted collection time the catalog
+already holds, expressed as scenes of the planned clip length, and how many hours of
+driving remain to hit the target.
 
 ## KPI definitions
 
