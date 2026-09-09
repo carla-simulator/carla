@@ -30,8 +30,16 @@ namespace rpc {
     auto BoolToStr = [](bool b) { return b ? "True" : "False"; };
     out << "WorldSettings(synchronous_mode=" << BoolToStr(settings.synchronous_mode)
         << ",no_rendering_mode=" << BoolToStr(settings.no_rendering_mode)
-        << ",fixed_delta_seconds=" << settings.fixed_delta_seconds.value()
-        << ",substepping=" << BoolToStr(settings.substepping)
+        // fixed_delta_seconds is unset in variable time-step mode; .value()
+        // threw std::bad_optional_access, so str(settings) was unusable on
+        // any settings object that had not pinned the time step.
+        << ",fixed_delta_seconds=";
+    if (settings.fixed_delta_seconds.has_value()) {
+      out << *settings.fixed_delta_seconds;
+    } else {
+      out << "None";
+    }
+    out << ",substepping=" << BoolToStr(settings.substepping)
         << ",max_substep_delta_time=" << settings.max_substep_delta_time
         << ",max_substeps=" << settings.max_substeps
         << ",max_culling_distance=" << settings.max_culling_distance
