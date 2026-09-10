@@ -1,0 +1,96 @@
+// Copyright (c) 2026 Computer Vision Center (CVC) at the UAB.
+// SPDX-License-Identifier: MIT
+#ifndef CARLA_RAIN_LENS_USH
+#define CARLA_RAIN_LENS_USH
+
+// Lens-space water, evaluated from simulation time. No frame history, render
+// targets, texture tiling, or dependence on the camera's output resolution.
+float3 CarlaRainHash(float2 Cell)
+{
+    float3 P = frac(float3(Cell.x, Cell.y, Cell.x) * float3(0.1031, 0.1030, 0.0973));
+    P += dot(P, P.yxz + 33.33);
+    return frac((P.xxy + P.yzz) * P.zyx);
+}
+
+// xy: refraction offset in aspect-correct lens coordinates; z: water coverage;
+// w: softened rim. Each bead has its own birth, dwell, run, and fade phases.
+float4 CarlaRainLayer(float2 LensUV, float Time, float Rain, float Scale,
+                      float Moving, float Seed)
+{
+    float2 Grid = LensUV * Scale;
+    // Stagger columns so sparse beads never reveal horizontal grid rows.
+    Grid.y += CarlaRainHash(float2(floor(Grid.x), Seed)).y;
+    float2 Cell = floor(Grid);
+    float3 Rand = CarlaRainHash(Cell + Seed);
+    float3 Rand2 = CarlaRainHash(Cell + Seed + 71.7);
+    float Age = frac(Time * lerp(0.055, 0.12, Rand.z) + Rand.y);
+    float Life = smoothstep(0.0, 0.09, Age) * (1.0 - smoothstep(0.82, 1.0, Age));
+    float Occupancy = smoothstep(Rand.x, Rand.x + 0.08, Rain * lerp(0.32, 0.65, Moving));
+    float Run = smoothstep(0.30, 0.85, Age);
+    float2 Center = (Rand2.xy - 0.5) * float2(0.56, 0.08);
+    Center.y += Moving * lerp(-0.17, 0.17, Run);
+    Center.x += Moving * 0.018 * sin(Age * 16.0 + Rand.z * 6.283185);
+    float Radius = lerp(0.055, 0.135, Rand2.z) * lerp(0.65, 1.0, Life);
+    float2 Delta = frac(Grid) - 0.5 - Center;
+    float Stretch = 1.0 + Moving * Run * 0.65;
+    float2 Q = Delta / (Radius * float2(1.0, Stretch));
+    Q.x *= 1.0 + Moving * 0.16 * saturate(-Q.y);
+    float R2 = dot(Q, Q);
+    float AA = max(fwidth(R2), 0.08);
+    float Bead = 1.0 - smoothstep(1.0 - AA, 1.0 + AA, R2);
+    float Water = Life * Occupancy;
+    float Body = Bead * Water;
+    // Curved water magnifies/inverts a small patch of the actual scene.
+    float2 Offset = -Delta / Scale * (1.6 + 0.8 * saturate(R2)) * Body;
+    float Rim = smoothstep(0.35, 0.85, R2) * Body;
+
+    // A narrow wet trail remains behind a running bead. Fade it toward the
+    // birth position; do not draw full-screen vertical stripes.
+    float TrailLength = Moving * Run * 0.32;
+    float Behind = -Delta.y;
+    float TrailWidth = Radius * 0.18;
+    float Trail = (1.0 - smoothstep(TrailWidth, TrailWidth + 0.015, abs(Delta.x)))
+        * smoothstep(0.0, 0.05, Behind)
+        * (1.0 - smoothstep(0.02, max(0.03, TrailLength), Behind))
+        * Moving * Run * Water * 0.30;
+    Offset.x -= Delta.x / Scale * Trail;
+    return float4(Offset, saturate(Body + Trail), Rim);
+}
+
+float3 CarlaRainScene(float2 UV)
+{
+    // Viewport and scene-buffer UVs differ with screen percentage, editor
+    // viewports, and captures. Clamp to this view's texel centers, not [0,1].
+    float2 BufferUV = ViewportUVToSceneTextureUV(UV, PPI_PostProcessInput0);
+    return SceneTextureLookup(ClampSceneTextureUV(BufferUV, PPI_PostProcessInput0),
+                              PPI_PostProcessInput0, true).rgb;
+}
+
+float3 CarlaRainLens(float2 UV, float3 SceneColor, float Time, float RainAmount,
+                     float Coverage, float DropScale, float Refraction,
+                     float Softness, float Seed)
+{
+    float Rain = saturate(RainAmount) * saturate(Coverage);
+    if (Rain <= 0.0001)
+        return SceneColor;
+
+    float Aspect = View.ViewSizeAndInvSize.x / max(View.ViewSizeAndInvSize.y, 1.0);
+    float2 LensUV = (UV - 0.5) * float2(Aspect, 1.0);
+    float Scale = max(DropScale, 0.25);
+    float4 Fine = CarlaRainLayer(LensUV, Time, Rain, 26.0 / Scale, 0.0, Seed + 13.0);
+    float4 Runs = CarlaRainLayer(LensUV, Time, Rain, 9.0 / Scale, 1.0, Seed + 97.0);
+    float Mask = saturate(Fine.z + Runs.z);
+    float2 Offset = (Fine.xy + Runs.xy) / float2(Aspect, 1.0) * max(Refraction, 0.0);
+    float2 RefractedUV = UV + Offset;
+    float2 Blur = float2(1.0 / Aspect, 1.0) * 0.0015 * max(Softness, 0.0);
+    float3 Wet = CarlaRainScene(RefractedUV) * 0.40;
+    Wet += CarlaRainScene(RefractedUV + float2(Blur.x, 0.0)) * 0.15;
+    Wet += CarlaRainScene(RefractedUV - float2(Blur.x, 0.0)) * 0.15;
+    Wet += CarlaRainScene(RefractedUV + float2(0.0, Blur.y)) * 0.15;
+    Wet += CarlaRainScene(RefractedUV - float2(0.0, Blur.y)) * 0.15;
+    // Cinematic water stays partially transparent. Avoid dark painted rims
+    // and fully replacing the background with a dark refracted building.
+    // Highlights still come from the scene, so black scenes do not glow.
+    return lerp(SceneColor, Wet, Mask * 0.68);
+}
+#endif

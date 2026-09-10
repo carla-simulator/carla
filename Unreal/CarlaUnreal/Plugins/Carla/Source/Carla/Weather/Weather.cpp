@@ -15,6 +15,10 @@
 #include "Carla/Weather/Sky.h"
 
 #include <util/ue-header-guard-begin.h>
+#include "Camera/PlayerCameraManager.h"
+#include "Particles/ParticleSystem.h"
+#include "Particles/ParticleSystemComponent.h"
+#include "EngineUtils.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/DirectionalLightComponent.h"
 #include "Components/LightComponent.h"
@@ -149,13 +153,160 @@ AWeather::AWeather(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
     PrecipitationPostProcessMaterial = ConstructorHelpers::FObjectFinder<UMaterial>(
-        TEXT("Material'/Game/Carla/Static/GenericMaterials/FX/ScreenDust/M_screenDrops.M_screenDrops'")).Object;
+        TEXT("Material'/Game/Carla/Static/GenericMaterials/FX/ScreenDust/M_LensRain.M_LensRain'")).Object;
 
     DustStormPostProcessMaterial = ConstructorHelpers::FObjectFinder<UMaterial>(
         TEXT("Material'/Game/Carla/Static/GenericMaterials/FX/ScreenDust/M_screenDust_wind.M_screenDust_wind'")).Object;
 
-    PrimaryActorTick.bCanEverTick = false;
+    RainParameters = ConstructorHelpers::FObjectFinder<UMaterialParameterCollection>(
+        TEXT("/Game/Carla/Blueprints/Weather/Materials/WeatherMaterialParameters.WeatherMaterialParameters")).Object;
+    RainTemplate = ConstructorHelpers::FObjectFinder<UParticleSystem>(
+        TEXT("/Game/Carla/Static/FX/Particles/Rain/PS_Rain.PS_Rain")).Object;
+    PrimaryActorTick.bCanEverTick = true;
+    PrimaryActorTick.TickGroup = TG_PostPhysics;
     RootComponent = ObjectInitializer.CreateDefaultSubobject<USceneComponent>(this, TEXT("RootComponent"));
+}
+
+void UCarlaRainCameraModifier::ModifyPostProcess(float DeltaSeconds,
+    float& BlendWeight, FPostProcessSettings& Settings)
+{
+    if (RainMaterial && RainWeight > 0.0f)
+    {
+        Settings.AddBlendable(RainMaterial, RainWeight);
+        BlendWeight = 1.0f;
+    }
+}
+
+UParticleSystemComponent* AWeather::CreateRainEmitter(AActor* Owner, bool bSensor)
+{
+    if (!RainTemplate)
+        return nullptr;
+    UParticleSystemComponent* Emitter = nullptr;
+    if (bSensor)
+    {
+        // RGB blueprints already attach PS_Rain. Adopt it, including its BP
+        // references, rather than creating duplicate rain or invalidating them.
+        TInlineComponentArray<UParticleSystemComponent*> Components(Owner);
+        for (auto* Component : Components)
+            if (Component->Template == RainTemplate)
+            {
+                Emitter = Component;
+                break;
+            }
+    }
+    const bool bNewComponent = Emitter == nullptr;
+    if (bNewComponent)
+        Emitter = NewObject<UParticleSystemComponent>(Owner);
+    Emitter->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+    Emitter->bAutoActivate = false;
+    Emitter->bAutoDestroy = false;
+    Emitter->SetTemplate(RainTemplate);
+    // Each capture sees only its own volume. The spectator volume is excluded
+    // from captures, so adding cameras never increases another view's density.
+    Emitter->SetOnlyOwnerSee(bSensor);
+    Emitter->SetVisibleInSceneCaptureOnly(bSensor);
+    Emitter->SetHiddenInSceneCapture(!bSensor);
+    Emitter->SetCastShadow(false);
+    if (bNewComponent)
+    {
+        Owner->AddInstanceComponent(Emitter);
+        Emitter->RegisterComponent();
+    }
+    Emitter->SetWorldScale3D(FVector(2.0f));
+    if (auto* Material = Emitter->CreateDynamicMaterialInstance(0))
+    {
+        Material->SetScalarParameterValue(TEXT("StreakBrightness"), 1.2f);
+        Material->SetScalarParameterValue(TEXT("StreakOpacity"), 0.65f);
+    }
+    return Emitter;
+}
+
+void AWeather::UpdateRain()
+{
+    if (!GetWorld() || !GetWorld()->IsGameWorld())
+        return;
+
+    const float Rain = FMath::Clamp(Weather.Precipitation / 100.0f, 0.0f, 1.0f);
+    // Explicitly drive the lens collection without depending on a town's sky BP.
+    if (RainParameters)
+        UKismetMaterialLibrary::SetScalarParameterValue(GetWorld(), RainParameters, TEXT("Precipitation"), Rain);
+
+    auto UpdateEmitter = [this, Rain](UParticleSystemComponent* Emitter, const FVector& Location)
+    {
+        if (!Emitter) return;
+        // PS_Rain's scaled spawn box is X[-1000,4000], Y[-2000,2000] cm.
+        // Center it on the view and retain world-space, vertically falling drops.
+        const FVector Origin = Location + FVector(-1500.0f, 0.0f, 400.0f);
+        if (FVector::DistSquared(Emitter->GetComponentLocation(), Origin) > FMath::Square(2000.0f))
+            Emitter->DeactivateImmediate(); // Do not leave a trail after teleporting.
+        Emitter->SetWorldLocation(Origin);
+        Emitter->SetFloatParameter(TEXT("RainDensity"), Rain * (4000.0f / 0.85f));
+        // Legacy distribution maps Z [0,1] to [0,-1000] cm/s. Negative input clamps to zero.
+        Emitter->SetVectorParameter(TEXT("RainVelocity"),
+            FVector(FMath::Clamp(Weather.WindIntensity, 0.0f, 100.0f) * 3.0f, 0.0f, 1.0f));
+        if (Rain <= 0.0f)
+            Emitter->DeactivateImmediate();
+        else if (!Emitter->IsActive())
+            Emitter->ActivateSystem(true);
+    };
+
+    if (auto* Camera = UGameplayStatics::GetPlayerCameraManager(GetWorld(), 0))
+    {
+        if (!IsValid(RainCameraModifier) || RainCameraModifier->GetOuter() != Camera)
+        {
+            if (IsValid(RainCameraModifier))
+                if (auto* PreviousCamera = Cast<APlayerCameraManager>(RainCameraModifier->GetOuter()))
+                    PreviousCamera->RemoveCameraModifier(RainCameraModifier);
+            RainCameraModifier = Cast<UCarlaRainCameraModifier>(
+                Camera->AddNewCameraModifier(UCarlaRainCameraModifier::StaticClass()));
+        }
+        if (RainCameraModifier)
+        {
+            RainCameraModifier->RainMaterial = PrecipitationPostProcessMaterial;
+            RainCameraModifier->RainWeight = Rain;
+        }
+        if (!ViewportRain && Rain > 0.0f)
+            ViewportRain = CreateRainEmitter(this, false);
+        UpdateEmitter(ViewportRain, Camera->GetCameraLocation());
+    }
+    else if (ViewportRain)
+        ViewportRain->DeactivateImmediate();
+
+    for (auto It = SensorRain.CreateIterator(); It; ++It)
+        if (!It.Key().IsValid() || !It.Value().IsValid())
+        {
+            if (It.Value().IsValid()) It.Value()->DestroyComponent();
+            It.RemoveCurrent();
+        }
+    for (TActorIterator<ASceneCaptureCamera> It(GetWorld()); It; ++It)
+    {
+        auto* Sensor = *It;
+        auto* Emitter = SensorRain.FindRef(Sensor).Get();
+        if (!Emitter && Rain > 0.0f)
+        {
+            Emitter = CreateRainEmitter(Sensor, true);
+            SensorRain.Add(Sensor, Emitter);
+        }
+        UpdateEmitter(Emitter, Sensor->GetCaptureComponent2D()->GetComponentLocation());
+    }
+}
+
+void AWeather::Tick(float DeltaSeconds)
+{
+    Super::Tick(DeltaSeconds);
+    UpdateRain();
+}
+
+void AWeather::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+    for (auto& Entry : SensorRain)
+        if (Entry.Value.IsValid()) Entry.Value->DestroyComponent();
+    SensorRain.Empty();
+    if (IsValid(RainCameraModifier))
+        if (auto* Camera = Cast<APlayerCameraManager>(RainCameraModifier->GetOuter()))
+            Camera->RemoveCameraModifier(RainCameraModifier);
+    RainCameraModifier = nullptr;
+    Super::EndPlay(EndPlayReason);
 }
 
 void AWeather::CheckWeatherPostProcessEffects()
@@ -175,6 +326,13 @@ void AWeather::CheckWeatherPostProcessEffects()
     for (AActor* SensorActor : SensorActors)
     {
         ASceneCaptureCamera* Sensor = Cast<ASceneCaptureCamera>(SensorActor);
+        // Removing a material from ActiveBlendables does not remove it from
+        // an existing camera. Clear stale weather passes when rain/dust stops;
+        // leave unrelated camera post-process materials intact.
+        if (!ActiveBlendables.Contains(PrecipitationPostProcessMaterial))
+            Sensor->GetCaptureComponent2D()->PostProcessSettings.RemoveBlendable(PrecipitationPostProcessMaterial);
+        if (!ActiveBlendables.Contains(DustStormPostProcessMaterial))
+            Sensor->GetCaptureComponent2D()->PostProcessSettings.RemoveBlendable(DustStormPostProcessMaterial);
         for (auto& ActiveBlendable : ActiveBlendables)
             Sensor->GetCaptureComponent2D()->PostProcessSettings.AddBlendable(ActiveBlendable.Key, ActiveBlendable.Value);
     }
@@ -1047,6 +1205,7 @@ void AWeather::ApplyWeather(const FWeatherParameters& InWeather)
     RefreshWeather(Weather);
     PushWeatherToSky();
     UpdateStreetLightsForDayNight();
+    UpdateRain();
 
     // record the weather event
     ACarlaRecorder *Recorder = UCarlaStatics::GetRecorder(GetWorld());
