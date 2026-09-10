@@ -1239,7 +1239,7 @@ class CameraManager(object):
     def render(self, display):
         if self.surface is not None:
             display.blit(self.surface, (0, 0))
-    
+
     @staticmethod
     def _parse_image(weak_self, image):
         self = weak_self()

@@ -7,10 +7,13 @@
 #include "CarlaLight.h"
 #include "CarlaLightSubsystem.h"
 #include "Carla/Game/CarlaStatics.h"
+#include "BlueprintLibary/LightDefaultsJsonUtils.h"
 
 #include <util/ue-header-guard-begin.h>
-#include "Components/PointLightComponent.h"
+#include "Components/LocalLightComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "HAL/IConsoleManager.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include <util/ue-header-guard-end.h>
 
 // The CARLA light content (street lamps, building lights...) was authored for
@@ -82,6 +85,13 @@ UCarlaLight::UCarlaLight()
 void UCarlaLight::OnRegister()
 {
   Super::OnRegister();
+  // Same rationale as BeginPlay below: a copy-pasted/duplicated actor's
+  // component inherits the source's already-Registered flag verbatim, which
+  // silently skipped subsystem registration for every editor-placed
+  // duplicate (confirmed with bus stops/billboards -- 11 and 4 placed
+  // instances respectively, only the original ever showed up in a scan,
+  // since RegisterLight() below no-ops when this flag is already set).
+  flags &= ~ECarlaLightFlags::Registered;
   RegisterLight();
 }
 
@@ -112,6 +122,7 @@ void UCarlaLight::RegisterLight()
   }
 
   ApplyLegacyComponentConversion();
+  ApplyLightAssetDefault();
 
   UWorld *World = GetWorld();
   if (World != nullptr)
@@ -126,6 +137,20 @@ void UCarlaLight::RegisterLight()
     }
   }
   flags |= ECarlaLightFlags::Registered;
+}
+
+void UCarlaLight::OnUnregister()
+{
+  UWorld* World = GetWorld();
+  if (World != nullptr)
+  {
+    if (UCarlaLightSubsystem* CarlaLightSubsystem = World->GetSubsystem<UCarlaLightSubsystem>())
+    {
+      CarlaLightSubsystem->UnregisterLight(this);
+    }
+  }
+  flags &= ~ECarlaLightFlags::Registered;
+  Super::OnUnregister();
 }
 
 void UCarlaLight::OnComponentDestroyed(bool bDestroyingHierarchy)
@@ -173,6 +198,12 @@ void UCarlaLight::ApplyLegacyComponentConversion()
 
 void UCarlaLight::ActivateAndConfigureLightComponents(AActor* Owner)
 {
+  // ULocalLightComponent, not UPointLightComponent: URectLightComponent is a
+  // sibling of UPointLightComponent (both derive from ULocalLightComponent),
+  // not a subclass -- every GetComponents<UPointLightComponent> call in this
+  // file used to silently find nothing on any RectLight-based prop (bus
+  // stops, billboards), making their Intensity/Color controls complete
+  // no-ops on the actual light despite the panel looking like it worked.
   // Widen undersized authored attenuation radii so the light actually
   // reaches the road (see cvar comment above).
   const float MinRadius = CVarCarlaLightMinAttenuationRadius.GetValueOnGameThread();
@@ -180,9 +211,9 @@ void UCarlaLight::ActivateAndConfigureLightComponents(AActor* Owner)
   {
     return;
   }
-  TArray<UPointLightComponent*> LightComponents;
-  Owner->GetComponents<UPointLightComponent>(LightComponents);
-  for (UPointLightComponent* LightComponent : LightComponents)
+  TArray<ULocalLightComponent*> LightComponents;
+  Owner->GetComponents<ULocalLightComponent>(LightComponents);
+  for (ULocalLightComponent* LightComponent : LightComponents)
   {
     if (LightComponent->AttenuationRadius < MinRadius)
     {
@@ -228,9 +259,9 @@ void UCarlaLight::ScaleLightComponentIntensities(AActor* Owner, ELightType Light
   {
     return;
   }
-  TArray<UPointLightComponent*> LightComponents;
-  Owner->GetComponents<UPointLightComponent>(LightComponents);
-  for (UPointLightComponent* LightComponent : LightComponents)
+  TArray<ULocalLightComponent*> LightComponents;
+  Owner->GetComponents<ULocalLightComponent>(LightComponents);
+  for (ULocalLightComponent* LightComponent : LightComponents)
   {
     const float Current = LightComponent->Intensity;
     UE_LOG(LogCarla, VeryVerbose, TEXT("CarlaLight conversion: owner %s component %s intensity %f visible %d"),
@@ -242,11 +273,49 @@ void UCarlaLight::ScaleLightComponentIntensities(AActor* Owner, ELightType Light
   }
 }
 
+void UCarlaLight::ApplyIntensityToComponents(float Intensity)
+{
+  // Drives the light components directly instead of going through the
+  // BlueprintImplementableEvent UpdateLights -> ChangeLight dispatcher ->
+  // SetLight chain: confirmed by instrumented testing that that chain never
+  // actually reaches the native component (PRE/POST-UpdateLights logged
+  // identical component intensity regardless of the requested value, both at
+  // registration and on a live Reapply). Several ported lamp blueprints have
+  // dead UpdateLights graphs (see ApplyLightOnToComponents); intensity had no
+  // native workaround the way on/off does, until now.
+  AActor* Owner = GetOwner();
+  if (Owner == nullptr)
+  {
+    return;
+  }
+  const float Scale = GetLegacyIntensityScale(LightType);
+  TArray<ULocalLightComponent*> LightComponents;
+  Owner->GetComponents<ULocalLightComponent>(LightComponents);
+  for (ULocalLightComponent* LightComponent : LightComponents)
+  {
+    LightComponent->SetIntensity(Intensity * Scale);
+  }
+}
+
+void UCarlaLight::ApplyColorToComponents(FLinearColor Color)
+{
+  AActor* Owner = GetOwner();
+  if (Owner == nullptr)
+  {
+    return;
+  }
+  TArray<ULocalLightComponent*> LightComponents;
+  Owner->GetComponents<ULocalLightComponent>(LightComponents);
+  for (ULocalLightComponent* LightComponent : LightComponents)
+  {
+    LightComponent->SetLightColor(Color);
+  }
+}
+
 void UCarlaLight::SetLightIntensity(float Intensity)
 {
   LightIntensity = Intensity;
-  UpdateLights();
-  ApplyLegacyComponentConversion();
+  ApplyIntensityToComponents(Intensity);
 }
 
 float UCarlaLight::GetLightIntensity() const
@@ -257,8 +326,7 @@ float UCarlaLight::GetLightIntensity() const
 void UCarlaLight::SetLightColor(FLinearColor Color)
 {
   LightColor = Color;
-  UpdateLights();
-  ApplyLegacyComponentConversion();
+  ApplyColorToComponents(Color);
   RecordLightChange();
 }
 
@@ -281,12 +349,128 @@ void UCarlaLight::HandleDayTimeChanged(bool bIsDay)
   DayTimeChanged(bIsDay);
   // Street already auto-toggled; Building and Vehicle (parked-car decoration,
   // not the ego vehicle's driver-controlled lights) should too -- "Other" is
-  // left alone, its members are too varied to assume night-on is always right.
+  // left alone, its members are too varied to assume night-on is always right
+  // for the real light component. The emissive bulb/glow material follows
+  // the exact same gate: a lit bulb visible in broad daylight looks wrong for
+  // street lamps specifically (confirmed -- night was fine, day never turned
+  // it back off once this was scoped down to a night-only restore). Forcing
+  // it to 0 for EVERY LightType including "Other" was tried first and
+  // reverted: that broke the tool's live-editing/testing use during daytime
+  // (ClearNoon, the default and most common state) for lights that don't
+  // want automatic day/night emissive behavior at all.
   if (LightType == ELightType::Street
       || LightType == ELightType::Building
       || LightType == ELightType::Vehicle)
   {
     SetLightOn(!bIsDay);
+    // ApplyEmissiveVisualState rather than SetEmissiveIntensity so the
+    // authored/saved EmissiveIntensity member isn't clobbered by the
+    // day-time 0 -- the next edit (or the next night) still has the real
+    // value to restore. Re-pushed (not just toggled) on the night side
+    // because the ported lamp blueprints' own DayTimeChanged graphs don't
+    // reliably restore it themselves (see ApplyEmissiveToComponents),
+    // leaving it stuck off after a day->night round trip otherwise.
+    ApplyEmissiveVisualState(bIsDay ? 0.0f : EmissiveIntensity);
+  }
+}
+
+void UCarlaLight::ApplyLightAssetDefault()
+{
+  AActor* Owner = GetOwner();
+  if (Owner == nullptr)
+  {
+    return;
+  }
+
+  // GetLightClassKey resolves the owning actor's class (BP_StreetLight01_C,
+  // ...), or a shared building-material family for buildings like
+  // BP_Apt20_A_C..F_C -- not this component's own class: every light-bearing
+  // actor places the same BP_Lights component, so GetClass() here would
+  // always read "BP_Lights_C" and collapse every light in the level into one
+  // bucket.
+  bool bIsBuildingClass = false;
+  FLightAssetDefault Default;
+  if (!ULightDefaultsJsonUtils::GetLightDefault(ULightDefaultsJsonUtils::GetLightClassKey(Owner, bIsBuildingClass), LightType, Default))
+  {
+    return;
+  }
+  SetLightColor(Default.Color);
+  SetLightIntensity(Default.Intensity);
+  SetEmissiveIntensity(Default.EmissiveIntensity);
+}
+
+void UCarlaLight::SetEmissiveIntensity(float Value)
+{
+  EmissiveIntensity = Value;
+  ApplyEmissiveVisualState(Value);
+}
+
+void UCarlaLight::ApplyEmissiveVisualState(float Value)
+{
+  // Apply immediately -- correct for every already-settled actor (which is
+  // most callers: the Light Defaults panel's live edits, Reapply To Level,
+  // day/night toggling). Also apply once more a tick later: called from
+  // RegisterLight (OnRegister), a MID created that early is orphaned --
+  // confirmed by logging the MID's own name, which differs between a
+  // registration-time apply (named after the static parent material, e.g.
+  // "M_StreetLight06_0") and a later apply once the level has finished
+  // settling (named "MaterialInstanceDynamic_N" as expected) -- two
+  // different objects, not the same one reused. Whatever resets the
+  // material slot back to its authored asset happens after OnRegister but
+  // before the component's real render proxy is built, so the same-frame
+  // MID never shows -- confirmed recurring on some content (food trucks)
+  // whose meshes finish setting up later still than a single deferred tick
+  // covers, needing a manual re-edit to actually show. Both applies are
+  // idempotent (same scalar values), so doing both is harmless.
+  ApplyEmissiveToComponents(Value);
+  if (UWorld* World = GetWorld())
+  {
+    // Cancel any still-pending retry from an earlier call first -- see
+    // DeferredEmissiveTimerHandle's comment. Without this, a burst of calls
+    // could leave several independent one-shot timers in flight, each
+    // capturing its own now-stale Value, any of which firing after this
+    // call's immediate apply above would silently undo it.
+    World->GetTimerManager().ClearTimer(DeferredEmissiveTimerHandle);
+    TWeakObjectPtr<UCarlaLight> WeakThis(this);
+    DeferredEmissiveTimerHandle = World->GetTimerManager().SetTimerForNextTick([WeakThis, Value]()
+    {
+      if (WeakThis.IsValid())
+      {
+        WeakThis->ApplyEmissiveToComponents(Value);
+      }
+    });
+  }
+}
+
+float UCarlaLight::GetEmissiveIntensity() const
+{
+  return EmissiveIntensity;
+}
+
+void UCarlaLight::ApplyEmissiveToComponents(float Value)
+{
+  AActor* Owner = GetOwner();
+  if (Owner == nullptr)
+  {
+    return;
+  }
+  // The lamp materials gate their whole emissive Lerp on "On/Off" (authored
+  // defaulting to 0 -- confirmed via M_StreetLight06/M_Artificial_Lamp), so
+  // EmissiveIntensity alone never did anything; flip the gate here too.
+  const float OnOff = (Value > 0.0f) ? 1.0f : 0.0f;
+  TArray<UStaticMeshComponent*> MeshComponents;
+  Owner->GetComponents<UStaticMeshComponent>(MeshComponents);
+  for (UStaticMeshComponent* MeshComponent : MeshComponents)
+  {
+    const int32 NumMaterials = MeshComponent->GetNumMaterials();
+    for (int32 MaterialIndex = 0; MaterialIndex < NumMaterials; ++MaterialIndex)
+    {
+      if (UMaterialInstanceDynamic* MID = MeshComponent->CreateAndSetMaterialInstanceDynamic(MaterialIndex))
+      {
+        MID->SetScalarParameterValue(TEXT("EmissiveIntensity"), Value);
+        MID->SetScalarParameterValue(TEXT("On/Off"), OnOff);
+      }
+    }
   }
 }
 
@@ -297,9 +481,9 @@ void UCarlaLight::ApplyLightOnToComponents(bool bOn)
   {
     return;
   }
-  TArray<UPointLightComponent*> LightComponents;
-  Owner->GetComponents<UPointLightComponent>(LightComponents);
-  for (UPointLightComponent* LightComponent : LightComponents)
+  TArray<ULocalLightComponent*> LightComponents;
+  Owner->GetComponents<ULocalLightComponent>(LightComponents);
+  for (ULocalLightComponent* LightComponent : LightComponents)
   {
     LightComponent->SetVisibility(bOn);
   }

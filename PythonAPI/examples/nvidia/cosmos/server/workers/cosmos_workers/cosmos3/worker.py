@@ -56,7 +56,32 @@ log = logging.getLogger("cosmos_worker.cosmos3")
 # repos cosmos-guardrail opens through NLTK's hardened (O_NOFOLLOW) loader — see load()
 GUARDRAIL_REPOS = ("nvidia/Cosmos-1.0-Guardrail",)
 
+# Which checkpoint a worker serves is decided by the backend id the server gave it: profiles and
+# the planner only ever say ``backends: [cosmos3-super]`` (server/profiles/full-8gpu.yaml,
+# profiles.add_super) and never pass ``--model``.  Without this mapping a ``cosmos3-super`` worker
+# started the *Nano* weights and served them under the Super name — silently, since both load.
+BACKEND_MODELS = {"cosmos3-nano": "nvidia/Cosmos3-Nano", "cosmos3-super": "nvidia/Cosmos3-Super"}
+DEFAULT_MODEL = "nvidia/Cosmos3-Nano"
+
 HINTS = ("edge", "blur", "depth", "seg", "wsm")
+# vLLM-Omni's own per-hint sampling presets (``TRANSFER_DEFAULTS`` in
+# ``vllm_omni/diffusion/models/cosmos3/transfer.py``, pinned ref d3c990dc), reproduced here
+# because of the sentence right below them: ``if len(hints) == 1``.  A request with **more than
+# one** hint gets none of this and falls back to ``COSMOS3_T2V_DEFAULT_GUIDANCE_SCALE = 6.0`` with
+# ``control_guidance`` 1.0 and the engine's flow shift (pipeline_cosmos3.py:3299-3308).
+# Measured on the node on 2026-08-28: single-hint ``c3-wsm`` (1.0 / 3.0 / 10) came back sharp,
+# while ``c3-wsm-depth-seg`` — same clip, same prompt, same seed, three hints — came back hazy and
+# low-contrast at 6.0 / 1.0.  So a multi-hint request gets an explicit regime from us instead of
+# that fallback; anything the caller names in ``request.extra`` (or ``guidance``) still wins.
+TRANSFER_PRESETS: dict[str, dict[str, float]] = {
+    "edge": {"guidance_scale": 3.0, "control_guidance": 1.5, "flow_shift": 10.0},
+    "blur": {"guidance_scale": 3.0, "control_guidance": 1.5, "flow_shift": 10.0},
+    "depth": {"guidance_scale": 3.0, "control_guidance": 1.5, "flow_shift": 10.0},
+    "seg": {"guidance_scale": 3.0, "control_guidance": 2.0, "flow_shift": 10.0},
+    "wsm": {"guidance_scale": 1.0, "control_guidance": 3.0, "flow_shift": 10.0},
+}
+MULTI_HINT_DEFAULTS: dict[str, float] = {"guidance_scale": 2.0, "control_guidance": 2.0, "flow_shift": 10.0}
+"""What this worker sends when a request has 2+ hints and the caller named nothing."""
 DERIVABLE = ("edge", "blur")
 HINT_OPTION_KEYS = {"edge": ("preset_edge_threshold",), "blur": ("preset_blur_strength",)}
 DEFAULT_CHUNK = {"wsm": 101}
@@ -83,8 +108,9 @@ class Cosmos3Worker(Worker):
         self.base = f"http://127.0.0.1:{self.port}"
         self.proc: subprocess.Popen | None = None
         self.storage = Path(args.storage_dir or tempfile.mkdtemp(prefix="cosmos3-out-"))
-        self.model_path, self.model_sha, self.offline = _resolve_model(args.model, args.hf_home)
-        self.served_name = args.served_model_name or (args.model if not Path(args.model).exists() else "cosmos3")
+        self.model = model_for(args)
+        self.model_path, self.model_sha, self.offline = _resolve_model(self.model, args.hf_home)
+        self.served_name = args.served_model_name or (self.model if not Path(self.model).exists() else "cosmos3")
         self.guardrails = args.guardrails
         self.vllm_version: dict[str, Any] = {}
         self.parallel = {k: v for k, v in (("tp", args.tp), ("cfg", args.cfg_parallel), ("ulysses", args.ulysses))
@@ -269,6 +295,7 @@ class Cosmos3Worker(Worker):
                 "parallel": self.parallel,
                 "form": {k: v for k, v in fields.items() if k not in ("prompt", "negative_prompt")},
                 "extra_params": extra,
+                "sampling": effective_sampling(fields, extra),
                 "input_reference": bool(files),
                 "inference_time_s": inference_s,
                 "stage_durations": info.get("stage_durations"),
@@ -330,6 +357,12 @@ class Cosmos3Worker(Worker):
             fields["num_inference_steps"] = str(int(request["num_steps"]))
         if request.get("guidance") is not None:
             fields["guidance_scale"] = str(float(request["guidance"]))
+        active = [h for h in HINTS if h in extra]
+        if len(active) > 1:
+            if "guidance_scale" not in fields:
+                fields["guidance_scale"] = str(MULTI_HINT_DEFAULTS["guidance_scale"])
+            for key in ("control_guidance", "flow_shift"):
+                extra.setdefault(key, MULTI_HINT_DEFAULTS[key])
         fields["extra_params"] = json.dumps(extra)
         files: list[tuple[str, Path, str | None]] = []
         rgb = inputs.get("rgb", {}).get(view)
@@ -347,6 +380,45 @@ class Cosmos3Worker(Worker):
             http.delete(f"{self.base}/v1/videos/{vid}", timeout=30.0)
         except (http.HttpError, OSError) as exc:
             log.debug("delete %s: %s", vid, exc)
+
+
+def effective_sampling(fields: dict[str, str], extra: dict[str, Any]) -> dict[str, Any]:
+    """The guidance regime this job actually ran under, and where each number came from.
+
+    Written into the result manifest so a hazy render can be explained without reading vendor
+    source: ``request`` (the caller named it), ``multi_hint_default`` (this worker filled it in,
+    see :data:`MULTI_HINT_DEFAULTS`) or ``vllm_preset:<hint>`` (a single-hint request, so
+    vLLM-Omni applies :data:`TRANSFER_PRESETS` itself).
+    """
+    active = [h for h in HINTS if h in extra]
+    preset = TRANSFER_PRESETS.get(active[0], {}) if len(active) == 1 else {}
+    out: dict[str, Any] = {"hints": active}
+    for key in ("guidance_scale", "control_guidance", "flow_shift"):
+        sent = fields.get(key) if key == "guidance_scale" else extra.get(key)
+        if sent is not None:
+            source = ("multi_hint_default" if len(active) > 1
+                      and float(sent) == MULTI_HINT_DEFAULTS[key] else "request")
+            out[key] = {"value": float(sent), "source": source}
+        elif preset:
+            out[key] = {"value": preset[key], "source": f"vllm_preset:{active[0]}"}
+    return out
+
+
+def model_for(args: argparse.Namespace) -> str:
+    """The checkpoint this worker should serve.
+
+    ``--model`` wins; then the backend id assigned by the server picks it out of
+    :data:`BACKEND_MODELS` — that is the only thing distinguishing a Super worker from a Nano one
+    on the command line the launcher builds.  ``COSMOS3_MODEL`` stays a fallback for an unknown
+    backend id (a custom checkpoint) rather than an override, so setting it on a node serving both
+    sizes cannot hand the Super worker the Nano weights.
+    """
+    if getattr(args, "model", None):
+        return args.model
+    for backend in (b.strip() for b in (getattr(args, "backends", None) or "").split(",")):
+        if backend in BACKEND_MODELS:
+            return BACKEND_MODELS[backend]
+    return os.environ.get("COSMOS3_MODEL") or DEFAULT_MODEL
 
 
 def _resolve_model(model: str, hf_home: str) -> tuple[str, str | None, bool]:
@@ -386,8 +458,9 @@ def _write_gradient_png(path: Path, w: int, h: int) -> None:
 
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--model", default=os.environ.get("COSMOS3_MODEL", "nvidia/Cosmos3-Nano"),
-                   help="HF repo id or local snapshot path")
+    p.add_argument("--model", default=None,
+                   help="HF repo id or local snapshot path (default: the checkpoint matching the "
+                        "backend id in --backends, else COSMOS3_MODEL, else Nano)")
     p.add_argument("--served-model-name", default=None,
                    help="model name used in requests (default: the repo id; required when --model is a path)")
     p.add_argument("--tp", type=int, default=1, help="tensor parallel size (Super: 2..8)")

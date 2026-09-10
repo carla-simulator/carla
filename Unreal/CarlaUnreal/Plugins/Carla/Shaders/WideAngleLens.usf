@@ -29,6 +29,9 @@ float4 CameraParams;
 float LongitudeOffset;
 float FOVFadeSize;
 uint Flags;
+// Written to pixels the lens never maps a ray to (LUT1D beyond the last
+// sample). Black for colour/label sensors, white (far) for depth.
+float4 InvalidColor;
 
 
 
@@ -131,6 +134,14 @@ void MainCS(
 		// ComputeAngle uses the current camera model, see CameraModelCommon.ush.
 
 		const float2 UV = (float2(PixelPosition) - Center) / FocalDistance;
+
+#if CAMERA_TYPE == CAMERA_TYPE_LUT1D
+		if (LensLUTOutOfRange(length(UV)))
+		{
+			OutImage[PixelPosition] = InvalidColor;
+			return;
+		}
+#endif
 
 		Alpha = ComputeAngle(length(UV));
 

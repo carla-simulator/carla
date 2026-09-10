@@ -10,6 +10,8 @@
 - [__Radar sensor__](#radar-sensor)
 - [__RGB camera__](#rgb-camera)
 - [__Ray-traced lens camera__](#ray-traced-lens-camera)
+- [__Ray-traced lens distance camera__](#ray-traced-lens-distance-camera)
+- [__Ray-traced lens instance camera__](#ray-traced-lens-instance-camera)
 - [__Semantic LIDAR sensor__](#semantic-lidar-sensor)
 - [__Semantic segmentation camera__](#semantic-segmentation-camera)
 - [__Instance segmentation camera__](#instance-segmentation-camera)
@@ -590,14 +592,28 @@ __Lens models.__ The `camera_model` attribute selects the radial projection:
 | `kannala_brandt` | Kannala-Brandt polynomial fisheye | `k1,k2,k3,k4` |
 | `brown_conrady` | Rectilinear + Brown-Conrady distortion | `k1,k2,k3,p1,p2` |
 | `lut` | Calibrated θ→r lookup table | — (use the `lut` attribute; needs an explicit `fx`) |
+| `ftheta` | NVIDIA rig f-theta polynomial, θ = c0 + c1·r + c2·r² + … (up to 8 terms), r in __pixels__ when `fx = 1/image_size_x` | `c0,c1,…` (up to 8 coefficients) |
 
-If `fx` is left at `0.0`, the focal length is derived automatically so that the requested `fov` spans the image width through the selected projection. An explicit calibration (`fx` > 0, in normalized units where the image half-width is 0.5) always wins over `fov`.
+If `fx` is left at `0.0`, the focal length is derived automatically so that the requested `fov` spans the image width through the selected projection. An explicit calibration (`fx` > 0, in normalized units where the image half-width is 0.5) always wins over `fov`. `camera_model=ftheta` and `camera_model=lut` need an explicit `fx` (their coefficients are defined against a pixel-space radius, not the normalized one the other models use); if left at `0.0` the sensor logs a warning and falls back to `fx=1.0` (coefficients then act in units of the full image width). Measured against an NVIDIA rig calibration, `ftheta` reprojects with a median error of about 1 pixel.
 
-__Denoising and convergence.__ The path tracer accumulates one batch of `samples_per_pixel` samples per simulation tick and denoises with NVIDIA DLSS Ray Reconstruction (the engine default, `r.PathTracing.Denoiser.Name=DLSSRR`). A static camera converges over successive ticks; a moving camera relies on the denoiser every frame. Low sample counts (`samples_per_pixel` of 4&ndash;16) with the denoiser enabled are the intended real-time operating point; high sample counts approach ground-truth path tracing at a heavy cost per frame.
+__Denoising and convergence.__ The path tracer accumulates one batch of `samples_per_pixel` samples per simulation tick and denoises with NVIDIA DLSS Ray Reconstruction (the engine default, `r.PathTracing.Denoiser.Name=DLSSRR`). A static camera converges over successive ticks; a moving camera relies on the denoiser every frame. Low sample counts (`samples_per_pixel` of 4&ndash;16) with the denoiser enabled are the intended real-time operating point; high sample counts approach ground-truth path tracing at a heavy cost per frame. `samples_per_pixel` is clamped to the console variable `r.PathTracing.MaxFramePassCount` (see [Ray-traced lens tuning](adv_rendering_options.md#ray-traced-lens-tuning)), with a warning logged when it clamps: a sensor asking for more samples than the engine can run in one frame can never finish (and denoise) within its tick, and would deliver a partially accumulated — and therefore noisier — image every frame instead of a smaller, fully converged one. Measured on car pixels at 1080p, noise (in 8-bit levels) falls from about 5.7 at 8 samples/pixel to 3.7 at 64, at roughly 54, 54, 74 and 116 ms per tick for 8/16/32/64 samples/pixel respectively (colour + instance sensors together); requesting a count above the pass cap measured about four times noisier than the same count kept under the cap.
 
-__Exposure.__ The capture's auto exposure is pinned to the daylight histogram window used by the CARLA sky rig, so path-traced frames match the photometric exposure of the RGB camera instead of adapting to raw sun radiance.
+__Exposure.__ `exposure_mode` selects between `auto` (default) — the capture's auto exposure is pinned to the daylight histogram window used by the CARLA sky rig, so path-traced frames match the photometric exposure of the RGB camera instead of adapting to raw sun radiance — and `manual`, which switches to the post-process profile's physical camera exposure plus `exposure_compensation` (in EV, `0.0` = no adjustment, negative darkens, positive brightens), deterministic from frame to frame. Use `manual` when the frame is composited against an external render (e.g. a `show_only_*` layer over an otherwise black background) and the content itself must not drive the histogram.
 
-__Readback latency.__ To keep the heavy path-traced render off the critical path, image readback is asynchronous: the image delivered on tick *N* was captured on tick *N-1* (one frame of latency, never a server stall).
+__Show-only rendering.__ `show_only_tags`, `shadow_catcher_tags` and `show_only_actor_ids` restrict the capture to a subset of the scene, for compositing:
+
+* `show_only_tags` — comma-separated CARLA semantic label names (e.g. `Car,Truck,Bus,Motorcycle,Bicycle,Pedestrians`, matched case-insensitively as a substring against the label). Only actors carrying at least one of these labels on any primitive component are rendered.
+* `shadow_catcher_tags` — same format (e.g. `Roads,Sidewalks`). Actors with these labels are rendered too, but only so they can receive the cast shadows of the `show_only_tags` actors; they are meant to be composited away afterwards (e.g. via their own segmentation mask), not kept in the final image.
+* `show_only_actor_ids` — comma-separated CARLA actor ids, added to the render list regardless of their labels.
+
+When any of the three is non-empty, everything else is neither rendered nor casts a shadow into the capture: colour captures show only sky/atmosphere in the empty pixels. The actor list is rescanned only when the world's actor count changes (an actor spawns or is destroyed), so a newly spawned actor appears on the next capture at negligible per-tick cost otherwise. Leaving all three empty renders the full scene as usual.
+
+__Readback and synchronous-mode delivery.__ The path-traced render is heavy, so by default (console variable `carla.RTLens.SyncModeBlockingReadback`, default `1`) the two modes behave differently:
+
+* __Synchronous mode__ (`world.tick()`-driven): the image delivered after tick *k* is the render of tick *k* itself — captured, then read back through a single batched GPU sync shared by every camera that tick, before the tick ends. No frame is ever dropped, at any `samples_per_pixel`; the cost is one GPU pipeline drain per tick.
+* __Asynchronous mode__: nothing paces the client, so the render never blocks the game thread (which also drives the RPC server). The readback is non-blocking and enqueued for the *previous* tick's capture, so the image delivered on tick *N* was rendered on tick *N-1* (one frame of latency) — frames drop under load rather than stalling the server.
+
+Setting `carla.RTLens.SyncModeBlockingReadback 0` (server console) forces the asynchronous, one-tick-late, droppable readback even in synchronous mode.
 
 `manual_control.py` includes ready-made presets in its camera cycle (pinhole, Kannala-Brandt fisheye 150°, Brown-Conrady barrel), and `manual_control_rtlens.py` boots directly into the fisheye configuration.
 
@@ -610,17 +626,22 @@ __Readback latency.__ To keep the heavy path-traced render off the critical path
 | `image_size_x`       | int      | 800      | Image width in pixels.           |
 | `image_size_y`       | int      | 600      | Image height in pixels.          |
 | `fov`    | float    | 90\.0    | Horizontal field of view in degrees, applied through the selected `camera_model` projection when `fx` is `0.0`. Clamped to 170.0 (half-angles at or beyond 90° are a known shader limitation). |
-| `camera_model` | str | `perspective` | Lens projection model. One of `perspective`, `stereographic`, `equidistant`, `equisolid`, `orthographic`, `kannala_brandt`, `brown_conrady`, `lut`. |
-| `distortion_coeffs` | str | (empty) | Comma-separated distortion coefficients; meaning is `camera_model`-specific (Kannala-Brandt: `k1,k2,k3,k4`; Brown-Conrady: `k1,k2,k3,p1,p2`). |
+| `camera_model` | str | `perspective` | Lens projection model. One of `perspective`, `stereographic`, `equidistant`, `equisolid`, `orthographic`, `kannala_brandt`, `brown_conrady`, `lut`, `ftheta`. |
+| `distortion_coeffs` | str | (empty) | Comma-separated distortion coefficients; meaning is `camera_model`-specific (Kannala-Brandt: `k1,k2,k3,k4`; Brown-Conrady: `k1,k2,k3,p1,p2`; f-theta: `c0,c1,…` up to 8 terms of θ = Σ cᵢ·rⁱ). |
 | `lut` | str | (empty) | Comma-separated θ→r samples for `camera_model=lut`. |
-| `fx`, `fy` | float | 0\.0 | Normalized focal lengths (image half-width = 0.5). `0.0` derives them from `fov`; `fy` defaults to `fx` (square pixels). |
+| `fx`, `fy` | float | 0\.0 | Normalized focal lengths (image half-width = 0.5). `0.0` derives them from `fov`; `fy` defaults to `fx` (square pixels). `lut` and `ftheta` need an explicit `fx` (e.g. `1/image_size_x` for pixel-unit coefficients). |
 | `cx`, `cy` | float | 0\.5 | Normalized principal point. |
 | `theta_max_deg` | float | 0\.0 | Maximum half-angle accepted by the lens, in degrees. `0.0` extends coverage automatically to the frame corners. |
 | `aperture_fstop` | float | 0\.0 | Physical depth of field. `0.0` means pinhole (no depth of field). |
 | `focus_distance_m` | float | 1000\.0 | Focus distance in meters when `aperture_fstop` > 0. |
 | `ca_shift_r`, `ca_shift_b` | float | 1\.0 | Chromatic aberration: per-channel radial scale of the red/blue channels relative to green (`1.0` = none). |
-| `samples_per_pixel` | int | 16 | Path-tracer samples accumulated per tick. Lower is faster; 4&ndash;16 with the denoiser is the real-time range. |
+| `samples_per_pixel` | int | 16 | Path-tracer samples accumulated per tick. Lower is faster; 4&ndash;16 with the denoiser is the real-time range. Clamped to `r.PathTracing.MaxFramePassCount` (a warning is logged when clamped). |
 | `enable_denoiser` | bool | True | Denoise each frame with DLSS Ray Reconstruction. Disable only for converged ground-truth renders from a static camera. |
+| `exposure_mode` | str | `auto` | `auto`: pinned to the CARLA sky rig's daylight histogram window (matches the RGB camera's photometric exposure). `manual`: the post-process profile's physical camera exposure plus `exposure_compensation`, deterministic frame to frame. |
+| `exposure_compensation` | float | 0\.0 | Exposure adjustment in EV. `0.0` = no adjustment; negative darkens, positive brightens. Applied in both `exposure_mode` values. |
+| `show_only_tags` | str | (empty) | Comma-separated semantic label names; when non-empty, only actors carrying one of these labels (plus `show_only_actor_ids`) are rendered — everything else is neither drawn nor casts a shadow. |
+| `shadow_catcher_tags` | str | (empty) | Comma-separated semantic label names; actors with these labels are rendered alongside the `show_only_tags` set so they receive its cast shadows, for later compositing away. |
+| `show_only_actor_ids` | str | (empty) | Comma-separated CARLA actor ids, added to the show-only render list regardless of label. |
 | `use_ray_tracing` | bool | True | Present for parity with the other cameras, but always effectively `True`: the path tracer has no rasterized fallback. |
 | `enable_postprocess_effects` | bool | True | Post-process effects activation. |
 | `post_process_profile` | str | `Default` | Named post-process profile applied to the capture. |
@@ -637,6 +658,74 @@ __Readback latency.__ To keep the heavy path-traced render off the critical path
 | `height`           | int   | Image height in pixels.          |
 | `fov` | float | Horizontal field of view in degrees.         |
 | `raw_data`         | bytes | Array of BGRA 32-bit pixels.     |
+
+---
+## Ray-traced lens distance camera
+
+* __Blueprint:__ sensor.camera.rt_lens_distance
+* __Output:__ [carla.DistanceImage](python_api.md#carla.DistanceImage) per step (unless `sensor_tick` says otherwise).
+
+The geometric twin of [`sensor.camera.rt_lens`](#ray-traced-lens-camera): it shares the exact same lens attributes (`camera_model`, `distortion_coeffs`, `lut`, `fx`/`fy`/`cx`/`cy`, `theta_max_deg`, `fov`, `aperture_fstop`, `focus_distance_m`, `show_only_tags`, `shadow_catcher_tags`, `show_only_actor_ids`, `sensor_tick`, …) so a colour/distance pair can be configured from the same dictionary and stay pixel-aligned, but it renders a single geometry AOV instead of a shaded image: for every pixel, the __Euclidean distance__, in metres, from the camera origin to the primary hit, measured along that pixel's (possibly heavily distorted) lens ray. This is the only meaningful "depth" for a non-pinhole lens, where a pinhole camera's planar view-space Z collapses to zero at 90° off axis.
+
+Depth of field is disabled for this sensor (`focus_distance_m`/`aperture_fstop` have no effect): a defocused primary ray would scatter its origin across the aperture and turn a distance measurement into an average over the circle of confusion. The AOV is exact by construction — one ray through the pixel centre, no anti-aliasing jitter, no temporal blending — so `samples_per_pixel` and `enable_denoiser` default to `1` and `False` and normally should not be changed: extra samples only cost time, and the denoiser must never touch metric data. Post-process attributes (`enable_postprocess_effects`, `post_process_profile`) are not present: this capture never goes through the post-process chain.
+
+Rays that hit nothing (sky) report a large miss distance, `1.0e5` metres (100 km), rather than `0.0`, so a consumer can tell "sky" from "at the camera".
+
+Compared with [`sensor.camera.depth`](#depth-camera): the depth camera encodes a lossy, RGB-packed, millimetre-precision planar depth (distance along the camera's forward axis) into an 8-bit-per-channel `carla.Image`, valid only for a rectilinear pinhole. `sensor.camera.rt_lens_distance` returns an exact float32 Euclidean ray distance (not planar depth) with no encoding loss, and is valid for every lens model the ray-traced lens camera supports, including wide-angle and fisheye projections. Measured against a pinhole reference, the AOV agrees with a rasterized planar depth to a median of about 0.6&nbsp;mm.
+
+```py
+import numpy as np
+
+distance_bp = blueprint_library.find('sensor.camera.rt_lens_distance')
+distance_bp.set_attribute('image_size_x', '1280')
+distance_bp.set_attribute('image_size_y', '720')
+distance_sensor = world.spawn_actor(distance_bp, transform, attach_to=vehicle)
+
+def on_distance(image):
+    # np.frombuffer wraps the sensor's own buffer without copying it; that
+    # buffer is reused by the next capture, so copy before storing or using
+    # the array outside this callback.
+    distances_m = np.copy(np.frombuffer(image.raw_data, dtype=np.float32))
+    distances_m = distances_m.reshape((image.height, image.width))
+
+distance_sensor.listen(on_distance)
+```
+
+#### Output attributes
+
+| Sensor data attribute            | Type  | Description        |
+| ----------------------- | ----------------------- | ----------------------- |
+| `frame`            | int   | Frame number when the measurement took place.      |
+| `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
+| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `width`            | int   | Image width in pixels.           |
+| `height`           | int   | Image height in pixels.          |
+| `fov` | float | Horizontal field of view in degrees.         |
+| `raw_data`         | bytes | `width * height` float32 values, row major (`np.frombuffer(image.raw_data, np.float32).reshape(height, width)`). Euclidean distance in metres along the pixel's lens ray to the primary hit; `1.0e5` (100 km) where the ray hit nothing. |
+
+---
+## Ray-traced lens instance camera
+
+* __Blueprint:__ sensor.camera.rt_lens_instance
+* __Output:__ [carla.Image](python_api.md#carla.Image) per step (unless `sensor_tick` says otherwise).
+
+The labelling twin of [`sensor.camera.rt_lens`](#ray-traced-lens-camera): same shared lens attribute surface as the distance camera above, but the geometry AOV it renders is the primary hit's CARLA tag rather than a distance. The output byte layout is identical to the [instance segmentation camera](#instance-segmentation-camera): red channel `R` carries the semantic label, and the green/blue channels carry the 16-bit instance id (`G` low byte, `B` high byte). The id is the __engine's internal actor unique id__ used to build the tag on the GPU, not the id returned by the Python `actor.id` property — treat it as an opaque per-instance key within one episode, not as a value to compare against `actor.id`.
+
+Depth of field is disabled (a defocused ray would blend two actors' ids into one pixel), and — like the distance camera — `samples_per_pixel`/`enable_denoiser` default to `1`/`False` (the AOV is an exact integer read off the primary hit, nothing for a denoiser to do) and post-process attributes are not present.
+
+Measured against the raster [instance segmentation camera](#instance-segmentation-camera) on the same view, per-pixel instance agreement is about 98%. The disagreements are concentrated on silhouette edges (anti-aliasing/coverage differences between the two renderers) and on windscreens and other translucent materials, where the path-traced AOV reports the surface *behind* the glass (the primary ray continues to its geometric hit) while the rasterizer reports the glass itself.
+
+#### Output attributes
+
+| Sensor data attribute            | Type  | Description        |
+| ----------------------- | ----------------------- | ----------------------- |
+| `frame`            | int   | Frame number when the measurement took place.      |
+| `timestamp`        | double | Simulation time of the measurement in seconds since the beginning of the episode.        |
+| `transform`        | [carla.Transform](<../python_api#carlatransform>)  | Location and rotation in world coordinates of the sensor at the time of the measurement. |
+| `width`            | int   | Image width in pixels.           |
+| `height`           | int   | Image height in pixels.          |
+| `fov` | float | Horizontal field of view in degrees.         |
+| `raw_data`         | bytes | Array of BGRA 32-bit pixels. `R` = semantic label (0&ndash;255). `G`, `B` = the 16-bit engine actor id, low/high byte (e.g. `[10, 20, 55]` is a vehicle, semantic tag 10, engine actor id `20 + 55*256`). |
 
 ---
 ## Semantic LIDAR sensor

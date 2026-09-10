@@ -129,9 +129,9 @@ def test_submit_masks_the_uploaded_videos(mock, tmp_path_factory):
     from carla_cosmos.client import sha256_file
 
     srv, client = mock
-    clip = _semantic_clip(tmp_path_factory, 16, "maskclip")
+    clip = _semantic_clip(tmp_path_factory, 93, "maskclip")
     cam = clip.manifest.camera_names[0]
-    job = client.submit_clip(clip, "cosmos3-nano", "empty street",
+    job = client.submit_clip(clip, "transfer2.5", "empty street",
                              {"depth": "clip", "seg": "clip", "edge": "derive"},
                              mask_classes=["vehicle"])
     req = job.result().manifest.request if job.wait(poll=0.1).status == "done" else None
@@ -140,7 +140,21 @@ def test_submit_masks_the_uploaded_videos(mock, tmp_path_factory):
     assert req.mask_dilate == 3
     assert req.controls["depth"].blob != sha256_file(clip.video("depth", cam)), "depth must be re-encoded masked"
     assert req.rgb[cam] != sha256_file(clip.video("rgb", cam)), "RGB is masked too (edge is derived from it)"
-    assert req.masks == {}, "cosmos3 has no per-control mask input; the pixels carry the mask"
+
+
+def test_mask_classes_are_refused_where_the_backend_has_no_mask_input(mock, tmp_path_factory):
+    """Cosmos 3 takes no mask video, and a pixels-only mask does not remove anything.
+
+    Measured on the node 2026-08-28: ``c3-blur-mask-vehicles`` (blur derived from a masked RGB)
+    reproduced the black silhouettes in the output frame for frame, so the request is refused
+    rather than silently producing them — before the masking pass re-encodes anything.
+    """
+    srv, client = mock
+    clip = _semantic_clip(tmp_path_factory, 16, "maskclip_c3")
+    for backend in ("cosmos3-nano", "cosmos3-super"):
+        with pytest.raises(CosmosError, match="has no mask input") as err:
+            client.submit_clip(clip, backend, "empty street", {"depth": "clip"}, mask_classes=["vehicle"])
+        assert "ClipGT scene package" in str(err.value.errors[0])
 
 
 def test_submit_uploads_the_mask_video_for_transfer25(mock, tmp_path_factory):
@@ -159,7 +173,7 @@ def test_submit_uploads_the_mask_video_for_transfer25(mock, tmp_path_factory):
 def test_mask_needs_a_semantic_source(mock, clip):
     srv, client = mock
     with pytest.raises(CosmosError, match="no semantic class information"):
-        client.submit_clip(clip, "cosmos3-nano", "x", {"depth": "clip"}, mask_classes=["car"])
+        client.submit_clip(clip, "transfer2.5", "x", {"depth": "clip"}, mask_classes=["car"])
 
 
 def test_mask_rejects_unknown_class_before_any_upload(mock, clip):
@@ -180,3 +194,29 @@ def test_weight_for_an_absent_control_is_rejected(mock, clip):
     srv, client = mock
     with pytest.raises(CosmosError, match="weight given for control"):
         client.submit_clip(clip, "cosmos3-nano", "x", {"depth": "clip"}, weights={"seg": 0.5})
+
+
+def test_a_derived_blur_or_vis_hint_gets_our_stronger_preset(mock, clip, tmp_path_factory):
+    """Both pipelines default ``preset_blur_strength`` to "medium", which pins the palette.
+
+    See ``carla_cosmos.client.DEFAULT_BLUR_PRESET``: the control is a bilateral-filtered copy of
+    the capture, and at "medium" it is 20.5/255 away from the RGB, so the prompt cannot restyle.
+    """
+    srv, client = mock
+
+    def extra_of(the_clip=clip, **kwargs):
+        job = client.submit_clip(the_clip, **kwargs)
+        job.wait(poll=0.1)
+        return job.result().manifest.request.extra
+
+    assert extra_of(backend="cosmos3-nano", prompt="night",
+                    controls={"blur": "derive"})["preset_blur_strength"] == "very_high"
+    clip93 = make_clip(tmp_path_factory.mktemp("clip93"), frames=93, fps=16)
+    assert extra_of(clip93, backend="transfer2.5", prompt="night",
+                    controls={"vis": "derive"})["preset_blur_strength"] == "very_high"
+    # the caller's own value wins
+    assert extra_of(backend="cosmos3-nano", prompt="night", controls={"blur": "derive"},
+                    extra={"preset_blur_strength": "medium"})["preset_blur_strength"] == "medium"
+    # and a control that is not a derived blur/vis is left alone
+    assert "preset_blur_strength" not in extra_of(backend="cosmos3-nano", prompt="night",
+                                                  controls={"edge": "derive", "depth": "clip"})

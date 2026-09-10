@@ -44,6 +44,31 @@ struct FTrafficLightModule
   TArray<int32> LaneIds;
 };
 
+/// One head of a baked Traffic Light Tool rig, and the OpenDRIVE signal it shows.
+///
+/// A mast arm can carry a protected-turn arrow beside the through head, and the two are red
+/// and green at the same instant. ATrafficLightBase holds exactly one UTrafficLightComponent
+/// and one ETrafficLightState (TrafficLightBase.h), and get_state / get_opendrive_id /
+/// get_stop_waypoints / the ALSM's IsAtTrafficLight are all per *actor*, so one actor cannot
+/// express two states. The rig is therefore split into one ADigitalTwinsTrafficLight per
+/// distinct SignalID, and this is the explicit binding that says which components go where --
+/// ComponentPrefix is the name ATrafficLightActor::Build gives the head's components
+/// ("Pole_02_Head_03"), which Bake preserves.
+USTRUCT()
+struct FTrafficLightHead
+{
+  GENERATED_BODY()
+
+  UPROPERTY()
+  FString ComponentPrefix;
+
+  UPROPERTY()
+  FString SignalID;
+
+  UPROPERTY()
+  TArray<int32> LaneIds;
+};
+
 /// Represents a traffic light configuration entry from map_logic.json
 USTRUCT()
 struct FTrafficLightLogicData
@@ -67,6 +92,11 @@ struct FTrafficLightLogicData
 
   UPROPERTY()
   TArray<FTrafficLightModule> Modules;
+
+  /// One entry per head of the baked rig. Empty (or all naming the same signal) = the whole
+  /// rig is one traffic light, exactly as before.
+  UPROPERTY()
+  TArray<FTrafficLightHead> Heads;
 };
 
 /// Utility class to parse map_logic.json files and apply traffic light timing configuration

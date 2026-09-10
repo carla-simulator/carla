@@ -233,6 +233,22 @@ namespace client {
         const rpc::MaterialParameter& parameter,
         const rpc::TextureFloatColor& Texture);
 
+    /// Light the scene with an environment map: an equirectangular linear
+    /// RGB(A) float panorama in the CARLA world frame (column 0 = azimuth 0 =
+    /// +X, azimuth grows toward +Y; row 0 = zenith) becomes the sky light's
+    /// cubemap (ambient + reflections) at the given intensity, replacing the
+    /// real-time atmosphere capture until ClearSkyLightMap. Persists across
+    /// weather changes; dropped by a level load (LoadWorld / ReloadWorld), so
+    /// set it again after loading. face_size is the cubemap resolution.
+    void SetSkyLightMap(
+        const rpc::TextureFloatColor& panorama,
+        float intensity = 1.0f,
+        int32_t face_size = 512);
+
+    void ClearSkyLightMap();
+
+    bool HasSkyLightMap() const;
+
     void ApplyTexturesToObject(
         const std::string &actor_name,
         const rpc::TextureColor& diffuse_texture,

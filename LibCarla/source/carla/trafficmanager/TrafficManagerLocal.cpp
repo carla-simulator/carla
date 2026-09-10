@@ -124,7 +124,20 @@ void TrafficManagerLocal::SetupLocalMap() {
   if (!files.empty()) {
     auto content = episode_proxy.Lock()->GetCacheFile(files[0], true);
     if (content.size() != 0) {
-      local_map->Load(content);
+      if (!local_map->Load(content)) {
+        // The copy in the client's file cache (~/carlaCache) is kept for ever once
+        // downloaded, so a rejected cache is most likely a stale local copy: fetch
+        // the server's current file once and try again before rebuilding from the
+        // OpenDRIVE.
+        log_warning("fetching the Traffic Manager cache", files[0], "from the server again");
+        episode_proxy.Lock()->RequestFile(files[0]);
+        content = episode_proxy.Lock()->GetCacheFile(files[0], false);
+        local_map = std::make_shared<InMemoryMap>(world_map);
+        if (content.size() == 0 || !local_map->Load(content)) {
+          local_map = std::make_shared<InMemoryMap>(world_map);
+          local_map->SetUp();
+        }
+      }
     } else {
       log_warning("No InMemoryMap cache found. Setting up local map. This may take a while...");
       local_map->SetUp();
@@ -219,14 +232,40 @@ void TrafficManagerLocal::Step() {
     localization_stage.Update(index);
   }
   for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
+    if (!localization_frame[index].localized) {
+      continue;
+    }
     collision_stage.Update(index);
   }
   collision_stage.ClearCycleCache();
   vehicle_light_stage.UpdateWorldInfo();
   for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
+    if (!localization_frame[index].localized) {
+      continue;
+    }
     traffic_light_stage.Update(index);
     motion_plan_stage.Update(index);
     vehicle_light_stage.Update(index);
+  }
+
+  // A vehicle skipped above never had its control command written, and the
+  // default-constructed command would reach the server as an empty spawn
+  // request ("Invalid ActorDescription '' (UId=0)"). Drop those slots; the
+  // commands appended past the per-vehicle range (vehicle lights) are kept.
+  const bool any_skipped = std::any_of(
+      localization_frame.begin(),
+      localization_frame.begin() + static_cast<long>(vehicle_id_list.size()),
+      [](const LocalizationData &data) { return !data.localized; });
+  if (any_skipped) {
+    ControlFrame filtered_frame;
+    filtered_frame.reserve(control_frame.size());
+    for (unsigned long index = 0u; index < control_frame.size(); ++index) {
+      if (index < vehicle_id_list.size() && !localization_frame[index].localized) {
+        continue;
+      }
+      filtered_frame.push_back(std::move(control_frame[index]));
+    }
+    control_frame = std::move(filtered_frame);
   }
 
   registration_lock.unlock();

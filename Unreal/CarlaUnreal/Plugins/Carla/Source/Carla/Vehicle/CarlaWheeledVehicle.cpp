@@ -11,6 +11,7 @@
 #include "Carla/Game/CarlaHUD.h"
 #include "Carla/Game/CarlaStatics.h"
 #include "Carla/Lights/CarlaLight.h"
+#include "BlueprintLibary/LightDefaultsJsonUtils.h"
 #include "Carla/Trigger/FrictionTrigger.h"
 #include "Carla/Util/ActorAttacher.h"
 #include "Carla/Util/EmptyActor.h"
@@ -247,10 +248,259 @@ void ACarlaWheeledVehicle::ActivateVehicleLightComponents()
       break;
     }
   }
+
+  // Light Defaults tool integration: everything above is this project's
+  // pre-existing native pipeline (per-vehicle authored intensities from the
+  // Blueprint's own Construction Script, scaled once here) -- it never
+  // touched Config/Lights/Defaults.json, so nothing edited/saved in the
+  // Vehicles tab ever reached an actual running simulation (manual_control.py
+  // et al), only the editor-only Preview spawn.
+  //
+  // Load the saved default once here (cheap, cached for the vehicle's
+  // lifetime) and apply it for the CURRENT light state -- at this point that
+  // is InputControl.LightState's default (everything off), so this must
+  // zero every group's material emissive, not light everything up. Do NOT
+  // use ApplyVehicleLightsToSingleActor/ApplyVehicleLightsLive here: those
+  // push Intensity uniformly to every exposed group at once, which is
+  // correct for the editor Preview (meant to show everything lit for
+  // editing) but wrong for gameplay, where a group must only glow when it is
+  // actually ON.
+  {
+    const FString ClassName = GetClass()->GetName();
+    bHasSavedVehicleLightDefault = ULightDefaultsJsonUtils::LoadVehicleLightDefault(
+        ClassName, SavedVehicleLightIntensity, SavedVehicleLightGroupIntensity);
+  }
+  ApplyVehicleLightDefaultsForCurrentState();
+}
+
+void ACarlaWheeledVehicle::ApplyVehicleLightDefaultsForCurrentState()
+{
+  if (!bHasSavedVehicleLightDefault)
+    return;
+
+  const FVehicleLightState& LightState = InputControl.LightState;
+  TMap<FString, bool> GroupOn;
+  GroupOn.Add(TEXT("Position"), LightState.Position);
+  GroupOn.Add(TEXT("Low Beam"), LightState.LowBeam);
+  GroupOn.Add(TEXT("High Beam"), LightState.HighBeam);
+  GroupOn.Add(TEXT("Fog"), LightState.Fog);
+  GroupOn.Add(TEXT("Brake"), LightState.Brake);
+  GroupOn.Add(TEXT("Reverse"), LightState.Reverse);
+  GroupOn.Add(TEXT("Left Blinker"), LightState.LeftBlinker);
+  GroupOn.Add(TEXT("Right Blinker"), LightState.RightBlinker);
+  GroupOn.Add(TEXT("Special1"), LightState.Special1);
+
+  TMap<FString, float> MaterialGroupValue;
+  for (const TPair<FString, bool>& Pair : GroupOn)
+  {
+    MaterialGroupValue.Add(Pair.Key, Pair.Value ? SavedVehicleLightIntensity : 0.0f);
+  }
+
+  ULightDefaultsJsonUtils::ApplyVehicleLightsRuntimeState(
+      this, MaterialGroupValue, SavedVehicleLightGroupIntensity);
+}
+
+void ACarlaWheeledVehicle::ResolveRiderComponentsIfNeeded()
+{
+  if (bRiderComponentsResolved)
+  {
+    return;
+  }
+  bRiderComponentsResolved = true;
+
+  if (!IsTwoWheeledVehicle())
+  {
+    return;
+  }
+
+  RiderMeshComponent = Cast<USkeletalMeshComponent>(GetDefaultSubobjectByName(RiderMeshComponentName));
+  VehicleMeshForRiderSeat = GetMesh();
+
+  if ((RiderMeshComponent == nullptr) || (VehicleMeshForRiderSeat == nullptr) ||
+      !VehicleMeshForRiderSeat->DoesSocketExist(VehicleMeshSeatSocketName))
+  {
+    UE_LOG(LogCarla, Warning,
+        TEXT("%s: IsTwoWheeledVehicle is true but rider component '%s' or seat socket '%s' could not be resolved -- rider seat-lock disabled."),
+        *GetName(), *RiderMeshComponentName.ToString(), *VehicleMeshSeatSocketName.ToString());
+    RiderMeshComponent = nullptr;
+    return;
+  }
+
+  // RiderMeshComponent ships parented (attached) to the vehicle mesh in
+  // the Blueprint's own component hierarchy -- the engine's normal
+  // attachment propagation tries to keep it glued to the parent's
+  // transform on its own, continuously, independent of and in addition to
+  // our own SetWorldTransform below. That's a second system moving the
+  // same component: our smoothed value can only "win" until the next
+  // native attachment update runs (driven by the parent's raw,
+  // unsmoothed motion), which is invisible to any log of what WE compute
+  // since it happens outside our own code entirely. Detaching once here
+  // (KeepWorldTransform: no visual pop) makes our own positioning the
+  // ONLY thing moving this component from this point on.
+  RiderMeshComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
+
+  // Doing the seat-lock from TickActor (tried first) still drifted while
+  // moving: the rider's own animation gets evaluated in a later phase of
+  // the frame than Actor tick, so whatever the Blueprint's per-tick logic
+  // (or the animation itself) does to the rider after TickActor returns
+  // still lands after our correction. OnBoneTransformsFinalized fires
+  // once this component's animation/bone evaluation is fully done for
+  // the frame -- there's nothing left afterwards to undo it before render.
+  //
+  // Neither this, a real engine attachment, nor forcing the rider to tick
+  // in TG_PostPhysics (all tried in this same investigation) fixed the
+  // drift -- the last one measurably made it worse, which rules out tick
+  // order as the cause (forcing later ticking should help or be neutral,
+  // not hurt). Async Physics is confirmed disabled project-wide too, so
+  // it isn't a render-interpolation gap either. The Riding/Stopped state
+  // machine's transition rules are also ruled out: Vehicle Speed <=/>
+  // Stop Speed with no dead zone, but Stop Speed is a near-zero threshold
+  // -- at the highway speeds where the drift is worst this never flips,
+  // so the state machine isn't blending anything there. Keeping this
+  // version (proven at least not to make things worse) as the baseline
+  // while OnRiderBoneTransformsFinalized below logs both sides of the
+  // seat-lock every frame to actually measure where the divergence comes
+  // from, instead of guessing at another candidate.
+  RiderMeshComponent->RegisterOnBoneTransformsFinalizedDelegate(
+      FOnBoneTransformsFinalizedMultiCast::FDelegate::CreateUObject(
+          this, &ACarlaWheeledVehicle::OnRiderBoneTransformsFinalized));
+}
+
+void ACarlaWheeledVehicle::OnRiderBoneTransformsFinalized()
+{
+  if ((RiderMeshComponent == nullptr) || (VehicleMeshForRiderSeat == nullptr))
+  {
+    return;
+  }
+  // Logging both sides of the seat-lock every frame (temporary, since
+  // removed) proved the actual cause: the rider's own Anim Blueprint reads
+  // vehicle-mesh sockets (Seat, then confirmed the same on the
+  // handler/pedal sockets driving arm/leg IK once the seat was fixed and
+  // hands/feet were still popping) in ITS Event BlueprintUpdateAnimation,
+  // and on frames where that races ahead of the vehicle mesh's physics
+  // update for the frame, it reads exactly last frame's transform instead
+  // -- an intermittent one-frame-stale read (some frames correct, some
+  // not), which is what a visible pop/teleport looks like, not a
+  // continuous drift. Forcing this component's own tick group later
+  // (tried and reverted) didn't help because the Blueprint's read happens
+  // from its own animation update dispatch, not from this component's
+  // TickComponent.
+  // Fix: cache every socket's transform here (this delegate reliably
+  // fires late enough in the frame to always be correct, confirmed by the
+  // same log) and have the Blueprint read
+  // GetCachedVehicleSocketWorldTransform(SocketName) instead of querying
+  // the socket itself, for every seat/handler/pedal target in its Data
+  // Gather. That traded the intermittent race for a one-frame lag that's
+  // constant instead of flickering -- GetCachedVehicleSocketWorldTransform
+  // extrapolates it forward using the velocity and timestamp cached here
+  // (shared across sockets: they're all rigidly attached to the same
+  // moving mesh) to cancel out the remaining visible trailing-behind-at-speed
+  // too.
+  CachedVehicleSocketTransforms.Reset();
+  for (const FName& SocketName : VehicleMeshForRiderSeat->GetAllSocketNames())
+  {
+    CachedVehicleSocketTransforms.Add(SocketName, VehicleMeshForRiderSeat->GetSocketTransform(SocketName));
+  }
+  // LeftPedalGeo/RightPedalGeo are bones, not sockets (not covered by
+  // GetAllSocketNames above) -- GetSocketTransform falls back to a bone
+  // lookup when given a bone name, so this still works. Needed as pivots
+  // for the pedal-socket special case in GetCachedVehicleSocketWorldTransform().
+  CachedVehicleSocketTransforms.Add(TEXT("LeftPedalGeo"), VehicleMeshForRiderSeat->GetSocketTransform(TEXT("LeftPedalGeo")));
+  CachedVehicleSocketTransforms.Add(TEXT("RightPedalGeo"), VehicleMeshForRiderSeat->GetSocketTransform(TEXT("RightPedalGeo")));
+  CachedVehicleMeshTransform = VehicleMeshForRiderSeat->GetComponentTransform();
+  CachedVehicleWorldVelocity = VehicleMeshForRiderSeat->GetComponentVelocity();
+  CachedVehicleWorldAngularVelocityDegrees = VehicleMeshForRiderSeat->GetPhysicsAngularVelocityInDegrees();
+  if (const UWorld* World = GetWorld())
+  {
+    CachedVehicleTransformsTimeSeconds = World->GetTimeSeconds();
+  }
+
+  // See RiderSeatSmoothingSpeed's comment -- Chaos suspension has small,
+  // real, high-frequency vertical jitter on the mesh every frame; this
+  // low-pass filters CachedVehicleMeshTransform (used as the extrapolation
+  // base in GetCachedVehicleSocketWorldTransform()) so the rider doesn't
+  // inherit it 1:1. First frame snaps straight to the real transform --
+  // interpolating FROM a default-constructed FTransform (identity, at the
+  // world origin) would sweep the rider there for one frame.
+  //
+  // Only the vertical (Z) component of TRANSLATION is filtered -- X/Y
+  // (forward/lateral motion) are copied through exactly, every frame,
+  // with zero lag. Smoothing all of it (tried first) reintroduced a rider
+  // slide: FMath::VInterpTo always trails a moving target, and that lag
+  // grows with how fast the target (the vehicle) is moving -- at real
+  // driving speed it was very visibly behind, indistinguishable from the
+  // original slide bug. Suspension bounce is a small, purely vertical
+  // wobble, so filtering only Z bounds the worst-case lag to that
+  // wobble's own (small) amplitude, independent of vehicle speed.
+  //
+  // Smoothing Z alone didn't kill the visible bounce (confirmed: lowering
+  // RiderSeatSmoothingSpeed changed nothing about it once settled, only
+  // the initial snap-in speed) -- the real source is ROTATION jitter
+  // (small Pitch/Roll noise from the same suspension), never smoothed
+  // above for the same reason X/Y aren't: Yaw must track the handlebars
+  // instantly or turning gets laggy. But every socket (Seat, handlers,
+  // pedals) sits some distance from the mesh's own origin, and rotating
+  // that lever arm by a jittery Pitch/Roll every frame moves its WORLD
+  // position by an amount that grows with the lever arm -- invisible in
+  // pure translation-Z terms but very visible as the whole rider
+  // shuddering together, uniformly, exactly what was reported. Fix:
+  // filter Pitch and Roll the same way as Z, but decompose through
+  // Euler/FRotator instead of a straight FQuat::Slerp specifically to
+  // keep Yaw untouched (Slerp-ing the whole quaternion would smooth Yaw
+  // too and reintroduce steering lag, the same mistake already made once
+  // with translation).
+  if (!bSmoothedVehicleMeshTransformInitialized)
+  {
+    SmoothedVehicleMeshTransform = CachedVehicleMeshTransform;
+    bSmoothedVehicleMeshTransformInitialized = true;
+  }
+  else if (const UWorld* World = GetWorld())
+  {
+    const float FrameDeltaTime = World->GetDeltaSeconds();
+
+    FVector SmoothedTranslation = CachedVehicleMeshTransform.GetTranslation();
+    SmoothedTranslation.Z = FMath::FInterpTo(
+        SmoothedVehicleMeshTransform.GetTranslation().Z, SmoothedTranslation.Z,
+        FrameDeltaTime, RiderSeatSmoothingSpeed);
+    SmoothedVehicleMeshTransform.SetTranslation(SmoothedTranslation);
+
+    const FRotator PreviousSmoothedRotator = SmoothedVehicleMeshTransform.Rotator();
+    const FRotator RawRotator = CachedVehicleMeshTransform.Rotator();
+    const FRotator NewSmoothedRotator(
+        FMath::FInterpTo(PreviousSmoothedRotator.Pitch, RawRotator.Pitch, FrameDeltaTime, RiderSeatSmoothingSpeed),
+        RawRotator.Yaw,
+        FMath::FInterpTo(PreviousSmoothedRotator.Roll, RawRotator.Roll, FrameDeltaTime, RiderSeatSmoothingSpeed));
+    SmoothedVehicleMeshTransform.SetRotation(NewSmoothedRotator.Quaternion());
+  }
+
+  // Reads back through GetCachedVehicleSocketWorldTransform() (the
+  // now-smoothed pipeline above) instead of querying the seat socket
+  // directly -- this hard-snaps the rider's whole root every frame, so an
+  // unsmoothed read here would still show the suspension jitter on the
+  // rider's hips/torso regardless of how smooth the AnimGraph's own IK
+  // reads are.
+  const FTransform SeatWorldTransform = GetCachedVehicleSocketWorldTransform(VehicleMeshSeatSocketName);
+  const FTransform TargetTransform = FTransform(RiderSeatRelativeRotationOffset) * SeatWorldTransform;
+  RiderMeshComponent->SetWorldTransform(TargetTransform);
 }
 
 void ACarlaWheeledVehicle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction){
   Super::TickActor(DeltaTime, TickType, ThisTickFunction);
+
+  // Two-wheeled vehicles: resolves (once) the rider components and
+  // attaches the rider to the seat socket -- see ResolveRiderComponentsIfNeeded's
+  // comment for why a real attachment, not a per-frame transform copy.
+  ResolveRiderComponentsIfNeeded();
+
+  // See GetPedalRotation()'s comment: a continuously-accumulated angle
+  // instead of the vehicle mesh's looping Timeline, so the pedal bone
+  // (and the rider's foot IK riding on it) never pops.
+  if (IsTwoWheeledVehicle())
+  {
+    PedalRotationAngle = FMath::Fmod(
+        PedalRotationAngle + GetVehicleForwardSpeed() * PedalRotationDegreesPerCm * DeltaTime,
+        360.0f);
+  }
 
   // When velocity/acceleration control is active, flush control every frame even without AI controller
   if (VelocityControl->IsActive() || AccelerationControl->IsActive())
@@ -908,6 +1158,10 @@ void ACarlaWheeledVehicle::SetVehicleLightState(const FVehicleLightState& LightS
     // from a looping timer, so no per-call component rescale is needed here
     // -- it would race that timer anyway.
     RefreshLightState(LightState);
+    // RefreshLightState's own graph is opaque to C++ and may repush its own
+    // (weak, authored) emissive values for whichever groups just toggled --
+    // reapply the Light Defaults saved values after it so ours win.
+    ApplyVehicleLightDefaultsForCurrentState();
   }
 }
 

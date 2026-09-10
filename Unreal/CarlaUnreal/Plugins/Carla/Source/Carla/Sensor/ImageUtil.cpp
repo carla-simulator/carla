@@ -495,16 +495,25 @@ namespace ImageUtil
     auto RenderTarget = Sensor.GetCaptureRenderTarget();
     if (RenderTarget == nullptr)
       return false;
-    return ReadImageDataAsyncFColor(*RenderTarget, std::move(Callback));
+    // Pass the sensor's readback pool, as ReadSensorImageDataAsync does:
+    // without it every camera allocated a fresh staging buffer (8 MB at
+    // 1080p) on every frame.
+    return ReadImageDataAsyncFColor(
+      *RenderTarget,
+      std::move(Callback),
+      /*bNonBlocking=*/false,
+      Sensor.GetReadbackPool());
   }
 
 
 
   bool ReadImageDataAsyncFLinearColor(
     UTextureRenderTarget2D& RenderTarget,
-    ReadImageDataAsyncCallbackFLinearColor&& Callback)
+    ReadImageDataAsyncCallbackFLinearColor&& Callback,
+    bool bNonBlocking,
+    FRHIGPUReadbackPoolPtr Pool)
   {
-    return ReadImageDataAsync(RenderTarget, [Callback = std::move(Callback)](
+    return ReadImageDataAsync(RenderTarget, std::move(Pool), [Callback = std::move(Callback)](
       const void* Mapping,
       size_t RowPitch,
       size_t BufferHeight,
@@ -517,7 +526,7 @@ namespace ImageUtil
         if (!DecodePixelsByFormat(Mapping, RowPitch, Size, Format, Flags, Pixels))
           return false;
         return Callback(Pixels, Size);
-      });
+      }, bNonBlocking);
   }
 
 
@@ -529,6 +538,12 @@ namespace ImageUtil
     auto RenderTarget = Sensor.GetCaptureRenderTarget();
     if (RenderTarget == nullptr)
       return false;
-    return ReadImageDataAsyncFLinearColor(*RenderTarget, std::move(Callback));
+    // Recycle the staging buffer through the sensor's pool, as the FColor
+    // variant does.
+    return ReadImageDataAsyncFLinearColor(
+      *RenderTarget,
+      std::move(Callback),
+      /*bNonBlocking=*/false,
+      Sensor.GetReadbackPool());
   }
 }
