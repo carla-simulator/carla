@@ -28,6 +28,11 @@ Beyond the run/scenario/evaluation/clip API, the Worker also exposes:
 * `GET /api/planner` — dataset size, storage and GPU-cost bands for a target
   corpus (scenes, clip length, cameras, resolution) on marketplace GPUs, with the
   catalog's current coverage against that target. Powers the Planner tab.
+* `GET|POST /api/plans`, `GET /api/plans/diff?a=&b=`, `GET /api/plans/:id/export/{csv,md}`
+  — named budget plans. A plan stores only its planner input and is repriced at
+  today's reference rates on every read, so drift against the totals captured at
+  save time is visible; two plans can be diffed field by field and either
+  exported as a spreadsheet or as a Markdown section of the partner report.
 * `GET /api/metrics` — Prometheus exposition for Grafana.
 * `GET /api/openapi.json` — OpenAPI 3.1 description of the whole API.
 * A [CARLA Leaderboard](https://github.com/carla-simulator/leaderboard)-style

@@ -56,6 +56,28 @@ answer. `[x]` means the survey is written up and the verdict is recorded here.
 - [ ] [metadriverse/metadrive](https://github.com/metadriverse/metadrive) — lightweight procedural scenarios; useful for behaviour-cloning volume where photorealism is not the point.
 - [ ] [Farama-Foundation/HighwayEnv](https://github.com/Farama-Foundation/HighwayEnv) — fast behaviour scenarios for planner-side evaluation.
 - [ ] [tier4/AWSIM](https://github.com/tier4/AWSIM) — Unity simulator paired with Autoware; the alternative to CARLA if partners standardise on Autoware.
+- [ ] [OpenDriveLab/Vista](https://github.com/OpenDriveLab/Vista) — a driving world model that continues a real clip under new actions. Question: whether generated continuations are consistent enough to train on, or only to stress-test.
+- [ ] [nvidia-cosmos/cosmos-transfer](https://github.com/nvidia-cosmos/cosmos-transfer) — style transfer from a CARLA render to photoreal. The cheap half of the sim-to-real problem if it holds geometry; pairs with the cosmos-predict item above.
+- [ ] CARLA's own **Digital Twin Tool** (procedural maps from OpenStreetMap, `carla-simulator/carla` 0.9.15+) — the fastest route from Bhutan's OSM road network to drivable maps, before any hand-built corridor.
+
+**Turning GNSS traces into routes and maps**
+
+- [ ] [valhalla/valhalla](https://github.com/valhalla/valhalla) — Meili map-matching would snap raw device tracks to the road network, which is what the route-archetype work and per-segment quality colouring both need first.
+- [ ] [Project-OSRM/osrm-backend](https://github.com/Project-OSRM/osrm-backend) — the lighter alternative if only matching, not routing, is wanted.
+- [ ] [OvertureMaps/data](https://github.com/OvertureMaps/data) — a second basemap opinion next to OSM for Bhutan's road coverage; worth a coverage comparison before committing the corridor maps.
+
+**Safety argument and closed-loop checks**
+
+- [ ] [intel/ad-rss-lib](https://github.com/intel/ad-rss-lib) — Responsibility-Sensitive Safety, already integrated with CARLA. An RSS check per run would give the safety case a formal, quotable rule set next to the Leaderboard penalties.
+- [ ] [microsoft/presidio](https://github.com/microsoft/presidio) — PII detection in the free-text fields (notes, consent refs, reviewer comments), the part of redaction that EgoBlur does not touch.
+
+**Pipeline plumbing the planner's arithmetic assumes**
+
+- [ ] [NVIDIA/DALI](https://github.com/NVIDIA/DALI) — GPU decode and augmentation. Directly attacks the "preprocessing eats GPU-hours before training starts" line in the planner's assumptions; worth measuring before trusting the sub-linear scaling exponent.
+- [ ] [lancedb/lance](https://github.com/lancedb/lance) and [activeloopai/deeplake](https://github.com/activeloopai/deeplake) — columnar/multimodal dataset formats with versioning built in; the alternative to webdataset shards plus DVC rather than a complement to them.
+- [ ] [Lightning-AI/litdata](https://github.com/Lightning-AI/litdata) — a third streaming-shard option to benchmark against webdataset and MosaicML streaming on R2 specifically.
+- [ ] [dagster-io/dagster](https://github.com/dagster-io/dagster) or [PrefectHQ/prefect](https://github.com/PrefectHQ/prefect) — orchestration for ingest → quality gates → redaction → release, once that pipeline outgrows `scripts/`.
+- [ ] [runpod/runpodctl](https://github.com/runpod/runpodctl) — the second marketplace API next to `vast-python`, so the live-price feature quotes more than one supplier.
 
 **Scenario authoring and benchmarks**
 
@@ -85,11 +107,19 @@ answer. `[x]` means the survey is written up and the verdict is recorded here.
 - [x] Scenario library: download any template as OpenSCENARIO.
 - [x] Deep links: `#runs/<run_id>`, `#scenarios/<family>`, `#evaluations/<id>` restore the view.
 - [x] Planner tab: dataset size, storage and GPU-cost bands for a target corpus, measured against what the catalog already holds (`/api/planner`).
+- [x] Saved plans: name a plan, store it, and diff two plans (target size, GPU, cost) so a budget change is reviewable.
+- [x] Budget export: the planner's numbers as CSV and as a printable Markdown section of the partner report.
 - [ ] Run comparison: overlay two runs' timelines and event markers.
 - [ ] Live GPU prices in the planner: poll the Vast.ai (and RunPod) listing API on the cron trigger, cache in D1, and replace the static reference rates with a real quote plus a price sparkline.
-- [ ] Saved plans: name a plan, store it, and diff two plans (target size, GPU, cost) so a budget change is reviewable.
-- [ ] Budget export: the planner's numbers as CSV and as a printable Markdown/PDF section of the partner report.
 - [ ] Training-run registry: register an actual training job (dataset snapshot hash, GPU, hours, spend) and show planned versus actual next to the model's evaluation rows.
+- [ ] Inverse planner: enter a budget ceiling and get the corpus it buys — the question a partner actually asks, and the mirror of the plan the tab produces today.
+- [ ] Plan revisions: keep every save of a plan instead of overwriting, so a budget's history is auditable and any two revisions diff with the machinery `/api/plans/diff` already has.
+- [ ] Plan sensitivity (tornado chart): which single input — scenes, cameras, resolution, program, rate — moves the total most, so the negotiation starts with the variable that matters.
+- [ ] Programme view: sum several saved plans into one budget with a total band and a month-by-month spend line.
+- [ ] Drift alerts: when a saved plan's repriced total moves more than N % (the `drift` field is already computed on every read), raise it on the Overview tab and through the notification webhook below.
+- [ ] Egress and transfer line in the plan: R2 egress plus marketplace ingress for the shards, which the current model ignores entirely.
+- [ ] Energy and carbon estimate per plan: kWh from GPU-hours × board power × PUE, and gCO2e at the grid intensity of the region the instance runs in — Bhutan's hydro grid is a genuine argument to make in the partner report.
+- [ ] Cost attribution by scenario family: which families consumed the accepted hours, so the next generation batch is aimed at the expensive gaps.
 - [ ] Cost KPIs: dollars per accepted hour, per released clip and per discovered edge case, on the Overview tab.
 - [ ] Collection plan from the coverage gap: turn "still to collect" into a per-cell (weather × lighting × route class) target and a scenario-generation batch.
 - [ ] Map overlays: event heatmap by class, per-segment quality colouring on the route.
@@ -113,13 +143,14 @@ answer. `[x]` means the survey is written up and the verdict is recorded here.
 - [ ] Scenario diff tool: what changed between two library versions and which reviews it invalidated.
 - [ ] ROS 2 native bridge recipe: record CARLA UE5 ROS 2 topics into MCAP and ingest.
 - [ ] `scripts/plan_budget.py`: the planner's arithmetic in Python so a proposal can be costed without the Worker, sharing the reference tables.
+- [ ] `scripts/save_plan.py`: push a costed proposal straight into `/api/plans` from a notebook, so the budget in a document and the one in the dashboard are the same record.
 - [ ] WebDataset/MosaicML shard export from R2 so a rented GPU streams the corpus instead of downloading it.
 - [ ] SkyPilot job template that launches a checkpointed run on an interruptible instance sized by a saved plan.
 
 ## Platform and engineering
 
 - [x] Worker unit tests (`npm test`) for router, auth, exports, OpenSCENARIO, driving score and metrics.
-- [x] D1 migration `0002_fleet_and_scores.sql`.
+- [x] D1 migration `0002_fleet_and_scores.sql`, `0003_plans.sql`.
 - [ ] Vitest with `@cloudflare/vitest-pool-workers` for end-to-end route tests against Miniflare.
 - [ ] Cloudflare Access / SSO in front of the dashboard; keep bearer tokens for machine clients.
 - [ ] Key rotation for `MANIFEST_SIGNING_KEY` with multiple `key_id`s.
@@ -130,6 +161,45 @@ answer. `[x]` means the survey is written up and the verdict is recorded here.
 
 This roadmap is worked one feature per iteration: each pass picks the highest-value
 open item above, ships it with tests, ticks the box and adds a line here. Newest first.
+
+### Iteration 3 — saved plans, plan diff and budget export
+
+A plan you cannot save is a plan you cannot argue about. This ships named budget
+plans, a field-by-field diff between any two, and the export that puts one in
+front of a partner.
+
+The design decision worth recording: **a saved plan stores only its planner
+input**, never its numbers. Every read re-runs `planProgram` over that input, so
+a plan saved last quarter is quoted at today's reference rates; the totals
+captured at save time are kept beside it purely so the movement shows up as a
+`drift` field instead of a silent restatement. That is also what makes the
+future live-price feature safe to land — it will move every saved plan at once,
+visibly.
+
+* `dashboard/migrations/0003_plans.sql` — `plans(plan_id, tenant_id, name, notes,
+  input, saved_totals, created_by, …)`, ids being slugs of the name so links read.
+* `dashboard/src/plans.ts` — pure model: `slugPlanId`, `summarize` (the eleven
+  headline numbers a budget line quotes), `diffTotals`, `comparePlanRecords`
+  (input diffs carry labels, not enum ids), `planToCsv` (flat
+  `section,item,value,unit` line items) and `planToMarkdown` (corpus table, a
+  low/expected/high cost table and the assumptions, ready to paste into the
+  Month-3 report).
+* `dashboard/src/routes/plans.ts` — `GET|POST /api/plans`,
+  `GET /api/plans/diff?a=&b=`, `GET|DELETE /api/plans/:id`,
+  `GET /api/plans/:id/export/{csv,md}`. Totals are computed server-side from the
+  submitted input, so a client cannot store numbers the model would not produce;
+  saving is tenant-guarded with an explicit 409 rather than a silent no-op.
+* Front end: a save form, a saved-plans table showing each plan repriced with its
+  drift, per-row Load / CSV / MD / Delete, and an A-vs-B diff table. Only money
+  is coloured in the diff — cheaper is good, but fewer scenes is not.
+* `dashboard/test/plans.test.ts` — 9 tests (slugs, repricing from input, drift,
+  input and metric diffs, CSV quoting, Markdown completeness) plus a router test
+  pinning `/api/plans/diff` ahead of `/api/plans/:id`. Verified end to end against
+  a local D1 and in the browser.
+
+Open follow-ups it creates: plan revisions instead of overwrite, drift alerts on
+the Overview tab, an inverse planner (budget in, corpus out) and a sensitivity
+chart — all listed above.
 
 ### Iteration 2 — dataset and compute planner
 

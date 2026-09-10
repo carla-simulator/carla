@@ -52,6 +52,16 @@ export function openApiDocument(baseUrl: string, appName: string): Record<string
         }),
         post: op("Same plan from a JSON body", "reader", { requestBody: jsonBody({ $ref: "#/components/schemas/PlannerInput" }) }),
       },
+      "/api/plans": {
+        get: op("Saved budget plans, each repriced at today's reference rates with the drift since it was saved", "reader"),
+        post: op("Save or overwrite a named plan; the totals are computed server-side from the input", "writer", { requestBody: jsonBody({ allOf: [{ $ref: "#/components/schemas/PlannerInput" }, { type: "object", required: ["name"], properties: { name: { type: "string" }, plan_id: { type: "string" }, notes: { type: "string" } } }] }) }),
+      },
+      "/api/plans/diff": { get: op("Diff two saved plans: the inputs that differ and what they did to the numbers", "reader", { parameters: [q("a"), q("b")] }) },
+      "/api/plans/{id}": {
+        get: op("One saved plan plus its full recomputed detail", "reader", { parameters: [idParam("id")] }),
+        delete: op("Delete a saved plan", "writer", { parameters: [idParam("id")] }),
+      },
+      "/api/plans/{id}/export/{format}": { get: op("Budget export: csv for a spreadsheet, md for the partner report", "reader", { parameters: [idParam("id"), { name: "format", in: "path", required: true, schema: { type: "string", enum: ["csv", "md"] } }] }) },
       "/api/runs": { get: op("List runs", "reader", { parameters: [q("source"), q("scenario_id"), q("quality_status"), q("limit", { type: "integer" })] }), post: op("Upsert a run manifest", "writer", { requestBody: jsonBody({ $ref: "#/components/schemas/Run" }) }) },
       "/api/runs/{id}": { get: op("Run detail with segments, chunks, event summary, evaluations and driving score", "reader", { parameters: [idParam("id")] }) },
       "/api/runs/{id}/telemetry": { post: op("Upload a telemetry chunk", "writer", { parameters: [idParam("id"), q("seq", { type: "integer" })], requestBody: jsonBody({ type: "object", properties: { samples: { type: "array", items: { $ref: "#/components/schemas/Sample" } } } }) }), get: op("Downsampled samples for playback", "reader", { parameters: [idParam("id"), q("max", { type: "integer" })] }) },

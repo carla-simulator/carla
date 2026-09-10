@@ -18,7 +18,7 @@
     deck: null,
     history: [],
     fleet: { devices: [], device: null, track: [], deck: null, timer: null },
-    planner: { options: null, plan: null },
+    planner: { options: null, plan: null, saved: [] },
   };
 
   const $ = (sel) => document.querySelector(sel);
@@ -709,6 +709,7 @@
     state.planner.plan = plan;
     setHash("planner", String(plan.input.scenes));
     renderPlan(plan);
+    await loadSavedPlans().catch((err) => toast(err.message));
   }
 
   function renderPlan(plan) {
@@ -749,6 +750,118 @@
         <tr><td>Still to collect or generate</td><td class="num">${cov.scenes_remaining.toLocaleString("en-US")}</td><td>${cov.collection_hours_remaining.toLocaleString("en-US")} h of driving at this clip length</td></tr>
       </tbody></table>`;
     $("#plan-assumptions").innerHTML = plan.assumptions.map((a) => `<li>${esc(a)}</li>`).join("");
+  }
+
+  // ------------------------------------------------------------- saved plans
+  /** Load a saved plan's input back into the form and re-plan it. */
+  function applyPlanInput(input) {
+    for (const [key, sel] of Object.entries(PLAN_FIELDS)) {
+      const value = input[key];
+      $(sel).value = value === null || value === undefined ? "" : value;
+    }
+    $("#plan-interruptible").checked = !!input.interruptible;
+  }
+
+  async function loadSavedPlans() {
+    const { plans } = await api("/api/plans");
+    state.planner.saved = plans;
+    renderSavedPlans(plans);
+  }
+
+  function renderSavedPlans(plans) {
+    const box = $("#plan-saved");
+    if (!plans.length) {
+      box.innerHTML = `<div class="empty">no saved plans yet — name the plan on the left and press Save</div>`;
+      $("#plan-diff").innerHTML = "";
+    } else {
+      box.innerHTML = `<table class="data-table"><thead><tr><th>Plan</th><th class="num">Scenes</th><th>GPU</th><th class="num">GPU-h</th><th class="num">Total</th><th></th></tr></thead><tbody>${plans.map((p) => `
+        <tr>
+          <td><b>${esc(p.name)}</b><div class="muted">${esc(p.notes || p.plan_id)}</div>${p.drift.length ? `<div class="drift">${p.drift.length} number(s) moved since it was saved</div>` : ""}</td>
+          <td class="num">${p.current.scenes.toLocaleString("en-US")}</td>
+          <td>${esc(p.current.gpu)}${p.input.interruptible ? " <span class=\"muted\">spot</span>" : ""}</td>
+          <td class="num">${Math.round(p.current.gpu_hours).toLocaleString("en-US")}</td>
+          <td class="num">${usd(p.current.total_usd)}${p.drift.some((d) => d.metric === "total_usd") ? `<div class="drift">was ${usd(p.saved.total_usd)}</div>` : ""}</td>
+          <td><div class="plan-row-actions">
+            <button type="button" data-plan-load="${esc(p.plan_id)}">Load</button>
+            <button type="button" data-plan-export="csv" data-plan-id="${esc(p.plan_id)}">CSV</button>
+            <button type="button" data-plan-export="md" data-plan-id="${esc(p.plan_id)}">MD</button>
+            <button type="button" data-plan-delete="${esc(p.plan_id)}">Delete</button>
+          </div></td>
+        </tr>`).join("")}</tbody></table>`;
+    }
+    const ids = plans.map((p) => p.plan_id);
+    const options = plans.map((p) => `<option value="${esc(p.plan_id)}">${esc(p.name)}</option>`).join("");
+    // A plan that was not in the previous listing is the one just saved: make it the B side.
+    const fresh = ids.find((id) => !(state.planner.savedIds || []).includes(id));
+    state.planner.savedIds = ids;
+    const a = $("#plan-diff-a"), b = $("#plan-diff-b");
+    const keep = (el, fallback) => (ids.includes(el.value) ? el.value : fallback);
+    const wantA = keep(a, ids[1] || ids[0] || ""), wantB = fresh || keep(b, ids[0] || "");
+    a.innerHTML = options; a.value = wantA;
+    b.innerHTML = options; b.value = wantB;
+    // Nothing is learned from diffing a plan against itself.
+    if (a.value === b.value && ids.length > 1) a.value = ids.find((id) => id !== b.value);
+  }
+
+  async function savePlan() {
+    const name = $("#plan-name").value.trim();
+    if (!name) return toast("give the plan a name first");
+    const body = { name, notes: $("#plan-notes").value.trim() || undefined };
+    for (const [key, value] of plannerQuery().entries()) body[key] = value;
+    try {
+      const { plan } = await api("/api/plans", { method: "POST", body });
+      toast(`saved "${plan.name}" as ${plan.plan_id}`);
+      await loadSavedPlans();
+    } catch (err) { toast(err.message); }
+  }
+
+  async function deleteSavedPlan(id) {
+    if (!window.confirm(`Delete the saved plan "${id}"?`)) return;
+    try {
+      await api(`/api/plans/${encodeURIComponent(id)}`, { method: "DELETE" });
+      toast("plan deleted");
+      await loadSavedPlans();
+    } catch (err) { toast(err.message); }
+  }
+
+  async function loadSavedPlan(id) {
+    try {
+      const { plan } = await api(`/api/plans/${encodeURIComponent(id)}`);
+      applyPlanInput(plan.input);
+      $("#plan-name").value = plan.name;
+      $("#plan-notes").value = plan.notes || "";
+      await loadPlanner();
+      toast(`loaded "${plan.name}"`);
+    } catch (err) { toast(err.message); }
+  }
+
+  async function diffSavedPlans() {
+    const a = $("#plan-diff-a").value, b = $("#plan-diff-b").value;
+    if (!a || !b) return toast("save two plans to compare them");
+    if (a === b) return toast("pick two different plans");
+    try {
+      renderPlanDiff(await api(`/api/plans/diff?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`));
+    } catch (err) { toast(err.message); }
+  }
+
+  function renderPlanDiff(diff) {
+    const signed = (n, unit) => (n > 0 ? "+" : "") + (unit === "USD" ? usd(n).replace("$-", "-$") : Math.round(n * 100) / 100);
+    const inputRows = diff.input.length
+      ? diff.input.map((f) => `<tr><td>${esc(f.label)}</td><td class="num">${esc(String(f.a))}</td><td class="num">${esc(String(f.b))}</td><td></td></tr>`).join("")
+      : `<tr><td colspan="4" class="muted">identical inputs</td></tr>`;
+    const metricRows = diff.metrics.length
+      ? diff.metrics.map((m) => {
+          const unit = m.label.toLowerCase().includes(m.unit.toLowerCase()) ? "" : ` <span class="muted">${esc(m.unit)}</span>`;
+          // Only money is coloured: cheaper is good, but fewer scenes is not.
+          const tone = m.unit !== "USD" ? "" : m.delta > 0 ? " up" : " down";
+          return `<tr><td>${esc(m.label)}${unit}</td>
+            <td class="num">${m.a.toLocaleString("en-US")}</td><td class="num">${m.b.toLocaleString("en-US")}</td>
+            <td class="num delta${tone}">${signed(m.delta, m.unit)}${m.pct === null ? "" : ` (${signed(m.pct)} %)`}</td></tr>`;
+        }).join("")
+      : `<tr><td colspan="4" class="muted">the numbers are unchanged</td></tr>`;
+    $("#plan-diff").innerHTML = `
+      <table class="data-table"><thead><tr><th>Field</th><th class="num">${esc(diff.a.name)} (A)</th><th class="num">${esc(diff.b.name)} (B)</th><th class="num">B − A</th></tr></thead>
+      <tbody>${inputRows}<tr><th colspan="4">Effect on the budget</th></tr>${metricRows}</tbody></table>`;
   }
 
   async function copyPlan() {
@@ -833,6 +946,16 @@
     $("#fleet-materialize").addEventListener("click", materializeTrack);
     $("#planner-form").addEventListener("submit", (ev) => { ev.preventDefault(); loadPlanner().catch((err) => toast(err.message)); });
     $("#plan-copy").addEventListener("click", copyPlan);
+    $("#plan-save").addEventListener("click", savePlan);
+    $("#plan-diff-btn").addEventListener("click", diffSavedPlans);
+    $("#plan-saved").addEventListener("click", (ev) => {
+      const button = ev.target.closest("button[data-plan-load], button[data-plan-delete], button[data-plan-export]");
+      if (!button) return;
+      const d = button.dataset;
+      if (d.planLoad) loadSavedPlan(d.planLoad);
+      else if (d.planDelete) deleteSavedPlan(d.planDelete);
+      else download(`/api/plans/${encodeURIComponent(d.planId)}/export/${d.planExport}`, `${d.planId}-budget.${d.planExport}`).catch((err) => toast(err.message));
+    });
     $("#plan-program").addEventListener("change", () => loadPlanner().catch((err) => toast(err.message)));
     $("#plan-gpu").addEventListener("change", () => loadPlanner().catch((err) => toast(err.message)));
     $("#plan-interruptible").addEventListener("change", () => loadPlanner().catch((err) => toast(err.message)));

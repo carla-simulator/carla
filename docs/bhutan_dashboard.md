@@ -96,6 +96,11 @@ need a writer token, just not necessarily in an `Authorization` header).
 | `POST /api/kpis/snapshot` | writer | Force a snapshot |
 | `GET /api/planner/options` | none | Reference tables behind the planner: dataset tiers, training programs, GPU rates, video bitrates |
 | `GET`/`POST /api/planner` | reader | Dataset size, storage and GPU-cost plan for a target corpus, plus the catalog's coverage against it |
+| `GET /api/plans` | reader | Saved budget plans, each repriced at today's rates with the drift since it was saved |
+| `POST /api/plans` | writer | Save or overwrite a named plan (`name` plus a planner input) |
+| `GET /api/plans/diff?a=&b=` | reader | Field-by-field diff of two saved plans and its effect on the budget |
+| `GET`/`DELETE /api/plans/:id` | reader / writer | One plan with its full recomputed detail; delete a plan |
+| `GET /api/plans/:id/export/{csv,md}` | reader | Budget as spreadsheet line items, or as a Markdown section of the partner report |
 | `GET /api/runs`, `GET /api/runs/:id` | reader | Run catalog and detail (segments, chunks, event summary, evaluations, driving score) |
 | `POST /api/runs` | writer | Upsert a run manifest |
 | `POST /api/runs/:id/telemetry?seq=N` | writer | Upload a chunk of samples (stored in R2, indexed in D1) |
@@ -209,6 +214,32 @@ What the model assumes, and why:
 The response also carries `coverage`: how much accepted collection time the catalog
 already holds, expressed as scenes of the planned clip length, and how many hours of
 driving remain to hit the target.
+
+### Saved plans
+
+A plan worth quoting is worth keeping. `POST /api/plans` stores a planner input
+under a name; everything else about the plan is recomputed on every read.
+
+```sh
+curl -X POST -H "authorization: Bearer $TOKEN" -H "content-type: application/json" \
+  -d '{"name":"Month 3 — 100k scenes","notes":"partner budget","scenes":100000,"cameras":3,"program":"fine_tune","gpu":"a100_80gb"}' \
+  "$BASE/api/plans"
+curl -H "authorization: Bearer $TOKEN" "$BASE/api/plans/diff?a=month-3-100k-scenes&b=pilot-20k-h100"
+curl -H "authorization: Bearer $TOKEN" "$BASE/api/plans/month-3-100k-scenes/export/md"
+```
+
+Only the *input* is stored. The totals a plan produced at save time are kept
+beside it, but they are never served as the answer: each read re-runs the model,
+and the difference between the two shows up as `drift`. A plan saved before the
+reference rates moved therefore quotes today's price and says so, rather than
+quietly restating a stale number. `plan_id` is a slug of the name, so saving under
+the same name updates the plan in place and the export links stay stable.
+
+The diff reports the inputs that differ (with labels, not enum ids) and what they
+did to the numbers — scenes, frames, storage, GPU-hours, wall clock, rate, and each
+cost line. The exports are `csv` (flat `section,item,value,unit` line items for a
+spreadsheet) and `md` (a corpus table, a low/expected/high cost table and the
+assumptions, ready to paste into the Month-3 report).
 
 ## KPI definitions
 

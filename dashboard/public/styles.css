@@ -182,6 +182,16 @@ code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0
 .coverage-bar i { display: block; height: 100%; background: var(--status-good); }
 .assumptions { margin: 0; padding-left: 18px; color: var(--text-secondary); font-size: 12px; }
 .assumptions li { margin-bottom: 4px; }
+.planner-form label.stack { flex-direction: column; align-items: stretch; gap: 3px; }
+.planner-form label.stack input { width: 100%; }
+.plan-diff-bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 13px; color: var(--text-secondary); }
+.plan-diff-bar label { display: flex; gap: 5px; align-items: center; }
+.plan-diff-bar select { max-width: 200px; }
+.plan-row-actions { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.plan-row-actions button { padding: 2px 7px; font-size: 12px; }
+.delta.up { color: var(--status-critical); }
+.delta.down { color: var(--status-good); }
+.drift { color: var(--status-warning); font-size: 11px; }
 .pill.online::before { background: var(--status-good); }
 .pill.stale::before { background: var(--status-warning); }
 .pill.offline::before { background: var(--text-muted); }

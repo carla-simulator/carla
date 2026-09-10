@@ -12,6 +12,7 @@ import { runEvidence } from "./routes/evidence";
 import { exportRun, exportScenarioXosc } from "./routes/exports";
 import { deviceTrack, ingestOsmAnd, ingestTraccar, listFleet, materializeTrack, postPositions } from "./routes/fleet";
 import { getPlanner, getPlannerOptions, postPlanner } from "./routes/planner";
+import { deletePlan, diffPlans, exportPlan, getPlan, listPlans, savePlan } from "./routes/plans";
 
 const router = new Router()
   .get("/api/health", (c) => json({ ok: true, app: c.env.APP_NAME, time: new Date().toISOString() }))
@@ -23,6 +24,12 @@ const router = new Router()
   .get("/api/planner/options", getPlannerOptions)
   .get("/api/planner", getPlanner)
   .post("/api/planner", postPlanner)
+  .get("/api/plans", listPlans)
+  .post("/api/plans", savePlan)
+  .get("/api/plans/diff", diffPlans)                    // before /api/plans/:id so "diff" is not read as an id
+  .get("/api/plans/:id", getPlan)
+  .delete("/api/plans/:id", deletePlan)
+  .get("/api/plans/:id/export/:format", exportPlan)
   .get("/api/runs", listRuns)
   .post("/api/runs", createRun)
   .get("/api/runs/:id", getRun)
@@ -60,7 +67,7 @@ const router = new Router()
 
 const CORS_HEADERS = {
   "access-control-allow-origin": "*",
-  "access-control-allow-methods": "GET, POST, PUT, OPTIONS",
+  "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
   "access-control-allow-headers": "authorization, content-type, x-tenant",
   "access-control-max-age": "86400",
 };
