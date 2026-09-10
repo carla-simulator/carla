@@ -96,6 +96,8 @@ need a writer token, just not necessarily in an `Authorization` header).
 | `POST /api/kpis/snapshot` | writer | Force a snapshot |
 | `GET /api/planner/options` | none | Reference tables behind the planner: dataset tiers, training programs, GPU rates, video bitrates |
 | `GET`/`POST /api/planner` | reader | Dataset size, storage and GPU-cost plan for a target corpus, plus the catalog's coverage against it |
+| `GET /api/coverage` | reader | ODD coverage matrix (visibility x lighting) with gaps worst first |
+| `GET /api/scenes`, `GET /api/scenes/:id` | none | Synthetic demo scenes for the scene viewer |
 | `GET /api/runs`, `GET /api/runs/:id` | reader | Run catalog and detail (segments, chunks, event summary, evaluations, driving score) |
 | `POST /api/runs` | writer | Upsert a run manifest |
 | `POST /api/runs/:id/telemetry?seq=N` | writer | Upload a chunk of samples (stored in R2, indexed in D1) |
@@ -209,6 +211,60 @@ What the model assumes, and why:
 The response also carries `coverage`: how much accepted collection time the catalog
 already holds, expressed as scenes of the planned clip length, and how many hours of
 driving remain to hit the target.
+
+## ODD coverage matrix
+
+`GET /api/coverage` crosses the scenario library's `visibility_class` with its
+`lighting_class` and counts, per cell, the scenario variants and the runs
+recorded against them. Scenario rows describe *planned* coverage; run rows
+describe *realised* coverage.
+
+| Status | Meaning |
+|---|---|
+| `covered` | at least `min_runs` accepted runs (default 3) |
+| `thin` | variants or runs exist, but too few accepted runs |
+| `gap` | nothing at all in the cell |
+
+Gaps come back worst first — empty cells before thin ones, then the thinnest of
+those — so the list doubles as a collection work queue. Runs with no scenario
+behind them (materialised fleet tracks, GPX imports) land in an `unlabelled` row
+and column: they are shown, because that data is real, but they are not ODD
+combinations, so they are excluded from `coverage_pct`.
+
+What closing a gap *costs* is a separate question, answered by
+`/api/planner`. The matrix deliberately holds no pricing model.
+
+## Demo scenes
+
+`GET /api/scenes` and `GET /api/scenes/:id` serve four synthetic scenes
+generated from a fixed seed. They carry no tenant data, so they need no token
+and are cached for an hour — which makes the Demo scenes tab the one surface
+that works on a fresh deployment, before a token exists or a single run has been
+ingested. Being seeded, they also make screenshots in partner reports
+reproducible.
+
+Each scene sits in an ODD cell the coverage matrix reports as a gap for a young
+catalog:
+
+| Scene | ODD cell | What it shows |
+|---|---|---|
+| `thimphu_junction` | clear / daylight / urban junction | Pedestrian steps off the kerb from behind a parked bus |
+| `dochula_switchback` | clear / daylight / hairpin | Oncoming truck cuts the apex and crosses the centreline |
+| `monsoon_descent` | heavy rain / daylight / mountain curve | Spray and standing water; usable lidar range 38 m |
+| `night_fog_pass` | fog / night / mountain straight | Usable range 22 m; roadside pedestrian acquired at 21.9 m |
+
+A scene is road geometry (a curvature profile integrated into a centreline, the
+way OpenDRIVE describes it), ego and actor tracks at 10 Hz, a sensor model and a
+list of events. Everything is a pure function of the seed, so two callers get
+identical bytes.
+
+The lidar is **not** in the payload. A point cloud for every frame would run to
+tens of megabytes; instead the viewer simulates the returns in the browser,
+casting rays from the ego against the same geometry the API sent and stopping at
+the nearest of the ground plane, an actor or a verge post. That keeps a scene
+around 70 kB and makes the scan respond to the sensor model — an actor beyond
+the scene's usable lidar range is drawn as *not detected*, which is what makes
+the fog and rain scenes look visibly different from the clear ones.
 
 ## KPI definitions
 

@@ -85,6 +85,7 @@ answer. `[x]` means the survey is written up and the verdict is recorded here.
 - [x] Scenario library: download any template as OpenSCENARIO.
 - [x] Deep links: `#runs/<run_id>`, `#scenarios/<family>`, `#evaluations/<id>` restore the view.
 - [x] Planner tab: dataset size, storage and GPU-cost bands for a target corpus, measured against what the catalog already holds (`/api/planner`).
+- [x] Demo scenes tab: seeded synthetic scenes rendered in deck.gl with a browser-side lidar simulation, served unauthenticated so a fresh deployment has something to show (`/api/scenes`).
 - [ ] Run comparison: overlay two runs' timelines and event markers.
 - [ ] Live GPU prices in the planner: poll the Vast.ai (and RunPod) listing API on the cron trigger, cache in D1, and replace the static reference rates with a real quote plus a price sparkline.
 - [ ] Saved plans: name a plan, store it, and diff two plans (target size, GPU, cost) so a budget change is reviewable.
@@ -99,7 +100,7 @@ answer. `[x]` means the survey is written up and the verdict is recorded here.
 - [ ] Notifications: webhook (Slack, e-mail via Workers) when a critical event is uploaded unreviewed.
 - [ ] Clip player with event markers for released clips.
 - [ ] Route archetype view from `route_profile.py` output (curvature, grade histograms).
-- [ ] Coverage matrix: scenarios and runs by weather × lighting × route class with gaps highlighted.
+- [x] Coverage matrix: scenarios and runs by visibility × lighting class with gaps highlighted, worst first (`/api/coverage`).
 - [ ] Per-tenant branding and read-only share links with expiring tokens.
 
 ## Toolkit and pipeline features
@@ -130,6 +131,41 @@ answer. `[x]` means the survey is written up and the verdict is recorded here.
 
 This roadmap is worked one feature per iteration: each pass picks the highest-value
 open item above, ships it with tests, ticks the box and adds a line here. Newest first.
+
+### Iteration 3 — ODD coverage matrix and the demo scene viewer
+
+Two items in one pass, because they answer the same question from opposite ends:
+which parts of the ODD are missing, and what those conditions actually look like.
+
+* `dashboard/src/coverage.ts` — pure matrix over scenario and run rows. Cells are
+  `covered` at `min_runs` accepted runs (default 3), `thin` when variants exist but
+  too few runs do, and a `gap` when nothing is there; gaps are ordered worst first so
+  the list reads as a collection queue. Runs with no scenario behind them land in an
+  `unlabelled` row and column that is shown but excluded from `coverage_pct`.
+  `dashboard/src/routes/coverage.ts` supplies the rows from D1.
+* `dashboard/src/scenes.ts` — four synthetic scenes generated from a fixed seed, each
+  placed in an ODD cell the matrix reports as a gap (urban junction, mountain hairpin,
+  monsoon descent, night fog). Road geometry comes from a curvature profile integrated
+  into a centreline, the way OpenDRIVE describes it; ego and actor tracks are sampled
+  at 10 Hz. `/api/scenes` needs no token because there is no tenant data in it, which
+  makes this the one tab that works on a fresh deployment.
+* `dashboard/public/scenes.js` — deck.gl `OrbitView` viewer in local metres. The lidar
+  is simulated client-side: rays sweep 32 elevation rings around the ego and stop at
+  the nearest of the ground plane, an actor box or a verge post. That keeps a scene at
+  about 70 kB instead of tens of megabytes, and ties the scan to the sensor model —
+  actors past the usable range are drawn as *not detected*, so fog and rain look
+  visibly different from clear daylight.
+* Tests: 4 over the matrix classification, 10 over scene generation (geometry,
+  determinism, frame counts, event/actor consistency, plausible speeds and braking)
+  and 9 over the viewer's ray casting, loaded into a sandbox because it is browser
+  code with no build step.
+
+This supersedes the duplicate planners on PRs #5 and #6: both re-implemented the
+Iteration 2 model under new names, and only the coverage matrix in #6 was new.
+
+Open follow-ups it creates: turn the gap list into a scenario-generation batch (the
+"collection plan from the coverage gap" item above), and let a demo scene be exported
+as OpenSCENARIO so it can be rendered for real in CARLA.
 
 ### Iteration 2 — dataset and compute planner
 

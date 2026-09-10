@@ -6,6 +6,7 @@
   <title>OA Driverless Vision · Atlas</title>
   <link rel="stylesheet" href="/styles.css">
   <script src="https://unpkg.com/deck.gl@9.0.35/dist.min.js" defer></script>
+  <script src="/scenes.js" defer></script>
   <script src="/app.js" defer></script>
 </head>
 <body data-palette="#2a78d6,#eb6834,#1baf7a">
@@ -21,6 +22,7 @@
       <button class="tab is-active" data-view="overview" role="tab">Overview</button>
       <button class="tab" data-view="runs" role="tab">Runs &amp; playback</button>
       <button class="tab" data-view="scenarios" role="tab">Scenario library</button>
+      <button class="tab" data-view="scenes" role="tab">Demo scenes</button>
       <button class="tab" data-view="evaluations" role="tab">Evaluations</button>
       <button class="tab" data-view="governance" role="tab">Safety &amp; governance</button>
       <button class="tab" data-view="fleet" role="tab">Fleet</button>
@@ -129,6 +131,51 @@
       <div class="card table-card"><table id="scenarios-table" class="data-table"><thead><tr>
         <th>Scenario</th><th>Family</th><th>Weather</th><th>Time</th><th>Route class</th><th>Traffic</th><th>Lane quality</th><th>Sensor degradation</th><th>Review</th><th title="ASAM OpenSCENARIO for ScenarioRunner / esmini">Export</th>
       </tr></thead><tbody></tbody></table></div>
+    </section>
+
+
+    <section id="view-scenes" class="view" aria-label="Demo scenes">
+      <div class="section-head">
+        <h1>Demo scenes</h1>
+        <p class="muted">Synthetic scenes generated from a fixed seed by <code>/api/scenes</code> — no database, no token, so a fresh deployment has something to show. The lidar is simulated in the browser by casting rays against the same geometry, which is why fog and rain visibly thin the returns. Each scene sits in an ODD cell the coverage matrix reports as a gap.</p>
+        <div class="filters">
+          <label>Scene <select id="scene-picker"></select></label>
+          <label class="check"><input type="checkbox" id="scene-lidar" checked> lidar</label>
+          <label class="check"><input type="checkbox" id="scene-follow" checked> follow ego</label>
+          <button id="scene-top" type="button">Top-down</button>
+        </div>
+      </div>
+      <p class="muted" id="scene-description"></p>
+      <div id="scene-odd" class="odd-row"></div>
+      <div class="scene-layout">
+        <div class="card">
+          <div id="scene-canvas" class="scene-canvas" role="img" aria-label="Simulated lidar scene"></div>
+          <div id="scene-hud" class="scene-hud"></div>
+          <div class="scene-controls">
+            <button id="scene-play" type="button">Play</button>
+            <input id="scene-slider" type="range" min="0" max="240" value="0" aria-label="scene playback position">
+            <span id="scene-time" class="mono">0.0 s</span>
+          </div>
+          <div class="legend scene-legend">
+            <span><i style="background:#2a78d6"></i> ego</span>
+            <span><i style="background:#1baf7a"></i> tracked vehicle</span>
+            <span><i style="background:#d63a3a"></i> tracked VRU</span>
+            <span><i style="background:#8a8a84"></i> beyond lidar range</span>
+            <span><i style="background:#ebb03c"></i> return off an object</span>
+            <span><i style="background:#607e8a"></i> carriageway</span>
+          </div>
+        </div>
+        <div class="scene-side">
+          <div class="card table-card">
+            <h2>Actors <span class="muted">range from the ego, this frame</span></h2>
+            <table id="scene-actors" class="data-table"><thead><tr><th>Actor</th><th>Class</th><th>Range</th><th>Perception</th></tr></thead><tbody></tbody></table>
+          </div>
+          <div class="card">
+            <h2>Events <span class="muted">click to jump</span></h2>
+            <ul id="scene-events" class="scene-events"></ul>
+          </div>
+        </div>
+      </div>
     </section>
 
     <section id="view-evaluations" class="view" aria-label="Evaluations">

@@ -763,7 +763,13 @@
   }
 
   // ------------------------------------------------------------------ wiring
-  const loaders = { overview: loadOverview, runs: loadRuns, scenarios: loadScenarios, evaluations: loadEvaluations, governance: loadGovernance, fleet: loadFleet, planner: loadPlanner };
+  /** The demo scenes live in scenes.js and need no token; see showView. */
+  async function loadScenes(id) {
+    if (!window.AtlasScenes) throw new Error("scene viewer failed to load");
+    await window.AtlasScenes.load(id);
+  }
+
+  const loaders = { overview: loadOverview, runs: loadRuns, scenarios: loadScenarios, scenes: loadScenes, evaluations: loadEvaluations, governance: loadGovernance, fleet: loadFleet, planner: loadPlanner };
 
   function setHash(view, id) {
     const next = "#" + view + (id ? "/" + encodeURIComponent(id) : "");
@@ -781,6 +787,12 @@
     document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("is-active", t.dataset.view === view));
     document.querySelectorAll(".view").forEach((v) => v.classList.toggle("is-active", v.id === "view-" + view));
     if (view !== "fleet") clearTimeout(state.fleet.timer);
+    if (view !== "scenes" && window.AtlasScenes) window.AtlasScenes.dispose();
+    // The demo scenes are generated, not stored, so this tab works unauthenticated.
+    if (view === "scenes") {
+      try { await loadScenes(id); } catch (err) { toast(err.message, 5000); }
+      return;
+    }
     if (!state.token) return;
     if (id && view === "runs") state.pendingRun = id;
     if (id && view === "scenarios") { const sel = $("#scenario-family"); if (![...sel.options].some((o) => o.value === id)) sel.add(new Option(id, id)); sel.value = id; }
@@ -811,6 +823,7 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => showView(t.dataset.view)));
+    if (window.AtlasScenes) window.AtlasScenes.wire();
     $("#auth-form").addEventListener("submit", (ev) => { ev.preventDefault(); connect(); });
     $("#auth-token").value = state.token;
     $("#auth-tenant").value = state.tenant;

@@ -28,6 +28,19 @@ Beyond the run/scenario/evaluation/clip API, the Worker also exposes:
 * `GET /api/planner` — dataset size, storage and GPU-cost bands for a target
   corpus (scenes, clip length, cameras, resolution) on marketplace GPUs, with the
   catalog's current coverage against that target. Powers the Planner tab.
+* `GET /api/coverage` — ODD coverage matrix: scenario variants and the runs
+  recorded against them, crossed by visibility and lighting class. A cell is
+  covered at `min_runs` accepted runs (default 3), thin when variants exist but
+  too few runs do, and a gap when nothing is there; gaps come back worst first.
+  Runs with no scenario behind them land in an `unlabelled` row and column that
+  is shown but excluded from the coverage percentage.
+* `GET /api/scenes`, `GET /api/scenes/:id` — synthetic demo scenes, generated
+  from a fixed seed. No tenant data and no authentication, so the Demo scenes
+  tab works on a fresh deployment before a single run is ingested. Each scene
+  carries road geometry, ego and actor tracks at 10 Hz, a sensor model and
+  events, and sits in an ODD cell the coverage matrix reports as a gap. The
+  lidar is not shipped — the viewer simulates the returns in the browser by
+  casting rays against the same geometry, so a scene stays around 70 kB.
 * `GET /api/metrics` — Prometheus exposition for Grafana.
 * `GET /api/openapi.json` — OpenAPI 3.1 description of the whole API.
 * A [CARLA Leaderboard](https://github.com/carla-simulator/leaderboard)-style

@@ -12,6 +12,8 @@ import { runEvidence } from "./routes/evidence";
 import { exportRun, exportScenarioXosc } from "./routes/exports";
 import { deviceTrack, ingestOsmAnd, ingestTraccar, listFleet, materializeTrack, postPositions } from "./routes/fleet";
 import { getPlanner, getPlannerOptions, postPlanner } from "./routes/planner";
+import { getCoverage } from "./routes/coverage";
+import { getScene, getScenes } from "./routes/scenes";
 
 const router = new Router()
   .get("/api/health", (c) => json({ ok: true, app: c.env.APP_NAME, time: new Date().toISOString() }))
@@ -23,6 +25,9 @@ const router = new Router()
   .get("/api/planner/options", getPlannerOptions)
   .get("/api/planner", getPlanner)
   .post("/api/planner", postPlanner)
+  .get("/api/coverage", getCoverage)
+  .get("/api/scenes", getScenes)
+  .get("/api/scenes/:id", getScene)
   .get("/api/runs", listRuns)
   .post("/api/runs", createRun)
   .get("/api/runs/:id", getRun)

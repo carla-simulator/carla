@@ -52,6 +52,13 @@ export function openApiDocument(baseUrl: string, appName: string): Record<string
         }),
         post: op("Same plan from a JSON body", "reader", { requestBody: jsonBody({ $ref: "#/components/schemas/PlannerInput" }) }),
       },
+      "/api/coverage": {
+        get: op("ODD coverage matrix: scenario variants and runs crossed by visibility and lighting class, with the gaps worst first", "reader", {
+          parameters: [q("min_runs", { type: "integer" })],
+        }),
+      },
+      "/api/scenes": { get: op("Demo scene catalog — synthetic, generated from a fixed seed, no tenant data", "none") },
+      "/api/scenes/{id}": { get: op("One demo scene: road geometry, ego and actor tracks, sensor model and events", "none", { parameters: [idParam("id")] }) },
       "/api/runs": { get: op("List runs", "reader", { parameters: [q("source"), q("scenario_id"), q("quality_status"), q("limit", { type: "integer" })] }), post: op("Upsert a run manifest", "writer", { requestBody: jsonBody({ $ref: "#/components/schemas/Run" }) }) },
       "/api/runs/{id}": { get: op("Run detail with segments, chunks, event summary, evaluations and driving score", "reader", { parameters: [idParam("id")] }) },
       "/api/runs/{id}/telemetry": { post: op("Upload a telemetry chunk", "writer", { parameters: [idParam("id"), q("seq", { type: "integer" })], requestBody: jsonBody({ type: "object", properties: { samples: { type: "array", items: { $ref: "#/components/schemas/Sample" } } } }) }), get: op("Downsampled samples for playback", "reader", { parameters: [idParam("id"), q("max", { type: "integer" })] }) },
