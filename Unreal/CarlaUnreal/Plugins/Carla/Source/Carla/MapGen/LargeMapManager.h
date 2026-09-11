@@ -81,6 +81,10 @@ protected:
   void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
   void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld);
 
+  // Snap the ATrafficSignBase actors among Candidates to the ground (used
+  // after tiles stream in) and re-register environment objects if any moved.
+  void AdjustSignsHeightToGround(const TArray<AActor*>& Candidates);
+
 public:
 
   void RegisterInitialObjects();

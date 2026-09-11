@@ -155,8 +155,12 @@
     - var_name: spectator_as_ego
       type: bool
       doc: >
-        Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. By default, the spectator will provoke loading of neighboring tiles in the absence of an ego actor. This might be inconvenient for applications that immediately spawn an ego actor. 
-    
+        Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. By default, the spectator will provoke loading of neighboring tiles in the absence of an ego actor. This might be inconvenient for applications that immediately spawn an ego actor.
+    - var_name: adjust_signs_height_to_ground
+      type: bool
+      doc: >
+        When enabled, OpenDRIVE-generated traffic signs and traffic lights are snapped down to the ground after spawning, keeping their trigger volumes aligned. Only generated actors are moved, never signs placed by hand in the level. It is false by default. Toggling it also re-adjusts already-spawned signs, so it can be enabled at any time.
+
     # - METHODS ----------------------------
     methods:
     - def_name: __init__
@@ -204,8 +208,13 @@
         type: bool
         default: True
         doc: >
-          Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps. 
-        
+          Used for large maps only. Defines the influence of the spectator on tile loading in Large Maps.
+      - param_name: adjust_signs_height_to_ground
+        type: bool
+        default: False
+        doc: >
+          Set this to true to snap OpenDRIVE-generated traffic signs and traffic lights down to the ground after spawning.
+
       doc: >
         Creates an object containing desired settings that could later be applied through carla.World and its method __<font color="#7fb800">apply_settings()</font>__.
     # --------------------------------------
