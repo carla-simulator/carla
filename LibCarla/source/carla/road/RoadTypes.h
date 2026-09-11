@@ -24,6 +24,8 @@ namespace road {
 
   using SignId = std::string;
 
+  using StencilId = std::string;
+
   using ConId = uint32_t;
 
   using ContId = std::string;
