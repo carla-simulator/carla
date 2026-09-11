@@ -1062,10 +1062,20 @@ def add_map(pack_dir, manifest, args):
         xodr = Path(xodr).expanduser()
         if not xodr.is_file():
             raise PackError("--xodr file not found: {}".format(xodr))
-        dst_xodr = content / "Maps" / "OpenDrive" / (map_name + ".xodr")
+        # Keep each logic file beside its own XODR: map_logic.json has a fixed
+        # runtime filename, so a shared directory would mix phases across maps.
+        logic = xodr.with_name("map_logic.json")
+        od_dir = Path("Maps/OpenDrive") / map_name if logic.is_file() else Path("Maps/OpenDrive")
+        dst_xodr = content / od_dir / (map_name + ".xodr")
         if xodr.resolve() != dst_xodr.resolve():
             copy_any(xodr, dst_xodr)
-        entry["xodr"] = "Maps/OpenDrive/{}.xodr".format(map_name)
+        entry["xodr"] = (od_dir / (map_name + ".xodr")).as_posix()
+        if logic.is_file():
+            load_json(logic)  # Fail before shipping malformed runtime configuration.
+            dst_logic = content / od_dir / "map_logic.json"
+            if logic.resolve() != dst_logic.resolve():
+                copy_any(logic, dst_logic)
+            entry["map_logic"] = (od_dir / "map_logic.json").as_posix()
         if not args.xodr:
             info("OpenDRIVE {} -> {}".format(xodr, entry["xodr"]))
     else:
@@ -1097,7 +1107,16 @@ def add_map(pack_dir, manifest, args):
         if not args.tm:
             info("Traffic Manager data {} -> {}/".format(tm, entry["tm"]))
 
-    manifest["maps"] = [m for m in manifest["maps"] if m.get("name") != map_name] + [entry]
+    # Re-registering a map after removing its phase file must not leave the
+    # old loose configuration in the staged pack.
+    old = next((m for m in manifest["maps"] if m.get("name") == map_name), {})
+    others = [m for m in manifest["maps"] if m.get("name") != map_name]
+    for key in ("xodr", "map_logic"):
+        previous = old.get(key)
+        if previous and previous != entry.get(key) and is_clean_relpath(previous):
+            if not any(m.get(key) == previous for m in others):
+                (content / previous).unlink(missing_ok=True)
+    manifest["maps"] = others + [entry]
     info("registered map {} as {}{}".format(map_name, entry["package"],
                                           " (World Partition)" if world_partition else ""))
 
@@ -1540,7 +1559,7 @@ def sidecar_files(pack_dir, manifest):
     """Content-relative sidecar files the manifest promises (catalogs, xodr, nav)."""
     rels = ["Content/" + c for c in manifest.get("catalogs", [])]
     for m in manifest.get("maps", []):
-        for key in ("xodr", "nav"):
+        for key in ("xodr", "nav", "map_logic"):
             if m.get(key):
                 rels.append("Content/" + m[key])
     return rels
@@ -1598,6 +1617,13 @@ def cmd_create(args):
     for spec in args.maps:
         resolve_map_source(spec, args, pack_dir)
     manifest = load_manifest(pack_dir)
+    if not VERSION_RE.match(args.version):
+        raise PackError("invalid pack version: {}".format(args.version))
+    manifest["version"] = args.version
+    descriptor = pack_dir / (manifest["name"] + ".uplugin")
+    plugin = load_json(descriptor)
+    plugin["VersionName"] = args.version
+    save_json(descriptor, plugin)
     for spec in args.maps:
         add_map(pack_dir, manifest, argparse.Namespace(
             map=spec, xodr=None, nav=None, tm=None, world_partition=False, copy=False,

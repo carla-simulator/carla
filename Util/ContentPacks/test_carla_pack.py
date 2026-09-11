@@ -432,6 +432,25 @@ echo '{"ok": true, "load": true, "save": true, "seconds": 1.0, "error": ""}' > "
         self.assertEqual(rc, 1)
         self.assertIn("already ships /Game/Carla/Maps/Town13/Town13", err)
 
+    def test_map_logic_is_isolated_per_map_and_shipped_as_sidecar(self):
+        run("init", PACK, "--project", self.project, "--carla-version", "0.10.0")
+        for name in ("Town12", "Town13"):
+            town = self.existing_town(name)
+            write(town.parent / "OpenDrive" / "map_logic.json", json.dumps({"map": name}))
+            rc, _, err = run("add", PACK, "--project", self.project, "--map", name)
+            self.assertEqual(rc, 0, err)
+        manifest = json.loads((self.pack_dir / "carla-pack.json").read_text())
+        for entry in manifest["maps"]:
+            logic = self.pack_dir / "Content" / entry["map_logic"]
+            self.assertEqual(json.loads(logic.read_text())["map"], entry["name"])
+            self.assertEqual(Path(entry["xodr"]).parent, Path(entry["map_logic"]).parent)
+        self.assertNotEqual(manifest["maps"][0]["map_logic"], manifest["maps"][1]["map_logic"])
+        old_logic = self.pack_dir / "Content" / manifest["maps"][0]["map_logic"]
+        (self.project.parent / "Content/Carla/Maps/Town12/OpenDrive/map_logic.json").unlink()
+        rc, _, err = run("add", PACK, "--project", self.project, "--map", "Town12")
+        self.assertEqual(rc, 0, err)
+        self.assertFalse(old_logic.exists())
+
     def test_create_is_init_add_build_in_one_command(self):
         for t in ("Town01_Opt", "Town12"):
             self.existing_town(t)
@@ -458,6 +477,11 @@ echo '{"ok": true, "load": true, "save": true, "seconds": 1.0, "error": ""}' > "
         self.assertEqual(rc, 0, err)
         self.assertIn("adding to the existing pack", out)
         self.assertEqual(len(json.loads((pack_dir / "carla-pack.json").read_text())["maps"]), 3)
+        rc, _, err = run("create", "Towns2", "Town13", "--project", self.project,
+                         "--engine", self.engine, "--pack-version", "2.0.0", "--dry-run")
+        self.assertEqual(rc, 0, err)
+        self.assertEqual(json.loads((pack_dir / "carla-pack.json").read_text())["version"], "2.0.0")
+        self.assertEqual(json.loads((pack_dir / "Towns2.uplugin").read_text())["VersionName"], "2.0.0")
         # no base anywhere: a clear error, nothing else
         shutil.rmtree(str(self.tmp / "Build"))
         rc, out, err = run("create", "Towns3", "Town13", "--project", self.project, "--engine", self.engine,

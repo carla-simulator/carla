@@ -415,3 +415,12 @@ Yes. Cooked content is configuration independent; the same pack mounts on Develo
 __Can I edit a CARLA town for my pack?__
 
 Make your own copy first: `carla-pack add NewPack --map Town12 --import` performs the editor's Save As into `/NewPack/Maps/Town12/Town12` (minutes for a large World Partition town, see `add`), then edit that copy in the editor and `build`. The pack then ships the copy under `/NewPack/`, so it can be installed next to a pack that ships the original in place.
+
+### DigitalTwin traffic phase sidecars
+
+When an OpenDRIVE file has a sibling `map_logic.json`, `add`/`create` copies both
+into `Content/Maps/OpenDrive/<Map>/` and records `map_logic` in the map manifest
+entry. The runtime finds this file beside the registered OpenDRIVE. Per-map
+folders prevent phase data collisions in multi-map packs. Re-registering a map
+without its former phase file removes obsolete managed sidecars. These packs
+require a binary with the corresponding native traffic phase implementation.

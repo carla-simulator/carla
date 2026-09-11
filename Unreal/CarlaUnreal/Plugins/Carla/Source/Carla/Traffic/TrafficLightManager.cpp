@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "TrafficLightManager.h"
+#include "GeoTrafficSign.h"
 #include "Game/CarlaStatics.h"
 #include "StopSignComponent.h"
 #include "YieldSignComponent.h"
@@ -535,6 +536,21 @@ T * GetClosestTrafficSignActor(const carla::road::Signal &Signal, UWorld* World)
   {
     float Dist = FVector::DistSquared(Actor->GetActorLocation(), Location);
     T * TrafficSign = Cast<T>(Actor);
+    // Baked twin signs carry an explicit identity. Their support may be moved
+    // onto a sidewalk more than 5 m from the logical OpenDRIVE control point.
+    // Never adopt another signal's identified sign through the proximity fallback.
+    if (const AGeoTrafficSign* GeoSign = Cast<AGeoTrafficSign>(Actor))
+    {
+      if (!GeoSign->SignalId.IsEmpty())
+      {
+        if (GeoSign->SignalId == carla::rpc::ToFString(Signal.GetSignalId()) &&
+            MatchSignalAndActor(Signal, TrafficSign))
+        {
+          return TrafficSign;
+        }
+        continue;
+      }
+    }
     if (Dist < MinDistance && MatchSignalAndActor(Signal, TrafficSign))
     {
       ClosestTrafficSign = TrafficSign;

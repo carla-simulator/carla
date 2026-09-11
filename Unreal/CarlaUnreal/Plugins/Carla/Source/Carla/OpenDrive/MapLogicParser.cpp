@@ -499,6 +499,19 @@ void UMapLogicParser::ApplyLaneIdsFromMapLogic(const FString& XODRFilePath, ATra
         Controller->SetRedTime(Data.Timing.RedDuration);
         Controller->SetGreenTime(Data.Timing.GreenDuration);
         Controller->SetYellowTime(Data.Timing.AmberDuration);
+        // Pedestrian heads have no amber lamp. Use an explicit two-state cycle,
+        // including the red crossing-clearance tail before vehicles can start.
+        const std::string Id(TCHAR_TO_UTF8(*Comp->GetSignId()));
+        if (Signals.at(Id)->GetType() == "1000002")
+        {
+          FTrafficLightStage Walk;
+          Walk.State = ETrafficLightState::Green;
+          Walk.Time = Data.Timing.GreenDuration;
+          FTrafficLightStage Clearance;
+          Clearance.State = ETrafficLightState::Red;
+          Clearance.Time = Data.Timing.RedDuration;
+          Controller->SetStates({Walk, Clearance});
+        }
       }
       else
       {
@@ -527,7 +540,10 @@ void UMapLogicParser::ApplyLaneIdsFromMapLogic(const FString& XODRFilePath, ATra
         TrafficLightManager->RegisterLightComponentFromOpenDRIVE(TrafficLightComp);
       }
       ApplyTiming(TrafficLightComp);
-      TrafficLightComp->InitializeSign(Map.value());
+      if (Signals.at(std::string(TCHAR_TO_UTF8(*TrafficLightComp->GetSignId())))->GetType() != "1000002")
+      {
+        TrafficLightComp->InitializeSign(Map.value());
+      }
       ++SuccessCount;
       continue;
     }
@@ -583,7 +599,10 @@ void UMapLogicParser::ApplyLaneIdsFromMapLogic(const FString& XODRFilePath, ATra
       UTrafficLightComponent* TrafficLightComp = NewTrafficLight->GetTrafficLightComponent();
       TrafficLightManager->RegisterLightComponentFromOpenDRIVE(TrafficLightComp);
       ApplyTiming(TrafficLightComp);
-      TrafficLightComp->InitializeSign(Map.value());
+      if (Signals.at(std::string(TCHAR_TO_UTF8(*TrafficLightComp->GetSignId())))->GetType() != "1000002")
+      {
+        TrafficLightComp->InitializeSign(Map.value());
+      }
       ++SpawnedHere;
       ++SuccessCount;
     }
