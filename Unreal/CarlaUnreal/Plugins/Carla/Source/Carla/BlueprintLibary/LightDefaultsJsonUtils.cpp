@@ -401,7 +401,7 @@ namespace
     const TArray<FString> VehicleLightGroupNames = {
         TEXT("Position"), TEXT("Low Beam"), TEXT("High Beam"), TEXT("Fog"),
         TEXT("Brake"), TEXT("Reverse"), TEXT("Left Blinker"), TEXT("Right Blinker"),
-        TEXT("Special1"),
+        TEXT("Special1"), TEXT("Interior"),
     };
 
     // Real light Intensity values (Ambulance's Low Beam ~500000) are
@@ -508,6 +508,8 @@ namespace
             return Lower.Contains(TEXT("reverse"));
         if (GroupName == TEXT("Special1"))
             return Lower.Contains(TEXT("special1"));
+        if (GroupName == TEXT("Interior"))
+            return Lower.Contains(TEXT("interior"));
         return false;
     }
 
@@ -1415,4 +1417,3 @@ void ULightDefaultsJsonUtils::PreviewVehicleBlinkers(const UObject* WorldContext
         return;
     UKismetMaterialLibrary::SetScalarParameterValue(World, Collection, TEXT("VisualTime"), 0.25f);
 }
-

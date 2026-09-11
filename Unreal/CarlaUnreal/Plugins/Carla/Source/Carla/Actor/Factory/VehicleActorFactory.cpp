@@ -15,6 +15,8 @@
 #include "JsonUtilities.h"
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
+#include "Components/StaticMeshComponent.h"
+#include "Materials/MaterialInstanceDynamic.h"
 #include <util/ue-header-guard-end.h>
 
 TArray<FActorDefinition> AVehicleActorFactory::GetDefinitions()
@@ -65,6 +67,30 @@ FActorSpawnResult AVehicleActorFactory::SpawnActor(
   }
 
   if( PostProcessVehicle(SpawnedActor, ActorDescription) ){
+    // Modular vehicles keep painted panels on static-mesh components. The
+    // legacy Blueprint paint path only visits the main skeletal mesh.
+    if (SpawnedActor->ActorHasTag(TEXT("Carla.StaticBodyworkPaint")) &&
+        ActorDescription.Variations.Contains(TEXT("color")))
+    {
+      const FLinearColor Color(UActorBlueprintFunctionLibrary::RetrieveActorAttributeToColor(
+          TEXT("color"), ActorDescription.Variations, FColor::White));
+      TArray<UStaticMeshComponent*> Panels;
+      SpawnedActor->GetComponents(Panels);
+      for (UStaticMeshComponent* Panel : Panels)
+      {
+        const TArray<FName> Slots = Panel->GetMaterialSlotNames();
+        for (int32 Index = 0; Index < Slots.Num(); ++Index)
+        {
+          if (Slots[Index] == TEXT("Bodywork_Mat"))
+          {
+            if (UMaterialInstanceDynamic* Paint = Panel->CreateDynamicMaterialInstance(Index))
+            {
+              Paint->SetVectorParameterValue(TEXT("Base Color"), Color);
+            }
+          }
+        }
+      }
+    }
     SpawnResult.Status = EActorSpawnResultStatus::Success;
     return SpawnResult;
   }
