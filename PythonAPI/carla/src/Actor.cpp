@@ -137,6 +137,8 @@ void export_actor() {
       .def("set_target_angular_velocity", &cc::Actor::SetTargetAngularVelocity, (arg("angular_velocity")))
       .def("enable_constant_velocity", &cc::Actor::EnableConstantVelocity, (arg("velocity")))
       .def("disable_constant_velocity", &cc::Actor::DisableConstantVelocity)
+      .def("enable_constant_acceleration", &cc::Actor::EnableConstantAcceleration, (arg("acceleration")))
+      .def("disable_constant_acceleration", &cc::Actor::DisableConstantAcceleration)
       .def("add_impulse", &AddActorImpulse, (arg("impulse"))) 
       .def("add_impulse_at_location", &AddActorImpulseAtLocation, (arg("impulse"), arg("location")))
       .def("add_force", &AddActorForce, (arg("force")))

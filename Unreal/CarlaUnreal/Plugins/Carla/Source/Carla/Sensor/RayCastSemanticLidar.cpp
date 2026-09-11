@@ -218,13 +218,19 @@ void ARayCastSemanticLidar::ComputeRawDetection(const FHitResult& HitInfo, const
 
     const AActor* actor = HitInfo.GetActor();
     Detection.object_idx = 0;
-    
-    // Given that landscapes do not have tags for now, asign it here if the actor is a landscape, otherwise get the component tag
-    if (actor->IsA<ALandscape>()){
+    Detection.object_tag = static_cast<uint32_t>(crp::CityObjectLabel::None);
+
+    // Given that landscapes do not have tags for now, assign it here if the
+    // actor is a landscape, otherwise get the component tag.
+    // GetTagOfTaggedComponent tolerates untagged components (World Partition
+    // streams in HLOD/proxy geometry that never went through ATagger) by
+    // falling back to the stencil value, where reading ComponentTags[0]
+    // directly asserts on an empty array.
+    if (actor != nullptr && actor->IsA<ALandscape>()){
       Detection.object_tag = static_cast<uint32_t>(ATagger::GetTagFromString("Terrain"));
     }
-    else {
-      Detection.object_tag = static_cast<uint32_t>(ATagger::GetTagFromString(HitInfo.Component->ComponentTags[0].ToString()));
+    else if (HitInfo.Component.IsValid()) {
+      Detection.object_tag = static_cast<uint32_t>(ATagger::GetTagOfTaggedComponent(*HitInfo.Component));
     }
 
     if (actor != nullptr) {

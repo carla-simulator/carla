@@ -77,17 +77,46 @@ public:
   template <typename T>
   static crp::CityObjectLabel GetLabelByPath(const T* Object)
   {
+    if (Object == nullptr)
+    {
+      // A component whose mesh is not assigned yet (props get their mesh
+      // after SpawnActor, i.e. after the OnActorSpawned tagger delegate).
+      return crp::CityObjectLabel::None;
+    }
     const FString Path = Object->GetPathName();
     TArray<FString> StringArray;
     Path.ParseIntoArray(StringArray, TEXT("/"), false);
-    if(Path.Contains("UE5UseOnly"))
+    if (!Path.StartsWith(TEXT("/Game/")))
     {
-      return (StringArray.Num() > 5 ? GetLabelByFolderName(StringArray[5]) : crp::CityObjectLabel::None);
+      // Content pack (or any other mount root): same folder rule as the base
+      // content, /<Pack>/Static/<Tag>/..., i.e. the folder right after the
+      // first "Static" folder names the label. Plugin content without a
+      // "Static" folder falls through to the nearest-folder fallback below.
+      for (int32 i = 1; i + 1 < StringArray.Num(); ++i)
+      {
+        if (StringArray[i] == TEXT("Static"))
+        {
+          const crp::CityObjectLabel PackLabel = GetLabelByFolderName(StringArray[i + 1]);
+          if (PackLabel != crp::CityObjectLabel::None)
+          {
+            return PackLabel;
+          }
+          break;
+        }
+      }
     }
-    else
+    const int32 Primary = Path.Contains("UE5UseOnly") ? 5 : 4;
+    crp::CityObjectLabel Label =
+        (StringArray.Num() > Primary ? GetLabelByFolderName(StringArray[Primary]) : crp::CityObjectLabel::None);
+    // Fallback for content mounted outside /Game/Carla/Static/<Label>/... (e.g. plugin
+    // content such as /CarlaDigitalTwinsTool/Static/Building/...): the labelled folder
+    // nearest the asset wins. Runs only when the fixed-index lookup found nothing, so
+    // classic content keeps its exact previous labels.
+    for (int32 i = StringArray.Num() - 2; i >= 0 && Label == crp::CityObjectLabel::None; --i)
     {
-      return (StringArray.Num() > 4 ? GetLabelByFolderName(StringArray[4]) : crp::CityObjectLabel::None);
+      Label = GetLabelByFolderName(StringArray[i]);
     }
+    return Label;
   }
 
   /// Method that computes the label corresponding to an specific object

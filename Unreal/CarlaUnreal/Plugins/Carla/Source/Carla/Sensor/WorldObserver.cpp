@@ -107,13 +107,28 @@ static auto FWorldObserver_GetActorState(const FCarlaActor &View, const FActorRe
         const UTrafficLightController* Controller =  TrafficLightComponent->GetController();
         const ATrafficLightGroup* Group = TrafficLightComponent->GetGroup();
 
+        // This serializer runs every tick for every traffic light; on maps
+        // whose signals fail junction grouping (e.g. HD-map OpenDRIVE with
+        // placeholder junction connections) a per-tick per-light error floods
+        // the log hard enough to stall the whole server. Log each condition
+        // once per session -- the affected lights simply stream zeroed state.
         if (!Controller)
         {
-          UE_LOG(LogCarla, Error, TEXT("TrafficLightComponent doesn't have any Controller assigned"));
+          static bool bLoggedMissingController = false;
+          if (!bLoggedMissingController)
+          {
+            bLoggedMissingController = true;
+            UE_LOG(LogCarla, Warning, TEXT("TrafficLightComponent doesn't have any Controller assigned (logged once; affected lights stream zeroed state)"));
+          }
         }
         else if (!Group)
         {
-          UE_LOG(LogCarla, Error, TEXT("TrafficLightComponent doesn't have any Group assigned"));
+          static bool bLoggedMissingGroup = false;
+          if (!bLoggedMissingGroup)
+          {
+            bLoggedMissingGroup = true;
+            UE_LOG(LogCarla, Warning, TEXT("TrafficLightComponent doesn't have any Group assigned (logged once; affected lights stream zeroed state)"));
+          }
         }
         else
         {
@@ -202,7 +217,13 @@ static auto FWorldObserver_GetDormantActorState(const FCarlaActor &View, const F
       const ATrafficLightGroup* Group = Controller->GetGroup();
       if(!Group)
       {
-        UE_LOG(LogCarla, Error, TEXT("TrafficLight doesn't have any Group assigned"));
+        // Same per-tick flood hazard as above: log once per session.
+        static bool bLoggedMissingGroup = false;
+        if (!bLoggedMissingGroup)
+        {
+          bLoggedMissingGroup = true;
+          UE_LOG(LogCarla, Warning, TEXT("TrafficLight doesn't have any Group assigned (logged once; affected lights stream zeroed state)"));
+        }
       }
       else
       {
@@ -349,8 +370,27 @@ static carla::Buffer FWorldObserver_Serialize(
     }
     else
     {
-      Velocity = TO_METERS * View->GetActor()->GetVelocity();
-      AngularVelocity = FWorldObserver_GetAngularVelocity(*View->GetActor());
+      const AActor* Actor = View->GetActor();
+      if (Actor == nullptr)
+      {
+        // World Partition streamed the actor out without notifying the
+        // registry (the entry is still Active but the weak pointer is now
+        // null). Skip it this frame; converting these to dormant on
+        // stream-out is tracked as follow-up work.
+        continue;
+      }
+      // Go through FCarlaActor::GetActorVelocity() rather than
+      // Actor->GetVelocity() directly: FWalkerActor overrides it to read
+      // UCharacterMovementComponent::Velocity, since AActor::GetVelocity()
+      // (via APawn::GetVelocity()) prefers the root component's
+      // physics-body velocity whenever it's simulating physics -- true for
+      // walker Blueprints set up for ragdoll death even while walking
+      // normally via AddMovementInput -- which reported near-zero here
+      // despite the walker actually moving. All other actor types are
+      // unaffected: the base FCarlaActor::GetActorVelocity() still just
+      // returns GetActor()->GetVelocity(), identical to before.
+      Velocity = TO_METERS * View->GetActorVelocity();
+      AngularVelocity = FWorldObserver_GetAngularVelocity(*Actor);
       Acceleration = FWorldObserver_GetAcceleration(*View, Velocity, DeltaSeconds);
       State = FWorldObserver_GetActorState(*View, Registry);
     }

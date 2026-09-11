@@ -171,5 +171,24 @@ public:
       DisplayName = "ROS2 Topics Visible On Startup")
   bool ROS2TopicVisibility = true;
 
+  /// DDS middleware (RMW) used by the native ROS2 connector. Accepted values:
+  /// "fastdds" (default) and "cyclonedds". Set via the --rmw= command-line
+  /// argument. CycloneDDS is only available on Linux.
+  UPROPERTY(Category = "Quality Settings/ROS2",
+      BlueprintReadOnly,
+      EditAnywhere,
+      config,
+      DisplayName = "ROS2 RMW")
+  FString RmwName = TEXT("fastdds");
+
+  /// ROS2 domain id. Set via --ros-domain-id=<N> on the command line.
+  /// -1 (the default) keeps each middleware's native default domain.
+  UPROPERTY(Category = "Quality Settings/ROS2",
+      BlueprintReadOnly,
+      EditAnywhere,
+      config,
+      DisplayName = "ROS2 Domain ID")
+  int32 ROS2DomainId = -1;
+
   /// @}
 };

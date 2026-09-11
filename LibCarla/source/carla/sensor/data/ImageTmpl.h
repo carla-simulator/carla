@@ -13,6 +13,7 @@
 #include "carla/sensor/s11n/GBufferUint8Serializer.h"
 #include "carla/sensor/s11n/GBufferFloatSerializer.h"
 #include "carla/sensor/s11n/NormalsImageSerializer.h"
+#include "carla/sensor/s11n/DistanceImageSerializer.h"
 #include "carla/ros2/ROS2.h"
 
 namespace carla {
@@ -35,6 +36,7 @@ namespace data {
     friend s11n::GBufferUint8Serializer;
     friend s11n::GBufferFloatSerializer;
     friend SerializerNormals;
+    friend s11n::DistanceImageSerializer;
 
     explicit ImageTmpl(RawData &&data)
       : Super(Serializer::header_offset, std::move(data)) {

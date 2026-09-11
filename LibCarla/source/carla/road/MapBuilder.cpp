@@ -7,6 +7,7 @@
 #include "carla/StringUtil.h"
 #include "carla/road/MapBuilder.h"
 #include "carla/road/element/RoadInfoElevation.h"
+#include "carla/road/element/RoadInfoLateralShape.h"
 #include "carla/road/element/RoadInfoGeometry.h"
 #include "carla/road/element/RoadInfoLaneAccess.h"
 #include "carla/road/element/RoadInfoLaneBorder.h"
@@ -81,6 +82,19 @@ namespace road {
     DEBUG_ASSERT(road != nullptr);
     auto elevation = std::make_unique<RoadInfoElevation>(s, a, b, c, d);
     _temp_road_info_container[road].emplace_back(std::move(elevation));
+  }
+
+  void MapBuilder::AddRoadLateralShape(
+      Road *road,
+      const double s,
+      const double a,
+      const double b,
+      const double c,
+      const double d,
+      const double t) {
+    DEBUG_ASSERT(road != nullptr);
+    auto shape = std::make_unique<RoadInfoLateralShape>(s, t, a, b, c, d);
+    _temp_road_info_container[road].emplace_back(std::move(shape));
   }
 
   void MapBuilder::AddRoadObjectCrosswalk(

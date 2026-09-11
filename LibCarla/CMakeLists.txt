@@ -463,6 +463,14 @@ if (BUILD_LIBCARLA_TESTS)
       ${LIBCARLA_SOURCE_PATH}/test/server/*.cpp
     )
 
+    if (NOT ENABLE_ROS2)
+      list (
+        REMOVE_ITEM
+        LIBCARLA_TEST_SERVER_SOURCES
+        ${LIBCARLA_SOURCE_PATH}/test/server/test_ros2_middleware.cpp
+      )
+    endif ()
+
     carla_add_executable (
       libcarla_test_server
       "Build the LibCarla server-side gtest suite."
@@ -490,6 +498,37 @@ if (BUILD_LIBCARLA_TESTS)
       LIBCARLA_WITH_GTEST
       LIBCARLA_TEST_CONTENT_FOLDER="${CARLA_WORKSPACE_PATH}/Build/test-content"
     )
+
+    if (ENABLE_ROS2)
+      # The ROS2 middleware tests need the Fast-CDR and Fast-DDS headers and
+      # shared libs that the Ros2Native ExternalProject chain installs at build
+      # time (Fast-DDS for GenericCdrPubSubType's TopicDataType base and
+      # SerializedPayload_t). The path mirrors PROJECT_INSTALL_PATH in
+      # Ros2Native/CMakeLists.txt.
+      set (CARLA_ROS2_NATIVE_INSTALL_PATH ${CMAKE_BINARY_DIR}/Ros2Native/install)
+      target_include_directories (
+        libcarla_test_server SYSTEM PRIVATE
+        ${CARLA_ROS2_NATIVE_INSTALL_PATH}/include
+      )
+      target_link_libraries (
+        libcarla_test_server PRIVATE
+        ${CARLA_ROS2_NATIVE_INSTALL_PATH}/lib/libfastcdr.so
+        ${CARLA_ROS2_NATIVE_INSTALL_PATH}/lib/libfastrtps.so
+      )
+      # libfastrtps.so privately depends on the foonathan_memory shared lib,
+      # whose file name is version- and config-dependent (e.g.
+      # libfoonathan_memory-0.7.4-dbg.so in Debug). -rpath-link lets the linker
+      # resolve those transitive symbols, and --disable-new-dtags emits DT_RPATH
+      # (instead of DT_RUNPATH) so the dynamic loader also searches this
+      # directory for libfastrtps.so's own dependencies at run time.
+      target_link_options (
+        libcarla_test_server PRIVATE
+        "LINKER:-rpath-link,${CARLA_ROS2_NATIVE_INSTALL_PATH}/lib"
+        "LINKER:-rpath,${CARLA_ROS2_NATIVE_INSTALL_PATH}/lib"
+        "LINKER:--disable-new-dtags"
+      )
+      add_dependencies (libcarla_test_server fastdds)
+    endif ()
 
   endif ()
 

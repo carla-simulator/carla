@@ -1,0 +1,77 @@
+// Copyright (c) 2025 NVIDIA CORPORATION.  All rights reserved.
+syntax = "proto3";
+
+package nre.grpc.protos.common;
+
+////////////////////////////////////////////////////////////////////////////////
+// Common types
+////////////////////////////////////////////////////////////////////////////////
+
+message Empty {}
+
+message Quat {
+    float w = 1;
+    float x = 2;
+    float y = 3;
+    float z = 4;
+}
+
+message Vec3 {
+    float x = 1;
+    float y = 2;
+    float z = 3;
+}
+
+message Pose {
+    // convention: translation (`vec`) is applied 1st, then rotation `quat`
+    Vec3 vec = 1;
+    Quat quat = 2;
+}
+
+message DynamicState {
+    Vec3 angular_velocity = 1;
+    Vec3 linear_velocity = 2;
+}
+
+message AABB { // axis aligned bounding box
+    float size_x = 1;
+    float size_y = 2;
+    float size_z = 3;
+}
+
+message PoseAtTime {
+    Pose pose = 1;
+    fixed64 timestamp_us = 2;
+}
+
+message StateAtTime {
+    fixed64 timestamp_us = 1;
+    Pose pose = 2;
+    DynamicState state = 3;
+}
+
+message Trajectory {
+    repeated PoseAtTime poses = 1;
+}
+
+message VersionId {
+    message APIVersion {
+        uint32 major = 1;
+        uint32 minor = 2;
+        uint32 patch = 3;
+    }
+
+    string version_id = 1;
+    string git_hash = 2;
+
+    // grpc_api_version
+    APIVersion grpc_api_version = 3;
+
+    // any additional data such as hardware config?
+}
+
+message SessionRequestStatus {} // empty; reserved name in case we want to extend it in the future
+
+message AvailableScenesReturn {
+    repeated string scene_ids = 1;
+}

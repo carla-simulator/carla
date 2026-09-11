@@ -88,21 +88,43 @@ Values quoted verbatim from the per-tier CVar set in the CARLA selector module. 
 
 Rows marked *(bucket)* take their value from the `[GroupName@N]` section in `DefaultScalability.ini` selected by the corresponding `sg.*Quality` row.
 
-### Render features disabled across every tier
+### Ray tracing defaults
 
-The following render-pipeline features are disabled at the project level for every tier, because their combined activation has not been validated stable on all target GPUs. Each tier renders with Software Lumen for GI plus reflections, and Virtual Shadow Maps for shadows.
+The hardware ray tracing subsystem is initialized at the project level (`r.RayTracing=True`) and the path tracer is available (`r.PathTracing=True`) — this is what powers the [ray-traced lens camera](ref_sensors.md#ray-traced-lens-camera). Per-effect switches are configured as follows:
 
 | CVar | Project default | Effect when enabled |
 |---|---|---|
-| `r.Lumen.HardwareRayTracing` | False | Switches Lumen GI + reflections from compute-only paths to hardware RT cores. Sharper glossy reflections, accurate secondary bounces. |
-| `r.RayTracing.Shadows` | False | Ray-traced shadows with physically accurate soft penumbras. Replaces Virtual Shadow Maps for the run. |
-| `r.RayTracing.ForceAllRayTracingEffects` | 0 | Force-enables every RT-capable effect in the project. High BVH cost; only enable with HW-RT-capable GPUs. |
-| `r.MegaLights.EnableForProject` | 0 | UE 5.5 MegaLights; many-light renderer for stylized / dense-light scenes. |
-| `r.PathTracing` | False | Offline-quality unbiased path-traced rendering. Not real-time. |
+| `r.RayTracing` | True | Initializes the hardware ray tracing subsystem (RTX-class GPU required). Read-only after engine init. |
+| `r.PathTracing` | True | Makes the path tracer available for `sensor.camera.rt_lens`. |
+| `r.Lumen.HardwareRayTracing` | False | Switches the main view's Lumen GI + reflections from software SDF tracing to hardware RT cores. Kept off by default: the engine keeps a single per-scene ray-tracing command cache, and mixing hardware-RT viewport effects with streaming path-traced sensors re-caches the whole scene every frame (a large flat per-frame cost on big towns). |
+| `r.RayTracing.Shadows` | False | Ray-traced direct shadows instead of Virtual Shadow Maps. Kept off by default for the same cache reason. |
+| `r.RayTracing.ForceAllRayTracingEffects` | 0 | Force-enables every RT-capable effect in the project. High BVH cost. |
 
-Enabling any of these requires editing `Config/DefaultEngine.ini` (or the corresponding tier code in `CarlaDeviceProfileSelectorModule.cpp`) and rebuilding the simulator. The packaged Shipping binary strips the engine's `-execcmds=` command-line parser, so runtime overrides via that flag are not available in distributed CARLA releases; only project-side configuration takes effect.
+Sensor captures opt into hardware ray tracing individually through the `use_ray_tracing` camera attribute (default `True`), and the console variable `carla.Camera.UseRayTracing` can force it on (`1`) or off (`0`) for every camera at once (`-1` respects the per-sensor attribute).
 
-The persisted `GameUserSettings.ini` does not need to be deleted when switching between tiers. The selector module re-applies the active tier's scalability after `UGameUserSettings::ApplyNonResolutionSettings` runs, so cross-run scalability state cannot shadow the current tier.
+Changing project defaults requires editing `Config/DefaultEngine.ini` and rebuilding the simulator. The packaged Shipping binary strips the engine's `-execcmds=` command-line parser, so runtime overrides via that flag are not available in distributed CARLA releases; only project-side configuration takes effect.
+
+### NVIDIA DLSS
+
+CARLA integrates two DLSS features (the DLSS SDK is fetched during setup, so both are present in standard builds; an NVIDIA RTX-class GPU is required at runtime):
+
+*   __DLSS Ray Reconstruction (DLSS-RR)__ denoises the path-traced frames of `sensor.camera.rt_lens`. It is the default denoiser (`r.PathTracing.Denoiser.Name=DLSSRR` in `DefaultEngine.ini`) and is controlled per sensor with the `enable_denoiser` attribute.
+*   __DLSS Super Resolution (DLSS-SR)__ upscales individual camera sensors: with `enable_dlss=true` a camera renders internally at `dlss_screen_percentage` of its output resolution and DLSS reconstructs the full-size image. It is opt-in per camera (see the [RGB camera attributes](ref_sensors.md#rgb-camera)); on non-NVIDIA hardware an enabled sensor degrades gracefully to a bilinear upscale.
+
+The example `PythonAPI/examples/manual_control_5cam.py` spawns a five-camera 1080p rig on an autopilot vehicle and toggles DLSS-SR live (press `D`) so the frame-rate and quality impact can be compared directly.
+
+### Ray-traced lens tuning
+
+The [ray-traced lens camera family](ref_sensors.md#ray-traced-lens-camera) (`sensor.camera.rt_lens`, `sensor.camera.rt_lens_distance`, `sensor.camera.rt_lens_instance`) is driven by a handful of engine console variables, set project-wide in `Unreal/CarlaUnreal/Config/DefaultEngine.ini` (`[SystemSettings]` and `[/Script/Engine.RendererSettings]` sections). Changing project defaults requires editing that file and rebuilding/repackaging the simulator; the packaged Shipping binary strips the `-execcmds=` command-line parser, so runtime overrides via the launch command are not available in distributed releases. A running editor or development build can still be tuned live from the in-game console.
+
+| CVar | Default | What it does | When to change it |
+|---|---|---|---|
+| `r.PathTracing.FramePassCount` | Engine: `1`. CARLA project (`DefaultEngine.ini`): `0` | Sample passes the path tracer runs per rendered frame. `0` = automatic: run as many passes as needed to finish the sensor's remaining `samples_per_pixel` that frame (capped at 16 by the engine). `N` = run up to N passes per frame (also capped at 16). | Leave at the CARLA default (`0`). It is what lets a *moving* camera reach and denoise its full `samples_per_pixel` budget every frame instead of restarting accumulation at 1 sample; without it only `samples_per_pixel=1` sensors reach the denoise gate while driving. |
+| `r.PathTracing.MaxFramePassCount` | Engine: `16`. CARLA project: `64` | Upper bound on `r.PathTracing.FramePassCount`, i.e. the most sample passes one rendered frame may run. A sensor's `samples_per_pixel` above this value cannot finish (and denoise) within one tick, and with a moving camera never reaches the denoise gate at all: `sensor.camera.rt_lens`'s `Set()` clamps `samples_per_pixel` to this cvar and logs a warning when it does. | Raise it to allow higher `samples_per_pixel` sensors to converge every frame (CARLA already raises it to 64); lower it to cap the worst-case per-frame path-tracing cost. Measured 2026-09-08: 32 samples/pixel run under a 16-pass cap was about 4&times; noisier than the same count run under a cap that lets it finish. |
+| `r.PathTracing.DLSSRR.FeatureIdleReleaseSeconds` | `0` (off) | Optional wall-clock fallback: seconds a DLSS Ray Reconstruction / DLSS Super Resolution feature (one per distinct view/lens configuration) may sit unused before its GPU memory is released. `0` disables it. | Not normally needed. A sensor's DLSS-RR feature (measured ~342 MB at 1080p) is released within about a second of the sensor being destroyed, because its lifetime is tied to the sensor's view state rather than to a timeout. That is what lets a live sensor go arbitrarily long between captures (a slow synchronous client, a sparse `sensor_tick`) without losing the denoiser's temporal history: the previous default of `10.0` re-created the feature and reset that history on every capture slower than 10 s. Set a value only as a safety net for a leak you have actually observed; any live sensor slower than the value then pays the reset again. |
+| `carla.RTLens.SyncModeBlockingReadback` | `1` | In synchronous mode, `1` delivers each `rt_lens*` image captured on the *same* tick, through a per-tick batched blocking GPU readback shared by every camera. `0` forces the asynchronous, one-tick-late, droppable readback (see [Readback and synchronous-mode delivery](ref_sensors.md#ray-traced-lens-camera)) even in synchronous mode. | Rollback valve. Leave at the default (`1`) for frame-accurate synchronous captures; set to `0` only to debug or work around a regression in the batched readback path. |
+
+ The selector module re-applies the active tier's scalability after `UGameUserSettings::ApplyNonResolutionSettings` runs, so cross-run scalability state cannot shadow the current tier.
 
 <br>
 

@@ -34,6 +34,7 @@
 #include "BlueprintEditor.h"
 #include "PhysicsEngine/SkeletalBodySetup.h"
 #include "UObject/SavePackage.h"
+#include "Misc/PackageName.h"
 #include <util/ue-header-guard-end.h>
 
 #include <unordered_map>
@@ -593,6 +594,7 @@ AActor* UUSDImporterWidget::GenerateNewVehicleBlueprint(
   CopyCollisionToPhysicsAsset(NewPhysicsAsset, VehicleMeshes.Body);
   // assign the physics asset to the skeletal mesh
   NewSkeletalMesh->SetPhysicsAsset(NewPhysicsAsset);
+  NewSkeletalMesh->MarkPackageDirty();
   // Create the new blueprint vehicle
   FKismetEditorUtilities::FCreateBlueprintFromActorParams Params;
   Params.bReplaceActor = false;
@@ -625,7 +627,8 @@ bool UUSDImporterWidget::EditSkeletalMeshBones(
     int32 BoneIdx = SkeletonModifier.FindBoneIndex(FName(*BoneName));
     if (BoneIdx == INDEX_NONE)
     {
-      UE_LOG(LogCarlaTools, Log, TEXT("Bone %s not found"), *BoneName);
+      UE_LOG(LogCarlaTools, Error, TEXT("Bone %s not found"), *BoneName);
+      return false;
     }
     UE_LOG(LogCarlaTools, Log, TEXT("Bone %s corresponds to index %d"), *BoneName, BoneIdx);
     SkeletonModifier.UpdateRefPoseTransform(BoneIdx, BoneTransform);
@@ -641,18 +644,31 @@ bool UUSDImporterWidget::EditSkeletalMeshBones(
   SaveArgs.bWarnOfLongFilename = true;
   SaveArgs.SaveFlags = SAVE_NoError;
 
-  return UPackage::SavePackage(Package, NewSkeletalMesh, *(Package->GetName()),
-                               SaveArgs);
+  const FString Filename = FPackageName::LongPackageNameToFilename(
+      Package->GetName(), FPackageName::GetAssetPackageExtension());
+  return UPackage::SavePackage(Package, NewSkeletalMesh, *Filename, SaveArgs);
 }
 
 void UUSDImporterWidget::CopyCollisionToPhysicsAsset(
     UPhysicsAsset* PhysicsAssetToEdit, UStaticMesh* StaticMesh)
 {
-  UE_LOG(LogCarlaTools, Log, TEXT("Num bodysetups %d"), PhysicsAssetToEdit->SkeletalBodySetups.Num());
-  UBodySetup* BodySetupPhysicsAsset = Cast<UBodySetup>(
-      PhysicsAssetToEdit->SkeletalBodySetups[
-          PhysicsAssetToEdit->FindBodyIndex(FName("Vehicle_Base"))]);
+  if (!PhysicsAssetToEdit || !StaticMesh || !StaticMesh->GetBodySetup())
+  {
+    return;
+  }
+  const int32 BodyIndex = PhysicsAssetToEdit->FindBodyIndex(FName("Vehicle_Base"));
+  if (!PhysicsAssetToEdit->SkeletalBodySetups.IsValidIndex(BodyIndex))
+  {
+    UE_LOG(LogCarlaTools, Error, TEXT("Vehicle_Base collision body is missing"));
+    return;
+  }
+  UBodySetup* BodySetupPhysicsAsset = PhysicsAssetToEdit->SkeletalBodySetups[BodyIndex];
   UBodySetup* BodySetupStaticMesh = StaticMesh->GetBodySetup();
+  BodySetupPhysicsAsset->Modify();
   BodySetupPhysicsAsset->AggGeom = BodySetupStaticMesh->AggGeom;
-
+  // Replacing authoring geometry alone leaves the template's cooked collision
+  // and DDC key alive. Rebuild Chaos geometry before saving the derived asset.
+  BodySetupPhysicsAsset->InvalidatePhysicsData();
+  BodySetupPhysicsAsset->CreatePhysicsMeshes();
+  PhysicsAssetToEdit->MarkPackageDirty();
 }

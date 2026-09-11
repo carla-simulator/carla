@@ -73,10 +73,25 @@ public:
   UPROPERTY(BlueprintCallable, BlueprintAssignable, Category = "DayTimeChangeEvent")
   FDayTimeChanged DayTimeChangeEvent;
 
-private:
+  /// Broadcast a day/night change and then re-apply the UE4->UE5 component
+  /// intensity conversion on every registered light. Use this instead of
+  /// broadcasting DayTimeChangeEvent directly: blueprint-bound handlers push
+  /// raw authored intensities into the light components, undoing any
+  /// conversion applied earlier in the same broadcast.
+  void NotifyDayTimeChange(bool bIsDay);
 
+  /// Flag every registered client (except ClientThatUpdate) so their
+  /// LightManager re-queries light states. Must be called after any
+  /// server-side state change made outside a client request (day/night
+  /// broadcast, recorder replay), or clients keep serving stale cached
+  /// values.
   void SetClientStatesdirty(FString ClientThatUpdate);
 
+private:
+
+  // UPROPERTY so the GC can see these references: a bare map dangles when
+  // World Partition streams out a lamp before its EndPlay unregisters it.
+  UPROPERTY()
   TMap<int, UCarlaLight* > Lights;
 
   // Flag for each client to tell if an update needs to be done

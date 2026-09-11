@@ -110,6 +110,30 @@ void LocalizationStage::Update(const unsigned long index) {
   // Initializing buffer if it is empty.
   if (waypoint_buffer.empty()) {
     SimpleWaypointPtr closest_waypoint = local_map->GetWaypoint(vehicle_location);
+    if (closest_waypoint == nullptr) {
+      // The map has no drivable waypoint at all (EmptyMap, or an OpenDRIVE
+      // file without roads): there is nothing to localize this vehicle
+      // against. Leave output.localized false so TrafficManagerLocal::Step
+      // skips the stages that assume a non-empty waypoint buffer.
+      output_array.at(index).localized = false;
+      return;
+    }
+    // Prefer a waypoint whose lane direction matches the vehicle heading.
+    // The nearest waypoint can belong to the opposing lane — or the vehicle
+    // may have been spun around (collision, player driving, bad resume
+    // pose) — and a buffer seeded against the heading makes the controller
+    // chase a target behind the vehicle at full lock and full throttle.
+    if (cg::Math::Dot(closest_waypoint->GetForwardVector(), heading_vector) < 0.0f) {
+      float best_dot = 0.0f;
+      for (const SimpleWaypointPtr &candidate :
+           local_map->GetWaypointsInDelta(vehicle_location, 8u, 4.0f)) {
+        const float dot = cg::Math::Dot(candidate->GetForwardVector(), heading_vector);
+        if (dot > best_dot) {
+          best_dot = dot;
+          closest_waypoint = candidate;
+        }
+      }
+    }
     PushWaypoint(actor_id, track_traffic, waypoint_buffer, closest_waypoint);
   }
 
@@ -222,6 +246,7 @@ void LocalizationStage::Update(const unsigned long index) {
 
   // Editing output array
   LocalizationData &output = output_array.at(index);
+  output.localized = true;
   output.is_at_junction_entrance = is_at_junction_entrance;
 
   if (is_at_junction_entrance) {

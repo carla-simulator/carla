@@ -189,6 +189,14 @@ float AInertialMeasurementUnit::ComputeCompass()
 void AInertialMeasurementUnit::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AInertialMeasurementUnit::PostPhysTick);
+  // The parent vehicle can be destroyed before this sensor (client-side
+  // destruction order is not guaranteed); the sensor then receives one more
+  // PostPhysTick with a null owner and the gyroscope owner dereference would
+  // assert, taking down the whole server. Skip the measurement instead.
+  if (GetOwner() == nullptr)
+  {
+    return;
+  }
   AccelerometerValue = ComputeAccelerometer(DeltaTime);
   GyroscopeValue = ComputeGyroscope();
   CompassValue = ComputeCompass();

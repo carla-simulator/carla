@@ -766,6 +766,27 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             out_mesh.AddVertex(edges.first);
             out_mesh.AddVertex(edges.second);
 
+            // Close this step's quad against a rung one resolution-step
+            // ahead instead of leaning on the *next* do-while iteration to
+            // supply it (as a bare "add 2 vertices, index 4" would): if the
+            // mark type changes to one this switch treats as a no-op (None,
+            // SolidSolid, SolidBroken, ...), that iteration adds no
+            // vertices at all, so these dangling indices used to only get
+            // resolved by the post-loop closing block below -- using
+            // s_end/the overshot s_current -- which stretched this rung
+            // into one long, warped quad spanning however much unmarked
+            // road followed. Self-close every Solid step, same as Broken
+            // already does.
+            s_current += road_param.resolution;
+            if (s_current > s_end) {
+              s_current = s_end;
+            }
+
+            edges = ComputeEdgesForLanemark(lane_section, lane, s_current, lane_mark_info.width, 0.0f);
+
+            out_mesh.AddVertex(edges.first);
+            out_mesh.AddVertex(edges.second);
+
             out_mesh.AddIndex(currentIndex);
             out_mesh.AddIndex(currentIndex + 1);
             out_mesh.AddIndex(currentIndex + 2);
@@ -774,7 +795,6 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             out_mesh.AddIndex(currentIndex + 3);
             out_mesh.AddIndex(currentIndex + 2);
 
-            s_current += road_param.resolution;
             break;
           }
           case carla::road::element::LaneMarking::Type::Broken: {
@@ -901,6 +921,33 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             out_mesh.AddVertex(rightpoint.location);
             out_mesh.AddVertex(leftpoint.location);
 
+            // Close this step's quad against a rung one resolution-step
+            // ahead instead of leaning on the *next* do-while iteration to
+            // supply it -- see the matching comment on the Solid case in
+            // GenerateLaneMarksForNotCenterLine. Without this, a centerline
+            // that turns into a no-op mark type (None, SolidSolid,
+            // SolidBroken double-yellow, ...) partway down the lane left
+            // this rung's quad dangling until the post-loop closing block
+            // stitched it to s_end/the overshot s_current instead, warping
+            // it into one long quad spanning however much unmarked road
+            // followed.
+            s_current += road_param.resolution;
+            if (s_current > s_end) {
+              s_current = s_end;
+            }
+
+            rightpoint = road.GetDirectedPointIn(s_current);
+            leftpoint = rightpoint;
+
+            rightpoint.ApplyLateralOffset(static_cast<float>(lane_mark_info.width * 0.5));
+            leftpoint.ApplyLateralOffset(static_cast<float>(lane_mark_info.width * -0.5));
+
+            rightpoint.location.y *= -1;
+            leftpoint.location.y *= -1;
+
+            out_mesh.AddVertex(rightpoint.location);
+            out_mesh.AddVertex(leftpoint.location);
+
             out_mesh.AddIndex(currentIndex);
             out_mesh.AddIndex(currentIndex + 1);
             out_mesh.AddIndex(currentIndex + 2);
@@ -909,7 +956,6 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
             out_mesh.AddIndex(currentIndex + 3);
             out_mesh.AddIndex(currentIndex + 2);
 
-            s_current += road_param.resolution;
             break;
           }
           case carla::road::element::LaneMarking::Type::Broken: {
@@ -1142,16 +1188,24 @@ std::map<road::Lane::LaneType , std::vector<std::unique_ptr<Mesh>>> MeshFactory:
 
     geom::Vector3D director;
     if (edges.first != edges.second) {
-      director = edges.second - edges.first;
-      director /= director.Length();
+      // `!=` is an exact floating-point compare, so two corners that are
+      // technically distinct but only a few nanometers apart still take
+      // this branch; the old `director /= director.Length()` then divides
+      // by a near-zero length and blows the vector up to a huge magnitude.
+      // MakeUnitVector() guards that: below its epsilon it returns the
+      // (still tiny) input unchanged instead of exploding, so a degenerate
+      // cross-section just yields a near-zero-length marking segment
+      // instead of a vertex millions of meters away (which was corrupting
+      // the OBJ handed to RecastBuilder and blowing up its voxel-grid
+      // sizing -- see the RecastBuilder-hang investigation).
+      director = (edges.second - edges.first).MakeUnitVector();
     } else {
       const std::map<road::LaneId, road::Lane> & lanes = lane_section.GetLanes();
       for (const auto& lane_pair : lanes) {
         std::pair<geom::Vector3D, geom::Vector3D> another_edge =
           lane_pair.second.GetCornerPositions(s_current, extra_width);
         if (another_edge.first != another_edge.second) {
-          director = another_edge.second - another_edge.first;
-          director /= director.Length();
+          director = (another_edge.second - another_edge.first).MakeUnitVector();
           break;
         }
       }

@@ -36,6 +36,10 @@ struct StaticAttributes {
   float half_length;
   float half_width;
   float half_height;
+  // Physical front-wheel steering lock in degrees (vehicles only). Queried
+  // once at registration from the vehicle physics control; the default is the
+  // car-class value the controller gains are anchored on.
+  float max_steer_angle = 70.0f;
 };
 using StaticAttributeMap = std::unordered_map<ActorId, StaticAttributes>;
 
@@ -99,6 +103,8 @@ public :
   ActorType GetType(const ActorId actor_id) const;
 
   cg::Vector3D GetDimensions(const ActorId actor_id) const;
+
+  float GetMaxSteerAngle(const ActorId actor_id) const;
 
 };
 

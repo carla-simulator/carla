@@ -12,6 +12,7 @@
 #include "Carla/Traffic/TrafficSignBase.h"
 #include "Carla/Vehicle/CarlaWheeledVehicle.h"
 #include "Carla/Traffic/TrafficLightBase.h"
+#include "Carla/Walker/WalkerBase.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Character.h"
 #include "Components/BoxComponent.h"
@@ -73,6 +74,19 @@ FBoundingBox UBoundingBoxCalculator::GetActorBoundingBox(const AActor *Actor, ui
         {
           // Hack to center the bbox of Gen3 kids
           Box.Origin.Z -= Box.Extent.Z * (1.0f / 0.65f - 1.0f);
+        }
+
+        // Wheelchair users: the wheelchair mesh is attached by the walker
+        // blueprint and is not part of the skeletal mesh bounds, so grow
+        // and shift the box to cover it (same offsets as ue4-dev).
+        auto WalkerBase = Cast<AWalkerBase>(Character);
+        if (WalkerBase && WalkerBase->bUsesWheelChair)
+        {
+          Box.Origin.X += 15.0f;
+          Box.Origin.Z -= 15.0f;
+
+          Box.Extent.X += 5.0f;
+          Box.Extent.Z += 5.0f;
         }
 
         return Box;

@@ -137,11 +137,25 @@ protected:
 
   void Tick(float DeltaSeconds) override;
 
-private:
-
-  void SpawnActorFactories();
+  /// Loads the episode georeference (parsing the map's OpenDRIVE by default)
+  /// and stores the recommended spawn points. Virtual so Autoware maps can
+  /// take the georeference from an MGRS data asset instead (tier4 port).
+  virtual void LoadGeoReference();
 
   void StoreSpawnPoints();
+
+  UPROPERTY()
+  UCarlaEpisode *Episode = nullptr;
+
+private:
+
+  /// Tags actors of World Partition cells as they stream in. The legacy
+  /// ALargeMapManager used to do this for WorldComposition tiles, but it
+  /// retires itself on World Partition maps, which left streamed-in cells
+  /// untagged (semantic segmentation rendered them unlabeled).
+  void OnLevelAddedToWorld(ULevel* InLevel, UWorld* InWorld);
+
+  void SpawnActorFactories();
 
   void GenerateSpawnPoints();
 
@@ -161,9 +175,6 @@ private:
 
   UPROPERTY()
   UCarlaSettingsDelegate *CarlaSettingsDelegate = nullptr;
-
-  UPROPERTY()
-  UCarlaEpisode *Episode = nullptr;
 
   UPROPERTY()
   ACarlaRecorder *Recorder = nullptr;

@@ -226,3 +226,21 @@ Note that the LHT/RHT convention affects not only the behaviour of traffic but a
 
 ---
 
+## Large maps and World Partition
+
+Under Unreal Engine 5, CARLA's large maps (such as Town12) use the engine's native __World Partition__ streaming with double-precision Large World Coordinates, replacing the legacy tile-based large map system. The map is divided into cells that stream in and out automatically around streaming sources, with no rebasing and no client-visible tiling: from the Python API a World Partition town behaves like any other map.
+
+Streaming sources are attached automatically:
+
+*   Every spawned vehicle keeps the ground under itself loaded, so vehicles can be spawned anywhere on the map without falling through unloaded terrain.
+*   Hero vehicles (`role_name` set to `hero`) get a wide loading ring controlled by the same `tile_stream_distance` setting used by legacy large maps ([carla.WorldSettings](python_api.md#carla.WorldSettings)).
+
+Legacy tiled towns can be converted in place to World Partition with the `CarlaLargeMapConvert` commandlet, which registers the old tiles as streaming levels, reads the tiling layout from the map's `TilesInfo.txt` and removes the legacy static lighting rig (the weather-driven sky replaces it):
+
+```sh
+UnrealEditor CarlaUnreal.uproject -run=CarlaLargeMapConvert \
+    /Game/Carla/Maps/Town12/Town12 -ConversionSuffix \
+    -AllowCommandletRendering -unattended -nosound
+```
+
+---

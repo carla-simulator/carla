@@ -43,6 +43,10 @@
 			"Enabled": true
 		},
 		{
+			"Name": "GeometryScripting",
+			"Enabled": true
+		},
+		{
 			"Name": "PythonScriptPlugin",
 			"Enabled": true
 		},
@@ -75,6 +79,18 @@
 		},
 		{
 			"Name": "PerformanceMonitor",
+			"Enabled": true
+		},
+		{
+			"Name": "NFORDenoise",
+			"Enabled": true
+		},
+		{
+			"Name": "NNEDenoiser",
+			"Enabled": false
+		},
+		{
+			"Name": "DLSSRRDenoiser",
 			"Enabled": true
 		}
 	],

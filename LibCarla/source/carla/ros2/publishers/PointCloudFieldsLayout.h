@@ -13,14 +13,12 @@
 namespace carla {
 namespace ros2 {
 
-// PointField datatype constants mirror the IDL-generated constants in
-// carla/ros2/types/PointField.h (sensor_msgs::msg::PointField__*). They are
-// kept here as an enum class so this header does not pull the FastDDS-generated
-// PointField types into the Build-Tests/ compile unit (where FastDDS is not
-// on the include path). Producers in publishers/Carla*Publisher.cpp pass the
-// values into sensor_msgs::msg::PointField directly; this enum mirrors the
-// same numeric values so layout tests can verify field offsets / sizes
-// without instantiating FastDDS.
+// PointField datatype constants mirror the numeric constants in
+// carla/ros2/types/msg/PointField.h (carla::ros2::msg::PointField::*). They are
+// kept here as an enum class so this header does not pull the message types into
+// the Build-Tests/ compile unit. Producers in publishers/Carla*Publisher.cpp map
+// these values onto carla::ros2::msg::PointField; this enum mirrors the same
+// numeric values so layout tests can verify field offsets / sizes.
 enum class PointFieldDataType : std::uint8_t {
   Int8    = 1,
   UInt8   = 2,
@@ -45,6 +43,24 @@ inline constexpr std::array<PointFieldDescriptor, 4> kLidarFields = {{
     {"y",         4u,  PointFieldDataType::Float32, 1u},
     {"z",         8u,  PointFieldDataType::Float32, 1u},
     {"intensity", 12u, PointFieldDataType::Float32, 1u},
+}};
+
+// Extended lidar (Autoware PointXYZIRCAEDT, tier4 SetDataEx port): x/y/z
+// FLOAT32, intensity + return_type UINT8, channel UINT16, azimuth/elevation/
+// distance FLOAT32, time_stamp UINT32. Point stride = 32 B, matching both the
+// tightly packed field layout and the naturally aligned LidarPointEx POD in
+// CarlaLidarPublisher.cpp (the uint16 lands on offset 14, so no padding).
+inline constexpr std::array<PointFieldDescriptor, 10> kLidarFieldsEx = {{
+    {"x",           0u,  PointFieldDataType::Float32, 1u},
+    {"y",           4u,  PointFieldDataType::Float32, 1u},
+    {"z",           8u,  PointFieldDataType::Float32, 1u},
+    {"intensity",   12u, PointFieldDataType::UInt8,   1u},
+    {"return_type", 13u, PointFieldDataType::UInt8,   1u},
+    {"channel",     14u, PointFieldDataType::UInt16,  1u},
+    {"azimuth",     16u, PointFieldDataType::Float32, 1u},
+    {"elevation",   20u, PointFieldDataType::Float32, 1u},
+    {"distance",    24u, PointFieldDataType::Float32, 1u},
+    {"time_stamp",  28u, PointFieldDataType::UInt32,  1u},
 }};
 
 // Semantic lidar: 6 fields. 4 FLOAT32 + 2 UINT32. Point stride = 24 B =

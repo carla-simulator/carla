@@ -1,7 +1,7 @@
 #include "BasicSubscriber.h"
 
-#include "carla/ros2/types/String.h"
-#include "carla/ros2/types/StringPubSubTypes.h"
+#include "carla/ros2/types/msg/String.h"
+#include "carla/ros2/middleware/fastdds/GenericCdrPubSubType.h"
 #include "carla/ros2/listeners/BasicListener.h"
 
 #include <fastdds/dds/domain/DomainParticipant.hpp>
@@ -33,9 +33,9 @@ namespace ros2 {
     efd::Subscriber* _subscriber { nullptr };
     efd::Topic* _topic { nullptr };
     efd::DataReader* _datareader { nullptr };
-    efd::TypeSupport _type { new std_msgs::msg::StringPubSubType() };
+    efd::TypeSupport _type { new GenericCdrPubSubType<msg::String>() };
     BasicListener _listener {nullptr};
-    std_msgs::msg::String _event {};
+    msg::String _event {};
     std::string _message {};
     bool _new_message {false};
     bool _alive {true};

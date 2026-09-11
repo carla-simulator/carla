@@ -1,0 +1,14 @@
+name: av-8gpu
+description: Transfer 2.5 auto/multiview (torchrun, 8 ranks, owns all GPUs) + wsm renderer; manual selection only
+priority: 100
+# no `match`: never auto-selected, start with COSMOS_PROFILE=av-8gpu
+workers:
+  - name: transfer25-av
+    type: transfer25_av
+    backends: [transfer2.5-av]
+    gpus: [0, 1, 2, 3, 4, 5, 6, 7]
+    args: ["--nproc", "8"]
+  - name: wsm-renderer
+    type: wsm_renderer
+    backends: [wsm-renderer]
+    gpus: [7]

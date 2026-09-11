@@ -249,7 +249,7 @@ void UCarlaSettingsDelegate::SetAllRoads(
             for (int32 k = 0; k < meshslotsnames.Num(); k++)
             {
               const FName &slotname = meshslotsnames[k];
-              road_pieces_materials.ContainsByPredicate(
+              (void)road_pieces_materials.ContainsByPredicate(
               [staticmeshcomponent, slotname](const FStaticMaterial &material)
               {
                 if (material.MaterialSlotName.IsEqual(slotname))

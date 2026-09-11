@@ -201,6 +201,17 @@ Regardless of the method used, the map will be ingested into CARLA and the resul
 ![opendrive_meshissue](img/tuto_g_osm_carla.jpg)
 <div style="text-align: right"><i>Outcome of the CARLA map generation using OpenStreetMap.</i></div>
 
+### What the generated map includes
+
+Runtime map generation builds a complete drivable environment from the OpenDRIVE description alone:
+
+*   __Terrain that follows the roads.__ A ground heightfield is generated under and around the road network, following the road elevation profile, so the world does not float over a flat plane. Gaps between carriageways (medians) are filled and kept flush with the road surface.
+*   __Road detail.__ Lane markings are generated for the whole network, including through junctions; crosswalks defined in the OpenDRIVE file get real zebra markings; road materials and semantic segmentation tags are applied so camera and LiDAR ground truth works on generated maps.
+*   __Elevation profiles.__ `lateralProfile` `<shape>` records in the OpenDRIVE file are honored, so banked and crowned roads reproduce their real cross-sections.
+*   __Street furniture.__ Street lights and other roadside props are procedurally scattered along the network, grounded on the terrain, and their lamps light up at night like the ones on the built-in maps.
+
+Additional static geometry can be added at runtime with [`world.spawn_custom_mesh()`](python_api.md#carla.World.spawn_custom_mesh), which spawns a procedural mesh with collision from a vertex/triangle list and a material hint (`"grass"`, `"road"`, `"dirt"`, `"sidewalk"`, or a full Unreal material path).
+
 <br>
 !!! Warning
     The roads generated end abruptly at the borders of the map. This will cause the Traffic Manager to crash when vehicles are not able to find the next waypoint. To avoid this, the OSM mode in the Traffic Manager is set to __True__ by default ([`set_osm_mode()`](python_api.md#carlatrafficmanager)). This will show a warning and destroy vehicles when necessary.  

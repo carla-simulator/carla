@@ -188,9 +188,12 @@ namespace geom {
         TriIndices.Add(Triangle);
       }
 
-      // Compute the normals
-      TArray<FVector> Normals;
-      Mesh.Normals.Init(FVector::UpVector, Mesh.Vertices.Num());
+      // Compute smooth per-vertex normals: accumulate each incident
+      // triangle's unnormalized (area-weighted) face normal and normalize.
+      // Assigning the raw face normal per triangle (last writer wins) lit
+      // every tessellation quad as a separate facet.
+      TArray<FVector> Accum;
+      Accum.Init(FVector::ZeroVector, Mesh.Vertices.Num());
 
       for (const auto &Triangle : TriIndices) {
         FVector Normal;
@@ -200,18 +203,23 @@ namespace geom {
         Normal.Y = (U.Z * V.X) - (U.X * V.Z);
         Normal.Z = (U.X * V.Y) - (U.Y * V.X);
         Normal = -Normal;
-        Normal = Normal.GetSafeNormal(.0001f);
+        // fix to prevent ugly x-fighting in geometries with very large curvatures,
+        // ensures that all road geometry is facing upwards
+        if (Normal.Z < 0.0f)
+        {
+          Normal = -Normal;
+        }
+        Accum[Triangle.v0] += Normal;
+        Accum[Triangle.v1] += Normal;
+        Accum[Triangle.v2] += Normal;
+      }
+
+      Mesh.Normals.Init(FVector::UpVector, Mesh.Vertices.Num());
+      for (int32 i = 0; i < Accum.Num(); ++i) {
+        const FVector Normal = Accum[i].GetSafeNormal(.0001f);
         if (Normal != FVector::ZeroVector)
         {
-          // fix to prevent ugly x-fighting in geometries with very large curvatures,
-          // ensures that all road geometry is facing upwards
-          if (FVector::DotProduct(Normal, FVector(0,0,1)) < 0)
-          {
-            Normal = -Normal;
-          }
-          Mesh.Normals[Triangle.v0] = Normal;
-          Mesh.Normals[Triangle.v1] = Normal;
-          Mesh.Normals[Triangle.v2] = Normal;
+          Mesh.Normals[i] = Normal;
         }
       }
 

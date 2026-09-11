@@ -166,6 +166,7 @@ The PID controller:
 
 - Estimates the throttle, brake, and steering input needed to reach a target value using the information gathered by the [Motion Planner Stage](#stage-4-motion-planner-stage).
 - Makes adjustments depending on the specific parameterization of the controller. Parameters can be modified if desired. Read more about [PID controllers](https://en.wikipedia.org/wiki/PID_controller) to learn how to make modifications.
+- Adapts to the real simulation step. The controller measures the actual simulation-time period between control updates and discretizes its integral/derivative terms and steering rate limits with it, so vehicle control stays stable when heavy rendering (for example, high-resolution or path-traced sensors) lowers the server frame rate. In synchronous mode at the design step of 0.05 s the behavior is identical to previous releases.
 
 __Related .cpp files:__ `PIDController.cpp`.
 ### Command Array
@@ -261,6 +262,8 @@ The TM implements general behavior patterns that must be taken into consideratio
 - __Vehicles are not goal-oriented,__ they follow a dynamically produced trajectory and choose a path randomly when approaching a junction. Their path is endless.
 - __Vehicles' target speed is 70% of their current speed limit__ unless any other value is set.
 - __Junction priority does not follow traffic regulations.__ The TM uses its own priority system at junctions. The resolution of this restriction is a work in progress. In the meantime, some issues may arise, for example, vehicles inside a roundabout yielding to a vehicle trying to get in.
+- __Stuck vehicles recover on their own.__ A vehicle that has not moved for a while (blocked against a curb, a prop, or another vehicle) performs a K-turn-style recovery maneuver to rejoin its lane instead of staying blocked forever.
+- __Vehicles start from realistic speeds.__ When a moving vehicle is handed to the TM its current speed seeds the controller, avoiding a brake-to-zero transient; vehicles that reach the end of their route hold position instead of drifting.
 
 TM behavior can be adjusted through the Python API. For specific methods, see the TM section of the Python API [documentation](../python_api/#carla.TrafficManager). Below is a general summary of what is possible through the API:
 

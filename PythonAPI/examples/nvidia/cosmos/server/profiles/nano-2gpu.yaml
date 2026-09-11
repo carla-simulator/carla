@@ -1,0 +1,16 @@
+name: nano-2gpu
+description: Manual layout — Cosmos 3 Nano (GPU 0) + Transfer 2.5 general with server-side wsm rendering (GPU 1)
+workers:
+  - name: cosmos3-nano
+    type: cosmos3
+    backends: [cosmos3-nano]
+    gpus: [0]
+    args: ["--tp", "1"]
+  - name: transfer25
+    type: transfer25
+    backends: [transfer2.5]
+    gpus: [1]
+  - name: wsm-renderer
+    type: wsm_renderer
+    backends: [wsm-renderer]
+    gpus: [1]

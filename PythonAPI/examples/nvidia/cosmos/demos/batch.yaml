@@ -1,0 +1,12 @@
+# Batch specification for single_view_replay.py: every prompt x every seed becomes one job.
+backend: cosmos3-nano
+priority: batch
+resolution: "720"
+controls: {depth: clip, seg: clip, edge: derive}
+seeds: [1, 2]
+negative_prompt: null
+prompts:
+  golden_hour: "The same street at golden hour, long warm shadows, photorealistic dashcam footage"
+  rain_night: "The same street at night in heavy rain, wet asphalt reflecting neon signs and headlights"
+  fog: "The same street in dense morning fog, muted colours, headlights glowing"
+  snow: "The same street after fresh snowfall, snow on the road edges and roofs, overcast sky"

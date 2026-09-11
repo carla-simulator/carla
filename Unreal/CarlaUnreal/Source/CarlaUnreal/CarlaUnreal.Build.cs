@@ -21,6 +21,10 @@ public class CarlaUnreal : ModuleRules
     public CarlaUnreal(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PrivatePCHHeaderFile = "CarlaUnreal.h";
+		// UE 5.8's UnrealBuildTool no longer adds the module root of flat-layout
+		// modules (no Public/Private split) to the include search path, which
+		// breaks the generated PCH's #include "CarlaUnreal.h".
+		PrivateIncludePaths.Add(ModuleDirectory);
         bEnableExceptions = true;
         bUseRTTI = true;
 

@@ -30,11 +30,19 @@ void UCarlaLightSubsystem::RegisterLight(UCarlaLight* CarlaLight)
     auto LightId = CarlaLight->GetId();
     if (Lights.Contains(LightId))
     {
-      UE_LOG(LogCarla, Warning, TEXT("Light Id overlapping"));
-      return;
+      // Runtime-spawned lights cloned from a template (PCG Spawn Actor,
+      // duplicated actors...) all arrive carrying the template's id;
+      // dropping them here silently disconnected every clone from the
+      // subsystem (day/night events, client light API). Assign the next
+      // free id instead.
+      while (Lights.Contains(LightId))
+      {
+        ++LightId;
+      }
+      CarlaLight->SetId(LightId);
     }
     Lights.Add(LightId, CarlaLight);
-    DayTimeChangeEvent.AddDynamic(CarlaLight, &UCarlaLight::DayTimeChanged);
+    DayTimeChangeEvent.AddUniqueDynamic(CarlaLight, &UCarlaLight::HandleDayTimeChanged);
   }
   SetClientStatesdirty("");
 }
@@ -44,7 +52,28 @@ void UCarlaLightSubsystem::UnregisterLight(UCarlaLight* CarlaLight)
   if(CarlaLight)
   {
     Lights.Remove(CarlaLight->GetId());
+    DayTimeChangeEvent.RemoveDynamic(CarlaLight, &UCarlaLight::HandleDayTimeChanged);
   }
+  SetClientStatesdirty("");
+}
+
+void UCarlaLightSubsystem::NotifyDayTimeChange(bool bIsDay)
+{
+  DayTimeChangeEvent.Broadcast(bIsDay);
+  // Blueprints bind this event too (BlueprintAssignable) and their handlers
+  // push raw authored UE4-era intensities into the light components; a
+  // per-light conversion inside the broadcast gets overwritten by whichever
+  // handler runs later. Convert once the whole broadcast is done.
+  for (auto& LightPair : Lights)
+  {
+    if (UCarlaLight* CarlaLight = LightPair.Value)
+    {
+      CarlaLight->ApplyLegacyComponentConversion();
+    }
+  }
+  // A day/night change flips light states server-side; flag every connected
+  // client so their LightManager re-queries instead of serving stale is_on
+  // values from its local cache.
   SetClientStatesdirty("");
 }
 
@@ -69,7 +98,13 @@ std::vector<carla::rpc::LightState> UCarlaLightSubsystem::GetLights(FString Clie
   for(auto& Light : Lights)
   {
     UCarlaLight* CarlaLight = Light.Value;
-
+    // World Partition can stream out a lamp's owner between the light's GC
+    // death and its EndPlay unregistration; this RPC runs on the server
+    // thread and must not touch such carcasses.
+    if (!IsValid(CarlaLight) || !IsValid(CarlaLight->GetOwner()))
+    {
+      continue;
+    }
     result.push_back(CarlaLight->GetLightState());
   }
   return result;

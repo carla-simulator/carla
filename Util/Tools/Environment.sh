@@ -4,6 +4,9 @@
 
 set -e
 
+# Directory containing these tool scripts.
+CARLA_BUILD_TOOLS_FOLDER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 function log {
   echo "[`basename "$0"`]: $1"
 }
