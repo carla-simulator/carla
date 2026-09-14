@@ -8,16 +8,59 @@
 
 #include "Carla.h"
 #include "TrafficSignBase.h"
+#include "Carla/Game/Tagger.h"
 
 #include <util/ue-header-guard-begin.h>
 #include "Components/BoxComponent.h"
 #include "Components/SceneComponent.h"
 #include "Engine/World.h"
 #include "GameFramework/Actor.h"
+#include "Landscape.h"
 #include <util/ue-header-guard-end.h>
+
+namespace crp = carla::rpc;
 
 namespace TrafficSignHeightUtils
 {
+  namespace
+  {
+    /// Whether a hit surface is ground that a sign may stand on.
+    ///
+    /// The downward trace crosses every static object under the sign, so a
+    /// fence or any other prop beside the pole can answer before the ground
+    /// does. Taking the closest hit therefore lands the sign on top of that
+    /// prop, so each candidate is classified by its semantic tag instead.
+    bool IsGroundHit(const FHitResult &HitResult)
+    {
+      // Landscapes are not tagged by ATagger, so they carry no tag at all.
+      const AActor *HitActor = HitResult.GetActor();
+      if (HitActor != nullptr && HitActor->IsA<ALandscape>())
+      {
+        return true;
+      }
+
+      const UPrimitiveComponent *Component = HitResult.GetComponent();
+      if (Component == nullptr)
+      {
+        return false;
+      }
+
+      switch (ATagger::GetTagOfTaggedComponent(*Component))
+      {
+        case crp::CityObjectLabel::Roads:
+        case crp::CityObjectLabel::RoadLines:
+        case crp::CityObjectLabel::Sidewalks:
+        case crp::CityObjectLabel::Ground:
+        case crp::CityObjectLabel::Terrain:
+        case crp::CityObjectLabel::Bridge:
+        case crp::CityObjectLabel::RailTrack:
+          return true;
+        default:
+          return false;
+      }
+    }
+  }
+
   bool AdjustLocationToGround(
       UWorld* World,
       FVector& Location,
@@ -32,19 +75,27 @@ namespace TrafficSignHeightUtils
     const FVector Start = Location + FVector(0.0f, 0.0f, 200.0f);
     const FVector End = Location - FVector(0.0f, 0.0f, 10000.0f);
 
-    FHitResult HitResult;
     FCollisionQueryParams CollisionParams;
     CollisionParams.bTraceComplex = true;
     CollisionParams.bReturnPhysicalMaterial = false;
     CollisionParams.AddIgnoredActors(IgnoredActors);
     CollisionParams.AddIgnoredComponents(IgnoredComponents);
 
+    // Collect every surface under the sign rather than only the closest one,
+    // then keep the first that is ground. The hits come back ordered along the
+    // ray, so this is the highest ground below the sign.
+    TArray<FHitResult> HitResults;
+    World->LineTraceMultiByChannel(
+        HitResults, Start, End, ECC_WorldStatic, CollisionParams);
+
     constexpr float ZOffsetSignToGround = 0.5f;
-    if (World->LineTraceSingleByChannel(
-            HitResult, Start, End, ECC_WorldStatic, CollisionParams))
+    for (const FHitResult &HitResult : HitResults)
     {
-      Location.Z = HitResult.Location.Z + ZOffsetSignToGround;
-      return true;
+      if (IsGroundHit(HitResult))
+      {
+        Location.Z = HitResult.Location.Z + ZOffsetSignToGround;
+        return true;
+      }
     }
     return false;
   }

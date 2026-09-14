@@ -17,9 +17,12 @@ class ATrafficSignBase;
 /// they are not left floating in the air or sunk below the terrain.
 namespace TrafficSignHeightUtils
 {
-  /// Line-trace downward to find the ground under \p Location. On hit, set
-  /// Location.Z to the ground hit plus a small offset and return true;
-  /// otherwise leave Location untouched and return false.
+  /// Line-trace downward to find the ground under \p Location. Every surface
+  /// along the ray is considered and the first one that is ground wins, so a
+  /// fence or other prop beside the pole is skipped instead of being treated
+  /// as the ground. On hit, set Location.Z to the ground hit plus a small
+  /// offset and return true; otherwise leave Location untouched and return
+  /// false.
   bool AdjustLocationToGround(
       UWorld* World,
       FVector& Location,
