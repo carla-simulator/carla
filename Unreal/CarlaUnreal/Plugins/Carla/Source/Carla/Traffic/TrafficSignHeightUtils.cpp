@@ -84,9 +84,14 @@ namespace TrafficSignHeightUtils
     // Collect every surface under the sign rather than only the closest one,
     // then keep the first that is ground. The hits come back ordered along the
     // ray, so this is the highest ground below the sign.
+    //
+    // The trace must use the overlap channel, the same one URayTracer::CastRay
+    // uses. ECC_WorldStatic blocks, so a multi trace on it still stops at the
+    // first solid surface and a prop beside the pole hides the ground behind
+    // a single hit that the filter below then rejects, leaving no candidate.
     TArray<FHitResult> HitResults;
     World->LineTraceMultiByChannel(
-        HitResults, Start, End, ECC_WorldStatic, CollisionParams);
+        HitResults, Start, End, ECC_GameTraceChannel3, CollisionParams);
 
     constexpr float ZOffsetSignToGround = 0.5f;
     for (const FHitResult &HitResult : HitResults)
