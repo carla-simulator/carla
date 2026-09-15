@@ -505,6 +505,20 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
     WorldObserver.BroadcastTick(*CurrentEpisode, DeltaSeconds, bMapChanged, LightUpdatePending);
     CurrentEpisode->GetSensorManager().PostPhysTick(World, TickType, DeltaSeconds);
     ResetSimulationState();
+
+    // OnPreTick is otherwise the only point that serves game-thread commands,
+    // so a client answering the snapshot broadcast above waits until the next
+    // frame, and a chain of dependent requests costs one frame per link. This
+    // second service point doubles the per-frame budget and halves that
+    // latency; RunSome returns immediately once the queue is empty, so an idle
+    // server pays nothing. Requests served here land after the broadcast and
+    // the recorder, so a spawn or destroy takes effect one frame later than it
+    // would from OnPreTick. Synchronous mode is left out: its tick cue belongs
+    // to the OnPreTick loop.
+    if (bIsPrimaryServer && !bSynchronousMode)
+    {
+      Server.RunSome(1u);
+    }
   }
 }
 
