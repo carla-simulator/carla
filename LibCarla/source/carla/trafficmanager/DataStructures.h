@@ -70,6 +70,10 @@ struct StateEntry {
   float angular_deviation;
   float velocity_deviation;
   float steer;
+  /// Last actuation commanded to the vehicle, which the next one is smoothed
+  /// against.
+  float throttle {0.0f};
+  float brake {0.0f};
 };
 
 } // namespace traffic_manager
