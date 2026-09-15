@@ -16,6 +16,7 @@ namespace carla {
 namespace traffic_manager {
 
 using namespace constants::FrameMemory;
+using namespace constants::WorldInfoRefresh;
 
 TrafficManagerLocal::TrafficManagerLocal(
   std::vector<float> longitudinal_PID_parameters,
@@ -166,7 +167,6 @@ void TrafficManagerLocal::Start() {
 void TrafficManagerLocal::Step() {
   bool synchronous_mode = parameters.GetSynchronousMode();
   bool hybrid_physics_mode = parameters.GetHybridPhysicsMode();
-  parameters.SetMaxBoundaries(20.0f, episode_proxy.Lock()->GetEpisodeSettings().actor_active_distance);
 
   // Skipping velocity update if elapsed time is less than 0.05s in asynchronous, hybrid mode.
   if (!synchronous_mode && hybrid_physics_mode) {
@@ -179,14 +179,26 @@ void TrafficManagerLocal::Step() {
     previous_update_instance = current_instance;
   }
 
+  // Read from the episode state the client already holds, so no round trip.
+  const carla::client::Timestamp timestamp = world.GetSnapshot().GetTimestamp();
+
   // Stop TM from processing the same frame more than once
   if (!synchronous_mode) {
-    carla::client::Timestamp timestamp = world.GetSnapshot().GetTimestamp();
     if (timestamp.frame == last_frame) {
+      // Without this the worker would spin on the episode state and contend
+      // with the thread that publishes it.
+      std::this_thread::sleep_for(SNAPSHOT_POLL_PERIOD);
       return;
     }
     last_frame = timestamp.frame;
   }
+
+  if (synchronous_mode ||
+      IsRefreshDue(timestamp.elapsed_seconds, last_settings_update, EPISODE_SETTINGS_REFRESH_PERIOD)) {
+    episode_settings = episode_proxy.Lock()->GetEpisodeSettings();
+    last_settings_update = timestamp.elapsed_seconds;
+  }
+  parameters.SetMaxBoundaries(20.0f, episode_settings.actor_active_distance);
 
   std::unique_lock<std::mutex> registration_lock(registration_mutex);
   // Updating simulation state, actor life cycle and performing necessary cleanup.
@@ -238,7 +250,7 @@ void TrafficManagerLocal::Step() {
     collision_stage.Update(index);
   }
   collision_stage.ClearCycleCache();
-  vehicle_light_stage.UpdateWorldInfo();
+  vehicle_light_stage.UpdateWorldInfo(timestamp.elapsed_seconds, synchronous_mode);
   for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
     if (!localization_frame[index].localized) {
       continue;
@@ -270,13 +282,15 @@ void TrafficManagerLocal::Step() {
 
   registration_lock.unlock();
 
-  // Sending the current cycle's batch command to the simulator.
+  // Sending the current cycle's batch command to the simulator. Synchronous
+  // mode has to apply the batch before the client sends the next tick cue.
+  // Asynchronous mode discards the responses anyway and waiting for them costs
+  // a full server frame; the frame gate above keeps at most one batch in
+  // flight.
   if (synchronous_mode) {
     episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
-  } else {
-    if (control_frame.size() > 0){
-      episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
-    }
+  } else if (!control_frame.empty()) {
+    episode_proxy.Lock()->ApplyBatch(control_frame, false);
   }
 }
 
