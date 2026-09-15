@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <limits>
 #include <stdint.h>
 #include <iostream>
@@ -36,6 +37,29 @@ static const double HYBRID_MODE_DT = 0.05;
 static const double INV_HYBRID_DT = 1.0 / HYBRID_MODE_DT;
 static const float PHYSICS_RADIUS = 50.0f;
 } // namespace HybridMode
+
+// Cadences for the world queries the traffic manager reads over synchronous
+// RPCs. The server drains its RPC queue once per rendered frame, so in
+// asynchronous mode each of those costs the step a full frame of latency;
+// none of this data changes fast enough to be worth reading every step.
+// Synchronous mode keeps reading them every step, so its behaviour is
+// unchanged.
+namespace WorldInfoRefresh {
+static const double EPISODE_SETTINGS_REFRESH_PERIOD = 1.0;
+static const double VEHICLE_LIGHT_STATES_REFRESH_PERIOD = 0.25;
+static const double WEATHER_REFRESH_PERIOD = 1.0;
+// Idle period of the asynchronous worker between snapshots. Negligible next to
+// a rendered frame, and keeps the worker off the episode state.
+static const std::chrono::milliseconds SNAPSHOT_POLL_PERIOD {1};
+
+/// Whether @a period of simulation time has elapsed since @a last. Also true
+/// when the simulation clock jumps backwards, which means a new episode, and
+/// when either value is NaN, so an unusable clock refreshes rather than pins
+/// the cache for ever.
+inline bool IsRefreshDue(const double now, const double last, const double period) {
+  return !(now >= last && (now - last) < period);
+}
+} // namespace WorldInfoRefresh
 
 namespace SpeedThreshold {
 static const float HIGHWAY_SPEED = 60.0f / 3.6f;

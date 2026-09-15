@@ -8,6 +8,7 @@
 
 #include <atomic>
 #include <chrono>
+#include <limits>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -17,6 +18,7 @@
 #include "carla/client/World.h"
 #include "carla/Memory.h"
 #include "carla/rpc/Command.h"
+#include "carla/rpc/EpisodeSettings.h"
 
 #include "carla/trafficmanager/AtomicActorSet.h"
 #include "carla/trafficmanager/InMemoryMap.h"
@@ -105,6 +107,10 @@ private:
   std::unique_ptr<std::thread> worker_thread;
   /// Last processed frame
   size_t last_frame{0};
+  /// Cached episode settings; they only change through world.apply_settings.
+  rpc::EpisodeSettings episode_settings;
+  /// Simulation time of the last episode settings refresh.
+  double last_settings_update {-std::numeric_limits<double>::infinity()};
   /// Randomization seed.
   uint64_t seed {static_cast<uint64_t>(time(NULL))};
   /// Structure holding random devices per vehicle.
