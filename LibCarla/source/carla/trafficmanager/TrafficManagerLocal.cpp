@@ -285,12 +285,22 @@ void TrafficManagerLocal::Step() {
   // Sending the current cycle's batch command to the simulator. Synchronous
   // mode has to apply the batch before the client sends the next tick cue.
   // Asynchronous mode discards the responses anyway and waiting for them costs
-  // a full server frame; the frame gate above keeps at most one batch in
-  // flight.
+  // a full server frame.
   if (synchronous_mode) {
     episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
   } else if (!control_frame.empty()) {
-    episode_proxy.Lock()->ApplyBatch(control_frame, false);
+    // The server acknowledges an unwaited batch on receipt, not on
+    // application, so nothing otherwise bounds how many batches queue up ahead
+    // of the game thread if another client saturates its command budget, and
+    // the applied command would fall further and further behind the computed
+    // one. Waiting for one batch periodically caps that: the queue ahead of it
+    // has to drain before the call returns.
+    if (IsRefreshDue(timestamp.elapsed_seconds, last_batch_sync, CONTROL_BATCH_SYNC_PERIOD)) {
+      episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
+      last_batch_sync = timestamp.elapsed_seconds;
+    } else {
+      episode_proxy.Lock()->ApplyBatch(control_frame, false);
+    }
   }
 }
 
