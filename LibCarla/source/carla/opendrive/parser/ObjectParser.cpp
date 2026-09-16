@@ -115,6 +115,27 @@ namespace parser {
                 node_object.attribute("hdg").as_double(),
                 node_object.attribute("pitch").as_double(),
                 node_object.attribute("roll").as_double());
+          } else if (name.find("Stencil_") != std::string::npos) {
+            road::RoadId road_id = node_road.attribute("id").as_uint();
+            road::Road *road = map_builder.GetRoad(road_id);
+
+            std::string stencil_type = name.substr(8); // Skip "Stencil_" prefix
+
+            // Assign stencil types
+
+            map_builder.AddStencil(road,
+                node_object.attribute("id").as_string(),
+                node_object.attribute("s").as_double(),
+                node_object.attribute("t").as_double(),
+                node_object.attribute("name").as_string(),
+                node_object.attribute("orientation").as_string(),
+                stencil_type,
+                node_object.attribute("zOffset").as_double(),
+                node_object.attribute("hdg").as_double(),
+                node_object.attribute("length").as_double(),
+                node_object.attribute("width").as_double(),
+                node_object.attribute("pitch").as_double(),
+                node_object.attribute("roll").as_double());
           }
         }
       }
