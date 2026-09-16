@@ -634,6 +634,92 @@ TEST(TrafficManagerRefreshCadence, EarlyRefresh_NewlyRegisteredVehicleIsReadProm
 }
 
 // -----------------------------------------------------------------------------
+// IsBatchSyncDue (the bound on the control batches queued ahead of the server)
+// -----------------------------------------------------------------------------
+
+namespace {
+
+struct BatchSyncTrace {
+  int syncs{0};
+  uint64_t deepest_queue{0u};
+};
+
+/// Drives the asynchronous worker's batch queue over @a steps steps, one batch
+/// per step, waiting for one whenever @a limit of them have gone unwaited for.
+BatchSyncTrace TraceBatchSyncs(const int steps, const uint64_t limit) {
+  BatchSyncTrace trace{};
+  uint64_t unwaited{limit};
+  for (int step{0}; step < steps; ++step) {
+    if (refresh::IsBatchSyncDue(unwaited, limit)) {
+      unwaited = 0u;
+      ++trace.syncs;
+    } else {
+      ++unwaited;
+    }
+    trace.deepest_queue = std::max(trace.deepest_queue, unwaited);
+  }
+  return trace;
+}
+
+/// The same queue bounded by simulation time instead, which is what a server
+/// running at @a fixed_delta_seconds per step accumulates.
+BatchSyncTrace TraceTimeGatedBatchSyncs(
+    const int steps,
+    const double fixed_delta_seconds,
+    const double period) {
+
+  BatchSyncTrace trace{};
+  uint64_t unwaited{0u};
+  double last_sync{kNeverRead};
+  for (int step{0}; step < steps; ++step) {
+    const double now{fixed_delta_seconds * static_cast<double>(step + 1)};
+    if (refresh::IsRefreshDue(now, last_sync, period)) {
+      unwaited = 0u;
+      last_sync = now;
+      ++trace.syncs;
+    } else {
+      ++unwaited;
+    }
+    trace.deepest_queue = std::max(trace.deepest_queue, unwaited);
+  }
+  return trace;
+}
+
+constexpr int kBatchSteps{1000};
+
+}  // namespace
+
+TEST(TrafficManagerBatchSync, IsBatchSyncDue_WithinTheBoundNothingIsWaitedFor) {
+  EXPECT_FALSE(refresh::IsBatchSyncDue(0u, refresh::MAX_UNWAITED_CONTROL_BATCHES));
+  EXPECT_FALSE(refresh::IsBatchSyncDue(refresh::MAX_UNWAITED_CONTROL_BATCHES - 1u,
+                                       refresh::MAX_UNWAITED_CONTROL_BATCHES));
+}
+
+TEST(TrafficManagerBatchSync, IsBatchSyncDue_AtOrPastTheBoundOneIsWaitedFor) {
+  EXPECT_TRUE(refresh::IsBatchSyncDue(refresh::MAX_UNWAITED_CONTROL_BATCHES,
+                                      refresh::MAX_UNWAITED_CONTROL_BATCHES));
+  EXPECT_TRUE(refresh::IsBatchSyncDue(refresh::MAX_UNWAITED_CONTROL_BATCHES + 5u,
+                                      refresh::MAX_UNWAITED_CONTROL_BATCHES));
+}
+
+TEST(TrafficManagerBatchSync, QueueNeverHoldsMoreThanThePermittedBatches) {
+  const BatchSyncTrace trace{TraceBatchSyncs(kBatchSteps, refresh::MAX_UNWAITED_CONTROL_BATCHES)};
+  EXPECT_LE(trace.deepest_queue, refresh::MAX_UNWAITED_CONTROL_BATCHES);
+  EXPECT_EQ(trace.syncs, kBatchSteps / static_cast<int>(refresh::MAX_UNWAITED_CONTROL_BATCHES + 1u));
+}
+
+TEST(TrafficManagerBatchSync, SlowServerWithAFixedDeltaIsBoundedTheSameWayAsAFastOne) {
+  // A fixed delta advances the clock by the same step whatever the frame rate,
+  // so a simulation-time bound scales with the delta and not with the queue it
+  // is meant to cap: at 0.05 s a second of it is twenty batches.
+  const BatchSyncTrace counted{TraceBatchSyncs(kBatchSteps, refresh::MAX_UNWAITED_CONTROL_BATCHES)};
+  const BatchSyncTrace timed{TraceTimeGatedBatchSyncs(kBatchSteps, 0.05, 1.0)};
+
+  EXPECT_LE(counted.deepest_queue, refresh::MAX_UNWAITED_CONTROL_BATCHES);
+  EXPECT_GT(timed.deepest_queue, refresh::MAX_UNWAITED_CONTROL_BATCHES);
+}
+
+// -----------------------------------------------------------------------------
 // ShapeReferenceVelocity (the bounded-acceleration reference the loop follows)
 // -----------------------------------------------------------------------------
 

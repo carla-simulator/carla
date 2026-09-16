@@ -48,9 +48,15 @@ namespace WorldInfoRefresh {
 static const double EPISODE_SETTINGS_REFRESH_PERIOD = 1.0;
 static const double VEHICLE_LIGHT_STATES_REFRESH_PERIOD = 0.25;
 static const double WEATHER_REFRESH_PERIOD = 1.0;
-// How often the asynchronous control batch is waited for, which is what bounds
-// the number of batches queued ahead of the server's game thread.
-static const double CONTROL_BATCH_SYNC_PERIOD = 1.0;
+// How many control batches may be sent without waiting for one, which is what
+// bounds the number of them queued ahead of the server's game thread. Counted
+// in batches and not in simulation time: the worker sends one batch per server
+// frame, but a fixed delta advances the clock by the same step whatever the
+// frame rate, so a simulation-time period lets a slow server queue
+// proportionally more of them (at 5 fps and a 0.05 s delta, twenty). The wait
+// costs the step the server frame it would otherwise have computed through, so
+// it is paid on one step in four rather than on every one.
+static const uint64_t MAX_UNWAITED_CONTROL_BATCHES = 4u;
 // Idle period of the asynchronous worker between snapshots. Negligible next to
 // a rendered frame, and keeps the worker off the episode state.
 static const std::chrono::milliseconds SNAPSHOT_POLL_PERIOD {1};
@@ -73,6 +79,12 @@ inline bool IsRefreshDue(const double now, const double last, const double perio
     const bool refreshed_this_step,
     const bool missing_from_the_last_refresh) {
   return !refreshed_this_step && !missing_from_the_last_refresh;
+}
+
+/// Whether the control batch produced on this step has to be waited for.
+/// @a unwaited_batches counts the batches sent since the last one that was.
+[[nodiscard]] inline bool IsBatchSyncDue(const uint64_t unwaited_batches, const uint64_t limit) {
+  return unwaited_batches >= limit;
 }
 } // namespace WorldInfoRefresh
 
