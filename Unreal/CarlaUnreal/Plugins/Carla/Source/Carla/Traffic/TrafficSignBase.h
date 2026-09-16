@@ -148,6 +148,16 @@ public:
 
   TArray<UBoxComponent*> GetTriggerVolumes() const;
 
+  /// True once this sign has been snapped to the ground, to avoid adjusting
+  /// it more than once.
+  UPROPERTY(Category = "Traffic Sign", VisibleAnywhere, BlueprintReadOnly, Transient)
+  bool bPositioned = false;
+
+  /// True for signs/lights generated from the OpenDRIVE map. Height adjustment
+  /// only moves generated actors, never signs placed by hand in the level.
+  UPROPERTY(Category = "Traffic Sign", VisibleAnywhere, BlueprintReadOnly, Transient)
+  bool bGeneratedFromOpenDRIVE = false;
+
 private:
 
   UPROPERTY(Category = "Traffic Sign", EditAnywhere)
