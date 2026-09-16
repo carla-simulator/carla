@@ -83,7 +83,6 @@ MotionPlanStage::MotionPlanStage(
   const LocalizationFrame &localization_frame,
   const CollisionFrame&collision_frame,
   const TLFrame &tl_frame,
-  const cc::World &world,
   ControlFrame &output_array,
   RandomGenerator &random_device,
   const LocalMapPtr &local_map,
@@ -100,11 +99,14 @@ MotionPlanStage::MotionPlanStage(
     localization_frame(localization_frame),
     collision_frame(collision_frame),
     tl_frame(tl_frame),
-    world(world),
     output_array(output_array),
     random_device(random_device),
     local_map(local_map),
     large_vehicles(large_vehicles) {}
+
+void MotionPlanStage::SetCycleTimestamp(const cc::Timestamp &timestamp) {
+  current_timestamp = timestamp;
+}
 
 void MotionPlanStage::Update(const unsigned long index) {
   const ActorId actor_id = vehicle_id_list.at(index);
@@ -119,7 +121,6 @@ void MotionPlanStage::Update(const unsigned long index) {
   const LocalizationData &localization = localization_frame.at(index);
   const CollisionHazardData &collision_hazard = collision_frame.at(index);
   const bool &tl_hazard = tl_frame.at(index);
-  current_timestamp = world.GetSnapshot().GetTimestamp();
   StateEntry current_state;
 
   // Instanciating teleportation transform as current vehicle transform.
