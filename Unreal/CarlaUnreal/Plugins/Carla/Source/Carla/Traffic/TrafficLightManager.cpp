@@ -308,13 +308,8 @@ void ATrafficLightManager::GenerateSignalsAndTrafficLights()
   }
 }
 
-bool ATrafficLightManager::AdjustSpawnedSignsHeight()
+TArray<AActor*> ATrafficLightManager::GetSignsToIgnoreWhileTracing() const
 {
-  UWorld* World = GetWorld();
-  // Ignore the whole generated set during the downward trace. Otherwise the
-  // ray hits the sign's own collision (or a neighbour still at its nominal
-  // height) instead of the ground, which lifts every actor by roughly its
-  // own base height and leaves the poles floating (see PR #9773).
   TArray<AActor*> IgnoredActors;
   IgnoredActors.Reserve(TrafficSigns.Num());
   for (ATrafficSignBase* Sign : TrafficSigns)
@@ -324,6 +319,13 @@ bool ATrafficLightManager::AdjustSpawnedSignsHeight()
       IgnoredActors.Add(Sign);
     }
   }
+  return IgnoredActors;
+}
+
+bool ATrafficLightManager::AdjustSpawnedSignsHeight()
+{
+  UWorld* World = GetWorld();
+  const TArray<AActor*> IgnoredActors = GetSignsToIgnoreWhileTracing();
   const TArray<UPrimitiveComponent*> NoIgnoredComponents;
   bool bAnyAdjusted = false;
   int32 GroundNotFoundCount = 0;
@@ -522,10 +524,21 @@ void ATrafficLightManager::UpdateSignalGroundDormancy()
     return;
   }
   UWorld *World = GetWorld();
+  // A World Partition map streams its ground in around the streaming source,
+  // so a signal generated over an unloaded cell finds nothing to stand on and
+  // keeps the height the OpenDRIVE record gave it. This sweep is already the
+  // place that learns when the ground below a signal becomes resident, so the
+  // snap rides it instead of running once at generation time.
+  const bool bSnapToGround = bAdjustSignsHeightToGround;
+  const TArray<AActor*> IgnoredActors =
+      bSnapToGround ? GetSignsToIgnoreWhileTracing() : TArray<AActor*>();
+  const TArray<UPrimitiveComponent*> NoIgnoredComponents;
+  bool bSweepWrapped = false;
   const int32 Checks = FMath::Min(DormancyChecksPerTick, Num);
   for (int32 i = 0; i < Checks; ++i)
   {
     DormancySweepIndex = (DormancySweepIndex + 1) % Num;
+    bSweepWrapped |= (DormancySweepIndex == 0);
     ATrafficSignBase *Sign = TrafficSigns[DormancySweepIndex];
     if (!IsValid(Sign))
     {
@@ -543,6 +556,23 @@ void ATrafficLightManager::UpdateSignalGroundDormancy()
     if (Sign->IsHidden() == bGroundResident)
     {
       Sign->SetActorHiddenInGame(!bGroundResident);
+    }
+    if (bSnapToGround && bGroundResident &&
+        TrafficSignHeightUtils::AdjustSignToGround(
+            World, Sign, IgnoredActors, NoIgnoredComponents))
+    {
+      bPendingEnvironmentObjectRefresh = true;
+    }
+  }
+
+  // Re-registering walks every actor in the world, so it waits for the sweep
+  // to come back round rather than running on every tick that moved a sign.
+  if (bPendingEnvironmentObjectRefresh && bSweepWrapped)
+  {
+    bPendingEnvironmentObjectRefresh = false;
+    if (ACarlaGameModeBase* GameMode = UCarlaStatics::GetGameMode(World))
+    {
+      GameMode->RegisterEnvironmentObjects();
     }
   }
 }

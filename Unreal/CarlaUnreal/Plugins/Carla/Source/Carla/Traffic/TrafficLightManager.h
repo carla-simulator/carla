@@ -83,6 +83,12 @@ private:
   // returns true if at least one sign moved.
   bool AdjustSpawnedSignsHeight();
 
+  // Every valid sign, to be ignored during a ground trace. Otherwise the ray
+  // hits the sign's own collision (or a neighbour still at its nominal height)
+  // instead of the ground, which lifts the actor by roughly its own base
+  // height and leaves the pole floating (see PR #9773).
+  TArray<AActor*> GetSignsToIgnoreWhileTracing() const;
+
   void SpawnTrafficLights();
 
   void SpawnSignals();
@@ -170,5 +176,9 @@ private:
   float DormancyTraceDepth = 2000.0f;
 
   int32 DormancySweepIndex = 0;
+
+  // Set when the dormancy sweep snaps a sign, cleared when the environment
+  // objects are re-registered at the end of a full sweep.
+  bool bPendingEnvironmentObjectRefresh = false;
 
 };
