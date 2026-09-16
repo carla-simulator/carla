@@ -7,6 +7,7 @@
 #include "carla/trafficmanager/TrafficManagerGeometry.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <limits>
 

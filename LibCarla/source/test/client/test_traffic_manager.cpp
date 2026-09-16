@@ -14,9 +14,13 @@
 
 #include <carla/geom/Location.h>
 #include <carla/trafficmanager/Constants.h>
+#include <carla/trafficmanager/DataStructures.h>
+#include <carla/trafficmanager/PIDController.h>
 #include <carla/trafficmanager/TrafficManagerGeometry.h>
 
 namespace cg = carla::geom;
+using carla::traffic_manager::ActuationSignal;
+using carla::traffic_manager::StateEntry;
 using carla::traffic_manager::GetPathSpeedLimit;
 using carla::traffic_manager::GetThreePointCircleRadius;
 using carla::traffic_manager::InterpolateBufferAt;
@@ -329,6 +333,33 @@ TEST(TrafficManagerPathSpeed, PathSpeedLimit_PathShorterThanTwoSamplesIsNotLimit
       kFreeSpeed);
 }
 
+TEST(TrafficManagerPathSpeed, PathSpeedLimit_NonPositiveSpacingIsNotLimited) {
+  // A spacing of zero would never advance the sampler.
+  const std::vector<cg::Location> path = StraightThenArc(0.0f, 6.0f, 120.0f, 2.0f);
+
+  EXPECT_FLOAT_EQ(
+      GetPathSpeedLimit(path, 0.0f, 0.0f, kLateralAcceleration, kBrakingDeceleration, kFreeSpeed),
+      kFreeSpeed);
+}
+
+TEST(TrafficManagerPathSpeed, PathSpeedLimit_ArcBehindTheVehicleIsNotCreditedWithBraking) {
+  // path_start_offset is negative while the scan is seeded with the waypoint
+  // just passed. The arc under the vehicle must then be measured with no
+  // braking distance credited to it, or the sawtooth comes back.
+  const float radius = 11.0f;
+  const std::vector<cg::Location> path = StraightThenArc(0.0f, radius, 180.0f, kSampleSpacing);
+
+  const float behind = GetPathSpeedLimit(
+      path, -kSampleSpacing, kSampleSpacing, kLateralAcceleration, kBrakingDeceleration,
+      kFreeSpeed);
+  const float ahead = GetPathSpeedLimit(
+      path, kSampleSpacing, kSampleSpacing, kLateralAcceleration, kBrakingDeceleration,
+      kFreeSpeed);
+
+  EXPECT_NEAR(behind, std::sqrt(radius * kLateralAcceleration), 0.1f);
+  EXPECT_GT(ahead, behind);
+}
+
 // -----------------------------------------------------------------------------
 // LargeVehicleJunctionOffsetProfile (Option C: bounded inboard excursion)
 // -----------------------------------------------------------------------------
@@ -470,4 +501,328 @@ TEST(TrafficManagerWideTurn, OffsetSideOccupied_OppositeSideNeighbourIsClear) {
 TEST(TrafficManagerWideTurn, OffsetSideOccupied_NeighbourAheadOutsideWindowIsClear) {
   // On the offset side but 20 m ahead: outside the longitudinal window.
   EXPECT_FALSE(SampleOccupied({{{20.0f, 1.0f, 0.0f}, 1.0f}}));
+}
+
+// -----------------------------------------------------------------------------
+// IsRefreshDue (the cadence every cached world query and the batch sync run on)
+// -----------------------------------------------------------------------------
+
+namespace {
+
+namespace tmgr = carla::traffic_manager;
+namespace pid_constants = carla::traffic_manager::constants::PID;
+namespace refresh = carla::traffic_manager::constants::WorldInfoRefresh;
+
+constexpr double kNeverRead{-std::numeric_limits<double>::infinity()};
+
+}  // namespace
+
+TEST(TrafficManagerRefreshCadence, IsRefreshDue_NothingReadYetIsDue) {
+  EXPECT_TRUE(refresh::IsRefreshDue(0.0, kNeverRead, refresh::EPISODE_SETTINGS_REFRESH_PERIOD));
+  EXPECT_TRUE(refresh::IsRefreshDue(1234.5, kNeverRead, refresh::VEHICLE_LIGHT_STATES_REFRESH_PERIOD));
+}
+
+TEST(TrafficManagerRefreshCadence, IsRefreshDue_SameFrameIsNotDue) {
+  EXPECT_FALSE(refresh::IsRefreshDue(10.0, 10.0, refresh::VEHICLE_LIGHT_STATES_REFRESH_PERIOD));
+}
+
+TEST(TrafficManagerRefreshCadence, IsRefreshDue_WithinThePeriodIsNotDue) {
+  EXPECT_FALSE(refresh::IsRefreshDue(10.24, 10.0, 0.25));
+}
+
+TEST(TrafficManagerRefreshCadence, IsRefreshDue_AtOrPastThePeriodIsDue) {
+  EXPECT_TRUE(refresh::IsRefreshDue(10.25, 10.0, 0.25));
+  EXPECT_TRUE(refresh::IsRefreshDue(11.0, 10.0, 0.25));
+}
+
+TEST(TrafficManagerRefreshCadence, IsRefreshDue_ClockGoingBackwardsIsDue) {
+  // A new episode restarts elapsed_seconds at zero. Without this the caches
+  // would carry the previous episode's contents for a whole period, where the
+  // actor ids have already started over.
+  EXPECT_TRUE(refresh::IsRefreshDue(0.05, 300.0, 1.0));
+}
+
+// -----------------------------------------------------------------------------
+// ShapeReferenceVelocity (the bounded-acceleration reference the loop follows)
+// -----------------------------------------------------------------------------
+
+namespace {
+
+constexpr float kControlDt{0.05f};
+constexpr float kCruiseTarget{60.0f / 3.6f};
+
+float Shape(
+    float previous_reference,
+    float vehicle_speed,
+    float target_velocity,
+    float control_dt,
+    bool emergency_stop = false) {
+
+  return tmgr::PID::ShapeReferenceVelocity(
+      previous_reference, vehicle_speed, target_velocity, control_dt, emergency_stop);
+}
+
+}  // namespace
+
+TEST(TrafficManagerComfortConstants, ReferenceLeadOutrunsTheThrottleSaturationError) {
+  // A vehicle that cannot follow the ramp is pinned at the lead cap, and it
+  // still has to receive everything the controller has, so the cap must sit
+  // above the relative velocity error that already saturates the throttle.
+  for (const auto &longitudinal : {pid_constants::LONGITUDIAL_PARAM,
+                                   pid_constants::LONGITUDIAL_HIGHWAY_PARAM}) {
+    EXPECT_GT(pid_constants::REFERENCE_LEAD_FRACTION,
+              pid_constants::MAX_THROTTLE / longitudinal[0]);
+  }
+}
+
+TEST(TrafficManagerReferenceVelocity, ShapeReference_RampsAwayFromRestAtComfortAcceleration) {
+  EXPECT_FLOAT_EQ(
+      Shape(0.0f, 0.0f, kCruiseTarget, kControlDt),
+      pid_constants::COMFORT_ACCELERATION * kControlDt);
+}
+
+TEST(TrafficManagerReferenceVelocity, ShapeReference_NeverExceedsTheTarget) {
+  EXPECT_FLOAT_EQ(
+      Shape(kCruiseTarget - 0.05f, kCruiseTarget - 0.05f, kCruiseTarget,
+            pid_constants::MAX_CONTROL_DT),
+      kCruiseTarget);
+}
+
+TEST(TrafficManagerReferenceVelocity, ShapeReference_DecelerationIsPassedThroughUnshaped) {
+  // The reference may not sit above the target, so a target that drops below
+  // the vehicle's speed reaches the loop unchanged and nothing here delays a
+  // brake.
+  EXPECT_FLOAT_EQ(Shape(20.0f, 20.0f, 5.0f, kControlDt), 5.0f);
+}
+
+TEST(TrafficManagerReferenceVelocity, ShapeReference_StaleLowReferenceIsRecoveredInOneStep) {
+  // A reference left behind by a cycle that did not drive the vehicle (a
+  // flushed state entry, a K-turn recovery) may not brake a vehicle that is
+  // already moving: it is pulled up to the current speed within one step.
+  // This is what lets the shaper carry no slow-server reset guard.
+  EXPECT_FLOAT_EQ(Shape(0.0f, 20.0f, 25.0f, kControlDt), 20.0f);
+}
+
+TEST(TrafficManagerReferenceVelocity, ShapeReference_StaleHighReferenceIsCappedToTheLead) {
+  EXPECT_FLOAT_EQ(
+      Shape(100.0f, 5.0f, 25.0f, kControlDt),
+      5.0f + pid_constants::REFERENCE_LEAD_FRACTION * 25.0f);
+}
+
+TEST(TrafficManagerReferenceVelocity, ShapeReference_LeadStaysBoundedWhileTheVehicleCannotFollow) {
+  // Uphill, or wedged against a kerb: the vehicle never gains speed. The
+  // reference must not run away from it, or the loop keeps asking for full
+  // throttle long after the obstruction clears.
+  float reference{0.0f};
+  for (int step = 0; step < 400; ++step) {
+    reference = Shape(reference, 0.0f, kCruiseTarget, kControlDt);
+  }
+  EXPECT_FLOAT_EQ(reference, pid_constants::REFERENCE_LEAD_FRACTION * kCruiseTarget);
+}
+
+TEST(TrafficManagerReferenceVelocity, ShapeReference_EmergencyStopDiscardsTheStoredReference) {
+  // While the vehicle was held the loop drove nothing, so the stored reference
+  // says nothing about the speed it is at now; on release the ramp has to
+  // restart from the vehicle, not from where the reference was left.
+  const float held{Shape(25.0f, 5.0f, 20.0f, kControlDt, true)};
+  const float not_held{Shape(25.0f, 5.0f, 20.0f, kControlDt, false)};
+
+  EXPECT_FLOAT_EQ(held, 5.0f + pid_constants::COMFORT_ACCELERATION * kControlDt);
+  EXPECT_LT(held, not_held);
+}
+
+TEST(TrafficManagerReferenceVelocity, ShapeReference_SlowServerStillRampsAtTheCompensatedRate) {
+  // Regression for the ramp being switched off on a server at or below five
+  // frames a second: the step is bounded by the same period the controller is
+  // compensated over, and the reference is not reset to the vehicle's speed.
+  // Advancing by COMFORT_ACCELERATION * control_dt instead would put the
+  // reference five times further ahead, which saturates the throttle.
+  EXPECT_FLOAT_EQ(
+      Shape(0.0f, 0.0f, kCruiseTarget, 1.0f),
+      pid_constants::COMFORT_ACCELERATION * pid_constants::MAX_CONTROL_DT);
+}
+
+TEST(TrafficManagerReferenceVelocity, ShapeReference_ShortFrameStillAdvancesTheReference) {
+  EXPECT_FLOAT_EQ(
+      Shape(0.0f, 0.0f, kCruiseTarget, 0.0001f),
+      pid_constants::COMFORT_ACCELERATION * pid_constants::MIN_CONTROL_DT);
+}
+
+// -----------------------------------------------------------------------------
+// RelativeVelocityDeviation (the zero-target guard)
+// -----------------------------------------------------------------------------
+
+TEST(TrafficManagerReferenceVelocity, VelocityDeviation_MatchesThePlainRatioOnceCaughtUp) {
+  // Everywhere outside an acceleration transient the reference has reached the
+  // target and the expression is the one it replaced.
+  EXPECT_FLOAT_EQ(tmgr::PID::RelativeVelocityDeviation(20.0f, 10.0f, 20.0f), 0.5f);
+}
+
+TEST(TrafficManagerReferenceVelocity, VelocityDeviation_ZeroTargetBehindAStoppedVehicleIsFinite) {
+  // The target reaches exactly zero behind a stopped vehicle, so a stopped
+  // vehicle behind one used to divide zero by zero.
+  const float reference{Shape(0.0f, 0.0f, 0.0f, kControlDt)};
+  const float deviation{tmgr::PID::RelativeVelocityDeviation(reference, 0.0f, 0.0f)};
+
+  EXPECT_TRUE(std::isfinite(deviation));
+  EXPECT_FLOAT_EQ(deviation, 0.0f);
+}
+
+TEST(TrafficManagerReferenceVelocity, VelocityDeviation_ZeroTargetDoesNotPoisonTheNextStep) {
+  // The NaN used to survive the throttle branch, be stored as the step's
+  // deviation, and become a NaN steering command on the next step through the
+  // derivative term.
+  StateEntry previous{};
+  StateEntry current{};
+  const float reference{Shape(0.0f, 0.0f, 0.0f, kControlDt)};
+  current.velocity_deviation = tmgr::PID::RelativeVelocityDeviation(reference, 0.0f, 0.0f);
+  current.reference_velocity = reference;
+
+  const ActuationSignal first{tmgr::PID::RunStep(
+      current, previous, pid_constants::LONGITUDIAL_PARAM, pid_constants::LATERAL_PARAM,
+      0.0f, kControlDt)};
+  EXPECT_TRUE(std::isfinite(first.throttle));
+  EXPECT_TRUE(std::isfinite(first.brake));
+  EXPECT_TRUE(std::isfinite(first.steer));
+
+  const ActuationSignal second{tmgr::PID::RunStep(
+      current, current, pid_constants::LONGITUDIAL_PARAM, pid_constants::LATERAL_PARAM,
+      0.0f, kControlDt)};
+  EXPECT_TRUE(std::isfinite(second.steer));
+  EXPECT_TRUE(std::isfinite(second.throttle));
+}
+
+// -----------------------------------------------------------------------------
+// SmoothActuation (launch ramp and command deadbands)
+// -----------------------------------------------------------------------------
+
+namespace {
+
+StateEntry PreviousCommand(float throttle, float brake, float steer) {
+  StateEntry state{};
+  state.throttle = throttle;
+  state.brake = brake;
+  state.steer = steer;
+  return state;
+}
+
+ActuationSignal Smooth(
+    const StateEntry &previous,
+    float control_dt,
+    float vehicle_speed,
+    ActuationSignal demand) {
+
+  tmgr::PID::SmoothActuation(previous, control_dt, vehicle_speed, demand);
+  return demand;
+}
+
+}  // namespace
+
+TEST(TrafficManagerActuationSmoothing, LaunchRamp_LimitsTheThrottleRiseFromRest) {
+  // The longitudinal gain reaches MAX_THROTTLE for any velocity error above a
+  // few per cent, so from a standstill the throttle would go to its bound in a
+  // single frame.
+  const ActuationSignal smoothed{Smooth(
+      PreviousCommand(0.0f, 0.0f, 0.0f), kControlDt, 0.0f,
+      ActuationSignal{pid_constants::MAX_THROTTLE, 0.0f, 0.0f})};
+
+  EXPECT_FLOAT_EQ(smoothed.throttle, pid_constants::MAX_LAUNCH_THROTTLE_RISE_RATE * kControlDt);
+}
+
+TEST(TrafficManagerActuationSmoothing, LaunchRamp_AlwaysClearsTheThrottleDeadband) {
+  // The ramp and the deadband act on the same signal. At the shortest period
+  // the controller is compensated over, the step the ramp allows must still be
+  // larger than the band that snaps a command back to the previous one, or a
+  // vehicle pulling away from rest is held at zero throttle for ever and
+  // blocks its lane.
+  const ActuationSignal smoothed{Smooth(
+      PreviousCommand(0.0f, 0.0f, 0.0f), 0.0001f, 0.0f,
+      ActuationSignal{pid_constants::MAX_THROTTLE, 0.0f, 0.0f})};
+
+  EXPECT_GT(smoothed.throttle, pid_constants::THROTTLE_DEADBAND);
+  EXPECT_FLOAT_EQ(
+      smoothed.throttle,
+      pid_constants::MAX_LAUNCH_THROTTLE_RISE_RATE * pid_constants::MIN_CONTROL_DT);
+}
+
+TEST(TrafficManagerActuationSmoothing, LaunchRamp_ReachesFullThrottleInABoundedNumberOfSteps) {
+  // Repeatedly applying the ramp has to converge on the demand rather than
+  // stall part way, which is what the deadband would do to a step it swallows.
+  StateEntry previous{PreviousCommand(0.0f, 0.0f, 0.0f)};
+  for (int step = 0; step < 200; ++step) {
+    const ActuationSignal smoothed{Smooth(
+        previous, kControlDt, 0.0f,
+        ActuationSignal{pid_constants::MAX_THROTTLE, 0.0f, 0.0f})};
+    previous.throttle = smoothed.throttle;
+  }
+  EXPECT_FLOAT_EQ(previous.throttle, pid_constants::MAX_THROTTLE);
+}
+
+TEST(TrafficManagerActuationSmoothing, LaunchRamp_IsReleasedAboveTheLaunchSpeed) {
+  const ActuationSignal smoothed{Smooth(
+      PreviousCommand(0.0f, 0.0f, 0.0f), kControlDt,
+      pid_constants::LAUNCH_RAMP_SPEED + 0.01f,
+      ActuationSignal{pid_constants::MAX_THROTTLE, 0.0f, 0.0f})};
+
+  EXPECT_FLOAT_EQ(smoothed.throttle, pid_constants::MAX_THROTTLE);
+}
+
+TEST(TrafficManagerActuationSmoothing, LaunchRamp_NeverRaisesAFallingThrottle) {
+  const ActuationSignal smoothed{Smooth(
+      PreviousCommand(0.5f, 0.0f, 0.0f), kControlDt, 1.0f,
+      ActuationSignal{0.1f, 0.0f, 0.0f})};
+
+  EXPECT_FLOAT_EQ(smoothed.throttle, 0.1f);
+}
+
+TEST(TrafficManagerActuationSmoothing, Deadband_HoldsTheThrottleDitherAndPassesARealStep) {
+  const StateEntry previous{PreviousCommand(0.5f, 0.0f, 0.0f)};
+
+  EXPECT_FLOAT_EQ(
+      Smooth(previous, kControlDt, 10.0f, ActuationSignal{0.505f, 0.0f, 0.0f}).throttle, 0.5f);
+  EXPECT_FLOAT_EQ(
+      Smooth(previous, kControlDt, 10.0f, ActuationSignal{0.52f, 0.0f, 0.0f}).throttle, 0.52f);
+}
+
+TEST(TrafficManagerActuationSmoothing, Deadband_HoldsTheBrakeDitherAndPassesARealStep) {
+  const StateEntry previous{PreviousCommand(0.0f, 0.4f, 0.0f)};
+
+  EXPECT_FLOAT_EQ(
+      Smooth(previous, kControlDt, 10.0f, ActuationSignal{0.0f, 0.4005f, 0.0f}).brake, 0.4f);
+  EXPECT_FLOAT_EQ(
+      Smooth(previous, kControlDt, 10.0f, ActuationSignal{0.0f, 0.45f, 0.0f}).brake, 0.45f);
+}
+
+TEST(TrafficManagerActuationSmoothing, Deadband_ZeroPedalDemandIsAlwaysHonoured) {
+  // The pedals have to rest exactly at zero, and nothing here may delay a
+  // lift-off or the release of a brake.
+  const ActuationSignal smoothed{Smooth(
+      PreviousCommand(0.005f, 0.005f, 0.0f), kControlDt, 10.0f,
+      ActuationSignal{0.0f, 0.0f, 0.0f})};
+
+  EXPECT_FLOAT_EQ(smoothed.throttle, 0.0f);
+  EXPECT_FLOAT_EQ(smoothed.brake, 0.0f);
+}
+
+TEST(TrafficManagerActuationSmoothing, Deadband_HoldsTheSteeringDitherAtUrbanSpeed) {
+  const StateEntry previous{PreviousCommand(0.0f, 0.0f, 0.1f)};
+
+  EXPECT_FLOAT_EQ(
+      Smooth(previous, kControlDt, 5.0f, ActuationSignal{0.0f, 0.0f, 0.1015f}).steer, 0.1f);
+  EXPECT_FLOAT_EQ(
+      Smooth(previous, kControlDt, 5.0f, ActuationSignal{0.0f, 0.0f, 0.105f}).steer, 0.105f);
+}
+
+TEST(TrafficManagerActuationSmoothing, Deadband_SteeringBandShrinksWithSpeed) {
+  // What a steering deadband can hide is a lateral acceleration, which grows
+  // with the square of speed: the same command step that is dither at urban
+  // speed is a real demand on a motorway.
+  const StateEntry previous{PreviousCommand(0.0f, 0.0f, 0.1f)};
+  const ActuationSignal demand{0.0f, 0.0f, 0.1005f};
+
+  EXPECT_FLOAT_EQ(
+      Smooth(previous, kControlDt, pid_constants::STEER_DEADBAND_REF_SPEED, demand).steer, 0.1f);
+  EXPECT_FLOAT_EQ(
+      Smooth(previous, kControlDt, 4.0f * pid_constants::STEER_DEADBAND_REF_SPEED, demand).steer,
+      0.1005f);
 }

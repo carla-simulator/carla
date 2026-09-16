@@ -5,7 +5,6 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include <algorithm>
-#include <array>
 #include <cmath>
 #include <limits>
 
@@ -29,51 +28,7 @@ using namespace constants::SpeedThreshold;
 using constants::HybridMode::HYBRID_MODE_DT;
 using constants::HybridMode::HYBRID_MODE_DT_FL;
 using constants::PID::DT;
-using constants::PID::MIN_CONTROL_DT;
-using constants::PID::MAX_CONTROL_DT;
-using constants::PID::COMFORT_ACCELERATION;
-using constants::PID::REFERENCE_LEAD_FRACTION;
 using constants::Collision::EPSILON;
-
-namespace {
-
-/// Conditions the controller output before it is commanded to the vehicle:
-/// ramps the throttle in while pulling away from a standstill, then holds the
-/// previous command while the new one is within a deadband of it, so the
-/// per-frame dither around the trim point does not reach the actuators. A zero
-/// demand is always honoured, so the pedals rest exactly at zero and nothing
-/// here delays a deceleration.
-void SmoothActuation(const StateEntry &previous_state,
-                     const float control_dt,
-                     const float vehicle_speed,
-                     ActuationSignal &actuation_signal) {
-  using namespace constants::PID;
-
-  const float speed_ratio =
-      STEER_DEADBAND_REF_SPEED / std::max(vehicle_speed, STEER_DEADBAND_REF_SPEED);
-  const float steer_deadband = STEER_DEADBAND * speed_ratio * speed_ratio;
-
-  if (vehicle_speed < LAUNCH_RAMP_SPEED) {
-    const float dt = std::max(MIN_CONTROL_DT, std::min(control_dt, MAX_CONTROL_DT));
-    actuation_signal.throttle = std::min(
-        actuation_signal.throttle,
-        previous_state.throttle + MAX_LAUNCH_THROTTLE_RISE_RATE * dt);
-  }
-
-  if (actuation_signal.throttle > 0.0f &&
-      std::abs(actuation_signal.throttle - previous_state.throttle) < THROTTLE_DEADBAND) {
-    actuation_signal.throttle = previous_state.throttle;
-  }
-  if (actuation_signal.brake > 0.0f &&
-      std::abs(actuation_signal.brake - previous_state.brake) < BRAKE_DEADBAND) {
-    actuation_signal.brake = previous_state.brake;
-  }
-  if (std::abs(actuation_signal.steer - previous_state.steer) < steer_deadband) {
-    actuation_signal.steer = previous_state.steer;
-  }
-}
-
-} // namespace
 
 MotionPlanStage::MotionPlanStage(
   const std::vector<ActorId> &vehicle_id_list,
@@ -430,37 +385,17 @@ void MotionPlanStage::Update(const unsigned long index) {
         control_dt = DT;
       }
 
-      // Reference speed the longitudinal loop is asked to reach this step. See
-      // COMFORT_ACCELERATION: the target itself steps, and a step of more than
-      // 7 per cent puts the throttle on its bound in one frame.
-      float reference_velocity = previous_state.reference_velocity;
-      if (emergency_stop) {
-        // The loop drove nothing while the vehicle was held, so the stored
-        // reference says nothing about the speed it is at now. A stale value
-        // from any other cause needs no such guard: the bounds below pull the
-        // reference back to within one ramp step of the vehicle in one cycle.
-        reference_velocity = vehicle_speed;
-      }
-      // The ramp uses the same period bounds as the controller, so a frame
-      // long enough to be clamped there cannot advance the reference further
-      // than the loop is compensated for.
-      reference_velocity = std::min(
-          reference_velocity +
-              COMFORT_ACCELERATION * std::clamp(control_dt, MIN_CONTROL_DT, MAX_CONTROL_DT),
-          dynamic_target_velocity);
-      // Never under the current speed, so the ramp cannot brake a vehicle that
-      // is already faster than it; never over the target, so it cannot cancel
-      // a deceleration the target is asking for.
-      reference_velocity =
-          std::max(reference_velocity, std::min(vehicle_speed, dynamic_target_velocity));
-      reference_velocity = std::min(
-          reference_velocity, vehicle_speed + REFERENCE_LEAD_FRACTION * dynamic_target_velocity);
-      // The target reaches exactly zero behind a stopped vehicle, and a
-      // stopped vehicle behind one divides zero by zero: the resulting NaN
-      // survives the throttle branch, is stored as this step's deviation, and
-      // the next step's derivative term turns it into a NaN steering command.
-      const float velocity_deviation{(reference_velocity - vehicle_speed) /
-                                     std::max(dynamic_target_velocity, EPSILON_RELATIVE_SPEED)};
+      // Reference speed the longitudinal loop is asked to reach this step,
+      // which closes on the target at a bounded acceleration instead of
+      // stepping to it, and the velocity error it produces.
+      const float reference_velocity{PID::ShapeReferenceVelocity(
+          previous_state.reference_velocity,
+          vehicle_speed,
+          dynamic_target_velocity,
+          control_dt,
+          emergency_stop)};
+      const float velocity_deviation{PID::RelativeVelocityDeviation(
+          reference_velocity, vehicle_speed, dynamic_target_velocity)};
 
       // If physics is enabled for the vehicle, use PID controller.
       // State update for vehicle.
@@ -503,7 +438,7 @@ void MotionPlanStage::Update(const unsigned long index) {
         actuation_signal.throttle = 0.0f;
         actuation_signal.brake = 1.0f;
       } else {
-        SmoothActuation(previous_state, control_dt, vehicle_speed, actuation_signal);
+        PID::SmoothActuation(previous_state, control_dt, vehicle_speed, actuation_signal);
       }
 
       // Constructing the actuation signal.
