@@ -803,59 +803,31 @@ float MotionPlanStage::GetTurnTargetVelocity(const Buffer &waypoint_buffer,
     return max_target_velocity;
   }
 
-  // Lowest speed any three consecutive samples of the path ahead allow: the
-  // curvature they describe, taken at LATERAL_COMFORT_ACCELERATION, raised by
-  // the speed that braking at TURN_BRAKING_DECELERATION can still shed over
-  // the distance to them.
-  // The samples are spaced along the path from the buffer front, at the
-  // resolution the map itself is sampled at, and interpolated rather than
-  // picked, so a junction's denser waypoints do not shorten the arcs. The
-  // distance to each arc is measured from the vehicle, not from the front: the
-  // front sits anywhere within one sample spacing of the vehicle, and taking
-  // its position as the origin makes every distance jump by that spacing each
-  // time a waypoint is consumed. The vehicle's own position cannot be used as
-  // the first sample either, since its lane offset would read as curvature.
-  const cg::Location front_location = waypoint_buffer.front()->GetLocation();
-  const float front_offset = vehicle_location.Distance(front_location);
+  // The scan starts at the waypoint the vehicle has just passed, not at the
+  // first one ahead of it: the arc a vehicle is already cornering on began
+  // behind that one, and starting there credits the arc with the distance
+  // still to run up to it, so the speed climbs by a quarter each time a
+  // waypoint is consumed and falls back as the next is approached, which is a
+  // sawtooth in the middle of every curve. Where the front has several
+  // predecessors, at a junction exit, there is no single arc to continue and
+  // the scan starts at the front.
+  std::vector<cg::Location> path;
+  path.reserve(waypoint_buffer.size() + 1u);
+  float path_start_offset = vehicle_location.Distance(waypoint_buffer.front()->GetLocation());
 
-  float turn_target_velocity = max_target_velocity;
-  std::array<cg::Location, 3> samples{front_location, front_location, front_location};
-  uint32_t sample_count = 1u;
-  cg::Location previous_location = front_location;
-  float travelled = 0.0f;
-  float next_sample_at = CURVATURE_SAMPLE_SPACING;
-
+  const std::vector<SimpleWaypointPtr> passed_waypoints =
+      waypoint_buffer.front()->GetPreviousWaypoint();
+  if (passed_waypoints.size() == 1u) {
+    path.push_back(passed_waypoints.front()->GetLocation());
+    path_start_offset = -vehicle_location.Distance(path.front());
+  }
   for (const auto &waypoint : waypoint_buffer) {
-    const cg::Location location = waypoint->GetLocation();
-    const float segment = location.Distance(previous_location);
-    const float segment_start = travelled;
-    travelled += segment;
-
-    while (segment > EPSILON && travelled >= next_sample_at) {
-      const float fraction = (next_sample_at - segment_start) / segment;
-      samples = {samples[1], samples[2],
-                 cg::Location{previous_location.x + (location.x - previous_location.x) * fraction,
-                              previous_location.y + (location.y - previous_location.y) * fraction,
-                              previous_location.z + (location.z - previous_location.z) * fraction}};
-      // The vehicle has to be down to the arc's speed by the time it reaches
-      // the first of the three samples, not the middle one.
-      const float distance_to_arc =
-          front_offset + next_sample_at - 2.0f * CURVATURE_SAMPLE_SPACING;
-      next_sample_at += CURVATURE_SAMPLE_SPACING;
-
-      if (++sample_count < 3u) {
-        continue;
-      }
-      const float radius = GetThreePointCircleRadius(samples[0], samples[1], samples[2]);
-      turn_target_velocity = std::min(
-          turn_target_velocity,
-          std::sqrt(radius * LATERAL_COMFORT_ACCELERATION +
-                    2.0f * TURN_BRAKING_DECELERATION * std::max(distance_to_arc, 0.0f)));
-    }
-    previous_location = location;
+    path.push_back(waypoint->GetLocation());
   }
 
-  return turn_target_velocity;
+  return GetPathSpeedLimit(path, path_start_offset, CURVATURE_SAMPLE_SPACING,
+                           LATERAL_COMFORT_ACCELERATION, TURN_BRAKING_DECELERATION,
+                           max_target_velocity);
 }
 
 void MotionPlanStage::RemoveActor(const ActorId actor_id) {

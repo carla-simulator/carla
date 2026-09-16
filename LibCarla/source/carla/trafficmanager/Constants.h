@@ -200,14 +200,12 @@ static const float LATERAL_COMFORT_ACCELERATION = 3.0f;
 // is the one that reaches the turn's own limit by braking at this rate, so the
 // vehicle slows before the curvature arrives instead of inside it.
 static const float TURN_BRAKING_DECELERATION = 2.0f;
-// Arc spacing of the curvature samples along the path buffer. What limits the
-// speed is the tightest curvature any three consecutive samples describe; the
-// circle through the first, middle and last point of the whole buffer reads
-// R ~ 22 m for a straight leading into an R = 11 m turn, so the limit used to
-// tighten only once the vehicle was already in the turn. 5 m matches the
-// resolution the map is sampled at and spans ~52 degrees of the tightest
-// urban connector.
-static const float CURVATURE_SAMPLE_SPACING = 5.0f;
+// Arc spacing of the curvature samples along the path. It cannot go below the
+// resolution the map is stored at: samples closer together than that land on
+// the chords of the stored polyline, which read as straight. It cannot go far
+// above it either, since three samples are needed for a curvature and a turn
+// shorter than two spacings is then not measured at all.
+static const float CURVATURE_SAMPLE_SPACING = Map::MAP_RESOLUTION;
 static const float PI = 3.1415927f;
 static const float PERC_MAX_SLOWDOWN = 0.08f;
 static const float FOLLOW_LEAD_FACTOR = 2.0f;
