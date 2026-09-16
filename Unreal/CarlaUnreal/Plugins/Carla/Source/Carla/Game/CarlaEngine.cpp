@@ -507,14 +507,15 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
     ResetSimulationState();
 
     // OnPreTick is otherwise the only point that serves game-thread commands,
-    // so a client answering the snapshot broadcast above waits until the next
-    // frame, and a chain of dependent requests costs one frame per link. This
-    // second service point doubles the per-frame budget and halves that
-    // latency; RunSome returns immediately once the queue is empty, so an idle
-    // server pays nothing. Requests served here land after the broadcast and
-    // the recorder, so a spawn or destroy takes effect one frame later than it
-    // would from OnPreTick. Synchronous mode is left out: its tick cue belongs
-    // to the OnPreTick loop.
+    // so a blocking request costs its caller a full frame. The traffic manager
+    // pays that on every spawn, because reading the actor list goes to the
+    // server whenever an actor it has not cached appears. A second service
+    // point halves that round trip; RunSome returns at once on an empty queue.
+    // When a command takes effect is unchanged: both points fall in the same
+    // gap before the next frame's physics. Serving after the broadcast is
+    // deliberate, so a transform served here cannot contradict the snapshot
+    // already sent for this frame. Synchronous mode is left out: its tick cue
+    // belongs to the OnPreTick loop.
     if (bIsPrimaryServer && !bSynchronousMode)
     {
       Server.RunSome(1u);
