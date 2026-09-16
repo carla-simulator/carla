@@ -48,6 +48,9 @@ namespace WorldInfoRefresh {
 static const double EPISODE_SETTINGS_REFRESH_PERIOD = 1.0;
 static const double VEHICLE_LIGHT_STATES_REFRESH_PERIOD = 0.25;
 static const double WEATHER_REFRESH_PERIOD = 1.0;
+// How often the asynchronous control batch is waited for, which is what bounds
+// the number of batches queued ahead of the server's game thread.
+static const double CONTROL_BATCH_SYNC_PERIOD = 1.0;
 // Idle period of the asynchronous worker between snapshots. Negligible next to
 // a rendered frame, and keeps the worker off the episode state.
 static const std::chrono::milliseconds SNAPSHOT_POLL_PERIOD {1};

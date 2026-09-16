@@ -111,6 +111,8 @@ private:
   rpc::EpisodeSettings episode_settings;
   /// Simulation time of the last episode settings refresh.
   double last_settings_update {-std::numeric_limits<double>::infinity()};
+  /// Simulation time of the last control batch that was waited for.
+  double last_batch_sync {-std::numeric_limits<double>::infinity()};
   /// Randomization seed.
   uint64_t seed {static_cast<uint64_t>(time(NULL))};
   /// Structure holding random devices per vehicle.
