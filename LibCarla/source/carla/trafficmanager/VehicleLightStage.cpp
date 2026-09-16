@@ -32,6 +32,7 @@ void VehicleLightStage::UpdateWorldInfo(const double current_time, const bool sy
       [this](const ActorId actor_id) { return parameters.GetUpdateVehicleLights(actor_id); });
   if (!any_vehicle_updates_lights) {
     all_light_states.clear();
+    missing_from_last_refresh.clear();
     last_light_states_update = -std::numeric_limits<double>::infinity();
     light_states_refreshed = false;
     return;
@@ -43,6 +44,7 @@ void VehicleLightStage::UpdateWorldInfo(const double current_time, const bool sy
   if (synchronous_mode ||
       IsRefreshDue(current_time, last_light_states_update, VEHICLE_LIGHT_STATES_REFRESH_PERIOD)) {
     all_light_states = world.GetVehiclesLightStates();
+    missing_from_last_refresh.clear();
     last_light_states_update = current_time;
     light_states_refreshed = true;
   }
@@ -100,8 +102,11 @@ void VehicleLightStage::Update(const unsigned long index) {
     // command from the sentinel above would switch on every bit this stage
     // does not manage (reverse, interior, special) and the write-back below
     // would then hold them on for good.
-    if (!light_states_refreshed) {
+    if (IsEarlyRefreshDue(light_states_refreshed, missing_from_last_refresh.contains(actor_id))) {
       last_light_states_update = -std::numeric_limits<double>::infinity();
+    }
+    if (light_states_refreshed) {
+      missing_from_last_refresh.insert(actor_id);
     }
     return;
   }
@@ -219,10 +224,12 @@ void VehicleLightStage::RemoveActor(const ActorId actor_id) {
             return light_state.first == actor_id;
           }),
       all_light_states.end());
+  missing_from_last_refresh.erase(actor_id);
 }
 
 void VehicleLightStage::Reset() {
   all_light_states.clear();
+  missing_from_last_refresh.clear();
   last_light_states_update = -std::numeric_limits<double>::infinity();
   last_weather_update = -std::numeric_limits<double>::infinity();
   light_states_refreshed = false;

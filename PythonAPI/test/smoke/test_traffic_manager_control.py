@@ -6,22 +6,28 @@
 
 """Smoke tests for the Traffic Manager control loop.
 
-Two behaviours that need a live server tick loop and cannot be reached from
+Three behaviours that need a live server tick loop and cannot be reached from
 the LibCarla suite, because they only appear once the controller output has
 been through the physics and back:
 
 * pulling away from rest and from a junction happens at a comfortable rate
   rather than with the throttle on its bound from the first frame,
 * corners are taken at a comfortable lateral acceleration rather than at the
-  tyre-grip limit, and the speed limiter does not brake traffic to a halt.
+  tyre-grip limit, and the speed limiter does not brake traffic to a halt,
+* the automatic vehicle lights never switch on a light the stage does not
+  manage, which is what deriving a command from the "state unknown" sentinel
+  used to do -- reachable only in asynchronous mode, where the cached light
+  state list can predate a vehicle.
 
-Both run in synchronous mode so the sampling period is exact.
+The comfort tests run in synchronous mode so the sampling period is exact.
+The lights test runs in asynchronous mode because that is the only mode where
+the cached world queries are paced instead of read every step.
 """
 
 import math
 import time
 
-from . import SyncSmokeTest
+from . import SmokeTest, SyncSmokeTest
 
 import carla
 
@@ -45,6 +51,24 @@ MAX_CORNERING_ACCELERATION = 5.0
 # The limiter must not brake traffic to a standstill: a regression that makes
 # the path speed limit collapse would otherwise pass every bound above.
 MIN_FLEET_MEAN_SPEED = 2.0
+
+# Bits the VehicleLightStage does not manage. The "state unknown" sentinel is
+# every bit set, so a command derived from it switches these on and the
+# write-back then holds them on for good.
+UNMANAGED_LIGHTS = (
+    int(carla.VehicleLightState.Reverse) |
+    int(carla.VehicleLightState.Interior) |
+    int(carla.VehicleLightState.Special1) |
+    int(carla.VehicleLightState.Special2))
+
+MANAGED_LIGHTS = (
+    int(carla.VehicleLightState.Position) |
+    int(carla.VehicleLightState.LowBeam) |
+    int(carla.VehicleLightState.HighBeam) |
+    int(carla.VehicleLightState.Brake) |
+    int(carla.VehicleLightState.RightBlinker) |
+    int(carla.VehicleLightState.LeftBlinker) |
+    int(carla.VehicleLightState.Fog))
 
 
 def _magnitude(vector):
@@ -197,3 +221,102 @@ class TestTrafficManagerComfort(SyncSmokeTest):
             mean_speed, MIN_FLEET_MEAN_SPEED,
             "the fleet averaged {:.2f} m/s; the turn speed limiter should slow "
             "traffic for corners, not stop it".format(mean_speed))
+
+
+class TestTrafficManagerVehicleLights(SmokeTest):
+    """Asynchronous mode, where the cached light state list is paced.
+
+    Synchronous mode reads the list on every step, so the case a stale or
+    incomplete cache produces is only reachable here.
+    """
+
+    def setUp(self):
+        super(TestTrafficManagerVehicleLights, self).setUp()
+        self.tm = self.client.get_trafficmanager()
+        self.tm_port = self.tm.get_port()
+        self.spawned = []
+
+    def tearDown(self):
+        for actor in self.spawned:
+            try:
+                actor.set_autopilot(False, self.tm_port)
+                actor.destroy()
+            except Exception:
+                pass
+        self.spawned = []
+        self.tm = None
+        self.client.load_world("Town10HD_Opt")
+        time.sleep(5)
+        self.world = None
+        self.client = None
+
+    def _spawn_one(self, spawn_point, blueprint):
+        actor = self.world.try_spawn_actor(blueprint, spawn_point)
+        if actor is None:
+            return None
+        actor.set_autopilot(True, self.tm_port)
+        self.tm.update_vehicle_lights(actor, True)
+        self.spawned.append(actor)
+        return actor
+
+    def test_automatic_lights_never_switch_on_an_unmanaged_light(self):
+        bp_lib = self.world.get_blueprint_library()
+        vehicle_bps = self.filter_vehicles_for_old_towns(list(bp_lib.filter("vehicle.*")))
+        spawn_points = self.world.get_map().get_spawn_points()
+        self.assertGreater(len(spawn_points), 12)
+
+        for index in range(8):
+            self._spawn_one(spawn_points[index], vehicle_bps[index % len(vehicle_bps)])
+        self.assertGreater(len(self.spawned), 0)
+
+        observed_managed = 0
+        next_spawn = 8
+        for step in range(40):
+            # Registering a vehicle between two refreshes of the cached list is
+            # the case that used to read the "state unknown" sentinel.
+            if step % 8 == 0 and next_spawn < min(12, len(spawn_points)):
+                self._spawn_one(
+                    spawn_points[next_spawn], vehicle_bps[next_spawn % len(vehicle_bps)])
+                next_spawn += 1
+            time.sleep(0.5)
+            for actor in list(self.spawned):
+                if not actor.is_alive:
+                    continue
+                light_state = int(actor.get_light_state())
+                observed_managed |= light_state & MANAGED_LIGHTS
+                self.assertEqual(
+                    light_state & UNMANAGED_LIGHTS, 0,
+                    "{} has an unmanaged light on (state 0x{:x}); the vehicle "
+                    "light stage must skip a vehicle whose current state it "
+                    "does not know instead of deriving a command from the "
+                    "sentinel".format(actor.type_id, light_state))
+
+        self.assertNotEqual(
+            observed_managed, 0,
+            "no managed light was ever driven, so the assertion above never "
+            "exercised the stage")
+
+    def test_destroyed_vehicle_does_not_hold_a_light_state(self):
+        bp_lib = self.world.get_blueprint_library()
+        vehicle_bps = self.filter_vehicles_for_old_towns(list(bp_lib.filter("vehicle.*")))
+        spawn_points = self.world.get_map().get_spawn_points()
+
+        first = self._spawn_one(spawn_points[0], vehicle_bps[0])
+        self.assertIsNotNone(first)
+        time.sleep(3.0)
+
+        self.spawned.remove(first)
+        first.destroy()
+        time.sleep(1.0)
+
+        # The cached list outlives the response it came from, so a destroyed
+        # vehicle has to be dropped from it explicitly. A replacement must get
+        # its own state rather than the one left behind.
+        replacement = self._spawn_one(spawn_points[1], vehicle_bps[1])
+        self.assertIsNotNone(replacement)
+        for _ in range(10):
+            time.sleep(0.5)
+            self.assertEqual(
+                int(replacement.get_light_state()) & UNMANAGED_LIGHTS, 0,
+                "a vehicle spawned after another was destroyed picked up an "
+                "unmanaged light state")

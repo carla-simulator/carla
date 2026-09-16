@@ -62,6 +62,18 @@ static const std::chrono::milliseconds SNAPSHOT_POLL_PERIOD {1};
 inline bool IsRefreshDue(const double now, const double last, const double period) {
   return !(now >= last && (now - last) < period);
 }
+
+/// Whether a vehicle the cached light state list does not cover is worth an
+/// unscheduled read of the whole list. @a missing_from_the_last_refresh says
+/// the vehicle was already absent from a list read from the server, so reading
+/// it again would only say the same: one the server keeps omitting, because it
+/// is dormant on a large map, would otherwise re-arm the unscheduled read on
+/// every other step and hold the whole fleet's lights at that cadence.
+[[nodiscard]] inline bool IsEarlyRefreshDue(
+    const bool refreshed_this_step,
+    const bool missing_from_the_last_refresh) {
+  return !refreshed_this_step && !missing_from_the_last_refresh;
+}
 } // namespace WorldInfoRefresh
 
 namespace SpeedThreshold {
