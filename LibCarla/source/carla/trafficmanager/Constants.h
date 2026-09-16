@@ -296,6 +296,17 @@ static const float MAX_DEVIATION_RATE = MAX_DEVIATION_DELTA / DT;
 // be asymmetric to stay safe (free to lift off, free to brake), and that
 // asymmetry biases the average command down, which measurably cost up to
 // 12 km/h of achieved speed on the navigation benchmark.
+// Pulling away from a standstill is the one place a ramp is wanted: the
+// proportional gain reaches MAX_THROTTLE for any velocity error above a few
+// per cent, so the throttle goes to its bound in a single frame and the
+// vehicle launches hard. Ramp it in below LAUNCH_RAMP_SPEED only, which keeps
+// the bias above out of normal driving.
+// The threshold has to stay near standstill. Raising it to 5 m/s to let the
+// ramp finish before releasing also caught corner exits, where the traffic
+// manager slows well below that, and throttling those cost 0.4 m of lane
+// deviation on the navigation benchmark.
+static const float LAUNCH_RAMP_SPEED = 2.0f;
+static const float MAX_LAUNCH_THROTTLE_RISE_RATE = 1.7f;
 static const float THROTTLE_DEADBAND = 0.01f;
 static const float BRAKE_DEADBAND = 0.01f;
 static const float STEER_DEADBAND = 0.002f;

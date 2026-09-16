@@ -33,11 +33,13 @@ using constants::Collision::EPSILON;
 namespace {
 
 /// Conditions the controller output before it is commanded to the vehicle:
-/// holds the previous command while the new one is within a deadband of it, so
-/// the per-frame dither around the trim point does not reach the actuators. A
-/// zero demand is always honoured, so the pedals rest exactly at zero and
-/// nothing here delays a deceleration.
+/// ramps the throttle in while pulling away from a standstill, then holds the
+/// previous command while the new one is within a deadband of it, so the
+/// per-frame dither around the trim point does not reach the actuators. A zero
+/// demand is always honoured, so the pedals rest exactly at zero and nothing
+/// here delays a deceleration.
 void SmoothActuation(const StateEntry &previous_state,
+                     const float control_dt,
                      const float vehicle_speed,
                      ActuationSignal &actuation_signal) {
   using namespace constants::PID;
@@ -45,6 +47,13 @@ void SmoothActuation(const StateEntry &previous_state,
   const float speed_ratio =
       STEER_DEADBAND_REF_SPEED / std::max(vehicle_speed, STEER_DEADBAND_REF_SPEED);
   const float steer_deadband = STEER_DEADBAND * speed_ratio * speed_ratio;
+
+  if (vehicle_speed < LAUNCH_RAMP_SPEED) {
+    const float dt = std::max(MIN_CONTROL_DT, std::min(control_dt, MAX_CONTROL_DT));
+    actuation_signal.throttle = std::min(
+        actuation_signal.throttle,
+        previous_state.throttle + MAX_LAUNCH_THROTTLE_RISE_RATE * dt);
+  }
 
   if (actuation_signal.throttle > 0.0f &&
       std::abs(actuation_signal.throttle - previous_state.throttle) < THROTTLE_DEADBAND) {
@@ -457,7 +466,7 @@ void MotionPlanStage::Update(const unsigned long index) {
         actuation_signal.throttle = 0.0f;
         actuation_signal.brake = 1.0f;
       } else {
-        SmoothActuation(previous_state, vehicle_speed, actuation_signal);
+        SmoothActuation(previous_state, control_dt, vehicle_speed, actuation_signal);
       }
 
       // Constructing the actuation signal.
