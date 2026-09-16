@@ -126,6 +126,57 @@ std::pair<cg::Location, uint64_t> GetTargetData(
   return InterpolateBufferAt(locations, target_distance, vehicle_location);
 }
 
+float GetPathSpeedLimit(
+    const std::vector<cg::Location> &path,
+    const float path_start_offset,
+    const float sample_spacing,
+    const float lateral_acceleration,
+    const float braking_deceleration,
+    const float max_speed) {
+
+  if (path.size() < 3u || sample_spacing <= 0.0f) {
+    return max_speed;
+  }
+
+  float speed_limit = max_speed;
+  std::array<cg::Location, 3> samples{path.front(), path.front(), path.front()};
+  uint32_t sample_count = 1u;
+  cg::Location previous_location = path.front();
+  float travelled = 0.0f;
+  float next_sample_at = sample_spacing;
+
+  for (const cg::Location &location : path) {
+    const float segment = location.Distance(previous_location);
+    const float segment_start = travelled;
+    travelled += segment;
+
+    while (segment > EPSILON && travelled >= next_sample_at) {
+      const float fraction = (next_sample_at - segment_start) / segment;
+      samples = {samples[1], samples[2],
+                 cg::Location{previous_location.x + (location.x - previous_location.x) * fraction,
+                              previous_location.y + (location.y - previous_location.y) * fraction,
+                              previous_location.z + (location.z - previous_location.z) * fraction}};
+      // The vehicle has to be down to the arc's speed by the time it reaches
+      // the first of the three samples, not the middle one.
+      const float distance_to_arc =
+          path_start_offset + next_sample_at - 2.0f * sample_spacing;
+      next_sample_at += sample_spacing;
+
+      if (++sample_count < 3u) {
+        continue;
+      }
+      const float radius = GetThreePointCircleRadius(samples[0], samples[1], samples[2]);
+      speed_limit = std::min(
+          speed_limit,
+          std::sqrt(radius * lateral_acceleration +
+                    2.0f * braking_deceleration * std::max(distance_to_arc, 0.0f)));
+    }
+    previous_location = location;
+  }
+
+  return speed_limit;
+}
+
 float LargeVehicleJunctionOffsetProfile(
     float t,
     float max_offset,
