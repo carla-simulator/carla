@@ -293,13 +293,14 @@ void TrafficManagerLocal::Step() {
     // application, so nothing otherwise bounds how many batches queue up ahead
     // of the game thread if another client saturates its command budget, and
     // the applied command would fall further and further behind the computed
-    // one. Waiting for one batch periodically caps that: the queue ahead of it
-    // has to drain before the call returns.
-    if (IsRefreshDue(timestamp.elapsed_seconds, last_batch_sync, CONTROL_BATCH_SYNC_PERIOD)) {
+    // one. Waiting for every so many batches caps that: the queue ahead of the
+    // one waited for has to drain before the call returns.
+    if (IsBatchSyncDue(unwaited_control_batches, MAX_UNWAITED_CONTROL_BATCHES)) {
       episode_proxy.Lock()->ApplyBatchSync(control_frame, false);
-      last_batch_sync = timestamp.elapsed_seconds;
+      unwaited_control_batches = 0u;
     } else {
       episode_proxy.Lock()->ApplyBatch(control_frame, false);
+      ++unwaited_control_batches;
     }
   }
 }
@@ -347,7 +348,7 @@ void TrafficManagerLocal::Stop() {
   last_frame = 0;
   episode_settings = rpc::EpisodeSettings{};
   last_settings_update = -std::numeric_limits<double>::infinity();
-  last_batch_sync = -std::numeric_limits<double>::infinity();
+  unwaited_control_batches = MAX_UNWAITED_CONTROL_BATCHES;
 
   buffer_map.clear();
   localization_frame.clear();

@@ -111,8 +111,10 @@ private:
   rpc::EpisodeSettings episode_settings;
   /// Simulation time of the last episode settings refresh.
   double last_settings_update {-std::numeric_limits<double>::infinity()};
-  /// Simulation time of the last control batch that was waited for.
-  double last_batch_sync {-std::numeric_limits<double>::infinity()};
+  /// Control batches sent since the last one the server was waited on. Starts
+  /// at the limit so the first batch of an episode is waited for.
+  uint64_t unwaited_control_batches {
+      constants::WorldInfoRefresh::MAX_UNWAITED_CONTROL_BATCHES};
   /// Randomization seed.
   uint64_t seed {static_cast<uint64_t>(time(NULL))};
   /// Structure holding random devices per vehicle.
