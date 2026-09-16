@@ -74,7 +74,6 @@ TrafficManagerLocal::TrafficManagerLocal(
                                       localization_frame,
                                       collision_frame,
                                       tl_frame,
-                                      world,
                                       control_frame,
                                       random_device,
                                       local_map,
@@ -251,6 +250,7 @@ void TrafficManagerLocal::Step() {
   }
   collision_stage.ClearCycleCache();
   vehicle_light_stage.UpdateWorldInfo(timestamp.elapsed_seconds, synchronous_mode);
+  motion_plan_stage.SetCycleTimestamp(timestamp);
   for (unsigned long index = 0u; index < vehicle_id_list.size(); ++index) {
     if (!localization_frame[index].localized) {
       continue;
