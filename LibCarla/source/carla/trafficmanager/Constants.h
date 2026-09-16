@@ -326,6 +326,29 @@ static const float STEER_DEADBAND = 0.002f;
 // an unscaled band cost 0.2 m of lane deviation at 90 km/h on the navigation
 // benchmark.
 static const float STEER_DEADBAND_REF_SPEED = 8.0f;
+// Longitudinal comfort limit. The proportional gain below saturates the
+// throttle for any velocity error over 7 per cent (0.85 / 12), so a target
+// that steps commands full throttle in a single frame, and the target does
+// step: the landmark that holds a vehicle at 10-15 km/h through a junction
+// leaves the path buffer in one frame, and the speed asked of the vehicle
+// triples between two consecutive frames. Measured pulling out of junctions
+// and roundabouts on Town10 and Town15 before this: 5.2-5.6 m/s2 median and
+// 8.4 m/s2 peak, at ~60 m/s3 of jerk, where a comfortable urban pull-away is
+// 1-2 m/s2 and 2 m/s3.
+// The loop is given a reference that closes on the target at this
+// acceleration instead of the target itself. Bounding the reference rather
+// than the throttle keeps the actuator free (nothing delays a lift-off or a
+// brake), needs no knowledge of the vehicle's power or gearing, and leaves the
+// loop untouched everywhere the reference has caught up with the target, which
+// is everywhere except an acceleration transient.
+static const float COMFORT_ACCELERATION = 2.0f;
+// How far the reference may lead the vehicle, as a fraction of the target. A
+// vehicle that cannot follow the ramp (uphill, wedged against a kerb) would
+// otherwise let the reference run away from it, and the loop would keep asking
+// for full throttle long after the obstruction cleared. The fraction has to
+// stay above the 7 per cent that saturates the throttle, so a vehicle held at
+// the cap still gets everything the controller has.
+static const float REFERENCE_LEAD_FRACTION = 0.15f;
 static const std::vector<float> LONGITUDIAL_PARAM = {12.0f, 0.05f, 0.02f};
 static const std::vector<float> LONGITUDIAL_HIGHWAY_PARAM = {20.0f, 0.05f, 0.01f};
 // Lateral gains, step-response tuned against the LINEAR Chaos steering

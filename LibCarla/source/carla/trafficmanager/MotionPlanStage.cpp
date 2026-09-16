@@ -28,6 +28,9 @@ using namespace constants::SpeedThreshold;
 using constants::HybridMode::HYBRID_MODE_DT;
 using constants::HybridMode::HYBRID_MODE_DT_FL;
 using constants::PID::DT;
+using constants::PID::MAX_CONTROL_DT;
+using constants::PID::COMFORT_ACCELERATION;
+using constants::PID::REFERENCE_LEAD_FRACTION;
 using constants::Collision::EPSILON;
 
 namespace {
@@ -323,8 +326,6 @@ void MotionPlanStage::Update(const unsigned long index) {
       if (std::abs(angular_deviation) > 0.25f) {  // > 45 degrees
         dynamic_target_velocity = std::min(dynamic_target_velocity, 3.0f);
       }
-      const float velocity_deviation{(dynamic_target_velocity - vehicle_speed) / dynamic_target_velocity};
-
       // --- Stuck / misaligned vehicle recovery (K-turn) -----------------
       // Two situations the forward PID cannot solve: a vehicle commanded to
       // move (no red light, no vehicle ahead) that stays immobile is wedged
@@ -415,10 +416,6 @@ void MotionPlanStage::Update(const unsigned long index) {
         lateral_parameters = urban_lateral_parameters;
       }
 
-      // If physics is enabled for the vehicle, use PID controller.
-      // State update for vehicle.
-      current_state = {current_timestamp, angular_deviation, velocity_deviation, 0.0f};
-
       // Measured controller period in simulation time. In synchronous mode
       // this is fixed_delta_seconds; in asynchronous mode it is one server
       // frame, which under render load can stretch well past the nominal DT
@@ -430,6 +427,36 @@ void MotionPlanStage::Update(const unsigned long index) {
       if (control_dt <= 0.0f) {
         control_dt = DT;
       }
+
+      // Reference speed the longitudinal loop is asked to reach this step. See
+      // COMFORT_ACCELERATION: the target itself steps, and a step of more than
+      // 7 per cent puts the throttle on its bound in one frame.
+      float reference_velocity = previous_state.reference_velocity;
+      if (emergency_stop || control_dt > MAX_CONTROL_DT) {
+        // The loop drove nothing since the stored reference was written, so it
+        // says nothing about the speed the vehicle is at now.
+        reference_velocity = vehicle_speed;
+      }
+      reference_velocity = std::min(
+          reference_velocity + COMFORT_ACCELERATION * control_dt, dynamic_target_velocity);
+      // Never under the current speed, so the ramp cannot brake a vehicle that
+      // is already faster than it; never over the target, so it cannot cancel
+      // a deceleration the target is asking for.
+      reference_velocity =
+          std::max(reference_velocity, std::min(vehicle_speed, dynamic_target_velocity));
+      reference_velocity = std::min(
+          reference_velocity, vehicle_speed + REFERENCE_LEAD_FRACTION * dynamic_target_velocity);
+      // The target reaches exactly zero behind a stopped vehicle, and a
+      // stopped vehicle behind one divides zero by zero: the resulting NaN
+      // survives the throttle branch, is stored as this step's deviation, and
+      // the next step's derivative term turns it into a NaN steering command.
+      const float velocity_deviation{(reference_velocity - vehicle_speed) /
+                                     std::max(dynamic_target_velocity, EPSILON_RELATIVE_SPEED)};
+
+      // If physics is enabled for the vehicle, use PID controller.
+      // State update for vehicle.
+      current_state = {current_timestamp, angular_deviation, velocity_deviation, 0.0f};
+      current_state.reference_velocity = reference_velocity;
 
       // Geometric pure-pursuit lateral command. The previous linearized
       // proportional term (P * deviation) was tuned at car-scale commands

@@ -74,6 +74,11 @@ struct StateEntry {
   /// against.
   float throttle {0.0f};
   float brake {0.0f};
+  /// Speed the longitudinal loop was asked to reach on the last step, which
+  /// closes on the real target at a bounded acceleration. Zero is a safe
+  /// initial value: the shaping raises the reference to the current speed
+  /// before using it, so a flushed or freshly created entry costs nothing.
+  float reference_velocity {0.0f};
 };
 
 } // namespace traffic_manager
