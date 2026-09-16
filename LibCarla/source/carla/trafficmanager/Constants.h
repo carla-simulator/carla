@@ -275,7 +275,7 @@ static const float INV_DT = 1.0f / DT;
 // Valid range for the measured controller period. Below MIN the derivative
 // division gets noisy; above MAX the sim is hitching so badly that reacting
 // to the full elapsed time would command huge one-tick corrections.
-static const float MIN_CONTROL_DT = 0.01f;
+static constexpr float MIN_CONTROL_DT = 0.01f;
 static const float MAX_CONTROL_DT = 0.2f;
 // Steering slew budget, per second of simulation time (0.15 per 0.05 s tick
 // at the design rate). Applying it per second instead of per tick keeps the
@@ -309,8 +309,14 @@ static const float MAX_DEVIATION_RATE = MAX_DEVIATION_DELTA / DT;
 // manager slows well below that, and throttling those cost 0.4 m of lane
 // deviation on the navigation benchmark.
 static const float LAUNCH_RAMP_SPEED = 2.0f;
-static const float MAX_LAUNCH_THROTTLE_RISE_RATE = 1.7f;
-static const float THROTTLE_DEADBAND = 0.01f;
+static constexpr float MAX_LAUNCH_THROTTLE_RISE_RATE = 1.7f;
+static constexpr float THROTTLE_DEADBAND = 0.01f;
+// The ramp and the deadband act on the same signal, so a step the ramp allows
+// has to be larger than the band that would otherwise snap it back to the
+// previous command; if it is not, a vehicle pulling away from rest is held at
+// zero throttle for ever and blocks its lane.
+static_assert(MAX_LAUNCH_THROTTLE_RISE_RATE * MIN_CONTROL_DT > THROTTLE_DEADBAND,
+              "the launch ramp must be able to step out of the throttle deadband");
 static const float BRAKE_DEADBAND = 0.01f;
 static const float STEER_DEADBAND = 0.002f;
 // What a steering deadband can hide is a lateral acceleration, which grows
