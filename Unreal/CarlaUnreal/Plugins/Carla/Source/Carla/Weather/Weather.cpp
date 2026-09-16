@@ -769,6 +769,13 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                 SunLightComponent->SetLightColor(FLinearColor::White);
             }
         }
+        // UpdateSun never applies a rotation. Pitch is negated because a
+        // directional light shines along its forward vector.
+        if (ULightComponent* SunLightComponent = FindComponent(TEXT("DirectionalLightComponentSun")))
+        {
+            SunLightComponent->SetWorldRotation(
+                FRotator(-Weather.SunAltitudeAngle, Weather.SunAzimuthAngle, 0.0f));
+        }
         // The rig's Moon light ships with AffectsWorld off -- a disabled
         // light contributes nothing to the scene no matter what its
         // Intensity is set to below, which is why night always rendered
