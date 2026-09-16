@@ -29,6 +29,7 @@ using namespace constants::SpeedThreshold;
 using constants::HybridMode::HYBRID_MODE_DT;
 using constants::HybridMode::HYBRID_MODE_DT_FL;
 using constants::PID::DT;
+using constants::PID::MIN_CONTROL_DT;
 using constants::PID::MAX_CONTROL_DT;
 using constants::PID::COMFORT_ACCELERATION;
 using constants::PID::REFERENCE_LEAD_FRACTION;
@@ -433,13 +434,20 @@ void MotionPlanStage::Update(const unsigned long index) {
       // COMFORT_ACCELERATION: the target itself steps, and a step of more than
       // 7 per cent puts the throttle on its bound in one frame.
       float reference_velocity = previous_state.reference_velocity;
-      if (emergency_stop || control_dt > MAX_CONTROL_DT) {
-        // The loop drove nothing since the stored reference was written, so it
-        // says nothing about the speed the vehicle is at now.
+      if (emergency_stop) {
+        // The loop drove nothing while the vehicle was held, so the stored
+        // reference says nothing about the speed it is at now. A stale value
+        // from any other cause needs no such guard: the bounds below pull the
+        // reference back to within one ramp step of the vehicle in one cycle.
         reference_velocity = vehicle_speed;
       }
+      // The ramp uses the same period bounds as the controller, so a frame
+      // long enough to be clamped there cannot advance the reference further
+      // than the loop is compensated for.
       reference_velocity = std::min(
-          reference_velocity + COMFORT_ACCELERATION * control_dt, dynamic_target_velocity);
+          reference_velocity +
+              COMFORT_ACCELERATION * std::clamp(control_dt, MIN_CONTROL_DT, MAX_CONTROL_DT),
+          dynamic_target_velocity);
       // Never under the current speed, so the ramp cannot brake a vehicle that
       // is already faster than it; never over the target, so it cannot cancel
       // a deceleration the target is asking for.
