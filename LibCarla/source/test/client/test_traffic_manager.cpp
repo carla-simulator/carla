@@ -543,6 +543,97 @@ TEST(TrafficManagerRefreshCadence, IsRefreshDue_ClockGoingBackwardsIsDue) {
 }
 
 // -----------------------------------------------------------------------------
+// IsEarlyRefreshDue (the unscheduled light state read a new vehicle is worth)
+// -----------------------------------------------------------------------------
+
+namespace {
+
+struct LightRefreshTrace {
+  int refreshes{0};
+  int steps_from_registration_to_a_refresh{-1};
+};
+
+/// Drives the cadence VehicleLightStage reads the fleet's light states at over
+/// @a steps steps of @a step_period seconds, for a vehicle registered on step
+/// @a registration_step that the server never reports (pass @a steps for a
+/// fleet the server reports in full). The list is read when it is due or when
+/// a vehicle armed an unscheduled read, and a vehicle the list was missing
+/// when it was read is not worth arming another.
+LightRefreshTrace TraceLightRefreshes(
+    const int steps,
+    const double step_period,
+    const int registration_step) {
+
+  LightRefreshTrace trace{};
+  double last_update{kNeverRead};
+  bool missing_from_the_last_refresh{false};
+
+  for (int step{0}; step < steps; ++step) {
+    const double now{step_period * static_cast<double>(step + 1)};
+    const bool refreshed{
+        refresh::IsRefreshDue(now, last_update, refresh::VEHICLE_LIGHT_STATES_REFRESH_PERIOD)};
+    if (refreshed) {
+      last_update = now;
+      missing_from_the_last_refresh = false;
+      ++trace.refreshes;
+    }
+
+    if (step < registration_step) {
+      continue;
+    }
+    if (refreshed && trace.steps_from_registration_to_a_refresh < 0) {
+      trace.steps_from_registration_to_a_refresh = step - registration_step;
+    }
+    if (refresh::IsEarlyRefreshDue(refreshed, missing_from_the_last_refresh)) {
+      last_update = kNeverRead;
+    }
+    if (refreshed) {
+      missing_from_the_last_refresh = true;
+    }
+  }
+  return trace;
+}
+
+constexpr int kThirtyFpsSteps{300};
+constexpr double kThirtyFpsPeriod{1.0 / 30.0};
+
+}  // namespace
+
+TEST(TrafficManagerRefreshCadence, IsEarlyRefreshDue_VehicleSeenForTheFirstTimeIsWorthARead) {
+  EXPECT_TRUE(refresh::IsEarlyRefreshDue(false, false));
+}
+
+TEST(TrafficManagerRefreshCadence, IsEarlyRefreshDue_VehicleTheServerOmitsIsNotWorthAnother) {
+  EXPECT_FALSE(refresh::IsEarlyRefreshDue(false, true));
+}
+
+TEST(TrafficManagerRefreshCadence, IsEarlyRefreshDue_StepThatAlreadyReadNeedsNoRead) {
+  EXPECT_FALSE(refresh::IsEarlyRefreshDue(true, false));
+  EXPECT_FALSE(refresh::IsEarlyRefreshDue(true, true));
+}
+
+TEST(TrafficManagerRefreshCadence, EarlyRefresh_VehicleTheServerNeverReportsKeepsTheRegularCadence) {
+  // Ten seconds at 30 fps: the read is paced by its own period whether or not
+  // the fleet contains a vehicle the server leaves out of every response.
+  const LightRefreshTrace reported{
+      TraceLightRefreshes(kThirtyFpsSteps, kThirtyFpsPeriod, kThirtyFpsSteps)};
+  const LightRefreshTrace omitted{TraceLightRefreshes(kThirtyFpsSteps, kThirtyFpsPeriod, 3)};
+
+  EXPECT_LE(omitted.refreshes, reported.refreshes + 1);
+  EXPECT_LE(
+      static_cast<double>(reported.refreshes),
+      1.0 + static_cast<double>(kThirtyFpsSteps) * kThirtyFpsPeriod /
+                refresh::VEHICLE_LIGHT_STATES_REFRESH_PERIOD);
+}
+
+TEST(TrafficManagerRefreshCadence, EarlyRefresh_NewlyRegisteredVehicleIsReadPromptly) {
+  // The one read a vehicle with no known light state is worth still happens on
+  // the step after it is registered.
+  const LightRefreshTrace omitted{TraceLightRefreshes(kThirtyFpsSteps, kThirtyFpsPeriod, 3)};
+  EXPECT_EQ(omitted.steps_from_registration_to_a_refresh, 1);
+}
+
+// -----------------------------------------------------------------------------
 // ShapeReferenceVelocity (the bounded-acceleration reference the loop follows)
 // -----------------------------------------------------------------------------
 

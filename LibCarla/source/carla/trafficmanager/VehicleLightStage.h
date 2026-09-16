@@ -2,6 +2,7 @@
 #pragma once
 
 #include <limits>
+#include <unordered_set>
 
 #include "carla/trafficmanager/DataStructures.h"
 #include "carla/trafficmanager/Parameters.h"
@@ -32,6 +33,10 @@ private:
   double last_weather_update {-std::numeric_limits<double>::infinity()};
   /// Whether all_light_states was read from the server on the current step.
   bool light_states_refreshed {false};
+  /// Vehicles the server itself left out of the list it last returned. Dropped
+  /// whenever the list is read again, so it only holds vehicles that were
+  /// checked against a list this stage did not have to guess at.
+  std::unordered_set<ActorId> missing_from_last_refresh;
 
   /// Keeps the commands issued by this stage visible in the cached list until
   /// it is read from the server again.
