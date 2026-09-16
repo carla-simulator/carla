@@ -21,6 +21,8 @@ class CARLA_API AStaticMeshFactory : public ACarlaActorFactory
   /// Retrieve the definitions of the static mesh actor
   TArray<FActorDefinition> GetDefinitions() final;
 
+  virtual void ReleaseContentPack(const FString &MountPoint) override;
+
   FActorSpawnResult SpawnActor(
       const FTransform &SpawnAtTransform,
       const FActorDescription &ActorDescription) final;

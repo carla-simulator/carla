@@ -1,4 +1,4 @@
-// Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma
+// Copyright (c) 2023 Computer Vision Center (CVC) at the Universitat Autonoma
 // de Barcelona (UAB).
 //
 // This work is licensed under the terms of the MIT license.
@@ -6,11 +6,8 @@
 
 #pragma once
 
-#include <util/ue-header-guard-begin.h>
 #include "CoreMinimal.h"
 #include "EditorUtilityWidget.h"
-#include "CarlaTools.h"
-#include <util/ue-header-guard-end.h>
 
 #include "DigitalTwinsBaseWidget.generated.h"
 
@@ -33,4 +30,7 @@ public:
 
   UFUNCTION(BlueprintCallable)
   void DestroyOpenDriveToMap();
+
+  UFUNCTION(BlueprintCallable)
+  void CreatePlugin(FString PluginName);
 };

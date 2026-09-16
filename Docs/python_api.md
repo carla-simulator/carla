@@ -46,7 +46,7 @@ Identifier for this actor. Unique during a given episode.
 - <a name="carla.Actor.type_id"></a>**<font color="#f8805a">type_id</font>** (_str_)  
 The identifier of the blueprint this actor was based on, e.g. `vehicle.ford.mustang`.  
 - <a name="carla.Actor.is_alive"></a>**<font color="#f8805a">is_alive</font>** (_bool_)  
-Returns whether this object was destroyed using this actor handle.  
+Returns whether the actor still exists according to the latest world snapshot received by the client (False after it was destroyed, through this handle or any other). A handle returned by spawn_actor() is reported alive (and is_active True) until a snapshot newer than the spawn arrives, so it can be used right away in both synchronous and asynchronous mode; handles obtained from world.get_actor()/get_actors() only reflect the snapshots. Because the value is snapshot-based, an actor removed with `client.apply_batch_sync([[carla.command.DestroyActor](#carla.command.DestroyActor)(...)])` still reads True until the next snapshot arrives (`world.tick()` in synchronous mode, `world.wait_for_tick()` otherwise); `actor.destroy()` on the same handle clears it immediately.  
 - <a name="carla.Actor.is_active"></a>**<font color="#f8805a">is_active</font>** (_bool_)  
 Returns whether this actor is active (True) or not (False).  
 - <a name="carla.Actor.is_dormant"></a>**<font color="#f8805a">is_dormant</font>** (_bool_)  
@@ -90,7 +90,7 @@ Sets a vehicle's velocity vector to a constant value over time. The resulting ve
         - `velocity` (_[carla.Vector3D](#carla.Vector3D)<small> - m/s</small>_) - Velocity vector in local space.  
     - **Note:** <font color="#8E8E8E">_Only [carla.Vehicle](#carla.Vehicle) actors can use this method.  
 _</font>  
-    - **Warning:** <font color="#ED2F2F">_Enabling a constant velocity for a vehicle managed by the [Traffic Manager](adv_traffic_manager.md) may cause conflicts. This method overrides any changes in velocity by the TM.  
+    - **Warning:** <font color="#ED2F2F">_Enabling a constant velocity for a vehicle managed by the [Traffic Manager](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_traffic_manager/) may cause conflicts. This method overrides any changes in velocity by the TM.  
 _</font>  
 
 ##### Getters
@@ -523,6 +523,11 @@ Creates a new world with default settings using `map_name` map. All actors in th
         - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Layers of the map that will be loaded. By default all layers are loaded. This parameter works like a flag mask.  
     - **Warning:** <font color="#ED2F2F">_`map_layers` are only available for "Opt" maps
 _</font>  
+- <a name="carla.Client.mount_content_pack"></a>**<font color="#7fb800">mount_content_pack</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**path**</font>)  
+Mounts a content pack (a content-only Unreal plugin cooked against this CARLA release, with a `carla-pack.json` manifest) into the running server without a restart. Its maps are listed by [carla.Client.get_available_maps](#carla.Client.get_available_maps) and loadable with [carla.Client.load_world](#carla.Client.load_world), and its catalogs (`Config/*.json`) are added to the blueprint library on the next episode. Raises a RuntimeError naming the reason when the path is not a pack, the pack was built for another base release or platform, or a pack of that name is already mounted.  
+    - **Parameters:**
+        - `path` (_str_) - Path on the server host of the pack directory (or its `carla-pack.json`).  
+    - **Return:** _[carla.ContentPackInfo](#carla.ContentPackInfo)_  
 - <a name="carla.Client.reload_world"></a>**<font color="#7fb800">reload_world</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**reset_settings**=True</font>)  
 Reload the current world, note that a new world is created with default settings using the same map. All actors present in the world will be destroyed, __but__ traffic manager instances will stay alive.  
     - **Parameters:**
@@ -578,6 +583,11 @@ Stops the recording in progress. If you specified a path in `filename`, the reco
 Stop current replayer.  
     - **Parameters:**
         - `keep_actors` (_bool_) - True if you want autoremove all actors from the replayer, or False to keep them.  
+- <a name="carla.Client.unmount_content_pack"></a>**<font color="#7fb800">unmount_content_pack</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**name**</font>)  
+Unmounts a content pack. Refused (RuntimeError) while a map of the pack is the current world or objects loaded from it are still alive; load another map first. Returns True on success.  
+    - **Parameters:**
+        - `name` (_str_) - Name of the pack, as reported by [carla.Client.get_content_packs](#carla.Client.get_content_packs).  
+    - **Return:** _bool_  
 
 ##### Getters
 - <a name="carla.Client.get_available_maps"></a>**<font color="#7fb800">get_available_maps</font>**(<font color="#00a6ed">**self**</font>)  
@@ -593,6 +603,9 @@ Returns a list of strings containing the paths of the maps available on server. 
 - <a name="carla.Client.get_client_version"></a>**<font color="#7fb800">get_client_version</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the client libcarla version by consulting it in the "Version.h" file. Both client and server can use different libcarla versions but some issues may arise regarding unexpected incompatibilities.  
     - **Return:** _str_  
+- <a name="carla.Client.get_content_packs"></a>**<font color="#7fb800">get_content_packs</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the content packs known to the server: the ones found at startup in `CarlaUnreal/Packs/`, in the directories given with `-carla-packs=<dir>[;<dir>]` or `$CARLA_PACKS`, and the ones mounted with [carla.Client.mount_content_pack](#carla.Client.mount_content_pack). Unmounted packs are listed with `mounted=False`.  
+    - **Return:** _list([carla.ContentPackInfo](#carla.ContentPackInfo))_  
 - <a name="carla.Client.get_required_files"></a>**<font color="#7fb800">get_required_files</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**folder**</font>, <font color="#00a6ed">**download**=True</font>)  
 Asks the server which files are required by the client to use the current map. Option to download files automatically if they are not already in the cache.  
     - **Parameters:**
@@ -686,6 +699,30 @@ Converts the image to a linear depth map. Used by the [depth camera](ref_sensors
 Converts the image to a depth map using a logarithmic scale, leading to better precision for small distances at the expense of losing it when further away.  
 - <a name="carla.ColorConverter.Raw"></a>**<font color="#f8805a">Raw</font>**  
 No changes applied to the image. Used by the [RGB camera](ref_sensors.md#rgb-camera).  
+
+---
+
+## carla.ContentPackInfo<a name="carla.ContentPackInfo"></a>
+Description of a content pack known to the server, as returned by [carla.Client.get_content_packs](#carla.Client.get_content_packs) and [carla.Client.mount_content_pack](#carla.Client.mount_content_pack).  
+
+### Instance Variables
+- <a name="carla.ContentPackInfo.name"></a>**<font color="#f8805a">name</font>** (_str_)  
+Pack name; also the plugin name and the `/<name>/` package mount point.  
+- <a name="carla.ContentPackInfo.version"></a>**<font color="#f8805a">version</font>** (_str_)  
+Pack version from the manifest.  
+- <a name="carla.ContentPackInfo.base_release"></a>**<font color="#f8805a">base_release</font>** (_str_)  
+CARLA base release the pack was cooked against, e.g. `carla-0.10.2-Linux`.  
+- <a name="carla.ContentPackInfo.path"></a>**<font color="#f8805a">path</font>** (_str_)  
+Absolute directory of the pack on the server host.  
+- <a name="carla.ContentPackInfo.mounted"></a>**<font color="#f8805a">mounted</font>** (_bool_)  
+True while the pack is mounted in the server.  
+- <a name="carla.ContentPackInfo.maps"></a>**<font color="#f8805a">maps</font>** (_list(str)_)  
+Map names declared by the pack manifest.  
+
+### Methods
+
+##### Dunder methods
+- <a name="carla.ContentPackInfo.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
 
 ---
 
@@ -871,6 +908,33 @@ Draws a string in a given location of the simulation which can only be seen serv
 
 ---
 
+## carla.DistanceImage<a name="carla.DistanceImage"></a>
+<small style="display:block;margin-top:-20px;">Inherited from _[carla.SensorData](#carla.SensorData)_</small></br>
+Class that defines a single-channel float32 image of Euclidean distances (in meters) retrieved by <b>sensor.camera.rt_lens_distance</b>. Each value is the distance from the camera origin to the primary hit along that pixel's lens ray (not a planar depth, unlike [carla.Image](#carla.Image) from <b>sensor.camera.depth</b>), so it stays exact for wide-angle and fisheye lens models. A ray that hits nothing (sky) reports a large value, `1.0e5` (100 km), instead of `0.0`. Learn more about this [here](ref_sensors.md#ray-traced-lens-distance-camera).  
+
+### Instance Variables
+- <a name="carla.DistanceImage.fov"></a>**<font color="#f8805a">fov</font>** (_float<small> - degrees</small>_)  
+Horizontal field of view of the image.  
+- <a name="carla.DistanceImage.height"></a>**<font color="#f8805a">height</font>** (_int_)  
+Image height in pixels.  
+- <a name="carla.DistanceImage.width"></a>**<font color="#f8805a">width</font>** (_int_)  
+Image width in pixels.  
+- <a name="carla.DistanceImage.raw_data"></a>**<font color="#f8805a">raw_data</font>** (_bytes_)  
+Flattened array of `width * height` float32 distances in meters, row major. Copy it before reuse, e.g. `np.copy(np.frombuffer(image.raw_data, dtype=np.float32)).reshape(image.height, image.width)`.  
+
+### Methods
+
+##### Dunder methods
+- <a name="carla.DistanceImage.__getitem__"></a>**<font color="#7fb800">\__getitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>)  
+Returns the distance in meters at flattened pixel index `pos`.  
+- <a name="carla.DistanceImage.__iter__"></a>**<font color="#7fb800">\__iter__</font>**(<font color="#00a6ed">**self**</font>)  
+Iterate over the per-pixel distances (float, meters) that form the image.  
+- <a name="carla.DistanceImage.__len__"></a>**<font color="#7fb800">\__len__</font>**(<font color="#00a6ed">**self**</font>)  
+- <a name="carla.DistanceImage.__setitem__"></a>**<font color="#7fb800">\__setitem__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**pos**=int</font>, <font color="#00a6ed">**distance**=float</font>)  
+- <a name="carla.DistanceImage.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+
+---
+
 ## carla.EnvironmentObject<a name="carla.EnvironmentObject"></a>
 Class that represents a geometry in the level, this geometry could be part of an actor formed with other EnvironmentObjects (ie: buildings).  
 
@@ -974,6 +1038,25 @@ The texture "CustomStencil" contains the Unreal Engine custom stencil data.
 
 ---
 
+## carla.GeoEllipsoid<a name="carla.GeoEllipsoid"></a>
+Geoellipsoid for map projection.  
+
+### Instance Variables
+- <a name="carla.GeoEllipsoid.a"></a>**<font color="#f8805a">a</font>** (_float_)  
+Semi-major axis in meters.  
+- <a name="carla.GeoEllipsoid.f_inv"></a>**<font color="#f8805a">f_inv</font>** (_float_)  
+Inverse flattening.  
+
+### Methods
+- <a name="carla.GeoEllipsoid.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**a**=6378137.0</font>, <font color="#00a6ed">**f_inv**=298.257223563</font>)  
+Constructor for this class.  
+    - **Parameters:**
+        - `a` (_float_) - Semi-major axis in meters.  
+        - `f_inv` (_float_) - Inverse flattening.  
+    - **Return:** _[carla.GeoEllipsoid](#carla.GeoEllipsoid)_  
+
+---
+
 ## carla.GeoLocation<a name="carla.GeoLocation"></a>
 Class that contains geographical coordinates simulated data. The [carla.Map](#carla.Map) can convert simulation locations by using the <b><georeference></b> tag in the OpenDRIVE file.  
 
@@ -999,25 +1082,6 @@ Height regarding ground level.
 
 ---
 
-## carla.GeoEllipsoid<a name="carla.GeoEllipsoid"></a>
-Geoellipsoid for map projection.  
-
-### Instance Variables
-- <a name="carla.GeoEllipsoid.a"></a>**<font color="#f8805a">a</font>** (_float_)  
-Semi-major axis in meters.  
-- <a name="carla.GeoEllipsoid.f_inv"></a>**<font color="#f8805a">f_inv</font>** (_float_)  
-Inverse flattening.  
-
-### Methods
-- <a name="carla.GeoEllipsoid.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**a**=6378137.0</font>, <font color="#00a6ed">**f_inv**=298.257223563</font>)  
-Constructor for this class.  
-    - **Parameters:**
-        - `a` (_float_) - Semi-major axis in meters.  
-        - `f_inv` (_float_) - Inverse flattening.  
-    - **Return:** _[carla.GeoEllipsoid](#carla.GeoEllipsoid)_  
-
----
-
 ## carla.GeoOffsetTransform<a name="carla.GeoOffsetTransform"></a>
 Class defining an optional offset transformation applied before UTM projection.  
 
@@ -1034,6 +1098,11 @@ Cosine of the heading offset rotation.
 Sine of the heading offset rotation.  
 
 ### Methods
+- <a name="carla.GeoOffsetTransform.ApplyTransformation"></a>**<font color="#7fb800">ApplyTransformation</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
+Applies the offset transformation to a location.  
+    - **Parameters:**
+        - `location` (_[carla.Location](#carla.Location)_) - Input location.  
+    - **Return:** _[carla.Location](#carla.Location)_  
 - <a name="carla.GeoOffsetTransform.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**offset_x**=0.0</font>, <font color="#00a6ed">**offset_y**=0.0</font>, <font color="#00a6ed">**offset_z**=0.0</font>, <font color="#00a6ed">**offset_hdg**=0.0</font>)  
 Constructor for this class.  
     - **Parameters:**
@@ -1042,14 +1111,6 @@ Constructor for this class.
         - `offset_z` (_float_) - Z offset in meters.  
         - `offset_hdg` (_float_) - Heading offset in radians.  
     - **Return:** _[carla.GeoOffsetTransform](#carla.GeoOffsetTransform)_  
-- <a name="carla.GeoOffsetTransform.ApplyTransformation"></a>**<font color="#7fb800">ApplyTransformation</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**=[carla.Location](#carla.Location)</font>)  
-Applies the offset transformation to a location.  
-    - **Parameters:**
-        - `location` (_[carla.Location](#carla.Location)_) - Input location.  
-    - **Return:** _[carla.Location](#carla.Location)_  
-
-##### Dunder methods
-- <a name="carla.GeoOffsetTransform.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.GeoOffsetTransform](#carla.GeoOffsetTransform)</font>)  
 
 ---
 
@@ -1306,9 +1367,9 @@ Additional text in the signal.
 - <a name="carla.Landmark.h_offset"></a>**<font color="#f8805a">h_offset</font>** (_float<small> - meters</small>_)  
 Orientation offset of the signal relative to the the definition of `road_id` at `s` in OpenDRIVE.  
 - <a name="carla.Landmark.pitch"></a>**<font color="#f8805a">pitch</font>** (_float<small> - meters</small>_)  
-Pitch rotation of the signal (Y-axis in [UE coordinates system](python_api.md#carlarotation)).  
+Pitch rotation of the signal (Y-axis in [UE coordinates system](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/python_api/#carlarotation)).  
 - <a name="carla.Landmark.roll"></a>**<font color="#f8805a">roll</font>** (_float_)  
-Roll rotation of the signal (X-axis in [UE coordinates system](python_api.md#carlarotation)).  
+Roll rotation of the signal (X-axis in [UE coordinates system](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/python_api/#carlarotation)).  
 - <a name="carla.Landmark.waypoint"></a>**<font color="#f8805a">waypoint</font>** (_[carla.Waypoint](#carla.Waypoint)_)  
 A waypoint placed in the lane of the one that made the query and at the `s` of the landmark. It is the first waypoint for which the landmark will be effective.  
 - <a name="carla.Landmark.transform"></a>**<font color="#f8805a">transform</font>** (_[carla.Transform](#carla.Transform)_)  
@@ -1575,6 +1636,208 @@ Iterate over the [carla.LidarDetection](#carla.LidarDetection) retrieved as data
 
 ---
 
+## carla.Light<a name="carla.Light"></a>
+This class exposes the lights that exist in the scene, except for vehicle lights. The properties of a light can be queried and changed at will.
+Lights are automatically turned on when the simulator enters night mode (sun altitude is below zero).  
+
+### Instance Variables
+- <a name="carla.Light.color"></a>**<font color="#f8805a">color</font>** (_[carla.Color](#carla.Color)_)  
+Color of the light.  
+- <a name="carla.Light.id"></a>**<font color="#f8805a">id</font>** (_int_)  
+Identifier of the light.  
+- <a name="carla.Light.intensity"></a>**<font color="#f8805a">intensity</font>** (_float<small> - lumens</small>_)  
+Intensity of the light.  
+- <a name="carla.Light.is_on"></a>**<font color="#f8805a">is_on</font>** (_bool_)  
+Switch of the light. It is __True__ when the light is on. When the night mode starts, this is set to __True__.  
+- <a name="carla.Light.location"></a>**<font color="#f8805a">location</font>** (_[carla.Location](#carla.Location)<small> - meters</small>_)  
+Position of the light.  
+- <a name="carla.Light.light_group"></a>**<font color="#f8805a">light_group</font>** (_[carla.LightGroup](#carla.LightGroup)_)  
+Group the light belongs to.  
+- <a name="carla.Light.light_state"></a>**<font color="#f8805a">light_state</font>** (_[carla.LightState](#carla.LightState)_)  
+State of the light. Summarizes its attributes, group, and if it is on/off.  
+
+### Methods
+- <a name="carla.Light.turn_off"></a>**<font color="#7fb800">turn_off</font>**(<font color="#00a6ed">**self**</font>)  
+Switches off the light.  
+- <a name="carla.Light.turn_on"></a>**<font color="#7fb800">turn_on</font>**(<font color="#00a6ed">**self**</font>)  
+Switches on the light.  
+
+##### Setters
+- <a name="carla.Light.set_color"></a>**<font color="#7fb800">set_color</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**color**</font>)  
+Changes the color of the light to `color`.  
+    - **Parameters:**
+        - `color` (_[carla.Color](#carla.Color)_)  
+- <a name="carla.Light.set_intensity"></a>**<font color="#7fb800">set_intensity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**intensity**</font>)  
+Changes the intensity of the light to `intensity`.  
+    - **Parameters:**
+        - `intensity` (_float<small> - lumens</small>_)  
+- <a name="carla.Light.set_light_group"></a>**<font color="#7fb800">set_light_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**</font>)  
+Changes the light to the group `light_group`.  
+    - **Parameters:**
+        - `light_group` (_[carla.LightGroup](#carla.LightGroup)_)  
+- <a name="carla.Light.set_light_state"></a>**<font color="#7fb800">set_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_state**</font>)  
+Changes the state of the light to `light_state`. This may change attributes, group and turn the light on/off all at once.  
+    - **Parameters:**
+        - `light_state` (_[carla.LightState](#carla.LightState)_)  
+
+---
+
+## carla.LightGroup<a name="carla.LightGroup"></a>
+This class categorizes the lights on scene into different groups. These groups available are provided as a enum values that can be used as flags.  
+
+__Note.__ So far, though there is a `vehicle` group, vehicle lights are not available as [carla.Light](#carla.Light) objects. These have to be managed using [carla.Vehicle](#carla.Vehicle) and [carla.VehicleLightState](#carla.VehicleLightState).  
+
+### Instance Variables
+- <a name="carla.LightGroup.None"></a>**<font color="#f8805a">None</font>**  
+All lights.  
+- <a name="carla.LightGroup.Vehicle"></a>**<font color="#f8805a">Vehicle</font>**  
+- <a name="carla.LightGroup.Street"></a>**<font color="#f8805a">Street</font>**  
+- <a name="carla.LightGroup.Building"></a>**<font color="#f8805a">Building</font>**  
+- <a name="carla.LightGroup.Other"></a>**<font color="#f8805a">Other</font>**  
+
+---
+
+## carla.LightManager<a name="carla.LightManager"></a>
+This class handles the lights in the scene. Its main use is to get and set the state of groups or lists of lights in one call. An instance of this class can be retrieved by the [carla.World.get_lightmanager](#carla.World.get_lightmanager)().  
+
+__Note.__ So far, though there is a `vehicle` group, vehicle lights are not available as [carla.Light](#carla.Light) objects. These have to be managed using [carla.Vehicle](#carla.Vehicle) and [carla.VehicleLightState](#carla.VehicleLightState).  
+
+### Methods
+- <a name="carla.LightManager.is_active"></a>**<font color="#7fb800">is_active</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
+Returns a list with booleans stating if the elements in `lights` are switched on/off.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be queried.  
+    - **Return:** _list(bool)_  
+- <a name="carla.LightManager.turn_off"></a>**<font color="#7fb800">turn_off</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
+Switches off all the lights in `lights`.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be switched off.  
+- <a name="carla.LightManager.turn_on"></a>**<font color="#7fb800">turn_on</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
+Switches on all the lights in `lights`.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be switched on.  
+
+##### Getters
+- <a name="carla.LightManager.get_all_lights"></a>**<font color="#7fb800">get_all_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**=[carla.LightGroup.None](#carla.LightGroup.None)</font>)  
+Returns a list containing the lights in a certain group. By default, the group is `None`.  
+    - **Parameters:**
+        - `light_group` (_[carla.LightGroup](#carla.LightGroup)_) - Group to filter the lights returned. Default is `None`.  
+    - **Return:** _list([carla.Light](#carla.Light))_  
+- <a name="carla.LightManager.get_color"></a>**<font color="#7fb800">get_color</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
+Returns a list with the colors of every element in `lights`.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be queried.  
+    - **Return:** _list([carla.Color](#carla.Color))_  
+    - **Setter:** _[carla.LightManager.set_color](#carla.LightManager.set_color)_  
+- <a name="carla.LightManager.get_intensity"></a>**<font color="#7fb800">get_intensity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
+Returns a list with the intensity of every element in `lights`.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be queried.  
+    - **Return:** _list(float)<small> - lumens</small>_  
+    - **Setter:** _[carla.LightManager.set_intensity](#carla.LightManager.set_intensity)_  
+- <a name="carla.LightManager.get_light_group"></a>**<font color="#7fb800">get_light_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
+Returns a list with the group of every element in `lights`.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be queried.  
+    - **Return:** _list([carla.LightGroup](#carla.LightGroup))_  
+    - **Setter:** _[carla.LightManager.set_light_group](#carla.LightManager.set_light_group)_  
+- <a name="carla.LightManager.get_light_state"></a>**<font color="#7fb800">get_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>)  
+Returns a list with the state of all the attributes of every element in `lights`.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be queried.  
+    - **Return:** _list([carla.LightState](#carla.LightState))_  
+    - **Setter:** _[carla.LightManager.set_light_state](#carla.LightManager.set_light_state)_  
+- <a name="carla.LightManager.get_turned_off_lights"></a>**<font color="#7fb800">get_turned_off_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**</font>)  
+Returns a list containing lights switched off in the scene, filtered by group.  
+    - **Parameters:**
+        - `light_group` (_[carla.LightGroup](#carla.LightGroup)_) - List of lights to be queried.  
+    - **Return:** _list([carla.Light](#carla.Light))_  
+- <a name="carla.LightManager.get_turned_on_lights"></a>**<font color="#7fb800">get_turned_on_lights</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**light_group**</font>)  
+Returns a list containing lights switched on in the scene, filtered by group.  
+    - **Parameters:**
+        - `light_group` (_[carla.LightGroup](#carla.LightGroup)_) - List of lights to be queried.  
+    - **Return:** _list([carla.Light](#carla.Light))_  
+
+##### Setters
+- <a name="carla.LightManager.set_active"></a>**<font color="#7fb800">set_active</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**active**</font>)  
+Switches on/off the elements in `lights`.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be switched on/off.  
+        - `active` (_list(bool)_) - List of booleans to be applied.  
+- <a name="carla.LightManager.set_color"></a>**<font color="#7fb800">set_color</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**color**</font>)  
+Changes the color of the elements in `lights` to `color`.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be changed.  
+        - `color` (_[carla.Color](#carla.Color)_) - Color to be applied.  
+    - **Getter:** _[carla.LightManager.get_color](#carla.LightManager.get_color)_  
+- <a name="carla.LightManager.set_colors"></a>**<font color="#7fb800">set_colors</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**colors**</font>)  
+Changes the color of each element in `lights` to the corresponding in `colors`.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be changed.  
+        - `colors` (_list([carla.Color](#carla.Color))_) - List of colors to be applied.  
+- <a name="carla.LightManager.set_day_night_cycle"></a>**<font color="#7fb800">set_day_night_cycle</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**active**</font>)  
+All scene lights have a day-night cycle, automatically turning on and off with the altitude of the sun. This interferes in cases where full control of the scene lights is required, so setting this to __False__ deactivates it. It can reactivated by setting it to __True__.  
+    - **Parameters:**
+        - `active` (_bool_) - (De)activation of the day-night cycle.  
+- <a name="carla.LightManager.set_intensities"></a>**<font color="#7fb800">set_intensities</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**intensities**</font>)  
+Changes the intensity of each element in `lights` to the corresponding in `intensities`.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be changed.  
+        - `intensities` (_list(float)<small> - lumens</small>_) - List of intensities to be applied.  
+- <a name="carla.LightManager.set_intensity"></a>**<font color="#7fb800">set_intensity</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**intensity**</font>)  
+Changes the intensity of every element in `lights` to `intensity`.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be changed.  
+        - `intensity` (_float<small> - lumens</small>_) - Intensity to be applied.  
+    - **Getter:** _[carla.LightManager.get_intensity](#carla.LightManager.get_intensity)_  
+- <a name="carla.LightManager.set_light_group"></a>**<font color="#7fb800">set_light_group</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_group**</font>)  
+Changes the group of every element in `lights` to `light_group`.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be changed.  
+        - `light_group` (_[carla.LightGroup](#carla.LightGroup)_) - Group to be applied.  
+    - **Getter:** _[carla.LightManager.get_light_group](#carla.LightManager.get_light_group)_  
+- <a name="carla.LightManager.set_light_groups"></a>**<font color="#7fb800">set_light_groups</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_groups**</font>)  
+Changes the group of each element in `lights` to the corresponding in `light_groups`.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be changed.  
+        - `light_groups` (_list([carla.LightGroup](#carla.LightGroup))_) - List of groups to be applied.  
+- <a name="carla.LightManager.set_light_state"></a>**<font color="#7fb800">set_light_state</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_state**</font>)  
+Changes the state of the attributes of every element in `lights` to `light_state`.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be changed.  
+        - `light_state` (_[carla.LightState](#carla.LightState)_) - State of the attributes to be applied.  
+    - **Getter:** _[carla.LightManager.get_light_state](#carla.LightManager.get_light_state)_  
+- <a name="carla.LightManager.set_light_states"></a>**<font color="#7fb800">set_light_states</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**lights**</font>, <font color="#00a6ed">**light_states**</font>)  
+Changes the state of the attributes of each element in `lights` to the corresponding in `light_states`.  
+    - **Parameters:**
+        - `lights` (_list([carla.Light](#carla.Light))_) - List of lights to be changed.  
+        - `light_states` (_list([carla.LightState](#carla.LightState))_) - List of state of the attributes to be applied.  
+
+---
+
+## carla.LightState<a name="carla.LightState"></a>
+This class represents all the light variables except the identifier and the location, which are should to be static. Using this class allows to manage all the parametrization of the light in one call.  
+
+### Instance Variables
+- <a name="carla.LightState.intensity"></a>**<font color="#f8805a">intensity</font>** (_float<small> - lumens</small>_)  
+Intensity of a light.  
+- <a name="carla.LightState.color"></a>**<font color="#f8805a">color</font>** (_[carla.Color](#carla.Color)_)  
+Color of a light.  
+- <a name="carla.LightState.group"></a>**<font color="#f8805a">group</font>** (_[carla.LightGroup](#carla.LightGroup)_)  
+Group a light belongs to.  
+- <a name="carla.LightState.active"></a>**<font color="#f8805a">active</font>** (_bool_)  
+Switch of a light. It is __True__ when the light is on.  
+
+### Methods
+- <a name="carla.LightState.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**intensity**=0.0</font>, <font color="#00a6ed">**color**=[carla.Color](#carla.Color)()</font>, <font color="#00a6ed">**group**=[carla.LightGroup.None](#carla.LightGroup.None)</font>, <font color="#00a6ed">**active**=False</font>)  
+    - **Parameters:**
+        - `intensity` (_float<small> - lumens</small>_) - Intensity of the light. Default is `0.0`.  
+        - `color` (_[carla.Color](#carla.Color)_) - Color of the light. Default is black.  
+        - `group` (_[carla.LightGroup](#carla.LightGroup)_) - Group the light belongs to. Default is the generic group `None`.  
+        - `active` (_bool_) - Swith of the light. Default is `False`, light is off.  
+
+---
+
 ## carla.Location<a name="carla.Location"></a>
 <small style="display:block;margin-top:-20px;">Inherited from _[carla.Vector3D](#carla.Vector3D)_</small></br>
 Represents a spot in the world.  
@@ -1598,6 +1861,14 @@ Returns Euclidean distance from this location to another one.
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_) - The other point to compute the distance with.  
     - **Return:** _float<small> - meters</small>_  
+- <a name="carla.Location.from_right_handed"></a>**<font color="#7fb800">from_right_handed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>)  
+Reads a right-handed (FLU) location back into CARLA's left-handed frame. Inverse of `to_right_handed()`; the mapping is its own inverse. This method is static.  
+    - **Parameters:**
+        - `location` (_[carla.RightHandedVector3D](#carla.RightHandedVector3D)_) - Location in the right-handed (FLU) frame.  
+    - **Return:** _[carla.Location](#carla.Location)_  
+- <a name="carla.Location.to_right_handed"></a>**<font color="#7fb800">to_right_handed</font>**(<font color="#00a6ed">**self**</font>)  
+Converts this location to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU") by mirroring the Y axis: `(x, y, z)` becomes `(x, -y, z)`. See [Coordinate conventions](/coordinate_conventions).  
+    - **Return:** _[carla.RightHandedVector3D](#carla.RightHandedVector3D)_  
 
 ##### Dunder methods
 - <a name="carla.Location.__abs__"></a>**<font color="#7fb800">\__abs__</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1923,6 +2194,111 @@ Iterate over the [carla.RadarDetection](#carla.RadarDetection) retrieved as data
 
 ---
 
+## carla.RightHandedRotation<a name="carla.RightHandedRotation"></a>
+Euler angles of a rotation in a **right-handed** frame: x forward, y **left**, z up (ROS [REP-103](https://www.ros.org/reps/rep-0103.html) "FLU"), every axis turned by the right-hand rule.  <br>
+<br>The three angles compose as the intrinsic Z-Y-X sequence `Rz(yaw) * Ry(pitch) * Rx(roll)` with the standard right-handed elementary matrices — the same thing `scipy.spatial.transform.Rotation.from_euler("xyz", ...)` and `tf2::Quaternion::setRPY` mean by "roll pitch yaw".  <br>
+<br>This is **not** `[carla.Rotation](#carla.Rotation)`. Get one from `[carla.Rotation.to_right_handed](#carla.Rotation.to_right_handed)()`; see [Coordinate conventions](/coordinate_conventions).  
+
+### Instance Variables
+- <a name="carla.RightHandedRotation.roll"></a>**<font color="#f8805a">roll</font>** (_float<small> - degrees</small>_)  
+Rotation about the forward (+X) axis, right-hand rule. Same sign as `[carla.Rotation.roll](#carla.Rotation.roll)`.  
+- <a name="carla.RightHandedRotation.pitch"></a>**<font color="#f8805a">pitch</font>** (_float<small> - degrees</small>_)  
+Rotation about the left (+Y) axis, right-hand rule. **Opposite** sign to `[carla.Rotation.pitch](#carla.Rotation.pitch)`.  
+- <a name="carla.RightHandedRotation.yaw"></a>**<font color="#f8805a">yaw</font>** (_float<small> - degrees</small>_)  
+Rotation about the up (+Z) axis, right-hand rule. **Opposite** sign to `[carla.Rotation.yaw](#carla.Rotation.yaw)`.  
+
+### Methods
+- <a name="carla.RightHandedRotation.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**roll**=0.0</font>, <font color="#00a6ed">**pitch**=0.0</font>, <font color="#00a6ed">**yaw**=0.0</font>)  
+    - **Parameters:**
+        - `roll` (_float<small> - degrees</small>_)  
+        - `pitch` (_float<small> - degrees</small>_)  
+        - `yaw` (_float<small> - degrees</small>_)  
+
+##### Getters
+- <a name="carla.RightHandedRotation.get_quaternion"></a>**<font color="#7fb800">get_quaternion</font>**(<font color="#00a6ed">**self**</font>)  
+This rotation as a right-handed `(x, y, z, w)` quaternion.  
+    - **Return:** _[carla.Quaternion](#carla.Quaternion)_  
+
+##### Dunder methods
+- <a name="carla.RightHandedRotation.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.RightHandedRotation](#carla.RightHandedRotation)</font>)  
+Returns __True__ if all three angles are equal.  
+    - **Return:** _bool_  
+- <a name="carla.RightHandedRotation.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.RightHandedRotation](#carla.RightHandedRotation)</font>)  
+Returns __True__ if any of the three angles differ.  
+    - **Return:** _bool_  
+- <a name="carla.RightHandedRotation.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Parses the angles to string.  
+    - **Return:** _str_  
+
+---
+
+## carla.RightHandedTransform<a name="carla.RightHandedTransform"></a>
+A location and a rotation in a **right-handed** frame: x forward, y **left**, z up (ROS [REP-103](https://www.ros.org/reps/rep-0103.html) "FLU").  <br>
+<br>This is the explicit boundary type between CARLA's left-handed world and every right-handed consumer (ROS 2 / tf2, NVIDIA ClipGT rigs, scipy, Open3D). Build one with `[carla.Transform.to_right_handed](#carla.Transform.to_right_handed)()` and go back with `[carla.Transform.from_right_handed](#carla.Transform.from_right_handed)()`; the handedness change then happens exactly once, here, instead of at every call site.  <br>
+<br>See [Coordinate conventions](/coordinate_conventions).  
+
+### Instance Variables
+- <a name="carla.RightHandedTransform.location"></a>**<font color="#f8805a">location</font>** (_[carla.RightHandedVector3D](#carla.RightHandedVector3D)<small> - meters</small>_)  
+Translation in the right-handed frame.  
+- <a name="carla.RightHandedTransform.rotation"></a>**<font color="#f8805a">rotation</font>** (_[carla.RightHandedRotation](#carla.RightHandedRotation)<small> - degrees (roll, pitch, yaw)</small>_)  
+Orientation in the right-handed frame, applied as intrinsic Z-Y-X.  
+
+### Methods
+- <a name="carla.RightHandedTransform.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**location**</font>, <font color="#00a6ed">**rotation**</font>)  
+    - **Parameters:**
+        - `location` (_[carla.RightHandedVector3D](#carla.RightHandedVector3D)_)  
+        - `rotation` (_[carla.RightHandedRotation](#carla.RightHandedRotation)<small> - degrees (roll, pitch, yaw)</small>_)  
+
+##### Getters
+- <a name="carla.RightHandedTransform.get_matrix"></a>**<font color="#7fb800">get_matrix</font>**(<font color="#00a6ed">**self**</font>)  
+The 4-matrix representation of this pose in the right-handed frame. Equal, element for element, to `S * [carla.Transform.get_matrix](#carla.Transform.get_matrix)() * S` with `S = diag(1, -1, 1, 1)`.  
+    - **Return:** _list(list(float))_  
+- <a name="carla.RightHandedTransform.get_quaternion"></a>**<font color="#7fb800">get_quaternion</font>**(<font color="#00a6ed">**self**</font>)  
+The orientation as a right-handed `(x, y, z, w)` quaternion. This is the value the ROS 2 bridge publishes for the equivalent `[carla.Transform](#carla.Transform)`.  
+    - **Return:** _[carla.Quaternion](#carla.Quaternion)_  
+
+##### Dunder methods
+- <a name="carla.RightHandedTransform.__eq__"></a>**<font color="#7fb800">\__eq__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.RightHandedTransform](#carla.RightHandedTransform)</font>)  
+Returns __True__ if both location and rotation are equal for this and `other`.  
+    - **Return:** _bool_  
+- <a name="carla.RightHandedTransform.__ne__"></a>**<font color="#7fb800">\__ne__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**other**=[carla.RightHandedTransform](#carla.RightHandedTransform)</font>)  
+Returns __True__ if any of location and rotation are not equal for this and `other`.  
+    - **Return:** _bool_  
+- <a name="carla.RightHandedTransform.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Parses both location and rotation to string.  
+    - **Return:** _str_  
+
+---
+
+## carla.RightHandedVector3D<a name="carla.RightHandedVector3D"></a>
+A 3D vector in a **right-handed** frame: x forward, y **left**, z up (ROS [REP-103](https://www.ros.org/reps/rep-0103.html) "FLU").  <br>
+<br>This is a boundary type. The simulator never returns one; you get it from `[carla.Location.to_right_handed](#carla.Location.to_right_handed)()` and hand it back with `[carla.Location.from_right_handed](#carla.Location.from_right_handed)()`. See [Coordinate conventions](/coordinate_conventions).  
+
+### Instance Variables
+- <a name="carla.RightHandedVector3D.x"></a>**<font color="#f8805a">x</font>** (_float<small> - meters</small>_)  
+Forward component.  
+- <a name="carla.RightHandedVector3D.y"></a>**<font color="#f8805a">y</font>** (_float<small> - meters</small>_)  
+**Left** component. This is the one whose sign differs from `[carla.Vector3D](#carla.Vector3D)`.  
+- <a name="carla.RightHandedVector3D.z"></a>**<font color="#f8805a">z</font>** (_float<small> - meters</small>_)  
+Up component.  
+
+### Methods
+- <a name="carla.RightHandedVector3D.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**x**=0.0</font>, <font color="#00a6ed">**y**=0.0</font>, <font color="#00a6ed">**z**=0.0</font>)  
+    - **Parameters:**
+        - `x` (_float_)  
+        - `y` (_float_)  
+        - `z` (_float_)  
+- <a name="carla.RightHandedVector3D.to_left_handed"></a>**<font color="#7fb800">to_left_handed</font>**(<font color="#00a6ed">**self**</font>)  
+This vector back in CARLA's left-handed frame: `(x, -y, z)`.  
+    - **Return:** _[carla.Vector3D](#carla.Vector3D)_  
+
+##### Dunder methods
+- <a name="carla.RightHandedVector3D.__str__"></a>**<font color="#7fb800">\__str__</font>**(<font color="#00a6ed">**self**</font>)  
+Parses the components to string.  
+    - **Return:** _str_  
+
+---
+
 ## carla.Rotation<a name="carla.Rotation"></a>
 Class that represents a 3D rotation and therefore, an orientation in space. CARLA uses the Unreal Engine coordinates system. This is a Z-up left-handed system.  <br>
 <br>The constructor method follows a specific order of declaration: `(pitch, yaw, roll)`, which corresponds to `(Y-rotation,Z-rotation,X-rotation)`.  <br> <br>![UE4_Rotation](https://d26ilriwvtzlb.cloudfront.net/8/83/BRMC_9.jpg) *Unreal Engine's coordinates system*.  
@@ -1942,6 +2318,14 @@ X-axis rotation angle.
         - `yaw` (_float<small> - degrees</small>_) - Z-axis rotation angle.  
         - `roll` (_float<small> - degrees</small>_) - X-axis rotation angle.  
     - **Warning:** <font color="#ED2F2F">_The declaration order is different in CARLA <code>(pitch,yaw,roll)</code>, and in the Unreal Engine Editor <code>(roll,pitch,yaw)</code>. When working in a build from source, don't mix up the axes' rotations._</font>  
+- <a name="carla.Rotation.from_right_handed"></a>**<font color="#7fb800">from_right_handed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**rotation**</font>)  
+Reads a right-handed (FLU) rotation back into CARLA's left-handed frame. Inverse of `to_right_handed()`; the mapping is its own inverse. This method is static.  
+    - **Parameters:**
+        - `rotation` (_[carla.RightHandedRotation](#carla.RightHandedRotation)_) - Rotation in the right-handed (FLU) frame.  
+    - **Return:** _[carla.Rotation](#carla.Rotation)_  
+- <a name="carla.Rotation.to_right_handed"></a>**<font color="#7fb800">to_right_handed</font>**(<font color="#00a6ed">**self**</font>)  
+Converts this rotation to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU"). Mirroring the Y axis negates **pitch and yaw** and leaves roll alone, so `(roll, pitch, yaw) = (10, 20, 30)` becomes `(10, -20, -30)`. See [Coordinate conventions](/coordinate_conventions).  
+    - **Return:** _[carla.RightHandedRotation](#carla.RightHandedRotation)_  
 
 ##### Getters
 - <a name="carla.Rotation.get_forward_vector"></a>**<font color="#7fb800">get_forward_vector</font>**(<font color="#00a6ed">**self**</font>)  
@@ -1977,7 +2361,7 @@ Cosine of the incident angle between the ray, and the normal of the hit object.
 - <a name="carla.SemanticLidarDetection.object_idx"></a>**<font color="#f8805a">object_idx</font>** (_uint_)  
 ID of the actor hit by the ray.  
 - <a name="carla.SemanticLidarDetection.object_tag"></a>**<font color="#f8805a">object_tag</font>** (_uint_)  
-[Semantic tag](ref_sensors.md#semantic-segmentation-camera) of the component hit by the ray.  
+[Semantic tag](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/ref_sensors/#semantic-segmentation-camera) of the component hit by the ray.  
 
 ### Methods
 
@@ -2091,7 +2475,9 @@ Base class for all the objects containing data generated by a [carla.Sensor](#ca
   - LIDAR sensor: [carla.LidarMeasurement](#carla.LidarMeasurement).<br>
   - Obstacle detector: [carla.ObstacleDetectionEvent](#carla.ObstacleDetectionEvent).<br>
   - Radar sensor: [carla.RadarMeasurement](#carla.RadarMeasurement).<br>
-  - Semantic LIDAR sensor: [carla.SemanticLidarMeasurement](#carla.SemanticLidarMeasurement).  
+  - Semantic LIDAR sensor: [carla.SemanticLidarMeasurement](#carla.SemanticLidarMeasurement).<br>
+  - Cooperative awareness messages V2X sensor: [carla.CAMEvent](#carla.CAMEvent).<br>
+  - Custom V2X messages V2X sensor: [carla.CustomV2XEvent](#carla.CustomV2XEvent).  
 
 ### Instance Variables
 - <a name="carla.SensorData.frame"></a>**<font color="#f8805a">frame</font>** (_int_)  
@@ -2363,11 +2749,11 @@ During the collision detection stage, which runs every frame, this method sets a
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) - The vehicle that is going to ignore walkers on scene.  
         - `perc` (_float_) - Between 0 and 100. Amount of times collisions will be ignored.  
-- <a name="carla.TrafficManager.keep_right_rule_percentage"></a>**<font color="#7fb800">keep_right_rule_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
-During the localization stage, this method sets a percent chance that vehicle will follow the *keep right* rule, and stay in the right lane.  
+- <a name="carla.TrafficManager.keep_slow_lane_rule_percentage"></a>**<font color="#7fb800">keep_slow_lane_rule_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**perc**</font>)  
+During the localization stage, this method sets a percent chance that vehicle will follow the *keep slow lane* rule, and stay in the slowest lane. For right-handed traffic, vehicles will move to the righmost lane while left-handed traffic will make vehicles move to the left.  
     - **Parameters:**
         - `actor` (_[carla.Actor](#carla.Actor)_) - Vehicle whose behaviour is being changed.  
-        - `perc` (_float_) - Between 0 and 100. Amount of times the vehicle will follow the keep right rule.  
+        - `perc` (_float_) - Between 0 and 100. Amount of times the vehicle will follow the keep slow lane rule.  
 - <a name="carla.TrafficManager.random_left_lanechange_percentage"></a>**<font color="#7fb800">random_left_lanechange_percentage</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**actor**</font>, <font color="#00a6ed">**percentage**</font>)  
 Adjust probability that in each timestep the actor will perform a left lane change, dependent on lane change availability.  
     - **Parameters:**
@@ -2498,6 +2884,14 @@ Describes a rotation for an object according to Unreal Engine's axis system.
     - **Parameters:**
         - `location` (_[carla.Location](#carla.Location)_)  
         - `rotation` (_[carla.Rotation](#carla.Rotation)<small> - degrees (pitch, yaw, roll)</small>_)  
+- <a name="carla.Transform.from_right_handed"></a>**<font color="#7fb800">from_right_handed</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**transform**</font>)  
+Reads a right-handed (FLU) transform back into CARLA's left-handed frame. Inverse of `to_right_handed()`; the mapping is its own inverse. This method is static.  
+    - **Parameters:**
+        - `transform` (_[carla.RightHandedTransform](#carla.RightHandedTransform)_) - Transform in the right-handed (FLU) frame.  
+    - **Return:** _[carla.Transform](#carla.Transform)_  
+- <a name="carla.Transform.to_right_handed"></a>**<font color="#7fb800">to_right_handed</font>**(<font color="#00a6ed">**self**</font>)  
+Converts this transform to a right-handed, x-forward / y-**left** / z-up frame (ROS REP-103 "FLU"). The location becomes `(x, -y, z)` and the rotation `(roll, -pitch, -yaw)`; equivalently the pose matrix becomes `S * get_matrix() * S` with `S = diag(1, -1, 1, 1)`. See [Coordinate conventions](/coordinate_conventions).  
+    - **Return:** _[carla.RightHandedTransform](#carla.RightHandedTransform)_  
 - <a name="carla.Transform.transform"></a>**<font color="#7fb800">transform</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**in_point**</font>)  
 Translates a 3D point from local to global coordinates using the current transformation as frame of reference.  
     - **Parameters:**
@@ -2844,7 +3238,7 @@ States which gear is the vehicle running on.
 - <a name="carla.VehicleControl.__init__"></a>**<font color="#7fb800">\__init__</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**throttle**=0.0</font>, <font color="#00a6ed">**steer**=0.0</font>, <font color="#00a6ed">**brake**=0.0</font>, <font color="#00a6ed">**hand_brake**=False</font>, <font color="#00a6ed">**reverse**=False</font>, <font color="#00a6ed">**manual_gear_shift**=False</font>, <font color="#00a6ed">**gear**=0</font>)  
     - **Parameters:**
         - `throttle` (_float_) - Scalar value between [0.0,1.0].  
-        - `steer` (_float_) - Scalar value between [-1.0,1.0].  
+        - `steer` (_float_) - Scalar value between [0.0,1.0].  
         - `brake` (_float_) - Scalar value between [0.0,1.0].  
         - `hand_brake` (_bool_)  
         - `reverse` (_bool_)  
@@ -3205,6 +3599,8 @@ The lane type of the current Waypoint, based on OpenDRIVE 1.4 standard.
 The right lane marking information based on the direction of the Waypoint.  
 - <a name="carla.Waypoint.left_lane_marking"></a>**<font color="#f8805a">left_lane_marking</font>** (_[carla.LaneMarking](#carla.LaneMarking)_)  
 The left lane marking information based on the direction of the Waypoint.  
+- <a name="carla.Waypoint.is_rht"></a>**<font color="#f8805a">is_rht</font>** (_bool_)  
+Flag indicating whether the waypoint is part of a right-handed traffic road.  
 
 ### Methods
 - <a name="carla.Waypoint.next"></a>**<font color="#7fb800">next</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**distance**</font>)  
@@ -3495,6 +3891,8 @@ Casts a ray from the specified initial_location to final_location. The function 
         - `initial_location` (_[carla.Location](#carla.Location)_) - The initial position of the ray.  
         - `final_location` (_[carla.Location](#carla.Location)_) - The final position of the ray.  
     - **Return:** _list([carla.LabelledPoint](#carla.LabelledPoint))_  
+- <a name="carla.World.clear_sky_light_map"></a>**<font color="#7fb800">clear_sky_light_map</font>**(<font color="#00a6ed">**self**</font>)  
+Removes a sky light map set with `set_sky_light_map()` and restores the real-time atmosphere capture on every sky rig in the level.  
 - <a name="carla.World.enable_environment_objects"></a>**<font color="#7fb800">enable_environment_objects</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**env_objects_ids**</font>, <font color="#00a6ed">**enable**</font>)<button class="SnipetButton" id="carla.World.enable_environment_objects-snipet_button">snippet &rarr;</button>  
 Enable or disable a set of EnvironmentObject identified by their id. These objects will appear or disappear from the level.  
     - **Parameters:**
@@ -3510,13 +3908,16 @@ Projects the specified point downwards in the scene. The functions casts a ray f
         - `location` (_[carla.Location](#carla.Location)_) - The point to be projected.  
         - `search_distance` (_float_) - The maximum distance to perform the projection.  
     - **Return:** _[carla.LabelledPoint](#carla.LabelledPoint)_  
+- <a name="carla.World.has_sky_light_map"></a>**<font color="#7fb800">has_sky_light_map</font>**(<font color="#00a6ed">**self**</font>)  
+Returns whether a sky light map is currently active (set with `set_sky_light_map()` and not yet cleared).  
+    - **Return:** _bool_  
 - <a name="carla.World.load_map_layer"></a>**<font color="#7fb800">load_map_layer</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**map_layers**</font>)<button class="SnipetButton" id="carla.World.load_map_layer-snipet_button">snippet &rarr;</button>  
 Loads the selected layers to the level. If the layer is already loaded the call has no effect.  
     - **Parameters:**
         - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Mask of level layers to be loaded.  
     - **Warning:** <font color="#ED2F2F">_This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs._</font>  
 - <a name="carla.World.on_tick"></a>**<font color="#7fb800">on_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**callback**</font>)  
-This method is used in [__asynchronous__ mode](adv_synchrony_timestep.md). It starts callbacks from the client for the function defined as `callback`, and returns the ID of the callback. The function will be called everytime the server ticks. It requires a [carla.WorldSnapshot](#carla.WorldSnapshot) as argument, which can be retrieved from __<font color="#7fb800">wait_for_tick()</font>__. Use __<font color="#7fb800">remove_on_tick()</font>__ to stop the callbacks.  
+This method is used in [__asynchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/). It starts callbacks from the client for the function defined as `callback`, and returns the ID of the callback. The function will be called everytime the server ticks. It requires a [carla.WorldSnapshot](#carla.WorldSnapshot) as argument, which can be retrieved from __<font color="#7fb800">wait_for_tick()</font>__. Use __<font color="#7fb800">remove_on_tick()</font>__ to stop the callbacks.  
     - **Parameters:**
         - `callback` (_[carla.WorldSnapshot](#carla.WorldSnapshot)_) - Function with a snapshot as compulsory parameter that will be called when the client receives a tick.  
     - **Return:** _int_  
@@ -3541,12 +3942,18 @@ The method will create, return and spawn an actor into the world. The actor will
         - `attach_to` (_[carla.Actor](#carla.Actor)_) - The parent object that the spawned actor will follow around.  
         - `attachment` (_[carla.AttachmentType](#carla.AttachmentType)_) - Determines how fixed and rigorous should be the changes in position according to its parent object.  
     - **Return:** _[carla.Actor](#carla.Actor)_  
+- <a name="carla.World.spawn_custom_mesh"></a>**<font color="#7fb800">spawn_custom_mesh</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**vertices**</font>, <font color="#00a6ed">**triangles**</font>, <font color="#00a6ed">**material**=grass</font>)  
+Spawns a static procedural mesh with collision in the world. The mesh lives until the world is reloaded. Useful to add custom terrain or static geometry to maps generated at runtime from OpenDRIVE.  
+    - **Parameters:**
+        - `vertices` (_list(float)_) - Flat list of vertex coordinates (x0, y0, z0, x1, y1, z1, ...) in meters, in the client coordinate frame.  
+        - `triangles` (_list(int)_) - Triangle indices into the vertex list, three per triangle.  
+        - `material` (_str_) - Semantic material hint ("grass", "road", "dirt", "sidewalk") or a full Unreal Engine material object path.  
 - <a name="carla.World.tick"></a>**<font color="#7fb800">tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  
-This method is used in [__synchronous__ mode](adv_synchrony_timestep.md), when the server waits for a client tick before computing the next frame. This method will send the tick, and give way to the server. It returns the ID of the new frame computed by the server.  
+This method is used in [__synchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/), when the server waits for a client tick before computing the next frame. This method will send the tick, and give way to the server. It returns the ID of the new frame computed by the server.  
     - **Parameters:**
         - `seconds` (_float<small> - seconds</small>_) - Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.  
     - **Return:** _int_  
-    - **Note:** <font color="#8E8E8E">_If no tick is received in synchronous mode, the simulation will freeze. Also, if many ticks are received from different clients, there may be synchronization issues. Please read the docs about [synchronous mode](adv_synchrony_timestep.md) to learn more.  
+    - **Note:** <font color="#8E8E8E">_If no tick is received in synchronous mode, the simulation will freeze. Also, if many ticks are received from different clients, there may be synchronization issues. Please read the docs about [synchronous mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/) to learn more.  
 _</font>  
 - <a name="carla.World.try_spawn_actor"></a>**<font color="#7fb800">try_spawn_actor</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**blueprint**</font>, <font color="#00a6ed">**transform**</font>, <font color="#00a6ed">**attach_to**=None</font>, <font color="#00a6ed">**attachment**=Rigid</font>)  
 Same as __<font color="#7fb800">spawn_actor()</font>__ but returns <b>None</b> on failure instead of throwing an exception.  
@@ -3562,7 +3969,7 @@ Unloads the selected layers to the level. If the layer is already unloaded the c
         - `map_layers` (_[carla.MapLayer](#carla.MapLayer)_) - Mask of level layers to be unloaded.  
     - **Warning:** <font color="#ED2F2F">_This only affects "Opt" maps. The minimum layout includes roads, sidewalks, traffic lights and traffic signs._</font>  
 - <a name="carla.World.wait_for_tick"></a>**<font color="#7fb800">wait_for_tick</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**seconds**=10.0</font>)  
-This method is used in [__asynchronous__ mode](adv_synchrony_timestep.md). It makes the client wait for a server tick. When the next frame is computed, the server will tick and return a snapshot describing the new state of the world.  
+This method is used in [__asynchronous__ mode](https://[carla.readthedocs.io](#carla.readthedocs.io)/en/latest/adv_synchrony_timestep/). It makes the client wait for a server tick. When the next frame is computed, the server will tick and return a snapshot describing the new state of the world.  
     - **Parameters:**
         - `seconds` (_float<small> - seconds</small>_) - Maximum time the server should wait for a tick. It is set to <code>10.0</code> by default.  
     - **Return:** _[carla.WorldSnapshot](#carla.WorldSnapshot)_  
@@ -3591,6 +3998,9 @@ Returns an array of bounding boxes with location and rotation in world space. Th
     - **Parameters:**
         - `actor_type` (_[carla.CityObjectLabel](#carla.CityObjectLabel)_) - Semantic tag of the elements contained in the bounding boxes that are returned.  
     - **Return:** _array([carla.BoundingBox](#carla.BoundingBox))_  
+- <a name="carla.World.get_lightmanager"></a>**<font color="#7fb800">get_lightmanager</font>**(<font color="#00a6ed">**self**</font>)  
+Returns an instance of [carla.LightManager](#carla.LightManager) that can be used to handle the lights in the scene.  
+    - **Return:** _[carla.LightManager](#carla.LightManager)_  
 - <a name="carla.World.get_map"></a>**<font color="#7fb800">get_map</font>**(<font color="#00a6ed">**self**</font>)  
 Asks the server for the XODR containing the map file, and returns this parsed as a [carla.Map](#carla.Map).  
     - **Return:** _[carla.Map](#carla.Map)_  
@@ -3656,6 +4066,14 @@ _</font>
         - `seed` (_int_) - Sets the seed to use for any random number generated in relation to pedestrians.  
     - **Note:** <font color="#8E8E8E">_Should be set before pedestrians are spawned. If you want to repeat the same exact bodies (blueprint) for each pedestrian, then use the same seed in the Python code (where the blueprint is choosen randomly) and here, otherwise the pedestrians will repeat the same paths but the bodies will be different.
 _</font>  
+- <a name="carla.World.set_sky_light_map"></a>**<font color="#7fb800">set_sky_light_map</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**width**</font>, <font color="#00a6ed">**height**</font>, <font color="#00a6ed">**pixels**</font>, <font color="#00a6ed">**intensity**=1.0</font>, <font color="#00a6ed">**face_size**=512</font>)  
+Lights the scene with an environment map instead of the real-time atmosphere capture: the equirectangular linear RGB(A) float `pixels` panorama is resampled into a cubemap and becomes the sky light's ambient and reflection source at `intensity`, on every sky rig in the level, until `clear_sky_light_map()` is called. Persists across weather changes but not across level loads: `load_world()` and `reload_world()` drop it, so set it again on the new world. Panorama convention (the CARLA world frame, i.e. Unreal's left-handed X-forward/Y-right/Z-up): column `u` is azimuth `phi = 2*pi * (u + 0.5) / width`, measured from +X toward +Y (the same sense as a CARLA yaw, so azimuth 90° is to the right of a yaw-0 vehicle); row `v` is elevation `theta = pi/2 - pi * (v + 0.5) / height`, with row 0 the zenith and the last row the nadir; direction `d = (cos(theta)*cos(phi), cos(theta)*sin(phi), sin(theta))`. Values are scene radiance in the project's photometric units (a clear noon sky is on the order of thousands of cd/m²), so a panorama normalized to `[0, 1]` typically needs `intensity` in the thousands to read correctly against CARLA's fixed daylight exposure — measure against a reference frame from the real-time atmosphere rather than assuming a default. An overload also accepts a pre-built [carla.TextureFloatColor](#carla.TextureFloatColor) panorama instead of `width`/`height`/`pixels`.  
+    - **Parameters:**
+        - `width` (_int_) - Panorama width in pixels.  
+        - `height` (_int_) - Panorama height in pixels.  
+        - `pixels` (_bytes_) - Contiguous buffer of `width * height * 3` (RGB) or `width * height * 4` (RGBA) float32 values, row major, top row first. Any object exposing the Python buffer protocol works, including a numpy array.  
+        - `intensity` (_float_) - Multiplier applied on top of the panorama's linear radiance values.  
+        - `face_size` (_int_) - Resolution (pixels per edge) of the cubemap the panorama is resampled into before lighting the sky.  
 - <a name="carla.World.set_weather"></a>**<font color="#7fb800">set_weather</font>**(<font color="#00a6ed">**self**</font>, <font color="#00a6ed">**weather**</font>)  
 Changes the weather parameteres ruling the simulation to another ones defined in an object.  
     - **Parameters:**
@@ -4135,117 +4553,60 @@ document.getElementById("snipets-container").innerHTML = null;
 }
 </script>
   
-<div id ="carla.DebugHelper.draw_string-snipet" style="display: none;">
+<div id ="carla.Map.get_waypoint-snipet" style="display: none;">
 <p class="SnipetFont">
-Snippet for carla.DebugHelper.draw_string
+Snippet for carla.Map.get_waypoint
 </p>
-<div id="carla.DebugHelper.draw_string-code" class="SnipetContent">
+<div id="carla.Map.get_waypoint-code" class="SnipetContent">
 
 ```py
   
 
-# This recipe is a modification of lane_explorer.py example.
-# It draws the path of an actor through the world, printing information at each waypoint.
+# This recipe shows the current traffic rules affecting the vehicle. 
+# Shows the current lane type and if a lane change can be done in the actual lane or the surrounding ones.
 
 # ...
-current_w = map.get_waypoint(vehicle.get_location())
-while True:
-
-    next_w = map.get_waypoint(vehicle.get_location(), lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk )
-    # Check if the vehicle is moving
-    if next_w.id != current_w.id:
-        vector = vehicle.get_velocity()
-        # Check if the vehicle is on a sidewalk
-        if current_w.lane_type == carla.LaneType.Sidewalk:
-            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else red, 60)
-        else:
-            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, 60)
-        debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (3.6 * math.sqrt(vector.x**2 + vector.y**2 + vector.z**2))), False, orange, 60)
-        draw_transform(debug, current_w.transform, white, 60)
-
-    # Update the current waypoint and sleep for some time
-    current_w = next_w
-    time.sleep(args.tick_time)
+waypoint = world.get_map().get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk))
+print("Current lane type: " + str(waypoint.lane_type))
+# Check current lane change allowed
+print("Current Lane change:  " + str(waypoint.lane_change))
+# Left and Right lane markings
+print("L lane marking type: " + str(waypoint.left_lane_marking.type))
+print("L lane marking change: " + str(waypoint.left_lane_marking.lane_change))
+print("R lane marking type: " + str(waypoint.right_lane_marking.type))
+print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
 # ...
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_string-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Map.get_waypoint-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.Map.get_waypoint.jpg">
   
 </div>
   
-<div id ="carla.Vehicle.set_wheel_steer_direction-snipet" style="display: none;">
+<div id ="carla.WalkerAIController.stop-snipet" style="display: none;">
 <p class="SnipetFont">
-Snippet for carla.Vehicle.set_wheel_steer_direction
+Snippet for carla.WalkerAIController.stop
 </p>
-<div id="carla.Vehicle.set_wheel_steer_direction-code" class="SnipetContent">
-
-```py
-  
-# Sets the appearance of the vehicles front wheels to 40°. Vehicle physics will not be affected.
-
-vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FR_Wheel, 40.0)
-vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FL_Wheel, 40.0)
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Vehicle.set_wheel_steer_direction-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.Sensor.listen-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.Sensor.listen
-</p>
-<div id="carla.Sensor.listen-code" class="SnipetContent">
+<div id="carla.WalkerAIController.stop-code" class="SnipetContent">
 
 ```py
   
 
-# This recipe applies a color conversion to the image taken by a camera sensor,
-# so it is converted to a semantic segmentation image.
+#To destroy the pedestrians, stop them from the navigation, and then destroy the objects (actor and controller).
 
-# ...
-camera_bp = world.get_blueprint_library().filter('sensor.camera.semantic_segmentation')
-# ...
-cc = carla.ColorConverter.CityScapesPalette
-camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, cc))
-# ...
+# stop pedestrians (list is [controller, actor, controller, actor ...])
+for i in range(0, len(all_id), 2):
+    all_actors[i].stop()
+
+# destroy pedestrian (actor and controller)
+client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Sensor.listen-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.DebugHelper.draw_box-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.DebugHelper.draw_box
-</p>
-<div id="carla.DebugHelper.draw_box-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe shows how to draw traffic light actor bounding boxes from a world snapshot.
-
-# ....
-debug = world.debug
-world_snapshot = world.get_snapshot()
-
-for actor_snapshot in world_snapshot:
-    actual_actor = world.get_actor(actor_snapshot.id)
-    if actual_actor.type_id == 'traffic.traffic_light':
-        debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
-# ...
-
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.DebugHelper.draw_box.jpg">
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 </div>
   
@@ -4375,6 +4736,87 @@ if vehicle_actor.is_at_traffic_light():
   
 </div>
   
+<div id ="carla.Sensor.listen-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.Sensor.listen
+</p>
+<div id="carla.Sensor.listen-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe applies a color conversion to the image taken by a camera sensor,
+# so it is converted to a semantic segmentation image.
+
+# ...
+camera_bp = world.get_blueprint_library().filter('sensor.camera.semantic_segmentation')
+# ...
+cc = carla.ColorConverter.CityScapesPalette
+camera.listen(lambda image: image.save_to_disk('output/%06d.png' % image.frame, cc))
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Sensor.listen-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.World.spawn_actor-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.World.spawn_actor
+</p>
+<div id="carla.World.spawn_actor-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe attaches different camera / sensors to a vehicle with different attachments.
+
+# ...
+camera = world.spawn_actor(rgb_camera_bp, transform, attach_to=vehicle, attachment_type=Attachment.Rigid)
+# Default attachment:  Attachment.Rigid
+gnss_sensor = world.spawn_actor(sensor_gnss_bp, transform, attach_to=vehicle)
+collision_sensor = world.spawn_actor(sensor_collision_bp, transform, attach_to=vehicle)
+lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, attach_to=vehicle)
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.spawn_actor-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.DebugHelper.draw_box-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.DebugHelper.draw_box
+</p>
+<div id="carla.DebugHelper.draw_box-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe shows how to draw traffic light actor bounding boxes from a world snapshot.
+
+# ....
+debug = world.debug
+world_snapshot = world.get_snapshot()
+
+for actor_snapshot in world_snapshot:
+    actual_actor = world.get_actor(actor_snapshot.id)
+    if actual_actor.type_id == 'traffic.traffic_light':
+        debug.draw_box(carla.BoundingBox(actor_snapshot.get_transform().location,carla.Vector3D(0.5,0.5,2)),actor_snapshot.get_transform().rotation, 0.05, carla.Color(255,0,0,0),0)
+# ...
+
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_box-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+
+<img src="/img/snipets_images/carla.DebugHelper.draw_box.jpg">
+  
+</div>
+  
 <div id ="carla.World.enable_environment_objects-snipet" style="display: none;">
 <p class="SnipetFont">
 Snippet for carla.World.enable_environment_objects
@@ -4405,36 +4847,31 @@ world.enable_environment_objects(objects_to_toggle, True)
   
 </div>
   
-<div id ="carla.Map.get_waypoint-snipet" style="display: none;">
+<div id ="carla.World.load_map_layer-snipet" style="display: none;">
 <p class="SnipetFont">
-Snippet for carla.Map.get_waypoint
+Snippet for carla.World.load_map_layer
 </p>
-<div id="carla.Map.get_waypoint-code" class="SnipetContent">
+<div id="carla.World.load_map_layer-code" class="SnipetContent">
 
 ```py
   
+# This recipe toggles on several layers in our "_Opt" maps
 
-# This recipe shows the current traffic rules affecting the vehicle. 
-# Shows the current lane type and if a lane change can be done in the actual lane or the surrounding ones.
+# Load town one with only minimum layout (roads, sidewalks, traffic lights and traffic signs)
+world = client.load_world('Town01_Opt', carla.MapLayer.None)
 
-# ...
-waypoint = world.get_map().get_waypoint(vehicle.get_location(),project_to_road=True, lane_type=(carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk))
-print("Current lane type: " + str(waypoint.lane_type))
-# Check current lane change allowed
-print("Current Lane change:  " + str(waypoint.lane_change))
-# Left and Right lane markings
-print("L lane marking type: " + str(waypoint.left_lane_marking.type))
-print("L lane marking change: " + str(waypoint.left_lane_marking.lane_change))
-print("R lane marking type: " + str(waypoint.right_lane_marking.type))
-print("R lane marking change: " + str(waypoint.right_lane_marking.lane_change))
-# ...
+# Toggle all buildings on
+world.load_map_layer(carla.MapLayer.Buildings)
+
+# Toggle all foliage on
+world.load_map_layer(carla.MapLayer.Foliage)
+
+# Toggle all parked vehicles on
+world.load_map_layer(carla.MapLayer.ParkedVehicles)
   
 
 ```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Map.get_waypoint-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-
-<img src="/img/snipets_images/carla.Map.get_waypoint.jpg">
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.load_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 </div>
   
@@ -4511,109 +4948,6 @@ for i in range(0, len(all_actors), 2):
   
 </div>
   
-<div id ="carla.World.unload_map_layer-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.World.unload_map_layer
-</p>
-<div id="carla.World.unload_map_layer-code" class="SnipetContent">
-
-```py
-  
-# This recipe toggles off several layers in our "_Opt" maps
-
-# Load town one with minimum layout (roads, sidewalks, traffic lights and traffic signs)
-# as well as buildings and parked vehicles
-world = client.load_world('Town01_Opt', carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles) 
-
-# Toggle all buildings off
-world.unload_map_layer(carla.MapLayer.Buildings)
-
-# Toggle all parked vehicles off
-world.unload_map_layer(carla.MapLayer.ParkedVehicles)
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.unload_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.World.spawn_actor-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.World.spawn_actor
-</p>
-<div id="carla.World.spawn_actor-code" class="SnipetContent">
-
-```py
-  
-
-# This recipe attaches different camera / sensors to a vehicle with different attachments.
-
-# ...
-camera = world.spawn_actor(rgb_camera_bp, transform, attach_to=vehicle, attachment_type=Attachment.Rigid)
-# Default attachment:  Attachment.Rigid
-gnss_sensor = world.spawn_actor(sensor_gnss_bp, transform, attach_to=vehicle)
-collision_sensor = world.spawn_actor(sensor_collision_bp, transform, attach_to=vehicle)
-lane_invasion_sensor = world.spawn_actor(sensor_lane_invasion_bp, transform, attach_to=vehicle)
-# ...
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.spawn_actor-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.World.load_map_layer-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.World.load_map_layer
-</p>
-<div id="carla.World.load_map_layer-code" class="SnipetContent">
-
-```py
-  
-# This recipe toggles on several layers in our "_Opt" maps
-
-# Load town one with only minimum layout (roads, sidewalks, traffic lights and traffic signs)
-world = client.load_world('Town01_Opt', carla.MapLayer.None)
-
-# Toggle all buildings on
-world.load_map_layer(carla.MapLayer.Buildings)
-
-# Toggle all foliage on
-world.load_map_layer(carla.MapLayer.Foliage)
-
-# Toggle all parked vehicles on
-world.load_map_layer(carla.MapLayer.ParkedVehicles)
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.load_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
-<div id ="carla.WalkerAIController.stop-snipet" style="display: none;">
-<p class="SnipetFont">
-Snippet for carla.WalkerAIController.stop
-</p>
-<div id="carla.WalkerAIController.stop-code" class="SnipetContent">
-
-```py
-  
-
-#To destroy the pedestrians, stop them from the navigation, and then destroy the objects (actor and controller).
-
-# stop pedestrians (list is [controller, actor, controller, actor ...])
-for i in range(0, len(all_id), 2):
-    all_actors[i].stop()
-
-# destroy pedestrian (actor and controller)
-client.apply_batch([carla.command.DestroyActor(x) for x in all_id])
-  
-
-```
-<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.WalkerAIController.stop-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
-  
-</div>
-  
 <div id ="carla.ActorBlueprint.set_attribute-snipet" style="display: none;">
 <p class="SnipetFont">
 Snippet for carla.ActorBlueprint.set_attribute
@@ -4645,6 +4979,90 @@ camera_bp.set_attribute('image_size_y', 600)
 
 ```
 <button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.ActorBlueprint.set_attribute-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.Vehicle.set_wheel_steer_direction-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.Vehicle.set_wheel_steer_direction
+</p>
+<div id="carla.Vehicle.set_wheel_steer_direction-code" class="SnipetContent">
+
+```py
+  
+# Sets the appearance of the vehicles front wheels to 40°. Vehicle physics will not be affected.
+
+vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FR_Wheel, 40.0)
+vehicle.set_wheel_steer_direction(carla.VehicleWheelLocation.FL_Wheel, 40.0)
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.Vehicle.set_wheel_steer_direction-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.DebugHelper.draw_string-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.DebugHelper.draw_string
+</p>
+<div id="carla.DebugHelper.draw_string-code" class="SnipetContent">
+
+```py
+  
+
+# This recipe is a modification of lane_explorer.py example.
+# It draws the path of an actor through the world, printing information at each waypoint.
+
+# ...
+current_w = map.get_waypoint(vehicle.get_location())
+while True:
+
+    next_w = map.get_waypoint(vehicle.get_location(), lane_type=carla.LaneType.Driving | carla.LaneType.Shoulder | carla.LaneType.Sidewalk )
+    # Check if the vehicle is moving
+    if next_w.id != current_w.id:
+        vector = vehicle.get_velocity()
+        # Check if the vehicle is on a sidewalk
+        if current_w.lane_type == carla.LaneType.Sidewalk:
+            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else red, 60)
+        else:
+            draw_waypoint_union(debug, current_w, next_w, cyan if current_w.is_junction else green, 60)
+        debug.draw_string(current_w.transform.location, str('%15.0f km/h' % (3.6 * math.sqrt(vector.x**2 + vector.y**2 + vector.z**2))), False, orange, 60)
+        draw_transform(debug, current_w.transform, white, 60)
+
+    # Update the current waypoint and sleep for some time
+    current_w = next_w
+    time.sleep(args.tick_time)
+# ...
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.DebugHelper.draw_string-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
+  
+</div>
+  
+<div id ="carla.World.unload_map_layer-snipet" style="display: none;">
+<p class="SnipetFont">
+Snippet for carla.World.unload_map_layer
+</p>
+<div id="carla.World.unload_map_layer-code" class="SnipetContent">
+
+```py
+  
+# This recipe toggles off several layers in our "_Opt" maps
+
+# Load town one with minimum layout (roads, sidewalks, traffic lights and traffic signs)
+# as well as buildings and parked vehicles
+world = client.load_world('Town01_Opt', carla.MapLayer.Buildings | carla.MapLayer.ParkedVehicles) 
+
+# Toggle all buildings off
+world.unload_map_layer(carla.MapLayer.Buildings)
+
+# Toggle all parked vehicles off
+world.unload_map_layer(carla.MapLayer.ParkedVehicles)
+  
+
+```
+<button id="button1" class="CopyScript" onclick="CopyToClipboard('carla.World.unload_map_layer-code')">Copy snippet</button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="button1" class="CloseSnipet" onclick="CloseSnipet()">Close snippet</button><br><br>
   
 </div>
   

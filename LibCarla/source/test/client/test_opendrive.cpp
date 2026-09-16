@@ -221,6 +221,13 @@ static void test_road_links(std::optional<Map>& map) {
   }
 }
 
+// A valid OpenDRIVE file may legitimately contain no road at all: CARLA ships
+// EmptyMap.xodr, a header-only file, so that world.get_map() works on the empty
+// sandbox map. Geometry tests have nothing to assert on such a map.
+static bool IsRoadless(carla::road::Map &map) {
+  return map.GetMap().GetRoads().empty();
+}
+
 TEST(road, parse_files) {
   for (const auto &file : util::OpenDrive::GetAvailableFiles()) {
     // std::cerr << file << std::endl;
@@ -307,6 +314,10 @@ TEST(road, iterate_waypoints) {
     auto m = OpenDriveParser::Load(util::OpenDrive::Load(file));
     ASSERT_TRUE(m.has_value());
     auto &map = *m;
+    if (IsRoadless(map)) {
+      carla::logging::log("  no roads, skipping:", file);
+      continue;
+    }
     const auto topology = map.GenerateTopology();
     ASSERT_FALSE(topology.empty());
     auto count = 0u;
@@ -376,6 +387,10 @@ TEST(road, get_waypoint) {
     auto m = OpenDriveParser::Load(util::OpenDrive::Load(file));
     ASSERT_TRUE(m.has_value());
     auto &map = *m;
+    if (IsRoadless(map)) {
+      carla::logging::log("  no roads, skipping:", file);
+      continue;
+    }
     for (auto i = 0u; i < 10'000u; ++i) {
       const auto location = Random::Location(-500.0f, 500.0f);
       auto owp = map.GetClosestWaypointOnRoad(location);

@@ -23,44 +23,27 @@ float GetThreePointCircleRadius(
     cg::Location middle_location,
     cg::Location last_location) {
 
-  const float x1{first_location.x};
-  const float y1{first_location.y};
-  const float x2{middle_location.x};
-  const float y2{middle_location.y};
-  const float x3{last_location.x};
-  const float y3{last_location.y};
+  // Work in a frame local to the middle point. The previous circumcenter
+  // formulation differenced products of squared world coordinates
+  // (x1*x1 - x3*x3, ...): at |coords| ~200 m those products are ~4e4 with
+  // float32's ~7 significant digits, so curvature-scale differences cancel
+  // catastrophically and the returned radius is noise. Translating to a
+  // local frame removes the large common offset before any squaring.
+  const float ax{first_location.x - middle_location.x};
+  const float ay{first_location.y - middle_location.y};
+  const float bx{last_location.x - middle_location.x};
+  const float by{last_location.y - middle_location.y};
 
-  const float x12{x1 - x2};
-  const float x13{x1 - x3};
-  const float y12{y1 - y2};
-  const float y13{y1 - y3};
-  const float y31{y3 - y1};
-  const float y21{y2 - y1};
-  const float x31{x3 - x1};
-  const float x21{x2 - x1};
-
-  const float sx13{x1 * x1 - x3 * x3};
-  const float sy13{y1 * y1 - y3 * y3};
-  const float sx21{x2 * x2 - x1 * x1};
-  const float sy21{y2 * y2 - y1 * y1};
-
-  const float f_denom{2.0f * (y31 * x12 - y21 * x13)};
-  if (std::abs(f_denom) <= EPSILON) {
-    return std::numeric_limits<float>::max();
+  // Circumradius R = (|AB| * |CB| * |AC|) / (4 * area), with
+  // 2 * area = |ax * by - ay * bx|.
+  const float cross{ax * by - ay * bx};
+  if (std::abs(cross) <= EPSILON) {
+    return std::numeric_limits<float>::max();  // collinear points
   }
-  const float f{(sx13 * x12 + sy13 * x12 + sx21 * x13 + sy21 * x13) / f_denom};
-
-  const float g_denom{2.0f * (x31 * y12 - x21 * y13)};
-  if (std::abs(g_denom) <= EPSILON) {
-    return std::numeric_limits<float>::max();
-  }
-  const float g{(sx13 * y12 + sy13 * y12 + sx21 * y13 + sy21 * y13) / g_denom};
-
-  const float c{-(x1 * x1 + y1 * y1) - 2.0f * g * x1 - 2.0f * f * y1};
-  const float h{-g};
-  const float k{-f};
-
-  return std::sqrt(h * h + k * k - c);
+  const float side_a{std::sqrt(ax * ax + ay * ay)};
+  const float side_b{std::sqrt(bx * bx + by * by)};
+  const float side_c{std::sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by))};
+  return (side_a * side_b * side_c) / (2.0f * std::abs(cross));
 }
 
 std::pair<cg::Location, uint64_t> InterpolateBufferAt(

@@ -95,9 +95,22 @@ bool UPostProcessJsonUtils::LoadAllPostProcessFromJsonToSceneCapture(USceneCaptu
         FPostProcessSettingsWrapper Wrapper;
         if (FJsonObjectConverter::JsonObjectStringToUStruct(InputString, &Wrapper, 0, 0))
         {
-            SensorCamera->PostProcessSettings = Wrapper.Settings; 
+            SensorCamera->PostProcessSettings = Wrapper.Settings;
             return true;
         }
     }
     return false;
+}
+
+TArray<FString> UPostProcessJsonUtils::GetAvailablePostProcessProfileNames()
+{
+    TArray<FString> ProfileNames;
+    const FString ConfigDir = FPaths::ProjectContentDir() / TEXT("Carla/Config/PostProcess/");
+    IFileManager::Get().FindFiles(ProfileNames, *(ConfigDir / TEXT("*.json")), true, false);
+    for (FString& Name : ProfileNames)
+    {
+        Name = FPaths::GetBaseFilename(Name);
+    }
+    ProfileNames.Sort();
+    return ProfileNames;
 }

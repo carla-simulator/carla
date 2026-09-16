@@ -6,6 +6,7 @@
 
 #include "Carla/Actor/CarlaBlueprintRegistry.h"
 #include "Carla.h"
+#include "Carla/ContentPacks/ContentPackManager.h"
 #include "Carla/Game/CarlaStatics.h"
 
 #include <util/ue-header-guard-begin.h>
@@ -154,9 +155,46 @@ void UCarlaBlueprintRegistry::LoadPropDefinitions(TArray<FPropParameters> &PropP
     PropFileNames.Insert(DefaultFileName, 0);
   }
 
+  // Content packs: every <Pack>/Content/Config/**/*.Package.json, appended
+  // after the project files so pack entries override by name.
+  PropFileNames.Append(FindContentPackPropFiles());
+
+  LoadPropDefinitionsFromFiles(PropFileNames, PropParametersArray);
+}
+
+TArray<FString> UCarlaBlueprintRegistry::FindContentPackPropFiles()
+{
+  TArray<FString> PropFileNames;
+  const FString WildCard = FString("*").Append(PropAttributes::REGISTRY_FORMAT);
+  if (const UCarlaContentPackManager *ContentPacks = UCarlaContentPackManager::Get())
+  {
+    for (const FString &PackContentDir : ContentPacks->GetPackContentDirs())
+    {
+      TArray<FString> PackPropFileNames;
+      IFileManager::Get().FindFilesRecursive(PackPropFileNames,
+          *(PackContentDir / TEXT("Config")),
+          *WildCard,
+          true,
+          false,
+          false);
+      PackPropFileNames.Sort();
+      PropFileNames.Append(PackPropFileNames);
+    }
+  }
+  return PropFileNames;
+}
+
+void UCarlaBlueprintRegistry::LoadPropDefinitionsFromFiles(
+    const TArray<FString> &PropFileNames,
+    TArray<FPropParameters> &PropParametersArray)
+{
   // Read all registry files and overwrite default registry values with user
   // registry files
   TMap<FString, int> PropIndexes;
+  for (int32 i = 0; i < PropParametersArray.Num(); ++i)
+  {
+    PropIndexes.Add(PropParametersArray[i].Name, i);
+  }
 
   for (int32 i = 0; i < PropFileNames.Num(); ++i)
   {

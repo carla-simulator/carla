@@ -1,0 +1,983 @@
+{
+  "date": "2026-09-11",
+  "map": "Town10HD_Opt",
+  "runtime": {
+    "blueprint": "vehicle.tesla.model3",
+    "initial_position": "Location(x=106.418777, y=-12.711724, z=-0.095350)",
+    "bounds": "BoundingBox(Location(x=-0.068500, y=0.000000, z=0.721500), Extent(x=2.347000, y=1.044000, z=0.721500), Rotation(pitch=0.000000, yaw=0.000000, roll=0.000000))",
+    "physics": "VehiclePhysicsControl(torque_curve=[Vector2D(x=0.000000, y=1.000000), Vector2D(x=5500.000000, y=1.000000), Vector2D(x=10000.000000, y=0.650000), Vector2D(x=15000.000000, y=0.430000), Vector2D(x=18500.000000, y=0.320000)], max_torque=550, max_rpm=18500, idle_rpm=0, brake_effect=0.05, rev_up_moi=1, rev_down_rate=600, differential_type=\u0003, front_rear_split=0.5, use_automatic_gears=1, gear_change_time=0.4, final_ratio=9, forward_gear_ratios=[1], reverse_gear_ratios=[1], change_up_rpm=18000, change_down_rpm=0, transmission_efficiency=0.9, mass=1850, drag_coefficient=0.3, center_of_mass=Location(x=0.000000, y=0.000000, z=0.350000), chassis_width=180, chassis_height=140, downforce_coefficient=0.3, drag_area=25200, inertia_tensor_scale=Vector3D(x=1.000000, y=1.000000, z=1.000000), sleep_threshold=10, sleep_slope_limit=0.866, steering_curve=[Vector2D(x=0.000000, y=1.000000), Vector2D(x=0.000000, y=1.000000), Vector2D(x=20.000000, y=0.800000), Vector2D(x=20.000000, y=0.800000), Vector2D(x=60.000000, y=0.400000), Vector2D(x=60.000000, y=0.400000), Vector2D(x=120.000000, y=0.300000), Vector2D(x=120.000000, y=0.300000)], wheels=[WheelPhysicsControl(axle_type=0, offsetVector3D(x=0.000000, y=0.000000, z=0.000000), wheel_radius=33.625000, wheel_width=23.500000, wheel_mass=20.000000, cornering_stiffness=1000.000000, friction_force_multiplier=3.500000, side_slip_modifier=1.000000, slip_threshold=20.000000, skid_threshold=20.000000, max_steer_angle=35.000000, affected_by_steering=1, affected_by_brake=1, affected_by_handbrake=0, affected_by_engine=1, abs_enabled=0, traction_control_enabled=0, max_wheelspin_rotation=30.000000, external_torque_combine_method=0, lateral_slip_graph=[], suspension_axis=Vector3D(x=0.000000, y=0.000000, z=-1.000000), suspension_force_offset=Vector3D(x=0.000000, y=0.000000, z=0.000000), suspension_max_raise=7.000000, suspension_max_drop=9.000000, suspension_damping_ratio=0.500000, wheel_load_ratio=0.500000, spring_rate=250.000000, spring_preload=50.000000, suspension_smoothing=0, rollbar_scaling=0.150000, sweep_shape=0, sweep_type=0, max_brake_torque=1800.000000, max_hand_brake_torque=3000.000000, wheel_index=0, location=Location(x=0.000000, y=0.000000, z=0.000000), old_location=Location(x=0.000000, y=0.000000, z=0.000000), velocity=Location(x=0.000000, y=0.000000, z=0.000000)), WheelPhysicsControl(axle_type=0, offsetVector3D(x=0.000000, y=0.000000, z=0.000000), wheel_radius=33.625000, wheel_width=23.500000, wheel_mass=20.000000, cornering_stiffness=1000.000000, friction_force_multiplier=3.500000, side_slip_modifier=1.000000, slip_threshold=20.000000, skid_threshold=20.000000, max_steer_angle=35.000000, affected_by_steering=1, affected_by_brake=1, affected_by_handbrake=0, affected_by_engine=1, abs_enabled=0, traction_control_enabled=0, max_wheelspin_rotation=30.000000, external_torque_combine_method=0, lateral_slip_graph=[], suspension_axis=Vector3D(x=0.000000, y=0.000000, z=-1.000000), suspension_force_offset=Vector3D(x=0.000000, y=0.000000, z=0.000000), suspension_max_raise=7.000000, suspension_max_drop=9.000000, suspension_damping_ratio=0.500000, wheel_load_ratio=0.500000, spring_rate=250.000000, spring_preload=50.000000, suspension_smoothing=0, rollbar_scaling=0.150000, sweep_shape=0, sweep_type=0, max_brake_torque=1800.000000, max_hand_brake_torque=3000.000000, wheel_index=1, location=Location(x=0.000000, y=0.000000, z=0.000000), old_location=Location(x=0.000000, y=0.000000, z=0.000000), velocity=Location(x=0.000000, y=0.000000, z=0.000000)), WheelPhysicsControl(axle_type=0, offsetVector3D(x=0.000000, y=0.000000, z=0.000000), wheel_radius=33.625000, wheel_width=23.500000, wheel_mass=20.000000, cornering_stiffness=1000.000000, friction_force_multiplier=3.500000, side_slip_modifier=1.000000, slip_threshold=20.000000, skid_threshold=20.000000, max_steer_angle=0.000000, affected_by_steering=0, affected_by_brake=1, affected_by_handbrake=1, affected_by_engine=1, abs_enabled=0, traction_control_enabled=0, max_wheelspin_rotation=30.000000, external_torque_combine_method=0, lateral_slip_graph=[], suspension_axis=Vector3D(x=0.000000, y=0.000000, z=-1.000000), suspension_force_offset=Vector3D(x=0.000000, y=0.000000, z=0.000000), suspension_max_raise=7.000000, suspension_max_drop=9.000000, suspension_damping_ratio=0.500000, wheel_load_ratio=0.500000, spring_rate=250.000000, spring_preload=50.000000, suspension_smoothing=0, rollbar_scaling=0.150000, sweep_shape=0, sweep_type=0, max_brake_torque=1800.000000, max_hand_brake_torque=3000.000000, wheel_index=2, location=Location(x=0.000000, y=0.000000, z=0.000000), old_location=Location(x=0.000000, y=0.000000, z=0.000000), velocity=Location(x=0.000000, y=0.000000, z=0.000000)), WheelPhysicsControl(axle_type=0, offsetVector3D(x=0.000000, y=0.000000, z=0.000000), wheel_radius=33.625000, wheel_width=23.500000, wheel_mass=20.000000, cornering_stiffness=1000.000000, friction_force_multiplier=3.500000, side_slip_modifier=1.000000, slip_threshold=20.000000, skid_threshold=20.000000, max_steer_angle=0.000000, affected_by_steering=0, affected_by_brake=1, affected_by_handbrake=1, affected_by_engine=1, abs_enabled=0, traction_control_enabled=0, max_wheelspin_rotation=30.000000, external_torque_combine_method=0, lateral_slip_graph=[], suspension_axis=Vector3D(x=0.000000, y=0.000000, z=-1.000000), suspension_force_offset=Vector3D(x=0.000000, y=0.000000, z=0.000000), suspension_max_raise=7.000000, suspension_max_drop=9.000000, suspension_damping_ratio=0.500000, wheel_load_ratio=0.500000, spring_rate=250.000000, spring_preload=50.000000, suspension_smoothing=0, rollbar_scaling=0.150000, sweep_shape=0, sweep_type=0, max_brake_torque=1800.000000, max_hand_brake_torque=3000.000000, wheel_index=3, location=Location(x=0.000000, y=0.000000, z=0.000000), old_location=Location(x=0.000000, y=0.000000, z=0.000000), velocity=Location(x=0.000000, y=0.000000, z=0.000000))], use_sweep_wheel_collision=0)",
+    "alive_after_settle": true,
+    "max_caliper_spin_deg": 0.0,
+    "drive_distance_m": 6.610207557678223,
+    "max_speed_kmh": 12.089140892028809,
+    "braked_speed_kmh": 4.783548210980371e-05,
+    "light_state": "carla.VehicleLightState(11)",
+    "front_steer_deg": 14.700000762939453,
+    "caliper_steer_deg": 14.700000762939453,
+    "status": "passed motion/braking; images require visual review"
+  },
+  "cameras": {
+    "camera_profile": "VehicleReview",
+    "semantic_tags": [
+      14
+    ],
+    "color": "140,12,20",
+    "car_label_pixels": 170235,
+    "door_regression": {
+      "vehicle.ue4.audi.tt": true,
+      "vehicle.dodge.charger": true
+    }
+  },
+  "assets": {
+    "lods": [
+      {
+        "mesh": "SM_Model3_Body",
+        "count": 4
+      },
+      {
+        "mesh": "SM_Model3_CaliperFL",
+        "count": 4
+      },
+      {
+        "mesh": "SM_Model3_CaliperFR",
+        "count": 4
+      },
+      {
+        "mesh": "SM_Model3_CaliperRL",
+        "count": 4
+      },
+      {
+        "mesh": "SM_Model3_CaliperRR",
+        "count": 4
+      },
+      {
+        "mesh": "SM_Model3_DoorFL",
+        "count": 4
+      },
+      {
+        "mesh": "SM_Model3_DoorFR",
+        "count": 4
+      },
+      {
+        "mesh": "SM_Model3_DoorRL",
+        "count": 4
+      },
+      {
+        "mesh": "SM_Model3_DoorRR",
+        "count": 4
+      },
+      {
+        "mesh": "SM_Model3_Hood",
+        "count": 4
+      },
+      {
+        "mesh": "SM_Model3_Trunk",
+        "count": 4
+      },
+      {
+        "mesh": "SM_Model3_WheelFL",
+        "count": 1
+      },
+      {
+        "mesh": "SM_Model3_WheelFR",
+        "count": 1
+      },
+      {
+        "mesh": "SM_Model3_WheelRL",
+        "count": 1
+      },
+      {
+        "mesh": "SM_Model3_WheelRR",
+        "count": 1
+      }
+    ],
+    "calipers": [
+      {
+        "component": "CaliperRR_GEN_VARIABLE",
+        "mesh": "/Game/Carla/Static/Car/4Wheeled/TeslaModel3UE58/Meshes/SM_Model3_CaliperRR.SM_Model3_CaliperRR",
+        "tags": [
+          "Carla.Caliper.3"
+        ]
+      },
+      {
+        "component": "CaliperRL_GEN_VARIABLE",
+        "mesh": "/Game/Carla/Static/Car/4Wheeled/TeslaModel3UE58/Meshes/SM_Model3_CaliperRL.SM_Model3_CaliperRL",
+        "tags": [
+          "Carla.Caliper.2"
+        ]
+      },
+      {
+        "component": "CaliperFR_GEN_VARIABLE",
+        "mesh": "/Game/Carla/Static/Car/4Wheeled/TeslaModel3UE58/Meshes/SM_Model3_CaliperFR.SM_Model3_CaliperFR",
+        "tags": [
+          "Carla.Caliper.1"
+        ]
+      },
+      {
+        "component": "CaliperFL_GEN_VARIABLE",
+        "mesh": "/Game/Carla/Static/Car/4Wheeled/TeslaModel3UE58/Meshes/SM_Model3_CaliperFL.SM_Model3_CaliperFL",
+        "tags": [
+          "Carla.Caliper.0"
+        ]
+      }
+    ]
+  },
+  "asset_regression": {
+    "status": "passed",
+    "saved_physics_asset": "/Game/Carla/Static/Car/4Wheeled/TeslaModel3UE58/PH_Model3.PH_Model3",
+    "wheel_meshes": [
+      "/Game/Carla/Static/Car/4Wheeled/TeslaModel3UE58/Meshes/SM_Model3_WheelRL.SM_Model3_WheelRL",
+      "/Game/Carla/Static/Car/4Wheeled/TeslaModel3UE58/Meshes/SM_Model3_WheelRR.SM_Model3_WheelRR",
+      "/Game/Carla/Static/Car/4Wheeled/TeslaModel3UE58/Meshes/SM_Model3_WheelFL.SM_Model3_WheelFL",
+      "/Game/Carla/Static/Car/4Wheeled/TeslaModel3UE58/Meshes/SM_Model3_WheelFR.SM_Model3_WheelFR"
+    ],
+    "wheel_lods": 1,
+    "rig_rendered": false,
+    "rig_bones_always_updated": true
+  },
+  "collision_regression": [
+    {
+      "hz": 60,
+      "case": "rear",
+      "initial_speed_mps": 10,
+      "contacts": 1,
+      "peak_height_m": 0.0008118003606796265,
+      "peak_speed_mps": 9.837318420410156,
+      "peak_vertical_speed_mps": 0.003504805499687791,
+      "peak_roll_deg": 1.0301693677902222,
+      "target_contacts": 1,
+      "passed": true
+    },
+    {
+      "hz": 30,
+      "case": "rear",
+      "initial_speed_mps": 10,
+      "contacts": 1,
+      "peak_height_m": 4.7340989112854004e-05,
+      "peak_speed_mps": 9.85313606262207,
+      "peak_vertical_speed_mps": 0.007884655147790909,
+      "peak_roll_deg": 1.0308647155761719,
+      "target_contacts": 1,
+      "passed": true
+    },
+    {
+      "hz": 30,
+      "case": "side",
+      "initial_speed_mps": 10,
+      "contacts": 7,
+      "peak_height_m": 0.04304056242108345,
+      "peak_speed_mps": 6.504946231842041,
+      "peak_vertical_speed_mps": 0.27354395389556885,
+      "peak_roll_deg": 5.150063514709473,
+      "target_contacts": 7,
+      "passed": true
+    },
+    {
+      "hz": 30,
+      "case": "barrier",
+      "initial_speed_mps": 10,
+      "contacts": 1,
+      "peak_height_m": 0.02142111212015152,
+      "peak_speed_mps": 9.85313606262207,
+      "peak_vertical_speed_mps": 0.3963794708251953,
+      "peak_roll_deg": 1.116466999053955,
+      "target_contacts": 1,
+      "passed": true
+    },
+    {
+      "hz": 30,
+      "case": "barrier",
+      "initial_speed_mps": 20,
+      "contacts": 1,
+      "peak_height_m": 0.026533454656600952,
+      "peak_speed_mps": 19.733139038085938,
+      "peak_vertical_speed_mps": 0.4844647943973541,
+      "peak_roll_deg": 1.1980797052383423,
+      "target_contacts": 1,
+      "passed": true
+    }
+  ],
+  "wheel_detail": {
+    "source": "source/tesla-model3-wheel-detail.blend",
+    "inspection_copy": "source/tesla-model3-tire-review.blend",
+    "part_triangles": {
+      "Body": 456289,
+      "DoorFL": 36445,
+      "DoorFR": 33109,
+      "DoorRL": 26875,
+      "DoorRR": 26843,
+      "Hood": 4572,
+      "Trunk": 11084,
+      "WheelFL": 324782,
+      "WheelFR": 324782,
+      "WheelRL": 324782,
+      "WheelRR": 324782,
+      "CaliperFL": 2593,
+      "CaliperFR": 2593,
+      "CaliperRL": 2795,
+      "CaliperRR": 2795
+    },
+    "normal_map_convention": "OpenGL; green flipped by Unreal importer",
+    "geometry": "Modeled channels, lateral cuts, rounded sidewalls, raised lettering, mould rings, disc vanes, valve stems",
+    "runtime_visual_review": {
+      "status": "passed",
+      "scope": "CARLA RGB close-ups of straight and steered wheels; tread, sidewall lettering, material maps and matching caliper steering inspected. Full impact suite not rerun for this visual revision."
+    }
+  },
+  "surface_upgrade": {
+    "status": "reviewed and integrated",
+    "source": "artifacts/tesla-model3/source/tesla-model3-optics-upgrade.blend",
+    "source_sha256": "c359b43cd8528bf0311e42a0b4ab832e8405c19e8005655f532a1bfd115a4cd6",
+    "part_triangles": {
+      "Body": 513313,
+      "DoorFL": 38024,
+      "DoorFR": 34700,
+      "DoorRL": 26711,
+      "DoorRR": 26679,
+      "Hood": 4572,
+      "Trunk": 11084,
+      "WheelFL": 324782,
+      "WheelFR": 324782,
+      "WheelRL": 324782,
+      "WheelRR": 324782,
+      "CaliperFL": 2593,
+      "CaliperFR": 2593,
+      "CaliperRL": 2795,
+      "CaliperRR": 2795
+    },
+    "total_lod0_triangles": 1964987,
+    "surface_generation": {
+      "materials": [
+        "wheels.6",
+        "WheelDetail_RaisedRubber",
+        "WheelDetail_Velvet",
+        "mirror_inside.0",
+        "movsteer_1.0.1",
+        "aluminium_light.0",
+        "back_chrome_light.0",
+        "black_lights.0",
+        "movsteer_1.0.0",
+        "Plastic.0",
+        "Seat_Leather_white.0",
+        "SurfaceDetail_Headliner",
+        "Putih.0"
+      ],
+      "glass_repairs": [
+        {
+          "object": "glass_glass.0_0",
+          "removed_nested_shell_modifiers": [
+            "Glass thickness"
+          ]
+        },
+        {
+          "object": "glass_glass.1_0",
+          "removed_nested_shell_modifiers": [
+            "Glass thickness"
+          ]
+        },
+        {
+          "object": "door_lf_glass.0_0",
+          "removed_nested_shell_modifiers": [
+            "Glass thickness"
+          ]
+        },
+        {
+          "object": "door_lr_glass.0_0",
+          "removed_nested_shell_modifiers": [
+            "Glass thickness"
+          ]
+        },
+        {
+          "object": "door_rf_glass.0_0",
+          "removed_nested_shell_modifiers": [
+            "Glass thickness"
+          ]
+        },
+        {
+          "object": "door_rr_glass.0_0",
+          "removed_nested_shell_modifiers": [
+            "Glass thickness"
+          ]
+        },
+        {
+          "object": "windscreen_ok_glass.0_0",
+          "removed_nested_shell_modifiers": [
+            "Glass thickness"
+          ]
+        }
+      ],
+      "status": "initial material pass; full upgrade checklist remains pending"
+    },
+    "detail_generation": {
+      "added": [
+        "SurfaceDetail_FrontLiner_-1",
+        "SurfaceDetail_FrontLiner_1",
+        "SurfaceDetail_RearLiner_-1",
+        "SurfaceDetail_RearLiner_1",
+        "SurfaceDetail_BatteryUndertray",
+        "SurfaceDetail_UndertrayJoint",
+        "SurfaceDetail_UndertrayJoint",
+        "SurfaceDetail_UndertrayJoint",
+        "SurfaceDetail_UndertrayJoint",
+        "SurfaceDetail_UndertrayJoint",
+        "SurfaceDetail_LowBeamReflector",
+        "SurfaceDetail_LowBeamEmitter",
+        "SurfaceDetail_LowBeamReflector",
+        "SurfaceDetail_LowBeamEmitter",
+        "SurfaceDetail_LowBeamReflector",
+        "SurfaceDetail_LowBeamEmitter",
+        "SurfaceDetail_LowBeamReflector",
+        "SurfaceDetail_LowBeamEmitter",
+        "SurfaceDetail_LowBeamReflector",
+        "SurfaceDetail_LowBeamEmitter",
+        "SurfaceDetail_LowBeamReflector",
+        "SurfaceDetail_LowBeamEmitter",
+        "SurfaceDetail_WindowSeal",
+        "SurfaceDetail_WindowSeal.001",
+        "SurfaceDetail_WindowSeal.002",
+        "SurfaceDetail_WindowSeal.003",
+        "SurfaceDetail_SteeringStitches"
+      ],
+      "bevelled": [
+        "movsteer_1.0_movsteer_1.0.1_0",
+        "chrome_movsteer_1.0.1_0",
+        "cahrome_movsteer_1.0.1_0",
+        "chrome__movsteer_1.0.1_0",
+        "chrome1_movsteer_1.0.1_0",
+        "chrome2_movsteer_1.0.1_0",
+        "aluminium_movsteer_1.0.1_0",
+        "aluminium2_aluminium2.0_0",
+        "chromeBELT_movsteer_1.0.1_0",
+        "chrome.001_movsteer_1.0.1_0",
+        "door_lf_movsteer_1.0.1_0",
+        "door_lf_aluminium2.0_0",
+        "door_lr_movsteer_1.0.1_0",
+        "door_lr_aluminium2.0_0",
+        "door_rf_movsteer_1.0.1_0",
+        "door_rf_aluminium2.0_0",
+        "door_rr_movsteer_1.0.1_0",
+        "door_rr_aluminium2.0_0",
+        "rear_bumper_movsteer_1.0.1_0",
+        "chrome_bonnet_ok_movsteer_1.0.1_0"
+      ],
+      "normal_refinement": [
+        "body_primary_0",
+        "bodysills_primary.001_0",
+        "boot_primary_0",
+        "door_lf_primary_0",
+        "door_lf_primary.002_0",
+        "door_lr_primary_0",
+        "door_lr_primary.002_0",
+        "door_rf_primary_0",
+        "door_rf_primary.002_0",
+        "door_rr_primary_0",
+        "door_rr_primary.002_0",
+        "front_bumper_ok_primary_0",
+        "rear_bumper_ok_primary_0",
+        "bonnet_ok_primary_0"
+      ],
+      "rear_light_guides": [
+        "rear_lights_right rear light_0",
+        "light_breake_breaklight l_0",
+        "breake_int_breaklight l_0",
+        "rear_lightsr_right rear light_0",
+        "rear_lightsl_left rear light_0"
+      ]
+    },
+    "optical_generation": {
+      "status": "generated\u2014requires review after changes",
+      "reflectors": [
+        {
+          "name": "SurfaceDetail_LowBeamReflector",
+          "quads": 768
+        },
+        {
+          "name": "SurfaceDetail_LowBeamReflector.001",
+          "quads": 768
+        },
+        {
+          "name": "SurfaceDetail_LowBeamReflector.002",
+          "quads": 768
+        },
+        {
+          "name": "SurfaceDetail_LowBeamReflector.003",
+          "quads": 768
+        },
+        {
+          "name": "SurfaceDetail_LowBeamReflector.004",
+          "quads": 768
+        },
+        {
+          "name": "SurfaceDetail_LowBeamReflector.005",
+          "quads": 768
+        }
+      ],
+      "combined_rear_lamps": [
+        "SurfaceDetail_RearCombined_l",
+        "SurfaceDetail_RearCombined_r"
+      ],
+      "removed_baked_reflections": [
+        "indicator_lf",
+        "indicator_rf",
+        "foglight_l",
+        "foglight_r",
+        "front_position_l",
+        "front_position_r"
+      ],
+      "outer_reflectors": [
+        "turn_indicat_l_indicator lf_0",
+        "turn_indicat_r_indicator rf_0"
+      ]
+    },
+    "saved_material_validation": {
+      "M_wheels_6": {
+        "attributes": "MaterialExpressionMakeMaterialAttributes",
+        "coat": 0.3499999940395355,
+        "coat_roughness": 0.1599999964237213
+      },
+      "M_Model3Paint": {
+        "attributes": "MaterialExpressionMakeMaterialAttributes",
+        "coat": 1.0,
+        "coat_roughness": 0.07999999821186066
+      },
+      "SurfaceDetail_Seat_Leather_white_0_Normal": {
+        "normal_compression": "<TextureCompressionSettings.TC_NORMALMAP: 1>"
+      },
+      "SurfaceDetail_movsteer_1_0_0_Normal": {
+        "normal_compression": "<TextureCompressionSettings.TC_NORMALMAP: 1>"
+      },
+      "low_beam_intensity": 50000.0,
+      "rear_position_intensity": 250.0,
+      "rear_diffuse_node": "MaterialExpressionConstant3Vector",
+      "reflector_flutes_normal": "/Game/Carla/Static/Car/4Wheeled/TeslaModel3UE58/Textures/T_SurfaceDetail_ReflectorFlutes_Normal.T_SurfaceDetail_ReflectorFlutes_Normal",
+      "light_parameters": {
+        "light_night": [
+          "Interior",
+          "LightIntensity",
+          "Metallic",
+          "Roughness",
+          "Specular"
+        ],
+        "front_position_l": [
+          "LightIntensity",
+          "Metallic",
+          "Position",
+          "Roughness",
+          "Specular"
+        ],
+        "front_position_r": [
+          "LightIntensity",
+          "Metallic",
+          "Position",
+          "Roughness",
+          "Specular"
+        ],
+        "left_front_light": [
+          "High Beam",
+          "LightIntensity",
+          "Low Beam",
+          "Metallic",
+          "Roughness",
+          "Specular"
+        ],
+        "right_front_light": [
+          "High Beam",
+          "LightIntensity",
+          "Low Beam",
+          "Metallic",
+          "Roughness",
+          "Specular"
+        ],
+        "reverse_indicator_l": [
+          "Left Blinker",
+          "LightIntensity",
+          "Metallic",
+          "Reverse",
+          "Roughness",
+          "Specular"
+        ],
+        "reverse_indicator_r": [
+          "LightIntensity",
+          "Metallic",
+          "Reverse",
+          "Right Blinker",
+          "Roughness",
+          "Specular"
+        ]
+      },
+      "authored_lights": [
+        {
+          "name": "Model3_Low_Beam_R_GEN_VARIABLE",
+          "tags": [
+            "Carla.Light.Low Beam"
+          ],
+          "pitch": -3.0,
+          "roll": 0.0,
+          "intensity": 500000.0
+        },
+        {
+          "name": "Model3_Interior_Roof_GEN_VARIABLE",
+          "tags": [
+            "Carla.Light.Interior"
+          ],
+          "pitch": 0.0,
+          "roll": 0.0,
+          "intensity": 20.0
+        },
+        {
+          "name": "Model3_Fog_R_GEN_VARIABLE",
+          "tags": [
+            "Carla.Light.Fog"
+          ],
+          "pitch": -6.0,
+          "roll": 0.0,
+          "intensity": 120000.0
+        },
+        {
+          "name": "Model3_Fog_L_GEN_VARIABLE",
+          "tags": [
+            "Carla.Light.Fog"
+          ],
+          "pitch": -6.0,
+          "roll": 0.0,
+          "intensity": 120000.0
+        },
+        {
+          "name": "Model3_High_Beam_R_GEN_VARIABLE",
+          "tags": [
+            "Carla.Light.High Beam"
+          ],
+          "pitch": 0.0,
+          "roll": 0.0,
+          "intensity": 1000000.0
+        },
+        {
+          "name": "Model3_High_Beam_L_GEN_VARIABLE",
+          "tags": [
+            "Carla.Light.High Beam"
+          ],
+          "pitch": 0.0,
+          "roll": 0.0,
+          "intensity": 1000000.0
+        },
+        {
+          "name": "Model3_Low_Beam_L_GEN_VARIABLE",
+          "tags": [
+            "Carla.Light.Low Beam"
+          ],
+          "pitch": -3.0,
+          "roll": 0.0,
+          "intensity": 500000.0
+        }
+      ],
+      "lcd_diffuse_node": "MaterialExpressionConstant3Vector",
+      "display_luminance": 1200.0,
+      "status": "passed"
+    },
+    "camera_review": {
+      "front": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-front.png",
+        "frame": 4907
+      },
+      "headlight": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-headlight.png",
+        "frame": 4942
+      },
+      "rear": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-rear.png",
+        "frame": 4977
+      },
+      "glass": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-glass.png",
+        "frame": 5012
+      },
+      "cabin": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-cabin.png",
+        "frame": 5047
+      },
+      "driver": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-driver.png",
+        "frame": 5082
+      },
+      "mirror": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-mirror.png",
+        "frame": 5117
+      },
+      "steered": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-steered.png",
+        "frame": 5182
+      },
+      "door": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-door.png",
+        "frame": 5247
+      },
+      "lights-off": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-lights-off.png",
+        "frame": 5462
+      },
+      "lights-on": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-lights-on.png",
+        "frame": 5497
+      },
+      "rear-on": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-rear-on.png",
+        "frame": 5532
+      }
+    },
+    "light_state_review": {
+      "audit-front-off": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-front-off.png",
+        "frame": 2664,
+        "requested_state": "NONE",
+        "observed_state": "NONE"
+      },
+      "audit-front-Position": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-front-Position.png",
+        "frame": 2699,
+        "requested_state": "Position",
+        "observed_state": "Position"
+      },
+      "audit-front-LowBeam": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-front-LowBeam.png",
+        "frame": 5741,
+        "requested_state": "LowBeam",
+        "observed_state": "LowBeam"
+      },
+      "audit-front-HighBeam": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-front-HighBeam.png",
+        "frame": 5776,
+        "requested_state": "HighBeam",
+        "observed_state": "HighBeam"
+      },
+      "audit-front-Fog": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-front-Fog.png",
+        "frame": 5811,
+        "requested_state": "Fog",
+        "observed_state": "Fog"
+      },
+      "audit-front-Interior": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-front-Interior.png",
+        "frame": 2839,
+        "requested_state": "Interior",
+        "observed_state": "Interior"
+      },
+      "audit-front-Brake": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-front-Brake.png",
+        "frame": 2874,
+        "requested_state": "Brake",
+        "observed_state": "Brake"
+      },
+      "audit-front-Reverse": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-front-Reverse.png",
+        "frame": 2909,
+        "requested_state": "Reverse",
+        "observed_state": "Reverse"
+      },
+      "audit-front-LeftBlinker": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-front-LeftBlinker.png",
+        "frame": 2944,
+        "requested_state": "LeftBlinker",
+        "observed_state": "LeftBlinker"
+      },
+      "audit-front-RightBlinker": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-front-RightBlinker.png",
+        "frame": 2979,
+        "requested_state": "RightBlinker",
+        "observed_state": "RightBlinker"
+      },
+      "audit-rear-off": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-off.png",
+        "frame": 420,
+        "requested_state": "NONE",
+        "observed_state": "NONE"
+      },
+      "audit-rear-Position": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-Position.png",
+        "frame": 3049,
+        "requested_state": "Position",
+        "observed_state": "Position"
+      },
+      "audit-rear-LowBeam": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-LowBeam.png",
+        "frame": 3084,
+        "requested_state": "LowBeam",
+        "observed_state": "LowBeam"
+      },
+      "audit-rear-HighBeam": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-HighBeam.png",
+        "frame": 3119,
+        "requested_state": "HighBeam",
+        "observed_state": "HighBeam"
+      },
+      "audit-rear-Fog": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-Fog.png",
+        "frame": 3154,
+        "requested_state": "Fog",
+        "observed_state": "Fog"
+      },
+      "audit-rear-Interior": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-Interior.png",
+        "frame": 3189,
+        "requested_state": "Interior",
+        "observed_state": "Interior"
+      },
+      "audit-rear-Brake": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-Brake.png",
+        "frame": 3224,
+        "requested_state": "Brake",
+        "observed_state": "Brake"
+      },
+      "audit-rear-Reverse": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-Reverse.png",
+        "frame": 455,
+        "requested_state": "Reverse",
+        "observed_state": "Reverse"
+      },
+      "audit-rear-LeftBlinker": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-LeftBlinker.png",
+        "frame": 419,
+        "requested_state": "LeftBlinker",
+        "observed_state": "LeftBlinker"
+      },
+      "audit-rear-RightBlinker": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-RightBlinker.png",
+        "frame": 454,
+        "requested_state": "RightBlinker",
+        "observed_state": "RightBlinker"
+      },
+      "audit-roof-off": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-roof-off.png",
+        "frame": 5846,
+        "requested_state": "NONE",
+        "observed_state": "NONE"
+      },
+      "audit-roof-Position": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-roof-Position.png",
+        "frame": 3399,
+        "requested_state": "Position",
+        "observed_state": "Position"
+      },
+      "audit-roof-LowBeam": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-roof-LowBeam.png",
+        "frame": 3434,
+        "requested_state": "LowBeam",
+        "observed_state": "LowBeam"
+      },
+      "audit-roof-HighBeam": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-roof-HighBeam.png",
+        "frame": 5881,
+        "requested_state": "HighBeam",
+        "observed_state": "HighBeam"
+      },
+      "audit-roof-Fog": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-roof-Fog.png",
+        "frame": 3504,
+        "requested_state": "Fog",
+        "observed_state": "Fog"
+      },
+      "audit-roof-Interior": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-roof-Interior.png",
+        "frame": 5916,
+        "requested_state": "Interior",
+        "observed_state": "Interior"
+      },
+      "audit-roof-Brake": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-roof-Brake.png",
+        "frame": 3574,
+        "requested_state": "Brake",
+        "observed_state": "Brake"
+      },
+      "audit-roof-Reverse": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-roof-Reverse.png",
+        "frame": 3609,
+        "requested_state": "Reverse",
+        "observed_state": "Reverse"
+      },
+      "audit-roof-LeftBlinker": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-roof-LeftBlinker.png",
+        "frame": 3644,
+        "requested_state": "LeftBlinker",
+        "observed_state": "LeftBlinker"
+      },
+      "audit-roof-RightBlinker": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-roof-RightBlinker.png",
+        "frame": 3679,
+        "requested_state": "RightBlinker",
+        "observed_state": "RightBlinker"
+      },
+      "audit-road-off": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-road-off.png",
+        "frame": 5951,
+        "requested_state": "NONE",
+        "observed_state": "NONE"
+      },
+      "audit-road-Position": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-road-Position.png",
+        "frame": 3749,
+        "requested_state": "Position",
+        "observed_state": "Position"
+      },
+      "audit-road-LowBeam": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-road-LowBeam.png",
+        "frame": 5986,
+        "requested_state": "LowBeam",
+        "observed_state": "LowBeam"
+      },
+      "audit-road-HighBeam": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-road-HighBeam.png",
+        "frame": 6021,
+        "requested_state": "HighBeam",
+        "observed_state": "HighBeam"
+      },
+      "audit-road-Fog": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-road-Fog.png",
+        "frame": 6056,
+        "requested_state": "Fog",
+        "observed_state": "Fog"
+      },
+      "audit-road-Interior": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-road-Interior.png",
+        "frame": 3889,
+        "requested_state": "Interior",
+        "observed_state": "Interior"
+      },
+      "audit-road-Brake": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-road-Brake.png",
+        "frame": 3924,
+        "requested_state": "Brake",
+        "observed_state": "Brake"
+      },
+      "audit-road-Reverse": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-road-Reverse.png",
+        "frame": 3959,
+        "requested_state": "Reverse",
+        "observed_state": "Reverse"
+      },
+      "audit-road-LeftBlinker": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-road-LeftBlinker.png",
+        "frame": 3994,
+        "requested_state": "LeftBlinker",
+        "observed_state": "LeftBlinker"
+      },
+      "audit-road-RightBlinker": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-road-RightBlinker.png",
+        "frame": 4029,
+        "requested_state": "RightBlinker",
+        "observed_state": "RightBlinker"
+      },
+      "audit-rear-right-off": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-right-off.png",
+        "frame": 525,
+        "requested_state": "NONE",
+        "observed_state": "NONE"
+      },
+      "audit-rear-right-Reverse": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-right-Reverse.png",
+        "frame": 560,
+        "requested_state": "Reverse",
+        "observed_state": "Reverse"
+      },
+      "audit-rear-right-LeftBlinker": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-right-LeftBlinker.png",
+        "frame": 489,
+        "requested_state": "LeftBlinker",
+        "observed_state": "LeftBlinker"
+      },
+      "audit-rear-right-RightBlinker": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-right-RightBlinker.png",
+        "frame": 524,
+        "requested_state": "RightBlinker",
+        "observed_state": "RightBlinker"
+      },
+      "audit-rear-lens-off": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-lens-off.png",
+        "frame": 265995,
+        "requested_state": "NONE",
+        "observed_state": "NONE"
+      },
+      "audit-rear-lens-Reverse": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-lens-Reverse.png",
+        "frame": 266030,
+        "requested_state": "Reverse",
+        "observed_state": "Reverse"
+      },
+      "audit-rear-lens-LeftBlinker": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-lens-LeftBlinker.png",
+        "frame": 1034,
+        "requested_state": "LeftBlinker",
+        "observed_state": "LeftBlinker"
+      },
+      "audit-rear-lens-RightBlinker": {
+        "file": "/home/german/Projects/CARLA_SOURCE/artifacts/tesla-model3/renders/upgrade-carla-audit-rear-lens-RightBlinker.png",
+        "frame": 266100,
+        "requested_state": "RightBlinker",
+        "observed_state": "RightBlinker"
+      }
+    },
+    "light_image_metrics": {
+      "road-LowBeam": {
+        "roi": [
+          300,
+          400,
+          1500,
+          650
+        ],
+        "mean_rgb_delta": 6.915694444444444,
+        "mean_absolute_rgb_delta": 7.018814444444445
+      },
+      "road-HighBeam": {
+        "roi": [
+          300,
+          400,
+          1500,
+          650
+        ],
+        "mean_rgb_delta": 8.18657111111111,
+        "mean_absolute_rgb_delta": 8.312882222222223
+      },
+      "road-Fog": {
+        "roi": [
+          300,
+          400,
+          1500,
+          650
+        ],
+        "mean_rgb_delta": 1.7318977777777778,
+        "mean_absolute_rgb_delta": 1.7982733333333334
+      },
+      "roof-HighBeam": {
+        "roi": [
+          450,
+          440,
+          1150,
+          530
+        ],
+        "mean_rgb_delta": -0.7777777777777778,
+        "mean_absolute_rgb_delta": 0.8165291005291005
+      },
+      "roof-Interior": {
+        "roi": [
+          450,
+          440,
+          1150,
+          530
+        ],
+        "mean_rgb_delta": 83.89503174603175,
+        "mean_absolute_rgb_delta": 83.89503174603175
+      }
+    },
+    "final_check_log": "artifacts/tesla-model3/audit/final-upgrade-checks.log",
+    "native_build_log": "artifacts/tesla-model3/audit/native-light-groups-build.log",
+    "limits": [
+      "Photograph-guided reconstruction, not OEM CAD",
+      "Artist-calibrated emission and beam cones, not measured photometry",
+      "Static display artwork and renderer-based mirror reflections",
+      "Full wheel geometry at distance; fleet optimization not validated"
+    ],
+    "rear_final_evidence": [
+      "audit/rear-accepted-camera.log",
+      "audit/rear-graph-camera.log",
+      "audit/rear-final-materials.log"
+    ]
+  }
+}

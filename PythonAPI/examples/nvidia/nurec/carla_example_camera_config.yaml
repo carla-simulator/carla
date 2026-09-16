@@ -1,0 +1,81 @@
+- camera_params:
+    camera_type: ftheta
+    resolution_w: 3848
+    resolution_h: 2168
+    logical_id: "camera_front_wide_120fov"
+    principal_point_x: 1927.038818
+    principal_point_y: 1099.315796
+    pixeldist_to_angle_poly: [
+        0.0,
+        0.00053944590035826,
+        2.46685849525363e-09,
+        2.6309770334576e-12,
+        -2.44043479933324e-16
+    ]
+    reference_poly: 1
+    angle_to_pixeldist_poly: []
+    max_angle: pi
+    shutter_type: ROLLING_TOP_TO_BOTTOM
+  translation: [0, -1.749, 1.47]
+  rotation: [0, 90, 0]
+
+- camera_params:
+    camera_type: ftheta
+    resolution_w: 3848
+    resolution_h: 2168
+    logical_id: "camera_front_wide_120fov"
+    principal_point_x: 1927.038818
+    principal_point_y: 1099.315796
+    pixeldist_to_angle_poly: [
+        0.0,
+        0.00053944590035826,
+        2.46685849525363e-09,
+        2.6309770334576e-12,
+        -2.44043479933324e-16
+    ]
+    reference_poly: 1
+    angle_to_pixeldist_poly: []
+    max_angle: pi
+    shutter_type: ROLLING_TOP_TO_BOTTOM
+  translation: [0, 0, 1.47]
+  rotation: [0, 0, 0]
+
+- camera_params:
+    camera_type: ftheta
+    resolution_w: 3848
+    resolution_h: 2168
+    logical_id: "camera_front_wide_120fov"
+    principal_point_x: 1927.038818
+    principal_point_y: 1099.315796
+    pixeldist_to_angle_poly: [
+        0.0,
+        0.00053944590035826,
+        2.46685849525363e-09,
+        2.6309770334576e-12,
+        -2.44043479933324e-16
+    ]
+    reference_poly: 1
+    angle_to_pixeldist_poly: []
+    max_angle: pi
+    shutter_type: ROLLING_TOP_TO_BOTTOM
+  translation: [0, 1.749, 1.47]
+  rotation: [ 0, -90, 0]
+
+
+# === Simple CARLA sensors ===
+- sensor: rgb
+  attributes:
+    image_size_x: 481
+    image_size_y: 271
+    fov: 90
+  transform:
+    location:
+      x: 0
+      y: 0
+      z: 10         # left side looking to center
+    rotation:
+      pitch: -90
+      yaw: 0
+      roll: 0
+
+

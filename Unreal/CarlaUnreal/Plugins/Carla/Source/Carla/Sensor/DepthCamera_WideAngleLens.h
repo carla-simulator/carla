@@ -27,4 +27,11 @@ public:
 protected:
 
   void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds) override;
+
+  /// Pixels outside the lens' calibrated range decode to the far plane
+  /// (all channels 255 -> 1000 m) rather than to zero depth.
+  FLinearColor GetInvalidPixelColor() const override
+  {
+    return FLinearColor(1.0F, 1.0F, 1.0F, 1.0F);
+  }
 };

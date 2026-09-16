@@ -1,0 +1,2628 @@
+{
+ "version": 1,
+ "generated": "2026-08-27T20:04:27Z",
+ "cosmos_transfer25_version": "v1.5.4",
+ "images": {
+  "nano": {
+   "artifacts": [
+    "cosmos3-nano",
+    "qwen3guard",
+    "cosmos1-guardrail",
+    "transfer25-edge",
+    "transfer25-depth",
+    "transfer25-blur",
+    "transfer25-seg",
+    "transfer25-av-multiview",
+    "predict25-av-multiview",
+    "reason1-7b",
+    "predict25-tokenizer",
+    "guardrail1",
+    "siglip2",
+    "siglip-so400m",
+    "sam2-hiera-large",
+    "grounding-dino-base",
+    "video-depth-anything-small"
+   ],
+   "bytes": 103727732425
+  },
+  "full": {
+   "artifacts": [
+    "cosmos3-nano",
+    "cosmos3-super",
+    "qwen3guard",
+    "cosmos1-guardrail",
+    "transfer25-edge",
+    "transfer25-depth",
+    "transfer25-blur",
+    "transfer25-seg",
+    "transfer25-av-multiview",
+    "predict25-av-multiview",
+    "reason1-7b",
+    "predict25-tokenizer",
+    "guardrail1",
+    "siglip2",
+    "siglip-so400m",
+    "sam2-hiera-large",
+    "grounding-dino-base",
+    "video-depth-anything-small"
+   ],
+   "bytes": 236380288556
+  }
+ },
+ "artifacts": [
+  {
+   "id": "cosmos3-nano",
+   "repo": "nvidia/Cosmos3-Nano",
+   "revision": "411f42a8fdfb8c5b2583cb8786e0938f49796eaa",
+   "include": [
+    "*"
+   ],
+   "exclude": [
+    "assets/*",
+    "images/*"
+   ],
+   "used_by": [
+    "cosmos3"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": false,
+   "note": "pinned to the 2026-08 release we validated the download path with (main moved on 2026-08-27); transformer, vae, sound_tokenizer, scheduler, text_tokenizer, vision_encoder (not loaded, kept for safety)",
+   "requested_revision": "411f42a8fdfb8c5b2583cb8786e0938f49796eaa",
+   "bytes": 34922466953,
+   "files": [
+    {
+     "path": ".gitattributes",
+     "size": 2357,
+     "sha256": null,
+     "blob_id": "e8e2f7bb807f20b9209054b51137c342f0a4ad93"
+    },
+    {
+     "path": "BIAS.md",
+     "size": 4720,
+     "sha256": null,
+     "blob_id": "0a30eddc040494e434e27b3e39aaf62ce907b3c6"
+    },
+    {
+     "path": "EXPLAINABILITY.md",
+     "size": 3189,
+     "sha256": null,
+     "blob_id": "f11cb8f3552fbc6fa450de8fed0e34b5e841fce0"
+    },
+    {
+     "path": "PRIVACY.md",
+     "size": 1215,
+     "sha256": null,
+     "blob_id": "7e2709dadccdd7983634f50e426168d09e3d4970"
+    },
+    {
+     "path": "README.md",
+     "size": 43813,
+     "sha256": null,
+     "blob_id": "ced641ca1a6b716f95b92420697e547c62535706"
+    },
+    {
+     "path": "SAFETY.md",
+     "size": 3677,
+     "sha256": null,
+     "blob_id": "44e1a5a58e8a5e76b8f0a6a415be45e59ba9f270"
+    },
+    {
+     "path": "chat_template.json",
+     "size": 5499,
+     "sha256": null,
+     "blob_id": "1081bacf1af7c7c6de4a585ce02cd0fd34e382da"
+    },
+    {
+     "path": "checkpoint.json",
+     "size": 2,
+     "sha256": null,
+     "blob_id": "9e26dfeeb6e641a33dae4961196235bdb965b21b"
+    },
+    {
+     "path": "config.json",
+     "size": 8166,
+     "sha256": null,
+     "blob_id": "b14065777d18b6403b9c04b4c0879ff76e3614d6"
+    },
+    {
+     "path": "generation_config.json",
+     "size": 269,
+     "sha256": null,
+     "blob_id": "e116347d7ef42621c7a5957f82c015c38d939c1f"
+    },
+    {
+     "path": "merges.txt",
+     "size": 1671839,
+     "sha256": null,
+     "blob_id": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0"
+    },
+    {
+     "path": "model.safetensors.index.json",
+     "size": 112969,
+     "sha256": null,
+     "blob_id": "8957c1dadb4e6b13c8b025f51c46ff8e1c8414d4"
+    },
+    {
+     "path": "model_index.json",
+     "size": 502,
+     "sha256": null,
+     "blob_id": "4b71212960a18124680abb8772304134c9bd6577"
+    },
+    {
+     "path": "modular_model_index.json",
+     "size": 1667,
+     "sha256": null,
+     "blob_id": "f359c406e914816dbae0e0496b01feeb433ed726"
+    },
+    {
+     "path": "preprocessor_config.json",
+     "size": 390,
+     "sha256": null,
+     "blob_id": "2ea84a437d448ff71b08df68fdd949d5cc4ebb64"
+    },
+    {
+     "path": "scheduler/scheduler_config.json",
+     "size": 884,
+     "sha256": null,
+     "blob_id": "feea3f81b41ab07ca305b3e78e54d6929c624b11"
+    },
+    {
+     "path": "sound_tokenizer/config.json",
+     "size": 1310,
+     "sha256": null,
+     "blob_id": "88842cb6d7115f0c0a90ddc20ed5e933e672ba74"
+    },
+    {
+     "path": "sound_tokenizer/diffusion_pytorch_model.safetensors",
+     "size": 1985176840,
+     "sha256": "a4b6da5975bf89f6853fe589ad4752d281ac79fbdfad52ea90537fa080b4b9c2",
+     "blob_id": "81a5a0646491c6398d6871dea8f5789ce05d7455"
+    },
+    {
+     "path": "text_tokenizer/added_tokens.json",
+     "size": 707,
+     "sha256": null,
+     "blob_id": "b54f9135e44c1e81047e8d05cb027af8bc039eed"
+    },
+    {
+     "path": "text_tokenizer/chat_template.jinja",
+     "size": 5292,
+     "sha256": null,
+     "blob_id": "124386803f142761528f710e77ae483f5f8c4fc4"
+    },
+    {
+     "path": "text_tokenizer/merges.txt",
+     "size": 1671853,
+     "sha256": null,
+     "blob_id": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7"
+    },
+    {
+     "path": "text_tokenizer/special_tokens_map.json",
+     "size": 613,
+     "sha256": null,
+     "blob_id": "ac23c0aaa2434523c494330aeb79c58395378103"
+    },
+    {
+     "path": "text_tokenizer/tokenizer.json",
+     "size": 11422654,
+     "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+     "blob_id": "cd71f61a15a522601badb3dc960d800d9cb3766c"
+    },
+    {
+     "path": "text_tokenizer/tokenizer_config.json",
+     "size": 5404,
+     "sha256": null,
+     "blob_id": "1d4fba2de0e94e8f97e08927cfb7d084160c2880"
+    },
+    {
+     "path": "text_tokenizer/vocab.json",
+     "size": 2776833,
+     "sha256": null,
+     "blob_id": "4783fe10ac3adce15ac8f358ef5462739852c569"
+    },
+    {
+     "path": "tokenizer.json",
+     "size": 7032403,
+     "sha256": null,
+     "blob_id": "c6cc1014128b19d1fc46b1d30a23e3b1d35db421"
+    },
+    {
+     "path": "tokenizer_config.json",
+     "size": 10868,
+     "sha256": null,
+     "blob_id": "d3d3763207692c78780f4bf42d4dadf49a5c8012"
+    },
+    {
+     "path": "transformer/config.json",
+     "size": 1383,
+     "sha256": null,
+     "blob_id": "c54d151af5170f5a09b02abf03fda3c169f948e8"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00001-of-00007.safetensors",
+     "size": 4902257280,
+     "sha256": "7d0f718198cac14cf323d58568c78aa1290b4bd1dcced6481624b5b9c6d70dc2",
+     "blob_id": "f250d7e62fdb53741f7651c093f9d9915dc18bce"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00002-of-00007.safetensors",
+     "size": 4999863656,
+     "sha256": "7e6e7d270c193a58a1aec0cbc89f6f5afcaef6e3b951d86b0a432244c449e34e",
+     "blob_id": "289c45150f5981aab953de5052d8f74bed56d766"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00003-of-00007.safetensors",
+     "size": 4932719448,
+     "sha256": "15d08936149a7e77c6668e5b1cd47dc92a35e33741f0090d619045b66da9ff8d",
+     "blob_id": "0db08e495cf639eeb4e483b29133708ae80b77ae"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00004-of-00007.safetensors",
+     "size": 4983084656,
+     "sha256": "02cebbb557bced701eb825901e1de5f86d2e1feb49cb9a8d1fb7d1b878fdb31b",
+     "blob_id": "69dd66b4ded70f111a73d79a0648a57be502de14"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00005-of-00007.safetensors",
+     "size": 4949498576,
+     "sha256": "a5e3edd742b8f1fcf27a3eb3878c67dfcb0e6881588fa35deef503d640ea69d1",
+     "blob_id": "b26c7d22858723de9f55680f86eeb9f083e30e34"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00006-of-00007.safetensors",
+     "size": 4261644464,
+     "sha256": "1bb99750f7ab4a47f8b0403a87aa43fefc9648660609ab2ace4cab361b957cd0",
+     "blob_id": "96167422dceee26ad9681d929f0380ced5142486"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00007-of-00007.safetensors",
+     "size": 1318361208,
+     "sha256": "3f159bc8b82477adde771ae9e4f54f76564e02844a2fc6267903bd745111d7f6",
+     "blob_id": "31fc71e980afc62ddc647fadf88e1cbda4a8e754"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model.safetensors.index.json",
+     "size": 78854,
+     "sha256": null,
+     "blob_id": "345e95ec0f8233be7b2bfdb9ac8237d98712c6fb"
+    },
+    {
+     "path": "vae/config.json",
+     "size": 1750,
+     "sha256": null,
+     "blob_id": "3391d3657e5f8fcc79ef83ac720e7f07a572dee4"
+    },
+    {
+     "path": "vae/diffusion_pytorch_model.safetensors",
+     "size": 1409400600,
+     "sha256": "230496cb59ff85bc9c040487737c4062480cb61c71e697b197b4c30142f2a0da",
+     "blob_id": "0c71384d6c6985e8a26aa317b48a8155d6e36bcd"
+    },
+    {
+     "path": "video_preprocessor_config.json",
+     "size": 385,
+     "sha256": null,
+     "blob_id": "3ba673a5ad7d4d13f54155ecd38b2a94a6dac8fe"
+    },
+    {
+     "path": "vision_encoder/config.json",
+     "size": 509,
+     "sha256": null,
+     "blob_id": "ec35ac92c69f6d32034f90ae4984b41b878092e9"
+    },
+    {
+     "path": "vision_encoder/model.safetensors",
+     "size": 1152811416,
+     "sha256": "b0c0f719fcf5f2cdadb676701477c236020713657976592ad046583707a6a95a",
+     "blob_id": "378a66df82d2872c4acec5c336dcfc593396c31a"
+    },
+    {
+     "path": "vocab.json",
+     "size": 2776833,
+     "sha256": null,
+     "blob_id": "4783fe10ac3adce15ac8f358ef5462739852c569"
+    }
+   ]
+  },
+  {
+   "id": "cosmos3-super",
+   "repo": "nvidia/Cosmos3-Super",
+   "revision": "fe77b66696d645f663b8f27e942b3b43e4629e23",
+   "include": [
+    "*"
+   ],
+   "exclude": [
+    "assets/*",
+    "images/*"
+   ],
+   "used_by": [
+    "cosmos3"
+   ],
+   "images": [
+    "full"
+   ],
+   "gated": false,
+   "note": "",
+   "requested_revision": "main",
+   "bytes": 132652556131,
+   "files": [
+    {
+     "path": ".gitattributes",
+     "size": 2000,
+     "sha256": null,
+     "blob_id": "d2f5d7ef62000d5e5856d495ccb16c4bbe6f1d7a"
+    },
+    {
+     "path": "BIAS.md",
+     "size": 4720,
+     "sha256": null,
+     "blob_id": "0a30eddc040494e434e27b3e39aaf62ce907b3c6"
+    },
+    {
+     "path": "EXPLAINABILITY.md",
+     "size": 3189,
+     "sha256": null,
+     "blob_id": "f11cb8f3552fbc6fa450de8fed0e34b5e841fce0"
+    },
+    {
+     "path": "PRIVACY.md",
+     "size": 1215,
+     "sha256": null,
+     "blob_id": "7e2709dadccdd7983634f50e426168d09e3d4970"
+    },
+    {
+     "path": "README.md",
+     "size": 43819,
+     "sha256": null,
+     "blob_id": "3e7cd52f6246958020084a4aadc512bcdaba978e"
+    },
+    {
+     "path": "SAFETY.md",
+     "size": 3677,
+     "sha256": null,
+     "blob_id": "44e1a5a58e8a5e76b8f0a6a415be45e59ba9f270"
+    },
+    {
+     "path": "chat_template.json",
+     "size": 5499,
+     "sha256": null,
+     "blob_id": "1081bacf1af7c7c6de4a585ce02cd0fd34e382da"
+    },
+    {
+     "path": "checkpoint.json",
+     "size": 2,
+     "sha256": null,
+     "blob_id": "9e26dfeeb6e641a33dae4961196235bdb965b21b"
+    },
+    {
+     "path": "config.json",
+     "size": 8168,
+     "sha256": null,
+     "blob_id": "e92edbb936e059cdda8a407682c58a8c4112f522"
+    },
+    {
+     "path": "generation_config.json",
+     "size": 269,
+     "sha256": null,
+     "blob_id": "7bb37933d2d86e4ceaabcc6540be989658f238e9"
+    },
+    {
+     "path": "merges.txt",
+     "size": 1671839,
+     "sha256": null,
+     "blob_id": "20024bfe7c83998e9aeaf98a0cd6a2ce6306c2f0"
+    },
+    {
+     "path": "model.safetensors.index.json",
+     "size": 180394,
+     "sha256": null,
+     "blob_id": "ff5524443c8e421f0cbbbe69421a6aecccd6d267"
+    },
+    {
+     "path": "model_index.json",
+     "size": 502,
+     "sha256": null,
+     "blob_id": "4b71212960a18124680abb8772304134c9bd6577"
+    },
+    {
+     "path": "modular_model_index.json",
+     "size": 1672,
+     "sha256": null,
+     "blob_id": "84f247b79b5e549d49de7c49359088fa4d8f1ea4"
+    },
+    {
+     "path": "preprocessor_config.json",
+     "size": 390,
+     "sha256": null,
+     "blob_id": "2ea84a437d448ff71b08df68fdd949d5cc4ebb64"
+    },
+    {
+     "path": "scheduler/scheduler_config.json",
+     "size": 884,
+     "sha256": null,
+     "blob_id": "feea3f81b41ab07ca305b3e78e54d6929c624b11"
+    },
+    {
+     "path": "sound_tokenizer/config.json",
+     "size": 1310,
+     "sha256": null,
+     "blob_id": "88842cb6d7115f0c0a90ddc20ed5e933e672ba74"
+    },
+    {
+     "path": "sound_tokenizer/diffusion_pytorch_model.safetensors",
+     "size": 1985176840,
+     "sha256": "a4b6da5975bf89f6853fe589ad4752d281ac79fbdfad52ea90537fa080b4b9c2",
+     "blob_id": "81a5a0646491c6398d6871dea8f5789ce05d7455"
+    },
+    {
+     "path": "text_tokenizer/added_tokens.json",
+     "size": 707,
+     "sha256": null,
+     "blob_id": "b54f9135e44c1e81047e8d05cb027af8bc039eed"
+    },
+    {
+     "path": "text_tokenizer/chat_template.jinja",
+     "size": 5292,
+     "sha256": null,
+     "blob_id": "124386803f142761528f710e77ae483f5f8c4fc4"
+    },
+    {
+     "path": "text_tokenizer/merges.txt",
+     "size": 1671853,
+     "sha256": null,
+     "blob_id": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7"
+    },
+    {
+     "path": "text_tokenizer/special_tokens_map.json",
+     "size": 613,
+     "sha256": null,
+     "blob_id": "ac23c0aaa2434523c494330aeb79c58395378103"
+    },
+    {
+     "path": "text_tokenizer/tokenizer.json",
+     "size": 11422654,
+     "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+     "blob_id": "cd71f61a15a522601badb3dc960d800d9cb3766c"
+    },
+    {
+     "path": "text_tokenizer/tokenizer_config.json",
+     "size": 5404,
+     "sha256": null,
+     "blob_id": "1d4fba2de0e94e8f97e08927cfb7d084160c2880"
+    },
+    {
+     "path": "text_tokenizer/vocab.json",
+     "size": 2776833,
+     "sha256": null,
+     "blob_id": "4783fe10ac3adce15ac8f358ef5462739852c569"
+    },
+    {
+     "path": "tokenizer.json",
+     "size": 7032403,
+     "sha256": null,
+     "blob_id": "c6cc1014128b19d1fc46b1d30a23e3b1d35db421"
+    },
+    {
+     "path": "tokenizer_config.json",
+     "size": 10868,
+     "sha256": null,
+     "blob_id": "d3d3763207692c78780f4bf42d4dadf49a5c8012"
+    },
+    {
+     "path": "transformer/config.json",
+     "size": 1383,
+     "sha256": null,
+     "blob_id": "0f8932ecc3a4f36dd7d840cef128268817ef4a35"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00001-of-00027.safetensors",
+     "size": 4932307384,
+     "sha256": "040b6a68556e302edfbd3fd1de30d4e082cb9e5358ff7b32f9af114f9b1c9495",
+     "blob_id": "3985687652e42b3c37a50e56a6f93e1a1e453130"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00002-of-00027.safetensors",
+     "size": 4802610968,
+     "sha256": "9265a9560c16c9ad6f276c8ff6f131ed7a51d75c3a367f6d2b4002b6671a4f2b",
+     "blob_id": "dcc286dfaa3f0f584b35424584ee2fcf18afd88b"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00003-of-00027.safetensors",
+     "size": 4949368056,
+     "sha256": "ee9b6045dcfc8d660357700d88f31f6c0a0044c91d4fe9d70e0ff7b90afc9fd8",
+     "blob_id": "01e77cbde398fbafce259988448df697cfa856fe"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00004-of-00027.safetensors",
+     "size": 4802610968,
+     "sha256": "8498cf61451d5f62a57f08d8c9b6ea8749b983a3f260f52420ee6040db67de25",
+     "blob_id": "161197b690af6b1523604fca6d9ce266ecaf1755"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00005-of-00027.safetensors",
+     "size": 4949368096,
+     "sha256": "f4034914f825adcbda188584466a6c54ad8782bef1a88bafae117cf2d8aba2ab",
+     "blob_id": "6ed66c4f75eb88e02ff3be113e3981971fd0d948"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00006-of-00027.safetensors",
+     "size": 4802611024,
+     "sha256": "dafd8015fcc8d7ae92c2246f5e742b1d7b5cfc098a6b64df6688312ec81555ab",
+     "blob_id": "f05ebc886135c6eedcb33c43368131515944afff"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00007-of-00027.safetensors",
+     "size": 4949368104,
+     "sha256": "4dc5a5e25a96a549b02ccc7f0d08a088c3eb93fa98651f83481d6822e9d2a534",
+     "blob_id": "658d3cb15fec27fcf400670a4dc8c1fe669d8abd"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00008-of-00027.safetensors",
+     "size": 4802611024,
+     "sha256": "25047e0b860d6ce87bb6e870578b3378d7697ae5e1c8a22068e0cd1bbc20ce9c",
+     "blob_id": "34dbf9c39fd00caa910bf285d1a809c9dbe3db6e"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00009-of-00027.safetensors",
+     "size": 4949368104,
+     "sha256": "8739245a796a498a6fab185d51632df3f4b15f37608573e270dddeb4ed4d9405",
+     "blob_id": "8eaf13fdaeafcc7ea7fe4bb2cdc5a7a9602cdc9f"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00010-of-00027.safetensors",
+     "size": 4802611024,
+     "sha256": "8e965d40a5c7c07d98c2554d48702a71d597c1ec31085cd10eee1d03f690310c",
+     "blob_id": "47126dce7cee3f0ddb5a1d96c34f36f16a59b7cb"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00011-of-00027.safetensors",
+     "size": 4949368104,
+     "sha256": "bfb8aad1c0ac92d312e74c337e8506c9f274b72a914239ea6141194fd3d1438d",
+     "blob_id": "394cfb3f45557ce569e4bf5e0a751bc3f0861719"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00012-of-00027.safetensors",
+     "size": 4802611024,
+     "sha256": "406e8c99fffef5e16bf4f2b3a512ccc347731227ad79a194d4ba875b95c8c6b9",
+     "blob_id": "95f0936d6a020aa9c88adb9fac61ba536557a1e6"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00013-of-00027.safetensors",
+     "size": 4949368104,
+     "sha256": "5acf40b6d7c3c97ceea8d53610588dfe3ecaac887321b3e8f38d8ea42a0d6375",
+     "blob_id": "f86cb6c219e3ae85bfe8bb5ea9cf1544f30629ac"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00014-of-00027.safetensors",
+     "size": 4802611024,
+     "sha256": "53c6562ab14a6158d1ac138760e85c3d1c3f4384e795cff6602731060259a5c5",
+     "blob_id": "bf3329a330b57dd15d24e8f2364272f41bf82258"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00015-of-00027.safetensors",
+     "size": 4949368104,
+     "sha256": "b2208de377650a5afeec7e5d223ed5499459dd94b52aecb42df624f3be546a9f",
+     "blob_id": "5c0d851e981cd59d45a2e8643d33d2d39b537c7c"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00016-of-00027.safetensors",
+     "size": 4802611024,
+     "sha256": "987b6f80205f9b453996a1bbd8fc3fdca8ba6f59bd07675026cd37b7864929e8",
+     "blob_id": "5b6c597ecf5910dd897ffa29a17f11d3bbf8bfde"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00017-of-00027.safetensors",
+     "size": 4949368104,
+     "sha256": "d42b165e6c1448f415041b8d6a22a18b5a042e2714c90ba6ecafa1b460364234",
+     "blob_id": "19cebe56f29e7ca641b975cf43bd36d10d672033"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00018-of-00027.safetensors",
+     "size": 4802611024,
+     "sha256": "8fe9c759b0b1126cc00671156959723bb427fd57288a293630ddb08a4e21c7af",
+     "blob_id": "e6f1e5f92bad620e4b12a494f0cb8b57dbbbfc8a"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00019-of-00027.safetensors",
+     "size": 4949368104,
+     "sha256": "89e3b04c0c39696a5b021d3a02a5816a5a82152f2b4fb53090734a79524a5a94",
+     "blob_id": "3d8209a681507d1bf5b5dd339fbda5985d001928"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00020-of-00027.safetensors",
+     "size": 4802611024,
+     "sha256": "dd3f05dd899f97d682b850b9039db0ddd01fd63447581297c5f4299fe9ae7799",
+     "blob_id": "6e85dc1af1f1915aac17ca507bf2df0df2ab3c59"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00021-of-00027.safetensors",
+     "size": 4949368104,
+     "sha256": "aafea01a1401f8335d20211ee3a7edc0453ce8943c6aeb36cc424f3b678ebdd8",
+     "blob_id": "2bb165cff98b8005e7b8bb7b52af53bc0192ecae"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00022-of-00027.safetensors",
+     "size": 4802611024,
+     "sha256": "42e4f9fbec544450716558e15a1437a359cd9f54e4d50106c2c061c1055564dd",
+     "blob_id": "de3b5192fb840b8e4730bebe730477291c31067a"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00023-of-00027.safetensors",
+     "size": 4949368104,
+     "sha256": "41bf7a3c335767b869054b17374e094b062a6600c9912d8e03af886edb56a80b",
+     "blob_id": "38f589abf8fac1423cd593f93860e70c3dd3cf22"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00024-of-00027.safetensors",
+     "size": 4802611024,
+     "sha256": "9827a447db76396743e464c4088dca865a96819657c79dd367d8da53cf61e6a9",
+     "blob_id": "6912d23dc91b8373aafeb0c4b90aceb8bdaf7c96"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00025-of-00027.safetensors",
+     "size": 4949368104,
+     "sha256": "a794c4f14a4442d49bdff78e33f10d611cc228c3e4b9383f4384972a7a71d430",
+     "blob_id": "550d898414f98f1c5abeb7875e668dcd587b1cb7"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00026-of-00027.safetensors",
+     "size": 4425141960,
+     "sha256": "dc50ce14f37ddcd5fc5ea411d4ce475b11774bb8b013199a08341c0acc1e2273",
+     "blob_id": "413fb9f01f567c183711308c8669c8b00456d2d9"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model-00027-of-00027.safetensors",
+     "size": 1658435704,
+     "sha256": "11351800a5a691b6ddc17fc5d6376a459a853771814ed3b2533736fe9e9c6934",
+     "blob_id": "1eec5351e42256dabcbd00e4c623aa2a5f15277f"
+    },
+    {
+     "path": "transformer/diffusion_pytorch_model.safetensors.index.json",
+     "size": 138887,
+     "sha256": null,
+     "blob_id": "bba5ebb71bd573b0ea5e42cf2b4ff7127f436c81"
+    },
+    {
+     "path": "vae/config.json",
+     "size": 1750,
+     "sha256": null,
+     "blob_id": "3391d3657e5f8fcc79ef83ac720e7f07a572dee4"
+    },
+    {
+     "path": "vae/diffusion_pytorch_model.safetensors",
+     "size": 1409400600,
+     "sha256": "230496cb59ff85bc9c040487737c4062480cb61c71e697b197b4c30142f2a0da",
+     "blob_id": "0c71384d6c6985e8a26aa317b48a8155d6e36bcd"
+    },
+    {
+     "path": "video_preprocessor_config.json",
+     "size": 385,
+     "sha256": null,
+     "blob_id": "3ba673a5ad7d4d13f54155ecd38b2a94a6dac8fe"
+    },
+    {
+     "path": "vision_encoder/config.json",
+     "size": 509,
+     "sha256": null,
+     "blob_id": "f672b783a0f2b206e3867fe01004038d2bbbb4d7"
+    },
+    {
+     "path": "vision_encoder/model.safetensors",
+     "size": 1190568352,
+     "sha256": "3bdba32cec6f4f570a150f0a0e5ec60115fda49ab15873ecc86473a3da824b1e",
+     "blob_id": "b60cc1438eac4f185f1c07ad0d247b18edead8e3"
+    },
+    {
+     "path": "vocab.json",
+     "size": 2776833,
+     "sha256": null,
+     "blob_id": "4783fe10ac3adce15ac8f358ef5462739852c569"
+    }
+   ]
+  },
+  {
+   "id": "qwen3guard",
+   "repo": "Qwen/Qwen3Guard-Gen-0.6B",
+   "revision": "fada3b2f655b89601929198343c94cd2f64d93cc",
+   "include": [
+    "*"
+   ],
+   "exclude": [
+    "*.onnx",
+    "*.msgpack",
+    "*.h5",
+    "*.ot",
+    "*.tflite",
+    "*.gguf",
+    ".gitattributes"
+   ],
+   "used_by": [
+    "cosmos3",
+    "transfer25",
+    "transfer25_av"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": false,
+   "note": "text guardrail for Cosmos 3 (cosmos-guardrail) and Transfer 2.5",
+   "requested_revision": "main",
+   "bytes": 1519203341,
+   "files": [
+    {
+     "path": "LICENSE",
+     "size": 11343,
+     "sha256": null,
+     "blob_id": "6634c8cc3133b3848ec74b9f275acaaa1ea618ab"
+    },
+    {
+     "path": "README.md",
+     "size": 9841,
+     "sha256": null,
+     "blob_id": "1abd0e6c85c31b21bd14ef747bca37f05aa879ae"
+    },
+    {
+     "path": "config.json",
+     "size": 727,
+     "sha256": null,
+     "blob_id": "eea5267ae100b197dd81cb1823d797bb18ebbc13"
+    },
+    {
+     "path": "generation_config.json",
+     "size": 161,
+     "sha256": null,
+     "blob_id": "76b0c0e82f202eb40ea0ed77df1afb0ac6a4cd4e"
+    },
+    {
+     "path": "merges.txt",
+     "size": 1671853,
+     "sha256": null,
+     "blob_id": "31349551d90c7606f325fe0f11bbb8bd5fa0d7c7"
+    },
+    {
+     "path": "model.safetensors",
+     "size": 1503300328,
+     "sha256": "4f3ce47ebd968cddb67de08d8764f8ede7c410a7d1fb9e08145a4c7a2f2e5c0f",
+     "blob_id": "618b2033e734e1f5ed6446d796575b712c7012ae"
+    },
+    {
+     "path": "tokenizer.json",
+     "size": 11422654,
+     "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+     "blob_id": "cd71f61a15a522601badb3dc960d800d9cb3766c"
+    },
+    {
+     "path": "tokenizer_config.json",
+     "size": 9601,
+     "sha256": null,
+     "blob_id": "409e51f8f3d4316361001ea16127a4aa7db80903"
+    },
+    {
+     "path": "vocab.json",
+     "size": 2776833,
+     "sha256": null,
+     "blob_id": "4783fe10ac3adce15ac8f358ef5462739852c569"
+    }
+   ]
+  },
+  {
+   "id": "cosmos1-guardrail",
+   "repo": "nvidia/Cosmos-1.0-Guardrail",
+   "revision": "cf03c0395fac8c4de386c0bdab12cc4fc8d66362",
+   "include": [
+    "blocklist/*",
+    "blocklist/**",
+    "face_blur_filter/Resnet50_Final.pth",
+    "README.md"
+   ],
+   "exclude": [],
+   "used_by": [
+    "cosmos3"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": true,
+   "note": "what cosmos-guardrail 0.3.1 loads; aegis/ and video filter unused",
+   "requested_revision": "main",
+   "bytes": 135332091,
+   "files": [
+    {
+     "path": "README.md",
+     "size": 20897,
+     "sha256": null,
+     "blob_id": "f6069ab1b5f170242a6d25ca27070250f98c68ec"
+    },
+    {
+     "path": "blocklist/custom/branding",
+     "size": 1781,
+     "sha256": null,
+     "blob_id": "3d50816050c00f5809859e373814bf145d54e726"
+    },
+    {
+     "path": "blocklist/custom/gore",
+     "size": 557,
+     "sha256": null,
+     "blob_id": "32a9901ba1a146d66ef8d36e159b824e2a370255"
+    },
+    {
+     "path": "blocklist/custom/notable",
+     "size": 1262,
+     "sha256": null,
+     "blob_id": "2072105df66622c9d4c447e4bf8d0b68edc6fef7"
+    },
+    {
+     "path": "blocklist/custom/violence",
+     "size": 40,
+     "sha256": null,
+     "blob_id": "aac990d82841810c2f4715f45941ffb5f049fce0"
+    },
+    {
+     "path": "blocklist/exact_match/blocked",
+     "size": 16244,
+     "sha256": null,
+     "blob_id": "afe42ba895ce360be441f7a0be3ec62c17f781d7"
+    },
+    {
+     "path": "blocklist/nltk_data/corpora/wordnet.zip",
+     "size": 10775600,
+     "sha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+     "blob_id": "777df8872a4b420dc0324d7656f5b04270c54110"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab.zip",
+     "size": 4259017,
+     "sha256": "c2b16c23d738effbdc5789d7aa601397c13ba2819bf922fb904687f3f16657ed",
+     "blob_id": "4a87f17d81051d17228a05815e7c01985af692d4"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/README",
+     "size": 8574,
+     "sha256": null,
+     "blob_id": "49a637cb19b758348071ed19edb29d33ab435b33"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/czech/abbrev_types.txt",
+     "size": 462,
+     "sha256": null,
+     "blob_id": "addf93e5edbb1dd14b83f3f67d272efaef348ad5"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/czech/collocations.tab",
+     "size": 1390,
+     "sha256": null,
+     "blob_id": "a455cf31496e566cd3330255ce4e158e28f7ab4c"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/czech/ortho_context.tab",
+     "size": 684150,
+     "sha256": null,
+     "blob_id": "9142df3336b3dc0eb60d2a70b8ee005449763ebd"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/czech/sent_starters.txt",
+     "size": 352,
+     "sha256": null,
+     "blob_id": "c81aad32035c6b0a7f90756515d885510ed01bd0"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/danish/abbrev_types.txt",
+     "size": 1130,
+     "sha256": null,
+     "blob_id": "6fc09d901dade22248c02d631753175f083ac704"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/danish/collocations.tab",
+     "size": 1693,
+     "sha256": null,
+     "blob_id": "97f345f7de214797e17e1989c072883e7391bacd"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/danish/ortho_context.tab",
+     "size": 743835,
+     "sha256": null,
+     "blob_id": "fb97fe71815d42542632401c1ecc104be05ea57a"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/danish/sent_starters.txt",
+     "size": 415,
+     "sha256": null,
+     "blob_id": "5458df91e0297ace2b480dbeeb836913c30284db"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/dutch/abbrev_types.txt",
+     "size": 434,
+     "sha256": null,
+     "blob_id": "4afec6e3301699597ac153e12bb89a581d2f12db"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/dutch/collocations.tab",
+     "size": 623,
+     "sha256": null,
+     "blob_id": "501015d123edc9a42c71265fc894a8d9c912e559"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/dutch/ortho_context.tab",
+     "size": 428403,
+     "sha256": null,
+     "blob_id": "6a37ed3f0f93afa9b221bdfa00b7d7c5fa12ee63"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/dutch/sent_starters.txt",
+     "size": 310,
+     "sha256": null,
+     "blob_id": "e246bfdfbe6927bb1760439a9e7f938391f9627e"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/english/abbrev_types.txt",
+     "size": 619,
+     "sha256": null,
+     "blob_id": "b38862b8c3126ae4ad3468f3377a7b2708554c17"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/english/collocations.tab",
+     "size": 594,
+     "sha256": null,
+     "blob_id": "c7032b7fc96369e446570185d07cd195c7bd5381"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/english/ortho_context.tab",
+     "size": 236303,
+     "sha256": null,
+     "blob_id": "a33a364852803f59d77bd6b8433801dbf7581439"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/english/sent_starters.txt",
+     "size": 241,
+     "sha256": null,
+     "blob_id": "478fd8334c5508d522b87a2ba7c06c38f56bf7b6"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/estonian/abbrev_types.txt",
+     "size": 224,
+     "sha256": null,
+     "blob_id": "c68ab829b328223e471cc6d309c635b6d174160d"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/estonian/collocations.tab",
+     "size": 1825,
+     "sha256": null,
+     "blob_id": "c7a6177a5f0e1faf0622d8c29f6dfca5acf0d8cf"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/estonian/ortho_context.tab",
+     "size": 936992,
+     "sha256": null,
+     "blob_id": "97d74744c4d2698558fc520d0727c0f0ac248e8c"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/estonian/sent_starters.txt",
+     "size": 679,
+     "sha256": null,
+     "blob_id": "7221cccbd6b8b6134d98dd0bc7f463131c952e9e"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/finnish/abbrev_types.txt",
+     "size": 484,
+     "sha256": null,
+     "blob_id": "8cb53791b1dbcd6bd43b3b0165bc7061b9169dd9"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/finnish/collocations.tab",
+     "size": 3046,
+     "sha256": null,
+     "blob_id": "f383d5ab44e8270ef923d2c9fe4bd8b776d75546"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/finnish/ortho_context.tab",
+     "size": 1189717,
+     "sha256": null,
+     "blob_id": "2fe97158665831ec291127243dc3a2c90f32d9a1"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/finnish/sent_starters.txt",
+     "size": 810,
+     "sha256": null,
+     "blob_id": "38abd4895899c25b4bc0b86d7cc8ee918a161991"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/french/abbrev_types.txt",
+     "size": 245,
+     "sha256": null,
+     "blob_id": "82ef7f3f807dd77610d4e300975636c993fc3b0f"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/french/collocations.tab",
+     "size": 334,
+     "sha256": null,
+     "blob_id": "1fe9b9b04b2d53669d2b64247394a987bf5419c5"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/french/ortho_context.tab",
+     "size": 334275,
+     "sha256": null,
+     "blob_id": "56ce056b0421f7f2250f48e8539ce97b68d720fd"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/french/sent_starters.txt",
+     "size": 233,
+     "sha256": null,
+     "blob_id": "bd9f4d3357910f0a4dd2102152cdada4fd8e4722"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/german/abbrev_types.txt",
+     "size": 246,
+     "sha256": null,
+     "blob_id": "5acff23e04e7c48e3634427694699ee14ec794cb"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/german/collocations.tab",
+     "size": 527,
+     "sha256": null,
+     "blob_id": "e85c5004e1e9c4da8c614c6cb82a11cb0aeb5c96"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/german/ortho_context.tab",
+     "size": 943500,
+     "sha256": null,
+     "blob_id": "52ff05ac9c2b8bfa18c806e3ce2172f3f1686a45"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/german/sent_starters.txt",
+     "size": 762,
+     "sha256": null,
+     "blob_id": "1240eca4f27964cc87a93b1042a09dd14964e2f3"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/greek/abbrev_types.txt",
+     "size": 570,
+     "sha256": null,
+     "blob_id": "4d8a0a06b7255e8a19c7bf5b3d31e1e1a5e01280"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/greek/collocations.tab",
+     "size": 118,
+     "sha256": null,
+     "blob_id": "2821727f8c461e648765a6a9c0de3e7d40b65764"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/greek/ortho_context.tab",
+     "size": 632838,
+     "sha256": null,
+     "blob_id": "e61e774def6742368f3887b3c5ff632f556a959b"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/greek/sent_starters.txt",
+     "size": 567,
+     "sha256": null,
+     "blob_id": "4099aed6cb48bcedf2225a9ee856393efacb213b"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/italian/abbrev_types.txt",
+     "size": 534,
+     "sha256": null,
+     "blob_id": "13beb19640c04a4dfab2690763bc4825397d5d94"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/italian/collocations.tab",
+     "size": 53,
+     "sha256": null,
+     "blob_id": "4fd846baeaa42f84954e2090182d8fbcc8ce22bc"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/italian/ortho_context.tab",
+     "size": 369822,
+     "sha256": null,
+     "blob_id": "7b5c93d0b20ef6bab588227f1e04688ec17195bc"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/italian/sent_starters.txt",
+     "size": 208,
+     "sha256": null,
+     "blob_id": "dcadf042465b7aca1cde274e2533054fb2f7dd2a"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/norwegian/abbrev_types.txt",
+     "size": 496,
+     "sha256": null,
+     "blob_id": "3379948584ae4641073a1d345d1b0533ea1d37a4"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/norwegian/collocations.tab",
+     "size": 869,
+     "sha256": null,
+     "blob_id": "7888449542c1fcff60c886fa88fd8c06c11a0ca7"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/norwegian/ortho_context.tab",
+     "size": 734070,
+     "sha256": null,
+     "blob_id": "a9b7dd2386855537c256a373e0e2386f678150b4"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/norwegian/sent_starters.txt",
+     "size": 378,
+     "sha256": null,
+     "blob_id": "70b191b1a4ca5d33a5688edd2d19bcf56aa19ba3"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/polish/abbrev_types.txt",
+     "size": 973,
+     "sha256": null,
+     "blob_id": "d0c7a93629d95e96140d6d079ff2127f5f586f70"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/polish/collocations.tab",
+     "size": 1101,
+     "sha256": null,
+     "blob_id": "1f4d291321dbd96e9f889c8230829da8f7d260fe"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/polish/ortho_context.tab",
+     "size": 1066577,
+     "sha256": null,
+     "blob_id": "8c25887cf8384d5f3eb9e445ad27e48e00e0ba93"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/polish/sent_starters.txt",
+     "size": 518,
+     "sha256": null,
+     "blob_id": "0a2158412aea35ae88429c8c193d2d8bfb97135e"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/portuguese/abbrev_types.txt",
+     "size": 301,
+     "sha256": null,
+     "blob_id": "5840329505a37a244585c9cc39bc0b7a6b631e91"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/portuguese/collocations.tab",
+     "size": 64,
+     "sha256": null,
+     "blob_id": "6355d4107725f98ef9e71e4f218acde01ecaa513"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/portuguese/ortho_context.tab",
+     "size": 363124,
+     "sha256": null,
+     "blob_id": "e07acba10f239ebf5646fa61fe309595f6b656f2"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/portuguese/sent_starters.txt",
+     "size": 209,
+     "sha256": null,
+     "blob_id": "494fe8b279928cb0e339419343ae60d8c71caffe"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/russian/abbrev_types.txt",
+     "size": 15363,
+     "sha256": null,
+     "blob_id": "3bb31653f49b45888c8e6afe270e3ed5f5bb705d"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/russian/collocations.tab",
+     "size": 0,
+     "sha256": null,
+     "blob_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/russian/ortho_context.tab",
+     "size": 10,
+     "sha256": null,
+     "blob_id": "9b18d6eb42882f1d53bf4508aaf938e0345687cc"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/russian/sent_starters.txt",
+     "size": 0,
+     "sha256": null,
+     "blob_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/slovene/abbrev_types.txt",
+     "size": 280,
+     "sha256": null,
+     "blob_id": "72a14996107556cef68138d8f23b4b067513f8c5"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/slovene/collocations.tab",
+     "size": 1131,
+     "sha256": null,
+     "blob_id": "04cb9ebbd81eb4dc5fdc50f40de59f0a55bcf46f"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/slovene/ortho_context.tab",
+     "size": 445129,
+     "sha256": null,
+     "blob_id": "7add76758ebffb3f5fa5a6ef04e308d77d5685df"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/slovene/sent_starters.txt",
+     "size": 358,
+     "sha256": null,
+     "blob_id": "56ee9c75b0e7f9de6f4cb2d077eb0a486a308e39"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/spanish/abbrev_types.txt",
+     "size": 234,
+     "sha256": null,
+     "blob_id": "2668423af54897cc0554e25152006a8d5525dc53"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/spanish/collocations.tab",
+     "size": 74,
+     "sha256": null,
+     "blob_id": "a3c8e4ac4403e95e089c2bff7e804bbdbe555f8b"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/spanish/ortho_context.tab",
+     "size": 337707,
+     "sha256": null,
+     "blob_id": "4387d2779a83bda1cc0b8f8b47e60169bcee39d2"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/spanish/sent_starters.txt",
+     "size": 289,
+     "sha256": null,
+     "blob_id": "25cd8a03e9e166ac3b7f4f1acf0ede6da7d236c9"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/swedish/abbrev_types.txt",
+     "size": 208,
+     "sha256": null,
+     "blob_id": "79b12d4cf6df9afb7210033a3a76306ce9d24180"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/swedish/collocations.tab",
+     "size": 136,
+     "sha256": null,
+     "blob_id": "6565db7d5e853cc5d5e1d838f6063f89bc7f0d1a"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/swedish/ortho_context.tab",
+     "size": 616904,
+     "sha256": null,
+     "blob_id": "ebec8ccc3a1b6d62e18d990cd3232588d7394ae5"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/swedish/sent_starters.txt",
+     "size": 295,
+     "sha256": null,
+     "blob_id": "5ccb1347ea11616c9f3a7a6fdb25c2e60a86db25"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/turkish/abbrev_types.txt",
+     "size": 424,
+     "sha256": null,
+     "blob_id": "f610cc126be9b94ea685bab4f2ad7324075f80d7"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/turkish/collocations.tab",
+     "size": 273,
+     "sha256": null,
+     "blob_id": "c6305c90cd18f20a2e776f5ed87093ff21b815c0"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/turkish/ortho_context.tab",
+     "size": 642682,
+     "sha256": null,
+     "blob_id": "9efceb5d33bc9c8a99f608a010f3944aec42e7d2"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/turkish/sent_starters.txt",
+     "size": 613,
+     "sha256": null,
+     "blob_id": "67c39626372185a21983d7bba64abc8123da4195"
+    },
+    {
+     "path": "blocklist/whitelist/fuzzy_blocked",
+     "size": 5,
+     "sha256": null,
+     "blob_id": "42b509ed5ed5f2471f7aafeba5b3bdc32dd8b65c"
+    },
+    {
+     "path": "face_blur_filter/Resnet50_Final.pth",
+     "size": 109497761,
+     "sha256": "6d1de9c2944f2ccddca5f5e010ea5ae64a39845a86311af6fdf30841b0a5a16d",
+     "blob_id": "16546738ce0a00a9fd47585e0fc52744d31cc117"
+    }
+   ]
+  },
+  {
+   "id": "transfer25-edge",
+   "repo": "nvidia/Cosmos-Transfer2.5-2B",
+   "revision": "b67b64abda3801a9aceddbff2bdb86126c06db74",
+   "include": [
+    "general/edge/61f5694b-0ad5-4ecd-8ad7-c8545627d125_ema_bf16.pt"
+   ],
+   "exclude": [],
+   "used_by": [
+    "transfer25"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": true,
+   "note": "",
+   "requested_revision": "b67b64abda3801a9aceddbff2bdb86126c06db74",
+   "bytes": 5526488249,
+   "files": [
+    {
+     "path": "general/edge/61f5694b-0ad5-4ecd-8ad7-c8545627d125_ema_bf16.pt",
+     "size": 5526488249,
+     "sha256": "ee74369129d65e399699cf12d56b343ffd2fb75e56615fe6a225606ef184fa27",
+     "blob_id": "f853e9751bd7f748b40147f001e9edad724416bf"
+    }
+   ]
+  },
+  {
+   "id": "transfer25-depth",
+   "repo": "nvidia/Cosmos-Transfer2.5-2B",
+   "revision": "dea7737ca29dd8d9086413c6dc5724b8250a0bb4",
+   "include": [
+    "general/depth/626e6618-bfcd-4d9a-a077-1409e2ce353f_ema_bf16.pt"
+   ],
+   "exclude": [],
+   "used_by": [
+    "transfer25"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": true,
+   "note": "",
+   "requested_revision": "dea7737ca29dd8d9086413c6dc5724b8250a0bb4",
+   "bytes": 5526488249,
+   "files": [
+    {
+     "path": "general/depth/626e6618-bfcd-4d9a-a077-1409e2ce353f_ema_bf16.pt",
+     "size": 5526488249,
+     "sha256": "6b75300d71804e6d7d9d2b4dbddaab0aebbbd686042e4b021f7f2c9e939ff9ad",
+     "blob_id": "6f758d7a8510aa7b1f94e7441094aefc3dfc8ab3"
+    }
+   ]
+  },
+  {
+   "id": "transfer25-blur",
+   "repo": "nvidia/Cosmos-Transfer2.5-2B",
+   "revision": "eb5325b77d358944da58a690157dd2b8071bbf85",
+   "include": [
+    "general/blur/ba2f44f2-c726-4fe7-949f-597069d9b91c_ema_bf16.pt"
+   ],
+   "exclude": [],
+   "used_by": [
+    "transfer25"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": true,
+   "note": "",
+   "requested_revision": "eb5325b77d358944da58a690157dd2b8071bbf85",
+   "bytes": 5526488249,
+   "files": [
+    {
+     "path": "general/blur/ba2f44f2-c726-4fe7-949f-597069d9b91c_ema_bf16.pt",
+     "size": 5526488249,
+     "sha256": "82ede02539a4b141dd24f99a0c46be75705b4b7472da5bf72a0cdf33f6ad9ac8",
+     "blob_id": "13a5422020fb9f284c384cc35434df471ad70fac"
+    }
+   ]
+  },
+  {
+   "id": "transfer25-seg",
+   "repo": "nvidia/Cosmos-Transfer2.5-2B",
+   "revision": "23057a4167b89de89a4a397fdbf3887994d115eb",
+   "include": [
+    "general/seg/5136ef49-6d8d-42e8-8abf-7dac722a304a_ema_bf16.pt"
+   ],
+   "exclude": [],
+   "used_by": [
+    "transfer25"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": true,
+   "note": "",
+   "requested_revision": "23057a4167b89de89a4a397fdbf3887994d115eb",
+   "bytes": 5526488249,
+   "files": [
+    {
+     "path": "general/seg/5136ef49-6d8d-42e8-8abf-7dac722a304a_ema_bf16.pt",
+     "size": 5526488249,
+     "sha256": "5ceb2f46b0d4c64b2cb2b6d977a34b50c881ae1bae9d5deca4868d82ae63da20",
+     "blob_id": "5bd5a9a527aba6438452bb19867e388beaf7813d"
+    }
+   ]
+  },
+  {
+   "id": "transfer25-av-multiview",
+   "repo": "nvidia/Cosmos-Transfer2.5-2B",
+   "revision": "00c591edab119e8a6ca06e6e091351a04ce0ecc9",
+   "include": [
+    "auto/multiview/4ecc66e9-df19-4aed-9802-0d11e057287a_ema_bf16.pt"
+   ],
+   "exclude": [],
+   "used_by": [
+    "transfer25_av"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": true,
+   "note": "",
+   "requested_revision": "00c591edab119e8a6ca06e6e091351a04ce0ecc9",
+   "bytes": 4776276290,
+   "files": [
+    {
+     "path": "auto/multiview/4ecc66e9-df19-4aed-9802-0d11e057287a_ema_bf16.pt",
+     "size": 4776276290,
+     "sha256": "bdf483deeca8e03c5a3c6b4c0bdefdec6600224572037da45b473e6a8bcb0129",
+     "blob_id": "c09093009590508104823fa8b1c1bdc278cdffdd"
+    }
+   ]
+  },
+  {
+   "id": "predict25-av-multiview",
+   "repo": "nvidia/Cosmos-Predict2.5-2B",
+   "revision": "865baf084d4c9e850eac59a021277d5a9b9e8b63",
+   "include": [
+    "auto/multiview/524af350-2e43-496c-8590-3646ae1325da_ema_bf16.pt"
+   ],
+   "exclude": [],
+   "used_by": [
+    "transfer25_av"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": true,
+   "note": "Predict 2.5 multiview base the Transfer 2.5 multiview control model is loaded on top of (cosmos_oss/checkpoints_predict2.py; found on the first GPU run)",
+   "requested_revision": "865baf084d4c9e850eac59a021277d5a9b9e8b63",
+   "bytes": 4118707017,
+   "files": [
+    {
+     "path": "auto/multiview/524af350-2e43-496c-8590-3646ae1325da_ema_bf16.pt",
+     "size": 4118707017,
+     "sha256": "9a90bcc00d20ad562bf2fa7a1590730e767f431a383f3ee0c0d09df2420a88a3",
+     "blob_id": "3e5b94784bbd3b480032a9262c5f3c300d6697b9"
+    }
+   ]
+  },
+  {
+   "id": "reason1-7b",
+   "repo": "nvidia/Cosmos-Reason1-7B",
+   "revision": "3210bec0495fdc7a8d3dbb8d58da5711eab4b423",
+   "include": [
+    "*"
+   ],
+   "exclude": [
+    "*.onnx",
+    "*.msgpack",
+    "*.h5",
+    "*.ot",
+    "*.tflite",
+    "*.gguf",
+    ".gitattributes"
+   ],
+   "used_by": [
+    "transfer25",
+    "transfer25_av"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": false,
+   "note": "Transfer 2.5 text encoder",
+   "requested_revision": "3210bec0495fdc7a8d3dbb8d58da5711eab4b423",
+   "bytes": 16591538377,
+   "files": [
+    {
+     "path": "README.md",
+     "size": 25877,
+     "sha256": null,
+     "blob_id": "fba130f4794812d694d8ea9a54f2e0e9c0f3614a"
+    },
+    {
+     "path": "chat_template.json",
+     "size": 1050,
+     "sha256": null,
+     "blob_id": "732bd68bc5427d1fb6c06a59b3bf2456b2155d24"
+    },
+    {
+     "path": "config.json",
+     "size": 1374,
+     "sha256": null,
+     "blob_id": "58ee12a9fb3d8708a1e41e49cb9aa5ac5017b6a6"
+    },
+    {
+     "path": "generation_config.json",
+     "size": 217,
+     "sha256": null,
+     "blob_id": "01e339a7fa288f08f11d56c7baf5c887237e1c5a"
+    },
+    {
+     "path": "model-00001-of-00004.safetensors",
+     "size": 4968243304,
+     "sha256": "c28404126221997ae8eb70a23b919c96174d42e35ae1d537e0c95093d50b359a",
+     "blob_id": "328e1e6f5a4e547929daeda7be3384dc02fd363f"
+    },
+    {
+     "path": "model-00002-of-00004.safetensors",
+     "size": 4991495816,
+     "sha256": "f281081864c10992d3e03874c79d526c84407e049d713747f19eb9c79cd16db3",
+     "blob_id": "567b0b7436eef947f9385ec0b0bc3317ce3b539a"
+    },
+    {
+     "path": "model-00003-of-00004.safetensors",
+     "size": 4932751040,
+     "sha256": "3bb3a62a8d0e83c6283388ddea99395b221f908f9181b8edd0f7f91d02260ebe",
+     "blob_id": "6319a161eff5a1f430f652ada3248a616dd387b3"
+    },
+    {
+     "path": "model-00004-of-00004.safetensors",
+     "size": 1691924384,
+     "sha256": "91bacbe1ad798e16daa05023b4e4bec70b53c8cd7d757db86c5bc76c4e0bbf15",
+     "blob_id": "845b6868362b48867b4bb8a2f31884223256ecee"
+    },
+    {
+     "path": "model.safetensors.index.json",
+     "size": 57618,
+     "sha256": null,
+     "blob_id": "0581f2e84b28e50710380865674b39403dab90de"
+    },
+    {
+     "path": "preprocessor_config.json",
+     "size": 350,
+     "sha256": null,
+     "blob_id": "7f3b746825e5eef53ed8ed57a91df9e86ee62c0a"
+    },
+    {
+     "path": "tokenizer.json",
+     "size": 7031645,
+     "sha256": null,
+     "blob_id": "443909a61d429dff23010e5bddd28ff530edda00"
+    },
+    {
+     "path": "tokenizer_config.json",
+     "size": 5702,
+     "sha256": null,
+     "blob_id": "91684ea3dc135a7d815e2c932054ce88c1aab41f"
+    }
+   ]
+  },
+  {
+   "id": "predict25-tokenizer",
+   "repo": "nvidia/Cosmos-Predict2.5-2B",
+   "revision": "f176dc95b4a70f53ce01c4b302851595e7322b00",
+   "include": [
+    "tokenizer.pth"
+   ],
+   "exclude": [],
+   "used_by": [
+    "transfer25",
+    "transfer25_av"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": true,
+   "note": "Wan2.1 VAE",
+   "requested_revision": "f176dc95b4a70f53ce01c4b302851595e7322b00",
+   "bytes": 507609880,
+   "files": [
+    {
+     "path": "tokenizer.pth",
+     "size": 507609880,
+     "sha256": "38071ab59bd94681c686fa51d75a1968f64e470262043be31f7a094e442fd981",
+     "blob_id": "5897fba405232a6b07a947d6188d19a8e050ccfb"
+    }
+   ]
+  },
+  {
+   "id": "guardrail1",
+   "repo": "nvidia/Cosmos-Guardrail1",
+   "revision": "d6d4bfa899a71454a700907664f3e88f503950cf",
+   "include": [
+    "*"
+   ],
+   "exclude": [
+    ".gitattributes"
+   ],
+   "used_by": [
+    "transfer25",
+    "transfer25_av"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": true,
+   "note": "Transfer 2.5 guardrails: blocklist, RetinaFace face blur, video content safety filter",
+   "requested_revision": "d6d4bfa899a71454a700907664f3e88f503950cf",
+   "bytes": 7171447266,
+   "files": [
+    {
+     "path": "README.md",
+     "size": 20683,
+     "sha256": null,
+     "blob_id": "9a0563bc33e32d81e5400cf3ee8e94220ba3692a"
+    },
+    {
+     "path": "blocklist/custom/blocklist",
+     "size": 3643,
+     "sha256": null,
+     "blob_id": "8f694e654295c5bff6ae30fdb29047d8dba468e0"
+    },
+    {
+     "path": "blocklist/exact_match/blocked",
+     "size": 16158,
+     "sha256": null,
+     "blob_id": "9e62284cb5ed834ee6904a44446a789c4db6d056"
+    },
+    {
+     "path": "blocklist/nltk_data/corpora/wordnet.zip",
+     "size": 10775600,
+     "sha256": "cbda5ea6eef7f36a97a43d4a75f85e07fccbb4f23657d27b4ccbc93e2646ab59",
+     "blob_id": "777df8872a4b420dc0324d7656f5b04270c54110"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab.zip",
+     "size": 4259017,
+     "sha256": "c2b16c23d738effbdc5789d7aa601397c13ba2819bf922fb904687f3f16657ed",
+     "blob_id": "4a87f17d81051d17228a05815e7c01985af692d4"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/README",
+     "size": 8574,
+     "sha256": null,
+     "blob_id": "49a637cb19b758348071ed19edb29d33ab435b33"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/czech/abbrev_types.txt",
+     "size": 462,
+     "sha256": null,
+     "blob_id": "addf93e5edbb1dd14b83f3f67d272efaef348ad5"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/czech/collocations.tab",
+     "size": 1390,
+     "sha256": null,
+     "blob_id": "a455cf31496e566cd3330255ce4e158e28f7ab4c"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/czech/ortho_context.tab",
+     "size": 684150,
+     "sha256": null,
+     "blob_id": "9142df3336b3dc0eb60d2a70b8ee005449763ebd"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/czech/sent_starters.txt",
+     "size": 352,
+     "sha256": null,
+     "blob_id": "c81aad32035c6b0a7f90756515d885510ed01bd0"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/danish/abbrev_types.txt",
+     "size": 1130,
+     "sha256": null,
+     "blob_id": "6fc09d901dade22248c02d631753175f083ac704"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/danish/collocations.tab",
+     "size": 1693,
+     "sha256": null,
+     "blob_id": "97f345f7de214797e17e1989c072883e7391bacd"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/danish/ortho_context.tab",
+     "size": 743835,
+     "sha256": null,
+     "blob_id": "fb97fe71815d42542632401c1ecc104be05ea57a"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/danish/sent_starters.txt",
+     "size": 415,
+     "sha256": null,
+     "blob_id": "5458df91e0297ace2b480dbeeb836913c30284db"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/dutch/abbrev_types.txt",
+     "size": 434,
+     "sha256": null,
+     "blob_id": "4afec6e3301699597ac153e12bb89a581d2f12db"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/dutch/collocations.tab",
+     "size": 623,
+     "sha256": null,
+     "blob_id": "501015d123edc9a42c71265fc894a8d9c912e559"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/dutch/ortho_context.tab",
+     "size": 428403,
+     "sha256": null,
+     "blob_id": "6a37ed3f0f93afa9b221bdfa00b7d7c5fa12ee63"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/dutch/sent_starters.txt",
+     "size": 310,
+     "sha256": null,
+     "blob_id": "e246bfdfbe6927bb1760439a9e7f938391f9627e"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/english/abbrev_types.txt",
+     "size": 619,
+     "sha256": null,
+     "blob_id": "b38862b8c3126ae4ad3468f3377a7b2708554c17"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/english/collocations.tab",
+     "size": 594,
+     "sha256": null,
+     "blob_id": "c7032b7fc96369e446570185d07cd195c7bd5381"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/english/ortho_context.tab",
+     "size": 236303,
+     "sha256": null,
+     "blob_id": "a33a364852803f59d77bd6b8433801dbf7581439"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/english/sent_starters.txt",
+     "size": 241,
+     "sha256": null,
+     "blob_id": "478fd8334c5508d522b87a2ba7c06c38f56bf7b6"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/estonian/abbrev_types.txt",
+     "size": 224,
+     "sha256": null,
+     "blob_id": "c68ab829b328223e471cc6d309c635b6d174160d"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/estonian/collocations.tab",
+     "size": 1825,
+     "sha256": null,
+     "blob_id": "c7a6177a5f0e1faf0622d8c29f6dfca5acf0d8cf"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/estonian/ortho_context.tab",
+     "size": 936992,
+     "sha256": null,
+     "blob_id": "97d74744c4d2698558fc520d0727c0f0ac248e8c"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/estonian/sent_starters.txt",
+     "size": 679,
+     "sha256": null,
+     "blob_id": "7221cccbd6b8b6134d98dd0bc7f463131c952e9e"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/finnish/abbrev_types.txt",
+     "size": 484,
+     "sha256": null,
+     "blob_id": "8cb53791b1dbcd6bd43b3b0165bc7061b9169dd9"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/finnish/collocations.tab",
+     "size": 3046,
+     "sha256": null,
+     "blob_id": "f383d5ab44e8270ef923d2c9fe4bd8b776d75546"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/finnish/ortho_context.tab",
+     "size": 1189717,
+     "sha256": null,
+     "blob_id": "2fe97158665831ec291127243dc3a2c90f32d9a1"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/finnish/sent_starters.txt",
+     "size": 810,
+     "sha256": null,
+     "blob_id": "38abd4895899c25b4bc0b86d7cc8ee918a161991"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/french/abbrev_types.txt",
+     "size": 245,
+     "sha256": null,
+     "blob_id": "82ef7f3f807dd77610d4e300975636c993fc3b0f"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/french/collocations.tab",
+     "size": 334,
+     "sha256": null,
+     "blob_id": "1fe9b9b04b2d53669d2b64247394a987bf5419c5"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/french/ortho_context.tab",
+     "size": 334275,
+     "sha256": null,
+     "blob_id": "56ce056b0421f7f2250f48e8539ce97b68d720fd"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/french/sent_starters.txt",
+     "size": 233,
+     "sha256": null,
+     "blob_id": "bd9f4d3357910f0a4dd2102152cdada4fd8e4722"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/german/abbrev_types.txt",
+     "size": 246,
+     "sha256": null,
+     "blob_id": "5acff23e04e7c48e3634427694699ee14ec794cb"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/german/collocations.tab",
+     "size": 527,
+     "sha256": null,
+     "blob_id": "e85c5004e1e9c4da8c614c6cb82a11cb0aeb5c96"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/german/ortho_context.tab",
+     "size": 943500,
+     "sha256": null,
+     "blob_id": "52ff05ac9c2b8bfa18c806e3ce2172f3f1686a45"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/german/sent_starters.txt",
+     "size": 762,
+     "sha256": null,
+     "blob_id": "1240eca4f27964cc87a93b1042a09dd14964e2f3"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/greek/abbrev_types.txt",
+     "size": 570,
+     "sha256": null,
+     "blob_id": "4d8a0a06b7255e8a19c7bf5b3d31e1e1a5e01280"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/greek/collocations.tab",
+     "size": 118,
+     "sha256": null,
+     "blob_id": "2821727f8c461e648765a6a9c0de3e7d40b65764"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/greek/ortho_context.tab",
+     "size": 632838,
+     "sha256": null,
+     "blob_id": "e61e774def6742368f3887b3c5ff632f556a959b"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/greek/sent_starters.txt",
+     "size": 567,
+     "sha256": null,
+     "blob_id": "4099aed6cb48bcedf2225a9ee856393efacb213b"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/italian/abbrev_types.txt",
+     "size": 534,
+     "sha256": null,
+     "blob_id": "13beb19640c04a4dfab2690763bc4825397d5d94"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/italian/collocations.tab",
+     "size": 53,
+     "sha256": null,
+     "blob_id": "4fd846baeaa42f84954e2090182d8fbcc8ce22bc"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/italian/ortho_context.tab",
+     "size": 369822,
+     "sha256": null,
+     "blob_id": "7b5c93d0b20ef6bab588227f1e04688ec17195bc"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/italian/sent_starters.txt",
+     "size": 208,
+     "sha256": null,
+     "blob_id": "dcadf042465b7aca1cde274e2533054fb2f7dd2a"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/norwegian/abbrev_types.txt",
+     "size": 496,
+     "sha256": null,
+     "blob_id": "3379948584ae4641073a1d345d1b0533ea1d37a4"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/norwegian/collocations.tab",
+     "size": 869,
+     "sha256": null,
+     "blob_id": "7888449542c1fcff60c886fa88fd8c06c11a0ca7"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/norwegian/ortho_context.tab",
+     "size": 734070,
+     "sha256": null,
+     "blob_id": "a9b7dd2386855537c256a373e0e2386f678150b4"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/norwegian/sent_starters.txt",
+     "size": 378,
+     "sha256": null,
+     "blob_id": "70b191b1a4ca5d33a5688edd2d19bcf56aa19ba3"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/polish/abbrev_types.txt",
+     "size": 973,
+     "sha256": null,
+     "blob_id": "d0c7a93629d95e96140d6d079ff2127f5f586f70"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/polish/collocations.tab",
+     "size": 1101,
+     "sha256": null,
+     "blob_id": "1f4d291321dbd96e9f889c8230829da8f7d260fe"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/polish/ortho_context.tab",
+     "size": 1066577,
+     "sha256": null,
+     "blob_id": "8c25887cf8384d5f3eb9e445ad27e48e00e0ba93"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/polish/sent_starters.txt",
+     "size": 518,
+     "sha256": null,
+     "blob_id": "0a2158412aea35ae88429c8c193d2d8bfb97135e"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/portuguese/abbrev_types.txt",
+     "size": 301,
+     "sha256": null,
+     "blob_id": "5840329505a37a244585c9cc39bc0b7a6b631e91"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/portuguese/collocations.tab",
+     "size": 64,
+     "sha256": null,
+     "blob_id": "6355d4107725f98ef9e71e4f218acde01ecaa513"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/portuguese/ortho_context.tab",
+     "size": 363124,
+     "sha256": null,
+     "blob_id": "e07acba10f239ebf5646fa61fe309595f6b656f2"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/portuguese/sent_starters.txt",
+     "size": 209,
+     "sha256": null,
+     "blob_id": "494fe8b279928cb0e339419343ae60d8c71caffe"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/russian/abbrev_types.txt",
+     "size": 15363,
+     "sha256": null,
+     "blob_id": "3bb31653f49b45888c8e6afe270e3ed5f5bb705d"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/russian/collocations.tab",
+     "size": 0,
+     "sha256": null,
+     "blob_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/russian/ortho_context.tab",
+     "size": 10,
+     "sha256": null,
+     "blob_id": "9b18d6eb42882f1d53bf4508aaf938e0345687cc"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/russian/sent_starters.txt",
+     "size": 0,
+     "sha256": null,
+     "blob_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/slovene/abbrev_types.txt",
+     "size": 280,
+     "sha256": null,
+     "blob_id": "72a14996107556cef68138d8f23b4b067513f8c5"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/slovene/collocations.tab",
+     "size": 1131,
+     "sha256": null,
+     "blob_id": "04cb9ebbd81eb4dc5fdc50f40de59f0a55bcf46f"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/slovene/ortho_context.tab",
+     "size": 445129,
+     "sha256": null,
+     "blob_id": "7add76758ebffb3f5fa5a6ef04e308d77d5685df"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/slovene/sent_starters.txt",
+     "size": 358,
+     "sha256": null,
+     "blob_id": "56ee9c75b0e7f9de6f4cb2d077eb0a486a308e39"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/spanish/abbrev_types.txt",
+     "size": 234,
+     "sha256": null,
+     "blob_id": "2668423af54897cc0554e25152006a8d5525dc53"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/spanish/collocations.tab",
+     "size": 74,
+     "sha256": null,
+     "blob_id": "a3c8e4ac4403e95e089c2bff7e804bbdbe555f8b"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/spanish/ortho_context.tab",
+     "size": 337707,
+     "sha256": null,
+     "blob_id": "4387d2779a83bda1cc0b8f8b47e60169bcee39d2"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/spanish/sent_starters.txt",
+     "size": 289,
+     "sha256": null,
+     "blob_id": "25cd8a03e9e166ac3b7f4f1acf0ede6da7d236c9"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/swedish/abbrev_types.txt",
+     "size": 208,
+     "sha256": null,
+     "blob_id": "79b12d4cf6df9afb7210033a3a76306ce9d24180"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/swedish/collocations.tab",
+     "size": 136,
+     "sha256": null,
+     "blob_id": "6565db7d5e853cc5d5e1d838f6063f89bc7f0d1a"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/swedish/ortho_context.tab",
+     "size": 616904,
+     "sha256": null,
+     "blob_id": "ebec8ccc3a1b6d62e18d990cd3232588d7394ae5"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/swedish/sent_starters.txt",
+     "size": 295,
+     "sha256": null,
+     "blob_id": "5ccb1347ea11616c9f3a7a6fdb25c2e60a86db25"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/turkish/abbrev_types.txt",
+     "size": 424,
+     "sha256": null,
+     "blob_id": "f610cc126be9b94ea685bab4f2ad7324075f80d7"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/turkish/collocations.tab",
+     "size": 273,
+     "sha256": null,
+     "blob_id": "c6305c90cd18f20a2e776f5ed87093ff21b815c0"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/turkish/ortho_context.tab",
+     "size": 642682,
+     "sha256": null,
+     "blob_id": "9efceb5d33bc9c8a99f608a010f3944aec42e7d2"
+    },
+    {
+     "path": "blocklist/nltk_data/tokenizers/punkt_tab/turkish/sent_starters.txt",
+     "size": 613,
+     "sha256": null,
+     "blob_id": "67c39626372185a21983d7bba64abc8123da4195"
+    },
+    {
+     "path": "blocklist/whitelist/whitelisted",
+     "size": 5,
+     "sha256": null,
+     "blob_id": "42b509ed5ed5f2471f7aafeba5b3bdc32dd8b65c"
+    },
+    {
+     "path": "face_blur_filter/Resnet50_Final.pth",
+     "size": 109497761,
+     "sha256": "6d1de9c2944f2ccddca5f5e010ea5ae64a39845a86311af6fdf30841b0a5a16d",
+     "blob_id": "16546738ce0a00a9fd47585e0fc52744d31cc117"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/.no_exist/9fdffc58afc957d1a03a25b10dba0329ab15c2a3/adapter_config.json",
+     "size": 0,
+     "sha256": null,
+     "blob_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/.no_exist/9fdffc58afc957d1a03a25b10dba0329ab15c2a3/added_tokens.json",
+     "size": 0,
+     "sha256": null,
+     "blob_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/.no_exist/9fdffc58afc957d1a03a25b10dba0329ab15c2a3/chat_template.jinja",
+     "size": 0,
+     "sha256": null,
+     "blob_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/.no_exist/9fdffc58afc957d1a03a25b10dba0329ab15c2a3/chat_template.json",
+     "size": 0,
+     "sha256": null,
+     "blob_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/.no_exist/9fdffc58afc957d1a03a25b10dba0329ab15c2a3/processor_config.json",
+     "size": 0,
+     "sha256": null,
+     "blob_id": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/blobs/051261b5a784a2e7e5f93de1f86d170d69a9efd9",
+     "size": 368,
+     "sha256": null,
+     "blob_id": "051261b5a784a2e7e5f93de1f86d170d69a9efd9"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/blobs/1e5036bed065526c3c212dfbe288752391797c4bb1a284aa18c9a0b23fcaf8ec",
+     "size": 798330,
+     "sha256": "1e5036bed065526c3c212dfbe288752391797c4bb1a284aa18c9a0b23fcaf8ec",
+     "blob_id": "a81d858d2426e864b349f0d9830edf5b453256d7"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/blobs/6555f2261d409dea394d6b6973129a53b8725803",
+     "size": 409,
+     "sha256": null,
+     "blob_id": "6555f2261d409dea394d6b6973129a53b8725803"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/blobs/6d6fd0bd6cc263099dc98e4fa383f90c9baa3521",
+     "size": 2399357,
+     "sha256": null,
+     "blob_id": "6d6fd0bd6cc263099dc98e4fa383f90c9baa3521"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/blobs/70741c5c1f6d21423ebf51ee77ef2fce868c33f2",
+     "size": 711,
+     "sha256": null,
+     "blob_id": "70741c5c1f6d21423ebf51ee77ef2fce868c33f2"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/blobs/a513b447f6b05f640f9980d25f4d8a5cff6cd25d",
+     "size": 576,
+     "sha256": null,
+     "blob_id": "a513b447f6b05f640f9980d25f4d8a5cff6cd25d"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/blobs/ea2abad2b7f8a9c1aa5e49a244d5d57ffa71c56f720c94bc5d240ef4d6e1d94a",
+     "size": 3511950624,
+     "sha256": "ea2abad2b7f8a9c1aa5e49a244d5d57ffa71c56f720c94bc5d240ef4d6e1d94a",
+     "blob_id": "ab15d89bf13a2daeee9f8ed3345b191344d03565"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/refs/main",
+     "size": 40,
+     "sha256": null,
+     "blob_id": "8a1056800e43994e68b3d3ed8e6b706c067998be"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/snapshots/9fdffc58afc957d1a03a25b10dba0329ab15c2a3/config.json",
+     "size": 576,
+     "sha256": null,
+     "blob_id": "a513b447f6b05f640f9980d25f4d8a5cff6cd25d"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/snapshots/9fdffc58afc957d1a03a25b10dba0329ab15c2a3/model.safetensors",
+     "size": 3511950624,
+     "sha256": "ea2abad2b7f8a9c1aa5e49a244d5d57ffa71c56f720c94bc5d240ef4d6e1d94a",
+     "blob_id": "ab15d89bf13a2daeee9f8ed3345b191344d03565"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/snapshots/9fdffc58afc957d1a03a25b10dba0329ab15c2a3/preprocessor_config.json",
+     "size": 368,
+     "sha256": null,
+     "blob_id": "051261b5a784a2e7e5f93de1f86d170d69a9efd9"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/snapshots/9fdffc58afc957d1a03a25b10dba0329ab15c2a3/special_tokens_map.json",
+     "size": 409,
+     "sha256": null,
+     "blob_id": "6555f2261d409dea394d6b6973129a53b8725803"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/snapshots/9fdffc58afc957d1a03a25b10dba0329ab15c2a3/spiece.model",
+     "size": 798330,
+     "sha256": "1e5036bed065526c3c212dfbe288752391797c4bb1a284aa18c9a0b23fcaf8ec",
+     "blob_id": "a81d858d2426e864b349f0d9830edf5b453256d7"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/snapshots/9fdffc58afc957d1a03a25b10dba0329ab15c2a3/tokenizer.json",
+     "size": 2399357,
+     "sha256": null,
+     "blob_id": "6d6fd0bd6cc263099dc98e4fa383f90c9baa3521"
+    },
+    {
+     "path": "video_content_safety_filter/models--google--siglip-so400m-patch14-384/snapshots/9fdffc58afc957d1a03a25b10dba0329ab15c2a3/tokenizer_config.json",
+     "size": 711,
+     "sha256": null,
+     "blob_id": "70741c5c1f6d21423ebf51ee77ef2fce868c33f2"
+    },
+    {
+     "path": "video_content_safety_filter/safety_filter.pt",
+     "size": 5814682,
+     "sha256": "a408f177d33943b475e3c0644553e38d8499b199eaf1bbf95c9f773f9997a575",
+     "blob_id": "8526fe2152af175735f7965fffbc1112ef4bf0b1"
+    }
+   ]
+  },
+  {
+   "id": "siglip2",
+   "repo": "google/siglip2-so400m-patch16-naflex",
+   "revision": "cc24074f717b612951c2dead130904ab9b65a81e",
+   "include": [
+    "*"
+   ],
+   "exclude": [
+    "*.onnx",
+    "*.msgpack",
+    "*.h5",
+    "*.ot",
+    "*.tflite",
+    "*.gguf",
+    ".gitattributes"
+   ],
+   "used_by": [
+    "transfer25"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": false,
+   "note": "image-context encoder instantiated unconditionally by the Transfer 2.5 conditioner",
+   "requested_revision": "main",
+   "bytes": 4581435403,
+   "files": [
+    {
+     "path": "README.md",
+     "size": 3389,
+     "sha256": null,
+     "blob_id": "c6da9c3373e752526c4c8808ede085f30c205f21"
+    },
+    {
+     "path": "config.json",
+     "size": 590,
+     "sha256": null,
+     "blob_id": "70b4ae5f068c1f5b9d6809f700f9ec042278ef13"
+    },
+    {
+     "path": "model.safetensors",
+     "size": 4542792928,
+     "sha256": "11a61a2068800d5f4f35cb041c1fea25de86ce87725e4c97a9ed046d0b22c076",
+     "blob_id": "bb8b8fe484791f9534218d992144cc1e266bf341"
+    },
+    {
+     "path": "preprocessor_config.json",
+     "size": 393,
+     "sha256": null,
+     "blob_id": "0b394ef874fa00123ca80d5456646592a052e50e"
+    },
+    {
+     "path": "special_tokens_map.json",
+     "size": 636,
+     "sha256": null,
+     "blob_id": "8d6368f7e735fbe4781bf6e956b7c6ad0586df80"
+    },
+    {
+     "path": "tokenizer.json",
+     "size": 34356304,
+     "sha256": "58a1696e79c9d97937389ed116f552a15c84811d7b8023918b86f4bc5775b1b0",
+     "blob_id": "f09cc022e166541fe83243037fd684e7f1e98dbf"
+    },
+    {
+     "path": "tokenizer.model",
+     "size": 4241003,
+     "sha256": "61a7b147390c64585d6c3543dd6fc636906c9af3865a5548f27f31aee1d4c8e2",
+     "blob_id": "796efe9ab515c15e146ce7588e6d7b9b8134dbf8"
+    },
+    {
+     "path": "tokenizer_config.json",
+     "size": 40160,
+     "sha256": null,
+     "blob_id": "3555266818f1cba8595ca97e26cd117ef1714bfb"
+    }
+   ]
+  },
+  {
+   "id": "siglip-so400m",
+   "repo": "google/siglip-so400m-patch14-384",
+   "revision": "9fdffc58afc957d1a03a25b10dba0329ab15c2a3",
+   "include": [
+    "*"
+   ],
+   "exclude": [
+    "*.onnx",
+    "*.msgpack",
+    "*.h5",
+    "*.ot",
+    "*.tflite",
+    "*.gguf",
+    ".gitattributes"
+   ],
+   "used_by": [
+    "transfer25",
+    "transfer25_av"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": false,
+   "note": "vision encoder of the Transfer 2.5 guardrail video content-safety filter (guardrail/video_content_safety_filter/vision_encoder.py hard-codes it; found on the first GPU run)",
+   "requested_revision": "main",
+   "bytes": 3515154696,
+   "files": [
+    {
+     "path": "README.md",
+     "size": 4321,
+     "sha256": null,
+     "blob_id": "a5fd5771ea9bec56bf88604979b486b309614463"
+    },
+    {
+     "path": "config.json",
+     "size": 576,
+     "sha256": null,
+     "blob_id": "a513b447f6b05f640f9980d25f4d8a5cff6cd25d"
+    },
+    {
+     "path": "model.safetensors",
+     "size": 3511950624,
+     "sha256": "ea2abad2b7f8a9c1aa5e49a244d5d57ffa71c56f720c94bc5d240ef4d6e1d94a",
+     "blob_id": "ab15d89bf13a2daeee9f8ed3345b191344d03565"
+    },
+    {
+     "path": "preprocessor_config.json",
+     "size": 368,
+     "sha256": null,
+     "blob_id": "051261b5a784a2e7e5f93de1f86d170d69a9efd9"
+    },
+    {
+     "path": "special_tokens_map.json",
+     "size": 409,
+     "sha256": null,
+     "blob_id": "6555f2261d409dea394d6b6973129a53b8725803"
+    },
+    {
+     "path": "spiece.model",
+     "size": 798330,
+     "sha256": "1e5036bed065526c3c212dfbe288752391797c4bb1a284aa18c9a0b23fcaf8ec",
+     "blob_id": "a81d858d2426e864b349f0d9830edf5b453256d7"
+    },
+    {
+     "path": "tokenizer.json",
+     "size": 2399357,
+     "sha256": null,
+     "blob_id": "6d6fd0bd6cc263099dc98e4fa383f90c9baa3521"
+    },
+    {
+     "path": "tokenizer_config.json",
+     "size": 711,
+     "sha256": null,
+     "blob_id": "70741c5c1f6d21423ebf51ee77ef2fce868c33f2"
+    }
+   ]
+  },
+  {
+   "id": "sam2-hiera-large",
+   "repo": "facebook/sam2-hiera-large",
+   "revision": "e6a8e8809b8f1bfa2238b6d080f3d05cc76bd251",
+   "include": [
+    "*"
+   ],
+   "exclude": [
+    "*.onnx",
+    "*.msgpack",
+    "*.h5",
+    "*.ot",
+    "*.tflite",
+    "*.gguf",
+    ".gitattributes"
+   ],
+   "used_by": [
+    "transfer25"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": false,
+   "note": "server-side seg derivation",
+   "requested_revision": "main",
+   "bytes": 1795814331,
+   "files": [
+    {
+     "path": "README.md",
+     "size": 19956,
+     "sha256": null,
+     "blob_id": "b362496ef6558d3319ee14a234f794e88a178dc9"
+    },
+    {
+     "path": "config.json",
+     "size": 5707,
+     "sha256": null,
+     "blob_id": "86f8d8ada7b808da97ea9c3bd77d1ba6b2191df4"
+    },
+    {
+     "path": "model.safetensors",
+     "size": 897831024,
+     "sha256": "ca82d5aa03964f3ff14a215b6da8e6689958893cd43682bf631054afed34133c",
+     "blob_id": "24a5707990c4955662283e31fda0adff6695171c"
+    },
+    {
+     "path": "preprocessor_config.json",
+     "size": 683,
+     "sha256": null,
+     "blob_id": "8499e53cb79bf1786a890021550e6994b9808f39"
+    },
+    {
+     "path": "processor_config.json",
+     "size": 95,
+     "sha256": null,
+     "blob_id": "7556f607c3581a19f545de09d8b3fc98502b9f36"
+    },
+    {
+     "path": "sam2_hiera_l.yaml",
+     "size": 3695,
+     "sha256": null,
+     "blob_id": "2b92b5b3a7392b627a74c46f29195ffdaab82d82"
+    },
+    {
+     "path": "sam2_hiera_large.pt",
+     "size": 897952466,
+     "sha256": "7442e4e9b732a508f80e141e7c2913437a3610ee0c77381a66658c3a445df87b",
+     "blob_id": "7198ee4779a9e91db4d79bdc80e188cc182482e0"
+    },
+    {
+     "path": "video_preprocessor_config.json",
+     "size": 705,
+     "sha256": null,
+     "blob_id": "aceb9b5b612e726cea11ae4db21c0964629aac3a"
+    }
+   ]
+  },
+  {
+   "id": "grounding-dino-base",
+   "repo": "IDEA-Research/grounding-dino-base",
+   "revision": "12bdfa3120f3e7ec7b434d90674b3396eccf88eb",
+   "include": [
+    "*"
+   ],
+   "exclude": [
+    "*.onnx",
+    "*.msgpack",
+    "*.h5",
+    "*.ot",
+    "*.tflite",
+    "*.gguf",
+    ".gitattributes"
+   ],
+   "used_by": [
+    "transfer25"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": false,
+   "note": "server-side seg derivation (prompted boxes)",
+   "requested_revision": "main",
+   "bytes": 1870351917,
+   "files": [
+    {
+     "path": "README.md",
+     "size": 2580,
+     "sha256": null,
+     "blob_id": "14c920e1b2effe7cc8f522a2be907758f828c9f1"
+    },
+    {
+     "path": "config.json",
+     "size": 1737,
+     "sha256": null,
+     "blob_id": "5a7f6206a1e488c54316e1f594311dd47a03a41b"
+    },
+    {
+     "path": "model.safetensors",
+     "size": 933400872,
+     "sha256": "5548f844c928c4b6f411fa8cbcc2bfa8dbbba437cb1d513975519f93c2a9ed21",
+     "blob_id": "317b6cd0fbfe94835c9b7b3096b97597ae4294dd"
+    },
+    {
+     "path": "preprocessor_config.json",
+     "size": 457,
+     "sha256": null,
+     "blob_id": "5cb45d963917ed130ce46a93204b349cbec21131"
+    },
+    {
+     "path": "pytorch_model.bin",
+     "size": 936002005,
+     "sha256": "4b51daf2969525a12df8f074b1f6084a69cd2796a565396ea1f4dfb7e5431aaa",
+     "blob_id": "2e32eb1229e012057f7fefbca0af0d62b8cea8e1"
+    },
+    {
+     "path": "special_tokens_map.json",
+     "size": 125,
+     "sha256": null,
+     "blob_id": "a8b3208c2884c4efb86e49300fdd3dc877220cdf"
+    },
+    {
+     "path": "tokenizer.json",
+     "size": 711396,
+     "sha256": null,
+     "blob_id": "688882a79f44442ddc1f60d70334a7ff5df0fb47"
+    },
+    {
+     "path": "tokenizer_config.json",
+     "size": 1237,
+     "sha256": null,
+     "blob_id": "ed97a84add5f9b2091e756765ad3ba087a345e17"
+    },
+    {
+     "path": "vocab.txt",
+     "size": 231508,
+     "sha256": null,
+     "blob_id": "fb140275c155a9c7c5a3b3e0e77a9e839594a938"
+    }
+   ]
+  },
+  {
+   "id": "video-depth-anything-small",
+   "repo": "depth-anything/Video-Depth-Anything-Small",
+   "revision": "256875362cff76724b920335dfb4b29dd611f66e",
+   "include": [
+    "*"
+   ],
+   "exclude": [
+    "*.onnx",
+    "*.msgpack",
+    "*.h5",
+    "*.ot",
+    "*.tflite",
+    "*.gguf",
+    ".gitattributes"
+   ],
+   "used_by": [
+    "transfer25"
+   ],
+   "images": [
+    "nano",
+    "full"
+   ],
+   "gated": false,
+   "note": "server-side depth derivation",
+   "requested_revision": "main",
+   "bytes": 116441867,
+   "files": [
+    {
+     "path": "README.md",
+     "size": 1111,
+     "sha256": null,
+     "blob_id": "42265cbd9ecfea5bfe6cafa74ed263bac74a12b7"
+    },
+    {
+     "path": "video_depth_anything_vits.pth",
+     "size": 116440756,
+     "sha256": "13379300b739e659f076a59d52e9801bd8d38c541a7e71f73bbca4dcfb013609",
+     "blob_id": "0f13a2efa30b2afa4e6dcf37b696c5998e42a62f"
+    }
+   ]
+  }
+ ]
+}

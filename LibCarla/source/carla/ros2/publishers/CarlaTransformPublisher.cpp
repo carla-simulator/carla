@@ -9,8 +9,8 @@
 #include "carla/Logging.h"
 #include "carla/ros2/publishers/PublisherImpl.h"
 #include "carla/ros2/publishers/TransformQuaternion.h"
-#include "carla/ros2/types/TFMessage.h"
-#include "carla/ros2/types/TFMessagePubSubTypes.h"
+#include "carla/ros2/types/msg/TFMessage.h"
+#include "carla/ros2/types/msg/TransformStamped.h"
 
 #include <cmath>
 
@@ -18,8 +18,7 @@ namespace carla {
 namespace ros2 {
 
 struct CarlaTransformMsgTraits {
-  using msg_type = tf2_msgs::msg::TFMessage;
-  using msg_pubsub_type = tf2_msgs::msg::TFMessagePubSubType;
+  using msg_type = msg::TFMessage;
 };
 
 namespace {
@@ -82,21 +81,21 @@ bool CarlaTransformPublisher::Write(
             tx, ty, tz, pitch_deg, yaw_deg, roll_deg, translation, rotation});
   }
 
-  geometry_msgs::msg::TransformStamped ts;
-  ts.header().stamp().sec(seconds);
-  ts.header().stamp().nanosec(nanoseconds);
-  ts.header().frame_id(parent_frame_id);
-  ts.child_frame_id(child_frame_id);
+  msg::TransformStamped ts{};
+  ts.header.stamp.sec = seconds;
+  ts.header.stamp.nanosec = nanoseconds;
+  ts.header.frame_id = parent_frame_id;
+  ts.child_frame_id = child_frame_id;
 
-  ts.transform().translation().x(translation[0]);
-  ts.transform().translation().y(translation[1]);
-  ts.transform().translation().z(translation[2]);
-  ts.transform().rotation().w(rotation[0]);
-  ts.transform().rotation().x(rotation[1]);
-  ts.transform().rotation().y(rotation[2]);
-  ts.transform().rotation().z(rotation[3]);
+  ts.transform.translation.x = translation[0];
+  ts.transform.translation.y = translation[1];
+  ts.transform.translation.z = translation[2];
+  ts.transform.rotation.w = rotation[0];
+  ts.transform.rotation.x = rotation[1];
+  ts.transform.rotation.y = rotation[2];
+  ts.transform.rotation.z = rotation[3];
 
-  _impl->GetMessage()->transforms({ts});
+  _impl->GetMessage()->transforms = {ts};
   return true;
 }
 

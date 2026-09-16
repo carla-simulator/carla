@@ -131,7 +131,7 @@ cmake -G Ninja -S . -B Build --toolchain=$PWD/CMake/Toolchain.cmake -DCMAKE_BUIL
 Use the full map package path (`/Game/Carla/Maps/<MapName>`), not a filesystem path. Leaving `CARLA_MAPS_TO_COOK` empty (the default) cooks the full map list from `DefaultGame.ini`, so the standard build is unchanged.
 
 !!! Note
-    `Town10HD_Opt` is the default map a package boots into. If your selection excludes it, set a different default map in `DefaultEngine.ini` before packaging, otherwise the packaged server starts with a missing-map error.
+    `Town10HD_Opt` is the default map a package boots into and the cooker always cooks the `GameDefaultMap` (only its persistent level, not its World Partition cells, when it is not in `CARLA_MAPS_TO_COOK`). If your selection excludes it, set a different default map in `DefaultEngine.ini` before packaging, otherwise the packaged server starts into an empty Town10.
 
 ### Run the package
 
@@ -152,6 +152,17 @@ If you want to install the Python API corresponding to the package you have buil
 ```sh
 pip3 install PythonAPI/dist/carla-***.whl
 ```
+
+### Content packs
+
+The `package` targets also cook the package as a __base release__ (UAT `-createreleaseversion=<release>`, `carla-<version>-<platform>` by default, `CARLA_BASE_RELEASE` overrides the name). Two artifacts come out of this, next to the package:
+
+* `CarlaUnreal/BaseRelease` inside the package: the release name the packaged server was cooked as. Content packs record the same string and the server refuses packs built against another release.
+* `Build/Package/<release>-release-metadata.tar.gz` (about 1 MB): the release's asset registry (`<release>/Linux/AssetRegistry.bin` and `Metadata/DevelopmentAssetRegistry.bin`), which is what a content pack is cooked "based on". Publish it together with the package tarball; `carla-pack build --base <this file>` needs it and nothing else from the package build.
+
+Packs under `Unreal/CarlaUnreal/Plugins/Packs/` must stay out of the base: after the cook the `package` target runs `Unreal/Package/CheckNoPackLeak.cmake`, which fails the build if any of those packs has package names under `/<Pack>/` in the cooked asset registry or files under `Plugins/Packs/<Pack>/` in the staged output (`CARLA_PACK_LEAK_IGNORE` skips a pack by name, for the rare pack named after a base content folder).
+
+See [Content packs](content_packs.md) for authoring, building and installing packs. The `pack-<Name>` CMake targets build the packs found under `Unreal/CarlaUnreal/Plugins/Packs/` against this release, and `content-packs-test` runs the tool's unit tests.
 
 ## Build presets
 

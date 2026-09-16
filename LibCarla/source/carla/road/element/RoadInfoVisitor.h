@@ -13,6 +13,7 @@ namespace element {
   class RoadInfo;
   class RoadInfoElevation;
   class RoadInfoGeometry;
+  class RoadInfoLateralShape;
   class RoadInfoLane;
   class RoadInfoLaneAccess;
   class RoadInfoLaneBorder;
@@ -41,6 +42,7 @@ namespace element {
     RoadInfoVisitor &operator=(RoadInfoVisitor &&) = default;
 
     virtual void Visit(RoadInfoElevation &) {}
+    virtual void Visit(RoadInfoLateralShape &) {}
     virtual void Visit(RoadInfoGeometry &) {}
     virtual void Visit(RoadInfoLane &) {}
     virtual void Visit(RoadInfoLaneAccess &) {}

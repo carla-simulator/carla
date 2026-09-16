@@ -182,6 +182,16 @@ namespace road {
     // Transform from the center of the road to the center of the lane
     dp.ApplyLateralOffset(lane_t_offset);
 
+    // Apply the road's lateral surface profile (<lateralProfile><shape>).
+    // ApplyLateralOffset(k) places the point at OpenDRIVE t = -k; the lane-0
+    // laneOffset (already applied inside GetDirectedPointIn as -offset)
+    // contributes +offset to t.
+    const auto shape_lane_offset = road->GetInfo<element::RoadInfoLaneOffset>(s);
+    const double shape_t0 = (shape_lane_offset != nullptr)
+        ? shape_lane_offset->GetPolynomial().Evaluate(s) : 0.0;
+    dp.location.z += static_cast<float>(
+        road->GetLateralShapeZ(s, shape_t0 - lane_t_offset));
+
     // Update the lane tangent with the road "laneOffset" at current s
     dp.tangent -= lane_tangent;
 
@@ -247,6 +257,20 @@ namespace road {
     // Transform from the center of the road to each of lane corners
     dp_r.ApplyLateralOffset(lane_t_offset + lane_width);
     dp_l.ApplyLateralOffset(lane_t_offset - lane_width);
+
+    // Apply the road's lateral surface profile (<lateralProfile><shape>) so
+    // the mesh follows the authored cross-section (crown/banking). Without
+    // this, crossing junction roads whose surfaces agree in the data end up
+    // as stacked flat meshes at their (differing) centerline elevations.
+    {
+      const auto corner_lane_offset = road->GetInfo<element::RoadInfoLaneOffset>(s);
+      const double corner_t0 = (corner_lane_offset != nullptr)
+          ? corner_lane_offset->GetPolynomial().Evaluate(s) : 0.0;
+      dp_r.location.z += static_cast<float>(
+          road->GetLateralShapeZ(s, corner_t0 - (lane_t_offset + lane_width)));
+      dp_l.location.z += static_cast<float>(
+          road->GetLateralShapeZ(s, corner_t0 - (lane_t_offset - lane_width)));
+    }
 
     // Unreal's Y axis hack
     dp_r.location.y *= -1;

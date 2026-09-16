@@ -102,6 +102,14 @@ namespace client {
     GetEpisode().Lock()->DisableActorConstantVelocity(*this);
   }
 
+  void Actor::EnableConstantAcceleration(const geom::Vector3D &vector) {
+    GetEpisode().Lock()->EnableActorConstantAcceleration(*this, vector);
+  }
+
+  void Actor::DisableConstantAcceleration() {
+    GetEpisode().Lock()->DisableActorConstantAcceleration(*this);
+  }
+
   void Actor::AddImpulse(const geom::Vector3D &impulse) {
     GetEpisode().Lock()->AddActorImpulse(*this, impulse);
   }
@@ -161,16 +169,22 @@ namespace client {
   }
 
   bool Actor::Destroy() {
-    rpc::ActorState actor_state = GetActorState();
-    bool result = false;
-    if (actor_state != rpc::ActorState::Invalid) {
-      result = GetEpisode().Lock()->DestroyActor(*this);
-    } else {
-      log_warning(
-          "attempting to destroy an actor that is already dead:",
-          GetDisplayId());
+    // The actor state known to the client comes from the last world snapshot
+    // received, which cannot list an actor spawned after it was taken (until
+    // the next frame in asynchronous mode, until the next tick in synchronous
+    // mode). A missing entry is therefore indistinguishable from a dead actor
+    // here, so the server decides: it rejects unknown ids with "unable to
+    // destroy actor: not found" and this returns false.
+    //
+    // A handle whose own Destroy() already succeeded has had its episode
+    // cleared (Simulator::DestroyActor); asking the server again is pointless
+    // and Lock() would throw, so a repeated Destroy() is simply false.
+    auto episode = GetEpisode().TryLock();
+    if (episode == nullptr) {
+      log_debug(GetDisplayId(), "already destroyed through this handle.");
+      return false;
     }
-    return result;
+    return episode->DestroyActor(*this);
   }
 
 } // namespace client

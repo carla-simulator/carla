@@ -11,6 +11,7 @@
 #include "carla/ListView.h"
 #include "carla/Logging.h"
 #include "carla/road/element/RoadInfoElevation.h"
+#include "carla/road/element/RoadInfoLateralShape.h"
 #include "carla/road/element/RoadInfoGeometry.h"
 #include "carla/road/element/RoadInfoLaneOffset.h"
 #include "carla/road/element/RoadInfoLaneWidth.h"
@@ -18,6 +19,7 @@
 #include "carla/road/MapData.h"
 #include "carla/road/Road.h"
 
+#include <algorithm>
 #include <stdexcept>
 
 namespace carla {
@@ -179,6 +181,66 @@ namespace road {
       ++it;
     }
     return nullptr;
+  }
+
+
+  double Road::GetLateralShapeZ(const double s, const double t) const {
+    const auto shapes = _info.GetInfos<element::RoadInfoLateralShape>();
+    if (shapes.empty()) {
+      return 0.0;
+    }
+    const double clamped_s = geom::Math::Clamp(s, 0.0, _length);
+
+    // Evaluate one station (all records sharing the same s): pick the record
+    // with the greatest t <= query t, clamping below the first record.
+    auto EvalStation = [t](const std::vector<const element::RoadInfoLateralShape *> &station) {
+      const element::RoadInfoLateralShape *chosen = station.front();
+      for (const auto *record : station) {
+        if (record->GetT() <= t) {
+          chosen = record;
+        } else {
+          break;
+        }
+      }
+      return chosen->Evaluate(t);
+    };
+
+    // Records come ordered by s; group them into stations and keep the two
+    // stations bracketing clamped_s.
+    std::vector<const element::RoadInfoLateralShape *> before, after;
+    double s_before = -1.0, s_after = -1.0;
+    std::vector<const element::RoadInfoLateralShape *> current;
+    double s_current = -1.0;
+    auto CloseStation = [&]() {
+      if (current.empty()) {
+        return;
+      }
+      std::sort(current.begin(), current.end(),
+          [](const auto *a, const auto *b) { return a->GetT() < b->GetT(); });
+      if (s_current <= clamped_s) {
+        before = current; s_before = s_current;
+      } else if (after.empty()) {
+        after = current; s_after = s_current;
+      }
+      current.clear();
+    };
+    for (const auto *record : shapes) {
+      if (record->GetDistance() != s_current) {
+        CloseStation();
+        s_current = record->GetDistance();
+      }
+      current.push_back(record);
+    }
+    CloseStation();
+
+    if (before.empty()) {
+      return after.empty() ? 0.0 : EvalStation(after);
+    }
+    if (after.empty() || s_after <= s_before) {
+      return EvalStation(before);
+    }
+    const double u = (clamped_s - s_before) / (s_after - s_before);
+    return (1.0 - u) * EvalStation(before) + u * EvalStation(after);
   }
 
   element::DirectedPoint Road::GetDirectedPointIn(const double s) const {

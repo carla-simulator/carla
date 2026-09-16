@@ -81,6 +81,18 @@ public:
       FActorDescription ActorDescription,
       FActorRegistry::IdType DesiredId = 0);
 
+  /// Forget the classes of every definition that refers to content under
+  /// @a MountPoint (a content pack being unmounted). Slots are kept so UIds
+  /// stay valid; spawning such a definition fails until the next episode.
+  void ReleaseContentPack(const FString &MountPoint);
+
+  /// Bind the definitions of @a ActorFactory that are not bound yet.
+  ///
+  /// Definitions are normally bound once, when the episode registers its
+  /// factories. A content pack mounted later brings new catalog entries, and
+  /// its blueprints must become available without waiting for a world load.
+  void BindNewDefinitions(ACarlaActorFactory &ActorFactory);
+
   const TArray<FActorDefinition> &GetActorDefinitions() const
   {
     return Definitions;
@@ -101,10 +113,15 @@ private:
   UFUNCTION()
   void OnActorDestroyed(AActor *Actor);
 
+  /// UPROPERTY so the garbage collector clears the class references when a
+  /// content pack's classes are destroyed; a plain array kept dangling
+  /// TSubclassOf pointers that ReleaseContentPack then dereferenced.
+  UPROPERTY()
   TArray<FActorDefinition> Definitions;
 
   TArray<SpawnFunctionType> SpawnFunctions;
 
+  UPROPERTY()
   TMap<FString, TSubclassOf<AActor>> Classes;
 
   FActorRegistry Registry;

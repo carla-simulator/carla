@@ -26,3 +26,9 @@ Config/CarSimConfig.ini
 *.sln
 CMakeLists.txt
 Makefile
+
+# cook release metadata written by -createreleaseversion (package target)
+Releases
+
+# content packs authored locally (carla-pack init writes here)
+Plugins/Packs

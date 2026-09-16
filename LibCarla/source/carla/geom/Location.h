@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "carla/geom/RightHandedVector3D.h"
 #include "carla/geom/Vector3D.h"
 #include "carla/geom/Vector3DInt.h"
 #include "carla/geom/Math.h"
@@ -47,6 +48,22 @@ namespace geom {
 
     inline auto Distance(Location loc) const {
       return Math::Distance(*this, loc);
+    }
+
+    // =========================================================================
+    // -- Right-handed (ROS / FLU) boundary ------------------------------------
+    // =========================================================================
+
+    /// This location expressed in a right-handed, x-forward / y-**left** /
+    /// z-up frame (ROS REP-103 "FLU"): `(x, -y, z)`.
+    constexpr RightHandedVector3D ToRightHanded() const {
+      return RightHandedVector3D(*this);
+    }
+
+    /// Inverse of `ToRightHanded()`. Mirroring Y is an involution, so this is
+    /// the same `(x, -y, z)` map read the other way.
+    static constexpr Location FromRightHanded(const RightHandedVector3D &rhs) {
+      return Location(rhs.x, -rhs.y, rhs.z);
     }
 
     // =========================================================================

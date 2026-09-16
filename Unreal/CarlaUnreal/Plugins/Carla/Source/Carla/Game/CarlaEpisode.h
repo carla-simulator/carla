@@ -94,6 +94,15 @@ public:
 
   /// Return the name of the map loaded in this episode.
   UFUNCTION(BlueprintCallable)
+  /// Block (game thread, bounded) until the RecastBuilder run started by the
+  /// last generate_opendrive_world has finished. Returns whether the navmesh
+  /// was built (true when no build is pending).
+  static bool WaitForPendingNavigationBuild(double TimeoutSeconds);
+
+  /// Delete Saved/OpenDrive|Nav/OpenDriveMap.* left by a previous generated
+  /// world (server startup and before each generation).
+  static void ClearGeneratedWorldFiles();
+
   const FString &GetMapName() const
   {
     return MapName;
@@ -331,11 +340,37 @@ public:
 
   FSensorManager& GetSensorManager() { return SensorManager; }
 
+  // ===========================================================================
+  // -- Pedestrian navigation state (server-side walker navigation) -------------
+  // ===========================================================================
+
+  /// Probability that a walker whose navigation starts after this call is a
+  /// "crosser" (may traverse crosswalk/road nav areas). Legacy semantics of
+  /// carla.World.set_pedestrians_cross_factor.
+  void SetPedestriansCrossFactor(float InCrossFactor)
+  {
+    PedestriansCrossFactor = FMath::Clamp(InCrossFactor, 0.0f, 1.0f);
+  }
+
+  /// Seed the RNG behind the crosser draw (and any future navigation
+  /// randomness). Deterministic given the same seed and start order.
+  void SetPedestriansSeed(uint32 InSeed)
+  {
+    PedestriansNavRNG.Initialize(static_cast<int32>(InSeed));
+  }
+
+  /// Draw once per walker at navigation start: crosser or not.
+  bool DrawWalkerIsCrosser()
+  {
+    return PedestriansNavRNG.FRand() < PedestriansCrossFactor;
+  }
+
   bool bIsPrimaryServer = true;
 
 private:
 
   friend class ACarlaGameModeBase;
+  friend class AAutowareGameModeBase;
   friend class FCarlaEngine;
 
   void InitializeAtBeginPlay();
@@ -402,6 +437,10 @@ private:
   carla::geom::GeoProjection MapGeoProjection;
 
   FIntVector CurrentMapOrigin;
+
+  float PedestriansCrossFactor = 0.0f;
+
+  FRandomStream PedestriansNavRNG = FRandomStream(0);
 
   FFrameData FrameData;
 

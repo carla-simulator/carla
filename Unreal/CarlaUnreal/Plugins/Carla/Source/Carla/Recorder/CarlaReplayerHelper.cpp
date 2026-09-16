@@ -113,7 +113,7 @@ FCarlaActor *CarlaReplayerHelper::FindTrafficSignAt(FVector Location)
   // through all actors in registry
   for (auto It = Registry.begin(); It != Registry.end(); ++It)
   {
-    FCarlaActor* CarlaActor = It.Value().Get();
+    FCarlaActor* CarlaActor = It->Value.Get();
     if (CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficLight ||
         CarlaActor->GetActorType() == FCarlaActor::ActorType::TrafficSign)
     {
@@ -484,6 +484,10 @@ void CarlaReplayerHelper::ProcessReplayerLightScene(CarlaRecorderLightScene Ligh
       CarlaLight->SetLightColor(LightScene.Color);
       CarlaLight->SetLightOn(LightScene.bOn);
       CarlaLight->SetLightType(static_cast<ELightType>(LightScene.Type));
+      // The replayer mutates light state server-side, outside any client
+      // request; without dirty-marking, connected clients keep serving stale
+      // is_on/intensity values from their LightManager cache.
+      CarlaLightSubsystem->SetClientStatesdirty("");
     }
   }
 }
@@ -554,6 +558,13 @@ bool CarlaReplayerHelper::ProcessReplayerFinish(bool bApplyAutopilot, bool bIgno
         {
             // stop all vehicles
             SetActorSimulatePhysics(CarlaActor, true);
+            // ProcessReplayerEventAdd also disabled collision on replayed
+            // vehicles; restore it or they are left permanently undrivable
+            // (no wheel contact) after the replay ends.
+            if (CarlaActor->GetActor())
+            {
+              CarlaActor->GetActor()->SetActorEnableCollision(true);
+            }
             SetActorVelocity(CarlaActor, FVector(0, 0, 0));
             FVehicleControl Control;
             Control.Throttle = 0.0f;

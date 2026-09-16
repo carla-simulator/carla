@@ -7,6 +7,7 @@
 
 #include "Carla/Actor/Factory/BlueprintActorFactory.h"
 #include "Carla/Actor/ActorBlueprintFunctionLibrary.h"
+#include "Carla/ContentPacks/ContentPackManager.h"
 #include "Carla/Actor/ActorDefinition.h"
 #include "Carla/Game/CarlaEpisode.h"
 
@@ -19,8 +20,20 @@
 
 TArray<FActorDefinition> ABlueprintActorFactory::GetDefinitions()
 {
+  // Rebuilt from scratch every episode, otherwise entries accumulate.
+  Definitions.Reset();
+  BlueprintsParams.Reset();
   LoadBlueprintParametersArrayFromFile("BlueprintParameters.json", BlueprintsParams);
-  
+  // Content packs: <Pack>/Content/Config/BlueprintParameters.json, later
+  // packs override earlier entries with the same Name.
+  for (const FString &PackFile : UCarlaContentPackManager::FindPackCatalogFiles("BlueprintParameters.json"))
+  {
+    TArray<FBlueprintParameters> PackBlueprintsParams;
+    LoadBlueprintParametersArrayFromFile(PackFile, PackBlueprintsParams);
+    UCarlaContentPackManager::MergeCatalog(BlueprintsParams, PackBlueprintsParams,
+        [](const FBlueprintParameters &B) { return B.Name; });
+  }
+
   UActorBlueprintFunctionLibrary::MakeBlueprintDefinitions(BlueprintsParams, Definitions);
   return Definitions;
 }
@@ -54,6 +67,12 @@ FActorSpawnResult ABlueprintActorFactory::SpawnActor(
 
   SpawnResult.Status = EActorSpawnResultStatus::UnknownError;
   return SpawnResult;
+}
+
+void ABlueprintActorFactory::ReleaseContentPack(const FString &MountPoint)
+{
+  Definitions.RemoveAll([&](const FActorDefinition &D) { return DefinitionReferencesPath(D, MountPoint); });
+  BlueprintsParams.RemoveAll([&](const FBlueprintParameters &B) { return B.Path.StartsWith(MountPoint); });
 }
 
 TSharedPtr<FJsonObject> ABlueprintActorFactory::FBlueprintParametersToJsonObject(const FBlueprintParameters& BlueprintParams)
@@ -151,7 +170,11 @@ bool ABlueprintActorFactory::JsonToFBlueprintParametersArray(const FString& Json
 void ABlueprintActorFactory::LoadBlueprintParametersArrayFromFile(const FString& FileName, TArray<FBlueprintParameters>& OutBlueprintParamsArray)
 {
   FString JsonString;
-  FString FilePath = FPaths::ProjectContentDir() + TEXT("Carla/Config/") + FileName;
+  // A relative name is resolved against the project catalog dir; an absolute
+  // path (content pack catalogs) is used as is.
+  FString FilePath = FPaths::IsRelative(FileName)
+      ? FPaths::ProjectContentDir() + TEXT("Carla/Config/") + FileName
+      : FileName;
   FString JsonContent;
 
   // Load the JSON file content into an FString

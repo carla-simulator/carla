@@ -111,6 +111,15 @@ namespace road {
         const double c,
         const double d);
 
+    void AddRoadLateralShape(
+        Road *road,
+        const double s,
+        const double a,
+        const double b,
+        const double c,
+        const double d,
+        const double t);
+
     void AddRoadObjectCrosswalk(
         Road *road,
         const std::string name,

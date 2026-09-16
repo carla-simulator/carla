@@ -26,6 +26,17 @@ ASemanticSegmentationCamera_WideAngleLens::ASemanticSegmentationCamera_WideAngle
   AddPostProcessingMaterial(TEXT("Material'/Carla/PostProcessingMaterials/GTMaterial.GTMaterial'"));
 }
 
+void ASemanticSegmentationCamera_WideAngleLens::SetUpSceneCaptureComponents(
+    TArrayView<USceneCaptureComponent2D_CARLA*> SceneCaptures)
+{
+  Super::SetUpSceneCaptureComponents(SceneCaptures);
+  // GTMaterial samples the segmentation ID buffer; opt every face capture
+  // into the segmentation pass (same as the pinhole ASemanticSegmentationCamera).
+  for (auto SceneCapture : SceneCaptures)
+    if (SceneCapture != nullptr)
+      SceneCapture->bRequiresSegmentationPass = true;
+}
+
 void ASemanticSegmentationCamera_WideAngleLens::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaSeconds)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(ASemanticSegmentationCamera_WideAngleLens::PostPhysTick);
@@ -33,5 +44,5 @@ void ASemanticSegmentationCamera_WideAngleLens::PostPhysTick(UWorld *World, ELev
   // client is subscribed.
   if (!AreClientsListening())
     return;
-  FPixelReader::SendPixelsInRenderThread<ASemanticSegmentationCamera_WideAngleLens, FColor>(*this);
+  CaptureAndSendToClient(*this);
 }
