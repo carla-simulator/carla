@@ -189,8 +189,25 @@ static const float LANDMARK_DETECTION_TIME = 3.5f;
 static const float TL_TARGET_VELOCITY = 15.0f / 3.6f;
 static const float STOP_TARGET_VELOCITY = 10.0f / 3.6f;
 static const float YIELD_TARGET_VELOCITY = 10.0f / 3.6f;
-static const float FRICTION = 0.6f;
-static const float GRAVITY = 9.81f;
+// Lateral acceleration a turn is taken at. This replaces a tyre-grip model
+// (FRICTION * GRAVITY, 0.6 g), which sits near the handling limit of a road
+// car and is not a speed anyone would choose: measured 0.44 g at the 95th
+// percentile and over 1 g at the peak through Town15 junctions. Comfort work
+// on adaptive cruise puts a turn at 0.2-0.3 g, and 0.3 g still takes the
+// R = 11 m junction connectors on Town10 at 20 km/h.
+static const float LATERAL_COMFORT_ACCELERATION = 3.0f;
+// Deceleration the approach to a turn is planned with: the speed allowed now
+// is the one that reaches the turn's own limit by braking at this rate, so the
+// vehicle slows before the curvature arrives instead of inside it.
+static const float TURN_BRAKING_DECELERATION = 2.0f;
+// Arc spacing of the curvature samples along the path buffer. What limits the
+// speed is the tightest curvature any three consecutive samples describe; the
+// circle through the first, middle and last point of the whole buffer reads
+// R ~ 22 m for a straight leading into an R = 11 m turn, so the limit used to
+// tighten only once the vehicle was already in the turn. 5 m matches the
+// resolution the map is sampled at and spans ~52 degrees of the tightest
+// urban connector.
+static const float CURVATURE_SAMPLE_SPACING = 5.0f;
 static const float PI = 3.1415927f;
 static const float PERC_MAX_SLOWDOWN = 0.08f;
 static const float FOLLOW_LEAD_FACTOR = 2.0f;

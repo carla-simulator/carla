@@ -90,6 +90,7 @@ private:
                                   float max_target_velocity);
 
   float GetTurnTargetVelocity(const Buffer &waypoint_buffer,
+                              const cg::Location vehicle_location,
                               float max_target_velocity);
 
 public:
