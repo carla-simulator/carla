@@ -37,11 +37,14 @@ void VehicleLightStage::UpdateWorldInfo(const double current_time, const bool sy
     return;
   }
 
-  light_states_refreshed = synchronous_mode ||
-      IsRefreshDue(current_time, last_light_states_update, VEHICLE_LIGHT_STATES_REFRESH_PERIOD);
-  if (light_states_refreshed) {
+  // The flag guards the unknown-state path in Update, so it may only be set
+  // once the read has succeeded.
+  light_states_refreshed = false;
+  if (synchronous_mode ||
+      IsRefreshDue(current_time, last_light_states_update, VEHICLE_LIGHT_STATES_REFRESH_PERIOD)) {
     all_light_states = world.GetVehiclesLightStates();
     last_light_states_update = current_time;
+    light_states_refreshed = true;
   }
 
   if (synchronous_mode ||
@@ -91,12 +94,15 @@ void VehicleLightStage::Update(const unsigned long index) {
     }
   }
 
-  if (!found_light_state && !light_states_refreshed) {
-    // The cached list predates this vehicle. Deriving a command from the
-    // sentinel above would switch on every bit this stage does not manage
-    // (reverse, interior, special), and the write-back below would then keep
-    // them on for good, so wait one step for a refreshed list instead.
-    last_light_states_update = -std::numeric_limits<double>::infinity();
+  if (!found_light_state) {
+    // The vehicle's current lights are unknown: the cached list predates it,
+    // or the server omits it because it is dormant on a large map. Deriving a
+    // command from the sentinel above would switch on every bit this stage
+    // does not manage (reverse, interior, special) and the write-back below
+    // would then hold them on for good.
+    if (!light_states_refreshed) {
+      last_light_states_update = -std::numeric_limits<double>::infinity();
+    }
     return;
   }
 
@@ -202,10 +208,25 @@ void VehicleLightStage::Update(const unsigned long index) {
   }
 }
 
-void VehicleLightStage::RemoveActor(const ActorId) {
+void VehicleLightStage::RemoveActor(const ActorId actor_id) {
+  // The cache outlives the response it came from, so a destroyed vehicle has
+  // to be dropped from it explicitly.
+  all_light_states.erase(
+      std::remove_if(
+          all_light_states.begin(),
+          all_light_states.end(),
+          [actor_id](const rpc::VehicleLightStateList::value_type &light_state) {
+            return light_state.first == actor_id;
+          }),
+      all_light_states.end());
 }
 
 void VehicleLightStage::Reset() {
+  all_light_states.clear();
+  last_light_states_update = -std::numeric_limits<double>::infinity();
+  last_weather_update = -std::numeric_limits<double>::infinity();
+  light_states_refreshed = false;
+  is_weather_enabled = false;
 }
 
 } // namespace traffic_manager

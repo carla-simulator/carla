@@ -342,6 +342,12 @@ void TrafficManagerLocal::Stop() {
   collision_stage.Reset();
   traffic_light_stage.Reset();
   motion_plan_stage.Reset();
+  vehicle_light_stage.Reset();
+
+  last_frame = 0;
+  episode_settings = rpc::EpisodeSettings{};
+  last_settings_update = -std::numeric_limits<double>::infinity();
+  last_batch_sync = -std::numeric_limits<double>::infinity();
 
   buffer_map.clear();
   localization_frame.clear();
