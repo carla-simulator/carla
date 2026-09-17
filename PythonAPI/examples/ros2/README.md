@@ -1,6 +1,10 @@
 # ROS2 Native Example
 
 This example demonstrates how to utilize the ROS 2 native interface in CARLA.
+The map-and-lidar demo consumes the latched `/carla/map` OpenDRIVE topic and
+renders the town lane network, hero transform tree, camera, and live lidar in
+one map-fixed RViz view. Run `./run_map_and_lidar_demo.sh` after starting CARLA
+with `--ros2`, then run `./run_rviz.sh`.
 
 ## Prerequisites
 

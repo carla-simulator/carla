@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -12,6 +12,7 @@
 import argparse
 import json
 import logging
+import signal
 
 import carla
 
@@ -171,4 +172,10 @@ if __name__ == '__main__':
 
     logging.info('Listening to server %s:%s', args.host, args.port)
 
+    # Docker stops the demo with SIGTERM. Translate it so main() executes its
+    # existing actor and world-settings cleanup path.
+    def _on_sigterm(signum, frame):
+        raise KeyboardInterrupt
+
+    signal.signal(signal.SIGTERM, _on_sigterm)
     main(args)
