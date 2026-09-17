@@ -52,7 +52,7 @@ inline std::string zenoh_qos_keyexpr(const QosProfile& qos) {
   const char* hist =
       qos.history == QosProfile::History::KeepLast ? "1" : "2";
   return std::string(rel) + ":" + dur + ":" + hist + "," +
-         std::to_string(qos.history_depth) + ":,:,:,,";
+         std::to_string(qos.EffectiveHistoryDepth()) + ":,:,:,,";
 }
 
 /// Monotonic per-process counter used to assign a unique entity id (eid) to

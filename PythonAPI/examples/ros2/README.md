@@ -86,3 +86,17 @@ export ROS_DOMAIN_ID=42
 ```
 
 When both are set, `--ros-domain-id` takes precedence over `ROS_DOMAIN_ID`.
+
+### Map topic and QoS
+
+On every episode start, CARLA publishes the current OpenDRIVE XML on
+`/carla/map` (`rt/carla/map` at the DDS layer) as `std_msgs/msg/String`. It
+uses reliable, transient-local, keep-last-one QoS, so a subscriber that starts
+after the simulator receives the current map immediately. The message has no
+ROS header by design: this preserves compatibility with carla-ros-bridge's
+`/carla/map` topic. A new map load replaces the cached sample.
+
+Camera image/camera-info and point-cloud publishers use ROS 2 sensor-data QoS
+(best effort) so a slow visualisation subscriber cannot stall CARLA's sensor
+publishing path. Configure RViz image and point-cloud displays for best-effort
+reliability; configure a `/carla/map` subscriber for transient-local durability.

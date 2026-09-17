@@ -1132,6 +1132,22 @@ TEST(publisher_impl, get_message_returns_pointer) {
   EXPECT_EQ(pub.GetMessage()->value, 7);
 }
 
+TEST(qos_profile, sensor_data_is_best_effort_with_default_history) {
+  const auto qos = carla::ros2::QosProfile::SensorData();
+  EXPECT_EQ(qos.reliability, carla::ros2::QosProfile::Reliability::BestEffort);
+  EXPECT_EQ(qos.durability, carla::ros2::QosProfile::Durability::Volatile);
+  EXPECT_EQ(qos.history, carla::ros2::QosProfile::History::KeepLast);
+  EXPECT_EQ(qos.EffectiveHistoryDepth(), 1);
+}
+
+TEST(qos_profile, invalid_keep_last_depth_is_clamped) {
+  carla::ros2::QosProfile qos;
+  qos.history_depth = 0;
+  EXPECT_EQ(qos.EffectiveHistoryDepth(), 1);
+  qos.history_depth = 4;
+  EXPECT_EQ(qos.EffectiveHistoryDepth(), 4);
+}
+
 TEST(publisher_impl, init_delegates_to_middleware) {
   PublisherImpl<TestPubTraits> pub;
   auto *mock = new MockPublisherMiddleware();
