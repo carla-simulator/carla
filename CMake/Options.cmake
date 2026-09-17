@@ -229,10 +229,18 @@ carla_string_option (
 # fetches the SDK from NVIDIA's public repository) and injects DLSS_SDK into
 # every Unreal build, package, and launch command, so `cmake --build` works
 # from any shell without CarlaSetup.sh's exports.
+cmake_path (
+  CONVERT
+  "$ENV{DLSS_SDK}"
+  TO_CMAKE_PATH_LIST
+  CARLA_DLSS_SDK_PATH_INFERRED
+  NORMALIZE
+)
+
 carla_string_option (
   CARLA_DLSS_SDK_PATH
   "Path to a checkout of the NVIDIA DLSS SDK (github.com/NVIDIA/DLSS). \"disabled\" builds without DLSS support; empty resolves the DLSS_SDK environment variable and falls back to fetching into ~/SDKs/DLSS."
-  "$ENV{DLSS_SDK}"
+  "${CARLA_DLSS_SDK_PATH_INFERRED}"
 )
 
 # Docs for UE5 build configurations:
