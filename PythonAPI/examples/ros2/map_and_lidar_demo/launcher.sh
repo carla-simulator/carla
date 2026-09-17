@@ -22,8 +22,6 @@ if [ "${MAP_ONLY}" != "1" ]; then
     # one about to spawn. Remove it first.
     python3 /opt/carla/cleanup.py --host "${CARLA_HOST}" --port "${CARLA_PORT}"
 
-    python3 /opt/carla/ego_tf_broadcaster.py --host "${CARLA_HOST}" --port "${CARLA_PORT}" &
-    pids+=($!)
     python3 /opt/carla/ros2_native.py --file /opt/carla/stack.json --host "${CARLA_HOST}" --port "${CARLA_PORT}" &
     pids+=($!)
 fi

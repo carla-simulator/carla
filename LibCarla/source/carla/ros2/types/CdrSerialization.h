@@ -12,11 +12,15 @@
 #include <cstdint>
 #include <vector>
 
+#include "carla/ros2/types/msg/Accel.h"
 #include "carla/ros2/types/msg/AckermannDrive.h"
 #include "carla/ros2/types/msg/AckermannDriveStamped.h"
 #include "carla/ros2/types/msg/CameraInfo.h"
 #include "carla/ros2/types/msg/CarlaCollisionEvent.h"
 #include "carla/ros2/types/msg/CarlaEgoVehicleControl.h"
+#include "carla/ros2/types/msg/CarlaEgoVehicleInfo.h"
+#include "carla/ros2/types/msg/CarlaEgoVehicleInfoWheel.h"
+#include "carla/ros2/types/msg/CarlaEgoVehicleStatus.h"
 #include "carla/ros2/types/msg/CarlaLineInvasion.h"
 #include "carla/ros2/types/msg/Clock.h"
 #include "carla/ros2/types/msg/Float32.h"
@@ -66,6 +70,17 @@ namespace ros2 {
 /// hundred transforms) while bounding the worst-case allocation to ~80 MiB.
 static constexpr uint32_t kMaxCdrSequenceElements = 1u << 20;
 
+/// Write the uint32_t length field of a CDR sequence, rejecting sizes above the
+/// sane cap so the cast to uint32_t cannot wrap and produce a malformed stream.
+/// Mirrors the guard applied when reading sequence lengths back from the wire.
+inline void serialize_cdr_sequence_length(
+    eprosima::fastcdr::Cdr& cdr, size_t size, const char* what) {
+  if (size > kMaxCdrSequenceElements) {
+    throw eprosima::fastcdr::exception::BadParamException(what);
+  }
+  cdr << static_cast<uint32_t>(size);
+}
+
 // --------------------------------------------------------------------------
 // Leaf types (no nested msg:: fields)
 // --------------------------------------------------------------------------
@@ -114,6 +129,20 @@ inline void deserialize_cdr(
   cdr >> m.y;
   cdr >> m.z;
   cdr >> m.w;
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::Accel& m) {
+  serialize_cdr(cdr, m.linear);
+  serialize_cdr(cdr, m.angular);
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::Accel& m) {
+  deserialize_cdr(cdr, m.linear);
+  deserialize_cdr(cdr, m.angular);
 }
 
 // --
@@ -480,6 +509,107 @@ inline void deserialize_cdr(
 // --
 
 inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::CarlaEgoVehicleStatus& m) {
+  serialize_cdr(cdr, m.header);
+  cdr << m.velocity;
+  serialize_cdr(cdr, m.acceleration);
+  serialize_cdr(cdr, m.orientation);
+  serialize_cdr(cdr, m.control);
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::CarlaEgoVehicleStatus& m) {
+  deserialize_cdr(cdr, m.header);
+  cdr >> m.velocity;
+  deserialize_cdr(cdr, m.acceleration);
+  deserialize_cdr(cdr, m.orientation);
+  deserialize_cdr(cdr, m.control);
+}
+
+// --
+
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::CarlaEgoVehicleInfoWheel& m) {
+  cdr << m.tire_friction;
+  cdr << m.damping_rate;
+  cdr << m.max_steer_angle;
+  cdr << m.radius;
+  cdr << m.max_brake_torque;
+  cdr << m.max_handbrake_torque;
+  serialize_cdr(cdr, m.position);
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::CarlaEgoVehicleInfoWheel& m) {
+  cdr >> m.tire_friction;
+  cdr >> m.damping_rate;
+  cdr >> m.max_steer_angle;
+  cdr >> m.radius;
+  cdr >> m.max_brake_torque;
+  cdr >> m.max_handbrake_torque;
+  deserialize_cdr(cdr, m.position);
+}
+
+// --
+
+/// CarlaEgoVehicleInfo::wheels is a sequence of structs.
+/// Write length + elements manually.
+inline void serialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, const msg::CarlaEgoVehicleInfo& m) {
+  cdr << m.id;
+  cdr << m.type;
+  cdr << m.rolename;
+  // CDR sequence length is uint32_t per DDS-XTypes 1.3 clause 7.4.1.1.
+  serialize_cdr_sequence_length(
+      cdr, m.wheels.size(),
+      "CarlaEgoVehicleInfo::wheels length exceeds sane CDR sequence cap");
+  for (const auto& w : m.wheels) {
+    serialize_cdr(cdr, w);
+  }
+  cdr << m.max_rpm;
+  cdr << m.moi;
+  cdr << m.damping_rate_full_throttle;
+  cdr << m.damping_rate_zero_throttle_clutch_engaged;
+  cdr << m.damping_rate_zero_throttle_clutch_disengaged;
+  cdr << m.use_gear_autobox;
+  cdr << m.gear_switch_time;
+  cdr << m.clutch_strength;
+  cdr << m.mass;
+  cdr << m.drag_coefficient;
+  serialize_cdr(cdr, m.center_of_mass);
+}
+
+inline void deserialize_cdr(
+    eprosima::fastcdr::Cdr& cdr, msg::CarlaEgoVehicleInfo& m) {
+  cdr >> m.id;
+  cdr >> m.type;
+  cdr >> m.rolename;
+  uint32_t wheels_size{0u};
+  cdr >> wheels_size;
+  if (wheels_size > kMaxCdrSequenceElements) {
+    throw eprosima::fastcdr::exception::BadParamException(
+        "CarlaEgoVehicleInfo::wheels length exceeds sane CDR sequence cap");
+  }
+  m.wheels.resize(static_cast<size_t>(wheels_size));
+  for (auto& w : m.wheels) {
+    deserialize_cdr(cdr, w);
+  }
+  cdr >> m.max_rpm;
+  cdr >> m.moi;
+  cdr >> m.damping_rate_full_throttle;
+  cdr >> m.damping_rate_zero_throttle_clutch_engaged;
+  cdr >> m.damping_rate_zero_throttle_clutch_disengaged;
+  cdr >> m.use_gear_autobox;
+  cdr >> m.gear_switch_time;
+  cdr >> m.clutch_strength;
+  cdr >> m.mass;
+  cdr >> m.drag_coefficient;
+  deserialize_cdr(cdr, m.center_of_mass);
+}
+
+// --
+
+inline void serialize_cdr(
     eprosima::fastcdr::Cdr& cdr, const msg::CarlaLineInvasion& m) {
   serialize_cdr(cdr, m.header);
   cdr << m.crossed_lane_markings;
@@ -576,7 +706,9 @@ inline void serialize_cdr(
   cdr << m.height;
   cdr << m.width;
   // CDR sequence length is uint32_t per DDS-XTypes 1.3 clause 7.4.1.1.
-  cdr << static_cast<uint32_t>(m.fields.size());
+  serialize_cdr_sequence_length(
+      cdr, m.fields.size(),
+      "PointCloud2::fields length exceeds sane CDR sequence cap");
   for (const auto& f : m.fields) {
     serialize_cdr(cdr, f);
   }
@@ -616,7 +748,9 @@ inline void deserialize_cdr(
 inline void serialize_cdr(
     eprosima::fastcdr::Cdr& cdr, const msg::TFMessage& m) {
   // CDR sequence length is uint32_t per DDS-XTypes 1.3 clause 7.4.1.1.
-  cdr << static_cast<uint32_t>(m.transforms.size());
+  serialize_cdr_sequence_length(
+      cdr, m.transforms.size(),
+      "TFMessage::transforms length exceeds sane CDR sequence cap");
   for (const auto& t : m.transforms) {
     serialize_cdr(cdr, t);
   }
