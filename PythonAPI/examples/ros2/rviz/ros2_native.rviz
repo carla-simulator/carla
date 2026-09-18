@@ -88,7 +88,7 @@ Visualization Manager:
             Depth: 5
             Durability Policy: Volatile
             History Policy: Keep Last
-            Reliability Policy: Reliable
+            Reliability Policy: Best Effort
             Value: /carla/hero/rgb/image
           Value: true
       Enabled: true
@@ -124,17 +124,30 @@ Visualization Manager:
             Durability Policy: Volatile
             Filter size: 10
             History Policy: Keep Last
-            Reliability Policy: Reliable
+            Reliability Policy: Best Effort
             Value: /carla/hero/lidar/point_cloud
           Use Fixed Frame: true
           Use rainbow: true
           Value: true
       Enabled: true
       Name: Lidar
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: Map
+      Namespaces:
+        lane_boundaries: true
+        lane_centerlines: false
+      Topic:
+        Depth: 1
+        Durability Policy: Transient Local
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /carla/map_markers
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: hero
+    Fixed Frame: map
     Frame Rate: 30
   Name: root
   Tools:
@@ -176,26 +189,26 @@ Visualization Manager:
   Value: true
   Views:
     Current:
-      Class: rviz_default_plugins/Orbit
-      Distance: 77.47811889648438
+      Class: rviz_default_plugins/ThirdPersonFollower
+      Distance: 100
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0.7942232489585876
-        Y: -0.8899260759353638
-        Z: -0.2945995330810547
-      Focal Shape Fixed Size: false
+        X: 0
+        Y: 0
+        Z: 0
+      Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.009999999776482582
-      Pitch: 0.34039872884750366
-      Target Frame: <Fixed Frame>
-      Value: Orbit (rviz)
-      Yaw: 3.1253957748413086
+      Pitch: 0.45
+      Target Frame: hero
+      Value: ThirdPersonFollower (rviz)
+      Yaw: 3.141592025756836
     Saved: ~
 Window Geometry:
   Displays:

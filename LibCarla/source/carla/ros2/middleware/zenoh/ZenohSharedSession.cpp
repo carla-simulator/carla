@@ -84,6 +84,14 @@ const z_loaned_session_t* zenoh_get_shared_session() {
       log_error("ZenohSharedSession: failed to read config at '", path,
                 "'; falling back to zenoh defaults");
       z_config_default(&cfg);
+      // Advanced-publisher caches need timestamping. Keep the fallback session
+      // capable of serving transient-local topics such as rt/carla/map.
+      if (zc_config_insert_json5(z_loan_mut(cfg), "timestamping/enabled",
+                                 "true") != Z_OK) {
+        log_warning("ZenohSharedSession: failed to enable timestamping on "
+                    "the fallback config; transient-local latching may be "
+                    "unavailable");
+      }
     }
     apply_config_overrides(z_loan_mut(cfg));
 

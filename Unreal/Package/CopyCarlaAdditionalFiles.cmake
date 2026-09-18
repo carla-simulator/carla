@@ -47,11 +47,15 @@ file (COPY ${PYTHON_EXAMPLE_FILES} DESTINATION ${CARLA_PACKAGE_ARCHIVE_PATH}/Pyt
 file (COPY_FILE ${CARLA_WORKSPACE_PATH}/PythonAPI/examples/requirements.txt ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/examples/requirements.txt)
 
 make_directory (${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/examples/ros2)
-file (GLOB PYTHON_EXAMPLE_ROS2_FILES ${CARLA_WORKSPACE_PATH}/PythonAPI/examples/ros2/*)
-file (COPY ${PYTHON_EXAMPLE_ROS2_FILES} DESTINATION ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/examples/ros2)
-make_directory (${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/examples/ros2/config)
-file (GLOB PYTHON_EXAMPLE_CONFIG_ROS2_FILES ${CARLA_WORKSPACE_PATH}/PythonAPI/examples/ros2/config/*)
-file (COPY ${PYTHON_EXAMPLE_CONFIG_ROS2_FILES} DESTINATION ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/examples/ros2/config)
+# Copy the complete ROS2 example tree (including the map demo and RViz assets)
+# but never stage interpreter cache files created in a developer's workspace.
+file (REMOVE_RECURSE
+      ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/examples/ros2/__pycache__
+      ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/examples/ros2/map_and_lidar_demo/__pycache__)
+file (COPY ${CARLA_WORKSPACE_PATH}/PythonAPI/examples/ros2/
+      DESTINATION ${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/examples/ros2
+      PATTERN "__pycache__" EXCLUDE
+      PATTERN "*.pyc" EXCLUDE)
 
 make_directory (${CARLA_PACKAGE_ARCHIVE_PATH}/PythonAPI/util/)
 file (GLOB PYTHON_UTIL_FILES ${CARLA_WORKSPACE_PATH}/PythonAPI/util/*.py)

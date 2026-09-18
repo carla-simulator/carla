@@ -48,6 +48,7 @@ class BaseSubscriber;
 class AutowareVehicleStatusPublisher;
 class CarlaCameraPublisher;
 class CarlaClockPublisher;
+class CarlaMapPublisher;
 class CarlaTransformPublisher;
 class BasicSubscriber;
 class BasicPublisher;
@@ -75,6 +76,9 @@ public:
   bool IsEnabled() { return _enabled; }
   void SetFrame(uint64_t frame);
   void SetTimestamp(double timestamp);
+  /// Publish the episode's OpenDRIVE description once per map load. The
+  /// publisher retains one transient-local sample for late subscribers.
+  void ProcessDataFromMap(const std::string &open_drive);
 
   // Global TF gate (tier4 port): when false, no sensor broadcasts its
   // transform on /tf. Complements the per-sensor publish_tf flag set at
@@ -304,6 +308,7 @@ private:
       _autoware_status_publishers;
   std::unordered_map<void *, std::vector<void *>> _actor_parents;
   std::shared_ptr<CarlaClockPublisher> _clock_publisher;
+  std::shared_ptr<CarlaMapPublisher> _map_publisher;
   std::unordered_map<void *, std::shared_ptr<BasePublisher>> _publishers;
   std::unordered_map<void *, std::shared_ptr<CarlaCameraPublisher>> _camera_publishers;
   std::unordered_map<void *, std::shared_ptr<CarlaTransformPublisher>> _transforms;
