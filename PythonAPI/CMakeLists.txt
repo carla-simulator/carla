@@ -30,6 +30,7 @@ set (
   rpc
   png_static
   zlibstatic
+  ${CARLA_PUGIXML_TARGET}
   Boost::asio
   Boost::python${Python3_VERSION_MAJOR}${Python3_VERSION_MINOR}
   Boost::geometry

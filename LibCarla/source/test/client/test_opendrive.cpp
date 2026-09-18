@@ -18,7 +18,7 @@
 #include <carla/road/element/RoadInfoMarkRecord.h>
 #include <carla/road/element/RoadInfoVisitor.h>
 
-#include <third-party/pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 #include <fstream>
 #include <string>
@@ -36,6 +36,10 @@ TEST(road, rejects_malformed_xodr) {
   const auto map = OpenDriveParser::Load("<OpenDRIVE><road id=\"1\"></OpenDRIVE>");
 
   EXPECT_FALSE(map.has_value());
+}
+
+TEST(road, rejects_null_xodr) {
+  EXPECT_FALSE(OpenDriveParser::Load(nullptr).has_value());
 }
 
 TEST(road, rejects_xodr_with_embedded_nul) {

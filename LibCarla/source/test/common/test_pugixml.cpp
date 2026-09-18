@@ -5,7 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "test.h"
-#include <pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 using namespace pugi;
 
