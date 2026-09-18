@@ -1073,13 +1073,24 @@ public:
   bool alive{true};
 
   bool init_called{false};
+  bool qos_init_called{false};
   bool publish_called{false};
   std::string last_topic_name;
+  carla::ros2::QosProfile last_qos;
   void *last_published_data{nullptr};
 
   bool Init(const std::string &topic_name) override {
     init_called = true;
     last_topic_name = topic_name;
+    return init_return_value;
+  }
+
+  bool Init(const std::string &topic_name,
+            const carla::ros2::QosProfile &qos) override {
+    init_called = true;
+    qos_init_called = true;
+    last_topic_name = topic_name;
+    last_qos = qos;
     return init_return_value;
   }
 
@@ -1156,6 +1167,25 @@ TEST(publisher_impl, init_delegates_to_middleware) {
   EXPECT_TRUE(pub.Init("rt/test_topic"));
   EXPECT_TRUE(mock->init_called);
   EXPECT_EQ(mock->last_topic_name, "rt/test_topic");
+}
+
+TEST(publisher_impl, init_with_qos_delegates_profile_to_middleware) {
+  PublisherImpl<TestPubTraits> pub;
+  auto *mock = new MockPublisherMiddleware();
+  pub.SetMiddlewareForTesting(
+      std::unique_ptr<IPublisherMiddleware>(mock));
+
+  const auto qos = carla::ros2::QosProfile::ReliableTransientLocal();
+  EXPECT_TRUE(pub.Init("rt/carla/map", qos));
+  EXPECT_TRUE(mock->qos_init_called);
+  EXPECT_EQ(mock->last_topic_name, "rt/carla/map");
+  EXPECT_EQ(mock->last_qos.reliability,
+            carla::ros2::QosProfile::Reliability::Reliable);
+  EXPECT_EQ(mock->last_qos.durability,
+            carla::ros2::QosProfile::Durability::TransientLocal);
+  EXPECT_EQ(mock->last_qos.history,
+            carla::ros2::QosProfile::History::KeepLast);
+  EXPECT_EQ(mock->last_qos.EffectiveHistoryDepth(), 1);
 }
 
 TEST(publisher_impl, publish_delegates_to_middleware) {
@@ -1463,6 +1493,23 @@ TEST(zenoh_wire_format, topic_liveliness_keyexpr_has_domain_and_mangled_topic) {
       "sensor_msgs::msg::dds_::Imu_", "RIHS01_abc", kZenohDefaultQos);
   EXPECT_EQ(ke.compare(0, 12, "@ros2_lv/42/"), 0) << "keyexpr: " << ke;
   EXPECT_NE(ke.find("%vehicle%imu"), std::string::npos);
+}
+
+TEST(zenoh_wire_format, default_profile_uses_the_legacy_graph_token) {
+  // Publishers which do not explicitly request a profile must keep the token
+  // used before QoS profiles were introduced, rather than treating
+  // QosProfile{} as an explicit request.
+  EXPECT_STREQ(kZenohDefaultQos, "::,1:,:,:,,");
+}
+
+TEST(zenoh_wire_format, sensor_data_profile_is_best_effort_volatile) {
+  EXPECT_EQ(zenoh_qos_keyexpr(QosProfile::SensorData()), "2:2:1,1:,:,:,,");
+}
+
+TEST(zenoh_wire_format, transient_local_profile_and_invalid_depth_are_encoded) {
+  auto qos = QosProfile::ReliableTransientLocal();
+  qos.history_depth = 0;
+  EXPECT_EQ(zenoh_qos_keyexpr(qos), "1:1:1,1:,:,:,,");
 }
 
 #ifndef _WIN32

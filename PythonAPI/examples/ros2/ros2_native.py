@@ -24,7 +24,9 @@ def _setup_vehicle(world, config):
     map_ = world.get_map()
 
     bp = bp_library.filter(config.get("type"))[0]
-    bp.set_attribute("role_name", config.get("id"))
+    # ``id`` is the public ROS frame/name.  A demo may set a distinct
+    # role_name to identify only the actors it owns for safe stale-run cleanup.
+    bp.set_attribute("role_name", config.get("role_name", config.get("id")))
     bp.set_attribute("ros_name", config.get("id")) 
 
     return  world.spawn_actor(

@@ -38,12 +38,10 @@ constexpr const char* kZenohDefaultQos     = "::,1:,:,:,,";
 /// TRANSIENT_LOCAL=1 / VOLATILE=2, KEEP_LAST=1 / KEEP_ALL=2) and empty
 /// fields meaning "system default" (compare kZenohDefaultQos).
 ///
-/// NOTE: this only *advertises* the QoS in the graph cache so rmw_zenoh
-/// peers report compatible endpoints. Zenoh delivery semantics are not
-/// differentiated per profile by this backend (in particular there is no
-/// querying-subscriber support, so TRANSIENT_LOCAL late-join latching is
-/// not provided). Needs validation against rmw_zenoh during the smoke
-/// phase.
+/// The publisher backend uses TRANSIENT_LOCAL to select a zenoh-ext advanced
+/// publisher with a bounded cache, allowing matching late readers to recover
+/// cached samples. The keyexpr still advertises the requested profile to
+/// rmw_zenoh's graph cache; compatibility must be validated with rmw_zenoh.
 inline std::string zenoh_qos_keyexpr(const QosProfile& qos) {
   const char* rel =
       qos.reliability == QosProfile::Reliability::Reliable ? "1" : "2";

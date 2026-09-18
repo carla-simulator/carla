@@ -9,7 +9,7 @@
 # Converts the latched /carla/map OpenDRIVE string into lane markers for RViz.
 #
 # Subscribes to /carla/map (std_msgs/String, transient_local), parses the
-# OpenDRIVE directly (no simulator connection or CARLA Python extension needed) and
+# OpenDRIVE with the carla Python package (no simulator connection needed) and
 # publishes a latched visualization_msgs/MarkerArray on /carla/map_markers:
 #   * lane_boundaries   the lane edges (centerline +/- half the lane width
 #                       given by the OpenDRIVE), one continuous polyline per
@@ -21,9 +21,8 @@
 # load_world), replacing the previous ones.
 
 import argparse
-import math
-import xml.etree.ElementTree as ET
 
+import carla
 import rclpy
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
@@ -68,32 +67,28 @@ def _lane_edge(waypoint, side):
             location.z + right.z * offset)
 
 
-def _lane_chains(open_drive, distance, logger):
-    """Yield sampled OpenDRIVE reference lines without the CARLA extension.
+def _lane_chains(carla_map, distance, logger):
+    """Yields each lane of the map as one list of consecutive waypoints.
 
-    This keeps the visualizer runnable in the ROS Humble image even when its
-    system glibc cannot load the host-built CARLA Python wheel. Curved geometry
-    is integrated from its OpenDRIVE curvature; line geometry is exact.
+    Walks every lane returned by get_topology() in driving direction at the
+    given sampling distance, then appends the first waypoint of the successor
+    road so consecutive roads connect without a gap. Walking each lane as a
+    single chain (instead of pairing independently sampled waypoints with
+    next()) keeps the polyline continuous across lane sections and road seams.
     """
-    root = ET.fromstring(open_drive)
-    for road in root.findall('road'):
-        for geometry in road.findall('./planView/geometry'):
-            x = float(geometry.get('x', 0.0)); y = float(geometry.get('y', 0.0))
-            heading = float(geometry.get('hdg', 0.0)); length = float(geometry.get('length', 0.0))
-            step_count = min(MAX_CHAIN_WAYPOINTS, max(2, int(math.ceil(length / distance)) + 1))
-            step = length / (step_count - 1)
-            arc = geometry.find('arc')
-            curvature = float(arc.get('curvature', 0.0)) if arc is not None else 0.0
-            chain = []
-            for index in range(step_count):
-                s = index * step
-                if abs(curvature) < 1e-12:
-                    chain.append((x + s * math.cos(heading), y + s * math.sin(heading), 0.0))
-                else:
-                    radius = 1.0 / curvature
-                    chain.append((x + radius * (math.sin(heading + curvature * s) - math.sin(heading)),
-                                  y - radius * (math.cos(heading + curvature * s) - math.cos(heading)), 0.0))
-            yield chain
+    for start, _ in carla_map.get_topology():
+        chain = [start]
+        following = start.next(distance)
+        while following and following[0].road_id == start.road_id and len(chain) < MAX_CHAIN_WAYPOINTS:
+            chain.append(following[0])
+            following = chain[-1].next(distance)
+        if len(chain) >= MAX_CHAIN_WAYPOINTS:
+            logger.warning(
+                'Lane chain on road {} truncated at {} waypoints, '
+                'its polyline may be incomplete'.format(start.road_id, MAX_CHAIN_WAYPOINTS))
+        if following:
+            chain.append(following[0])
+        yield chain
 
 
 class MapToMarkers(Node):
@@ -107,6 +102,8 @@ class MapToMarkers(Node):
 
     def _on_map(self, map_msg):
         self.get_logger().info('Received OpenDRIVE ({} bytes), parsing...'.format(len(map_msg.data)))
+        carla_map = carla.Map('map_to_markers', map_msg.data)
+
         # Drop the markers of a previously received map before adding the new ones.
         clear_previous = Marker()
         clear_previous.action = Marker.DELETEALL
@@ -122,16 +119,13 @@ class MapToMarkers(Node):
                 marker.points.append(Point(x=x, y=-y, z=z + 0.1))
             markers.append(marker)
 
-        for chain in _lane_chains(map_msg.data, self._waypoint_distance, self.get_logger()):
+        for chain in _lane_chains(carla_map, self._waypoint_distance, self.get_logger()):
             add_strip('lane_centerlines', (0.2, 0.8, 1.0),
-                      chain)
+                      [(w.transform.location.x, w.transform.location.y, w.transform.location.z)
+                       for w in chain])
             for side in (-1.0, 1.0):
-                # A 3.5 m half-width gives a stable road-edge visualization
-                # for all standard CARLA roads without depending on carla.Map.
-                edge = [(x - side * 3.5 * math.sin(math.atan2(y - chain[0][1], x - chain[0][0])),
-                         y + side * 3.5 * math.cos(math.atan2(y - chain[0][1], x - chain[0][0])), z)
-                        for x, y, z in chain]
-                add_strip('lane_boundaries', (0.9, 0.9, 0.9), edge)
+                add_strip('lane_boundaries', (0.9, 0.9, 0.9),
+                          [_lane_edge(w, side) for w in chain])
 
         self._marker_publisher.publish(MarkerArray(markers=markers))
         boundary_count = sum(1 for m in markers if m.ns == 'lane_boundaries')

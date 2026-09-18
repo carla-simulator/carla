@@ -21,7 +21,8 @@ CarlaMapPublisher::CarlaMapPublisher()
     : BasePublisher("rt/carla/map"),
       _impl(std::make_shared<PublisherImpl<CarlaMapMsgTraits>>()) {
   auto qos = QosProfile::ReliableTransientLocal();
-  if (!_impl->Init(GetBaseTopicName(), qos)) {
+  _initialized = _impl->Init(GetBaseTopicName(), qos);
+  if (!_initialized) {
     log_warning("CarlaMapPublisher: failed to initialise writer for ",
                 GetBaseTopicName());
   }
@@ -30,10 +31,17 @@ CarlaMapPublisher::CarlaMapPublisher()
 CarlaMapPublisher::~CarlaMapPublisher() = default;
 
 bool CarlaMapPublisher::Publish() {
+  if (!_initialized) {
+    log_warning("CarlaMapPublisher: cannot publish because writer initialization failed");
+    return false;
+  }
   return _impl->Publish();
 }
 
 bool CarlaMapPublisher::Write(const std::string &open_drive) {
+  if (!_initialized) {
+    return false;
+  }
   _impl->GetMessage()->data = open_drive;
   return true;
 }

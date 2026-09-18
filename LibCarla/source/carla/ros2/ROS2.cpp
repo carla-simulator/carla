@@ -189,8 +189,14 @@ void ROS2::ProcessDataFromMap(const std::string &open_drive) {
   if (!_map_publisher) {
     _map_publisher = std::make_shared<CarlaMapPublisher>();
   }
-  _map_publisher->Write(open_drive);
-  _map_publisher->Publish();
+  if (!_map_publisher->Write(open_drive) || !_map_publisher->Publish()) {
+    log_warning("ROS2: failed to publish OpenDRIVE map");
+    // Do not retain a publisher whose middleware writer could not be created
+    // (or has subsequently become unusable). A later episode gets a fresh
+    // initialization attempt instead of permanently losing /carla/map after a
+    // transient middleware failure.
+    _map_publisher.reset();
+  }
 }
 
 void ROS2::RegisterSensor(

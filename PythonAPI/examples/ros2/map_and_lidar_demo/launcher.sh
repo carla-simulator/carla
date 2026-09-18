@@ -10,19 +10,22 @@ CARLA_HOST="${CARLA_HOST:-localhost}"
 CARLA_PORT="${CARLA_PORT:-2000}"
 WAYPOINT_DISTANCE="${WAYPOINT_DISTANCE:-2.0}"
 MAP_ONLY="${MAP_ONLY:-0}"
+DEMO_ROLE_NAME="${DEMO_ROLE_NAME:-hero_carla_map_and_lidar_demo}"
 
 pids=()
+
+# A container killed before ros2_native.py can run its finally block may leave
+# its actors behind.  The stack uses an owner-qualified hero role, so this is
+# safe to run before every launch and cannot delete another client's ``hero``.
+python3 /opt/carla/cleanup.py --host "${CARLA_HOST}" --port "${CARLA_PORT}" \
+    --role-name "${DEMO_ROLE_NAME}"
 
 python3 /opt/carla/map_to_markers.py --waypoint-distance "${WAYPOINT_DISTANCE}" &
 pids+=($!)
 
 if [ "${MAP_ONLY}" != "1" ]; then
-    # A previous stack that died without cleanup (killed container, double
-    # Ctrl+C) leaves its vehicle behind, publishing on the same topics as the
-    # one about to spawn. Remove it first.
-    python3 /opt/carla/cleanup.py --host "${CARLA_HOST}" --port "${CARLA_PORT}"
-
-    python3 /opt/carla/ego_tf_broadcaster.py --host "${CARLA_HOST}" --port "${CARLA_PORT}" &
+    python3 /opt/carla/ego_tf_broadcaster.py --host "${CARLA_HOST}" --port "${CARLA_PORT}" \
+        --role-name "${DEMO_ROLE_NAME}" --frame hero &
     pids+=($!)
     python3 /opt/carla/ros2_native.py --file /opt/carla/stack.json --host "${CARLA_HOST}" --port "${CARLA_PORT}" &
     pids+=($!)
@@ -48,8 +51,6 @@ echo "[demo] A helper exited, stopping the stack..."
 stop
 wait || true
 
-# Belt and braces: if the spawning helper was killed mid-cleanup, remove what
-# it left behind so the next run starts from a clean world anyway.
-if [ "${MAP_ONLY}" != "1" ]; then
-    python3 /opt/carla/cleanup.py --host "${CARLA_HOST}" --port "${CARLA_PORT}" || true
-fi
+# ros2_native.py tracks and destroys only the actors it created.  The next
+# launch removes leftovers by the private role above if an unclean stop ever
+# prevented this normal cleanup path from running.

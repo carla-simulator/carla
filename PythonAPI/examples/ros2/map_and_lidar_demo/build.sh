@@ -22,11 +22,12 @@ map_to_markers.py, ego_tf_broadcaster.py) installed.
 Options:
   --distro    ROS 2 distribution to use. Supported: humble, jazzy  (default: humble)
   --rmw       RMW implementation to use. Supported: fastdds, cyclonedds, zenoh  (default: fastdds)
-  --wheel     Path to the carla wheel to install (default: autodetect in PythonAPI/carla/dist)
+  --wheel     Path to the carla wheel to install. If omitted, use the
+              target-runtime wheel in Build/ros2-wheel-<distro>/PythonAPI/dist.
 
 Examples:
-  $0 --distro=humble --rmw=fastdds
-  $0 --distro=jazzy  --rmw=cyclonedds --wheel=/path/to/carla-0.9.16-cp312-cp312-manylinux_2_31_x86_64.whl
+  $0 --distro=humble --rmw=fastdds \\
+      --wheel=/absolute/path/to/carla-0.10.0-cp310-cp310-linux_x86_64.whl
 EOF
     exit 1
 }
@@ -67,29 +68,35 @@ IMAGE_NAME="carla-map-and-lidar-demo-${DISTRO}-${RMW}"
 
 # --- Locate the carla wheel ---
 if [ -z "$WHEEL" ]; then
-    WHEEL="$(ls "${EXAMPLES_DIR}"/../../carla/dist/carla-*-${PYTHON_TAG}-*.whl 2>/dev/null | head -n 1 || true)"
-    # UE5's CMake build publishes the wheel under Build/PythonAPI/dist rather
-    # than the legacy PythonAPI/carla/dist location used by the UE4 Makefile.
-    if [ -z "$WHEEL" ]; then
-        WHEEL="$(ls "${EXAMPLES_DIR}"/../../../Build/PythonAPI/dist/carla-*-${PYTHON_TAG}-*.whl 2>/dev/null | head -n 1 || true)"
+    # A wheel built on the host may require a newer glibc than the ROS image.
+    # Only select the explicitly target-runtime build; Docker validates the
+    # import below before it tags an image.
+    shopt -s nullglob
+    WHEELS=("${EXAMPLES_DIR}"/../../../Build/ros2-wheel-${DISTRO}/PythonAPI/dist/carla-*-${PYTHON_TAG}-*.whl)
+    shopt -u nullglob
+    if [ "${#WHEELS[@]}" -eq 1 ]; then
+        WHEEL="${WHEELS[0]}"
+    elif [ "${#WHEELS[@]}" -gt 1 ]; then
+        echo "Found multiple target-runtime carla ${PYTHON_TAG} wheels; pass the intended one with --wheel."
+        printf '  %s\n' "${WHEELS[@]}"
+        exit 1
     fi
 fi
 if [ -z "$WHEEL" ] || [ ! -f "$WHEEL" ]; then
-    echo "No carla ${PYTHON_TAG} wheel found in '${EXAMPLES_DIR}/../../carla/dist'."
-    echo "Build it with 'make PythonAPI' or pass one explicitly with --wheel=<path>."
+    echo "No target-runtime carla ${PYTHON_TAG} wheel found."
+    echo "Pass a wheel built for the selected ROS image with --wheel=<path>."
     exit 1
 fi
 
-# --- Build the base RViz image if missing ---
-if ! docker image inspect "${BASE_IMAGE}" &>/dev/null; then
-    echo "[demo] Building base Docker image '${BASE_IMAGE}' (distro=${DISTRO}, rmw=${RMW})..."
-    docker build \
-        --build-arg ROS_DISTRO="${DISTRO}" \
-        --build-arg RMW_IMPLEMENTATION="${RMW_IMPLEMENTATION}" \
-        --file "${EXAMPLES_DIR}/Dockerfile" \
-        --tag "${BASE_IMAGE}" \
-        "${EXAMPLES_DIR}"
-fi
+# Always invoke the build: Docker cache makes an unchanged build cheap, while
+# source or Dockerfile changes must not silently reuse a stale demo image.
+echo "[demo] Building base Docker image '${BASE_IMAGE}' (distro=${DISTRO}, rmw=${RMW})..."
+docker build \
+    --build-arg ROS_DISTRO="${DISTRO}" \
+    --build-arg RMW_IMPLEMENTATION="${RMW_IMPLEMENTATION}" \
+    --file "${EXAMPLES_DIR}/Dockerfile" \
+    --tag "${BASE_IMAGE}" \
+    "${EXAMPLES_DIR}"
 
 # --- Build the demo image from a staged context ---
 BUILD_DIR="$(mktemp -d)"
@@ -108,5 +115,6 @@ cp "$WHEEL" "${BUILD_DIR}/"
 echo "[demo] Building Docker image '${IMAGE_NAME}' (wheel=$(basename "$WHEEL"))..."
 docker build \
     --build-arg BASE_IMAGE="${BASE_IMAGE}" \
+    --build-arg CARLA_VERSION="0.10.0" \
     --tag "${IMAGE_NAME}" \
     "${BUILD_DIR}"

@@ -6,12 +6,9 @@
 # This work is licensed under the terms of the MIT license.
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
-# Destroys leftover demo actors: every vehicle with the given role_name and the
-# sensors attached to it. Also restores asynchronous mode, which a killed stack
-# can leave enabled with nobody ticking. Run by launcher.sh before
-# spawning so that a previous demo stack that died without cleaning up (killed
-# container, double Ctrl+C, docker stop grace timeout) does not leave a second
-# vehicle publishing on the same topics.
+# Destroys explicitly identified demo actors and their attached sensors. It is
+# intentionally opt-in: a role_name such as "hero" is shared by common CARLA
+# workflows, so treating it as ownership could destroy another client's actor.
 
 import argparse
 
@@ -24,30 +21,39 @@ def main(args):
     world = client.get_world()
     actors = world.get_actors()
 
-    leftovers = [vehicle for vehicle in actors.filter('vehicle.*')
-                 if vehicle.attributes.get('role_name') == args.role_name]
+    leftovers = []
+    for actor_id in args.actor_id:
+        actor = world.get_actor(actor_id)
+        if actor is None:
+            print("Actor {} no longer exists".format(actor_id))
+        elif actor.type_id.startswith('vehicle.'):
+            leftovers.append(actor)
+        else:
+            print("Actor {} is not a vehicle; skipping".format(actor_id))
+    if args.role_name:
+        for actor in actors.filter('vehicle.*'):
+            if actor.attributes.get('role_name') == args.role_name:
+                leftovers.append(actor)
+
     for vehicle in leftovers:
         for sensor in actors.filter('sensor.*'):
             if sensor.parent is not None and sensor.parent.id == vehicle.id:
                 sensor.destroy()
         vehicle.destroy()
-        print("Destroyed leftover vehicle {} (role_name '{}')".format(vehicle.id, args.role_name))
+        print("Destroyed demo vehicle {}".format(vehicle.id))
 
     if not leftovers:
-        print("No leftover vehicles with role_name '{}'".format(args.role_name))
-
-    settings = world.get_settings()
-    if settings.synchronous_mode:
-        settings.synchronous_mode = False
-        settings.fixed_delta_seconds = None
-        world.apply_settings(settings)
-        print('Restored asynchronous mode')
+        print("No explicitly identified demo vehicles to destroy")
 
 
 if __name__ == '__main__':
     argparser = argparse.ArgumentParser(description='CARLA demo leftover actor cleanup')
     argparser.add_argument('--host', metavar='H', default='localhost', help='IP of the host CARLA Simulator (default: localhost)')
     argparser.add_argument('--port', metavar='P', default=2000, type=int, help='TCP port of CARLA Simulator (default: 2000)')
-    argparser.add_argument('--role-name', metavar='NAME', default='hero', help='role_name of the vehicles to destroy (default: hero)')
+    targets = argparser.add_mutually_exclusive_group()
+    targets.add_argument('--actor-id', metavar='ID', type=int, action='append', default=[],
+                           help='Vehicle actor id created by this demo (repeatable). No actors are destroyed unless supplied.')
+    targets.add_argument('--role-name', metavar='NAME',
+                           help='Private role_name owned by this demo. Matching vehicles and their attached sensors are destroyed.')
 
     main(argparser.parse_args())

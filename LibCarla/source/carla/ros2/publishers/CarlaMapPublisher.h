@@ -36,6 +36,7 @@ public:
 
 private:
   std::shared_ptr<PublisherImpl<CarlaMapMsgTraits>> _impl;
+  bool _initialized{false};
 };
 
 }  // namespace ros2

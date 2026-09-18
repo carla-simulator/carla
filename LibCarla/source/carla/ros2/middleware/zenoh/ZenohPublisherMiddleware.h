@@ -65,15 +65,19 @@ class ZenohPublisherMiddleware : public IPublisherMiddleware {
   }
 
   bool Init(const std::string& topic_name) override {
-    return InitImpl(topic_name, QosProfile{});
+    // Preserve the historic unspecified QoS token for callers that have not
+    // opted into a profile. This avoids changing graph compatibility for all
+    // existing Zenoh publishers merely by adding the QoS overload.
+    return InitImpl(topic_name, QosProfile{}, true);
   }
 
   bool Init(const std::string& topic_name, const QosProfile& qos) override {
-    return InitImpl(topic_name, qos);
+    return InitImpl(topic_name, qos, false);
   }
 
  private:
-  bool InitImpl(const std::string& topic_name, const QosProfile& requested_qos) {
+  bool InitImpl(const std::string& topic_name, const QosProfile& requested_qos,
+                bool use_legacy_default_qos) {
     const z_loaned_session_t* session = zenoh_get_shared_session();
 
     const std::string topic_no_rt = zenoh_strip_rt_prefix(topic_name);
@@ -118,7 +122,9 @@ class ZenohPublisherMiddleware : public IPublisherMiddleware {
 
     QosProfile effective_qos = requested_qos;
     if (!_use_advanced) effective_qos.durability = QosProfile::Durability::Volatile;
-    const std::string qos_str = zenoh_qos_keyexpr(effective_qos);
+    const std::string qos_str = use_legacy_default_qos
+        ? kZenohDefaultQos
+        : zenoh_qos_keyexpr(effective_qos);
 
     const std::string lv_ke_str = zenoh_make_topic_liveliness_keyexpr(
         zenoh_ros_domain_id(), zenoh_session_zid(), zenoh_next_entity_id(),

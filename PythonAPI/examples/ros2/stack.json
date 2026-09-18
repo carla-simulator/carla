@@ -1,6 +1,7 @@
 {
     "type": "vehicle.lincoln.mkz",
     "id": "hero",
+    "role_name": "hero_carla_map_and_lidar_demo",
     "sensors": [
         {
             "type": "sensor.camera.rgb",
