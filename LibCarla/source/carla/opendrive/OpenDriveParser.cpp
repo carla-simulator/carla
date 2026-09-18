@@ -19,17 +19,32 @@
 #include "carla/opendrive/parser/TrafficGroupParser.h"
 #include "carla/road/MapBuilder.h"
 
-#include <third-party/pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 namespace carla {
 namespace opendrive {
 
   std::optional<road::Map> OpenDriveParser::Load(const std::string &opendrive) {
+    return Load(std::string_view{opendrive});
+  }
+
+  std::optional<road::Map> OpenDriveParser::Load(const char *opendrive) {
+    if (opendrive == nullptr) {
+      return {};
+    }
+    return Load(std::string_view{opendrive});
+  }
+
+  std::optional<road::Map> OpenDriveParser::Load(std::string_view opendrive) {
     pugi::xml_document xml;
-    pugi::xml_parse_result parse_result = xml.load_string(opendrive.c_str());
+    const pugi::xml_parse_result parse_result = xml.load_buffer(
+        opendrive.data(), opendrive.size());
 
     if (parse_result == false) {
-      log_error("unable to parse the OpenDRIVE XML string");
+      log_error(
+          "unable to parse the OpenDRIVE XML string:",
+          parse_result.description(),
+          "at offset", parse_result.offset);
       return {};
     }
 

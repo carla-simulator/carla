@@ -11,7 +11,7 @@
 #include "carla/road/MapBuilder.h"
 #include "carla/road/RoadTypes.h"
 
-#include <third-party/pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 namespace carla {
 namespace opendrive {
