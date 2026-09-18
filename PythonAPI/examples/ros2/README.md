@@ -40,6 +40,12 @@ Execute the ROS 2 example script:
 python3 ros2_native.py --file stack.json
 ```
 
+The controller follows an already-running world's synchronization mode by
+default. Pass `--sync` when it should own the fixed-step clock; if traffic is
+already running synchronously, `--sync` detects that owner and waits for its
+ticks instead of double-ticking the simulation. `--force-sync` is available
+only for deliberate experiments with two clock owners.
+
 * The `stack.json` file defines the sensor configuration.
 * You can edit this file to adjust the sensor setup according to your requirements.
 

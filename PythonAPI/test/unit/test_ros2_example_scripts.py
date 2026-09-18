@@ -17,8 +17,11 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
+import types
 import unittest
+import importlib.util
 
 
 class TestMapAndLidarDemoLaunchScript(unittest.TestCase):
@@ -60,6 +63,28 @@ class TestMapAndLidarDemoLaunchScript(unittest.TestCase):
 
             self.assertIn('--env=ROS_DOMAIN_ID=42',
                           capture.read_text().splitlines())
+
+    def test_ros2_controller_never_claims_an_existing_sync_clock(self):
+        source = (
+            Path(__file__).resolve().parents[2]
+            / 'examples' / 'ros2' / 'ros2_native.py')
+        carla_stub = types.ModuleType('carla')
+        previous_carla = sys.modules.get('carla')
+        sys.modules['carla'] = carla_stub
+        try:
+            spec = importlib.util.spec_from_file_location('ros2_native_test', source)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+        finally:
+            if previous_carla is None:
+                sys.modules.pop('carla', None)
+            else:
+                sys.modules['carla'] = previous_carla
+
+        self.assertFalse(module._should_take_sync_ownership(True, False, True))
+        self.assertTrue(module._should_take_sync_ownership(True, False, False))
+        self.assertTrue(module._should_take_sync_ownership(False, True, True))
+        self.assertFalse(module._should_take_sync_ownership(False, False, False))
 
 
 if __name__ == '__main__':

@@ -27,7 +27,10 @@ if [ "${MAP_ONLY}" != "1" ]; then
     python3 /opt/carla/ego_tf_broadcaster.py --host "${CARLA_HOST}" --port "${CARLA_PORT}" \
         --role-name "${DEMO_ROLE_NAME}" --frame hero &
     pids+=($!)
-    python3 /opt/carla/ros2_native.py --file /opt/carla/stack.json --host "${CARLA_HOST}" --port "${CARLA_PORT}" &
+    # Request synchronous operation, but ros2_native.py only takes ownership
+    # when the world is currently asynchronous.  If generate_traffic.py is
+    # already the synchronous master, the controller follows its clock.
+    python3 /opt/carla/ros2_native.py --sync --file /opt/carla/stack.json --host "${CARLA_HOST}" --port "${CARLA_PORT}" &
     pids+=($!)
 fi
 
