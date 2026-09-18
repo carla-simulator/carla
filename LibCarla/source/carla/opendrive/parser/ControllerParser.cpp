@@ -8,7 +8,7 @@
 
 #include "carla/road/MapBuilder.h"
 
-#include <third-party/pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 namespace carla {
 namespace opendrive {

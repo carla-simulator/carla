@@ -150,6 +150,37 @@ include_directories (
 
 
 
+# ==== PUGIXML ====
+# Keep this verified release archive in sync with the parser regression tests. Linking
+# the upstream target avoids compiling a separate embedded copy per LibCarla
+# variant while preserving its public include usage requirements.
+set (PUGIXML_BUILD_TESTS OFF CACHE INTERNAL "" FORCE)
+set (PUGIXML_BUILD_SAMPLES OFF CACHE INTERNAL "" FORCE)
+# CARLA's flattened Unreal, Python, and installed-client link paths require a
+# concrete archive even when the global build requests shared libraries.
+set (PUGIXML_BUILD_SHARED_AND_STATIC_LIBS ON CACHE INTERNAL "" FORCE)
+set (PUGIXML_INSTALL OFF CACHE INTERNAL "" FORCE)
+if (ENABLE_EXCEPTIONS)
+  set (PUGIXML_NO_EXCEPTIONS OFF CACHE INTERNAL "" FORCE)
+else ()
+  set (PUGIXML_NO_EXCEPTIONS ON CACHE INTERNAL "" FORCE)
+endif ()
+carla_dependency_add (
+  pugixml
+  v1.16
+  https://github.com/zeux/pugixml/archive/refs/tags/v1.16.tar.gz
+  https://github.com/zeux/pugixml.git
+  URL_HASH SHA256=357bcab8877dc9943f355d3a72daba1b053238ba955f50fa81586afb65090219
+)
+carla_dependencies_make_available ()
+# Unreal's bundled Clang toolchain does not ship clang-scan-deps.  CARLA
+# targets already avoid CMake module scanning; fetched pugixml needs the same
+# setting because it is an independent CMake target.
+set (CARLA_PUGIXML_TARGET pugixml-static)
+set_property (TARGET ${CARLA_PUGIXML_TARGET} PROPERTY CXX_SCAN_FOR_MODULES OFF)
+
+
+
 # ==== BOOST ====
 set (
   BOOST_INCLUDED_PROJECTS
