@@ -31,6 +31,12 @@ using namespace util;
 
 const std::string BASE_PATH = LIBCARLA_TEST_CONTENT_FOLDER "/OpenDrive/";
 
+TEST(road, rejects_malformed_xodr) {
+  const auto map = OpenDriveParser::Load("<OpenDRIVE><road id=\"1\"></OpenDRIVE>");
+
+  EXPECT_FALSE(map.has_value());
+}
+
 // Road Elevation
 static void test_road_elevation(const pugi::xml_document &xml, std::optional<Map>& map) {
   pugi::xml_node open_drive_node = xml.child("OpenDRIVE");
