@@ -105,6 +105,10 @@ carla_dependency_add (
   ${CARLA_ZLIB_TAG}
   https://github.com/madler/zlib/archive/refs/tags/${CARLA_ZLIB_TAG}.zip
   https://github.com/madler/zlib.git
+  PATCH_COMMAND
+    ${CMAKE_COMMAND}
+      -DZLIB_SOURCE_DIR=<SOURCE_DIR>
+      -P${CMAKE_CURRENT_LIST_DIR}/DisableZlibCPack.cmake
 )
 carla_dependencies_make_available ()
 include_directories (
