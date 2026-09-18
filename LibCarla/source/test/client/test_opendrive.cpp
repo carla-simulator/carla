@@ -22,6 +22,7 @@
 
 #include <fstream>
 #include <string>
+#include <string_view>
 
 using namespace carla::road;
 using namespace carla::road::element;
@@ -35,6 +36,12 @@ TEST(road, rejects_malformed_xodr) {
   const auto map = OpenDriveParser::Load("<OpenDRIVE><road id=\"1\"></OpenDRIVE>");
 
   EXPECT_FALSE(map.has_value());
+}
+
+TEST(road, rejects_xodr_with_embedded_nul) {
+  constexpr std::string_view xodr{"<OpenDRIVE>\0</OpenDRIVE>", 24u};
+
+  EXPECT_FALSE(OpenDriveParser::Load(xodr).has_value());
 }
 
 // Road Elevation

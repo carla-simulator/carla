@@ -24,9 +24,10 @@
 namespace carla {
 namespace opendrive {
 
-  std::optional<road::Map> OpenDriveParser::Load(const std::string &opendrive) {
+  std::optional<road::Map> OpenDriveParser::Load(std::string_view opendrive) {
     pugi::xml_document xml;
-    pugi::xml_parse_result parse_result = xml.load_string(opendrive.c_str());
+    const pugi::xml_parse_result parse_result = xml.load_buffer(
+        opendrive.data(), opendrive.size());
 
     if (parse_result == false) {
       log_error(
