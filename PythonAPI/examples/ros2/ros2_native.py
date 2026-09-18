@@ -34,10 +34,15 @@ def _setup_vehicle(world, config):
     bp.set_attribute("role_name", config.get("role_name", config.get("id")))
     bp.set_attribute("ros_name", config.get("id")) 
 
-    return  world.spawn_actor(
-        bp,
-        map_.get_spawn_points()[0],
-        attach_to=None)
+    # Traffic may already occupy the first map spawn point.  Do not abort the
+    # entire ROS2 stack on that expected collision; try each point until the
+    # controller finds a free one.
+    for spawn_point in map_.get_spawn_points():
+        vehicle = world.try_spawn_actor(bp, spawn_point, attach_to=None)
+        if vehicle is not None:
+            return vehicle
+
+    raise RuntimeError("Unable to find a free spawn point for the ROS2 vehicle")
 
 
 def _setup_sensors(world, vehicle, sensors_config):
