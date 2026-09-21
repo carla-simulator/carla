@@ -2615,9 +2615,6 @@ Resets the state of the traffic lights of the group to the initial state at the 
 _</font>  
 
 ##### Getters
-- <a name="carla.TrafficLight.get_affected_lane_waypoints"></a>**<font color="#7fb800">get_affected_lane_waypoints</font>**(<font color="#00a6ed">**self**</font>)  
-Returns a list of waypoints indicating the positions and lanes where the traffic light is having an effect.  
-    - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
 - <a name="carla.TrafficLight.get_elapsed_time"></a>**<font color="#7fb800">get_elapsed_time</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the time in seconds since current light state started according to last tick. The method does not call the simulator.  
     - **Return:** _float<small> - seconds</small>_  
@@ -2634,7 +2631,7 @@ _</font>
 Returns a list of the bounding boxes encapsulating each light box of the traffic light.  
     - **Return:** _list([carla.BoundingBox](#carla.BoundingBox))_  
 - <a name="carla.TrafficLight.get_opendrive_id"></a>**<font color="#7fb800">get_opendrive_id</font>**(<font color="#00a6ed">**self**</font>)  
-Returns the OpenDRIVE id of this traffic light.  
+Returns the OpenDRIVE id of this traffic light. Inherited from [carla.TrafficSign](#carla.TrafficSign).  
     - **Return:** _str_  
 - <a name="carla.TrafficLight.get_pole_index"></a>**<font color="#7fb800">get_pole_index</font>**(<font color="#00a6ed">**self**</font>)  
 Returns the index of the pole that identifies it as part of the traffic light group of a junction.  
@@ -2647,9 +2644,6 @@ The client returns the time set for the traffic light to be red, according to la
 The client returns the state of the traffic light according to last tick. The method does not call the simulator.  
     - **Return:** _[carla.TrafficLightState](#carla.TrafficLightState)_  
     - **Setter:** _[carla.TrafficLight.set_state](#carla.TrafficLight.set_state)_  
-- <a name="carla.TrafficLight.get_stop_waypoints"></a>**<font color="#7fb800">get_stop_waypoints</font>**(<font color="#00a6ed">**self**</font>)  
-Returns a list of waypoints indicating the stop position for the traffic light. These waypoints are computed from the trigger boxes of the traffic light that indicate where a vehicle should stop.  
-    - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
 - <a name="carla.TrafficLight.get_yellow_time"></a>**<font color="#7fb800">get_yellow_time</font>**(<font color="#00a6ed">**self**</font>)  
 The client returns the time set for the traffic light to be yellow, according to last tick. The method does not call the simulator.  
     - **Return:** _float<small> - seconds</small>_  
@@ -2867,6 +2861,19 @@ Traffic signs appearing in the simulation except for traffic lights. These have 
 ### Instance Variables
 - <a name="carla.TrafficSign.trigger_volume"></a>**<font color="#f8805a">trigger_volume</font>**  
 A [carla.BoundingBox](#carla.BoundingBox) situated near a traffic sign where the [carla.Actor](#carla.Actor) who is inside can know about it.  
+
+### Methods
+
+##### Getters
+- <a name="carla.TrafficSign.get_affected_lane_waypoints"></a>**<font color="#7fb800">get_affected_lane_waypoints</font>**(<font color="#00a6ed">**self**</font>)  
+Returns a list of waypoints indicating the positions and lanes where the traffic sign is having an effect.  
+    - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
+- <a name="carla.TrafficSign.get_opendrive_id"></a>**<font color="#7fb800">get_opendrive_id</font>**(<font color="#00a6ed">**self**</font>)  
+Returns the OpenDRIVE id of this traffic sign.  
+    - **Return:** _str_  
+- <a name="carla.TrafficSign.get_stop_waypoints"></a>**<font color="#7fb800">get_stop_waypoints</font>**(<font color="#00a6ed">**self**</font>)  
+Returns a list of waypoints indicating the stop position for the traffic sign. These waypoints are computed from the trigger volume of the sign that indicates where a vehicle should stop.  
+    - **Return:** _list([carla.Waypoint](#carla.Waypoint))_  
 
 ---
 
