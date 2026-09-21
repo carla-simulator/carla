@@ -20,6 +20,7 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "EngineUtils.h"
 #include "Components/ExponentialHeightFogComponent.h"
+#include "Components/ChildActorComponent.h"
 #include "Components/DirectionalLightComponent.h"
 #include "Components/LightComponent.h"
 #include "Components/PostProcessComponent.h"
@@ -683,6 +684,60 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                         if (StrayLight->IsUsedAsAtmosphereSunLight())
                             StrayLight->SetAtmosphereSunLight(false);
                     }
+                }
+            }
+
+            // Destroying the surplus child ACTORS above is not enough. Each was
+            // owned by a UChildActorComponent that SetSkySphere and
+            // SetSunActorReference add to this rig on EVERY weather push, and a
+            // surviving component immediately recreates its child actor -- so
+            // the actor dedup above was treating the symptom while the
+            // components grew without bound.
+            //
+            // Measured: 2 components leaked per push (8 -> 208 over 100 pushes
+            // with identical weather values and the sun held still; 208 -> 6
+            // with this fix), so a client driving weather at 10 Hz accumulates
+            // hundreds of coincident opaque sky spheres. Unbounded memory and
+            // performance growth for anyone using the Weather API.
+            //
+            // Not the cause of the sky flicker in #9884, despite an earlier
+            // version of this comment claiming so: that flicker is the
+            // volumetric cloud shadow map, and it reproduces with this fix
+            // applied and only the two legitimate components present. Piling
+            // up spheres does destabilise the sky on its own -- they keep the
+            // sun state they had when they stopped being current and then
+            // fight over the depth test -- but that is this defect, not the
+            // reported one.
+            //
+            // Keep one component per child-actor class, preferring the one
+            // whose child actor the dedup above chose to keep.
+            // DestroyComponent takes the child actor with it.
+            {
+                TInlineComponentArray<UChildActorComponent*> ChildActorComponents;
+                SkyActor->GetComponents(ChildActorComponents);
+                TMap<UClass*, TArray<UChildActorComponent*>> ComponentsByChildClass;
+                for (UChildActorComponent* ChildComponent : ChildActorComponents)
+                    if (ChildComponent != nullptr && ChildComponent->GetChildActorClass() != nullptr)
+                        ComponentsByChildClass.FindOrAdd(ChildComponent->GetChildActorClass()).Add(ChildComponent);
+
+                for (const TPair<UClass*, TArray<UChildActorComponent*>>& Pair : ComponentsByChildClass)
+                {
+                    const TArray<UChildActorComponent*>& Components = Pair.Value;
+                    if (Components.Num() < 2)
+                        continue;
+                    UChildActorComponent* ComponentToKeep = Components.Last();
+                    for (UChildActorComponent* ChildComponent : Components)
+                    {
+                        if (ChildComponent->GetChildActor() != nullptr
+                            && ChildComponent->GetChildActor() == SphereActor)
+                        {
+                            ComponentToKeep = ChildComponent;
+                            break;
+                        }
+                    }
+                    for (UChildActorComponent* ChildComponent : Components)
+                        if (ChildComponent != ComponentToKeep)
+                            ChildComponent->DestroyComponent();
                 }
             }
         }
