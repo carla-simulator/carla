@@ -150,6 +150,20 @@ static TAutoConsoleVariable<bool> CVarCarlaWeatherEnableOvercastClouds(
     TEXT("Billowy overcast one. Set false to always use the plain master instead."),
     ECVF_Default);
 
+// Every weather push re-asserts the cloud material (MI_Clouds or the Billowy
+// master) and overwrites BaseNoiseExp / Cloud Density on the rig's
+// VolumetricCloudComponent. That makes a component authored or swapped in by
+// hand in BP_Carla_Sky unmeasurable on its own terms -- it never survives the
+// first push. Set false to leave the component exactly as the blueprint
+// authored it, to test whether the sky flicker in #9884 follows the rig's
+// specific cloud asset or any volumetric cloud at all.
+static TAutoConsoleVariable<bool> CVarCarlaWeatherDriveCloudMaterial(
+    TEXT("carla.Weather.DriveCloudMaterial"),
+    true,
+    TEXT("Whether weather pushes assign the cloud material and its density parameters to ")
+    TEXT("the sky rig's VolumetricCloudComponent. Set false to leave the blueprint's own setup alone."),
+    ECVF_Default);
+
 AWeather::AWeather(const FObjectInitializer& ObjectInitializer)
     : Super(ObjectInitializer)
 {
@@ -831,6 +845,41 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             SunLightComponent->SetWorldRotation(
                 FRotator(-Weather.SunAltitudeAngle, Weather.SunAzimuthAngle, 0.0f));
         }
+
+        // The cloud shadow map is a single 512-texel map (512 * the light's
+        // CloudShadowMapResolutionScale, capped by
+        // r.VolumetricCloud.ShadowMap.MaxResolution) spread over
+        // CloudShadowExtent kilometres of radius. The rig ships 150 km, which
+        // is ~586 m per texel: rotating the sun walks cloud density across
+        // texels that coarse and the clouds' self-shadowing changes in visible
+        // steps, which the atmosphere then carries into cloud-free sky as well
+        // -- issue #9884. 20 km still covers far more than any CARLA town, and
+        // at ~78 m per texel the stepping stops being visible.
+        //
+        // Measured on the viewport (Town10, sun altitude 2, cloudiness 30,
+        // 0.5 deg of azimuth per captured frame; residual from a 9-frame
+        // moving average, normalised by the ROI's own mean): horizon sky
+        // 0.0718 with 80 consecutive-frame steps over 3 levels at 150 km,
+        // 0.0109 with 13 at 20 km, and 0.0045 with 4 once the filtering in
+        // DefaultScalability.ini is added on top. The floor, with the shadow
+        // map switched off entirely, is 0.0004 with 0 steps. The road ROI,
+        // which must not move, stayed at its own floor throughout. Confirmed
+        // by eye on a rotating sun, which a residual score alone does not
+        // establish.
+        //
+        // The trade: the map no longer covers the distant world, so clouds
+        // stop shadowing sky far from the camera and the horizon sits brighter
+        // than it did at 150 km (level 90.6 -> 167.8 of 255).
+        if (UDirectionalLightComponent* SunDirectionalLight =
+                Cast<UDirectionalLightComponent>(FindComponent(TEXT("DirectionalLightComponentSun"))))
+        {
+            constexpr float CloudShadowExtentKm = 20.0f;
+            if (SunDirectionalLight->CloudShadowExtent != CloudShadowExtentKm)
+            {
+                SunDirectionalLight->CloudShadowExtent = CloudShadowExtentKm;
+                SunDirectionalLight->MarkRenderStateDirty();
+            }
+        }
         // The rig's Moon light ships with AffectsWorld off -- a disabled
         // light contributes nothing to the scene no matter what its
         // Intensity is set to below, which is why night always rendered
@@ -870,9 +919,18 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         // rendered sky look does not change; the capture ignores the sphere
         // and sees the atmosphere, yielding a physically-scaled ambient in
         // the same photometric units as the sun that tracks sun altitude for
-        // free. The VolumetricCloudComponent is deliberately left inactive:
-        // the sphere already paints clouds, and volumetric ones would
-        // composite in front of it as a second cloud layer.
+        // free.
+        //
+        // The VolumetricCloudComponent is NOT activated here either, but do
+        // not read that as it being switched off: activation is irrelevant for
+        // that component type. CreateRenderState_Concurrent adds the proxy
+        // when ShouldComponentAddToScene() && ShouldRender() && IsRegistered()
+        // and never consults IsActive(), so the rig's clouds render regardless.
+        // Verified live on Town10's placed BP_Carla_Sky_C_15: visible = True,
+        // is_active = False, with a MID off MI_Clouds assigned -- and they are
+        // plainly in frame. Visibility, not activation, is the lever. An
+        // earlier comment here asserted the opposite and sent the #9884
+        // investigation away from the real cause for a whole session.
         {
             FObjectProperty* AtmosphereProperty = CastField<FObjectProperty>(
                 SkyActor->GetClass()->FindPropertyByName(TEXT("SkyAtmosphereComponent")));
@@ -1040,6 +1098,7 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
     // which routinely wasn't the case in the editor, silently leaving clouds
     // disconnected from Weather.Cloudiness). See CVarCarlaWeatherOvercastThreshold
     // above for how this was reverse-engineered.
+    if (CVarCarlaWeatherDriveCloudMaterial.GetValueOnGameThread())
     {
         FObjectProperty* CloudComponentProperty = CastField<FObjectProperty>(
             SkyActor->GetClass()->FindPropertyByName(TEXT("VolumetricCloudComponent")));
