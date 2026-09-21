@@ -24,7 +24,7 @@ truth: each ``traffic.traffic_light*`` actor contributes
 * a ``type=traffic_light`` way per light box (``get_light_boxes()``),
 * a ``type=stop_line`` way from ``get_stop_waypoints()``,
 * a ``type=regulatory_element, subtype=traffic_light`` relation, referenced by
-  every lanelet hit by ``get_affected_lane_waypoints()``.
+  every approach lane identified by ``get_stop_waypoints()``.
 Offline (--xodr) mode skips injection with a warning.
 """
 
@@ -140,6 +140,38 @@ def _node_xy(node):
     return lx, ly, ele
 
 
+def _check_unique_opendrive_id(kind, actor_id, opendrive_id, seen_ids):
+    """Validate ``opendrive_id`` for the deterministic id scheme: numeric, and
+    not already claimed by another actor of the same kind this run."""
+    try:
+        # The id scheme keys on int(opendrive_id), so "007" and "7" must
+        # collide here too, or two actors can silently emit the same
+        # regulatory-element id.
+        numeric_id = int(opendrive_id)
+    except ValueError:
+        raise ValueError(
+            f"{kind} actor {actor_id} has non-numeric OpenDRIVE id {opendrive_id!r}; "
+            "this map-generation tool's deterministic id scheme currently requires "
+            "numeric OpenDRIVE ids."
+        )
+    if numeric_id in seen_ids:
+        raise RuntimeError(
+            f"{kind} actors {seen_ids[numeric_id]} and {actor_id} both report OpenDRIVE "
+            f"id {opendrive_id!r}; the deterministic id scheme requires each {kind} to have "
+            "a unique OpenDRIVE id."
+        )
+    seen_ids[numeric_id] = actor_id
+
+
+# Ids for injected elements are derived deterministically from each actor's
+# OpenDRIVE id instead of a running counter, so re-running the injectors
+# against an unchanged town regenerates byte-identical ids. Each element kind
+# gets its own base, far above anything crdesigner emits, and a stride far
+# above the handful of nodes/ways/relations one actor's injection creates.
+TRAFFIC_LIGHT_ID_BASE = 900_000_000
+TRAFFIC_LIGHT_ID_STRIDE = 1000
+
+
 class OsmMap:
     """Small mutable view over a converter-produced lanelet2 osm file."""
 
@@ -148,21 +180,20 @@ class OsmMap:
         self.root = self.tree.getroot()
         self.nodes = {n.get("id"): n for n in self.root.findall("node")}
         self.ways = {w.get("id"): w for w in self.root.findall("way")}
-        ids = [int(e.get("id")) for e in self.root.iter() if e.get("id", "").lstrip("-").isdigit()]
-        self._next_id = max(ids, default=0) + 1
-        # lanelet relation -> Nx2 array of boundary node coords (map frame, meters)
+        # lanelet relation -> closed boundary polygon (map frame, meters)
         self.lanelets = []
         for rel in self.root.findall("relation"):
             tags = {t.get("k"): t.get("v") for t in rel.findall("tag")}
             if tags.get("type") != "lanelet":
                 continue
-            pts = []
+            boundaries = {}
             for member in rel.findall("member"):
                 if member.get("type") != "way" or member.get("role") not in ("left", "right"):
                     continue
                 way = self.ways.get(member.get("ref"))
                 if way is None:
                     continue
+                pts = []
                 for nd in way.findall("nd"):
                     node = self.nodes.get(nd.get("ref"))
                     if node is None:
@@ -170,18 +201,33 @@ class OsmMap:
                     lx, ly, _ = _node_xy(node)
                     if lx is not None and ly is not None:
                         pts.append((lx, ly))
-            if pts:
-                self.lanelets.append((rel, pts))
+                if pts:
+                    boundaries[member.get("role")] = pts
+            if "left" in boundaries and "right" in boundaries:
+                left_pts, right_pts = boundaries["left"], boundaries["right"]
+                polygon = left_pts + list(reversed(right_pts))
+                # Containment assumes left/right boundaries were sampled in
+                # lockstep; a mismatch would fold the polygon on itself, so
+                # such a lanelet is excluded from containment (but its edges
+                # are still usable for the distance fallback below).
+                containment_ok = len(left_pts) == len(right_pts)
+                if not containment_ok:
+                    print(f"WARNING: lanelet {rel.get('id')} has mismatched left/right "
+                          f"boundary point counts ({len(left_pts)} vs {len(right_pts)}); "
+                          "excluding it from polygon-containment matching.", flush=True)
+                self.lanelets.append((rel, polygon, containment_ok))
 
-    def new_id(self):
-        i = self._next_id
-        self._next_id += 1
-        return str(i)
+    def traffic_light_id(self, opendrive_id, slot):
+        return str(TRAFFIC_LIGHT_ID_BASE + int(opendrive_id) * TRAFFIC_LIGHT_ID_STRIDE + slot)
 
-    def add_node(self, x, y, z):
-        nid = self.new_id()
+    def add_node(self, x, y, z, node_id):
+        if node_id in self.nodes:
+            raise RuntimeError(
+                f"node id {node_id!r} already exists in the map; the deterministic id scheme "
+                "has collided with another element (id-band overflow or a stale leftover node)."
+            )
         node = ET.SubElement(self.root, "node", {
-            "id": nid, "action": "modify", "visible": "true", "version": "1",
+            "id": node_id, "action": "modify", "visible": "true", "version": "1",
             # lat/lon are placeholders: the Autoware *Local* projector reads
             # local_x/local_y only. Regenerate with a real projection for MGRS.
             "lat": "0.0", "lon": "0.0",
@@ -189,31 +235,152 @@ class OsmMap:
         ET.SubElement(node, "tag", {"k": "local_x", "v": f"{x:.4f}"})
         ET.SubElement(node, "tag", {"k": "local_y", "v": f"{y:.4f}"})
         ET.SubElement(node, "tag", {"k": "ele", "v": f"{z:.4f}"})
-        return nid
+        self.nodes[node_id] = node
+        return node_id
 
-    def add_way(self, node_ids, tags):
-        wid = self.new_id()
+    def add_way(self, node_ids, tags, way_id):
+        if way_id in self.ways:
+            raise RuntimeError(
+                f"way id {way_id!r} already exists in the map; the deterministic id scheme "
+                "has collided with another element (id-band overflow or a stale leftover way)."
+            )
         way = ET.SubElement(self.root, "way", {
-            "id": wid, "action": "modify", "visible": "true", "version": "1",
+            "id": way_id, "action": "modify", "visible": "true", "version": "1",
         })
         for nid in node_ids:
             ET.SubElement(way, "nd", {"ref": nid})
         for k, v in tags.items():
             ET.SubElement(way, "tag", {"k": k, "v": str(v)})
-        return wid
+        self.ways[way_id] = way
+        return way_id
 
     def nearest_lanelet(self, x, y, max_dist=6.0):
+        # max_dist (m): cutoff for a stop/affected waypoint that isn't
+        # strictly inside any lanelet polygon.
+        # CARLA returns affected waypoints on lane centerlines. Prefer polygon
+        # containment: measuring only to boundary vertices can select the lane
+        # on the other side of a shared boundary, especially on long segments.
+        containing = [rel for rel, polygon, containment_ok in self.lanelets
+                      if containment_ok and self._point_in_polygon(x, y, polygon)]
+        if len(containing) == 1:
+            return containing[0]
+
         best, best_d = None, max_dist
-        for rel, pts in self.lanelets:
-            for px, py in pts:
-                d = math.hypot(px - x, py - y)
+        # With zero or several containing lanelets, narrow the edge-distance
+        # search to just those (an empty `containing` searches everything).
+        candidates = ((rel, polygon) for rel, polygon, _ in self.lanelets
+                      if not containing or rel in containing)
+        for rel, polygon in candidates:
+            for i, a in enumerate(polygon):
+                b = polygon[(i + 1) % len(polygon)]
+                d = self._point_segment_distance(x, y, a, b)
                 if d < best_d:
                     best, best_d = rel, d
         return best
 
+    @staticmethod
+    def _point_in_polygon(x, y, polygon):
+        inside = False
+        j = len(polygon) - 1
+        for i, (xi, yi) in enumerate(polygon):
+            xj, yj = polygon[j]
+            if ((yi > y) != (yj > y)):
+                x_cross = (xj - xi) * (y - yi) / (yj - yi) + xi
+                if x < x_cross:
+                    inside = not inside
+            j = i
+        return inside
+
+    @staticmethod
+    def _point_segment_distance(x, y, a, b):
+        dx, dy = b[0] - a[0], b[1] - a[1]
+        length_sq = dx * dx + dy * dy
+        if length_sq == 0.0:
+            return math.hypot(x - a[0], y - a[1])
+        u = max(0.0, min(1.0, ((x - a[0]) * dx + (y - a[1]) * dy) / length_sq))
+        return math.hypot(x - (a[0] + u * dx), y - (a[1] + u * dy))
+
     def write(self, path):
         ET.indent(self.tree, space="  ")
         self.tree.write(path, encoding="UTF-8", xml_declaration=True)
+
+
+def _way_still_referenced(root, way_id):
+    return any(
+        member.get("type") == "way" and member.get("ref") == way_id
+        for rel in root.findall("relation")
+        for member in rel.findall("member")
+    )
+
+
+def _node_still_referenced(root, ways, node_id):
+    if any(nd.get("ref") == node_id for way in ways.values() for nd in way.findall("nd")):
+        return True
+    return any(
+        member.get("type") == "node" and member.get("ref") == node_id
+        for rel in root.findall("relation")
+        for member in rel.findall("member")
+    )
+
+
+def _remove_regulatory_elements(osm, matches):
+    """Remove every regulatory-element relation for which ``matches(tags)`` is
+    true, drop the lanelet back-references pointing at it, then drop any of
+    its member ways/nodes nothing else in the map still references.
+
+    Shared by every injector below: each re-run must clean up its own
+    previous injection (or a live-authoritative element keeps regulating a
+    lanelet after the actor it modeled disappears), and the converter itself
+    can emit relations needing the same treatment before ground truth
+    replaces them.
+    """
+    root = osm.root
+    relation_ids = set()
+    for rel in root.findall("relation"):
+        tags = {t.get("k"): t.get("v") for t in rel.findall("tag")}
+        if tags.get("type") == "regulatory_element" and matches(tags):
+            relation_ids.add(rel.get("id"))
+    if not relation_ids:
+        return 0
+
+    candidate_way_ids = set()
+    for rel in root.findall("relation"):
+        if rel.get("id") not in relation_ids:
+            continue
+        for member in rel.findall("member"):
+            if member.get("type") == "way":
+                candidate_way_ids.add(member.get("ref"))
+
+    for rel in root.findall("relation"):
+        for member in list(rel.findall("member")):
+            if (member.get("type") == "relation" and
+                    member.get("role") == "regulatory_element" and
+                    member.get("ref") in relation_ids):
+                rel.remove(member)
+    for rel in list(root.findall("relation")):
+        if rel.get("id") in relation_ids:
+            root.remove(rel)
+
+    stale_way_ids = {wid for wid in candidate_way_ids if not _way_still_referenced(root, wid)}
+    stale_node_ids = set()
+    for way_id in stale_way_ids:
+        way = osm.ways.get(way_id)
+        if way is None:
+            continue
+        stale_node_ids.update(nd.get("ref") for nd in way.findall("nd"))
+        root.remove(way)
+        del osm.ways[way_id]
+
+    for node_id in stale_node_ids:
+        if _node_still_referenced(root, osm.ways, node_id):
+            continue
+        node = osm.nodes.get(node_id)
+        if node is None:
+            continue
+        root.remove(node)
+        del osm.nodes[node_id]
+
+    return len(relation_ids)
 
 
 def inject_traffic_lights(world, osm_path):
@@ -222,49 +389,95 @@ def inject_traffic_lights(world, osm_path):
         print("WARNING: no lanelets with local_x/local_y found; skipping traffic-light injection.",
               flush=True)
         return 0
+
     lights = list(world.get_actors().filter("traffic.traffic_light*"))
+    if not lights:
+        print("WARNING: no live CARLA traffic-light actors found; leaving the map unchanged.",
+              flush=True)
+        return 0
+
+    removed = _remove_regulatory_elements(osm, lambda tags: tags.get("subtype") == "traffic_light")
+    if removed:
+        print(f"Removed {removed} converter/previous traffic-light regulatory elements.",
+              flush=True)
+
     print(f"Injecting regulatory elements for {len(lights)} traffic lights...", flush=True)
     injected = 0
+    seen_opendrive_ids = {}
     for tl in lights:
+        opendrive_id = tl.get_opendrive_id()
+        _check_unique_opendrive_id("traffic light", tl.id, opendrive_id, seen_opendrive_ids)
+        tl_slot = 0
+
+        def _tl_id():
+            nonlocal tl_slot
+            allocated = osm.traffic_light_id(opendrive_id, tl_slot)
+            tl_slot += 1
+            return allocated
+
+        stop_wps = tl.get_stop_waypoints()
+        affected_wps = tl.get_affected_lane_waypoints()
+        approach_wps = stop_wps or affected_wps
+        line_direction = None
+        lateral_carla = None
+        if approach_wps:
+            # All boxes and the stop line below share one heading, taken from
+            # the first approach waypoint. This assumes a single approach
+            # direction per signal group; a group governing diverging lanes
+            # (e.g. straight + turn) would need a heading per lane instead.
+            forward = approach_wps[0].transform.rotation.get_forward_vector()
+            # CARLA y is inverted in the map frame. Lanelet2 traffic-light
+            # lines are directed so their +90-degree normal follows traffic.
+            travel_x, travel_y = forward.x, -forward.y
+            norm = math.hypot(travel_x, travel_y)
+            if norm > 0.0:
+                travel_x, travel_y = travel_x / norm, travel_y / norm
+                line_direction = (travel_y, -travel_x)
+                lateral_carla = (line_direction[0], -line_direction[1])
+
         light_way_ids = []
         for bb in tl.get_light_boxes():
-            right = bb.rotation.get_right_vector()
             cx, cy, cz = bb.location.x, bb.location.y, bb.location.z
-            ey, ez = bb.extent.y, bb.extent.z
+            ez = bb.extent.z
             bottom = cz - ez
-            p1 = carla_xyz_to_map(cx - right.x * ey, cy - right.y * ey, bottom)
-            p2 = carla_xyz_to_map(cx + right.x * ey, cy + right.y * ey, bottom)
-            n1 = osm.add_node(*p1)
-            n2 = osm.add_node(*p2)
+            if line_direction is not None:
+                box_forward = bb.rotation.get_forward_vector()
+                box_right = bb.rotation.get_right_vector()
+                half_width = (
+                    abs(lateral_carla[0] * box_forward.x +
+                        lateral_carla[1] * box_forward.y) * bb.extent.x +
+                    abs(lateral_carla[0] * box_right.x +
+                        lateral_carla[1] * box_right.y) * bb.extent.y
+                )
+                map_cx, map_cy, _ = carla_xyz_to_map(cx, cy, bottom)
+                lx, ly = line_direction
+                p1 = (map_cx - lx * half_width, map_cy - ly * half_width, bottom)
+                p2 = (map_cx + lx * half_width, map_cy + ly * half_width, bottom)
+            else:
+                # Defensive fallback for maps whose traffic-light actors do not
+                # expose affected or stop waypoints.
+                right = bb.rotation.get_right_vector()
+                ey = bb.extent.y
+                p1 = carla_xyz_to_map(cx - right.x * ey, cy - right.y * ey, bottom)
+                p2 = carla_xyz_to_map(cx + right.x * ey, cy + right.y * ey, bottom)
+            n1 = osm.add_node(*p1, node_id=_tl_id())
+            n2 = osm.add_node(*p2, node_id=_tl_id())
             light_way_ids.append(osm.add_way([n1, n2], {
                 "type": "traffic_light",
                 "subtype": "red_yellow_green",
                 "height": f"{2.0 * ez:.3f}",
-            }))
+            }, way_id=_tl_id()))
         if not light_way_ids:
             continue
 
         stop_way_id = None
-        stop_wps = tl.get_stop_waypoints()
         if stop_wps:
-            endpoints = []
-            for wp in stop_wps:
-                tf = wp.transform
-                r = tf.rotation.get_right_vector()
-                half = 0.5 * wp.lane_width
-                loc = tf.location
-                endpoints.append(carla_xyz_to_map(loc.x - r.x * half, loc.y - r.y * half, loc.z))
-                endpoints.append(carla_xyz_to_map(loc.x + r.x * half, loc.y + r.y * half, loc.z))
-            # Single 2-point way spanning all affected lanes: take the two
-            # extreme endpoints along the lateral axis of the first waypoint.
-            r0 = stop_wps[0].transform.rotation.get_right_vector()
-            axis = (r0.x, -r0.y)  # lateral axis, already in map frame
-            endpoints.sort(key=lambda p: p[0] * axis[0] + p[1] * axis[1])
-            a, b = endpoints[0], endpoints[-1]
+            a, b = _lane_stop_line_endpoints(stop_wps)
             stop_way_id = osm.add_way(
-                [osm.add_node(*a), osm.add_node(*b)], {"type": "stop_line"})
+                [osm.add_node(*a, node_id=_tl_id()), osm.add_node(*b, node_id=_tl_id())],
+                {"type": "stop_line"}, way_id=_tl_id())
 
-        re_id = osm.new_id()
+        re_id = _tl_id()
         rel = ET.SubElement(osm.root, "relation", {
             "id": re_id, "action": "modify", "visible": "true", "version": "1",
         })
@@ -274,14 +487,22 @@ def inject_traffic_lights(world, osm_path):
             ET.SubElement(rel, "member", {"type": "way", "ref": stop_way_id, "role": "ref_line"})
         ET.SubElement(rel, "tag", {"k": "type", "v": "regulatory_element"})
         ET.SubElement(rel, "tag", {"k": "subtype", "v": "traffic_light"})
+        ET.SubElement(rel, "tag", {"k": "carla_opendrive_id", "v": str(opendrive_id)})
 
-        # Reference the regulatory element from every affected lanelet.
+        # Stop waypoints identify the approach lanes that own the stop line.
+        # Affected waypoints may instead lie on junction connector lanelets,
+        # which makes the signal invisible to a route approaching the stop.
         linked = set()
-        for wp in tl.get_affected_lane_waypoints():
+        for wp in approach_wps:
             loc = wp.transform.location
             mx, my, _ = carla_xyz_to_map(loc.x, loc.y, loc.z)
             lanelet_rel = osm.nearest_lanelet(mx, my)
-            if lanelet_rel is None or id(lanelet_rel) in linked:
+            if lanelet_rel is None:
+                print(f"WARNING: traffic light {opendrive_id} has no lanelet match for "
+                      f"approach waypoint at map ({mx:.2f}, {my:.2f}); skipping this "
+                      "association.", flush=True)
+                continue
+            if id(lanelet_rel) in linked:
                 continue
             linked.add(id(lanelet_rel))
             ET.SubElement(lanelet_rel, "member", {
@@ -291,6 +512,24 @@ def inject_traffic_lights(world, osm_path):
     osm.write(osm_path)
     print(f"Injected {injected} traffic-light regulatory elements -> {osm_path}", flush=True)
     return injected
+
+
+def _lane_stop_line_endpoints(wps):
+    """Two map-frame endpoints spanning ``wps``' lanes, perpendicular to the
+    first waypoint's heading. Shared by every stop-line construction below."""
+    endpoints = []
+    for wp in wps:
+        tf = wp.transform
+        r = tf.rotation.get_right_vector()
+        half = 0.5 * wp.lane_width
+        loc = tf.location
+        endpoints.append(carla_xyz_to_map(loc.x - r.x * half, loc.y - r.y * half, loc.z))
+        endpoints.append(carla_xyz_to_map(loc.x + r.x * half, loc.y + r.y * half, loc.z))
+    # Extreme points along the lateral axis span every lane in wps.
+    r0 = wps[0].transform.rotation.get_right_vector()
+    axis = (r0.x, -r0.y)  # already in map frame (y negated)
+    endpoints.sort(key=lambda p: p[0] * axis[0] + p[1] * axis[1])
+    return endpoints[0], endpoints[-1]
 
 
 def generate(args, world=None):
