@@ -157,6 +157,29 @@ static TAutoConsoleVariable<bool> CVarCarlaWeatherEnableOvercastClouds(
 // first push. Set false to leave the component exactly as the blueprint
 // authored it, to test whether the sky flicker in #9884 follows the rig's
 // specific cloud asset or any volumetric cloud at all.
+// Radius in kilometres that the volumetric cloud shadow map covers. The map's
+// texel size is this divided by its resolution, and coarse texels are what
+// makes a rotating sun step the sky -- see the block that applies it in
+// ApplyWeatherToSkyActor. Exposed so it can be swept live instead of needing a
+// rebuild per value; 20 is what was measured and shipped.
+static TAutoConsoleVariable<float> CVarCarlaWeatherCloudShadowExtentKm(
+    TEXT("carla.Weather.CloudShadowExtentKm"),
+    10.0f,
+    TEXT("Radius in km covered by the volumetric cloud shadow map, set on the sky rig's sun ")
+    TEXT("light. Smaller means finer shadow map texels and less stepping as the sun rotates, ")
+    TEXT("at the cost of clouds no longer shadowing anything further away. 0 or less leaves ")
+    TEXT("whatever the rig authored."),
+    ECVF_Default);
+
+// Scales how dark the cloud shadow is, and so scales the amplitude of whatever
+// stepping remains. 1.0 is the rig's authored value.
+static TAutoConsoleVariable<float> CVarCarlaWeatherCloudShadowStrength(
+    TEXT("carla.Weather.CloudShadowStrength"),
+    -1.0f,
+    TEXT("Cloud shadow strength on the sky rig's sun light, for both the sky and the surface. ")
+    TEXT("Negative leaves whatever the rig authored (1.0)."),
+    ECVF_Default);
+
 static TAutoConsoleVariable<bool> CVarCarlaWeatherDriveCloudMaterial(
     TEXT("carla.Weather.DriveCloudMaterial"),
     true,
@@ -853,8 +876,8 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         // is ~586 m per texel: rotating the sun walks cloud density across
         // texels that coarse and the clouds' self-shadowing changes in visible
         // steps, which the atmosphere then carries into cloud-free sky as well
-        // -- issue #9884. 20 km still covers far more than any CARLA town, and
-        // at ~78 m per texel the stepping stops being visible.
+        // -- issue #9884. 10 km still covers far more than any CARLA town, and
+        // at ~39 m per texel the stepping stops being visible.
         //
         // Measured on the viewport (Town10, sun altitude 2, cloudiness 30,
         // 0.5 deg of azimuth per captured frame; residual from a 9-frame
@@ -870,13 +893,40 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         // The trade: the map no longer covers the distant world, so clouds
         // stop shadowing sky far from the camera and the horizon sits brighter
         // than it did at 150 km (level 90.6 -> 167.8 of 255).
+        //
+        // 10 rather than 20 km comes from a later sweep, scored by splitting
+        // the viewport into 288 tiles and counting the tiles that step at all,
+        // which is what caught a residue the hand-placed ROIs had missed
+        // entirely. From an elevated camera over the cloud field, sun at
+        // altitude 2: 90 tiles at 20 km, 69 at 10 km, 61 at 5 km, against 38
+        // with the shadow map off. The lever is spent by 10 km -- 5 km buys
+        // almost nothing and its median residue is slightly worse.
+        //
+        // Weakening CloudShadowStrength was measured too and is deliberately
+        // NOT done: at 0.25 it lands near the floor, but only because it
+        // attenuates the cloud shadow itself by the same factor. That is
+        // fading the feature out, not fixing the artifact.
         if (UDirectionalLightComponent* SunDirectionalLight =
                 Cast<UDirectionalLightComponent>(FindComponent(TEXT("DirectionalLightComponentSun"))))
         {
-            constexpr float CloudShadowExtentKm = 20.0f;
-            if (SunDirectionalLight->CloudShadowExtent != CloudShadowExtentKm)
+            bool bSunLightRenderStateDirty = false;
+            const float CloudShadowExtentKm = CVarCarlaWeatherCloudShadowExtentKm.GetValueOnGameThread();
+            if (CloudShadowExtentKm > 0.0f && SunDirectionalLight->CloudShadowExtent != CloudShadowExtentKm)
             {
                 SunDirectionalLight->CloudShadowExtent = CloudShadowExtentKm;
+                bSunLightRenderStateDirty = true;
+            }
+            const float CloudShadowStrength = CVarCarlaWeatherCloudShadowStrength.GetValueOnGameThread();
+            if (CloudShadowStrength >= 0.0f
+                && (SunDirectionalLight->CloudShadowStrength != CloudShadowStrength
+                    || SunDirectionalLight->CloudShadowOnSurfaceStrength != CloudShadowStrength))
+            {
+                SunDirectionalLight->CloudShadowStrength = CloudShadowStrength;
+                SunDirectionalLight->CloudShadowOnSurfaceStrength = CloudShadowStrength;
+                bSunLightRenderStateDirty = true;
+            }
+            if (bSunLightRenderStateDirty)
+            {
                 SunDirectionalLight->MarkRenderStateDirty();
             }
         }
