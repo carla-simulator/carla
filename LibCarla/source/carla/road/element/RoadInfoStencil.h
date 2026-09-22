@@ -39,6 +39,7 @@ namespace element {
         std::string orientation)
       : RoadInfo(s),
         _stencil_id(stencil_id),
+        _stencil(nullptr),
         _road_id(road_id),
         _s(s),
         _t(t),

@@ -470,7 +470,6 @@ namespace road {
 
     const auto &lane = GetLane(waypoint);
     const bool forward = lane.IsPositiveDirection();
-    const double signed_distance = forward ? distance : -distance;
     const double relative_s = waypoint.s - lane.GetDistance();
     const double remaining_lane_length = forward ? lane.GetLength() - relative_s : relative_s;
     DEBUG_ASSERT(remaining_lane_length >= 0.0);
@@ -478,28 +477,30 @@ namespace road {
     auto &road = _data.GetRoad(waypoint.road_id);
     std::vector<StencilSearchData> result;
 
-    // If after subtracting the distance we are still in the same lane, return
-    // same waypoint with the extra distance.
-    if (distance <= remaining_lane_length) {
-      auto stencils = road.GetInfosInRange<element::RoadInfoStencil>(
-          waypoint.s, waypoint.s + signed_distance);
-      for(auto* stencil : stencils){
-        double distance_to_stencil = 0;
-        if (lane.IsPositiveDirection()){
-          distance_to_stencil = stencil->GetS() - waypoint.s;
-        } else {
-          distance_to_stencil = waypoint.s - stencil->GetS();
-        }
-
-        if (distance_to_stencil >= 0) {
-          StencilSearchData data;
-          data.stencil = stencil;
-          data.waypoint = waypoint;
-          data.waypoint.s = stencil->GetS();
-          data.accumulated_s = distance_to_stencil;
-          result.push_back(data);
-        }
+    // Collect the stencils on this lane, up to the lane end or the requested
+    // distance, whichever comes first.
+    const double in_lane_distance = std::min(distance, remaining_lane_length);
+    const double signed_distance = forward ? in_lane_distance : -in_lane_distance;
+    auto stencils = road.GetInfosInRange<element::RoadInfoStencil>(
+        waypoint.s, waypoint.s + signed_distance);
+    for(auto* stencil : stencils){
+      double distance_to_stencil = 0;
+      if (lane.IsPositiveDirection()){
+        distance_to_stencil = stencil->GetS() - waypoint.s;
+      } else {
+        distance_to_stencil = waypoint.s - stencil->GetS();
       }
+
+      if (distance_to_stencil >= 0) {
+        StencilSearchData data;
+        data.stencil = stencil;
+        data.waypoint = waypoint;
+        data.waypoint.s = stencil->GetS();
+        data.accumulated_s = distance_to_stencil;
+        result.push_back(data);
+      }
+    }
+    if (distance <= remaining_lane_length) {
       return result;
     }
 

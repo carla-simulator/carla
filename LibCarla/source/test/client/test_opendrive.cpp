@@ -482,4 +482,11 @@ TEST(road, stencil_parsing) {
   auto it = map_stencils.find(stencil_id);
   ASSERT_NE(it, map_stencils.end());
   EXPECT_EQ(stencils[0]->GetStencil(), it->second.get());
+
+  // A search that runs past the lane end must still return the stencils
+  // before the lane end.
+  const Waypoint start{1u, 0u, -1, 0.0};
+  auto found = map->GetStencilsInDistance(start, 30.0, false);
+  ASSERT_EQ(found.size(), 1u);
+  EXPECT_DOUBLE_EQ(found[0].accumulated_s, 5.0);
 }

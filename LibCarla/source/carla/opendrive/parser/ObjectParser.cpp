@@ -115,7 +115,7 @@ namespace parser {
                 node_object.attribute("hdg").as_double(),
                 node_object.attribute("pitch").as_double(),
                 node_object.attribute("roll").as_double());
-          } else if (name.find("Stencil_") != std::string::npos) {
+          } else if (name.rfind("Stencil_", 0) == 0) {
             road::RoadId road_id = node_road.attribute("id").as_uint();
             road::Road *road = map_builder.GetRoad(road_id);
 
