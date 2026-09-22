@@ -31,6 +31,10 @@ namespace ros2 {
 /// "<domain>/<topic>/<type>/<hash>".  A liveliness token is declared so the
 /// endpoint shows up in rmw_zenoh's graph cache.
 ///
+/// Transient-local profiles use a zenoh-ext advanced publisher with a bounded
+/// cache. This is the Zenoh equivalent of DDS latching: matching late readers
+/// recover the cached map sample rather than waiting for another episode load.
+///
 /// Parameterized on a traits type T that provides:
 ///   T::msg_type — the message type (a carla::ros2::msg::* POD struct)
 template<typename T>
@@ -41,6 +45,7 @@ class ZenohPublisherMiddleware : public IPublisherMiddleware {
   ZenohPublisherMiddleware() {
     // Gravestone owned handles so destructor's z_drop is safe if Init never ran.
     z_internal_null(&_publisher);
+    z_internal_null(&_advanced_publisher);
     z_internal_null(&_liveliness_token);
     z_internal_null(&_matching_listener);
   }
@@ -55,22 +60,24 @@ class ZenohPublisherMiddleware : public IPublisherMiddleware {
     std::lock_guard<std::mutex> lock(_publish_mutex);
     z_drop(z_move(_matching_listener));
     z_drop(z_move(_liveliness_token));
+    z_drop(z_move(_advanced_publisher));
     z_drop(z_move(_publisher));
   }
 
   bool Init(const std::string& topic_name) override {
-    return InitImpl(topic_name, kZenohDefaultQos);
+    // Preserve the historic unspecified QoS token for callers that have not
+    // opted into a profile. This avoids changing graph compatibility for all
+    // existing Zenoh publishers merely by adding the QoS overload.
+    return InitImpl(topic_name, QosProfile{}, true);
   }
 
   bool Init(const std::string& topic_name, const QosProfile& qos) override {
-    // The profile is advertised in the liveliness token so rmw_zenoh peers see
-    // a compatible endpoint; zenoh delivery semantics are not differentiated
-    // (see zenoh_qos_keyexpr).
-    return InitImpl(topic_name, zenoh_qos_keyexpr(qos));
+    return InitImpl(topic_name, qos, false);
   }
 
  private:
-  bool InitImpl(const std::string& topic_name, const std::string& qos_str) {
+  bool InitImpl(const std::string& topic_name, const QosProfile& requested_qos,
+                bool use_legacy_default_qos) {
     const z_loaned_session_t* session = zenoh_get_shared_session();
 
     const std::string topic_no_rt = zenoh_strip_rt_prefix(topic_name);
@@ -91,14 +98,33 @@ class ZenohPublisherMiddleware : public IPublisherMiddleware {
       return false;
     }
 
-    z_publisher_options_t pub_opts;
-    z_publisher_options_default(&pub_opts);
-    if (z_declare_publisher(session, &_publisher, z_loan(ke), &pub_opts)
-        != Z_OK) {
-      log_error("ZenohPublisherMiddleware (", topic_name,
-                "): z_declare_publisher failed");
-      return false;
+    _use_advanced = requested_qos.durability == QosProfile::Durability::TransientLocal;
+    if (_use_advanced) {
+      ze_advanced_publisher_options_t options;
+      ze_advanced_publisher_options_default(&options);
+      options.cache.is_enabled = true;
+      options.cache.max_samples = static_cast<size_t>(requested_qos.EffectiveHistoryDepth());
+      if (ze_declare_advanced_publisher(session, &_advanced_publisher, z_loan(ke), &options) != Z_OK) {
+        log_warning("ZenohPublisherMiddleware (", topic_name,
+                    "): advanced publisher unavailable; falling back to volatile delivery");
+        _use_advanced = false;
+      }
     }
+    if (!_use_advanced) {
+      z_publisher_options_t pub_opts;
+      z_publisher_options_default(&pub_opts);
+      if (z_declare_publisher(session, &_publisher, z_loan(ke), &pub_opts) != Z_OK) {
+        log_error("ZenohPublisherMiddleware (", topic_name,
+                  "): z_declare_publisher failed");
+        return false;
+      }
+    }
+
+    QosProfile effective_qos = requested_qos;
+    if (!_use_advanced) effective_qos.durability = QosProfile::Durability::Volatile;
+    const std::string qos_str = use_legacy_default_qos
+        ? kZenohDefaultQos
+        : zenoh_qos_keyexpr(effective_qos);
 
     const std::string lv_ke_str = zenoh_make_topic_liveliness_keyexpr(
         zenoh_ros_domain_id(), zenoh_session_zid(), zenoh_next_entity_id(),
@@ -119,9 +145,12 @@ class ZenohPublisherMiddleware : public IPublisherMiddleware {
 
     z_owned_closure_matching_status_t closure;
     z_closure_matching_status(&closure, &on_matching_status, nullptr, this);
-    if (z_publisher_declare_matching_listener(
-            z_loan(_publisher), &_matching_listener, z_move(closure))
-        != Z_OK) {
+    const z_result_t listener_result = _use_advanced
+        ? ze_advanced_publisher_declare_matching_listener(
+              z_loan(_advanced_publisher), &_matching_listener, z_move(closure))
+        : z_publisher_declare_matching_listener(
+              z_loan(_publisher), &_matching_listener, z_move(closure));
+    if (listener_result != Z_OK) {
       log_error("ZenohPublisherMiddleware (", topic_name,
                 "): z_publisher_declare_matching_listener failed");
       return false;
@@ -134,7 +163,8 @@ class ZenohPublisherMiddleware : public IPublisherMiddleware {
  public:
   bool Publish(void* message_data) override {
     std::lock_guard<std::mutex> lock(_publish_mutex);
-    if (!z_internal_check(_publisher)) {
+    if (_use_advanced ? !z_internal_check(_advanced_publisher)
+                      : !z_internal_check(_publisher)) {
       return false;
     }
 
@@ -148,11 +178,19 @@ class ZenohPublisherMiddleware : public IPublisherMiddleware {
     z_owned_bytes_t attachment;
     z_bytes_copy_from_buf(&attachment, attach.data(), attach.size());
 
-    z_publisher_put_options_t opts;
-    z_publisher_put_options_default(&opts);
-    opts.attachment = z_move(attachment);
-
-    if (z_publisher_put(z_loan(_publisher), z_move(payload), &opts) != Z_OK) {
+    z_result_t result;
+    if (_use_advanced) {
+      ze_advanced_publisher_put_options_t opts;
+      ze_advanced_publisher_put_options_default(&opts);
+      opts.put_options.attachment = z_move(attachment);
+      result = ze_advanced_publisher_put(z_loan(_advanced_publisher), z_move(payload), &opts);
+    } else {
+      z_publisher_put_options_t opts;
+      z_publisher_put_options_default(&opts);
+      opts.attachment = z_move(attachment);
+      result = z_publisher_put(z_loan(_publisher), z_move(payload), &opts);
+    }
+    if (result != Z_OK) {
       log_error("ZenohPublisherMiddleware::Publish (", _topic_name,
                 "): z_publisher_put failed");
       return false;
@@ -176,12 +214,14 @@ class ZenohPublisherMiddleware : public IPublisherMiddleware {
   }
 
   z_owned_publisher_t         _publisher;
+  ze_owned_advanced_publisher_t _advanced_publisher;
   z_owned_liveliness_token_t  _liveliness_token;
   z_owned_matching_listener_t _matching_listener;
 
   mutable std::mutex _publish_mutex;
   std::atomic<bool>  _alive { false };
   std::string        _topic_name;
+  bool               _use_advanced { false };
 };
 
 } // namespace ros2

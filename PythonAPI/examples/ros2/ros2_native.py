@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Copyright (c) 2026 Computer Vision Center (CVC) at the Universitat Autonoma de
 # Barcelona (UAB).
@@ -12,8 +12,14 @@
 import argparse
 import json
 import logging
+import signal
 
 import carla
+
+
+def _should_take_sync_ownership(sync_requested, force_sync, world_is_sync):
+    """Return whether this client may safely become the synchronous master."""
+    return (sync_requested or force_sync) and (force_sync or not world_is_sync)
 
 
 def _setup_vehicle(world, config):
@@ -23,13 +29,20 @@ def _setup_vehicle(world, config):
     map_ = world.get_map()
 
     bp = bp_library.filter(config.get("type"))[0]
-    bp.set_attribute("role_name", config.get("id"))
+    # ``id`` is the public ROS frame/name.  A demo may set a distinct
+    # role_name to identify only the actors it owns for safe stale-run cleanup.
+    bp.set_attribute("role_name", config.get("role_name", config.get("id")))
     bp.set_attribute("ros_name", config.get("id")) 
 
-    return  world.spawn_actor(
-        bp,
-        map_.get_spawn_points()[0],
-        attach_to=None)
+    # Traffic may already occupy the first map spawn point.  Do not abort the
+    # entire ROS2 stack on that expected collision; try each point until the
+    # controller finds a free one.
+    for spawn_point in map_.get_spawn_points():
+        vehicle = world.try_spawn_actor(bp, spawn_point, attach_to=None)
+        if vehicle is not None:
+            return vehicle
+
+    raise RuntimeError("Unable to find a free spawn point for the ROS2 vehicle")
 
 
 def _setup_sensors(world, vehicle, sensors_config):
@@ -89,25 +102,33 @@ def main(args):
         settings = world.get_settings()
 
         traffic_manager = client.get_trafficmanager(args.tm_port)
-        if not args.asynch:
-            traffic_manager.set_synchronous_mode(True)
 
-        # A synchronous world must have exactly one client ticking it. By
-        # default we only take ownership of the clock (become the synchronous
-        # master) if no other client already runs the world synchronously
-        # (e.g. generate_traffic.py); otherwise we would double-step the
-        # simulation and destabilise Traffic Manager control of the autopilot
-        # vehicle. --force-sync overrides this, --asynch opts out entirely.
+        # A synchronous world must have exactly one client ticking it. Follow
+        # the current world mode by default, so a ROS2 controller started next
+        # to generate_traffic.py never becomes a second clock owner. Use
+        # --sync when this process should take ownership; --force-sync is an
+        # explicit opt-in to the unsafe two-owner configuration.
         if args.force_sync and settings.synchronous_mode:
             logging.warning(
                 "--force-sync: the world is already in synchronous mode; "
                 "ticking it from a second client may double-step the simulation.")
 
-        if not args.asynch and (args.force_sync or not settings.synchronous_mode):
+        if _should_take_sync_ownership(
+                args.sync, args.force_sync, settings.synchronous_mode):
             synchronous_master = True
             settings.synchronous_mode = True
             settings.fixed_delta_seconds = args.delta
             world.apply_settings(settings)
+            traffic_manager.set_synchronous_mode(True)
+        elif args.sync:
+            logging.info(
+                "The world is already synchronous; following the existing "
+                "Traffic Manager clock without ticking it")
+
+        if not settings.synchronous_mode:
+            logging.warning(
+                "ROS2 autopilot is running in asynchronous mode; use --sync "
+                "for a controller-owned fixed-step simulation")
 
         with open(args.file) as f:
             config = json.load(f)
@@ -161,6 +182,7 @@ if __name__ == '__main__':
     argparser.add_argument('--tm-port', metavar='P', default=8000, type=int, help='Port of the Traffic Manager to register the autopilot vehicle with (default: 8000). Must match the port used by generate_traffic.py.')
     argparser.add_argument('--delta', metavar='S', default=0.05, type=float, help='Fixed simulation time step in seconds, applied only when this client becomes the synchronous master (default: 0.05)')
     sync_group = argparser.add_mutually_exclusive_group()
+    sync_group.add_argument('--sync', action='store_true', help='Take synchronous ownership of the world when it is not already owned by another client')
     sync_group.add_argument('--force-sync', action='store_true', help='Always become the synchronous master and tick the world, even if another client already runs it synchronously (may double-step the simulation)')
     sync_group.add_argument('--asynch', action='store_true', help='Do not take control of the simulation clock: never enable synchronous mode and never tick, only wait for ticks from whoever owns the world')
 
@@ -171,4 +193,10 @@ if __name__ == '__main__':
 
     logging.info('Listening to server %s:%s', args.host, args.port)
 
+    # Docker stops the demo with SIGTERM. Translate it so main() executes its
+    # existing actor and world-settings cleanup path.
+    def _on_sigterm(signum, frame):
+        raise KeyboardInterrupt
+
+    signal.signal(signal.SIGTERM, _on_sigterm)
     main(args)

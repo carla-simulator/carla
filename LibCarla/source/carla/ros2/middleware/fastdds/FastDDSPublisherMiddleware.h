@@ -163,7 +163,7 @@ class FastDDSPublisherMiddleware
           qos->history == QosProfile::History::KeepLast
               ? efd::KEEP_LAST_HISTORY_QOS
               : efd::KEEP_ALL_HISTORY_QOS;
-      wqos.history().depth = qos->history_depth;
+      wqos.history().depth = qos->EffectiveHistoryDepth();
     }
 
     // Set USER_DATA (PID_USER_DATA = 0x002c per OMG DDSI-RTPS v2.5 §9.6.2.2.2)

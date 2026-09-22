@@ -24,6 +24,7 @@
 #include "publishers/BasePublisher.h"
 #include "publishers/CarlaCameraPublisher.h"
 #include "publishers/CarlaClockPublisher.h"
+#include "publishers/CarlaMapPublisher.h"
 #include "publishers/CarlaRGBCameraPublisher.h"
 #include "publishers/CarlaDepthCameraPublisher.h"
 #include "publishers/CarlaNormalsCameraPublisher.h"
@@ -175,6 +176,27 @@ void ROS2::SetTimestamp(double timestamp) {
   _basic_publisher->SetData("Hello from Carla!");
   _basic_publisher->Publish();
 #endif
+}
+
+void ROS2::ProcessDataFromMap(const std::string &open_drive) {
+  if (!_enabled) {
+    return;
+  }
+  if (open_drive.empty()) {
+    log_warning("ROS2: empty OpenDRIVE description, skipping map publish");
+    return;
+  }
+  if (!_map_publisher) {
+    _map_publisher = std::make_shared<CarlaMapPublisher>();
+  }
+  if (!_map_publisher->Write(open_drive) || !_map_publisher->Publish()) {
+    log_warning("ROS2: failed to publish OpenDRIVE map");
+    // Do not retain a publisher whose middleware writer could not be created
+    // (or has subsequently become unusable). A later episode gets a fresh
+    // initialization attempt instead of permanently losing /carla/map after a
+    // transient middleware failure.
+    _map_publisher.reset();
+  }
 }
 
 void ROS2::RegisterSensor(
@@ -1005,6 +1027,7 @@ void ROS2::Shutdown() {
   _autoware_vehicles.clear();
   _autoware_status_publishers.clear();
   _clock_publisher.reset();
+  _map_publisher.reset();
   _enabled = false;
 #if defined(WITH_ROS2_DEMO)
   _basic_publisher.reset();

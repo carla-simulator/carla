@@ -102,7 +102,7 @@ class CycloneDDSPublisherMiddleware : public IPublisherMiddleware {
           qos_profile->history == QosProfile::History::KeepLast
               ? DDS_HISTORY_KEEP_LAST
               : DDS_HISTORY_KEEP_ALL,
-          qos_profile->history_depth);
+          qos_profile->EffectiveHistoryDepth());
     } else {
       dds_qset_reliability(qos, DDS_RELIABILITY_RELIABLE, DDS_SECS(1));
       dds_qset_history(qos, DDS_HISTORY_KEEP_LAST, 1);

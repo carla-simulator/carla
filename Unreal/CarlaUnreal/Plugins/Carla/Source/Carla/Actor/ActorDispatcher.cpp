@@ -279,7 +279,13 @@ FCarlaActor* UActorDispatcher::RegisterActor(
       bool bEnableAutowareControl = false;
       for (auto &&Attr : Description.Variations)
       {
-        if (Attr.Key == "role_name" && (Attr.Value.Value == "hero" || Attr.Value.Value == "ego"))
+        // Accept an owner-qualified hero/ego role as well as the legacy exact
+        // value.  This lets independent clients safely identify their own
+        // hero actor for cleanup while retaining the native vehicle-control
+        // behavior associated with a hero role.
+        if (Attr.Key == "role_name" &&
+            (Attr.Value.Value == "hero" || Attr.Value.Value == "ego" ||
+             Attr.Value.Value.StartsWith(TEXT("hero_")) || Attr.Value.Value.StartsWith(TEXT("ego_"))))
         {
           bIsHero = true;
         }

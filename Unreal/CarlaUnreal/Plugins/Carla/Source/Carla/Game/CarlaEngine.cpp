@@ -15,6 +15,7 @@
 #include "Carla/Settings/CarlaSettings.h"
 #include "Carla/Settings/EpisodeSettings.h"
 #include "Carla/MapGen/LargeMapManager.h"
+#include "Carla/OpenDrive/OpenDrive.h"
 
 #include <util/disable-ue4-macros.h>
 #include <carla/Logging.h>
@@ -372,6 +373,17 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
   Server.NotifyBeginEpisode(Episode);
 
   Episode.bIsPrimaryServer = bIsPrimaryServer;
+
+  #if defined(WITH_ROS2)
+  {
+    auto ROS2 = carla::ros2::ROS2::GetInstance();
+    if (ROS2->IsEnabled())
+    {
+      const FString XODR = UOpenDrive::GetXODR(World);
+      ROS2->ProcessDataFromMap(std::string(TCHAR_TO_UTF8(*XODR)));
+    }
+  }
+  #endif
 }
 
 void FCarlaEngine::NotifyEndEpisode()

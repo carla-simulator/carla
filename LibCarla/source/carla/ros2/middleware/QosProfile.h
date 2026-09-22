@@ -56,6 +56,21 @@ struct QosProfile {
     p.history_depth = 1;
     return p;
   }
+
+  /// BEST_EFFORT / VOLATILE / KEEP_LAST depth 1 — ROS 2's sensor-data
+  /// profile.  High-rate image and point-cloud streams must not block their
+  /// rendering thread while waiting for a slow subscriber to acknowledge.
+  static QosProfile SensorData() {
+    QosProfile p;
+    p.reliability = Reliability::BestEffort;
+    return p;
+  }
+
+  /// DDS KEEP_LAST requires a positive depth. Keep malformed callers from
+  /// passing zero through to a middleware-specific invalid setting.
+  std::int32_t EffectiveHistoryDepth() const {
+    return history_depth > 0 ? history_depth : 1;
+  }
 };
 
 } // namespace ros2

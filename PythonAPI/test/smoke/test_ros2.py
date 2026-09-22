@@ -196,6 +196,22 @@ class TestROS2(SyncSmokeTest):
             dvs.destroy()
             sem_lidar.destroy()
 
+    def test_ros2_map_publish_on_reload(self):
+        """Reloading an episode re-publishes the latched OpenDRIVE map.
+
+        The native publisher is created during NotifyBeginEpisode. This smoke
+        path catches failures while constructing a transient-local writer or
+        retrieving the newly loaded world's OpenDRIVE description.
+        """
+        self.world = self.client.reload_world()
+        settings = carla.WorldSettings(
+            no_rendering_mode=False,
+            synchronous_mode=True,
+            fixed_delta_seconds=0.05)
+        self.world.apply_settings(settings)
+        for _ in range(5):
+            self.world.tick()
+
     def test_ros2_enable_disable_cycle(self):
         """Enable -> tick -> disable -> tick -> re-enable -> tick: no crash or state leak.
 

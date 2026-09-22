@@ -8,6 +8,7 @@
 
 #include "carla/Logging.h"
 #include "carla/ros2/publishers/PublisherImpl.h"
+#include "carla/ros2/middleware/QosProfile.h"
 #include "carla/ros2/types/msg/PointCloud2.h"
 #include "carla/ros2/types/msg/PointField.h"
 
@@ -63,7 +64,8 @@ CarlaPointCloudPublisher::CarlaPointCloudPublisher(
     std::string base_topic_name, std::string frame_id, bool exact_topic)
   : BasePublisher(std::move(base_topic_name), std::move(frame_id)),
     _impl(std::make_shared<PublisherImpl<CarlaPointCloudMsgTraits>>()) {
-  if (!_impl->Init(exact_topic ? GetBaseTopicName() : GetBaseTopicName() + "/point_cloud")) {
+  if (!_impl->Init(exact_topic ? GetBaseTopicName() : GetBaseTopicName() + "/point_cloud",
+                   QosProfile::SensorData())) {
     log_error("CarlaPointCloudPublisher: failed to initialise writer for", GetBaseTopicName());
   }
 }
