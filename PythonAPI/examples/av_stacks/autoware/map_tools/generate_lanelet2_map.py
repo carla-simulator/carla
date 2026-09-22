@@ -18,6 +18,20 @@ the convention the prebuilt autoware-contents maps use and what Autoware
 expects. Do NOT flip the converter output. Live CARLA actor coordinates
 (traffic lights, waypoints) ARE flipped (y := -y) before injection.
 
+Projection: crdesigner's OpenDRIVE config defaults ``proj_string_odr`` to
+"EPSG:3857" (pseudo-Mercator). When a xodr carries its own ``<geoReference>``
+(RoadRunner-exported maps, including Town10HD_Opt, do), crdesigner silently
+reprojects every road/lanelet vertex from that georeference into
+"EPSG:3857" before emitting local_x/local_y -- while live CARLA actor
+coordinates (traffic lights, stop signs, ego pose) go through
+``carla_xyz_to_map()``'s plain ``(x, -y, z)`` with no reprojection at all.
+That mismatch bakes a real, position-dependent lateral offset (order
+0.2-2m across a town, growing with distance from the projection origin)
+between the map's static road geometry and everything live-injected or
+localized against it. ``proj_string_odr`` is forced to ``None`` below so
+crdesigner keeps the xodr's native local Cartesian coordinates untouched,
+matching the frame CARLA itself uses.
+
 Traffic lights: the upstream prebuilt maps lack traffic-light regulatory
 elements. When a live server is available this tool injects them from ground
 truth: each ``traffic.traffic_light*`` actor contributes
@@ -88,12 +102,16 @@ def convert_xodr_to_lanelet2(xodr_path, out_osm):
     """Run the crdesigner OpenDRIVE -> lanelet2 conversion (no y flip, see module doc)."""
     try:
         from crdesigner.common.config.lanelet2_config import lanelet2_config  # noqa: PLC0415
+        from crdesigner.common.config.opendrive_config import open_drive_config  # noqa: PLC0415
         from crdesigner.map_conversion.map_conversion_interface import opendrive_to_lanelet  # noqa: PLC0415
     except ImportError:
         sys.stderr.write(CONVERTER_HELP)
         sys.exit(2)
     lanelet2_config.autoware = True
     lanelet2_config.use_local_coordinates = True
+    # See module docstring: disables crdesigner's silent geoReference -> EPSG:3857
+    # reprojection so local_x/local_y stay in the xodr's native Cartesian frame.
+    open_drive_config.proj_string_odr = None
     print(f"Converting {xodr_path} -> {out_osm} (crdesigner, autoware/local mode)...", flush=True)
     opendrive_to_lanelet(xodr_path, out_osm, lanelet2_config=lanelet2_config)
     if not os.path.isfile(out_osm) or os.path.getsize(out_osm) == 0:
