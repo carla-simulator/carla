@@ -1288,12 +1288,17 @@ def extract_tar(path, dest):
         raise PackError("cannot extract {}: {}".format(path, e))
 
 
+def cook_platform(platform):
+    """Directory name cooked/staged output uses for a UAT platform (Win64 cooks as Windows)."""
+    return "Windows" if platform == "Win64" else platform
+
+
 def find_release_dirs(root, platform):
     """Yield (release_name, releases_root) for every <root>/**/<rel>/<platform>/AssetRegistry.bin."""
     root = Path(root)
     hits = []
     for reg in root.rglob(ASSET_REGISTRY):
-        if reg.parent.name == platform and reg.parent.parent != root.parent:
+        if reg.parent.name == cook_platform(platform) and reg.parent.parent != root.parent:
             hits.append((reg.parent.parent.name, reg.parent.parent.parent))
     return hits
 
@@ -1308,6 +1313,7 @@ def resolve_base(base, platform, work):
     single release, or a `Releases/<release>/<Platform>` directory.
     """
     base = Path(base).expanduser()
+    plat_dir = cook_platform(platform)
     if not base.exists():
         raise PackError("--base not found: {}".format(base))
     if base.is_file():
@@ -1317,13 +1323,13 @@ def resolve_base(base, platform, work):
         extract_tar(base, extracted)
         hits = find_release_dirs(extracted, platform)
         if not hits:
-            raise PackError("{} does not contain <release>/{}/{}".format(base, platform, ASSET_REGISTRY))
+            raise PackError("{} does not contain <release>/{}/{}".format(base, plat_dir, ASSET_REGISTRY))
         release, root = hits[0]
         return release, root.resolve()
     # directory
-    if (base / platform / ASSET_REGISTRY).is_file():          # Releases/<rel>
+    if (base / plat_dir / ASSET_REGISTRY).is_file():          # Releases/<rel>
         return base.name, base.parent.resolve()
-    if base.name == platform and (base / ASSET_REGISTRY).is_file():  # Releases/<rel>/<Platform>
+    if base.name == plat_dir and (base / ASSET_REGISTRY).is_file():  # Releases/<rel>/<Platform>
         return base.parent.name, base.parent.parent.resolve()
     hits = find_release_dirs(base, platform)
     if len(hits) == 1:
@@ -1332,7 +1338,7 @@ def resolve_base(base, platform, work):
         raise PackError("{} holds several releases ({}); point --base at one of them"
                         .format(base, ", ".join(sorted(set(h[0] for h in hits)))))
     raise PackError("{} is not a release-metadata tarball or a Releases/<release> directory "
-                    "(no <release>/{}/{} inside)".format(base, platform, ASSET_REGISTRY))
+                    "(no <release>/{}/{} inside)".format(base, plat_dir, ASSET_REGISTRY))
 
 
 def uat_command(engine, project, uplugin, release, releases_root, platform, config, maps,
@@ -1384,10 +1390,10 @@ def uat_command(engine, project, uplugin, release, releases_root, platform, conf
 def find_staged_pack(staged_root, name, platform):
     """The staged plugin folder: <staged_root>/**/<name>/Content/Paks/<platform>/."""
     for d in find_dirs_named(staged_root, name):
-        if (d / "Content" / "Paks" / platform).is_dir():
+        if (d / "Content" / "Paks" / cook_platform(platform)).is_dir():
             return d
     raise PackError("no staged output for {} under {} (expected .../{}/Content/Paks/{}/)"
-                    .format(name, staged_root, name, platform))
+                    .format(name, staged_root, name, cook_platform(platform)))
 
 
 def find_asset_registry(staged_pack, pack_dir, name, platform, override=None):
@@ -1405,7 +1411,7 @@ def find_asset_registry(staged_pack, pack_dir, name, platform, override=None):
             raise PackError("--asset-registry not found: {}".format(p))
         return p
     candidates = []
-    cooked_root = Path(pack_dir) / "Saved" / "Cooked" / platform
+    cooked_root = Path(pack_dir) / "Saved" / "Cooked" / cook_platform(platform)
     cooked_dirs = find_dirs_named(cooked_root, name, prune={"Content", "Paks"})
     for d in cooked_dirs:
         candidates.append(d / ASSET_REGISTRY)
@@ -1465,7 +1471,7 @@ def assemble_pack(pack_dir, manifest, staged_pack, out_dir, platform, release, e
             raise PackError("{} exists and is not a previous carla-pack build output; refusing to delete it"
                             .format(out_pack))
         shutil.rmtree(str(out_pack))
-    out_paks = out_pack / "Content" / "Paks" / platform
+    out_paks = out_pack / "Content" / "Paks" / cook_platform(platform)
     out_paks.mkdir(parents=True)
 
     # .uplugin: the authored descriptor, flipped to ExplicitlyLoaded for runtime mounting
@@ -1479,7 +1485,7 @@ def assemble_pack(pack_dir, manifest, staged_pack, out_dir, platform, release, e
     # pak platform file finds the .utoc/.ucas by the .pak's base name, so any name works
     # as long as the triple shares it (verified 2026-08-30 on the packaged server:
     # TestPack-Linux.* mounted, TestMap loaded, pack prop and vehicle spawned).
-    staged_paks = staged_pack / "Content" / "Paks" / platform
+    staged_paks = staged_pack / "Content" / "Paks" / cook_platform(platform)
     sets = collect_pak_sets(staged_paks)
     if not sets:
         raise PackError("no .pak/.utoc/.ucas in {}".format(staged_paks))
@@ -1685,7 +1691,7 @@ def cmd_build(args):
         if m not in maps:
             maps.append(m)
     if in_place:
-        check_maps_not_in_base(in_place, releases_root / release / platform / ASSET_REGISTRY)
+        check_maps_not_in_base(in_place, releases_root / release / cook_platform(platform) / ASSET_REGISTRY)
 
     staging_dir = Path(args.staged).expanduser().resolve() if args.staged else work / "Staged"
     cmd = uat_command(engine or "$" + ENGINE_ENV, project, uplugin, release, releases_root,
@@ -1802,6 +1808,7 @@ def server_base_release(project_dir):
 def server_platform(project_dir):
     """The packaged platform from the layout <Package>/<Platform>/CarlaUnreal (None if unknown)."""
     name = Path(project_dir).parent.name
+    name = "Win64" if name == "Windows" else name
     return name if name in KNOWN_PLATFORMS else None
 
 
@@ -2031,7 +2038,7 @@ def registry_files_of(base, platform):
     if not base.is_dir():
         raise PackError("--base not found: {}".format(base))
     found = sorted(set(list(base.rglob(ASSET_REGISTRY)) + list(base.rglob("DevelopmentAssetRegistry.bin"))))
-    found = [f for f in found if platform in f.parts or f.parent == base]
+    found = [f for f in found if cook_platform(platform) in f.parts or f.parent == base]
     if not found:
         raise PackError("no {} under {} for platform {}".format(ASSET_REGISTRY, base, platform))
     return found
