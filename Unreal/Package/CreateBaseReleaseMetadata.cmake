@@ -12,7 +12,12 @@
 #         CARLA_PACKAGE_ARCHIVE_PATH, UE_SYSTEM_NAME
 
 set (RELEASE_DIR ${CARLA_RELEASES_PATH}/${CARLA_BASE_RELEASE_NAME})
-set (RELEASE_PLATFORM_DIR ${RELEASE_DIR}/${UE_SYSTEM_NAME})
+# The cook names the platform dir after the cook platform: Win64 cooks as "Windows".
+set (COOK_PLATFORM_NAME ${UE_SYSTEM_NAME})
+if ("${UE_SYSTEM_NAME}" STREQUAL "Win64")
+  set (COOK_PLATFORM_NAME Windows)
+endif ()
+set (RELEASE_PLATFORM_DIR ${RELEASE_DIR}/${COOK_PLATFORM_NAME})
 foreach (REQUIRED_FILE AssetRegistry.bin Metadata/DevelopmentAssetRegistry.bin)
   if (NOT EXISTS ${RELEASE_PLATFORM_DIR}/${REQUIRED_FILE})
     message (FATAL_ERROR

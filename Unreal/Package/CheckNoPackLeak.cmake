@@ -71,7 +71,12 @@ endif ()
 
 # 1. cooked base registries (the pack cook's base; must exist - the metadata step
 #    checks the same two files).
-set (RELEASE_PLATFORM_DIR "${CARLA_RELEASES_PATH}/${CARLA_BASE_RELEASE_NAME}/${UE_SYSTEM_NAME}")
+# The cook names the platform dir after the cook platform: Win64 cooks as "Windows".
+set (COOK_PLATFORM_NAME "${UE_SYSTEM_NAME}")
+if ("${UE_SYSTEM_NAME}" STREQUAL "Win64")
+  set (COOK_PLATFORM_NAME Windows)
+endif ()
+set (RELEASE_PLATFORM_DIR "${CARLA_RELEASES_PATH}/${CARLA_BASE_RELEASE_NAME}/${COOK_PLATFORM_NAME}")
 set (REGISTRIES
   "${RELEASE_PLATFORM_DIR}/AssetRegistry.bin"
   "${RELEASE_PLATFORM_DIR}/Metadata/DevelopmentAssetRegistry.bin")
