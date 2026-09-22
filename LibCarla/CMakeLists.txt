@@ -151,7 +151,6 @@ if (BUILD_CARLA_SERVER)
     LIBCARLA_SERVER_SOURCES_THIRD_PARTY
     ${LIBCARLA_SOURCE_PATH}/third-party/odrSpiral/*.cpp
     ${LIBCARLA_SOURCE_PATH}/third-party/moodycamel/*.cpp
-    ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.cpp
   )
 
   file (
@@ -205,7 +204,6 @@ if (BUILD_CARLA_SERVER)
     LIBCARLA_SERVER_HEADERS_THIRD_PARTY
     ${LIBCARLA_SOURCE_PATH}/third-party/odrSpiral/*.h
     ${LIBCARLA_SOURCE_PATH}/third-party/moodycamel/*.h
-    ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.hpp
   )
 
   # glibc 2.38+ compat shim (compiled as C11 to avoid __isoc23_strtol redirect)
@@ -234,6 +232,7 @@ if (BUILD_CARLA_SERVER)
     RecastNavigation::DetourCrowd
     png_static
     zlibstatic
+    pugixml::static
     rpc
   )
   
@@ -316,8 +315,6 @@ if (BUILD_CARLA_CLIENT)
     LIBCARLA_CLIENT_HEADERS_THIRD_PARTY
     ${LIBCARLA_SOURCE_PATH}/third-party/odrSpiral/*.h
     ${LIBCARLA_SOURCE_PATH}/third-party/moodycamel/*.h
-    ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.hpp
-    ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.h
   )
 
   file (
@@ -367,7 +364,6 @@ if (BUILD_CARLA_CLIENT)
     GLOB
     LIBCARLA_CLIENT_SOURCES_THIRD_PARTY
     ${LIBCARLA_SOURCE_PATH}/third-party/odrSpiral/*.cpp
-    ${LIBCARLA_SOURCE_PATH}/third-party/pugixml/*.cpp
   )
 
   carla_add_library (
@@ -391,6 +387,7 @@ if (BUILD_CARLA_CLIENT)
     RecastNavigation::DetourCrowd
     png_static
     zlibstatic
+    pugixml::static
     rpc
   )
   target_include_directories (
@@ -425,6 +422,19 @@ if (BUILD_CARLA_CLIENT)
   )
 
   install (
+    TARGETS ${CARLA_PUGIXML_TARGET}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
+
+  install (
+    FILES
+      ${pugixml_SOURCE_DIR}/src/pugiconfig.hpp
+      ${pugixml_SOURCE_DIR}/src/pugixml.hpp
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+  )
+
+  install (
     DIRECTORY   ${LIBCARLA_SOURCE_PATH}/carla
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING
@@ -441,6 +451,12 @@ if (BUILD_CARLA_CLIENT)
 
   string (REPLACE ";" " " CARLA_EXPORTED_DEFINITIONS
     "${CARLA_COMMON_DEFINITIONS};${CARLA_EXCEPTION_DEFINITIONS};${CARLA_RTTI_DEFINITIONS}")
+
+  if (PUGIXML_NO_EXCEPTIONS)
+    set (CARLA_PUGIXML_EXPORTED_DEFINITIONS PUGIXML_NO_EXCEPTIONS)
+  else ()
+    set (CARLA_PUGIXML_EXPORTED_DEFINITIONS)
+  endif ()
 
   configure_package_config_file (
     ${CARLA_WORKSPACE_PATH}/CMake/CarlaConfig.cmake.in

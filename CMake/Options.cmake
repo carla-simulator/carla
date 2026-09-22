@@ -355,13 +355,10 @@ carla_string_option (
 
 # ==== LIBPNG ====
 
-# We can not upgrade any further due to ZLIB.
-# See https://github.com/madler/zlib/issues/1019
-# Once this is resolved we can target 1.6.50
 carla_string_option (
   CARLA_LIBPNG_VERSION
   "Target libpng version."
-  1.6.40
+  1.6.58
 )
 
 carla_string_option (
@@ -405,13 +402,13 @@ carla_string_option (
 carla_string_option (
   CARLA_SQLITE_VERSION
   "Target SQLite version (major[1].minor[2].patch[2].revision[2])."
-  3.50.04.00
+  3.53.04.00
 )
 
 carla_string_option (
   CARLA_SQLITE_RELEASE_YEAR
   "Year corresponding to the target SQLite release."
-  2025
+  2026
 )
 
 # ==== XERCESC ====
@@ -433,7 +430,7 @@ carla_string_option (
 carla_string_option (
   CARLA_ZLIB_VERSION
   "Target zlib git tag."
-  1.3.1
+  1.3.2
 )
 
 carla_string_option (

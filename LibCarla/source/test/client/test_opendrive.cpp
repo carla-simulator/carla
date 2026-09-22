@@ -18,10 +18,11 @@
 #include <carla/road/element/RoadInfoMarkRecord.h>
 #include <carla/road/element/RoadInfoVisitor.h>
 
-#include <third-party/pugixml/pugixml.hpp>
+#include <pugixml.hpp>
 
 #include <fstream>
 #include <string>
+#include <string_view>
 
 using namespace carla::road;
 using namespace carla::road::element;
@@ -30,6 +31,22 @@ using namespace carla::opendrive;
 using namespace util;
 
 const std::string BASE_PATH = LIBCARLA_TEST_CONTENT_FOLDER "/OpenDrive/";
+
+TEST(road, rejects_malformed_xodr) {
+  const auto map = OpenDriveParser::Load("<OpenDRIVE><road id=\"1\"></OpenDRIVE>");
+
+  EXPECT_FALSE(map.has_value());
+}
+
+TEST(road, rejects_null_xodr) {
+  EXPECT_FALSE(OpenDriveParser::Load(nullptr).has_value());
+}
+
+TEST(road, rejects_xodr_with_embedded_nul) {
+  constexpr std::string_view xodr{"<OpenDRIVE>\0</OpenDRIVE>", 24u};
+
+  EXPECT_FALSE(OpenDriveParser::Load(xodr).has_value());
+}
 
 // Road Elevation
 static void test_road_elevation(const pugi::xml_document &xml, std::optional<Map>& map) {
