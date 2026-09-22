@@ -432,13 +432,9 @@ function (
     carla_message ("package(${PACKAGE_CONFIGURATION}): cooking only ${CARLA_MAPS_TO_COOK}")
   endif ()
 
-  # On Windows, keep one externally managed Zen instance alive across cook,
-  # stage, pak, and archive. Run `zenserver.exe --port 8558` before packaging.
-  # Linux packages successfully with UAT's auto-launched Zen instance, so this
-  # argument must remain Windows-only.
-  if (WIN32)
-    list (APPEND CARLA_PACKAGE_EXTRA_UAT_ARGS -NoZenAutoLaunch=127.0.0.1)
-  endif ()
+  # Zen must outlive the cook (stage reads the cooked oplog back) and must not be
+  # spawned under the build. Start it first: package.sh, or zenserver --port 8558.
+  list (APPEND CARLA_PACKAGE_EXTRA_UAT_ARGS -NoZenAutoLaunch=127.0.0.1)
 
   # Content packs (Plugins/Packs/*) are cooked as DLC "based on" this release:
   # the cook writes Unreal/CarlaUnreal/Releases/<release>/<Platform>/
