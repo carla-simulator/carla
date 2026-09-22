@@ -43,7 +43,6 @@ MotionPlanStage::MotionPlanStage(
   const LocalizationFrame &localization_frame,
   const CollisionFrame&collision_frame,
   const TLFrame &tl_frame,
-  const cc::World &world,
   ControlFrame &output_array,
   RandomGenerator &random_device,
   const LocalMapPtr &local_map,
@@ -60,11 +59,14 @@ MotionPlanStage::MotionPlanStage(
     localization_frame(localization_frame),
     collision_frame(collision_frame),
     tl_frame(tl_frame),
-    world(world),
     output_array(output_array),
     random_device(random_device),
     local_map(local_map),
     large_vehicles(large_vehicles) {}
+
+void MotionPlanStage::SetCycleTimestamp(const cc::Timestamp &timestamp) {
+  current_timestamp = timestamp;
+}
 
 void MotionPlanStage::Update(const unsigned long index) {
   const ActorId actor_id = vehicle_id_list.at(index);
@@ -79,7 +81,6 @@ void MotionPlanStage::Update(const unsigned long index) {
   const LocalizationData &localization = localization_frame.at(index);
   const CollisionHazardData &collision_hazard = collision_frame.at(index);
   const bool &tl_hazard = tl_frame.at(index);
-  current_timestamp = world.GetSnapshot().GetTimestamp();
   StateEntry current_state;
 
   // Instanciating teleportation transform as current vehicle transform.
@@ -143,7 +144,7 @@ void MotionPlanStage::Update(const unsigned long index) {
     float max_landmark_target_velocity = GetLandmarkTargetVelocity(*(waypoint_buffer.at(0)), vehicle_location, actor_id, max_target_velocity);
 
     // Algorithm to reduce speed near turns
-    float max_turn_target_velocity = GetTurnTargetVelocity(waypoint_buffer, max_target_velocity);
+    float max_turn_target_velocity = GetTurnTargetVelocity(waypoint_buffer, vehicle_location, max_target_velocity);
     max_target_velocity = std::min(std::min(max_target_velocity, max_landmark_target_velocity), max_turn_target_velocity);
 
     // Collision handling and target velocity correction.
@@ -282,8 +283,6 @@ void MotionPlanStage::Update(const unsigned long index) {
       if (std::abs(angular_deviation) > 0.25f) {  // > 45 degrees
         dynamic_target_velocity = std::min(dynamic_target_velocity, 3.0f);
       }
-      const float velocity_deviation{(dynamic_target_velocity - vehicle_speed) / dynamic_target_velocity};
-
       // --- Stuck / misaligned vehicle recovery (K-turn) -----------------
       // Two situations the forward PID cannot solve: a vehicle commanded to
       // move (no red light, no vehicle ahead) that stays immobile is wedged
@@ -374,10 +373,6 @@ void MotionPlanStage::Update(const unsigned long index) {
         lateral_parameters = urban_lateral_parameters;
       }
 
-      // If physics is enabled for the vehicle, use PID controller.
-      // State update for vehicle.
-      current_state = {current_timestamp, angular_deviation, velocity_deviation, 0.0f};
-
       // Measured controller period in simulation time. In synchronous mode
       // this is fixed_delta_seconds; in asynchronous mode it is one server
       // frame, which under render load can stretch well past the nominal DT
@@ -389,6 +384,23 @@ void MotionPlanStage::Update(const unsigned long index) {
       if (control_dt <= 0.0f) {
         control_dt = DT;
       }
+
+      // Reference speed the longitudinal loop is asked to reach this step,
+      // which closes on the target at a bounded acceleration instead of
+      // stepping to it, and the velocity error it produces.
+      const float reference_velocity{PID::ShapeReferenceVelocity(
+          previous_state.reference_velocity,
+          vehicle_speed,
+          dynamic_target_velocity,
+          control_dt,
+          emergency_stop)};
+      const float velocity_deviation{PID::RelativeVelocityDeviation(
+          reference_velocity, vehicle_speed, dynamic_target_velocity)};
+
+      // If physics is enabled for the vehicle, use PID controller.
+      // State update for vehicle.
+      current_state = {current_timestamp, angular_deviation, velocity_deviation, 0.0f};
+      current_state.reference_velocity = reference_velocity;
 
       // Geometric pure-pursuit lateral command. The previous linearized
       // proportional term (P * deviation) was tuned at car-scale commands
@@ -425,6 +437,8 @@ void MotionPlanStage::Update(const unsigned long index) {
       if (emergency_stop) {
         actuation_signal.throttle = 0.0f;
         actuation_signal.brake = 1.0f;
+      } else {
+        PID::SmoothActuation(previous_state, control_dt, vehicle_speed, actuation_signal);
       }
 
       // Constructing the actuation signal.
@@ -437,6 +451,8 @@ void MotionPlanStage::Update(const unsigned long index) {
 
       // Updating PID state.
       current_state.steer = actuation_signal.steer;
+      current_state.throttle = actuation_signal.throttle;
+      current_state.brake = actuation_signal.brake;
       StateEntry &state = pid_state_map.at(actor_id);
       state = current_state;
     }
@@ -723,23 +739,38 @@ float MotionPlanStage::GetLandmarkTargetVelocity(const SimpleWaypoint& waypoint,
 }
 
 float MotionPlanStage::GetTurnTargetVelocity(const Buffer &waypoint_buffer,
+                                             const cg::Location vehicle_location,
                                              float max_target_velocity) {
 
   if (waypoint_buffer.size() < 3) {
     return max_target_velocity;
   }
-  else {
-    const SimpleWaypointPtr first_waypoint = waypoint_buffer.front();
-    const SimpleWaypointPtr last_waypoint = waypoint_buffer.back();
-    const SimpleWaypointPtr middle_waypoint = waypoint_buffer.at(waypoint_buffer.size() / 2);
 
-    float radius = GetThreePointCircleRadius(first_waypoint->GetLocation(),
-                                             middle_waypoint->GetLocation(),
-                                             last_waypoint->GetLocation());
+  // The scan starts at the waypoint the vehicle has just passed, not at the
+  // first one ahead of it: the arc a vehicle is already cornering on began
+  // behind that one, and starting there credits the arc with the distance
+  // still to run up to it, so the speed climbs by a quarter each time a
+  // waypoint is consumed and falls back as the next is approached, which is a
+  // sawtooth in the middle of every curve. Where the front has several
+  // predecessors, at a junction exit, there is no single arc to continue and
+  // the scan starts at the front.
+  std::vector<cg::Location> path;
+  path.reserve(waypoint_buffer.size() + 1u);
+  float path_start_offset = vehicle_location.Distance(waypoint_buffer.front()->GetLocation());
 
-    // Return the max velocity at the turn
-    return std::sqrt(radius * FRICTION * GRAVITY);
+  const std::vector<SimpleWaypointPtr> passed_waypoints =
+      waypoint_buffer.front()->GetPreviousWaypoint();
+  if (passed_waypoints.size() == 1u) {
+    path.push_back(passed_waypoints.front()->GetLocation());
+    path_start_offset = -vehicle_location.Distance(path.front());
   }
+  for (const auto &waypoint : waypoint_buffer) {
+    path.push_back(waypoint->GetLocation());
+  }
+
+  return GetPathSpeedLimit(path, path_start_offset, CURVATURE_SAMPLE_SPACING,
+                           LATERAL_COMFORT_ACCELERATION, TURN_BRAKING_DECELERATION,
+                           max_target_velocity);
 }
 
 void MotionPlanStage::RemoveActor(const ActorId actor_id) {

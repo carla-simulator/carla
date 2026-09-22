@@ -1,4 +1,6 @@
 
+#include <algorithm>
+
 #include "carla/trafficmanager/Constants.h"
 #include "carla/trafficmanager/LocalizationUtils.h"
 
@@ -8,6 +10,7 @@ namespace carla {
 namespace traffic_manager {
 
 using namespace constants::VehicleLight;
+using namespace constants::WorldInfoRefresh;
 
 VehicleLightStage::VehicleLightStage(
   const std::vector<ActorId> &vehicle_id_list,
@@ -21,12 +24,51 @@ VehicleLightStage::VehicleLightStage(
     world(world),
     control_frame(control_frame) {}
 
-void VehicleLightStage::UpdateWorldInfo() {
-  // Get the global weather and all the vehicle light states at once
-  all_light_states = world.GetVehiclesLightStates();
-  is_weather_enabled = world.IsWeatherEnabled();
-  if (is_weather_enabled)
-    weather = world.GetWeather();
+void VehicleLightStage::UpdateWorldInfo(const double current_time, const bool synchronous_mode) {
+  // Nothing has to be read while no vehicle is set to update its lights.
+  const bool any_vehicle_updates_lights = std::any_of(
+      vehicle_id_list.begin(),
+      vehicle_id_list.end(),
+      [this](const ActorId actor_id) { return parameters.GetUpdateVehicleLights(actor_id); });
+  if (!any_vehicle_updates_lights) {
+    all_light_states.clear();
+    missing_from_last_refresh.clear();
+    last_light_states_update = -std::numeric_limits<double>::infinity();
+    light_states_refreshed = false;
+    return;
+  }
+
+  // The flag guards the unknown-state path in Update, so it may only be set
+  // once the read has succeeded.
+  light_states_refreshed = false;
+  if (synchronous_mode ||
+      IsRefreshDue(current_time, last_light_states_update, VEHICLE_LIGHT_STATES_REFRESH_PERIOD)) {
+    all_light_states = world.GetVehiclesLightStates();
+    missing_from_last_refresh.clear();
+    last_light_states_update = current_time;
+    light_states_refreshed = true;
+  }
+
+  if (synchronous_mode ||
+      IsRefreshDue(current_time, last_weather_update, WEATHER_REFRESH_PERIOD)) {
+    is_weather_enabled = world.IsWeatherEnabled();
+    if (is_weather_enabled) {
+      weather = world.GetWeather();
+    }
+    last_weather_update = current_time;
+  }
+}
+
+void VehicleLightStage::SetCachedLightState(
+    const ActorId actor_id,
+    const rpc::VehicleLightState::flag_type light_state) {
+  for (auto &vls : all_light_states) {
+    if (vls.first == actor_id) {
+      vls.second = light_state;
+      return;
+    }
+  }
+  all_light_states.emplace_back(actor_id, light_state);
 }
 
 void VehicleLightStage::Update(const unsigned long index) {
@@ -45,11 +87,28 @@ void VehicleLightStage::Update(const unsigned long index) {
   bool fog_lights = false;
 
   // search the current light state of the vehicle
+  bool found_light_state = false;
   for (auto&& vls : all_light_states) {
     if (vls.first == actor_id) {
       light_states = vls.second;
+      found_light_state = true;
       break;
     }
+  }
+
+  if (!found_light_state) {
+    // The vehicle's current lights are unknown: the cached list predates it,
+    // or the server omits it because it is dormant on a large map. Deriving a
+    // command from the sentinel above would switch on every bit this stage
+    // does not manage (reverse, interior, special) and the write-back below
+    // would then hold them on for good.
+    if (IsEarlyRefreshDue(light_states_refreshed, missing_from_last_refresh.contains(actor_id))) {
+      last_light_states_update = -std::numeric_limits<double>::infinity();
+    }
+    if (light_states_refreshed) {
+      missing_from_last_refresh.insert(actor_id);
+    }
+    return;
   }
 
   // Determine if the vehicle is truning left or right by checking the close waypoints
@@ -146,14 +205,35 @@ void VehicleLightStage::Update(const unsigned long index) {
     new_light_states &= ~rpc::VehicleLightState::flag_type(rpc::VehicleLightState::LightState::Fog);
 
   // Update the vehicle light state if it has changed
-  if (new_light_states != light_states)
+  if (new_light_states != light_states) {
     control_frame.push_back(carla::rpc::Command::SetVehicleLightState(actor_id, new_light_states));
+    // Otherwise the same command is queued again on every step until the list
+    // is refreshed.
+    SetCachedLightState(actor_id, new_light_states);
+  }
 }
 
-void VehicleLightStage::RemoveActor(const ActorId) {
+void VehicleLightStage::RemoveActor(const ActorId actor_id) {
+  // The cache outlives the response it came from, so a destroyed vehicle has
+  // to be dropped from it explicitly.
+  all_light_states.erase(
+      std::remove_if(
+          all_light_states.begin(),
+          all_light_states.end(),
+          [actor_id](const rpc::VehicleLightStateList::value_type &light_state) {
+            return light_state.first == actor_id;
+          }),
+      all_light_states.end());
+  missing_from_last_refresh.erase(actor_id);
 }
 
 void VehicleLightStage::Reset() {
+  all_light_states.clear();
+  missing_from_last_refresh.clear();
+  last_light_states_update = -std::numeric_limits<double>::infinity();
+  last_weather_update = -std::numeric_limits<double>::infinity();
+  light_states_refreshed = false;
+  is_weather_enabled = false;
 }
 
 } // namespace traffic_manager

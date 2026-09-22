@@ -505,6 +505,21 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
     WorldObserver.BroadcastTick(*CurrentEpisode, DeltaSeconds, bMapChanged, LightUpdatePending);
     CurrentEpisode->GetSensorManager().PostPhysTick(World, TickType, DeltaSeconds);
     ResetSimulationState();
+
+    // OnPreTick is otherwise the only point that serves game-thread commands,
+    // so a blocking request costs its caller a full frame. The traffic manager
+    // pays that on every spawn, because reading the actor list goes to the
+    // server whenever an actor it has not cached appears. A second service
+    // point halves that round trip; RunSome returns at once on an empty queue.
+    // When a command takes effect is unchanged: both points fall in the same
+    // gap before the next frame's physics. Serving after the broadcast is
+    // deliberate, so a transform served here cannot contradict the snapshot
+    // already sent for this frame. Synchronous mode is left out: its tick cue
+    // belongs to the OnPreTick loop.
+    if (bIsPrimaryServer && !bSynchronousMode)
+    {
+      Server.RunSome(1u);
+    }
   }
 }
 
