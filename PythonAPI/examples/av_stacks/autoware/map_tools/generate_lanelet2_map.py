@@ -162,18 +162,23 @@ def _node_xy(node):
 
 def _check_unique_opendrive_id(kind, actor_id, opendrive_id, seen_ids):
     """Validate ``opendrive_id`` for the deterministic id scheme: numeric, and
-    not already claimed by another actor of the same kind this run."""
+    not already claimed by another actor of the same kind this run.
+
+    Returns the parsed numeric id on success, or ``None`` if ``opendrive_id``
+    is empty/non-numeric; a ``None`` return means "skip this actor" and is not
+    an error, since some shipped CARLA towns have stop signs and traffic
+    lights with no OpenDRIVE id at all. A genuine duplicate numeric id between
+    two different actors is still a hard error.
+    """
     try:
         # The id scheme keys on int(opendrive_id), so "007" and "7" must
         # collide here too, or two actors can silently emit the same
         # regulatory-element id.
         numeric_id = int(opendrive_id)
     except ValueError:
-        raise ValueError(
-            f"{kind} actor {actor_id} has non-numeric OpenDRIVE id {opendrive_id!r}; "
-            "this map-generation tool's deterministic id scheme currently requires "
-            "numeric OpenDRIVE ids."
-        )
+        print(f"WARNING: {kind} actor {actor_id} has non-numeric OpenDRIVE id "
+              f"{opendrive_id!r}; skipping.", flush=True)
+        return None
     if numeric_id in seen_ids:
         raise RuntimeError(
             f"{kind} actors {seen_ids[numeric_id]} and {actor_id} both report OpenDRIVE "
@@ -181,6 +186,7 @@ def _check_unique_opendrive_id(kind, actor_id, opendrive_id, seen_ids):
             "a unique OpenDRIVE id."
         )
     seen_ids[numeric_id] = actor_id
+    return numeric_id
 
 
 # Ids for injected elements are derived deterministically from each actor's
@@ -448,7 +454,8 @@ def inject_traffic_lights(world, osm_path):
     seen_opendrive_ids = {}
     for tl in lights:
         opendrive_id = tl.get_opendrive_id()
-        _check_unique_opendrive_id("traffic light", tl.id, opendrive_id, seen_opendrive_ids)
+        if _check_unique_opendrive_id("traffic light", tl.id, opendrive_id, seen_opendrive_ids) is None:
+            continue
         tl_slot = 0
 
         def _tl_id():
@@ -763,9 +770,21 @@ def inject_stop_signs(world, osm_path):
 
     # get_actors() order is not guaranteed across runs; sort by OpenDRIVE id
     # (the same key the deterministic id scheme uses) so regeneration from
-    # identical live state is byte-identical regardless of actor order.
-    signs = sorted(world.get_actors().filter("traffic.stop"),
-                   key=lambda s: int(s.get_opendrive_id()))
+    # identical live state is byte-identical regardless of actor order. A sign
+    # with an empty/non-numeric OpenDRIVE id can't be sorted this way, so it's
+    # filtered out up front (with a warning) before the sort runs.
+    all_signs = world.get_actors().filter("traffic.stop")
+    sortable_signs = []
+    for sign in all_signs:
+        opendrive_id = sign.get_opendrive_id()
+        try:
+            int(opendrive_id)
+        except ValueError:
+            print(f"WARNING: stop sign actor {sign.id} has non-numeric OpenDRIVE id "
+                  f"{opendrive_id!r}; skipping.", flush=True)
+            continue
+        sortable_signs.append(sign)
+    signs = sorted(sortable_signs, key=lambda s: int(s.get_opendrive_id()))
     if not signs:
         print("WARNING: no live CARLA stop-sign actors found; leaving the map unchanged.",
               flush=True)
@@ -779,7 +798,8 @@ def inject_stop_signs(world, osm_path):
     seen_opendrive_ids = {}
     for sign in signs:
         opendrive_id = sign.get_opendrive_id()
-        _check_unique_opendrive_id("stop sign", sign.id, opendrive_id, seen_opendrive_ids)
+        if _check_unique_opendrive_id("stop sign", sign.id, opendrive_id, seen_opendrive_ids) is None:
+            continue
 
         stop_wps = sign.get_stop_waypoints() or sign.get_affected_lane_waypoints()
         if not stop_wps:
