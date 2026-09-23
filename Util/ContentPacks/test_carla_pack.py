@@ -732,6 +732,16 @@ class TestBuild(PackTestBase):
         self.assertEqual(rc, 1)
         self.assertIn("not a release-metadata tarball", err)
 
+    def test_win64_base_uses_windows_cook_dir(self):
+        rel = self.tmp / "WinReleases" / "carla-0.10.0-Win64"
+        (rel / "Windows").mkdir(parents=True)
+        (rel / "Windows" / cp.ASSET_REGISTRY).write_bytes(b"")
+        self.assertEqual(cp.cook_platform("Win64"), "Windows")
+        self.assertEqual(cp.cook_platform("Linux"), "Linux")
+        for base in (rel, rel / "Windows"):
+            self.assertEqual(cp.resolve_base(base, "Win64", self.tmp / "work"),
+                             (rel.name, rel.parent.resolve()))
+
     def test_packaging_normalises_staged_output(self):
         self.init_and_add()
         (self.pack_dir / "Config" / "PluginSettings.ini").unlink()

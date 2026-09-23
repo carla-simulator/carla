@@ -39,6 +39,11 @@ if (WIN32)
     ""
   )
 
+  set (
+    MACROS_UNDEF_FILE_TEXT
+    ""
+  )
+
   foreach (WINDOWS_MACRO ${WINDOWS_MACRO_LIST})
     string (
       APPEND
@@ -50,6 +55,11 @@ if (WIN32)
       APPEND
       GUARD_END_FILE_TEXT
       "#pragma pop_macro(\"${WINDOWS_MACRO}\")\n"
+    )
+    string (
+      APPEND
+      MACROS_UNDEF_FILE_TEXT
+      "#undef ${WINDOWS_MACRO}\n"
     )
   endforeach ()
 
@@ -63,6 +73,12 @@ if (WIN32)
     WRITE
     ${LIBCARLA_SOURCE_PATH}/util/ue-header-guard-end.h
     ${GUARD_END_FILE_TEXT}
+  )
+
+  file (
+    WRITE
+    ${LIBCARLA_SOURCE_PATH}/util/windows-macros-undef.h
+    ${MACROS_UNDEF_FILE_TEXT}
   )
 
   set_directory_properties(
@@ -82,6 +98,12 @@ else ()
   file (
     WRITE
     ${LIBCARLA_SOURCE_PATH}/util/ue-header-guard-end.h
+    ""
+  )
+
+  file (
+    WRITE
+    ${LIBCARLA_SOURCE_PATH}/util/windows-macros-undef.h
     ""
   )
 

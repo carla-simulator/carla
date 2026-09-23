@@ -12,6 +12,7 @@
 
 #include <util/ue-header-guard-begin.h>
 #include "Engine/CollisionProfile.h"
+#include "Engine/Engine.h"
 #include "DrawDebugHelpers.h"
 #include "EngineUtils.h"
 #include <util/ue-header-guard-end.h>
