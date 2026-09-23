@@ -11,6 +11,7 @@
 #include "carla/rpc/Metadata.h"
 #include "carla/rpc/Response.h"
 
+#include <boost/asio/executor_work_guard.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/post.hpp>
 
@@ -58,6 +59,9 @@ namespace rpc {
       TRACE_CPUPROFILER_EVENT_SCOPE_STR(__FUNCTION__);
       #include <compiler/disable-ue4-macros.h>
       #endif // LIBCARLA_INCLUDED_FROM_UE4
+      // Keep the slice waiting for posted RPCs when its queue is empty.
+      // Otherwise the synchronous engine tick loop busy-spins between cues.
+      auto work = boost::asio::make_work_guard(_sync_io_context);
       _sync_io_context.restart();
       _sync_io_context.run_for(duration.to_chrono());
     }

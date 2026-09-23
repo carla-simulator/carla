@@ -62,3 +62,13 @@ TEST(rpc, server_bind_sync_run_on_game_thread) {
   std::cout << "game thread: run " << i << " slices.\n";
   ASSERT_TRUE(done);
 }
+
+TEST(rpc, idle_sync_slice_waits_for_work) {
+  Server server(TESTING_PORT);
+  for (auto attempt = 0; attempt < 2; ++attempt) {
+    const auto start = std::chrono::steady_clock::now();
+    server.SyncRunFor(20ms);
+    // A generous lower bound separates waiting from an empty-queue return.
+    EXPECT_GE(std::chrono::steady_clock::now() - start, 10ms);
+  }
+}
