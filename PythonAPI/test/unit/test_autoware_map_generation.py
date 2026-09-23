@@ -5,7 +5,8 @@
 # For a copy, see <https://opensource.org/licenses/MIT>.
 
 """Offline unit tests for the Autoware lanelet2 map generator's stop-sign
-regulatory-element injection (generate_lanelet2_map.inject_stop_signs).
+regulatory-element injection (generate_lanelet2_map.inject_stop_signs) and
+its shared OpenDRIVE-id validation helper.
 
 Runs against small hand-built .osm fixtures and fake CARLA actors -- no
 simulator, no crdesigner.
@@ -13,6 +14,8 @@ simulator, no crdesigner.
 
 from __future__ import annotations
 
+import contextlib
+import io
 import os
 import sys
 import tempfile
@@ -689,11 +692,34 @@ class InjectStopSignsTests(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             gl2m.inject_stop_signs(FakeWorld([s1, s2]), self.osm_path)
 
-    def test_non_numeric_opendrive_id_raises(self):
-        sign = FakeStopSign(actor_id=1, opendrive_id="abc", stop_wps=[_stop_sign_waypoint()])
+    def test_non_numeric_or_empty_opendrive_id_is_skipped(self):
+        for opendrive_id in ("abc", ""):
+            with self.subTest(opendrive_id=opendrive_id):
+                self._write(BASE_OSM)
+                sign = FakeStopSign(actor_id=1, opendrive_id=opendrive_id,
+                                    stop_wps=[_stop_sign_waypoint()])
 
-        with self.assertRaises(ValueError):
-            gl2m.inject_stop_signs(FakeWorld([sign]), self.osm_path)
+                output = io.StringIO()
+                with contextlib.redirect_stdout(output):
+                    injected = gl2m.inject_stop_signs(FakeWorld([sign]), self.osm_path)
+
+                self.assertEqual(injected, 0)
+                self.assertEqual(self._stop_sign_relations(), [])
+                self.assertEqual(self._linked_lanelet_ids(), set())
+                self.assertIn("WARNING: stop sign actor 1 has non-numeric OpenDRIVE id",
+                              output.getvalue())
+
+    def test_sign_with_non_numeric_opendrive_id_does_not_block_valid_signs(self):
+        bad = FakeStopSign(actor_id=1, opendrive_id="", stop_wps=[_stop_sign_waypoint()])
+        good = FakeStopSign(actor_id=2, opendrive_id="7", stop_wps=[_stop_sign_waypoint()])
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            injected = gl2m.inject_stop_signs(FakeWorld([bad, good]), self.osm_path)
+
+        self.assertEqual(injected, 1)
+        rels = self._stop_sign_relations()
+        self.assertEqual([tags["carla_opendrive_id"] for _rel, tags in rels], ["7"])
+        self.assertEqual(self._linked_lanelet_ids(), {"100"})
 
     def test_rerun_with_no_live_signs_still_removes_stale_regulatory_elements(self):
         sign = FakeStopSign(actor_id=1, opendrive_id="7", stop_wps=[_stop_sign_waypoint()])
@@ -705,6 +731,35 @@ class InjectStopSignsTests(unittest.TestCase):
         self.assertEqual(injected, 0)
         self.assertEqual(self._linked_lanelet_ids(), set())
         self.assertEqual(len(self._stop_sign_relations()), 0)
+
+
+class CheckUniqueOpendriveIdTests(unittest.TestCase):
+    """Covers the helper directly: inject_stop_signs pre-filters invalid ids
+    before calling it, so only inject_traffic_lights reaches its skip branch."""
+
+    def test_numeric_id_is_accepted_and_recorded(self):
+        seen = {}
+
+        self.assertEqual(gl2m._check_unique_opendrive_id("traffic light", 1, "42", seen), 42)
+        self.assertEqual(seen, {42: 1})
+
+    def test_non_numeric_or_empty_id_returns_none_without_recording(self):
+        for opendrive_id in ("abc", ""):
+            with self.subTest(opendrive_id=opendrive_id):
+                seen = {}
+
+                with contextlib.redirect_stdout(io.StringIO()):
+                    result = gl2m._check_unique_opendrive_id("traffic light", 3, opendrive_id, seen)
+
+                self.assertIsNone(result)
+                self.assertEqual(seen, {})
+
+    def test_duplicate_numeric_id_raises(self):
+        seen = {}
+        gl2m._check_unique_opendrive_id("traffic light", 4, "7", seen)
+
+        with self.assertRaises(RuntimeError):
+            gl2m._check_unique_opendrive_id("traffic light", 5, "007", seen)
 
 
 if __name__ == "__main__":
