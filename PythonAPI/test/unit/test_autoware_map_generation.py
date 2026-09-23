@@ -286,6 +286,55 @@ FAR_CROSSWALK_ONLY_OSM = """  <node id="80" action="modify" visible="true" versi
 """
 
 
+# A wide lanelet whose "right" way is digitized in the opposite direction to
+# its "left" way (left ascends local_x 2->10; right is authored 10->2, the
+# same two physical endpoints as an ascending way, just backwards). This is
+# what real crdesigner-converted OpenDRIVE data produces for some junction
+# lanelets, and folds OsmMap's `left_pts + reversed(right_pts)` containment
+# polygon into a self-crossing bowtie: a stop waypoint squarely inside
+# lanelet 100 (map (5, 0)) is also, incorrectly, "contained" by this bowtie,
+# so nearest_lanelet()'s old vertex-distance heuristic could steal it away
+# from lanelet 100, its true approach lanelet. The polygon-agnostic fit path
+# (_fit_stop_line_to_lanelet) rejects this lanelet instead, on its own drawn
+# width (4 m) versus the reported lane_width (see
+# InjectTrafficLightsTests.test_reversed_boundary_neighbor_is_not_mislinked).
+REVERSED_RIGHT_BOUNDARY_LANELET_OSM = """  <node id="92" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
+    <tag k="local_x" v="2.0000"/>
+    <tag k="local_y" v="1.0000"/>
+    <tag k="ele" v="0.0000"/>
+  </node>
+  <node id="93" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
+    <tag k="local_x" v="10.0000"/>
+    <tag k="local_y" v="1.0000"/>
+    <tag k="ele" v="0.0000"/>
+  </node>
+  <node id="94" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
+    <tag k="local_x" v="10.0000"/>
+    <tag k="local_y" v="-3.0000"/>
+    <tag k="ele" v="0.0000"/>
+  </node>
+  <node id="95" action="modify" visible="true" version="1" lat="0.0" lon="0.0">
+    <tag k="local_x" v="2.0000"/>
+    <tag k="local_y" v="-3.0000"/>
+    <tag k="ele" v="0.0000"/>
+  </node>
+  <way id="96" action="modify" visible="true" version="1">
+    <nd ref="92"/>
+    <nd ref="93"/>
+  </way>
+  <way id="97" action="modify" visible="true" version="1">
+    <nd ref="94"/>
+    <nd ref="95"/>
+  </way>
+  <relation id="900" action="modify" visible="true" version="1">
+    <member type="way" ref="96" role="left"/>
+    <member type="way" ref="97" role="right"/>
+    <tag k="type" v="lanelet"/>
+    <tag k="subtype" v="road"/>
+  </relation>
+"""
+
+
 def _osm_with(*extra):
     return BASE_OSM.replace("</osm>", "".join(extra) + "</osm>")
 
@@ -318,13 +367,44 @@ class FakeWaypoint:
         self.transform = FakeTransform(location, rotation)
         self.lane_width = lane_width
 
+    def next(self, distance):
+        # No fixture here models a route continuing past this waypoint, so
+        # _advance_waypoint's walk stops immediately and the waypoint it was
+        # given is used as-is.
+        return []
+
+
+class FakeLightBox:
+    def __init__(self, location, extent=(0.3, 0.9, 0.3), rotation=None):
+        self.location = FakeVector3D(*location)
+        self.extent = FakeVector3D(*extent)
+        self.rotation = rotation or FakeRotation()
+
 
 class FakeTrafficLight:
-    """Only used here to exercise inject_stop_signs' actor-type filtering."""
+    """Exercises inject_stop_signs' actor-type filtering (bare constructor),
+    and inject_traffic_lights' actor interface (remaining fields)."""
 
-    def __init__(self, actor_id, type_id="traffic.traffic_light"):
+    def __init__(self, actor_id, type_id="traffic.traffic_light", opendrive_id=None,
+                 stop_wps=None, affected_wps=None, light_boxes=None):
         self.id = actor_id
         self.type_id = type_id
+        self._opendrive_id = opendrive_id
+        self._stop_wps = stop_wps or []
+        self._affected_wps = affected_wps or []
+        self._light_boxes = light_boxes or []
+
+    def get_opendrive_id(self):
+        return self._opendrive_id
+
+    def get_stop_waypoints(self):
+        return self._stop_wps
+
+    def get_affected_lane_waypoints(self):
+        return self._affected_wps
+
+    def get_light_boxes(self):
+        return self._light_boxes
 
 
 class FakeStopSign:
@@ -362,6 +442,12 @@ class FakeWorld:
 def _stop_sign_waypoint():
     # CARLA (5, 0, 0) -> map (5, 0, 0): centred inside lanelet 100, whose drawn
     # width (2.0) deliberately differs from the reported lane_width (1.6).
+    return FakeWaypoint(FakeVector3D(5.0, 0.0, 0.0), lane_width=1.6)
+
+
+def _traffic_light_waypoint():
+    # Same convention as _stop_sign_waypoint(): CARLA (5, 0, 0) -> map (5, 0),
+    # centred inside lanelet 100.
     return FakeWaypoint(FakeVector3D(5.0, 0.0, 0.0), lane_width=1.6)
 
 
@@ -731,6 +817,77 @@ class InjectStopSignsTests(unittest.TestCase):
         self.assertEqual(injected, 0)
         self.assertEqual(self._linked_lanelet_ids(), set())
         self.assertEqual(len(self._stop_sign_relations()), 0)
+
+
+class InjectTrafficLightsTests(unittest.TestCase):
+    def setUp(self):
+        fd, self.osm_path = tempfile.mkstemp(suffix=".osm")
+        os.close(fd)
+        with open(self.osm_path, "w", encoding="utf-8") as f:
+            f.write(BASE_OSM)
+
+    def tearDown(self):
+        if os.path.exists(self.osm_path):
+            os.unlink(self.osm_path)
+
+    def _write(self, osm_text):
+        with open(self.osm_path, "w", encoding="utf-8") as f:
+            f.write(osm_text)
+
+    def _traffic_light_relations(self, root=None):
+        root = root if root is not None else ET.parse(self.osm_path).getroot()
+        rels = []
+        for rel in root.findall("relation"):
+            tags = {t.get("k"): t.get("v") for t in rel.findall("tag")}
+            if tags.get("type") == "regulatory_element" and tags.get("subtype") == "traffic_light":
+                rels.append((rel, tags))
+        return rels
+
+    def _linked_lanelet_ids(self, root=None):
+        root = root if root is not None else ET.parse(self.osm_path).getroot()
+        re_ids = {rel.get("id") for rel, _t in self._traffic_light_relations(root)}
+        return {rel.get("id") for rel in root.findall("relation")
+                for m in rel.findall("member")
+                if m.get("type") == "relation" and m.get("role") == "regulatory_element"
+                and m.get("ref") in re_ids}
+
+    def test_injects_traffic_light_regulatory_element_with_expected_schema(self):
+        light = FakeTrafficLight(actor_id=9, opendrive_id="5",
+                                  stop_wps=[_traffic_light_waypoint()],
+                                  light_boxes=[FakeLightBox((5.0, 0.0, 5.0))])
+
+        injected = gl2m.inject_traffic_lights(FakeWorld([light]), self.osm_path)
+        self.assertEqual(injected, 1)
+
+        rels = self._traffic_light_relations()
+        self.assertEqual(len(rels), 1)
+        rel, tags = rels[0]
+        self.assertEqual(tags["subtype"], "traffic_light")
+        self.assertEqual(tags["carla_opendrive_id"], "5")
+
+        members = rel.findall("member")
+        self.assertEqual(len([m for m in members if m.get("role") == "refers"]), 1)
+        ref_lines = [m for m in members if m.get("role") == "ref_line"]
+        self.assertEqual(len(ref_lines), 1)
+        self.assertEqual(ref_lines[0].get("type"), "way")
+
+        self.assertEqual(self._linked_lanelet_ids(), {"100"})
+
+    def test_reversed_boundary_neighbor_lanelet_is_not_mislinked(self):
+        # Lanelet 900 physically overlaps lanelet 100's stop waypoint (map
+        # (5, 0) sits inside 900's own bowtie fold, see
+        # REVERSED_RIGHT_BOUNDARY_LANELET_OSM), so a vertex/containment-based
+        # match can steal the traffic light away from the lanelet it actually
+        # approaches. The current fit-based linking must not do that.
+        self._write(_osm_with(REVERSED_RIGHT_BOUNDARY_LANELET_OSM))
+        light = FakeTrafficLight(actor_id=9, opendrive_id="5",
+                                  stop_wps=[_traffic_light_waypoint()],
+                                  light_boxes=[FakeLightBox((5.0, 0.0, 5.0))])
+
+        injected = gl2m.inject_traffic_lights(FakeWorld([light]), self.osm_path)
+
+        self.assertEqual(injected, 1)
+        self.assertEqual(self._linked_lanelet_ids(), {"100"})
 
 
 class CheckUniqueOpendriveIdTests(unittest.TestCase):
