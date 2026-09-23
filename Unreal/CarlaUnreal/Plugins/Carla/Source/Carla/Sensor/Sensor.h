@@ -272,6 +272,16 @@ private:
   /// Allows the sensor to tick with the tick rate from UE4.
   bool ReadyToTick = false;
 
+  /// The DeltaTime UE4's tick-interval scheduler computed for the most recent
+  /// Tick() call, i.e. the real elapsed time since this sensor last ticked
+  /// (see FTickFunction::CalculateDeltaTime), not merely the current physics
+  /// substep's delta. PostPhysTickInternal is invoked once per physics
+  /// substep regardless of this sensor's own tick interval, so it must reuse
+  /// this value instead of whatever substep delta it is handed, or a sensor
+  /// with sensor_tick spanning multiple substeps simulates as if only the
+  /// last substep had elapsed.
+  float ReadyToTickDeltaSeconds = 0.0f;
+
   bool bClientsListening = false;
 
 };
