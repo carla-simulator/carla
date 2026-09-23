@@ -225,17 +225,18 @@ def write_snapshot(path, matches, last_write, dead_actor_ids):
 def main():
     args = parse_args()
     stop_lines, opendrive_id_to_relation = map_stop_lines(args.map_path)
-    if not stop_lines and not opendrive_id_to_relation:
-        raise RuntimeError(f"no traffic-light regulatory elements found in {args.map_path}")
+    no_traffic_lights = not stop_lines and not opendrive_id_to_relation
+    if no_traffic_lights:
+        print(
+            f"WARNING: no traffic-light regulatory elements found in {args.map_path}; "
+            "nothing to bridge, idling until shutdown.",
+            flush=True,
+        )
 
     client = carla.Client(args.host, args.port)
     client.set_timeout(args.timeout)
     world = client.get_world()
     world.wait_for_tick(args.timeout)
-    actors = list(world.get_actors().filter("traffic.traffic_light*"))
-    matches = match_actors(actors, stop_lines, opendrive_id_to_relation, args.max_match_distance)
-    if len(matches) != len(actors):
-        raise RuntimeError(f"matched only {len(matches)} of {len(actors)} CARLA traffic lights")
 
     stop = {"flag": False}
 
@@ -248,6 +249,16 @@ def main():
 
     signal.signal(signal.SIGTERM, handle_signal)
     signal.signal(signal.SIGINT, handle_signal)
+
+    if no_traffic_lights:
+        while not stop["flag"]:
+            world.wait_for_tick(args.timeout)
+        return
+
+    actors = list(world.get_actors().filter("traffic.traffic_light*"))
+    matches = match_actors(actors, stop_lines, opendrive_id_to_relation, args.max_match_distance)
+    if len(matches) != len(actors):
+        raise RuntimeError(f"matched only {len(matches)} of {len(actors)} CARLA traffic lights")
 
     last_write = None
     dead_actor_ids = set()
