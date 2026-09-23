@@ -21,6 +21,7 @@
 #include "EngineUtils.h"
 #include "Components/ExponentialHeightFogComponent.h"
 #include "Components/ChildActorComponent.h"
+#include "Components/MeshComponent.h"
 #include "Components/DirectionalLightComponent.h"
 #include "Components/LightComponent.h"
 #include "Components/PostProcessComponent.h"
@@ -162,6 +163,72 @@ static TAutoConsoleVariable<bool> CVarCarlaWeatherEnableOvercastClouds(
 // makes a rotating sun step the sky -- see the block that applies it in
 // ApplyWeatherToSkyActor. Exposed so it can be swept live instead of needing a
 // rebuild per value; 20 is what was measured and shipped.
+// Heavy rain reads as a bright, flat, colourless scene where the far end of the
+// street dissolves into grey -- not as a dark one. Measured off three reference
+// photographs of a Tokyo downpour: saturation 3-5%, mid-distance contrast
+// 16-22, channels within ~2 levels of each other. CARLA at Cloudiness 100 and
+// FogDensity 100 sits at saturation 24%, contrast 60 and blue running 22 levels
+// over red, because FogDensity is scaled by 0.001 below and tops out at an
+// engine density of 0.1, which is far too thin to produce that veil.
+//
+// These expose the two knobs so the look can be swept from the console without
+// a rebuild. Both default to current behaviour.
+// Both light intensities come from curves keyed on SunAltitudeAngle alone --
+// SunIntensity_Curve and SkyIntensity_Curve on the rig -- so Cloudiness does
+// not affect them at all. At Cloudiness 100 the sun still delivers the 100000
+// units of a clear midday, which is what blows out the fog on the sun side and
+// leaves one half of the frame far brighter than the other. Measured on
+// Town10 with heavy rain: dropping the sun to 20000 takes the blown-out
+// fraction from 2.8% to 0.0%.
+//
+// Exposed as direct overrides rather than a Cloudiness curve on purpose: the
+// obvious formula, sun down and sky light up, was measured and does NOT hold
+// the exposure. CARLA's sky light captures the sky in real time, and that sky
+// is lit by the same sun, so dimming the sun dims the capture too -- at sun 0
+// with the sky light at double intensity the whole scene sits at brightness
+// 6.8 out of 255. Choosing the right relationship needs an artist, so this
+// gives them a dial instead of baking in a guess.
+static TAutoConsoleVariable<float> CVarCarlaWeatherSunIntensityOverride(
+    TEXT("carla.Weather.SunIntensityOverride"),
+    -1.0f,
+    TEXT("If >= 0, overrides the sky rig's sun intensity after SunIntensity_Curve has been ")
+    TEXT("applied. Negative keeps the curve's value."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherSkyLightIntensityOverride(
+    TEXT("carla.Weather.SkyLightIntensityOverride"),
+    -1.0f,
+    TEXT("If >= 0, overrides the sky rig's sky light intensity after SkyIntensity_Curve has ")
+    TEXT("been applied. Negative keeps the curve's value."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherFogDensityScale(
+    TEXT("carla.Weather.FogDensityScale"),
+    0.001f,
+    TEXT("Multiplier taking CARLA's 0-100 FogDensity to the height fog component's density. ")
+    TEXT("The shipped 0.001 caps the engine at 0.1, too thin for a heavy-rain veil."),
+    ECVF_Default);
+
+// Grey level forced on the fog's inscattering colour. The fog otherwise takes
+// its colour from the sky atmosphere, which is blue, and that blue is most of
+// the cast that separates CARLA's rain from the references.
+static TAutoConsoleVariable<float> CVarCarlaWeatherFogGrey(
+    TEXT("carla.Weather.FogGrey"),
+    -1.0f,
+    TEXT("If >= 0, forces the height fog inscattering colour to this neutral grey. ")
+    TEXT("Negative leaves whatever the rig and the sky atmosphere produce."),
+    ECVF_Default);
+
+// Cloud ExtinctionScale, i.e. how much light the cloud layer actually blocks.
+// The rig authors 0.05, which lets the sun through and keeps the clouds white
+// and puffy whatever the Cloudiness says.
+static TAutoConsoleVariable<float> CVarCarlaWeatherCloudExtinction(
+    TEXT("carla.Weather.CloudExtinction"),
+    -1.0f,
+    TEXT("If >= 0, overrides the cloud material's ExtinctionScale on every weather push. ")
+    TEXT("Negative leaves the material's own value (0.05)."),
+    ECVF_Default);
+
 static TAutoConsoleVariable<float> CVarCarlaWeatherCloudShadowExtentKm(
     TEXT("carla.Weather.CloudShadowExtentKm"),
     10.0f,
@@ -657,6 +724,67 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                 SphereActor->AttachToActor(SkyActor, FAttachmentTransformRules::KeepWorldTransform);
             }
 
+            // The sphere paints its own sun, and the two material parameters
+            // that place it -- "Light direction" and "Sun height" -- are only
+            // ever written by the blueprint when its "Directional Light Actor"
+            // reference is set. On this rig that reference is empty, so they
+            // keep the material's defaults: direction (1, 0, 0) and height 0.
+            //
+            // Measured live at SunAltitudeAngle 25 / SunAzimuthAngle 170: the
+            // directional light pointed the scene's light in from
+            // (0.89, -0.16, 0.42) while the painted sun sat at +X on the
+            // horizon. So the sun you see and the light that lights the scene
+            // disagree, and worse, the painted one does not move at all as the
+            // azimuth turns -- any client driving a day cycle through the
+            // weather API gets a sun frozen in place.
+            //
+            // Compute the direction from the weather rather than reading it
+            // back off the light: the light's own rotation is applied further
+            // down in this same function, so reading it here would use the
+            // previous push's value, and deriving both from the same source
+            // is what keeps them from drifting apart again.
+            //
+            // Do NOT go through the "SkySphere" property to find it: on
+            // Town10's rig that property reads None, so anything hanging off
+            // it silently does nothing. The sphere that actually renders is a
+            // child actor of this rig, so walk the child actor components.
+            {
+                const FVector SunDirection =
+                    -FRotator(-Weather.SunAltitudeAngle, Weather.SunAzimuthAngle, 0.0f).Vector();
+
+                TArray<AActor*> SkyCandidates;
+                if (SphereActor != nullptr)
+                    SkyCandidates.Add(SphereActor);
+                TInlineComponentArray<UChildActorComponent*> RigChildActors;
+                SkyActor->GetComponents(RigChildActors);
+                for (UChildActorComponent* RigChild : RigChildActors)
+                    if (RigChild != nullptr && RigChild->GetChildActor() != nullptr)
+                        SkyCandidates.AddUnique(RigChild->GetChildActor());
+
+                for (AActor* Candidate : SkyCandidates)
+                {
+                    TInlineComponentArray<UMeshComponent*> SphereMeshes;
+                    Candidate->GetComponents(SphereMeshes);
+                    for (UMeshComponent* SphereMesh : SphereMeshes)
+                    {
+                        if (SphereMesh == nullptr)
+                            continue;
+                        // Returns the existing dynamic instance when there
+                        // already is one, so this does not pile up a new
+                        // material per push. Setting a parameter the material
+                        // does not have is a no-op, which is what keeps this
+                        // safe to apply to every mesh hanging off the rig.
+                        if (UMaterialInstanceDynamic* SphereMID =
+                                SphereMesh->CreateAndSetMaterialInstanceDynamic(0))
+                        {
+                            SphereMID->SetVectorParameterValue(
+                                TEXT("Light direction"), FLinearColor(SunDirection));
+                            SphereMID->SetScalarParameterValue(TEXT("Sun height"), SunDirection.Z);
+                        }
+                    }
+                }
+            }
+
             // PIE start reliably left duplicate attached actors -- not just
             // the sphere (SetSkySphere's respawn: destroy-old, spawn-new,
             // doesn't reliably find/destroy the previous one across
@@ -796,7 +924,11 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             : nullptr;
         if (FogComponent != nullptr)
         {
-            FogComponent->SetFogDensity(Weather.FogDensity * 0.001f);
+            FogComponent->SetFogDensity(
+                Weather.FogDensity * CVarCarlaWeatherFogDensityScale.GetValueOnGameThread());
+            const float FogGrey = CVarCarlaWeatherFogGrey.GetValueOnGameThread();
+            if (FogGrey >= 0.0f)
+                FogComponent->SetFogInscatteringColor(FLinearColor(FogGrey, FogGrey, FogGrey, 1.0f));
             FogComponent->SetStartDistance(Weather.FogDistance * 100.0f);
             FogComponent->SetFogCutoffDistance(0.0f);
         }
@@ -856,6 +988,9 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             if (ULightComponent* SunLightComponent = FindComponent(TEXT("DirectionalLightComponentSun")))
             {
                 SunLightComponent->SetIntensity(SunIntensityCurve->GetFloatValue(Weather.SunAltitudeAngle));
+                const float SunIntensityOverride = CVarCarlaWeatherSunIntensityOverride.GetValueOnGameThread();
+                if (SunIntensityOverride >= 0.0f)
+                    SunLightComponent->SetIntensity(SunIntensityOverride);
                 // Rigs saved with a black light color render no sunlight at any
                 // intensity; the physical tint comes from the color temperature.
                 SunLightComponent->SetLightColor(FLinearColor::White);
@@ -1016,6 +1151,9 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                 SkyLightComponent->SetActive(true);
             if (UCurveFloat* SkyIntensityCurve = FindCurve(TEXT("SkyIntensity_Curve")))
                 SkyLightComponent->SetIntensity(SkyIntensityCurve->GetFloatValue(Weather.SunAltitudeAngle));
+            const float SkyLightIntensityOverride = CVarCarlaWeatherSkyLightIntensityOverride.GetValueOnGameThread();
+            if (SkyLightIntensityOverride >= 0.0f)
+                SkyLightComponent->SetIntensity(SkyLightIntensityOverride);
             }
             UE_LOG(LogCarla, Verbose, TEXT(
                 "AWeather sky light: active=%d intensity=%.3f realtimecapture=%d mobility=%d visible=%d"),
@@ -1217,6 +1355,9 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                         : FMath::Clamp(100.0f - 0.8f * Weather.Cloudiness, 0.0f, 6000.0f);
                     CloudMID->SetScalarParameterValue(TEXT("BaseNoiseExp"), BaseNoiseExp);
                 }
+                const float CloudExtinction = CVarCarlaWeatherCloudExtinction.GetValueOnGameThread();
+                if (CloudExtinction >= 0.0f)
+                    CloudMID->SetScalarParameterValue(TEXT("ExtinctionScale"), CloudExtinction);
                 CloudComponent->SetMaterial(CloudMID);
             }
             else
