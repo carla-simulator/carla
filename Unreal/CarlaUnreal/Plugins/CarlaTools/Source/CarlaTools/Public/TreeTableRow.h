@@ -22,6 +22,15 @@ enum class ELaneDescriptor : uint8 {
   Any           = 255 // 0xFE
 };
 
+UENUM(BlueprintType)
+enum class ESignStyle : uint8
+{
+  VC    UMETA(DisplayName = "Vienna Convention (Europe)"),
+  MUTCD UMETA(DisplayName = "MUTCD (America)"),
+  GB    UMETA(DisplayName = "GB (China)"),
+  None  UMETA(DisplayName = "None")
+};
+
 USTRUCT(BlueprintType)
 struct FTreeTableRow : public FTableRowBase {
 

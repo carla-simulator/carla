@@ -44,6 +44,8 @@ private:
 	static bool JsonToFPropParameters(const TSharedPtr<FJsonObject> JsonObject, FPropParameters& OutPropParams);
 	static bool JsonToFPropParametersArray(const FString& JsonString, TArray<FPropParameters>& OutPropParamsArray);
 
+	virtual void ReleaseContentPack(const FString &MountPoint) override;
+
 protected:
 	UPROPERTY(EditAnywhere)
 	TArray<FActorDefinition> Definitions;

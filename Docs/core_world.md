@@ -172,7 +172,9 @@ The weather can also be customized using two scripts provided by CARLA.
 !!! Note
     Changes in the weather do not affect physics. They are only visuals that can be captured by the camera sensors. 
 
-__Night mode starts when sun_altitude_angle < 0__, which is considered sunset. This is when lights become especially relevant.  
+Under Unreal Engine 5, the weather parameters drive the engine's physically-based sky system directly: sun position and intensity, sky light, clouds, fog and wet surfaces all respond to [carla.WeatherParameters](python_api.md#carla.WeatherParameters) in physical lighting units, in the viewport and in every camera sensor alike.
+
+__Night mode starts when sun_altitude_angle < 0__, which is considered sunset. This is when lights become especially relevant. At night the scene is lit by a physically consistent night rig: street lamps cast real light on the road, an ambient moon/sky floor keeps unlit areas readable, vehicle headlights project actual light beams, and the night sky shows stars.
 
 ### Lights
 
@@ -197,6 +199,8 @@ lmanager.turn_on(my_lights)
 lmanager.set_color(my_lights,carla.Color(255,0,0))
 lmanager.set_intensities(my_lights,list_of_intensities)
 ```
+
+In `manual_control.py`, press `U` to toggle all street lights and `Shift+U` to toggle the automatic day/night street light cycle.
 
 * __Vehicle lights__ have to be turned on/off by the user. Each vehicle has a set of lights listed in [__carla.VehicleLightState__](python_api.md#carla.VehicleLightState). So far, not all vehicles have lights integrated. Here is a list of those that are available by the time of writing.  
 	*   __Bikes.__ All of them have a front and back position light.  

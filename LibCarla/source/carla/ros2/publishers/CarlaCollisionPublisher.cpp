@@ -8,15 +8,13 @@
 
 #include "carla/Logging.h"
 #include "carla/ros2/publishers/PublisherImpl.h"
-#include "carla/ros2/types/CarlaCollisionEvent.h"
-#include "carla/ros2/types/CarlaCollisionEventPubSubTypes.h"
+#include "carla/ros2/types/msg/CarlaCollisionEvent.h"
 
 namespace carla {
 namespace ros2 {
 
 struct CarlaCollisionMsgTraits {
-  using msg_type = carla_msgs::msg::CarlaCollisionEvent;
-  using msg_pubsub_type = carla_msgs::msg::CarlaCollisionEventPubSubType;
+  using msg_type = msg::CarlaCollisionEvent;
 };
 
 CarlaCollisionPublisher::CarlaCollisionPublisher(
@@ -42,14 +40,14 @@ bool CarlaCollisionPublisher::Write(
     float impulse_y,
     float impulse_z) {
   auto *message = _impl->GetMessage();
-  message->header().stamp().sec(seconds);
-  message->header().stamp().nanosec(nanoseconds);
-  message->header().frame_id(GetFrameId());
+  message->header.stamp.sec = seconds;
+  message->header.stamp.nanosec = nanoseconds;
+  message->header.frame_id = GetFrameId();
 
-  message->other_actor_id(other_actor_id);
-  message->normal_impulse().x(impulse_x);
-  message->normal_impulse().y(impulse_y);
-  message->normal_impulse().z(impulse_z);
+  message->other_actor_id = other_actor_id;
+  message->normal_impulse.x = impulse_x;
+  message->normal_impulse.y = impulse_y;
+  message->normal_impulse.z = impulse_z;
   return true;
 }
 

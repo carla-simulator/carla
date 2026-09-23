@@ -1,0 +1,76 @@
+--- a/cosmos_transfer2/_src/transfer2_multiview/models/multiview_vid2vid_model_control_vace_rectified_flow.py
++++ b/cosmos_transfer2/_src/transfer2_multiview/models/multiview_vid2vid_model_control_vace_rectified_flow.py
+@@ -105,41 +105,47 @@
+         decoded_state = rearrange(decoded_state, "(B V) C T H W -> B C (V T) H W", V=n_views)
+         return decoded_state
+ 
++    # carla-cosmos patch (server/tools/patches/cosmos-transfer2.5-multiview-tokenizer-cp.patch): the tokenizer hands
++    # one view to each context-parallel rank; the pinned release raised when there were more views than ranks
++    # (7 views need 8 GPUs) and decode_cp would fail on the shape.  Do it in rounds of cp_size views instead: the
++    # same per-rank memory as NVIDIA's layout, any rank count (including a single GPU, where each round is one view).
++    def _tokenizer_cp(self):
++        """(cp_group, cp_size); (None, 1) when context parallelism is not initialised."""
++        try:
++            cp_group = parallel_state.get_context_parallel_group()
++            return cp_group, len(get_process_group_ranks(cp_group))
++        except (AssertionError, RuntimeError, ValueError):
++            return None, 1
++
++    def _tokenizer_cp_rounds(self, views_V_B_C_T_H_W: torch.Tensor, fn) -> torch.Tensor:
++        cp_group, cp_size = self._tokenizer_cp()
++        n_views = views_V_B_C_T_H_W.shape[0]
++        outputs = []
++        for start in range(0, n_views, cp_size):
++            chunk = views_V_B_C_T_H_W[start : start + cp_size]
++            if cp_group is None:
++                outputs.append(fn(rearrange(chunk, "V B C T H W -> (B V) C T H W")))
++                continue
++            padded = torch.zeros((cp_size, *chunk.shape[1:]), **self.tensor_kwargs)
++            padded[0 : chunk.shape[0]] = chunk
++            local_V_B_C_T_H_W = broadcast_split_tensor(padded, seq_dim=0, process_group=cp_group)
++            local_out = fn(rearrange(local_V_B_C_T_H_W, "V B C T H W -> (B V) C T H W"))
++            gathered = [torch.empty_like(local_out) for _ in range(cp_size)]
++            dist.all_gather(gathered, local_out, group=cp_group)
++            outputs.extend(gathered[0 : chunk.shape[0]])
++        return torch.cat(outputs, dim=2)  # [B, C, V * T, H, W]
++
+     @torch.no_grad()
+     def encode_cp(self, state: torch.Tensor) -> torch.Tensor:
+-        cp_size = len(get_process_group_ranks(parallel_state.get_context_parallel_group()))
+-        cp_group = parallel_state.get_context_parallel_group()
+         n_views = state.shape[2] // self.tokenizer.get_pixel_num_frames(self.state_t)
+-        if n_views > cp_size:
+-            raise ValueError(
+-                f"n_views must be less than or equal to cp_size, got n_views={n_views} and cp_size={cp_size}"
+-            )
+         state_V_B_C_T_H_W = rearrange(state, "B C (V T) H W -> V B C T H W", V=n_views)
+-        state_input = torch.zeros((cp_size, *state_V_B_C_T_H_W.shape[1:]), **self.tensor_kwargs)
+-        state_input[0:n_views] = state_V_B_C_T_H_W
+-        local_state_V_B_C_T_H_W = broadcast_split_tensor(state_input, seq_dim=0, process_group=cp_group)
+-        local_state = rearrange(local_state_V_B_C_T_H_W, "V B C T H W -> (B V) C T H W")
+-        encoded_state = super().encode(local_state)
+-        encoded_state_list = [torch.empty_like(encoded_state) for _ in range(cp_size)]
+-        dist.all_gather(encoded_state_list, encoded_state, group=cp_group)
+-        encoded_state = torch.cat(encoded_state_list[0:n_views], dim=2)  # [B, C, V * T, H, W]
+-        return encoded_state
++        return self._tokenizer_cp_rounds(state_V_B_C_T_H_W, lambda x: ControlVideo2WorldModelRectifiedFlow.encode(self, x))
+ 
+     @torch.no_grad()
+     def decode_cp(self, latent: torch.Tensor) -> torch.Tensor:
+-        cp_size = len(get_process_group_ranks(parallel_state.get_context_parallel_group()))
+-        cp_group = parallel_state.get_context_parallel_group()
+         n_views = latent.shape[2] // self.state_t
+         latent_V_B_C_T_H_W = rearrange(latent, "B C (V T) H W -> V B C T H W", V=n_views)
+-        latent_input = torch.zeros((cp_size, *latent_V_B_C_T_H_W.shape[1:]), **self.tensor_kwargs)
+-        latent_input[0:n_views] = latent_V_B_C_T_H_W
+-        local_latent_V_B_C_T_H_W = broadcast_split_tensor(latent_input, seq_dim=0, process_group=cp_group)
+-        local_latent = rearrange(local_latent_V_B_C_T_H_W, "V B C T H W -> (B V) C T H W")
+-        decoded_state = super().decode(local_latent)
+-        decoded_state_list = [torch.empty_like(decoded_state) for _ in range(cp_size)]
+-        dist.all_gather(decoded_state_list, decoded_state, group=cp_group)
+-        decoded_state = torch.cat(decoded_state_list[0:n_views], dim=2)  # [B, C, V * T, H, W]
+-        return decoded_state
++        return self._tokenizer_cp_rounds(latent_V_B_C_T_H_W, lambda x: ControlVideo2WorldModelRectifiedFlow.decode(self, x))
+ 
+     def training_step(
+         self, data_batch: dict[str, torch.Tensor], iteration: int

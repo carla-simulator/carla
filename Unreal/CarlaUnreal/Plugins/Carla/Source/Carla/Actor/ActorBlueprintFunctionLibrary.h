@@ -19,6 +19,7 @@
 #include "ActorBlueprintFunctionLibrary.generated.h"
 
 class AGnssSensor;
+class AAutowareGnssSensor;
 class AInertialMeasurementUnit;
 class ARadar;
 class ASceneCaptureSensor;
@@ -89,6 +90,17 @@ public:
       bool &Success,
       FActorDefinition &Definition);
 
+  static FActorDefinition MakeRayTracedLensCameraDefinition(
+      const FString &Id,
+      bool bEnableModifyingPostProcessEffects = false);
+
+  UFUNCTION(Category = "Carla Actor", BlueprintCallable)
+  static void MakeRayTracedLensCameraDefinition(
+      const FString &Id,
+      bool bEnableModifyingPostProcessEffects,
+      bool &Success,
+      FActorDefinition &Definition);
+
   static FActorDefinition MakeNormalsCameraDefinition();
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
@@ -106,11 +118,15 @@ public:
       FActorDefinition &Definition);
 
   static FActorDefinition MakeGnssDefinition();
+  static FActorDefinition MakeAutowareGnssDefinition();
 
   UFUNCTION(Category = "Carla Actor", BlueprintCallable)
   static void MakeGnssDefinition(
       bool &Success,
-      FActorDefinition &Definition);
+      FActorDefinition &Definition,
+      FString Name);
+
+  static FActorDefinition MakeVehicleStatusDefinition();
 
   static FActorDefinition MakeIMUDefinition();
 
@@ -277,6 +293,7 @@ public:
   static void SetLidar(const FActorDescription &Description, FLidarDescription &Lidar);
 
   static void SetGnss(const FActorDescription &Description, AGnssSensor *Gnss);
+  static void SetAutowareGnss(const FActorDescription &Description, AAutowareGnssSensor *Gnss);
 
   static void SetIMU(const FActorDescription &Description, AInertialMeasurementUnit *IMU);
 

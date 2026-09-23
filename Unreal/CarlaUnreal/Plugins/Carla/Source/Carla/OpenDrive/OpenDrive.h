@@ -34,6 +34,10 @@ public:
   UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")
   static FString FindPathToXODRFile(const FString &InMapName);
 
+  /// Where a generated OpenDRIVE world stores its xodr:
+  /// <ProjectSavedDir>/OpenDrive/<MapName>.xodr (read before any content dir).
+  static FString GetSavedXODRPath(const FString &MapName);
+
   UFUNCTION(BlueprintCallable, Category="CARLA|OpenDrive")
   static FString LoadXODR(const FString &MapName);
 

@@ -24,6 +24,8 @@ public:
 
   ATrafficLightManager();
 
+  virtual void Tick(float DeltaSeconds) override;
+
   UFUNCTION(BlueprintCallable, Category = "Traffic Light Manager")
   void RegisterLightComponentFromOpenDRIVE(UTrafficLightComponent * TrafficLight);
 
@@ -59,11 +61,18 @@ public:
   // Called when the game starts by the gamemode
   void InitializeTrafficLights();
 
+  /// Copy the authored model configuration (traffic light / sign / speed
+  /// limit blueprints) from another manager, e.g. a baked manager that is
+  /// being replaced by a persistent-level one on World Partition maps.
+  void AdoptModelConfigurationFrom(const ATrafficLightManager& Other);
+
 private:
 
   void SpawnTrafficLights();
 
   void SpawnSignals();
+
+  void UpdateSignalGroundDormancy();
 
   void RemoveRoadrunnerProps() const;
 
@@ -102,6 +111,12 @@ private:
   UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
   TMap<FString, TSubclassOf<AActor>> SpeedLimitModels;
 
+  // US (MUTCD) speed plates keyed by mph. Used instead of SpeedLimitModels when the
+  // xodr signal carries country="US" (see Signal::GetCountry(); twin builds with a US
+  // profile stamp it, stock CARLA maps carry "OpenDRIVE" and keep the EU plates).
+  UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
+  TMap<FString, TSubclassOf<AActor>> SpeedLimitModels_US;
+
   UPROPERTY(Category = "Traffic Light Manager", VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
   TObjectPtr<USceneComponent> SceneComponent;
 
@@ -122,5 +137,18 @@ private:
 
   UPROPERTY()
   bool bTrafficLightsFrozen = false;
+
+  // On World Partition maps the OpenDRIVE-spawned signals are persistent
+  // actors while the ground streams per cell, so a signal can be visible over
+  // terrain that is not resident. Signals with no ground beneath them are
+  // hidden until their cell streams in (legacy tiled maps handled this by
+  // putting out-of-range actors to sleep in ALargeMapManager).
+  UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
+  int32 DormancyChecksPerTick = 150;
+
+  UPROPERTY(EditAnywhere, Category= "Traffic Light Manager")
+  float DormancyTraceDepth = 2000.0f;
+
+  int32 DormancySweepIndex = 0;
 
 };

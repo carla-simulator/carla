@@ -42,5 +42,5 @@ void ADepthCamera_WideAngleLens::PostPhysTick(UWorld *World, ELevelTick TickType
   // client is subscribed.
   if (!AreClientsListening())
     return;
-  FPixelReader::SendPixelsInRenderThread<ADepthCamera_WideAngleLens, FColor>(*this);
+  CaptureAndSendToClient(*this);
 }

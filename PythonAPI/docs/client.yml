@@ -250,6 +250,32 @@
           '/Game/Carla/Maps/Town06',
           '/Game/Carla/Maps/Town07']
     # --------------------------------------
+    - def_name: get_content_packs
+      params:
+      return: list(carla.ContentPackInfo)
+      doc: >
+        Returns the content packs known to the server: the ones found at startup in `CarlaUnreal/Packs/`, in the directories given with `-carla-packs=<dir>[;<dir>]` or `$CARLA_PACKS`, and the ones mounted with carla.Client.mount_content_pack. Unmounted packs are listed with `mounted=False`.
+    # --------------------------------------
+    - def_name: mount_content_pack
+      params:
+      - param_name: path
+        type: str
+        doc: >
+          Path on the server host of the pack directory (or its `carla-pack.json`).
+      return: carla.ContentPackInfo
+      doc: >
+        Mounts a content pack (a content-only Unreal plugin cooked against this CARLA release, with a `carla-pack.json` manifest) into the running server without a restart. Its maps are listed by carla.Client.get_available_maps and loadable with carla.Client.load_world, and its catalogs (`Config/*.json`) are added to the blueprint library on the next episode. Raises a RuntimeError naming the reason when the path is not a pack, the pack was built for another base release or platform, or a pack of that name is already mounted.
+    # --------------------------------------
+    - def_name: unmount_content_pack
+      params:
+      - param_name: name
+        type: str
+        doc: >
+          Name of the pack, as reported by carla.Client.get_content_packs.
+      return: bool
+      doc: >
+        Unmounts a content pack. Refused (RuntimeError) while a map of the pack is the current world or objects loaded from it are still alive; load another map first. Returns True on success.
+    # --------------------------------------
     - def_name: get_client_version
       params:
       return: str
@@ -342,6 +368,41 @@
           Name of the file you are requesting.
       doc: >
         Requests one of the required files returned by carla.Client.get_required_files.
+
+  - class_name: ContentPackInfo
+    # - DESCRIPTION ------------------------
+    doc: >
+      Description of a content pack known to the server, as returned by carla.Client.get_content_packs and carla.Client.mount_content_pack.
+    # - PROPERTIES -------------------------
+    instance_variables:
+    - var_name: name
+      type: str
+      doc: >
+        Pack name; also the plugin name and the `/<name>/` package mount point.
+    - var_name: version
+      type: str
+      doc: >
+        Pack version from the manifest.
+    - var_name: base_release
+      type: str
+      doc: >
+        CARLA base release the pack was cooked against, e.g. `carla-0.10.2-Linux`.
+    - var_name: path
+      type: str
+      doc: >
+        Absolute directory of the pack on the server host.
+    - var_name: mounted
+      type: bool
+      doc: >
+        True while the pack is mounted in the server.
+    - var_name: maps
+      type: list(str)
+      doc: >
+        Map names declared by the pack manifest.
+    # - METHODS ----------------------------
+    methods:
+    - def_name: __str__
+    # --------------------------------------
 
   - class_name: TrafficManager
     # - DESCRIPTION ------------------------

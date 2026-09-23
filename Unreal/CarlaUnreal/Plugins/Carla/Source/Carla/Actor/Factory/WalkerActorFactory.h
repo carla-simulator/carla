@@ -44,6 +44,8 @@ private:
 	static bool JsonToFWalkerParameters(const TSharedPtr<FJsonObject> JsonObject, FPedestrianParameters& OutWalkerParams);
 	static bool JsonToFWalkerParametersArray(const FString& JsonString, TArray<FPedestrianParameters>& OutWalkerParamsArray);
 
+	virtual void ReleaseContentPack(const FString &MountPoint) override;
+
 protected:
 	UPROPERTY(EditAnywhere)
 	TArray<FActorDefinition> Definitions;

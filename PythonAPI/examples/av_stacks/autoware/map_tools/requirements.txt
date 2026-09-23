@@ -1,0 +1,15 @@
+# Pinned deps for the CARLA -> Autoware map tooling.
+# Verified installing and converting on Python 3.13 (2026-08-19).
+# Install into a virtualenv:
+#   python3 -m venv <venv> && <venv>/bin/pip install -r requirements.txt
+#
+# OpenDRIVE -> lanelet2 engine (maintained successor of opendrive2lanelet):
+commonroad-scenario-designer==0.8.5
+# Point cloud math + PCD I/O (installed by crdesigner too; pinned for standalone use):
+numpy==2.5.2
+#
+# NOT pinned here: the 'carla' Python package. Install the wheel built from
+# this repo (PythonAPI/carla/dist/carla-*.whl) into the same environment to
+# run the live-server tools (generate_pointcloud_map.py, live-mode
+# generate_lanelet2_map.py, generate_map_artifacts.py). Offline xodr->osm
+# conversion and fetch_prebuilt_maps.sh do not need it.

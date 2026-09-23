@@ -59,4 +59,46 @@ public:
   // This function will removed instanced static meshes in the level and place static mesh actors instead
   UFUNCTION(BlueprintCallable)
   static TArray<AStaticMeshActor*> RevertStaticMeshesInTheLevelForInstancedStaticMeshes(UWorld* World, TArray<UStaticMesh*> Filter);
+
+  // Ported from carla-digitaltwins' CarlaMeshGeneration module so its building-generator
+  // blueprints (redirected here via CoreRedirects) can run against stock CARLA.
+  UFUNCTION(BlueprintCallable)
+  static UInstancedStaticMeshComponent* AddInstancedStaticMeshComponentToActor(AActor* TargetActor);
+
+  UFUNCTION(BlueprintCallable)
+  static UStaticMeshComponent* AddStaticMeshComponentToActor(AActor* TargetActor);
+
+  // Ported from carla-mesh-generation (MIT) for the carla-digitaltwins tooling.
+  UFUNCTION(BlueprintCallable)
+  static FVector2D InverseTransverseMercatorProjection(float x, float y, float lat0, float lon0);
+
+  UFUNCTION(BlueprintCallable)
+  static USceneComponent* AddSceneComponentToActor(AActor* TargetActor);
+
+  UFUNCTION(BlueprintCallable)
+  static void SmoothVerticesDeep(
+    TArray<FVector>& Vertices,
+    const TArray<int32>& Indices,
+    int Depth = 3,                 // Number of neighbor levels
+    int NumIterations = 1,
+    float SmoothingFactor = 1.0f   // Blend between original and averaged
+  );
+
+  static uint16 GetPixelG16(const TArrayView64<const uint16>& Pixels, int Width, int Height, int X, int Y)
+  {
+    X = FMath::Clamp(X, 0, Width - 1);
+    Y = FMath::Clamp(Y, 0, Height - 1);
+    return Pixels[Y * Width + X];
+  }
+
+  static float CubicHermite(float A, float B, float C, float D, float T)
+  {
+    float a = -0.5f*A + 1.5f*B - 1.5f*C + 0.5f*D;
+    float b = A - 2.5f*B + 2.0f*C - 0.5f*D;
+    float c = -0.5f*A + 0.5f*C;
+    float d = B;
+    return ((a * T + b) * T + c) * T + d;
+  }
+
+  static float BicubicSampleG16(const TArrayView64<const uint16>& Pixels, int Width, int Height, float X, float Y);
 };

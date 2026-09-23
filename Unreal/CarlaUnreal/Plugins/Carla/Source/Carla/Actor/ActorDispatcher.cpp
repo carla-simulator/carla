@@ -37,6 +37,43 @@ void UActorDispatcher::Bind(FActorDefinition Definition, SpawnFunctionType Funct
   }
 }
 
+void UActorDispatcher::ReleaseContentPack(const FString &MountPoint)
+{
+  // Drop the definitions outright instead of only clearing their class: the
+  // blueprint library the client asks for is built from Definitions, so a
+  // definition left behind keeps advertising a blueprint whose content is no
+  // longer mounted until the next world load rebuilds the list.
+  Definitions.RemoveAll([&MountPoint](const FActorDefinition &Definition)
+  {
+    return ACarlaActorFactory::DefinitionReferencesPath(Definition, MountPoint);
+  });
+  for (auto It = Classes.CreateIterator(); It; ++It)
+  {
+    const bool bStillDefined = Definitions.ContainsByPredicate(
+        [&It](const FActorDefinition &Definition) { return Definition.Id == It.Key(); });
+    if (!bStillDefined)
+    {
+      It.RemoveCurrent();
+    }
+  }
+}
+
+void UActorDispatcher::BindNewDefinitions(ACarlaActorFactory &ActorFactory)
+{
+  for (const auto &Definition : ActorFactory.GetDefinitions())
+  {
+    const bool bAlreadyBound = Definitions.ContainsByPredicate(
+        [&Definition](const FActorDefinition &Existing) { return Existing.Id == Definition.Id; });
+    if (bAlreadyBound)
+    {
+      continue;
+    }
+    Bind(Definition, [&](const FTransform &Transform, const FActorDescription &Description) {
+      return ActorFactory.SpawnActor(Transform, Description);
+    });
+  }
+}
+
 void UActorDispatcher::Bind(ACarlaActorFactory &ActorFactory)
 {
   for (const auto &Definition : ActorFactory.GetDefinitions())
@@ -77,16 +114,21 @@ TPair<EActorSpawnResultStatus, FCarlaActor*> UActorDispatcher::SpawnActor(
     Result.Status = EActorSpawnResultStatus::UnknownError;
   }
 
+  if (Result.IsValid())
+  {
+    // Tag before registering: FActorRegistry::MakeCarlaActor snapshots the
+    // semantic tags into the actor info that spawn_actor/get_actors return,
+    // and the OnActorSpawned tagger delegate already ran before the factory
+    // assigned the mesh (props were tagged "None" there).
+    ATagger::TagActor(*Result.Actor, true);
+  }
+
   FCarlaActor* View = Result.IsValid() ?
       RegisterActor(*Result.Actor, std::move(Description), DesiredId) : nullptr;
   if (!View)
   {
     UE_LOG(LogCarla, Warning, TEXT("Failed to spawn actor '%s'"), *Description.Id);
     check(Result.Status != EActorSpawnResultStatus::Success);
-  }
-  else
-  {
-    ATagger::TagActor(*View->GetActor(), true);
   }
 
   return MakeTuple(Result.Status, View);
@@ -192,11 +234,16 @@ FCarlaActor* UActorDispatcher::RegisterActor(
     {
       // actor ros_name
       std::string RosName;
+      std::string RosTopicName;
       for (auto &&Attr : Description.Variations)
       {
         if (Attr.Key == "ros_name")
         {
           RosName = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
+        }
+        if (Attr.Key == "ros_topic_name")
+        {
+          RosTopicName = std::string(TCHAR_TO_UTF8(*Attr.Value.Value));
         }
       }
       const std::string id = std::string(TCHAR_TO_UTF8(*Description.Id));
@@ -220,12 +267,16 @@ FCarlaActor* UActorDispatcher::RegisterActor(
       {
         ROS2->RegisterSensor(static_cast<void*>(&Actor), ResolvedRosName, ResolvedRosName, true);
       }
+      // exact-topic override (empty when the attribute is unset or equals the
+      // blueprint id: signal to generate the default topic name)
+      ROS2->AddActorRosTopicName(static_cast<void*>(&Actor), RosTopicName == id ? "" : RosTopicName);
 
       // vehicle controller for hero. Scan the variations once for the hero role and the
-      // opt-in Ackermann control flag; the two control topics are mutually exclusive on
-      // the ROS 2 side, so only request Ackermann when the attribute asks for it.
+      // opt-in Ackermann/Autoware control flags; the control topics are mutually
+      // exclusive on the ROS 2 side, so only request them when an attribute asks for it.
       bool bIsHero = false;
       bool bEnableAckermannControl = false;
+      bool bEnableAutowareControl = false;
       for (auto &&Attr : Description.Variations)
       {
         if (Attr.Key == "role_name" && (Attr.Value.Value == "hero" || Attr.Value.Value == "ego"))
@@ -236,15 +287,25 @@ FCarlaActor* UActorDispatcher::RegisterActor(
         {
           bEnableAckermannControl = Attr.Value.Value.ToBool();
         }
+        else if (Attr.Key == "ros2_autoware_control")
+        {
+          bEnableAutowareControl = Attr.Value.Value.ToBool();
+        }
       }
       if (bIsHero)
       {
+        if (bEnableAutowareControl)
+        {
+          // Autoware maps steering 1:1 to wheel angle; a speed-dependent
+          // steering curve would silently rescale the command (tier4 port).
+          ActorROS2Handler::FlattenSteeringCurve(&Actor);
+        }
         ROS2->RegisterVehicle(static_cast<void*>(&Actor), ResolvedRosName, ResolvedRosName, [ResolvedRosName](void *Actor, carla::ros2::ROS2CallbackData Data) -> void
         {
           AActor *UEActor = reinterpret_cast<AActor *>(Actor);
           ActorROS2Handler Handler(UEActor, ResolvedRosName);
           std::visit(Handler, Data);
-        }, bEnableAckermannControl);
+        }, bEnableAckermannControl, bEnableAutowareControl);
         #if defined(WITH_ROS2_DEMO)
         ROS2->AddBasicSubscriberCallback(static_cast<void*>(&Actor), ResolvedRosName, [ResolvedRosName](void *Actor, carla::ros2::ROS2MessageCallbackData Data) -> void
         {
@@ -284,6 +345,7 @@ void UActorDispatcher::OnActorDestroyed(AActor *Actor)
     // a missing key, so it works for both vehicles and sensors that never
     // registered a callback.
     ROS2->UnregisterVehicle(ActorKey);
+    ROS2->RemoveActorRosTopicName(ActorKey);
     #if defined(WITH_ROS2_DEMO)
     ROS2->RemoveBasicSubscriberCallback(ActorKey);
     #endif

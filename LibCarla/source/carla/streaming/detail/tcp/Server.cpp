@@ -7,6 +7,7 @@
 #include "carla/streaming/detail/tcp/Server.h"
 
 #include "carla/Logging.h"
+#include "carla/Sockets.h"
 
 #include <boost/asio/post.hpp>
 
@@ -21,7 +22,13 @@ namespace tcp {
     : _io_context(io_context),
       _acceptor(_io_context, std::move(ep)),
       _timeout(time_duration::seconds(10u)),
-      _synchronous(false) {}
+      _synchronous(false) {
+    // Prevent this listening socket from leaking into child processes
+    // started via fork+exec while the server is alive (e.g. RecastBuilder,
+    // launched by UCarlaEpisode::LoadNewOpendriveEpisode). See
+    // carla/Sockets.h for details.
+    carla::SetSocketCloseOnExec(_acceptor.native_handle());
+  }
 
   void Server::OpenSession(
       time_duration timeout,

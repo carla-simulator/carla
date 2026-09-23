@@ -61,8 +61,8 @@ TEST(recurrent_shared_future, exception) {
     future.SetException(std::runtime_error(message));
   });
 
-  // carla::throw_exception(const std::exception&) slices the derived type
-  // before rethrow, so the original message is lost. The test still verifies
-  // that the future surfaces an exception to the waiter.
-  ASSERT_THROW(future.WaitFor(1s), std::exception);
+  // The future rethrows a carla::detail::SharedException wrapping the
+  // message; carla::throw_exception is templated on the static type, so the
+  // wrapper reaches the waiter with its type intact (no slicing).
+  ASSERT_THROW(future.WaitFor(1s), carla::detail::SharedException);
 }

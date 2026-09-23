@@ -1,0 +1,94 @@
+# Settings for nurec_runner.py.
+# Pass a different file with --config; every key is optional and the values
+# below are the defaults (a missing file reproduces the plain replay demo).
+
+# NOTE on backends: the 26.04 clipgt sample scenes are trained for 3dgut-nrend
+# and the server uses that (via its PyTorch path) when backend is null - the
+# default is already nrend rendering. backend: nrend selects NVIDIA's native
+# CUDA implementation instead, which in NRE 26.04 cannot load these scenes:
+# they use time-varying Fourier appearance features (fourier_features_dim > 1)
+# and NRESHGaussianModel only accepts static [N, 3] albedo, so every render
+# fails with "input albedo data has wrong size". Retest on newer NRE releases.
+renderer:
+  # null    = the renderer backend the artifact was trained for (default)
+  # "nrend"  = NVIDIA's fast C++/CUDA renderer
+  # "gsplat" = reference Gaussian-splat renderer
+  backend: null
+  # Server-side post-process that visually blends inserted or CARLA-driven
+  # actors into the neural background (serve-grpc --enable-harmonizer).
+  harmonizer: false
+  # "planar" = raw RGB_UINT8_PLANAR transfer (default); "jpeg" = legacy
+  # encoded transfer (needs nvidia-nvimgcodec-cu12).
+  image_format: planar
+  # Extra serve-grpc flags, passed through verbatim, e.g. ["--enable-fsim2sim"].
+  # Changing any renderer setting invalidates container reuse automatically.
+  extra_server_args: []
+
+cameras:
+  # Which cameras to render.
+  #   config: null (default) uses the recording's own calibrated rig cameras:
+  #   intrinsics (f-theta polynomials, principal point, shutter) AND mounting
+  #   extrinsics (T_sensor_rig) come from the scene itself.
+  #   config: <path.yaml> uses hand-written camera definitions instead (see
+  #   carla_example_camera_config.yaml), relative paths resolve next to the
+  #   demo script.
+  config: null
+  # Scene mode only: which rig cameras to render; null = all of them,
+  # ordered front -> sides -> rear. E.g. [camera_front_wide_120fov].
+  scene_ids: null
+  # Render scale. null auto-fits each camera to its pygame cell in scene
+  # mode (and means 0.125 in YAML mode).
+  resolution_ratio: null
+  framerate: 30
+  # Scene mode: add a CARLA-rendered forward view from the ego showing the
+  # UE5 world (OpenDRIVE reconstruction, proxy actors, physics) next to the
+  # neural renders, for debugging. YAML mode ignores this - define CARLA
+  # sensors in the camera file instead.
+  carla_front_view: true
+  # CARLA weather preset for the debug view (neural render unaffected);
+  # null keeps the map default, which is very dark on reconstructed maps.
+  carla_weather: ClearNoon
+
+control:
+  # Ego vehicle behaviour once handoff_seconds of replay have elapsed:
+  #   "replay"     - keep following the recorded ego track rigidly
+  #   "trajectory" - SimpleTrajectoryFollower re-drives the recorded
+  #                  trajectory with CARLA vehicle physics (default)
+  #   "autopilot"  - CARLA Traffic Manager autopilot (free driving)
+  ego: trajectory
+  handoff_seconds: 1.0
+  # Every other vehicle in the scene:
+  #   "replay" - follow the recorded tracks rigidly (default)
+  #   "carla"  - hand each vehicle to the CARLA Traffic Manager (its recorded
+  #              path becomes the TM route, CARLA physics drives it) and
+  #              stream the resulting poses into the neural render. Walkers
+  #              stay replay-driven. This is the hook for authoring custom
+  #              scenarios with the CARLA API on top of a NuRec scene.
+  actors: replay
+
+asset_editing:
+  # Scenario-variation API (NRE >= 26.04): list the scene's dynamic objects
+  # and rewrite which assets are rendered. enabled: true logs the scene's
+  # object tracks and swappable asset ids at startup.
+  enabled: false
+  # Swap the rendered asset of the first swappable vehicle for the asset of
+  # the second swappable vehicle (self-contained demo, no asset catalog).
+  demo_swap: false
+  # Insert a rendered-only clone of the first swappable vehicle with its
+  # whole trajectory shifted sideways by insert_offset_m meters.
+  demo_insert: false
+  insert_offset_m: 4.0
+
+lidar:
+  # Neural lidar rendered by NuRec (NRE >= 26.04), mounted height_m above
+  # the ego rig origin. Sweeps are drawn as a bird's-eye-view panel in the
+  # pygame grid and saved under <output-dir>/lidar_bev/ with --saveimages.
+  enabled: true
+  type: PANDAR128 # PANDAR128 | AT128
+  framerate: 10
+  # Mount height above the ego rig origin, meters (roof lidar ~2 m).
+  height_m: 2.0
+  visualize: true
+  # BEV panel extent in meters (points beyond are clipped) and pixel size.
+  bev_range_m: 10.0
+  bev_size_px: 480

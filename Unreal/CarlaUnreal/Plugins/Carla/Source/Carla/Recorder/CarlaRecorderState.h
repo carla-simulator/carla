@@ -7,6 +7,7 @@
 #pragma once
 
 #include <sstream>
+#include <vector>
 
 #pragma pack(push, 1)
 

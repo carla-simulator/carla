@@ -1,0 +1,14 @@
+# Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+#
+# NVIDIA NuRec gRPC Protos - Python Requirements
+#
+# The generated stubs in protos/ are vendored from the NRE container
+# (nvcr.io/nvidia/nre/nre-ga:26.04.01, protobuf 5.29 gencode) and are checked
+# in — regeneration is only needed when the .proto files change:
+# python update_generated.py
+#
+# Keep grpcio-tools in lockstep with grpcio and protobuf.
+
+grpcio>=1.66
+grpcio-tools>=1.66
+protobuf>=5.29,<7

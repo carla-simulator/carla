@@ -117,7 +117,7 @@ if (WIN32)
 else ()
   carla_dependency_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/libz.a)
 endif ()
-carla_dependency_option (ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
+carla_dependency_option (ZLIB_INCLUDE_DIRS "${zlib_SOURCE_DIR};${zlib_BINARY_DIR}")
 carla_dependency_option (ZLIB_LIBRARIES ${ZLIB_LIBRARY})
 
 
@@ -264,17 +264,6 @@ if (BUILD_OSM_WORLD_RENDERER)
 endif ()
 
 
-
-if (BUILD_CARLA_UNREAL AND ENABLE_STREETMAP)
-  # ==== STREETMAP ====
-  carla_dependency_add (
-    StreetMap
-    ${CARLA_STREETMAP_TAG}
-    https://github.com/carla-simulator/StreetMap/archive/refs/heads/${CARLA_STREETMAP_TAG}.zip
-    https://github.com/carla-simulator/StreetMap.git
-    SOURCE_DIR ${CARLA_WORKSPACE_PATH}/Unreal/CarlaUnreal/Plugins/StreetMap
-  )
-endif ()
 
 if (BUILD_LIBCARLA_TESTS)
   # ==== GOOGLETEST ====

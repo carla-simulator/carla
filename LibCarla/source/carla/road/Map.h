@@ -165,6 +165,12 @@ namespace road {
     std::vector<std::unique_ptr<geom::Mesh>> GenerateChunkedMesh(
         const rpc::OpendriveGenerationParameters& params) const;
 
+    /// Roads excluded from mesh/marking generation: link-less sub-2m
+    /// slivers and link-less duplicate traces overlapping a connected
+    /// road (DeepMap/NuRec export artifacts that render as floating
+    /// slabs of road stacked on the real carriageway).
+    std::unordered_set<road::RoadId> ComputeSkippedGenerationRoads() const;
+
     std::map<road::Lane::LaneType , std::vector<std::unique_ptr<geom::Mesh>>>
       GenerateOrderedChunkedMeshInLocations( const rpc::OpendriveGenerationParameters& params,
                                              const geom::Vector3D& minpos,
@@ -178,7 +184,9 @@ namespace road {
       const geom::Vector3D& maxpos,
       float distancebetweentrees,
       float distancefromdrivinglineborder,
-      float s_offset = 0) const;
+      float s_offset = 0,
+      bool measure_from_curb = false,
+      bool keep_on_sidewalk = false) const;
 
     geom::Mesh GenerateWalls(const double distance, const float wall_height) const;
 
@@ -196,6 +204,24 @@ namespace road {
     const std::unordered_map<ContId, std::unique_ptr<Controller>>& GetControllers() const {
       return _data.GetControllers();
     }
+
+    const std::unordered_map<StencilId, std::unique_ptr<Stencil>>& GetStencils() const {
+      return _data.GetStencils();
+    }
+    /// Data structure for the stencil search
+    struct StencilSearchData {
+      const element::RoadInfoStencil *stencil;
+      Waypoint waypoint;
+      double accumulated_s = 0;
+    };
+
+    /// Searches stencils from an initial waypoint until the defined distance.
+    std::vector<StencilSearchData> GetStencilsInDistance(
+        Waypoint waypoint, double distance, bool stop_at_junction = false) const;
+
+    /// Return all RoadInfoStencil in the map
+    std::vector<const element::RoadInfoStencil*>
+        GetAllStencilReferences() const;
 
     std::vector<carla::geom::BoundingBox> GetJunctionsBoundingBoxes() const;
 
@@ -260,6 +286,13 @@ public:
       const geom::Vector3D& maxpos ) const;
 
     std::unique_ptr<geom::Mesh> SDFToMesh(const road::Junction& jinput, const std::vector<geom::Vector3D>& sdfinput, int grid_cells_per_dim) const;
+
+    /// Paves the regions a junction's lane corridors enclose but don't
+    /// cover (see GenerateChunkedMesh). Returns nullptr when there is
+    /// nothing to fill.
+    std::unique_ptr<geom::Mesh> GenerateJunctionFill(
+        const road::Junction &junction,
+        const geom::Mesh &corridor_mesh) const;
   };
 
 } // namespace road
