@@ -431,6 +431,40 @@ def _remove_regulatory_elements(osm, matches):
     return len(relation_ids)
 
 
+# CARLA's get_stop_waypoints() places the stop line ~2 m before the real
+# painted stop line (observed via live testing); advance the waypoint toward
+# the traffic light by this distance before drawing the lanelet2 stop line.
+TRAFFIC_LIGHT_STOP_LINE_ADVANCE_M = 2.0
+
+
+def _advance_waypoint(wp, distance):
+    """``wp`` moved ``distance`` meters along the lane, toward the light.
+
+    Walks in small steps instead of a single ``wp.next(distance)`` call,
+    and stops short as soon as the next step would cross into the
+    junction or off ``wp``'s own road/lane. CARLA's raw stop waypoint is
+    sometimes already only a metre or two from the junction entry, so a
+    blind ``next(distance)`` can jump past the real stop line and land
+    inside the junction, or even on an unrelated connector road tens of
+    metres away (observed live for two of Town10HD's 15 traffic lights).
+    """
+    step = 0.5
+    current = wp
+    travelled = 0.0
+    while travelled + step <= distance + 1e-6:
+        ahead = current.next(step)
+        if not ahead:
+            break
+        candidate = ahead[0]
+        if (candidate.is_junction
+                or candidate.road_id != wp.road_id
+                or candidate.lane_id != wp.lane_id):
+            break
+        current = candidate
+        travelled += step
+    return current
+
+
 def inject_traffic_lights(world, osm_path):
     osm = OsmMap(osm_path)
     if not osm.lanelets:
@@ -450,6 +484,7 @@ def inject_traffic_lights(world, osm_path):
               flush=True)
 
     print(f"Injecting regulatory elements for {len(lights)} traffic lights...", flush=True)
+    cross_sections = _lanelet_cross_sections(osm)
     injected = 0
     seen_opendrive_ids = {}
     for tl in lights:
@@ -520,8 +555,25 @@ def inject_traffic_lights(world, osm_path):
             continue
 
         stop_way_id = None
+        fitted_lanelet_rels = None
         if stop_wps:
-            a, b = _lane_stop_line_endpoints(stop_wps)
+            advanced_wps = [_advance_waypoint(wp, TRAFFIC_LIGHT_STOP_LINE_ADVANCE_M)
+                             for wp in stop_wps]
+            # crdesigner's own lanelet boundaries disagree with CARLA's OpenDRIVE
+            # ground truth by up to ~0.5 m on junction roads (see
+            # _fit_stop_line_to_lanelet); a line built from the raw CARLA numbers
+            # can float off the lanelet Autoware actually loads, which is why the
+            # traffic_light behavior-velocity module can fail to compute a stop
+            # point for it. Fit onto the lanelet's own drawn boundaries instead,
+            # same as stop signs.
+            fitted = _fit_multi_lane_stop_line(cross_sections, advanced_wps)
+            if fitted is not None:
+                fitted_lanelet_rels, a, b = fitted
+            else:
+                print(f"WARNING: traffic light {opendrive_id} stop line could not be fitted "
+                      "to a lanelet cross section; falling back to the reported lane width, "
+                      "so it may not line up with the lane boundaries.", flush=True)
+                a, b = _lane_stop_line_endpoints(advanced_wps)
             stop_way_id = osm.add_way(
                 [osm.add_node(*a, node_id=_tl_id()), osm.add_node(*b, node_id=_tl_id())],
                 {"type": "stop_line"}, way_id=_tl_id())
@@ -538,25 +590,46 @@ def inject_traffic_lights(world, osm_path):
         ET.SubElement(rel, "tag", {"k": "subtype", "v": "traffic_light"})
         ET.SubElement(rel, "tag", {"k": "carla_opendrive_id", "v": str(opendrive_id)})
 
-        # Stop waypoints identify the approach lanes that own the stop line.
-        # Affected waypoints may instead lie on junction connector lanelets,
-        # which makes the signal invisible to a route approaching the stop.
+        # Link to the same lanelets the stop line was fitted onto above, when
+        # that succeeded. _fit_stop_line_to_lanelet() is a containment check
+        # (the waypoint must sit inside the lanelet's own drawn cross
+        # section), so it correctly excludes an adjacent lanelet that is
+        # merely nearby. nearest_lanelet() below matches by nearest boundary
+        # VERTEX instead, which can pick a lanelet the waypoint was never
+        # actually inside of -- verified live for this branch's light 945,
+        # where it attached the regulatory element to a lanelet for a
+        # different (CARLA-unreported) lane one lane-width further out,
+        # whose own path a correctly-fitted stop line can never cross, so
+        # the behavior-velocity module could never find a stop point on it.
+        # Stop waypoints identify the approach lanes that own the stop line;
+        # affected waypoints may instead lie on junction connector lanelets,
+        # invisible to a route approaching the stop, so nearest_lanelet over
+        # approach_wps remains the fallback when fitting didn't run at all.
         linked = set()
-        for wp in approach_wps:
-            loc = wp.transform.location
-            mx, my, _ = carla_xyz_to_map(loc.x, loc.y, loc.z)
-            lanelet_rel = osm.nearest_lanelet(mx, my)
-            if lanelet_rel is None:
-                print(f"WARNING: traffic light {opendrive_id} has no lanelet match for "
-                      f"approach waypoint at map ({mx:.2f}, {my:.2f}); skipping this "
-                      "association.", flush=True)
-                continue
-            if id(lanelet_rel) in linked:
-                continue
-            linked.add(id(lanelet_rel))
-            ET.SubElement(lanelet_rel, "member", {
-                "type": "relation", "ref": re_id, "role": "regulatory_element",
-            })
+        if fitted_lanelet_rels is not None:
+            for lanelet_rel in fitted_lanelet_rels:
+                if id(lanelet_rel) in linked:
+                    continue
+                linked.add(id(lanelet_rel))
+                ET.SubElement(lanelet_rel, "member", {
+                    "type": "relation", "ref": re_id, "role": "regulatory_element",
+                })
+        else:
+            for wp in approach_wps:
+                loc = wp.transform.location
+                mx, my, _ = carla_xyz_to_map(loc.x, loc.y, loc.z)
+                lanelet_rel = osm.nearest_lanelet(mx, my)
+                if lanelet_rel is None:
+                    print(f"WARNING: traffic light {opendrive_id} has no lanelet match for "
+                          f"approach waypoint at map ({mx:.2f}, {my:.2f}); skipping this "
+                          "association.", flush=True)
+                    continue
+                if id(lanelet_rel) in linked:
+                    continue
+                linked.add(id(lanelet_rel))
+                ET.SubElement(lanelet_rel, "member", {
+                    "type": "relation", "ref": re_id, "role": "regulatory_element",
+                })
         injected += 1
     osm.write(osm_path)
     print(f"Injected {injected} traffic-light regulatory elements -> {osm_path}", flush=True)
@@ -726,13 +799,14 @@ def _fit_stop_line_to_lanelet(cross_sections, wp):
     return [(rel, a, b) for _key, rel, a, b in matches]
 
 
-def _stop_sign_line(cross_sections, stop_wps):
-    """(lanelet_rels, a, b) for a stop sign, or None to fall back to lane width.
+def _fit_multi_lane_stop_line(cross_sections, stop_wps):
+    """(lanelet_rels, a, b) for a stop line, or None to fall back to lane width.
 
-    Every waypoint must fit, so a multi-lane stop line spans all its lanes; the
-    line is one physical marking, built from the first waypoint's best fit,
-    while lanelet_rels lists every lanelet any waypoint fit into. A lanelet
-    missing the back-reference drives straight through the sign.
+    Shared by stop signs and traffic lights. Every waypoint must fit, so a
+    multi-lane stop line spans all its lanes; the line is one physical
+    marking, built from the first waypoint's best fit, while lanelet_rels
+    lists every lanelet any waypoint fit into. A lanelet missing the
+    back-reference drives straight through the sign/light.
     """
     best_fits = []
     lanelet_rels = []
@@ -746,11 +820,28 @@ def _stop_sign_line(cross_sections, stop_wps):
             if id(rel) not in seen:
                 seen.add(id(rel))
                 lanelet_rels.append(rel)
-    endpoints = [p for fit in best_fits for p in fit[1:]]
+
     r0 = stop_wps[0].transform.rotation.get_right_vector()
     axis = (r0.x, -r0.y)
-    endpoints.sort(key=lambda p: p[0] * axis[0] + p[1] * axis[1])
-    return lanelet_rels, endpoints[0], endpoints[-1]
+
+    def axis_proj(p):
+        return p[0] * axis[0] + p[1] * axis[1]
+
+    # Each fit's own two points already form a locally perpendicular span for
+    # that one lane. On a curved road, two lanes' independently-matched
+    # lanelets are not at the same arc length, so pooling every waypoint's
+    # points and taking the global extremes -- as if they shared one cross
+    # section -- can splice together points from different locations along
+    # the curve. The resulting "stop line" runs along the road instead of
+    # across it, which downstream (Autoware's calcStopPoint) then fails to
+    # intersect the planned path at all. Order waypoints, not raw points,
+    # along the lateral axis, and take each end from its own waypoint's fit.
+    fit_axis = [(axis_proj(fit[1]) + axis_proj(fit[2])) / 2.0 for fit in best_fits]
+    order = sorted(range(len(best_fits)), key=lambda i: fit_axis[i])
+    first_fit, last_fit = best_fits[order[0]], best_fits[order[-1]]
+    first_point = min(first_fit[1:], key=axis_proj)
+    last_point = max(last_fit[1:], key=axis_proj)
+    return lanelet_rels, first_point, last_point
 
 
 def inject_stop_signs(world, osm_path):
@@ -807,7 +898,7 @@ def inject_stop_signs(world, osm_path):
                   "waypoints; skipping.", flush=True)
             continue
 
-        fitted = _stop_sign_line(cross_sections, stop_wps)
+        fitted = _fit_multi_lane_stop_line(cross_sections, stop_wps)
         if fitted is not None:
             lanelet_rels, a, b = fitted
         else:
