@@ -58,9 +58,26 @@ FString UOpenDrive::FindPathToXODRFile(const FString &InMapName){
     return DefaultFilePath;
   }
 
-  // Mounted content packs ship <Content>/Maps/OpenDrive/<Map>.xodr.
+  // The manifest owns the sidecar path. DigitalTwin packs isolate each map's
+  // XODR and map_logic.json in a subdirectory so phase files cannot collide.
   if (const UCarlaContentPackManager *ContentPacks = UCarlaContentPackManager::Get())
   {
+    for (const FCarlaContentPack &Pack : ContentPacks->GetPacks())
+    {
+      if (!Pack.bMounted) continue;
+      for (const FCarlaContentPackMap &Map : Pack.Manifest.Maps)
+      {
+        if (Map.Name.Equals(MapName, ESearchCase::IgnoreCase) && !Map.Xodr.IsEmpty())
+        {
+          const FString PackFilePath = FPaths::ConvertRelativePathToFull(Pack.ContentDir / Map.Xodr);
+          if (FPaths::IsUnderDirectory(PackFilePath, Pack.ContentDir) && FileManager.FileExists(*PackFilePath))
+          {
+            return PackFilePath;
+          }
+        }
+      }
+    }
+    // Compatibility with older packs without a registered sidecar path.
     for (const FString &PackContentDir : ContentPacks->GetPackContentDirs())
     {
       const FString PackFilePath = PackContentDir / TEXT("Maps/OpenDrive") / XODRFileName;

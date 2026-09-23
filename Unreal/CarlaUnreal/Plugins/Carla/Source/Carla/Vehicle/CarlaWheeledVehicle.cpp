@@ -21,6 +21,7 @@
 #include <util/ue-header-guard-begin.h>
 #include "Components/BoxComponent.h"
 #include "Components/LightComponent.h"
+#include "Components/StaticMeshComponent.h"
 #include "Engine/CollisionProfile.h"
 #include "UObject/UnrealType.h"
 #include "MovementComponents/DefaultMovementComponent.h"
@@ -101,8 +102,6 @@ void ACarlaWheeledVehicle::BeginPlay()
       }
     }
   }
-  ResetConstraints();
-
   // get collision disable constraints (used to prevent doors from colliding with each other)
   CollisionDisableConstraints.Empty();
   TArray<UPhysicsConstraintComponent*> Constraints;
@@ -111,6 +110,9 @@ void ACarlaWheeledVehicle::BeginPlay()
   {
     if (!ConstraintsComponents.Contains(Constraint))
     {
+      // Closed doors are welded to the chassis. A joint between two such
+      // components would constrain a Chaos particle to itself.
+      Constraint->TermComponentConstraint();
       UPrimitiveComponent* CollisionDisabledComponent1 = Cast<UPrimitiveComponent>(
         GetDefaultSubobjectByName(Constraint->ComponentName1.ComponentName));
       UPrimitiveComponent* CollisionDisabledComponent2 = Cast<UPrimitiveComponent>(
@@ -125,6 +127,7 @@ void ACarlaWheeledVehicle::BeginPlay()
       }
     }
   }
+  ResetConstraints();
 
   float FrictionScale = 3.5f;
 
@@ -289,6 +292,7 @@ void ACarlaWheeledVehicle::ApplyVehicleLightDefaultsForCurrentState()
   GroupOn.Add(TEXT("Left Blinker"), LightState.LeftBlinker);
   GroupOn.Add(TEXT("Right Blinker"), LightState.RightBlinker);
   GroupOn.Add(TEXT("Special1"), LightState.Special1);
+  GroupOn.Add(TEXT("Interior"), LightState.Interior);
 
   TMap<FString, float> MaterialGroupValue;
   for (const TPair<FString, bool>& Pair : GroupOn)
@@ -298,6 +302,26 @@ void ACarlaWheeledVehicle::ApplyVehicleLightDefaultsForCurrentState()
 
   ULightDefaultsJsonUtils::ApplyVehicleLightsRuntimeState(
       this, MaterialGroupValue, SavedVehicleLightGroupIntensity);
+
+  // Authored modular lamps can opt into state control without relying on a
+  // template Blueprint's fixed component list. Untagged lights retain their
+  // existing Blueprint behavior and each tagged lamp retains its photometry.
+  TInlineComponentArray<ULightComponent*> AuthoredLights(this);
+  for (ULightComponent* Light : AuthoredLights)
+  {
+    bool bControlled = false;
+    bool bEnabled = false;
+    for (const TPair<FString, bool>& Pair : GroupOn)
+    {
+      if (Light->ComponentHasTag(FName(*(FString(TEXT("Carla.Light.")) + Pair.Key))))
+      {
+        bControlled = true;
+        bEnabled |= Pair.Value;
+      }
+    }
+    if (bControlled)
+      Light->SetVisibility(bEnabled);
+  }
 }
 
 void ACarlaWheeledVehicle::ResolveRiderComponentsIfNeeded()
@@ -486,6 +510,33 @@ void ACarlaWheeledVehicle::OnRiderBoneTransformsFinalized()
 
 void ACarlaWheeledVehicle::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction){
   Super::TickActor(DeltaTime, TickType, ThisTickFunction);
+
+  // Calipers follow the wheel centre and steering, but never wheel spin.
+  // Modular authoring opts in; existing vehicle animation is unchanged.
+  if (ActorHasTag(TEXT("Carla.ModularWheelCalipers")))
+  {
+    UChaosWheeledVehicleMovementComponent* Movement = GetChaosWheeledVehicleMovementComponent();
+    if (Movement && Movement->PhysicsVehicleOutput())
+    {
+      static const FName CaliperTags[] = {TEXT("Carla.Caliper.0"), TEXT("Carla.Caliper.1"),
+          TEXT("Carla.Caliper.2"), TEXT("Carla.Caliper.3")};
+      TInlineComponentArray<UStaticMeshComponent*> Components(this);
+      for (UStaticMeshComponent* Component : Components)
+      {
+        for (int32 Index = 0; Index < UE_ARRAY_COUNT(CaliperTags) && Index < Movement->WheelSetups.Num() && Index < Movement->Wheels.Num(); ++Index)
+        {
+          if (Component->ComponentHasTag(CaliperTags[Index]))
+          {
+            const FQuat Rotation = GetMesh()->GetComponentQuat() *
+                FRotator(0.0f, Movement->Wheels[Index]->GetSteerAngle(), 0.0f).Quaternion();
+            Component->SetWorldLocationAndRotation(
+                GetMesh()->GetSocketLocation(Movement->WheelSetups[Index].BoneName), Rotation);
+            break;
+          }
+        }
+      }
+    }
+  }
 
   // Two-wheeled vehicles: resolves (once) the rider components and
   // attaches the rider to the seat socket -- see ResolveRiderComponentsIfNeeded's
@@ -1353,6 +1404,13 @@ void ACarlaWheeledVehicle::CloseDoorPhys(const EVehicleDoor DoorIdx)
 {
   UPhysicsConstraintComponent* Constraint = ConstraintsComponents[static_cast<int>(DoorIdx)];
   UPrimitiveComponent* DoorComponent = ConstraintDoor[Constraint];
+  // Remove the joints before disabling the door body and welding it back
+  // into the chassis. Otherwise Chaos can retain a self-referencing edge.
+  Constraint->TermComponentConstraint();
+  if (UPhysicsConstraintComponent** CollisionDisable = CollisionDisableConstraints.Find(DoorComponent))
+  {
+    (*CollisionDisable)->TermComponentConstraint();
+  }
   FTransform DoorInitialTransform =
     DoorComponentsTransform[DoorComponent] * GetActorTransform();
   DoorComponent->SetSimulatePhysics(false);

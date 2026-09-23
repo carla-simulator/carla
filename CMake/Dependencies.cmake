@@ -117,7 +117,7 @@ if (WIN32)
 else ()
   carla_dependency_option (ZLIB_LIBRARY ${zlib_BINARY_DIR}/libz.a)
 endif ()
-carla_dependency_option (ZLIB_INCLUDE_DIRS ${zlib_SOURCE_DIR} ${zlib_BINARY_DIR})
+carla_dependency_option (ZLIB_INCLUDE_DIRS "${zlib_SOURCE_DIR};${zlib_BINARY_DIR}")
 carla_dependency_option (ZLIB_LIBRARIES ${ZLIB_LIBRARY})
 
 

@@ -7,6 +7,7 @@
 
 #include "Sky.generated.h"
 
+struct FWeatherParameters;
 class UPostProcessComponent;
 class UExponentialHeightFogComponent;
 class UDirectionalLightComponent;
