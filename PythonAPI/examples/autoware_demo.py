@@ -261,10 +261,18 @@ def generate_vlp16_blueprint(blueprint_library):
     blueprint.set_attribute("upper_fov", "10.0")
     blueprint.set_attribute("lower_fov", "-20.0")
 
-    # Calculated as: horizontal_fov / horizontal_resolution / sensor_tick * channels
+    # Calculated as: horizontal_fov / horizontal_resolution / sensor_tick * channels,
+    # assuming the 10 Hz rotation_frequency set below.
     blueprint.set_attribute("points_per_second", "288000")
 
     blueprint.set_attribute("sensor_tick", "0.1")
+    blueprint.set_attribute("rotation_frequency", "10.0")
+
+    # Disable CARLA's default random per-tick point dropout (45% general rate
+    # by default): re-rolled every frame, it destabilizes the point cluster on
+    # perfectly static objects enough for a tracker to read it as motion.
+    blueprint.set_attribute("dropoff_general_rate", "0.0")
+    blueprint.set_attribute("dropoff_zero_intensity", "0.0")
 
     # ROS settings
     blueprint.set_attribute("ros_name", "velodyne_top")  # frame_id
