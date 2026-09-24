@@ -763,6 +763,13 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         {
             if (ULightComponent* SunLightComponent = FindComponent(TEXT("DirectionalLightComponentSun")))
             {
+                // UpdateSun in the authored rig can leave the light at its
+                // astronomical/default trajectory instead of the RPC angles.
+                // Drive the component in world space: inherited rig transforms
+                // must not rotate the requested sun. A directional light's
+                // forward vector points away from the sun (bearing az + 180).
+                SunLightComponent->SetWorldRotation(FRotator(
+                    -Weather.SunAltitudeAngle, Weather.SunAzimuthAngle, 0.0f));
                 SunLightComponent->SetIntensity(SunIntensityCurve->GetFloatValue(Weather.SunAltitudeAngle));
                 // Rigs saved with a black light color render no sunlight at any
                 // intensity; the physical tint comes from the color temperature.

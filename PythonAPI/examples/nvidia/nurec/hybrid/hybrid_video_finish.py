@@ -17,6 +17,7 @@ ap.add_argument("--empty-opa", type=float, default=0.6, help="engine pixels with
 ap.add_argument("--unmix", type=int, default=0, help="remove the CARLA background from the cars' silhouette pixels using the catchers-only pass A image "
                                                     "(experimental: the soft mask is not the true coverage, so it over-corrects into a dark outline; off by default)")
 ap.add_argument("--shadow-sigma", type=float, default=1.5, help="low-pass applied to both colour images before the cast-shadow ratio")
+ap.add_argument("--shadow-depth-bias", type=float, default=0.0, help="metres of road-depth tolerance for shadow visibility; 0 preserves the existing blend, 0.5 avoids halving contact shadows on aligned proxy and neural roads")
 ap.add_argument("--jobs", type=int, default=16, help="worker processes (frames are independent)")
 ap.add_argument("--edge-extend", type=int, default=1, help="push the colour of the nearest mask-interior pixel into the silhouette band, where the CARLA layer is anti-aliased against its own sky (kills the bright rim)")
 a = ap.parse_args()
@@ -24,7 +25,7 @@ meta = json.load(open(f"{a.run}/meta.json"))
 unmix = bool(a.unmix)
 os.makedirs(f"{a.run}/frames", exist_ok=True)
 GROUND = [1, 2, 24, 22, 10, 9]
-SYN = [12, 13] + list(range(14, 20))      # synthetic actors: Pedestrian, Rider, vehicles
+SYN = meta.get("synthetic_tags", [12, 13] + list(range(14, 20)))
 
 
 def composite(k):
@@ -58,7 +59,7 @@ def composite(k):
     R0l = gaussian_filter(R0.mean(axis=2), a.shadow_sigma) if a.shadow_sigma > 0 else R0.mean(axis=2)
     ratio = np.clip(Rl / np.maximum(R0l, 1.0), a.shadow_min, 1.0)
     ground = np.isin(sem, GROUND) & (~M)
-    vis0 = np.clip(0.5 + (dist - dc) / (2 * max(a.soft, 0.25)), 0, 1); vis0 = np.where(opa < 0.05, 0.0, vis0)
+    vis0 = np.clip(0.5 + (dist - dc + a.shadow_depth_bias) / (2 * max(a.soft, 0.25)), 0, 1); vis0 = np.where(opa < 0.05, 0.0, vis0)
     shadow = gaussian_filter(1.0 - (1.0 - ratio) * ground * vis0, 1.0)
     Bs = Bg * shadow[..., None]
     C = alpha[..., None] * R + (1 - alpha[..., None]) * Bs

@@ -61,6 +61,37 @@ class LanePath:
     def lateral(self, pos): return self.line.distance(Point(pos.x, pos.y))
 
 
+def carla_lane_path(actor, distance=300.0):
+    """A fixed 3D-selected route, avoiding 2D lane ambiguity at overpasses.
+
+    Geometry comes from CARLA's map; Scenic still controls every action. Refuse
+    forks rather than silently choosing an unrelated exit. The caller chooses
+    the starting actor/lane explicitly.
+    """
+    import carla
+    kinds = carla.LaneType.Driving | carla.LaneType.OnRamp | carla.LaneType.OffRamp | carla.LaneType.Entry | carla.LaneType.Exit
+    wp = actor.get_world().get_map().get_waypoint(actor.get_location(), lane_type=kinds)
+    if wp is None:
+        raise ValueError("No drivable lane at actor's 3D position")
+    pts = []
+    for _ in range(int(distance / 2) + 1):
+        loc = wp.transform.location
+        pts.append((loc.x, -loc.y))
+        # Exported junctions can list the exact same successor twice.
+        successors = list({(p.road_id, p.section_id, p.lane_id, round(p.s, 4)): p
+                           for p in wp.next(2.0)}.values())
+        if not successors:
+            break
+        if len(successors) != 1:
+            raise ValueError(f"Route needs an explicit branch at road {wp.road_id}, lane {wp.lane_id}")
+        wp = successors[0]
+    if len(pts) < 2:
+        raise ValueError("Lane route has no forward extent")
+    route = LanePath()
+    route.line = LineString(pts)
+    return route
+
+
 def lateral_to_lane(me, lane):
     """Distance (m) from `me` to the centreline of `lane` and its successors (for `until` conditions of a lane change)."""
     p = LanePath(); p.update(lane); return p.lateral(me.position)

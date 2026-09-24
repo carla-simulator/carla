@@ -7,7 +7,10 @@ imported, ``SensorSimService.render_rgb`` gains a second behaviour: a request wh
 
     b"HYBR" | uint32 h | uint32 w | uint8 rgb (3,h,w) | float32 distance (h,w) | float32 opacity (h,w)
 
-instead of an encoded image. Every other request is untouched.
+instead of an encoded image. ``image_quality == -8`` returns ``HYF1`` with the
+same dimensions and planes, but planar RGB is native float32 without exporter
+clamping or quantization. Native model color processing remains in effect.
+Every other request is untouched.
 """
 import importlib.abc
 import importlib.util
@@ -27,7 +30,8 @@ def _patch(module):
     orig = module.SensorSimService.render_rgb
 
     def render_rgb(self, request, context):
-        if abs(request.image_quality - SENTINEL) > 1e-3:
+        float_output = abs(request.image_quality - (-8.0)) < 1e-3
+        if not float_output and abs(request.image_quality - SENTINEL) > 1e-3:
             return orig(self, request, context)
         try:
             with self.get_backend(request.scene_id) as backend:
@@ -44,10 +48,15 @@ def _patch(module):
                         rb, fields=FIELDS, actors_snapshot=snap,
                         frame_start_us=request.frame_start_us, frame_end_us=request.frame_end_us)
                     w, h = rb.rendering_data.w, rb.rendering_data.h
-            rgb = (fr.color_image.clamp(0, 1) * 255).to(torch.uint8).permute(2, 0, 1).contiguous().cpu().numpy()
+            # HYF1 preserves native float values. This is a transport guarantee,
+            # not a claim about the model's ISP/transfer function or HDR range.
+            if float_output:
+                rgb = fr.color_image.float().permute(2, 0, 1).contiguous().cpu().numpy().astype("<f4")
+            else:
+                rgb = (fr.color_image.clamp(0, 1) * 255).to(torch.uint8).permute(2, 0, 1).contiguous().cpu().numpy()
             dist = fr.distance_image.float().contiguous().cpu().numpy().astype("<f4")
             opa = fr.opacity_image.float().contiguous().cpu().numpy().astype("<f4")
-            payload = b"HYBR" + struct.pack("<II", h, w) + rgb.tobytes() + dist.tobytes() + opa.tobytes()
+            payload = (b"HYF1" if float_output else b"HYBR") + struct.pack("<II", h, w) + rgb.tobytes() + dist.tobytes() + opa.tobytes()
             return RGBRenderReturn(image_bytes=payload)
         except Exception as exc:  # noqa: BLE001
             module.log.error("hybrid render failed: %s\n%s", exc, traceback.format_exc())

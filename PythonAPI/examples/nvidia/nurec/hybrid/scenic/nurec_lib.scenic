@@ -11,13 +11,14 @@ from scenic.domains.driving.actions import SetThrottleAction, SetSteerAction, Se
 from nurec_helpers import *
 
 
-behavior LaneKeep(target_speed, leads=(), headway=1.4, min_gap=6.0, lane=None, max_throttle=0.9, max_brake=0.7, lat_tol=1.8):
+behavior LaneKeep(target_speed, leads=(), headway=1.4, min_gap=6.0, lane=None, max_throttle=0.9, max_brake=0.7, lat_tol=1.8, route=None):
     """Follow the current lane (or `lane`) at target_speed (m/s); with `leads`, hold a time headway behind the nearest one
     ahead in the lane (a car counts as ahead within `lat_tol` m of this car's axis; widen it to react to a car angling in from
     the kerb or the next lane). Never terminates on its own: pair it with `until` / `for`."""
-    path = LanePath(); ctrl = SpeedControl(simulation().timestep, max_brake=max_brake); past_steer = 0.0
+    path = route if route is not None else LanePath(); ctrl = SpeedControl(simulation().timestep, max_brake=max_brake); past_steer = 0.0
     while True:
-        path.update(lane if lane is not None else self._lane)
+        if route is None:
+            path.update(lane if lane is not None else self._lane)
         if path.line is None:
             take SetThrottleAction(0.0), SetBrakeAction(1.0), SetSteerAction(0.0)
             continue

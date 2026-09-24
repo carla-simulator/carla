@@ -52,16 +52,15 @@ import math
 import numpy as np
 from scipy.ndimage import map_coordinates
 
-# Measured on the OpenDRIVE proxy world (sun az 275 / alt 39.2, manual exposure 0.44): a shadowed road
-# patch reads 31 (default atmosphere capture), 2.3 at intensity 0, 15.5 at 12000, 85 at 100000 with the
-# highway probe .jpg (linear mean 0.118). Ambient is linear in intensity, so ~26000 matches the default
-# atmosphere capture. That default was calibrated for the raster ambient term only: under the exposure that
-# matches the sunlit road to the neural road, the neural sky sits at ~6x the road's luminance while the sky
-# light at 26000 sits at ~1x, so path-traced car paint (a mirror of the sky) came out 3-6x too dark. At
-# 160000 (6.15x) the sky matches (2026-09-08, highway scene 7c2cf6cd: a silver car's side goes from 0.04 to
-# 0.21 of the road luminance at its median, 0.54 at p90; the cast shadows keep their depth, the exposure
-# solve moves by -0.8 EV). Sweep with `hybrid_run.py --skymap-intensity`.
-DEFAULT_INTENSITY = 160000.0
+# Display-referred probe scale; re-solve camera exposure for each scene.
+# 160000 previously compensated for the weather rig leaving the directional
+# light at its authored trajectory instead of the requested sun angles. This
+# overlit reflected sky and produced broad white rims on vehicles. With the
+# native world-space sun-direction correction, 26000 retains daylight fill
+# while the directional sun supplies the road illumination (matched NuRec
+# vehicle tests, 2026-09-14). This remains an LDR probe approximation, not HDR
+# radiometric ground truth; retain the per-scene intensity override.
+DEFAULT_INTENSITY = 26000.0
 
 
 def srgb_to_linear(x):

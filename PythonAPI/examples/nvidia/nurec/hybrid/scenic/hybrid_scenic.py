@@ -29,6 +29,7 @@ from utils import mat_to_carla_transform, carla_transform_to_nurec  # noqa: E402
 from projection_functions import get_t_rig_enu_from_ecef  # noqa: E402
 from nre.grpc.protos import sensorsim_pb2 as s, sensorsim_pb2_grpc as g, common_pb2 as c  # noqa: E402
 import scenic_xodr  # noqa: E402
+from prop_grounding import ground_prop, snap_ramp_vehicle, DRIVABLE_LANES  # noqa: E402
 
 OPTICAL_TO_FLU = np.array([[0.0, 0.0, 1.0], [-1.0, 0.0, 0.0], [0.0, -1.0, 0.0]])
 OPTICAL_BASIS = np.eye(4); OPTICAL_BASIS[:3, :3] = OPTICAL_TO_FLU
@@ -45,6 +46,8 @@ ap.add_argument("--frames", type=int, default=0, help="max frames (0 = until the
 ap.add_argument("--max-seconds", type=float, default=0.0, help="cap on the simulation (0 = twice the recorded drive + 5 s: a scenario whose ego never reaches the route end would otherwise fill the disk with frames)")
 ap.add_argument("--camera", default="camera_front_wide_120fov")
 ap.add_argument("--sun", default="280,40,10", help="CARLA azimuth,altitude,cloudiness or auto:<illum_probe json>:<sun_calib json>")
+ap.add_argument("--sky-probe", help="Explicit illumination-probe JSON; also works when an overcast probe has no detected sun")
+ap.add_argument("--diffuse-only", action="store_true", help="Use the environment map without directional sun/moon for fully overcast source logs")
 ap.add_argument("--exposure", type=float, default=0.44, help="r.EyeAdaptation.LensAttenuation for the raster path (the rt_lens sensors use --rt-exposure-comp)")
 ap.add_argument("--keep-world", action="store_true"); ap.add_argument("--tm-port", type=int, default=8000)
 ap.add_argument("--furniture", type=int, default=0, help="carla.OpenDrive.StreetFurniture for the generated proxy world (0 = bare road)")
@@ -198,7 +201,7 @@ def teardown():
 
 atexit.register(teardown)
 
-a.sun_illum_json = None
+a.sun_illum_json = a.sky_probe
 if a.sun.startswith("auto:"):
     illum_json, calib_json = a.sun[5:].split(":")
     il = json.load(open(illum_json)); cb = json.load(open(calib_json))["fit"]; a.sun_illum_json = illum_json
@@ -222,6 +225,11 @@ if a.skymap and a.sun_illum_json is not None and hasattr(world, "set_sky_light_m
 elif hasattr(world, "has_sky_light_map") and world.has_sky_light_map():
     world.clear_sky_light_map(); print("stale sky light map cleared", flush=True)
 console("r.EyeAdaptation.MethodOverride 3"); console(f"r.EyeAdaptation.LensAttenuation {a.exposure}"); console("r.MotionBlur.Amount 0")
+if a.diffuse_only:
+    if not SKYMAP:
+        fail("--diffuse-only requires an active environment map (--sky-probe and --skymap 1)")
+    console("py import unreal; w=unreal.find_object(None,'/Game/Carla/Maps/OpenDriveMap.OpenDriveMap'); [c.set_intensity(0.0) for a in unreal.GameplayStatics.get_all_actors_of_class(w,unreal.Actor) for c in a.get_components_by_class(unreal.DirectionalLightComponent)]")
+    print("Overcast environment lighting: directional sun and moon disabled", flush=True)
 bpl = world.get_blueprint_library()
 
 
@@ -284,7 +292,7 @@ print(f"rt capture: rt_lens ftheta ({a.rt_spp} spp, DLSS-RR, exposure_compensati
 
 # ---------------- the scenario's frame: recorded start pose on the lane centre, recorded end pose ----------------
 tf_rig0 = mat_to_carla_transform(t_sc @ rig_at(tt[0]))
-wp0 = cmap.get_waypoint(tf_rig0.location, project_to_road=True, lane_type=carla.LaneType.Driving)
+wp0 = cmap.get_waypoint(tf_rig0.location, project_to_road=True, lane_type=DRIVABLE_LANES)
 if wp0 is None: fail("the recorded start pose projects onto no driving lane of the proxy world (wrong scene / usdz?)")
 tf_end = mat_to_carla_transform(t_sc @ rig_at(tt[-1]))
 v0 = np.linalg.norm(pos[min(5, len(pos) - 1)] - pos[0]) / max((tt[min(5, len(tt) - 1)] - tt[0]) / 1e6, 1e-3)
@@ -339,15 +347,28 @@ class HybridSimulation(CarlaSimulation):
     and saves B_k.npz with the camera pose the frame was rendered from."""
 
     def setup(self):
+        global SYN_TAGS
         Simulation.setup(self)                     # spawn the scene's objects (CarlaSimulation.setup would also set a weather)
+        self.world.tick()                          # populate actor transform snapshots before ramp placement
+        for obj in self.objects:
+            if obj.snapToGround: snap_ramp_vehicle(self.world, obj.carlaActor)
         self.world.tick()
+        self.prop_grounding = [result for obj in self.objects
+                               if (result := ground_prop(self.world, obj.carlaActor)) is not None]
+        self.world.tick()
+        with open(os.path.join(a.out, "prop_grounding.json"), "w") as f:
+            json.dump(self.prop_grounding, f, indent=2)
         for obj in self.objects:
             if isinstance(obj.carlaActor, carla.Vehicle): obj.carlaActor.apply_control(carla.VehicleControl(manual_gear_shift=False))
         self.world.tick()
         ego = self.objects[0].carlaActor; LIVE_ACTORS.extend(o.carlaActor for o in self.objects)
-        others = [o.carlaActor.id for o in self.objects[1:] if isinstance(o.carlaActor, (carla.Vehicle, carla.Walker))]
+        others = [o.carlaActor.id for o in self.objects[1:]]
+        # Props (e.g. construction cones) use Dynamic, not the vehicle labels.
+        # The show-only list limits these labels to this scenario's actors.
+        SYN_TAGS = tuple(sorted(set(SYN_TAGS).union(
+            tag for o in self.objects[1:] for tag in o.carlaActor.semantic_tags)))
         # the camera on the ego: rig origin on the ego's vertical axis rig_h above the lane, camera = rig @ rig_to_camera
-        wp = cmap.get_waypoint(ego.get_location(), project_to_road=True, lane_type=carla.LaneType.Driving)
+        wp = cmap.get_waypoint(ego.get_location(), project_to_road=True, lane_type=DRIVABLE_LANES)
         ego_h = float(ego.get_location().z - wp.transform.location.z) if wp is not None else 0.0
         T_rel = np.eye(4); T_rel[2, 3] = rig_h - ego_h
         rel = mat_to_carla_transform(T_rel @ R2C @ np.linalg.inv(OPTICAL_BASIS))
@@ -374,7 +395,8 @@ class HybridSimulation(CarlaSimulation):
                 obj.carlaActor.set_target_velocity(carla.Vector3D(fv.x * obj.speed, fv.y * obj.speed, 0.0))
         self.k = 0; self.t_start = time.time()
         self.spawned = [dict(id=int(o.carlaActor.id), bp=o.carlaActor.type_id, color=o.carlaActor.attributes.get("color", ""), role=getattr(o, "rolename", None) or "",
-                             speed=float(o.speed or 0.0) * 3.6, ego=o is self.objects[0]) for o in self.objects]
+                             speed=float(o.speed or 0.0) * 3.6, ego=o is self.objects[0],
+                             kind="car" if isinstance(o.carlaActor, carla.Vehicle) else "walker" if isinstance(o.carlaActor, carla.Walker) else "prop") for o in self.objects]
 
     def step(self):
         self.current_frame = self.world.tick()
@@ -386,7 +408,7 @@ class HybridSimulation(CarlaSimulation):
         t_us, s_m, lat = project_on_drive((Tcam @ R2C_INV)[:3, 3])          # the rig, not the camera: the drive is the rig's path
         inst = arr(fr["instance_segmentation"])
         sem_ = inst[:, :, 2].copy(); inst_ = (inst[:, :, 1].astype(np.uint32) + inst[:, :, 0].astype(np.uint32) * 256)
-        np.savez(f"{a.out}/B_{self.k:04d}.npz", rgb=arr(fr["rgb"])[:, :, 2::-1].copy(), sem=sem_, inst=inst_, dist=dist_arr(fr["depth"]), T_cam=Tcam, t_us=t_us,
+        np.savez_compressed(f"{a.out}/B_{self.k:04d}.npz", rgb=arr(fr["rgb"])[:, :, 2::-1].copy(), sem=sem_, inst=inst_, dist=dist_arr(fr["depth"]), T_cam=Tcam, t_us=t_us,
                  cam_tf=np.array([tf.location.x, tf.location.y, tf.location.z, tf.rotation.pitch, tf.rotation.yaw, tf.rotation.roll]))
         ego = self.objects[0].carlaActor; v = ego.get_velocity()
         CAPTURED.append(dict(k=self.k, t_us=int(t_us), s_m=s_m, lateral_m=lat, ego_speed_kmh=float(np.hypot(v.x, v.y) * 3.6)))
@@ -429,7 +451,7 @@ for k in range(n_frames):
     tf = cam_tf_of(k); cams["catch"][0].set_transform(tf); world.tick(); fr = capture(cams)
     if fr["catch"] is None: fail(f"pass A frame {k}: no frame within 30 s")
     B = np.load(f"{a.out}/B_{k:04d}.npz")
-    np.savez(f"{a.out}/A_{k:04d}.npz", rgb=arr(fr["catch"])[:, :, 2::-1].copy(), T_cam=B["T_cam"], t_us=int(B["t_us"]))
+    np.savez_compressed(f"{a.out}/A_{k:04d}.npz", rgb=arr(fr["catch"])[:, :, 2::-1].copy(), T_cam=B["T_cam"], t_us=int(B["t_us"]))
     if k % 50 == 0: print(f"  A frame {k}/{n_frames} {time.time() - t_start:.0f}s", flush=True)
 destroy_cams(cams)
 
@@ -438,11 +460,11 @@ t_start = time.time()
 for k in range(n_frames):
     B = np.load(f"{a.out}/B_{k:04d}.npz")
     rgb, dist, opa = render_engine(B["T_cam"], int(B["t_us"]))
-    np.savez(f"{a.out}/E_{k:04d}.npz", color=rgb, distance=dist, opacity=opa)
+    np.savez_compressed(f"{a.out}/E_{k:04d}.npz", color=rgb, distance=dist, opacity=opa)
     if k % 50 == 0: print(f"  engine frame {k}/{n_frames} {time.time() - t_start:.0f}s", flush=True)
 
-json.dump(dict(scene=sid, frames=int(n_frames), fps=a.fps, frame_t=[f["t_us"] for f in CAPTURED], cars=[sp for sp in spawned if not sp["ego"]], ego=next((sp for sp in spawned if sp["ego"]), None),
-               walkers=[], sun=a.sun, w=a.w, h=a.h, ftheta=FT, furniture=a.furniture, capture_mode="rt-scenic", skymap=SKYMAP,
+json.dump(dict(scene=sid, frames=int(n_frames), fps=a.fps, synthetic_tags=list(SYN_TAGS), frame_t=[f["t_us"] for f in CAPTURED], cars=[sp for sp in spawned if not sp["ego"] and sp["kind"] == "car"], ego=next((sp for sp in spawned if sp["ego"]), None),
+               walkers=[sp for sp in spawned if sp["kind"] == "walker"], props=[sp for sp in spawned if sp["kind"] == "prop"], sun=a.sun, diffuse_only=a.diffuse_only, sky_probe=a.sun_illum_json, w=a.w, h=a.h, ftheta=FT, furniture=a.furniture, capture_mode="rt-scenic", skymap=SKYMAP,
                rt=dict(spp=a.rt_spp, exposure_comp=a.rt_exposure_comp, exposure_mode="auto" if a.rt_exposure_auto else "fixed", exposure_calib=CALIB),
                catcher_tags=a.catcher_tags, scenic=dict(scenario=os.path.abspath(a.scenario), seed=a.seed, params={k: v for k, v in params.items() if k not in ("map",)},
                termination=str(sim.result.terminationReason), rig_height=rig_h, map_report=rep), ego_track=CAPTURED, warmup_ticks=WARMUP),

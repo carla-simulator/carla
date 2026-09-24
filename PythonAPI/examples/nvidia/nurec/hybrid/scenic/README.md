@@ -50,8 +50,50 @@ stopped behind another car short of the route end, like `urban_pullout.scenic`, 
 | `hwy_overtake.scenic` | 7c2cf6cd | the ego closes on a slow van, waits for a faster car coming up in the left lane to pass, pulls out behind it, overtakes the van and moves back into the right lane ahead of it; the camera leaves the recorded lane by one lane width for a few seconds |
 | `hwy_brake_wave.scenic` | 7c2cf6cd | the ego follows a three-car platoon; the head car brakes hard to 40 km/h and holds it, the braking propagates back through the platoon to the ego, then everyone accelerates again while left-lane traffic keeps passing |
 | `urban_pullout.scenic` | a2a4322c | a car waiting at the kerb where the street widens pulls out in front of the ego as it comes up; the ego brakes hard to its headway and follows it until both are queued behind the standing car at the end (time-limited clip) |
+| `hwy_adversarial_merge.scenic` | 1370aa93, explicit main-road/ramp poses in the workspace scenario manifest | the white Model 3 follows a real right-hand on-ramp, merges ahead and slows; the Lincoln ego brakes and recovers; ten-second review; `ego_reacts=0` is a deliberately failing counterfactual |
+| `hwy_construction.scenic` | 0fd2c051, parameters below | the new Model 3 yields to a graphite Model 3, moves left around a cone taper, barriers and parked Sprinter, and continues within the short reconstructed route |
 
-All end when the ego reaches the end of the recorded drive: the neural scene is only reconstructed along it — a few
+The construction preset for the 173 m source route is:
+
+```sh
+python hybrid_run.py --scene 0fd2c051 --out /runs/construction --scenic hwy_construction.scenic \
+  --scenic-param ego_speed=45 --scenic-param wait_speed=30 --scenic-param change_speed=35 \
+  --scenic-param passer_speed=75 --scenic-param passer_start=-8 --scenic-param closure_distance=100
+```
+
+Construction props are included in the capture's show-only actor list. Their semantic labels are saved in
+`meta.json: synthetic_tags` and used by the compositor; older captures retain the vehicle/pedestrian mask.
+The metadata separates `cars`, `walkers`, and `props`.
+
+The former A preset on 7c2cf6cd was a left adjacent-lane cut-in and is rejected for the right-ramp requirement.
+The replacement starts ego on road 19/lane -4 and the merger on road 6/lane -1 (`OnRamp`) of 1370aa93.
+Its 200-frame physics check has no collisions; ego slows from about 65 to 33 km/h. Disabling ego's response
+causes vehicle contact. Use the explicit poses in `artifacts/nurec-scenarios/scenarios.json` via
+`run_selected.py A`; the standalone scenario's placeholder poses are not a usable default source layout.
+`carla_lane_path` follows connected CARLA waypoints selected in 3D, avoiding Scenic's ambiguity at overpasses.
+Ramp transforms are read only after an initial world tick; newly spawned actors can otherwise report an origin pose.
+
+For a verified fully overcast source, `hybrid_run.py --scenic ... --diffuse-only` uses the probe as environment
+lighting with directional sun and moon disabled. This does not require inventing a sun direction when the
+probe has no credible detection. The lower-level capture accepts `--sky-probe PATH.json --diffuse-only`.
+Actual light intensities should be checked in the live renderer; A's review records sun=0, moon=0, sky=26000.
+The probe is reconstructed, display-referred imagery, so this remains an approximate lighting match.
+A uses +2.568 EV sensor exposure measured against a clear sky ROI: matching the generic proxy asphalt alone
+made the visible sky 1.67 EV too bright and washed out roof reflections. The qualification harness supports
+`--calibrate-sky X0,Y0,X1,Y1` for a visually verified overcast sky region, plus a diagnostic `--balance-road`
+comparison. The selected exposure and reference are saved with the workspace scenario manifest.
+
+The OpenDRIVE sanitizer reports missing lane links, zero-area drivable lanes, and bounded cubic width
+undershoot corrections (maximum 2 cm; larger defects fail). It preserves CARLA's original proxy geometry;
+only the copy supplied to Scenic is repaired. The 1370aa93 corrections are 3.20 and 10.83 mm.
+
+`validate_behavior.py` runs the Scenic scenario on a dedicated CARLA server without rendering or NuRec GPU inference.
+It **replaces that server's world** with the source OpenDRIVE. It accepts `--usdz`, `--scenario`, `--out`, `--port`,
+`--param K=V`, and `--seed`; run with `python -O`. It saves per-frame actor poses, bounding-box footprints, speeds,
+controls, lane IDs and collision events in `behavior.json`. Nonzero initial speeds are applied after settling, as in
+the hybrid capture. `--sample-only` checks placement and prints rejection reasons without simulating behavior.
+
+Scenarios end at or before the end of the recorded drive: the neural scene is only reconstructed along it — a few
 metres past the end the render falls apart (`+0/+40/+80 m` past the highway end: 66/71/76 % of the pixels below 0.6
 opacity). Lateral departures of a lane width or two are fine (the overtake takes the camera into the left lane); more
 than that, and the reconstruction shows its holes.
@@ -62,15 +104,11 @@ CARLA car covers it; the temporal harmonizer otherwise turns the smear into a ph
 use the UE5-native models (Lincoln MKZ, Dodge Charger, Nissan Patrol, Mini Cooper, Ford Crown taxi, Mercedes Sprinter);
 the `ue4.*` blueprints are the low-detail legacy imports. Until 2026-09-08 the Lincoln and the Mini ignored the `color`
 attribute (their paint slot was not named `Bodywork_Mat`, see `Util/ContentRepair/fix_vehicle_paint_slots.py`), which
-made every car of the first runs black whatever the scenario asked for. Two more things decide how the cars look under
-the path tracer (both landed the same day): the car-paint master (`M_CarPaintMaster`, a clear-coat metal) carries
-roughness values up to 1.6 on its instances, which the raster path clamps but the path tracer integrates literally
-(a metal that reflects nothing), so the master now clamps the roughness to 0.2 through a `PathTracingQualitySwitch`
-(`Util/ContentRepair/fix_carpaint_pathtracing.py`; raster untouched); and the sky light's default intensity moved from
-26000 to 160000 (`skymap.DEFAULT_INTENSITY`): under the exposure that matches the road to the neural road, the neural
-sky sits at ~6x the road's luminance and the old sky light at ~1x, so car panels — mirrors of the sky — came out 3-6x too
-dark. A silver car's side went from 0.01 to 0.21 of the road luminance (median; 0.54 at p90) with both, the cast
-shadows kept their depth. Sweep with `hybrid_run.py --skymap-intensity`.
+made every car of the first runs black whatever the scenario asked for. Vehicle appearance also depends on the actual rendered lighting and transparent-surface masks. The September 14 qualification tests found that the sky rig could leave the directional light at its authored trajectory even though the weather API reported the requested angles. `Weather.cpp` now sets the sun component's world rotation explicitly. With the correct sun supplying direct illumination, `skymap.DEFAULT_INTENSITY` is 26000 again; the previous 160000 fill produced broad white reflections. Exposure is still solved per scene. The path-traced instance/distance AOVs now identify the first visible surface, including glazing, independently of the raster depth opacity clip; this prevents missing glass pixels in the composite.
+
+Construction props use `prop_grounding.py`: road collision samples determine local height and slope, and measured mesh base offsets seat the qualified cones/barriers on that surface. This runs in both behavior validation and hybrid rendering and writes `prop_grounding.json`. It replaces origin-only waypoint snapping for those props. In source 0fd2c051 the latter left one barrier about 15 cm below the actual road surface.
+
+Static qualification is not final video acceptance. Check the actor layer and composite at the actual camera distances and in motion before selecting the filming assets.
 
 `make_reel.sh OUT.mp4 RUN:"caption" ...` cuts the harmonized clips of several runs into one captioned reel.
 
@@ -85,6 +123,40 @@ own `FollowLaneBehavior` PID is tuned for ~10 m/s and spins a car at highway spe
 never brakes (it zeroes the throttle before taking its magnitude), which is why the behaviours are local.
 
 ## Writing a scenario
+
+### Traffic queue followed by pedestrian crossing
+
+`urban_traffic_crossing.scenic` uses `a2a4322c`, the same source as the Mary
+cinematic comparison. The ego approaches at 15 km/h and stops behind a stationary
+Lincoln and Mini queue. A farther Nissan retains the existing reconstruction-ghost
+cover placement. The pedestrian waits for a continuous one-second ego stop, then
+crosses right to left between ego and lead vehicle at Mary's measured native
+1.047794 m/s. The ego holds its brake throughout the crossing.
+
+On a dedicated CARLA server at port 4690, from the workspace root:
+
+```sh
+.venv-rtaov/bin/python -O carla-ue58-dev/PythonAPI/examples/nvidia/nurec/hybrid/scenic/validate_behavior.py \
+  --usdz nurec_samples/sample_set/26.04_release/a2a4322c-3f99-40c3-94df-17a67f56f55d/a2a4322c-3f99-40c3-94df-17a67f56f55d.usdz \
+  --scenario carla-ue58-dev/PythonAPI/examples/nvidia/nurec/hybrid/scenic/urban_traffic_crossing.scenic \
+  --out RUN --fps 24 --seconds 20
+# Repeat into REPLAY, then validate both:
+.venv-rtaov/bin/python carla-ue58-dev/PythonAPI/examples/nvidia/nurec/hybrid/scenic/check_traffic_crossing.py RUN/behavior.json REPLAY/behavior.json REVIEW
+```
+
+The completed physics review is in
+`artifacts/hybrid-cinematic-mvp/traffic_crossing/validation.json` and
+`behavior-review.png`. Both runs contain 370 samples at 24 fps, with zero reported
+collisions and identical actor positions/yaws. Ego travel is 10.70 m; the crossing
+runs from 7.71 to 14.38 s. Minimum pedestrian-to-ego footprint clearance is 2.33 m.
+The simulation uses `walker.pedestrian.german` as Mary's proxy. These measurements
+validate behavior, not VFX appearance. The completed cinematic review is
+`artifacts/hybrid-cinematic-mvp/sh020_traffic_crossing/comp/review.mp4`: 370 frames
+at 24 fps, 960×540. It includes the longer Mary cache, moving-camera NuRec plates,
+and native vehicle cinematic tracks. See that shot's `REVIEW.md` for validation
+and remaining source-reconstruction/color/lighting limitations.
+
+### General placement
 
 ```scenic
 model scenic.simulators.carla.model

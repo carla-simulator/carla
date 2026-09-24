@@ -53,7 +53,10 @@ ap.add_argument("--scenic", default=None, help="Scenic scenario (.scenic) that d
                 "the capture step becomes scenic/hybrid_scenic.py (see scenic/README.md); a bare name resolves under scenic/")
 ap.add_argument("--scenic-param", action="append", default=[], help="K=V global parameter for the Scenic scenario (repeatable)")
 ap.add_argument("--seed", type=int, default=0, help="Scenic sampling seed")
+ap.add_argument("--diffuse-only", action="store_true", help="Scenic overcast capture: environment map without directional sun/moon")
 a = ap.parse_args()
+if a.diffuse_only and (not a.scenic or not a.skymap):
+    ap.error("--diffuse-only requires --scenic and --skymap 1")
 if a.scenic and not os.path.exists(a.scenic) and os.path.exists(os.path.join(HERE, "scenic", a.scenic)): a.scenic = os.path.join(HERE, "scenic", a.scenic)
 if a.scenic and not os.path.exists(a.scenic): raise SystemExit(f"no such Scenic scenario: {a.scenic}")
 a.samples = os.path.realpath(a.samples); a.harmonizer_dir = os.path.realpath(a.harmonizer_dir)     # no '..' : the paths are also used inside containers
@@ -167,16 +170,20 @@ illum = os.path.join(OUT, "illum"); calib = os.path.join(OUT, "sun_calib.json");
 if not os.path.exists(illum + ".json"):
     sh([PY, os.path.join(HERE, "illum_probe.py"), illum, "--scene", a.scene, "--frac", "0.5", "--port", str(a.nre_port)])
 il = json.load(open(illum + ".json"))
-if not il.get("sun"): raise SystemExit(f"illumination probe found no sun in {a.scene} ({illum}.json lists the rejected candidates); no --sun override in hybrid_run.py")
-log(f"sun in rig frame: az {il['sun']['az_deg']:.1f} el {il['sun']['el_deg']:.1f} ({il['sun']['method']}, confidence {il['sun']['confidence']:.2f}, "
-    f"{len(il.get('sun_candidates', []))} candidates)")
+if a.diffuse_only:
+    log("Overcast source: environment-map lighting without directional sun/moon")
+else:
+    if not il.get("sun"): raise SystemExit(f"illumination probe found no sun in {a.scene} ({illum}.json lists the rejected candidates); use --diffuse-only only for a verified overcast Scenic source")
+    log(f"sun in rig frame: az {il['sun']['az_deg']:.1f} el {il['sun']['el_deg']:.1f} ({il['sun']['method']}, confidence {il['sun']['confidence']:.2f}, "
+        f"{len(il.get('sun_candidates', []))} candidates)")
 
 # ---------- 2. capture ----------
-common = ["--port", str(a.carla_port), "--nre-port", str(a.nre_port), "--fps", str(a.fps), "--sun", f"auto:{illum}.json:{calib}", "--exposure", str(a.exposure),
+common = ["--port", str(a.carla_port), "--nre-port", str(a.nre_port), "--fps", str(a.fps), "--sun", "0,45,100" if a.diffuse_only else f"auto:{illum}.json:{calib}", "--exposure", str(a.exposure),
           "--furniture", "0", "--rt-spp", str(a.rt_spp), "--rt-exposure-comp", str(a.rt_exposure_comp), "--calib-frames", str(a.calib_frames),
           "--skymap", str(a.skymap), "--skymap-intensity", str(a.skymap_intensity)]
 if a.frames: common += ["--frames", str(a.frames)]
 if a.keep_world: common += ["--keep-world"]
+if a.diffuse_only: common += ["--sky-probe", illum + ".json", "--diffuse-only"]
 if a.scenic:
     # Scenic drives the ego (with the recorded camera on it) and every other agent; -O strips the parser asserts of Scenic's OpenDRIVE reader
     cmd = [PY, "-u", "-O", os.path.join(HERE, "scenic", "hybrid_scenic.py"), OUT, "--scene", a.scene, "--usdz", usdz, "--scenario", os.path.abspath(a.scenic), "--seed", str(a.seed)] + common

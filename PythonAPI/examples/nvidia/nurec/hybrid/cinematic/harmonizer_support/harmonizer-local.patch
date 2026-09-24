@@ -1,0 +1,15 @@
+diff --git a/src/model/pipeline.py b/src/model/pipeline.py
+index c01383c..c6bcf8f 100644
+--- a/src/model/pipeline.py
++++ b/src/model/pipeline.py
+@@ -289,0 +290,2 @@ class FastDenoiser(torch.nn.Module):
++        if not dit_path:
++            pipe.dit = pipe.dit.to_empty(device="cpu")   # materialize meta tensors; the harmonizer .pkl supplies every DiT weight
+diff --git a/src/pix2pix_turbo_harmonizer.py b/src/pix2pix_turbo_harmonizer.py
+index 228b568..a293890 100644
+--- a/src/pix2pix_turbo_harmonizer.py
++++ b/src/pix2pix_turbo_harmonizer.py
+@@ -32 +32,2 @@ def get_pipeline_config(
+-    config.dit_path = "checkpoints/nvidia/Cosmos-Predict2-0.6B-Text2Image/model.pt"
++    import os as _os
++    config.dit_path = "checkpoints/nvidia/Cosmos-Predict2-0.6B-Text2Image/model.pt" if _os.path.exists("checkpoints/nvidia/Cosmos-Predict2-0.6B-Text2Image/model.pt") else ""   # gated base absent: rely on the .pkl weights
