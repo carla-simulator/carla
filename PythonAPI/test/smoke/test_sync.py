@@ -32,7 +32,8 @@ class TestSynchronousMode(SyncSmokeTest):
             # workaround: give time to UE4 to clean memory after loading (old assets)
             time.sleep(5)
 
-    def _test_camera_on_synchronous_mode(self):
+    def test_camera_on_synchronous_mode(self):
+        # Regression test for carla-simulator/carla#9898
         print("TestSynchronousMode.test_camera_on_synchronous_mode")
 
         cam_bp = self.world.get_blueprint_library().find('sensor.camera.rgb')
@@ -54,7 +55,7 @@ class TestSynchronousMode(SyncSmokeTest):
 
                 frame = ts.frame
 
-                image = image_queue.get()
+                image = image_queue.get(True, 10.0)
                 self.assertEqual(image.frame, ts.frame)
                 self.assertEqual(image.timestamp, ts.elapsed_seconds)
 
@@ -70,16 +71,17 @@ class TestSynchronousMode(SyncSmokeTest):
 
         car_bp = bp_lib.find('vehicle.ford.mustang')
         car = self.world.spawn_actor(car_bp, spawn_points[0])
-        # List of sensors that are not events, these are retrieved every frame
+        # List of sensors that are not events, these are retrieved every frame.
+        # Cameras included as a regression check for carla-simulator/carla#9898.
         sensor_ids = [
             "sensor.lidar.ray_cast",
             "sensor.lidar.ray_cast_semantic",
             "sensor.other.gnss",
             "sensor.other.radar",
             "sensor.other.imu",
-#            "sensor.camera.rgb",
-#            "sensor.camera.depth",
-#            "sensor.camera.semantic_segmentation"
+            "sensor.camera.rgb",
+            "sensor.camera.depth",
+            "sensor.camera.semantic_segmentation",
             ]
         sensor_bps = [bp_lib.find(n) for n in sensor_ids]
         trans = carla.Transform(carla.Location(x=1.6, z=1.7))

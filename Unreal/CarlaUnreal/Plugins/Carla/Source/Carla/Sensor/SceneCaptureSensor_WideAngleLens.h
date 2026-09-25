@@ -255,14 +255,14 @@ public:
     if (!Sensor.AreClientsListening())
       return;
     Sensor.EnqueueRenderSceneImmediate();
-    const auto FrameIndex = FCarlaEngine::GetFrameCounter();
+    const auto CaptureContext = ASensor::MakeCaptureContext(Sensor);
     ImageUtil::ReadImageDataAsyncFColor(
         *Sensor.GetCaptureRenderTarget(),
-        [&Sensor, FrameIndex](TArrayView<const FColor> Pixels, FIntPoint) -> bool
+        [&Sensor, CaptureContext](TArrayView<const FColor> Pixels, FIntPoint) -> bool
         {
           if (!IsValid(&Sensor))
             return false;
-          ASensor::SendDataToClient(Sensor, Pixels, FrameIndex);
+          ASensor::SendDataToClient(Sensor, Pixels, CaptureContext);
           return true;
         },
         /*bNonBlocking=*/false,
