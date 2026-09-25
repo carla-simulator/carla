@@ -14,6 +14,7 @@
 #include <HighResScreenshot.h>
 #include <RHIGPUReadback.h>
 #include <Async/ParallelFor.h>
+#include <Async/TaskGraphInterfaces.h>
 #include <util/ue-header-guard-end.h>
 
 #include <chrono>
@@ -331,6 +332,82 @@ namespace ImageUtil
     GBatchedReadbacks.Add(MoveTemp(Context));
   }
 
+  struct FMappedReadback
+  {
+    void* Data = nullptr;
+    int32 RowPitch = 0;
+    int32 BufferHeight = 0;
+  };
+
+  // Per-sensor (keyed by readback pool) last delivery task, so a sensor's
+  // frames deliver in order while different sensors run concurrently.
+  // Swept each call to only keep sensors still in flight.
+  static TMap<const FRHIGPUReadbackPool*, FGraphEventRef> GLastDeliveryTaskByPool;
+
+  // Decode/serialize/publish need no RHI once Lock()ed, so they run off the
+  // render thread; Unlock() is routed back since it asserts
+  // IsInRenderingThread(). Context moves through both tasks so it (and any
+  // FallbackReadback) outlives Unlock().
+  static void DispatchReadbackDelivery(
+    ReadImageDataContext&& Context,
+    const FMappedReadback& Mapped)
+  {
+    check(IsInRenderingThread());
+
+    const FRHIGPUReadbackPool* PoolKey = Context.Pool.Get();
+    // The single-FGraphEventRef overload asserts its prerequisite is non-null,
+    // so an empty array is used instead for a sensor's first delivery.
+    FGraphEventArray Prerequisites;
+    if (const FGraphEventRef* Existing = GLastDeliveryTaskByPool.Find(PoolKey))
+    {
+      Prerequisites.Add(*Existing);
+    }
+
+    void* Data = Mapped.Data;
+    int32 RowPitch = Mapped.RowPitch;
+    int32 BufferHeight = Mapped.BufferHeight;
+
+    FGraphEventRef Task = FFunctionGraphTask::CreateAndDispatchWhenReady(
+      [Context = MoveTemp(Context), Data, RowPitch, BufferHeight]() mutable
+      {
+        TRACE_CPUPROFILER_EVENT_SCOPE_STR("FlushBatchedReadbacks Deliver");
+        const bool bWasLocked = (Data != nullptr);
+        if (bWasLocked)
+        {
+          Context.Callback(Data, RowPitch, BufferHeight, Context.Format, Context.Size);
+        }
+        ENQUEUE_RENDER_COMMAND(ReadbackUnlockRelease)(
+          [Context = MoveTemp(Context), bWasLocked](FRHICommandListImmediate&) mutable
+          {
+            if (bWasLocked)
+            {
+              Context.Readback->Unlock();
+            }
+
+            if (Context.Pool && Context.SlotIndex != INDEX_NONE)
+            {
+              Context.Pool->Release(Context.SlotIndex);
+            }
+          });
+      },
+      TStatId(),
+      &Prerequisites,
+      ENamedThreads::AnyBackgroundThreadNormalTask);
+
+    if (PoolKey != nullptr)
+    {
+      GLastDeliveryTaskByPool.Add(PoolKey, Task);
+    }
+
+    for (auto It = GLastDeliveryTaskByPool.CreateIterator(); It; ++It)
+    {
+      if (It->Value->IsComplete())
+      {
+        It.RemoveCurrent();
+      }
+    }
+  }
+
   void FlushBatchedReadbacks()
   {
     ENQUEUE_RENDER_COMMAND(FlushBatchedReadbacksCmd)(
@@ -358,15 +435,9 @@ namespace ImageUtil
         Query.ReleaseQuery();
       }
 
-      // Lock() needs the render thread, but after the sync it is a cheap
-      // CPU-side map. Decode + delivery is per-sensor independent (each
-      // callback owns its pixel buffer and data stream), so it runs wide.
-      struct FMappedReadback
-      {
-        void* Data = nullptr;
-        int32 RowPitch = 0;
-        int32 BufferHeight = 0;
-      };
+      // Lock() still needs the render thread; decode/serialize/publish don't
+      // -- DispatchReadbackDelivery hands them off, so this command returns
+      // once dispatched rather than blocking on completion.
       TArray<FMappedReadback> Mapped;
       Mapped.SetNum(Batch.Num());
       for (int32 Index = 0; Index < Batch.Num(); ++Index)
@@ -374,27 +445,9 @@ namespace ImageUtil
         Mapped[Index].Data = Batch[Index].Readback->Lock(
           Mapped[Index].RowPitch, &Mapped[Index].BufferHeight);
       }
-      {
-        TRACE_CPUPROFILER_EVENT_SCOPE_STR("FlushBatchedReadbacks Deliver");
-        ParallelFor(Batch.Num(), [&](int32 Index)
-        {
-          if (Mapped[Index].Data != nullptr)
-          {
-            Batch[Index].Callback(
-              Mapped[Index].Data,
-              Mapped[Index].RowPitch,
-              Mapped[Index].BufferHeight,
-              Batch[Index].Format,
-              Batch[Index].Size);
-          }
-        });
-      }
       for (int32 Index = 0; Index < Batch.Num(); ++Index)
       {
-        if (Mapped[Index].Data != nullptr)
-          Batch[Index].Readback->Unlock();
-        if (Batch[Index].Pool && Batch[Index].SlotIndex != INDEX_NONE)
-          Batch[Index].Pool->Release(Batch[Index].SlotIndex);
+        DispatchReadbackDelivery(MoveTemp(Batch[Index]), Mapped[Index]);
       }
     });
   }

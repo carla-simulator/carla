@@ -58,6 +58,10 @@ void ASceneCaptureCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
   {
+    if (!IsValid(this))
+    {
+      return false;
+    }
     SendDataToClient(*this, Pixels, CaptureContext);
     return true;
   });

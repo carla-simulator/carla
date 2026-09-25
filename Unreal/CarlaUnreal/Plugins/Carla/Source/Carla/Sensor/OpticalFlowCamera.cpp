@@ -49,6 +49,10 @@ void AOpticalFlowCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float 
           EPixelFormat Format,
           FIntPoint Extent)
       {
+        if (!IsValid(this))
+        {
+          return false;
+        }
         check(sizeof(FVector2f) == sizeof(float) * 2);
         check(RowPitch >= Extent.X);
         check(BufferHeight >= Extent.Y);

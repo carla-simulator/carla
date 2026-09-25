@@ -40,6 +40,11 @@ void ADepthCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaS
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
   {
+    if (!IsValid(this))
+    {
+      return false;
+    }
+
     SendDataToClient(*this, Pixels, CaptureContext);
     return true;
   });

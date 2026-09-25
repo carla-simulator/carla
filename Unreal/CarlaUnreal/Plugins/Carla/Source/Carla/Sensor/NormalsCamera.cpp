@@ -36,6 +36,10 @@ void ANormalsCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float Delt
     TArrayView<const FColor> Pixels,
     FIntPoint Size) -> bool
   {
+    if (!IsValid(this))
+    {
+      return false;
+    }
     SendDataToClient(*this, Pixels, CaptureContext);
     return true;
   });
