@@ -20,6 +20,11 @@ except ImportError:
 
 
 class TestSynchronousMode(SyncSmokeTest):
+    def tearDown(self):
+        self.client.load_world('Town10HD_Opt')
+        self.world = None
+        self.client = None
+
     def test_reloading_map(self):
         print("TestSynchronousMode.test_reloading_map")
         settings = carla.WorldSettings(
@@ -27,7 +32,9 @@ class TestSynchronousMode(SyncSmokeTest):
             synchronous_mode=True,
             fixed_delta_seconds=0.05)
         for _ in range(0, 4):
-            self.world = self.client.reload_world()
+            # reload_world() is not supported on the packaged build; load_world
+            # of the same map is the documented workaround.
+            self.world = self.client.load_world('Town10HD_Opt')
             self.world.apply_settings(settings)
             # workaround: give time to UE4 to clean memory after loading (old assets)
             time.sleep(5)
@@ -69,7 +76,7 @@ class TestSynchronousMode(SyncSmokeTest):
         spawn_points = self.world.get_map().get_spawn_points()
         self.assertNotEqual(len(spawn_points), 0)
 
-        car_bp = bp_lib.find('vehicle.ford.mustang')
+        car_bp = bp_lib.find('vehicle.dodge.charger')
         car = self.world.spawn_actor(car_bp, spawn_points[0])
         # List of sensors that are not events, these are retrieved every frame.
         # Cameras included as a regression check for carla-simulator/carla#9898.
