@@ -155,11 +155,19 @@ namespace ImageUtil
 
 
 
-  // Synchronize the GPU once and deliver every blocking readback recorded
-  // since the previous flush. One pipeline drain per tick for all cameras
-  // together, instead of the historical drain-per-camera, while keeping the
-  // per-tick "all sensors delivered" simulation guarantee.
+  // Synchronize the GPU once for every blocking readback recorded since the
+  // previous flush (one pipeline drain per tick for all cameras together,
+  // instead of the historical drain-per-camera), then hand each one's
+  // decode/serialize/publish to a background task instead of delivering
+  // synchronously; see DispatchReadbackDelivery in ImageUtil.cpp.
   void FlushBatchedReadbacks();
+
+
+
+  // Blocks the calling thread (game thread) until every readback dispatched
+  // through Pool has finished decoding/publishing. Call before a sensor using
+  // Pool is torn down, so no in-flight delivery can outlive it.
+  void WaitForPendingReadbackDeliveries(const FRHIGPUReadbackPoolPtr& Pool);
 
 
 

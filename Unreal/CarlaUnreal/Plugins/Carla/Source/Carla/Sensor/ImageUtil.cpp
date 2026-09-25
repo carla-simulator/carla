@@ -15,6 +15,7 @@
 #include <RHIGPUReadback.h>
 #include <Async/ParallelFor.h>
 #include <Async/TaskGraphInterfaces.h>
+#include <RenderingThread.h>
 #include <util/ue-header-guard-end.h>
 
 #include <chrono>
@@ -339,15 +340,27 @@ namespace ImageUtil
     int32 BufferHeight = 0;
   };
 
-  // Per-sensor (keyed by readback pool) last delivery task, so a sensor's
-  // frames deliver in order while different sensors run concurrently.
-  // Swept each call to only keep sensors still in flight.
+  // Per-sensor (keyed by readback pool) last dispatched delivery task.
+  // Render-thread-only, except WaitForPendingReadbackDeliveries reads it via
+  // a render command. Never holds more than one entry per pool: a new
+  // dispatch waits for the previous one first (see DispatchReadbackDelivery),
+  // so this can never grow to more than the number of pools currently
+  // in flight.
   static TMap<const FRHIGPUReadbackPool*, FGraphEventRef> GLastDeliveryTaskByPool;
 
   // Decode/serialize/publish need no RHI once Lock()ed, so they run off the
   // render thread; Unlock() is routed back since it asserts
   // IsInRenderingThread(). Context moves through both tasks so it (and any
   // FallbackReadback) outlives Unlock().
+  //
+  // Waiting for a sensor's previous delivery before dispatching its next one
+  // keeps deliveries in order and bounds how many can be in flight per sensor
+  // to one -- the same "at most one flush behind" bound the old synchronous
+  // flush had. It costs nothing once a sensor's decode/publish keeps up with
+  // capture (the wait is on an already-completed task); it only blocks the
+  // render thread once a sensor's publish (e.g. a slow ROS2/network
+  // consumer) falls behind, in place of the readback pool otherwise growing
+  // one fallback allocation per frame with no bound.
   static void DispatchReadbackDelivery(
     ReadImageDataContext&& Context,
     const FMappedReadback& Mapped)
@@ -355,12 +368,9 @@ namespace ImageUtil
     check(IsInRenderingThread());
 
     const FRHIGPUReadbackPool* PoolKey = Context.Pool.Get();
-    // The single-FGraphEventRef overload asserts its prerequisite is non-null,
-    // so an empty array is used instead for a sensor's first delivery.
-    FGraphEventArray Prerequisites;
-    if (const FGraphEventRef* Existing = GLastDeliveryTaskByPool.Find(PoolKey))
+    if (FGraphEventRef* Existing = GLastDeliveryTaskByPool.Find(PoolKey))
     {
-      Prerequisites.Add(*Existing);
+      (*Existing)->Wait();
     }
 
     void* Data = Mapped.Data;
@@ -391,20 +401,40 @@ namespace ImageUtil
           });
       },
       TStatId(),
-      &Prerequisites,
+      nullptr, // no prerequisite: the Wait() above already serializes this pool
       ENamedThreads::AnyBackgroundThreadNormalTask);
 
     if (PoolKey != nullptr)
     {
       GLastDeliveryTaskByPool.Add(PoolKey, Task);
     }
+  }
 
-    for (auto It = GLastDeliveryTaskByPool.CreateIterator(); It; ++It)
+  void WaitForPendingReadbackDeliveries(const FRHIGPUReadbackPoolPtr& Pool)
+  {
+    check(IsInGameThread());
+    if (!Pool.IsValid())
     {
-      if (It->Value->IsComplete())
+      return;
+    }
+
+    FGraphEventRef LastTask;
+    ENQUEUE_RENDER_COMMAND(WaitForPendingReadbackDeliveriesCmd)(
+      [Pool, &LastTask](FRHICommandListImmediate&)
       {
-        It.RemoveCurrent();
-      }
+        if (FGraphEventRef* Existing = GLastDeliveryTaskByPool.Find(Pool.Get()))
+        {
+          LastTask = *Existing;
+        }
+        GLastDeliveryTaskByPool.Remove(Pool.Get());
+      });
+    // Waits for the command above to run, so LastTask is safe to read past
+    // this point; also drains any already-queued Unlock/Release commands.
+    FlushRenderingCommands();
+
+    if (LastTask.IsValid())
+    {
+      LastTask->Wait();
     }
   }
 

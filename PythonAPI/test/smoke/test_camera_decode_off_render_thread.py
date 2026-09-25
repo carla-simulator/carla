@@ -48,14 +48,21 @@ class TestCameraDecodeOffRenderThread(SyncSmokeTest):
                 camera.listen(q.put)
                 queues.append(q)
 
-            transform_by_frame = {}
+            # Keyed by (camera.id, frame) and read back from the server right
+            # after tick(), not the locally-intended value: set_transform() is
+            # a separate RPC from tick(), and comparing against what the test
+            # asked for (rather than what the server had actually applied by
+            # that tick) is itself racy independent of anything under test.
+            actual_transform_by_camera_frame = {}
             num_ticks = 30
             for i in range(num_ticks):
                 t = carla.Transform(carla.Location(x=float(i), z=10.0))
                 for camera in cameras:
                     camera.set_transform(t)
                 self.world.tick()
-                transform_by_frame[self.world.get_snapshot().frame] = t
+                frame = self.world.get_snapshot().frame
+                for camera in cameras:
+                    actual_transform_by_camera_frame[(camera.id, frame)] = camera.get_transform()
 
             for camera, q in zip(cameras, queues):
                 images = []
@@ -78,7 +85,7 @@ class TestCameraDecodeOffRenderThread(SyncSmokeTest):
                     % (camera.id, frames))
 
                 for image in images:
-                    expected = transform_by_frame.get(image.frame)
+                    expected = actual_transform_by_camera_frame.get((camera.id, image.frame))
                     self.assertIsNotNone(
                         expected,
                         "camera %s delivered frame %d, which was never ticked"
@@ -112,5 +119,14 @@ class TestCameraDecodeOffRenderThread(SyncSmokeTest):
             camera.destroy()
 
         for _ in range(10):
+            self.world.tick()
+
+        # Force a real garbage-collection pass (a level transition triggers
+        # one), so this actually exercises IsValid(this) after the sensor's
+        # memory may have been reclaimed, not just after EndPlay.
+        self.world = self.client.load_world('Town10HD_Opt')
+        self.world.apply_settings(carla.WorldSettings(
+            synchronous_mode=True, fixed_delta_seconds=0.05))
+        for _ in range(5):
             self.world.tick()
         self.assertIsNotNone(self.world.get_snapshot(), "server did not survive destroying cameras with deliveries in flight")

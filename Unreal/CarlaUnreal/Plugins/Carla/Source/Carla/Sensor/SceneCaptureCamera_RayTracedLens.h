@@ -70,9 +70,10 @@ protected:
   /// overload; the callee just issues its own read of GetCaptureRenderTarget().
   ///
   /// Synchronous mode: capture first, then a BLOCKING readback of what was just
-  /// rendered, delivered by FSensorManager's single per-tick
-  /// ImageUtil::FlushBatchedReadbacks() GPU sync -- the frame the client gets
-  /// for tick k is tick k's render and cannot be dropped.
+  /// rendered, synchronized by FSensorManager's single per-tick
+  /// ImageUtil::FlushBatchedReadbacks() GPU sync and delivered shortly after --
+  /// the frame the client gets for tick k is tick k's render and cannot be
+  /// dropped.
   /// Asynchronous mode: readback first (of the previous tick's pixels), then
   /// capture, never waiting on the render thread -- one tick of latency and
   /// frames may drop under load, but the server cannot stall.

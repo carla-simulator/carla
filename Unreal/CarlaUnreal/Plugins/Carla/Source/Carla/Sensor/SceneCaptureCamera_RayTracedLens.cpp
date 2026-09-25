@@ -403,6 +403,10 @@ void ASceneCaptureCamera_RayTracedLens::PostPhysTick(UWorld *World, ELevelTick T
         TArrayView<const FColor> Pixels,
         FIntPoint Size) -> bool
       {
+        if (!IsValid(this))
+        {
+          return false;
+        }
         SendDataToClient(*this, Pixels, CaptureContext);
         return true;
       }, bNonBlocking, GetReadbackPool());
@@ -421,7 +425,8 @@ void ASceneCaptureCamera_RayTracedLens::TickCaptureAndReadback(
   // dropped. Recording the copy after CaptureScene() puts it behind this tick's
   // render commands; ImageUtil batches it and FSensorManager's single per-tick
   // ImageUtil::FlushBatchedReadbacks() waits for the GPU once for the whole
-  // camera batch and delivers it before the tick ends. That is exactly the path
+  // camera batch, then decodes/publishes it on a background task (still in
+  // frame order, at most one frame behind). That is exactly the path
   // every raster scene-capture camera takes (see
   // ASceneCaptureCamera::PostPhysTick -> ImageUtil::ReadSensorImageDataAsyncFColor),
   // and because the batch sync waits for the copy, a frame cannot be dropped at

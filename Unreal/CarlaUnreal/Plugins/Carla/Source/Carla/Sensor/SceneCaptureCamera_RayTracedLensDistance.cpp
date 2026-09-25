@@ -167,7 +167,7 @@ void ASceneCaptureCamera_RayTracedLensDistance::PostPhysTick(
               EPixelFormat Format,
               FIntPoint Extent) -> bool
           {
-            if (MappedPtr == nullptr || Format != PF_R32_FLOAT)
+            if (!IsValid(this) || MappedPtr == nullptr || Format != PF_R32_FLOAT)
             {
               return false;
             }

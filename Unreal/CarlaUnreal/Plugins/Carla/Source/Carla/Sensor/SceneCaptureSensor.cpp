@@ -5,6 +5,7 @@
 // For a copy, see <https://opensource.org/licenses/MIT>.
 
 #include "Carla/Sensor/SceneCaptureSensor.h"
+#include "Carla/Sensor/ImageUtil.h"
 #include "Carla/Sensor/PostProcessConfig.h"
 #include "Carla.h"
 #include "Carla/Game/CarlaStatics.h"
@@ -1125,6 +1126,11 @@ void ASceneCaptureSensor::EndPlay(const EEndPlayReason::Type EndPlayReason)
     CaptureComponent2D->Deactivate();
     CaptureComponent2D->ReleaseViewStates();
   }
+  // Finish any decode/publish still in flight before this sensor (and the
+  // Stream/ROS2 registration its callback captures) goes away: EndPlay runs
+  // before OnDestroyed, which is what tears those down.
+  ImageUtil::WaitForPendingReadbackDeliveries(ReadbackPool);
+
   // Drop the sensor's strong ref. Any in-flight AsyncTask still holds a copy
   // of the shared_ptr, so the pool dies with the last consuming task.
   ReadbackPool.Reset();
