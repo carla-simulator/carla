@@ -20,7 +20,10 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "EngineUtils.h"
 #include "Components/ExponentialHeightFogComponent.h"
+#include "Components/ChildActorComponent.h"
+#include "Components/MeshComponent.h"
 #include "Components/DirectionalLightComponent.h"
+#include "Components/SkyAtmosphereComponent.h"
 #include "Components/LightComponent.h"
 #include "Components/PostProcessComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
@@ -38,25 +41,62 @@
 #include "UObject/UnrealType.h"
 #include <util/ue-header-guard-end.h>
 
-// This project runs a FIXED day-calibrated exposure
-// (r.DefaultFeature.AutoExposure=False); CheckWeatherPostProcessEffects below
-// clamps the sky rig's post process to histogram EV100 [10,12] bias 0 for
-// sensor determinism. A near-black night scene always meters to the bright
-// end of that clamp (EV100=10), where the exposure multiplier is
-// 1/(K*2^EV100) with UE's EV100->luminance calibration constant K=1.2, i.e.
-// ~1/(1.2*1024) = 0.000814. UDirectionalLightComponent::Intensity is lux, so
-// asphalt (~7% albedo, surface radiance = illuminance*albedo/pi) needs about
-// this much total ambient illuminance to land at a dim-but-visible sRGB pixel
-// value: target pixel 10-25/255 -> linear ~0.0008-0.006 (undoing ~2.2 gamma)
-// -> scene radiance ~1-7 cd/m^2 (dividing by the 0.000814 exposure multiplier)
-// -> illuminance = radiance*pi/albedo ~= 45-315 lux, midpoint ~130 lux. Split
-// ~100 lux on the moon directional (the dominant single-direction term) and
-// the rest as ambient fill: a uniform sky of luminance L produces horizontal
-// illuminance E = pi*L, so a 30 lux ambient contribution needs L ~= 10, hence
-// the skylight floor below.
+// Volumetric clouds are lit only by atmosphere sun lights. Index 1 is the
+// engine's second slot, so the moon does not take the sun's.
+static TAutoConsoleVariable<float> CVarCarlaWeatherSunAltitudeFalloff(
+    TEXT("carla.Weather.SunAltitudeFalloff"),
+    1.0f,
+    TEXT("How much of the physical sin(elevation) falloff to apply to the sun intensity ")
+    TEXT("curve. 1 is fully physical, 0 leaves the rig's curve alone."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherSunHorizonFloor(
+    TEXT("carla.Weather.SunHorizonFloor"),
+    0.05f,
+    TEXT("Lower bound on the sin(elevation) falloff factor, as a fraction of the zenith ")
+    TEXT("value. 0.004 is a real horizon sun's ~400 lux against ~100000 overhead."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherTransmittanceReleaseDeg(
+    TEXT("carla.Weather.TransmittanceReleaseDeg"),
+    -6.0f,
+    TEXT("Sun altitude, in degrees, by which the transmittance clamp has fully released ")
+    TEXT("back to the engine's -90. Between 0 and this it eases off."),
+    ECVF_Default);
+
+// Forced, overriding whatever the rig authored.
+static TAutoConsoleVariable<float> CVarCarlaWeatherExposureBias(
+    TEXT("carla.Weather.ExposureBias"),
+    0.97f,
+    TEXT("Auto exposure compensation, in EV, forced on the sky rig's post process. ")
+    TEXT("Negative leaves the rig's authored value."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherExposureMaxEV(
+    TEXT("carla.Weather.ExposureMaxEV"),
+    13.0f,
+    TEXT("Upper EV100 bound of the auto exposure range. Negative leaves the rig's value. ")
+    TEXT("Above 13 nothing measurably changes."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherTransmittanceMinElevationDeg(
+    TEXT("carla.Weather.TransmittanceMinElevationDeg"),
+    0.0f,
+    TEXT("Minimum sun elevation, in degrees, used to evaluate the atmospheric tint applied ")
+    TEXT("to lit surfaces. The engine default of -90 makes a sunset tint the whole city red. ")
+    TEXT("Values above ~5 light the city as if it were day under a night sky."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherDayNightBlendDeg(
+    TEXT("carla.Weather.DayNightBlendDeg"),
+    8.0f,
+    TEXT("Half-width, in degrees of sun altitude, of the band the sun/moon handover is ")
+    TEXT("spread over. 0 gives a hard switch at the horizon."),
+    ECVF_Default);
+
 static TAutoConsoleVariable<float> CVarCarlaWeatherMoonIntensity(
     TEXT("carla.Weather.MoonIntensity"),
-    500.0f,
+    50.0f,
     TEXT("Minimum DirectionalLightComponentMoon intensity (lux) enforced on the sky rig ")
     TEXT("whenever SunAltitudeAngle < 0. Set 0 to leave the rig's authored/curve-driven ")
     TEXT("moon intensity untouched."),
@@ -112,13 +152,11 @@ static TAutoConsoleVariable<float> CVarCarlaWeatherNightSkylightIntensity(
 // halos or day-side effect (the whole block is gated to SunAltitudeAngle<0).
 static TAutoConsoleVariable<float> CVarCarlaWeatherStarsBrightness(
     TEXT("carla.Weather.StarsBrightness"),
-    0.0f,
+    70.0f,
     TEXT("Value forced into the night sky sphere's \"Stars Brightness\" variable ")
-    TEXT("(BP_Sky_Sphere, engine content) whenever SunAltitudeAngle < 0, floored the same ")
-    TEXT("way as the moon/skylight intensities above. Set 0 (the default) to leave the rig's ")
-    TEXT("authored/artist-edited value untouched -- this used to default to 5000, which stomped ")
-    TEXT("any hand-tuned \"Stars brightness\" value on the sky sphere BP back up to 5000 on ")
-    TEXT("every push, making it look uneditable."),
+    TEXT("(BP_Sky_Sphere, engine content) whenever SunAltitudeAngle < 0. Set 0 to leave the ")
+    TEXT("sphere's authored value alone; any other value replaces it on every push, which is ")
+    TEXT("the only way to make the stars FAINTER than the 100 the asset ships."),
     ECVF_Default);
 
 // Reverse-engineered from BP_GeneralSceneSettings.UpdateClouds (before it was
@@ -147,6 +185,89 @@ static TAutoConsoleVariable<bool> CVarCarlaWeatherEnableOvercastClouds(
     true,
     TEXT("Whether Cloudiness at/above OvercastThreshold switches the cloud material to the ")
     TEXT("Billowy overcast one. Set false to always use the plain master instead."),
+    ECVF_Default);
+
+// False stops the weather push re-asserting the cloud material.
+static TAutoConsoleVariable<float> CVarCarlaWeatherOvercastSunIntensity(
+    TEXT("carla.Weather.OvercastSunIntensity"),
+    1200.0f,
+    TEXT("Sun intensity at Cloudiness 100, blended in from SunIntensity_Curve by Cloudiness ")
+    TEXT("and clamped so it can only darken. Negative disables."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherOvercastSkyLightIntensity(
+    TEXT("carla.Weather.OvercastSkyLightIntensity"),
+    10.0f,
+    TEXT("Sky light intensity at Cloudiness 100, blended in from SkyIntensity_Curve by ")
+    TEXT("Cloudiness and clamped so it can only brighten. Negative disables."),
+    ECVF_Default);
+
+// bOnlyDarken picks the clamp direction: a ceiling for the sun, a floor for
+// the sky light.
+static float ComputeNightBlend(float SunAltitudeAngle)
+{
+    const float Band = CVarCarlaWeatherDayNightBlendDeg.GetValueOnGameThread();
+    if (Band <= 0.0f)
+        return SunAltitudeAngle < 0.0f ? 1.0f : 0.0f;
+    const float T = FMath::Clamp(0.5f - SunAltitudeAngle / (2.0f * Band), 0.0f, 1.0f);
+    return T * T * (3.0f - 2.0f * T);   // smoothstep
+}
+
+// Applied before the overcast blend, so its peak stays the curve's own.
+static float ApplySunAltitudeFalloff(float CurveValue, float CurvePeak, float SunAltitudeAngle)
+{
+    const float Strength = FMath::Clamp(
+        CVarCarlaWeatherSunAltitudeFalloff.GetValueOnGameThread(), 0.0f, 1.0f);
+    if (Strength <= 0.0f || CurvePeak <= UE_KINDA_SMALL_NUMBER)
+        return CurveValue;
+
+    // Both fractions are of the curve's peak, not of its value at this altitude.
+    const float SinElevation =
+        FMath::Sin(FMath::DegreesToRadians(FMath::Max(SunAltitudeAngle, 0.0f)));
+    const float Physical = CurvePeak * FMath::Max(
+        SinElevation, CVarCarlaWeatherSunHorizonFloor.GetValueOnGameThread());
+
+    // Min so it only darkens; below the horizon the curve governs.
+    return FMath::Min(CurveValue, FMath::Lerp(CurveValue, Physical, Strength));
+}
+
+// The curve's peak above the horizon; the overcast targets are quoted at it.
+static float SampleCurvePeakAboveHorizon(UCurveFloat* Curve)
+{
+    float Peak = 0.0f;
+    if (Curve != nullptr)
+        for (float Altitude = 0.0f; Altitude <= 90.0f; Altitude += 5.0f)
+            Peak = FMath::Max(Peak, Curve->GetFloatValue(Altitude));
+    return Peak;
+}
+
+// CurvePeak > 0 treats OvercastValue as a factor on the curve, 0 as an absolute.
+static float ApplyOvercastBlend(float CurveValue, float OvercastValue,
+                                float Cloudiness, bool bOnlyDarken, float CurvePeak)
+{
+    if (OvercastValue < 0.0f)
+        return CurveValue;
+    const float Overcast = FMath::Clamp(Cloudiness / 100.0f, 0.0f, 1.0f);
+    const float Blended = CurvePeak > UE_KINDA_SMALL_NUMBER
+        ? CurveValue * FMath::Lerp(1.0f, OvercastValue / CurvePeak, Overcast)
+        : FMath::Lerp(CurveValue, OvercastValue, Overcast);
+    return bOnlyDarken ? FMath::Min(CurveValue, Blended) : FMath::Max(CurveValue, Blended);
+}
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherFogDensityScale(
+    TEXT("carla.Weather.FogDensityScale"),
+    0.001f,
+    TEXT("Multiplier taking CARLA's 0-100 FogDensity to the height fog component's density. ")
+    TEXT("The shipped 0.001 caps the engine at 0.1, too thin for a heavy-rain veil."),
+    ECVF_Default);
+
+static TAutoConsoleVariable<float> CVarCarlaWeatherCloudShadowExtentKm(
+    TEXT("carla.Weather.CloudShadowExtentKm"),
+    10.0f,
+    TEXT("Radius in km covered by the volumetric cloud shadow map, set on the sky rig's sun ")
+    TEXT("light. Smaller means finer shadow map texels and less stepping as the sun rotates, ")
+    TEXT("at the cost of clouds no longer shadowing anything further away. 0 or less leaves ")
+    TEXT("whatever the rig authored."),
     ECVF_Default);
 
 AWeather::AWeather(const FObjectInitializer& ObjectInitializer)
@@ -619,6 +740,58 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                 SphereActor->AttachToActor(SkyActor, FAttachmentTransformRules::KeepWorldTransform);
             }
 
+            // The sphere's painted sun follows its "Directional Light Actor", which is
+            // unset here, so the parameters are written directly. The sphere is reached
+            // through the rig's child actors.
+            {
+                const FVector SunDirection =
+                    -FRotator(-Weather.SunAltitudeAngle, Weather.SunAzimuthAngle, 0.0f).Vector();
+
+                TArray<AActor*> SkyCandidates;
+                if (SphereActor != nullptr)
+                    SkyCandidates.Add(SphereActor);
+                TInlineComponentArray<UChildActorComponent*> RigChildActors;
+                SkyActor->GetComponents(RigChildActors);
+                for (UChildActorComponent* RigChild : RigChildActors)
+                    if (RigChild != nullptr && RigChild->GetChildActor() != nullptr)
+                        SkyCandidates.AddUnique(RigChild->GetChildActor());
+
+                for (AActor* Candidate : SkyCandidates)
+                {
+                    // Written on the blueprint variable as well as the material, since
+                    // RefreshMaterial pushes the variable into the material.
+                    if (FNumericProperty* SunHeightProperty = CastField<FNumericProperty>(
+                            FindPropertyByAuthoredName(Candidate->GetClass(), TEXT("Sun Height"))))
+                    {
+                        SunHeightProperty->SetFloatingPointPropertyValue(
+                            SunHeightProperty->ContainerPtrToValuePtr<void>(Candidate),
+                            SunDirection.Z);
+                    }
+
+                    TInlineComponentArray<UMeshComponent*> SphereMeshes;
+                    Candidate->GetComponents(SphereMeshes);
+                    for (UMeshComponent* SphereMesh : SphereMeshes)
+                    {
+                        if (SphereMesh == nullptr)
+                            continue;
+
+                        // The sphere occludes the atmosphere, so it is only shown at night.
+                        const bool bShouldBeVisible = Weather.SunAltitudeAngle < 0.0f;
+                        if (SphereMesh->IsVisible() != bShouldBeVisible)
+                            SphereMesh->SetVisibility(bShouldBeVisible);
+
+                        // Reuses the existing dynamic instance; unknown parameters are a no-op.
+                        if (UMaterialInstanceDynamic* SphereMID =
+                                SphereMesh->CreateAndSetMaterialInstanceDynamic(0))
+                        {
+                            SphereMID->SetVectorParameterValue(
+                                TEXT("Light direction"), FLinearColor(SunDirection));
+                            SphereMID->SetScalarParameterValue(TEXT("Sun height"), SunDirection.Z);
+                        }
+                    }
+                }
+            }
+
             // PIE start reliably left duplicate attached actors -- not just
             // the sphere (SetSkySphere's respawn: destroy-old, spawn-new,
             // doesn't reliably find/destroy the previous one across
@@ -685,6 +858,37 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                     }
                 }
             }
+
+            // Their owning components are re-added on every push and recreate the actors,
+            // so the components go too.
+            {
+                TInlineComponentArray<UChildActorComponent*> ChildActorComponents;
+                SkyActor->GetComponents(ChildActorComponents);
+                TMap<UClass*, TArray<UChildActorComponent*>> ComponentsByChildClass;
+                for (UChildActorComponent* ChildComponent : ChildActorComponents)
+                    if (ChildComponent != nullptr && ChildComponent->GetChildActorClass() != nullptr)
+                        ComponentsByChildClass.FindOrAdd(ChildComponent->GetChildActorClass()).Add(ChildComponent);
+
+                for (const TPair<UClass*, TArray<UChildActorComponent*>>& Pair : ComponentsByChildClass)
+                {
+                    const TArray<UChildActorComponent*>& Components = Pair.Value;
+                    if (Components.Num() < 2)
+                        continue;
+                    UChildActorComponent* ComponentToKeep = Components.Last();
+                    for (UChildActorComponent* ChildComponent : Components)
+                    {
+                        if (ChildComponent->GetChildActor() != nullptr
+                            && ChildComponent->GetChildActor() == SphereActor)
+                        {
+                            ComponentToKeep = ChildComponent;
+                            break;
+                        }
+                    }
+                    for (UChildActorComponent* ChildComponent : Components)
+                        if (ChildComponent != ComponentToKeep)
+                            ChildComponent->DestroyComponent();
+                }
+            }
         }
 
         // The blueprint's UpdateFog runs, but the values it leaves on the
@@ -704,7 +908,8 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             : nullptr;
         if (FogComponent != nullptr)
         {
-            FogComponent->SetFogDensity(Weather.FogDensity * 0.001f);
+            FogComponent->SetFogDensity(
+                Weather.FogDensity * CVarCarlaWeatherFogDensityScale.GetValueOnGameThread());
             FogComponent->SetStartDistance(Weather.FogDistance * 100.0f);
             FogComponent->SetFogCutoffDistance(0.0f);
         }
@@ -763,7 +968,14 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         {
             if (ULightComponent* SunLightComponent = FindComponent(TEXT("DirectionalLightComponentSun")))
             {
-                SunLightComponent->SetIntensity(SunIntensityCurve->GetFloatValue(Weather.SunAltitudeAngle));
+                SunLightComponent->SetIntensity(ApplyOvercastBlend(
+                    ApplySunAltitudeFalloff(
+                        SunIntensityCurve->GetFloatValue(Weather.SunAltitudeAngle),
+                        SampleCurvePeakAboveHorizon(SunIntensityCurve),
+                        Weather.SunAltitudeAngle),
+                    CVarCarlaWeatherOvercastSunIntensity.GetValueOnGameThread(),
+                    Weather.Cloudiness, /*bOnlyDarken=*/true,
+                    SampleCurvePeakAboveHorizon(SunIntensityCurve)));
                 // Rigs saved with a black light color render no sunlight at any
                 // intensity; the physical tint comes from the color temperature.
                 SunLightComponent->SetLightColor(FLinearColor::White);
@@ -775,6 +987,43 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         {
             SunLightComponent->SetWorldRotation(
                 FRotator(-Weather.SunAltitudeAngle, Weather.SunAzimuthAngle, 0.0f));
+        }
+
+        // The moon likewise, anti-solar; pitch negated as for the sun.
+        if (ULightComponent* MoonLightComponent = FindComponent(TEXT("DirectionalLightComponentMoon")))
+        {
+            MoonLightComponent->SetWorldRotation(
+                FRotator(Weather.SunAltitudeAngle, Weather.SunAzimuthAngle + 180.0f, 0.0f));
+        }
+
+        // Set on every push: a push re-instances the components from their archetype.
+        if (UDirectionalLightComponent* MoonAtmosphereLight =
+                Cast<UDirectionalLightComponent>(FindComponent(TEXT("DirectionalLightComponentMoon"))))
+        {
+            const bool bWanted = ComputeNightBlend(Weather.SunAltitudeAngle) > 0.0f;
+            // The setters dirty the render state themselves.
+            if (MoonAtmosphereLight->AtmosphereSunLightIndex != 1)
+                MoonAtmosphereLight->SetAtmosphereSunLightIndex(1);
+            if (MoonAtmosphereLight->bAtmosphereSunLight != (bWanted ? 1u : 0u))
+                MoonAtmosphereLight->SetAtmosphereSunLight(bWanted);
+        }
+
+        // Bounds the cloud shadow map's 512 texels to a radius that keeps them small
+        // enough that a turning sun does not walk cloud density across them.
+        if (UDirectionalLightComponent* SunDirectionalLight =
+                Cast<UDirectionalLightComponent>(FindComponent(TEXT("DirectionalLightComponentSun"))))
+        {
+            bool bSunLightRenderStateDirty = false;
+            const float CloudShadowExtentKm = CVarCarlaWeatherCloudShadowExtentKm.GetValueOnGameThread();
+            if (CloudShadowExtentKm > 0.0f && SunDirectionalLight->CloudShadowExtent != CloudShadowExtentKm)
+            {
+                SunDirectionalLight->CloudShadowExtent = CloudShadowExtentKm;
+                bSunLightRenderStateDirty = true;
+            }
+            if (bSunLightRenderStateDirty)
+            {
+                SunDirectionalLight->MarkRenderStateDirty();
+            }
         }
         // The rig's Moon light ships with AffectsWorld off -- a disabled
         // light contributes nothing to the scene no matter what its
@@ -803,21 +1052,15 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         // black (SLS_SpecifiedCubemap with a null cubemap) and the
         // bRealTimeCapture flag that overrides that source renders ONLY sky
         // components -- SkyAtmosphere, VolumetricCloud, IsSky-flagged meshes
-        // -- into the capture. The sky CARLA actually displays is the stock
-        // engine BP_Sky_Sphere mesh (not IsSky-flagged, invisible to the
-        // capture), and the rig's own SkyAtmosphereComponent is inactive like
-        // everything else, so the real-time capture rendered an empty scene:
-        // a black cubemap, zero ambient at any intensity (verified: black
-        // shadows with GI disabled entirely, with the skylight active).
+        // -- into the capture. The displayed sky is the legacy sphere, which the
+        // capture cannot see, and the rig's SkyAtmosphere is inactive, so the
+        // capture rendered a black cubemap and no ambient at any intensity.
+        // Activating the atmosphere gives the capture something to see; the
+        // main view is unchanged, still showing the opaque sphere in front.
         //
-        // So: activate the SkyAtmosphere for the capture to see. In the main
-        // view it stays hidden behind the opaque legacy sphere, so the
-        // rendered sky look does not change; the capture ignores the sphere
-        // and sees the atmosphere, yielding a physically-scaled ambient in
-        // the same photometric units as the sun that tracks sun altitude for
-        // free. The VolumetricCloudComponent is deliberately left inactive:
-        // the sphere already paints clouds, and volumetric ones would
-        // composite in front of it as a second cloud layer.
+        // Activation is irrelevant for the cloud component: the proxy is added
+        // from ShouldComponentAddToScene() && ShouldRender() && IsRegistered(),
+        // never from IsActive(). Visibility is the lever.
         {
             FObjectProperty* AtmosphereProperty = CastField<FObjectProperty>(
                 SkyActor->GetClass()->FindPropertyByName(TEXT("SkyAtmosphereComponent")));
@@ -826,6 +1069,23 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                 : nullptr;
             if (AtmosphereComponent != nullptr && !AtmosphereComponent->IsActive())
                 AtmosphereComponent->SetActive(true);
+
+            // Set every push: a push re-instances the component from its archetype.
+            if (USkyAtmosphereComponent* Atmosphere = Cast<USkyAtmosphereComponent>(AtmosphereComponent))
+            {
+                // Released below the horizon, where the atmosphere's light is the moon.
+                const float Release = CVarCarlaWeatherTransmittanceReleaseDeg.GetValueOnGameThread();
+                const float Clamped = CVarCarlaWeatherTransmittanceMinElevationDeg.GetValueOnGameThread();
+                float MinElevation = Clamped;
+                if (Release < 0.0f)
+                {
+                    const float T = FMath::Clamp(Weather.SunAltitudeAngle / Release, 0.0f, 1.0f);
+                    const float Eased = T * T * (3.0f - 2.0f * T);   // smoothstep
+                    MinElevation = FMath::Lerp(Clamped, -90.0f, Eased);
+                }
+                if (!FMath::IsNearlyEqual(Atmosphere->TransmittanceMinLightElevationAngle, MinElevation))
+                    Atmosphere->SetTransmittanceMinLightElevationAngle(MinElevation);
+            }
         }
         // Skylight: force active + real-time capture (the latter is already
         // set on the asset; enforced defensively in case a rig resave clears
@@ -852,7 +1112,10 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             if (!SkyLightComponent->IsActive())
                 SkyLightComponent->SetActive(true);
             if (UCurveFloat* SkyIntensityCurve = FindCurve(TEXT("SkyIntensity_Curve")))
-                SkyLightComponent->SetIntensity(SkyIntensityCurve->GetFloatValue(Weather.SunAltitudeAngle));
+                SkyLightComponent->SetIntensity(ApplyOvercastBlend(
+                    SkyIntensityCurve->GetFloatValue(Weather.SunAltitudeAngle),
+                    CVarCarlaWeatherOvercastSkyLightIntensity.GetValueOnGameThread(),
+                    Weather.Cloudiness, /*bOnlyDarken=*/false, /*CurvePeak=*/0.0f));
             }
             UE_LOG(LogCarla, Verbose, TEXT(
                 "AWeather sky light: active=%d intensity=%.3f realtimecapture=%d mobility=%d visible=%d"),
@@ -882,7 +1145,9 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
         // behind the default floor values.
         if (Weather.SunAltitudeAngle < 0.0f)
         {
-            const float MoonFloor = CVarCarlaWeatherMoonIntensity.GetValueOnGameThread();
+            // Scaled by the handover curve so the moon fades in across dusk.
+            const float MoonFloor = CVarCarlaWeatherMoonIntensity.GetValueOnGameThread()
+                * ComputeNightBlend(Weather.SunAltitudeAngle);
             if (ULightComponent* MoonLightComponent = FindComponent(TEXT("DirectionalLightComponentMoon")))
             {
                 if (!MoonLightComponent->IsActive())
@@ -917,6 +1182,24 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             AActor* SphereActor = SphereProperty != nullptr
                 ? Cast<AActor>(SphereProperty->GetObjectPropertyValue_InContainer(SkyActor))
                 : nullptr;
+
+            // The property is unset on this rig, so the sphere is reached through the
+            // child actors instead.
+            if (SphereActor == nullptr)
+            {
+                TInlineComponentArray<UChildActorComponent*> RigChildActors;
+                SkyActor->GetComponents(RigChildActors);
+                for (UChildActorComponent* RigChild : RigChildActors)
+                {
+                    AActor* Candidate = RigChild != nullptr ? RigChild->GetChildActor() : nullptr;
+                    if (Candidate != nullptr &&
+                        FindPropertyByAuthoredName(Candidate->GetClass(), TEXT("Stars Brightness")) != nullptr)
+                    {
+                        SphereActor = Candidate;
+                        break;
+                    }
+                }
+            }
             UE_LOG(LogCarla, Verbose, TEXT("AWeather night sky: sphere property %s, actor %s"),
                 SphereProperty ? TEXT("found") : TEXT("MISSING"),
                 SphereActor ? *SphereActor->GetName() : TEXT("null"));
@@ -936,9 +1219,8 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                         FindPropertyByAuthoredName(SphereActor->GetClass(), TEXT("Stars Brightness"))))
                 {
                     void* ValuePtr = StarsBrightnessProperty->ContainerPtrToValuePtr<void>(SphereActor);
-                    const double CurrentStarsBrightness =
-                        StarsBrightnessProperty->GetFloatingPointPropertyValue(ValuePtr);
-                    if (StarsFloor > 0.0f && CurrentStarsBrightness < StarsFloor)
+                    // Sets rather than floors, so the value can go below the sphere's authored one.
+                    if (StarsFloor > 0.0f)
                         StarsBrightnessProperty->SetFloatingPointPropertyValue(ValuePtr, StarsFloor);
                 }
                 else
@@ -1105,6 +1387,10 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
                 SkyActor->GetWorld(), WeatherMPC, TEXT("WindIntensity"), Weather.WindIntensity);
             UKismetMaterialLibrary::SetScalarParameterValue(
                 SkyActor->GetWorld(), WeatherMPC, TEXT("Wetness"), Weather.Wetness);
+            // 0 by day, 1 by night. Materials gate night-only emissives on it.
+            UKismetMaterialLibrary::SetScalarParameterValue(
+                SkyActor->GetWorld(), WeatherMPC, TEXT("NightFactor"),
+                ComputeNightBlend(Weather.SunAltitudeAngle));
         }
     }
 
@@ -1161,6 +1447,19 @@ void AWeather::ApplyWeatherToSkyActor(AActor* SkyActor, const FWeatherParameters
             {
                 Settings.bOverride_AutoExposureSpeedDown = true;
                 Settings.AutoExposureSpeedDown = 1.0f;
+            }
+            // Forced, overriding whatever the rig authored.
+            const float ExposureBias = CVarCarlaWeatherExposureBias.GetValueOnGameThread();
+            if (ExposureBias >= 0.0f)
+            {
+                Settings.bOverride_AutoExposureBias = true;
+                Settings.AutoExposureBias = ExposureBias;
+            }
+            const float ExposureMaxEV = CVarCarlaWeatherExposureMaxEV.GetValueOnGameThread();
+            if (ExposureMaxEV >= 0.0f)
+            {
+                Settings.bOverride_AutoExposureMaxBrightness = true;
+                Settings.AutoExposureMaxBrightness = ExposureMaxEV;
             }
             PostProcessComponent->bUnbound = true;
         }
