@@ -201,7 +201,7 @@ void ATrafficLightManager::RegisterLightComponentFromOpenDRIVE(UTrafficLightComp
     auto *NewTrafficLightController = NewObject<UTrafficLightController>();
     NewTrafficLightController->SetControllerId(FString::FromInt(TrafficLightControllerMissingId));
     NewTrafficLightController->SetRedTime(10);
-    TrafficLightGroup->AddController(NewTrafficLightController);
+    TrafficLightGroup->GetControllers().Add(NewTrafficLightController);
     TrafficControllers.Add(NewTrafficLightController->GetControllerId(), NewTrafficLightController);
     TrafficLightController = NewTrafficLightController;
 
