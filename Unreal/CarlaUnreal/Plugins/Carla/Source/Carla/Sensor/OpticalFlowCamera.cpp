@@ -39,10 +39,10 @@ void AOpticalFlowCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float 
     return;
   }
 
-  const auto FrameIndex = FCarlaEngine::GetFrameCounter();
+  const auto CaptureContext = MakeCaptureContext(*this);
   ImageUtil::ReadSensorImageDataAsync(
       *this,
-      [this, FrameIndex](
+      [this, CaptureContext](
           const void* MappedPtr,
           size_t RowPitch,
           size_t BufferHeight,
@@ -74,7 +74,7 @@ void AOpticalFlowCamera::PostPhysTick(UWorld *World, ELevelTick TickType, float 
         SendDataToClient(
             *this,
             TArrayView<FVector2f>(ImageData),
-            FrameIndex);
+            CaptureContext);
         return true;
       });
 }
