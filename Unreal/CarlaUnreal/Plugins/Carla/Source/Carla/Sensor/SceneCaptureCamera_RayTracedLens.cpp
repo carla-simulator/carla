@@ -390,21 +390,20 @@ void ASceneCaptureCamera_RayTracedLens::PostPhysTick(UWorld *World, ELevelTick T
   }
 
   TickCaptureAndReadback(World, TickType, DeltaSeconds,
-    [this](bool bNonBlocking)
+    [this](bool bNonBlocking, const FSensorCaptureContext &CaptureContext)
     {
       auto *RenderTarget = GetCaptureRenderTarget();
       if (RenderTarget == nullptr)
         return;
-      const auto FrameIndex = FCarlaEngine::GetFrameCounter();
       // Use the per-sensor recycling readback pool (not a fresh per-frame
       // FRHIGPUTextureReadback): the async path holds each readback until its
       // off-thread delivery, so per-call staging buffers would accumulate and
       // exhaust GPU/host memory within seconds under load.
-      ImageUtil::ReadImageDataAsyncFColor(*RenderTarget, [this, FrameIndex](
+      ImageUtil::ReadImageDataAsyncFColor(*RenderTarget, [this, CaptureContext](
         TArrayView<const FColor> Pixels,
         FIntPoint Size) -> bool
       {
-        SendDataToClient(*this, Pixels, FrameIndex);
+        SendDataToClient(*this, Pixels, CaptureContext);
         return true;
       }, bNonBlocking, GetReadbackPool());
     });
@@ -414,7 +413,7 @@ void ASceneCaptureCamera_RayTracedLens::TickCaptureAndReadback(
     UWorld *World,
     ELevelTick TickType,
     float DeltaSeconds,
-    TFunctionRef<void(bool bNonBlocking)> EnqueueReadback)
+    TFunctionRef<void(bool bNonBlocking, const FSensorCaptureContext &Context)> EnqueueReadback)
 {
   // SYNCHRONOUS MODE -- capture first, then a BLOCKING readback of what we just
   // rendered. The client's world.tick() is the frame boundary, so the image
@@ -450,7 +449,12 @@ void ASceneCaptureCamera_RayTracedLens::TickCaptureAndReadback(
     ASceneCaptureSensor::PostPhysTick(World, TickType, DeltaSeconds);
     if (AreClientsListening())
     {
-      EnqueueReadback(/*bNonBlocking=*/false);
+      const FSensorCaptureContext Context = MakeCaptureContext(*this);
+      // Keep this current even in sync mode, in case the sensor switches to
+      // async mode later.
+      PendingReadbackContext = Context;
+      bHasPendingReadbackContext = true;
+      EnqueueReadback(/*bNonBlocking=*/false, Context);
     }
     return;
   }
@@ -472,10 +476,21 @@ void ASceneCaptureCamera_RayTracedLens::TickCaptureAndReadback(
   //    GPU submission -- which is what makes its readback fence actually signal
   //    -- and captures the previous frame's pixels (they precede this tick's
   //    render). Result: one frame of latency, never a stall.
-  if (AreClientsListening())
+  // Use the stored context, not this tick's live state: the render target
+  // still holds the PREVIOUS capture.
+  if (AreClientsListening() && bHasPendingReadbackContext)
   {
-    EnqueueReadback(/*bNonBlocking=*/true);
+    EnqueueReadback(/*bNonBlocking=*/true, PendingReadbackContext);
   }
 
+  // Read once: PostPhysTick below makes this same decision internally.
+  const bool bWillCaptureThisFrame = ShouldCaptureThisFrame();
+
   ASceneCaptureSensor::PostPhysTick(World, TickType, DeltaSeconds);
+
+  if (bWillCaptureThisFrame)
+  {
+    PendingReadbackContext = MakeCaptureContext(*this);
+    bHasPendingReadbackContext = true;
+  }
 }
