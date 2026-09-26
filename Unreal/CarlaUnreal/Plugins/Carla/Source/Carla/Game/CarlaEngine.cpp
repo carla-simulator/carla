@@ -177,6 +177,34 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
                 TRACE_CPUPROFILER_EVENT_SCOPE_STR("FramesToProcess.emplace_back");
                 std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
                 FramesToProcess.emplace_back(GetCurrentEpisode()->GetFrameData());
+                // The primary broadcasts SEND_FRAME every tick regardless of
+                // whether this secondary has drained the previous ones (see
+                // OnPreTick, which applies at most one queued frame per own
+                // tick): there is no acknowledgement or backpressure between
+                // the two. A growing backlog here means this secondary is
+                // falling behind the primary's simulation clock; surface it
+                // instead of silently accumulating memory and staleness.
+                // Logged only on state change (not once per queued frame,
+                // which would otherwise fire at SEND_FRAME's own cadence).
+                // The warn/recovery thresholds are deliberately different
+                // (hysteresis): a queue depth oscillating around one single
+                // threshold would flip the log message every tick, which is
+                // exactly the spam this was meant to avoid.
+                static constexpr int32 BacklogWarningThreshold = 5;
+                static constexpr int32 BacklogRecoveryThreshold = 2;
+                const int32 BacklogSize = static_cast<int32>(FramesToProcess.size());
+                if (BacklogSize > BacklogWarningThreshold && !bFramesToProcessBacklogged)
+                {
+                  UE_LOG(LogCarla, Warning,
+                      TEXT("Secondary server is falling behind the primary: %d frames queued"),
+                      BacklogSize);
+                  bFramesToProcessBacklogged = true;
+                }
+                else if (BacklogSize <= BacklogRecoveryThreshold && bFramesToProcessBacklogged)
+                {
+                  UE_LOG(LogCarla, Log, TEXT("Secondary server has caught up with the primary"));
+                  bFramesToProcessBacklogged = false;
+                }
               }
             }
             // forces a tick
