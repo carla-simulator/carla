@@ -41,13 +41,14 @@ void PrimaryCommands::SendLoadMap(std::string map) {
 }
 
 // send to who the router wants the request for a token
-token_type PrimaryCommands::SendGetToken(stream_id sensor_id) {
+token_type PrimaryCommands::SendGetToken(stream_id sensor_id, std::weak_ptr<Primary> &out_session) {
   log_info("asking for a token");
   carla::Buffer buf(reinterpret_cast<carla::Buffer::value_type *>(&sensor_id),
                     static_cast<size_t>(sizeof(stream_id)));
   auto fut = _router->WriteToNext(MultiGPUCommand::GET_TOKEN, std::move(buf));
 
   auto response = fut.get();
+  out_session = response.session;
   token_type new_token(*reinterpret_cast<carla::streaming::detail::token_data *>(response.buffer.data()));
   log_info("got a token: ", new_token.get_stream_id(), ", ", new_token.get_port());
   return new_token;
@@ -55,6 +56,7 @@ token_type PrimaryCommands::SendGetToken(stream_id sensor_id) {
 
 // send to know if a connection is alive
 void PrimaryCommands::SendIsAlive() {
+  std::scoped_lock<std::mutex> lock(_mutex);
   std::string msg("Are you alive?");
   carla::Buffer buf(reinterpret_cast<const unsigned char *>(msg.c_str()), static_cast<size_t>(msg.size()));
   log_info("sending is alive command");
@@ -109,6 +111,7 @@ bool PrimaryCommands::SendIsEnabledForROS(stream_id sensor_id) {
 }
 
 token_type PrimaryCommands::GetToken(stream_id sensor_id) {
+  std::scoped_lock<std::mutex> lock(_mutex);
   // search if the sensor has been activated in any secondary server
   auto it = _tokens.find(sensor_id);
   if (it != _tokens.end()) {
@@ -117,9 +120,11 @@ token_type PrimaryCommands::GetToken(stream_id sensor_id) {
     return it->second;
   }
   else {
-    // enable the sensor on one secondary server
-    auto server = _router->GetNextServer();
-    auto token = SendGetToken(sensor_id);
+    // enable the sensor on one secondary server; the session that actually
+    // answers comes back from the round trip itself, not from a separate
+    // (and potentially stale) "next server" lookup.
+    std::weak_ptr<Primary> server;
+    auto token = SendGetToken(sensor_id, server);
     // add to the maps
     _tokens[sensor_id] = token;
     _servers[sensor_id] = server;
@@ -129,17 +134,23 @@ token_type PrimaryCommands::GetToken(stream_id sensor_id) {
 }
 
 void PrimaryCommands::EnableForROS(stream_id sensor_id) {
-  auto it = _servers.find(sensor_id);
-  if (it != _servers.end()) {
-    SendEnableForROS(sensor_id);
-  } else {
-    // we need to activate the sensor in any server yet, and repeat
-    GetToken(sensor_id);
-    EnableForROS(sensor_id);
+  {
+    std::scoped_lock<std::mutex> lock(_mutex);
+    auto it = _servers.find(sensor_id);
+    if (it != _servers.end()) {
+      SendEnableForROS(sensor_id);
+      return;
+    }
   }
+  // The sensor has not been routed to a secondary yet. GetToken() performs
+  // that routing under its own critical section, so the lock above must be
+  // released first to avoid a self-deadlock on the recursive call below.
+  GetToken(sensor_id);
+  EnableForROS(sensor_id);
 }
 
 void PrimaryCommands::DisableForROS(stream_id sensor_id) {
+  std::scoped_lock<std::mutex> lock(_mutex);
   auto it = _servers.find(sensor_id);
   if (it != _servers.end()) {
     SendDisableForROS(sensor_id);
@@ -147,6 +158,7 @@ void PrimaryCommands::DisableForROS(stream_id sensor_id) {
 }
 
 bool PrimaryCommands::IsEnabledForROS(stream_id sensor_id) {
+  std::scoped_lock<std::mutex> lock(_mutex);
   auto it = _servers.find(sensor_id);
   if (it != _servers.end()) {
     return SendIsEnabledForROS(sensor_id);

@@ -13,6 +13,8 @@
 #include "carla/streaming/detail/Token.h"
 #include "carla/streaming/detail/Types.h"
 
+#include <mutex>
+
 namespace carla {
 namespace multigpu {
 
@@ -51,8 +53,12 @@ class PrimaryCommands {
 
   private:
 
-    // send to one secondary to get the token of a sensor
-    token_type SendGetToken(carla::streaming::detail::stream_id_type sensor_id);
+    // send to one secondary to get the token of a sensor; also reports which
+    // secondary session actually answered, so the caller never has to guess
+    // it from a separate (and racy) round-robin lookup.
+    token_type SendGetToken(
+        carla::streaming::detail::stream_id_type sensor_id,
+        std::weak_ptr<Primary> &out_session);
 
     // manage ROS enable/disable of sensor
     void SendEnableForROS(stream_id sensor_id);
@@ -63,6 +69,12 @@ class PrimaryCommands {
     std::shared_ptr<Router> _router;
     std::unordered_map<stream_id, token_type> _tokens;
     std::unordered_map<stream_id, std::weak_ptr<Primary>> _servers;
+
+    // Serializes every round trip through _router (GetToken/EnableForROS/...).
+    // The router keeps at most one in-flight promise per secondary session
+    // (see Router::_promises), so two overlapping requests to the same
+    // session would otherwise clobber each other's promise.
+    std::mutex _mutex;
 };
 
 } // namespace multigpu
