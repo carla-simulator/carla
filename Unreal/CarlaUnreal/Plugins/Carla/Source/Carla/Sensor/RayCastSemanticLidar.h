@@ -38,17 +38,20 @@ public:
   virtual void Set(const FActorDescription &Description) override;
   virtual void Set(const FLidarDescription &LidarDescription);
 
+  virtual void SimulateLidar(const float DeltaTime, bool bLockPhysics = true);
+
+  virtual void SendData(const float DeltaTime);
+
 protected:
-  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
+  virtual void BeginPlay() override;
+  virtual void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
   /// Creates a Laser for each channel.
   void CreateLasers();
 
-  /// Updates LidarMeasurement with the points read in DeltaTime.
-  void SimulateLidar(const float DeltaTime);
-
   /// Shoot a laser ray-trace, return whether the laser hit something.
-  bool ShootLaser(const float VerticalAngle, float HorizontalAngle, FHitResult &HitResult, FCollisionQueryParams& TraceParams) const;
+  bool ShootLaser(const float VerticalAngle, float HorizontalAngle, FHitResult &HitResult, FCollisionQueryParams& TraceParams,
+                  const FVector &LidarBodyLocation, const FRotator &LidarBodyRotation) const;
 
   /// Method that allow to preprocess if the rays will be traced.
   virtual void PreprocessRays(uint32_t Channels, uint32_t MaxPointsPerChannel);
