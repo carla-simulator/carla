@@ -56,11 +56,9 @@ void ARayCastLidar::Set(const FLidarDescription &LidarDescription)
   DropOffGenActive = Description.DropOffGenRate > std::numeric_limits<float>::epsilon();
 }
 
-void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
+void ARayCastLidar::SendData(const float DeltaTime)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(ARayCastLidar::PostPhysTick);
-  SimulateLidar(DeltaTime);
-
+  TRACE_CPUPROFILER_EVENT_SCOPE(ARayCastLidar::SendData);
   auto DataStream = GetDataStream(*this);
   auto SensorTransform = DataStream.GetSensorTransform();
 
@@ -87,8 +85,6 @@ void ARayCastLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float Delta
     }
   }
   #endif
-
-
 }
 
 float ARayCastLidar::ComputeIntensity(const FSemanticDetection& RawDetection) const

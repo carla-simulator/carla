@@ -70,11 +70,9 @@ void AHSSLidar::Set(const FLidarDescription &LidarDescription)
   DropOffGenActive = Description.DropOffGenRate > std::numeric_limits<float>::epsilon();
 }
 
-void AHSSLidar::PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime)
+void AHSSLidar::SendData(const float DeltaTime)
 {
-  TRACE_CPUPROFILER_EVENT_SCOPE(AHSSLidar::PostPhysTick);
-  SimulateLidar(DeltaTime);
-
+  TRACE_CPUPROFILER_EVENT_SCOPE(AHSSLidar::SendData);
   auto DataStream = GetDataStream(*this);
   auto SensorTransform = DataStream.GetSensorTransform();
 
@@ -207,7 +205,7 @@ static float SnapToStep(float value, float step)
   return std::round(value / step) * step;
 }
 
-void AHSSLidar::SimulateLidar(const float DeltaTime)
+void AHSSLidar::SimulateLidar(const float DeltaTime, bool bLockPhysics)
 {
   TRACE_CPUPROFILER_EVENT_SCOPE(AHSSLidar::SimulateLidar);
   const uint32 ChannelCount = Description.Channels;
@@ -239,7 +237,11 @@ void AHSSLidar::SimulateLidar(const float DeltaTime)
   ResetRecordedHits(ChannelCount, PointsToScanWithOneLaser);
   PreprocessRays(ChannelCount, PointsToScanWithOneLaser);
 
-  auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(GetWorld()->GetPhysicsScene());
+  const FTransform ActorTransform = GetTransform();
+  const FVector LidarBodyLocation = ActorTransform.GetLocation();
+  const FRotator LidarBodyRotation = ActorTransform.Rotator();
+
+  auto RunChannelRaycasts = [&]()
   {
     TRACE_CPUPROFILER_EVENT_SCOPE(ParallelFor);
     ParallelFor(ChannelCount, [&](int32 idxChannel) {
@@ -256,14 +258,23 @@ void AHSSLidar::SimulateLidar(const float DeltaTime)
             -HorizontalFov / 2.0f + static_cast<float>(idxPtsOneLaser) * HorizontalResolution;
         const bool PreprocessResult = RayPreprocessCondition[idxChannel][idxPtsOneLaser];
 
-        if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult, TraceParams)) {
+        if (PreprocessResult && ShootLaser(VertAngle, HorizAngle, HitResult, TraceParams, LidarBodyLocation, LidarBodyRotation)) {
           WritePointAsync(idxChannel, HitResult);
         }
       };
     });
-  }
-  LockedPhysObject.Release();
+  };
 
-  FTransform ActorTransf = GetTransform();
-  ComputeAndSaveDetections(ActorTransf);
+  if (bLockPhysics)
+  {
+    auto LockedPhysObject = FPhysicsObjectExternalInterface::LockRead(GetWorld()->GetPhysicsScene());
+    RunChannelRaycasts();
+    LockedPhysObject.Release();
+  }
+  else
+  {
+    RunChannelRaycasts();
+  }
+
+  ComputeAndSaveDetections(ActorTransform);
 }

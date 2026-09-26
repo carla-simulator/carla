@@ -38,12 +38,11 @@ public:
   virtual void Set(const FActorDescription &Description) override;
   virtual void Set(const FLidarDescription &LidarDescription) override;
 
-  virtual void PostPhysTick(UWorld *World, ELevelTick TickType, float DeltaTime) override;
+  virtual void SendData(const float DeltaTime) override;
 
   const TArray<float>& GetTestPointCloud() const { return PointCloudLidarData; };
 
-protected:
-  virtual void SimulateLidar(const float DeltaTime);
+  virtual void SimulateLidar(const float DeltaTime, bool bLockPhysics = true) override;
 
 private:
   FDetection ComputeDetection(const FHitResult& HitInfo, const FTransform& SensorTransf) const;
