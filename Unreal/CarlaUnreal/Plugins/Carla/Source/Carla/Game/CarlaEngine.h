@@ -139,6 +139,11 @@ private:
 
   std::vector<FFrameData> FramesToProcess;
   std::mutex FrameToProcessMutex;
+
+  // Tracks whether this secondary is currently considered behind the
+  // primary's SEND_FRAME cadence, so the backlog warning logs on state
+  // change only rather than once per queued frame.
+  bool bFramesToProcessBacklogged = false;
 };
 
 // Note: this has a circular dependency with FCarlaEngine; it must be included late.
