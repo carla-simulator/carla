@@ -70,12 +70,25 @@ namespace multigpu {
     void TestDisconnectSession(std::shared_ptr<Primary> session) {
       DisconnectSession(std::move(session));
     }
+    // Test-only: invokes the same response-handling path SetCallbacks()
+    // wires to the Listener, so the resync-on-episode-ready contract can be
+    // exercised without a live secondary.
+    void TestHandleResponse(std::shared_ptr<Primary> session, Buffer buffer) {
+      HandleResponse(std::move(session), std::move(buffer));
+    }
 #endif // LIBCARLA_WITH_GTEST
 
   private:
     void ConnectSession(std::shared_ptr<Primary> session);
     void DisconnectSession(std::shared_ptr<Primary> session);
     void ClearSessions();
+
+    /// Re-arms the new-connection resync if @a buffer is the secondary's
+    /// episode-ready marker (checked first, so it can never be misdelivered
+    /// to a pending promise on the same session); otherwise resolves the
+    /// pending promise for @a session with @a buffer, or logs and drops the
+    /// data if no request is currently pending on it.
+    void HandleResponse(std::shared_ptr<Primary> session, Buffer buffer);
 
     /// Fails a pending request instead of leaving its future unresolved.
     /// A session can vanish (dead weak_ptr, disconnect, empty router) between

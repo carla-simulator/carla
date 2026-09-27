@@ -27,6 +27,7 @@
 #include "Misc/CoreDelegates.h"
 #include <util/ue-header-guard-end.h>
 
+#include <atomic>
 #include <mutex>
 
 class UCarlaSettings;
@@ -130,7 +131,10 @@ private:
   FDelegateHandle OnEpisodeSettingsChangeHandle;
 
   bool bIsPrimaryServer = true;
-  bool bNewConnection = false;
+
+  // Set from the router's io-context thread (ConnectSession/HandleResponse
+  // callbacks); consumed and cleared from the game thread in OnPostTick.
+  std::atomic<bool> bNewConnection{false};
 
   std::unordered_map<uint32_t, uint32_t> MappedId;
 
