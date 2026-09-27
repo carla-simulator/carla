@@ -177,19 +177,11 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
                 TRACE_CPUPROFILER_EVENT_SCOPE_STR("FramesToProcess.emplace_back");
                 std::scoped_lock<std::mutex> Lock(FrameToProcessMutex);
                 FramesToProcess.emplace_back(GetCurrentEpisode()->GetFrameData());
-                // The primary broadcasts SEND_FRAME every tick regardless of
-                // whether this secondary has drained the previous ones (see
-                // OnPreTick, which applies at most one queued frame per own
-                // tick): there is no acknowledgement or backpressure between
-                // the two. A growing backlog here means this secondary is
-                // falling behind the primary's simulation clock; surface it
-                // instead of silently accumulating memory and staleness.
-                // Logged only on state change (not once per queued frame,
-                // which would otherwise fire at SEND_FRAME's own cadence).
-                // The warn/recovery thresholds are deliberately different
-                // (hysteresis): a queue depth oscillating around one single
-                // threshold would flip the log message every tick, which is
-                // exactly the spam this was meant to avoid.
+                // SEND_FRAME has no acknowledgement or backpressure, so a growing
+                // backlog means this secondary is falling behind; surface it.
+                // Logged only on state change, with separate warn/recovery
+                // thresholds (hysteresis) so a backlog oscillating near one
+                // value can't flip the log every tick.
                 static constexpr int32 BacklogWarningThreshold = 5;
                 static constexpr int32 BacklogRecoveryThreshold = 2;
                 const int32 BacklogSize = static_cast<int32>(FramesToProcess.size());
@@ -400,6 +392,18 @@ void FCarlaEngine::NotifyBeginEpisode(UCarlaEpisode &Episode)
   Server.NotifyBeginEpisode(Episode);
 
   Episode.bIsPrimaryServer = bIsPrimaryServer;
+
+  if (!bIsPrimaryServer && Secondary)
+  {
+    // Re-arms the primary's full-resync flag (see Router::HandleResponse),
+    // since connect-time arming predates this secondary's own level load.
+    // Write(Buffer), not Write(std::string): the latter has no completion
+    // handler keeping the message alive and can dangle.
+    carla::Buffer Marker(
+        reinterpret_cast<const unsigned char *>(carla::multigpu::kEpisodeReadyMarker.data()),
+        carla::multigpu::kEpisodeReadyMarker.size());
+    Secondary->Write(std::move(Marker));
+  }
 }
 
 void FCarlaEngine::NotifyEndEpisode()
@@ -496,8 +500,8 @@ void FCarlaEngine::OnPostTick(UWorld *World, ELevelTick TickType, float DeltaSec
     if (bIsPrimaryServer)
     {
       if (SecondaryServer->HasClientsConnected()) {
-        GetCurrentEpisode()->GetFrameData().GetFrameData(GetCurrentEpisode(), true, bNewConnection);
-        bNewConnection = false;
+        const bool bWasNewConnection = bNewConnection.exchange(false);
+        GetCurrentEpisode()->GetFrameData().GetFrameData(GetCurrentEpisode(), true, bWasNewConnection);
         std::ostringstream OutStream;
         GetCurrentEpisode()->GetFrameData().Write(OutStream);
 

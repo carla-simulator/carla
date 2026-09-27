@@ -18,19 +18,13 @@
 #include <chrono>
 #include <future>
 #include <memory>
+#include <string>
 #include <thread>
 
-// These tests exercise the multi-GPU router's request/response bookkeeping
-// (LibCarla/source/carla/multigpu/router.cpp) without a live secondary
-// process. A "session" here is a carla::multigpu::Primary constructed
-// directly against an unconnected socket: its Write()/ReadData() paths are
-// never exercised, only Router's session-selection and promise-fulfillment
-// logic, which is what the target bugs live in.
-//
-// The io_context must actually be running (as it always is in production,
-// via Router::AsyncRun()) before a boost::asio acceptor/socket built on it is
-// torn down; tearing one down without ever having run it is a codepath
-// production never exercises and is not what these tests are about.
+// Exercises Router's session-selection and promise-fulfillment logic without
+// a live secondary process: a "session" here is a carla::multigpu::Primary
+// built against an unconnected socket, so only Router's own bookkeeping is
+// under test, never Primary's Write()/ReadData().
 
 namespace {
 
@@ -140,6 +134,105 @@ TEST_F(MultiGpuRouterTest, disconnect_rejects_pending_promise_for_that_session) 
   EXPECT_THROW(future.get(), std::runtime_error);
 }
 
+TEST_F(MultiGpuRouterTest, episode_ready_marker_with_no_pending_promise_triggers_resync_callback) {
+  carla::multigpu::Router router(TESTING_PORT);
+  router.AsyncRun(1u);
+
+  int callback_count = 0;
+  router.SetNewConnectionCallback([&callback_count]() { ++callback_count; });
+
+  auto session = MakeFakeSession();
+  router.TestConnectSession(session);
+  callback_count = 0; // TestConnectSession() itself already fired the callback once.
+
+  carla::Buffer marker(
+      reinterpret_cast<const unsigned char *>(carla::multigpu::kEpisodeReadyMarker.data()),
+      carla::multigpu::kEpisodeReadyMarker.size());
+  router.TestHandleResponse(session, std::move(marker));
+
+  EXPECT_EQ(callback_count, 1);
+}
+
+TEST_F(MultiGpuRouterTest, unsolicited_non_marker_data_does_not_trigger_resync_callback) {
+  carla::multigpu::Router router(TESTING_PORT);
+  router.AsyncRun(1u);
+
+  int callback_count = 0;
+  router.SetNewConnectionCallback([&callback_count]() { ++callback_count; });
+
+  auto session = MakeFakeSession();
+  router.TestConnectSession(session);
+  callback_count = 0;
+
+  // Anything that is not the exact episode-ready marker must not be
+  // misread as that signal, even though it also arrives with no pending
+  // promise (e.g. a protocol desync or a stray write from a misbehaving
+  // secondary).
+  std::string garbage("not the marker");
+  carla::Buffer buffer(
+      reinterpret_cast<const unsigned char *>(garbage.data()), garbage.size());
+  router.TestHandleResponse(session, std::move(buffer));
+
+  EXPECT_EQ(callback_count, 0);
+}
+
+TEST_F(MultiGpuRouterTest, episode_ready_marker_is_not_misdelivered_to_a_pending_promise) {
+  carla::multigpu::Router router(TESTING_PORT);
+  router.AsyncRun(1u);
+
+  int callback_count = 0;
+  router.SetNewConnectionCallback([&callback_count]() { ++callback_count; });
+
+  auto session = MakeFakeSession();
+  router.TestConnectSession(session);
+  callback_count = 0;
+
+  // A request is already pending on this exact session when the marker
+  // arrives -- e.g. a GetToken round trip in flight at the moment this
+  // secondary's own level reload completes. The marker must still be
+  // recognized as the resync signal, and must NOT be handed to this
+  // request as if it were its (garbage) response data.
+  auto future = router.WriteToNext(carla::multigpu::MultiGPUCommand::GET_TOKEN, carla::Buffer());
+  ASSERT_EQ(future.wait_for(std::chrono::milliseconds(50)), std::future_status::timeout);
+
+  carla::Buffer marker(
+      reinterpret_cast<const unsigned char *>(carla::multigpu::kEpisodeReadyMarker.data()),
+      carla::multigpu::kEpisodeReadyMarker.size());
+  router.TestHandleResponse(session, std::move(marker));
+
+  EXPECT_EQ(callback_count, 1);
+  EXPECT_EQ(future.wait_for(std::chrono::milliseconds(50)), std::future_status::timeout);
+
+  // The request itself is still healthy: its real reply, once it arrives,
+  // resolves normally.
+  router.TestHandleResponse(session, carla::Buffer());
+  ASSERT_EQ(future.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+  EXPECT_NO_THROW(future.get());
+}
+
+TEST_F(MultiGpuRouterTest, response_with_pending_promise_does_not_trigger_resync_callback) {
+  carla::multigpu::Router router(TESTING_PORT);
+  router.AsyncRun(1u);
+
+  int callback_count = 0;
+  router.SetNewConnectionCallback([&callback_count]() { ++callback_count; });
+
+  auto session = MakeFakeSession();
+  router.TestConnectSession(session);
+  callback_count = 0;
+
+  auto future = router.WriteToNext(carla::multigpu::MultiGPUCommand::GET_TOKEN, carla::Buffer());
+  ASSERT_EQ(future.wait_for(std::chrono::milliseconds(50)), std::future_status::timeout);
+
+  // Real response data, distinct from the marker (see the priority test
+  // above for the marker-with-pending-promise case).
+  router.TestHandleResponse(session, carla::Buffer());
+
+  ASSERT_EQ(future.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+  EXPECT_NO_THROW(future.get());
+  EXPECT_EQ(callback_count, 0);
+}
+
 TEST_F(MultiGpuRouterTest, overlapping_request_to_same_session_is_rejected_not_orphaned) {
   carla::multigpu::Router router(TESTING_PORT);
   router.AsyncRun(1u);
@@ -205,44 +298,39 @@ TEST_F(MultiGpuRouterTest, write_to_next_round_robins_across_connected_sessions)
 }
 
 TEST(MultiGpuRouterProductionShutdown, stop_releases_listening_port_despite_reference_cycle) {
-  // Reproduces the exact production call shape (CarlaServer.cpp:
-  // make_shared<Router>, then SetCallbacks(), then AsyncRun()) rather than
-  // the MultiGpuRouterTest fixture's simplified one, because the regression
-  // this guards against only exists in that shape: SetCallbacks() makes
-  // _commander hold a shared_ptr<Router> back to this object (Router ->
-  // PrimaryCommands -> Router), so ~Router() never runs once it has been
-  // called -- Stop() itself, not destruction, must release the OS-level
-  // listening socket. This was a real regression introduced while fixing a
-  // different bug (a double Listener::Stop() call that only crashed in a
-  // test/destructor-driven teardown) and confirmed by adversarial review.
-  // A fixed, non-zero port, not TESTING_PORT (0): Router::GetLocalEndpoint()
-  // returns the endpoint it was constructed with, not the acceptor's actual
-  // bound local_endpoint() -- with port 0 (ephemeral) it would report "port
-  // 0" while the OS silently assigned a real port underneath, and the probe
-  // below would then always trivially succeed on a *different*, fresh
-  // ephemeral port instead of ever re-checking the one actually in question.
-  constexpr uint16_t kFixedTestPort = 17654u;
-  auto router = std::make_shared<carla::multigpu::Router>(kFixedTestPort);
+  // Reproduces the production call shape (make_shared<Router>, SetCallbacks(),
+  // AsyncRun()): SetCallbacks() gives PrimaryCommands a shared_ptr back to
+  // this Router, so ~Router() never runs -- Stop() itself, not destruction,
+  // must release the listening socket.
+  //
+  // A bound, ephemeral port obtained up front, not TESTING_PORT (0) passed
+  // straight to Router: GetLocalEndpoint() returns the endpoint the Router
+  // was constructed with, not the acceptor's actual bound local_endpoint(),
+  // so constructing it with port 0 would make the probe below re-check a
+  // different, freshly-assigned port instead of the one actually in use.
+  uint16_t fixed_test_port;
+  {
+    boost::asio::io_context probe_io_context;
+    carla::multigpu::Listener port_probe(
+        probe_io_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::make_address("0.0.0.0"), 0));
+    fixed_test_port = port_probe.GetLocalEndpoint().port();
+  }
+
+  auto router = std::make_shared<carla::multigpu::Router>(fixed_test_port);
   router->SetCallbacks();
   router->AsyncRun(1u);
   const auto endpoint = router->GetLocalEndpoint();
 
-  // SetCallbacks()/Listen() only posts the initial async_accept; give the
-  // background thread a short, bounded window to actually run it and arm
-  // the pending accept operation whose handler captures shared_from_this()
-  // -- without that, this test would not exercise the mechanism it exists
-  // to guard, regardless of the fix's correctness.
+  // Give the background thread a bounded window to run the initial
+  // async_accept SetCallbacks()/Listen() posts, arming the handler whose
+  // capture of shared_from_this() this test exists to guard against leaking.
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   router->Stop();
 
-  // `router` is deliberately still alive and its SetCallbacks() reference
-  // cycle still intact at this point -- exactly as in production, where
-  // Stop() is called but the Router itself is never destroyed. The check
-  // below must not depend on ~Router()/~Listener() ever running: breaking
-  // the cycle (or letting `router` go out of scope) before this point would
-  // let ordinary destruction release the port and mask the very regression
-  // this test exists to catch.
+  // `router` is deliberately still alive with its reference cycle intact
+  // here, exactly as in production: the check below must not depend on
+  // ~Router()/~Listener() ever running.
   {
     boost::asio::io_context probe_io_context;
     EXPECT_NO_THROW({
@@ -250,9 +338,7 @@ TEST(MultiGpuRouterProductionShutdown, stop_releases_listening_port_despite_refe
     }) << "Router::Stop() did not release its listening port";
   }
 
-  // Cleanup only, after the assertion above: break the self-reference cycle
-  // so this test's Router doesn't leak for the rest of the process (this is
-  // a test-hygiene concern only -- production leaks it on purpose, for the
-  // whole process lifetime, which is exactly the condition just tested).
+  // Break the self-reference cycle so this test's Router doesn't leak for
+  // the rest of the process; production leaks it on purpose.
   router->GetCommander().set_router(nullptr);
 }
