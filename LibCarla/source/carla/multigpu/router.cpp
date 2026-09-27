@@ -24,22 +24,13 @@ Router::~Router() {
 
 void Router::Stop() {
   ClearSessions();
-  // _pool.Stop() joins every worker thread that may still be inside
-  // _pool.io_context().run() (started by AsyncRun()) before the listener's
-  // acceptor is closed, so no in-flight accept can race with the teardown
-  // (boost::asio objects are not thread-safe against a concurrent close).
+  // Joins worker threads before the acceptor closes, so no in-flight accept
+  // can race with teardown.
   _pool.Stop();
-  // _listener.reset() alone is NOT enough to close the acceptor in
-  // production: SetCallbacks() (always called before AsyncRun(), see
-  // CarlaServer.cpp) leaves a pending async_accept whose handler captures
-  // shared_from_this(), and _commander (PrimaryCommands) holds a
-  // shared_ptr<Router> back to this object once set_router() runs -- a
-  // reference cycle that means ~Router() itself never runs in production.
-  // So ~Listener() would never fire and the listening socket would stay
-  // open for the rest of the process if this explicit call were removed.
-  // It is safe to call unconditionally: Listener::Stop() is idempotent, so
-  // it does not matter whether ~Listener() also happens to run later (as it
-  // does in a unit test with no SetCallbacks() call and no reference cycle).
+  // ~Router() never runs in production (PrimaryCommands holds a shared_ptr
+  // back to this Router, see set_router()), so Stop() must release the
+  // listening socket itself. Listener::Stop() is idempotent, so this is
+  // safe even if ~Listener() also runs later, as it does in a unit test.
   if (_listener) {
     _listener->Stop();
   }
@@ -57,31 +48,23 @@ void Router::SetCallbacks() {
   // prepare server
   std::weak_ptr<Router> weak = shared_from_this();
 
-  carla::multigpu::Listener::callback_function_type on_open = [=](std::shared_ptr<carla::multigpu::Primary> session) {
+  carla::multigpu::Listener::callback_function_type on_open = [weak](std::shared_ptr<carla::multigpu::Primary> session) {
     auto self = weak.lock();
     if (!self) return;
-    self->ConnectSession(session);
+    self->ConnectSession(std::move(session));
   };
 
-  carla::multigpu::Listener::callback_function_type on_close = [=](std::shared_ptr<carla::multigpu::Primary> session) {
+  carla::multigpu::Listener::callback_function_type on_close = [weak](std::shared_ptr<carla::multigpu::Primary> session) {
     auto self = weak.lock();
     if (!self) return;
-    self->DisconnectSession(session);
+    self->DisconnectSession(std::move(session));
   };
 
   carla::multigpu::Listener::callback_function_type_response on_response =
-    [=](std::shared_ptr<carla::multigpu::Primary> session, carla::Buffer buffer) {
+    [weak](std::shared_ptr<carla::multigpu::Primary> session, carla::Buffer buffer) {
       auto self = weak.lock();
       if (!self) return;
-      std::scoped_lock<std::mutex> lock(self->_mutex);
-      auto prom =self-> _promises.find(session.get());
-      if (prom != self->_promises.end()) {
-        log_info("Got data from secondary (with promise): ", buffer.size());
-        prom->second->set_value({session, std::move(buffer)});
-        self->_promises.erase(prom);
-      } else {
-        log_info("Got data from secondary (without promise): ", buffer.size());
-      }
+      self->HandleResponse(std::move(session), std::move(buffer));
     };
 
   _commander.set_router(shared_from_this());
@@ -146,6 +129,32 @@ void Router::RejectPromise(
   promise->set_exception(std::make_exception_ptr(std::runtime_error(std::string(reason))));
 }
 
+void Router::HandleResponse(std::shared_ptr<Primary> session, Buffer buffer) {
+  std::scoped_lock<std::mutex> lock(_mutex);
+
+  // Checked before the promise lookup: no command reply can equal this
+  // exact marker (see commands.h), so it can never be misdelivered as data
+  // for whatever happens to be pending on this session.
+  const std::string_view payload(
+      reinterpret_cast<const char *>(buffer.data()), buffer.size());
+  if (payload == kEpisodeReadyMarker) {
+    log_info("Secondary episode ready, re-arming full resync");
+    if (_callback) {
+      _callback();
+    }
+    return;
+  }
+
+  auto prom = _promises.find(session.get());
+  if (prom != _promises.end()) {
+    log_info("Got data from secondary (with promise): ", buffer.size());
+    prom->second->set_value({std::move(session), std::move(buffer)});
+    _promises.erase(prom);
+  } else {
+    log_warning("multigpu router: ignoring unsolicited data with no pending request: ", buffer.size(), " bytes");
+  }
+}
+
 void Router::ClearSessions() {
   std::scoped_lock<std::mutex> lock(_mutex);
   _sessions.clear();
@@ -200,13 +209,9 @@ std::future<SessionInfo> Router::WriteToNext(MultiGPUCommand id, Buffer &&buffer
     if (s == nullptr) {
       RejectPromise(response, "no secondary session available to route the command");
     } else if (_promises.contains(s.get())) {
-      // _promises holds at most one slot per session (there is no per-request
-      // correlation id in the wire protocol to demultiplex more than one).
-      // Silently overwriting the earlier entry here would orphan it forever
-      // instead of just failing fast, so refuse the newer request instead.
-      // Every real caller (PrimaryCommands) already serializes its own
-      // requests one at a time; this only ever fires for a caller that
-      // bypasses that discipline.
+      // One slot per session (no per-request correlation id in the wire
+      // protocol): overwriting it would orphan the earlier promise forever,
+      // so refuse the newer request instead.
       RejectPromise(response, "a request is already pending on this secondary session");
     } else {
       _promises[s.get()] = response;
@@ -236,20 +241,16 @@ std::future<SessionInfo> Router::WriteToOne(std::weak_ptr<Primary> server, Multi
   // write to the specific server only
   std::scoped_lock<std::mutex> lock(_mutex);
   auto s = server.lock();
-  // A session's socket can already be closed (disconnect in progress) while
-  // the Primary object itself is kept alive a little longer by another
-  // reference, so locking the weak_ptr alone is not enough: check it is
-  // still a member of _sessions, which DisconnectSession removes it from
-  // synchronously before anything else. Otherwise Write() would silently
-  // no-op on the closed socket and this promise would never resolve.
+  // A session's socket can already be closed while the Primary object is
+  // kept alive a little longer elsewhere, so also check _sessions
+  // membership; otherwise Write() would silently no-op and this promise
+  // would never resolve.
   const bool still_connected =
       s && (std::find(_sessions.begin(), _sessions.end(), s) != _sessions.end());
   if (!still_connected) {
     RejectPromise(response, "secondary session is no longer connected");
   } else if (_promises.contains(s.get())) {
-    // See the matching comment in WriteToNext: one slot per session, so an
-    // overlapping request must be refused rather than silently orphaning
-    // whichever one was already pending.
+    // Same reasoning as WriteToNext: one slot per session.
     RejectPromise(response, "a request is already pending on this secondary session");
   } else {
     _promises[s.get()] = response;
