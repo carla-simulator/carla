@@ -54,7 +54,7 @@ private:
   TArray<TWeakObjectPtr<ARayCastSemanticLidar>> ActiveLidars;
 
   /// LiDARs due this frame, snapshotted on the game thread for the simulation task.
-  TArray<ARayCastSemanticLidar*> LidarsToSimulate;
+  TArray<TObjectPtr<ARayCastSemanticLidar>> LidarsToSimulate;
 
   FGraphEventRef LidarSimulationTask;
 };
