@@ -397,7 +397,7 @@ class TestCollisionDeterminism(SmokeTest):
             os.mkdir(output_path)
 
         # Loading Town03 for test
-        self.client.load_world("Town03")
+        self.client.load_world("Town03_Opt")
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
 
@@ -423,7 +423,7 @@ class TestCollisionDeterminism(SmokeTest):
             os.mkdir(output_path)
 
         # Loading Town03 for test
-        self.client.load_world("Town03")
+        self.client.load_world("Town03_Opt")
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
 
@@ -449,7 +449,7 @@ class TestCollisionDeterminism(SmokeTest):
             os.mkdir(output_path)
 
         # Loading Town03 for test
-        self.client.load_world("Town03")
+        self.client.load_world("Town03_Opt")
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
 
@@ -475,7 +475,7 @@ class TestCollisionDeterminism(SmokeTest):
             os.mkdir(output_path)
 
         # Loading Town03 for test
-        self.client.load_world("Town03")
+        self.client.load_world("Town03_Opt")
         # workaround: give time to UE4 to clean memory after loading (old assets)
         time.sleep(5)
 
