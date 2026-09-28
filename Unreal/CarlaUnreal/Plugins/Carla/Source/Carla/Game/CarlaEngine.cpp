@@ -274,6 +274,11 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
       Secondary->Connect();
       // set this server in synchronous mode
       bSynchronousMode = true;
+      if (!FApp::CanEverRender())
+      {
+        UE_LOG(LogCarla, Warning,
+            TEXT("Multi-GPU secondary started without rendering (-nullrhi): camera sensors routed here will produce no data"));
+      }
     }
     else
     {
@@ -285,6 +290,11 @@ void FCarlaEngine::NotifyInitGame(const UCarlaSettings &Settings)
         this->bNewConnection = true;
         UE_LOG(LogCarla, Log, TEXT("New secondary connection detected"));
       });
+      if (!FApp::CanEverRender())
+      {
+        UE_LOG(LogCarla, Log,
+            TEXT("Rendering disabled (-nullrhi): running as a non-rendering, authority-only primary. Camera sensors need a connected rendering secondary server to produce data."));
+      }
     }
   }
 
