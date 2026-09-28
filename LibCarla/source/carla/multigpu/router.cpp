@@ -10,7 +10,6 @@
 #include "carla/streaming/EndPoint.h"
 
 #include <algorithm>
-#include <stdexcept>
 
 namespace carla {
 namespace multigpu {
@@ -126,7 +125,7 @@ void Router::RejectPromise(
     std::shared_ptr<std::promise<SessionInfo>> promise,
     std::string_view reason) {
   log_error("multigpu router: rejecting pending request: ", reason);
-  promise->set_exception(std::make_exception_ptr(std::runtime_error(std::string(reason))));
+  promise->set_value(SessionInfo{});
 }
 
 void Router::HandleResponse(std::shared_ptr<Primary> session, Buffer buffer) {

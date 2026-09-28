@@ -1243,7 +1243,12 @@ void FCarlaServer::FPimpl::BindActions()
     {
       // multi-gpu
       UE_LOG(LogCarla, Log, TEXT("Sensor %d '%s' created in secondary server"), sensor_id, *Desc);
-      return SecondaryServer->GetCommander().GetToken(sensor_id);
+      auto Token = SecondaryServer->GetCommander().GetToken(sensor_id);
+      if (!Token)
+      {
+        RESPOND_ERROR("no secondary server could provide a token for this sensor");
+      }
+      return *Token;
     }
     else
     {
@@ -1275,7 +1280,10 @@ void FCarlaServer::FPimpl::BindActions()
     if (SecondaryServer->HasClientsConnected() && !ForceInPrimary)
     {
       // multi-gpu
-      SecondaryServer->GetCommander().EnableForROS(sensor_id);
+      if (!SecondaryServer->GetCommander().EnableForROS(sensor_id))
+      {
+        RESPOND_ERROR("no secondary server could enable ROS for this sensor");
+      }
     }
     else
     {
